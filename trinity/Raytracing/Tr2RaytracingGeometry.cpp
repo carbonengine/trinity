@@ -5,6 +5,7 @@
 
 #include "Tr2Renderer.h"
 #include "Shader/Tr2Shader.h"
+#include "../Tr2BoneTransformBuffer.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 #include <../trinityal/dx12/Tr2BufferALDx12.h>
@@ -172,7 +173,7 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 	}
 }
 
-bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms )
+bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms, uint32_t offset )
 {
 	auto newSize = count * 3 * 4;
 	if( m_transforms.size() != newSize )
@@ -186,6 +187,8 @@ bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4
 		memcpy( m_transforms.data(), transforms, count * sizeof( granny_matrix_3x4 ) );
 		m_isDirty = true;
 	}
+
+	m_boneOffset = offset;
 
 	return m_isDirty;
 }
@@ -210,14 +213,9 @@ TriGeometryResMeshData* Tr2RaytracingMesh::GetMeshData() const
 	return m_meshData;
 }
 
-size_t Tr2RaytracingMesh::GetTransformsSize() const
+uint32_t Tr2RaytracingMesh::GetTransformOffset() const
 {
-	return m_transforms.size() * sizeof( float );
-}
-
-const void* Tr2RaytracingMesh::GetTransforms() const
-{
-	return m_transforms.data();
+	return m_boneOffset;
 }
 
 Tr2BufferAL Tr2RaytracingMesh::GetSkinnedVertexBuffer( Tr2RenderContext& renderContext )
@@ -466,6 +464,18 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 	}
 }
 
+namespace
+{
+struct SkinningShaderCBuffer
+{
+	uint32_t vertexCount;
+	uint32_t stride;
+	uint32_t positionOffset;
+	uint32_t boneOffset;
+	uint32_t transformOffset;
+	uint32_t _unused[3];
+};
+}
 
 void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 {
@@ -477,6 +487,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 #endif
 
 	std::vector<Tr2RaytracingMesh*> outdatedMeshes;
+
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( renderContext );
 
 	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
 	{
@@ -536,21 +548,19 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			TriGeometryResMeshData* meshData = mesh->GetMeshData();
 
 			auto vertexCount = meshData->m_vertexCount;
-			auto constSize = mesh->GetTransformsSize() + 4 * sizeof( uint32_t );
-			if( !m_skinVerticesData.IsValid() || m_skinVerticesData.GetSize() < constSize )
+			if( !m_skinVerticesData.IsValid() )
 			{
-				m_skinVerticesData.Create( uint32_t( constSize ), renderContext.GetPrimaryRenderContext() );
+				m_skinVerticesData.Create( uint32_t( sizeof( SkinningShaderCBuffer ) ), renderContext.GetPrimaryRenderContext() );
 			}
-			float* constData;
+			SkinningShaderCBuffer* constData;
 			m_skinVerticesData.Lock( (void**)&constData, renderContext );
 
-			reinterpret_cast<uint32_t*>( constData )[0] = vertexCount;
-			reinterpret_cast<uint32_t*>( constData )[1] = meshData->m_vertexAllocation.GetStride() / 4;
+			constData->vertexCount = vertexCount;
+			constData->stride = meshData->m_vertexAllocation.GetStride() / 4;
 			auto offsets = FindOffsets( meshData->m_vertexDeclaration );
-			reinterpret_cast<uint32_t*>( constData )[2] = offsets.positionOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
-			reinterpret_cast<uint32_t*>( constData )[3] = offsets.boneOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
-
-			memcpy( constData + 4, mesh->GetTransforms(), mesh->GetTransformsSize() );
+			constData->positionOffset = offsets.positionOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
+			constData->boneOffset = offsets.boneOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
+			constData->transformOffset = mesh->GetTransformOffset();
 
 			m_skinVerticesData.Unlock( renderContext );
 

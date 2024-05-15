@@ -1573,7 +1573,11 @@ void EveSpaceObject2::UpdateRtSkeleton()
 		return; //no skinned areas
 	}
 
-	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList() );
+	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	auto offset = m_boneOffsets.GetCurrentFrameOffset();
+
+	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );
 
 	if( skeletonChanged )
 	{

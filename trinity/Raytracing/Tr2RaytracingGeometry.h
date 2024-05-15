@@ -58,14 +58,13 @@ public:
 	Tr2RaytracingMesh();
 
 	void UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize );
-	bool SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms );
+	bool SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms, uint32_t offset );
 
 	bool IsGood() const;
 	bool GetAndResetDirtyFlag();
 
 	TriGeometryResMeshData* GetMeshData() const;
-	size_t GetTransformsSize() const;
-	const void* GetTransforms() const;
+	uint32_t GetTransformOffset() const;
 	Tr2BufferAL GetSkinnedVertexBuffer( Tr2RenderContext& renderContext );
 	const Tr2BufferAL& GetVertexBuffer() const;
 	const Tr2BufferAL& GetIndexBuffer() const;
@@ -75,6 +74,7 @@ private:
 	TriGeometryResPtr m_geometry;
 	uint32_t m_meshIndex;
 	std::vector<float> m_transforms;
+	uint32_t m_boneOffset;
 	bool m_isDirty;
 	float m_screenSize;
 	TriGeometryResMeshData* m_meshData;

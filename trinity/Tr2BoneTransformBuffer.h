@@ -32,6 +32,7 @@ private:
 
 	void Resize( uint32_t size );
 
+	std::mutex m_mutex;
 	Tr2BufferAL m_buffer;
 	std::vector<Float4x3> m_mirror;
 

@@ -25,6 +25,7 @@ Tr2BoneTransformBuffer::Float4x3::Float4x3( const Matrix& m )
 
 uint32_t Tr2BoneTransformBuffer::UploadTransforms( const Float4x3* data, uint32_t matrixCount )
 {
+	std::unique_lock lock( m_mutex );
 	if( m_head >= m_tail )
 	{
 		if( m_head + matrixCount > m_size )
