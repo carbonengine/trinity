@@ -147,7 +147,7 @@ namespace TrinityALImpl
 				}
 				break;
 			case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
-				m_srv[reg.parameter] = renderContext.GetSrvUavHeapView();
+				m_srv[reg.parameter] = renderContext.GetSrvHeapView();
 				break;
 			default:
 				m_srv[reg.parameter] = renderContext.GetNullSrvDx12( it->registerType );
@@ -206,7 +206,7 @@ namespace TrinityALImpl
 				}
 				break;
 			case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
-				m_srv[reg.parameter] = renderContext.GetSrvUavHeapView();
+				m_uav[reg.parameter] = renderContext.GetUavHeapView();
 				break;
 			default:
 				CCP_AL_LOGWARN("Missing UAV resource in resource set for register %u, stage %u", reg.index, reg.stage);

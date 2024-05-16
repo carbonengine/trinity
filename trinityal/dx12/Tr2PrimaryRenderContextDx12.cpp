@@ -213,7 +213,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	m_srvUavAllocator = std::make_shared<SrvUavDescriptorAllocator>( device, 16 * 1024 );
 	if( auto entry = m_srvUavAllocator->Allocate() )
 	{
-		m_srvUavHeapStart = std::make_shared<ShaderResourceViewDx12>( m_srvUavAllocator.get(), entry );
+		m_srvHeapStart = std::make_shared<ShaderResourceViewDx12>( m_srvUavAllocator.get(), entry );
+		m_uavHeapStart = std::make_shared<UnorderedAccessViewDx12>( m_srvUavAllocator.get(), entry );
 	}
 
 	CComPtr<ID3D12CommandQueue> commandQueue;
@@ -537,7 +538,8 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	// JB: Forcing the destruction of samplers because they now hold a SamplerStateDx12 object
 	m_samplerStateFactory.Clear();
-	m_srvUavHeapStart = nullptr;
+	m_srvHeapStart = nullptr;
+	m_uavHeapStart = nullptr;
 	m_srvUavAllocator = nullptr;
 	for (int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES + 1; ++idx)
 	{
@@ -1111,9 +1113,14 @@ ID3D12DescriptorHeap* Tr2PrimaryRenderContextAL::GetGlobalSrvUavHeap() const
 	return m_srvUavAllocator->GetGpuVisibleHeap();
 }
 
-std::shared_ptr<ShaderResourceViewDx12> Tr2PrimaryRenderContextAL::GetSrvUavHeapView() const
+std::shared_ptr<ShaderResourceViewDx12> Tr2PrimaryRenderContextAL::GetSrvHeapView() const
 {
-	return m_srvUavHeapStart;
+	return m_srvHeapStart;
+}
+
+std::shared_ptr<UnorderedAccessViewDx12> Tr2PrimaryRenderContextAL::GetUavHeapView() const
+{
+	return m_uavHeapStart;
 }
 
 /** Create a ShaderResourceView */
