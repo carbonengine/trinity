@@ -144,7 +144,10 @@ std::wstring Tr2RaytracingPipelineStateManager::GetUniqueName()
 // ***************** Tr2RaytracingMesh *****************
 
 Tr2RaytracingMesh::Tr2RaytracingMesh() :
+	m_skinnedVertices( nullptr ),
 	m_meshIndex( 0 ),
+	m_boneOffset( 0 ),
+	m_skinnedVertexOffset( 0 ),
 	m_isDirty( true ),
 	m_screenSize( 0.f )
 {
@@ -220,17 +223,20 @@ uint32_t Tr2RaytracingMesh::GetTransformOffset() const
 	return m_boneOffset;
 }
 
-Tr2BufferAL& Tr2RaytracingMesh::GetSkinnedVertexBuffer( Tr2RenderContext& renderContext )
+const Tr2BufferAL& Tr2RaytracingMesh::GetSkinnedVertexBuffer( Tr2RenderContext& renderContext )
 {
-	auto mesh = m_meshData;
-	auto vertexCount = mesh->m_vertexCount;
+	return *m_skinnedVertices;
+}
 
-	const uint32_t vertexSize = 3 * sizeof( float );
-	if( !m_skinnedVertices.IsValid() || m_skinnedVertices.GetSize() < vertexSize * vertexCount )
-	{
-		m_skinnedVertices.Create( Tr2BufferDescriptionAL( vertexSize, vertexCount, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ), nullptr, renderContext.GetPrimaryRenderContext() );
-	}
-	return m_skinnedVertices;
+void Tr2RaytracingMesh::SetSkinnedVertices( const Tr2BufferAL& buffer, uint32_t offset )
+{
+	m_skinnedVertices = &buffer;
+	m_skinnedVertexOffset = offset;
+}
+
+uint32_t Tr2RaytracingMesh::GetSkinnedVertexOffset() const
+{
+	return m_skinnedVertexOffset;
 }
 
 const Tr2BufferAL& Tr2RaytracingMesh::GetVertexBuffer() const
@@ -292,7 +298,13 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 			rebuild = true;
 		}
 
-		auto positions = Tr2RtPositionStreamAL( mesh.GetSkinnedVertexBuffer( renderContext ) );
+		auto positions = Tr2RtPositionStreamAL( 
+			mesh.GetSkinnedVertexBuffer( renderContext ), 
+			3 * sizeof( float ),
+			meshData->m_vertexCount,
+			mesh.GetSkinnedVertexOffset(),
+			0,
+			Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT );
 		auto indices = Tr2RtIndicesStreamAL( meshData->m_indexAllocation.GetBuffer(), meshData->m_indexAllocation.GetStride(), meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[m_areaIndex].m_firstIndex, meshData->m_areas[m_areaIndex].m_primitiveCount * 3 );
 
 		if( update )
@@ -477,7 +489,7 @@ struct SkinningShaderCBuffer
 	uint32_t transformOffset;
 	uint32_t inVB;
 	uint32_t outVB;
-	uint32_t _unused;
+	uint32_t outVBOffset;
 };
 }
 
@@ -489,15 +501,17 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.PushDisableUAVBarriersDx12();
 	ON_BLOCK_EXIT( [&] { renderContext.PopDisableUAVBarriersDx12(); } );
-
-	std::vector<D3D12_RESOURCE_BARRIER> barriers;
-	barriers.reserve( m_geometryData.size() );
 #endif
 
 	std::vector<Tr2RaytracingMesh*> outdatedMeshes;
 	outdatedMeshes.reserve( m_geometryData.size() );
 
-	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( renderContext );
+	{
+		CCP_STATS_ZONE( "Tr2BoneTransformBuffer" );
+		Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( renderContext );
+	}
+
+	uint32_t skinnedVertexCount = 0;
 
 	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
 	{
@@ -516,30 +530,32 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 			outdatedMeshes.push_back( mesh );
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-			auto alBuffer = mesh->GetSkinnedVertexBuffer( renderContext ).TrinityALImpl_GetObject();
-
-			D3D12_RESOURCE_BARRIER barrier;
-			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			barrier.Transition.pResource = alBuffer->GetGpuResource();
-			barrier.Transition.StateBefore = alBuffer->GetDefaultState();
-			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-			barriers.push_back( barrier );
-#endif
+			skinnedVertexCount += mesh->GetMeshData()->m_vertexCount;
 		}
 	}
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-	renderContext.FlushBarriersDx12();
-	renderContext.m_commandList->ResourceBarrier( UINT( barriers.size() ), barriers.data() );
-
-	for( auto& barrier : barriers )
+	if( !m_skinnedVertices.IsValid() || m_skinnedVertices.GetDesc().count < skinnedVertexCount )
 	{
-		std::swap( barrier.Transition.StateBefore, barrier.Transition.StateAfter );
+		const uint32_t vertexSize = 3 * sizeof( float );
+		m_skinnedVertices.Create( Tr2BufferDescriptionAL( vertexSize, skinnedVertexCount, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ), nullptr, renderContext.GetPrimaryRenderContext() );
 	}
-	ON_BLOCK_EXIT( [&] { renderContext.m_commandList->ResourceBarrier( UINT( barriers.size() ), barriers.data() ); } );
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+
+	D3D12_RESOURCE_BARRIER barrier;
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = m_skinnedVertices.TrinityALImpl_GetObject()->GetGpuResource();
+	barrier.Transition.StateBefore = m_skinnedVertices.TrinityALImpl_GetObject()->GetDefaultState();
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	renderContext.ResourceBarrierDx12( barrier );
+	renderContext.FlushBarriersDx12();
+
+	std::swap( barrier.Transition.StateBefore, barrier.Transition.StateAfter );
+
+	ON_BLOCK_EXIT( [&]{ renderContext.ResourceBarrierDx12( barrier ); } );
 #endif
 
 	if( !outdatedMeshes.empty() )
@@ -572,14 +588,14 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			m_skinVerticesData.Create( uint32_t( sizeof( SkinningShaderCBuffer ) ), renderContext.GetPrimaryRenderContext() );
 		}
 
+		uint32_t outOffset = 0;
+
 		for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
 		{
 			Tr2RaytracingMesh* mesh = *it;
 			TriGeometryResMeshData* meshData = mesh->GetMeshData();
 
 			auto vertexCount = meshData->m_vertexCount;
-
-			auto& skinnedVB = mesh->GetSkinnedVertexBuffer( renderContext );
 
 			SkinningShaderCBuffer* constData;
 			m_skinVerticesData.Lock( (void**)&constData, renderContext );
@@ -591,7 +607,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			constData->boneOffset = offsets.boneOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
 			constData->transformOffset = mesh->GetTransformOffset();
 			constData->inVB = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
-			constData->outVB = mesh->GetSkinnedVertexBuffer( renderContext ).GetUavIndexInHeap();
+			constData->outVB = m_skinnedVertices.GetUavIndexInHeap();
+			constData->outVBOffset = outOffset * 3;
 
 			m_skinVerticesData.Unlock( renderContext );
 
@@ -599,7 +616,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12
 			inVB.m_buffer = meshData->m_vertexAllocation.GetBuffer();
-			outVB.m_buffer = mesh->GetSkinnedVertexBuffer( renderContext );
+			outVB.m_buffer = m_skinnedVertices;
 
 			m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, &inVB );
 			m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, &outVB );
@@ -625,6 +642,10 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			m_skinVerticesEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
 #endif
 			renderContext.RunComputeShader( ( vertexCount + 63 ) / 64, 1, 1 );
+
+			mesh->SetSkinnedVertices( m_skinnedVertices, outOffset );
+
+			outOffset += meshData->m_vertexCount;
 		}
 	}
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12

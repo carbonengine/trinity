@@ -65,16 +65,20 @@ public:
 
 	TriGeometryResMeshData* GetMeshData() const;
 	uint32_t GetTransformOffset() const;
-	Tr2BufferAL& GetSkinnedVertexBuffer( Tr2RenderContext& renderContext );
+	const Tr2BufferAL& GetSkinnedVertexBuffer( Tr2RenderContext& renderContext );
 	const Tr2BufferAL& GetVertexBuffer() const;
 	const Tr2BufferAL& GetIndexBuffer() const;
 
+	void SetSkinnedVertices( const Tr2BufferAL& buffer, uint32_t offset );
+	uint32_t GetSkinnedVertexOffset() const;
+
 private:
-	Tr2BufferAL m_skinnedVertices;
+	const Tr2BufferAL* m_skinnedVertices;
 	TriGeometryResPtr m_geometry;
 	uint32_t m_meshIndex;
 	std::vector<float> m_transforms;
 	uint32_t m_boneOffset;
+	uint32_t m_skinnedVertexOffset;
 	bool m_isDirty;
 	float m_screenSize;
 	TriGeometryResMeshData* m_meshData;
@@ -154,6 +158,8 @@ private:
 	Tr2EffectPtr m_skinVerticesEffect;
 	Tr2ConstantBufferAL m_skinVerticesData;
 	std::unordered_map<unsigned, VtxOffsets> m_offsets;
+
+	Tr2BufferAL m_skinnedVertices;
 };
 
 TYPEDEF_BLUECLASS( Tr2RaytracingGeometry );
