@@ -121,7 +121,8 @@ public:
 
 
 	ID3D12DescriptorHeap* GetGlobalSrvUavHeap() const;
-	std::shared_ptr<ShaderResourceViewDx12> GetSrvUavHeapView() const;
+	std::shared_ptr<ShaderResourceViewDx12> GetSrvHeapView() const;
+	std::shared_ptr<UnorderedAccessViewDx12> GetUavHeapView() const;
 
 	/** Create a ShaderResourceView */
 	HRESULT CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<ShaderResourceViewDx12>& srvView);
@@ -289,7 +290,8 @@ private:
 
 	std::shared_ptr<SrvUavDescriptorAllocator> m_srvUavAllocator;
 	std::shared_ptr<GlobalDescriptorHeapAllocator> m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
-	std::shared_ptr<ShaderResourceViewDx12> m_srvUavHeapStart;
+	std::shared_ptr<ShaderResourceViewDx12> m_srvHeapStart;
+	std::shared_ptr<UnorderedAccessViewDx12> m_uavHeapStart;
 
 	std::shared_ptr<ShaderResourceViewDx12> m_nullSrv[16];
 	std::shared_ptr<UnorderedAccessViewDx12> m_nullUav[16];
