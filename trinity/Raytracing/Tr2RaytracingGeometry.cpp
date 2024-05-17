@@ -562,12 +562,12 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	ON_BLOCK_EXIT( [&]{ renderContext.ResourceBarrierDx12( barrier ); } );
 #endif
 
+    CTr2RuntimeGpuBuffer inVB;
+    CTr2RuntimeGpuBuffer outVB;
+
 	if( !outdatedMeshes.empty() )
 	{
 		CCP_STATS_ZONE( "Dispatch" );
-
-		CTr2RuntimeGpuBuffer inVB;
-		CTr2RuntimeGpuBuffer outVB;
 
 		auto perObjVSRegister = Tr2Renderer::GetPerObjectVSStartRegister();
 
