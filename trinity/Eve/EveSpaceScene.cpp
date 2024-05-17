@@ -2033,6 +2033,15 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
+	
+		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
+		if( m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
+		{
+			PopulatePerFramePSData( m_perFramePS, renderContext );
+			ApplyPerFrameData( renderContext );
+			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_rtManager->GetShadowMap(), renderContext );
+		}
+
 		renderContext.SetReadOnlyDepth( false );
 	}
 	

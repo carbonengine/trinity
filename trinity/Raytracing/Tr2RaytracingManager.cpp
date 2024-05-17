@@ -90,6 +90,18 @@ void Tr2RaytracingManager::SetBlankTexture()
 	}
 }
 
+ITr2TextureProvider* Tr2RaytracingManager::GetShadowMap() const
+{
+	if( m_denoiser )
+	{
+		return m_denoiser->GetTexture();
+	}
+	else
+	{
+		return m_destTex;
+	}
+}
+
 void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, Tr2RenderContext& renderContext )
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );
