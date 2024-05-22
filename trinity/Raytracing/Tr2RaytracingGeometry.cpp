@@ -569,8 +569,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
     CTr2RuntimeGpuBuffer inVB;
     CTr2RuntimeGpuBuffer outVB;
     
-    Tr2GeometryBufferParameterPtr inVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( "InVB" ) );
-    Tr2GeometryBufferParameterPtr outVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( "InVB" ) );
+    Tr2GeometryBufferParameterPtr inVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( m_inVertexBufferTechniqueName.c_str() ) );
+    Tr2GeometryBufferParameterPtr outVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( m_outVertexBufferTechniqueName.c_str() ) );
 
 	if( !outdatedMeshes.empty() )
 	{
