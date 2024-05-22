@@ -599,9 +599,10 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			m_skinVerticesData.Create( uint32_t( sizeof( SkinningShaderCBuffer ) ), renderContext.GetPrimaryRenderContext() );
 		}
 
-        outVB.m_buffer = m_skinnedVertices;
+#if TRINITY_PLATFORM != TRINITY_DIRECTX12
+		outVB.m_buffer = m_skinnedVertices;
         outVbParam->SetGpuBuffer( &outVB );
-
+#endif
 		uint32_t outOffset = 0;
 
 
