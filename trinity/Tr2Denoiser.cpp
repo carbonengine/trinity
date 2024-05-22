@@ -176,3 +176,8 @@ bool Tr2Denoiser::OnModified( Be::Var* )
 	m_parametersDirty = true;
 	return true;
 }
+
+void Tr2Denoiser::SetRadius( uint32_t value )
+{
+	m_radius = value;
+}
