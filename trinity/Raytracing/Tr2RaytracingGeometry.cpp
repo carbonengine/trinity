@@ -5,6 +5,7 @@
 
 #include "Tr2Renderer.h"
 #include "Shader/Tr2Shader.h"
+#include "Shader/Parameter/Tr2GeometryBufferParameter.h"
 #include "../Tr2BoneTransformBuffer.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -319,6 +320,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 
 		if( rebuild )
 		{
+            CCP_STATS_ZONE( "BLAS rebuild" );
 			if( FAILED( m_blas.Create( positions, indices, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_BUILD | Tr2RtBuildFlags::ALLOW_UPDATE, renderContext.GetPrimaryRenderContext() ) ) )
 			{
 				CCP_LOGERR( "Failed to create BLAS!" );
@@ -392,6 +394,8 @@ Tr2RaytracingGeometry::Tr2RaytracingGeometry()
 {
 	m_skinVerticesEffect.CreateInstance();
 	m_skinVerticesEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/skinvertices.fx" );
+    m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
+    m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
 }
 
 Tr2BufferAL* Tr2RaytracingGeometry::GetGpuBuffer( unsigned )
@@ -564,6 +568,9 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
     CTr2RuntimeGpuBuffer inVB;
     CTr2RuntimeGpuBuffer outVB;
+    
+    Tr2GeometryBufferParameterPtr inVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( "InVB" ) );
+    Tr2GeometryBufferParameterPtr outVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( "InVB" ) );
 
 	if( !outdatedMeshes.empty() )
 	{
@@ -592,7 +599,11 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			m_skinVerticesData.Create( uint32_t( sizeof( SkinningShaderCBuffer ) ), renderContext.GetPrimaryRenderContext() );
 		}
 
+        outVB.m_buffer = m_skinnedVertices;
+        outVbParam->SetGpuBuffer( &outVB );
+
 		uint32_t outOffset = 0;
+
 
 		for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
 		{
@@ -620,10 +631,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12
 			inVB.m_buffer = meshData->m_vertexAllocation.GetBuffer();
-			outVB.m_buffer = m_skinnedVertices;
-
-			m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, &inVB );
-			m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, &outVB );
+            inVbParam->SetGpuBuffer( &inVB );
 #endif
 			// cheat a bit instead of calling RunComputeShader() to make things more performant
 			if( firstIteration )
@@ -654,8 +662,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	}
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12
 	renderContext.SetResourceSet( Tr2ResourceSetAL() );
-	m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
-	m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
+    inVbParam->SetGpuBuffer( static_cast<ITr2GpuBuffer*>( nullptr ) );
+    outVbParam->SetGpuBuffer( static_cast<ITr2GpuBuffer*>( nullptr ) );
 #endif
 }
 
@@ -693,14 +701,18 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 		instances.push_back( instance );
 	}
 
-	if( instances.empty() )
-	{
-		m_tlas = Tr2RtTopLevelAccelerationStructureAL();
-	}
-	else if( FAILED( m_tlas.Update( instances.size(), instances.data(), renderContext ) ) )
-	{
-		m_tlas.Create( instances.size(), instances.data(), Tr2RtBuildFlags::PREFER_FAST_TRACE, renderContext.GetPrimaryRenderContext() );
-	}
+    {
+        CCP_STATS_ZONE( "TLAS update" );
+        if( instances.empty() )
+        {
+            m_tlas = Tr2RtTopLevelAccelerationStructureAL();
+        }
+        else if( FAILED( m_tlas.Update( instances.size(), instances.data(), renderContext ) ) )
+        {
+            CCP_STATS_ZONE( "TLAS create" );
+            m_tlas.Create( instances.size(), instances.data(), Tr2RtBuildFlags::PREFER_FAST_TRACE, renderContext.GetPrimaryRenderContext() );
+        }
+    }
 }
 
 void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform )

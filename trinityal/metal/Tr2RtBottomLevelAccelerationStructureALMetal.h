@@ -42,6 +42,9 @@ class Tr2RtBottomLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2Rt
         
         API_AVAILABLE(macos(11.0)) 
         MTLPrimitiveAccelerationStructureDescriptor* m_accelerationStructureDesc;
+        
+        NSUInteger m_scratchBufferSize;
+        
         id<MTLBuffer> m_scratchBuffer;
     };
 }

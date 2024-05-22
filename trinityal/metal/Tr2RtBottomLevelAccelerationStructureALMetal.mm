@@ -31,7 +31,7 @@ MTLAttributeFormat ConvertVertexFormat( Tr2RenderContextEnum::PixelFormat format
 
 // NOTE: this has no compaction
 API_AVAILABLE(macos(11.0))
-id<MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, TrinityALImpl::MetalContext* metalContext )
+std::pair<id<MTLAccelerationStructure>, NSUInteger> BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, TrinityALImpl::MetalContext* metalContext )
 {
     id<MTLDevice> device = metalContext->GetDevice();
 
@@ -52,7 +52,7 @@ id<MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructure
                            scratchBufferOffset:0];
     metalContext->GetPrimaryWorkQueue()->ReleaseEncoder( false );
     
-    return accelerationStructure;
+    return { accelerationStructure, accelSizes.refitScratchBufferSize };
 }
 
 }
@@ -60,6 +60,7 @@ id<MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructure
 namespace  TrinityALImpl {
 
     Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL()
+        :m_scratchBufferSize( 0 )
     {
         
     }
@@ -128,7 +129,9 @@ namespace  TrinityALImpl {
                 m_accelerationStructureDesc.usage |= MTLAccelerationStructureUsagePreferFastBuild;
             }
 
-            m_primitiveAccelerationStructure = BuildAccelerationStructure( m_accelerationStructureDesc, metalContext );
+            auto result = BuildAccelerationStructure( m_accelerationStructureDesc, metalContext );
+            m_primitiveAccelerationStructure = result.first;
+            m_scratchBufferSize = result.second;
             
             m_geomDesc.indexBuffer = nil;
             m_geomDesc.vertexBuffer = nil;
@@ -169,20 +172,10 @@ namespace  TrinityALImpl {
             m_geomDesc.vertexBufferOffset = positions.m_vertexOffset * positions.m_stride + positions.m_positionOffset;
 
             MetalContext *metalContext = renderContext.GetMetalContext();
-            id<MTLDevice> device = metalContext->GetDevice();
             
-            // Query for the sizes needed to store and build the acceleration structure.
-            MTLAccelerationStructureSizes accelSizes = [device accelerationStructureSizesWithDescriptor:m_accelerationStructureDesc];
-            if( accelSizes.accelerationStructureSize > m_primitiveAccelerationStructure.size )
+            if( !m_scratchBuffer )
             {
-                m_geomDesc.indexBuffer = nil;
-                m_geomDesc.vertexBuffer = nil;
-                return E_INVALIDARG;
-            }
-            
-            if( !m_scratchBuffer || m_scratchBuffer.length < accelSizes.refitScratchBufferSize )
-            {
-                m_scratchBuffer = [device newBufferWithLength:accelSizes.refitScratchBufferSize options:MTLResourceStorageModePrivate];
+                m_scratchBuffer = [metalContext->GetDevice() newBufferWithLength:m_scratchBufferSize options:MTLResourceStorageModePrivate];
             }
             auto commandEncoder = metalContext->GetPrimaryWorkQueue()->GetAccelerationStructureEncoder();
             
@@ -236,6 +229,7 @@ namespace  TrinityALImpl {
             m_accelerationStructureDesc = nullptr;
         }
         m_scratchBuffer = nullptr;
+        m_scratchBufferSize = 0;
     }
 
     void Tr2RtBottomLevelAccelerationStructureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
