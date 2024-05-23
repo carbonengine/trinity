@@ -47,6 +47,7 @@ private:
     id<MTLFXSpatialScaler> m_mfxSpatialScaler;
     
     bool m_temporal;
+    bool m_setup;
     Tr2UpscalingAL::JitterSequence m_jitterSequence;
 
     friend class Tr2MetalFxUpscalingTechnique;
