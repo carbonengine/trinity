@@ -108,27 +108,7 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
-	TogglePlugin( sl::kFeatureDLSS, false );
-	TogglePlugin( sl::kFeatureDLSS_G, false );
-	TogglePlugin( sl::kFeatureNIS, false );
-#if DLSS_DEBUG
-	TogglePlugin( sl::kFeatureImGUI, false );
-#endif
-	TogglePlugin( sl::kFeaturePCL, false );
-
-	if( m_attachedToDevice )
-	{
-		auto reflexConst = sl::ReflexOptions{};
-		reflexConst.mode = sl::ReflexMode::eOff;
-		if( SL_FAILED( result, m_slReflexSetOptions( reflexConst ) ) )
-		{
-			CCP_LOGERR( "Reflex failed to set options (%d)", result );
-		}
-
-		TogglePlugin( sl::kFeatureReflex, false );
-
-		m_attachedToDevice = false;
-	}
+	Tr2StreamlineAL::ReleaseStreamline( m_streamlineModule );
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const 
@@ -151,19 +131,17 @@ bool Tr2DlssUpscalingTechnique::SupportsFrameGeneration( ) const
 	return m_supportsFrameGeneration;
 }
 
-bool Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
+void Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
 {
 	if( !m_attachedToDevice )
 	{
-		return false;
+		return;
 	}
 	if( SL_FAILED( res, m_slSetFeatureLoaded( feature, enable ) ) )
 	{
 		CCP_LOGERR( "Trying to %s Nvidia Streamline plugin '%s' but it failed (%d)", enable ? "enable" : "disable", 
 			Tr2StreamlineAL::GetPluginName(feature), res );
-		return false;
 	}
-	return true;
 }
 
 bool Tr2DlssUpscalingTechnique::ReplacesDevice() const
@@ -292,8 +270,27 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContex
 
 void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
-	// toggle plugin needs to have the pipeline clean before it is called
-	renderContext.FlushAndSyncDx12();
+	TogglePlugin( sl::kFeatureDLSS, false );
+	TogglePlugin( sl::kFeatureDLSS_G, false );
+	TogglePlugin( sl::kFeatureNIS, false );
+#if DLSS_DEBUG
+	TogglePlugin( sl::kFeatureImGUI, false );
+#endif
+	TogglePlugin( sl::kFeaturePCL, false );
+
+	if( m_attachedToDevice )
+	{
+		auto reflexConst = sl::ReflexOptions{};
+		reflexConst.mode = sl::ReflexMode::eOff;
+		if( SL_FAILED( result, m_slReflexSetOptions( reflexConst ) ) )
+		{
+			CCP_LOGERR( "Reflex failed to set options (%d)", result );
+		}
+
+		TogglePlugin( sl::kFeatureReflex, false );
+
+		m_attachedToDevice = false;
+	}
 }
 
 Tr2UpscalingContextAL* Tr2DlssUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
