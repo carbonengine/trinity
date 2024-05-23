@@ -27,7 +27,7 @@ namespace Tr2StreamlineAL
 		{
 			CCP_LOGERR( "Unable to find sl.interposer.dll in path for secure load." );
 		}
-#ifndef NDEBUG
+#if CCP_BUILD_FLAVOR == _trinitydev
 		else 
 		{
 			STREAMLINE_MODULE = LoadLibraryW( abs_path );
@@ -102,7 +102,7 @@ namespace Tr2StreamlineAL
 		// now set it up
 		sl::Preferences pref{};
 
-#ifndef NDEBUG
+#if CCP_BUILD_FLAVOR == _trinitydev
 		pref.showConsole = true; // for debugging, set to false in production
 		pref.logLevel = sl::LogLevel::eVerbose;
 #else
@@ -122,8 +122,8 @@ namespace Tr2StreamlineAL
 			,sl::kFeatureDLSS_G // framegeneration is only available on dx12
 			,sl::kFeatureReflex // dlssg requires reflex
 			,sl::kFeaturePCL
-#ifndef NDEBUG
-//			,sl::kFeatureImGUI // imgui is only availabe with reflex and dlssg
+#if CCP_BUILD_FLAVOR == _trinitydev
+			,sl::kFeatureImGUI // imgui is only availabe with reflex and dlssg
 #endif
 #endif
 		};
@@ -153,12 +153,15 @@ namespace Tr2StreamlineAL
 		return STREAMLINE_INITIALIZATION_RESULT;
 	}
 
-	void ReleaseStreamline( )
+	void ReleaseStreamline( HMODULE streamlineModule )
 	{
-		if( SL_FAILED( res, reinterpret_cast<PFun_slShutdown*>( GetProcAddress( STREAMLINE_MODULE, "slShutdown" ) )() ) )
+		if( SL_FAILED( res, reinterpret_cast<PFun_slShutdown*>( GetProcAddress( streamlineModule, "slShutdown" ) )() ) )
 		{
 			CCP_LOGNOTICE( "Could not release streamline %d", res );
 		}
+
+		FreeLibrary( streamlineModule );
+		STREAMLINE_INITIALIZED = false;
 	}
 
 	sl::Result CheckForAvailability( HMODULE streamlineModule, sl::Feature feature, sl::AdapterInfo adapterInfo )
@@ -170,6 +173,7 @@ namespace Tr2StreamlineAL
 		auto result = slIsFeatureSupported( feature, adapterInfo );
 		if( result != sl::Result::eOk )
 		{
+			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is available", pluginName );
 			switch( result )
 			{
 			case sl::Result::eErrorOSOutOfDate: // inform user to update OS

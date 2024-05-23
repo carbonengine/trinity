@@ -48,6 +48,10 @@ namespace TrinityALImpl
 	{
 	}
 
+	Tr2UpscalingTechniqueDx12::~Tr2UpscalingTechniqueDx12()
+	{
+	}
+
 	bool Tr2UpscalingTechniqueDx12::ReplacesSwapchain() const
 	{
 		return false;

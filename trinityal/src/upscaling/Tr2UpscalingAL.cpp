@@ -158,8 +158,8 @@ void Tr2UpscalingTechniqueAL::SanitizeState()
 		uint32_t leastDistance = std::numeric_limits<uint32_t>().max();
 		for( auto& availableSetting : availableSettings )
 		{
-			uint32_t currentDistance = m_setting - availableSetting;
-			if( leastDistance <= currentDistance )
+			uint32_t currentDistance = abs(int(m_setting) - int(availableSetting));
+			if( leastDistance > currentDistance )
 			{
 				bestCandidate = availableSetting;
 				leastDistance = currentDistance;
@@ -303,7 +303,7 @@ void Tr2UpscalingContextAL::Reset()
 	m_reset = true;
 }
 
-bool Tr2UpscalingContextAL::AreDisplayParametersValid( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) const
+bool Tr2UpscalingContextAL::AreDispatchParametersValid( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) const
 {
 	bool valid = true;
 	if( dispatchParameters.input == nullptr )

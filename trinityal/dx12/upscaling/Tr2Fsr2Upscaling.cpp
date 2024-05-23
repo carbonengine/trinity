@@ -127,10 +127,10 @@ Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Setup( Tr2RenderContextAL& rende
 	m_initializationParameters.displaySize.height = m_displayHeight;
 	m_initializationParameters.flags = FFX_FSR2_ENABLE_DEPTH_INVERTED | FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE;
 
-	#ifndef _NDEBUG
+#if CCP_BUILD_FLAVOR == _trinitydev
 	m_initializationParameters.flags |= FFX_FSR2_ENABLE_DEBUG_CHECKING;
 	m_initializationParameters.fpMessage = &Fsr2Utils::LogFsr2Message;
-	#endif
+#endif
 
 	errorCode = ffxFsr2ContextCreate( &m_context, &m_initializationParameters );
 	m_setup = errorCode == FFX_OK;
@@ -187,7 +187,7 @@ Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Dispatch( Tr2RenderContextAL& re
 	{
 		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
 	}
-	if( !AreDisplayParametersValid( dispatchParameters ) )
+	if( !AreDispatchParametersValid( dispatchParameters ) )
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}

@@ -266,7 +266,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
 	}
 
-	if( !AreDisplayParametersValid( dispatchParameters ) )
+	if( !AreDispatchParametersValid( dispatchParameters ) )
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}

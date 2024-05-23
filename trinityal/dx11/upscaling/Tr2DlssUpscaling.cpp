@@ -79,6 +79,7 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
+	//Tr2StreamlineAL::ReleaseStreamline( m_streamlineModule );
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const
@@ -346,7 +347,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
 	}
 
-	if( !AreDisplayParametersValid( dispatchParameters ) )
+	if( !AreDispatchParametersValid( dispatchParameters ) )
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}

@@ -6,6 +6,9 @@
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
+
+#define DLSS_DEBUG false
+
 #include "Tr2DlssUpscaling.h"
 #include "../Tr2TextureALDx12.h"
 #include "../Tr2RenderContextDx12.h"
@@ -13,6 +16,7 @@
 #include "../Tr2VideoAdapterInfoALDx12.h"
 #include "../Utilities.h"
 #include "include/Tr2StreamlineAL.h"
+
 
 namespace DlssUtils
 {
@@ -46,8 +50,8 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 {
 	m_isAvailable = false;
 	m_streamlineSetup = false;
-	m_streamlineModule = Tr2StreamlineAL::GetStreamlineModule();
 
+	m_streamlineModule = Tr2StreamlineAL::GetStreamlineModule();
 	if( !m_streamlineModule )
 	{
 		return;
@@ -100,19 +104,31 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 
 	m_streamlineSetup = true;
 	SanitizeState();
-
-	TogglePlugin( sl::kFeatureDLSS, m_isAvailable );
-	TogglePlugin( sl::kFeatureDLSS_G, m_supportsFrameGeneration && m_frameGeneration );
-	TogglePlugin( sl::kFeatureNIS, m_isAvailable );
-#ifndef NDEBUG
-	TogglePlugin( sl::kFeatureImGUI, m_supportsFrameGeneration && m_frameGeneration );
-#endif
-	TogglePlugin( sl::kFeatureReflex, m_supportsFrameGeneration && m_frameGeneration );
-	TogglePlugin( sl::kFeaturePCL, m_frameGeneration );
 }
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
+	TogglePlugin( sl::kFeatureDLSS, false );
+	TogglePlugin( sl::kFeatureDLSS_G, false );
+	TogglePlugin( sl::kFeatureNIS, false );
+#if DLSS_DEBUG
+	TogglePlugin( sl::kFeatureImGUI, false );
+#endif
+	TogglePlugin( sl::kFeaturePCL, false );
+
+	if( m_attachedToDevice )
+	{
+		auto reflexConst = sl::ReflexOptions{};
+		reflexConst.mode = sl::ReflexMode::eOff;
+		if( SL_FAILED( result, m_slReflexSetOptions( reflexConst ) ) )
+		{
+			CCP_LOGERR( "Reflex failed to set options (%d)", result );
+		}
+
+		TogglePlugin( sl::kFeatureReflex, false );
+
+		m_attachedToDevice = false;
+	}
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const 
@@ -180,6 +196,15 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
 		return nativeDevice;
 	}
+	m_attachedToDevice = true;
+	TogglePlugin( sl::kFeatureDLSS, m_isAvailable );
+	TogglePlugin( sl::kFeatureDLSS_G, m_supportsFrameGeneration && m_frameGeneration );
+	TogglePlugin( sl::kFeatureNIS, m_isAvailable );
+#if DLSS_DEBUG
+	TogglePlugin( sl::kFeatureImGUI, m_supportsFrameGeneration && m_frameGeneration );
+#endif
+	TogglePlugin( sl::kFeatureReflex, m_supportsFrameGeneration && m_frameGeneration );
+	TogglePlugin( sl::kFeaturePCL, m_frameGeneration );
 
 	auto reflexConst = sl::ReflexOptions{};
 	reflexConst.mode = m_frameGeneration ? sl::ReflexMode::eLowLatency : sl::ReflexMode::eOff;
@@ -269,28 +294,6 @@ void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
 	// toggle plugin needs to have the pipeline clean before it is called
 	renderContext.FlushAndSyncDx12();
-
-	TogglePlugin( sl::kFeatureDLSS, false );
-	TogglePlugin( sl::kFeatureDLSS_G, false );
-	TogglePlugin( sl::kFeatureNIS, false );
-#ifndef NDEBUG
-	//TogglePlugin( sl::kFeatureImGUI, false );
-#endif
-	TogglePlugin( sl::kFeaturePCL, false );
-
-	if( m_attachedToDevice )
-	{
-		auto reflexConst = sl::ReflexOptions{};
-		reflexConst.mode = sl::ReflexMode::eOff;
-		if( SL_FAILED( result, m_slReflexSetOptions( reflexConst ) ) )
-		{
-			CCP_LOGERR( "Reflex failed to set options (%d)", result );
-		}
-
-		TogglePlugin( sl::kFeatureReflex, false );
-
-		m_attachedToDevice = false;
-	}
 }
 
 Tr2UpscalingContextAL* Tr2DlssUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
@@ -579,7 +582,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
 	}
 
-	if( !AreDisplayParametersValid( dispatchParameters ) )
+	if( !AreDispatchParametersValid( dispatchParameters ) )
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
