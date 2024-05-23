@@ -1102,6 +1102,9 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 
 	if( m_usingUpscaling )
 	{
+		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
+		m_jitter.x = upscalingInfo.jitterX;
+		m_jitter.y = upscalingInfo.jitterY;
 		m_jitterMatrix = TranslationMatrix( Vector3( m_jitter.x, m_jitter.y, 0 ) );
 		m_jitteredProjection = m_projection * m_jitterMatrix;
 	}
@@ -1181,12 +1184,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-
 	m_usingUpscaling = upscalingInfo.technique != Tr2UpscalingAL::NONE;
-	m_jitter.x = upscalingInfo.jitterX;
-	m_jitter.y = upscalingInfo.jitterY;
-	m_mipLevelBias = upscalingInfo.mipLevelBias;
-	m_upscalingAmount = upscalingInfo.upscalingAmount;
 
 	if( m_visualizeMethod != VM_NONE )
 	{
@@ -2544,7 +2542,7 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	data.ViewportSize.y = renderContext.m_esm.GetDeviceViewport().m_height;
 
 	data.Time = Tr2Renderer::GetAnimationTime();
-	data.Upscaling = m_upscalingAmount;
+	data.Upscaling = 1.0f;
 	
 	data.FrameIndex = (uint32_t) Tr2Renderer::GetCurrentFrameCounter();
 	data.Jittering = m_jitter != Vector4(0, 0, 0, 0);
@@ -2561,7 +2559,12 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	data.SceneMipLodBias = 0.0f;
 	if( m_usingUpscaling )
 	{
+		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
+
+		m_mipLevelBias = upscalingInfo.mipLevelBias;
+		m_upscalingAmount = upscalingInfo.upscalingAmount;
 		data.SceneMipLodBias = m_mipLevelBias;
+		data.Upscaling = m_upscalingAmount; 
 	}
 	else if( m_postProcess )
 	{
