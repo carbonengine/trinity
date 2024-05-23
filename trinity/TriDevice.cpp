@@ -133,7 +133,7 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	m_allowThrottling( true ),
 	m_upscalingChanged(false),
 	m_upscalingTechnique( Tr2UpscalingAL::Technique::NONE ),
-	m_upscalingSetting( Tr2UpscalingAL::Setting::BALANCED ),
+	m_upscalingSetting( Tr2UpscalingAL::Setting::NATIVE ),
 	m_upscalingWithFrameGeneration( false )
 {	
 	
@@ -359,7 +359,7 @@ bool TriDevice::ChangeDevice(
 	}
 
 	InitD3DDevice();
-	UpdateAvailableUpscalingTechniques();
+	UpdateAvailableUpscalingTechniques();	
 	PrepareDeviceResources(); //call python to recreate its stuff.
 
 	return true;
