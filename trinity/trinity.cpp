@@ -114,7 +114,7 @@ extern bool g_gpuTimersEnabled;
 bool g_bindlessRenderingEnabled = true;
 TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
 extern bool g_gdrEnabled;
-extern bool g_skipNvidiaStreamline;
+extern bool g_upscalingDebug;
 
 #if TRINITY_PLATFORM == TRINITY_METAL
 extern bool g_enableMetalCounters;
@@ -163,6 +163,12 @@ void InitializeTrinity()
 	}
 #endif
 
+	auto upsclingDebugArg = BeOS->GetStartupArgValue( L"upscalingDebug" );
+	if( !upsclingDebugArg.empty() )
+	{
+		g_upscalingDebug = upsclingDebugArg == L"1";
+	}
+	
 	auto debugArg = BeOS->GetStartupArgValue( L"deviceDebug" );
 	if( !debugArg.empty() )
 	{
@@ -191,12 +197,6 @@ void InitializeTrinity()
 	if( !gdpr.empty() )
 	{
 		g_gdrEnabled = gdpr != L"0";
-	}
-
-	auto skipStreamline = BeOS->GetStartupArgValue( L"skipStreamline" );
-	if( !skipStreamline.empty() )
-	{
-		g_skipNvidiaStreamline = skipStreamline == L"1";
 	}
 	
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );

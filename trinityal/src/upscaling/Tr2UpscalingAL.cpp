@@ -6,6 +6,8 @@
 #include "StdAfx.h"
 #include "include/upscaling/Tr2UpscalingAL.h"
 
+bool g_upscalingDebug = false;
+
 namespace Tr2UpscalingAL
 {
 	void LogResult( Result result )

@@ -40,7 +40,8 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	m_renderedFrame( 0 ),
 	m_vsyncInterval( 0 ), 
 	m_adapterVendorId( 0 ), 
-	m_deviceStatisticsQueryEmpty( false )
+	m_deviceStatisticsQueryEmpty( false ),
+	m_upscalingTechnique( nullptr )
 {
 	m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();

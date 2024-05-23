@@ -11,6 +11,8 @@
 #include "Tr2PrimaryRenderContextAL.h"
 #include <FidelityFX/host/backends/dx12/ffx_dx12.h>
 
+extern bool g_upscalingDebug;
+
 namespace Fsr2Utils
 {
 	void LogFsr2Message( FfxMsgType type, const wchar_t* message )
@@ -127,10 +129,11 @@ Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Setup( Tr2RenderContextAL& rende
 	m_initializationParameters.displaySize.height = m_displayHeight;
 	m_initializationParameters.flags = FFX_FSR2_ENABLE_DEPTH_INVERTED | FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE;
 
-#if CCP_BUILD_FLAVOR == _trinitydev
-	m_initializationParameters.flags |= FFX_FSR2_ENABLE_DEBUG_CHECKING;
-	m_initializationParameters.fpMessage = &Fsr2Utils::LogFsr2Message;
-#endif
+	if( g_upscalingDebug )
+	{
+		m_initializationParameters.flags |= FFX_FSR2_ENABLE_DEBUG_CHECKING;
+		m_initializationParameters.fpMessage = &Fsr2Utils::LogFsr2Message;
+	}
 
 	errorCode = ffxFsr2ContextCreate( &m_context, &m_initializationParameters );
 	m_setup = errorCode == FFX_OK;

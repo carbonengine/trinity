@@ -12,6 +12,8 @@
 #include "Tr2PrimaryRenderContextAL.h"
 #include <FidelityFX/host/backends/dx12/ffx_dx12.h>
 
+extern bool g_upscalingDebug;
+
 namespace Fsr3Utils
 {
 	void LogFsr3Message( FfxMsgType type, const wchar_t* message )
@@ -132,9 +134,12 @@ void Tr2Fsr3UpscalingTechnique::ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swap
 
 	m_frameGenerationConfig.frameGenerationEnabled = true;
 	m_frameGenerationConfig.flags = 0;
-#if CCP_BUILD_FLAVOR == _trinitydev
-	m_frameGenerationConfig.flags |= FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_TEAR_LINES; // | FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_VIEW;
-#endif
+	
+	if( g_upscalingDebug )
+	{
+		m_frameGenerationConfig.flags |= FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_TEAR_LINES; // | FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_VIEW;
+	}
+	
 	m_frameGenerationConfig.onlyPresentInterpolated = true;
 	m_frameGenerationConfig.allowAsyncWorkloads = false;
 	m_frameGenerationConfig.frameGenerationCallback = nullptr;
