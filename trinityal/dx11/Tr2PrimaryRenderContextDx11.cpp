@@ -49,6 +49,12 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 {
 	Destroy();
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->Destroy( *this );
+		delete m_upscalingTechnique;
+		m_upscalingTechnique = nullptr;
+	}
 }
 
 void Tr2PrimaryRenderContextAL::Destroy()
@@ -229,7 +235,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		{
 			m_upscalingTechnique->AttachToDevice( m_d3dDevice11 );
 		}
-		//Tr2Streamline::Attach( m_d3dDevice11 );
 		CCP_AL_LOG( "DX11: device created succesfully" );
 	}
 	else		
@@ -696,6 +701,7 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	if( m_upscalingTechnique )
 	{
 		m_upscalingTechnique->Destroy( *this );
+		delete m_upscalingTechnique;
 		m_upscalingTechnique = nullptr;
 	}
 
@@ -791,9 +797,31 @@ void Tr2PrimaryRenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 
 std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
 {
+
+	Tr2UpscalingAL::Technique activeTechnique = Tr2UpscalingAL::Technique::NONE;
+	if( m_upscalingTechnique )
+	{
+		Tr2UpscalingAL::Setting setting;
+		bool framegeneration;
+		m_upscalingTechnique->GetState( activeTechnique, setting, framegeneration );
+	}
+
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
 	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
 	{
+		if( technique == activeTechnique && m_upscalingTechnique )
+		{
+			uint32_t allSettings = 0;
+
+			for( auto& setting : m_upscalingTechnique->GetAvailableSettings() )
+			{
+				allSettings |= setting;
+			}
+
+			supportedTechniques.push_back( { technique, allSettings, m_upscalingTechnique->SupportsFrameGeneration() } );
+			continue;
+		}
+
 		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
 		if( tech )
 		{
