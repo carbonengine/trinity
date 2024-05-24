@@ -70,6 +70,13 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
 {
+    
+    if( m_upscalingTechnique ){
+        m_upscalingTechnique->Destroy(*this);
+        delete m_upscalingTechnique;
+        m_upscalingTechnique = nullptr;
+    }
+    
 	m_vertexLayout = Tr2VertexLayoutAL();
 	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();

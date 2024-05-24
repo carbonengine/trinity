@@ -246,6 +246,7 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL&
         if( m_mfxSpatialScaler != nil )
         {
             auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
+            queue->EndEncoder();
             
             m_mfxSpatialScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.input );
             m_mfxSpatialScaler.outputTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.output );
@@ -255,6 +256,7 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL&
         else if( m_mfxTemporalScaler != nil )
         {
             auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
+            queue->EndEncoder();
             
             m_mfxTemporalScaler.reset = m_reset;
             m_mfxTemporalScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.input );
