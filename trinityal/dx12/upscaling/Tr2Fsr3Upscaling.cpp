@@ -333,10 +333,12 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Setup( Tr2RenderContextAL& rende
 	{
 		m_initializationParameters.flags |= FFX_FSR3_ENABLE_UPSCALING_ONLY;
 	}
-#if CCP_BUILD_FLAVOR == _trinitydev
-	m_initializationParameters.flags |= FFX_FSR3_ENABLE_DEBUG_CHECKING;
-	m_initializationParameters.fpMessage = &Fsr3Utils::LogFsr3Message;
-#endif
+
+	if( g_upscalingDebug )
+	{
+		m_initializationParameters.flags |= FFX_FSR3_ENABLE_DEBUG_CHECKING;
+		m_initializationParameters.fpMessage = &Fsr3Utils::LogFsr3Message;
+	}
 
 	errorCode = ffxFsr3ContextCreate( &m_context, &m_initializationParameters );
 	m_setup = errorCode == FFX_OK;
