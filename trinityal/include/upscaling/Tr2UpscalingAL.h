@@ -162,7 +162,7 @@ public:
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) = 0;
 
 protected:
-	bool AreDisplayParametersValid( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) const;
+	bool AreDispatchParametersValid( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) const;
 
 	Tr2UpscalingAL::Setting m_setting;
 	bool m_frameGeneration;

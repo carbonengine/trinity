@@ -16,6 +16,10 @@ namespace TrinityALImpl
 	Tr2UpscalingTechniqueAL( technique, setting, frameGeneration )
 	{
 	}
+
+	Tr2UpscalingTechniqueDx11::~Tr2UpscalingTechniqueDx11()
+	{
+	}	
 	
 	void Tr2UpscalingTechniqueDx11::AttachToDevice( CComPtr<ID3D11Device>& device )
 	{

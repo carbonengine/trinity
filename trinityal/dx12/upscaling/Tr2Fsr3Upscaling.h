@@ -33,6 +33,10 @@ public:
 
 private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
+	FfxSwapchain m_framegenSwapchain;
+	FfxCommandQueue m_framegenCommandQueue;
+	FfxFrameGenerationConfig m_frameGenerationConfig = {};
+	bool m_attachedToSwapchain;
 };
 
 
@@ -48,7 +52,7 @@ public:
 	virtual bool IsTemporal() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
-	void GenerateFrame( Tr2RenderContextAL& renderContext );
+	void GenerateFrame( Tr2RenderContextAL& renderContext, FfxFrameGenerationConfig frameGenConfig );
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
@@ -56,7 +60,6 @@ private:
 
 	FfxFsr3ContextDescription m_initializationParameters = {};
 	FfxFsr3Context m_context;
-	FfxFrameGenerationConfig m_frameGenerationConfig = {};
 
 	typedef enum Fsr3BackendTypes : uint32_t
 	{

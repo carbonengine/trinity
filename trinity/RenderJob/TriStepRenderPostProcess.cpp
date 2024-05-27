@@ -931,40 +931,6 @@ void TriStepRenderPostProcess::RenderDynamicExposure( Tr2RenderTarget* dest, Tr2
 	Tr2Renderer::RunComputeShader( m_dynamicExposureMeasureExposureShader, 1, 1, 1, renderContext );
 }
 
-
-//Tr2Upscaling::UpscalingType TriStepRenderPostProcess::ProcessUpscaling( Tr2PPUpscalingEffect* upscaling, Tr2RenderContext& renderContext )
-//{
-//	if( upscaling && upscaling->IsActive() )
-//	{ 
-//		bool hasExposure = m_exposureTexture != nullptr;
-//		if( !upscaling->IsDirty() && upscaling->NeedsExposureTexture() )
-//		{
-//			if( hasExposure != upscaling->UsesExposureTexture() )
-//			{
-//				upscaling->SetDirty( true );
-//			}
-//		}
-//		if( upscaling->IsDirty() )
-//		{
-//			Tr2Upscaling::UpscalingSetupContext setupContext = {};
-//			setupContext.sourcePixelFormat = m_renderInfo->GetSourceBuffer()->GetFormat();
-//			setupContext.depthPixelFormat = Tr2RenderContextEnum::ConvertDepthStencilFormat( m_scene->GetDepth() ? m_scene->GetDepth()->GetFormat() : Tr2RenderContextEnum::DSFMT_UNKNOWN );
-//			setupContext.motionVectorPixelFormat = m_velocityBuffer->GetFormat();
-//			setupContext.hasExposureTexture = hasExposure;
-//            
-//			upscaling->Setup( setupContext, renderContext );
-//			upscaling->SetDirty( false );
-//		}
-//		if( upscaling->IsTemporal() )
-//		{
-//			m_scene->SetVelocityMap( m_velocityBuffer );
-//		}
-//		
-//		return upscaling->GetUpscalingType();
-//	}
-//	return Tr2Upscaling::UT_NOT_APPLICABLE;
-//}
-
 Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	GPU_REGION( renderContext, "Upscaling" );
@@ -987,7 +953,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	float middleValue = dynamicExposure ? dynamicExposure->m_middleValue : 0.0f;
 	SetupExposureConversion( wantsExposure && canHaveExposure, middleValue );
 
-	if( dispatchRequirements & Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE && m_exposureTexture )
+	if( wantsExposure && m_exposureTexture )
 	{
 		GPU_REGION( renderContext, "ExposureToTexture" );
 		m_dynamicExposureToTextureShader->SetParameter( BlueSharedString( "ExposureBuffer" ), m_exposure );

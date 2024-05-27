@@ -13,7 +13,7 @@
 
 #define INITIALIZE_SL_FEATURE_FUNC( func, feature )   \
 	if( SL_FAILED( res, m_slGetFeatureFunction( feature, #func, (void*&)m_##func ) ) )                                                   \
-		CCP_LOGERR( "Unable to find function %s for feature %s Error code: %d", #func, ##feature, res ); \
+		CCP_LOGERR( "Unable to find function %s for feature %s Error code: %d", #func, #feature, res ); 
 
 namespace Tr2StreamlineAL
 {	
@@ -24,7 +24,7 @@ namespace Tr2StreamlineAL
 
 	HMODULE GetStreamlineModule();
 	sl::Result InitializeStreamline( HMODULE streamlineModule );
-	void ReleaseStreamline( );
+	void ReleaseStreamline( HMODULE streamlineModule );
 	sl::Result CheckForAvailability( HMODULE streamlineModule, sl::Feature feature, sl::AdapterInfo adapterInfo );
-	}
+}
 #endif

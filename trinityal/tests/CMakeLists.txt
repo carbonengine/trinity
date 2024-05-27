@@ -114,18 +114,21 @@ if(WIN32)
     set_shared_trinityaltest_properties(TrinityALTest_dx12)
 
     get_target_property(_FSR_LIB AMD::FidelityFX_FSR3 INTERFACE_LINK_LIBRARIES)
+    get_target_property(_FSR3_DIR AMD::FidelityFX_FSR3 INTERFACE_BINARY_DIRECTORIES)
     foreach(CurrentLib IN LISTS _FSR_LIB)
         add_custom_command(
                     TARGET TrinityALTest_dx12 POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${AMD_FIDELITY_FSR3_BIN_DIRECTORY}${CurrentLib}.dll" $<TARGET_FILE_DIR:TrinityALTest_dx12>)
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_FSR3_DIR}/${CurrentLib}.dll" $<TARGET_FILE_DIR:TrinityALTest_dx12>)
     endforeach()
     get_target_property(_XESS_DIR INTEL::xess INTERFACE_LINK_DIRECTORIES)
     get_target_property(_XESS_LIB INTEL::xess INTERFACE_LINK_LIBRARIES)
-    add_custom_command(TARGET TrinityALTest_dx12 POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${_XESS_DIR}/${_XESS_LIB}.dll"
-            $<TARGET_FILE_DIR:TrinityALTest_dx11>)
-
+        
+    foreach(CurrentLib IN LISTS _XESS_LIB)
+        add_custom_command(TARGET TrinityALTest_dx12 POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_XESS_DIR}/${CurrentLib}.dll"
+                $<TARGET_FILE_DIR:TrinityALTest_dx12>)
+    endforeach()
 
     #GTest
     set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")

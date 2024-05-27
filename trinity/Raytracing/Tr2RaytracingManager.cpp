@@ -43,6 +43,8 @@ Tr2RaytracingManager::Tr2RaytracingManager( IRoot* lockobj ) :
 	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/rtshadows.fx" );
 
 	m_denoiser.CreateInstance();
+	m_denoiser->SetRadius( 3 );
+
 	m_whiteTexture.CreateInstance();
 }
 
@@ -87,6 +89,18 @@ void Tr2RaytracingManager::SetBlankTexture()
 	if( m_whiteTexture->IsValid() )
 	{
 		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_whiteTexture );
+	}
+}
+
+ITr2TextureProvider* Tr2RaytracingManager::GetShadowMap() const
+{
+	if( m_denoiser )
+	{
+		return m_denoiser->GetTexture();
+	}
+	else
+	{
+		return m_destTex;
 	}
 }
 

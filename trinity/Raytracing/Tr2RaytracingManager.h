@@ -24,6 +24,8 @@ public:
 
 	void SetBlankTexture();
 
+	ITr2TextureProvider* GetShadowMap() const;
+
 private:
 		 
 	Tr2RaytracingGeometryPtr m_geometry;

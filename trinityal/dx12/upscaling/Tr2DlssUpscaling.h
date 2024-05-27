@@ -49,7 +49,7 @@ public:
 private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
 
-	bool TogglePlugin( sl::Feature feature, bool enable );
+	void TogglePlugin( sl::Feature feature, bool enable );
 
 	uint32_t m_adapter;
 	

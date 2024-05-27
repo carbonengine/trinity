@@ -6,6 +6,9 @@
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
+
+#define DLSS_DEBUG false
+
 #include "Tr2DlssUpscaling.h"
 #include "../Tr2TextureALDx12.h"
 #include "../Tr2RenderContextDx12.h"
@@ -13,6 +16,7 @@
 #include "../Tr2VideoAdapterInfoALDx12.h"
 #include "../Utilities.h"
 #include "include/Tr2StreamlineAL.h"
+
 
 namespace DlssUtils
 {
@@ -46,8 +50,8 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 {
 	m_isAvailable = false;
 	m_streamlineSetup = false;
-	m_streamlineModule = Tr2StreamlineAL::GetStreamlineModule();
 
+	m_streamlineModule = Tr2StreamlineAL::GetStreamlineModule();
 	if( !m_streamlineModule )
 	{
 		return;
@@ -100,19 +104,11 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 
 	m_streamlineSetup = true;
 	SanitizeState();
-
-	TogglePlugin( sl::kFeatureDLSS, m_isAvailable );
-	TogglePlugin( sl::kFeatureDLSS_G, m_supportsFrameGeneration && m_frameGeneration );
-	TogglePlugin( sl::kFeatureNIS, m_isAvailable );
-#ifndef NDEBUG
-	TogglePlugin( sl::kFeatureImGUI, m_supportsFrameGeneration && m_frameGeneration );
-#endif
-	TogglePlugin( sl::kFeatureReflex, m_supportsFrameGeneration && m_frameGeneration );
-	TogglePlugin( sl::kFeaturePCL, m_frameGeneration );
 }
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
+	Tr2StreamlineAL::ReleaseStreamline( m_streamlineModule );
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const 
@@ -135,19 +131,17 @@ bool Tr2DlssUpscalingTechnique::SupportsFrameGeneration( ) const
 	return m_supportsFrameGeneration;
 }
 
-bool Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
+void Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
 {
 	if( !m_attachedToDevice )
 	{
-		return false;
+		return;
 	}
 	if( SL_FAILED( res, m_slSetFeatureLoaded( feature, enable ) ) )
 	{
 		CCP_LOGERR( "Trying to %s Nvidia Streamline plugin '%s' but it failed (%d)", enable ? "enable" : "disable", 
 			Tr2StreamlineAL::GetPluginName(feature), res );
-		return false;
 	}
-	return true;
 }
 
 bool Tr2DlssUpscalingTechnique::ReplacesDevice() const
@@ -180,6 +174,15 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
 		return nativeDevice;
 	}
+	m_attachedToDevice = true;
+	TogglePlugin( sl::kFeatureDLSS, m_isAvailable );
+	TogglePlugin( sl::kFeatureDLSS_G, m_supportsFrameGeneration && m_frameGeneration );
+	TogglePlugin( sl::kFeatureNIS, m_isAvailable );
+#if DLSS_DEBUG
+	TogglePlugin( sl::kFeatureImGUI, m_supportsFrameGeneration && m_frameGeneration );
+#endif
+	TogglePlugin( sl::kFeatureReflex, m_supportsFrameGeneration && m_frameGeneration );
+	TogglePlugin( sl::kFeaturePCL, m_frameGeneration );
 
 	auto reflexConst = sl::ReflexOptions{};
 	reflexConst.mode = m_frameGeneration ? sl::ReflexMode::eLowLatency : sl::ReflexMode::eOff;
@@ -267,14 +270,11 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContex
 
 void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
-	// toggle plugin needs to have the pipeline clean before it is called
-	renderContext.FlushAndSyncDx12();
-
 	TogglePlugin( sl::kFeatureDLSS, false );
 	TogglePlugin( sl::kFeatureDLSS_G, false );
 	TogglePlugin( sl::kFeatureNIS, false );
-#ifndef NDEBUG
-	//TogglePlugin( sl::kFeatureImGUI, false );
+#if DLSS_DEBUG
+	TogglePlugin( sl::kFeatureImGUI, false );
 #endif
 	TogglePlugin( sl::kFeaturePCL, false );
 
@@ -579,7 +579,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
 	}
 
-	if( !AreDisplayParametersValid( dispatchParameters ) )
+	if( !AreDispatchParametersValid( dispatchParameters ) )
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
