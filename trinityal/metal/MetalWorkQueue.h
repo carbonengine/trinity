@@ -193,6 +193,7 @@ namespace TrinityALImpl
         API_AVAILABLE(macos(11.0))
         id<MTLAccelerationStructureCommandEncoder> GetAccelerationStructureEncoder( NSString *encoderLabel = nil );
 
+        void EndEncoder();
 		void ReleaseEncoder( bool endEncoding );
 
 		void CopyDataToBuffer( id<MTLBuffer> buffer, const void *data, size_t offset, size_t sizeInBytes );
@@ -368,6 +369,7 @@ namespace TrinityALImpl
         
         uint64_t GetCurrentEncoderIndex() const;
         void MarkConstantBuffersDirty();
+        
 	private:
 		void CreateClearFunctions();
 		void ResetWorkQueue();

@@ -11,17 +11,17 @@
 namespace TrinityALImpl
 {
 	const std::vector<Tr2UpscalingAL::Technique> AVAILABLE_UPSCALING_TECHNIQUES = {
-		Tr2UpscalingAL::Technique::DLSS,
 		Tr2UpscalingAL::Technique::FSR2,
 		Tr2UpscalingAL::Technique::FSR3,
 		Tr2UpscalingAL::Technique::XESS,
+		Tr2UpscalingAL::Technique::DLSS,
 	};
 
 	class Tr2UpscalingTechniqueDx12 : public Tr2UpscalingTechniqueAL
 	{
 	public: 
 		Tr2UpscalingTechniqueDx12( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
-
+		virtual ~Tr2UpscalingTechniqueDx12();
 		virtual bool ReplacesSwapchain() const;
 		virtual bool ReplacesDevice() const;
 		virtual bool ReplacesCommandQueue() const;

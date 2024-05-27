@@ -79,6 +79,9 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
+	TogglePlugin( sl::kFeatureDLSS, false );
+	TogglePlugin( sl::kFeatureNIS, false );
+	Tr2StreamlineAL::ReleaseStreamline( m_streamlineModule );
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const
@@ -96,14 +99,16 @@ std::vector<Tr2UpscalingAL::Setting> Tr2DlssUpscalingTechnique::GetAvailableSett
 	};
 }
 
-bool Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
+void Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
 {
+	if( !m_attachedToDevice )
+	{
+		return;
+	}
 	if( SL_FAILED( res, m_slSetFeatureLoaded( feature, enable ) ) )
 	{
 		CCP_LOGERR( "Trying to %s Nvidia Streamline plugin '%s' but it failed (%d)", enable ? "enable" : "disable", Tr2StreamlineAL::GetPluginName( feature ), res );
-		return false;
 	}
-	return false;
 }
 
 void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
@@ -346,7 +351,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
 	}
 
-	if( !AreDisplayParametersValid( dispatchParameters ) )
+	if( !AreDispatchParametersValid( dispatchParameters ) )
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}

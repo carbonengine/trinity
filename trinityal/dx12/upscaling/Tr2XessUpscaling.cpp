@@ -13,6 +13,8 @@
 #include "../Utilities.h"
 #include <xess/xess_d3d12.h>
 
+extern bool g_upscalingDebug;
+
 namespace Tr2XessUpscalingUtils
 {
 const char* ResultToString( xess_result_t result )
@@ -227,15 +229,16 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& rende
 
 	CCP_LOGNOTICE( "XeSS: Version - %u.%u.%u", ver.major, ver.minor, ver.patch );
 
-#if TRINITYDEV
-	// Set logging callback here.
-	ret = xessSetLoggingCallback( m_context, XESS_LOGGING_LEVEL_DEBUG, Tr2XessUpscalingUtils::LogXeSS );
-	if( ret != XESS_RESULT_SUCCESS )
+	if( g_upscalingDebug )
 	{
-		CCP_LOGERR( "XeSS: Could not set logging callback Result - %s.", Tr2XessUpscalingUtils::ResultToString( ret ) );
-		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+		// Set logging callback here.
+		ret = xessSetLoggingCallback( m_context, XESS_LOGGING_LEVEL_DEBUG, Tr2XessUpscalingUtils::LogXeSS );
+		if( ret != XESS_RESULT_SUCCESS )
+		{
+			CCP_LOGERR( "XeSS: Could not set logging callback Result - %s.", Tr2XessUpscalingUtils::ResultToString( ret ) );
+			return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+		}
 	}
-#endif
 	xess_2d_t inputRes = { 1, 1 };
 	xess_2d_t inputMinRes = { 1, 1 };
 	xess_2d_t inputMaxRes = { 1, 1 };
@@ -266,7 +269,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
 	}
 
-	if( !AreDisplayParametersValid( dispatchParameters ) )
+	if( !AreDispatchParametersValid( dispatchParameters ) )
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}

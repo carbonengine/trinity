@@ -20,6 +20,7 @@ public:
 
 	ALResult Apply( ITr2TextureProvider & source, ITr2TextureProvider & depth, ITr2TextureProvider * normals, const Matrix& projection, Tr2RenderContext& renderContext );
 	ITr2TextureProvider* GetTexture() const;
+	void SetRadius( uint32_t value );
 
 	bool OnModified( Be::Var * value ) override;
 

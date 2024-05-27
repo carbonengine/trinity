@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <sl_security.h>
 
-
+extern bool g_upscalingDebug;
 
 namespace Tr2StreamlineAL
 {
@@ -27,17 +27,16 @@ namespace Tr2StreamlineAL
 		{
 			CCP_LOGERR( "Unable to find sl.interposer.dll in path for secure load." );
 		}
-#ifndef NDEBUG
-		else 
+		else if( g_upscalingDebug )
 		{
 			STREAMLINE_MODULE = LoadLibraryW( abs_path );
 		}
-#else
 		else if( sl::security::verifyEmbeddedSignature( abs_path ) )
 		{
 			STREAMLINE_MODULE = LoadLibraryW( abs_path );
 		}
-#endif
+#
+		CCP_LOGNOTICE( "NVidia Streamline library loaded" );
 
 		return STREAMLINE_MODULE;
 	}
@@ -101,14 +100,16 @@ namespace Tr2StreamlineAL
 		}
 		// now set it up
 		sl::Preferences pref{};
-
-#ifndef NDEBUG
-		pref.showConsole = true; // for debugging, set to false in production
-		pref.logLevel = sl::LogLevel::eVerbose;
-#else
-		pref.showConsole = false;
-		pref.logLevel = sl::LogLevel::eOff;
-#endif
+		if( g_upscalingDebug )
+		{
+			pref.showConsole = true; // for debugging, set to false in production
+			pref.logLevel = sl::LogLevel::eVerbose;
+		}
+		else{
+			pref.showConsole = false;
+			pref.logLevel = sl::LogLevel::eOff;
+		}
+		
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
 		pref.renderAPI = sl::RenderAPI::eD3D11;
 #elif TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -122,9 +123,6 @@ namespace Tr2StreamlineAL
 			,sl::kFeatureDLSS_G // framegeneration is only available on dx12
 			,sl::kFeatureReflex // dlssg requires reflex
 			,sl::kFeaturePCL
-#ifndef NDEBUG
-//			,sl::kFeatureImGUI // imgui is only availabe with reflex and dlssg
-#endif
 #endif
 		};
 
@@ -153,12 +151,20 @@ namespace Tr2StreamlineAL
 		return STREAMLINE_INITIALIZATION_RESULT;
 	}
 
-	void ReleaseStreamline( )
+	void ReleaseStreamline( HMODULE streamlineModule )
 	{
-		if( SL_FAILED( res, reinterpret_cast<PFun_slShutdown*>( GetProcAddress( STREAMLINE_MODULE, "slShutdown" ) )() ) )
+		if( SL_FAILED( res, reinterpret_cast<PFun_slShutdown*>( GetProcAddress( streamlineModule, "slShutdown" ) )() ) )
 		{
 			CCP_LOGNOTICE( "Could not release streamline %d", res );
 		}
+		else
+		{
+			CCP_LOGNOTICE( "NVidia Streamline successfully released" );	
+		}
+
+		FreeLibrary( streamlineModule );
+		STREAMLINE_INITIALIZED = false;
+		STREAMLINE_MODULE = nullptr;
 	}
 
 	sl::Result CheckForAvailability( HMODULE streamlineModule, sl::Feature feature, sl::AdapterInfo adapterInfo )
@@ -170,6 +176,7 @@ namespace Tr2StreamlineAL
 		auto result = slIsFeatureSupported( feature, adapterInfo );
 		if( result != sl::Result::eOk )
 		{
+			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is available", pluginName );
 			switch( result )
 			{
 			case sl::Result::eErrorOSOutOfDate: // inform user to update OS

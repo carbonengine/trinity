@@ -18,6 +18,8 @@ namespace TrinityALImpl
 	{
 	public:
 		Tr2UpscalingTechniqueDx11( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+		virtual ~Tr2UpscalingTechniqueDx11();
+
 		virtual void AttachToDevice( CComPtr<ID3D11Device>& device );
 	};
 

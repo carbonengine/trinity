@@ -1141,6 +1141,7 @@ void Tr2Sprite2dScene::IssueDrawCall()
 
 				m_drawCallStartIndex /= sizeof( uint32_t );
 				renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer.GetBuffer(), vertexBufferOffset, sizeof( Tr2Sprite2dD3DVertex ) );
+                renderContext.m_esm.ApplyIndexBuffer( m_indexBuffer.GetBuffer()  );
 				m_effect->Render( this, renderContext );
 				m_indexBuffer.DoneUsingData( renderContext );
 			}

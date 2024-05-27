@@ -666,6 +666,14 @@ bool MetalWorkQueue::BlitToDrawableAndPresent( id<MTLTexture> srcTexture, NSView
     return true;
 }
 
+void MetalWorkQueue::EndEncoder()
+{
+    if( m_encoderInUse || !m_encoderEnded )
+    {
+        ReleaseEncoder( true );
+    }
+}
+
 void MetalWorkQueue::ReleaseEncoder( bool endEncoding )
 {
 	if( !m_encoderInUse && !endEncoding )

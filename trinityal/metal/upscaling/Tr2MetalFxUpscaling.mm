@@ -67,7 +67,8 @@ std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableS
 
 
 Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) : Tr2UpscalingContextAL(displayWidth, displayHeight, setting, frameGeneration, sourceFormat, depthFormat),
-    m_temporal( false )
+    m_temporal( false ),
+    m_setup( false )
 {
     if( @available(macOS 13.0, *))
     {
@@ -132,7 +133,7 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Setup( Tr2RenderContextAL& re
         {
             return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
         }
-        
+        m_setup = true;
         return Tr2UpscalingAL::Result::OK;
     }
     return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
@@ -230,11 +231,22 @@ uint32_t Tr2MetalFxUpscalingContext::GetDispatchRequirements() const
 
 Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
-    if( @available( macOS 13.0, * ))
+    if( @available( macOS 13.0, * ) )
     {
+        if( !m_setup )
+        {
+            return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+        }
+
+        if( !AreDispatchParametersValid( dispatchParameters ) )
+        {
+            return Tr2UpscalingAL::Result::INCORRECT_INPUT;
+        }
+
         if( m_mfxSpatialScaler != nil )
         {
             auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
+            queue->EndEncoder();
             
             m_mfxSpatialScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.input );
             m_mfxSpatialScaler.outputTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.output );
@@ -244,6 +256,7 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL&
         else if( m_mfxTemporalScaler != nil )
         {
             auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
+            queue->EndEncoder();
             
             m_mfxTemporalScaler.reset = m_reset;
             m_mfxTemporalScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.input );
