@@ -75,7 +75,10 @@ public:
 	IBehavior* GetBehaviorByName( const std::string& name );
 	int GetGroupIndexIndicator() const;
 	unsigned int GetVertexDeclarationHandle() const;
-	void GetInfoForBuffer( uint8_t * data, const Matrix& parentWorldLocation );
+
+	void GetShipInfoForBuffer( uint8_t * data, const Matrix& parentWorldLocation );
+	void GetBoosterInfoForBuffer( uint8_t * data, const Matrix& parentWorldLocation );
+
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 
 	// Setters

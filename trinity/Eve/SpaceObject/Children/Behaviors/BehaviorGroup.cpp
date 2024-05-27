@@ -653,9 +653,9 @@ bool BehaviorGroup::IsGroupVisible() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Get LOD info for buffer. Called from BehaviorSystem
+//   Get ship info
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
+void BehaviorGroup::GetShipInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	m_lightInfo.clear();
@@ -664,42 +664,64 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 
 	if( m_currentScreenSize == 0.0 )
 	{
-
-		for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
-		{
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
-
-			// boosters
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
-		}
+		memset( data, 0, m_agents.size()  * (24 * sizeof( float )) );
 		return;
 	}
 
 	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
 		float LOD = m_debugMode ? m_debugLodLevel : ( *agent ).xfade;
+
 		Matrix agentTransform = TransformationMatrix( agentScale, agent->rotation, agent->position );
+		Matrix lastAgentTransform = agent->lastTransform;
+
 		if( agent->isVisible && m_display )
 		{
 			float LODmod = 0;
 			Matrix meshData = Matrix( zeroMatrix );
-			// agent mesh
+			Matrix lastMeshData = Matrix( zeroMatrix );
+
 			if( LOD < 0.75f )
 			{
 				LODmod = ( 1 - LOD ) * ( 0.5f + ( 1 - LOD ) * 0.5f );
 				Vector3 meshScale = m_scale * Vector3( LODmod, LODmod, LODmod );
 				meshData = Transpose( ScalingMatrix( meshScale ) * agentTransform );
+
+				lastMeshData = Transpose( ScalingMatrix( meshScale ) * lastAgentTransform );
 			}
 			memcpy( data, &meshData, 12 * sizeof( float ) );
+			data += 12 * sizeof( float );
+
+			//memcpy( data, &meshData, 12 * sizeof( float ) );
+			memcpy( data, &lastMeshData, 12 * sizeof( float ) );
+			//memset( data, 0, 12 * sizeof( float ) );
 			data += 12 * sizeof( float );
 		}
 		else
 		{
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
+			memset( data, 0, 24 * sizeof( float ) );
+			data += 24 * sizeof( float );
 		}
+
+		agent->lastTransform = agentTransform;
+	}
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Get booster info
+// --------------------------------------------------------------------------------------
+void BehaviorGroup::GetBoosterInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	m_lightInfo.clear();
+	auto agentScale = Vector3( 1.0, 1.0, 1.0 );
+	Matrix zeroMatrix = ScalingMatrix( Vector3( 0.0, 0.0, 0.0 ) );
+
+	if( m_currentScreenSize == 0.0 )
+	{
+		memset( data, 0, m_agents.size() * ( 12 * sizeof( float ) ) );
+		return;
 	}
 
 	unsigned int agentIndex = 0;
@@ -711,7 +733,6 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 		{
 			float LODmod = 0;
 
-			// boosters
 			Vector4 boosterPos = Vector4( 0, 0, 0, 0 );
 			Quaternion boosterQuaternion = Quaternion( 0, 0, 0, 1 );
 			Vector4 boosterInfo = Vector4( 0, 0, 0, 0 );
@@ -753,9 +774,9 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 		}
 		else
 		{
-			// boosters
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
+			memset( data, 0, 12 * sizeof( float ) );
 			data += 12 * sizeof( float );
+
 			if( m_booster != nullptr && m_display )
 			{
 				m_booster->AddFlare( IdentityMatrix(), 0, 0, agentIndex, 0, 0 );
@@ -793,6 +814,9 @@ void BehaviorGroup::CreateVertexDeclaration()
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 8, 1, 1 );
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 9, 1, 1 );
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 10, 1, 1 );
+				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 11, 1, 1 );
+				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 12, 1, 1 );
+				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 13, 1, 1 );
 
 				// create vertex-declarartion
 				m_vertexDeclarationHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_agentInstancedVertex );

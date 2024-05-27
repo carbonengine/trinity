@@ -373,7 +373,7 @@ unsigned int BehaviorGroupBooster::GetVertexDeclaration() const
 	return m_vertexDeclarationHandle;
 }
 
-Tr2RenderBatch BehaviorGroupBooster::GetBatch( Tr2BufferAL* instanceBuffer, unsigned int offset, unsigned int stride, unsigned int count ) const
+Tr2RenderBatch BehaviorGroupBooster::GetBatch( Tr2BufferAL* instanceBuffer, unsigned int startInstance, unsigned int instanceDataStride, unsigned int count ) const
 {
 	if( !instanceBuffer || !m_displayBoosters || !m_display )
 	{
@@ -395,8 +395,8 @@ Tr2RenderBatch BehaviorGroupBooster::GetBatch( Tr2BufferAL* instanceBuffer, unsi
 	batch.SetVertexDeclaration( GetVertexDeclaration() );
 	batch.SetInidices( *indexBuffer, indexBuffer->GetDesc().stride );
 	batch.SetStreamSource( 0, m_vertexBuffer.GetSharedResource() );
-	batch.SetStreamSource( 1, *instanceBuffer, stride );
-	batch.SetDrawIndexedInstanced( 2 * 6 * 3, count, 0, m_vertexBuffer.GetSharedResource().GetOffset() / m_vertexBuffer.GetSharedResource().GetStride(), offset );
+	batch.SetStreamSource( 1, *instanceBuffer, instanceDataStride );
+	batch.SetDrawIndexedInstanced( 2 * 6 * 3, count, 0, m_vertexBuffer.GetSharedResource().GetOffset() / m_vertexBuffer.GetSharedResource().GetStride(), startInstance );
 	return batch;
 }
 

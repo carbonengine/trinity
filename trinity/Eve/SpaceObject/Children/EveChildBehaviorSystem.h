@@ -78,7 +78,7 @@ public:
 
 	Matrix GetWorldTransform();
 
-	void ChangeBufferVertexCount();
+	void ChangeBufferInstanceCount();
 	const std::vector<SplineTunnel>* GetTunnels() const;
 	SplineTunnelGroupVector* GetSplineTunnels();
 
@@ -88,7 +88,6 @@ public:
 	unsigned int GetInstanceBufferCount() const;
 	unsigned int GetInstanceBufferVertexDeclaration( unsigned int bufferIndex ) const;
 	unsigned int GetInstanceBufferVertexCount( unsigned int bufferIndex ) const;
-	void GetVertexBuffer( unsigned int bufferIndex, Tr2BufferAL& buffer, unsigned& stride );
 	bool GetInstanceBufferBoundingBox( unsigned int bufferIndex, Vector3& minBounds, Vector3& maxBounds ) const;
 	bool HasTransparentBatches();
 	float GetSortValue();
@@ -122,7 +121,6 @@ private:
 	void GetGroupBoosterBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType,
 								 const Tr2PerObjectData* perObjectData, BehaviorGroup* group );
 
-	std::vector<uint32_t> m_offsets;
 
 	EveSpaceObjectPSData m_psData;
 	EveSpaceObjectVSData m_vsData;
@@ -130,12 +128,15 @@ private:
 	bool m_display;
 	bool m_isVisible;
 
-	// Instance data as vertex buffer
-	Tr2BufferAL m_vertexBuffer;
+	// Instance data (vertex) buffer
+	Tr2BufferAL m_shipInstanceBuffer, m_boosterInstanceBuffer;
 	//number of locations in memory between beginnings of successive array elements
-	unsigned const m_stride;
+	unsigned const m_shipStride, m_boosterStride;
+
+	std::vector<uint32_t> m_startInstanceValues;
+
 	// Number of instances
-	unsigned m_vertexCount;
+	unsigned m_instanceCount;
 
 	PSplineTunnelGroupVector m_splineTunnels;
 	std::vector<SplineTunnel> m_tunnels;

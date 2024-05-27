@@ -2049,7 +2049,10 @@ Tr2InstancedMeshPtr EveSOF::CreateInstancedMesh( std::vector<EveSOFDataMgr::Hull
 	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 0 ); // transform0
 	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 1 ); // transform1
 	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 2 ); // transform2
-	instanceDef.Add( Tr2VertexDefinition::BYTE_4, Tr2VertexDefinition::TEXCOORD, 3 ); // boneindex
+	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 3 ); // lastTransform0
+	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 4 ); // lastTransform1
+	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 5 ); // lastTransform2
+	instanceDef.Add( Tr2VertexDefinition::BYTE_4, Tr2VertexDefinition::TEXCOORD, 6 ); // boneindex
 
 	Tr2RuntimeInstanceDataPtr instanceData;
 	instanceData.CreateInstance();
@@ -2158,6 +2161,10 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 					i.transform0 = *reinterpret_cast<Vector4*>( &m.GetX() );
 					i.transform1 = *reinterpret_cast<Vector4*>( &m.GetY() );
 					i.transform2 = *reinterpret_cast<Vector4*>( &m.GetZ() );
+
+					i.lastTransform0 = *reinterpret_cast<Vector4*>( &m.GetX() );
+					i.lastTransform1 = *reinterpret_cast<Vector4*>( &m.GetY() );
+					i.lastTransform2 = *reinterpret_cast<Vector4*>( &m.GetZ() );
 
 					return i;
 				} );
@@ -3426,6 +3433,9 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 				i.transform0 = *reinterpret_cast<Vector4*>( &transposed.GetX() );
 				i.transform1 = *reinterpret_cast<Vector4*>( &transposed.GetY() );
 				i.transform2 = *reinterpret_cast<Vector4*>( &transposed.GetZ() );
+				i.lastTransform0 = *reinterpret_cast<Vector4*>( &transposed.GetX() );
+				i.lastTransform1 = *reinterpret_cast<Vector4*>( &transposed.GetY() );
+				i.lastTransform2 = *reinterpret_cast<Vector4*>( &transposed.GetZ() );
 				i.boneIndex = loc->boneIndex;
 				instances.push_back( i );
 			}

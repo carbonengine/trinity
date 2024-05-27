@@ -1099,6 +1099,9 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			instance.transform0 = *reinterpret_cast<Vector4*>( &transform.GetX() );
 			instance.transform1 = *reinterpret_cast<Vector4*>( &transform.GetY() );
 			instance.transform2 = *reinterpret_cast<Vector4*>( &transform.GetZ() );
+			instance.lastTransform0 = *reinterpret_cast<Vector4*>( &transform.GetX() );
+			instance.lastTransform1 = *reinterpret_cast<Vector4*>( &transform.GetY() );
+			instance.lastTransform2 = *reinterpret_cast<Vector4*>( &transform.GetZ() );
 			instance.boneIndex = iit->boneIndex;
 			him.instances.push_back( instance );
 

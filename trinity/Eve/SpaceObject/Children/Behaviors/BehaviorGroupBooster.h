@@ -83,7 +83,7 @@ public:
 	unsigned int GetVertexDeclaration() const;
 	void RebuildFlareBuffer( unsigned int count );
 	
-	Tr2RenderBatch GetBatch( Tr2BufferAL * instanceBuffer, unsigned int offset, unsigned int stride, unsigned int count ) const;
+	Tr2RenderBatch GetBatch( Tr2BufferAL * instanceBuffer, unsigned int startInstance, unsigned int instanceDataStride, unsigned int count ) const;
 
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
