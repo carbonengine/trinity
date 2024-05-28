@@ -455,6 +455,10 @@ void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 	m_vsData.invWorldTransform = Inverse( m_worldTransform );
 	m_vsData.worldTransformLast = Transpose( lastWorldTransform );
 
+	m_psData.worldTransform = m_vsData.worldTransform;
+	m_psData.worldTransformLast = m_vsData.worldTransformLast;
+	m_psData.invWorldTransform = m_vsData.invWorldTransform;
+
 	// Normalize screenSize dimensions
 	auto screen_width = Tr2Renderer::GetViewport().width;
 	auto screen_height = Tr2Renderer::GetViewport().height;
