@@ -290,6 +290,10 @@ void Tr2UpscalingContextAL::GetJitter( float& x, float& y ) const
 	y = m_jitterYScale * m_jitterY / (float)m_renderHeight;
 }
 
+void Tr2UpscalingContextAL::SetHudLessTexture( Tr2TextureAL* texture )
+{
+}
+
 float Tr2UpscalingContextAL::GetMipLevelBias() const
 {
 	return log2( 1.0f / m_upscaling ) - 1.0f;

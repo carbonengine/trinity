@@ -111,9 +111,12 @@ class Tr2UpscalingTechniqueAL
 public:
 	Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
     virtual ~Tr2UpscalingTechniqueAL();
-	virtual void Destroy( Tr2RenderContextAL& renderContext ) = 0;
-	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent );
 
+	// Destroy is called when the rendercontext is being destroyed. Everything needs to be clean after this call!
+	virtual void Destroy( Tr2RenderContextAL& renderContext ) = 0;
+	// Called by the device to mark events if we need to trigger stuff at some point in time
+	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent );
+	// makes the state correct based on what is supported (f.ex if we pass in framegen to fsr1 it should not be "enabled")
 	void SanitizeState();
 
 	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const;
@@ -144,11 +147,16 @@ public:
 
 	// after setup is called, we must know the size of the render targets!
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) = 0;
+	// when a window is closed or when we change devices this will be called
 	virtual void Destroy( Tr2RenderContextAL& renderContext );
+	// at what render resolution are we drawing to
 	void GetRenderDimensions( uint32_t& width, uint32_t& height ) const;
+	// What is the outpu dimensions
 	void GetDisplayDimensions( uint32_t& width, uint32_t& height ) const;
+	
 	void GetJitter( float& x, float& y ) const;
 
+	// the requirements of the dispatch (as in the textures needed)
 	virtual uint32_t GetDispatchRequirements() const = 0;
 	virtual void UpdateJitter() = 0;
 	virtual bool IsTemporal() const = 0;
@@ -158,6 +166,8 @@ public:
 	void Reset();
 
 	uint32_t GetID() const;
+
+	virtual void SetHudLessTexture( Tr2TextureAL* texture );
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) = 0;
 
