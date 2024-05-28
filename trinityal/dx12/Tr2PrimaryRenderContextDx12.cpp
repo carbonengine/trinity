@@ -1304,7 +1304,7 @@ Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t 
 
 Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
-	if( m_upscalingTechnique == nullptr )
+	if( m_upscalingTechnique == nullptr || displayWidth == 0 || displayHeight == 0 )
 	{
 		return nullptr;
 	}

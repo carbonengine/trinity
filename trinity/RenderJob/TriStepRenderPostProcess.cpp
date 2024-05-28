@@ -372,11 +372,16 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
 
 	auto upscalingEnabled = upscalingInfo.technique != Tr2UpscalingAL::NONE;
+	Tr2PostProcessRenderInfo::Texture output;
 	if( upscalingEnabled )
 	{
+		output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight );
 		taa = nullptr;
 	}
-	auto output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight );
+	else
+	{
+		output = m_renderInfo->GetTempTexture();
+	}
 	
 	// Always copy
 	auto nonMsaaSource = m_renderInfo->GetTempTexture();
