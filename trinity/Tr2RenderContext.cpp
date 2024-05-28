@@ -341,8 +341,9 @@ void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* bat
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
 
 	CCP_STATS_ZONE( "Direct drawing (sorted)" );
+#if TRINITY_PLATFORM != TRINITY_METAL
 	GPU_REGION( *renderContext, "Direct drawing (sorted)" );
-
+#endif
 
 	UseTextures( batches, techniqueName, *renderContext );
 
@@ -497,7 +498,9 @@ void Tr2RenderContextBase::RenderSortedBatches( const std::vector<Tr2RenderBatch
 	}
 
 	CCP_STATS_ZONE( "Direct drawing" );
+#if TRINITY_PLATFORM != TRINITY_METAL
 	GPU_REGION( renderContext, "Direct drawing" );
+#endif
 
 #if TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS
 	extern bool g_useParallelEncoding;
@@ -567,8 +570,10 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 	if( g_gdrEnabled )
 	{
 		CCP_STATS_ZONE( "Indirect drawing" );
+#if TRINITY_PLATFORM != TRINITY_METAL
 		GPU_REGION( *renderContext, "Indirect drawing" );
-		
+#endif
+
 		Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
 
 		static Tr2IndirectDrawBuffer s_buffer;

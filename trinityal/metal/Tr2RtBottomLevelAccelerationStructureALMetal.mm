@@ -173,7 +173,7 @@ namespace  TrinityALImpl {
 
             MetalContext *metalContext = renderContext.GetMetalContext();
             
-            if( !m_scratchBuffer )
+            if( !m_scratchBuffer && m_scratchBufferSize > 0 )
             {
                 m_scratchBuffer = [metalContext->GetDevice() newBufferWithLength:m_scratchBufferSize options:MTLResourceStorageModePrivate];
             }
