@@ -80,6 +80,13 @@ Tr2RenderContextAL::~Tr2RenderContextAL()
 	m_vertexLayout = Tr2VertexLayoutAL();
 	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
+    
+    std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), BoundRT{} );
+    std::fill( std::begin( m_stackRT ), std::end( m_stackRT ), TrackableStdStack<BoundRT>{} );
+    m_stackDS = TrackableStdStack<Tr2TextureAL>();
+    m_boundDepthStencil = {};
+    m_defaultBackBuffer = {};
+    m_swapChain = Tr2SwapChainAL();
 
 	if( m_isPrimary )
 	{
