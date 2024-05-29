@@ -168,7 +168,8 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_fadeEnabled( false ),
 	m_lutEnabled( false ),
 	m_vignetteEnabled( false ),
-	m_sceneDirty( false )
+	m_sceneDirty( false ),
+	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID )
 {
 	m_renderInfo.CreateInstance();
 	m_tonemappingEffect.CreateInstance();
@@ -225,10 +226,19 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 
 TriStepRenderPostProcess::~TriStepRenderPostProcess( void )
 {
+	if( m_upscalingContextID != Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		auto context = renderContext.GetUpscalingContext(m_upscalingContextID);
+		if( context )
+		{
+			context->SetHudLessTexture( nullptr );
+		}
+	}
 	m_scene = nullptr;
 }
 
-void TriStepRenderPostProcess::py__init__(EveSpaceScene* scene, Tr2RenderTarget* source, Tr2RenderTarget* opaque_source)
+void TriStepRenderPostProcess::py__init__( EveSpaceScene* scene, Tr2RenderTarget* source, Tr2RenderTarget* opaque_source )
 {
 	if( scene == nullptr )
 	{
@@ -368,8 +378,13 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	m_scene->SetVelocityMap( nullptr );
 	uint32_t w, h;
 	Tr2Renderer::GetBackBufferDimensions( w, h );
+
+	if( m_upscalingContextID == Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	{
+		m_upscalingContextID = Tr2Renderer::GetUpscalingContextID();
+	}
 	
-	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
+	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContextID );
 
 	auto upscalingEnabled = upscalingInfo.technique != Tr2UpscalingAL::NONE;
 	Tr2PostProcessRenderInfo::Texture output;
@@ -417,7 +432,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	if( upscalingInfo.temporal )
 	{
-		auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( Tr2Renderer::GetUpscalingContextID() );
+		auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
 		upscalingContext->SetHudLessTexture(output->GetTexture());
 		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
 		// upscale the temp textures so everything hence forth is correct
@@ -458,7 +473,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 		if( upscalingEnabled && !upscalingInfo.temporal )
 		{
-			auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( Tr2Renderer::GetUpscalingContextID() );
+			auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
 			upscalingContext->SetHudLessTexture( output->GetTexture() );
 
 			output = RenderUpscaling( output, renderContext, upscalingContext, dynamicExposure );

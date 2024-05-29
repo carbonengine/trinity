@@ -18,7 +18,7 @@ const Be::ClassInfo* TriStepSetUpscalingContextID::ExposeToBlue()
 			"__init__",
 			py__init__,
 			1,
-			"Sets the upscalingContextID for easy on the current render job\n"
+			"Sets the upscalingContextID for easy retrieval on the current render job\n"
 			":param upscalingContextID: the id of the upscaling context" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )

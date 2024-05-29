@@ -4,13 +4,13 @@
 
 
 TriStepSetUpscalingContextID::TriStepSetUpscalingContextID( IRoot* lockobj ) :
-	m_upscalingContextID( 0 )
+	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID )
 {
 }
 
 TriStepSetUpscalingContextID::~TriStepSetUpscalingContextID( void )
 {
-	Tr2Renderer::SetUpscalingContextID( 0 );
+	Tr2Renderer::SetUpscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID );
 }
 
 // --------------------------------------------------------------------------------------

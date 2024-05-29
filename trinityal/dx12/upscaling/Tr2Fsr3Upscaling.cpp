@@ -229,8 +229,10 @@ Tr2Fsr3UpscalingContext::~Tr2Fsr3UpscalingContext()
 
 void Tr2Fsr3UpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 {
-	if( m_frameGeneration && ( texture == nullptr || m_frameGenerationConfig.HUDLessColor.resource != texture->TrinityALImpl_GetObject()->GetResourceDx12() ) )
+	if( m_frameGeneration && ( texture == nullptr || ( texture->TrinityALImpl_GetObject() != nullptr && m_frameGenerationConfig.HUDLessColor.resource != texture->TrinityALImpl_GetObject()->GetResourceDx12() ) ) )
 	{
+		auto result = ffxWaitForPresents( m_frameGenerationConfig.swapChain );
+
 		m_frameGenerationConfig.HUDLessColor = Fsr3Utils::ConvertTextureToFfxResource( texture, L"FSR3_Hudless", FfxResourceStates::FFX_RESOURCE_STATE_PIXEL_COMPUTE_READ );
 	}
 }
