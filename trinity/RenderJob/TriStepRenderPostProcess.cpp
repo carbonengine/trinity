@@ -235,6 +235,11 @@ TriStepRenderPostProcess::~TriStepRenderPostProcess( void )
 			context->SetHudLessTexture( nullptr );
 		}
 	}
+	if( m_scene )
+	{
+		m_scene->SetVelocityMap( nullptr );
+	}
+
 	m_scene = nullptr;
 }
 
