@@ -80,7 +80,7 @@ namespace Tr2StreamlineAL
 		}
 	}
 
-	sl::float4x4 F16AsFloat4x4( float f[16] )
+	sl::float4x4 F16AsFloat4x4( const float f[16] )
 	{
 		sl::float4x4 m;
 		m.setRow( 0, sl::float4( f[0], f[1], f[2], f[3] ) );
@@ -100,15 +100,7 @@ namespace Tr2StreamlineAL
 		}
 		// now set it up
 		sl::Preferences pref{};
-		if( g_upscalingDebug )
-		{
-			pref.showConsole = true; // for debugging, set to false in production
-			pref.logLevel = sl::LogLevel::eVerbose;
-		}
-		else{
-			pref.showConsole = false;
-			pref.logLevel = sl::LogLevel::eOff;
-		}
+
 		
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
 		pref.renderAPI = sl::RenderAPI::eD3D11;
@@ -126,6 +118,17 @@ namespace Tr2StreamlineAL
 #endif
 		};
 
+		if( g_upscalingDebug )
+		{
+			pref.showConsole = true; // for debugging, set to false in production
+			pref.logLevel = sl::LogLevel::eVerbose;
+			//features.push_back(sl::kFeatureImGUI);
+		}
+		else
+		{
+			pref.showConsole = false;
+			pref.logLevel = sl::LogLevel::eOff;
+		}
 
 		sl::Feature* featuresToEnable = features.data();
 		pref.numFeaturesToLoad = (uint32_t)features.size();
@@ -153,18 +156,21 @@ namespace Tr2StreamlineAL
 
 	void ReleaseStreamline( HMODULE streamlineModule )
 	{
-		if( SL_FAILED( res, reinterpret_cast<PFun_slShutdown*>( GetProcAddress( streamlineModule, "slShutdown" ) )() ) )
+		if( streamlineModule )
 		{
-			CCP_LOGNOTICE( "Could not release streamline %d", res );
-		}
-		else
-		{
-			CCP_LOGNOTICE( "NVidia Streamline successfully released" );	
-		}
+			if( SL_FAILED( res, reinterpret_cast<PFun_slShutdown*>( GetProcAddress( streamlineModule, "slShutdown" ) )() ) )
+			{
+				CCP_LOGNOTICE( "Could not release streamline %d", res );
+			}
+			else
+			{
+				CCP_LOGNOTICE( "NVidia Streamline successfully released" );
+			}
 
-		FreeLibrary( streamlineModule );
-		STREAMLINE_INITIALIZED = false;
-		STREAMLINE_MODULE = nullptr;
+			FreeLibrary( streamlineModule );
+			STREAMLINE_INITIALIZED = false;
+			STREAMLINE_MODULE = nullptr;
+		}
 	}
 
 	sl::Result CheckForAvailability( HMODULE streamlineModule, sl::Feature feature, sl::AdapterInfo adapterInfo )

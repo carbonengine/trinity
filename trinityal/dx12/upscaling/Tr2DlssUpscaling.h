@@ -87,6 +87,7 @@ public:
 		HMODULE streamlineModule, 
 		sl::FrameToken* frameToken );
 	~Tr2DlssUpscalingContext();
+	virtual void Destroy(Tr2RenderContextAL& renderContext ) override;
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 	virtual bool IsTemporal() const override;

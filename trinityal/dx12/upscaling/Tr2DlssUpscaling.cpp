@@ -17,7 +17,6 @@
 #include "../Utilities.h"
 #include "include/Tr2StreamlineAL.h"
 
-
 namespace DlssUtils
 {
 
@@ -32,7 +31,6 @@ namespace DlssUtils
 			return { sl::ResourceType::eTex2d, nullptr, nullptr, nullptr, 0 };
 		}
 	}
-
 }
 
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
@@ -178,9 +176,6 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 	TogglePlugin( sl::kFeatureDLSS, m_isAvailable );
 	TogglePlugin( sl::kFeatureDLSS_G, m_supportsFrameGeneration && m_frameGeneration );
 	TogglePlugin( sl::kFeatureNIS, m_isAvailable );
-#if DLSS_DEBUG
-	TogglePlugin( sl::kFeatureImGUI, m_supportsFrameGeneration && m_frameGeneration );
-#endif
 	TogglePlugin( sl::kFeatureReflex, m_supportsFrameGeneration && m_frameGeneration );
 	TogglePlugin( sl::kFeaturePCL, m_frameGeneration );
 
@@ -345,6 +340,12 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
+
+}
+
+void Tr2DlssUpscalingContext::Destroy( Tr2RenderContextAL& renderContext ) {
+	renderContext.FlushAndSyncDx12();
+
 	m_slFreeResources( sl::kFeatureDLSS, m_viewHandle );
 	m_slFreeResources( sl::kFeatureNIS, m_viewHandle );
 
