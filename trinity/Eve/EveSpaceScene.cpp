@@ -2079,7 +2079,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		return;
 	}
 	
-	if( !m_freezeFrustum && m_enableShadows && m_shadowQuality == SHADOW_LOW || m_shadowQuality == SHADOW_HIGH )
+	if( !m_freezeFrustum && m_enableShadows && ( m_shadowQuality == SHADOW_LOW || m_shadowQuality == SHADOW_HIGH ) )
 	{
 		m_shadowView = Tr2Renderer::GetInverseViewTransform();
 		SetupCascadedShadows( renderContext );
