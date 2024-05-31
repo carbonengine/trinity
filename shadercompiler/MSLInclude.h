@@ -437,7 +437,7 @@ using namespace raytracing;
 
 struct RaytracingAccelerationStructureT
 {
-     instance_acceleration_structure tlas[1];
+     instance_acceleration_structure tlas;
 };
 
 #define RaytracingAccelerationStructure const RaytracingAccelerationStructureT*
@@ -474,8 +474,6 @@ struct __MetalHitSV
 };
 
 #define __INTERSECION_TAGS instancing, triangle_data, world_space_data
-#define __INTERSECTION_FUNCTION_TABLE intersection_function_table<__INTERSECION_TAGS>
-
 
 struct __RtLocalMaterial
 {
@@ -517,7 +515,7 @@ void __TraceRay(
     r.min_distance = ray_.TMin;
     r.max_distance = ray_.TMax;
 
-    typename intersector<__INTERSECION_TAGS>::result_type intersection = i.intersect(r, accelerationStructure[0].tlas[0], instanceInclusionMask, intersectionTable, payload);
+    typename intersector<__INTERSECION_TAGS>::result_type intersection = i.intersect(r, accelerationStructure[0].tlas, instanceInclusionMask, intersectionTable, payload);
 
     __MetalHitSV hit;
 

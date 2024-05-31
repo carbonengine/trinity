@@ -3046,6 +3046,8 @@ void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTa
     [computeEncoder setVisibleFunctionTable: shaderTable->GetClosestHitFunctionTable() atBufferIndex:14];
     [computeEncoder setBuffer:shaderTable->GetMaterialBuffer() offset:0 atIndex:15];
     [computeEncoder setBuffer:shaderTable->GetMaterialBuffer() offset:shaderTable->GetMissMaterialOffset() atIndex:16];
+    
+    [computeEncoder useResource:shaderTable->GetAnyHitFunctionTable() usage:MTLResourceUsageRead];
 
     // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
     // pixel. The sample needs to align the number of threads to a multiple of the threadgroup

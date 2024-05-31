@@ -2402,7 +2402,7 @@ namespace
         case PatchShaderType::CLOSEST_HIT:
             return MakeInlineString( "[[visible]]" );
         case PatchShaderType::ANY_HIT:
-            return MakeInlineString( "[[intersection(triangle, instancing, triangle_data)]]" );
+            return MakeInlineString( "[[intersection(triangle, __INTERSECION_TAGS)]]" );
         default:
             return MakeInlineString( "" );
         }

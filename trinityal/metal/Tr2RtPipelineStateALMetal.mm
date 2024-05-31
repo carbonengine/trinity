@@ -161,9 +161,9 @@ namespace TrinityALImpl
                 return E_FAIL;
             }
             
-            for( int hitGroupIdx = 0; hitGroupIdx < desc.m_hitGroups.size(); ++hitGroupIdx)
+            for( auto& hGroup : desc.m_hitGroups )
             {
-                auto& hGroup = desc.m_hitGroups[hitGroupIdx];
+                auto& dest = m_hitGroupMap[hGroup.exportName];
                 
                 if( !hGroup.anyHit.empty() )
                 {
@@ -172,7 +172,7 @@ namespace TrinityALImpl
                     {
                         return E_INVALIDARG;
                     }
-                    m_hitGroupMap[hGroup.exportName].anyHit = found->second;
+                    dest.anyHit = found->second;
                 }
                 if( !hGroup.intersection.empty() )
                 {
@@ -181,7 +181,7 @@ namespace TrinityALImpl
                     {
                         return E_INVALIDARG;
                     }
-                    m_hitGroupMap[hGroup.exportName].intersection = found->second;
+                    dest.intersection = found->second;
                 }
                 if( !hGroup.closestHit.empty() )
                 {
@@ -190,7 +190,7 @@ namespace TrinityALImpl
                     {
                         return E_INVALIDARG;
                     }
-                    m_hitGroupMap[hGroup.exportName].closestHit = found->second;
+                    dest.closestHit = found->second;
                 }
             }
             

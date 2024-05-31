@@ -98,7 +98,7 @@ namespace TrinityALImpl
             
             // Map each piece of scene hit group to its intersection function.
             int groupIndex = 0;
-            for( auto hitGroup : desc.m_hitGroupNames )
+            for( auto& hitGroup : desc.m_hitGroupNames )
             {
                 auto found = hitGroupMap.find( hitGroup.name );
                 
@@ -115,7 +115,8 @@ namespace TrinityALImpl
                     }
                     else
                     {
-                        [m_anyHitFunctionTable setOpaqueTriangleIntersectionFunctionWithSignature:MTLIntersectionFunctionSignatureInstancing atIndex:groupIndex];
+                        auto signature = MTLIntersectionFunctionSignatureInstancing | MTLIntersectionFunctionSignatureTriangleData | MTLIntersectionFunctionSignatureWorldSpaceData;
+                        [m_anyHitFunctionTable setOpaqueTriangleIntersectionFunctionWithSignature:signature atIndex:groupIndex];
                     }
                     if( found->second.closestHit )
                     {
