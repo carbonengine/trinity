@@ -38,7 +38,7 @@ namespace
 	unsigned int s_perObjectPSStartRegister = 4;
 	unsigned int s_perObjectVSGUIStartRegister = 6;
 
-	uint32_t s_upscalingContextID = 0;
+	uint32_t s_upscalingContextID = Tr2UpscalingAL::INVALID_CONTEXT_ID;
 
 	TriPoolAllocator* s_poolAllocator = NULL;
 	// keep an array of directories which are to exclude from texture-sizing

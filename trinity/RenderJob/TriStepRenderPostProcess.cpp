@@ -168,7 +168,8 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_fadeEnabled( false ),
 	m_lutEnabled( false ),
 	m_vignetteEnabled( false ),
-	m_sceneDirty( false )
+	m_sceneDirty( false ),
+	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID )
 {
 	m_renderInfo.CreateInstance();
 	m_tonemappingEffect.CreateInstance();
@@ -225,10 +226,24 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 
 TriStepRenderPostProcess::~TriStepRenderPostProcess( void )
 {
+	if( m_upscalingContextID != Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		auto context = renderContext.GetUpscalingContext(m_upscalingContextID);
+		if( context )
+		{
+			context->SetHudLessTexture( nullptr );
+		}
+	}
+	if( m_scene )
+	{
+		m_scene->SetVelocityMap( nullptr );
+	}
+
 	m_scene = nullptr;
 }
 
-void TriStepRenderPostProcess::py__init__(EveSpaceScene* scene, Tr2RenderTarget* source, Tr2RenderTarget* opaque_source)
+void TriStepRenderPostProcess::py__init__( EveSpaceScene* scene, Tr2RenderTarget* source, Tr2RenderTarget* opaque_source )
 {
 	if( scene == nullptr )
 	{
@@ -369,13 +384,24 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	uint32_t w, h;
 	Tr2Renderer::GetBackBufferDimensions( w, h );
 
-	auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( Tr2Renderer::GetUpscalingContextID() );
-	auto upscalingEnabled = upscalingContext != nullptr;
+	if( m_upscalingContextID == Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	{
+		m_upscalingContextID = Tr2Renderer::GetUpscalingContextID();
+	}
+	
+	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContextID );
+
+	auto upscalingEnabled = upscalingInfo.technique != Tr2UpscalingAL::NONE;
+	Tr2PostProcessRenderInfo::Texture output;
 	if( upscalingEnabled )
 	{
+		output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight );
 		taa = nullptr;
 	}
-	auto temporalUpscaling = upscalingEnabled && upscalingContext->IsTemporal();
+	else
+	{
+		output = m_renderInfo->GetTempTexture();
+	}
 	
 	// Always copy
 	auto nonMsaaSource = m_renderInfo->GetTempTexture();
@@ -393,9 +419,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	if( ProcessDepthOfField( renderContext, dof ) )
 	{
-		bool temporal = temporalUpscaling || ( taa && taa->IsActive() );
-		float upscalingRatio = upscalingContext ? upscalingContext->GetUpscalingAmount() : 1.0f; 
-		RenderDepthOfField( nonMsaaSource, renderContext, dof, temporal, upscalingRatio );
+		bool temporal = upscalingInfo.temporal || ( taa && taa->IsActive() );
+		RenderDepthOfField( nonMsaaSource, renderContext, dof, temporal, upscalingInfo.upscalingAmount );
 	}
 
 	if( ProcessTaa( taa ) )
@@ -410,8 +435,10 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	Tr2PostProcessRenderInfo::Texture upscaledSource;
 
-	if( temporalUpscaling )
+	if( upscalingInfo.temporal )
 	{
+		auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
+		upscalingContext->SetHudLessTexture(output->GetTexture());
 		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
 		// upscale the temp textures so everything hence forth is correct
 		uint32_t w, h;
@@ -443,16 +470,17 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	bool doGrain = ProcessFilmGrain( filmGrain );
 
-	auto output = m_renderInfo->GetTempTexture();
-
-	if( !temporalUpscaling || doGrain )
+	if( !upscalingInfo.temporal || doGrain )
 	{
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 		DrawInto( *output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 		nonMsaaSource = Tr2PostProcessRenderInfo::Texture();
 
-		if( upscalingEnabled && !temporalUpscaling )
+		if( upscalingEnabled && !upscalingInfo.temporal )
 		{
+			auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
+			upscalingContext->SetHudLessTexture( output->GetTexture() );
+
 			output = RenderUpscaling( output, renderContext, upscalingContext, dynamicExposure );
 		}
 		if( doGrain )
@@ -474,11 +502,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		RenderSignalLoss( output, renderContext, signalLoss );
 	}
 
-	//Tr2DlssPlugin dlssPlugin;
-	//if( Tr2Streamline::GetDlssPlugin( dlssPlugin ) )
-	//{
-	//	dlssPlugin.SetHudLessResource( output->GetTexture(), renderContext );
-	//}
 	renderContext.m_esm.PopDepthStencilBuffer();
 	renderContext.m_esm.PopRenderTarget();
 	
@@ -991,11 +1014,11 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.frameTimeDelta = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_lastFrameTime ) * 1000.0f;
 	dispatchParameters.preExposure = 0.4f;
 
-	memcpy( dispatchParameters.view, &view, 16 );
-	memcpy( dispatchParameters.projection, &projection, 16 );
-	memcpy( dispatchParameters.invProjection, &inverseProjection, 16 );
-	memcpy( dispatchParameters.clipToPrevClip, &reprojection, 16 );
-	memcpy( dispatchParameters.prevClipToClip, &inverseProjection, 16 );
+	memcpy( dispatchParameters.view, &view, 16 * sizeof(float) );
+	memcpy( dispatchParameters.projection, &projection, 16 * sizeof( float ) );
+	memcpy( dispatchParameters.invProjection, &inverseProjection, 16 * sizeof( float ) );
+	memcpy( dispatchParameters.clipToPrevClip, &reprojection, 16 * sizeof( float ) );
+	memcpy( dispatchParameters.prevClipToClip, &invReprojection, 16 * sizeof( float ) );
 
 	dispatchParameters.depth = m_scene->GetDepth() ? m_scene->GetDepth()->GetTexture() : nullptr;
 	dispatchParameters.input = source ? source->GetTexture() : nullptr;

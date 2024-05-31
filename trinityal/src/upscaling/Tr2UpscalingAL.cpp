@@ -257,6 +257,13 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t di
 {
 	static uint32_t CONTEXT_ID = 0; 
 	m_id = CONTEXT_ID++;
+
+	if( m_id == Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	{
+		// Tr2UpscalingAL::INVALID_CONTEXT_ID is reserved, don't use it as an actual context id!
+		m_id = 0;
+		CONTEXT_ID = 0;
+	}
 }
 
 Tr2UpscalingContextAL::~Tr2UpscalingContextAL()
@@ -288,6 +295,10 @@ void Tr2UpscalingContextAL::GetJitter( float& x, float& y ) const
 {
 	x = m_jitterXScale * m_jitterX / (float)m_renderWidth;
 	y = m_jitterYScale * m_jitterY / (float)m_renderHeight;
+}
+
+void Tr2UpscalingContextAL::SetHudLessTexture( Tr2TextureAL* texture )
+{
 }
 
 float Tr2UpscalingContextAL::GetMipLevelBias() const

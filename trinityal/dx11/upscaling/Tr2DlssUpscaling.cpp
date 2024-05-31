@@ -189,7 +189,6 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
-	DECLARE_SL_FUNC( m_streamlineModule, slFreeResources );
 	m_slFreeResources( sl::kFeatureDLSS, m_viewHandle );
 	m_slFreeResources( sl::kFeatureNIS, m_viewHandle );
 }

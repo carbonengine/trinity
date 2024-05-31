@@ -18,7 +18,7 @@
 namespace Tr2StreamlineAL
 {	
 	const char* GetPluginName( sl::Feature feature );
-	sl::float4x4 F16AsFloat4x4( float f[16] );
+	sl::float4x4 F16AsFloat4x4( const float f[16] );
 
 	void Tr2StreamlineLog( sl::LogType type, const char* msg );
 

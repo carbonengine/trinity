@@ -221,6 +221,7 @@ private:
 	Tr2EffectPtr m_blurBigHorizontal;
 
 	Be::Time m_lastFrameTime;
+	uint32_t m_upscalingContextID;
 };
 
 TYPEDEF_BLUECLASS( TriStepRenderPostProcess );

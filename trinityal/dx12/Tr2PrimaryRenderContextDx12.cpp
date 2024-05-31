@@ -533,14 +533,14 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	m_commandAllocators.clear();
 
-	m_commandQueue = nullptr;
-	FlushPendingRelease();
-
 	if( m_swapchain )
 	{
 		CR( m_swapchain->SetFullscreenState( FALSE, nullptr ) );
 	}
 	m_swapchain = nullptr;
+
+	m_commandQueue = nullptr;
+	FlushPendingRelease();
 
 	// JB: Forcing the destruction of samplers because they now hold a SamplerStateDx12 object
 	m_samplerStateFactory.Clear();
@@ -1304,7 +1304,7 @@ Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t 
 
 Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
-	if( m_upscalingTechnique == nullptr )
+	if( m_upscalingTechnique == nullptr || displayWidth == 0 || displayHeight == 0 )
 	{
 		return nullptr;
 	}

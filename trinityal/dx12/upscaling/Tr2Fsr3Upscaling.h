@@ -34,8 +34,6 @@ public:
 private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
 	FfxSwapchain m_framegenSwapchain;
-	FfxCommandQueue m_framegenCommandQueue;
-	FfxFrameGenerationConfig m_frameGenerationConfig = {};
 	bool m_attachedToSwapchain;
 };
 
@@ -43,7 +41,7 @@ private:
 class Tr2Fsr3UpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, FfxSwapchain frameInterpolationSwapchain, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	~Tr2Fsr3UpscalingContext();
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
@@ -52,12 +50,13 @@ public:
 	virtual bool IsTemporal() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
-	void GenerateFrame( Tr2RenderContextAL& renderContext, FfxFrameGenerationConfig frameGenConfig );
+	virtual void SetHudLessTexture( Tr2TextureAL* texture ) override;
+
+	void GenerateFrame( Tr2RenderContextAL& renderContext );
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
-
 	FfxFsr3ContextDescription m_initializationParameters = {};
 	FfxFsr3Context m_context;
 
@@ -71,7 +70,8 @@ private:
 	FfxInterface m_ffxFsr3Backends[FSR3_BACKEND_COUNT] = {};
 
 	bool m_setup;
-	bool m_usingExposure;
+	FfxFrameGenerationConfig m_frameGenerationConfig = {};
+	FfxSwapchain m_framegenSwapchain;
 
 	friend class Tr2Fsr3UpscalingTechnique;
 };

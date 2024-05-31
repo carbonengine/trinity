@@ -24,6 +24,7 @@
 #include "Tr2Variable.h"
 #include "TriFrustumOrtho.h"
 #include "Tr2ShadowMap.h"
+#include "Eve/SpaceObject/Children/EveChildCloud2.h"
 
 class TriProjection;
 class TriView;
@@ -649,6 +650,8 @@ private:
 
 	BlueSharedString m_shadowAlgorithm;
 	const BlueSharedString m_shadowAlgorithmName = BlueSharedString( "SHADOW_ALGORITHM" );
+
+	void RenderVolumetricShadowMap( size_t volumetricCount );
 
 	// Raytring
 	Tr2RaytracingManagerPtr m_rtManager;

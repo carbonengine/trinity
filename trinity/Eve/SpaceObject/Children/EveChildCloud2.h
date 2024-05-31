@@ -10,6 +10,8 @@
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 #include "Tr2DebugRenderer.h"
+#include "Tr2DepthStencil.h"
+#include "TriFrustumOrtho.h"
 #include "../../EveEntity.h"
 #include "../../../ITr2VolumetricRenderable.h"
 
@@ -93,6 +95,9 @@ public:
 
 	void RegisterComponents() override;
 
+	void SetupShadowFrustum();
+	void SetupShadowMap();
+
 	bool IsLightmapDirty() const;
 	void MarkLightmapDirty( bool );
 
@@ -123,6 +128,7 @@ public:
 		Vector2 unused2;
 		LightData lights[4];
 		Vector4 mapOffsets[3];
+		Matrix lightViewProj;
 	};
 
 private:
@@ -168,6 +174,10 @@ private:
 	Tr2VolumerticQuality m_minVisibleQuality;
 	Tr2VolumerticQuality m_currentQuality;
 
+	Tr2DepthStencilPtr m_shadowMapDS;
+	Tr2RenderTargetPtr m_shadowMapRT;
+	Tr2EffectPtr m_shadowEffect;
+
 	std::string m_name;
 	bool m_display;
 	bool m_castShadows;
@@ -189,6 +199,22 @@ private:
 
 	Vector3 m_mapTiling[3];
 	Vector3 m_mapOffsets[3];
+
+	const Vector3 m_unitCube[8] = {
+	//The unit cube in DirectX is from( -1, -1, 0 ) to ( 1, 1, 1 )
+	Vector3( -1, -1, 0 ), // vertex 0
+	Vector3( -1, 1, 0 ), // vertex 1
+	Vector3( 1, 1, 0 ), // etc..
+	Vector3( 1, -1, 0 ),
+	Vector3( -1, -1, 1 ),
+	Vector3( -1, 1, 1 ),
+	Vector3( 1, 1, 1 ),
+	Vector3( 1, -1, 1 )
+	};
+
+	Matrix m_lightViewProj;
+	TriFrustumOrtho m_shadowFrustum;
+
 };
 
 TYPEDEF_BLUECLASS( EveChildCloud2 );

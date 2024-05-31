@@ -50,7 +50,7 @@ const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
 		(
 			"__init__",
 			py__init__,
-			2,
+			0,
 			"Creates a render step that renders post processes\n"
 			":param scene: an ITr2Scene object\n"
 			":param source: an Tr2RenderTarget object"
