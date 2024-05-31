@@ -14,7 +14,7 @@
 #include "TriRenderBatch.h"
 #include "Tr2RenderTarget.h"
 #include "Tr2DepthStencil.h"
-#include "Eve\IEveShadowCaster.h"
+#include "Eve/IEveShadowCaster.h"
 
 
 Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
