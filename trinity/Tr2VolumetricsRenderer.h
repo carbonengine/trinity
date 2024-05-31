@@ -7,6 +7,7 @@
 #pragma once
 
 #include "ITr2VolumetricRenderable.h"
+#include "TriFrustumOrtho.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -35,6 +36,10 @@ public:
 		ITr2TextureProvider* shadowMap,
 		Tr2RenderContext& renderContext );
 
+	bool PrepareShadowMap( Tr2RenderContext & renderContext );
+	void RenderIntoShadowMap( EveComponentRegistry& registry );
+
+
 	EXPOSE_TO_BLUE();
 
 private:
@@ -45,6 +50,7 @@ private:
 	Tr2TextureReferencePtr m_volumeSlices;
 	Tr2RenderTargetPtr m_downsampledDepth;
 	Tr2RenderTargetPtr m_blurScratch;
+	Tr2DepthStencilPtr m_shadowDS;
 	std::unique_ptr<ITriRenderBatchAccumulator> m_batches;
 	Tr2VolumerticQuality m_quality;
 	float m_scaleFactor;

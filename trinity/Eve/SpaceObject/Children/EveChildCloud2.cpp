@@ -115,6 +115,9 @@ EveChildCloud2::EveChildCloud2( IRoot* lockobj ) :
 	std::fill( std::begin( m_mapTiling ), std::end( m_mapTiling ), Vector3( 1, 1, 1 ) );
 	std::fill( std::begin( m_mapOffsets ), std::end( m_mapOffsets ), Vector3( 0, 0, 0 ) );
 	PrepareResources();
+
+	m_shadowEffect.CreateInstance();
+	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/SimpleShadowDepth.fx" );
 }
 
 EveChildCloud2::~EveChildCloud2()
@@ -386,6 +389,11 @@ void EveChildCloud2::SetSceneInformation( const SceneInformation& sceneInformati
 	m_targetWidth = sceneInformation.targetWidth;
 	m_targetHeight = sceneInformation.targetHeight;
 
+	if( m_receiveShadows )
+	{
+		SetupShadowFrustum();
+	}
+
 	m_effect->SetOption(
 		BlueSharedString( "CLOUD_SHADOWS" ),
 		sceneInformation.receiveShadows && m_receiveShadows ? BlueSharedString( "CLOUD_SHADOWS_RECEIVE" ) : BlueSharedString( "CLOUD_SHADOWS_NONE" ) );
@@ -401,6 +409,9 @@ void EveChildCloud2::ReleaseResources( TriStorage s )
 	{
 		m_lightmapWidth = 0;
 	}
+
+	m_shadowMapDS = Tr2DepthStencilPtr();
+	m_shadowMapRT = Tr2RenderTargetPtr();
 }
 
 bool EveChildCloud2::OnPrepareResources()
@@ -501,6 +512,7 @@ void EveChildCloud2::PopulatePerObjectData( PerObjectData& data, float screenSiz
 	auto worldViewInv = Inverse( m_worldTransform * Tr2Renderer::GetViewTransform() );
 	data.worldViewInv = Transpose( worldViewInv );
 	data.viewPosition = TransformCoord( Tr2Renderer::GetViewPosition(), Inverse( m_worldTransform ) );
+	data.lightViewProj = Transpose( m_lightViewProj );
 
 	uint32_t lightmapWidth = std::max( 1u, uint32_t( m_lightmapWidth * m_lightmapSizeScale ) );
 	uint32_t lightmapHeight = std::max( 1u, uint32_t( m_lightmapHeight * m_lightmapSizeScale ) );
@@ -788,6 +800,36 @@ void EveChildCloud2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchTy
 		batch.SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
 		batches->Commit( batch );
 	}
+}
+
+void EveChildCloud2::SetupShadowFrustum()
+{
+	// Find light view
+	Matrix lightView = Inverse( OrthoNormalBasisZ( -m_localSunDirection ) );
+
+	AxisAlignedBoundingBox aabb;
+	// Now transform the unit cube based off matrices
+	for( unsigned int i = 0; i < 8; ++i )
+	{
+		Vector3 vertex = m_unitCube[i];
+		// view space
+		Vector4 transformedVertex = Transform( Vector4( vertex, 1.0 ), m_worldTransform );
+
+		transformedVertex /= transformedVertex.w;
+
+		// light view space
+		aabb.IncludePoint( TransformCoord( transformedVertex.GetXYZ(), ( lightView ) ) );
+	}
+
+	m_lightViewProj = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
+
+	// create shadow frustum out from lightView, aabb.min, aabb.max
+	m_shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
+}
+
+void EveChildCloud2::SetupShadowMap()
+{
+
 }
 
 bool EveChildCloud2::HasTransparentBatches() 
