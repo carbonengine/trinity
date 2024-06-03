@@ -108,17 +108,26 @@ private:
 class EveSceneStaticParticlesPerObjectData : public Tr2PerObjectData
 {
 public:
-	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
+	void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const override
 	{
 		FillAndSetConstants( *buffers[Tr2RenderContextEnum::VERTEX_SHADER],
-							 &m_world,
-							 sizeof( EveSceneStaticParticlesPerObjectData ),
+							 &m_data,
+							 sizeof( m_data ),
 							 Tr2RenderContextEnum::VERTEX_SHADER,
 							 Tr2Renderer::GetPerObjectVSStartRegister(),
 							 renderContext );
 	}
-	Matrix m_world;
-	Matrix m_lastWorld;
+
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
+	{
+		writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, &m_data, sizeof( m_data ) );
+	}
+
+	struct Data
+	{
+		Matrix world;
+		Matrix lastWorld;
+	} m_data;
 };
 
 TYPEDEF_BLUECLASS( EveSceneStaticParticles );

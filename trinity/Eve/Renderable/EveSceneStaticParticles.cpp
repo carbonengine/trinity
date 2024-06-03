@@ -144,8 +144,8 @@ Tr2PerObjectData* EveSceneStaticParticles::GetPerObjectData( ITriRenderBatchAccu
 		return nullptr;
 	}
 	// column_major for shaders
-	data->m_world = Transpose( m_worldMatrix );
-	data->m_lastWorld = Transpose( m_lastWorldMatrix );
+	data->m_data.world = Transpose( m_worldMatrix );
+	data->m_data.lastWorld = Transpose( m_lastWorldMatrix );
 	return data;
 }
 
