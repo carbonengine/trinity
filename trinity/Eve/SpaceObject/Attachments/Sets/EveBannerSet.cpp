@@ -119,7 +119,7 @@ namespace
 const std::vector<float> s_fullScreenSize = { 1 };
 }
 
-bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveBannerSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -128,6 +128,7 @@ bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 		return false;
 	}
 	aabb.Transform( parentTransform );
+	auto frustum = updateContext.GetFrustum();
 	m_isVisible = frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
 
 	bool isLoddedOut = true;
@@ -142,13 +143,11 @@ bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	}
 	else
 	{
-		extern float g_eveSpaceSceneVisibilityThreshold;
-
 		auto closest = sphere.GetXYZ() + Normalize( frustum.m_viewPos - sphere.GetXYZ() ) * sphere.w;
 		Vector4 elementSphere( closest, m_maxBannerRadius );
 
 		screenSize = frustum.GetPixelSizeAccrossEst( &elementSphere );
-		if( screenSize > g_eveSpaceSceneVisibilityThreshold * 0.5f )
+		if( screenSize > updateContext.GetVisibilityThreshold() * 0.5f )
 		{
 			isLoddedOut = false;
 		}

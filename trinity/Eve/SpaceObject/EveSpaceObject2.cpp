@@ -50,7 +50,6 @@ TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLighting
 
 const BlueSharedString DAMAGE_LOCATOR_SET_NAME( "damage" );
 
-extern float g_eveSpaceSceneLODFactor;
 extern bool g_eveSpaceSceneRaytracedShadows;
 
 
@@ -160,6 +159,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_maxSpeed( 0 ),
 	m_estimatedPixelDiameter( 0.f ),
 	m_estimatedPixelDiameterWithChildren( 0.f ),
+	m_meshScreenSize( 0 ),
 	m_boundingSphereCenter( 0.f, 0.f, 0.f ),
 	m_boundingSphereRadius( -1.f ),
 	m_boundingSphereWorldCenter( 0.f, 0.f, 0.f ),
@@ -368,7 +368,7 @@ Matrix EveSpaceObject2::GetObserverTransform()
 	return m_worldTransform;
 }
 
-void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	Be::Time time = updateContext.GetTime();
 
@@ -468,7 +468,7 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	m_boneOffsets.AdvanceFrame();
 
@@ -588,7 +588,7 @@ void EveSpaceObject2::UpdateWorldBounds()
 	}
 }
 
-void EveSpaceObject2::PrepareShaderData( EveUpdateContext& updateContext )
+void EveSpaceObject2::PrepareShaderData( const EveUpdateContext& updateContext )
 {
 	UpdateWorldBounds();
 
@@ -962,11 +962,9 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 		}
 	}
 
-	auto meshScreenSize = m_allowLodSelection ? m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor : std::numeric_limits<float>::max();
-
 	if( m_impactOverlay )
 	{
-		m_impactOverlay->GetBatches( batches, batchType, perObjectData, meshScreenSize );
+		m_impactOverlay->GetBatches( batches, batchType, perObjectData, m_meshScreenSize );
 	}
 
 	// Everything except for shadow batches
@@ -977,11 +975,11 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 		// transparent needs sorted meshareas
 		if( batchType != TRIBATCHTYPE_TRANSPARENT )
 		{
-			m_mesh->GetBatches( batches, areas, perObjectData, meshScreenSize );
+			m_mesh->GetBatches( batches, areas, perObjectData, m_meshScreenSize );
 		}
 		else
 		{
-			GetSortedBatchesFromMeshAreaVector( areas, batches, perObjectData, m_mesh, meshScreenSize, &m_worldTransform );
+			GetSortedBatchesFromMeshAreaVector( areas, batches, perObjectData, m_mesh, m_meshScreenSize, &m_worldTransform );
 		}
 	}
 
@@ -1066,8 +1064,7 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 	}
 
 	int meshIx = mesh->GetMeshIndex();
-	auto meshScreenSize = m_allowLodSelection ? m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor : std::numeric_limits<float>::max();
-	auto meshData = geomRes->GetMeshData( meshIx, meshScreenSize );
+	auto meshData = geomRes->GetMeshData( meshIx, m_meshScreenSize );
 	if( !meshData || !meshData->m_allocationsValid )
 	{
 		return;
@@ -1228,13 +1225,13 @@ bool EveSpaceObject2::FindLocatorTransformByName( const char* name, unsigned int
 	return false;
 }
 
-void EveSpaceObject2::UpdateShLighting( Tr2ShLightingManager& manager )
+void EveSpaceObject2::UpdateShLighting( Tr2ShLightingManager& manager, const EveUpdateContext& updateContext )
 {
 	memset( m_psData.shLightingCoefficients, 0, sizeof( m_psData.shLightingCoefficients ) );
-	if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneLowDetailThreshold )
+	if( m_estimatedPixelDiameterWithChildren > updateContext.GetLowDetailThreshold() )
 	{
-		float intensityFadeRadius = ( g_eveSpaceSceneMediumDetailThreshold - g_eveSpaceSceneLowDetailThreshold ) * 0.25f;
-		float intensity = ( m_estimatedPixelDiameterWithChildren - g_eveSpaceSceneLowDetailThreshold ) / intensityFadeRadius;
+		float intensityFadeRadius = ( updateContext.GetMediumDetailThreshold() - updateContext.GetLowDetailThreshold() ) * 0.25f;
+		float intensity = ( m_estimatedPixelDiameterWithChildren - updateContext.GetLowDetailThreshold() ) / intensityFadeRadius;
 		intensity = std::min( std::max( intensity, 0.f ), 1.f );
 		manager.GetLighting( m_worldPosition, intensity, m_boundingSphereRadius * g_secondaryLightingRadiusCutoffFactor, m_psData.shLightingCoefficients );
 	}
@@ -1335,7 +1332,7 @@ void EveSpaceObject2::PushRenderables( std::vector<ITr2Renderable*>& renderables
 	{
 		renderables.push_back( this );
 
-		if( m_estimatedPixelDiameter >= g_eveSpaceSceneLowDetailThreshold )
+		if( m_lodLevel >= TR2_LOD_MEDIUM )
 		{
 			CCP_STATS_INC( eveHighDetailObjects );
 		}
@@ -1377,13 +1374,13 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 			for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 			{
 				// now prep to get the renderables
-				( *it )->GetRenderables( renderables, geometryRes, m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor );
+				( *it )->GetRenderables( renderables, geometryRes, m_meshScreenSize );
 			}
 		}
 	}
 }
 
-void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1397,6 +1394,7 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	m_lodLevel = TR2_LOD_LOW;
 	m_lodLevelWithChildren = TR2_LOD_LOW;
 	m_impostorMode = false;
+	auto frustum = updateContext.GetFrustum();
 
 	if( m_boundingSphereRadius > 0.0f )
 	{
@@ -1415,7 +1413,7 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
-			if( ( *it )->UpdateVisibility( frustum, m_worldTransform, bones, boneCount ) )
+			if( ( *it )->UpdateVisibility( updateContext, m_worldTransform, bones, boneCount ) )
 			{
 				m_isMeshVisible = true;
 				m_isVisible = true;
@@ -1429,14 +1427,14 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 		for( IEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
 		{
 			IEveTransform* p = *it;
-			p->UpdateVisibility( frustum, m_worldTransform );
+			p->UpdateVisibility( updateContext, m_worldTransform );
 		}
 	}
 	if( GetBoundingSphere( bounds, EVE_BOUNDS_WITH_CHILDREN ) )
 	{
 		m_isInFrustum = frustum.IsSphereVisible( &bounds );
 		m_estimatedPixelDiameterWithChildren = frustum.GetPixelSizeAccrossEst( &bounds );
-		if( m_isInFrustum && m_estimatedPixelDiameterWithChildren >= g_eveSpaceSceneVisibilityThreshold )
+		if( m_isInFrustum && m_estimatedPixelDiameterWithChildren >= updateContext.GetVisibilityThreshold() )
 		{
 			m_isVisible = true;
 		}
@@ -1444,11 +1442,11 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 	if( m_isVisible )
 	{
-		if( m_estimatedPixelDiameter > g_eveSpaceSceneMediumDetailThreshold )
+		if( m_estimatedPixelDiameter > updateContext.GetMediumDetailThreshold() )
 		{
 			m_lodLevel = TR2_LOD_HIGH;
 		}
-		else if( m_estimatedPixelDiameter > g_eveSpaceSceneLowDetailThreshold )
+		else if( m_estimatedPixelDiameter > updateContext.GetLowDetailThreshold() )
 		{
 			m_lodLevel = TR2_LOD_MEDIUM;
 		}
@@ -1457,15 +1455,15 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 			m_lodLevel = TR2_LOD_LOW;
 		}
 
-		if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneMediumDetailThreshold )
+		if( m_estimatedPixelDiameterWithChildren > updateContext.GetMediumDetailThreshold() )
 		{
 			m_lodLevelWithChildren = TR2_LOD_HIGH;
 		}
-		else if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneLowDetailThreshold )
+		else if( m_estimatedPixelDiameterWithChildren > updateContext.GetLowDetailThreshold() )
 		{
 			m_lodLevelWithChildren = TR2_LOD_MEDIUM;
 		}
-		else if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneLowDetailThreshold * 0.5f )
+		else if( m_estimatedPixelDiameterWithChildren > updateContext.GetLowDetailThreshold() * 0.5f )
 		{
 			m_lodLevelWithChildren = TR2_LOD_LOW;
 		}
@@ -1487,7 +1485,7 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 	for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 	{
-		( *ecIt )->UpdateVisibility( frustum, m_worldTransform, m_lodLevelWithChildren );
+		( *ecIt )->UpdateVisibility( updateContext, m_worldTransform, m_lodLevelWithChildren );
 	}
 
 	if( m_isMeshVisible )
@@ -1501,24 +1499,26 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 			{
 				( *it )->SetBoneMatrix( m_animationUpdater->GetMeshBoneMatrixList(), m_animationUpdater->GetMeshBoneCount() );
 			}
-			( *it )->UpdateVisibility( frustum, &pd );
+			( *it )->UpdateVisibility( updateContext, &pd );
 		}
 	}
 
 	if( m_mesh )
 	{
-		auto size = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
-		m_mesh->UseWithScreenSize( size, m_boundingSphereWorldRadius );
+		m_meshScreenSize = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) / updateContext.GetLodFactor();
+		m_meshScreenSize = m_allowLodSelection ? m_meshScreenSize : std::numeric_limits<float>::max();
+
+		m_mesh->UseWithScreenSize( m_meshScreenSize, m_boundingSphereWorldRadius );
 
 		if( g_eveSpaceSceneRaytracedShadows )
 		{
-			UpdateRtMesh();
+			UpdateRtMesh(updateContext);
 			UpdateRtSkeleton();
 		}
 	}
 }
 
-void EveSpaceObject2::UpdateRtMesh()
+void EveSpaceObject2::UpdateRtMesh( const EveUpdateContext& updateContext )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	if( !renderContext.GetCaps().SupportsRaytracing() )
@@ -1529,7 +1529,7 @@ void EveSpaceObject2::UpdateRtMesh()
 	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 	if( !areas->empty() )
 	{
-		auto meshScreenSize = m_allowLodSelection ? m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor : std::numeric_limits<float>::max();
+		auto meshScreenSize = m_allowLodSelection ? m_estimatedPixelDiameter / updateContext.GetLodFactor() : std::numeric_limits<float>::max();
 		auto rtMesh = m_mesh->GetOrCreateRtMesh();
 		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), meshScreenSize );
 
@@ -1593,10 +1593,11 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	}
 }
 
-bool EveSpaceObject2::IsVisible( const TriFrustum& frustum ) const
+bool EveSpaceObject2::IsVisible( const EveUpdateContext& updateContext ) const
 {
+	auto frustum = updateContext.GetFrustum();
 	return frustum.IsSphereVisible( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) &&
-		frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) >= g_eveSpaceSceneVisibilityThreshold;
+		frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) >= updateContext.GetVisibilityThreshold();
 }
 
 void EveSpaceObject2::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors )
@@ -3543,8 +3544,7 @@ int EveSpaceObject2::GetLastUsedMeshLod() const
 	{
 		return 0;
 	}
-	auto meshScreenSize = m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor;
-	return m_mesh->GetGeometryResource()->GetLodIndexForScreenSize( unsigned( m_mesh->GetMeshIndex() ), meshScreenSize );
+	return m_mesh->GetGeometryResource()->GetLodIndexForScreenSize( unsigned( m_mesh->GetMeshIndex() ), m_meshScreenSize );
 }
 
 void EveSpaceObject2::SetProceduralContainerVariable( const char* name, float value )

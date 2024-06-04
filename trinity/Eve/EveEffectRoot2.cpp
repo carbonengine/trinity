@@ -12,8 +12,6 @@
 #include "Eve/SpaceObject/Children/EveChildContainer.h"
 
 extern float g_eveSpaceObjectResourceUnloadingTimeThreshold;
-extern float g_eveSpaceSceneMediumDetailThreshold;
-extern float g_eveSpaceSceneLowDetailThreshold;
 
 EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	PARENTLOCK( m_observers ),
@@ -137,7 +135,7 @@ void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 	}
 }
 
-void EveEffectRoot2::UpdateSyncronous( EveUpdateContext& updateContext ) 
+void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 {	
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -171,7 +169,7 @@ void EveEffectRoot2::UpdateSyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveEffectRoot2::UpdateAsyncronous( EveUpdateContext& updateContext ) 
+void EveEffectRoot2::UpdateAsyncronous( const EveUpdateContext& updateContext ) 
 {	
 	UpdateControllers();
 
@@ -200,7 +198,7 @@ void EveEffectRoot2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveEffectRoot2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) 
+void EveEffectRoot2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	if( !m_display )
 	{
@@ -213,19 +211,19 @@ void EveEffectRoot2::UpdateVisibility( const TriFrustum& frustum, const Matrix& 
 		GetBoundingSphere( boundingSphere );
 		BoundingSphereTransform( m_worldTransform, boundingSphere );
 		
-		if( frustum.IsSphereVisible( &boundingSphere ) )
+		if( updateContext.GetFrustum().IsSphereVisible( &boundingSphere ) )
 		{
-			m_estimatedSize = frustum.GetPixelSizeAccross( &boundingSphere );
+			m_estimatedSize = updateContext.GetFrustum().GetPixelSizeAccross( &boundingSphere );
 		}
 
 		Tr2Lod oldLod = m_lodLevel;
 		m_lodLevel = TR2_LOD_LOW;
 
-		if( m_estimatedSize >= g_eveSpaceSceneMediumDetailThreshold )
+		if( m_estimatedSize >= updateContext.GetMediumDetailThreshold() )
 		{
 			m_lodLevel = TR2_LOD_HIGH;
 		}
-		else if( m_estimatedSize >= g_eveSpaceSceneLowDetailThreshold )
+		else if( m_estimatedSize >= updateContext.GetLowDetailThreshold() )
 		{
 			m_lodLevel = TR2_LOD_MEDIUM;
 		}
@@ -235,7 +233,7 @@ void EveEffectRoot2::UpdateVisibility( const TriFrustum& frustum, const Matrix& 
 	
 	for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 	{
-		(*ecIt)->UpdateVisibility( frustum, parentTransform, m_lodLevel );
+		(*ecIt)->UpdateVisibility( updateContext, parentTransform, m_lodLevel );
 	}
 }
 

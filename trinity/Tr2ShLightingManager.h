@@ -8,6 +8,7 @@
 #ifndef Tr2ShLightingManager_H
 #define Tr2ShLightingManager_H
 
+class EveUpdateContext;
 BLUE_DECLARE( Tr2PointLight );
 BLUE_DECLARE_VECTOR( Tr2PointLight );
 BLUE_DECLARE( TriCurveSet );
@@ -115,7 +116,7 @@ BLUE_INTERFACE( ITr2SecondaryLightSource ): public IRoot
 // --------------------------------------------------------------------------------------
 BLUE_INTERFACE( ITr2ShLightingReceiver ): public IRoot
 {
-	virtual void UpdateShLighting( Tr2ShLightingManager& ) = 0;
+	virtual void UpdateShLighting( Tr2ShLightingManager&, const EveUpdateContext& ) = 0;
 	virtual void ClearShLighting() = 0;
 };
 

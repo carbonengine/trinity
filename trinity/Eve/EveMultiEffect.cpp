@@ -282,7 +282,7 @@ float EveMultiEffect::GetRangeDuration( const std::string& name, const std::stri
 
 /////////////////////////////////////////////////////////////////////////////////////
 // IEveSpaceObject2
-void EveMultiEffect::UpdateSyncronous( EveUpdateContext& updateContext ) 
+void EveMultiEffect::UpdateSyncronous( const EveUpdateContext& updateContext ) 
 {
 	Be::Time time = updateContext.GetTime();
 
@@ -304,8 +304,8 @@ void EveMultiEffect::UpdateSyncronous( EveUpdateContext& updateContext )
 }
 
 
-void EveMultiEffect::UpdateAsyncronous( EveUpdateContext& updateContext ) {}
-void EveMultiEffect::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) {}
+void EveMultiEffect::UpdateAsyncronous( const EveUpdateContext& updateContext ) {}
+void EveMultiEffect::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) {}
 void EveMultiEffect::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) {}
 bool EveMultiEffect::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const { return false; }
 void EveMultiEffect::GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpaceObjectPSData& psData ) const {}

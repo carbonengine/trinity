@@ -19,6 +19,9 @@ const Be::ClassInfo* EveBoosterSet2Renderable::ExposeToBlue()
 		MAP_ATTRIBUTE( "trailsTimeDelta", m_trailsTimeDelta, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "trailIntensity", m_trailIntensity, "", Be::READ )
 		MAP_ATTRIBUTE( "trailsTotalLength", m_trailsTotalLength, "", Be::READ )
+		MAP_ATTRIBUTE( "isVisible", m_isVisible, "", Be::READ )
+		MAP_ATTRIBUTE( "trailsVisible", m_trailsVisible, "", Be::READ )
+		MAP_ATTRIBUTE( "boostersVisible", m_boostersVisible, "", Be::READ )
 	EXPOSURE_END()
 }
 

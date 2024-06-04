@@ -19,9 +19,6 @@
 #include "Utilities/BoundingSphere.h"
 
 
-extern float g_eveSpaceSceneLODFactor;
-
-
 EveChildParticleSystem::EveChildParticleSystem( IRoot* lockobj ):
 	EveChildTransform(),
 	PARENTLOCK( m_particleEmitters ),
@@ -37,6 +34,7 @@ EveChildParticleSystem::EveChildParticleSystem( IRoot* lockobj ):
 	m_lodClampLow( 5 ),
 	m_lodSphereRadius( 0.0f ),
 	m_minScreenSize( 0.0f ),
+	m_adjustedMinScreenSize( 0.0f ),
 	m_currentScreenSize( -1 ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER )
 {
@@ -103,13 +101,15 @@ void EveChildParticleSystem::Setup( const Vector3* scale, const Quaternion* rota
 	EveChildTransform::Setup( scale, rotation, translation, lowestLodVisible );
 }
 
-void EveChildParticleSystem::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildParticleSystem::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
+	auto frustum = updateContext.GetFrustum();
 	m_isVisible = m_display && frustum.IsSphereVisible( &m_boundingSphere );
+	m_adjustedMinScreenSize = m_minScreenSize * updateContext.GetLodFactor();
 	if( m_isVisible )
 	{
 		m_currentScreenSize = frustum.GetPixelSizeAccrossEst( &m_lodSphere );
-		m_isVisible &= m_currentScreenSize >= m_minScreenSize * g_eveSpaceSceneLODFactor;
+		m_isVisible &= m_currentScreenSize >= m_adjustedMinScreenSize;
 	}
 	else
 	{
@@ -127,7 +127,7 @@ void EveChildParticleSystem::UpdateVisibility( const TriFrustum& frustum, const 
 
 bool EveChildParticleSystem::IsVisible( const TriFrustum& frustum ) const
 {
-	return frustum.IsSphereVisible( &m_boundingSphere ) && frustum.GetPixelSizeAccrossEst( &m_lodSphere ) >= m_minScreenSize * g_eveSpaceSceneLODFactor;
+	return frustum.IsSphereVisible( &m_boundingSphere ) && frustum.GetPixelSizeAccrossEst( &m_lodSphere ) >= m_adjustedMinScreenSize;
 }
 
 
@@ -198,7 +198,7 @@ Tr2PerObjectData* EveChildParticleSystem::GetPerObjectData( ITriRenderBatchAccum
 	return data;
 }
 
-void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildParticleSystem::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	if( m_mesh )
 	{
@@ -209,7 +209,7 @@ void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, 
 	}
 }
 
-void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildParticleSystem::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform;
 	if( params.childParent )
@@ -270,7 +270,7 @@ void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext,
 			{
 				TriFrustum frustum;
 				frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionRawTransform(), Tr2Renderer::GetViewport() );
-				if( frustum.GetPixelSizeAccrossEst( &m_lodSphere ) < m_minScreenSize * g_eveSpaceSceneLODFactor )
+				if( frustum.GetPixelSizeAccrossEst( &m_lodSphere ) < m_minScreenSize * updateContext.GetLodFactor() )
 				{
 					emitCountFactor = 0.f;
 				}

@@ -20,9 +20,6 @@ CCP_STATS_DECLARE( decalDPCount, "Trinity/EveSpaceObject2/DecalDPCount", true, C
 bool g_buildDecalBuffers = false;
 TRI_REGISTER_SETTING( "buildDecalBuffers", g_buildDecalBuffers );
 
-
-extern float g_eveSpaceSceneLODFactor;
-
 using namespace Tr2RenderContextEnum;
 
 static BlueStructureDefinition s_eveSpaceObjectDecalIndexDef[] =
@@ -116,7 +113,7 @@ bool EveSpaceObjectDecal::OnPrepareResources()
 	return true;
 }
 
-void EveSpaceObjectDecal::UpdateVisibility( const TriFrustum& frustum, const IEveSpaceObject2::ParentData* parentData )
+void EveSpaceObjectDecal::UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData )
 {
 	m_isVisible = 0;
 
@@ -132,7 +129,8 @@ void EveSpaceObjectDecal::UpdateVisibility( const TriFrustum& frustum, const IEv
 		Vector3 min( -1, -1, -1 );
 		Vector3 max( 1, 1, 1 );
 		bool isInstanced = m_instanceData != nullptr;
-		
+		auto frustum = updateContext.GetFrustum();
+
 		// are we using instance magic?
 		if( isInstanced )
 		{
@@ -163,7 +161,7 @@ void EveSpaceObjectDecal::UpdateVisibility( const TriFrustum& frustum, const IEv
 
 		auto pixelSize = frustum.GetPixelSizeAccrossEst( sphereCenter, sphereRadius );
 			
-		float modifiedMinScreen = m_minScreenSize * g_eveSpaceSceneLODFactor;
+		float modifiedMinScreen = m_minScreenSize * updateContext.GetLodFactor();
 		if( pixelSize < modifiedMinScreen )
 		{
 			m_isVisible = 0;

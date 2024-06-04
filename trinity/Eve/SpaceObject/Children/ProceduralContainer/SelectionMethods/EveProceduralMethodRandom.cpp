@@ -111,7 +111,7 @@ EveChildRefPtr EveProceduralMethodRandom::GetSelectedChild()
     return nullptr;
 }
 
-void EveProceduralMethodRandom::UpdateASyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveProceduralMethodRandom::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
     bool regenerateParameterMap = false;
     for( auto it = begin( m_parameters ); it != end( m_parameters ); ++it )

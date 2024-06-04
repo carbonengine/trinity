@@ -8,7 +8,7 @@
 #ifndef Tr2DataTextureManager_H
 #define Tr2DataTextureManager_H
 
-BLUE_DECLARE( EveUpdateContext );
+class EveUpdateContext;
 BLUE_DECLARE( Tr2TextureReference );
 
 BLUE_CLASS( Tr2DataTextureManager ) :

@@ -57,10 +57,10 @@ public:
 	// IEveSpaceObjectChild
 	virtual const char* GetName() const override;
 	virtual void SetName( const char* name ) override;
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	virtual void GetLocalToWorldTransform( Matrix& transform ) const override;
-	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod ) override;
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override
@@ -79,7 +79,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	bool IsVisible( const TriFrustum& frustum ) const override;
+	bool IsVisible( const EveUpdateContext& frustum ) const override;
 	void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 	bool HasTransparentBatches() override;
 	float GetSortValue() override;
@@ -192,6 +192,7 @@ private:
 
 	float m_sortingModifier;
 	float m_minScreenSize;
+	float m_adjustedMinScreenSize;
 
 	uint32_t m_lightmapWidth;
 	uint32_t m_lightmapHeight;

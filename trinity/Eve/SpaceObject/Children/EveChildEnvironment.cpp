@@ -54,7 +54,7 @@ void EveChildEnvironment::SetName( const char* name )
 	m_name = BlueSharedString(name);
 }
 
-void EveChildEnvironment::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildEnvironment::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 
 }
@@ -71,12 +71,12 @@ bool EveChildEnvironment::GetBoundingSphere( Vector4& sphere, BoundingSphereQuer
 	return true;
 }
 
-void EveChildEnvironment::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildEnvironment::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 
 }
 
-void EveChildEnvironment::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildEnvironment::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( m_isDirty )
 	{

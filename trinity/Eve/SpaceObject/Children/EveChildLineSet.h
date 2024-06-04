@@ -55,7 +55,7 @@ public:
 	void GetLocalToWorldTransform( Matrix & transform ) const override;
 
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod ) override;
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override {};
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
 	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override {};
@@ -74,8 +74,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// update
-	void UpdateSyncronous( EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
-	void UpdateAsyncronous( EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void ChangeLOD( Tr2Lod lod ) override;
 
 

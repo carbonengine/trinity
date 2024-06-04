@@ -266,7 +266,7 @@ void EveChildContainer::SetName( const char* name )
 	m_name = BlueSharedString( name );
 }
 
-void EveChildContainer::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildContainer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{
@@ -280,7 +280,7 @@ void EveChildContainer::UpdateVisibility( const TriFrustum& frustum, const Matri
 
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		( *it )->UpdateVisibility( frustum, parentTransform, parentLod );
+		( *it )->UpdateVisibility( updateContext, parentTransform, parentLod );
 	}
 
 	if( HasRenderables() )
@@ -294,7 +294,7 @@ void EveChildContainer::UpdateVisibility( const TriFrustum& frustum, const Matri
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
-			( *it )->UpdateVisibility( frustum, m_worldTransform, bones, boneCount);
+			( *it )->UpdateVisibility( updateContext, m_worldTransform, bones, boneCount);
 		}
 	}
 }
@@ -383,7 +383,7 @@ void EveChildContainer::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Qu
 	}	
 }
 
-void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildContainer::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( !IsUpdating() )
 	{
@@ -406,7 +406,7 @@ void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, const
 	}
 }
 
-void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildContainer::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	m_boneOffsets.AdvanceFrame();
 
@@ -427,7 +427,7 @@ void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, cons
 	}
 }
 
-void EveChildContainer::DoUpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{

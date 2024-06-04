@@ -14,7 +14,7 @@ public:
 	EveCircle( IRoot* lockobj = nullptr );
 	~EveCircle();
 	
-	bool Update( EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
+	bool Update( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateBuffer( Tr2RenderContext & renderContext, uint8_t * &data, const Matrix& systemLocation, const unsigned stride ) override;
 	
 	void GeneratePoints( const Matrix& parentTransform = IdentityMatrix() ) override;

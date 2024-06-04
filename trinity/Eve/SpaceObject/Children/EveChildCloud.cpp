@@ -19,8 +19,6 @@
 
 using namespace Tr2RenderContextEnum;
 
-extern float g_eveSpaceSceneLODFactor;
-
 namespace
 {
 
@@ -183,7 +181,8 @@ EveChildCloud::EveChildCloud( IRoot* lockobj )
 	m_sortingModifier( 1.0f ),
 	m_minScreenSize( 0.0f ),
 	m_cellScreenSize( 0.3f ),
-	m_currentIB( 0 )
+	m_currentIB( 0 ),
+	m_lastLodFactor(1.0f)
 {
 	PrepareResources();
 }
@@ -221,9 +220,11 @@ void EveChildCloud::SetName( const char* name )
 	m_name = name;
 }
 
-void EveChildCloud::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildCloud::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
-	m_isVisible = !( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) || frustum.GetPixelSizeAccross( &m_boundingSphere ) < m_minScreenSize * g_eveSpaceSceneLODFactor );
+	auto frustum = updateContext.GetFrustum();
+	m_isVisible = !( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) || frustum.GetPixelSizeAccross( &m_boundingSphere ) < m_minScreenSize * updateContext.GetLodFactor() );
+	m_lastLodFactor = updateContext.GetLodFactor(); // this is needed for some math in GetPerObjectData
 }
 
 void EveChildCloud::GetRenderables( std::vector<ITr2Renderable*>& renderables )
@@ -406,7 +407,7 @@ Tr2PerObjectData* EveChildCloud::GetPerObjectData( ITriRenderBatchAccumulator* a
 	float x = ( box.m_max.x - box.m_min.x ) * w;
 	float y = ( box.m_max.y - box.m_min.y ) * w;
 	float size = std::max( x, y ) / m_preTesselationLevel;
-	size /= 1 + logf( g_eveSpaceSceneLODFactor );
+	size /= 1 + logf( m_lastLodFactor );
 
 	m_currentIB = 0;
 	while( size < m_cellScreenSize && m_currentIB + 1 < m_indexBuffers.size() )
@@ -418,7 +419,7 @@ Tr2PerObjectData* EveChildCloud::GetPerObjectData( ITriRenderBatchAccumulator* a
 	return data;
 }
 
-void EveChildCloud::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildCloud::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( m_volume )
 	{
@@ -440,7 +441,7 @@ void EveChildCloud::UpdateSyncronous( EveUpdateContext& updateContext, const Eve
 	BoundingSphereFromBox( m_boundingSphere, m_min, m_max, &m_worldTransform );
 }
 
-void EveChildCloud::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildCloud::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	BoundingSphereFromBox( m_boundingSphere, m_min, m_max, &m_worldTransform );
 }

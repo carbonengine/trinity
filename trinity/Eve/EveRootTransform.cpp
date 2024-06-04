@@ -9,7 +9,7 @@ EveRootTransform::EveRootTransform( IRoot* lockobj ):
 {
 }
 
-void EveRootTransform::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveRootTransform::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -54,7 +54,7 @@ void EveRootTransform::UpdateSyncronous( EveUpdateContext& updateContext )
 	EveTransform::UpdateAsyncronous( updateContext );
 }
 
-void EveRootTransform::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveRootTransform::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 }
 

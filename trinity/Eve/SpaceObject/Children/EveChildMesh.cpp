@@ -11,11 +11,9 @@
 #include "Utilities/BoundingBox.h"
 #include "Resources/TriGeometryRes.h"
 
-extern float g_eveSpaceSceneLODFactor;
-extern float g_eveSpaceSceneVisibilityThreshold;
 extern bool g_eveSpaceSceneRaytracedShadows;
 
-EveChildMesh::EveChildMesh( IRoot* lockobj ):
+EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 	PARENTLOCK( m_transformModifiers ),
 	PARENTLOCK( m_decals ),
 	PARENTLOCK( m_attachments ),
@@ -162,12 +160,13 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 	return sizeInShadow > 5.f;
 }
 
-void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	m_isVisible = false;
 	m_currentScreenSize = -1;
 	m_instancesVisible = false;
 	m_currentInstanceScreenSize = -1.0f;
+	auto frustum = updateContext.GetFrustum();
 
 	if( m_mesh )
 	{
@@ -188,8 +187,8 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 			m_mesh->UseWithScreenSize( m_currentScreenSize, CcpMath::Sphere( bounds ).radius );
 		}
 
-		m_currentScreenSize /= g_eveSpaceSceneLODFactor;
-		m_currentInstanceScreenSize /= g_eveSpaceSceneLODFactor;
+		m_currentScreenSize /= updateContext.GetLodFactor();
+		m_currentInstanceScreenSize /= updateContext.GetLodFactor();
 
 		if( frustum.IsBoxVisible( bounds ) )
 		{
@@ -206,7 +205,7 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
-			( *it )->UpdateVisibility( frustum, m_worldTransform, bones, boneCount );
+			( *it )->UpdateVisibility( updateContext, m_worldTransform, bones, boneCount );
 		}
 	}
 
@@ -218,7 +217,7 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 			{
 				( *it )->SetBoneMatrix( m_animationUpdater->GetMeshBoneMatrixList(), m_animationUpdater->GetMeshBoneCount() );
 			}
-			( *it )->UpdateVisibility( frustum, &m_parentData );
+			( *it )->UpdateVisibility( updateContext, &m_parentData );
 		}
 
 		if( g_eveSpaceSceneRaytracedShadows )
@@ -379,15 +378,16 @@ bool EveChildMesh::HasTransparentBatches()
 	return false;
 }
 
-bool EveChildMesh::IsVisible( const TriFrustum& frustum ) const
+bool EveChildMesh::IsVisible( const EveUpdateContext& updateContext ) const
 {
 	Vector4 boundingSphere;
 
 	if( GetBoundingSphere( boundingSphere ) && boundingSphere.w != 0)
 	{
+		auto frustum = updateContext.GetFrustum();
 		if( frustum.IsSphereVisible( boundingSphere.GetXYZ(), boundingSphere.w ) )
 		{
-			return frustum.GetPixelSizeAccrossEst( boundingSphere.GetXYZ(), boundingSphere.w ) >= g_eveSpaceSceneVisibilityThreshold;
+			return frustum.GetPixelSizeAccrossEst( boundingSphere.GetXYZ(), boundingSphere.w ) >= updateContext.GetVisibilityThreshold();
 		}
 	}
 	return false;
@@ -549,7 +549,7 @@ void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shade
 	}
 }
 
-void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	m_boneOffsets.AdvanceFrame();
 
@@ -605,7 +605,7 @@ void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 	m_psData.screenSize.y = min( float( m_currentScreenSize / screen_height ), 1.0f );
 }
 
-void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	if( m_animationUpdater )
 	{

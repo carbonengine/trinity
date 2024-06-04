@@ -10,6 +10,7 @@
 #include "include/TriColor.h"
 #include "Tr2DebugRenderer.h"
 #include "Tr2ProceduralResources.h"
+#include "Eve/EveUpdateContext.h"
 
 // forwards
 class ITriRenderBatchAccumulator;
@@ -90,7 +91,7 @@ public:
 	// get the transformed bounding sphere, ready for use
 	void GetBoundingSphere( Vector4& boundingSphere ) const;
 	// rendering
-	void UpdateVisibility( const TriFrustum& frustum );
+	void UpdateVisibility( const EveUpdateContext& updateContext );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	void UpdateTrails( float deltaT, Be::Time t );
 	float GetIntensity() const { return m_overallIntensity; }
@@ -115,6 +116,10 @@ public:
 	Vector3 m_trailsBoundsMin, m_trailsBoundsMax;
 	float m_boosterLOD;
 	float m_trailsLOD;
+
+	bool m_boosterHighLod;
+	bool m_boostersVisible;
+	bool m_trailsVisible;
 		
 	// parent ship data
 	float m_parentSpeed;
@@ -240,7 +245,7 @@ public:
 	void SetGlow( EveSpriteSetPtr glow );
 	void SetTrail( EveTrailsSetPtr trail );
 	// rendering
-	void UpdateVisibility( const TriFrustum& frustum );
+	void UpdateVisibility( const EveUpdateContext& updateContext );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	// query booster intensity
 	float GetBoosterIntensity() const;

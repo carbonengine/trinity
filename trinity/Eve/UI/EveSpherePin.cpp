@@ -182,7 +182,7 @@ void EveSpherePin::ReleaseCachedData( BlueAsyncRes* p )
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveSpherePin::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveSpherePin::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -217,7 +217,7 @@ void EveSpherePin::UpdateSyncronous( EveUpdateContext& updateContext )
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveSpherePin::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveSpherePin::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	// don't forget the curves
 	if( !m_curveSets.empty() )
@@ -230,7 +230,7 @@ void EveSpherePin::UpdateAsyncronous( EveUpdateContext& updateContext )
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveSpherePin::Update( EveUpdateContext& updateContext )
+void EveSpherePin::Update( const EveUpdateContext& updateContext )
 {
 	UpdateSyncronous( updateContext );
 	UpdateAsyncronous( updateContext );
@@ -246,7 +246,7 @@ void EveSpherePin::UpdateViewDependentData( const TriFrustum& frustum, const Mat
 	m_worldTransform = localTransform * parentTransform;
 }
 
-void EveSpherePin::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveSpherePin::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	if( !m_display )
 	{
@@ -254,7 +254,7 @@ void EveSpherePin::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	}
 
 	// position the lines with parent transform
-	UpdateViewDependentData( frustum, parentTransform );
+	UpdateViewDependentData( updateContext.GetFrustum(), parentTransform );
 	Vector4 boundingSphere = m_boundingSphere;
 	BoundingSphereTransform( m_worldTransform, boundingSphere );
 }

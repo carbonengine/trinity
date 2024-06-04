@@ -72,6 +72,7 @@ public:
 	void AddLight( PerLightData& data );
 	ALResult UpdateLists( Tr2RenderContext& renderContext );
 	void SetVariableStore();
+	void AdjustLightCutoff( float lodFactor );
 
 	virtual void ReleaseResources( TriStorage s );
 
@@ -105,6 +106,8 @@ private:
 	Tr2Variable m_lightBufferVariable;
 	Tr2Variable m_indexBufferVariable;
 	TriFrustum m_frustum;
+
+	float m_adjustedCutoff;
 };
 
 #endif

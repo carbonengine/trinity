@@ -139,7 +139,7 @@ bool EveSpriteLineSet::ReallocateResources()
 // Description:
 //   Get bounding box around sprite lines, update visibility based on if box is visible or not
 // --------------------------------------------------------------------------------------
-bool EveSpriteLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveSpriteLineSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -148,7 +148,7 @@ bool EveSpriteLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix
 	}
 	aabb.Transform( parentTransform );
 
-	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
 void EveSpriteLineSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )

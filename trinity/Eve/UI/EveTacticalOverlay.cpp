@@ -13,11 +13,6 @@
 #include "TriFrustum.h"
 #include "Tr2VariableStore.h"
 
-extern float g_eveSpaceSceneLowDetailThreshold;
-extern float g_eveSpaceSceneMediumDetailThreshold;
-extern float g_eveSpaceSceneHighDetailThreshold;
-extern float g_eveSpaceSceneVisibilityThreshold;
-
 EveTacticalOverlayTrackObject::EveTacticalOverlayTrackObject( IRoot* lockobj ) :
 	m_position( 0, 0, 0 ),
 	m_velocity( 0, 0, 0 ),
@@ -27,7 +22,7 @@ EveTacticalOverlayTrackObject::EveTacticalOverlayTrackObject( IRoot* lockobj ) :
 {
 }
 
-void EveTacticalOverlayTrackObject::UpdatePosition( EveUpdateContext& updateContext )
+void EveTacticalOverlayTrackObject::UpdatePosition( const EveUpdateContext& updateContext )
 {
 	if( m_positionCurve )
 	{
@@ -150,7 +145,7 @@ void EveTacticalOverlay::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer
 	}
 }
 
-void EveTacticalOverlay::UpdateSyncronous( EveUpdateContext& updateContext ) 
+void EveTacticalOverlay::UpdateSyncronous( const EveUpdateContext& updateContext ) 
 {
 	if( m_positionCurve )
 	{
@@ -165,9 +160,9 @@ void EveTacticalOverlay::UpdateSyncronous( EveUpdateContext& updateContext )
 	RegisterVariables();
 }
 
-static inline float GetSubdivisionCount( float pixelSize, float low, float mid, float high )
+static inline float GetSubdivisionCount( float pixelSize, float low, float mid, float high, const EveUpdateContext& updateContext )
 {
-	if( pixelSize < g_eveSpaceSceneVisibilityThreshold )
+	if( pixelSize < updateContext.GetVisibilityThreshold() )
 	{
 		return 0;
 	}
@@ -176,26 +171,26 @@ static inline float GetSubdivisionCount( float pixelSize, float low, float mid, 
 	float lowStep;
 	float highStep;
 
-	if( pixelSize <= g_eveSpaceSceneLowDetailThreshold )
+	if( pixelSize <= updateContext.GetLowDetailThreshold() )
 	{
 		lowCount = 1;
 		highCount = low;
-		lowStep = g_eveSpaceSceneVisibilityThreshold;
-		highStep = g_eveSpaceSceneLowDetailThreshold;
+		lowStep = updateContext.GetVisibilityThreshold();
+		highStep = updateContext.GetLowDetailThreshold();
 	}
-	else if( pixelSize <= g_eveSpaceSceneMediumDetailThreshold )
+	else if( pixelSize <= updateContext.GetMediumDetailThreshold() )
 	{
 		lowCount = low;
 		highCount = mid;
-		lowStep = g_eveSpaceSceneLowDetailThreshold;
-		highStep = g_eveSpaceSceneMediumDetailThreshold;
+		lowStep = updateContext.GetLowDetailThreshold();
+		highStep = updateContext.GetMediumDetailThreshold();
 	}
 	else
 	{
 		lowCount = mid;
 		highCount = high;
-		lowStep = g_eveSpaceSceneMediumDetailThreshold;
-		highStep = g_eveSpaceSceneHighDetailThreshold;
+		lowStep = updateContext.GetMediumDetailThreshold();
+		highStep = updateContext.GetHighDetailThreshold();
 	}
 
 	float linstep = TriLinearize( lowStep, highStep, pixelSize );
@@ -223,7 +218,7 @@ void EveTacticalOverlay::SetVariableStore( Tr2Effect* effect )
 	}
 }
 
-void EveTacticalOverlay::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveTacticalOverlay::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	m_connectorBuffer.clear();
 	m_anchorBuffer.clear();
@@ -232,6 +227,8 @@ void EveTacticalOverlay::UpdateVisibility( const TriFrustum& frustum, const Matr
 	Vector3 up( 0, 1, 0 );
 	float distanceThreshold = ( m_ranges.x + m_ranges.y ) * m_ranges.z;
 	float requestedSegments = 0.f;
+	auto frustum = updateContext.GetFrustum();
+
 	for( auto it = m_trackObjects.begin(); it != m_trackObjects.end(); it++ )
 	{
 		Vector3 position = (*it)->GetPosition();
@@ -258,7 +255,7 @@ void EveTacticalOverlay::UpdateVisibility( const TriFrustum& frustum, const Matr
 		}
 		
 		float pixelDiameter = frustum.GetPixelSizeAccross( &bs );
-		float segments = GetSubdivisionCount( pixelDiameter, m_connectorSegmentsLow, m_connectorSegmentsMedium, m_connectorSegmentsHigh );
+		float segments = GetSubdivisionCount( pixelDiameter, m_connectorSegmentsLow, m_connectorSegmentsMedium, m_connectorSegmentsHigh, updateContext );
 		if( segments != 0 )
 		{
 			Vector2 planarDiff( positionPlane.x - position.x, positionPlane.z - position.z );

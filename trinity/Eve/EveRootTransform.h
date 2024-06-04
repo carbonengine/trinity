@@ -24,8 +24,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext );
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriTargetable

@@ -22,7 +22,7 @@ public:
 	EveTacticalOverlayTrackObject( IRoot* lockobj = NULL );
 	~EveTacticalOverlayTrackObject() {}
 
-	void UpdatePosition( EveUpdateContext& updateContext );
+	void UpdatePosition( const EveUpdateContext& updateContext );
 	inline Vector3 GetVelocity() const { return m_velocity; }
 	inline Vector3 GetPosition() const { return m_position; }
 	inline float GetRadius() const { return m_radius; }
@@ -81,9 +81,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	void UpdateSyncronous( EveUpdateContext& updateContext );
-	void UpdateAsyncronous( EveUpdateContext& updateContext ) {}
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
+	void UpdateSyncronous( const EveUpdateContext& updateContext );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext ) {}
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ){};
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const { return false; }
 	void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t ) { position = Vector3( 0.f, 0.f, 0.f ); }
