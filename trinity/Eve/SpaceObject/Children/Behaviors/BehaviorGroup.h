@@ -54,6 +54,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// BehaviorGroup
 	void AddAgent();
+	void AddAgents( const std::vector<Vector3>& positions );
 	void RemoveAgent();
 	void RemoveSpecificAgent( int index );
 	void UpdateAsyncronous( EveUpdateContext & updateContext );

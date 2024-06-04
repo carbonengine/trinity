@@ -276,6 +276,38 @@ void BehaviorGroup::AddAgent()
 	OnAgentCountChanged();
 }
 
+void BehaviorGroup::AddAgents( const std::vector<Vector3>& positions )
+{
+	for( auto& position : positions )
+	{
+		DroneAgent agent;
+		agent.position = position;
+		m_agents.push_back( agent );
+	}
+
+	while( m_scratchData.size() < m_behaviors.size() )
+	{
+		m_scratchData.push_back( CcpMallocBuffer() );
+	}
+
+	for( size_t i = 0; i < m_behaviors.size(); ++i )
+	{
+		auto size = m_behaviors[m_sortedBehaviorIndexes[i]]->GetScratchMemorySize();
+		if( size > 0 )
+		{
+			m_scratchData[m_sortedBehaviorIndexes[i]].resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
+			for( size_t j = m_agents.size() - positions.size(); j < m_agents.size(); j++ )
+			{
+				m_behaviors[m_sortedBehaviorIndexes[i]]->InitializeScratch( m_scratchData[m_sortedBehaviorIndexes[i]].get() + size * ( j ) );
+			}
+		}
+	}
+
+	m_actualCount += static_cast<int32_t>( positions.size() );
+
+	OnAgentCountChanged();
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Create an agent and add it to the vector. Updates scratchdata for that new agent
