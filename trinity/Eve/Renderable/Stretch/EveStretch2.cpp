@@ -198,17 +198,17 @@ void EveStretch2::SetIntensity( float intensity )
 	m_intensity = intensity;
 }
 
-void EveStretch2::UpdateEffectSync( EveUpdateContext& updateContext )
+void EveStretch2::UpdateEffectSync( const EveUpdateContext& updateContext )
 {
 	// do nothing here
 }
 
-void EveStretch2::UpdateEffectAsync( EveUpdateContext& updateContext ) 
+void EveStretch2::UpdateEffectAsync( const EveUpdateContext& updateContext )
 {
 	Update( updateContext );
 }
 
-void EveStretch2::Update(EveUpdateContext& updateContext)
+void EveStretch2::Update( const EveUpdateContext& updateContext )
 {
 	Be::Time time = updateContext.GetTime();
 	if( m_startTime == 0 )
@@ -293,14 +293,14 @@ void EveStretch2::GetEndPointTransforms( Matrix& source, Matrix& destination ) c
 	destination.GetTranslation() = m_destination;
 }
 
-void EveStretch2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveStretch2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	if( m_visible && m_intensity > 0 )
 	{
 		CcpMath::AxisAlignedBox box( Vector3( -m_boundingRadius, -m_boundingRadius, -m_boundingRadius ), Vector3( m_boundingRadius, m_boundingRadius, Length( m_destination - m_source ) + m_boundingRadius ) );
 		box.Transform( m_sourceTransform );
 
-		m_isInFrustum = frustum.IsBoxVisible( box );
+		m_isInFrustum = updateContext.GetFrustum().IsBoxVisible( box );
 	}
 	else
 	{

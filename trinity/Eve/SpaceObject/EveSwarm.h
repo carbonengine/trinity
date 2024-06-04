@@ -54,7 +54,7 @@ public:
 	void SetShaderData( const EveSpaceObjectVSData& vsData, const EveSpaceObjectPSData& psData );
 	void InitDecals( const PEveSpaceObjectDecalVector &decals );
 	void PushDecals( std::vector<ITr2Renderable*>& renderables, float screensize );
-	void UpdateDecalVisibility( const TriFrustum& frustum, IEveSpaceObject2::ParentData& pd, Tr2GrannyAnimation* animationUpdater );
+	void UpdateDecalVisibility( const EveUpdateContext& updateContext, IEveSpaceObject2::ParentData& pd, Tr2GrannyAnimation* animationUpdater );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
@@ -212,11 +212,11 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveShip2 overrides
-	void UpdateSyncronous( EveUpdateContext& updateContext );
-	void UpdateAsyncronous( EveUpdateContext& updateContext );
-	void UpdateTurretsAsyncronous( EveUpdateContext& updateContext );
+	void UpdateSyncronous( const EveUpdateContext& updateContext );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	void UpdateTurretsAsyncronous( const EveUpdateContext& updateContext );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) override;
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
 	void PushRenderables( std::vector<ITr2Renderable*>& renderables );
 	void RebuildCachedData( BlueAsyncRes* p );
 	void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
@@ -256,7 +256,7 @@ protected:
 	Matrix GetObserverTransform() override;
 	const Matrix* GetTurretTransform( unsigned int turretSetIndex ) const;
 	
-	void UpdateBoosters( EveUpdateContext& updateContext ) {}
+	virtual void UpdateBoosters( const EveUpdateContext& updateContext ) override {}
 	void UpdateWorldTransform( Be::Time time );
 
 private:
@@ -281,9 +281,6 @@ private:
 
 	int32_t m_count;
 	float m_debugSize;
-
-	// frustum so we can update the decal visibility
-	TriFrustum m_frustum;
 
 	// Squad bounds
 	Vector3 m_squadBoundsMin;

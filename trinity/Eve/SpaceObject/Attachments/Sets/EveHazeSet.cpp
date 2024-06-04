@@ -206,7 +206,7 @@ bool EveHazeSet::OnPrepareResources()
 // Description:
 //   Update visibility based on if bounding box surrounding the hazes is visible or not.
 // --------------------------------------------------------------------------------------
-bool EveHazeSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveHazeSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetItemSetAabb( m_aabb, m_boundingBoxes, bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -214,7 +214,7 @@ bool EveHazeSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 		return false;
 	}
 	aabb.Transform( parentTransform );
-	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
 void EveHazeSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )

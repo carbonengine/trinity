@@ -14,7 +14,7 @@
 #include "Eve/EveUpdateContext.h"
 #include "TriFrustum.h"
 
-extern float g_eveSpaceSceneLODFactor;
+const float PARTICLE_CLUSTER_MIN_SIZE = 100.0f;
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -90,7 +90,7 @@ bool EveSceneStaticParticles::Initialize()
 // Description:
 //   Update. Mainly calculate a new worldmatrix based on the ever changing ego pos
 // --------------------------------------------------------------------------------
-void EveSceneStaticParticles::Update( EveUpdateContext& updateContext )
+void EveSceneStaticParticles::Update( const EveUpdateContext& updateContext )
 {
 	// nothing to do here?
 	if( Tr2Renderer::IsLowQuality() || m_clusters.empty() || !m_mesh )
@@ -103,6 +103,26 @@ void EveSceneStaticParticles::Update( EveUpdateContext& updateContext )
 	Vector3d offset = m_centerOfClusters - updateContext.GetOrigin();
 	// build a transform matrix
 	m_worldMatrix = TranslationMatrix( float(offset.x), float(offset.y), float(offset.z) );
+
+	m_center = TransformCoord( m_boundingSphere.GetXYZ(), m_worldMatrix );
+}
+
+void EveSceneStaticParticles::UpdateVisibility( const EveUpdateContext& updateContext )
+{
+	m_visible = false;
+
+	// nothing to do here?
+	if( Tr2Renderer::IsLowQuality() || m_clusters.empty() || !m_mesh )
+	{
+		return;
+	}
+	auto frustum = updateContext.GetFrustum();
+	m_estimatedSize = frustum.GetPixelSizeAccross( &m_boundingSphere );
+
+	bool estimatedSizeWithinBounds = m_estimatedSize > PARTICLE_CLUSTER_MIN_SIZE * updateContext.GetLodFactor();
+	bool inBoundingSphere = LengthSq( m_center - frustum.m_viewPos ) <= m_boundingSphere.w * m_boundingSphere.w;
+	
+	m_visible = inBoundingSphere || ( IsVisible( frustum ) && estimatedSizeWithinBounds );
 }
 
 // --------------------------------------------------------------------------------
@@ -111,15 +131,6 @@ void EveSceneStaticParticles::Update( EveUpdateContext& updateContext )
 // --------------------------------------------------------------------------------
 void EveSceneStaticParticles::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables )
 {
-	// nothing to do here?
-	if( Tr2Renderer::IsLowQuality() || m_clusters.empty() || !m_mesh )
-	{
-		return;
-	}
-	m_center = TransformCoord( m_boundingSphere.GetXYZ(), m_worldMatrix );
-	bool inBoundingSphere = LengthSq( m_center - frustum.m_viewPos ) <= m_boundingSphere.w * m_boundingSphere.w;
-	m_estimatedSize = frustum.GetPixelSizeAccross( &m_boundingSphere );
-	m_visible = inBoundingSphere || IsVisible( frustum );
 	if( m_visible )
 	{
 		renderables.push_back( this );
@@ -162,7 +173,7 @@ float EveSceneStaticParticles::GetSortValue()
 bool EveSceneStaticParticles::IsVisible( const TriFrustum& frustum ) const
 {
 	Vector4 transformedSphere( m_center, m_boundingSphere.w );
-	return frustum.IsSphereVisible( &transformedSphere ) && m_estimatedSize > 100.0f * g_eveSpaceSceneLODFactor;
+	return frustum.IsSphereVisible( &transformedSphere );
 }
 
 void EveSceneStaticParticles::GetDebugOptions( Tr2DebugRendererOptions& options )

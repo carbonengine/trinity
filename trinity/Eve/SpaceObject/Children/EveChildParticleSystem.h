@@ -17,9 +17,9 @@
 #include "Tr2DebugRenderer.h"
 
 
+class EveUpdateContext;
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2InstancedMesh );
-BLUE_DECLARE( EveUpdateContext );
 BLUE_DECLARE( EveSpaceObject2 );
 
 BLUE_DECLARE( Tr2ParticleSystem );
@@ -46,11 +46,11 @@ public:
 	// IEveSpaceObjectChild
 	const char* GetName() const;
 	void SetName( const char* name );
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod );
 	void PlayCurveSet( const std::string& name, const std::string& rangeName ) {};
@@ -104,6 +104,7 @@ private:
 
 	float m_lodSphereRadius;
 	float m_minScreenSize;
+	float m_adjustedMinScreenSize;
 	float m_currentScreenSize;
 
 	bool m_display;

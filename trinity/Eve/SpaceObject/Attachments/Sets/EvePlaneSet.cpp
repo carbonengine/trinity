@@ -218,7 +218,7 @@ void EvePlaneSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix
 // Description:
 //   Get bounding box around planes, update visibility based on if box is visible or not
 // --------------------------------------------------------------------------------------
-bool EvePlaneSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EvePlaneSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -227,7 +227,7 @@ bool EvePlaneSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& par
 	}
 	aabb.Transform( parentTransform );
 
-	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
 void EvePlaneSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )

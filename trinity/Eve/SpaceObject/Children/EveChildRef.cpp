@@ -142,7 +142,7 @@ void EveChildRef::SetProceduralContainerVariable(const char *name, float value)
     }
 }
 
-void EveChildRef::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildRef::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if ( !m_display )
 	{
@@ -150,7 +150,7 @@ void EveChildRef::UpdateVisibility( const TriFrustum& frustum, const Matrix& par
 	}
 	if ( m_child )
 	{
-		m_child->UpdateVisibility( frustum, parentTransform, parentLod );
+		m_child->UpdateVisibility( updateContext, parentTransform, parentLod );
 	}
 }
 
@@ -190,7 +190,7 @@ void EveChildRef::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRend
 	}
 }
 
-void EveChildRef::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildRef::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if ( m_child )
 	{
@@ -202,7 +202,7 @@ void EveChildRef::UpdateSyncronous( EveUpdateContext& updateContext, const EveCh
 	}
 }
 
-void EveChildRef::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildRef::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform = params.localToWorldTransform;
 	if ( params.childParent )

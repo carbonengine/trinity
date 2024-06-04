@@ -13,8 +13,6 @@
 #include "Tr2Mesh.h"
 #include "Tr2MeshBase.h"
 
-extern float g_eveSpaceSceneLowDetailThreshold;
-extern float g_eveSpaceSceneMediumDetailThreshold;
 extern float g_eveSpaceSceneLowUpdateRate;
 
 EveTransform::EveTransform( IRoot* lockobj ) :
@@ -76,17 +74,17 @@ Tr2PerObjectData* EveTransform::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	return data;
 }
 
-void EveTransform::Update( EveUpdateContext& updateContext )
+void EveTransform::Update( const EveUpdateContext& updateContext )
 {
 	UpdateSyncronous( updateContext );
 	UpdateAsyncronous( updateContext );
 }
 
-void EveTransform::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveTransform::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 }
 
-void EveTransform::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveTransform::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	// is this one here enabled?
 	if( m_hideOnLowQuality && Tr2Renderer::IsLowQuality() )
@@ -287,7 +285,7 @@ void EveTransform::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr
 	}
 }
 
-void EveTransform::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveTransform::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	m_lodLevel = TR2_LOD_LOW;
 	m_isVisible = false;
@@ -302,7 +300,7 @@ void EveTransform::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 		return;
 	}
 
-	UpdateViewDependentData( frustum, parentTransform );
+	UpdateViewDependentData( updateContext.GetFrustum(), parentTransform );
 	
 	if( m_mesh )
 	{
@@ -310,17 +308,17 @@ void EveTransform::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 		if( GetBoundingSphere( boundingSphere ) )
 		{
 			// check visibility with camera or, if threshold set to negative, no culling
-			if( frustum.IsSphereVisible( &boundingSphere ) || ( m_visibilityThreshold < 0.f ) )
+			if( updateContext.GetFrustum().IsSphereVisible( &boundingSphere ) || ( m_visibilityThreshold < 0.f ) )
 			{
-				float estimatedSize = frustum.GetPixelSizeAccross( &boundingSphere );
+				float estimatedSize = updateContext.GetFrustum().GetPixelSizeAccross( &boundingSphere );
 
 				m_mesh->UseWithScreenSize( estimatedSize, boundingSphere.w );
 
-				if( estimatedSize >= g_eveSpaceSceneMediumDetailThreshold )
+				if( estimatedSize >= updateContext.GetMediumDetailThreshold() )
 				{
 					m_lodLevel = TR2_LOD_HIGH;
 				}
-				else if( estimatedSize >= g_eveSpaceSceneLowDetailThreshold )
+				else if( estimatedSize >= updateContext.GetLowDetailThreshold() )
 				{
 					m_lodLevel = TR2_LOD_MEDIUM;
 				}
@@ -348,7 +346,7 @@ void EveTransform::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	for( IEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
 	{
 		IEveTransform* p = *it;
-		p->UpdateVisibility( frustum, m_worldTransform );
+		p->UpdateVisibility( updateContext, m_worldTransform );
 		
 		// Use the highest child LOD level.
 		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, p->GetLODLevel() );

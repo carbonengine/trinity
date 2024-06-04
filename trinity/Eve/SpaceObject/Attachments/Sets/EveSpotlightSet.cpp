@@ -140,7 +140,7 @@ inline void EveSpotlightSet::RegisterQuadRendererGlow( Tr2QuadRenderer& quadRend
 // Description:
 //   Get bounding box around spot lights, update visibility based on if box is visible or not
 // --------------------------------------------------------------------------------------
-bool EveSpotlightSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveSpotlightSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetItemSetAabb( m_aabb, m_boundingBoxes, bones, m_skinned ? boneCount : 0 );
 	if( !aabb.IsInitialized() )
@@ -149,7 +149,7 @@ bool EveSpotlightSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	}
 	aabb.Transform( parentTransform );
 
-	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
 void EveSpotlightSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )

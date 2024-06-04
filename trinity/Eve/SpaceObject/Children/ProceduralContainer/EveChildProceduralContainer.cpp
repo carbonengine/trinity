@@ -38,7 +38,7 @@ void EveChildProceduralContainer::OnListModified( long event, ssize_t key, ssize
 {
 }
 
-void EveChildProceduralContainer::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildProceduralContainer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{
@@ -47,7 +47,7 @@ void EveChildProceduralContainer::UpdateVisibility( const TriFrustum& frustum, c
 
     if ( nullptr != m_selectedObject )
     {
-	    m_selectedObject->UpdateVisibility( frustum, parentTransform, parentLod );
+	    m_selectedObject->UpdateVisibility( updateContext, parentTransform, parentLod );
     }
 }
 
@@ -91,7 +91,7 @@ void EveChildProceduralContainer::AddQuadsToQuadRenderer( const TriFrustum& frus
     }
 }
 
-void EveChildProceduralContainer::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildProceduralContainer::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
@@ -108,7 +108,7 @@ void EveChildProceduralContainer::UpdateSyncronous( EveUpdateContext& updateCont
 	}
 }
 
-void EveChildProceduralContainer::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildProceduralContainer::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform = params.localToWorldTransform;
 
@@ -139,7 +139,7 @@ void EveChildProceduralContainer::UpdateAsyncronous( EveUpdateContext& updateCon
 
     if ( nullptr != m_selectionMethod )
     {
-        m_selectionMethod->UpdateASyncronous(updateContext, newParams);
+        m_selectionMethod->UpdateAsyncronous(updateContext, newParams);
     }
 }
 

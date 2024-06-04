@@ -62,7 +62,7 @@ bool EveBezierCurve::OnModified( Be::Var* value )
 	return true;
 }
 
-bool EveBezierCurve::Update( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+bool EveBezierCurve::Update( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( m_movementSpeed != 0 )
 	{

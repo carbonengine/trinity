@@ -41,21 +41,21 @@ EveCurveLineSet::~EveCurveLineSet()
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveCurveLineSet::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveCurveLineSet::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveCurveLineSet::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveCurveLineSet::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveCurveLineSet::Update( EveUpdateContext& updateContext )
+void EveCurveLineSet::Update( const EveUpdateContext& updateContext )
 {
 }
 
-void EveCurveLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveCurveLineSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	m_isVisible = false;
 
@@ -73,7 +73,7 @@ void EveCurveLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	BoundingSphereTransform( m_worldTransform, boundingSphere );
 
 	// cull!
-	if( frustum.IsSphereVisible( &boundingSphere ) )
+	if( updateContext.GetFrustum().IsSphereVisible( &boundingSphere ) )
 	{
 		m_isVisible = true;
 	}

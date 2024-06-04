@@ -229,7 +229,7 @@ bool EveChildBulletStorm::GetBoundingSphere( Vector4& sphere, BoundingSphereQuer
 // Description:
 //   Syncronous updates happen here
 // --------------------------------------------------------------------------------
-void EveChildBulletStorm::UpdateSyncronous( EveUpdateContext&, const EveChildUpdateParams& )
+void EveChildBulletStorm::UpdateSyncronous( const EveUpdateContext&, const EveChildUpdateParams& )
 {
 }
 
@@ -267,7 +267,7 @@ bool EveChildBulletStorm::CanChangeState()
 // Description:
 //   Assyncronous updates happen here
 // --------------------------------------------------------------------------------
-void EveChildBulletStorm::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildBulletStorm::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	// we need to move with our parent
 	if( params.spaceObjectParent )

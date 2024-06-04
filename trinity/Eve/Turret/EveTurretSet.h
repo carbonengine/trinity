@@ -175,11 +175,11 @@ public:
 	void UpdateTurretTransforms(const Matrix* parentWorldMatrix);
 
 	// timing and worldspace positioning
-	void UpdateSyncronous( EveUpdateContext& updateContext, const Matrix* parentMatrix );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const Matrix* parentMatrix );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
 
 	// rendering
-	void UpdateVisibility( const TriFrustum& frustum );
+	void UpdateVisibility( const EveUpdateContext& updateContext );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, const Vector4* shLighting );
 	
 	// rebuild the bounding sphere size
@@ -283,7 +283,7 @@ private:
 	// cleanup
 	void Cleanup();
 	// determine LOD and check for change
-	bool UpdateLOD();
+	bool UpdateLOD( const EveUpdateContext& updateContext );
 	// set transform for tracking
 	void ModifySystemBoneTransform( SystemBones bone, const Vector3* target, granny_transform* transform, const Matrix* localTransform ) const;
 

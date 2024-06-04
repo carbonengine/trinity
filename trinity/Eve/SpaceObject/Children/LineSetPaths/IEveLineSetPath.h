@@ -4,7 +4,7 @@ BLUE_INTERFACE( IEveLineSetPath ) :
 	public IRoot
 {
 public:
-	virtual bool Update( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) = 0;
+	virtual bool Update( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) = 0;
 	virtual void UpdateBuffer( Tr2RenderContext & renderContext, uint8_t*& data, const Matrix& systemLocation, const unsigned stride ) = 0;
 
 	virtual void GeneratePoints( const Matrix& parentTransform = IdentityMatrix() ) = 0;

@@ -116,15 +116,15 @@ public:
 	const char* GetName() const;
 	void SetName( const char* name );
 
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
 
-	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, Matrix& parentTransform );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, Matrix& parentTransform );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod );
 	void GetLights( Tr2LightManager& lightManager ) const;
@@ -171,7 +171,7 @@ public:
 	PIEveSpaceObjectChildVector m_objects;
 
 protected:
-	void DoUpdateAsyncronous( EveUpdateContext & updateContext, const EveChildUpdateParams& params );
+	void DoUpdateAsyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params );
 
 	bool IsRendering() const;
 	bool IsUpdating() const;

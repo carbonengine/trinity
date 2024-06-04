@@ -44,16 +44,16 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext );
-	void UpdateVisibility(  const TriFrustum& frustum, const Matrix& parentTransform );
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform
-	virtual void Update( EveUpdateContext& updateContext );
+	virtual void Update( const EveUpdateContext& updateContext );
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform );
 
 	// No sensible implementation?

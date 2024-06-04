@@ -54,9 +54,6 @@ static std::string s_systemBoneSkeletonNames[] = {
 const unsigned int INVALID_BONE_INDEX = 0xffffffff;
 const unsigned int INVALID_TURRET_INDEX = 0xffffffff;
 
-// use options visibility threshold when to turn off turret rendering, NOT the firingeffect
-extern float g_eveSpaceSceneVisibilityThreshold;
-
 // some very static timings, no need to confuse artists by exposing them
 const float TRACKING_FADE_TIME = 1.f;
 
@@ -850,7 +847,7 @@ bool EveTurretSet::OnPrepareResources()
 // Return Value:
 //   True if a LOD level change did happen
 // --------------------------------------------------------------------------------
-bool EveTurretSet::UpdateLOD()
+bool EveTurretSet::UpdateLOD( const EveUpdateContext& updateContext )
 {
 	// is LODing enabled?
 	if( m_lodLevel == LOD_DISABLED )
@@ -873,7 +870,7 @@ bool EveTurretSet::UpdateLOD()
 		return false;
 	}
 
-	if( m_estimatedPixelDiameter < 2.f * g_eveSpaceSceneVisibilityThreshold )
+	if( m_estimatedPixelDiameter < 2.f * updateContext.GetVisibilityThreshold() )
 	{
 		// totally EMPTY: no turret visible at all
 		m_lodLevel = LOD_EMPTY;
@@ -890,7 +887,7 @@ bool EveTurretSet::UpdateLOD()
 	return ( oldLOD != m_lodLevel );
 }
 
-void EveTurretSet::UpdateSyncronous( EveUpdateContext& updateContext, const Matrix* parentMatrix )
+void EveTurretSet::UpdateSyncronous( const EveUpdateContext& updateContext, const Matrix* parentMatrix )
 {
 	float deltaT = updateContext.GetDeltaT();
 	Be::Time time = updateContext.GetTime();
@@ -901,7 +898,7 @@ void EveTurretSet::UpdateSyncronous( EveUpdateContext& updateContext, const Matr
 	}
 
 	// LODing
-	if( UpdateLOD() )
+	if( UpdateLOD( updateContext ) )
 	{
 		// LOD change, so just call ::InitializeGeometryResource(), takes care of everything
 		InitializeGeometryResource();
@@ -1003,7 +1000,7 @@ void EveTurretSet::UpdateSyncronous( EveUpdateContext& updateContext, const Matr
 //   updateContext - scene update context
 //   parentData - parent object data
 // --------------------------------------------------------------------------------
-void EveTurretSet::UpdateAsyncronous( EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData )
+void EveTurretSet::UpdateAsyncronous( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData )
 {
 	m_boneOffsets.AdvanceFrame();
 
@@ -1576,7 +1573,7 @@ bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 	return sizeInShadow > 5.f;
 }
 
-void EveTurretSet::UpdateVisibility( const TriFrustum& frustum )
+void EveTurretSet::UpdateVisibility( const EveUpdateContext& updateContext )
 {
 	m_parentShLighting = nullptr;
 
@@ -1591,6 +1588,7 @@ void EveTurretSet::UpdateVisibility( const TriFrustum& frustum )
 	{
 		return;
 	}
+	auto frustum = updateContext.GetFrustum();
 
 	for( std::vector<SingleTurretData>::iterator it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
 	{
@@ -1615,7 +1613,7 @@ void EveTurretSet::UpdateVisibility( const TriFrustum& frustum )
 
 	if( m_displayEffects && m_firingEffect )
 	{
-		m_firingEffect->UpdateVisibility( frustum );
+		m_firingEffect->UpdateVisibility( updateContext );
 	}
 
 	auto ambientEffect = GetAmbientEffect();
@@ -1631,7 +1629,7 @@ void EveTurretSet::UpdateVisibility( const TriFrustum& frustum )
 			currentLod = Tr2Lod::TR2_LOD_UNSPECIFIED;
 		}
 
-		ambientEffect->UpdateVisibility( frustum, m_parentData.transform, currentLod );
+		ambientEffect->UpdateVisibility( updateContext, m_parentData.transform, currentLod );
 	}
 
 	if( g_eveSpaceSceneRaytracedShadows )

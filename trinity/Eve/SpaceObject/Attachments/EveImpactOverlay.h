@@ -13,11 +13,12 @@
 #include "Include/ITriTargetable.h"
 #include "Resources/Tr2LodResource.h"
 
+class EveUpdateContext;
+
 BLUE_DECLARE( TriPerlinCurve );
 BLUE_DECLARE( Tr2ScalarFader );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2MeshBase );
-BLUE_DECLARE( EveUpdateContext );
 BLUE_DECLARE( EveSpaceObject2 );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuUniqueEmitter );
@@ -75,8 +76,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Updates
-	void UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent );
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Rendering
@@ -90,7 +91,7 @@ public:
 	int32_t GetDataTextureOffset() const;
 	ITriTargetable::ImpactConfiguration GetImpactConfiguration() const;
 	bool HasShieldEllipsoid() const;
-	float GetActivationStrength( EveUpdateContext& updateContext ) const;
+	float GetActivationStrength( const EveUpdateContext& updateContext ) const;
 	float GetArmorImpactLifeTime() const;
 
 	// setters

@@ -210,7 +210,7 @@ void EveChildBehaviorSystem::PassInTunnelFunctionsToBehaviorGroups()
 
 /////////////////////////////////////////////////////////////////////////////////////
 // EveChildMesh
-void EveChildBehaviorSystem::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildBehaviorSystem::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 
 	// might be a better way to get these initialized but Iinitialize doesn't work
@@ -541,7 +541,7 @@ std::vector<std::pair<int, int>> EveChildBehaviorSystem::GetVertexElementAddedTh
 
 /////////////////////////////////////////////////////////////////////////////////////
 // IEveSpaceObjectChild
-void EveChildBehaviorSystem::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildBehaviorSystem::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform;
 
@@ -608,7 +608,7 @@ void EveChildBehaviorSystem::SetName( const char* name )
 {
 }
 
-void EveChildBehaviorSystem::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildBehaviorSystem::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{
@@ -617,7 +617,7 @@ void EveChildBehaviorSystem::UpdateVisibility( const TriFrustum& frustum, const 
 
 	for ( auto it = begin( m_behaviorGroups ); it != end( m_behaviorGroups ); ++it )
 	{
-		( *it )->UpdateVisibility( frustum, m_worldTransform );
+		( *it )->UpdateVisibility( updateContext, m_worldTransform );
 	}
 }
 

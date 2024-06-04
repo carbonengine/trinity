@@ -8,9 +8,7 @@
 #define EveLODHelper_h
 
 #include "Resources/Tr2LodResource.h"
-
-// forwards
-class TriFrustum;
+#include "Eve/EveUpdateContext.h"
 
 // externs
 extern float g_eveSpaceSceneLowUpdateRate;
@@ -80,7 +78,7 @@ public:
 	// Return value:
 	//   Returns the higher(valid) LOD
 	// --------------------------------------------------------------------------------
-	static Tr2Lod MergeLOD( Tr2Lod lod0, const Vector4& sphere, const TriFrustum& frustum );
+	static Tr2Lod MergeLOD( Tr2Lod lod0, const Vector4& sphere, const EveUpdateContext& updateContext );
 };
 
 

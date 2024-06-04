@@ -214,10 +214,10 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateVisibility(  const TriFrustum& frustum, const Matrix& parentTransform );
-	virtual void PrepareShaderData( EveUpdateContext& updateContext );
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
+	virtual void PrepareShaderData( const EveUpdateContext& updateContext );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 	virtual void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
@@ -251,7 +251,7 @@ public:
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	virtual bool IsVisible( const TriFrustum& frustum ) const;
+	virtual bool IsVisible( const EveUpdateContext& updateContext ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IAsyncLoadedResNotifyTarget
@@ -298,7 +298,7 @@ public:
 		
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ShLightingReceiver
-	virtual void UpdateShLighting( Tr2ShLightingManager& );
+	virtual void UpdateShLighting( Tr2ShLightingManager&, const EveUpdateContext& updateContext );
 	virtual void ClearShLighting();
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -534,6 +534,8 @@ protected:
 	// valid if we're inside the frustum.
 	float m_estimatedPixelDiameter;
 	float m_estimatedPixelDiameterWithChildren;
+	float m_meshScreenSize;
+
 	
 	Tr2GrannyAnimationPtr m_animationUpdater;
 
@@ -667,7 +669,7 @@ protected:
 
 	EntityComponents::ReflectionMode m_reflectionMode;
 
-	void UpdateRtMesh();
+	void UpdateRtMesh(const EveUpdateContext& updateContext);
 	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 

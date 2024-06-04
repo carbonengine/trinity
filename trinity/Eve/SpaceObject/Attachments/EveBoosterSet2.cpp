@@ -24,10 +24,6 @@ CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 // how many planes per booster tree structure?
 const unsigned int EVE_BOOSTER_PLANES_COUNT[EveBoosterSet2::SHAPE_COUNT] = { 4, 6 };
 
-// externs
-extern float g_eveSpaceSceneLowDetailThreshold;
-extern float g_eveSpaceSceneMediumDetailThreshold;
-
 // registered globals
 // enable
 bool g_eveSpaceObjectTrailsEnabled = true;
@@ -57,7 +53,10 @@ EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) :
 	m_overallIntensity( 0.f ),
 	m_lastAccFactor( 0.f ),
 	m_lastValue( 0.f ),
+	m_boostersVisible( false ),
+	m_boosterHighLod( false ),
 	// Trails
+	m_trailsVisible( false ),
 	m_trailIntensity( 0.f ),
 	m_trailsTotalLength( 0.f ),
 	m_trailsTimeToNext( 0.f ),
@@ -193,7 +192,7 @@ void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, 
 	}
 
 	// boosters visible based on LOD?
-	if( m_boosterLOD > g_eveSpaceSceneLowDetailThreshold )
+	if( m_boostersVisible )
 	{
 		auto shape = Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI ? EveBoosterSet2::BOX : EveBoosterSet2::STAR;
 		auto indexBuffer = Tr2Renderer::GetQuadListIndexBuffer( EVE_BOOSTER_PLANES_COUNT[shape] );
@@ -203,7 +202,7 @@ void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, 
 		}
 
 		Tr2RenderBatch batch;
-		batch.SetMaterial( ( m_boosterLOD > g_eveSpaceSceneMediumDetailThreshold * 1.5f || !m_boosterSet->m_effectFar ) ? m_boosterSet->m_effect : m_boosterSet->m_effectFar );
+		batch.SetMaterial( ( m_boosterHighLod || !m_boosterSet->m_effectFar ) ? m_boosterSet->m_effect : m_boosterSet->m_effectFar );
 		batch.SetPerObjectData( perObjectData );
 		batch.SetVertexDeclaration( m_boosterSet->m_vertexDeclHandle );
 		auto& vb = m_boosterSet->m_vertexBuffer.GetSharedResource();
@@ -220,7 +219,7 @@ void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, 
 		batches->Commit( batch );
 	}
 
-	if( m_trailsLOD > g_eveSpaceSceneLowDetailThreshold )
+	if( m_trailsVisible )
 	{
 		if( m_boosterSet->m_trails )
 		{
@@ -302,15 +301,19 @@ void EveBoosterSet2Renderable::GetBoundingSphere( Vector4& boundingSphere ) cons
 }
 
 // --------------------------------------------------------------------------------
-void EveBoosterSet2Renderable::UpdateVisibility( const TriFrustum& frustum )
+void EveBoosterSet2Renderable::UpdateVisibility( const EveUpdateContext& updateContext )
 {
 
 	Vector4 transformedBoundingSphere;
 	GetBoundingSphere( transformedBoundingSphere );
 
+	auto frustum = updateContext.GetFrustum();
+
 	// LOD for boosters: use the bounding sphere
 	m_boosterLOD = 2.f * frustum.GetPixelSizeAccross( &transformedBoundingSphere );
-	
+	m_boosterHighLod = m_boosterLOD > updateContext.GetMediumDetailThreshold() * 1.5f;
+	m_boostersVisible = m_boosterLOD > updateContext.GetLowDetailThreshold();
+
 	// LOD for trails: based on closest control point of spline with sphere around it
 	unsigned int cntrPosIdx = 0;
 	float sqDist = FLT_MAX;
@@ -326,6 +329,7 @@ void EveBoosterSet2Renderable::UpdateVisibility( const TriFrustum& frustum )
 	}
 	Vector4 tmp( m_trailsControlPositions[ cntrPosIdx ], transformedBoundingSphere.w );
 	m_trailsLOD = 7.5f * frustum.GetPixelSizeAccross( &tmp );
+	m_trailsVisible = m_trailsLOD > updateContext.GetLowDetailThreshold();
 
 	m_isVisible = frustum.IsSphereVisible( &transformedBoundingSphere ) || frustum.IsBoxVisible( m_trailsBoundsMin, m_trailsBoundsMax );
 }
@@ -546,7 +550,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 
 	// last tangent is always from before-last to last point
 	Vector3 lastDir = m_trailsControlPositions[ EVE_MAX_CONTROL_POINT_COUNT - 1 ] - m_trailsControlPositions[ EVE_MAX_CONTROL_POINT_COUNT - 2 ];
-	m_trailsControlNormals[ EVE_MAX_CONTROL_POINT_COUNT - 1 ] = 0.5 * lastDir;
+	m_trailsControlNormals[ EVE_MAX_CONTROL_POINT_COUNT - 1 ] = 0.5f * lastDir;
 
 	// the rest is calculated according to c-r (or something...)
 	for( unsigned int i = 1; i < EVE_MAX_CONTROL_POINT_COUNT - 1; ++i )
@@ -1089,20 +1093,20 @@ void EveBoosterSet2::RebuildInstanceData( Tr2RenderContext& /*renderContext*/ )
 }
 
 
-void EveBoosterSet2::UpdateVisibility( const TriFrustum& frustum )
+void EveBoosterSet2::UpdateVisibility( const EveUpdateContext& updateContext )
 {
 	m_glowsVisible = false;
 	if( m_display )
 	{
 		for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 		{
-			(*it)->UpdateVisibility( frustum );
+			(*it)->UpdateVisibility( updateContext );
 		}
 		if( m_glows )
 		{
 			for( auto& renderable : m_boosterRenderables )
 			{
-				if( m_glows->UpdateVisibility( frustum, renderable->m_parentTransform, nullptr, 0 ) )
+				if( m_glows->UpdateVisibility( updateContext, renderable->m_parentTransform, nullptr, 0 ) )
 				{
 					m_glowsVisible = true;
 					break;
@@ -1257,7 +1261,7 @@ void EveBoosterSet2::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Mat
 
 	for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 	{
-		if( (*it)->m_boosterLOD > g_eveSpaceSceneLowDetailThreshold || !m_flareLodEnabled )
+		if( (*it)->m_boostersVisible || !m_flareLodEnabled )
 		{
 			m_glows->AddBoosterGlowToQuadRenderer( quadRenderer, (*it)->m_parentTransform, (*it)->m_overallIntensity, m_warpIntensity );
 		}

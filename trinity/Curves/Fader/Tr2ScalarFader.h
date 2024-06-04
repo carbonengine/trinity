@@ -9,7 +9,7 @@
 #define Tr2ScalarFader_H
 
 // forwards
-BLUE_DECLARE( EveUpdateContext );
+class EveUpdateContext;
 
 BLUE_CLASS( Tr2ScalarFader ) :
 	public IRoot
@@ -21,7 +21,7 @@ public:
 	~Tr2ScalarFader();
 
 	// update
-	void Update( EveUpdateContext& updateContext );
+	void Update( const EveUpdateContext& updateContext );
 
 	// start/stop fade
 	void StartFade( bool isFadeIn, float fadeLength );

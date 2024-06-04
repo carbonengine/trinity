@@ -26,16 +26,16 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	void UpdateSyncronous( EveUpdateContext& updateContext );
-	void UpdateAsyncronous( EveUpdateContext& updateContext );
-	void UpdateVisibility(  const TriFrustum& frustum, const Matrix& parentTransform  );
+	void UpdateSyncronous( const EveUpdateContext& updateContext );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform
-	void Update( EveUpdateContext& updateContext );
+	void Update( const EveUpdateContext& updateContext );
 	Tr2Lod GetLODLevel() const { return TR2_LOD_HIGH; }
 
 	// No sensible implementation?

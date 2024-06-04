@@ -36,18 +36,6 @@ extern bool g_eveIsSpaceObjectResourceUnloadingEnabled;
 // Time threshold for resource unloading (in seconds).
 extern float g_eveSpaceObjectResourceUnloadingTimeThreshold;
 
-// Object itself only renders if estimated pixel diameter is above
-// this threshold. Note that attachments may still render, in particular
-// turret firing effects, or light glows as they may be more noticeable from afar.
-extern float g_eveSpaceSceneVisibilityThreshold;
-
-// Object itself renders with low detail geometry (if available) if estimated pixel
-// diameter is above this threshold. Note that attachments may still render, in particular
-// turret firing effects, or light glows as they may be more noticeable from afar.
-extern float g_eveSpaceSceneLowDetailThreshold;
-extern float g_eveSpaceSceneMediumDetailThreshold;
-extern float g_eveSpaceSceneHighDetailThreshold;
-
 // Setting for what reflection mode is used
 extern int g_eveReflectionMode;
 
@@ -353,7 +341,7 @@ protected:
 	void PopulatePerFramePSData( PerFramePSData & data, Tr2RenderContext & renderContext );
 	void ApplyPerFrameData( Tr2RenderContext & renderContext );
 
-	void UpdatePlanets( EveUpdateContext & updateContext );
+	void UpdatePlanets( const EveUpdateContext & updateContext );
 	void RenderPlanets( Tr2RenderContext & renderContext );
 
 	void RenderDistortion( Tr2RenderContext & renderContext );

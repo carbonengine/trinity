@@ -25,8 +25,6 @@
 
 using namespace Tr2RenderContextEnum;
 
-extern float g_eveSpaceSceneLODFactor;
-
 namespace
 {
 
@@ -98,6 +96,7 @@ EveChildCloud2::EveChildCloud2( IRoot* lockobj ) :
 	m_declaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_sortingModifier( 1.0f ),
 	m_minScreenSize( 0.0f ),
+	m_adjustedMinScreenSize( 0.0f ),
 	m_effectHash( 0 ),
 	m_lightmapWidth( 0 ),
 	m_lightmapHeight( 0 ),
@@ -191,7 +190,7 @@ void EveChildCloud2::SetName( const char* name )
 	m_name = name;
 }
 
-void EveChildCloud2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildCloud2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 }
 
@@ -230,7 +229,7 @@ void EveChildCloud2::GetVolumetricBatches( const TriFrustum& frustum, ITriRender
 	}
 
 	auto screenSize = frustum.GetPixelSizeAccross( m_boundingSphere );
-	if( screenSize < m_minScreenSize* g_eveSpaceSceneLODFactor )
+	if( screenSize < m_adjustedMinScreenSize )
 	{
 		return;
 	}
@@ -583,7 +582,7 @@ void EveChildCloud2::PopulatePerObjectData( PerObjectData& data, float screenSiz
 	data.mapOffsets[2] = Vector4( m_mapOffsets[2], 0.f );
 }
 
-void EveChildCloud2::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildCloud2::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	if( m_effect )
 	{
@@ -649,7 +648,7 @@ void EveChildCloud2::UpdateSyncronous( EveUpdateContext& updateContext, const Ev
 	m_renderedLastFrame = false;
 }
 
-void EveChildCloud2::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildCloud2::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	m_localTransform = TransformationMatrix( m_scaling, m_rotation, m_translation );
 
@@ -675,6 +674,8 @@ void EveChildCloud2::UpdateAsyncronous( EveUpdateContext& updateContext, const E
 		m_mapOffsets[i].y = fmodf( m_mapOffsets[i].y + shift.y * m_mapTiling[i].y, 1.f );
 		m_mapOffsets[i].z = fmodf( m_mapOffsets[i].z + shift.z * m_mapTiling[i].y, 1.f );
 	}
+
+	m_adjustedMinScreenSize = m_minScreenSize * updateContext.GetLodFactor();
 }
 
 void EveChildCloud2::GetDebugOptions( Tr2DebugRendererOptions& options )
@@ -767,8 +768,9 @@ void EveChildCloud2::GetVolumetricShadowBatches( ITriRenderBatchAccumulator* bat
 	batches->Commit( batch );
 }
 
-bool EveChildCloud2::IsVisible( const TriFrustum& frustum ) const 
+bool EveChildCloud2::IsVisible( const EveUpdateContext& updateContext ) const
 {
+	auto frustum = updateContext.GetFrustum();
 	auto isVisible = m_display && frustum.IsSphereVisible( m_boundingSphere.center, m_boundingSphere.radius );
 	if( !isVisible )
 	{
@@ -776,7 +778,7 @@ bool EveChildCloud2::IsVisible( const TriFrustum& frustum ) const
 	}
 
 	auto screenSize = frustum.GetPixelSizeAccross( m_boundingSphere );
-	if( screenSize < m_minScreenSize * g_eveSpaceSceneLODFactor )
+	if( screenSize < m_adjustedMinScreenSize )
 	{
 		return false;
 	}
