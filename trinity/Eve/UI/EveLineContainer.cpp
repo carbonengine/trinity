@@ -21,7 +21,7 @@ EveLineContainer::~EveLineContainer()
 {
 }
 
-void EveLineContainer::Update( EveUpdateContext& context )
+void EveLineContainer::Update( const EveUpdateContext& context )
 {
 	if( !m_lineSet )
 	{
@@ -37,7 +37,7 @@ void EveLineContainer::Update( EveUpdateContext& context )
 	m_lineSet->SubmitChanges();
 }
 
-void EveLineContainer::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveLineContainer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	if( !m_display )
 	{
@@ -46,7 +46,7 @@ void EveLineContainer::UpdateVisibility( const TriFrustum& frustum, const Matrix
 
 	if( m_lineSet )
 	{
-		m_lineSet->UpdateVisibility( frustum, parentTransform );
+		m_lineSet->UpdateVisibility( updateContext, parentTransform );
 	}
 }
 

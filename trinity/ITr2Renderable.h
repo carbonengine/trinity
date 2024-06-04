@@ -8,6 +8,7 @@ class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class TriPoolAllocator;
 class TriFrustum;
+class EveUpdateContext;
 
 BLUE_DECLARE_INTERFACE( ITr2Renderable );
 BLUE_DECLARE_IVECTOR( ITr2Renderable );
@@ -42,7 +43,7 @@ enum Tr2RenderReason
 BLUE_INTERFACE( ITr2Renderable ) :
 	public IRoot
 {
-	virtual bool IsVisible( const TriFrustum & frustum ) const
+	virtual bool IsVisible( const EveUpdateContext& frustum ) const
 	{
 		return true;
 	}

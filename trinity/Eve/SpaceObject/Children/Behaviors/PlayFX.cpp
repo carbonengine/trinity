@@ -135,16 +135,16 @@ std::vector<Vector3> PlayFX::CalculateBehavior( std::vector<DroneAgent>& agents,
 	return m_todo;
 }
 
-void PlayFX::UpdateAsyncronous( EveUpdateContext& updateContext, const TriFrustum& frustum, const Matrix& parentTransform )
+void PlayFX::UpdateAsyncronous( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	for( auto fx = m_firingEffects.begin(); fx != m_firingEffects.end(); ++fx )
 	{
 		( *fx )->UpdateEffectAsync( updateContext );
-		( *fx )->UpdateVisibility( frustum, parentTransform );
+		( *fx )->UpdateVisibility( updateContext, parentTransform );
 	}
 }
 
-void PlayFX::UpdateSyncronous( EveUpdateContext& updateContext )
+void PlayFX::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	for( auto fx = m_firingEffects.begin(); fx != m_firingEffects.end(); ++fx )
 	{

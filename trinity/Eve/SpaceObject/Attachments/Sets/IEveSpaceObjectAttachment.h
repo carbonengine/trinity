@@ -10,6 +10,7 @@
 #include "Tr2DebugRenderer.h"
 #include "Tr2LightManager.h"
 #include "Lights/Tr2Light.h"
+#include "Eve/EveUpdateContext.h"
 
 class Tr2QuadRenderer;
 class TriFrustum;
@@ -17,7 +18,7 @@ class TriFrustum;
 
 BLUE_INTERFACE( IEveSpaceObjectAttachment ) : public IRoot
 {
-	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) { return false; }
+	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) { return false; }
 
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL ) {}
 

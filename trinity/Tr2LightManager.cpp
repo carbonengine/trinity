@@ -14,8 +14,6 @@
 
 CCP_STATS_DECLARE( lightsGathered, "Trinity/Tr2LightManager/lightsGathered", true, CST_COUNTER_LOW, "How many lights were pushed to GPU" );
 
-extern float g_eveSpaceSceneLODFactor;
-
 namespace
 {
 
@@ -154,6 +152,11 @@ void Tr2LightManager::SetFrustum( const TriFrustum& frustum )
 	m_frustum = frustum;
 }
 
+void Tr2LightManager::AdjustLightCutoff( float lodFactor )
+{
+	m_adjustedCutoff = CUTOFF_PIXEL_SIZE * lodFactor;
+}
+
 void Tr2LightManager::AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius, uint16_t flags )
 {
 	if( !AreLightFlagsValid( flags ) )
@@ -174,10 +177,10 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 	}
 
 	float size = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) );
-	float cutoff = CUTOFF_PIXEL_SIZE * g_eveSpaceSceneLODFactor;
-	if( size > cutoff )
+
+	if( size > m_adjustedCutoff )
 	{
-		float dimming = std::min( ( size - cutoff ) / FADE_SIZE, 1.f );
+		float dimming = std::min( ( size - m_adjustedCutoff ) / FADE_SIZE, 1.f );
 		data.color = reinterpret_cast<const Vector3&>( color );
 		data.color.x *= radius * dimming;
 		data.color.y *= radius * dimming;
@@ -208,10 +211,9 @@ void Tr2LightManager::AddLight( PerLightData& data )
 	}
 
 	float size = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) );
-	float cutoff = CUTOFF_PIXEL_SIZE * g_eveSpaceSceneLODFactor;
-	if( size > cutoff )
+	if( size > m_adjustedCutoff )
 	{
-		float dimming = std::min( ( size - cutoff ) / FADE_SIZE, 1.f );
+		float dimming = std::min( ( size - m_adjustedCutoff ) / FADE_SIZE, 1.f );
 		data.color.x *= data.radius * dimming;
 		data.color.y *= data.radius * dimming;
 		data.color.z *= data.radius * dimming;

@@ -22,8 +22,6 @@
 #include "Eve/SpaceObject/Attachments/Sets/EveSpotlightSet.h"
 #include "Eve/Turret/EveTurretSet.h"
 
-extern float g_eveSpaceSceneLODFactor;
-
 EveSwarmRenderable::EveSwarmRenderable( IRoot* lockobj ) :
 PARENTLOCK( m_decals )
 {
@@ -175,7 +173,7 @@ void EveSwarmRenderable::PushDecals( std::vector<ITr2Renderable*>& renderables, 
 	}
 }
 
-void EveSwarmRenderable::UpdateDecalVisibility( const TriFrustum& frustum, IEveSpaceObject2::ParentData &pd, Tr2GrannyAnimation* animationUpdater )
+void EveSwarmRenderable::UpdateDecalVisibility( const EveUpdateContext& updateContext, IEveSpaceObject2::ParentData& pd, Tr2GrannyAnimation* animationUpdater )
 {
 	TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
 
@@ -192,7 +190,7 @@ void EveSwarmRenderable::UpdateDecalVisibility( const TriFrustum& frustum, IEveS
 				( *it )->SetBoneMatrix( animationUpdater->GetMeshBoneMatrixList(), animationUpdater->GetMeshBoneCount() );
 			}
 			// now prep to get the renderables
-			( *it )->UpdateVisibility( frustum, &pd );
+			( *it )->UpdateVisibility( updateContext, &pd );
 		}
 	}
 }
@@ -373,7 +371,7 @@ void EveSwarm::RebuildCachedData( BlueAsyncRes* p )
 // Description:
 //   From EveShip2
 // --------------------------------------------------------------------------------
-void EveSwarm::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveSwarm::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	if( m_swarmingEnabled )
 	{
@@ -416,7 +414,7 @@ void EveSwarm::UpdateOrientation( SwarmVehicle* vehicle, float timeDiff )
 }
 
 
-void EveSwarm::UpdateTurretsAsyncronous( EveUpdateContext& updateContext )
+void EveSwarm::UpdateTurretsAsyncronous( const EveUpdateContext& updateContext )
 {
 	for( EveTurretSetVector::iterator it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
@@ -434,7 +432,7 @@ void EveSwarm::UpdateTurretsAsyncronous( EveUpdateContext& updateContext )
 // Description:
 //   From EveShip2
 // --------------------------------------------------------------------------------
-void EveSwarm::UpdateAsyncronous( EveUpdateContext& context )
+void EveSwarm::UpdateAsyncronous( const EveUpdateContext& context )
 {
 	if( !m_swarmingEnabled || m_count == 0 )
 	{
@@ -728,32 +726,33 @@ void EveSwarm::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 // --------------------------------------------------------------------------------
 void EveSwarm::PushRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	for( auto it = m_renderables.begin(); it != m_renderables.end(); it++ )
-	{
-		renderables.push_back( *it );
-	}
-
 	// are decals visible?
-	if (m_mesh && m_isMeshVisible)
+	if( m_mesh && m_isMeshVisible )
+	{
+		for (auto it = m_renderables.begin(); it != m_renderables.end(); it++)
+		{
+			renderables.push_back( *it );
+			( *it )->PushDecals( renderables, m_meshScreenSize );
+		}
+	}
+}
+
+void EveSwarm::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
+{
+	EveShip2::UpdateVisibility( updateContext, parentTransform );
+	
+	// are decals visible?
+	if( m_mesh && m_isMeshVisible )
 	{
 		// put together parent data for the decals
 		IEveSpaceObject2::ParentData pd;
 		GetParentData( &pd );
 
-		for (auto it = m_renderables.begin(); it != m_renderables.end(); it++)
+		for( auto it = m_renderables.begin(); it != m_renderables.end(); it++ )
 		{
-			( *it )->UpdateDecalVisibility( m_frustum, pd, m_animationUpdater );
-			( *it )->PushDecals( renderables, m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor );
+			( *it )->UpdateDecalVisibility( updateContext, pd, m_animationUpdater );
 		}
 	}
-}
-
-void EveSwarm::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
-{
-	EveShip2::UpdateVisibility(
-		frustum, parentTransform );
-
-	m_frustum = frustum;
 }
 
 

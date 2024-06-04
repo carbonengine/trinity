@@ -89,7 +89,7 @@ EveChildRefPtr EveProceduralMethodCycling::GetSelectedChild()
     return nullptr;
 }
 
-void EveProceduralMethodCycling::UpdateASyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveProceduralMethodCycling::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
     if ( m_selectedChildIndex < 0 || m_selectedChildIndex > (m_parameters.size() - 1) )
     {

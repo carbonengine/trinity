@@ -200,7 +200,7 @@ void EveChildLineSet::SetName( const char* name )
 	m_name = BlueSharedString( name );
 }
 
-void EveChildLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildLineSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{
@@ -210,7 +210,7 @@ void EveChildLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	m_isVisible = false;
 	Vector4 sphere = m_boundingSphere;
 	BoundingSphereTransform( m_worldTransform, sphere );
-
+	auto frustum = updateContext.GetFrustum();
 	if( frustum.IsSphereVisible( &( sphere ) ) )
 	{
 		m_currentScreenSize = frustum.GetPixelSizeAccross( &m_boundingSphere );
@@ -223,12 +223,12 @@ void EveChildLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 	if( m_lineSet )
 	{
-		m_lineSet->UpdateVisibility( frustum, m_worldTransform );
+		m_lineSet->UpdateVisibility( updateContext, m_worldTransform );
 	}
 
 	for( auto it = begin( m_lines ); it != end( m_lines ); ++it )
 	{
-		( *it )->UpdateVisibility( frustum, parentLod, m_worldTransform );
+		( *it )->UpdateVisibility( updateContext.GetFrustum(), parentLod, m_worldTransform );
 	}
 }
 
@@ -275,7 +275,7 @@ bool EveChildLineSet::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery qu
 	return true;
 }
 
-void EveChildLineSet::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildLineSet::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	CreateSpriteVertexDeclaration();
 
@@ -388,7 +388,7 @@ std::vector<std::pair<int, int>> EveChildLineSet::GetVertexElementAddedThroughCo
 	return out;
 }
 
-void EveChildLineSet::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildLineSet::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform = params.localToWorldTransform;
 

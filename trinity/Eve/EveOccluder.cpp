@@ -150,7 +150,7 @@ EveOccluder::EveOccluder( IRoot* lockobj ) :
 //   frustum - the current view frustum of the current frame
 //   transform - parent transform of the lensflare to turn this into a 2d sprite
 // --------------------------------------------------------------------------------
-void EveOccluder::RunQuery( Tr2RenderContext& renderContext, const TriFrustum& frustum, const Matrix& transform, uint32_t bufferOffset, float fogWeight )
+void EveOccluder::RunQuery( Tr2RenderContext& renderContext, const EveUpdateContext& updateContext, const Matrix& transform, uint32_t bufferOffset, float fogWeight )
 {
 	// visible?
 	if( !m_display )
@@ -170,7 +170,7 @@ void EveOccluder::RunQuery( Tr2RenderContext& renderContext, const TriFrustum& f
 	for( auto& sprite : m_sprites )
 	{
 		sprite->UpdateSyncronous( dummyContext );
-		sprite->UpdateVisibility( frustum, transform );
+		sprite->UpdateVisibility( updateContext, transform );
 		sprite->GetRenderables( renderables, nullptr );
 	}
 	// collect batches from renderables (only from decal area, nothing else is important for

@@ -356,6 +356,13 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.UpdateOrigin( m_ballpark );
 	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
 
+	m_updateContext.SetFrustum( m_frameData.frustum );
+	m_updateContext.SetHighDetailThreshold( g_eveSpaceSceneHighDetailThreshold / m_upscalingAmount );
+	m_updateContext.SetMediumDetailThreshold( g_eveSpaceSceneMediumDetailThreshold / m_upscalingAmount );
+	m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / m_upscalingAmount );
+	m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / m_upscalingAmount );
+	m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / m_upscalingAmount );
+
 	{
 		for( auto it = m_backgroundObjects.begin(); it != m_backgroundObjects.end(); ++it )
 		{
@@ -1250,6 +1257,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 		lightManager->Clear( renderContext );
 		lightManager->SetFrustum( frustum );
+		lightManager->AdjustLightCutoff( m_updateContext.GetLodFactor() );
 
 		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
 			for( auto i = range.begin(); i != range.end(); ++i )
@@ -1300,7 +1308,6 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	TriFrustum& frustum = m_frameData.frustum;
 	
 	std::vector<IEveSpaceObject2*> allObjects;
 	std::vector<ITr2Renderable*> renderables;
@@ -1310,17 +1317,26 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 	{
 		CCP_STATS_ZONE( "UpdateVisibility" );
 		Tr2ParallelDo( m_objects.begin(), m_objects.end(), [&]( IEveSpaceObject2* obj ) {
-			obj->UpdateVisibility( frustum, identity );
+			obj->UpdateVisibility( m_updateContext, identity );
 		} );
 
 		m_cameraAttachmentParent->SetTransform( Tr2Renderer::GetInverseViewTransform() );
 		m_cameraAttachmentParent->UpdateSyncronous( m_updateContext );
 		m_cameraAttachmentParent->UpdateAsyncronous( m_updateContext );
-		m_cameraAttachmentParent->UpdateVisibility( frustum, identity );
+		m_cameraAttachmentParent->UpdateVisibility( m_updateContext, identity );
 
-		Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj ) {
-			obj->UpdateZOnlyVisibility( frustum );
+		Tr2ParallelDo( m_staticParticles.begin(), m_staticParticles.end(), [&]( EveSceneStaticParticles* staticParticles ){
+			staticParticles->UpdateVisibility( m_updateContext );
 		} );
+		
+		Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj ) {
+			obj->UpdateZOnlyVisibility( m_updateContext );
+		} );
+
+		// until we have proper support for multiple lensflares we just do it in a list...
+		for( auto& lensflare : m_lensflares ){
+			lensflare->UpdateVisibility( m_updateContext );
+		}
 	}
 
 	// objects will be batched up.
@@ -1360,10 +1376,10 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 
 	for( auto it = m_staticParticles.begin(); it != m_staticParticles.end(); ++it )
 	{
-		( *it )->GetRenderables( frustum, renderables );
+		( *it )->GetRenderables( m_updateContext.GetFrustum(), renderables );
 	}
 
-	UpdateQuadRenderer( frustum, allObjects, renderContext );
+	UpdateQuadRenderer( m_updateContext.GetFrustum(), allObjects, renderContext );
 	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_OPAQUE, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
 	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_ADDITIVE, m_primaryBatches[TRIBATCHTYPE_ADDITIVE] );
 
@@ -1537,7 +1553,7 @@ void EveSpaceScene::UpdateShLighting(
 				ITr2ShLightingReceiverPtr receiver = BlueCastPtr( allObjects[i] );
 				if( receiver != nullptr )
 				{
-					receiver->UpdateShLighting( *m_shLightingManager );
+					receiver->UpdateShLighting( *m_shLightingManager, m_updateContext );
 				}
 			}
 		} );
@@ -1637,6 +1653,9 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	{
 		m_rtManager->SetBlankTexture();
 	}
+	// we change the frustum during reflection updates/renderings
+	// we need the old one for resetting
+	auto normalFrustum = m_updateContext.GetFrustum();
 
 	m_reflectionProbe->InitRenderPass( renderContext );
 	for( unsigned i = m_reflectionProbe->GetStartFace(); i < m_reflectionProbe->GetEndFace(); i++ )
@@ -1658,16 +1677,18 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 			TriFrustum frustum;
 			Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
 			frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &planetProjection, renderContext.m_esm.GetViewport() );
+			m_updateContext.SetFrustum(frustum);
+
 			for( auto& planet : m_planets )
 			{
-				planet->UpdatePlanetVisibility( frustum, m_planetScale );
+				planet->UpdatePlanetVisibility( m_updateContext, m_planetScale );
 			}
 
 			Tr2Renderer::SetViewTransform( orgViewMatrix );
 		}
 
 		TriFrustum currentFrustum = m_reflectionProbe->GetFrustum( i, renderContext );
-
+		m_updateContext.SetFrustum( currentFrustum );
 		// get the background reflection renderables from the component registry
 		RenderBackgroundPassObjects( renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );
 
@@ -1702,8 +1723,8 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 
 			// Filter out the non-visible reflection renderables based on the current frustum
 			m_componentRegistry->ProcessComponents<ITr2Renderable>(
-				[currentFrustum, &visibleRenderables] ( ITr2Renderable* renderable ) -> void {
-					if( renderable->IsVisible( currentFrustum ) )
+				[&]( ITr2Renderable* renderable ) -> void {
+					if( renderable->IsVisible( m_updateContext ) )
 					{
 						visibleRenderables.push_back( renderable );
 					}
@@ -1751,6 +1772,8 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
 	ApplyPerFrameData( renderContext );
+
+	m_updateContext.SetFrustum( normalFrustum );
 }
 
 // --------------------------------------------------------------------------------------
@@ -1790,6 +1813,10 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	TriFrustum frustum;
 	Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
 	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &planetProjection, renderContext.m_esm.GetViewport() );
+	
+	auto normalFrustum = m_updateContext.GetFrustum();
+
+	m_updateContext.SetFrustum(frustum);
 
 	for( auto it = m_planets.begin(); it != m_planets.end(); ++it )
 	{
@@ -1799,8 +1826,10 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	}
 
 	Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj ) {
-		obj->UpdatePlanetVisibility( frustum, m_planetScale );
+		obj->UpdatePlanetVisibility( m_updateContext, m_planetScale );
 	} );
+
+	m_updateContext.SetFrustum( normalFrustum );
 
 	Tr2Renderer::SetViewTransform( orgViewMatrix );
 
@@ -1869,7 +1898,7 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 		for( auto it = m_backgroundObjects.begin(); it != m_backgroundObjects.end(); ++it )
 		{
 			auto obj = *it;
-			obj->UpdateVisibility( frustum, IdentityMatrix() );
+			obj->UpdateVisibility( m_updateContext, IdentityMatrix() );
 			obj->GetRenderables( visible, nullptr );
 		}
 		if( !visible.empty() )
@@ -1908,7 +1937,7 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 			renderContext.SetReadOnlyDepth( true );
 			for( EveLensflareVector::const_iterator it = m_lensflares.begin(); it != m_lensflares.end(); ++it )
 			{
-				( *it )->RunBackgroundOcclusionQueries( renderContext, frustum );
+				( *it )->RunBackgroundOcclusionQueries( renderContext, m_updateContext );
 			}
 			renderContext.SetReadOnlyDepth( false );
 		}
@@ -1918,7 +1947,7 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 	{
 		renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
 
-		m_warpTunnel->UpdateVisibility( frustum, IdentityMatrix() );
+		m_warpTunnel->UpdateVisibility( m_updateContext, IdentityMatrix() );
 		m_warpTunnel->GetRenderables( visible, nullptr );
 
 		GetTransparentBatchesFromRenderables( visible, transparentObjects, m_secondaryBatches );
@@ -2154,7 +2183,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 	// at first, do all the occlusion queries
 	for( auto& lensflare : m_lensflares )
 	{
-		lensflare->RunOcclusionQueries( renderContext, m_frameData.frustum );
+		lensflare->RunOcclusionQueries( renderContext, m_updateContext );
 	}
 
 	//GPU particles
@@ -2297,7 +2326,7 @@ void EveSpaceScene::Render3DUI( Tr2RenderContext& renderContext )
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
 
-	Tr2ParallelDo( m_uiObjects.begin(), m_uiObjects.end(), [&]( IEveSpaceObject2* obj ) { obj->UpdateVisibility( m_frameData.frustum, identity ); } );
+	Tr2ParallelDo( m_uiObjects.begin(), m_uiObjects.end(), [&]( IEveSpaceObject2* obj ) { obj->UpdateVisibility( m_updateContext, identity ); } );
 
 	for( auto it = m_uiObjects.begin(); it != m_uiObjects.end(); ++it )
 	{
@@ -3130,8 +3159,10 @@ void EveSpaceScene::GetPickingObjectsToRender( std::vector<ITr2Renderable*>& pic
 	CTriViewport vp;
 	vp.width = vp.height = 1;
 
-	pickFrustum.DeriveFrustum(
-		&view, &camPos, &proj, vp );
+	pickFrustum.DeriveFrustum( &view, &camPos, &proj, vp );
+
+	// PROBABLY VERY BAD!
+	m_updateContext.SetFrustum(pickFrustum);
 
 	for( IEveSpaceObject2Vector::const_iterator it = m_objects.begin(); it != m_objects.end(); ++it )
 	{
@@ -3141,11 +3172,11 @@ void EveSpaceScene::GetPickingObjectsToRender( std::vector<ITr2Renderable*>& pic
 			// function to decide what objects are pickable in the given frustum.
 			// This is not necessarily what we want, as some objects might be
 			// renderable but not pickable (particle clouds?)
-			( *it )->UpdateVisibility( pickFrustum, IdentityMatrix() );
+			( *it )->UpdateVisibility( m_updateContext, IdentityMatrix() );
 			( *it )->GetRenderables( pickableRenderObjects, nullptr );
 		}
 	}
-	m_cameraAttachmentParent->UpdateVisibility( pickFrustum, IdentityMatrix() );
+	m_cameraAttachmentParent->UpdateVisibility( m_updateContext, IdentityMatrix() );
 	m_cameraAttachmentParent->GetRenderables( pickableRenderObjects, nullptr );
 }
 

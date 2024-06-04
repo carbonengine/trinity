@@ -33,7 +33,7 @@ public:
 	void SetLocalExplosionTransforms( const std::vector<Matrix>& transforms );
 	void SetGlobalExplosionOffset( const Vector3& offset );
 
-	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 
 	

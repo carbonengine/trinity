@@ -11,10 +11,6 @@ const float EvePlanet::SCALE = 1000000.0f;
 // Temporary variables, should be set by whatever module controls fov
 const float FOV_MIN = 0.65f;
 
-// Global SpaceScene thresholds for LODing, options dependent
-extern float g_eveSpaceSceneMediumDetailThreshold;
-extern float g_eveSpaceSceneVisibilityThreshold;
-
 EvePlanet::EvePlanet( IRoot* lockobj ) :
 	EveEffectRoot2( lockobj ),
 	m_update( true ),
@@ -42,7 +38,7 @@ void EvePlanet::UnregisterSecondaryLightSource( Tr2ShLightingManager& manager )
 	manager.UnregisterSecondaryLightSource( &m_worldTransform.GetTranslation() );
 }
 
-void EvePlanet::UpdateEffectChildren( EveUpdateContext& updateContext, Matrix &worldTransform, float renderScale )
+void EvePlanet::UpdateEffectChildren( const EveUpdateContext& updateContext, Matrix &worldTransform, float renderScale )
 {
 	EveChildUpdateParams params;
 	params.spaceObjectParent = nullptr;
@@ -67,7 +63,7 @@ void EvePlanet::UpdateEffectChildren( EveUpdateContext& updateContext, Matrix &w
 	}
 }
 
-void EvePlanet::UpdatePlanetSyncronous( EveUpdateContext& updateContext, float renderScale )
+void EvePlanet::UpdatePlanetSyncronous( const EveUpdateContext& updateContext, float renderScale )
 {
 	if( !m_update )
 	{
@@ -119,7 +115,7 @@ Matrix EvePlanet::CalculatePlanetScaleTransform( const Matrix& worldTransform, f
 	return worldTransform * planetScaleTransform;
 }
 
-void EvePlanet::UpdatePlanetVisibility( const TriFrustum& frustum, float renderScale )
+void EvePlanet::UpdatePlanetVisibility( const EveUpdateContext& updateContext, float renderScale )
 {
 	const auto scaledTransform = CalculatePlanetScaleTransform( m_worldTransform, renderScale );
 
@@ -129,15 +125,15 @@ void EvePlanet::UpdatePlanetVisibility( const TriFrustum& frustum, float renderS
 
 	for ( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
 	{
-		(*it)->UpdateVisibility( frustum, scaledTransform, m_lodLevel );
+		( *it )->UpdateVisibility( updateContext, scaledTransform, m_lodLevel );
 	}
 }
 
-void EvePlanet::UpdateZOnlyVisibility( const TriFrustum& frustum )
+void EvePlanet::UpdateZOnlyVisibility( const EveUpdateContext& updateContext )
 {
 	if( nullptr != m_zOnlyModel )
 	{
-		m_zOnlyModel->UpdateVisibility( frustum, m_worldTransform, m_lodLevel );
+		m_zOnlyModel->UpdateVisibility( updateContext, m_worldTransform, m_lodLevel );
 	}
 }
 
@@ -289,18 +285,6 @@ void EvePlanet::SetRenderScale( float value )
 {
 	m_renderScale = value;
 }
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Just return a global variable, slightly modified by a constant, since this
-//   is a planet, not a ship.
-// Return value:
-//   Returns the visibilty threshold for planets
-// --------------------------------------------------------------------------------
-//float EvePlanet::GetVisibilityThreshold() const
-//{
-//	return g_eveSpaceSceneVisibilityThreshold;
-//}
 
 // --------------------------------------------------------------------------------
 unsigned int EvePlanet::GetDamageLocatorCount() const

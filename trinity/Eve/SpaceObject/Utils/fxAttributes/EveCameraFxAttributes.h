@@ -14,7 +14,7 @@ public:
 	EveCameraFxAttributes( IRoot* lockobj = nullptr );
 	~EveCameraFxAttributes();
 	
-	void UpdateAsyncronous( EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 
 private:
 	// Controls

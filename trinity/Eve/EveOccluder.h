@@ -10,6 +10,7 @@
 #include "ITr2Renderable.h"
 #include "TriRenderBatch.h"
 #include "../Tr2DeviceResource.h"
+#include "Eve/EveUpdateContext.h"
 
 // forwards
 class TriFrustum;
@@ -71,7 +72,7 @@ public:
 	EveOccluder(IRoot* lockobj = NULL);
 
 	// do the occlusion rendering/querying
-	void RunQuery( Tr2RenderContext& renderContext, const TriFrustum& frustum, const Matrix& transform, uint32_t bufferOffset, float fogWeight );
+	void RunQuery( Tr2RenderContext& renderContext, const EveUpdateContext& updateContext, const Matrix& transform, uint32_t bufferOffset, float fogWeight );
 
 private:
 	// name

@@ -183,7 +183,7 @@ void EveChildExplosion::SetGlobalExplosionOffset( const Vector3& offset )
 //   Implements IEveSpaceObjectChild interface. If the effect is playing this function
 //   spawns explosions.
 // --------------------------------------------------------------------------------------
-void EveChildExplosion::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( m_isPlaying )
 	{

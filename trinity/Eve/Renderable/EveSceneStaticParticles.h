@@ -68,7 +68,8 @@ public:
 	virtual bool IsVisible( const TriFrustum& frustum ) const;
 	
 	// update & render
-	void Update( EveUpdateContext& updateContext );
+	void Update( const EveUpdateContext& updateContext );
+	void UpdateVisibility( const EveUpdateContext& updateContext );
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables );
 
 	// manage clusters

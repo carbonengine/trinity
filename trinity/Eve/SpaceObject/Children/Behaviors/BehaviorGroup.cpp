@@ -601,11 +601,13 @@ float BehaviorGroup::GetBlendModifier() const
 // Description:
 //   Check if each agent is still visible or not and update it's visibility based on that.
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateVisibility( const TriFrustum& frustum, const Matrix& worldTransform )
+void BehaviorGroup::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& worldTransform )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	m_currentScreenSize = 0.0f;
 	float worldRadius = 1;
+
+	auto frustum = updateContext.GetFrustum();
 	// Check if an agent is visible and calculate the xfade value
 	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
@@ -638,7 +640,6 @@ void BehaviorGroup::UpdateVisibility( const TriFrustum& frustum, const Matrix& w
 	}
 	m_mesh->UseWithScreenSize( m_currentScreenSize, worldRadius );
 
-	m_frustum = frustum;
 	m_parentTransform = worldTransform;
 }
 
@@ -846,7 +847,7 @@ void BehaviorGroup::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 // Description:
 //   For the effect in PlayFX to be updated this is needed.
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateAsyncronous( EveUpdateContext& updateContext )
+void BehaviorGroup::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	if( !m_update )
 	{
@@ -855,7 +856,7 @@ void BehaviorGroup::UpdateAsyncronous( EveUpdateContext& updateContext )
 
 	if( m_playFXBehavior != nullptr )
 	{
-		m_playFXBehavior->UpdateAsyncronous( updateContext, m_frustum, m_parentTransform );
+		m_playFXBehavior->UpdateAsyncronous( updateContext, m_parentTransform );
 	}
 }
 
@@ -864,7 +865,7 @@ void BehaviorGroup::UpdateAsyncronous( EveUpdateContext& updateContext )
 // Description:
 //   For the effect in PlayFX to be updated this is needed.
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void BehaviorGroup::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( !m_update )
 	{

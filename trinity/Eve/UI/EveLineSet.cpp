@@ -93,7 +93,7 @@ bool EveLineSet::OnPrepareResources()
 
 //////////////////////////////////////////////////////////////////////////////////////
 // IEveSpaceObject2
-void EveLineSet::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveLineSet::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -112,11 +112,11 @@ void EveLineSet::UpdateSyncronous( EveUpdateContext& updateContext )
 	m_worldTransform = TransformationMatrix( m_scaling, rotation, translation );
 }
 
-void EveLineSet::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveLineSet::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 }
 
-void EveLineSet::Update( EveUpdateContext& updateContext )
+void EveLineSet::Update( const EveUpdateContext& updateContext )
 {
 	UpdateSyncronous( updateContext );
 }
@@ -129,7 +129,7 @@ void EveLineSet::UpdateViewDependentData( const TriFrustum& frustum, const Matri
 {
 }
 
-void EveLineSet::UpdateVisibility(  const TriFrustum& frustum, const Matrix& parentTransform  )
+void EveLineSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 }
 

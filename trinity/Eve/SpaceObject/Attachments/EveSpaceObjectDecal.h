@@ -10,6 +10,7 @@
 #include "Tr2ShLightingManager.h"
 #include "Tr2DebugRenderer.h"
 #include "Eve/IEveSpaceObject2.h"
+#include "Eve/EveUpdateContext.h"
 
 BLUE_DECLARE_INTERFACE( ITr2InstanceData );
 BLUE_DECLARE( Tr2Buffer );
@@ -113,7 +114,7 @@ public:
 	void CopyFrom( EveSpaceObjectDecal *object );
 
 	// access
-	void UpdateVisibility( const TriFrustum& frustum, const IEveSpaceObject2::ParentData* parentData );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, TriGeometryRes* geomRes, float screensize );
 	void GetInstancedRenderables( std::vector<ITr2Renderable*>& renderables, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
 
