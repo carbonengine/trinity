@@ -11,9 +11,15 @@
 #include "Utilities/MatrixUtils.h"
 #include "TriFrustum.h"
 #include "Tr2InstancedMesh.h"
+#include "TriSettingsRegistrar.h"
+
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 CCP_STATS_DECLARE( decalDPCount, "Trinity/EveSpaceObject2/DecalDPCount", true, CST_COUNTER_LOW, "Number of decals rendered" );
+
+bool g_buildDecalBuffers = false;
+TRI_REGISTER_SETTING( "buildDecalBuffers", g_buildDecalBuffers );
+
 
 extern float g_eveSpaceSceneLODFactor;
 
@@ -194,7 +200,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 			m_baseGeometryResource = geomRes;
 		}
 	}
-	else
+	else if( g_buildDecalBuffers )
 	{
 		// if we get a new mesh, we must re-build the index buffer. This should be avoided cause it is slow!
 		if( geomRes != m_baseGeometryResource )
