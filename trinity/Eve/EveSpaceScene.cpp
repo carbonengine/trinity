@@ -2033,13 +2033,14 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 		m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
 	
 		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
+		size_t shadowCasterCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
 		if( m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
 		{
 			PopulatePerFramePSData( m_perFramePS, renderContext );
 			ApplyPerFrameData( renderContext );
 			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_rtManager->GetShadowMap(), renderContext );
 
-			RenderVolumetricShadowMap( volumetricCount );
+			RenderVolumetricShadowMap( renderContext );
 		}
 
 		renderContext.SetReadOnlyDepth( false );
@@ -2054,9 +2055,9 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	}
 }
 
-void EveSpaceScene::RenderVolumetricShadowMap( size_t volumetricCount )
+void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 {
-	m_volumetricsRenderer->RenderIntoShadowMap( *m_componentRegistry );
+	m_volumetricsRenderer->RenderIntoShadowMap( *m_componentRegistry, m_frameData.frustum, renderContext );
 }
 
 void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
@@ -2593,7 +2594,9 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	}
 	if( m_rtManager )
 	{
-		// set data here
+		// volumetricsRenderer->GetZFar
+		// 
+		
 	}
 	// m_perFrameVS.ProjectionMat is already transposed
 	data.ProjectionInverseMat = Inverse( m_perFrameVS.ProjectionMat );

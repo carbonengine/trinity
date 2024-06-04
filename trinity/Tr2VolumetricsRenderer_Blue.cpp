@@ -69,5 +69,6 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			m_blurScratch,
 			"",
 			Be::READ )
+
 	EXPOSURE_END()
 }

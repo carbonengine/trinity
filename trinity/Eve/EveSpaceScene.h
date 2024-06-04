@@ -651,7 +651,7 @@ private:
 	BlueSharedString m_shadowAlgorithm;
 	const BlueSharedString m_shadowAlgorithmName = BlueSharedString( "SHADOW_ALGORITHM" );
 
-	void RenderVolumetricShadowMap( size_t volumetricCount );
+	void RenderVolumetricShadowMap( Tr2RenderContext & renderContext );
 
 	// Raytring
 	Tr2RaytracingManagerPtr m_rtManager;
