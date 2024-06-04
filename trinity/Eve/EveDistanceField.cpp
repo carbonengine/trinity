@@ -182,9 +182,10 @@ void EveDistanceField::UpdateDistanceCurveSize()
 	if( m_distanceCurve )
 	{
 		auto& keys = m_distanceCurve->GetKeys();
-		if( keys.size() > 1 )
+		if( keys.size() == 2 )
 		{
-			keys[keys.size() - 1].m_time = m_maxDistance;
+			keys[0].m_time = m_minDistance;
+			keys[1].m_time = m_maxDistance;
 			m_distanceCurve->OnKeysChanged();
 		}
 		m_distanceCurve->SetTimeOffset( 0 );
