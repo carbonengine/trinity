@@ -3180,7 +3180,7 @@ void EveSpaceScene::GetPickingObjectsToRender( std::vector<ITr2Renderable*>& pic
 	m_cameraAttachmentParent->GetRenderables( pickableRenderObjects, nullptr );
 }
 
-void EveSpaceScene::UpdatePlanets( EveUpdateContext& updateContext )
+void EveSpaceScene::UpdatePlanets( const EveUpdateContext& updateContext )
 {
 	// The planet view matrix must be set up for update to accommodate
 	// potential transform modifiers in the transform hierarchy of the
