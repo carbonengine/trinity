@@ -985,8 +985,14 @@ void EveSwarm::SetCount( int count )
 
 void EveSwarm::RegisterComponents()
 {
+	// need to call this to register all the turrets and things
 	EveShip2::RegisterComponents();
 	auto reg = GetComponentRegistry();
+
+	// unregister all components from this, because this is just a container
+	// but at this point we have registered turrets and other things
+	reg->UnRegisterAllComponents( this );
+
 	if( reg )
 	{
 		for( auto& renderable : m_renderables )
