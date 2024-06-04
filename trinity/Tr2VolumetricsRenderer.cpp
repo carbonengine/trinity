@@ -14,8 +14,7 @@
 #include "TriRenderBatch.h"
 #include "Tr2RenderTarget.h"
 #include "Tr2DepthStencil.h"
-#include "Eve/IEveShadowCaster.h"
-
+#include "Eve/SpaceObject/Children/EveChildCloud2.h"
 
 Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_quality( Tr2VolumerticQuality::High ),
@@ -38,8 +37,6 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_downsampleDepth->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/DownsampleDepth.fx" );
 
 	m_blurScratch.CreateInstance();
-
-	m_shadowDS.CreateInstance();
 
 	m_hBlur.CreateInstance();
 	m_hBlur->SetOption( BlueSharedString( "SOURCE_TYPE" ), BlueSharedString( "SOURCE_TYPE_ARRAY" ) );
@@ -338,58 +335,33 @@ void Tr2VolumetricsRenderer::UpdateVariableStore()
 	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", m_volumeSlices );
 }
 
-bool Tr2VolumetricsRenderer::PrepareShadowMap( Tr2RenderContext& renderContext )
+void Tr2VolumetricsRenderer::RenderIntoShadowMap( EveComponentRegistry& registry, 
+	const TriFrustum& frustum, 
+	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	if( !m_receiveShadows )
-	{
-		return false;
-	}
-
-	if( !m_shadowDS || !m_shadowDS->IsValid() )
-	{
-		m_shadowDS->Create( 512, 512, Tr2RenderContextEnum::DSFMT_D16, 1, 0, Tr2RenderContextEnum::EX_NONE );
-	}
-
-	// Using depth stencil as shadow map
-	renderContext.m_esm.PushViewport();
-	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
-	renderContext.m_esm.PushDepthStencilBuffer( *m_shadowDS->GetTexture() );
-
-	renderContext.m_esm.UpdateRenderTargetViewport( m_shadowDS->GetWidth(), m_shadowDS->GetHeight() );
-
-	// we want a clean depth buffer for this
-	CR( renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xffffffff, 1, 0 ) );
-
-	renderContext.SetReadOnlyDepth( false );
-
-	renderContext.m_esm.SetViewport( m_shadowDS->GetWidth(), m_shadowDS->GetHeight(), 0, 0, 0, 1 );
-
-	return true;
-}
-
-void Tr2VolumetricsRenderer::RenderIntoShadowMap( EveComponentRegistry& registry )
-{/*
-	registry.ProcessComponents<ITr2VolumetricRenderable>( [&registry]( ITr2VolumetricRenderable* volumetric ) -> void {
-		volumetric->SetSceneInformation( sceneInfo );
+	// unsure about this cast to evechildcloud2
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&registry, &frustum, &renderContext]( ITr2VolumetricRenderable* volumetric ) -> void {
+		if( EveChildCloud2Ptr entity = BlueCastPtr( volumetric ) )
+		{
+			entity->SetupShadowFrustum();
+			entity->RenderShadowBatches( registry, frustum, renderContext );
+			
+		}
 	} );
 
 
-	auto shadowCasters = registry.GetComponents<IEveShadowCaster>();
 
-	for( auto& caster : shadowCasters )
-	{
-		if( caster->IsCastingShadow(m_shad) )
-	}
+	// Set per obj data
+
+	
+	/*	static const unsigned perFrameVsMask = 
+		( 1 << VERTEX_SHADER )					|
+		SHADER_TYPE_EXISTS( COMPUTE_SHADER )	|
+		SHADER_TYPE_EXISTS( GEOMETRY_SHADER )	|
+		SHADER_TYPE_EXISTS( HULL_SHADER )		|
+		SHADER_TYPE_EXISTS( DOMAIN_SHADER)		;
+	FillAndSetConstants( m_shadowPerFrameVSBuffer, &data, sizeof( data ), perFrameVsMask, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext );
 	*/
 
-
-	// For each cloud
-		// For each IEveShadowCaster
-		//		If caster in cloud frustum
-		//		Get caster.ShadowBatches
-		//		render into shadow Depth
-		//		
 	
 }

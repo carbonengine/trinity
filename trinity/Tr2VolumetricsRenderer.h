@@ -37,7 +37,7 @@ public:
 		Tr2RenderContext& renderContext );
 
 	bool PrepareShadowMap( Tr2RenderContext & renderContext );
-	void RenderIntoShadowMap( EveComponentRegistry& registry );
+	void RenderIntoShadowMap( EveComponentRegistry & registry, const TriFrustum& frustum, Tr2RenderContext& renderContext );
 
 
 	EXPOSE_TO_BLUE();
@@ -50,14 +50,17 @@ private:
 	Tr2TextureReferencePtr m_volumeSlices;
 	Tr2RenderTargetPtr m_downsampledDepth;
 	Tr2RenderTargetPtr m_blurScratch;
-	Tr2DepthStencilPtr m_shadowDS;
+	
 	std::unique_ptr<ITriRenderBatchAccumulator> m_batches;
+	
+	Tr2ConstantBufferAL m_shadowPerFrameVSBuffer;
 	Tr2VolumerticQuality m_quality;
 	float m_scaleFactor;
 	bool m_blur;
 	bool m_volumeHasContent;
 	bool m_castShadows;
 	bool m_receiveShadows;
+	
 };
 
 TYPEDEF_BLUECLASS( Tr2VolumetricsRenderer );

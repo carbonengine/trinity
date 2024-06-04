@@ -12,6 +12,7 @@
 #include "Tr2DebugRenderer.h"
 #include "Tr2DepthStencil.h"
 #include "TriFrustumOrtho.h"
+#include "Utilities/BoundingBox.h"
 #include "../../EveEntity.h"
 #include "../../../ITr2VolumetricRenderable.h"
 
@@ -96,7 +97,10 @@ public:
 	void RegisterComponents() override;
 
 	void SetupShadowFrustum();
-	void SetupShadowMap();
+	TriFrustumOrtho GetShadowFrustum();
+	void RenderShadowBatches( EveComponentRegistry & registry, const TriFrustum& frustum, Tr2RenderContext& renderContext );
+	float GetZFar();
+	Matrix GetLightViewProj();
 
 	bool IsLightmapDirty() const;
 	void MarkLightmapDirty( bool );
@@ -129,6 +133,7 @@ public:
 		LightData lights[4];
 		Vector4 mapOffsets[3];
 		Matrix lightViewProj;
+		float zFar;
 	};
 
 private:
@@ -138,6 +143,7 @@ private:
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator, float screenSize );
 	void CreateEmptyLightMap();
 	bool HasValidTransform() const;
+	bool PrepareShadowMap( Tr2RenderContext & renderContext );
 
 	// data for positioning
 	Matrix m_localTransform;
@@ -175,8 +181,7 @@ private:
 	Tr2VolumerticQuality m_currentQuality;
 
 	Tr2DepthStencilPtr m_shadowMapDS;
-	Tr2RenderTargetPtr m_shadowMapRT;
-	Tr2EffectPtr m_shadowEffect;
+	std::unique_ptr<ITriRenderBatchAccumulator> m_shadowBatches;
 
 	std::string m_name;
 	bool m_display;
@@ -214,7 +219,9 @@ private:
 
 	Matrix m_lightViewProj;
 	TriFrustumOrtho m_shadowFrustum;
-
+	float m_zFar;
+	AxisAlignedBoundingBox m_aabb;
+	unsigned int m_shadowMapSize;
 };
 
 TYPEDEF_BLUECLASS( EveChildCloud2 );
