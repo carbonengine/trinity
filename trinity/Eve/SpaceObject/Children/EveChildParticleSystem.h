@@ -66,7 +66,7 @@ public:
 	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	float GetSortValue();
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	bool IsVisible( const TriFrustum& frustum ) const;
+	bool IsVisible( const EveUpdateContext& updateContext ) const override;
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -104,7 +104,6 @@ private:
 
 	float m_lodSphereRadius;
 	float m_minScreenSize;
-	float m_adjustedMinScreenSize;
 	float m_currentScreenSize;
 
 	bool m_display;

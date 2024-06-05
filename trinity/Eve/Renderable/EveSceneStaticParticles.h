@@ -65,7 +65,7 @@ public:
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
 	virtual bool HasTransparentBatches();
 	virtual float GetSortValue();
-	virtual bool IsVisible( const TriFrustum& frustum ) const;
+	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
 	
 	// update & render
 	void Update( const EveUpdateContext& updateContext );

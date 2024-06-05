@@ -210,7 +210,7 @@ void EveChildLineSet::UpdateVisibility( const EveUpdateContext& updateContext, c
 	m_isVisible = false;
 	Vector4 sphere = m_boundingSphere;
 	BoundingSphereTransform( m_worldTransform, sphere );
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	if( frustum.IsSphereVisible( &( sphere ) ) )
 	{
 		m_currentScreenSize = frustum.GetPixelSizeAccross( &m_boundingSphere );

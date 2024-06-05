@@ -540,7 +540,7 @@ void EveTurretFiringFX::UpdateVisibility( const EveUpdateContext& updateContext 
 		return;
 	}
 
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 
 	Matrix m;
 	for( unsigned int i = 0; i < m_stretch.size(); ++i )

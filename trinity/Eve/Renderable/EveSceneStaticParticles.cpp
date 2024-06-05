@@ -116,13 +116,13 @@ void EveSceneStaticParticles::UpdateVisibility( const EveUpdateContext& updateCo
 	{
 		return;
 	}
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	m_estimatedSize = frustum.GetPixelSizeAccross( &m_boundingSphere );
 
 	bool estimatedSizeWithinBounds = m_estimatedSize > PARTICLE_CLUSTER_MIN_SIZE * updateContext.GetLodFactor();
 	bool inBoundingSphere = LengthSq( m_center - frustum.m_viewPos ) <= m_boundingSphere.w * m_boundingSphere.w;
 	
-	m_visible = inBoundingSphere || ( IsVisible( frustum ) && estimatedSizeWithinBounds );
+	m_visible = inBoundingSphere || ( IsVisible( updateContext ) && estimatedSizeWithinBounds );
 }
 
 // --------------------------------------------------------------------------------
@@ -170,10 +170,10 @@ float EveSceneStaticParticles::GetSortValue()
 	return 0.0f;
 }
 
-bool EveSceneStaticParticles::IsVisible( const TriFrustum& frustum ) const
+bool EveSceneStaticParticles::IsVisible( const EveUpdateContext& updateContext ) const
 {
 	Vector4 transformedSphere( m_center, m_boundingSphere.w );
-	return frustum.IsSphereVisible( &transformedSphere );
+	return updateContext.GetFrustum().IsSphereVisible( &transformedSphere );
 }
 
 void EveSceneStaticParticles::GetDebugOptions( Tr2DebugRendererOptions& options )

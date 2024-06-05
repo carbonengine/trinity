@@ -227,7 +227,7 @@ void EveTacticalOverlay::UpdateVisibility( const EveUpdateContext& updateContext
 	Vector3 up( 0, 1, 0 );
 	float distanceThreshold = ( m_ranges.x + m_ranges.y ) * m_ranges.z;
 	float requestedSegments = 0.f;
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 
 	for( auto it = m_trackObjects.begin(); it != m_trackObjects.end(); it++ )
 	{

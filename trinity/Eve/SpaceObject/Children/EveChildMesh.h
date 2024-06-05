@@ -82,7 +82,7 @@ public:
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	virtual bool IsVisible( const EveUpdateContext& updateContext ) const;
+	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize

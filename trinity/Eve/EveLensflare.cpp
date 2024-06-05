@@ -291,8 +291,7 @@ void EveLensflare::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Re
 void EveLensflare::UpdateVisibility( const EveUpdateContext& updateContext )
 {
 	m_isVisible = false;
-	auto frustum = updateContext.GetFrustum();
-
+	auto& frustum = updateContext.GetFrustum();
 	// visibility?
 	float viewDotDir = Dot( frustum.m_viewDir, m_direction );
 	m_isVisible = viewDotDir >= 0.f;

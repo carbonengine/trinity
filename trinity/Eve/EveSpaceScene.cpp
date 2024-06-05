@@ -3161,7 +3161,7 @@ void EveSpaceScene::GetPickingObjectsToRender( std::vector<ITr2Renderable*>& pic
 
 	pickFrustum.DeriveFrustum( &view, &camPos, &proj, vp );
 
-	// PROBABLY VERY BAD!
+	auto& oldFrustum = m_updateContext.GetFrustum();
 	m_updateContext.SetFrustum(pickFrustum);
 
 	for( IEveSpaceObject2Vector::const_iterator it = m_objects.begin(); it != m_objects.end(); ++it )
@@ -3176,6 +3176,8 @@ void EveSpaceScene::GetPickingObjectsToRender( std::vector<ITr2Renderable*>& pic
 			( *it )->GetRenderables( pickableRenderObjects, nullptr );
 		}
 	}
+	m_updateContext.SetFrustum( oldFrustum );
+
 	m_cameraAttachmentParent->UpdateVisibility( m_updateContext, IdentityMatrix() );
 	m_cameraAttachmentParent->GetRenderables( pickableRenderObjects, nullptr );
 }

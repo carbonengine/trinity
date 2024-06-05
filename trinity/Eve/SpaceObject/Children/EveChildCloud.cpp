@@ -222,7 +222,7 @@ void EveChildCloud::SetName( const char* name )
 
 void EveChildCloud::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	m_isVisible = !( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) || frustum.GetPixelSizeAccross( &m_boundingSphere ) < m_minScreenSize * updateContext.GetLodFactor() );
 	m_lastLodFactor = updateContext.GetLodFactor(); // this is needed for some math in GetPerObjectData
 }

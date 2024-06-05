@@ -79,7 +79,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	bool IsVisible( const EveUpdateContext& frustum ) const override;
+	bool IsVisible( const EveUpdateContext& updateContext ) const override;
 	void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 	bool HasTransparentBatches() override;
 	float GetSortValue() override;

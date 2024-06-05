@@ -9,7 +9,7 @@
 // --------------------------------------------------------------------------------
 Tr2Lod EveLODHelper::MergeLOD( Tr2Lod lod0, const Vector4& sphere, const EveUpdateContext& updateContext )
 {
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 
 	// only change something if this thing is actually visible
 	if( frustum.IsSphereVisible( &sphere ) )

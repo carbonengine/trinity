@@ -770,7 +770,7 @@ void EveChildCloud2::GetVolumetricShadowBatches( ITriRenderBatchAccumulator* bat
 
 bool EveChildCloud2::IsVisible( const EveUpdateContext& updateContext ) const
 {
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	auto isVisible = m_display && frustum.IsSphereVisible( m_boundingSphere.center, m_boundingSphere.radius );
 	if( !isVisible )
 	{
@@ -778,7 +778,7 @@ bool EveChildCloud2::IsVisible( const EveUpdateContext& updateContext ) const
 	}
 
 	auto screenSize = frustum.GetPixelSizeAccross( m_boundingSphere );
-	if( screenSize < m_adjustedMinScreenSize )
+	if( screenSize < m_minScreenSize * updateContext.GetLodFactor() )
 	{
 		return false;
 	}

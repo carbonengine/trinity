@@ -46,8 +46,6 @@ bool g_lightNoiseInitialized = false;
 
 EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) : 
 	m_isVisible( false ),
-	m_boosterLOD( 0.f ),
-	m_trailsLOD( 0.f ),
 	m_parentRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_parentSpeed( 0.f ),
 	m_overallIntensity( 0.f ),
@@ -307,12 +305,12 @@ void EveBoosterSet2Renderable::UpdateVisibility( const EveUpdateContext& updateC
 	Vector4 transformedBoundingSphere;
 	GetBoundingSphere( transformedBoundingSphere );
 
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 
 	// LOD for boosters: use the bounding sphere
-	m_boosterLOD = 2.f * frustum.GetPixelSizeAccross( &transformedBoundingSphere );
-	m_boosterHighLod = m_boosterLOD > updateContext.GetMediumDetailThreshold() * 1.5f;
-	m_boostersVisible = m_boosterLOD > updateContext.GetLowDetailThreshold();
+	float boosterLOD = 2.f * frustum.GetPixelSizeAccross( &transformedBoundingSphere );
+	m_boosterHighLod = boosterLOD > updateContext.GetMediumDetailThreshold() * 1.5f;
+	m_boostersVisible = boosterLOD > updateContext.GetLowDetailThreshold();
 
 	// LOD for trails: based on closest control point of spline with sphere around it
 	unsigned int cntrPosIdx = 0;
@@ -328,8 +326,8 @@ void EveBoosterSet2Renderable::UpdateVisibility( const EveUpdateContext& updateC
 		}
 	}
 	Vector4 tmp( m_trailsControlPositions[ cntrPosIdx ], transformedBoundingSphere.w );
-	m_trailsLOD = 7.5f * frustum.GetPixelSizeAccross( &tmp );
-	m_trailsVisible = m_trailsLOD > updateContext.GetLowDetailThreshold();
+	float trailsLOD = 7.5f * frustum.GetPixelSizeAccross( &tmp );
+	m_trailsVisible = trailsLOD > updateContext.GetLowDetailThreshold();
 
 	m_isVisible = frustum.IsSphereVisible( &transformedBoundingSphere ) || frustum.IsBoxVisible( m_trailsBoundsMin, m_trailsBoundsMax );
 }

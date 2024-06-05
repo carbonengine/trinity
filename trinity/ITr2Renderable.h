@@ -43,7 +43,7 @@ enum Tr2RenderReason
 BLUE_INTERFACE( ITr2Renderable ) :
 	public IRoot
 {
-	virtual bool IsVisible( const EveUpdateContext& frustum ) const
+	virtual bool IsVisible( const EveUpdateContext& updateContext ) const
 	{
 		return true;
 	}
