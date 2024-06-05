@@ -639,7 +639,7 @@ void BehaviorGroup::UpdateVisibility( const EveUpdateContext& updateContext, con
 	m_currentScreenSize = 0.0f;
 	float worldRadius = 1;
 
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	// Check if an agent is visible and calculate the xfade value
 	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{

@@ -256,7 +256,7 @@ protected:
 	Matrix GetObserverTransform() override;
 	const Matrix* GetTurretTransform( unsigned int turretSetIndex ) const;
 	
-	virtual void UpdateBoosters( const EveUpdateContext& updateContext ) override {}
+	void UpdateBoosters( const EveUpdateContext& updateContext ) override {}
 	void UpdateWorldTransform( Be::Time time );
 
 private:

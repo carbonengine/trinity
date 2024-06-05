@@ -114,8 +114,6 @@ public:
 
 	// LODs and bounds
 	Vector3 m_trailsBoundsMin, m_trailsBoundsMax;
-	float m_boosterLOD;
-	float m_trailsLOD;
 
 	bool m_boosterHighLod;
 	bool m_boostersVisible;

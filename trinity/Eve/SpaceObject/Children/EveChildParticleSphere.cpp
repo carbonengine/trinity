@@ -97,7 +97,7 @@ void EveChildParticleSphere::GetRenderables( std::vector<ITr2Renderable*>& rende
 // -----------------------------------------------------------------------------
 void EveChildParticleSphere::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix&, Tr2Lod )
 {
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	auto isVisible = !( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) );
 	if( isVisible && m_particleSystem )
 	{

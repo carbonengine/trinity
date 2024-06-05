@@ -1588,7 +1588,7 @@ void EveTurretSet::UpdateVisibility( const EveUpdateContext& updateContext )
 	{
 		return;
 	}
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 
 	for( std::vector<SingleTurretData>::iterator it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
 	{

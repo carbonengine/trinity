@@ -34,7 +34,6 @@ EveChildParticleSystem::EveChildParticleSystem( IRoot* lockobj ):
 	m_lodClampLow( 5 ),
 	m_lodSphereRadius( 0.0f ),
 	m_minScreenSize( 0.0f ),
-	m_adjustedMinScreenSize( 0.0f ),
 	m_currentScreenSize( -1 ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER )
 {
@@ -103,13 +102,12 @@ void EveChildParticleSystem::Setup( const Vector3* scale, const Quaternion* rota
 
 void EveChildParticleSystem::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	m_isVisible = m_display && frustum.IsSphereVisible( &m_boundingSphere );
-	m_adjustedMinScreenSize = m_minScreenSize * updateContext.GetLodFactor();
 	if( m_isVisible )
 	{
 		m_currentScreenSize = frustum.GetPixelSizeAccrossEst( &m_lodSphere );
-		m_isVisible &= m_currentScreenSize >= m_adjustedMinScreenSize;
+		m_isVisible &= m_currentScreenSize >= m_minScreenSize * updateContext.GetLodFactor();
 	}
 	else
 	{
@@ -125,9 +123,10 @@ void EveChildParticleSystem::UpdateVisibility( const EveUpdateContext& updateCon
 	}
 }
 
-bool EveChildParticleSystem::IsVisible( const TriFrustum& frustum ) const
+bool EveChildParticleSystem::IsVisible( const EveUpdateContext& updateContext ) const
 {
-	return frustum.IsSphereVisible( &m_boundingSphere ) && frustum.GetPixelSizeAccrossEst( &m_lodSphere ) >= m_adjustedMinScreenSize;
+	auto& frustum = updateContext.GetFrustum();
+	return frustum.IsSphereVisible( &m_boundingSphere ) && frustum.GetPixelSizeAccrossEst( &m_lodSphere ) >= m_minScreenSize * updateContext.GetLodFactor();
 }
 
 

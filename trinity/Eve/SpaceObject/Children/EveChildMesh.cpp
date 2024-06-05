@@ -166,7 +166,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	m_currentScreenSize = -1;
 	m_instancesVisible = false;
 	m_currentInstanceScreenSize = -1.0f;
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 
 	if( m_mesh )
 	{
@@ -384,7 +384,7 @@ bool EveChildMesh::IsVisible( const EveUpdateContext& updateContext ) const
 
 	if( GetBoundingSphere( boundingSphere ) && boundingSphere.w != 0)
 	{
-		auto frustum = updateContext.GetFrustum();
+		auto& frustum = updateContext.GetFrustum();
 		if( frustum.IsSphereVisible( boundingSphere.GetXYZ(), boundingSphere.w ) )
 		{
 			return frustum.GetPixelSizeAccrossEst( boundingSphere.GetXYZ(), boundingSphere.w ) >= updateContext.GetVisibilityThreshold();

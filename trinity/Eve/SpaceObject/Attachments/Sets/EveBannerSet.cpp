@@ -128,7 +128,7 @@ bool EveBannerSet::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		return false;
 	}
 	aabb.Transform( parentTransform );
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	m_isVisible = frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
 
 	bool isLoddedOut = true;

@@ -126,7 +126,7 @@ void EveMissileWarhead::UpdateVisibility( const EveUpdateContext& updateContext,
 	{
 		return;
 	}
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	m_isVisible = true;
 	UpdateViewDependentData( frustum, parentTransform );
 	

@@ -8,9 +8,7 @@ const Be::ClassInfo* EveBoosterSet2Renderable::ExposeToBlue()
     EXPOSURE_BEGIN( EveBoosterSet2Renderable, "" )
         MAP_INTERFACE( EveBoosterSet2Renderable )
 		MAP_INTERFACE( ITr2Renderable )
-		
-		MAP_ATTRIBUTE( "boosterLOD", m_boosterLOD, "current booster LOD", Be::READ )
-		MAP_ATTRIBUTE( "trailsLOD", m_trailsLOD, "current trails LOD", Be::READ )
+
 		MAP_ATTRIBUTE( "overallIntensity", m_overallIntensity, "The overall intensity of the boosters resulting from velo, acceleration, etc.", Be::READ )
 		MAP_ATTRIBUTE( "parentSpeed", m_parentSpeed, "The speed of the ship", Be::READWRITE )
 		MAP_ATTRIBUTE( "parentRotation", m_parentRotation, "The rotation of the ship", Be::READWRITE )
@@ -22,6 +20,7 @@ const Be::ClassInfo* EveBoosterSet2Renderable::ExposeToBlue()
 		MAP_ATTRIBUTE( "isVisible", m_isVisible, "", Be::READ )
 		MAP_ATTRIBUTE( "trailsVisible", m_trailsVisible, "", Be::READ )
 		MAP_ATTRIBUTE( "boostersVisible", m_boostersVisible, "", Be::READ )
+		MAP_ATTRIBUTE( "boosterHighLod", m_boosterHighLod, "Are the boosters using high lods (using the near effect)", Be::READ )
 	EXPOSURE_END()
 }
 
@@ -162,7 +161,7 @@ const Be::ClassInfo* EveBoosterSet2::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "instances", m_boosterRenderables, "Instances of this booster set.", Be::READ )
 		MAP_ATTRIBUTE( "effect", m_effect, "Effect to use to render the boosters", Be::READWRITE | Be::PERSIST )
-                MAP_ATTRIBUTE( "effectFar", m_effectFar, "Effect to use to render the boosters at a distance", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "effectFar", m_effectFar, "Effect to use to render the boosters at a distance", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "glows", m_glows, "Sprite set to use to render the glows on the boosters", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "trails", m_trails, "Trails set used to render the trails of this booster", Be::READWRITE | Be::PERSIST )
 

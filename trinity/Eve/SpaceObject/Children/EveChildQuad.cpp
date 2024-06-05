@@ -191,7 +191,7 @@ void EveChildQuad::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	Vector4 sphere = Vector4( 0.f, 0.f, 0.f, std::sqrt( 2.f ) );
 	BoundingSphereTransform( m_worldTransform, sphere );
 
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 
 	if( frustum.IsSphereVisible( &sphere ) )
 	{

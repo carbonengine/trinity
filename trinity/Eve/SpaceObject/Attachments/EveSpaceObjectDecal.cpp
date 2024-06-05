@@ -129,7 +129,7 @@ void EveSpaceObjectDecal::UpdateVisibility( const EveUpdateContext& updateContex
 		Vector3 min( -1, -1, -1 );
 		Vector3 max( 1, 1, 1 );
 		bool isInstanced = m_instanceData != nullptr;
-		auto frustum = updateContext.GetFrustum();
+		auto& frustum = updateContext.GetFrustum();
 
 		// are we using instance magic?
 		if( isInstanced )

@@ -1394,7 +1394,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 	m_lodLevel = TR2_LOD_LOW;
 	m_lodLevelWithChildren = TR2_LOD_LOW;
 	m_impostorMode = false;
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 
 	if( m_boundingSphereRadius > 0.0f )
 	{
