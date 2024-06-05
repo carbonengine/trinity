@@ -81,7 +81,7 @@ private:
 	uint32_t m_skinnedVertexOffset;
 	bool m_isDirty;
 	float m_screenSize;
-	TriGeometryResMeshData* m_meshData;
+	int m_lodIndex;
 
 	friend class Tr2RaytracingGeometry;
 };

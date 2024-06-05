@@ -150,7 +150,8 @@ Tr2RaytracingMesh::Tr2RaytracingMesh() :
 	m_boneOffset( 0 ),
 	m_skinnedVertexOffset( 0 ),
 	m_isDirty( true ),
-	m_screenSize( 0.f )
+	m_screenSize( 0.f ),
+	m_lodIndex( 0 )
 {
 }
 
@@ -162,8 +163,7 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 		m_geometry = geometry;
 		m_meshIndex = meshIndex;
 		m_screenSize = screenSize;
-
-		m_meshData = m_geometry->GetMeshData( m_meshIndex, m_screenSize );
+		m_lodIndex = m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize );
 
 		m_transforms.clear();
 
@@ -172,9 +172,9 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 	else if( m_screenSize != screenSize )
 	{
 		//screen size has changed, so check if we've changed to a different LOD
-		auto meshData = m_geometry->GetMeshData( m_meshIndex, screenSize );
-		m_isDirty = m_meshData == meshData;
-		m_meshData = meshData;
+		auto lodIndex = m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize );
+		m_isDirty = lodIndex != m_lodIndex;
+		m_lodIndex = lodIndex;
 		m_screenSize = screenSize;
 	}
 }
@@ -201,7 +201,7 @@ bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4
 
 bool Tr2RaytracingMesh::IsGood() const
 {
-	return m_geometry && m_geometry->IsGood() && m_geometry->GetMeshData( m_meshIndex );
+	return m_geometry && m_geometry->IsGood() && GetMeshData();
 }
 
 bool Tr2RaytracingMesh::GetAndResetDirtyFlag()
@@ -216,7 +216,7 @@ bool Tr2RaytracingMesh::GetAndResetDirtyFlag()
 
 TriGeometryResMeshData* Tr2RaytracingMesh::GetMeshData() const
 {
-	return m_meshData;
+	return m_geometry->GetMeshDataLod( m_meshIndex, m_lodIndex );
 }
 
 uint32_t Tr2RaytracingMesh::GetTransformOffset() const
@@ -242,12 +242,12 @@ uint32_t Tr2RaytracingMesh::GetSkinnedVertexOffset() const
 
 const Tr2BufferAL& Tr2RaytracingMesh::GetVertexBuffer() const
 {
-	return m_meshData->m_vertexAllocation.GetBuffer();
+	return GetMeshData()->m_vertexAllocation.GetBuffer();
 }
 
 const Tr2BufferAL& Tr2RaytracingMesh::GetIndexBuffer() const
 {
-	return m_meshData->m_indexAllocation.GetBuffer();
+	return GetMeshData()->m_indexAllocation.GetBuffer();
 }
 
 // ***************** Tr2RaytracingMeshArea *****************
