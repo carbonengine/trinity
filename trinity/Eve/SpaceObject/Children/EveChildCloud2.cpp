@@ -869,7 +869,11 @@ bool EveChildCloud2::PrepareShadowMap( Tr2RenderContext& renderContext )
 		return false;
 	}
 
-	if( !m_shadowMapDS || !m_shadowMapDS->IsValid() )
+	if( !m_shadowMapDS )
+	{
+		m_shadowMapDS.CreateInstance();
+	}
+	if( !m_shadowMapDS->IsValid() )
 	{
 		m_shadowMapDS->Create( m_shadowMapSize, m_shadowMapSize, Tr2RenderContextEnum::DSFMT_D32F, 1, 0, Tr2RenderContextEnum::EX_NONE );
 	}
