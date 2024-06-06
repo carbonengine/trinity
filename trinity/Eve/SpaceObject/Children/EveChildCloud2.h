@@ -76,6 +76,9 @@ public:
 	bool UpdateVolumetricLightmap( Tr2RenderContext & renderContext ) override;
 	void SetSceneInformation( const SceneInformation& sceneInformation ) override;
 	void GetVolumetricShadowBatches( ITriRenderBatchAccumulator* batches ) override;
+	void GetVolumetricShadowInfo( ShadowInfo & shadowInfo ) override;
+	bool PrepareCloudShadowMap( Tr2RenderContext & renderContext ) override;
+	void SetCloudShadowMapHandle() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
@@ -94,14 +97,12 @@ public:
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
+	void ClearVariableStore();
+
 	void RegisterComponents() override;
 
-	void SetupShadowFrustum();
-	TriFrustumOrtho GetShadowFrustum();
-	void RenderShadowBatches( EveComponentRegistry & registry, const TriFrustum& frustum, Tr2RenderContext& renderContext );
-	float GetZFar();
-	Matrix GetLightViewProj();
-
+	void SetupShadowFrustum( ShadowInfo & shadowInfo );
+	
 	bool IsLightmapDirty() const;
 	void MarkLightmapDirty( bool );
 
@@ -143,7 +144,6 @@ private:
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator, float screenSize );
 	void CreateEmptyLightMap();
 	bool HasValidTransform() const;
-	bool PrepareShadowMap( Tr2RenderContext & renderContext );
 
 	// data for positioning
 	Matrix m_localTransform;
@@ -181,7 +181,7 @@ private:
 	Tr2VolumerticQuality m_currentQuality;
 
 	Tr2DepthStencilPtr m_shadowMapDS;
-	std::unique_ptr<ITriRenderBatchAccumulator> m_shadowBatches;
+	TriVariable* m_depthShadowMapHandle;
 
 	std::string m_name;
 	bool m_display;
@@ -219,9 +219,7 @@ private:
 	};
 
 	Matrix m_lightViewProj;
-	TriFrustumOrtho m_shadowFrustum;
 	float m_zFar;
-	AxisAlignedBoundingBox m_aabb;
 	unsigned int m_shadowMapSize;
 };
 
