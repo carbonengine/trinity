@@ -36,6 +36,18 @@ extern bool g_eveIsSpaceObjectResourceUnloadingEnabled;
 // Time threshold for resource unloading (in seconds).
 extern float g_eveSpaceObjectResourceUnloadingTimeThreshold;
 
+// Object itself only renders if estimated pixel diameter is above
+// this threshold. Note that attachments may still render, in particular
+// turret firing effects, or light glows as they may be more noticeable from afar.
+extern float g_eveSpaceSceneVisibilityThreshold;
+
+// Object itself renders with low detail geometry (if available) if estimated pixel
+// diameter is above this threshold. Note that attachments may still render, in particular
+// turret firing effects, or light glows as they may be more noticeable from afar.
+extern float g_eveSpaceSceneLowDetailThreshold;
+extern float g_eveSpaceSceneMediumDetailThreshold;
+extern float g_eveSpaceSceneHighDetailThreshold;
+
 // Setting for what reflection mode is used
 extern int g_eveReflectionMode;
 
@@ -635,12 +647,16 @@ private:
 
 	ShadowQuality m_shadowQuality;
 
-	BlueSharedString m_shadowAlgorithm;
-	const BlueSharedString m_shadowAlgorithmName = BlueSharedString( "SHADOW_ALGORITHM" );
+	const BlueSharedString m_shadowCascadedName = BlueSharedString( "SHADOW_CASCADED" );
+	const BlueSharedString m_shadowRaytracedName = BlueSharedString( "SHADOW_RT" );
+	BlueSharedString m_shadowCascadedValue;
+	BlueSharedString m_shadowRaytracedValue;
+	bool m_usingRaytracedShadows;
 
 	void RenderVolumetricShadowMap( Tr2RenderContext & renderContext );
+	void RenderIntoCloudShadowMap( Tr2RenderContext & renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation );
 
-	// Raytring
+	// raytracing
 	Tr2RaytracingManagerPtr m_rtManager;
 	bool m_enableRaytracing;
 

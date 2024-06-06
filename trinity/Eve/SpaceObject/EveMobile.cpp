@@ -80,11 +80,11 @@ void EveMobile::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* va
 
 					if( g_eveSpaceSceneRaytracedShadows )
 					{
-						turretSet->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_RT" ) );
+						turretSet->SetShaderOption( BlueSharedString( "SHADOW_RT" ), BlueSharedString( "SHADOW_RAY_ENABLED" ) );
 					}
 					else
 					{
-						turretSet->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_CASCADED" ) );
+						turretSet->SetShaderOption( BlueSharedString( "SHADOW_CASCADED" ), BlueSharedString( "SHADOW_CASC_ENABLED" ) );
 					}
 				}
 			}

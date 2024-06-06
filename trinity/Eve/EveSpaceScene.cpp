@@ -2052,21 +2052,28 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 
 	renderContext.m_esm.EndManagedRendering();
 	
-	
 	if( m_rtManager && m_shadowQuality == SHADOW_RAYTRACED && m_depthMap->IsValid() && !m_objects.empty() && m_enableShadows )
 	{
+		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
+		size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
+		if( volumetricCount + shadowCasterCount == 0 )
+		{
+			return;
+		}
+
 		renderContext.SetReadOnlyDepth( true );
 		m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
-	
-		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
-		size_t shadowCasterCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
-		if( m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
+
+		if( m_componentRegistry && m_volumetricsRenderer )
 		{
 			PopulatePerFramePSData( m_perFramePS, renderContext );
 			ApplyPerFrameData( renderContext );
 			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_rtManager->GetShadowMap(), renderContext );
 
 			RenderVolumetricShadowMap( renderContext );
+
+			PopulatePerFramePSData( m_perFramePS, renderContext );
+			ApplyPerFrameData( renderContext );
 		}
 
 		renderContext.SetReadOnlyDepth( false );
@@ -2083,7 +2090,81 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 
 void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 {
-	m_volumetricsRenderer->RenderIntoShadowMap( *m_componentRegistry, m_frameData.frustum, renderContext );
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	m_componentRegistry->ProcessComponents<ITr2VolumetricRenderable>( [this, &renderContext]( ITr2VolumetricRenderable* volumetric ) -> void {
+		ITr2VolumetricRenderable::ShadowInfo shadowInfo;
+		volumetric->GetVolumetricShadowInfo( shadowInfo );
+
+		if( volumetric->PrepareCloudShadowMap( renderContext ) )
+		{
+			RenderIntoCloudShadowMap( renderContext, &shadowInfo );
+			volumetric->SetCloudShadowMapHandle();
+		}
+	} );
+}
+
+void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
+	if( shadowCasters.empty() )
+	{
+		return;
+	}
+
+	// Get distance from camera to zFar
+	auto camPos = Tr2Renderer::GetViewPosition();
+	auto direction = camPos - cloudShadowInformation->aabbMax;
+	float dist = Length( direction );
+
+	auto projection = PerspectiveFovMatrix( Tr2Renderer::GetFieldOfView(), Tr2Renderer::GetAspectRatio(), m_frameData.frustum.m_zNear, dist );
+	auto invViewProj = Inverse( projection ) * Tr2Renderer::GetInverseViewTransform();
+	const Matrix viewProj = Inverse( invViewProj );
+
+	TriFrustum frustum;
+	frustum.ExtractFrustum( &viewProj );
+
+	for( auto& caster : shadowCasters )
+	{
+		float sizeInShadow = 0.0f;
+		caster->IsCastingShadow( frustum, cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld, sizeInShadow );
+		// special threshold check
+		if( sizeInShadow > 5.0f )
+		{
+			auto perObjData = caster->GetShadowPerObjectData( m_shadowBatches[0].get() );
+			caster->GetShadowBatches( m_shadowBatches[0].get(), perObjData, sizeInShadow );
+		}
+
+		m_shadowBatches[0]->Finalize();
+		PerFrameVSData data;
+		data.ViewProjectionMat = Transpose( cloudShadowInformation->lightViewProj );
+
+		static const unsigned perFrameVsMask =
+			( 1 << VERTEX_SHADER ) |
+			SHADER_TYPE_EXISTS( COMPUTE_SHADER ) |
+			SHADER_TYPE_EXISTS( GEOMETRY_SHADER ) |
+			SHADER_TYPE_EXISTS( HULL_SHADER ) |
+			SHADER_TYPE_EXISTS( DOMAIN_SHADER );
+		FillAndSetConstants( m_shadowPerFrameVSBuffer, &data, sizeof( data ), perFrameVsMask, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext );
+
+		if( m_shadowBatches[0]->GetBatchCount() )
+		{
+			renderContext.m_esm.SetInvertedDepthTest( false );
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
+			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
+			renderContext.RenderBatches( m_shadowBatches[0].get(), BlueSharedString( "Shadow" ) );
+		}
+
+		m_shadowBatches[0]->Clear();
+	}
+
+	renderContext.SetReadOnlyDepth( false );
+
+	renderContext.m_esm.PopRenderTarget();
+	renderContext.m_esm.PopDepthStencilBuffer();
+	renderContext.m_esm.PopViewport();
 }
 
 void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
@@ -2619,12 +2700,7 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 		}
 		data.SplitInfo = m_cascadedShadowMap->m_perSplitData.SplitInfo;
 	}
-	if( m_rtManager )
-	{
-		// volumetricsRenderer->GetZFar
-		// 
-		
-	}
+
 	// m_perFrameVS.ProjectionMat is already transposed
 	data.ProjectionInverseMat = Inverse( m_perFrameVS.ProjectionMat );
 	data.Debug = m_perFrameDebug;
@@ -2741,46 +2817,41 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 
 	if( IsMatch( value, m_shadowQuality ) )
 	{
-		bool spaceObjDirty = true;
-		g_eveSpaceSceneRaytracedShadows = m_shadowQuality == SHADOW_RAYTRACED;
 		if( m_shadowQuality == SHADOW_DISABLED )
 		{
-			spaceObjDirty = false;
+			m_shadowCascadedValue = BlueSharedString( "SHADOW_CASC_DISABLED" );
+			m_shadowRaytracedValue = BlueSharedString( "SHADOW_RAY_DISABLED" );
 		}
-		else if( g_eveSpaceSceneRaytracedShadows )
-		{
-			if( m_shadowAlgorithm == BlueSharedString( "SHADOW_RT" ) )
-			{
-				spaceObjDirty = false;
 
+		g_eveSpaceSceneRaytracedShadows = m_shadowQuality == SHADOW_RAYTRACED;
+
+		if( g_eveSpaceSceneRaytracedShadows )
+		{
+			// if we have volumetrics in scene we need the shadow batches
+			size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
+			if( volumetricCount )
+			{
+				m_shadowCascadedValue = BlueSharedString( "SHADOW_CASC_ENABLED" );
 			}
 			else
 			{
-				m_shadowAlgorithm = BlueSharedString( "SHADOW_RT" );
+				m_shadowCascadedValue = BlueSharedString( "SHADOW_CASC_DISABLED" );
 			}
-			
+
 			if( !m_rtManager )
 			{
 				m_rtManager.CreateInstance();
 			}
+			m_shadowRaytracedValue = BlueSharedString( "SHADOW_RAY_ENABLED" );
 		}
-		else
+		else if( m_shadowQuality == SHADOW_HIGH || m_shadowQuality == SHADOW_LOW ) 
 		{
-			if( m_shadowAlgorithm == BlueSharedString( "SHADOW_CASCADED" ) )
-			{
-				spaceObjDirty = false;
-			}
-			else
-			{
-				m_shadowAlgorithm = BlueSharedString( "SHADOW_CASCADED" );
-			}
-
 			if( m_shadowQuality == SHADOW_LOW )
 			{
 				if( m_cascadedShadowMap )
 				{
 					m_cascadedShadowMap->ShouldUseDenoiser( false );
-				}	
+				}
 			}
 			else
 			{
@@ -2789,16 +2860,16 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 					m_cascadedShadowMap->ShouldUseDenoiser( true );
 				}
 			}
+			m_shadowRaytracedValue = BlueSharedString( "SHADOW_RAY_DISABLED" );
+			m_shadowCascadedValue = BlueSharedString( "SHADOW_CASC_ENABLED" );
 		}
-	
-		if( spaceObjDirty )
+
+		for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
 		{
-			for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
+			if( EveSpaceObject2Ptr spaceObj = BlueCastPtr( *it ) )
 			{
-				if( EveSpaceObject2Ptr spaceObj = BlueCastPtr( *it ) )
-				{
-					spaceObj->SetShaderOption( m_shadowAlgorithmName, m_shadowAlgorithm );
-				}
+				spaceObj->SetShaderOption( m_shadowRaytracedName, m_shadowRaytracedValue );
+				spaceObj->SetShaderOption( m_shadowCascadedName, m_shadowCascadedValue );
 			}
 		}
 	}
@@ -2926,11 +2997,13 @@ void EveSpaceScene::OnListModified(
 			{
 				if( m_shadowQuality == SHADOW_RAYTRACED )
 				{
-					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_RT" ) );
+					m_usingRaytracedShadows = true;
+					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_RT" ), BlueSharedString( "SHADOW_RAY_ENABLED" ) );
 				}
 				else if( m_shadowQuality == SHADOW_LOW || m_shadowQuality == SHADOW_HIGH )
 				{
-					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_CASCADED" ) );
+					m_usingRaytracedShadows = false;
+					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_CASCADED" ), BlueSharedString( "SHADOW_CASC_ENABLED" ) );
 				}
 			}
 		}
@@ -3381,7 +3454,7 @@ void EveSpaceScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 			m_virtualCameraSystem->RenderDebugInfo( *m_debugRenderer );
 		}
 
-		if( m_freezeFrustum )
+		if( m_freezeFrustum && ( m_shadowQuality == SHADOW_HIGH || m_shadowQuality == SHADOW_LOW ) )
 		{
 			SetupCascadedShadows( renderContext );
 		}

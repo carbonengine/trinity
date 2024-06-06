@@ -36,10 +36,6 @@ public:
 		ITr2TextureProvider* shadowMap,
 		Tr2RenderContext& renderContext );
 
-	bool PrepareShadowMap( Tr2RenderContext & renderContext );
-	void RenderIntoShadowMap( EveComponentRegistry & registry, const TriFrustum& frustum, Tr2RenderContext& renderContext );
-
-
 	EXPOSE_TO_BLUE();
 
 private:

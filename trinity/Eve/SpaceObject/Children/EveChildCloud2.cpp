@@ -22,6 +22,7 @@
 #include "../../../Tr2TextureReference.h"
 #include "../../../Tr2TextureAnimation.h"
 
+extern bool g_eveSpaceSceneRaytracedShadows;
 
 using namespace Tr2RenderContextEnum;
 
@@ -33,12 +34,12 @@ class EveChildCloudPerObjectData : public Tr2PerObjectData
 public:
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 	{
-		static const unsigned mask = 
-			( 1 << VERTEX_SHADER )					|
-			SHADER_TYPE_EXISTS( COMPUTE_SHADER )	|
-			SHADER_TYPE_EXISTS( GEOMETRY_SHADER )	|
-			SHADER_TYPE_EXISTS( HULL_SHADER )		|
-			SHADER_TYPE_EXISTS( DOMAIN_SHADER)		;
+		static const unsigned mask =
+			( 1 << VERTEX_SHADER ) |
+			SHADER_TYPE_EXISTS( COMPUTE_SHADER ) |
+			SHADER_TYPE_EXISTS( GEOMETRY_SHADER ) |
+			SHADER_TYPE_EXISTS( HULL_SHADER ) |
+			SHADER_TYPE_EXISTS( DOMAIN_SHADER );
 		if( ( constantTypeMask & mask ) != 0 )
 		{
 			FillAndSetConstants(
@@ -103,11 +104,11 @@ EveChildCloud2::EveChildCloud2( IRoot* lockobj ) :
 	m_lightmapDepth( 0 ),
 	m_lightmapDirtyOffset( 0 ),
 	m_lightmapSizeScale( 0.5f ),
-	m_shadowMapSize( 1024 )
+	m_shadowMapSize( 512 ),
+	m_depthShadowMapHandle( NULL )
 {
 	m_lightMap.CreateInstance();
 	m_emptyLightMap.CreateInstance();
-	m_shadowMapDS.CreateInstance();
 
 	m_variableStore.CreateInstance();
 	m_variableStore->RegisterVariable( "LightMap", m_emptyLightMap );
@@ -117,7 +118,7 @@ EveChildCloud2::EveChildCloud2( IRoot* lockobj ) :
 	std::fill( std::begin( m_mapOffsets ), std::end( m_mapOffsets ), Vector3( 0, 0, 0 ) );
 	PrepareResources();
 
-	m_shadowBatches.reset( new TriRenderBatchAccumulator<>( Tr2Renderer::GetPoolAllocator() ) );
+	m_depthShadowMapHandle = GlobalStore().RegisterVariable( "DepthShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 }
 
 EveChildCloud2::~EveChildCloud2()
@@ -204,8 +205,8 @@ bool EveChildCloud2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery ) c
 	return true;
 }
 
-void EveChildCloud2::GetLocalToWorldTransform( Matrix &transform ) const 
-{ 
+void EveChildCloud2::GetLocalToWorldTransform( Matrix& transform ) const
+{
 	transform = m_worldTransform;
 }
 
@@ -264,7 +265,7 @@ void EveChildCloud2::CreateEmptyLightMap()
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 
-        uint8_t gray[4] = { 127, 127, 127, 127 };
+		uint8_t gray[4] = { 127, 127, 127, 127 };
 		Tr2SubresourceData initialData;
 		initialData.m_sysMem = gray;
 		initialData.m_sysMemPitch = 4;
@@ -328,11 +329,11 @@ bool EveChildCloud2::UpdateVolumetricLightmap( Tr2RenderContext& renderContext )
 
 		const uint32_t VOXELS_PER_UPDATE = uint32_t( 6400000 * m_lightmapSizeScale * m_lightmapSizeScale * m_lightmapSizeScale );
 		uint32_t slices = std::max( VOXELS_PER_UPDATE / ( lightmapHeight * lightmapDepth ), 1u );
-		auto success = Tr2Renderer::RunComputeShader( 
-			m_effect, 
-			BlueSharedString( "GenerateLightmap" ), 
-			slices, 
-			( m_lightmapHeight + 7 ) / 8, 
+		auto success = Tr2Renderer::RunComputeShader(
+			m_effect,
+			BlueSharedString( "GenerateLightmap" ),
+			slices,
+			( m_lightmapHeight + 7 ) / 8,
 			( m_lightmapDepth + 7 ) / 8,
 			renderContext );
 		if( success )
@@ -389,14 +390,13 @@ void EveChildCloud2::SetSceneInformation( const SceneInformation& sceneInformati
 	m_targetWidth = sceneInformation.targetWidth;
 	m_targetHeight = sceneInformation.targetHeight;
 
-	if( m_receiveShadows )
-	{
-		SetupShadowFrustum();
-	}
-
 	m_effect->SetOption(
 		BlueSharedString( "CLOUD_SHADOWS" ),
 		sceneInformation.receiveShadows && m_receiveShadows ? BlueSharedString( "CLOUD_SHADOWS_RECEIVE" ) : BlueSharedString( "CLOUD_SHADOWS_NONE" ) );
+
+	m_effect->SetOption(
+		BlueSharedString( "CLOUD_SHADOW_ALGORITHM" ),
+		sceneInformation.receiveShadows && m_receiveShadows && g_eveSpaceSceneRaytracedShadows ? BlueSharedString( "CLOUD_SHADOWS_RAYTRACED" ) : BlueSharedString( "CLOUD_SHADOWS_CASCADED" ) );
 }
 
 void EveChildCloud2::ReleaseResources( TriStorage s )
@@ -410,7 +410,20 @@ void EveChildCloud2::ReleaseResources( TriStorage s )
 		m_lightmapWidth = 0;
 	}
 
+	if( m_depthShadowMapHandle )
+	{
+		m_depthShadowMapHandle->Clear();
+	}
+
 	m_shadowMapDS = Tr2DepthStencilPtr();
+}
+
+void EveChildCloud2::ClearVariableStore()
+{
+	if( m_depthShadowMapHandle )
+	{
+		m_depthShadowMapHandle->Clear();
+	}
 }
 
 bool EveChildCloud2::OnPrepareResources()
@@ -699,17 +712,6 @@ void EveChildCloud2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	{
 		renderer.DrawSphere( this, m_boundingSphere.center, m_boundingSphere.radius, 18, Tr2DebugRenderer::Wireframe, 0xff00ff00 );
 	}
-
-	if( renderer.HasOption( GetRawRoot(), "Shadow Frustum" ) )
-	{
-		uint32_t color = 0xff00ff00;
-		Vector3 minBounds( -0.5f, -0.5f, -0.5f );
-		Vector3 maxBounds( 0.5f, 0.5f, 0.5f );
-		//renderer.DrawBox( this, m_worldTransform * m_lightViewProj, minBounds, maxBounds, Tr2DebugRenderer::Wireframe, color );
-		//renderer.DrawBox( this, Inverse( m_worldTransform ), minBounds, maxBounds, Tr2DebugRenderer::Wireframe, color );
-		renderer.DrawBox( this, m_aabb.m_min, m_aabb.m_max, Tr2DebugRenderer::Wireframe, color );
-		renderer.DrawBox( this, Inverse( m_lightViewProj ), m_aabb.m_min, m_aabb.m_max, Tr2DebugRenderer::Wireframe, 0xffff0000 );
-	}
 }
 
 
@@ -768,6 +770,56 @@ void EveChildCloud2::GetVolumetricShadowBatches( ITriRenderBatchAccumulator* bat
 	batches->Commit( batch );
 }
 
+void EveChildCloud2::GetVolumetricShadowInfo( ShadowInfo& shadowInfo )
+{
+	SetupShadowFrustum( shadowInfo );
+}
+
+bool EveChildCloud2::PrepareCloudShadowMap( Tr2RenderContext& renderContext )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	if( !m_receiveShadows )
+	{
+		return false;
+	}
+
+	if( !m_shadowMapDS )
+	{
+		m_shadowMapDS.CreateInstance();
+	}
+
+	if( !m_shadowMapDS || !m_shadowMapDS->IsValid() )
+	{
+		m_shadowMapDS->Create( m_shadowMapSize, m_shadowMapSize, Tr2RenderContextEnum::DSFMT_D32F, 1, 0, Tr2RenderContextEnum::EX_NONE );
+	}
+
+	// Using depth stencil as shadow map
+	renderContext.m_esm.PushViewport();
+	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
+	renderContext.m_esm.PushDepthStencilBuffer( *m_shadowMapDS->GetTexture() );
+
+	renderContext.m_esm.UpdateRenderTargetViewport( m_shadowMapDS->GetWidth(), m_shadowMapDS->GetHeight() );
+
+	// we want a clean depth buffer for this
+	CR( renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xffffffff, 1, 0 ) );
+
+	renderContext.SetReadOnlyDepth( false );
+
+	renderContext.m_esm.SetViewport( m_shadowMapDS->GetWidth(), m_shadowMapDS->GetHeight(), 0, 0, 0, 1 );
+
+	return true;
+}
+
+
+void EveChildCloud2::SetCloudShadowMapHandle()
+{
+	if( m_shadowMapDS->IsValid() )
+	{
+		m_depthShadowMapHandle->SetValue( m_shadowMapDS );
+	}
+}
+
 bool EveChildCloud2::IsVisible( const EveUpdateContext& updateContext ) const
 {
 	auto& frustum = updateContext.GetFrustum();
@@ -785,7 +837,7 @@ bool EveChildCloud2::IsVisible( const EveUpdateContext& updateContext ) const
 	return true;
 }
 
-void EveChildCloud2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason ) 
+void EveChildCloud2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( m_currentQuality < m_minVisibleQuality )
 	{
@@ -817,35 +869,33 @@ void EveChildCloud2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchTy
 	}
 }
 
-void EveChildCloud2::SetupShadowFrustum()
+void EveChildCloud2::SetupShadowFrustum( ShadowInfo& shadowInfo )
 {
 	// Find light view
 	Matrix lightView = Inverse( OrthoNormalBasisZ( -m_localSunDirection ) );
-	
-	AxisAlignedBoundingBox aabb = CcpMath::AxisAlignedBox( Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ) ); //CcpMath::AxisAlignedBox( m_boundingSphere );
-	
 
+	AxisAlignedBoundingBox aabb = CcpMath::AxisAlignedBox( Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ) );
 	aabb.Transform( m_worldTransform * lightView );
-	m_aabb = aabb;
+
 	m_lightViewProj = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
 
+	shadowInfo.aabbMax = aabb.m_max;
+
 	// create shadow frustum out from lightView, aabb.min, aabb.max
-	m_shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
+	TriFrustumOrtho shadowFrustum;
+	shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
 
-	m_zFar = aabb.m_max.z;
+	shadowInfo.lightViewProj = m_lightViewProj;
+	shadowInfo.shadowFrustum = shadowFrustum;
+	shadowInfo.shadowMapSize = m_shadowMapSize;
 }
 
-TriFrustumOrtho EveChildCloud2::GetShadowFrustum()
-{
-	return m_shadowFrustum;
-}
-
-bool EveChildCloud2::HasTransparentBatches() 
+bool EveChildCloud2::HasTransparentBatches()
 {
 	return true;
 }
 
-float EveChildCloud2::GetSortValue() 
+float EveChildCloud2::GetSortValue()
 {
 	return std::numeric_limits<float>::max();
 }
@@ -858,92 +908,4 @@ Tr2PerObjectData* EveChildCloud2::GetPerObjectData( ITriRenderBatchAccumulator* 
 		PopulatePerObjectData( data->m_data, 1 );
 	}
 	return data;
-}
-
-bool EveChildCloud2::PrepareShadowMap( Tr2RenderContext& renderContext )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	if( !m_receiveShadows )
-	{
-		return false;
-	}
-
-	if( !m_shadowMapDS )
-	{
-		m_shadowMapDS.CreateInstance();
-	}
-	if( !m_shadowMapDS->IsValid() )
-	{
-		m_shadowMapDS->Create( m_shadowMapSize, m_shadowMapSize, Tr2RenderContextEnum::DSFMT_D32F, 1, 0, Tr2RenderContextEnum::EX_NONE );
-	}
-
-	// Using depth stencil as shadow map
-	renderContext.m_esm.PushViewport();
-	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
-	renderContext.m_esm.PushDepthStencilBuffer( *m_shadowMapDS->GetTexture() );
-
-	renderContext.m_esm.UpdateRenderTargetViewport( m_shadowMapDS->GetWidth(), m_shadowMapDS->GetHeight() );
-
-	// we want a clean depth buffer for this
-	CR( renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xffffffff, 1, 0 ) );
-
-	renderContext.SetReadOnlyDepth( false );
-
-	renderContext.m_esm.SetViewport( m_shadowMapDS->GetWidth(), m_shadowMapDS->GetHeight(), 0, 0, 0, 1 );
-
-	return true;
-}
-
-void EveChildCloud2::RenderShadowBatches( EveComponentRegistry& registry,
-	const TriFrustum& frustum,
-	Tr2RenderContext& renderContext )
-{
-	auto shadowCasters = registry.GetComponents<IEveShadowCaster>();
-
-	if( shadowCasters.empty() )
-	{
-		return;
-	}
-
-	PrepareShadowMap( renderContext );
-
-	for( auto& caster : shadowCasters )
-	{
-		float sizeInShadow = 0.0f;
-		bool lala = caster->IsCastingShadow( frustum, m_shadowFrustum, m_shadowMapSize, m_localSunDirection, sizeInShadow );
-		if( sizeInShadow > 0.0f )
-		{
-			auto perObjData = caster->GetShadowPerObjectData( m_shadowBatches.get() );
-			caster->GetShadowBatches( m_shadowBatches.get(), perObjData, sizeInShadow );
-		}
-	}
-
-	m_shadowBatches->Finalize();
-
-	if(m_shadowBatches->GetBatchCount())
-	{
-		renderContext.m_esm.SetInvertedDepthTest( false );
-		ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
-		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
-		renderContext.RenderBatches( m_shadowBatches.get(), BlueSharedString( "Shadow" ) );
-	}
-
-	m_shadowBatches->Clear();
-
-	renderContext.SetReadOnlyDepth( false );
-
-	renderContext.m_esm.PopRenderTarget();
-	renderContext.m_esm.PopDepthStencilBuffer();
-	renderContext.m_esm.PopViewport();
-}
-
-float EveChildCloud2::GetZFar()
-{
-	return m_zFar;
-}
-
-Matrix EveChildCloud2::GetLightViewProj()
-{
-	return m_lightViewProj;
 }

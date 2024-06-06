@@ -334,34 +334,3 @@ void Tr2VolumetricsRenderer::UpdateVariableStore()
 {
 	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", m_volumeSlices );
 }
-
-void Tr2VolumetricsRenderer::RenderIntoShadowMap( EveComponentRegistry& registry, 
-	const TriFrustum& frustum, 
-	Tr2RenderContext& renderContext )
-{
-	// unsure about this cast to evechildcloud2
-	registry.ProcessComponents<ITr2VolumetricRenderable>( [&registry, &frustum, &renderContext]( ITr2VolumetricRenderable* volumetric ) -> void {
-		if( EveChildCloud2Ptr entity = BlueCastPtr( volumetric ) )
-		{
-			entity->SetupShadowFrustum();
-			entity->RenderShadowBatches( registry, frustum, renderContext );
-			
-		}
-	} );
-
-
-
-	// Set per obj data
-
-	
-	/*	static const unsigned perFrameVsMask = 
-		( 1 << VERTEX_SHADER )					|
-		SHADER_TYPE_EXISTS( COMPUTE_SHADER )	|
-		SHADER_TYPE_EXISTS( GEOMETRY_SHADER )	|
-		SHADER_TYPE_EXISTS( HULL_SHADER )		|
-		SHADER_TYPE_EXISTS( DOMAIN_SHADER)		;
-	FillAndSetConstants( m_shadowPerFrameVSBuffer, &data, sizeof( data ), perFrameVsMask, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext );
-	*/
-
-	
-}
