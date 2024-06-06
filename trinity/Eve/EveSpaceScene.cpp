@@ -190,7 +190,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_jitteredProjection( IdentityMatrix() ),
 	m_jitter( 0.f, 0.f, 0.f, 0.f ),
 	m_upscalingAmount( 1.0f ),
-	m_mipLevelBias( 0.0f ),
 	m_usingUpscaling( false )
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
@@ -356,7 +355,10 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.UpdateOrigin( m_ballpark );
 	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
 
-	m_updateContext.SetFrustum( m_frameData.frustum );
+	TriFrustum& frustum = m_frameData.frustum;
+	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), Tr2Renderer::GetViewport() );
+
+	m_updateContext.SetFrustum( frustum );
 	m_updateContext.SetHighDetailThreshold( g_eveSpaceSceneHighDetailThreshold / m_upscalingAmount );
 	m_updateContext.SetMediumDetailThreshold( g_eveSpaceSceneMediumDetailThreshold / m_upscalingAmount );
 	m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / m_upscalingAmount );
@@ -1212,12 +1214,8 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	{
 		m_dataTextureMgr->SetVariables();
 	}
-
-	// Set up the frustum for visibility checking.
-	// Todo: Solve the issue of getting renderables from objects that aren't visible but
-	// still might trigger rendering, such as particle effects or turret firing effects.
-	TriFrustum& frustum = m_frameData.frustum;
-	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), renderContext.m_esm.GetViewport() );
+	auto& frustum = m_updateContext.GetFrustum();
+	m_frameData.frustum = frustum;
 
 	Jitter( renderContext );
 
@@ -1655,7 +1653,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	}
 	// we change the frustum during reflection updates/renderings
 	// we need the old one for resetting
-	auto normalFrustum = m_updateContext.GetFrustum();
+	auto& normalFrustum = m_updateContext.GetFrustum();
 
 	m_reflectionProbe->InitRenderPass( renderContext );
 	for( unsigned i = m_reflectionProbe->GetStartFace(); i < m_reflectionProbe->GetEndFace(); i++ )
@@ -1814,7 +1812,7 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
 	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &planetProjection, renderContext.m_esm.GetViewport() );
 	
-	auto normalFrustum = m_updateContext.GetFrustum();
+	auto& normalFrustum = m_updateContext.GetFrustum();
 
 	m_updateContext.SetFrustum(frustum);
 
@@ -1872,7 +1870,6 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	TriFrustum& frustum = m_frameData.frustum;
 	std::vector<ITr2Renderable*> visible;
 	Tr2RenderableSortList transparentObjects;
 
@@ -2594,13 +2591,14 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	data.ProjectionToView.y = projection._33;
 
 	data.SceneMipLodBias = 0.0f;
+	m_upscalingAmount = 1.0f;
+
 	if( m_usingUpscaling )
 	{
 		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
 
-		m_mipLevelBias = upscalingInfo.mipLevelBias;
 		m_upscalingAmount = upscalingInfo.upscalingAmount;
-		data.SceneMipLodBias = m_mipLevelBias;
+		data.SceneMipLodBias = upscalingInfo.mipLevelBias;
 		data.Upscaling = m_upscalingAmount; 
 	}
 	else if( m_postProcess )

@@ -595,7 +595,6 @@ private:
 	Tr2ShLightingManagerPtr m_shLightingManager;
 
 	float m_upscalingAmount;
-	float m_mipLevelBias;
 	bool m_usingUpscaling; 
 	Vector4 m_jitter; // xy: projection offset, zw: pixel offset
 
