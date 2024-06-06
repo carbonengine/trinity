@@ -525,7 +525,6 @@ void EveChildCloud2::PopulatePerObjectData( PerObjectData& data, float screenSiz
 	data.worldViewInv = Transpose( worldViewInv );
 	data.viewPosition = TransformCoord( Tr2Renderer::GetViewPosition(), Inverse( m_worldTransform ) );
 	data.lightViewProj = Transpose( m_lightViewProj );
-	data.zFar = m_zFar;
 
 	uint32_t lightmapWidth = std::max( 1u, uint32_t( m_lightmapWidth * m_lightmapSizeScale ) );
 	uint32_t lightmapHeight = std::max( 1u, uint32_t( m_lightmapHeight * m_lightmapSizeScale ) );
@@ -695,7 +694,6 @@ void EveChildCloud2::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Bounding Box" );
 	options.insert( "Bounding Sphere" );
-	options.insert( "Shadow Frustum" );
 }
 
 void EveChildCloud2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
@@ -875,12 +873,15 @@ void EveChildCloud2::SetupShadowFrustum( ShadowInfo& shadowInfo )
 	Matrix lightView = Inverse( OrthoNormalBasisZ( -m_localSunDirection ) );
 
 	AxisAlignedBoundingBox aabb = CcpMath::AxisAlignedBox( Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ) );
+
 	aabb.Transform( m_worldTransform * lightView );
+
+	aabb.m_max.z += 2500000.f;
 
 	m_lightViewProj = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
 
 	shadowInfo.aabbMax = aabb.m_max;
-
+	
 	// create shadow frustum out from lightView, aabb.min, aabb.max
 	TriFrustumOrtho shadowFrustum;
 	shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );

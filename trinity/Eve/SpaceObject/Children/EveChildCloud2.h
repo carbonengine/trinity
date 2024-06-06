@@ -134,7 +134,6 @@ public:
 		LightData lights[4];
 		Vector4 mapOffsets[3];
 		Matrix lightViewProj;
-		float zFar;
 	};
 
 private:

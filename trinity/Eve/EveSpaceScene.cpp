@@ -2066,8 +2066,6 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 
 		if( m_componentRegistry && m_volumetricsRenderer )
 		{
-			PopulatePerFramePSData( m_perFramePS, renderContext );
-			ApplyPerFrameData( renderContext );
 			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_rtManager->GetShadowMap(), renderContext );
 
 			RenderVolumetricShadowMap( renderContext );
@@ -2122,6 +2120,7 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 	auto projection = PerspectiveFovMatrix( Tr2Renderer::GetFieldOfView(), Tr2Renderer::GetAspectRatio(), m_frameData.frustum.m_zNear, dist );
 	auto invViewProj = Inverse( projection ) * Tr2Renderer::GetInverseViewTransform();
 	const Matrix viewProj = Inverse( invViewProj );
+
 
 	TriFrustum frustum;
 	frustum.ExtractFrustum( &viewProj );
