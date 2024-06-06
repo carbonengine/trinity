@@ -138,16 +138,6 @@ Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique tech
 	m_contexts = std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>>();
 }
 
-Tr2UpscalingTechniqueAL::~Tr2UpscalingTechniqueAL()
-{
-    for( auto& context : m_contexts )
-    {
-        context.second.release();
-    }
-    
-    m_contexts.clear();
-}
-
 void Tr2UpscalingTechniqueAL::SanitizeState()
 {
 	const auto& availableSettings = GetAvailableSettings();
