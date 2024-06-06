@@ -43,7 +43,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Tr2Transform
-	virtual void Update( EveUpdateContext& updateContext );
+	virtual void Update( const EveUpdateContext& updateContext ) override;
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform );
 
 protected:
