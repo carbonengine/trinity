@@ -1326,11 +1326,11 @@ namespace TrinityALImpl
 		}
 
 		description["size"] = std::to_string( size * std::max( 1u, m_desc.GetArraySize() ) * std::max( 1u, m_msaa.samples ) );
-		description["width"] = std::to_string( long long( m_desc.GetWidth() ) );
-		description["height"] = std::to_string( long long( m_desc.GetHeight() ) );
+		description["width"] = std::to_string( m_desc.GetWidth() );
+		description["height"] = std::to_string( m_desc.GetHeight() );
 		description["depth"] = std::to_string( m_desc.GetDepth() );
-		description["mipLevels"] = std::to_string( long long( m_desc.GetTrueMipCount() ) );
-		description["format"] = std::to_string( long long( m_desc.GetFormat() ) );
+		description["mipLevels"] = std::to_string( m_desc.GetTrueMipCount() );
+		description["format"] = std::to_string( int( m_desc.GetFormat() ) );
 		description["texType"] = std::to_string( int( m_desc.GetType() ) );
 		description["array"] = std::to_string( m_desc.GetArraySize() );
 		description["cpuUsage"] = std::to_string( int( m_cpuUsage ) );
