@@ -22,7 +22,7 @@ include(CcpGlobalSettings)
 include(CcpPackageConfigHelpers)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set(CMAKE_COMPILE_WARNING_AS_ERROR OFF)
+set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 
 add_subdirectory(shadercompiler)
 add_subdirectory(trinityal)
