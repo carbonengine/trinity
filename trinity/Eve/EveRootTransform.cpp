@@ -58,7 +58,7 @@ void EveRootTransform::UpdateAsyncronous( const EveUpdateContext& updateContext 
 {
 }
 
-void EveRootTransform::Update( EveUpdateContext& updateContext )
+void EveRootTransform::Update( const EveUpdateContext& updateContext )
 {
 	UpdateSyncronous( updateContext );
 	UpdateAsyncronous( updateContext );
