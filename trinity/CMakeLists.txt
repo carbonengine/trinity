@@ -1710,6 +1710,8 @@ function(set_shared_trinity_properties target)
     )
 
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake DESTINATION .)
+    
+    ccp_enable_vs_analizers(${target})
 
 endfunction()
 

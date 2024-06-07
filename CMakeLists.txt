@@ -21,6 +21,15 @@ list(INSERT CMAKE_MODULE_PATH 0 ${BRANCH_ROOT_DIR}/cmake)
 include(CcpGlobalSettings)
 include(CcpPackageConfigHelpers)
 
+function(ccp_enable_vs_analizers target)
+    set_target_properties(${target} PROPERTIES
+        VS_GLOBAL_RunCodeAnalysis false
+        VS_GLOBAL_EnableMicrosoftCodeAnalysis false
+        VS_GLOBAL_EnableClangTidyCodeAnalysis true
+    )
+endfunction()
+
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
 

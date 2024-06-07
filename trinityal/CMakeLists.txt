@@ -423,6 +423,8 @@ function(set_shared_trinityal_properties targetSuffix)
     )
 
     add_trinity_dev_debug_flags(${target})
+    
+    ccp_enable_vs_analizers(${target})
 endfunction()
 
 #[[
