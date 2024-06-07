@@ -25,7 +25,7 @@ Tr2RaytracingPipelineStateManager::Tr2RaytracingPipelineStateManager() :
 }
 
 // remove material
-bool Tr2RaytracingPipelineStateManager::AddLibrary( std::wstring& rayGenName, std::wstring& missName, Tr2Material* material, BlueSharedString techniqueName )
+bool Tr2RaytracingPipelineStateManager::AddLibrary( std::wstring& rayGenName, std::wstring& missName, Tr2Material* material, const BlueSharedString& techniqueName )
 {
 	if( !material )
 	{
@@ -93,7 +93,9 @@ std::wstring Tr2RaytracingPipelineStateManager::AddHitGroup( const Tr2EffectLibr
 	}
 
 	const wchar_t* names[3];
-	std::wstring closestHitName, anyHitName, intersectionName;
+	std::wstring closestHitName;
+	std::wstring anyHitName;
+	std::wstring intersectionName;
 	const wchar_t* exportNamesRaw[3];
 	size_t count = 0;
 
@@ -139,7 +141,7 @@ Tr2RtPipelineStateAL Tr2RaytracingPipelineStateManager::GetPipelineState( Tr2Ren
 
 std::wstring Tr2RaytracingPipelineStateManager::GetUniqueName()
 {
-	return L"rtShader_" + std::to_wstring( long( long( m_nextName++ ) ) );
+	return L"rtShader_" + std::to_wstring( m_nextName++ );
 }
 
 // ***************** Tr2RaytracingMesh *****************
@@ -163,7 +165,14 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 		m_geometry = geometry;
 		m_meshIndex = meshIndex;
 		m_screenSize = screenSize;
-		m_lodIndex = std::max( 0, m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize ) );
+		if( m_geometry && m_geometry->IsGood() )
+		{
+			m_lodIndex = m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize );
+		}
+		else
+		{
+			m_lodIndex = -1;
+		}
 
 		m_transforms.clear();
 
@@ -172,8 +181,16 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 	else if( m_screenSize != screenSize )
 	{
 		//screen size has changed, so check if we've changed to a different LOD
-		auto lodIndex = std::max( 0, m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize ) );
-		m_isDirty = lodIndex != m_lodIndex;
+		auto lodIndex = -1;
+		if( m_geometry && m_geometry->IsGood() )
+		{
+			m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize );
+		}
+		else
+		{
+			lodIndex = -1;
+		}
+		m_isDirty |= lodIndex != m_lodIndex;
 		m_lodIndex = lodIndex;
 		m_screenSize = screenSize;
 	}
@@ -188,7 +205,7 @@ bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4
 		m_isDirty = true;
 	}
 
-	if( newSize > 0 && memcmp( m_transforms.data(), transforms, newSize * sizeof( float ) ) )
+	if( newSize > 0 && memcmp( m_transforms.data(), transforms, newSize * sizeof( float ) ) != 0 )
 	{
 		memcpy( m_transforms.data(), transforms, count * sizeof( granny_matrix_3x4 ) );
 		m_isDirty = true;
@@ -216,6 +233,10 @@ bool Tr2RaytracingMesh::GetAndResetDirtyFlag()
 
 TriGeometryResMeshData* Tr2RaytracingMesh::GetMeshData() const
 {
+	if( m_lodIndex < 0 )
+	{
+		return m_geometry->GetMeshData( m_meshIndex );
+	}
 	return m_geometry->GetMeshDataLod( m_meshIndex, m_lodIndex );
 }
 
@@ -253,7 +274,8 @@ const Tr2BufferAL& Tr2RaytracingMesh::GetIndexBuffer() const
 // ***************** Tr2RaytracingMeshArea *****************
 
 Tr2RaytracingMeshArea::Tr2RaytracingMeshArea( uint32_t index ) :
-	m_areaIndex( index )
+	m_areaIndex( index ),
+	m_blasOutdated( true )
 {
 }
 
@@ -331,35 +353,33 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 
 		return m_blas;
 	}
-	else
-	{
-		if( !meshData->m_areas[m_areaIndex].m_staticBlas.IsValid() )
-		{
-			auto vertexStream = Tr2RtPositionStreamAL(
-				meshData->m_vertexAllocation.GetBuffer(),
-				meshData->m_vertexAllocation.GetStride(),
-				meshData->m_vertexCount,
-				meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
-				0,
-				Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT );
-			auto indexStream = Tr2RtIndicesStreamAL(
-				meshData->m_indexAllocation.GetBuffer(),
-				meshData->m_indexAllocation.GetStride(),
-				meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[m_areaIndex].m_firstIndex,
-				meshData->m_areas[m_areaIndex].m_primitiveCount * 3 );
 
-			meshData->m_areas[m_areaIndex].m_staticBlas.Create(
-				vertexStream,
-				indexStream,
-				Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY,
-				Tr2RtBuildFlags::PREFER_FAST_TRACE,
-				renderContext.GetPrimaryRenderContext() );
-		}
-		return meshData->m_areas[m_areaIndex].m_staticBlas;
+	if( !meshData->m_areas[m_areaIndex].m_staticBlas.IsValid() )
+	{
+		auto vertexStream = Tr2RtPositionStreamAL(
+			meshData->m_vertexAllocation.GetBuffer(),
+			meshData->m_vertexAllocation.GetStride(),
+			meshData->m_vertexCount,
+			meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+			0,
+			Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT );
+		auto indexStream = Tr2RtIndicesStreamAL(
+			meshData->m_indexAllocation.GetBuffer(),
+			meshData->m_indexAllocation.GetStride(),
+			meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[m_areaIndex].m_firstIndex,
+			meshData->m_areas[m_areaIndex].m_primitiveCount * 3 );
+
+		meshData->m_areas[m_areaIndex].m_staticBlas.Create(
+			vertexStream,
+			indexStream,
+			Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY,
+			Tr2RtBuildFlags::PREFER_FAST_TRACE,
+			renderContext.GetPrimaryRenderContext() );
 	}
+	return meshData->m_areas[m_areaIndex].m_staticBlas;
 }
 
-const Tr2ConstantBufferAL& Tr2RaytracingMeshArea::GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext )
+const Tr2ConstantBufferAL& Tr2RaytracingMeshArea::GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const
 {
 	auto meshData = mesh.GetMeshData();
 	if( !meshData->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
@@ -390,7 +410,8 @@ const Tr2ConstantBufferAL& Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 }
 
 // ***************** Tr2RaytracingGeometry *****************
-Tr2RaytracingGeometry::Tr2RaytracingGeometry()
+Tr2RaytracingGeometry::Tr2RaytracingGeometry() :
+	m_pipelineManager( nullptr )
 {
 	m_skinVerticesEffect.CreateInstance();
 	m_skinVerticesEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/skinvertices.fx" );

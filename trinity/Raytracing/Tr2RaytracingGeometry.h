@@ -16,7 +16,7 @@ class Tr2RaytracingPipelineStateManager
 public:
 	Tr2RaytracingPipelineStateManager();
 
-	bool AddLibrary( std::wstring& rayGenName, std::wstring& missName, Tr2Material* material, BlueSharedString techniqueName );
+	bool AddLibrary( std::wstring& rayGenName, std::wstring& missName, Tr2Material* material, const BlueSharedString& techniqueName );
 	void AddLibrary( std::wstring& rayGenName, std::wstring& missName, const Tr2EffectLibrary& library );
 	std::wstring AddHitGroup( const Tr2EffectLibrary& library );
 	Tr2RtPipelineStateAL GetPipelineState( Tr2RenderContext& renderContext );
@@ -91,7 +91,7 @@ class Tr2RaytracingMeshArea
 public:
 	Tr2RaytracingMeshArea( uint32_t index );
 	const Tr2RtBottomLevelAccelerationStructureAL& BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
-	const Tr2ConstantBufferAL& GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
+	const Tr2ConstantBufferAL& GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const;
 	uint32_t GetAreaIndex(){ return m_areaIndex; }
 	void MarkBlasOutdated() { m_blasOutdated = true; }
 
