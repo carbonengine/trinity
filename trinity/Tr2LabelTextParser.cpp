@@ -259,13 +259,17 @@ error:
 
 static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
 {
-    wchar_t* paramString;
-    if( !PyArg_ParseTuple( args, "u", &paramString ) )
+    PyObject* paramObject;
+    if( !PyArg_ParseTuple( args, "U", &paramObject ) )
     {
         return nullptr;
     }
-
-    size_t stringLength = wcslen(paramString);
+    Py_ssize_t stringLength;
+    wchar_t* paramString = PyUnicode_AsWideCharString(paramObject, &stringLength );
+    if( !paramString )
+    {
+        return nullptr;
+    }
     wchar_t* inString = CCP_NEW("ParseLabelText") wchar_t[stringLength + 1];
     wcscpy_s(inString, stringLength + 1, paramString);
 
