@@ -334,40 +334,6 @@ set(_SOURCES
     stub/Tr2VideoAdapterInfoALStub.h
     stub/upscaling/Tr2UpscalingALStub.cpp
     stub/upscaling/Tr2UpscalingALStub.h
-    vulkan/Tr2BufferALVulkan.cpp
-    vulkan/Tr2BufferALVulkan.h
-    vulkan/Tr2CapsALVulkan.h
-    vulkan/Tr2ConstantBufferALVulkan.cpp
-    vulkan/Tr2ConstantBufferALVulkan.h
-    vulkan/Tr2FenceALVulkan.h
-    vulkan/Tr2GpuTimerALVulkan.h
-    vulkan/Tr2OcclusionQueryALVulkan.h
-    vulkan/Tr2PipelineStatsQueryALVulkan.cpp
-    vulkan/Tr2PipelineStatsQueryALVulkan.h
-    vulkan/Tr2PrimaryRenderContextVulkan.cpp
-    vulkan/Tr2PrimaryRenderContextVulkan.h
-    vulkan/Tr2RenderContextVulkan.cpp
-    vulkan/Tr2RenderContextVulkan.h
-    vulkan/Tr2ResourceSetALVulkan.cpp
-    vulkan/Tr2ResourceSetALVulkan.h
-    vulkan/Tr2SamplerStateALVulkan.cpp
-    vulkan/Tr2SamplerStateALVulkan.h
-    vulkan/Tr2ShaderALVulkan.cpp
-    vulkan/Tr2ShaderALVulkan.h
-    vulkan/Tr2ShaderProgramALVulkan.cpp
-    vulkan/Tr2ShaderProgramALVulkan.h
-    vulkan/Tr2SwapChainALVulkan.h
-    vulkan/Tr2TextureALVulkan.cpp
-    vulkan/Tr2TextureALVulkan.h
-    vulkan/Tr2VertexLayoutALVulkan.cpp
-    vulkan/Tr2VertexLayoutALVulkan.h
-    vulkan/Tr2VideoAdapterInfoALVulkan.cpp
-    vulkan/Tr2VideoAdapterInfoALVulkan.h
-    vulkan/upscaling/Tr2UpscalingALVulkan.cpp
-    vulkan/upscaling/Tr2UpscalingALVulkan.h
-    vulkan/UtilitiesVulkan.cpp
-    vulkan/UtilitiesVulkan.h
-    vulkan/VkResult.h
 )
 
 # Ensure that we have a sane file grouping for XCode and VS project files
