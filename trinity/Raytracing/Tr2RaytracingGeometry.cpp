@@ -528,6 +528,18 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	ON_BLOCK_EXIT( [&] { renderContext.PopDisableUAVBarriersDx12(); } );
 #endif
 
+	for( auto& geom : m_geometryData )
+	{
+		if( geom.materialIndex == INVALID_MATERIAL )
+		{
+			continue;
+		}
+		if( geom.area->IsBlasOutdated() )
+		{
+			geom.mesh->m_isDirty = true;
+		}
+	}
+
 	std::vector<Tr2RaytracingMesh*> outdatedMeshes;
 	outdatedMeshes.reserve( m_geometryData.size() );
 
