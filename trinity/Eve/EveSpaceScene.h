@@ -207,7 +207,6 @@ protected:
 	struct FrameData
 	{
 		Matrix projection;
-		TriFrustum frustum;
 
 		std::vector<ShadowReceiver> objectsReceivingShadow;
 	};
