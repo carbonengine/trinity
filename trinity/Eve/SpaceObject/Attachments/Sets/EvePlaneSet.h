@@ -126,8 +126,8 @@ private:
 		Vector4_16 blinkData;
 		uint8_t index;
 		uint8_t boneIndex;
-		uint8_t pickBufferID;
 		uint8_t maskMapAtlasIndex;
+		uint8_t pickBufferID;
 	};
 	struct VolatileData
 	{
