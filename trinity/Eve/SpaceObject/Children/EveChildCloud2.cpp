@@ -22,6 +22,8 @@
 #include "../../../Tr2TextureReference.h"
 #include "../../../Tr2TextureAnimation.h"
 
+extern bool g_eveSpaceSceneRaytracedShadows;
+
 using namespace Tr2RenderContextEnum;
 
 namespace
@@ -391,6 +393,10 @@ void EveChildCloud2::SetSceneInformation( const SceneInformation& sceneInformati
 	m_effect->SetOption(
 		BlueSharedString( "CLOUD_SHADOWS" ),
 		sceneInformation.receiveShadows && m_receiveShadows ? BlueSharedString( "CLOUD_SHADOWS_RECEIVE" ) : BlueSharedString( "CLOUD_SHADOWS_NONE" ) );
+
+	m_effect->SetOption(
+		BlueSharedString( "CLOUD_SHADOW_ALGORITHM" ),
+		sceneInformation.receiveShadows && m_receiveShadows && g_eveSpaceSceneRaytracedShadows ? BlueSharedString( "CLOUD_SHADOWS_RAYTRACED" ) : BlueSharedString( "CLOUD_SHADOWS_CASCADED" ) );
 }
 
 void EveChildCloud2::ReleaseResources( TriStorage s )
