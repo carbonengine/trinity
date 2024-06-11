@@ -22,8 +22,6 @@
 #include "../../../Tr2TextureReference.h"
 #include "../../../Tr2TextureAnimation.h"
 
-extern bool g_eveSpaceSceneRaytracedShadows;
-
 using namespace Tr2RenderContextEnum;
 
 namespace
@@ -393,10 +391,6 @@ void EveChildCloud2::SetSceneInformation( const SceneInformation& sceneInformati
 	m_effect->SetOption(
 		BlueSharedString( "CLOUD_SHADOWS" ),
 		sceneInformation.receiveShadows && m_receiveShadows ? BlueSharedString( "CLOUD_SHADOWS_RECEIVE" ) : BlueSharedString( "CLOUD_SHADOWS_NONE" ) );
-
-	m_effect->SetOption(
-		BlueSharedString( "CLOUD_SHADOW_ALGORITHM" ),
-		sceneInformation.receiveShadows && m_receiveShadows && g_eveSpaceSceneRaytracedShadows ? BlueSharedString( "CLOUD_SHADOWS_RAYTRACED" ) : BlueSharedString( "CLOUD_SHADOWS_CASCADED" ) );
 }
 
 void EveChildCloud2::ReleaseResources( TriStorage s )
@@ -879,13 +873,12 @@ void EveChildCloud2::SetupShadowFrustum( ShadowInfo& shadowInfo )
 	aabb.m_max.z += 2500000.f;
 
 	m_lightViewProj = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
-
-	shadowInfo.aabbMax = aabb.m_max;
 	
 	// create shadow frustum out from lightView, aabb.min, aabb.max
 	TriFrustumOrtho shadowFrustum;
 	shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
-
+	
+	shadowInfo.aabbMax = aabb.m_max;
 	shadowInfo.lightViewProj = m_lightViewProj;
 	shadowInfo.shadowFrustum = shadowFrustum;
 	shadowInfo.shadowMapSize = m_shadowMapSize;
