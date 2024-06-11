@@ -1650,7 +1650,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	}
 	// we change the frustum during reflection updates/renderings
 	// we need the old one for resetting
-	auto& normalFrustum = m_updateContext.GetFrustum();
+	auto normalFrustum = m_updateContext.GetFrustum();
 
 	m_reflectionProbe->InitRenderPass( renderContext );
 	for( unsigned i = m_reflectionProbe->GetStartFace(); i < m_reflectionProbe->GetEndFace(); i++ )
@@ -1809,7 +1809,7 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
 	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &planetProjection, renderContext.m_esm.GetViewport() );
 	
-	auto& normalFrustum = m_updateContext.GetFrustum();
+	auto normalFrustum = m_updateContext.GetFrustum();
 
 	m_updateContext.SetFrustum(frustum);
 
@@ -3153,7 +3153,7 @@ void EveSpaceScene::GetPickingObjectsToRender( std::vector<ITr2Renderable*>& pic
 
 	pickFrustum.DeriveFrustum( &view, &camPos, &proj, vp );
 
-	auto& oldFrustum = m_updateContext.GetFrustum();
+	auto oldFrustum = m_updateContext.GetFrustum();
 	m_updateContext.SetFrustum(pickFrustum);
 
 	for( IEveSpaceObject2Vector::const_iterator it = m_objects.begin(); it != m_objects.end(); ++it )
