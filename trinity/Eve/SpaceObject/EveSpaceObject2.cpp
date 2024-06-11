@@ -1595,7 +1595,7 @@ void EveSpaceObject2::UpdateRtSkeleton()
 
 bool EveSpaceObject2::IsVisible( const EveUpdateContext& updateContext ) const
 {
-	auto frustum = updateContext.GetFrustum();
+	auto& frustum = updateContext.GetFrustum();
 	return frustum.IsSphereVisible( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) &&
 		frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) >= updateContext.GetVisibilityThreshold();
 }

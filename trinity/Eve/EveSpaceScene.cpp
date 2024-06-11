@@ -354,7 +354,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.UpdateOrigin( m_ballpark );
 	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
 
-	TriFrustum& frustum = m_frameData.frustum;
+	TriFrustum frustum;
 	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), Tr2Renderer::GetViewport() );
 
 	m_updateContext.SetFrustum( frustum );
@@ -490,7 +490,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 	// set up frustums
 	for( unsigned int splitIndex = 0; splitIndex < SHADOW_FRUSTUM_COUNT; ++splitIndex )
 	{
-		ShadowMap::SplitSetup splitSetupInfo = m_cascadedShadowMap->SetupShadowSplit( splitIndex, m_shadowView, m_sunData.DirWorld, m_frameData.frustum.m_zNear );
+		ShadowMap::SplitSetup splitSetupInfo = m_cascadedShadowMap->SetupShadowSplit( splitIndex, m_shadowView, m_sunData.DirWorld, m_updateContext.GetFrustum().m_zNear );
 
 		// Get the split up camera frustum so we can use it to do some "half space culling" for objects
 		TriFrustum frustum;
@@ -1213,8 +1213,6 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	{
 		m_dataTextureMgr->SetVariables();
 	}
-	auto& frustum = m_updateContext.GetFrustum();
-	m_frameData.frustum = frustum;
 
 	Jitter( renderContext );
 
@@ -1253,7 +1251,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		CCP_STATS_SCOPED_TIME( gatherDynamicLights );
 
 		lightManager->Clear( renderContext );
-		lightManager->SetFrustum( frustum );
+		lightManager->SetFrustum( m_updateContext.GetFrustum() );
 		lightManager->AdjustLightCutoff( m_updateContext.GetLodFactor() );
 
 		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
@@ -1281,7 +1279,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	//  the lensflares need a special pre-render update
 	for( auto it = m_lensflares.cbegin(); it != m_lensflares.cend(); ++it )
 	{
-		( *it )->PrepareRender( frustum );
+		( *it )->PrepareRender( m_updateContext.GetFrustum() );
 	}
 
 	if( m_velocityMap )
@@ -1500,7 +1498,7 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 		Tr2Renderer::SetViewTransform( view );
 		Tr2Renderer::SetProjectionTransform( proj );
 
-		TriFrustum frustum = m_frameData.frustum;
+		TriFrustum frustum;
 		frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), fakeViewport );
 
 		PopulatePerFramePSData( m_perFramePS, renderContext );
@@ -1757,6 +1755,8 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 
 	m_reflectionProbe->EndRenderPass( renderContext );
 
+	m_updateContext.SetFrustum( normalFrustum );
+
 	// reset ssao
 	if( m_ssao )
 	{
@@ -1769,8 +1769,6 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
 	ApplyPerFrameData( renderContext );
-
-	m_updateContext.SetFrustum( normalFrustum );
 }
 
 // --------------------------------------------------------------------------------------
@@ -2111,7 +2109,7 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 	auto direction = Tr2Renderer::GetViewPosition() - cloudShadowInformation->aabbMax;
 	float dist = Length( direction );
 
-	auto projection = PerspectiveFovMatrix( Tr2Renderer::GetFieldOfView(), Tr2Renderer::GetAspectRatio(), m_frameData.frustum.m_zNear, dist );
+	auto projection = PerspectiveFovMatrix( Tr2Renderer::GetFieldOfView(), Tr2Renderer::GetAspectRatio(), m_updateContext.GetFrustum().m_zNear, dist );
 	auto invViewProj = Inverse( projection ) * Tr2Renderer::GetInverseViewTransform();
 	const Matrix viewProj = Inverse( invViewProj );
 
@@ -2168,7 +2166,7 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	{
 		return;
 	}
-	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_frameData.frustum, *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
+	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 }
 
 // --------------------------------------------------------------------------------------
@@ -2297,9 +2295,6 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
 	ApplyPerFrameData( renderContext );
 
-
-	// Set up the frustum for visibility checking.
-	TriFrustum& frustum = m_frameData.frustum;
 	// collect visible lensflares
 	std::vector<ITr2Renderable*> visible;
 
@@ -2331,7 +2326,7 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 		// lensflares
 		for( auto it = m_lensflares.cbegin(); it != m_lensflares.cend(); ++it )
 		{
-			( *it )->GetRenderables( frustum, visible );
+			( *it )->GetRenderables( m_updateContext.GetFrustum(), visible );
 		}
 
 		if( !visible.empty() )
@@ -2389,7 +2384,7 @@ void EveSpaceScene::Render3DUI( Tr2RenderContext& renderContext )
 	std::vector<ITr2Renderable*> renderables;
 	Tr2RenderableSortList transparentObjects;
 
-	TriFrustum& frustum = m_frameData.frustum;
+	TriFrustum frustum;
 	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), renderContext.m_esm.GetViewport() );
 
 	renderContext.m_esm.BeginManagedRendering();
