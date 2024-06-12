@@ -209,7 +209,7 @@ bool Tr2MetalFxUpscalingContext::IsTemporal() const
     return m_temporal;
 }
 
-bool HasSharpening() const {
+bool Tr2MetalFxUpscalingContext::HasSharpening() const {
     return false;
 }
 
