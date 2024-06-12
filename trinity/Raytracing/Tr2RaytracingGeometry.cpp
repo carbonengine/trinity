@@ -184,11 +184,7 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 		auto lodIndex = -1;
 		if( m_geometry && m_geometry->IsGood() )
 		{
-			m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize );
-		}
-		else
-		{
-			lodIndex = -1;
+			lodIndex = m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize );
 		}
 
 		m_isDirty |= lodIndex != m_lodIndex;

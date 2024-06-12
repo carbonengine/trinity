@@ -2091,7 +2091,7 @@ void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 
 	m_componentRegistry->ProcessComponents<ITr2VolumetricRenderable>( [this, &renderContext, &shadowCasters]( ITr2VolumetricRenderable* volumetric ) -> void {
 		ITr2VolumetricRenderable::ShadowInfo shadowInfo;
-		volumetric->GetVolumetricShadowInfo( shadowInfo );
+		volumetric->GetVolumetricShadowInfo( shadowInfo, m_sunData.DirWorld );
 
 		if( volumetric->PrepareCloudShadowMap( renderContext ) )
 		{

@@ -51,7 +51,7 @@ public:
 	virtual bool UpdateVolumetricLightmap( Tr2RenderContext & renderContext ) = 0;
 	virtual void SetSceneInformation( const SceneInformation& sceneInformation ) = 0;
 	virtual void GetVolumetricShadowBatches( ITriRenderBatchAccumulator * batches ) = 0;
-	virtual void GetVolumetricShadowInfo( ShadowInfo & shadowInfo ) = 0;
+	virtual void GetVolumetricShadowInfo( ShadowInfo & shadowInfo, Vector3 sunDir ) = 0;
 	virtual bool PrepareCloudShadowMap( Tr2RenderContext & renderContext ) = 0;
 	virtual void SetCloudShadowMapHandle() = 0;
 };
