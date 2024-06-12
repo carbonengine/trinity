@@ -22,7 +22,6 @@
 #include "Effects/Tr2PPFogEffect.h"
 #include "Effects/Tr2PPTaaEffect.h"
 #include "Effects/Tr2PPDepthOfFieldEffect.h"
-#include "Effects/Tr2PPUpscalingEffect.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2PPSignalLossEffect );

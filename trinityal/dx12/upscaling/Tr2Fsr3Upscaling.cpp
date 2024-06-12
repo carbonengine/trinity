@@ -285,6 +285,10 @@ bool Tr2Fsr3UpscalingContext::IsTemporal() const
 	return true;
 }
 
+bool Tr2Fsr3UpscalingContext::HasSharpening() const
+{
+	return true;
+}
 
 void Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext::UpdateJitter()
 {
@@ -432,7 +436,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2RenderContextAL& re
 	dispatchDescription.motionVectorScale.y = (float)m_renderHeight;
 	dispatchDescription.reset = m_reset;
 	dispatchDescription.enableSharpening = true;
-	dispatchDescription.sharpness = 0.8f;
+	dispatchDescription.sharpness = 0.9f;
 	dispatchDescription.frameTimeDelta = dispatchParameters.frameTimeDelta;
 
 	dispatchDescription.preExposure = dispatchParameters.preExposure;

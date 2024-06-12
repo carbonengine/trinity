@@ -7,6 +7,8 @@
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
 #include "Tr2UpscalingAlDx11.h"
+#include "dx11/Tr2TextureALDx11.h"
+
 #include <sl.h>
 #include <sl_consts.h>
 #include <sl_dlss.h>
@@ -73,6 +75,8 @@ public:
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 	virtual bool IsTemporal() const override;
+	virtual bool HasSharpening() const override;
+
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
 
@@ -81,14 +85,18 @@ public:
 private:
 	void SetFrameToken( sl::FrameToken* token );
 
-	sl::Result ReadyResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters );
+	sl::Result ReadyDLSSResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters );
+	sl::Result ReadyNISResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters );
 	void SetCommonConstants( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
 
 	Tr2UpscalingAL::JitterSequence m_jitterSequence;
 
 	sl::DLSSMode m_dlssMode;
-	sl::DLSSOptions m_options;
+	sl::DLSSOptions m_dlssOptions;
+	sl::NISOptions m_nisOptions;
 	sl::DLSSOptimalSettings m_optimalSettings;
+
+	Tr2TextureAL m_dlssOutput;
 	
 	PFun_slGetFeatureFunction* m_slGetFeatureFunction;
 	PFun_slDLSSGetOptimalSettings* m_slDLSSGetOptimalSettings;
@@ -96,6 +104,7 @@ private:
 	PFun_slSetConstants* m_slSetConstants;
 	PFun_slEvaluateFeature* m_slEvaluateFeature;
 	PFun_slFreeResources* m_slFreeResources;
+	PFun_slNISSetOptions* m_slNISSetOptions;
 	PFun_slSetTag* m_slSetTag;
 
 	sl::ViewportHandle m_viewHandle;

@@ -4,6 +4,11 @@
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "Include/TriMath.h"
 
+// FidelityFX headers
+#define A_CPU
+#include "ffx_a.h"
+#include "ffx_cas.h"
+
 namespace
 {
 const uint32_t HISTOGRAM_TILE_SIZE_X = 16;
@@ -157,6 +162,13 @@ BlueSharedString GetFinalizeTypeOptionValue( BlurFinalize finalize )
 
 }
 
+namespace AMDSharpening
+{
+	Vector4 AsVector( uintfloat4 v )
+	{
+		return Vector4( v.f[0], v.f[1], v.f[2], v.f[3] );
+	}
+}
 
 TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_quality( HIGH ),
@@ -347,7 +359,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			signalLoss = postProcess->GetSignalLoss();
 			fade = postProcess->GetFade();
 		default:
-			//upscaling = postProcess->GetUpscalingEffect();
 			taa = postProcess->GetTaa();
 			break;
 		}
@@ -356,7 +367,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		{
 			dof = postProcess->GetDepthOfField();
 		}
-
 	}
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
@@ -381,8 +391,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	}
 	// Processing effects will set velocity map if it is needed
 	m_scene->SetVelocityMap( nullptr );
-	uint32_t w, h;
-	Tr2Renderer::GetBackBufferDimensions( w, h );
 
 	if( m_upscalingContextID == Tr2UpscalingAL::INVALID_CONTEXT_ID )
 	{
@@ -402,7 +410,10 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	{
 		output = m_renderInfo->GetTempTexture();
 	}
-	
+
+	ProcessSharpening( !upscalingInfo.hasSharpening, output->GetWidth(), output->GetHeight(), upscalingInfo.upscalingAmount );
+
+
 	// Always copy
 	auto nonMsaaSource = m_renderInfo->GetTempTexture();
 	sourceBuffer->GetRenderTarget().Resolve( *nonMsaaSource, renderContext );
@@ -483,6 +494,9 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 			output = RenderUpscaling( output, renderContext, upscalingContext, dynamicExposure );
 		}
+
+		output = RenderSharpening( output, renderContext );
+
 		if( doGrain )
 		{
 			RenderFilmGrain( output, renderContext, filmGrain );
@@ -495,6 +509,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	else
 	{
 		Tr2Renderer::DrawTexture( renderContext, m_tonemappingEffect, *output, Vector2( 0, 0 ), Vector2( 1, 1 ) );
+		output = RenderSharpening( output, renderContext );
 	}
 
 	if( ProcessSignalLoss( signalLoss ) )
@@ -528,6 +543,56 @@ void TriStepRenderPostProcess::SetupExposureConversion( bool enable, float middl
 		m_dynamicExposureToTextureShader = nullptr;
 		m_exposureTexture = nullptr;
 	}
+}
+
+void TriStepRenderPostProcess::ProcessSharpening( bool enable, uint32_t displayWidth, uint32_t displayHeight, float upscalingAmount )
+{
+	if( enable && !m_fidelityFxCasShader )
+	{
+		float casIntensity = 0.5f;
+
+		m_fidelityFxCasShader.CreateInstance();
+		m_fidelityFxCasShader->StartUpdate();
+		m_fidelityFxCasShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/CAS.fx" );
+		
+		AF1 outWidth = static_cast<AF1>( displayWidth );
+		AF1 outHeight = static_cast<AF1>( displayHeight );
+		
+		AMDSharpening::CASConstants casConst;
+
+		CasSetup( casConst.const0.u, casConst.const1.u, casIntensity, outWidth, outHeight, outWidth, outHeight );
+
+		m_fidelityFxCasShader->SetParameter( BlueSharedString( "InputTexture" ), PLACEHOLDER );
+		m_fidelityFxCasShader->SetParameter( BlueSharedString( "OutputTexture" ), PLACEHOLDER );
+		m_fidelityFxCasShader->SetParameter( BlueSharedString( "const0" ), AMDSharpening::AsVector( casConst.const0 ) );
+		m_fidelityFxCasShader->SetParameter( BlueSharedString( "const1" ), AMDSharpening::AsVector( casConst.const1 ) );
+
+		m_fidelityFxCasShader->EndUpdate();
+
+	}
+}
+
+Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderSharpening( Tr2PostProcessRenderInfo::Texture& input, Tr2RenderContext& renderContext )
+{
+	if( m_fidelityFxCasShader )
+	{
+		GPU_REGION( renderContext, "CAS Sharpening" );
+
+		static const uint32_t CAS_THREAD_GROUP_WORK_REGION_DIM = 16;
+		Tr2PostProcessRenderInfo::Texture output = m_renderInfo->GetTempTexture( 1.0f, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
+
+		m_fidelityFxCasShader->SetParameter( BlueSharedString( "InputTexture" ), input );
+		m_fidelityFxCasShader->SetParameter( BlueSharedString( "OutputTexture" ), output );
+
+		auto renderWidth = output->GetWidth();
+		auto renderHeight = output->GetHeight();
+
+		auto dispatchX = ( renderWidth + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
+		auto dispatchY = ( renderHeight + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
+		Tr2Renderer::RunComputeShader( m_fidelityFxCasShader, dispatchX, dispatchY, 1, renderContext );
+		return output;
+	}
+	return input;
 }
 
 // Helper function to blur certain channel of a source render target to a destination render target with a blur type (Big/Small)

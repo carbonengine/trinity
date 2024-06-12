@@ -836,16 +836,6 @@ set(_SOURCES
     Particle/Tr2StaticEmitter.cpp
     Particle/Tr2StaticEmitter.h
     Particle/Tr2StaticEmitter_Blue.cpp
-    PostProcess/Effects/Sharpening/ITr2Sharpening.h
-    PostProcess/Effects/Sharpening/Tr2FidelityFxCas.cpp
-    PostProcess/Effects/Sharpening/Tr2FidelityFxCas.h
-    PostProcess/Effects/Sharpening/Tr2FidelityFxCas_Blue.cpp
-    PostProcess/Effects/Sharpening/Tr2NoopSharpening.cpp
-    PostProcess/Effects/Sharpening/Tr2NoopSharpening.h
-    PostProcess/Effects/Sharpening/Tr2NoopSharpening_Blue.cpp
-    PostProcess/Effects/Upscaling/ITr2Upscaling.h
-    PostProcess/Effects/Upscaling/Tr2UpscalingUtils.cpp
-    PostProcess/Effects/Upscaling/Tr2UpscalingUtils.h
     PostProcess/Effects/Tr2PPBloomEffect.cpp
     PostProcess/Effects/Tr2PPBloomEffect.h
     PostProcess/Effects/Tr2PPBloomEffect_Blue.cpp
@@ -882,9 +872,6 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPTaaEffect.cpp
     PostProcess/Effects/Tr2PPTaaEffect.h
     PostProcess/Effects/Tr2PPTaaEffect_Blue.cpp
-    PostProcess/Effects/Tr2PPUpscalingEffect.cpp
-    PostProcess/Effects/Tr2PPUpscalingEffect.h
-    PostProcess/Effects/Tr2PPUpscalingEffect_Blue.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.h
     PostProcess/Effects/Tr2PPVignetteEffect_Blue.cpp
