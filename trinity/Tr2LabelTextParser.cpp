@@ -266,11 +266,11 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
     }
     Py_ssize_t stringLength;
     wchar_t* paramString = PyUnicode_AsWideCharString(paramObject, &stringLength );
+    Py_DECREF( paramObject );
     if( !paramString )
     {
         return nullptr;
     }
-    Py_DECREF( paramObject );
     wchar_t* inString = CCP_NEW("ParseLabelText") wchar_t[stringLength + 1];
     wcscpy_s(inString, stringLength + 1, paramString);
 
