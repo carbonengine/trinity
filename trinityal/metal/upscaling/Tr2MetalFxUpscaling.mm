@@ -209,6 +209,10 @@ bool Tr2MetalFxUpscalingContext::IsTemporal() const
     return m_temporal;
 }
 
+bool HasSharpening() const {
+    return false;
+}
+
 void Tr2MetalFxUpscalingContext::UpdateJitter()
 {
     if( m_temporal )
