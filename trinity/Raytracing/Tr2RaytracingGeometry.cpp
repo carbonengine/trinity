@@ -167,7 +167,7 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 		m_screenSize = screenSize;
 		if( m_geometry && m_geometry->IsGood() )
 		{
-			m_lodIndex = std::max( 0, m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize ) );
+			m_lodIndex = m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize );
 		}
 		else
 		{
@@ -184,12 +184,13 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 		auto lodIndex = -1;
 		if( m_geometry && m_geometry->IsGood() )
 		{
-			m_lodIndex = std::max( 0, m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize ) );
+			m_geometry->GetLodIndexForScreenSize( m_meshIndex, m_screenSize );
 		}
 		else
 		{
 			lodIndex = -1;
 		}
+
 		m_isDirty |= lodIndex != m_lodIndex;
 		m_lodIndex = lodIndex;
 		m_screenSize = screenSize;
