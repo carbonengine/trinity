@@ -153,6 +153,11 @@ bool Tr2XessUpscalingContext::IsTemporal() const
 	return true;
 }
 
+bool Tr2XessUpscalingContext::HasSharpening() const
+{
+	return false;
+}
+
 uint32_t Tr2XessUpscalingContext::GetDispatchRequirements() const
 {
 	return Tr2UpscalingAL::DispatchRequirements::VELOCITY | Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE;

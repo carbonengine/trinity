@@ -7,6 +7,8 @@
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 #include "include/upscaling/Tr2UpscalingAL.h"
+#include "dx12/Tr2TextureALDx12.h"
+
 #include <sl.h>
 #include <sl_consts.h>
 #include <sl_dlss.h>
@@ -56,8 +58,11 @@ private:
 	HMODULE m_streamlineModule;
 	bool m_isAvailable;
 	bool m_supportsFrameGeneration;
+	bool m_attachedToDevice;
 
 	bool m_streamlineSetup;
+
+	uint32_t m_contextIndex;
 	sl::FrameToken* m_frameToken;
 
 	// a few functions from the streamline module.
@@ -67,10 +72,6 @@ private:
 	PFun_slPCLSetMarker* m_slPCLSetMarker;
 	PFun_slGetNewFrameToken* m_slGetNewFrameToken;
 	PFun_slUpgradeInterface* m_slUpgradeInterface;
-
-	bool m_attachedToDevice;
-
-	uint32_t m_contextIndex;
 };
 
 class Tr2DlssUpscalingContext : public Tr2UpscalingContextAL
@@ -91,6 +92,7 @@ public:
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 	virtual bool IsTemporal() const override;
+	bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
 
@@ -98,7 +100,8 @@ public:
 
 private:
 	void SetFrameToken( sl::FrameToken* token );
-	sl::Result ReadyResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters );
+	sl::Result ReadyDLSSResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters );
+	sl::Result ReadyNISResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters );
 	void SetCommonConstants( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
 
 	sl::Result UpdateDlssG();
@@ -106,8 +109,10 @@ private:
 	Tr2UpscalingAL::JitterSequence m_jitterSequence;
 
 	sl::DLSSMode m_dlssMode;
-	sl::DLSSOptions m_options;
+	sl::DLSSOptions m_dlssOptions;
 	sl::DLSSGOptions m_dlssgOptions;
+	sl::NISOptions m_nisOptions;
+
 	sl::DLSSOptimalSettings m_optimalSettings;
 
 	sl::ViewportHandle m_viewHandle;
@@ -116,6 +121,8 @@ private:
 
 	HMODULE m_streamlineModule;
 	sl::FrameToken* m_frameToken;
+
+	Tr2TextureAL m_dlssOutput;
 
 	bool m_setup;
 
@@ -131,6 +138,7 @@ private:
 	PFun_slEvaluateFeature* m_slEvaluateFeature;
 	PFun_slFreeResources* m_slFreeResources;
 	PFun_slDLSSGGetState* m_slDLSSGGetState;
+	PFun_slNISSetOptions* m_slNISSetOptions;
 	PFun_slSetTag* m_slSetTag;
 	PFun_slAllocateResources* m_slAllocateResources;
 

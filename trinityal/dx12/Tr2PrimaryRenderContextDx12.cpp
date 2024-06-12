@@ -1333,6 +1333,7 @@ Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint3
 		info.upscalingAmount = context->GetUpscalingAmount();
 		info.mipLevelBias = context->GetMipLevelBias();
 		info.temporal = context->IsTemporal();
+		info.hasSharpening = context->HasSharpening();
 		context->GetJitter( info.jitterX, info.jitterY );
 		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
 		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );

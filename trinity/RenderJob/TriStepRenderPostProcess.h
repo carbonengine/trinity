@@ -70,8 +70,26 @@ namespace PostProcessBlur
 
 	BlueSharedString GetBlurChannelOptionValue( BlurChannel channel );
 	BlueSharedString GetBlurTypeOptionValue( BlurType type );
-        BlueSharedString GetProcessTypeOptionValue( BlurProcess process);
-        BlueSharedString GetFinalizeTypeOptionValue( BlurFinalize finalize );
+	BlueSharedString GetProcessTypeOptionValue( BlurProcess process);
+	BlueSharedString GetFinalizeTypeOptionValue( BlurFinalize finalize );
+}
+
+
+namespace AMDSharpening
+{
+	typedef union
+	{
+		uint32_t u[4];
+		float f[4];
+	} uintfloat4;
+
+	Vector4 AsVector( uintfloat4 v );
+
+	struct CASConstants
+	{
+		uintfloat4 const0 = {};
+		uintfloat4 const1 = {};
+	};
 }
 
 // -------------------------------------------------------------
@@ -109,6 +127,10 @@ public:
 private:
 	// exposure texture 
 	void SetupExposureConversion( bool enable, float middleValue );
+
+	// optional sharpening
+	void ProcessSharpening( bool enable, uint32_t displayWidth, uint32_t displayHeight, float upscalingAmount );
+	Tr2PostProcessRenderInfo::Texture RenderSharpening( Tr2PostProcessRenderInfo::Texture& input, Tr2RenderContext& renderContext );
 
 	// bloom
 	bool ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure );
@@ -219,6 +241,9 @@ private:
 
 	Tr2EffectPtr m_blurBigVertical;
 	Tr2EffectPtr m_blurBigHorizontal;
+
+	// contrast adaptive sharpening, used if no upscaling is applied or if an upscaling does not have sharpening
+	Tr2EffectPtr m_fidelityFxCasShader;
 
 	Be::Time m_lastFrameTime;
 	uint32_t m_upscalingContextID;

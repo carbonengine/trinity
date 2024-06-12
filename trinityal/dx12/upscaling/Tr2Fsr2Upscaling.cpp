@@ -164,7 +164,13 @@ void Tr2Fsr2UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
 		m_setup = false;
 	}
 }
+
 bool Tr2Fsr2UpscalingContext::IsTemporal() const
+{
+	return true;
+}
+
+bool Tr2Fsr2UpscalingContext::HasSharpening() const
 {
 	return true;
 }

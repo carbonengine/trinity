@@ -78,6 +78,7 @@ namespace Tr2UpscalingAL
 		setting( Tr2UpscalingAL::Setting::NATIVE ),
 		frameGeneration( false ),
 		temporal(false),
+		hasSharpening(false),
 		upscalingAmount( 1.0f ),
 		jitterX( 0.0f ),
 		jitterY( 0.0f ),
