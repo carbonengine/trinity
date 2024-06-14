@@ -256,6 +256,41 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 	renderContext.SetResourceSet( pp.m_resourceSet );
 }
 
+void Tr2Material::ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex, unsigned int passIndex, uint32_t overrideProgram, Tr2RenderContext& renderContext ) const
+{
+	if( !m_shader )
+	{
+		return;
+	}
+	auto sp = renderContext.m_esm.GetShaderProgram( overrideProgram );
+	if( !sp )
+	{
+		return;
+	}
+
+	unsigned mask = m_shader->GetShaderTypeMask( techniqueIndex );
+	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
+	auto resourceSetDesc = Tr2ResourceSetDescriptionAL( *sp );
+	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
+	{
+		if( mask & ( 1 << i ) )
+		{
+			auto& input = pp.m_stageInput[i];
+			ApplyConstants( Tr2RenderContextEnum::ShaderType( i ), input, !pp.m_reroutedParameters.empty(), renderContext );
+			UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType( i ), input, resourceSetDesc );
+			mask &= ~( 1 << i );
+		}
+	}
+
+	CCP_STATS_INC( effectResourceSetCreated );
+
+	Tr2ResourceSetAL resourceSet;
+	resourceSet.Create( resourceSetDesc, *sp, renderContext.GetPrimaryRenderContext() );
+	renderContext.SetResourceSet( resourceSet );
+
+	pp.m_resourceSetDirty = true;
+}
+
 bool Tr2Material::ApplyShaderInputs( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const
 {
 	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
