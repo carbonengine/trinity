@@ -2232,10 +2232,13 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 
 	if( m_opaqueColorMap != nullptr )
 	{
-		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {Tr2LoadAction::LOAD, Tr2StoreAction::STORE} );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
 		renderContext.m_esm.PushRenderTarget( *m_opaqueColorMap );
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 		Tr2Renderer::DrawTexture( renderContext, *m_colorMap );
 		renderContext.m_esm.PopRenderTarget();
+		renderContext.m_esm.PopDepthStencilBuffer();
 	}
 
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );

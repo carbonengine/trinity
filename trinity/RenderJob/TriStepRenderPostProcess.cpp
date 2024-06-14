@@ -434,12 +434,13 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		RenderDepthOfField( nonMsaaSource, renderContext, dof, temporal, upscalingInfo.upscalingAmount );
 	}
 
+	bool hasDynamicExposure = ProcessDynamicExposure( renderContext, dynamicExposure, bloom );
 	if( ProcessTaa( taa ) )
 	{
 		RenderTaa( nonMsaaSource, renderContext, taa, dynamicExposure );
 	}
 
-	if( ProcessDynamicExposure( renderContext, dynamicExposure, bloom ) )
+	if( hasDynamicExposure )
 	{
 		RenderDynamicExposure( nonMsaaSource, renderContext, dynamicExposure );
 	}
@@ -453,7 +454,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
 		// upscale the temp textures so everything hence forth is correct
 		uint32_t w, h;
-		
 		upscalingContext->GetDisplayDimensions( w, h );
 		m_renderInfo->SetRenderSize( w, h );
 		// need to reset the perframedata so we have the correct viewport size etc
@@ -480,21 +480,29 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	ProcessVignette( vignette );
 
 	bool doGrain = ProcessFilmGrain( filmGrain );
-
 	if( !upscalingInfo.temporal || doGrain )
 	{
-		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-		DrawInto( *output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
-		nonMsaaSource = Tr2PostProcessRenderInfo::Texture();
-
 		if( upscalingEnabled && !upscalingInfo.temporal )
 		{
+			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
+			DrawInto( *nonMsaaSource, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
+			
 			auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
-			upscalingContext->SetHudLessTexture( output->GetTexture() );
-
-			output = RenderUpscaling( output, renderContext, upscalingContext, dynamicExposure );
+			
+			output = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
+			
+			// upscale the temp textures so everything hence forth is correct
+			uint32_t w, h;
+			upscalingContext->GetDisplayDimensions( w, h );
+			m_renderInfo->SetRenderSize( w, h );
+			// need to reset the perframedata so we have the correct viewport size etc
+			m_scene->ApplyUpscalingToPerFrameData( w, h, renderContext );
 		}
-
+		else
+		{
+			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
+			DrawInto( *output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
+		}
 		output = RenderSharpening( output, renderContext );
 
 		if( doGrain )
