@@ -43,8 +43,8 @@ namespace Fsr2Utils
 	}
 }
 
-Tr2Fsr2UpscalingTechnique::Tr2Fsr2UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration )
+Tr2Fsr2UpscalingTechnique::Tr2Fsr2UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration, adapter )
 {
 	SanitizeState();
 }

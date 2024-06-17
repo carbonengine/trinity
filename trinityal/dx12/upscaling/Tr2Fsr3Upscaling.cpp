@@ -98,8 +98,8 @@ namespace Fsr3Utils
 
 }
 
-Tr2Fsr3UpscalingTechnique::Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration ),
+Tr2Fsr3UpscalingTechnique::Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration, adapter ),
 	m_framegenSwapchain( nullptr ), 
 	m_attachedToSwapchain( false )
 {

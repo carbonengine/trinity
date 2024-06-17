@@ -34,7 +34,7 @@ namespace DlssUtils
 }
 
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration ),
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration, adapter ),
 	m_adapter( adapter ),
 	m_contextIndex( 0 ), 
 	m_frameToken( 0 ), 

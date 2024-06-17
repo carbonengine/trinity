@@ -109,7 +109,7 @@ class Tr2UpscalingContextAL;
 class Tr2UpscalingTechniqueAL
 {
 public:
-	Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
     virtual ~Tr2UpscalingTechniqueAL() = default;
 
 	// Destroy is called when the rendercontext is being destroyed. Everything needs to be clean after this call!

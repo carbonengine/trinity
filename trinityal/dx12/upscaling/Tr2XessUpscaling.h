@@ -12,7 +12,7 @@
 class Tr2XessUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
-	Tr2XessUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2XessUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2XessUpscalingTechnique();
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;

@@ -20,7 +20,7 @@ FfxResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* t
 class Tr2Fsr2UpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
-	Tr2Fsr2UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2Fsr2UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2Fsr2UpscalingTechnique();
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;

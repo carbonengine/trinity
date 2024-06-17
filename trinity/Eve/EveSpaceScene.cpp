@@ -1109,9 +1109,9 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 {
 	m_projection = Tr2Renderer::GetProjectionTransform();
 
-	if( m_usingUpscaling )
-	{
-		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
+	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
+	if( m_usingUpscaling && upscalingInfo.temporal )
+	{	
 		m_jitter.x = upscalingInfo.jitterX;
 		m_jitter.y = upscalingInfo.jitterY;
 		m_jitterMatrix = TranslationMatrix( Vector3( m_jitter.x, m_jitter.y, 0 ) );
@@ -2679,6 +2679,10 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 
 		m_upscalingAmount = upscalingInfo.upscalingAmount;
 		data.SceneMipLodBias = upscalingInfo.mipLevelBias;
+		if( !upscalingInfo.temporal && m_postProcess )
+		{
+			data.SceneMipLodBias += m_postProcess->GetMipLodBias();
+		}
 		data.Upscaling = m_upscalingAmount; 
 	}
 	else if( m_postProcess )

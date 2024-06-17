@@ -130,7 +130,7 @@ namespace Tr2UpscalingAL
 }
 
 
-Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ):
+Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ):
 	m_technique( technique ),
 	m_setting(setting),
 	m_frameGeneration( frameGeneration )
@@ -293,7 +293,12 @@ void Tr2UpscalingContextAL::SetHudLessTexture( Tr2TextureAL* texture )
 
 float Tr2UpscalingContextAL::GetMipLevelBias() const
 {
-	return log2( 1.0f / m_upscaling ) - 1.0f;
+	float mipBias = log2( 1.0f / m_upscaling );
+	if( IsTemporal() )
+	{
+		mipBias -= 1;
+	}
+	return mipBias;
 }
 
 float Tr2UpscalingContextAL::GetUpscalingAmount() const

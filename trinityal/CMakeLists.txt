@@ -220,8 +220,10 @@ set(_SOURCES
     include/Tr2VideoAdapterInfoAL.h
     include/TrinityAL.h
     include/TrinityALForward.h
-    include//upscaling/Tr2Fsr1Upscaling.h
-    include//upscaling/Tr2UpscalingAL.h
+    include/upscaling/Tr2Fsr1Upscaling.h
+    include/upscaling/Tr2UpscalingAL.h
+    include/upscaling/Fsr1DX.h
+    include/upscaling/Fsr1Metal.h
     metal/MetalContext.h
     metal/MetalContext.mm
     metal/MetalResourceArray.h

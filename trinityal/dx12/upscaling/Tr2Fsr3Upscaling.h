@@ -20,7 +20,7 @@ namespace Fsr3Utils
 class Tr2Fsr3UpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
-	Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2Fsr3UpscalingTechnique();
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;

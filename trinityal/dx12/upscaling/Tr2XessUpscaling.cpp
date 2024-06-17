@@ -79,8 +79,8 @@ void LogXeSS( const char* message, xess_logging_level_t loggingLevel )
 }
 
 
-Tr2XessUpscalingTechnique::Tr2XessUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration )
+Tr2XessUpscalingTechnique::Tr2XessUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration, adapter )
 {
 	SanitizeState();
 }

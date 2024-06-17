@@ -9,6 +9,7 @@
 
 #include "Tr2UpscalingALDx12.h"
 #include "Tr2DlssUpscaling.h"
+#include <upscaling/Tr2Fsr1Upscaling.h>
 #include "Tr2Fsr2Upscaling.h"
 #include "Tr2Fsr3Upscaling.h"
 #include "Tr2XessUpscaling.h"
@@ -20,17 +21,20 @@ namespace TrinityALImpl
 		TrinityALImpl::Tr2UpscalingTechniqueDx12* techniqueImpl = nullptr;
 		switch( technique )
 		{
+		case Tr2UpscalingAL::Technique::FSR1:
+			techniqueImpl = new Tr2Fsr1UpscalingTechnique( technique, setting, frameGeneration, adapter );
+			break;
 		case Tr2UpscalingAL::Technique::FSR2:
-			techniqueImpl = new Tr2Fsr2UpscalingTechnique( technique, setting, frameGeneration );
+			techniqueImpl = new Tr2Fsr2UpscalingTechnique( technique, setting, frameGeneration, adapter );
 			break;
 		case Tr2UpscalingAL::Technique::FSR3:
-			techniqueImpl = new Tr2Fsr3UpscalingTechnique( technique, setting, frameGeneration );
+			techniqueImpl = new Tr2Fsr3UpscalingTechnique( technique, setting, frameGeneration, adapter );
 			break;
 		case Tr2UpscalingAL::Technique::DLSS:
 			techniqueImpl = new Tr2DlssUpscalingTechnique( technique, setting, frameGeneration, adapter );
 			break;
 		case Tr2UpscalingAL::Technique::XESS:
-			techniqueImpl = new Tr2XessUpscalingTechnique( technique, setting, frameGeneration );
+			techniqueImpl = new Tr2XessUpscalingTechnique( technique, setting, frameGeneration, adapter );
 			break;
 		}
 
@@ -43,8 +47,8 @@ namespace TrinityALImpl
 		return nullptr;
 	}
 
-	Tr2UpscalingTechniqueDx12::Tr2UpscalingTechniqueDx12( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ) : 
-		Tr2UpscalingTechniqueAL( technique, setting, frameGeneration )
+	Tr2UpscalingTechniqueDx12::Tr2UpscalingTechniqueDx12( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) : 
+		Tr2UpscalingTechniqueAL( technique, setting, frameGeneration, adapter )
 	{
 	}
 
