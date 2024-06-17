@@ -40,6 +40,7 @@ public:
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 	virtual void Destroy( Tr2RenderContextAL& renderContex ) override;
 	virtual bool IsTemporal() const override;
+	virtual bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
 

@@ -27,7 +27,14 @@ Tr2SuballocatedBuffer::~Tr2SuballocatedBuffer()
 
 ALResult Tr2SuballocatedBuffer::Allocate( size_t stride, size_t count, void* data, Tr2RenderContextAL& renderContext, Allocation& result )
 {
-
+	if( !m_buffer.IsValid() && !m_allocators.empty() )
+	{
+		PrepareResources();
+		if( !m_buffer.IsValid() )
+		{
+			return E_FAIL;
+		}
+	}
 	size_t size = count * stride;
 	size_t paddedSize = size;
 	size_t alignment = stride;
@@ -52,7 +59,7 @@ ALResult Tr2SuballocatedBuffer::Allocate( size_t stride, size_t count, void* dat
 	{
 		auto allocator = m_allocators[i];
 
-		Tr2VirtualAllocator::VirtualAllocation allocation;
+		Tr2VirtualAllocator::VirtualAllocation allocation = {};
 		if( !allocator.Allocate( paddedSize, alignment, allocation ) )
 		{
 			continue; //This allocators is full, try the next one!
@@ -63,10 +70,10 @@ ALResult Tr2SuballocatedBuffer::Allocate( size_t stride, size_t count, void* dat
 		};
 
 		result.m_allocatorIndex = i;
-		result.m_offset = (uint32_t)Align( i * m_blockSize + allocation.offset, stride );
-		result.m_size = (uint32_t)size; //Make sure to save the unpadded size.
+		result.m_offset = static_cast<uint32_t>( Align( static_cast<size_t>( i ) * m_blockSize + allocation.offset, stride ) );
+		result.m_size = static_cast<uint32_t>( size ); //Make sure to save the unpadded size.
 
-		result.m_stride = (uint32_t)stride;
+		result.m_stride = static_cast<uint32_t>( stride );
 
 		result.m_allocation = allocation;
 		result.m_parent = this;
@@ -126,7 +133,7 @@ bool Tr2SuballocatedBuffer::OnPrepareResources()
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	uint32_t bufferSize = m_blockSize * (uint32_t)m_allocators.size();
+	uint32_t bufferSize = m_blockSize * static_cast<uint32_t>( m_allocators.size() );
 
 	Tr2BufferAL buffer;
 	Tr2BufferDescriptionAL desc( 1, bufferSize, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
@@ -141,12 +148,12 @@ void Tr2SuballocatedBuffer::Expand()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	uint32_t oldBufferSize = m_blockSize * (uint32_t)m_allocators.size();
+	uint32_t oldBufferSize = m_blockSize * static_cast<uint32_t>( m_allocators.size() );
 
 	Tr2VirtualAllocator allocator( m_blockSize );
 	m_allocators.push_back( allocator );
 
-	uint32_t newBufferSize = m_blockSize * (uint32_t)m_allocators.size();
+	uint32_t newBufferSize = m_blockSize * static_cast<uint32_t>( m_allocators.size() );
 
 	Tr2BufferAL newBuffer;
 	Tr2BufferDescriptionAL desc( 1, newBufferSize, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
@@ -160,7 +167,7 @@ void Tr2SuballocatedBuffer::Expand()
 
 	m_buffer = newBuffer;
 
-	size_t BYTES_TO_MEGABYTES = 1024 * 1024;
+	size_t BYTES_TO_MEGABYTES = size_t( 1024 ) * 1024;
 	CCP_LOGNOTICE( "Allocating more buffer memory for buffer '%s'. Total memory allocated: %zu MBs", m_name.c_str(), m_blockSize * m_allocators.size() / BYTES_TO_MEGABYTES );
 }
 

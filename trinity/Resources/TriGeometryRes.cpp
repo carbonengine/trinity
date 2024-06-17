@@ -280,7 +280,7 @@ TriGeometryResMeshData* TriGeometryRes::GetMeshData( unsigned int meshIx, float 
 	if( mesh )
 	{
 		int lodIndex = GetLodIndexForScreenSize( meshIx, screenSize );
-		if( lodIndex > 0 )
+		if( lodIndex >= 0 )
 		{
 			mesh = m_meshLods[mesh->m_lods[lodIndex].meshIndex].get();
 		}

@@ -92,6 +92,7 @@ namespace Tr2UpscalingAL
 		Setting setting;
 		bool frameGeneration;
 		bool temporal;
+		bool hasSharpening;
 		float upscalingAmount;
 		float jitterX;
 		float jitterY;
@@ -160,6 +161,7 @@ public:
 	virtual uint32_t GetDispatchRequirements() const = 0;
 	virtual void UpdateJitter() = 0;
 	virtual bool IsTemporal() const = 0;
+	virtual bool HasSharpening() const = 0;
 	
 	float GetUpscalingAmount() const;
 	float GetMipLevelBias() const;

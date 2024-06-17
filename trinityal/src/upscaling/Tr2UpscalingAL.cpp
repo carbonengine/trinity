@@ -78,6 +78,7 @@ namespace Tr2UpscalingAL
 		setting( Tr2UpscalingAL::Setting::NATIVE ),
 		frameGeneration( false ),
 		temporal(false),
+		hasSharpening(false),
 		upscalingAmount( 1.0f ),
 		jitterX( 0.0f ),
 		jitterY( 0.0f ),
@@ -198,6 +199,12 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& 
 
 Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
+    // safety harness, displayWidth and displayHeight need to be bigger than 1 since it is hard to render into something
+    // that is smaller than a pixel...
+    if( displayWidth < 2 || displayHeight < 2 ){
+        CCP_LOGWARN("Cannot create an upscaler for output that is less than 2x2 pixels. Ignoring context creation");
+        return nullptr;
+    }
 	auto context = CreateContextInstance( displayWidth, displayHeight, sourceFormat, depthFormat );
 	context->Setup( renderContext );
 	m_contexts[context->GetID()].reset( context );

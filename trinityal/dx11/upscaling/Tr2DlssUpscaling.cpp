@@ -15,6 +15,8 @@
 #include "../Tr2RenderContextDx11.h"
 #include "../Tr2TextureALDx11.h"
 
+extern bool g_upscalingDebug;
+
 namespace DlssUtils
 {
 	sl::Resource GenerateTextureResource( Tr2TextureAL* texture )
@@ -23,17 +25,17 @@ namespace DlssUtils
 		{
 			return { sl::ResourceType::eTex2d, texture->TrinityALImpl_GetObject()->GetResourceDx11(), nullptr, nullptr, 0 };
 		}
-		else
-		{
-			return { sl::ResourceType::eTex2d, nullptr, nullptr, nullptr, 0 };
-		}
+
+		return { sl::ResourceType::eTex2d, nullptr, nullptr, nullptr, 0 };
 	}
 }
 
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	Tr2UpscalingTechniqueDx11( technique, setting, frameGeneration, adapter ),
-	m_contextIndex(0),
-	m_attachedToDevice( false )
+	m_attachedToDevice( false ),
+	m_adapter( 0 ),
+	m_contextIndex( 0 ),
+	m_frameToken( nullptr )
 {
 	m_streamlineSetup = false;
 	m_streamlineModule = Tr2StreamlineAL::GetStreamlineModule();
@@ -65,8 +67,8 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 	m_isAvailable = true;
 
 	std::vector<sl::Feature> features = {
-		sl::kFeatureDLSS,
-		sl::kFeatureNIS
+		sl::kFeatureNIS,
+		sl::kFeatureDLSS
 	};
 	for( auto& feature : features )
 	{
@@ -174,12 +176,15 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, frameGeneration, sourceFormat, depthFormat ),
 	m_viewHandle( sl::ViewportHandle( contextNumber ) ),
 	m_streamlineModule( streamlineModule ),
-	m_frameToken( frameToken )
+	m_frameToken( frameToken ), 
+	m_setup( false ), 
+	m_dlssMode( sl::DLSSMode::eOff )
 {
 	DECLARE_SL_FUNC( m_streamlineModule, slGetFeatureFunction );
 
 	INITIALIZE_SL_FEATURE_FUNC( slDLSSGetOptimalSettings, sl::kFeatureDLSS );
 	INITIALIZE_SL_FEATURE_FUNC( slDLSSSetOptions, sl::kFeatureDLSS );
+	INITIALIZE_SL_FEATURE_FUNC( slNISSetOptions, sl::kFeatureNIS );
 
 	INITIALIZE_SL_FUNC( streamlineModule, slSetTag );
 	INITIALIZE_SL_FUNC( streamlineModule, slSetConstants );
@@ -190,7 +195,6 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
 	m_slFreeResources( sl::kFeatureDLSS, m_viewHandle );
-	m_slFreeResources( sl::kFeatureNIS, m_viewHandle );
 }
 
 Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Setup( Tr2RenderContextAL& renderContext )
@@ -215,11 +219,11 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Setup( Tr2RenderContextAL& rende
 		break;
 	}
 
-	m_options.outputWidth = m_displayWidth;
-	m_options.outputHeight = m_displayHeight;
-	m_options.mode = m_dlssMode;
+	m_dlssOptions.outputWidth = m_displayWidth;
+	m_dlssOptions.outputHeight = m_displayHeight;
+	m_dlssOptions.mode = m_dlssMode;
 
-	if( SL_FAILED( result, m_slDLSSGetOptimalSettings( m_options, m_optimalSettings ) ) )
+	if( SL_FAILED( result, m_slDLSSGetOptimalSettings( m_dlssOptions, m_optimalSettings ) ) )
 	{
 		CCP_LOGERR( "Getting Optimal Settings for DLSS failed (%d)", result );
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
@@ -227,23 +231,34 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Setup( Tr2RenderContextAL& rende
 	m_renderWidth = m_optimalSettings.optimalRenderWidth == 0 ? m_displayWidth : m_optimalSettings.optimalRenderWidth;
 	m_renderHeight = m_optimalSettings.optimalRenderHeight == 0 ? m_displayHeight : m_optimalSettings.optimalRenderHeight;
 
-	m_upscaling = (float)m_options.outputHeight / (float)m_renderHeight;
+	m_upscaling = (float)m_dlssOptions.outputHeight / (float)m_renderHeight;
 
 	m_jitterSequence = Tr2UpscalingAL::GenerateHaltonSequence( 8 * (uint32_t)powf( m_upscaling, 2.0f ), 2, 3 );
 
-	m_options.colorBuffersHDR = sl::eTrue;
-	m_options.mode = m_dlssMode;
-	m_options.useAutoExposure = sl::eFalse;
+	m_dlssOptions.colorBuffersHDR = sl::eTrue;
+	m_dlssOptions.mode = m_dlssMode;
+	m_dlssOptions.useAutoExposure = sl::eFalse;
 
-	if( SL_FAILED( res, m_slDLSSSetOptions( m_viewHandle, m_options ) ) )
+	if( SL_FAILED( res, m_slDLSSSetOptions( m_viewHandle, m_dlssOptions ) ) )
 	{
 		CCP_LOGERR( "Setting DLSS Options failed with (%d)", res );
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
-	else
+
+	m_nisOptions.hdrMode = sl::NISHDR::eLinear;
+	m_nisOptions.mode = sl::NISMode::eScaler;
+	m_nisOptions.sharpness = 0.1f;
+
+	if( SL_FAILED( res, m_slNISSetOptions( m_viewHandle, m_nisOptions ) ) )
 	{
-		CCP_LOGNOTICE( "DLSS Options set successfully" );
+		CCP_LOGERR( "Setting NIS Options failed with (%d)", res );
+		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
+
+	auto dims = Tr2BitmapDimensions( m_displayWidth, m_displayHeight, 1, m_sourceFormat );
+	m_dlssOutput.Create( dims, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, renderContext.GetPrimaryRenderContext() );
+
+	CCP_LOGNOTICE( "DLSS Options set successfully" );
 
 	m_setup = true;
 	return Tr2UpscalingAL::Result::OK;
@@ -259,6 +274,11 @@ void Tr2DlssUpscalingContext::SetFrameToken( sl::FrameToken* frameToken )
 	m_frameToken = frameToken;
 }
 
+bool Tr2DlssUpscalingContext::HasSharpening() const
+{
+	return true;
+}
+
 void Tr2DlssUpscalingContext::UpdateJitter()
 {
 	m_jitterX = m_jitterSequence[m_jitterIndex].first;
@@ -272,10 +292,10 @@ uint32_t Tr2DlssUpscalingContext::GetDispatchRequirements() const
 	return Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPAQUE_ONLY | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE | Tr2UpscalingAL::DispatchRequirements::VELOCITY;
 }
 
-sl::Result Tr2DlssUpscalingContext::ReadyResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
 	auto inputResource = DlssUtils::GenerateTextureResource( dispatchParameters.input );
-	auto outputResource = DlssUtils::GenerateTextureResource( dispatchParameters.output );
+	auto outputResource = DlssUtils::GenerateTextureResource( &m_dlssOutput );
 	auto depthResource = DlssUtils::GenerateTextureResource( dispatchParameters.depth );
 	auto velocityResource = DlssUtils::GenerateTextureResource( dispatchParameters.velocity );
 	auto exposureResource = DlssUtils::GenerateTextureResource( dispatchParameters.exposure );
@@ -305,6 +325,29 @@ sl::Result Tr2DlssUpscalingContext::ReadyResources( Tr2RenderContextAL& renderCo
 	if( SL_FAILED( res, m_slSetTag( m_viewHandle, resources, 6, renderContext.m_context ) ) )
 	{
 		CCP_LOGERR( "DLSS Failed to tag resources (%d)", res );
+		return res;
+	}
+	return sl::Result::eOk;
+}
+
+
+sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+{
+	auto inputResource = DlssUtils::GenerateTextureResource( &m_dlssOutput );
+	auto outputResource = DlssUtils::GenerateTextureResource( dispatchParameters.output );
+
+	sl::Extent displayExtent = {};
+	displayExtent.height = m_displayHeight;
+	displayExtent.width = m_displayWidth;
+
+	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilPresent, &displayExtent };
+	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilPresent, &displayExtent };
+
+	sl::ResourceTag resources[] = { colorInTag, colorOutTag };
+
+	if( SL_FAILED( res, m_slSetTag( m_viewHandle, resources, 2, renderContext.m_context ) ) )
+	{
+		CCP_LOGERR( "NIS Failed to tag resources (%d)", res );
 		return res;
 	}
 	return sl::Result::eOk;
@@ -355,21 +398,31 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
 
-	if( SL_FAILED( res, ReadyResources( renderContext, dispatchParameters ) ) )
+	SetCommonConstants( dispatchParameters );
+
+	const sl::BaseStructure* handle[] = { &m_viewHandle };
+
+	if( SL_FAILED( res, ReadyDLSSResources( renderContext, dispatchParameters ) ) )
 	{
 		CCP_LOGERR( "DLSS Failed to tag resources (%d)", res );
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
 
-	SetCommonConstants( dispatchParameters );
-
-	const sl::BaseStructure* handle[] = { &m_viewHandle };
-
 	if( SL_FAILED( result, m_slEvaluateFeature( sl::kFeatureDLSS, *m_frameToken, handle, _countof( handle ), renderContext.m_context ) ) )
 	{
-		CCP_LOGERR( "DLSS Failed to Dispatch (%d)", result );
+		CCP_LOGERR( "Failed to Dispatch DLSS (%d)", result );
 	}
 
+	if( SL_FAILED( res, ReadyNISResources( renderContext, dispatchParameters ) ) )
+	{
+		CCP_LOGERR( "NIS Failed to tag resources (%d)", res );
+		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
+	}
+
+	if( SL_FAILED( result, m_slEvaluateFeature( sl::kFeatureNIS, *m_frameToken, handle, _countof( handle ), renderContext.m_context ) ) )
+	{
+		CCP_LOGERR( "Failed to Dispatch NIS (%d)", result );
+	}
 	return Tr2UpscalingAL::OK;
 }
 

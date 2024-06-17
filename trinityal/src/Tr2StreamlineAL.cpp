@@ -122,7 +122,9 @@ namespace Tr2StreamlineAL
 		{
 			pref.showConsole = true; // for debugging, set to false in production
 			pref.logLevel = sl::LogLevel::eVerbose;
-			//features.push_back(sl::kFeatureImGUI);
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+			features.push_back(sl::kFeatureImGUI);
+#endif
 		}
 		else
 		{

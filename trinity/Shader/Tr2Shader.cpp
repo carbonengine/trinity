@@ -167,12 +167,14 @@ void Tr2Shader::ApplyAllStateForPass( uint32_t techniqueIndex, uint32_t passInde
 }
 
 // --------------------------------------------------------------------------------------
-void Tr2Shader::ApplyShaderOverride( uint32_t techniqueIndex, uint32_t passIndex, const Tr2Shader& overrideShader, uint32_t overridePassIndex, Tr2RenderContext &renderContext ) const
+uint32_t Tr2Shader::ApplyShaderOverride( uint32_t techniqueIndex, uint32_t passIndex, const Tr2Shader& overrideShader, uint32_t overridePassIndex, Tr2RenderContext& renderContext ) const
 {
 	auto program = m_effect.techniques[techniqueIndex].passes[passIndex].shaderProgram;
 	auto overrideProgram = overrideShader.m_effect.techniques[0].passes[overridePassIndex].shaderProgram;
 
-	renderContext.m_esm.ApplyShaderProgram( Tr2EffectStateManager::RegisterShaderProgramOverride( program, overrideProgram ) );
+	auto combined = Tr2EffectStateManager::RegisterShaderProgramOverride( program, overrideProgram );
+	renderContext.m_esm.ApplyShaderProgram( combined );
+	return combined;
 }
 
 // --------------------------------------------------------------------------------------

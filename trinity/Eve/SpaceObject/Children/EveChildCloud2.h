@@ -76,7 +76,7 @@ public:
 	bool UpdateVolumetricLightmap( Tr2RenderContext & renderContext ) override;
 	void SetSceneInformation( const SceneInformation& sceneInformation ) override;
 	void GetVolumetricShadowBatches( ITriRenderBatchAccumulator* batches ) override;
-	void GetVolumetricShadowInfo( ShadowInfo & shadowInfo ) override;
+	void GetVolumetricShadowInfo( ShadowInfo & shadowInfo, Vector3 sunDir ) override;
 	bool PrepareCloudShadowMap( Tr2RenderContext & renderContext ) override;
 	void SetCloudShadowMapHandle() override;
 
@@ -101,7 +101,7 @@ public:
 
 	void RegisterComponents() override;
 
-	void SetupShadowFrustum( ShadowInfo & shadowInfo );
+	void SetupShadowFrustum( ShadowInfo & shadowInfo, Vector3 sunDir );
 	
 	bool IsLightmapDirty() const;
 	void MarkLightmapDirty( bool );

@@ -37,6 +37,8 @@ namespace TrinityALImpl
 		case Tr2UpscalingAL::DLSS:
 			techniqueImpl = new Tr2DlssUpscalingTechnique( technique, setting, frameGeneration, adapter );
 			break;
+		default:
+			break;
 		}
 		if( techniqueImpl && techniqueImpl->IsAvailable( renderContext ) )
 		{

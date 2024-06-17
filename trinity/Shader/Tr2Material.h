@@ -211,6 +211,7 @@ public:
 	EXPOSE_TO_BLUE();
 
 	void ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContext& renderContext ) const;
+	void ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex, unsigned int passIndex, uint32_t overrideProgram, Tr2RenderContext& renderContext ) const;
 	void ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr2RtPipelineStateAL& rtPipelineState, Tr2RenderContext& renderContext ) const;
 	//void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;
 	void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, const Tr2BufferAL* vb, const Tr2BufferAL* ib, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;

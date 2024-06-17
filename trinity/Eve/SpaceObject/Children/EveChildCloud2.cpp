@@ -768,9 +768,9 @@ void EveChildCloud2::GetVolumetricShadowBatches( ITriRenderBatchAccumulator* bat
 	batches->Commit( batch );
 }
 
-void EveChildCloud2::GetVolumetricShadowInfo( ShadowInfo& shadowInfo )
+void EveChildCloud2::GetVolumetricShadowInfo( ShadowInfo& shadowInfo, Vector3 sunDir )
 {
-	SetupShadowFrustum( shadowInfo );
+	SetupShadowFrustum( shadowInfo, sunDir );
 }
 
 bool EveChildCloud2::PrepareCloudShadowMap( Tr2RenderContext& renderContext )
@@ -867,10 +867,10 @@ void EveChildCloud2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchTy
 	}
 }
 
-void EveChildCloud2::SetupShadowFrustum( ShadowInfo& shadowInfo )
+void EveChildCloud2::SetupShadowFrustum( ShadowInfo& shadowInfo, Vector3 sunDir )
 {
 	// Find light view
-	Matrix lightView = Inverse( OrthoNormalBasisZ( -m_localSunDirection ) );
+	Matrix lightView = Inverse( OrthoNormalBasisZ( -sunDir ) );
 
 	AxisAlignedBoundingBox aabb = CcpMath::AxisAlignedBox( Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ) );
 
@@ -879,13 +879,12 @@ void EveChildCloud2::SetupShadowFrustum( ShadowInfo& shadowInfo )
 	aabb.m_max.z += 2500000.f;
 
 	m_lightViewProj = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
-
-	shadowInfo.aabbMax = aabb.m_max;
 	
 	// create shadow frustum out from lightView, aabb.min, aabb.max
 	TriFrustumOrtho shadowFrustum;
 	shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
-
+	
+	shadowInfo.aabbMax = aabb.m_max;
 	shadowInfo.lightViewProj = m_lightViewProj;
 	shadowInfo.shadowFrustum = shadowFrustum;
 	shadowInfo.shadowMapSize = m_shadowMapSize;

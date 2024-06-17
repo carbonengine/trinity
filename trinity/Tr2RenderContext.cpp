@@ -767,12 +767,11 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 
 	auto overrideMaterial = overrideEffect;
 
-	for( auto& batch : batches->GetBatches() )
-	{
+	auto RenderBatch = [&]( auto& batch ) {
 		uint32_t technique;
 		if( !batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
 		{
-			continue;
+			return;
 		}
 
 		m_esm.ApplyStandardStates( batch.m_renderingMode );
@@ -782,8 +781,8 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 		{
 			D3DPERF_EVENT1( L"Pass %i", passIx );
 
-			batch.m_shader->ApplyShaderOverride( technique, 0, *overrideShader, passIx, *renderContext );
-			batch.m_material->ApplyMaterialDataForPass( technique, 0, *renderContext );
+			auto program = batch.m_shader->ApplyShaderOverride( technique, 0, *overrideShader, passIx, *renderContext );
+			batch.m_material->ApplyMaterialDataForPassWithOverride( technique, 0, program, *renderContext );
 			overrideShader->ApplyRenderStates( 0, passIx, *renderContext );
 
 			if( batch.m_objectData )
@@ -799,6 +798,15 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 
 			CCP_STATS_INC( batchCount );
 		}
+	};
+
+	for( auto& batch : batches->GetGdprBatches() )
+	{
+		RenderBatch( batch );
+	}
+	for( auto& batch : batches->GetBatches() )
+	{
+		RenderBatch( batch );
 	}
 }
 

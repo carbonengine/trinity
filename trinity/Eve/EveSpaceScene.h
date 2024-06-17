@@ -207,7 +207,6 @@ protected:
 	struct FrameData
 	{
 		Matrix projection;
-		TriFrustum frustum;
 
 		std::vector<ShadowReceiver> objectsReceivingShadow;
 	};
@@ -654,7 +653,7 @@ private:
 	bool m_usingRaytracedShadows;
 
 	void RenderVolumetricShadowMap( Tr2RenderContext & renderContext );
-	void RenderIntoCloudShadowMap( Tr2RenderContext & renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation );
+	void RenderIntoCloudShadowMap( Tr2RenderContext & renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, std::vector<IEveShadowCaster*> shadowCasters );
 
 	// raytracing
 	Tr2RaytracingManagerPtr m_rtManager;
