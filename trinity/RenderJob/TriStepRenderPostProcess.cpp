@@ -404,7 +404,10 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	if( upscalingEnabled )
 	{
 		output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight );
-		taa = nullptr;
+		if( upscalingInfo.temporal )
+		{
+			taa = nullptr;
+		}
 	}
 	else
 	{

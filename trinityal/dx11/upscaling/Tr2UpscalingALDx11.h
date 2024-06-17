@@ -11,6 +11,7 @@
 namespace TrinityALImpl
 {
 	static const std::vector<Tr2UpscalingAL::Technique> AVAILABLE_UPSCALING_TECHNIQUES = {
+		Tr2UpscalingAL::FSR1,
 		Tr2UpscalingAL::DLSS
 	};
 
