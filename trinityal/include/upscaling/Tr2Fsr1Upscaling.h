@@ -15,15 +15,15 @@
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	#include "dx12/upscaling/Tr2UpscalingALDx12.h"
-	#define PARENT_CLASS TrinityALImpl::Tr2UpscalingTechniqueDx12
+	#define TECHNIQUE_PARENT_CLASS TrinityALImpl::Tr2UpscalingTechniqueDx12
 #elif TRINITY_PLATFORM == TRINITY_DIRECTX11
 	#include "dx11/upscaling/Tr2UpscalingALDx11.h"
-	#define PARENT_CLASS TrinityALImpl::Tr2UpscalingTechniqueDx11
+	#define TECHNIQUE_PARENT_CLASS TrinityALImpl::Tr2UpscalingTechniqueDx11
 #else
-	#define PARENT_CLASS Tr2UpscalingTechniqueAL
+	#define TECHNIQUE_PARENT_CLASS Tr2UpscalingTechniqueAL
 #endif
 
-class Tr2Fsr1UpscalingTechnique : public PARENT_CLASS
+class Tr2Fsr1UpscalingTechnique : public TECHNIQUE_PARENT_CLASS
 {
 public:
 	Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
@@ -45,6 +45,7 @@ public:
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 	virtual bool IsTemporal() const override;
+	virtual bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
 

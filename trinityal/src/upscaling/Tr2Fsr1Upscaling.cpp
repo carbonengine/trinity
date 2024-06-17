@@ -22,7 +22,7 @@
 
 
 Tr2Fsr1UpscalingTechnique::Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
-	PARENT_CLASS( technique, setting, frameGeneration, adapter )
+	TECHNIQUE_PARENT_CLASS( technique, setting, frameGeneration, adapter )
 {
 }
 
@@ -150,6 +150,11 @@ void Tr2Fsr1UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
 }
 
 bool Tr2Fsr1UpscalingContext::IsTemporal() const
+{
+	return false;
+}
+
+bool Tr2Fsr1UpscalingContext::HasSharpening() const
 {
 	return false;
 }
