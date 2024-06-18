@@ -256,6 +256,8 @@ private:
 	bool ShouldSkipFrame() const;
 	void Throttle() const;
 
+	bool SupportsRaytracing();
+
 private:
 	BlueScriptCallback m_onDeviceRemoved;
 

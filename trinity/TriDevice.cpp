@@ -1216,3 +1216,9 @@ Vector2 TriDevice::GetRenderResolution( uint32_t upscalingContextId )
 	}
 	return Vector2( -1.0f, -1.0 );
 }
+
+bool TriDevice::SupportsRaytracing()
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	return renderContext.GetCaps().SupportsRaytracing();
+}
