@@ -24,6 +24,8 @@ public:
 	~Tr2Fsr3UpscalingTechnique();
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
+	virtual bool IsTemporal() const override;
+
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 	virtual bool SupportsFrameGeneration() const override;
 	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
@@ -41,13 +43,12 @@ private:
 class Tr2Fsr3UpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, FfxSwapchain frameInterpolationSwapchain, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, FfxSwapchain frameInterpolationSwapchain, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	~Tr2Fsr3UpscalingContext();
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
-	virtual bool IsTemporal() const override;
 	virtual bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;

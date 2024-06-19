@@ -131,10 +131,10 @@ namespace Tr2UpscalingAL
 }
 
 
-Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ):
-	m_technique( technique ),
-	m_setting(setting),
-	m_frameGeneration( frameGeneration )
+Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
+	m_frameGeneration( frameGeneration ),
+	m_setting( setting ),
+	m_technique( technique )
 {
 	m_contexts = std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>>();
 }
@@ -143,7 +143,7 @@ void Tr2UpscalingTechniqueAL::SanitizeState()
 {
 	const auto& availableSettings = GetAvailableSettings();
 	m_frameGeneration = m_frameGeneration && SupportsFrameGeneration();
-	if( availableSettings.size() > 0 && std::find( availableSettings.begin(), availableSettings.end(), m_setting ) == availableSettings.end() )
+	if( !availableSettings.empty() && std::find( availableSettings.begin(), availableSettings.end(), m_setting ) == availableSettings.end() )
 	{
 		// find the closest setting, without going into higher quality
 		// start by setting the bestCandidate as the lowest quality setting
@@ -165,6 +165,10 @@ void Tr2UpscalingTechniqueAL::SanitizeState()
 std::vector<Tr2UpscalingAL::Setting> Tr2UpscalingTechniqueAL::GetAvailableSettings() const
 {
 	return std::vector<Tr2UpscalingAL::Setting>();
+}
+
+void Tr2UpscalingTechniqueAL::Prepare( Tr2RenderContextAL& renderContext ) 
+{
 }
 
 void Tr2UpscalingTechniqueAL::GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration )
@@ -221,7 +225,7 @@ void Tr2UpscalingTechniqueAL::DeleteContext( Tr2RenderContextAL& renderContext, 
 		return;
 	}
 
-	context->second.get()->Destroy( renderContext );
+	context->second->Destroy( renderContext );
 	m_contexts.erase( context );
 }
 
@@ -235,9 +239,10 @@ bool Tr2UpscalingTechniqueAL::SupportsFrameGeneration( ) const
 	return false;
 }
 
-Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
+Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool temporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
 	m_setting(setting),
 	m_frameGeneration( frameGeneration ),
+	m_temporal( temporal ),
 	m_displayWidth( displayWidth ),
 	m_displayHeight( displayHeight ),
 	m_renderWidth( 0 ),
@@ -298,10 +303,15 @@ void Tr2UpscalingContextAL::SetHudLessTexture( Tr2TextureAL* texture )
 {
 }
 
+bool Tr2UpscalingContextAL::IsTemporal() const
+{
+	return m_temporal;
+}
+
 float Tr2UpscalingContextAL::GetMipLevelBias() const
 {
 	float mipBias = log2( 1.0f / m_upscaling );
-	if( IsTemporal() )
+	if( m_temporal )
 	{
 		mipBias -= 1;
 	}

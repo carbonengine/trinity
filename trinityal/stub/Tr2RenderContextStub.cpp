@@ -477,11 +477,12 @@ Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t ups
 	return Tr2UpscalingAL::UpscalingInfo();
 }
 
-void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal )
 {
 	technique = Tr2UpscalingAL::Technique::NONE;
 	setting = Tr2UpscalingAL::Setting::NATIVE;
 	framegeneration = false;
+	temporal = false;
 }
 
 std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )

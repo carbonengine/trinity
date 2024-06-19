@@ -453,8 +453,17 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"DeleteUpscalingContext",
 			DeleteUpscalingContext,
 			"Deletes an upscaling context \n"
-			":param upscalingContextID: the id of the context to delete\n"
+			":param upscalingContextID: the id of the context to delete\n")
+
+#if BLUE_WITH_PYTHON
+		MAP_METHOD_AS_METHOD(
+			"GetUpscalingInfo",
+			PyGetUpscalingInfo,
+			"Gets the upscaling context info for an upscaling id\n"
+			":param upscalingContextID: the id of the context"
 		)
+#endif
+
 		MAP_METHOD_AND_WRAP(
 			"GetRenderResolution",
 			GetRenderResolution,

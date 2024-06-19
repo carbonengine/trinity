@@ -30,6 +30,7 @@ public:
 	// Tr2UpscalingTechniqueAL overrides
 	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const override;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
+	virtual bool IsTemporal() const override;
 
 	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
@@ -66,6 +67,7 @@ public:
 		uint32_t displayHeight, 
 		Tr2UpscalingAL::Setting setting, 
 		bool frameGeneration, 
+		bool isTemporal,
 		Tr2RenderContextEnum::PixelFormat sourceFormat, 
 		Tr2RenderContextEnum::DepthStencilFormat depthFormat, 
 		uint32_t contextNumber, 
@@ -74,7 +76,6 @@ public:
 	~Tr2DlssUpscalingContext();
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
-	virtual bool IsTemporal() const override;
 	virtual bool HasSharpening() const override;
 
 	virtual void UpdateJitter() override;
