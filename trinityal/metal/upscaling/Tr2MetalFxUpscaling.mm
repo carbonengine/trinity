@@ -26,8 +26,8 @@ namespace MetalUpscalingUtils
     }
 }
 
-Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ):
-    Tr2UpscalingTechniqueAL( technique, setting, frameGeneration ),
+Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ):
+    Tr2UpscalingTechniqueAL( technique, setting, frameGeneration, adapter ),
     m_temporal( false )
 {
     this->SanitizeState();
@@ -36,6 +36,11 @@ Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Tech
 Tr2MetalFxUpscalingTechnique::~Tr2MetalFxUpscalingTechnique()
 {
     
+}
+
+bool Tr2MetalFxUpscalingTechnique::IsTemporal() const
+{
+	return m_temporal;
 }
 
 void Tr2MetalFxUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
@@ -78,9 +83,8 @@ void Tr2MetalFxUpscalingTechnique::Prepare( Tr2RenderContextAL& renderContext )
     }
 }
 
-Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool temporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) : 
-    Tr2UpscalingContextAL(displayWidth, displayHeight, setting, frameGeneration, sourceFormat, depthFormat),
-    m_temporal( m_temporal ),
+Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) : 
+    Tr2UpscalingContextAL(displayWidth, displayHeight, setting, frameGeneration, isTemporal, sourceFormat, depthFormat),
     m_setup( false )
 {
     if( @available(macOS 13.0, *) )

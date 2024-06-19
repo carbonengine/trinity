@@ -16,7 +16,7 @@ namespace TrinityALImpl
         Tr2UpscalingTechniqueAL* tech = nullptr;
         switch( technique ){
             case Tr2UpscalingAL::Technique::METALFX:
-                tech = new Tr2MetalFxUpscalingTechnique( technique, setting, frameGeneration );
+                tech = new Tr2MetalFxUpscalingTechnique( technique, setting, frameGeneration, adapter );
                 break;
             default:
                 break;

@@ -12,7 +12,7 @@
 class Tr2MetalFxUpscalingTechnique : public Tr2UpscalingTechniqueAL
 {
 public:
-    Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+    Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
     ~Tr2MetalFxUpscalingTechnique();
     virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
