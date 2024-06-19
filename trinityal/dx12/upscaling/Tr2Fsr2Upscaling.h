@@ -24,6 +24,8 @@ public:
 	~Tr2Fsr2UpscalingTechnique();
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
+	virtual bool IsTemporal() const override;
+
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
 private:
@@ -34,12 +36,11 @@ private:
 class Tr2Fsr2UpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2Fsr2UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Tr2Fsr2UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	~Tr2Fsr2UpscalingContext();
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 	virtual void Destroy( Tr2RenderContextAL& renderContex ) override;
-	virtual bool IsTemporal() const override;
 	virtual bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;

@@ -40,17 +40,22 @@ std::vector<Tr2UpscalingAL::Setting> Tr2Fsr1UpscalingTechnique::GetAvailableSett
 	};
 }
 
+bool Tr2Fsr1UpscalingTechnique::IsTemporal() const
+{
+	return false;
+}
+
 void Tr2Fsr1UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
 }
 
 Tr2UpscalingContextAL* Tr2Fsr1UpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) 
 {
-	return new Tr2Fsr1UpscalingContext( displayWidth, displayHeight, m_setting, sourceFormat, depthFormat );
+	return new Tr2Fsr1UpscalingContext( displayWidth, displayHeight, m_setting, IsTemporal(), sourceFormat, depthFormat );
 }
 
-Tr2Fsr1UpscalingContext::Tr2Fsr1UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
-	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, false, sourceFormat, depthFormat )
+Tr2Fsr1UpscalingContext::Tr2Fsr1UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
+	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, false, isTemporal, sourceFormat, depthFormat )
 {
 	m_upscaling = 1.0f;
 	switch( setting )
@@ -147,11 +152,6 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Setup(Tr2RenderContextAL& render
 
 void Tr2Fsr1UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
 {
-}
-
-bool Tr2Fsr1UpscalingContext::IsTemporal() const
-{
-	return false;
 }
 
 bool Tr2Fsr1UpscalingContext::HasSharpening() const

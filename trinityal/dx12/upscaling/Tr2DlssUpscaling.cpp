@@ -121,6 +121,11 @@ std::vector<Tr2UpscalingAL::Setting> Tr2DlssUpscalingTechnique::GetAvailableSett
 	};
 }
 
+bool Tr2DlssUpscalingTechnique::IsTemporal() const
+{
+	return true;
+}
+
 bool Tr2DlssUpscalingTechnique::SupportsFrameGeneration( ) const
 {
 	return m_supportsFrameGeneration;
@@ -285,7 +290,7 @@ void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 
 Tr2UpscalingContextAL* Tr2DlssUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
-	return new Tr2DlssUpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, sourceFormat, depthFormat, ++m_contextIndex, m_streamlineModule, m_frameToken );
+	return new Tr2DlssUpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, IsTemporal(), sourceFormat, depthFormat, ++m_contextIndex, m_streamlineModule, m_frameToken );
 }
 
 Tr2DlssUpscalingContext::Tr2DlssUpscalingContext( 
@@ -293,12 +298,13 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	uint32_t displayHeight, 
 	Tr2UpscalingAL::Setting setting, 
 	bool frameGeneration,
+	bool isTemporal,
 	Tr2RenderContextEnum::PixelFormat sourceFormat,
 	Tr2RenderContextEnum::DepthStencilFormat depthFormat, 
 	uint32_t contextNumber, 
 	HMODULE streamlineModule, 
 	sl::FrameToken* frameToken ) :
-	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, frameGeneration, sourceFormat, depthFormat ),
+	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, frameGeneration, isTemporal, sourceFormat, depthFormat ),
 	m_dlssMode( sl::DLSSMode::eOff ),
 	m_viewHandle( sl::ViewportHandle( contextNumber ) ),
 	m_streamlineModule( streamlineModule ),
@@ -488,11 +494,6 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Setup( Tr2RenderContextAL& rende
 	CCP_LOGNOTICE( "DLSS Options set successfully" );
 	m_setup = true;
 	return Tr2UpscalingAL::Result::OK;
-}
-
-bool Tr2DlssUpscalingContext::IsTemporal() const
-{
-	return true;
 }
 
 bool Tr2DlssUpscalingContext::HasSharpening() const
