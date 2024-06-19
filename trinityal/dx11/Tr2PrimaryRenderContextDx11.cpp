@@ -788,6 +788,7 @@ Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint3
 		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
 		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
 		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
+		info.temporal = m_upscalingTechnique->IsTemporal();
 	}
 	return info;
 }
