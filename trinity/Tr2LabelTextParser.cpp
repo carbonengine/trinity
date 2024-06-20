@@ -264,7 +264,6 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
     {
         return nullptr;
     }
-    ON_BLOCK_EXIT( [paramObject] { Py_DECREF( paramObject ); } );
     Py_ssize_t stringLength;
     wchar_t* paramString = PyUnicode_AsWideCharString(paramObject, &stringLength );
     if( !paramString )
