@@ -48,6 +48,10 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDARG;
 		}
+		if( !renderContext.m_commandList4 )
+		{
+			return E_INVALIDCALL;
+		}
 		
 		// gather geometry info for buffer
 		D3D12_RAYTRACING_GEOMETRY_DESC geometry;
@@ -134,8 +138,12 @@ namespace TrinityALImpl
 		}
 		renderContext.FlushBarriersDx12( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource() );
 
-		// BuildRaytracingAccelerationStructure function runs on gpu and returns size of structure
-		renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+		if( renderContext.m_commandList4 )
+		{
+			// BuildRaytracingAccelerationStructure function runs on gpu and returns size of structure
+			renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+		}
+		
 
 		std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
 		std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
@@ -176,6 +184,10 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDARG;
 		}
+		if( !renderContext.m_commandList4 )
+		{
+			return E_INVALIDCALL;
+		}
 
 		D3D12_RAYTRACING_GEOMETRY_DESC geometry = m_geometryDesc;
 		geometry.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
@@ -215,7 +227,10 @@ namespace TrinityALImpl
 
 		renderContext.FlushBarriersDx12( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource() );
 
-		renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+		if( renderContext.m_commandList4 )
+		{
+			renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+		}
 
 		std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
 		std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
