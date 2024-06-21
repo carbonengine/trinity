@@ -63,6 +63,16 @@ Tr2UpscalingContextAL* Tr2MetalFxUpscalingTechnique::CreateContextInstance( uint
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableSettings() const {
+    if( m_temporal )
+	{
+		return {
+			Tr2UpscalingAL::Setting::ULTRA_QUALITY,
+			Tr2UpscalingAL::Setting::QUALITY,
+			Tr2UpscalingAL::Setting::BALANCED,
+			Tr2UpscalingAL::Setting::PERFORMANCE,
+			Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE
+		};
+	}
     return {
         Tr2UpscalingAL::Setting::QUALITY,
         Tr2UpscalingAL::Setting::BALANCED,
@@ -110,17 +120,20 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Setup( Tr2RenderContextAL& re
     if( @available(macOS 13.0, *) )
     {
         switch( m_setting ){
+            case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
+                m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
+                break;
             case Tr2UpscalingAL::Setting::QUALITY:
-                m_upscaling = m_temporal ? 1.5 : 1.25;
+                m_upscaling = m_temporal ? 1.4 : 1.25;
                 break;
             case Tr2UpscalingAL::Setting::BALANCED:
-                m_upscaling = m_temporal ? 2.0 : 1.5;
+                m_upscaling = m_temporal ? 1.7 : 1.5;
                 break;
             case Tr2UpscalingAL::Setting::PERFORMANCE:
-                m_upscaling = m_temporal ? 2.5 : 1.75;
+                m_upscaling = m_temporal ? 2.0 : 1.75;
                 break;
             case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
-                m_upscaling = m_temporal ? 3.0 : 2.0;
+                m_upscaling = m_temporal ? 2.3 : 2.0;
                 break;
             default:
                 m_upscaling = 1.0;
