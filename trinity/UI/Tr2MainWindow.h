@@ -139,7 +139,7 @@ protected:
 public:
 	bool IsKeyToggled( uint32_t keyCode ) const;
 	bool IsKeyPressed( uint32_t keyCode ) const;
-	std::string GetKeyName( uint32_t keyCode ) const;
+	std::wstring GetKeyName( uint32_t keyCode ) const;
 private:
 	ALResult SetState( bool adjustWindow, const Tr2MainWindowState::State& state );
 

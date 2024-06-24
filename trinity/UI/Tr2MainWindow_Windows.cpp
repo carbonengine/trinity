@@ -303,9 +303,9 @@ bool Tr2MainWindow::IsKeyPressed( uint32_t keyCode ) const
 	return ( GetKeyState( keyCode ) & 0x8000 ) ? 1 : 0;
 }
 
-std::string Tr2MainWindow::GetKeyName( uint32_t keyCode ) const
+std::wstring Tr2MainWindow::GetKeyName( uint32_t keyCode ) const
 {
-	auto scanCode = ::MapVirtualKeyA( keyCode, MAPVK_VK_TO_VSC ) << 16;
+	auto scanCode = ::MapVirtualKeyW( keyCode, MAPVK_VK_TO_VSC ) << 16;
 
 	// Set the extended keyboard bit for the following virtual keys
 	switch( keyCode )
@@ -331,16 +331,16 @@ std::string Tr2MainWindow::GetKeyName( uint32_t keyCode ) const
 	scanCode |= ( 1 << 25 );
 
 	const int bufferSize = 64;
-	char buffer[bufferSize];
+	wchar_t buffer[bufferSize];
 
 	// Lookup the key name and return true if it succeeds
-	if( ::GetKeyNameTextA( scanCode, buffer, bufferSize ) )
+	if( ::GetKeyNameTextW( scanCode, buffer, bufferSize ) )
 	{
 		return buffer;
 	}
 	else
 	{
-		return "";
+		return L"";
 	}
 }
 
