@@ -738,7 +738,8 @@ ALResult Tr2RenderContextAL::CreateDevice(
     if( @available( macOS 11.0, * ) )
     {
         auto device = m_metalContext->GetDevice();
-        bool raytracingAvailable = device.supportsRaytracing && ([device supportsFamily:MTLGPUFamilyMac2] && [device supportsFamily:MTLGPUFamilyApple7]);
+		bool isAppleSilicon = [device supportsFamily:MTLGPUFamilyMac2] && [device supportsFamily:MTLGPUFamilyApple7];
+        bool raytracingAvailable = device.supportsRaytracing && isAppleSilicon;
         m_caps.m_supportsRaytracing = raytracingAvailable;
         if( m_caps.m_supportsRaytracing )
         {
