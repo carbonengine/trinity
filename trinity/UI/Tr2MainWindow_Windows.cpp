@@ -303,7 +303,7 @@ bool Tr2MainWindow::IsKeyPressed( uint32_t keyCode ) const
 	return ( GetKeyState( keyCode ) & 0x8000 ) ? 1 : 0;
 }
 
-std::wstring Tr2MainWindow::GetKeyName( uint32_t keyCode ) const
+std::string Tr2MainWindow::GetKeyName( uint32_t keyCode ) const
 {
 	auto scanCode = ::MapVirtualKeyW( keyCode, MAPVK_VK_TO_VSC ) << 16;
 
@@ -336,12 +336,9 @@ std::wstring Tr2MainWindow::GetKeyName( uint32_t keyCode ) const
 	// Lookup the key name and return true if it succeeds
 	if( ::GetKeyNameTextW( scanCode, buffer, bufferSize ) )
 	{
-		return buffer;
+		return WideToUTF8( buffer );
 	}
-	else
-	{
-		return L"";
-	}
+	return "";
 }
 
 
