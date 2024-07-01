@@ -723,6 +723,7 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
+	m_upscalingTechnique->Prepare( *this );
 
 	return Tr2UpscalingAL::Result::OK;
 }
@@ -759,16 +760,18 @@ void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
 }
 
 
-void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal )
 {
 	if( m_upscalingTechnique )
 	{
 		m_upscalingTechnique->GetState( technique, setting, framegeneration );
+		temporal = m_upscalingTechnique->IsTemporal();
 		return;
 	}
 	technique = Tr2UpscalingAL::Technique::NONE;
 	setting = Tr2UpscalingAL::Setting::NATIVE;
 	framegeneration = false;
+	temporal = false;
 }
 
 Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
@@ -780,12 +783,12 @@ Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint3
 	{
 		info.upscalingAmount = context->GetUpscalingAmount();
 		info.mipLevelBias = context->GetMipLevelBias();
-		info.temporal = context->IsTemporal();
 		info.hasSharpening = context->HasSharpening();
 		context->GetJitter( info.jitterX, info.jitterY );
 		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
 		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
 		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
+		info.temporal = m_upscalingTechnique->IsTemporal();
 	}
 	return info;
 }

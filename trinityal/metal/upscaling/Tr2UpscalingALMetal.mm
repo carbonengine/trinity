@@ -8,6 +8,7 @@
 
 #include "Tr2UpscalingALMetal.h"
 #include "Tr2MetalFxUpscaling.h"
+#include "../../include/upscaling/Tr2Fsr1Upscaling.h"
 
 namespace TrinityALImpl
 {
@@ -16,7 +17,10 @@ namespace TrinityALImpl
         Tr2UpscalingTechniqueAL* tech = nullptr;
         switch( technique ){
             case Tr2UpscalingAL::Technique::METALFX:
-                tech = new Tr2MetalFxUpscalingTechnique( technique, setting, frameGeneration );
+                tech = new Tr2MetalFxUpscalingTechnique( technique, setting, frameGeneration, adapter );
+                break;
+            case Tr2UpscalingAL::Technique::FSR1:
+                tech = new Tr2Fsr1UpscalingTechnique( technique, setting, frameGeneration, adapter );
                 break;
             default:
                 break;

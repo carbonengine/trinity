@@ -1168,9 +1168,9 @@ void TriDevice::CreateUpscalingTechnique( uint32_t adapter )
 	{
 		CCP_LOGWARN( "Could not enable upscaling" );
 	}
-
+	bool _temporal;
 	// if setting up failed, or we pass in incorrect technique or setting or framegen then this will let us know what was actually applied
-	renderContext.GetUpscalingSetup( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration );
+	renderContext.GetUpscalingSetup( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration, _temporal );
 
 	m_upscalingChanged = false;
 }
@@ -1216,3 +1216,105 @@ Vector2 TriDevice::GetRenderResolution( uint32_t upscalingContextId )
 	}
 	return Vector2( -1.0f, -1.0 );
 }
+
+bool TriDevice::SupportsRaytracing()
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	return renderContext.GetCaps().SupportsRaytracing();
+}
+
+#if BLUE_WITH_PYTHON
+PyObject* TriDevice::PyGetUpscalingInfo( PyObject* args )
+{
+	uint32_t contextId = Tr2UpscalingAL::INVALID_CONTEXT_ID;
+
+	if( !PyArg_ParseTuple( args, "|I", &contextId ) )
+	{
+		return nullptr;
+	}
+
+	Tr2UpscalingAL::Technique technique;
+	Tr2UpscalingAL::Setting setting;
+	bool frameGeneration;
+	bool temporal;
+
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	renderContext.GetUpscalingSetup(technique, setting, frameGeneration, temporal);
+
+	auto result = PyDict_New();
+
+	auto value = PyString_FromString( Tr2UpscalingAL::GetTechniqueName(technique) );
+	PyDict_SetItemString( result, "techniqueName", value );
+	Py_DecRef( value );
+
+	value = PyInt_FromSize_t( technique );
+	PyDict_SetItemString( result, "technique", value );
+	Py_DecRef( value );
+
+	value = PyString_FromString( Tr2UpscalingAL::GetSettingName( setting ) );
+	PyDict_SetItemString( result, "settingName", value );
+	Py_DecRef( value );
+
+	value = PyInt_FromSize_t( setting );
+	PyDict_SetItemString( result, "setting", value );
+	Py_DecRef( value );
+
+	value = PyBool_FromLong( frameGeneration );
+	PyDict_SetItemString( result, "frameGeneration", value );
+	Py_DecRef( value );
+
+	value = PyBool_FromLong( temporal );
+	PyDict_SetItemString( result, "temporal", value );
+	Py_DecRef( value );
+
+	if( contextId != Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	{
+		auto info = renderContext.GetUpscalingInfo( contextId );
+		auto contextInfo = PyDict_New();
+		
+		value = PyLong_FromSize_t( contextId );
+		PyDict_SetItemString( contextInfo, "id", value );
+		Py_DecRef( value );
+
+		value = PyLong_FromSize_t( info.displayWidth );
+		PyDict_SetItemString( contextInfo, "displayWidth", value );
+		Py_DecRef( value );
+
+		value = PyLong_FromSize_t( info.displayHeight );
+		PyDict_SetItemString( contextInfo, "displayHeight", value );
+		Py_DecRef( value );
+
+		value = PyLong_FromSize_t( info.renderWidth );
+		PyDict_SetItemString( contextInfo, "renderWidth", value );
+		Py_DecRef( value );
+
+		value = PyLong_FromSize_t( info.renderHeight );
+		PyDict_SetItemString( contextInfo, "renderHeight", value );
+		Py_DecRef( value );
+		
+		value = PyBool_FromLong( info.hasSharpening );
+		PyDict_SetItemString( contextInfo, "hasSharpening", value );
+		Py_DecRef( value );
+
+		value = PyFloat_FromDouble( info.jitterX );
+		PyDict_SetItemString( contextInfo, "jitterX", value );
+		Py_DecRef( value );
+
+		value = PyFloat_FromDouble( info.jitterY );
+		PyDict_SetItemString( contextInfo, "jitterY", value );
+		Py_DecRef( value );
+
+		value = PyFloat_FromDouble( info.mipLevelBias );
+		PyDict_SetItemString( contextInfo, "mipLevelBias", value );
+		Py_DecRef( value );
+
+		value = PyFloat_FromDouble( info.upscalingAmount );
+		PyDict_SetItemString( contextInfo, "upscalingAmount", value );
+		Py_DecRef( value );
+
+		PyDict_SetItemString( result, "upsclaingContext", contextInfo );
+		Py_DecRef( contextInfo );
+	}
+	return result;
+}
+#endif

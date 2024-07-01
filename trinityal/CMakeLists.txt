@@ -448,7 +448,7 @@ elseif(APPLE)
     ccp_add_library(TrinityAL_metal STATIC)
     target_compile_definitions(TrinityAL_metal PUBLIC TRINITY_PLATFORM=TRINITY_METAL)
     set_shared_trinityal_properties(metal)
-    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework MetalFX" "-framework IOKit" "-framework QuartzCore")
+    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework MetalFX" "-framework IOKit" "-framework QuartzCore" AMD::FidelityFX_FSR)
     #[[
         FIXME because we're mixing objective-c++ and c++ headers in our precompiled headers then we need to force
         one specific language for macOS. This can be fixed once we revisit our usage of precompiled headers, which is

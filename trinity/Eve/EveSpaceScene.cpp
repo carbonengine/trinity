@@ -2814,6 +2814,21 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 	if( IsMatch( value, m_shadowQuality ) )
 	{
 		g_eveSpaceSceneRaytracedShadows = m_shadowQuality == SHADOW_RAYTRACED;
+
+		if( m_shadowQuality == SHADOW_LOW )
+		{
+			if( m_cascadedShadowMap )
+			{
+				m_cascadedShadowMap->ShouldUseDenoiser( false );
+			}
+		}
+		if( m_shadowQuality == SHADOW_HIGH )
+		{
+			if( m_cascadedShadowMap )
+			{
+				m_cascadedShadowMap->ShouldUseDenoiser( true );
+			}
+		}
 	}
 		
 	return true;

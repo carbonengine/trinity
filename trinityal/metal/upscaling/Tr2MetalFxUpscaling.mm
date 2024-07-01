@@ -26,8 +26,9 @@ namespace MetalUpscalingUtils
     }
 }
 
-Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ):
-    Tr2UpscalingTechniqueAL( technique, setting, frameGeneration )
+Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ):
+    Tr2UpscalingTechniqueAL( technique, setting, frameGeneration, adapter ),
+    m_temporal( false )
 {
     this->SanitizeState();
 }
@@ -35,6 +36,11 @@ Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Tech
 Tr2MetalFxUpscalingTechnique::~Tr2MetalFxUpscalingTechnique()
 {
     
+}
+
+bool Tr2MetalFxUpscalingTechnique::IsTemporal() const
+{
+	return m_temporal;
 }
 
 void Tr2MetalFxUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
@@ -53,10 +59,20 @@ void Tr2MetalFxUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 
 Tr2UpscalingContextAL* Tr2MetalFxUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
-    return new Tr2MetalFxUpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, sourceFormat, depthFormat );
+    return new Tr2MetalFxUpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, m_temporal, sourceFormat, depthFormat );
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableSettings() const {
+    if( m_temporal )
+	{
+		return {
+			Tr2UpscalingAL::Setting::ULTRA_QUALITY,
+			Tr2UpscalingAL::Setting::QUALITY,
+			Tr2UpscalingAL::Setting::BALANCED,
+			Tr2UpscalingAL::Setting::PERFORMANCE,
+			Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE
+		};
+	}
     return {
         Tr2UpscalingAL::Setting::QUALITY,
         Tr2UpscalingAL::Setting::BALANCED,
@@ -65,12 +81,23 @@ std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableS
     };
 }
 
+void Tr2MetalFxUpscalingTechnique::Prepare( Tr2RenderContextAL& renderContext ) 
+{
+    if( @available(macOS 13.0, *) )
+    {
+        TrinityALImpl::MetalContext* metalContext = renderContext.GetPrimaryRenderContext().GetMetalContext();
+        auto device = metalContext->GetDevice();
+     
+        // temporal scalers are only available on silicon hardware, need to check if it supported
+        m_temporal = [MTLFXTemporalScalerDescriptor supportsDevice:device];
+    }
+}
 
-Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) : Tr2UpscalingContextAL(displayWidth, displayHeight, setting, frameGeneration, sourceFormat, depthFormat),
-    m_temporal( false ),
+Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) : 
+    Tr2UpscalingContextAL(displayWidth, displayHeight, setting, frameGeneration, isTemporal, sourceFormat, depthFormat),
     m_setup( false )
 {
-    if( @available(macOS 13.0, *))
+    if( @available(macOS 13.0, *) )
     {
         m_mfxTemporalScaler = nil;
         m_mfxSpatialScaler = nil;
@@ -81,7 +108,7 @@ Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( uint32_t displayWidth, u
 
 Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext()
 {
-    if( @available( macos 13.0, * ) )
+    if( @available(macos 13.0, *) )
     {
         m_mfxSpatialScaler = nil;
         m_mfxTemporalScaler = nil;
@@ -92,24 +119,21 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Setup( Tr2RenderContextAL& re
 {
     if( @available(macOS 13.0, *) )
     {
-        TrinityALImpl::MetalContext* metalContext = renderContext.GetPrimaryRenderContext().GetMetalContext();
-        auto device = metalContext->GetDevice();
-     
-        // temporal scalers are only available on silicon hardware, need to check if it supported
-        m_temporal = [MTLFXTemporalScalerDescriptor supportsDevice:device];
-        
         switch( m_setting ){
+            case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
+                m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
+                break;
             case Tr2UpscalingAL::Setting::QUALITY:
-                m_upscaling = m_temporal ? 1.5 : 1.25;
+                m_upscaling = m_temporal ? 1.4 : 1.25;
                 break;
             case Tr2UpscalingAL::Setting::BALANCED:
-                m_upscaling = m_temporal ? 2.0 : 1.5;
+                m_upscaling = m_temporal ? 1.7 : 1.5;
                 break;
             case Tr2UpscalingAL::Setting::PERFORMANCE:
-                m_upscaling = m_temporal ? 2.5 : 1.75;
+                m_upscaling = m_temporal ? 2.0 : 1.75;
                 break;
             case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
-                m_upscaling = m_temporal ? 3.0 : 2.0;
+                m_upscaling = m_temporal ? 2.3 : 2.0;
                 break;
             default:
                 m_upscaling = 1.0;
@@ -202,11 +226,6 @@ void Tr2MetalFxUpscalingContext::CreateSpatialScaler( Tr2RenderContextAL& render
             CCP_LOGERR("Could not create a MetalFX Spatial Scaler");
         }
     }
-}
-
-bool Tr2MetalFxUpscalingContext::IsTemporal() const
-{
-    return m_temporal;
 }
 
 bool Tr2MetalFxUpscalingContext::HasSharpening() const {

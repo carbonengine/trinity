@@ -119,9 +119,12 @@ public:
 	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent );
 	// makes the state correct based on what is supported (f.ex if we pass in framegen to fsr1 it should not be "enabled")
 	void SanitizeState();
+	// prepare the technique if needed 
+	virtual void Prepare( Tr2RenderContextAL& renderContext );
 
 	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const;
 	virtual bool SupportsFrameGeneration( ) const;
+	virtual bool IsTemporal() const = 0;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const = 0;
 
 	Tr2UpscalingContextAL* GetContext( Tr2RenderContextAL& renderContext, uint32_t upscalingContextID );
@@ -143,7 +146,7 @@ protected:
 class Tr2UpscalingContextAL
 {
 public:
-	Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool temporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
     virtual ~Tr2UpscalingContextAL();
 
 	// after setup is called, we must know the size of the render targets!
@@ -160,8 +163,9 @@ public:
 	// the requirements of the dispatch (as in the textures needed)
 	virtual uint32_t GetDispatchRequirements() const = 0;
 	virtual void UpdateJitter() = 0;
-	virtual bool IsTemporal() const = 0;
 	virtual bool HasSharpening() const = 0;
+
+	bool IsTemporal() const;
 	
 	float GetUpscalingAmount() const;
 	float GetMipLevelBias() const;
@@ -178,6 +182,7 @@ protected:
 
 	Tr2UpscalingAL::Setting m_setting;
 	bool m_frameGeneration;
+	bool m_temporal;
 
 	uint32_t m_displayWidth;
 	uint32_t m_displayHeight;

@@ -246,6 +246,10 @@ private:
 
 	uint32_t CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	void DeleteUpscalingContext( uint32_t contextID );
+#if BLUE_WITH_PYTHON
+	PyObject* PyGetUpscalingInfo( PyObject* args );
+#endif 
+
 	Vector2 GetRenderResolution( uint32_t upscalingContextId );
 	PTr2UpscalingTechniqueInfoStructureList m_supportedUpscalingTechniques;
 
@@ -255,6 +259,8 @@ private:
 
 	bool ShouldSkipFrame() const;
 	void Throttle() const;
+
+	bool SupportsRaytracing();
 
 private:
 	BlueScriptCallback m_onDeviceRemoved;

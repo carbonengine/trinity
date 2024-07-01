@@ -738,7 +738,8 @@ ALResult Tr2RenderContextAL::CreateDevice(
     if( @available( macOS 11.0, * ) )
     {
         auto device = m_metalContext->GetDevice();
-        bool raytracingAvailable = device.supportsRaytracing || ([device supportsFamily:MTLGPUFamilyMac2] && [device supportsFamily:MTLGPUFamilyApple7]);
+		bool isAppleSilicon = [device supportsFamily:MTLGPUFamilyMac2] && [device supportsFamily:MTLGPUFamilyApple7];
+        bool raytracingAvailable = device.supportsRaytracing && isAppleSilicon;
         m_caps.m_supportsRaytracing = raytracingAvailable;
         if( m_caps.m_supportsRaytracing )
         {
@@ -1393,6 +1394,7 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
+	m_upscalingTechnique->Prepare( *this );
 	
 	return Tr2UpscalingAL::Result::OK;
 }
@@ -1486,26 +1488,28 @@ Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t ups
 	{
 		info.upscalingAmount = context->GetUpscalingAmount();
 		info.mipLevelBias = context->GetMipLevelBias();
-		info.temporal = context->IsTemporal();
 		info.hasSharpening = context->HasSharpening();
 		context->GetJitter( info.jitterX, info.jitterY );
 		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
 		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
 		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
+		info.temporal = m_upscalingTechnique->IsTemporal();
 	}
 	return info;
 }
 
-void Tr2RenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+void Tr2RenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal )
 {
     if( m_upscalingTechnique )
     {
         m_upscalingTechnique->GetState( technique, setting, framegeneration );
+		temporal = m_upscalingTechnique->IsTemporal();
         return;
     }
     technique = Tr2UpscalingAL::Technique::NONE;
     setting = Tr2UpscalingAL::Setting::NATIVE;
     framegeneration = false;
+	temporal = false;
 }
 
 void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
