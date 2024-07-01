@@ -15,12 +15,6 @@
 #include "ffx_fsr1.h"
 
 
-
-
-
-
-
-
 Tr2Fsr1UpscalingTechnique::Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TECHNIQUE_PARENT_CLASS( technique, setting, frameGeneration, adapter )
 {
@@ -112,8 +106,9 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Setup(Tr2RenderContextAL& render
 						 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
 						 .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
 	Tr2ShaderAL easuShader;
-	CR_RETURN( easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() ) );
-	CR_RETURN( m_easuProgram.Create( &easuShader, 1, renderContext.GetPrimaryRenderContext() ) );
+
+	CR_RETURN_VAL( easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() ), Tr2UpscalingAL::CONTEXT_SETUP_FAILED );
+	CR_RETURN_VAL( m_easuProgram.Create( &easuShader, 1, renderContext.GetPrimaryRenderContext() ), Tr2UpscalingAL::CONTEXT_SETUP_FAILED );
 
 
     //Create the sampler for the input
