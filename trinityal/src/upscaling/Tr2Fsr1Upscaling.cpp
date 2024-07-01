@@ -107,8 +107,8 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Setup(Tr2RenderContextAL& render
 						 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
 						 .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
 	Tr2ShaderAL easuShader;
-	easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() );
-	m_easuProgram.Create( &easuShader, 1, renderContext.GetPrimaryRenderContext() );
+	CR_RETURN( easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() ) );
+	CR_RETURN( m_easuProgram.Create( &easuShader, 1, renderContext.GetPrimaryRenderContext() ) );
 
 
     //Create the sampler for the input
