@@ -24,6 +24,7 @@
 Tr2Fsr1UpscalingTechnique::Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TECHNIQUE_PARENT_CLASS( technique, setting, frameGeneration, adapter )
 {
+    SanitizeState();
 }
 
 Tr2Fsr1UpscalingTechnique::~Tr2Fsr1UpscalingTechnique()
