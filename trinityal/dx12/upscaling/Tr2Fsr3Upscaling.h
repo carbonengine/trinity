@@ -13,7 +13,7 @@
 namespace Fsr3Utils
 {
 	void LogFsr3Message( FfxMsgType type, const wchar_t* message );
-	FfxResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* textureName, FfxResourceStates state );
+	FfxResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* textureName );
 	FfxSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format );
 }
 
@@ -74,6 +74,7 @@ private:
 	bool m_setup;
 	FfxFrameGenerationConfig m_frameGenerationConfig = {};
 	FfxSwapchain m_framegenSwapchain;
+	std::unique_ptr<Tr2TextureAL> m_reactiveMask;
 
 	friend class Tr2Fsr3UpscalingTechnique;
 };

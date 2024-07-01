@@ -72,6 +72,10 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDARG;
 		}
+		if( !renderContext.m_commandList4 )
+		{
+			return E_INVALIDCALL;
+		}
 
 		//if this causes problems then create an array of all the instances.blas buffers fill the uav barrier with that
 		D3D12_RESOURCE_BARRIER uavBarrier;
@@ -145,9 +149,11 @@ namespace TrinityALImpl
 		desc.ScratchAccelerationStructureData = scratch->GetGPUVirtualAddress();
 		desc.DestAccelerationStructureData = buffer.TrinityALImpl_GetObject()->GetGpuView();
 
-		// flush referenced blas barriers here?
-		renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
-
+		if( renderContext.m_commandList4 )
+		{
+			renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+		}
+		
 		// don't compact things if they animate
 		// but here we would maybe compact
 
@@ -182,6 +188,10 @@ namespace TrinityALImpl
 		if( m_capacity < count )
 		{
 			return E_INVALIDARG;
+		}
+		if( !renderContext.m_commandList4 )
+		{
+			return E_INVALIDCALL;
 		}
 
 		//if this causes problems then create an array of all the instances.blas buffers fill the uav barrier with that
@@ -241,8 +251,11 @@ namespace TrinityALImpl
 		desc.ScratchAccelerationStructureData = m_scratch->GetGPUVirtualAddress();
 		desc.DestAccelerationStructureData = m_buffer.TrinityALImpl_GetObject()->GetGpuView();
 
-		renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
-
+		if( renderContext.m_commandList4 )
+		{
+			renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+		}
+		
 		D3D12_RESOURCE_BARRIER topLevelUavBarrier;
 		topLevelUavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 		topLevelUavBarrier.UAV.pResource = m_buffer.TrinityALImpl_GetObject()->GetGpuResource();

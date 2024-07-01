@@ -912,7 +912,7 @@ namespace
 	{
 		if( !listing.enabled() )
 		{
-			return;
+			//return;
 		}
 		if( !stage.constants.empty() )
 		{
@@ -3846,7 +3846,7 @@ namespace
 			size_t programFilesSize;
 			getenv_s( &programFilesSize, programFiles, "PROGRAMFILES" );
 
-			cmd << "\"" << programFiles << "\\Metal Developer Tools\\macos\\bin\\" << name << ".exe\"";
+			cmd << "\"" << programFiles << "\\Metal Developer Tools\\metal\\macos\\bin\\" << name << ".exe\"";
 		}
 #else
 		cmd << "xcrun -sdk macosx " << name;
