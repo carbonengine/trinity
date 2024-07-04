@@ -912,7 +912,7 @@ namespace
 	{
 		if( !listing.enabled() )
 		{
-			//return;
+			return;
 		}
 		if( !stage.constants.empty() )
 		{
