@@ -102,10 +102,11 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Setup(Tr2RenderContextAL& render
 
     //Load the upscaling shader program
     auto signature = Tr2ShaderSignatureAL()
-						 .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
-						 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
-						 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
-						 .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
+                         .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
+                         .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 1 )
+                         .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
+                         .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 )
+                         .Add( Tr2ShaderThreadGroupSizeAL(64, 1, 1) );
 	Tr2ShaderAL easuShader;
 
 	CR_RETURN_VAL( easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() ), Tr2UpscalingAL::CONTEXT_SETUP_FAILED );
@@ -175,7 +176,7 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2RenderContextAL& re
 	renderContext.SetShaderProgram(m_easuProgram);
 		
 	Tr2ResourceSetDescriptionAL desc( m_easuProgram );
-	desc.SetSrv( Tr2RenderContextEnum::ShaderType::COMPUTE_SHADER, 0, *dispatchParameters.input );
+	desc.SetSrv( Tr2RenderContextEnum::ShaderType::COMPUTE_SHADER, 1, *dispatchParameters.input );
 	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, *dispatchParameters.output );
 	desc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, m_sampler );
 
@@ -185,8 +186,8 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2RenderContextAL& re
 	renderContext.SetResourceSet( resourceSet );
 		
 	renderContext.SetConstants( m_constantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, 0 );
-		
-		
+    
+    
     int workgroupSize = 16;
 	renderContext.RunComputeShader((m_displayWidth + workgroupSize - 1) / workgroupSize, (m_displayHeight + workgroupSize - 1) / workgroupSize, 1);
 
