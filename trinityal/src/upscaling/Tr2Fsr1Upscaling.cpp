@@ -114,8 +114,8 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Setup(Tr2RenderContextAL& render
                          .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
                          .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 )
                          .Add( Tr2ShaderThreadGroupSizeAL(64, 1, 1) );
-	Tr2ShaderAL easuShader;
 
+	Tr2ShaderAL easuShader;
 	CR_RETURN_VAL( easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() ), Tr2UpscalingAL::CONTEXT_SETUP_FAILED );
 	CR_RETURN_VAL( m_easuProgram.Create( &easuShader, 1, renderContext.GetPrimaryRenderContext() ), Tr2UpscalingAL::CONTEXT_SETUP_FAILED );
 
