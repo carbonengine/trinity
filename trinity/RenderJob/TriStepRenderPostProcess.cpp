@@ -487,12 +487,15 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	{
 		if( upscalingEnabled && !upscalingInfo.temporal )
 		{
+			
+			auto temp = m_renderInfo->GetTempTexture();
+
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-			DrawInto( *nonMsaaSource, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
+			DrawInto( *temp, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 			
 			auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
 			
-			output = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
+			output = RenderUpscaling( temp, renderContext, upscalingContext, dynamicExposure );
 			
 			// upscale the temp textures so everything hence forth is correct
 			uint32_t w, h;
