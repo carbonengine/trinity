@@ -37,6 +37,7 @@ Be::VarChooser Tr2SpriteObjectEffectChooser[] =
 	{ "TR2_SFX_FONT",			BeCast( TR2_SFX_FONT ),			"Font rendered by FreeType" },
 	{ "TR2_SFX_DOT",			BeCast( TR2_SFX_DOT ),			"Dot product of primary texture and direction vector" },
 	{ "TR2_SFX_DROPSHADOW",		BeCast( TR2_SFX_DROPSHADOW ),	"Primary texture copied, plus a drop shadow" },
+	{ "TR2_SFX_OUTLINE",		BeCast( TR2_SFX_OUTLINE ),		"Primary texture copied, plus an outline" },
 	{ "TR2_SFX_MODULATE",		BeCast( TR2_SFX_MODULATE ),		"Primary and secondary textures modulated (multiplied)" },
 	{ "TR2_SFX_MASK",			BeCast( TR2_SFX_MASK ),			"Alpha channel of secondary used as mask for primary" },
 	{ "TR2_SFX_NOALPHA",		BeCast( TR2_SFX_NOALPHA ),		"Primary texture copied, alpha forced to 1.0" },
@@ -256,6 +257,14 @@ const Be::ClassInfo* Tr2SpriteObject::ExposeToBlue()
 			"glowColor",
 			m_glowColor,
 			"Glow color - see 'shadowOffset'",
+			Be::READWRITE | Be::NOTIFY
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"outlineColor",
+			m_outlineColor,
+			"Outline color",
 			Be::READWRITE | Be::NOTIFY
 		)
 
