@@ -897,7 +897,7 @@ bool Tr2Sprite2dScene::PrepareSpriteVerts(
 			vertex.position.z = m_depth;
 			vertex.color = m_color;
 			vertex.texCoord[0] = uv[0][i];
-			if( (sfx == TR2_SFX_BLUR) || (sfx == TR2_SFX_GLOW) )
+			if( (sfx == TR2_SFX_BLUR) || (sfx == TR2_SFX_GLOW) || (sfx == TR2_SFX_OUTLINE) )
 			{
 				vertex.texCoord[1] = uvInitial[0][( i + 2 ) % 4];
 			}
