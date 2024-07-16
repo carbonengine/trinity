@@ -26,10 +26,10 @@ Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL
 {
 }
 
-ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtGeometryAL& geometry, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
 {
 	m_blas = std::make_shared<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL>();
-	auto hr = m_blas->Create( positions, indices, numObjects, buildFlags, renderContext );
+	auto hr = m_blas->Create( geometry, geometry, geometryFlags, buildFlags, renderContext );
 	if( FAILED( hr ) )
 	{
 		m_blas = NullBlas();
@@ -37,13 +37,24 @@ ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStr
 	return hr;
 }
 
-ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext )
+ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtGeometryAL& geometry, const Tr2RtGeometryAL& capacity, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
+{
+	m_blas = std::make_shared<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL>();
+	auto hr = m_blas->Create( geometry, capacity, geometryFlags, buildFlags, renderContext );
+	if( FAILED( hr ) )
+	{
+		m_blas = NullBlas();
+	}
+	return hr;
+}
+
+ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext )
 {
 	if( !IsValid() )
 	{
 		return E_INVALIDCALL;
 	}
-	return m_blas->Update( positions, indices, renderContext );
+	return m_blas->Update( geometry, renderContext );
 }
 
 bool Tr2RtBottomLevelAccelerationStructureAL::IsValid() const
@@ -71,12 +82,17 @@ Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL
 {
 }
 
-ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtGeometryAL& geometry, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
 {
 	return E_FAIL;
 }
 
-ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext )
+ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtGeometryAL& geometry, const Tr2RtGeometryAL& capacity, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext )
 {
 	return E_FAIL;
 }

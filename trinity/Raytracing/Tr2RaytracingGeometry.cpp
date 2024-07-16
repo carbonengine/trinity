@@ -238,6 +238,11 @@ TriGeometryResMeshData* Tr2RaytracingMesh::GetMeshData() const
 	return m_geometry->GetMeshDataLod( m_meshIndex, m_lodIndex );
 }
 
+TriGeometryResMeshData* Tr2RaytracingMesh::GetHighestLodMeshData() const
+{
+	return m_geometry->GetMeshData( m_meshIndex );
+}
+
 uint32_t Tr2RaytracingMesh::GetTransformOffset() const
 {
 	return m_boneOffset;
@@ -319,18 +324,19 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 			rebuild = true;
 		}
 
-		auto positions = Tr2RtPositionStreamAL( 
+		Tr2RtGeometryAL geometry;
+		geometry.positions = Tr2RtPositionStreamAL( 
 			mesh.GetSkinnedVertexBuffer( renderContext ), 
 			3 * sizeof( float ),
 			meshData->m_vertexCount,
 			mesh.GetSkinnedVertexOffset(),
 			0,
 			Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT );
-		auto indices = Tr2RtIndicesStreamAL( meshData->m_indexAllocation.GetBuffer(), meshData->m_indexAllocation.GetStride(), meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[m_areaIndex].m_firstIndex, meshData->m_areas[m_areaIndex].m_primitiveCount * 3 );
+		geometry.indices = Tr2RtIndicesStreamAL( meshData->m_indexAllocation.GetBuffer(), meshData->m_indexAllocation.GetStride(), meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[m_areaIndex].m_firstIndex, meshData->m_areas[m_areaIndex].m_primitiveCount * 3 );
 
 		if( update )
 		{
-			if( FAILED( m_blas.Update( positions, indices, renderContext.GetPrimaryRenderContext() ) ) )
+			if( FAILED( m_blas.Update( geometry, renderContext.GetPrimaryRenderContext() ) ) )
 			{
 				//This will fail gracefully whenever the LOD changes, so fall back to rebuild in this case.
 				//CCP_LOGERR( "Failed to update BLAS, recreating it instead" );
@@ -341,7 +347,24 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 		if( rebuild )
 		{
             CCP_STATS_ZONE( "BLAS rebuild" );
-			if( FAILED( m_blas.Create( positions, indices, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_BUILD | Tr2RtBuildFlags::ALLOW_UPDATE, renderContext.GetPrimaryRenderContext() ) ) )
+
+			auto capacity = geometry;
+			auto lod0 = mesh.GetHighestLodMeshData();
+
+			if( lod0 != meshData )
+			{
+				// provide the capacity for the BLAS to grow into
+				capacity.positions = Tr2RtPositionStreamAL(
+					geometry.positions.m_vertexBuffer,
+					3 * sizeof( float ),
+					lod0->m_vertexCount,
+					mesh.GetSkinnedVertexOffset(),
+					geometry.positions.m_positionOffset,
+					Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT );
+				capacity.indices = Tr2RtIndicesStreamAL( lod0->m_indexAllocation.GetBuffer(), lod0->m_indexAllocation.GetStride(), lod0->m_indexAllocation.GetStartIndex() + lod0->m_areas[m_areaIndex].m_firstIndex, lod0->m_areas[m_areaIndex].m_primitiveCount * 3 );
+			}
+
+			if( FAILED( m_blas.Create( geometry, capacity, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_BUILD | Tr2RtBuildFlags::ALLOW_UPDATE, renderContext.GetPrimaryRenderContext() ) ) )
 			{
 				CCP_LOGERR( "Failed to create BLAS!" );
 			}
@@ -368,8 +391,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 			meshData->m_areas[m_areaIndex].m_primitiveCount * 3 );
 
 		meshData->m_areas[m_areaIndex].m_staticBlas.Create(
-			vertexStream,
-			indexStream,
+			{ vertexStream, indexStream },
 			Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY,
 			Tr2RtBuildFlags::PREFER_FAST_TRACE,
 			renderContext.GetPrimaryRenderContext() );

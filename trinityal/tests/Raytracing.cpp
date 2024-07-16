@@ -77,7 +77,7 @@ TEST_F( Raytracing, BLASIsValidAfterCreation )
 #endif
 
     Tr2RtBottomLevelAccelerationStructureAL blas;
-    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
 
     ASSERT_TRUE( blas.IsValid() );
 }
@@ -96,9 +96,9 @@ TEST_F( Raytracing, BLASIsValidAfterUpdate )
 #endif
 
     Tr2RtBottomLevelAccelerationStructureAL blas;
-    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::ALLOW_UPDATE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::ALLOW_UPDATE, *renderContext ) );
     
-    ASSERT_HRESULT_SUCCEEDED( blas.Update( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( blas.Update( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, *renderContext ) );
     
     ASSERT_TRUE( blas.IsValid() );
 }
@@ -124,7 +124,7 @@ TEST_F( Raytracing, TLASIsValidAfterCreation )
 #endif
 
     Tr2RtBottomLevelAccelerationStructureAL blas;
-    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
 
     Tr2RtInstanceAL instance;
     instance.blas = blas;
@@ -438,7 +438,7 @@ TEST_F( Raytracing, TraceRays )
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
     
     Tr2RtBottomLevelAccelerationStructureAL blas;
-    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
     
     Tr2RtInstanceAL instance;
     instance.blas = blas;
@@ -564,7 +564,7 @@ TEST_F( Raytracing, CanUpdateBlas )
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
     
     Tr2RtBottomLevelAccelerationStructureAL blas;
-    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::ALLOW_UPDATE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::ALLOW_UPDATE, *renderContext ) );
     
     Tr2RtInstanceAL instance;
     instance.blas = blas;
@@ -631,7 +631,7 @@ TEST_F( Raytracing, CanUpdateBlas )
         
         ASSERT_HRESULT_SUCCEEDED( vb.UpdateBuffer( 0, sizeof( animatedCube ), animatedCube, *renderContext ) );
 
-        ASSERT_HRESULT_SUCCEEDED( blas.Update( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), *renderContext ) );
+        ASSERT_HRESULT_SUCCEEDED( blas.Update( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, *renderContext ) );
 
         float clearColor[] = { 0, 0, float( g & 0xff ) / 255.f, 0 };
         ASSERT_HRESULT_SUCCEEDED( renderContext->ClearUav( resultTex, 0, clearColor ) );
@@ -730,7 +730,7 @@ TEST_F( Raytracing, CanUseLocalConstants )
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
     
     Tr2RtBottomLevelAccelerationStructureAL blas;
-    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
 
     Tr2RtInstanceAL instances[2];
     instances[0].blas = blas;
@@ -915,7 +915,7 @@ TEST_F( Raytracing, CanUsePerObjectData )
 #endif
     
     Tr2RtBottomLevelAccelerationStructureAL blas;
-    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
 
     Tr2RtInstanceAL instances[2];
     instances[0].blas = blas;
@@ -1119,7 +1119,7 @@ TEST_F( Raytracing, CanUseLocalTextures )
 	ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
 
 	Tr2RtBottomLevelAccelerationStructureAL blas;
-	ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( { Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ) }, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
 
 	Tr2RtInstanceAL instances[2];
 	instances[0].blas = blas;

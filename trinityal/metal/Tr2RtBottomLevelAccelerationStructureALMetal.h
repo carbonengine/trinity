@@ -24,8 +24,12 @@ class Tr2RtBottomLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2Rt
         Tr2RtBottomLevelAccelerationStructureAL();
         ~Tr2RtBottomLevelAccelerationStructureAL();
         
-        ALResult Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext );
-        ALResult Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext );
+        ALResult Create( const Tr2RtGeometryAL& geometry,
+						 const Tr2RtGeometryAL& capacity,
+						 Tr2RtBlasGeometryFlags::Type geometryFlags,
+						 Tr2RtBuildFlags::Type buildFlags,
+						 Tr2PrimaryRenderContextAL& renderContext );
+		ALResult Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext );
         ALResult CompactBlas( Tr2PrimaryRenderContextAL& renderContext );
         bool IsValid() const;
         

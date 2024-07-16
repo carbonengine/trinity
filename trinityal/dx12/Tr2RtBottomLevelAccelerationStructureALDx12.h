@@ -18,8 +18,8 @@ namespace TrinityALImpl
 		Tr2RtBottomLevelAccelerationStructureAL();
 		~Tr2RtBottomLevelAccelerationStructureAL();
 
-		ALResult Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext );
-		ALResult Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext );
+		ALResult Create( const Tr2RtGeometryAL& geometry, const Tr2RtGeometryAL& capacity, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext );
+		ALResult Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext );
 		ALResult CompactBlas( Tr2PrimaryRenderContextAL& renderContext );
 		bool IsValid() const;
 		
@@ -35,6 +35,7 @@ namespace TrinityALImpl
 		CComPtr<ID3D12Resource> m_scratch;
 		D3D12_GPU_VIRTUAL_ADDRESS m_bufferAddress;
 		D3D12_RAYTRACING_GEOMETRY_DESC m_geometryDesc;
+		Tr2RtBlasGeometryFlags::Type m_geometryFlags;
 		Tr2RtBuildFlags::Type m_buildFlags;
 		Tr2PrimaryRenderContextAL* m_owner;
 	};

@@ -71,17 +71,17 @@ namespace  TrinityALImpl {
     }
 
     // Function to build a singular BLAS, list of BLAS to be kept elsewhere
-    ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
+    ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtGeometryAL& geometry, const Tr2RtGeometryAL&, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
     {
         if( !renderContext.IsValid() || !renderContext.GetCaps().SupportsRaytracing() )
         {
             return E_INVALIDCALL;
         }
-        if( !positions.IsValid() || !HasFlag( positions.m_vertexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+        if( !geometry.positions.IsValid() || !HasFlag( geometry.positions.m_vertexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
         {
             return E_INVALIDARG;
         }
-        if( !indices.IsValid() || !HasFlag( indices.m_indexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+        if( !geometry.indices.IsValid() || !HasFlag( geometry.indices.m_indexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
         {
             return E_INVALIDARG;
         }
@@ -90,7 +90,7 @@ namespace  TrinityALImpl {
         }
         else
         {
-            if( positions.m_positionFormat != Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT )
+            if( geometry.positions.m_positionFormat != Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT )
             {
                 return E_INVALIDARG;
             }
@@ -103,18 +103,18 @@ namespace  TrinityALImpl {
             // GEOMETRY DESCRIPTOR
             m_geomDesc = [MTLAccelerationStructureTriangleGeometryDescriptor descriptor];
             
-            m_geomDesc.indexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
-            m_geomDesc.indexType = indices.m_stride == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32;
-            m_geomDesc.indexBufferOffset = indices.m_stride * indices.m_indexOffset;
+            m_geomDesc.indexBuffer = geometry.indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
+            m_geomDesc.indexType = geometry.indices.m_stride == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32;
+            m_geomDesc.indexBufferOffset = geometry.indices.m_stride * geometry.indices.m_indexOffset;
             
-            m_geomDesc.vertexBuffer = positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
-            m_geomDesc.vertexStride = positions.m_stride;
-            m_geomDesc.vertexBufferOffset = positions.m_vertexOffset * positions.m_stride + positions.m_positionOffset;
+            m_geomDesc.vertexBuffer = geometry.positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
+            m_geomDesc.vertexStride = geometry.positions.m_stride;
+            m_geomDesc.vertexBufferOffset = geometry.positions.m_vertexOffset * geometry.positions.m_stride + geometry.positions.m_positionOffset;
              
-            m_geomDesc.triangleCount = indices.m_indexCount / 3;
+            m_geomDesc.triangleCount = geometry.indices.m_indexCount / 3;
             if( @available( macOS 13.0, * ) )
             {
-                m_geomDesc.vertexFormat = ConvertVertexFormat( positions.m_positionFormat );
+                m_geomDesc.vertexFormat = ConvertVertexFormat( geometry.positions.m_positionFormat );
             } 
             
             // Acceleration structure descriptor ( a descriptor for descriptors )
@@ -145,7 +145,7 @@ namespace  TrinityALImpl {
     }
 
 
-    ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext )
+    ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext )
     {
         if( !renderContext.IsValid() )
         {
@@ -158,18 +158,18 @@ namespace  TrinityALImpl {
             {
                 return E_INVALIDARG;
             }
-            if( m_geomDesc.vertexStride != positions.m_stride ||
-               m_geomDesc.indexType != ( indices.m_stride == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32 ) ||
-               m_geomDesc.triangleCount != indices.m_indexCount / 3 )
+            if( m_geomDesc.vertexStride != geometry.positions.m_stride ||
+               m_geomDesc.indexType != ( geometry.indices.m_stride == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32 ) ||
+               m_geomDesc.triangleCount != geometry.indices.m_indexCount / 3 )
             {
                 return E_INVALIDARG;
             }
 
-            m_geomDesc.indexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
-            m_geomDesc.indexBufferOffset = indices.m_stride * indices.m_indexOffset;
+            m_geomDesc.indexBuffer = geometry.indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
+            m_geomDesc.indexBufferOffset = geometry.indices.m_stride * geometry.indices.m_indexOffset;
             
-            m_geomDesc.vertexBuffer = positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
-            m_geomDesc.vertexBufferOffset = positions.m_vertexOffset * positions.m_stride + positions.m_positionOffset;
+            m_geomDesc.vertexBuffer = geometry.positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
+            m_geomDesc.vertexBufferOffset = geometry.positions.m_vertexOffset * geometry.positions.m_stride + geometry.positions.m_positionOffset;
 
             MetalContext *metalContext = renderContext.GetMetalContext();
             

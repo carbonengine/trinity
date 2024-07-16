@@ -15,17 +15,77 @@
 
 namespace
 {
-	uintptr_t Align( uintptr_t offset, size_t alignment )
+uintptr_t Align( uintptr_t offset, size_t alignment )
+{
+	return ( offset + ( alignment - 1 ) ) & ~( alignment - 1 );
+}
+
+D3D12_RAYTRACING_GEOMETRY_DESC CreateGeometryDesc( const Tr2RtGeometryAL& geometry, Tr2RtBlasGeometryFlags::Type geometryFlags )
+{
+	D3D12_RAYTRACING_GEOMETRY_DESC result;
+	result.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+	result.Triangles.VertexBuffer.StartAddress = geometry.positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuView() +
+		geometry.positions.m_vertexOffset * geometry.positions.m_stride + geometry.positions.m_positionOffset;
+	result.Triangles.VertexBuffer.StrideInBytes = geometry.positions.m_stride;
+	result.Triangles.VertexCount = geometry.positions.m_vertexCount;
+	result.Triangles.VertexFormat = DXGI_FORMAT( geometry.positions.m_positionFormat );
+	result.Triangles.IndexBuffer = geometry.indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuView() + geometry.indices.m_stride * geometry.indices.m_indexOffset;
+	result.Triangles.IndexFormat = geometry.indices.m_stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+	result.Triangles.IndexCount = geometry.indices.m_indexCount;
+	result.Triangles.Transform3x4 = 0;
+	result.Flags = geometryFlags ? D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE : D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
+	return result;
+}
+
+D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS CreateInputsDesc( const D3D12_RAYTRACING_GEOMETRY_DESC* geometry, Tr2RtBuildFlags::Type buildFlags )
+{
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS desc = {};
+	desc.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
+	desc.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY; //For a data set of n elements, the pointer parameter simply points to the start of an of n elements in memory.
+	desc.pGeometryDescs = geometry;
+	desc.NumDescs = 1;
+	desc.Flags = static_cast<D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS>( buildFlags );
+	return desc;
+}
+
+void BuildRaytracingAccelerationStructure( const D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC& desc, const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext )
+{
+	D3D12_RESOURCE_BARRIER barriers[2];
+	uint32_t barrierCount = 0;
+	if( ( geometry.positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetDefaultState() & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE ) == 0 )
 	{
-		return (offset + (alignment - 1)) & ~(alignment - 1);
+		barriers[barrierCount++] = TrinityALImpl::Transition( geometry.positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), geometry.positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetDefaultState(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
 	}
+	if( geometry.positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource() != geometry.indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource() &&
+		( geometry.indices.m_indexBuffer.TrinityALImpl_GetObject()->GetDefaultState() & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE ) == 0 )
+	{
+		barriers[barrierCount++] = TrinityALImpl::Transition( geometry.indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), geometry.indices.m_indexBuffer.TrinityALImpl_GetObject()->GetDefaultState(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
+	}
+	if( barrierCount )
+	{
+		renderContext.ResourceBarrierDx12( barrierCount, barriers );
+	}
+	renderContext.FlushBarriersDx12( geometry.positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), geometry.indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource() );
+
+	// BuildRaytracingAccelerationStructure function runs on gpu and returns size of structure
+	renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+
+
+	std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
+	std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
+	renderContext.ResourceBarrierDx12( barrierCount, barriers );
+}
 
 }
 
 namespace TrinityALImpl
 {
 	Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL()
-		:m_owner( nullptr )
+		:m_bufferAddress{},
+		m_geometryDesc{},
+		m_geometryFlags{},
+		m_buildFlags{},
+		m_owner( nullptr )
 	{
 	}
 
@@ -34,17 +94,17 @@ namespace TrinityALImpl
 		Destroy();
 	}
 
-	ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtGeometryAL& geometry, const Tr2RtGeometryAL& capacity, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		if( !renderContext.IsValid() || !renderContext.GetCaps().SupportsRaytracing() )
 		{
 			return E_INVALIDCALL;
 		}
-		if( !positions.IsValid() || !HasFlag( positions.m_vertexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+		if( !geometry.positions.IsValid() || !HasFlag( geometry.positions.m_vertexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
 			return E_INVALIDARG;
 		}
-		if( !indices.IsValid() || !HasFlag( indices.m_indexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+		if( !geometry.indices.IsValid() || !HasFlag( geometry.indices.m_indexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
 			return E_INVALIDARG;
 		}
@@ -54,27 +114,10 @@ namespace TrinityALImpl
 		}
 		
 		// gather geometry info for buffer
-		D3D12_RAYTRACING_GEOMETRY_DESC geometry;
-		geometry.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-		geometry.Triangles.VertexBuffer.StartAddress = positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuView() +
-			positions.m_vertexOffset * positions.m_stride + positions.m_positionOffset;
-		geometry.Triangles.VertexBuffer.StrideInBytes = positions.m_stride;
-		geometry.Triangles.VertexCount = positions.m_vertexCount;
-		geometry.Triangles.VertexFormat = DXGI_FORMAT( positions.m_positionFormat );
-		geometry.Triangles.IndexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuView() + indices.m_stride * indices.m_indexOffset;
-		geometry.Triangles.IndexFormat = indices.m_stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
-		geometry.Triangles.IndexCount = indices.m_indexCount;
-		geometry.Triangles.Transform3x4 = 0;
-		geometry.Flags = Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY ? D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE : D3D12_RAYTRACING_GEOMETRY_FLAG_NONE;
-		
+		D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = CreateGeometryDesc( capacity, geometryFlags );
 		
 		// size requirements for scratch and acceleration structure buffers
-		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS prebuildDesc = {};
-		prebuildDesc.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-		prebuildDesc.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY; //For a data set of n elements, the pointer parameter simply points to the start of an of n elements in memory.
-		prebuildDesc.pGeometryDescs = &geometry;
-		prebuildDesc.NumDescs = numObjects;
-		prebuildDesc.Flags = (D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS)buildFlags;
+		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS prebuildDesc = CreateInputsDesc( &geometryDesc, buildFlags );
 
 		D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo = {};
 		// do some bvh optimization and return an estimate on how big the structure will be - runs on cpu
@@ -82,16 +125,15 @@ namespace TrinityALImpl
 
 		if( preBuildInfo.ResultDataMaxSizeInBytes <= 0 )
 		{
-			CCP_LOGERR( "No data in BLAS" );
 			return E_INVALIDCALL;
 		}
 
 		// Create two buffers 
 		// 1.	Scratch buffer which is required for intermediate computation.
 		// 2.	The result buffer which will hold the acceleration data.
-		CComPtr<ID3D12Resource> scratch, buffer;
+		CComPtr<ID3D12Resource> scratch;
+		CComPtr<ID3D12Resource> buffer;
 		
-		// upload heap?
 		auto heap = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
 
 		// Buffer sizes need to be 256-byte-aligned
@@ -114,44 +156,19 @@ namespace TrinityALImpl
 			nullptr,
 			IID_PPV_ARGS( &buffer ) ) );
 
+		geometryDesc = CreateGeometryDesc( geometry, geometryFlags );
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
 		desc.Inputs = prebuildDesc;
-
 		desc.ScratchAccelerationStructureData = scratch->GetGPUVirtualAddress();
 		desc.DestAccelerationStructureData = buffer->GetGPUVirtualAddress();
 
-		D3D12_RESOURCE_BARRIER barriers[2];
-		uint32_t barrierCount = 0;
-		if( ( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetDefaultState() & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE ) == 0 )
-		{
-			barriers[barrierCount++] = TrinityALImpl::Transition( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetDefaultState(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
-		}
-		if( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource() != indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource() &&
-			( indices.m_indexBuffer.TrinityALImpl_GetObject()->GetDefaultState() & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE ) == 0 )
-		{
-			barriers[barrierCount++] = TrinityALImpl::Transition( indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), indices.m_indexBuffer.TrinityALImpl_GetObject()->GetDefaultState(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
-		}
-		if( barrierCount )
-		{
-			renderContext.ResourceBarrierDx12( barrierCount, barriers );
-		}
-		renderContext.FlushBarriersDx12( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource() );
-
-		if( renderContext.m_commandList4 )
-		{
-			// BuildRaytracingAccelerationStructure function runs on gpu and returns size of structure
-			renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
-		}
-		
-
-		std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
-		std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
-		renderContext.ResourceBarrierDx12( barrierCount, barriers );
+		BuildRaytracingAccelerationStructure( desc, geometry, renderContext );
 
 		m_buffer = buffer;
 		m_owner = &renderContext;
-		m_geometryDesc = geometry;
+		m_geometryDesc = geometryDesc;
+		m_geometryFlags = geometryFlags;
 		m_buildFlags = buildFlags;
 		if( (buildFlags & Tr2RtBuildFlags::ALLOW_UPDATE) != 0 )
 		{
@@ -166,7 +183,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext )
+	ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext )
 	{
 		if( !m_scratch )
 		{
@@ -176,65 +193,46 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDARG;
 		}
-		if( m_geometryDesc.Triangles.VertexBuffer.StrideInBytes	!= positions.m_stride													||
-			m_geometryDesc.Triangles.VertexCount				!= positions.m_vertexCount																		||
-			m_geometryDesc.Triangles.VertexFormat				!= DXGI_FORMAT( positions.m_positionFormat )													||
-			m_geometryDesc.Triangles.IndexFormat				!= (indices.m_stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT)	||
-			m_geometryDesc.Triangles.IndexCount					!= indices.m_indexCount )
-		{
-			return E_INVALIDARG;
-		}
 		if( !renderContext.m_commandList4 )
 		{
 			return E_INVALIDCALL;
 		}
 
-		D3D12_RAYTRACING_GEOMETRY_DESC geometry = m_geometryDesc;
-		geometry.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-		geometry.Triangles.VertexBuffer.StartAddress = positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuView() +
-			positions.m_vertexOffset * positions.m_stride + positions.m_positionOffset;
-		geometry.Triangles.IndexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuView() + indices.m_stride * indices.m_indexOffset;
+		bool rebuild = false;
 
-		// get size requirements for scratch and acceleration structure buffers
-		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = {};
-		inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-		inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY; //For a data set of n elements, the pointer parameter simply points to the start of an of n elements in memory.
-		inputs.pGeometryDescs = &geometry;
-		inputs.NumDescs = 1; // number of elements pGeometryDescs refer to
-		inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE | ((D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS)m_buildFlags);
+		D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = CreateGeometryDesc( geometry, m_geometryFlags );
+		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = CreateInputsDesc( &geometryDesc, m_buildFlags );
+
+		if( m_geometryDesc.Triangles.VertexBuffer.StrideInBytes != geometryDesc.Triangles.VertexBuffer.StrideInBytes ||
+			m_geometryDesc.Triangles.VertexCount != geometryDesc.Triangles.VertexCount ||
+			m_geometryDesc.Triangles.VertexFormat != geometryDesc.Triangles.VertexFormat ||
+			m_geometryDesc.Triangles.IndexFormat != geometryDesc.Triangles.IndexFormat ||
+			m_geometryDesc.Triangles.IndexCount != geometryDesc.Triangles.IndexCount )
+		{
+
+			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo = {};
+			renderContext.GetPrimaryRenderContext().m_device5->GetRaytracingAccelerationStructurePrebuildInfo( &inputs, &preBuildInfo );
+			
+			if( preBuildInfo.ResultDataMaxSizeInBytes <= 0 || preBuildInfo.ScratchDataSizeInBytes > m_scratch->GetDesc().Width || preBuildInfo.ResultDataMaxSizeInBytes > m_buffer->GetDesc().Width )
+			{
+				return E_INVALIDARG;
+			}
+			rebuild = true;
+		}
+		m_geometryDesc = geometryDesc;
+
+		if( !rebuild )
+		{
+			inputs.Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
+		}
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
 		desc.Inputs = inputs;
-		desc.SourceAccelerationStructureData = m_buffer->GetGPUVirtualAddress(); //  If this address is the same as DestAccelerationStructureData, the update is to be performed in-place.
+		desc.SourceAccelerationStructureData = rebuild ? 0 : m_buffer->GetGPUVirtualAddress(); //  If this address is the same as DestAccelerationStructureData, the update is to be performed in-place.
 		desc.ScratchAccelerationStructureData = m_scratch->GetGPUVirtualAddress();
 		desc.DestAccelerationStructureData = m_buffer->GetGPUVirtualAddress();
 
-		D3D12_RESOURCE_BARRIER barriers[2];
-		uint32_t barrierCount = 0;
-		if( ( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetDefaultState() & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE ) == 0 )
-		{
-			barriers[barrierCount++] = TrinityALImpl::Transition( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetDefaultState(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
-		}
-		if( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource() != indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource() &&
-			( indices.m_indexBuffer.TrinityALImpl_GetObject()->GetDefaultState() & D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE ) == 0 )
-		{
-			barriers[barrierCount++] = TrinityALImpl::Transition( indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), indices.m_indexBuffer.TrinityALImpl_GetObject()->GetDefaultState(), D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
-		}
-		if( barrierCount )
-		{
-			renderContext.ResourceBarrierDx12( barrierCount, barriers );
-		}
-
-		renderContext.FlushBarriersDx12( positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetGpuResource(), indices.m_indexBuffer.TrinityALImpl_GetObject()->GetGpuResource() );
-
-		if( renderContext.m_commandList4 )
-		{
-			renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
-		}
-
-		std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
-		std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
-		renderContext.ResourceBarrierDx12( barrierCount, barriers );
+		BuildRaytracingAccelerationStructure( desc, geometry, renderContext );
 
 		return S_OK;
 	}

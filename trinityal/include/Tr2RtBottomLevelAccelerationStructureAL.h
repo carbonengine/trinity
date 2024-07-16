@@ -104,13 +104,20 @@ struct Tr2RtIndicesStreamAL
 	uint32_t m_stride;
 };
 
+struct Tr2RtGeometryAL
+{
+	Tr2RtPositionStreamAL positions;
+	Tr2RtIndicesStreamAL indices;
+};
+
 class Tr2RtBottomLevelAccelerationStructureAL
 {
 public:
 	Tr2RtBottomLevelAccelerationStructureAL();
 
-	ALResult Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext );
-	ALResult Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext );
+	ALResult Create( const Tr2RtGeometryAL& geometry, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Create( const Tr2RtGeometryAL& geometry, const Tr2RtGeometryAL& capacity, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext );
 	bool IsValid() const;
 	ALResult CompactBlas( Tr2PrimaryRenderContextAL& renderContext );
 
