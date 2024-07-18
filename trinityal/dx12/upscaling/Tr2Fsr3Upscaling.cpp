@@ -121,6 +121,8 @@ void Tr2Fsr3UpscalingTechnique::ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swap
 	
 	if( result != FFX_OK )
 	{
+		swapchain.Attach( ffxGetDX12SwapchainPtr( m_framegenSwapchain ) );
+		m_frameGeneration = false;
 		m_framegenSwapchain = nullptr;
 		CCP_LOGERR( "Failed to replace DX12 swapchain with AMD frame interpolation swapchain. 0x%x", result );
 		return;
