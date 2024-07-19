@@ -37,6 +37,7 @@ private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
 	FfxSwapchain m_framegenSwapchain;
 	bool m_attachedToSwapchain;
+	bool m_supportsFrameGeneration;
 };
 
 

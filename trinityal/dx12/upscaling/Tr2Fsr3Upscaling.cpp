@@ -101,15 +101,25 @@ namespace Fsr3Utils
 Tr2Fsr3UpscalingTechnique::Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration, adapter ),
 	m_framegenSwapchain( nullptr ), 
-	m_attachedToSwapchain( false )
+	m_attachedToSwapchain( false ),
+	m_supportsFrameGeneration( true )
 {
  	SanitizeState();
+
+	OSVERSIONINFOEX osvi = {};
+	osvi.dwMajorVersion = 10;
+	osvi.dwBuildNumber = 20348; // Required for I3D3Device8 used by FSR3
+
+	DWORDLONG conditionMask = 0;
+	VER_SET_CONDITION( conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL );
+	VER_SET_CONDITION( conditionMask, VER_BUILDNUMBER, VER_GREATER_EQUAL );
+	m_supportsFrameGeneration = VerifyVersionInfo( &osvi, VER_MAJORVERSION | VER_BUILDNUMBER, conditionMask );
 }
 
 
 bool Tr2Fsr3UpscalingTechnique::ReplacesSwapchain() const
 {
-	return m_frameGeneration;
+	return m_frameGeneration && m_supportsFrameGeneration;
 }
 
 void Tr2Fsr3UpscalingTechnique::ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swapchain, Tr2WindowHandle hwnd, ID3D12CommandQueue* commandQueue )
@@ -177,7 +187,7 @@ bool Tr2Fsr3UpscalingTechnique::IsTemporal() const
 
 bool Tr2Fsr3UpscalingTechnique::SupportsFrameGeneration() const
 {
-	return true;
+	return m_supportsFrameGeneration;
 }
 
 void Tr2Fsr3UpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
