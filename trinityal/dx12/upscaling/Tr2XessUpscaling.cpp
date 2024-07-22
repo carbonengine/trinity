@@ -165,9 +165,13 @@ uint32_t Tr2XessUpscalingContext::GetDispatchRequirements() const
 
 void Tr2XessUpscalingContext::UpdateJitter()
 {
-	m_jitterX = m_jitterSequence[m_jitterIndex].first;
-	m_jitterY = m_jitterSequence[m_jitterIndex].second;
-	m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
+	if( m_setup )
+	{
+		m_jitterX = m_jitterSequence[m_jitterIndex].first;
+		m_jitterY = m_jitterSequence[m_jitterIndex].second;
+
+		m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
+	}
 }
 
 void Tr2XessUpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
