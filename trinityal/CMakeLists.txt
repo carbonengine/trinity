@@ -19,16 +19,13 @@ set(PUBLIC_HEADER_FILES
 )
 
 set(PUBLIC_AL_HEADER_FILES
-    include/Tr2BitmapDimensions.h
     include/Tr2BufferAL.h
     include/Tr2CapsAL.h
     include/Tr2ConstantBufferAL.h
-    include/Tr2CubemapFace.h
     include/Tr2FenceAL.h
     include/Tr2GpuTimerAL.h
     include/Tr2OcclusionQueryAL.h
     include/Tr2PipelineStatsQueryAL.h
-    include/Tr2PixelFormat.h
     include/Tr2PrimaryRenderContextAL.h
     include/Tr2RenderContextAL.h
     include/Tr2RenderPassAL.h
@@ -38,7 +35,6 @@ set(PUBLIC_AL_HEADER_FILES
     include/Tr2ShaderProgramAL.h
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
-    include/Tr2TextureType.h
     include/Tr2VertexLayoutAL.h
     include/Tr2VideoAdapterInfoAL.h
     include/TrinityAL.h
