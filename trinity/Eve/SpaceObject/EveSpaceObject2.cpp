@@ -1554,14 +1554,26 @@ void EveSpaceObject2::UpdateRtSkeleton()
 		return; //no areas at all or no RT mesh
 	}
 
+	auto geo = m_mesh->GetGeometryResource();
+	if( !geo || !geo->IsGood() )
+	{
+		return;
+	}
+
 	auto meshIndex = m_mesh->GetMeshIndex();
-	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
+	auto meshData = geo->GetMeshData( meshIndex );
+	if( !meshData )
+	{
+		return;
+	}
 
 	bool hasSkinned = false;
 
-	for( auto it = begin( *areas ); it != end( *areas ); ++it )
+	for( auto& area : *areas )
 	{
-		if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
+		auto index = area->GetIndex();
+
+		if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
 		{
 			hasSkinned = true;
 			break;
@@ -1582,12 +1594,12 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	if( skeletonChanged )
 	{
 		//Skeleton has changed, so mark all area BLAS's as out-of-date.
-		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		for( auto& area : *areas )
 		{
-			auto meshAreaIndex = ( *it )->GetIndex();
-			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
+			auto meshAreaIndex = area->GetIndex();
+			if( meshAreaIndex >= 0 && meshAreaIndex < meshData->m_areas.size() && meshData->m_areas[meshAreaIndex].m_isSkinned )
 			{
-				( *it )->GetRtMeshArea()->MarkBlasOutdated();
+				area->GetRtMeshArea()->MarkBlasOutdated();
 			}
 		}
 	}

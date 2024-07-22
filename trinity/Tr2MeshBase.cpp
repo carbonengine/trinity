@@ -421,16 +421,16 @@ void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches,
 		return;
 	}
 	auto mesh = geometry->GetMeshData( m_meshIndex, screenSize );
-	if( !mesh )
+	if( !mesh || !mesh->m_allocationsValid )
 	{
 		return;
 	}
 
-	for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+	for( auto& area : *areas )
 	{
-		if( auto batch = CreateGeometryBatch( mesh, *it, data ) )
+		if( auto batch = CreateGeometryBatch( mesh, area, data ) )
 		{
-			batch.SetPickingData( m_meshIndex, ( *it )->GetIndex() );
+			batch.SetPickingData( m_meshIndex, area->GetIndex() );
 			batches->Commit( batch );
 		}
 	}
