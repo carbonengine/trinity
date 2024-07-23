@@ -407,6 +407,7 @@ protected:
 
 	//cascaded shadow map
 	Tr2ShadowMapPtr m_cascadedShadowMap;
+	TriTextureResPtr m_emptyShadowMap;
 
 	PIEveSpaceObject2Vector	m_backgroundObjects;
 	PEvePlanetVector		m_planets;

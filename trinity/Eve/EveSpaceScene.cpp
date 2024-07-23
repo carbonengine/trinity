@@ -40,6 +40,7 @@
 #include "../Tr2BoneTransformBuffer.h"
 #include <ScopedBlockTrap.h>
 #include "Raytracing/Tr2RaytracingManager.h"
+#include "../Resources/TriTextureRes.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -265,6 +266,9 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_volumetricsRenderer.CreateInstance();
 
 	m_rtManager.CreateInstance();
+
+	m_emptyShadowMap.CreateInstance();
+	BeResMan->GetResource( "res:/texture/global/white.dds", "", m_emptyShadowMap );
 }
 
 IRoot* EveSpaceScene::GetCameraAttachments() const
@@ -658,10 +662,7 @@ void EveSpaceScene::ApplyUpscalingToPerFrameData( uint32_t width, uint32_t heigh
 
 void EveSpaceScene::DisableShadows()
 {
-	if( m_cascadedShadowMap )
-	{
-		m_cascadedShadowMap->SetBlankTexture();
-	}
+	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 }
 
 void EveSpaceScene::ApplyPerFrameData( Tr2RenderContext& renderContext )
@@ -1639,15 +1640,8 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	}
 
 	// disable shadows
-	if( m_cascadedShadowMap )
-	{
-		m_cascadedShadowMap->SetBlankTexture();
-	}
+	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 
-	if( m_rtManager )
-	{
-		m_rtManager->SetBlankTexture();
-	}
 	// we change the frustum during reflection updates/renderings
 	// we need the old one for resetting
 	auto normalFrustum = m_updateContext.GetFrustum();
@@ -2049,29 +2043,29 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 
 	renderContext.m_esm.EndManagedRendering();
 	
+	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
+
 	if( m_rtManager && m_shadowQuality == SHADOW_RAYTRACED && m_depthMap->IsValid() && !m_objects.empty() && m_enableShadows )
 	{
 		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
 		size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
-		if( volumetricCount + shadowCasterCount == 0 )
+		if( volumetricCount + shadowCasterCount != 0 )
 		{
-			return;
+			renderContext.SetReadOnlyDepth( true );
+			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
+
+			if( m_componentRegistry && m_volumetricsRenderer )
+			{
+				m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_rtManager->GetShadowMap(), renderContext );
+
+				RenderVolumetricShadowMap( renderContext );
+
+				PopulatePerFramePSData( m_perFramePS, renderContext );
+				ApplyPerFrameData( renderContext );
+			}
+
+			renderContext.SetReadOnlyDepth( false );
 		}
-
-		renderContext.SetReadOnlyDepth( true );
-		m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
-
-		if( m_componentRegistry && m_volumetricsRenderer )
-		{
-			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_rtManager->GetShadowMap(), renderContext );
-
-			RenderVolumetricShadowMap( renderContext );
-
-			PopulatePerFramePSData( m_perFramePS, renderContext );
-			ApplyPerFrameData( renderContext );
-		}
-
-		renderContext.SetReadOnlyDepth( false );
 	}
 	
 	if( m_ssao )
