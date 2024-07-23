@@ -22,8 +22,6 @@ public:
 	bool OnPrepareResources();
 	void ReleaseResources( TriStorage s );
 
-	void SetBlankTexture();
-
 	ITr2TextureProvider* GetShadowMap() const;
 
 private:

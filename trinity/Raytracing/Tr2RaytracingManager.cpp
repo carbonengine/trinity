@@ -60,11 +60,6 @@ Tr2RaytracingGeometry& Tr2RaytracingManager::GetGeometry()
 
 bool Tr2RaytracingManager::OnPrepareResources()
 {
-	if( !m_whiteTexture->IsValid() )
-	{
-		BeResMan->GetResource( "res:/texture/global/white.dds", "", m_whiteTexture );
-	}
-
 	return true;
 }
 
@@ -76,19 +71,10 @@ void Tr2RaytracingManager::ReleaseResources( TriStorage s )
 	m_shadowEffect = nullptr;
 	m_destTex = Tr2RenderTargetPtr();
 	m_denoiser = nullptr;
-	m_whiteTexture = nullptr;
 
 	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
 		m_shadowPerFrameData = Tr2ConstantBufferAL();
-	}
-}
-
-void Tr2RaytracingManager::SetBlankTexture()
-{
-	if( m_whiteTexture->IsValid() )
-	{
-		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_whiteTexture );
 	}
 }
 
