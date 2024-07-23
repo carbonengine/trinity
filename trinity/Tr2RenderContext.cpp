@@ -580,6 +580,10 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 		if( !s_buffer.IsValid() )
 		{
 			s_buffer.Create( 1024 * 1024 );
+			if( !s_buffer.IsValid() )
+			{
+				return;
+			}
 		}
 
 		s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetRecordingFrameNumber(), primaryContext->GetPrimaryRenderContext().GetRenderedFrameNumber() );

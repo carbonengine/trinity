@@ -200,7 +200,7 @@ Tr2IndirectDrawBuffer::Allocation Tr2IndirectDrawBuffer::Allocate( uint32_t size
 	}
 	if( m_head < m_tail && m_head + int32_t( size ) >= m_tail )
 	{
-		CCP_LOGERR( "Resizing indirect draw buffer" );
+		CCP_LOGNOTICE( "Resizing indirect draw buffer" );
 		Resize( m_size * 2 );
 	}
 
@@ -520,32 +520,38 @@ void Tr2IndirectDrawBuffer::Resize( uint32_t newSize )
 	}
 
 
+	CComPtr<ID3D12Resource> uploadBuffer;
+	CComPtr<ID3D12Resource> defaultBuffer;
 
 	{
-		CComPtr<ID3D12Resource> uploadBuffer;
-
 		D3D12_HEAP_PROPERTIES heap = { D3D12_HEAP_TYPE_UPLOAD, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
 		D3D12_RESOURCE_DESC resourceDesc = { D3D12_RESOURCE_DIMENSION_BUFFER, 0, UINT64( newSize ), 1, 1, 1, DXGI_FORMAT_UNKNOWN, 1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE };
 
 		HRESULT result = renderContext.m_device->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&uploadBuffer));
-
-		m_uploadBuffer = uploadBuffer;
+		if( FAILED( result ) )
+		{
+			CCP_LOGERR( "Failed to create indirect draw upload buffer (hr=0x%x)", result );
+			return;
+		}
 
 		D3D12_RANGE range = { 0, 0 };
-		m_uploadBuffer->Map(0, &range, (void**)&m_cpuAddr);
+		uploadBuffer->Map(0, &range, (void**)&m_cpuAddr);
 	}
 
 	{
-
-		CComPtr<ID3D12Resource> defaultBuffer;
-
 		D3D12_HEAP_PROPERTIES heap = { D3D12_HEAP_TYPE_DEFAULT, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
 		D3D12_RESOURCE_DESC resourceDesc = { D3D12_RESOURCE_DIMENSION_BUFFER, 0, UINT64( newSize ), 1, 1, 1, DXGI_FORMAT_UNKNOWN, 1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE };
 
 		HRESULT result = renderContext.m_device->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, nullptr, IID_PPV_ARGS(&defaultBuffer));
-
-		m_defaultBuffer = defaultBuffer;
+		if( FAILED( result ) )
+		{
+			CCP_LOGERR( "Failed to create indirect draw buffer (hr=0x%x)", result );
+			return;
+		}
 	}
+
+	m_uploadBuffer = uploadBuffer;
+	m_defaultBuffer = defaultBuffer;
 
 	m_size = newSize;
 
