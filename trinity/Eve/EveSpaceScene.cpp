@@ -1396,7 +1396,7 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 
 	if( !m_rtManager )
 	{
-		m_rtManager.CreateInstance();
+		return;
 	}
 
 	CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
