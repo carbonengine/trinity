@@ -742,6 +742,12 @@ void Tr2Effect::RebuildCachedDataInternal()
 						{
 							continue;
 						}
+
+						if( i != Tr2RenderContextEnum::VERTEX_SHADER && i != Tr2RenderContextEnum::PIXEL_SHADER && i != Tr2RenderContextEnum::COMPUTE_SHADER )
+						{
+							pp.m_compatibleWithGdr = false;
+						}
+
 						auto& input = pp.m_stageInput[i];
 						MapPassParameters( Tr2RenderContextEnum::ShaderType( i ), input, pp, stage, desc, renderContext );
 
