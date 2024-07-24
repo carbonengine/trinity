@@ -11,7 +11,6 @@
 #include "../../ALResult.h"
 #include "../../include/Tr2VertexLayoutAL.h"
 #include "../../include/Tr2ShaderProgramAL.h"
-#include "../../include/Tr2PixelFormat.h"
 #include "../../Tr2HalHelperStructures.h"
 
 namespace TrinityALImpl

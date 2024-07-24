@@ -14,7 +14,6 @@ namespace TrinityALImpl
 
 class Tr2PrimaryRenderContextAL;
 class Tr2RenderContextAL;
-struct Tr2BitmapDimensions;
 struct Tr2SubresourceData;
 struct Tr2MsaaDesc;
 struct Tr2TextureSubresource;

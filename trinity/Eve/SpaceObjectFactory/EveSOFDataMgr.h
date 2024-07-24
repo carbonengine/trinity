@@ -172,6 +172,8 @@ public:
 		BlueSharedString locatorSetName;
 		DNADescriptorData descriptor;
 		bool isInstanced;
+		bool extendsBoundingSphere;
+		bool extendsShieldEllipsoid;
 		bool hasDistribution;
 		bool enabled;
 		ExtensionPlacementDistribution distribution;

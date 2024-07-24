@@ -1924,6 +1924,8 @@ public:
 	std::string m_locatorSetName;
 	bool m_enabled;
 	bool m_isInstanced;
+	bool m_extendsShieldEllipsoid;
+	bool m_extendsBoundingSphere;
 	Vector3 m_offset;
 	EveSOFDataHullExtensionPlacementDistributionPlacementPtr m_distribution;
 	PIEveSOFDataHullExtensionPlacementDistributionVector m_distributionConditions;

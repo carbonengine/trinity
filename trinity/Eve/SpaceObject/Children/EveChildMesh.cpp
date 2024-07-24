@@ -13,7 +13,13 @@
 
 extern bool g_eveSpaceSceneRaytracedShadows;
 
-EveChildMesh::EveChildMesh( IRoot* lockobj ) :
+namespace
+{
+constexpr float s_instanceScreenSizeThreshold = 1.f;
+
+}
+
+EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	PARENTLOCK( m_transformModifiers ),
 	PARENTLOCK( m_decals ),
 	PARENTLOCK( m_attachments ),
@@ -146,11 +152,16 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 	{
 		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 		{
-			auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( shadowFrustum.GetEyePos(), m_worldTransform.GetTranslation() );
-			auto instanceSphere = CcpMath::Sphere( instanceBounds );
-			auto sphereAsVector = Vector4( instanceSphere.center, instanceSphere.radius );
+			if( auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.GetEyePos(), Inverse( m_worldTransform ) ) ) )
+			{
+				instanceBounds.Transform( m_worldTransform );
 
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, sphereAsVector );
+				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, Vector4( instanceBounds.center, instanceBounds.radius ) );
+			}
+			else
+			{
+				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );
+			}
 		}
 		else
 		{
@@ -177,9 +188,17 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 		{
-			auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( frustum.m_viewPos, m_worldTransform.GetTranslation() );
-			m_currentInstanceScreenSize = frustum.GetPixelSizeAccross( instanceBounds );
-			m_mesh->UseWithScreenSize( m_currentInstanceScreenSize, CcpMath::Sphere( instanceBounds ).radius );
+			if( auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( TransformCoord( frustum.m_viewPos, Inverse( m_worldTransform ) ) ) )
+			{
+				instanceBounds.Transform( m_worldTransform );
+				m_currentInstanceScreenSize = frustum.GetPixelSizeAccross( instanceBounds );
+				m_mesh->UseWithScreenSize( m_currentInstanceScreenSize, instanceBounds.radius );
+			}
+			else
+			{
+				m_currentInstanceScreenSize = std::numeric_limits<float>::max();
+				m_mesh->UseWithScreenSize( m_currentScreenSize, CcpMath::Sphere( bounds ).radius );
+			}
 		}
 		else
 		{
@@ -193,7 +212,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		if( frustum.IsBoxVisible( bounds ) )
 		{
 			m_isVisible = parentLod >= m_lowestLodVisible && m_currentScreenSize >= m_minScreenSize;
-			m_instancesVisible = m_isVisible && m_currentInstanceScreenSize >= m_minScreenSize;
+			m_instancesVisible = m_isVisible && m_currentInstanceScreenSize >= s_instanceScreenSizeThreshold;
 		}
 	}
 

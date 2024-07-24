@@ -1623,6 +1623,8 @@ EveSOFDataMgr::ExtensionPlacementData EveSOFDataMgr::UnpackPlacementData( IEveSO
 		placementData.locatorSetName = BlueSharedString( placement->m_locatorSetName );
 		placementData.descriptor = descriptor;
 		placementData.isInstanced = placement->m_isInstanced;
+		placementData.extendsBoundingSphere = placement->m_extendsBoundingSphere;
+		placementData.extendsShieldEllipsoid = placement->m_extendsShieldEllipsoid;
 
 		placementData.hasDistribution = placement->m_distribution != nullptr;
 		if( placementData.hasDistribution )

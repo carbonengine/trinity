@@ -247,10 +247,7 @@ void Tr2DynamicBinding::Link()
 	if( IsSourceValid() && IsDestinationValid() )
 	{
 		m_binding.CreateInstance();
-		m_binding->SetDestination( m_destinationObjectAttribute.c_str(), static_cast<IRoot*>( m_destination ) );
-		m_binding->SetSource( m_sourceObjectAttribute.c_str(), static_cast<IRoot*>( m_source ) );
-		m_binding->SetScale( m_scale );
-		m_binding->Initialize();
+		m_binding->CreateWeakBinding( m_source, m_sourceObjectAttribute.c_str(), m_destination, m_destinationObjectAttribute.c_str(), m_scale );
 		if( m_bindingTime == 0 )
 		{
 			m_bindingTime = BeOS->GetCurrentFrameTime() + TimeFromMS( m_bindingDelay );

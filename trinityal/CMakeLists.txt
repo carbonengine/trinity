@@ -24,16 +24,13 @@ set(PUBLIC_HEADER_FILES
 )
 
 set(PUBLIC_AL_HEADER_FILES
-    include/Tr2BitmapDimensions.h
     include/Tr2BufferAL.h
     include/Tr2CapsAL.h
     include/Tr2ConstantBufferAL.h
-    include/Tr2CubemapFace.h
     include/Tr2FenceAL.h
     include/Tr2GpuTimerAL.h
     include/Tr2OcclusionQueryAL.h
     include/Tr2PipelineStatsQueryAL.h
-    include/Tr2PixelFormat.h
     include/Tr2PrimaryRenderContextAL.h
     include/Tr2RenderContextAL.h
     include/Tr2RenderPassAL.h
@@ -43,7 +40,6 @@ set(PUBLIC_AL_HEADER_FILES
     include/Tr2ShaderProgramAL.h
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
-    include/Tr2TextureType.h
     include/Tr2VertexLayoutAL.h
     include/Tr2VideoAdapterInfoAL.h
     include/TrinityAL.h
@@ -191,11 +187,9 @@ set(_SOURCES
     dx12/util/GpuMarkerBuffer.h
     dx12/util/PsoDescription.cpp
     dx12/util/PsoDescription.h
-    include/Tr2BitmapDimensions.h
     include/Tr2BufferAL.h
     include/Tr2CapsAL.h
     include/Tr2ConstantBufferAL.h
-    include/Tr2CubemapFace.h
     include/Tr2FenceAL.h
     include/Tr2GpuTimerAL.h
     include/Tr2OcclusionQueryAL.h
@@ -204,7 +198,6 @@ set(_SOURCES
     include/Tr2RtShaderTableAL.h
     include/Tr2RtTopLevelAccelerationStructureAL.h
     include/Tr2PipelineStatsQueryAL.h
-    include/Tr2PixelFormat.h
     include/Tr2PrimaryRenderContextAL.h
     include/Tr2RenderContextAL.h
     include/Tr2RenderPassAL.h
@@ -215,7 +208,6 @@ set(_SOURCES
     include/Tr2StreamlineAL.h    
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
-    include/Tr2TextureType.h
     include/Tr2VertexLayoutAL.h
     include/Tr2VideoAdapterInfoAL.h
     include/TrinityAL.h
@@ -373,7 +365,7 @@ function(set_shared_trinityal_properties targetSuffix)
 
     find_package(CcpCore REQUIRED NO_CMAKE_PATH)
 
-    target_link_libraries(${target} PUBLIC CcpCore)
+    target_link_libraries(${target} PUBLIC CcpCore ImageIO)
 
     # override the output directory to ensure that all TrinityAL outputs end up in the same folder.
     # this is OK because we're differentiating them by OUTPUT_NAME
@@ -404,6 +396,13 @@ if(WIN32)
     target_compile_definitions(TrinityAL_stub PUBLIC TRINITY_PLATFORM=TRINITY_STUB)
     set_shared_trinityal_properties(stub)
 endif()
+
+find_package(ImageIO REQUIRED NO_CMAKE_PATH)
+find_package(ZLIB REQUIRED NO_CMAKE_PATH)
+find_package(JPEG REQUIRED NO_CMAKE_PATH)
+find_package(PNG REQUIRED NO_CMAKE_PATH)
+find_package(NanoVDB REQUIRED)
+
 
 if(WIN32)
     find_package(NvidiaAftermath REQUIRED)

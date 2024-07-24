@@ -204,6 +204,8 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 		fakePlacement.name = BlueSharedString( "Solo Placement" );
 		fakePlacement.offset = Vector3( 0, 0, 0 );
 		fakePlacement.hasDistribution = false;
+		fakePlacement.extendsBoundingSphere = false;
+		fakePlacement.extendsShieldEllipsoid = false;
 		CreatePlacement( newObj, dna, fakePlacement, std::vector<EveSOFDataMgr::LocatorDirectionData>( 1, center ), centerOffset );
 
 		// create an empty mesh...
@@ -3478,20 +3480,25 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 			CcpMath::Sphere instanceSphere( extensionDna->GetHullBoundingSphere() );
 			instanceSphere.Transform( transform );
 			
-			// update the bounding sphere of the parent
-			updatedBoundingSphere.IncludeSphere( instanceSphere );
-			// update the shield ellipsoid of the parent
-
-			CcpMath::AxisAlignedBox instanceBox( instanceSphere );
-			if( extensionDna->GetHullShapeEllipsoid() )
+			if( placement.extendsBoundingSphere )
 			{
-				instanceBox = CcpMath::AxisAlignedBox( extensionDna->GetHullShapeEllipsoid() );
-				instanceBox.Transform( transform );
+				// update the bounding sphere of the parent
+				updatedBoundingSphere.IncludeSphere( instanceSphere );
 			}
 
-			// include the instance box in the ellipsoid
-			updatedEllipsoid.IncludeBox( instanceBox );
-			
+			// update the shield ellipsoid of the parent
+			if( placement.extendsShieldEllipsoid )
+			{
+				CcpMath::AxisAlignedBox instanceBox( instanceSphere );
+				if( extensionDna->GetHullShapeEllipsoid() )
+				{
+					instanceBox = CcpMath::AxisAlignedBox( extensionDna->GetHullShapeEllipsoid() );
+					instanceBox.Transform( transform );
+				}
+
+				// include the instance box in the ellipsoid
+				updatedEllipsoid.IncludeBox( instanceBox );
+			}
 			// Controllers!
 			SetupControllers( BlueCastPtr( placementContainer->GetRawRoot() ), extensionDna, buildFlags );
 
@@ -3527,15 +3534,19 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 		container->AddToEffectChildrenList( child );
 	}
 
-	// change the bounding sphere of the parent, so clipping spheres etc will still be correct
-	parent->SetBoundingSphereInformation( updatedBoundingSphere );
-	// also store the parentBounds in the dna if we have nested layouts
-	extensionDna->SetParentBoundingSphere( updatedBoundingSphere );
-
-	// update the space object and the dna
-	parent->SetShapeEllipsoid( updatedEllipsoid );
-	extensionDna->SetParentShapeEllipsoidInfo( updatedEllipsoid );
-
+	if( placement.extendsBoundingSphere )
+	{
+		// change the bounding sphere of the parent, so clipping spheres etc will still be correct
+		parent->SetBoundingSphereInformation( updatedBoundingSphere );
+		// also store the parentBounds in the dna if we have nested layouts
+		extensionDna->SetParentBoundingSphere( updatedBoundingSphere );
+	}
+	if( placement.extendsShieldEllipsoid )
+	{
+		// update the space object and the dna
+		parent->SetShapeEllipsoid( updatedEllipsoid );
+		extensionDna->SetParentShapeEllipsoidInfo( updatedEllipsoid );
+	}
 	SetupInstancedMeshes( parent, extensionDna, placementOffsets );
 
 	// Finish up setting up the common data

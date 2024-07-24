@@ -115,13 +115,6 @@ void EveTransform::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		p->Update( updateContext );
 	}
 
-
-	if( !m_isVisible )
-	{
-		// This means emitters start working one frame after object is visible.
-		return;
-	}
-
 	for( auto it = m_particleSystems.begin(); it != m_particleSystems.end(); ++it )
 	{
 		(*it)->UpdateTransform( m_worldTransform );
@@ -142,8 +135,6 @@ void EveTransform::UpdateAsyncronous( const EveUpdateContext& updateContext )
 			( *it )->Update( args );
 		}
 	}
-
-	m_isVisible = false;
 }
 
 void EveTransform::UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform )

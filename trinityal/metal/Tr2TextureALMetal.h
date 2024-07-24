@@ -3,7 +3,6 @@
 #if( TRINITY_PLATFORM == TRINITY_METAL )
 
 #include "../include/Tr2TextureAL.h"
-#include "../include/Tr2BitmapDimensions.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2MemoryCounterAL.h"
 #include "MetalContext.h"
