@@ -34,7 +34,7 @@ namespace
 			std::seed_seq::result_type( reinterpret_cast<uint64_t>( curve ) )
 		};
 		std::seed_seq seq( std::begin( seeds ), std::end( seeds ) );
-		std::default_random_engine e1( seq );
+		std::minstd_rand0 e1( seq );
 		std::uniform_real_distribution<float> d( a, b );
 		return d( e1 );
 	}
