@@ -645,6 +645,7 @@ void Tr2Effect::RebuildSamplerOverrides()
 
 	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2ResourceSetDescriptionAL& resourceSetDesc )
 	{
+		bool modified = false;
 		for( auto jt = m_samplerOverrides.begin(); jt != m_samplerOverrides.end(); ++jt )
 		{
 			for( auto it = stage.samplers.begin(); it != stage.samplers.end(); ++it )
@@ -654,10 +655,12 @@ void Tr2Effect::RebuildSamplerOverrides()
 					Tr2SamplerStateAL sampler;
 					sampler.Create( CreateSamplerDescription( *jt ), renderContext );
 					resourceSetDesc.SetSampler( shaderType, it->first, sampler );
+					modified = true;
 					break;
 				}
 			}
 		}
+		return modified;
 	};
 
 	auto& desc = m_shader->GetEffectDescription();
@@ -676,7 +679,11 @@ void Tr2Effect::RebuildSamplerOverrides()
 					continue;
 				}
 
-				UpdateSamplers( ShaderType( i ), stage, pp.m_resourceSetDesc );
+				if( UpdateSamplers( ShaderType( i ), stage, pp.m_resourceSetDesc ) )
+				{
+					pp.m_compatibleWithGdr = false;
+					m_compatibleWithGdr = false;
+				}
 			}
 		}
 		for( unsigned passIx = 0; passIx != desc.techniques[technique].libraries.size(); ++passIx )
