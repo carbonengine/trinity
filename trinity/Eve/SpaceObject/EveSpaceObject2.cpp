@@ -1529,9 +1529,8 @@ void EveSpaceObject2::UpdateRtMesh( const EveUpdateContext& updateContext )
 	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 	if( !areas->empty() )
 	{
-		auto meshScreenSize = m_allowLodSelection ? m_estimatedPixelDiameter / updateContext.GetLodFactor() : std::numeric_limits<float>::max();
 		auto rtMesh = m_mesh->GetOrCreateRtMesh();
-		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), meshScreenSize );
+		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_meshScreenSize );
 
 		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
