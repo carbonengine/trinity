@@ -354,7 +354,7 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 {
 	Tr2RenderBatch batch;
 
-	if( !area->GetDisplay() )
+	if( !area->GetDisplay() || !mesh->m_allocationsValid )
 	{
 		return batch;
 	}
