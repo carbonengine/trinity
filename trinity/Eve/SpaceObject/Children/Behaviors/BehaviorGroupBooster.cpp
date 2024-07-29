@@ -375,7 +375,7 @@ unsigned int BehaviorGroupBooster::GetVertexDeclaration() const
 
 Tr2RenderBatch BehaviorGroupBooster::GetBatch( Tr2BufferAL* instanceBuffer, unsigned int startInstance, unsigned int instanceDataStride, unsigned int count ) const
 {
-	if( !instanceBuffer || !m_displayBoosters || !m_display )
+	if( !instanceBuffer || !m_displayBoosters || !m_display || !m_vertexBuffer.GetSharedResource().IsValid() )
 	{
 		return {};
 	}
