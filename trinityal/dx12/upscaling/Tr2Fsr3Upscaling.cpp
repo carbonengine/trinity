@@ -108,7 +108,7 @@ Tr2Fsr3UpscalingTechnique::Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique 
 
 	OSVERSIONINFOEX osvi = {};
 	osvi.dwMajorVersion = 10;
-	osvi.dwBuildNumber = 20348; // Required for I3D3Device8 used by FSR3
+	osvi.dwBuildNumber = 19041; // Required for ID3D12Device8 used by FSR3
 
 	DWORDLONG conditionMask = 0;
 	VER_SET_CONDITION( conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL );
