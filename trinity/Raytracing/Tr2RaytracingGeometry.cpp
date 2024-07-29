@@ -306,7 +306,7 @@ For compaction, a general rule is: compact for static geometry, for fully dynami
 const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext )
 {
 	auto meshData = mesh.GetMeshData();
-	if( meshData->m_areas[m_areaIndex].m_isSkinned )
+	if( meshData && meshData->m_areas[m_areaIndex].m_isSkinned )
 	{
 		if( m_blas.IsValid() && !m_blasOutdated )
 		{
@@ -401,8 +401,8 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 
 const Tr2ConstantBufferAL& Tr2RaytracingMeshArea::GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const
 {
-	auto meshData = mesh.GetMeshData();
-	if( !meshData->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
+	TriGeometryResMeshData* meshData = mesh.GetMeshData();
+	if( meshData && !meshData->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
 	{
 		if( SUCCEEDED( meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Create( sizeof( TriRtGeometryConstants ), renderContext.GetPrimaryRenderContext() ) ) )
 		{
@@ -578,7 +578,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 
 		Tr2RaytracingMesh* mesh = it->mesh;
-		if( mesh->GetMeshData()->m_areas[it->area->GetAreaIndex()].m_isSkinned )
+		TriGeometryResMeshData* meshData = mesh->GetMeshData();
+		if( meshData && meshData->m_areas[it->area->GetAreaIndex()].m_isSkinned )
 		{
 			if( !mesh->GetAndResetDirtyFlag() )
 			{
@@ -587,7 +588,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 			outdatedMeshes.push_back( mesh );
 
-			skinnedVertexCount += mesh->GetMeshData()->m_vertexCount;
+			skinnedVertexCount += meshData->m_vertexCount;
 		}
 	}
 
@@ -663,6 +664,10 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		{
 			Tr2RaytracingMesh* mesh = *it;
 			TriGeometryResMeshData* meshData = mesh->GetMeshData();
+			if( !meshData )
+			{
+				return;
+			}
 
 			auto vertexCount = meshData->m_vertexCount;
 

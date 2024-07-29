@@ -185,7 +185,7 @@ namespace TrinityALImpl
 
 	ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext )
 	{
-		if( !m_scratch )
+		if( !m_scratch || !m_buffer )
 		{
 			return E_INVALIDCALL;
 		}
@@ -295,10 +295,11 @@ namespace TrinityALImpl
 			{
 				RELEASE_LATER( m_owner, m_scratch );
 			}
-			m_owner = nullptr;
 			m_scratch = nullptr;
 			m_buffer = nullptr;
 			m_bufferAddress = {};
+			m_geometryDesc = {};
+			m_owner = nullptr;
 		}
 	}
 
