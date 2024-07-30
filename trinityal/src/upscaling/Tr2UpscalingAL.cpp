@@ -201,8 +201,20 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& 
 	return m_contexts[upscalingContextID].get();
 }
 
-Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, uint32_t existingContext )
 {
+    if( existingContext != Tr2UpscalingAL::INVALID_CONTEXT_ID )
+    {
+        auto context = m_contexts.find( existingContext );
+        if( context != m_contexts.end() )
+        {
+            if( context->second->ReSetup( displayWidth, displayHeight, sourceFormat, depthFormat, renderContext ) )
+            {
+                return context->second.get();
+            }
+        }
+        DeleteContext( renderContext, existingContext );
+    }
     // safety harness, displayWidth and displayHeight need to be bigger than 1 since it is hard to render into something
     // that is smaller than a pixel...
     if( displayWidth < 2 || displayHeight < 2 ){
@@ -270,6 +282,11 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t di
 
 Tr2UpscalingContextAL::~Tr2UpscalingContextAL()
 {
+}
+
+bool Tr2UpscalingContextAL::ReSetup( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Tr2RenderContextAL& renderContext )
+{
+    return false;
 }
 
 void Tr2UpscalingContextAL::Destroy( Tr2RenderContextAL& renderContext )

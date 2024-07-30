@@ -163,6 +163,10 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Setup( Tr2RenderContextAL& re
     return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 }
 
+bool Tr2MetalFxUpscalingContext::ReSetup( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Tr2RenderContextAL& renderContext )
+{
+    return m_displayWidth == displayWidth && m_displayHeight == displayHeight && m_sourceFormat == sourceFormat && m_depthFormat == depthFormat;
+}
 
 void Tr2MetalFxUpscalingContext::CreateTemporalScaler( Tr2RenderContextAL& renderContext )
 {

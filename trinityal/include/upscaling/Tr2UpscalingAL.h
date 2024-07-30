@@ -128,7 +128,7 @@ public:
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const = 0;
 
 	Tr2UpscalingContextAL* GetContext( Tr2RenderContextAL& renderContext, uint32_t upscalingContextID );
-	Tr2UpscalingContextAL* CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Tr2UpscalingContextAL* CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
 	void DeleteContext( Tr2RenderContextAL& renderContext, uint32_t contextID );
 
 	void GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration );
@@ -151,6 +151,7 @@ public:
 
 	// after setup is called, we must know the size of the render targets!
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) = 0;
+    virtual bool ReSetup( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Tr2RenderContextAL& renderContext );
 	// when a window is closed or when we change devices this will be called
 	virtual void Destroy( Tr2RenderContextAL& renderContext );
 	// at what render resolution are we drawing to

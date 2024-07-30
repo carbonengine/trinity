@@ -1183,10 +1183,12 @@ void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingA
 	m_upscalingWithFrameGeneration = frameGeneration;
 }
 
-uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Be::Optional<uint32_t> existingContext )
 {
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	auto context = renderContext.CreateUpscalingContext( displayWidth, displayHeight, sourceFormat, depthFormat );
+    CCP_STATS_ZONE( __FUNCTION__ );
+
+    USE_MAIN_THREAD_RENDER_CONTEXT();
+    auto context = renderContext.CreateUpscalingContext( displayWidth, displayHeight, sourceFormat, depthFormat, existingContext.IsAssigned() ? existingContext.GetValue() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
 	if( context )
 	{
 		return context->GetID();
@@ -1196,6 +1198,7 @@ uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t disp
 
 void TriDevice::DeleteUpscalingContext( uint32_t contextID )
 {
+    CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	renderContext.DeleteUpscalingContext( contextID );
 }

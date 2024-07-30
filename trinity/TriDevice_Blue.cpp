@@ -442,12 +442,17 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			":param setting: the setting to use (type Tr2UpscalingAL::Setting)\n" 
 			":param frameGeneration: framegeneration on/off (type bool)" 
 		)
-		MAP_METHOD_AND_WRAP(
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"CreateUpscalingContext",
 			CreateUpscalingContext,
+            1,
 			"Creates an upscaling context for the display resolution, if there is upscaling enabled\n"
 			":param displayWidth: the width of the display\n"
 			":param displayHeight: the height of the display\n" 
+            ":param pixelFormat: pixel format for the render target\n"
+            ":param depthFormat: pixel format for the depth buffer\n"
+            ":param existingContext: ID of the existing context to try to reuse for the new one. If it is not possible to\n"
+            "  reuse the existing context it will be deleted before the new context is created\n"
 		)
 		MAP_METHOD_AND_WRAP(
 			"DeleteUpscalingContext",

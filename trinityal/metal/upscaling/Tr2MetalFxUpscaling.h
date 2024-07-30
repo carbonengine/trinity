@@ -34,6 +34,7 @@ public:
     ~Tr2MetalFxUpscalingContext();
 
     virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
+    bool ReSetup( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Tr2RenderContextAL& renderContext ) override;
     virtual bool HasSharpening() const override;
     virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
