@@ -46,13 +46,25 @@ private:
     void CreateSpatialScaler( Tr2RenderContextAL& renderContext );
     
     API_AVAILABLE(macos(13.0))
-    id<MTLFXTemporalScaler> m_mfxTemporalScaler;
-    
-    API_AVAILABLE(macos(13.0))
     id<MTLFXSpatialScaler> m_mfxSpatialScaler;
     
     bool m_setup;
     Tr2UpscalingAL::JitterSequence m_jitterSequence;
+    
+    struct TemporalScaler
+    {
+        API_AVAILABLE(macos(13.0))
+        MTLFXTemporalScalerDescriptor* desc;
+        
+        API_AVAILABLE(macos(13.0))
+        id<MTLFXTemporalScaler> temporalScaler;
+
+        id<MTLDevice> device;
+        std::atomic<bool> canceled = false;
+        std::atomic<bool> created = false;
+    };
+    
+    std::shared_ptr<TemporalScaler> m_temporalScaler;
 
     friend class Tr2MetalFxUpscalingTechnique;
 };

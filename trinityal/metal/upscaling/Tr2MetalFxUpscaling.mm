@@ -26,6 +26,60 @@ namespace MetalUpscalingUtils
     }
 }
 
+namespace
+{
+
+template <typename Item, typename Processor>
+class WorkQueue
+{
+public:
+    WorkQueue( Processor processor )
+    :   m_processor( processor )
+    {
+        std::thread( [this]() {
+            Worker();
+        } ).detach();
+    }
+    
+    void Add( const std::shared_ptr<Item>& item )
+    {
+        std::unique_lock lock( m_mutex );
+        m_queue.push_back( item );
+        m_added.notify_one();
+    }
+private:
+    void Worker()
+    {
+        for( ;; )
+        {
+            m_processor( GetItem() );
+        }
+    }
+    
+    std::shared_ptr<Item> GetItem()
+    {
+        for( ;; )
+        {
+            std::unique_lock scope( m_mutex );
+            if( !m_queue.empty() )
+            {
+                auto item = m_queue.front();
+                m_queue.erase( m_queue.begin() );
+                return item;
+            }
+            m_added.wait( scope, [this] { return !m_queue.empty(); } );
+        }
+    }
+    
+    std::mutex m_mutex;
+    std::condition_variable m_added;
+    std::vector<std::shared_ptr<Item>> m_queue;
+    Processor m_processor;
+};
+
+
+}
+
 Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ):
     Tr2UpscalingTechniqueAL( technique, setting, frameGeneration, adapter ),
     m_temporal( false )
@@ -99,7 +153,6 @@ Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( uint32_t displayWidth, u
 {
     if( @available(macOS 13.0, *) )
     {
-        m_mfxTemporalScaler = nil;
         m_mfxSpatialScaler = nil;
     }
     m_jitterXScale = 1.0f;
@@ -110,8 +163,11 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext()
 {
     if( @available(macos 13.0, *) )
     {
+        if( m_temporalScaler )
+        {
+            m_temporalScaler->canceled = true;
+        }
         m_mfxSpatialScaler = nil;
-        m_mfxTemporalScaler = nil;
     }
 }
 
@@ -148,12 +204,9 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Setup( Tr2RenderContextAL& re
             CreateTemporalScaler( renderContext );
             m_jitterSequence = Tr2UpscalingAL::GenerateHaltonSequence( 8 * m_upscaling * m_upscaling, 2, 3 );
         }
-        else
-        {
-            CreateSpatialScaler( renderContext );
-        }
+        CreateSpatialScaler( renderContext );
         
-        if( m_mfxSpatialScaler == nil && m_mfxTemporalScaler == nil )
+        if( m_mfxSpatialScaler == nil )
         {
             return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
         }
@@ -172,6 +225,21 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler( Tr2RenderContextAL& rende
 {
     if( @available(macOS 13.0, *) )
     {
+        static WorkQueue<TemporalScaler, void (*)( const std::shared_ptr<TemporalScaler>& )> s_queue( []( auto scaler ) {
+            if( !scaler->canceled )
+            {
+                scaler->temporalScaler = [scaler->desc newTemporalScalerWithDevice:scaler->device];
+                if( scaler->temporalScaler == nil )
+                {
+                    CCP_LOGERR("Could not create a MetalFX Temporal Scaler");
+                    return;
+                }
+                scaler->temporalScaler.motionVectorScaleX = scaler->desc.inputWidth;
+                scaler->temporalScaler.motionVectorScaleY = scaler->desc.inputHeight;
+                scaler->created = true;
+            }
+        } );
+        
         TrinityALImpl::MetalContext* metalContext = renderContext.GetPrimaryRenderContext().GetMetalContext();
         auto pixelFormat = metalContext->m_utils->GetMTLPixelFormat( m_sourceFormat );
         auto depthPixelFormat = metalContext->m_utils->GetMTLPixelFormat( Tr2RenderContextEnum::ConvertDepthStencilFormat( m_depthFormat ) );        
@@ -190,16 +258,12 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler( Tr2RenderContextAL& rende
         desc.motionTextureFormat = motionPixelFormat;
         desc.outputTextureFormat = pixelFormat;
         
-        m_mfxTemporalScaler = [desc newTemporalScalerWithDevice:device];
+        m_temporalScaler = std::make_shared<TemporalScaler>();
+        m_temporalScaler->desc = desc;
+        m_temporalScaler->device = device;
         
-        if( m_mfxTemporalScaler == nil )
-        {
-            CCP_LOGERR("Could not create a MetalFX Temporal Scaler");
-            return;
-        }
+        s_queue.Add( m_temporalScaler );
         
-        m_mfxTemporalScaler.motionVectorScaleX = m_renderWidth;
-        m_mfxTemporalScaler.motionVectorScaleY = m_renderHeight;
         m_reset = true;
     }
 }
@@ -238,7 +302,7 @@ bool Tr2MetalFxUpscalingContext::HasSharpening() const {
 
 void Tr2MetalFxUpscalingContext::UpdateJitter()
 {
-    if( m_temporal )
+    if( m_temporal && m_temporalScaler && m_temporalScaler->created )
     {
         m_jitterX = m_jitterSequence[m_jitterIndex].first;
         m_jitterY = m_jitterSequence[m_jitterIndex].second;
@@ -270,6 +334,33 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL&
             return Tr2UpscalingAL::Result::INCORRECT_INPUT;
         }
 
+        if( m_temporalScaler && m_temporalScaler->created )
+        {
+            if( m_mfxSpatialScaler )
+            {
+                m_reset = true;
+                m_mfxSpatialScaler = nil;
+            }
+            
+            auto scaler = m_temporalScaler->temporalScaler;
+            auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
+            queue->EndEncoder();
+            
+            scaler.reset = m_reset;
+            scaler.colorTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.input );
+            scaler.depthTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.depth );
+            scaler.motionTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.velocity );
+            scaler.outputTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.output );
+            scaler.depthReversed = true;
+            scaler.jitterOffsetX = m_jitterX;
+            scaler.jitterOffsetY = m_jitterY;
+            
+            [scaler encodeToCommandBuffer:queue->GetCommandBuffer()];
+            
+            m_reset = false;
+            return Tr2UpscalingAL::Result::OK;
+        }
+        
         if( m_mfxSpatialScaler != nil )
         {
             auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
@@ -279,24 +370,6 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL&
             m_mfxSpatialScaler.outputTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.output );
             
             [m_mfxSpatialScaler encodeToCommandBuffer:queue->GetCommandBuffer()];
-        }
-        else if( m_mfxTemporalScaler != nil )
-        {
-            auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
-            queue->EndEncoder();
-            
-            m_mfxTemporalScaler.reset = m_reset;
-            m_mfxTemporalScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.input );
-            m_mfxTemporalScaler.depthTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.depth );
-            m_mfxTemporalScaler.motionTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.velocity );
-            m_mfxTemporalScaler.outputTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.output );
-            m_mfxTemporalScaler.depthReversed = true;
-            m_mfxTemporalScaler.jitterOffsetX = m_jitterX;
-            m_mfxTemporalScaler.jitterOffsetY = m_jitterY;
-            
-            [m_mfxTemporalScaler encodeToCommandBuffer:queue->GetCommandBuffer()];
-            
-            m_reset = false;
         }
         else
         {
