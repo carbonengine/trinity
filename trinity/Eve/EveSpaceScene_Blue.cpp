@@ -43,25 +43,6 @@ Be::VarChooser EveVisualizerChooser[] =
 	};
 BLUE_REGISTER_ENUM_EX( "EveVisualizeMethod", EveSpaceScene::EveVisualizeMethod, EveVisualizerChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
-Be::VarChooser ShadowVisualizerChooser[] = {
-	{ "Disabled",
-	  BeCast( EveSpaceScene::SHADOW_DISABLED ),
-	  "No shadows" },
-	{ "Low",
-	  BeCast( EveSpaceScene::SHADOW_LOW ),
-	  "Cascaded shadows but no denoiser" },
-	{ "High",
-	  BeCast( EveSpaceScene::SHADOW_HIGH ),
-	  "Cascaded shadows with denoising" },
-	{ "Raytraced",
-	  BeCast( EveSpaceScene::SHADOW_RAYTRACED ),
-	  "Raytraced shadows" },
-	{ 0 }
-};
-BLUE_REGISTER_ENUM_EX( "ShadowVisualizeMethod", EveSpaceScene::ShadowQuality, ShadowVisualizerChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
-
-
-
 #if BLUE_WITH_PYTHON
 PyObject* PyPickObjectAndAreaID( PyObject* self, PyObject* args )
 {
@@ -332,13 +313,12 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_cascadedShadowMap,
 			"This should get created in python.",
 			Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE_WITH_CHOOSER(
+		MAP_ATTRIBUTE(
 			"shadowQualitySetting",
 			m_shadowQuality,
-			"Set quality for shadows, low, high or raytraced\n"
-			":jessica-group: Shadows",
-			Be::READWRITE | Be::ENUM | Be::NOTIFY,
-			ShadowVisualizerChooser )
+			"Set quality for shadows \n"
+			"jessica-hidden: True",
+			Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE(
 			"freezeFrustum",
 			m_freezeFrustum,
