@@ -43,22 +43,14 @@ namespace Fsr2Utils
 	}
 }
 
-Tr2Fsr2UpscalingTechnique::Tr2Fsr2UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration, adapter )
+Tr2Fsr2UpscalingTechnique::Tr2Fsr2UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter )
 {
 	SanitizeState();
 }
 
 Tr2Fsr2UpscalingTechnique::~Tr2Fsr2UpscalingTechnique()
 {
-}
-
-void Tr2Fsr2UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
-{
-	for( auto& item : m_contexts )
-	{
-		item.second.get()->Destroy( renderContext );
-	}
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2Fsr2UpscalingTechnique::GetAvailableSettings() const
@@ -76,13 +68,13 @@ bool Tr2Fsr2UpscalingTechnique::IsTemporal() const
 	return true;
 }
 
-Tr2UpscalingContextAL* Tr2Fsr2UpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+Tr2UpscalingContextAL* Tr2Fsr2UpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
 {
-	return new Tr2Fsr2UpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, IsTemporal(), sourceFormat, depthFormat );
+	return new Tr2Fsr2UpscalingContext( m_setting, m_frameGeneration, params );
 }
 
-Tr2Fsr2UpscalingContext::Tr2Fsr2UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
-	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, frameGeneration, isTemporal, sourceFormat, depthFormat ),
+Tr2Fsr2UpscalingContext::Tr2Fsr2UpscalingContext( Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2UpscalingAL::UpscalingContextParams params ) :
+	Tr2UpscalingContextAL( setting, frameGeneration, params ),
 	m_initializationParameters( {} ),
 	m_setup( false )
 {
@@ -103,19 +95,15 @@ Tr2Fsr2UpscalingContext::Tr2Fsr2UpscalingContext( uint32_t displayWidth, uint32_
 	case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
 		m_upscaling = ffxFsr2GetUpscaleRatioFromQualityMode( FfxFsr2QualityMode::FFX_FSR2_QUALITY_MODE_ULTRA_PERFORMANCE );
 		break;
+	default:
+		m_upscaling = 1.0f;
+		break;
 	}
 
 	m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
 	m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
-}
 
-Tr2Fsr2UpscalingContext::~Tr2Fsr2UpscalingContext()
-{
-}
-
-Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Setup( Tr2RenderContextAL& renderContext )
-{
-	auto device = renderContext.m_ownerDevice->m_device;
+	auto device = params.renderContext.m_ownerDevice->m_device;
 
 	// Setup DX12 interface.
 	const size_t scratchBufferSize = ffxGetScratchMemorySizeDX12( 1 );
@@ -124,7 +112,7 @@ Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Setup( Tr2RenderContextAL& rende
 	if( errorCode != FFX_OK )
 	{
 		CCP_LOGERR( "FSR2 setup could not create interface %d", errorCode );
-		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+		return;
 	}
 
 	m_initializationParameters.backendInterface.device = ffxGetDeviceDX12( device );
@@ -145,17 +133,14 @@ Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Setup( Tr2RenderContextAL& rende
 	if( !m_setup )
 	{
 		CCP_LOGERR( "FSR2 setup could not create context %d", errorCode );
-		Destroy( renderContext );
-		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
 	}
-	return Tr2UpscalingAL::Result::OK;
 }
 
-void Tr2Fsr2UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
+Tr2Fsr2UpscalingContext::~Tr2Fsr2UpscalingContext()
 {
 	if( m_setup )
 	{
-		renderContext.FlushAndSyncDx12( );
+		m_params.renderContext.FlushAndSyncDx12();
 		auto errorCode = ffxFsr2ContextDestroy( &m_context );
 		if( errorCode != FFX_OK )
 		{
@@ -166,7 +151,6 @@ void Tr2Fsr2UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
 			CCP_FREE( m_initializationParameters.backendInterface.scratchBuffer );
 			m_initializationParameters.backendInterface.scratchBuffer = nullptr;
 		}
-		m_setup = false;
 	}
 }
 
@@ -190,7 +174,7 @@ uint32_t Tr2Fsr2UpscalingContext::GetDispatchRequirements() const
 	return Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE | Tr2UpscalingAL::DispatchRequirements::VELOCITY | Tr2UpscalingAL::DispatchRequirements::REACTIVE;
 }
 
-Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
 	if( !m_setup )
 	{
@@ -200,6 +184,8 @@ Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Dispatch( Tr2RenderContextAL& re
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
+
+	auto& renderContext = m_params.renderContext;
 	// flush all barriers before handing control over to FSR2
 	renderContext.FlushBarriersDx12();
 

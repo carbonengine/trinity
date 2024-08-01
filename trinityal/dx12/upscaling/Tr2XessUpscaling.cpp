@@ -79,22 +79,14 @@ void LogXeSS( const char* message, xess_logging_level_t loggingLevel )
 }
 
 
-Tr2XessUpscalingTechnique::Tr2XessUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration, adapter )
+Tr2XessUpscalingTechnique::Tr2XessUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter )
 {
 	SanitizeState();
 }
 
 Tr2XessUpscalingTechnique::~Tr2XessUpscalingTechnique()
 {
-}
-
-void Tr2XessUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
-{
-	for( auto& item : m_contexts )
-	{
-		item.second.get()->Destroy( renderContext );
-	}
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2XessUpscalingTechnique::GetAvailableSettings() const
@@ -112,18 +104,18 @@ bool Tr2XessUpscalingTechnique::IsTemporal() const
 	return true;
 }
 
-bool Tr2XessUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const
+bool Tr2XessUpscalingTechnique::IsAvailable( ) const
 {
 	return true;
 }
 
-Tr2UpscalingContextAL* Tr2XessUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+Tr2UpscalingContextAL* Tr2XessUpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
 {
-	return new Tr2XessUpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, IsTemporal(), sourceFormat, depthFormat );
+	return new Tr2XessUpscalingContext( m_setting, m_frameGeneration, params );
 }
 
-Tr2XessUpscalingContext::Tr2XessUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
-	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, frameGeneration, isTemporal, sourceFormat, depthFormat ),
+Tr2XessUpscalingContext::Tr2XessUpscalingContext( Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2UpscalingAL::UpscalingContextParams params ) :
+	Tr2UpscalingContextAL( setting, frameGeneration, params ),
 	m_context( nullptr ),
 	m_setup( false ),
 	m_setupWithExposure( true )
@@ -147,10 +139,13 @@ Tr2XessUpscalingContext::Tr2XessUpscalingContext( uint32_t displayWidth, uint32_
 		CCP_LOGERR( "Invalid Setting Applied to Tr2XeSSUpscaling: %d", setting );
 		break;
 	}
+
+	Setup();
 }
 
 Tr2XessUpscalingContext::~Tr2XessUpscalingContext()
 {
+	Destroy();
 }
 
 bool Tr2XessUpscalingContext::HasSharpening() const
@@ -174,18 +169,20 @@ void Tr2XessUpscalingContext::UpdateJitter()
 	}
 }
 
-void Tr2XessUpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
+void Tr2XessUpscalingContext::Destroy( )
 {
 	if( m_context )
 	{
-		renderContext.FlushAndSyncDx12( );
+		m_params.renderContext.FlushAndSyncDx12( );
 		xessDestroyContext( m_context );
 		m_context = nullptr;
 	}
 }
 
-Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& renderContext )
+void Tr2XessUpscalingContext::Setup( )
 {
+	m_setup = false;
+
 	xess_d3d12_init_params_t params{};
 	params.outputResolution.x = m_displayWidth;
 	params.outputResolution.y = m_displayHeight;
@@ -196,6 +193,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& rende
 		params.initFlags |= XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE;
 	}
 
+	auto& renderContext = m_params.renderContext;	
 	renderContext.FlushAndSyncDx12();
 	renderContext.DirtyDescriptorCache();
 
@@ -204,9 +202,10 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& rende
 	{
 		m_context = nullptr;
 		CCP_LOGNOTICE( "XeSS: XeSS is not supported on this device. Result - %s.", Tr2XessUpscalingUtils::ResultToString( status ) );
-		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+		return;
 	}
-	else if( XESS_RESULT_WARNING_OLD_DRIVER == xessIsOptimalDriver( m_context ) )
+	
+	if( XESS_RESULT_WARNING_OLD_DRIVER == xessIsOptimalDriver( m_context ) )
 	{
 		CCP_LOGNOTICE( "XeSS: Please install the latest graphics driver from your vendor for optimal Intel(R) XeSS performance and visual quality" );
 	}
@@ -224,7 +223,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& rende
 	if( ret != XESS_RESULT_SUCCESS )
 	{
 		CCP_LOGERR( "XeSS: Could not initialize. Result - %s.", Tr2XessUpscalingUtils::ResultToString( ret ) );
-		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+		return;
 	}
 
 	// Get version of XeSS
@@ -233,7 +232,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& rende
 	if( ret != XESS_RESULT_SUCCESS )
 	{
 		CCP_LOGERR( "XeSS: Could not get version information. Result - %s.", Tr2XessUpscalingUtils::ResultToString( ret ) );
-		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+		return;
 	}
 
 	CCP_LOGNOTICE( "XeSS: Version - %u.%u.%u", ver.major, ver.minor, ver.patch );
@@ -245,7 +244,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& rende
 		if( ret != XESS_RESULT_SUCCESS )
 		{
 			CCP_LOGERR( "XeSS: Could not set logging callback Result - %s.", Tr2XessUpscalingUtils::ResultToString( ret ) );
-			return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+			return;
 		}
 	}
 	xess_2d_t inputRes = { 1, 1 };
@@ -257,7 +256,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& rende
 	if( ret != XESS_RESULT_SUCCESS )
 	{
 		CCP_LOGERR( "XeSS: Could not get input resolution. Result - %s.", Tr2XessUpscalingUtils::ResultToString( ret ) );
-		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+		return;
 	}
 
 	m_renderWidth = inputRes.x;
@@ -268,10 +267,9 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Setup( Tr2RenderContextAL& rende
 
 	CCP_LOGNOTICE( "XeSS: Initialized." );
 	m_setup = true;
-	return Tr2UpscalingAL::Result::OK;
 }
 
-Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
 	if( !m_setup )
 	{
@@ -289,8 +287,8 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		CCP_LOGNOTICE( "XeSS: Resetting the context due to exposure not being available." );
 
 		m_setupWithExposure = false;
-		Destroy( renderContext );
-		Setup( renderContext );
+		Destroy();
+		Setup();
 	}
 	// and the reverse
 	else if( !m_setupWithExposure && dispatchParameters.exposure != nullptr )
@@ -298,8 +296,8 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		CCP_LOGNOTICE( "XeSS: Resetting the context due to exposure now being available." );
 
 		m_setupWithExposure = true;
-		Destroy( renderContext );
-		Setup( renderContext );
+		Destroy();
+		Setup();
 	}
 
 	auto namer = []( Tr2TextureAL* texture, const char* name ) {
@@ -330,6 +328,8 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2RenderContextAL& re
 	namer( dispatchParameters.depth, "xess depth" );
 	namer( dispatchParameters.velocity, "xess velocity" );
 	namer( dispatchParameters.exposure, "xess exposure" );
+
+	auto& renderContext = m_params.renderContext;
 
 	// flush all barriers before changing the state of the textures
 	renderContext.SetResourceSet( Tr2ResourceSetAL() );

@@ -85,6 +85,24 @@ namespace Tr2UpscalingAL
 		mipLevelBias( 0.0f )
 	{}
 
+	UpscalingContextParams::UpscalingContextParams( Tr2RenderContextAL& renderContext ) :
+		displayWidth( 0 ),
+		displayHeight( 0 ),
+		sourceFormat( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_UNKNOWN ),
+		depthFormat( Tr2RenderContextEnum::DepthStencilFormat::DSFMT_UNKNOWN ),
+		allowFramegen( false ),
+		renderContext( renderContext )
+	{} 
+
+	//implement the equal operator
+	bool UpscalingContextParams::operator==( const UpscalingContextParams& other ) const
+	{
+		return displayWidth == other.displayWidth &&
+			displayHeight == other.displayHeight &&
+			sourceFormat == other.sourceFormat &&
+			depthFormat == other.depthFormat &&
+			allowFramegen == other.allowFramegen;
+	}
 
 	const char* GetTechniqueName( Technique technique )
 	{
@@ -131,12 +149,17 @@ namespace Tr2UpscalingAL
 }
 
 
-Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
+Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	m_frameGeneration( frameGeneration ),
 	m_setting( setting ),
-	m_technique( technique )
+	m_technique( technique ), 
+	m_renderContext( renderContext )
 {
 	m_contexts = std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>>();
+}
+
+void Tr2UpscalingTechniqueAL::ReleaseResources()
+{
 }
 
 void Tr2UpscalingTechniqueAL::SanitizeState()
@@ -167,18 +190,14 @@ std::vector<Tr2UpscalingAL::Setting> Tr2UpscalingTechniqueAL::GetAvailableSettin
 	return std::vector<Tr2UpscalingAL::Setting>();
 }
 
-void Tr2UpscalingTechniqueAL::Prepare( Tr2RenderContextAL& renderContext ) 
-{
-}
-
-void Tr2UpscalingTechniqueAL::GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration )
+void Tr2UpscalingTechniqueAL::GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration ) const
 {
 	technique = m_technique;
 	setting = m_setting;
 	frameGeneration = m_frameGeneration;
 }
 
-void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
+void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
 	if( frameEvent == Tr2RenderContextEnum::FrameEvent::FRAME_EVENT_RENDERING_STARTED )
 	{
@@ -191,7 +210,7 @@ void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextAL& renderContext,
 }
 
 
-Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& renderContext, uint32_t upscalingContextID )
+Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( uint32_t upscalingContextID )
 {
 	if( m_contexts.find( upscalingContextID ) == m_contexts.end() )
 	{
@@ -201,34 +220,34 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& 
 	return m_contexts[upscalingContextID].get();
 }
 
-Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, uint32_t existingContext )
+Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext )
 {
     if( existingContext != Tr2UpscalingAL::INVALID_CONTEXT_ID )
     {
         auto context = m_contexts.find( existingContext );
         if( context != m_contexts.end() )
         {
-            if( context->second->ReSetup( displayWidth, displayHeight, sourceFormat, depthFormat, renderContext ) )
+            if( context->second->ReSetup( params) )
             {
                 return context->second.get();
             }
         }
-        DeleteContext( renderContext, existingContext );
+        DeleteContext( existingContext );
     }
     // safety harness, displayWidth and displayHeight need to be bigger than 1 since it is hard to render into something
     // that is smaller than a pixel...
-    if( displayWidth < 2 || displayHeight < 2 ){
-        CCP_LOGWARN("Cannot create an upscaler for output that is less than 2x2 pixels. Ignoring context creation");
+    if( params.displayWidth < 2 || params.displayHeight < 2 )
+    {
+        CCP_LOGWARN( "Cannot create an upscaler for output that is less than 2x2 pixels. Ignoring context creation" );
         return nullptr;
     }
-	auto context = CreateContextInstance( displayWidth, displayHeight, sourceFormat, depthFormat );
-	context->Setup( renderContext );
-	m_contexts[context->GetID()].reset( context );
+    auto context = CreateContextInstance( params );
+    m_contexts[context->GetID()].reset( context );
 
-	return context;
+    return context;
 }
 
-void Tr2UpscalingTechniqueAL::DeleteContext( Tr2RenderContextAL& renderContext, uint32_t contextID )
+void Tr2UpscalingTechniqueAL::DeleteContext( uint32_t contextID )
 {
 	auto context = m_contexts.find( contextID );
 	if( context == m_contexts.end() )
@@ -237,11 +256,10 @@ void Tr2UpscalingTechniqueAL::DeleteContext( Tr2RenderContextAL& renderContext, 
 		return;
 	}
 
-	context->second->Destroy( renderContext );
 	m_contexts.erase( context );
 }
 
-bool Tr2UpscalingTechniqueAL::IsAvailable( Tr2RenderContextAL& renderContext ) const
+bool Tr2UpscalingTechniqueAL::IsAvailable( ) const
 {
 	return true;
 }
@@ -251,12 +269,10 @@ bool Tr2UpscalingTechniqueAL::SupportsFrameGeneration( ) const
 	return false;
 }
 
-Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool temporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
+Tr2UpscalingContextAL::Tr2UpscalingContextAL( Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2UpscalingAL::UpscalingContextParams params ) :
 	m_setting(setting),
-	m_frameGeneration( frameGeneration ),
-	m_temporal( temporal ),
-	m_displayWidth( displayWidth ),
-	m_displayHeight( displayHeight ),
+	m_displayWidth( params.displayWidth ),
+	m_displayHeight( params.displayHeight ),
 	m_renderWidth( 0 ),
 	m_renderHeight( 0 ),
 	m_upscaling( 0 ),
@@ -266,8 +282,7 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t di
 	m_jitterY( 0.0f ),
 	m_jitterXScale( 2.0f ),
 	m_jitterYScale( -2.0f ), 
-	m_sourceFormat( sourceFormat ),
-	m_depthFormat( depthFormat )
+	m_params( params )
 {
 	static uint32_t CONTEXT_ID = 0; 
 	m_id = CONTEXT_ID++;
@@ -278,19 +293,17 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t di
 		m_id = 0;
 		CONTEXT_ID = 0;
 	}
+
+	m_frameGeneration = frameGeneration && m_params.allowFramegen;
 }
 
 Tr2UpscalingContextAL::~Tr2UpscalingContextAL()
 {
 }
 
-bool Tr2UpscalingContextAL::ReSetup( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Tr2RenderContextAL& renderContext )
+bool Tr2UpscalingContextAL::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
 {
     return false;
-}
-
-void Tr2UpscalingContextAL::Destroy( Tr2RenderContextAL& renderContext )
-{
 }
 
 uint32_t Tr2UpscalingContextAL::GetID() const
@@ -306,8 +319,8 @@ void Tr2UpscalingContextAL::GetRenderDimensions( uint32_t& width, uint32_t& heig
 
 void Tr2UpscalingContextAL::GetDisplayDimensions( uint32_t& width, uint32_t& height ) const
 {
-	width = m_displayWidth;
-	height = m_displayHeight;
+	width = m_params.displayWidth;
+	height = m_params.displayHeight;
 }
 
 void Tr2UpscalingContextAL::GetJitter( float& x, float& y ) const
@@ -320,15 +333,10 @@ void Tr2UpscalingContextAL::SetHudLessTexture( Tr2TextureAL* texture )
 {
 }
 
-bool Tr2UpscalingContextAL::IsTemporal() const
-{
-	return m_temporal;
-}
-
-float Tr2UpscalingContextAL::GetMipLevelBias() const
+float Tr2UpscalingContextAL::GetMipLevelBias( bool temporal ) const
 {
 	float mipBias = log2( 1.0f / m_upscaling );
-	if( m_temporal )
+	if( temporal )
 	{
 		mipBias -= 1;
 	}

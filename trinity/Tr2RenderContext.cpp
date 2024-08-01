@@ -288,7 +288,6 @@ void Tr2RenderContext::DestroyMainThreadRenderContext()
 {
 	if( s_mainThreadRenderContext )
 	{
-		s_mainThreadRenderContext->Destroy();
 		s_mainThreadRenderContext.Unlock();
 		Tr2RenderContextAL::SetPrimaryRenderContext( nullptr );
 	}

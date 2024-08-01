@@ -14,9 +14,35 @@
 #include "ffx_a.h"
 #include "ffx_fsr1.h"
 
+namespace FSR1
+{
+	const uint8_t SHADER_BYTECODE[] = {
 
-Tr2Fsr1UpscalingTechnique::Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
-	TECHNIQUE_PARENT_CLASS( technique, setting, frameGeneration, adapter )
+	#if TRINITY_PLATFORM == TRINITY_METAL
+	#include "include/upscaling/Fsr1Metal.h"
+	#else
+	#include "include/upscaling/Fsr1DX.h"
+	#endif
+	};
+
+	//For some reason, metal uses the same register space for SRVs and UAVs, so the index is different for the Metal shader.
+	#if TRINITY_PLATFORM == TRINITY_METAL
+	const uint32_t SRV_REGISTER_INDEX = 1;
+	#else
+	const uint32_t SRV_REGISTER_INDEX = 0;
+	#endif
+
+	struct FSRConstants
+	{
+		float Const0[4];
+		float Const1[4];
+		float Const2[4];
+		float Const3[4];
+	};
+}
+
+Tr2Fsr1UpscalingTechnique::Tr2Fsr1UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
+	TECHNIQUE_PARENT_CLASS( renderContext, technique, setting, frameGeneration, adapter )
 {
     SanitizeState();
 }
@@ -40,17 +66,24 @@ bool Tr2Fsr1UpscalingTechnique::IsTemporal() const
 	return false;
 }
 
-void Tr2Fsr1UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
+bool Tr2Fsr1UpscalingTechnique::IsAvailable() const
 {
+#if TRINITY_PLATFORM == TRINITY_METAL
+	if( @available( macOS 13.0, * ) )
+	{
+		return false;
+	}
+#endif
+	return true;
+} 
+
+Tr2UpscalingContextAL* Tr2Fsr1UpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
+{
+	return new Tr2Fsr1UpscalingContext( m_setting, params );
 }
 
-Tr2UpscalingContextAL* Tr2Fsr1UpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) 
-{
-	return new Tr2Fsr1UpscalingContext( displayWidth, displayHeight, m_setting, IsTemporal(), sourceFormat, depthFormat );
-}
-
-Tr2Fsr1UpscalingContext::Tr2Fsr1UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
-	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, false, isTemporal, sourceFormat, depthFormat )
+Tr2Fsr1UpscalingContext::Tr2Fsr1UpscalingContext( Tr2UpscalingAL::Setting setting, Tr2UpscalingAL::UpscalingContextParams params ) :
+	Tr2UpscalingContextAL( setting, false, params )
 {
 	m_upscaling = 1.0f;
 	switch( setting )
@@ -73,65 +106,33 @@ Tr2Fsr1UpscalingContext::Tr2Fsr1UpscalingContext( uint32_t displayWidth, uint32_
 
 	m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
 	m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
-}
 
-Tr2Fsr1UpscalingContext::~Tr2Fsr1UpscalingContext()
-{
+	//Load the upscaling shader program
+	auto signature = Tr2ShaderSignatureAL()
+						 .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
+						 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, FSR1::SRV_REGISTER_INDEX )
+						 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
+						 .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 )
+						 .Add( Tr2ShaderThreadGroupSizeAL( 64, 1, 1 ) );
 
-}
-
-const uint8_t SHADER_BYTECODE[] = {
-
-#if TRINITY_PLATFORM == TRINITY_METAL
-	#include "include/upscaling/Fsr1Metal.h"
-#else
-	#include "include/upscaling/Fsr1DX.h"
-#endif
-};
-
-//For some reason, metal uses the same register space for SRVs and UAVs, so the index is different for the Metal shader.
-#if TRINITY_PLATFORM == TRINITY_METAL
-	const uint32_t SRV_REGISTER_INDEX = 1;
-#else
-	const uint32_t SRV_REGISTER_INDEX = 0;
-#endif
-
-struct FSRConstants
-{
-	float Const0[4];
-	float Const1[4];
-	float Const2[4];
-	float Const3[4];
-};
-
-Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Setup(Tr2RenderContextAL& renderContext)
-{
-
-    //Load the upscaling shader program
-    auto signature = Tr2ShaderSignatureAL()
-                         .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
-						 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, SRV_REGISTER_INDEX )
-                         .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
-                         .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 )
-                         .Add( Tr2ShaderThreadGroupSizeAL(64, 1, 1) );
-
+	auto& renderContext = params.renderContext;
 	Tr2ShaderAL easuShader;
-	CR_RETURN_VAL( easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() ), Tr2UpscalingAL::CONTEXT_SETUP_FAILED );
-	CR_RETURN_VAL( m_easuProgram.Create( &easuShader, 1, renderContext.GetPrimaryRenderContext() ), Tr2UpscalingAL::CONTEXT_SETUP_FAILED );
+	easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() );
+	m_easuProgram.Create( &easuShader, 1, renderContext.GetPrimaryRenderContext() );
 
 
-    //Create the sampler for the input
-    Tr2SamplerDescription desc( Tr2RenderContextEnum::TextureFilter::TF_LINEAR, Tr2RenderContextEnum::TextureAddressMode::TA_CLAMP );
+	//Create the sampler for the input
+	Tr2SamplerDescription desc( Tr2RenderContextEnum::TextureFilter::TF_LINEAR, Tr2RenderContextEnum::TextureAddressMode::TA_CLAMP );
 	m_sampler.Create( desc, renderContext.GetPrimaryRenderContext() );
 
 
-    //Create the FSR1 EASU constant buffer
-    float renderWidth_f = float( m_renderWidth );
+	//Create the FSR1 EASU constant buffer
+	float renderWidth_f = float( m_renderWidth );
 	float renderHeight_f = float( m_renderHeight );
 	float displayWidth_f = float( m_displayWidth );
 	float displayHeight_f = float( m_displayHeight );
 
-	FSRConstants constants;
+	FSR1::FSRConstants constants;
 	FsrEasuCon(
 
 		(uint32_t*)constants.Const0,
@@ -146,16 +147,13 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Setup(Tr2RenderContextAL& render
 		renderHeight_f,
 
 		displayWidth_f,
-		displayHeight_f 
-    );
-	m_constantBuffer.Create( sizeof( FSRConstants ), Tr2ConstantUsageAL::IMMUTABLE, &constants, renderContext.GetPrimaryRenderContext() );
-
-
-	return Tr2UpscalingAL::Result::OK;
+		displayHeight_f );
+	m_constantBuffer.Create( sizeof( FSR1::FSRConstants ), Tr2ConstantUsageAL::IMMUTABLE, &constants, renderContext.GetPrimaryRenderContext() );
 }
 
-void Tr2Fsr1UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
+Tr2Fsr1UpscalingContext::~Tr2Fsr1UpscalingContext()
 {
+
 }
 
 bool Tr2Fsr1UpscalingContext::HasSharpening() const
@@ -172,23 +170,21 @@ uint32_t Tr2Fsr1UpscalingContext::GetDispatchRequirements() const
 	return 0;
 }
 
-
-
-
-Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
+	auto& renderContext = m_params.renderContext;
 
 	GPU_REGION_AL( renderContext, "FSR1 Upscaling" );
 
 	renderContext.SetShaderProgram(m_easuProgram);
 		
 	Tr2ResourceSetDescriptionAL desc( m_easuProgram );
-	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, SRV_REGISTER_INDEX, *dispatchParameters.input );
+	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::SRV_REGISTER_INDEX, *dispatchParameters.input );
 	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, *dispatchParameters.output );
 	desc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, m_sampler );
 
 	Tr2ResourceSetAL resourceSet;
-	resourceSet.Create( desc, m_easuProgram, renderContext.GetPrimaryRenderContext() );
+	resourceSet.Create( desc, m_easuProgram, m_params.renderContext.GetPrimaryRenderContext() );
 
 	renderContext.SetResourceSet( resourceSet );
 		

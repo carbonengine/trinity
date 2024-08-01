@@ -99,6 +99,19 @@ namespace Tr2UpscalingAL
 		float mipLevelBias;
 	};
 
+	struct UpscalingContextParams
+	{
+		UpscalingContextParams( Tr2RenderContextAL& renderContext );
+		uint32_t displayWidth;
+		uint32_t displayHeight;
+		Tr2RenderContextEnum::PixelFormat sourceFormat;
+		Tr2RenderContextEnum::DepthStencilFormat depthFormat;
+		bool allowFramegen;
+		Tr2RenderContextAL& renderContext;
+
+		bool operator==( const UpscalingContextParams& other ) const;
+	};
+
 	const char* GetTechniqueName( Technique technique );
 	const char* GetSettingName( Setting setting );
 	const uint32_t INVALID_CONTEXT_ID = std::numeric_limits<uint32_t>::max();
@@ -110,53 +123,47 @@ class Tr2UpscalingContextAL;
 class Tr2UpscalingTechniqueAL
 {
 public:
-	Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+	Tr2UpscalingTechniqueAL( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
     virtual ~Tr2UpscalingTechniqueAL() = default;
 
-	// Destroy is called when the rendercontext is being destroyed. Everything needs to be clean after this call!
-	virtual void Destroy( Tr2RenderContextAL& renderContext ) = 0;
 	// Called by the device to mark events if we need to trigger stuff at some point in time
-	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent );
+	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent );
 	// makes the state correct based on what is supported (f.ex if we pass in framegen to fsr1 it should not be "enabled")
 	void SanitizeState();
-	// prepare the technique if needed 
-	virtual void Prepare( Tr2RenderContextAL& renderContext );
 
-	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const;
+	virtual void ReleaseResources();
+
+	virtual bool IsAvailable( ) const;
 	virtual bool SupportsFrameGeneration( ) const;
 	virtual bool IsTemporal() const = 0;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const = 0;
 
-	Tr2UpscalingContextAL* GetContext( Tr2RenderContextAL& renderContext, uint32_t upscalingContextID );
-	Tr2UpscalingContextAL* CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
-	void DeleteContext( Tr2RenderContextAL& renderContext, uint32_t contextID );
+	Tr2UpscalingContextAL* GetContext( uint32_t upscalingContextID );
+	Tr2UpscalingContextAL* CreateContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	void DeleteContext( uint32_t contextID );
 
-	void GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration );
+	void GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration ) const;
 
 protected:
-	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) = 0;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) = 0;
 
 	std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>> m_contexts;
 	bool m_frameGeneration;
 	Tr2UpscalingAL::Setting m_setting;
 	Tr2UpscalingAL::Technique m_technique;
+	Tr2RenderContextAL& m_renderContext;
 };
 
 
 class Tr2UpscalingContextAL
 {
 public:
-	Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool temporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
-    virtual ~Tr2UpscalingContextAL();
-
-	// after setup is called, we must know the size of the render targets!
-	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) = 0;
-    virtual bool ReSetup( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Tr2RenderContextAL& renderContext );
-	// when a window is closed or when we change devices this will be called
-	virtual void Destroy( Tr2RenderContextAL& renderContext );
+	Tr2UpscalingContextAL( Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2UpscalingAL::UpscalingContextParams params );
+	virtual ~Tr2UpscalingContextAL();
+	virtual bool ReSetup( Tr2UpscalingAL::UpscalingContextParams params );
 	// at what render resolution are we drawing to
 	void GetRenderDimensions( uint32_t& width, uint32_t& height ) const;
-	// What is the outpu dimensions
+	// What is the output dimensions
 	void GetDisplayDimensions( uint32_t& width, uint32_t& height ) const;
 	
 	void GetJitter( float& x, float& y ) const;
@@ -165,25 +172,22 @@ public:
 	virtual uint32_t GetDispatchRequirements() const = 0;
 	virtual void UpdateJitter() = 0;
 	virtual bool HasSharpening() const = 0;
-
-	bool IsTemporal() const;
 	
 	float GetUpscalingAmount() const;
-	float GetMipLevelBias() const;
+	float GetMipLevelBias( bool temporal ) const;
 	void Reset();
 
 	uint32_t GetID() const;
 
 	virtual void SetHudLessTexture( Tr2TextureAL* texture );
 
-	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) = 0;
+	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) = 0;
 
 protected:
 	bool AreDispatchParametersValid( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) const;
 
 	Tr2UpscalingAL::Setting m_setting;
 	bool m_frameGeneration;
-	bool m_temporal;
 
 	uint32_t m_displayWidth;
 	uint32_t m_displayHeight;
@@ -198,8 +202,7 @@ protected:
 	float m_jitterXScale;
 	float m_jitterYScale;
 
-	Tr2RenderContextEnum::PixelFormat m_sourceFormat;
-	Tr2RenderContextEnum::DepthStencilFormat m_depthFormat;
+	Tr2UpscalingAL::UpscalingContextParams m_params;
 
 private:
 	uint32_t m_id;

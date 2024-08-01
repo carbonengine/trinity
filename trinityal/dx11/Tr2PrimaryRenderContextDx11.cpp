@@ -49,20 +49,19 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 
 Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 {
-	Destroy();
 	if( m_upscalingTechnique )
 	{
-		m_upscalingTechnique->Destroy( *this );
 		delete m_upscalingTechnique;
 		m_upscalingTechnique = nullptr;
 	}
+	Destroy();
 }
 
 void Tr2PrimaryRenderContextAL::Destroy()
 {
 	if( m_upscalingTechnique )
 	{
-		m_upscalingTechnique->Destroy( *this );
+		m_upscalingTechnique->ReleaseResources();
 	}
 
 	m_samplerStateFactory.Clear();
@@ -701,7 +700,6 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 {
 	if( m_upscalingTechnique )
 	{
-		m_upscalingTechnique->Destroy( *this );
 		delete m_upscalingTechnique;
 		m_upscalingTechnique = nullptr;
 	}
@@ -712,8 +710,8 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	}
 
 	// find the technique
-	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
-	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
+	auto supportedTechnique = std::find( std::begin( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES ), std::end( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES ), tech );
+	if( supportedTechnique == std::end( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES ) )
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
@@ -723,29 +721,28 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-	m_upscalingTechnique->Prepare( *this );
 
 	return Tr2UpscalingAL::Result::OK;
 }
 
-Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t upscalingContextId )
+Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t upscalingContextId ) const
 {
 	if( m_upscalingTechnique == nullptr )
 	{
 		return nullptr;
 	}
 
-	return m_upscalingTechnique->GetContext( *this, upscalingContextId );
+	return m_upscalingTechnique->GetContext( upscalingContextId );
 }
 
-Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, uint32_t existingContext )
+Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext )
 {
 	if( m_upscalingTechnique == nullptr )
 	{
 		return nullptr;
 	}
 
-	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat, existingContext );
+	return m_upscalingTechnique->CreateContext( params, existingContext );
 }
 
 
@@ -756,11 +753,11 @@ void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
 		return;
 	}
 
-	return m_upscalingTechnique->DeleteContext( *this, contextID );
+	return m_upscalingTechnique->DeleteContext( contextID );
 }
 
 
-void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal )
+void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const
 {
 	if( m_upscalingTechnique )
 	{
@@ -774,21 +771,21 @@ void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& te
 	temporal = false;
 }
 
-Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
+Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID ) const
 {
 	auto context = GetUpscalingContext( upscalingContextID );
 	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
 
 	if( context != nullptr )
 	{
+		info.temporal = m_upscalingTechnique->IsTemporal();
 		info.upscalingAmount = context->GetUpscalingAmount();
-		info.mipLevelBias = context->GetMipLevelBias();
+		info.mipLevelBias = context->GetMipLevelBias( info.temporal );
 		info.hasSharpening = context->HasSharpening();
 		context->GetJitter( info.jitterX, info.jitterY );
 		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
 		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
 		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
-		info.temporal = m_upscalingTechnique->IsTemporal();
 	}
 	return info;
 }
@@ -797,7 +794,7 @@ void Tr2PrimaryRenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 {
 	if( m_upscalingTechnique )
 	{
-		m_upscalingTechnique->MarkFrameEvent( *this, frameEvent );
+		m_upscalingTechnique->MarkFrameEvent( frameEvent );
 	}
 }
 
@@ -841,8 +838,8 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
 		}
 		if( tech )
-		{
-			tech->Destroy(*this);
+		{	
+			delete tech;
 			tech = nullptr;
 		}
 	}

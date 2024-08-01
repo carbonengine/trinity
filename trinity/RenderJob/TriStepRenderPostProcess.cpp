@@ -1036,7 +1036,7 @@ void TriStepRenderPostProcess::RenderDynamicExposure( Tr2RenderTarget* dest, Tr2
 Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	GPU_REGION( renderContext, "Upscaling" );
-	if( upscalingContext->IsTemporal() )
+	if( renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContextID ).temporal )
 	{
 		m_scene->SetVelocityMap( m_velocityBuffer );
 	}
@@ -1108,7 +1108,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	{
 		GPU_REGION( renderContext, "UpscalingTechnique" );
 
-		upscalingContext->Dispatch( renderContext, dispatchParameters );
+		upscalingContext->Dispatch( dispatchParameters );
 	}
 	return dest;
 }

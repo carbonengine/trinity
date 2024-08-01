@@ -244,7 +244,7 @@ private:
 	void CreateUpscalingTechnique( uint32_t adapter );
 	void SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 
-	uint32_t CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Be::Optional<uint32_t> existingContext );
+	uint32_t CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, bool allowFramegen, Be::Optional<uint32_t> existingContext );
 	void DeleteUpscalingContext( uint32_t contextID );
 #if BLUE_WITH_PYTHON
 	PyObject* PyGetUpscalingInfo( PyObject* args );

@@ -20,32 +20,28 @@ FfxResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* t
 class Tr2Fsr2UpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
-	Tr2Fsr2UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+	Tr2Fsr2UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2Fsr2UpscalingTechnique();
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual bool IsTemporal() const override;
 
-	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
-
 private:
-	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 
 };
 
 class Tr2Fsr2UpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2Fsr2UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Tr2Fsr2UpscalingContext( Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2UpscalingAL::UpscalingContextParams params );
 	~Tr2Fsr2UpscalingContext();
 
-	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
-	virtual void Destroy( Tr2RenderContextAL& renderContex ) override;
 	virtual bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
 
-	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
+	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
 	FfxFsr2ContextDescription m_initializationParameters;

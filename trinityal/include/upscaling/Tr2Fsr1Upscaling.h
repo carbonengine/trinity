@@ -26,30 +26,27 @@
 class Tr2Fsr1UpscalingTechnique : public TECHNIQUE_PARENT_CLASS
 {
 public:
-	Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+	Tr2Fsr1UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2Fsr1UpscalingTechnique();
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual bool IsTemporal() const override;
-
-	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
+	virtual bool IsAvailable() const override;
 
 private:
-	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 };
 
 class Tr2Fsr1UpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2Fsr1UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Tr2Fsr1UpscalingContext( Tr2UpscalingAL::Setting setting, Tr2UpscalingAL::UpscalingContextParams params );
 	~Tr2Fsr1UpscalingContext();
 
-	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
-	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 	virtual bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
 
-	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
+	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
 

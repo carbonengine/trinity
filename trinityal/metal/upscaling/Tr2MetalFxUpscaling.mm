@@ -80,10 +80,18 @@ private:
 
 }
 
-Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ):
-    Tr2UpscalingTechniqueAL( technique, setting, frameGeneration, adapter ),
+Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ):
+    Tr2UpscalingTechniqueAL( renderContext, technique, setting, frameGeneration, adapter ),
     m_temporal( false )
 {
+    if( @available(macOS 13.0, *) )
+    {
+        TrinityALImpl::MetalContext* metalContext = m_renderContext.GetPrimaryRenderContext().GetMetalContext();
+        auto device = metalContext->GetDevice();
+     
+        // temporal scalers are only available on silicon hardware, need to check if it supported
+        m_temporal = [MTLFXTemporalScalerDescriptor supportsDevice:device];
+    }
     this->SanitizeState();
 }
 
@@ -97,11 +105,7 @@ bool Tr2MetalFxUpscalingTechnique::IsTemporal() const
 	return m_temporal;
 }
 
-void Tr2MetalFxUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
-{
-}
-
- bool Tr2MetalFxUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const
+ bool Tr2MetalFxUpscalingTechnique::IsAvailable() const
 {
     if( @available(macOS 13.0, *) )
     {
@@ -111,9 +115,9 @@ void Tr2MetalFxUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
     return false;
 } 
 
-Tr2UpscalingContextAL* Tr2MetalFxUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+Tr2UpscalingContextAL* Tr2MetalFxUpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
 {
-    return new Tr2MetalFxUpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, m_temporal, sourceFormat, depthFormat );
+    return new Tr2MetalFxUpscalingContext( params );
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableSettings() const {
@@ -147,8 +151,8 @@ void Tr2MetalFxUpscalingTechnique::Prepare( Tr2RenderContextAL& renderContext )
     }
 }
 
-Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) : 
-    Tr2UpscalingContextAL(displayWidth, displayHeight, setting, frameGeneration, isTemporal, sourceFormat, depthFormat),
+Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting setting, Tr2UpscalingAL::UpscalingContextParams params ) : 
+    Tr2UpscalingContextAL( setting, false, params ),
     m_setup( false )
 {
     if( @available(macOS 13.0, *) )
@@ -169,10 +173,7 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext()
         }
         m_mfxSpatialScaler = nil;
     }
-}
 
-Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Setup( Tr2RenderContextAL& renderContext )
-{
     if( @available(macOS 13.0, *) )
     {
         switch( m_setting ){
@@ -201,10 +202,10 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Setup( Tr2RenderContextAL& re
         
         if( m_temporal )
         {
-            CreateTemporalScaler( renderContext );
+            CreateTemporalScaler();
             m_jitterSequence = Tr2UpscalingAL::GenerateHaltonSequence( 8 * m_upscaling * m_upscaling, 2, 3 );
         }
-        CreateSpatialScaler( renderContext );
+        CreateSpatialScaler();
         
         if( m_mfxSpatialScaler == nil )
         {
@@ -216,12 +217,12 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Setup( Tr2RenderContextAL& re
     return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 }
 
-bool Tr2MetalFxUpscalingContext::ReSetup( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Tr2RenderContextAL& renderContext )
+bool Tr2MetalFxUpscalingContext::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
 {
-    return m_displayWidth == displayWidth && m_displayHeight == displayHeight && m_sourceFormat == sourceFormat && m_depthFormat == depthFormat;
+    return m_params == params;
 }
 
-void Tr2MetalFxUpscalingContext::CreateTemporalScaler( Tr2RenderContextAL& renderContext )
+void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
 {
     if( @available(macOS 13.0, *) )
     {
@@ -240,6 +241,8 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler( Tr2RenderContextAL& rende
             }
         } );
         
+        auto& renderContext = m_params.renderContext;
+
         TrinityALImpl::MetalContext* metalContext = renderContext.GetPrimaryRenderContext().GetMetalContext();
         auto pixelFormat = metalContext->m_utils->GetMTLPixelFormat( m_sourceFormat );
         auto depthPixelFormat = metalContext->m_utils->GetMTLPixelFormat( Tr2RenderContextEnum::ConvertDepthStencilFormat( m_depthFormat ) );        
@@ -268,10 +271,12 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler( Tr2RenderContextAL& rende
     }
 }
 
-void Tr2MetalFxUpscalingContext::CreateSpatialScaler( Tr2RenderContextAL& renderContext )
+void Tr2MetalFxUpscalingContext::CreateSpatialScaler()
 {
     if( @available(macOS 13.0, *) )
     {
+        auto& renderContext = m_params.renderContext;
+
         TrinityALImpl::MetalContext* metalContext = renderContext.GetPrimaryRenderContext().GetMetalContext();
         auto pixelFormat = metalContext->m_utils->GetMTLPixelFormat( m_sourceFormat );
         auto device = metalContext->GetDevice();
@@ -333,6 +338,8 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL&
         {
             return Tr2UpscalingAL::Result::INCORRECT_INPUT;
         }
+        
+        auto& renderContext = m_params.renderContext;
 
         if( m_temporalScaler && m_temporalScaler->created )
         {

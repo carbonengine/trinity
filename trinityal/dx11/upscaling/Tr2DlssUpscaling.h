@@ -24,22 +24,21 @@ namespace DlssUtils
 class Tr2DlssUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx11
 {
 public:
-	Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+	Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2DlssUpscalingTechnique();
 
 	// Tr2UpscalingTechniqueAL overrides
-	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const override;
+	virtual bool IsAvailable( ) const override;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual bool IsTemporal() const override;
 
-	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
-	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
+	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
 
 	// TrinityALImpl::Tr2UpscalingTechniqueDx11 overrides
 	virtual void AttachToDevice( CComPtr<ID3D11Device>& device ) override;
 
 private:
-	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 
 	void TogglePlugin( sl::Feature feature, bool enable );
 
@@ -63,31 +62,26 @@ class Tr2DlssUpscalingContext : public Tr2UpscalingContextAL
 {
 public:
 	Tr2DlssUpscalingContext( 
-		uint32_t displayWidth, 
-		uint32_t displayHeight, 
 		Tr2UpscalingAL::Setting setting, 
 		bool frameGeneration, 
-		bool isTemporal,
-		Tr2RenderContextEnum::PixelFormat sourceFormat, 
-		Tr2RenderContextEnum::DepthStencilFormat depthFormat, 
+		Tr2UpscalingAL::UpscalingContextParams params,
 		uint32_t contextNumber, 
 		HMODULE streamlineModule, 
 		sl::FrameToken* frameToken );
 	~Tr2DlssUpscalingContext();
 
-	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 	virtual bool HasSharpening() const override;
 
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
 
-	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
+	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
 	void SetFrameToken( sl::FrameToken* token );
 
-	sl::Result ReadyDLSSResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters );
-	sl::Result ReadyNISResources( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters );
+	sl::Result ReadyDLSSResources( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
+	sl::Result ReadyNISResources( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
 	void SetCommonConstants( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
 
 	Tr2UpscalingAL::JitterSequence m_jitterSequence;

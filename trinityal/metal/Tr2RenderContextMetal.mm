@@ -72,7 +72,7 @@ Tr2RenderContextAL::~Tr2RenderContextAL()
 {
     
     if( m_upscalingTechnique ){
-        m_upscalingTechnique->Destroy(*this);
+        m_upscalingTechnique->ReleaseResource();
         delete m_upscalingTechnique;
         m_upscalingTechnique = nullptr;
     }
@@ -1394,29 +1394,28 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-	m_upscalingTechnique->Prepare( *this );
 	
 	return Tr2UpscalingAL::Result::OK;
 }
 
-Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID )
+Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID ) const
 {
 	if( m_upscalingTechnique == nullptr )
 	{
 		return nullptr;
 	}
 
-	return m_upscalingTechnique->GetContext( *this, upscalingContextID );
+	return m_upscalingTechnique->GetContext( upscalingContextID );
 }
 
-Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, uint32_t existingContext )
+Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext )
 {
 	if( m_upscalingTechnique == nullptr )
 	{
 		return nullptr;
 	}
 
-	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat, existingContext );
+	return m_upscalingTechnique->CreateContext( params, existingContext );
 }
 
 void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
@@ -1426,7 +1425,7 @@ void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
 		return;
 	}
 
-	return m_upscalingTechnique->DeleteContext( *this, contextID );
+	return m_upscalingTechnique->DeleteContext( contextID );
 }
 
 std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
@@ -1479,26 +1478,26 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderCont
     return supportedTechniques;
 }
 
-Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
+Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID ) const
 {
 	auto context = GetUpscalingContext( upscalingContextID );
 	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
 
 	if( context != nullptr )
 	{
-		info.upscalingAmount = context->GetUpscalingAmount();
+		info.temporal = m_upscalingTechnique->IsTemporal();
+		info.upscalingAmount = context->GetUpscalingAmount( info.temporal );
 		info.mipLevelBias = context->GetMipLevelBias();
 		info.hasSharpening = context->HasSharpening();
 		context->GetJitter( info.jitterX, info.jitterY );
 		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
 		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
 		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
-		info.temporal = m_upscalingTechnique->IsTemporal();
 	}
 	return info;
 }
 
-void Tr2RenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal )
+void Tr2RenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const
 {
     if( m_upscalingTechnique )
     {

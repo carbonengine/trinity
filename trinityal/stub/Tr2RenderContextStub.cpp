@@ -464,7 +464,7 @@ Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscali
 	return nullptr;
 }
 
-Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat,  uint32_t existingContext )
+Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext )
 {
 	return nullptr;
 }

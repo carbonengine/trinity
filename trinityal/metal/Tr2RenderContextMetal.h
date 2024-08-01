@@ -254,11 +254,11 @@ public:
 	
 	
     Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
-	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID );
-	Tr2UpscalingContextAL* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID ) const;
+	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
 	void DeleteUpscalingContext( uint32_t contextID );
-	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID );
-	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID ) const;
+	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const;
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
 
 	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );

@@ -20,21 +20,22 @@ namespace Fsr3Utils
 class Tr2Fsr3UpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
-	Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+	Tr2Fsr3UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2Fsr3UpscalingTechnique();
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual bool IsTemporal() const override;
 
-	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
+	virtual void ReleaseResources() override;
+
 	virtual bool SupportsFrameGeneration() const override;
-	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
+	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
 
 	virtual bool ReplacesSwapchain() const override;
 	virtual void ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swapchain, Tr2WindowHandle hwnd, ID3D12CommandQueue* commandQueue ) override;
 
 private:
-	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 	FfxSwapchain m_framegenSwapchain;
 	bool m_attachedToSwapchain;
 	bool m_supportsFrameGeneration;
@@ -44,11 +45,8 @@ private:
 class Tr2Fsr3UpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, bool isTemporal, FfxSwapchain frameInterpolationSwapchain, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Tr2Fsr3UpscalingContext( Tr2UpscalingAL::Setting setting, bool frameGeneration, FfxSwapchain frameInterpolationSwapchain, Tr2UpscalingAL::UpscalingContextParams params );
 	~Tr2Fsr3UpscalingContext();
-
-	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
-	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
 	virtual bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
@@ -57,7 +55,7 @@ public:
 
 	void GenerateFrame( Tr2RenderContextAL& renderContext );
 
-	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
+	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
 	FfxFsr3ContextDescription m_initializationParameters = {};

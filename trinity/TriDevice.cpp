@@ -1183,22 +1183,29 @@ void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingA
 	m_upscalingWithFrameGeneration = frameGeneration;
 }
 
-uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, Be::Optional<uint32_t> existingContext )
+uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, bool allowFramegen, Be::Optional<uint32_t> existingContext )
 {
     CCP_STATS_ZONE( __FUNCTION__ );
+	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-    USE_MAIN_THREAD_RENDER_CONTEXT();
-    auto context = renderContext.CreateUpscalingContext( displayWidth, displayHeight, sourceFormat, depthFormat, existingContext.IsAssigned() ? existingContext.GetValue() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	Tr2UpscalingAL::UpscalingContextParams params = Tr2UpscalingAL::UpscalingContextParams(renderContext);
+	params.allowFramegen = allowFramegen;
+	params.displayWidth = displayWidth;
+	params.displayHeight = displayHeight;
+	params.sourceFormat = sourceFormat;
+	params.depthFormat = depthFormat;
+
+	auto context = renderContext.CreateUpscalingContext( params, existingContext.IsAssigned() ? existingContext.GetValue() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
 	if( context )
 	{
 		return context->GetID();
 	}
-	return 0;
+	return Tr2UpscalingAL::INVALID_CONTEXT_ID;
 }
 
 void TriDevice::DeleteUpscalingContext( uint32_t contextID )
 {
-    CCP_STATS_ZONE( __FUNCTION__ );
+        CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	renderContext.DeleteUpscalingContext( contextID );
 }
