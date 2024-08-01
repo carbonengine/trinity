@@ -2045,7 +2045,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	
 	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 
-	if( m_rtManager && m_shadowQuality == SHADOW_RAYTRACED && m_depthMap->IsValid() && !m_objects.empty() && m_enableShadows )
+	if( m_rtManager && m_shadowQuality == SHADOW_RAYTRACED && m_enableShadows && m_depthMap && m_depthMap->IsValid() && !m_objects.empty() )
 	{
 		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
 		size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
