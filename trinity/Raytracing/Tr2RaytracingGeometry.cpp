@@ -306,7 +306,11 @@ For compaction, a general rule is: compact for static geometry, for fully dynami
 const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext )
 {
 	auto meshData = mesh.GetMeshData();
-	if( meshData && meshData->m_areas[m_areaIndex].m_isSkinned )
+	if( !meshData || m_areaIndex >= meshData->m_areas.size() )
+	{
+		return m_blas;
+	}
+	if( meshData->m_areas[m_areaIndex].m_isSkinned )
 	{
 		if( m_blas.IsValid() && !m_blasOutdated )
 		{
