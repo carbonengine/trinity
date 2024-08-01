@@ -72,7 +72,7 @@ Tr2RenderContextAL::~Tr2RenderContextAL()
 {
     
     if( m_upscalingTechnique ){
-        m_upscalingTechnique->ReleaseResource();
+        m_upscalingTechnique->ReleaseResources();
         delete m_upscalingTechnique;
         m_upscalingTechnique = nullptr;
     }
@@ -1372,7 +1372,6 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 {
     if( m_upscalingTechnique )
     {
-        m_upscalingTechnique->Destroy( *this );
         delete m_upscalingTechnique;
         m_upscalingTechnique = nullptr;
     }
@@ -1465,13 +1464,11 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderCont
             }
 
             supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
-            tech->Destroy( *this );
             tech = nullptr;
         }
 		
 		if( tech )
 		{
-			tech->Destroy(*this);
 			tech = nullptr;
 		}
     }
@@ -1486,8 +1483,8 @@ Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t ups
 	if( context != nullptr )
 	{
 		info.temporal = m_upscalingTechnique->IsTemporal();
-		info.upscalingAmount = context->GetUpscalingAmount( info.temporal );
-		info.mipLevelBias = context->GetMipLevelBias();
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias( info.temporal );
 		info.hasSharpening = context->HasSharpening();
 		context->GetJitter( info.jitterX, info.jitterY );
 		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
@@ -1518,7 +1515,7 @@ void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameE
 		return;
 	}
 
-	return m_upscalingTechnique->MarkFrameEvent( *this, frameEvent );
+	return m_upscalingTechnique->MarkFrameEvent( frameEvent );
 }
 ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
 {
