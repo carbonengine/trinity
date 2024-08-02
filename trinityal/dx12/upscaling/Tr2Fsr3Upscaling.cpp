@@ -363,12 +363,15 @@ bool Tr2Fsr3UpscalingContext::HasSharpening() const
 
 void Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext::UpdateJitter()
 {
-	m_jitterX = 0.0f;
-	m_jitterY = 0.0f;
-	++m_jitterIndex;
-	const int32_t jitterPhaseCount = ffxFsr3UpscalerGetJitterPhaseCount( m_renderWidth, m_displayWidth );
-	ffxFsr3UpscalerGetJitterOffset( &m_jitterX, &m_jitterY, m_jitterIndex, jitterPhaseCount );
-	m_jitterIndex = m_jitterIndex % jitterPhaseCount;
+	if( m_setup )
+	{
+		m_jitterX = 0.0f;
+		m_jitterY = 0.0f;
+		++m_jitterIndex;
+		const int32_t jitterPhaseCount = ffxFsr3UpscalerGetJitterPhaseCount( m_renderWidth, m_displayWidth );
+		ffxFsr3UpscalerGetJitterOffset( &m_jitterX, &m_jitterY, m_jitterIndex, jitterPhaseCount );
+		m_jitterIndex = m_jitterIndex % jitterPhaseCount;
+	}
 }
 
 uint32_t Tr2Fsr3UpscalingContext::GetDispatchRequirements() const
