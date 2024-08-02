@@ -117,7 +117,7 @@ bool Tr2MetalFxUpscalingTechnique::IsTemporal() const
 
 Tr2UpscalingContextAL* Tr2MetalFxUpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
 {
-    return new Tr2MetalFxUpscalingContext( params );
+    return new Tr2MetalFxUpscalingContext( m_setting, m_temporal, params );
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableSettings() const {
@@ -139,19 +139,7 @@ std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableS
     };
 }
 
-void Tr2MetalFxUpscalingTechnique::Prepare( Tr2RenderContextAL& renderContext ) 
-{
-    if( @available(macOS 13.0, *) )
-    {
-        TrinityALImpl::MetalContext* metalContext = renderContext.GetPrimaryRenderContext().GetMetalContext();
-        auto device = metalContext->GetDevice();
-     
-        // temporal scalers are only available on silicon hardware, need to check if it supported
-        m_temporal = [MTLFXTemporalScalerDescriptor supportsDevice:device];
-    }
-}
-
-Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting setting, Tr2UpscalingAL::UpscalingContextParams params ) : 
+Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting setting, bool temporal, Tr2UpscalingAL::UpscalingContextParams params ) :
     Tr2UpscalingContextAL( setting, false, params ),
     m_setup( false )
 {
@@ -161,6 +149,7 @@ Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting 
     }
     m_jitterXScale = 1.0f;
     m_jitterYScale = -1.0f;
+    m_temporal = temporal;
 }
 
 Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext()
@@ -172,10 +161,7 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext()
             m_temporalScaler->canceled = true;
         }
         m_mfxSpatialScaler = nil;
-    }
-
-    if( @available(macOS 13.0, *) )
-    {
+		
         switch( m_setting ){
             case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
                 m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
@@ -209,12 +195,10 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext()
         
         if( m_mfxSpatialScaler == nil )
         {
-            return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+            return;
         }
         m_setup = true;
-        return Tr2UpscalingAL::Result::OK;
     }
-    return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 }
 
 bool Tr2MetalFxUpscalingContext::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
@@ -244,8 +228,8 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
         auto& renderContext = m_params.renderContext;
 
         TrinityALImpl::MetalContext* metalContext = renderContext.GetPrimaryRenderContext().GetMetalContext();
-        auto pixelFormat = metalContext->m_utils->GetMTLPixelFormat( m_sourceFormat );
-        auto depthPixelFormat = metalContext->m_utils->GetMTLPixelFormat( Tr2RenderContextEnum::ConvertDepthStencilFormat( m_depthFormat ) );        
+        auto pixelFormat = metalContext->m_utils->GetMTLPixelFormat( m_params.sourceFormat );
+        auto depthPixelFormat = metalContext->m_utils->GetMTLPixelFormat( Tr2RenderContextEnum::ConvertDepthStencilFormat( m_params.depthFormat ) );
         // motion pixel format is always the same, true as of April 2024
         auto motionPixelFormat = metalContext->m_utils->GetMTLPixelFormat( Tr2RenderContextEnum::PIXEL_FORMAT_R16G16_FLOAT );
         
@@ -278,7 +262,7 @@ void Tr2MetalFxUpscalingContext::CreateSpatialScaler()
         auto& renderContext = m_params.renderContext;
 
         TrinityALImpl::MetalContext* metalContext = renderContext.GetPrimaryRenderContext().GetMetalContext();
-        auto pixelFormat = metalContext->m_utils->GetMTLPixelFormat( m_sourceFormat );
+        auto pixelFormat = metalContext->m_utils->GetMTLPixelFormat( m_params.sourceFormat );
         auto device = metalContext->GetDevice();
         
         MTLFXSpatialScalerDescriptor* desc = [MTLFXSpatialScalerDescriptor new];
@@ -325,7 +309,7 @@ uint32_t Tr2MetalFxUpscalingContext::GetDispatchRequirements() const
     return 0;
 }
 
-Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
     if( @available( macOS 13.0, * ) )
     {

@@ -28,7 +28,7 @@ private:
 class Tr2MetalFxUpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting setting, Tr2UpscalingAL::UpscalingContextParams params );
+	Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting setting, bool temporal, Tr2UpscalingAL::UpscalingContextParams params );
     ~Tr2MetalFxUpscalingContext();
 
 	bool ReSetup( Tr2UpscalingAL::UpscalingContextParams params ) override;
@@ -46,6 +46,7 @@ private:
     id<MTLFXSpatialScaler> m_mfxSpatialScaler;
     
     bool m_setup;
+	bool m_temporal;
     Tr2UpscalingAL::JitterSequence m_jitterSequence;
     
     struct TemporalScaler
