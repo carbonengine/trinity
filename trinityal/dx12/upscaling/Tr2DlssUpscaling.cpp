@@ -19,7 +19,6 @@ extern bool g_upscalingDebug;
 
 namespace DlssUtils
 {
-
 	sl::Resource GenerateTextureResource( Tr2TextureAL* texture )
 	{
 		if( texture && texture->IsValid() )
@@ -193,12 +192,18 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
 		return nativeDevice;
 	}
+	
 	m_attachedToDevice = true;
 	TogglePlugin( sl::kFeatureDLSS, m_isAvailable );
 	TogglePlugin( sl::kFeatureDLSS_G, m_supportsFrameGeneration && m_frameGeneration );
 	TogglePlugin( sl::kFeatureNIS, m_isAvailable );
 	TogglePlugin( sl::kFeatureReflex, m_supportsFrameGeneration && m_frameGeneration );
 	TogglePlugin( sl::kFeaturePCL, m_frameGeneration );
+
+	if( g_upscalingDebug )
+	{
+		TogglePlugin( sl::kFeatureImGUI, m_isAvailable );
+	}
 
 	auto reflexConst = sl::ReflexOptions{};
 	reflexConst.mode = m_frameGeneration ? sl::ReflexMode::eLowLatency : sl::ReflexMode::eOff;
@@ -526,7 +531,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::Dispatch
 
 	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilPresent, &renderExtent };
 	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilPresent, &renderExtent };
-	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eOnlyValidNow, &displayExtent };
+	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilPresent, &displayExtent };
 	sl::ResourceTag depthTag = sl::ResourceTag{ &depthResource, sl::kBufferTypeDepth, sl::ResourceLifecycle::eValidUntilPresent, &renderExtent };
 	sl::ResourceTag mvecTag = sl::ResourceTag{ &velocityResource, sl::kBufferTypeMotionVectors, sl::ResourceLifecycle::eValidUntilPresent, &renderExtent };
 	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilPresent, &exposureExtent };
