@@ -255,6 +255,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
 	m_slFreeResources( sl::kFeatureDLSS, m_viewHandle );
+	m_slFreeResources( sl::kFeatureNIS, m_viewHandle );
 }
 
 void Tr2DlssUpscalingContext::SetFrameToken( sl::FrameToken* frameToken )
@@ -269,10 +270,13 @@ bool Tr2DlssUpscalingContext::HasSharpening() const
 
 void Tr2DlssUpscalingContext::UpdateJitter()
 {
-	m_jitterX = m_jitterSequence[m_jitterIndex].first;
-	m_jitterY = m_jitterSequence[m_jitterIndex].second;
+	if( m_setup )
+	{
+		m_jitterX = m_jitterSequence[m_jitterIndex].first;
+		m_jitterY = m_jitterSequence[m_jitterIndex].second;
 
-	m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
+		m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
+	}
 }
 
 uint32_t Tr2DlssUpscalingContext::GetDispatchRequirements() const
