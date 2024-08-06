@@ -194,7 +194,7 @@ namespace Tr2StreamlineAL
 				CCP_LOGWARN( "Driver is out of date, please update driver to use %s", pluginName );
 				break;
 			case sl::Result::eErrorAdapterNotSupported:
-				CCP_LOGWARN( "No adapter found that supports %s", pluginName );
+				CCP_LOGWARN( "Current adapter doesn't support %s", pluginName );
 				break;
 			case sl::Result::eErrorMissingOrInvalidAPI:
 				CCP_LOGWARN( "Graphics api not supported for %s", pluginName );
