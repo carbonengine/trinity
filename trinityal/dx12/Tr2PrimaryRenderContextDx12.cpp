@@ -644,7 +644,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	UINT resizeFlags = 0;
 	
-	if( presentationParameters.variableRefreshRateSupported )
+	if( m_supportsVariableRefreshRate )
 	{
 		resizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 	}

@@ -137,6 +137,16 @@ TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfter
 	EXPECT_EQ( presentParameters.mode.height, renderContext->GetDefaultBackBuffer().GetHeight() );
 }
 
+TEST_F( RenderContextCreation, RenderContextCanRecreateTheDevice )
+{
+	if( !MachineHasGfxAdapter() ) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	Tr2PresentParametersAL presentParameters;
+	SetUpPresentParameters( presentParameters );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
+}
+
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
 
 TEST_F( RenderContextCreation, CanCreateBC7TexturesWithSoftwareContext )
