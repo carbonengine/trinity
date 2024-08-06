@@ -144,61 +144,62 @@ Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting 
     m_setup( false )
 {
     if( @available(macOS 13.0, *) )
-    {
-        m_mfxSpatialScaler = nil;
-    }
-    m_jitterXScale = 1.0f;
-    m_jitterYScale = -1.0f;
-    m_temporal = temporal;
+	{
+		m_mfxSpatialScaler = nil;
+		
+		m_jitterXScale = 1.0f;
+		m_jitterYScale = -1.0f;
+		m_temporal = temporal;
+		
+		switch( m_setting ){
+			case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
+				m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
+				break;
+			case Tr2UpscalingAL::Setting::QUALITY:
+				m_upscaling = m_temporal ? 1.4 : 1.25;
+				break;
+			case Tr2UpscalingAL::Setting::BALANCED:
+				m_upscaling = m_temporal ? 1.7 : 1.5;
+				break;
+			case Tr2UpscalingAL::Setting::PERFORMANCE:
+				m_upscaling = m_temporal ? 2.0 : 1.75;
+				break;
+			case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
+				m_upscaling = m_temporal ? 2.3 : 2.0;
+				break;
+			default:
+				m_upscaling = 1.0;
+				break;
+		}
+		
+		m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
+		m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
+		
+		if( m_temporal )
+		{
+			CreateTemporalScaler();
+			m_jitterSequence = Tr2UpscalingAL::GenerateHaltonSequence( 8 * m_upscaling * m_upscaling, 2, 3 );
+		}
+		CreateSpatialScaler();
+		
+		if( m_mfxSpatialScaler == nil )
+		{
+			return;
+		}
+		m_setup = true;
+	}
 }
 
-Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext()
-{
-    if( @available(macos 13.0, *) )
-    {
-        if( m_temporalScaler )
-        {
-            m_temporalScaler->canceled = true;
-        }
-        m_mfxSpatialScaler = nil;
-		
-        switch( m_setting ){
-            case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
-                m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
-                break;
-            case Tr2UpscalingAL::Setting::QUALITY:
-                m_upscaling = m_temporal ? 1.4 : 1.25;
-                break;
-            case Tr2UpscalingAL::Setting::BALANCED:
-                m_upscaling = m_temporal ? 1.7 : 1.5;
-                break;
-            case Tr2UpscalingAL::Setting::PERFORMANCE:
-                m_upscaling = m_temporal ? 2.0 : 1.75;
-                break;
-            case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
-                m_upscaling = m_temporal ? 2.3 : 2.0;
-                break;
-            default:
-                m_upscaling = 1.0;
-                break;
-        }
-        
-        m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
-        m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
-        
-        if( m_temporal )
-        {
-            CreateTemporalScaler();
-            m_jitterSequence = Tr2UpscalingAL::GenerateHaltonSequence( 8 * m_upscaling * m_upscaling, 2, 3 );
-        }
-        CreateSpatialScaler();
-        
-        if( m_mfxSpatialScaler == nil )
-        {
-            return;
-        }
-        m_setup = true;
-    }
+Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext() {
+	
+	if( @available(macos 13.0, *) )
+	{
+		if( m_temporalScaler )
+		{
+			m_temporalScaler->canceled = true;
+		}
+		m_mfxSpatialScaler = nil;
+	}
 }
 
 bool Tr2MetalFxUpscalingContext::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
