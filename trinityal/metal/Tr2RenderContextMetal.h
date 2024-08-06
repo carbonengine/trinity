@@ -262,6 +262,8 @@ public:
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
 
 	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+    
+    void ReleaseLater( id<NSObject> obj );
 
 protected:
 	bool                               m_isValid;

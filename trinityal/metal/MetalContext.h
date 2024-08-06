@@ -99,6 +99,9 @@ public:
 	MetalWorkQueue* GetPrimaryWorkQueue();
     
     ConstantBufferAllocator& GetConstantBufferAllocator();
+    
+    void ReleaseLater( id<NSObject> obj );
+    void FlushPendingRelease( uint64_t renderedFrame );
 private:
 	id<MTLDevice>       m_device;
 	id<MTLCommandQueue> m_commandQueue;
@@ -131,6 +134,13 @@ private:
 	std::mutex m_pipelineCacheMutex;
 
 	std::vector<void*> m_destroyedConstantBuffers;
+    
+    struct ReleasingItem
+    {
+        id<NSObject> object;
+        uint64_t frame;
+    };
+    std::vector<ReleasingItem> m_pendingRelease;
 
 	void GenerateDummyTexture();
 	void GenerateDummyBuffer();

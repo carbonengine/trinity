@@ -26,6 +26,10 @@ namespace MetalUpscalingUtils
     }
 }
 
+bool g_disableMetalFXScalerReuse = false;
+bool g_disableMetalFXScalerAsyncCreation = false;
+bool g_delayReleaseMetalFXScaler = true;
+
 namespace
 {
 
@@ -46,6 +50,11 @@ public:
         std::unique_lock lock( m_mutex );
         m_queue.push_back( item );
         m_added.notify_one();
+    }
+    
+    void Process( const std::shared_ptr<Item>& item )
+    {
+        m_processor( item );
     }
 private:
     void Worker()
@@ -141,7 +150,8 @@ std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableS
 
 Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting setting, bool temporal, Tr2UpscalingAL::UpscalingContextParams params ) :
     Tr2UpscalingContextAL( setting, false, params ),
-    m_setup( false )
+    m_setup( false ),
+    m_renderContext( params.renderContext )
 {
     if( @available(macOS 13.0, *) )
 	{
@@ -197,6 +207,10 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext() {
 		if( m_temporalScaler )
 		{
 			m_temporalScaler->canceled = true;
+            if( g_delayReleaseMetalFXScaler && m_temporalScaler->created )
+            {
+                m_renderContext.ReleaseLater( m_temporalScaler->temporalScaler );
+            }
 		}
 		m_mfxSpatialScaler = nil;
 	}
@@ -204,6 +218,10 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext() {
 
 bool Tr2MetalFxUpscalingContext::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
 {
+    if( g_disableMetalFXScalerReuse )
+    {
+        return false;
+    }
     return m_params == params;
 }
 
@@ -250,7 +268,14 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
         m_temporalScaler->desc = desc;
         m_temporalScaler->device = device;
         
-        s_queue.Add( m_temporalScaler );
+        if( g_disableMetalFXScalerAsyncCreation )
+        {
+            s_queue.Process( m_temporalScaler );
+        }
+        else
+        {
+            s_queue.Add( m_temporalScaler );
+        }
         
         m_reset = true;
     }
