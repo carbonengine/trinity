@@ -383,7 +383,7 @@ uint32_t Tr2Fsr3UpscalingContext::GetDispatchRequirements() const
 
 void Tr2Fsr3UpscalingContext::GenerateFrame( Tr2RenderContextAL& renderContext )
 {
-	if( !m_setup || m_reset )
+	if( !m_setup || m_reset || !m_frameGeneration )
 	{
 		return;
 	}
