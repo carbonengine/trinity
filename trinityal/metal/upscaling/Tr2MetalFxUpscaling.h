@@ -49,6 +49,8 @@ private:
 	bool m_temporal;
     Tr2UpscalingAL::JitterSequence m_jitterSequence;
     
+    Tr2RenderContextAL& m_renderContext;
+    
     struct TemporalScaler
     {
         API_AVAILABLE(macos(13.0))

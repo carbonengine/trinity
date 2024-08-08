@@ -1611,6 +1611,11 @@ uint64_t Tr2RenderContextAL::GetRenderedFrameNumber() const
 	return m_metalContext->GetRenderedFrameNumber();
 }
 
+void Tr2RenderContextAL::ReleaseLater( id<NSObject> obj )
+{
+    m_metalContext->ReleaseLater( obj );
+}
+
 void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )
 {
 	m_textures.push_back( texture.TrinityALImpl_GetObject() );

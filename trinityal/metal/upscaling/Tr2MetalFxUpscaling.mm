@@ -26,6 +26,10 @@ namespace MetalUpscalingUtils
     }
 }
 
+bool g_disableMetalFXScalerReuse = false;
+bool g_disableMetalFXScalerAsyncCreation = false;
+bool g_delayReleaseMetalFXScaler = true;
+
 namespace
 {
 
@@ -46,6 +50,11 @@ public:
         std::unique_lock lock( m_mutex );
         m_queue.push_back( item );
         m_added.notify_one();
+    }
+    
+    void Process( const std::shared_ptr<Item>& item )
+    {
+        m_processor( item );
     }
 private:
     void Worker()
@@ -141,68 +150,78 @@ std::vector<Tr2UpscalingAL::Setting> Tr2MetalFxUpscalingTechnique::GetAvailableS
 
 Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting setting, bool temporal, Tr2UpscalingAL::UpscalingContextParams params ) :
     Tr2UpscalingContextAL( setting, false, params ),
-    m_setup( false )
+    m_setup( false ),
+    m_renderContext( params.renderContext )
 {
     if( @available(macOS 13.0, *) )
-    {
-        m_mfxSpatialScaler = nil;
-    }
-    m_jitterXScale = 1.0f;
-    m_jitterYScale = -1.0f;
-    m_temporal = temporal;
+	{
+		m_mfxSpatialScaler = nil;
+		
+		m_jitterXScale = 1.0f;
+		m_jitterYScale = -1.0f;
+		m_temporal = temporal;
+		
+		switch( m_setting ){
+			case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
+				m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
+				break;
+			case Tr2UpscalingAL::Setting::QUALITY:
+				m_upscaling = m_temporal ? 1.4 : 1.25;
+				break;
+			case Tr2UpscalingAL::Setting::BALANCED:
+				m_upscaling = m_temporal ? 1.7 : 1.5;
+				break;
+			case Tr2UpscalingAL::Setting::PERFORMANCE:
+				m_upscaling = m_temporal ? 2.0 : 1.75;
+				break;
+			case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
+				m_upscaling = m_temporal ? 2.3 : 2.0;
+				break;
+			default:
+				m_upscaling = 1.0;
+				break;
+		}
+		
+		m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
+		m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
+		
+		if( m_temporal )
+		{
+			CreateTemporalScaler();
+			m_jitterSequence = Tr2UpscalingAL::GenerateHaltonSequence( 8 * m_upscaling * m_upscaling, 2, 3 );
+		}
+		CreateSpatialScaler();
+		
+		if( m_mfxSpatialScaler == nil )
+		{
+			return;
+		}
+		m_setup = true;
+	}
 }
 
-Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext()
-{
-    if( @available(macos 13.0, *) )
-    {
-        if( m_temporalScaler )
-        {
-            m_temporalScaler->canceled = true;
-        }
-        m_mfxSpatialScaler = nil;
-		
-        switch( m_setting ){
-            case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
-                m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
-                break;
-            case Tr2UpscalingAL::Setting::QUALITY:
-                m_upscaling = m_temporal ? 1.4 : 1.25;
-                break;
-            case Tr2UpscalingAL::Setting::BALANCED:
-                m_upscaling = m_temporal ? 1.7 : 1.5;
-                break;
-            case Tr2UpscalingAL::Setting::PERFORMANCE:
-                m_upscaling = m_temporal ? 2.0 : 1.75;
-                break;
-            case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
-                m_upscaling = m_temporal ? 2.3 : 2.0;
-                break;
-            default:
-                m_upscaling = 1.0;
-                break;
-        }
-        
-        m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
-        m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
-        
-        if( m_temporal )
-        {
-            CreateTemporalScaler();
-            m_jitterSequence = Tr2UpscalingAL::GenerateHaltonSequence( 8 * m_upscaling * m_upscaling, 2, 3 );
-        }
-        CreateSpatialScaler();
-        
-        if( m_mfxSpatialScaler == nil )
-        {
-            return;
-        }
-        m_setup = true;
-    }
+Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext() {
+	
+	if( @available(macos 13.0, *) )
+	{
+		if( m_temporalScaler )
+		{
+			m_temporalScaler->canceled = true;
+            if( g_delayReleaseMetalFXScaler && m_temporalScaler->created )
+            {
+                m_renderContext.ReleaseLater( m_temporalScaler->temporalScaler );
+            }
+		}
+		m_mfxSpatialScaler = nil;
+	}
 }
 
 bool Tr2MetalFxUpscalingContext::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
 {
+    if( g_disableMetalFXScalerReuse )
+    {
+        return false;
+    }
     return m_params == params;
 }
 
@@ -249,7 +268,14 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
         m_temporalScaler->desc = desc;
         m_temporalScaler->device = device;
         
-        s_queue.Add( m_temporalScaler );
+        if( g_disableMetalFXScalerAsyncCreation )
+        {
+            s_queue.Process( m_temporalScaler );
+        }
+        else
+        {
+            s_queue.Add( m_temporalScaler );
+        }
         
         m_reset = true;
     }
