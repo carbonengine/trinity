@@ -82,6 +82,8 @@ void DescriptorStateCache::Reset()
 void DescriptorStateCache::Dirty()
 {
 	m_heapsDirty = true;
+	m_srvUavDirty = true;
+	m_samplerDirty = true;
 
 	// Set the last slots to 0 so if we need any then we will resend the descriptors to the gpu
 	m_uploadedSamplerCount = 0;
