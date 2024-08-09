@@ -24,9 +24,6 @@ namespace TrinityALImpl
 		case Tr2UpscalingAL::Technique::FSR1:
 			techniqueImpl = new Tr2Fsr1UpscalingTechnique( renderContext, technique, setting, frameGeneration, adapter );
 			break;
-		case Tr2UpscalingAL::Technique::FSR2:
-			techniqueImpl = new Tr2Fsr2UpscalingTechnique( renderContext, technique, setting, frameGeneration, adapter );
-			break;
 		case Tr2UpscalingAL::Technique::FSR3:
 			techniqueImpl = new Tr2Fsr3UpscalingTechnique( renderContext, technique, setting, frameGeneration, adapter );
 			break;
@@ -35,6 +32,8 @@ namespace TrinityALImpl
 			break;
 		case Tr2UpscalingAL::Technique::XESS:
 			techniqueImpl = new Tr2XessUpscalingTechnique( renderContext, technique, setting, frameGeneration, adapter );
+			break;
+		default:
 			break;
 		}
 
