@@ -26,10 +26,6 @@ namespace MetalUpscalingUtils
     }
 }
 
-bool g_disableMetalFXScalerReuse = false;
-bool g_disableMetalFXScalerAsyncCreation = false;
-bool g_delayReleaseMetalFXScaler = true;
-
 namespace
 {
 
@@ -207,7 +203,7 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext() {
 		if( m_temporalScaler )
 		{
 			m_temporalScaler->canceled = true;
-            if( g_delayReleaseMetalFXScaler && m_temporalScaler->created )
+            if( m_temporalScaler->created )
             {
                 m_renderContext.ReleaseLater( m_temporalScaler->temporalScaler );
             }
@@ -218,10 +214,6 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext() {
 
 bool Tr2MetalFxUpscalingContext::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
 {
-    if( g_disableMetalFXScalerReuse )
-    {
-        return false;
-    }
     return m_params == params;
 }
 
@@ -268,14 +260,7 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
         m_temporalScaler->desc = desc;
         m_temporalScaler->device = device;
         
-        if( g_disableMetalFXScalerAsyncCreation )
-        {
-            s_queue.Process( m_temporalScaler );
-        }
-        else
-        {
-            s_queue.Add( m_temporalScaler );
-        }
+        s_queue.Add( m_temporalScaler );
         
         m_reset = true;
     }

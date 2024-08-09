@@ -199,30 +199,6 @@ void InitializeTrinity()
 		g_gdrEnabled = gdpr != L"0";
 	}
     
-#if TRINITY_PLATFORM == TRINITY_METAL
-    extern bool g_disableMetalFXScalerReuse;
-    extern bool g_disableMetalFXScalerAsyncCreation;
-    extern bool g_delayReleaseMetalFXScaler;
-
-    auto metalFXTest = BeOS->GetStartupArgValue( L"metalfxtest" );
-    if( !metalFXTest.empty() )
-    {
-        if( metalFXTest == L"1" )
-        {
-            CCP_LOGNOTICE( "MetalFX tests: disabling scaler reuse, async creation and delayed release" );
-            g_disableMetalFXScalerReuse = true;
-            g_disableMetalFXScalerAsyncCreation = true;
-            g_delayReleaseMetalFXScaler = false;
-        }
-        else if( metalFXTest == L"2" )
-        {
-            CCP_LOGNOTICE( "MetalFX tests: disabling scaler reuse, async creation, but leaving delayed release enabled" );
-            g_disableMetalFXScalerReuse = true;
-            g_disableMetalFXScalerAsyncCreation = true;
-        }
-    }
-#endif
-    
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
 
 	Tr2FontManager::Initialize();
