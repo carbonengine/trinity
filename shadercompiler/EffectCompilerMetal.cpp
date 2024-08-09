@@ -4629,7 +4629,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 		}
         listing.end(); // pases list
 
-        listing.dict().literal( "libraries" ).list();
+        listing.literal( "libraries" ).list();
 
         for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
         {
