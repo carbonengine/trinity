@@ -1090,7 +1090,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.backClip = Tr2Renderer::GetBackClip();
 	dispatchParameters.frontClip = Tr2Renderer::GetFrontClip();
 	dispatchParameters.fieldOfView = Tr2Renderer::GetFieldOfView();
-	dispatchParameters.frameTimeDelta = timeDelta;
+	dispatchParameters.frameTimeDelta = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_lastFrameTime ) * 1000.0f;
 	dispatchParameters.preExposure = 0.4f;
 
 	memcpy( dispatchParameters.cameraPos, &Tr2Renderer::GetViewPosition(), 3 * sizeof( float ) );
