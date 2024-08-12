@@ -58,7 +58,10 @@ namespace Tr2UpscalingAL
 		float aspectRatio;
 		float frameTimeDelta;
 		float preExposure;
-		float view[16];
+		float cameraForward[3];
+		float cameraRight[3];
+		float cameraUp[3];
+		float cameraPos[3];
 		float projection[16];
 		float invProjection[16];
 		float clipToPrevClip[16];

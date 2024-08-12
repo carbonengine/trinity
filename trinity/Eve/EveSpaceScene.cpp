@@ -188,6 +188,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_projection( IdentityMatrix() ),
 	m_projectionLast( IdentityMatrix() ),
 	m_jitteredProjection( IdentityMatrix() ),
+	m_reprojectionMatrix( IdentityMatrix() ),
 	m_jitter( 0.f, 0.f, 0.f, 0.f ),
 	m_upscalingAmount( 1.0f ),
 	m_usingUpscaling( false )
@@ -1137,35 +1138,6 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 
 void EveSpaceScene::UpdatePostProcessPSData()
 {
-	Matrix currentView = Tr2Renderer::GetViewTransform();
-	Matrix currentProj = m_projection;
-
-	Matrix prevView = m_viewLast;
-	Matrix prevProj = m_projectionLast;
-
-
-	// if we are using TAA we need to make the projection use inverse depth so we get the correct velocity
-	// however we don't want that when using upscaling
-	if( m_usingUpscaling )
-	{
-		currentProj._33 = -currentProj._33 - 1.f;
-		currentProj._43 = -currentProj._43;
-
-		prevProj._33 = -prevProj._33 - 1.f;
-		prevProj._43 = -prevProj._43;
-	}
-
-	//Reprojection matrix for objects infinitely far away.
-	//This only takes the camera's rotation into account, completely ignoring any camera translation.
-
-	currentView._41 = currentView._42 = currentView._43 = 0.0; //Force translation component to (0, 0, 0)
-	prevView._41 = prevView._42 = prevView._43 = 0.0; //Force translation component to (0, 0, 0)
-	
-	Matrix reprojectionMatrix = Inverse( currentProj ) * Inverse( currentView ) * prevView * prevProj;
-
-	//TODO: This variable is calculated here for legacy purposes. It should be removed or at least modified to fit its current use!
-	m_reprojectionMatSkyBox = Transpose( reprojectionMatrix );
-
 	m_postProcessPSData.DeltaT = m_updateContext.GetDeltaT();
 	m_postProcessPSData.OriginShift = m_updateContext.GetOriginShift();
 
@@ -1219,7 +1191,8 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	m_frameData.projection = m_jitteredProjection;
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
-
+	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( Tr2Renderer::GetViewTransform() ) * m_viewLast * m_projectionLast;
+	
 	m_velocityMapDirty = false;
 
 	renderContext.m_esm.BeginManagedRendering();
@@ -2352,6 +2325,7 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 			Tr2Renderer::DrawTexture( renderContext, *texture );
 		}
 	}
+	
 	// Store the view transform from this frame
 	m_viewLast = Tr2Renderer::GetViewTransform();
 	m_projectionLast = m_projection;
@@ -3469,7 +3443,7 @@ Tr2DepthStencil* EveSpaceScene::GetDepth()
 	return m_depthMap;
 }
 
-Matrix EveSpaceScene::GetReprojectionMatrix()
+Matrix EveSpaceScene::GetReprojectionMatrix() const
 {
-	return m_reprojectionMatSkyBox;
+	return m_reprojectionMatrix;
 }
