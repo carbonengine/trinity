@@ -1072,6 +1072,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 		{
 			m_reactiveMask.CreateInstance();
 			m_reactiveMask->SetName( "ReactiveMask" );
+			m_reactiveMask->Create( source->GetWidth(), source->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, source->GetMsaaType(), 0 );
 		}
 
 		m_reactiveMaskEffect->SetParameter( BlueSharedString( "OpaqueOnly" ), m_opaqueColorBuffer );
