@@ -181,6 +181,7 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_lutEnabled( false ),
 	m_vignetteEnabled( false ),
 	m_sceneDirty( false ),
+	m_lastFrameTime( std::numeric_limits<long long>().max() ),
 	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID )
 {
 	m_renderInfo.CreateInstance();
@@ -1082,9 +1083,9 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 
 	auto view = Tr2Renderer::GetViewTransform();
 	auto projection = Tr2Renderer::GetProjectionTransform();
-	auto inverseProjection = Inverse( Tr2Renderer::GetProjectionTransform() );
+	auto inverseProjection = Inverse( projection );
 	auto reprojection = m_scene->GetReprojectionMatrix();
-	auto invReprojection = Inverse( m_scene->GetReprojectionMatrix() );
+	auto invReprojection = Inverse( reprojection );
 
 	dispatchParameters.aspectRatio = Tr2Renderer::GetAspectRatio();
 	dispatchParameters.backClip = Tr2Renderer::GetBackClip();
@@ -1093,7 +1094,10 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.frameTimeDelta = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_lastFrameTime ) * 1000.0f;
 	dispatchParameters.preExposure = 0.4f;
 
-	memcpy( dispatchParameters.view, &view, 16 * sizeof(float) );
+	memcpy( dispatchParameters.cameraPos, &Tr2Renderer::GetViewPosition(), 3 * sizeof( float ) );
+	memcpy( dispatchParameters.cameraForward, &view.GetZ(), 3 * sizeof( float ) );
+	memcpy( dispatchParameters.cameraUp, &view.GetY(), 3 * sizeof( float ) );
+	memcpy( dispatchParameters.cameraRight, &view.GetX(), 3 * sizeof( float ) );
 	memcpy( dispatchParameters.projection, &projection, 16 * sizeof( float ) );
 	memcpy( dispatchParameters.invProjection, &inverseProjection, 16 * sizeof( float ) );
 	memcpy( dispatchParameters.clipToPrevClip, &reprojection, 16 * sizeof( float ) );

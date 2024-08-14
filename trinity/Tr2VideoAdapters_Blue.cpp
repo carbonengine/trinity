@@ -100,16 +100,6 @@ const Be::ClassInfo* Tr2VideoAdapters::ExposeToBlue()
 			"\n:param idx: Video adapter index"
 			"\n:param format: Back buffer format (member of trinity.PIXEL_FORMAT)"
 			"\n:param modeIndex: Display mode index" )
-		MAP_METHOD_AND_WRAP( 
-			"GetRenderTargetMsaaSupport", 
-			GetRenderTargetMsaaSupport, 
-			"Returns number of MSAA quality levels supported by video adapter for"
-			"\ngiven render target format and number of MSAA samples (0 means MSAA is"
-			"\nnot supported for given combination)."
-			"\n"
-			"\n:param idx: Video adapter index"
-			"\n:param format: Render target format (member of trinity.PIXEL_FORMAT)"
-			"\n:param msaaType: Number of MSAA samples" )
 
 		MAP_METHOD_AND_WRAP( 
 			"SupportsBackBufferFormat", 

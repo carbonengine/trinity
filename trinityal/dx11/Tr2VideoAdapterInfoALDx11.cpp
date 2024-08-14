@@ -31,10 +31,8 @@ struct AdapterInfo
 struct DeviceInfo
 {
 	static const unsigned FORMAT_COUNT = 100;
-	static const unsigned MAX_SAMPLE_COUNT = D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT;
 
 	uint32_t m_formatSupport[FORMAT_COUNT];
-	uint8_t m_qualityLevels[FORMAT_COUNT][MAX_SAMPLE_COUNT];
 };
 
 std::vector<AdapterInfo> s_adapters;
@@ -156,22 +154,9 @@ ALResult InitializeDirect3D()
 
 		DeviceInfo deviceInfo;
 		memset( deviceInfo.m_formatSupport, 0, sizeof( deviceInfo.m_formatSupport ) );
-		memset( deviceInfo.m_qualityLevels, 0, sizeof( deviceInfo.m_qualityLevels ) );
 		for ( unsigned i = 0; i < DeviceInfo::FORMAT_COUNT; ++i )
 		{
 			device->CheckFormatSupport( static_cast<DXGI_FORMAT>( i ), deviceInfo.m_formatSupport + i );
-		}
-		for ( unsigned i = 0; i < DeviceInfo::FORMAT_COUNT; ++i )
-		{
-			for ( unsigned j = 0; j < DeviceInfo::MAX_SAMPLE_COUNT; ++j )
-			{
-				uint32_t count = 0;
-				if ( FAILED( device->CheckMultisampleQualityLevels( static_cast<DXGI_FORMAT>( i ), j + 2, &count ) ) )
-				{
-					break;
-				}
-				deviceInfo.m_qualityLevels[i][j] = uint8_t( count );
-			}
 		}
 
 		CComPtr<IDXGIOutput> outputPtr;
@@ -410,29 +395,6 @@ unsigned log2( unsigned int x )
 		ans++;
 	}
 	return ans;
-}
-
-ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
-													 Tr2RenderContextEnum::PixelFormat format,
-													 unsigned msaaType,
-													 unsigned& msaaQuality )
-{
-	CHECK_INIT;
-	CHECK_VALID_ADAPTER;
-
-	if ( msaaType <= 1 )
-	{
-		msaaQuality = 0;
-		return S_OK;
-	}
-
-	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT || msaaType >= (unsigned)DeviceInfo::MAX_SAMPLE_COUNT )
-	{
-		return E_INVALIDARG;
-	}
-
-	msaaQuality = s_deviceInfo[s_adapters[adapterIndex].m_deviceInfoIndex].m_qualityLevels[format][msaaType - 2];
-	return S_OK;
 }
 
 ALResult Tr2VideoAdapterInfo::RefreshData()

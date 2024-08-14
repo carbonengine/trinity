@@ -91,6 +91,7 @@ public:
 	virtual uint32_t GetDispatchRequirements() const override;
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
+	virtual void SetHudLessTexture( Tr2TextureAL* texture ) override;
 
 private:
 	void SetFrameToken( sl::FrameToken* token );

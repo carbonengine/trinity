@@ -20,7 +20,6 @@ namespace
 		std::wstring description;
 		uint32_t vendorID;
 		uint32_t deviceID;
-		uint32_t msaaSamples;
         
         std::vector<Tr2DisplayModeInfo> modes;
 	};
@@ -174,14 +173,6 @@ namespace
 			}
 		}
 
-		uint32_t msaaSamples = 1;
-		for( uint32_t i = 2; i < 32; ++i )
-		{
-			if( [device supportsTextureSampleCount:i] )
-			{
-				msaaSamples |= 1 << i;
-			}
-		}
 		std::wstring deviceDescription = ToWString( [device name] );
 		
 		uint32_t vendorID = 0;
@@ -232,7 +223,6 @@ namespace
 				CFRelease(info);
 			}
 
-			display.msaaSamples = msaaSamples;
 			display.description = deviceDescription;
 			display.vendorID = vendorID;
 			display.deviceID = deviceID;
@@ -469,29 +459,6 @@ bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex, Tr2
 		return false;
 	}
 	return true;
-}
-
-ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
-													 Tr2RenderContextEnum::PixelFormat,
-													 unsigned msaaType,
-													 unsigned& msaaQuality )
-{
-	CHECK_ADAPTER;
-
-	if( msaaType >= 32 )
-	{
-		msaaQuality = 0;
-		return S_OK;
-	}
-	if( ( s_displays[adapterIndex].msaaSamples & (1 << msaaType ) ) != 0 )
-	{
-		msaaQuality = 1;
-	}
-	else
-	{
-		msaaQuality = 0;
-	}
-	return S_OK;
 }
 
 bool Tr2VideoAdapterInfo::AreAdaptersDifferent( unsigned adapter1,
