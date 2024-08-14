@@ -38,10 +38,6 @@ public:
 							 int /*Tr2RenderContextEnum::PixelFormat*/ backBufferFormat,
 							 unsigned modeIndex,
 							 Tr2DisplayMode** mode );
-	ALResult GetRenderTargetMsaaSupport( unsigned adapterIndex,
-										 int /*Tr2RenderContextEnum::PixelFormat*/ format,
-										 unsigned msaaType,
-										 unsigned& msaaQuality );
 	bool SupportsBackBufferFormat( unsigned adapterIndex,
 								   int /*Tr2RenderContextEnum::PixelFormat*/ backBufferFormat );
 	bool SupportsRenderTargetFormat( unsigned adapterIndex,
