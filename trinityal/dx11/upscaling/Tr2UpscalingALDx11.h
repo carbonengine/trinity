@@ -11,7 +11,8 @@
 namespace TrinityALImpl
 {
 	constexpr Tr2UpscalingAL::Technique AVAILABLE_UPSCALING_TECHNIQUES[] = {
-		Tr2UpscalingAL::FSR1
+		Tr2UpscalingAL::FSR1,
+		Tr2UpscalingAL::DLSS
 	};
 
 	class Tr2UpscalingTechniqueDx11 : public Tr2UpscalingTechniqueAL
