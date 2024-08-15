@@ -350,12 +350,13 @@ void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParame
 	m_commonConstants.cameraAspectRatio = dispatchParameters.aspectRatio;
 	m_commonConstants.cameraFar = dispatchParameters.backClip;
 	m_commonConstants.cameraFOV = dispatchParameters.fieldOfView;
-	m_commonConstants.cameraFwd = sl::float3( dispatchParameters.view[13], dispatchParameters.view[14], dispatchParameters.view[15] );
 	m_commonConstants.cameraMotionIncluded = sl::eTrue;
 	m_commonConstants.cameraNear = dispatchParameters.frontClip;
-	m_commonConstants.cameraPos = sl::float3( dispatchParameters.view[2], dispatchParameters.view[6], dispatchParameters.view[10] );
-	m_commonConstants.cameraRight = sl::float3( dispatchParameters.view[0], dispatchParameters.view[4], dispatchParameters.view[8] );
-	m_commonConstants.cameraUp = sl::float3( dispatchParameters.view[1], dispatchParameters.view[5], dispatchParameters.view[9] );
+	m_commonConstants.cameraFwd = sl::float3( dispatchParameters.cameraForward[0], dispatchParameters.cameraForward[1], dispatchParameters.cameraForward[2] );
+	m_commonConstants.cameraPos = sl::float3( dispatchParameters.cameraPos[0], dispatchParameters.cameraPos[1], dispatchParameters.cameraPos[2] );
+	m_commonConstants.cameraRight = sl::float3( dispatchParameters.cameraRight[0], dispatchParameters.cameraRight[1], dispatchParameters.cameraRight[2] );
+	m_commonConstants.cameraUp = sl::float3( dispatchParameters.cameraUp[0], dispatchParameters.cameraUp[1], dispatchParameters.cameraUp[2] );
+
 	m_commonConstants.cameraViewToClip = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.projection );
 	m_commonConstants.clipToCameraView = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.invProjection );
 	m_commonConstants.clipToPrevClip = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.clipToPrevClip );

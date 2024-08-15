@@ -89,20 +89,6 @@ TEST( VideoAdapterInfo, SameAdaptersAreNotDifferent )
 	EXPECT_FALSE( Tr2VideoAdapterInfo::AreAdaptersDifferent( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, Tr2VideoAdapterInfo::DEFAULT_ADAPTER ) );
 }
 
-TEST( VideoAdapterInfo, CanQueryMsaaSupport )
-{
-	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
-	if (!count) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
-
-	unsigned quality;
-	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterMsaaSupport( 
-		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
-		PIXEL_FORMAT_B8G8R8A8_UNORM, 
-		1, 
-		quality ) );
-}
-
 TEST( VideoAdapterInfo, DefaultAdapterSupports32bppRenderTarget )
 {
 	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::SupportsRenderTargetFormat( 

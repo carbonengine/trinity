@@ -191,7 +191,7 @@ public:
 	Tr2ShaderBufferPtr GetPostProcessPSBuffer();
 	void SetVelocityMap( Tr2RenderTargetPtr velocityMap );
 	Tr2DepthStencil* GetDepth();
-	Matrix GetReprojectionMatrix();
+	Matrix GetReprojectionMatrix() const;
 
 
 	enum ShadowQuality
@@ -343,8 +343,6 @@ protected:
 
 	PostProcessPSData m_postProcessPSData;
 	Tr2ShaderBufferPtr m_postProcessPSBuffer;
-
-	Matrix m_reprojectionMatSkyBox;
 
 	void UpdatePostProcessPSData();
 
@@ -664,6 +662,9 @@ private:
 	// projection matrices
 	Matrix m_projection;
 	Matrix m_jitteredProjection;
+
+	// reprojection matrix
+	Matrix m_reprojectionMatrix;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceScene );

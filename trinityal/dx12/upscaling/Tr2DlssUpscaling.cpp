@@ -107,6 +107,10 @@ Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 	TogglePlugin( sl::kFeatureNIS, false );
 
 	TogglePlugin( sl::kFeaturePCL, false );
+	if( g_upscalingDebug )
+	{
+		TogglePlugin( sl::kFeatureImGUI, false );
+	}
 
 	if( m_attachedToDevice )
 	{
@@ -121,6 +125,9 @@ Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 
 		m_attachedToDevice = false;
 	}
+
+	m_renderContext.FlushAndSyncDx12();
+
 	Tr2StreamlineAL::ReleaseStreamline( m_streamlineModule );
 }
 
@@ -517,25 +524,13 @@ sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::Dispatch
 	auto exposureResource = DlssUtils::GenerateTextureResource( dispatchParameters.exposure );
 	auto opaqueOnlyResource = DlssUtils::GenerateTextureResource( dispatchParameters.opaqueOnly );
 
-	sl::Extent renderExtent = {};
-	renderExtent.height = m_renderHeight;
-	renderExtent.width = m_renderWidth;
-
-	sl::Extent displayExtent = {};
-	displayExtent.height = m_displayHeight;
-	displayExtent.width = m_displayWidth;
-
-	sl::Extent exposureExtent = {};
-	exposureExtent.height = 1;
-	exposureExtent.width = 1;
-
-	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilPresent, &renderExtent };
-	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilPresent, &renderExtent };
-	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilPresent, &displayExtent };
-	sl::ResourceTag depthTag = sl::ResourceTag{ &depthResource, sl::kBufferTypeDepth, sl::ResourceLifecycle::eValidUntilPresent, &renderExtent };
-	sl::ResourceTag mvecTag = sl::ResourceTag{ &velocityResource, sl::kBufferTypeMotionVectors, sl::ResourceLifecycle::eValidUntilPresent, &renderExtent };
-	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilPresent, &exposureExtent };
-
+	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	sl::ResourceTag depthTag = sl::ResourceTag{ &depthResource, sl::kBufferTypeDepth, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	sl::ResourceTag mvecTag = sl::ResourceTag{ &velocityResource, sl::kBufferTypeMotionVectors, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	
 	sl::ResourceTag resources[] = { colorInTag, opaqueColorInTag, colorOutTag, depthTag, mvecTag, exposureTag };
 
 	if( SL_FAILED( res, m_slSetTag( m_viewHandle, resources, 6, renderContext.m_commandList ) ) )
@@ -552,12 +547,8 @@ sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2UpscalingAL::DispatchP
 	auto inputResource = DlssUtils::GenerateTextureResource( &m_dlssOutput );
 	auto outputResource = DlssUtils::GenerateTextureResource( dispatchParameters.output );
 
-	sl::Extent displayExtent = {};
-	displayExtent.height = m_displayHeight;
-	displayExtent.width = m_displayWidth;
-
-	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilPresent, &displayExtent };
-	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilPresent, &displayExtent };
+	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilPresent,  };
 
 	sl::ResourceTag resources[] = { colorInTag, colorOutTag };
 
@@ -571,15 +562,18 @@ sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2UpscalingAL::DispatchP
 
 void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
+	m_commonConstants = sl::Constants{};
 	m_commonConstants.cameraAspectRatio = dispatchParameters.aspectRatio;
 	m_commonConstants.cameraFar = dispatchParameters.backClip;
 	m_commonConstants.cameraFOV = dispatchParameters.fieldOfView;
-	m_commonConstants.cameraFwd = sl::float3( dispatchParameters.view[13], dispatchParameters.view[14], dispatchParameters.view[15] );
 	m_commonConstants.cameraMotionIncluded = sl::eTrue;
 	m_commonConstants.cameraNear = dispatchParameters.frontClip;
-	m_commonConstants.cameraPos = sl::float3( dispatchParameters.view[2], dispatchParameters.view[6], dispatchParameters.view[10] );
-	m_commonConstants.cameraRight = sl::float3( dispatchParameters.view[0], dispatchParameters.view[4], dispatchParameters.view[8] );
-	m_commonConstants.cameraUp = sl::float3( dispatchParameters.view[1], dispatchParameters.view[5], dispatchParameters.view[9] );
+
+	m_commonConstants.cameraFwd = sl::float3( dispatchParameters.cameraForward[0], dispatchParameters.cameraForward[1], dispatchParameters.cameraForward[2] );
+	m_commonConstants.cameraPos = sl::float3( dispatchParameters.cameraPos[0], dispatchParameters.cameraPos[1], dispatchParameters.cameraPos[2] );
+	m_commonConstants.cameraRight = sl::float3( dispatchParameters.cameraRight[0], dispatchParameters.cameraRight[1], dispatchParameters.cameraRight[2] );
+	m_commonConstants.cameraUp = sl::float3( dispatchParameters.cameraUp[0], dispatchParameters.cameraUp[1], dispatchParameters.cameraUp[2] );
+
 	m_commonConstants.cameraViewToClip = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.projection );
 	m_commonConstants.clipToCameraView = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.invProjection );
 	m_commonConstants.clipToPrevClip = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.clipToPrevClip );
@@ -588,10 +582,11 @@ void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParame
 	m_commonConstants.motionVectors3D = sl::eFalse;
 	m_commonConstants.motionVectorsDilated = sl::eFalse;
 	m_commonConstants.motionVectorsJittered = sl::eFalse;
-	m_commonConstants.mvecScale = sl::float2( 1, -1 );
+	m_commonConstants.mvecScale = sl::float2( 1, 1 );
 	m_commonConstants.orthographicProjection = sl::eFalse;
 	m_commonConstants.prevClipToClip = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.prevClipToClip );
 	m_commonConstants.reset = m_reset ? sl::eTrue : sl::eFalse;
+
 
 	if( SL_FAILED( result, m_slSetConstants( m_commonConstants, *m_frameToken, m_viewHandle ) ) )
 	{
@@ -656,6 +651,21 @@ void Tr2DlssUpscalingContext::SetFrameToken( sl::FrameToken* token )
 {
 	m_frameToken = token;
 }
+
+void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
+{
+	if( texture )
+	{
+		auto resource = DlssUtils::GenerateTextureResource( texture );
+		sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+
+		if( SL_FAILED( res, m_slSetTag( m_viewHandle, &tag, 1, m_params.renderContext.m_commandList ) ) )
+		{
+			CCP_LOGERR( "Failed to tag HudLess texture (%d)", res );
+		}
+	}
+}
+
 
 
 #endif
