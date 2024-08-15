@@ -358,6 +358,7 @@ protected:
 	void RenderDistortion( Tr2RenderContext & renderContext );
 
 	Matrix CreatePlanetViewMatrix( const Matrix& original );
+	void SetupPlanetsAsShadowCaster( CcpMath::Sphere* planets, size_t maxPlanets );
 	void SetupPlanetsAsShadowCaster( Tr2RenderContext & renderContext );
 
 	void GetPickingResults( Tr2PickBuffer & pickBuffer, Tr2RenderContext & renderContext, unsigned short& objId, unsigned short& areaId, float& depth );

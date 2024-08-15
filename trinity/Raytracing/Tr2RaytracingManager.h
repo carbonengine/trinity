@@ -17,7 +17,7 @@ public:
 
 	Tr2RaytracingGeometry& GetGeometry();
 
-	void RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, Tr2RenderContext& renderContext );
+	void RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, const CcpMath::Sphere* planets, size_t planetCount, Tr2RenderContext& renderContext );
 	
 	bool OnPrepareResources();
 	void ReleaseResources( TriStorage s );

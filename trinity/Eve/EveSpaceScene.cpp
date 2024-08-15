@@ -2052,7 +2052,11 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 		if( volumetricCount + shadowCasterCount != 0 )
 		{
 			renderContext.SetReadOnlyDepth( true );
-			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
+
+			constexpr size_t maxPlanets = 2;
+			CcpMath::Sphere planets[maxPlanets];
+			SetupPlanetsAsShadowCaster( planets, maxPlanets );
+			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, planets, maxPlanets, renderContext );
 
 			if( m_componentRegistry && m_volumetricsRenderer )
 			{
@@ -3286,9 +3290,8 @@ void EveSpaceScene::ClearRenderTargetIfNoBatches( Tr2RenderTarget* rt, uint32_t 
 #endif
 }
 
-void EveSpaceScene::SetupPlanetsAsShadowCaster( Tr2RenderContext& renderContext )
+void EveSpaceScene::SetupPlanetsAsShadowCaster( CcpMath::Sphere* planets, size_t maxPlanets )
 {
-	// list of planet's sphere and the corresponding pixelSize
 	std::vector<PlanetInfo> visiblePlanets;
 	for( EvePlanet* obj : m_planets )
 	{
@@ -3306,18 +3309,28 @@ void EveSpaceScene::SetupPlanetsAsShadowCaster( Tr2RenderContext& renderContext 
 			visiblePlanets.emplace_back( p );
 		}
 	}
-	
-	// sort the visiblePlanet list by the pixelSize so we get the 2 largest ones
-	std::sort(visiblePlanets.begin(), visiblePlanets.end(),
-		[](const PlanetInfo& a, const PlanetInfo& b) {
-			return a.pixelSize > b.pixelSize;
-	});
-	
-	// cut unnecessary objects from the list, or if we only have 1 planet the other index is just filled with 0 values
-	visiblePlanets.resize(2);
 
-	m_planetPerObjData.planetSphere[0] = visiblePlanets[0].sphere;
-	m_planetPerObjData.planetSphere[1] = visiblePlanets[1].sphere;
+	// sort the visiblePlanet list by the pixelSize so we get the 2 largest ones
+	std::sort( visiblePlanets.begin(), visiblePlanets.end(), []( const PlanetInfo& a, const PlanetInfo& b ) {
+		return a.pixelSize > b.pixelSize;
+	} );
+
+	// cut unnecessary objects from the list, or if we only have 1 planet the other index is just filled with 0 values
+	visiblePlanets.resize( maxPlanets );
+
+	for( size_t i = 0 ; i < maxPlanets ; i++ )
+	{
+		planets[i] = CcpMath::Sphere( visiblePlanets[i].sphere );
+	}
+}
+
+void EveSpaceScene::SetupPlanetsAsShadowCaster( Tr2RenderContext& renderContext )
+{
+	CcpMath::Sphere planets[2];
+	SetupPlanetsAsShadowCaster( planets, 2 );
+
+	m_planetPerObjData.planetSphere[0] = Vector4( planets[0].center, planets[0].radius );
+	m_planetPerObjData.planetSphere[1] = Vector4( planets[1].center, planets[1].radius );
 	m_planetPerObjBuffer->SetData( (void*)&m_planetPerObjData, sizeof( m_planetPerObjData ) );
 	m_planetPerObjBuffer->ApplyBuffer( renderContext );
 }
