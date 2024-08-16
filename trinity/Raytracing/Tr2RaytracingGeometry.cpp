@@ -248,9 +248,9 @@ uint32_t Tr2RaytracingMesh::GetTransformOffset() const
 	return m_boneOffset;
 }
 
-const Tr2BufferAL& Tr2RaytracingMesh::GetSkinnedVertexBuffer( Tr2RenderContext& renderContext )
+const Tr2BufferAL* Tr2RaytracingMesh::GetSkinnedVertexBuffer() const
 {
-	return *m_skinnedVertices;
+	return m_skinnedVertices;
 }
 
 void Tr2RaytracingMesh::SetSkinnedVertices( const Tr2BufferAL& buffer, uint32_t offset )
@@ -317,6 +317,12 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 			return m_blas; //Nothing to do, we're up to date and valid
 		}
 
+		auto skinnedVB = mesh.GetSkinnedVertexBuffer();
+		if( !skinnedVB )
+		{
+			return m_blas; //No skinned vertices, can't build BLAS
+		}
+
 		//At this point we know that the BLAS is either invalid or dirty. We at least need to update it.
 		bool update = true;
 		bool rebuild = false;
@@ -330,7 +336,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 
 		Tr2RtGeometryAL geometry;
 		geometry.positions = Tr2RtPositionStreamAL( 
-			mesh.GetSkinnedVertexBuffer( renderContext ), 
+			*skinnedVB, 
 			3 * sizeof( float ),
 			meshData->m_vertexCount,
 			mesh.GetSkinnedVertexOffset(),

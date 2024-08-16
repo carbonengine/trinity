@@ -66,7 +66,7 @@ public:
 	TriGeometryResMeshData* GetMeshData() const;
 	TriGeometryResMeshData* GetHighestLodMeshData() const;
 	uint32_t GetTransformOffset() const;
-	const Tr2BufferAL& GetSkinnedVertexBuffer( Tr2RenderContext& renderContext );
+	const Tr2BufferAL* GetSkinnedVertexBuffer() const;
 	const Tr2BufferAL& GetVertexBuffer() const;
 	const Tr2BufferAL& GetIndexBuffer() const;
 
