@@ -31,7 +31,6 @@ public:
 	Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting setting, bool temporal, Tr2UpscalingAL::UpscalingContextParams params );
     ~Tr2MetalFxUpscalingContext();
 
-	bool ReSetup( Tr2UpscalingAL::UpscalingContextParams params ) override;
     virtual bool HasSharpening() const override;
     virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
