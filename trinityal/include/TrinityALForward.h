@@ -35,6 +35,10 @@
 #include <set>
 
 #include <CcpCore.h>
+#include <PixelFormat.h>
+#include <CubemapFace.h>
+#include <TextureType.h>
+#include <BitmapDimensions.h>
 
 #ifdef _MSC_VER
 #pragma warning(pop)

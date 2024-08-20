@@ -544,17 +544,31 @@ CcpMath::AxisAlignedBox Tr2InstancedMesh::GetInstanceBounds() const
 }
 
 
-CcpMath::AxisAlignedBox Tr2InstancedMesh::GetInstanceBoundsClosestToPoint( const Vector3& point, Vector3 worldPos ) const
+CcpMath::Sphere Tr2InstancedMesh::GetInstanceBoundsClosestToPoint( const Vector3& point ) const
 {
-	auto instanceBounds = GetInstanceBounds();
+	float instanceSize = m_maxInstanceSize;
+	switch( m_boundsMethod )
+	{
+	case Tr2InstancedMesh::DYNAMIC:
+		break;
+	case Tr2InstancedMesh::DYNAMIC_SCALED: 
+		{
+			float radius = 0;
+			GetInstanceBounds().EnumerateVertices( [&radius]( const Vector3& vtx ) {
+				radius = std::max( radius, LengthSq( vtx ) );
+			} );
+			instanceSize *= sqrt( radius );
+			break;
+		}
+	default:
+		return {};
+	}
 	auto outerBounds = GetBounds();
-	outerBounds.m_min -= instanceBounds.m_min;
-	outerBounds.m_max -= instanceBounds.m_max;
-	outerBounds.Offset( worldPos );
+	outerBounds.Grow( -instanceSize );
 	
 	Vector3 closestPoint = ClosestPointToBoundingBox( outerBounds.m_min, outerBounds.m_max, point );
-	instanceBounds.Offset( closestPoint );
-	return instanceBounds;
+
+	return CcpMath::Sphere( closestPoint, instanceSize );
 }
 
 CcpMath::AxisAlignedBox Tr2InstancedMesh::GetAreaBounds( unsigned int, const Matrix* boneTransforms ) const
@@ -867,9 +881,10 @@ void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugR
 			{
 				if( m_instanceGeometryResource )
 				{
-					auto aabb = GetInstanceBoundsClosestToPoint( Tr2Renderer::GetViewPosition(), worldTransform.GetTranslation() );
-					if( aabb && !parentBounds.IsPointInside( Tr2Renderer::GetViewPosition() ) )
+					auto sphere = GetInstanceBoundsClosestToPoint( TransformCoord( Tr2Renderer::GetViewPosition(), Inverse( worldTransform ) ) );
+					if( sphere && !parentBounds.IsPointInside( Tr2Renderer::GetViewPosition() ) )
 					{
+						auto aabb = CcpMath::AxisAlignedBox( sphere );
 						renderer.DrawBox( this, worldTransform, aabb.m_min, aabb.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff008888, 0x22008888 ) );
 					}
 				}
