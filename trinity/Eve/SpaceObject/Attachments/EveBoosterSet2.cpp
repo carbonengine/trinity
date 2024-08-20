@@ -75,6 +75,9 @@ EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) :
 
 	m_trailsOffsets = (XMVECTOR*)CCP_ALIGNED_MALLOC( "EveBoosterSet2::m_trailsOffsets", sizeof( XMVECTOR ) * EVE_MAX_POSITION_OFFSET_COUNT, 16 );
 	memset( m_trailsOffsets, 0, EVE_MAX_POSITION_OFFSET_COUNT * sizeof( XMVECTOR ) );
+
+	auto shape = Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI ? EveBoosterSet2::BOX : EveBoosterSet2::STAR;
+	Tr2Renderer::ReserveQuadListIndexBuffer( EVE_BOOSTER_PLANES_COUNT[shape] );
 }
 
 EveBoosterSet2Renderable::~EveBoosterSet2Renderable()
@@ -193,8 +196,8 @@ void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, 
 	if( m_boostersVisible )
 	{
 		auto shape = Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI ? EveBoosterSet2::BOX : EveBoosterSet2::STAR;
-		auto indexBuffer = Tr2Renderer::GetQuadListIndexBuffer( EVE_BOOSTER_PLANES_COUNT[shape] );
-		if( !indexBuffer )
+		auto& indexBuffer = Tr2Renderer::GetQuadListIndexBuffer();
+		if( !indexBuffer.IsValid() )
 		{
 			return;
 		}
@@ -206,12 +209,12 @@ void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, 
 		auto& vb = m_boosterSet->m_vertexBuffer.GetSharedResource();
 		batch.SetStreamSource( 0, vb.GetBuffer(), vb.GetStride() );
 		batch.SetStreamSource( 1, m_boosterSet->m_instanceBuffer );
-		batch.SetInidices( *indexBuffer, indexBuffer->GetDesc().stride );
+		batch.SetInidices( indexBuffer );
 
 		batch.SetDrawIndexedInstanced(
 			3 * 2 * EVE_BOOSTER_PLANES_COUNT[shape],
 			uint32_t( m_boosterSet->m_singleBoosters.size() ),
-			0,
+			indexBuffer.GetStartIndex() ,
 			vb.GetOffset() / vb.GetStride(),
 			m_boosterSet->m_instanceBuffer.GetOffset() / m_boosterSet->m_instanceBuffer.GetStride() );
 		batches->Commit( batch );

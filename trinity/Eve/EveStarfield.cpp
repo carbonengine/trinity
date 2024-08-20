@@ -77,8 +77,8 @@ void EveStarfield::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr
 		return;
 	}
 
-	auto ib = Tr2Renderer::GetQuadListIndexBuffer( m_starCount );
-	if( !ib )
+	auto& ib = Tr2Renderer::GetQuadListIndexBuffer();
+	if( !ib.IsValid() )
 	{
 		return;
 	}
@@ -86,8 +86,10 @@ void EveStarfield::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr
 	Tr2RenderBatch batch;
 	batch.SetMaterial( m_effect );
 	batch.SetPerObjectData( perObjectData );
-	batch.SetGeometry( m_vertexDeclHandle, m_vertexBuffer, uint32_t( m_bytesPerVertex ), *ib, ib->GetDesc().stride );
-	batch.SetDrawIndexedInstanced( m_starCount * 6, 1, 0, 0, 0 );
+	batch.SetVertexDeclaration( m_vertexDeclHandle );
+	batch.SetStreamSource( 0, m_vertexBuffer, uint32_t( m_bytesPerVertex ) );
+	batch.SetInidices( ib );
+	batch.SetDrawIndexedInstanced( m_starCount * 6, 1, ib.GetStartIndex(), 0, 0 );
 	accumulator->Commit( batch );
 }
 
@@ -162,6 +164,8 @@ bool EveStarfield::OnPrepareResources()
 		Tr2CpuUsage::NONE,
 		&verts[0], 
 		renderContext ), false );
+
+	Tr2Renderer::ReserveQuadListIndexBuffer( m_starCount );
 
 	return true;
 }
