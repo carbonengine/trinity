@@ -105,7 +105,7 @@ public:
 	static void RebuildEffects();
 
 	static void ReserveQuadListIndexBuffer( uint32_t numOfQuads );
-	static [[nodiscard]] Tr2SuballocatedBuffer::Allocation& GetQuadListIndexBuffer();
+	[[nodiscard]] static Tr2SuballocatedBuffer::Allocation& GetQuadListIndexBuffer();
 
 	static void BeginFrame();
 	static void EndFrame();
