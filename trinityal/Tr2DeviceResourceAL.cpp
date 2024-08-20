@@ -71,12 +71,15 @@ void DestroyDeviceResources( Tr2ALMemoryTypes memoryTypes )
 	do
 	{
 		s_resourcesMutated = false;
-		for( auto it = begin( allResources ); it != end( allResources ); ++it )
+		for( auto it = begin( allResources ); it != end( allResources ); )
 		{
+			auto next = it;
+			++next;
 			if( ( *it )->IsResourceValid() && ( ( *it )->GetResourceMemoryClass() & memoryTypes ) != 0 )
 			{
 				( *it )->Destroy();
 			}
+			it = next;
 		}
 	} 
 	while( s_resourcesMutated );
