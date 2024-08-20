@@ -74,6 +74,7 @@ private:
 
 	Tr2EffectPtr m_preFilterEffect;
 	Tr2EffectPtr m_filterEffect;
+	Tr2EffectPtr m_copyMipEffect;
 	Tr2RenderTargetPtr m_preFilterTarget;
 	Tr2RenderTargetPtr m_postFilterTarget;
 

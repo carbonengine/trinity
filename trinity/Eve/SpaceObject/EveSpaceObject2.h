@@ -114,6 +114,9 @@ static const size_t EVE_SPACE_OBJECT_VS_DATA_MAX_SIZE = sizeof( EveSpaceObjectVS
 // --------------------------------------------------------------------------------
 struct EveSpaceObjectPSData
 {
+	Matrix worldTransform;
+	Matrix worldTransformLast;
+	Matrix invWorldTransform;
 	Vector4 shipData;
 	Vector4 clipData;
 	Vector4 miscData;

@@ -448,6 +448,10 @@ void EveChildLineSet::UpdateAsyncronous( EveUpdateContext& updateContext, const 
 
 	m_vsData.worldTransform = Transpose( m_worldTransform );
 	m_vsData.invWorldTransform = Inverse( m_worldTransform );
+
+	m_psData.worldTransform = m_vsData.worldTransform;
+	m_psData.worldTransformLast = m_vsData.worldTransformLast;
+	m_psData.invWorldTransform = m_vsData.invWorldTransform;
 }
 
 

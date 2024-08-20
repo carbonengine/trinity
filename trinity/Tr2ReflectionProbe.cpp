@@ -20,6 +20,15 @@ const unsigned MIP_COUNT = 7;
 const unsigned FILTER_SIZE = 128;
 const unsigned FILTER_GROUP_DIM = 342; // ceil(sum(2**(x+x) for x in range(1, MIP_COUNT + 1)) / GROUP_SIZE)
 
+namespace
+{
+
+const auto s_backLightColorName = BlueSharedString( "BackLightColor" );
+const auto s_backLightContrastName = BlueSharedString( "BackLightContrast" );
+const auto s_viewDirectionName = BlueSharedString( "ViewDirection" );
+
+}
+
 Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj ) :
 	m_initialized( false ),
 	m_hasData( false ),
@@ -43,6 +52,7 @@ Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj ) :
 
 	m_renderTargetCube.CreateInstance();
 	m_preFilterEffect.CreateInstance();
+	m_copyMipEffect.CreateInstance();
 	m_filterEffect.CreateInstance();
 	m_preFilterTarget.CreateInstance();
 	m_postFilterTarget.CreateInstance();
@@ -254,7 +264,7 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 
 	if( !m_postFilterTarget->IsValid() )
 	{
-		CR_RETURN_VAL( m_postFilterTarget->Create( FILTER_SIZE, FILTER_SIZE, MIP_COUNT, m_hdrOutput ? rtFormat : PIXEL_FORMAT_R8G8B8A8_UNORM, 0, 0, EX_BIND_UNORDERED_ACCESS, TEX_TYPE_CUBE ), false );
+		CR_RETURN_VAL( m_postFilterTarget->Create( FILTER_SIZE * 2, FILTER_SIZE * 2, MIP_COUNT + 1, m_hdrOutput ? rtFormat : PIXEL_FORMAT_R8G8B8A8_UNORM, 0, 0, EX_BIND_UNORDERED_ACCESS, TEX_TYPE_CUBE ), false );
 		m_hasData = false;
 	}
 
@@ -269,9 +279,9 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 		m_preFilterEffect->SetOption( BlueSharedString( "HOLLYWOOD_MODE" ), BlueSharedString( m_hollywoodMode ? "HOLLYWOOD_ON" : "HOLLYWOOD_OFF" ) );
 		if( m_hollywoodMode )
 		{
-			m_preFilterEffect->SetParameter( BlueSharedString( "BackLightColor" ), Vector4( m_backlightColor ) );
-			m_preFilterEffect->SetParameter( BlueSharedString( "BackLightContrast" ), m_backlightContrast );
-			m_preFilterEffect->SetParameter( BlueSharedString( "ViewDirection" ), Vector3( 0, 1, 0 ) );
+			m_preFilterEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
+			m_preFilterEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
+			m_preFilterEffect->SetParameter( s_viewDirectionName, Vector3( 0, 1, 0 ) );
 		}
 
 		m_filterEffect->SetParameter( BlueSharedString( "tex_in" ), m_preFilterTarget );
@@ -282,11 +292,22 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 			str << "tex_out" << i;
 			Tr2RuntimeTextureParameterPtr param;
 			param.CreateInstance();
-			param->Create( BlueSharedString( str.str() ), m_postFilterTarget, i );
+			param->Create( BlueSharedString( str.str() ), m_postFilterTarget, i + 1 );
 			m_filterEffect->AddResource( param );
 		}
 
 		m_filterEffect->SetParameter( BlueSharedString( "output_srgb" ), m_hdrOutput ? 0.f : 1.f );
+
+		m_copyMipEffect->SetEffectPathName( "res:/graphics/effect/managed/space/System/Reflection/CopyCube.fx" );
+		m_copyMipEffect->SetParameter( BlueSharedString( "tex_hi_res" ), source ? source : static_cast<ITr2TextureProvider*>( m_renderTargetCube ) );
+		m_copyMipEffect->SetParameter( BlueSharedString( "tex_lo_res" ), m_postFilterTarget );
+		m_copyMipEffect->SetOption( BlueSharedString( "HOLLYWOOD_MODE" ), BlueSharedString( m_hollywoodMode ? "HOLLYWOOD_ON" : "HOLLYWOOD_OFF" ) );
+		if( m_hollywoodMode )
+		{
+			m_copyMipEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
+			m_copyMipEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
+			m_copyMipEffect->SetParameter( s_viewDirectionName, Vector3( 0, 1, 0 ) );
+		}
 
 		m_initialized = true;
 	}
@@ -325,21 +346,30 @@ void Tr2ReflectionProbe::Filter( Tr2RenderContext &renderContext )
 
 		if( m_hollywoodMode )
 		{
-			m_preFilterEffect->SetParameter( BlueSharedString( "BackLightColor" ), Vector4( m_backlightColor ) );
-			m_preFilterEffect->SetParameter( BlueSharedString( "BackLightContrast" ), m_backlightContrast );
-			m_preFilterEffect->SetParameter( BlueSharedString( "ViewDirection" ), Tr2Renderer::GetInverseViewTransform().GetZ() );
+			m_preFilterEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
+			m_preFilterEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
+			m_preFilterEffect->SetParameter( s_viewDirectionName, Tr2Renderer::GetInverseViewTransform().GetZ() );
+
+			m_copyMipEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
+			m_copyMipEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
+			m_copyMipEffect->SetParameter( s_viewDirectionName, Tr2Renderer::GetInverseViewTransform().GetZ() );
 		}
 
-		Tr2Renderer::RunComputeShader( m_preFilterEffect, FILTER_SIZE / 8, FILTER_SIZE / 8, 6, renderContext );
+		Tr2Renderer::RunComputeShader( m_preFilterEffect, FILTER_SIZE * 2 / 8, FILTER_SIZE * 2 / 8, 6, renderContext );
 	}
 
 	{
 		GPU_REGION( renderContext, "Reflection Filter Mip Generation" );
 		m_preFilterTarget->GenerateMipMaps();
 	}
-
-	GPU_REGION( renderContext, "Reflection Main Filter" );
-	Tr2Renderer::RunComputeShader( m_filterEffect, FILTER_GROUP_DIM, 6, 1, renderContext );
+	{
+		GPU_REGION( renderContext, "Reflection Main Filter" );
+		Tr2Renderer::RunComputeShader( m_filterEffect, FILTER_GROUP_DIM, 6, 1, renderContext );
+	}
+	{
+		GPU_REGION( renderContext, "Copy Mip" );
+		Tr2Renderer::RunComputeShader( m_copyMipEffect, FILTER_SIZE * 2 / 8, FILTER_SIZE * 2 / 8, 6, renderContext );
+	}
 }
 
 void Tr2ReflectionProbe::RunFilter()

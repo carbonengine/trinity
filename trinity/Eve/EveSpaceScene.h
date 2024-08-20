@@ -459,6 +459,8 @@ protected:
 	Color m_ambientColor;
 	Color m_fogColor;
 	float m_nebulaIntensity;
+	float m_backgroundReflectionIntensity;
+	float m_defaultDiffuseRoughness;
 	Tr2Variable m_nebulaIntensityVar;
 
 	float m_fogStart; // Depth at which fogging starts
