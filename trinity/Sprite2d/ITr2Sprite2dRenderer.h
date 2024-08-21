@@ -85,6 +85,7 @@ struct Tr2Sprite2dD3DVertex : public Tr2Sprite2dVertexBase
 	uint8_t spriteEffect;
 	uint8_t tileMode;
 	Color outlineColor;
+	float outlineThreshold;
 };
 
 BLUE_DECLARE( Tr2AtlasTexture );

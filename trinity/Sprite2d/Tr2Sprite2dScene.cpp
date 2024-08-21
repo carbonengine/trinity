@@ -76,6 +76,7 @@ Tr2Sprite2dScene::Tr2Sprite2dScene( IRoot* lockobj ) :
 	m_backgroundColor( 0x000000ff ),
 	m_color( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_outlineColor( 0.0f, 0.0f, 0.0f, 1.0f ),
+	m_outlineThreshold( 0.0f ),
 	m_accumulatedAlpha( 1.0f ),
 	m_drawWireFrame( false ),
 	m_clearBackground( false ),
@@ -908,6 +909,7 @@ bool Tr2Sprite2dScene::PrepareSpriteVerts(
 			if (sfx == TR2_SFX_OUTLINE)
 			{
 				vertex.outlineColor = m_outlineColor;
+				vertex.outlineThreshold = m_outlineThreshold;
 			}
 			vertex.glowBrightness = m_glowBrightness;
 			vertex.blendMode = PackBlendMode( m_blendMode, m_spriteTarget );
@@ -1233,6 +1235,9 @@ bool Tr2Sprite2dScene::OnPrepareResources()
 
 			// Outline color
 			s_vertexDesc.Add( s_vertexDesc.FLOAT32_4, s_vertexDesc.COLOR, 1 );
+
+			// Outline threshold
+			s_vertexDesc.Add( s_vertexDesc.FLOAT32_1, s_vertexDesc.TEXCOORD, 4 );
 		}
 
 		m_vertexDecl = Tr2EffectStateManager::GetVertexDeclarationHandle( s_vertexDesc );
@@ -1686,6 +1691,11 @@ void Tr2Sprite2dScene::SetColor( const Color& color )
 void Tr2Sprite2dScene::SetOutlineColor( const Color& outlineColor )
 {
 	m_outlineColor = outlineColor;
+}
+
+void Tr2Sprite2dScene::SetOutlineThreshold( float outlineThreshold )
+{
+	m_outlineThreshold = outlineThreshold;
 }
 
 bool Tr2Sprite2dScene::SelectEffect()

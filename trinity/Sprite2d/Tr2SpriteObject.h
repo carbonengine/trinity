@@ -113,6 +113,7 @@ protected:
 	float m_glowExpand;
 	Color m_glowColor;
 	Color m_outlineColor;
+	float m_outlineThreshold;
 };
 
 TYPEDEF_BLUECLASS( Tr2SpriteObject );
