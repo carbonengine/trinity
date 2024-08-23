@@ -23,7 +23,7 @@
 
 in ::= expression(B).
 {
-	parserState->m_preprocessorConditionResult = B;
+	parserState->m_preprocessorConditionResult = int( B );
 }
 
 

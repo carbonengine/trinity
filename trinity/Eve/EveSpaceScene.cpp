@@ -193,7 +193,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 
 	m_shadowAllocators.resize( SHADOW_FRUSTUM_COUNT );
 	m_shadowBatches.resize( SHADOW_FRUSTUM_COUNT );
-	m_shadowCasters.resize( SHADOW_FRUSTUM_COUNT );
 	for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 	{
 		m_shadowBatches[i].reset( new TriRenderBatchAccumulator<EffectKeyGenerator>( &m_shadowAllocators[i] ) );
@@ -446,12 +445,15 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_cascadedShadowMap )
+	if( !m_cascadedShadowMap || !m_componentRegistry )
 	{
 		return;
 	}
 
-	if( m_objects.size() == 0 )
+	size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
+	size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
+
+	if( shadowCasterCount + volumetricCount == 0 )
 	{
 		return;
 	}
@@ -460,9 +462,6 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 	for( unsigned int splitIndex = 0; splitIndex < SHADOW_FRUSTUM_COUNT; ++splitIndex )
 	{
 		ShadowMap::SplitSetup splitSetupInfo = m_cascadedShadowMap->SetupShadowSplit( splitIndex, m_shadowView, m_sunData.DirWorld, m_frameData.frustum.m_zNear );
-
-		// reserve
-		m_shadowCasters[splitIndex].reserve( m_objects.size() );
 
 		// Get the split up camera frustum so we can use it to do some "half space culling" for objects
 		TriFrustum frustum;
@@ -487,8 +486,6 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		m_splitSetup[splitIndex] = splitSetupInfo;
 	}
 
-	GetShadowCasters();
-
 	// if the shadow map DS isn't set then skip everything
 	if( !m_cascadedShadowMap->PrepareShadowRendering( renderContext ) )
 	{
@@ -497,51 +494,72 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 
 	// Get shadow batches in parallel
 	std::vector<size_t> indices;
+
+	std::vector<std::vector<EveSpaceScene::ShadowInfo>> shadowCasterInfo;
+	shadowCasterInfo.resize( SHADOW_FRUSTUM_COUNT );
+
 	for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 	{
 		indices.push_back( i );
 	}
 
 	{
-		CCP_STATS_ZONE( "GetShadowBatches" );
-		std::vector<std::vector<Tr2PerObjectData*>> perObjectData;
-		perObjectData.resize( m_shadowCasters.size() );
-
+		CCP_STATS_ZONE( "GetBatches" );
+		unsigned int shadowMapSize = m_cascadedShadowMap->GetShadowMapSize();
+		auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
+	
 		{
-			CCP_STATS_ZONE( "PerObjectData" );
-			for( size_t index : indices )
-			{
-				auto& casters = m_shadowCasters[index];
-				perObjectData[index].reserve( m_shadowCasters.size() );
-				for( auto shadowCaster = casters.begin(); shadowCaster != casters.end(); ++shadowCaster )
+			CCP_STATS_ZONE( "Find shadow casters" );
+			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
+				auto sunDir = m_sunData.DirWorld;
+				auto cameraFrustum = m_cameraFrustums[frustumIndex];
+				auto shadowFrustum = m_shadowFrustums[frustumIndex];
+				auto casters = shadowCasterInfo[frustumIndex];
+
+				auto frustumShadowCasterInfo = std::vector<EveSpaceScene::ShadowInfo>();
+				frustumShadowCasterInfo.reserve( shadowCasterCount );
+
+				for( auto& caster : shadowCasters )
 				{
-					auto obj = shadowCaster->renderable;
-					auto objectData = obj->GetPerObjectData( m_shadowBatches[index].get() );
-					perObjectData[index].push_back( objectData );
+					float radius;
+					if( caster->IsCastingShadow( cameraFrustum, shadowFrustum, shadowMapSize, sunDir, radius ) )
+					{
+						frustumShadowCasterInfo.push_back( EveSpaceScene::ShadowInfo( radius, caster, nullptr ) );
+					}
+				}
+				shadowCasterInfo[frustumIndex] = frustumShadowCasterInfo;
+			} );
+		}
+		{
+			CCP_STATS_ZONE( "Per object data" );
+
+			// This is not thread safe, hence no threading...
+			for( unsigned int frustumIndex = 0; frustumIndex < SHADOW_FRUSTUM_COUNT; ++frustumIndex )
+			{
+				auto batches = m_shadowBatches[frustumIndex].get();
+				for( auto& info : shadowCasterInfo[frustumIndex] )
+				{
+					info.perObjectData = info.caster->GetShadowPerObjectData(batches);
 				}
 			}
 		}
 
-		Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t index ) {
-			CCP_STATS_ZONE( "GetBatches" );
-			auto& casters = m_shadowCasters[index];
-			auto objectData = perObjectData[index].begin();
-			for( auto shadowCaster = casters.begin(); shadowCaster != casters.end(); ++shadowCaster )
-			{
-				auto obj = shadowCaster->renderable;
-				obj->GetShadowBatches( m_shadowBatches[index].get(), *objectData, shadowCaster->shadowSize );
-				++objectData;
-			}
-			m_shadowBatches[index]->Finalize();
-		} );
-	}
+		{
+			CCP_STATS_ZONE( "get batches" );
+			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
+				for( const auto& info : shadowCasterInfo[frustumIndex] )
+				{
+					info.caster->GetShadowBatches( m_shadowBatches[frustumIndex].get(), info.perObjectData, info.radius );
+				}
 
+				m_shadowBatches[frustumIndex]->Finalize();
+			} );
+		}
+	}
 
 	for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 	{
-		auto& casters = m_shadowCasters[i];
-
-		if( casters.empty() )
+		if( shadowCasterInfo[i].empty() )
 		{
 			continue;
 		}
@@ -549,7 +567,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		m_cascadedShadowMap->BeginShadowRendering( renderContext, i );
 
 		// column_major for shaders
-		ShadowPerFrameVSData data;
+		PerFrameVSData data;
 		data.ViewProjectionMat = Transpose( m_splitSetup[i].lightViewProjection );
 
 		static const unsigned perFrameVsMask =
@@ -567,12 +585,11 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 			renderContext.m_esm.SetInvertedDepthTest( false );
 			ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
-			renderContext.RenderBatches( m_shadowBatches[i].get() );
+			renderContext.RenderBatches( m_shadowBatches[i].get(), BlueSharedString( "Shadow" ) );
 		}
 
 		m_shadowBatches[i]->Clear();
 		m_shadowAllocators[i].Clear();
-		m_shadowCasters[i].clear();
 	}
 	m_cascadedShadowMap->EndShadowRendering( renderContext );
 
@@ -581,9 +598,9 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 	SetupPlanetsAsShadowCaster( renderContext );
 	m_cascadedShadowMap->DrawToShadowMapResult( renderContext, m_depthMap );
 
-	if( m_componentRegistry && m_volumetricsRenderer )
+	if( m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
 	{
-		m_volumetricsRenderer->RenderShadows( m_componentRegistry->GetVolumetricRenderables(), m_cascadedShadowMap->GetShadowMap(), renderContext );
+		m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_cascadedShadowMap->GetShadowMap(), renderContext );
 	}
 }
 
@@ -592,26 +609,6 @@ void EveSpaceScene::DisableShadows()
 	if( m_cascadedShadowMap )
 	{
 		m_cascadedShadowMap->SetNoShadow();
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Fills provided vector with non-NULL shadow casters from m_objects list.
-// Arguments:
-//   sortedShadowCasters - (out) list of all shadow casters in the scene
-// --------------------------------------------------------------------------------------
-void EveSpaceScene::GetShadowCasters()
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	unsigned int shadowMapSize = m_cascadedShadowMap->GetShadowMapSize();
-
-	for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
-	{
-		if( IEveShadowCasterPtr caster = BlueCastPtr( *it ) )
-		{
-			caster->GatherShadowRenderables( m_shadowCasters, m_cameraFrustums, m_shadowFrustums, SHADOW_FRUSTUM_COUNT, shadowMapSize, m_sunData.DirWorld );
-		}
 	}
 }
 
@@ -1346,6 +1343,9 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 	Vector3 eye = Tr2Renderer::GetInverseViewTransform().GetTranslation();
 	Vector3 up = TransformNormal( Vector3( 0, 1, 0 ), Tr2Renderer::GetInverseViewTransform() );
 
+	// disable shadows because otherwise we get black ships all the time
+	DisableShadows();
+
 	for( size_t i = 0; i < m_impostorManager->GetRenderQueueLength(); ++i )
 	{
 		GPU_REGION( renderContext, "Impostor Update" );
@@ -1572,20 +1572,18 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 
 		if( m_dynamicObjectReflectionEnabled && m_reflectionProbe->ReadyForDynamicObjectReflections() )
 		{
-			auto& reflectionRenderables = m_componentRegistry->GetReflectionRenderables();
-
 			std::vector<ITr2Renderable*> visibleRenderables;
-			visibleRenderables.reserve( reflectionRenderables.size() );
+			visibleRenderables.reserve( m_componentRegistry->ComponentCount<ITr2Renderable>() );
 
 			// Filter out the non-visible reflection renderables based on the current frustum
-			for( auto it = reflectionRenderables.begin(); it != reflectionRenderables.end(); ++it )
-			{
-				auto ref = *it;
-				if( ref->IsVisible( currentFrustum ) )
-				{
-					visibleRenderables.push_back( ref );
+			m_componentRegistry->ProcessComponents<ITr2Renderable>(
+				[currentFrustum, &visibleRenderables] ( ITr2Renderable* renderable ) -> void {
+					if( renderable->IsVisible( currentFrustum ) )
+					{
+						visibleRenderables.push_back( renderable );
+					}
 				}
-			}
+			);
 
 			if( !visibleRenderables.empty() )
 			{
@@ -1903,7 +1901,7 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	m_volumetricsRenderer->RenderVolumetrics( m_componentRegistry->GetVolumetricRenderables(), m_frameData.frustum, *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
+	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_frameData.frustum, *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 }
 
 

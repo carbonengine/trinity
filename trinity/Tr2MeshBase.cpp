@@ -322,7 +322,7 @@ const wchar_t* Tr2MeshBase::GetGeometryResPath() const
 	const TriGeometryRes* currentRes = GetGeometryResource();
 	if( !currentRes )
 	{
-		return nullptr;
+		return L"";
 	}
 	return currentRes->GetPath();
 }
@@ -372,6 +372,30 @@ void Tr2MeshBase::CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& colle
 		}
 		TriRenderBatchAreaBlock ab( (*a)->GetIndex(), (*a)->GetCount() );
 		collector.push_back( ab );
+	}
+}
+
+// -------------------------------------------------------------
+// Description:
+//   Put the very basic info of a mesharea (block) into a class that contains the list of areas and a pointer to a material
+// -------------------------------------------------------------
+void Tr2MeshBase::CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksWithSharedMaterial& collector, TriBatchType areaType ) const
+{
+	const Tr2MeshAreaVector* areas = GetAreas( areaType );
+	collector.m_areaBlockVector.reserve( areas->size() );
+
+	for( auto a = areas->begin(); a != areas->end(); ++a )
+	{
+		if( areaType == TRIBATCHTYPE_OPAQUE && !( *a )->IsCastingShadows() )
+		{
+			continue;
+		}
+		if( !collector.m_shaderMaterial && !!( *a )->GetMaterialInterface() )
+		{
+			collector.m_shaderMaterial = ( *a )->GetMaterialInterface();
+		}
+		TriRenderBatchAreaBlock ab( ( *a )->GetIndex(), ( *a )->GetCount() );
+		collector.m_areaBlockVector.push_back( ab );
 	}
 }
 

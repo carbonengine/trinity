@@ -135,6 +135,8 @@ private:
 	size_t FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna, size_t hullIdx, size_t meshIndexOffset ) const;
 	bool GenerateLodResourcePaths( std::string& mediumResPath, std::string& lowResPath, std::string& ultraResPath, const char* resPath, const char* usage ) const;
 	void GenerateDepthFromAreaVector( Tr2MeshBase* mesh, const Tr2MeshAreaVector* meshAreaVector, const EveSOFDNAPtr dna ) const;
+	void CreatePointLightData( const Vector3& pos, const float scale, const Color& color, const EveSOFDataMgr::PointLightAttachment* lightData ) const;
+	void CreateTexturedPointLightData( const Vector3& pos, const float scale, const std::string& texturePath, const EveSOFDataMgr::PointLightAttachment* lightData ) const;
 
 	// all the source data
 	PEveSOFDataMgr m_dataMgr;
@@ -142,7 +144,6 @@ private:
 	// shared
 	Tr2EffectPtr m_hazeSetEffectSpherical, m_skinnedHazeSetEffectSpherical, m_hazeSetEffectHalfSpherical;
 	Tr2EffectPtr m_spriteSetEffect;
-	Tr2EffectPtr m_shadowEffect, m_shadowEffectSkinned;
 	BlueSharedString m_depthOnlyEffectName, m_decalsEffectName[EveSOFDataHullDecalSetItem::USAGE_MAX];
 
 	mutable std::unordered_map<std::string, bool> m_existingFilesCache;

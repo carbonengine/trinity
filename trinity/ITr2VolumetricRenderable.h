@@ -9,6 +9,7 @@
 class TriFrustum;
 class ITriRenderBatchAccumulator;
 
+#include "Eve/EveComponentRegistry.h"
 
 enum class Tr2VolumerticQuality
 {
@@ -41,3 +42,5 @@ public:
 	virtual void SetSceneInformation( const SceneInformation& sceneInformation ) = 0;
 	virtual void GetVolumetricShadowBatches( ITriRenderBatchAccumulator * batches ) = 0;
 };
+
+REGISTER_COMPONENT_TYPE( "VolumetricRenderable", ITr2VolumetricRenderable )

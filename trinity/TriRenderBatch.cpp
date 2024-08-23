@@ -149,7 +149,20 @@ void TriRenderBatchAreaBlock::Optimize( std::vector<TriRenderBatchAreaBlock>& ar
 	}
 }
 
+TriRenderBatchAreaBlocksWithSharedMaterial::TriRenderBatchAreaBlocksWithSharedMaterial()
+{
+}
 
+
+void TriRenderBatchAreaBlocksWithSharedMaterial::Optimize()
+{
+	TriRenderBatchAreaBlock::Optimize( m_areaBlockVector );
+}
+
+void TriRenderBatchAreaBlocksWithSharedMaterial::Clear()
+{
+	m_areaBlockVector.clear();
+}
 
 void TriGeometryBatch::SubmitGeometry( Tr2RenderContext& renderContext )
 {

@@ -7,10 +7,11 @@
 #include "include/ITriMatrix.h"
 
 TriValueBinding::TriValueBinding( IRoot* lockobj ) :
-	m_isValid( false ),
+	m_isWeak( false ),
 	m_isEnabled( true ),
 	m_source( nullptr ),
 	m_destination( nullptr ),
+	m_notifyPtr( nullptr ),
 	m_copyFunc( NULL ),
 	m_scale( 1.0f ),
 	m_offset( 0.0f, 0.0f, 0.0f, 0.0f ),
@@ -21,7 +22,7 @@ TriValueBinding::TriValueBinding( IRoot* lockobj ) :
 
 TriValueBinding::~TriValueBinding()
 {
-	ITriReroutablePtr rp( BlueCastPtr( m_destinationObject ) );
+	ITriReroutablePtr rp( BlueCastPtr( GetCurrentDestinationObject() ) );
 	if( rp )
 	{
 		rp->UnregisterBinding( this );
@@ -35,6 +36,14 @@ void TriValueBinding::CopyValue()
 		return;
 	}
 
+	if( m_isWeak )
+	{
+		if( !m_sourceObjectWeak || !m_destinationObjectWeak )
+		{
+			return;
+		}
+	}
+
 	if( m_copyFunc )
 	{
 		m_copyFunc( (Be::Var*)m_source, (Be::Var*)m_destination, m_scale, m_offset );
@@ -45,13 +54,13 @@ void TriValueBinding::CopyValue()
 	}
 	else if( m_copyValueCallable )
 	{
-		m_copyValueCallable.CallVoid( m_sourceObject, m_destinationObject );
+		m_copyValueCallable.CallVoid( GetCurrentSourceObject(), GetCurrentDestinationObject() );
 	}
 }
 
 bool TriValueBinding::OnModified( Be::Var* val )
 {
-	ITriReroutablePtr rp( BlueCastPtr( m_destinationObject ) );
+	ITriReroutablePtr rp( BlueCastPtr( GetCurrentDestinationObject() ) );
 	if( rp )
 	{
 		rp->UnregisterBinding( this );
@@ -297,14 +306,41 @@ const Be::VarEntry* TriValueBinding::FindEntry( const char* name, const Be::Clas
 	return NULL;
 }
 
+namespace
+{
+std::optional<uint8_t> GetItemOffset( const std::string& item )
+{
+	if( item == "x" || item == "r" )
+	{
+		return 0;
+	}
+	if( item == "y" || item == "g" )
+	{
+		return 1;
+	}
+	if( item == "z" || item == "b" )
+	{
+		return 2;
+	}
+	if( item == "w" || item == "a" )
+	{
+		return 3;
+	}
+	return std::nullopt;
+}
+}
+
 void TriValueBinding::Initialize()
 {
-	m_isValid = false;
 	m_source = NULL;
 	m_destination = NULL;
 	m_copyFunc = NULL;
+	m_notifyPtr = nullptr;
 
-	if( !m_sourceObject || !m_destinationObject )
+	IRoot* sourceObject = GetCurrentSourceObject();
+	IRoot* destinationObject = GetCurrentDestinationObject();
+
+	if( !sourceObject || !destinationObject )
 	{
 		// No point doing anything yet - all copy functions need a source and destination object
 		return;
@@ -316,58 +352,23 @@ void TriValueBinding::Initialize()
 		return;
 	}
 
-	const Be::ClassInfo* srcClassInfo = m_sourceObject->ClassType();
-	const Be::ClassInfo* dstClassInfo = m_destinationObject->ClassType();
+	const Be::ClassInfo* srcClassInfo = sourceObject->ClassType();
+	const Be::ClassInfo* dstClassInfo = destinationObject->ClassType();
 
 	size_t dataSize = 0;
 
 	m_sourceItemOffset = 0;
 	bool sourceFloatArrayAsFloat = false;
 
-	std::string sourceAttr = m_sourceAttribute.c_str();
+	std::string sourceAttr = m_sourceAttribute;
 	size_t sourceDot = sourceAttr.find( '.' );
 	if( sourceDot != std::string::npos )
 	{
 		std::string sourceItem = sourceAttr.substr( sourceDot + 1 );
-		if( strcmp( sourceItem.c_str(), "x" ) == 0 )
+		if( auto offset = GetItemOffset( sourceItem ) )
 		{
 			sourceFloatArrayAsFloat = true;
-			m_sourceItemOffset = 0;
-		}
-		else if( strcmp( sourceItem.c_str(), "y" ) == 0 )
-		{
-			sourceFloatArrayAsFloat = true;
-			m_sourceItemOffset = sizeof( float );
-		}
-		else if( strcmp( sourceItem.c_str(), "z" ) == 0 )
-		{
-			sourceFloatArrayAsFloat = true;
-			m_sourceItemOffset = 2 * sizeof( float );
-		}
-		else if( strcmp( sourceItem.c_str(), "w" ) == 0 )
-		{
-			sourceFloatArrayAsFloat = true;
-			m_sourceItemOffset = 3 * sizeof( float );
-		}
-		else if( strcmp( sourceItem.c_str(), "r" ) == 0 )
-		{
-			sourceFloatArrayAsFloat = true;
-			m_sourceItemOffset = 0;
-		}
-		else if( strcmp( sourceItem.c_str(), "g" ) == 0 )
-		{
-			sourceFloatArrayAsFloat = true;
-			m_sourceItemOffset = sizeof( float );
-		}
-		else if( strcmp( sourceItem.c_str(), "b" ) == 0 )
-		{
-			sourceFloatArrayAsFloat = true;
-			m_sourceItemOffset = 2 * sizeof( float );
-		}
-		else if( strcmp( sourceItem.c_str(), "a" ) == 0 )
-		{
-			sourceFloatArrayAsFloat = true;
-			m_sourceItemOffset = 3 * sizeof( float );
+			m_sourceItemOffset = *offset * sizeof( float );
 		}
 		sourceAttr = sourceAttr.substr( 0, sourceDot );
 	}
@@ -380,45 +381,10 @@ void TriValueBinding::Initialize()
 	if( destDot != std::string::npos )
 	{
 		std::string destItem = destAttr.substr( destDot + 1 );
-		if( strcmp( destItem.c_str(), "x" ) == 0 )
+		if( auto offset = GetItemOffset( destItem ) )
 		{
 			destFloatArrayAsFloat = true;
-			m_destItemOffset = 0;
-		}
-		else if( strcmp( destItem.c_str(), "y" ) == 0 )
-		{
-			destFloatArrayAsFloat = true;
-			m_destItemOffset = sizeof( float );
-		}
-		else if( strcmp( destItem.c_str(), "z" ) == 0 )
-		{
-			destFloatArrayAsFloat = true;
-			m_destItemOffset = 2 * sizeof( float );
-		}
-		else if( strcmp( destItem.c_str(), "w" ) == 0 )
-		{
-			destFloatArrayAsFloat = true;
-			m_destItemOffset = 3 * sizeof( float );
-		}
-		else if( strcmp( destItem.c_str(), "r" ) == 0 )
-		{
-			destFloatArrayAsFloat = true;
-			m_destItemOffset = 0;
-		}
-		else if( strcmp( destItem.c_str(), "g" ) == 0 )
-		{
-			destFloatArrayAsFloat = true;
-			m_destItemOffset = sizeof( float );
-		}
-		else if( strcmp( destItem.c_str(), "b" ) == 0 )
-		{
-			destFloatArrayAsFloat = true;
-			m_destItemOffset = 2 * sizeof( float );
-		}
-		else if( strcmp( destItem.c_str(), "a" ) == 0 )
-		{
-			destFloatArrayAsFloat = true;
-			m_destItemOffset = 3 * sizeof( float );
+			m_destItemOffset = *offset * sizeof( float );
 		}
 		destAttr = destAttr.substr( 0, destDot );
 	}
@@ -432,8 +398,8 @@ void TriValueBinding::Initialize()
 		const Be::VarEntry* dstEntry = FindEntry( destAttr.c_str(), dstClassInfo, dstOffset );
 		if( srcEntry && dstEntry )
 		{
-			m_source = (void*)BLUEMAPMEMBEROFFSET( m_sourceObject.p, srcEntry, srcClassInfo, srcOffset );
-			m_destination = (void*)BLUEMAPMEMBEROFFSET( m_destinationObject.p, dstEntry, dstClassInfo, dstOffset );
+			m_source = (void*)BLUEMAPMEMBEROFFSET( sourceObject, srcEntry, srcClassInfo, srcOffset );
+			m_destination = (void*)BLUEMAPMEMBEROFFSET( destinationObject, dstEntry, dstClassInfo, dstOffset );
 			dataSize = DetermineCopyFunc( srcEntry, dstEntry, dataSize, sourceFloatArrayAsFloat, destFloatArrayAsFloat );
 		}
 		else
@@ -450,14 +416,13 @@ void TriValueBinding::Initialize()
 
 		if( dstEntry && ( dstEntry->mEditFlags & Be::NOTIFY ) )
 		{
-			m_notifyPtr = BlueCastPtr( m_destinationObject );
+			m_notifyPtr = INotifyPtr( BlueCastPtr( destinationObject ) );
 		}
 	}
 
 	if( m_copyFunc )
 	{
-		m_isValid = true;
-		ITriReroutablePtr rp( BlueCastPtr( m_destinationObject ) );
+		ITriReroutablePtr rp( BlueCastPtr( destinationObject ) );
 		if( rp )
 		{
 			rp->RegisterBinding( this );
@@ -787,20 +752,99 @@ void TriValueBinding::SetSource( const std::string& sourceAttribute, IRootPtr so
 {
 	m_sourceAttribute = sourceAttribute;
 	m_sourceObject = sourceObject;
+	m_sourceObjectWeak = nullptr;
+	m_isWeak = false;
 }
 
 void TriValueBinding::SetDestination( const std::string& destinationAttribute, IRootPtr destinationObject )
 {
 	m_destinationAttribute = destinationAttribute;
 	m_destinationObject = destinationObject;
+	m_destinationObjectWeak = nullptr;
+	m_isWeak = false;
+}
+
+void TriValueBinding::CreateWeakBinding( IRoot* source, const char* sourceAttr, IRoot* dest, const char* destAttr, float scale, const Vector4& offset )
+{
+	if( ITriReroutablePtr rp = BlueCastPtr( GetCurrentDestinationObject() ) )
+	{
+		rp->UnregisterBinding( this );
+	}
+
+	m_sourceAttribute = sourceAttr;
+	m_sourceObject = nullptr;
+	m_sourceObjectWeak = source;
+	m_destinationAttribute = destAttr;
+	m_destinationObject = nullptr;
+	m_destinationObjectWeak = dest;
+	m_scale = scale;
+	m_offset = offset;
+	m_isWeak = true;
+	m_notifyPtr = nullptr;
+	Initialize();
 }
 
 bool TriValueBinding::IsValid() const
 {
-	return m_isValid;
+	return m_copyFunc != nullptr;
 }
 
 void TriValueBinding::SetScale( float scale )
 {
 	m_scale = scale;
+}
+
+IRoot* TriValueBinding::GetCurrentSourceObject() const
+{
+	return m_isWeak ? static_cast<IRoot*>( m_sourceObjectWeak ) : m_sourceObject.p;
+}
+
+IRoot* TriValueBinding::GetCurrentDestinationObject() const
+{
+	return m_isWeak ? static_cast<IRoot*>( m_destinationObjectWeak ) : m_destinationObject.p;
+}
+
+IRootPtr TriValueBinding::GetSourceObject() const
+{
+	return GetCurrentSourceObject();
+}
+
+void TriValueBinding::SetSourceObject( IRoot* sourceObject )
+{
+	if( m_isWeak )
+	{
+		m_sourceObjectWeak = sourceObject;
+	}
+	else
+	{
+		m_sourceObject = sourceObject;
+	}
+	if( ITriReroutablePtr rp = BlueCastPtr( GetCurrentDestinationObject() ) )
+	{
+		rp->UnregisterBinding( this );
+	}
+	Initialize();
+}
+
+IRootPtr TriValueBinding::GetDestinationObject() const
+{
+	return GetCurrentDestinationObject();
+}
+
+void TriValueBinding::SetDestinationObject( IRoot* destinationObject )
+{
+	if( ITriReroutablePtr rp = BlueCastPtr( GetCurrentDestinationObject() ) )
+	{
+		rp->UnregisterBinding( this );
+	}
+
+	if( m_isWeak )
+	{
+		m_destinationObjectWeak = destinationObject;
+	}
+	else
+	{
+		m_destinationObject = destinationObject;
+	}
+	Initialize();
 }

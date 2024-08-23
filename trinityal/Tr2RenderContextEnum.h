@@ -2,11 +2,10 @@
 #ifndef Tr2RenderContextEnum_h
 #define Tr2RenderContextEnum_h
 
-#include "include/Tr2PixelFormat.h"
-#include "include/Tr2TextureType.h"
-
 namespace Tr2RenderContextEnum
 {
+	using namespace ImageIO;	
+
 	enum ObjectType
 	{
 		OT_CONSTANT_BUFFER,
@@ -429,6 +428,8 @@ namespace Tr2RenderContextEnum
 		CONTEXT_STATUS_INVALID,
 	};
 }
+
+using Tr2BitmapDimensions = ImageIO::BitmapDimensions;
 
 
 namespace Tr2CpuUsage

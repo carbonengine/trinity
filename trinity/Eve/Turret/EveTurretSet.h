@@ -105,7 +105,9 @@ BLUE_CLASS( EveTurretSet ):
 	public ITr2Renderable,
 	public IShaderConfigurer,
 	public ITr2ControllerOwner,
-	public ITr2DebugRenderable
+	public EveEntity,
+	public ITr2DebugRenderable,
+	public IEveShadowCaster
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -132,7 +134,6 @@ public:
 	// ITr2Renderable
 	bool HasTransparentBatches() override;
 	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
-	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	float GetSortValue() override;
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
 
@@ -155,6 +156,16 @@ public:
 	// ITr2DebugRenderable
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// IEveShadowCaster
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
+	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
 
 	int GetState() const;
 
@@ -173,10 +184,6 @@ public:
 	// rendering
 	void UpdateVisibility( const TriFrustum& frustum );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, const Vector4* shLighting );
-	void GetRenderablesCastingShadow( const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables );
-
-	// shadows
-	void GatherShadowRenderables( std::vector<std::vector<ShadowCasterInfo>>& shadowCasters, TriFrustum* splitCameraFrustums, TriFrustumOrtho* shadowFrustums, const size_t arraySize, const unsigned int shadowMapSize, const Vector3 sunDir );
 	
 	// rebuild the bounding sphere size
 	void RebuildBoundingSphere();
@@ -362,8 +369,6 @@ private:
 	unsigned int m_vertexDeclHandle;
 	// turret draw shader needs to be changable
 	Tr2EffectPtr m_turretEffect;
-	// shader to render the 2d sprite
-	Tr2EffectPtr m_shadowEffect;
 	// turret geometry
 	unsigned int m_turretVertexDeclElementCount;
 	Tr2VertexDefinition m_turretVertexDecl;

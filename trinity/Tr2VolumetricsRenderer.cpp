@@ -51,7 +51,13 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_batches.reset( new TriRenderBatchAccumulator<>( Tr2Renderer::GetPoolAllocator() ) );
 }
 
-void Tr2VolumetricsRenderer::RenderVolumetrics( const std::vector<ITr2VolumetricRenderable*>& volumetrics, const TriFrustum& frustum, Tr2DepthStencil& sceneDepth, const Vector3& sunDirection, const float depthSlices[4], Tr2RenderContext& renderContext )
+void Tr2VolumetricsRenderer::RenderVolumetrics(
+	const EveComponentRegistry& registry,
+	const TriFrustum& frustum,
+	Tr2DepthStencil& sceneDepth,
+	const Vector3& sunDirection,
+	const float depthSlices[4],
+	Tr2RenderContext& renderContext )
 {
 	uint32_t slices = 4;
 
@@ -63,7 +69,9 @@ void Tr2VolumetricsRenderer::RenderVolumetrics( const std::vector<ITr2Volumetric
 
 	auto& volumeSlices = *m_volumeSlices->GetTexture();
 
-	if( volumetrics.empty() )
+	auto volumetricsCount = registry.ComponentCount<ITr2VolumetricRenderable>();
+
+	if( volumetricsCount == 0 )
 	{
 		if( !volumeSlices.IsValid() )
 		{
@@ -132,22 +140,16 @@ void Tr2VolumetricsRenderer::RenderVolumetrics( const std::vector<ITr2Volumetric
 	sceneInfo.receiveShadows = m_receiveShadows;
 	sceneInfo.castShadows = m_castShadows;
 
-	for( auto& ref : volumetrics )
-	{
-		ref->SetSceneInformation( sceneInfo );
-	}
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&sceneInfo] ( ITr2VolumetricRenderable* volumetric ) -> void {
+		volumetric->SetSceneInformation( sceneInfo );
+		} );
 
 	{
 		GPU_REGION( renderContext, "Lightmaps" );
-		for( auto& ref : volumetrics )
-		{
-			if( ref->UpdateVolumetricLightmap( renderContext ) )
-			{
-				break;
-			}
-		}
+		registry.ProcessComponentsUntil<ITr2VolumetricRenderable>( [&renderContext] ( ITr2VolumetricRenderable* volumetric ) -> bool {
+			return volumetric->UpdateVolumetricLightmap( renderContext );
+			} );
 	}
-
 	if( !volumeSlices.IsValid() || volumeSlices.GetWidth() != width || volumeSlices.GetHeight() != height )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -239,11 +241,11 @@ void Tr2VolumetricsRenderer::RenderVolumetrics( const std::vector<ITr2Volumetric
 	renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0, 0, 3 );
 
 	std::vector<std::pair<ITr2VolumetricRenderable*, float>> renderables;
-	renderables.reserve( volumetrics.size() );
-	for( auto& ref : volumetrics )
-	{
-		renderables.push_back( { ref, ref->GetSortValue( frustum ) } );
-	}
+	renderables.reserve( volumetricsCount );
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&renderables, &frustum] ( ITr2VolumetricRenderable* renderable ) -> void {
+		renderables.push_back( { renderable, renderable->GetSortValue( frustum ) } );
+		} );
+
 	std::stable_sort( begin( renderables ), end( renderables ), []( auto x, auto y ) { return x.second > y.second; } );
 
 	for( auto& ref : renderables )
@@ -294,17 +296,20 @@ void Tr2VolumetricsRenderer::RenderVolumetrics( const std::vector<ITr2Volumetric
 	m_volumeHasContent = true;
 }
 
-void Tr2VolumetricsRenderer::RenderShadows( const std::vector<ITr2VolumetricRenderable*>& volumetrics, ITr2TextureProvider* shadowMap, Tr2RenderContext& renderContext )
+void Tr2VolumetricsRenderer::RenderShadows(
+	const EveComponentRegistry& registry,
+	ITr2TextureProvider* shadowMap,
+	Tr2RenderContext& renderContext )
 {
-	if( volumetrics.empty() || !shadowMap || !shadowMap->GetTexture() || !m_castShadows )
+	auto volumetricsCount = registry.ComponentCount<ITr2VolumetricRenderable>();
+	if( !shadowMap || !shadowMap->GetTexture() || !m_castShadows )
 	{
 		return;
 	}
+	auto accumulator = m_batches.get();
 
-	for( auto& ref : volumetrics )
-	{
-		ref->GetVolumetricShadowBatches( m_batches.get() );
-	}
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&accumulator] ( ITr2VolumetricRenderable* volumetric ) { 
+		volumetric->GetVolumetricShadowBatches( accumulator ); } );
 
 	if( m_batches->GetBatchCount() )
 	{

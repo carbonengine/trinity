@@ -19,13 +19,20 @@ const Be::ClassInfo* TriValueBinding::ExposeToBlue()
 			"Name of this value binding.",
 			Be::READWRITE | Be::PERSIST
 		)
-		MAP_ATTRIBUTE
+		MAP_PROPERTY_READONLY
 		(
 			"isValid",
-			m_isValid,
+			IsValid,
 			"True if this binding is valid, i.e. source object, source attribute\n"
 			"destination object and destination attribute are all valid and if the\n"
-			"source and destination are of compatible types.",
+			"source and destination are of compatible types."
+		)
+		MAP_ATTRIBUTE
+		(
+			"isWeak",
+			m_isWeak,
+			"True if this binding was set up to have weak references to the source and\n"
+			"destination objects. Can only be set up for specific bindings in C++.",
 			Be::READ
 		)
 		MAP_ATTRIBUTE
@@ -37,11 +44,18 @@ const Be::ClassInfo* TriValueBinding::ExposeToBlue()
 			Be::READWRITE
 		)
 		MAP_ATTRIBUTE
-		( 
+		(
+			"sourceObject",
+			m_sourceObject,
+			"Object providing the source value.",
+			Be::PERSISTONLY 
+		)
+		MAP_PROPERTY
+		(
 			"sourceObject", 
-			m_sourceObject, 
-			"Object providing the source value.", 
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
+			GetSourceObject, 
+			SetSourceObject,
+			"Object providing the source value."
 		)
 		MAP_ATTRIBUTE
 		( 
@@ -56,7 +70,14 @@ const Be::ClassInfo* TriValueBinding::ExposeToBlue()
 			"destinationObject",
 			m_destinationObject,
 			"Destination object.",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
+			Be::PERSISTONLY
+		)
+		MAP_PROPERTY
+		(
+			"destinationObject",
+			GetDestinationObject,
+			SetDestinationObject,
+			"Destination object."
 		)
 		MAP_ATTRIBUTE
 		( 

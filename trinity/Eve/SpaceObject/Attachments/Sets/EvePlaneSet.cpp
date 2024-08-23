@@ -14,10 +14,37 @@
 #include "Tr2DebugRenderer.h"
 #include "Tr2Renderer.h"
 #include "Utilities/MatrixUtils.h"
-
+#include "Shader/Parameter/TriTextureParameter.h"
+#include "Resources/TriTextureRes.h"
+#include "Resources/Tr2LightProfileRes.h"
 
 static const char* PLANESET_PICK_EFFECT_PATH = "res:/Graphics/Effect/Managed/Space/SpaceObject/FX/PlanePicking.fx";
 
+EvePlaneLight::EvePlaneLight() :
+	lightData( LightData() ),
+	index( 0 ),
+	saturation( 1.0f ),
+	boneMatrix( IdentityMatrix() ),
+	fadeType( EveSpaceObjectAttachmentUtils::FT_NONE ),
+	blinkPhase( 0.0f ),
+	blinkRate( 0.0f )
+{
+}
+
+EvePlaneLight::EvePlaneLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring& profilePath, EveSpaceObjectAttachmentUtils::FadeType fade, float blinkPhase, float blinkRate ) :
+	lightData( lightData ),
+	saturation( saturation ),
+	index( index ),
+	boneMatrix( IdentityMatrix() ),
+	fadeType( fade ),
+	blinkPhase( blinkPhase ),
+	blinkRate( blinkRate )
+{
+	if( !profilePath.empty() )
+	{
+		BeResMan->GetResource( profilePath, L"lp", lightProfile );
+	}
+}
 
 // vertex layout struct
 struct PlaneVertex
@@ -51,6 +78,7 @@ EvePlaneSet::EvePlaneSet( IRoot* lockobj ) :
 	m_hideOnLowQuality( false ),
 	m_pickBufferID( 0 ),
 	m_vertexCount( 0 ),
+	m_activationStrength( 0 ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 {
 	// create picking effect
@@ -243,6 +271,18 @@ bool EvePlaneSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& par
 	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
+void EvePlaneSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+{
+	for( auto& light : m_lights ) 
+	{
+		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
+		{
+			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+		}
+	}
+	m_activationStrength = activationStrength;
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Get bounding box surrounding planes
@@ -376,6 +416,7 @@ void EvePlaneSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Plane Sets" );
 	options.insert( "Plane Sets Bounds" );
+	options.insert( "Plane Sets Lights" );
 }
 
 void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
@@ -426,6 +467,47 @@ void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& p
 			Tr2DebugRenderer::Wireframe,
 			0xff00ff00 );
 	}
+
+	if( renderer.HasOption( this, "Plane Sets Lights" ) )
+	{
+		Color averageColor = Color( 0 );
+		if( m_lights.size() > 0 )
+		{
+			averageColor = GetAverageColor();
+		}
+
+		for( auto& l : m_lights )
+		{
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+
+			Color c = l.lightData.color;
+			float fade = EveSpaceObjectAttachmentUtils::Fade( l.fadeType, l.blinkRate, l.blinkPhase );
+
+			c = Color( c.r * averageColor.r, c.g * averageColor.g, c.b * averageColor.b, c.a * averageColor.a );
+			c = Saturate( c, l.saturation );
+
+			c.a = 0.5f * fade;
+			auto planeItem = l.index > m_planes.size() ? nullptr : m_planes[l.index];
+
+			renderer.DrawSphere(
+				planeItem,
+				t,
+				l.lightData.innerRadius,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+			c.a = 0.3f * fade;
+			renderer.DrawSphere(
+				planeItem,
+				t,
+				l.lightData.radius,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+		}
+	}
 }
 
 void EvePlaneSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -433,5 +515,87 @@ void EvePlaneSet::SetShaderOption( const BlueSharedString& name, const BlueShare
 	if( nullptr != m_effect )
 	{
 		m_effect->SetOption( name, value );
+	}
+}
+
+void EvePlaneSet::SetImageMapParameter( TriTextureParameterPtr imageMap )
+{
+	m_imageMapParameter = imageMap;
+}
+
+void EvePlaneSet::SetLayerMap1Parameter( TriTextureParameterPtr layerMap1 )
+{
+	m_layerMap1Parameter = layerMap1;
+}
+
+void EvePlaneSet::SetLayerMap2Parameter( TriTextureParameterPtr layerMap2 )
+{
+	m_layerMap2Parameter = layerMap2;
+}
+
+void EvePlaneSet::SetMaskMapParameter( TriTextureParameterPtr maskMap )
+{
+	m_maskMapParameter = maskMap;
+}
+
+Color EvePlaneSet::GetAverageColor() const
+{
+	Color layer1, layer2, image, mask;
+
+	layer1 = GetAverageColor( m_layerMap1Parameter );
+	layer2 = GetAverageColor( m_layerMap2Parameter );
+	image = GetAverageColor( m_imageMapParameter );
+	mask = GetAverageColor( m_maskMapParameter );
+
+	return Color( layer1.r * layer2.r * image.r * mask.r, 
+					layer1.g * layer2.g * image.g * mask.g,
+					layer1.b * layer2.b * image.b * mask.b, 
+					layer1.a * layer2.a * image.a * mask.a );
+}
+
+Color EvePlaneSet::GetAverageColor( const TriTextureParameterPtr& map ) const
+{
+	if( nullptr == map || nullptr == map->GetResource() )
+	{
+		return Color( 1, 1, 1, 1 );
+	}
+
+	auto resource = dynamic_cast<TriTextureRes*>( map->GetResource() );
+	if( nullptr == resource )
+	{
+		return Color( 1, 1, 1, 1 );
+	}
+
+	return resource->GetAverageColor();
+}
+
+void EvePlaneSet::AddLight( const EvePlaneLight& light )
+{
+	m_lights.push_back( light );
+}
+
+void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	LightFeatures features = LightFeatures();
+
+	features.parentBrightness = m_activationStrength;
+	Color averageColor = Color( 0 );
+	if( m_lights.size() > 0 )
+	{
+		averageColor = GetAverageColor();
+	}
+
+	for( auto light : m_lights )
+	{
+		auto lightDataCopy = light.lightData;
+		Color c = light.lightData.color;
+		lightDataCopy.color = Color( c.r * averageColor.r, c.g * averageColor.g, c.b * averageColor.b, c.a * averageColor.a );
+		lightDataCopy.color = Saturate( lightDataCopy.color, light.saturation );
+		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+
+		float fade = EveSpaceObjectAttachmentUtils::Fade( light.fadeType, light.blinkRate, light.blinkPhase );
+		lightDataCopy.brightness *= fade;
+		auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		lightManager.AddLight( perLightData );
 	}
 }

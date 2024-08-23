@@ -233,9 +233,9 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
-	virtual bool GetRenderablesCastingShadow( bool isSelf, const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables );
-	void GatherShadowRenderables( std::vector<std::vector<ShadowCasterInfo>>& shadowCasters, TriFrustum* splitCameraFrustums, TriFrustumOrtho* shadowFrustums, const size_t arraySize, const unsigned int shadowMapSize, const Vector3 sunDir );
-	virtual bool IsShadowReceiveEnabled();
+	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
+	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -249,7 +249,6 @@ public:
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 	virtual bool IsVisible( const TriFrustum& frustum ) const;
@@ -390,9 +389,6 @@ public:
 
 	void AddCustomMask( EveCustomMaskPtr newCustomMask );
 
-	// access to shadows
-	void SetShadowEffect( Tr2EffectPtr newShadowEffect );
-
 	// access to children
 	void AddToChildrenList( EveTransformPtr transform );
 
@@ -451,6 +447,8 @@ public:
 	Matrix GetEveLocatorTransform( const char* name ) const;
 
 	void SetReflectionMode(EntityComponents::ReflectionMode mode);
+	void SetIsAnimated( bool isAnimated );
+	void SetCastsShadow( bool castShadow );
 
 	int GetLastUsedMeshLod() const;
 
@@ -486,6 +484,9 @@ protected:
 	bool m_display;
 	bool m_allowLodSelection;
 	bool m_isPickable;
+	bool m_isAnimated;
+	bool m_castShadow;
+	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshAreas;
 
 	Matrix m_worldTransform;
 	Matrix m_invWorldTransform;
@@ -611,11 +612,6 @@ protected:
 	
 	Color m_albedoColor;
 	float m_secondaryLightingSphereRadius;
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// Shadow related things
-	Tr2EffectPtr m_shadowEffect;
-	bool m_enableShadow;
 
 	PIEveSpaceObjectAttachmentVector m_attachments;
 
