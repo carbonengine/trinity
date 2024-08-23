@@ -1135,12 +1135,18 @@ std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>> TriGeometryRes::Get
 	return std::make_pair( result, std::make_pair( boneIndex, std::make_pair( hitpoint, normal ) ) );
 }
 
-std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>> TriGeometryRes::GetAreaIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir, unsigned int areaIx )
+std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>> TriGeometryRes::GetAreaIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir, int areaIx )
 {
 	Vector3 hitpoint( 0.0f, 0.0f, 0.0f );
 	Vector3 normal( 0.0f, 0.0f, 0.0f );
 	int boneIndex;
-	bool result = GetIntersectionPointNormalBone( &pos, &dir, &hitpoint, &normal, &boneIndex, areaIx );
+
+	// In Python 3, passing a signed value to an unsigned C exposed attribute is an error.
+	// In order to maintain backwards compatible behavior with Python 2
+	// this method got changed to accept signed integers and cast them to unsigned.
+	auto unsignedAreaIndex = static_cast<unsigned int>(areaIx);
+
+	bool result = GetIntersectionPointNormalBone( &pos, &dir, &hitpoint, &normal, &boneIndex, unsignedAreaIndex );
 	return std::make_pair( result, std::make_pair( boneIndex, std::make_pair( hitpoint, normal ) ) );
 }
 
