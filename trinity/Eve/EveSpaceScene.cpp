@@ -2154,6 +2154,13 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 	
 	if( !m_display )
 	{
+		// We still need to pump GPU particles as technically this is not "rendering", and we need to avoid situations
+		// when we accumulate an unreasonable number of emit requests.
+		if( GetGpuParticleSystem() )
+		{
+			GPU_REGION( renderContext, "Particles" );
+			GetGpuParticleSystem()->Update( m_updateTime, m_updateContext.GetOriginShift(), renderContext );
+		}
 		return;
 	}
 	
