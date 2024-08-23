@@ -268,6 +268,14 @@ const Be::ClassInfo* Tr2SpriteObject::ExposeToBlue()
 			Be::READWRITE | Be::NOTIFY
 		)
 
+		MAP_ATTRIBUTE
+		(
+			"outlineThreshold",
+			m_outlineThreshold,
+			"Outline threshold - how high of a alpha tolerance the outline checks for (alpha - threshold > epsilon)",
+			Be::READWRITE | Be::NOTIFY
+		)
+
 	EXPOSURE_CHAINTO( Tr2SpriteObjectBase )
 }
 
