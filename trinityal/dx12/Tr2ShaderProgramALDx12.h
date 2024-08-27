@@ -42,8 +42,8 @@ namespace TrinityALImpl
 
 		uint32_t m_srvUavParameterCount;
 		uint32_t m_srvUavParameterOffset;
-		uint32_t m_samplerTableSize;
-		uint32_t m_samplerParameter;
+		uint32_t m_samplerParameterCount;
+		uint32_t m_samplerParameterOffset;
 
 		bool m_isCompute;
 	};
@@ -85,16 +85,15 @@ namespace TrinityALImpl
 			std::vector<D3D12_ROOT_PARAMETER>& parameters,
 			bool dynamicBuffers
 			);
-		void AddSamplerRanges(
+		void AddSamplerParameters(
 			Tr2RenderContextEnum::ShaderType shaderType,
 			const Tr2ShaderSignatureAL& signature,
-			std::vector<D3D12_DESCRIPTOR_RANGE>& samplerRanges );
+			std::vector<D3D12_ROOT_PARAMETER>& parameters,
+			std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges );
 		static D3D12_SHADER_BYTECODE MakeShaderBytecode( const ::Tr2ShaderAL& shader );
 
 
 		Tr2RootSignatureAL m_rootSignature;
-		uint32_t m_samplerTableSize;
-		uint32_t m_samplerParameter;
 
 		CComPtr<ID3D12CommandSignature> m_drawInstanced;
 
