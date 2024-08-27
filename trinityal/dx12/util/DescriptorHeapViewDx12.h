@@ -38,7 +38,7 @@ class ShaderResourceViewDx12
 {
 public:
 
-	ShaderResourceViewDx12( SrvUavDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
+	ShaderResourceViewDx12( GpuVisibleDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
 	virtual ~ShaderResourceViewDx12();
 
 
@@ -68,25 +68,25 @@ public:
 
 private:
 	GlobalDescriptorHeapPage::DescriptorEntry* m_entry;
-	SrvUavDescriptorAllocator* m_allocator;
+	GpuVisibleDescriptorAllocator* m_allocator;
 	uint32_t m_index;
 };
 
 class UnorderedAccessViewDx12 : public ShaderResourceViewDx12
 {
 public:
-	UnorderedAccessViewDx12( SrvUavDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry ) :
+	UnorderedAccessViewDx12( GpuVisibleDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry ) :
 		ShaderResourceViewDx12( allocator, heapEntry )
 	{
 	}
 };
 
 /** SamplerState object */
-class SamplerStateDx12 : public DescriptorHeapViewDx12
+class SamplerStateDx12 : public ShaderResourceViewDx12
 {
 public:
 
-	SamplerStateDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry);
+	SamplerStateDx12( GpuVisibleDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
 	virtual ~SamplerStateDx12();
 };
 

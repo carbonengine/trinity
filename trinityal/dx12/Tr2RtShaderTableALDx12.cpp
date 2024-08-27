@@ -174,8 +174,6 @@ namespace TrinityALImpl
 				}
 				if( signature->m_samplerParameterCount )
 				{
-					DescriptorHeapEntry result = descriptorCache.GetSamplerHeapAllocator().Allocate( signature->m_samplerParameterCount );
-
 					for( auto& sampler : signature->m_samplerRegisters )
 					{
 						auto& input = material.m_resourceSet.m_samplers[sampler.index];
@@ -183,10 +181,7 @@ namespace TrinityALImpl
 						{
 							return E_INVALIDARG;
 						}
-						auto src = input.sampler.TrinityALImpl_GetObject()->m_samplerState->GetHandleCPU();
-						D3D12_CPU_DESCRIPTOR_HANDLE dest = { result.m_cpuHandle.ptr + samplerHeapIncrement * sampler.parameter };
-						renderContext.m_device->CopyDescriptorsSimple( 1, dest, src, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
-						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sampler.parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &result.m_gpuHandle, sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
+						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sampler.parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &input.sampler.TrinityALImpl_GetObject()->m_samplerState->GetHandleGPU(), sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
 					}
 				}
 			}

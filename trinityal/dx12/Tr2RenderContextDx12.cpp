@@ -155,8 +155,7 @@ ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocato
 	{
 		m_descriptorCache.push_back( std::make_shared<DescriptorStateCache>( 
 			renderContext.m_device, 
-			&renderContext,
-			DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE ) );
+			&renderContext ) );
 	}
 	m_ownerDevice = &renderContext;
 	return S_OK;
@@ -744,7 +743,7 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 
 	m_commandList->SetComputeRootSignature( p->GetGlobalRootSignature().m_rootSignature );
 	uint32_t bufferIndex = m_ownerDevice->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), & pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature());
+	m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap(), &pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature() );
 	FlushComputeBarriersDx12();
 
 	if( m_commandList4 )
@@ -870,7 +869,7 @@ ALResult Tr2RenderContextAL::SetAllState()
 	if( m_psoDescription.m_shaderProgram.IsValid() )
 	{
 		uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-		m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), &m_psoDescription.m_shaderProgram.m_program->m_rootSignature );
+		m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap(), &m_psoDescription.m_shaderProgram.m_program->m_rootSignature );
 	}
 
 	return S_OK;
@@ -1251,7 +1250,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 	FlushBarriersDx12( obj->GetGpuResource() );
 
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap() );
+	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap() );
 
 	m_commandList->ClearUnorderedAccessViewFloat(
 		obj->m_clearUav->GetHandleGPU(),
@@ -1289,7 +1288,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 	FlushBarriersDx12( obj->GetGpuResource() );
 
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap() );
+	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap() );
 
 	m_commandList->ClearUnorderedAccessViewUint(
 		obj->m_clearUav->GetHandleGPU(),
@@ -1320,7 +1319,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 		return E_INVALIDARG;
 	}
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap() );
+	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap() );
 
 	auto resource = obj->GetResourceDx12();
 
@@ -1359,7 +1358,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 		return E_INVALIDARG;
 	}
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap() );
+	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap() );
 	auto resource = obj->GetResourceDx12();
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )

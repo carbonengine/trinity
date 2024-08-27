@@ -28,7 +28,7 @@ DescriptorHeapViewDx12::~DescriptorHeapViewDx12()
 }
 
 /** */
-ShaderResourceViewDx12::ShaderResourceViewDx12( SrvUavDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry ) :
+ShaderResourceViewDx12::ShaderResourceViewDx12( GpuVisibleDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry ) :
 	m_entry( heapEntry ),
 	m_allocator( allocator )
 {
@@ -45,8 +45,8 @@ ShaderResourceViewDx12::~ShaderResourceViewDx12()
 }
 
 /** */
-SamplerStateDx12::SamplerStateDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry) :
-	DescriptorHeapViewDx12(allocator, heapEntry)
+SamplerStateDx12::SamplerStateDx12( GpuVisibleDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry ) :
+	ShaderResourceViewDx12( allocator, heapEntry )
 {
 }
 

@@ -133,12 +133,12 @@ private:
 
 
 
-class SrvUavDescriptorAllocator
+class GpuVisibleDescriptorAllocator
 {
 public:
 
-	SrvUavDescriptorAllocator( ID3D12Device* device, uint32_t initialSize );
-	~SrvUavDescriptorAllocator();
+	GpuVisibleDescriptorAllocator( ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t initialSize );
+	~GpuVisibleDescriptorAllocator();
 
 	ID3D12DescriptorHeap* GetGpuVisibleHeap() const;
 
@@ -167,6 +167,8 @@ private:
 
 	using DescriptorList = FreeList<GlobalDescriptorHeapPage::DescriptorEntry, GlobalDescriptorHeapPage::DescriptorInitArgs>;
 	std::unique_ptr<DescriptorList> m_freeList;
+	D3D12_DESCRIPTOR_HEAP_TYPE m_type;
+	UINT m_entrySize;
 };
 
 
