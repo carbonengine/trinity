@@ -17,7 +17,7 @@ TriStepSetUpscalingContextID::~TriStepSetUpscalingContextID( void )
 // Description:
 //   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
-void TriStepSetUpscalingContextID::py__init__( uint32_t upscalingContextID )
+void TriStepSetUpscalingContextID::py__init__( Be::OptionalWithDefaultValue<uint32_t, Tr2UpscalingAL::INVALID_CONTEXT_ID> upscalingContextID )
 {
 	m_upscalingContextID = upscalingContextID;
 }

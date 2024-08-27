@@ -163,7 +163,7 @@ class Tr2UpscalingContextAL
 public:
 	Tr2UpscalingContextAL( Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2UpscalingAL::UpscalingContextParams params );
 	virtual ~Tr2UpscalingContextAL();
-	virtual bool ReSetup( Tr2UpscalingAL::UpscalingContextParams params );
+	bool Reuse( Tr2UpscalingAL::UpscalingContextParams params );
 	// at what render resolution are we drawing to
 	void GetRenderDimensions( uint32_t& width, uint32_t& height ) const;
 	// What is the output dimensions

@@ -275,6 +275,8 @@ Tr2RenderTargetPtr Tr2PrimaryRenderContext::GetBackBuffer()
 #endif
 
 
+bool g_renderContextIsBeingDestroyed = false;
+
 namespace
 {
 #if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
@@ -288,8 +290,10 @@ void Tr2RenderContext::DestroyMainThreadRenderContext()
 {
 	if( s_mainThreadRenderContext )
 	{
-		s_mainThreadRenderContext.Unlock();
+		g_renderContextIsBeingDestroyed = true;
 		Tr2RenderContextAL::SetPrimaryRenderContext( nullptr );
+		s_mainThreadRenderContext.Unlock();
+		g_renderContextIsBeingDestroyed = false;
 	}
 }
 

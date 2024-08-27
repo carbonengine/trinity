@@ -212,11 +212,6 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext() {
 	}
 }
 
-bool Tr2MetalFxUpscalingContext::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
-{
-    return m_params == params;
-}
-
 void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
 {
     if( @available(macOS 13.0, *) )

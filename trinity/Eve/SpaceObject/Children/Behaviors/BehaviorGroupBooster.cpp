@@ -146,6 +146,7 @@ bool BehaviorGroupBooster::Initialize()
 
 	// create vertex-declarartion
 	m_vertexDeclarationHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_boosterInstancedVertex );
+	Tr2Renderer::ReserveQuadListIndexBuffer( 6 );
 	return true;
 }
 
@@ -384,8 +385,8 @@ Tr2RenderBatch BehaviorGroupBooster::GetBatch( Tr2BufferAL* instanceBuffer, unsi
 		// Don't render these except on high!
 		return {};
 	}
-	auto indexBuffer = Tr2Renderer::GetQuadListIndexBuffer( 6 );
-	if( !indexBuffer )
+	auto& indexBuffer = Tr2Renderer::GetQuadListIndexBuffer();
+	if( !indexBuffer.IsValid() )
 	{
 		return {};
 	}
@@ -393,10 +394,10 @@ Tr2RenderBatch BehaviorGroupBooster::GetBatch( Tr2BufferAL* instanceBuffer, unsi
 	Tr2RenderBatch batch;
 	batch.SetMaterial( m_boosterEffect );
 	batch.SetVertexDeclaration( GetVertexDeclaration() );
-	batch.SetInidices( *indexBuffer, indexBuffer->GetDesc().stride );
+	batch.SetInidices( indexBuffer );
 	batch.SetStreamSource( 0, m_vertexBuffer.GetSharedResource() );
 	batch.SetStreamSource( 1, *instanceBuffer, instanceDataStride );
-	batch.SetDrawIndexedInstanced( 2 * 6 * 3, count, 0, m_vertexBuffer.GetSharedResource().GetOffset() / m_vertexBuffer.GetSharedResource().GetStride(), startInstance );
+	batch.SetDrawIndexedInstanced( 2 * 6 * 3, count, indexBuffer.GetStartIndex(), m_vertexBuffer.GetSharedResource().GetOffset() / m_vertexBuffer.GetSharedResource().GetStride(), startInstance );
 	return batch;
 }
 

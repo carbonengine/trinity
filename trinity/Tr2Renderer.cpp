@@ -7,6 +7,7 @@
 #include "TriLineSet.h"
 #include "TriSettingsRegistrar.h"
 #include "TriPoolAllocator.h"
+#include "Resources/TriGeometryRes.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -95,13 +96,8 @@ namespace
 
 	// shared vertex/index buffers
 	Tr2BufferAL s_quadVertexBuffer;
-	// Various sizes of index buffers
-	// 16 bit
-	Tr2BufferAL s_quadListIndexBuffer16Bit;
-	uint16_t s_quadListSize16Bit = 0;
-	// 32 bit
-	Tr2BufferAL s_quadListIndexBuffer32Bit;
-	uint32_t s_quadListSize32Bit = 0;
+	Tr2SuballocatedBuffer::Allocation s_quadListIndexBuffer;
+	uint32_t s_quadListSize = 0;
 
 	Tr2TextureAL s_fallbackTextures[2][3];
 	bool s_debugFallbackTexture = false;
@@ -270,13 +266,13 @@ namespace
 
 	
 	template <typename T>
-	bool CreateIndexBuffer( T count, Tr2BufferAL& buffer )
+	bool CreateIndexBuffer( T count, Tr2SuballocatedBuffer::Allocation& buffer )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		// Re-create the index buffer with the correct type
 
 		std::vector<T> indices( count * 6 );
-		T* pInds = &indices[0];
+		T* pInds = indices.data();
 		for( T i = 0; i < count; ++i )
 		{
 			pInds[0] = 0 + 4 * i;
@@ -287,10 +283,15 @@ namespace
 			pInds[5] = 2 + 4 * i;
 			pInds += 6;
 		}
-		HRESULT hr = buffer.Create( sizeof( T ), count * 6, Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::NONE, &indices[0], renderContext );
+		if( buffer.IsValid() )
+		{
+			g_sharedBuffer.Free( buffer );
+		}
+		auto hr = g_sharedBuffer.Allocate( sizeof( T ), count * 6, indices.data(), renderContext, buffer );
+
 		if( FAILED( hr ) )
 		{
-			CCP_LOGERR( "CreateIndexBuffer failed to create index buffer (%d)", hr );
+			CCP_LOGERR( "CreateIndexBuffer failed to create an index buffer for %d quads with HRESULT=0x(%X)", count, hr.GetResult() );
 			return false;
 		}
 		return true;
@@ -1202,49 +1203,48 @@ unsigned int Tr2Renderer::GetPerObjectPSStartRegister()
 	return s_perObjectPSStartRegister;
 }
 
-Tr2BufferAL* Tr2Renderer::GetQuadListIndexBuffer( uint32_t numOfQuads )
+void Tr2Renderer::ReserveQuadListIndexBuffer( uint32_t numOfQuads )
 {
 	static std::mutex s_mutex;
 
 	if( !Tr2Renderer::IsResourceCreationAllowed() )
 	{
-		return nullptr;
+		return;
 	}
 
 	std::scoped_lock lock( s_mutex );
 
-	// how many indices do these quads need?
-	uint32_t numOfIndices = numOfQuads * 6;
-
-	// need to check if the index count fits in the buffers
-	if( (uint16_t)numOfIndices == numOfIndices )
+	if( numOfQuads <= s_quadListSize && s_quadListIndexBuffer.IsValid() )
 	{
-		// we just need the 16 bit buffer
-		if( numOfQuads <= s_quadListSize16Bit && s_quadListIndexBuffer16Bit.IsValid() )
-		{
-			return &s_quadListIndexBuffer16Bit;
-		}
-		if( CreateIndexBuffer<uint16_t>( (uint16_t)numOfQuads, s_quadListIndexBuffer16Bit ) )
-		{
-			s_quadListSize16Bit = numOfQuads;
-			return &s_quadListIndexBuffer16Bit;
-		}
-	}
-	else 
-	{
-		// we need the big one!
-		if( numOfQuads <= s_quadListSize32Bit && s_quadListIndexBuffer32Bit.IsValid() )
-		{
-			return &s_quadListIndexBuffer32Bit;
-		}
-		if( CreateIndexBuffer<uint32_t>( (uint32_t)numOfQuads, s_quadListIndexBuffer32Bit ) )
-		{
-			s_quadListSize32Bit = numOfQuads;
-			return &s_quadListIndexBuffer32Bit;
-		}
+		return;
 	}
 
-	return NULL;
+	numOfQuads = std::max( numOfQuads, s_quadListSize );
+	if( numOfQuads == 0 )
+	{
+		return;
+	}
+
+	// we just need the 16 bit buffer
+	if( numOfQuads <= static_cast<uint32_t>( std::numeric_limits<uint16_t>::max() / 6 ) )
+	{
+		if( CreateIndexBuffer<uint16_t>( static_cast<uint16_t>( numOfQuads ), s_quadListIndexBuffer ) )
+		{
+			s_quadListSize = numOfQuads;
+		}
+	}
+	else
+	{
+		if( CreateIndexBuffer<uint32_t>( numOfQuads, s_quadListIndexBuffer ) )
+		{
+			s_quadListSize = numOfQuads;
+		}
+	}
+}
+
+Tr2SuballocatedBuffer::Allocation& Tr2Renderer::GetQuadListIndexBuffer()
+{
+	return s_quadListIndexBuffer;
 }
 
 void Tr2Renderer::PrepareDeviceResources()
@@ -1275,22 +1275,20 @@ void Tr2Renderer::PrepareDeviceResources()
 	}
 
 	// just call the Get* function, it will do the alloc...
-	GetQuadListIndexBuffer( 1 );
+	ReserveQuadListIndexBuffer( 128 );
 
 	CreateFallbackTextures( renderContext );
 }
 
 void Tr2Renderer::ReleaseDeviceResources( TriStorage s )
 {
-	if( ( s & s_quadVertexBuffer.GetMemoryClass() ) || 
-		( s & s_quadListIndexBuffer16Bit.GetMemoryClass() ) ||  
-		( s & s_quadListIndexBuffer32Bit.GetMemoryClass() ) )
+	if( ( s & s_quadVertexBuffer.GetMemoryClass() ) )
 	{
 		s_quadVertexBuffer = Tr2BufferAL();
-		s_quadListIndexBuffer16Bit = Tr2BufferAL();
-		s_quadListSize16Bit = 0;
-		s_quadListIndexBuffer32Bit = Tr2BufferAL();
-		s_quadListSize32Bit = 0;
+	}
+	if( ( s & TRISTORAGE_MANAGEDMEMORY ) )
+	{
+		g_sharedBuffer.Free( s_quadListIndexBuffer );
 	}
 	DestroyFallbackTextures( s_fallbackTextures[0] );
 	DestroyFallbackTextures( s_fallbackTextures[1] );

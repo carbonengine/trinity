@@ -11,7 +11,7 @@ public:
 	TriStepSetUpscalingContextID( IRoot* lockobj = 0 );
 	~TriStepSetUpscalingContextID( void );
 
-	void py__init__( uint32_t upscalingContextID = Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	void py__init__( Be::OptionalWithDefaultValue<uint32_t, Tr2UpscalingAL::INVALID_CONTEXT_ID> upscalingContextID = Tr2UpscalingAL::INVALID_CONTEXT_ID );
 
 	//IRenderStep
 	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );

@@ -95,7 +95,8 @@ std::vector<Tr2UpscalingAL::Setting> Tr2XessUpscalingTechnique::GetAvailableSett
 		Tr2UpscalingAL::Setting::ULTRA_QUALITY,
 		Tr2UpscalingAL::Setting::QUALITY,
 		Tr2UpscalingAL::Setting::BALANCED,
-		Tr2UpscalingAL::Setting::PERFORMANCE
+		Tr2UpscalingAL::Setting::PERFORMANCE,
+		Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE
 	};
 }
 
@@ -134,6 +135,9 @@ Tr2XessUpscalingContext::Tr2XessUpscalingContext( Tr2UpscalingAL::Setting settin
 		break;
 	case Tr2UpscalingAL::Setting::PERFORMANCE:
 		m_xessSetting = XESS_QUALITY_SETTING_PERFORMANCE;
+		break;
+	case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
+		m_xessSetting = XESS_QUALITY_SETTING_ULTRA_PERFORMANCE;
 		break;
 	default:
 		CCP_LOGERR( "Invalid Setting Applied to Tr2XeSSUpscaling: %d", setting );
