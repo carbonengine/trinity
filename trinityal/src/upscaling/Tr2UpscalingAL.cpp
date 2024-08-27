@@ -227,7 +227,7 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2UpscalingAL::U
         auto context = m_contexts.find( existingContext );
         if( context != m_contexts.end() )
         {
-            if( context->second->ReSetup( params) )
+            if( context->second->Reuse( params) )
             {
                 return context->second.get();
             }
@@ -301,9 +301,9 @@ Tr2UpscalingContextAL::~Tr2UpscalingContextAL()
 {
 }
 
-bool Tr2UpscalingContextAL::ReSetup( Tr2UpscalingAL::UpscalingContextParams params )
+bool Tr2UpscalingContextAL::Reuse( Tr2UpscalingAL::UpscalingContextParams params )
 {
-    return false;
+	return m_params == params;
 }
 
 uint32_t Tr2UpscalingContextAL::GetID() const

@@ -168,4 +168,6 @@ extern const Be::VarChooser Tr2RenderContextEnum_DisplayScaling_Chooser[];
 extern const Be::VarChooser Tr2RenderContextEnum_SwapEffect_Chooser[];
 extern const Be::VarChooser Tr2RenderContextEnum_PresentInterval_Chooser[];
 
+extern bool g_renderContextIsBeingDestroyed;
+
 #endif

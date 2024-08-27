@@ -305,6 +305,8 @@ bool TriStepRenderPostProcess::OnModified( Be::Var* value )
 
 TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	if( !m_renderInfo->Setup( renderContext ) )
 	{
 		return RS_FAILED;

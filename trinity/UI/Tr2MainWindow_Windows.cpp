@@ -564,7 +564,10 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				gTriDev->SetThrottling( TriDevice::WINDOW_HIDDEN, false );
 			}
 
-			SetState( false, newMode );
+			if ( !g_renderContextIsBeingDestroyed )
+			{
+				SetState( false, newMode );
+			}
 
 			std::pair<int32_t, bool> ret;
 			m_onWindowsMessage.Call( ret, msg, wParam, lParam ).ReportException();

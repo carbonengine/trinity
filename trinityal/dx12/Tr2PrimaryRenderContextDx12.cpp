@@ -770,9 +770,11 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	auto presentFlag = (m_syncInterval == Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE && m_supportsVariableRefreshRate) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
 	CR( m_swapchain->Present( m_syncInterval, presentFlag ) );
+	FORWARD_HR( m_device->GetDeviceRemovedReason(); )
 	for( auto it = begin( m_pendingPresents ); it != end( m_pendingPresents ); ++it )
 	{
 		it->swapChain->Present( it->presentInterval, 0 );
+		FORWARD_HR( m_device->GetDeviceRemovedReason(); )
 	}
 
 	m_currentBackBufferIndex = m_swapchain->GetCurrentBackBufferIndex();

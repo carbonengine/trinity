@@ -4,13 +4,89 @@
 
 #include "TriDevice.h"
 #include "RenderJob/Tr2RenderJobs.h"
-
-
 #include "TriSettingsRegistrar.h"
+#include <sstream>
+#include <iomanip>
+
+
 bool g_emulateDriverReset = false;
 TRI_REGISTER_SETTING( "emulateDriverReset", g_emulateDriverReset );
 
 CCP_STATS_DECLARED_ELSEWHERE( presentTime );
+extern unsigned long long g_currentFrameCounter;
+
+namespace
+{
+
+std::string GetDeviceRemovedReasonString( HRESULT hr )
+{
+	std::stringstream reason;
+	switch( hr )
+	{
+	case DXGI_ERROR_DEVICE_HUNG:
+		reason << "DXGI_ERROR_DEVICE_HUNG: ";
+		break;
+	case DXGI_ERROR_DEVICE_REMOVED:
+		reason << "DXGI_ERROR_DEVICE_REMOVED: ";
+		break;
+	case DXGI_ERROR_DEVICE_RESET:
+		reason << "DXGI_ERROR_DEVICE_RESET: ";
+		break;
+	case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
+		reason << "DXGI_ERROR_DRIVER_INTERNAL_ERROR: ";
+		break;
+	case DXGI_ERROR_INVALID_CALL:
+		reason << "DXGI_ERROR_INVALID_CALL: ";
+		break;
+	default:
+		reason << "HRESULT: ";
+		break;
+	}
+	reason << "0x" << std::setfill( '0' ) << std::setw( 8 ) << std::hex << (uint32_t)hr;
+	return reason.str();
+}
+
+void NotifyDeviceRemoved( HRESULT hr, BlueScriptCallback& onDeviceRemoved )
+{
+	static uint32_t s_deviceLostCount = 0;
+	++s_deviceLostCount;
+
+	Tr2RenderContextEnum::RenderContextStatus status = Tr2RenderContextEnum::CONTEXT_STATUS_INVALID;
+	std::string marker, markerMessage, offendingShader;
+	if( SUCCEEDED( Tr2RenderContext_GetMainThreadRenderContext().GetGpuStateMarker( status, marker, offendingShader ) ) )
+	{
+		if( !marker.empty() )
+		{
+			markerMessage = ", GPU marker: " + marker;
+		}
+		if( !offendingShader.empty() )
+		{
+			markerMessage = ", shader: " + offendingShader;
+		}
+	}
+	auto reason = GetDeviceRemovedReasonString( hr );
+
+	if( onDeviceRemoved.IsValid() )
+	{
+		onDeviceRemoved.CallVoid( (uint64_t)(unsigned long)hr, reason, s_deviceLostCount, marker, "", offendingShader );
+	}
+
+	CCP_LOGERR( "DX12 device removed, reason: %s%s", reason.c_str(), markerMessage.c_str() );
+
+	if( BeCrashes )
+	{
+		std::string str;
+		BeCrashes->SetCrashKeyValue( "gpuRemovedCount", ( str = std::to_string( s_deviceLostCount ) ).c_str() );
+		BeCrashes->SetCrashKeyValue( "gpuRemovedFrame", ( str = std::to_string( g_currentFrameCounter ) ).c_str() );
+		BeCrashes->SetCrashKeyValue( "gpuRemovedReason", reason.c_str() );
+		if( !marker.empty() )
+		{
+			BeCrashes->SetCrashKeyValue( "gpuRemovedMarker", marker.c_str() );
+		}
+	}
+};
+
+}
 
 
 void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
@@ -18,6 +94,30 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 #if BLUE_WITH_PYTHON
 	AutoTasklet _at( PyOS->GetTaskletTimer(), "TriDevice::HandleRenderTick" );
 #endif
+
+	auto TearDownDevice = [&]() {
+		ReleaseDeviceResources( TRISTORAGE_ALL );
+
+		mDeviceLost = true;
+		Tr2RenderContext::DestroyMainThreadRenderContext();
+
+		LogAllLiveResources();
+	};
+
+	auto HandleLostDevice = [&]() {
+		HRESULT hr = Tr2RenderContext_GetMainThreadRenderContext().m_device->GetDeviceRemovedReason();
+		if( FAILED( hr ) || g_emulateDriverReset )
+		{
+			g_emulateDriverReset = false;
+			if( !mDeviceLost )
+			{
+				NotifyDeviceRemoved( hr, m_onDeviceRemoved );
+				TearDownDevice();
+				return true;
+			}
+		}
+		return false;
+	};
 
 	if( mDeviceLost )
 	{
@@ -40,83 +140,15 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 		return;
 	}
 	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_UPDATE_STARTED );
-	HRESULT hr = Tr2RenderContext_GetMainThreadRenderContext().m_device->GetDeviceRemovedReason();
-	if( FAILED( hr ) || g_emulateDriverReset )
+	if( HandleLostDevice() )
 	{
-		g_emulateDriverReset = false;
-		if( !mDeviceLost )
-		{
-			static uint32_t s_deviceLostCount = 0;
-			++s_deviceLostCount;
-
-			Tr2RenderContextEnum::RenderContextStatus status = Tr2RenderContextEnum::CONTEXT_STATUS_INVALID;
-			std::string marker, markerMessage, offendingShader;
-			if( SUCCEEDED( Tr2RenderContext_GetMainThreadRenderContext().GetGpuStateMarker( status, marker, offendingShader ) ) )
-			{
-				markerMessage = ", GPU marker: " + marker;
-				markerMessage = ", shader: " + offendingShader;
-			}
-
-			Tr2RenderContextEnum::PixelFormat format;
-			uint64_t size;
-			uint32_t width;
-			uint32_t height;
-			uint32_t depth;
-			uint32_t mips;
-			bool hasPageFault = false;
-			char resourceDesc[256] = { 0 };
-			if( SUCCEEDED( Tr2RenderContext_GetMainThreadRenderContext().GetGpuPageFaultResource( format, size, width, height, depth, mips ) ) )
-			{
-				sprintf_s( resourceDesc, "fmt %i, size: %u, %ux%ux%u, mips: %u", int( format ), unsigned( size ), width, height, depth, mips );
-				markerMessage += ", Page Fault: ";
-				markerMessage += resourceDesc;
-				hasPageFault = true;
-			}
-
-			if( m_onDeviceRemoved.IsValid() )
-			{
-				m_onDeviceRemoved.CallVoid( (uint64_t)(unsigned long)hr, BeGetErrorMessage( ALResult( hr ) ), s_deviceLostCount, marker, resourceDesc, offendingShader );
-			}
-
-			CCP_LOGERR( "DX12 device removed, reason: 0x%x%s", hr, markerMessage.c_str() );
-
-			if( BeCrashes )
-			{
-				extern unsigned long long g_currentFrameCounter;
-
-				std::string str;
-				BeCrashes->SetCrashKeyValue( "gpuRemovedCount", ( str = std::to_string( s_deviceLostCount ) ).c_str() );
-				BeCrashes->SetCrashKeyValue( "gpuRemovedFrame", ( str = std::to_string( g_currentFrameCounter ) ).c_str() );
-				BeCrashes->SetCrashKeyValue( "gpuRemovedReason", ( str = std::to_string( hr ) ).c_str() );
-				if( !marker.empty() )
-				{
-					BeCrashes->SetCrashKeyValue( "gpuRemovedMarker", marker.c_str() );
-				}
-				if( hasPageFault )
-				{
-					BeCrashes->SetCrashKeyValue( "gpuPageFaultResource", resourceDesc );
-				}
-			}
-			ReleaseDeviceResources( TRISTORAGE_ALL );
-
-			mDeviceLost = true;
-			Tr2RenderContext::DestroyMainThreadRenderContext();
-
-			LogAllLiveResources();
-			return;
-		}
+		return;
 	}
 
 	if( m_upscalingChanged )
 	{
 		CCP_LOGNOTICE( "DX12 device removed, reason: upscaler changed" );
-
-		ReleaseDeviceResources( TRISTORAGE_ALL );
-
-		mDeviceLost = true;
-		Tr2RenderContext::DestroyMainThreadRenderContext();
-
-		LogAllLiveResources();
+		TearDownDevice();
 		return;
 	}
 
@@ -137,12 +169,16 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 	// it is more efficient to do it like this (revers order), because there is some
 	// acyncrounicy between EndScene() and Present(). So if we pump Python
 	// and do all the other stuff between we get a degree of paralization
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED );
 	{
 		CCP_STATS_SCOPED_TIME( presentTime );
-		Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED );
 		CR_RETURN( Tr2RenderContext_GetMainThreadRenderContext().Present() );
-		Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_FINISHED );
 	}
+	if( HandleLostDevice() )
+	{
+		return;
+	}
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_FINISHED );
 
 	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED );
 	if( !Render() )

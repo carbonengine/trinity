@@ -159,6 +159,8 @@ bool EveChildBulletStorm::OnPrepareResources()
 	// now build the pre-instance buffer
 	Rebuild();
 
+	Tr2Renderer::ReserveQuadListIndexBuffer( 2 );
+
 	return true;
 }
 
@@ -361,8 +363,8 @@ void EveChildBulletStorm::GetBatches( ITriRenderBatchAccumulator* batches, TriBa
 		return;
 	}
 
-	auto ib = Tr2Renderer::GetQuadListIndexBuffer( 2 );
-	if( !ib )
+	auto& ib = Tr2Renderer::GetQuadListIndexBuffer();
+	if( !ib.IsValid() )
 	{
 		return;
 	}
@@ -370,9 +372,11 @@ void EveChildBulletStorm::GetBatches( ITriRenderBatchAccumulator* batches, TriBa
 	Tr2RenderBatch batch;
 	batch.SetMaterial( m_effect );
 	batch.SetPerObjectData( perObjectData );
-	batch.SetGeometry( m_vertexDeclHandle, m_vertexBuffer, sizeof( BulletStormVertex ), *ib, ib->GetDesc().stride );
+	batch.SetVertexDeclaration( m_vertexDeclHandle );
+	batch.SetStreamSource( 0, m_vertexBuffer, sizeof( BulletStormVertex ) );
 	batch.SetStreamSource( 1, m_perInstanceBuffer, sizeof( PerInstanceVertex ) );
-	batch.SetDrawIndexedInstanced( 6, m_objectCount, 0, 0, 0 );
+	batch.SetInidices( ib );
+	batch.SetDrawIndexedInstanced( 6, m_objectCount, ib.GetStartIndex(), 0, 0 );
 	batches->Commit( batch );
 }
 

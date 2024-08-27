@@ -17,6 +17,8 @@ namespace
 		Vector3 sunDirection;
 		float sunAngle;
 
+		CcpMath::Sphere planets[2];
+
 		Vector2 resolution;
 		uint32_t frameIndex;
 	};
@@ -90,7 +92,7 @@ ITr2TextureProvider* Tr2RaytracingManager::GetShadowMap() const
 	}
 }
 
-void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, Tr2RenderContext& renderContext )
+void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, const CcpMath::Sphere* planets, size_t planetCount, Tr2RenderContext& renderContext )
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Raytraced shadows" );
@@ -167,6 +169,13 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 
 		data->sunDirection = Normalize( sunDirection );
 		data->sunAngle = m_sunAngle / 180.f * XM_PI;
+
+		std::fill( std::begin( data->planets ), std::end( data->planets ), CcpMath::Sphere( Vector3( 0, 0, 0 ), 0 ) );
+
+		for( size_t i = 0; i < std::min( planetCount, sizeof( data->planets ) / sizeof( data->planets[0] ) ); ++i )
+		{
+			data->planets[i] = planets[i];
+		}
 
 		data->resolution = Vector2( float( destTex->GetWidth() ), float( destTex->GetHeight() ) );
 		data->frameIndex = uint32_t( Tr2Renderer::GetCurrentFrameCounter() & 0xffffffff );

@@ -333,8 +333,8 @@ void EveStretch2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType 
 {
 	if( batchType == TRIBATCHTYPE_ADDITIVE && m_effect && m_effect->GetShaderStateInterface() && m_vb.GetSharedResource().IsValid() )
 	{
-		auto ib = Tr2Renderer::GetQuadListIndexBuffer( m_quadCount );
-		if( !ib )
+		auto& ib = Tr2Renderer::GetQuadListIndexBuffer();
+		if( !ib.IsValid() )
 		{
 			return;
 		}
@@ -344,8 +344,8 @@ void EveStretch2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType 
 		Tr2RenderBatch batch;
 		batch.SetMaterial( m_effect );
 		batch.SetPerObjectData( perObjectData );
-		batch.SetGeometry( m_vertexDeclHandle, vb.GetBuffer(), vb.GetStride(), *ib, ib->GetDesc().stride );
-		batch.SetDrawIndexedInstanced( 6 * m_quadCount, 1, 0, vb.GetOffset() / vb.GetStride(), 0 );
+		batch.SetGeometry( m_vertexDeclHandle, vb, ib );
+		batch.SetDrawIndexedInstanced( 6 * m_quadCount, 1, ib.GetStartIndex(), vb.GetOffset() / vb.GetStride(), 0 );
 
 		batches->Commit( batch );
 	}
@@ -374,6 +374,8 @@ bool EveStretch2::OnPrepareResources()
 	def.Add( Tr2VertexDefinition::FLOAT32_2, Tr2VertexDefinition::POSITION );
 
 	m_vertexDeclHandle = renderContext.m_esm.GetVertexDeclarationHandle( def );
+
+	Tr2Renderer::ReserveQuadListIndexBuffer( m_quadCount );
 	return true;
 }
 

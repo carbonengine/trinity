@@ -324,10 +324,10 @@ namespace TrinityALImpl
 			RELEASE_LATER( m_owner, m_drawIndexedInstanced );
 			m_drawIndexedInstanced = nullptr;
 		}
+		auto owner = m_owner;
 		if( m_owner )
 		{
 			m_rootSignature.Destroy( *m_owner );
-			m_owner->OnShaderProgramDestroyedDx12( this );
 		}
 
 		m_shaders.clear();
@@ -345,6 +345,12 @@ namespace TrinityALImpl
 		m_indirectBufferLayout.constantBufferCount = {};
 
 		m_owner = nullptr;
+
+		// We want to notify the owner last as it may trigger destruction of this program
+		if( owner )
+		{
+			owner->OnShaderProgramDestroyedDx12( this );
+		}
 	}
 
 	ALResult Tr2ShaderProgramAL::CreateCommandSignatures( Tr2IndirectBufferLayoutAL& bufferLayout, Tr2PrimaryRenderContextAL& renderContext )

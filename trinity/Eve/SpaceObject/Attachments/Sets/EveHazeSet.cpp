@@ -199,6 +199,8 @@ bool EveHazeSet::OnPrepareResources()
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	CR_RETURN_VAL( g_sharedBuffer.Allocate( sizeof( HazeVertex ), m_vertexCount, &verts[0], renderContext, m_vertexBuffer ), false );
 
+	Tr2Renderer::ReserveQuadListIndexBuffer( m_vertexCount / 4 );
+
 	return true;
 }
 
@@ -265,8 +267,8 @@ void EveHazeSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchTy
 		return;
 	}
 
-	auto indexBuffer = Tr2Renderer::GetQuadListIndexBuffer( m_vertexCount / 4 );
-	if( !indexBuffer )
+	auto& indexBuffer = Tr2Renderer::GetQuadListIndexBuffer();
+	if( !indexBuffer.IsValid() )
 	{
 		return;
 	}
@@ -276,9 +278,9 @@ void EveHazeSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchTy
 	batch.SetPerObjectData( perObjectData );
 	batch.SetVertexDeclaration( m_vertexDeclHandle );
 	batch.SetStreamSource( 0, m_vertexBuffer.GetBuffer(), m_vertexBuffer.GetStride() );
-	batch.SetInidices( *indexBuffer, indexBuffer->GetDesc().stride );
+	batch.SetInidices( indexBuffer );
 
-	batch.SetDrawIndexedInstanced( m_vertexCount / 2 * 3, 1, 0, m_vertexBuffer.GetOffset() / m_vertexBuffer.GetStride(), 0 );
+	batch.SetDrawIndexedInstanced( m_vertexCount / 2 * 3, 1, indexBuffer.GetStartIndex(), m_vertexBuffer.GetOffset() / m_vertexBuffer.GetStride(), 0 );
 
 	accumulator->Commit( batch );
 }
