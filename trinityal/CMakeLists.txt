@@ -161,8 +161,6 @@ set(_SOURCES
     dx12/Utilities.h
     dx12/upscaling/Tr2DlssUpscaling.cpp 
     dx12/upscaling/Tr2DlssUpscaling.h 
-    dx12/upscaling/Tr2Fsr2Upscaling.cpp 
-    dx12/upscaling/Tr2Fsr2Upscaling.h 
     dx12/upscaling/Tr2Fsr3Upscaling.cpp 
     dx12/upscaling/Tr2Fsr3Upscaling.h 
     dx12/upscaling/Tr2UpscalingALDx12.cpp

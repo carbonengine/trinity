@@ -10,7 +10,6 @@
 #include "Tr2UpscalingALDx12.h"
 #include "Tr2DlssUpscaling.h"
 #include <upscaling/Tr2Fsr1Upscaling.h>
-#include "Tr2Fsr2Upscaling.h"
 #include "Tr2Fsr3Upscaling.h"
 #include "Tr2XessUpscaling.h"
 
