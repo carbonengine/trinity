@@ -32,62 +32,68 @@ namespace DlssUtils
 
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	Tr2UpscalingTechniqueDx11( renderContext, technique, setting, frameGeneration, adapter ),
-	m_attachedToDevice( false ),
 	m_adapter( 0 ),
 	m_contextIndex( 0 ),
 	m_frameToken( nullptr )
 {
-	m_streamlineSetup = false;
-	m_streamlineModule = Tr2StreamlineAL::GetStreamlineModule();
 
-	if( !m_streamlineModule )
-	{
-		CCP_LOGERR( "Could not find the streamline module. Streamline will not be initialized" );
-
-		return;
-	}
-
-	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( m_streamlineModule ) ) )
-	{
-		return;
-	}
-
-	// setup the streamline function calls, now that we have the module
-	INITIALIZE_SL_FUNC( m_streamlineModule, slGetFeatureFunction );
-	INITIALIZE_SL_FUNC( m_streamlineModule, slSetFeatureLoaded );
-	INITIALIZE_SL_FUNC( m_streamlineModule, slGetNewFrameToken );
-
-	Tr2AdapterInfo videoAdapterInfo;
-	Tr2VideoAdapterInfo::GetAdapterInfo( adapter, videoAdapterInfo );
-
-	sl::AdapterInfo adapterInfo{};
-	adapterInfo.deviceLUID = videoAdapterInfo.luid;
-	adapterInfo.deviceLUIDSizeInBytes = sizeof( LUID );
-
-	m_isAvailable = true;
-
-	std::vector<sl::Feature> features = {
-		sl::kFeatureNIS,
-		sl::kFeatureDLSS
-	};
-	for( auto& feature : features )
-	{
-		m_isAvailable &= Tr2StreamlineAL::CheckForAvailability( m_streamlineModule, feature, adapterInfo ) == sl::Result::eOk;
-	}
-	// framegen is not available on dx11!
 	m_frameGeneration = false;
+
+	m_streamlineSetup = false;
+
+	
+	//We need to create a dummy device to figure out if DLSS and frame generation actually is supported.
+
+	{
+		if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline() ) )
+		{
+			CCP_LOGERR( "Streamline initialization failed with error %d", res );
+			return;
+		}
+
+		
+		CComPtr<IDXGIAdapter1> dxgiAdapter;
+		CComPtr<IDXGIOutput> output;
+		Tr2VideoAdapterInfo::GetVideoAdapterDX11( adapter, &dxgiAdapter, &output );
+
+
+		const D3D_FEATURE_LEVEL levelWanted = D3D_FEATURE_LEVEL_11_0;
+		
+		D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_UNKNOWN;
+
+		CComPtr<ID3D11Device> device;
+		D3D_FEATURE_LEVEL levelSupported;
+		CComPtr<ID3D11DeviceContext> m_context;
+		
+		
+		if( SUCCEEDED( D3D11CreateDevice( dxgiAdapter, driverType, 0, 0, &levelWanted, 1, D3D11_SDK_VERSION, &device, &levelSupported, &m_context ) ) )
+		{
+			if( Tr2StreamlineAL::SetDevice( device, adapter ) == sl::Result::eOk )
+			{
+				m_isAvailable = Tr2StreamlineAL::IsDLSSAvailable();
+			}
+		}
+
+		Tr2StreamlineAL::ReleaseStreamline();
+	}
+	
+	//We're done gathering info, initialize Streamline again and await the actual device!
+	
+	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline() ) )
+	{
+		CCP_LOGERR( "Streamline initialization failed with error %d", res );
+		return;
+	}
+
+	// framegen is not available on dx11!
+
 	m_streamlineSetup = true;
 	SanitizeState();
 }
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
-	if( m_attachedToDevice )
-	{
-		TogglePlugin( sl::kFeatureDLSS, false );
-		TogglePlugin( sl::kFeatureNIS, false );
-	}
-	Tr2StreamlineAL::ReleaseStreamline( m_streamlineModule );
+	Tr2StreamlineAL::ReleaseStreamline( );
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable( ) const
@@ -110,24 +116,12 @@ bool Tr2DlssUpscalingTechnique::IsTemporal() const
 	return true;
 }
 
-void Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
-{
-	if( !m_attachedToDevice )
-	{
-		return;
-	}
-	if( SL_FAILED( res, m_slSetFeatureLoaded( feature, enable ) ) )
-	{
-		CCP_LOGERR( "Trying to %s Nvidia Streamline plugin '%s' but it failed (%d)", enable ? "enable" : "disable", Tr2StreamlineAL::GetPluginName( feature ), res );
-	}
-}
-
 void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
 	Tr2UpscalingTechniqueDx11::MarkFrameEvent( frameEvent );
 	if( frameEvent == Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED )
 	{
-		if( SL_FAILED( res, m_slGetNewFrameToken( m_frameToken, nullptr ) ) )
+		if( SL_FAILED( res, Tr2StreamlineAL::GetNewFrameToken( m_frameToken ) ) )
 		{
 			CCP_LOGERR( "Could not get new frame token for Nvidia Streamline (%d)", res );
 			return;
@@ -141,26 +135,18 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 
 void Tr2DlssUpscalingTechnique::AttachToDevice(CComPtr<ID3D11Device>& device) 
 {
-	if( m_attachedToDevice )
-	{
-		TogglePlugin( sl::kFeatureDLSS, false );
-		TogglePlugin( sl::kFeatureNIS, false );
-	}
-	DECLARE_SL_FUNC( m_streamlineModule, slSetD3DDevice );
-	if( SL_FAILED( res, m_slSetD3DDevice( device ) ) )
+
+	if( SL_FAILED( res, Tr2StreamlineAL::SetDevice( device, m_adapter ) ) )
 	{
 		CCP_LOGWARN( "Could not attach NVidia Streamline to device. Error code %d", res );
 		return;
 	}
-	m_attachedToDevice = true;
-	TogglePlugin( sl::kFeatureDLSS, true );
-	TogglePlugin( sl::kFeatureNIS, true );
 	CCP_LOGNOTICE( "NVidia Streamline successfully attached to device and adapter" );
 }
 
 Tr2UpscalingContextAL* Tr2DlssUpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
 {
-	return new Tr2DlssUpscalingContext( m_setting, false, params, m_contextIndex++, m_streamlineModule, m_frameToken );
+	return new Tr2DlssUpscalingContext( m_setting, false, params, m_contextIndex++, m_frameToken );
 }
 
 Tr2DlssUpscalingContext::Tr2DlssUpscalingContext( 
@@ -168,25 +154,14 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	bool frameGeneration, 
 	Tr2UpscalingAL::UpscalingContextParams params,
 	uint32_t contextNumber, 
-	HMODULE streamlineModule, 
 	sl::FrameToken* frameToken ) :
 	Tr2UpscalingContextAL( setting, frameGeneration, params ),
 	m_viewHandle( sl::ViewportHandle( contextNumber ) ),
 	m_dlssMode( sl::DLSSMode::eOff ),
 	m_frameToken( frameToken ),
-	m_streamlineModule( streamlineModule ),
 	m_setup( false )
 {
-	DECLARE_SL_FUNC( m_streamlineModule, slGetFeatureFunction );
 
-	INITIALIZE_SL_FEATURE_FUNC( slDLSSGetOptimalSettings, sl::kFeatureDLSS );
-	INITIALIZE_SL_FEATURE_FUNC( slDLSSSetOptions, sl::kFeatureDLSS );
-	INITIALIZE_SL_FEATURE_FUNC( slNISSetOptions, sl::kFeatureNIS );
-
-	INITIALIZE_SL_FUNC( streamlineModule, slSetTag );
-	INITIALIZE_SL_FUNC( streamlineModule, slSetConstants );
-	INITIALIZE_SL_FUNC( streamlineModule, slEvaluateFeature );
-	INITIALIZE_SL_FUNC( streamlineModule, slFreeResources );
 
 	m_dlssMode = sl::DLSSMode::eOff;
 	switch( m_setting )
@@ -212,7 +187,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	m_dlssOptions.outputHeight = m_displayHeight;
 	m_dlssOptions.mode = m_dlssMode;
 
-	if( SL_FAILED( result, m_slDLSSGetOptimalSettings( m_dlssOptions, m_optimalSettings ) ) )
+	if( SL_FAILED( result, Tr2StreamlineAL::GetDLSSOptimalSettings( m_dlssOptions, m_optimalSettings ) ) )
 	{
 		CCP_LOGERR( "Getting Optimal Settings for DLSS failed (%d)", result );
 		return;
@@ -228,7 +203,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	m_dlssOptions.mode = m_dlssMode;
 	m_dlssOptions.useAutoExposure = sl::eFalse;
 
-	if( SL_FAILED( res, m_slDLSSSetOptions( m_viewHandle, m_dlssOptions ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetDLSSOptions( m_viewHandle, m_dlssOptions ) ) )
 	{
 		CCP_LOGERR( "Setting DLSS Options failed with (%d)", res );
 		return;
@@ -238,7 +213,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	m_nisOptions.mode = sl::NISMode::eScaler;
 	m_nisOptions.sharpness = 0.1f;
 
-	if( SL_FAILED( res, m_slNISSetOptions( m_viewHandle, m_nisOptions ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetNISOptions( m_viewHandle, m_nisOptions ) ) )
 	{
 		CCP_LOGERR( "Setting NIS Options failed with (%d)", res );
 		return;
@@ -254,8 +229,8 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
-	m_slFreeResources( sl::kFeatureDLSS, m_viewHandle );
-	m_slFreeResources( sl::kFeatureNIS, m_viewHandle );
+	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
+	Tr2StreamlineAL::FreeResources( sl::kFeatureNIS, m_viewHandle );
 }
 
 void Tr2DlssUpscalingContext::SetFrameToken( sl::FrameToken* frameToken )
@@ -314,7 +289,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::Dispatch
 
 	sl::ResourceTag resources[] = { colorInTag, opaqueColorInTag, colorOutTag, depthTag, mvecTag, exposureTag };
 	
-	if( SL_FAILED( res, m_slSetTag( m_viewHandle, resources, 6, m_params.renderContext.m_context ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTags( m_params.renderContext, m_viewHandle, resources, 6 ) ) )
 	{
 		CCP_LOGERR( "DLSS Failed to tag resources (%d)", res );
 		return res;
@@ -337,7 +312,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2UpscalingAL::DispatchP
 
 	sl::ResourceTag resources[] = { colorInTag, colorOutTag };
 
-	if( SL_FAILED( res, m_slSetTag( m_viewHandle, resources, 2, m_params.renderContext.m_context ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTags( m_params.renderContext, m_viewHandle, resources, 2 ) ) )
 	{
 		CCP_LOGERR( "NIS Failed to tag resources (%d)", res );
 		return res;
@@ -372,7 +347,7 @@ void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParame
 	m_commonConstants.cameraPinholeOffset = sl::float2( 0, 0 );
 	m_commonConstants.reset = m_reset ? sl::eTrue : sl::eFalse;
 
-	if( SL_FAILED( result, m_slSetConstants( m_commonConstants, *m_frameToken, m_viewHandle ) ) )
+	if( SL_FAILED( result, Tr2StreamlineAL::SetConstants( m_commonConstants, *m_frameToken, m_viewHandle ) ) )
 	{
 		CCP_LOGERR( "Setting Nvidia Streamline common constants failed (%d)", result );
 	}
@@ -401,7 +376,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
 
-	if( SL_FAILED( result, m_slEvaluateFeature( sl::kFeatureDLSS, *m_frameToken, handle, _countof( handle ), m_params.renderContext.m_context ) ) )
+	if( SL_FAILED( result, Tr2StreamlineAL::EvaluateFeature( m_params.renderContext, sl::kFeatureDLSS, *m_frameToken, handle, _countof( handle ) ) ) )
 	{
 		CCP_LOGERR( "Failed to Dispatch DLSS (%d)", result );
 	}
@@ -412,7 +387,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
 
-	if( SL_FAILED( result, m_slEvaluateFeature( sl::kFeatureNIS, *m_frameToken, handle, _countof( handle ), m_params.renderContext.m_context ) ) )
+	if( SL_FAILED( result, Tr2StreamlineAL::EvaluateFeature( m_params.renderContext, sl::kFeatureNIS, *m_frameToken, handle, _countof( handle ) ) ) )
 	{
 		CCP_LOGERR( "Failed to Dispatch NIS (%d)", result );
 	}

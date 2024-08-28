@@ -40,20 +40,11 @@ public:
 private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 
-	void TogglePlugin( sl::Feature feature, bool enable );
-
 	uint32_t m_adapter;
-	HMODULE m_streamlineModule;
 	bool m_isAvailable;
 	bool m_streamlineSetup;
-	bool m_attachedToDevice;
 
 	sl::FrameToken* m_frameToken;
-
-	// a few functions from the streamline module.
-	PFun_slGetFeatureFunction* m_slGetFeatureFunction;
-	PFun_slSetFeatureLoaded* m_slSetFeatureLoaded;
-	PFun_slGetNewFrameToken* m_slGetNewFrameToken;
 
 	uint32_t m_contextIndex;
 };
@@ -66,7 +57,6 @@ public:
 		bool frameGeneration, 
 		Tr2UpscalingAL::UpscalingContextParams params,
 		uint32_t contextNumber, 
-		HMODULE streamlineModule, 
 		sl::FrameToken* frameToken );
 	~Tr2DlssUpscalingContext();
 
@@ -92,20 +82,10 @@ private:
 	sl::DLSSOptimalSettings m_optimalSettings;
 
 	Tr2TextureAL m_dlssOutput;
-	
-	PFun_slGetFeatureFunction* m_slGetFeatureFunction;
-	PFun_slDLSSGetOptimalSettings* m_slDLSSGetOptimalSettings;
-	PFun_slDLSSSetOptions* m_slDLSSSetOptions;
-	PFun_slSetConstants* m_slSetConstants;
-	PFun_slEvaluateFeature* m_slEvaluateFeature;
-	PFun_slFreeResources* m_slFreeResources;
-	PFun_slNISSetOptions* m_slNISSetOptions;
-	PFun_slSetTag* m_slSetTag;
 
 	sl::ViewportHandle m_viewHandle;
 	sl::Constants m_commonConstants;
 
-	HMODULE m_streamlineModule;
 	sl::FrameToken* m_frameToken;
 
 	bool m_setup;

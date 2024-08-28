@@ -55,23 +55,14 @@ private:
 
 	uint32_t m_adapter;
 	
-	HMODULE m_streamlineModule;
 	bool m_isAvailable;
 	bool m_supportsFrameGeneration;
-	bool m_attachedToDevice;
 
 	bool m_streamlineSetup;
 
 	uint32_t m_contextIndex;
 	sl::FrameToken* m_frameToken;
 
-	// a few functions from the streamline module.
-	PFun_slGetFeatureFunction* m_slGetFeatureFunction;
-	PFun_slReflexSetOptions* m_slReflexSetOptions;
-	PFun_slSetFeatureLoaded* m_slSetFeatureLoaded;
-	PFun_slPCLSetMarker* m_slPCLSetMarker;
-	PFun_slGetNewFrameToken* m_slGetNewFrameToken;
-	PFun_slUpgradeInterface* m_slUpgradeInterface;
 };
 
 class Tr2DlssUpscalingContext : public Tr2UpscalingContextAL
@@ -82,7 +73,6 @@ public:
 		bool frameGeneration, 
 		Tr2UpscalingAL::UpscalingContextParams params,
 		uint32_t contextNumber, 
-		HMODULE streamlineModule, 
 		sl::FrameToken* frameToken );
 	~Tr2DlssUpscalingContext();
 
@@ -124,18 +114,6 @@ private:
 	uint64_t m_vramUsage;
 	uint32_t m_minWidthHeight;
 	uint32_t m_actualFrames;
-
-	// a few functions from the streamline module.
-	PFun_slDLSSGetOptimalSettings* m_slDLSSGetOptimalSettings;
-	PFun_slDLSSSetOptions* m_slDLSSSetOptions;
-	PFun_slDLSSGSetOptions* m_slDLSSGSetOptions;
-	PFun_slSetConstants* m_slSetConstants;
-	PFun_slEvaluateFeature* m_slEvaluateFeature;
-	PFun_slFreeResources* m_slFreeResources;
-	PFun_slDLSSGGetState* m_slDLSSGGetState;
-	PFun_slNISSetOptions* m_slNISSetOptions;
-	PFun_slSetTag* m_slSetTag;
-	PFun_slAllocateResources* m_slAllocateResources;
 
 	friend class Tr2DlssUpscalingTechnique;
 };

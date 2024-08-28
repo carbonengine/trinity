@@ -4,16 +4,24 @@
 
 #include <sl.h>
 #include <sl_consts.h>
+#include <sl_dlss.h>
+#include <sl_nis.h>
 
-#define DECLARE_SL_FUNC( streamlineModule, func ) \
-	PFun_##func* m_##func = reinterpret_cast<PFun_##func*>( GetProcAddress( streamlineModule, #func ) );\
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	#include <sl_dlss_g.h>
+	#include <sl_reflex.h>
+	#include <sl_pcl.h>
+#endif
 
-#define INITIALIZE_SL_FUNC( streamlineModule, func ) \
-	m_##func = reinterpret_cast<PFun_##func*>( GetProcAddress( streamlineModule, #func ) )
 
-#define INITIALIZE_SL_FEATURE_FUNC( func, feature )   \
-	if( SL_FAILED( res, m_slGetFeatureFunction( feature, #func, (void*&)m_##func ) ) )                                                   \
-		CCP_LOGERR( "Unable to find function %s for feature %s Error code: %d", #func, #feature, res ); 
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	#include <dx12/Tr2RenderContextDx12.h>
+	#include "dx12/Tr2VideoAdapterInfoALDx12.h"
+#elif TRINITY_PLATFORM == TRINITY_DIRECTX11
+	#include <dx11/Tr2RenderContextDx11.h>
+	#include "dx11/Tr2VideoAdapterInfoALDx11.h"
+#endif
+
 
 namespace Tr2StreamlineAL
 {	
@@ -22,9 +30,55 @@ namespace Tr2StreamlineAL
 
 	void Tr2StreamlineLog( sl::LogType type, const char* msg );
 
-	HMODULE GetStreamlineModule();
-	sl::Result InitializeStreamline( HMODULE streamlineModule );
-	void ReleaseStreamline( HMODULE streamlineModule );
-	sl::Result CheckForAvailability( HMODULE streamlineModule, sl::Feature feature, sl::AdapterInfo adapterInfo );
+	sl::Result InitializeStreamline( );
+	void ReleaseStreamline( );
+
+	
+
+	//Streamline functions
+
+	sl::Result SetDevice( void* d3dDevice, uint32_t adapter );
+	sl::Result UpgradeInterface( void** nativeInterface );
+
+	sl::Result SetFeatureLoaded( sl::Feature feature, bool enable );
+
+	sl::Result GetNewFrameToken( sl::FrameToken*& m_frameToken );
+
+	sl::Result AllocateResources( Tr2RenderContextAL& renderContext, sl::Feature feature, const sl::ViewportHandle& viewport );
+	sl::Result FreeResources( sl::Feature feature, const sl::ViewportHandle& viewport );
+
+	sl::Result SetTags( Tr2RenderContextAL& renderContext, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags );
+	sl::Result SetConstants( const sl::Constants& values, const sl::FrameToken& frame, const sl::ViewportHandle& viewport );
+	sl::Result EvaluateFeature( Tr2RenderContextAL& renderContext, sl::Feature feature, const sl::FrameToken& frame, const sl::BaseStructure** inputs, uint32_t numInputs );
+
+
+	//Feature functions
+
+	sl::Result GetDLSSOptimalSettings( const sl::DLSSOptions& options, sl::DLSSOptimalSettings& settings );
+	sl::Result SetDLSSOptions( const sl::ViewportHandle& viewport, const sl::DLSSOptions& options );
+
+	sl::Result SetNISOptions( const sl::ViewportHandle& viewport, const sl::NISOptions& options );
+
+	
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+
+	sl::Result SetDLSSGOptions( const sl::ViewportHandle& viewport, const sl::DLSSGOptions& options );
+	sl::Result GetDLSSGState( const sl::ViewportHandle& viewport, sl::DLSSGState& state, const sl::DLSSGOptions* options );
+
+	sl::Result SetReflexOptions( const sl::ReflexOptions& options );
+
+	void SetPCLMarker( Tr2RenderContextEnum::FrameEvent& frameEvent, sl::FrameToken* m_frameToken );
+
+#endif
+
+
+	bool IsDLSSAvailable();
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	bool IsFrameGenerationAvailable();
+#endif
+
+
+
 }
+
 #endif

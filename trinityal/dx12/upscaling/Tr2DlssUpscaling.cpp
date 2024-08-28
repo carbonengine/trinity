@@ -34,106 +34,63 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter ),
 	m_adapter( adapter ),
 	m_frameToken( 0 ), 
-	m_slGetFeatureFunction( nullptr ),
-	m_slReflexSetOptions( nullptr ),
-	m_slSetFeatureLoaded( nullptr ),
-	m_slPCLSetMarker( nullptr ),
-	m_slGetNewFrameToken( nullptr ),
-	m_attachedToDevice( false ),
 	m_supportsFrameGeneration( false ),
 	m_contextIndex( 0 )
 {
 	m_isAvailable = false;
 	m_streamlineSetup = false;
 
-	m_streamlineModule = Tr2StreamlineAL::GetStreamlineModule();
-	if( !m_streamlineModule )
+	
+	//We need to create a dummy device to figure out if DLSS and frame generation actually is supported.
 	{
+		if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline() ) )
+		{
+			CCP_LOGERR( "Streamline initialization failed with error %d", res );
+			return;
+		}
+
+
+		CComPtr<ID3D12Device> device;
+		CComPtr<IDXGIAdapter1> dxgiAdapter;
+		CComPtr<IDXGIOutput> output;
+		TrinityALImpl::GetVideoAdapter( adapter, &dxgiAdapter, &output );
+		if( SUCCEEDED( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) ) ) )
+		{
+
+			if( Tr2StreamlineAL::SetDevice( device, adapter ) == sl::Result::eOk )
+			{
+				m_isAvailable = Tr2StreamlineAL::IsDLSSAvailable();
+				m_frameGeneration = Tr2StreamlineAL::IsFrameGenerationAvailable();
+			}
+		}
+
+		Tr2StreamlineAL::ReleaseStreamline();
+	}
+
+
+	//We're done gathering info, initialize Streamline again and await the actual device!
+	
+	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline() ) )
+	{
+		CCP_LOGERR( "Streamline initialization failed with error %d", res );
 		return;
-	}
-
-	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( m_streamlineModule ) ) )
-	{
-		return;
-	}
-
-	// setup the streamline function calls, now that we have the module
-	INITIALIZE_SL_FUNC( m_streamlineModule, slGetFeatureFunction );
-	INITIALIZE_SL_FUNC( m_streamlineModule, slSetFeatureLoaded );
-	INITIALIZE_SL_FUNC( m_streamlineModule, slGetNewFrameToken );
-	INITIALIZE_SL_FUNC( m_streamlineModule, slUpgradeInterface );
-
-	INITIALIZE_SL_FEATURE_FUNC( slReflexSetOptions, sl::kFeatureReflex );
-	INITIALIZE_SL_FEATURE_FUNC( slPCLSetMarker, sl::kFeaturePCL );
-
-	Tr2AdapterInfo videoAdapterInfo;
-	Tr2VideoAdapterInfo::GetAdapterInfo( adapter, videoAdapterInfo );
-
-	sl::AdapterInfo adapterInfo{};
-	adapterInfo.deviceLUID = videoAdapterInfo.luid;
-	adapterInfo.deviceLUIDSizeInBytes = sizeof( LUID );
-
-
-	std::vector<sl::Feature> dlssFeatures = {
-		sl::kFeatureDLSS,
-		sl::kFeatureNIS
-	};
-	m_isAvailable = true;
-
-	for( auto& feature : dlssFeatures )
-	{
-		m_isAvailable &= Tr2StreamlineAL::CheckForAvailability( m_streamlineModule, feature, adapterInfo ) == sl::Result::eOk;
-	}
-
-	std::vector<sl::Feature> dlssgFeatures = {
-		sl::kFeatureDLSS_G,
-		sl::kFeatureReflex
-	};
-	m_supportsFrameGeneration = true;
-
-	for( auto& feature : dlssgFeatures )
-	{
-		m_supportsFrameGeneration &= Tr2StreamlineAL::CheckForAvailability( m_streamlineModule, feature, adapterInfo ) == sl::Result::eOk;
 	}
 
 	m_streamlineSetup = true;
+
 	SanitizeState();
 }
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
-	TogglePlugin( sl::kFeatureDLSS, false );
-	TogglePlugin( sl::kFeatureDLSS_G, false );
-	TogglePlugin( sl::kFeatureNIS, false );
-
-	TogglePlugin( sl::kFeaturePCL, false );
-	if( g_upscalingDebug )
-	{
-		TogglePlugin( sl::kFeatureImGUI, false );
-	}
-
-	if( m_attachedToDevice )
-	{
-		auto reflexConst = sl::ReflexOptions{};
-		reflexConst.mode = sl::ReflexMode::eOff;
-		if( SL_FAILED( result, m_slReflexSetOptions( reflexConst ) ) )
-		{
-			CCP_LOGERR( "Reflex failed to set options (%d)", result );
-		}
-
-		TogglePlugin( sl::kFeatureReflex, false );
-
-		m_attachedToDevice = false;
-	}
-
 	m_renderContext.FlushAndSyncDx12();
 
-	Tr2StreamlineAL::ReleaseStreamline( m_streamlineModule );
+	Tr2StreamlineAL::ReleaseStreamline(); //this should be enough, no need to shut down plugins manually.
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable( ) const 
 {
-	return m_isAvailable && m_streamlineSetup;
+	return m_streamlineSetup && m_isAvailable;
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2DlssUpscalingTechnique::GetAvailableSettings() const
@@ -156,19 +113,6 @@ bool Tr2DlssUpscalingTechnique::SupportsFrameGeneration( ) const
 	return m_supportsFrameGeneration;
 }
 
-void Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
-{
-	if( !m_attachedToDevice )
-	{
-		return;
-	}
-	if( SL_FAILED( res, m_slSetFeatureLoaded( feature, enable ) ) )
-	{
-		CCP_LOGERR( "Trying to %s Nvidia Streamline plugin '%s' but it failed (%d)", enable ? "enable" : "disable", 
-			Tr2StreamlineAL::GetPluginName(feature), res );
-	}
-}
-
 bool Tr2DlssUpscalingTechnique::ReplacesDevice() const
 {
 	return true;
@@ -186,41 +130,35 @@ bool Tr2DlssUpscalingTechnique::ReplacesFactory() const
 
 CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12Device>& nativeDevice )
 {
-	DECLARE_SL_FUNC( m_streamlineModule, slSetD3DDevice );
-
-	if( SL_FAILED( res, m_slSetD3DDevice( nativeDevice ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetDevice( nativeDevice, m_adapter ) ) )
 	{
 		CCP_LOGWARN( "Could not attach NVidia Streamline to device (%d)", res );
 		return nativeDevice;
 	}
 	CComPtr<ID3D12Device> proxy = nativeDevice;
-	if( SL_FAILED( res, m_slUpgradeInterface( (void**)&proxy.p ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::UpgradeInterface( (void**)&proxy.p ) ) )
 	{
 		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
 		return nativeDevice;
 	}
-	
-	m_attachedToDevice = true;
-	TogglePlugin( sl::kFeatureDLSS, m_isAvailable );
-	TogglePlugin( sl::kFeatureDLSS_G, m_supportsFrameGeneration && m_frameGeneration );
-	TogglePlugin( sl::kFeatureNIS, m_isAvailable );
-	TogglePlugin( sl::kFeatureReflex, m_supportsFrameGeneration && m_frameGeneration );
-	TogglePlugin( sl::kFeaturePCL, m_frameGeneration );
 
-	if( g_upscalingDebug )
+	CCP_ASSERT_M( m_isAvailable == Tr2StreamlineAL::IsDLSSAvailable(), "DLSS is unexpectedly unavailable!" );
+	CCP_ASSERT_M( m_supportsFrameGeneration == Tr2StreamlineAL::IsFrameGenerationAvailable(), "Frame generation is unexpectedly unavailable!" );
+	;
+
+
+	if( m_frameGeneration )
 	{
-		TogglePlugin( sl::kFeatureImGUI, m_isAvailable );
-	}
+		auto reflexConst = sl::ReflexOptions{};
+		reflexConst.mode = m_frameGeneration ? sl::ReflexMode::eLowLatency : sl::ReflexMode::eOff;
+		reflexConst.useMarkersToOptimize = true;
+		reflexConst.virtualKey = VK_F13;
+		reflexConst.frameLimitUs = 0;
 
-	auto reflexConst = sl::ReflexOptions{};
-	reflexConst.mode = m_frameGeneration ? sl::ReflexMode::eLowLatency : sl::ReflexMode::eOff;
-	reflexConst.useMarkersToOptimize = true;
-	reflexConst.virtualKey = VK_F13;
-	reflexConst.frameLimitUs = 0;
-
-	if( SL_FAILED( result, m_slReflexSetOptions( reflexConst ) ) )
-	{
-		CCP_LOGERR( "Reflex failed to set options (%d)", result );
+		if( SL_FAILED( result, Tr2StreamlineAL::SetReflexOptions( reflexConst ) ) )
+		{
+			CCP_LOGERR( "Reflex failed to set options (%d)", result );
+		}
 	}
 
 	return proxy;
@@ -230,7 +168,7 @@ CComPtr<ID3D12CommandQueue> Tr2DlssUpscalingTechnique::ReplaceCommandQueue( CCom
 {
 	CComPtr<ID3D12CommandQueue> proxy = native;
 
-	if( SL_FAILED( res, m_slUpgradeInterface( (void**)&proxy.p ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::UpgradeInterface( (void**)&proxy.p ) ) )
 	{
 		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
 		return native;
@@ -242,7 +180,7 @@ CComPtr<IDXGIFactory4> Tr2DlssUpscalingTechnique::ReplaceFactory( CComPtr<IDXGIF
 {
 	CComPtr<IDXGIFactory4> proxy = native;
 
-	if( SL_FAILED( res, m_slUpgradeInterface( (void**)&proxy.p ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::UpgradeInterface( (void**)&proxy.p ) ) )
 	{
 		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
 		return native;
@@ -254,26 +192,11 @@ CComPtr<IDXGIFactory4> Tr2DlssUpscalingTechnique::ReplaceFactory( CComPtr<IDXGIF
 void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
 	Tr2UpscalingTechniqueDx12::MarkFrameEvent( frameEvent );
-	
-	sl::PCLMarker slEvent = (sl::PCLMarker)0;
 
-	switch( frameEvent )
+
+	if( frameEvent == Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED )
 	{
-	case Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED:
-		slEvent = sl::PCLMarker::ePresentStart;
-		break;
-	case Tr2RenderContextEnum::FRAME_EVENT_PRESENT_FINISHED:
-		slEvent = sl::PCLMarker::ePresentEnd;
-		break;
-	case Tr2RenderContextEnum::FRAME_EVENT_UPDATE_STARTED:
-		slEvent = sl::PCLMarker::eSimulationStart;
-		break;
-	case Tr2RenderContextEnum::FRAME_EVENT_UPDATE_FINISHED:
-		slEvent = sl::PCLMarker::eSimulationEnd;
-		break;
-	case Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED:
-		slEvent = sl::PCLMarker::eRenderSubmitStart;
-		if( SL_FAILED( res, m_slGetNewFrameToken( m_frameToken, nullptr ) ) )
+		if( SL_FAILED( res, Tr2StreamlineAL::GetNewFrameToken( m_frameToken ) ) )
 		{
 			CCP_LOGERR( "Could not get new frame token for Nvidia Streamline (%d)", res );
 		}
@@ -282,23 +205,17 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 			auto dlssContext = (Tr2DlssUpscalingContext*)( context.second.get() );
 			dlssContext->SetFrameToken( m_frameToken );
 		}
-		break;
-	case Tr2RenderContextEnum::FRAME_EVENT_RENDERING_FINISHED:
-		slEvent = sl::PCLMarker::eRenderSubmitEnd;
-		break;
 	}
-	if( m_frameToken )
+
+	if (m_frameGeneration)
 	{
-		if( SL_FAILED( result, m_slPCLSetMarker( slEvent, *m_frameToken ) ) )
-		{
-			CCP_LOGERR( "Reflex failed to set marker %d (%d)", slEvent, result );
-		}
+		Tr2StreamlineAL::SetPCLMarker( frameEvent, m_frameToken );
 	}
 }
 
 Tr2UpscalingContextAL* Tr2DlssUpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
 {
-	return new Tr2DlssUpscalingContext( m_setting, m_frameGeneration, params, ++m_contextIndex, m_streamlineModule, m_frameToken );
+	return new Tr2DlssUpscalingContext( m_setting, m_frameGeneration, params, ++m_contextIndex, m_frameToken );
 }
 
 Tr2DlssUpscalingContext::Tr2DlssUpscalingContext( 
@@ -306,43 +223,16 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	bool frameGeneration,
 	Tr2UpscalingAL::UpscalingContextParams params,
 	uint32_t contextNumber, 
-	HMODULE streamlineModule, 
 	sl::FrameToken* frameToken ) :
 	Tr2UpscalingContextAL( setting, frameGeneration, params ),
 	m_dlssMode( sl::DLSSMode::eOff ),
 	m_viewHandle( sl::ViewportHandle( contextNumber ) ),
-	m_streamlineModule( streamlineModule ),
 	m_frameToken( frameToken ),
 	m_setup( false ),
 	m_vramUsage( 0 ),
 	m_minWidthHeight( 0 ),
-	m_actualFrames( 0 ),
-	m_slDLSSGetOptimalSettings( nullptr ),
-	m_slDLSSSetOptions( nullptr ),
-	m_slDLSSGSetOptions( nullptr ),
-	m_slSetConstants( nullptr ),
-	m_slEvaluateFeature( nullptr ),
-	m_slFreeResources( nullptr ),
-	m_slDLSSGGetState( nullptr ),
-	m_slNISSetOptions( nullptr ),
-	m_slSetTag( nullptr )
+	m_actualFrames( 0 )
 {
-	DECLARE_SL_FUNC( m_streamlineModule, slGetFeatureFunction );
-	INITIALIZE_SL_FEATURE_FUNC( slNISSetOptions, sl::kFeatureNIS );
-
-	INITIALIZE_SL_FEATURE_FUNC( slDLSSGetOptimalSettings, sl::kFeatureDLSS );
-	INITIALIZE_SL_FEATURE_FUNC( slDLSSSetOptions, sl::kFeatureDLSS );
-	if( frameGeneration )
-	{
-		INITIALIZE_SL_FEATURE_FUNC( slDLSSGGetState, sl::kFeatureDLSS_G );
-		INITIALIZE_SL_FEATURE_FUNC( slDLSSGSetOptions, sl::kFeatureDLSS_G );
-	}
-
-	INITIALIZE_SL_FUNC( streamlineModule, slSetTag );
-	INITIALIZE_SL_FUNC( streamlineModule, slSetConstants );
-	INITIALIZE_SL_FUNC( streamlineModule, slEvaluateFeature );
-	INITIALIZE_SL_FUNC( streamlineModule, slFreeResources );
-	INITIALIZE_SL_FUNC( streamlineModule, slAllocateResources );
 
 	m_dlssMode = sl::DLSSMode::eOff;
 	switch( m_setting )
@@ -374,7 +264,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	m_dlssOptions.outputHeight = m_displayHeight;
 	m_dlssOptions.mode = m_dlssMode;
 
-	if( SL_FAILED( result, m_slDLSSGetOptimalSettings( m_dlssOptions, m_optimalSettings ) ) )
+	if( SL_FAILED( result, Tr2StreamlineAL::GetDLSSOptimalSettings( m_dlssOptions, m_optimalSettings ) ) )
 	{
 		CCP_LOGERR( "Getting Optimal Settings for DLSS failed (%d)", result );
 		return;
@@ -411,7 +301,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 		m_dlssgOptions.mvecDepthWidth = m_renderWidth;
 		m_dlssgOptions.mvecDepthHeight = m_renderHeight;
 
-		if( SL_FAILED( res, m_slDLSSGSetOptions( m_viewHandle, m_dlssgOptions ) ) )
+		if( SL_FAILED( res, Tr2StreamlineAL::SetDLSSGOptions( m_viewHandle, m_dlssgOptions ) ) )
 		{
 			CCP_LOGERR( "Setting DLSSG Options failed with (%d)", res );
 			return;
@@ -425,7 +315,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	m_dlssOptions.useAutoExposure = sl::eFalse;
 	m_dlssOptions.alphaUpscalingEnabled = sl::eFalse;
 
-	if( SL_FAILED( res, m_slDLSSSetOptions( m_viewHandle, m_dlssOptions ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetDLSSOptions( m_viewHandle, m_dlssOptions ) ) )
 	{
 		CCP_LOGERR( "Setting DLSS Options failed with (%d)", res );
 		return;
@@ -435,7 +325,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	m_nisOptions.mode = sl::NISMode::eScaler;
 	m_nisOptions.sharpness = 0.1f;
 
-	if( SL_FAILED( res, m_slNISSetOptions( m_viewHandle, m_nisOptions ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetNISOptions( m_viewHandle, m_nisOptions ) ) )
 	{
 		CCP_LOGERR( "Setting NIS Options failed with (%d)", res );
 		return;
@@ -452,37 +342,37 @@ Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
 	m_params.renderContext.FlushAndSyncDx12();
 
-	m_slFreeResources( sl::kFeatureDLSS, m_viewHandle );
-	m_slFreeResources( sl::kFeatureNIS, m_viewHandle );
+	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
+	Tr2StreamlineAL::FreeResources( sl::kFeatureNIS, m_viewHandle );
 
 	if( m_frameGeneration )
 	{
-		m_slFreeResources( sl::kFeatureDLSS_G, m_viewHandle );
+		Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS_G, m_viewHandle );
 	}
 }
 
 sl::Result Tr2DlssUpscalingContext::UpdateDlssG()
 {
-	if( SL_FAILED( res, m_slDLSSGGetState( m_viewHandle, m_dlssgState, &m_dlssgOptions ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::GetDLSSGState( m_viewHandle, m_dlssgState, &m_dlssgOptions ) ) )
 	{
 		CCP_LOGERR( "Getting DLSSG State failed with (%d) - disabling framegeneration", res );
 		m_frameGeneration = false;
 		switch( m_dlssgState.status )
 		{
 		case sl::DLSSGStatus::eFailResolutionTooLow:
-			CCP_LOGERR( "DLSS - Framegeneration disabled because the resolution is too small (%d, %d). Minimum resolution is %d", m_dlssOptions.outputWidth, m_dlssOptions.outputHeight, m_dlssgState.minWidthOrHeight );
+			CCP_LOGERR( "DLSS - Frame generation disabled because the resolution is too small (%d, %d). Minimum resolution is %d", m_dlssOptions.outputWidth, m_dlssOptions.outputHeight, m_dlssgState.minWidthOrHeight );
 			break;
 		case sl::DLSSGStatus::eFailReflexNotDetectedAtRuntime:
-			CCP_LOGERR( "DLSS - Framegeneration disabled because Nvidia Reflex was not detected" );
+			CCP_LOGERR( "DLSS - Frame generation disabled because Nvidia Reflex was not detected" );
 			break;
 		case sl::DLSSGStatus::eFailHDRFormatNotSupported:
-			CCP_LOGERR( "DLSS - Framegeneration disabled because HDR format is not supported" );
+			CCP_LOGERR( "DLSS - Frame generation disabled because HDR format is not supported" );
 			break;
 		case sl::DLSSGStatus::eFailCommonConstantsInvalid:
-			CCP_LOGERR( "DLSS - Framegeneration disabled because some common constants are invalid" );
+			CCP_LOGERR( "DLSS - Frame generation disabled because some common constants are invalid" );
 			break;
 		case sl::DLSSGStatus::eFailGetCurrentBackBufferIndexNotCalled:
-			CCP_LOGERR( "DLSS - Framegeneration disabled because D3D Integration is not using SwapChain::GetCurrentBackBufferIndex API" );
+			CCP_LOGERR( "DLSS - Frame generation disabled because D3D Integration is not using SwapChain::GetCurrentBackBufferIndex API" );
 			break;
 		default:
 			break;
@@ -533,7 +423,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::Dispatch
 	
 	sl::ResourceTag resources[] = { colorInTag, opaqueColorInTag, colorOutTag, depthTag, mvecTag, exposureTag };
 
-	if( SL_FAILED( res, m_slSetTag( m_viewHandle, resources, 6, renderContext.m_commandList ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTags( renderContext, m_viewHandle, resources, 6 ) ) )
 	{
 		CCP_LOGERR( "DLSS Failed to tag resources (%d)", res );
 		return res;
@@ -552,7 +442,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2UpscalingAL::DispatchP
 
 	sl::ResourceTag resources[] = { colorInTag, colorOutTag };
 
-	if( SL_FAILED( res, m_slSetTag( m_viewHandle, resources, 2, renderContext.m_commandList ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTags( renderContext, m_viewHandle, resources, 2 ) ) )
 	{
 		CCP_LOGERR( "NIS Failed to tag resources (%d)", res );
 		return res;
@@ -588,7 +478,7 @@ void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParame
 	m_commonConstants.reset = m_reset ? sl::eTrue : sl::eFalse;
 
 
-	if( SL_FAILED( result, m_slSetConstants( m_commonConstants, *m_frameToken, m_viewHandle ) ) )
+	if( SL_FAILED( result, Tr2StreamlineAL::SetConstants( m_commonConstants, *m_frameToken, m_viewHandle ) ) )
 	{
 		CCP_LOGERR( "Setting Nvidia Streamline common constants failed (%d)", result );
 	}
@@ -614,19 +504,18 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 
 	const sl::BaseStructure* handle[] = { &m_viewHandle };
 
-	auto commandBuffer = ( sl::CommandBuffer* ) renderContext.m_commandList;
 	if( m_frameGeneration )
 	{
-		m_slAllocateResources( commandBuffer, sl::kFeatureDLSS_G, m_viewHandle );
+		Tr2StreamlineAL::AllocateResources( renderContext, sl::kFeatureDLSS_G, m_viewHandle );
 		UpdateDlssG();
 	}
-	m_slAllocateResources( commandBuffer, sl::kFeatureDLSS, m_viewHandle );
+	Tr2StreamlineAL::AllocateResources( renderContext, sl::kFeatureDLSS, m_viewHandle );
 
 	if( SL_FAILED( res, ReadyDLSSResources( dispatchParameters ) ) )
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
-	if( SL_FAILED( result, m_slEvaluateFeature( sl::kFeatureDLSS, *m_frameToken, handle, _countof( handle ), commandBuffer ) ) )
+	if( SL_FAILED( result, Tr2StreamlineAL::EvaluateFeature( renderContext, sl::kFeatureDLSS, *m_frameToken, handle, _countof( handle ) ) ) )
 	{
 		CCP_LOGERR( "Failed to Dispatch DLSS (%d)", result );
 	}
@@ -636,7 +525,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	{
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
-	if( SL_FAILED( result, m_slEvaluateFeature( sl::kFeatureNIS, *m_frameToken, handle, _countof( handle ), commandBuffer ) ) )
+	if( SL_FAILED( result, Tr2StreamlineAL::EvaluateFeature( renderContext, sl::kFeatureNIS, *m_frameToken, handle, _countof( handle ) ) ) )
 	{
 		CCP_LOGERR( "Failed to Dispatch NIS (%d)", result );
 	}
@@ -659,7 +548,7 @@ void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 		auto resource = DlssUtils::GenerateTextureResource( texture );
 		sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
 
-		if( SL_FAILED( res, m_slSetTag( m_viewHandle, &tag, 1, m_params.renderContext.m_commandList ) ) )
+		if( SL_FAILED( res, Tr2StreamlineAL::SetTags( m_params.renderContext, m_viewHandle, &tag, 1 ) ) )
 		{
 			CCP_LOGERR( "Failed to tag HudLess texture (%d)", res );
 		}
