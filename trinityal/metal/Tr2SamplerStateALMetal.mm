@@ -241,6 +241,11 @@ namespace TrinityALImpl
 		m_metalContext = nil;
 	}
 
+	uint32_t Tr2SamplerStateAL::GetIndexInHeap() const
+	{
+		return 0xffffffff;
+	}
+
 	bool Tr2SamplerStateAL::IsValid() const
 	{
 		return ( m_mtlSamplerState != nil );
