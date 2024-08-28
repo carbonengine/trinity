@@ -90,7 +90,7 @@ namespace TrinityALImpl
 
 				switch( resource.type )
 				{
-				case Tr2ResourceSetDescriptionAL::BUFFER:
+				case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 					if( resource.buffer.IsValid() )
 					{
 						CCP_ASSERT( i < METAL_SRV_BUFFER_COUNT );
@@ -103,7 +103,7 @@ namespace TrinityALImpl
 						// bufferMask &= ~(1 << bufferIndex);
 					}
 					break;
-                case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
+                case Tr2ResourceSetDescriptionAL::Resource::HEAP_VIEW:
                     {
                         CCP_ASSERT( i < METAL_SRV_BUFFER_COUNT );
 
@@ -112,7 +112,7 @@ namespace TrinityALImpl
 
                     }
                     break;
-				case Tr2ResourceSetDescriptionAL::TEXTURE:
+				case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 					if( resource.texture.IsValid() )
 					{
 						CCP_ASSERT( i < METAL_SRV_TEXTURE_COUNT );
@@ -134,7 +134,7 @@ namespace TrinityALImpl
 						textureMask &= ~(1 << texIndex);
 					}
 					break;
-				case Tr2ResourceSetDescriptionAL::NONE:
+				case Tr2ResourceSetDescriptionAL::Resource::NONE:
 					continue;
 				default:
 					CCP_AL_LOGWARN( "Unknown SRV resource type in resource set for register %d, stage %d", i, stage );
@@ -152,7 +152,7 @@ namespace TrinityALImpl
 
 				switch (resource.type)
 				{
-				case Tr2ResourceSetDescriptionAL::BUFFER:
+				case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 					if( resource.buffer.IsValid() )
 					{
 						CCP_ASSERT( i < METAL_UAV_BUFFER_COUNT );
@@ -165,7 +165,7 @@ namespace TrinityALImpl
 						// bufferMask &= ~(1 << bufferIndex);
 					}
 					break;
-                case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
+                case Tr2ResourceSetDescriptionAL::Resource::HEAP_VIEW:
                     {
                         CCP_ASSERT( i < METAL_UAV_BUFFER_COUNT );
 
@@ -173,7 +173,7 @@ namespace TrinityALImpl
                         heapViewMask |= (1 << heapViewMask);
                     }
                     break;
-				case Tr2ResourceSetDescriptionAL::TEXTURE:
+				case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 					if( resource.texture.IsValid() )
 					{
 						CCP_ASSERT( i < METAL_UAV_TEXTURE_COUNT );
@@ -186,7 +186,7 @@ namespace TrinityALImpl
 						textureMask &= ~(1 << texIndex);
 					}
 					break;
-				case Tr2ResourceSetDescriptionAL::NONE:
+				case Tr2ResourceSetDescriptionAL::Resource::NONE:
 					continue;
 				default:
 					CCP_AL_LOGWARN( "Unknown UAV resource type in resource set for register %d, stage %d", i, stage );
@@ -205,7 +205,7 @@ namespace TrinityALImpl
 				}
 				const Tr2ResourceSetDescriptionAL::Sampler& sampler = description.m_samplers[description.m_registerMap.samplers[stage][i]];
 
-				if( sampler.assigned )
+				if( sampler.type == Tr2ResourceSetDescriptionAL::Sampler::SAMPLER )
 				{
 					m_samplers[stage][i] = sampler.sampler.m_sampler->GetMetalSamplerState();
 					samplersMin = std::min<NSUInteger>( samplersMin, i );

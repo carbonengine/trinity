@@ -278,7 +278,7 @@ bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage
 	{
 		return false;
 	}
-	resource.type = BUFFER;
+	resource.type = Resource::BUFFER;
 	resource.buffer = buffer;
 	return true;
 }
@@ -299,7 +299,7 @@ bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage
 	{
 		return false;
 	}
-	resource.type = TEXTURE;
+	resource.type = Resource::TEXTURE;
 	resource.texture = texture;
 	resource.colorSpace = colorSpace;
 	return true;
@@ -321,7 +321,7 @@ bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage
 	{
 		return false;
 	}
-	resource.type = BUFFER;
+	resource.type = Resource::BUFFER;
 	resource.buffer = buffer;
 	return true;
 }
@@ -342,7 +342,7 @@ bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage
 	{
 		return false;
 	}
-	resource.type = TEXTURE;
+	resource.type = Resource::TEXTURE;
 	resource.texture = texture;
 	resource.mip = mip;
 	return true;
@@ -360,11 +360,11 @@ bool Tr2ResourceSetDescriptionAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderTy
 		return false;
 	}
 	auto& resource = m_srv[index];
-	if( resource.type == HEAP_VIEW )
+	if( resource.type == Resource::HEAP_VIEW )
 	{
 		return false;
 	}
-	resource.type = HEAP_VIEW;
+	resource.type = Resource::HEAP_VIEW;
 	return true;
 }
 
@@ -380,11 +380,31 @@ bool Tr2ResourceSetDescriptionAL::SetUavHeapView( Tr2RenderContextEnum::ShaderTy
 		return false;
 	}
 	auto& resource = m_uav[index];
-	if( resource.type == HEAP_VIEW )
+	if( resource.type == Resource::HEAP_VIEW )
 	{
 		return false;
 	}
-	resource.type = HEAP_VIEW;
+	resource.type = Resource::HEAP_VIEW;
+	return true;
+}
+
+bool Tr2ResourceSetDescriptionAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
+{
+	if( m_registerMap.samplerCount == 0 )
+	{
+		return false;
+	}
+	auto index = m_registerMap.samplers[stage][registerIndex];
+	if( index >= m_registerMap.samplerCount )
+	{
+		return false;
+	}
+	auto& resource = m_samplers[index];
+	if( resource.type == Sampler::HEAP_VIEW )
+	{
+		return false;
+	}
+	resource.type = Sampler::HEAP_VIEW;
 	return true;
 }
 
@@ -400,12 +420,12 @@ bool Tr2ResourceSetDescriptionAL::SetSampler( Tr2RenderContextEnum::ShaderType s
 		return false;
 	}
 	auto& resource = m_samplers[index];
-	if( resource == sampler )
+	if( resource.type == Sampler::SAMPLER && resource.sampler == sampler )
 	{
 		return false;
 	}
 	resource.sampler = sampler;
-	resource.assigned = true;
+	resource.type = Sampler::SAMPLER;
 	return true;
 }
 
@@ -419,14 +439,14 @@ void Tr2ResourceSetDescriptionAL::ClearResources()
 	for( uint32_t i = 0; i < m_registerMap.srvCount; ++i )
 	{
 		auto& srv = m_srv[i];
-		srv.type = NONE;
+		srv.type = Resource::NONE;
 		srv.texture = Tr2TextureAL();
 		srv.buffer = Tr2BufferAL();
 	}
 	for( uint32_t i = 0; i < m_registerMap.uavCount; ++i )
 	{
 		auto& uav = m_uav[i];
-		uav.type = NONE;
+		uav.type = Resource::NONE;
 		uav.texture = Tr2TextureAL();
 		uav.buffer = Tr2BufferAL();
 	}
@@ -494,25 +514,29 @@ void Tr2ResourceSetDescriptionAL::Resource::UpdateHash( uint32_t& hash ) const
 }
 
 Tr2ResourceSetDescriptionAL::Sampler::Sampler()
-	:assigned( false )
+	:type( NONE )
 {
 }
 
 bool Tr2ResourceSetDescriptionAL::Sampler::operator==( const Sampler& other ) const
 {
-	return sampler == other.sampler && assigned == other.assigned;
+	return sampler == other.sampler && type == other.type;
 }
 
 bool Tr2ResourceSetDescriptionAL::Sampler::operator==( const Tr2SamplerStateAL& other ) const
 {
-	return sampler == other && assigned;
+	return sampler == other && type == SAMPLER;
 }
 
 void Tr2ResourceSetDescriptionAL::Sampler::UpdateHash( uint32_t& hash ) const
 {
-	if( assigned )
+	if( type == SAMPLER )
 	{
 		HashResourcePtr( sampler, hash );
+	}
+	else if( type == HEAP_VIEW )
+	{
+		hash = CcpHashFNV1( &type, sizeof( type ), hash );
 	}
 }
 

@@ -142,10 +142,10 @@ namespace TrinityALImpl
 						D3D12_GPU_DESCRIPTOR_HANDLE src;
 						switch( input.type )
 						{
-						case Tr2ResourceSetDescriptionAL::TEXTURE:
+						case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 							src = input.texture.TrinityALImpl_GetObject()->m_view[input.colorSpace]->GetHandleGPU();
 							break;
-						case Tr2ResourceSetDescriptionAL::BUFFER:
+						case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 							src = input.buffer.TrinityALImpl_GetObject()->m_srv->GetHandleGPU();
 							break;
 						default:
@@ -160,10 +160,10 @@ namespace TrinityALImpl
 						D3D12_GPU_DESCRIPTOR_HANDLE src;
 						switch( input.type )
 						{
-						case Tr2ResourceSetDescriptionAL::TEXTURE:
+						case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 							src = input.texture.TrinityALImpl_GetObject()->m_uav[input.mip]->GetHandleGPU();
 							break;
-						case Tr2ResourceSetDescriptionAL::BUFFER:
+						case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 							src = input.buffer.TrinityALImpl_GetObject()->m_uav->GetHandleGPU();
 							break;
 						default:
@@ -177,11 +177,19 @@ namespace TrinityALImpl
 					for( auto& sampler : signature->m_samplerRegisters )
 					{
 						auto& input = material.m_resourceSet.m_samplers[sampler.index];
-						if( !input.assigned )
+						D3D12_GPU_DESCRIPTOR_HANDLE handle;
+						switch( input.type )
 						{
+						case Tr2ResourceSetDescriptionAL::Sampler::SAMPLER:
+							handle = input.sampler.TrinityALImpl_GetObject()->m_samplerState->GetHandleGPU();
+							break;
+						case Tr2ResourceSetDescriptionAL::Sampler::HEAP_VIEW:
+							auto handle = renderContext.GetSamplerHeapView()->GetHandleGPU();
+							break;
+						default:
 							return E_INVALIDARG;
 						}
-						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sampler.parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &input.sampler.TrinityALImpl_GetObject()->m_samplerState->GetHandleGPU(), sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
+						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sampler.parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &handle, sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
 					}
 				}
 			}

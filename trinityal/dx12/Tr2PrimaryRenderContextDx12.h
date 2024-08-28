@@ -124,6 +124,7 @@ public:
 	std::shared_ptr<ShaderResourceViewDx12> GetSrvHeapView() const;
 	std::shared_ptr<UnorderedAccessViewDx12> GetUavHeapView() const;
 	ID3D12DescriptorHeap* GetGlobalSamplerHeap() const;
+	std::shared_ptr<SamplerStateDx12> GetSamplerHeapView() const;
 
 	/** Create a ShaderResourceView */
 	HRESULT CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<ShaderResourceViewDx12>& srvView);
@@ -150,6 +151,7 @@ public:
 	bool FormatIsUAVCompatibleDx12( DXGI_FORMAT format ) const;
 	std::shared_ptr<ShaderResourceViewDx12> GetNullSrvDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
 	std::shared_ptr<UnorderedAccessViewDx12> GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
+	std::shared_ptr<SamplerStateDx12> GetNullSamplerDx12() const;
 	
 	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
 	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID ) const;
