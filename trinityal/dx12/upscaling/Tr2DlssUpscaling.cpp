@@ -60,7 +60,7 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 			if( Tr2StreamlineAL::SetDevice( device, adapter ) == sl::Result::eOk )
 			{
 				m_isAvailable = Tr2StreamlineAL::IsDLSSAvailable();
-				m_frameGeneration = Tr2StreamlineAL::IsFrameGenerationAvailable();
+				m_supportsFrameGeneration = Tr2StreamlineAL::IsFrameGenerationAvailable();
 			}
 		}
 
@@ -144,7 +144,6 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 
 	CCP_ASSERT_M( m_isAvailable == Tr2StreamlineAL::IsDLSSAvailable(), "DLSS is unexpectedly unavailable!" );
 	CCP_ASSERT_M( m_supportsFrameGeneration == Tr2StreamlineAL::IsFrameGenerationAvailable(), "Frame generation is unexpectedly unavailable!" );
-	;
 
 
 	if( m_frameGeneration )

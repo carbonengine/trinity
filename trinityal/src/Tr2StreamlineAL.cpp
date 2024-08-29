@@ -334,16 +334,6 @@ namespace Tr2StreamlineAL
 		return true;
 	}
 
-	sl::AdapterInfo GetAdapterInfo( uint32_t adapter )
-	{
-		Tr2AdapterInfo videoAdapterInfo;
-		Tr2VideoAdapterInfo::GetAdapterInfo( adapter, videoAdapterInfo );
-
-		sl::AdapterInfo adapterInfo{};
-		adapterInfo.deviceLUID = videoAdapterInfo.luid;
-		adapterInfo.deviceLUIDSizeInBytes = sizeof( LUID );
-		return adapterInfo;
-	}
 
 	sl::Result SetDevice( void* d3dDevice, uint32_t adapter )
 	{
@@ -362,8 +352,12 @@ namespace Tr2StreamlineAL
 		}
 
 		STREAMLINE_DEVICE_SET = true;
-		
-		sl::AdapterInfo info = GetAdapterInfo( adapter );
+
+		Tr2AdapterInfo videoAdapterInfo;
+		Tr2VideoAdapterInfo::GetAdapterInfo( adapter, videoAdapterInfo );
+		sl::AdapterInfo info;
+		info.deviceLUID = videoAdapterInfo.luid;
+		info.deviceLUIDSizeInBytes = sizeof( LUID );
 
 		bool dlssSupported = true;
 		dlssSupported &= CheckFeature( info, sl::kFeatureDLSS );
