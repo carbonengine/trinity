@@ -87,6 +87,8 @@ struct Tr2EffectResource
 		UAV_RWSTRUCTURED_WITH_COUNTER,
 	};
 
+	static const int BINDLESS_SAMPLER = 100;
+
 	// Texture name (string is managed by the owner of string table: Tr2EffectRes or
 	// Tr2HighLevelShader)
 	const char* name;

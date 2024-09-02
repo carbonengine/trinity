@@ -605,6 +605,23 @@ bool Tr2EffectDescription::Read( const void* data,
 
 					shaderTypes.push_back( type );
 					signatures.push_back( pass.stageInputs[type].signature );
+
+					for( auto& c : pass.stageInputs[type].constants )
+					{
+						if( c.type != Tr2EffectConstant::UINT || c.dimension != 1 )
+						{
+							continue;
+						}
+						auto found = find_if( pass.stageInputs[type].samplers.begin(), pass.stageInputs[type].samplers.end(), [&]( const auto& s ) { return strcmp( s.second.name, c.name.c_str() ) == 0; } );
+						if( found != pass.stageInputs[type].samplers.end() )
+						{
+							if ( c.offset + c.size < pass.stageInputs[type].m_constantValueSize )
+							{
+								std::fill( pass.stageInputs[type].constantValues + pass.stageInputs[type].m_constantValueSize, pass.stageInputs[type].constantValues + c.offset + c.size, 0 );
+							}
+							reinterpret_cast<uint32_t*>( pass.stageInputs[type].constantValues + c.offset )[0] = found->second.sampler.GetIndexInHeap();
+						}
+					}
 				}
 				
 				pass.resourceSetDesc = Tr2ResourceSetDescriptionAL( Tr2RegisterMapAL( shaderTypes.data(), signatures.data(), signatures.size() ) );
@@ -749,6 +766,14 @@ bool Tr2EffectDescription::Read( const void* data,
 						if( IsHeapView( res.second.name ) )
 						{
 							pass.resourceSetDesc.SetUavHeapView( Tr2RenderContextEnum::ShaderType( type ), res.first );
+						}
+					}
+					for( auto& sampler : stage.samplers )
+					{
+						auto isHeapView = IsHeapView( sampler.second.name );
+						if( IsHeapView( sampler.second.name ) )
+						{
+							pass.resourceSetDesc.SetSamplerHeapView( Tr2RenderContextEnum::ShaderType( type ), sampler.first );
 						}
 					}
 				}
