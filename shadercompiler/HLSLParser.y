@@ -1664,6 +1664,15 @@ init_declarator_list(A) ::= init_declarator_list(B) OP_COMA name_declaration(C).
 	C->SetType( type );
 	B->AddChild( C );
 	A = B;
+
+	if( type == TypeFromTokenType( OP_BINDLESSHANDLESAMPLER ) )
+	{
+		if( auto stateBlock = C->GetChildOrNull( 1 ) )
+		{
+			parserState->AddBindlessSampler( C->GetSymbol(), stateBlock );
+			C->ReplaceChild( 1, nullptr );
+		}
+	}
 }
 
 
@@ -1690,6 +1699,15 @@ single_declaration(A) ::= fully_specified_type(B) name_declaration(C).
 		symbol->definition = C;
 	}
 	A->SetType( B );
+
+	if( type == TypeFromTokenType( OP_BINDLESSHANDLESAMPLER ) )
+	{
+		if( auto stateBlock = C->GetChildOrNull( 1 ) )
+		{
+			parserState->AddBindlessSampler( C->GetSymbol(), stateBlock );
+			C->ReplaceChild( 1, nullptr );
+		}
+	}
 }
 
 %type fully_specified_type {Type}
@@ -2058,6 +2076,11 @@ type_specifier(A) ::= OP_TRIANGLESTREAM(B) OP_LESS type_specifier(C) OP_MORE.
 }
 
 type_specifier(A) ::= OP_BINDLESSHANDLETEXTURE2D(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_BINDLESSHANDLESAMPLER(B).
 {
 	A.FromToken( B );
 }

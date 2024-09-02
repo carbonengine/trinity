@@ -962,6 +962,7 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		"BindlessHandleTexture2D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURE2D ); }
 		"BindlessHandleTexture3D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURE3D ); }
 		"BindlessHandleTextureCube" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURECUBE ); }
+		"BindlessHandleSampler" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLESAMPLER ); }
 		"RaytracingAccelerationStructure" { RETURN( OP_RAYTRACING_ACCELERATION_STRUCTURE ); }
 		"RayDesc" { RETURN( OP_RAY_DESC ); }
 

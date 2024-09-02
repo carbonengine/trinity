@@ -547,7 +547,7 @@ namespace
 							symbol->addressSpace = AddressSpace::Device;
 							break;
 						default:
-							if (type.arrayDimensions && type.IsTexture())
+							if (type.arrayDimensions && ( type.IsTexture() || type.IsSampler() ) )
 							{
 								symbol->addressSpace = AddressSpace::Device;
 							}
@@ -959,8 +959,13 @@ namespace
 					.literal( "borderColor" ).list().literal( it->second.borderColor.x ).literal( it->second.borderColor.y ).literal( it->second.borderColor.z ).literal( it->second.borderColor.w ).end()
 					.literal( "minLOD" ).literal( it->second.minLOD )
 					.literal( "maxLOD" ).literal( it->second.maxLOD )
-					.literal( "srgbTexture" ).literal( it->second.srgbTexture != 0 )
-					.end();
+					.literal( "srgbTexture" ).literal( it->second.srgbTexture != 0 );
+				auto annotations = result.annotations.find( it->second.name );
+				if( annotations != result.annotations.end() )
+				{
+					PrintAnnotations( listing, annotations->second.annotations );
+				}
+				listing.end();
 			}
 			listing.end();
 		}
@@ -1845,17 +1850,29 @@ namespace
 			case OP_SAMPLER3D:
 			case OP_SAMPLERCUBE:
 			case OP_SAMPLERCOMPARISON:
-			{
-				assert( existingReg.registerType == MetalRegister::Sampler );
-
-				int index = existingReg.registerNumber;
-
-				if( !RecordRegister( index, samplers, paramNode, "sampler" ) )
+				if( type.arrayDimensions > 0 )
 				{
-					return false;
+					assert( existingReg.registerType == MetalRegister::Texture );
+					assert( existingReg.registerNumber < METAL_SRV_TEXTURE_COUNT );
+
+					int index = existingReg.registerNumber;
+					if( !RecordRegister( index, srvs, paramNode, "SRV" ) )
+					{
+						return false;
+					}
+				}
+				else
+				{
+					assert( existingReg.registerType == MetalRegister::Sampler );
+
+					int index = existingReg.registerNumber;
+
+					if( !RecordRegister( index, samplers, paramNode, "sampler" ) )
+					{
+						return false;
+					}
 				}
 				break;
-			}
 
 			default:
 				break;
@@ -2051,6 +2068,26 @@ namespace
 			case OP_SAMPLER3D:
 			case OP_SAMPLERCUBE:
 			case OP_SAMPLERCOMPARISON:
+				if ( symbol->type.arrayDimensions > 0 )
+				{
+					reg.registerType = MetalRegister::SRV;
+
+					if( FindUnusedRegister( nextFreeSRV, METAL_SRV_BUFFER_COUNT, srvs, reg.registerNumber ) )
+					{
+						srvs[reg.registerNumber] = symbol;
+					}
+					else
+					{
+						state.ShowMessage(
+							callNode->GetLocation(),
+							EC_CUSTOM_ERROR,
+							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
+							ToString( symbol->name ).c_str(),
+							GetAssignedSymbolNames( srvs, 0, METAL_SRV_BUFFER_COUNT ).c_str() );
+						return false;
+					}
+				}
+				else
 				{
 					reg.registerType = MetalRegister::Sampler;
 
@@ -2704,7 +2741,7 @@ namespace
             call->SetType( functionHeader->GetType() );
             for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
             {
-                if( params[i]->type.IsTexture() && params[i]->type.arrayDimensions > 0 )
+				if( ( params[i]->type.IsTexture() || params[i]->type.IsSampler() ) && params[i]->type.arrayDimensions > 0 )
                 {
                     auto cast = state.NewNode( NT_CAST_EXPRESSION );
                     cast->SetType( params[i]->type );
@@ -3113,6 +3150,7 @@ namespace
 		case OP_BINDLESSHANDLETEXTURE2D:
 		case OP_BINDLESSHANDLETEXTURE3D:
 		case OP_BINDLESSHANDLETEXTURECUBE:
+		case OP_BINDLESSHANDLESAMPLER:
 			if( isPacked )
 			{
 				typeSize = packedIntSize[type.width - 1];
@@ -3266,6 +3304,7 @@ namespace
 				case OP_BINDLESSHANDLETEXTURE2D:
 				case OP_BINDLESSHANDLETEXTURE3D:
 				case OP_BINDLESSHANDLETEXTURECUBE:
+				case OP_BINDLESSHANDLESAMPLER:
 					constant.type = CONSTANT_TYPE_UINT;
 					break;
 				case OP_BOOL:
@@ -3334,12 +3373,26 @@ namespace
 					{
 						Annotation symbolAnnotation;
 						symbolAnnotation.type = ANNOTATION_TYPE_INT;
-						symbolAnnotation.intValue = BindlessTextureType( symbol->type.builtInType );
+						symbolAnnotation.intValue = symbol->type.builtInType == OP_BINDLESSHANDLESAMPLER ? 100 : BindlessTextureType( symbol->type.builtInType );
 						paramAnnotations.annotations[g_stringTable.AddString( "BindlessHandleType" )] = symbolAnnotation;
 					}
 					if( !paramAnnotations.annotations.empty() )
 					{
 						annotations[constant.name] = paramAnnotations;
+					}
+				}
+
+				if( type.builtInType == OP_BINDLESSHANDLESAMPLER )
+				{
+					auto found = std::find_if( begin( state.m_bindlessSamplers ), end( state.m_bindlessSamplers ), [symbol]( const auto& bs ) { return bs.name == symbol; } );
+					if( found != end( state.m_bindlessSamplers ) )
+					{
+						Sampler sampler;
+						if( GetSamplerState( state, found->definition, sampler ) )
+						{
+							sampler.name = constant.name;
+							stage.samplers[uint8_t( 100 + ( found - begin( state.m_bindlessSamplers ) ) )] = sampler;
+						}
 					}
 				}
 
@@ -3584,19 +3637,51 @@ namespace
 				{
 					if( reg.registerType == MetalRegister::SRV )
 					{
-						Texture texture;
-						texture.name = g_stringTable.AddString( symbol->name );
-						texture.type = TypeToTextureType( type );
-						if( texture.type == TEX_TYPE_INVALID )
+						if ( type.IsSampler() )
 						{
-							continue;
+							if( symbol->used )
+							{
+								Sampler sampler = {};
+
+								auto globalSamplerSymbol = state.GetSymbolTable().LookupGlobal( ToString( symbol->name ).c_str() );
+								if( !GetSamplerState( state, globalSamplerSymbol->definition, sampler ) )
+								{
+									return false;
+								}
+
+								if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressV == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressW == D3D11_TEXTURE_ADDRESS_BORDER )
+								{
+									auto& c = sampler.borderColor;
+									if( ( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 0 ) &&
+										( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 1 ) &&
+										( c.x != 1 || c.y != 1 || c.z != 1 || c.w != 1 ) )
+									{
+										state.ShowMessage( globalSamplerSymbol->definition->GetLocation(), EC_CUSTOM_ERROR, "sampler border color is not one of colors supported by Metal" );
+										return false;
+									}
+								}
+
+								sampler.name = g_stringTable.AddString( symbol->name );
+
+								stage.samplers[uint8_t( reg.registerNumber )] = sampler;
+							}
 						}
-						ParameterAnnotation paramAnnotations;
-						if( ExtractAnnotations( symbol->name, state, paramAnnotations, &texture.isSRGB, &texture.isAutoregister ) )
+						else
 						{
-							annotations[texture.name] = paramAnnotations;
+							Texture texture;
+							texture.name = g_stringTable.AddString( symbol->name );
+							texture.type = TypeToTextureType( type );
+							if( texture.type == TEX_TYPE_INVALID )
+							{
+								continue;
+							}
+							ParameterAnnotation paramAnnotations;
+							if( ExtractAnnotations( symbol->name, state, paramAnnotations, &texture.isSRGB, &texture.isAutoregister ) )
+							{
+								annotations[texture.name] = paramAnnotations;
+							}
+							stage.textures[uint8_t( reg.registerNumber )] = texture;
 						}
-						stage.textures[uint8_t( reg.registerNumber )] = texture;
 					}
 					else
 					{
