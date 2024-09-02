@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(ShaderCompiler VERSION 1.2.1)
+project(ShaderCompiler VERSION 1.2.2)
 
 
 if (APPLE)
