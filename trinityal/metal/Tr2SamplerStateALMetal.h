@@ -29,6 +29,7 @@ namespace TrinityALImpl
 	private:
 		MetalContext* m_metalContext;
 		id<MTLSamplerState> m_mtlSamplerState;
+        uint32_t m_heapIndex;
 		std::string m_name;
 	};
 }
