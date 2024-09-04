@@ -1133,6 +1133,7 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 	{
 		m_jitterMatrix = IdentityMatrix();
 		m_jitteredProjection = m_projection;
+		m_jitter.x = m_jitter.y = 0.0f;
 	}
 }
 

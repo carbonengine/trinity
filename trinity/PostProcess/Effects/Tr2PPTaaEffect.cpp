@@ -30,10 +30,17 @@ Tr2PPTaaEffect::~Tr2PPTaaEffect()
 
 void Tr2PPTaaEffect::GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y )
 {
-	m_samplingIndex = ++m_samplingIndex % 4;
-	m_jitterX = m_samplingPatterns[m_samplingIndex].x;
-	m_jitterY = m_samplingPatterns[m_samplingIndex].y;
+	if (m_display)
+	{
+		m_samplingIndex = ++m_samplingIndex % 4;
+		m_jitterX = m_samplingPatterns[m_samplingIndex].x;
+		m_jitterY = m_samplingPatterns[m_samplingIndex].y;
 
-	x = 2.0f * m_jitterX / (float)renderWidth;
-	y = 2.0f * m_jitterY / (float)renderHeight;
+		x = 2.0f * m_jitterX / (float)renderWidth;
+		y = 2.0f * m_jitterY / (float)renderHeight;
+	}
+	else
+	{
+		x = y = 0.0f;
+	}
 }
