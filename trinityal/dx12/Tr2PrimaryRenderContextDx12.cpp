@@ -216,11 +216,19 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		CCP_ASSERT(m_allocators[idx].get() != nullptr);
 	}
 
-	m_srvUavAllocator = std::make_shared<SrvUavDescriptorAllocator>( device, 16 * 1024 );
+	m_srvUavAllocator = std::make_shared<GpuVisibleDescriptorAllocator>( device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 16 * 1024 );
 	if( auto entry = m_srvUavAllocator->Allocate() )
 	{
 		m_srvHeapStart = std::make_shared<ShaderResourceViewDx12>( m_srvUavAllocator.get(), entry );
 		m_uavHeapStart = std::make_shared<UnorderedAccessViewDx12>( m_srvUavAllocator.get(), entry );
+	}
+
+	m_samplerAllocator = std::make_shared<GpuVisibleDescriptorAllocator>( device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1024 );
+	if( auto entry = m_samplerAllocator->Allocate() )
+	{
+		D3D12_SAMPLER_DESC nullSamplerDesc = { D3D12_FILTER_MIN_MAG_MIP_POINT, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_TEXTURE_ADDRESS_MODE_WRAP, 0, 0, D3D12_COMPARISON_FUNC_ALWAYS };
+		device->CreateSampler( &nullSamplerDesc, entry->m_offsetCPU );
+		m_samplerHeapStart = std::make_shared<SamplerStateDx12>( m_samplerAllocator.get(), entry );
 	}
 
 	CComPtr<ID3D12CommandQueue> commandQueue;
@@ -1131,6 +1139,16 @@ std::shared_ptr<UnorderedAccessViewDx12> Tr2PrimaryRenderContextAL::GetUavHeapVi
 	return m_uavHeapStart;
 }
 
+ID3D12DescriptorHeap* Tr2PrimaryRenderContextAL::GetGlobalSamplerHeap() const
+{
+	return m_samplerAllocator->GetGpuVisibleHeap();
+}
+
+std::shared_ptr<SamplerStateDx12> Tr2PrimaryRenderContextAL::GetSamplerHeapView() const
+{
+	return m_samplerHeapStart;
+}
+
 /** Create a ShaderResourceView */
 HRESULT Tr2PrimaryRenderContextAL::CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<class ShaderResourceViewDx12>& srvView)
 {
@@ -1163,14 +1181,13 @@ HRESULT Tr2PrimaryRenderContextAL::CreateUnorderedAccessView(ID3D12Resource* res
 /** Create a SamplerState */
 HRESULT Tr2PrimaryRenderContextAL::CreateSamplerState(const D3D12_SAMPLER_DESC& desc, std::shared_ptr<SamplerStateDx12>& samplerState)
 {
-	const std::shared_ptr<GlobalDescriptorHeapAllocator>& allocator = m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER];
-	GlobalDescriptorHeapPage::DescriptorEntry* entry = allocator->Allocate();
-	if (entry == nullptr)
+	GlobalDescriptorHeapPage::DescriptorEntry* entry = m_samplerAllocator->Allocate();
+	if( entry == nullptr )
+	{
 		return E_OUTOFMEMORY;
-
+	}
 	m_device->CreateSampler(&desc, entry->m_offsetCPU);
-
-	samplerState = std::make_shared<SamplerStateDx12>(allocator.get(), entry);
+	samplerState = std::make_shared<SamplerStateDx12>( m_samplerAllocator.get(), entry );
 	return S_OK;
 }
 
@@ -1262,6 +1279,11 @@ std::shared_ptr<ShaderResourceViewDx12> Tr2PrimaryRenderContextAL::GetNullSrvDx1
 std::shared_ptr<UnorderedAccessViewDx12> Tr2PrimaryRenderContextAL::GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const
 {
 	return m_nullUav[RegisterTypeIndex( type )];
+}
+
+std::shared_ptr<SamplerStateDx12> Tr2PrimaryRenderContextAL::GetNullSamplerDx12() const
+{
+	return m_samplerHeapStart;
 }
 
 Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )

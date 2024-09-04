@@ -251,8 +251,17 @@ public:
 	std::map<InlineString, PreprocessorDefine> m_defines;
 	std::vector<PreprocessorCondition> m_prepocessorConditions;
 
+	struct SamplerDefinition
+	{
+		const Symbol* name;
+		ASTNode* definition;
+	};
+	std::vector<SamplerDefinition> m_bindlessSamplers;
+
 	ASTNode* NewNode( int nodeType );
 	ASTNode* NewNode( int nodeType, const ScannerToken& token );
+
+	void AddBindlessSampler( const Symbol* name, ASTNode* definition );
 
 private:
 	void ShowMessageImpl( const FileLocation& location, int32_t errorCode, va_list args );

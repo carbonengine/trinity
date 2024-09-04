@@ -1197,3 +1197,8 @@ ASTNode* ParserState::NewNode( int nodeType, const ScannerToken& token )
 {
     return new ASTNode( ASTNodeType( nodeType ), GetCurrentLocation(), GetSymbolTable().GetCurrentScope(), &token );
 }
+
+void ParserState::AddBindlessSampler( const Symbol* name, ASTNode* definition )
+{
+	m_bindlessSamplers.push_back( { name, definition } );
+}

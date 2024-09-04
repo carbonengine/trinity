@@ -1664,11 +1664,12 @@ bool GetSamplerState( ParserState& parserState, ASTNode* node, Sampler& sampler 
 	sampler.borderColor.z = 0.0f;
 	sampler.borderColor.w = 0.0f;
 	sampler.srgbTexture = 0;
-	sampler.isDynamic = 0;
+	sampler.isDynamic = 1;
 
 	ASTNode* states = node->GetChildOrNull( 1 );
 	if( states && states->GetNodeType() == NT_SAMPLER_STATE_LIST )
 	{
+		sampler.isDynamic = 0;
 		sampler.filter = 0xff;
 		sampler.minFilter = 0xff;
 		sampler.magFilter = 0xff;

@@ -9,6 +9,7 @@
 #include "SymbolTable.h"
 #include "CompileMessageQueue.h"
 #include "FxAnalyzer.h"
+#include "HLSLParser.h"
 //#include "ASTNode.h"
 
 
@@ -367,17 +368,31 @@ namespace DxReflection
 									paramAnnotations.annotations[g_stringTable.AddString( ToString( a->name ).c_str() )] = result;
 								}
 							}
-							if( symbol->type.IsBindlessHandle() )
+						}
+						if( symbol->type.IsBindlessHandle() )
+						{
+							Annotation symbolAnnotation;
+							symbolAnnotation.type = ANNOTATION_TYPE_INT;
+							symbolAnnotation.intValue = symbol->type.builtInType == OP_BINDLESSHANDLESAMPLER ? 100 : BindlessTextureType( symbol->type.builtInType );
+							paramAnnotations.annotations[g_stringTable.AddString( "BindlessHandleType" )] = symbolAnnotation;
+
+							if( symbol->type.builtInType == OP_BINDLESSHANDLESAMPLER )
 							{
-								Annotation symbolAnnotation;
-								symbolAnnotation.type = ANNOTATION_TYPE_INT;
-								symbolAnnotation.intValue = BindlessTextureType( symbol->type.builtInType );
-								paramAnnotations.annotations[g_stringTable.AddString( "BindlessHandleType" )] = symbolAnnotation;
+								auto found = std::find_if( begin( parserState.m_bindlessSamplers ), end( parserState.m_bindlessSamplers ), [symbol]( const auto& bs ) { return bs.name == symbol; } );
+								if( found != end( parserState.m_bindlessSamplers ) )
+								{
+									Sampler sampler;
+									if( GetSamplerState( parserState, found->definition, sampler ) )
+									{
+										sampler.name = constant.name;
+										stage.samplers[uint8_t( 100 + ( found - begin( parserState.m_bindlessSamplers ) ) )] = sampler;
+									}
+								}
 							}
-							if( !paramAnnotations.annotations.empty() )
-							{
-								annotations[constant.name] = paramAnnotations;
-							}
+						}
+						if( !paramAnnotations.annotations.empty() )
+						{
+							annotations[constant.name] = paramAnnotations;
 						}
 					}
 				}
@@ -456,6 +471,25 @@ namespace DxReflection
 					sampler.name = g_stringTable.AddString( desc.Name );
 					stage.samplers[uint8_t( desc.BindPoint )] = sampler;
 					stage.registerInputs.push_back( { RT_SAMPLER, desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
+
+					if( symbol && symbol->annotations )
+					{
+						ParameterAnnotation paramAnnotations;
+						for( auto ai = symbol->annotations->begin(); ai != symbol->annotations->end(); ++ai )
+						{
+							Annotation result;
+							bool srgb, autoregister;
+							if( MakeEffectAnnotationFromSymbolAnnotation( *ai, result, srgb, autoregister ) )
+							{
+								paramAnnotations.annotations[g_stringTable.AddString( ToString( ai->name ).c_str() )] = result;
+							}
+						}
+						if( !paramAnnotations.annotations.empty() )
+						{
+							annotations[g_stringTable.AddString( desc.Name )] = paramAnnotations;
+						}
+					}
+
 				}
 				//stage.samplers[uint8_t( desc.BindPoint )] = sampler;
 			}

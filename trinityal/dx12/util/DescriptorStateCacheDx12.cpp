@@ -13,11 +13,9 @@
 #include "../Tr2PrimaryRenderContextDx12.h"
 
 /** */
-DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler ) :
-	m_allocatorSampler(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, pageSizeSampler),
+DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context ) :
 	m_primaryContext(context),
-	m_device(device),
-	m_uploadedSamplerCount( 0 )
+	m_device(device)
 {
 	m_allocatorUpload.Initialize( device );
 
@@ -52,21 +50,13 @@ void DescriptorStateCache::Reset()
 		m_srvUav[slot] = m_nullSrv;
 		m_sampler[slot] = m_nullSampler;
 
-		m_parameterSlots[Tr2RenderContextEnum::GRAPHICS_PIPE][slot].SetNone();
-		m_parameterSlots[Tr2RenderContextEnum::COMPUTE_PIPE][slot].SetNone();
+		m_parameterSlots[slot].SetNone();
 	}
 	memset(m_cbv, 0, sizeof(m_cbv));
 
 	m_heapsDirty = true;
 	m_srvUavDirty = true;
 	m_samplerDirty = true;
-
-	m_uploadedSamplerCount = 0;
-
-	m_pipeDirty[Tr2RenderContextEnum::GRAPHICS_PIPE] = true;
-	m_pipeDirty[Tr2RenderContextEnum::COMPUTE_PIPE] = true;
-
-	m_allocatorSampler.Reset();
 
 	std::vector<CComPtr<ID3D12Resource>> releaseLater;
 	m_allocatorUpload.Reset( releaseLater );
@@ -85,14 +75,11 @@ void DescriptorStateCache::Dirty()
 	m_srvUavDirty = true;
 	m_samplerDirty = true;
 
-	// Set the last slots to 0 so if we need any then we will resend the descriptors to the gpu
-	m_uploadedSamplerCount = 0;
-
 	// Pretend that nothing is currently bound forcing the next Commit() to re-assign every parameter
 	for (uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot)
 	{
-		m_parameterSlots[Tr2RenderContextEnum::GRAPHICS_PIPE][slot].SetNone();
-		m_parameterSlots[Tr2RenderContextEnum::COMPUTE_PIPE][slot].SetNone();
+		m_parameterSlots[slot].SetNone();
+		m_parameterSlots[slot].SetNone();
 	}
 }
 
@@ -183,140 +170,88 @@ D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const void* dat
 }
 
 
-void DescriptorStateCache::SetHeaps( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap )
+void DescriptorStateCache::SetHeaps( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, ID3D12DescriptorHeap* globalSamplerHeap )
 {
-	if( m_heapsDirty )
+	if( m_heapsDirty || m_globalSrvUavHeap != globalSrvUavHeap || m_globalSamplerHeap != globalSamplerHeap )
 	{
 		ID3D12DescriptorHeap* heaps[] = {
 			globalSrvUavHeap,
-			m_allocatorSampler.GetCurrentHeap()
+			globalSamplerHeap
 		};
 
 		commandList->SetDescriptorHeaps( 2, heaps );
+
+		m_globalSrvUavHeap = globalSrvUavHeap;
+		m_globalSamplerHeap = globalSamplerHeap;
+		m_heapsDirty = false;
+		m_srvUavDirty = true;
+		m_samplerDirty = true;
 	}
-	m_pipeDirty[Tr2RenderContextEnum::GRAPHICS_PIPE] = true;
-	m_pipeDirty[Tr2RenderContextEnum::COMPUTE_PIPE] = true;
-	m_heapsDirty = false;
-	m_srvUavDirty = true;
-	m_samplerDirty = true;
 }
 
 /** Apply state */
-void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, const TrinityALImpl::Tr2RootSignatureAL* rootSignature )
+void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, ID3D12DescriptorHeap* globalSamplerHeap, const TrinityALImpl::Tr2RootSignatureAL* rootSignature )
 {
-	Tr2RenderContextEnum::ShaderPipe targetPipe = rootSignature->m_isCompute ? Tr2RenderContextEnum::COMPUTE_PIPE : Tr2RenderContextEnum::GRAPHICS_PIPE;
-	Tr2RenderContextEnum::ShaderPipe otherPipe = rootSignature->m_isCompute ? Tr2RenderContextEnum::GRAPHICS_PIPE : Tr2RenderContextEnum::COMPUTE_PIPE;
+	bool rootSignatureChanged = rootSignature->m_rootSignature != m_rootSignature;
 
-	bool mustBindSrvUav = m_pipeDirty[targetPipe] || m_srvUavDirty || globalSrvUavHeap != globalSrvUavHeap;
-	bool mustBindSampler = m_pipeDirty[targetPipe] || m_samplerDirty || m_uploadedSamplerCount < rootSignature->m_samplerTableSize;
+	// If we are changing the root signature or rebinding heaps, we must rebind everything
+	bool forceSet = rootSignatureChanged || m_heapsDirty || m_globalSrvUavHeap != globalSrvUavHeap || m_globalSamplerHeap != globalSamplerHeap;
 
-	bool dirtyHeaps = m_heapsDirty;
+	SetHeaps( commandList, globalSrvUavHeap, globalSamplerHeap );
 
-	if( mustBindSampler )
-	{
-		uint32_t requiredViews = rootSignature->m_samplerTableSize;
+	bool mustBindSrvUav = m_srvUavDirty || forceSet;
+	bool mustBindSampler = m_samplerDirty || forceSet;
 
-		// Allocate space in the heap
-		DescriptorHeapEntry result = m_allocatorSampler.Allocate(requiredViews);
-		dirtyHeaps |= result.m_isDirty;
-		m_lastSamplerAddress[targetPipe] = result.m_gpuHandle;
-
-		// Iterate over bindings and copy to GPU-visible heap
-		uint32_t destIncrement = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-		for (uint32_t idx = 0; idx < requiredViews; ++idx)
-		{
-			CCP_ASSERT(m_sampler[idx] != nullptr);
-
-			D3D12_CPU_DESCRIPTOR_HANDLE dest = { result.m_cpuHandle.ptr + destIncrement * idx };
-			m_device->CopyDescriptorsSimple(1, dest, m_sampler[idx]->GetHandleCPU(), D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
-		}
-		m_uploadedSamplerCount = rootSignature->m_samplerTableSize;
-	}
-
-	bool forceSet = rootSignature->m_rootSignature != m_rootSignature || m_globalSrvUavHeap != globalSrvUavHeap;
-
-	if( dirtyHeaps || m_globalSrvUavHeap != globalSrvUavHeap )
-	{
-		ID3D12DescriptorHeap* heaps[] =
-		{
-			globalSrvUavHeap,
-			m_allocatorSampler.GetCurrentHeap()
-		};
-		m_globalSrvUavHeap = globalSrvUavHeap;
-
-		commandList->SetDescriptorHeaps(2, heaps);
-
-		// If we're required to switch pipes in the future, we must force it to re-bind contents
-		m_heapsDirty = false;
-	}
+	auto setRootDescriptorTable = rootSignature->m_isCompute ? &ID3D12GraphicsCommandList::SetComputeRootDescriptorTable : &ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable;
 
 	// Check if the SRV/UAV table *can* be bound, *must* be bound and isn't already bound
-	if( mustBindSrvUav || forceSet )
+	if( mustBindSrvUav )
 	{
-		auto setRootDescriptorTable = rootSignature->m_isCompute ? &ID3D12GraphicsCommandList::SetComputeRootDescriptorTable : &ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable;
-
 		for( uint32_t i = 0; i < rootSignature->m_srvUavParameterCount; ++i )
 		{
 			uint32_t index = rootSignature->m_srvUavParameterOffset + i;
 			auto handle = m_srvUav[index]->GetHandleGPU();
-			if( forceSet || !m_parameterSlots[targetPipe][index].IsValidSRV( handle ) )
+			if( forceSet || !m_parameterSlots[index].IsValidSRV( handle ) )
 			{
-				m_parameterSlots[targetPipe][index].SetSRV( handle );
+				m_parameterSlots[index].SetSRV( handle );
 				( commandList->*setRootDescriptorTable )( index, handle );
 			}
 		}
 	}
 
-	// Check if the Sampler table *can* be bound, *must* be bound and isn't already bound
-	if( rootSignature->m_samplerParameter != 0xffffffff && ( mustBindSampler || !m_parameterSlots[targetPipe][rootSignature->m_samplerParameter].IsValidSampler( m_lastSamplerAddress[targetPipe] ) || rootSignature->m_rootSignature != m_rootSignature ) )
+	if( mustBindSampler )
 	{
-		m_parameterSlots[targetPipe][rootSignature->m_samplerParameter].SetSampler(m_lastSamplerAddress[targetPipe]);
-
-		if ( rootSignature->m_isCompute)
+		for( uint32_t i = 0; i < rootSignature->m_samplerParameterCount; ++i )
 		{
-			commandList->SetComputeRootDescriptorTable( rootSignature->m_samplerParameter, m_lastSamplerAddress[targetPipe]);
+			uint32_t index = rootSignature->m_samplerParameterOffset + i;
+			auto handle = m_sampler[index]->GetHandleGPU();
+			if( forceSet || !m_parameterSlots[index].IsValidSampler( handle ) )
+			{
+				m_parameterSlots[index].SetSampler( handle );
+				( commandList->*setRootDescriptorTable )( index, handle );
+			}
 		}
-		else
-		{
-			commandList->SetGraphicsRootDescriptorTable( rootSignature->m_samplerParameter, m_lastSamplerAddress[targetPipe]);
-		} 
 	}
 
 	D3D12_GPU_VIRTUAL_ADDRESS nullCbv = m_primaryContext->m_nullCB.GetGpuView();
 	auto setConstantBufferView = rootSignature->m_isCompute ? &ID3D12GraphicsCommandList::SetComputeRootConstantBufferView : &ID3D12GraphicsCommandList::SetGraphicsRootConstantBufferView;
-	if( rootSignature->m_rootSignature != m_rootSignature )
+	for( auto it = begin( rootSignature->m_cbRegisters ); it != end( rootSignature->m_cbRegisters ); ++it )
 	{
-		for( auto it = begin( rootSignature->m_cbRegisters ); it != end( rootSignature->m_cbRegisters ); ++it )
+		D3D12_GPU_VIRTUAL_ADDRESS address = m_cbv[it->stage][it->index];
+		if( rootSignatureChanged || !m_parameterSlots[it->parameter].IsValidCBV( address ) )
 		{
-			D3D12_GPU_VIRTUAL_ADDRESS address = m_cbv[it->stage][it->index];
-			m_parameterSlots[targetPipe][it->parameter].SetCBV( address );
-			( commandList->*setConstantBufferView )( it->parameter, address != 0 ? address : nullCbv );
-		}
-		m_rootSignature = rootSignature->m_rootSignature;
-	}
-	else
-	{
-		for( auto it = begin( rootSignature->m_cbRegisters ); it != end( rootSignature->m_cbRegisters ); ++it )
-		{
-			D3D12_GPU_VIRTUAL_ADDRESS address = m_cbv[it->stage][it->index];
-			if( m_parameterSlots[targetPipe][it->parameter].IsValidCBV( address ) )
-				continue;
-			m_parameterSlots[targetPipe][it->parameter].SetCBV( address );
+			m_parameterSlots[it->parameter].SetCBV( address );
 			( commandList->*setConstantBufferView )( it->parameter, address != 0 ? address : nullCbv );
 		}
 	}
 
 	// Clear dirty flags
-	m_pipeDirty[targetPipe] = false;
-	m_pipeDirty[otherPipe] = true;
 	m_srvUavDirty = false;
 	m_samplerDirty = false;
-	m_rootSignature = rootSignature->m_rootSignature;
-}
-
-FrameLocalDescriptorHeapAllocator& DescriptorStateCache::GetSamplerHeapAllocator()
-{
-	return m_allocatorSampler;
+	if( rootSignatureChanged )
+	{
+		m_rootSignature = rootSignature->m_rootSignature;
+	}
 }
 
 #endif

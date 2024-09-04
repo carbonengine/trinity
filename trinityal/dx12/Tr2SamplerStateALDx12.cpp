@@ -17,8 +17,9 @@ extern uint32_t g_forceAnisotropy;
 
 namespace TrinityALImpl
 {
-	Tr2SamplerStateAL::Tr2SamplerStateAL()
-		:m_isValid( false )
+	Tr2SamplerStateAL::Tr2SamplerStateAL() :
+		m_indexInHeap( 0xffffffff ),
+		m_isValid( false )
 	{
 	}
 
@@ -58,13 +59,21 @@ namespace TrinityALImpl
 		m_isValid = true;
 
 		m_samplerState = nullptr;
-		return renderContext.CreateSamplerState(m_sampler, m_samplerState);
+		FORWARD_HR( renderContext.CreateSamplerState( m_sampler, m_samplerState ) );
+		m_indexInHeap = m_samplerState->GetIndexInHeap();
+		return S_OK;
 	}
 
 	void Tr2SamplerStateAL::Destroy()
 	{
 		m_samplerState = nullptr;
 		m_isValid = false;
+		m_indexInHeap = 0xffffffff;
+	}
+
+	uint32_t Tr2SamplerStateAL::GetIndexInHeap() const
+	{
+		return m_indexInHeap;
 	}
 
 	bool Tr2SamplerStateAL::IsValid() const

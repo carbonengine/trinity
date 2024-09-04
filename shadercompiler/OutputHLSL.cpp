@@ -379,6 +379,7 @@ namespace
 			case OP_BINDLESSHANDLETEXTURE2D:
 			case OP_BINDLESSHANDLETEXTURE3D:
 			case OP_BINDLESSHANDLETEXTURECUBE:
+			case OP_BINDLESSHANDLESAMPLER:
 				os << "uint";
 				return;
 			case OP_RAYTRACING_ACCELERATION_STRUCTURE:
@@ -631,6 +632,7 @@ namespace
 			case OP_BINDLESSHANDLETEXTURE2D:
 			case OP_BINDLESSHANDLETEXTURE3D:
 			case OP_BINDLESSHANDLETEXTURECUBE:
+			case OP_BINDLESSHANDLESAMPLER:
 				os << "uint";
 				return;
             case OP_RAYTRACING_ACCELERATION_STRUCTURE:
@@ -1555,7 +1557,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			os << Child( 2 ) << ' ';
 		}
 #endif
-		auto isArrayOfTextures = symbol->type.arrayDimensions > 0 && symbol->type.IsTexture() && symbol && !symbol->registerSpecifier.empty();
+		auto isArrayOfTextures = symbol->type.arrayDimensions > 0 && ( symbol->type.IsTexture() || symbol->type.IsSampler() ) && symbol && !symbol->registerSpecifier.empty();
 		if( isArrayOfTextures )
 		{
 			os << "const _ResourceRef<" << node->GetType() << ">*";

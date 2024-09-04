@@ -66,6 +66,7 @@ public:
     
     uint32_t AllocateHeapIndex( id<MTLTexture> texture );
     uint32_t AllocateHeapIndex( id<MTLBuffer> buffer );
+    uint32_t AllocateHeapIndex( id<MTLSamplerState> sampler );
     void DeallocateHeapIndex( uint32_t index );
     id<MTLBuffer> GetHeapViewBuffer() const;
 

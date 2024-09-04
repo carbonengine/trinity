@@ -404,6 +404,22 @@ namespace TrinityALImpl
         }
     }
 
+    uint32_t MetalContext::AllocateHeapIndex( id<MTLSamplerState> sampler )
+    {
+        if( !sampler || !m_resourceHeap )
+        {
+            return 0xffffffff;
+        }
+        if( @available( macOS 13.0, * ) )
+        {
+            return m_resourceHeap.Allocate( sampler.gpuResourceID._impl );
+        }
+        else
+        {
+            return 0xffffffff;
+        }
+    }
+
     void MetalContext::DeallocateHeapIndex( uint32_t index )
     {
         m_resourceHeap.Deallocate( index );

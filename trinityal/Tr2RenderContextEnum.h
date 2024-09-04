@@ -40,17 +40,6 @@ namespace Tr2RenderContextEnum
 		SHADER_TYPE_COUNT = INVALID_SHADER,
 	};
 
-	/** Representation of controllable GPU pipelines */
-	enum ShaderPipe
-	{
-		GRAPHICS_PIPE = 0,
-		COMPUTE_PIPE,
-		INVALID_PIPE,
-
-		SHADER_PIPE_FIRST = GRAPHICS_PIPE,
-		SHADER_PIPE_COUNT = INVALID_PIPE
-	};
-
 	// Special case constant buffers added to handle trinity
 	enum
 	{
