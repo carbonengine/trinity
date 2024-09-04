@@ -643,7 +643,7 @@ void Tr2Effect::RebuildSamplerOverrides()
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2ResourceSetDescriptionAL& resourceSetDesc, Tr2MaterialStageInput& stageInput )
+	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2ResourceSetDescriptionAL& resourceSetDesc )
 	{
 		bool modified = false;
 		for( auto& samplerOverride : m_samplerOverrides )
@@ -672,7 +672,7 @@ void Tr2Effect::RebuildSamplerOverrides()
 					continue;
 				}
 
-				if( UpdateSamplers( ShaderType( i ), stage, pp.m_resourceSetDesc, pp.m_stageInput[i] ) )
+				if( UpdateSamplers( ShaderType( i ), stage, pp.m_resourceSetDesc ) )
 				{
 					pp.m_compatibleWithGdr = false;
 					m_compatibleWithGdr = false;
@@ -683,8 +683,8 @@ void Tr2Effect::RebuildSamplerOverrides()
 		{
 			auto& pp = *m_parametersForPasses[technique].libraries[passIx];
 
-			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].globalInput, pp.m_globalResourceSetDesc, pp.m_globalInput );
-			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].localInput, pp.m_localResourceSetDesc, pp.m_localInput );
+			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].globalInput, pp.m_globalResourceSetDesc );
+			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].localInput, pp.m_localResourceSetDesc );
 		}
 	}
 }
