@@ -612,7 +612,7 @@ bool Tr2EffectDescription::Read( const void* data,
 						{
 							continue;
 						}
-						auto found = find_if( pass.stageInputs[type].samplers.begin(), pass.stageInputs[type].samplers.end(), [&]( const auto& s ) { return strcmp( s.second.name, c.name.c_str() ) == 0; } );
+						auto found = find_if( pass.stageInputs[type].samplers.begin(), pass.stageInputs[type].samplers.end(), [&]( const auto& s ) { return s.second.name && strcmp( s.second.name, c.name.c_str() ) == 0; } );
 						if( found != pass.stageInputs[type].samplers.end() )
 						{
 							if ( c.offset + c.size < pass.stageInputs[type].m_constantValueSize )
@@ -741,6 +741,10 @@ bool Tr2EffectDescription::Read( const void* data,
 				if (stage.m_exists)
 				{
 					auto IsHeapView = [&]( const char* name ) {
+						if( !name )
+						{
+							return false;
+						}
 						auto it = std::find_if( annotations.begin(), annotations.end(), [&]( Tr2EffectAnnotationMap::const_reference key ) { return strcmp( key.first, name ) == 0; } );
 						if( it != annotations.end() )
 						{

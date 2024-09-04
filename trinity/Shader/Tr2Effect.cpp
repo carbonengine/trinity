@@ -1867,7 +1867,7 @@ void Tr2Effect::MapPassParameters(
 				continue;
 			}
 
-			auto sampler = find_if( begin( stageInputDesc.samplers ), end( stageInputDesc.samplers ), [&]( auto& s ) { return strcmp( s.second.name, c.name.c_str() ) == 0; } );
+			auto sampler = find_if( begin( stageInputDesc.samplers ), end( stageInputDesc.samplers ), [&]( auto& s ) { return s.second.name && strcmp( s.second.name, c.name.c_str() ) == 0; } );
 			if( sampler != end( stageInputDesc.samplers ) )
 			{
 				auto over = find_if( m_samplerOverrides.begin(), m_samplerOverrides.end(), [&]( auto& s ) { return s.name == c.name; } );
