@@ -30,10 +30,9 @@ namespace
 			return 0;
 		}
 		size_t size = signature->m_cbRegisters.size() * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE );
-		if( signature->m_samplerTableSize )
-		{
-			size += sizeof( D3D12_GPU_DESCRIPTOR_HANDLE );
-		}
+		size += signature->m_srvRegisters.size() * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE );
+		size += signature->m_uavRegisters.size() * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE );
+		size += signature->m_samplerRegisters.size() * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE );
 		return size;
 	}
 
@@ -86,7 +85,7 @@ namespace TrinityALImpl
 		{
 			signatureSize = std::max( signatureSize, GetSignatureSize( *it ) );
 			srvDescriptorCount = std::max( srvDescriptorCount, (*it)->m_srvUavParameterCount );
-			samplerDescriptorCount = std::max( samplerDescriptorCount, (*it)->m_samplerTableSize );
+			samplerDescriptorCount = std::max( samplerDescriptorCount, (*it)->m_samplerParameterCount );
 		}
 
 		auto& descriptorCache = *renderContext.m_descriptorCache[renderContext.GetCurrentBackBufferIndex()];
@@ -143,10 +142,10 @@ namespace TrinityALImpl
 						D3D12_GPU_DESCRIPTOR_HANDLE src;
 						switch( input.type )
 						{
-						case Tr2ResourceSetDescriptionAL::TEXTURE:
+						case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 							src = input.texture.TrinityALImpl_GetObject()->m_view[input.colorSpace]->GetHandleGPU();
 							break;
-						case Tr2ResourceSetDescriptionAL::BUFFER:
+						case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 							src = input.buffer.TrinityALImpl_GetObject()->m_srv->GetHandleGPU();
 							break;
 						default:
@@ -161,10 +160,10 @@ namespace TrinityALImpl
 						D3D12_GPU_DESCRIPTOR_HANDLE src;
 						switch( input.type )
 						{
-						case Tr2ResourceSetDescriptionAL::TEXTURE:
+						case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 							src = input.texture.TrinityALImpl_GetObject()->m_uav[input.mip]->GetHandleGPU();
 							break;
-						case Tr2ResourceSetDescriptionAL::BUFFER:
+						case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 							src = input.buffer.TrinityALImpl_GetObject()->m_uav->GetHandleGPU();
 							break;
 						default:
@@ -173,21 +172,24 @@ namespace TrinityALImpl
 						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + jt->parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &src, sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
 					}
 				}
-				if( signature->m_samplerTableSize )
+				if( signature->m_samplerParameterCount )
 				{
-					DescriptorHeapEntry result = descriptorCache.GetSamplerHeapAllocator().Allocate( signature->m_samplerTableSize );
-
-					for( auto jt = begin( signature->m_samplerRegisters ); jt != end( signature->m_samplerRegisters ); ++jt )
+					for( auto& sampler : signature->m_samplerRegisters )
 					{
-						auto& input = material.m_resourceSet.m_samplers[jt->index];
-						if( !input.assigned )
+						auto& input = material.m_resourceSet.m_samplers[sampler.index];
+						D3D12_GPU_DESCRIPTOR_HANDLE handle;
+						switch( input.type )
 						{
+						case Tr2ResourceSetDescriptionAL::Sampler::SAMPLER:
+							handle = input.sampler.TrinityALImpl_GetObject()->m_samplerState->GetHandleGPU();
+							break;
+						case Tr2ResourceSetDescriptionAL::Sampler::HEAP_VIEW:
+							auto handle = renderContext.GetSamplerHeapView()->GetHandleGPU();
+							break;
+						default:
 							return E_INVALIDARG;
 						}
-						auto src = input.sampler.TrinityALImpl_GetObject()->m_samplerState->GetHandleCPU();
-						D3D12_CPU_DESCRIPTOR_HANDLE dest = { result.m_cpuHandle.ptr + samplerHeapIncrement * jt->parameter };
-						renderContext.m_device->CopyDescriptorsSimple( 1, dest, src, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
-						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + signature->m_samplerParameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &result.m_gpuHandle, sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
+						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sampler.parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &handle, sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
 					}
 				}
 			}

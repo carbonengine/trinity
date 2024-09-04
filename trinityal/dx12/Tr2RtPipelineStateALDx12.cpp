@@ -321,7 +321,6 @@ namespace TrinityALImpl
 
 		std::vector<D3D12_ROOT_PARAMETER> parameters;
 		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>> ranges;
-		std::vector<D3D12_DESCRIPTOR_RANGE> samplerRanges;
 
 		const auto shaderType = Tr2RenderContextEnum::COMPUTE_SHADER;
 
@@ -384,29 +383,25 @@ namespace TrinityALImpl
 		{
 			if( reg.registerType == Tr2ShaderRegisterAL::SAMPLER )
 			{
-				Tr2RootSignatureAL::CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( samplerRanges.size() ), reg.registerType };
+				Tr2RootSignatureAL::CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType };
 				rootSignature.m_samplerRegisters.push_back( cbr );
-				samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, reg.registerIndex, space, reg.arrayCount, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND ) );
+
+				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE>( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, reg.registerIndex, space, reg.arrayCount ) ) );
+
+				D3D12_ROOT_PARAMETER parameter;
+				parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+				parameter.DescriptorTable.NumDescriptorRanges = 1;
+				parameter.DescriptorTable.pDescriptorRanges = ranges.back().get();
+				parameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+				parameters.push_back( parameter );
+				rootSignature.m_samplerParameterCount++;
 			}
-		}
-
-		if( !samplerRanges.empty() )
-		{
-			D3D12_ROOT_PARAMETER parameter;
-			parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			parameter.DescriptorTable.NumDescriptorRanges = UINT( samplerRanges.size() );
-			parameter.DescriptorTable.pDescriptorRanges = &samplerRanges[0];
-			parameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-			rootSignature.m_samplerParameter = uint32_t( parameters.size() );
-
-			parameters.push_back( parameter );
 		}
 
 		signatureDesc.NumParameters = UINT( parameters.size() );
 		if( signatureDesc.NumParameters )
 		{
-			signatureDesc.pParameters = &parameters[0];
+			signatureDesc.pParameters = parameters.data();
 		}
 
 		signatureDesc.NumStaticSamplers = 0;
@@ -430,8 +425,6 @@ namespace TrinityALImpl
 			return hr;
 		}
 		rootSignature.m_isCompute = true;
-		//rootSignature.m_srvUavTableSize = uint32_t( ranges.size() );
-		rootSignature.m_samplerTableSize = uint32_t( samplerRanges.size() );
 		rootSignature.m_registerMap = Tr2RegisterMapAL( &shaderType, &signature, 1 );
 
 		return renderContext.m_device->CreateRootSignature(

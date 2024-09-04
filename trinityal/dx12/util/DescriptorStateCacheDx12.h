@@ -25,7 +25,7 @@ class DescriptorStateCache
 public:
 
 	/** */
-	DescriptorStateCache( CComPtr<ID3D12Device> device, class Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler );
+	DescriptorStateCache( CComPtr<ID3D12Device> device, class Tr2PrimaryRenderContextAL* context );
 
 	/** Dirty all states and reset internal allocators */
 	void Reset();
@@ -34,7 +34,7 @@ public:
 	void Dirty();
 
 	/** Apply state */
-	void Commit( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, const TrinityALImpl::Tr2RootSignatureAL* rootSignature );
+	void Commit( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, ID3D12DescriptorHeap* globalSamplerHeap, const TrinityALImpl::Tr2RootSignatureAL* rootSignature );
 
 	/** Set an array of ShaderResourceViews */
 	void SetShaderResources(uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews);
@@ -50,9 +50,7 @@ public:
 	/** Set an array or UnorderedAccessViews */
 	void SetUnorderedAccessViews(uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews);
 
-	void SetHeaps( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap );
-
-	FrameLocalDescriptorHeapAllocator& GetSamplerHeapAllocator();
+	void SetHeaps( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, ID3D12DescriptorHeap* globalSamplerHeap );
 
 private:
 
@@ -124,10 +122,9 @@ private:
 		ERootParameterType m_type;
 	};
 
-	FrameLocalDescriptorHeapAllocator m_allocatorSampler;
 	ConstantBufferAllocator m_allocatorUpload;
 
-	class Tr2PrimaryRenderContextAL* m_primaryContext;
+	Tr2PrimaryRenderContextAL* m_primaryContext;
 	CComPtr<ID3D12Device> m_device;
 	std::shared_ptr<ShaderResourceViewDx12> m_nullSrv;
 	std::shared_ptr<UnorderedAccessViewDx12> m_nullUav;
@@ -140,17 +137,12 @@ private:
 	D3D12_GPU_VIRTUAL_ADDRESS m_cbv[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 
 	CComPtr<ID3D12DescriptorHeap> m_globalSrvUavHeap;
+	CComPtr<ID3D12DescriptorHeap> m_globalSamplerHeap;
 	bool m_heapsDirty;
 	bool m_srvUavDirty;
 	bool m_samplerDirty;
 
-	uint32_t m_uploadedSamplerCount;
-
-	bool m_pipeDirty[Tr2RenderContextEnum::SHADER_PIPE_COUNT];
-
-	RootParameterSlot m_parameterSlots[Tr2RenderContextEnum::SHADER_PIPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	D3D12_GPU_DESCRIPTOR_HANDLE m_lastSrvUavAddress[Tr2RenderContextEnum::SHADER_PIPE_COUNT];
-	D3D12_GPU_DESCRIPTOR_HANDLE m_lastSamplerAddress[Tr2RenderContextEnum::SHADER_PIPE_COUNT];
+	RootParameterSlot m_parameterSlots[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 };
 
 #endif

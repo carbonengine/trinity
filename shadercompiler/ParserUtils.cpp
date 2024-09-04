@@ -785,10 +785,6 @@ namespace
 					{
 						r.space = AllocateRegister( registers.spaces );
 					}
-					else if( registerType == 's' )
-					{
-						r.space = int( stage );
-					}
 					else
 					{
 						r.space = 0;

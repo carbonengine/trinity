@@ -110,7 +110,7 @@ namespace TrinityALImpl
 			m_srvMask |= 1 << reg.parameter;
 			switch (resource.type)
 			{
-			case Tr2ResourceSetDescriptionAL::TEXTURE:
+			case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 				if( resource.texture.IsValid() && it->registerType >= Tr2ShaderRegisterAL::SRV_TEXTURE1D )
 				{
 					m_srv[reg.parameter] = resource.texture.m_texture->m_view[resource.colorSpace];
@@ -128,7 +128,7 @@ namespace TrinityALImpl
 					AddTransition( resource.texture.m_texture->GetResourceDx12(), resource.texture.m_texture->m_defaultState, stateFlag );
 				}
 				break;
-			case Tr2ResourceSetDescriptionAL::BUFFER:
+			case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 				if( resource.buffer.IsValid() && it->registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER )
 				{
 					m_srv[reg.parameter] = resource.buffer.m_buffer->m_srv;
@@ -146,7 +146,7 @@ namespace TrinityALImpl
 					AddTransition( resource.buffer.m_buffer->GetGpuResource(), resource.buffer.m_buffer->m_defaultState, stateFlag );
 				}
 				break;
-			case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
+			case Tr2ResourceSetDescriptionAL::Resource::HEAP_VIEW:
 				m_srv[reg.parameter] = renderContext.GetSrvHeapView();
 				break;
 			default:
@@ -163,7 +163,7 @@ namespace TrinityALImpl
 			m_uavMask |= 1 << reg.parameter;
 			switch( resource.type )
 			{
-			case Tr2ResourceSetDescriptionAL::TEXTURE:
+			case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 				if (resource.texture.IsValid())
 				{
 					if( resource.texture.IsValid() && it->registerType >= Tr2ShaderRegisterAL::UAV_TEXTURE1D )
@@ -184,7 +184,7 @@ namespace TrinityALImpl
 					}
 				}
 				break;
-			case Tr2ResourceSetDescriptionAL::BUFFER:
+			case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 				if (resource.buffer.IsValid())
 				{
 					if( resource.buffer.IsValid() && it->registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER )
@@ -205,7 +205,7 @@ namespace TrinityALImpl
 					}
 				}
 				break;
-			case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
+			case Tr2ResourceSetDescriptionAL::Resource::HEAP_VIEW:
 				m_uav[reg.parameter] = renderContext.GetUavHeapView();
 				break;
 			default:
@@ -220,9 +220,17 @@ namespace TrinityALImpl
 		{
 			auto& reg = *it;
 			auto& sampler = description.m_samplers[description.m_registerMap.samplers[reg.stage][reg.index]];
-			if( sampler.assigned )
+			switch( sampler.type )
 			{
+			case Tr2ResourceSetDescriptionAL::Sampler::SAMPLER:
 				m_sampler[reg.parameter] = sampler.sampler.m_sampler->m_samplerState;
+				break;
+			case Tr2ResourceSetDescriptionAL::Sampler::HEAP_VIEW:
+				m_sampler[reg.parameter] = renderContext.GetSamplerHeapView();
+				break;
+			default:
+				m_sampler[reg.parameter] = renderContext.GetNullSamplerDx12();
+				break;
 			}
 			m_samplerCount = std::max( reg.parameter + 1, m_samplerCount );
 		}

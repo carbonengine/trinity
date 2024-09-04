@@ -30,6 +30,8 @@ struct Tr2SamplerOverride
 	float lodBias;
 	uint32_t maxMipLevel;
 	uint32_t maxAnisotropy;
+
+	Tr2SamplerStateAL sampler;
 };
 
 BLUE_DECLARE_STRUCTURE_LIST( Tr2SamplerOverride );

@@ -605,6 +605,24 @@ bool Tr2EffectDescription::Read( const void* data,
 
 					shaderTypes.push_back( type );
 					signatures.push_back( pass.stageInputs[type].signature );
+
+					for( auto& c : pass.stageInputs[type].constants )
+					{
+						if( c.type != Tr2EffectConstant::UINT || c.dimension != 1 )
+						{
+							continue;
+						}
+
+						if( auto sampler = FindSamplerByName( pass.stageInputs[type].samplers, c.name.c_str() ) )
+						{
+							if ( c.offset + c.size > pass.stageInputs[type].m_constantValueSize )
+							{
+								std::fill( pass.stageInputs[type].constantValues + pass.stageInputs[type].m_constantValueSize, pass.stageInputs[type].constantValues + c.offset + c.size, 0 );
+								pass.stageInputs[type].m_constantValueSize = c.offset + c.size;
+							}
+							reinterpret_cast<uint32_t*>( pass.stageInputs[type].constantValues + c.offset )[0] = sampler->second.sampler.GetIndexInHeap();
+						}
+					}
 				}
 				
 				pass.resourceSetDesc = Tr2ResourceSetDescriptionAL( Tr2RegisterMapAL( shaderTypes.data(), signatures.data(), signatures.size() ) );
@@ -724,6 +742,10 @@ bool Tr2EffectDescription::Read( const void* data,
 				if (stage.m_exists)
 				{
 					auto IsHeapView = [&]( const char* name ) {
+						if( !name )
+						{
+							return false;
+						}
 						auto it = std::find_if( annotations.begin(), annotations.end(), [&]( Tr2EffectAnnotationMap::const_reference key ) { return strcmp( key.first, name ) == 0; } );
 						if( it != annotations.end() )
 						{
@@ -751,6 +773,14 @@ bool Tr2EffectDescription::Read( const void* data,
 							pass.resourceSetDesc.SetUavHeapView( Tr2RenderContextEnum::ShaderType( type ), res.first );
 						}
 					}
+					for( auto& sampler : stage.samplers )
+					{
+						auto isHeapView = IsHeapView( sampler.second.name );
+						if( IsHeapView( sampler.second.name ) )
+						{
+							pass.resourceSetDesc.SetSamplerHeapView( Tr2RenderContextEnum::ShaderType( type ), sampler.first );
+						}
+					}
 				}
 				++type;
 			}
@@ -759,3 +789,9 @@ bool Tr2EffectDescription::Read( const void* data,
 	return true;
 }
 
+
+const Tr2SamplerSetupMap::value_type* FindSamplerByName( const Tr2SamplerSetupMap& samplerMap, const char* name )
+{
+	auto found = find_if( begin( samplerMap ), end( samplerMap ), [name]( const Tr2SamplerSetupMap::value_type& pair ) { return pair.second.name && strcmp( pair.second.name, name ) == 0; } );
+	return found != end( samplerMap ) ? &*found : nullptr;
+}

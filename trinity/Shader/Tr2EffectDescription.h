@@ -87,6 +87,8 @@ struct Tr2EffectResource
 		UAV_RWSTRUCTURED_WITH_COUNTER,
 	};
 
+	static const int BINDLESS_SAMPLER = 100;
+
 	// Texture name (string is managed by the owner of string table: Tr2EffectRes or
 	// Tr2HighLevelShader)
 	const char* name;
@@ -268,5 +270,9 @@ struct Tr2ShaderOption
 	BlueSharedString name;
 	BlueSharedString value;
 };
+
+
+const Tr2SamplerSetupMap::value_type* FindSamplerByName( const Tr2SamplerSetupMap& samplerMap, const char* name );
+
 
 #endif //Tr2EffectDescription_H

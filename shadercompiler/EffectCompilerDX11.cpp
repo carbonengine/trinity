@@ -761,8 +761,13 @@ void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectDa
 				.literal( "minLOD" ).literal( it->second.minLOD )
 				.literal( "maxLOD" ).literal( it->second.maxLOD )
 				.literal( "srgbTexture" ).literal( it->second.srgbTexture != 0 )
-				.literal( "isDynamic" ).literal( it->second.isDynamic != 0 )
-				.end();
+				.literal( "isDynamic" ).literal( it->second.isDynamic != 0 );
+			auto annotations = result.annotations.find( it->second.name );
+			if( annotations != result.annotations.end() )
+			{
+				PrintAnnotations( listing, annotations->second.annotations );
+			}
+			listing.end();
 		}
 		listing.end();
 	}

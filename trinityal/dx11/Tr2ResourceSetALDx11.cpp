@@ -50,13 +50,13 @@ namespace TrinityALImpl
 				auto& desc = description.m_srv[description.m_registerMap.srvs[stageIndex][registerIndex]];
 				switch( desc.type )
 				{
-				case Tr2ResourceSetDescriptionAL::BUFFER:
+				case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 					stage.resources[registerIndex] = desc.buffer.m_buffer->m_srv;
 					break;
-				case Tr2ResourceSetDescriptionAL::TEXTURE:
+				case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 					stage.resources[registerIndex] = desc.texture.m_texture->m_view[desc.colorSpace];
 					break;
-				case Tr2ResourceSetDescriptionAL::NONE:
+				case Tr2ResourceSetDescriptionAL::Resource::NONE:
 					continue;
 				default:
 					return E_INVALIDARG;
@@ -71,7 +71,7 @@ namespace TrinityALImpl
 					continue;
 				}
 				auto& desc = description.m_samplers[description.m_registerMap.samplers[stageIndex][registerIndex]];
-				if( desc.assigned )
+				if( desc.type == Tr2ResourceSetDescriptionAL::Sampler::SAMPLER )
 				{
 					stage.samplers[registerIndex] = desc.sampler.m_sampler->m_samplerState;
 					stage.samplerOffset = std::min( stage.samplerOffset, registerIndex );
@@ -85,7 +85,7 @@ namespace TrinityALImpl
 					continue;
 				}
 				auto& desc = description.m_uav[description.m_registerMap.uavs[stageIndex][registerIndex]];
-				if( desc.type == Tr2ResourceSetDescriptionAL::NONE )
+				if( desc.type == Tr2ResourceSetDescriptionAL::Resource::NONE )
 				{
 					continue;
 				}
@@ -103,12 +103,12 @@ namespace TrinityALImpl
 				}
 				switch( desc.type )
 				{
-				case Tr2ResourceSetDescriptionAL::BUFFER:
+				case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 					m_uavs[registerIndex] = desc.buffer.m_buffer->m_uav;
 					m_uavCount = registerIndex + 1;
 					m_uavOffset = std::min( m_uavOffset, registerIndex );
 					break;
-				case Tr2ResourceSetDescriptionAL::TEXTURE:
+				case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 					if( desc.mip < desc.texture.m_texture->m_uav.size() )
 					{
 						m_uavs[registerIndex] = desc.texture.m_texture->m_uav[desc.mip];

@@ -58,6 +58,7 @@ public:
 	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 );
 	bool SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
 	bool SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
+	bool SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
 	bool SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
 	void ClearResources();
 	
@@ -65,16 +66,16 @@ public:
 
 	bool operator==( const Tr2ResourceSetDescriptionAL& other ) const;
 private:
-	enum ResourceType
-	{
-		NONE,
-		BUFFER,
-		TEXTURE,
-		HEAP_VIEW,
-	};
-
 	struct Resource
 	{
+		enum Type
+		{
+			NONE,
+			BUFFER,
+			TEXTURE,
+			HEAP_VIEW,
+		};
+
 		Resource();
 
 		bool operator==( const Resource& other ) const;
@@ -85,7 +86,7 @@ private:
 
 		Tr2TextureAL texture;
 		Tr2BufferAL buffer;
-		ResourceType type;
+		Type type;
 		union
 		{
 			Tr2RenderContextEnum::ColorSpace colorSpace;
@@ -95,6 +96,13 @@ private:
 
 	struct Sampler
 	{
+		enum Type
+		{
+			NONE,
+			SAMPLER,
+			HEAP_VIEW,
+		};
+
 		Sampler();
 
 		bool operator==( const Sampler& other ) const;
@@ -103,7 +111,7 @@ private:
 		void UpdateHash( uint32_t& hash ) const;
 
 		Tr2SamplerStateAL sampler;
-		bool assigned;
+		Type type;
 	};
 
 	Tr2RegisterMapAL m_registerMap;

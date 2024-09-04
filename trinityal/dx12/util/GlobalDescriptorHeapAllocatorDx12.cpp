@@ -165,17 +165,19 @@ void GlobalDescriptorHeapPage::Free(GlobalDescriptorHeapPage::DescriptorEntry* e
 }
 
 
-SrvUavDescriptorAllocator::SrvUavDescriptorAllocator( ID3D12Device* device, uint32_t initialSize ) :
+GpuVisibleDescriptorAllocator::GpuVisibleDescriptorAllocator( ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t initialSize ) :
 	m_device( device ),
-	m_mutex( "SrvUavDescriptorAllocator", "m_mutex" ),
+	m_mutex( "GpuVisibleDescriptorAllocator", "m_mutex" ),
 	m_size( initialSize ),
 	m_sizeIncrement( initialSize ),
-	m_frameNumber( 0 )
+	m_frameNumber( 0 ),
+	m_type( type ),
+	m_entrySize( device->GetDescriptorHandleIncrementSize( type ) )
 {
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDesc.NumDescriptors = initialSize;
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	heapDesc.Type = type;
 
 	HRESULT hr = m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &m_gpuHeap ) );
 	if( hr != S_OK )
@@ -194,21 +196,20 @@ SrvUavDescriptorAllocator::SrvUavDescriptorAllocator( ID3D12Device* device, uint
 
 	auto cpuHandleStart = m_gpuHeap->GetCPUDescriptorHandleForHeapStart();
 	auto gpuHandleStart = m_gpuHeap->GetGPUDescriptorHandleForHeapStart();
-	auto entrySize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
-	m_freeList = std::make_unique<DescriptorList>( initialSize, GlobalDescriptorHeapPage::DescriptorInitArgs( cpuHandleStart, gpuHandleStart, entrySize ) );
+	m_freeList = std::make_unique<DescriptorList>( initialSize, GlobalDescriptorHeapPage::DescriptorInitArgs( cpuHandleStart, gpuHandleStart, m_entrySize ) );
 }
 
-SrvUavDescriptorAllocator::~SrvUavDescriptorAllocator()
+GpuVisibleDescriptorAllocator::~GpuVisibleDescriptorAllocator()
 {
 }
 
-ID3D12DescriptorHeap* SrvUavDescriptorAllocator::GetGpuVisibleHeap() const
+ID3D12DescriptorHeap* GpuVisibleDescriptorAllocator::GetGpuVisibleHeap() const
 {
 	return m_gpuHeap;
 }
 
-GlobalDescriptorHeapPage::DescriptorEntry* SrvUavDescriptorAllocator::Allocate()
+GlobalDescriptorHeapPage::DescriptorEntry* GpuVisibleDescriptorAllocator::Allocate()
 {
 	CcpAutoMutex lock( m_mutex );
 
@@ -223,7 +224,7 @@ GlobalDescriptorHeapPage::DescriptorEntry* SrvUavDescriptorAllocator::Allocate()
 	return entry;
 }
 
-bool SrvUavDescriptorAllocator::Resize()
+bool GpuVisibleDescriptorAllocator::Resize()
 {
 	CComPtr<ID3D12DescriptorHeap> gpuHeap;
 	CComPtr<ID3D12DescriptorHeap> cpuHeap;
@@ -231,7 +232,7 @@ bool SrvUavDescriptorAllocator::Resize()
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDesc.NumDescriptors = m_size + m_sizeIncrement;
-	heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	heapDesc.Type = m_type;
 
 	HRESULT hr = m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &gpuHeap ) );
 	if( hr != S_OK )
@@ -252,9 +253,9 @@ bool SrvUavDescriptorAllocator::Resize()
 	auto dest = gpuHeap->GetCPUDescriptorHandleForHeapStart();
 	auto source = m_cpuHeap->GetCPUDescriptorHandleForHeapStart();
 
-	m_device->CopyDescriptorsSimple( m_size, dest, source, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+	m_device->CopyDescriptorsSimple( m_size, dest, source, m_type );
 	dest = cpuHeap->GetCPUDescriptorHandleForHeapStart();
-	m_device->CopyDescriptorsSimple( m_size, dest, source, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+	m_device->CopyDescriptorsSimple( m_size, dest, source, m_type );
 
 	auto oldBaseCpu = m_gpuHeap->GetCPUDescriptorHandleForHeapStart();
 	auto oldBaseGpu = m_gpuHeap->GetGPUDescriptorHandleForHeapStart();
@@ -265,8 +266,7 @@ bool SrvUavDescriptorAllocator::Resize()
 		entry.m_offsetCPU.ptr = ( entry.m_offsetCPU.ptr - oldBaseCpu.ptr ) + newBaseCpu.ptr;
 		entry.m_offsetGPU.ptr = ( entry.m_offsetGPU.ptr - oldBaseGpu.ptr ) + newBaseGpu.ptr;
 	} );
-	auto entrySize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-	m_freeList->AddPage( m_sizeIncrement, GlobalDescriptorHeapPage::DescriptorInitArgs( newBaseCpu, newBaseGpu, entrySize ) );
+	m_freeList->AddPage( m_sizeIncrement, GlobalDescriptorHeapPage::DescriptorInitArgs( newBaseCpu, newBaseGpu, m_entrySize ) );
 
 	m_size += m_sizeIncrement;
 	m_pendingReleaseHeaps.push_back( { m_gpuHeap, m_frameNumber } );
@@ -278,7 +278,7 @@ bool SrvUavDescriptorAllocator::Resize()
 	return true;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE SrvUavDescriptorAllocator::GetDescriptorInCpuHeap( GlobalDescriptorHeapPage::DescriptorEntry* entry )
+D3D12_CPU_DESCRIPTOR_HANDLE GpuVisibleDescriptorAllocator::GetDescriptorInCpuHeap( GlobalDescriptorHeapPage::DescriptorEntry* entry )
 {
 	m_freeList->ValidateEntry( entry );
 	auto gpuBase = m_gpuHeap->GetCPUDescriptorHandleForHeapStart();
@@ -288,21 +288,20 @@ D3D12_CPU_DESCRIPTOR_HANDLE SrvUavDescriptorAllocator::GetDescriptorInCpuHeap( G
 	};
 }
 
-uint32_t SrvUavDescriptorAllocator::GetIndexInHeap( GlobalDescriptorHeapPage::DescriptorEntry* entry ) const
+uint32_t GpuVisibleDescriptorAllocator::GetIndexInHeap( GlobalDescriptorHeapPage::DescriptorEntry* entry ) const
 {
 	auto gpuBase = m_gpuHeap->GetGPUDescriptorHandleForHeapStart();
-	auto entrySize = m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-	return uint32_t( ( entry->m_offsetGPU.ptr - gpuBase.ptr ) / entrySize );
+	return uint32_t( ( entry->m_offsetGPU.ptr - gpuBase.ptr ) / m_entrySize );
 }
 
-void SrvUavDescriptorAllocator::Free( GlobalDescriptorHeapPage::DescriptorEntry* entry )
+void GpuVisibleDescriptorAllocator::Free( GlobalDescriptorHeapPage::DescriptorEntry* entry )
 {
 	CcpAutoMutex lock( m_mutex );
 
 	m_pendingFree.push_back( { entry, m_frameNumber } );
 }
 
-void SrvUavDescriptorAllocator::SetFrameIndices( uint64_t recordingFrame, uint64_t renderedFrame )
+void GpuVisibleDescriptorAllocator::SetFrameIndices( uint64_t recordingFrame, uint64_t renderedFrame )
 {
 	CcpAutoMutex lock( m_mutex );
 	for( size_t i = 0; i < m_pendingFree.size(); ++i )

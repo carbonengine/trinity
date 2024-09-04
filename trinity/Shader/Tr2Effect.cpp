@@ -646,18 +646,11 @@ void Tr2Effect::RebuildSamplerOverrides()
 	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2ResourceSetDescriptionAL& resourceSetDesc )
 	{
 		bool modified = false;
-		for( auto jt = m_samplerOverrides.begin(); jt != m_samplerOverrides.end(); ++jt )
+		for( auto& samplerOverride : m_samplerOverrides )
 		{
-			for( auto it = stage.samplers.begin(); it != stage.samplers.end(); ++it )
+			if( auto sampler = FindSamplerByName(stage.samplers, samplerOverride.name.c_str()) )
 			{
-				if( it->second.name && strcmp( jt->name.c_str(), it->second.name ) == 0 )
-				{
-					Tr2SamplerStateAL sampler;
-					sampler.Create( CreateSamplerDescription( *jt ), renderContext );
-					resourceSetDesc.SetSampler( shaderType, it->first, sampler );
-					modified = true;
-					break;
-				}
+				modified |= resourceSetDesc.SetSampler( shaderType, sampler->first, samplerOverride.sampler );
 			}
 		}
 		return modified;
@@ -690,11 +683,8 @@ void Tr2Effect::RebuildSamplerOverrides()
 		{
 			auto& pp = *m_parametersForPasses[technique].libraries[passIx];
 
-			for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
-			{
-				UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].globalInput, pp.m_globalResourceSetDesc );
-				UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].localInput, pp.m_localResourceSetDesc );
-			}
+			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].globalInput, pp.m_globalResourceSetDesc );
+			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].localInput, pp.m_localResourceSetDesc );
 		}
 	}
 }
@@ -719,6 +709,11 @@ void Tr2Effect::RebuildCachedDataInternal()
 		{
 			CCP_STATS_ZONE( __FUNCTION__ );
 			USE_MAIN_THREAD_RENDER_CONTEXT();
+
+			for ( auto& over : m_samplerOverrides )
+			{
+				over.sampler.Create( CreateSamplerDescription( over ), renderContext );
+			}
 
 			m_parametersForPasses.clear();
 
@@ -1047,6 +1042,8 @@ bool Tr2Effect::PopulateParameters()
 									newTex2D->Unlock();
 								}
 								break;
+								case Tr2EffectResource::BINDLESS_SAMPLER:
+									break;
 								default: {
 									OTr2GeometryBufferParameter* newBuffer = new OTr2GeometryBufferParameter();
 									newBuffer->m_name = BlueSharedString( constant->name );
@@ -1741,6 +1738,11 @@ bool GetBindlessFallbackTextureIndex( const Tr2EffectDescription& desc, const Tr
 		return false;
 	}
 
+	if( found->intValue == Tr2EffectResource::BINDLESS_SAMPLER )
+	{
+		// Fallbacks values for samplers are filled separately
+		return false;
+	}
 	auto resourceType = Tr2EffectResource::Type( found->intValue );
 
 	auto& fallbackTexture = Tr2Renderer::GetFallbackTexture( resourceType, c.name.c_str() );
@@ -1853,6 +1855,30 @@ void Tr2Effect::MapPassParameters(
 
 	CCP_ASSERT( constantSize >= constantDefaultValueSize );
 
+	auto PopulateBindlessSamplers = [&]( uint8_t* constantData ) {
+		for( auto& c : constants )
+		{
+			if( c.type != Tr2EffectConstant::UINT || c.dimension != 1 )
+			{
+				continue;
+			}
+
+			if( FindSamplerByName( stageInputDesc.samplers, c.name.c_str() ) )
+			{
+				auto over = find_if( m_samplerOverrides.begin(), m_samplerOverrides.end(), [&]( auto& s ) { return s.name == c.name; } );
+				if( over != m_samplerOverrides.end() )
+				{
+					reinterpret_cast<uint32_t*>( constantData + c.offset )[0] = over->sampler.GetIndexInHeap();
+				}
+				else
+				{
+
+					reinterpret_cast<uint32_t*>( constantData + c.offset )[0] = 0;
+				}
+			}
+		}
+	};
+
 	if( constantSize > 0 && !hasVariableParams )
 	{
 		std::unique_ptr<uint8_t[]> mirror( new uint8_t[constantSize] );
@@ -1892,6 +1918,7 @@ void Tr2Effect::MapPassParameters(
 			}
 		}
 
+		PopulateBindlessSamplers( mirror.get() );
 
 		//pp.GetSharedConstantBuffer( stage, mirror.get(), constantSize );
 		stageInput.GetSharedConstantBuffer( mirror.get(), constantSize );
@@ -1923,6 +1950,8 @@ void Tr2Effect::MapPassParameters(
 				}
 			}
 		}
+
+		PopulateBindlessSamplers( static_cast<uint8_t*>( mirror ) );
 
 		if( hasVariableParams )
 		{

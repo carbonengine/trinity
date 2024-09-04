@@ -96,7 +96,7 @@ bool Type::IsStruct() const
 
 bool Type::IsBindlessHandle() const
 {
-	return IsScalar() && ( builtInType == OP_BINDLESSHANDLETEXTURE2D || builtInType == OP_BINDLESSHANDLETEXTURE3D || builtInType == OP_BINDLESSHANDLETEXTURECUBE );
+	return IsScalar() && ( builtInType == OP_BINDLESSHANDLETEXTURE2D || builtInType == OP_BINDLESSHANDLETEXTURE3D || builtInType == OP_BINDLESSHANDLETEXTURECUBE || builtInType == OP_BINDLESSHANDLESAMPLER );
 }
 
 bool Type::IsScalarOrVector() const
@@ -109,8 +109,9 @@ bool Type::IsScalarOrVector() const
 		builtInType == OP_FLOAT ||
 		builtInType == OP_DOUBLE ||
 		builtInType == OP_BINDLESSHANDLETEXTURE2D ||
-		builtInType == OP_BINDLESSHANDLETEXTURE3D ||
-		builtInType == OP_BINDLESSHANDLETEXTURECUBE	);
+	    builtInType == OP_BINDLESSHANDLETEXTURE3D ||
+	    builtInType == OP_BINDLESSHANDLETEXTURECUBE ||
+		builtInType == OP_BINDLESSHANDLESAMPLER );
 }
 
 bool Type::IsTexture() const
