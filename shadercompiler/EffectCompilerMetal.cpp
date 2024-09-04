@@ -3631,43 +3631,48 @@ namespace
 			{
 				assert( reg.registerType == MetalRegister::SRV || reg.registerType == MetalRegister::UAV );
 
-				stage.registerInputs.push_back( { reg.registerType == MetalRegister::SRV ? RT_SRV_BUFFER : RT_UAV_BUFFER, (uint32_t)reg.registerNumber, (uint32_t)type.arraySizes[0], 0 } );
-
 				if( symbol->used )
 				{
 					if( reg.registerType == MetalRegister::SRV )
 					{
 						if ( type.IsSampler() )
 						{
-							if( symbol->used )
-							{
-								Sampler sampler = {};
+							stage.registerInputs.push_back( { RT_SAMPLER, (uint32_t)reg.registerNumber, (uint32_t)type.arraySizes[0], 0 } );
 
-								auto globalSamplerSymbol = state.GetSymbolTable().LookupGlobal( ToString( symbol->name ).c_str() );
-								if( !GetSamplerState( state, globalSamplerSymbol->definition, sampler ) )
+							Sampler sampler = {};
+
+							auto globalSamplerSymbol = state.GetSymbolTable().LookupGlobal( ToString( symbol->name ).c_str() );
+							if( !GetSamplerState( state, globalSamplerSymbol->definition, sampler ) )
+							{
+								return false;
+							}
+
+							if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressV == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressW == D3D11_TEXTURE_ADDRESS_BORDER )
+							{
+								auto& c = sampler.borderColor;
+								if( ( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 0 ) &&
+									( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 1 ) &&
+									( c.x != 1 || c.y != 1 || c.z != 1 || c.w != 1 ) )
 								{
+									state.ShowMessage( globalSamplerSymbol->definition->GetLocation(), EC_CUSTOM_ERROR, "sampler border color is not one of colors supported by Metal" );
 									return false;
 								}
-
-								if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressV == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressW == D3D11_TEXTURE_ADDRESS_BORDER )
-								{
-									auto& c = sampler.borderColor;
-									if( ( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 0 ) &&
-										( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 1 ) &&
-										( c.x != 1 || c.y != 1 || c.z != 1 || c.w != 1 ) )
-									{
-										state.ShowMessage( globalSamplerSymbol->definition->GetLocation(), EC_CUSTOM_ERROR, "sampler border color is not one of colors supported by Metal" );
-										return false;
-									}
-								}
-
-								sampler.name = g_stringTable.AddString( symbol->name );
-
-								stage.samplers[uint8_t( reg.registerNumber )] = sampler;
 							}
+
+							sampler.name = g_stringTable.AddString( symbol->name );
+
+							ParameterAnnotation paramAnnotations;
+							if( ExtractAnnotations( symbol->name, state, paramAnnotations, nullptr, nullptr ) )
+							{
+								annotations[sampler.name] = paramAnnotations;
+							}
+
+							stage.samplers[uint8_t( reg.registerNumber )] = sampler;
 						}
 						else
 						{
+							stage.registerInputs.push_back( { RT_SRV_BUFFER, (uint32_t)reg.registerNumber, (uint32_t)type.arraySizes[0], 0 } );
+
 							Texture texture;
 							texture.name = g_stringTable.AddString( symbol->name );
 							texture.type = TypeToTextureType( type );
@@ -3685,6 +3690,8 @@ namespace
 					}
 					else
 					{
+						stage.registerInputs.push_back( { RT_UAV_BUFFER, (uint32_t)reg.registerNumber, (uint32_t)type.arraySizes[0], 0 } );
+
 						Uav texture;
 						texture.name = g_stringTable.AddString( symbol->name );
 						texture.type = TypeToTextureType( type );
