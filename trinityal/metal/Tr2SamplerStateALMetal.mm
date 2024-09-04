@@ -163,6 +163,7 @@ namespace TrinityALImpl
 	Tr2SamplerStateAL::Tr2SamplerStateAL()
 		: m_metalContext( nullptr )
 		, m_mtlSamplerState( nullptr )
+        , m_heapIndex( 0xffffffff )
 	{
 	}
 
@@ -226,10 +227,11 @@ namespace TrinityALImpl
 		metalSamplerDescriptor.compareFunction = compareFunction;
 		// desc.m_isComparisonFilter
 
-		metalSamplerDescriptor.supportArgumentBuffers = NO;
+		metalSamplerDescriptor.supportArgumentBuffers = YES;
 
 		m_mtlSamplerState = m_metalContext->CreateSamplerState( metalSamplerDescriptor );
 		m_metalContext->DestroySamplerDescriptor( metalSamplerDescriptor );
+        m_heapIndex = m_metalContext->AllocateHeapIndex( m_mtlSamplerState );
 
 		return S_OK;
 	}
@@ -239,11 +241,12 @@ namespace TrinityALImpl
 		m_metalContext->DestroySamplerState( m_mtlSamplerState );
 		m_mtlSamplerState = nil;
 		m_metalContext = nil;
+        m_heapIndex = 0xffffffff;
 	}
 
 	uint32_t Tr2SamplerStateAL::GetIndexInHeap() const
 	{
-		return 0xffffffff;
+		return m_heapIndex;
 	}
 
 	bool Tr2SamplerStateAL::IsValid() const

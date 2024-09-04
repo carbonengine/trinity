@@ -170,7 +170,7 @@ namespace TrinityALImpl
                         CCP_ASSERT( i < METAL_UAV_BUFFER_COUNT );
 
                         const NSUInteger bufferIndex = METAL_UAV_BUFFER_OFFSET + i;
-                        heapViewMask |= (1 << heapViewMask);
+                        heapViewMask |= (1 << bufferIndex);
                     }
                     break;
 				case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
@@ -213,6 +213,12 @@ namespace TrinityALImpl
 					// Remove this resource from mask.
 					samplerMask &= ~(1 << i);
 				}
+                else if( sampler.type == Tr2ResourceSetDescriptionAL::Sampler::HEAP_VIEW )
+                {
+                    CCP_ASSERT( i < METAL_SRV_BUFFER_COUNT );
+                    const NSUInteger bufferIndex = METAL_SRV_BUFFER_OFFSET + i;
+                    heapViewMask |= (1 << bufferIndex);
+                }
 			}
 
 			// Replace any missing resources with dummy ones.
