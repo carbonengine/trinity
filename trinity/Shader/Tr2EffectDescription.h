@@ -271,4 +271,8 @@ struct Tr2ShaderOption
 	BlueSharedString value;
 };
 
+
+const Tr2SamplerSetupMap::value_type* FindSamplerByName( const Tr2SamplerSetupMap& samplerMap, const char* name );
+
+
 #endif //Tr2EffectDescription_H

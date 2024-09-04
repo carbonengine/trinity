@@ -612,14 +612,15 @@ bool Tr2EffectDescription::Read( const void* data,
 						{
 							continue;
 						}
-						auto found = find_if( pass.stageInputs[type].samplers.begin(), pass.stageInputs[type].samplers.end(), [&]( const auto& s ) { return s.second.name && strcmp( s.second.name, c.name.c_str() ) == 0; } );
-						if( found != pass.stageInputs[type].samplers.end() )
+
+						if( auto sampler = FindSamplerByName( pass.stageInputs[type].samplers, c.name.c_str() ) )
 						{
-							if ( c.offset + c.size < pass.stageInputs[type].m_constantValueSize )
+							if ( c.offset + c.size > pass.stageInputs[type].m_constantValueSize )
 							{
 								std::fill( pass.stageInputs[type].constantValues + pass.stageInputs[type].m_constantValueSize, pass.stageInputs[type].constantValues + c.offset + c.size, 0 );
+								pass.stageInputs[type].m_constantValueSize = c.offset + c.size;
 							}
-							reinterpret_cast<uint32_t*>( pass.stageInputs[type].constantValues + c.offset )[0] = found->second.sampler.GetIndexInHeap();
+							reinterpret_cast<uint32_t*>( pass.stageInputs[type].constantValues + c.offset )[0] = sampler->second.sampler.GetIndexInHeap();
 						}
 					}
 				}
@@ -788,3 +789,9 @@ bool Tr2EffectDescription::Read( const void* data,
 	return true;
 }
 
+
+const Tr2SamplerSetupMap::value_type* FindSamplerByName( const Tr2SamplerSetupMap& samplerMap, const char* name )
+{
+	auto found = find_if( begin( samplerMap ), end( samplerMap ), [name]( const Tr2SamplerSetupMap::value_type& pair ) { return pair.second.name && strcmp( pair.second.name, name ) == 0; } );
+	return found != end( samplerMap ) ? &*found : nullptr;
+}

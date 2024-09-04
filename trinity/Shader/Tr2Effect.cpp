@@ -648,13 +648,9 @@ void Tr2Effect::RebuildSamplerOverrides()
 		bool modified = false;
 		for( auto& samplerOverride : m_samplerOverrides )
 		{
-			for( auto& sampler : stage.samplers )
+			if( auto sampler = FindSamplerByName(stage.samplers, samplerOverride.name.c_str()) )
 			{
-				if( sampler.second.name && strcmp( samplerOverride.name.c_str(), sampler.second.name ) == 0 )
-				{
-					modified = resourceSetDesc.SetSampler( shaderType, sampler.first, samplerOverride.sampler );
-					break;
-				}
+				modified |= resourceSetDesc.SetSampler( shaderType, sampler->first, samplerOverride.sampler );
 			}
 		}
 		return modified;
@@ -1859,7 +1855,7 @@ void Tr2Effect::MapPassParameters(
 
 	CCP_ASSERT( constantSize >= constantDefaultValueSize );
 
-	auto PopulateBinlessSamplers = [&]( uint8_t* constantData ) {
+	auto PopulateBindlessSamplers = [&]( uint8_t* constantData ) {
 		for( auto& c : constants )
 		{
 			if( c.type != Tr2EffectConstant::UINT || c.dimension != 1 )
@@ -1867,8 +1863,7 @@ void Tr2Effect::MapPassParameters(
 				continue;
 			}
 
-			auto sampler = find_if( begin( stageInputDesc.samplers ), end( stageInputDesc.samplers ), [&]( auto& s ) { return s.second.name && strcmp( s.second.name, c.name.c_str() ) == 0; } );
-			if( sampler != end( stageInputDesc.samplers ) )
+			if( FindSamplerByName( stageInputDesc.samplers, c.name.c_str() ) )
 			{
 				auto over = find_if( m_samplerOverrides.begin(), m_samplerOverrides.end(), [&]( auto& s ) { return s.name == c.name; } );
 				if( over != m_samplerOverrides.end() )
@@ -1923,7 +1918,7 @@ void Tr2Effect::MapPassParameters(
 			}
 		}
 
-		PopulateBinlessSamplers( mirror.get() );
+		PopulateBindlessSamplers( mirror.get() );
 
 		//pp.GetSharedConstantBuffer( stage, mirror.get(), constantSize );
 		stageInput.GetSharedConstantBuffer( mirror.get(), constantSize );
@@ -1956,7 +1951,7 @@ void Tr2Effect::MapPassParameters(
 			}
 		}
 
-		PopulateBinlessSamplers( static_cast<uint8_t*>( mirror ) );
+		PopulateBindlessSamplers( static_cast<uint8_t*>( mirror ) );
 
 		if( hasVariableParams )
 		{
