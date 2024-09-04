@@ -266,11 +266,6 @@ void TriStepRenderPostProcess::py__init__( EveSpaceScene* scene, Tr2RenderTarget
 	m_scene = scene;
 	m_sceneDirty = true;
 
-	if( !source || !source->IsValid() )
-	{
-		CCP_LOGERR( "TriStepRenderPostProcess: source is invalid" );
-	}
-
 	SetRenderTarget( source );
 	m_opaqueColorBuffer = opaque_source;
 	SetupVelocityMap();
@@ -312,15 +307,16 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		return RS_FAILED;
 	}
 
-	auto sourceBuffer = m_renderInfo->GetSourceBuffer();
-
-	if( !sourceBuffer || !sourceBuffer->IsValid() )
+	if( m_scene == nullptr )
 	{
 		return RS_OK;
 	}
 
-	if( m_scene == nullptr )
+	auto sourceBuffer = m_renderInfo->GetSourceBuffer();
+
+	if( !sourceBuffer || !sourceBuffer->IsValid() )
 	{
+		CCP_LOGERR( "TriStepRenderPostProcess::Execute: Source buffer is invalid!" );
 		return RS_OK;
 	}
 
@@ -1767,7 +1763,7 @@ void TriStepRenderPostProcess::SetRenderTarget( Tr2RenderTarget* rt )
 	if( rt != GetRenderTarget() )
 	{
 		m_renderInfo->SetSourceBuffer( rt );
-		if( rt != nullptr )
+		if( rt != nullptr && rt->IsValid() )
 		{
 			m_tilesX = rt->GetWidth() / HISTOGRAM_TILE_SIZE_X + 1;
 			m_tilesY = rt->GetHeight() / HISTOGRAM_TILE_SIZE_Y + 1;
