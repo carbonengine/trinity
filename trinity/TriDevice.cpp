@@ -83,7 +83,6 @@ namespace
 
 CCP_STATS_DECLARE( deviceOnTick, "Trinity/device/OnTick", true, CST_TIME, "Time spent in TriDevice::OnTick" );
 
-CCP_STATS_DECLARE( fpsRaw, "FPSRaw", false, CST_COUNTER_LOW, "Frames per second (raw values)");
 CCP_STATS_DECLARE( fps, "FPS", false, CST_COUNTER_LOW, "Frames per second");
 CCP_STATS_DECLARE( smoothedFrameTime, "Trinity/SmoothedFrameTime", false, CST_TIME, "Frame time smoothed over a number of frames");
 CCP_STATS_DECLARE( frameTime, "Trinity/FrameTime", false, CST_TIME, "Frame time" );
@@ -97,6 +96,8 @@ CCP_STATS_DECLARE( frameTimeAbove500ms, "Trinity/FrameTimeAbove500ms", false, CS
 CCP_STATS_DECLARE( presentTime, "Trinity/PresentTime", true, CST_TIME, "Time spent in Present call" );
 CCP_STATS_DECLARE( activeFrameTime, "Trinity/ActiveFrameTime", true, CST_TIME, "Frame time not counting persent or throttle time" );
 CCP_STATS_DECLARE( throttleTime, "Trinity/ThrottleTime", true, CST_TIME, "Time spent throttling" );
+CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
+CCP_STATS_DECLARE( smoothedGeneratedFrames, "Trinity/smoothedGeneratedFrames", false, CST_COUNTER_LOW, "Smoothed fps (+ generated) over a number of frames" );
 
 
 	// NOTE: This is a global pointer to a ROT object, initialized by it
@@ -581,8 +582,11 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	static BeTimer s_frameTimer;
 	static const int s_fpsValuesCount = 64;
 	static double s_frameTimeValues[s_fpsValuesCount] = {0.0};
+	static double s_generatedFrames[s_fpsValuesCount] = { 0 };
+
 	static double s_frameTimeSum = 0.0;
 	static int s_currentFpsValue = 0;
+	static double s_generatedFpsSum = 0;
 
 	double frameTime = s_frameTimer.GetSeconds();
 #if CCP_STATS_ENABLED
@@ -640,6 +644,21 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 		}
 	}
 
+	if( m_upscalingWithFrameGeneration )
+	{
+		s_generatedFpsSum -= s_generatedFrames[s_currentFpsValue];
+		double generatedSinceLastPresent = CCP_STATS_GET( generatedFrames );
+		s_generatedFrames[s_currentFpsValue] = generatedSinceLastPresent;
+		s_generatedFpsSum += generatedSinceLastPresent;
+
+		CCP_STATS_SET( generatedFrames, 0 );
+	}
+	else
+	{
+		s_generatedFrames[s_currentFpsValue] = 0;
+		s_generatedFpsSum = 0;
+	}
+	
 	s_frameTimeSum -= s_frameTimeValues[s_currentFpsValue];
 	s_frameTimeValues[s_currentFpsValue] = frameTime;
 	s_frameTimeSum += frameTime;
@@ -658,6 +677,7 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	CCP_STATS_SET( fps, 100.0 * avgFps );
 #if CCP_STATS_ENABLED
 	g_ccpStatistics_smoothedFrameTime.Set( avgFrametime );
+	CCP_STATS_SET( smoothedGeneratedFrames, 100.0 * ( s_generatedFpsSum / (double)s_fpsValuesCount ) * avgFps );
 #endif
 
 	s_frameTimer.Reset();

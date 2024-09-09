@@ -7,6 +7,8 @@
 #include "include/upscaling/Tr2UpscalingAL.h"
 
 bool g_upscalingDebug = false;
+CCP_STATS_DECLARE( generatedFrames, "GeneratedFrames", false, CST_COUNTER_LOW, "Generated Frames between presents" );
+
 
 namespace Tr2UpscalingAL
 {
@@ -31,8 +33,6 @@ namespace Tr2UpscalingAL
         case INCORRECT_INPUT:
             CCP_LOGWARN( "Tr2Upscaling: Incorrect input" );
             break;
-                
-            
 		}
 	}
 
@@ -64,7 +64,7 @@ namespace Tr2UpscalingAL
 
 	uint32_t ConvertDisplaySizeToRenderSize( uint32_t displaySize, float upscaling )
 	{
-		uint32_t renderSize = uint32_t( displaySize / (float)upscaling );
+		uint32_t renderSize = uint32_t( (float)displaySize / (float)upscaling );
 		uint32_t addition = displaySize % 2 != renderSize % 2;
 		return renderSize + addition;
 	}
@@ -133,7 +133,7 @@ namespace Tr2UpscalingAL
 		case NATIVE:
 			return "Native";
 		case ULTRA_QUALITY:
-			return "UltraQuality";
+			return "Ultra Quality";
 		case QUALITY:
 			return "Quality";
 		case BALANCED:
@@ -141,7 +141,7 @@ namespace Tr2UpscalingAL
 		case PERFORMANCE:
 			return "Performance";
 		case ULTRA_PERFORMANCE:
-			return "UltraPerformance";
+			return "Ultra Performance";
 		}
 		return "Unknown";
 	}

@@ -13,6 +13,7 @@
 #include <FidelityFX/host/backends/dx12/ffx_dx12.h>
 
 extern bool g_upscalingDebug;
+CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
 namespace Fsr3Utils
 {
@@ -297,7 +298,11 @@ Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( Tr2UpscalingAL::Setting settin
 
 		m_frameGenerationConfig.onlyPresentInterpolated = true;
 		m_frameGenerationConfig.allowAsyncWorkloads = false;
-		m_frameGenerationConfig.frameGenerationCallback = ffxFsr3DispatchFrameGeneration;
+		m_frameGenerationConfig.frameGenerationCallback = []( const FfxFrameGenerationDispatchDescription* d) -> FfxErrorCode { 
+			CCP_STATS_INC( generatedFrames );
+
+			return ffxFsr3DispatchFrameGeneration(d); 
+		};
 		m_frameGenerationConfig.swapChain = m_framegenSwapchain;
 		m_frameGenerationConfig.HUDLessColor = Fsr3Utils::ConvertTextureToFfxResource( nullptr, L"FSR3_Hudless" );
 	}
@@ -354,7 +359,6 @@ void Tr2Fsr3UpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 		m_frameGenerationConfig.HUDLessColor = Fsr3Utils::ConvertTextureToFfxResource( texture, L"FSR3_Hudless" );
 	}
 }
-
 
 bool Tr2Fsr3UpscalingContext::HasSharpening() const
 {
@@ -478,6 +482,8 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	}
 
 	m_reset = false;
+	// increase the generated frame, so we at least have one frame active...
+	CCP_STATS_INC( generatedFrames );
 
 	// the descriptor cache is dirty, mark it so
 	renderContext.DirtyDescriptorCache();
