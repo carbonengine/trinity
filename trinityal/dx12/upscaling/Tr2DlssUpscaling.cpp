@@ -16,6 +16,7 @@
 #include "include/Tr2StreamlineAL.h"
 
 extern bool g_upscalingDebug;
+CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
 namespace DlssUtils
 {
@@ -378,6 +379,9 @@ sl::Result Tr2DlssUpscalingContext::UpdateDlssG()
 		}
 		return res;
 	}
+
+	CCP_STATS_SET( generatedFrames, m_dlssgState.numFramesActuallyPresented );
+
 	return sl::Result::eOk;
 }
 

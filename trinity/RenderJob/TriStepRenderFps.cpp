@@ -6,6 +6,7 @@
 #include "pdm.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( vertexCount );
+CCP_STATS_DECLARED_ELSEWHERE( smoothedGeneratedFrames );
 
 #ifdef _WIN32
 #include <ctime>
@@ -167,28 +168,48 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 	std::string displayResolution = std::to_string( displayWidth ) + "x" + std::to_string( displayHeight );
 
 	char upscalingBuffer[256];
+
 	if( upscalingInfo.technique != Tr2UpscalingAL::Technique::NONE )
 	{
 		std::string formattedUpscalingText = 
 		"   Upscaler: %11s\n"
 		"    Setting: %11s\n"
-		"   FrameGen: %11s\n"
-		"   Temporal: %11s\n"
 		" Render Res: %11s\n";
 		
 		std::string techniqueName( Tr2UpscalingAL::GetTechniqueName( upscalingInfo.technique ) );
         techniqueName = techniqueName.substr( 0, std::min((size_t)11, techniqueName.length()) ).c_str();
-        std::string settingName( Tr2UpscalingAL::GetSettingName( upscalingInfo.setting ) );
-        settingName = settingName.substr( 0, std::min( (size_t)11, settingName.length() ) );
         std::string renderRes = std::to_string( upscalingInfo.renderWidth ) + "x" + std::to_string( upscalingInfo.renderHeight );
-
+		std::string settingName;
+		std::string generatedFrames;
+		switch( upscalingInfo.setting )
+		{
+		case Tr2UpscalingAL::NATIVE:
+			settingName = "Native";
+			break;
+		case Tr2UpscalingAL::ULTRA_QUALITY:
+			settingName = "UQuality";
+			break;
+		case Tr2UpscalingAL::QUALITY:
+			settingName = "Quality";
+			break;
+		case Tr2UpscalingAL::BALANCED:
+			settingName = "Balanced";
+			break;
+		case Tr2UpscalingAL::PERFORMANCE:
+			settingName = "Perform";
+			break;
+		case Tr2UpscalingAL::ULTRA_PERFORMANCE:
+			settingName = "UPerform";
+			break;
+		default:
+			settingName = "Unknown";
+			break;
+		}
 		sprintf_s(
 			upscalingBuffer,
 			formattedUpscalingText.c_str(),
             techniqueName.c_str(),
 			settingName.c_str(),
-			upscalingInfo.frameGeneration ? "Yes" : "No",
-			upscalingInfo.temporal ? "Yes" : "No",
             renderRes.c_str() );
  	}
 	else
