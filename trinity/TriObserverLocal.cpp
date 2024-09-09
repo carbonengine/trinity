@@ -18,7 +18,20 @@ void TriObserverLocal::Update( const Matrix& worldTransform )
 		Vector3 front, up, position;
 		position = TransformCoord( m_position, worldTransform );
 		front = TransformNormal( m_front, worldTransform );
-		up = TransformNormal( Vector3( 0.0f, 1.0f, 0.0f ), worldTransform );
+
+		const float epsilon = 1.0e-10f;
+
+		// Sometimes with get world transforms with zero scale, which can cause the front vector to be zero.
+		// Audio2 doesn't like that at all, so we send an arbitrary front vector in that case.
+		if( LengthSq( front ) < epsilon )
+		{
+			front = Vector3( 0.0f, 0.0f, 1.0f );
+			up = Vector3( 0.0f, 1.0f, 0.0f );
+		}
+		else
+		{
+			up = TransformNormal( Vector3( 0.0f, 1.0f, 0.0f ), worldTransform );
+		}
 		m_observer.p->UpdatePlacement( front, up, position );
 	}
 }
