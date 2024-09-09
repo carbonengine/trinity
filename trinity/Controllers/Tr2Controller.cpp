@@ -171,7 +171,6 @@ void Tr2Controller::Unlink()
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	Stop();
-	m_owner = nullptr;
 	for( auto& var : m_variables )
 	{
 		var->SetDestinationBuffer( nullptr );
@@ -186,6 +185,7 @@ void Tr2Controller::Unlink()
 		( *it )->Unlink();
 	}
 	m_bindingPathRoots.clear();
+	m_owner = nullptr;
 }
 
 void Tr2Controller::ReLink()
