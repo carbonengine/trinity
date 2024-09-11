@@ -167,7 +167,7 @@ bool Tr2SSAO::PrepareSsaoResources( Layer& layer, const Layer* prevLayer, Tr2Pri
 
 	if( !layer.resources.ssaoWorkerTextureA.IsValid() )
 	{
-		Tr2BitmapDimensions dims( TEX_TYPE_2D, PIXEL_FORMAT_R8G8_SNORM, size.ssaoBufferWidth, size.ssaoBufferHeight, 1, 1, SSAO_PASS_COUNT );
+		Tr2BitmapDimensions dims( TEX_TYPE_2D, PIXEL_FORMAT_R8G8_UNORM, size.ssaoBufferWidth, size.ssaoBufferHeight, 1, 1, SSAO_PASS_COUNT );
 		if( prevLayer && prevLayer->resources.ssaoWorkerTextureA.GetDesc() == dims )
 		{
 			layer.resources.ssaoWorkerTextureA = prevLayer->resources.ssaoWorkerTextureA;
@@ -181,7 +181,7 @@ bool Tr2SSAO::PrepareSsaoResources( Layer& layer, const Layer* prevLayer, Tr2Pri
 
 	if( !layer.resources.ssaoWorkerTextureB.IsValid() )
 	{
-		Tr2BitmapDimensions dims( TEX_TYPE_2D, PIXEL_FORMAT_R8G8_SNORM, size.ssaoBufferWidth, size.ssaoBufferHeight, 1, 1, SSAO_PASS_COUNT );
+		Tr2BitmapDimensions dims( TEX_TYPE_2D, PIXEL_FORMAT_R8G8_UNORM, size.ssaoBufferWidth, size.ssaoBufferHeight, 1, 1, SSAO_PASS_COUNT );
 		if( prevLayer && prevLayer->resources.ssaoWorkerTextureB.GetDesc() == dims )
 		{
 			layer.resources.ssaoWorkerTextureB = prevLayer->resources.ssaoWorkerTextureB;
