@@ -31,7 +31,6 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
         CCP_LOGNOTICE( "Resetting device - Upscaler changed" );
         CreateUpscalingTechnique(mAdapter);
         ResetDevice();
-        UpdateAvailableUpscalingTechniques();
         return;
     }
     

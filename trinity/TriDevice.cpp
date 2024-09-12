@@ -250,6 +250,7 @@ bool TriDevice::CreateSimpleDevice(
 	mHeight = height;
 	mHwnd = hwnd;
 	mDeviceLost = false;
+	bool adapterChanged = Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter );
 	mAdapter = adapter;
 
 	if( type != NO_ADAPTER && !SetPresentParameters( mAdapter, mPresentParam ) )
@@ -263,7 +264,10 @@ bool TriDevice::CreateSimpleDevice(
 		return false;
 	}
 
-	UpdateAvailableUpscalingTechniques();
+	if( adapterChanged || m_supportedUpscalingTechniques.empty() )
+	{
+		UpdateAvailableUpscalingTechniques();
+	}
 	PrepareDeviceResources();
 
 	BeOS->RegisterForTicks(this, (void*)TRINITY);
@@ -361,7 +365,10 @@ bool TriDevice::ChangeDevice(
 	}
 
 	InitD3DDevice();
-	UpdateAvailableUpscalingTechniques();	
+	if( adaptersChanged || m_supportedUpscalingTechniques.empty() )
+	{
+		UpdateAvailableUpscalingTechniques();
+	}
 	PrepareDeviceResources(); //call python to recreate its stuff.
 
 	return true;
