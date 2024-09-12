@@ -3235,7 +3235,10 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 	renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
 	RenderOpaqueBatches( m_secondaryBatches, renderContext );
 
+	auto oldReadOnlyDepth = renderContext.GetReadOnlyDepth();
+	renderContext.SetReadOnlyDepth( true );
 	RenderTransparentBatches( m_secondaryBatches, renderContext );
+	renderContext.SetReadOnlyDepth( oldReadOnlyDepth );
 	ClearBatches( m_secondaryBatches );
 
 	// Put view/projection back to normal
