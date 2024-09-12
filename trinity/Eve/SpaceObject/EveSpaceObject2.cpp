@@ -504,6 +504,9 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 	m_vsData.ellpsoidRadii = Vector4( shapeRadius, 0.f );
 	m_vsData.ellpsoidCenter = Vector4( shapeCenter, 0.f );
 
+	m_psData.worldTransform = m_vsData.worldTransform;
+	m_psData.invWorldTransform = m_vsData.invWorldTransform;
+
 	if( m_impactOverlay )
 	{
 		m_psData.miscData.y = (float)m_impactOverlay->GetDataTextureOffset();
@@ -2405,6 +2408,7 @@ void EveSpaceObject2::UpdateWorldTransform( Be::Time time )
 	}
 	m_lastUpdateTransformTime = time;
 	m_vsData.worldTransformLast = Transpose( m_worldTransform );
+	m_psData.worldTransformLast = m_vsData.worldTransformLast;
 
 	if( m_ballPosition )
 	{
