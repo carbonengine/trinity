@@ -76,6 +76,8 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual void SetOrigin( Origin origin ) {};
 
 	virtual void AddTransformModifier( IEveChildTransformModifier* modifier ) {};
+
+	virtual void SetMute( bool isMuted ) {};
 };
 
 BLUE_DECLARE_IVECTOR( IEveSpaceObjectChild );

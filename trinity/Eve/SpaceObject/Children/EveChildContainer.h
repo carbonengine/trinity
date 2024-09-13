@@ -134,6 +134,9 @@ public:
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void SetAlwaysOn( bool alwaysOn );
 
+	bool GetMute();
+	void SetMute( bool isMuted );
+
 	void PlayCurveSet( const std::string& name, const std::string& rangeName );
 	void StopCurveSet( const std::string& name );
 	void UpdateCurveSet( const std::string& name, Be::Time time );
@@ -189,6 +192,7 @@ protected:
 	float m_activationStrength;
 	float m_ownerMaxSpeed;
 	bool m_display;
+	bool m_mute;
 	DisplayQualityModifier m_displayFilter;
 	bool m_isAlwaysOn;
 	bool m_isPlacementRoot;

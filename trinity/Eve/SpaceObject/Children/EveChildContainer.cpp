@@ -35,6 +35,7 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 	m_displayFilter( SHADER_ALL ),
 	m_worldVelocity( 0, 0, 0 ),
 	m_display( true ),
+	m_mute( false ),
 	m_isAlwaysOn( false ),
 	m_isPlacementRoot( false ),
 	m_ownerMaxSpeed( 0 ),
@@ -78,6 +79,25 @@ bool EveChildContainer::OnModified( Be::Var* val )
 	}
 	return true;
 }
+
+bool EveChildContainer::GetMute()
+{
+	return m_mute;
+}
+
+void EveChildContainer::SetMute( bool isMute )
+{
+	m_mute = isMute;
+	for( auto it : m_objects )
+	{
+		it->SetMute( m_mute );
+	}
+	for( auto it : m_observers )
+	{
+		it->SetMute( m_mute );
+	}
+}
+
 
 void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
