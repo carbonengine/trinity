@@ -152,6 +152,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	PARENTLOCK( m_controllers ),
 	m_impostorMode( false ),
 	m_display( true ),
+	m_mute( false ),
 	m_update( true ),
 	m_allowLodSelection( true ),
 	m_isPickable( true ),
@@ -700,7 +701,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			}
 		}
 
-		renderer.DrawBox( this, m_worldTransform, bounds.m_min, bounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor(color, 0xffff0000, 0xff00ff00, 0x00000000) );
+		renderer.DrawBox( this, m_worldTransform, bounds.m_min, bounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( color, 0xffff0000, 0xff00ff00, 0x00000000 ) );
 	}
 
 	if( renderer.HasOption( GetRawRoot(), "Bounding Sphere" ) )
@@ -1031,7 +1032,8 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 	}
 }
 
-Tr2PerObjectData* EveSpaceObject2::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) {
+Tr2PerObjectData* EveSpaceObject2::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
+{
 	return GetPerObjectData( accumulator );
 }
 
@@ -2516,7 +2518,6 @@ void EveSpaceObject2::FreezeHighDetailMesh()
 	{
 		decal->SetHighDetailDecalState( true );
 	}
-
 }
 
 void EveSpaceObject2::PrepareForAnimation()
@@ -2788,7 +2789,7 @@ void EveSpaceObject2::SetDnaString( const char* dna )
 // --------------------------------------------------------------------------------
 ITriTargetable::ImpactConfiguration EveSpaceObject2::GetImpactConfiguration() const
 {
-	if( m_impactOverlay != nullptr )	
+	if( m_impactOverlay != nullptr )
 	{
 		return m_impactOverlay->GetImpactConfiguration();
 	}
@@ -3052,11 +3053,11 @@ float EveSpaceObject2::GetEstimatedPixelDiameter() const
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::EstimatePixelDiameter( const TriFrustum& frustum )
 {
-	// estimate the pixel diameter using the local bounding box,  
+	// estimate the pixel diameter using the local bounding box,
 	// as the bounding sphere may not pepresent the mesh bounding sphere,
 	// but rather the bounding sphere of the object and it's EveChildMesh attachments
 	Vector4 sphere;
-	BoundingSphereFromBox(sphere, m_localAabbMin, m_localAabbMax, &m_worldTransform );
+	BoundingSphereFromBox( sphere, m_localAabbMin, m_localAabbMax, &m_worldTransform );
 	m_estimatedPixelDiameter = frustum.GetPixelSizeAccross( sphere.GetXYZ(), sphere.w );
 }
 
@@ -3598,6 +3599,25 @@ void EveSpaceObject2::SetInheritProperties( const Color* colorSet )
 		{
 			light->SetInheritProperties( m_inheritProperties->GetProperties() );
 		}
+	}
+}
+
+bool EveSpaceObject2::GetMute()
+{
+	return m_mute;
+}
+
+void EveSpaceObject2::SetMute( bool isMute )
+{
+	m_mute = isMute;
+	for( auto it : m_effectChildren )
+	{
+		it->SetMute( m_mute );
+	}
+	for( auto it : m_observers )
+	{
+
+		it->SetMute( m_mute );
 	}
 }
 
