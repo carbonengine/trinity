@@ -84,7 +84,7 @@ PyObject* TriVector::Repr(
 	*handled = true;
 	char buf[120];
 	int size = sprintf_s(buf, "(%.3f, %.3f, %.3f)", x, y, z);
-	return PyString_FromStringAndSize(buf, size);
+	return PyUnicode_FromStringAndSize(buf, size);
 }
 
 

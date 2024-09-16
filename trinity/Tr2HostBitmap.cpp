@@ -703,7 +703,7 @@ PyObject * Tr2HostBitmap::GetPixelPy( PyObject *tuple )
 	{
 		Py_RETURN_NONE;
 	}
-	return PyInt_FromLong(val);
+	return PyLong_FromLong(val);
 }
 
 PyObject* Tr2HostBitmap::PySetPixel( PyObject* args )

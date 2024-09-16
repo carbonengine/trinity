@@ -186,7 +186,7 @@ void AddScancodesToDict(PyObject* dict)
 {
 	for (int i = 0; i < sizeof SCANCODES / sizeof SCANCODES[0]; i++)
 	{
-		PyObject* value = PyInt_FromLong( SCANCODES[i].mDIK );
+		PyObject* value = PyLong_FromLong( SCANCODES[i].mDIK );
 		PyDict_SetItemString(dict, (char*)SCANCODES[i].mName, value);
 		Py_DECREF(value);
 	}

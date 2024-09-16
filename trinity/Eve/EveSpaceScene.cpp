@@ -170,6 +170,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_reflectionMapTransformVar( "ReflectionMapTransform", IdentityMatrix() ),
 	m_suncVecVar( "SunVec", Vector3( 0.0f, 0.0f, 1.0f ) ),
 	m_nebulaIntensity( 1.f ),
+	m_backgroundReflectionIntensity( 1.f ),
+	m_defaultDiffuseRoughness( 1.f ),
 	m_nebulaIntensityVar( "NebulaIntensity", m_nebulaIntensity ),
 	m_planetScale( 1e6 ),
 	m_planetCameraScale( 1e6 ),
@@ -1630,6 +1632,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 
 		PopulatePerFramePSData( m_perFramePS, renderContext );
 		PopulatePerFrameVSData( m_perFrameVS, renderContext );
+
 		ApplyPerFrameData( renderContext );
 
 		{
@@ -1838,11 +1841,25 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 	std::vector<ITr2Renderable*> visible;
 	Tr2RenderableSortList transparentObjects;
 
+
 	// nebula
 	if( m_backgroundEffect )
 	{
+
+		if( reason == BACKGROUND_RENDER_REFLECTION )
+		{
+			// multiply the nebula intensity with the reflection multiplier so we can control the reflection intensity
+			m_nebulaIntensityVar = m_backgroundReflectionIntensity;
+		}
+
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		Tr2Renderer::DrawCameraSpaceScreenQuad( renderContext, m_backgroundEffect->GetShaderStateInterface(), m_backgroundEffect );
+		
+		if( reason == BACKGROUND_RENDER_REFLECTION )
+		{
+			// Reset the nebula intensity to the original one
+			m_nebulaIntensityVar = m_nebulaIntensity;
+		}
 	}
 
 	// stars
@@ -2601,11 +2618,12 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 
 	data.Sun = m_sunData;
 	data.Sun.DiffuseColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
+	data.Sun.DiffuseColor.a = m_defaultDiffuseRoughness;
 	// make sure whatever direction we get in here, it is normalized! And inverted: Shaders work with direction to light...
 	data.Sun.DirWorld = -Normalize( data.Sun.DirWorld );
 	data.AmbientColor = Vector3( m_ambientColor.r, m_ambientColor.g, m_ambientColor.b );
 
-	data.ReflectionIntensity = m_reflectionIntensity * m_nebulaIntensity;
+	data.ReflectionIntensity = m_reflectionIntensity;
 	data.FogColor = Vector4( m_fogColor.r, m_fogColor.g, m_fogColor.b, m_fogMax );
 
 	// ps gamma brightness

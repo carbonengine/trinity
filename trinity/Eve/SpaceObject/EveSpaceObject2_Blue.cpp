@@ -90,7 +90,7 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 			PyObject* tuple = PyTuple_New( 3 );
 			PyTuple_SetItem( tuple, 0, Py_BuildValue( "(fff)", position.x, position.y, position.z ) );
 			PyTuple_SetItem( tuple, 1, Py_BuildValue( "(ffff)", rotation.x, rotation.y, rotation.z, rotation.w ) );
-			PyTuple_SetItem( tuple, 2, PyInt_FromLong( locator.boneIndex ) );
+			PyTuple_SetItem( tuple, 2, PyLong_FromLong( locator.boneIndex ) );
 			PyList_SetItem( result, ssize_t( i ), tuple );
 		}
 		return result;
@@ -110,13 +110,13 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 			Quaternion rotation;
 
 			if( !PyTuple_Check( item ) || !BlueExtractVector( PyTuple_GET_ITEM( item, 0 ), &position.x, 3 ) ||
-				!BlueExtractVector( PyTuple_GET_ITEM( item, 1 ), &rotation.x, 4 ) || !PyInt_Check( PyTuple_GET_ITEM( item, 2 ) ) )
+				!BlueExtractVector( PyTuple_GET_ITEM( item, 1 ), &rotation.x, 4 ) || !PyLong_Check( PyTuple_GET_ITEM( item, 2 ) ) )
 			{
 				Py_DECREF( item );
                 PyErr_SetString( PyExc_TypeError, "arument must be a sequence of (position, rotation, boneIndex) tuples" );
 				return nullptr;
 			}
-			int boneIndex = int( PyInt_AsLong( PyTuple_GET_ITEM( item, 2 ) ) );
+			int boneIndex = int( PyLong_AsLong( PyTuple_GET_ITEM( item, 2 ) ) );
 
 			TransformLocator( position, rotation, boneIndex, pThis->m_animationUpdater );
 			if( modelTranslationCurve || modelRotationCurve )
@@ -125,7 +125,7 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 			PyObject* tuple = PyTuple_New( 3 );
 			PyTuple_SetItem( tuple, 0, Py_BuildValue( "(fff)", position.x, position.y, position.z ) );
 			PyTuple_SetItem( tuple, 1, Py_BuildValue( "(ffff)", rotation.x, rotation.y, rotation.z, rotation.w ) );
-			PyTuple_SetItem( tuple, 2, PyInt_FromLong( boneIndex ) );
+			PyTuple_SetItem( tuple, 2, PyLong_FromLong( boneIndex ) );
 			PyList_SetItem( result, ssize_t( i ), tuple );
 			Py_DECREF( item );
 		}

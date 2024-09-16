@@ -28,7 +28,7 @@ static PyObject* PyLockBuffer( PyObject* self, PyObject* args )
 	unsigned int pitch = 0;
 	if( pThis->LockBuffer( pData, pitch ) )
 	{
-		PyObject *buffer = PyBuffer_FromReadWriteMemory( pData, pThis->GetHeight() * pitch);
+		PyObject *buffer = PyMemoryView_FromMemory( (char*)pData, pThis->GetHeight() * pitch, PyBUF_READ);
 
 		PyObject *result = PyTuple_New(4);
 		if (!result) {
@@ -36,9 +36,9 @@ static PyObject* PyLockBuffer( PyObject* self, PyObject* args )
 			return nullptr;
 		}
 		PyTuple_SET_ITEM( result, 0, buffer );
-		PyTuple_SET_ITEM( result, 1, PyInt_FromLong( pThis->GetWidth() ) );
-		PyTuple_SET_ITEM( result, 2, PyInt_FromLong( pThis->GetHeight() ) );
-		PyTuple_SET_ITEM( result, 3, PyInt_FromLong( pitch ) );
+		PyTuple_SET_ITEM( result, 1, PyLong_FromLong( pThis->GetWidth() ) );
+		PyTuple_SET_ITEM( result, 2, PyLong_FromLong( pThis->GetHeight() ) );
+		PyTuple_SET_ITEM( result, 3, PyLong_FromLong( pitch ) );
 
 		return result;
 	}
@@ -59,7 +59,7 @@ static PyObject* PyLockBufferAndMargin( PyObject* self, PyObject* args )
 		const int height = pThis->GetHeight() + margin * 2;
 		const int width = pThis->GetWidth() + margin * 2;
 
-		PyObject *buffer = PyBuffer_FromReadWriteMemory( data, height * pitch);
+		PyObject* buffer = PyMemoryView_FromMemory( (char*)data, height * pitch, PyBUF_WRITE );
 
 		PyObject *result = PyTuple_New(5);
 		if (!result) {
@@ -67,10 +67,10 @@ static PyObject* PyLockBufferAndMargin( PyObject* self, PyObject* args )
 			return nullptr;
 		}
 		PyTuple_SET_ITEM( result, 0, buffer );
-		PyTuple_SET_ITEM( result, 1, PyInt_FromLong( width ) );
-		PyTuple_SET_ITEM( result, 2, PyInt_FromLong( height ) );
-		PyTuple_SET_ITEM( result, 3, PyInt_FromLong( pitch ) );
-		PyTuple_SET_ITEM( result, 4, PyInt_FromLong( margin ) );
+		PyTuple_SET_ITEM( result, 1, PyLong_FromLong( width ) );
+		PyTuple_SET_ITEM( result, 2, PyLong_FromLong( height ) );
+		PyTuple_SET_ITEM( result, 3, PyLong_FromLong( pitch ) );
+		PyTuple_SET_ITEM( result, 4, PyLong_FromLong( margin ) );
 
 		return result;
 	}

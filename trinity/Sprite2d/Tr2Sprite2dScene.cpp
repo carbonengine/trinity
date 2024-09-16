@@ -75,6 +75,8 @@ Tr2Sprite2dScene::Tr2Sprite2dScene( IRoot* lockobj ) :
 	m_pickState( TR2_SPS_ON ),
 	m_backgroundColor( 0x000000ff ),
 	m_color( 1.0f, 1.0f, 1.0f, 1.0f ),
+	m_outlineColor( 0.0f, 0.0f, 0.0f, 1.0f ),
+	m_outlineThreshold( 0.0f ),
 	m_accumulatedAlpha( 1.0f ),
 	m_drawWireFrame( false ),
 	m_clearBackground( false ),
@@ -896,13 +898,18 @@ bool Tr2Sprite2dScene::PrepareSpriteVerts(
 			vertex.position.z = m_depth;
 			vertex.color = m_color;
 			vertex.texCoord[0] = uv[0][i];
-			if( (sfx == TR2_SFX_BLUR) || (sfx == TR2_SFX_GLOW) )
+			if( (sfx == TR2_SFX_BLUR) || (sfx == TR2_SFX_GLOW) || (sfx == TR2_SFX_OUTLINE) )
 			{
 				vertex.texCoord[1] = uvInitial[0][( i + 2 ) % 4];
 			}
 			else
 			{
 				vertex.texCoord[1] = uv[1][i];
+			}
+			if (sfx == TR2_SFX_OUTLINE)
+			{
+				vertex.outlineColor = m_outlineColor;
+				vertex.outlineThreshold = m_outlineThreshold;
 			}
 			vertex.glowBrightness = m_glowBrightness;
 			vertex.blendMode = PackBlendMode( m_blendMode, m_spriteTarget );
@@ -1210,7 +1217,7 @@ bool Tr2Sprite2dScene::OnPrepareResources()
 		{
 			// This vertex declaration matches the Tr2Sprite2dD3DVertex defined in ITr2Sprite2dRenderer.h
 			s_vertexDesc.Add( s_vertexDesc.FLOAT32_3, s_vertexDesc.POSITION );
-			s_vertexDesc.Add( s_vertexDesc.FLOAT32_4, s_vertexDesc.COLOR );
+			s_vertexDesc.Add( s_vertexDesc.FLOAT32_4, s_vertexDesc.COLOR, 0 );
 
 			// Texture coordinates, primary texture
 			s_vertexDesc.Add( s_vertexDesc.FLOAT32_2, s_vertexDesc.TEXCOORD, 0 );
@@ -1226,6 +1233,12 @@ bool Tr2Sprite2dScene::OnPrepareResources()
 
 			// Matrix index
 			s_vertexDesc.Add( s_vertexDesc.UBYTE_4, s_vertexDesc.BLENDINDICES );
+
+			// Outline color
+			s_vertexDesc.Add( s_vertexDesc.FLOAT32_4, s_vertexDesc.COLOR, 1 );
+
+			// Outline threshold
+			s_vertexDesc.Add( s_vertexDesc.FLOAT32_1, s_vertexDesc.TEXCOORD, 4 );
 		}
 
 		m_vertexDecl = Tr2EffectStateManager::GetVertexDeclarationHandle( s_vertexDesc );
@@ -1674,6 +1687,16 @@ void Tr2Sprite2dScene::EndLayer( float x, float y, float width, float height, IT
 void Tr2Sprite2dScene::SetColor( const Color& color )
 {
 	m_color = color;
+}
+
+void Tr2Sprite2dScene::SetOutlineColor( const Color& outlineColor )
+{
+	m_outlineColor = outlineColor;
+}
+
+void Tr2Sprite2dScene::SetOutlineThreshold( float outlineThreshold )
+{
+	m_outlineThreshold = outlineThreshold;
 }
 
 bool Tr2Sprite2dScene::SelectEffect()

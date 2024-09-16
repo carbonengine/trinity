@@ -51,7 +51,7 @@ PyObject* TriMatrix::Repr(
 		_31, _32, _33, _34,
 		_41, _42, _43, _44		
 		);
-	return PyString_FromString(buf);
+	return PyUnicode_FromString(buf);
 }
 #endif
 

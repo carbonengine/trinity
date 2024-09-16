@@ -198,7 +198,7 @@ private:
 	void ProcessFade( Tr2PPFadeEffect* fade );
 
 	// LUT
-	void ProcessLut( Tr2PPLutEffect* lut );
+	void ProcessLut( std::vector<Tr2PPLutEffect*> luts );
 
 	// vignette
 	void ProcessVignette( Tr2PPVignetteEffect* vignette);
@@ -210,9 +210,12 @@ private:
 	Tr2EffectPtr m_tonemappingEffect;
 	bool m_desaturateEnabled;
 	bool m_fadeEnabled;
-	bool m_lutEnabled;
+	uint8_t m_lutsEnabled;
 	bool m_vignetteEnabled;
+	void ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping, Tr2RenderTarget* blitCurrent, Tr2RenderTarget* blitOriginal );
+
 	bool m_sceneDirty;
+
 
 	EveSpaceScenePtr m_scene;
 	Tr2PostProcessRenderInfoPtr m_renderInfo;

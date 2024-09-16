@@ -416,6 +416,20 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"How intense is the nebula\n"
 			":jessica-group: Lighting",
 			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"backgroundReflectionIntensity",
+			m_backgroundReflectionIntensity,
+			"How intense is the background in the refletions?\n"
+			":jessica-group: Lighting",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"defaultDiffuseRoughness",
+			m_defaultDiffuseRoughness,
+			"Default diffuse roughness which is used when calculating diffuse environment lighting (1 very rough, 0 very smooth)\n"
+			"In the end this will control which environment map mip will be used (1 will use the lowest mip, 0 will use the highest mip)\n"
+			":jessica-group: Lighting",
+			Be::READWRITE | Be::PERSIST )
+		
 		MAP_ATTRIBUTE( "fogColor", m_fogColor, ":jessica-group: Fog\n:jessica-tuple-type: linearcolor", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogStart", m_fogStart, "Depth at which fogging starts.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogEnd", m_fogEnd, "Depth at which the fog does not get thicker.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
@@ -647,13 +661,13 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 
 	if( data->GetData() == 0 )
 	{
-		return PyInt_FromLong( -1 );
+		return PyLong_FromLong( -1 );
 	}
 
 	const Tr2VertexDefinition& def = data->GetLayout();
 	if( def.m_items.empty() )
 	{
-		return PyInt_FromLong( -1 );
+		return PyLong_FromLong( -1 );
 	}
 
 	const char* positionStream = nullptr;
@@ -669,7 +683,7 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 
 	if( positionStream == nullptr )
 	{
-		return PyInt_FromLong( -1 );
+		return PyLong_FromLong( -1 );
 	}
 
 	float fx, fy;
@@ -688,7 +702,7 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 	Matrix projection2view;
 	if( !Inverse( projection2view, projMat ) )
 	{
-		return PyInt_FromLong( -1 );
+		return PyLong_FromLong( -1 );
 	}
 
 	Vector3 rayStart( fx, fy, 0.0f );
@@ -735,7 +749,7 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 		positionStream += data->GetStride();
 	}
 
-	return PyInt_FromLong( closestParticleID );
+	return PyLong_FromLong( closestParticleID );
 }
 
 MAP_FUNCTION(

@@ -82,9 +82,14 @@ void Tr2Sprite2d::GatherSprites( Tr2Sprite2dScene* renderer )
 
 		SetRegularRenderState( renderer );
 
+		if( m_spriteEffect == TR2_SFX_OUTLINE )
+		{
+			SetOutlineRenderState( renderer );
+		}
+
 		renderer->PrepareSpriteVerts( &m_vertices[4], m_translation, displayWidth, displayHeight, m_spriteEffect );
 
-		if( m_spriteEffect < TR2_SFX_TWO_TEXTURES && (m_spriteEffect != TR2_SFX_BLUR) && (m_spriteEffect != TR2_SFX_GLOW) )
+		if( m_spriteEffect < TR2_SFX_TWO_TEXTURES && (m_spriteEffect != TR2_SFX_BLUR) && (m_spriteEffect != TR2_SFX_GLOW) && (m_spriteEffect != TR2_SFX_OUTLINE) )
 		{
 			for( int i = 4; i < 8; ++i )
 			{

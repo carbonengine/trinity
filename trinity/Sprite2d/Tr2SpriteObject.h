@@ -97,6 +97,7 @@ protected:
 	void SetRegularRenderState( Tr2Sprite2dScene* renderer );
 	void SetGlowRenderState( Tr2Sprite2dScene* renderer );
 	void SetShadowRenderState( Tr2Sprite2dScene* renderer );
+	void SetOutlineRenderState( Tr2Sprite2dScene* renderer );
 	bool ValidateAndSetTextures( Tr2Sprite2dScene* renderer );
 
 protected:
@@ -111,6 +112,8 @@ protected:
 	float m_glowFactor;
 	float m_glowExpand;
 	Color m_glowColor;
+	Color m_outlineColor;
+	float m_outlineThreshold;
 };
 
 TYPEDEF_BLUECLASS( Tr2SpriteObject );

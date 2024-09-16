@@ -872,6 +872,9 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPTaaEffect.cpp
     PostProcess/Effects/Tr2PPTaaEffect.h
     PostProcess/Effects/Tr2PPTaaEffect_Blue.cpp
+    PostProcess/Effects/Tr2PPTonemappingEffect.cpp
+    PostProcess/Effects/Tr2PPTonemappingEffect.h
+    PostProcess/Effects/Tr2PPTonemappingEffect_Blue.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.h
     PostProcess/Effects/Tr2PPVignetteEffect_Blue.cpp

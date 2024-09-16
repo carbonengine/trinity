@@ -68,43 +68,66 @@ void Tr2GrannyDeallocate( const char* file, granny_int32x line, void* memory )
 }
 
 #if BLUE_WITH_PYTHON
-const char* InitializeForPython()
+PyObject* InitializeForPython()
 {
-	const PyMethodDef dummyMethods[] = {0};
+	static PyMethodDef dummyMethods[] = {0};
 
 	// put myself into python as a module
-	PyObject* module = Py_InitModule( CCP_STRINGIZE( CCP_CONCATENATE( TRINITYNAME, CCP_BUILD_FLAVOR ) ), (PyMethodDef*)dummyMethods);
-	PyObject* dict = PyModule_GetDict(module);
+    static struct PyModuleDef trinityDef = {
+        PyModuleDef_HEAD_INIT,
+        CCP_STRINGIZE( CCP_CONCATENATE( TRINITYNAME, CCP_BUILD_FLAVOR ) ),
+        "",
+        -1,
+        dummyMethods
+    };
+	PyObject* module = PyModule_Create(&trinityDef);
+    if ( module ) {
+        PyObject* dict = PyModule_GetDict(module);
 
-	// constants
-	AddTriConstants(dict);
+        // constants
+        AddTriConstants(dict);
 
-	// put UI into python as a separate module
-	PyObject* uiModule = Py_InitModule("triui", (PyMethodDef*)dummyMethods);
-	PyObject* uiDict = PyModule_GetDict(uiModule);
+        // put UI into python as a separate module
+        static struct PyModuleDef triuiDef = {
+            PyModuleDef_HEAD_INIT,
+            "triui",
+            "",
+            -1,
+            dummyMethods
+        };
+        PyObject* uiModule = PyModule_Create(&triuiDef);
+        PyObject* uiDict = PyModule_GetDict(uiModule);
 
-	AddScancodesToDict(uiDict);
-	AddUIChoosersToDict(uiDict);
+        AddScancodesToDict(uiDict);
+        AddUIChoosersToDict(uiDict);
 
-	BLUE_REGISTER_THUNKER(ITriScalarFunction_Thunk::Defs(), ITriScalarFunction_Thunk::IID());
-	BLUE_REGISTER_THUNKER(ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID());
-	BLUE_REGISTER_THUNKER(ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID());
-	BLUE_REGISTER_THUNKER(ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID());
+        PyObject* sys_modules = PyImport_GetModuleDict();
+        if( PyDict_SetItemString( sys_modules, triuiDef.m_name, uiModule ) != 0 )
+        {
+            return nullptr;
+        }
 
-	BlueRegisterToModule( module, BlueRegistration::GetClassRegs(), 
-						  BlueRegistration::GetFuncRegs(),
-						  BlueRegistration::GetEnumRegs(),
-						  BlueRegistration::GetTestRegs(),
-						  BlueRegistration::GetThunkerRegs(),
-						  BlueRegistration::GetFuncSignatures() );
+        BLUE_REGISTER_THUNKER(ITriScalarFunction_Thunk::Defs(), ITriScalarFunction_Thunk::IID());
+        BLUE_REGISTER_THUNKER(ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID());
+        BLUE_REGISTER_THUNKER(ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID());
+        BLUE_REGISTER_THUNKER(ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID());
 
-	BlueRegisterObjectsToModule( module, BlueRegistration::GetObjectRegs() );
-	BlueRegisterExceptionsToModule( module, BlueRegistration::GetExceptionRegs() );
+        BlueRegisterToModule( module, BlueRegistration::GetClassRegs(),
+                              BlueRegistration::GetFuncRegs(),
+                              BlueRegistration::GetEnumRegs(),
+                              BlueRegistration::GetTestRegs(),
+                              BlueRegistration::GetThunkerRegs(),
+                              BlueRegistration::GetFuncSignatures() );
 
-	PyModule_AddObject( module, "settings", BlueWrapObjectForPython(&Tr2Renderer::GetSettings()) );
-	PyModule_AddObject( module, "fontMan", BlueWrapObjectForPython( g_fontManager ) );
+        BlueRegisterObjectsToModule( module, BlueRegistration::GetObjectRegs() );
+        BlueRegisterExceptionsToModule( module, BlueRegistration::GetExceptionRegs() );
 
-	return NULL;
+        PyModule_AddObject( module, "settings", BlueWrapObjectForPython(&Tr2Renderer::GetSettings()) );
+        PyModule_AddObject( module, "fontMan", BlueWrapObjectForPython( g_fontManager ) );
+
+    }
+
+	return module;
 }
 #endif
 
@@ -222,16 +245,11 @@ static void StartDLL()
 //--------------------------------------------------------------------
 // inittrinity - python dll module entry function
 //--------------------------------------------------------------------
-extern "C" void
-#ifdef _MSC_VER
-	__declspec(dllexport)
-#else
-__attribute__((visibility("default")))
-#endif
-CCP_CONCATENATE( CCP_CONCATENATE( init, TRINITYNAME ), CCP_BUILD_FLAVOR )()
+PyMODINIT_FUNC
+CCP_CONCATENATE( CCP_CONCATENATE( PyInit_, TRINITYNAME ), CCP_BUILD_FLAVOR )()
 {
 	StartDLL();
-	InitializeForPython();
+	return InitializeForPython();
 }
 
 #endif
@@ -248,13 +266,12 @@ static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
 {
 #ifdef _WIN32
 
-	char* context = NULL;
 	if( PyTuple_GET_SIZE(args) == 1 )
 	{
 		PyObject* o = PyTuple_GetItem( args, 0 );
-		if( PyString_Check( o ) )
+		if( PyUnicode_Check( o ) )
 		{
-			context = PyString_AsString( o );
+			const char* context = PyUnicode_AsUTF8( o );
 			OutputDebugString( "Python Triggered Breakpoint: " );
 			OutputDebugString( context );
 			OutputDebugString( "\n" );
