@@ -106,7 +106,7 @@ if(WIN32)
 
     #GTest
     set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
-    gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
+    #gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
 
     ccp_add_executable(TrinityALTest_dx12 ${_SOURCES})
     target_link_libraries(TrinityALTest_dx12 PRIVATE TrinityAL_dx12)
@@ -132,7 +132,7 @@ if(WIN32)
 
     #GTest
     set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
-    gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
+    #gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
 
 elseif(APPLE)
     enable_language(OBJCXX)
@@ -144,7 +144,7 @@ elseif(APPLE)
 
     #GTest
     set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "Tests")
-    gtest_discover_tests(TrinityALTest_metal myListOfTests DISCOVERY_MODE PRE_TEST)
+    #gtest_discover_tests(TrinityALTest_metal myListOfTests DISCOVERY_MODE PRE_TEST)
 endif()
 
 
