@@ -5,11 +5,14 @@
 
 TriObserverLocal::TriObserverLocal( IRoot* lockobj ) :
 	m_front( 0.0f, 0.0f, 1.0f ),
-	m_position( 0.0f, 0.0f, 0.0f )
-{}
+	m_position( 0.0f, 0.0f, 0.0f ),
+	m_mute( false )
+{
+}
 
 TriObserverLocal::~TriObserverLocal()
-{}
+{
+}
 
 void TriObserverLocal::Update( const Matrix& worldTransform )
 {
@@ -56,9 +59,41 @@ void TriObserverLocal::SetFront( const Vector3& front )
 	m_front = front;
 }
 
+bool TriObserverLocal::GetMute()
+{
+	return m_mute;
+}
+
+void TriObserverLocal::SetMute( bool isMute )
+{
+	if ( m_mute == isMute )
+	{
+		return;
+	}
+	m_mute = isMute;
+	ITr2AudEmitterPtr emitter;
+	if( m_observer != nullptr )
+	{
+		if( ITr2AudEmitterPtr audEmitter = dynamic_cast<ITr2AudEmitter*>( m_observer.p ) )
+		{
+			emitter = audEmitter;
+		}
+	}
+
+	if( emitter != nullptr )
+	{
+		m_mute ? emitter->Mute() : emitter->Unmute();
+	}
+}
+
+bool TriObserverLocal::OnModified( Be::Var* val )
+{
+	return true;
+}
+
 void TriObserverLocal::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	if ( auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_observer.p ) )
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_observer.p ) )
 	{
 		tmp->GetDebugOptions( options );
 	}
@@ -66,7 +101,7 @@ void TriObserverLocal::GetDebugOptions( Tr2DebugRendererOptions& options )
 
 void TriObserverLocal::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-	auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_observer.p );
+	auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_observer.p );
 	if( tmp )
 	{
 		tmp->RenderDebugInfo( renderer );
@@ -81,7 +116,7 @@ void TriObserverLocal::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 //   observer - The observer that you want to send an audio event to.
 //   audioEvent - The audio event you want to be sent to the sound engine.
 //-----------------------------------------------------
-void SendEventToAudEmitter( TriObserverLocal* observer, const std::wstring& audioEvent ) 
+void SendEventToAudEmitter( TriObserverLocal* observer, const std::wstring& audioEvent )
 {
 	if( observer != nullptr )
 	{
