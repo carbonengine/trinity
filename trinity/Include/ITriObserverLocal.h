@@ -4,7 +4,8 @@
 
 struct IBluePlacementObserver;
 
-BLUE_INTERFACE( ITriObserverLocal ) : public IRoot
+BLUE_INTERFACE( ITriObserverLocal ) : 
+	public IRoot
 {
 	virtual IBluePlacementObserver* GetObserver() = 0;
 	virtual void SetObserver( IBluePlacementObserver* obs ) = 0;
