@@ -9,6 +9,8 @@
 #include "ffx_a.h"
 #include "ffx_cas.h"
 
+extern float g_eveSpaceSceneGammaBrightness;
+
 namespace
 {
 const uint32_t HISTOGRAM_TILE_SIZE_X = 16;
@@ -223,6 +225,7 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( "VignetteShape" ), "res:/texture/global/black.dds" );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), PLACEHOLDER );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "OutputGamma" ), g_eveSpaceSceneGammaBrightness );
 
 	m_tonemappingEffect->EndUpdate();
 
@@ -477,6 +480,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), bloomTexture ? bloomTexture.GetRenderTarget() : m_renderInfo->GetBlackTexture() );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), upscaledSource );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "OutputGamma" ), g_eveSpaceSceneGammaBrightness );
 
 	ProcessDesaturate( desaturate );
 	ProcessFade( fade );
