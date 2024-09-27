@@ -104,6 +104,9 @@ TRI_REGISTER_SETTING( "eveReflectionSetting", g_eveReflectionMode );
 bool g_eveSpaceSceneRaytracedShadows = true;
 TRI_REGISTER_SETTING( "eveSpaceSceneRaytracedShadows", g_eveSpaceSceneRaytracedShadows );
 
+bool g_lensflaresInReflections = true;
+TRI_REGISTER_SETTING( "lensflaresInReflections", g_lensflaresInReflections );
+
 namespace
 {
 const char* VISUALIZER_EFFECT_PATH[EveSpaceScene::VM_COUNT] =
@@ -1658,7 +1661,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 		// get the background reflection renderables from the component registry
 		RenderBackgroundPassObjects( renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );
 
-		if( !m_lensflares.empty() && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA )
+		if( g_lensflaresInReflections && !m_lensflares.empty() && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA )
 		{
 			GPU_REGION( renderContext, "Lens Flares in reflections" );
 			std::vector<ITr2Renderable*> visible;
