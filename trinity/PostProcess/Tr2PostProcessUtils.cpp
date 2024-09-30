@@ -11,7 +11,7 @@
 
 namespace PostProcess
 {
-
+template<>
 void PostProcessAttribute<Tr2Bokeh::Shape>::Blend( const PostProcessAttribute<Tr2Bokeh::Shape>& other, float intensity, float weight )
 {
 	if( other.enabled )
@@ -25,6 +25,7 @@ void PostProcessAttribute<Tr2Bokeh::Shape>::Blend( const PostProcessAttribute<Tr
 	}
 }
 
+template <>
 void PostProcessAttribute<BlueSharedString>::Blend( const PostProcessAttribute<BlueSharedString>& other, float intensity, float weight )
 {
 	if( other.enabled )
@@ -38,6 +39,7 @@ void PostProcessAttribute<BlueSharedString>::Blend( const PostProcessAttribute<B
 	}
 }
 
+template <>
 void PostProcessAttribute<bool>::Blend( const PostProcessAttribute<bool>& other, float intensity, float weight )
 {
 	if( other.enabled )
@@ -264,13 +266,6 @@ void Attributes::Merge( const Attributes& other, const WeightTable& table )
 		case PostProcessAttributeType::FADE_COLOR:
 			fadeColor.Blend( other.fadeColor, row.intensity, row.totalIntensity );
 			break;	
-		/* case PostProcessAttributeType::LUT_INTENSITY:	
-			lutIntensity.Blend( other.lutIntensity, row.intensity, row.totalIntensity );
-			break;
-		case PostProcessAttributeType::LUT_PATH:
-			lutPath.Blend( other.lutPath, row.intensity, row.totalIntensity );
-			break;
-		*/
 		case PostProcessAttributeType::LUT_INTENSITY:
 		case PostProcessAttributeType::LUT_PATH:
 			prioritizedLuts.insert( { other.lutIntensity.enabled ? other.lutIntensity.value * row.intensity * row.intensity / row.totalIntensity : -1.0f, 
@@ -324,6 +319,8 @@ void Attributes::Merge( const Attributes& other, const WeightTable& table )
 			break;
 		case PostProcessAttributeType::DEPTH_OF_FIELD_SHAPE:
 			depthOfFieldShape.Blend( other.depthOfFieldShape, row.intensity, row.totalIntensity );
+			break;
+		default:
 			break;
 		}
 	}
