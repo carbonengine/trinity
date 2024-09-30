@@ -10,10 +10,8 @@
 #include "Tr2Renderer.h"
 
 EveSphereVolume::EveSphereVolume( IRoot* lockobj ) :
-	m_position( 0, 0, 0 ),
-	m_centerOffset( 0, 0, 0 ),
-	m_radius( 0 ),
-	m_innerRadius( 0 ),
+	m_innerSphere( Vector3(0.0f, 0.0f, 0.0f), 1.0f ),
+	m_outerSphere( Vector3( 0.0f, 0.0f, 0.0f ), 1.0f ),
 	m_notifyParent( false )
 {
 }
@@ -24,61 +22,35 @@ EveSphereVolume::~EveSphereVolume()
 
 void EveSphereVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform )
 {
-	renderer.DrawSphere( this, TranslationMatrix( m_position ) * parentTransform, m_radius, 20, Tr2DebugRenderer::Wireframe, 0xff555555 );
-	renderer.DrawSphere( this, TranslationMatrix( m_position + m_centerOffset ) * parentTransform, max( m_innerRadius, 1.0f ), 20, Tr2DebugRenderer::Wireframe, 0xff777777 );
+	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center ) * parentTransform, m_outerSphere.radius, 20, Tr2DebugRenderer::Wireframe, 0xff555555 );
+	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center + m_innerSphere.center ) * parentTransform, max( m_innerSphere.radius, 1.0f ), 20, Tr2DebugRenderer::Wireframe, 0xff777777 );
 }
 
-Vector4 EveSphereVolume::GetBoundingSphere() const
+const CcpMath::Sphere EveSphereVolume::GetBoundingSphere() const
 {
-	return Vector4( m_position, m_radius );
+	return m_outerSphere;
 }
 
 float EveSphereVolume::GetIntensity( Vector3 position )
 {
-	// are we inside of the outer radius?
-	float radiusSq = m_radius * m_radius;
-	if (LengthSq( position - m_position ) > radiusSq)
+	if( m_outerSphere.IsPointInside(position) )
 	{
-		return 0;
+		// since the innersphere is offset from the outer sphere, we need to construct a new one that is centered in the owners object space
+		CcpMath::Sphere innerModified(m_innerSphere);
+		innerModified.center += m_outerSphere.center;
+		if( innerModified.IsPointInside( position ) )
+		{
+			return 1.0f;
+		}
+		// this will not handle inner sphere offsets...
+		// will need a more complex solution for that
+		float distFromInnnerCenter = LengthSq( position - m_outerSphere.center );
+		float distFromInnerSurface = distFromInnnerCenter - pow( innerModified.radius, 2.0f );
+		
+		float interpolationDistance = pow( m_outerSphere.radius, 2.0f ) - pow( innerModified.radius, 2.0f );
+		return 1.0f - distFromInnerSurface / interpolationDistance;
 	}
-
-	Vector3 line = position - m_position - m_centerOffset;
-	float distanceToInnerRadiusSq = LengthSq( line );
-	float innerRadiusSq = m_innerRadius * m_innerRadius;
-	if (distanceToInnerRadiusSq <  innerRadiusSq)
-	{
-		return 1;
-	}
-
-	return 1.0f - distanceToInnerRadiusSq / (radiusSq - innerRadiusSq);
-	/*
-	// TODO make math good!
-
-	// find the intersection line between the camera position and the center offset
-	// determening the intensity on how far we are from that line to the inner radius
-	line = m_centerOffset - cameraPosition;
-	Vector3 centerToOffset = m_centerOffset - m_position;
-
-	// project the center to the line
-	Vector3 centerProj = m_centerOffset + Dot( centerToOffset, line ) / Dot( line, line ) * line;
-
-	//
-	//   Cam --x----- CO
-	//         |
-	//         |
-	//         P
-	//
-
-	float centerProjToBoundsSq = radiusSq - LengthSq( centerProj - m_position );
-
-	float cameraPosToCenterProjSq = LengthSq( centerProj - cameraPosition );
-	float centerOffsetToCenterProjSq = LengthSq( centerProj - m_centerOffset ) - innerRadiusSq;
-
-	float totalDistance = centerOffsetToCenterProjSq + centerProjToBoundsSq;
-	float cameraDistance = LengthSq(cameraPosition - m_centerOffset) - innerRadiusSq;
-
-	return 1.0f - cameraDistance / totalDistance;
-	*/
+	return 0.0f;
 }
 
 void EveSphereVolume::RegisterForChanges( std::function<void()> NotifyParent )
@@ -91,9 +63,9 @@ void EveSphereVolume::RegisterForChanges( std::function<void()> NotifyParent )
 // INotify
 bool EveSphereVolume::OnModified( Be::Var* val )
 {
-	m_innerRadius = min( m_innerRadius, m_radius );
+	m_innerSphere.radius = min( m_innerSphere.radius, m_outerSphere.radius );
 
-	if (m_notifyParent && (IsMatch( val, m_position ) || IsMatch( val, m_radius )))
+	if( m_notifyParent && ( IsMatch( val, m_outerSphere.center ) || IsMatch( val, m_outerSphere.radius ) ) )
 	{
 		m_notifyParentFunc();
 	}

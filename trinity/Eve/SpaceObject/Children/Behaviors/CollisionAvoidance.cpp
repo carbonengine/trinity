@@ -36,7 +36,7 @@ std::vector<Vector3> CollisionAvoidance::CalculateBehavior( std::vector<DroneAge
 			if( intensity > 0.0 )
 			{
 				// get the direction AWAY from the center of the exclusion volume
-				Vector3 fromTarget = agent->position - m_exclusionVolumes[i]->GetBoundingSphere().GetXYZ();
+				Vector3 fromTarget = agent->position - m_exclusionVolumes[i]->GetBoundingSphere().center;
 
 				Vector3 avoidanceForce = fromTarget * intensity;
 				agent->acceleration += avoidanceForce * m_collisionAvoidanceScalar;
