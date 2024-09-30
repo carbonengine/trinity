@@ -329,8 +329,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	Tr2PPFilmGrainEffectPtr filmGrain = nullptr;
 	Tr2PPDesaturateEffectPtr desaturate = nullptr;
 	Tr2PPFadeEffectPtr fade = nullptr;
-	std::vector<Tr2PPLutEffect*> luts = std::vector<Tr2PPLutEffect*>();
-	luts.reserve( 4 );
+	std::vector<const Tr2PPLutEffect*> luts = std::vector<const Tr2PPLutEffect*>();
 	Tr2PPVignetteEffectPtr vignette = nullptr;
 	Tr2PPFogEffectPtr fog = nullptr;
 	Tr2PPTaaEffectPtr taa = nullptr;
@@ -353,12 +352,9 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			vignette = postProcess->GetVignette();
 		case LOW:
 			tonemapping = postProcess->GetTonemapping();
-			luts.push_back( postProcess->GetLut() );
-			luts.push_back( postProcess->GetAdditionalLut1() );
-			luts.push_back( postProcess->GetAdditionalLut2() );
-			luts.push_back( postProcess->GetAdditionalLut3() );
 			signalLoss = postProcess->GetSignalLoss();
 			fade = postProcess->GetFade();
+			postProcess->GetLuts( luts );
 		default:
 			taa = postProcess->GetTaa();
 			break;
@@ -384,10 +380,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		SetDirtyIfNotNull( filmGrain );
 		SetDirtyIfNotNull( desaturate );
 		SetDirtyIfNotNull( fade );
-		for( auto& lut : luts )
-		{
-			SetDirtyIfNotNull( lut );
-		}
 		SetDirtyIfNotNull( vignette );
 		SetDirtyIfNotNull( fog );
 		SetDirtyIfNotNull( taa );
@@ -1220,51 +1212,43 @@ void TriStepRenderPostProcess::ProcessFade( Tr2PPFadeEffect* fade )
 	}
 }
 
-void TriStepRenderPostProcess::ProcessLut( std::vector<Tr2PPLutEffect*> luts )
+void TriStepRenderPostProcess::ProcessLut( std::vector<const Tr2PPLutEffect*> luts )
 {
 	bool tomeppingEffectUpdating = false;
 	uint8_t lutsActive = 0;
 	for( const auto& lut : luts )
 	{
-		if( lut && lut->IsActive() )
+		// we only need to update the tonemapping buffer
+		std::string influenceParam = std::string( "LUTInfluence_" ) + std::to_string( lutsActive );
+		std::string textureParam = std::string( "TexLUT_" ) + std::to_string( lutsActive );
+
+		if( !tomeppingEffectUpdating )
 		{
-			// we only need to update the tonemapping buffer
-			if( lut->IsDirty() )
-			{
-				std::string influenceParam = std::string( "LUTInfluence_" ) + std::to_string( lutsActive );
-				std::string textureParam = std::string( "TexLUT_" ) + std::to_string( lutsActive );
-
-				if( !tomeppingEffectUpdating )
-				{
-					m_tonemappingEffect->StartUpdate();
-					tomeppingEffectUpdating = true;
-				}
-
-				m_tonemappingEffect->SetParameter( BlueSharedString( influenceParam ), lut->m_influence );
-				auto resource = m_tonemappingEffect->GetResourceByName( textureParam.c_str() );
-				if( !resource )
-				{
-					m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( textureParam ), lut->m_path.c_str() );
-				}
-				else
-				{
-					const auto param = dynamic_cast<TriTextureParameter*>( resource );
-					const auto currPath = param->GetResourcePath();
-					const std::string possibleNewPathStr = lut->m_path.c_str();
-
-					const std::wstring possibleNewPathWstr( possibleNewPathStr.begin(), possibleNewPathStr.end() );
-
-					if( currPath != possibleNewPathWstr )
-					{
-						param->SetResourcePath( lut->m_path.c_str() );
-					}
-				}
-				m_tonemappingEffect->SetOption( BlueSharedString( "LUT_TOGGLE" ), BlueSharedString( "LUT_ENABLED" ) );
-
-				lut->SetDirty( false );
-			}
-			lutsActive++;
+			m_tonemappingEffect->StartUpdate();
+			tomeppingEffectUpdating = true;
 		}
+
+		m_tonemappingEffect->SetParameter( BlueSharedString( influenceParam ), lut->m_influence );
+		auto resource = m_tonemappingEffect->GetResourceByName( textureParam.c_str() );
+		if( !resource )
+		{
+			m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( textureParam ), lut->m_path.c_str() );
+		}
+		else
+		{
+			const auto param = dynamic_cast<TriTextureParameter*>( resource );
+			const auto currPath = param->GetResourcePath();
+			const std::string possibleNewPathStr = lut->m_path.c_str();
+
+			const std::wstring possibleNewPathWstr( possibleNewPathStr.begin(), possibleNewPathStr.end() );
+
+			if( currPath != possibleNewPathWstr )
+			{
+				param->SetResourcePath( lut->m_path.c_str() );
+			}
+		}
+		m_tonemappingEffect->SetOption( BlueSharedString( "LUT_TOGGLE" ), BlueSharedString( "LUT_ENABLED" ) );
+		lutsActive++;
 	}
 
 	if( m_lutsEnabled > lutsActive )

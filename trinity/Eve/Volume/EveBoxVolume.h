@@ -31,7 +31,7 @@ public:
 	// IEveVolume
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform ) override;
 	float GetIntensity( Vector3 position ) override;
-	Vector4 GetBoundingSphere() const override;
+	const CcpMath::Sphere GetBoundingSphere() const override;
 	void RegisterForChanges( std::function<void()> NotifyParent ) override;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -56,6 +56,8 @@ private:
 
 	Vector3 m_innerIntersection;
 	Vector3 m_outerIntersection;
+
+	CcpMath::Sphere m_boundingSphere;
 
 	std::function<void()> m_notifyParentFunc;
 	bool m_notifyParent;
