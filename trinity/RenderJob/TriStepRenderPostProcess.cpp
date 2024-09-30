@@ -760,7 +760,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Rend
 	m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
 	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
 
-	auto blurContext = PostProcessBlur::CreateBlurContext(1.0f );
+	auto blurContext = PostProcessBlur::CreateBlurContext( 0.5f );
 	Blur( *rt1, *rt1, renderContext, blurContext);
 
 	return rt1;
