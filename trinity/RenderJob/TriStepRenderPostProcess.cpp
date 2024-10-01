@@ -493,7 +493,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		if( upscalingEnabled && !upscalingInfo.temporal )
 		{
 			
-			auto temp = m_renderInfo->GetTempTexture();
+			auto temp = m_renderInfo->GetTempTexture( "Tonemapping Result" );
 
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 			DrawInto( *temp, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
@@ -756,7 +756,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Rend
 	GPU_REGION( renderContext, "Bloom" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	auto rt1 = m_renderInfo->GetTempTexture( 0.5f );
+	auto rt1 = m_renderInfo->GetTempTexture( "Bloom", 0.5f );
 	m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
 	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
 
@@ -813,11 +813,11 @@ void TriStepRenderPostProcess::RenderGodRays( Tr2RenderTarget* dest, Tr2RenderCo
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 	// Downsample depth
-	auto rt1 = m_renderInfo->GetTempTexture( 0.5f );
+	auto rt1 = m_renderInfo->GetTempTexture( "Down-sampled Depth", 0.5f );
 	DownSampleDepth( renderContext, rt1 );
 
 	// God rays
-	auto rt2 = m_renderInfo->GetTempTexture( 0.5f );
+	auto rt2 = m_renderInfo->GetTempTexture( "God rays", 0.5f );
 	m_godrayEffect->SetParameter( BlueSharedString( "DepthMap" ), rt1 );
 	renderContext.m_esm.PushRenderTarget( *rt2 );
 	renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0 ); // clear is needed because godray vertex shader can opt out of rendering
@@ -1414,7 +1414,7 @@ void TriStepRenderPostProcess::RenderFog( Tr2RenderTarget* dest, Tr2RenderContex
 	DrawInto( *tempCopy, Tr2LoadAction::DONT_CARE, *dest, renderContext );
 
 	// render fog color
-	auto rt1 = m_renderInfo->GetTempTexture( 0.5f );
+	auto rt1 = m_renderInfo->GetTempTexture( "Fog Color", 0.5f );
 	m_fogColorEffect->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
 	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_fogColorEffect, renderContext );
 
@@ -1707,13 +1707,12 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 		{
-			auto coc = m_renderInfo->GetTempTexture( depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
-
-			auto blur = m_renderInfo->GetTempTexture();
+			Tr2PostProcessRenderInfo::Texture coc;
 
 			if( !depthOfField->m_foregroundBlurNeeded )
 			{
 				GPU_REGION( renderContext, "CoC" );
+				coc = m_renderInfo->GetTempTexture( "CoC", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
 				DrawInto( *coc, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
 				if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoC )
 				{
@@ -1724,7 +1723,7 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 			else
 			{
 				GPU_REGION( renderContext, "CoC" );
-				auto coc2 = m_renderInfo->GetTempTexture( depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8_UNORM );
+				auto coc2 = m_renderInfo->GetTempTexture( "CoC", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8_UNORM );
 
 				DrawInto( *coc2, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
 				if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoC )
@@ -1740,6 +1739,7 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 																		   PostProcessBlur::BP_Maximum,
 																		   PostProcessBlur::BF_MaxOfAllChannels,
 																		   depthOfField->m_cocScale );
+					coc = m_renderInfo->GetTempTexture( "CoC Blurred", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
 					Blur( *coc, *coc2, renderContext, blurContext );
 					if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoCBlurred )
 					{
@@ -1750,6 +1750,8 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 			}
 
 			float adjustedScale = depthOfField->m_scale / upscalingAmount;
+
+			auto blur = m_renderInfo->GetTempTexture( "Bokeh Blend" );
 
 			if( depthOfField->m_useTAAFriendlyBokeh )
 			{
