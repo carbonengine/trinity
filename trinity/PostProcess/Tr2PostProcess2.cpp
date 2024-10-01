@@ -10,7 +10,8 @@
 #include "Tr2PostProcessRenderInfo.h"
 
 
-Tr2PostProcess2::Tr2PostProcess2( IRoot* lockobj )
+Tr2PostProcess2::Tr2PostProcess2( IRoot* lockobj ):
+	PARENTLOCK( m_luts )
 {
 	
 }
@@ -34,7 +35,7 @@ float Tr2PostProcess2::GetMipLodBias() const
 
 void Tr2PostProcess2::GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y )
 {
-	 if( m_taa )
+	if( m_taa )
 	{
 		m_taa->GetJitter( renderWidth, renderHeight, x, y );		
 	}
@@ -42,5 +43,18 @@ void Tr2PostProcess2::GetJitter( uint32_t renderWidth, uint32_t renderHeight, fl
 	{
 		x = 0;
 		y = 0;
+	}
+}
+
+void Tr2PostProcess2::GetLuts( std::vector<const Tr2PPLutEffect*>& container ) const
+{
+	container.clear();
+	container.reserve( m_luts.size() );
+	for( const auto& lut : m_luts )
+	{	
+		if( lut->IsActive() )
+		{
+			container.push_back( lut );
+		}
 	}
 }

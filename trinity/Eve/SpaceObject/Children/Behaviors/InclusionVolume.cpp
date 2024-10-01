@@ -40,7 +40,7 @@ std::vector<Vector3> InclusionVolume::CalculateBehavior(std::vector<DroneAgent>&
 
 		for ( auto volume = m_inclusionVolumes.begin(); volume != m_inclusionVolumes.end(); ++volume )
 		{
-			boxPos = ( *volume )->GetBoundingSphere().GetXYZ();
+			boxPos = ( *volume )->GetBoundingSphere().center;
 			status = ( *volume )->GetIntensity( agent->position );
 			
 			

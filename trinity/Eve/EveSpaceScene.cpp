@@ -41,6 +41,7 @@
 #include <ScopedBlockTrap.h>
 #include "Raytracing/Tr2RaytracingManager.h"
 #include "../Resources/TriTextureRes.h"
+#include "../PostProcess/ITr2PostProcessOwner.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -325,10 +326,20 @@ Tr2PostProcess2Ptr EveSpaceScene::GetPostProcess()
 	{
 		return nullptr;
 	}
-	else
+
+	auto combination = PostProcess::Gather(*m_componentRegistry);
+	if( !combination )
 	{
 		return m_postProcess;
 	}
+
+	if( m_postProcess )
+	{
+		combination->SetDynamicExposure( m_postProcess->GetDynamicExposure() );
+		combination->SetTaa( m_postProcess->GetTaa() );
+		combination->SetTonemapping( m_postProcess->GetTonemapping() );
+	}
+	return combination;
 }
 
 Tr2ShaderBufferPtr EveSpaceScene::GetPostProcessPSBuffer()

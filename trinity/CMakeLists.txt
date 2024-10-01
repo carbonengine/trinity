@@ -455,9 +455,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildEffectPropagator.cpp
     Eve/SpaceObject/Children/EveChildEffectPropagator.h
     Eve/SpaceObject/Children/EveChildEffectPropagator_Blue.cpp
-    Eve/SpaceObject/Children/EveChildEnvironment.cpp
-    Eve/SpaceObject/Children/EveChildEnvironment.h
-    Eve/SpaceObject/Children/EveChildEnvironment_Blue.cpp
+    Eve/SpaceObject/Children/EveChildPostProcessVolume.cpp
+    Eve/SpaceObject/Children/EveChildPostProcessVolume.h
+    Eve/SpaceObject/Children/EveChildPostProcessVolume_Blue.cpp
     Eve/SpaceObject/Children/EveChildExplosion.cpp
     Eve/SpaceObject/Children/EveChildExplosion.h
     Eve/SpaceObject/Children/EveChildExplosion_Blue.cpp
@@ -884,6 +884,9 @@ set(_SOURCES
     PostProcess/Tr2PostProcessRenderInfo.cpp
     PostProcess/Tr2PostProcessRenderInfo.h
     PostProcess/Tr2PostProcessRenderInfo_Blue.cpp
+    PostProcess/Tr2PostProcessUtils.cpp
+    PostProcess/Tr2PostProcessUtils.h
+    PostProcess/ITr2PostProcessOwner.h
     RenderJob/ITriRenderStep.h
     RenderJob/Tr2RenderJobs.cpp
     RenderJob/Tr2RenderJobs.h

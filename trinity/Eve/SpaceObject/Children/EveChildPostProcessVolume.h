@@ -5,8 +5,6 @@
 //
 
 #pragma once
-#ifndef EveChildEnvironment_H
-#define EveChildEnvironment_H
 
 #include "StdAfx.h"
 #include "IEveSpaceObjectChild.h"
@@ -14,23 +12,28 @@
 #include "ITr2Renderable.h"
 #include "Tr2DebugRenderer.h"
 #include "Eve/Volume/IEveVolume.h"
+#include "PostProcess/ITr2PostProcessOwner.h"
+#include "PostProcess/Tr2PostProcessUtils.h"
 
+BLUE_DECLARE_INTERFACE( ITr2PostProcessOwner );
 BLUE_DECLARE_INTERFACE( IEveVolume );
 BLUE_DECLARE_IVECTOR( IEveVolume );
 
-BLUE_CLASS( EveChildEnvironment ) :
+
+BLUE_CLASS( EveChildPostProcessVolume ) :
 	public IEveSpaceObjectChild,
 	public EveChildTransform,
-	public ITr2Renderable,
 	public IInitialize,
 	public ITr2DebugRenderable,
-	public IListNotify
+	public IListNotify,
+	public ITr2PostProcessOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	EveChildEnvironment( IRoot* lockobj = NULL );
-	~EveChildEnvironment();
+	EveChildPostProcessVolume( IRoot* lockobj = NULL );
+	~EveChildPostProcessVolume();
 
 	void RebuildBoundingSphere();
 
@@ -39,7 +42,7 @@ public:
 	const char* GetName() const;
 	void SetName( const char* name );
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables ){};
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
@@ -50,12 +53,8 @@ public:
 	bool IsAlwaysOn() const;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) {} ;
 
-	/////////////////////////////////////////////////////////////////////////////////////
-	// ITr2Renderable
-	bool HasTransparentBatches() override;
-	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
-	float GetSortValue() override;
-	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	virtual void RegisterComponents();
+	virtual void UnRegisterComponents();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -70,21 +69,23 @@ public:
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2PostProcessOwner
+	PostProcess::Attributes& GetPostProcessAttributes() override;
+
 private:
 	void UpdateTransformFromParent( const EveChildUpdateParams& params );
-	void SetAsDirty();
+	void FlagBoundingSphereRebuildRequired();
 
-	
 	BlueSharedString m_name;
 	PIEveVolumeVector m_volumes;
-	PIEveVolumeVector m_exclusionVolumes;
+	PIEveVolumeVector m_exclusionVolumes; 
 
-	Vector4 m_boundingSphere;
-	bool m_isDirty;
+	CcpMath::Sphere m_boundingSphere;
+	bool m_rebuildBoundingSphereRequired;
 
-	float m_environmentIntensity;
+	// post process attributes
+	PostProcess::Attributes m_postProcessAttributeOverrides;
 };
 
-TYPEDEF_BLUECLASS( EveChildEnvironment );
-
-#endif
+TYPEDEF_BLUECLASS( EveChildPostProcessVolume );
