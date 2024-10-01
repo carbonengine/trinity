@@ -145,6 +145,8 @@ void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 		data.clear();
 	}
 	m_lightData.clear();
+	m_shadowCasters.clear();
+	m_volumetricLights.clear();
 }
 
 void Tr2LightManager::SetFrustum( const TriFrustum& frustum )
@@ -289,11 +291,8 @@ ALResult Tr2LightManager::DoUpdateLists(Tr2RenderContext& renderContext )
 	return S_OK;
 }
 
-ALResult Tr2LightManager::UpdateLists( Tr2RenderContext& renderContext )
+void Tr2LightManager::ResolveLightData()
 {
-	m_lightBufferVariable = m_lightBuffer;
-	m_indexBufferVariable = m_indexBuffer;
-
 	m_lightData.clear();
 	for( auto& data : m_tlsLightData )
 	{
@@ -303,6 +302,22 @@ ALResult Tr2LightManager::UpdateLists( Tr2RenderContext& renderContext )
 		}
 		data.clear();
 	}
+
+	m_shadowCasters.clear();
+	m_volumetricLights.clear();
+	for( uint32_t i = 0; i < m_lightData.size(); i++ )
+	{
+		if( ( m_lightData[i].flags & FLAG_CASTS_SHADOWS ) != 0 )
+			m_shadowCasters.push_back( i );
+		if( ( m_lightData[i].flags & FLAG_IS_VOLUMETRIC ) != 0 )
+			m_volumetricLights.push_back( i );
+	}
+}
+
+ALResult Tr2LightManager::UpdateLists( Tr2RenderContext& renderContext )
+{
+	m_lightBufferVariable = m_lightBuffer;
+	m_indexBufferVariable = m_indexBuffer;
 
 	if( m_lightData.empty() )
 	{

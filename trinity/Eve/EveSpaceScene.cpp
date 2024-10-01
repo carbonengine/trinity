@@ -1251,6 +1251,8 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 			}
 		}
 		m_cameraAttachmentParent->GetLights( *lightManager );
+
+		lightManager->ResolveLightData();
 	}
 
 	//  the lensflares need a special pre-render update

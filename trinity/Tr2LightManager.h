@@ -52,17 +52,27 @@ public:
 		uint16_t flags;
 
 		Vector3_16 direction;
-		uint16_t padding0;
+		Float_16 projectionPlaneDistance;
 
 		Float_16 outerAngle;
 		Float_16 innerAngle;
 
-		uint16_t padding1;
-		uint16_t padding2;
+		Float_16 shadowMapScale;
+		union
+		{
+			Float_16 shadowMapBias;
+			uint16_t shadowMapIndex;
+		};
+
+		PerLightData( ) : shadowMapIndex( 0xFFFF )
+		{
+		}
 	};
 
 	static const uint16_t FLAG_AFFECTS_SURFACES = 1;
 	static const uint16_t FLAG_AFFECTS_PARTICLES = 1 << 1;
+	static const uint16_t FLAG_CASTS_SHADOWS = 1 << 2;
+	static const uint16_t FLAG_IS_VOLUMETRIC = 1 << 3;
 
 	static const uint16_t FLAG_DEFAULT = FLAG_AFFECTS_SURFACES;
 
@@ -70,6 +80,7 @@ public:
 	void SetFrustum( const TriFrustum& frustum );
 	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT );
 	void AddLight( PerLightData& data );
+	void ResolveLightData();
 	ALResult UpdateLists( Tr2RenderContext& renderContext );
 	void SetVariableStore();
 	void AdjustLightCutoff( float lodFactor );
@@ -97,6 +108,8 @@ private:
 
 	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
 	std::vector<PerLightData> m_lightData;
+	std::vector<uint32_t> m_shadowCasters;
+	std::vector<uint32_t> m_volumetricLights;
 	Tr2GpuStructuredBufferPtr m_lightBuffer;
 	Tr2GpuStructuredBufferPtr m_indexBuffer;
 

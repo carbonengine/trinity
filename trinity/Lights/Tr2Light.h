@@ -46,6 +46,9 @@ struct LightData {
 	uint16_t flags;
 
 	Be::Time startTime;
+
+	bool castsShadows;
+	bool isVolumetric;
 };
 
 
@@ -54,12 +57,13 @@ struct LightData {
 	The reason why I did it this way instead of using virtual functions is that this is faster (no vtable).
 	Another reason is because the information in this ends up as PerLightData which needs to contain everything regardless of light type
 */
-BLUE_CLASS( Tr2Light ):
+BLUE_CLASS( Tr2Light ) :
 	public IInitialize,
 	public INotify
 {
 public:
-	enum LIGHT_TYPE {
+	enum LIGHT_TYPE
+	{
 		UNDEFINED_LIGHT,
 		POINT_LIGHT,
 		SPOT_LIGHT,
@@ -76,7 +80,7 @@ public:
 	virtual void Update();
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const granny_matrix_3x4* bones = nullptr, size_t boneCount = 0 );
 	virtual void SetLightData( LightData& baseData );
-	
+
 	void SetBoneMatrix( const granny_matrix_3x4* bones, size_t boneCount );
 	void SetBrightnessMultiplier( float multi );
 

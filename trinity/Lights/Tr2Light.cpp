@@ -25,7 +25,9 @@ LightData::LightData() :
 	texturePath( L"" ),
 	boneIndex( -1 ),
 	flags( Tr2LightManager::FLAG_DEFAULT ),
-	startTime( BeOS->GetCurrentFrameTime() )
+	startTime( BeOS->GetCurrentFrameTime() ),
+	castsShadows( false ),
+	isVolumetric( false )
 {
 }
 
@@ -59,7 +61,10 @@ Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transfor
 
 	data.outerAngle = Float_16( 0.0f );
 	data.innerAngle = Float_16( 0.0f );
-		
+
+	data.flags |= castsShadows ? Tr2LightManager::FLAG_CASTS_SHADOWS : 0;
+	data.flags |= isVolumetric ? Tr2LightManager::FLAG_IS_VOLUMETRIC : 0;
+	
 	return data;
 }
 
