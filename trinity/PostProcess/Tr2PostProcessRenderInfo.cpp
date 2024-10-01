@@ -38,6 +38,10 @@ bool Tr2PostProcessRenderInfo::OnModified( Be::Var* value )
 	{
 		SetSourceBuffer( m_sourceBuffer );
 	}
+	else if( IsMatch( value, m_debugTextures ) )
+	{
+		m_tempTextures.clear();
+	}
 	return true;
 }
 

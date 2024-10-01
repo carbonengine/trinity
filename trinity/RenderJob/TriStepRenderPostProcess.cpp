@@ -1698,11 +1698,6 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 				GPU_REGION( renderContext, "CoC" );
 				coc = m_renderInfo->GetTempTexture( "CoC", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
 				DrawInto( *coc, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
-				if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoC )
-				{
-					DrawInto( *dest, Tr2LoadAction::DONT_CARE, *coc, renderContext );
-					return;
-				}
 			}
 			else
 			{
@@ -1710,11 +1705,6 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 				auto coc2 = m_renderInfo->GetTempTexture( "CoC", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8_UNORM );
 
 				DrawInto( *coc2, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
-				if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoC )
-				{
-					DrawInto( *dest, Tr2LoadAction::DONT_CARE, *coc2, renderContext );
-					return;
-				}
 				{
 					GPU_REGION( renderContext, "CoC Blur" );
 
@@ -1725,11 +1715,6 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 																		   depthOfField->m_cocScale );
 					coc = m_renderInfo->GetTempTexture( "CoC Blurred", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
 					Blur( *coc, *coc2, renderContext, blurContext );
-					if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoCBlurred )
-					{
-						DrawInto( *dest, Tr2LoadAction::DONT_CARE, *coc, renderContext );
-						return;
-					}
 				}
 			}
 
@@ -1781,11 +1766,6 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "CoCMap" ), coc );
 					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( adjustedScale, 0.0f, 0.0f, 0.0f ) );
 					DrawInto( *blur, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehBlurShader, renderContext );
-					if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_BokehBlend )
-					{
-						DrawInto( *dest, Tr2LoadAction::DONT_CARE, *blur, renderContext );
-						return;
-					}
 				}
 				{
 					GPU_REGION( renderContext, "Bokeh Fill" );
