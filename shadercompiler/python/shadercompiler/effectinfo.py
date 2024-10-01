@@ -76,7 +76,7 @@ class _StringTable(object):
 
     def get_string(self, offset):
         try:
-            return self._data[offset:self._data.index('\000', offset)]
+            return self._data[offset:self._data.index(b'\000', offset)].decode('utf-8')
         except ValueError:
             return self._data[offset:]
 
@@ -261,15 +261,15 @@ class StaticSampler(object):
 class LibraryInput(object):
     def __init__(self, stream, string_table, version):
         self.registers = []
-        for input_index in xrange(stream.read_uint8()):
+        for input_index in range(stream.read_uint8()):
             self.registers.append(ShaderRegister(stream, version, 0))
 
         self.static_samplers = []
-        for sampler_index in xrange(stream.read_uint8()):
+        for sampler_index in range(stream.read_uint8()):
             self.static_samplers.append(StaticSampler(stream))
 
         self.constants = []
-        for i in xrange(stream.read_uint32()):
+        for i in range(stream.read_uint32()):
             self.constants.append(Constant(stream, string_table, version))
 
         constant_value_size = stream.read_uint32()
@@ -279,19 +279,19 @@ class LibraryInput(object):
             const.read_default_value(const_data)
 
         self.resources = []
-        for i in xrange(stream.read_uint8()):
+        for i in range(stream.read_uint8()):
             self.resources.append(Resource(stream, string_table, version))
 
         self.samplers = []
-        for i in xrange(stream.read_uint8()):
+        for i in range(stream.read_uint8()):
             self.samplers.append(Sampler(stream, string_table, version))
 
         self.uavs = []
-        for i in xrange(stream.read_uint8()):
+        for i in range(stream.read_uint8()):
             self.uavs.append(UAV(stream, string_table, version))
 
         self.annotations = {}
-        for j in xrange(stream.read_uint8()):
+        for j in range(stream.read_uint8()):
             annotation = Annotation(stream, string_table)
             self.annotations[annotation.name] = annotation
 
@@ -306,16 +306,16 @@ class Stage(object):
             self.thread_group_size = stream.read_uint32(), stream.read_uint32(), stream.read_uint32()
 
         self.inputs = []
-        for input_index in xrange(stream.read_uint8()):
+        for input_index in range(stream.read_uint8()):
             self.inputs.append(ShaderInput(stream, version))
 
         self.registers = []
         if version > 8:
-            for input_index in xrange(stream.read_uint8()):
+            for input_index in range(stream.read_uint8()):
                 self.registers.append(ShaderRegister(stream, version, self.stage))
         self.static_samplers = []
         if version > 12:
-            for sampler_index in xrange(stream.read_uint8()):
+            for sampler_index in range(stream.read_uint8()):
                 self.static_samplers.append(StaticSampler(stream))
 
         if version < 5:
@@ -334,7 +334,7 @@ class Stage(object):
             self.thread_group_size = None, None, None
 
         self.constants = []
-        for i in xrange(stream.read_uint32()):
+        for i in range(stream.read_uint32()):
             self.constants.append(Constant(stream, string_table, version))
 
         constant_value_size = stream.read_uint32()
@@ -349,21 +349,21 @@ class Stage(object):
             const.read_default_value(const_data)
 
         self.resources = []
-        for i in xrange(stream.read_uint8()):
+        for i in range(stream.read_uint8()):
             self.resources.append(Resource(stream, string_table, version))
 
         self.samplers = []
-        for i in xrange(stream.read_uint8()):
+        for i in range(stream.read_uint8()):
             self.samplers.append(Sampler(stream, string_table, version))
 
         self.uavs = []
         if version >= 3:
-            for i in xrange(stream.read_uint8()):
+            for i in range(stream.read_uint8()):
                 self.uavs.append(UAV(stream, string_table, version))
 
         self.annotations = {}
         if version >= 8:
-            for j in xrange(stream.read_uint8()):
+            for j in range(stream.read_uint8()):
                 annotation = Annotation(stream, string_table)
                 self.annotations[annotation.name] = annotation
 
@@ -396,13 +396,13 @@ class Pass(object):
         if stage_count > Stages.COUNT:
             raise RuntimeError('too many stages')
 
-        for stage_index in xrange(stage_count):
+        for stage_index in range(stage_count):
             stage = Stage(stream, string_table, version)
             self.stages[stage.stage] = stage
 
         self.states = {}
         state_count = stream.read_uint8()
-        for i in xrange(state_count):
+        for i in range(state_count):
             state = stream.read_uint32()
             value = stream.read_uint32()
             self.states[state] = value
@@ -416,7 +416,7 @@ class Technique(object):
         if version > 6:
             self.name = string_table.get_string(stream.read_uint32())
         pass_count = stream.read_uint8()
-        for i in xrange(pass_count):
+        for i in range(pass_count):
             self.passes.append(Pass(stream, string_table, version))
         self.libraries = []
         for i in range(stream.read_uint8()):
@@ -450,7 +450,7 @@ class ParameterAnnotation(object):
     def __init__(self, stream, string_table):
         self.name = string_table.get_string(stream.read_uint32())
         self.annotations = {}
-        for j in xrange(stream.read_uint8()):
+        for j in range(stream.read_uint8()):
             annotation = Annotation(stream, string_table)
             self.annotations[annotation.name] = annotation
 
@@ -480,13 +480,13 @@ class _Parameter(object):
         if isinstance(self.constant, Resource):
             if self.constant.type == 5:  # typeless texture
                 self.constant = other.constant
-        for k, v in other.annotation.annotations.iteritems():
+        for k, v in other.annotation.annotations.items():
             if k not in self.annotation.annotations:
                 self.annotation.annotations[k] = v
 
 
 def _merge_parameters(destination, other):
-    for k, v in other.iteritems():
+    for k, v in other.items():
         if k not in destination:
             destination[k] = v
         else:
@@ -507,7 +507,7 @@ class Permutation(object):
             self.type = Permutation.STATIC
         count = stream.read_uint8()
         self.options = []
-        for i in xrange(count):
+        for i in range(count):
             self.options.append(string_table.get_string(stream.read_uint32()))
 
 
@@ -518,21 +518,21 @@ class ShaderInfo(object):
 
         if version > 6:
             technique_count = stream.read_uint8()
-            for i in xrange(technique_count):
+            for i in range(technique_count):
                 self.techniques.append(Technique(stream, string_table, version))
         else:
             self.techniques.append(Technique(stream, string_table, version))
 
         self.annotations = {}
-        for i in xrange(stream.read_uint16()):
+        for i in range(stream.read_uint16()):
             annotation = ParameterAnnotation(stream, string_table)
             self.annotations[annotation.name] = annotation
-        for k, v in self.annotations.iteritems():
+        for k, v in self.annotations.items():
             heap_view = v.annotations.get('IsHeapView')
             if heap_view and heap_view.type == AnnotationType.BOOL and heap_view.value:
                 for technique in self.techniques:
                     for p in technique.passes:
-                        for stage in p.stages.itervalues():
+                        for stage in p.stages.values():
                             for tex in stage.resources:
                                 if tex.name == k:
                                     tex.trinity_type = 'Tr2HeapViewParameter'
@@ -554,7 +554,7 @@ class ShaderInfo(object):
         result = {}
         for t in self.techniques:
             for p in t.passes:
-                for stage in p.stages.itervalues():
+                for stage in p.stages.values():
                     for const in getattr(stage, stage_attr):
                         annotation = self.annotations.get(const.name)
                         if not annotation:
@@ -571,7 +571,7 @@ class ShaderInfo(object):
         result = {}
         for t in self.techniques:
             for p in t.passes:
-                for stage in p.stages.itervalues():
+                for stage in p.stages.values():
                     for sampler in stage.samplers:
                         result[sampler.name] = sampler
         return result
@@ -609,7 +609,7 @@ class EffectInfo(object):
             if header_size * 3 * 4 + 4 > stream.remaining():
                 raise RuntimeError('invalid header size')
             self._offsets = {}
-            for i in xrange(header_size):
+            for i in range(header_size):
                 key = stream.read_uint32()
                 self._offsets[key] = (stream.read_uint32(), stream.read_uint32())
             self._string_table = _StringTable(stream)
@@ -617,7 +617,7 @@ class EffectInfo(object):
             self._string_table = _StringTable(stream)
             permutation_count = stream.read_uint8()
             self.permutations = []
-            for i in xrange(permutation_count):
+            for i in range(permutation_count):
                 self.permutations.append(Permutation(stream, self._string_table, version))
             header_size = stream.read_uint32()
             if header_size == 0:
@@ -625,7 +625,7 @@ class EffectInfo(object):
             if header_size * 3 * 4 + 4 > stream.remaining():
                 raise RuntimeError('invalid header size')
             self._offsets = {}
-            for i in xrange(header_size):
+            for i in range(header_size):
                 key = stream.read_uint32()
                 self._offsets[key] = (stream.read_uint32(), stream.read_uint32())
 
@@ -655,7 +655,7 @@ class EffectInfo(object):
         options = []
         for each in self.permutations:
             options.append((each, each.options[index % len(each.options)]))
-            index /= len(each.options)
+            index //= len(each.options)
         return options
 
 
@@ -671,8 +671,8 @@ def apply_to_shaders(path, callback, shader_filter=None):
     :type shader_filter: (int, int, list[(str, Permutation)])->bool
     :return:
     """
-    for platform in PLATFORM_NAMES.iterkeys():
-        for sm in SHADER_MODEL_NAMES.iterkeys():
+    for platform in PLATFORM_NAMES.keys():
+        for sm in SHADER_MODEL_NAMES.keys():
             try:
                 compiled = paths.get_compiled_path(path, sm, platform)
             except ValueError:
@@ -684,7 +684,7 @@ def apply_to_shaders(path, callback, shader_filter=None):
             count = 1
             for each in effect.permutations:
                 count *= len(each.options)
-            for each in xrange(count):
+            for each in range(count):
                 if shader_filter:
                     if not shader_filter(platform, sm, effect.index_to_options(each)):
                         continue
@@ -706,8 +706,8 @@ def get_merged_parameters(path, shader_filter=None):
     resources = {}
     samplers = {}
     has_compiled = False
-    for platform in PLATFORM_NAMES.iterkeys():
-        for sm in SHADER_MODEL_NAMES.iterkeys():
+    for platform in PLATFORM_NAMES.keys():
+        for sm in SHADER_MODEL_NAMES.keys():
             try:
                 compiled = paths.get_compiled_path(path, sm, platform)
             except ValueError:
@@ -720,7 +720,7 @@ def get_merged_parameters(path, shader_filter=None):
             count = 1
             for each in effect.permutations:
                 count *= len(each.options)
-            for each in xrange(count):
+            for each in range(count):
                 if shader_filter:
                     if not shader_filter(platform, sm, effect.index_to_options(each)):
                         continue
@@ -760,8 +760,8 @@ def is_using_compressed_tangents(path, shader_filter=None):
     :rtype: bool
     """
     has_compiled = False
-    for platform in PLATFORM_NAMES.iterkeys():
-        for sm in SHADER_MODEL_NAMES.iterkeys():
+    for platform in PLATFORM_NAMES.keys():
+        for sm in SHADER_MODEL_NAMES.keys():
             try:
                 compiled = paths.get_compiled_path(path, sm, platform)
             except ValueError:
@@ -774,7 +774,7 @@ def is_using_compressed_tangents(path, shader_filter=None):
             count = 1
             for each in effect.permutations:
                 count *= len(each.options)
-            for each in xrange(count):
+            for each in range(count):
                 if shader_filter:
                     if not shader_filter(platform, sm, effect.index_to_options(each)):
                         continue

@@ -198,7 +198,7 @@ private:
 	void ProcessFade( Tr2PPFadeEffect* fade );
 
 	// LUT
-	void ProcessLut( std::vector<Tr2PPLutEffect*> luts );
+	void ProcessLut( std::vector<const Tr2PPLutEffect*> luts );
 
 	// vignette
 	void ProcessVignette( Tr2PPVignetteEffect* vignette);

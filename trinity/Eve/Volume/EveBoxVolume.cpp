@@ -25,6 +25,7 @@ EveBoxVolume::EveBoxVolume( IRoot* lockobj ) :
 	m_innerBoxTransform( IdentityMatrix() ),
 	m_inverseBoxTransform( IdentityMatrix() ),
 	m_inverseInnerBoxTransform( IdentityMatrix() ),
+	m_boundingSphere( Vector3( 0, 0, 0 ), 0 ),
 	m_debugShowIntersection( false ),
 	m_notifyParent( false )
 {
@@ -52,9 +53,9 @@ void EveBoxVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 	}
 }
 
-Vector4 EveBoxVolume::GetBoundingSphere() const
+const CcpMath::Sphere EveBoxVolume::GetBoundingSphere() const
 {
-	return Vector4( m_position, Length( m_scaling ) * 0.5f );
+	return m_boundingSphere;
 }
 
 
@@ -105,6 +106,9 @@ void EveBoxVolume::Setup()
 
 	m_inverseBoxTransform = Inverse( m_boxTransform );
 	m_inverseInnerBoxTransform = Inverse( m_innerBoxTransform );
+
+	m_boundingSphere.center = m_position;
+	m_boundingSphere.radius = Length( m_scaling ) * 0.5f;
 }
 
 //////////////////////////////////////////////////////////////////////////
