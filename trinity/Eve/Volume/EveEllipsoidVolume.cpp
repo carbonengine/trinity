@@ -20,6 +20,7 @@ EveEllipsoidVolume::EveEllipsoidVolume( IRoot* lockobj ) :
 	m_rotationMatrix( IdentityMatrix() ),
 	m_inverseRotationMatrix( IdentityMatrix() ),
 	m_debugShowIntersection( false ),
+	m_boundingSphere( Vector3( 0, 0, 0 ), 0 ),
 	m_notifyParent( false )
 {
 }
@@ -43,6 +44,9 @@ void EveEllipsoidVolume::Setup()
 
 	m_rotationMatrix = RotationMatrix( m_rotation );
 	m_inverseRotationMatrix = Inverse( m_rotationMatrix );
+
+	m_boundingSphere.center = m_position;
+	m_boundingSphere.radius = max( m_shape.x, max( m_shape.y, m_shape.z ) );
 }
 
 void EveEllipsoidVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform )
@@ -60,9 +64,9 @@ void EveEllipsoidVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Ma
 	}
 }
 
-Vector4 EveEllipsoidVolume::GetBoundingSphere() const
+const CcpMath::Sphere EveEllipsoidVolume::GetBoundingSphere() const
 {
-	return Vector4( m_position, max( m_shape.x, max( m_shape.y, m_shape.z ) ) );
+	return m_boundingSphere;
 }
 
 float EveEllipsoidVolume::GetIntensity( Vector3 position )

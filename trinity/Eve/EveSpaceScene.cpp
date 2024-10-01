@@ -41,6 +41,7 @@
 #include <ScopedBlockTrap.h>
 #include "Raytracing/Tr2RaytracingManager.h"
 #include "../Resources/TriTextureRes.h"
+#include "../PostProcess/ITr2PostProcessOwner.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -103,6 +104,9 @@ TRI_REGISTER_SETTING( "eveReflectionSetting", g_eveReflectionMode );
 
 bool g_eveSpaceSceneRaytracedShadows = true;
 TRI_REGISTER_SETTING( "eveSpaceSceneRaytracedShadows", g_eveSpaceSceneRaytracedShadows );
+
+bool g_lensflaresInReflections = true;
+TRI_REGISTER_SETTING( "lensflaresInReflections", g_lensflaresInReflections );
 
 namespace
 {
@@ -322,10 +326,20 @@ Tr2PostProcess2Ptr EveSpaceScene::GetPostProcess()
 	{
 		return nullptr;
 	}
-	else
+
+	auto combination = PostProcess::Gather(*m_componentRegistry);
+	if( !combination )
 	{
 		return m_postProcess;
 	}
+
+	if( m_postProcess )
+	{
+		combination->SetDynamicExposure( m_postProcess->GetDynamicExposure() );
+		combination->SetTaa( m_postProcess->GetTaa() );
+		combination->SetTonemapping( m_postProcess->GetTonemapping() );
+	}
+	return combination;
 }
 
 Tr2ShaderBufferPtr EveSpaceScene::GetPostProcessPSBuffer()
@@ -1660,7 +1674,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 		// get the background reflection renderables from the component registry
 		RenderBackgroundPassObjects( renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );
 
-		if( !m_lensflares.empty() && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA )
+		if( g_lensflaresInReflections && !m_lensflares.empty() && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA )
 		{
 			GPU_REGION( renderContext, "Lens Flares in reflections" );
 			std::vector<ITr2Renderable*> visible;
