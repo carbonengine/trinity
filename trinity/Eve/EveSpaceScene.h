@@ -632,6 +632,12 @@ private:
 
 	BlueSharedString m_name;
 
+	// Dynamic light shadow maps
+	bool PrepareShadowMapForLights( Tr2RenderContext & renderContext, Tr2DepthStencilPtr shadowMap );
+	void RenderShadowMapForSpotLight( Tr2RenderContext & renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, uint32_t shadowMapScale, uint32_t shadowMapOffsetX, uint32_t shadowMapOffsetY, const Vector3& lightPosition, const Matrix& view, const Matrix& projection, Tr2DepthStencilPtr shadowMap );
+	void RenderShadowMapForLight( Tr2RenderContext & renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, Tr2DepthStencilPtr shadowMap );
+	void FinishRenderingShadowMapForLights( Tr2RenderContext & renderContext );
+
 	// Object to gather all components
 	EveComponentRegistryPtr m_componentRegistry;
 

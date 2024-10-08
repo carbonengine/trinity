@@ -1734,6 +1734,24 @@ bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const Tr
 	return sizeInShadow > 15.f;
 }
 
+bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
+{
+	if( !m_display || m_boundingSphereWorldRadius <= 0.0 )
+	{
+		return false;
+	}
+
+	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereRadius );
+
+	sizeInShadow = 0;
+
+	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, bs ) )
+	{
+		sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
+	}
+	return sizeInShadow > 15.f;
+}
+
 void EveSpaceObject2::SetMesh( Tr2MeshBase* mesh )
 {
 	m_mesh = mesh;

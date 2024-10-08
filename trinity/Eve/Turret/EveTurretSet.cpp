@@ -1573,6 +1573,32 @@ bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 	return sizeInShadow > 5.f;
 }
 
+bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
+{
+	if( !m_display || !m_geometryResource )
+	{
+		return false;
+	}
+
+	sizeInShadow = 0;
+
+	for( auto& turret : m_singleTurrets )
+	{
+		Vector4 transformedBoundingSphere = m_boundingSphere;
+		// transform bounding sphere into world space to check against frustum
+		BoundingSphereTransform( turret.worldMatrix, transformedBoundingSphere );
+
+		if( transformedBoundingSphere.w > 0.0f )
+		{
+			if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, transformedBoundingSphere ) )
+			{
+				sizeInShadow = max( sizeInShadow, EveShadowCaster::GetSizeInShadow( shadowFrustum, transformedBoundingSphere ) );
+			}
+		}
+	}
+	return sizeInShadow > 5.f;
+}
+
 void EveTurretSet::UpdateVisibility( const EveUpdateContext& updateContext )
 {
 	m_parentShLighting = nullptr;

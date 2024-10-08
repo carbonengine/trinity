@@ -17,6 +17,7 @@
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( Tr2GpuStructuredBuffer );
+BLUE_DECLARE( Tr2DepthStencil );
 
 class Tr2TextureArray;
 
@@ -31,6 +32,7 @@ class Tr2TextureArray;
 //     lightManager.SetFrustum( frustum );
 //     for each in scene.lights
 //       lightManager.AddPointLight( each ); // this can be done in parallel
+//	   lightManager.ResolveLightData();
 //     lightManager.UpdateLists();
 //     renderYourStuff();
 //  Light manager GPU buffers are accessed through variable store with names 
@@ -57,16 +59,12 @@ public:
 		Float_16 outerAngle;
 		Float_16 innerAngle;
 
-		Float_16 shadowMapScale;
-		union
-		{
-			Float_16 shadowMapBias;
-			uint16_t shadowMapIndex;
-		};
+		uint32_t padding : 2;
+		uint32_t shadowMapScale : 10;
+		uint32_t shadowMapOffsetX : 10;
+		uint32_t shadowMapOffsetY : 10;
 
-		PerLightData( ) : shadowMapIndex( 0xFFFF )
-		{
-		}
+		void GetUnpackedShadowMapData( uint32_t& shadowMapScale, uint32_t& shadowMapOffsetX, uint32_t& shadowMapOffsetY ) const;
 	};
 
 	static const uint16_t FLAG_AFFECTS_SURFACES = 1;
@@ -96,6 +94,10 @@ public:
 
 	static Tr2TextureArray& GetLightProfileArray();
 
+	const std::vector<uint32_t>& GetShadowCastingLights() const;
+	const Tr2LightManager::PerLightData& GetLightData( uint32_t index ) const;
+	Tr2DepthStencilPtr GetShadowMapAtlas();
+
 private:
 	Tr2LightManager( const Tr2LightManager& );
 	Tr2LightManager& operator=( const Tr2LightManager& );
@@ -106,9 +108,11 @@ private:
 	ALResult ClearLightIndices( Tr2RenderContext& renderContext );
 	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
 
+	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
+
 	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
 	std::vector<PerLightData> m_lightData;
-	std::vector<uint32_t> m_shadowCasters;
+	std::vector<uint32_t> m_shadowCastingLights;
 	std::vector<uint32_t> m_volumetricLights;
 	Tr2GpuStructuredBufferPtr m_lightBuffer;
 	Tr2GpuStructuredBufferPtr m_indexBuffer;
@@ -121,6 +125,19 @@ private:
 	TriFrustum m_frustum;
 
 	float m_adjustedCutoff;
+
+	Tr2DepthStencilPtr m_shadowMapAtlasDS;
+	struct ShadowMapNode
+	{
+		uint32_t children[2];
+		uint32_t lightIndex;
+		int x;
+		int y;
+		int width;
+		int height;
+	};
+	std::vector<ShadowMapNode> m_shadowMapNodes;
+	uint32_t InsertShadowMapNode( uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
 };
 
 #endif

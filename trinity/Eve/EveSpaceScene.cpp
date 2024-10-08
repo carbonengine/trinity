@@ -2174,6 +2174,140 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 }
 
+bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, Tr2DepthStencilPtr shadowMap )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	CCP_ASSERT( shadowMap && shadowMap->IsValid() );
+
+	// Using depth stencil as shadow map
+	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
+	renderContext.m_esm.PushDepthStencilBuffer( *shadowMap->GetTexture() );
+
+	// we want a clean depth buffer for this
+	renderContext.SetReadOnlyDepth( false );
+	CR( renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xffffffff, 1, 0 ) );
+
+	return true;
+}
+
+void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, 
+	uint32_t shadowMapScale, uint32_t shadowMapOffsetX, uint32_t shadowMapOffsetY, const Vector3& lightPosition, const Matrix& view, const Matrix& projection, Tr2DepthStencilPtr shadowMap )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	renderContext.m_esm.PushViewport();
+	renderContext.m_esm.UpdateRenderTargetViewport( shadowMap->GetWidth(), shadowMap->GetHeight() );
+	renderContext.m_esm.SetViewport( shadowMapScale, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY, 0, 1 );
+	
+	TriFrustum shadowFrustum;
+	// TODO: intern, extract frustum does not fill in all the data for the frustum. 
+	// TODO: intern, then again, the same matrix multiplication is happening inside of DeriveFrustum as well... do something about this
+	//shadowFrustum.ExtractFrustum( &viewProj );
+	const Matrix viewProj = view * projection;
+	shadowFrustum.DeriveFrustum( &view, &lightPosition, &projection, renderContext.m_esm.GetViewport() );
+	{
+		CCP_STATS_ZONE( "get shadowbatches for light" );
+		float sizeInShadow = 0.0f;
+		for( auto& caster : shadowCasters )
+		{
+			caster->IsCastingShadow( m_updateContext.GetFrustum(), shadowFrustum, shadowMapScale, sizeInShadow );
+			// special threshold check
+			if( sizeInShadow > 5.0f )
+			{
+				auto perObjData = caster->GetShadowPerObjectData( m_shadowBatches[0].get() );
+				caster->GetShadowBatches( m_shadowBatches[0].get(), perObjData, sizeInShadow );
+			}
+		}
+	}
+
+	m_shadowBatches[0]->Finalize();
+	PerFrameVSData data;
+	data.ViewProjectionMat = Transpose( viewProj );
+
+	static const unsigned perFrameVsMask =
+		( 1 << VERTEX_SHADER ) |
+		SHADER_TYPE_EXISTS( COMPUTE_SHADER ) |
+		SHADER_TYPE_EXISTS( GEOMETRY_SHADER ) |
+		SHADER_TYPE_EXISTS( HULL_SHADER ) |
+		SHADER_TYPE_EXISTS( DOMAIN_SHADER );
+	FillAndSetConstants( m_shadowPerFrameVSBuffer, &data, sizeof( data ), perFrameVsMask, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext );
+
+	if( m_shadowBatches[0]->GetBatchCount() )
+	{
+		renderContext.m_esm.SetInvertedDepthTest( false );
+		ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
+		renderContext.RenderBatches( m_shadowBatches[0].get(), BlueSharedString( "Shadow" ) );
+	}
+
+	m_shadowBatches[0]->Clear();
+
+	renderContext.SetReadOnlyDepth( false );
+
+	renderContext.m_esm.PopViewport();
+}
+
+void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, Tr2DepthStencilPtr shadowMap )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	// TODO: intern, think about proper value for near clipping...
+	// TODO: intern, confirm that up vector is ok
+
+	if( lightData.innerAngle <= 0. )
+	{
+		// pointlight
+		// TODO: intern, there surely is a more elegant way of doing this...
+		Vector3 directions[6] = {
+			Vector3( 1.f, 0.f, 0.f ), Vector3( 0.f, 1.f, 0.f ), Vector3( 0.f, 0.f, 1.f ), 
+			Vector3( -1.f, 0.f, 0.f ), Vector3( 0.f, -1.f, 0.f ), Vector3( 0.f, 0.f, -1.f )
+		};
+
+		float fov = 90.f / 360.f * TRI_2PI;
+		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius / 1000.f, lightData.radius );
+		for( int32_t y = 0; y < 2; y++ )
+		{
+			for( int32_t x = 0; x < 3; x++ )
+			{
+				Vector3 direction = directions[x + y * 3];
+				Vector3 up = Vector3( direction.z, direction.x, direction.y );
+				Matrix view = LookAtMatrix( lightData.position, lightData.position - direction, up );
+				uint32_t shadowMapScale;
+				uint32_t shadowMapOffsetX;
+				uint32_t shadowMapOffsetY;
+				lightData.GetUnpackedShadowMapData( shadowMapScale, shadowMapOffsetX, shadowMapOffsetY );
+				shadowMapOffsetX += x * shadowMapScale;
+				shadowMapOffsetY += y * shadowMapScale;
+				RenderShadowMapForSpotLight( renderContext, shadowCasters, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY, lightData.position, view, projection, shadowMap );
+			}
+		}
+	}
+	else
+	{
+		// spotlight
+		// TODO: intern, fov from projectionPlaneDistance. or better yet, construct perspective matrix directly
+		float fov = acos( float( lightData.outerAngle ) );
+		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius / 1000.f, lightData.radius );
+		Vector3 up = Vector3( lightData.direction.z, lightData.direction.x, lightData.direction.y );
+		Matrix view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
+		uint32_t shadowMapScale;
+		uint32_t shadowMapOffsetX;
+		uint32_t shadowMapOffsetY;
+		lightData.GetUnpackedShadowMapData( shadowMapScale, shadowMapOffsetX, shadowMapOffsetY );
+		RenderShadowMapForSpotLight( renderContext, shadowCasters, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY, lightData.position, view, projection, shadowMap );
+	}
+}
+
+void EveSpaceScene::FinishRenderingShadowMapForLights( Tr2RenderContext& renderContext )
+{
+	renderContext.m_esm.PopRenderTarget();
+	renderContext.m_esm.PopDepthStencilBuffer();
+
+	//PopulatePerFramePSData( m_perFramePS, renderContext );
+	ApplyPerFrameData( renderContext );
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Main rendering of foreground objects.
@@ -2209,10 +2343,23 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		GPU_REGION( renderContext, "Lighting" );
-		CCP_STATS_SCOPED_TIME( updateDynamicLightLists );
-
-		lightManager->UpdateLists(renderContext );
+		{
+			GPU_REGION( renderContext, "PointLight/SpotLight Shadow Maps" );
+			Tr2DepthStencilPtr shadowMap = lightManager->GetShadowMapAtlas();
+			PrepareShadowMapForLights( renderContext, shadowMap );
+			std::vector<IEveShadowCaster*> shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
+			for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
+			{
+				const Tr2LightManager::PerLightData& lightData = lightManager->GetLightData( lightIndex );
+				RenderShadowMapForLight( renderContext, shadowCasters, lightData, shadowMap );
+			}
+			FinishRenderingShadowMapForLights( renderContext );
+		}
+		{
+			GPU_REGION( renderContext, "Lighting" );
+			CCP_STATS_SCOPED_TIME( updateDynamicLightLists );
+			lightManager->UpdateLists( renderContext );
+		}
 	}
 
 	GPU_REGION( renderContext, "Color Pass" );
