@@ -150,6 +150,7 @@ private:
 	// dynamic exposure
 	bool ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom );
 	void RenderDynamicExposure( Tr2RenderTarget* dest, Tr2RenderContext & renderContext, Tr2PPDynamicExposureEffect * dynamicExposure );
+	void RenderDynamicExposureDebug( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure );
 	Tr2GpuBufferPtr m_localHistograms;
 	Tr2GpuBufferPtr m_histogram;
 	Tr2GpuBufferPtr m_exposure;
@@ -160,6 +161,7 @@ private:
 	Tr2EffectPtr m_dynamicExposureMergeHistogramShader;
 	Tr2EffectPtr m_dynamicExposureMeasureExposureShader;
 	Tr2EffectPtr m_dynamicExposureToTextureShader;
+	Tr2EffectPtr m_dynamicExposureDebugShader;
 	Tr2RenderTargetPtr m_exposureTexture;
 
 	// depth of field

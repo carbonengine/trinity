@@ -528,6 +528,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		RenderSignalLoss( output, renderContext, signalLoss );
 	}
 
+	RenderDynamicExposureDebug( renderContext, dynamicExposure );
+
 	renderContext.m_esm.PopDepthStencilBuffer();
 	renderContext.m_esm.PopRenderTarget();
 	
@@ -1028,6 +1030,47 @@ void TriStepRenderPostProcess::RenderDynamicExposure( Tr2RenderTarget* dest, Tr2
 
 	// Measure histogram
 	Tr2Renderer::RunComputeShader( m_dynamicExposureMeasureExposureShader, 1, 1, 1, renderContext );
+}
+
+void TriStepRenderPostProcess::RenderDynamicExposureDebug( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure )
+{
+	if( dynamicExposure && dynamicExposure->IsActive() && dynamicExposure->m_debug )
+	{
+		Tr2Rect rect;
+		const TriViewport& vp = renderContext.m_esm.GetViewport();
+		rect.left = vp.x;
+		rect.top = vp.y + int32_t( 0.7f * vp.height );
+		rect.right = vp.x + vp.width;
+		rect.bottom = vp.y + vp.height;
+
+		if( !m_dynamicExposureDebugShader )
+		{
+			m_dynamicExposureDebugShader.CreateInstance();
+			m_dynamicExposureDebugShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ExposureDebug.fx" );
+		}
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "Histogram" ), m_histogram );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "MinLuminance" ), log( dynamicExposure->m_minLuminance ) );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "MaxLuminance" ), log( dynamicExposure->m_maxLuminance ) );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "RectSize" ), Vector2( float( rect.left - rect.right ), float( rect.bottom - rect.top ) ) );
+
+		Tr2TextureAL noTexture;
+		Tr2Renderer::DrawTexture( renderContext, m_dynamicExposureDebugShader, noTexture, Vector2( 0, 0 ), Vector2( 1, 1 ), Vector2( 0, 0.7f ), Vector2( 1, 1 ) );
+
+		const float* exposureData = nullptr;
+		if( SUCCEEDED( m_exposure->GetGpuBuffer( 0 )->MapForReading( exposureData, renderContext ) ) )
+		{
+			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_CENTER, 0xff00ff00, "Middle gray: %.2f", exposureData[0] );
+			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_LEFT, 0xff00ff00, "Min: %.2f", exposureData[5] );
+			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_RIGHT, 0xff00ff00, "Max: %.2f", exposureData[6] );
+
+			m_exposure->GetGpuBuffer( 0 )->UnmapForReading( renderContext );
+		}
+	}
+	else
+	{
+		m_dynamicExposureDebugShader = nullptr;
+	}
 }
 
 Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure )
