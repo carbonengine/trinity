@@ -25,6 +25,7 @@
 #include "TriFrustumOrtho.h"
 #include "Tr2ShadowMap.h"
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
+#include "PostProcess/ITr2PostProcessOwner.h"
 
 class TriProjection;
 class TriView;
@@ -87,6 +88,8 @@ BLUE_DECLARE( Tr2GpuStructuredBuffer );
 BLUE_DECLARE( Tr2TextureReference );
 BLUE_DECLARE( Tr2VolumetricsRenderer );
 BLUE_DECLARE( Tr2RaytracingManager );
+BLUE_DECLARE( Tr2PostProcessAttributes );
+BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
 
 BLUE_CLASS( EveSpaceScene ) :
 	public ITr2Scene,
@@ -95,7 +98,9 @@ BLUE_CLASS( EveSpaceScene ) :
 	public INotify,
 	public Tr2DeviceResource,
 	public IListNotify,
-	public ITr2NamedPredicate
+	public ITr2NamedPredicate,
+	public ITr2PostProcessOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -149,6 +154,10 @@ public:
 	// ITr2NamedPredicate
 	bool GetPredicate( const char* name ) const override;
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2PostProcessOwner
+	Tr2PostProcessAttributes* GetPostProcessAttributes() override;
+
 	// all eve-specific visualize methods
 	enum EveVisualizeMethod
 	{
@@ -189,6 +198,7 @@ public:
 	}
 	Tr2PostProcess2Ptr GetPostProcess();
 	Tr2ShaderBufferPtr GetPostProcessPSBuffer();
+
 	void SetVelocityMap( Tr2RenderTargetPtr velocityMap );
 	Tr2DepthStencil* GetDepth();
 	Matrix GetReprojectionMatrix() const;
@@ -622,7 +632,12 @@ private:
 
 	IRoot* GetCameraAttachments() const;
 
-	Tr2PostProcess2Ptr m_postProcess;
+	void UpdatePostProcessAttributes();
+	Tr2PostProcess2Ptr m_combinedPostProcess;
+	Tr2PostProcess2Ptr m_sceneDefaultPostProcess;
+	Tr2PostProcessAttributesPtr m_sceneDefaultPostProcessAttributes;
+	Tr2PostProcessAttributesPtr m_combinedPostProcessAttributes;
+
 	Tr2ReflectionProbePtr m_reflectionProbe;
 	EveVirtualCameraSystemPtr m_virtualCameraSystem;
 

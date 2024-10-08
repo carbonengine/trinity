@@ -107,6 +107,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( ITr2NamedPredicate )
+		MAP_INTERFACE( EveEntity )
+		MAP_INTERFACE( ITr2PostProcessOwner )
 
 		MAP_ATTRIBUTE(
 			"name",
@@ -538,7 +540,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			":jessica-group: Lighting\n",
 			Be::READWRITE )
 
-
 		MAP_ATTRIBUTE(
 			"impostorManager",
 			m_impostorManager,
@@ -553,9 +554,15 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 
 		MAP_ATTRIBUTE(
 			"postprocess",
-			m_postProcess,
+			m_sceneDefaultPostProcess,
 			"The post process",
 			Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE(
+			"combinedPostProcessAttributes",
+			m_combinedPostProcessAttributes,
+			"",
+			Be::READ )
 
 		MAP_ATTRIBUTE(
 			"virtualCameraSystem",
@@ -573,6 +580,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"ReregisterEntities",
 			ReregisterEntities,
 			"Re registers all entities" )
+
 
 	EXPOSURE_END()
 }
@@ -774,4 +782,6 @@ MAP_FUNCTION(
 	":param radius: instance radius\n"
 	":type radius: float\n"
 	":rtype: int" );
+
+
 #endif

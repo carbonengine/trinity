@@ -50,6 +50,10 @@ void Tr2PostProcess2::GetLuts( std::vector<const Tr2PPLutEffect*>& container ) c
 {
 	container.clear();
 	container.reserve( m_luts.size() );
+	if( m_lut && m_lut->IsActive() )
+	{
+		container.push_back( m_lut );
+	}
 	for( const auto& lut : m_luts )
 	{	
 		if( lut->IsActive() )
@@ -57,4 +61,10 @@ void Tr2PostProcess2::GetLuts( std::vector<const Tr2PPLutEffect*>& container ) c
 			container.push_back( lut );
 		}
 	}
+}
+
+
+void Tr2PostProcess2::ClearLuts()
+{
+	m_luts.Clear();
 }

@@ -9,17 +9,19 @@
 
 BLUE_DEFINE( Tr2PPDepthOfFieldEffect );
 
-const Be::VarChooser BokehShapeChooser[] = {
-	{ "Disk", BeCast( Tr2Bokeh::Disk ), "A perfectly circular aperture" },
-	{ "Triangle", BeCast( Tr2Bokeh::Triangle ), "An aperture with 3 sides" },
-	{ "Rectangle", BeCast( Tr2Bokeh::Rectangle ), "An aperture with 4 sides" },
-	{ "Pentagon", BeCast( Tr2Bokeh::Pentagon ), "An aperture with 5 sides" },
-	{ "Hexagon", BeCast( Tr2Bokeh::Hexagon ), "An aperture with 6 sides" },
-	{ "Heart", BeCast( Tr2Bokeh::Heart ), "A heart-shaped aperture <3" },
-	{ 0 }
-};
-BLUE_REGISTER_ENUM_EX( "BokehShapeType", Tr2Bokeh::Shape, BokehShapeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
-
+namespace Tr2Bokeh
+{
+	const Be::VarChooser BokehShapeChooser[] = {
+		{ "Disk", BeCast( Tr2Bokeh::Disk ), "A perfectly circular aperture" },
+		{ "Triangle", BeCast( Tr2Bokeh::Triangle ), "An aperture with 3 sides" },
+		{ "Rectangle", BeCast( Tr2Bokeh::Rectangle ), "An aperture with 4 sides" },
+		{ "Pentagon", BeCast( Tr2Bokeh::Pentagon ), "An aperture with 5 sides" },
+		{ "Hexagon", BeCast( Tr2Bokeh::Hexagon ), "An aperture with 6 sides" },
+		{ "Heart", BeCast( Tr2Bokeh::Heart ), "A heart-shaped aperture <3" },
+		{ 0 }
+	};
+	BLUE_REGISTER_ENUM_EX( "BokehShapeType", Shape, BokehShapeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+}
 const Be::ClassInfo* Tr2PPDepthOfFieldEffect::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2PPDepthOfFieldEffect, "" )
@@ -30,7 +32,7 @@ const Be::ClassInfo* Tr2PPDepthOfFieldEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "scale", m_scale, "A value that scales the blur kernel", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "cocScale", m_cocScale, "A value that scales the coc texture compared to the source", Be::READWRITE )
 		MAP_ATTRIBUTE( "foregroundBlurNeeded", m_foregroundBlurNeeded, "If foreground is always in focus, we can safely uncheck this", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "bokehShape", m_bokehShape, "What is the shape of the bokeh", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, BokehShapeChooser );
+		MAP_ATTRIBUTE_WITH_CHOOSER( "bokehShape", m_bokehShape, "What is the shape of the bokeh", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, Tr2Bokeh::BokehShapeChooser );
 		MAP_ATTRIBUTE( "useTAAFriendlyBokeh", m_useTAAFriendlyBokeh, "Enables a separate Bokeh shader when TAA is enabled that is optimized to reduce flickering", Be::READWRITE | Be::NOTIFY )
 		
 	EXPOSURE_CHAINTO( Tr2PPEffect )

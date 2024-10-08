@@ -18,6 +18,8 @@ namespace Tr2Bokeh
 		Hexagon,
 		Heart
 	};
+
+	extern const Be::VarChooser BokehShapeChooser[];
 }
 
 extern bool g_postprocessDofEnabled;

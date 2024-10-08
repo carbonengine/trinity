@@ -878,15 +878,17 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPVignetteEffect.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.h
     PostProcess/Effects/Tr2PPVignetteEffect_Blue.cpp
+    PostProcess/ITr2PostProcessOwner.h
     PostProcess/Tr2PostProcess2.cpp
     PostProcess/Tr2PostProcess2.h
     PostProcess/Tr2PostProcess2_Blue.cpp
+    PostProcess/Tr2PostProcessAttributes.cpp
+    PostProcess/Tr2PostProcessAttributes.h
+    PostProcess/Tr2PostProcessAttributes_Blue.cpp
+    PostProcess/Tr2PostProcessEnums.h
     PostProcess/Tr2PostProcessRenderInfo.cpp
     PostProcess/Tr2PostProcessRenderInfo.h
     PostProcess/Tr2PostProcessRenderInfo_Blue.cpp
-    PostProcess/Tr2PostProcessUtils.cpp
-    PostProcess/Tr2PostProcessUtils.h
-    PostProcess/ITr2PostProcessOwner.h
     RenderJob/ITriRenderStep.h
     RenderJob/Tr2RenderJobs.cpp
     RenderJob/Tr2RenderJobs.h
