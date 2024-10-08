@@ -31,6 +31,7 @@ public:
 	float m_adjustment;
 	float m_minExposure;
 	float m_maxExposure;
+	bool m_debug;
 
 };
 TYPEDEF_BLUECLASS( Tr2PPDynamicExposureEffect );

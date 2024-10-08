@@ -10,7 +10,8 @@
 
 Tr2PostProcessRenderInfo::Tr2PostProcessRenderInfo( IRoot* lockobj ):
 	m_renderWidth( 0 ),
-	m_renderHeight( 0 )
+	m_renderHeight( 0 ),
+	m_debugTextures( false )
 {
 	m_black.CreateInstance();
 	m_black->SetName( "Black" );
@@ -36,6 +37,10 @@ bool Tr2PostProcessRenderInfo::OnModified( Be::Var* value )
 	if( IsMatch( value, m_sourceBuffer ) )
 	{
 		SetSourceBuffer( m_sourceBuffer );
+	}
+	else if( IsMatch( value, m_debugTextures ) )
+	{
+		m_tempTextures.clear();
 	}
 	return true;
 }
@@ -104,12 +109,22 @@ Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetBlackTexture()
 	return Texture( this, m_black );
 }
 
-Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture(float renderScale, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
+Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( float renderScale, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
 {
-	return GetTempTexture( uint32_t(m_renderWidth * renderScale), uint32_t(m_renderHeight * renderScale), exFlag, pixelFormat );
+	return GetTempTexture( "", renderScale, exFlag, pixelFormat );
 }
 
 Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( uint32_t width, uint32_t height, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
+{
+	return GetTempTexture( "", width, height, exFlag, pixelFormat );
+}
+
+Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( const char* name, float renderScale, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
+{
+	return GetTempTexture( name, uint32_t(m_renderWidth * renderScale), uint32_t(m_renderHeight * renderScale), exFlag, pixelFormat );
+}
+
+Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( const char* name, uint32_t width, uint32_t height, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
 {
 	
 	CCP_ASSERT( width > 0 && height > 0 );
@@ -127,6 +142,13 @@ Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( uint
 	{
 		if( tempTexture.width == width && tempTexture.height == height && tempTexture.exFlag == exFlag && tempTexture.pixelFormat == pixelFormat && tempTexture.lockCount == 0 )
 		{
+			if( m_debugTextures )
+			{
+				if ( tempTexture.debugName != name )
+				{
+					continue;
+				}
+			}
 			++tempTexture.lockCount;
 			return Texture( this, tempTexture.texture );
 		}
@@ -147,6 +169,15 @@ Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( uint
 		1,
 		0,
 		exFlag );
+	if( m_debugTextures )
+	{
+		tempTexture.debugName = name;
+		tempTexture.texture->SetName( tempTexture.debugName.empty() ? "Post-process Temp Texture" : name );
+	}
+	else
+	{
+		tempTexture.texture->SetName( "Post-process Temp Texture" );
+	}
 	m_tempTextures.push_back( tempTexture );
 	return Texture( this, tempTexture.texture );
 }

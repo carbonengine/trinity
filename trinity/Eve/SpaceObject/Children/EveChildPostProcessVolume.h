@@ -13,7 +13,7 @@
 #include "Tr2DebugRenderer.h"
 #include "Eve/Volume/IEveVolume.h"
 #include "PostProcess/ITr2PostProcessOwner.h"
-#include "PostProcess/Tr2PostProcessUtils.h"
+#include "PostProcess/Tr2PostProcessAttributes.h"
 
 BLUE_DECLARE_INTERFACE( ITr2PostProcessOwner );
 BLUE_DECLARE_INTERFACE( IEveVolume );
@@ -71,7 +71,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2PostProcessOwner
-	PostProcess::Attributes& GetPostProcessAttributes() override;
+	Tr2PostProcessAttributes* GetPostProcessAttributes() override;
 
 private:
 	void UpdateTransformFromParent( const EveChildUpdateParams& params );
@@ -85,7 +85,7 @@ private:
 	bool m_rebuildBoundingSphereRequired;
 
 	// post process attributes
-	PostProcess::Attributes m_postProcessAttributeOverrides;
+	Tr2PostProcessAttributesPtr m_postProcessAttributes;
 };
 
 TYPEDEF_BLUECLASS( EveChildPostProcessVolume );

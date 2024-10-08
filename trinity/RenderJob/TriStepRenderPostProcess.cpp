@@ -485,7 +485,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		if( upscalingEnabled && !upscalingInfo.temporal )
 		{
 			
-			auto temp = m_renderInfo->GetTempTexture();
+			auto temp = m_renderInfo->GetTempTexture( "Tonemapping Result" );
 
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 			DrawInto( *temp, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
@@ -527,6 +527,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	{
 		RenderSignalLoss( output, renderContext, signalLoss );
 	}
+
+	RenderDynamicExposureDebug( renderContext, dynamicExposure );
 
 	renderContext.m_esm.PopDepthStencilBuffer();
 	renderContext.m_esm.PopRenderTarget();
@@ -748,7 +750,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Rend
 	GPU_REGION( renderContext, "Bloom" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	auto rt1 = m_renderInfo->GetTempTexture( 0.5f );
+	auto rt1 = m_renderInfo->GetTempTexture( "Bloom", 0.5f );
 	m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
 	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
 
@@ -805,11 +807,11 @@ void TriStepRenderPostProcess::RenderGodRays( Tr2RenderTarget* dest, Tr2RenderCo
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 	// Downsample depth
-	auto rt1 = m_renderInfo->GetTempTexture( 0.5f );
+	auto rt1 = m_renderInfo->GetTempTexture( "Down-sampled Depth", 0.5f );
 	DownSampleDepth( renderContext, rt1 );
 
 	// God rays
-	auto rt2 = m_renderInfo->GetTempTexture( 0.5f );
+	auto rt2 = m_renderInfo->GetTempTexture( "God rays", 0.5f );
 	m_godrayEffect->SetParameter( BlueSharedString( "DepthMap" ), rt1 );
 	renderContext.m_esm.PushRenderTarget( *rt2 );
 	renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0 ); // clear is needed because godray vertex shader can opt out of rendering
@@ -1028,6 +1030,47 @@ void TriStepRenderPostProcess::RenderDynamicExposure( Tr2RenderTarget* dest, Tr2
 
 	// Measure histogram
 	Tr2Renderer::RunComputeShader( m_dynamicExposureMeasureExposureShader, 1, 1, 1, renderContext );
+}
+
+void TriStepRenderPostProcess::RenderDynamicExposureDebug( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure )
+{
+	if( dynamicExposure && dynamicExposure->IsActive() && dynamicExposure->m_debug )
+	{
+		Tr2Rect rect;
+		const TriViewport& vp = renderContext.m_esm.GetViewport();
+		rect.left = vp.x;
+		rect.top = vp.y + int32_t( 0.7f * vp.height );
+		rect.right = vp.x + vp.width;
+		rect.bottom = vp.y + vp.height;
+
+		if( !m_dynamicExposureDebugShader )
+		{
+			m_dynamicExposureDebugShader.CreateInstance();
+			m_dynamicExposureDebugShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ExposureDebug.fx" );
+		}
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "Histogram" ), m_histogram );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "MinLuminance" ), log( dynamicExposure->m_minLuminance ) );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "MaxLuminance" ), log( dynamicExposure->m_maxLuminance ) );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "RectSize" ), Vector2( float( rect.left - rect.right ), float( rect.bottom - rect.top ) ) );
+
+		Tr2TextureAL noTexture;
+		Tr2Renderer::DrawTexture( renderContext, m_dynamicExposureDebugShader, noTexture, Vector2( 0, 0 ), Vector2( 1, 1 ), Vector2( 0, 0.7f ), Vector2( 1, 1 ) );
+
+		const float* exposureData = nullptr;
+		if( SUCCEEDED( m_exposure->GetGpuBuffer( 0 )->MapForReading( exposureData, renderContext ) ) )
+		{
+			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_CENTER, 0xff00ff00, "Middle gray: %.2f", exposureData[0] );
+			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_LEFT, 0xff00ff00, "Min: %.2f", exposureData[5] );
+			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_RIGHT, 0xff00ff00, "Max: %.2f", exposureData[6] );
+
+			m_exposure->GetGpuBuffer( 0 )->UnmapForReading( renderContext );
+		}
+	}
+	else
+	{
+		m_dynamicExposureDebugShader = nullptr;
+	}
 }
 
 Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure )
@@ -1398,7 +1441,7 @@ void TriStepRenderPostProcess::RenderFog( Tr2RenderTarget* dest, Tr2RenderContex
 	DrawInto( *tempCopy, Tr2LoadAction::DONT_CARE, *dest, renderContext );
 
 	// render fog color
-	auto rt1 = m_renderInfo->GetTempTexture( 0.5f );
+	auto rt1 = m_renderInfo->GetTempTexture( "Fog Color", 0.5f );
 	m_fogColorEffect->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
 	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_fogColorEffect, renderContext );
 
@@ -1691,31 +1734,20 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 		{
-			auto coc = m_renderInfo->GetTempTexture( depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
-
-			auto blur = m_renderInfo->GetTempTexture();
+			Tr2PostProcessRenderInfo::Texture coc;
 
 			if( !depthOfField->m_foregroundBlurNeeded )
 			{
 				GPU_REGION( renderContext, "CoC" );
+				coc = m_renderInfo->GetTempTexture( "CoC", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
 				DrawInto( *coc, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
-				if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoC )
-				{
-					DrawInto( *dest, Tr2LoadAction::DONT_CARE, *coc, renderContext );
-					return;
-				}
 			}
 			else
 			{
 				GPU_REGION( renderContext, "CoC" );
-				auto coc2 = m_renderInfo->GetTempTexture( depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8_UNORM );
+				auto coc2 = m_renderInfo->GetTempTexture( "CoC", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8_UNORM );
 
 				DrawInto( *coc2, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
-				if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoC )
-				{
-					DrawInto( *dest, Tr2LoadAction::DONT_CARE, *coc2, renderContext );
-					return;
-				}
 				{
 					GPU_REGION( renderContext, "CoC Blur" );
 
@@ -1724,16 +1756,14 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 																		   PostProcessBlur::BP_Maximum,
 																		   PostProcessBlur::BF_MaxOfAllChannels,
 																		   depthOfField->m_cocScale );
+					coc = m_renderInfo->GetTempTexture( "CoC Blurred", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
 					Blur( *coc, *coc2, renderContext, blurContext );
-					if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_CoCBlurred )
-					{
-						DrawInto( *dest, Tr2LoadAction::DONT_CARE, *coc, renderContext );
-						return;
-					}
 				}
 			}
 
 			float adjustedScale = depthOfField->m_scale / upscalingAmount;
+
+			auto blur = m_renderInfo->GetTempTexture( "Bokeh Blend" );
 
 			if( depthOfField->m_useTAAFriendlyBokeh )
 			{
@@ -1779,11 +1809,6 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "CoCMap" ), coc );
 					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( adjustedScale, 0.0f, 0.0f, 0.0f ) );
 					DrawInto( *blur, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehBlurShader, renderContext );
-					if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_BokehBlend )
-					{
-						DrawInto( *dest, Tr2LoadAction::DONT_CARE, *blur, renderContext );
-						return;
-					}
 				}
 				{
 					GPU_REGION( renderContext, "Bokeh Fill" );

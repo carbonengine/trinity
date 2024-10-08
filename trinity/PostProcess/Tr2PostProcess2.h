@@ -57,12 +57,15 @@ public:
 	Tr2PPFilmGrainEffectPtr GetFilmGrain() const { return m_filmGrain; }
 	Tr2PPDesaturateEffectPtr GetDesaturate() const { return m_desaturate; }
 	Tr2PPFadeEffectPtr GetFade() const { return m_fade; }
-	void GetLuts( std::vector<const Tr2PPLutEffect*> &container ) const;
 	Tr2PPVignetteEffectPtr GetVignette() const { return m_vignette; }
 	Tr2PPFogEffectPtr GetFog() const { return m_fog; }
 	Tr2PPTaaEffectPtr GetTaa() const { return m_taa; }
 	Tr2PPDepthOfFieldEffectPtr GetDepthOfField() const { return m_depthOfField; }
 	Tr2PPTonemappingEffectPtr GetTonemapping() const { return m_tonemapping; }
+
+	
+	void GetLuts( std::vector<const Tr2PPLutEffect*> & container ) const;
+	void ClearLuts();
 
 	void SetSignalLoss(Tr2PPSignalLossEffectPtr effect) { m_signalLoss = effect; }
 	void SetGodRays(Tr2PPGodRaysEffectPtr effect) { m_godRays = effect; }
@@ -93,6 +96,8 @@ private:
 	Tr2PPFilmGrainEffectPtr m_filmGrain;
 	Tr2PPDesaturateEffectPtr m_desaturate;
 	Tr2PPFadeEffectPtr m_fade;
+	Tr2PPLutEffectPtr m_lut;
+
 	PTr2PPLutEffectVector m_luts;
 	Tr2PPVignetteEffectPtr m_vignette;
 	Tr2PPFogEffectPtr m_fog;

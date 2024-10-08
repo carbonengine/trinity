@@ -12,6 +12,8 @@ EveChildPostProcessVolume::EveChildPostProcessVolume( IRoot* lockobj ) :
 	m_boundingSphere( Vector3( 0.0, 0.0, 0.0), 0.0 ),
 	m_rebuildBoundingSphereRequired( true )
 {
+	m_postProcessAttributes.CreateInstance();
+	m_postProcessAttributes->SetOwner( this->GetRawRoot() );
 	m_volumes.SetNotify( this );
 }
 
@@ -114,11 +116,11 @@ void EveChildPostProcessVolume::UpdateAsyncronous( const EveUpdateContext& updat
 	// global postprocess volumes have no volumes, so they are always on
 	if( m_volumes.size() == 0 )
 	{
-		m_postProcessAttributeOverrides.intensity = 1.0f;
+		m_postProcessAttributes->intensity = 1.0f;
 	}
 	else
 	{
-		m_postProcessAttributeOverrides.intensity = 0.0f;
+		m_postProcessAttributes->intensity = 0.0f;
 
 		Matrix inverseWorldTransform = Inverse( m_worldTransform );
 		Vector3 cameraInObjectSpace = Transform( Tr2Renderer::GetViewPosition(), inverseWorldTransform ).GetXYZ();
@@ -129,8 +131,8 @@ void EveChildPostProcessVolume::UpdateAsyncronous( const EveUpdateContext& updat
 			// Now find the intensity within the volumes
 			for( auto volume = m_volumes.begin(); volume != m_volumes.end(); ++volume )
 			{
-				m_postProcessAttributeOverrides.intensity = std::max( m_postProcessAttributeOverrides.intensity, ( *volume )->GetIntensity( cameraInObjectSpace ) );
-				if( m_postProcessAttributeOverrides.intensity == 1.0f )
+				m_postProcessAttributes->intensity = std::max( m_postProcessAttributes->intensity, ( *volume )->GetIntensity( cameraInObjectSpace ) );
+				if( m_postProcessAttributes->intensity == 1.0f )
 				{
 					// early exit
 					break;
@@ -242,7 +244,7 @@ void EveChildPostProcessVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 }
 
-PostProcess::Attributes& EveChildPostProcessVolume::GetPostProcessAttributes()
+Tr2PostProcessAttributes* EveChildPostProcessVolume::GetPostProcessAttributes()
 {
-	return m_postProcessAttributeOverrides;
+	return m_postProcessAttributes;
 }

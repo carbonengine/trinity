@@ -42,6 +42,7 @@
 #include "Raytracing/Tr2RaytracingManager.h"
 #include "../Resources/TriTextureRes.h"
 #include "../PostProcess/ITr2PostProcessOwner.h"
+#include "../PostProcess/Tr2PostProcessAttributes.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -276,6 +277,12 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 
 	m_emptyShadowMap.CreateInstance();
 	BeResMan->GetResource( "res:/texture/global/white.dds", "", m_emptyShadowMap );
+
+	m_sceneDefaultPostProcessAttributes.CreateInstance();
+	m_sceneDefaultPostProcessAttributes->SetOwner( this->GetRawRoot() );
+	m_combinedPostProcessAttributes.CreateInstance();
+
+	m_componentRegistry->RegisterComponent<ITr2PostProcessOwner>( this );
 }
 
 IRoot* EveSpaceScene::GetCameraAttachments() const
@@ -320,26 +327,60 @@ void EveSpaceScene::ReleaseResources( TriStorage s )
 	}
 }
 
+void EveSpaceScene::UpdatePostProcessAttributes()
+{
+	if( !m_display )
+	{
+		return;
+	}
+
+	// is this ok?
+	m_sceneDefaultPostProcessAttributes->FromPostProcess( m_sceneDefaultPostProcess, PostProcessEnums::SCENE_DEFAULT_PRIORITY, 1.0f );
+
+
+	std::vector<Tr2PostProcessAttributes*> postProcessAttributes;
+
+	for( auto& owner : m_componentRegistry->GetComponents<ITr2PostProcessOwner>() )
+	{
+		postProcessAttributes.push_back( owner->GetPostProcessAttributes() );
+	}
+
+	if( !postProcessAttributes.empty() )
+	{
+		if( !m_combinedPostProcess )
+		{
+			m_combinedPostProcess.CreateInstance();
+		}
+		
+		m_combinedPostProcessAttributes->Reset();
+		m_combinedPostProcessAttributes->Blend( postProcessAttributes );
+		m_combinedPostProcessAttributes->ToPostProcess( m_combinedPostProcess );
+	
+		if( m_sceneDefaultPostProcess )
+		{
+			m_combinedPostProcess->SetDynamicExposure( m_sceneDefaultPostProcess->GetDynamicExposure() );
+			m_combinedPostProcess->SetTaa( m_sceneDefaultPostProcess->GetTaa() );
+			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemapping() );
+		}
+	}
+	else
+	{
+		m_combinedPostProcess = nullptr;
+	}
+}
+
+Tr2PostProcessAttributes* EveSpaceScene::GetPostProcessAttributes()
+{
+	return m_sceneDefaultPostProcessAttributes;
+}
+
 Tr2PostProcess2Ptr EveSpaceScene::GetPostProcess()
 {
 	if( !m_display )
 	{
 		return nullptr;
 	}
-
-	auto combination = PostProcess::Gather(*m_componentRegistry);
-	if( !combination )
-	{
-		return m_postProcess;
-	}
-
-	if( m_postProcess )
-	{
-		combination->SetDynamicExposure( m_postProcess->GetDynamicExposure() );
-		combination->SetTaa( m_postProcess->GetTaa() );
-		combination->SetTonemapping( m_postProcess->GetTonemapping() );
-	}
-	return combination;
+	return m_combinedPostProcess;
 }
 
 Tr2ShaderBufferPtr EveSpaceScene::GetPostProcessPSBuffer()
@@ -472,6 +513,9 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		taskGroup.wait();
 		m_updateContext.SetTaskGroup( nullptr );
 	}
+
+	// update the combined postprocess attributes 
+	UpdatePostProcessAttributes();
 
 	// Update the sun direction from the ball
 	// Since the egoBall is the center of the universe and is the player ship,
@@ -1134,12 +1178,12 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 		m_jitterMatrix = TranslationMatrix( Vector3( m_jitter.x, m_jitter.y, 0 ) );
 		m_jitteredProjection = m_projection * m_jitterMatrix;
 	}
-	else if( m_postProcess )
+	else if( m_sceneDefaultPostProcess )
 	{
 		auto rtWidth = renderContext.m_esm.GetRenderTargetWidth();
 		auto rtHeight = renderContext.m_esm.GetRenderTargetHeight();
 
-		m_postProcess->GetJitter( rtWidth, rtHeight, m_jitter.x, m_jitter.y );
+		m_sceneDefaultPostProcess->GetJitter( rtWidth, rtHeight, m_jitter.x, m_jitter.y );
 		auto currJitterOffset = Vector3( m_jitter.x, m_jitter.y, 0 );
 
 		m_jitterMatrix = TranslationMatrix( currJitterOffset );
@@ -2833,15 +2877,15 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 
 		m_upscalingAmount = upscalingInfo.upscalingAmount;
 		data.SceneMipLodBias = upscalingInfo.mipLevelBias;
-		if( !upscalingInfo.temporal && m_postProcess )
+		if( !upscalingInfo.temporal && m_sceneDefaultPostProcess )
 		{
-			data.SceneMipLodBias += m_postProcess->GetMipLodBias();
+			data.SceneMipLodBias += m_sceneDefaultPostProcess->GetMipLodBias();
 		}
 		data.Upscaling = m_upscalingAmount; 
 	}
-	else if( m_postProcess )
+	else if( m_sceneDefaultPostProcess )
 	{
-		data.SceneMipLodBias = m_postProcess->GetMipLodBias();
+		data.SceneMipLodBias = m_sceneDefaultPostProcess->GetMipLodBias();
 	}
 
 	if( m_cascadedShadowMap )
