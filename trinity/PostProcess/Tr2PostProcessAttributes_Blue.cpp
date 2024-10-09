@@ -129,6 +129,28 @@ namespace PostProcessEnums
 		{ "DepthOfFieldShape",
 		  BeCast( AttributeType::DEPTH_OF_FIELD_SHAPE ),
 		  "Depth Of Field Shape" },
+
+		  { "WhiteTemperature",
+		  BeCast( AttributeType::WHITE_TEMPERATURE ),
+		  "White Temperature" },
+		  { "WhiteTint",
+		  BeCast( AttributeType::WHITE_TINT ),
+		  "White Tint" },
+		  { "ColorSaturation",
+		  BeCast( AttributeType::COLOR_SATURATION ),
+		  "Color Saturation" },
+		  { "ColorContrast",
+		  BeCast( AttributeType::COLOR_CONTRAST ),
+		  "Color Contrast" },
+		  { "ColorGamma",
+		  BeCast( AttributeType::COLOR_GAMMA ),
+		  "Color Gamma" },
+		  { "ColorGain",
+		  BeCast( AttributeType::COLOR_GAIN ),
+		  "Color Gain" },
+		  { "ColorOffset",
+		  BeCast( AttributeType::COLOR_OFFSET ),
+		  "Color Offset" },
 		{ 0 }
 	};
 	BLUE_REGISTER_ENUM_EX( "Tr2PostProcessAttributeType", AttributeType, Tr2PostProcessAttributeTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
@@ -195,6 +217,14 @@ const Be::ClassInfo* Tr2PostProcessAttributes::ExposeToBlue()
 		POSTPROCESSATTRIBUTE_DEFINE( depthOfFieldFocalDistance, Depth Of Field, "" )
 		POSTPROCESSATTRIBUTE_DEFINE( depthOfFieldFocalLength, Depth Of Field, "" )
 		POSTPROCESSATTRIBUTE_DEFINE_ENUM( depthOfFieldShape, Depth Of Field, "DOES NOT BLEND!", Tr2Bokeh::BokehShapeChooser )
+
+		POSTPROCESSATTRIBUTE_DEFINE( whiteTemperature, Color Correction, "\n:jessica-numeric-range: (3000, 15000)" )
+		POSTPROCESSATTRIBUTE_DEFINE( whiteTint, Color Correction, "\n:jessica-numeric-range: (-1.0, 1.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorSaturation, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorContrast, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorGamma, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorGain, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorOffset, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
 
 		MAP_ATTRIBUTE( "owner", m_owner, "Post process owner", Be::READ )
 		MAP_ATTRIBUTE( "sources", m_sources, "Post process sources", Be::READ )

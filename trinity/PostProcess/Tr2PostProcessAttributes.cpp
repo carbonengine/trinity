@@ -190,6 +190,14 @@ void Tr2PostProcessAttributes::Reset()
 	depthOfFieldFocalDistance = Attribute( 0.0f );
 	depthOfFieldFocalLength = Attribute( 0.0f );
 	depthOfFieldShape = Attribute( Tr2Bokeh::Disk );
+
+	whiteTemperature = 0;
+	whiteTint = 0;
+	colorSaturation = 0;
+	colorContrast = 0;
+	colorGamma = 0;
+	colorGain = Vector3( 0.0f, 0.0f, 0.0f );
+	colorOffset = Vector3( 0.0f, 0.0f, 0.0f );
 }
 
 void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, PostProcessEnums::Priority inPriority, float inIntensity )
@@ -269,6 +277,14 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		lutPath = Attribute(lut->m_path, true);
 		break;
 	}
+
+	whiteTemperature = Attribute( postProcess->m_whiteTemperature, true );
+	whiteTint = Attribute( postProcess->m_whiteTint, true );
+	colorSaturation = Attribute( postProcess->m_colorSaturation, true );
+	colorContrast = Attribute( postProcess->m_colorContrast, true );
+	colorGamma = Attribute( postProcess->m_colorGamma, true );
+	colorGain = Attribute( postProcess->m_colorGain, true );
+	colorOffset = Attribute( postProcess->m_colorOffset, true );
 }
 
 void Tr2PostProcessAttributes::ResetWeights()
@@ -450,6 +466,41 @@ void Tr2PostProcessAttributes::ResetWeights()
 		auto r = WeightRow( PostProcessEnums::AttributeType::DEPTH_OF_FIELD_SHAPE, intensity );
 		m_weights.Append( &r );
 	}
+	if( whiteTemperature.enabled )
+	{
+		auto r = WeightRow( PostProcessEnums::AttributeType::WHITE_TEMPERATURE, intensity );
+		m_weights.Append( &r );
+	}
+	if( whiteTint.enabled )
+	{
+		auto r = WeightRow( PostProcessEnums::AttributeType::WHITE_TINT, intensity );
+		m_weights.Append( &r );
+	}
+	if( colorSaturation.enabled )
+	{
+		auto r = WeightRow( PostProcessEnums::AttributeType::COLOR_SATURATION, intensity );
+		m_weights.Append( &r );
+	}
+	if( colorContrast.enabled )
+	{
+		auto r = WeightRow( PostProcessEnums::AttributeType::COLOR_CONTRAST, intensity );
+		m_weights.Append( &r );
+	}
+	if( colorGamma.enabled )
+	{
+		auto r = WeightRow( PostProcessEnums::AttributeType::COLOR_GAMMA, intensity );
+		m_weights.Append( &r );
+	}
+	if( colorGain.enabled )
+	{
+		auto r = WeightRow( PostProcessEnums::AttributeType::COLOR_GAIN, intensity );
+		m_weights.Append( &r );
+	}
+	if( colorOffset.enabled )
+	{
+		auto r = WeightRow( PostProcessEnums::AttributeType::COLOR_OFFSET, intensity );
+		m_weights.Append( &r );
+	}
 }
 
 void Tr2PostProcessAttributes::UpdateWeightIntensity( std::vector<WeightRow>& currentPriorityWeights, std::vector<WeightRow>& higherPriorityWeights )
@@ -605,10 +656,408 @@ void Tr2PostProcessAttributes::Merge( const Tr2PostProcessAttributes* other )
 		case PostProcessEnums::AttributeType::DEPTH_OF_FIELD_SHAPE:
 			depthOfFieldShape.Blend( other->depthOfFieldShape, row.intensity, row.totalIntensity );
 			break;
+		case PostProcessEnums::AttributeType::WHITE_TEMPERATURE:
+			whiteTemperature.Blend( other->whiteTemperature, row.intensity, row.totalIntensity );
+			break;
+		case PostProcessEnums::AttributeType::WHITE_TINT:
+			whiteTint.Blend( other->whiteTint, row.intensity, row.totalIntensity );
+			break;
+		case PostProcessEnums::AttributeType::COLOR_SATURATION:
+			colorSaturation.Blend( other->colorSaturation, row.intensity, row.totalIntensity );
+			break;
+		case PostProcessEnums::AttributeType::COLOR_CONTRAST:
+			colorContrast.Blend( other->colorContrast, row.intensity, row.totalIntensity );
+			break;
+		case PostProcessEnums::AttributeType::COLOR_GAMMA:
+			colorGamma.Blend( other->colorGamma, row.intensity, row.totalIntensity );
+			break;
+		case PostProcessEnums::AttributeType::COLOR_GAIN:
+			colorGain.Blend( other->colorGain, row.intensity, row.totalIntensity );
+			break;
+		case PostProcessEnums::AttributeType::COLOR_OFFSET:
+			colorOffset.Blend( other->colorOffset, row.intensity, row.totalIntensity );
+			break;
 		default:
 			break;
 		}
 	}
+}
+
+namespace
+{
+
+template <typename T>
+T Zero( T )
+{
+	return {};
+}
+
+inline Vector2 Zero( Vector2 )
+{
+	return Vector2( 0, 0 );
+}
+
+inline Vector3 Zero( Vector3 )
+{
+	return Vector3( 0, 0, 0 );
+}
+
+inline Vector4 Zero( Vector4 )
+{
+	return Vector4( 0, 0, 0, 0 );
+}
+
+inline Color Zero( Color )
+{
+	return Color( 0, 0, 0, 0 );
+}
+
+template <typename T>
+class SumAccumulator
+{
+public:
+	using ResultType = T;
+
+	void Add( const T& value, float weight )
+	{
+		m_result += value * weight;
+	}
+
+	ResultType GetResult() const
+	{
+		return m_result;
+	}
+
+private:
+	ResultType m_result = Zero( T() );
+};
+
+
+template <typename T>
+class MaxWeightAccumulator
+{
+public:
+	using ResultType = T;
+
+	void Add( const T& value, float weight )
+	{
+		if( weight > m_weight )
+		{
+			m_weight = weight;
+			m_result = value;
+		}
+	}
+
+	ResultType GetResult() const
+	{
+		return m_result;
+	}
+
+private:
+	ResultType m_result = Zero( T() );
+	float m_weight = 0.0f;
+};
+
+template <typename T, size_t N>
+struct MaxNWeightsAccumulator
+{
+public:
+	struct WeightedValue
+	{
+		T value = Zero( T() );
+		float weight = 0;
+	};
+	struct ResultType
+	{
+		std::array<WeightedValue, N> values;
+		size_t count = 0;
+	};
+
+	void Add( const T& value, float weight )
+	{
+		for( size_t i = 0; i < m_result.count; ++i )
+		{
+			if( weight > m_result.values[i].weight )
+			{
+				for( size_t j = N - 1; j > i; --j )
+				{
+					m_result.values[j] = m_result.values[j - 1];
+				}
+				m_result.values[i].value = value;
+				m_result.values[i].weight = weight;
+				if( m_result.count < N )
+				{
+					++m_result.count;
+				}
+				return;
+			}
+		}
+	}
+
+	ResultType GetResult() const
+	{
+		ResultType result = m_result;
+		float totalWeight = 0;
+		for( auto& value : result.values )
+		{
+			totalWeight += value.weight;
+		}
+		if( totalWeight > 0 )
+		{
+			for( auto& value : result.values )
+			{
+				value.weight /= totalWeight;
+			}
+		}
+		return result;
+	}
+
+private:
+	ResultType m_result;
+};
+
+
+template <typename T>
+struct DefaultAccumulator
+{
+	using Type = SumAccumulator<T>;
+};
+
+template <>
+struct DefaultAccumulator<BlueSharedString>
+{
+	using Type = MaxWeightAccumulator<BlueSharedString>;
+};
+
+template <>
+struct DefaultAccumulator<bool>
+{
+	using Type = MaxWeightAccumulator<bool>;
+};
+
+
+template <typename T, typename Accumulator = typename DefaultAccumulator<T>::Type>
+typename Accumulator::ResultType Accumulate( PostProcess::Attribute<T> Tr2PostProcessAttributes::*attr, const std::vector<Tr2PostProcessAttributes*>& sources, Accumulator accumulator = {} )
+{
+	// sources are assumed to be sorted by priority: high to low
+
+	float remainingWeight = 1.0f;
+
+	for( auto it = begin( sources ); it != end( sources ); )
+	{
+		// figure out the range of sources with the same priority
+		auto jt = it;
+		while( jt != end( sources ) && ( *jt )->priority == ( *it )->priority )
+		{
+			++jt;
+		}
+
+		float totalPriorityIntensity = 0.0f;
+		for( auto kt = it; kt != jt; ++kt )
+		{
+			if( ( ( **kt ).*attr ).enabled )
+			{
+				totalPriorityIntensity += ( **kt ).intensity;
+			}
+		}
+		if( totalPriorityIntensity == 0.0f )
+		{
+			it = jt;
+			continue;
+		}
+
+		float normalizationFactor = 1.f / std::max( totalPriorityIntensity, 1.0f ) * remainingWeight;
+
+		for( auto kt = it; kt != jt; ++kt )
+		{
+			if( ( ( **kt ).*attr ).enabled )
+			{
+				float weight = ( **kt ).intensity * normalizationFactor;
+
+				accumulator.Add( ( ( **kt ).*attr ).value, weight );
+			}
+		}
+
+		remainingWeight -= totalPriorityIntensity;
+		it = jt;
+		if( remainingWeight <= 0 )
+		{
+			break;
+		}
+	}
+	return accumulator.GetResult();
+}
+
+}
+
+void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vector<Tr2PostProcessAttributes*>& sources )
+{
+	auto signalLossIntensity = Accumulate( &Tr2PostProcessAttributes::signalLossIntensity, sources );
+	auto bloomBrightness = Accumulate( &Tr2PostProcessAttributes::bloomBrightness, sources );
+	auto bloomLuminanceThreshold = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceThreshold, sources );
+	auto bloomLuminanceScale = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceScale, sources );
+	auto grimeIntensity = Accumulate( &Tr2PostProcessAttributes::grimeIntensity, sources );
+	auto grimePath = Accumulate( &Tr2PostProcessAttributes::grimePath, sources );
+	auto filmGrainColored = Accumulate( &Tr2PostProcessAttributes::filmGrainColored, sources );
+	auto filmGrainColorAmount = Accumulate( &Tr2PostProcessAttributes::filmGrainColorAmount, sources );
+	auto filmGrainIntensity = Accumulate( &Tr2PostProcessAttributes::filmGrainIntensity, sources );
+	auto filmGrainSize = Accumulate( &Tr2PostProcessAttributes::filmGrainSize, sources );
+	auto filmGrainDensity = Accumulate( &Tr2PostProcessAttributes::filmGrainDensity, sources );
+	auto filmGrainContrast = Accumulate( &Tr2PostProcessAttributes::filmGrainContrast, sources );
+	auto filmGrainBrightnessModifier = Accumulate( &Tr2PostProcessAttributes::filmGrainBrightnessModifier, sources );
+	auto saturation = Accumulate( &Tr2PostProcessAttributes::saturation, sources );
+	auto fadeIntensity = Accumulate( &Tr2PostProcessAttributes::fadeIntensity, sources );
+	auto fadeColor = Accumulate( &Tr2PostProcessAttributes::fadeColor, sources );
+	auto lutIntensity = Accumulate( &Tr2PostProcessAttributes::lutIntensity, sources );
+	auto lutPath = Accumulate( &Tr2PostProcessAttributes::lutPath, sources, MaxNWeightsAccumulator<BlueSharedString, 4>() );
+	auto vignetteIntensity = Accumulate( &Tr2PostProcessAttributes::vignetteIntensity, sources );
+	auto vignetteOpacity = Accumulate( &Tr2PostProcessAttributes::vignetteOpacity, sources );
+	auto vignetteColor = Accumulate( &Tr2PostProcessAttributes::vignetteColor, sources );
+	auto vignetteDetail1Size = Accumulate( &Tr2PostProcessAttributes::vignetteDetail1Size, sources );
+	auto vignetteDetail1Scroll = Accumulate( &Tr2PostProcessAttributes::vignetteDetail1Scroll, sources );
+	auto vignetteDetail2Size = Accumulate( &Tr2PostProcessAttributes::vignetteDetail2Size, sources );
+	auto vignetteDetail2Scroll = Accumulate( &Tr2PostProcessAttributes::vignetteDetail2Scroll, sources );
+	auto vignetteShapePath = Accumulate( &Tr2PostProcessAttributes::vignetteShapePath, sources );
+	auto vignetteDetailPath = Accumulate( &Tr2PostProcessAttributes::vignetteDetailPath, sources );
+	auto vignetteSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteSineFrequency, sources );
+	auto vignetteMinSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteMinSineFrequency, sources );
+	auto vignetteMaxSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteMaxSineFrequency, sources );
+	auto depthOfFieldScale = Accumulate( &Tr2PostProcessAttributes::depthOfFieldScale, sources );
+	auto depthOfFieldFocalDistance = Accumulate( &Tr2PostProcessAttributes::depthOfFieldFocalDistance, sources );
+	auto depthOfFieldFocalLength = Accumulate( &Tr2PostProcessAttributes::depthOfFieldFocalLength, sources );
+	auto depthOfFieldShape = Accumulate( &Tr2PostProcessAttributes::depthOfFieldShape, sources, MaxWeightAccumulator<Tr2Bokeh::Shape>() );
+	auto whiteTemperature = Accumulate( &Tr2PostProcessAttributes::whiteTemperature, sources );
+	auto whiteTint = Accumulate( &Tr2PostProcessAttributes::whiteTint, sources );
+	auto colorSaturation = Accumulate( &Tr2PostProcessAttributes::colorSaturation, sources );
+	auto colorContrast = Accumulate( &Tr2PostProcessAttributes::colorContrast, sources );
+	auto colorGamma = Accumulate( &Tr2PostProcessAttributes::colorGamma, sources );
+	auto colorGain = Accumulate( &Tr2PostProcessAttributes::colorGain, sources );
+	auto colorOffset = Accumulate( &Tr2PostProcessAttributes::colorOffset, sources );
+
+
+	postprocess.SetBloom( nullptr );
+	postprocess.SetDesaturate( nullptr );
+	postprocess.SetFade( nullptr );
+	postprocess.SetFilmGrain( nullptr );
+	postprocess.SetSignalLoss( nullptr );
+	postprocess.SetVignette( nullptr );
+	postprocess.SetDepthOfField( nullptr );
+	postprocess.ClearLuts();
+
+	if( signalLossIntensity > 0 )
+	{
+		Tr2PPSignalLossEffectPtr signalLossEffect;
+		signalLossEffect.CreateInstance();
+		signalLossEffect->m_strength = signalLossIntensity;
+		postprocess.SetSignalLoss( signalLossEffect );
+	}
+	if( bloomBrightness > 0 )
+	{
+		Tr2PPBloomEffectPtr bloomEffect;
+		bloomEffect.CreateInstance();
+		bloomEffect->m_bloomBrightness = bloomBrightness;
+		bloomEffect->m_luminanceThreshold = bloomLuminanceThreshold;
+		bloomEffect->m_luminanceScale = bloomLuminanceScale;
+		postprocess.SetBloom( bloomEffect );
+	}
+	if( grimeIntensity > 0 )
+	{
+		Tr2PPBloomEffectPtr bloomEffect;
+		if( postprocess.GetBloom() == nullptr )
+		{
+			bloomEffect.CreateInstance();
+		}
+		else
+		{
+			bloomEffect = postprocess.GetBloom();
+		}
+		bloomEffect->m_grimeWeight = grimeIntensity;
+		bloomEffect->m_grimePath = grimePath;
+		postprocess.SetBloom( bloomEffect );
+	}
+	if( filmGrainIntensity > 0 )
+	{
+		Tr2PPFilmGrainEffectPtr filmGrainEffect;
+		filmGrainEffect.CreateInstance();
+		filmGrainEffect->m_intensity = filmGrainIntensity;
+		filmGrainEffect->m_grainSize = filmGrainSize;
+		filmGrainEffect->m_grainDensity = filmGrainDensity;
+		filmGrainEffect->m_grainContrast = filmGrainContrast;
+		filmGrainEffect->m_brightnessModifier = filmGrainBrightnessModifier;
+		filmGrainEffect->m_colored = filmGrainColored;
+		filmGrainEffect->m_colorAmount = filmGrainColorAmount;
+		postprocess.SetFilmGrain( filmGrainEffect );
+	}
+
+	if( saturation > 0 )
+	{
+		Tr2PPDesaturateEffectPtr desaturationEffect;
+		desaturationEffect.CreateInstance();
+		desaturationEffect->m_intensity = saturation + 1.0f;
+		postprocess.SetDesaturate( desaturationEffect );
+	}
+
+	if( fadeIntensity > 0 )
+	{
+		Tr2PPFadeEffectPtr fadeEffect;
+		fadeEffect.CreateInstance();
+		fadeEffect->m_intensity = fadeIntensity;
+		fadeEffect->m_color = fadeColor;
+		postprocess.SetFade( fadeEffect );
+	}
+
+	size_t count = 0;
+	for( const auto& lut : lutPath.values )
+	{
+		if( count == lutPath.count )
+		{
+			break;
+		}
+		Tr2PPLutEffectPtr lutEffect;
+		lutEffect.CreateInstance();
+		lutEffect->m_influence = lut.weight;
+		lutEffect->m_path = lut.value;
+
+		postprocess.AddLut( lutEffect );
+		++count;
+	}
+
+	if( vignetteIntensity > 0 )
+	{
+		Tr2PPVignetteEffectPtr vignetteEffect;
+		vignetteEffect.CreateInstance();
+		vignetteEffect->m_intensity = vignetteIntensity;
+		vignetteEffect->m_opacity = vignetteOpacity;
+		vignetteEffect->m_color = vignetteColor;
+		vignetteEffect->m_detail1Size = vignetteDetail1Size;
+		vignetteEffect->m_detail1Scroll = vignetteDetail1Scroll;
+		vignetteEffect->m_detail2Size = vignetteDetail2Size;
+		vignetteEffect->m_detail2Scroll = vignetteDetail2Scroll;
+		vignetteEffect->m_shapePath = vignetteShapePath;
+		vignetteEffect->m_detailPath = vignetteDetailPath;
+
+		postprocess.SetVignette( vignetteEffect );
+	}
+
+	if( depthOfFieldScale > 0 )
+	{
+		Tr2PPDepthOfFieldEffectPtr dofEffect;
+		dofEffect.CreateInstance();
+		dofEffect->m_scale = depthOfFieldScale;
+		dofEffect->m_cocScale = 1.0f;
+		dofEffect->m_focalDistance = depthOfFieldFocalDistance;
+		dofEffect->m_focalLength = depthOfFieldFocalLength;
+		dofEffect->m_bokehShape = depthOfFieldShape;
+		postprocess.SetDepthOfField( dofEffect );
+	}
+
+	postprocess.m_whiteTemperature = whiteTemperature;
+	postprocess.m_whiteTint = whiteTint;
+	postprocess.m_colorSaturation = colorSaturation;
+	postprocess.m_colorContrast = colorContrast;
+	postprocess.m_colorGamma = colorGamma;
+	postprocess.m_colorGain = colorGain;
+	postprocess.m_colorOffset = colorOffset;
 }
 
 void Tr2PostProcessAttributes::Blend( std::vector<Tr2PostProcessAttributes*> sources )
@@ -789,4 +1238,12 @@ void Tr2PostProcessAttributes::ToPostProcess( Tr2PostProcess2Ptr postprocess ) c
 		dofEffect->m_bokehShape = depthOfFieldShape.value;
 		postprocess->SetDepthOfField( dofEffect );
 	}
+
+	postprocess->m_whiteTemperature = whiteTemperature.value;
+	postprocess->m_whiteTint = whiteTint.value;
+	postprocess->m_colorSaturation = colorSaturation.value;
+	postprocess->m_colorContrast = colorContrast.value;
+	postprocess->m_colorGamma = colorGamma.value;
+	postprocess->m_colorGain = colorGain.value;
+	postprocess->m_colorOffset = colorOffset.value;
 }

@@ -72,6 +72,8 @@ public:
 
 	void Merge( const Tr2PostProcessAttributes* other ); 
 
+	static void MergeInto( Tr2PostProcess2 & postprocess, std::vector<Tr2PostProcessAttributes*> & attributes );
+
 	// public attributes, so we can access them from the outside
 	float intensity;
 	PostProcessEnums::Priority priority;
@@ -121,6 +123,15 @@ public:
 	PostProcess::Attribute<float> depthOfFieldFocalDistance;
 	PostProcess::Attribute<float> depthOfFieldFocalLength;
 	PostProcess::Attribute<Tr2Bokeh::Shape> depthOfFieldShape;
+
+	PostProcess::Attribute<float> whiteTemperature = 6500.f;
+	PostProcess::Attribute<float> whiteTint = 0.0f;
+	PostProcess::Attribute<float> colorSaturation = 1.f;
+	PostProcess::Attribute<float> colorContrast = 1.f;
+	PostProcess::Attribute<float> colorGamma = 1.f;
+	PostProcess::Attribute<Vector3> colorGain = Vector3( 1, 1, 1 );
+	PostProcess::Attribute<Vector3> colorOffset = Vector3( 0, 0, 0 );
+
 private:
 	void ResetWeights();
 	void UpdateWeightIntensity( std::vector<WeightRow> & currentPriorityWeights, std::vector<WeightRow> & higherPriorityWeights );

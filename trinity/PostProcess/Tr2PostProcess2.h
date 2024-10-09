@@ -88,6 +88,14 @@ public:
 	// Jittering
 	void GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y );
 
+	float m_whiteTemperature = 6500.0f;
+	float m_whiteTint = 0.0f;
+	float m_colorSaturation = 1.0f;
+	float m_colorContrast = 1.0f;
+	float m_colorGamma = 1.0f;
+	Vector3 m_colorGain = Vector3( 1.0f, 1.0f, 1.0f );
+	Vector3 m_colorOffset = Vector3( 0.0f, 0.0f, 0.0f );
+
 private:
 	Tr2PPSignalLossEffectPtr m_signalLoss;
 	Tr2PPGodRaysEffectPtr m_godRays;

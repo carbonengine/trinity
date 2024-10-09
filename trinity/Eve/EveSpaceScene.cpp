@@ -109,6 +109,10 @@ TRI_REGISTER_SETTING( "eveSpaceSceneRaytracedShadows", g_eveSpaceSceneRaytracedS
 bool g_lensflaresInReflections = true;
 TRI_REGISTER_SETTING( "lensflaresInReflections", g_lensflaresInReflections );
 
+bool g_useAlternativePostProcessMerge = false;
+TRI_REGISTER_SETTING( "useAlternativePostProcessMerge", g_useAlternativePostProcessMerge );
+
+
 namespace
 {
 const char* VISUALIZER_EFFECT_PATH[EveSpaceScene::VM_COUNT] =
@@ -351,11 +355,23 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 		{
 			m_combinedPostProcess.CreateInstance();
 		}
-		
-		m_combinedPostProcessAttributes->Reset();
-		m_combinedPostProcessAttributes->Blend( postProcessAttributes );
-		m_combinedPostProcessAttributes->ToPostProcess( m_combinedPostProcess );
-	
+
+		if( g_useAlternativePostProcessMerge )
+		{
+			std::sort(
+				begin( postProcessAttributes ),
+				end( postProcessAttributes ),
+				[]( Tr2PostProcessAttributes* a, Tr2PostProcessAttributes* b ) {
+					return a->priority > b->priority;
+				} );
+			Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes );
+		}
+		else
+		{
+			m_combinedPostProcessAttributes->Reset();
+			m_combinedPostProcessAttributes->Blend( postProcessAttributes );
+			m_combinedPostProcessAttributes->ToPostProcess( m_combinedPostProcess );
+		}
 		if( m_sceneDefaultPostProcess )
 		{
 			m_combinedPostProcess->SetDynamicExposure( m_sceneDefaultPostProcess->GetDynamicExposure() );
