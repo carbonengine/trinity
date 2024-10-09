@@ -83,7 +83,7 @@ namespace
 
 CCP_STATS_DECLARE( deviceOnTick, "Trinity/device/OnTick", true, CST_TIME, "Time spent in TriDevice::OnTick" );
 
-CCP_STATS_DECLARE( fpsRaw, "Trinity/FPSRaw", false, CST_COUNTER_LOW, "Raw frames per second" );
+CCP_STATS_DECLARE( fpsRaw, "FPSRaw", false, CST_COUNTER_LOW, "Raw frames per second" );
 CCP_STATS_DECLARE( fps, "FPS", false, CST_COUNTER_LOW, "Frames per second");
 CCP_STATS_DECLARE( smoothedFrameTime, "Trinity/SmoothedFrameTime", false, CST_TIME, "Frame time smoothed over a number of frames");
 CCP_STATS_DECLARE( frameTime, "Trinity/FrameTime", false, CST_TIME, "Frame time" );
