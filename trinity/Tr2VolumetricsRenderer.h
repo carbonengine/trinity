@@ -8,6 +8,7 @@
 
 #include "ITr2VolumetricRenderable.h"
 #include "TriFrustumOrtho.h"
+#include "Tr2ShadowMap.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -30,11 +31,17 @@ public:
 		const Vector3& sunDirection,
 		const float depthSlices[4],
 		Tr2RenderContext& renderContext );
+
+	void RenderFog( Tr2RenderContext & renderContext, Tr2DepthStencil & sceneDepth, Tr2ShadowMap * cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast );
+
 	void UpdateVariableStore();
 	void RenderShadows(
 		const EveComponentRegistry& registry,
 		ITr2TextureProvider* shadowMap,
 		Tr2RenderContext& renderContext );
+
+
+
 
 	EXPOSE_TO_BLUE();
 
@@ -46,6 +53,70 @@ private:
 	Tr2TextureReferencePtr m_volumeSlices;
 	Tr2RenderTargetPtr m_downsampledDepth;
 	Tr2RenderTargetPtr m_blurScratch;
+
+	
+	struct FroxelFogSettings
+	{
+		float thickness;
+		float directionality;
+
+		float environmentIntensity;
+
+		Color fogColor;
+		Color backgroundColor;
+	};
+	FroxelFogSettings m_froxelFogSettings;
+	
+	Tr2TextureReferencePtr m_fogFroxels;
+	Tr2TextureReferencePtr m_temporalFroxels0, m_temporalFroxels1;
+	bool m_currentTemporalFroxels;
+	Vector3 m_froxelJitter;
+
+	Tr2EffectPtr m_clearFroxels;
+	Tr2EffectPtr m_calculateFroxels;
+	Tr2EffectPtr m_filterFroxels;
+	Tr2EffectPtr m_raymarchFroxels;
+	Tr2EffectPtr m_applyFroxels;
+
+	struct FogPerObjectData
+	{
+		Matrix ProjectionMatrix;
+		Matrix InverseProjectionMatrix;
+
+		Vector3 Jitter;
+		float Far;
+
+		Vector3 Scattering;
+		float BaseDensity;
+
+		float MaxDistanceVisibility;
+		float MieG;
+		float EnvironmentIntensity;
+		float _pad1;
+
+		Vector3 Extinction;
+		float _pad0;
+
+		Matrix InverseViewMatrix;
+
+		Vector2 LinearizeDepthParams;
+		Vector2 _pad2;
+
+		Vector4 UnprojectParams;
+		Vector4 PreviousProjectParams;
+		Matrix ReprojectionMatrix;
+
+		Vector3 SunDirection;
+		float _pad3;
+		Vector3 SunColor;
+		float _pad4;
+
+		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
+		Matrix ShadowMatrix[SHADOW_FRUSTUM_COUNT];
+		Vector4 SplitInfo;
+	};
+	Tr2ConstantBufferAL m_fogConstantBuffer;
+
 	
 	std::unique_ptr<ITriRenderBatchAccumulator> m_batches;
 	

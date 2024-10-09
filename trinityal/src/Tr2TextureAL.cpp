@@ -110,6 +110,11 @@ uint32_t Tr2TextureAL::GetHeight() const
 	return m_texture->GetDesc().GetHeight();
 }
 
+uint32_t Tr2TextureAL::GetDepth() const
+{
+	return m_texture->GetDesc().GetDepth();
+}
+
 uint32_t Tr2TextureAL::GetMipCount() const
 {
 	return m_texture->GetDesc().GetMipCount();

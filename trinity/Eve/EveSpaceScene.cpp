@@ -2230,6 +2230,9 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 		return;
 	}
 	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
+
+	Color sunColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
+	m_volumetricsRenderer->RenderFog( renderContext, *m_depthMap, m_cascadedShadowMap, m_sunData.DirWorld, sunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), m_viewLast, m_projectionLast );
 }
 
 // --------------------------------------------------------------------------------------
@@ -2764,7 +2767,17 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 
 		for( int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 		{
-			data.ShadowMatrixVal[i] = m_cascadedShadowMap->m_perSplitData.ShadowMatrixVal[i];
+			Matrix matrix = Tr2Renderer::GetInverseViewTransform() * Transpose( m_cascadedShadowMap->m_perSplitData.ShadowMatrixVal[i] );
+
+			matrix *= ScalingMatrix( 0.5f, -0.5f, 1 ) * TranslationMatrix( 0.5f, 0.5f, 0 ); //Flip y and change range from (-1, +1) to (0, 1)
+
+			int cells_x = 8;
+			int cells_y = 2;
+			int x = i % cells_x;
+			int y = i / cells_x;
+			matrix *= ScalingMatrix( 1.0f / cells_x, 1.0f / cells_y, 1 ) * TranslationMatrix( (float)x / cells_x, (float)y / cells_y, 0 );
+
+			data.ShadowMatrixVal[i] = Transpose( matrix );
 		}
 		data.SplitInfo = m_cascadedShadowMap->m_perSplitData.SplitInfo;
 	}
