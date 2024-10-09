@@ -389,6 +389,8 @@ static bool ConvertEffectPath( const std::string& path, std::string& actualPath 
 	{
 		actualPath[dot++] = *sm++;
 	}
+	actualPath.resize(actualPath.find( '\0' ));
+
 	return true;
 }
 

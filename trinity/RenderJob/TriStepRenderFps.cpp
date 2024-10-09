@@ -205,6 +205,10 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 			settingName = "Unknown";
 			break;
 		}
+		if( upscalingInfo.frameGeneration )
+		{
+			settingName += "/FG";
+		}
 		sprintf_s(
 			upscalingBuffer,
 			formattedUpscalingText.c_str(),
