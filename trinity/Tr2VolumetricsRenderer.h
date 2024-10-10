@@ -18,6 +18,27 @@ class TriFrustum;
 class ITriRenderBatchAccumulator;
 
 
+BLUE_INTERFACE( ITr2FroxelFogSettings ) :
+	public IRoot
+{
+public:
+	struct FroxelFogSettings
+	{
+		float thickness = 0.f;
+		float directionality = 0.5f;
+
+		float environmentIntensity = 1.f;
+
+		Color fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
+		Color backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+	};
+	virtual float GetFroxelFogIntensity() = 0;
+	virtual FroxelFogSettings GetFroxelFogSettings() = 0;
+};
+
+REGISTER_COMPONENT_TYPE( "FroxelFogSettings", ITr2FroxelFogSettings );
+
+
 BLUE_CLASS( Tr2VolumetricsRenderer ) :
 	public IRoot
 {
@@ -32,7 +53,7 @@ public:
 		const float depthSlices[4],
 		Tr2RenderContext& renderContext );
 
-	void RenderFog( Tr2RenderContext & renderContext, Tr2DepthStencil & sceneDepth, Tr2ShadowMap * cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast );
+	void RenderFog( const EveComponentRegistry& registry, Tr2RenderContext& renderContext, Tr2DepthStencil& sceneDepth, Tr2ShadowMap* cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast );
 
 	void UpdateVariableStore();
 	void RenderShadows(
@@ -55,17 +76,7 @@ private:
 	Tr2RenderTargetPtr m_blurScratch;
 
 	
-	struct FroxelFogSettings
-	{
-		float thickness;
-		float directionality;
-
-		float environmentIntensity;
-
-		Color fogColor;
-		Color backgroundColor;
-	};
-	FroxelFogSettings m_froxelFogSettings;
+	ITr2FroxelFogSettings::FroxelFogSettings m_froxelFogSettings;
 	
 	Tr2TextureReferencePtr m_fogFroxels;
 	Tr2TextureReferencePtr m_temporalFroxels0, m_temporalFroxels1;
