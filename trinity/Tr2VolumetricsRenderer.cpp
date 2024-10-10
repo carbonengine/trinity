@@ -408,6 +408,9 @@ void Tr2VolumetricsRenderer::RenderFog( Tr2RenderContext& renderContext, Tr2Dept
 
 	if (m_froxelFogSettings.thickness <= 0.0f)
 	{
+		m_clearFroxels->SetParameter( BlueSharedString( "Width" ), width );
+		m_clearFroxels->SetParameter( BlueSharedString( "Height" ), height );
+		m_clearFroxels->SetParameter( BlueSharedString( "Depth" ), depth );
 		m_clearFroxels->SetParameter( BlueSharedString( "OutputTexture" ), m_fogFroxels );
 		Tr2Renderer::RunComputeShader( m_clearFroxels, wgX, wgY, wgZ, renderContext );
 
@@ -450,6 +453,10 @@ void Tr2VolumetricsRenderer::RenderFog( Tr2RenderContext& renderContext, Tr2Dept
 
 			m_fogConstantBuffer.Lock( (void**)&data, renderContext );
 
+			data->ResolutionX = width;
+			data->ResolutionY = height;
+			data->ResolutionZ = depth;
+
 			data->ProjectionMatrix = Transpose( projection );
 			data->InverseProjectionMatrix = Transpose( inverseProjection );
 
@@ -486,8 +493,6 @@ void Tr2VolumetricsRenderer::RenderFog( Tr2RenderContext& renderContext, Tr2Dept
 
 				data->UnprojectParams = Vector4( mulX, mulY, addX, addY );
 			}
-
-
 
 			{
 				Vector4 offset = Vector4( +1, -1, -1, 1 ) * projectionLast; //flipped Y
