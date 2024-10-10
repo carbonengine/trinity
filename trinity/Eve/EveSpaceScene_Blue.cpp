@@ -581,6 +581,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			ReregisterEntities,
 			"Re registers all entities" )
 
+		MAP_PROPERTY_READONLY( "Shadow Map Atlas", GetShadowMapAtlas, "" )
 
 	EXPOSURE_END()
 }

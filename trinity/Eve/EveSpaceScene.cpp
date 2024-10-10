@@ -2331,9 +2331,9 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 	{
 		// spotlight
 		// TODO: intern, fov from projectionPlaneDistance. or better yet, construct perspective matrix directly
-		float fov = acos( float( lightData.outerAngle ) );
+		float fov = 2.f * acos( float( lightData.outerAngle ) );
 		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius / 1000.f, lightData.radius );
-		Vector3 up = Vector3( lightData.direction.z, lightData.direction.x, lightData.direction.y );
+		Vector3 up = Vector3(0.f, 1.f, 0.f);//Vector3( lightData.direction.z, lightData.direction.x, lightData.direction.y );
 		Matrix view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
 		uint32_t shadowMapScale;
 		uint32_t shadowMapOffsetX;
@@ -3674,6 +3674,10 @@ void EveSpaceScene::ReregisterEntities()
 	}
 }
 
+Tr2DepthStencilPtr EveSpaceScene::GetShadowMapAtlas()
+{
+	return Tr2LightManager::GetInstance()->GetShadowMapAtlas();
+}
 
 void EveSpaceScene::ClearComponentRegistry()
 {

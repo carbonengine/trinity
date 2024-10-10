@@ -403,6 +403,8 @@ protected:
 
 	void RenderVolumetrics( Tr2RenderContext & renderContext );
 
+	Tr2DepthStencilPtr GetShadowMapAtlas();
+
 protected:
 	bool m_display;
 	bool m_update;
