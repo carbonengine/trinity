@@ -633,10 +633,12 @@ private:
 	IRoot* GetCameraAttachments() const;
 
 	void UpdatePostProcessAttributes();
+	BluePy GetPostProcessDebug() const;
 	Tr2PostProcess2Ptr m_combinedPostProcess;
 	Tr2PostProcess2Ptr m_sceneDefaultPostProcess;
 	Tr2PostProcessAttributesPtr m_sceneDefaultPostProcessAttributes;
 	Tr2PostProcessAttributesPtr m_combinedPostProcessAttributes;
+	BluePy m_postProcessDebug;
 
 	Tr2ReflectionProbePtr m_reflectionProbe;
 	EveVirtualCameraSystemPtr m_virtualCameraSystem;

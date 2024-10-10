@@ -835,13 +835,64 @@ struct DefaultAccumulator<bool>
 	using Type = MaxWeightAccumulator<bool>;
 };
 
+template <typename T>
+const char* GetAttributeName( T Tr2PostProcessAttributes::* attribute )
+{
+	auto a = reinterpret_cast<uintptr_t>( &reinterpret_cast<uint8_t&>( reinterpret_cast<Tr2PostProcessAttributes*>( 0 )->*attribute ) );
+	auto rtti = Tr2PostProcessAttributes::ClassType_();
+	for( const Be::VarEntry* entry = rtti->mMemberTable; entry->mName; entry++ )
+	{
+		if( !entry->mGetProperty && entry->mOffset == a )
+		{
+			return entry->mName;
+		}
+	}
+	return "unknown";
+}
+
+template <typename T>
+void EndAttribute( Tr2PostProcessAttributesDebugObserver& observer, const T& value )
+{
+	auto pyValue = BlueWrapReturnValue( {}, value );
+	observer.EndAttribute( pyValue );
+	Py_DECREF( pyValue );
+}
+
+void EndAttribute( Tr2PostProcessAttributesDebugObserver& observer, const typename MaxNWeightsAccumulator<BlueSharedString, 4>::ResultType& value )
+{
+	auto pyList = PyList_New( 0 );
+	for (size_t i = 0; i < value.count; ++i)
+	{
+		auto element = PyDict_New();
+		auto pyValue = BlueWrapReturnValue( {}, value.values[i].value );
+		PyDict_SetItemString( element, "value", pyValue );
+		Py_DECREF( pyValue );
+
+		auto pyWeight = BlueWrapReturnValue( {}, value.values[i].weight );
+		PyDict_SetItemString( element, "weight", pyWeight );
+		Py_DECREF( pyWeight );
+
+		PyList_Append( pyList, element );
+		Py_DECREF( element );
+	}
+	observer.EndAttribute( pyList );
+	Py_DECREF( pyList );
+}
+
+
+
 
 template <typename T, typename Accumulator = typename DefaultAccumulator<T>::Type>
-typename Accumulator::ResultType Accumulate( PostProcess::Attribute<T> Tr2PostProcessAttributes::*attr, const std::vector<Tr2PostProcessAttributes*>& sources, Accumulator accumulator = {} )
+typename Accumulator::ResultType Accumulate( PostProcess::Attribute<T> Tr2PostProcessAttributes::*attr, const std::vector<Tr2PostProcessAttributes*>& sources, Tr2PostProcessAttributesDebugObserver* observer, Accumulator accumulator = {} )
 {
 	// sources are assumed to be sorted by priority: high to low
 
 	float remainingWeight = 1.0f;
+
+	if( observer )
+	{
+		observer->BeginAttribute( GetAttributeName( attr ) );
+	}
 
 	for( auto it = begin( sources ); it != end( sources ); )
 	{
@@ -875,6 +926,10 @@ typename Accumulator::ResultType Accumulate( PostProcess::Attribute<T> Tr2PostPr
 				float weight = ( **kt ).intensity * normalizationFactor;
 
 				accumulator.Add( ( ( **kt ).*attr ).value, weight );
+				if( observer )
+				{
+					observer->Influence( *kt, weight );
+				}
 			}
 		}
 
@@ -885,54 +940,58 @@ typename Accumulator::ResultType Accumulate( PostProcess::Attribute<T> Tr2PostPr
 			break;
 		}
 	}
+	if( observer )
+	{
+		EndAttribute( *observer, accumulator.GetResult() );
+	}
 	return accumulator.GetResult();
 }
 
 }
 
-void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vector<Tr2PostProcessAttributes*>& sources )
+void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vector<Tr2PostProcessAttributes*>& sources, Tr2PostProcessAttributesDebugObserver* debugObserver )
 {
-	auto signalLossIntensity = Accumulate( &Tr2PostProcessAttributes::signalLossIntensity, sources );
-	auto bloomBrightness = Accumulate( &Tr2PostProcessAttributes::bloomBrightness, sources );
-	auto bloomLuminanceThreshold = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceThreshold, sources );
-	auto bloomLuminanceScale = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceScale, sources );
-	auto grimeIntensity = Accumulate( &Tr2PostProcessAttributes::grimeIntensity, sources );
-	auto grimePath = Accumulate( &Tr2PostProcessAttributes::grimePath, sources );
-	auto filmGrainColored = Accumulate( &Tr2PostProcessAttributes::filmGrainColored, sources );
-	auto filmGrainColorAmount = Accumulate( &Tr2PostProcessAttributes::filmGrainColorAmount, sources );
-	auto filmGrainIntensity = Accumulate( &Tr2PostProcessAttributes::filmGrainIntensity, sources );
-	auto filmGrainSize = Accumulate( &Tr2PostProcessAttributes::filmGrainSize, sources );
-	auto filmGrainDensity = Accumulate( &Tr2PostProcessAttributes::filmGrainDensity, sources );
-	auto filmGrainContrast = Accumulate( &Tr2PostProcessAttributes::filmGrainContrast, sources );
-	auto filmGrainBrightnessModifier = Accumulate( &Tr2PostProcessAttributes::filmGrainBrightnessModifier, sources );
-	auto saturation = Accumulate( &Tr2PostProcessAttributes::saturation, sources );
-	auto fadeIntensity = Accumulate( &Tr2PostProcessAttributes::fadeIntensity, sources );
-	auto fadeColor = Accumulate( &Tr2PostProcessAttributes::fadeColor, sources );
-	auto lutIntensity = Accumulate( &Tr2PostProcessAttributes::lutIntensity, sources );
-	auto lutPath = Accumulate( &Tr2PostProcessAttributes::lutPath, sources, MaxNWeightsAccumulator<BlueSharedString, 4>() );
-	auto vignetteIntensity = Accumulate( &Tr2PostProcessAttributes::vignetteIntensity, sources );
-	auto vignetteOpacity = Accumulate( &Tr2PostProcessAttributes::vignetteOpacity, sources );
-	auto vignetteColor = Accumulate( &Tr2PostProcessAttributes::vignetteColor, sources );
-	auto vignetteDetail1Size = Accumulate( &Tr2PostProcessAttributes::vignetteDetail1Size, sources );
-	auto vignetteDetail1Scroll = Accumulate( &Tr2PostProcessAttributes::vignetteDetail1Scroll, sources );
-	auto vignetteDetail2Size = Accumulate( &Tr2PostProcessAttributes::vignetteDetail2Size, sources );
-	auto vignetteDetail2Scroll = Accumulate( &Tr2PostProcessAttributes::vignetteDetail2Scroll, sources );
-	auto vignetteShapePath = Accumulate( &Tr2PostProcessAttributes::vignetteShapePath, sources );
-	auto vignetteDetailPath = Accumulate( &Tr2PostProcessAttributes::vignetteDetailPath, sources );
-	auto vignetteSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteSineFrequency, sources );
-	auto vignetteMinSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteMinSineFrequency, sources );
-	auto vignetteMaxSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteMaxSineFrequency, sources );
-	auto depthOfFieldScale = Accumulate( &Tr2PostProcessAttributes::depthOfFieldScale, sources );
-	auto depthOfFieldFocalDistance = Accumulate( &Tr2PostProcessAttributes::depthOfFieldFocalDistance, sources );
-	auto depthOfFieldFocalLength = Accumulate( &Tr2PostProcessAttributes::depthOfFieldFocalLength, sources );
-	auto depthOfFieldShape = Accumulate( &Tr2PostProcessAttributes::depthOfFieldShape, sources, MaxWeightAccumulator<Tr2Bokeh::Shape>() );
-	auto whiteTemperature = Accumulate( &Tr2PostProcessAttributes::whiteTemperature, sources );
-	auto whiteTint = Accumulate( &Tr2PostProcessAttributes::whiteTint, sources );
-	auto colorSaturation = Accumulate( &Tr2PostProcessAttributes::colorSaturation, sources );
-	auto colorContrast = Accumulate( &Tr2PostProcessAttributes::colorContrast, sources );
-	auto colorGamma = Accumulate( &Tr2PostProcessAttributes::colorGamma, sources );
-	auto colorGain = Accumulate( &Tr2PostProcessAttributes::colorGain, sources );
-	auto colorOffset = Accumulate( &Tr2PostProcessAttributes::colorOffset, sources );
+	auto signalLossIntensity = Accumulate( &Tr2PostProcessAttributes::signalLossIntensity, sources, debugObserver );
+	auto bloomBrightness = Accumulate( &Tr2PostProcessAttributes::bloomBrightness, sources, debugObserver );
+	auto bloomLuminanceThreshold = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceThreshold, sources, debugObserver );
+	auto bloomLuminanceScale = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceScale, sources, debugObserver );
+	auto grimeIntensity = Accumulate( &Tr2PostProcessAttributes::grimeIntensity, sources, debugObserver );
+	auto grimePath = Accumulate( &Tr2PostProcessAttributes::grimePath, sources, debugObserver );
+	auto filmGrainColored = Accumulate( &Tr2PostProcessAttributes::filmGrainColored, sources, debugObserver );
+	auto filmGrainColorAmount = Accumulate( &Tr2PostProcessAttributes::filmGrainColorAmount, sources, debugObserver );
+	auto filmGrainIntensity = Accumulate( &Tr2PostProcessAttributes::filmGrainIntensity, sources, debugObserver );
+	auto filmGrainSize = Accumulate( &Tr2PostProcessAttributes::filmGrainSize, sources, debugObserver );
+	auto filmGrainDensity = Accumulate( &Tr2PostProcessAttributes::filmGrainDensity, sources, debugObserver );
+	auto filmGrainContrast = Accumulate( &Tr2PostProcessAttributes::filmGrainContrast, sources, debugObserver );
+	auto filmGrainBrightnessModifier = Accumulate( &Tr2PostProcessAttributes::filmGrainBrightnessModifier, sources, debugObserver );
+	auto saturation = Accumulate( &Tr2PostProcessAttributes::saturation, sources, debugObserver );
+	auto fadeIntensity = Accumulate( &Tr2PostProcessAttributes::fadeIntensity, sources, debugObserver );
+	auto fadeColor = Accumulate( &Tr2PostProcessAttributes::fadeColor, sources, debugObserver );
+	auto lutIntensity = Accumulate( &Tr2PostProcessAttributes::lutIntensity, sources, debugObserver );
+	auto lutPath = Accumulate( &Tr2PostProcessAttributes::lutPath, sources, debugObserver, MaxNWeightsAccumulator<BlueSharedString, 4>() );
+	auto vignetteIntensity = Accumulate( &Tr2PostProcessAttributes::vignetteIntensity, sources, debugObserver );
+	auto vignetteOpacity = Accumulate( &Tr2PostProcessAttributes::vignetteOpacity, sources, debugObserver );
+	auto vignetteColor = Accumulate( &Tr2PostProcessAttributes::vignetteColor, sources, debugObserver );
+	auto vignetteDetail1Size = Accumulate( &Tr2PostProcessAttributes::vignetteDetail1Size, sources, debugObserver );
+	auto vignetteDetail1Scroll = Accumulate( &Tr2PostProcessAttributes::vignetteDetail1Scroll, sources, debugObserver );
+	auto vignetteDetail2Size = Accumulate( &Tr2PostProcessAttributes::vignetteDetail2Size, sources, debugObserver );
+	auto vignetteDetail2Scroll = Accumulate( &Tr2PostProcessAttributes::vignetteDetail2Scroll, sources, debugObserver );
+	auto vignetteShapePath = Accumulate( &Tr2PostProcessAttributes::vignetteShapePath, sources, debugObserver );
+	auto vignetteDetailPath = Accumulate( &Tr2PostProcessAttributes::vignetteDetailPath, sources, debugObserver );
+	auto vignetteSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteSineFrequency, sources, debugObserver );
+	auto vignetteMinSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteMinSineFrequency, sources, debugObserver );
+	auto vignetteMaxSineFrequency = Accumulate( &Tr2PostProcessAttributes::vignetteMaxSineFrequency, sources, debugObserver );
+	auto depthOfFieldScale = Accumulate( &Tr2PostProcessAttributes::depthOfFieldScale, sources, debugObserver );
+	auto depthOfFieldFocalDistance = Accumulate( &Tr2PostProcessAttributes::depthOfFieldFocalDistance, sources, debugObserver );
+	auto depthOfFieldFocalLength = Accumulate( &Tr2PostProcessAttributes::depthOfFieldFocalLength, sources, debugObserver );
+	auto depthOfFieldShape = Accumulate( &Tr2PostProcessAttributes::depthOfFieldShape, sources, debugObserver, MaxWeightAccumulator<Tr2Bokeh::Shape>() );
+	auto whiteTemperature = Accumulate( &Tr2PostProcessAttributes::whiteTemperature, sources, debugObserver );
+	auto whiteTint = Accumulate( &Tr2PostProcessAttributes::whiteTint, sources, debugObserver );
+	auto colorSaturation = Accumulate( &Tr2PostProcessAttributes::colorSaturation, sources, debugObserver );
+	auto colorContrast = Accumulate( &Tr2PostProcessAttributes::colorContrast, sources, debugObserver );
+	auto colorGamma = Accumulate( &Tr2PostProcessAttributes::colorGamma, sources, debugObserver );
+	auto colorGain = Accumulate( &Tr2PostProcessAttributes::colorGain, sources, debugObserver );
+	auto colorOffset = Accumulate( &Tr2PostProcessAttributes::colorOffset, sources, debugObserver );
 
 
 	postprocess.SetBloom( nullptr );
@@ -1246,4 +1305,64 @@ void Tr2PostProcessAttributes::ToPostProcess( Tr2PostProcess2Ptr postprocess ) c
 	postprocess->m_colorGamma = colorGamma.value;
 	postprocess->m_colorGain = colorGain.value;
 	postprocess->m_colorOffset = colorOffset.value;
+}
+
+
+
+Tr2PostProcessAttributesDebugObserver::Tr2PostProcessAttributesDebugObserver()
+{
+	m_debugObject = PyDict_New();
+}
+
+Tr2PostProcessAttributesDebugObserver::~Tr2PostProcessAttributesDebugObserver()
+{
+	Py_XDECREF( m_debugObject );
+}
+
+void Tr2PostProcessAttributesDebugObserver::BeginAttribute(const char* name)
+{
+	m_currentAttribute = PyDict_New();
+
+	auto pyName = BlueWrapReturnValue( {}, name );
+	PyDict_SetItemString( m_currentAttribute, "name", pyName );
+	Py_XDECREF( pyName );
+
+	m_currentInfluencers = PyList_New( 0 );
+	PyDict_SetItemString( m_currentAttribute, "influencers", m_currentInfluencers );
+	Py_XDECREF( m_currentInfluencers );
+
+
+	PyDict_SetItemString( m_debugObject, name, m_currentAttribute );
+	Py_XDECREF( m_currentAttribute );
+}
+
+void Tr2PostProcessAttributesDebugObserver::Influence(Tr2PostProcessAttributes* attributes, float weight)
+{
+	auto rec = PyDict_New();
+
+	auto pyAttributes = BlueWrapReturnValue( {}, attributes );
+	PyDict_SetItemString( rec, "attributes", pyAttributes );
+	Py_XDECREF( pyAttributes );
+
+	auto pyWeight = BlueWrapReturnValue( {}, weight );
+	PyDict_SetItemString( rec, "weight", pyWeight );
+	Py_XDECREF( pyWeight );
+
+	PyList_Append( m_currentInfluencers, rec );
+	Py_XDECREF( rec );
+}
+
+void Tr2PostProcessAttributesDebugObserver::EndAttribute( PyObject* value )
+{
+	if (value && m_currentAttribute)
+	{
+		PyDict_SetItemString( m_currentAttribute, "value", value );
+	}
+	m_currentAttribute = nullptr;
+	m_currentInfluencers = nullptr;
+}
+
+BluePy Tr2PostProcessAttributesDebugObserver::GetDict() const
+{
+	return BluePy( m_debugObject, true );
 }

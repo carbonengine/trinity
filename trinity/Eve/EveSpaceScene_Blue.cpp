@@ -564,6 +564,11 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"",
 			Be::READ )
 
+		MAP_METHOD_AND_WRAP(
+			"GetPostProcessDebug",
+			GetPostProcessDebug,
+			"Returns a dictionary with post-processing attribute blending information" )
+
 		MAP_ATTRIBUTE(
 			"virtualCameraSystem",
 			m_virtualCameraSystem,
