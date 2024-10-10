@@ -2250,7 +2250,7 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 
 	Color sunColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
-	m_volumetricsRenderer->RenderFog( renderContext, *m_depthMap, m_cascadedShadowMap, m_sunData.DirWorld, sunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), m_viewLast, m_projectionLast );
+	m_volumetricsRenderer->RenderFog( *m_componentRegistry, renderContext, *m_depthMap, m_cascadedShadowMap, m_sunData.DirWorld, sunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), m_viewLast, m_projectionLast );
 }
 
 // --------------------------------------------------------------------------------------

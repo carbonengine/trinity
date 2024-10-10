@@ -335,9 +335,8 @@ float logBase(float base, float value)
 	return log2( value ) / log2( base );
 }
 
-void Tr2VolumetricsRenderer::RenderFog( Tr2RenderContext& renderContext, Tr2DepthStencil& sceneDepth, Tr2ShadowMap* cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast )
+void Tr2VolumetricsRenderer::RenderFog( const EveComponentRegistry& registry, Tr2RenderContext& renderContext, Tr2DepthStencil& sceneDepth, Tr2ShadowMap* cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast )
 {
-
 	uint32_t originalWidth = sceneDepth.GetWidth();
 	uint32_t originalHeight = sceneDepth.GetHeight();
 
@@ -399,8 +398,35 @@ void Tr2VolumetricsRenderer::RenderFog( Tr2RenderContext& renderContext, Tr2Dept
 			return;
 		}
 	}
-
 	
+	float totalWeight = 0;
+	registry.ProcessComponents<ITr2FroxelFogSettings>( [&totalWeight]( ITr2FroxelFogSettings* component ) -> void {
+		totalWeight += component->GetFroxelFogIntensity();
+	} );
+
+	m_froxelFogSettings = {};
+	if( totalWeight > 0 )
+	{
+		m_froxelFogSettings.thickness *= 1 - std::min( 1.f, totalWeight );
+		m_froxelFogSettings.directionality *= 1 - std::min( 1.f, totalWeight );
+		m_froxelFogSettings.environmentIntensity *= 1 - std::min( 1.f, totalWeight );
+		m_froxelFogSettings.fogColor *= 1 - std::min( 1.f, totalWeight );
+		m_froxelFogSettings.backgroundColor *= 1 - std::min( 1.f, totalWeight );
+
+		registry.ProcessComponents<ITr2FroxelFogSettings>( [totalWeight, this]( ITr2FroxelFogSettings* component ) -> void {
+			float weight = component->GetFroxelFogIntensity() / std::max( 1.f, totalWeight );
+			if( weight > 0 )
+			{
+				auto settings = component->GetFroxelFogSettings();
+				m_froxelFogSettings.thickness += settings.thickness * weight;
+				m_froxelFogSettings.directionality += settings.directionality * weight;
+				m_froxelFogSettings.environmentIntensity += settings.environmentIntensity * weight;
+				m_froxelFogSettings.fogColor += settings.fogColor * weight;
+				m_froxelFogSettings.backgroundColor += settings.backgroundColor * weight;
+			}
+		} );
+	}
+
 	int workgroupSize = 4;
 	int wgX = ( width + workgroupSize - 1 ) / workgroupSize;
 	int wgY = ( height + workgroupSize - 1 ) / workgroupSize;
