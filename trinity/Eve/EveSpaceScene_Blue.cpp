@@ -360,6 +360,11 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			".",
 			Be::READ )
 		MAP_ATTRIBUTE(
+			"subSurfaceScattering",
+			m_sssss,
+			"Screen Space Sub Surface Scattering",
+			Be::READ )
+		MAP_ATTRIBUTE(
 			"distortionTexture",
 			m_distortionMap,
 			".",

@@ -35,8 +35,10 @@
 #include "VirtualCamera/EveVirtualCameraSystem.h"
 #include "Eve/EveEntity.h"
 #include "Tr2SSAO.h"
+#include "Tr2SSSSS.h"
 #include "Lights/ITr2LightOwner.h"
 #include "../Tr2VolumetricsRenderer.h"
+#include "../Tr2GpuStructuredBuffer.h"
 #include <ScopedBlockTrap.h>
 
 using namespace Tr2RenderContextEnum;
@@ -249,6 +251,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_reflectionProbe.CreateInstance();
 	m_componentRegistry.CreateInstance();
 	m_ssao.CreateInstance();
+	m_sssss.CreateInstance();
 
 	m_volumetricsRenderer.CreateInstance();
 }
@@ -1998,6 +2001,14 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		Tr2Renderer::DrawTexture( renderContext, *m_colorMap );
 		renderContext.m_esm.PopRenderTarget();
 	}
+
+	// Write sub surface seprable specular and SSS mask information
+	m_sssss->SetupSeprableSpecularSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
+
+
+	// Write sub surface scattering blur
+	m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_colorMap, m_opaqueColorMap, m_depthMap );
+
 
 	Matrix proj = Tr2Renderer::GetProjectionTransform();
 	if( m_taaPattern != TAA_NONE )
