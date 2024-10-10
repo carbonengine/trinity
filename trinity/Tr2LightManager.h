@@ -126,6 +126,7 @@ private:
 
 	float m_adjustedCutoff;
 
+	Tr2Variable m_shadowMapAtlasVariable;
 	Tr2DepthStencilPtr m_shadowMapAtlasDS;
 	struct ShadowMapNode
 	{

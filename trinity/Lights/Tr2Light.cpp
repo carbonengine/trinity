@@ -76,7 +76,7 @@ Tr2LightManager::PerLightData LightData::AsPerSpotLightData( CXMMATRIX transform
 
 	data.outerAngle = Float_16( cos( TRI_2PI * outerAngle / 360.0f ) );
 	data.innerAngle = Float_16( cos( TRI_2PI * innerAngle / 360.0f ) );
-	data.projectionPlaneDistance = Float_16( 1.f / atan( TRI_2PI * outerAngle / 180.0f ) );
+	data.projectionPlaneDistance = Float_16( 1.f / tan( TRI_PI * outerAngle / 360.0f ) );
 
 	return data;
 }

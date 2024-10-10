@@ -94,6 +94,7 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 	m_lightBufferVariable.Register( "LightBuffer", m_lightBuffer );
 	m_indexBufferVariable.Register( "LightIndexBuffer", m_indexBuffer );
 	GlobalStore().RegisterVariable( "LightProfileArray", &GetLightProfileArray() );
+	m_shadowMapAtlasVariable.Register( "ShadowMapAtlas", m_shadowMapAtlasDS );
 
 	PrepareResources();
 }
@@ -111,6 +112,9 @@ void Tr2LightManager::ResetVariableStore()
 	GlobalStore().RegisterVariable( "LightBuffer", empty );
 	GlobalStore().RegisterVariable( "LightIndexBuffer", empty );
 	GlobalStore().RegisterVariable( "LightProfileArray", &GetLightProfileArray() );
+
+	Tr2DepthStencilPtr emptyTexture;
+	GlobalStore().RegisterVariable( "ShadowMapAtlas", emptyTexture );
 }
 
 Tr2LightManager* Tr2LightManager::GetOrCreateInstance( const char* effectPath )
@@ -139,12 +143,14 @@ void Tr2LightManager::SetVariableStore()
 {
 	m_lightBufferVariable = m_lightBuffer;
 	m_indexBufferVariable = m_indexBuffer;
+	m_shadowMapAtlasVariable = m_shadowMapAtlasDS;
 }
 
 void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 {
 	m_lightBufferVariable = m_lightBuffer;
 	m_indexBufferVariable = m_indexBuffer;
+	m_shadowMapAtlasVariable = m_shadowMapAtlasDS;
 	ClearLightIndices( renderContext );
 
 	for( auto& data : m_tlsLightData )
@@ -379,6 +385,7 @@ ALResult Tr2LightManager::UpdateLists( Tr2RenderContext& renderContext )
 {
 	m_lightBufferVariable = m_lightBuffer;
 	m_indexBufferVariable = m_indexBuffer;
+	m_shadowMapAtlasVariable = m_shadowMapAtlasDS;
 
 	if( m_lightData.empty() )
 	{
