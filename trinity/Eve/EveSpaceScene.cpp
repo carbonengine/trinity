@@ -112,6 +112,9 @@ TRI_REGISTER_SETTING( "lensflaresInReflections", g_lensflaresInReflections );
 bool g_useAlternativePostProcessMerge = false;
 TRI_REGISTER_SETTING( "useAlternativePostProcessMerge", g_useAlternativePostProcessMerge );
 
+bool g_enablePostProcessDebugging = false;
+TRI_REGISTER_SETTING( "enablePostProcessDebugging", g_enablePostProcessDebugging );
+
 
 namespace
 {
@@ -364,7 +367,17 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 				[]( Tr2PostProcessAttributes* a, Tr2PostProcessAttributes* b ) {
 					return a->priority > b->priority;
 				} );
-			Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes );
+			if( g_enablePostProcessDebugging )
+			{
+				Tr2PostProcessAttributesDebugObserver observer;
+				Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes, &observer );
+				m_postProcessDebug = observer.GetDict();
+			}
+			else
+			{
+				Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes );
+				m_postProcessDebug = {};
+			}
 		}
 		else
 		{
@@ -383,6 +396,11 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 	{
 		m_combinedPostProcess = nullptr;
 	}
+}
+
+BluePy EveSpaceScene::GetPostProcessDebug() const
+{
+	return !m_postProcessDebug ? BluePy( Py_None, true ) : m_postProcessDebug;
 }
 
 Tr2PostProcessAttributes* EveSpaceScene::GetPostProcessAttributes()

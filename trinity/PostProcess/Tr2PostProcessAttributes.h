@@ -52,6 +52,8 @@ struct WeightRow
 BLUE_DECLARE_STRUCTURE_LIST( WeightRow );
 
 
+class Tr2PostProcessAttributesDebugObserver;
+
 BLUE_CLASS( Tr2PostProcessAttributes ) :
 	public IRoot
 {
@@ -72,7 +74,7 @@ public:
 
 	void Merge( const Tr2PostProcessAttributes* other ); 
 
-	static void MergeInto( Tr2PostProcess2 & postprocess, std::vector<Tr2PostProcessAttributes*> & attributes );
+	static void MergeInto( Tr2PostProcess2 & postprocess, std::vector<Tr2PostProcessAttributes*> & attributes, Tr2PostProcessAttributesDebugObserver* debugObserver = nullptr );
 
 	// public attributes, so we can access them from the outside
 	float intensity;
@@ -146,3 +148,23 @@ private:
 };
 
 TYPEDEF_BLUECLASS( Tr2PostProcessAttributes );
+
+
+class Tr2PostProcessAttributesDebugObserver
+{
+public:
+	Tr2PostProcessAttributesDebugObserver();
+	~Tr2PostProcessAttributesDebugObserver();
+
+	void BeginAttribute( const char* name );
+	void Influence( Tr2PostProcessAttributes* attributes, float weight );
+
+	void EndAttribute( PyObject* value );
+
+	BluePy GetDict() const;
+
+private:
+	PyObject* m_debugObject = nullptr;
+	PyObject* m_currentAttribute = nullptr;
+	PyObject* m_currentInfluencers = nullptr;
+};
