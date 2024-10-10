@@ -83,6 +83,11 @@ private:
 		Matrix ProjectionMatrix;
 		Matrix InverseProjectionMatrix;
 
+		uint32_t ResolutionX;
+		uint32_t ResolutionY;
+		uint32_t ResolutionZ;
+		float _pad0;
+
 		Vector3 Jitter;
 		float Far;
 
@@ -95,25 +100,26 @@ private:
 		float _pad1;
 
 		Vector3 Extinction;
-		float _pad0;
+		float _pad2;
 
 		Matrix InverseViewMatrix;
 
 		Vector2 LinearizeDepthParams;
-		Vector2 _pad2;
+		Vector2 _pad3;
 
 		Vector4 UnprojectParams;
 		Vector4 PreviousProjectParams;
 		Matrix ReprojectionMatrix;
 
 		Vector3 SunDirection;
-		float _pad3;
-		Vector3 SunColor;
 		float _pad4;
+		Vector3 SunColor;
+		float _pad5;
 
+		//Directional light shadows
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
-		Matrix ShadowMatrix[SHADOW_FRUSTUM_COUNT];
-		Vector4 SplitInfo;
+		Matrix ShadowMatrix[16]; // Matrix that takes a coordinate from view space all the way to the packed cascades
+		Vector4 SplitInfo; // x = NrOfSplits, y = <unused>, z = <unused>, w = <unused>
 	};
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
