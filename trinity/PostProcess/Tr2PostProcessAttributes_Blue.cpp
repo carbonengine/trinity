@@ -19,7 +19,7 @@ namespace PostProcessEnums
 		{ "Low",
 		  BeCast( Priority::LOW_PRIORITY ),
 		  "Low Priority" },
-		{ "Scene Default",
+		{ "SceneDefault",
 		  BeCast( Priority::SCENE_DEFAULT_PRIORITY ),
 		  "Scene Default (lowest) Priority" },
 		{ 0 }

@@ -1048,7 +1048,7 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 		postprocess.SetFilmGrain( filmGrainEffect );
 	}
 
-	if( saturation > 0 )
+	if( saturation != 0 )
 	{
 		Tr2PPDesaturateEffectPtr desaturationEffect;
 		desaturationEffect.CreateInstance();
