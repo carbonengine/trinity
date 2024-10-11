@@ -25,12 +25,20 @@ public:
 	void SetPosition( Vector3 pos );
 	void SetFront( const Vector3& front );
 
+	bool GetMute();
+	void SetMute( bool isMute );
+
+	// INotify
+	virtual bool OnModified( Be::Var * val );
+	 
 	// debug
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
+
 	std::string m_name;
 private:
+	bool m_mute;
 	Vector3 m_front;
 	Vector3 m_position;
 	IBluePlacementObserverPtr m_observer;

@@ -28,6 +28,7 @@ EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_estimatedSize( 0.0f ),
 	m_display( true ),
+	m_mute( false ),
 	m_startTime( 0 ),
 	m_effectDuration( -1 ),
 	m_lodLevel( TR2_LOD_HIGH ),
@@ -62,7 +63,6 @@ bool EveEffectRoot2::OnModified( Be::Var* val )
 	}
 	return true;
 }
-
 
 void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
@@ -901,6 +901,23 @@ void EveEffectRoot2::AddObserver( TriObserverLocalPtr observer )
 	m_observers.Append( observer );
 }
 
+bool EveEffectRoot2::GetMute()
+{
+	return m_mute;
+}
+
+void EveEffectRoot2::SetMute( bool isMute )
+{
+	m_mute = isMute;
+	for( auto it : m_effectChildren )
+	{
+		it->SetMute( m_mute );
+	}
+	for( auto it : m_observers )
+	{
+		it->SetMute( m_mute );
+	}
+}
 
 void EveEffectRoot2::FreezeHighDetailMesh()
 {
