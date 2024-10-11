@@ -98,9 +98,7 @@ BLUE_CLASS( EveSpaceScene ) :
 	public INotify,
 	public Tr2DeviceResource,
 	public IListNotify,
-	public ITr2NamedPredicate,
-	public ITr2PostProcessOwner,
-	public EveEntity
+	public ITr2NamedPredicate
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -153,10 +151,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2NamedPredicate
 	bool GetPredicate( const char* name ) const override;
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// ITr2PostProcessOwner
-	Tr2PostProcessAttributes* GetPostProcessAttributes() override;
 
 	// all eve-specific visualize methods
 	enum EveVisualizeMethod
