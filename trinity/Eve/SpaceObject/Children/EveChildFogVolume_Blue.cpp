@@ -32,31 +32,31 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 			m_settings.thickness,
 			"Overall thickness of the fog. A higher thickness makes the fog more intense close up to the camera, making god ray shadows pop more.\n"
 			":jessica-group: Froxel Fog",
-			Be::READWRITE )
+			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"directionality",
 			m_settings.directionality,
 			"Scattering directionality of the fog. A higher value causes the fog to light up only when looking directly towards light sources.\n"
 			":jessica-group: Froxel Fog",
-			Be::READWRITE )
+			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"environmentIntensity",
 			m_settings.environmentIntensity,
 			"The visibility of the skybox behind the fog, blurred by the directionality setting above.\n"
 			":jessica-group: Froxel Fog",
-			Be::READWRITE )
+			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"fogColor",
 			m_settings.fogColor,
 			"The color of the fog itself. Changing this will change what light is scattered from the sun, dynamic lights and the fog.\n"
 			":jessica-group: Froxel Fog",
-			Be::READWRITE )
+			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"backgroundColor",
 			m_settings.backgroundColor,
 			"How transparent the fog is to the background, controllable for RGB separately. When set to (0, 0, 0), the background is completely blocked by the fog. \n"
 			":jessica-group: Froxel Fog",
-			Be::READWRITE )
+			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "boundingSphereCenter", m_boundingSphere.center, "", Be::READ )
 		MAP_ATTRIBUTE( "boundingSphereRadius", m_boundingSphere.radius, "", Be::READ )
