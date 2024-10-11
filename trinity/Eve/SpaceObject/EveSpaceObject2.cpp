@@ -1723,6 +1723,7 @@ bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const Tr
 		return false;
 	}
 
+	// TODO: intern, is this wrong as well? might need to use m_boundingSphereWorldRadius here, too.
 	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereRadius );
 
 	sizeInShadow = 0;
@@ -1741,7 +1742,7 @@ bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const Tr
 		return false;
 	}
 
-	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereRadius );
+	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
 
 	sizeInShadow = 0;
 

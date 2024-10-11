@@ -109,6 +109,8 @@ private:
 	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
 
 	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
+	
+	uint32_t InsertShadowMapNode( uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
 
 	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
 	std::vector<PerLightData> m_lightData;
@@ -138,7 +140,6 @@ private:
 		int height;
 	};
 	std::vector<ShadowMapNode> m_shadowMapNodes;
-	uint32_t InsertShadowMapNode( uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
 };
 
 #endif
