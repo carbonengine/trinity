@@ -2999,7 +2999,7 @@ void EveSpaceScene::OnListModified(
 				}
 			}
 		}
-		if( theList == &m_objects )
+		if( theList == &m_objects || theList == &m_backgroundObjects || theList == &m_planets )
 		{
 			for( ssize_t i = 0; i < theList->GetSize(); ++i )
 			{
@@ -3027,7 +3027,7 @@ void EveSpaceScene::OnListModified(
 		{
 			spaceObject->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 		}
-		if( theList == &m_objects )
+		if( theList == &m_objects || theList == &m_backgroundObjects || theList == &m_planets )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( value ) )
 			{
@@ -3051,7 +3051,7 @@ void EveSpaceScene::OnListModified(
 				receiver->ClearShLighting();
 			}
 		}
-		if( theList == &m_objects )
+		if( theList == &m_objects || theList == &m_backgroundObjects || theList == &m_planets )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( value ) )
 			{
