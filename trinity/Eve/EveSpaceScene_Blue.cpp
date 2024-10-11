@@ -107,8 +107,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( ITr2NamedPredicate )
-		MAP_INTERFACE( EveEntity )
-		MAP_INTERFACE( ITr2PostProcessOwner )
 
 		MAP_ATTRIBUTE(
 			"name",

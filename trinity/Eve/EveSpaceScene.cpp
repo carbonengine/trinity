@@ -109,9 +109,6 @@ TRI_REGISTER_SETTING( "eveSpaceSceneRaytracedShadows", g_eveSpaceSceneRaytracedS
 bool g_lensflaresInReflections = true;
 TRI_REGISTER_SETTING( "lensflaresInReflections", g_lensflaresInReflections );
 
-bool g_useAlternativePostProcessMerge = false;
-TRI_REGISTER_SETTING( "useAlternativePostProcessMerge", g_useAlternativePostProcessMerge );
-
 bool g_enablePostProcessDebugging = false;
 TRI_REGISTER_SETTING( "enablePostProcessDebugging", g_enablePostProcessDebugging );
 
@@ -286,10 +283,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	BeResMan->GetResource( "res:/texture/global/white.dds", "", m_emptyShadowMap );
 
 	m_sceneDefaultPostProcessAttributes.CreateInstance();
-	m_sceneDefaultPostProcessAttributes->SetOwner( this->GetRawRoot() );
 	m_combinedPostProcessAttributes.CreateInstance();
-
-	m_componentRegistry->RegisterComponent<ITr2PostProcessOwner>( this );
 }
 
 IRoot* EveSpaceScene::GetCameraAttachments() const
@@ -344,13 +338,14 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 	// is this ok?
 	m_sceneDefaultPostProcessAttributes->FromPostProcess( m_sceneDefaultPostProcess, PostProcessEnums::SCENE_DEFAULT_PRIORITY, 1.0f );
 
-
 	std::vector<Tr2PostProcessAttributes*> postProcessAttributes;
 
 	for( auto& owner : m_componentRegistry->GetComponents<ITr2PostProcessOwner>() )
 	{
 		postProcessAttributes.push_back( owner->GetPostProcessAttributes() );
 	}
+
+	postProcessAttributes.push_back( m_sceneDefaultPostProcessAttributes );
 
 	if( !postProcessAttributes.empty() )
 	{
@@ -359,31 +354,22 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess.CreateInstance();
 		}
 
-		if( g_useAlternativePostProcessMerge )
+		std::sort(
+			begin( postProcessAttributes ),
+			end( postProcessAttributes ),
+			[]( Tr2PostProcessAttributes* a, Tr2PostProcessAttributes* b ) {
+				return a->priority > b->priority;
+			} );
+		if( g_enablePostProcessDebugging )
 		{
-			std::sort(
-				begin( postProcessAttributes ),
-				end( postProcessAttributes ),
-				[]( Tr2PostProcessAttributes* a, Tr2PostProcessAttributes* b ) {
-					return a->priority > b->priority;
-				} );
-			if( g_enablePostProcessDebugging )
-			{
-				Tr2PostProcessAttributesDebugObserver observer;
-				Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes, &observer );
-				m_postProcessDebug = observer.GetDict();
-			}
-			else
-			{
-				Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes );
-				m_postProcessDebug = {};
-			}
+			Tr2PostProcessAttributesDebugObserver observer;
+			Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes, &observer );
+			m_postProcessDebug = observer.GetDict();
 		}
 		else
 		{
-			m_combinedPostProcessAttributes->Reset();
-			m_combinedPostProcessAttributes->Blend( postProcessAttributes );
-			m_combinedPostProcessAttributes->ToPostProcess( m_combinedPostProcess );
+			Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes );
+			m_postProcessDebug = {};
 		}
 		if( m_sceneDefaultPostProcess )
 		{
@@ -401,11 +387,6 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 BluePy EveSpaceScene::GetPostProcessDebug() const
 {
 	return !m_postProcessDebug ? BluePy( Py_None, true ) : m_postProcessDebug;
-}
-
-Tr2PostProcessAttributes* EveSpaceScene::GetPostProcessAttributes()
-{
-	return m_sceneDefaultPostProcessAttributes;
 }
 
 Tr2PostProcess2Ptr EveSpaceScene::GetPostProcess()

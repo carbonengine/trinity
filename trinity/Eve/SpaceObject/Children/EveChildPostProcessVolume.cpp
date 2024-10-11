@@ -13,7 +13,6 @@ EveChildPostProcessVolume::EveChildPostProcessVolume( IRoot* lockobj ) :
 	m_rebuildBoundingSphereRequired( true )
 {
 	m_postProcessAttributes.CreateInstance();
-	m_postProcessAttributes->SetOwner( this->GetRawRoot() );
 	m_volumes.SetNotify( this );
 }
 
