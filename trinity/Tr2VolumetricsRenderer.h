@@ -9,6 +9,7 @@
 #include "ITr2VolumetricRenderable.h"
 #include "TriFrustumOrtho.h"
 #include "Tr2ShadowMap.h"
+#include "PostProcess/Tr2PostProcessEnums.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -25,15 +26,24 @@ public:
 	struct FroxelFogSettings
 	{
 		float thickness = 0.f;
-		float directionality = 0.5f;
+		float directionality = 0.f;
 
-		float environmentIntensity = 1.f;
+		float environmentIntensity = 0.f;
 
-		Color fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
-		Color backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+		Color backgroundColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+
+		FroxelFogSettings operator*( float rhs ) const;
+		FroxelFogSettings operator+( const FroxelFogSettings& rhs ) const;
 	};
-	virtual float GetFroxelFogIntensity() = 0;
-	virtual FroxelFogSettings GetFroxelFogSettings() = 0;
+
+	struct FroxelFogWeightedSettings
+	{
+		PostProcessEnums::Priority priority = PostProcessEnums::MEDIUM_PRIORITY;
+		float intensity = 1;
+		FroxelFogSettings value;
+	};
+	virtual FroxelFogWeightedSettings GetFroxelFogSettings() = 0;
 };
 
 REGISTER_COMPONENT_TYPE( "FroxelFogSettings", ITr2FroxelFogSettings );

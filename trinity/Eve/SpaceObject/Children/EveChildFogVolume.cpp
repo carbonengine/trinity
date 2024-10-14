@@ -12,7 +12,6 @@
 EveChildFogVolume::EveChildFogVolume( IRoot* lockobj ) :
 	PARENTLOCK( m_volumes ),
 	m_intensity( 1.f ),
-	m_currentIntensity( 0.f ),
 	m_boundingSphere( Vector3( 0.0, 0.0, 0.0 ), 0.0 ),
 	m_rebuildBoundingSphereRequired( true )
 {
@@ -110,11 +109,11 @@ void EveChildFogVolume::UpdateAsyncronous( const EveUpdateContext& updateContext
 	// global postprocess volumes have no volumes, so they are always on
 	if( m_volumes.empty() )
 	{
-		m_currentIntensity = m_intensity;
+		m_settings.intensity = m_intensity;
 	}
 	else
 	{
-		m_currentIntensity = 0.0f;
+		m_settings.intensity = 0.0f;
 
 		Matrix inverseWorldTransform = Inverse( m_worldTransform );
 		Vector3 cameraInObjectSpace = Transform( Tr2Renderer::GetViewPosition(), inverseWorldTransform ).GetXYZ();
@@ -125,14 +124,14 @@ void EveChildFogVolume::UpdateAsyncronous( const EveUpdateContext& updateContext
 			// Now find the intensity within the volumes
 			for( auto& volume : m_volumes )
 			{
-				m_currentIntensity = std::max( m_currentIntensity, volume->GetIntensity( cameraInObjectSpace ) );
-				if( m_currentIntensity == 1.0f )
+				m_settings.intensity = std::max( m_settings.intensity, volume->GetIntensity( cameraInObjectSpace ) );
+				if( m_settings.intensity == 1.0f )
 				{
 					// early exit
 					break;
 				}
 			}
-			m_currentIntensity *= m_intensity;
+			m_settings.intensity *= m_intensity;
 		}
 	}
 }
@@ -229,12 +228,7 @@ void EveChildFogVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 }
 
-ITr2FroxelFogSettings::FroxelFogSettings EveChildFogVolume::GetFroxelFogSettings()
+ITr2FroxelFogSettings::FroxelFogWeightedSettings EveChildFogVolume::GetFroxelFogSettings()
 {
 	return m_settings;
-}
-
-float EveChildFogVolume::GetFroxelFogIntensity()
-{
-	return m_currentIntensity;
 }

@@ -15,6 +15,32 @@
 #include "Tr2RenderTarget.h"
 #include "Tr2DepthStencil.h"
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
+#include "PriorityBlend.h"
+
+
+ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator*( float rhs ) const
+{
+	FroxelFogSettings result;
+	result.thickness = thickness * rhs;
+	result.directionality = directionality * rhs;
+	result.environmentIntensity = environmentIntensity * rhs;
+	result.fogColor = fogColor * rhs;
+	result.backgroundColor = backgroundColor * rhs;
+	return result;
+
+}
+
+ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator+(const FroxelFogSettings& rhs) const
+{
+	FroxelFogSettings result;
+	result.thickness = thickness + rhs.thickness;
+	result.directionality = directionality + rhs.directionality;
+	result.environmentIntensity = environmentIntensity + rhs.environmentIntensity;
+	result.fogColor = fogColor + rhs.fogColor;
+	result.backgroundColor = backgroundColor + rhs.backgroundColor;
+	return result;
+}
+
 
 Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_quality( Tr2VolumerticQuality::High ),
@@ -399,33 +425,25 @@ void Tr2VolumetricsRenderer::RenderFog( const EveComponentRegistry& registry, Tr
 		}
 	}
 	
-	float totalWeight = 0;
-	registry.ProcessComponents<ITr2FroxelFogSettings>( [&totalWeight]( ITr2FroxelFogSettings* component ) -> void {
-		totalWeight += component->GetFroxelFogIntensity();
+	std::vector<ITr2FroxelFogSettings::FroxelFogWeightedSettings> overrides;
+	registry.ProcessComponents<ITr2FroxelFogSettings>( [&overrides]( ITr2FroxelFogSettings* component ) -> void {
+		overrides.push_back( component->GetFroxelFogSettings() );
+	} );
+	sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
+		return a.priority > b.priority;
 	} );
 
-	m_froxelFogSettings = {};
-	if( totalWeight > 0 )
-	{
-		m_froxelFogSettings.thickness *= 1 - std::min( 1.f, totalWeight );
-		m_froxelFogSettings.directionality *= 1 - std::min( 1.f, totalWeight );
-		m_froxelFogSettings.environmentIntensity *= 1 - std::min( 1.f, totalWeight );
-		m_froxelFogSettings.fogColor *= 1 - std::min( 1.f, totalWeight );
-		m_froxelFogSettings.backgroundColor *= 1 - std::min( 1.f, totalWeight );
-
-		registry.ProcessComponents<ITr2FroxelFogSettings>( [totalWeight, this]( ITr2FroxelFogSettings* component ) -> void {
-			float weight = component->GetFroxelFogIntensity() / std::max( 1.f, totalWeight );
-			if( weight > 0 )
-			{
-				auto settings = component->GetFroxelFogSettings();
-				m_froxelFogSettings.thickness += settings.thickness * weight;
-				m_froxelFogSettings.directionality += settings.directionality * weight;
-				m_froxelFogSettings.environmentIntensity += settings.environmentIntensity * weight;
-				m_froxelFogSettings.fogColor += settings.fogColor * weight;
-				m_froxelFogSettings.backgroundColor += settings.backgroundColor * weight;
-			}
-		} );
-	}
+	ITr2FroxelFogSettings::FroxelFogWeightedSettings baseline;
+	baseline.priority = (PostProcessEnums::Priority)-1;
+	baseline.intensity = 1;
+	baseline.value.thickness = 0.0f;
+	baseline.value.directionality = 0.5f;
+	baseline.value.environmentIntensity = 1.0f;
+	baseline.value.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
+	baseline.value.backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+	overrides.push_back( baseline );
+	
+	m_froxelFogSettings = PriorityBlend( overrides );
 
 	int workgroupSize = 4;
 	int wgX = ( width + workgroupSize - 1 ) / workgroupSize;

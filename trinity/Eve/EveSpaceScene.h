@@ -498,6 +498,9 @@ protected:
 	float m_defaultDiffuseRoughness;
 	Tr2Variable m_nebulaIntensityVar;
 
+	Color m_currentSunColor;
+	float m_currentNebulaIntensity;
+
 	float m_fogStart; // Depth at which fogging starts
 	float m_fogEnd; // Depth at which fog does not get stronger
 	float m_fogMax; // Maximum strength of fog, range [0,1], at m_fogEnd distance.
@@ -640,6 +643,7 @@ private:
 	float m_reflectionIntensity;
 	float m_reflectionBackLightingContrast;
 	Color m_reflectionBackLightingColor;
+	float m_currentRelfectionIntensity;
 
 	BlueSharedString m_name;
 

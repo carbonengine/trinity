@@ -20,6 +20,12 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 		MAP_INTERFACE( IListNotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER(
+			"priority",
+			m_settings.priority,
+			"Priority of this override. Affects blending between different override objects",
+			Be::READWRITE | Be::PERSIST | Be::ENUM,
+			PostProcessEnums::Tr2PostProcessPriorityChooser )
 		MAP_ATTRIBUTE( 
 			"intensity", 
 			m_intensity, 
@@ -29,31 +35,31 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 
 		MAP_ATTRIBUTE(
 			"thickness",
-			m_settings.thickness,
+			m_settings.value.thickness,
 			"Overall thickness of the fog. A higher thickness makes the fog more intense close up to the camera, making god ray shadows pop more.\n"
 			":jessica-group: Froxel Fog",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"directionality",
-			m_settings.directionality,
+			m_settings.value.directionality,
 			"Scattering directionality of the fog. A higher value causes the fog to light up only when looking directly towards light sources.\n"
 			":jessica-group: Froxel Fog",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"environmentIntensity",
-			m_settings.environmentIntensity,
+			m_settings.value.environmentIntensity,
 			"The visibility of the skybox behind the fog, blurred by the directionality setting above.\n"
 			":jessica-group: Froxel Fog",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"fogColor",
-			m_settings.fogColor,
+			m_settings.value.fogColor,
 			"The color of the fog itself. Changing this will change what light is scattered from the sun, dynamic lights and the fog.\n"
 			":jessica-group: Froxel Fog",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"backgroundColor",
-			m_settings.backgroundColor,
+			m_settings.value.backgroundColor,
 			"How transparent the fog is to the background, controllable for RGB separately. When set to (0, 0, 0), the background is completely blocked by the fog. \n"
 			":jessica-group: Froxel Fog",
 			Be::READWRITE | Be::PERSIST )
