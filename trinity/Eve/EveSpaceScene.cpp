@@ -43,6 +43,8 @@
 #include "../Resources/TriTextureRes.h"
 #include "../PostProcess/ITr2PostProcessOwner.h"
 #include "../PostProcess/Tr2PostProcessAttributes.h"
+#include "SpaceObject/Children/EveChildLightingOverride.h"
+#include "PriorityBlend.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -179,6 +181,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_reflectionMapTransformVar( "ReflectionMapTransform", IdentityMatrix() ),
 	m_suncVecVar( "SunVec", Vector3( 0.0f, 0.0f, 1.0f ) ),
 	m_nebulaIntensity( 1.f ),
+	m_currentNebulaIntensity( 1.f ),
 	m_backgroundReflectionIntensity( 1.f ),
 	m_defaultDiffuseRoughness( 1.f ),
 	m_nebulaIntensityVar( "NebulaIntensity", m_nebulaIntensity ),
@@ -186,8 +189,10 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_planetCameraScale( 1e6 ),
 	m_sunColor( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_sunColorWithDynamicLights( 1.0f, 1.0f, 1.0f, 1.0f ),
+	m_currentSunColor( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_useSunColorWithDynamicLights( false ),
 	m_reflectionIntensity( 1.35f ),
+	m_currentRelfectionIntensity( 1.35f ),
 	m_reflectionBackLightingContrast( 8.0f ),
 	m_reflectionBackLightingColor( 2.0f, 2.0f, 2.0f, 2.0f ),
 	m_dynamicObjectReflectionEnabled( true ),
@@ -1220,6 +1225,7 @@ void EveSpaceScene::UpdatePostProcessPSData()
 	m_postProcessPSBuffer->SetData( (void*)&m_postProcessPSData, sizeof( m_postProcessPSData ) );
 }
 
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Set up rendering states, frustum and gather all batches.
@@ -1270,6 +1276,38 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( Tr2Renderer::GetViewTransform() ) * m_viewLast * m_projectionLast;
 	
 	m_velocityMapDirty = false;
+
+	{
+		std::vector<IEveLightingOverride::OverrideInfo> overrides;
+		m_componentRegistry->ProcessComponents<IEveLightingOverride>( [&overrides]( IEveLightingOverride* component ) -> void {
+			overrides.push_back( component->GetOverrides() );
+		} );
+		sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
+			return a.priority > b.priority;
+		} );
+
+		IEveLightingOverride::OverrideInfo baseline;
+		baseline.priority = (PostProcessEnums::Priority)-1;
+		baseline.intensity = 1;
+		auto sunColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
+		baseline.value.sunIntensity = std::max( { sunColor.r, sunColor.g, sunColor.b } );
+		if( baseline.value.sunIntensity != 0 )
+		{
+			baseline.value.sunColor = sunColor * ( 1.f / baseline.value.sunIntensity );
+		}
+		else
+		{
+			baseline.value.sunColor = sunColor;
+		}
+		baseline.value.backgroundIntensity = m_nebulaIntensity;
+		baseline.value.reflectionIntensity = m_reflectionIntensity;
+		overrides.push_back( baseline );
+
+		auto over = PriorityBlend( overrides );
+		m_currentSunColor = over.sunColor * over.sunIntensity;
+		m_currentNebulaIntensity = over.backgroundIntensity;
+		m_currentRelfectionIntensity = over.reflectionIntensity;
+	}
 
 	renderContext.m_esm.BeginManagedRendering();
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
@@ -1676,10 +1714,10 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	// lower the reflection intensity for the objects rendered into the reflection
 	// (so the reflections in the reflections don't get brighter and brighter)
 	// we cap it at 0.8 for no good reason, just felt like a good number to cap the reflection intensity in the reflections
-	auto tmp = m_reflectionIntensity;
-	if( m_reflectionIntensity != 0.0f )
+	auto tmp = m_currentRelfectionIntensity;
+	if( m_currentRelfectionIntensity != 0.0f )
 	{
-		m_reflectionIntensity = min( 0.8f, 1.0f / ( m_reflectionIntensity * m_reflectionIntensity ) );
+		m_currentRelfectionIntensity = min( 0.8f, 1.0f / ( m_currentRelfectionIntensity * m_currentRelfectionIntensity ) );
 	}
 
 	// disable ssao
@@ -1808,7 +1846,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	}
 
 	// reset the reflection intensity
-	m_reflectionIntensity = tmp;
+	m_currentRelfectionIntensity = tmp;
 
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
@@ -1931,7 +1969,7 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 		if( reason == BACKGROUND_RENDER_REFLECTION )
 		{
 			// Reset the nebula intensity to the original one
-			m_nebulaIntensityVar = m_nebulaIntensity;
+			m_nebulaIntensityVar = m_currentNebulaIntensity;
 		}
 	}
 
@@ -2230,7 +2268,7 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	}
 	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 
-	Color sunColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
+	Color sunColor = m_currentSunColor;
 	m_volumetricsRenderer->RenderFog( *m_componentRegistry, renderContext, *m_depthMap, m_cascadedShadowMap, m_sunData.DirWorld, sunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), m_viewLast, m_projectionLast );
 }
 
@@ -2598,7 +2636,7 @@ void EveSpaceScene::UpdateVariableStore()
 	m_envMap2Var = m_envMap2;
 	m_reflectionMapVar = m_envMap1;
 	m_reflectionMaskMapVar = m_envMap2;
-	m_nebulaIntensityVar = m_nebulaIntensity;
+	m_nebulaIntensityVar = m_currentNebulaIntensity;
 	// the environment cubemap (aka nebula) is passed theough the global variable store
 	m_envMapHandle->SetValue( m_envMapTextureRes );
 
@@ -2648,7 +2686,7 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData& data, Tr2RenderConte
 
 	// sun data
 	data.Sun = m_sunData;
-	data.Sun.DiffuseColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
+	data.Sun.DiffuseColor = m_currentSunColor;
 
 	// make sure whatever direction we get in here, it is normalized! And inverted: Shaders work with direction to light...
 	data.Sun.DirWorld = -Normalize( data.Sun.DirWorld );
@@ -2693,13 +2731,13 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	data.EnvMapRotationMat = Transpose( RotationMatrix( m_envMapRotation ) );
 
 	data.Sun = m_sunData;
-	data.Sun.DiffuseColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
+	data.Sun.DiffuseColor = m_currentSunColor;
 	data.Sun.DiffuseColor.a = m_defaultDiffuseRoughness;
 	// make sure whatever direction we get in here, it is normalized! And inverted: Shaders work with direction to light...
 	data.Sun.DirWorld = -Normalize( data.Sun.DirWorld );
 	data.AmbientColor = Vector3( m_ambientColor.r, m_ambientColor.g, m_ambientColor.b );
 
-	data.ReflectionIntensity = m_reflectionIntensity;
+	data.ReflectionIntensity = m_currentRelfectionIntensity;
 	data.FogColor = Vector4( m_fogColor.r, m_fogColor.g, m_fogColor.b, m_fogMax );
 
 	// ps gamma brightness
