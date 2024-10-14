@@ -2230,7 +2230,7 @@ bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, 
 
 	// we want a clean depth buffer for this
 	renderContext.SetReadOnlyDepth( false );
-	CR( renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xffffffff, 1, 0 ) );
+	CR( renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0, 0, 0 ) );
 
 	return true;
 }
@@ -2248,6 +2248,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 	// TODO: intern, extract frustum does not fill in all the data for the frustum. 
 	// TODO: intern, then again, the same matrix multiplication is happening inside of DeriveFrustum as well... do something about this
 	//shadowFrustum.ExtractFrustum( &viewProj );
+	
 	const Matrix viewProj = view * projection;
 	shadowFrustum.DeriveFrustum( &view, &lightPosition, &projection, renderContext.m_esm.GetViewport() );
 	{
@@ -2279,8 +2280,10 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 
 	if( m_shadowBatches[0]->GetBatchCount() )
 	{
-		renderContext.m_esm.SetInvertedDepthTest( false );
-		ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
+		renderContext.m_esm.SetInvertedDepthTest( true );
+		// TODO: intern, ask whether setting this to false on block exit makes any sense...
+		//ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
+
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatches( m_shadowBatches[0].get(), BlueSharedString( "Shadow" ) );
 	}
@@ -2309,7 +2312,8 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 		};
 
 		float fov = 90.f / 360.f * TRI_2PI;
-		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius / 1000.f, lightData.radius );
+		// we flip near and far plane for reverse z
+		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius, lightData.radius / 1000.f );
 		for( int32_t y = 0; y < 2; y++ )
 		{
 			for( int32_t x = 0; x < 3; x++ )
@@ -2332,7 +2336,8 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 		// spotlight
 		// TODO: intern, fov from projectionPlaneDistance. or better yet, construct perspective matrix directly
 		float fov = 2.f * acos( float( lightData.outerAngle ) );
-		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius / 1000.f, lightData.radius );
+		// we flip near and far plane for reverse z
+		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius, lightData.radius / 1000.f );
 		Vector3 up = Vector3(0.f, 1.f, 0.f);//Vector3( lightData.direction.z, lightData.direction.x, lightData.direction.y );
 		Matrix view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
 		uint32_t shadowMapScale;
