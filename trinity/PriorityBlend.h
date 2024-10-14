@@ -17,7 +17,7 @@ The value type needs to support + and * operators.
 The sources are assumed to be sorted by priority: high to low.
 */
 template <typename T>
-typename decltype( T::value ) PriorityBlend( const std::vector<T>& sources, decltype( T::value ) result = {} )
+decltype( T::value ) PriorityBlend( const std::vector<T>& sources, decltype( T::value ) result = {} )
 {
 	// sources are assumed to be sorted by priority: high to low
 	float remainingWeight = 1.0f;
