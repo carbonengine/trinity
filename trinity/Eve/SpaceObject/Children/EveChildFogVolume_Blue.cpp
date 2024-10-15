@@ -17,7 +17,6 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 		MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( IInitialize )
-		MAP_INTERFACE( IListNotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER(
@@ -66,7 +65,7 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "boundingSphereCenter", m_boundingSphere.center, "", Be::READ )
 		MAP_ATTRIBUTE( "boundingSphereRadius", m_boundingSphere.radius, "", Be::READ )
-		MAP_ATTRIBUTE( "volumes", m_volumes, "", Be::READ | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "volumes", m_volumes, "", Be::READ | Be::PERSIST )
 
 	EXPOSURE_END()
 }

@@ -9,20 +9,19 @@
 EveChildPostProcessVolume::EveChildPostProcessVolume( IRoot* lockobj ) : 
 	PARENTLOCK( m_volumes ),
 	PARENTLOCK( m_exclusionVolumes ),
-	m_boundingSphere( Vector3( 0.0, 0.0, 0.0), 0.0 ),
-	m_rebuildBoundingSphereRequired( true )
+	m_boundingSphere( Vector3( 0.0, 0.0, 0.0), 0.0 )
 {
 	m_postProcessAttributes.CreateInstance();
-	m_volumes.SetNotify( this );
 }
 
 EveChildPostProcessVolume::~EveChildPostProcessVolume()
 {
-
 }
 
 void EveChildPostProcessVolume::RebuildBoundingSphere()
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	m_boundingSphere.center *= 0.0f;
 	m_boundingSphere.radius *= 0.0f;
 
@@ -55,11 +54,6 @@ void EveChildPostProcessVolume::RebuildBoundingSphere()
 		m_boundingSphere.center += 0.5f * ( 1.f + ( volumeSphere.radius - m_boundingSphere.radius ) / deltaLen ) * delta;
 		m_boundingSphere.radius = 0.5f * ( m_boundingSphere.radius + volumeSphere.radius + deltaLen );
 	}
-}
-
-void EveChildPostProcessVolume::FlagBoundingSphereRebuildRequired()
-{
-	m_rebuildBoundingSphereRequired = true;
 }
 
 void EveChildPostProcessVolume::RegisterComponents()
@@ -104,13 +98,11 @@ void EveChildPostProcessVolume::UpdateSyncronous( const EveUpdateContext& update
 
 void EveChildPostProcessVolume::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	UpdateTransformFromParent( params );
 
-	if( m_rebuildBoundingSphereRequired )
-	{
-		m_rebuildBoundingSphereRequired = false;
-		RebuildBoundingSphere();
-	}
+	RebuildBoundingSphere();
 
 	// global postprocess volumes have no volumes, so they are always on
 	if( m_volumes.size() == 0 )
@@ -128,14 +120,30 @@ void EveChildPostProcessVolume::UpdateAsyncronous( const EveUpdateContext& updat
 		if( m_boundingSphere.IsPointInside( cameraInObjectSpace ) )
 		{
 			// Now find the intensity within the volumes
-			for( auto volume = m_volumes.begin(); volume != m_volumes.end(); ++volume )
+			for( const auto& volume : m_volumes )
 			{
-				m_postProcessAttributes->intensity = std::max( m_postProcessAttributes->intensity, ( *volume )->GetIntensity( cameraInObjectSpace ) );
+				m_postProcessAttributes->intensity = std::max( m_postProcessAttributes->intensity, volume->GetIntensity( cameraInObjectSpace ) );
 				if( m_postProcessAttributes->intensity == 1.0f )
 				{
 					// early exit
 					break;
 				}
+			}
+
+			if( m_postProcessAttributes->intensity != 0.0f )
+			{
+				// check if the camera is within an exclusion volume
+				float negativeIntensity = 0.0f;
+				for( const auto& volume : m_exclusionVolumes )
+				{
+					negativeIntensity = std::max( negativeIntensity, volume->GetIntensity( cameraInObjectSpace ) );
+					if( negativeIntensity == 1.0f )
+					{
+						// early exit
+						break;
+					}
+				}
+				m_postProcessAttributes->intensity = std::max( 0.0f, m_postProcessAttributes->intensity - negativeIntensity );
 			}
 		}
 	}
@@ -180,35 +188,10 @@ bool EveChildPostProcessVolume::IsAlwaysOn() const
 // IInitialize
 bool EveChildPostProcessVolume::Initialize()
 {
-	for( auto volume = m_volumes.begin(); volume != m_volumes.end(); ++volume )
-	{
-		( *volume )->RegisterForChanges( std::bind( &EveChildPostProcessVolume::FlagBoundingSphereRebuildRequired, this ) );
-	}
-
 	RebuildBoundingSphere();
 	return true;
 }
 
-
-void EveChildPostProcessVolume::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList )
-{
-	if( theList != &m_volumes )
-	{
-		return;
-	}
-
-	m_rebuildBoundingSphereRequired = true;
-	switch (event & BELIST_EVENTMASK)
-	{
-	case BELIST_INSERTED:
-		if( IEveVolumePtr volume = BlueCastPtr( value ) )
-		{
-			volume->RegisterForChanges( std::bind( &EveChildPostProcessVolume::FlagBoundingSphereRebuildRequired, this ) );
-		}
-	default:
-		break;
-	};
-}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // ITr2DebugRenderable
@@ -225,7 +208,7 @@ void EveChildPostProcessVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	{
 		for( auto volume = m_volumes.begin(); volume != m_volumes.end(); ++volume )
 		{
-			(*volume)->RenderDebugInfo( renderer, m_worldTransform );
+			(*volume)->RenderDebugInfo( renderer, m_worldTransform, 0xFFFFFFFF );
 		}
 	}
 
@@ -233,7 +216,7 @@ void EveChildPostProcessVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	{
 		for (auto volume = m_exclusionVolumes.begin(); volume != m_exclusionVolumes.end(); ++volume)
 		{
-			(*volume)->RenderDebugInfo( renderer, m_worldTransform );
+			( *volume )->RenderDebugInfo( renderer, m_worldTransform, 0xFFFF3333 );
 		}
 	}
 

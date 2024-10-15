@@ -15,7 +15,6 @@ const Be::ClassInfo* EveChildLightingOverride::ExposeToBlue()
 		MAP_INTERFACE( IEveLightingOverride )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( ITr2DebugRenderable )
-		MAP_INTERFACE( IListNotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER(
@@ -50,6 +49,10 @@ const Be::ClassInfo* EveChildLightingOverride::ExposeToBlue()
 			m_overrides.value.reflectionIntensity,
 			"Overall reflection intensity override",
 			Be::READWRITE | Be::PERSIST )
-
+		MAP_ATTRIBUTE(
+			"volumes",
+			m_volumes,
+			"The volumes that affect the light overrides",
+			Be::READ | Be::PERSIST )
 	EXPOSURE_END()
 }

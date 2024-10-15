@@ -26,15 +26,12 @@ IEveLightingOverride::Overrides IEveLightingOverride::Overrides::operator + ( co
 EveChildLightingOverride::EveChildLightingOverride( IRoot* lockobj ) :
 	PARENTLOCK( m_volumes ),
 	m_intensity( 1.0f ),
-	m_boundingSphere( Vector3( 0.0, 0.0, 0.0 ), 0.0 ),
-	m_rebuildBoundingSphereRequired( true )
+	m_boundingSphere( Vector3( 0.0, 0.0, 0.0 ), 0.0 )
 {
 	m_overrides.value.sunColor = Color( 1, 1, 1, 1 );
 	m_overrides.value.sunIntensity = 1;
 	m_overrides.value.backgroundIntensity = 1;
 	m_overrides.value.reflectionIntensity = 1;
-
-	m_volumes.SetNotify( this );
 }
 
 EveChildLightingOverride::OverrideInfo EveChildLightingOverride::GetOverrides() const 
@@ -126,12 +123,7 @@ void EveChildLightingOverride::UpdateAsyncronous( const EveUpdateContext& update
 		localToWorldTransform = IdentityMatrix();
 	}
 	UpdateTransform( localToWorldTransform );
-
-	if( m_rebuildBoundingSphereRequired )
-	{
-		m_rebuildBoundingSphereRequired = false;
-		RebuildBoundingSphere();
-	}
+	RebuildBoundingSphere();
 
 	if( m_volumes.empty() )
 	{
@@ -178,34 +170,10 @@ bool EveChildLightingOverride::IsAlwaysOn() const
 
 bool EveChildLightingOverride::Initialize()
 {
-	for( auto volume = m_volumes.begin(); volume != m_volumes.end(); ++volume )
-	{
-		( *volume )->RegisterForChanges( [this]() { m_rebuildBoundingSphereRequired = true; } );
-	}
-
 	RebuildBoundingSphere();
 	return true;
 }
 
-void EveChildLightingOverride::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList )
-{
-	if( theList != &m_volumes )
-	{
-		return;
-	}
-
-	m_rebuildBoundingSphereRequired = true;
-	switch( event & BELIST_EVENTMASK )
-	{
-	case BELIST_INSERTED:
-		if( IEveVolumePtr volume = BlueCastPtr( value ) )
-		{
-			volume->RegisterForChanges( [this]() { m_rebuildBoundingSphereRequired = true; } );
-		}
-	default:
-		break;
-	};
-}
 
 void EveChildLightingOverride::GetDebugOptions( Tr2DebugRendererOptions& options )
 {

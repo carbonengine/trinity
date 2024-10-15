@@ -45,7 +45,6 @@ BLUE_CLASS( EveChildLightingOverride ) :
 	public IEveLightingOverride,
 	public IInitialize,
 	public ITr2DebugRenderable,
-	public IListNotify,
 	public EveChildTransform,
 	public EveEntity
 {
@@ -80,10 +79,6 @@ public:
 	bool Initialize() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// IListNotify
-	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList );
-
-	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
 	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
@@ -98,7 +93,6 @@ private:
 	PIEveVolumeVector m_volumes;
 	float m_intensity;
 	CcpMath::Sphere m_boundingSphere;
-	bool m_rebuildBoundingSphereRequired;
 };
 
 TYPEDEF_BLUECLASS( EveChildLightingOverride );

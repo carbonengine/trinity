@@ -12,10 +12,8 @@
 EveChildFogVolume::EveChildFogVolume( IRoot* lockobj ) :
 	PARENTLOCK( m_volumes ),
 	m_intensity( 1.f ),
-	m_boundingSphere( Vector3( 0.0, 0.0, 0.0 ), 0.0 ),
-	m_rebuildBoundingSphereRequired( true )
+	m_boundingSphere( Vector3( 0.0, 0.0, 0.0 ), 0.0 )
 {
-	m_volumes.SetNotify( this );
 }
 
 void EveChildFogVolume::RebuildBoundingSphere()
@@ -51,11 +49,6 @@ void EveChildFogVolume::RebuildBoundingSphere()
 		m_boundingSphere.center += 0.5f * ( 1.f + ( volumeSphere.radius - m_boundingSphere.radius ) / deltaLen ) * delta;
 		m_boundingSphere.radius = 0.5f * ( m_boundingSphere.radius + volumeSphere.radius + deltaLen );
 	}
-}
-
-void EveChildFogVolume::FlagBoundingSphereRebuildRequired()
-{
-	m_rebuildBoundingSphereRequired = true;
 }
 
 void EveChildFogVolume::RegisterComponents()
@@ -99,12 +92,7 @@ void EveChildFogVolume::UpdateSyncronous( const EveUpdateContext& updateContext,
 void EveChildFogVolume::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	UpdateTransformFromParent( params );
-
-	if( m_rebuildBoundingSphereRequired )
-	{
-		m_rebuildBoundingSphereRequired = false;
-		RebuildBoundingSphere();
-	}
+	RebuildBoundingSphere();
 
 	// global postprocess volumes have no volumes, so they are always on
 	if( m_volumes.empty() )
@@ -174,34 +162,8 @@ bool EveChildFogVolume::IsAlwaysOn() const
 // IInitialize
 bool EveChildFogVolume::Initialize()
 {
-	for( auto volume = m_volumes.begin(); volume != m_volumes.end(); ++volume )
-	{
-		( *volume )->RegisterForChanges( std::bind( &EveChildFogVolume::FlagBoundingSphereRebuildRequired, this ) );
-	}
-
 	RebuildBoundingSphere();
 	return true;
-}
-
-
-void EveChildFogVolume::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList )
-{
-	if( theList != &m_volumes )
-	{
-		return;
-	}
-
-	m_rebuildBoundingSphereRequired = true;
-	switch( event & BELIST_EVENTMASK )
-	{
-	case BELIST_INSERTED:
-		if( IEveVolumePtr volume = BlueCastPtr( value ) )
-		{
-			volume->RegisterForChanges( std::bind( &EveChildFogVolume::FlagBoundingSphereRebuildRequired, this ) );
-		}
-	default:
-		break;
-	};
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
