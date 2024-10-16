@@ -95,7 +95,7 @@ public:
 	static Tr2TextureArray& GetLightProfileArray();
 
 	const std::vector<uint32_t>& GetShadowCastingLights() const;
-	const Tr2LightManager::PerLightData& GetLightData( uint32_t index ) const;
+	Tr2LightManager::PerLightData& GetLightData( uint32_t index );
 	Tr2DepthStencilPtr GetShadowMapAtlas();
 
 private:

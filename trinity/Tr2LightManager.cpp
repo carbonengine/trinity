@@ -13,6 +13,9 @@
 #include "Tr2TextureArray.h"
 #include "Tr2DepthStencil.h"
 
+#include "include/TriMath.h"
+
+
 CCP_STATS_DECLARE( lightsGathered, "Trinity/Tr2LightManager/lightsGathered", true, CST_COUNTER_LOW, "How many lights were pushed to GPU" );
 
 namespace
@@ -342,8 +345,10 @@ void Tr2LightManager::ResolveLightData()
 		
 		// TODO: intern, do something smarter than hardcoding 512 by 512. make it size and distance based!
 		// TODO: intern, be aware that the pixel size might be very large when frustum culling has been turned off (see g_frustumCullingDisabled)
-		//float size = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &lightData.position ) );
-		uint32_t size = 512;
+		float sizeAcross = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &lightData.position ) );
+		sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? SHADOW_MAP_ATLAS_SIZE : sizeAcross;
+		uint32_t size = (uint32_t)ClampInt( (int32_t)sizeAcross, SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE, 1024 );
+		size = CCP_ALIGN( size, SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE );
 		// TODO: intern, sort the shadow casting lights by shadow map size, giving priority to larger ones. 
 		// TODO: intern, small ones might even be discarded to save performance on culling/rendering
 
@@ -428,7 +433,8 @@ bool Tr2LightManager::OnPrepareResources()
 	// Setup depth stencil texture
 	m_shadowMapAtlasDS = Tr2DepthStencilPtr();
 	m_shadowMapAtlasDS.CreateInstance();
-	m_shadowMapAtlasDS->Create( SHADOW_MAP_ATLAS_SIZE, SHADOW_MAP_ATLAS_SIZE, Tr2RenderContextEnum::DSFMT_D32, 0, 0 );
+	// TODO: intern, maybe switch to 16 bit for atlas format? check if there is z-fighting with DSFMT_D16!
+	m_shadowMapAtlasDS->Create( SHADOW_MAP_ATLAS_SIZE, SHADOW_MAP_ATLAS_SIZE, Tr2RenderContextEnum::DSFMT_D32F, 0, 0 );
 
 	return true;
 }
@@ -449,7 +455,7 @@ const std::vector<uint32_t>& Tr2LightManager::GetShadowCastingLights() const
 	return m_shadowCastingLights;
 }
 
-const Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t index ) const
+Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t index )
 {
 	return m_lightData[index];
 }
@@ -537,7 +543,7 @@ bool Tr2LightManager::GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t widt
 	height = CCP_ALIGN( height, SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE );
 
 	uint32_t nodeId = InsertShadowMapNode( 0, lightIndex, width, height );
-	CCP_ASSERT_M( nodeId != -1, "Shadow map atlas could not fit the requested entry." );
+	//CCP_ASSERT_M( nodeId != -1, "Shadow map atlas could not fit the requested entry." );
 
 	if( nodeId != -1 )
 	{

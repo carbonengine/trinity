@@ -2249,7 +2249,12 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 	// TODO: intern, then again, the same matrix multiplication is happening inside of DeriveFrustum as well... do something about this
 	//shadowFrustum.ExtractFrustum( &viewProj );
 	
-	const Matrix viewProj = view * projection;
+	const float margin = 8.f;
+	const float marginScale = 1.f - (margin / shadowMapScale);
+	//const float marginBias = .5f * (margin / shadowMapScale);
+	const Matrix marginMatrix = ScalingMatrix( Vector3( marginScale, marginScale, 1.f ) );// * TranslationMatrix( marginBias, marginBias, 0.f );
+	const Matrix viewProj = view * projection * marginMatrix;
+
 	shadowFrustum.DeriveFrustum( &view, &lightPosition, &projection, renderContext.m_esm.GetViewport() );
 	{
 		CCP_STATS_ZONE( "get shadowbatches for light" );
@@ -2392,7 +2397,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		if( lightManager->GetShadowCastingLights().size() > 0 )
+		if( lightManager->GetShadowCastingLights().size() > 0 )//&& m_shadowQuality != SHADOW_DISABLED )
 		{
 			GPU_REGION( renderContext, "PointLight/SpotLight Shadow Maps" );
 			Tr2DepthStencilPtr shadowMap = lightManager->GetShadowMapAtlas();
@@ -2405,6 +2410,14 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 			}
 			FinishRenderingShadowMapForLights( renderContext );
 		}
+		//else
+		//{
+		//	for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
+		//	{
+		//		Tr2LightManager::PerLightData& lightData = lightManager->GetLightData( lightIndex );
+		//		lightData.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
+		//	}
+		//}
 		{
 			GPU_REGION( renderContext, "Lighting" );
 			CCP_STATS_SCOPED_TIME( updateDynamicLightLists );
