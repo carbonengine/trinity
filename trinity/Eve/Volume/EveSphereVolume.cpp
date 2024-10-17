@@ -11,8 +11,7 @@
 
 EveSphereVolume::EveSphereVolume( IRoot* lockobj ) :
 	m_innerSphere( Vector3(0.0f, 0.0f, 0.0f), 1.0f ),
-	m_outerSphere( Vector3( 0.0f, 0.0f, 0.0f ), 1.0f ),
-	m_notifyParent( false )
+	m_outerSphere( Vector3( 0.0f, 0.0f, 0.0f ), 1.0f )
 {
 }
 
@@ -20,10 +19,10 @@ EveSphereVolume::~EveSphereVolume()
 {
 }
 
-void EveSphereVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform )
+void EveSphereVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor )
 {
-	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center ) * parentTransform, m_outerSphere.radius, 20, Tr2DebugRenderer::Wireframe, 0xff555555 );
-	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center + m_innerSphere.center ) * parentTransform, m_innerSphere.radius, 20, Tr2DebugRenderer::Wireframe, 0xff777777 );
+	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center ) * parentTransform, m_outerSphere.radius, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.5f );
+	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center + m_innerSphere.center ) * parentTransform, m_innerSphere.radius, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.5f );
 }
 
 const CcpMath::Sphere EveSphereVolume::GetBoundingSphere() const
@@ -53,21 +52,11 @@ float EveSphereVolume::GetIntensity( Vector3 position )
 	return 0.0f;
 }
 
-void EveSphereVolume::RegisterForChanges( std::function<void()> NotifyParent )
-{
-	m_notifyParentFunc = NotifyParent;
-	m_notifyParent = true;
-}
-
 //////////////////////////////////////////////////////////////////////////
 // INotify
 bool EveSphereVolume::OnModified( Be::Var* val )
 {
 	m_innerSphere.radius = min( m_innerSphere.radius, m_outerSphere.radius );
 
-	if( m_notifyParent && ( IsMatch( val, m_outerSphere.center ) || IsMatch( val, m_outerSphere.radius ) ) )
-	{
-		m_notifyParentFunc();
-	}
 	return true;
 }

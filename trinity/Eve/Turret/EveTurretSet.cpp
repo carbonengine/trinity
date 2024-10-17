@@ -701,7 +701,7 @@ void EveTurretSet::RebuildCachedData( BlueAsyncRes* p )
 					// get gemoetry's original vertex-decl...
 					Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, m_turretVertexDecl );
 					// ...expand it with instances stream elements...
-					auto& item = m_turretVertexDecl.Add( m_turretVertexDecl.FLOAT32_1, m_turretVertexDecl.TEXCOORD, 1, 1, 1 );
+					auto& item = m_turretVertexDecl.Add( m_turretVertexDecl.FLOAT32_1, m_turretVertexDecl.TEXCOORD, 2, 1, 1 );
 					item.m_offset = 0;
 					// ...and create new vertex dcel again
 					m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( m_turretVertexDecl );
@@ -1567,6 +1567,32 @@ bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 			if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, transformedBoundingSphere ) )
 			{
 				sizeInShadow = max( sizeInShadow, EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, transformedBoundingSphere ) );
+			}
+		}
+	}
+	return sizeInShadow > 5.f;
+}
+
+bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
+{
+	if( !m_display || !m_geometryResource )
+	{
+		return false;
+	}
+
+	sizeInShadow = 0;
+
+	for( auto& turret : m_singleTurrets )
+	{
+		Vector4 transformedBoundingSphere = m_boundingSphere;
+		// transform bounding sphere into world space to check against frustum
+		BoundingSphereTransform( turret.worldMatrix, transformedBoundingSphere );
+
+		if( transformedBoundingSphere.w > 0.0f )
+		{
+			if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, transformedBoundingSphere ) )
+			{
+				sizeInShadow = max( sizeInShadow, EveShadowCaster::GetSizeInShadow( shadowFrustum, transformedBoundingSphere ) );
 			}
 		}
 	}

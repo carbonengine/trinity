@@ -20,8 +20,7 @@ EveEllipsoidVolume::EveEllipsoidVolume( IRoot* lockobj ) :
 	m_rotationMatrix( IdentityMatrix() ),
 	m_inverseRotationMatrix( IdentityMatrix() ),
 	m_debugShowIntersection( false ),
-	m_boundingSphere( Vector3( 0, 0, 0 ), 0 ),
-	m_notifyParent( false )
+	m_boundingSphere( Vector3( 0, 0, 0 ), 0 )
 {
 }
 
@@ -49,13 +48,13 @@ void EveEllipsoidVolume::Setup()
 	m_boundingSphere.radius = max( m_shape.x, max( m_shape.y, m_shape.z ) );
 }
 
-void EveEllipsoidVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform )
+void EveEllipsoidVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor )
 {
 	Matrix outerTransform = TransformationMatrix( m_shape, m_rotation, m_position ) * parentTransform;
-	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), outerTransform, 20, Tr2DebugRenderer::Wireframe, 0xff4444ff );
+	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), outerTransform, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.5f );
 
 	Matrix innerTransform = TransformationMatrix( m_innerShape, m_rotation, m_position ) * parentTransform;
-	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), innerTransform, 20, Tr2DebugRenderer::Wireframe, 0x4444ffff );
+	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), innerTransform, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.75f );
 
 	if( m_debugShowIntersection )
 	{
@@ -92,24 +91,10 @@ float EveEllipsoidVolume::GetIntensity( Vector3 position )
 	return LengthSq( position - m_outerIntersection ) / LengthSq( m_innerIntersection - m_outerIntersection );
 }
 
-void EveEllipsoidVolume::RegisterForChanges( std::function<void()> NotifyParent )
-{
-	m_notifyParentFunc = NotifyParent;
-	m_notifyParent = true;
-}
-
 //////////////////////////////////////////////////////////////////////////
 // INotify
 bool EveEllipsoidVolume::OnModified( Be::Var* val )
 {
-	if( m_notifyParent && ( IsMatch( val, m_position ) || IsMatch( val, m_shape ) ) )
-	{
-		Setup();
-		m_notifyParentFunc();
-	}
-	if( IsMatch( val, m_innerShape ) || IsMatch( val, m_rotation ) )
-	{
-		Setup();
-	}
+	Setup();
 	return true;
 }

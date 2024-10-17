@@ -259,6 +259,28 @@ bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const
 	return false;
 }
 
+bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
+{
+	Vector4 boundingSphere;
+	if( !m_owner )
+	{
+		return false;
+	}
+
+	if( m_owner->GetBoundingSphere( boundingSphere ) )
+	{
+		boundingSphere.GetXYZ() = m_worldTransform.GetTranslation();
+		sizeInShadow = 0;
+
+		if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, boundingSphere ) )
+		{
+			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, boundingSphere );
+		}
+		return sizeInShadow > 15.f;
+	}
+	return false;
+}
+
 void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
 {
 	if( !m_mesh || !m_mesh->GetDisplay() )
