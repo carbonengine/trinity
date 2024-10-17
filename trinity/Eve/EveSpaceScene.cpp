@@ -2249,7 +2249,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 	// TODO: intern, then again, the same matrix multiplication is happening inside of DeriveFrustum as well... do something about this
 	//shadowFrustum.ExtractFrustum( &viewProj );
 	
-	const float margin = 8.f;
+	const float margin = 16.f;
 	const float marginScale = 1.f - (margin / shadowMapScale);
 	//const float marginBias = .5f * (margin / shadowMapScale);
 	const Matrix marginMatrix = ScalingMatrix( Vector3( marginScale, marginScale, 1.f ) );// * TranslationMatrix( marginBias, marginBias, 0.f );
@@ -2285,10 +2285,12 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 
 	if( m_shadowBatches[0]->GetBatchCount() )
 	{
-		renderContext.m_esm.SetInvertedDepthTest( true );
-		// TODO: intern, ask whether setting this to false on block exit makes any sense...
-		//ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
-
+		if( !renderContext.m_esm.IsDepthTestInverted() )
+		{
+			renderContext.m_esm.SetInvertedDepthTest( true );
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
+		}
+		
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatches( m_shadowBatches[0].get(), BlueSharedString( "Shadow" ) );
 	}
