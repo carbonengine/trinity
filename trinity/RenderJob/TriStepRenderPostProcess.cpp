@@ -479,6 +479,23 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	ProcessLut( luts );
 	ProcessVignette( vignette );
 
+	{
+		static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
+		m_tonemappingEffect->SetParameter( WhiteTemperature, postProcess->m_whiteTemperature );
+		static auto WhiteTint = BlueSharedString( "WhiteTint" );
+		m_tonemappingEffect->SetParameter( WhiteTint, postProcess->m_whiteTint );
+		static auto ColorSaturation = BlueSharedString( "ColorSaturation" );
+		m_tonemappingEffect->SetParameter( ColorSaturation, postProcess->m_colorSaturation );
+		static auto ColorContrast = BlueSharedString( "ColorContrast" );
+		m_tonemappingEffect->SetParameter( ColorContrast, postProcess->m_colorContrast );
+		static auto ColorGamma = BlueSharedString( "ColorGamma" );
+		m_tonemappingEffect->SetParameter( ColorGamma, postProcess->m_colorGamma );
+		static auto ColorGain = BlueSharedString( "ColorGain" );
+		m_tonemappingEffect->SetParameter( ColorGain, postProcess->m_colorGain );
+		static auto ColorOffset = BlueSharedString( "ColorOffset" );
+		m_tonemappingEffect->SetParameter( ColorOffset, postProcess->m_colorOffset );
+	}
+
 	bool doGrain = ProcessFilmGrain( filmGrain );
 	if( !upscalingInfo.temporal || doGrain )
 	{

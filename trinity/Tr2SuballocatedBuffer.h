@@ -94,7 +94,7 @@ private:
 	const uint8_t* m_mappedPointer = nullptr;
 	int m_mapCounter = 0;
 
-	void Expand();
+	void Expand( uint32_t blockSize );
 
 	ALResult MapForReading( Tr2RenderContextAL& renderContext );
 

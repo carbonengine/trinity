@@ -98,9 +98,7 @@ BLUE_CLASS( EveSpaceScene ) :
 	public INotify,
 	public Tr2DeviceResource,
 	public IListNotify,
-	public ITr2NamedPredicate,
-	public ITr2PostProcessOwner,
-	public EveEntity
+	public ITr2NamedPredicate
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -153,10 +151,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2NamedPredicate
 	bool GetPredicate( const char* name ) const override;
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// ITr2PostProcessOwner
-	Tr2PostProcessAttributes* GetPostProcessAttributes() override;
 
 	// all eve-specific visualize methods
 	enum EveVisualizeMethod
@@ -506,6 +500,9 @@ protected:
 	float m_defaultDiffuseRoughness;
 	Tr2Variable m_nebulaIntensityVar;
 
+	Color m_currentSunColor;
+	float m_currentNebulaIntensity;
+
 	float m_fogStart; // Depth at which fogging starts
 	float m_fogEnd; // Depth at which fog does not get stronger
 	float m_fogMax; // Maximum strength of fog, range [0,1], at m_fogEnd distance.
@@ -635,10 +632,12 @@ private:
 	IRoot* GetCameraAttachments() const;
 
 	void UpdatePostProcessAttributes();
+	BluePy GetPostProcessDebug() const;
 	Tr2PostProcess2Ptr m_combinedPostProcess;
 	Tr2PostProcess2Ptr m_sceneDefaultPostProcess;
 	Tr2PostProcessAttributesPtr m_sceneDefaultPostProcessAttributes;
 	Tr2PostProcessAttributesPtr m_combinedPostProcessAttributes;
+	BluePy m_postProcessDebug;
 
 	Tr2ReflectionProbePtr m_reflectionProbe;
 	EveVirtualCameraSystemPtr m_virtualCameraSystem;
@@ -646,6 +645,7 @@ private:
 	float m_reflectionIntensity;
 	float m_reflectionBackLightingContrast;
 	Color m_reflectionBackLightingColor;
+	float m_currentRelfectionIntensity;
 
 	BlueSharedString m_name;
 

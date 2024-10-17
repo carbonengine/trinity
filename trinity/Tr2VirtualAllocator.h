@@ -22,8 +22,11 @@ public:
 	bool Allocate( size_t size, size_t alignment, VirtualAllocation& result );
 	void Free( VirtualAllocation allocation );
 
+	size_t GetSize() const;
+
 private:
 	void* block;
+	const size_t m_size;
 };
 
 #endif

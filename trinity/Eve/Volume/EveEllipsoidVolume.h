@@ -23,10 +23,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveVolume
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& parentTransform, const Color& baseColor ) override;
 	float GetIntensity( Vector3 position ) override;
 	const CcpMath::Sphere GetBoundingSphere() const override;
-	void RegisterForChanges( std::function<void()> NotifyParent ) override;
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify

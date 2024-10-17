@@ -41,6 +41,7 @@ public:
 
 	uint32_t GetWidth() const;
 	uint32_t GetHeight() const;
+	uint32_t GetDepth() const;
 	uint32_t GetMipCount() const;
 	uint32_t GetTrueMipCount() const;
 	Tr2RenderContextEnum::PixelFormat GetFormat() const;

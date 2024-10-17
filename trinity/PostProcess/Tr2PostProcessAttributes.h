@@ -15,42 +15,20 @@ namespace PostProcess
 	{
 		T value;
 		bool enabled;
-		float currentIntensity;
 
 		Attribute( T value ) :
 			value( value ),
-			enabled( false ),
-			currentIntensity( 0.0f ){}
+			enabled( false ){}
 	
 		Attribute( T value, bool enabled ) :
 			value( value ),
-			enabled( enabled ),
-			currentIntensity( 0.0f ){}
-
-		void Blend( const Attribute<T>& other, float intensity, float totalIntensity )
-		{
-			if( other.enabled )
-			{
-				value += other.value * intensity * intensity / totalIntensity;
-				enabled = true;
-			}
-		}
+			enabled( enabled ){}
 	};
 }
 
-struct WeightRow
-{
-	WeightRow();
-	WeightRow( PostProcessEnums::AttributeType type, float intensity );
-	WeightRow( PostProcessEnums::AttributeType type, float intensity, float totalIntensity );
-	WeightRow( const WeightRow& other );
 
-	float intensity;
-	float totalIntensity;
-	uint32_t type;
-};
-BLUE_DECLARE_STRUCTURE_LIST( WeightRow );
 
+class Tr2PostProcessAttributesDebugObserver;
 
 BLUE_CLASS( Tr2PostProcessAttributes ) :
 	public IRoot
@@ -60,17 +38,12 @@ public:
 
 	Tr2PostProcessAttributes( IRoot* lockobj = NULL );
 	~Tr2PostProcessAttributes();
-
+	
 	void Reset();
 
 	void FromPostProcess( Tr2PostProcess2* postprocess, PostProcessEnums::Priority priority, float intensity );
-	void ToPostProcess( Tr2PostProcess2Ptr postprocess ) const;
-	void Blend( std::vector<Tr2PostProcessAttributes*> attributes );
 	
-	PWeightRowStructureList GetWeightTable( ) const;
-	void SetOwner( IRoot* owner );
-
-	void Merge( const Tr2PostProcessAttributes* other ); 
+	static void MergeInto( Tr2PostProcess2 & postprocess, std::vector<Tr2PostProcessAttributes*> & attributes, Tr2PostProcessAttributesDebugObserver* debugObserver = nullptr );
 
 	// public attributes, so we can access them from the outside
 	float intensity;
@@ -121,17 +94,34 @@ public:
 	PostProcess::Attribute<float> depthOfFieldFocalDistance;
 	PostProcess::Attribute<float> depthOfFieldFocalLength;
 	PostProcess::Attribute<Tr2Bokeh::Shape> depthOfFieldShape;
-private:
-	void ResetWeights();
-	void UpdateWeightIntensity( std::vector<WeightRow> & currentPriorityWeights, std::vector<WeightRow> & higherPriorityWeights );
 
-	PWeightRowStructureList m_weights;
-
-	// the owner of this attribute, used for knowing where the blended attribute comes from
-	IRoot* m_owner;
-
-	// when attributes are blended we maintain a list of sources, for debugging
-	PTr2PostProcessAttributesVector m_sources;
+	PostProcess::Attribute<float> whiteTemperature = 6500.f;
+	PostProcess::Attribute<float> whiteTint = 0.0f;
+	PostProcess::Attribute<float> colorSaturation = 1.f;
+	PostProcess::Attribute<float> colorContrast = 1.f;
+	PostProcess::Attribute<float> colorGamma = 1.f;
+	PostProcess::Attribute<Vector3> colorGain = Vector3( 1, 1, 1 );
+	PostProcess::Attribute<Vector3> colorOffset = Vector3( 0, 0, 0 );
 };
 
 TYPEDEF_BLUECLASS( Tr2PostProcessAttributes );
+
+
+class Tr2PostProcessAttributesDebugObserver
+{
+public:
+	Tr2PostProcessAttributesDebugObserver();
+	~Tr2PostProcessAttributesDebugObserver();
+
+	void BeginAttribute( const char* name );
+	void Influence( Tr2PostProcessAttributes* attributes, float weight );
+
+	void EndAttribute( PyObject* value );
+
+	BluePy GetDict() const;
+
+private:
+	PyObject* m_debugObject = nullptr;
+	PyObject* m_currentAttribute = nullptr;
+	PyObject* m_currentInfluencers = nullptr;
+};

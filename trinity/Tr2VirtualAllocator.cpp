@@ -9,7 +9,8 @@
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
-Tr2VirtualAllocator::Tr2VirtualAllocator( size_t size )
+Tr2VirtualAllocator::Tr2VirtualAllocator( size_t size ) :
+	m_size( size )
 {
 
 	VmaVirtualBlockCreateInfo info = {};
@@ -50,4 +51,7 @@ void Tr2VirtualAllocator::Free( VirtualAllocation allocation )
 	vmaVirtualFree( (VmaVirtualBlock)block, (VmaVirtualAllocation)allocation.allocation );
 }
 
-
+size_t Tr2VirtualAllocator::GetSize() const
+{
+	return m_size;
+}

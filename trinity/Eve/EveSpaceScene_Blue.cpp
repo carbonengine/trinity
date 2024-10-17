@@ -107,8 +107,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( ITr2NamedPredicate )
-		MAP_INTERFACE( EveEntity )
-		MAP_INTERFACE( ITr2PostProcessOwner )
 
 		MAP_ATTRIBUTE(
 			"name",
@@ -563,6 +561,11 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_combinedPostProcessAttributes,
 			"",
 			Be::READ )
+
+		MAP_METHOD_AND_WRAP(
+			"GetPostProcessDebug",
+			GetPostProcessDebug,
+			"Returns a dictionary with post-processing attribute blending information" )
 
 		MAP_ATTRIBUTE(
 			"virtualCameraSystem",

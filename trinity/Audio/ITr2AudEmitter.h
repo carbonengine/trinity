@@ -24,6 +24,8 @@ BLUE_INTERFACE( ITr2AudEmitter ) : public IRoot
 	virtual bool SetAttenuationScalingFactor( const float scalingFactor ) = 0;
 	virtual std::string GetName() = 0;
 	virtual void SetVisibility( bool visible ) = 0;
+	virtual void Mute() = 0;
+	virtual void Unmute() = 0;
 };
 
 #endif

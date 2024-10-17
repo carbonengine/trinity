@@ -701,7 +701,7 @@ void EveTurretSet::RebuildCachedData( BlueAsyncRes* p )
 					// get gemoetry's original vertex-decl...
 					Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, m_turretVertexDecl );
 					// ...expand it with instances stream elements...
-					auto& item = m_turretVertexDecl.Add( m_turretVertexDecl.FLOAT32_1, m_turretVertexDecl.TEXCOORD, 1, 1, 1 );
+					auto& item = m_turretVertexDecl.Add( m_turretVertexDecl.FLOAT32_1, m_turretVertexDecl.TEXCOORD, 2, 1, 1 );
 					item.m_offset = 0;
 					// ...and create new vertex dcel again
 					m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( m_turretVertexDecl );

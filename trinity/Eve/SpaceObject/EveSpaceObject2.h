@@ -460,6 +460,9 @@ public:
 
 	void SetInheritProperties( const Color* colorSet ) override;
 
+	bool GetMute();
+	void SetMute( bool isMute );
+
 protected:
 	// Activation-Strength
 	float m_activationStrength;
@@ -488,6 +491,7 @@ protected:
 
 	bool m_update;
 	bool m_display;
+	bool m_mute;
 	bool m_allowLodSelection;
 	bool m_isPickable;
 	bool m_isAnimated;

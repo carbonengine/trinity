@@ -15,6 +15,32 @@
 #include "Tr2RenderTarget.h"
 #include "Tr2DepthStencil.h"
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
+#include "PriorityBlend.h"
+
+
+ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator*( float rhs ) const
+{
+	FroxelFogSettings result;
+	result.thickness = thickness * rhs;
+	result.directionality = directionality * rhs;
+	result.environmentIntensity = environmentIntensity * rhs;
+	result.fogColor = fogColor * rhs;
+	result.backgroundColor = backgroundColor * rhs;
+	return result;
+
+}
+
+ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator+(const FroxelFogSettings& rhs) const
+{
+	FroxelFogSettings result;
+	result.thickness = thickness + rhs.thickness;
+	result.directionality = directionality + rhs.directionality;
+	result.environmentIntensity = environmentIntensity + rhs.environmentIntensity;
+	result.fogColor = fogColor + rhs.fogColor;
+	result.backgroundColor = backgroundColor + rhs.backgroundColor;
+	return result;
+}
+
 
 Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_quality( Tr2VolumerticQuality::High ),
@@ -24,19 +50,21 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_castShadows( false ),
 	m_receiveShadows( false )
 {
+
 	m_volumeSlices.CreateInstance();
 	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", m_volumeSlices );
 
 	m_downsampledDepth.CreateInstance();
 	GlobalStore().RegisterVariable( "VolumetricDepthMap", m_downsampledDepth );
 
+	m_blurScratch.CreateInstance();
+
+
 	m_volumeBlit.CreateInstance();
 	m_volumeBlit->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/VolumeBlit.fx" );
 
 	m_downsampleDepth.CreateInstance();
 	m_downsampleDepth->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/DownsampleDepth.fx" );
-
-	m_blurScratch.CreateInstance();
 
 	m_hBlur.CreateInstance();
 	m_hBlur->SetOption( BlueSharedString( "SOURCE_TYPE" ), BlueSharedString( "SOURCE_TYPE_ARRAY" ) );
@@ -48,6 +76,37 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_vBlur->SetParameter( BlueSharedString( "SourceMap" ), m_blurScratch );
 
 	m_batches.reset( new TriRenderBatchAccumulator<>( Tr2Renderer::GetPoolAllocator() ) );
+
+
+	m_froxelFogSettings.thickness = 0.0f;
+	m_froxelFogSettings.directionality = 0.5f;
+	m_froxelFogSettings.environmentIntensity = 1.0f;
+	m_froxelFogSettings.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
+	m_froxelFogSettings.backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+
+
+	m_fogFroxels.CreateInstance();
+	GlobalStore().RegisterVariable( "EveSceneDistanceFogMap", m_fogFroxels );
+
+	m_temporalFroxels0.CreateInstance();
+	m_temporalFroxels1.CreateInstance();
+	m_currentTemporalFroxels = false;
+	m_froxelJitter = Vector3( 0, 0, 0 );
+
+	m_clearFroxels.CreateInstance();
+	m_clearFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/ClearFroxels.fx" );
+
+	m_calculateFroxels.CreateInstance();
+	m_calculateFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/CalculateFroxels.fx" );
+
+	m_filterFroxels.CreateInstance();
+	m_filterFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx" );
+
+	m_raymarchFroxels.CreateInstance();
+	m_raymarchFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/RaymarchFroxels.fx" );
+
+	m_applyFroxels.CreateInstance();
+	m_applyFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/ApplyFroxels.fx" );
 }
 
 void Tr2VolumetricsRenderer::RenderVolumetrics(
@@ -296,6 +355,287 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 
 	m_volumeHasContent = true;
 }
+
+float logBase(float base, float value)
+{
+	return log2( value ) / log2( base );
+}
+
+void Tr2VolumetricsRenderer::RenderFog( const EveComponentRegistry& registry, Tr2RenderContext& renderContext, Tr2DepthStencil& sceneDepth, Tr2ShadowMap* cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast )
+{
+	uint32_t originalWidth = sceneDepth.GetWidth();
+	uint32_t originalHeight = sceneDepth.GetHeight();
+
+	float scale = 1 / 8.0f; //clamp this to 1.0 when it's no longer hardcoded
+	uint32_t width = std::max( 1u, uint32_t( originalWidth * scale ) );
+	uint32_t height = std::max( 1u, uint32_t( originalHeight * scale ) );
+	uint32_t depth = 128;
+
+	auto& fogFroxels = *m_fogFroxels->GetTexture();
+	auto& temporalFroxels0 = *m_temporalFroxels0->GetTexture();
+	auto& temporalFroxels1 = *m_temporalFroxels1->GetTexture();
+
+	if( !fogFroxels.IsValid() || fogFroxels.GetWidth() != width || fogFroxels.GetHeight() != height || fogFroxels.GetDepth() != depth )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		fogFroxels.Create( Tr2BitmapDimensions(
+							   Tr2RenderContextEnum::TEX_TYPE_3D,
+							   Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT,
+							   width,
+							   height,
+							   depth,
+							   1,
+							   1 ),
+						   Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE,
+						   renderContext );
+		m_fogFroxels->OnTextureChange().Broadcast();
+
+		temporalFroxels0.Create( Tr2BitmapDimensions(
+									 Tr2RenderContextEnum::TEX_TYPE_3D,
+									 Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT,
+									 width,
+									 height,
+									 depth,
+									 1,
+									 1 ),
+								 Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE,
+								 renderContext );
+		m_temporalFroxels0->OnTextureChange().Broadcast();
+
+		temporalFroxels1.Create( Tr2BitmapDimensions(
+									 Tr2RenderContextEnum::TEX_TYPE_3D,
+									 Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT,
+									 width,
+									 height,
+									 depth,
+									 1,
+									 1 ),
+								 Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE,
+								 renderContext );
+		m_temporalFroxels1->OnTextureChange().Broadcast();
+
+
+
+
+		if( !fogFroxels.IsValid() || !temporalFroxels0.IsValid() || !temporalFroxels1.IsValid() )
+		{
+			CCP_LOGERR( "Tr2VolumetricsRenderer failed to create slices texture with size %ix%ix%i", int( width ), int( height ), int( depth ) );
+			return;
+		}
+	}
+	
+	std::vector<ITr2FroxelFogSettings::FroxelFogWeightedSettings> overrides;
+	registry.ProcessComponents<ITr2FroxelFogSettings>( [&overrides]( ITr2FroxelFogSettings* component ) -> void {
+		overrides.push_back( component->GetFroxelFogSettings() );
+	} );
+	sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
+		return a.priority > b.priority;
+	} );
+
+	ITr2FroxelFogSettings::FroxelFogWeightedSettings baseline;
+	baseline.priority = (PostProcessEnums::Priority)-1;
+	baseline.intensity = 1;
+	baseline.value.thickness = 0.0f;
+	baseline.value.directionality = 0.5f;
+	baseline.value.environmentIntensity = 1.0f;
+	baseline.value.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
+	baseline.value.backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+	overrides.push_back( baseline );
+	
+	m_froxelFogSettings = PriorityBlend( overrides );
+
+	int workgroupSize = 4;
+	int wgX = ( width + workgroupSize - 1 ) / workgroupSize;
+	int wgY = ( height + workgroupSize - 1 ) / workgroupSize;
+	int wgZ = ( depth + workgroupSize - 1 ) / workgroupSize;
+
+	if (m_froxelFogSettings.thickness <= 0.0f)
+	{
+		m_clearFroxels->SetParameter( BlueSharedString( "Width" ), width );
+		m_clearFroxels->SetParameter( BlueSharedString( "Height" ), height );
+		m_clearFroxels->SetParameter( BlueSharedString( "Depth" ), depth );
+		m_clearFroxels->SetParameter( BlueSharedString( "OutputTexture" ), m_fogFroxels );
+		Tr2Renderer::RunComputeShader( m_clearFroxels, wgX, wgY, wgZ, renderContext );
+
+		return;
+	}
+
+
+	Matrix inverseView = Inverse( view );
+	Matrix inverseProjection = Inverse( projection );
+
+	float g = 1.61803398874989484820;
+	float g2 = 1.32471795724474602596;
+
+	m_froxelJitter += Vector3( 1.0f / ( g2 * g2 ), 1.0f / g2, 1.0f / g );
+	m_froxelJitter.x -= floor( m_froxelJitter.x );
+	m_froxelJitter.y -= floor( m_froxelJitter.y );
+	m_froxelJitter.z -= floor( m_froxelJitter.z );
+
+
+	float maxDistance = Tr2Renderer::GetBackClip();
+	float maxDistanceVisibility = 1.0f / (1.0f + m_froxelFogSettings.thickness);
+	float baseDensity = -logf( maxDistanceVisibility ) / maxDistance;
+
+	Vector3 backgroundColor = Vector3( m_froxelFogSettings.backgroundColor.r, m_froxelFogSettings.backgroundColor.g, m_froxelFogSettings.backgroundColor.b );
+	backgroundColor = Vector3( 1.0f, 1.0f, 1.0f ) - ( ( Vector3( 1.0f, 1.0f, 1.0f ) - backgroundColor ) * ( 1.0f - maxDistanceVisibility ) );
+	Vector3 extinction = Vector3( -logf( backgroundColor.x ), -logf( backgroundColor.y ), -logf( backgroundColor.z ) ) / maxDistance;
+
+	float mieG = -std::clamp(m_froxelFogSettings.directionality, 0.001f, 0.999f);
+
+
+	{
+		bool hasShadows;
+		{
+			if( !m_fogConstantBuffer.IsValid() )
+			{
+				m_fogConstantBuffer.Create( uint32_t( sizeof( FogPerObjectData ) ), renderContext.GetPrimaryRenderContext() );
+			}
+
+			FogPerObjectData* data;
+
+			m_fogConstantBuffer.Lock( (void**)&data, renderContext );
+
+			data->ResolutionX = width;
+			data->ResolutionY = height;
+			data->ResolutionZ = depth;
+
+			data->ProjectionMatrix = Transpose( projection );
+			data->InverseProjectionMatrix = Transpose( inverseProjection );
+
+			data->Jitter = m_froxelJitter;
+			data->Far = maxDistance;
+
+			Color fogColor = m_froxelFogSettings.fogColor;
+			data->Scattering = Vector3( fogColor.r, fogColor.g, fogColor.b );
+			data->BaseDensity = baseDensity;
+
+			data->MaxDistanceVisibility = maxDistanceVisibility;
+			data->MieG = mieG;
+			data->EnvironmentIntensity = m_froxelFogSettings.environmentIntensity;
+
+
+			data->Extinction = extinction;
+
+			data->InverseViewMatrix = Transpose( inverseView );
+
+
+
+			{
+				Vector4 topLeft = Vector4( -1, +1, 0, 1 ) * inverseProjection; // flipped Y
+				Vector4 botRight = Vector4( +1, -1, 0, 1 ) * inverseProjection;
+
+				//No need for W-divide here, because it cancels out when we divide by z: (xy/w) / (-z/w) = xy/-z
+
+				float invZ = 1.0f / -topLeft.z; //both have the same Z, since they have the same depth
+
+				float addX = topLeft.x * invZ;
+				float addY = topLeft.y * invZ;
+				float mulX = botRight.x * invZ - addX;
+				float mulY = botRight.y * invZ - addY;
+
+				data->UnprojectParams = Vector4( mulX, mulY, addX, addY );
+			}
+
+			{
+				Vector4 offset = Vector4( +1, -1, -1, 1 ) * projectionLast; //flipped Y
+
+				//because we set view space Z to -1, W will be 1.0, so we don't need to do a W divide here
+
+				float mulX = offset.x * 0.5f;
+				float mulY = offset.y * 0.5f;
+				float addX = 0.5f;
+				float addY = 0.5f;
+
+				data->PreviousProjectParams = Vector4( mulX, mulY, addX, addY );
+			}
+
+			Matrix reprojectionMatrix = inverseView * viewLast;
+			data->ReprojectionMatrix = Transpose( reprojectionMatrix );
+
+			Vector4 tempSunDir = Vector4( -sunDirection, 0.0f ) * view;
+			data->SunDirection = Vector3(tempSunDir.x, tempSunDir.y, tempSunDir.z);
+
+			data->SunColor = Vector3( sunColor.r, sunColor.g, sunColor.b );
+
+			if( cascadedShadowMap )
+			{
+				data->ShadowMapValues[0] = cascadedShadowMap->m_perSplitData.ShadowMapValues[0];
+				data->ShadowMapValues[1] = cascadedShadowMap->m_perSplitData.ShadowMapValues[1];
+				data->ShadowMapValues[2] = cascadedShadowMap->m_perSplitData.ShadowMapValues[2];
+				data->ShadowMapValues[3] = cascadedShadowMap->m_perSplitData.ShadowMapValues[3];
+
+				for( int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
+				{
+					Matrix matrix = inverseView * Transpose( cascadedShadowMap->m_perSplitData.ShadowMatrixVal[i] );
+
+					matrix *= ScalingMatrix( 0.5f, -0.5f, 1 ) * TranslationMatrix( 0.5f, 0.5f, 0 ); //Flip y and change range from (-1, +1) to (0, 1)
+
+					int cells_x = 8;
+					int cells_y = 2;
+					int x = i % cells_x;
+					int y = i / cells_x;
+					matrix *= ScalingMatrix( 1.0f / cells_x, 1.0f / cells_y, 1 ) * TranslationMatrix( (float)x / cells_x, (float)y / cells_y, 0 );
+
+					data->ShadowMatrix[i] = Transpose( matrix );
+				}
+				data->SplitInfo = cascadedShadowMap->m_perSplitData.SplitInfo;
+
+				hasShadows = true;
+			}
+			else
+			{
+				hasShadows = false;
+			}
+
+			m_fogConstantBuffer.Unlock( renderContext );
+
+			renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
+		}
+
+		Tr2TextureReferencePtr& temporalInput = m_currentTemporalFroxels ? m_temporalFroxels0 : m_temporalFroxels1;
+		Tr2TextureReferencePtr& temporalOutput = m_currentTemporalFroxels ? m_temporalFroxels1 : m_temporalFroxels0;
+		m_currentTemporalFroxels = !m_currentTemporalFroxels;
+
+
+
+
+		
+		m_calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
+		m_calculateFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity > 0.0f ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );
+		//m_calculateFroxels->SetParameter( BlueSharedString( "DepthBuffer" ), sceneDepth );
+		m_calculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), m_fogFroxels );
+		Tr2Renderer::RunComputeShader( m_calculateFroxels, wgX, wgY, wgZ, renderContext );
+
+		
+		m_filterFroxels->SetParameter( BlueSharedString( "InputTexture" ), m_fogFroxels );
+		m_filterFroxels->SetParameter( BlueSharedString( "PreviousTexture" ), temporalInput );
+		m_filterFroxels->SetParameter( BlueSharedString( "OutputTexture" ), temporalOutput );
+		Tr2Renderer::RunComputeShader( m_filterFroxels, wgX, wgY, wgZ, renderContext );
+
+
+		
+		m_raymarchFroxels->SetParameter( BlueSharedString( "InputTexture" ), temporalOutput );
+		m_raymarchFroxels->SetParameter( BlueSharedString( "OutputTexture" ), m_fogFroxels );
+		Tr2Renderer::RunComputeShader( m_raymarchFroxels, ( width + 7 ) / 8, ( height + 7 ) / 8, 1, renderContext ); // 8x8 workgroup
+	}
+
+
+	{
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
+
+		m_applyFroxels->SetParameter( BlueSharedString( "FroxelTexture" ), m_fogFroxels );
+		m_applyFroxels->SetParameter( BlueSharedString( "OriginalResolution" ), Vector2( float( originalWidth ), float( originalHeight ) ) );
+		m_applyFroxels->SetParameter( BlueSharedString( "MaxDistanceVisibility" ), maxDistanceVisibility );
+		m_applyFroxels->SetParameter( BlueSharedString( "BaseDensity" ), baseDensity );
+		m_applyFroxels->SetParameter( BlueSharedString( "Extinction" ), extinction );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_applyFroxels );
+	}
+
+
+}
+
 
 void Tr2VolumetricsRenderer::RenderShadows(
 	const EveComponentRegistry& registry,
