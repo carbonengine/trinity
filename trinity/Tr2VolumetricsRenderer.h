@@ -9,6 +9,7 @@
 #include "ITr2VolumetricRenderable.h"
 #include "TriFrustumOrtho.h"
 #include "Tr2ShadowMap.h"
+#include "PostProcess/Tr2PostProcessEnums.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -16,6 +17,36 @@ BLUE_DECLARE( Tr2DepthStencil );
 BLUE_DECLARE( EveComponentRegistry );
 class TriFrustum;
 class ITriRenderBatchAccumulator;
+
+
+BLUE_INTERFACE( ITr2FroxelFogSettings ) :
+	public IRoot
+{
+public:
+	struct FroxelFogSettings
+	{
+		float thickness = 0.f;
+		float directionality = 0.f;
+
+		float environmentIntensity = 0.f;
+
+		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+		Color backgroundColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+
+		FroxelFogSettings operator*( float rhs ) const;
+		FroxelFogSettings operator+( const FroxelFogSettings& rhs ) const;
+	};
+
+	struct FroxelFogWeightedSettings
+	{
+		PostProcessEnums::Priority priority = PostProcessEnums::MEDIUM_PRIORITY;
+		float intensity = 1;
+		FroxelFogSettings value;
+	};
+	virtual FroxelFogWeightedSettings GetFroxelFogSettings() = 0;
+};
+
+REGISTER_COMPONENT_TYPE( "FroxelFogSettings", ITr2FroxelFogSettings );
 
 
 BLUE_CLASS( Tr2VolumetricsRenderer ) :
@@ -32,7 +63,7 @@ public:
 		const float depthSlices[4],
 		Tr2RenderContext& renderContext );
 
-	void RenderFog( Tr2RenderContext & renderContext, Tr2DepthStencil & sceneDepth, Tr2ShadowMap * cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast );
+	void RenderFog( const EveComponentRegistry& registry, Tr2RenderContext& renderContext, Tr2DepthStencil& sceneDepth, Tr2ShadowMap* cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast );
 
 	void UpdateVariableStore();
 	void RenderShadows(
@@ -55,23 +86,15 @@ private:
 	Tr2RenderTargetPtr m_blurScratch;
 
 	
-	struct FroxelFogSettings
-	{
-		float thickness;
-		float directionality;
-
-		float environmentIntensity;
-
-		Color fogColor;
-		Color backgroundColor;
-	};
-	FroxelFogSettings m_froxelFogSettings;
 
 	Tr2TextureReferencePtr m_mieEnvironmentMap;
 	float m_environmentRandom;
 	Vector2 m_environmentJitter;
 	float m_environmentDirectionality;
 	float m_environmentBlendCounter;
+
+	ITr2FroxelFogSettings::FroxelFogSettings m_froxelFogSettings;
+	
 
 	Tr2TextureReferencePtr m_fogFroxels;
 	Tr2TextureReferencePtr m_temporalFroxels0, m_temporalFroxels1;

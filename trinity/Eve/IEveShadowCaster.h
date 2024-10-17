@@ -37,11 +37,23 @@ namespace EveShadowCaster
 		return sphereIsVisible;
 	}
 
+	inline bool IsVisible( const TriFrustum& camera, const TriFrustum& shadow, const Vector4 boundingSphere )
+	{
+		bool sphereIsVisible = shadow.IsSphereVisible( &boundingSphere );
+		// TODO: intern, do something smart to cull the shadowcasting sphere using the camera frustum
+		return sphereIsVisible;
+	}
+
 	inline float GetSizeInShadow( const TriFrustumOrtho& shadow, const uint32_t shadowMapSize, const Vector4 boundingSphere )
 	{
 		return shadow.GetPixelSize( boundingSphere, shadowMapSize );
 	}
-}
+
+	inline float GetSizeInShadow( const TriFrustum& shadow, const Vector4 boundingSphere )
+	{
+		return shadow.GetPixelSizeAccross( &boundingSphere );
+	}
+	}
 
 BLUE_DECLARE( Tr2RaytracingManager );
 
@@ -50,6 +62,7 @@ BLUE_INTERFACE( IEveShadowCaster ) :
 {
 	// Used for cascaded shadow map
 	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const = 0;
+	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const = 0;
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) = 0;
 	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;
 	// raytraced shadows

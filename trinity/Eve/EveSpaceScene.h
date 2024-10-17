@@ -98,9 +98,7 @@ BLUE_CLASS( EveSpaceScene ) :
 	public INotify,
 	public Tr2DeviceResource,
 	public IListNotify,
-	public ITr2NamedPredicate,
-	public ITr2PostProcessOwner,
-	public EveEntity
+	public ITr2NamedPredicate
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -153,10 +151,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2NamedPredicate
 	bool GetPredicate( const char* name ) const override;
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// ITr2PostProcessOwner
-	Tr2PostProcessAttributes* GetPostProcessAttributes() override;
 
 	// all eve-specific visualize methods
 	enum EveVisualizeMethod
@@ -403,6 +397,8 @@ protected:
 
 	void RenderVolumetrics( Tr2RenderContext & renderContext );
 
+	Tr2DepthStencilPtr GetShadowMapAtlas();
+
 protected:
 	bool m_display;
 	bool m_update;
@@ -505,6 +501,9 @@ protected:
 	float m_backgroundReflectionIntensity;
 	float m_defaultDiffuseRoughness;
 	Tr2Variable m_nebulaIntensityVar;
+
+	Color m_currentSunColor;
+	float m_currentNebulaIntensity;
 
 	float m_fogStart; // Depth at which fogging starts
 	float m_fogEnd; // Depth at which fog does not get stronger
@@ -648,8 +647,15 @@ private:
 	float m_reflectionIntensity;
 	float m_reflectionBackLightingContrast;
 	Color m_reflectionBackLightingColor;
+	float m_currentRelfectionIntensity;
 
 	BlueSharedString m_name;
+
+	// Dynamic light shadow maps
+	bool PrepareShadowMapForLights( Tr2RenderContext & renderContext, Tr2DepthStencilPtr shadowMap );
+	void RenderShadowMapForSpotLight( Tr2RenderContext & renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, uint32_t shadowMapScale, uint32_t shadowMapOffsetX, uint32_t shadowMapOffsetY, const Vector3& lightPosition, const Matrix& view, const Matrix& projection, Tr2DepthStencilPtr shadowMap );
+	void RenderShadowMapForLight( Tr2RenderContext & renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, Tr2DepthStencilPtr shadowMap );
+	void FinishRenderingShadowMapForLights( Tr2RenderContext & renderContext );
 
 	// Object to gather all components
 	EveComponentRegistryPtr m_componentRegistry;

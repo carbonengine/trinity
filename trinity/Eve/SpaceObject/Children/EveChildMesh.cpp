@@ -171,6 +171,44 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 	return sizeInShadow > 5.f;
 }
 
+bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
+{
+	if( !m_display || !m_castShadow )
+	{
+		return false;
+	}
+
+	Vector4 bs;
+	GetBoundingSphere( bs );
+	sizeInShadow = 0;
+
+	if( bs.w <= 0.0f )
+	{
+		return false;
+	}
+
+	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, bs ) )
+	{
+		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+		{
+			if( auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.m_viewPos, Inverse( m_worldTransform ) ) ) )
+			{
+				instanceBounds.Transform( m_worldTransform );
+				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, Vector4( instanceBounds.center, instanceBounds.radius ) );
+			}
+			else
+			{
+				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
+			}
+		}
+		else
+		{
+			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
+		}
+	}
+	return sizeInShadow > 5.f;
+}
+
 void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	m_isVisible = false;

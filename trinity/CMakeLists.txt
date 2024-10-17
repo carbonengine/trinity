@@ -455,6 +455,12 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildEffectPropagator.cpp
     Eve/SpaceObject/Children/EveChildEffectPropagator.h
     Eve/SpaceObject/Children/EveChildEffectPropagator_Blue.cpp
+    Eve/SpaceObject/Children/EveChildFogVolume.cpp
+    Eve/SpaceObject/Children/EveChildFogVolume.h
+    Eve/SpaceObject/Children/EveChildFogVolume_Blue.cpp
+    Eve/SpaceObject/Children/EveChildLightingOverride.cpp
+    Eve/SpaceObject/Children/EveChildLightingOverride.h
+    Eve/SpaceObject/Children/EveChildLightingOverride_Blue.cpp
     Eve/SpaceObject/Children/EveChildPostProcessVolume.cpp
     Eve/SpaceObject/Children/EveChildPostProcessVolume.h
     Eve/SpaceObject/Children/EveChildPostProcessVolume_Blue.cpp
@@ -1284,6 +1290,7 @@ set(_SOURCES
     ITr2WorldTransformUpdater.h
     ITriReroutable.h
     IWorldPosition.h
+    PriorityBlend.h
     resource.h
     StdAfx.cpp
     StdAfx.h

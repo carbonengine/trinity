@@ -107,8 +107,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( ITr2NamedPredicate )
-		MAP_INTERFACE( EveEntity )
-		MAP_INTERFACE( ITr2PostProcessOwner )
 
 		MAP_ATTRIBUTE(
 			"name",
@@ -586,6 +584,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			ReregisterEntities,
 			"Re registers all entities" )
 
+		MAP_PROPERTY_READONLY( "Shadow Map Atlas", GetShadowMapAtlas, "" )
 
 	EXPOSURE_END()
 }
