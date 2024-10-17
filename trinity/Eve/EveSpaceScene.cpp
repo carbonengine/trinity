@@ -172,6 +172,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_backgroundRenderingEnabled( false ),
 	m_updateContext( 0 ),
 	m_ssaoMapHandle( nullptr ),
+	m_staticEnvMapHandle( NULL ),
 	m_envMapHandle( NULL ),
 	m_envMap1Var( "EnvMap1", m_envMap1 ),
 	m_envMap2Var( "EnvMap2", m_envMap2 ),
@@ -242,6 +243,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	// global textures
 	// register variable handle to texture
 	m_envMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneEnvMap", (ITr2TextureProvider*)nullptr );
+	m_staticEnvMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneStaticEnvMap", (ITr2TextureProvider*)nullptr );
 	m_ssaoMapHandle = GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2BoneTransformBuffer::GetInstance() );
 
@@ -316,6 +318,11 @@ EveSpaceScene::~EveSpaceScene()
 void EveSpaceScene::ReleaseResources( TriStorage s )
 {
 	// handles
+
+	if( m_staticEnvMapHandle )
+	{
+		m_staticEnvMapHandle->Clear();
+	}
 	if( m_envMapHandle )
 	{
 		m_envMapHandle->Clear();
@@ -2619,6 +2626,7 @@ void EveSpaceScene::UpdateVariableStore()
 	m_reflectionMaskMapVar = m_envMap2;
 	m_nebulaIntensityVar = m_nebulaIntensity;
 	// the environment cubemap (aka nebula) is passed theough the global variable store
+	m_staticEnvMapHandle->SetValue( m_staticEnvMapTextureRes );
 	m_envMapHandle->SetValue( m_envMapTextureRes );
 
 	if( m_ssao )
@@ -2813,6 +2821,12 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 bool EveSpaceScene::Initialize()
 {
 	// the environment cubemap aka the nebula
+
+	if( m_staticEnvMapHandle )
+	{
+		BeResMan->GetResource( m_envMapResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_staticEnvMapTextureRes );
+	}
+
 	if( m_reflectionProbe && m_reflectionProbe->IsValid() )
 	{
 		m_envMapTextureRes = m_reflectionProbe->GetReflection();
@@ -2822,7 +2836,7 @@ bool EveSpaceScene::Initialize()
 	}
 	else if( m_envMapHandle )
 	{
-		BeResMan->GetResource( m_envMapResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_envMapTextureRes );
+		m_envMapTextureRes = m_staticEnvMapTextureRes;
 	}
 
 	if( !m_envMap1ResPath.empty() )
@@ -2867,9 +2881,27 @@ bool EveSpaceScene::Initialize()
 bool EveSpaceScene::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_reflectionProbe ) || IsMatch( value, m_envMapResPath ) )
-	{
-		m_envMapTextureRes.Unlock();
-		if( HasReflectionProbe() )
+	{	
+		m_staticEnvMapTextureRes.Unlock();
+
+		if( m_staticEnvMapHandle )
+		{
+			BeResMan->GetResource( m_envMapResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_staticEnvMapTextureRes );
+		}
+
+		if( m_reflectionProbe && m_reflectionProbe->IsValid() )
+		{
+			m_envMapTextureRes = m_reflectionProbe->GetReflection();
+
+			m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
+			m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
+		}
+		else if( m_envMapHandle )
+		{
+			m_envMapTextureRes = m_staticEnvMapTextureRes;
+		}
+
+		/* if( HasReflectionProbe() )
 		{
 			m_envMapTextureRes = m_reflectionProbe->GetReflection();
 			m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
@@ -2878,7 +2910,7 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 		else if( !m_envMapResPath.empty() )
 		{
 			BeResMan->GetResource( m_envMapResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_envMapTextureRes );
-		}
+		}*/
 	}
 	if( IsMatch( value, m_envMap1ResPath ) )
 	{
