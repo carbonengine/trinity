@@ -66,12 +66,19 @@ private:
 		Color backgroundColor;
 	};
 	FroxelFogSettings m_froxelFogSettings;
-	
+
+	Tr2TextureReferencePtr m_mieEnvironmentMap;
+	float m_environmentRandom;
+	Vector2 m_environmentJitter;
+	float m_environmentDirectionality;
+	float m_environmentBlendCounter;
+
 	Tr2TextureReferencePtr m_fogFroxels;
 	Tr2TextureReferencePtr m_temporalFroxels0, m_temporalFroxels1;
 	bool m_currentTemporalFroxels;
 	Vector3 m_froxelJitter;
 
+	Tr2EffectPtr m_updateMieEnvironmentMap;
 	Tr2EffectPtr m_clearFroxels;
 	Tr2EffectPtr m_calculateFroxels;
 	Tr2EffectPtr m_filterFroxels;

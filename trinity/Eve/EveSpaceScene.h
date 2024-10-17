@@ -446,6 +446,8 @@ protected:
 	Quaternion m_envMapRotation;
 
 	std::string m_envMapResPath;
+	TriVariable* m_staticEnvMapHandle;
+	ITr2TextureProviderPtr m_staticEnvMapTextureRes;
 	TriVariable* m_envMapHandle;
 	ITr2TextureProviderPtr m_envMapTextureRes;
 
