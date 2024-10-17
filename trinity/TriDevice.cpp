@@ -671,7 +671,6 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 		GrannyRecenterAllControlClocks( -ANIMATION_TIME_MAX );
 	}
 
-	BeOS->NextScheduledEvent( mTickInterval );
 	m_simTime = simTime;
 	m_realTime = realTime;
    
