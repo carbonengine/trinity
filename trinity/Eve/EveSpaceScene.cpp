@@ -2292,7 +2292,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 		}
 		
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
-		renderContext.RenderBatches( m_shadowBatches[0].get(), BlueSharedString( "Shadow" ) );
+		renderContext.RenderBatches( m_shadowBatches[0].get(), BlueSharedString( "DynamicLightShadow" ) );
 	}
 
 	m_shadowBatches[0]->Clear();
