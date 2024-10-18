@@ -102,7 +102,6 @@ private:
 	Vector3 m_froxelJitter;
 
 	Tr2EffectPtr m_updateMieEnvironmentMap;
-	Tr2EffectPtr m_clearFroxels;
 	Tr2EffectPtr m_calculateFroxels;
 	Tr2EffectPtr m_filterFroxels;
 	Tr2EffectPtr m_raymarchFroxels;
