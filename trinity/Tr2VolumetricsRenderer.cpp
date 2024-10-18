@@ -377,6 +377,30 @@ float logBase(float base, float value)
 
 void Tr2VolumetricsRenderer::RenderFog( const EveComponentRegistry& registry, Tr2RenderContext& renderContext, Tr2DepthStencil& sceneDepth, Tr2ShadowMap* cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast )
 {
+
+
+	std::vector<ITr2FroxelFogSettings::FroxelFogWeightedSettings> overrides;
+	registry.ProcessComponents<ITr2FroxelFogSettings>( [&overrides]( ITr2FroxelFogSettings* component ) -> void {
+		overrides.push_back( component->GetFroxelFogSettings() );
+	} );
+	sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
+		return a.priority > b.priority;
+	} );
+
+	ITr2FroxelFogSettings::FroxelFogWeightedSettings baseline;
+	baseline.priority = (PostProcessEnums::Priority)-1;
+	baseline.intensity = 1;
+	baseline.value.thickness = 0.0f;
+	baseline.value.directionality = 0.5f;
+	baseline.value.environmentIntensity = 1.0f;
+	baseline.value.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
+	baseline.value.backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+	overrides.push_back( baseline );
+
+	m_froxelFogSettings = PriorityBlend( overrides );
+
+
+
 	uint32_t originalWidth = sceneDepth.GetWidth();
 	uint32_t originalHeight = sceneDepth.GetHeight();
 
@@ -443,27 +467,6 @@ void Tr2VolumetricsRenderer::RenderFog( const EveComponentRegistry& registry, Tr
 		m_temporalFroxels0->OnTextureChange().Broadcast();
 		m_temporalFroxels1->OnTextureChange().Broadcast();
 	}
-
-	
-	std::vector<ITr2FroxelFogSettings::FroxelFogWeightedSettings> overrides;
-	registry.ProcessComponents<ITr2FroxelFogSettings>( [&overrides]( ITr2FroxelFogSettings* component ) -> void {
-		overrides.push_back( component->GetFroxelFogSettings() );
-	} );
-	sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
-		return a.priority > b.priority;
-	} );
-
-	ITr2FroxelFogSettings::FroxelFogWeightedSettings baseline;
-	baseline.priority = (PostProcessEnums::Priority)-1;
-	baseline.intensity = 1;
-	baseline.value.thickness = 0.0f;
-	baseline.value.directionality = 0.5f;
-	baseline.value.environmentIntensity = 1.0f;
-	baseline.value.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
-	baseline.value.backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
-	overrides.push_back( baseline );
-	
-	m_froxelFogSettings = PriorityBlend( overrides );
 
 	int workgroupSize = 4;
 	int wgX = ( width + workgroupSize - 1 ) / workgroupSize;
@@ -560,7 +563,7 @@ void Tr2VolumetricsRenderer::RenderFog( const EveComponentRegistry& registry, Tr
 
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "Resolution" ), environmentMapResolution );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "Jitter" ), m_environmentJitter );
-		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "G" ), mieG );
+		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "MieG" ), mieG );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "BlendWeight" ), blendWeight );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "Random" ), m_environmentRandom );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "PrecomputedMieEnvironmentMap" ), m_mieEnvironmentMap );
@@ -727,6 +730,7 @@ void Tr2VolumetricsRenderer::RenderFog( const EveComponentRegistry& registry, Tr
 		m_applyFroxels->SetParameter( BlueSharedString( "MaxDistanceVisibility" ), maxDistanceVisibility );
 		m_applyFroxels->SetParameter( BlueSharedString( "BaseDensity" ), baseDensity );
 		m_applyFroxels->SetParameter( BlueSharedString( "Extinction" ), extinction );
+		m_applyFroxels->SetParameter( BlueSharedString( "MieG" ), mieG );
 		m_applyFroxels->SetParameter( BlueSharedString( "EnvironmentIntensity" ), environmentIntensity );
 		Tr2Renderer::DrawScreenQuad( renderContext, m_applyFroxels );
 	}
