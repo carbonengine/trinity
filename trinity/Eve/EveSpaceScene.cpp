@@ -3795,7 +3795,11 @@ void EveSpaceScene::ReregisterEntities()
 
 Tr2DepthStencilPtr EveSpaceScene::GetShadowMapAtlas()
 {
-	return Tr2LightManager::GetInstance()->GetShadowMapAtlas();
+	if( auto lightManager = Tr2LightManager::GetInstance() )
+	{
+		return lightManager->GetShadowMapAtlas();
+	}
+	return nullptr;
 }
 
 void EveSpaceScene::ClearComponentRegistry()
