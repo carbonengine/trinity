@@ -63,7 +63,30 @@ public:
 		const float depthSlices[4],
 		Tr2RenderContext& renderContext );
 
-	void RenderFog( const EveComponentRegistry& registry, Tr2RenderContext& renderContext, Tr2DepthStencil& sceneDepth, Tr2ShadowMap* cascadedShadowMap, Vector3 sunDirection, Color sunColor, Matrix view, Matrix projection, Matrix viewLast, Matrix projectionLast );
+
+	void UpdateFogSettings( const EveComponentRegistry& registry );
+	bool HasFog() const;
+
+	void RenderFog( 
+		Tr2RenderContext & renderContext, 
+		uint32_t width, 
+		uint32_t height, 
+		Tr2ShadowMap * cascadedShadowMap, 
+		const Vector3& sunDirection, 
+		const Color& sunColor, 
+		const Matrix& view, 
+		const Matrix& projection, 
+		const Matrix& viewLast, 
+		const Matrix& projectionLast );
+	void RenderFogIntoReflectionMap( 
+		Tr2RenderContext& renderContext, 
+		uint32_t width, 
+		uint32_t height, 
+		const Vector3& sunDirection, 
+		const Color& sunColor, 
+		const Matrix& view, 
+		const Matrix& projection );
+	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
 
 	void UpdateVariableStore();
 	void RenderShadows(
@@ -77,6 +100,36 @@ public:
 	EXPOSE_TO_BLUE();
 
 private:
+	struct FogViewDependentResources
+	{
+		explicit FogViewDependentResources( bool temporalFroxels );
+
+		Tr2TextureReferencePtr fogFroxels;
+		Tr2TextureReferencePtr temporalFroxels0;
+		Tr2TextureReferencePtr temporalFroxels1;
+
+		Tr2EffectPtr calculateFroxels;
+		Tr2EffectPtr filterFroxels;
+		Tr2EffectPtr raymarchFroxels;
+		Tr2EffectPtr applyFroxels;
+
+		Vector3 froxelJitter;
+		bool currentTemporalFroxels;
+	};
+
+	void RenderFog( 
+		FogViewDependentResources& resources, 
+		Tr2RenderContext& renderContext, 
+		uint32_t originalWidth, 
+		uint32_t originalHeight, 
+		Tr2ShadowMap* cascadedShadowMap, 
+		const Vector3& sunDirection, 
+		const Color& sunColor, 
+		const Matrix& view, 
+		const Matrix& projection, 
+		const Matrix& viewLast, 
+		const Matrix& projectionLast );
+
 	Tr2EffectPtr m_volumeBlit;
 	Tr2EffectPtr m_downsampleDepth;
 	Tr2EffectPtr m_hBlur;
@@ -96,16 +149,10 @@ private:
 	ITr2FroxelFogSettings::FroxelFogSettings m_froxelFogSettings;
 	
 
-	Tr2TextureReferencePtr m_fogFroxels;
-	Tr2TextureReferencePtr m_temporalFroxels0, m_temporalFroxels1;
-	bool m_currentTemporalFroxels;
-	Vector3 m_froxelJitter;
+	FogViewDependentResources m_fogResources;
+	FogViewDependentResources m_fogReflectionResources;
 
 	Tr2EffectPtr m_updateMieEnvironmentMap;
-	Tr2EffectPtr m_calculateFroxels;
-	Tr2EffectPtr m_filterFroxels;
-	Tr2EffectPtr m_raymarchFroxels;
-	Tr2EffectPtr m_applyFroxels;
 
 	struct FogPerObjectData
 	{

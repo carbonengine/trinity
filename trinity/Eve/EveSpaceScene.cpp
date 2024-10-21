@@ -45,6 +45,7 @@
 #include "../PostProcess/Tr2PostProcessAttributes.h"
 #include "SpaceObject/Children/EveChildLightingOverride.h"
 #include "PriorityBlend.h"
+#include "Tr2TextureReference.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -1316,6 +1317,12 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		m_currentRelfectionIntensity = over.reflectionIntensity;
 	}
 
+	if( m_volumetricsRenderer )
+	{
+		m_volumetricsRenderer->UpdateFogSettings( *m_componentRegistry );
+		m_volumetricsRenderer->UpdateFogEnvironmentMap( renderContext );
+	}
+
 	renderContext.m_esm.BeginManagedRendering();
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 
@@ -1739,6 +1746,31 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	// disable shadows
 	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 
+	// Override DepthMap in the variable store
+	ITr2TextureProvider* bkDepthMapTexVar = nullptr;
+	CTr2TextureReference faceDepthBuffer;
+	if( m_depthMapVar.GetType() == TRIVARIABLE_TEXTURE_RES )
+	{
+		m_depthMapVar.GetValue( bkDepthMapTexVar );
+		if( bkDepthMapTexVar )
+		{
+			bkDepthMapTexVar->Lock();
+		}
+
+		m_depthMapVar = &faceDepthBuffer;
+	}
+	ON_BLOCK_EXIT( [&] {
+		if( m_depthMapVar.GetType() == TRIVARIABLE_TEXTURE_RES )
+		{
+			m_depthMapVar = bkDepthMapTexVar;
+			if( bkDepthMapTexVar )
+			{
+				bkDepthMapTexVar->Unlock();
+			}
+		}
+		UpdateVariableStore();
+	} );
+
 	// we change the frustum during reflection updates/renderings
 	// we need the old one for resetting
 	auto normalFrustum = m_updateContext.GetFrustum();
@@ -1755,6 +1787,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 		PopulatePerFrameVSData( m_perFrameVS, renderContext );
 
 		ApplyPerFrameData( renderContext );
+		*faceDepthBuffer.GetTexture() = m_reflectionProbe->GetDepthBuffer( i );
 
 		{
 			Matrix orgViewMatrix = Tr2Renderer::GetViewTransform();
@@ -1818,7 +1851,9 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 				}
 			);
 
-			if( !visibleRenderables.empty() )
+			bool hasFog = m_volumetricsRenderer && m_volumetricsRenderer->HasFog();
+
+			if( hasFog || !visibleRenderables.empty() )
 			{
 				// clear planets
 				renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
@@ -1837,7 +1872,16 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 				renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
 
 				RenderOpaqueBatches( m_secondaryBatches, renderContext );
+
+				renderContext.SetReadOnlyDepth( true );
+				if( m_volumetricsRenderer )
+				{
+					uint32_t width = Tr2Renderer::GetViewport().width;
+					uint32_t height = Tr2Renderer::GetViewport().height;
+					m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, width, height, m_sunData.DirWorld, m_currentSunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
+				}
 				RenderTransparentBatches( m_secondaryBatches, renderContext );
+				renderContext.SetReadOnlyDepth( false );
 
 				ClearBatches( m_secondaryBatches );
 				renderContext.m_esm.EndManagedRendering();
@@ -2279,7 +2323,7 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 
 	Color sunColor = m_currentSunColor;
-	m_volumetricsRenderer->RenderFog( *m_componentRegistry, renderContext, *m_depthMap, m_cascadedShadowMap, m_sunData.DirWorld, sunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), m_viewLast, m_projectionLast );
+	m_volumetricsRenderer->RenderFog( renderContext, m_depthMap->GetWidth(), m_depthMap->GetHeight(), m_cascadedShadowMap, m_sunData.DirWorld, sunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), m_viewLast, m_projectionLast );
 }
 
 bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, Tr2DepthStencilPtr shadowMap )

@@ -40,6 +40,7 @@ public:
 	void InitRenderPass( Tr2RenderContext &renderContext );
 	void StartRenderFace( unsigned face, Tr2RenderContext &renderContext );
 	void EndRenderPass( Tr2RenderContext &renderContext );
+	Tr2TextureAL GetDepthBuffer( unsigned face );
 
 	TriFrustum GetFrustum( unsigned face, Tr2RenderContext& renderContext );
 
