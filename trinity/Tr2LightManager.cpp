@@ -311,7 +311,7 @@ void Tr2LightManager::AddLight( PerLightData& data )
 		data.color.y *= data.radius * dimming;
 		data.color.z *= data.radius * dimming;
 
-		if ( m_qualityUsedByShadowAtlas == ShadowQuality::SHADOW_DISABLED )
+		if( m_shadowMapAtlasSettings.size == 0 || m_qualityUsedByShadowAtlas == ShadowQuality::SHADOW_DISABLED )
 			data.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
 
 		m_tlsLightData.local().push_back( data );
