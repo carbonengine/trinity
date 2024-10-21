@@ -2936,9 +2936,16 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	
 	data.FrameIndex = (uint32_t) Tr2Renderer::GetCurrentFrameCounter();
 	data.Jittering = m_jitter != Vector4(0, 0, 0, 0);
-	data.ShadowMapAtlasSize = (float)Tr2LightManager::GetInstance()->GetShadowMapAtlasSettings().actualTextureSize;
-	data.ShadowMapAtlasEntryMinSizeLog2 = Tr2LightManager::GetInstance()->GetShadowMapAtlasSettings().entryMinSizeLog2;
-
+	if( auto lightManager = Tr2LightManager::GetInstance() )
+	{
+		data.ShadowMapAtlasSize = (float)lightManager->GetShadowMapAtlasSettings().actualTextureSize;
+		data.ShadowMapAtlasEntryMinSizeLog2 = lightManager->GetShadowMapAtlasSettings().entryMinSizeLog2;
+	}
+	else
+	{
+		data.ShadowMapAtlasSize = 0.f;
+		data.ShadowMapAtlasEntryMinSizeLog2 = 0;
+	}
 	data.ShadowMapSettings = Vector4( 1.f, 1.f, 0.f, 0.f );
 	
 	data.ShadowLightness = 0;
