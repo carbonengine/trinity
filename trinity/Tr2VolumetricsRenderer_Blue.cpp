@@ -117,7 +117,7 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"fogFroxels",
-			m_fogFroxels,
+			m_fogResources.fogFroxels,
 			"",
 			Be::READ )
 

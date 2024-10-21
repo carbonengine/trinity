@@ -143,6 +143,11 @@ void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext &renderContext )
 #endif
 }
 
+Tr2TextureAL Tr2ReflectionProbe::GetDepthBuffer( unsigned face )
+{
+	return m_stencilMaps[face];
+}
+
 void Tr2ReflectionProbe::StartRenderFace( unsigned face, Tr2RenderContext &renderContext )
 {
 	renderContext.RenderPassHint( { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE, 0 }, { Tr2LoadAction::CLEAR, Tr2StoreAction::DONT_CARE, 0.F } );
@@ -248,7 +253,7 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 		if( !m_stencilMaps[i].IsValid() )
 		{
 			int stencilSize = ( m_customSourceTexture && m_customSourceTexture->IsValid() ) ? m_customSourceTexture->GetWidth() : m_intermediateSize;
-			CR_RETURN_VAL( m_stencilMaps[i].Create( Tr2BitmapDimensions( stencilSize, stencilSize, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, renderContext ), false );
+			CR_RETURN_VAL( m_stencilMaps[i].Create( Tr2BitmapDimensions( stencilSize, stencilSize, 1, PIXEL_FORMAT_D32_FLOAT ), Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, renderContext ), false );
 		}
 	}
 
