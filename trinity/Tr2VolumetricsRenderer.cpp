@@ -625,12 +625,12 @@ void Tr2VolumetricsRenderer::RenderFog(
 	const float g2 = 1.32471795724474602596;
 
 	float maxDistance = Tr2Renderer::GetBackClip();
-	float maxDistanceVisibility = 1.0f / ( 1.0f + m_froxelFogSettings.thickness );
-	float baseDensity = -logf( maxDistanceVisibility ) / maxDistance;
+	float maxDistanceVisibility = exp(-m_froxelFogSettings.thickness);
+	float baseDensity = m_froxelFogSettings.thickness / maxDistance;
 
-	Vector3 backgroundColor = Vector3( m_froxelFogSettings.backgroundColor.r, m_froxelFogSettings.backgroundColor.g, m_froxelFogSettings.backgroundColor.b );
-	backgroundColor = Vector3( 1.0f, 1.0f, 1.0f ) - ( ( Vector3( 1.0f, 1.0f, 1.0f ) - backgroundColor ) * ( 1.0f - maxDistanceVisibility ) );
-	Vector3 extinction = Vector3( -logf( backgroundColor.x ), -logf( backgroundColor.y ), -logf( backgroundColor.z ) ) / maxDistance;
+	Color backgroundColor = m_froxelFogSettings.backgroundColor;
+
+	
 
 	float mieG = -std::clamp( m_froxelFogSettings.directionality, 0.001f, 0.999f );
 
@@ -679,7 +679,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 			data->EnvironmentIntensity = m_froxelFogSettings.environmentIntensity;
 
 
-			data->Extinction = extinction;
+			//data->Extinction = extinction;
 
 			data->InverseViewMatrix = Transpose( inverseView );
 
@@ -795,7 +795,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 		resources.applyFroxels->SetParameter( BlueSharedString( "OriginalResolution" ), Vector2( float( originalWidth ), float( originalHeight ) ) );
 		resources.applyFroxels->SetParameter( BlueSharedString( "MaxDistanceVisibility" ), maxDistanceVisibility );
 		resources.applyFroxels->SetParameter( BlueSharedString( "BaseDensity" ), baseDensity );
-		resources.applyFroxels->SetParameter( BlueSharedString( "Extinction" ), extinction );
+		resources.applyFroxels->SetParameter( BlueSharedString( "BackgroundColor" ), Vector3( backgroundColor.r, backgroundColor.g, backgroundColor.b ) );
 		resources.applyFroxels->SetParameter( BlueSharedString( "MieG" ), mieG );
 		resources.applyFroxels->SetParameter( BlueSharedString( "EnvironmentIntensity" ), m_froxelFogSettings.environmentIntensity );
 		Tr2Renderer::DrawScreenQuad( renderContext, resources.applyFroxels );
