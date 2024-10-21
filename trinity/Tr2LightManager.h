@@ -21,6 +21,8 @@ BLUE_DECLARE( Tr2DepthStencil );
 
 class Tr2TextureArray;
 
+class EveSpaceScene;
+enum ShadowQuality;
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -63,9 +65,19 @@ public:
 		uint32_t shadowMapScale : 10;
 		uint32_t shadowMapOffsetX : 10;
 		uint32_t shadowMapOffsetY : 10;
-
-		void GetUnpackedShadowMapData( uint32_t& shadowMapScale, uint32_t& shadowMapOffsetX, uint32_t& shadowMapOffsetY ) const;
 	};
+	struct ShadowMapAtlasSettings
+	{
+		uint32_t actualTextureSize;	// only updated once per frame. might be larger than size, as multiple eve space scenes might request different shadow qualities
+		uint32_t sizeLog2;
+		uint32_t size;
+		uint32_t entryMinSizeLog2;
+		uint32_t entryMinSize;
+		uint32_t entryInverseScaleFactorLog2;
+		uint32_t entryMaxSize;
+	};
+
+	void GetUnpackedShadowMapData( const PerLightData& lightData, uint32_t& shadowMapScale, uint32_t& shadowMapOffsetX, uint32_t& shadowMapOffsetY ) const;
 
 	static const uint16_t FLAG_AFFECTS_SURFACES = 1;
 	static const uint16_t FLAG_AFFECTS_PARTICLES = 1 << 1;
@@ -82,6 +94,8 @@ public:
 	ALResult UpdateLists( Tr2RenderContext& renderContext );
 	void SetVariableStore();
 	void AdjustLightCutoff( float lodFactor );
+	
+	void SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter );
 
 	virtual void ReleaseResources( TriStorage s );
 
@@ -95,12 +109,23 @@ public:
 	static Tr2TextureArray& GetLightProfileArray();
 
 	const std::vector<uint32_t>& GetShadowCastingLights() const;
-	Tr2LightManager::PerLightData& GetLightData( uint32_t index );
+	const Tr2LightManager::PerLightData& GetLightData( uint32_t index ) const;
 	Tr2DepthStencilPtr GetShadowMapAtlas();
+	const ShadowMapAtlasSettings& GetShadowMapAtlasSettings() const;
 
 private:
 	Tr2LightManager( const Tr2LightManager& );
 	Tr2LightManager& operator=( const Tr2LightManager& );
+
+	struct ShadowMapNode
+	{
+		uint32_t children[2];
+		uint32_t lightIndex;
+		int x;
+		int y;
+		int width;
+		int height;
+	};
 
 	virtual bool OnPrepareResources();
 
@@ -108,8 +133,8 @@ private:
 	ALResult ClearLightIndices( Tr2RenderContext& renderContext );
 	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
 
-	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
-	
+	void UpdateShadowAtlasSize( ShadowQuality shadowQuality );
+	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );	
 	uint32_t InsertShadowMapNode( uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
 
 	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
@@ -130,16 +155,11 @@ private:
 
 	Tr2Variable m_shadowMapAtlasVariable;
 	Tr2DepthStencilPtr m_shadowMapAtlasDS;
-	struct ShadowMapNode
-	{
-		uint32_t children[2];
-		uint32_t lightIndex;
-		int x;
-		int y;
-		int width;
-		int height;
-	};
+	ShadowMapAtlasSettings m_shadowMapAtlasSettings;
 	std::vector<ShadowMapNode> m_shadowMapNodes;
+	ShadowQuality m_qualityUsedByShadowAtlas;
+	ShadowQuality m_nextFrameQuality;
+	uint64_t m_currentFrameCounter;
 };
 
 #endif

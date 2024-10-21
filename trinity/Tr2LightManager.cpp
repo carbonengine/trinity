@@ -14,6 +14,7 @@
 #include "Tr2DepthStencil.h"
 
 #include "include/TriMath.h"
+#include "Eve/EveSpaceScene.h"
 
 
 CCP_STATS_DECLARE( lightsGathered, "Trinity/Tr2LightManager/lightsGathered", true, CST_COUNTER_LOW, "How many lights were pushed to GPU" );
@@ -35,10 +36,8 @@ const uint32_t TILE_WIDTH = 16;
 const uint32_t TILE_HEIGHT = 16;
 
 // Size (in pixels) for width/height of shadow map atlas used by shadowcasting pointlights and spotlights
-const uint32_t SHADOW_MAP_ATLAS_SIZE_LOG2 = 12;
-const uint32_t SHADOW_MAP_ATLAS_SIZE = 1 << SHADOW_MAP_ATLAS_SIZE_LOG2;
-const uint32_t SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE_LOG2 = SHADOW_MAP_ATLAS_SIZE_LOG2 - 10;
-const uint32_t SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE = 1 << SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE_LOG2;
+const uint32_t HIGH_QUALITY_ATLAS_SIZE_LOG2 = 14;
+const uint32_t HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE = 2048;
 
 struct PerFrameData
 {
@@ -82,6 +81,38 @@ Tr2LightManager*& Singleton()
 	return manager;
 }
 
+Tr2LightManager::ShadowMapAtlasSettings CalculateShadowMapAtlasSettings( ShadowQuality shadowQuality )
+{
+	Tr2LightManager::ShadowMapAtlasSettings settings{};
+	switch( shadowQuality )
+	{
+	case ShadowQuality::SHADOW_DISABLED:
+		settings.sizeLog2 = 0;
+		settings.size = 0;
+		settings.entryMinSizeLog2 = 0;
+		settings.entryMinSize = 0;
+		settings.entryInverseScaleFactorLog2 = 0;
+		settings.entryMaxSize = 0;
+		break;
+	case ShadowQuality::SHADOW_LOW:
+		settings.sizeLog2 = HIGH_QUALITY_ATLAS_SIZE_LOG2 - 2;
+		break;
+	case ShadowQuality::SHADOW_HIGH:
+	case ShadowQuality::SHADOW_RAYTRACED:
+		settings.sizeLog2 = HIGH_QUALITY_ATLAS_SIZE_LOG2;
+		break;
+	}
+	if( shadowQuality != ShadowQuality::SHADOW_DISABLED )
+	{
+		settings.size = 1 << settings.sizeLog2;
+		settings.entryMinSizeLog2 = settings.sizeLog2 - 10;
+		settings.entryMinSize = 1 << settings.entryMinSizeLog2;
+		settings.entryInverseScaleFactorLog2 = HIGH_QUALITY_ATLAS_SIZE_LOG2 - settings.sizeLog2;
+		settings.entryMaxSize = HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE >> settings.entryInverseScaleFactorLog2;
+	}
+	return settings;
+}
+
 }
 
 Tr2LightManager::Tr2LightManager( const char* effectPath )
@@ -98,6 +129,8 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 	m_indexBufferVariable.Register( "LightIndexBuffer", m_indexBuffer );
 	GlobalStore().RegisterVariable( "LightProfileArray", &GetLightProfileArray() );
 	m_shadowMapAtlasVariable.Register( "ShadowMapAtlas", m_shadowMapAtlasDS );
+
+	m_qualityUsedByShadowAtlas = ShadowQuality::SHADOW_DISABLED;
 
 	PrepareResources();
 }
@@ -167,8 +200,8 @@ void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 	m_shadowMapNodes.resize( 1 );
 	m_shadowMapNodes[0].x = 0;
 	m_shadowMapNodes[0].y = 0;
-	m_shadowMapNodes[0].width = SHADOW_MAP_ATLAS_SIZE;
-	m_shadowMapNodes[0].height = SHADOW_MAP_ATLAS_SIZE;
+	m_shadowMapNodes[0].width = m_shadowMapAtlasSettings.size;
+	m_shadowMapNodes[0].height = m_shadowMapAtlasSettings.size;
 	m_shadowMapNodes[0].children[0] = -1;
 	m_shadowMapNodes[0].children[1] = -1;
 	m_shadowMapNodes[0].lightIndex = -1;
@@ -182,6 +215,38 @@ void Tr2LightManager::SetFrustum( const TriFrustum& frustum )
 void Tr2LightManager::AdjustLightCutoff( float lodFactor )
 {
 	m_adjustedCutoff = CUTOFF_PIXEL_SIZE * lodFactor;
+}
+
+void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter )
+{
+	if ( m_currentFrameCounter != frameCounter )
+	{
+		UpdateShadowAtlasSize( m_nextFrameQuality );
+		m_nextFrameQuality = shadowQuality;
+		m_currentFrameCounter = frameCounter;
+	}
+	m_nextFrameQuality = (ShadowQuality)max( (uint32_t)shadowQuality, (uint32_t)m_nextFrameQuality );
+	
+	ShadowQuality tmpShadowQuality = (ShadowQuality)min( (uint32_t)shadowQuality, (uint32_t)m_qualityUsedByShadowAtlas );
+	m_shadowMapAtlasSettings = CalculateShadowMapAtlasSettings( tmpShadowQuality );
+	m_shadowMapAtlasSettings.actualTextureSize = m_shadowMapAtlasDS ? m_shadowMapAtlasDS->GetWidth() : 0;
+}
+
+void Tr2LightManager::UpdateShadowAtlasSize( ShadowQuality shadowQuality )
+{
+	if( m_qualityUsedByShadowAtlas != shadowQuality )
+	{
+		// Setup depth stencil texture
+		m_shadowMapAtlasDS = Tr2DepthStencilPtr();
+		m_shadowMapAtlasDS.CreateInstance();
+		if ( shadowQuality != ShadowQuality::SHADOW_DISABLED )
+		{
+			Tr2LightManager::ShadowMapAtlasSettings settings = CalculateShadowMapAtlasSettings( shadowQuality );
+			// TODO: intern, maybe switch to 16 bit for atlas format? check if there is z-fighting with DSFMT_D16!
+			m_shadowMapAtlasDS->Create( settings.size, settings.size, Tr2RenderContextEnum::DSFMT_D32F, 0, 0 );
+		}
+	}
+	m_qualityUsedByShadowAtlas = shadowQuality;
 }
 
 void Tr2LightManager::AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius, uint16_t flags )
@@ -244,6 +309,10 @@ void Tr2LightManager::AddLight( PerLightData& data )
 		data.color.x *= data.radius * dimming;
 		data.color.y *= data.radius * dimming;
 		data.color.z *= data.radius * dimming;
+
+		if ( m_qualityUsedByShadowAtlas == ShadowQuality::SHADOW_DISABLED )
+			data.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
+
 		m_tlsLightData.local().push_back( data );
 	}
 }
@@ -346,9 +415,10 @@ void Tr2LightManager::ResolveLightData()
 		// TODO: intern, do something smarter than hardcoding 512 by 512. make it size and distance based!
 		// TODO: intern, be aware that the pixel size might be very large when frustum culling has been turned off (see g_frustumCullingDisabled)
 		float sizeAcross = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &lightData.position ) );
-		sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? SHADOW_MAP_ATLAS_SIZE : sizeAcross;
-		uint32_t size = (uint32_t)ClampInt( (int32_t)sizeAcross, SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE, 1024 );
-		size = CCP_ALIGN( size, SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE );
+		sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? m_shadowMapAtlasSettings.size : sizeAcross;
+		uint32_t size = ( (uint32_t)sizeAcross ) >> m_shadowMapAtlasSettings.entryInverseScaleFactorLog2;
+		size = (uint32_t)ClampInt( size, m_shadowMapAtlasSettings.entryMinSize, m_shadowMapAtlasSettings.entryMaxSize );
+		size = CCP_ALIGN( size, m_shadowMapAtlasSettings.entryMinSize );
 		// TODO: intern, sort the shadow casting lights by shadow map size, giving priority to larger ones. 
 		// TODO: intern, small ones might even be discarded to save performance on culling/rendering
 
@@ -372,9 +442,9 @@ void Tr2LightManager::ResolveLightData()
 
 		if( gotShadowMapAtlasEntry )
 		{
-			lightData.shadowMapOffsetX = offsetX >> SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE_LOG2;
-			lightData.shadowMapOffsetY = offsetY >> SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE_LOG2;
-			lightData.shadowMapScale = size >> SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE_LOG2;
+			lightData.shadowMapOffsetX = offsetX >> m_shadowMapAtlasSettings.entryMinSizeLog2;
+			lightData.shadowMapOffsetY = offsetY >> m_shadowMapAtlasSettings.entryMinSizeLog2;
+			lightData.shadowMapScale = size >> m_shadowMapAtlasSettings.entryMinSizeLog2;
 		}
 		else
 		{
@@ -430,12 +500,6 @@ bool Tr2LightManager::OnPrepareResources()
 	m_effect->SetParameter( BlueSharedString( "LightIndices" ), m_indexBuffer );
 	m_effect->SetParameter( BlueSharedString( "LightIndexCount" ), m_indexBufferCounter );
 
-	// Setup depth stencil texture
-	m_shadowMapAtlasDS = Tr2DepthStencilPtr();
-	m_shadowMapAtlasDS.CreateInstance();
-	// TODO: intern, maybe switch to 16 bit for atlas format? check if there is z-fighting with DSFMT_D16!
-	m_shadowMapAtlasDS->Create( SHADOW_MAP_ATLAS_SIZE, SHADOW_MAP_ATLAS_SIZE, Tr2RenderContextEnum::DSFMT_D32F, 0, 0 );
-
 	return true;
 }
 
@@ -455,7 +519,7 @@ const std::vector<uint32_t>& Tr2LightManager::GetShadowCastingLights() const
 	return m_shadowCastingLights;
 }
 
-Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t index )
+const Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t index ) const
 {
 	return m_lightData[index];
 }
@@ -463,6 +527,11 @@ Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t index )
 Tr2DepthStencilPtr Tr2LightManager::GetShadowMapAtlas()
 {
 	return m_shadowMapAtlasDS;
+}
+
+const Tr2LightManager::ShadowMapAtlasSettings& Tr2LightManager::GetShadowMapAtlasSettings() const
+{
+	return m_shadowMapAtlasSettings;
 }
 
 // based on: https://blackpawn.com/texts/lightmaps/default.html
@@ -539,8 +608,8 @@ uint32_t Tr2LightManager::InsertShadowMapNode( uint32_t nodeId, uint32_t lightIn
 
 bool Tr2LightManager::GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY )
 {
-	width = CCP_ALIGN( width, SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE );
-	height = CCP_ALIGN( height, SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE );
+	width = CCP_ALIGN( width, m_shadowMapAtlasSettings.entryMinSize );
+	height = CCP_ALIGN( height, m_shadowMapAtlasSettings.entryMinSize );
 
 	uint32_t nodeId = InsertShadowMapNode( 0, lightIndex, width, height );
 	//CCP_ASSERT_M( nodeId != -1, "Shadow map atlas could not fit the requested entry." );
@@ -550,16 +619,16 @@ bool Tr2LightManager::GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t widt
 		out_posX = m_shadowMapNodes[nodeId].x;
 		out_posY = m_shadowMapNodes[nodeId].y;
 
-		CCP_ASSERT_M( ( out_posX & ( SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE - 1 ) ) == 0, "Shadow map atlas entry posX is not aligned!" );
-		CCP_ASSERT_M( ( out_posY & ( SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE - 1 ) ) == 0, "Shadow map atlas entry posY is not aligned!" );
+		CCP_ASSERT_M( ( out_posX & ( m_shadowMapAtlasSettings.entryMinSize - 1 ) ) == 0, "Shadow map atlas entry posX is not aligned!" );
+		CCP_ASSERT_M( ( out_posY & ( m_shadowMapAtlasSettings.entryMinSize - 1 ) ) == 0, "Shadow map atlas entry posY is not aligned!" );
 	}
 
 	return nodeId != -1;
 }
 
-void Tr2LightManager::PerLightData::GetUnpackedShadowMapData( uint32_t& shadowMapScale, uint32_t& shadowMapOffsetX, uint32_t& shadowMapOffsetY ) const
+void Tr2LightManager::GetUnpackedShadowMapData( const PerLightData& lightData, uint32_t& shadowMapScale, uint32_t& shadowMapOffsetX, uint32_t& shadowMapOffsetY ) const
 {
-	shadowMapScale = this->shadowMapScale << SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE_LOG2;
-	shadowMapOffsetX = this->shadowMapOffsetX << SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE_LOG2;
-	shadowMapOffsetY = this->shadowMapOffsetY << SHADOW_MAP_ATLAS_ENTRY_MIN_SIZE_LOG2;
+	shadowMapScale = lightData.shadowMapScale << m_shadowMapAtlasSettings.entryMinSizeLog2;
+	shadowMapOffsetX = lightData.shadowMapOffsetX << m_shadowMapAtlasSettings.entryMinSizeLog2;
+	shadowMapOffsetY = lightData.shadowMapOffsetY << m_shadowMapAtlasSettings.entryMinSizeLog2;
 }

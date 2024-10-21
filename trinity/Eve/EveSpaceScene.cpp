@@ -1348,6 +1348,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		lightManager->Clear( renderContext );
 		lightManager->SetFrustum( m_updateContext.GetFrustum() );
 		lightManager->AdjustLightCutoff( m_updateContext.GetLodFactor() );
+		lightManager->SetShadowQuality( m_shadowQuality, renderContext.GetPrimaryRenderContextPointer()->GetRecordingFrameNumber() );
 
 		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
 			for( auto i = range.begin(); i != range.end(); ++i )
@@ -2394,7 +2395,7 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 				uint32_t shadowMapScale;
 				uint32_t shadowMapOffsetX;
 				uint32_t shadowMapOffsetY;
-				lightData.GetUnpackedShadowMapData( shadowMapScale, shadowMapOffsetX, shadowMapOffsetY );
+				Tr2LightManager::GetInstance()->GetUnpackedShadowMapData( lightData, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY );
 				shadowMapOffsetX += x * shadowMapScale;
 				shadowMapOffsetY += y * shadowMapScale;
 				RenderShadowMapForSpotLight( renderContext, shadowCasters, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY, lightData.position, view, projection, shadowMap );
@@ -2413,7 +2414,7 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 		uint32_t shadowMapScale;
 		uint32_t shadowMapOffsetX;
 		uint32_t shadowMapOffsetY;
-		lightData.GetUnpackedShadowMapData( shadowMapScale, shadowMapOffsetX, shadowMapOffsetY );
+		Tr2LightManager::GetInstance()->GetUnpackedShadowMapData( lightData, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY );
 		RenderShadowMapForSpotLight( renderContext, shadowCasters, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY, lightData.position, view, projection, shadowMap );
 	}
 }
@@ -2462,7 +2463,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		if( lightManager->GetShadowCastingLights().size() > 0 )//&& m_shadowQuality != SHADOW_DISABLED )
+		if( lightManager->GetShadowCastingLights().size() > 0 && m_shadowQuality != SHADOW_DISABLED )
 		{
 			GPU_REGION( renderContext, "PointLight/SpotLight Shadow Maps" );
 			Tr2DepthStencilPtr shadowMap = lightManager->GetShadowMapAtlas();
@@ -2475,14 +2476,6 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 			}
 			FinishRenderingShadowMapForLights( renderContext );
 		}
-		//else
-		//{
-		//	for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
-		//	{
-		//		Tr2LightManager::PerLightData& lightData = lightManager->GetLightData( lightIndex );
-		//		lightData.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
-		//	}
-		//}
 		{
 			GPU_REGION( renderContext, "Lighting" );
 			CCP_STATS_SCOPED_TIME( updateDynamicLightLists );
@@ -2943,6 +2936,8 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	
 	data.FrameIndex = (uint32_t) Tr2Renderer::GetCurrentFrameCounter();
 	data.Jittering = m_jitter != Vector4(0, 0, 0, 0);
+	data.ShadowMapAtlasSize = (float)Tr2LightManager::GetInstance()->GetShadowMapAtlasSettings().actualTextureSize;
+	data.ShadowMapAtlasEntryMinSizeLog2 = Tr2LightManager::GetInstance()->GetShadowMapAtlasSettings().entryMinSizeLog2;
 
 	data.ShadowMapSettings = Vector4( 1.f, 1.f, 0.f, 0.f );
 	

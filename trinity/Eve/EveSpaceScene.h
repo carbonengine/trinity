@@ -55,6 +55,14 @@ extern int g_eveReflectionMode;
 // raytracing shadow setting
 extern bool g_eveSpaceSceneRaytracedShadows;
 
+enum ShadowQuality
+{
+	SHADOW_DISABLED,
+	SHADOW_LOW,
+	SHADOW_HIGH,
+	SHADOW_RAYTRACED
+};
+
 struct ShadowReceiver;
 
 BLUE_DECLARE( TriFrustum );
@@ -198,14 +206,6 @@ public:
 	Matrix GetReprojectionMatrix() const;
 
 
-	enum ShadowQuality
-	{
-		SHADOW_DISABLED,
-		SHADOW_LOW,
-		SHADOW_HIGH,
-		SHADOW_RAYTRACED
-	};
-
 protected:
 	// Data shared between the different rendering method chunks
 	struct FrameData
@@ -279,9 +279,9 @@ protected:
 
 		uint32_t FrameIndex;
 		uint32_t Jittering; //0 if off, 1 if on
-		uint32_t unused3;
-		uint32_t unused4;
-
+		float ShadowMapAtlasSize;					// shadow map atlas for dynamic lights
+		uint32_t ShadowMapAtlasEntryMinSizeLog2;	// shadow map atlas for dynamic lights
+		
 		float VolumetricSlices[4];
 
 		// Cascaded shadow maps
