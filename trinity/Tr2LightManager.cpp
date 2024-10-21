@@ -38,6 +38,7 @@ const uint32_t TILE_HEIGHT = 16;
 // Size (in pixels) for width/height of shadow map atlas used by shadowcasting pointlights and spotlights
 const uint32_t HIGH_QUALITY_ATLAS_SIZE_LOG2 = 14;
 const uint32_t HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE = 2048;
+const uint32_t MAX_NUM_SHADOWCASTING_LIGHTS = 10;
 
 struct PerFrameData
 {
@@ -399,28 +400,59 @@ void Tr2LightManager::ResolveLightData()
 
 	m_shadowCastingLights.clear();
 	m_volumetricLights.clear();
+
+	// filter all shadowcasting and volumetric lights
+	struct LightScreenSizeTuple
+	{
+		uint32_t lightIndex;
+		float sizeAcross;
+	};
+	std::vector<LightScreenSizeTuple> lightTuples;
 	for( uint32_t i = 0; i < m_lightData.size(); i++ )
 	{
 		if( ( m_lightData[i].flags & FLAG_CASTS_SHADOWS ) != 0 )
-			m_shadowCastingLights.push_back( i );
+		{
+			// TODO: intern, be aware that the pixel size might be very large when frustum culling has been turned off (see g_frustumCullingDisabled)
+			float sizeAcross = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
+			sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? m_shadowMapAtlasSettings.size : sizeAcross;
+			lightTuples.push_back( LightScreenSizeTuple{ i, sizeAcross } );
+		}
 		if( ( m_lightData[i].flags & FLAG_IS_VOLUMETRIC ) != 0 )
+		{
 			m_volumetricLights.push_back( i );
+		}
 	}
 
-	
-	for( uint32_t lightIndex : m_shadowCastingLights )
+	// sort shadowcasting lights by size on screen
+	std::sort(lightTuples.begin(), lightTuples.end(), 
+		[](const LightScreenSizeTuple& a, const LightScreenSizeTuple& b)
+		{
+			return a.sizeAcross > b.sizeAcross;
+		}
+	);
+
+	// keep only the largest lights
+	uint32_t numShadowCastingLights = min( MAX_NUM_SHADOWCASTING_LIGHTS, (uint32_t)lightTuples.size() );
+	m_shadowCastingLights.resize( numShadowCastingLights );
+	for( uint32_t i = 0; i < numShadowCastingLights; i++ )
 	{
+		m_shadowCastingLights[i] = lightTuples[i].lightIndex;
+	}
+	for( uint32_t i = MAX_NUM_SHADOWCASTING_LIGHTS; i < lightTuples.size(); i++ )
+	{
+		Tr2LightManager::PerLightData& lightData = m_lightData[lightTuples[i].lightIndex];
+		lightData.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
+	}
+
+	// make an entries into the shadow map atlas
+	for( uint32_t i = 0; i < numShadowCastingLights; i++ )
+	{
+		uint32_t lightIndex = lightTuples[i].lightIndex;
 		Tr2LightManager::PerLightData& lightData = m_lightData[lightIndex];
 		
-		// TODO: intern, do something smarter than hardcoding 512 by 512. make it size and distance based!
-		// TODO: intern, be aware that the pixel size might be very large when frustum culling has been turned off (see g_frustumCullingDisabled)
-		float sizeAcross = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &lightData.position ) );
-		sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? m_shadowMapAtlasSettings.size : sizeAcross;
-		uint32_t size = ( (uint32_t)sizeAcross ) >> m_shadowMapAtlasSettings.entryInverseScaleFactorLog2;
+		uint32_t size = ( (uint32_t)lightTuples[i].sizeAcross ) >> m_shadowMapAtlasSettings.entryInverseScaleFactorLog2;
 		size = (uint32_t)ClampInt( size, m_shadowMapAtlasSettings.entryMinSize, m_shadowMapAtlasSettings.entryMaxSize );
 		size = CCP_ALIGN( size, m_shadowMapAtlasSettings.entryMinSize );
-		// TODO: intern, sort the shadow casting lights by shadow map size, giving priority to larger ones. 
-		// TODO: intern, small ones might even be discarded to save performance on culling/rendering
 
 		uint32_t width, height;
 		if ( lightData.innerAngle <= 0.f )

@@ -1345,10 +1345,10 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	{
 		CCP_STATS_SCOPED_TIME( gatherDynamicLights );
 
+		lightManager->SetShadowQuality( m_shadowQuality, renderContext.GetPrimaryRenderContextPointer()->GetRecordingFrameNumber() );
 		lightManager->Clear( renderContext );
 		lightManager->SetFrustum( m_updateContext.GetFrustum() );
 		lightManager->AdjustLightCutoff( m_updateContext.GetLodFactor() );
-		lightManager->SetShadowQuality( m_shadowQuality, renderContext.GetPrimaryRenderContextPointer()->GetRecordingFrameNumber() );
 
 		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
 			for( auto i = range.begin(); i != range.end(); ++i )
