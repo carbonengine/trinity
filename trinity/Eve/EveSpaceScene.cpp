@@ -160,7 +160,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	PARENTLOCK( m_externalParameters ),
 	m_display( true ),
 	m_update( true ),
-	m_shadowQuality( SHADOW_RAYTRACED ),
+	m_shadowQuality( ShadowQuality::SHADOW_RAYTRACED ),
 	m_enableShadows( true ),
 	m_displayShadowMap( false ),
 	m_shadowView( IdentityMatrix() ),
@@ -1344,7 +1344,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	GatherBatches( renderContext );
 
-	if( m_shadowQuality == SHADOW_RAYTRACED && m_enableShadows )
+	if( m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows )
 	{
 		PrepareRaytracedShadows( renderContext );
 	}
@@ -2216,7 +2216,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	
 	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 
-	if( m_rtManager && m_shadowQuality == SHADOW_RAYTRACED && m_enableShadows && m_depthMap && m_depthMap->IsValid() && !m_objects.empty() )
+	if( m_rtManager && m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows && m_depthMap && m_depthMap->IsValid() && !m_objects.empty() )
 	{
 		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
 		size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
@@ -2511,7 +2511,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		return;
 	}
 	
-	if( !m_freezeFrustum && m_enableShadows && ( m_shadowQuality == SHADOW_LOW || m_shadowQuality == SHADOW_HIGH ) )
+	if( !m_freezeFrustum && m_enableShadows && ( m_shadowQuality == ShadowQuality::SHADOW_DISABLED || m_shadowQuality == ShadowQuality::SHADOW_HIGH ) )
 	{
 		m_shadowView = Tr2Renderer::GetInverseViewTransform();
 		SetupCascadedShadows( renderContext );
@@ -2522,7 +2522,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		if( lightManager->GetShadowCastingLights().size() > 0 && m_shadowQuality != SHADOW_DISABLED )
+		if( lightManager->GetShadowCastingLights().size() > 0 && m_shadowQuality != ShadowQuality::SHADOW_DISABLED )
 		{
 			GPU_REGION( renderContext, "PointLight/SpotLight Shadow Maps" );
 			Tr2DepthStencilPtr shadowMap = lightManager->GetShadowMapAtlas();
@@ -3198,16 +3198,16 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 
 	if( IsMatch( value, m_shadowQuality ) )
 	{
-		g_eveSpaceSceneRaytracedShadows = m_shadowQuality == SHADOW_RAYTRACED;
+		g_eveSpaceSceneRaytracedShadows = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED;
 
-		if( m_shadowQuality == SHADOW_LOW )
+		if( m_shadowQuality == ShadowQuality::SHADOW_LOW )
 		{
 			if( m_cascadedShadowMap )
 			{
 				m_cascadedShadowMap->ShouldUseDenoiser( false );
 			}
 		}
-		if( m_shadowQuality == SHADOW_HIGH )
+		if( m_shadowQuality == ShadowQuality::SHADOW_HIGH )
 		{
 			if( m_cascadedShadowMap )
 			{
@@ -3794,7 +3794,7 @@ void EveSpaceScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 			m_virtualCameraSystem->RenderDebugInfo( *m_debugRenderer );
 		}
 
-		if( m_freezeFrustum && ( m_shadowQuality == SHADOW_HIGH || m_shadowQuality == SHADOW_LOW ) )
+		if( m_freezeFrustum && ( m_shadowQuality == ShadowQuality::SHADOW_HIGH || m_shadowQuality == ShadowQuality::SHADOW_LOW ) )
 		{
 			SetupCascadedShadows( renderContext );
 		}

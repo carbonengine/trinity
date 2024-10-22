@@ -55,14 +55,6 @@ extern int g_eveReflectionMode;
 // raytracing shadow setting
 extern bool g_eveSpaceSceneRaytracedShadows;
 
-enum ShadowQuality
-{
-	SHADOW_DISABLED,
-	SHADOW_LOW,
-	SHADOW_HIGH,
-	SHADOW_RAYTRACED
-};
-
 struct ShadowReceiver;
 
 BLUE_DECLARE( TriFrustum );

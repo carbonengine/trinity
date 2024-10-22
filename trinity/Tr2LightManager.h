@@ -21,8 +21,13 @@ BLUE_DECLARE( Tr2DepthStencil );
 
 class Tr2TextureArray;
 
-class EveSpaceScene;
-enum ShadowQuality;
+enum class ShadowQuality
+{
+	SHADOW_DISABLED,
+	SHADOW_LOW,
+	SHADOW_HIGH,
+	SHADOW_RAYTRACED
+};
 
 // --------------------------------------------------------------------------------------
 // Description:

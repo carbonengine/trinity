@@ -14,7 +14,6 @@
 #include "Tr2DepthStencil.h"
 
 #include "include/TriMath.h"
-#include "Eve/EveSpaceScene.h"
 
 
 CCP_STATS_DECLARE( lightsGathered, "Trinity/Tr2LightManager/lightsGathered", true, CST_COUNTER_LOW, "How many lights were pushed to GPU" );
