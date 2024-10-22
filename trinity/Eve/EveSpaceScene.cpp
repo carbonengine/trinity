@@ -909,7 +909,11 @@ void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& 
 			TRIBATCHTYPE_DISTORTION
 		};
 
-	unsigned typeCount = m_distortionMap ? 5 : 4;
+	unsigned typeCount = unsigned( sizeof( s_allTypes ) / sizeof( s_allTypes[0] ) );
+	if( !m_distortionMap )
+	{
+		typeCount -= 1;
+	}
 
 	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, m_perThreadBatches, s_allTypes, typeCount, reason );
 }
