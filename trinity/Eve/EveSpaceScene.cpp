@@ -1750,161 +1750,172 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	// disable shadows
 	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 
-	// Override DepthMap in the variable store
-	ITr2TextureProvider* bkDepthMapTexVar = nullptr;
-	CTr2TextureReference faceDepthBuffer;
-	if( m_depthMapVar.GetType() == TRIVARIABLE_TEXTURE_RES )
 	{
-		m_depthMapVar.GetValue( bkDepthMapTexVar );
-		if( bkDepthMapTexVar )
-		{
-			bkDepthMapTexVar->Lock();
-		}
-
-		m_depthMapVar = &faceDepthBuffer;
-	}
-	ON_BLOCK_EXIT( [&] {
+		// Override DepthMap in the variable store
+		ITr2TextureProvider* bkDepthMapTexVar = nullptr;
+		CTr2TextureReference faceDepthBuffer;
 		if( m_depthMapVar.GetType() == TRIVARIABLE_TEXTURE_RES )
 		{
-			m_depthMapVar = bkDepthMapTexVar;
+			m_depthMapVar.GetValue( bkDepthMapTexVar );
 			if( bkDepthMapTexVar )
 			{
-				bkDepthMapTexVar->Unlock();
+				bkDepthMapTexVar->Lock();
 			}
+
+			m_depthMapVar = &faceDepthBuffer;
 		}
-		UpdateVariableStore();
-	} );
-
-	// we change the frustum during reflection updates/renderings
-	// we need the old one for resetting
-	auto normalFrustum = m_updateContext.GetFrustum();
-
-	m_reflectionProbe->InitRenderPass( renderContext );
-	for( unsigned i = m_reflectionProbe->GetStartFace(); i < m_reflectionProbe->GetEndFace(); i++ )
-	{
-		std::string contextName = "Reflection Face " + std::to_string( i );
-
-		GPU_REGION( renderContext, contextName.c_str() );
-		m_reflectionProbe->StartRenderFace( i, renderContext );
-
-		PopulatePerFramePSData( m_perFramePS, renderContext );
-		PopulatePerFrameVSData( m_perFrameVS, renderContext );
-
-		ApplyPerFrameData( renderContext );
-		*faceDepthBuffer.GetTexture() = m_reflectionProbe->GetDepthBuffer( i );
-
-		{
-			Matrix orgViewMatrix = Tr2Renderer::GetViewTransform();
-			Matrix planetViewMatrix = CreatePlanetViewMatrix( orgViewMatrix );
-			Tr2Renderer::SetViewTransform( planetViewMatrix );
-
-			TriFrustum frustum;
-			Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
-			frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &planetProjection, renderContext.m_esm.GetViewport() );
-			m_updateContext.SetFrustum(frustum);
-
-			for( auto& planet : m_planets )
+		ON_BLOCK_EXIT( [&] {
+			if( m_depthMapVar.GetType() == TRIVARIABLE_TEXTURE_RES )
 			{
-				planet->UpdatePlanetVisibility( m_updateContext, m_planetScale );
-			}
-
-			Tr2Renderer::SetViewTransform( orgViewMatrix );
-		}
-
-		TriFrustum currentFrustum = m_reflectionProbe->GetFrustum( i, renderContext );
-		m_updateContext.SetFrustum( currentFrustum );
-		// get the background reflection renderables from the component registry
-		RenderBackgroundPassObjects( renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );
-
-		if( g_lensflaresInReflections && !m_lensflares.empty() && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA )
-		{
-			GPU_REGION( renderContext, "Lens Flares in reflections" );
-			std::vector<ITr2Renderable*> visible;
-
-			// lensflares
-			for( auto it = m_lensflares.cbegin(); it != m_lensflares.cend(); ++it )
-			{
-				( *it )->GetRenderables( currentFrustum, visible );
-			}
-
-			if( !visible.empty() )
-			{
-				renderContext.SetReadOnlyDepth( true );
-				RenderRenderables( visible,
-								   m_secondaryBatches[TRIBATCHTYPE_ADDITIVE],
-								   TRIBATCHTYPE_ADDITIVE,
-								   Tr2EffectStateManager::RM_ALPHA_ADDITIVE,
-								   renderContext,
-								   Tr2RenderReason::TR2RENDERREASON_REFLECTION );
-				renderContext.SetReadOnlyDepth( false );
-			}
-		}
-
-		if( m_dynamicObjectReflectionEnabled && m_reflectionProbe->ReadyForDynamicObjectReflections() )
-		{
-			std::vector<ITr2Renderable*> visibleRenderables;
-			visibleRenderables.reserve( m_componentRegistry->ComponentCount<ITr2Renderable>() );
-
-			// Filter out the non-visible reflection renderables based on the current frustum
-			m_componentRegistry->ProcessComponents<ITr2Renderable>(
-				[&]( ITr2Renderable* renderable ) -> void {
-					if( renderable->IsVisible( m_updateContext ) )
-					{
-						visibleRenderables.push_back( renderable );
-					}
-				}
-			);
-
-			bool hasFog = m_volumetricsRenderer && m_volumetricsRenderer->HasFog();
-
-			if( hasFog || !visibleRenderables.empty() )
-			{
-				// clear planets
-				renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
-				ClearBatches( m_secondaryBatches );
-
-				// We are rendering in a left hand coordinate system (for cubemaps) so don't override the cullmode!!!
-				renderContext.m_esm.BeginManagedRendering( CullMode::CULLMODE_NONE );
-
-				Tr2RenderableSortList transparentObjects;
-				GetAllBatchesFromRenderables( visibleRenderables, transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
-
-				PrepareTransparentBatch( transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
-				FinalizeBatches( m_secondaryBatches );
-
-				renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DEPTH_ONLY );
-				renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
-
-				RenderOpaqueBatches( m_secondaryBatches, renderContext );
-
-				renderContext.SetReadOnlyDepth( true );
-				if( m_volumetricsRenderer )
+				m_depthMapVar = bkDepthMapTexVar;
+				if( bkDepthMapTexVar )
 				{
-					uint32_t width = Tr2Renderer::GetViewport().width;
-					uint32_t height = Tr2Renderer::GetViewport().height;
-					m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, width, height, m_sunData.DirWorld, m_currentSunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
+					bkDepthMapTexVar->Unlock();
 				}
-				RenderTransparentBatches( m_secondaryBatches, renderContext );
-				renderContext.SetReadOnlyDepth( false );
+			}
+			UpdateVariableStore();
+		} );
 
-				ClearBatches( m_secondaryBatches );
-				renderContext.m_esm.EndManagedRendering();
+		auto bkProjection = m_projection;
+		ON_BLOCK_EXIT( [&] { m_projection = bkProjection; } );
+		auto bkJitter = m_jitterMatrix;
+		m_jitterMatrix = IdentityMatrix();
+		ON_BLOCK_EXIT( [&] { m_jitterMatrix = bkJitter; } );
+
+		// we change the frustum during reflection updates/renderings
+		// we need the old one for resetting
+		auto normalFrustum = m_updateContext.GetFrustum();
+
+
+		m_reflectionProbe->InitRenderPass( renderContext );
+
+		m_projection = Tr2Renderer::GetProjectionTransform();
+
+		for( unsigned i = m_reflectionProbe->GetStartFace(); i < m_reflectionProbe->GetEndFace(); i++ )
+		{
+			std::string contextName = "Reflection Face " + std::to_string( i );
+
+			GPU_REGION( renderContext, contextName.c_str() );
+			m_reflectionProbe->StartRenderFace( i, renderContext );
+
+			PopulatePerFramePSData( m_perFramePS, renderContext );
+			PopulatePerFrameVSData( m_perFrameVS, renderContext );
+
+			ApplyPerFrameData( renderContext );
+			*faceDepthBuffer.GetTexture() = m_reflectionProbe->GetDepthBuffer( i );
+
+			{
+				Matrix orgViewMatrix = Tr2Renderer::GetViewTransform();
+				Matrix planetViewMatrix = CreatePlanetViewMatrix( orgViewMatrix );
+				Tr2Renderer::SetViewTransform( planetViewMatrix );
+
+				TriFrustum frustum;
+				Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
+				frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &planetProjection, renderContext.m_esm.GetViewport() );
+				m_updateContext.SetFrustum( frustum );
+
+				for( auto& planet : m_planets )
+				{
+					planet->UpdatePlanetVisibility( m_updateContext, m_planetScale );
+				}
+
+				Tr2Renderer::SetViewTransform( orgViewMatrix );
+			}
+
+			TriFrustum currentFrustum = m_reflectionProbe->GetFrustum( i, renderContext );
+			m_updateContext.SetFrustum( currentFrustum );
+			// get the background reflection renderables from the component registry
+			RenderBackgroundPassObjects( renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );
+
+			if( g_lensflaresInReflections && !m_lensflares.empty() && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA )
+			{
+				GPU_REGION( renderContext, "Lens Flares in reflections" );
+				std::vector<ITr2Renderable*> visible;
+
+				// lensflares
+				for( auto it = m_lensflares.cbegin(); it != m_lensflares.cend(); ++it )
+				{
+					( *it )->GetRenderables( currentFrustum, visible );
+				}
+
+				if( !visible.empty() )
+				{
+					renderContext.SetReadOnlyDepth( true );
+					RenderRenderables( visible,
+									   m_secondaryBatches[TRIBATCHTYPE_ADDITIVE],
+									   TRIBATCHTYPE_ADDITIVE,
+									   Tr2EffectStateManager::RM_ALPHA_ADDITIVE,
+									   renderContext,
+									   Tr2RenderReason::TR2RENDERREASON_REFLECTION );
+					renderContext.SetReadOnlyDepth( false );
+				}
+			}
+
+			if( m_dynamicObjectReflectionEnabled && m_reflectionProbe->ReadyForDynamicObjectReflections() )
+			{
+				std::vector<ITr2Renderable*> visibleRenderables;
+				visibleRenderables.reserve( m_componentRegistry->ComponentCount<ITr2Renderable>() );
+
+				// Filter out the non-visible reflection renderables based on the current frustum
+				m_componentRegistry->ProcessComponents<ITr2Renderable>(
+					[&]( ITr2Renderable* renderable ) -> void {
+						if( renderable->IsVisible( m_updateContext ) )
+						{
+							visibleRenderables.push_back( renderable );
+						}
+					} );
+
+				bool hasFog = m_volumetricsRenderer && m_volumetricsRenderer->HasFog();
+
+				if( hasFog || !visibleRenderables.empty() )
+				{
+					// clear planets
+					renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
+					ClearBatches( m_secondaryBatches );
+
+					// We are rendering in a left hand coordinate system (for cubemaps) so don't override the cullmode!!!
+					renderContext.m_esm.BeginManagedRendering( CullMode::CULLMODE_NONE );
+
+					Tr2RenderableSortList transparentObjects;
+					GetAllBatchesFromRenderables( visibleRenderables, transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
+
+					PrepareTransparentBatch( transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
+					FinalizeBatches( m_secondaryBatches );
+
+					renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DEPTH_ONLY );
+					renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
+
+					RenderOpaqueBatches( m_secondaryBatches, renderContext );
+
+					renderContext.SetReadOnlyDepth( true );
+					if( m_volumetricsRenderer )
+					{
+						uint32_t width = Tr2Renderer::GetViewport().width;
+						uint32_t height = Tr2Renderer::GetViewport().height;
+						m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, width, height, m_sunData.DirWorld, m_currentSunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
+					}
+					RenderTransparentBatches( m_secondaryBatches, renderContext );
+					renderContext.SetReadOnlyDepth( false );
+
+					ClearBatches( m_secondaryBatches );
+					renderContext.m_esm.EndManagedRendering();
+				}
 			}
 		}
+
+		m_reflectionProbe->EndRenderPass( renderContext );
+
+		m_updateContext.SetFrustum( normalFrustum );
+
+		// reset ssao
+		if( m_ssao )
+		{
+			m_ssaoMapHandle->SetValue( m_ssao->GetOutput() );
+		}
+
+		// reset the reflection intensity
+		m_currentRelfectionIntensity = tmp;
 	}
-
-	m_reflectionProbe->EndRenderPass( renderContext );
-
-	m_updateContext.SetFrustum( normalFrustum );
-
-	// reset ssao
-	if( m_ssao )
-	{
-		m_ssaoMapHandle->SetValue( m_ssao->GetOutput() );
-	}
-
-	// reset the reflection intensity
-	m_currentRelfectionIntensity = tmp;
 
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
