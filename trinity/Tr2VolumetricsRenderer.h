@@ -147,6 +147,8 @@ private:
 	float m_environmentBlendCounter;
 
 	ITr2FroxelFogSettings::FroxelFogSettings m_froxelFogSettings;
+
+	float m_gameBackClip;
 	
 
 	FogViewDependentResources m_fogResources;

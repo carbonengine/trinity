@@ -105,6 +105,7 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 
 	m_batches.reset( new TriRenderBatchAccumulator<>( Tr2Renderer::GetPoolAllocator() ) );
 
+	m_gameBackClip = 1E6f; //must match what the actual game uses; not what Graphite is set to.
 
 	m_froxelFogSettings.thickness = 0.0f;
 	m_froxelFogSettings.directionality = 0.5f;
@@ -624,7 +625,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 	const float g = 1.61803398874989484820;
 	const float g2 = 1.32471795724474602596;
 
-	float maxDistance = Tr2Renderer::GetBackClip();
+	float maxDistance = m_gameBackClip;
 	float maxDistanceVisibility = exp(-m_froxelFogSettings.thickness);
 	float baseDensity = m_froxelFogSettings.thickness / maxDistance;
 
@@ -632,6 +633,9 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 	
 
+	//MieG is negative when light is scattered in the direction the light was already going.
+	//Expose this value as positive, then clamp it so that it's always negative.
+	//Exactly 0.0 and 1.0 both cause issues with the math, so clamp to a slightly larger value.
 	float mieG = -std::clamp( m_froxelFogSettings.directionality, 0.001f, 0.999f );
 
 
@@ -793,6 +797,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 		resources.applyFroxels->SetParameter( BlueSharedString( "FroxelTexture" ), resources.fogFroxels );
 		resources.applyFroxels->SetParameter( BlueSharedString( "MieEnvironmentMap" ), m_mieEnvironmentMap );
 		resources.applyFroxels->SetParameter( BlueSharedString( "OriginalResolution" ), Vector2( float( originalWidth ), float( originalHeight ) ) );
+		resources.applyFroxels->SetParameter( BlueSharedString( "MaxDistance" ), maxDistance );
 		resources.applyFroxels->SetParameter( BlueSharedString( "MaxDistanceVisibility" ), maxDistanceVisibility );
 		resources.applyFroxels->SetParameter( BlueSharedString( "BaseDensity" ), baseDensity );
 		resources.applyFroxels->SetParameter( BlueSharedString( "BackgroundColor" ), Vector3( backgroundColor.r, backgroundColor.g, backgroundColor.b ) );

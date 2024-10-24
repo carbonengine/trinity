@@ -111,6 +111,13 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			Be::READ )
 
 		MAP_ATTRIBUTE(
+			"gameBackClip",
+			m_gameBackClip,
+			"Hardcoded back clip value, must match the back clip used by the game. This value makes sure that the fog looks correct even if the back clip is changed in Graphite. \n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
+
+		MAP_ATTRIBUTE(
 			"mieEnvironmentMap",
 			m_mieEnvironmentMap,
 			"",
