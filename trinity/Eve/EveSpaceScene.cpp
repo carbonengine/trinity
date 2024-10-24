@@ -2367,17 +2367,12 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 	renderContext.m_esm.UpdateRenderTargetViewport( shadowMap->GetWidth(), shadowMap->GetHeight() );
 	renderContext.m_esm.SetViewport( shadowMapScale, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY, 0, 1 );
 	
-	TriFrustum shadowFrustum;
-	// TODO: intern, extract frustum does not fill in all the data for the frustum. 
-	// TODO: intern, then again, the same matrix multiplication is happening inside of DeriveFrustum as well... do something about this
-	//shadowFrustum.ExtractFrustum( &viewProj );
-	
 	const float margin = 16.f;
 	const float marginScale = 1.f - (margin / shadowMapScale);
-	//const float marginBias = .5f * (margin / shadowMapScale);
-	const Matrix marginMatrix = ScalingMatrix( Vector3( marginScale, marginScale, 1.f ) );// * TranslationMatrix( marginBias, marginBias, 0.f );
+	const Matrix marginMatrix = ScalingMatrix( Vector3( marginScale, marginScale, 1.f ) );
 	const Matrix viewProj = view * projection * marginMatrix;
 
+	TriFrustum shadowFrustum;
 	shadowFrustum.DeriveFrustum( &view, &lightPosition, &projection, renderContext.m_esm.GetViewport() );
 	{
 		CCP_STATS_ZONE( "get shadowbatches for light" );
@@ -2419,9 +2414,6 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 	}
 
 	m_shadowBatches[0]->Clear();
-
-	renderContext.SetReadOnlyDepth( false );
-
 	renderContext.m_esm.PopViewport();
 }
 
@@ -2429,18 +2421,13 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	// TODO: intern, think about proper value for near clipping...
-	// TODO: intern, confirm that up vector is ok
-
 	if( lightData.innerAngle <= 0. )
 	{
 		// pointlight
-		// TODO: intern, there surely is a more elegant way of doing this...
 		Vector3 directions[6] = {
 			Vector3( 1.f, 0.f, 0.f ), Vector3( 0.f, 1.f, 0.f ), Vector3( 0.f, 0.f, 1.f ), 
 			Vector3( -1.f, 0.f, 0.f ), Vector3( 0.f, -1.f, 0.f ), Vector3( 0.f, 0.f, -1.f )
 		};
-
 		float fov = 90.f / 360.f * TRI_2PI;
 		// we flip near and far plane for reverse z
 		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius, lightData.radius / 1000.f );
@@ -2464,11 +2451,10 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 	else
 	{
 		// spotlight
-		// TODO: intern, fov from projectionPlaneDistance. or better yet, construct perspective matrix directly
 		float fov = 2.f * acos( float( lightData.outerAngle ) );
 		// we flip near and far plane for reverse z
 		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius, lightData.radius / 1000.f );
-		Vector3 up = Vector3(0.f, 1.f, 0.f);//Vector3( lightData.direction.z, lightData.direction.x, lightData.direction.y );
+		Vector3 up = abs( lightData.direction.y ) < .7f ? Vector3( 0.f, 1.f, 0.f ) : Vector3( 1.f, 0.f, 0.f );
 		Matrix view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
 		uint32_t shadowMapScale;
 		uint32_t shadowMapOffsetX;
@@ -2482,8 +2468,6 @@ void EveSpaceScene::FinishRenderingShadowMapForLights( Tr2RenderContext& renderC
 {
 	renderContext.m_esm.PopRenderTarget();
 	renderContext.m_esm.PopDepthStencilBuffer();
-
-	//PopulatePerFramePSData( m_perFramePS, renderContext );
 	ApplyPerFrameData( renderContext );
 }
 
@@ -2997,12 +2981,14 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	data.Jittering = m_jitter != Vector4(0, 0, 0, 0);
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		data.ShadowMapAtlasSize = (float)lightManager->GetShadowMapAtlasSettings().actualTextureSize;
+		data.InverseShadowMapAtlasSize = lightManager->GetShadowMapAtlasSettings().actualTextureSize > 0 ? 
+			1.f / lightManager->GetShadowMapAtlasSettings().actualTextureSize :
+			0.f;
 		data.ShadowMapAtlasEntryMinSizeLog2 = lightManager->GetShadowMapAtlasSettings().entryMinSizeLog2;
 	}
 	else
 	{
-		data.ShadowMapAtlasSize = 0.f;
+		data.InverseShadowMapAtlasSize = 0.f;
 		data.ShadowMapAtlasEntryMinSizeLog2 = 0;
 	}
 	data.ShadowMapSettings = Vector4( 1.f, 1.f, 0.f, 0.f );

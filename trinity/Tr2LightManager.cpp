@@ -242,7 +242,6 @@ void Tr2LightManager::UpdateShadowAtlasSize( ShadowQuality shadowQuality )
 		if ( shadowQuality != ShadowQuality::SHADOW_DISABLED )
 		{
 			Tr2LightManager::ShadowMapAtlasSettings settings = CalculateShadowMapAtlasSettings( shadowQuality );
-			// TODO: intern, maybe switch to 16 bit for atlas format? check if there is z-fighting with DSFMT_D16!
 			m_shadowMapAtlasDS->Create( settings.size, settings.size, Tr2RenderContextEnum::DSFMT_D32F, 0, 0 );
 		}
 	}
@@ -311,8 +310,9 @@ void Tr2LightManager::AddLight( PerLightData& data )
 		data.color.z *= data.radius * dimming;
 
 		if( m_shadowMapAtlasSettings.size == 0 || m_qualityUsedByShadowAtlas == ShadowQuality::SHADOW_DISABLED )
+		{
 			data.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
-
+		}
 		m_tlsLightData.local().push_back( data );
 	}
 }
@@ -411,8 +411,7 @@ void Tr2LightManager::ResolveLightData()
 	{
 		if( ( m_lightData[i].flags & FLAG_CASTS_SHADOWS ) != 0 )
 		{
-			// TODO: intern, be aware that the pixel size might be very large when frustum culling has been turned off (see g_frustumCullingDisabled)
-			float sizeAcross = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
+			float sizeAcross = m_frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
 			sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? m_shadowMapAtlasSettings.size : sizeAcross;
 			lightTuples.push_back( LightScreenSizeTuple{ i, sizeAcross } );
 		}
@@ -450,10 +449,11 @@ void Tr2LightManager::ResolveLightData()
 		Tr2LightManager::PerLightData& lightData = m_lightData[lightIndex];
 		
 		uint32_t size = ( (uint32_t)lightTuples[i].sizeAcross ) >> m_shadowMapAtlasSettings.entryInverseScaleFactorLog2;
-		size = (uint32_t)ClampInt( size, m_shadowMapAtlasSettings.entryMinSize, m_shadowMapAtlasSettings.entryMaxSize );
+		size = ClampUInt( size, m_shadowMapAtlasSettings.entryMinSize, m_shadowMapAtlasSettings.entryMaxSize );
 		size = CCP_ALIGN( size, m_shadowMapAtlasSettings.entryMinSize );
 
-		uint32_t width, height;
+		uint32_t width;
+		uint32_t height;
 		if ( lightData.innerAngle <= 0.f )
 		{
 			// pointlight
@@ -642,7 +642,7 @@ bool Tr2LightManager::GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t widt
 	width = CCP_ALIGN( width, m_shadowMapAtlasSettings.entryMinSize );
 	height = CCP_ALIGN( height, m_shadowMapAtlasSettings.entryMinSize );
 
-	uint32_t nodeId = InsertShadowMapNode( 0, lightIndex, width, height );
+	uint32_t nodeId = InsertShadowMapNode( 0, lightIndex, (int32_t)width, (int32_t)height );
 	//CCP_ASSERT_M( nodeId != -1, "Shadow map atlas could not fit the requested entry." );
 
 	if( nodeId != -1 )
