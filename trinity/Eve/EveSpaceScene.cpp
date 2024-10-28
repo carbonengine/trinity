@@ -574,8 +574,9 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 
 	size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
 	size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
+	size_t fogCount = m_componentRegistry->ComponentCount<ITr2FroxelFogSettings>();
 
-	if( shadowCasterCount + volumetricCount == 0 )
+	if( shadowCasterCount + volumetricCount + fogCount == 0 )
 	{
 		return;
 	}
