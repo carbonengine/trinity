@@ -104,9 +104,9 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
-			"backgroundColor",
-			m_froxelFogSettings.backgroundColor,
-			"How transparent the fog is to the background, controllable for RGB separately. When set to (0, 0, 0), the background is completely blocked by the fog. \n"
+			"backgroundVisibility",
+			m_froxelFogSettings.backgroundVisibility,
+			"How transparent the fog is. Increasing this causes the skybox and objects to become visible, no matter how high the fog thickness is set. \n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 

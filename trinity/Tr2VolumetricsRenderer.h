@@ -32,7 +32,7 @@ public:
 		float environmentIntensity = 0.f;
 
 		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
-		Color backgroundColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+		float backgroundVisibility = 0.0f;
 
 		FroxelFogSettings operator*( float rhs ) const;
 		FroxelFogSettings operator+( const FroxelFogSettings& rhs ) const;

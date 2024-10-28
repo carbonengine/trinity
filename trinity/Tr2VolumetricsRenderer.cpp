@@ -26,7 +26,7 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 	result.directionality = directionality * rhs;
 	result.environmentIntensity = environmentIntensity * rhs;
 	result.fogColor = fogColor * rhs;
-	result.backgroundColor = backgroundColor * rhs;
+	result.backgroundVisibility = backgroundVisibility * rhs;
 	return result;
 
 }
@@ -38,7 +38,7 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 	result.directionality = directionality + rhs.directionality;
 	result.environmentIntensity = environmentIntensity + rhs.environmentIntensity;
 	result.fogColor = fogColor + rhs.fogColor;
-	result.backgroundColor = backgroundColor + rhs.backgroundColor;
+	result.backgroundVisibility = backgroundVisibility + rhs.backgroundVisibility;
 	return result;
 }
 
@@ -112,7 +112,7 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_froxelFogSettings.directionality = 0.5f;
 	m_froxelFogSettings.environmentIntensity = 1.0f;
 	m_froxelFogSettings.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
-	m_froxelFogSettings.backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+	m_froxelFogSettings.backgroundVisibility = 0.0f;
 
 
 	{
@@ -402,7 +402,7 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 	baseline.value.directionality = 0.5f;
 	baseline.value.environmentIntensity = 1.0f;
 	baseline.value.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
-	baseline.value.backgroundColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
+	baseline.value.backgroundVisibility = 0.0f;
 	overrides.push_back( baseline );
 
 	m_froxelFogSettings = PriorityBlend( overrides );
@@ -630,7 +630,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 	float maxDistanceVisibility = exp(-m_froxelFogSettings.thickness);
 	float baseDensity = m_froxelFogSettings.thickness / maxDistance;
 
-	Color backgroundColor = m_froxelFogSettings.backgroundColor;
+	Color fogColor = m_froxelFogSettings.fogColor;
+	float backgroundVisibility = m_froxelFogSettings.backgroundVisibility;
 
 	
 
@@ -675,7 +676,6 @@ void Tr2VolumetricsRenderer::RenderFog(
 			data->Jitter = resources.froxelJitter;
 			data->Far = maxDistance;
 
-			Color fogColor = m_froxelFogSettings.fogColor;
 			data->Scattering = Vector3( fogColor.r, fogColor.g, fogColor.b );
 			data->BaseDensity = baseDensity;
 
@@ -824,10 +824,12 @@ void Tr2VolumetricsRenderer::RenderFog(
 		resources.applyFroxels->SetParameter( BlueSharedString( "FroxelTexture" ), resources.fogFroxels );
 		resources.applyFroxels->SetParameter( BlueSharedString( "MieEnvironmentMap" ), m_mieEnvironmentMap );
 		resources.applyFroxels->SetParameter( BlueSharedString( "OriginalResolution" ), Vector2( float( originalWidth ), float( originalHeight ) ) );
+		resources.applyFroxels->SetParameter( BlueSharedString( "FroxelResolution" ), Vector4( float( width ), float( height ), 1.0f / float( width ), 1.0f / float( height ) ) );
 		resources.applyFroxels->SetParameter( BlueSharedString( "MaxDistance" ), maxDistance );
 		resources.applyFroxels->SetParameter( BlueSharedString( "MaxDistanceVisibility" ), maxDistanceVisibility );
 		resources.applyFroxels->SetParameter( BlueSharedString( "BaseDensity" ), baseDensity );
-		resources.applyFroxels->SetParameter( BlueSharedString( "BackgroundColor" ), Vector3( backgroundColor.r, backgroundColor.g, backgroundColor.b ) );
+		resources.applyFroxels->SetParameter( BlueSharedString( "FogColor" ), Vector3( fogColor.r, fogColor.g, fogColor.b ) );
+		resources.applyFroxels->SetParameter( BlueSharedString( "BackgroundVisibility" ), backgroundVisibility );
 		resources.applyFroxels->SetParameter( BlueSharedString( "MieG" ), mieG );
 		resources.applyFroxels->SetParameter( BlueSharedString( "EnvironmentIntensity" ), m_froxelFogSettings.environmentIntensity );
 		Tr2Renderer::DrawScreenQuad( renderContext, resources.applyFroxels );
