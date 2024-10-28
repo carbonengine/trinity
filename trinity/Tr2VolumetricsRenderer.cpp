@@ -16,6 +16,7 @@
 #include "Tr2DepthStencil.h"
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
 #include "PriorityBlend.h"
+#include "Tr2LightManager.h"
 
 
 ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator*( float rhs ) const
@@ -750,6 +751,32 @@ void Tr2VolumetricsRenderer::RenderFog(
 			else
 			{
 				hasShadows = false;
+			}
+
+			if ( auto lightManager = Tr2LightManager::GetInstance() )
+			{
+				CCP_ASSERT_M( lightManager->GetVolumetricLights().size() <= 16, "LightManager does not meet expectation of VolumetricsRenderer!" );
+
+				data->NumDynamicLights = (uint32_t)lightManager->GetVolumetricLights().size();
+				data->InverseShadowMapAtlasSize = lightManager->GetShadowMapAtlasSettings().actualTextureSize > 0 ?
+					1.f / lightManager->GetShadowMapAtlasSettings().actualTextureSize :
+					0.f;
+				data->ShadowMapAtlasEntryMinSizeLog2 = lightManager->GetShadowMapAtlasSettings().entryMinSizeLog2;
+
+				for( uint32_t i = 0; i < lightManager->GetVolumetricLights().size(); i++ )
+				{
+					uint32_t lightIndex = lightManager->GetVolumetricLights()[i];
+					data->DynamicLights[i] = lightManager->GetLightData( lightIndex );
+					// doesn't work due to orientation reconstruction, which is taking place in world space
+					//data->DynamicLights[i].position = ( Vector4( data->DynamicLights[i].position, 1.f ) * view ).GetXYZ();
+					//data->DynamicLights[i].direction = Vector3_16( ( Vector4( data->DynamicLights[i].direction, 0.f ) * view ).GetXYZ() );
+				}
+			}
+			else
+			{
+				data->NumDynamicLights = 0;
+				data->InverseShadowMapAtlasSize = 0.f;
+				data->ShadowMapAtlasEntryMinSizeLog2 = 0;
 			}
 
 			m_fogConstantBuffer.Unlock( renderContext );

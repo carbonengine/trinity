@@ -37,7 +37,8 @@ const uint32_t TILE_HEIGHT = 16;
 // Size (in pixels) for width/height of shadow map atlas used by shadowcasting pointlights and spotlights
 const uint32_t HIGH_QUALITY_ATLAS_SIZE_LOG2 = 14;
 const uint32_t HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE = 2048;
-const uint32_t MAX_NUM_SHADOWCASTING_LIGHTS = 10;
+const uint32_t MAX_NUM_SHADOWCASTING_LIGHTS = 16;
+const uint32_t MAX_NUM_VOLUMETRIC_LIGHTS = 16;
 
 struct PerFrameData
 {
@@ -406,40 +407,75 @@ void Tr2LightManager::ResolveLightData()
 		uint32_t lightIndex;
 		float sizeAcross;
 	};
+
+	// filter volumetric lights
 	std::vector<LightScreenSizeTuple> lightTuples;
-	for( uint32_t i = 0; i < m_lightData.size(); i++ )
 	{
-		if( ( m_lightData[i].flags & FLAG_CASTS_SHADOWS ) != 0 )
+		for( uint32_t i = 0; i < m_lightData.size(); i++ )
 		{
-			float sizeAcross = m_frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
-			sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? m_shadowMapAtlasSettings.size : sizeAcross;
-			lightTuples.push_back( LightScreenSizeTuple{ i, sizeAcross } );
+			if( ( m_lightData[i].flags & FLAG_IS_VOLUMETRIC ) != 0 )
+			{
+				float sizeAcross = m_frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
+				sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? m_shadowMapAtlasSettings.size : sizeAcross;
+				lightTuples.push_back( LightScreenSizeTuple{ i, sizeAcross } );
+			}
 		}
-		if( ( m_lightData[i].flags & FLAG_IS_VOLUMETRIC ) != 0 )
-		{
-			m_volumetricLights.push_back( i );
-		}
-	}
 
-	// sort shadowcasting lights by size on screen
-	std::sort(lightTuples.begin(), lightTuples.end(), 
-		[](const LightScreenSizeTuple& a, const LightScreenSizeTuple& b)
-		{
+		// sort volumetric lights by size on screen
+		std::sort( lightTuples.begin(), lightTuples.end(), []( const LightScreenSizeTuple& a, const LightScreenSizeTuple& b ) {
 			return a.sizeAcross > b.sizeAcross;
-		}
-	);
+		} );
 
-	// keep only the largest lights
-	uint32_t numShadowCastingLights = min( MAX_NUM_SHADOWCASTING_LIGHTS, (uint32_t)lightTuples.size() );
-	m_shadowCastingLights.resize( numShadowCastingLights );
-	for( uint32_t i = 0; i < numShadowCastingLights; i++ )
-	{
-		m_shadowCastingLights[i] = lightTuples[i].lightIndex;
+		// keep only the largest lights
+		uint32_t numVolumetricLights = min( MAX_NUM_VOLUMETRIC_LIGHTS, (uint32_t)lightTuples.size() );
+		m_volumetricLights.resize( numVolumetricLights );
+		uint32_t i = 0;
+		for( ; i < numVolumetricLights; i++ )
+		{
+			m_volumetricLights[i] = lightTuples[i].lightIndex;
+		}
+		for( ; i < lightTuples.size(); i++ )
+		{
+			Tr2LightManager::PerLightData& lightData = m_lightData[lightTuples[i].lightIndex];
+			lightData.flags &= ~Tr2LightManager::FLAG_IS_VOLUMETRIC;
+		}
 	}
-	for( uint32_t i = MAX_NUM_SHADOWCASTING_LIGHTS; i < lightTuples.size(); i++ )
+
+	// filter shadowcasting lights
+	uint32_t numShadowCastingLights = 0;
+	lightTuples.resize( 0 );
 	{
-		Tr2LightManager::PerLightData& lightData = m_lightData[lightTuples[i].lightIndex];
-		lightData.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
+		for( uint32_t i = 0; i < m_lightData.size(); i++ )
+		{
+			if( ( m_lightData[i].flags & FLAG_CASTS_SHADOWS ) != 0 )
+			{
+				float sizeAcross = m_frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
+				sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? m_shadowMapAtlasSettings.size : sizeAcross;
+				lightTuples.push_back( LightScreenSizeTuple{ i, sizeAcross } );
+			}
+		}
+
+		// sort shadowcasting lights by size on screen
+		std::sort(lightTuples.begin(), lightTuples.end(), 
+			[](const LightScreenSizeTuple& a, const LightScreenSizeTuple& b)
+			{
+				return a.sizeAcross > b.sizeAcross;
+			}
+		);
+
+		// keep only the largest lights
+		numShadowCastingLights = min( MAX_NUM_SHADOWCASTING_LIGHTS, (uint32_t)lightTuples.size() );
+		m_shadowCastingLights.resize( numShadowCastingLights );
+		uint32_t i = 0;
+		for( ; i < numShadowCastingLights; i++ )
+		{
+			m_shadowCastingLights[i] = lightTuples[i].lightIndex;
+		}
+		for( ; i < lightTuples.size(); i++ )
+		{
+			Tr2LightManager::PerLightData& lightData = m_lightData[lightTuples[i].lightIndex];
+			lightData.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
+		}
 	}
 
 	// make an entries into the shadow map atlas
@@ -548,6 +584,11 @@ Tr2TextureArray& Tr2LightManager::GetLightProfileArray()
 const std::vector<uint32_t>& Tr2LightManager::GetShadowCastingLights() const
 {
 	return m_shadowCastingLights;
+}
+
+const std::vector<uint32_t>& Tr2LightManager::GetVolumetricLights() const
+{
+	return m_volumetricLights;
 }
 
 const Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t index ) const
