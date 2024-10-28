@@ -107,9 +107,68 @@ int32_t Tr2RenderTarget::Create(
 	{
 		m_width = width;
 		m_height = height;
+		m_arraySize = 1;
 		m_mipCount = mipLevelCount;
 		m_format = format;
 		m_msaa = Tr2MsaaDesc( msaaType, msaaQuality );
+		m_flags = ExFlag( flags );
+		m_type = type;
+		m_cpuUsage = cpuUsage;
+		m_gpuUsage = gpuUsage;
+		m_renderTarget.SetName( m_name.c_str() );
+	}
+	else
+	{
+		Destroy();
+	}
+	return hr;
+}
+
+int32_t Tr2RenderTarget::CreateArray(
+	unsigned width,
+	unsigned height,
+	unsigned arraySize,
+	unsigned mipLevelCount,
+	Tr2RenderContextEnum::PixelFormat format,
+	Tr2RenderContextEnum::ExFlag flags,
+	Tr2RenderContextEnum::TextureType type )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	if( IsAttached() )
+	{
+		return E_INVALIDARG;
+	}
+
+	auto gpuUsage = Tr2GpuUsage::NONE;
+	auto cpuUsage = Tr2CpuUsage::NONE;
+	GetUsage( 0u, flags, gpuUsage, cpuUsage );
+	if( !type )
+	{
+		type = TEX_TYPE_2D;
+	}
+
+	if( type == TEX_TYPE_CUBE )
+	{
+		arraySize *= 6;
+	}
+
+	auto hr = m_renderTarget.Create(
+								Tr2BitmapDimensions( type, format, width, height, 1, mipLevelCount, arraySize ),
+								Tr2MsaaDesc( ),
+								gpuUsage,
+								cpuUsage,
+								nullptr,
+								renderContext )
+				  .GetResult();
+	if( SUCCEEDED( hr ) )
+	{
+		m_width = width;
+		m_height = height;
+		m_arraySize = arraySize;
+		m_mipCount = mipLevelCount;
+		m_format = format;
+		m_msaa = Tr2MsaaDesc( );
 		m_flags = ExFlag( flags );
 		m_type = type;
 		m_cpuUsage = cpuUsage;
@@ -153,6 +212,7 @@ int32_t Tr2RenderTarget::CreateManual(
 	{
 		m_width = width;
 		m_height = height;
+		m_arraySize = 1;
 		m_mipCount = mipLevelCount;
 		m_format = format;
 		m_msaa = Tr2MsaaDesc( msaaType, msaaQuality );
@@ -373,6 +433,17 @@ uint32_t Tr2RenderTarget::GetMipCount() const
 
 // --------------------------------------------------------------------------------------
 // Description:
+//   Returns size of the texture array in the render target.
+// Return Value:
+//   size of the texture array
+// --------------------------------------------------------------------------------------
+uint32_t Tr2RenderTarget::GetArraySize() const
+{
+	return GetRenderTarget().GetArraySize();
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
 //   Returns number of samples in MSAA render target.
 // Return Value:
 //   Number of samples in MSAA render target
@@ -426,7 +497,7 @@ bool Tr2RenderTarget::OnPrepareResources()
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 
-		m_renderTarget.Create( Tr2BitmapDimensions( m_type, m_format, m_width, m_height, 1, m_mipCount ), m_msaa, m_gpuUsage, m_cpuUsage, nullptr, renderContext );
+		m_renderTarget.Create( Tr2BitmapDimensions( m_type, m_format, m_width, m_height, 1, m_mipCount, m_arraySize ), m_msaa, m_gpuUsage, m_cpuUsage, nullptr, renderContext );
 		m_onTextureChange();
 	}
 	return true;
