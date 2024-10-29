@@ -1039,6 +1039,11 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 		m_workQueue->SetDepthBias( &depthBias, nil, nil );
 		return S_OK;
 	}
+	case RS_DEPTH_CLIP_ENABLE:
+	{
+		m_workQueue->SetDepthClipEnable( value != 0 );
+		return S_OK;
+	}
 	case RS_SEPARATEALPHABLENDENABLE:
 	{
 		m_separateAlphaBlendEnabled = value != 0;

@@ -49,6 +49,7 @@ MetalWorkQueue::MetalWorkQueue()
 	, m_cullMode( MTLCullModeNone )
     , m_fillMode( MTLTriangleFillModeFill )
 	, m_depthBias( MetalDepthBias{0.0f, 0.0f, FLT_MAX} )
+	, m_depthClipMode( MTLDepthClipModeClip )
 	, m_stencilReferenceValue( 0 )
 	, m_outputPixelFormat( MTLPixelFormatInvalid )
 	, m_outputDepthFormat( MTLPixelFormatInvalid )
@@ -1776,6 +1777,12 @@ bool MetalWorkQueue::EmitRenderEncoderState()
 		m_dirtyRenderEncoderState &= ~METAL_RENDERENCODERDIRTYSTATE_DEPTHBIAS;
 	}
 
+	if( m_dirtyRenderEncoderState & METAL_RENDERENCODERDIRTYSTATE_DEPTHCLIP )
+	{
+		[m_currentRenderEncoder setDepthClipMode:m_depthClipMode];
+		m_dirtyRenderEncoderState &= ~METAL_RENDERENCODERDIRTYSTATE_DEPTHCLIP;
+	}
+
 	if( m_dirtyRenderEncoderState & METAL_RENDERENCODERDIRTYSTATE_DEPTHSTENCILSTATE )
 	{
 		// Make sure we don't enable depth write when the depth attachment is not set.
@@ -2146,6 +2153,12 @@ void MetalWorkQueue::SetDepthBias( float *depthBias, float *slopeScale, float *c
 	if (slopeScale) m_depthBias.slopeScale = *slopeScale;
 	if (clamp)      m_depthBias.clamp      = *clamp;
 	m_dirtyRenderEncoderState |= METAL_RENDERENCODERDIRTYSTATE_DEPTHBIAS;
+}
+
+void MetalWorkQueue::SetDepthClipEnable( bool enable )
+{
+	m_depthClipMode = enable ? MTLDepthClipModeClip : MTLDepthClipModeClamp;
+	m_dirtyRenderEncoderState |= METAL_RENDERENCODERDIRTYSTATE_DEPTHCLIP;
 }
 
 void MetalWorkQueue::SetDepthState( bool enabled )

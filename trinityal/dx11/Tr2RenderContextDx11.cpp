@@ -1614,6 +1614,13 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				SetRtDsToDevice( MAX_RENDER_TARGET );
 			}
 			continue;
+		case RS_DEPTH_CLIP_ENABLE:
+			if( rs.DepthClipEnable != ( value ? TRUE : FALSE ) )
+			{
+				rs.DepthClipEnable = value ? TRUE : FALSE;
+				m_dirtyFlag.flags.rasterizer = true;
+			}
+			continue;
 		default:
 			continue;
 		}

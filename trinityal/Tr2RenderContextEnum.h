@@ -263,6 +263,7 @@ namespace Tr2RenderContextEnum
 		RS_STENCILMASK               = 58,   /* Mask value used in stencil test */
 		RS_STENCILWRITEMASK          = 59,   /* Write mask applied to values written to stencil buffer */
 		RS_TEXTUREFACTOR             = 60,   /* D3DCOLOR used for multi-texture blend */
+		RS_DEPTH_CLIP_ENABLE		 = 61,   /* Corresponds to D3D12_RASTERIZER_DESC.DepthClipEnable */
 		RS_WRAP0                     = 128,  /* wrap for 1st texture coord. set */
 		RS_WRAP1                     = 129,  /* wrap for 2nd texture coord. set */
 		RS_WRAP2                     = 130,  /* wrap for 3rd texture coord. set */

@@ -256,7 +256,7 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	}
 
 	// pull the aabb towards the sun
-	aabb.m_max.z += 250000.f;
+	//aabb.m_max.z += 250000.f;
 	splitSetup.aabb = aabb;
 	
 	splitSetup.lightViewProjection = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );

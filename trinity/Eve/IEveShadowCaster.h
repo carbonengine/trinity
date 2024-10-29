@@ -15,7 +15,7 @@ namespace EveShadowCaster
 {
 	inline bool IsVisible( const TriFrustum& camera, const TriFrustumOrtho& shadow, const Vector3 sunDir, const Vector4 boundingSphere )
 	{
-		bool sphereIsVisible = shadow.IsSphereVisibleAndInsideNearPlane( &boundingSphere );
+		bool sphereIsVisible = shadow.IsSphereVisibleIgnoreFarPlane( boundingSphere.GetXYZ(), boundingSphere.w );
 		if( sphereIsVisible )
 		{
 			for( unsigned int j = 0; j < 6; ++j )

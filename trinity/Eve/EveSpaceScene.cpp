@@ -685,6 +685,9 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		{
 			GPU_REGION( renderContext, "Cascade rendering" );
 
+			renderContext.SetRenderState( Tr2RenderContextEnum::RS_DEPTH_CLIP_ENABLE, FALSE );
+			ON_BLOCK_EXIT( [&] { renderContext.SetRenderState( Tr2RenderContextEnum::RS_DEPTH_CLIP_ENABLE, TRUE ); } );
+
 			for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 			{
 				if( shadowCasterInfo[i].empty() )

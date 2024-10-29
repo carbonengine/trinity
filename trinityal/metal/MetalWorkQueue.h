@@ -90,8 +90,9 @@ namespace TrinityALImpl
 		METAL_RENDERENCODERDIRTYSTATE_VERTEXDESCRIPTOR  = 1u << 5,
 		METAL_RENDERENCODERDIRTYSTATE_ATTACHMENTS       = 1u << 6,
         METAL_RENDERENCODERDIRTYSTATE_FILLMODE          = 1u << 7,
+		METAL_RENDERENCODERDIRTYSTATE_DEPTHCLIP         = 1u << 8,
 
-		METAL_RENDERENCODERDIRTYSTATE_ALL               = 0b011111111u
+		METAL_RENDERENCODERDIRTYSTATE_ALL               = 0b0111111111u
 	};
 
 	enum MetalBlendType
@@ -268,6 +269,7 @@ namespace TrinityALImpl
 		void SetCullMode( MTLCullMode cullMode );
         void SetFillMode( MTLTriangleFillMode fillMode );
 		void SetDepthBias( float *depthBias, float *slopeScale, float *clamp );
+		void SetDepthClipEnable( bool enable );
 		void SetBlendColor( uint32_t attachmentIndex, uint32_t blendColor );
 		void SetSrcBlend( uint32_t attachmentIndex, MTLBlendFactor factor );
 		void SetDestBlend( uint32_t attachmentIndex, MTLBlendFactor factor );
@@ -440,6 +442,7 @@ namespace TrinityALImpl
         MTLTriangleFillMode          m_fillMode;
 		MetalDepthBias               m_depthBias;
 		MetalBlendState              m_blendState[METAL_MAX_RENDER_TARGETS];
+		MTLDepthClipMode m_depthClipMode;
 		MTLDepthStencilDescriptor   *m_depthStencilDescriptor;
 		MTLStencilDescriptor        *m_frontFaceStencilDescriptor;
 		MTLStencilDescriptor        *m_backFaceStencilDescriptor;

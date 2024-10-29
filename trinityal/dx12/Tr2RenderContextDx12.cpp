@@ -469,6 +469,13 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 	case Tr2RenderContextEnum::RS_ALPHAFUNC:
 	case Tr2RenderContextEnum::RS_ALPHAREF:
 		return S_OK;
+	case Tr2RenderContextEnum::RS_DEPTH_CLIP_ENABLE:
+		if( m_psoDescription.m_rasterizerDesc.DepthClipEnable != ( value ? TRUE : FALSE ) )
+		{
+			m_psoDescription.m_rasterizerDesc.DepthClipEnable = value ? TRUE : FALSE;
+			m_dirtyPso = true;
+		}
+		return S_OK;
 	default:
 		return E_NOTIMPL;
 	}
