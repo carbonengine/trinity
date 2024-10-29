@@ -471,7 +471,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
 		{
-			const Matrix transform = *it;
+			const Matrix transform = *it * m_worldTransform;
 
 			const Tr2MeshAreaVector* areas = instanced->GetAreas( TRIBATCHTYPE_OPAQUE );
 			for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
