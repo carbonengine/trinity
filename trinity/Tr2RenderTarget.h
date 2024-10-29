@@ -43,6 +43,15 @@ public:
 		Tr2RenderContextEnum::ExFlag flags = Tr2RenderContextEnum::EX_NONE,
 		Tr2RenderContextEnum::TextureType type = Tr2RenderContextEnum::TEX_TYPE_2D );
 
+	int32_t CreateArray(
+		unsigned width,
+		unsigned height,
+		unsigned arraySize,
+		unsigned mipLevelCount,
+		Tr2RenderContextEnum::PixelFormat format,
+		Tr2RenderContextEnum::ExFlag flags = Tr2RenderContextEnum::EX_NONE,
+		Tr2RenderContextEnum::TextureType type = Tr2RenderContextEnum::TEX_TYPE_2D );
+
 	int32_t CreateManual(
 		unsigned width, 
 		unsigned height, 
@@ -69,6 +78,7 @@ public:
 	uint32_t GetWidth() const;
 	uint32_t GetHeight() const;
 	uint32_t GetMipCount() const;
+	uint32_t GetArraySize() const;
 	uint32_t GetMsaaType() const;
 	uint32_t GetMsaaQuality() const;
 	Tr2RenderContextEnum::PixelFormat GetFormat() const;
@@ -98,6 +108,7 @@ private:
 
 	uint32_t m_width;
 	uint32_t m_height;
+	uint32_t m_arraySize;
 	uint32_t m_mipCount;
 	Tr2RenderContextEnum::PixelFormat m_format;
 	Tr2MsaaDesc m_msaa;

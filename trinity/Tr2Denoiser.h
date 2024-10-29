@@ -19,6 +19,10 @@ public:
 	Tr2Denoiser();
 
 	ALResult Apply( ITr2TextureProvider & source, ITr2TextureProvider & depth, ITr2TextureProvider * normals, const Matrix& projection, Tr2RenderContext& renderContext );
+	ALResult Apply( ITr2TextureProvider & source, ITr2TextureProvider & depth, ITr2TextureProvider * normals, const Matrix& projection, uint32_t index, Tr2RenderContext& renderContext );
+
+	void SetArraySize( uint32_t value );
+
 	ITr2TextureProvider* GetTexture() const;
 	void SetRadius( uint32_t value );
 
@@ -40,6 +44,8 @@ private:
 	float m_depthWeight;
 	float m_normalWeight;
 	float m_planeWeight;
+
+	uint32_t m_textureArraySize;
 
 	bool m_bypass;
 	bool m_parametersDirty;

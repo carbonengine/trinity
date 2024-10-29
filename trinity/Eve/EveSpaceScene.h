@@ -271,7 +271,7 @@ protected:
 
 		uint32_t FrameIndex;
 		uint32_t Jittering; //0 if off, 1 if on
-		float ShadowMapAtlasSize;					// shadow map atlas for dynamic lights
+		float InverseShadowMapAtlasSize;			// shadow map atlas for dynamic lights
 		uint32_t ShadowMapAtlasEntryMinSizeLog2;	// shadow map atlas for dynamic lights
 		
 		float VolumetricSlices[4];

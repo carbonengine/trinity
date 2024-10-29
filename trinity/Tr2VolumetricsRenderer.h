@@ -10,6 +10,7 @@
 #include "TriFrustumOrtho.h"
 #include "Tr2ShadowMap.h"
 #include "PostProcess/Tr2PostProcessEnums.h"
+#include "Tr2LightManager.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -31,7 +32,7 @@ public:
 		float environmentIntensity = 0.f;
 
 		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
-		Color backgroundColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+		float backgroundVisibility = 0.0f;
 
 		FroxelFogSettings operator*( float rhs ) const;
 		FroxelFogSettings operator+( const FroxelFogSettings& rhs ) const;
@@ -147,6 +148,8 @@ private:
 	float m_environmentBlendCounter;
 
 	ITr2FroxelFogSettings::FroxelFogSettings m_froxelFogSettings;
+
+	float m_gameBackClip;
 	
 
 	FogViewDependentResources m_fogResources;
@@ -162,7 +165,7 @@ private:
 		uint32_t ResolutionX;
 		uint32_t ResolutionY;
 		uint32_t ResolutionZ;
-		float _pad0;
+		uint32_t NumDynamicLights;
 
 		Vector3 Jitter;
 		float Far;
@@ -173,10 +176,10 @@ private:
 		float MaxDistanceVisibility;
 		float MieG;
 		float EnvironmentIntensity;
-		float _pad1;
+		float InverseShadowMapAtlasSize;
 
 		Vector3 Extinction;
-		float _pad2;
+		uint32_t ShadowMapAtlasEntryMinSizeLog2;
 
 		Matrix InverseViewMatrix;
 
@@ -196,6 +199,9 @@ private:
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
 		Matrix ShadowMatrix[16]; // Matrix that takes a coordinate from view space all the way to the packed cascades
 		Vector4 SplitInfo; // x = NrOfSplits, y = <unused>, z = <unused>, w = <unused>
+
+		// TODO: intern, consider passing in indices and reading from LightBuffer
+		Tr2LightManager::PerLightData DynamicLights[16];
 	};
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
