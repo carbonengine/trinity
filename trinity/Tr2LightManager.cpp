@@ -36,7 +36,7 @@ const uint32_t TILE_HEIGHT = 16;
 
 // Size (in pixels) for width/height of shadow map atlas used by shadowcasting pointlights and spotlights
 const uint32_t HIGH_QUALITY_ATLAS_SIZE_LOG2 = 14;
-const uint32_t HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE = 2048;
+const uint32_t HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE = 1 << 13;
 const uint32_t MAX_NUM_SHADOWCASTING_LIGHTS = 16;
 const uint32_t MAX_NUM_VOLUMETRIC_LIGHTS = 16;
 
@@ -450,18 +450,15 @@ void Tr2LightManager::ResolveLightData()
 			if( ( m_lightData[i].flags & FLAG_CASTS_SHADOWS ) != 0 )
 			{
 				float sizeAcross = m_frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
-				sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? m_shadowMapAtlasSettings.size : sizeAcross;
+				sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? ( 1 << HIGH_QUALITY_ATLAS_SIZE_LOG2 ) : sizeAcross;
 				lightTuples.push_back( LightScreenSizeTuple{ i, sizeAcross } );
 			}
 		}
 
 		// sort shadowcasting lights by size on screen
-		std::sort(lightTuples.begin(), lightTuples.end(), 
-			[](const LightScreenSizeTuple& a, const LightScreenSizeTuple& b)
-			{
-				return a.sizeAcross > b.sizeAcross;
-			}
-		);
+		std::sort( lightTuples.begin(), lightTuples.end(), []( const LightScreenSizeTuple& a, const LightScreenSizeTuple& b ) {
+			return a.sizeAcross > b.sizeAcross;
+		} );
 
 		// keep only the largest lights
 		numShadowCastingLights = min( MAX_NUM_SHADOWCASTING_LIGHTS, (uint32_t)lightTuples.size() );
@@ -478,49 +475,69 @@ void Tr2LightManager::ResolveLightData()
 		}
 	}
 
-	// make an entries into the shadow map atlas
-	for( uint32_t i = 0; i < numShadowCastingLights; i++ )
+	bool everythingFit = false;
+	// 5 iterations are more than enough. With the current values we should actually only need at most 4 iterations.
+	for( uint32_t j = 0; j < 5 && !everythingFit; j++ )
 	{
-		uint32_t lightIndex = lightTuples[i].lightIndex;
-		Tr2LightManager::PerLightData& lightData = m_lightData[lightIndex];
-		
-		uint32_t size = ( (uint32_t)lightTuples[i].sizeAcross ) >> m_shadowMapAtlasSettings.entryInverseScaleFactorLog2;
-		size = ClampUInt( size, m_shadowMapAtlasSettings.entryMinSize, m_shadowMapAtlasSettings.entryMaxSize );
-		size = CCP_ALIGN( size, m_shadowMapAtlasSettings.entryMinSize );
+		everythingFit = true;
+		uint32_t entryInverseScaleFactorLog2 = m_shadowMapAtlasSettings.entryInverseScaleFactorLog2 + j;
+		uint32_t entryMaxSize = m_shadowMapAtlasSettings.entryMaxSize >> j;
 
-		uint32_t width;
-		uint32_t height;
-		if ( lightData.innerAngle <= 0.f )
-		{
-			// pointlight
-			width = 3 * size;
-			height = 2 * size;
-		}
-		else
-		{
-			// spotlight
-			width = size;
-			height = size;
-		}
-		
-		uint32_t offsetX;
-		uint32_t offsetY;
-		bool gotShadowMapAtlasEntry = GetShadowMapAtlasEntry( lightIndex, width, height, offsetX, offsetY );
+		// clear atlas entries
+		m_shadowMapNodes.resize( 1 );
+		m_shadowMapNodes[0].x = 0;
+		m_shadowMapNodes[0].y = 0;
+		m_shadowMapNodes[0].width = m_shadowMapAtlasSettings.size;
+		m_shadowMapNodes[0].height = m_shadowMapAtlasSettings.size;
+		m_shadowMapNodes[0].children[0] = -1;
+		m_shadowMapNodes[0].children[1] = -1;
+		m_shadowMapNodes[0].lightIndex = -1;
 
-		if( gotShadowMapAtlasEntry )
+		// make entries into the shadow map atlas
+		for( uint32_t i = 0; i < numShadowCastingLights; i++ )
 		{
-			lightData.shadowMapOffsetX = offsetX >> m_shadowMapAtlasSettings.entryMinSizeLog2;
-			lightData.shadowMapOffsetY = offsetY >> m_shadowMapAtlasSettings.entryMinSizeLog2;
-			lightData.shadowMapScale = size >> m_shadowMapAtlasSettings.entryMinSizeLog2;
-		}
-		else
-		{
-			CCP_LOGWARN( "Creation of shadow map atlas entry failed." );
-			lightData.shadowMapOffsetX = 0;
-			lightData.shadowMapOffsetY = 0;
-			lightData.shadowMapScale = 0;
+			uint32_t lightIndex = lightTuples[i].lightIndex;
+			Tr2LightManager::PerLightData& lightData = m_lightData[lightIndex];
+
+			uint32_t size = ( (uint32_t)lightTuples[i].sizeAcross ) >> entryInverseScaleFactorLog2;
+			size = ClampUInt( size, m_shadowMapAtlasSettings.entryMinSize, entryMaxSize );
+			size = CCP_ALIGN( size, m_shadowMapAtlasSettings.entryMinSize );
+
+			uint32_t width;
+			uint32_t height;
+			if( lightData.innerAngle <= 0.f )
+			{
+				// pointlight
+				width = 3 * size;
+				height = 2 * size;
+			}
+			else
+			{
+				// spotlight
+				width = size;
+				height = size;
+			}
+
+			uint32_t offsetX;
+			uint32_t offsetY;
+			bool gotShadowMapAtlasEntry = GetShadowMapAtlasEntry( lightIndex, width, height, offsetX, offsetY );
+
+			if( gotShadowMapAtlasEntry )
+			{
+				lightData.shadowMapOffsetX = offsetX >> m_shadowMapAtlasSettings.entryMinSizeLog2;
+				lightData.shadowMapOffsetY = offsetY >> m_shadowMapAtlasSettings.entryMinSizeLog2;
+				lightData.shadowMapScale = size >> m_shadowMapAtlasSettings.entryMinSizeLog2;
+			}
+			else
+			{
+				lightData.shadowMapOffsetX = 0;
+				lightData.shadowMapOffsetY = 0;
+				lightData.shadowMapScale = 0;
+				everythingFit = false;
+			}
 		}
 	}
+	CCP_ASSERT_M( everythingFit, "Not all entries fit into the shadow map atlas!" );
 }
 
 ALResult Tr2LightManager::UpdateLists( Tr2RenderContext& renderContext )
