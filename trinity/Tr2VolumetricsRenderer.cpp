@@ -650,18 +650,10 @@ void Tr2VolumetricsRenderer::RenderFog(
 	float backgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility, 0.0f, 1.0f );
 
 
-
-
-
-	
-
 	//MieG is negative when light is scattered in the direction the light was already going in.
 	//Expose this value as positive, then negate and clamp it so that it's always negative.
 	//Exactly 0.0 and 1.0 both cause issues with the math in the shader, so clamp to a slightly smaller range.
 	float mieG = -std::clamp( m_froxelFogSettings.directionality, 0.001f, 0.999f );
-
-
-
 
 	Matrix inverseView = Inverse( view );
 	Matrix inverseProjection = Inverse( projection );
