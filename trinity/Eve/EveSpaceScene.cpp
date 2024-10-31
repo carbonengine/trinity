@@ -2388,7 +2388,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 			if( sizeInShadow > 5.0f )
 			{
 				auto perObjData = caster->GetShadowPerObjectData( m_shadowBatches[0].get() );
-				caster->GetShadowBatches( m_shadowBatches[0].get(), perObjData, sizeInShadow );
+				caster->GetShadowBatches( m_shadowBatches[0].get(), perObjData, min( (float)shadowMapScale, sizeInShadow) );
 			}
 		}
 	}
