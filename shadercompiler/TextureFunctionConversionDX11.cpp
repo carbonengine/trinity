@@ -1009,6 +1009,35 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 			}
 
 			auto textureType = node->GetChild( 0 )->GetType();
+			// For indexing texture arrays we need to separate the array index from the coordinate
+			auto SplitIndex = [&]( uint32_t dimension ) {
+				auto arg = call->GetChild( 0 );
+
+				const char* xyzw = "xyzw";
+				auto dot = NewDot( state, arg, MakeInlineString( xyzw, xyzw + dimension ) );
+				call->ReplaceChild( size_t( 0 ), dot );
+
+				dot = NewDot( state, arg->Copy(), MakeInlineString( xyzw + dimension, xyzw + dimension + 1 ) );
+				call->InsertChild( 1, dot );
+			};
+			switch (textureType.builtInType)
+			{
+			case OP_TEXTURE1DARRAY:
+			case OP_RWTEXTURE1DARRAY:
+				SplitIndex( 1 );
+				break;
+			case OP_TEXTURE2DARRAY:
+			case OP_RWTEXTURE2DARRAY:
+				SplitIndex( 2 );
+				break;
+			case OP_TEXTURE3DARRAY:
+			case OP_RWTEXTURE3DARRAY:
+				SplitIndex( 3 );
+				break;
+			default:
+				break;
+			}
+			// MLS tex.read is always a 4 component vector. If the original texture is not a 4 component vector, we need to swizzle the result
 			if( textureType.templateParameter && textureType.templateParameter->width != 4 )
 			{
 				const char* xyzw = "xyzw";
