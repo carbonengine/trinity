@@ -109,6 +109,12 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			"How transparent the fog is. Increasing this causes the skybox and objects to become visible, no matter how high the fog thickness is set. \n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
+		MAP_ATTRIBUTE(
+			"intensity",
+			m_froxelFogSettings.intensity,
+			"For debugging purposes \n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
 
 		MAP_ATTRIBUTE(
 			"gameBackClip",
