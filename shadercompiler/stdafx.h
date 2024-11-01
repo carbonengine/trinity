@@ -250,15 +250,6 @@ enum D3D11_FILL_MODE
 #include <thread>
 #include <functional>
 
-#if CCP_TELEMETRY_ENABLED
-#include "rad_tm.h"
-#else
-#define tmFunction( ... )
-#define tmZone( ... )
-#define tmThreadName( ... )
-
-#endif
-
 #ifndef _WIN32
 
 inline errno_t fopen_s( FILE** stream, char const* fileName, char const* mode )
