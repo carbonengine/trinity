@@ -27,6 +27,9 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 	result.environmentIntensity = environmentIntensity * rhs;
 	result.fogColor = fogColor * rhs;
 	result.backgroundVisibility = backgroundVisibility * rhs;
+
+	result.intensity = rhs;
+
 	return result;
 
 }
@@ -39,6 +42,9 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 	result.environmentIntensity = environmentIntensity + rhs.environmentIntensity;
 	result.fogColor = fogColor + rhs.fogColor;
 	result.backgroundVisibility = backgroundVisibility + rhs.backgroundVisibility;
+
+	result.intensity = intensity + rhs.intensity;
+
 	return result;
 }
 
@@ -395,17 +401,24 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 		return a.priority > b.priority;
 	} );
 
-	ITr2FroxelFogSettings::FroxelFogWeightedSettings baseline;
-	baseline.priority = (PostProcessEnums::Priority)-1;
-	baseline.intensity = 1;
-	baseline.value.thickness = 0.0f;
-	baseline.value.directionality = 0.5f;
-	baseline.value.environmentIntensity = 1.0f;
-	baseline.value.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
-	baseline.value.backgroundVisibility = 0.0f;
-	overrides.push_back( baseline );
-
 	m_froxelFogSettings = PriorityBlend( overrides );
+
+	/*
+		Apart from thickness, the other settings should not be faded in from zero.
+		They should instead just be inherited directly from the fogs, even if the total intensity is less than 1.0.
+		
+		Example: If we have a 0.1 intensity fog with a directionality of 0.5, we don't want to get a directionality of 0.05. We just want 0.5.
+
+		To accomplish this, we calculate the total intensity of the priority blend and divide those settings by it.
+	*/
+
+
+	float inverseIntensity = 1.0f / m_froxelFogSettings.intensity;
+
+	m_froxelFogSettings.directionality *= inverseIntensity;
+	m_froxelFogSettings.environmentIntensity *= inverseIntensity;
+	m_froxelFogSettings.fogColor *= inverseIntensity;
+	m_froxelFogSettings.backgroundVisibility *= inverseIntensity;
 }
 
 bool Tr2VolumetricsRenderer::HasFog() const
@@ -444,8 +457,7 @@ void Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
 void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderContext )
 {
 	bool froxelsEnabled = m_froxelFogSettings.thickness > 0.0f;
-	float environmentIntensity = m_froxelFogSettings.environmentIntensity;
-	bool environmentLightingEnabled = froxelsEnabled && environmentIntensity > 0;
+	bool environmentLightingEnabled = froxelsEnabled && m_froxelFogSettings.environmentIntensity > 0;
 
 
 	uint32_t environmentMapResolution = 1;
@@ -630,14 +642,22 @@ void Tr2VolumetricsRenderer::RenderFog(
 	float maxDistanceVisibility = exp(-m_froxelFogSettings.thickness);
 	float baseDensity = m_froxelFogSettings.thickness / maxDistance;
 
+	float directionality = m_froxelFogSettings.directionality;
+
+	float environmentIntensity = m_froxelFogSettings.environmentIntensity;
+
 	Color fogColor = m_froxelFogSettings.fogColor;
-	float backgroundVisibility = m_froxelFogSettings.backgroundVisibility;
+	float backgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility, 0.0f, 1.0f );
+
+
+
+
 
 	
 
-	//MieG is negative when light is scattered in the direction the light was already going.
-	//Expose this value as positive, then clamp it so that it's always negative.
-	//Exactly 0.0 and 1.0 both cause issues with the math, so clamp to a slightly larger value.
+	//MieG is negative when light is scattered in the direction the light was already going in.
+	//Expose this value as positive, then negate and clamp it so that it's always negative.
+	//Exactly 0.0 and 1.0 both cause issues with the math in the shader, so clamp to a slightly smaller range.
 	float mieG = -std::clamp( m_froxelFogSettings.directionality, 0.001f, 0.999f );
 
 
@@ -681,7 +701,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 			data->MaxDistanceVisibility = maxDistanceVisibility;
 			data->MieG = mieG;
-			data->EnvironmentIntensity = m_froxelFogSettings.environmentIntensity;
+			data->EnvironmentIntensity = environmentIntensity;
 
 
 			//data->Extinction = extinction;

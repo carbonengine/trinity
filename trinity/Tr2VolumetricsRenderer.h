@@ -26,13 +26,16 @@ BLUE_INTERFACE( ITr2FroxelFogSettings ) :
 public:
 	struct FroxelFogSettings
 	{
-		float thickness = 0.f;
-		float directionality = 0.f;
+		float thickness = 0.0f;
 
-		float environmentIntensity = 0.f;
+		float directionality = 0.0f;
+
+		float environmentIntensity = 0.0f;
 
 		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
 		float backgroundVisibility = 0.0f;
+
+		float intensity = 0.0f; //Used to normalize certain values if less than 1.0
 
 		FroxelFogSettings operator*( float rhs ) const;
 		FroxelFogSettings operator+( const FroxelFogSettings& rhs ) const;
