@@ -60,6 +60,7 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_oldZFar( 0.0 ),
 	m_shadowMapHandle( NULL ),
 	m_cascadedShadowMapHandle( NULL ),
+	m_useDenoiser( true ),
 	m_debugColorSplit( false )
 {
 	m_shadowEffect.CreateInstance();
@@ -80,6 +81,22 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 Tr2ShadowMap::~Tr2ShadowMap()
 {
 	ReleaseResources( TRISTORAGE_ALL );
+}
+
+void Tr2ShadowMap::Setup( uint32_t elementSize, uint32_t elementCount, bool useDenoiser )
+{
+	if( m_size != elementSize || m_splitCount != elementCount )
+	{
+		m_size = elementSize;
+		m_splitCount = elementCount;
+		ReleaseResources( TRISTORAGE_ALL );
+		PrepareResources();
+	}
+	m_useDenoiser = useDenoiser;
+	if( !useDenoiser )
+	{
+		m_denoiser = nullptr;
+	}
 }
 
 bool Tr2ShadowMap::OnModified( Be::Var* value )

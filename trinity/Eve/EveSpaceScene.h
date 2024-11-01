@@ -344,6 +344,8 @@ protected:
 
 	void PopulatePerFrameVSData( PerFrameVSData & data, Tr2RenderContext & renderContext );
 	void PopulatePerFramePSData( PerFramePSData & data, Tr2RenderContext & renderContext );
+	void PopulatePerFramePSData( PerFramePSData & data, Tr2ShadowMap* shadowMap, Tr2RenderContext & renderContext );
+
 	void ApplyPerFrameData( Tr2RenderContext & renderContext );
 
 	void UpdatePlanets( const EveUpdateContext & updateContext );
@@ -391,19 +393,21 @@ protected:
 
 	Tr2DepthStencilPtr GetShadowMapAtlas();
 
+	void EnableShadowsInReflections( bool enable );
+	bool IsShadowsInReflectionsEnabled() const;
+
 protected:
 	bool m_display;
 	bool m_update;
 	bool m_displayShadowMap;
 	bool m_backgroundRenderingEnabled;
-	TriFrustumOrtho m_shadowFrustums[SHADOW_FRUSTUM_COUNT];
-	TriFrustum m_cameraFrustums[SHADOW_FRUSTUM_COUNT];
 
 	float m_planetScale;
 	float m_planetCameraScale;
 
 	//cascaded shadow map
 	Tr2ShadowMapPtr m_cascadedShadowMap;
+	Tr2ShadowMapPtr m_reflectionShadowMap;
 	TriTextureResPtr m_emptyShadowMap;
 
 	PIEveSpaceObject2Vector	m_backgroundObjects;
@@ -544,7 +548,7 @@ private:
 	Tr2ConstantBufferAL	m_shadowPerFrameVSBuffer;
 
 	// Cascaded shadows
-	void SetupCascadedShadows( Tr2RenderContext & renderContext );
+	void SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap & shadowMap, const TriFrustum& viewFrustum, Tr2DepthStencil* depthMap, Tr2RenderContext& renderContext );
 	void DisableShadows();
 
 	// Picking
@@ -656,10 +660,8 @@ private:
 
 	bool m_dynamicObjectReflectionEnabled;
 
-	ShadowMap::SplitSetup m_splitSetup[SHADOW_FRUSTUM_COUNT];
 	// Cascaded shadow debugging
 	bool m_freezeFrustum;
-	Matrix m_shadowView;
 	// for "fake" scenes like ship fitting etc
 	bool m_enableShadows;
 
