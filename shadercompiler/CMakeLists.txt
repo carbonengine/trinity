@@ -188,7 +188,7 @@ else()
 endif()
 
 if(WITH_TELEMETRY)
-    find_package(RadGameToolsTelemetry REQUIRED NO_CMAKE_PATH)
+    find_package(Tracy REQUIRED NO_CMAKE_PATH)
     target_link_libraries(ShaderCompiler PUBLIC Tracy::TracyClient)
     target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=1 TRACY_IMPORTS TRACY_ENABLE TRACY_FIBERS TRACY_ON_DEMAND TRACY_DELAYED_INIT TRACY_MANUAL_LIFETIME)
 else()
