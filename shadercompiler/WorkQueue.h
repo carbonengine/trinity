@@ -74,7 +74,9 @@ private:
 
 	void WorkerThread()
 	{
-		tmThreadName( 0, 0, "Compile Worker Thread" );
+#if CCP_TELEMETRY_ENABLED
+		tracy::SetThreadName( 0, 0, "Compile Worker Thread" );
+#endif
 
 		while( true )
 		{

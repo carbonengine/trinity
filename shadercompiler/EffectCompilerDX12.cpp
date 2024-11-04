@@ -7,7 +7,7 @@
 
 bool EffectCompilerDX12::Create()
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	return m_compiler.Create();
 }

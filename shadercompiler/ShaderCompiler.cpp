@@ -213,7 +213,7 @@ void PrintUsage()
 
 bool DiscoverPermutations( Permutations& permutations, const char* shaderSource, size_t shaderLength )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	ParserState state( MakeInlineString( shaderSource, shaderSource + shaderLength ) );
 	if( !state.DiscoverPermutations( permutations ) )
@@ -532,12 +532,30 @@ struct WithTelemetry
 #endif
 };
 
+// Helper class to ensure Tracy profiler is correctly started / shutdown when running with `TRACY_MANUAL_LIFETIME`
+class TracyHelper
+{
+public:
+	TracyHelper() {
+#if TRACY_MANUAL_LIFETIME
+		tracy::StartupProfiler();
+#endif
+	}
+
+	~TracyHelper() {
+#if TRACY_MANUAL_LIFETIME
+		tracy::ShutdownProfiler();
+#endif
+	}
+};
+
 #if _WIN32
 int _tmain(int argc, _TCHAR* argv[])
 #else
 int main(int argc, char* argv[])
 #endif
 {
+	TracyHelper tracyIntegration;
 
 	ProgramArguments args;
 	if( !ExtractCommandLineArguments( args, argc, argv ) )
@@ -628,7 +646,7 @@ int main(int argc, char* argv[])
 	}
 
 	{
-		tmZone( 0, 0, "Packing" );
+		ZoneScopedN( "Packing" );
 
 		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 		{
@@ -649,7 +667,7 @@ int main(int argc, char* argv[])
 	std::map<unsigned, unsigned> aliases;
 
 	{
-		tmZone( 0, 0, "Find aliases" );
+		ZoneScopedN( "Find aliases" );
 		for( size_t i = 0; i < keys.size(); ++i )
 		{
 			auto& b0 = g_compiledEffects[keys[i]];
@@ -676,7 +694,7 @@ int main(int argc, char* argv[])
 	}
 
 	{
-		tmZone( 0, 0, "Saving" );
+		ZoneScopedN( "Saving" );
 		// Open the output file
 		FILE* file = nullptr;
 		if( fopen_s( &file, args.outputPath, "wb" ) != 0 )

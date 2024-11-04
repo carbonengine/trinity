@@ -676,7 +676,7 @@ bool ParserState::DiscoverPermutations( Permutations& permutations )
 
 bool ParserState::Parse()
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	//PreprocessorParseTrace( stdout, "parser: " );
 	void* parser = ParseAlloc( malloc );
