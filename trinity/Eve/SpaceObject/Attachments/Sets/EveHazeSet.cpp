@@ -399,7 +399,7 @@ void EveHazeSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentT
 			features.parentBrightness *= m_boosterGain;
 		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
-		auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

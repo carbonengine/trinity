@@ -471,7 +471,7 @@ void EveBannerSet::GetLights( Tr2LightManager& lightManager, const Matrix& paren
 		light.lightData.color = Saturate(averageColor, light.saturation);
 		lightFeatures.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, lightFeatures );
+		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, lightFeatures, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		
 		lightManager.AddLight( data );
 	}

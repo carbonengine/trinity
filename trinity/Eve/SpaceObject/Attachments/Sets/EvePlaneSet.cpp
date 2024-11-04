@@ -530,7 +530,7 @@ void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parent
 
 		float fade = EveSpaceObjectAttachmentUtils::Fade( light.fadeType, light.blinkRate, light.blinkPhase );
 		lightDataCopy.brightness *= fade;
-		auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

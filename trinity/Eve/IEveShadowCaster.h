@@ -2,6 +2,7 @@
 #define IEveShadowCaster_h
 
 #include "Eve/EveComponentRegistry.h"
+#include "ITr2Renderable.h"
 #include "TriFrustumOrtho.h"
 #include "TriFrustum.h"
 
@@ -61,7 +62,7 @@ BLUE_INTERFACE( IEveShadowCaster ) :
 	public IRoot
 {
 	// Used for cascaded shadow map
-	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const = 0;
+	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const = 0;
 	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const = 0;
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) = 0;
 	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;

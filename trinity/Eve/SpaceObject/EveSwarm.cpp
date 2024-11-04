@@ -237,10 +237,15 @@ void EveSwarmRenderable::SetShaderOption( const BlueSharedString& name, const Bl
 
 //////////////////////////////////////////////////////////////////////////////////////
 // IEveShadowCaster
-bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
+bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	Vector4 boundingSphere;
 	if( !m_owner )
+	{
+		return false;
+	}
+
+	if( renderReason == TR2RENDERREASON_REFLECTION )
 	{
 		return false;
 	}

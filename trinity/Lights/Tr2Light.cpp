@@ -26,7 +26,7 @@ LightData::LightData() :
 	boneIndex( -1 ),
 	flags( Tr2LightManager::FLAG_DEFAULT ),
 	startTime( BeOS->GetCurrentFrameTime() ),
-	castsShadows( false ),
+	castsShadows( PerLightShadowSetting::DISABLED ),
 	isVolumetric( false )
 {
 }
@@ -38,7 +38,7 @@ LightFeatures::LightFeatures() :
 {
 }
 
-Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transform, LightFeatures& features ) const 
+Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transform, LightFeatures& features, ShadowQuality shadowQuality ) const
 {
 
 	Tr2LightManager::PerLightData data;
@@ -63,16 +63,20 @@ Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transfor
 	data.innerAngle = Float_16( 0.0f );
 	data.projectionPlaneDistance = Float_16( 1.f / tan( TRI_2PI * 45.f / 360.0f ) );
 
-	data.flags |= castsShadows ? Tr2LightManager::FLAG_CASTS_SHADOWS : 0;
+	if ( castsShadows == PerLightShadowSetting::ALWAYS_ENABLED
+		|| (castsShadows == PerLightShadowSetting::ENABLED_ONLY_ON_HIGH_QUALITY && shadowQuality == ShadowQuality::SHADOW_HIGH)
+		|| (castsShadows == PerLightShadowSetting::ENABLED_ONLY_ON_HIGH_QUALITY && shadowQuality == ShadowQuality::SHADOW_RAYTRACED) )
+	{
+		data.flags |= Tr2LightManager::FLAG_CASTS_SHADOWS;
+	}
 	data.flags |= isVolumetric ? Tr2LightManager::FLAG_IS_VOLUMETRIC : 0;
 	
 	return data;
 }
 
-
-Tr2LightManager::PerLightData LightData::AsPerSpotLightData( CXMMATRIX transform, LightFeatures& features ) const
+Tr2LightManager::PerLightData LightData::AsPerSpotLightData( CXMMATRIX transform, LightFeatures& features, ShadowQuality shadowQuality ) const
 {
-	auto data = AsPerPointLightData( transform, features );
+	auto data = AsPerPointLightData( transform, features, shadowQuality );
 
 	data.outerAngle = Float_16( cos( TRI_2PI * outerAngle / 360.0f ) );
 	data.innerAngle = Float_16( cos( TRI_2PI * innerAngle / 360.0f ) );
@@ -140,12 +144,12 @@ void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, flo
 
 	if( m_type == Tr2Light::POINT_LIGHT )
 	{
-		auto data = m_lightData.AsPerPointLightData( lightTransform, features );
+		auto data = m_lightData.AsPerPointLightData( lightTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( data );
 	}
 	else if( m_type == Tr2Light::SPOT_LIGHT )
 	{
-		auto data = m_lightData.AsPerSpotLightData( lightTransform, features );
+		auto data = m_lightData.AsPerSpotLightData( lightTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( data );
 	}
 }

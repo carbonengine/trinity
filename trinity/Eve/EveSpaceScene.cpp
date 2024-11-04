@@ -163,7 +163,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_shadowQuality( ShadowQuality::SHADOW_RAYTRACED ),
 	m_enableShadows( true ),
 	m_displayShadowMap( false ),
-	m_shadowView( IdentityMatrix() ),
 	m_enableRaytracing( false ),
 	m_visualizeMethod( VM_NONE ),
 	m_perFrameDebug( 0.f ),
@@ -563,11 +562,11 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateTime = simTime;
 }
 
-void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
+void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap& shadowMap, const TriFrustum& viewFrustum, Tr2DepthStencil* depthMap, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_cascadedShadowMap || !m_componentRegistry )
+	if( !m_componentRegistry )
 	{
 		return;
 	}
@@ -581,18 +580,22 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		return;
 	}
 
+	TriFrustum cameraFrustums[SHADOW_FRUSTUM_COUNT];
+	TriFrustumOrtho shadowFrustums[SHADOW_FRUSTUM_COUNT];
+	ShadowMap::SplitSetup splitSetup[SHADOW_FRUSTUM_COUNT];
+
 	// set up frustums
 	for( unsigned int splitIndex = 0; splitIndex < SHADOW_FRUSTUM_COUNT; ++splitIndex )
 	{
-		ShadowMap::SplitSetup splitSetupInfo = m_cascadedShadowMap->SetupShadowSplit( splitIndex, m_shadowView, m_sunData.DirWorld, m_updateContext.GetFrustum().m_zNear );
+		ShadowMap::SplitSetup splitSetupInfo = shadowMap.SetupShadowSplit( splitIndex, Tr2Renderer::GetInverseViewTransform(), m_sunData.DirWorld, viewFrustum.m_zNear );
 
 		// Get the split up camera frustum so we can use it to do some "half space culling" for objects
 		TriFrustum frustum;
 		const Matrix viewProj = Inverse( splitSetupInfo.invViewProj );
 		frustum.ExtractFrustum( &viewProj );
-		m_cameraFrustums[splitIndex] = frustum;
+		cameraFrustums[splitIndex] = frustum;
 
-		m_shadowFrustums[splitIndex] = splitSetupInfo.shadowFrustum;
+		shadowFrustums[splitIndex] = splitSetupInfo.shadowFrustum;
 
 		// debug frustum
 		if( m_debugRenderer && m_freezeFrustum )
@@ -602,15 +605,15 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 			Vector3 aabbMin = splitSetupInfo.aabb.m_min;
 			Vector3 aabbMax = splitSetupInfo.aabb.m_max;
 
-			m_debugRenderer->DrawBox( this, splitSetupInfo.invViewProj, min, max, Tr2DebugRenderer::Wireframe, m_cascadedShadowMap->GetDebugColors( splitIndex ) );
-			m_debugRenderer->DrawBox( this, Inverse( splitSetupInfo.lightViewProjection ), aabbMin, aabbMax, Tr2DebugRenderer::Wireframe, m_cascadedShadowMap->GetDebugColors( splitIndex ) );
+			m_debugRenderer->DrawBox( this, splitSetupInfo.invViewProj, min, max, Tr2DebugRenderer::Wireframe, shadowMap.GetDebugColors( splitIndex ) );
+			m_debugRenderer->DrawBox( this, Inverse( splitSetupInfo.lightViewProjection ), aabbMin, aabbMax, Tr2DebugRenderer::Wireframe, shadowMap.GetDebugColors( splitIndex ) );
 		}
 
-		m_splitSetup[splitIndex] = splitSetupInfo;
+		splitSetup[splitIndex] = splitSetupInfo;
 	}
 
 	// if the shadow map DS isn't set then skip everything
-	if( !m_cascadedShadowMap->PrepareShadowRendering( renderContext ) )
+	if( !shadowMap.PrepareShadowRendering( renderContext ) )
 	{
 		return;
 	}
@@ -628,15 +631,15 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 
 	{
 		CCP_STATS_ZONE( "GetBatches" );
-		unsigned int shadowMapSize = m_cascadedShadowMap->GetShadowMapSize();
+		unsigned int shadowMapSize = shadowMap.GetShadowMapSize();
 		auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 
 		{
 			CCP_STATS_ZONE( "Find shadow casters" );
 			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
 				auto sunDir = m_sunData.DirWorld;
-				auto cameraFrustum = m_cameraFrustums[frustumIndex];
-				auto shadowFrustum = m_shadowFrustums[frustumIndex];
+				auto cameraFrustum = cameraFrustums[frustumIndex];
+				auto shadowFrustum = shadowFrustums[frustumIndex];
 				auto casters = shadowCasterInfo[frustumIndex];
 
 				auto frustumShadowCasterInfo = std::vector<EveSpaceScene::ShadowInfo>();
@@ -645,7 +648,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 				for( auto& caster : shadowCasters )
 				{
 					float radius;
-					if( caster->IsCastingShadow( cameraFrustum, shadowFrustum, shadowMapSize, sunDir, radius ) )
+					if( caster->IsCastingShadow( cameraFrustum, shadowFrustum, shadowMapSize, sunDir, renderReason, radius ) )
 					{
 						frustumShadowCasterInfo.push_back( EveSpaceScene::ShadowInfo( radius, caster, nullptr ) );
 					}
@@ -696,11 +699,11 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 					continue;
 				}
 
-				m_cascadedShadowMap->BeginShadowRendering( renderContext, i );
+				shadowMap.BeginShadowRendering( renderContext, i );
 
 				// column_major for shaders
 				PerFrameVSData data;
-				data.ViewProjectionMat = Transpose( m_splitSetup[i].lightViewProjection );
+				data.ViewProjectionMat = Transpose( splitSetup[i].lightViewProjection );
 
 				static const unsigned perFrameVsMask =
 					( 1 << VERTEX_SHADER ) |
@@ -723,17 +726,17 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 				m_shadowBatches[i]->Clear();
 				m_shadowAllocators[i].Clear();
 			}
-			m_cascadedShadowMap->EndShadowRendering( renderContext );
+			shadowMap.EndShadowRendering( renderContext );
 		}
 
-		PopulatePerFramePSData( m_perFramePS, renderContext );
+		PopulatePerFramePSData( m_perFramePS, &shadowMap, renderContext );
 		ApplyPerFrameData( renderContext );
 		SetupPlanetsAsShadowCaster( renderContext );
-		m_cascadedShadowMap->DrawToShadowMapResult( renderContext, m_depthMap );
+		shadowMap.DrawToShadowMapResult( renderContext, depthMap );
 
-		if( m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
+		if( renderReason == TR2RENDERREASON_NORMAL && m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
 		{
-			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_cascadedShadowMap->GetShadowMap(), renderContext );
+			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, shadowMap.GetShadowMap(), renderContext );
 		}
 	}
 }
@@ -1887,11 +1890,22 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 					FinalizeBatches( m_secondaryBatches );
 
 					renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DEPTH_ONLY );
+					renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_OPAQUE], BlueSharedString( "Depth" ) );
 					renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
+
+					if( m_enableShadows && m_shadowQuality != ShadowQuality::SHADOW_DISABLED && m_reflectionShadowMap )
+					{
+						renderContext.m_esm.SetInvertedCullMode( false );
+						SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, currentFrustum, nullptr, renderContext );
+						renderContext.m_esm.SetInvertedCullMode( true );
+					}
+
+					// TODO: raytraced shadows here
+
+					renderContext.SetReadOnlyDepth( true );
 
 					RenderOpaqueBatches( m_secondaryBatches, renderContext );
 
-					renderContext.SetReadOnlyDepth( true );
 					if( m_volumetricsRenderer )
 					{
 						uint32_t width = Tr2Renderer::GetViewport().width;
@@ -2294,7 +2308,7 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
-			caster->IsCastingShadow( frustum, cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld, sizeInShadow );
+			caster->IsCastingShadow( frustum, cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld, TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
 			{
@@ -2499,10 +2513,9 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		return;
 	}
 	
-	if( !m_freezeFrustum && m_enableShadows && ( m_shadowQuality == ShadowQuality::SHADOW_LOW || m_shadowQuality == ShadowQuality::SHADOW_HIGH ) )
+	if( !m_freezeFrustum && m_enableShadows && m_cascadedShadowMap && ( m_shadowQuality == ShadowQuality::SHADOW_LOW || m_shadowQuality == ShadowQuality::SHADOW_HIGH ) )
 	{
-		m_shadowView = Tr2Renderer::GetInverseViewTransform();
-		SetupCascadedShadows( renderContext );
+		SetupCascadedShadows( TR2RENDERREASON_NORMAL, *m_cascadedShadowMap, m_updateContext.GetFrustum(), m_depthMap, renderContext );
 	}
 	renderContext.AddGpuMarker( __FUNCTION__ );
 
@@ -2940,6 +2953,11 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData& data, Tr2RenderConte
 
 void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderContext& renderContext )
 {
+	PopulatePerFramePSData( data, m_cascadedShadowMap, renderContext );
+}
+
+void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* shadowMap, Tr2RenderContext& renderContext )
+{
 	// column_major for shaders
 	data.ViewMat = Transpose( Tr2Renderer::GetViewTransform() );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
@@ -3024,16 +3042,16 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 		data.SceneMipLodBias = m_sceneDefaultPostProcess->GetMipLodBias();
 	}
 
-	if( m_cascadedShadowMap )
+	if( shadowMap )
 	{
-		data.ShadowMapValues[0] = m_cascadedShadowMap->m_perSplitData.ShadowMapValues[0];
-		data.ShadowMapValues[1] = m_cascadedShadowMap->m_perSplitData.ShadowMapValues[1];
-		data.ShadowMapValues[2] = m_cascadedShadowMap->m_perSplitData.ShadowMapValues[2];
-		data.ShadowMapValues[3] = m_cascadedShadowMap->m_perSplitData.ShadowMapValues[3];
+		data.ShadowMapValues[0] = shadowMap->m_perSplitData.ShadowMapValues[0];
+		data.ShadowMapValues[1] = shadowMap->m_perSplitData.ShadowMapValues[1];
+		data.ShadowMapValues[2] = shadowMap->m_perSplitData.ShadowMapValues[2];
+		data.ShadowMapValues[3] = shadowMap->m_perSplitData.ShadowMapValues[3];
 
 		for( int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 		{
-			Matrix matrix = Tr2Renderer::GetInverseViewTransform() * Transpose( m_cascadedShadowMap->m_perSplitData.ShadowMatrixVal[i] );
+			Matrix matrix = Tr2Renderer::GetInverseViewTransform() * Transpose( shadowMap->m_perSplitData.ShadowMatrixVal[i] );
 
 			matrix *= ScalingMatrix( 0.5f, -0.5f, 1 ) * TranslationMatrix( 0.5f, 0.5f, 0 ); //Flip y and change range from (-1, +1) to (0, 1)
 
@@ -3045,7 +3063,7 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 
 			data.ShadowMatrixVal[i] = Transpose( matrix );
 		}
-		data.SplitInfo = m_cascadedShadowMap->m_perSplitData.SplitInfo;
+		data.SplitInfo = shadowMap->m_perSplitData.SplitInfo;
 	}
 
 	// m_perFrameVS.ProjectionMat is already transposed
@@ -3784,9 +3802,9 @@ void EveSpaceScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 			m_virtualCameraSystem->RenderDebugInfo( *m_debugRenderer );
 		}
 
-		if( m_freezeFrustum && ( m_shadowQuality == ShadowQuality::SHADOW_HIGH || m_shadowQuality == ShadowQuality::SHADOW_LOW ) )
+		if( m_freezeFrustum && m_cascadedShadowMap && ( m_shadowQuality == ShadowQuality::SHADOW_HIGH || m_shadowQuality == ShadowQuality::SHADOW_LOW ) )
 		{
-			SetupCascadedShadows( renderContext );
+			SetupCascadedShadows( TR2RENDERREASON_NORMAL, *m_cascadedShadowMap, m_updateContext.GetFrustum(), m_depthMap, renderContext );
 		}
 
 		m_debugRenderer->EndRender( renderContext );
@@ -3873,4 +3891,25 @@ Tr2DepthStencil* EveSpaceScene::GetDepth()
 Matrix EveSpaceScene::GetReprojectionMatrix() const
 {
 	return m_reprojectionMatrix;
+}
+
+void EveSpaceScene::EnableShadowsInReflections( bool enable )
+{
+	if( enable )
+	{
+		if( !m_reflectionShadowMap )
+		{
+			m_reflectionShadowMap.CreateInstance();
+			m_reflectionShadowMap->Setup( 512, SHADOW_FRUSTUM_COUNT, false );
+		}
+	}
+	else
+	{
+		m_reflectionShadowMap = nullptr;
+	}
+}
+
+bool EveSpaceScene::IsShadowsInReflectionsEnabled() const
+{
+	return m_reflectionShadowMap != nullptr;
 }

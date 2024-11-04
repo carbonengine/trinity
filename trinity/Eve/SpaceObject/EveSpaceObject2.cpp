@@ -1718,9 +1718,14 @@ void EveSpaceObject2::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Quad
 // Description:
 //   Check if the object is casting a shadow in the camera/shadow frustums
 // --------------------------------------------------------------------------------
-bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
+bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	if( !m_display || m_boundingSphereWorldRadius <= 0.0 )
+	{
+		return false;
+	}
+
+	if( renderReason == TR2RENDERREASON_REFLECTION && !EntityComponents::ShouldReflect( m_reflectionMode ) )
 	{
 		return false;
 	}

@@ -119,6 +119,8 @@ public:
 	Tr2DepthStencilPtr GetShadowMapAtlas();
 	const ShadowMapAtlasSettings& GetShadowMapAtlasSettings() const;
 
+	ShadowQuality GetCurrentSpaceSceneShadowQuality();
+
 private:
 	Tr2LightManager( const Tr2LightManager& );
 	Tr2LightManager& operator=( const Tr2LightManager& );
@@ -165,6 +167,7 @@ private:
 	std::vector<ShadowMapNode> m_shadowMapNodes;
 	ShadowQuality m_qualityUsedByShadowAtlas;
 	ShadowQuality m_nextFrameQuality;
+	ShadowQuality m_currentSpaceSceneShadowQuality;
 	uint64_t m_currentFrameCounter;
 };
 

@@ -533,7 +533,7 @@ void EveSpotlightSet::GetLights( Tr2LightManager& lightManager, const Matrix& pa
 		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-		auto perLightData = light.lightData.AsPerSpotLightData( light.boneMatrix * parentTransform, features );
+		auto perLightData = light.lightData.AsPerSpotLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

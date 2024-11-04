@@ -584,6 +584,14 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			ReregisterEntities,
 			"Re registers all entities" )
 
+		MAP_PROPERTY( 
+			"shadowsInReflections", 
+			IsShadowsInReflectionsEnabled, 
+			EnableShadowsInReflections,
+			"Enables/disables shadows in the reflection cubemap (only if shadows are enabled)\n\n"
+			":jessica-group: Shadows"
+		)
+
 		MAP_PROPERTY_READONLY( "Shadow Map Atlas", GetShadowMapAtlas, "" )
 
 	EXPOSURE_END()

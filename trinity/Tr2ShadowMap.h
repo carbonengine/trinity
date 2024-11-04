@@ -43,7 +43,7 @@ namespace ShadowMap
 //   This class holds a cascaded shadow map and takes care of splitting the frustum
 //
 // --------------------------------------------------------------------------------
-class Tr2ShadowMap : public INotify,
+BLUE_CLASS( Tr2ShadowMap ) : public INotify,
 					 public Tr2DeviceResource
 {
 public:
@@ -51,6 +51,8 @@ public:
 
 	Tr2ShadowMap( IRoot* lockobj = 0 );
 	~Tr2ShadowMap();
+
+	void Setup( uint32_t elementSize, uint32_t elementCount, bool useDenoiser );
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
