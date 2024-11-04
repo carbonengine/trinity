@@ -472,81 +472,35 @@ void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permut
 struct WithTelemetry
 {
 #if CCP_TELEMETRY_ENABLED
-	explicit WithTelemetry( bool enable )
+	explicit WithTelemetry( bool enable ) : m_enabled(enable)
 	{
 		if( !enable )
 		{
 			return;
 		}
-#ifdef NDEBUG
-		tmLoadLibrary( TM_RELEASE );
-#else
-		tmLoadLibrary( TM_DEBUG );
-#endif
-
-		tm_int32 memorySize = 8 * 1024 * 1024;
-		char* memory = (char*)malloc( memorySize );
-		tmInitialize( memorySize, memory );
-		tm_error err = tmOpen(
-			0, // unused
-			"ShaderCompiler", // program name, don't use slashes or weird character that will screw up a filename
-			__DATE__ " " __TIME__, // identifier, could be date time, or a build number ... whatever you want
-			"localhost", // telemetry server address
-			TMCT_TCP, // network capture
-			4719, // telemetry server port
-			TMOF_INIT_NETWORKING, // flags
-			100 ); // timeout in milliseconds ... pass -1 for infinite
-
-		if( err == TMERR_DISABLED )
-		{
-			printf( "Telemetry is disabled via #define NTELEMETRY\n" );
-		}
-		else if( err == TMERR_UNINITIALIZED )
-		{
-			printf( "tmInitialize failed or was not called\n" );
-		}
-		else if( err == TMERR_NETWORK_NOT_INITIALIZED )
-		{
-			printf( "WSAStartup was not called before tmOpen! Call WSAStartup or pass TMOF_INIT_NETWORKING.\n" );
-		}
-		else if( err == TMERR_NULL_API )
-		{
-			printf( "There is no Telemetry API (the DLL isn't in the EXE's path)!\n" );
-		}
-		else if( err == TMERR_COULD_NOT_CONNECT )
-		{
-			printf( "There is no Telemetry server running\n" );
-		}
-	}
-
-	~WithTelemetry()
-	{
-		tmTick( 0 );
-		tmClose( 0 );
-		tmShutdown();
-	}
-#else
-	explicit WithTelemetry( bool )
-	{
-	}
-#endif
-};
-
-// Helper class to ensure Tracy profiler is correctly started / shutdown when running with `TRACY_MANUAL_LIFETIME`
-class TracyHelper
-{
-public:
-	TracyHelper() {
 #if TRACY_MANUAL_LIFETIME
 		tracy::StartupProfiler();
 #endif
 	}
 
-	~TracyHelper() {
+	~WithTelemetry()
+	{
+		if ( m_enabled )
+		{
+			FrameMark;
 #if TRACY_MANUAL_LIFETIME
-		tracy::ShutdownProfiler();
+			tracy::ShutdownProfiler();
 #endif
+		}
 	}
+
+	private:
+		bool m_enabled{false};
+#else
+	explicit WithTelemetry( bool )
+	{
+	}
+#endif
 };
 
 #if _WIN32
@@ -555,8 +509,6 @@ int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char* argv[])
 #endif
 {
-	TracyHelper tracyIntegration;
-
 	ProgramArguments args;
 	if( !ExtractCommandLineArguments( args, argc, argv ) )
 	{
