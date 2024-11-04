@@ -443,7 +443,7 @@ void EveSpriteSet::GetLights( Tr2LightManager& lightManager, const Matrix& paren
 	{
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		float blinkScale = EveSpaceObjectAttachmentUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
 		data.radius *= blinkScale;
 		data.innerRadius = Float_16( float( data.innerRadius ) * blinkScale );

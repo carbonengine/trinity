@@ -132,6 +132,7 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 	m_shadowMapAtlasVariable.Register( "ShadowMapAtlas", m_shadowMapAtlasDS );
 
 	m_qualityUsedByShadowAtlas = ShadowQuality::SHADOW_DISABLED;
+	m_currentSpaceSceneShadowQuality = ShadowQuality::SHADOW_DISABLED;
 
 	PrepareResources();
 }
@@ -220,6 +221,8 @@ void Tr2LightManager::AdjustLightCutoff( float lodFactor )
 
 void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter )
 {
+	m_currentSpaceSceneShadowQuality = shadowQuality;
+
 	if ( m_currentFrameCounter != frameCounter )
 	{
 		UpdateShadowAtlasSize( m_nextFrameQuality );
@@ -621,6 +624,11 @@ Tr2DepthStencilPtr Tr2LightManager::GetShadowMapAtlas()
 const Tr2LightManager::ShadowMapAtlasSettings& Tr2LightManager::GetShadowMapAtlasSettings() const
 {
 	return m_shadowMapAtlasSettings;
+}
+
+ShadowQuality Tr2LightManager::GetCurrentSpaceSceneShadowQuality()
+{
+	return m_currentSpaceSceneShadowQuality;
 }
 
 // based on: https://blackpawn.com/texts/lightmaps/default.html

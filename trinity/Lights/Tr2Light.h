@@ -19,10 +19,17 @@ struct LightFeatures {
 	float parentBrightness;
 };
 
+enum class PerLightShadowSetting
+{
+	DISABLED,
+	ENABLED_ONLY_ON_HIGH_QUALITY,
+	ALWAYS_ENABLED
+};
+
 struct LightData {
 	LightData();
-	Tr2LightManager::PerLightData AsPerPointLightData( CXMMATRIX transform, LightFeatures& features ) const;
-	Tr2LightManager::PerLightData AsPerSpotLightData( CXMMATRIX transform, LightFeatures& features ) const;
+	Tr2LightManager::PerLightData AsPerPointLightData( CXMMATRIX transform, LightFeatures& features, ShadowQuality shadowQuality ) const;
+	Tr2LightManager::PerLightData AsPerSpotLightData( CXMMATRIX transform, LightFeatures& features, ShadowQuality shadowQuality ) const;
 
 	Vector3 position;
 	Color color;
@@ -47,7 +54,7 @@ struct LightData {
 
 	Be::Time startTime;
 
-	bool castsShadows;
+	PerLightShadowSetting castsShadows;
 	bool isVolumetric;
 };
 
@@ -108,4 +115,5 @@ protected:
 
 TYPEDEF_BLUECLASS( Tr2Light );
 
+extern const Be::VarChooser PerLightShadowSettingChooser[];
 extern const Be::VarChooser Tr2LightFlagChooser[];
