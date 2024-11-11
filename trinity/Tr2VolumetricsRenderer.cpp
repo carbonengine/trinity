@@ -17,6 +17,7 @@
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
 #include "PriorityBlend.h"
 #include "Tr2LightManager.h"
+#include "Tr2TextureArray.h"
 #include "include/TriMath.h"
 
 ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator*( float rhs ) const
