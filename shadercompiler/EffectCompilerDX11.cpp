@@ -233,7 +233,7 @@ static void PatchSemantics( InputStageType shaderStage, ASTNode* callNode )
 
 static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, ParserState& state, CodeStream& os, std::string& entryPointName )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	// 1. wrap uniforms
 	// 2. fix VPOS
@@ -467,7 +467,7 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 
 bool EffectCompilerDX11::Create()
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 	return SUCCEEDED( ::DxcCreateInstance( CLSID_DxcUtils, IID_PPV_ARGS( &m_dxilUtils ) ) );
 }
 
@@ -554,7 +554,7 @@ std::string PrintPrettyCode( const char* code, const char* indent )
 
 void PrintShaderOutListing( YamlOutput& listing, ID3DBlob* effectData, ID3D11ShaderReflection* reflection )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	if( !listing.enabled() )
 	{
@@ -885,7 +885,7 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 
 std::string SanitizeCode( const std::string& src )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 	std::regex line( "#line[^\\n]*\\n?\\n" );
 	return std::regex_replace( src, line, std::string( "" ) );
 }
@@ -946,7 +946,7 @@ DWORD GetOptimizationLevel()
 
 bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	CComPtr<ID3D10Blob> effectData;
 	CComPtr<ID3D10Blob> errors;
@@ -1137,7 +1137,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				{
 					HRESULT hr;
 					{
-						tmZone( 0, 0, "D3DCompile" );
+						ZoneScopedN( "D3DCompile" );
 						hr = D3DCompile(
 							code.c_str(),
 							code.length(),
@@ -1176,7 +1176,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 				CComPtr<ID3DBlob> strippedEffectData;
 				{
-					tmZone( 0, 0, "D3DStripShader" );
+					ZoneScopedN( "D3DStripShader" );
 					if( FAILED( D3DStripShader(
 						effectData->GetBufferPointer(),
 						effectData->GetBufferSize(),
@@ -1191,7 +1191,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 				CComPtr<ID3D11ShaderReflection> reflection;
 				{
-					tmZone( 0, 0, "D3DReflect" );
+					ZoneScopedN( "D3DReflect" );
 
 					if( FAILED( D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p ) ) )
 					{
