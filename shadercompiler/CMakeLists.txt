@@ -11,7 +11,7 @@ else()
     set(DXC_DEFAULT ON)
 endif()
 
-option(WITH_TELEMETRY "Enable integration with RAD Game tools Telemetry SDK" ${TELEMETRY_DEFAULT})
+option(WITH_TELEMETRY "Enable integration with Tracy profiler" ${TELEMETRY_DEFAULT})
 
 option(WITH_DXC "Enable DXC Compiler" ${DXC_DEFAULT})
 
@@ -188,9 +188,9 @@ else()
 endif()
 
 if(WITH_TELEMETRY)
-    find_package(RadGameToolsTelemetry REQUIRED NO_CMAKE_PATH)
-    target_link_libraries(ShaderCompiler PUBLIC RadGameTools::Telemetry)
-    target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=1)
+    find_package(Tracy REQUIRED NO_CMAKE_PATH)
+    target_link_libraries(ShaderCompiler PUBLIC Tracy::TracyClient)
+    target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=1 TRACY_IMPORTS TRACY_ENABLE TRACY_FIBERS TRACY_ON_DEMAND TRACY_DELAYED_INIT TRACY_MANUAL_LIFETIME)
 else()
     target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=0)
 endif()

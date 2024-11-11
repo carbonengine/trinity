@@ -284,7 +284,7 @@ static void MarkCBuffersAndStructsUsed( ASTNode* node, SymbolTable& symbols )
 
 void MarkUsedSymbols( ASTNode* entryPoint, ParserState& state )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	MarkUsedSymbols( entryPoint, state.GetSymbolTable() );
 	MarkCBuffersAndStructsUsed( state.GetTree(), state.GetSymbolTable() );
@@ -590,7 +590,7 @@ static void PatchCBuffers( ParserState& state, ASTNode* parent, unsigned &index 
 
 void PatchCBuffers( ParserState& state )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	for( unsigned i = 0; i < state.GetTree()->GetChildrenCount(); ++i )
 	{
@@ -811,7 +811,7 @@ namespace
 
 void AssignRegisters( ASTNode* root, int32_t stage )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	Registers registers;
 	registers.spaces.insert( 0 );
@@ -875,7 +875,7 @@ void SortProgramNodes( ASTNode* root )
 
 void CreateGlobalsCB( ParserState& state )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	auto root = state.GetTree();
 	if( !root )
@@ -1166,4 +1166,3 @@ ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char*
     arg->GetSymbol()->registerSpecifier[MakeInlineString( "" )] = reg;
     return arg;
 }
-

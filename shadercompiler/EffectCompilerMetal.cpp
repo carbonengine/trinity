@@ -100,7 +100,7 @@ namespace
 
 	void ReplaceFloatModulo( ParserState& state )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		state.GetTree()->Map( [&]( auto node ) {
 			if( node->GetNodeType() == NT_EXPRESSION && node->GetToken()->type == OP_PERCENT )
@@ -173,7 +173,7 @@ namespace
 
 	void ConvertSyncFunctionsToMetal( std::map<Symbol*, ASTNode*>& functions )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		for( auto& it : functions )
 		{
@@ -189,7 +189,7 @@ namespace
 
 	void CollectFunctions( ParserState& state, std::map<Symbol*, ASTNode*>& functions )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		ASTNode* root = state.GetTree();
 		if( !root )
@@ -477,7 +477,7 @@ namespace
 
 	void AddUsedGlobalsAsFunctionParams( std::map<Symbol*, ASTNode*>& functions, const std::vector<ASTNode*>& globals )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		for( auto& it : functions )
 		{
@@ -604,7 +604,7 @@ namespace
 			std::map<Symbol*, ASTNode*>& functions,
 			std::vector<ASTNode*>& globals )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		ASTNode* root = state.GetTree();
 		if( !root )
@@ -1102,7 +1102,7 @@ namespace
 
 	void RemapSystemSemanticsDXtoMetal( ASTNode* callNode )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		const InlineString shaderProfile = MakeInlineString( "" );
 
@@ -1615,7 +1615,7 @@ namespace
 
 	bool AutoAssignRegisters( ParserState& state, ASTNode* callNode )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		Symbol* entryPointSymbol = callNode->GetSymbol();
 		if( !entryPointSymbol || !entryPointSymbol->definition )
@@ -2476,7 +2476,7 @@ namespace
 	// Returns new entry point function definition (added to AST root)
 	ASTNode* PatchShader( PatchShaderType shaderType, ASTNode* callNode, ParserState& state )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		Symbol* entryPointSymbol = callNode->GetSymbol();
 		if( !entryPointSymbol || !entryPointSymbol->definition )
@@ -2854,7 +2854,7 @@ namespace
 
     ASTNode* PatchRtShader( PatchShaderType shaderType, ASTNode* callNode, ParserState& state, std::vector<Symbol*>& rtConstantBuffers )
     {
-        tmFunction( 0, 0 );
+        ZoneScoped;
 
         Symbol* entryPointSymbol = callNode->GetSymbol();
         if( !entryPointSymbol || !entryPointSymbol->definition )
@@ -3953,7 +3953,7 @@ namespace
 	// Parameters having "readnone" token are unused. Or so I think...
 	void DetectUnusedArguments( const char* libPath, ParserState& state, ASTNode* callNode )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		std::string entryName = ToString( callNode->GetChild( 1 )->GetSymbol()->name );
 		auto functionHeader = callNode->GetChild( 1 )->GetSymbol()->definition->GetChild( 0 );
@@ -4210,7 +4210,7 @@ namespace
         {
             // Write shader source into temp file.
             {
-                tmZone( 0, 0, "Write Source" );
+                ZoneScopedN( "Write Source" );
 
                 std::lock_guard withFileMutex( s_fileMutex );
                 FILE* file = nullptr;
@@ -4234,7 +4234,7 @@ namespace
 
             // Compile shader.
             {
-                tmZone( 0, 0, "Call compiler" );
+                ZoneScopedN( "Call compiler" );
 
                 std::ostringstream cmd;
                 cmd << MetalTool( "metal" ) << " -x metal ";
@@ -4280,7 +4280,7 @@ namespace
 
             // Read shader binary.
             {
-                tmZone( 0, 0, "Read binary" );
+                ZoneScopedN( "Read binary" );
 
                 std::lock_guard withFileMutex( s_fileMutex );
                 FILE* file = nullptr;
@@ -4395,7 +4395,7 @@ bool EffectCompilerMetal::Create()
 
 bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	ParserState state( MakeInlineString( source, source + sourceLength ) );
 	for( auto& it : defines )
