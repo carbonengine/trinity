@@ -36,6 +36,7 @@ public:
 		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
 		float backgroundVisibility = 0.0f;
 
+		double logThickness = 0.0;
 		float intensity = 0.0f; //Used to normalize certain values if less than 1.0
 
 		FroxelFogSettings operator*( float rhs ) const;
@@ -155,16 +156,21 @@ private:
 
 	
 
+	
+
 	Tr2TextureReferencePtr m_mieEnvironmentMap;
 	float m_environmentRandom;
 	Vector2 m_environmentJitter;
 	float m_environmentDirectionality;
 	float m_environmentBlendCounter;
 
+	bool m_logBlending;
+	double m_logBlendingSmoothness;
 	ITr2FroxelFogSettings::FroxelFogSettings m_froxelFogSettings;
 
 	float m_gameBackClip;
-	
+
+	Tr2TextureReferencePtr m_froxelNoise;
 
 	FogViewDependentResources m_fogResources;
 	FogViewDependentResources m_fogReflectionResources;

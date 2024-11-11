@@ -17,7 +17,7 @@
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
 #include "PriorityBlend.h"
 #include "Tr2LightManager.h"
-#include "Tr2TextureArray.h"
+#include "include/TriMath.h"
 
 ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator*( float rhs ) const
 {
@@ -28,6 +28,7 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 	result.fogColor = fogColor * rhs;
 	result.backgroundVisibility = backgroundVisibility * rhs;
 
+	result.logThickness = logThickness * rhs;
 	result.intensity = rhs;
 
 	return result;
@@ -43,6 +44,7 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 	result.fogColor = fogColor + rhs.fogColor;
 	result.backgroundVisibility = backgroundVisibility + rhs.backgroundVisibility;
 
+	result.logThickness = logThickness + rhs.logThickness;
 	result.intensity = intensity + rhs.intensity;
 
 	return result;
@@ -86,7 +88,9 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_castShadows( false ),
 	m_receiveShadows( false ),
 	m_fogResources( true ),
-	m_fogReflectionResources( false )
+	m_fogReflectionResources( false ),
+	m_logBlending( true ),
+	m_logBlendingSmoothness( 4.0 )
 {
 
 	m_volumeSlices.CreateInstance();
@@ -115,13 +119,36 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 
 	m_batches.reset( new TriRenderBatchAccumulator<>( Tr2Renderer::GetPoolAllocator() ) );
 
-	m_gameBackClip = 1E6f; //must match what the actual game uses; not what Graphite is set to.
+	m_gameBackClip = 1E6f; //must match what the actual game uses; not what Graphite is currently set to, as the user can change the back clip.
 
-	m_froxelFogSettings.thickness = 0.0f;
-	m_froxelFogSettings.directionality = 0.5f;
-	m_froxelFogSettings.environmentIntensity = 1.0f;
-	m_froxelFogSettings.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
-	m_froxelFogSettings.backgroundVisibility = 0.0f;
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		int noiseTextureResolution = 64;
+		int numTexels = noiseTextureResolution * noiseTextureResolution * noiseTextureResolution;
+
+		Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_SNORM, noiseTextureResolution, noiseTextureResolution, noiseTextureResolution, 1, 1 );
+
+
+
+		int8_t* noiseData = new int8_t[numTexels];
+		for( int i = 0; i < numTexels; i++ )
+		{
+			noiseData[i] = (int8_t) TriRandInt( -127, +127 );
+		}
+
+
+		Tr2SubresourceData initialData;
+		initialData.m_sysMem = noiseData;
+		initialData.m_sysMemPitch = noiseTextureResolution;
+		initialData.m_sysMemSlicePitch = noiseTextureResolution * noiseTextureResolution;
+
+
+		m_froxelNoise.CreateInstance();
+		m_froxelNoise->GetTexture()->Create(dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
+
+		delete[] noiseData;
+	}
 
 
 	{
@@ -389,16 +416,18 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 	m_volumeHasContent = true;
 }
 
-float logBase(float base, float value)
-{
-	return log2( value ) / log2( base );
-}
-
 void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& registry )
 {
 	std::vector<ITr2FroxelFogSettings::FroxelFogWeightedSettings> overrides;
-	registry.ProcessComponents<ITr2FroxelFogSettings>( [&overrides]( ITr2FroxelFogSettings* component ) -> void {
-		overrides.push_back( component->GetFroxelFogSettings() );
+	double logBlendingSmoothness = m_logBlendingSmoothness;
+	registry.ProcessComponents<ITr2FroxelFogSettings>( [&overrides, logBlendingSmoothness]( ITr2FroxelFogSettings* component ) -> void {
+
+		ITr2FroxelFogSettings::FroxelFogWeightedSettings fogSettings = component->GetFroxelFogSettings();
+
+		//Compute log(1 + thickness * m_logBlendingSmoothness) for each fog
+		fogSettings.value.logThickness = log1p( (double)fogSettings.value.thickness * logBlendingSmoothness );
+
+		overrides.push_back( fogSettings );
 	} );
 	sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
 		return a.priority > b.priority;
@@ -406,22 +435,30 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 
 	m_froxelFogSettings = PriorityBlend( overrides );
 
-	/*
-		Apart from thickness, the other settings should not be faded in from zero.
-		They should instead just be inherited directly from the fogs, even if the total intensity is less than 1.0.
+	if (m_logBlending)
+	{
+		//Replace the thickness with a logarithmically interpolated one, making the transition from 0 thickness more graceful.
+		m_froxelFogSettings.thickness = (float)( expm1( m_froxelFogSettings.logThickness ) / logBlendingSmoothness );
+	}
+
+
+	float intensity = m_froxelFogSettings.intensity;
+	if (intensity > 0.0000001f)
+	{
+		float inverseIntensity = 1.0f / intensity;
+		/*
+			Apart from thickness, the other settings should not be faded in from zero.
 		
-		Example: If we have a 0.1 intensity fog with a directionality of 0.5, we don't want to get a directionality of 0.05. We just want 0.5.
+			Example: If we have a 0.1 intensity fog with a directionality of 0.5, we don't want to get a directionality of 0.05. We just want 0.5.
 
-		To accomplish this, we calculate the total intensity of the priority blend and divide those settings by it.
-	*/
+			To accomplish this, we calculate the total intensity of the priority blend and divide those settings by it.
+		*/
 
-
-	float inverseIntensity = 1.0f / m_froxelFogSettings.intensity;
-
-	m_froxelFogSettings.directionality *= inverseIntensity;
-	m_froxelFogSettings.environmentIntensity *= inverseIntensity;
-	m_froxelFogSettings.fogColor *= inverseIntensity;
-	m_froxelFogSettings.backgroundVisibility *= inverseIntensity;
+		m_froxelFogSettings.directionality *= inverseIntensity;
+		m_froxelFogSettings.environmentIntensity *= inverseIntensity;
+		m_froxelFogSettings.fogColor *= inverseIntensity;
+		m_froxelFogSettings.backgroundVisibility *= inverseIntensity;
+	}
 }
 
 bool Tr2VolumetricsRenderer::HasFog() const
@@ -657,18 +694,10 @@ void Tr2VolumetricsRenderer::RenderFog(
 	float backgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility, 0.0f, 1.0f );
 
 
-
-
-
-	
-
 	//MieG is negative when light is scattered in the direction the light was already going in.
 	//Expose this value as positive, then negate and clamp it so that it's always negative.
 	//Exactly 0.0 and 1.0 both cause issues with the math in the shader, so clamp to a slightly smaller range.
 	float mieG = -std::clamp( m_froxelFogSettings.directionality, 0.001f, 0.999f );
-
-
-
 
 	Matrix inverseView = Inverse( view );
 	Matrix inverseProjection = Inverse( projection );
@@ -857,6 +886,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 		if( ! ( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) )
 		{
 			resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
+			resources.calculateFroxels->SetParameter(BlueSharedString("NoiseTexture"), m_froxelNoise);
 			resources.calculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
 			Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
 		}
@@ -864,6 +894,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 		{
 			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Scene" ), raytracingGeometry );
 			resources.rtCalculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
+			resources.rtCalculateFroxels->SetParameter(BlueSharedString("NoiseTexture"), m_froxelNoise);
 			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
 			resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 			renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );

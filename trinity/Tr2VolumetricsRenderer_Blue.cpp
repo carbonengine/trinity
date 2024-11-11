@@ -106,20 +106,34 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 		MAP_ATTRIBUTE(
 			"backgroundVisibility",
 			m_froxelFogSettings.backgroundVisibility,
-			"How transparent the fog is. Increasing this causes the skybox and objects to become visible, no matter how high the fog thickness is set. \n"
+			"How transparent the fog is. Increasing this causes the skybox and objects to become visible, no matter how high the fog thickness is set.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"intensity",
 			m_froxelFogSettings.intensity,
-			"For debugging purposes \n"
+			"Total intensity accumulated from fog volumes. For debugging purposes only.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 
 		MAP_ATTRIBUTE(
+			"logBlending",
+			m_logBlending,
+			"Enables a logarithm-based blending for fog volumes, giving a smoother fade-in when a high-thickness fog is blended in. This is always enabled, but can be disabled for debugging purposes.\n"
+			":jessica-group: Froxel Fog",
+			Be::READWRITE )
+
+		MAP_ATTRIBUTE(
+			"logBlendingSmoothness",
+			m_logBlendingSmoothness,
+			"The smoothness of the logarithmic blending. A higher value here causes fog thickness to ramp up more slowly when a thick fog is faded in. This should be kept at the hard-coded default, but can be changed for debugging/testing purposes.\n"
+			":jessica-group: Froxel Fog",
+			Be::READWRITE )
+
+		MAP_ATTRIBUTE(
 			"gameBackClip",
 			m_gameBackClip,
-			"Hardcoded back clip value, must match the back clip used by the game. This value makes sure that the fog looks correct even if the back clip is changed in Graphite. \n"
+			"Hardcoded back clip value, must match the back clip used by the game. This value makes sure that the fog looks correct even if the back clip is changed in Graphite.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 
