@@ -11,8 +11,9 @@
 #include "Tr2ShadowMap.h"
 #include "PostProcess/Tr2PostProcessEnums.h"
 #include "Tr2LightManager.h"
+#include "Raytracing/Tr2RaytracingGeometry.h"
 
-BLUE_DECLARE( Tr2Effect );
+	BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
 BLUE_DECLARE( Tr2DepthStencil );
 BLUE_DECLARE( EveComponentRegistry );
@@ -75,7 +76,9 @@ public:
 		Tr2RenderContext & renderContext, 
 		uint32_t width, 
 		uint32_t height, 
-		Tr2ShadowMap * cascadedShadowMap, 
+		Tr2ShadowMap* cascadedShadowMap, 
+		Tr2RaytracingGeometryPtr raytracingGeometry,
+		ShadowQuality shadowQuality,
 		const Vector3& sunDirection, 
 		const Color& sunColor, 
 		const Matrix& view, 
@@ -93,6 +96,7 @@ public:
 	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
 
 	void UpdateVariableStore();
+	void SetPlanets( const CcpMath::Sphere* planets, size_t planetCount );
 	void RenderShadows(
 		const EveComponentRegistry& registry,
 		ITr2TextureProvider* shadowMap,
@@ -102,6 +106,10 @@ public:
 
 
 	EXPOSE_TO_BLUE();
+
+
+	Tr2RaytracingPipelineStateManager m_pipelineManager;
+	Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
 
 private:
 	struct FogViewDependentResources
@@ -113,6 +121,7 @@ private:
 		Tr2TextureReferencePtr temporalFroxels1;
 
 		Tr2EffectPtr calculateFroxels;
+		Tr2EffectPtr rtCalculateFroxels;
 		Tr2EffectPtr filterFroxels;
 		Tr2EffectPtr raymarchFroxels;
 		Tr2EffectPtr applyFroxels;
@@ -127,6 +136,8 @@ private:
 		uint32_t originalWidth, 
 		uint32_t originalHeight, 
 		Tr2ShadowMap* cascadedShadowMap, 
+		Tr2RaytracingGeometryPtr raytracingGeometry,
+		ShadowQuality shadowQuality,
 		const Vector3& sunDirection, 
 		const Color& sunColor, 
 		const Matrix& view, 
@@ -196,15 +207,16 @@ private:
 		Vector3 SunDirection;
 		float _pad4;
 		Vector3 SunColor;
-		float _pad5;
+		float LightProfileTextureWidth;
 
 		//Directional light shadows
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
 		Matrix ShadowMatrix[16]; // Matrix that takes a coordinate from view space all the way to the packed cascades
 		Vector4 SplitInfo; // x = NrOfSplits, y = <unused>, z = <unused>, w = <unused>
 
-		// TODO: intern, consider passing in indices and reading from LightBuffer
 		Tr2LightManager::PerLightData DynamicLights[16];
+
+		CcpMath::Sphere planets[2];
 	};
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
@@ -218,7 +230,8 @@ private:
 	bool m_volumeHasContent;
 	bool m_castShadows;
 	bool m_receiveShadows;
-	
+
+	std::array<CcpMath::Sphere, 2> m_planets;
 };
 
 TYPEDEF_BLUECLASS( Tr2VolumetricsRenderer );

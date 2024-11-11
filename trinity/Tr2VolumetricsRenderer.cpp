@@ -17,7 +17,7 @@
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
 #include "PriorityBlend.h"
 #include "Tr2LightManager.h"
-
+#include "Tr2TextureArray.h"
 
 ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator*( float rhs ) const
 {
@@ -62,6 +62,9 @@ Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bo
 
 	calculateFroxels.CreateInstance();
 	calculateFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/CalculateFroxels.fx" );
+
+	rtCalculateFroxels.CreateInstance();
+	rtCalculateFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/RtCalculateFroxels.fx" );
 
 	filterFroxels.CreateInstance();
 	filterFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx" );
@@ -431,6 +434,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 	uint32_t width,
 	uint32_t height,
 	Tr2ShadowMap* cascadedShadowMap,
+	Tr2RaytracingGeometryPtr raytracingGeometry,
+	ShadowQuality shadowQuality,
 	const Vector3& sunDirection,
 	const Color& sunColor,
 	const Matrix& view,
@@ -438,7 +443,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 	const Matrix& viewLast,
 	const Matrix& projectionLast)
 {
-	RenderFog( m_fogResources, renderContext, width, height, cascadedShadowMap, sunDirection, sunColor, view, projection, viewLast, projectionLast );
+	RenderFog( m_fogResources, renderContext, width, height, cascadedShadowMap, raytracingGeometry, shadowQuality, sunDirection, sunColor, view, projection, viewLast, projectionLast );
 }
 
 void Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
@@ -450,7 +455,7 @@ void Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
 	const Matrix& view,
 	const Matrix& projection)
 {
-	RenderFog( m_fogReflectionResources, renderContext, width, height, nullptr, sunDirection, sunColor, view, projection, view, projection );
+	RenderFog( m_fogReflectionResources, renderContext, width, height, nullptr, nullptr, ShadowQuality::SHADOW_DISABLED, sunDirection, sunColor, view, projection, view, projection );
 }
 
 
@@ -546,6 +551,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 	uint32_t originalWidth,
 	uint32_t originalHeight,
 	Tr2ShadowMap* cascadedShadowMap,
+	Tr2RaytracingGeometryPtr raytracingGeometry,
+	ShadowQuality shadowQuality, 
 	const Vector3& sunDirection,
 	const Color& sunColor,
 	const Matrix& view,
@@ -676,6 +683,10 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 	{
 		bool hasShadows;
+		uint32_t techniqueIndex;
+		Tr2RtPipelineStateAL pipelineState;
+		Tr2RtShaderTableAL shadowShaderTable;
+		std::wstring rayGenName;
 		{
 			if( !m_fogConstantBuffer.IsValid() )
 			{
@@ -747,7 +758,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 			data->SunColor = Vector3( sunColor.r, sunColor.g, sunColor.b );
 
-			if( cascadedShadowMap )
+			if( cascadedShadowMap && ( shadowQuality == ShadowQuality::SHADOW_LOW || shadowQuality == ShadowQuality::SHADOW_HIGH ) )
 			{
 				data->ShadowMapValues[0] = cascadedShadowMap->m_perSplitData.ShadowMapValues[0];
 				data->ShadowMapValues[1] = cascadedShadowMap->m_perSplitData.ShadowMapValues[1];
@@ -772,6 +783,37 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 				hasShadows = true;
 			}
+			else if ( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED )
+			{
+				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
+				{
+					return;
+				}
+
+				for(int32_t i = 0; i < m_planets.size(); i++)
+				{
+					data->planets[i] = m_planets[i];
+				}
+
+				std::wstring missName;
+				m_pipelineManager.AddLibrary( rayGenName, missName, resources.rtCalculateFroxels, BlueSharedString( "RtShadow" ) );
+
+				pipelineState = m_pipelineManager.GetPipelineState( renderContext );
+
+				if( !pipelineState.IsValid() )
+				{
+					return;
+				}
+
+				{
+					CCP_STATS_ZONE( "Create shader table" );
+					m_shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
+					m_shaderTableDesc.AddMissShader( missName.c_str() );
+					
+					shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+				}
+
+			}
 			else
 			{
 				hasShadows = false;
@@ -791,10 +833,9 @@ void Tr2VolumetricsRenderer::RenderFog(
 				{
 					uint32_t lightIndex = lightManager->GetVolumetricLights()[i];
 					data->DynamicLights[i] = lightManager->GetLightData( lightIndex );
-					// doesn't work due to orientation reconstruction, which is taking place in world space
-					//data->DynamicLights[i].position = ( Vector4( data->DynamicLights[i].position, 1.f ) * view ).GetXYZ();
-					//data->DynamicLights[i].direction = Vector3_16( ( Vector4( data->DynamicLights[i].direction, 0.f ) * view ).GetXYZ() );
 				}
+
+				data->LightProfileTextureWidth = (float)lightManager->GetLightProfileArray().GetWidth();
 			}
 			else
 			{
@@ -813,10 +854,21 @@ void Tr2VolumetricsRenderer::RenderFog(
 		int wgY = ( height + workgroupSize - 1 ) / workgroupSize;
 		int wgZ = ( depth + workgroupSize - 1 ) / workgroupSize;
 
-		
-		resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
-		resources.calculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
-		Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
+		if( ! ( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) )
+		{
+			resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
+			resources.calculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
+			Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
+		}
+		else
+		{
+			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Scene" ), raytracingGeometry );
+			resources.rtCalculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
+			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
+			resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+			renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
+			renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
+		}
 
 		if( temporalFog )
 		{
@@ -858,6 +910,12 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 }
 
+void Tr2VolumetricsRenderer::SetPlanets( const CcpMath::Sphere* planets, size_t planetCount )
+{
+	CCP_ASSERT_M( planetCount == 2, "Tr2VolumetricsRenderer expects two planets!" );
+
+	memcpy( m_planets.data(), planets, planetCount * sizeof( CcpMath::Sphere ) );
+}
 
 void Tr2VolumetricsRenderer::RenderShadows(
 	const EveComponentRegistry& registry,
