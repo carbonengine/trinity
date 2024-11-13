@@ -250,6 +250,10 @@ enum D3D11_FILL_MODE
 #include <thread>
 #include <functional>
 
+#if !NDEBUG 
+#undef CCP_TELEMETRY_ENABLED
+#endif
+
 #if CCP_TELEMETRY_ENABLED
 #include <tracy/Tracy.hpp>
 #else
