@@ -242,6 +242,11 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 #else
 	auto rtFormat = PIXEL_FORMAT_R11G11B10_FLOAT;
 #endif
+	return DoPrepareResources( rtFormat, renderContext );
+}
+
+bool Tr2ReflectionProbe::DoPrepareResources( ImageIO::PixelFormat rtFormat, Tr2PrimaryRenderContext& renderContext )
+{
 
 	for( int i = 0; i < 6; i++ )
 	{
@@ -322,6 +327,14 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 
 bool Tr2ReflectionProbe::OnModified( Be::Var* value )
 {
+	DestroyRenderTargets();
+	PrepareResources();
+
+	return true;
+}
+
+void Tr2ReflectionProbe::DestroyRenderTargets()
+{
 	for( unsigned i = 0; i < 6; i++ )
 	{
 		m_renderTargets[i]->Destroy();
@@ -332,13 +345,8 @@ bool Tr2ReflectionProbe::OnModified( Be::Var* value )
 	m_preFilterTarget->Destroy();
 	m_postFilterTarget->Destroy();
 	m_initialized = false;
-
-	PrepareResources();
-
 	m_onePassDone = false;
 	m_currentFrame = 0;
-
-	return true;
 }
 
 void Tr2ReflectionProbe::Filter( Tr2RenderContext &renderContext )
@@ -380,7 +388,8 @@ void Tr2ReflectionProbe::Filter( Tr2RenderContext &renderContext )
 void Tr2ReflectionProbe::RunFilter()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	OnPrepareResources();
+	DestroyRenderTargets();
+	DoPrepareResources( PIXEL_FORMAT_R16G16B16A16_FLOAT, renderContext );
 	Filter( renderContext );
 }
 

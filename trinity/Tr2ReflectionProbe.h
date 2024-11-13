@@ -62,6 +62,8 @@ public:
 private:
 	void RunFilter();
 	void Filter( Tr2RenderContext &renderContext );
+	bool DoPrepareResources( ImageIO::PixelFormat targetFormat, Tr2PrimaryRenderContext& renderContext );
+	void DestroyRenderTargets();
 
 	bool m_initialized;
 	bool m_hasData;
