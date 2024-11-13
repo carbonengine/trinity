@@ -15,8 +15,9 @@ EveChildFogVolume::EveChildFogVolume( IRoot* lockobj ) :
 	m_boundingSphere( Vector3( 0.0, 0.0, 0.0 ), 0.0 )
 {
 	m_settings.value.thickness = 1.0f;
-	m_settings.value.directionality = 0.5f;
+	m_settings.value.lightDirectionality = 0.5f;
 	m_settings.value.environmentIntensity = 1.0f;
+	m_settings.value.environmentDirectionality = 0.75f;
 	m_settings.value.fogColor = Color( 1, 1, 1, 1 );
 	m_settings.value.backgroundVisibility = 0.0f;
 }

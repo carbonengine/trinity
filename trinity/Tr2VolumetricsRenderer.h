@@ -29,9 +29,10 @@ public:
 	{
 		float thickness = 0.0f;
 
-		float directionality = 0.0f;
+		float lightDirectionality = 0.0f;
 
 		float environmentIntensity = 0.0f;
+		float environmentDirectionality = 0.0f;
 
 		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
 		float backgroundVisibility = 0.0f;
@@ -82,6 +83,8 @@ public:
 		ShadowQuality shadowQuality,
 		const Vector3& sunDirection, 
 		const Color& sunColor, 
+		const Vector3d origin,
+		const Vector3d originShift,
 		const Matrix& view, 
 		const Matrix& projection, 
 		const Matrix& viewLast, 
@@ -92,6 +95,7 @@ public:
 		uint32_t height, 
 		const Vector3& sunDirection, 
 		const Color& sunColor, 
+		const Vector3d origin,
 		const Matrix& view, 
 		const Matrix& projection );
 	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
@@ -141,6 +145,8 @@ private:
 		ShadowQuality shadowQuality,
 		const Vector3& sunDirection, 
 		const Color& sunColor, 
+		const Vector3d origin,
+		const Vector3d originShift,
 		const Matrix& view, 
 		const Matrix& projection, 
 		const Matrix& viewLast, 
@@ -161,7 +167,7 @@ private:
 	Tr2TextureReferencePtr m_mieEnvironmentMap;
 	float m_environmentRandom;
 	Vector2 m_environmentJitter;
-	float m_environmentDirectionality;
+	float m_previousEnvironmentG;
 	float m_environmentBlendCounter;
 
 	bool m_logBlending;
@@ -170,7 +176,16 @@ private:
 
 	float m_gameBackClip;
 
-	Tr2TextureReferencePtr m_froxelNoise;
+	float m_noiseFrequency;
+	float m_noodleCoordMultiplier;
+	float m_noodleIntensity;
+	float m_noiseStrength;
+
+	float m_noiseSharpness;
+
+	Tr2TextureReferencePtr m_froxel1DNoise;
+	Tr2TextureReferencePtr m_froxel2DNoise;
+	Tr2TextureReferencePtr m_froxel3DNoise;
 
 	FogViewDependentResources m_fogResources;
 	FogViewDependentResources m_fogReflectionResources;
@@ -194,7 +209,7 @@ private:
 		float BaseDensity;
 
 		float MaxDistanceVisibility;
-		float MieG;
+		float LightG;
 		float EnvironmentIntensity;
 		float InverseShadowMapAtlasSize;
 
@@ -203,8 +218,17 @@ private:
 
 		Matrix InverseViewMatrix;
 
+		Vector3 NoiseCoordOffset;
+		float NoiseCoordMultiplier;
+
+		float NoodleCoordMultiplier;
+		float NoodleCoordOffset;
+		float NoodleIntensity;
+		float NoiseStrength;
+
+		float NoiseInverseSharpness;
+		float _pad3;
 		Vector2 LinearizeDepthParams;
-		Vector2 _pad3;
 
 		Vector4 UnprojectParams;
 		Vector4 PreviousProjectParams;

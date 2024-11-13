@@ -1912,7 +1912,8 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 					{
 						uint32_t width = Tr2Renderer::GetViewport().width;
 						uint32_t height = Tr2Renderer::GetViewport().height;
-						m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, width, height, m_sunData.DirWorld, m_currentSunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
+						Vector3d origin = m_updateContext.GetOrigin();
+						m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, width, height, m_sunData.DirWorld, m_currentSunColor, origin, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
 					}
 					RenderTransparentBatches( m_secondaryBatches, renderContext );
 					renderContext.SetReadOnlyDepth( false );
@@ -2359,14 +2360,19 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 
 	Color sunColor = m_currentSunColor;
-	if( m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED )
-	{
-		m_volumetricsRenderer->RenderFog( renderContext, m_depthMap->GetWidth(), m_depthMap->GetHeight(), m_cascadedShadowMap, &m_rtManager->GetGeometry(), m_shadowQuality, m_sunData.DirWorld, sunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), m_viewLast, m_projectionLast );
-	}
-	else
-	{
-		m_volumetricsRenderer->RenderFog( renderContext, m_depthMap->GetWidth(), m_depthMap->GetHeight(), m_cascadedShadowMap, nullptr, m_shadowQuality, m_sunData.DirWorld, sunColor, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), m_viewLast, m_projectionLast );
-	}
+
+	Vector3d origin = m_updateContext.GetOrigin();
+	Vector3d originShift = m_updateContext.GetOriginShift();
+
+	m_volumetricsRenderer->RenderFog(
+		renderContext,
+		m_depthMap->GetWidth(), m_depthMap->GetHeight(),
+		m_cascadedShadowMap, m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED ? &m_rtManager->GetGeometry() : nullptr,	m_shadowQuality,
+		m_sunData.DirWorld, sunColor, 
+		origin, originShift,
+		Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), 
+		m_viewLast, m_projectionLast 
+	);
 }
 
 bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, Tr2DepthStencilPtr shadowMap )
