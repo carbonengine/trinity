@@ -88,6 +88,7 @@ public:
 	// Jittering
 	void GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y );
 
+	float m_exposureAdjustment = 0;
 	float m_whiteTemperature = 6500.0f;
 	float m_whiteTint = 0.0f;
 	float m_colorSaturation = 1.0f;

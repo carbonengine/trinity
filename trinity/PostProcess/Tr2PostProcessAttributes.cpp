@@ -22,6 +22,7 @@ Tr2PostProcessAttributes::Tr2PostProcessAttributes( IRoot* lockobj ) :
 	bloomLuminanceScale( Attribute( 0.0f ) ),
 	grimeIntensity( Attribute( 0.0f ) ),
 	grimePath( Attribute( BlueSharedString( "" ) ) ),
+	exposureAdjustment( Attribute( 0.0f ) ),
 	filmGrainIntensity( Attribute( 0.0f ) ),
 	filmGrainSize( Attribute( 0.0f ) ),
 	filmGrainDensity( Attribute( 0.0f ) ),
@@ -332,6 +333,7 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	auto bloomLuminanceScale = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceScale, sources, debugObserver );
 	auto grimeIntensity = Accumulate( &Tr2PostProcessAttributes::grimeIntensity, sources, debugObserver );
 	auto grimePath = Accumulate( &Tr2PostProcessAttributes::grimePath, sources, debugObserver );
+	auto exposureAdjustment = Accumulate( &Tr2PostProcessAttributes::exposureAdjustment, sources, debugObserver );
 	auto filmGrainColored = Accumulate( &Tr2PostProcessAttributes::filmGrainColored, sources, debugObserver );
 	auto filmGrainColorAmount = Accumulate( &Tr2PostProcessAttributes::filmGrainColorAmount, sources, debugObserver );
 	auto filmGrainIntensity = Accumulate( &Tr2PostProcessAttributes::filmGrainIntensity, sources, debugObserver );
@@ -485,6 +487,8 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 		postprocess.SetDepthOfField( dofEffect );
 	}
 
+	postprocess.m_exposureAdjustment = exposureAdjustment;
+
 	postprocess.m_whiteTemperature = whiteTemperature;
 	postprocess.m_whiteTint = whiteTint;
 	postprocess.m_colorSaturation = colorSaturation;
@@ -504,6 +508,7 @@ void Tr2PostProcessAttributes::Reset()
 	bloomLuminanceScale = Attribute( 0.0f );
 	grimeIntensity = Attribute( 0.0f );
 	grimePath = Attribute( BlueSharedString( "" ) );
+	exposureAdjustment = Attribute( 0.0f );
 	filmGrainIntensity = Attribute( 0.0f );
 	filmGrainSize = Attribute( 0.0f );
 	filmGrainDensity = Attribute( 0.0f );

@@ -57,6 +57,8 @@ public:
 	PostProcess::Attribute<float> grimeIntensity;
 	PostProcess::Attribute<BlueSharedString> grimePath;
 
+	PostProcess::Attribute<float> exposureAdjustment;
+
 	PostProcess::Attribute<bool> filmGrainColored;
 	PostProcess::Attribute<float> filmGrainColorAmount;
 	PostProcess::Attribute<float> filmGrainIntensity;

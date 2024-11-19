@@ -54,6 +54,8 @@ const Be::ClassInfo* Tr2PostProcessAttributes::ExposeToBlue()
 		POSTPROCESSATTRIBUTE_DEFINE( grimeIntensity, Grime, "\n:jessica-numeric-range: (0.0, 1.0)" )
 		POSTPROCESSATTRIBUTE_DEFINE( grimePath, Grime, "DOES NOT BLEND!" )
 
+		POSTPROCESSATTRIBUTE_DEFINE( exposureAdjustment, Exposure, "Manual exposure adjustment value in stops" )
+
 		POSTPROCESSATTRIBUTE_DEFINE( filmGrainIntensity, Film Grain, "\n:jessica-numeric-range: (0.0, 1.0)" )
 		POSTPROCESSATTRIBUTE_DEFINE( filmGrainSize, Film Grain, "" )
 		POSTPROCESSATTRIBUTE_DEFINE( filmGrainDensity, Film Grain, "" )

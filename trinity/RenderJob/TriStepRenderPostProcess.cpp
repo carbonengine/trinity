@@ -433,7 +433,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		RenderDepthOfField( nonMsaaSource, renderContext, dof, temporal, upscalingInfo.upscalingAmount );
 	}
 
-	bool hasDynamicExposure = ProcessDynamicExposure( renderContext, dynamicExposure, bloom );
+	bool hasDynamicExposure = ProcessDynamicExposure( renderContext, dynamicExposure, bloom, postProcess );
 	if( ProcessTaa( taa ) )
 	{
 		RenderTaa( nonMsaaSource, renderContext, taa, dynamicExposure );
@@ -879,7 +879,7 @@ void TriStepRenderPostProcess::RenderSignalLoss( Tr2RenderTarget* dest, Tr2Rende
 }
 
 
-bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom )
+bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom, Tr2PostProcess2* postProcess )
 {
 	if( !m_exposure || !m_exposure->IsValid() )
 	{
@@ -938,7 +938,6 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderC
 			m_tonemappingEffect->StartUpdate();
 			m_tonemappingEffect->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "Histogram" ), m_histogram );
-			m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureAdjust" ), pow( 2.0f, dynamicExposure->m_adjustment ) );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureMiddleValue" ), dynamicExposure->m_middleValue );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureInfluence" ), dynamicExposure->m_influence );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "MinExposure" ), dynamicExposure->m_minExposure );
@@ -1019,6 +1018,12 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderC
 			m_tonemappingEffect->EndUpdate();
 		}
 	}
+	auto exposureAdjustment = postProcess->m_exposureAdjustment;
+	if( dynamicExposure )
+	{
+		exposureAdjustment += dynamicExposure->m_adjustment;
+	}
+	m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureAdjust" ), pow( 2.0f, exposureAdjustment ) );
 
 	return dynamicExposure != nullptr && dynamicExposure->IsActive();
 }
