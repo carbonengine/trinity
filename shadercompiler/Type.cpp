@@ -15,7 +15,8 @@ bool Type::operator==( const Type& type ) const
 		width == type.width && 
 		height == type.height && 
 		( ( templateParameter == nullptr && type.templateParameter == nullptr ) ||
-		  ( templateParameter != nullptr && type.templateParameter != nullptr && *templateParameter == *type.templateParameter && templateSamples == type.templateSamples ) );
+		  ( templateParameter != nullptr && type.templateParameter != nullptr && *templateParameter == *type.templateParameter && templateSamples == type.templateSamples ) ) &&
+		( !IsTexture() || isDepthTexture == isDepthTexture );
 }
 
 bool Type::operator!=( const Type& type ) const
@@ -36,6 +37,7 @@ bool Type::FromToken( const ScannerToken& token )
 	arrayDimensions = 0;
 	metalTextureAccess = 0;
 	templateSamples = -1;
+	isDepthTexture = false;
 	return true;
 }
 
@@ -52,6 +54,7 @@ bool Type::FromTokenType( int type )
 	arrayDimensions = 0;
 	metalTextureAccess = 0;
 	templateSamples = -1;
+	isDepthTexture = false;
 	return true;
 }
 
@@ -71,6 +74,7 @@ bool Type::FromSymbol( const Symbol* asymbol )
 	arrayDimensions = 0;
 	metalTextureAccess = 0;
 	templateSamples = -1;
+	isDepthTexture = false;
 	return true;
 }
 
@@ -239,14 +243,21 @@ bool Type::GetMethodType( ASTNode* methodCall, Type& returnType ) const
 			else
 			{
 				returnType.FromTokenType( OP_FLOAT );
-				returnType.width = 4;
+				if( isDepthTexture )
+				{
+					returnType.width = 1;
+				}
+				else
+				{
+					returnType.width = 4;
+				}
 			}
 			return true;
 		}
 		if( method == MakeInlineString( "SampleCmp" ) ||
 			method == MakeInlineString( "SampleCmpLevelZero" ) )
 		{
-			returnType.FromTokenType( OP_UINT );
+			returnType.FromTokenType( OP_FLOAT );
 			return true;
 		}
 		return false;
@@ -464,7 +475,7 @@ std::string Type::ToString() const
 	case OP_TEXTURE1D:
 		return "Texture1D";
 	case OP_TEXTURE2D:
-		return "Texture2D";
+		return isDepthTexture ? "DepthTexture2D" : "Texture2D";
 	case OP_TEXTURE3D:
 		return "Texture3D";
 	case OP_TEXTURECUBE:
@@ -472,7 +483,7 @@ std::string Type::ToString() const
 	case OP_TEXTURE1DARRAY:
 		return "Texture1DArray";
 	case OP_TEXTURE2DARRAY:
-		return "Texture2DArray";
+		return isDepthTexture ? "DepthTexture2DArray" : "Texture2DArray";
 	case OP_TEXTURE3DARRAY:
 		return "Texture3DArray";
 	case OP_TEXTURECUBEARRAY:
@@ -617,7 +628,14 @@ bool Type::GetIndexedType( Type& type ) const
 		else
 		{
 			type.FromTokenType( OP_FLOAT );
-			type.width = 4;
+			if (isDepthTexture)
+			{
+				type.width = 1;
+			}
+			else
+			{
+				type.width = 4;
+			}
 		}
 		return true;
 	case OP_BUFFER:

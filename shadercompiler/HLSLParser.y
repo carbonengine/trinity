@@ -1889,6 +1889,36 @@ type_specifier(A) ::= OP_TEXTURE2DARRAY(B).
 	A.FromToken( B );
 }
 
+type_specifier(A) ::= OP_DEPTHTEXTURE2D(B) OP_LESS type_specifier(C) OP_MORE.
+{
+	A.FromToken( B );
+	A.builtInType = OP_TEXTURE2D;
+	A.isDepthTexture = true;
+	A.templateParameter = new Type( C );
+}
+
+type_specifier(A) ::= OP_DEPTHTEXTURE2D(B).
+{
+	A.FromToken( B );
+	A.builtInType = OP_TEXTURE2D;
+	A.isDepthTexture = true;
+}
+
+type_specifier(A) ::= OP_DEPTHTEXTURE2DARRAY(B) OP_LESS type_specifier(C) OP_MORE.
+{
+	A.FromToken( B );
+	A.builtInType = OP_TEXTURE2DARRAY;
+	A.isDepthTexture = true;
+	A.templateParameter = new Type( C );
+}
+
+type_specifier(A) ::= OP_DEPTHTEXTURE2DARRAY(B).
+{
+	A.FromToken( B );
+	A.builtInType = OP_TEXTURE2DARRAY;
+	A.isDepthTexture = true;
+}
+
 type_specifier(A) ::= OP_TEXTURE3D(B) OP_LESS type_specifier(C) OP_MORE.
 {
 	A.FromToken( B );

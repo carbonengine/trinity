@@ -532,14 +532,30 @@ namespace
 				{
 					os << "const ";
 				}
-				os << "texture2d<" << MslTextureTemplateType( type ) << '>';
+				if( type.isDepthTexture )
+				{
+					os << "depth2d";
+				}
+				else
+				{
+					os << "texture2d";
+				}
+				os << "<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE2DARRAY:
 				if( type.arrayDimensions > 0 )
 				{
 					os << "const ";
 				}
-				os << "texture2d_array<" << MslTextureTemplateType( type ) << '>';
+				if( type.isDepthTexture )
+				{
+					os << "depth2d_array";
+				}
+				else
+				{
+					os << "texture2d_array";
+				}
+				os << "<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE3D:
 				if( type.arrayDimensions > 0 )

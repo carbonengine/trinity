@@ -1038,7 +1038,7 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 				break;
 			}
 			// MLS tex.read is always a 4 component vector. If the original texture is not a 4 component vector, we need to swizzle the result
-			if( textureType.templateParameter && textureType.templateParameter->width != 4 )
+			if( !textureType.isDepthTexture && textureType.templateParameter && textureType.templateParameter->width != 4 )
 			{
 				const char* xyzw = "xyzw";
 				ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + textureType.width ) );

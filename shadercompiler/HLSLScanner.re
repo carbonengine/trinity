@@ -940,6 +940,8 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		"SamplerState" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_SAMPLER ); }
 		"SamplerComparisonState" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_SAMPLERCOMPARISON ); }
 
+		"DepthTexture2D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_DEPTHTEXTURE2D ); }
+		"DepthTexture2DArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_DEPTHTEXTURE2D ); }
 		[tT]"exture1D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE1D ); }
 		[tT]"exture2D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE2D ); }
 		[tT]"exture3D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE3D ); }
