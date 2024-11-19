@@ -16,7 +16,7 @@ bool Type::operator==( const Type& type ) const
 		height == type.height && 
 		( ( templateParameter == nullptr && type.templateParameter == nullptr ) ||
 		  ( templateParameter != nullptr && type.templateParameter != nullptr && *templateParameter == *type.templateParameter && templateSamples == type.templateSamples ) ) &&
-		( !IsTexture() || isDepthTexture == isDepthTexture );
+		( !IsTexture() || isDepthTexture == type.isDepthTexture );
 }
 
 bool Type::operator!=( const Type& type ) const
