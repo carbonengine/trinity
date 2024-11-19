@@ -664,3 +664,8 @@ void EveChildEffectPropagator::SetEffect( EveChildInstanceContainer* effect )
 	// register again
 	RegisterComponents();
 }
+
+void EveChildEffectPropagator::SetControllerVariable( const char* name, float value )
+{
+	m_effect->SetControllerVariable( name, value );
+}

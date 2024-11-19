@@ -148,6 +148,7 @@ protected:
 	bool m_isAlwaysOn;
 	EveChildInheritPropertiesPtr m_inheritProperties;
 	Origin m_origin;
+	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
 
 	IEveSpaceObjectChildPtr m_source;
 	PIEveSpaceObjectChildVector m_instances;
