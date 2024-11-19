@@ -440,8 +440,7 @@ const Tr2ConstantBufferAL& Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 }
 
 // ***************** Tr2RaytracingGeometry *****************
-Tr2RaytracingGeometry::Tr2RaytracingGeometry() :
-	m_pipelineManager( nullptr )
+Tr2RaytracingGeometry::Tr2RaytracingGeometry()
 {
 	m_skinVerticesEffect.CreateInstance();
 	m_skinVerticesEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/skinvertices.fx" );
@@ -460,19 +459,26 @@ void Tr2RaytracingGeometry::BeginSceneUpdate()
 }
 
 
-void Tr2RaytracingGeometry::EndSceneUpdate( Tr2RenderContext& renderContext )
+void Tr2RaytracingGeometry::EndSceneUpdate( Tr2RenderContext& renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers )
 {
-	PrepareShaderTableDescription( renderContext );
+	PrepareShaderTableDescription( renderContext, numRaycasters, shaderTableDescs, pipelineManagers );
 	TransformMeshes( renderContext );
 	BuildAccelerationStructures( renderContext );
 }
 
-void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& renderContext )
+void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers )
 {
+	CCP_ASSERT_M( numRaycasters > 0, "numRaycasters has to be greater than zero! Why are you preparing shader tables when you have no raycasters?" );
+
 	GPU_REGION( renderContext, "PrepareShaderTableDescription" );
 	CCP_STATS_ZONE( __FUNCTION__ );
-	m_shaderTableDesc = Tr2RtShaderTableDescriptionAL();
-	std::map<uint32_t, std::pair<std::wstring, uint32_t>> seenLibraries;
+	for( int32_t i = 0; i < numRaycasters; i++ )
+	{
+		*shaderTableDescs[i] = Tr2RtShaderTableDescriptionAL();
+	}
+
+	std::vector<std::map<uint32_t, std::pair<std::wstring, uint32_t>>> seenLibraries;
+	seenLibraries.resize( numRaycasters );
 
 	uint32_t materialIndex = 0;
 	Tr2RtLocalMaterialDescriptionAL material;
@@ -502,33 +508,31 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		{
 			it->isTransparent = true;
 		}
-		auto foundLib = seenLibraries.find( lib.libraryHandle );
-		if( foundLib == end( seenLibraries ) )
-		{
-			auto hitGroupName = m_pipelineManager->AddHitGroup( lib );
-			seenLibraries[lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
 
-			it->materialIndex = materialIndex++;
-			if( it->perObjectData )
-			{
-				material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
-			}
-			it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, &it->mesh->GetVertexBuffer(), &it->mesh->GetIndexBuffer(), material, renderContext );
-			m_shaderTableDesc.AddHitGroup( hitGroupName.c_str(), material );
-		}
-		else if( !lib.localInput.signature.registers.empty() )
+		it->materialIndex = materialIndex++;
+		if( it->perObjectData )
 		{
-			it->materialIndex = materialIndex++;
-			if( it->perObjectData )
-			{
-				material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
-			}
-			it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, &it->mesh->GetVertexBuffer(), &it->mesh->GetIndexBuffer(), material, renderContext );
-			m_shaderTableDesc.AddHitGroup( foundLib->second.first.c_str(), material );
+			material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
 		}
-		else
+		it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, &it->mesh->GetVertexBuffer(), &it->mesh->GetIndexBuffer(), material, renderContext );
+
+		for( int32_t i = 0; i < numRaycasters; i++ )
 		{
-			it->materialIndex = foundLib->second.second;
+			auto foundLib = seenLibraries[i].find( lib.libraryHandle );
+			if( foundLib == end( seenLibraries[i] ) )
+			{
+				auto hitGroupName = pipelineManagers[i]->AddHitGroup( lib );
+				seenLibraries[i][lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
+				shaderTableDescs[i]->AddHitGroup( hitGroupName.c_str(), material );
+			}
+			else if( !lib.localInput.signature.registers.empty() )
+			{
+				shaderTableDescs[i]->AddHitGroup( foundLib->second.first.c_str(), material );
+			}
+			else
+			{
+				it->materialIndex = foundLib->second.second;
+			}
 		}
 	}
 }

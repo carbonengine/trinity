@@ -11,8 +11,9 @@
 #include "Tr2ShadowMap.h"
 #include "PostProcess/Tr2PostProcessEnums.h"
 #include "Tr2LightManager.h"
+#include "Raytracing/Tr2RaytracingGeometry.h"
 
-BLUE_DECLARE( Tr2Effect );
+	BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
 BLUE_DECLARE( Tr2DepthStencil );
 BLUE_DECLARE( EveComponentRegistry );
@@ -28,9 +29,10 @@ public:
 	{
 		float thickness = 0.0f;
 
-		float directionality = 0.0f;
+		float lightDirectionality = 0.0f;
 
 		float environmentIntensity = 0.0f;
+		float environmentDirectionality = 0.0f;
 
 		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
 		float backgroundVisibility = 0.0f;
@@ -76,9 +78,13 @@ public:
 		Tr2RenderContext & renderContext, 
 		uint32_t width, 
 		uint32_t height, 
-		Tr2ShadowMap * cascadedShadowMap, 
+		Tr2ShadowMap* cascadedShadowMap, 
+		Tr2RaytracingGeometryPtr raytracingGeometry,
+		ShadowQuality shadowQuality,
 		const Vector3& sunDirection, 
 		const Color& sunColor, 
+		const Vector3d origin,
+		const Vector3d originShift,
 		const Matrix& view, 
 		const Matrix& projection, 
 		const Matrix& viewLast, 
@@ -89,11 +95,13 @@ public:
 		uint32_t height, 
 		const Vector3& sunDirection, 
 		const Color& sunColor, 
+		const Vector3d origin,
 		const Matrix& view, 
 		const Matrix& projection );
 	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
 
 	void UpdateVariableStore();
+	void SetPlanets( const CcpMath::Sphere* planets, size_t planetCount );
 	void RenderShadows(
 		const EveComponentRegistry& registry,
 		ITr2TextureProvider* shadowMap,
@@ -103,6 +111,10 @@ public:
 
 
 	EXPOSE_TO_BLUE();
+
+
+	Tr2RaytracingPipelineStateManager m_pipelineManager;
+	Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
 
 private:
 	struct FogViewDependentResources
@@ -114,6 +126,7 @@ private:
 		Tr2TextureReferencePtr temporalFroxels1;
 
 		Tr2EffectPtr calculateFroxels;
+		Tr2EffectPtr rtCalculateFroxels;
 		Tr2EffectPtr filterFroxels;
 		Tr2EffectPtr raymarchFroxels;
 		Tr2EffectPtr applyFroxels;
@@ -128,8 +141,12 @@ private:
 		uint32_t originalWidth, 
 		uint32_t originalHeight, 
 		Tr2ShadowMap* cascadedShadowMap, 
+		Tr2RaytracingGeometryPtr raytracingGeometry,
+		ShadowQuality shadowQuality,
 		const Vector3& sunDirection, 
 		const Color& sunColor, 
+		const Vector3d origin,
+		const Vector3d originShift,
 		const Matrix& view, 
 		const Matrix& projection, 
 		const Matrix& viewLast, 
@@ -150,7 +167,7 @@ private:
 	Tr2TextureReferencePtr m_mieEnvironmentMap;
 	float m_environmentRandom;
 	Vector2 m_environmentJitter;
-	float m_environmentDirectionality;
+	float m_previousEnvironmentG;
 	float m_environmentBlendCounter;
 
 	bool m_logBlending;
@@ -159,7 +176,16 @@ private:
 
 	float m_gameBackClip;
 
-	Tr2TextureReferencePtr m_froxelNoise;
+	float m_noiseFrequency;
+	float m_noodleCoordMultiplier;
+	float m_noodleIntensity;
+	float m_noiseStrength;
+
+	float m_noiseSharpness;
+
+	Tr2TextureReferencePtr m_froxel1DNoise;
+	Tr2TextureReferencePtr m_froxel2DNoise;
+	Tr2TextureReferencePtr m_froxel3DNoise;
 
 	FogViewDependentResources m_fogResources;
 	FogViewDependentResources m_fogReflectionResources;
@@ -183,7 +209,7 @@ private:
 		float BaseDensity;
 
 		float MaxDistanceVisibility;
-		float MieG;
+		float LightG;
 		float EnvironmentIntensity;
 		float InverseShadowMapAtlasSize;
 
@@ -192,8 +218,17 @@ private:
 
 		Matrix InverseViewMatrix;
 
+		Vector3 NoiseCoordOffset;
+		float NoiseCoordMultiplier;
+
+		float NoodleCoordMultiplier;
+		float NoodleCoordOffset;
+		float NoodleIntensity;
+		float NoiseStrength;
+
+		float NoiseInverseSharpness;
+		float _pad3;
 		Vector2 LinearizeDepthParams;
-		Vector2 _pad3;
 
 		Vector4 UnprojectParams;
 		Vector4 PreviousProjectParams;
@@ -202,15 +237,16 @@ private:
 		Vector3 SunDirection;
 		float _pad4;
 		Vector3 SunColor;
-		float _pad5;
+		float LightProfileTextureWidth;
 
 		//Directional light shadows
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
 		Matrix ShadowMatrix[16]; // Matrix that takes a coordinate from view space all the way to the packed cascades
 		Vector4 SplitInfo; // x = NrOfSplits, y = <unused>, z = <unused>, w = <unused>
 
-		// TODO: intern, consider passing in indices and reading from LightBuffer
 		Tr2LightManager::PerLightData DynamicLights[16];
+
+		CcpMath::Sphere planets[2];
 	};
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
@@ -224,7 +260,8 @@ private:
 	bool m_volumeHasContent;
 	bool m_castShadows;
 	bool m_receiveShadows;
-	
+
+	std::array<CcpMath::Sphere, 2> m_planets;
 };
 
 TYPEDEF_BLUECLASS( Tr2VolumetricsRenderer );

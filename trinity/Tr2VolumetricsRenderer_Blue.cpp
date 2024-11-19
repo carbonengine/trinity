@@ -86,15 +86,21 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
-			"directionality",
-			m_froxelFogSettings.directionality,
-			"Scattering directionality of the fog. A higher value causes the fog to light up only when looking directly towards light sources.\n"
+			"lightDirectionality",
+			m_froxelFogSettings.lightDirectionality,
+			"Scattering directionality for the sun and dynamic local lights. A higher value causes the fog to light up only when looking directly towards light sources.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"environmentIntensity",
 			m_froxelFogSettings.environmentIntensity,
 			"The visibility of the skybox behind the fog, blurred by the directionality setting above.\n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
+		MAP_ATTRIBUTE(
+			"environmentDirectionality",
+			m_froxelFogSettings.environmentDirectionality,
+			"Scattering directionality for the environment map. A lower value causes a more uniform environment color, while a higher value causes the fog to light up only when looking directly at bright areas of the environment map.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
@@ -136,6 +142,45 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			"Hardcoded back clip value, must match the back clip used by the game. This value makes sure that the fog looks correct even if the back clip is changed in Graphite.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
+
+
+
+		MAP_ATTRIBUTE(
+			"noiseFrequency",
+			m_noiseFrequency,
+			"Test. \n"
+			":jessica-group: Froxel Fog",
+			Be::READWRITE )
+
+		MAP_ATTRIBUTE(
+			"noodleCoordMultiplier",
+			m_noodleCoordMultiplier,
+			"Test. \n"
+			":jessica-group: Froxel Fog",
+			Be::READWRITE )
+
+		MAP_ATTRIBUTE(
+			"noodleIntensity",
+			m_noodleIntensity,
+			"Test. \n"
+			":jessica-group: Froxel Fog",
+			Be::READWRITE )
+
+		MAP_ATTRIBUTE(
+			"noiseStrength",
+			m_noiseStrength,
+			"Test. \n"
+			":jessica-group: Froxel Fog",
+			Be::READWRITE )
+
+		MAP_ATTRIBUTE(
+			"noiseSharpness",
+			m_noiseSharpness,
+			"Test. \n"
+			":jessica-group: Froxel Fog",
+			Be::READWRITE )
+
+
 
 		MAP_ATTRIBUTE(
 			"mieEnvironmentMap",

@@ -113,7 +113,7 @@ public:
 
 	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
 	void BeginSceneUpdate();
-	void EndSceneUpdate( Tr2RenderContext& renderContext );
+	void EndSceneUpdate( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform );
 	bool HasGeometry() const;
 
@@ -121,11 +121,7 @@ public:
     
     Tr2RtTopLevelAccelerationStructureAL GetTLAS() const;
 
-	Tr2RaytracingPipelineStateManager* m_pipelineManager;
-	Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
-
 	const BlueSharedString m_rtShadowTechniqueName = BlueSharedString( "RtShadow" );
-
 private:
 	struct VtxOffsets
 	{
@@ -148,7 +144,7 @@ private:
 	const BlueSharedString m_outVertexBufferTechniqueName = BlueSharedString( "OutVB" );
 	static const uint32_t INVALID_MATERIAL = 0xffffffff;
 
-	void PrepareShaderTableDescription( Tr2RenderContext& renderContext );
+	void PrepareShaderTableDescription( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL * *shaderTableDescs, Tr2RaytracingPipelineStateManager * *pipelineManagers );
 	void TransformMeshes( Tr2RenderContext& renderContext );
 	void BuildAccelerationStructures(Tr2RenderContext& renderContext);
 

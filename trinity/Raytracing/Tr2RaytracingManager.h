@@ -24,11 +24,12 @@ public:
 
 	ITr2TextureProvider* GetShadowMap() const;
 
+	Tr2RaytracingPipelineStateManager m_pipelineManager;
+	Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
 private:
 		 
 	Tr2RaytracingGeometryPtr m_geometry;
 
-	Tr2RaytracingPipelineStateManager m_pipelineManager;
 
 	Tr2EffectPtr m_shadowEffect;
 	unsigned m_shadowEffectHash;

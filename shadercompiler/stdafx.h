@@ -250,13 +250,15 @@ enum D3D11_FILL_MODE
 #include <thread>
 #include <functional>
 
-#if CCP_TELEMETRY_ENABLED
-#include "rad_tm.h"
-#else
-#define tmFunction( ... )
-#define tmZone( ... )
-#define tmThreadName( ... )
+#if !NDEBUG 
+#undef CCP_TELEMETRY_ENABLED
+#endif
 
+#if CCP_TELEMETRY_ENABLED
+#include <tracy/Tracy.hpp>
+#else
+#define ZoneScoped
+#define ZoneScopedN(x)
 #endif
 
 #ifndef _WIN32

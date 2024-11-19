@@ -38,7 +38,6 @@ Tr2RaytracingManager::Tr2RaytracingManager( IRoot* lockobj ) :
 	m_applyDenoiser( true )
 {
 	m_geometry.CreateInstance();
-	m_geometry->m_pipelineManager = &m_pipelineManager;
 	m_destTex.CreateInstance();
 
 	m_shadowEffect.CreateInstance();
@@ -147,12 +146,11 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 		return;
 	}
 
-	auto& shaderTableDesc = m_geometry->m_shaderTableDesc;
 	{
 		CCP_STATS_ZONE( "Create shader table" );
-		shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
-		shaderTableDesc.AddMissShader( missName.c_str() );
-		m_shadowShaderTable.Create( shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+		m_shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
+		m_shaderTableDesc.AddMissShader( missName.c_str() );
+		m_shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
 	}
 
 	if( !m_shadowPerFrameData.IsValid() )

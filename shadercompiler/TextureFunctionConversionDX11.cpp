@@ -627,7 +627,7 @@ static void PatchCalls( ParserState& state,
 
 void ConvertTextureFunctionsDX11( ParserState& state )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	std::map<Symbol*, SamplerToTexture> samplers;
 	std::map<Symbol*, std::vector<ParameterInfo>> functions;
@@ -710,7 +710,7 @@ static void TransferSRGBToTexturesDX11( ParserState& state, ASTNode* node )
 
 void TransferSRGBToTexturesDX11( ParserState& state )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	TransferSRGBToTexturesDX11( state, state.GetTree() );
 }

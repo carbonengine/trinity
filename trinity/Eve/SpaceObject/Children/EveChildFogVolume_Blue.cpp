@@ -39,15 +39,21 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 			":jessica-group: Froxel Fog",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
-			"directionality",
-			m_settings.value.directionality,
-			"Scattering directionality of the fog. A higher value causes the fog to light up only when looking directly towards light sources.\n"
+			"lightDirectionality",
+			m_settings.value.lightDirectionality,
+			"Scattering directionality for the sun and dynamic local lights. A higher value causes the fog to light up only when looking directly towards light sources.\n"
 			":jessica-group: Froxel Fog",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"environmentIntensity",
 			m_settings.value.environmentIntensity,
 			"The visibility of the skybox behind the fog, blurred by the directionality setting above.\n"
+			":jessica-group: Froxel Fog",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"environmentDirectionality",
+			m_settings.value.environmentDirectionality,
+			"Scattering directionality for the environment map. A lower value causes a more uniform environment color, while a higher value causes the fog to light up only when looking directly at bright areas of the environment map.\n"
 			":jessica-group: Froxel Fog",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(

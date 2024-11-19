@@ -247,7 +247,7 @@ namespace DxReflection
 	template <typename Traits>
 	static bool ProcessReflection( ParserState& parserState, typename Traits::Reflection* reflection, bool collectStaticSamplers, StageData& stage, std::map<StringReference, ParameterAnnotation>& annotations, uint32_t acceptedSpace = 0xffffffff, const std::vector<uint32_t>& allowedSpaces = {} )
 	{
-		tmFunction( 0, 0 );
+		ZoneScoped;
 
 		typename Traits::ShaderDesc reflDesc;
 		if( FAILED( reflection->GetDesc( &reflDesc ) ) )
@@ -333,7 +333,7 @@ namespace DxReflection
 					constant.dimension = 1;
 					break;
 				case D3D_SVC_VECTOR:
-					constant.dimension = 4;
+					constant.dimension = uint8_t( varDesc.Size / 4 );
 					break;
 				case D3D_SVC_MATRIX_ROWS:
 				case D3D_SVC_MATRIX_COLUMNS:
