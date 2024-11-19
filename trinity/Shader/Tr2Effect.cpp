@@ -1865,7 +1865,7 @@ void Tr2Effect::MapPassParameters(
 				continue;
 			}
 
-			if( FindSamplerByName( stageInputDesc.samplers, c.name.c_str() ) )
+			if( auto sampler = FindSamplerByName( stageInputDesc.samplers, c.name.c_str() ) )
 			{
 				auto over = find_if( m_samplerOverrides.begin(), m_samplerOverrides.end(), [&]( auto& s ) { return s.name == c.name; } );
 				if( over != m_samplerOverrides.end() )
@@ -1874,8 +1874,7 @@ void Tr2Effect::MapPassParameters(
 				}
 				else
 				{
-
-					reinterpret_cast<uint32_t*>( constantData + c.offset )[0] = 0;
+					reinterpret_cast<uint32_t*>( constantData + c.offset )[0] = sampler->second.sampler.GetIndexInHeap();
 				}
 			}
 		}
