@@ -504,6 +504,7 @@ namespace
 			case OP_SAMPLER3D:
 			case OP_SAMPLERCUBE:
 			case OP_SAMPLER:
+			case OP_SAMPLERCOMPARISON:
 				os << "sampler";
 				return;
 			// TODO

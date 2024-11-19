@@ -915,6 +915,24 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 		}
 		SplitCoordVec( call, textureType, 0 );
 	}
+	else if (functionToken.stringValue == "SampleCmp")
+	{
+		// t.SampleCmp(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord, cmp, [offset])
+		functionToken.stringValue = MakeInlineString( "sample_compare" );
+		// texture arrays: t.SampleCmp(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord., coord., [offset])
+		SplitCoordVec( call, textureType );
+	}
+	else if( functionToken.stringValue == "SampleCmpLevelZero" )
+	{
+		// t.SampleCmpLevelZero(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord, level(0), [offset])
+		functionToken.stringValue = MakeInlineString( "sample_compare" );
+		// texture arrays: t.SampleCmpLevelZero(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord., coord., level(0), [offset])
+		auto zero = ScannerToken::FromTokenType( OP_INT_CONST, call->GetLocation() );
+		zero.stringValue = MakeInlineString( "0" );
+		call->InsertChild( 3, new ASTNode( NT_CONSTANT, call->GetLocation(), call->GetScope(), &zero ) );
+		WrapInOption( { 3 }, "level" );
+		SplitCoordVec( call, textureType );
+	}
 	else if( functionToken.stringValue == "GetDimensions" )
 	{
 		// replace tex.GetDimensions(...) with GetDemensions(tex, ...)
@@ -928,7 +946,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 	
 	call->SetToken( &functionToken );
 
-	if( !isGatherCall && textureType.templateParameter && textureType.templateParameter->width != 4 )
+	if( !textureType.isDepthTexture && !isGatherCall && textureType.templateParameter && textureType.templateParameter->width != 4 )
 	{
 		const char* xyzw = "xyzw";
 		ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + textureType.templateParameter->width ) );
