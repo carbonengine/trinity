@@ -2367,7 +2367,9 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	m_volumetricsRenderer->RenderFog(
 		renderContext,
 		m_depthMap->GetWidth(), m_depthMap->GetHeight(),
-		m_cascadedShadowMap, m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED ? &m_rtManager->GetGeometry() : nullptr,	m_shadowQuality,
+		m_cascadedShadowMap,
+		m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_rtManager ? &m_rtManager->GetGeometry() : nullptr,
+		m_shadowQuality,
 		m_sunData.DirWorld, sunColor, 
 		origin, originShift,
 		Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), 

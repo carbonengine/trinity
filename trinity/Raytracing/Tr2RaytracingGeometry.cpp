@@ -219,6 +219,21 @@ bool Tr2RaytracingMesh::IsGood() const
 	return m_geometry && m_geometry->IsGood() && GetMeshData();
 }
 
+bool Tr2RaytracingMesh::IsGoodForArea( uint32_t area ) const
+{
+	if( !m_geometry || !m_geometry->IsGood() )
+	{
+		return false;
+	}
+	auto data = GetMeshData();
+	if( !data )
+	{
+		return false;
+	}
+	return area < data->m_areas.size();
+}
+
+
 bool Tr2RaytracingMesh::GetAndResetDirtyFlag()
 {
 	if( m_isDirty )
@@ -790,7 +805,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 
 void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform )
 {
-	if( !mesh.IsGood() )
+	if( !mesh.IsGoodForArea( area.GetAreaIndex() ) )
 	{
 		return;
 	}

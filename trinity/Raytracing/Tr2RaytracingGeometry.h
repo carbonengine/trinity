@@ -61,6 +61,7 @@ public:
 	bool SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms, uint32_t offset );
 
 	bool IsGood() const;
+	bool IsGoodForArea( uint32_t area ) const;
 	bool GetAndResetDirtyFlag();
 
 	TriGeometryResMeshData* GetMeshData() const;
