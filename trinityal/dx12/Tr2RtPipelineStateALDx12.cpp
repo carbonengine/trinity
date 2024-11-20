@@ -58,10 +58,7 @@ namespace TrinityALImpl
 
 	Tr2RtPipelineStateAL::~Tr2RtPipelineStateAL()
 	{
-		if( m_owner )
-		{
-			m_owner = nullptr;
-		}
+		Destroy();
 	}
 
 	ALResult Tr2RtPipelineStateAL::CreateRtPipelineState( const Tr2RtPipelineStateDescriptionAL& desc, Tr2PrimaryRenderContextAL& renderContext )
