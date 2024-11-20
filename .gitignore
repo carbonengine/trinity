@@ -5,3 +5,4 @@ carbon/autobuild/**
 cmake-build*/
 .idea/
 .DS_Store
+.nothing
