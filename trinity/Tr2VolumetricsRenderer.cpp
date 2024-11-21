@@ -887,7 +887,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 				hasShadows = true;
 			}
-			else if ( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED )
+			else if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.rtCalculateFroxels && resources.rtCalculateFroxels->GetShaderStateInterface() )
 			{
 				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
 				{
