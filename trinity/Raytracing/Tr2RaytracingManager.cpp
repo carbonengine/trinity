@@ -184,13 +184,15 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 	const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	renderContext.ClearUav( *destTex, 0, clearValue );
 
-	m_shadowEffect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
-    
-    renderContext.UseAccelerationStructure( m_geometry->GetTLAS() );
+	if( m_shadowShaderTable.IsValid() )
+	{
+		m_shadowEffect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 
-	renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
-	renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
-	
+		renderContext.UseAccelerationStructure( m_geometry->GetTLAS() );
+
+		renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
+		renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
+	}
 	if( m_denoiser && m_applyDenoiser )
 	{
 		m_denoiser->Apply( *m_destTex, *depth, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), renderContext );
