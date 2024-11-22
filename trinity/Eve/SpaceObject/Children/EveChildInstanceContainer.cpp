@@ -40,6 +40,7 @@ EveChildInstanceContainer::EveChildInstanceContainer( IRoot* lockobj ) :
 	PARENTLOCK( m_instances ),
 	PARENTLOCK( m_transforms ),
 	PARENTLOCK( m_transformModifiers ),
+	m_controllerVariables( "EveChildInstanceContainer::m_controllerVariables" ),
 	m_worldVelocity( 0, 0, 0 ),
 	m_display( true ),
 	m_isAlwaysOn( false ),
@@ -230,6 +231,13 @@ void EveChildInstanceContainer::CreateInstance( const Vector3& scale, const Quat
 	translationParent->AddToEffectChildrenList( instance );
 	translationParent->Setup( &scale, &rotation, &translation, TR2_LOD_LOW );
 	translationParent->Initialize();
+
+	for( auto it = begin( m_controllerVariables ); it != end( m_controllerVariables ); ++it )
+	{
+		translationParent->SetControllerVariable( it->first.c_str(), it->second );
+	}
+
+	translationParent->StartControllers();
 
 	if( boneIndex >= 0 )
 	{
@@ -499,6 +507,8 @@ void EveChildInstanceContainer::RemoveFromEffectChildrenList( IEveSpaceObjectChi
 
 void EveChildInstanceContainer::SetControllerVariable( const char* name, float value )
 {
+	m_source->SetControllerVariable( name, value );
+	m_controllerVariables[name] = value;
 	RunOnInstances( [&name, &value]( IEveSpaceObjectChild* c ) { c->SetControllerVariable( name, value ); } );
 }
 
