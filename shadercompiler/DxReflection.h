@@ -352,10 +352,9 @@ namespace DxReflection
 					memcpy( &stage.defaultValues[constant.offset], varDesc.DefaultValue, constant.size );
 				}
 
-				if( annotations.find( constant.name ) == annotations.end() )
+				if( Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( varDesc.Name ) )
 				{
-					Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( varDesc.Name );
-					if( symbol )
+					if( annotations.find( constant.name ) == annotations.end() )
 					{
 						ParameterAnnotation paramAnnotations;
 						if( symbol->annotations )
@@ -375,24 +374,23 @@ namespace DxReflection
 							symbolAnnotation.type = ANNOTATION_TYPE_INT;
 							symbolAnnotation.intValue = symbol->type.builtInType == OP_BINDLESSHANDLESAMPLER ? 100 : BindlessTextureType( symbol->type.builtInType );
 							paramAnnotations.annotations[g_stringTable.AddString( "BindlessHandleType" )] = symbolAnnotation;
-
-							if( symbol->type.builtInType == OP_BINDLESSHANDLESAMPLER )
-							{
-								auto found = std::find_if( begin( parserState.m_bindlessSamplers ), end( parserState.m_bindlessSamplers ), [symbol]( const auto& bs ) { return bs.name == symbol; } );
-								if( found != end( parserState.m_bindlessSamplers ) )
-								{
-									Sampler sampler;
-									if( GetSamplerState( parserState, found->definition, sampler ) )
-									{
-										sampler.name = constant.name;
-										stage.samplers[uint8_t( 100 + ( found - begin( parserState.m_bindlessSamplers ) ) )] = sampler;
-									}
-								}
-							}
 						}
 						if( !paramAnnotations.annotations.empty() )
 						{
 							annotations[constant.name] = paramAnnotations;
+						}
+					}
+					if( symbol->type.IsBindlessHandle() && symbol->type.builtInType == OP_BINDLESSHANDLESAMPLER )
+					{
+						auto found = std::find_if( begin( parserState.m_bindlessSamplers ), end( parserState.m_bindlessSamplers ), [symbol]( const auto& bs ) { return bs.name == symbol; } );
+						if( found != end( parserState.m_bindlessSamplers ) )
+						{
+							Sampler sampler;
+							if( GetSamplerState( parserState, found->definition, sampler ) )
+							{
+								sampler.name = constant.name;
+								stage.samplers[uint8_t( 100 + ( found - begin( parserState.m_bindlessSamplers ) ) )] = sampler;
+							}
 						}
 					}
 				}
