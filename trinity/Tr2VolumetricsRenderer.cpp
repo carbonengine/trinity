@@ -937,9 +937,9 @@ void Tr2VolumetricsRenderer::RenderFog(
 					Matrix4dMultiply( newMatrix, rotationMatrix, m_godRayNoiseMatrix );
 
 					
-					Vector3 noiseDirection2 = Normalize( Vector3( (float)newMatrix[2], (float)newMatrix[6], (float)newMatrix[10] ) );
+					/* Vector3 noiseDirection2 = Normalize( Vector3( (float)newMatrix[2], (float)newMatrix[6], (float)newMatrix[10] ) );
 					float angle2 = acos( std::clamp( Dot( sunDirection, noiseDirection2 ), -1.0f, 1.0f ) );
-					CCP_LOGERR( "Angle before: %g, angle after: %g", angle, angle2 );
+					CCP_LOGERR( "Angle before: %g, angle after: %g", angle, angle2 );*/
 					
 					
 					//Figure out where the camera used to be in noise space and where it is now.
@@ -957,8 +957,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 					Matrix4dCopy( m_godRayNoiseMatrix, newMatrix );
 
 					
-					Vector4d fixedNoiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), newMatrix );
-					CCP_LOGERR( "Camera noise position: (%g, %g, %g)", fixedNoiseCoords.x, fixedNoiseCoords.y, fixedNoiseCoords.z );
+					//Vector4d fixedNoiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), newMatrix );
+					//CCP_LOGERR( "Camera noise position: (%g, %g, %g)", fixedNoiseCoords.x, fixedNoiseCoords.y, fixedNoiseCoords.z );
 				}
 
 				//Since the shader operates relative to the origin, we need to add the origin in noise space to the translation here.
