@@ -115,12 +115,56 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			"How transparent the fog is. Increasing this causes the skybox and objects to become visible, no matter how high the fog thickness is set.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
+
+		MAP_ATTRIBUTE(
+			"godRayNoiseIntensity",
+			m_froxelFogSettings.godRayNoiseIntensity,
+			"The intensity of the 2D noise added to the incoming sun light. This adds god rays even when there are no shadows being cast by objects. \n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
+		MAP_ATTRIBUTE(
+			"godRayNoiseFrequency",
+			m_froxelFogSettings.godRayNoiseFrequency,
+			"The frequency of the 2D noise added to the incoming sun light. A higher value makes the god rays larger and less detailed. Around 15.0 is a good starting point. \n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
+		MAP_ATTRIBUTE(
+			"godRayNoiseAnimationSpeed",
+			m_froxelFogSettings.godRayNoiseAnimationSpeed,
+			"The animation speed of the 2D noise added to the incoming sun light. Setting this above 0.0 makes the god rays shift and morph over time. \n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
+
+		MAP_ATTRIBUTE(
+			"fogNoiseIntensity",
+			m_froxelFogSettings.fogNoiseIntensity,
+			"The intensity of the 3D noise used to modify the fog color. Setting this to 0 gives you a uniform fog, while values above 0.0 will add more variation to the fog color, similar to puffy clouds. \n "
+			":jessica-group: Froxel Fog",
+			Be::READ )
+		MAP_ATTRIBUTE(
+			"fogNoiseFrequency",
+			m_froxelFogSettings.fogNoiseFrequency,
+			"The frequency of the 3D noise used to modify the fog color. A higher value makes the cloud puffs larger and less detailed, while a smaller value makes the puffs smaller and more numerous. Around 15.0 is a good starting point. \n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
+		MAP_ATTRIBUTE(
+			"fogNoiseMovementSpeed",
+			m_froxelFogSettings.fogNoiseMovementSpeed,
+			"The animation speed of the 3D noise used to modify the fog color. This is used to scroll the fog over time, simulating a simple 'wind' effect. \n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
+
+
+
+
+
 		MAP_ATTRIBUTE(
 			"intensity",
 			m_froxelFogSettings.intensity,
 			"Total intensity accumulated from fog volumes. For debugging purposes only.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
+
 
 		MAP_ATTRIBUTE(
 			"logBlending",
@@ -144,41 +188,6 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			Be::READ )
 
 
-
-		MAP_ATTRIBUTE(
-			"noiseFrequency",
-			m_noiseFrequency,
-			"Test. \n"
-			":jessica-group: Froxel Fog",
-			Be::READWRITE )
-
-		MAP_ATTRIBUTE(
-			"noodleCoordMultiplier",
-			m_noodleCoordMultiplier,
-			"Test. \n"
-			":jessica-group: Froxel Fog",
-			Be::READWRITE )
-
-		MAP_ATTRIBUTE(
-			"noodleIntensity",
-			m_noodleIntensity,
-			"Test. \n"
-			":jessica-group: Froxel Fog",
-			Be::READWRITE )
-
-		MAP_ATTRIBUTE(
-			"noiseStrength",
-			m_noiseStrength,
-			"Test. \n"
-			":jessica-group: Froxel Fog",
-			Be::READWRITE )
-
-		MAP_ATTRIBUTE(
-			"noiseSharpness",
-			m_noiseSharpness,
-			"Test. \n"
-			":jessica-group: Froxel Fog",
-			Be::READWRITE )
 
 
 

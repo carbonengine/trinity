@@ -19,6 +19,7 @@
 #include "Tr2LightManager.h"
 #include "Tr2TextureArray.h"
 #include "include/TriMath.h"
+#include "Utilities/Vector4d.h"
 
 ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator*( float rhs ) const
 {
@@ -29,6 +30,14 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 	result.environmentDirectionality = environmentDirectionality * rhs;
 	result.fogColor = fogColor * rhs;
 	result.backgroundVisibility = backgroundVisibility * rhs;
+
+	result.godRayNoiseIntensity = godRayNoiseIntensity * rhs;
+	result.godRayNoiseFrequency = godRayNoiseFrequency * rhs;
+	result.godRayNoiseAnimationSpeed = godRayNoiseAnimationSpeed * rhs;
+
+	result.fogNoiseIntensity = fogNoiseIntensity * rhs;
+	result.fogNoiseFrequency = fogNoiseFrequency * rhs;
+	result.fogNoiseMovementSpeed = fogNoiseMovementSpeed * rhs;
 
 	result.logThickness = logThickness * rhs;
 	result.intensity = rhs;
@@ -47,6 +56,14 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 	result.fogColor = fogColor + rhs.fogColor;
 	result.backgroundVisibility = backgroundVisibility + rhs.backgroundVisibility;
 
+	result.godRayNoiseIntensity = godRayNoiseIntensity + rhs.godRayNoiseIntensity;
+	result.godRayNoiseFrequency = godRayNoiseFrequency + rhs.godRayNoiseFrequency;
+	result.godRayNoiseAnimationSpeed = godRayNoiseAnimationSpeed + rhs.godRayNoiseAnimationSpeed;
+
+	result.fogNoiseIntensity = fogNoiseIntensity + rhs.fogNoiseIntensity;
+	result.fogNoiseFrequency = fogNoiseFrequency + rhs.fogNoiseFrequency;
+	result.fogNoiseMovementSpeed = fogNoiseMovementSpeed + rhs.fogNoiseMovementSpeed;
+
 	result.logThickness = logThickness + rhs.logThickness;
 	result.intensity = intensity + rhs.intensity;
 
@@ -56,6 +73,7 @@ ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSetting
 
 Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bool temporalFroxels )
 {
+	shadowFroxels.CreateInstance();
 	fogFroxels.CreateInstance();
 	if( temporalFroxels )
 	{
@@ -65,11 +83,11 @@ Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bo
 	currentTemporalFroxels = false;
 	froxelJitter = Vector3( 0, 0, 0 );
 
+	raytraceFroxels.CreateInstance();
+	raytraceFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/RaytraceFroxels.fx" );
+
 	calculateFroxels.CreateInstance();
 	calculateFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/CalculateFroxels.fx" );
-
-	rtCalculateFroxels.CreateInstance();
-	rtCalculateFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/RtCalculateFroxels.fx" );
 
 	filterFroxels.CreateInstance();
 	filterFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx" );
@@ -192,6 +210,11 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 		m_froxel3DNoise->GetTexture()->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
 
 		delete[] noiseData;
+	}
+
+	{
+		m_testValue = 0.0f;
+		Matrix4dFromMatrix( m_godRayNoiseMatrix, IdentityMatrix() );
 	}
 
 
@@ -460,7 +483,7 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 	m_volumeHasContent = true;
 }
 
-void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& registry )
+void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& registry, const EveUpdateContext& updateContext )
 {
 	std::vector<ITr2FroxelFogSettings::FroxelFogWeightedSettings> overrides;
 	double logBlendingSmoothness = m_logBlendingSmoothness;
@@ -503,7 +526,25 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 		m_froxelFogSettings.environmentDirectionality *= inverseIntensity;
 		m_froxelFogSettings.fogColor *= inverseIntensity;
 		m_froxelFogSettings.backgroundVisibility *= inverseIntensity;
+
+		m_froxelFogSettings.godRayNoiseIntensity *= inverseIntensity;
+		m_froxelFogSettings.godRayNoiseFrequency *= inverseIntensity;
+		m_froxelFogSettings.godRayNoiseAnimationSpeed *= inverseIntensity;
+
+		m_froxelFogSettings.fogNoiseIntensity *= inverseIntensity;
+		m_froxelFogSettings.fogNoiseFrequency *= inverseIntensity;
+		m_froxelFogSettings.fogNoiseMovementSpeed *= inverseIntensity;
 	}
+
+	float delta = updateContext.GetDeltaT();
+
+	m_godRayNoiseAnimation += m_froxelFogSettings.godRayNoiseAnimationSpeed * (delta / m_froxel3DNoise->GetDepth());
+	m_godRayNoiseAnimation -= floor( m_godRayNoiseAnimation );
+
+	float fogFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency );
+	m_fogNoiseMovement += m_froxelFogSettings.fogNoiseMovementSpeed * delta;
+
+
 }
 
 bool Tr2VolumetricsRenderer::HasFog() const
@@ -648,6 +689,15 @@ void Tr2VolumetricsRenderer::RenderFog(
 	const Matrix& viewLast,
 	const Matrix& projectionLast )
 {
+
+	//Vector3d origin = Vector3d( 123456789, 987654321, 135792468 );
+	//Vector3d origin = Vector3d( 123456, 987654, 135792 );
+	//Vector3d origin = Vector3d( 0, 0, 0 );
+
+	//m_testValue += 0.001;
+	//Vector3 sunDirection = Normalize( Vector3( sinf( m_testValue * 1.2345678f ), cosf( m_testValue * 1.3210987536f ), sinf( m_testValue * 0.99283659871f ) ) );
+
+
 	uint32_t width = 1;
 	uint32_t height = 1;
 	uint32_t depth = 1;
@@ -662,9 +712,24 @@ void Tr2VolumetricsRenderer::RenderFog(
 	}
 
 	auto temporalFog = resources.temporalFroxels0 && resources.temporalFroxels1;
-	
-	auto& fogFroxels = *resources.fogFroxels->GetTexture();
 
+	auto& shadowFroxels = *resources.shadowFroxels->GetTexture();
+	if( !shadowFroxels.IsValid() || shadowFroxels.GetWidth() != width || shadowFroxels.GetHeight() != height || shadowFroxels.GetDepth() != depth )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		if( froxelsEnabled )
+		{
+			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, width, height, depth, 1, 1 );
+			shadowFroxels.Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
+		}
+		else
+		{
+			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, 1, 1, 1, 1, 1 );
+			shadowFroxels.Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
+		}
+	}
+
+	auto& fogFroxels = *resources.fogFroxels->GetTexture();
 	if( !fogFroxels.IsValid() || fogFroxels.GetWidth() != width || fogFroxels.GetHeight() != height || fogFroxels.GetDepth() != depth )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -730,8 +795,29 @@ void Tr2VolumetricsRenderer::RenderFog(
 		return;
 	}
 
-	const float g = 1.61803398874989484820;
-	const float g2 = 1.32471795724474602596;
+	enum SHADOW_TYPE
+	{
+		SHADOWS_DISABLED,
+		SHADOWS_CASCADED,
+		SHADOWS_RAYTRACED
+	};
+
+	SHADOW_TYPE shadowType;
+	if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.raytraceFroxels && resources.raytraceFroxels->GetShaderStateInterface() )
+	{
+		shadowType = SHADOWS_RAYTRACED;
+	}
+	else if( cascadedShadowMap && ( shadowQuality == ShadowQuality::SHADOW_LOW || shadowQuality == ShadowQuality::SHADOW_HIGH ) )
+	{
+		shadowType = SHADOWS_CASCADED;
+	}
+	else
+	{
+		shadowType = SHADOWS_DISABLED;
+	}
+
+
+
 
 	float maxDistance = m_gameBackClip;
 	float maxDistanceVisibility = exp(-m_froxelFogSettings.thickness);
@@ -755,6 +841,9 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 	if( temporalFog )
 	{
+		const float g = 1.61803398874989484820;
+		const float g2 = 1.32471795724474602596;
+
 		resources.froxelJitter += Vector3( 1.0f / ( g2 * g2 ), 1.0f / g2, 1.0f / g );
 		resources.froxelJitter.x -= floor( resources.froxelJitter.x );
 		resources.froxelJitter.y -= floor( resources.froxelJitter.y );
@@ -762,7 +851,6 @@ void Tr2VolumetricsRenderer::RenderFog(
 	}
 
 	{
-		bool hasShadows;
 		uint32_t techniqueIndex;
 		Tr2RtPipelineStateAL pipelineState;
 		Tr2RtShaderTableAL shadowShaderTable;
@@ -798,31 +886,115 @@ void Tr2VolumetricsRenderer::RenderFog(
 			//data->Extinction = extinction;
 
 
-			double range = exp2f( ceil( m_noiseFrequency ) );
+			{
+				float exactFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency );
+				float baseFrequency = exp2f( floor( -m_froxelFogSettings.fogNoiseFrequency ) );
+				float nextFrequency = baseFrequency * 2.0f;
 
-			float originX = (float)fmod( origin.x, range );
-			float originY = (float)fmod( origin.y, range );
-			float originZ = (float)fmod( origin.z, range );
+				
+				double offsetX = origin.x * baseFrequency;
+				double offsetY = origin.y * baseFrequency;
+				double offsetZ = origin.z * baseFrequency;
+				offsetX -= floor( offsetX );
+				offsetY -= floor( offsetY );
+				offsetZ -= floor( offsetZ );
 
-			//data->NoiseCoordOffset = Vector3( (float) origin.x, (float) origin.y, (float) origin.z );
-			data->NoiseCoordOffset = Vector3( originX, originY, originZ );
-
-			data->NoiseCoordMultiplier = -m_noiseFrequency;
-
-			data->NoodleCoordMultiplier = m_noodleCoordMultiplier;
-			data->NoodleCoordOffset = 0.0;
-			data->NoodleIntensity = m_noodleIntensity;
-			data->NoiseStrength = m_noiseStrength;
-
-			data->NoiseInverseSharpness = 1.0f / m_noiseSharpness;
+				data->FogNoiseOffset = Vector3( (float)offsetX, (float)offsetY, (float)offsetZ );
 
 
+				data->FogNoiseFrequency = baseFrequency;
+				data->FogNoiseLerp = ( exactFrequency - baseFrequency ) / ( nextFrequency - baseFrequency );
+				data->FogNoiseIntensity = m_froxelFogSettings.fogNoiseIntensity;
+			}
 
-			
+
+			{
+
+				/*
+					This code is used to re-align m_godRayNoiseMatrix so that it is always aligned with the sun's direction.
+					This gets complicated as we're trying to align a 2D texture along the sun's direction without causing popping/sudden changes.
+					It does this by finding how many radians it is off by, constructing a rotation axis and then rotating the matrix by said angle to re-align it.
+
+					This is the minimal rotation needed to re-align the matrix, but has some weird side effects:
+					- Rotating like this means that if the direction changes a lot and then returns to a previous position, the orientation of the noise texture can be different.
+					- When we rotate the matrix, the camera's position in "noise space" changes dramatically. We therefore cancel out this "motion" so that at least the camera ends up in the same position again.
+				*/
+				
+				//Get the current direction of the god ray noise matrix
+				Vector3 noiseDirection = Normalize(Vector3( (float)m_godRayNoiseMatrix[2], (float)m_godRayNoiseMatrix[6], (float)m_godRayNoiseMatrix[10] ));
+
+				//Check if the angle between the new sun direction is more than a small threshold
+				float angle = acos( std::clamp( Dot( sunDirection, noiseDirection ), -1.0f, 1.0f ) ); //Clamp to avoid going out of the acos() domain of [-1, +1] due to rounding.
+				if( angle > 0.001f )
+				{
+					//Construct the rotation axis
+					Vector3 axis = Normalize( Cross( sunDirection, noiseDirection ) );
+
+					//Create a rotation matrix and apply it to the god ray noise matrix.
+					double rotationMatrix[16];
+					Matrix4dFromMatrix( rotationMatrix, RotationMatrix( axis, angle ) );
+					double newMatrix[16];
+					Matrix4dMultiply( newMatrix, rotationMatrix, m_godRayNoiseMatrix );
+
+					
+					Vector3 noiseDirection2 = Normalize( Vector3( (float)newMatrix[2], (float)newMatrix[6], (float)newMatrix[10] ) );
+					float angle2 = acos( std::clamp( Dot( sunDirection, noiseDirection2 ), -1.0f, 1.0f ) );
+					CCP_LOGERR( "Angle before: %g, angle after: %g", angle, angle2 );
+					
+					
+					//Figure out where the camera used to be in noise space and where it is now.
+					Vector3d cameraPosition = origin + TransformCoord( Vector3( 0, 0, 0 ), inverseView );
+					Vector4d previousNoiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), m_godRayNoiseMatrix );
+					Vector4d noiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), newMatrix );
+
+					//Calculate the difference and update the new matrix to cancel out the motion.
+					Vector4d difference = previousNoiseCoords - noiseCoords;
+					newMatrix[12] += difference.x;
+					newMatrix[13] += difference.y;
+					newMatrix[14] += difference.z;
+
+					//Finally, copy the new matrix back to m_godRayNoiseMatrix
+					Matrix4dCopy( m_godRayNoiseMatrix, newMatrix );
+
+					
+					Vector4d fixedNoiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), newMatrix );
+					CCP_LOGERR( "Camera noise position: (%g, %g, %g)", fixedNoiseCoords.x, fixedNoiseCoords.y, fixedNoiseCoords.z );
+				}
+
+				//Since the shader operates relative to the origin, we need to add the origin in noise space to the translation here.
+				//Also apply fmod() to it so that we don't get huge values that break the floating point precision when casting to float.
+
+				//Build a translation matrix
+				double originTranslation[16];
+				Matrix4dFromMatrix( originTranslation, IdentityMatrix() );
+				originTranslation[12] = origin.x;
+				originTranslation[13] = origin.y;
+				originTranslation[14] = origin.z;
+
+				//Multiply it with the god ray noise matrix.
+				double relativeNoiseMatrix[16];
+				Matrix4dMultiply( relativeNoiseMatrix, originTranslation, m_godRayNoiseMatrix );
+
+				//Apply fmod() to the translation based on the noise frequency to avoid precision issues when converting to a 32-bit float matrix later.
+				float baseFrequency = exp2f( floor( -m_froxelFogSettings.godRayNoiseFrequency ) );
+				float previousFrequency = baseFrequency * 2.0f;
+				relativeNoiseMatrix[12] = fmod( relativeNoiseMatrix[12], 1.0 / baseFrequency );
+				relativeNoiseMatrix[13] = fmod( relativeNoiseMatrix[13], 1.0 / baseFrequency );
+				relativeNoiseMatrix[14] = fmod( relativeNoiseMatrix[14], 1.0 / baseFrequency );
+
+				//Convert to float and pray that it works.
+				data->GodRayNoiseMatrix = Transpose( Matrix4dToMatrix( relativeNoiseMatrix ) );
+
+				
+
+				data->GodRayNoiseFrequency = baseFrequency;
+				data->GodRayNoiseLerp = ( exp2f( -m_froxelFogSettings.godRayNoiseFrequency ) - baseFrequency ) / ( previousFrequency - baseFrequency );
+				data->GodRayNoiseIntensity = m_froxelFogSettings.godRayNoiseIntensity;
+				data->GodRayNoiseAnimation = (float)m_godRayNoiseAnimation;
+
+			}
 
 			data->InverseViewMatrix = Transpose( inverseView );
-
-
 
 			{
 				Vector4 topLeft = Vector4( -1, +1, 0, 1 ) * inverseProjection; // flipped Y
@@ -862,7 +1034,12 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 			data->SunColor = Vector3( sunColor.r, sunColor.g, sunColor.b );
 
-			if( cascadedShadowMap && ( shadowQuality == ShadowQuality::SHADOW_LOW || shadowQuality == ShadowQuality::SHADOW_HIGH ) )
+			for( int32_t i = 0; i < m_planets.size(); i++ )
+			{
+				data->planets[i] = m_planets[i];
+			}
+
+			if( shadowType == SHADOWS_CASCADED )
 			{
 				data->ShadowMapValues[0] = cascadedShadowMap->m_perSplitData.ShadowMapValues[0];
 				data->ShadowMapValues[1] = cascadedShadowMap->m_perSplitData.ShadowMapValues[1];
@@ -884,29 +1061,22 @@ void Tr2VolumetricsRenderer::RenderFog(
 					data->ShadowMatrix[i] = Transpose( matrix );
 				}
 				data->SplitInfo = cascadedShadowMap->m_perSplitData.SplitInfo;
-
-				hasShadows = true;
 			}
-			else if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.rtCalculateFroxels && resources.rtCalculateFroxels->GetShaderStateInterface() )
+			else if( shadowType == SHADOWS_RAYTRACED )
 			{
-				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
+				if( !resources.raytraceFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
 				{
-					return;
-				}
-
-				for(int32_t i = 0; i < m_planets.size(); i++)
-				{
-					data->planets[i] = m_planets[i];
+					return; //TODO: Not good to exit the function completely, just disable shadows instead
 				}
 
 				std::wstring missName;
-				m_pipelineManager.AddLibrary( rayGenName, missName, resources.rtCalculateFroxels, BlueSharedString( "RtShadow" ) );
+				m_pipelineManager.AddLibrary( rayGenName, missName, resources.raytraceFroxels, BlueSharedString( "RtShadow" ) );
 
 				pipelineState = m_pipelineManager.GetPipelineState( renderContext );
 
 				if( !pipelineState.IsValid() )
 				{
-					return;
+					return; //TODO: Not good to exit the function completely, just disable shadows instead
 				}
 
 				{
@@ -917,10 +1087,6 @@ void Tr2VolumetricsRenderer::RenderFog(
 					shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
 				}
 
-			}
-			else
-			{
-				hasShadows = false;
 			}
 
 			if ( auto lightManager = Tr2LightManager::GetInstance() )
@@ -953,21 +1119,46 @@ void Tr2VolumetricsRenderer::RenderFog(
 			renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 		}
 
+		if( shadowType == SHADOWS_RAYTRACED )
+		{
+			resources.raytraceFroxels->SetParameter( BlueSharedString( "Scene" ), raytracingGeometry );
+			resources.raytraceFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.shadowFroxels );
+			resources.raytraceFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+			renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
+			renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
+		}
+
 		int workgroupSize = 4;
 		int wgX = ( width + workgroupSize - 1 ) / workgroupSize;
 		int wgY = ( height + workgroupSize - 1 ) / workgroupSize;
 		int wgZ = ( depth + workgroupSize - 1 ) / workgroupSize;
 
-		if( ! ( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) )
+		//if( ! ( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) )
 		{
-			resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
+			
+			if (shadowType == SHADOWS_RAYTRACED)
+			{
+				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_RAYTRACED" ) );
+				resources.calculateFroxels->SetParameter( BlueSharedString( "RaytracedShadowTexture" ), resources.shadowFroxels );
+			}
+			else if( shadowType == SHADOWS_CASCADED )
+			{
+				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_CASCADED" ) );
+			}
+			else
+			{
+				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_DISABLED" ) );
+			}
+
+			resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
+			resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise1DTexture" ), m_froxel1DNoise );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise2DTexture" ), m_froxel2DNoise );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
 			Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
 		}
-		else
+		/*else
 		{
 			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Scene" ), raytracingGeometry );
 			resources.rtCalculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
@@ -978,7 +1169,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 			resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 			renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
 			renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
-		}
+		}*/
 
 		if( temporalFog )
 		{

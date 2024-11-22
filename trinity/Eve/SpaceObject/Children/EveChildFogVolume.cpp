@@ -14,12 +14,23 @@ EveChildFogVolume::EveChildFogVolume( IRoot* lockobj ) :
 	m_intensity( 1.f ),
 	m_boundingSphere( Vector3( 0.0, 0.0, 0.0 ), 0.0 )
 {
+
+	//Set some default values
 	m_settings.value.thickness = 1.0f;
 	m_settings.value.lightDirectionality = 0.5f;
 	m_settings.value.environmentIntensity = 1.0f;
 	m_settings.value.environmentDirectionality = 0.75f;
-	m_settings.value.fogColor = Color( 1, 1, 1, 1 );
+	m_settings.value.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
 	m_settings.value.backgroundVisibility = 0.0f;
+
+	m_settings.value.godRayNoiseIntensity = 0.0f;
+	m_settings.value.godRayNoiseFrequency = 15.0f;
+	m_settings.value.godRayNoiseAnimationSpeed = 0.0f;
+
+	m_settings.value.fogNoiseIntensity = 0.0f;
+	m_settings.value.fogNoiseFrequency = 15.0f;
+	m_settings.value.fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
+
 }
 
 void EveChildFogVolume::RebuildBoundingSphere()

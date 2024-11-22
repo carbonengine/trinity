@@ -9,9 +9,12 @@
 #include "ITr2VolumetricRenderable.h"
 #include "TriFrustumOrtho.h"
 #include "Tr2ShadowMap.h"
-#include "PostProcess/Tr2PostProcessEnums.h"
 #include "Tr2LightManager.h"
+#include "Eve/EveUpdateContext.h"
+#include "PostProcess/Tr2PostProcessEnums.h"
 #include "Raytracing/Tr2RaytracingGeometry.h"
+
+struct Vector3d;
 
 	BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -36,6 +39,18 @@ public:
 
 		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
 		float backgroundVisibility = 0.0f;
+
+
+		float godRayNoiseIntensity = 0.0f;
+		float godRayNoiseFrequency = 0.0f;
+		float godRayNoiseAnimationSpeed = 0.0f;
+
+		float fogNoiseIntensity = 0.0f;
+		float fogNoiseFrequency = 0.0f;
+		Vector3 fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
+
+
+
 
 		double logThickness = 0.0;
 		float intensity = 0.0f; //Used to normalize certain values if less than 1.0
@@ -71,7 +86,7 @@ public:
 		Tr2RenderContext& renderContext );
 
 
-	void UpdateFogSettings( const EveComponentRegistry& registry );
+	void UpdateFogSettings( const EveComponentRegistry& registry, const EveUpdateContext& updateContext );
 	bool HasFog() const;
 
 	void RenderFog( 
@@ -121,12 +136,13 @@ private:
 	{
 		explicit FogViewDependentResources( bool temporalFroxels );
 
+		Tr2TextureReferencePtr shadowFroxels;
 		Tr2TextureReferencePtr fogFroxels;
 		Tr2TextureReferencePtr temporalFroxels0;
 		Tr2TextureReferencePtr temporalFroxels1;
 
+		Tr2EffectPtr raytraceFroxels;
 		Tr2EffectPtr calculateFroxels;
-		Tr2EffectPtr rtCalculateFroxels;
 		Tr2EffectPtr filterFroxels;
 		Tr2EffectPtr raymarchFroxels;
 		Tr2EffectPtr applyFroxels;
@@ -176,16 +192,16 @@ private:
 
 	float m_gameBackClip;
 
-	float m_noiseFrequency;
-	float m_noodleCoordMultiplier;
-	float m_noodleIntensity;
-	float m_noiseStrength;
-
-	float m_noiseSharpness;
-
 	Tr2TextureReferencePtr m_froxel1DNoise;
 	Tr2TextureReferencePtr m_froxel2DNoise;
 	Tr2TextureReferencePtr m_froxel3DNoise;
+
+
+	double m_godRayNoiseAnimation;
+	Vector3d m_fogNoiseMovement;
+
+	float m_testValue;
+	double m_godRayNoiseMatrix[16];
 
 	FogViewDependentResources m_fogResources;
 	FogViewDependentResources m_fogReflectionResources;
@@ -218,16 +234,19 @@ private:
 
 		Matrix InverseViewMatrix;
 
-		Vector3 NoiseCoordOffset;
-		float NoiseCoordMultiplier;
+		float GodRayNoiseFrequency;
+		float GodRayNoiseLerp;
+		float GodRayNoiseAnimation;
+		float GodRayNoiseIntensity;
 
-		float NoodleCoordMultiplier;
-		float NoodleCoordOffset;
-		float NoodleIntensity;
-		float NoiseStrength;
+		Matrix GodRayNoiseMatrix;
 
-		float NoiseInverseSharpness;
-		float _pad3;
+
+		Vector3 FogNoiseOffset;
+		float FogNoiseFrequency;
+
+		float FogNoiseLerp;
+		float FogNoiseIntensity;
 		Vector2 LinearizeDepthParams;
 
 		Vector4 UnprojectParams;
