@@ -2502,6 +2502,8 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 
 void EveSpaceScene::FinishRenderingShadowMapForLights( Tr2RenderContext& renderContext )
 {
+	renderContext.SetReadOnlyDepth( true );
+
 	renderContext.m_esm.PopRenderTarget();
 	renderContext.m_esm.PopDepthStencilBuffer();
 	ApplyPerFrameData( renderContext );
