@@ -1331,6 +1331,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	if( m_volumetricsRenderer )
 	{
 		m_volumetricsRenderer->UpdateFogSettings( *m_componentRegistry, m_updateContext );
+		UpdateVariableStore();
 		m_volumetricsRenderer->UpdateFogEnvironmentMap( renderContext );
 	}
 
