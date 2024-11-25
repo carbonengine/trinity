@@ -190,6 +190,12 @@ namespace Tr2StreamlineAL
 			INITIALIZE_FUNCTION( slEvaluateFeature );
 		}
 
+		if( !FUNCTIONS.m_slInit || !FUNCTIONS.m_slShutdown || !FUNCTIONS.m_slIsFeatureSupported )
+		{
+			CCP_LOGERR( "Library sl.interposer.dll is missing critical functions slInit, slShutdown, slIsFeatureSupported making streamline unusable. Updating nVidia driver version may halp." );
+			ReleaseStreamline();
+			return sl::Result::eErrorDriverOutOfDate;
+		}
 
 
 		// now set it up
