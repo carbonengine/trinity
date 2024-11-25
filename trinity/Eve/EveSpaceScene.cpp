@@ -1897,9 +1897,23 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 
 					if( m_enableShadows && m_shadowQuality != ShadowQuality::SHADOW_DISABLED && m_reflectionShadowMap )
 					{
-						renderContext.m_esm.SetInvertedCullMode( false );
-						SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, currentFrustum, nullptr, renderContext );
-						renderContext.m_esm.SetInvertedCullMode( true );
+						// We have so many ways to turn off shadows...
+						bool reallyHaveShadows = false;
+						if( m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED )
+						{
+							reallyHaveShadows = m_rtManager != nullptr;
+						}
+						else
+						{
+							reallyHaveShadows = m_cascadedShadowMap != nullptr;
+						}
+
+						if( reallyHaveShadows )
+						{
+							renderContext.m_esm.SetInvertedCullMode( false );
+							SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, currentFrustum, nullptr, renderContext );
+							renderContext.m_esm.SetInvertedCullMode( true );
+						}
 					}
 
 					// TODO: raytraced shadows here
