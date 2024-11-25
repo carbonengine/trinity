@@ -269,6 +269,9 @@ MTLBlendFactor MetalUtils::GetMTLBlendFactor( uint32_t value )
 		MTLBlendFactorOneMinusSource1Alpha,        // D3DBLEND_BOTHINVSRCALPHA
 		MTLBlendFactorBlendColor,                  // D3DBLEND_BLENDFACTOR
 		MTLBlendFactorOneMinusBlendColor,          // D3DBLEND_INVBLENDFACTOR
+		MTLBlendFactorSource1Color,				   // D3DBLEND_SRCCOLOR2
+		MTLBlendFactorOneMinusSource1Color,		   // D3DBLEND_INVSRCCOLOR2
+
 	};
 
 	return BlendFormatConversionTable[value];
