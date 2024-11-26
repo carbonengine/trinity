@@ -36,7 +36,6 @@
 #include "Eve/EveEntity.h"
 #include "Tr2SSAO.h"
 #include "Lights/ITr2LightOwner.h"
-#include "../Tr2VolumetricsRenderer.h"
 #include "../Tr2BoneTransformBuffer.h"
 #include <ScopedBlockTrap.h>
 #include "Raytracing/Tr2RaytracingManager.h"
@@ -3109,6 +3108,8 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.VolumetricSlices[1] = 10000;
 	data.VolumetricSlices[2] = 100000;
 	data.VolumetricSlices[3] = 1000000;
+
+	m_volumetricsRenderer->PopulatePerFrameData( data.FroxelFogData );
 }
 
 bool EveSpaceScene::Initialize()

@@ -123,6 +123,24 @@ public:
 		Tr2RenderContext& renderContext );
 
 
+	struct FroxelPerFrameData
+	{
+		Vector3 FogColor;
+		float BackgroundVisibility;
+
+		float BaseDensity;
+		float MaxDistance;
+		float MaxDistanceVisibility;
+		float EnvironmentIntensity;
+
+		float EnvironmentG;
+		float _pad0;
+		float _pad1;
+		float _pad2;
+	};
+
+	void PopulatePerFrameData( FroxelPerFrameData& data );
+
 
 
 	EXPOSE_TO_BLUE();
@@ -192,8 +210,6 @@ private:
 
 	float m_gameBackClip;
 
-	Tr2TextureReferencePtr m_froxel1DNoise;
-	Tr2TextureReferencePtr m_froxel2DNoise;
 	Tr2TextureReferencePtr m_froxel3DNoise;
 
 
@@ -269,6 +285,7 @@ private:
 	};
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
+	
 	
 	std::unique_ptr<ITriRenderBatchAccumulator> m_batches;
 	

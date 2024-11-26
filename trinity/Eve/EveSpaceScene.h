@@ -26,6 +26,7 @@
 #include "Tr2ShadowMap.h"
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
 #include "PostProcess/ITr2PostProcessOwner.h"
+#include "../Tr2VolumetricsRenderer.h"
 
 class TriProjection;
 class TriView;
@@ -281,6 +282,8 @@ protected:
 		Matrix ShadowMatrixVal[SHADOW_FRUSTUM_COUNT];
 		Vector4 SplitInfo;
 		Matrix ProjectionInverseMat;
+
+		Tr2VolumetricsRenderer::FroxelPerFrameData FroxelFogData;
 	};
 
 	Matrix m_viewLast, m_projectionLast;

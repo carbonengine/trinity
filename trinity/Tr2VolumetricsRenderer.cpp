@@ -143,52 +143,7 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_gameBackClip = 1E6f; //must match what the actual game uses; not what Graphite is currently set to, as the user can change the back clip.
 
 	
-	int noise1DResolution = 256;
-	int noise2DResolution = 128;
 	int noise3DResolution = 64;
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-
-		Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_1D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_SNORM, noise1DResolution, 1, 1, 1, 1 );
-
-		int8_t* noiseData = new int8_t[noise1DResolution];
-		for( int i = 0; i < noise1DResolution; i++ )
-		{
-			noiseData[i] = (int8_t)TriRandInt( -127, +127 );
-		}
-
-		Tr2SubresourceData initialData;
-		initialData.m_sysMem = noiseData;
-		initialData.m_sysMemPitch = noise1DResolution;
-		initialData.m_sysMemSlicePitch = noise1DResolution * noise1DResolution;
-
-		m_froxel1DNoise.CreateInstance();
-		m_froxel1DNoise->GetTexture()->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
-
-		delete[] noiseData;
-	}
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-
-		int numTexels = noise2DResolution * noise2DResolution;
-		Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_2D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_SNORM, noise2DResolution, noise2DResolution, 1, 1, 1 );
-
-		int8_t* noiseData = new int8_t[numTexels];
-		for( int i = 0; i < numTexels; i++ )
-		{
-			noiseData[i] = (int8_t)TriRandInt( -127, +127 );
-		}
-
-		Tr2SubresourceData initialData;
-		initialData.m_sysMem = noiseData;
-		initialData.m_sysMemPitch = noise2DResolution;
-		initialData.m_sysMemSlicePitch = noise2DResolution * noise2DResolution;
-
-		m_froxel2DNoise.CreateInstance();
-		m_froxel2DNoise->GetTexture()->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
-
-		delete[] noiseData;
-	}
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -789,6 +744,9 @@ void Tr2VolumetricsRenderer::RenderFog(
 	int wgZ = ( depth + workgroupSize - 1 ) / workgroupSize;
 
 
+	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", resources.fogFroxels );
+
+
 	if (!froxelsEnabled)
 	{
 		//We have nothing more we need to do.
@@ -947,7 +905,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 					Vector4d previousNoiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), m_godRayNoiseMatrix );
 					Vector4d noiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), newMatrix );
 
-					//Calculate the difference and update the new matrix to cancel out the motion.
+					//Calculate the difference and update the new matrix to cancel out the motion resulting from the rotation.
 					Vector4d difference = previousNoiseCoords - noiseCoords;
 					newMatrix[12] += difference.x;
 					newMatrix[13] += difference.y;
@@ -1133,7 +1091,6 @@ void Tr2VolumetricsRenderer::RenderFog(
 		int wgY = ( height + workgroupSize - 1 ) / workgroupSize;
 		int wgZ = ( depth + workgroupSize - 1 ) / workgroupSize;
 
-		//if( ! ( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) )
 		{
 			
 			if (shadowType == SHADOWS_RAYTRACED)
@@ -1152,24 +1109,10 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 			resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
 			resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
-			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise1DTexture" ), m_froxel1DNoise );
-			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise2DTexture" ), m_froxel2DNoise );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
 			Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
 		}
-		/*else
-		{
-			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Scene" ), raytracingGeometry );
-			resources.rtCalculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( hasShadows ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
-			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise1DTexture" ), m_froxel1DNoise );
-			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise2DTexture" ), m_froxel2DNoise );
-			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
-			resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
-			renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
-			renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
-		}*/
 
 		if( temporalFog )
 		{
@@ -1194,21 +1137,28 @@ void Tr2VolumetricsRenderer::RenderFog(
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
 
 		resources.applyFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity > 0 ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );
-		resources.applyFroxels->SetParameter( BlueSharedString( "FroxelTexture" ), resources.fogFroxels );
-		resources.applyFroxels->SetParameter( BlueSharedString( "MieEnvironmentMap" ), m_mieEnvironmentMap );
-		resources.applyFroxels->SetParameter( BlueSharedString( "OriginalResolution" ), Vector2( float( originalWidth ), float( originalHeight ) ) );
-		resources.applyFroxels->SetParameter( BlueSharedString( "FroxelResolution" ), Vector4( float( width ), float( height ), 1.0f / float( width ), 1.0f / float( height ) ) );
-		resources.applyFroxels->SetParameter( BlueSharedString( "MaxDistance" ), maxDistance );
-		resources.applyFroxels->SetParameter( BlueSharedString( "MaxDistanceVisibility" ), maxDistanceVisibility );
-		resources.applyFroxels->SetParameter( BlueSharedString( "BaseDensity" ), baseDensity );
-		resources.applyFroxels->SetParameter( BlueSharedString( "FogColor" ), Vector3( fogColor.r, fogColor.g, fogColor.b ) );
-		resources.applyFroxels->SetParameter( BlueSharedString( "BackgroundVisibility" ), backgroundVisibility );
-		resources.applyFroxels->SetParameter( BlueSharedString( "EnvironmentG" ), environmentG );
-		resources.applyFroxels->SetParameter( BlueSharedString( "EnvironmentIntensity" ), m_froxelFogSettings.environmentIntensity );
 		Tr2Renderer::DrawScreenQuad( renderContext, resources.applyFroxels );
 	}
+}
+
+void Tr2VolumetricsRenderer::PopulatePerFrameData( FroxelPerFrameData& data )
+{
+	float maxDistance = m_gameBackClip;
+	float maxDistanceVisibility = exp( -m_froxelFogSettings.thickness );
+	float baseDensity = m_froxelFogSettings.thickness / maxDistance;
+
+	float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality, 0.001f, 0.999f );
 
 
+	data.FogColor = Vector3( m_froxelFogSettings.fogColor.r, m_froxelFogSettings.fogColor.g, m_froxelFogSettings.fogColor.b );
+	data.BackgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility, 0.0f, 1.0f );
+
+	data.BaseDensity = baseDensity;
+	data.MaxDistance = maxDistance;
+	data.MaxDistanceVisibility = maxDistanceVisibility;
+	data.EnvironmentIntensity = m_froxelFogSettings.environmentIntensity;
+
+	data.EnvironmentG = environmentG;
 }
 
 void Tr2VolumetricsRenderer::SetPlanets( const CcpMath::Sphere* planets, size_t planetCount )
@@ -1254,4 +1204,5 @@ void Tr2VolumetricsRenderer::RenderShadows(
 void Tr2VolumetricsRenderer::UpdateVariableStore()
 {
 	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", m_volumeSlices );
+	GlobalStore().RegisterVariable( "EveSceneMieEnvironmentMap", m_mieEnvironmentMap );
 }
