@@ -134,6 +134,10 @@ PyObject* InitializeForPython()
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 extern bool g_gpuTimersEnabled;
+bool g_bindlessRenderingEnabled = true;
+TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
+extern bool g_gdrEnabled;
+extern bool g_upscalingDebug;
 
 #if TRINITY_PLATFORM == TRINITY_METAL
 extern bool g_enableMetalCounters;
@@ -151,17 +155,6 @@ void InitializeTrinity()
 	if( auto type = getenv( "METAL_DEVICE_WRAPPER_TYPE" ) )
 	{
 		isUsingMetalValidation = strcmp( type, "0" ) != 0;
-	}
-
-	extern bool g_fullSizeConstantBuffers;
-	g_fullSizeConstantBuffers = BeOS->HasStartupArg( L"fullcb" );
-	if( isUsingMetalValidation )
-	{
-		g_fullSizeConstantBuffers = true;
-	}
-	if( g_fullSizeConstantBuffers )
-	{
-		CCP_LOGNOTICE( "trinity is using full constant buffer uploads to bypass graphics validation issues" );
 	}
 #endif
 
@@ -192,6 +185,12 @@ void InitializeTrinity()
 		CCP_LOGNOTICE( "trinity is not using parallel encoding" );
 	}
 #endif
+
+	auto upsclingDebugArg = BeOS->GetStartupArgValue( L"upscalingDebug" );
+	if( !upsclingDebugArg.empty() )
+	{
+		g_upscalingDebug = upsclingDebugArg == L"1";
+	}
 	
 	auto debugArg = BeOS->GetStartupArgValue( L"deviceDebug" );
 	if( !debugArg.empty() )
@@ -211,6 +210,18 @@ void InitializeTrinity()
 		g_gpuTimersEnabled = timers != L"0";
 	}
 
+	auto bindlessRendering = BeOS->GetStartupArgValue( L"bindlessRendering" );
+	if( !bindlessRendering.empty() )
+	{
+		g_bindlessRenderingEnabled = bindlessRendering != L"0";
+	}
+
+	auto gdpr = BeOS->GetStartupArgValue( L"gdpr" );
+	if( !gdpr.empty() )
+	{
+		g_gdrEnabled = gdpr != L"0";
+	}
+    
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
 
 	Tr2FontManager::Initialize();

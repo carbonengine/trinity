@@ -1125,29 +1125,30 @@ void Tr2Sprite2dScene::IssueDrawCall()
 			}
 			else
 			{
-				if( auto desc = m_effect->GetPassDescription( 0, 0 ) )
-				{
-					for( uint32_t i = 0; i < 2; ++i )
-					{
-						Tr2TextureAL* texAL = nullptr;
-						if( m_texture[i] )
-						{
-							texAL = m_texture[i]->GetTexture();
-							if( !texAL )
-							{
-								if( m_texture[i]->GetRenderTarget() )
-								{
-									texAL = m_texture[i]->GetRenderTarget();
-								}
-							}
-						}
-						auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-						desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
-					}
-				}
+                if( auto desc = m_effect->GetPassDescription( 0, 0 ) )
+                {
+                    for( uint32_t i = 0; i < 2; ++i )
+                    {
+                        Tr2TextureAL* texAL = nullptr;
+                        if( m_texture[i] )
+                        {
+                            texAL = m_texture[i]->GetTexture();
+                            if( !texAL )
+                            {
+                                if( m_texture[i]->GetRenderTarget() )
+                                {
+                                    texAL = m_texture[i]->GetRenderTarget();
+                                }
+                            }
+                        }
+                        auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+                        desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
+                    }
+                }
 
 				m_drawCallStartIndex /= sizeof( uint32_t );
 				renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer.GetBuffer(), vertexBufferOffset, sizeof( Tr2Sprite2dD3DVertex ) );
+                renderContext.m_esm.ApplyIndexBuffer( m_indexBuffer.GetBuffer()  );
 				m_effect->Render( this, renderContext );
 				m_indexBuffer.DoneUsingData( renderContext );
 			}

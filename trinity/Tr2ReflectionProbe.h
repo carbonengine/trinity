@@ -40,6 +40,7 @@ public:
 	void InitRenderPass( Tr2RenderContext &renderContext );
 	void StartRenderFace( unsigned face, Tr2RenderContext &renderContext );
 	void EndRenderPass( Tr2RenderContext &renderContext );
+	Tr2TextureAL GetDepthBuffer( unsigned face );
 
 	TriFrustum GetFrustum( unsigned face, Tr2RenderContext& renderContext );
 
@@ -61,6 +62,8 @@ public:
 private:
 	void RunFilter();
 	void Filter( Tr2RenderContext &renderContext );
+	bool DoPrepareResources( ImageIO::PixelFormat targetFormat, Tr2PrimaryRenderContext& renderContext );
+	void DestroyRenderTargets();
 
 	bool m_initialized;
 	bool m_hasData;

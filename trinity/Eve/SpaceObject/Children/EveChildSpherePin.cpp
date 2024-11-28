@@ -25,7 +25,7 @@ EveChildSpherePin::~EveChildSpherePin()
 {
 }
 
-void EveChildSpherePin::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildSpherePin::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	EveChildMesh::UpdateAsyncronous( updateContext, params );
 	const auto time = updateContext.GetTime();

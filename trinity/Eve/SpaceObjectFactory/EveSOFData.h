@@ -2108,6 +2108,8 @@ public:
 
 	// parent texture
 	PEveSOFDataGenericStringVector m_parentTextures;
+
+	bool m_additive;
 };
 TYPEDEF_BLUECLASS( EveSOFDataGenericDecalShader );
 BLUE_DECLARE_VECTOR( EveSOFDataGenericDecalShader );

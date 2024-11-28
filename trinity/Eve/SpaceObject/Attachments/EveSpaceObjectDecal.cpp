@@ -11,11 +11,14 @@
 #include "Utilities/MatrixUtils.h"
 #include "TriFrustum.h"
 #include "Tr2InstancedMesh.h"
+#include "TriSettingsRegistrar.h"
+
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 CCP_STATS_DECLARE( decalDPCount, "Trinity/EveSpaceObject2/DecalDPCount", true, CST_COUNTER_LOW, "Number of decals rendered" );
 
-extern float g_eveSpaceSceneLODFactor;
+bool g_buildDecalBuffers = false;
+TRI_REGISTER_SETTING( "buildDecalBuffers", g_buildDecalBuffers );
 
 using namespace Tr2RenderContextEnum;
 
@@ -40,6 +43,7 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_parentBoneMatrix( IdentityMatrix() ),
 	m_minScreenSize( 0 ),
 	m_instanceScreenSize( -1 ),
+	m_batchType( TRIBATCHTYPE_DECAL ),
 	m_vertexDeclarationOverride( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_instanceData( nullptr ),
 	m_minBounds( 0, 0, 0 ),
@@ -109,7 +113,7 @@ bool EveSpaceObjectDecal::OnPrepareResources()
 	return true;
 }
 
-void EveSpaceObjectDecal::UpdateVisibility( const TriFrustum& frustum, const IEveSpaceObject2::ParentData* parentData )
+void EveSpaceObjectDecal::UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData )
 {
 	m_isVisible = 0;
 
@@ -125,7 +129,8 @@ void EveSpaceObjectDecal::UpdateVisibility( const TriFrustum& frustum, const IEv
 		Vector3 min( -1, -1, -1 );
 		Vector3 max( 1, 1, 1 );
 		bool isInstanced = m_instanceData != nullptr;
-		
+		auto& frustum = updateContext.GetFrustum();
+
 		// are we using instance magic?
 		if( isInstanced )
 		{
@@ -156,7 +161,7 @@ void EveSpaceObjectDecal::UpdateVisibility( const TriFrustum& frustum, const IEv
 
 		auto pixelSize = frustum.GetPixelSizeAccrossEst( sphereCenter, sphereRadius );
 			
-		float modifiedMinScreen = m_minScreenSize * g_eveSpaceSceneLODFactor;
+		float modifiedMinScreen = m_minScreenSize * updateContext.GetLodFactor();
 		if( pixelSize < modifiedMinScreen )
 		{
 			m_isVisible = 0;
@@ -193,7 +198,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 			m_baseGeometryResource = geomRes;
 		}
 	}
-	else
+	else if( g_buildDecalBuffers )
 	{
 		// if we get a new mesh, we must re-build the index buffer. This should be avoided cause it is slow!
 		if( geomRes != m_baseGeometryResource )
@@ -247,7 +252,7 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 									  const Tr2PerObjectData* perObjectData,
 									  Tr2RenderReason reason )
 {
-	if( batchType != TRIBATCHTYPE_DECAL )
+	if( batchType != m_batchType )
 	{
 		return;
 	}
@@ -262,6 +267,15 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 		return;
 	}
 
+	if( !m_baseGeometryResource->IsGood() )
+	{
+		return;
+	}
+
+	if( m_baseGeometryResource->GetMeshCount() < 1 )
+	{
+		return;
+	}
 	int index = m_geometryLodIndex + 1;
 	if( index >= m_indexBuffers.size() ||
 		!m_indexBuffer.IsValid() ||
@@ -270,12 +284,45 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 		return;
 	}
 
-	TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
+	const TriGeometryResMeshData* meshData = m_geometryLodIndex < 0 ? m_baseGeometryResource->GetMeshData( 0 ) : m_baseGeometryResource->GetMeshDataLod( 0, m_geometryLodIndex );
+	if( !meshData || !meshData->m_allocationsValid )
+	{
+		return;
+	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_decalEffect );
+	auto declaration = m_vertexDeclarationOverride != Tr2EffectStateManager::UNINITIALIZED_DECLARATION ? m_vertexDeclarationOverride : meshData->m_vertexDeclaration;
+	batch.SetGeometry( declaration, meshData->m_vertexAllocation, m_indexBuffer );
+
+	batch.SetPerObjectData( perObjectData );
+
+	if( m_instanceData )
+	{
+		ITr2InstanceData::InstanceData data = m_instanceData->GetInstanceData( 0, std::numeric_limits<float>::max() );
+		batch.SetDrawIndexedInstanced(
+			m_indexBuffers[index].m_primitiveCount * 3,
+			data.count,
+			m_indexBuffer.GetStartIndex() + m_indexBuffers[index].m_startIndex,
+			meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+			data.offset / data.stride );
+		batch.m_vertexStreams[1] = &data.buffer;
+		batch.m_stride[1] = data.stride;
+	}
+	else
+	{
+		batch.SetDrawIndexedInstanced(
+			m_indexBuffers[index].m_primitiveCount * 3,
+			1,
+			m_indexBuffer.GetStartIndex() + m_indexBuffers[index].m_startIndex,
+			meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+			0 );
+	}
+
 	if( batch )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_decalEffect );
-		batch->SetGeometryProvider( this );
+		CCP_STATS_INC( decalDPCount );
+
 		batches->Commit( batch );
 	}
 }
@@ -332,68 +379,6 @@ Tr2PerObjectData* EveSpaceObjectDecal::GetPerObjectData( ITriRenderBatchAccumula
 	}
 
 	return perObjectData;
-}
-
-// ------------------------------------------------------------------------------------------------------
-void EveSpaceObjectDecal::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	if( !m_baseGeometryResource )
-	{
-		return;
-	}
-
-	if( !m_baseGeometryResource->IsGood() )
-	{
-		return;
-	}
-
-	if( m_baseGeometryResource->GetMeshCount() < 1 )
-	{
-		return;
-	}
-
-	int index = m_geometryLodIndex + 1;
-	if( index >= m_indexBuffers.size() ||
-		!m_indexBuffer.IsValid() ||
-		!m_indexBuffers[index].m_primitiveCount )
-	{
-		return;
-	}
-
-	const TriGeometryResMeshData* meshData = m_geometryLodIndex < 0 ? m_baseGeometryResource->GetMeshData( 0 ) : m_baseGeometryResource->GetMeshDataLod( 0, m_geometryLodIndex );
-	if( !meshData )
-	{
-		return;
-	}
-
-	if( !meshData->m_vertexBuffer.IsValid() )
-	{
-		return;
-	}
-
-	CCP_STATS_INC( decalDPCount );
-
-	auto declaration = m_vertexDeclarationOverride != Tr2EffectStateManager::UNINITIALIZED_DECLARATION ? m_vertexDeclarationOverride : meshData->m_vertexDeclaration;
-	
-	// render
-	renderContext.m_esm.ApplyVertexDeclaration( declaration );
-	renderContext.m_esm.ApplyStreamSource( 0, meshData->m_vertexBuffer, 0, meshData->m_bytesPerVertex );
-	renderContext.m_esm.ApplyIndexBuffer( m_indexBuffer );
-	renderContext.SetTopology( TOP_TRIANGLES );
-
-
-	if( m_instanceData )
-	{
-		ITr2InstanceData::InstanceData data = m_instanceData->GetInstanceData( 0, m_instanceScreenSize );
-
-		renderContext.m_esm.ApplyStreamSource( 1, data.buffer, 0, data.stride );
-
-		renderContext.DrawIndexedInstanced( meshData->m_vertexCount, m_indexBuffers[index].m_startIndex, m_indexBuffers[index].m_primitiveCount, data.count );	
-	}
-	else
-	{
-		renderContext.DrawIndexedPrimitive( meshData->m_vertexCount, m_indexBuffers[index].m_startIndex, m_indexBuffers[index].m_primitiveCount );	
-	}
 }
 
 void EveSpaceObjectDecal::CopyFrom( EveSpaceObjectDecal *object )
@@ -640,7 +625,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes )
 			return;
 		}
 
-		if( !meshData->m_vertexBuffer.IsValid() || !meshData->m_indexBuffer.IsValid() )
+		if( !meshData->m_allocationsValid )
 		{
 			return;
 		}
@@ -649,18 +634,18 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes )
 		const unsigned char* originalVertices = NULL;
 		const unsigned char* originalIndices = NULL;
 
-		if( FAILED( meshData->m_vertexBuffer.MapForReading( originalVertices, renderContext ) ) )
+		if( FAILED( meshData->m_vertexAllocation.MapForReading( originalVertices, renderContext ) ) )
 		{
 			return;
 		}
-		ON_BLOCK_EXIT( [&] { meshData->m_vertexBuffer.UnmapForReading( renderContext ); } );
+		ON_BLOCK_EXIT( [&] { meshData->m_vertexAllocation.UnmapForReading( renderContext ); } );
 
 
-		if( FAILED( meshData->m_indexBuffer.MapForReading( originalIndices, renderContext ) ) )
+		if( FAILED( meshData->m_indexAllocation.MapForReading( originalIndices, renderContext ) ) )
 		{
 			return;
 		}
-		ON_BLOCK_EXIT( [&] { meshData->m_indexBuffer.UnmapForReading( renderContext ); } );
+		ON_BLOCK_EXIT( [&] { meshData->m_indexAllocation.UnmapForReading( renderContext ); } );
 
 		// correct source pointers
 		const unsigned int* indices32 = reinterpret_cast<const unsigned int*>( originalIndices );
@@ -668,7 +653,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes )
 		// collect indices for decal geometry
 		std::vector<unsigned int> decalIndices32;
 		std::vector<unsigned short> decalIndices16;
-		bool is16bit = meshData->m_indexBuffer.GetDesc().stride == 2;
+		bool is16bit = meshData->m_indexAllocation.GetStride() == 2;
 		if( is16bit )
 		{
 			decalIndices16.reserve( meshData->m_primitiveCount * 3 );
@@ -775,13 +760,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes )
 	// dont create empty buffer
 	if( !allIndices.empty() )
 	{
-		if( !SUCCEEDED( m_indexBuffer.Create(
-				4,
-				uint32_t( allIndices.size() ),
-				Tr2GpuUsage::INDEX_BUFFER,
-				Tr2CpuUsage::NONE,
-				allIndices.data(),
-				renderContext ) ) )
+		if( !SUCCEEDED( g_sharedBuffer.Allocate( 4, uint32_t( allIndices.size() ), allIndices.data(), renderContext, m_indexBuffer ) ) )
 		{
 			return;
 		}
@@ -838,7 +817,7 @@ void EveSpaceObjectDecal::CreateStaticIndexBuffers()
 	{
 		std::copy( begin( buffer.m_indices ), end( buffer.m_indices ), begin( indices ) + buffer.m_startIndex );
 	}
-	if( !SUCCEEDED( m_indexBuffer.Create( 4, uint32_t( indices.size() ), Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::NONE, &indices[0], renderContext ) ) )
+	if( !SUCCEEDED( g_sharedBuffer.Allocate( 4, uint32_t( indices.size() ), indices.data(), renderContext, m_indexBuffer ) ) )
 	{
 		m_rebuildIndexBuffers = true;
 	}
@@ -863,7 +842,7 @@ void EveSpaceObjectDecal::GetPickingBatches( ITriRenderBatchAccumulator* batches
 	{
 		return;
 	}
-	GetBatches( batches, TRIBATCHTYPE_DECAL, perObjectData );
+	GetBatches( batches, m_batchType, perObjectData );
 }
 
 std::vector<uint32_t> EveSpaceObjectDecal::GetDecalPrimitiveCounts() const
@@ -876,6 +855,11 @@ std::vector<uint32_t> EveSpaceObjectDecal::GetDecalPrimitiveCounts() const
 	return counts;
 }
 
+void EveSpaceObjectDecal::SetBatchType( TriBatchType batchType )
+{
+	m_batchType = batchType;
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Copy all the matrices to HW
@@ -885,4 +869,10 @@ void EveDecalPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buff
 	// add up constant count, see EveDecalPerObjectData
 	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_vsData, sizeof(DecalVSPerObjectData), VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
 	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_psData, sizeof(DecalPSPerObjectData), PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+}
+
+void EveDecalPerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	writer.SetPerObjectData( VERTEX_SHADER, &m_vsData, sizeof( DecalVSPerObjectData ) );
+	writer.SetPerObjectData( PIXEL_SHADER, &m_psData, sizeof( DecalPSPerObjectData ) );
 }

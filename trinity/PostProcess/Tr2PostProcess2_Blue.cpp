@@ -19,19 +19,67 @@ const Be::ClassInfo* Tr2PostProcess2::ExposeToBlue()
 		MAP_ATTRIBUTE( "godRays", m_godRays, "Accesses the God Rays effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "bloom", m_bloom, "Accesses the bloom effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "dynamicExposure", m_dynamicExposure, "Accesses the dynamic exposure effect", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "fidelityFX", m_fidelityFX, "Accesses the FidelityFX effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "filmGrain", m_filmGrain, "Accesses the film grain effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "desaturate", m_desaturate, "Accesses the desaturate effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fade", m_fade, "Accesses the fade effect", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "lut", m_lut, "Accesses the LUT effect", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "additionalLut1", m_additionalLut1, "Accesses the first additional LUT effect", Be::READWRITE )
-		MAP_ATTRIBUTE( "additionalLut2", m_additionalLut2, "Accesses the second additional LUT effect", Be::READWRITE )
-		MAP_ATTRIBUTE( "additionalLut3", m_additionalLut3, "Accesses the third additional LUT effect", Be::READWRITE )
+		MAP_ATTRIBUTE( "luts", m_luts, "Accesses the LUT effect", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "lut", m_lut, "Accesses the LUT effect", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "vignette", m_vignette, "Accesses the vignette effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fog", m_fog, "Accesses the fog effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "depthOfField", m_depthOfField, "Accesses the dof effect", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "taa", m_taa, "Accesses the temporal antialiasing effect", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "taa", m_taa, "Accesses the temporal antialiasing effect", Be::READWRITE )
 		MAP_ATTRIBUTE( "tonemapping", m_tonemapping, "Accesses the tonemapping effect", Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE( 
+			"whiteTemperature", 
+			m_whiteTemperature, 
+			"Color grading white temperature\n"
+			":jessica-group: Color Correction\n"
+			":jessica-numeric-range: (3000, 15000)", 
+			Be::READWRITE )
+		MAP_ATTRIBUTE( 
+			"whiteTint", 
+			m_whiteTint, 
+			"Color grading white tint\n"
+			":jessica-group: Color Correction\n"
+			":jessica-numeric-range: (-1.0, 1.0)", 
+			Be::READWRITE )
+		MAP_ATTRIBUTE( 
+			"colorSaturation", 
+			m_colorSaturation, 
+			"Color saturation\n"
+			":jessica-group: Color Correction\n"
+			":jessica-numeric-range: (0.0, 2.0)",
+			Be::READWRITE )
+		MAP_ATTRIBUTE( 
+			"colorContrast", 
+			m_colorContrast, 
+			"Image contrast\n"
+			":jessica-group: Color Correction\n"
+			":jessica-numeric-range: (0.0, 2.0)",
+			Be::READWRITE )
+		MAP_ATTRIBUTE( 
+			"colorGamma", 
+			m_colorGamma, 
+			"Image gamma\n"
+			":jessica-group: Color Correction\n"
+			":jessica-numeric-range: (0.0, 2.0)",
+			Be::READWRITE )
+		MAP_ATTRIBUTE( 
+			"colorGain", 
+			m_colorGain, 
+			"Image color gain (scale)\n"
+			":jessica-group: Color Correction\n"
+			":jessica-numeric-range: (0.0, 2.0)",
+			Be::READWRITE )
+		MAP_ATTRIBUTE( 
+			"colorOffset", 
+			m_colorOffset, 
+			"Image color offset\n"
+			":jessica-group: Color Correction\n"
+			":jessica-numeric-range: (0.0, 2.0)",
+			Be::READWRITE )
+
 
     EXPOSURE_END()
 }

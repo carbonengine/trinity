@@ -4,7 +4,6 @@
 
 
 #include "Tr2DeviceResource.h"
-#include "ITr2GeometryProvider.h"
 
 BLUE_DECLARE( EveStarfield );
 BLUE_DECLARE( Tr2Effect );
@@ -15,7 +14,6 @@ class Tr2PerObjectData;
 class EveStarfield :
 	public INotify,
 	public IInitialize,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource
 {
 public:
@@ -37,10 +35,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-	
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource

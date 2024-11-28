@@ -21,6 +21,10 @@ namespace TrinityALImpl
 		const char* shaderPath,
 		Tr2PrimaryRenderContextAL &renderContext )
 	{
+		if( !signature.samplers.empty() )
+		{
+			return E_INVALIDARG;
+		}
 		m_bytecode.resize( "Tr2ShaderALMetal::m_bytecode", bytecode.size );
 		if( m_bytecode.empty() )
 		{
@@ -53,7 +57,15 @@ namespace TrinityALImpl
 			}
 			case Tr2ShaderRegisterAL::SAMPLER:
 			{
-				m_resourceMask.samplerMask|= 1 << reg.registerIndex;
+                if( reg.arrayCount != 1 )
+                {
+                    // This is an array of samplers, and it's bound as an SRV buffer
+                    m_resourceMask.bufferMask |= 1 << ( METAL_SRV_BUFFER_OFFSET + reg.registerIndex );
+                }
+                else
+                {
+                    m_resourceMask.samplerMask|= 1 << reg.registerIndex;
+                }
 				break;
 			}
 			case Tr2ShaderRegisterAL::SRV_BUFFER:

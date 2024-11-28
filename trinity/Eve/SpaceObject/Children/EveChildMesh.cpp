@@ -9,9 +9,9 @@
 #include "Tr2GrannyAnimation.h"
 #include "TriFrustumOrtho.h"
 #include "Utilities/BoundingBox.h"
+#include "Resources/TriGeometryRes.h"
 
-extern float g_eveSpaceSceneLODFactor;
-extern float g_eveSpaceSceneVisibilityThreshold;
+extern bool g_eveSpaceSceneRaytracedShadows;
 
 namespace
 {
@@ -34,10 +34,10 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_currentInstanceScreenSize( -1.f ),
 	m_sortValueOffset( 0 ),
 	m_sortValueScale( 1 ),
-	m_useSpaceObjectData( true ),
 	m_activationStrength( 1.0f ),
 	m_origin( SPACE ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
+	m_instanceCount( 0 ),
 	EveChildTransform(),
 	EveEntity( lockobj )
 {
@@ -132,9 +132,14 @@ void EveChildMesh::RegisterComponents()
 // --------------------------------------------------------------------------------
 // Description:
 //   Check if the object is casting a shadow in the camera/shadow frustums
-bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
+bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	if( !m_display || !m_castShadow )
+	{
+		return false;
+	}
+
+	if( renderReason == TR2RENDERREASON_REFLECTION && !EntityComponents::ShouldReflect( m_reflectionMode ) )
 	{
 		return false;
 	}
@@ -171,12 +176,51 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 	return sizeInShadow > 5.f;
 }
 
-void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
+{
+	if( !m_display || !m_castShadow )
+	{
+		return false;
+	}
+
+	Vector4 bs;
+	GetBoundingSphere( bs );
+	sizeInShadow = 0;
+
+	if( bs.w <= 0.0f )
+	{
+		return false;
+	}
+
+	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, bs ) )
+	{
+		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+		{
+			if( auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.m_viewPos, Inverse( m_worldTransform ) ) ) )
+			{
+				instanceBounds.Transform( m_worldTransform );
+				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, Vector4( instanceBounds.center, instanceBounds.radius ) );
+			}
+			else
+			{
+				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
+			}
+		}
+		else
+		{
+			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
+		}
+	}
+	return sizeInShadow > 5.f;
+}
+
+void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	m_isVisible = false;
 	m_currentScreenSize = -1;
 	m_instancesVisible = false;
 	m_currentInstanceScreenSize = -1.0f;
+	auto& frustum = updateContext.GetFrustum();
 
 	if( m_mesh )
 	{
@@ -205,8 +249,8 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 			m_mesh->UseWithScreenSize( m_currentScreenSize, CcpMath::Sphere( bounds ).radius );
 		}
 
-		m_currentScreenSize /= g_eveSpaceSceneLODFactor;
-		m_currentInstanceScreenSize /= g_eveSpaceSceneLODFactor;
+		m_currentScreenSize /= updateContext.GetLodFactor();
+		m_currentInstanceScreenSize /= updateContext.GetLodFactor();
 
 		if( frustum.IsBoxVisible( bounds ) )
 		{
@@ -223,7 +267,7 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
-			( *it )->UpdateVisibility( frustum, m_worldTransform, bones, boneCount );
+			( *it )->UpdateVisibility( updateContext, m_worldTransform, bones, boneCount );
 		}
 	}
 
@@ -235,10 +279,97 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 			{
 				( *it )->SetBoneMatrix( m_animationUpdater->GetMeshBoneMatrixList(), m_animationUpdater->GetMeshBoneCount() );
 			}
-			( *it )->UpdateVisibility( frustum, &m_parentData );
+			( *it )->UpdateVisibility( updateContext, &m_parentData );
+		}
+
+		if( g_eveSpaceSceneRaytracedShadows )
+		{
+			UpdateRtMesh();
+			UpdateRtSkeleton();
 		}
 	}
 }
+
+void EveChildMesh::UpdateRtMesh()
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	if( !renderContext.GetCaps().SupportsRaytracing() )
+	{
+		return;
+	}
+
+	if( !m_mesh )
+	{
+		return;
+	}
+
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	if( !areas->empty() )
+	{
+		auto rtMesh = m_mesh->GetOrCreateRtMesh();
+		// todo: dbl check with using currScreenSize
+		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_currentScreenSize );
+
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			( *it )->GetOrCreateRtMeshArea();
+		}
+	}
+}
+
+void EveChildMesh::UpdateRtSkeleton()
+{
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return;
+	}
+
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	auto rtMesh = m_mesh->GetRtMesh();
+	if( areas->empty() || !rtMesh )
+	{
+		return; //no areas at all or no RT mesh
+	}
+
+	auto meshIndex = m_mesh->GetMeshIndex();
+	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
+
+	bool hasSkinned = false;
+
+	for( auto it = begin( *areas ); it != end( *areas ); ++it )
+	{
+		if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
+		{
+			hasSkinned = true;
+			break;
+		}
+	}
+
+	if( !hasSkinned )
+	{
+		return; //no skinned areas
+	}
+
+	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	auto offset = m_boneOffsets.GetCurrentFrameOffset();
+
+	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );
+
+	if( skeletonChanged )
+	{
+		//Skeleton has changed, so mark all area BLAS's as out-of-date.
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			auto meshAreaIndex = ( *it )->GetIndex();
+			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
+			{
+				( *it )->GetRtMeshArea()->MarkBlasOutdated();
+			}
+		}
+	}
+}
+
 
 void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
@@ -249,16 +380,18 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 			if( m_instancesVisible )
 			{
 				renderables.push_back( this );
-
-				TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
-
-				if( geometryRes )
+				if (!m_decals.empty())
 				{
-					// runn over every decal and update it
-					for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+					auto geometryRes = m_mesh->GetGeometryResource();
+
+					if (geometryRes)
 					{
-						// now prep to get the renderables
-						( *it )->GetInstancedRenderables( renderables, instanced, m_currentInstanceScreenSize );
+						// run over every decal and update it
+						for (EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it)
+						{
+							// now prep to get the renderables
+							(*it)->GetInstancedRenderables(renderables, instanced, m_currentInstanceScreenSize);
+						}
 					}
 				}
 			}
@@ -266,11 +399,11 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 		else
 		{
 			renderables.push_back( this );
-			TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
+			auto geometryRes = m_mesh->GetGeometryResource();
 
 			if( geometryRes )
 			{
-				// runn over every decal and update it
+				// run over every decal and update it
 				for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 				{
 					// now prep to get the renderables
@@ -307,15 +440,16 @@ bool EveChildMesh::HasTransparentBatches()
 	return false;
 }
 
-bool EveChildMesh::IsVisible( const TriFrustum& frustum ) const
+bool EveChildMesh::IsVisible( const EveUpdateContext& updateContext ) const
 {
 	Vector4 boundingSphere;
 
 	if( GetBoundingSphere( boundingSphere ) && boundingSphere.w != 0)
 	{
+		auto& frustum = updateContext.GetFrustum();
 		if( frustum.IsSphereVisible( boundingSphere.GetXYZ(), boundingSphere.w ) )
 		{
-			return frustum.GetPixelSizeAccrossEst( boundingSphere.GetXYZ(), boundingSphere.w ) >= g_eveSpaceSceneVisibilityThreshold;
+			return frustum.GetPixelSizeAccrossEst( boundingSphere.GetXYZ(), boundingSphere.w ) >= updateContext.GetVisibilityThreshold();
 		}
 	}
 	return false;
@@ -350,6 +484,76 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	}
 }
 
+void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
+{
+	if( !m_display || !m_mesh || !m_castShadow || !g_eveSpaceSceneRaytracedShadows )
+	{
+		return;
+	}
+
+	auto rtMesh = m_mesh->GetRtMesh();
+
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	if( !m_rtPerObjectData.IsValid() )
+	{
+		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
+	}
+
+	EveSpaceObjectPSData* perObjectData;
+	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
+	*perObjectData = m_psData;
+	m_rtPerObjectData.Unlock( renderContext );
+
+	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+	{
+		if( !instanced->GetDisplay() )
+		{
+			return;
+		}
+
+		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
+		{
+			const Matrix transform = *it * m_worldTransform;
+
+			const Tr2MeshAreaVector* areas = instanced->GetAreas( TRIBATCHTYPE_OPAQUE );
+			for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+			{
+				auto area = *it;
+				if( area->GetDisplay() )
+				{
+					auto geometry = area->GetRtMeshArea();
+					if( geometry )
+					{
+						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, transform );
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+		for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+		{
+			auto area = *it;
+			if( area->GetDisplay() )
+			{
+				auto geometry = area->GetRtMeshArea();
+				if( geometry )
+				{
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, m_worldTransform );
+				}
+			}
+		}
+	}
+}
+
+void EveChildMesh::SetInstanceTransforms( std::vector<Matrix> instances )
+{
+	m_instanceTransforms = instances;
+}
+
 float EveChildMesh::GetSortValue()
 {
 	Vector3 d = Tr2Renderer::GetViewPosition() - m_worldTransform.GetTranslation();
@@ -364,19 +568,14 @@ Tr2PerObjectData* EveChildMesh::GetShadowPerObjectData( ITriRenderBatchAccumulat
 
 Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
-	if( !m_useSpaceObjectData )
+	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
-		EveBasicPerObjectData* perObjectData = accumulator->Allocate<EveBasicPerObjectData>();
-
-		if( !perObjectData )
-		{
-			return nullptr;
-		}
-
-		perObjectData->m_world = m_vsData.worldTransform;
-		perObjectData->m_worldInverseTranspose = Inverse( m_worldTransform );
-		return perObjectData;
+		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+		m_vsData.boneOffsets[2] = boneCount;
+		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
 	}
+	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
+	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
 
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
@@ -396,13 +595,7 @@ uint32_t EveChildMesh::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType sh
 	}
 	else
 	{
-		int boneCount = 0;
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-		{
-			boneCount = m_animationUpdater->GetMeshBoneCount();
-		}
-
-		return sizeof( m_vsData ) + boneCount * 3 * 16; // m_vsBonesMatrix (3x4)
+		return sizeof( m_vsData );
 	}
 }
 
@@ -410,25 +603,18 @@ void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shade
 {
 	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
 	{
-		uint8_t* perObjectPS = (uint8_t*)data;
-		memcpy( perObjectPS, &m_psData, sizeof( m_psData ) );
+		memcpy( data, &m_psData, sizeof( m_psData ) );
 	}
 	else
 	{
-		uint8_t* perObjectVS = (uint8_t*)data;
-		memcpy( perObjectVS, &m_vsData, sizeof( m_vsData ) );
-		perObjectVS += sizeof( m_vsData );
-
-		size -= sizeof( m_vsData );
-		if( size )
-		{
-			memcpy( perObjectVS, m_animationUpdater->GetMeshBoneMatrixList(), size );
-		}
+		memcpy( data, &m_vsData, sizeof( m_vsData ) );
 	}
 }
 
-void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
+	m_boneOffsets.AdvanceFrame();
+
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
 
@@ -485,7 +671,7 @@ void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 	m_psData.screenSize.y = min( float( m_currentScreenSize / screen_height ), 1.0f );
 }
 
-void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	if( m_animationUpdater )
 	{

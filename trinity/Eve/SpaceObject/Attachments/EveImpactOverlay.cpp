@@ -119,7 +119,7 @@ bool EveImpactOverlay::Initialize()
 // Description:
 //   Do everyting non-threadsafe here
 // --------------------------------------------------------------------------------
-void EveImpactOverlay::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveImpactOverlay::UpdateSyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 	// do we have something to do at all?
 	if( !HasGeneralActivity() )
@@ -192,7 +192,7 @@ void EveImpactOverlay::UpdateSyncronous( EveUpdateContext& updateContext, EveSpa
 // Description:
 //   Do all the math-heavy conversion here async
 // --------------------------------------------------------------------------------
-void EveImpactOverlay::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveImpactOverlay::UpdateAsyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 	// first always reduce shield impacts
 	for( auto sidit = m_shieldImpactData.begin(); sidit != m_shieldImpactData.end(); )
@@ -492,7 +492,7 @@ bool EveImpactOverlay::HasShieldEllipsoid() const
 //   EveImpact overlays can modulate the activation strenth, to let the lights
 //   flciker etc.
 // --------------------------------------------------------------------------------
-float EveImpactOverlay::GetActivationStrength( EveUpdateContext& updateContext ) const
+float EveImpactOverlay::GetActivationStrength( const EveUpdateContext& updateContext ) const
 {
 	// settings
 	if( !g_eveSpaceObjectImpactEffectEnabled )
@@ -790,8 +790,18 @@ int EveImpactOverlay::CreateArmorImpact( int damageLocatorIndex, float size, boo
 // Description:
 //   Hand out the shader for armor efects
 // --------------------------------------------------------------------------------
-Tr2EffectPtr EveImpactOverlay::GetArmorDamageShader( TriBatchType batchType ) const
+Tr2Effect* EveImpactOverlay::GetArmorDamageShader( TriBatchType batchType ) const
 {
+	if( batchType != TRIBATCHTYPE_DECAL )
+	{
+		return nullptr;
+	}
+
+	if( ( m_dataTextureBlockID == -1 ) || ( m_dataTextureOffset == -1 ) )
+	{
+		return nullptr;
+	}
+
 	// settings
 	if( !g_eveSpaceObjectImpactEffectEnabled )
 	{
@@ -802,16 +812,7 @@ Tr2EffectPtr EveImpactOverlay::GetArmorDamageShader( TriBatchType batchType ) co
 	{
 		return nullptr;
 	}
-	if( ( m_dataTextureBlockID == -1 ) || ( m_dataTextureOffset == -1 ) )
-	{
-		return nullptr;
-	}
-
-	if( batchType == TRIBATCHTYPE_DECAL )
-	{
-		return m_armorDamageShader;
-	}
-	return nullptr;
+	return m_armorDamageShader;
 }
 
 

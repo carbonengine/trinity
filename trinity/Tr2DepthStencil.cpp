@@ -62,6 +62,7 @@ long Tr2DepthStencil::Create( unsigned width, unsigned height, DepthStencilForma
 		m_msaa = Tr2MsaaDesc( msaaType, msaaQuality );
 		m_flags = flags;
 		m_depthStencil.SetName( m_name.c_str() );
+		m_onTextureChange();
 	}
 	else
 	{
@@ -77,6 +78,11 @@ Tr2TextureAL* Tr2DepthStencil::GetTexture()
 		return  &m_depthStencil;
 	}
 	return nullptr;
+}
+
+Tr2DepthStencil::OnTextureChangeEvent& Tr2DepthStencil::OnTextureChange()
+{
+	return m_onTextureChange;
 }
 
 bool Tr2DepthStencil::IsReadable() const
@@ -98,6 +104,8 @@ void Tr2DepthStencil::Destroy()
 	m_format = DSFMT_AUTO;
 	m_msaa = Tr2MsaaDesc();
 	m_flags = EX_NONE;
+
+	m_onTextureChange();
 }
 
 // --------------------------------------------------------------------------------------
@@ -168,6 +176,7 @@ void Tr2DepthStencil::ReleaseResources( TriStorage s )
 	if( m_depthStencil.IsValid() && ( s & m_depthStencil.GetMemoryClass() ) )
 	{
 		m_depthStencil = Tr2TextureAL();
+		m_onTextureChange();
 	}
 }
 
@@ -185,6 +194,7 @@ bool Tr2DepthStencil::OnPrepareResources()
 		}
 
 		m_depthStencil.Create( Tr2BitmapDimensions( m_width, m_height, 1, Tr2RenderContextEnum::ConvertDepthStencilFormat( m_format ) ), m_msaa, gpuUsage, renderContext );
+		m_onTextureChange();
 	}
 	return true;
 }

@@ -32,10 +32,6 @@ public:
 									Tr2RenderContextEnum::PixelFormat backBufferFormat,
 									unsigned modeIndex,
 									Tr2DisplayModeInfo& mode );
-	static ALResult GetAdapterMsaaSupport( unsigned adapterIndex,
-										   Tr2RenderContextEnum::PixelFormat format,
-										   unsigned msaaType,
-										   unsigned& msaaQuality );
 	static bool SupportsBackBufferFormat( unsigned adapterIndex,
 										  Tr2RenderContextEnum::PixelFormat backBufferFormat );
 	static bool SupportsRenderTargetFormat( unsigned adapterIndex, Tr2RenderContextEnum::PixelFormat format );

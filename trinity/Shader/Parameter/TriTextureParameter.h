@@ -57,6 +57,11 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEffectTextureParameter
+	void CopyValueToEffect(
+		Tr2RenderContextEnum::ShaderType inputType,
+		unsigned char* destHandle,
+		size_t size,
+		Tr2RenderContext& renderContext ) const override;
 	virtual bool CopyToResourceSet(
 		Tr2ResourceSetDescriptionAL& resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
@@ -66,11 +71,16 @@ public:
 		Tr2ResourceSetDescriptionAL& resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex ) const;
+	void AddUsedTexture( Tr2BindlessResourcesAL& usedTextures ) const override;
 	unsigned GetHashValue( unsigned startingHash ) const;
+	bool SupportsDirtyNotification() const override;
 
 	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities ) override;
 	void EnableTextureLoding( const std::array<float, UV_SET_MAX_COUNT>& uvDensityScale ) override;
 	void DisableTextureLoding() override;
+
+	void OnAddedToMaterial( Tr2Material* material ) override;
+	void OnRemovedFromMaterial( Tr2Material* material ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
@@ -100,6 +110,9 @@ public:
 	void SetResourcePath( const char* resourcePath );
 
 private:
+	void OnTextureChanged();
+	void CacheTexture();
+
 	Tr2ShaderPtr m_cachedEffect;
 
 	BlueSharedString m_name;
@@ -108,10 +121,15 @@ private:
 	mutable ITr2TextureProviderPtr m_lowResResource;
 	TriTextureResPtr m_textureRes;
 	Tr2EffectResource::Type m_resourceType;
+	Tr2RenderContextEnum::ColorSpace m_bindlessColorSpace;
 
 	uint32_t m_uavMipLevel;
 
 	std::array<float, UV_SET_MAX_COUNT> m_uvDensityScale;
+	std::vector<Tr2Material*> m_materials;
+
+	Tr2TextureAL m_cachedTexture;
+	uint32_t m_cachedSrvIndex[2];
 
 	bool m_isUsedByEffect;
 	bool m_textureLodEnabled;

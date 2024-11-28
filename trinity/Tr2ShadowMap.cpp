@@ -52,7 +52,6 @@ Tr2DepthStencilPtr GetShadowAtlas( uint32_t width, uint32_t height )
 
 using namespace Tr2RenderContextEnum;
 Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
-	m_quality( HIGH ),
 	m_size( SHADOW_MAP_SIZE ),
 	m_height( 2 ),
 	m_width( 8 ),
@@ -61,6 +60,7 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_oldZFar( 0.0 ),
 	m_shadowMapHandle( NULL ),
 	m_cascadedShadowMapHandle( NULL ),
+	m_useDenoiser( true ),
 	m_debugColorSplit( false )
 {
 	m_shadowEffect.CreateInstance();
@@ -75,12 +75,28 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	
 	PrepareResources();
 
-	SetHighSettingSplitValues();
+	SetSplitValues();
 }
 
 Tr2ShadowMap::~Tr2ShadowMap()
 {
 	ReleaseResources( TRISTORAGE_ALL );
+}
+
+void Tr2ShadowMap::Setup( uint32_t elementSize, uint32_t elementCount, bool useDenoiser )
+{
+	if( m_size != elementSize || m_splitCount != elementCount )
+	{
+		m_size = elementSize;
+		m_splitCount = elementCount;
+		ReleaseResources( TRISTORAGE_ALL );
+		PrepareResources();
+	}
+	m_useDenoiser = useDenoiser;
+	if( !useDenoiser )
+	{
+		m_denoiser = nullptr;
+	}
 }
 
 bool Tr2ShadowMap::OnModified( Be::Var* value )
@@ -103,22 +119,6 @@ bool Tr2ShadowMap::OnModified( Be::Var* value )
 		PrepareResources();
 	}
 
-	if( IsMatch( value, m_quality ) )
-	{
-		// if high settings then setup the denoiser
-		if( m_quality == HIGH )
-		{
-			if( !m_denoiser )
-			{
-				m_denoiser.CreateInstance();
-			}
-		}
-		else
-		{
-			m_denoiser = nullptr;
-		}
-	}
-
 	return true;
 }
 
@@ -137,7 +137,9 @@ void Tr2ShadowMap::ReleaseResources( TriStorage s )
 	m_cascadedShadowMapDS = Tr2DepthStencilPtr();
 	m_shadowMapResultRT = Tr2RenderTargetPtr();
 
-	SetNoShadow();
+	m_denoiser = nullptr;
+
+	SetBlankTexture();
 }
 
 
@@ -173,17 +175,22 @@ bool Tr2ShadowMap::OnPrepareResources()
 		BeResMan->GetResource( "res:/texture/global/white.dds", "", m_whiteTexture );
 	}
 
-	SetNoShadow();
+	SetBlankTexture();
 
 	return true;
 }
 
-void Tr2ShadowMap::SetNoShadow()
+void Tr2ShadowMap::SetBlankTexture()
 {
 	if( m_shadowMapHandle )
 	{
 		m_shadowMapHandle->SetValue( m_whiteTexture );
 	}
+}
+
+void Tr2ShadowMap::ShouldUseDenoiser( bool val )
+{
+	m_useDenoiser = val;
 }
 
 // --------------------------------------------------------------------------------
@@ -266,7 +273,7 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	}
 
 	// pull the aabb towards the sun
-	aabb.m_max.z += 250000.f;
+	//aabb.m_max.z += 250000.f;
 	splitSetup.aabb = aabb;
 	
 	splitSetup.lightViewProjection = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
@@ -360,6 +367,7 @@ void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2T
 
 	if( m_shadowMapResultRT || m_shadowMapResultRT->IsValid() )
 	{
+		GPU_REGION( renderContext, "Denoising" );
 		renderContext.m_esm.PushRenderTarget( *m_shadowMapResultRT );
 		renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
 
@@ -367,7 +375,7 @@ void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2T
 
 		{
 			CCP_STATS_ZONE( "DO_DENOISER" );
-			if( m_denoiser )
+			if( m_denoiser && m_useDenoiser )
 			{
 				m_denoiser->Apply( *m_shadowMapResultRT, *depthMap, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), renderContext );
 			}
@@ -375,7 +383,7 @@ void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2T
 
 		if( m_shadowMapHandle )
 		{
-			if( m_denoiser )
+			if( m_denoiser && m_useDenoiser )
 			{
 				m_shadowMapHandle->SetValue( m_denoiser->GetTexture() );
 			}
@@ -440,7 +448,7 @@ bool Tr2ShadowMap::GetDebugSplitValue() const
 	return m_debugColorSplit;
 }
 
-void Tr2ShadowMap::SetHighSettingSplitValues()
+void Tr2ShadowMap::SetSplitValues()
 {
 	m_splitValues[0] = 25.f;
 	m_splitValues[1] = 75.f;

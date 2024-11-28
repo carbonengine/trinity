@@ -3,6 +3,7 @@
 #include "Shader/Tr2Effect.h"
 #include "TriRenderBatch.h"
 #include "include/TriMath.h"
+#include "Tr2Renderer.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -76,24 +77,20 @@ void EveStarfield::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr
 		return;
 	}
 
-	TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-	if( batch )
+	auto& ib = Tr2Renderer::GetQuadListIndexBuffer();
+	if( !ib.IsValid() )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetGeometryProvider( this );
-
-		accumulator->Commit( batch );
+		return;
 	}
-}
 
-void EveStarfield::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, m_bytesPerVertex );
-
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawPrimitive( 0, m_vertexCount / 3 );
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetVertexDeclaration( m_vertexDeclHandle );
+	batch.SetStreamSource( 0, m_vertexBuffer, uint32_t( m_bytesPerVertex ) );
+	batch.SetInidices( ib );
+	batch.SetDrawIndexedInstanced( m_starCount * 6, 1, ib.GetStartIndex(), 0, 0 );
+	accumulator->Commit( batch );
 }
 
 bool EveStarfield::Initialize()
@@ -134,7 +131,7 @@ bool EveStarfield::OnPrepareResources()
 		return false;
 	}
 
-	m_vertexCount = m_starCount * 6;
+	m_vertexCount = m_starCount * 4;
 	m_bytesPerVertex = sizeof( StarfieldSpriteVertex );
 
 
@@ -146,25 +143,17 @@ bool EveStarfield::OnPrepareResources()
 	for( int i = 0; i < m_starCount; ++i )
 	{
 		GenerateStar(m_minDistance, m_maxDistance, m_minFlashRate, m_maxFlashRate, m_minFlashIntensity, &star);
-		for( int j = 0; j < 6; ++j )
+		for( int j = 0; j < 4; ++j )
 		{
-			StarfieldSpriteVertex& vertex = verts[i * 6 + j];
+			StarfieldSpriteVertex& vertex = verts[i * 4 + j];
 			vertex.position = star.position;
 			vertex.colorIndex = star.colorIndex;
 			vertex.flashIntensity = star.flashIntensity;
 			vertex.flashPhase = star.flashPhase;
 			vertex.flashRate = star.flashRate;
 			vertex.textureIndex = star.textureIndex;
+			vertex.cornerIndex = j;
 		}
-
-		verts[i*6 + 0].cornerIndex = 0;
-		verts[i*6 + 1].cornerIndex = 2;
-		verts[i*6 + 2].cornerIndex = 1;
-
-		verts[i*6 + 3].cornerIndex = 0;
-		verts[i*6 + 4].cornerIndex = 3;
-		verts[i*6 + 5].cornerIndex = 2;
-
 	}
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -175,6 +164,8 @@ bool EveStarfield::OnPrepareResources()
 		Tr2CpuUsage::NONE,
 		&verts[0], 
 		renderContext ), false );
+
+	Tr2Renderer::ReserveQuadListIndexBuffer( m_starCount );
 
 	return true;
 }

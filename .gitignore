@@ -1,6 +1,6 @@
 .vs/**
 out/**
-temp/**
+temp*/**
 carbon/autobuild/**
 cmake-build*/
 .idea/

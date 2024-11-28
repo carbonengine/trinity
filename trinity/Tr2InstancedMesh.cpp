@@ -30,77 +30,6 @@ extern bool g_brokenMacOSNvidiaDrivers;
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Render batch for Tr2InstancedMesh.
-// See Also:
-//   Tr2InstancedMesh, TriRenderBatch
-// --------------------------------------------------------------------------------------
-class Tr2InstancedMesh::Batch: public TriRenderBatch
-{
-public:
-	Batch()
-		:m_mesh( nullptr ),
-		m_areaIndex( 0 ),
-		m_areaCount( 0 ),
-		m_reversed( false )
-	{
-	}
-
-	// --------------------------------------------------------------------------------------
-	// Description:
-	//   Assigns Tr2InstancedMesh to the batch.
-	// Arguments:
-	//   mesh - Instanced mesh that will be rendered with this batch
-	// --------------------------------------------------------------------------------------
-	void SetMesh( Tr2InstancedMesh* mesh )
-	{
-		m_mesh = mesh;
-	}
-
-	void SetMeshParameters( unsigned int areaIx, 
-							unsigned int areaCount,
-							float screenSize,
-							bool reversed = false )
-	{
-		m_areaIndex = areaIx;
-		m_areaCount = areaCount;
-		m_screenSize = screenSize;
-		m_reversed = reversed;
-	}
-
-	// --------------------------------------------------------------------------------------
-	// Description:
-	//   Submit instanced geometry to the device.
-	// --------------------------------------------------------------------------------------
-    virtual void SubmitGeometry( Tr2RenderContext& renderContext )
-	{
-		m_mesh->RenderAreas( m_areaIndex, m_areaCount, m_screenSize, m_reversed, renderContext );
-	}
-
-	// --------------------------------------------------------------------------------------
-	// Description:
-	//   Gets the batch type name for PIX debugging.
-	// Return value:
-	//   Batch type name
-	// --------------------------------------------------------------------------------------
-	virtual const std::string& GetBatchTypeName( void ) const
-	{ 
-		static const std::string name = "Tr2InstancedMesh::Batch";
-		return name; 
-	}
-private:
-	// Instanced mesh to render
-	Tr2InstancedMesh* m_mesh;
-	// Area start index
-    unsigned int m_areaIndex;
-	// Number of geometry areas to render
-    unsigned int m_areaCount;
-	float m_screenSize;
-	// If reversed index buffer is required
-	bool m_reversed;
-};
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Tr2InstancedMesh default constructor
 // --------------------------------------------------------------------------------------
 Tr2InstancedMesh::Tr2InstancedMesh( IRoot* lockobj )
@@ -206,135 +135,8 @@ bool Tr2InstancedMesh::OnModified( Be::Var* value )
 	{
 		CreateVertexDeclaration();
 	}
-	else if( IsMatch( value, m_instanceCount ) )
-	{
-		CreateVertexDeclaration();
-		RebuildIndirectBuffers();
-	}
 
 	return Tr2Mesh::OnModified( value );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Rebuilds (either clears or creates) indirect parameter buffers for all areas of the
-//   mesh.
-// --------------------------------------------------------------------------------------
-void Tr2InstancedMesh::RebuildIndirectBuffers()
-{
-	if( !m_instanceCount )
-	{
-		m_indirectParams.clear();
-	}
-	else
-	{
-		for( int type = 0; type < TRIBATCHTYPE_COUNT_OF_BATCH_TYPES; ++type )
-		{
-			Tr2MeshAreaVector* areas = GetAreas( TriBatchType( type ) );
-			if( areas )
-			{
-				for( auto it = areas->begin(); it != areas->end(); ++it )
-				{
-					AreaKey key;
-					key.index = ( *it )->GetIndex();
-					key.count = ( *it )->GetCount();
-					key.reversed = ( *it )->GetReversed();
-					GetIndirectBuffer( key );
-				}
-			}
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Gets or create an indirect parameters buffer for given area properties. The instance
-//   count field of the buffer is left with 0 and needs to be filled later with the 
-//   actual count.
-// Arguments:
-//   key - Area parameters
-// Return Value:
-//   Indirect parameters buffer or NULL on error
-// --------------------------------------------------------------------------------------
-Tr2BufferAL Tr2InstancedMesh::GetIndirectBuffer( const AreaKey& key )
-{
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-
-	auto found = m_indirectParams.find( key );
-	if( found != m_indirectParams.end() )
-	{
-		if( found->second.IsValid() )
-		{
-			return found->second;
-		}
-		else
-		{
-			m_indirectParams.erase( found );
-		}
-	}
-
-	unsigned areaIx = key.index;
-	unsigned areaCount = key.count;
-
-	auto geometryResource = GetGeometryResource();
-
-	if( !geometryResource || !geometryResource->IsGood() )
-	{
-		return Tr2BufferAL();
-	}
-
-	if( m_meshIndex >= int( geometryResource->GetMeshCount() ) )
-	{
-		return Tr2BufferAL();
-	}
-
-	TriGeometryResMeshData* pMesh = geometryResource->GetMeshData( m_meshIndex );
-	if( !pMesh )
-	{
-		return Tr2BufferAL();
-	}
-
-	if( areaIx >= pMesh->m_areas.size() )
-	{
-		return Tr2BufferAL();
-	}
-
-	if( areaIx + areaCount > pMesh->m_areas.size() )
-	{
-		areaCount = (unsigned int)pMesh->m_areas.size() - areaIx;
-	}
-	
-	const TriGeometryResAreaData& area = pMesh->m_areas[areaIx];
-
-	unsigned int primCount = area.m_primitiveCount;
-	for( unsigned int i = 1; i < areaCount; ++i )
-	{
-		const TriGeometryResAreaData& curArea = pMesh->m_areas[areaIx + i];
-		primCount += curArea.m_primitiveCount;
-	}
-
-	uint32_t data[5];
-	data[0] = primCount * 3;
-	data[1] = 154;
-	data[3] = 0;
-	data[4] = 0;
-
-	if( key.reversed )
-	{
-		data[2] = pMesh->m_primitiveCount * 3 - area.m_firstIndex - primCount * 3;
-	}
-	else
-	{
-		data[2] = area.m_firstIndex;
-	}
-
-	Tr2BufferAL buffer;
-	if( FAILED( buffer.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, 5, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::DRAW_INDIRECT_ARGS, Tr2CpuUsage::NONE, data, renderContext ) ) )
-	{
-		return Tr2BufferAL();
-	}
-	m_indirectParams[key] = buffer;
-	return buffer;
 }
 
 // --------------------------------------------------------------------------------------
@@ -413,39 +215,38 @@ void Tr2InstancedMesh::SetInstanceGeometryRes( ITr2InstanceData* res )
 //   data - Per-object data
 // --------------------------------------------------------------------------------------
 void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
-					const Tr2MeshAreaVector* areas, 
-					const Tr2PerObjectData* data,
-					float screenSize,
-					ITr2MeshBatchCallback* callback ) const
+								   const Tr2MeshAreaVector* areas,
+								   const Tr2PerObjectData* data,
+								   float screenSize ) const
+{
+	GetBatches( batches, areas, data, screenSize, false );
+}
+
+
+void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
+								   const Tr2MeshAreaVector* areas,
+								   const Tr2PerObjectData* data,
+								   float screenSize, 
+								   bool reverseAreas ) const
 {
 	if( !GetDisplay() || g_brokenMacOSNvidiaDrivers )
 	{
 		return;
 	}
-	if( m_instanceCount )
+
+	auto geometryResource = GetGeometryResource();
+	if( !geometryResource || !geometryResource->IsGood() )
 	{
-		if( !m_instanceCount->GetGpuBuffer( 0 ) )
-		{
-			return;
-		}
-	}
-	else
-	{
-		auto instanceGeometryResource = GetInstanceGeometryResource();
-		if( !instanceGeometryResource || !instanceGeometryResource->IsInstanceDataReady() )
-		{
-			return;
-		}
-	}
-	bool rebuild = m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
-	if( !rebuild )
-	{
-		if( !m_instanceCount && GetInstanceGeometryResource() && GetInstanceGeometryResource()->IsInstanceDataReady() )
-		{
-			rebuild = m_instanceDeclaration != GetInstanceGeometryResource()->GetInstanceBufferVertexDeclaration( m_instanceMeshIndex );
-		}
+		return;
 	}
 
+	auto instanceGeometryResource = GetInstanceGeometryResource();
+	if( !instanceGeometryResource || !instanceGeometryResource->IsInstanceDataReady() )
+	{
+		return;
+	}
+
+	bool rebuild = m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION || m_instanceDeclaration != instanceGeometryResource->GetInstanceBufferVertexDeclaration( m_instanceMeshIndex );
 	if( rebuild )
 	{
 		CreateVertexDeclaration();
@@ -455,40 +256,74 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 		}
 	}
 
+	auto mesh = geometryResource->GetMeshData( m_meshIndex );
+	if( !mesh || !mesh->m_allocationsValid )
+	{
+		return;
+	}
+
+	auto instanceData = instanceGeometryResource->GetInstanceData( m_instanceMeshIndex, screenSize );
+	if( instanceData.count == 0 )
+	{
+		return;
+	}
+
 	for( auto it = areas->begin(); it != areas->end(); ++it )
 	{
 		Tr2MeshArea* area = *it;
-		auto shadMat = area->GetMaterialInterface();
 
 		if( !area->GetDisplay())
 		{
 			continue;
 		}
 
+		auto shadMat = area->GetMaterialInterface();
 		if( !shadMat )
 		{
 			continue;
 		}
 
-		Batch* batch = batches->Allocate<Batch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
+		auto primCount = GetPrimitiveCount( *mesh, area->GetIndex(), area->GetCount() );
+		if( !primCount )
 		{
-			batch->SetPerObjectData( data );
-			batch->SetMesh( const_cast<Tr2InstancedMesh*>( this ) );
-			batch->SetMeshParameters( area->GetIndex(), area->GetCount(), screenSize, area->GetReversed() );
-			batch->SetShaderMaterial( area->GetMaterialInterface() );
-
-			if( callback )
-			{
-				if( !callback->ProcessBatch( area, batch ) )
-				{
-					continue;
-				}
-			}
-
-			batches->Commit( batch );
+			continue;
 		}
+		auto reversed = area->GetReversed();
+		if( reverseAreas )
+		{
+			reversed = !reversed;
+		}
+		if( reversed && !mesh->m_reversedIndicesValid )
+		{
+			continue;
+		}
+		auto& meshArea = mesh->m_areas[area->GetIndex()];
+
+		Tr2RenderBatch batch;
+		batch.SetMaterial( shadMat );
+		batch.SetPerObjectData( data );
+		batch.SetGeometry( m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+		batch.SetStreamSource( 1, instanceData.buffer, instanceData.stride );
+
+		auto& indices = reversed ? mesh->m_reversedIndexAllocation : mesh->m_indexAllocation;
+		uint32_t startIndex;
+		if( reversed )
+		{
+			startIndex = indices.GetStartIndex() + mesh->m_primitiveCount * 3 - meshArea.m_firstIndex - primCount * 3;
+		}
+		else
+		{
+			startIndex = indices.GetStartIndex() + meshArea.m_firstIndex;
+		}
+
+		batch.SetDrawIndexedInstanced(
+			primCount * 3,
+			instanceData.count,
+			startIndex,
+			mesh->m_vertexAllocation.GetOffset() / mesh->m_vertexAllocation.GetStride(),
+			instanceData.offset / instanceData.stride );
+
+		batches->Commit( batch );
 	}
 }
 
@@ -601,149 +436,6 @@ bool Tr2InstancedMesh::IsLoading() const
 	return Tr2Mesh::IsLoading() && GetInstanceGeometryResource() && !GetInstanceGeometryResource()->IsInstanceDataReady();
 }
 
-void Tr2InstancedMesh::RenderAreas( unsigned int areaIx, 
-									unsigned int areaCount, 
-									float screenSize,
-									bool reversed, 
-									Tr2RenderContext& renderContext )
-{
-    if( g_brokenMacOSNvidiaDrivers )
-    {
-        return;
-    }
-	if( m_instanceCount )
-	{
-		auto geometryResource = GetGeometryResource();
-		if( !geometryResource || !geometryResource->IsGood() )
-		{
-			return;
-		}
-
-		if( m_meshIndex >= int( geometryResource->GetMeshCount() ) )
-		{
-			return;
-		}
-
-		TriGeometryResMeshData* pMesh = geometryResource->GetMeshData( m_meshIndex );
-		if( !pMesh )
-		{
-			return;
-		}
-
-		auto source = m_instanceCount->GetGpuBuffer( 0 );
-		if( !source || !source->IsValid() )
-		{
-			return;
-		}
-
-		AreaKey key;
-		key.index = areaIx;
-		key.count = areaCount;
-		key.reversed = reversed;
-		auto params = GetIndirectBuffer( key );
-		if( !params.IsValid() )
-		{
-			return;
-		}
-		renderContext.CopySubBuffer( params, 4, *source, 0, 4 );
-
-		renderContext.m_esm.ApplyVertexDeclaration( pMesh->m_vertexDeclaration );
-		renderContext.m_esm.ApplyStreamSource( 0, pMesh->m_vertexBuffer, 0, pMesh->m_bytesPerVertex );
-		if( reversed )
-		{
-			geometryResource->ReverseIndexBuffer( *pMesh, renderContext );
-			renderContext.m_esm.ApplyIndexBuffer( pMesh->m_reversedIndexBuffer );
-		}
-		else
-		{
-			renderContext.m_esm.ApplyIndexBuffer( pMesh->m_indexBuffer );
-		}
-
-		renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
-		renderContext.DrawIndexedInstancedIndirect( params, 0 );
-	}
-	else
-	{
-		auto instanceGeometryResource = GetInstanceGeometryResource();
-
-		if( m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
-		{
-			return;
-		}
-
-		auto geometryResource = GetGeometryResource();
-
-		if( !geometryResource || !geometryResource->IsGood() )
-		{
-			return;
-		}
-
-		if( !instanceGeometryResource || !instanceGeometryResource->IsInstanceDataReady() )
-		{
-			return;
-		}
-
-		if( m_meshIndex >= int( geometryResource->GetMeshCount() ) )
-		{
-			return;
-		}
-
-		TriGeometryResMeshData* pMesh = geometryResource->GetMeshData( m_meshIndex, screenSize );
-		if( !pMesh )
-		{
-			return;
-		}
-
-		if( areaIx >= pMesh->m_areas.size() )
-		{
-			return;
-		}
-
-		if( areaIx + areaCount > pMesh->m_areas.size() )
-		{
-			areaCount = (unsigned int)pMesh->m_areas.size() - areaIx;
-		}
-	
-		const TriGeometryResAreaData& area = pMesh->m_areas[areaIx];
-
-		unsigned int primCount = area.m_primitiveCount;
-		for( unsigned int i = 1; i < areaCount; ++i )
-		{
-			const TriGeometryResAreaData& curArea = pMesh->m_areas[areaIx + i];
-			primCount += curArea.m_primitiveCount;
-		}
-
-		auto instanceData = instanceGeometryResource->GetInstanceData( m_instanceMeshIndex, screenSize );
-
-		if( primCount && instanceData.count )
-		{
-			renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclaration );
-			renderContext.m_esm.ApplyStreamSource( 0, pMesh->m_vertexBuffer, 0, pMesh->m_bytesPerVertex );
-			renderContext.m_esm.ApplyStreamSource( 1, instanceData.buffer, 0, instanceData.stride );
-			if( reversed )
-			{
-				geometryResource->ReverseIndexBuffer( *pMesh, renderContext );
-				renderContext.m_esm.ApplyIndexBuffer( pMesh->m_reversedIndexBuffer );
-			}
-			else
-			{
-				renderContext.m_esm.ApplyIndexBuffer( pMesh->m_indexBuffer );
-			}
-
-			renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
-			if( reversed )
-			{
-				renderContext.DrawIndexedInstanced( pMesh->m_vertexCount, pMesh->m_primitiveCount * 3 - area.m_firstIndex - primCount * 3, primCount, instanceData.count );
-			}
-			else
-			{
-				renderContext.DrawIndexedInstanced( pMesh->m_vertexCount, area.m_firstIndex, primCount, instanceData.count );
-			}
-			CCP_STATS_ADD( instancesRendered, instanceData.count );
-		}
-	}
-}
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Returns vertex declaration elements for a given mesh in geometry resource.
@@ -821,38 +513,27 @@ void Tr2InstancedMesh::CreateVertexDeclaration() const
 		return;
 	}
 	
-	if( m_instanceCount )
+	if( !GetInstanceGeometryResource() || !GetInstanceGeometryResource()->IsInstanceDataReady() )
 	{
-		auto geometryResource = GetGeometryResource();
-		if( geometryResource && geometryResource->IsGood() && geometryResource->GetMeshData( m_meshIndex ) )
-		{
-			m_vertexDeclaration = geometryResource->GetMeshData( m_meshIndex )->m_vertexDeclaration;
-		}
+		return;
 	}
-	else
+
+	const unsigned declaration = GetInstanceGeometryResource()->GetInstanceBufferVertexDeclaration( m_instanceMeshIndex );
+	m_instanceDeclaration = declaration;
+
+	if( declaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
-		if( !GetInstanceGeometryResource() || !GetInstanceGeometryResource()->IsInstanceDataReady() )
-		{
-			return;
-		}
-
-		const unsigned declaration = GetInstanceGeometryResource()->GetInstanceBufferVertexDeclaration( m_instanceMeshIndex );
-		m_instanceDeclaration = declaration;
-
-		if( declaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
-		{
-			return;
-		}
-		Tr2VertexDefinition instanceVD;
-		if( !Tr2EffectStateManager::GetVertexDeclarationElements( declaration, instanceVD ) )
-		{
-			return;
-		}
-		Tr2VertexDefinition meshVD;
-		if( GetMeshVertexDeclaration( GetGeometryResource(), m_meshIndex, meshVD ) )
-		{
-			m_vertexDeclaration = MergeVertexDeclarations( meshVD, instanceVD );
-		}
+		return;
+	}
+	Tr2VertexDefinition instanceVD;
+	if( !Tr2EffectStateManager::GetVertexDeclarationElements( declaration, instanceVD ) )
+	{
+		return;
+	}
+	Tr2VertexDefinition meshVD;
+	if( GetMeshVertexDeclaration( GetGeometryResource(), m_meshIndex, meshVD ) )
+	{
+		m_vertexDeclaration = MergeVertexDeclarations( meshVD, instanceVD );
 	}
 }
 

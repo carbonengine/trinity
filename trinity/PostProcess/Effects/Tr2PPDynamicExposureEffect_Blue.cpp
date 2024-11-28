@@ -25,6 +25,7 @@ const Be::ClassInfo* Tr2PPDynamicExposureEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "adjustment", m_adjustment, "Exposure adjustment", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "minExposure", m_minExposure, "Minimal exposure limit", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "maxExposure", m_maxExposure, "Maximal exposure limit", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "debug", m_debug, "Enable debugging for the exposure", Be::READWRITE )
 
 		EXPOSURE_CHAINTO( Tr2PPEffect )
 

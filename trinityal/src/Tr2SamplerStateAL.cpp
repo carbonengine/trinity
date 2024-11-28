@@ -25,6 +25,11 @@ ALResult Tr2SamplerStateAL::Create( const Tr2SamplerDescription& description, Tr
 	return renderContext.m_samplerStateFactory.Get( m_sampler, description, renderContext );
 }
 
+uint32_t Tr2SamplerStateAL::GetIndexInHeap() const
+{
+	return m_sampler->GetIndexInHeap();
+}
+
 bool Tr2SamplerStateAL::IsValid() const
 {
 	return m_sampler->IsValid();

@@ -12,12 +12,13 @@
 class Tr2ProceduralBuffer
 {
 public:
-	typedef Tr2BufferAL ResourceType;
-	typedef ALResult( *FactoryFunction )( Tr2BufferAL& result, Tr2PrimaryRenderContext& renderContext );
+	typedef Tr2SuballocatedBuffer::Allocation ResourceType;
+	typedef ALResult ( *FactoryFunction )( Tr2SuballocatedBuffer::Allocation& result, Tr2PrimaryRenderContext& renderContext );
 
 	Tr2ProceduralBuffer( const BlueSharedString& name, FactoryFunction factory );
 
-	const Tr2BufferAL& GetSharedResource() const;
+	const Tr2SuballocatedBuffer::Allocation& GetSharedResource() const;
+
 private:
-	const Tr2BufferAL* m_resource;
+	const Tr2SuballocatedBuffer::Allocation* m_resource;
 };

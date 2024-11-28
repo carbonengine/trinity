@@ -19,6 +19,7 @@ struct DroneAgent
 		id( TriRandInt( 500 ) ),
 		playFX( false ),
 		fxStartTime( -1 ),
+		lastTransform( IdentityMatrix() ),
 		// LOD
 		xfade( 0.f ),				
 		screenSize( 0.f ),			
@@ -38,6 +39,8 @@ struct DroneAgent
 	float lifetime;
 	bool playFX;
 	Be::Time fxStartTime;
+
+	Matrix lastTransform;
 
 	float xfade; // Crossfade between mesh and sprite. 1.0 = mesh, 0.0 = sprite
 	bool isVisible; // Don't render agents off-screen

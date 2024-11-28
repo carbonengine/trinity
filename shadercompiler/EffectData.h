@@ -61,6 +61,9 @@ enum TextureType
 	TEX_TYPE_UAV_CONSUME_STRUCTURED,
 	TEX_TYPE_UAV_RWSTRUCTURED_WITH_COUNTER,
 
+	// raytracing
+	TEX_TYPE_RAYTRACING_ACCELERATION_STRUCTURE,
+
 	TEX_TYPE_INVALID
 };
 
@@ -110,6 +113,14 @@ enum RegisterInputType
 	RT_UAV_TEXTURECUBEARRAY,
 };
 
+enum class RtShaderType : uint8_t
+{
+	RAY_GEN,
+	MISS,
+	CLOSEST_HIT,
+	ANY_HIT,
+	INTERSECTION,
+};
 
 template <typename T, typename P>
 class PackAs
@@ -306,17 +317,19 @@ struct Texture
 	{
 		stream.Save( name );
 		stream.Save( type );
+		stream.Save( count );
 		stream.Save( isSRGB );
 		stream.Save( isAutoregister );
 	}
 
 	bool operator==( const Texture& other ) const
 	{
-		return name == other.name && type == other.type && isSRGB == other.isSRGB && isAutoregister == other.isAutoregister;
+		return name == other.name && type == other.type && count == other.count && isSRGB == other.isSRGB && isAutoregister == other.isAutoregister;
 	}
 
 	StringReference name;
 	PackAs<TextureType, uint8_t> type;
+	uint32_t count = 1;
 	bool isSRGB;
 	bool isAutoregister;
 };
@@ -329,16 +342,18 @@ struct Uav
 	{
 		stream.Save( name );
 		stream.Save( type );
+		stream.Save( count );
 		stream.Save( isAutoregister );
 	}
 
 	bool operator==( const Texture& other ) const
 	{
-		return name == other.name && type == other.type && isAutoregister == other.isAutoregister;
+		return name == other.name && type == other.type && count == other.count && isAutoregister == other.isAutoregister;
 	}
 
 	StringReference name;
 	PackAs<TextureType, uint8_t> type;
+	uint32_t count = 1;
 	bool isAutoregister;
 };
 
@@ -366,6 +381,7 @@ struct Sampler
 		stream.Save( borderColor.w );
 		stream.Save( minLOD );
 		stream.Save( maxLOD );
+		stream.Save( isDynamic );
 	}
 
 	bool operator==( const Sampler& sampler ) const
@@ -386,7 +402,8 @@ struct Sampler
 			borderColor.z == sampler.borderColor.z &&
 			borderColor.w == sampler.borderColor.w &&
 			minLOD == sampler.minLOD &&
-			maxLOD == sampler.maxLOD;
+			maxLOD == sampler.maxLOD &&
+			isDynamic == sampler.isDynamic;
 	}
 
 	bool operator<( const Sampler& sampler ) const
@@ -408,6 +425,7 @@ struct Sampler
 		COMPARE( borderColor.w );
 		COMPARE( minLOD );
 		COMPARE( maxLOD );
+		COMPARE( isDynamic );
 #undef COMPARE
 		return false;
 	}
@@ -428,6 +446,7 @@ struct Sampler
 	float minLOD;
 	float maxLOD;
 	uint8_t srgbTexture; // unsaved ?
+	uint8_t isDynamic;
 };
 
 
@@ -465,15 +484,79 @@ struct RegisterInputDescription
 	{
 		stream.Save( registerType );
 		stream.Save( registerIndex );
+		stream.Save( registerCount );
+		stream.Save( registerSpace );
 	}
 
 	bool operator==( const RegisterInputDescription& other ) const
 	{
-		return registerType == other.registerType && registerIndex == other.registerIndex;
+		return registerType == other.registerType && registerIndex == other.registerIndex && registerCount == other.registerCount && registerSpace == other.registerSpace;
 	}
 
 	PackAs<RegisterInputType, uint8_t> registerType;
 	uint32_t registerIndex;
+	uint32_t registerCount;
+	uint8_t registerSpace;
+};
+
+struct StaticSampler
+{
+	template <typename T>
+	void Save( T& stream )
+	{
+		stream.Save( registerIndex );
+		stream.Save( registerSpace );
+		stream.Save( comparison );
+		stream.Save( minFilter );
+		stream.Save( magFilter );
+		stream.Save( mipFilter );
+		stream.Save( addressU );
+		stream.Save( addressV );
+		stream.Save( addressW );
+		stream.Save( mipLODBias );
+		stream.Save( maxAnisotropy );
+		stream.Save( comparisonFunc );
+
+		stream.Save( borderColor );
+		stream.Save( minLOD );
+		stream.Save( maxLOD );
+	}
+
+	bool operator==( const StaticSampler& sampler ) const
+	{
+		return registerIndex == sampler.registerIndex &&
+			registerSpace == sampler.registerSpace &&
+			comparison == sampler.comparison &&
+			minFilter == sampler.minFilter &&
+			magFilter == sampler.magFilter &&
+			mipFilter == sampler.mipFilter &&
+			addressU == sampler.addressU &&
+			addressV == sampler.addressV &&
+			addressW == sampler.addressW &&
+			mipLODBias == sampler.mipLODBias &&
+			maxAnisotropy == sampler.maxAnisotropy &&
+			comparisonFunc == sampler.comparisonFunc &&
+			borderColor == sampler.borderColor &&
+			minLOD == sampler.minLOD &&
+			maxLOD == sampler.maxLOD;
+	}
+
+	uint32_t registerIndex;
+	uint8_t registerSpace;
+
+	uint8_t comparison;
+	uint8_t minFilter;
+	uint8_t magFilter;
+	uint8_t mipFilter;
+	uint8_t addressU;
+	uint8_t addressV;
+	uint8_t addressW;
+	float mipLODBias;
+	uint8_t maxAnisotropy;
+	uint8_t comparisonFunc;
+	uint8_t borderColor;
+	float minLOD;
+	float maxLOD;
 };
 
 
@@ -535,30 +618,22 @@ struct ParameterAnnotation
 };
 
 
-struct StageInput
+struct StageData
 {
 	template <typename T>
 	void Save( T& stream )
 	{
-		stream.Save( type );
-
-		stream.Save( uint8_t( pipelineInputs.size() ) );
-		for( auto it = pipelineInputs.begin(); it != pipelineInputs.end(); ++it )
-		{
-			it->Save( stream );
-		}
-
 		stream.Save( uint8_t( registerInputs.size() ) );
 		for( auto it = registerInputs.begin(); it != registerInputs.end(); ++it )
 		{
 			it->Save( stream );
 		}
 
-		stream.Save( shaderSize );
-		stream.Save( shaderDataStr );
-		stream.Save( threadGroupSize[0] );
-		stream.Save( threadGroupSize[1] );
-		stream.Save( threadGroupSize[2] );
+		stream.Save( uint8_t( staticSamplers.size() ) );
+		for( auto& it : staticSamplers )
+		{
+			it.Save( stream );
+		}
 
 		stream.Save( uint32_t( constants.size() ) );
 		for( auto it = constants.begin(); it != constants.end(); ++it )
@@ -592,12 +667,8 @@ struct StageInput
 		annotations.Save( stream );
 	}
 
-	PackAs<InputStageType, uint8_t> type;
-	std::vector<PipelineInputDescription> pipelineInputs;
 	std::vector<RegisterInputDescription> registerInputs;
-	uint32_t shaderSize;
-	StringReference shaderDataStr;
-	uint32_t threadGroupSize[3];
+	std::vector<StaticSampler> staticSamplers;
 	std::vector<Constant> constants;
 	std::vector<BYTE> defaultValues;
 	StringReference defaultValuesStr;
@@ -607,6 +678,35 @@ struct StageInput
 	ParameterAnnotation annotations;
 };
 
+struct StageInput : public StageData
+{
+	template <typename T>
+	void Save( T& stream )
+	{
+		stream.Save( type );
+
+		stream.Save( shaderSize );
+		stream.Save( shaderDataStr );
+		stream.Save( threadGroupSize[0] );
+		stream.Save( threadGroupSize[1] );
+		stream.Save( threadGroupSize[2] );
+
+		stream.Save( uint8_t( pipelineInputs.size() ) );
+		for( auto it = pipelineInputs.begin(); it != pipelineInputs.end(); ++it )
+		{
+			it->Save( stream );
+		}
+
+		StageData::Save( stream );
+	}
+
+	PackAs<InputStageType, uint8_t> type;
+	uint32_t shaderSize;
+	StringReference shaderDataStr;
+	uint32_t threadGroupSize[3];
+	std::vector<PipelineInputDescription> pipelineInputs;
+
+};
 
 typedef std::map<uint32_t, uint32_t> RenderStates;
 
@@ -633,6 +733,47 @@ struct Pass
 	RenderStates states;
 };
 
+struct ShaderExport
+{
+	template <typename T>
+	void Save( T& stream )
+	{
+		stream.Save( type );
+		stream.Save( name );
+	}
+
+	PackAs<RtShaderType, uint8_t> type;
+	StringReference name;
+};
+
+
+struct Library
+{
+	template <typename T>
+	void Save( T& stream )
+	{
+		stream.Save( payloadSize );
+		stream.Save( shaderSize );
+		stream.Save( shaderDataStr );
+		stream.Save( uint32_t( exports.size() ) );
+		for( auto it : exports )
+		{
+			it.Save( stream );
+		}
+		stream.Save( hitGroupName );
+
+		globalInputs.Save( stream );
+		localInputs.Save( stream );
+	}
+
+	uint32_t payloadSize;
+	uint32_t shaderSize;
+	StringReference shaderDataStr;
+	std::vector<ShaderExport> exports;
+	StringReference hitGroupName;
+	StageData globalInputs;
+	StageData localInputs;
+};
 
 struct Technique
 {
@@ -645,10 +786,17 @@ struct Technique
 		{
 			it->Save( stream );
 		}
+
+		stream.Save( uint8_t( libraries.size() ) );
+		for( auto& it : libraries )
+		{
+			it.Save( stream );
+		}
 	}
 
 	StringReference name;
 	std::vector<Pass> passes;
+	std::vector<Library> libraries;
 };
 
 

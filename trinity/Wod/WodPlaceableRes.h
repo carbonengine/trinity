@@ -6,8 +6,6 @@
 #include "Tr2Model.h"
 #include "include/TriVector.h"
 
-BLUE_DECLARE( TriRenderBatch );
-
 BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
 

@@ -272,7 +272,7 @@ namespace TrinityALImpl
 		}
 	}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
 	{
 		data = nullptr;
 		if( !renderContext.IsValid() || !IsValid() )
@@ -283,8 +283,7 @@ namespace TrinityALImpl
 		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
-			auto noSyncronization = lockType == Tr2LockType::NON_SYNCHRONIZED;
-			auto mapType = noSyncronization ? D3D11_MAP_WRITE_NO_OVERWRITE : D3D11_MAP_WRITE_DISCARD;
+			auto mapType = HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) ? D3D11_MAP_WRITE_NO_OVERWRITE : D3D11_MAP_WRITE_DISCARD;
 			auto hr = renderContext.m_context->Map( m_buffer, 0, mapType, 0, &ms );
 			if( FAILED( hr ) )
 			{
@@ -374,10 +373,10 @@ namespace TrinityALImpl
 		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			void* ptr;
-			CR_RETURN_HR( MapForWriting( ptr, Tr2LockType::SYNCHRONIZED, renderContext ) );
+			CR_RETURN_HR( MapForWriting( ptr, renderContext ) );
 
 			uint8_t* dst = static_cast<uint8_t*>( ptr ) + offset;
-			const uint8_t* src = static_cast<const uint8_t*>( data ) + offset;
+			const uint8_t* src = static_cast<const uint8_t*>( data );
 
 			memcpy( dst, src, size );
 			UnmapForWriting( renderContext );
@@ -395,10 +394,20 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+	{
+		return 0xffffffff;
+	}
+	
+	uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+	{
+		return 0xffffffff;
+	}
+
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2BufferAL";
-		description["size"] = std::to_string( long long( GetDesc().count * GetDesc().stride ) );
+		description["size"] = std::to_string( GetDesc().count * GetDesc().stride );
 		description["cpuUsage"] = std::to_string( int( GetDesc().cpuUsage ) );
 		description["gpuUsage"] = std::to_string( int( GetDesc().gpuUsage ) );
 		description["format"] = std::to_string( int( GetDesc().format ) );
@@ -415,6 +424,12 @@ namespace TrinityALImpl
 		SetDebugName( m_srv, name );
 		SetDebugName( m_uav, name );
 		return S_OK;
+	}
+
+
+	ID3D11Buffer* Tr2BufferAL::GetGpuResource() const
+	{
+		return m_buffer;
 	}
 }
 #endif

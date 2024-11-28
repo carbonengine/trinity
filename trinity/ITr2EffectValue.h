@@ -46,6 +46,11 @@ BLUE_INTERFACE( ITr2EffectValue ) : public IRoot
 	{
 		return false;
 	}
+
+	virtual void AddUsedTexture( Tr2BindlessResourcesAL& usedTextures ) const
+	{
+	}
+
 };
 
 TYPEDEF_BLUECLASS( ITr2EffectValue );

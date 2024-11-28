@@ -22,6 +22,7 @@
 namespace TrinityALImpl
 {
 	class Tr2ResourceSetAL;
+	class Tr2RtShaderTableAL;
 }
 
 
@@ -65,6 +66,7 @@ namespace TrinityALImpl
 		}
 
 		ID3D12Resource* GetResourceDx12() const;
+		D3D12_RESOURCE_STATES GetResourceState() const;
 		const std::shared_ptr<RenderTargetViewDx12>& GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR, uint32_t slice = 0 ) const;
 		void AssignFromSwapChainDx12( const std::vector<CComPtr<ID3D12Resource>>& backBuffers, const std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs, Tr2PrimaryRenderContextAL& renderContext );
 		void SetSwapChainBufferIndexDx12( uint32_t index );
@@ -73,6 +75,10 @@ namespace TrinityALImpl
 		ALResult SetName( const char* name );
 
 		bool operator==( const Tr2TextureAL& other ) const;
+
+		uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+		uint32_t GetUavIndexInHeap( uint32_t mip ) const;
+
 	private:
 		void GetRegionSize( const Tr2TextureSubresource& region, uint32_t& pitch, uint64_t& size );
 
@@ -106,6 +112,7 @@ namespace TrinityALImpl
 		std::shared_ptr<ShaderResourceViewDx12> m_view[2];
 		std::vector<std::shared_ptr<RenderTargetViewDx12>> m_rtv;
 		std::shared_ptr<DepthStencilViewDx12> m_dsv;
+		uint32_t m_srvIndicesInHeap[2];
 		std::string m_name;
 
 		struct MipMapGenerator;
@@ -113,6 +120,7 @@ namespace TrinityALImpl
 
 		friend class Tr2ResourceSetAL;
 		friend class Tr2RenderContextAL;
+		friend class Tr2RtShaderTableAL;
 	};
 }
 

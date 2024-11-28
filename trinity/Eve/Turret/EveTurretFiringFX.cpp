@@ -425,7 +425,7 @@ bool EveTurretFiringFX::ReadyToFire() const
 // Return value:
 //   Returns true if the effect has just fired
 // --------------------------------------------------------------------------------
-bool EveTurretFiringFX::UpdateAsynchronous( EveUpdateContext& updateContext )
+bool EveTurretFiringFX::UpdateAsynchronous( const EveUpdateContext& updateContext )
 {
 	float deltaT = updateContext.GetDeltaT();
 	bool retVal = false;
@@ -519,7 +519,7 @@ bool EveTurretFiringFX::UpdateAsynchronous( EveUpdateContext& updateContext )
 	return retVal;
 }
 
-bool EveTurretFiringFX::UpdateSynchronous( EveUpdateContext &updateContext )
+bool EveTurretFiringFX::UpdateSynchronous( const EveUpdateContext &updateContext )
 {
 	// check all stretch effects and see if we have to start or stop them
 	for( unsigned int i = 0; i < m_stretch.size(); ++i )
@@ -533,12 +533,14 @@ bool EveTurretFiringFX::UpdateSynchronous( EveUpdateContext &updateContext )
 	return true;
 }
 
-void EveTurretFiringFX::UpdateVisibility( const TriFrustum& frustum )
+void EveTurretFiringFX::UpdateVisibility( const EveUpdateContext& updateContext )
 {
 	if( !m_display || !m_isFiring )
 	{
 		return;
 	}
+
+	auto& frustum = updateContext.GetFrustum();
 
 	Matrix m;
 	for( unsigned int i = 0; i < m_stretch.size(); ++i )
@@ -547,7 +549,7 @@ void EveTurretFiringFX::UpdateVisibility( const TriFrustum& frustum )
 		{
 			if ( m_firingDuration >= m_perMuzzleData[i].elapsedTime || m_isLoopFiring )
 			{
-				m_stretch[i]->UpdateVisibility( frustum, m );
+				m_stretch[i]->UpdateVisibility( updateContext, m );
 			}
 		}
 	}

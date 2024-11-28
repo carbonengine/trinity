@@ -34,7 +34,7 @@ Tr2ScalarFader::~Tr2ScalarFader()
 // Description:
 //   Update the fading progress if there is any going on
 // --------------------------------------------------------------------------------
-void Tr2ScalarFader::Update( EveUpdateContext& updateContext )
+void Tr2ScalarFader::Update( const EveUpdateContext& updateContext )
 {
 	if( m_fading != 0.f )
 	{

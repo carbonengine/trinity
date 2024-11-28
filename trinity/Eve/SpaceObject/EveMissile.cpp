@@ -12,9 +12,6 @@
 #include "Eve/EveUpdateContext.h"
 #include "include/IEveReferencePoint.h"
 
-// use options visibility threshold when to turn off turret rendering, NOT the firingeffect
-extern float g_eveSpaceSceneVisibilityThreshold;
-
 // keep track of missiles
 CCP_STATS_DECLARE( eveMissileObjects, "Trinity/Missiles/missileObjects", true, CST_COUNTER_LOW, "Number of missiles (MIRVs) in this frame.");
 
@@ -114,7 +111,7 @@ void EveMissile::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRende
 // Arguments:
 //   time - current game time
 // --------------------------------------------------------------------------------
-void EveMissile::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveMissile::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	EveSpaceObject2::UpdateSyncronous( updateContext );
 	Be::Time time = updateContext.GetTime();
@@ -217,9 +214,9 @@ void EveMissile::UpdateSyncronous( EveUpdateContext& updateContext )
 	RebuildMissileBoundingSphere();
 }
 
-void EveMissile::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveMissile::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
-	EveSpaceObject2::UpdateVisibility( frustum, parentTransform );
+	EveSpaceObject2::UpdateVisibility( updateContext, parentTransform );
 
 	// collect the renderables from every warhead this MIRV has
 	for( EveMissileWarheadVector::const_iterator it = m_warheads.begin(); it != m_warheads.end(); ++it )
@@ -230,7 +227,7 @@ void EveMissile::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 		Matrix subMissileTransform = warhead->GetCurrentOffsetTransform() * m_worldTransform;
 
 		// final call
-		warhead->UpdateVisibility( frustum, subMissileTransform );
+		warhead->UpdateVisibility( updateContext, subMissileTransform );
 
 		// Propagate warhead LODs to the missile.
 		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, warhead->GetLODLevel() );

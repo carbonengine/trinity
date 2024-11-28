@@ -11,6 +11,8 @@
 #include "../include/Tr2ConstantBufferAL.h"
 #include "Tr2ResourceHelper.h"
 
+class DescriptorStateCache;
+
 namespace TrinityALImpl
 {
 
@@ -23,8 +25,8 @@ namespace TrinityALImpl
 		{
 			GPUViewToken() : m_address( 0 ), m_frameNumber( UINT64_MAX ) { }
 
-			D3D12_GPU_VIRTUAL_ADDRESS m_address;
-			uint64_t m_frameNumber;
+			std::atomic<D3D12_GPU_VIRTUAL_ADDRESS> m_address;
+			std::atomic<uint64_t> m_frameNumber;
 		};
 
 		Tr2ConstantBufferAL();
@@ -42,8 +44,6 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 
 		void* GetDataPtr() const { return (void*)m_data.get(); }
-		const GPUViewToken& GetToken() const { return m_token; }
-		void SetToken( const GPUViewToken& token ) { m_token = token; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
 
@@ -52,7 +52,7 @@ namespace TrinityALImpl
 		Tr2ConstantBufferAL& operator=( const Tr2ConstantBufferAL& ) /* = delete */;
 
 		Tr2PrimaryRenderContextAL* m_owner;
-		GPUViewToken m_token;
+		mutable GPUViewToken m_token;
 
 		CcpMallocBuffer m_data;
 		uint32_t m_size;
@@ -60,7 +60,7 @@ namespace TrinityALImpl
 		std::string m_name;
 
 		friend class Tr2RenderContextAL;
-		friend class DescriptorStateCache;
+		friend class ::DescriptorStateCache;
 	};
 }
 

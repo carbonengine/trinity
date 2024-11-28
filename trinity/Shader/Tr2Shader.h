@@ -22,7 +22,7 @@ public:
 	void ApplyAllStateForPass( uint32_t techniqueIndex, uint32_t passIndex, Tr2RenderContext &renderContext ) const;
 
 	void ApplyRenderStates( uint32_t techniqueIndex, uint32_t passIndex, Tr2RenderContext &renderContext ) const;
-	void ApplyShaderOverride( uint32_t techniqueIndex, uint32_t passIndex, const Tr2Shader& overrideShader,  uint32_t overridePassIndex, Tr2RenderContext &renderContext ) const;
+	uint32_t ApplyShaderOverride( uint32_t techniqueIndex, uint32_t passIndex, const Tr2Shader& overrideShader,  uint32_t overridePassIndex, Tr2RenderContext &renderContext ) const;
 
 	uint32_t GetShaderTypeMask( uint32_t techniqueIndex ) const;
 

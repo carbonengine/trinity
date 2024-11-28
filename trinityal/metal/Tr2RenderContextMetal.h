@@ -15,7 +15,11 @@
 #include "../include/Tr2RenderPassAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2AdapterStructures.h"
+#include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 #include "MetalContext.h"
+#include "../include/upscaling/Tr2UpscalingAL.h"
+#include <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
 
 class Tr2ConstantBufferAL;
 class Tr2ShaderAL;
@@ -23,8 +27,22 @@ class Tr2SamplerStateAL;
 class Tr2TextureAL;
 class Tr2ResourceSetAL;
 class Tr2BufferAL;
+class Tr2RtShaderTableAL;
+class Tr2RtPipelineStateAL;
 struct ITr2RenderContextEvents;
 
+
+class Tr2BindlessResourcesAL
+{
+public:
+	void Add( const Tr2TextureAL& texture );
+	void Add( const Tr2BindlessResourcesAL& resources );
+	void Clear();
+	friend class Tr2RenderContextAL;
+
+private:
+	std::vector<TrinityALImpl::Tr2TextureAL*> m_textures;
+};
 
 // -------------------------------------------------------------
 // Description:
@@ -63,7 +81,8 @@ public:
 		uint32_t offset,
 		uint32_t stride ) throw( );
 
-	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
+	ALResult SetIndices( const Tr2BufferAL& buffer ) throw( );
+	ALResult SetIndices( const Tr2BufferAL& buffer, int stride ) throw();
 
 	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
 	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
@@ -96,6 +115,18 @@ public:
 		uint32_t primitiveCount,
 		uint32_t numInstances );
 
+	ALResult DrawIndexedInstanced(
+		uint32_t indexCountPerInstance,
+		uint32_t instanceCount,
+		uint32_t startIndexLocation,
+		int32_t baseVertexLocation,
+		uint32_t startInstanceLocation );
+	ALResult DrawInstanced(
+		uint32_t vertexCountPerInstance,
+		uint32_t instanceCount,
+		uint32_t startVertexLocation,
+		uint32_t startInstanceLocation );
+
 	ALResult DrawIndexedPrimitiveUP(
 		uint32_t numVertices,
 		uint32_t primitiveCount,
@@ -121,6 +152,8 @@ public:
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ );
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset );
 
+    ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth );
+    
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );
@@ -131,6 +164,9 @@ public:
 		Tr2RenderContextEnum::ShaderType constantType,
 		uint32_t registerIndex,
 		uint32_t maxRegisterCount = 0 );
+
+    uint64_t UploadConstants( const void* data, size_t size );
+    uint64_t UploadConstants( const Tr2ConstantBufferAL& buffer );
 
 	// Helper function to clear the current primary backbuffer, depth and/or stencil.
 	ALResult Clear(
@@ -206,6 +242,29 @@ public:
 	
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
 
+	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
+    ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
+    ALResult UseConstantBuffer( id<MTLBuffer> constantBuffer );
+
+    bool SupportsBindlessTextures() const;
+
+	uint64_t GetRecordingFrameNumber() const;
+	uint64_t GetRenderedFrameNumber() const;
+
+	
+	
+    Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID ) const;
+	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	void DeleteUpscalingContext( uint32_t contextID );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID ) const;
+	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const;
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+    
+    void ReleaseLater( id<NSObject> obj );
+
 protected:
 	bool                               m_isValid;
 
@@ -244,8 +303,6 @@ protected:
 	};
 
 	MetalPrimitiveInfo                 m_metalPrimitiveInfo;
-	MTLIndexType                       m_metalIndexType;
-	id<MTLBuffer>                      m_metalIndexBuffer;
 	MTLCompareFunction                 m_depthCompareFunction;
 	CAMetalLayer                      *m_caMetalLayer;
 	
@@ -271,11 +328,16 @@ protected:
 	
 	uint32_t m_queueIndex;
 
-	void CheckDrawResources();
 	void SetAsPrimary();
+    Tr2UpscalingTechniqueAL* m_upscalingTechnique;
 
 public:
-	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
+    void CheckDrawResources();
+
+    MTLIndexType                       m_metalIndexType;
+    id<MTLBuffer>                      m_metalIndexBuffer;
+
+    TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 };
 
 #endif

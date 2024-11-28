@@ -1,6 +1,6 @@
-Texture2D<float> tex: register(t0, space2);
-SamplerState sampl: register(s0, space2);
-RWBuffer<float4> output: register(u0, space2);
+Texture2D<float> tex: register(t0);
+SamplerState sampl: register(s0);
+RWBuffer<float4> output: register(u0);
 
 [numthreads(1, 1, 1)]
 void main()

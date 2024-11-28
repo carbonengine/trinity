@@ -46,5 +46,5 @@ def compile_shader(effect_path, output_path=None, platform=None, shader_model=No
         args.append('/Gfa')
     args.append(effect_path)
     args.append(output_path)
-    print args
+    print(args)
     return subprocess.check_output(args)

@@ -39,7 +39,7 @@ EveStretch::EveStretch( IRoot* lockobj ) :
 }
 
 // start the update mess!
-void EveStretch::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveStretch::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -64,7 +64,7 @@ void EveStretch::UpdateSyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveStretch::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveStretch::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	if( !m_update )
 	{
@@ -103,23 +103,23 @@ void EveStretch::UpdateAsyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveStretch::Update( EveUpdateContext& updateContext )
+void EveStretch::Update( const EveUpdateContext& updateContext )
 {
 	UpdateSyncronous( updateContext );
 	UpdateAsyncronous( updateContext );
 }
 
-void EveStretch::UpdateEffectAsync( EveUpdateContext& updateContext )
+void EveStretch::UpdateEffectAsync( const EveUpdateContext& updateContext )
 {
 	Update( updateContext );
 }
 
-void EveStretch::UpdateEffectSync( EveUpdateContext& updateContext )
+void EveStretch::UpdateEffectSync( const EveUpdateContext& updateContext )
 {
 	// do nothing here
 }
 
-void EveStretch::UpdateCurves( EveUpdateContext& updateContext )
+void EveStretch::UpdateCurves( const EveUpdateContext& updateContext )
 {
 	Be::Time time = updateContext.GetTime();
 	if( !m_update )
@@ -156,7 +156,7 @@ void EveStretch::UpdateCurves( EveUpdateContext& updateContext )
 }
 
 
-void EveStretch::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveStretch::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	m_lodLevel = TR2_LOD_LOW;
 
@@ -186,7 +186,7 @@ void EveStretch::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 
 			m = TransformationMatrix( Vector3( 1, 1, 1 ), rotation, m_sourcePosition );
 		}
-		m_sourceObject->UpdateVisibility( frustum, m );
+		m_sourceObject->UpdateVisibility( updateContext, m );
 		// The object's LOD is the highest of it's move, stretch, dest and source object's LODs
 		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, m_sourceObject->GetLODLevel() );
 	}
@@ -200,7 +200,7 @@ void EveStretch::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 		Vector3 scaling = Vector3( m_destObjectScale, m_destObjectScale, m_destObjectScale );
 		Matrix m = TransformationMatrix( scaling, rotation, m_destinationPosition );
 
-		m_destObject->UpdateVisibility( frustum, m );
+		m_destObject->UpdateVisibility( updateContext, m );
 		// The object's LOD is a combination of it's move, stretch, dest and source object's LODs
 		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, m_destObject->GetLODLevel() );
 	}
@@ -227,7 +227,7 @@ void EveStretch::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 
 			m = TransformationMatrix( scaling, rotation, m_sourcePosition );
 		}
-		m_stretchObject->UpdateVisibility( frustum, m );
+		m_stretchObject->UpdateVisibility( updateContext, m );
 		// The object's LOD is a combination of it's move, stretch, dest and source object's LODs
 		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, m_stretchObject->GetLODLevel() );
 
@@ -235,7 +235,7 @@ void EveStretch::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 		// too low results when the stretcher is too small (animation!)
 		Vector4 sourceDestSphere;
 		BoundingSphereFromPoints( sourceDestSphere, m_sourcePosition, m_destinationPosition );
-		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, sourceDestSphere, frustum );
+		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, sourceDestSphere, updateContext );
 	}
 
 	if( m_moveObject )
@@ -270,7 +270,7 @@ void EveStretch::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 			movedPostition = Lerp( m_sourcePosition, m_destinationPosition, progress );
 		}
 		m = TransformationMatrix( Vector3( 1, 1, 1 ), rotation, movedPostition );
-		m_moveObject->UpdateVisibility( frustum, m );
+		m_moveObject->UpdateVisibility( updateContext, m );
 
 		// The object's LOD is a combination of it's move, stretch, dest and source object's LODs
 		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, m_moveObject->GetLODLevel() );

@@ -69,13 +69,13 @@ public:
 
     /////////////////////////////////////////////////////////////////////////////////////
     // IEveSpaceObjectChild
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod ) override;
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
-	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-	void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void GetLocalToWorldTransform( Matrix& transform ) const override;
     void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	void ChangeLOD( Tr2Lod lod ) override;

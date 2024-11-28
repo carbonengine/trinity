@@ -71,11 +71,16 @@ void DestroyDeviceResources( Tr2ALMemoryTypes memoryTypes )
 	do
 	{
 		s_resourcesMutated = false;
-		for( auto it = begin( allResources ); it != end( allResources ); ++it )
+		for( auto resource : allResources )
 		{
-			if( ( *it )->IsResourceValid() && ( ( *it )->GetResourceMemoryClass() & memoryTypes ) != 0 )
+			if( resource->IsResourceValid() && ( resource->GetResourceMemoryClass() & memoryTypes ) != 0 )
 			{
-				( *it )->Destroy();
+				resource->Destroy();
+			}
+			if( s_resourcesMutated )
+			{
+				// We can't trust the iterator anymore, so we need to break out of the loop and start over.
+				break;
 			}
 		}
 	} 

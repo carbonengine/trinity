@@ -256,6 +256,8 @@ const Be::ClassInfo* TriTextureRes::ExposeToBlue()
 		
 		MAP_ATTRIBUTE( "wrappedRenderTarget", m_wrappedRenderTarget, "Live view renderTarget being wrapped with SetFromRenderTarget", Be::READ );
 
+		MAP_PROPERTY_READONLY( "srvIndex", GetSrvIndexInHeap, "" )
+
 		MAP_METHOD_AND_WRAP
 		(
 			"SetFromRenderTarget",

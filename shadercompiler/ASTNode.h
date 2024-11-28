@@ -74,7 +74,7 @@ enum ASTNodeType
 	NT_STATE_ASSIGNMENT,
 	// state assignment constant value: token=state value
 	NT_STATE_VALUE,
-	// technique declaration: token=technique name, child[i]=NT_PASS_DECLARATION
+	// technique declaration: token=technique name, child[i]=NT_PASS_DECLARATION or NT_LIBRARY
 	NT_TECHNIQUE,
 	// pass declaration: token=pass name, child[i]=NT_STATE_ASSIGNMENT or NT_SHADER_ASSIGNMENT
 	NT_PASS,
@@ -94,6 +94,9 @@ enum ASTNodeType
 
 	// Geometry shader parameter primitive type ("line", "triangle", etc.): token=primitive type
 	NT_PRIMITIVE_TYPE,
+
+	// Raytracing declaration: token=library name, child[i]=NT_FUNCTION_CALL
+	NT_LIBRARY,
 };
 
 
@@ -109,6 +112,7 @@ public:
 	void AddChild( ASTNode* child );
 	void InsertChild( size_t place, ASTNode* child );
 	void ReplaceChild( size_t place, ASTNode* child );
+    void ReplaceChild( ASTNode* old, ASTNode* child );
 	void RemoveChild( size_t place );
 
 	ASTNodeType GetNodeType() const;
@@ -159,4 +163,7 @@ private:
 	FileLocation m_location;
 	std::vector<ASTNode*> m_children;
 	ScopeSymbolTable* m_scope;
+
+public:
+	void* m_extraData = nullptr;
 };

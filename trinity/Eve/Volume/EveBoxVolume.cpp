@@ -25,8 +25,8 @@ EveBoxVolume::EveBoxVolume( IRoot* lockobj ) :
 	m_innerBoxTransform( IdentityMatrix() ),
 	m_inverseBoxTransform( IdentityMatrix() ),
 	m_inverseInnerBoxTransform( IdentityMatrix() ),
-	m_debugShowIntersection( false ),
-	m_notifyParent( false )
+	m_boundingSphere( Vector3( 0, 0, 0 ), 0 ),
+	m_debugShowIntersection( false )
 {
 }
 
@@ -40,21 +40,21 @@ bool EveBoxVolume::Initialize()
 	return true;
 }
 
-void EveBoxVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform )
+void EveBoxVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor )
 {
-	renderer.DrawBox( this, m_boxTransform * parentTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Wireframe, 0xff555555 );
-	renderer.DrawBox( this, m_innerBoxTransform * parentTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Wireframe, 0xff777777 );
+	renderer.DrawBox( this, m_boxTransform * parentTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Wireframe, baseColor * 0.5f );
+	renderer.DrawBox( this, m_innerBoxTransform * parentTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Wireframe, baseColor * 0.75f );
 
 	if( m_debugShowIntersection )
 	{
-		renderer.DrawSphere( this, parentTransform, TransformCoord( m_innerIntersection, m_boxTransform ), 1, 16, Tr2DebugRenderer::Solid, 0xffff0000 );
+		renderer.DrawSphere( this, parentTransform, TransformCoord( m_innerIntersection, m_boxTransform ), 1, 16, Tr2DebugRenderer::Solid, 0xff555555 );
 		renderer.DrawSphere( this, parentTransform, TransformCoord( m_outerIntersection, m_boxTransform ), 1, 16, Tr2DebugRenderer::Solid, 0xffffff00 );
 	}
 }
 
-Vector4 EveBoxVolume::GetBoundingSphere() const
+const CcpMath::Sphere EveBoxVolume::GetBoundingSphere() const
 {
-	return Vector4( m_position, Length( m_scaling ) * 0.5f );
+	return m_boundingSphere;
 }
 
 
@@ -88,13 +88,6 @@ float EveBoxVolume::GetIntensity( Vector3 position )
 	return LengthSq( axisAlignedPosition - m_outerIntersection ) / LengthSq( m_innerIntersection - m_outerIntersection );
 }
 
-
-void EveBoxVolume::RegisterForChanges( std::function<void()> NotifyParent )
-{
-	m_notifyParentFunc = NotifyParent;
-	m_notifyParent = true;
-}
-
 void EveBoxVolume::Setup()
 {
 	m_scaling = XMVectorMax( m_scaling, Vector3( 0, 0, 0 ) );
@@ -105,21 +98,15 @@ void EveBoxVolume::Setup()
 
 	m_inverseBoxTransform = Inverse( m_boxTransform );
 	m_inverseInnerBoxTransform = Inverse( m_innerBoxTransform );
+
+	m_boundingSphere.center = m_position;
+	m_boundingSphere.radius = Length( m_scaling ) * 0.5f;
 }
 
 //////////////////////////////////////////////////////////////////////////
 // INotify
 bool EveBoxVolume::OnModified( Be::Var* val )
 {
-	if(m_notifyParent && (IsMatch( val, m_position ) || IsMatch( val, m_scaling )))
-	{
-		Setup();
-
-		m_notifyParentFunc();
-	}
-	if( IsMatch( val, m_rotation ) || IsMatch( val, m_innerScaling ) )
-	{
-		Setup();
-	}
+	Setup();
 	return true;
 }

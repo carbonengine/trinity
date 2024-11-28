@@ -20,30 +20,9 @@ BLUE_DECLARE( TriGeometryRes );
 struct TriGeometryResSkeletonData;
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
+struct TriGeometryResMeshData;
 class TriRenderBatch;
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   A callback object for Tr2Mesh::GetBatches function. Callers of Tr2Mesh::GetBatches
-//   can perform custom per-area operations on a render batch created by Tr2Mesh or even 
-//   reject a batch from submitting.
-// See Also:
-//   Tr2Mesh
-// --------------------------------------------------------------------------------------
-struct ITr2MeshBatchCallback
-{
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   Per-area/batch callback function.
-	// Arguments:
-	//   area - Mesh area for which the render batch was created
-	//   batch - A new render batch that is about to be submitted
-	// Return Value:
-	//   true If the batch needs to be submitted
-	//   false If the batch needs to be dropped
-	// ----------------------------------------------------------------------------------
-	virtual bool ProcessBatch( Tr2MeshArea* area, TriRenderBatch* batch ) = 0;
-};
+class Tr2RaytracingMesh;
 
 BLUE_CLASS( Tr2MeshBase ):
 	public IListNotify
@@ -57,8 +36,7 @@ public:
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches,
 		const Tr2MeshAreaVector* areas, 
 		const Tr2PerObjectData* data,
-		float screenSize = std::numeric_limits<float>::max(),
-		ITr2MeshBatchCallback* callback = nullptr ) const;
+		float screenSize = std::numeric_limits<float>::max() ) const;
 
 	Tr2MeshAreaVector* GetAreas( TriBatchType areaType );
 	const Tr2MeshAreaVector* GetAreas( TriBatchType areaType ) const;
@@ -99,12 +77,18 @@ public:
 	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
 	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer );
 
+	Tr2RaytracingMesh* GetOrCreateRtMesh();
+	Tr2RaytracingMesh* GetRtMesh() const;
+
 	std::vector<Tr2MeshAreaPtr> GetAllAreas() const;
 
 	Tr2MaterialBoundsAdjustment GetMaterialBoundsAdjustment() const;
 	void SetMaterialBoundsAdjustment( const Tr2MaterialBoundsAdjustment& adjustment );
 
 	void UseWithScreenSize( float screenSize, float worldRadius ) const;
+
+	void ReverseIndexBufferIfNeeded();
+	void ReverseIndexBuffers();
 
 protected:
 	unsigned int FindJoint( const std::string* boneList, const int numBones, const char* name ) const;
@@ -129,6 +113,7 @@ protected:
 	PTr2MeshAreaVector m_geometryEraserAreas;
 	PTr2MeshAreaVector m_flareAreas;
 	PTr2MeshAreaVector m_distortionAreas;
+	PTr2MeshAreaVector m_decalAdditiveAreas;
 
 	PTr2MeshAreaVector* m_areaLookupArray[ TRIBATCHTYPE_COUNT_OF_BATCH_TYPES ];
 
@@ -142,10 +127,15 @@ protected:
 
 	CcpMath::AxisAlignedBox m_cachedBounds;
 	Tr2MaterialBoundsAdjustment m_boundsAdjustment;
+
+	std::unique_ptr<Tr2RaytracingMesh> m_rtMesh;
 };
 
 TYPEDEF_BLUECLASS( Tr2MeshBase );
 BLUE_DECLARE_VECTOR( Tr2MeshBase );
+
+
+Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* area, const Tr2PerObjectData* data );
 
 
 #endif // Tr2MeshBase_h

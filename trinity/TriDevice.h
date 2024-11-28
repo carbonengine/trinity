@@ -28,6 +28,7 @@
 
 #include "include/ITriDevice.h"
 #include "TriViewport.h"
+#include <upscaling/Tr2UpscalingAL.h>
 
 BLUE_DECLARE_INTERFACE( ITr2Scene );
 BLUE_DECLARE_INTERFACE( ITr2Updateable );
@@ -37,6 +38,17 @@ BLUE_DECLARE_VECTOR( TriCurveSet );
 BLUE_DECLARE( Tr2RenderJobs );
 BLUE_DECLARE( Tr2RenderTargetGrabber );
 
+struct Tr2UpscalingTechniqueInfo
+{
+	uint32_t technique;
+	uint32_t supportedSettings;
+	bool framegen;
+};
+
+BLUE_DECLARE_STRUCTURE_LIST( Tr2UpscalingTechniqueInfo );
+
+extern Be::VarChooser Tr2UpsclaingAL_UpscalingTechnique_Chooser[];
+extern Be::VarChooser Tr2UpsclaingAL_UpscalingSetting_Chooser[];
 extern const Be::VarChooser TriDeviceTypeChooser[];
 
 BLUE_CLASS( TriDevice ):
@@ -228,12 +240,27 @@ private:
 
 	void HandleRenderTick( Be::Time realTime, Be::Time simTime );
 
+	void UpdateAvailableUpscalingTechniques( );
+	void CreateUpscalingTechnique( uint32_t adapter );
+	void SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+
+	uint32_t CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, bool allowFramegen, Be::Optional<uint32_t> existingContext );
+	void DeleteUpscalingContext( uint32_t contextID );
+#if BLUE_WITH_PYTHON
+	PyObject* PyGetUpscalingInfo( PyObject* args );
+#endif 
+
+	Vector2 GetRenderResolution( uint32_t upscalingContextId );
+	PTr2UpscalingTechniqueInfoStructureList m_supportedUpscalingTechniques;
+
 	bool SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& pp );
 
 	static void LogAllLiveResources( Tr2ALMemoryTypes flags = AL_MEMORY_VIDEO | AL_MEMORY_MANAGED );
 
 	bool ShouldSkipFrame() const;
 	void Throttle() const;
+
+	bool SupportsRaytracing();
 
 private:
 	BlueScriptCallback m_onDeviceRemoved;
@@ -261,6 +288,11 @@ private:
 	void RebuildDeviceResourcesInPython(); 
 
 	bool mDeviceLost;
+
+	bool m_upscalingChanged;
+	Tr2UpscalingAL::Technique m_upscalingTechnique;
+	Tr2UpscalingAL::Setting m_upscalingSetting;
+	bool m_upscalingWithFrameGeneration;
 
 	float m_animationTime;
 	float m_animationTimeScale;

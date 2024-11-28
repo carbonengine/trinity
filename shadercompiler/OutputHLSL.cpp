@@ -5,6 +5,7 @@
 #include "HLSLParser.h"
 
 #include "EffectCompilerMetal.h"
+#include "EffectData.h"
 
 namespace
 {
@@ -375,6 +376,18 @@ namespace
 				PrintTypeHLSL11( os, *type.templateParameter );
 				os << '>';
 				return;
+			case OP_BINDLESSHANDLETEXTURE2D:
+			case OP_BINDLESSHANDLETEXTURE3D:
+			case OP_BINDLESSHANDLETEXTURECUBE:
+			case OP_BINDLESSHANDLESAMPLER:
+				os << "uint";
+				return;
+			case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+				os << "RaytracingAccelerationStructure";
+				return;
+			case OP_RAY_DESC:
+				os << "RayDesc";
+				return;
 			default:
 				os << "!!error_type!!";
 				return;
@@ -491,6 +504,7 @@ namespace
 			case OP_SAMPLER3D:
 			case OP_SAMPLERCUBE:
 			case OP_SAMPLER:
+			case OP_SAMPLERCOMPARISON:
 				os << "sampler";
 				return;
 			// TODO
@@ -500,19 +514,55 @@ namespace
 				return;
 #endif
 			case OP_TEXTURE1D:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture1d<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE1DARRAY:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture1d_array<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE:
 			case OP_TEXTURE2D:
-				os << "texture2d<" << MslTextureTemplateType( type ) << '>';
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
+				if( type.isDepthTexture )
+				{
+					os << "depth2d";
+				}
+				else
+				{
+					os << "texture2d";
+				}
+				os << "<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE2DARRAY:
-				os << "texture2d_array<" << MslTextureTemplateType( type ) << '>';
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
+				if( type.isDepthTexture )
+				{
+					os << "depth2d_array";
+				}
+				else
+				{
+					os << "texture2d_array";
+				}
+				os << "<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE3D:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture3d<" << MslTextureTemplateType( type ) << '>';
 				return;
 #if 0
@@ -522,16 +572,32 @@ namespace
 				return;
 #endif
 			case OP_TEXTURECUBE:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texturecube<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURECUBEARRAY:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texturecube_array<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE2DMS:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture2d_ms<" << MslTextureTemplateType( type ) << '>';
 				return;
 			// Supported since Metal 2.0 (macOS) and Metal 1.0 (iOS).
 			case OP_TEXTURE2DMSARRAY:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture2d_ms_array<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_BUFFER:
@@ -580,6 +646,18 @@ namespace
 			case OP_RWTEXTURE3D:
 				os << "texture3d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
 				return;
+			case OP_BINDLESSHANDLETEXTURE2D:
+			case OP_BINDLESSHANDLETEXTURE3D:
+			case OP_BINDLESSHANDLETEXTURECUBE:
+			case OP_BINDLESSHANDLESAMPLER:
+				os << "uint";
+				return;
+            case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+                os << "RaytracingAccelerationStructure";
+                return;
+            case OP_RAY_DESC:
+                os << "RayDesc";
+                return;
 #if 0
 			// There is no "texture3d_array" in MSL.
 			case OP_RWTEXTURE3DARRAY:
@@ -1142,6 +1220,86 @@ static bool IsVectorReferenceParameter( const Symbol* functionSymbol, size_t par
 	return false;
 }
 
+static const char* MSLAddressMode( uint8_t addressMode )
+{
+	switch( addressMode )
+	{
+	case D3D11_TEXTURE_ADDRESS_WRAP:
+		return "repeat";
+	case D3D11_TEXTURE_ADDRESS_MIRROR:
+		return "mirrored_repeat";
+	case D3D11_TEXTURE_ADDRESS_CLAMP:
+		return "clamp_to_edge";
+	case D3D11_TEXTURE_ADDRESS_BORDER:
+		return "clamp_to_border";
+	default:
+		return "clamp_to_edge";
+	}
+}
+
+static const char* MSLBorderColor( uint8_t border )
+{
+	switch( border )
+	{
+	case 0:
+		return "transparent_black";
+	case 1:
+		return "opaque_black";
+	case 2:
+		return "opaque_white";
+	default:
+		return "transparent_black";
+	}
+}
+
+static const char* MSLFilterMode( uint8_t filter )
+{
+	switch( filter )
+	{
+	case 0:
+	case 1:
+		return "nearest";
+	default:
+		return "linear";
+	}
+}
+
+static const char* MSLMipFilterMode( uint8_t filter )
+{
+	switch( filter )
+	{
+	case 0:
+		return "none";
+	case 1:
+		return "nearest";
+	default:
+		return "linear";
+	}
+}
+
+static const char* MSLCompareFunc( uint8_t func )
+{
+	switch( func )
+	{
+	case D3D11_COMPARISON_ALWAYS:
+		return "always";
+	case D3D11_COMPARISON_LESS:
+		return "less";
+	case D3D11_COMPARISON_EQUAL:
+		return "equal";
+	case D3D11_COMPARISON_LESS_EQUAL:
+		return "less_equal";
+	case D3D11_COMPARISON_GREATER:
+		return "greater";
+	case D3D11_COMPARISON_NOT_EQUAL:
+		return "not_equal";
+	case D3D11_COMPARISON_GREATER_EQUAL:
+		return "greater_equal";
+	default:
+		return "never";
+	}
+}
+
 CodeStream& operator<<( CodeStream& os, const MSL& msl )
 {
 	auto node = msl.node;
@@ -1233,6 +1391,36 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 				     node->GetChild( 0 )->GetChild( 1 )->GetType().IsMatrix() ) ) )
 		{
 			os << "to_" << node->GetType() << "( " << Child( 0 ) << " )";
+		}
+		else if( node->GetSymbol() )
+		{
+			Symbol* symbol = node->GetSymbol();
+			os << "(";
+			switch( symbol->addressSpace )
+			{
+			case AddressSpace::Constant:
+					os << "constant ";
+					break;
+			case AddressSpace::Device:
+					os << "device ";
+					break;
+			case AddressSpace::Thread:
+					os << "thread ";
+					break;
+			case AddressSpace::Threadgroup:
+					os << "threadgroup ";
+					break;
+			default:
+					break;
+			}
+
+			os << node->GetType();
+			for( int i = 0; i < node->GetType().arrayDimensions; ++i )
+			{
+				os << '*';
+			}
+			os << ")( " << Child( 0 ) << " )";
+
 		}
 		else
 		{
@@ -1373,6 +1561,9 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			case AddressSpace::Threadgroup:
 				os << "threadgroup ";
 				break;
+            case AddressSpace::RayData:
+                os << "ray_data ";
+                break;
 			default:
 				break;
 		}
@@ -1383,7 +1574,15 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			os << Child( 2 ) << ' ';
 		}
 #endif
-		os << node->GetType();
+		auto isArrayOfTextures = symbol->type.arrayDimensions > 0 && ( symbol->type.IsTexture() || symbol->type.IsSampler() ) && symbol && !symbol->registerSpecifier.empty();
+		if( isArrayOfTextures )
+		{
+			os << "const _ResourceRef<" << node->GetType() << ">*";
+		}
+		else
+		{
+			os << node->GetType();
+		}
 		if( isReference )
 		{
 			// Don't need to add & for arrays.
@@ -1393,7 +1592,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			}
 		}
 		os << " " << symbol->name;
-		if( node->GetChildOrNull( 0 ) )
+		if( !isArrayOfTextures && node->GetChildOrNull( 0 ) )
 		{
 			os << Child( 0 );
 		}
@@ -1500,6 +1699,9 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		case AddressSpace::Threadgroup:
 			os << "threadgroup ";
 			break;
+		case AddressSpace::Constexpr:
+			os << "constexpr ";
+			break;
 		default:
 			break;
 		}
@@ -1521,28 +1723,31 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			os << " )";
 		}
 #endif
-		for( auto it = symbol->registerSpecifier.begin(); it != symbol->registerSpecifier.end(); ++it )
+		if( symbol->addressSpace != AddressSpace::Constexpr )
 		{
-			const RegisterSpecifier& reg = it->second;
-			if( reg.registerType == MetalRegister::Attribute )
+			for( auto it = symbol->registerSpecifier.begin(); it != symbol->registerSpecifier.end(); ++it )
 			{
-				os << "[[ attribute(" << reg.registerNumber << ") ]]";
-			}
-			else if( reg.registerType == MetalRegister::CBuffer )
-			{
-				// just ignore it
-			}
-			else if( reg.registerType == MetalRegister::User )
-			{
-				os << " [[ user(" << symbol->semantic << ") ]]";
-			}
-			else if( reg.registerType == MetalRegister::System )
-			{
-				os << "[[ " << MetalSystemSemanticsType::GetString( reg.registerNumber ) << " ]]";
-			}
-			else
-			{
-				os << "[[ !!unsupported_register " << reg.registerType << "!! ]]";
+				const RegisterSpecifier& reg = it->second;
+				if( reg.registerType == MetalRegister::Attribute )
+				{
+					os << "[[ attribute(" << reg.registerNumber << ") ]]";
+				}
+				else if( reg.registerType == MetalRegister::CBuffer )
+				{
+					// just ignore it
+				}
+				else if( reg.registerType == MetalRegister::User )
+				{
+					os << " [[ user(" << symbol->semantic << ") ]]";
+				}
+				else if( reg.registerType == MetalRegister::System )
+				{
+					os << "[[ " << MetalSystemSemanticsType::GetString( reg.registerNumber ) << " ]]";
+				}
+				else
+				{
+					os << "[[ !!unsupported_register " << reg.registerType << "!! ]]";
+				}
 			}
 		}
 
@@ -1711,41 +1916,30 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		}
 		break;
 	case NT_SAMPLER_STATE_LIST:
-		// TODO: This must be improved.
-#if 0
 		{
-			os << '(';
-			int stateCount = 0;
-			for( size_t i = 0, n = node->GetChildrenCount(); i < n; ++i)
+			if( node->m_extraData )
 			{
-				ASTNode* assignment = node->GetChild( i );
-				assert( assignment->GetNodeType() == NT_STATE_ASSIGNMENT );
-
-				InlineString lhs = assignment->GetToken()->stringValue;
-
-				static const InlineString texture = MakeInlineString( "Texture" );
-				if( lhs != texture )
+				StaticSampler* sampler = static_cast<StaticSampler*>( node->m_extraData );
+				os << '(';
+				os << "s_address::" << MSLAddressMode( sampler->addressU );
+				os << ", " << "t_address::" << MSLAddressMode( sampler->addressV );
+				os << ", " << "r_address::" << MSLAddressMode( sampler->addressW );
+				os << ", " << "border_color::" << MSLBorderColor( sampler->borderColor );
+				os << ", " << "mag_filter::" << MSLFilterMode( sampler->magFilter );
+				os << ", " << "min_filter::" << MSLFilterMode( sampler->minFilter );
+				os << ", " << "mip_filter::" << MSLMipFilterMode( sampler->mipFilter );
+				os << ", " << "compare_func::" << MSLCompareFunc( sampler->comparisonFunc );
+				if( sampler->minFilter == 3 || sampler->magFilter == 3 || sampler->mipFilter == 3 )
 				{
-					if( stateCount > 0 )
-					{
-						os << ", ";
-					}
-
-					InlineString rhs = assignment->GetChild( 0 )->GetToken()->stringValue;
-					os << MapHLSLtoMSL( lhs ) << "::" << MapHLSLtoMSL( rhs );
-					++stateCount;
+					os << ", " << "max_anisotropy(" << int( sampler->maxAnisotropy ) << ")";
 				}
-
-				ScannerToken token;
-				token.type = OP_ID;
-				token.intValue = 0;
-				token.stringValue = MakeInlineString( "&" );
-				token.fileLocation = assignment->GetLocation();
-
+				if( sampler->minLOD != -std::numeric_limits<float>::max() || sampler->maxLOD != std::numeric_limits<float>::max() )
+				{
+					os << ", " << "lod_clamp(" << sampler->minLOD << ", " << sampler->maxLOD << ")";
+				}
+				os << ')';
 			}
-			os << ')';
 		}
-#endif
 		break;
 	case NT_STATE_ASSIGNMENT:
 		os << node->GetToken()->stringValue << " = ";
@@ -1773,7 +1967,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 	case NT_FUNCTION_ATTRIBUTE:
 		{
 			auto attrib = ToString( node->GetToken()->stringValue );
-			if( attrib == "vertex" || attrib == "fragment" || attrib == "kernel" )
+			if( attrib == "vertex" || attrib == "fragment" || attrib == "kernel" || ( attrib.length() > 4 && attrib.substr( 0, 2 ) == "[[") )
 			{
 				os << ' ' << attrib << ' ';
 			}

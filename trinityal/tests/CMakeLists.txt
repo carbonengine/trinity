@@ -15,6 +15,7 @@ set(_SOURCES
     Fence.cpp
     GPUTimer.cpp
     OcclusionQuery.cpp
+    Raytracing.cpp
     RenderContext.cpp
     RenderContextCreation.cpp
     RenderTarget.cpp
@@ -104,17 +105,34 @@ if(WIN32)
             $<TARGET_FILE_DIR:TrinityALTest_dx11>)
 
     #GTest
-    set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "TestsDX11")
-    gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
+    set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
+    #gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
 
     ccp_add_executable(TrinityALTest_dx12 ${_SOURCES})
     target_link_libraries(TrinityALTest_dx12 PRIVATE TrinityAL_dx12)
     target_compile_definitions(TrinityALTest_dx12 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX12)
     set_shared_trinityaltest_properties(TrinityALTest_dx12)
 
+    get_target_property(_FSR_LIB AMD::FidelityFX_FSR3 INTERFACE_LINK_LIBRARIES)
+    get_target_property(_FSR3_DIR AMD::FidelityFX_FSR3 INTERFACE_BINARY_DIRECTORIES)
+    foreach(CurrentLib IN LISTS _FSR_LIB)
+        add_custom_command(
+                    TARGET TrinityALTest_dx12 POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_FSR3_DIR}/${CurrentLib}.dll" $<TARGET_FILE_DIR:TrinityALTest_dx12>)
+    endforeach()
+    get_target_property(_XESS_DIR INTEL::xess INTERFACE_LINK_DIRECTORIES)
+    get_target_property(_XESS_LIB INTEL::xess INTERFACE_LINK_LIBRARIES)
+        
+    foreach(CurrentLib IN LISTS _XESS_LIB)
+        add_custom_command(TARGET TrinityALTest_dx12 POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${_XESS_DIR}/${CurrentLib}.dll"
+                $<TARGET_FILE_DIR:TrinityALTest_dx12>)
+    endforeach()
+
     #GTest
-    set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "TestsDX12")
-    gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
+    set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
+    #gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
 
 elseif(APPLE)
     enable_language(OBJCXX)
@@ -125,8 +143,8 @@ elseif(APPLE)
     set_shared_trinityaltest_properties(TrinityALTest_metal)
 
     #GTest
-    set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "TestsMetal")
-    gtest_discover_tests(TrinityALTest_metal myListOfTests)
+    set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "Tests")
+    #gtest_discover_tests(TrinityALTest_metal myListOfTests DISCOVERY_MODE PRE_TEST)
 endif()
 
 

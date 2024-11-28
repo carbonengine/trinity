@@ -2,6 +2,7 @@
 #ifndef TriGrannyRes_H
 #define TriGrannyRes_H
 
+#include "TriGeometryRes.h"
 
 #if BLUE_WITH_PYTHON
 class GrannyMaterialWrapper
@@ -82,10 +83,10 @@ public:
 
 	// Bake by mapping every morphtarget name to a mesh
 	typedef std::map<std::string, float> NameToWeightMap;
-	bool BakeBlendshape( unsigned int meshIx, const NameToWeightMap& nameToWeight, void* pVertexData, unsigned int vertexDataSize );
+	bool BakeBlendshape( unsigned int meshIx, const NameToWeightMap& nameToWeight, Tr2SuballocatedBuffer::Allocation& pVertexData, Tr2RenderContextAL& renderContext, unsigned int vertexDataSize );
 
 	// Bake by providing a vector of weights that exactly matches the layout of morph targets
-	bool BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights  , void* pVertexData, unsigned int vertexDataSize );
+	bool BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights, Tr2SuballocatedBuffer::Allocation& pVertexData, Tr2RenderContextAL& renderContext, unsigned int vertexDataSize );
 
 	int GetModelCount();
 	std::string GetModelName( unsigned int ix );
@@ -133,7 +134,8 @@ protected:
 
 	void CollectGrannyMaterials();
 
-	bool BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights  , void* pVertexData, unsigned int vertexDataSize, const NameToWeightMap* nameToWeight, bool deltaOnly );
+	bool BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights, Tr2SuballocatedBuffer::Allocation& pVertexData, Tr2RenderContextAL& renderContext, unsigned int vertexDataSize, const NameToWeightMap* nameToWeight, bool deltaOnly );
+
 protected:
 	size_t m_dataSize;
 	size_t m_memoryUsage;

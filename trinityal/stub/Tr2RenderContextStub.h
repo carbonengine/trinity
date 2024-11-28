@@ -9,7 +9,9 @@
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2RenderPassAL.h"
+#include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 #include "../Tr2HalHelperStructures.h"
+#include "../include/upscaling/Tr2UpscalingAL.h"
 
 class Tr2ConstantBufferAL;
 class Tr2VertexLayoutAL;
@@ -18,9 +20,26 @@ class Tr2SamplerStateAL;
 class Tr2TextureAL;
 class Tr2ResourceSetAL;
 class Tr2BufferAL;
+class Tr2RtShaderTableAL;
+class Tr2RtPipelineStateAL;
 struct ITr2RenderContextEvents;
 struct Tr2PresentParametersAL;
 
+
+
+class Tr2BindlessResourcesAL
+{
+public:
+	void Add( const Tr2TextureAL& )
+	{
+	}
+	void Add( const Tr2BindlessResourcesAL& )
+	{
+	}
+	void Clear()
+	{
+	}
+};
 
 // -------------------------------------------------------------
 // Description:
@@ -61,7 +80,8 @@ public:
 		const Tr2BufferAL & buffer,
 		uint32_t offset,
 		uint32_t stride ) throw( );
-	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
+	ALResult SetIndices( const Tr2BufferAL& buffer ) throw( );
+	ALResult SetIndices( const Tr2BufferAL& buffer, uint32_t stride ) throw();
 	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
 	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
 
@@ -102,6 +122,18 @@ public:
 		uint32_t primitiveCount, 
 		uint32_t numInstances );
 
+	ALResult DrawIndexedInstanced(
+		uint32_t indexCountPerInstance,
+		uint32_t instanceCount,
+		uint32_t startIndexLocation,
+		int32_t baseVertexLocation,
+		uint32_t startInstanceLocation );
+	ALResult DrawInstanced(
+		uint32_t vertexCountPerInstance,
+		uint32_t instanceCount,
+		uint32_t startVertexLocation,
+		uint32_t startInstanceLocation );
+
 	ALResult DrawIndexedPrimitiveUP( 
 		uint32_t numVertices, 
 		uint32_t primitiveCount, 
@@ -136,6 +168,11 @@ public:
 		return E_FAIL;
 	}
 	ALResult RunComputeShaderIndirect( Tr2BufferAL&, unsigned )
+	{
+		return E_FAIL;
+	}
+	
+	ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
 	{
 		return E_FAIL;
 	}
@@ -210,6 +247,25 @@ public:
 		uint32_t& height,
 		uint32_t& depth,
 		uint32_t& mips ) const;
+
+	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
+    ALResult UseAccelerationStructure(Tr2RtTopLevelAccelerationStructureAL tlas );
+    
+	bool SupportsBindlessTextures() const;
+
+	uint64_t GetRecordingFrameNumber() const;
+	uint64_t GetRenderedFrameNumber() const;
+
+
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID );
+	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	void DeleteUpscalingContext( uint32_t contextID );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID );
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
+	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal );
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+
 private:
 	enum { MAX_RENDER_TARGET = 8 };
 	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];
@@ -217,6 +273,8 @@ private:
 	Tr2TextureAL m_defaultBackBuffer;
 	Tr2Viewport m_viewport;
 	TrackableStdStack<Tr2TextureAL>	m_stackRT[MAX_RENDER_TARGET];
+	uint64_t m_frameNumber;
+
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 };

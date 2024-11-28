@@ -9,6 +9,7 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2GpuTimerAL.h"
+#include "upscaling/Tr2UpscalingAL.h"
 
 
 struct Tr2PresentParametersAL;
@@ -38,10 +39,26 @@ public:
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
 
+	bool SupportsBindlessTextures() const;
+
+	uint64_t GetRecordingFrameNumber() const;
+	uint64_t GetRenderedFrameNumber() const;
+
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID ) const;
+	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params , uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID);
+	void DeleteUpscalingContext( uint32_t contextID );
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
+	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const;
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID ) const;
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+
 public:
 	bool m_usingEXDevice;
 
 	CComPtr<ID3D11Device>			m_d3dDevice11;
+
 	CComPtr<IDXGISwapChain>			m_swapChain;
 	CComPtr<IDXGIFactory>			m_dxgiFactory;
 	CComPtr<IDXGIOutput>			m_dxgiOutput;
@@ -50,6 +67,9 @@ public:
 		
 private:
 	ALResult CreateBackBuffers( const Tr2PresentParametersAL& presentationParameters );
+
+	uint64_t m_recodingFrame;
+	uint64_t m_renderedFrame;
 
 	uint32_t			m_vsyncInterval;
 
@@ -61,6 +81,13 @@ private:
 
 	// Device statistics
 	CComPtr<ID3D11Query> m_deviceStatistics;
+
+	struct FrameFence
+	{
+		uint64_t recordedFrame;
+		CComPtr<ID3D11Query> query;
+	};
+	std::vector<FrameFence> m_frameFences;
 	bool m_deviceStatisticsQueryEmpty;
 	Tr2GpuTimerAL m_frameTimer;
 
@@ -69,6 +96,8 @@ private:
 	Tr2CapsAL m_caps;
 
 	Tr2MemoryCounterAL m_memory;
+	TrinityALImpl::Tr2UpscalingTechniqueDx11* m_upscalingTechnique;
+
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 

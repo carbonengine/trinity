@@ -262,7 +262,7 @@ void EveChildSocket::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
 {
 }
 
-void EveChildSocket::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildSocket::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if ( !m_display )
 	{
@@ -270,7 +270,7 @@ void EveChildSocket::UpdateVisibility( const TriFrustum& frustum, const Matrix& 
 	}
 	if ( m_plug )
 	{
-		m_plug->UpdateVisibility( frustum, parentTransform, parentLod );
+		m_plug->UpdateVisibility( updateContext, parentTransform, parentLod );
 	}
 }
 
@@ -310,7 +310,7 @@ void EveChildSocket::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadR
 	}
 }
 
-void EveChildSocket::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildSocket::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if ( m_plug )
 	{
@@ -327,7 +327,7 @@ void EveChildSocket::UpdateSyncronous( EveUpdateContext& updateContext, const Ev
 	}
 }
 
-void EveChildSocket::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildSocket::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform = params.localToWorldTransform;
 	if ( params.childParent )

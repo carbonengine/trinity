@@ -8,7 +8,10 @@
 #include "Tr2PostProcessRenderInfo.h"
 
 
-Tr2PostProcessRenderInfo::Tr2PostProcessRenderInfo( IRoot* lockobj )
+Tr2PostProcessRenderInfo::Tr2PostProcessRenderInfo( IRoot* lockobj ):
+	m_renderWidth( 0 ),
+	m_renderHeight( 0 ),
+	m_debugTextures( false )
 {
 	m_black.CreateInstance();
 	m_black->SetName( "Black" );
@@ -34,6 +37,10 @@ bool Tr2PostProcessRenderInfo::OnModified( Be::Var* value )
 	if( IsMatch( value, m_sourceBuffer ) )
 	{
 		SetSourceBuffer( m_sourceBuffer );
+	}
+	else if( IsMatch( value, m_debugTextures ) )
+	{
+		m_tempTextures.clear();
 	}
 	return true;
 }
@@ -86,6 +93,12 @@ void Tr2PostProcessRenderInfo::SetSourceBuffer( Tr2RenderTarget* sourceBuffer )
 	m_tempTextures.clear();
 }
 
+void Tr2PostProcessRenderInfo::SetRenderSize(uint32_t renderWidth, uint32_t renderHeight)
+{
+	m_renderWidth = renderWidth;
+	m_renderHeight = renderHeight;
+}
+
 Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetSourceBuffer()
 {
 	return Texture( this, m_sourceBuffer );
@@ -96,9 +109,25 @@ Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetBlackTexture()
 	return Texture( this, m_black );
 }
 
-Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( float sizeFactor, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
+Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( float renderScale, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
 {
-	CCP_ASSERT( sizeFactor > 0 );
+	return GetTempTexture( "", renderScale, exFlag, pixelFormat );
+}
+
+Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( uint32_t width, uint32_t height, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
+{
+	return GetTempTexture( "", width, height, exFlag, pixelFormat );
+}
+
+Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( const char* name, float renderScale, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
+{
+	return GetTempTexture( name, uint32_t(m_renderWidth * renderScale), uint32_t(m_renderHeight * renderScale), exFlag, pixelFormat );
+}
+
+Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( const char* name, uint32_t width, uint32_t height, Tr2RenderContextEnum::ExFlag exFlag, Tr2RenderContextEnum::PixelFormat pixelFormat )
+{
+	
+	CCP_ASSERT( width > 0 && height > 0 );
 	if( !m_sourceBuffer )
 	{
 		return Texture();
@@ -111,27 +140,44 @@ Tr2PostProcessRenderInfo::Texture Tr2PostProcessRenderInfo::GetTempTexture( floa
 
 	for( auto& tempTexture : m_tempTextures )
 	{
-		if( tempTexture.sizeFactor == sizeFactor && tempTexture.exFlag == exFlag && tempTexture.pixelFormat == pixelFormat && tempTexture.lockCount == 0 )
+		if( tempTexture.width == width && tempTexture.height == height && tempTexture.exFlag == exFlag && tempTexture.pixelFormat == pixelFormat && tempTexture.lockCount == 0 )
 		{
+			if( m_debugTextures )
+			{
+				if ( tempTexture.debugName != name )
+				{
+					continue;
+				}
+			}
 			++tempTexture.lockCount;
 			return Texture( this, tempTexture.texture );
 		}
 	}
 
 	TempTexture tempTexture;
-	tempTexture.sizeFactor = sizeFactor;
+	tempTexture.width = width;
+	tempTexture.height = height;
 	tempTexture.exFlag = exFlag;
 	tempTexture.lockCount = 1;
 	tempTexture.pixelFormat = pixelFormat;
 	tempTexture.texture.CreateInstance();
 	tempTexture.texture->Create(
-		std::max( unsigned( m_sourceBuffer->GetWidth() * sizeFactor ), 1u ),
-		std::max( unsigned( m_sourceBuffer->GetHeight() * sizeFactor ), 1u ),
+		std::max( unsigned( width ), 1u ),
+		std::max( unsigned( height ), 1u ),
 		1,
 		pixelFormat,
 		1,
 		0,
 		exFlag );
+	if( m_debugTextures )
+	{
+		tempTexture.debugName = name;
+		tempTexture.texture->SetName( tempTexture.debugName.empty() ? "Post-process Temp Texture" : name );
+	}
+	else
+	{
+		tempTexture.texture->SetName( "Post-process Temp Texture" );
+	}
 	m_tempTextures.push_back( tempTexture );
 	return Texture( this, tempTexture.texture );
 }

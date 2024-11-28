@@ -35,8 +35,6 @@ public:
 
 	void GetBatches( TriBatchType batchType, ITriRenderBatchAccumulator* accumulator );
 
-	void SubmitGeometry( EffectKey effectKey, Tr2RenderContext& renderContext );
-
 	virtual void ReleaseResources( TriStorage s );
 
 	uint32_t GetInstanceBufferSize() const;
@@ -103,6 +101,7 @@ private:
 	uint32_t m_vertexBufferOffset;
 	// Size of the instance data added last frame
 	uint32_t m_lastInstanceDataSize;
+	uint32_t m_bufferAlignment;
 };
 
 TYPEDEF_BLUECLASS( Tr2QuadRenderer );

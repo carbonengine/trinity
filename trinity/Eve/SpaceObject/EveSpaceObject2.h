@@ -35,6 +35,8 @@
 #include "Eve/EveEntity.h"
 #include "Lights/ITr2LightOwner.h"
 #include "Tr2GrannyAnimation.h"
+#include "Raytracing/Tr2RaytracingManager.h"
+#include "Tr2BoneTransformBuffer.h"
 
 
 // consts
@@ -102,11 +104,8 @@ struct EveSpaceObjectVSData
 	Vector4 ellpsoidCenter;
 	Matrix customMaskMatrix[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskData[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
-	// following this is a variable size array of 4x3 bone matrices
-	static const size_t MAX_BONE_COUNT = 58;
+	uint32_t boneOffsets[4];
 };
-
-static const size_t EVE_SPACE_OBJECT_VS_DATA_MAX_SIZE = sizeof( EveSpaceObjectVSData ) + EveSpaceObjectVSData::MAX_BONE_COUNT * 12 * sizeof( float );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -129,7 +128,7 @@ struct EveSpaceObjectPSData
 
 // ---------------------------------------------------------------------------------------
 //  Description:
-//    Given a pointer to a mesh area vector, gathers TriGeometryBatches for each of the
+//    Given a pointer to a mesh area vector, gathers render batches for each of the
 //    areas. Order of batches is sorted, based upon distance to camera.
 // Arguments:
 //   areas - mesharea vector to collect from
@@ -218,10 +217,10 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateVisibility(  const TriFrustum& frustum, const Matrix& parentTransform );
-	virtual void PrepareShaderData( EveUpdateContext& updateContext );
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
+	virtual void PrepareShaderData( const EveUpdateContext& updateContext );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 	virtual void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
@@ -230,15 +229,17 @@ public:
 	virtual void GetLocalToWorldTransform( Matrix &transform ) const;
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
-        virtual void SetProceduralContainerVariable( const char *name, float value ) override;
+	virtual void SetProceduralContainerVariable( const char *name, float value ) override;
 	virtual bool IsPickable() const;
 	virtual void GetParentData( IEveSpaceObject2::ParentData * pd ) const;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
-	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
-	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
-	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
+	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const override;
+	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -254,7 +255,7 @@ public:
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	virtual bool IsVisible( const TriFrustum& frustum ) const;
+	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IAsyncLoadedResNotifyTarget
@@ -301,7 +302,7 @@ public:
 		
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ShLightingReceiver
-	virtual void UpdateShLighting( Tr2ShLightingManager& );
+	virtual void UpdateShLighting( Tr2ShLightingManager&, const EveUpdateContext& updateContext );
 	virtual void ClearShLighting();
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -314,6 +315,8 @@ public:
 	virtual void GetImpostorBatches( const TriFrustum& frustum, std::map<TriBatchType, ITriRenderBatchAccumulator*>& batches );
 	virtual float GetRenderPriority( const ImpostorHash& oldHash, const ImpostorHash& newHash ) const;
 	virtual bool GetImpostorBoundingSphere( Vector4& sphere ) const;
+	virtual void GetLastImpostorBoundingSphere( Vector4 & sphere ) const;
+
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
@@ -449,13 +452,16 @@ public:
 
 	Matrix GetEveLocatorTransform( const char* name ) const;
 
-	void SetReflectionMode(EntityComponents::ReflectionMode mode);
+	void SetReflectionMode( EntityComponents::ReflectionMode mode );
 	void SetIsAnimated( bool isAnimated );
 	void SetCastsShadow( bool castShadow );
 
 	int GetLastUsedMeshLod() const;
 
 	void SetInheritProperties( const Color* colorSet ) override;
+
+	bool GetMute();
+	void SetMute( bool isMute );
 
 protected:
 	// Activation-Strength
@@ -485,6 +491,7 @@ protected:
 
 	bool m_update;
 	bool m_display;
+	bool m_mute;
 	bool m_allowLodSelection;
 	bool m_isPickable;
 	bool m_isAnimated;
@@ -535,6 +542,8 @@ protected:
 	// valid if we're inside the frustum.
 	float m_estimatedPixelDiameter;
 	float m_estimatedPixelDiameterWithChildren;
+	float m_meshScreenSize;
+
 	
 	Tr2GrannyAnimationPtr m_animationUpdater;
 
@@ -667,6 +676,13 @@ protected:
 	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
 
 	EntityComponents::ReflectionMode m_reflectionMode;
+
+	void UpdateRtMesh(const EveUpdateContext& updateContext);
+	void UpdateRtSkeleton();
+	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+
+	Tr2BoneTransformOffsets m_boneOffsets;
+
 };
 
 TYPEDEF_BLUECLASS( EveSpaceObject2 );

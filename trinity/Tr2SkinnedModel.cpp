@@ -35,31 +35,29 @@ void Tr2SkinnedModel::GetBatchesForArea( Tr2MeshAreaVector* areas, Tr2Mesh* mesh
 	}
 
 	TriGeometryRes* geomRes = mesh->GetGeometryResource();
-	if( !geomRes )
+	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
 	}
 	int meshIx = mesh->GetMeshIndex();
 
 	TriGeometryResMeshData* meshData = geomRes->GetMeshData( meshIx );
-	if( !meshData )
+	if( !meshData || !meshData->m_allocationsValid )
 	{
 		return;
 	}
 
-	for( PTr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
+	for( auto& area : *areas )
 	{
-		Tr2MeshArea* area = *it;
 		auto shader = area->GetMaterialInterface();
 		if( !area->GetDisplay() || ( !shader ) )
 		{
 			continue;
 		}
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
 		Tr2PerAreaDataSkinned* areaData = batches->Allocate<Tr2PerAreaDataSkinned>();
 
 		// Note that this can fail if the accumulator can't add more batches!
-		if( batch && areaData )
+		if( areaData )
 		{
 			unsigned int n = 0;
 
@@ -117,11 +115,7 @@ void Tr2SkinnedModel::GetBatchesForArea( Tr2MeshAreaVector* areas, Tr2Mesh* mesh
 			}
 			areaData->SetPerObjectData( *skinnedData );
 
-			batch->SetShaderMaterial( shader );
-			batch->SetPerObjectData( areaData );
-			batch->SetGeometryResource( geomRes );
-			batch->SetMeshParameters( meshIx, area->GetIndex(), area->GetCount(), area->GetReversed() );
-
+			auto batch = CreateGeometryBatch( meshData, area, areaData );
 			batches->Commit( batch );
 		}
 	}

@@ -33,7 +33,7 @@ EveShip2::~EveShip2()
 {
 }
 
-void EveShip2::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveShip2::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	if( !m_update )
 	{
@@ -66,7 +66,7 @@ void EveShip2::UpdateSyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveShip2::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveShip2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	if( !m_update )
 	{
@@ -76,7 +76,7 @@ void EveShip2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	UpdateBoosters( updateContext );
 }
 
-void EveShip2::UpdateBoosters( EveUpdateContext& updateContext )
+void EveShip2::UpdateBoosters( const EveUpdateContext& updateContext )
 {
 	if( m_boosters )
 	{
@@ -87,9 +87,9 @@ void EveShip2::UpdateBoosters( EveUpdateContext& updateContext )
 	}
 }
 
-void EveShip2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveShip2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
-	EveMobile::UpdateVisibility( frustum, parentTransform );
+	EveMobile::UpdateVisibility( updateContext, parentTransform );
 
 	if( !m_display )
 	{
@@ -99,7 +99,7 @@ void EveShip2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parent
 	// collect renderables of the boosters
 	if( DisplayBoosters() )
 	{
-		m_boosters->UpdateVisibility( frustum );
+		m_boosters->UpdateVisibility( updateContext );
 	}
 }
 

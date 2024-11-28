@@ -9,11 +9,13 @@
 class Tr2ShaderAL;
 class Tr2ShaderProgramAL;
 class Tr2PrimaryRenderContextAL;
+class Tr2RtPipelineStateAL;
 struct Tr2ShaderSignatureAL;
 
 namespace TrinityALImpl
 {
 	class Tr2ResourceSetAL;
+	class Tr2RtShaderTableAL;
 }
 
 struct Tr2RegisterMapAL
@@ -54,6 +56,9 @@ public:
 	bool SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
 	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer );
 	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 );
+	bool SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
+	bool SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
+	bool SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
 	bool SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
 	void ClearResources();
 	
@@ -61,15 +66,16 @@ public:
 
 	bool operator==( const Tr2ResourceSetDescriptionAL& other ) const;
 private:
-	enum ResourceType
-	{
-		NONE,
-		BUFFER,
-		TEXTURE,
-	};
-
 	struct Resource
 	{
+		enum Type
+		{
+			NONE,
+			BUFFER,
+			TEXTURE,
+			HEAP_VIEW,
+		};
+
 		Resource();
 
 		bool operator==( const Resource& other ) const;
@@ -80,7 +86,7 @@ private:
 
 		Tr2TextureAL texture;
 		Tr2BufferAL buffer;
-		ResourceType type;
+		Type type;
 		union
 		{
 			Tr2RenderContextEnum::ColorSpace colorSpace;
@@ -90,6 +96,13 @@ private:
 
 	struct Sampler
 	{
+		enum Type
+		{
+			NONE,
+			SAMPLER,
+			HEAP_VIEW,
+		};
+
 		Sampler();
 
 		bool operator==( const Sampler& other ) const;
@@ -98,7 +111,7 @@ private:
 		void UpdateHash( uint32_t& hash ) const;
 
 		Tr2SamplerStateAL sampler;
-		bool assigned;
+		Type type;
 	};
 
 	Tr2RegisterMapAL m_registerMap;
@@ -107,6 +120,7 @@ private:
 	std::unique_ptr<Sampler[]> m_samplers;
 
 	friend class TrinityALImpl::Tr2ResourceSetAL;
+	friend class TrinityALImpl::Tr2RtShaderTableAL;
 };
 
 class Tr2ResourceSetAL
@@ -115,6 +129,7 @@ public:
 	Tr2ResourceSetAL();
 
 	ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
 	bool IsValid() const;
 
 	Tr2ALMemoryType GetMemoryClass() const;

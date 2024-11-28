@@ -276,6 +276,38 @@ void BehaviorGroup::AddAgent()
 	OnAgentCountChanged();
 }
 
+void BehaviorGroup::AddAgents( const std::vector<Vector3>& positions )
+{
+	for( auto& position : positions )
+	{
+		DroneAgent agent;
+		agent.position = position;
+		m_agents.push_back( agent );
+	}
+
+	while( m_scratchData.size() < m_behaviors.size() )
+	{
+		m_scratchData.push_back( CcpMallocBuffer() );
+	}
+
+	for( size_t i = 0; i < m_behaviors.size(); ++i )
+	{
+		auto size = m_behaviors[m_sortedBehaviorIndexes[i]]->GetScratchMemorySize();
+		if( size > 0 )
+		{
+			m_scratchData[m_sortedBehaviorIndexes[i]].resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
+			for( size_t j = m_agents.size() - positions.size(); j < m_agents.size(); j++ )
+			{
+				m_behaviors[m_sortedBehaviorIndexes[i]]->InitializeScratch( m_scratchData[m_sortedBehaviorIndexes[i]].get() + size * ( j ) );
+			}
+		}
+	}
+
+	m_actualCount += static_cast<int32_t>( positions.size() );
+
+	OnAgentCountChanged();
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Create an agent and add it to the vector. Updates scratchdata for that new agent
@@ -601,11 +633,13 @@ float BehaviorGroup::GetBlendModifier() const
 // Description:
 //   Check if each agent is still visible or not and update it's visibility based on that.
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateVisibility( const TriFrustum& frustum, const Matrix& worldTransform )
+void BehaviorGroup::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& worldTransform )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	m_currentScreenSize = 0.0f;
 	float worldRadius = 1;
+
+	auto& frustum = updateContext.GetFrustum();
 	// Check if an agent is visible and calculate the xfade value
 	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
@@ -638,7 +672,6 @@ void BehaviorGroup::UpdateVisibility( const TriFrustum& frustum, const Matrix& w
 	}
 	m_mesh->UseWithScreenSize( m_currentScreenSize, worldRadius );
 
-	m_frustum = frustum;
 	m_parentTransform = worldTransform;
 }
 
@@ -653,31 +686,78 @@ bool BehaviorGroup::IsGroupVisible() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Get LOD info for buffer. Called from BehaviorSystem
+//   Get ship info
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
+void BehaviorGroup::GetShipInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	m_lightInfo.clear();
 	auto agentScale = Vector3( 1.0, 1.0, 1.0 );
 	Matrix zeroMatrix = ScalingMatrix( Vector3( 0.0, 0.0, 0.0 ) );
-	unsigned int agentIndex = 0;
 
 	if( m_currentScreenSize == 0.0 )
 	{
-
-		for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
-		{
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
-
-			// boosters
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
-		}
+		memset( data, 0, m_agents.size()  * (24 * sizeof( float )) );
 		return;
 	}
 
+	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
+	{
+		float LOD = m_debugMode ? m_debugLodLevel : ( *agent ).xfade;
+
+		Matrix agentTransform = TransformationMatrix( agentScale, agent->rotation, agent->position );
+		Matrix lastAgentTransform = agent->lastTransform;
+
+		if( agent->isVisible && m_display )
+		{
+			float LODmod = 0;
+			Matrix meshData = Matrix( zeroMatrix );
+			Matrix lastMeshData = Matrix( zeroMatrix );
+
+			if( LOD < 0.75f )
+			{
+				LODmod = ( 1 - LOD ) * ( 0.5f + ( 1 - LOD ) * 0.5f );
+				Vector3 meshScale = m_scale * Vector3( LODmod, LODmod, LODmod );
+				meshData = Transpose( ScalingMatrix( meshScale ) * agentTransform );
+
+				lastMeshData = Transpose( ScalingMatrix( meshScale ) * lastAgentTransform );
+			}
+			memcpy( data, &meshData, 12 * sizeof( float ) );
+			data += 12 * sizeof( float );
+
+			//memcpy( data, &meshData, 12 * sizeof( float ) );
+			memcpy( data, &lastMeshData, 12 * sizeof( float ) );
+			//memset( data, 0, 12 * sizeof( float ) );
+			data += 12 * sizeof( float );
+		}
+		else
+		{
+			memset( data, 0, 24 * sizeof( float ) );
+			data += 24 * sizeof( float );
+		}
+
+		agent->lastTransform = agentTransform;
+	}
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Get booster info
+// --------------------------------------------------------------------------------------
+void BehaviorGroup::GetBoosterInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	m_lightInfo.clear();
+	auto agentScale = Vector3( 1.0, 1.0, 1.0 );
+	Matrix zeroMatrix = ScalingMatrix( Vector3( 0.0, 0.0, 0.0 ) );
+
+	if( m_currentScreenSize == 0.0 )
+	{
+		memset( data, 0, m_agents.size() * ( 12 * sizeof( float ) ) );
+		return;
+	}
+
+	unsigned int agentIndex = 0;
 	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
 		float LOD = m_debugMode ? m_debugLodLevel : ( *agent ).xfade;
@@ -685,18 +765,7 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 		if( agent->isVisible && m_display )
 		{
 			float LODmod = 0;
-			Matrix meshData = Matrix( zeroMatrix );
-			// agent mesh
-			if( LOD < 0.75f )
-			{
-				LODmod = ( 1 - LOD ) * ( 0.5f + ( 1 - LOD ) * 0.5f );
-				Vector3 meshScale = m_scale * Vector3( LODmod, LODmod, LODmod );
-				meshData = Transpose( ScalingMatrix( meshScale ) * agentTransform );
-			}
-			memcpy( data, &meshData, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
 
-			// boosters
 			Vector4 boosterPos = Vector4( 0, 0, 0, 0 );
 			Quaternion boosterQuaternion = Quaternion( 0, 0, 0, 1 );
 			Vector4 boosterInfo = Vector4( 0, 0, 0, 0 );
@@ -738,12 +807,9 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 		}
 		else
 		{
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
+			memset( data, 0, 12 * sizeof( float ) );
 			data += 12 * sizeof( float );
 
-			// boosters
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
 			if( m_booster != nullptr && m_display )
 			{
 				m_booster->AddFlare( IdentityMatrix(), 0, 0, agentIndex, 0, 0 );
@@ -781,6 +847,9 @@ void BehaviorGroup::CreateVertexDeclaration()
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 8, 1, 1 );
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 9, 1, 1 );
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 10, 1, 1 );
+				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 11, 1, 1 );
+				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 12, 1, 1 );
+				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 13, 1, 1 );
 
 				// create vertex-declarartion
 				m_vertexDeclarationHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_agentInstancedVertex );
@@ -810,7 +879,7 @@ void BehaviorGroup::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 // Description:
 //   For the effect in PlayFX to be updated this is needed.
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateAsyncronous( EveUpdateContext& updateContext )
+void BehaviorGroup::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	if( !m_update )
 	{
@@ -819,7 +888,7 @@ void BehaviorGroup::UpdateAsyncronous( EveUpdateContext& updateContext )
 
 	if( m_playFXBehavior != nullptr )
 	{
-		m_playFXBehavior->UpdateAsyncronous( updateContext, m_frustum, m_parentTransform );
+		m_playFXBehavior->UpdateAsyncronous( updateContext, m_parentTransform );
 	}
 }
 
@@ -828,7 +897,7 @@ void BehaviorGroup::UpdateAsyncronous( EveUpdateContext& updateContext )
 // Description:
 //   For the effect in PlayFX to be updated this is needed.
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void BehaviorGroup::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( !m_update )
 	{

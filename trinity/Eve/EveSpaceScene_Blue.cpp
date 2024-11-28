@@ -25,24 +25,23 @@ Be::VarChooser EveVisualizerChooser[] =
 		  BeCast( EveSpaceScene::VM_TEXCOORD0 ),
 		  "" },
 		{ "TexCoord1",
-		  BeCast( EveSpaceScene::VM_TEXCOORD1 ),
+		BeCast( EveSpaceScene::VM_TEXCOORD1 ),
 		  "" },
 		{ "White",
-		  BeCast( EveSpaceScene::VM_WHITE ),
+		BeCast( EveSpaceScene::VM_WHITE ),
 		  "" },
 		{ "Overdraw",
-		  BeCast( EveSpaceScene::VM_OVERDRAW ),
+		BeCast( EveSpaceScene::VM_OVERDRAW ),
 		  "" },
 		{ "Wireframe",
-		  BeCast( EveSpaceScene::VW_WIREFRAME ),
+		BeCast( EveSpaceScene::VW_WIREFRAME ),
 		  "" },
 		{ "LightCount",
-		  BeCast( EveSpaceScene::VW_LIGHT_COUNT ),
+		BeCast( EveSpaceScene::VW_LIGHT_COUNT ),
 		  "" },
-		{ 0 }
+	{ 0 }
 	};
 BLUE_REGISTER_ENUM_EX( "EveVisualizeMethod", EveSpaceScene::EveVisualizeMethod, EveVisualizerChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
-
 
 #if BLUE_WITH_PYTHON
 PyObject* PyPickObjectAndAreaID( PyObject* self, PyObject* args )
@@ -126,32 +125,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_update,
 			"If update is off, scene is not updated (may still be rendered)",
 			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
-			"enableShadows",
-			m_enableShadows,
-			"If true, generate shadow map for scene\n"
-			":jessica-group: Shadows",
-			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
-			"freezeFrustum",
-			m_freezeFrustum,
-			"If true, zoom out to see the frustum split\n"
-			":jessica-group: Shadows",
-			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
-			"displayShadowMap",
-			m_displayShadowMap,
-			"Displays the shadowmap on top of the screen (unfiltered).\n"
-			":jessica-group: Shadows",
-			Be::READWRITE )
-
-		MAP_METHOD_AND_WRAP(
-			"DisableShadows",
-			DisableShadows,
-			"Set to disable shadows" )
 
 		MAP_ATTRIBUTE(
 			"backgroundEffect",
@@ -334,22 +307,51 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"depthTexture",
 			m_depthMap,
 			".",
-			Be::READWRITE 
-		)
+			Be::READWRITE )
+		MAP_ATTRIBUTE(
+			"cascadedShadowMap",
+			m_cascadedShadowMap,
+			"This should get created in python.",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"shadowQualitySetting",
+			m_shadowQuality,
+			"Set quality for shadows \n"
+			"jessica-hidden: True",
+			Be::READWRITE | Be::NOTIFY )
+		MAP_ATTRIBUTE(
+			"freezeFrustum",
+			m_freezeFrustum,
+			"If true, zoom out to see the frustum split\n"
+			":jessica-group: Shadows",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"displayShadowMap",
+			m_displayShadowMap,
+			"Displays the shadowmap on top of the screen (unfiltered).\n"
+			":jessica-group: Shadows",
+			Be::READWRITE )
+		MAP_ATTRIBUTE( 
+			"raytracingManager",
+			m_rtManager,
+			"Raytracing manager\n"
+			": jessica - group : Raytracing ",
+			Be::READWRITE )
+		MAP_METHOD_AND_WRAP(
+			"DisableShadows",
+			DisableShadows,
+			"Set to disable shadows" )
 		MAP_ATTRIBUTE(
 			"colorTexture",
 			m_colorMap,
 			".",
-			Be::READWRITE 
-		)
+			Be::READWRITE )
 		MAP_ATTRIBUTE(
 			"opaqueColorTexture",
 			m_opaqueColorMap,
 			".",
-			Be::READWRITE 
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE )
+		MAP_ATTRIBUTE(
 			"normalTexture",
 			m_normalMap,
 			".",
@@ -438,8 +440,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		MAP_ATTRIBUTE( "fogEnd", m_fogEnd, "Depth at which the fog does not get thicker.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogMax", m_fogMax, "Maximum strength of fog at end depth, range [0,1].\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE( "cascadedShadowMap", m_cascadedShadowMap, "This should get created in python.", Be::READWRITE | Be::PERSIST )
-
 		MAP_ATTRIBUTE_WITH_CHOOSER(
 			"visualizeMethod",
 			m_visualizeMethod,
@@ -504,25 +504,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_updateTime,
 			"Time of the last call to Update, for this scene",
 			Be::READ )
-
-		MAP_ATTRIBUTE(
-			"pixelOffsetScale",
-			m_taaPixelOffsetScale,
-			"Size of the offset in pixels for TAA",
-			Be::READWRITE )
-
-		MAP_ATTRIBUTE(
-			"taaSubpixelPattern",
-			m_taaPattern,
-			"Pattern type for TAA sampling offsets."
-			"\n 0 - none"
-			"\n 1 - totally random"
-			"\n 2 - 2x pattern"
-			"\n 3 - 3x pattern"
-			"\n 4 - 4x pattern",
-			Be::READWRITE )
-
-
+			
 		MAP_PROPERTY_READONLY(
 			"quadRenderer",
 			GetQuadRenderer,
@@ -561,7 +543,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			":jessica-group: Lighting\n",
 			Be::READWRITE )
 
-
 		MAP_ATTRIBUTE(
 			"impostorManager",
 			m_impostorManager,
@@ -576,9 +557,20 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 
 		MAP_ATTRIBUTE(
 			"postprocess",
-			m_postProcess,
+			m_sceneDefaultPostProcess,
 			"The post process",
 			Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE(
+			"combinedPostProcessAttributes",
+			m_combinedPostProcessAttributes,
+			"",
+			Be::READ )
+
+		MAP_METHOD_AND_WRAP(
+			"GetPostProcessDebug",
+			GetPostProcessDebug,
+			"Returns a dictionary with post-processing attribute blending information" )
 
 		MAP_ATTRIBUTE(
 			"virtualCameraSystem",
@@ -596,6 +588,16 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"ReregisterEntities",
 			ReregisterEntities,
 			"Re registers all entities" )
+
+		MAP_PROPERTY( 
+			"shadowsInReflections", 
+			IsShadowsInReflectionsEnabled, 
+			EnableShadowsInReflections,
+			"Enables/disables shadows in the reflection cubemap (only if shadows are enabled)\n\n"
+			":jessica-group: Shadows"
+		)
+
+		MAP_PROPERTY_READONLY( "Shadow Map Atlas", GetShadowMapAtlas, "" )
 
 	EXPOSURE_END()
 }
@@ -797,4 +799,6 @@ MAP_FUNCTION(
 	":param radius: instance radius\n"
 	":type radius: float\n"
 	":rtype: int" );
+
+
 #endif

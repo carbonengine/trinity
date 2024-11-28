@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
+find_package(FidelityFX REQUIRED)
+find_package(FidelityFX_FSR REQUIRED)
+find_package(FidelityFX_FSR3 REQUIRED)
+find_package(IntelXeSS REQUIRED)
+
 project(TrinityAL VERSION 1.0.0)
 
 set(PUBLIC_HEADER_FILES
@@ -104,7 +109,11 @@ set(_SOURCES
     dx11/Tr2VertexLayoutALDx11.cpp
     dx11/Tr2VertexLayoutALDx11.h
     dx11/Tr2VideoAdapterInfoALDx11.cpp
-    dx11/Tr2VideoAdapterInfoALDx11.h
+    dx11/Tr2VideoAdapterInfoALDx11.h    
+    dx11/upscaling/Tr2DlssUpscaling.cpp 
+    dx11/upscaling/Tr2DlssUpscaling.h
+    dx11/upscaling/Tr2UpscalingALDx11.cpp
+    dx11/upscaling/Tr2UpscalingALDx11.h
     dx12/Tr2BufferALDx12.cpp
     dx12/Tr2BufferALDx12.h
     dx12/Tr2CapsALDx12.h
@@ -126,6 +135,14 @@ set(_SOURCES
     dx12/Tr2ResourceHelper.h
     dx12/Tr2ResourceSetALDx12.cpp
     dx12/Tr2ResourceSetALDx12.h
+    dx12/Tr2RtBottomLevelAccelerationStructureALDx12.cpp
+    dx12/Tr2RtBottomLevelAccelerationStructureALDx12.h
+    dx12/Tr2RtPipelineStateALDx12.cpp
+    dx12/Tr2RtPipelineStateALDx12.h
+    dx12/Tr2RtShaderTableALDx12.cpp
+    dx12/Tr2RtShaderTableALDx12.h
+    dx12/Tr2RtTopLevelAccelerationStructureALDx12.cpp
+    dx12/Tr2RtTopLevelAccelerationStructureALDx12.h
     dx12/Tr2SamplerStateALDx12.cpp
     dx12/Tr2SamplerStateALDx12.h
     dx12/Tr2ShaderALDx12.cpp
@@ -142,6 +159,14 @@ set(_SOURCES
     dx12/Tr2VideoAdapterInfoALDx12.h
     dx12/Utilities.cpp
     dx12/Utilities.h
+    dx12/upscaling/Tr2DlssUpscaling.cpp 
+    dx12/upscaling/Tr2DlssUpscaling.h 
+    dx12/upscaling/Tr2Fsr3Upscaling.cpp 
+    dx12/upscaling/Tr2Fsr3Upscaling.h 
+    dx12/upscaling/Tr2UpscalingALDx12.cpp
+    dx12/upscaling/Tr2UpscalingALDx12.h
+    dx12/upscaling/Tr2XessUpscaling.cpp   
+    dx12/upscaling/Tr2XessUpscaling.h  
     dx12/util/AmdExtDevice.h
     dx12/util/DescriptorHeapViewDx12.cpp
     dx12/util/DescriptorHeapViewDx12.h
@@ -166,6 +191,10 @@ set(_SOURCES
     include/Tr2FenceAL.h
     include/Tr2GpuTimerAL.h
     include/Tr2OcclusionQueryAL.h
+    include/Tr2RtBottomLevelAccelerationStructureAL.h
+    include/Tr2RtPipelineStateAL.h
+    include/Tr2RtShaderTableAL.h
+    include/Tr2RtTopLevelAccelerationStructureAL.h
     include/Tr2PipelineStatsQueryAL.h
     include/Tr2PrimaryRenderContextAL.h
     include/Tr2RenderContextAL.h
@@ -173,15 +202,22 @@ set(_SOURCES
     include/Tr2ResourceSetAL.h
     include/Tr2SamplerStateAL.h
     include/Tr2ShaderAL.h
-    include/Tr2ShaderProgramAL.h
+    include/Tr2ShaderProgramAL.h    
+    include/Tr2StreamlineAL.h    
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
     include/Tr2VertexLayoutAL.h
     include/Tr2VideoAdapterInfoAL.h
     include/TrinityAL.h
     include/TrinityALForward.h
+    include/upscaling/Tr2Fsr1Upscaling.h
+    include/upscaling/Tr2UpscalingAL.h
+    include/upscaling/Fsr1DX.h
+    include/upscaling/Fsr1Metal.h
     metal/MetalContext.h
     metal/MetalContext.mm
+    metal/MetalResourceArray.h
+    metal/MetalResourceArray.mm
     metal/MetalShaders.metal
     metal/MetalShaderStrings.h
     metal/MetalShaderTypes.h
@@ -209,6 +245,14 @@ set(_SOURCES
     metal/Tr2RenderContextMetal.mm
     metal/Tr2ResourceSetALMetal.h
     metal/Tr2ResourceSetALMetal.mm
+    metal/Tr2RtBottomLevelAccelerationStructureALMetal.mm
+    metal/Tr2RtBottomLevelAccelerationStructureALMetal.h
+    metal/Tr2RtPipelineStateALMetal.mm
+    metal/Tr2RtPipelineStateALMetal.h
+    metal/Tr2RtShaderTableALMetal.mm
+    metal/Tr2RtShaderTableALMetal.h
+    metal/Tr2RtTopLevelAccelerationStructureALMetal.mm
+    metal/Tr2RtTopLevelAccelerationStructureALMetal.h
     metal/Tr2SamplerStateALMetal.h
     metal/Tr2SamplerStateALMetal.mm
     metal/Tr2ShaderALMetal.h
@@ -223,6 +267,10 @@ set(_SOURCES
     metal/Tr2VertexLayoutALMetal.mm
     metal/Tr2VideoAdapterInfoALMetal.h
     metal/Tr2VideoAdapterInfoALMetal.mm
+    metal/upscaling/Tr2MetalFxUpscaling.h 
+    metal/upscaling/Tr2MetalFxUpscaling.mm
+    metal/upscaling/Tr2UpscalingALMetal.h
+    metal/upscaling/Tr2UpscalingALMetal.mm
     src/Tr2BufferAL.cpp
     src/Tr2ConstantBufferAL.cpp
     src/Tr2FenceAL.cpp
@@ -230,12 +278,19 @@ set(_SOURCES
     src/Tr2OcclusionQueryAL.cpp
     src/Tr2PipelineStatsQueryAL.cpp
     src/Tr2ResourceSetAL.cpp
+    src/Tr2RtBottomLevelAccelerationStructureAL.cpp
+    src/Tr2RtPipelineStateAL.cpp
+    src/Tr2RtShaderTableAL.cpp
+    src/Tr2RtTopLevelAccelerationStructureAL.cpp
     src/Tr2SamplerStateAL.cpp
     src/Tr2ShaderAL.cpp
-    src/Tr2ShaderProgramAL.cpp
+    src/Tr2ShaderProgramAL.cpp    
+    src/Tr2StreamlineAL.cpp    
     src/Tr2SwapChainAL.cpp
     src/Tr2TextureAL.cpp
     src/Tr2VertexLayoutAL.cpp
+    src/upscaling/Tr2Fsr1Upscaling.cpp
+    src/upscaling/Tr2UpscalingAL.cpp
     stub/Tr2BufferALStub.cpp
     stub/Tr2BufferALStub.h
     stub/Tr2CapsALStub.cpp
@@ -269,38 +324,8 @@ set(_SOURCES
     stub/Tr2VertexLayoutALStub.h
     stub/Tr2VideoAdapterInfoALStub.cpp
     stub/Tr2VideoAdapterInfoALStub.h
-    vulkan/Tr2BufferALVulkan.cpp
-    vulkan/Tr2BufferALVulkan.h
-    vulkan/Tr2CapsALVulkan.h
-    vulkan/Tr2ConstantBufferALVulkan.cpp
-    vulkan/Tr2ConstantBufferALVulkan.h
-    vulkan/Tr2FenceALVulkan.h
-    vulkan/Tr2GpuTimerALVulkan.h
-    vulkan/Tr2OcclusionQueryALVulkan.h
-    vulkan/Tr2PipelineStatsQueryALVulkan.cpp
-    vulkan/Tr2PipelineStatsQueryALVulkan.h
-    vulkan/Tr2PrimaryRenderContextVulkan.cpp
-    vulkan/Tr2PrimaryRenderContextVulkan.h
-    vulkan/Tr2RenderContextVulkan.cpp
-    vulkan/Tr2RenderContextVulkan.h
-    vulkan/Tr2ResourceSetALVulkan.cpp
-    vulkan/Tr2ResourceSetALVulkan.h
-    vulkan/Tr2SamplerStateALVulkan.cpp
-    vulkan/Tr2SamplerStateALVulkan.h
-    vulkan/Tr2ShaderALVulkan.cpp
-    vulkan/Tr2ShaderALVulkan.h
-    vulkan/Tr2ShaderProgramALVulkan.cpp
-    vulkan/Tr2ShaderProgramALVulkan.h
-    vulkan/Tr2SwapChainALVulkan.h
-    vulkan/Tr2TextureALVulkan.cpp
-    vulkan/Tr2TextureALVulkan.h
-    vulkan/Tr2VertexLayoutALVulkan.cpp
-    vulkan/Tr2VertexLayoutALVulkan.h
-    vulkan/Tr2VideoAdapterInfoALVulkan.cpp
-    vulkan/Tr2VideoAdapterInfoALVulkan.h
-    vulkan/UtilitiesVulkan.cpp
-    vulkan/UtilitiesVulkan.h
-    vulkan/VkResult.h
+    stub/upscaling/Tr2UpscalingALStub.cpp
+    stub/upscaling/Tr2UpscalingALStub.h
 )
 
 # Ensure that we have a sane file grouping for XCode and VS project files
@@ -356,6 +381,8 @@ function(set_shared_trinityal_properties targetSuffix)
     )
 
     add_trinity_dev_debug_flags(${target})
+    
+    ccp_enable_vs_analizers(${target})
 endfunction()
 
 #[[
@@ -376,25 +403,49 @@ find_package(NanoVDB REQUIRED)
 
 
 if(WIN32)
-    # required for 11
     find_package(NvidiaAftermath REQUIRED)
+    find_package(NvidiaStreamline REQUIRED)
+    find_package(NvidiaDlssPlugin REQUIRED)
+    find_package(NvidiaNisPlugin REQUIRED)
+    find_package(NvidiaReflexPlugin REQUIRED)
+    find_package(NvidiaPclPlugin REQUIRED)
 
     ccp_add_library(TrinityAL_dx11 STATIC)
     target_compile_definitions(TrinityAL_dx11 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX11)
-    target_link_libraries(TrinityAL_dx11 PUBLIC Nvidia::Aftermath d3d11 dxgi dxguid legacy_stdio_definitions)
+    target_link_libraries(TrinityAL_dx11 PUBLIC d3d11 
+                                                dxgi
+                                                dxguid
+                                                Nvidia::Aftermath  
+                                                NVIDIA::Streamline 
+                                                NVIDIA::dlss_sl_plugin 
+                                                NVIDIA::nis_sl_plugin 
+                                                AMD::FidelityFX
+                                                AMD::FidelityFX_FSR
+                                                legacy_stdio_definitions)
     set_shared_trinityal_properties(dx11)
 
     ccp_add_library(TrinityAL_dx12 STATIC)
     target_compile_definitions(TrinityAL_dx12 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX12)
-    target_link_libraries(TrinityAL_dx12 PUBLIC Nvidia::Aftermath d3d12 dxgi dxguid)
+    target_link_libraries(TrinityAL_dx12 PUBLIC d3d12 
+                                                dxgi 
+                                                dxguid 
+                                                Nvidia::Aftermath  
+                                                NVIDIA::Streamline 
+                                                NVIDIA::dlss_sl_plugin 
+                                                NVIDIA::nis_sl_plugin 
+                                                NVIDIA::reflex_sl_plugin 
+                                                NVIDIA::pcl_sl_plugin 
+                                                AMD::FidelityFX_FSR3 
+                                                AMD::FidelityFX
+                                                AMD::FidelityFX_FSR
+                                                INTEL::xess)
     set_shared_trinityal_properties(dx12)
 elseif(APPLE)
     enable_language(OBJCXX)
     ccp_add_library(TrinityAL_metal STATIC)
     target_compile_definitions(TrinityAL_metal PUBLIC TRINITY_PLATFORM=TRINITY_METAL)
     set_shared_trinityal_properties(metal)
-    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework IOKit" "-framework QuartzCore")
-    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework IOKit" "-framework QuartzCore")
+    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework MetalFX" "-framework IOKit" "-framework QuartzCore" AMD::FidelityFX_FSR)
     #[[
         FIXME because we're mixing objective-c++ and c++ headers in our precompiled headers then we need to force
         one specific language for macOS. This can be fixed once we revisit our usage of precompiled headers, which is
@@ -408,11 +459,8 @@ else()
     message(FATAL_ERROR "Unsupported trinity platform, only stub would be available!")
 endif()
 
-
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
-    include(CTest)
-    if(BUILD_TESTING)
-	    add_subdirectory(tests)
-    endif()
+option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
+message(STATUS " BUILD_TESTING VALUE IS ${BUILD_TESTING}")
+if(BUILD_TESTING)
+    add_subdirectory(tests)
 endif()

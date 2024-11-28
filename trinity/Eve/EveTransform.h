@@ -48,10 +48,10 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2	
-	void Update( EveUpdateContext& updateContext ) override;
-	void UpdateSyncronous( EveUpdateContext& updateContext ) override;
-	void UpdateAsyncronous( EveUpdateContext& updateContext ) override;
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) override;
+	void Update( const EveUpdateContext& updateContext ) override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext ) override;
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) override;
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const override;
@@ -133,13 +133,18 @@ public:
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 	{
 		FillAndSetConstants(	*buffers[Tr2RenderContextEnum::VERTEX_SHADER],
-											&m_world, sizeof( m_world ) + sizeof( m_worldInverseTranspose ),
+											&m_world, sizeof( m_world ) +  sizeof( m_worldLast ) + sizeof( m_worldInverseTranspose ),
 											Tr2RenderContextEnum::VERTEX_SHADER,
 											Tr2Renderer::GetPerObjectVSStartRegister(),
 											renderContext );
 	}
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
+	{
+		writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, &m_world, sizeof( m_world ) + sizeof( m_world ) + sizeof( m_worldInverseTranspose ) );
+	}
 
 	Matrix m_world;
+	Matrix m_worldLast;
 	Matrix m_worldInverseTranspose;
 };
 

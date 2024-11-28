@@ -94,7 +94,7 @@ namespace TrinityALImpl
 	{
 	}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
 	{
 		if( !renderContext.IsValid() || !IsValid() )
 		{
@@ -132,6 +132,16 @@ namespace TrinityALImpl
 			return S_OK;
 		}
 		return S_OK;
+	}
+
+	uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+	{
+		return 0xffffffff;
+	}
+
+	uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+	{
+		return 0xffffffff;
 	}
 
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& ) const

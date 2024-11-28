@@ -44,29 +44,15 @@ public:
 
 	/**  */
 	FreeList(uint32_t entryCount, const tInitArgs& initArgs) :
-		m_entryCount(entryCount),
-		m_freeCount(entryCount),
+		m_entryCount(0),
+		m_freeCount(0),
 		m_freeHead(nullptr),
 		m_inUseHead(nullptr)
 	{
-		// Create free list
-		m_allEntries.reserve(entryCount);
-		for (uint32_t entryIdx = 0; entryIdx < m_entryCount; ++entryIdx)
-		{
-			m_allEntries.push_back(Entry(entryIdx, initArgs));
-		}
-
-		// Pre-link all entries
-		for (uint32_t entryIdx = 0; entryIdx < m_entryCount; ++entryIdx)
-		{
-			Entry& entry = m_allEntries[entryIdx];
-
-			entry.m_prev = entryIdx > 0 ? &m_allEntries[entryIdx - 1] : nullptr;
-			entry.m_next = entryIdx < (m_entryCount - 1) ? &m_allEntries[entryIdx + 1] : nullptr;
-		}
+		AddPage( entryCount, initArgs );
 
 		// Point to the first element in the list
-		m_freeHead = &m_allEntries[0];
+		m_freeHead = m_allEntries[0]->data();
 	}
 
 	/**  */
@@ -77,10 +63,41 @@ public:
 		m_inUseHead = nullptr;
 	}
 
-	/** Get internal vector of entries */
-	const std::vector<Entry>& GetAllEntries() const
+	template <typename Op>
+	void EnumerateEntries( const Op& operation )
 	{
-		return m_allEntries;
+		for( auto& page : m_allEntries )
+		{
+			for( auto& entry : *page )
+			{
+				operation( entry );
+			}
+		}
+	}
+
+	void AddPage( uint32_t pageSize, const tInitArgs& initArgs )
+	{
+		m_allEntries.emplace_back( std::make_unique<std::vector<Entry>>() );
+		// Create free list
+		auto& page = *m_allEntries.back(); 
+		page.reserve( pageSize );
+		for( uint32_t entryIdx = 0; entryIdx < pageSize; ++entryIdx )
+		{
+			page.push_back( Entry( m_entryCount + entryIdx, initArgs ) );
+		}
+
+		for( uint32_t entryIdx = 0; entryIdx < pageSize; ++entryIdx )
+		{
+			Entry& entry = page[entryIdx];
+
+			entry.m_prev = entryIdx > 0 ? &page[entryIdx - 1] : nullptr;
+			entry.m_next = entryIdx < ( m_entryCount - 1 ) ? &page[entryIdx + 1] : nullptr;
+		}
+
+		m_entryCount += pageSize;
+		m_freeCount += pageSize;
+		page.back().m_next = m_freeHead;
+		m_freeHead = &page[0];
 	}
 
 	/** Get whether the list is full */
@@ -198,22 +215,25 @@ public:
 	void ValidateEntry(T* entry)
 	{
 		// The pointer should lie within our pre-allocated list
-		uintptr_t entryPtr = reinterpret_cast<uintptr_t>(entry);
-		uintptr_t startPtr = reinterpret_cast<uintptr_t>(&m_allEntries.front());
-		uintptr_t endPtr = reinterpret_cast<uintptr_t>(&m_allEntries.back());
+		uintptr_t entryPtr = reinterpret_cast<uintptr_t>( entry );
+		for( auto& page : m_allEntries )
+		{
+			uintptr_t startPtr = reinterpret_cast<uintptr_t>( &page->front() );
+			uintptr_t endPtr = reinterpret_cast<uintptr_t>( &page->back() );
 
-		CCP_ASSERT(entryPtr >= startPtr);
-		CCP_ASSERT(entryPtr <= endPtr);
-		CCP_UNUSED( entryPtr );
-		CCP_UNUSED( startPtr );
-		CCP_UNUSED( endPtr );
+			if( entryPtr >= startPtr && entryPtr <= endPtr )
+			{
+				return;
+			}
+		}
+		CCP_ASSERT( false );
 	}
 
 private:
 
 	uint32_t m_entryCount;
 	uint32_t m_freeCount;
-	std::vector<Entry> m_allEntries;
+	std::vector<std::unique_ptr<std::vector<Entry>>> m_allEntries;
 	Entry* m_freeHead;
 	Entry* m_inUseHead;
 };

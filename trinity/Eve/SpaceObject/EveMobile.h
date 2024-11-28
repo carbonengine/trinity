@@ -38,10 +38,10 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Overrides of EveSpaceObject2 implementations
-	void UpdateSyncronous( EveUpdateContext& updateContext ) override;
-	void UpdateAsyncronous( EveUpdateContext& updateContext ) override;
-	void PrepareShaderData( EveUpdateContext& updateContext ) override;
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext ) override;
+	void PrepareShaderData( const EveUpdateContext& updateContext ) override;
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) override;
 	bool GetLocalBoundingBox( Vector3 &min, Vector3 &max ) override;
 	void GetLights(Tr2LightManager& lightManager) const override;
@@ -65,7 +65,7 @@ public:
 	// checks and counts the number of locators and/or granny-bones used to position turrets
 	unsigned int GetTurretLocatorCount();
 	// Asynch update for turret sets
-	virtual void UpdateTurretsAsyncronous( EveUpdateContext& updateContext );
+	virtual void UpdateTurretsAsyncronous( const EveUpdateContext& updateContext );
 
 	void SetShaderOption(const BlueSharedString& name, const BlueSharedString& value) override;
 

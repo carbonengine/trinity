@@ -65,6 +65,19 @@ bool Tr2RuntimeTextureParameter::ApplyUav(
 	}
 }
 
+void Tr2RuntimeTextureParameter::AddUsedTexture( Tr2BindlessResourcesAL& usedTextures ) const
+{
+	if( Tr2TextureAL* tex = ( m_texture ? m_texture->GetTexture() : nullptr ) )
+	{
+		usedTextures.Add( *tex );
+	}
+	else
+	{
+		usedTextures.Add( *tex );
+	}
+}
+
+
 // --------------------------------------------------------------------------------------
 const char* Tr2RuntimeTextureParameter::GetParameterName() const
 {

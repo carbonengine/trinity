@@ -33,7 +33,7 @@ public:
     const char* GetProceduralMethodVariable() override;
 
     //  IEveProceduralSelectionMethod
-    void UpdateASyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+    void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
     bool IsSelectedChildModified() const override;
     EveChildRefPtr GetSelectedChild() override;
     IEveVolumeVector* GetDebugVolumes() override;

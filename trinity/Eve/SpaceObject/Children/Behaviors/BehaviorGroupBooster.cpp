@@ -13,12 +13,14 @@
 #include "include/TriMath.h"
 #include "Eve/SpaceObject/Children/EveChildQuad.h"
 #include "Eve/SpaceObject/Children/TransformModifiers/EveChildModifierHalo.h"
+#include "Resources/TriGeometryRes.h"
+#include "TriRenderBatch.h"
 
 
 
 namespace
 {
-	ALResult GetBoxVB( Tr2BufferAL& vb, Tr2PrimaryRenderContext& renderContext )
+	ALResult GetBoxVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
 	{
 		const uint32_t vertexCount = 4 * 6;
 		BehaviorGroupBooster::BoosterVertex vertices[vertexCount];
@@ -53,8 +55,7 @@ namespace
 		( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
 		( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
 
-		return vb.Create( sizeof( BehaviorGroupBooster::BoosterVertex ), vertexCount, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, &vertices[0], renderContext );
-
+		return g_sharedBuffer.Allocate( sizeof( BehaviorGroupBooster::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
 	}
 	
 	Tr2VertexDefinition& GetQuadDefinition()
@@ -145,6 +146,7 @@ bool BehaviorGroupBooster::Initialize()
 
 	// create vertex-declarartion
 	m_vertexDeclarationHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_boosterInstancedVertex );
+	Tr2Renderer::ReserveQuadListIndexBuffer( 6 );
 	return true;
 }
 
@@ -367,39 +369,36 @@ Tr2EffectPtr BehaviorGroupBooster::GetEffect()
 	return m_boosterEffect;
 }
 
-unsigned int BehaviorGroupBooster::GetVertexDeclaration()
+unsigned int BehaviorGroupBooster::GetVertexDeclaration() const
 {
 	return m_vertexDeclarationHandle;
 }
 
-void BehaviorGroupBooster::Draw( Tr2RenderContext& renderContext, Tr2BufferAL* instanceBuffer, unsigned int offset, unsigned int stride, unsigned int count )
+Tr2RenderBatch BehaviorGroupBooster::GetBatch( Tr2BufferAL* instanceBuffer, unsigned int startInstance, unsigned int instanceDataStride, unsigned int count ) const
 {
-	if( !instanceBuffer || !m_displayBoosters)
+	if( !instanceBuffer || !m_displayBoosters || !m_display || !m_vertexBuffer.GetSharedResource().IsValid() )
 	{
-		return;
+		return {};
 	}
-
 	if( Tr2Renderer::GetShaderModel() < TR2SM_3_0_HI )
 	{
 		// Don't render these except on high!
-		return;
+		return {};
 	}
-	
-	auto indexBuffer = Tr2Renderer::GetQuadListIndexBuffer( 6 );
-	if( !indexBuffer )
+	auto& indexBuffer = Tr2Renderer::GetQuadListIndexBuffer();
+	if( !indexBuffer.IsValid() )
 	{
-		return;
+		return {};
 	}
-	
-	renderContext.m_esm.ApplyVertexDeclaration( GetVertexDeclaration() );
-	renderContext.m_esm.ApplyIndexBuffer( *indexBuffer ); 
 
-	// stream0: "indexed", booster shape
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer.GetSharedResource(), 0, sizeof( BoosterVertex ) );
-	// stream1: the instance buffer
-	renderContext.m_esm.ApplyStreamSource( 1, *instanceBuffer, offset, stride );
-	renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
-	renderContext.DrawIndexedInstanced( 4 * 6, 0, 2 * 6, count);
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_boosterEffect );
+	batch.SetVertexDeclaration( GetVertexDeclaration() );
+	batch.SetInidices( indexBuffer );
+	batch.SetStreamSource( 0, m_vertexBuffer.GetSharedResource() );
+	batch.SetStreamSource( 1, *instanceBuffer, instanceDataStride );
+	batch.SetDrawIndexedInstanced( 2 * 6 * 3, count, indexBuffer.GetStartIndex(), m_vertexBuffer.GetSharedResource().GetOffset() / m_vertexBuffer.GetSharedResource().GetStride(), startInstance );
+	return batch;
 }
 
 void BehaviorGroupBooster::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )

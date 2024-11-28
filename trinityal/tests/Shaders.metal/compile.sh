@@ -14,6 +14,10 @@ for file in *.csh; do
 	echo $file
 	xcrun metal -x metal -gline-tables-only -MO $file -o ${file:r}.cs.bin
 done
+for file in *.rsh; do
+    echo $file
+    xcrun metal -x metal -gline-tables-only -MO $file -o ${file:r}.rs.bin
+done
 for file in *.bin; do
 	python ../bin2h.cmd $file ${file:r}.h
 done

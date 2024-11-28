@@ -101,7 +101,7 @@ namespace TrinityALImpl
 		}
 		renderContext.m_commandList->EndQuery( m_query, D3D12_QUERY_TYPE_OCCLUSION, 0 );
 		renderContext.m_commandList->ResolveQueryData( m_query, D3D12_QUERY_TYPE_OCCLUSION, 0, 1, m_result, 0 );
-		m_frameIndex = m_owner->GetCurrentFrameIndexDx12();
+		m_frameIndex = m_owner->GetRecordingFrameNumber();
 		return S_OK;
 	}
 
@@ -115,7 +115,7 @@ namespace TrinityALImpl
 		{
 			renderContext.FlushAndSyncDx12();
 		}
-		if( m_owner->GetCompletedFrameIndexDx12() < m_frameIndex )
+		if( m_owner->GetRenderedFrameNumber() < m_frameIndex )
 		{
 			return S_FALSE;
 		}

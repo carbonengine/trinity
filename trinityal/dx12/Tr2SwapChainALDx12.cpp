@@ -36,13 +36,14 @@ namespace Tr2SwapChainUtils
 	}
 
 	ALResult CreateSwapChain(
-		CComPtr<IDXGISwapChain3>& swapChain,
+		CComPtr<IDXGISwapChain4>& swapChain,
 		Tr2WindowHandle focusWindow,
 		const Tr2PresentParametersAL& presentationParameters,
 		ID3D12CommandQueue* commandQueue,
-		IDXGIOutput* output )
+		IDXGIOutput* output,
+		Tr2PrimaryRenderContextAL& renderContext )
 	{
-		CComPtr<IDXGIFactory4> dxgiFactory;
+		CComPtr<IDXGIFactory4> factory;
 
 		UINT createFactoryFlags = 0;
 		if( g_requestDeviceDebugLayer )
@@ -50,7 +51,7 @@ namespace Tr2SwapChainUtils
 			createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 		}
 
-		CR_RETURN_HR( CreateDXGIFactory2( createFactoryFlags, IID_PPV_ARGS( &dxgiFactory ) ) );
+		CR_RETURN_HR( renderContext.CreateFactory2( createFactoryFlags, factory ) );
 
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = presentationParameters.mode.width;
@@ -76,19 +77,10 @@ namespace Tr2SwapChainUtils
 		{
 			wnd = focusWindow;
 		}
-
-		CComPtr<IDXGISwapChain1> swapChain1;
 		
-		CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
-			commandQueue,
-			wnd,
-			&swapChainDesc,
-			nullptr,
-			output,
-			&swapChain1 ) );
+		CR_RETURN_HR( renderContext.CreateSwapChainForHwnd( factory, commandQueue, wnd, &swapChainDesc, nullptr, output, swapChain ) );
 		
-		CR_RETURN_HR( swapChain1.QueryInterface( &swapChain ) );
-		CR_RETURN_HR( dxgiFactory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER ) );
+		CR_RETURN_HR( factory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER ) );
 		return S_OK;
 	}
 
@@ -144,6 +136,7 @@ namespace TrinityALImpl
 		}
 
 		FORWARD_HR( renderContext.FlushAndSyncDx12( renderContext ) );
+		renderContext.FlushPendingRelease();  // Make sure we have no references to the old swap chain lingering around
 
 		Tr2PresentParametersAL presentationParameters;
 		CR_RETURN_HR( Tr2SwapChainUtils::FillPresentationParameters( presentationParameters, windowHandle ) );
@@ -153,8 +146,8 @@ namespace TrinityALImpl
 
 	ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationParameters, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext )
 	{
-		CComPtr<IDXGISwapChain3> swapChain;
-		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output ) );
+		CComPtr<IDXGISwapChain4> swapChain;
+		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output, renderContext ) );
 
 		std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 		std::vector<CComPtr<ID3D12Resource>> backBuffers;
@@ -253,8 +246,8 @@ namespace TrinityALImpl
 	void Tr2SwapChainAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2SwapChainAL";
-		description["width"] = std::to_string( long long( m_presentParameters.mode.width ) );
-		description["height"] = std::to_string( long long( m_presentParameters.mode.height ) );
+		description["width"] = std::to_string( m_presentParameters.mode.width );
+		description["height"] = std::to_string( m_presentParameters.mode.height );
 		description["name"] = m_name;
 	}
 

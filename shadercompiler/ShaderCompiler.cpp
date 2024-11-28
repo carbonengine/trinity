@@ -213,7 +213,7 @@ void PrintUsage()
 
 bool DiscoverPermutations( Permutations& permutations, const char* shaderSource, size_t shaderLength )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	ParserState state( MakeInlineString( shaderSource, shaderSource + shaderLength ) );
 	if( !state.DiscoverPermutations( permutations ) )
@@ -472,59 +472,30 @@ void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permut
 struct WithTelemetry
 {
 #if CCP_TELEMETRY_ENABLED
-	explicit WithTelemetry( bool enable )
+	explicit WithTelemetry( bool enable ) : m_enabled(enable)
 	{
 		if( !enable )
 		{
 			return;
 		}
-#ifdef NDEBUG
-		tmLoadLibrary( TM_RELEASE );
-#else
-		tmLoadLibrary( TM_DEBUG );
+#if TRACY_MANUAL_LIFETIME
+		tracy::StartupProfiler();
 #endif
-
-		tm_int32 memorySize = 8 * 1024 * 1024;
-		char* memory = (char*)malloc( memorySize );
-		tmInitialize( memorySize, memory );
-		tm_error err = tmOpen(
-			0, // unused
-			"ShaderCompiler", // program name, don't use slashes or weird character that will screw up a filename
-			__DATE__ " " __TIME__, // identifier, could be date time, or a build number ... whatever you want
-			"localhost", // telemetry server address
-			TMCT_TCP, // network capture
-			4719, // telemetry server port
-			TMOF_INIT_NETWORKING, // flags
-			100 ); // timeout in milliseconds ... pass -1 for infinite
-
-		if( err == TMERR_DISABLED )
-		{
-			printf( "Telemetry is disabled via #define NTELEMETRY\n" );
-		}
-		else if( err == TMERR_UNINITIALIZED )
-		{
-			printf( "tmInitialize failed or was not called\n" );
-		}
-		else if( err == TMERR_NETWORK_NOT_INITIALIZED )
-		{
-			printf( "WSAStartup was not called before tmOpen! Call WSAStartup or pass TMOF_INIT_NETWORKING.\n" );
-		}
-		else if( err == TMERR_NULL_API )
-		{
-			printf( "There is no Telemetry API (the DLL isn't in the EXE's path)!\n" );
-		}
-		else if( err == TMERR_COULD_NOT_CONNECT )
-		{
-			printf( "There is no Telemetry server running\n" );
-		}
 	}
 
 	~WithTelemetry()
 	{
-		tmTick( 0 );
-		tmClose( 0 );
-		tmShutdown();
+		if ( m_enabled )
+		{
+			FrameMark;
+#if TRACY_MANUAL_LIFETIME
+			tracy::ShutdownProfiler();
+#endif
+		}
 	}
+
+	private:
+		bool m_enabled{false};
 #else
 	explicit WithTelemetry( bool )
 	{
@@ -538,7 +509,6 @@ int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char* argv[])
 #endif
 {
-
 	ProgramArguments args;
 	if( !ExtractCommandLineArguments( args, argc, argv ) )
 	{
@@ -628,7 +598,7 @@ int main(int argc, char* argv[])
 	}
 
 	{
-		tmZone( 0, 0, "Packing" );
+		ZoneScopedN( "Packing" );
 
 		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 		{
@@ -649,7 +619,7 @@ int main(int argc, char* argv[])
 	std::map<unsigned, unsigned> aliases;
 
 	{
-		tmZone( 0, 0, "Find aliases" );
+		ZoneScopedN( "Find aliases" );
 		for( size_t i = 0; i < keys.size(); ++i )
 		{
 			auto& b0 = g_compiledEffects[keys[i]];
@@ -676,7 +646,7 @@ int main(int argc, char* argv[])
 	}
 
 	{
-		tmZone( 0, 0, "Saving" );
+		ZoneScopedN( "Saving" );
 		// Open the output file
 		FILE* file = nullptr;
 		if( fopen_s( &file, args.outputPath, "wb" ) != 0 )

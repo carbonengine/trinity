@@ -4,7 +4,6 @@
 #include "TriRenderBatch.h"
 #include "Utilities/MatrixUtils.h"
 #include "Tr2QuadRenderer.h"
-#include "Tr2PickingHelperBatch.h"
 #include "Tr2DebugRenderer.h"
 #include <Tr2Renderer.h>
 #include "Resources/Tr2LightProfileRes.h"
@@ -128,7 +127,7 @@ void EveSpriteSet::AddBoosterGlowToQuadRenderer( Tr2QuadRenderer& quadRenderer, 
 // Description:
 //   Go through list of sprites, update visibility based on if a sprite is visible or not.
 // --------------------------------------------------------------------------------------
-bool EveSpriteSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveSpriteSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -137,7 +136,7 @@ bool EveSpriteSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	}
 	aabb.Transform( parentTransform );
 
-	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
 void EveSpriteSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
@@ -334,25 +333,6 @@ void EveSpriteSet::Rebuild()
 	CreateItemSetBoundingBoxes( m_aabb, m_boundingBoxes, m_skinned, begin( m_sprites ), end( m_sprites ) );
 }
 
-void EveSpriteSet::GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData )
-{
-	for( auto it = m_sprites.begin(); it != m_sprites.end(); ++it )
-	{
-		if( auto batch = batches->Allocate<Tr2PickingHelperBatch>() )
-		{
-			batch->SetPerObjectData( perObjectData );
-			batch->AddSphere( ( *it )->m_position, ( *it )->m_maxScale );
-			batch->SetAreaID( areaIDOffset );
-			batches->Commit( batch );
-		}
-		else
-		{
-			break;
-		}
-		++areaIDOffset;
-	}
-}
-
 void EveSpriteSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Sprite Sets" );
@@ -463,7 +443,7 @@ void EveSpriteSet::GetLights( Tr2LightManager& lightManager, const Matrix& paren
 	{
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		float blinkScale = EveSpaceObjectAttachmentUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
 		data.radius *= blinkScale;
 		data.innerRadius = Float_16( float( data.innerRadius ) * blinkScale );

@@ -21,7 +21,7 @@ namespace TrinityALImpl
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
 		const Tr2ShaderSignatureAL& signature,
-		const char* shaderPath,
+		const char*,
 		Tr2PrimaryRenderContextAL &renderContext )
 	{
 		ReleaseShader();
@@ -29,6 +29,10 @@ namespace TrinityALImpl
 		if( renderContext.m_d3dDevice11 == nullptr )
 		{
 			return E_FAIL;
+		}
+		if( !signature.samplers.empty() )
+		{
+			return E_INVALIDARG;
 		}
 
 		m_type = type;
@@ -180,8 +184,8 @@ namespace TrinityALImpl
 	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ShaderAL";
-		description["shader"] = std::to_string( long long( GetType() ) );
-		description["size"] = std::to_string( long long( m_bytecode.size() ) );
+		description["shader"] = std::to_string( int( GetType() ) );
+		description["size"] = std::to_string( m_bytecode.size() );
 		description["name"] = m_name;
 	}
 

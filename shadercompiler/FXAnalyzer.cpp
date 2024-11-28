@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "FXAnalyzer.h"
-#include "EffectData.h"
 #include "ASTNode.h"
 #include "HLSLParser.h"
 #include "ParserUtils.h"
@@ -310,6 +309,7 @@ StateDescription g_samplerStates[] = {
 	{ "MipMapLodBias",	SVT_FLOAT,	nullptr,			offsetof( Sampler, mipLODBias ) },
 	{ "ComparisonFunc",	SVT_BYTE,	s_comparisonValues,	offsetof( Sampler, comparisonFunc ) },
 	{ "SRGBTexture",	SVT_BOOL,	s_boolValues,		offsetof( Sampler, srgbTexture ) },
+	{ "IsDynamic",      SVT_BOOL,   s_boolValues,       offsetof( Sampler, isDynamic ) },
 	{ nullptr,			SVT_BOOL,	nullptr,			0 },
 };
 
@@ -565,8 +565,13 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 		}
 			return true;
 		case OP_STRING_CONST:
-			state.ShowMessage( node->GetToken()->fileLocation, EC_UNSUPPORTED_TYPE, "string" );
-			return false;
+		{
+			type.FromTokenType( OP_STRING );
+			ExpressionValueElement element;
+			element.stringValue = ParseString( node->GetToken()->stringValue );
+			value.push_back( element );
+		}
+		return true;
 		}
 		return false;
 	case NT_VAR_IDENTIFIER: {
@@ -1659,10 +1664,12 @@ bool GetSamplerState( ParserState& parserState, ASTNode* node, Sampler& sampler 
 	sampler.borderColor.z = 0.0f;
 	sampler.borderColor.w = 0.0f;
 	sampler.srgbTexture = 0;
+	sampler.isDynamic = 1;
 
 	ASTNode* states = node->GetChildOrNull( 1 );
 	if( states && states->GetNodeType() == NT_SAMPLER_STATE_LIST )
 	{
+		sampler.isDynamic = 0;
 		sampler.filter = 0xff;
 		sampler.minFilter = 0xff;
 		sampler.magFilter = 0xff;
@@ -1727,6 +1734,50 @@ bool GetSamplerState( ParserState& parserState, ASTNode* node, Sampler& sampler 
 	return true;
 }
 
+bool ConvertToStaticSampler( StaticSampler& staticSampler, const Sampler& sampler )
+{
+	if( sampler.isDynamic )
+	{
+		return false;
+	}
+	if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressV == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressW == D3D11_TEXTURE_ADDRESS_BORDER )
+	{
+		if( sampler.borderColor.x == 0 && sampler.borderColor.y == 0 && sampler.borderColor.z == 0 && sampler.borderColor.w == 0 )
+		{
+			staticSampler.borderColor = 0;
+		}
+		else if( sampler.borderColor.x == 0 && sampler.borderColor.y == 0 && sampler.borderColor.z == 0 && sampler.borderColor.w == 1 )
+		{
+			staticSampler.borderColor = 1;
+		}
+		else if( sampler.borderColor.x == 1 && sampler.borderColor.y == 1 && sampler.borderColor.z == 1 && sampler.borderColor.w == 1 )
+		{
+			staticSampler.borderColor = 2;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		staticSampler.borderColor = 0;
+	}
+	staticSampler.comparison = sampler.comparison;
+	staticSampler.minFilter = sampler.minFilter;
+	staticSampler.magFilter = sampler.magFilter;
+	staticSampler.mipFilter = sampler.mipFilter;
+	staticSampler.addressU = sampler.addressU;
+	staticSampler.addressV = sampler.addressV;
+	staticSampler.addressW = sampler.addressW;
+	staticSampler.minLOD = sampler.minLOD;
+	staticSampler.maxLOD = sampler.maxLOD;
+	staticSampler.mipLODBias = sampler.mipLODBias;
+	staticSampler.maxAnisotropy = sampler.maxAnisotropy;
+	staticSampler.comparisonFunc = sampler.comparisonFunc;
+	return true;
+}
+
 int EvaluateIntegerExpression( ParserState& state, ASTNode* node, int defaultValue )
 {
 	Type type;
@@ -1744,4 +1795,33 @@ int EvaluateIntegerExpression( ParserState& state, ASTNode* node, int defaultVal
 		return defaultValue;
 	}
 	return int( value[0].intValue );
+}
+
+
+std::optional<RtShaderType> ParseRtShaderName( const InlineString& name )
+{
+    if( EqualsCaseInsensitive( name, "raygenshader" ) )
+    {
+        return RtShaderType::RAY_GEN;
+    }
+    else if( EqualsCaseInsensitive( name, "missshader" ) )
+    {
+        return RtShaderType::MISS;
+    }
+    else if( EqualsCaseInsensitive( name, "closesthitshader" ) )
+    {
+        return RtShaderType::CLOSEST_HIT;
+    }
+    else if( EqualsCaseInsensitive( name, "anyhitshader" ) )
+    {
+        return RtShaderType::ANY_HIT;
+    }
+    else if( EqualsCaseInsensitive( name, "intersectionshader" ) )
+    {
+        return RtShaderType::INTERSECTION;
+    }
+    else
+    {
+        return {};
+    }
 }

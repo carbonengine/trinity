@@ -538,7 +538,7 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw()
 	m_assignedUavOffset( 0 ),
 	m_assignedPsUavs( false )
 {	
-	m_dirtyFlag.flags = 0;
+	m_dirtyFlag.mask = 0;
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
 
 	static_assert(	D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT >= MAX_RENDER_TARGET, 
@@ -610,8 +610,6 @@ void Tr2RenderContextAL::Destroy() throw()
 		m_aftermathContext = nullptr;
 	}
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
-
-	m_commandList		= nullptr;
 		
 	m_boundDepthStencil	= Tr2TextureAL();
 
@@ -634,7 +632,7 @@ void Tr2RenderContextAL::Destroy() throw()
 	m_renderStateEmulation.s_depthStencilStateCache.clear();
 	m_renderStateEmulation.s_rasterizerCache.clear();
 
-	m_dirtyFlag.flags = 0;
+	m_dirtyFlag.mask = 0;
 	
 	m_fragmentOpBuffer = Tr2ConstantBufferAL();
 
@@ -750,7 +748,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 	uint32_t,
 	uint32_t startIndex, 
 	uint32_t primitiveCount, 
-	uint32_t ) throw()
+	uint32_t baseVertexLocation ) throw()
 {
 	auto vc = ComputeVertexCount( primitiveCount );
 	
@@ -764,7 +762,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 	}
 
 	ApplyReadOnlyDepth();
-	m_context->DrawIndexed( vc, startIndex, 0 );
+	m_context->DrawIndexed( vc, startIndex, baseVertexLocation );
 	
 	return S_OK;
 }
@@ -791,6 +789,50 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	
 	return S_OK;
 }
+
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t indexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startIndexLocation,
+	int32_t baseVertexLocation,
+	uint32_t startInstanceLocation ) throw()
+{
+	CCP_STATS_ADD( primitiveCount, indexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, indexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	if( !ApplyShadowRenderStates() )
+	{
+		return E_FAIL;
+	}
+
+	ApplyReadOnlyDepth();
+	m_context->DrawIndexedInstanced( indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation );
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawInstanced(
+	uint32_t vertexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startVertexLocation,
+	uint32_t startInstanceLocation ) throw( )
+{
+	CCP_STATS_ADD( primitiveCount, vertexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, vertexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	if( !ApplyShadowRenderStates() )
+	{
+		return E_FAIL;
+	}
+
+	ApplyReadOnlyDepth();
+	m_context->DrawInstanced( vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation );
+
+	return S_OK;
+}
+
 
 ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw()
 {
@@ -1241,9 +1283,13 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 
 ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw()
 {
-	m_context->IASetIndexBuffer( buffer.m_buffer->m_buffer,
-		buffer.GetDesc().stride == 2  ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT,
-		0 );
+	return SetIndices( buffer, buffer.GetDesc().stride );
+}
+
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, uint32_t stride) throw()
+{
+	m_context->IASetIndexBuffer( buffer.m_buffer->m_buffer, stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 0 );
 	return S_OK;
 }
 
@@ -1355,7 +1401,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 		if( blends != static_cast<D3D11_BLEND>( value ) )	\
 		{													\
 			blends = static_cast<D3D11_BLEND>( value );		\
-			m_dirtyFlag.blend = true;						\
+			m_dirtyFlag.flags.blend = true;					\
 		}													\
 	}
 
@@ -1364,7 +1410,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 		if( op != static_cast<D3D11_BLEND_OP>( value ) )	\
 		{													\
 			op = static_cast<D3D11_BLEND_OP>( value );		\
-			m_dirtyFlag.blend = true;						\
+			m_dirtyFlag.flags.blend = true;					\
 		}													\
 	}
 
@@ -1396,7 +1442,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ( rt0.BlendEnable == 0 ) != ( value == 0 ) )
 			{
 				rt0.BlendEnable = value ? 1 : 0;
-				m_dirtyFlag.blend = true;
+				m_dirtyFlag.flags.blend = true;
 			}
 			continue;	//return S_OK;
 
@@ -1412,7 +1458,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( rt0.RenderTargetWriteMask != value )
 			{
 				rt0.RenderTargetWriteMask = static_cast<UINT8>( value ) & 0xf;
-				m_dirtyFlag.blend = true;			
+				m_dirtyFlag.flags.blend = true;			
 			}
 			//m_queryableRenderState.m_colorWriteEnable = value;
 			continue;	//return S_OK;
@@ -1421,7 +1467,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( m_renderStateEmulation.m_separateAlphaBlendEnabled != ( value != 0 ) )
 			{
 				m_renderStateEmulation.m_separateAlphaBlendEnabled = value != 0;
-				m_dirtyFlag.blend = true;
+				m_dirtyFlag.flags.blend = true;
 			}
 			continue;	//return S_OK;
 
@@ -1430,7 +1476,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ( ds.DepthEnable != 0 ) != ( value != 0 ) )
 			{
 				ds.DepthEnable = value ? 1 : 0;
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			//m_queryableRenderState.m_zEnable = value;
 			continue;	//return S_OK;
@@ -1441,7 +1487,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.DepthWriteMask = value	? D3D11_DEPTH_WRITE_MASK_ALL 
 											: D3D11_DEPTH_WRITE_MASK_ZERO;
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			//m_queryableRenderState.m_zWriteEnable = value;
 			continue;	//return S_OK;
@@ -1450,7 +1496,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ds.DepthFunc != static_cast<D3D11_COMPARISON_FUNC>( value ) )
 			{
 				ds.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>( value );	// same -- TODO Halify the enum values
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1458,7 +1504,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ( ds.StencilEnable == 0 ) != ( value == 0 ) )
 			{
 				ds.StencilEnable = value ? 1 : 0;
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1466,7 +1512,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ds.StencilReadMask != value || ds.StencilWriteMask != value )
 			{
 				ds.StencilReadMask = ds.StencilWriteMask = static_cast<UINT8>( value );
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1474,7 +1520,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( m_renderStateEmulation.m_currentStencilRef != value )
 			{
 				m_renderStateEmulation.m_currentStencilRef = value;
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1484,7 +1530,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.FrontFace.StencilFailOp = 
 					ds.BackFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1494,7 +1540,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.FrontFace.StencilDepthFailOp = 
 					ds.BackFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1504,7 +1550,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.FrontFace.StencilPassOp = 
 					ds.BackFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			continue;	//return S_OK;
 		
@@ -1514,7 +1560,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.FrontFace.StencilFunc = 
 					ds.BackFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>( value );	// same -- TODO halify
-				m_dirtyFlag.depthStencil = true;
+				m_dirtyFlag.flags.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1524,7 +1570,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( rs.FillMode != static_cast<D3D11_FILL_MODE>( value ) )
 			{
 				rs.FillMode = static_cast<D3D11_FILL_MODE>( value );	// same -- Halify
-				m_dirtyFlag.rasterizer = true;
+				m_dirtyFlag.flags.rasterizer = true;
 			}
 			continue;	//return S_OK;
 
@@ -1537,7 +1583,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				{
 					rs.CullMode = newValue;
 					rs.FrontCounterClockwise = FALSE;
-					m_dirtyFlag.rasterizer = true;
+					m_dirtyFlag.flags.rasterizer = true;
 				}
 				//m_queryableRenderState.m_cullMode = value;
 			}
@@ -1550,7 +1596,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				//rs.DepthBias = static_cast<INT>(value);
 				rs.DepthBias = static_cast<INT>( *(float*)&value ); // cppcheck-suppress invalidPointerCast
-				m_dirtyFlag.rasterizer = true;
+				m_dirtyFlag.flags.rasterizer = true;
 			}
 			continue;	//return S_OK;
 
@@ -1558,7 +1604,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( rs.SlopeScaledDepthBias != *( (float*)&value ) ) // cppcheck-suppress invalidPointerCast
 			{
 				rs.SlopeScaledDepthBias = *( (float*)&value ); // cppcheck-suppress invalidPointerCast
-				m_dirtyFlag.rasterizer = true;
+				m_dirtyFlag.flags.rasterizer = true;
 			}
 			continue;	//return S_OK;
 		case RS_SRGBWRITEENABLE:
@@ -1566,6 +1612,13 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				m_isSrgbRenderTarget = ( value != 0 );
 				SetRtDsToDevice( MAX_RENDER_TARGET );
+			}
+			continue;
+		case RS_DEPTH_CLIP_ENABLE:
+			if( rs.DepthClipEnable != ( value ? TRUE : FALSE ) )
+			{
+				rs.DepthClipEnable = value ? TRUE : FALSE;
+				m_dirtyFlag.flags.rasterizer = true;
 			}
 			continue;
 		default:
@@ -1607,10 +1660,10 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 		m_context->IASetInputLayout( nullptr );
 	}
 
-	if( m_dirtyFlag.flags )
+	if( m_dirtyFlag.mask )
 	{
 		OK = ApplyBlendState() && ApplyDepthStencilState() && ApplyRasterizerState();
-		m_dirtyFlag.flags = 0;
+		m_dirtyFlag.mask = 0;
 	}
 
 	auto hasHullShader =m_shaderProgram.m_program->m_shaders.hullShader != nullptr;
@@ -1634,7 +1687,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 
 bool Tr2RenderContextAL::ApplyBlendState() throw()
 {	
-	if( !m_dirtyFlag.blend )
+	if( !m_dirtyFlag.flags.blend )
 	{
 		return true;
 	}
@@ -1650,7 +1703,7 @@ bool Tr2RenderContextAL::ApplyBlendState() throw()
 
 bool Tr2RenderContextAL::ApplyDepthStencilState() throw()
 {	
-	if( !m_dirtyFlag.depthStencil )
+	if( !m_dirtyFlag.flags.depthStencil )
 	{
 		return true;
 	}
@@ -1667,7 +1720,7 @@ bool Tr2RenderContextAL::ApplyDepthStencilState() throw()
 
 bool Tr2RenderContextAL::ApplyRasterizerState() throw()
 {	
-	if( !m_dirtyFlag.rasterizer )
+	if( !m_dirtyFlag.flags.rasterizer )
 	{
 		return true;
 	}
@@ -2133,12 +2186,27 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Col
 {
 }
 
+ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type, const Tr2BindlessResourcesAL& )
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
+{
+    return S_OK;
+}
+
 void TrinityALImpl::SetDebugName( ID3D11DeviceChild* resource, const char* name )
 {
 	if( resource )
 	{
 		resource->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( strlen( name ) ), name );
 	}
+}
+
+ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+{
+	return E_FAIL;
 }
 
 #endif	//DX11?

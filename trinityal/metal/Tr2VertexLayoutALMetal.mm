@@ -106,7 +106,7 @@ namespace TrinityALImpl
 	Tr2VertexLayoutAL::MetalVertexDescriptor Tr2VertexLayoutAL::GenerateVertexDescriptor( const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const
 	{
 		MetalContext* metalContext = m_renderContext->GetMetalContext();
-		MetalVertexDescriptor result = { metalContext->CreateVertexLayout(), 0, false };
+		MetalVertexDescriptor result = { metalContext->CreateVertexLayout(), 0, 0, false };
 
 		static_assert(
 			sizeof( result.streamMask ) * 8 >= METAL_VERTEX_STREAM_BUFFER_COUNT,
@@ -162,8 +162,47 @@ namespace TrinityALImpl
 				result.needsDummyStream = true;
 			}
 		}
+        CalculateHash( result );
+
 		return result;
 	}
+
+    void Tr2VertexLayoutAL::CalculateHash( MetalVertexDescriptor& result ) const
+    {
+        auto hash_combine = []( std::size_t& seed, uint32_t v )
+        {
+            std::hash<uint32_t> hasher;
+            seed ^= hasher( v ) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        };
+        
+        size_t hashVal = 0;
+        unsigned int mask = result.streamMask;
+        for( int i = 0; mask && i < METAL_MAX_VERTEX_ATTRIBUTES; ++i )
+        {
+            auto stream = result.descriptor.attributes[i].bufferIndex;
+            unsigned int flag = ( 1 << stream );
+            if( mask & flag )
+            {
+                hash_combine( hashVal, (uint32_t)result.descriptor.attributes[i].bufferIndex );
+                hash_combine( hashVal, (uint32_t)result.descriptor.attributes[i].offset );
+                hash_combine( hashVal, (uint32_t)result.descriptor.attributes[i].format );
+            }
+        }
+
+        mask = result.streamMask;
+        for( int i = 0; mask && i < METAL_VERTEX_STREAM_BUFFER_COUNT; ++i )
+        {
+            unsigned int flag = ( 1 << i );
+            if( mask & flag )
+            {
+                hash_combine( hashVal, (uint32_t)result.descriptor.layouts[i].stepFunction );
+                hash_combine( hashVal, (uint32_t)result.descriptor.layouts[i].stepRate );
+
+                mask = mask & ~flag;
+            }
+        }
+        result.baseHash = hashVal;
+    }
 
 	void Tr2VertexLayoutAL::SetVertexLayout( const std::shared_ptr<TrinityALImpl::Tr2ShaderProgramAL>& shaderProgram, Tr2RenderContextAL& renderContext )
 	{
@@ -197,12 +236,13 @@ namespace TrinityALImpl
 		{
 			renderContext.GetMetalWorkQueue()->SetVertexStream( METAL_VERTEX_STREAM_DUMMY, renderContext.GetMetalContext()->GetDummyBuffer(), sizeof(float) * 4, 0 );
 		}
-		renderContext.GetMetalWorkQueue()->SetCurrentVertexDescriptor( descriptor.descriptor, descriptor.streamMask );
+		renderContext.GetMetalWorkQueue()->SetCurrentVertexDescriptor( descriptor.descriptor, descriptor.streamMask, descriptor.baseHash );
 	}
 
     void Tr2VertexLayoutAL::AddVertexDescriptor( size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream )
     {
-        m_metalVertexDescriptors[inputHash] = { descriptor, streamMask, needsDummyStream };
+        auto& desc = m_metalVertexDescriptors[inputHash] = { descriptor, inputHash, streamMask, needsDummyStream };
+        CalculateHash( desc );
     }
 }
 

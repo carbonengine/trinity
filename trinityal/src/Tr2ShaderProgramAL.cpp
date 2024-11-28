@@ -29,6 +29,17 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL* shaders, size_t count, Tr2Prim
 	return result;
 }
 
+ALResult Tr2ShaderProgramAL::CreateCommandSignatures( Tr2IndirectBufferLayoutAL& bufferLayout, Tr2PrimaryRenderContextAL& renderContext )
+{
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	return m_program->CreateCommandSignatures( bufferLayout, renderContext );
+#else
+	(void)bufferLayout;
+	(void)renderContext;
+	return E_FAIL;
+#endif
+}
+
 bool Tr2ShaderProgramAL::IsValid() const
 {
 	return m_program->IsValid();
@@ -60,4 +71,9 @@ ALResult Tr2ShaderProgramAL::SetName( const char* name )
 		return E_INVALIDARG;
 	}
 	return m_program->SetName( name );
+}
+
+TrinityALImpl::Tr2ShaderProgramAL* Tr2ShaderProgramAL::TrinityALImpl_GetObject() const
+{
+	return m_program.get();
 }

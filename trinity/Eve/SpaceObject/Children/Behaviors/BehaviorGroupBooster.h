@@ -13,7 +13,7 @@ BLUE_DECLARE( Tr2LightManager );
 BLUE_DECLARE( EveChildQuad );
 BLUE_DECLARE( EveChildModifierHalo );
 BLUE_DECLARE( TriFrustum );
-
+struct Tr2RenderBatch;
 
 
 // --------------------------------------------------------------------------------------
@@ -80,10 +80,10 @@ public:
 
 	void CreateBuffer();
 	Tr2EffectPtr GetEffect();
-	unsigned int GetVertexDeclaration();
+	unsigned int GetVertexDeclaration() const;
 	void RebuildFlareBuffer( unsigned int count );
 	
-	void Draw( Tr2RenderContext& renderContext, Tr2BufferAL* instanceBuffer, unsigned int offset, unsigned int stride, unsigned int count );
+	Tr2RenderBatch GetBatch( Tr2BufferAL * instanceBuffer, unsigned int startInstance, unsigned int instanceDataStride, unsigned int count ) const;
 
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;

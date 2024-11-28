@@ -7,8 +7,6 @@
 #ifndef EveHazeSetItem_H
 #define EveHazeSetItem_H
 
-#include "ITr2GeometryProvider.h"
-
 // --------------------------------------------------------------------------------
 // Description:
 //   This class is for rendering all of one ship's trails.

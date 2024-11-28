@@ -11,7 +11,7 @@ Tr2PipelineStatsQueryAL::Tr2PipelineStatsQueryAL()
 {
 }
 
-ALResult Tr2PipelineStatsQueryAL::Create( Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2PipelineStatsQueryAL::Create( Tr2PrimaryRenderContextAL& )
 {
 	return S_OK;
 }
@@ -25,37 +25,37 @@ void Tr2PipelineStatsQueryAL::Destroy()
 {
 }
 
-ALResult Tr2PipelineStatsQueryAL::Begin( Tr2RenderContextAL& renderContext )
+ALResult Tr2PipelineStatsQueryAL::Begin( Tr2RenderContextAL& )
 {
 	return S_OK;
 }
 
-ALResult Tr2PipelineStatsQueryAL::End( Tr2RenderContextAL& renderContext )
+ALResult Tr2PipelineStatsQueryAL::End( Tr2RenderContextAL& )
 {
 	return S_OK;
 }
 
-ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2RenderContextAL& renderContext )
+ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL&, Tr2RenderContextAL& )
 {
 	return S_OK;
 }
 
-size_t Tr2PipelineStatsQueryAL::GetValueCount( const Tr2PipelineStatsDataAL& data )
+size_t Tr2PipelineStatsQueryAL::GetValueCount( const Tr2PipelineStatsDataAL& )
 {
 	return 0;
 }
 
-const char* Tr2PipelineStatsQueryAL::GetLabel( const Tr2PipelineStatsDataAL& data, size_t index )
+const char* Tr2PipelineStatsQueryAL::GetLabel( const Tr2PipelineStatsDataAL&, size_t )
 {
 	return "";
 }
 
-const char* Tr2PipelineStatsQueryAL::GetDescription( const Tr2PipelineStatsDataAL& data, size_t index )
+const char* Tr2PipelineStatsQueryAL::GetDescription( const Tr2PipelineStatsDataAL&, size_t )
 {
 	return "";
 }
 
-::Tr2PipelineStatsQueryAL::Value Tr2PipelineStatsQueryAL::GetValue( const Tr2PipelineStatsDataAL& data, size_t index )
+::Tr2PipelineStatsQueryAL::Value Tr2PipelineStatsQueryAL::GetValue( const Tr2PipelineStatsDataAL&, size_t )
 {
 	return 0;
 }

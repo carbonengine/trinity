@@ -56,6 +56,8 @@ void Tr2TextureAtlas::ReleaseResources( TriStorage s )
 		}
 		m_freeAreas.clear();
 		m_dirtyMipRegions.clear();
+
+		m_onTextureChange();
 	}
 }
 
@@ -111,6 +113,8 @@ bool Tr2TextureAtlas::OnPrepareResources()
 	m_freeTexels = m_width * m_height;
 	m_freeMaxWidth = m_width;
 	m_freeMaxHeight = m_height;
+
+	m_onTextureChange();
 
 	return true;
 }
@@ -927,6 +931,11 @@ void Tr2TextureAtlas::PaintEmptyArea( Tr2TextureAtlasArea* area )
 Tr2TextureAL* Tr2TextureAtlas::GetTexture()
 {
 	return &m_texture;
+}
+
+Tr2TextureAtlas::OnTextureChangeEvent& Tr2TextureAtlas::OnTextureChange()
+{
+	return m_onTextureChange;
 }
 
 int Tr2TextureAtlas::GetTexturesInAtlasCount()

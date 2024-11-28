@@ -47,7 +47,15 @@ struct MetalSystemSemanticsType
 		thread_position_in_threadgroup,
 		thread_index_in_threadgroup,
 		threadgroup_position_in_grid,
-		sample_id
+		sample_id,
+        threads_per_grid,
+        
+        payload,
+        barycentric_coord,
+        origin,
+        direction,
+        min_distance,
+        distance,
 	};
 
 	static const char* GetString( int type );

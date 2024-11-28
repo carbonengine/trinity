@@ -14,7 +14,10 @@
 #include "Tr2ShaderProgramALMetal.h"
 #include "Tr2TextureALMetal.h"
 #include "Tr2SwapChainALMetal.h"
-
+#include "Tr2RtPipelineStateALMetal.h"
+#include "Tr2RtShaderTableALMetal.h"
+#include "Tr2RtTopLevelAccelerationStructureALMetal.h"
+#include "upscaling/Tr2UpscalingALMetal.h"
 
 #include "MetalContext.h"
 
@@ -60,14 +63,30 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_separateAlphaBlendEnabled( false )
 	, m_srgbWriteEnable( false )
     , m_isPrimary( false )
+    , m_caps()
+    , m_upscalingTechnique( nullptr )
 {
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
 {
+    
+    if( m_upscalingTechnique ){
+        m_upscalingTechnique->ReleaseResources();
+        delete m_upscalingTechnique;
+        m_upscalingTechnique = nullptr;
+    }
+    
 	m_vertexLayout = Tr2VertexLayoutAL();
 	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
+    
+    std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), BoundRT{} );
+    std::fill( std::begin( m_stackRT ), std::end( m_stackRT ), TrackableStdStack<BoundRT>{} );
+    m_stackDS = TrackableStdStack<Tr2TextureAL>();
+    m_boundDepthStencil = {};
+    m_defaultBackBuffer = {};
+    m_swapChain = Tr2SwapChainAL();
 
 	if( m_isPrimary )
 	{
@@ -153,24 +172,29 @@ ALResult Tr2RenderContextAL::SetStreamSource(uint32_t stream,
 
 ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer) throw( )
 {
+	return SetIndices( buffer, buffer.GetDesc().stride );
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, int stride) throw( )
+{
 	if( !buffer.IsValid() )
 	{
 		m_metalIndexBuffer = nil;
 		return S_OK;
 	}
 	
-	if( buffer.GetDesc().stride == 2 )
+	if( stride == 2 )
 	{
 		m_metalIndexType = MTLIndexTypeUInt16;
 	}
-	else if( buffer.GetDesc().stride == 4 )
+	else if( stride == 4 )
 	{
 		m_metalIndexType = MTLIndexTypeUInt32;
 	}
 	else
 	{
 		m_metalIndexType = MTLIndexTypeUInt32;
-		CCP_AL_LOGWARN( "Unsupported index buffer stride: %d. Defaulting to 4.", (int)buffer.GetDesc().stride );
+		CCP_AL_LOGWARN( "Unsupported index buffer stride: %d. Defaulting to 4.", (int)stride );
 	}
 
 	m_metalIndexBuffer = buffer.m_buffer->GetMetalBuffer();
@@ -239,9 +263,14 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mipLevel,
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&, uint32_t, uint32_t )
+ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src, uint32_t srcOffset, uint32_t length )
 {
-	return E_FAIL;
+    if( !dest.IsValid() || !src.IsValid() )
+    {
+        return E_INVALIDARG;
+    }
+    m_workQueue->CopyBufferToBuffer( dest.m_buffer->GetMetalBuffer(), destOffset, src.m_buffer->GetMetalBuffer(), srcOffset, length );
+	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::Clear(
@@ -389,6 +418,46 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t indexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startIndexLocation,
+	int32_t baseVertexLocation,
+	uint32_t startInstanceLocation )
+{
+    if( m_metalIndexBuffer == nil )
+    {
+        return E_INVALIDARG;
+    }
+    
+	CCP_STATS_ADD( primitiveCount, indexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, indexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	CheckDrawResources();
+
+	m_workQueue->DrawIndexedPrimitives( m_metalPrimitiveInfo.metalPrimitiveType, indexCountPerInstance, m_metalIndexType, m_metalIndexBuffer, startIndexLocation, instanceCount, baseVertexLocation, startInstanceLocation );
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawInstanced(
+	uint32_t vertexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startVertexLocation,
+	uint32_t startInstanceLocation )
+{
+	CCP_STATS_ADD( primitiveCount, vertexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, vertexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	CheckDrawResources();
+
+	m_workQueue->DrawPrimitives( m_metalPrimitiveInfo.metalPrimitiveType, vertexCountPerInstance, startVertexLocation, instanceCount, startInstanceLocation );
+
+	return S_OK;
+}
+
 ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
 {
 	if( !params.IsValid() )
@@ -436,7 +505,7 @@ void Tr2RenderContextAL::CheckDrawResources()
 	}
 	else
 	{
-		m_workQueue->SetCurrentVertexDescriptor( nil, 0 );
+		m_workQueue->SetCurrentVertexDescriptor( nil, 0, 0 );
 	}
 }
 
@@ -522,6 +591,22 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+{
+    if( !pipeline.IsValid() )
+    {
+        return E_FAIL;
+    }
+    if (@available(macOS 11.0, *)) {
+        // pass on shaderTable to bind it to the RayGen shader
+        SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram() );
+    
+        m_workQueue->DispatchRays( pipeline.TrinityALImpl_GetObject(), shaderTable.TrinityALImpl_GetObject(), width, height );
+    }
+    
+    return S_OK;
+}
+
 ALResult Tr2RenderContextAL::SetConstants(
 	const Tr2ConstantBufferAL& buffer,
 	ShaderType shaderType,
@@ -536,6 +621,25 @@ ALResult Tr2RenderContextAL::SetConstants(
 	buffer.m_buffer->SetConstants( shaderType, registerIndex, *this );
 
 	return S_OK;
+}
+
+uint64_t Tr2RenderContextAL::UploadConstants( const void* data, size_t size )
+{
+    TrinityALImpl::ConstantBufferToken token;
+    token.frame = 0;
+    token.offset = 0;
+    GetMetalWorkQueue()->UploadConstants( data, uint32_t( size ), token );
+    return token.offset;
+}
+
+uint64_t Tr2RenderContextAL::UploadConstants( const Tr2ConstantBufferAL& buffer )
+{
+    if( buffer.m_buffer->m_buffer )
+    {
+        GetMetalWorkQueue()->UploadConstants( buffer.m_buffer->m_buffer, buffer.m_buffer->m_size, buffer.m_buffer->m_token );
+        return buffer.m_buffer->m_token.offset;
+    }
+    return 0;
 }
 
 void Tr2RenderContextAL::SetReadOnlyDepth( bool enable )
@@ -630,7 +734,22 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	{
 		m_events->OnContextCreated( *this );
 	}
-
+    
+    if( @available( macOS 11.0, * ) )
+    {
+        auto device = m_metalContext->GetDevice();
+		bool isAppleSilicon = [device supportsFamily:MTLGPUFamilyMac2] && [device supportsFamily:MTLGPUFamilyApple7];
+        bool raytracingAvailable = device.supportsRaytracing && isAppleSilicon;
+        m_caps.m_supportsRaytracing = raytracingAvailable;
+        if( m_caps.m_supportsRaytracing )
+        {
+            CCP_LOGNOTICE( "Device supports raytracing" );
+        }
+        else
+        {
+            CCP_LOGNOTICE( "Device does not support raytracing" );
+        }
+    }
 	return S_OK;
 }
 
@@ -920,6 +1039,11 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 		m_workQueue->SetDepthBias( &depthBias, nil, nil );
 		return S_OK;
 	}
+	case RS_DEPTH_CLIP_ENABLE:
+	{
+		m_workQueue->SetDepthClipEnable( value != 0 );
+		return S_OK;
+	}
 	case RS_SEPARATEALPHABLENDENABLE:
 	{
 		m_separateAlphaBlendEnabled = value != 0;
@@ -1001,7 +1125,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		const ShaderType stages[] = { VERTEX_SHADER, PIXEL_SHADER, COMPUTE_SHADER };
 		for( auto stage : stages )
 		{
-			m_workQueue->SetBuffers( stage, rs.m_buffers[stage], rs.m_buffersMask[stage] );
+			m_workQueue->SetBuffers( stage, rs.m_buffers[stage], rs.m_buffersMask[stage], GetMetalContext()->GetHeapViewBuffer(), rs.m_heapViewMask[stage] );
 			m_workQueue->SetTextures( stage, rs.m_textures[stage], rs.m_texturesRange[stage] );
 			m_workQueue->SetSamplers( stage, rs.m_samplers[stage], rs.m_samplersRange[stage] );
 		}
@@ -1248,5 +1372,269 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 
 	return S_OK;
 }
+
+Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
+{
+    if( m_upscalingTechnique )
+    {
+        delete m_upscalingTechnique;
+        m_upscalingTechnique = nullptr;
+    }
+	
+    if( tech == Tr2UpscalingAL::Technique::NONE )
+	{
+		return Tr2UpscalingAL::Result::OK;
+	}
+
+	// find the technique
+	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
+	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
+	{
+		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	}
+
+	m_upscalingTechnique = TrinityALImpl::CreateUpscalingTechnique( *this, tech, setting, frameGeneration, adapter );
+	if( m_upscalingTechnique == nullptr )
+	{
+		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	}
+	
+	return Tr2UpscalingAL::Result::OK;
+}
+
+Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID ) const
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return nullptr;
+	}
+
+	return m_upscalingTechnique->GetContext( upscalingContextID );
+}
+
+Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return nullptr;
+	}
+
+	return m_upscalingTechnique->CreateContext( params, existingContext );
+}
+
+void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return;
+	}
+
+	return m_upscalingTechnique->DeleteContext( contextID );
+}
+
+std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
+{
+	Tr2UpscalingAL::Technique activeTechnique = Tr2UpscalingAL::Technique::NONE;
+	if( m_upscalingTechnique )
+	{
+		Tr2UpscalingAL::Setting setting;
+		bool framegeneration;
+		m_upscalingTechnique->GetState( activeTechnique, setting, framegeneration );
+	}
+
+    std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
+    for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
+    {
+		if( technique == activeTechnique && m_upscalingTechnique)
+		{ 
+			uint32_t allSettings = 0;
+
+			for( auto& setting : m_upscalingTechnique->GetAvailableSettings() )
+			{
+				allSettings |= setting;
+			}
+
+			supportedTechniques.push_back( { technique, allSettings, m_upscalingTechnique->SupportsFrameGeneration() } );
+			continue;
+		}
+
+        auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
+        if( tech )
+        {
+            uint32_t allSettings = 0;
+
+            for( auto& setting : tech->GetAvailableSettings() )
+            {
+                allSettings |= setting;
+            }
+
+            supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
+            tech = nullptr;
+        }
+		
+		if( tech )
+		{
+			tech = nullptr;
+		}
+    }
+    return supportedTechniques;
+}
+
+Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID ) const
+{
+	auto context = GetUpscalingContext( upscalingContextID );
+	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
+
+	if( context != nullptr )
+	{
+		info.temporal = m_upscalingTechnique->IsTemporal();
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias( info.temporal );
+		info.hasSharpening = context->HasSharpening();
+		context->GetJitter( info.jitterX, info.jitterY );
+		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
+		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
+	}
+	return info;
+}
+
+void Tr2RenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const
+{
+    if( m_upscalingTechnique )
+    {
+        m_upscalingTechnique->GetState( technique, setting, framegeneration );
+		temporal = m_upscalingTechnique->IsTemporal();
+        return;
+    }
+    technique = Tr2UpscalingAL::Technique::NONE;
+    setting = Tr2UpscalingAL::Setting::NATIVE;
+    framegeneration = false;
+	temporal = false;
+}
+
+void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return;
+	}
+
+	return m_upscalingTechnique->MarkFrameEvent( frameEvent );
+}
+ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
+{
+    if( resources.m_textures.empty() )
+    {
+        return S_OK;
+    }
+    if( @available( macOS 13.0, * ) )
+    {
+        auto encoder = m_workQueue->GetRenderEncoder();
+        auto encoderIndex = m_workQueue->GetCurrentEncoderIndex();
+
+        std::vector<__unsafe_unretained id<MTLTexture>> textures;
+        textures.reserve( resources.m_textures.size() * 2 );
+        for( auto& tex : resources.m_textures )
+        {
+            if( tex->IsValid() && tex->m_usedInEncoder != encoderIndex )
+            {
+                tex->m_usedInEncoder = encoderIndex;
+                __unsafe_unretained auto t0 = tex->m_mtlTexture;
+                if( t0 )
+                {
+                    textures.push_back( t0 );
+                }
+                __unsafe_unretained auto t1 = tex->m_mtlTextureSRGBView;
+                if( t1 && t1 != t0 )
+                {
+                    textures.push_back( t1 );
+                }
+            }
+        }
+        [encoder useResources:textures.data()
+                        count:NSUInteger( textures.size())
+                        usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
+        m_workQueue->ReleaseEncoder( false );
+    }
+    
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas  )
+{
+    if( @available( macOS 11.0, * ) )
+    {
+        id<MTLAccelerationStructure> accelerationStructure =  tlas.TrinityALImpl_GetObject()->GetInstanceAccelerationStructure();
+        
+        auto computeEncoder = m_workQueue->GetComputeEncoder();
+        
+        [computeEncoder useResource:accelerationStructure usage:MTLResourceUsageRead];
+        
+        m_workQueue->ReleaseEncoder( false );
+        
+        return S_OK;
+    }
+    return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::UseConstantBuffer( id<MTLBuffer> constantBuffer )
+{
+    if( @available( macOS 11.0, * ) )
+    {
+        auto computeEncoder = m_workQueue->GetComputeEncoder();
+        
+        [computeEncoder useResource:constantBuffer usage:MTLResourceUsageRead];
+        
+        m_workQueue->ReleaseEncoder( false );
+        
+        return S_OK;
+    }
+    return E_FAIL;
+}
+
+bool Tr2RenderContextAL::SupportsBindlessTextures() const
+{
+    if( @available( macOS 13.0, * ) )
+    {
+        if( !m_metalContext || !m_metalContext->GetDevice() )
+        {
+            return false;
+        }
+        return m_metalContext->GetDevice().argumentBuffersSupport == MTLArgumentBuffersTier2;
+    }
+    return false;
+}
+
+uint64_t Tr2RenderContextAL::GetRecordingFrameNumber() const
+{
+	return m_metalContext->GetRecordingFrameNumber();
+}
+
+uint64_t Tr2RenderContextAL::GetRenderedFrameNumber() const
+{
+	return m_metalContext->GetRenderedFrameNumber();
+}
+
+void Tr2RenderContextAL::ReleaseLater( id<NSObject> obj )
+{
+    m_metalContext->ReleaseLater( obj );
+}
+
+void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )
+{
+	m_textures.push_back( texture.TrinityALImpl_GetObject() );
+}
+
+void Tr2BindlessResourcesAL::Add( const Tr2BindlessResourcesAL& resources )
+{
+	m_textures.insert( end( m_textures ), begin( resources.m_textures ), end( resources.m_textures ) );
+}
+
+void Tr2BindlessResourcesAL::Clear()
+{
+	m_textures.clear();
+}
+
 
 #endif

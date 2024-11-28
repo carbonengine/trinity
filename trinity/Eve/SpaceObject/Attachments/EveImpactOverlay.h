@@ -10,15 +10,15 @@
 
 //#include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Include/ITriTargetable.h"
 #include "Resources/Tr2LodResource.h"
+
+class EveUpdateContext;
 
 BLUE_DECLARE( TriPerlinCurve );
 BLUE_DECLARE( Tr2ScalarFader );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2MeshBase );
-BLUE_DECLARE( EveUpdateContext );
 BLUE_DECLARE( EveSpaceObject2 );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuUniqueEmitter );
@@ -76,13 +76,13 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Updates
-	void UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent );
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Rendering
 	void GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, float screenSize );
-	Tr2EffectPtr GetArmorDamageShader( TriBatchType batchType ) const;
+	Tr2Effect* GetArmorDamageShader( TriBatchType batchType ) const;
 
 	// setup
 	void Set( TriPerlinCurvePtr hullDamageFlickerCurve, Tr2GpuUniqueEmitterPtr armorDamageEmitter, Tr2GpuUniqueEmitterPtr hullImpactEmitter, Tr2EffectPtr armorDamageShader, Tr2MeshBase* shieldImpactMesh, bool shieldIsEllipsoid );
@@ -91,7 +91,7 @@ public:
 	int32_t GetDataTextureOffset() const;
 	ITriTargetable::ImpactConfiguration GetImpactConfiguration() const;
 	bool HasShieldEllipsoid() const;
-	float GetActivationStrength( EveUpdateContext& updateContext ) const;
+	float GetActivationStrength( const EveUpdateContext& updateContext ) const;
 	float GetArmorImpactLifeTime() const;
 
 	// setters

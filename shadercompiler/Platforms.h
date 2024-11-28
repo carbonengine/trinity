@@ -8,7 +8,6 @@ enum Platform
 	PLATFORM_DX11 = 2,
 
 	PLATFORM_DX12 = 6,
-	PLATFORM_VULKAN = 7,
 
 	PLATFORM_METAL = 10,
 
@@ -22,8 +21,6 @@ inline bool IsValidPlatform( Platform platform )
 	case PLATFORM_DX11:
 		return true;
 	case PLATFORM_DX12:
-		return true;
-	case PLATFORM_VULKAN:
 		return true;
 	case PLATFORM_METAL:
 		return true;
@@ -40,8 +37,6 @@ inline const char* GetPlatformShortName( Platform platform )
 		return "dx11";
 	case PLATFORM_DX12:
 		return "dx12";
-	case PLATFORM_VULKAN:
-		return "vulkan";
 	case PLATFORM_METAL:
 		return "mtl";
 	default:
@@ -57,8 +52,6 @@ inline const char* GetPlatformLongName( Platform platform )
 		return "DirectX 11";
 	case PLATFORM_DX12:
 		return "DirectX 12";
-	case PLATFORM_VULKAN:
-		return "Vulkan";
 	case PLATFORM_METAL:
 		return "Metal";
 	default:
@@ -74,8 +67,6 @@ inline const char* GetPlatformIdString( Platform platform )
 		return "2";
 	case PLATFORM_DX12:
 		return "6";
-	case PLATFORM_VULKAN:
-		return "7";
 	case PLATFORM_METAL:
 		return "10";
 	default:

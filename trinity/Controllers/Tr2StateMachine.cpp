@@ -103,11 +103,11 @@ void Tr2StateMachine::Unlink()
 		return;
 	}
 	Stop();
-	m_controller = nullptr;
 	for( auto it = begin( m_states ); it != end( m_states ); ++it )
 	{
 		( *it )->Unlink();
 	}
+	m_controller = nullptr;
 }
 
 void Tr2StateMachine::FollowTransitions( uint64_t variableDirtyMask )

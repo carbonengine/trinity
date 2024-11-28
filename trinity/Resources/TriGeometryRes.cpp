@@ -15,6 +15,14 @@ using namespace Tr2RenderContextEnum;
 
 CCP_STATS_DECLARE( geometryResBytes, "Trinity/geometryResBytes", false, CST_MEMORY, "Size of memory occupied by geometry resources." );
 
+#if TRINITY_PLATFORM != TRINITY_DIRECTX11
+const auto gpuUsage = Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE;
+#else
+const auto gpuUsage = Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::INDEX_BUFFER;
+#endif
+
+Tr2SuballocatedBuffer g_sharedBuffer( "TriGeometryRes shared vertex/index buffer", gpuUsage, SHARED_BUFFER_BLOCK_SIZE );
+
 //////////////////////////////////////////////////////////////////////////
 //
 // Structures used for pulling bounds information out of extended data
@@ -151,6 +159,30 @@ static void ConvertDataToVector3( Tr2VertexDefinition::DataType elementType, con
 }
 
 
+uint32_t GetPrimitiveCount( const TriGeometryResMeshData& mesh, uint32_t index, uint32_t count )
+{
+	if( index >= mesh.m_areas.size() )
+	{
+			return 0;
+	}
+
+	if( index + count > mesh.m_areas.size() )
+	{
+			count = uint32_t( mesh.m_areas.size() - index );
+	}
+
+	auto& meshArea = mesh.m_areas[index];
+
+	uint32_t primCount = uint32_t( meshArea.m_primitiveCount );
+	for( uint32_t i = 1; i < count; ++i )
+	{
+			primCount += mesh.m_areas[index + i].m_primitiveCount;
+	}
+	return primCount;
+}
+
+
+
 
 TriGeometryRes::TriGeometryRes(IRoot* lockobj) :
 	m_pGrannyFile( NULL ),
@@ -248,7 +280,7 @@ TriGeometryResMeshData* TriGeometryRes::GetMeshData( unsigned int meshIx, float 
 	if( mesh )
 	{
 		int lodIndex = GetLodIndexForScreenSize( meshIx, screenSize );
-		if( lodIndex > 0 )
+		if( lodIndex >= 0 )
 		{
 			mesh = m_meshLods[mesh->m_lods[lodIndex].meshIndex].get();
 		}
@@ -639,6 +671,53 @@ void TriGeometryRes::DetermineAreaBones( TriGeometryResAreaData& area, granny_me
 	}
 }
 
+bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	// offset to boneindex
+	int boneIndexOffset = GetVertexComponentOffset( myMesh, GrannyVertexBoneIndicesName );
+	// if there are no bone-indices , we are done
+	if( boneIndexOffset == -1 )
+	{
+		return false;
+	}
+
+	// pointers to bone indices
+	uint8_t* pBoneIndex0 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 0;
+	uint8_t* pBoneIndex1 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 1;
+	uint8_t* pBoneIndex2 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 2;
+	uint8_t* pBoneIndex3 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 3;
+	
+	// cycle thorugh all vertices of this area and collect bone indices
+	for( int vIx = 0; vIx < area.m_primitiveCount * 3; ++vIx )
+	{
+		int index;
+
+		if( myMesh->PrimaryTopology->Indices16 )
+		{
+			index = myMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
+		}
+		else
+		{
+			index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
+		}
+
+		// bones
+		uint8_t boneIndex0 = *(pBoneIndex0 + index * bytesPerVertex);
+		uint8_t boneIndex1 = *(pBoneIndex1 + index * bytesPerVertex);
+		uint8_t boneIndex2 = *(pBoneIndex2 + index * bytesPerVertex);
+		uint8_t boneIndex3 = *(pBoneIndex3 + index * bytesPerVertex);
+
+		if( boneIndex0 != 0 || boneIndex1 != 0 || boneIndex2 != 0 || boneIndex3 != 0 )
+		{
+			// found it attached to a bone so return early
+			return true;
+		}
+	}
+	// if we reach this point, then no vertices have any valid bone indices
+	return false;
+}
+
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -728,7 +807,7 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 
 				TriGeometryResAreaData& area = pMesh->m_areas[groupIx];
 				area.m_name = "";
-
+				
 				if( myMesh->MaterialBindingCount > grp.MaterialIndex )
 				{
 					if( myMesh->MaterialBindings[grp.MaterialIndex].Material != NULL )
@@ -742,6 +821,8 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				area.m_primitiveCount = myMesh->PrimaryTopology->Groups[groupIx].TriCount;
 
 				pMesh->m_primitiveCount += area.m_primitiveCount;
+
+				area.m_isSkinned = IsAreaSkinned( area, myMesh, bytesPerVertex );
 
 				// only re-map the bone indices if there is a skeleton...
 				if( gi->SkeletonCount )
@@ -972,7 +1053,7 @@ void TriGeometryRes::RecalculateBoundingSphere()
 		}
 
 		// need all the verts
-		if( !mesh->m_vertexBuffer.IsValid() )
+		if( !mesh->m_allocationsValid )
 		{
 			continue;
 		}
@@ -980,7 +1061,7 @@ void TriGeometryRes::RecalculateBoundingSphere()
 		// vertex info
 		uint32_t vertSize = mesh->m_bytesPerVertex;
 		const uint8_t* pVertices;
-		if( SUCCEEDED( mesh->m_vertexBuffer.MapForReading( pVertices, renderContext ) ) )
+		if( SUCCEEDED( mesh->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 		{
 			// need vertex declaration to get offset of position element in the vertex
 			Tr2VertexDefinition decl;
@@ -998,7 +1079,7 @@ void TriGeometryRes::RecalculateBoundingSphere()
 				// all is done in this recursive function
 				BoundingSphereFromPoints( mesh->m_boundingSphere, &points[0], points.size() );
 			}
-			mesh->m_vertexBuffer.UnmapForReading( renderContext );
+			mesh->m_vertexAllocation.UnmapForReading( renderContext );
 		}
 	}
 }
@@ -1052,7 +1133,7 @@ void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, v
 
 	int i = meshIx;
 
-	if( m_meshes[i] == NULL || !m_meshes[i]->m_vertexBuffer.IsValid() || !m_meshes[i]->m_indexBuffer.IsValid() )
+	if( m_meshes[i] == NULL || !m_meshes[i]->m_allocationsValid )
 	{
 		return;
 	}
@@ -1061,16 +1142,16 @@ void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, v
 	const uint8_t* pIndices;
 
 	int vertSize = m_meshes[i]->m_bytesPerVertex;
-	if( FAILED( m_meshes[i]->m_vertexBuffer.MapForReading( pVertices, renderContext ) ) )
+	if( FAILED( m_meshes[i]->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 	{
 		return;
 	}
-	ON_BLOCK_EXIT( [&]{ m_meshes[i]->m_vertexBuffer.UnmapForReading( renderContext ); } );
-	if (FAILED(m_meshes[i]->m_indexBuffer.MapForReading( pIndices, renderContext ) ) )
+	ON_BLOCK_EXIT( [&] { m_meshes[i]->m_vertexAllocation.UnmapForReading( renderContext ); } );
+	if( FAILED( m_meshes[i]->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
 	{
 		return;
 	}
-	ON_BLOCK_EXIT( [&]{ m_meshes[i]->m_indexBuffer.UnmapForReading( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { m_meshes[i]->m_indexAllocation.UnmapForReading( renderContext ); } );
 
 	const uint16_t* pShortIndices = (uint16_t*)pIndices;
 	const uint32_t* pLongIndices = (uint32_t*)pIndices;
@@ -1099,7 +1180,7 @@ void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, v
 		Vector3 p1;
 		Vector3 p2;
 		Vector3 p3;
-		if (m_meshes[i]->m_indexBuffer.GetDesc().stride == 2 )
+		if (m_meshes[i]->m_indexAllocation.GetStride() == 2 )
 		{
 			index1 = pShortIndices[j*3];
 			index2 = pShortIndices[(j*3)+1];
@@ -1243,16 +1324,16 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3*di
 		const uint8_t* pIndices;
 
 		int vertSize = m_meshes[i]->m_bytesPerVertex;
-		if( FAILED( m_meshes[i]->m_vertexBuffer.MapForReading( pVertices, renderContext ) ) )
+		if( FAILED( m_meshes[i]->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 		{
 			return 0;
 		}
-		ON_BLOCK_EXIT( [&]{ m_meshes[i]->m_vertexBuffer.UnmapForReading( renderContext ); } );
-		if( FAILED( m_meshes[i]->m_indexBuffer.MapForReading( pIndices, renderContext ) ) )
+		ON_BLOCK_EXIT( [&] { m_meshes[i]->m_vertexAllocation.UnmapForReading( renderContext ); } );
+		if( FAILED( m_meshes[i]->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
 		{			
 			return false;
 		}
-		ON_BLOCK_EXIT( [&]{ m_meshes[i]->m_indexBuffer.UnmapForReading( renderContext ); } );
+		ON_BLOCK_EXIT( [&] { m_meshes[i]->m_indexAllocation.UnmapForReading( renderContext ); } );
 		
 		const uint16_t* pShortIndices = (uint16_t*)pIndices;
 		const uint32_t* pLongIndices = (uint32_t*)pIndices;
@@ -1290,7 +1371,7 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3*di
 			Vector3 p2;
 			Vector3 p3;
 			float pu, pv, dist;
-			if( m_meshes[i]->m_indexBuffer.GetDesc().stride == 2 )
+			if( m_meshes[i]->m_indexAllocation.GetStride() == 2 )
 			{
 				index1 = pShortIndices[currentIndex++];
 				index2 = pShortIndices[currentIndex++];
@@ -1422,7 +1503,8 @@ TriGeometryResAreaData::TriGeometryResAreaData() :
 	m_firstIndex( 0 ),
 	m_primitiveCount( 0 ),
 	m_vertexCount( 0 ),
-	m_jointBindings( "TriGeometryResAreaData/m_jointBindings" )
+	m_jointBindings( "TriGeometryResAreaData/m_jointBindings" ),
+	m_isSkinned( false )
 {
 }
 
@@ -1435,7 +1517,9 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 	m_hasPerMeshAreaBoneBindings( false ),
 	m_isLodMesh( false ),
 	m_pVertexData( NULL ),
-	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
+	m_allocationsValid(false),
+	m_reversedIndicesValid(false)
 {
 }
 
@@ -1447,24 +1531,23 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 // -------------------------------------------------------------
 void TriGeometryRes::ReverseIndexBuffer( TriGeometryResMeshData& meshData, Tr2RenderContext& renderContext )
 {
-	if( !meshData.m_indexBuffer.IsValid() )
+	if( !meshData.m_allocationsValid)
 	{
 		return;
 	}
-	if( meshData.m_reversedIndexBuffer.IsValid() )	// already done?
+	if( meshData.m_reversedIndicesValid ) // already done?
 	{
 		return;
 	}
 
-	auto& source = meshData.m_indexBuffer;
-	Tr2BufferAL	reverseIB;
+	auto& source = meshData.m_indexAllocation;
 
 	std::unique_ptr<uint8_t[]> reversedData( new uint8_t[source.GetSize()] );
-	if( meshData.m_indexBuffer.GetDesc().stride == 2 )
+	if( source.GetStride() == 2 )
 	{
 		const uint16_t* originalData = nullptr;
-		CR_RETURN( meshData.m_indexBuffer.MapForReading( originalData, renderContext ) );
-		ON_BLOCK_EXIT( [&]{ meshData.m_indexBuffer.UnmapForReading( renderContext ); } );
+		CR_RETURN( source.MapForReading( originalData, renderContext ) );
+		ON_BLOCK_EXIT( [&] { source.UnmapForReading( renderContext ); } );
 
 		uint16_t *invertedData = reinterpret_cast<uint16_t*>( reversedData.get() );
 
@@ -1477,8 +1560,8 @@ void TriGeometryRes::ReverseIndexBuffer( TriGeometryResMeshData& meshData, Tr2Re
 	else
 	{
 		const uint32_t* originalData = nullptr;
-		CR_RETURN( meshData.m_indexBuffer.MapForReading( originalData, renderContext ) );
-		ON_BLOCK_EXIT( [&] { meshData.m_indexBuffer.UnmapForReading( renderContext ); } );
+		CR_RETURN( source.MapForReading( originalData, renderContext ) );
+		ON_BLOCK_EXIT( [&] { source.UnmapForReading( renderContext ); } );
 
 		uint16_t *invertedData = reinterpret_cast<uint16_t*>( reversedData.get() );
 
@@ -1490,10 +1573,10 @@ void TriGeometryRes::ReverseIndexBuffer( TriGeometryResMeshData& meshData, Tr2Re
 	}
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		CR_RETURN( reverseIB.Create( source.GetDesc(), reversedData.get(), renderContext ) );
+		CR_RETURN(g_sharedBuffer.Allocate( source.GetStride(), source.GetSize() / source.GetStride(), reversedData.get(), renderContext, meshData.m_reversedIndexAllocation ));
 	}
 
-	meshData.m_reversedIndexBuffer = std::move( reverseIB );
+	meshData.m_reversedIndicesValid = true;
 }
 
 bool TriGeometryRes::RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed )
@@ -1539,50 +1622,37 @@ bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigne
 		}
 	}
 
-    if( areaIx >= pMesh->m_areas.size() )
-    {
-        return false;
-    }
-
-    if( areaIx + areaCount > pMesh->m_areas.size() )
-    {
-		areaCount = (unsigned int)pMesh->m_areas.size() - areaIx;
-    }
-
-    const TriGeometryResAreaData& area = pMesh->m_areas[areaIx];
-
-    unsigned int primCount = area.m_primitiveCount;
-    for( unsigned int i = 1; i < areaCount; ++i )
-    {
-        const TriGeometryResAreaData& curArea = pMesh->m_areas[areaIx + i];
-        primCount += curArea.m_primitiveCount;
-    }
+    unsigned int primCount = GetPrimitiveCount( *pMesh, areaIx, areaCount );
 
 	if( primCount )
 	{
-		renderContext.m_esm.ApplyVertexDeclaration( pMesh->m_vertexDeclaration );
-		renderContext.m_esm.ApplyStreamSource( 0, pMesh->m_vertexBuffer, 0, pMesh->m_bytesPerVertex );
 		if( reversed )
 		{
 			if( buildReversed )
 			{
 				ReverseIndexBuffer( *pMesh, renderContext );
 			}
-			renderContext.m_esm.ApplyIndexBuffer( pMesh->m_reversedIndexBuffer );
+			else if( !pMesh->m_reversedIndicesValid )
+			{
+				return false;
+			}
 		}
-		else
-		{
-			renderContext.m_esm.ApplyIndexBuffer( pMesh->m_indexBuffer );
-		}
+
+		const TriGeometryResAreaData& area = pMesh->m_areas[areaIx];
+		renderContext.m_esm.ApplyVertexDeclaration( pMesh->m_vertexDeclaration );
+		renderContext.m_esm.ApplyStreamSource( 0, pMesh->m_vertexAllocation );
+
+		auto& indices = reversed ? pMesh->m_reversedIndexAllocation : pMesh->m_indexAllocation;
+		renderContext.m_esm.ApplyIndexBuffer( indices );
 
 		renderContext.SetTopology( TOP_TRIANGLES );
 		if( reversed )
 		{
-			renderContext.DrawIndexedPrimitive( pMesh->m_vertexCount, pMesh->m_primitiveCount * 3 - area.m_firstIndex - primCount * 3, primCount );
+			renderContext.DrawIndexedPrimitive( pMesh->m_vertexCount, indices.GetStartIndex() + pMesh->m_primitiveCount * 3 - area.m_firstIndex - primCount * 3, primCount );
 		}
 		else
 		{
-			renderContext.DrawIndexedPrimitive( pMesh->m_vertexCount, area.m_firstIndex, primCount );
+			renderContext.DrawIndexedPrimitive( pMesh->m_vertexCount, indices.GetStartIndex() + area.m_firstIndex, primCount );
 		}
 	}
 
@@ -1616,21 +1686,6 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 		pSrc = GrannyGetMeshVertices( myMesh );
 	}
 
-	if( myMesh->Name && strncmp( myMesh->Name, "gpuraw_", 7 ) == 0 )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		CR_RETURN_VAL( pMesh->m_shaderResourceBuffer.Create( bytesPerVertex, vertexCount, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, pSrc, renderContext ), false );
-
-		pMesh->m_bytesPerVertex = bytesPerVertex;
-		pMesh->m_vertexCount = vertexCount;
-
-		pMesh->m_vertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( vertexDefinition );
-
-		m_memoryUse += vbSize; // Memory use is only approximate as a  hint for the resource cache
-	
-		return true;
-	}
-
 	int indexCount = myMesh->PrimaryTopology->Index16Count;
 	if( indexCount == 0 )
 	{
@@ -1650,41 +1705,35 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 		}
 	}
 
-	CR_RETURN_VAL( pMesh->m_vertexBuffer.Create( bytesPerVertex, vertexCount, Tr2GpuUsage::VERTEX_BUFFER, cpuUsage, pSrc, renderContext ), false );
-	std::string name = static_cast<const char*>( CW2A( GetPath() ) );
-	if( myMesh->Name )
-	{
-		name += " ";
-		name += myMesh->Name;
-	}
-	pMesh->m_vertexBuffer.SetName( name.c_str() );
+	CR_RETURN_VAL( g_sharedBuffer.Allocate( bytesPerVertex, vertexCount, pSrc, renderContext, pMesh->m_vertexAllocation ), false );
 	
 	// create d3d index buffer, this one is shared, either for dynamic or static geometry
-	Tr2BufferAL d3dIB;
 	int ibSize = indexCount * bytesPerIndex;
 
 	{
 		std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
 		GrannyCopyMeshIndices( myMesh, bytesPerIndex, &tempBuffer[0] );
 
+		
+
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		HRESULT hr = d3dIB.Create( bytesPerIndex, indexCount, Tr2GpuUsage::INDEX_BUFFER, cpuUsage, &tempBuffer[0], renderContext );
+		ALResult hr = g_sharedBuffer.Allocate( bytesPerIndex, indexCount, &tempBuffer[0], renderContext, pMesh->m_indexAllocation );
 		if( FAILED( hr ) )
 		{
-			pMesh->m_vertexBuffer = Tr2BufferAL();
+			g_sharedBuffer.Free( pMesh->m_vertexAllocation );
 			return false;	
 		}
-		d3dIB.SetName( name.c_str() );
 	}
 
 
 	pMesh->m_bytesPerVertex = bytesPerVertex;
 	pMesh->m_vertexCount = vertexCount;
-	pMesh->m_indexBuffer = std::move( d3dIB );
 
 	pMesh->m_vertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( vertexDefinition );
 
-	m_memoryUse += vbSize + ibSize; // Memory use is only approximate as a  hint for the resource cache
+	pMesh->m_allocationsValid = true;
+
+	m_memoryUse += vbSize + ibSize; // Memory use is only approximate as a hint for the resource cache
 	
 	return true;
 }
@@ -1728,7 +1777,7 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( !pMesh || !pMesh->m_indexBuffer.IsValid() || !pMesh->m_vertexBuffer.IsValid() || pMesh->m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	if( !pMesh || !pMesh->m_allocationsValid || pMesh->m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
 		return false;
 	}
@@ -1747,18 +1796,18 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 	}
 
 	const void* pVertices;
-	if( FAILED( pMesh->m_vertexBuffer.MapForReading( pVertices, renderContext ) ) )
+	if( FAILED( pMesh->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 	{
 		return false;
 	}
-	ON_BLOCK_EXIT( [&]{ pMesh->m_vertexBuffer.UnmapForReading( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { pMesh->m_vertexAllocation.UnmapForReading( renderContext ); } );
 
 	const void* pIndices;
-	if( FAILED( pMesh->m_indexBuffer.MapForReading( pIndices, renderContext ) ) )
+	if( FAILED( pMesh->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
 	{
 		return false;
 	}
-	ON_BLOCK_EXIT( [&]{ pMesh->m_indexBuffer.UnmapForReading( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { pMesh->m_indexAllocation.UnmapForReading( renderContext ); } );
 
 
 	granny_vertex_data myVertexData;
@@ -1913,10 +1962,11 @@ ITr2InstanceData::InstanceData TriGeometryRes::GetInstanceData( unsigned int buf
 	if( mesh )
 	{
 		return {
-			mesh->m_vertexBuffer, mesh->m_bytesPerVertex, mesh->m_vertexCount
+			mesh->m_vertexAllocation.GetBuffer(), mesh->m_vertexAllocation.GetOffset(), mesh->m_bytesPerVertex, mesh->m_vertexCount
 		};
 	}
-	return {};
+	static Tr2BufferAL nullVB;
+	return { nullVB };
 }
 
 // --------------------------------------------------------------------------------------
@@ -1945,27 +1995,6 @@ CcpMath::AxisAlignedBox TriGeometryRes::GetInstanceBufferBoundingBox( unsigned i
 		return CcpMath::AxisAlignedBox();
 	}
 	return CcpMath::AxisAlignedBox( mesh->m_minBounds, mesh->m_maxBounds );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements ITr2GpuBuffer interface. Returns GPU buffer with instance data.
-// Arguments:
-//   bufferIndex - instance buffer index
-// Return Value:
-//   GPU buffer containing instance data
-// --------------------------------------------------------------------------------------
-Tr2BufferAL* TriGeometryRes::GetGpuBuffer( unsigned bufferIndex )
-{
-	if( !IsGood() )
-	{
-		return nullptr;
-	}
-	if( bufferIndex < m_meshes.size() && m_meshes[bufferIndex] )
-	{
-		return &m_meshes[bufferIndex]->m_shaderResourceBuffer;
-	}
-	return nullptr;
 }
 
 Be::Result<std::string> TriGeometryRes::GetModelName( unsigned int ix, std::string& name ) const

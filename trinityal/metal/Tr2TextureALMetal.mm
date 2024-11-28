@@ -20,9 +20,16 @@ namespace TrinityALImpl
 		, m_mtlTexture( nil )
 		, m_mtlTextureSRGBView( nil )
 		, m_metalContext( nullptr )
+        , m_usedInEncoder( 0 )
 		, m_wrappedTexture( false )
 	{
+            m_srvHeapIndices[0] = m_srvHeapIndices[1] = 0xffffffff;
 	}
+
+    Tr2TextureAL::~Tr2TextureAL()
+    {
+        Destroy();
+    }
 
 	ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
 	{
@@ -217,7 +224,19 @@ namespace TrinityALImpl
 
 			m_wrappedTexture = false;
 		}
-        
+        m_mtlTextureSRGBView = metalContext->CreateSRGBViewOfMetalTexture( m_mtlTexture );
+        if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+        {
+            m_srvHeapIndices[0] = metalContext->AllocateHeapIndex( m_mtlTexture );
+            if( m_mtlTextureSRGBView == m_mtlTexture )
+            {
+                m_srvHeapIndices[1] = m_srvHeapIndices[0];
+            }
+            else
+            {
+                m_srvHeapIndices[1] = metalContext->AllocateHeapIndex( m_mtlTextureSRGBView );
+            }
+        }
         m_memory.Set( Tr2MemoryCounterAL::TEXTURE, realDesc, msaa );
 
 		m_metalContext  = metalContext;
@@ -225,7 +244,16 @@ namespace TrinityALImpl
 		m_gpuUsage      = gpuUsage;
 		m_cpuUsage      = cpuUsage;
 		m_msaa          = msaa;
-		m_mtlTextureUAV.resize( desc.GetTrueMipCount() );
+        if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+        {
+            m_mtlTextureUAV.resize( desc.GetTrueMipCount() );
+            m_uavHeapIndices.resize( desc.GetTrueMipCount() );
+            for( uint32_t i = 0; i < desc.GetTrueMipCount(); ++i )
+            {
+                m_mtlTextureUAV[i] = m_metalContext->CreateUAVOfMetalTexture( m_mtlTexture, i );
+                m_uavHeapIndices[i] = m_metalContext->AllocateHeapIndex( m_mtlTextureUAV[i] );
+            }
+        }
 		if( initialData )
 		{
 			m_dataLayout = *initialData;
@@ -236,10 +264,6 @@ namespace TrinityALImpl
 
 	id<MTLTexture> Tr2TextureAL::GetSRGBViewMetalTexture()
 	{
-		if( !m_mtlTextureSRGBView )
-		{
-			m_mtlTextureSRGBView = m_metalContext->CreateSRGBViewOfMetalTexture( m_mtlTexture );
-		}
 		return m_mtlTextureSRGBView;
 	}
 	
@@ -248,10 +272,6 @@ namespace TrinityALImpl
 		if( mipLevel >= m_mtlTextureUAV.size() )
 		{
 			return nil;
-		}
-		if( !m_mtlTextureUAV[mipLevel] )
-		{
-			m_mtlTextureUAV[mipLevel] = m_metalContext->CreateUAVOfMetalTexture( m_mtlTexture, mipLevel );
 		}
 		return m_mtlTextureUAV[mipLevel];
 	}
@@ -262,17 +282,29 @@ namespace TrinityALImpl
 	}
 
 	void Tr2TextureAL::Destroy()
-	{
-		if( m_mtlTexture )
-		{
-			m_metalContext->DestroyMetalTexture(m_mtlTexture);
-		}
-		if( m_mtlTextureSRGBView )
-		{
-			m_metalContext->DestroyMetalTexture(m_mtlTextureSRGBView);
-		}
-		for( auto texture : m_mtlTextureUAV )
-		{
+    {
+        m_usedInEncoder = 0;
+        if( m_mtlTexture )
+        {
+            m_metalContext->DeallocateHeapIndex( m_srvHeapIndices[0] );
+            m_metalContext->DestroyMetalTexture(m_mtlTexture);
+        }
+        if( m_mtlTextureSRGBView )
+        {
+            if( m_srvHeapIndices[1] != m_srvHeapIndices[0] )
+            {
+                m_metalContext->DeallocateHeapIndex( m_srvHeapIndices[1] );
+            }
+            m_metalContext->DestroyMetalTexture(m_mtlTextureSRGBView);
+        }
+        m_srvHeapIndices[0] = m_srvHeapIndices[1] = 0xffffffff;
+        for( auto& idx : m_uavHeapIndices )
+        {
+            m_metalContext->DeallocateHeapIndex( idx );
+        }
+        m_uavHeapIndices.clear();
+        for( auto texture : m_mtlTextureUAV )
+        {
 			m_metalContext->DestroyMetalTexture( texture );
 		}
 		m_mtlTextureUAV.clear();
@@ -299,6 +331,7 @@ namespace TrinityALImpl
 		m_mtlReadBackBuffer  = nil;
 		m_mtlTexture         = nil;
 		m_mtlTextureSRGBView = nil;
+        
 
 		m_metalContext   = nil;
 		m_wrappedTexture = false;
@@ -735,6 +768,20 @@ namespace TrinityALImpl
 	uintptr_t Tr2TextureAL::GetSharedHandle() const
 	{
 		return 0;
+	}
+
+	uint32_t Tr2TextureAL::GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace space ) const
+	{
+        return m_srvHeapIndices[space];
+	}
+	
+	uint32_t Tr2TextureAL::GetUavIndexInHeap( uint32_t mip ) const
+	{
+        if( mip < m_uavHeapIndices.size() )
+        {
+            return 0xffffffff;
+        }
+        return m_uavHeapIndices[mip];
 	}
 
 	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const

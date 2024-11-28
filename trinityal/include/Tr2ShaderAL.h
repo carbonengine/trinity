@@ -4,19 +4,22 @@
 #include "../ALResult.h"
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2VertexDefinition.h"
+#include "../Tr2HalHelperStructures.h"
 
 
 struct Tr2ShaderBytecodeAL
 {
 	Tr2ShaderBytecodeAL();
 	Tr2ShaderBytecodeAL( const void* bytecode, size_t size );
-
+    
 	template <typename T, size_t Size>
 	Tr2ShaderBytecodeAL( const T( &bytecode_ )[Size] )
 		:bytecode( bytecode_ ),
 		size( Size * sizeof( T ) )
 	{
 	}
+    
+    ~Tr2ShaderBytecodeAL();
 
 	const void* bytecode;
 	size_t size;
@@ -34,6 +37,8 @@ struct Tr2ShaderPipelineInputAL
 	};
 	Tr2ShaderPipelineInputAL();
 	Tr2ShaderPipelineInputAL( Tr2VertexDefinition::UsageCode usage, uint32_t usageIndex, uint32_t registerIndex, Type type, uint32_t dimension, uint32_t usedMask = 0xf );
+
+	bool operator==( const Tr2ShaderPipelineInputAL& other ) const;
 
 	Tr2VertexDefinition::UsageCode usage;
 	uint32_t usageIndex;
@@ -80,13 +85,30 @@ struct Tr2ShaderRegisterAL
 	};
 
 	Tr2ShaderRegisterAL();
-	Tr2ShaderRegisterAL( RegisterType registerType, uint32_t registerIndex );
+	Tr2ShaderRegisterAL( RegisterType registerType, uint32_t registerIndex, uint32_t registerSpace = 0, uint32_t arrayCount = 1, bool dynamic = true );
+
+	bool operator==( const Tr2ShaderRegisterAL& other ) const;
 
 	bool IsSrv() const;
 	bool IsUav() const;
 
 	RegisterType registerType;
 	uint32_t registerIndex;
+	uint32_t registerSpace;
+	uint32_t arrayCount;
+	bool dynamic;
+};
+
+struct Tr2StaticSamplerAL
+{
+	Tr2SamplerDescription sampler;
+	uint32_t registerIndex;
+	uint32_t registerSpace;
+
+	bool operator==( const Tr2StaticSamplerAL& other ) const
+	{
+		return sampler == other.sampler && registerIndex == other.registerIndex && registerSpace == other.registerSpace;
+	}
 };
 
 
@@ -106,11 +128,16 @@ struct Tr2ShaderSignatureAL
 	Tr2ShaderSignatureAL& Add( const Tr2ShaderPipelineInputAL& pipelineInput );
 	Tr2ShaderSignatureAL& Add( Tr2VertexDefinition::UsageCode usage, uint32_t usageIndex, uint32_t registerIndex, Tr2ShaderPipelineInputAL::Type type, uint32_t dimension, uint32_t usedMask = 0xf );
 	Tr2ShaderSignatureAL& Add( const Tr2ShaderRegisterAL& registerDesc );
-	Tr2ShaderSignatureAL& Add( Tr2ShaderRegisterAL::RegisterType registerType, uint32_t registerIndex );
+	Tr2ShaderSignatureAL& Add( Tr2ShaderRegisterAL::RegisterType registerType, uint32_t registerIndex, uint32_t registerSpace = 0, uint32_t arrayCount = 1 );
 	Tr2ShaderSignatureAL& Add( const Tr2ShaderThreadGroupSizeAL& size );
+	Tr2ShaderSignatureAL& Add( const Tr2SamplerDescription& sampler, uint32_t registerIndex, uint32_t registerSpace = 0 );
+
+	bool IsEmpty() const;
+	bool operator==( const Tr2ShaderSignatureAL& other ) const;
 
 	std::vector<Tr2ShaderPipelineInputAL> pipelineInputs;
 	std::vector<Tr2ShaderRegisterAL> registers;
+	std::vector<Tr2StaticSamplerAL> samplers;
 	Tr2ShaderThreadGroupSizeAL threadGroupSize;
 };
 
@@ -148,6 +175,8 @@ public:
 	bool operator!=( const Tr2ShaderAL& other ) const;
 
 	ALResult SetName( const char* name );
+
+    TrinityALImpl::Tr2ShaderAL* TrinityALImpl_GetObject() const;
 
 private:
 	Tr2ShaderAL( std::shared_ptr<TrinityALImpl::Tr2ShaderAL> shader );

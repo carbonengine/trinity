@@ -11,6 +11,11 @@ Tr2TextureAL* Tr2TextureReference::GetTexture()
 	return &m_texture;
 }
 
+Tr2TextureReference::OnTextureChangeEvent& Tr2TextureReference::OnTextureChange()
+{
+	return m_onTextureChange;
+}
+
 BeResultChoice<BlueStdResult, ImageIO::Result> Tr2TextureReference::Save( const std::wstring& resPath )
 {
 	if( !m_texture.IsValid() )
@@ -102,7 +107,14 @@ Tr2TextureAL* Tr2TransientTextureReference::GetTexture()
 	return m_texture;
 }
 
+Tr2TransientTextureReference::OnTextureChangeEvent& Tr2TransientTextureReference::OnTextureChange()
+{
+	return m_onTextureChange;
+}
+
+
 void Tr2TransientTextureReference::SetTexture( Tr2TextureAL* texture )
 {
 	m_texture = texture;
+	m_onTextureChange.Broadcast();
 }

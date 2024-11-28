@@ -1535,6 +1535,10 @@ const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetFactionalPatternAppli
 // --------------------------------------------------------------------------------
 const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetHullPatternApplicationData() const
 {
+	if( !m_patternData )
+	{
+		return nullptr;
+	}
 	// TODO PHASE-6
 	if( m_patternData->sof6 )
 	{

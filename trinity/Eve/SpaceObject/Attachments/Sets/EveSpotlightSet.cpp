@@ -11,7 +11,6 @@
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/MatrixUtils.h"
 #include "Tr2QuadRenderer.h"
-#include "Tr2PickingHelperBatch.h"
 #include "Tr2DebugRenderer.h"
 #include <TriMath.h>
 #include "Resources/Tr2LightProfileRes.h"
@@ -141,7 +140,7 @@ inline void EveSpotlightSet::RegisterQuadRendererGlow( Tr2QuadRenderer& quadRend
 // Description:
 //   Get bounding box around spot lights, update visibility based on if box is visible or not
 // --------------------------------------------------------------------------------------
-bool EveSpotlightSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveSpotlightSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetItemSetAabb( m_aabb, m_boundingBoxes, bones, m_skinned ? boneCount : 0 );
 	if( !aabb.IsInitialized() )
@@ -150,7 +149,7 @@ bool EveSpotlightSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	}
 	aabb.Transform( parentTransform );
 
-	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
 void EveSpotlightSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
@@ -417,27 +416,6 @@ void EveSpotlightSet::AddSpotlightItem( EveSpotlightSetItemPtr item )
 	m_spotlightItems.Insert( -1, item );
 }
 
-void EveSpotlightSet::GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData )
-{
-	for( auto it = m_spotlightItems.begin(); it != m_spotlightItems.end(); ++it )
-	{
-		if( auto batch = batches->Allocate<Tr2PickingHelperBatch>() )
-		{
-			batch->SetPerObjectData( perObjectData );
-			batch->AddSphere(
-				( *it )->m_transform.GetTranslation(),
-				std::max( float( ( *it )->m_spriteScale.x ), std::max( float( ( *it )->m_spriteScale.y ), float( ( *it )->m_spriteScale.z ) ) ) * 0.5f );
-			batch->SetAreaID( areaIDOffset );
-			batches->Commit( batch );
-		}
-		else
-		{
-			break;
-		}
-		++areaIDOffset;
-	}
-}
-
 void EveSpotlightSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
 	if( nullptr != m_coneEffect )
@@ -555,7 +533,7 @@ void EveSpotlightSet::GetLights( Tr2LightManager& lightManager, const Matrix& pa
 		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-		auto perLightData = light.lightData.AsPerSpotLightData( light.boneMatrix * parentTransform, features );
+		auto perLightData = light.lightData.AsPerSpotLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

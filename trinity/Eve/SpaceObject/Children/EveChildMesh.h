@@ -18,15 +18,14 @@
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachment.h"
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachmentOwner.h"
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Resources/Tr2LodResource.h"
 #include "TransformModifiers/IEveChildTransformModifier.h"
 #include "Tr2DebugRenderer.h"
+#include "Raytracing/Tr2RaytracingManager.h"
 
-
+class EveUpdateContext;
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2MeshBase );
-BLUE_DECLARE( EveUpdateContext );
 BLUE_DECLARE( EveSpaceObject2 );
 
 BLUE_CLASS( EveChildMesh ) :
@@ -53,11 +52,11 @@ public:
 	// IEveSpaceObjectChild
 	const char* GetName() const;
 	void SetName( const char* name );
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod ) override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
@@ -83,7 +82,7 @@ public:
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	virtual bool IsVisible( const TriFrustum& frustum ) const;
+	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -103,12 +102,14 @@ public:
 	virtual void GetLights( Tr2LightManager& lightManager ) const;
 	virtual void AddLight( Tr2Light* newLight );
 	virtual void ClearLights();
-
+	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
-	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
-	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
-	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const override;
+	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
@@ -127,6 +128,8 @@ public:
 
 	Tr2GrannyAnimation* GetAnimationController() const override;
 	void SetAnimationController( Tr2GrannyAnimation* animation );
+
+	void SetInstanceTransforms( std::vector<Matrix> instances );
 
 protected:
 	void InitializeAnimation();
@@ -155,6 +158,7 @@ protected:
 	float m_sortValueScale;
 
 	// per-object data
+	Tr2BoneTransformOffsets m_boneOffsets;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataVs;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataPs;
 	EveSpaceObjectPSData m_psData;
@@ -163,7 +167,6 @@ protected:
 	bool m_display;
 	bool m_isVisible;
 	bool m_instancesVisible;
-	bool m_useSpaceObjectData;
 	bool m_castShadow;
 
 	float m_activationStrength;
@@ -175,6 +178,13 @@ protected:
 	PEveSpaceObjectDecalVector m_decals;
 	PIEveSpaceObjectAttachmentVector m_attachments;
 	PTr2LightVector m_lights;
+
+	void UpdateRtMesh();
+	void UpdateRtSkeleton();
+	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+	std::vector<Matrix> m_instanceTransforms;
+	unsigned int m_instanceCount;
+
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );

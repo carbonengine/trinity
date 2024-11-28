@@ -173,6 +173,14 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
+		MAP_PROPERTY
+		(
+			"mute",
+			GetMute,
+			SetMute,
+			"" 
+		)
+
 		MAP_ATTRIBUTE
 		(
 			"update",
@@ -189,7 +197,8 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			Be::READWRITE | Be::NOTIFY | Be::PERSIST
 		)
 
-		MAP_ATTRIBUTE(
+		MAP_ATTRIBUTE
+		(
 			"isAnimated",
 			m_isAnimated,
 			"If set, we have animations",

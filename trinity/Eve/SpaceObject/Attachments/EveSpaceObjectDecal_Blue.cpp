@@ -25,6 +25,8 @@ const Be::ClassInfo* EveSpaceObjectDecal::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "decalEffect", m_decalEffect, "The effect used to draw the decal", Be::READWRITE | Be::PERSIST )
 
+		MAP_ATTRIBUTE( "batchType", m_batchType, "Batch type (render pass) used to render the decal", Be::READ )
+
 		MAP_PROPERTY_READONLY( "hasStaticIndexBuffers", HasStaticIndexBuffers, "" )
 		MAP_METHOD_AND_WRAP( "GetDecalPrimitiveCounts", GetDecalPrimitiveCounts, "Returns an array of primitve counts" )
 		MAP_METHOD_AND_WRAP(

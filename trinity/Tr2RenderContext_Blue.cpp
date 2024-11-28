@@ -7,6 +7,7 @@
 #pragma warning(push, 4)
 
 using namespace Tr2RenderContextEnum;
+using namespace Tr2UpscalingAL;
 
 const Be::VarChooser Tr2RenderContextEnum_ObjectType_Chooser[] =
 {
@@ -305,7 +306,6 @@ BLUE_REGISTER_ENUM_EX(
     Tr2RenderContextEnum_PresentInterval_Chooser,
     ENUM_REG_ENUM_OBJECT_ON_MODULE
 );
-
 
 BLUE_DEFINE( Tr2RenderContext );
 
