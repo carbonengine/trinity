@@ -761,9 +761,16 @@ void Tr2VolumetricsRenderer::RenderFog(
 	};
 
 	SHADOW_TYPE shadowType;
+
 	if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.raytraceFroxels && resources.raytraceFroxels->GetShaderStateInterface() )
 	{
+		//Hack to disable raytraced shadows on Metal, as it currently does not work.
+#if TRINITY_PLATFORM != TRINITY_METAL
 		shadowType = SHADOWS_RAYTRACED;
+#else
+		shadowType = SHADOWS_DISABLED;
+#endif
+		
 	}
 	else if( cascadedShadowMap && ( shadowQuality == ShadowQuality::SHADOW_LOW || shadowQuality == ShadowQuality::SHADOW_HIGH ) )
 	{
