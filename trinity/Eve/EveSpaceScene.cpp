@@ -2251,6 +2251,16 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	
 	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 
+	constexpr size_t maxPlanets = 2;
+	CcpMath::Sphere planets[maxPlanets];
+	SetupPlanetsAsShadowCaster( planets, maxPlanets );
+
+	if( m_volumetricsRenderer )
+	{
+		m_volumetricsRenderer->SetPlanets( planets, maxPlanets );
+	}
+
+
 	if( m_rtManager && m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows && m_depthMap && m_depthMap->IsValid() && !m_objects.empty() )
 	{
 		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
@@ -2258,15 +2268,10 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 		if( volumetricCount + shadowCasterCount != 0 )
 		{
 			renderContext.SetReadOnlyDepth( true );
-
-			constexpr size_t maxPlanets = 2;
-			CcpMath::Sphere planets[maxPlanets];
-			SetupPlanetsAsShadowCaster( planets, maxPlanets );
 			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, planets, maxPlanets, renderContext );
 
 			if( m_componentRegistry && m_volumetricsRenderer )
 			{
-				m_volumetricsRenderer->SetPlanets( planets, maxPlanets );
 				m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_rtManager->GetShadowMap(), renderContext );
 
 				RenderVolumetricShadowMap( renderContext );
