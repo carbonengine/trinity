@@ -1166,6 +1166,11 @@ void Tr2VolumetricsRenderer::PopulatePerFrameData( FroxelPerFrameData& data )
 	data.EnvironmentIntensity = m_froxelFogSettings.environmentIntensity;
 
 	data.EnvironmentG = environmentG;
+
+	for( int32_t i = 0; i < m_planets.size(); i++ )
+	{
+		data.planets[i] = m_planets[i];
+	}
 }
 
 void Tr2VolumetricsRenderer::SetPlanets( const CcpMath::Sphere* planets, size_t planetCount )
