@@ -660,10 +660,38 @@ void Tr2VolumetricsRenderer::RenderFog(
 	bool froxelsEnabled = m_froxelFogSettings.thickness > 0.0f;
 	if( froxelsEnabled )
 	{
-		float scale = std::min(1 / 8.0f, 1.0f);
+
+		float scale;
+		uint32_t numLayers;
+
+		switch (m_quality)
+		{
+		case Tr2VolumerticQuality::Ultra:
+			scale = 1 / 6.0;
+			numLayers = 128;
+			break;
+
+		case Tr2VolumerticQuality::High:
+			scale = 1 / 8.0;
+			numLayers = 128;
+			break;
+
+		case Tr2VolumerticQuality::Medium:
+			scale = 1 / 12.0;
+			numLayers = 96;
+			break;
+
+		case Tr2VolumerticQuality::Low:
+		default:
+			scale = 1 / 16.0;
+			numLayers = 64;
+			break;
+		}
+
+
 		width = std::max( 4u, uint32_t( originalWidth * scale ) );
 		height = std::max( 4u, uint32_t( originalHeight * scale ) );
-		depth = std::max( 1u, 128u );
+		depth = std::max( 1u, numLayers );
 	}
 
 	auto temporalFog = resources.temporalFroxels0 && resources.temporalFroxels1;
