@@ -503,12 +503,29 @@ struct WithTelemetry
 #endif
 };
 
+#if !SHADER_COMPILER_TEST
+
 #if _WIN32
 int _tmain(int argc, _TCHAR* argv[])
 #else
 int main(int argc, char* argv[])
 #endif
 {
+#if _WIN32
+	char metalToolsPath[MAX_PATH] = { 0 };
+	size_t metalToolsPathSize;
+	if( getenv_s( &metalToolsPathSize, metalToolsPath, "METAL_TOOLS_PATH" ) == 0 )
+	{
+		g_metalToolsPath = metalToolsPath;
+	}
+#else
+	if( auto metalToolsPath = getenv( "METAL_TOOLS_PATH" ) )
+	{
+		g_metalToolsPath = metalToolsPath;
+	}
+#endif
+
+
 	ProgramArguments args;
 	if( !ExtractCommandLineArguments( args, argc, argv ) )
 	{
@@ -762,3 +779,4 @@ int main(int argc, char* argv[])
 
 	return 0;
 }
+#endif

@@ -1188,6 +1188,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 				stage.shaderSize = uint32_t( strippedEffectData->GetBufferSize() );
 				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
+				stage.source = code;
+
 
 				CComPtr<ID3D11ShaderReflection> reflection;
 				{

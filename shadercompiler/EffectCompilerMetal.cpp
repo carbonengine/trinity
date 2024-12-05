@@ -4691,6 +4691,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				{
 					stage.defaultValuesStr = INVALID_REFERENCE;
 				}
+				stage.source = os.str();
 
 				listing.dict()
 					.literal( "profile" ).literal( profile )
