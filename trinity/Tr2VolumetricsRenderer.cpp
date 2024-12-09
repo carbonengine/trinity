@@ -1081,7 +1081,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 				}
 
 			}
-			/*	// TODO: intern, add back in once mac issue has been resolved
+			
 			if ( auto lightManager = Tr2LightManager::GetInstance() )
 			{
 				CCP_ASSERT_M( lightManager->GetVolumetricLights().size() <= 16, "LightManager does not meet expectation of VolumetricsRenderer!" );
@@ -1100,7 +1100,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 				data->LightProfileTextureWidth = (float)lightManager->GetLightProfileArray().GetWidth();
 			}
-			else*/
+			else
 			{
 				data->NumDynamicLights = 0;
 				data->InverseShadowMapAtlasSize = 0.f;
