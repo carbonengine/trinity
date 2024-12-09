@@ -2626,13 +2626,6 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 	// Write sub surface scattering blur
 	m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_colorMap, m_opaqueColorMap, m_depthMap );
 
-
-	Matrix proj = Tr2Renderer::GetProjectionTransform();
-	if( m_taaPattern != TAA_NONE )
-	{
-		//proj = EveCamera::AddCenterOffset( proj, -m_xProjOffset, -m_yProjOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
-	}
-	m_frameData.projection = proj;
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
 	
 	PopulateAndApplyPerFrameData( renderContext );
