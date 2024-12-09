@@ -593,6 +593,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		)
 
 		MAP_PROPERTY_READONLY( "Shadow Map Atlas", GetShadowMapAtlas, "" )
+		MAP_PROPERTY_READONLY( "Raytraced Dynamic Shadow Atlas", GetRaytracedDynamicShadowAtlas, "" )
 
 	EXPOSURE_END()
 }

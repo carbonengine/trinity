@@ -1517,13 +1517,29 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 	CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
 	m_rtManager->GetGeometry().BeginSceneUpdate();
 
-	m_componentRegistry->ProcessComponents<IEveShadowCaster>([this]( IEveShadowCaster* caster ) -> void {
+	m_componentRegistry->ProcessComponents<IEveShadowCaster>( [this]( IEveShadowCaster* caster ) -> void {
 		caster->PushRtGeometry( *m_rtManager );
 	} );
 
-	Tr2RtShaderTableDescriptionAL* shaderTableDescs[2] = { &m_rtManager->m_shaderTableDesc, &m_volumetricsRenderer->m_shaderTableDesc };
-	Tr2RaytracingPipelineStateManager* pipelineManagers[2] = { &m_rtManager->m_pipelineManager, &m_volumetricsRenderer->m_pipelineManager };
-	m_rtManager->GetGeometry().EndSceneUpdate( renderContext, 2, shaderTableDescs, pipelineManagers );
+
+	Tr2RtShaderTableDescriptionAL* shaderTableDescs[3];
+	Tr2RaytracingPipelineStateManager* pipelineManagers[3];
+	shaderTableDescs[0] = &m_rtManager->m_shaderTableDesc;
+	pipelineManagers[0] = &m_rtManager->m_pipelineManager;
+	int i = 1;
+	if( auto lightManager = Tr2LightManager::GetInstance() )
+	{
+		shaderTableDescs[i] = lightManager->GetRaytracingShaderTableDesc();
+		pipelineManagers[i] = lightManager->GetRaytracingPipelineManager();
+		i++;
+	}
+	if( m_volumetricsRenderer )
+	{
+		shaderTableDescs[i] = &m_volumetricsRenderer->m_shaderTableDesc;
+		pipelineManagers[i] = &m_volumetricsRenderer->m_pipelineManager;
+		i++;
+	}
+	m_rtManager->GetGeometry().EndSceneUpdate( renderContext, i, shaderTableDescs, pipelineManagers );
 }
 
 void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
@@ -2280,6 +2296,11 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 				ApplyPerFrameData( renderContext );
 			}
 
+			if( auto lightManager = Tr2LightManager::GetInstance() )
+			{
+				lightManager->RenderRaytracedShadows( &m_rtManager->GetGeometry(), m_depthMap, m_normalMap, planets, maxPlanets, renderContext );
+			}
+
 			renderContext.SetReadOnlyDepth( false );
 		}
 	}
@@ -2562,7 +2583,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		if( lightManager->GetShadowCastingLights().size() > 0 && m_shadowQuality != ShadowQuality::SHADOW_DISABLED )
+		if( lightManager->GetShadowCastingLights().size() > 0 && m_shadowQuality != ShadowQuality::SHADOW_DISABLED && m_shadowQuality != ShadowQuality::SHADOW_RAYTRACED )
 		{
 			GPU_REGION( renderContext, "PointLight/SpotLight Shadow Maps" );
 			Tr2DepthStencilPtr shadowMap = lightManager->GetShadowMapAtlas();
@@ -3040,6 +3061,9 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	
 	data.FrameIndex = (uint32_t) Tr2Renderer::GetCurrentFrameCounter();
 	data.Jittering = m_jitter != Vector4(0, 0, 0, 0);
+
+	data.ShadowQuality = 1 << (uint32_t) m_shadowQuality;
+
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
 		data.InverseShadowMapAtlasSize = lightManager->GetShadowMapAtlasSettings().actualTextureSize > 0 ? 
@@ -3908,6 +3932,16 @@ Tr2DepthStencilPtr EveSpaceScene::GetShadowMapAtlas()
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
 		return lightManager->GetShadowMapAtlas();
+	}
+	return nullptr;
+}
+
+
+ITr2TextureProviderPtr EveSpaceScene::GetRaytracedDynamicShadowAtlas()
+{
+	if( auto lightManager = Tr2LightManager::GetInstance() )
+	{
+		return lightManager->GetRaytracedShadowMap();
 	}
 	return nullptr;
 }
