@@ -273,11 +273,7 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 		{
 			UpdateShadowAtlasSize( ShadowQuality::SHADOW_DISABLED );
 		}
-		if( nextFrameShadowQuality & ( 1 << (uint32_t)ShadowQuality::SHADOW_RAYTRACED ) )
-		{
-			UpdateRaytracingDestination( ShadowQuality::SHADOW_RAYTRACED );
-		}
-		else
+		if( ! ( nextFrameShadowQuality & ( 1 << (uint32_t)ShadowQuality::SHADOW_RAYTRACED ) ) )
 		{
 			UpdateRaytracingDestination( ShadowQuality::SHADOW_DISABLED );
 		}
@@ -312,7 +308,7 @@ void Tr2LightManager::UpdateShadowAtlasSize( ShadowQuality shadowQuality )
 
 void Tr2LightManager::UpdateRaytracingDestination( ShadowQuality shadowQuality )
 {
-	if( ( shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) != m_Raytracing.m_destTex->IsValid() )
+	if( ( shadowQuality == ShadowQuality::SHADOW_DISABLED ) && m_Raytracing.m_destTex->IsValid() )
 	{
 		// Setup depth stencil texture
 		m_Raytracing.m_destTex = Tr2RenderTargetPtr();
@@ -666,9 +662,9 @@ void Tr2LightManager::ReleaseResources( TriStorage s )
 		m_perFrameData = Tr2ConstantBufferAL();
 	}
 
-	m_Raytracing.m_effect = nullptr;
-	m_Raytracing.m_destTex = Tr2RenderTargetPtr();
-
+	// light manager does not release all sorts of buffers/effects. raytracing manager on the other hand does.
+	// probably because raytracing manager expects to get destroyed, unlike light manager, which is a singleton...?
+	
 	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
 		m_Raytracing.m_perFrameData = Tr2ConstantBufferAL();
