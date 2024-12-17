@@ -279,7 +279,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_cameraAttachmentParent.CreateInstance();
 	m_reflectionProbe.CreateInstance();
 	m_componentRegistry.CreateInstance();
-	m_ssao.CreateInstance();
 
 	m_volumetricsRenderer.CreateInstance();
 

@@ -360,7 +360,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"SSAO",
 			m_ssao,
 			".",
-			Be::READ )
+			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"distortionTexture",
 			m_distortionMap,
