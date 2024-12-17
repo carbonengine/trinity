@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "TriGrannyRes.h"
-#include "TriGeometryRes.h"
 
 #include "Utilities/GeometryUtils.h"
 
@@ -211,18 +210,18 @@ int TriGrannyRes::GetVertexComponentOffset( int meshIx, const char* componentNam
 	return -1;
 }
 
-bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights  , void* pVertexData, unsigned int vertexDataSize )
+bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights, Tr2SuballocatedBuffer::Allocation& pVertexData, Tr2RenderContextAL& renderContext, unsigned int vertexDataSize )
 {
-	return BakeBlendshape( meshIx, weights, pVertexData, vertexDataSize, NULL, false );
+	return BakeBlendshape( meshIx, weights, pVertexData, renderContext, vertexDataSize, NULL, false );
 }
 
-bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const NameToWeightMap& nameToWeight, void* pVertexData, unsigned int vertexDataSize )
+bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const NameToWeightMap& nameToWeight, Tr2SuballocatedBuffer::Allocation& pVertexData, Tr2RenderContextAL& renderContext, unsigned int vertexDataSize )
 {
 	std::vector<float> dummyWeights;
-	return BakeBlendshape( meshIx, dummyWeights, pVertexData, vertexDataSize, &nameToWeight, false );
+	return BakeBlendshape( meshIx, dummyWeights, pVertexData, renderContext, vertexDataSize, &nameToWeight, false );
 }
 
-bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights, void* pVertexData, unsigned int vertexDataSize, const NameToWeightMap* const nameToWeight, bool deltaOnly )
+bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights, Tr2SuballocatedBuffer::Allocation& pVertexData, Tr2RenderContextAL& renderContext, unsigned int vertexDataSize, const NameToWeightMap* const nameToWeight, bool deltaOnly )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -297,7 +296,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 
 	if( !blendVertexFormat )
 	{
-		memcpy( pVertexData, pSrc, vertexDataSize );
+		pVertexData.Update( pSrc, renderContext);
 		CCP_LOG( "BakeBlendshape called on %S but it has no blendshapes", GetPath() );
 		return true;
 	}
@@ -305,10 +304,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 	// Copy into a temporary buffer; otherwise with every addition we're reading back from
 	// pVertexData, which is a locked vertex buffer, so that could be really slow memory.
 	std::vector<char> localVertexData;
-	if( !deltaOnly )
-	{
-		localVertexData.insert( localVertexData.end(), (char*)pSrc, (char*)pSrc + vertexDataSize );
-	}
+	localVertexData.insert( localVertexData.end(), (char*)pSrc, (char*)pSrc + vertexDataSize );
 
 	unsigned int blendBytesPerVertex = GrannyGetTotalObjectSize( blendVertexFormat );
 
@@ -436,7 +432,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 				{
 					for( int i = 0; i < blendIndexCount; ++i, ++vertexIx, pDelta += blendBytesPerVertex )
 					{
-						uint8_t* __restrict pBase = static_cast<uint8_t*>( pVertexData ) + *vertexIx * 12;
+						uint8_t* __restrict pBase = reinterpret_cast<uint8_t*>( localVertexData.data() ) + *vertexIx * 12;
 
 						Vector3 delta = *reinterpret_cast<const Vector3_16*>( pDelta );
 
@@ -447,7 +443,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 				{
 					for( int i = 0; i < blendIndexCount; ++i, ++vertexIx, pDelta += blendBytesPerVertex )
 					{
-						uint8_t* __restrict pBase = static_cast<uint8_t*>( pVertexData ) + *vertexIx * 12;
+						uint8_t* __restrict pBase = reinterpret_cast<uint8_t*>( localVertexData.data() ) + *vertexIx * 12;
 
 						( reinterpret_cast<float*>( pBase ) )[0] += ( reinterpret_cast<const float*>( pDelta ) )[0] * weight;
 						( reinterpret_cast<float*>( pBase ) )[1] += ( reinterpret_cast<const float*>( pDelta ) )[1] * weight;
@@ -541,7 +537,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 
 			if( deltaOnly )
 			{
-				uint8_t* __restrict pDst = static_cast<uint8_t*>( pVertexData );
+				uint8_t* __restrict pDst = reinterpret_cast<uint8_t*>( &localVertexData[0] );
 
 				for( int i = 0; i < vertexCount; ++i )
 				{
@@ -603,10 +599,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 		}
 	}
 
-	if( !localVertexData.empty() )
-	{
-		memcpy( pVertexData, &localVertexData[0], localVertexData.size() );
-	}
+	pVertexData.Update( localVertexData.data(), renderContext );
 
 	return true;
 }
@@ -1079,7 +1072,7 @@ GrannyMaterialWrapper::GrannyMaterialWrapper(granny_material * gmat, unsigned in
 					sprintf_s(tmpbuf,"%s_%s", materialMap->Usage, defs->Name);
 					
 					// set the actual value of this dict entry to the file path.
-					PyObject * matString = PyString_FromString(targetString);
+					PyObject * matString = PyUnicode_FromString(targetString);
 					// set into the dict.
 					PyDict_SetItemString(m_dictionary, tmpbuf, matString);
 					
@@ -1219,21 +1212,12 @@ Be::Result<std::string> TriGrannyRes::BakeBlendshapeFromScript( unsigned int mes
 	{
 		return Be::Result<std::string>( "Trying to bake using geometryRes with NULL meshData" );
 	}
-	if( !meshData->m_vertexBuffer.IsValid() )
+	if( !meshData->m_allocationsValid )
 	{
 		return Be::Result<std::string>( "Trying to bake to a null vertex buffer" );
 	}
 
-	void* pVertexData = NULL;
-	HRESULT hr = meshData->m_vertexBuffer.MapForWriting( pVertexData, renderContext );
-	if( FAILED( hr ) )
-	{
-		return Be::Result<std::string>( "Failed to lock vertex buffer" );
-	}
-
-	bool success = BakeBlendshape( meshIx, weights, pVertexData, meshData->m_vertexCount * meshData->m_bytesPerVertex );
-	meshData->m_vertexBuffer.UnmapForWriting( renderContext );
+	bool success = BakeBlendshape( meshIx, weights, meshData->m_vertexAllocation, renderContext, meshData->m_vertexCount * meshData->m_bytesPerVertex );
 
 	return success ? Be::Result<std::string>() : Be::Result<std::string>( " TriGrannyRes::BakeBlendshape encountered problems. ");
 }
-

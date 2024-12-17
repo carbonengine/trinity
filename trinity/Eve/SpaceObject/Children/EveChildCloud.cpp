@@ -19,8 +19,6 @@
 
 using namespace Tr2RenderContextEnum;
 
-extern float g_eveSpaceSceneLODFactor;
-
 namespace
 {
 
@@ -42,6 +40,13 @@ public:
 			Tr2Renderer::GetPerObjectVSStartRegister(),
 			renderContext );
 	}
+
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
+	{
+		writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, &m_data, sizeof( m_data ) );
+		writer.SetPerObjectData( Tr2RenderContextEnum::GEOMETRY_SHADER, &m_data, sizeof( m_data ) );
+	}
+
 
 	struct Data
 	{
@@ -176,7 +181,8 @@ EveChildCloud::EveChildCloud( IRoot* lockobj )
 	m_sortingModifier( 1.0f ),
 	m_minScreenSize( 0.0f ),
 	m_cellScreenSize( 0.3f ),
-	m_currentIB( 0 )
+	m_currentIB( 0 ),
+	m_lastLodFactor(1.0f)
 {
 	PrepareResources();
 }
@@ -214,9 +220,11 @@ void EveChildCloud::SetName( const char* name )
 	m_name = name;
 }
 
-void EveChildCloud::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildCloud::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
-	m_isVisible = !( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) || frustum.GetPixelSizeAccross( &m_boundingSphere ) < m_minScreenSize * g_eveSpaceSceneLODFactor );
+	auto& frustum = updateContext.GetFrustum();
+	m_isVisible = !( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) || frustum.GetPixelSizeAccross( &m_boundingSphere ) < m_minScreenSize * updateContext.GetLodFactor() );
+	m_lastLodFactor = updateContext.GetLodFactor(); // this is needed for some math in GetPerObjectData
 }
 
 void EveChildCloud::GetRenderables( std::vector<ITr2Renderable*>& renderables )
@@ -261,15 +269,18 @@ void EveChildCloud::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchTyp
 	{
 		return;
 	}
-	TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
-	if( batch )
+	if( m_declaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION || !m_effect || m_indexBuffers.empty() )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetGeometryProvider( this );
-		batch->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
-		batches->Commit( batch );
+		return;
 	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
+	batch.SetGeometry( m_declaration, m_vertexBuffer, sizeof( Vector2 ), m_indexBuffers[std::min( m_currentIB, m_indexBuffers.size() - 1 )], 2 );
+	batch.SetDrawIndexedInstanced( m_indexBuffers[std::min( m_currentIB, m_indexBuffers.size() - 1 )].GetDesc().count, 1, 0, 0, 0 );
+	batches->Commit( batch );
 }
 
 void EveChildCloud::ReleaseResources( TriStorage s )
@@ -396,7 +407,7 @@ Tr2PerObjectData* EveChildCloud::GetPerObjectData( ITriRenderBatchAccumulator* a
 	float x = ( box.m_max.x - box.m_min.x ) * w;
 	float y = ( box.m_max.y - box.m_min.y ) * w;
 	float size = std::max( x, y ) / m_preTesselationLevel;
-	size /= 1 + logf( g_eveSpaceSceneLODFactor );
+	size /= 1 + logf( m_lastLodFactor );
 
 	m_currentIB = 0;
 	while( size < m_cellScreenSize && m_currentIB + 1 < m_indexBuffers.size() )
@@ -408,19 +419,7 @@ Tr2PerObjectData* EveChildCloud::GetPerObjectData( ITriRenderBatchAccumulator* a
 	return data;
 }
 
-void EveChildCloud::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	renderContext.m_esm.ApplyVertexDeclaration( m_declaration );
-	renderContext.m_esm.ApplyIndexBuffer( m_indexBuffers[std::min( m_currentIB, m_indexBuffers.size() - 1 )] );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( Vector2 ) );
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawIndexedPrimitive( 
-		m_vertexBuffer.GetSize() / sizeof( Vector2 ), 
-		0, 
-		m_indexBuffers[std::min( m_currentIB, m_indexBuffers.size() - 1 )].GetDesc().count / 3 );
-}
-
-void EveChildCloud::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildCloud::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( m_volume )
 	{
@@ -442,7 +441,7 @@ void EveChildCloud::UpdateSyncronous( EveUpdateContext& updateContext, const Eve
 	BoundingSphereFromBox( m_boundingSphere, m_min, m_max, &m_worldTransform );
 }
 
-void EveChildCloud::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildCloud::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	BoundingSphereFromBox( m_boundingSphere, m_min, m_max, &m_worldTransform );
 }

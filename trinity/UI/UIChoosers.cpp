@@ -27,7 +27,7 @@ void AddUIChoosersToDict(PyObject* dict)
 
 		while (kv->mKey)
 		{
-			PyObject* value = PyInt_FromLong(kv->mValue.mLong);
+			PyObject* value = PyLong_FromLong(kv->mValue.mLong);
 			PyDict_SetItemString(dict, (char*)(kv->mKey ), value);
 			Py_DECREF(value);
 			kv++;

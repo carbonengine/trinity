@@ -4,7 +4,6 @@
 
 
 
-#include "ITr2GeometryProvider.h"
 #include "Tr2DeviceResource.h"
 
 // forwards
@@ -23,7 +22,6 @@ BLUE_DECLARE( TriGeometryRes );
 BLUE_CLASS( EveTrailsSet ):
 	public IInitialize,
 	public INotify,
-	public ITr2GeometryProvider,
 	public IBlueAsyncResNotifyTarget,
 	public Tr2DeviceResource
 {
@@ -43,10 +41,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* val );
-	
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IBlueAsyncResNotifyTarget
@@ -112,7 +106,7 @@ private:
 	Tr2VertexDefinition m_trailVertexDecl;
 	unsigned int m_vertexDeclHandle;
 	// vertex buffers for multi-stream rendering
-	Tr2BufferAL m_instanceBuffer;
+	Tr2SuballocatedBuffer::Allocation m_instanceBuffer;
 
 	// fade in/out co-efficient
 	float m_fadeSpeed;

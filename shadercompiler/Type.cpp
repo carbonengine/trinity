@@ -15,7 +15,8 @@ bool Type::operator==( const Type& type ) const
 		width == type.width && 
 		height == type.height && 
 		( ( templateParameter == nullptr && type.templateParameter == nullptr ) ||
-		  ( templateParameter != nullptr && type.templateParameter != nullptr && *templateParameter == *type.templateParameter && templateSamples == type.templateSamples ) );
+		  ( templateParameter != nullptr && type.templateParameter != nullptr && *templateParameter == *type.templateParameter && templateSamples == type.templateSamples ) ) &&
+		( !IsTexture() || isDepthTexture == type.isDepthTexture );
 }
 
 bool Type::operator!=( const Type& type ) const
@@ -36,6 +37,7 @@ bool Type::FromToken( const ScannerToken& token )
 	arrayDimensions = 0;
 	metalTextureAccess = 0;
 	templateSamples = -1;
+	isDepthTexture = false;
 	return true;
 }
 
@@ -52,6 +54,7 @@ bool Type::FromTokenType( int type )
 	arrayDimensions = 0;
 	metalTextureAccess = 0;
 	templateSamples = -1;
+	isDepthTexture = false;
 	return true;
 }
 
@@ -71,6 +74,7 @@ bool Type::FromSymbol( const Symbol* asymbol )
 	arrayDimensions = 0;
 	metalTextureAccess = 0;
 	templateSamples = -1;
+	isDepthTexture = false;
 	return true;
 }
 
@@ -94,6 +98,11 @@ bool Type::IsStruct() const
 	return symbol != nullptr;
 }
 
+bool Type::IsBindlessHandle() const
+{
+	return IsScalar() && ( builtInType == OP_BINDLESSHANDLETEXTURE2D || builtInType == OP_BINDLESSHANDLETEXTURE3D || builtInType == OP_BINDLESSHANDLETEXTURECUBE || builtInType == OP_BINDLESSHANDLESAMPLER );
+}
+
 bool Type::IsScalarOrVector() const
 {
 	return symbol == nullptr && 
@@ -102,7 +111,11 @@ bool Type::IsScalarOrVector() const
 		builtInType == OP_BOOL ||
 		builtInType == OP_HALF ||
 		builtInType == OP_FLOAT ||
-		builtInType == OP_DOUBLE );
+		builtInType == OP_DOUBLE ||
+		builtInType == OP_BINDLESSHANDLETEXTURE2D ||
+	    builtInType == OP_BINDLESSHANDLETEXTURE3D ||
+	    builtInType == OP_BINDLESSHANDLETEXTURECUBE ||
+		builtInType == OP_BINDLESSHANDLESAMPLER );
 }
 
 bool Type::IsTexture() const
@@ -230,14 +243,21 @@ bool Type::GetMethodType( ASTNode* methodCall, Type& returnType ) const
 			else
 			{
 				returnType.FromTokenType( OP_FLOAT );
-				returnType.width = 4;
+				if( isDepthTexture )
+				{
+					returnType.width = 1;
+				}
+				else
+				{
+					returnType.width = 4;
+				}
 			}
 			return true;
 		}
 		if( method == MakeInlineString( "SampleCmp" ) ||
 			method == MakeInlineString( "SampleCmpLevelZero" ) )
 		{
-			returnType.FromTokenType( OP_UINT );
+			returnType.FromTokenType( OP_FLOAT );
 			return true;
 		}
 		return false;
@@ -455,7 +475,7 @@ std::string Type::ToString() const
 	case OP_TEXTURE1D:
 		return "Texture1D";
 	case OP_TEXTURE2D:
-		return "Texture2D";
+		return isDepthTexture ? "DepthTexture2D" : "Texture2D";
 	case OP_TEXTURE3D:
 		return "Texture3D";
 	case OP_TEXTURECUBE:
@@ -463,7 +483,7 @@ std::string Type::ToString() const
 	case OP_TEXTURE1DARRAY:
 		return "Texture1DArray";
 	case OP_TEXTURE2DARRAY:
-		return "Texture2DArray";
+		return isDepthTexture ? "DepthTexture2DArray" : "Texture2DArray";
 	case OP_TEXTURE3DARRAY:
 		return "Texture3DArray";
 	case OP_TEXTURECUBEARRAY:
@@ -512,6 +532,10 @@ std::string Type::ToString() const
 		return "LineStream";
 	case OP_TRIANGLESTREAM:
 		return "TriangleStream";
+	case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+		return "RaytracingAccelerationStructure";
+	case OP_RAY_DESC:
+		return "RayDesc";
 	}
 	if( width > 1 || height > 1 )
 	{
@@ -604,7 +628,14 @@ bool Type::GetIndexedType( Type& type ) const
 		else
 		{
 			type.FromTokenType( OP_FLOAT );
-			type.width = 4;
+			if (isDepthTexture)
+			{
+				type.width = 1;
+			}
+			else
+			{
+				type.width = 4;
+			}
 		}
 		return true;
 	case OP_BUFFER:
@@ -646,10 +677,12 @@ Type TypeFromSymbol( const Symbol* symbol )
     return t;
 }
 
-Type TypeFromTokenType( int type )
+Type TypeFromTokenType( int type, int width, int height )
 {
     Type t;
     t.FromTokenType( type );
+    t.width = width;
+    t.height = height;
     return t;
 }
 
@@ -721,4 +754,32 @@ int GetNumericTypePrecedence( int type )
 		}
 	}
 	return -1;
+}
+
+
+
+namespace hlsl {
+
+const Type void_t = TypeFromTokenType( OP_VOID );
+
+const Type bool_t = TypeFromTokenType( OP_BOOL );
+const Type int_t = TypeFromTokenType( OP_INT );
+const Type uint_t = TypeFromTokenType( OP_UINT );
+const Type float_t = TypeFromTokenType( OP_FLOAT );
+
+const Type bool2_t = TypeFromTokenType( OP_BOOL, 2 );
+const Type int2_t = TypeFromTokenType( OP_INT, 2 );
+const Type uint2_t = TypeFromTokenType( OP_UINT, 2 );
+const Type float2_t = TypeFromTokenType( OP_FLOAT, 2 );
+
+const Type bool3_t = TypeFromTokenType( OP_BOOL, 3 );
+const Type int3_t = TypeFromTokenType( OP_INT, 3 );
+const Type uint3_t = TypeFromTokenType( OP_UINT, 3 );
+const Type float3_t = TypeFromTokenType( OP_FLOAT, 3 );
+
+const Type bool4_t = TypeFromTokenType( OP_BOOL, 4 );
+const Type int4_t = TypeFromTokenType( OP_INT, 4 );
+const Type uint4_t = TypeFromTokenType( OP_UINT, 4 );
+const Type float4_t = TypeFromTokenType( OP_FLOAT, 4 );
+
 }

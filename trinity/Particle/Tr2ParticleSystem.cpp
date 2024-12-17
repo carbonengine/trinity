@@ -63,6 +63,7 @@ Tr2ParticleSystem::Tr2ParticleSystem( IRoot* lockobj )
 	m_useSimTimeRebase( false ),
 	m_isUsingSimTimeRebase( false ),
 	m_shouldSortVisible( true ),
+	m_previousDataOutdated( true ),
 	m_worldTransform( IdentityMatrix() )
 {
 	for( unsigned i = 0; i < Tr2ParticleElementData::COUNT; ++i )
@@ -308,7 +309,7 @@ bool Tr2ParticleSystem::IsInstanceDataReady() const
 
 ITr2InstanceData::InstanceData Tr2ParticleSystem::GetInstanceData( unsigned int, float ) const
 {
-	return { m_vertexBuffer, uint32_t( m_vertexSizes[Tr2ParticleElementData::GPU] * sizeof( float ) ), m_aliveCount };
+	return { m_vertexBuffer, 0, uint32_t( m_vertexSizes[Tr2ParticleElementData::GPU] * sizeof( float ) ), m_aliveCount };
 }
 
 // --------------------------------------------------------------------------------------
@@ -492,6 +493,27 @@ void Tr2ParticleSystem::Update( const ITr2GenericEmitter::UpdateArguments& globa
 	auto arguments = globalArguments;
 	arguments.parentTransform = m_worldTransform;
 
+
+	if( m_previousDataOutdated )
+	{
+		float* gpuBuffer = m_buffers[Tr2ParticleElementData::GPU];
+		uint32_t gpuDataSize = m_vertexSizes[Tr2ParticleElementData::GPU];
+		uint32_t gpuDataHalfSize = gpuDataSize >> 1;
+
+		for( uint32_t i = 0; i < m_aliveCount; ++i )
+		{
+			//Save the current data so we have the previous frame's data for motion vectors
+			//This kinda has to be done regardless of if we tick or not, to make sure it's always up to date for rendering...
+			std::copy( 
+				gpuBuffer + i * gpuDataSize,
+				gpuBuffer + i * gpuDataSize + gpuDataHalfSize,
+				gpuBuffer + i * gpuDataSize + gpuDataHalfSize 
+			);
+		}
+
+		m_previousDataOutdated = false;
+	}
+
 	// if we're offscreen or very small, we can tick less frequently
 	if( m_updatePeriod > 1 )
 	{
@@ -601,6 +623,8 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 		{
 			m_insertDeleteMutex->Release();
 		}
+
+		m_previousDataOutdated = true;
 	}
 	
 	s_aliveParticleCount += m_aliveCount;
@@ -694,6 +718,8 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 
 		m_bufferDirty = true;
 		s_updatedParticleCount = m_aliveCount;
+
+		m_previousDataOutdated = true;
 	}
 	// Update contraints
 	if( m_updateSimulation && !m_constraints.empty() )
@@ -703,6 +729,7 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 			( *constraint )->ApplyConstraint( arguments, m_buffers, m_vertexSizes, m_aliveCount, dt );
 		}
 		m_bufferDirty = true;
+		m_previousDataOutdated = true;
 	}
 
 	// Update bounding box
@@ -780,6 +807,8 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 					}
 				}
 			} );
+
+		m_previousDataOutdated = true;
 	}
 }
 
@@ -865,23 +894,39 @@ void Tr2ParticleSystem::RebuildDeclaration()
 	
 	for( auto it = m_elementMap.begin(); it != m_elementMap.end(); ++it )
 	{
-		if( it->second.m_bufferType == Tr2ParticleElementData::GPU )
+		//Skip things we don't want to upload to the GPU
+		if( it->second.m_bufferType != Tr2ParticleElementData::GPU )
 		{
-			Tr2VertexDefinition::Item item;
-			item.m_stream = 0;
-			item.m_offset = it->second.m_offset * sizeof( float );
-			item.m_dataType = static_cast<Tr2VertexDefinition::DataType>( vd.DT_FLOAT32 + ( ( it->second.m_dimension - 1 ) << vd.DT_SIZE_OFFSET ) );
-			item.m_usage = it->first.GetD3DUsage();
-			if( it->first.m_type == Tr2ParticleElementDeclarationName::CUSTOM )
-			{
-				item.m_usageIndex = it->second.m_usageIndex;
-			}
-			else
-			{
-				item.m_usageIndex = 0;
-			}
-			vd.m_items.push_back( item );
+			continue;
+		}
 
+		Tr2VertexDefinition::Item item;
+		item.m_stream = 0;
+		item.m_offset = it->second.m_offset * sizeof( float );
+		item.m_dataType = static_cast<Tr2VertexDefinition::DataType>( vd.DT_FLOAT32 + ( ( it->second.m_dimension - 1 ) << vd.DT_SIZE_OFFSET ) );
+		item.m_usage = it->first.GetD3DUsage();
+		
+		item.m_usageIndex = it->first.m_type == Tr2ParticleElementDeclarationName::CUSTOM ? it->second.m_usageIndex : 0;
+
+		vd.m_items.push_back( item );
+		vd.m_nextOffset[0] = std::max( vd.m_nextOffset[0], item.m_offset + vd.GetDataTypeSizeInBytes( item.m_dataType ) );
+
+		/*
+		Since we need to upload both the current and previous frame's data,
+		we duplicate the vertex attributes with an offset. This allows the shader to access
+		both the current data and the previous data simultaneously.
+
+		Since CUSTOM vertex attributes can't be updated, we only need to duplicate the non-CUSTOM
+		attributes. However, for simplicity, all the previous frame particle GPU data is tracked,
+		so this could be added in the future if necessary.
+		*/
+
+		if( it->first.m_type != Tr2ParticleElementDeclarationName::CUSTOM )
+		{
+			item.m_usageIndex = 1;
+			item.m_offset += m_vertexSizes[Tr2ParticleElementData::GPU] * sizeof( float ) / 2;
+
+			vd.m_items.push_back( item );
 			vd.m_nextOffset[0] = std::max( vd.m_nextOffset[0], item.m_offset + vd.GetDataTypeSizeInBytes( item.m_dataType ) );
 		}
 	}
@@ -1079,7 +1124,7 @@ void Tr2ParticleSystem::SortParticles()
 					std::copy( 
 						m_buffers[Tr2ParticleElementData::GPU] + m_indexes[i] * m_vertexSizes[Tr2ParticleElementData::GPU],
 						m_buffers[Tr2ParticleElementData::GPU] + ( m_indexes[i] + 1 ) * m_vertexSizes[Tr2ParticleElementData::GPU],
-						data + i * m_vertexSizes[Tr2ParticleElementData::GPU] );					   
+						data + i * m_vertexSizes[Tr2ParticleElementData::GPU] );
 				}
 			}
 		}
@@ -1161,7 +1206,7 @@ void Tr2ParticleSystem::UpdateElementDeclaration()
 			}
 			if( usages[( *it )->m_usageIndex] )
 			{
-				CCP_LOGERR( "Duplicate usage index %u for particle declatation element %s", ( *it )->m_usageIndex, ( *it )->GetName().c_str() );
+				CCP_LOGERR( "Duplicate usage index %u for particle declaration element %s", ( *it )->m_usageIndex, ( *it )->GetName().c_str() );
 				return;
 			}
 			usages[( *it )->m_usageIndex] = true;
@@ -1202,6 +1247,8 @@ void Tr2ParticleSystem::UpdateElementDeclaration()
 			m_vertexSizes[i] += 4 - m_vertexSizes[i] % 4;
 		}
 	}
+
+	m_vertexSizes[Tr2ParticleElementData::GPU] *= 2; //Reserve space for previous frame data
 
 	m_declarationHash++;
 

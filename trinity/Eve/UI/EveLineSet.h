@@ -6,7 +6,6 @@
 #include "ITr2Renderable.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/IEveTransform.h"
-#include "ITr2GeometryProvider.h"
 #include "include/ITriFunction.h"
 
 #include "Tr2DeviceResource.h"
@@ -31,7 +30,6 @@ class EveLineSet :
 	public ITr2Renderable,
 	public IEveTransform,
 	public IEveSpaceObject2,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource
 {
 public:
@@ -46,16 +44,16 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext );
-	void UpdateVisibility(  const TriFrustum& frustum, const Matrix& parentTransform );
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform
-	virtual void Update( EveUpdateContext& updateContext );
+	virtual void Update( const EveUpdateContext& updateContext );
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform );
 
 	// No sensible implementation?
@@ -70,10 +68,6 @@ public:
 private:
 	bool OnPrepareResources();
 public:
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable

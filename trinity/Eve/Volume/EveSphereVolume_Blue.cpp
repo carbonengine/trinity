@@ -17,9 +17,9 @@ const Be::ClassInfo* EveSphereVolume::ExposeToBlue()
 
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "position", m_position, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "radius", m_radius, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "innerRadius", m_innerRadius, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "position", m_outerSphere.center, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "radius", m_outerSphere.radius, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "innerRadius", m_innerSphere.radius, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		EXPOSURE_END()
 }

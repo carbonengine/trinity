@@ -8,6 +8,7 @@
 #include "Tr2SamplerStateALMetal.h"
 #include "Tr2TextureALMetal.h"
 #include "Tr2ShaderProgramALMetal.h"
+#include "Tr2RtPipelineStateALMetal.h"
 #include "ALLog.h"
 
 static_assert(
@@ -41,7 +42,22 @@ namespace TrinityALImpl
 		Destroy();
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL &program, Tr2PrimaryRenderContextAL& renderContext )
+    ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2RtPipelineStateAL &pipeline, Tr2PrimaryRenderContextAL& renderContext )
+    {
+        Destroy();
+
+        if( !renderContext.IsValid() || !pipeline.IsValid() )
+        {
+            return E_INVALIDARG;
+        }
+        
+        const ::Tr2ShaderProgramAL program = pipeline.m_pipeline->GetShaderProgram();
+    
+        return Create(description, program, renderContext);
+        
+    }
+
+    ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		Destroy();
 
@@ -55,6 +71,7 @@ namespace TrinityALImpl
 		for( auto stage : stages )
 		{
 			uint32_t buffersMask = 0;
+            uint32_t heapViewMask = 0;
 			NSUInteger texturesMin = NSUIntegerMax;
 			NSUInteger texturesMax = 0;
 
@@ -73,7 +90,7 @@ namespace TrinityALImpl
 
 				switch( resource.type )
 				{
-				case Tr2ResourceSetDescriptionAL::BUFFER:
+				case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 					if( resource.buffer.IsValid() )
 					{
 						CCP_ASSERT( i < METAL_SRV_BUFFER_COUNT );
@@ -86,7 +103,16 @@ namespace TrinityALImpl
 						// bufferMask &= ~(1 << bufferIndex);
 					}
 					break;
-				case Tr2ResourceSetDescriptionAL::TEXTURE:
+                case Tr2ResourceSetDescriptionAL::Resource::HEAP_VIEW:
+                    {
+                        CCP_ASSERT( i < METAL_SRV_BUFFER_COUNT );
+
+                        const NSUInteger bufferIndex = METAL_SRV_BUFFER_OFFSET + i;
+                        heapViewMask |= (1 << bufferIndex);
+
+                    }
+                    break;
+				case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 					if( resource.texture.IsValid() )
 					{
 						CCP_ASSERT( i < METAL_SRV_TEXTURE_COUNT );
@@ -108,7 +134,7 @@ namespace TrinityALImpl
 						textureMask &= ~(1 << texIndex);
 					}
 					break;
-				case Tr2ResourceSetDescriptionAL::NONE:
+				case Tr2ResourceSetDescriptionAL::Resource::NONE:
 					continue;
 				default:
 					CCP_AL_LOGWARN( "Unknown SRV resource type in resource set for register %d, stage %d", i, stage );
@@ -126,7 +152,7 @@ namespace TrinityALImpl
 
 				switch (resource.type)
 				{
-				case Tr2ResourceSetDescriptionAL::BUFFER:
+				case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 					if( resource.buffer.IsValid() )
 					{
 						CCP_ASSERT( i < METAL_UAV_BUFFER_COUNT );
@@ -139,7 +165,15 @@ namespace TrinityALImpl
 						// bufferMask &= ~(1 << bufferIndex);
 					}
 					break;
-				case Tr2ResourceSetDescriptionAL::TEXTURE:
+                case Tr2ResourceSetDescriptionAL::Resource::HEAP_VIEW:
+                    {
+                        CCP_ASSERT( i < METAL_UAV_BUFFER_COUNT );
+
+                        const NSUInteger bufferIndex = METAL_UAV_BUFFER_OFFSET + i;
+                        heapViewMask |= (1 << bufferIndex);
+                    }
+                    break;
+				case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 					if( resource.texture.IsValid() )
 					{
 						CCP_ASSERT( i < METAL_UAV_TEXTURE_COUNT );
@@ -152,7 +186,7 @@ namespace TrinityALImpl
 						textureMask &= ~(1 << texIndex);
 					}
 					break;
-				case Tr2ResourceSetDescriptionAL::NONE:
+				case Tr2ResourceSetDescriptionAL::Resource::NONE:
 					continue;
 				default:
 					CCP_AL_LOGWARN( "Unknown UAV resource type in resource set for register %d, stage %d", i, stage );
@@ -171,7 +205,7 @@ namespace TrinityALImpl
 				}
 				const Tr2ResourceSetDescriptionAL::Sampler& sampler = description.m_samplers[description.m_registerMap.samplers[stage][i]];
 
-				if( sampler.assigned )
+				if( sampler.type == Tr2ResourceSetDescriptionAL::Sampler::SAMPLER )
 				{
 					m_samplers[stage][i] = sampler.sampler.m_sampler->GetMetalSamplerState();
 					samplersMin = std::min<NSUInteger>( samplersMin, i );
@@ -179,6 +213,12 @@ namespace TrinityALImpl
 					// Remove this resource from mask.
 					samplerMask &= ~(1 << i);
 				}
+                else if( sampler.type == Tr2ResourceSetDescriptionAL::Sampler::HEAP_VIEW )
+                {
+                    CCP_ASSERT( i < METAL_SRV_BUFFER_COUNT );
+                    const NSUInteger bufferIndex = METAL_SRV_BUFFER_OFFSET + i;
+                    heapViewMask |= (1 << bufferIndex);
+                }
 			}
 
 			// Replace any missing resources with dummy ones.
@@ -225,6 +265,7 @@ namespace TrinityALImpl
 			}
 
 			m_buffersMask[stage] = buffersMask;
+            m_heapViewMask[stage] = heapViewMask;
 			m_texturesRange[stage] = ( texturesMin != NSUIntegerMax ) ? NSMakeRange( texturesMin, texturesMax - texturesMin + 1 ) : NSMakeRange( 0, 0 );
 			m_samplersRange[stage] = ( samplersMin != NSUIntegerMax ) ? NSMakeRange( samplersMin, samplersMax - samplersMin + 1 ) : NSMakeRange( 0, 0 );
 		}
@@ -253,7 +294,8 @@ namespace TrinityALImpl
 				m_samplers[stage][i] = nil;
 			}
 
-			m_buffersMask[stage] = 0;
+            m_buffersMask[stage] = 0;
+            m_heapViewMask[stage] = 0;
 			m_texturesRange[stage] = NSMakeRange( 0, 0 );
 			m_samplersRange[stage] = NSMakeRange( 0, 0 );
 		}

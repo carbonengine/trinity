@@ -680,23 +680,6 @@ Tr2PerObjectData* Tr2CurveLineSet::GetPerObjectData( ITriRenderBatchAccumulator*
 
 // -------------------------------------------------------------
 // Description:
-//   Renders the line set.
-// -------------------------------------------------------------
-void Tr2CurveLineSet::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	if( !m_vertexBuffer.IsValid() )
-	{
-		return;
-	}
-
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( LineVertex ) );
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawPrimitive( 0, 2 * m_currentSubmittedLineCount );
-}
-
-// -------------------------------------------------------------
-// Description:
 //   Submits all changes of this line set to the video card.
 // -------------------------------------------------------------
 bool Tr2CurveLineSet::SubmitChanges()
@@ -1127,24 +1110,28 @@ void Tr2CurveLineSet::SetDynamicFlag( bool b )
 // -------------------------------------------------------------
 void Tr2CurveLineSet::GetBatchImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect )
 {
-	TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-	if( batch )
+	if( !effect || !m_vertexBuffer.IsValid() || m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( effect );
-		batch->SetGeometryProvider( this );
-
-		float maxDepth = Tr2Renderer::GetFrustumRadius();
-
-		Vector3 center( m_boundingSphere.x, m_boundingSphere.y, m_boundingSphere.z );
-		center -= Tr2Renderer::GetViewPosition();
-		float z = std::min( std::max( ( Length( center ) + m_depthOffset ) / maxDepth, 0.f ), 1.f );
-
-		unsigned int depth = ( unsigned int )( ( float )0xFFFFFFF * ( 1.0f - z ) );
-		batch->SetDepth( depth );
-
-		accumulator->Commit( batch );
+		return;
 	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( effect );
+	batch.SetPerObjectData( perObjectData );
+
+	float maxDepth = Tr2Renderer::GetFrustumRadius();
+
+	Vector3 center( m_boundingSphere.x, m_boundingSphere.y, m_boundingSphere.z );
+	center -= Tr2Renderer::GetViewPosition();
+	float z = std::min( std::max( ( Length( center ) + m_depthOffset ) / maxDepth, 0.f ), 1.f );
+
+	unsigned int depth = (unsigned int)( (float)0xFFFFFFF * ( 1.0f - z ) );
+	batch.m_depth = depth;
+
+	batch.SetVertexDeclaration( m_vertexDeclHandle );
+	batch.SetStreamSource( 0, m_vertexBuffer, sizeof( LineVertex ) );
+	batch.SetDrawInstanced( 6 * m_currentSubmittedLineCount, 1, 0, 0 );
+	accumulator->Commit( batch );
 }
 
 // ------------------------------------------------------------------------------------------------------

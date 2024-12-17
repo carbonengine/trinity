@@ -44,7 +44,7 @@ PyObject* TriQuaternion::Repr(
 	*handled = true;
 	char buf[120];
 	sprintf_s(buf, "(%f,%f,%f,%f)", x, y, z,w);
-	return PyString_FromString(buf);
+	return PyUnicode_FromString(buf);
 }
 
 

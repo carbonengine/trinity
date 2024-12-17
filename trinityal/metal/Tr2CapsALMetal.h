@@ -12,7 +12,8 @@
 #define TRINITY_PLATFORM_IS_LOW_PERFORMACE 0
 #define TRINITY_PLATFORM_MAX_CONSTANT_BUFFER_SIZE ( 4 * 1024 )
 #define TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS 1
-
+#define TRINITY_PLATFORM_SUPPORTS_HEAP_VIEW 1
+#define TRINITY_PLATFORM_SUPPORTS_RAY_TRACING 1
 
 class Tr2CapsAL
 {
@@ -22,6 +23,14 @@ public:
 	bool SupportsStandaloneSwapChain() const;
 	bool SupportsVertexShaderTextures() const;
 	bool SupportsVariableRefreshRate() const;
+	bool SupportsRaytracing() const;
+
+    bool m_supportsRaytracing;
+    
+    Tr2CapsAL();
+    Tr2CapsAL(const Tr2CapsAL& other);
+    
+    Tr2CapsAL& operator=(const Tr2CapsAL& other);
 };
 
 #endif

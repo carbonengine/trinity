@@ -46,13 +46,21 @@ ASTNode* NewStruct( ParserState& state, const InlineString& name = InlineString(
 
 ASTNode* NewVarIdentifier( ParserState& state, Symbol* var );
 ASTNode* NewLiteralConst( ParserState& state, float value );
+ASTNode* NewLiteralConst( ParserState& state, uint32_t value );
+ASTNode* NewLiteralConst( ParserState& state, bool value );
 ASTNode* NewDot( ParserState& state, ASTNode* expr, Symbol* field );
 ASTNode* NewDot( ParserState& state, ASTNode* expr, const InlineString& field );
 ASTNode* NewBinaryExpression( ParserState& state, int op, ASTNode* left, ASTNode* right );
 ASTNode* NewConditionalExpression( ParserState& state, ASTNode* condition, ASTNode* trueExpr, ASTNode* falseExpr );
 
+ASTNode* NewFunctionCall( ParserState& state, const Type& type, const char* name, const std::vector<ASTNode*>& args );
+ASTNode* NewCastExpression( ParserState& state, const Type& type, ASTNode* child );
+
 ASTNode* NewVarDeclaration( ParserState& state, const Type& type, const InlineString& name = InlineString() );
+ASTNode* NewVarDeclaration( ParserState& state, Symbol* symbol, ASTNode* initializer = nullptr );
 ASTNode* NewExpressionStatement( ParserState& state, ASTNode* expr );
 ASTNode* NewReturn( ParserState& state, ASTNode* expr = nullptr );
 
 ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const InlineString& name = InlineString() );
+ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char* name );
+ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char* name, const RegisterSpecifier& reg );

@@ -627,7 +627,7 @@ static void PatchCalls( ParserState& state,
 
 void ConvertTextureFunctionsDX11( ParserState& state )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	std::map<Symbol*, SamplerToTexture> samplers;
 	std::map<Symbol*, std::vector<ParameterInfo>> functions;
@@ -710,7 +710,7 @@ static void TransferSRGBToTexturesDX11( ParserState& state, ASTNode* node )
 
 void TransferSRGBToTexturesDX11( ParserState& state )
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	TransferSRGBToTexturesDX11( state, state.GetTree() );
 }
@@ -895,7 +895,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 				cast->AddChild( dot );
 				dot = cast;
 			}
-			call->ReplaceChild( 0 , dot );
+			call->ReplaceChild( size_t( 0 ), dot );
 
 			swizzle = ScannerToken::ID( MakeInlineString( xyzw + coord->GetType().width - 1, xyzw + coord->GetType().width ) );
 			dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
@@ -911,9 +911,27 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 			castType.builtInType = OP_UINT;
 			cast->SetType( castType );
 			cast->AddChild( coord );
-			call->ReplaceChild( 0, cast );
+			call->ReplaceChild( size_t( 0 ), cast );
 		}
 		SplitCoordVec( call, textureType, 0 );
+	}
+	else if (functionToken.stringValue == "SampleCmp")
+	{
+		// t.SampleCmp(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord, cmp, [offset])
+		functionToken.stringValue = MakeInlineString( "sample_compare" );
+		// texture arrays: t.SampleCmp(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord., coord., [offset])
+		SplitCoordVec( call, textureType );
+	}
+	else if( functionToken.stringValue == "SampleCmpLevelZero" )
+	{
+		// t.SampleCmpLevelZero(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord, level(0), [offset])
+		functionToken.stringValue = MakeInlineString( "sample_compare" );
+		// texture arrays: t.SampleCmpLevelZero(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord., coord., level(0), [offset])
+		auto zero = ScannerToken::FromTokenType( OP_INT_CONST, call->GetLocation() );
+		zero.stringValue = MakeInlineString( "0" );
+		call->InsertChild( 3, new ASTNode( NT_CONSTANT, call->GetLocation(), call->GetScope(), &zero ) );
+		WrapInOption( { 3 }, "level" );
+		SplitCoordVec( call, textureType );
 	}
 	else if( functionToken.stringValue == "GetDimensions" )
 	{
@@ -928,7 +946,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 	
 	call->SetToken( &functionToken );
 
-	if( !isGatherCall && textureType.templateParameter && textureType.templateParameter->width != 4 )
+	if( !textureType.isDepthTexture && !isGatherCall && textureType.templateParameter && textureType.templateParameter->width != 4 )
 	{
 		const char* xyzw = "xyzw";
 		ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + textureType.templateParameter->width ) );
@@ -951,7 +969,8 @@ static bool IsTextureIndexing( ASTNode* node )
 	return node->GetNodeType() == NT_POSTFIX_EXPRESSION &&
 		node->GetToken() &&
 		node->GetToken()->type == OP_LEFT_BRACKET &&
-		node->GetChild( 0 )->GetType().IsTexture();
+		node->GetChild( 0 )->GetType().IsTexture() &&
+		node->GetChild( 0 )->GetType().arrayDimensions == 0;
 }
 
 
@@ -1004,11 +1023,40 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 				castType.builtInType = OP_UINT;
 				cast->SetType( castType );
 				cast->AddChild( coord );
-				call->ReplaceChild( 0, cast );
+				call->ReplaceChild( size_t( 0 ), cast );
 			}
 
 			auto textureType = node->GetChild( 0 )->GetType();
-			if( textureType.templateParameter && textureType.templateParameter->width != 4 )
+			// For indexing texture arrays we need to separate the array index from the coordinate
+			auto SplitIndex = [&]( uint32_t dimension ) {
+				auto arg = call->GetChild( 0 );
+
+				const char* xyzw = "xyzw";
+				auto dot = NewDot( state, arg, MakeInlineString( xyzw, xyzw + dimension ) );
+				call->ReplaceChild( size_t( 0 ), dot );
+
+				dot = NewDot( state, arg->Copy(), MakeInlineString( xyzw + dimension, xyzw + dimension + 1 ) );
+				call->InsertChild( 1, dot );
+			};
+			switch (textureType.builtInType)
+			{
+			case OP_TEXTURE1DARRAY:
+			case OP_RWTEXTURE1DARRAY:
+				SplitIndex( 1 );
+				break;
+			case OP_TEXTURE2DARRAY:
+			case OP_RWTEXTURE2DARRAY:
+				SplitIndex( 2 );
+				break;
+			case OP_TEXTURE3DARRAY:
+			case OP_RWTEXTURE3DARRAY:
+				SplitIndex( 3 );
+				break;
+			default:
+				break;
+			}
+			// MLS tex.read is always a 4 component vector. If the original texture is not a 4 component vector, we need to swizzle the result
+			if( !textureType.isDepthTexture && textureType.templateParameter && textureType.templateParameter->width != 4 )
 			{
 				const char* xyzw = "xyzw";
 				ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + textureType.width ) );
@@ -1163,4 +1211,56 @@ void ConvertTextureFunctionsToMetal( ParserState& state )
 {
 	ConvertTextureFunctionsDX11( state );
 	PatchMetalTextureCalls( state, state.GetTree() );
+}
+
+
+void MergeSamplers( ParserState& state )
+{
+	std::map<Sampler, Symbol*> samplers;
+
+	for( auto child : state.GetTree()->GetChildren() )
+	{
+		if( child->GetNodeType() == NT_VAR_DECLARATION_LIST )
+		{
+			for( auto name : child->GetChildren() )
+			{
+				if( name && name->GetSymbol() && name->GetSymbol()->type.IsSampler() )
+				{
+					Sampler sampler;
+					if( GetSamplerState( state, name, sampler ) && !sampler.isDynamic )
+					{
+						auto found = samplers.find( sampler );
+						if( found != samplers.end() )
+						{
+							state.GetTree()->Map( [&]( auto node ) {
+								if( node->GetNodeType() != NT_NAME_DECLARATION && node->GetSymbol() == name->GetSymbol() )
+								{
+									node->SetSymbol( found->second );
+								}
+								return node;
+							} );
+						}
+						else
+						{
+							samplers[sampler] = name->GetSymbol();
+						}
+					}
+				}
+			}
+		}
+	}
+}
+int32_t BindlessTextureType( int type )
+{
+	switch( type )
+	{
+	case OP_BINDLESSHANDLETEXTURE2D:
+		return TEX_TYPE_2D;
+	case OP_BINDLESSHANDLETEXTURE3D:
+		return TEX_TYPE_3D;
+	case OP_BINDLESSHANDLETEXTURECUBE:
+		return TEX_TYPE_CUBE;
+	default:
+		return TEX_TYPE_INVALID;
+	}
 }

@@ -70,7 +70,7 @@ Tr2ProceduralBuffer::Tr2ProceduralBuffer( const BlueSharedString& name, FactoryF
 {
 }
 
-const Tr2BufferAL& Tr2ProceduralBuffer::GetSharedResource() const
+const Tr2SuballocatedBuffer::Allocation& Tr2ProceduralBuffer::GetSharedResource() const
 {
 	return *m_resource;
 }

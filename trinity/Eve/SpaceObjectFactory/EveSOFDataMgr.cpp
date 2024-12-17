@@ -1099,6 +1099,9 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			instance.transform0 = *reinterpret_cast<Vector4*>( &transform.GetX() );
 			instance.transform1 = *reinterpret_cast<Vector4*>( &transform.GetY() );
 			instance.transform2 = *reinterpret_cast<Vector4*>( &transform.GetZ() );
+			instance.lastTransform0 = *reinterpret_cast<Vector4*>( &transform.GetX() );
+			instance.lastTransform1 = *reinterpret_cast<Vector4*>( &transform.GetY() );
+			instance.lastTransform2 = *reinterpret_cast<Vector4*>( &transform.GetZ() );
 			instance.boneIndex = iit->boneIndex;
 			him.instances.push_back( instance );
 
@@ -1620,6 +1623,8 @@ EveSOFDataMgr::ExtensionPlacementData EveSOFDataMgr::UnpackPlacementData( IEveSO
 		placementData.locatorSetName = BlueSharedString( placement->m_locatorSetName );
 		placementData.descriptor = descriptor;
 		placementData.isInstanced = placement->m_isInstanced;
+		placementData.extendsBoundingSphere = placement->m_extendsBoundingSphere;
+		placementData.extendsShieldEllipsoid = placement->m_extendsShieldEllipsoid;
 
 		placementData.hasDistribution = placement->m_distribution != nullptr;
 		if( placementData.hasDistribution )
@@ -2018,6 +2023,7 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 			EveSOFDataGenericStringPtr paramData = ( *spit );
 			gdsd.parameters.push_back( BlueSharedString( paramData->m_str ) );
 		}
+		gdsd.additive = shaderData->m_additive;
 
 		gd.decalShaderData[shaderData->m_shader] = gdsd;
 	}

@@ -228,7 +228,7 @@ void EveTrailsSet::Add( const Matrix* localMatrix, float size )
 // --------------------------------------------------------------------------------
 void EveTrailsSet::ReleaseResources( TriStorage s )
 {
-	m_instanceBuffer = Tr2BufferAL();
+	g_sharedBuffer.Free( m_instanceBuffer );
 	m_vertexDeclHandle = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
 }
 
@@ -266,7 +266,7 @@ bool EveTrailsSet::OnPrepareResources()
 void EveTrailsSet::InitializeInstanceBuffer()
 {
 	// get rid of old one
-	m_instanceBuffer = Tr2BufferAL();
+	g_sharedBuffer.Free( m_instanceBuffer );
 
 	// something there?
 	if( m_trailData.empty() )
@@ -284,45 +284,14 @@ void EveTrailsSet::InitializeInstanceBuffer()
 		verts[i].transform = Vector4( m_trailData[i].transform._41, m_trailData[i].transform._42, m_trailData[i].transform._43, m_trailData[i].size );
 	}
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	CR_RETURN( m_instanceBuffer.Create(		
+
+	
+	CR_RETURN( g_sharedBuffer.Allocate(		
 		sizeof( InstanceVertex ),
 		trailCount, 
-		Tr2GpuUsage::VERTEX_BUFFER,
-		Tr2CpuUsage::NONE,
 		&verts[0], 
-		renderContext ) );
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Setup instanced reandering and call DIP
-// --------------------------------------------------------------------------------
-void EveTrailsSet::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	if( !m_geometryResource )
-	{
-		return;
-	}
-	const TriGeometryResMeshData* meshData = m_geometryResource->GetMeshData( 0 );
-	if( !meshData )
-	{
-		return;
-	}
-	if( !meshData->m_indexBuffer.IsValid() || !meshData->m_vertexBuffer.IsValid() )
-	{
-		return;
-	}
-
-	// render
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyIndexBuffer( meshData->m_indexBuffer );
-	// Stream 0: "geometry": here: our turret geometry	
-	renderContext.m_esm.ApplyStreamSource( 0, meshData->m_vertexBuffer, 0, meshData->m_bytesPerVertex );
-	// Stream 1: instance", here: instance index	
-	renderContext.m_esm.ApplyStreamSource( 1, m_instanceBuffer, 0, sizeof( InstanceVertex ) );
-
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawIndexedInstanced( meshData->m_vertexCount, 0, meshData->m_primitiveCount, (unsigned int)m_trailData.size() );
+		renderContext, 
+		m_instanceBuffer ) );
 }
 
 // --------------------------------------------------------------------------------
@@ -338,15 +307,7 @@ void EveTrailsSet::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr
 	{
 		return;
 	}
-	if( !m_geometryResource )
-	{
-		return;
-	}
-	if( !m_geometryResource->IsGood() )
-	{
-		return;
-	}
-	if( m_geometryResource->GetMeshCount() < 1 )
+	if( !m_geometryResource || !m_geometryResource->IsGood() )
 	{
 		return;
 	}
@@ -358,13 +319,25 @@ void EveTrailsSet::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr
 	{
 		return;
 	}
-
-	TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-	if( batch )
+	auto meshData = m_geometryResource->GetMeshData( 0 );
+	if( !meshData )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetGeometryProvider( this );
-		accumulator->Commit( batch );
+		return;
 	}
+	if( !meshData->m_allocationsValid )
+	{
+		return;
+	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetGeometry( m_vertexDeclHandle, meshData->m_vertexAllocation, m_instanceBuffer, meshData->m_indexAllocation );
+	batch.SetDrawIndexedInstanced(
+		meshData->m_primitiveCount * 3,
+		uint32_t( m_trailData.size() ),
+		meshData->m_indexAllocation.GetStartIndex(),
+		meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+		m_instanceBuffer.GetOffset() / m_instanceBuffer.GetStride() );
+	accumulator->Commit( batch );
 }

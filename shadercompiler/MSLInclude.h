@@ -422,4 +422,145 @@ struct VectorReference3
 	int3 m_swizzles;
 	typename metal::remove_reference<TIn>::type m_value;
 };
+
+
+template <typename Resource>
+struct _ResourceRef
+{
+	Resource resource;
+};
+
+
+#if __METAL_VERSION__ >= 300
+
+using namespace raytracing;
+
+struct RaytracingAccelerationStructureT
+{
+     instance_acceleration_structure tlas;
+};
+
+#define RaytracingAccelerationStructure const RaytracingAccelerationStructureT*
+
+struct RayDesc
+{
+    float3 Origin;
+    float3 Direction;
+    float TMin;
+    float TMax;
+};
+
+#define RAY_FLAG_NONE                            0x00
+#define RAY_FLAG_FORCE_OPAQUE                    0x01
+#define RAY_FLAG_FORCE_NON_OPAQUE                0x02
+#define RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH 0x04
+#define RAY_FLAG_SKIP_CLOSEST_HIT_SHADER         0x08
+#define RAY_FLAG_CULL_BACK_FACING_TRIANGLES      0x10
+#define RAY_FLAG_CULL_FRONT_FACING_TRIANGLES     0x20
+#define RAY_FLAG_CULL_OPAQUE                     0x40
+#define RAY_FLAG_CULL_NON_OPAQUE                 0x80
+#define RAY_FLAG_SKIP_TRIANGLES                  0x100
+#define RAY_FLAG_SKIP_PROCEDURAL_PRIMITIVES      0x200
+
+
+struct __MetalHitSV
+{
+    uint instance_id;
+    float3 origin;
+    float3 direction;
+    float min_distance;
+    float distance;
+    float2 barycentric_coord;
+};
+
+#define __INTERSECION_TAGS instancing, triangle_data, world_space_data
+
+struct __RtLocalMaterial
+{
+    device void* buffer;
+};
+
+template <typename T>
+void __GetLocalRTBufferT( device __RtLocalMaterial* materials, uint index, thread T& dest )
+{
+    dest = ((device T*)materials[index].buffer)[0];
+}
+
+#define __GetLocalRTBuffer(index, dest) __GetLocalRTBufferT(__rtMaterials, index, dest)
+
+template <typename payload_t>
+void __TraceRay(
+    device RaytracingAccelerationStructure accelerationStructure,
+    uint rayFlags,
+    uint instanceInclusionMask,
+    uint rayContributionToHitGroupIndex,
+    uint multiplierForGeometryContributionToHitGroupIndex,
+    uint missShaderIndex,
+    RayDesc ray_,
+    thread payload_t& payload,
+
+    intersection_function_table<__INTERSECION_TAGS> intersectionTable,
+    visible_function_table<void(thread payload_t&, __MetalHitSV, device __RtLocalMaterial*)> missShaderTable,
+    device __RtLocalMaterial* missMaterials,
+    visible_function_table<void(thread payload_t&, __MetalHitSV, device __RtLocalMaterial*)> hitShaderTable,
+    device __RtLocalMaterial* hitMaterials )
+{
+    intersector<__INTERSECION_TAGS> i;
+    i.assume_geometry_type(geometry_type::triangle);
+    i.accept_any_intersection(rayFlags & RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH);
+    
+    ray r;
+    r.origin = ray_.Origin;
+    r.direction = ray_.Direction;
+    r.min_distance = ray_.TMin;
+    r.max_distance = ray_.TMax;
+
+    typename intersector<__INTERSECION_TAGS>::result_type intersection = i.intersect(r, accelerationStructure[0].tlas, instanceInclusionMask, intersectionTable, payload);
+
+    __MetalHitSV hit;
+
+    if (intersection.type == intersection_type::none)
+    {
+        hit.instance_id = 0;
+        hit.origin = r.origin;
+        hit.direction = r.direction;
+        hit.min_distance = r.min_distance;
+        hit.distance = r.max_distance;
+        hit.barycentric_coord = { 0.0, 0.0 };
+
+        missShaderTable[missShaderIndex](payload, hit, missMaterials + 8 * missShaderIndex);
+    }
+    else if( ( rayFlags & RAY_FLAG_SKIP_CLOSEST_HIT_SHADER ) == 0 )
+    {
+        hit.instance_id = intersection.instance_id;
+        hit.origin = intersection.world_to_object_transform * float4( r.origin, 1.0 );
+        hit.direction = intersection.world_to_object_transform * float4( r.direction, 0.0 );
+        hit.min_distance = r.min_distance;
+        hit.distance = intersection.distance;
+        hit.barycentric_coord = intersection.triangle_barycentric_coord;
+
+        uint offset = ((device uint*)accelerationStructure)[2 + intersection.instance_id];
+
+        hitShaderTable[intersection.instance_id](payload, hit, hitMaterials + 8 * offset);
+    }
+}
+
+#define TraceRay(accelerationStructure, rayFlags, instanceInclusionMask, rayContributionToHitGroupIndex, multiplierForGeometryContributionToHitGroupIndex, missShaderIndex, ray, payload) \
+    __TraceRay(accelerationStructure, rayFlags, instanceInclusionMask, rayContributionToHitGroupIndex, multiplierForGeometryContributionToHitGroupIndex, missShaderIndex, ray, payload, __intersectionTable, __missShaderFunctionTable, __missMaterials, __hitShaderFunctionTable, __hitMaterials)
+
+
+#define DispatchRaysIndex() (__dispatchRaysIndex)
+#define DispatchRaysDimensions() (__dispatchRaysDimensions)
+
+
+#define InstanceID() (__metalHitSV.instance_id)
+#define ObjectRayOrigin() (__metalHitSV.origin)
+#define ObjectRayDirection() (__metalHitSV.direction)
+#define RayTMin() (__metalHitSV.min_distance)
+#define RayTCurrent() (__metalHitSV.distance)
+
+#define IgnoreHit() return false
+
+#endif
+
 )MSL"

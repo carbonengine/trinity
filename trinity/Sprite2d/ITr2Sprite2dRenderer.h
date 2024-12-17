@@ -38,6 +38,7 @@ enum Tr2SpriteObjectEffect
 	TR2_SFX_DOT,								// Primary texture used in dot product against light vector
 	TR2_SFX_NOALPHA,							// Primary texture as a Bink video texture
 	TR2_SFX_DROPSHADOW,							// Primary texture modulated with vertex colors plus a drop shadow
+	TR2_SFX_OUTLINE, 							// Primary texture modulated with vertex colors plus an outline
 	TR2_SFX_COLOROVERLAY,						// Primary texture colorized with overlay effect (http://en.wikipedia.org/wiki/Blend_modes#Overlay)
 	TR2_SFX_SOFTLIGHT,							// Primary texture colorized with a soft light effect (http://en.wikipedia.org/wiki/Blend_modes#Soft_Light)
 	TR2_SFX_BLUR,								// Primary texture is blurred
@@ -83,6 +84,8 @@ struct Tr2Sprite2dD3DVertex : public Tr2Sprite2dVertexBase
 	uint8_t blendMode;
 	uint8_t spriteEffect;
 	uint8_t tileMode;
+	Color outlineColor;
+	float outlineThreshold;
 };
 
 BLUE_DECLARE( Tr2AtlasTexture );

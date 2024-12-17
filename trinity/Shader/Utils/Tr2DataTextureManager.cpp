@@ -45,6 +45,7 @@ void Tr2DataTextureManager::ReleaseResources( TriStorage s )
 {
 	// get rid of data texture
 	*m_dataTexture->GetTexture() = Tr2TextureAL();
+	m_dataTexture->OnTextureChange().Broadcast();
 }
 
 // --------------------------------------------------------------------------------
@@ -71,8 +72,10 @@ bool Tr2DataTextureManager::OnPrepareResources()
 	Tr2SubresourceData init = { &t[0], m_textureWidth * uint32_t(sizeof(Vector4)), m_textureWidth * m_textureHeight * uint32_t(sizeof(Vector4)) };
 	if( FAILED( m_dataTexture->GetTexture()->Create( Tr2BitmapDimensions( m_textureWidth, m_textureHeight, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_FLOAT ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE, &init, renderContext ) ) )
 	{
+		m_dataTexture->OnTextureChange().Broadcast();
 		return false;
 	}
+	m_dataTexture->OnTextureChange().Broadcast();
 
 	return true;
 }

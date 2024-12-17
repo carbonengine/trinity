@@ -268,6 +268,8 @@ const Be::ClassInfo* EveSOFDataHullExtensionPlacement::ExposeToBlue(){
 		MAP_ATTRIBUTE( "distributionConditions", m_distributionConditions, "", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "descriptor", m_descriptor, "The dna descriptor of the extension", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "isInstanced", m_isInstanced, "is the mesh instanced? instanced meshes cannot be animated", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "extendsBoundingSphere", m_extendsBoundingSphere, "If true then it will grow the boundingsphere of the parent", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "extendsShieldEllipsoid", m_extendsShieldEllipsoid, "If true then it will grow the shield ellipsoid of the parent", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
 }
 
@@ -535,7 +537,8 @@ const Be::ClassInfo* EveSOFDataGenericDecalShader::ExposeToBlue()
 		MAP_ATTRIBUTE( "parameters", m_parameters, "Complete list of all parameters for this shader", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "defaultTextures", m_defaultTextures, "Default (global) textures for this shader", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "parentTextures", m_parentTextures, "Parent textures from the hull", Be::READ | Be::PERSIST )
-		EXPOSURE_END()
+		MAP_ATTRIBUTE( "additive", m_additive, "Render decals with this shader during the additive pass rather than the decal pass to make sure they are rendered on top of any other decals", Be::READ | Be::PERSIST )
+	EXPOSURE_END()
 }
 
 

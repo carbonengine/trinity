@@ -41,14 +41,25 @@ public:
 	void SetDestination( const std::string& destAttribute, IRootPtr destination );
 	void SetScale( float scale );
 
+	void CreateWeakBinding( IRoot* source, const char* sourceAttr, IRoot* dest, const char* destAttr, float scale = 1.0f, const Vector4& offset = Vector4( 0.0f, 0.0f, 0.0f, 0.0f ) );
+
 	bool IsValid() const;
 
 protected:
+	IRoot* GetCurrentSourceObject() const;
+	IRoot* GetCurrentDestinationObject() const;
+
+	IRootPtr GetSourceObject() const;
+	void SetSourceObject( IRoot* sourceObject );
+
+	IRootPtr GetDestinationObject() const;
+	void SetDestinationObject( IRoot* destinationObject );
+
 	std::string m_name;
-	bool m_isValid;
-	bool m_isEnabled;
 	IRootPtr m_sourceObject;
+	BlueWeakRef<IRoot> m_sourceObjectWeak;
 	IRootPtr m_destinationObject;
+	BlueWeakRef<IRoot> m_destinationObjectWeak;
 
 	std::string m_sourceAttribute;
 	std::string m_destinationAttribute;
@@ -60,12 +71,14 @@ protected:
 	// with destination attribute as something like 'value.x'. We
 	// need to store this offset to properly handle rerouting destination
 	// after initial setup.
-	unsigned int m_sourceItemOffset;
-	unsigned int m_destItemOffset;
+	uint8_t m_sourceItemOffset;
+	uint8_t m_destItemOffset;
+	bool m_isWeak;
+	bool m_isEnabled;
 
 	float m_scale;
 	Vector4 m_offset;
-	INotifyPtr m_notifyPtr;
+	INotify* m_notifyPtr;
 
 	typedef void (*CopyFunc)( void* srcVar, void* dstVar, float scale, const Vector4& offset );
 	CopyFunc m_copyFunc;

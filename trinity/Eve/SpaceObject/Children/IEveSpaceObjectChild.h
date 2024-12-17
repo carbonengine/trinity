@@ -46,14 +46,14 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual const char* GetName() const = 0;
 	virtual void SetName( const char* name ) = 0;
 
-	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod ) = 0;
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) = 0;
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables ) = 0;
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const = 0;
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) {}
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const {}
 	
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) = 0;
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) = 0;
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) = 0;
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) = 0;
 
 	virtual void GetLocalToWorldTransform( Matrix& transform ) const = 0;
 	
@@ -76,6 +76,8 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual void SetOrigin( Origin origin ) {};
 
 	virtual void AddTransformModifier( IEveChildTransformModifier* modifier ) {};
+
+	virtual void SetMute( bool isMuted ) {};
 };
 
 BLUE_DECLARE_IVECTOR( IEveSpaceObjectChild );

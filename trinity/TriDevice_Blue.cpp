@@ -164,6 +164,40 @@ BLUE_REGISTER_ENUM_EX( "TriDeviceType",
 					   TriDeviceTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
+Be::VarChooser Tr2UpsclaingAL_UpscalingTechnique_Chooser[] = {
+	{ "NONE", BeCast( Tr2UpscalingAL::Technique::NONE ), "" },
+	{ "FSR1", BeCast( Tr2UpscalingAL::Technique::FSR1 ), "" },
+	{ "FSR2", BeCast( Tr2UpscalingAL::Technique::FSR2 ), "" },
+	{ "FSR3", BeCast( Tr2UpscalingAL::Technique::FSR3 ), "" },
+	{ "DLSS", BeCast( Tr2UpscalingAL::Technique::DLSS ), "" },
+	{ "XESS", BeCast( Tr2UpscalingAL::Technique::XESS ), "" },
+	{ "METALFX", BeCast( Tr2UpscalingAL::Technique::METALFX ), "" },
+	{ 0 }
+};
+
+Be::VarChooser Tr2UpsclaingAL_UpscalingSetting_Chooser[] = {
+	{ "NATIVE", BeCast( Tr2UpscalingAL::Setting::NATIVE ), "" },
+	{ "ULTRA_QUALITY", BeCast( Tr2UpscalingAL::Setting::ULTRA_QUALITY ), "" },
+	{ "QUALITY", BeCast( Tr2UpscalingAL::Setting::QUALITY ), "" },
+	{ "BALANCED", BeCast( Tr2UpscalingAL::Setting::BALANCED ), "" },
+	{ "PERFORMANCE", BeCast( Tr2UpscalingAL::Setting::PERFORMANCE ), "" },
+	{ "ULTRA_PERFORMANCE", BeCast( Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE ), "" },
+	{ 0 }
+};
+
+BLUE_REGISTER_ENUM_EX(
+	"UPSCALING_TECHNIQUE",
+	Tr2UpscalingAL::Technique,
+	Tr2UpsclaingAL_UpscalingTechnique_Chooser,
+	ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+BLUE_REGISTER_ENUM_EX(
+	"UPSCALING_SETTING",
+	Tr2UpscalingAL::Setting,
+	Tr2UpsclaingAL_UpscalingSetting_Chooser,
+	ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+
 const Be::ClassInfo* TriDevice::ExposeToBlue()
 {
 	/////////////////////////////////////////
@@ -224,6 +258,34 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			m_mipLevelSkipCount, 
 			"Number of high detail mip levels we skip, i.e. chop of the front of the mip chain.",
 			Be::READWRITE 
+		)
+
+		MAP_ATTRIBUTE(
+			"upscalingTechnique",
+			m_upscalingTechnique,
+			"Upscaling technique.\n"
+			":jessica-group: Upscaling\n",
+			Be::READ )
+
+		MAP_ATTRIBUTE(
+			"upscalingSetting",
+			m_upscalingSetting,
+			"Upscaling setting.\n"
+			":jessica-group: Upscaling\n",
+			Be::READ )
+
+		MAP_ATTRIBUTE(
+			"frameGeneration",
+			m_upscalingWithFrameGeneration,
+			"upscaling With Frame Generation.\n"
+			":jessica-group: Upscaling\n",
+			Be::READ )
+
+		MAP_ATTRIBUTE(
+			"supportedUpscalingTechniques",
+			m_supportedUpscalingTechniques,
+			"List of the supported upscaling techniques.\n",
+			Be::READ 
 		)
 
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets that are update each frame. Finished curve sets are removed automatically.", Be::READ | Be::PERSIST ) 
@@ -371,6 +433,53 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"IsVariableRefreshRateSupported",
 			IsVariableRefreshRateSupported,
 			"Returns True if the device support variable refresh rate (gsync, freesync)"
+		)
+		MAP_METHOD_AND_WRAP(
+			"SetUpscaling",
+			SetUpscaling,
+			"Sets an upscaling technique on the device with the requested setting and framegeneration\n"
+			":param technique: the technique to use (type Tr2UpscalingAL::Technique)\n" 
+			":param setting: the setting to use (type Tr2UpscalingAL::Setting)\n" 
+			":param frameGeneration: framegeneration on/off (type bool)" 
+		)
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"CreateUpscalingContext",
+			CreateUpscalingContext,
+            1,
+			"Creates an upscaling context for the display resolution, if there is upscaling enabled\n"
+			":param displayWidth: the width of the display\n"
+			":param displayHeight: the height of the display\n" 
+            ":param pixelFormat: pixel format for the render target\n"
+            ":param depthFormat: pixel format for the depth buffer\n"
+            ":param existingContext: ID of the existing context to try to reuse for the new one. If it is not possible to\n"
+            "  reuse the existing context it will be deleted before the new context is created\n"
+		)
+		MAP_METHOD_AND_WRAP(
+			"DeleteUpscalingContext",
+			DeleteUpscalingContext,
+			"Deletes an upscaling context \n"
+			":param upscalingContextID: the id of the context to delete\n")
+
+#if BLUE_WITH_PYTHON
+		MAP_METHOD_AS_METHOD(
+			"GetUpscalingInfo",
+			PyGetUpscalingInfo,
+			"Gets the upscaling context info for an upscaling id\n"
+			":param upscalingContextID: the id of the context"
+		)
+#endif
+
+		MAP_METHOD_AND_WRAP(
+			"GetRenderResolution",
+			GetRenderResolution,
+			"Gets the render resolution for the provided display resolution\n"
+			":param displayWidth: the width of the display\n" 
+			":param displayHeight: the height of the display\n" 
+		)
+		MAP_METHOD_AND_WRAP(
+			"SupportsRaytracing",
+			SupportsRaytracing,
+			"Returns True if the device supports raytracing"
 		)
 
     EXPOSURE_END()

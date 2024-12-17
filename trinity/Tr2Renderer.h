@@ -102,9 +102,10 @@ public:
 	static void RegisterEffect( Tr2Effect* f );
 	static void UnregisterEffect( Tr2Effect* f );
 	static void ReinitializeRegisteredEffects();
+	static void RebuildEffects();
 
-	// pointer since this can fail
-	static Tr2BufferAL* GetQuadListIndexBuffer( uint32_t numOfQuads );
+	static void ReserveQuadListIndexBuffer( uint32_t numOfQuads );
+	[[nodiscard]] static Tr2SuballocatedBuffer::Allocation& GetQuadListIndexBuffer();
 
 	static void BeginFrame();
 	static void EndFrame();
@@ -168,6 +169,9 @@ public:
 	static float GetAnimationTime();
 	static float GetAnimationTimeElapsed( float startTime );
 
+	static uint32_t GetUpscalingContextID();
+	static void SetUpscalingContextID( uint32_t upscalingContextID );
+
 	// Text output for debugging purposes.
 	// Calls to Printf gather up text - text is rendered on RenderDebugInfo.
 	// This allows calls to Printf outside the rendering phase.
@@ -223,7 +227,7 @@ public:
 	static void EnableFallbackTextureDebugging();
 	static void DisableFallbackTextureDebugging();
 	static const Tr2TextureAL& GetFallbackTexture( Tr2EffectResource::Type textureType, const char* debugContext );
-	static bool GetSystemShaderOptions( Tr2ShaderOption** options, size_t* count );
+	static void InitializeSystemShaderOptions();
 
 	static bool GetGeometryShaderSupport();
 private:

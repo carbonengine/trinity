@@ -336,17 +336,17 @@ void EveChildInstanceContainer::GetRenderables( std::vector<ITr2Renderable*>& re
 }
 
 
-void EveChildInstanceContainer::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildInstanceContainer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{
 		return;
 	}
 
-	RunOnInstances( [&frustum, &parentTransform, parentLod]( IEveSpaceObjectChild* c ) { c->UpdateVisibility( frustum, parentTransform, parentLod ); } );
+	RunOnInstances( [&updateContext, &parentTransform, parentLod]( IEveSpaceObjectChild* c ) { c->UpdateVisibility( updateContext, parentTransform, parentLod ); } );
 }
 
-void EveChildInstanceContainer::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildInstanceContainer::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( !m_display )
 	{
@@ -375,7 +375,7 @@ void EveChildInstanceContainer::AddTransformModifier( IEveChildTransformModifier
 	m_reset = true;
 }
 
-void EveChildInstanceContainer::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildInstanceContainer::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( !m_display )
 	{

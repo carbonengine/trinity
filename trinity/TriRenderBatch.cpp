@@ -3,99 +3,6 @@
 #include "TriRenderBatch.h"
 #include "Resources/TriGeometryRes.h"
 
-BLUE_DEFINE_INTERFACE( ITr2GeometryProvider );
-
-TriRenderBatchStore::TriRenderBatchStore( TriPoolAllocator* allocator ) :
-	ITriRenderBatchAccumulator( allocator ),
-	m_batchCount( 0 ),
-	m_batches()	
-{
-}
-
-TriRenderBatchStore::~TriRenderBatchStore()
-{
-	Clear();
-}
-
-void TriRenderBatchStore::Clear( void )
-{
-	for( std::vector<TriRenderBatch*>::iterator it = m_batches.begin(); it != m_batches.end(); ++it )
-	{
-		TriRenderBatch* doomed = *it;
-		if( doomed )
-		{
-			doomed->~TriRenderBatch();
-			doomed = NULL;
-		}
-	}
-
-	m_batches.clear();
-	m_batchCount = 0;
-}
-
-void TriRenderBatchStore::Commit( TriRenderBatch* batch )
-{
-	if( batch )
-	{
-		// Set the user data and rendering mode for the batch
-		batch->SetUserData( m_userData );
-		batch->SetRenderingMode( m_renderingMode );
-
-		m_batches.push_back( batch );
-		++m_batchCount;
-	}
-}
-
-void TriRenderBatchStore::TransferBatchToOtherAccumulator( 
-		ITriRenderBatchAccumulator* accumulator, 
-		size_t index )
-{
-	// Verify that the other accumulator is valid
-	CCP_ASSERT_M( accumulator != NULL, "Attempt to transfer render batch to NULL accumulator" );
-
-	// Verify that the index is in range
-	CCP_ASSERT_M( index < m_batches.size(), "Render batch index out of range" );
-
-	// Get the batch to transfer
-	TriRenderBatch* batchToTransfer = m_batches[index];
-	// Verify that the batch is valid
-	CCP_ASSERT_M( batchToTransfer != NULL, "Attempt to transfer NULL render batch" );
-
-	accumulator->SetRenderingMode( batchToTransfer->GetRenderingMode() );
-	// Transfer the batch
-	accumulator->Commit( batchToTransfer );
-	// Flag the batch as NULL
-	m_batches[index] = NULL;
-}
-
-TriRenderBatch::~TriRenderBatch()
-{
-}
-
-void TriRenderBatch::SetShaderMaterial( Tr2Material* val )
-{
-	m_shaderMaterial = val;
-}
-
-Tr2Material* TriRenderBatch::GetShaderMaterialInterface() const
-{
-	return m_shaderMaterial;
-}
-
-Tr2Shader* TriRenderBatch::GetShaderStateInterface() const
-{
-	if (m_shaderMaterial)
-	{
-		return m_shaderMaterial->GetShaderStateInterface();
-	}
-	else
-	{
-		return NULL;
-	}
-}
-
-
-
 
 // -------------------------------------------------------------
 // Description:
@@ -153,7 +60,6 @@ TriRenderBatchAreaBlocksWithSharedMaterial::TriRenderBatchAreaBlocksWithSharedMa
 {
 }
 
-
 void TriRenderBatchAreaBlocksWithSharedMaterial::Optimize()
 {
 	TriRenderBatchAreaBlock::Optimize( m_areaBlockVector );
@@ -164,27 +70,139 @@ void TriRenderBatchAreaBlocksWithSharedMaterial::Clear()
 	m_areaBlockVector.clear();
 }
 
-void TriGeometryBatch::SubmitGeometry( Tr2RenderContext& renderContext )
+void Tr2RenderBatch::SetMaterial( Tr2Material* material )
 {
-	if( m_geometryResource )
-	{
-		m_geometryResource->RenderAreas( m_screenSize, m_meshIndex, m_areaIndex, m_areaCount, renderContext, m_reversed, !m_performedSyncronousSubmit );
-	}
+	m_material = material;
+	m_shader = material->GetShaderStateInterface();
 }
 
-void TriGeometryBatch::SyncronousSubmit( Tr2RenderContext& renderContext )
+void Tr2RenderBatch::SetGeometry( unsigned vertexDecl, const Tr2BufferAL& vb, uint32_t stride, const Tr2BufferAL& ib, uint32_t indexStride )
 {
-	if( m_geometryResource && m_reversed )
-	{
-		if( auto meshData = m_geometryResource->GetMeshData( m_meshIndex, m_screenSize ) )
-		{
-			m_geometryResource->ReverseIndexBuffer( *meshData, renderContext );
-		}
-	}
-	m_performedSyncronousSubmit = true;
+	m_vertexDeclaration = vertexDecl;
+	m_vertexStreams[0] = &vb;
+	m_vertexStreams[1] = nullptr;
+	m_stride[0] = stride;
+	m_indexBuffer = &ib;
+	m_indexStride = indexStride;
 }
 
-void TriGeometryBatch::SetGeometryResource( TriGeometryRes* val )
+void Tr2RenderBatch::SetGeometry( unsigned vertexDecl, const Tr2SuballocatedBuffer::Allocation& vb, const Tr2SuballocatedBuffer::Allocation& ib )
 {
-	m_geometryResource = val;
+	SetGeometry( vertexDecl, vb.GetBuffer(), vb.GetStride(), ib.GetBuffer(), ib.GetStride() );
+}
+
+void Tr2RenderBatch::SetGeometry( unsigned vertexDecl, const Tr2SuballocatedBuffer::Allocation& vb1, const Tr2SuballocatedBuffer::Allocation& vb2, const Tr2SuballocatedBuffer::Allocation& ib )
+{
+	SetGeometry( vertexDecl, vb1, ib );
+	m_vertexStreams[1] = &vb2.GetBuffer();
+	m_stride[1] = vb2.GetStride();
+}
+
+void Tr2RenderBatch::SetVertexDeclaration( unsigned int vertexDeclaration )
+{
+	m_vertexDeclaration = vertexDeclaration;
+}
+
+void Tr2RenderBatch::SetStreamSource( uint32_t index, const Tr2BufferAL& vb, uint32_t stride )
+{
+	m_vertexStreams[index] = &vb;
+	m_stride[index] = stride;
+}
+
+void Tr2RenderBatch::SetStreamSource( uint32_t index, const Tr2SuballocatedBuffer::Allocation& vb )
+{
+	m_vertexStreams[index] = &vb.GetBuffer();
+	m_stride[index] = vb.GetStride();
+}
+
+void Tr2RenderBatch::SetInidices( const Tr2BufferAL& ib, uint32_t stride )
+{
+	m_indexBuffer = &ib;
+	m_indexStride = stride;
+}
+
+void Tr2RenderBatch::SetInidices( const Tr2SuballocatedBuffer::Allocation& ib )
+{
+	m_indexBuffer = &ib.GetBuffer();
+	m_indexStride = ib.GetStride();
+}
+
+void Tr2RenderBatch::SetTopology( Tr2RenderContextEnum::Topology topology )
+{
+	m_topology = topology;
+}
+
+void Tr2RenderBatch::SetPerObjectData( const Tr2PerObjectData* perObjectData )
+{
+	m_objectData = perObjectData;
+}
+
+void Tr2RenderBatch::SetDrawIndexedInstanced( uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation, uint32_t baseVertexLocation, uint32_t startInstanceLocation )
+{
+	m_indexCountPerInstance = indexCountPerInstance;
+	m_instanceCount = instanceCount;
+	m_startIndexLocation = startIndexLocation;
+	m_baseVertexLocation = baseVertexLocation;
+	m_startInstanceLocation = startInstanceLocation;
+}
+
+void Tr2RenderBatch::SetDrawInstanced( uint32_t vertexCountPerInstance, uint32_t instanceCount, uint32_t startVertexLocation, uint32_t startInstanceLocation )
+{
+	m_indexCountPerInstance = vertexCountPerInstance;
+	m_instanceCount = instanceCount;
+	m_startIndexLocation = startVertexLocation;
+	m_startInstanceLocation = startInstanceLocation;
+}
+
+void Tr2RenderBatch::SetRenderingMode( Tr2EffectStateManager::RenderingMode mode )
+{
+	m_renderingMode = mode;
+}
+
+void Tr2RenderBatch::SetPickingData( uint32_t pickingData )
+{
+	m_pickingData = pickingData;
+}
+
+void Tr2RenderBatch::SetPickingData( uint32_t meshIndex, uint32_t areaIndex )
+{
+	SetPickingData( ( meshIndex << 8 ) | ( areaIndex & 0xff ) );
+}
+
+
+
+bool Tr2RenderBatch::IsValid() const
+{
+	return m_shader != nullptr;
+}
+
+Tr2RenderBatch::operator bool() const
+{
+	return IsValid();
+}
+
+
+bool CanBeBinned( Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 )
+{
+	if( batch1.m_shader != batch2.m_shader )
+	{
+		return false;
+	}
+	if( batch1.m_vertexDeclaration != batch2.m_vertexDeclaration )
+	{
+		return false;
+	}
+	if( batch1.m_indexStride != batch2.m_indexStride )
+	{
+		return false;
+	}
+	if( batch1.m_vertexStreams[0] != batch2.m_vertexStreams[0] || batch1.m_vertexStreams[1] != batch2.m_vertexStreams[1] )
+	{
+		return false;
+	}
+	if( batch1.m_renderingMode != batch2.m_renderingMode )
+	{
+		return false;
+	}
+	return true;
 }

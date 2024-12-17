@@ -46,11 +46,12 @@ public:
 #if TRINITYDEV
 	virtual void GetDescription( std::string& desc ) { desc = "<Tr2SolidSet>"; }
 #endif
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext );
 	
 	Vector3 GetCenterOfMass( void );
+
+protected:
+	void GetBatchesImpl( ITriRenderBatchAccumulator * accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect, GetBatchesReason reason ) override;
+
 private:
 	virtual bool OnPrepareResources();
 	

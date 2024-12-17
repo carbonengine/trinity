@@ -25,7 +25,7 @@ public:
 
 	enum ConnectorType { PointToPoint, XZ_CircleStraight, XZ_Circle, StraightAnchor, CurvedAnchor, Orbit };
 
-	void Update( EveUpdateContext& context );
+	void Update( const EveUpdateContext& context );
 	void AddLine( EveCurveLineSet* lineSet );
 
 private:

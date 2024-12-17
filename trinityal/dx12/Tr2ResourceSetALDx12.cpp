@@ -14,6 +14,7 @@
 #include "Tr2BufferALDx12.h"
 #include "Tr2TextureALDx12.h"
 #include "Tr2SamplerStateALDx12.h"
+#include "Tr2RtPipelineStateALDx12.h"
 #include "Utilities.h"
 #include "ALLog.h"
 
@@ -57,7 +58,28 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
-		if( program.m_program->m_registerMap != description.m_registerMap )
+		return Create( description, program.m_program->m_rootSignature, renderContext );
+	}
+
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		Destroy();
+
+		if( !renderContext.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		if( !pipeline.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+
+		return Create( description, pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature(), renderContext );
+	}
+
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RootSignatureAL& rootSignature, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		if( rootSignature.m_registerMap != description.m_registerMap )
 		{
 			return E_INVALIDARG;
 		}
@@ -66,7 +88,7 @@ namespace TrinityALImpl
 
 		auto AddTransition = [&]( ID3D12Resource* res, D3D12_RESOURCE_STATES defaultState, D3D12_RESOURCE_STATES expectedState ) {
 			// TODO: verify state
-			if( ( defaultState & expectedState ) == 0 )
+			if( ( defaultState & expectedState ) == 0 && defaultState != D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE )
 			{
 				auto found = std::find( begin( transitioned ), end( transitioned ), res );
 				if( found == transitioned.end() )
@@ -79,7 +101,7 @@ namespace TrinityALImpl
 			m_usedResources.push_back( res );
 		};
 
-		for (auto it = begin(program.m_program->m_srvRegisters); it != end(program.m_program->m_srvRegisters); ++it)
+		for( auto it = begin( rootSignature.m_srvRegisters ); it != end( rootSignature.m_srvRegisters ); ++it )
 		{
 			auto& reg = *it;
 			auto& resource = description.m_srv[description.m_registerMap.srvs[reg.stage][reg.index]];
@@ -88,7 +110,7 @@ namespace TrinityALImpl
 			m_srvMask |= 1 << reg.parameter;
 			switch (resource.type)
 			{
-			case Tr2ResourceSetDescriptionAL::TEXTURE:
+			case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 				if( resource.texture.IsValid() && it->registerType >= Tr2ShaderRegisterAL::SRV_TEXTURE1D )
 				{
 					m_srv[reg.parameter] = resource.texture.m_texture->m_view[resource.colorSpace];
@@ -106,7 +128,7 @@ namespace TrinityALImpl
 					AddTransition( resource.texture.m_texture->GetResourceDx12(), resource.texture.m_texture->m_defaultState, stateFlag );
 				}
 				break;
-			case Tr2ResourceSetDescriptionAL::BUFFER:
+			case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 				if( resource.buffer.IsValid() && it->registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER )
 				{
 					m_srv[reg.parameter] = resource.buffer.m_buffer->m_srv;
@@ -124,22 +146,24 @@ namespace TrinityALImpl
 					AddTransition( resource.buffer.m_buffer->GetGpuResource(), resource.buffer.m_buffer->m_defaultState, stateFlag );
 				}
 				break;
+			case Tr2ResourceSetDescriptionAL::Resource::HEAP_VIEW:
+				m_srv[reg.parameter] = renderContext.GetSrvHeapView();
+				break;
 			default:
 				m_srv[reg.parameter] = renderContext.GetNullSrvDx12( it->registerType );
 				break;
 			}
 		}
 
-		for (auto it = begin(program.m_program->m_uavRegisters); it != end(program.m_program->m_uavRegisters); ++it)
+		for (auto it = begin(rootSignature.m_uavRegisters); it != end( rootSignature.m_uavRegisters); ++it)
 		{
 			auto& reg = *it;
 			auto& resource = description.m_uav[description.m_registerMap.uavs[reg.stage][reg.index]];
-			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 			m_resourceCount = std::max( reg.parameter + 1, m_resourceCount );
 			m_uavMask |= 1 << reg.parameter;
 			switch( resource.type )
 			{
-			case Tr2ResourceSetDescriptionAL::TEXTURE:
+			case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
 				if (resource.texture.IsValid())
 				{
 					if( resource.texture.IsValid() && it->registerType >= Tr2ShaderRegisterAL::UAV_TEXTURE1D )
@@ -160,7 +184,7 @@ namespace TrinityALImpl
 					}
 				}
 				break;
-			case Tr2ResourceSetDescriptionAL::BUFFER:
+			case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
 				if (resource.buffer.IsValid())
 				{
 					if( resource.buffer.IsValid() && it->registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER )
@@ -181,6 +205,9 @@ namespace TrinityALImpl
 					}
 				}
 				break;
+			case Tr2ResourceSetDescriptionAL::Resource::HEAP_VIEW:
+				m_uav[reg.parameter] = renderContext.GetUavHeapView();
+				break;
 			default:
 				CCP_AL_LOGWARN("Missing UAV resource in resource set for register %u, stage %u", reg.index, reg.stage);
 				m_uav[reg.parameter] = renderContext.GetNullUavDx12( it->registerType );
@@ -189,13 +216,21 @@ namespace TrinityALImpl
 
 		}
 
-		for (auto it = begin(program.m_program->m_samplerRegisters); it != end(program.m_program->m_samplerRegisters); ++it)
+		for (auto it = begin(rootSignature.m_samplerRegisters); it != end( rootSignature.m_samplerRegisters); ++it)
 		{
 			auto& reg = *it;
 			auto& sampler = description.m_samplers[description.m_registerMap.samplers[reg.stage][reg.index]];
-			if( sampler.assigned )
+			switch( sampler.type )
 			{
+			case Tr2ResourceSetDescriptionAL::Sampler::SAMPLER:
 				m_sampler[reg.parameter] = sampler.sampler.m_sampler->m_samplerState;
+				break;
+			case Tr2ResourceSetDescriptionAL::Sampler::HEAP_VIEW:
+				m_sampler[reg.parameter] = renderContext.GetSamplerHeapView();
+				break;
+			default:
+				m_sampler[reg.parameter] = renderContext.GetNullSamplerDx12();
+				break;
 			}
 			m_samplerCount = std::max( reg.parameter + 1, m_samplerCount );
 		}

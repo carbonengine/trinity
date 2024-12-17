@@ -8,7 +8,7 @@
 #include "Tr2MeshBase.h"
 #include "Resources/TriGeometryRes.h"
 #include "Utilities/BoundingBox.h"
-
+#include "Raytracing/Tr2RaytracingGeometry.h"
 
 CCP_STATS_DECLARE( tr2MeshBindToRig, "Trinity/BindToRig", true, CST_COUNTER_LOW, "Number of times a mesh executed bind to a new rig" );
 
@@ -27,6 +27,7 @@ Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
 	PARENTLOCK( m_decalPrepassAreas ),
 	PARENTLOCK( m_flareAreas ),
 	PARENTLOCK( m_distortionAreas ),
+	PARENTLOCK( m_decalAdditiveAreas ),
 	m_display( true ),
 	m_meshIndex( 0 ),
     m_pBoneList(NULL),
@@ -63,11 +64,19 @@ Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
 	m_areaLookupArray[ TRIBATCHTYPE_GEOMETRY_ERASER ] = &m_geometryEraserAreas;
 	m_areaLookupArray[ TRIBATCHTYPE_FLARE ] = &m_flareAreas;
 	m_areaLookupArray[ TRIBATCHTYPE_DISTORTION ] = &m_distortionAreas;
+	m_areaLookupArray[TRIBATCHTYPE_DECAL_ADDITIVE] = &m_decalAdditiveAreas;
 }
 
 
 Tr2MeshBase::~Tr2MeshBase()
 {
+	for( auto& list : m_areaLookupArray )
+	{
+		for( auto& area : *list )
+		{
+			area->RemoveOwnerMesh( this );
+		}
+	}
 }
 
 void Tr2MeshBase::OnListModified(
@@ -75,12 +84,89 @@ void Tr2MeshBase::OnListModified(
 	ssize_t key,
 	ssize_t key2,
 	IRoot* value,
-	const IList* theList
+	const IList* list
 	)
 {
+	switch( event & BELIST_EVENTMASK )
+	{
+	case BELIST_INSERTED:
+		if( Tr2MeshAreaPtr area = BlueCastPtr( value ) )
+		{
+			area->AddOwnerMesh( this );
+			ReverseIndexBufferIfNeeded();
+		}
+		break;
+	case BELIST_REMOVED:
+		if( Tr2MeshAreaPtr area = BlueCastPtr( value ) )
+		{
+			area->RemoveOwnerMesh( this );
+		}
+		break;
+	case BELIST_LOADFINISHED:
+		for( ssize_t i = 0; i < list->GetSize(); ++i )
+		{
+			if( Tr2MeshAreaPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+			{
+				entity->AddOwnerMesh( this );
+			}
+		}
+		ReverseIndexBufferIfNeeded();
+		break;
+	case BELIST_UNLOADSTART:
+		for( ssize_t i = 0; i < list->GetSize(); ++i )
+		{
+			if( Tr2MeshAreaPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+			{
+				entity->RemoveOwnerMesh( this );
+			}
+		}
+		break;
+	default:
+		break;
+	}
 }
 
+void Tr2MeshBase::ReverseIndexBufferIfNeeded()
+{
+	for( auto& list : m_areaLookupArray )
+	{
+		for( auto& area : *list )
+		{
+			if( area->IsReversed() )
+			{
+				ReverseIndexBuffers();
+				return;
+			}
+		}
+	}
+}
 
+void Tr2MeshBase::ReverseIndexBuffers()
+{
+	auto geometry = GetGeometryResource();
+	if( geometry && geometry->IsGood() )
+	{
+		if( auto mesh = geometry->GetMeshData( m_meshIndex ) )
+		{
+			if( !mesh->m_reversedIndicesValid )
+			{
+				USE_MAIN_THREAD_RENDER_CONTEXT();
+				geometry->ReverseIndexBuffer( *mesh, renderContext );
+			}
+			for( auto lod : mesh->m_lods )
+			{
+				if( auto meshLod = geometry->GetMeshData( unsigned( lod.meshIndex ) ) )
+				{
+					if( !meshLod->m_reversedIndicesValid )
+					{
+						USE_MAIN_THREAD_RENDER_CONTEXT();
+						geometry->ReverseIndexBuffer( *meshLod, renderContext );
+					}
+				}
+			}
+		}
+	}
+}
 
 unsigned int Tr2MeshBase::FindJoint( const std::string* boneList, const int numBones, const char* name ) const
 {
@@ -264,49 +350,87 @@ bool Tr2MeshBase::GetDisplay() const
 	return m_display;
 }
 
+Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* area, const Tr2PerObjectData* data )
+{
+	Tr2RenderBatch batch;
+
+	if( !area->GetDisplay() || !mesh->m_allocationsValid )
+	{
+		return batch;
+	}
+
+	auto shadMat = area->GetMaterialInterface();
+	if( !shadMat || !shadMat->GetShaderStateInterface() )
+	{
+		return batch;
+	}
+
+	auto primCount = GetPrimitiveCount( *mesh, area->GetIndex(), area->GetCount() );
+	auto& meshArea = mesh->m_areas[area->GetIndex()];
+
+	if( !primCount )
+	{
+		return batch;
+	}
+
+	if( area->GetReversed() && !mesh->m_reversedIndicesValid )
+	{
+		return batch;
+	}
+
+	batch.SetMaterial( shadMat );
+	batch.SetGeometry( mesh->m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+
+	batch.SetPerObjectData( data );
+
+	auto& indices = area->GetReversed() ? mesh->m_reversedIndexAllocation : mesh->m_indexAllocation;
+	uint32_t startIndex;
+	if( area->GetReversed() )
+	{
+		startIndex = indices.GetStartIndex() + mesh->m_primitiveCount * 3 - meshArea.m_firstIndex - primCount * 3;
+	}
+	else
+	{
+		startIndex = indices.GetStartIndex() + meshArea.m_firstIndex;
+	}
+
+	batch.SetDrawIndexedInstanced(
+		primCount * 3,
+		1,
+		startIndex,
+		mesh->m_vertexAllocation.GetOffset() / mesh->m_vertexAllocation.GetStride(),
+		0 );
+	return batch;
+}
+
+
+
 void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches, 
 	const Tr2MeshAreaVector* areas, 
 	const Tr2PerObjectData* data,
-	float screenSize,
-	ITr2MeshBatchCallback* callback ) const
+	float screenSize ) const
 {
 	if( !GetDisplay() )
 	{
 		return;
 	}
 
-	for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+	auto geometry = GetGeometryResource();
+	if( !geometry || !geometry->IsGood() )
 	{
-		Tr2MeshArea* area = *it;
-		auto shadMat = area->GetMaterialInterface();
+		return;
+	}
+	auto mesh = geometry->GetMeshData( m_meshIndex, screenSize );
+	if( !mesh || !mesh->m_allocationsValid )
+	{
+		return;
+	}
 
-		if( !area->GetDisplay())
+	for( auto& area : *areas )
+	{
+		if( auto batch = CreateGeometryBatch( mesh, area, data ) )
 		{
-			continue;
-		}
-
-		if( !shadMat )
-		{
-			continue;
-		}
-
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
-		{
-			batch->SetShaderMaterial( shadMat );
-			batch->SetPerObjectData( data );
-			batch->SetGeometryResource( GetGeometryResource() );
-			batch->SetMeshParameters( m_meshIndex, area->GetIndex(), area->GetCount(), screenSize, area->GetReversed() );
-
-			if( callback )
-			{
-				if( !callback->ProcessBatch( area, batch ) )
-				{
-					continue;
-				}
-			}
-
+			batch.SetPickingData( m_meshIndex, area->GetIndex() );
 			batches->Commit( batch );
 		}
 	}
@@ -477,4 +601,18 @@ void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 			}
 		}
 	}
+}
+
+Tr2RaytracingMesh* Tr2MeshBase::GetOrCreateRtMesh()
+{
+	if( !m_rtMesh )
+	{
+		m_rtMesh.reset( new Tr2RaytracingMesh() );
+	}
+	return m_rtMesh.get();
+}
+
+Tr2RaytracingMesh* Tr2MeshBase::GetRtMesh() const
+{
+	return m_rtMesh.get();
 }

@@ -72,11 +72,11 @@ public:
 public:
 	bool ReadyToFire() const;
 	// timing and worldspace positioning
-	bool UpdateSynchronous( EveUpdateContext& updateContext );
-	bool UpdateAsynchronous( EveUpdateContext& updateContext );
+	bool UpdateSynchronous( const EveUpdateContext& updateContext );
+	bool UpdateAsynchronous( const EveUpdateContext& updateContext );
 
 	// rendering
-	void UpdateVisibility( const TriFrustum& frustum );
+	void UpdateVisibility( const EveUpdateContext& updateContext );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 
 	// query: get the number of per-muzzle effects

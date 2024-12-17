@@ -29,8 +29,8 @@ static PyObject* PyGetParameterAnnotations( PyObject* self, PyObject* args )
 	}
 
 	// If we got passed a string, look up the string, if we got passed a parameter, look up the name of that
-	if ( PyString_Check( parameterObject ) )
-		parameterNameString = PyString_AsString( parameterObject );
+	if ( PyUnicode_Check( parameterObject ) )
+		parameterNameString = PyUnicode_AsUTF8( parameterObject );
 	else
 	{
 		ITriEffectParameterPtr iParameterObject( parameterObject );
@@ -62,7 +62,7 @@ static PyObject* PyGetParameterAnnotations( PyObject* self, PyObject* args )
 		}
 		else if( annotation->type == Tr2EffectParameterAnnotation::INT )
 		{
-			tmpValue = PyInt_FromLong( annotation->intValue );
+			tmpValue = PyLong_FromLong( annotation->intValue );
 			PyDict_SetItemString( annotationDict, annotation->name, tmpValue );
 			Py_DECREF( tmpValue );
 		}
@@ -74,7 +74,7 @@ static PyObject* PyGetParameterAnnotations( PyObject* self, PyObject* args )
 		}
 		else if( annotation->type == Tr2EffectParameterAnnotation::STRING )
 		{
-			tmpValue = PyString_FromString( annotation->stringValue );
+			tmpValue = PyUnicode_FromString( annotation->stringValue );
 			PyDict_SetItemString( annotationDict, annotation->name, tmpValue );
 			Py_DECREF( tmpValue );
 		} 

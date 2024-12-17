@@ -4,6 +4,7 @@
 #include "Include/IEveBallpark.h"
 #include "Utilities/Vector3d.h"
 #include "../TbbStub.h"
+#include <TriFrustum.h>
 
 BLUE_DECLARE( Tr2DataTextureManager );
 
@@ -20,7 +21,11 @@ public:
 		m_currentTime( 0 ),
 		m_origin( UNINITIALIZED_ORIGIN, UNINITIALIZED_ORIGIN, UNINITIALIZED_ORIGIN ),
 		m_originShift( 0, 0, 0 ),
-		m_originShiftRemainder( 0, 0, 0 )
+		m_originShiftRemainder( 0, 0, 0 ),
+		m_visibilityThreshold(0.f),
+		m_highDetailThreshold( 0.f ),
+		m_mediumDetailThreshold( 0.f ),
+		m_lowDetailThreshold( 0.f )
 	{
 		SetTime( time );
 	}
@@ -112,6 +117,66 @@ public:
 		return m_taskGroup;
 	}
 
+	void SetVisibilityThreshold( float visibilityThreshold )
+	{
+		m_visibilityThreshold = visibilityThreshold;
+	}
+
+	float GetVisibilityThreshold() const
+	{
+		return m_visibilityThreshold;
+	}
+
+	void SetHighDetailThreshold( float highDetailThreshold )
+	{
+		m_highDetailThreshold = highDetailThreshold;
+	}
+
+	float GetHighDetailThreshold() const
+	{
+		return m_highDetailThreshold;
+	}
+
+	void SetMediumDetailThreshold( float mediumDetailThreshold )
+	{
+		m_mediumDetailThreshold = mediumDetailThreshold;
+	}
+
+	float GetMediumDetailThreshold() const
+	{
+		return m_mediumDetailThreshold;
+	}
+
+	void SetLowDetailThreshold( float lowDetailThreshold )
+	{
+		m_lowDetailThreshold = lowDetailThreshold;
+	}
+
+	float GetLowDetailThreshold() const
+	{
+		return m_lowDetailThreshold;
+	}
+	
+	void SetLodFactor( float lodFactor )
+	{
+		m_lodFactor = lodFactor;
+	}
+
+	float GetLodFactor() const
+	{
+		return m_lodFactor;
+	}
+
+	void SetFrustum( TriFrustum frustum )
+	{
+		m_frustum = frustum;
+	}
+
+	const TriFrustum& GetFrustum() const
+	{
+		return m_frustum;
+	}
+
 private:
 	Be::Time m_currentTime;
 	Be::Time m_lastTime;
@@ -126,6 +191,14 @@ private:
 	Vector3 m_originShift;
 	Vector3d m_originShiftRemainder;
 	Tr2ParallelTaskGroup* m_taskGroup = nullptr;
+
+	// visibility attributes
+	float m_visibilityThreshold;
+	float m_highDetailThreshold;
+	float m_mediumDetailThreshold;
+	float m_lowDetailThreshold;
+	float m_lodFactor;
+	TriFrustum m_frustum; 
 };
 
 #endif //EveUpdateContext_h

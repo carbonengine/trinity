@@ -135,6 +135,7 @@ void Tr2Mesh::RebuildCachedData( BlueAsyncRes* p )
 	if( p == m_geometryResource || p == m_lowResGeometryResource )
 	{
 		CacheBounds();
+		ReverseIndexBufferIfNeeded();
 	}
 	if( p == m_geometryResource )
 	{

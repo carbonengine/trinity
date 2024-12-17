@@ -8,12 +8,18 @@ bool g_preloadTextureToDeviceOnPrepare = true;
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2TextureAL> nullTexture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
+
+std::shared_ptr<TrinityALImpl::Tr2TextureAL>& NullTexture()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2TextureAL> nullTexture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
+	return nullTexture;
+}
+	
 }
 
 
-Tr2TextureAL::Tr2TextureAL()
-	:m_texture( nullTexture )
+Tr2TextureAL::Tr2TextureAL() :
+	m_texture( NullTexture() )
 {
 }
 
@@ -48,7 +54,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 	auto hr = m_texture->Create( desc, msaa, gpuUsage, cpuUsage, initialData, renderContext );
 	if( FAILED( hr ) )
 	{
-		m_texture = nullTexture;
+		m_texture = NullTexture();
 	}
 	return hr;
 }
@@ -59,7 +65,7 @@ ALResult Tr2TextureAL::OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage,
 	auto hr = m_texture->OpenShared( handle, gpuUsage, renderContext );
 	if( FAILED( hr ) )
 	{
-		m_texture = nullTexture;
+		m_texture = NullTexture();
 	}
 	return hr;
 }
@@ -102,6 +108,11 @@ uint32_t Tr2TextureAL::GetWidth() const
 uint32_t Tr2TextureAL::GetHeight() const
 {
 	return m_texture->GetDesc().GetHeight();
+}
+
+uint32_t Tr2TextureAL::GetDepth() const
+{
+	return m_texture->GetDesc().GetDepth();
 }
 
 uint32_t Tr2TextureAL::GetMipCount() const
@@ -215,6 +226,16 @@ uintptr_t Tr2TextureAL::GetSharedHandle() const
 	return m_texture->GetSharedHandle();
 }
 
+uint32_t Tr2TextureAL::GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace ) const
+{
+	return m_texture->GetSrvIndexInHeap( colorSpace );
+}
+
+uint32_t Tr2TextureAL::GetUavIndexInHeap( uint32_t mip ) const
+{
+	return m_texture->GetUavIndexInHeap( mip );
+}
+
 ALResult Tr2TextureAL::SetName( const char* name )
 {
 	if( !IsValid() )
@@ -232,7 +253,6 @@ TrinityALImpl::Tr2TextureAL* Tr2TextureAL::TrinityALImpl_GetObject() const
 {
 	return m_texture.get();
 }
-
 
 
 namespace

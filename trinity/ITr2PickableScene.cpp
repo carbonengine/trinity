@@ -295,9 +295,7 @@ bool ITr2PickableScene::RenderPicking( ITriRenderBatchAccumulator* pOpaquePickin
         return false;
     }
 
-    TriRenderBatch* p = pOpaquePickingBatches->GetFirstBatch();
-
-    if( p != NULL )
+    if( pOpaquePickingBatches->GetBatchCount() )
     {
 		pOpaquePickingBatches->Finalize();
 

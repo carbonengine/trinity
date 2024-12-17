@@ -214,112 +214,103 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 
 	const Tr2PerObjectDataSkinned* skinnedData = static_cast<const Tr2PerObjectDataSkinned*>( perObjectData );
 
-	for( PTr2MeshVector::const_iterator meshIt = m_visualModel->GetMeshes().begin(); meshIt != m_visualModel->GetMeshes().end(); ++meshIt )
+	for( auto mesh : m_visualModel->GetMeshes() )
 	{
-		Tr2Mesh* mesh = *meshIt;
-		if( mesh )
+		if( !mesh || !mesh->GetDisplay() )
 		{
-			Tr2MeshAreaVector* areas = mesh->GetAreas( batchType );
-			if( areas )
+			continue;
+		}
+		Tr2MeshAreaVector* areas = mesh->GetAreas( batchType );
+		if( !areas )
+		{
+			continue;
+		}
+
+		TriGeometryRes* geomRes = mesh->GetGeometryResource();
+		if( !geomRes || !geomRes->IsGood() )
+		{
+			continue;
+		}
+
+		int meshIx = mesh->GetMeshIndex();
+		TriGeometryResMeshData* meshData = geomRes->GetMeshData( meshIx );
+		if( !meshData || !meshData->m_allocationsValid )
+		{
+			continue;
+		}
+
+		for( auto& area : *areas )
+		{
+			auto shader = area->GetMaterialInterface();
+			if( !area->GetDisplay() || ( !shader ) )
 			{
-				if( !mesh->GetDisplay() )
-				{
-					continue;
-				}
+				continue;
+			}
+			Tr2PerAreaDataSkinned* areaData = batches->Allocate<Tr2PerAreaDataSkinned>();
+			// Note that this can fail if the accumulator can't add more batches!
+			if( !areaData )
+			{
+				continue;
+			}
+			unsigned int n = 0;
 
-				TriGeometryRes* geomRes = mesh->GetGeometryResource();
-				if( !geomRes )
-				{
-					continue;
-				}
-				int meshIx = mesh->GetMeshIndex();
+			// if we have bone-remapping, get jointbindings from area
+			TriGeometryResAreaData* areaRes = geomRes->GetAreaData( meshIx, area->GetIndex() );
+			if( areaRes && meshData->m_hasPerMeshAreaBoneBindings )
+			{
+				// number of per this area
+				n = (unsigned int)areaRes->m_jointBindings.size();
+			}
+			else
+			{
+				n = area->GetJointCount();
+			}
 
-				TriGeometryResMeshData* meshData = geomRes->GetMeshData( meshIx );
-				if( !meshData )
-				{
-					continue;
-				}
+			// Much more than this would trash the per-frame data
+			if( n > TR2_MAX_BONES_PER_MESHAREA )
+			{
+				continue;
+			}
 
-				for( PTr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
+			areaData->SetUserData( skinnedData->GetUserData() );
+			unsigned int* animMapping = area->GetJointMappingAnimRig();
+			if( ( m_visualModel->GetSkeleton() != NULL ) && ( animMapping != NULL ) )
+			{
+				areaData->SetJointCount( n );
+
+				for( unsigned int joint = 0; joint < n; ++joint )
 				{
-					Tr2MeshArea* area = *it;
-					auto shader = area->GetMaterialInterface();
-					if( !area->GetDisplay() || ( !shader ) )
+					// apply a lookup to change the bone-index from per-mesharea to per-mesh, if we have per-mesharea
+					int meshBoneIx = 0;
+					if( areaRes && meshData->m_hasPerMeshAreaBoneBindings )
 					{
-						continue;
+						meshBoneIx = areaRes->m_jointBindings[joint];
 					}
-					TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-					Tr2PerAreaDataSkinned* areaData = batches->Allocate<Tr2PerAreaDataSkinned>();
-
-					// Note that this can fail if the accumulator can't add more batches!
-					if( batch && areaData )
+					else
 					{
-						unsigned int n = 0;
-
-						// if we have bone-remapping, get jointbindings from area
-						TriGeometryResAreaData* areaRes = geomRes->GetAreaData( meshIx, area->GetIndex() );
-						if( areaRes && meshData->m_hasPerMeshAreaBoneBindings )
-						{
-							// number of per this area
-							n = (unsigned int)areaRes->m_jointBindings.size();
-						}
-						else
-						{
-							n = area->GetJointCount();
-						}
-
-						// Much more than this would trash the per-frame data
-						if( n > TR2_MAX_BONES_PER_MESHAREA )
-						{
-							continue;
-						}
-
-						areaData->SetUserData( skinnedData->GetUserData() );
-						unsigned int* animMapping = area->GetJointMappingAnimRig();
-						if( ( m_visualModel->GetSkeleton() != NULL ) && ( animMapping != NULL ) )
-						{
-							areaData->SetJointCount( n );
-
-							for( unsigned int joint = 0; joint < n; ++joint )
-							{
-								// apply a lookup to change the bone-index from per-mesharea to per-mesh, if we have per-mesharea
-								int meshBoneIx = 0;
-								if( areaRes && meshData->m_hasPerMeshAreaBoneBindings )
-								{
-									meshBoneIx = areaRes->m_jointBindings[joint];
-								}
-								else
-								{
-									meshBoneIx = joint;
-								}
-								// ... then from per-mesh into the skeleton
-								float* m = skinnedData->GetSkinningMatrix( animMapping[meshBoneIx] );
-								areaData->SetJointTransform( joint, m );
-							}
-						}
-						else
-						{
-							areaData->SetJointCount( TR2_MAX_BONES_PER_MESHAREA );
-							float idMatrix[4 * 3];
-							memset( idMatrix, 0, 4 * 3 * sizeof( float ) );
-							idMatrix[0] = idMatrix[5] = idMatrix[10] = 1.f;
-							for( unsigned int joint = 0; joint < TR2_MAX_BONES_PER_MESHAREA; ++joint )
-							{
-								areaData->SetJointTransform( joint, idMatrix );
-							}
-						}
-						areaData->SetPerObjectData( *skinnedData );
-
-						batch->SetShaderMaterial( shader );
-						batch->SetPerObjectData( areaData );
-						batch->SetGeometryResource( geomRes );
-						batch->SetMeshParameters( meshIx, area->GetIndex(), area->GetCount(), area->GetReversed() );
-						batch->SetDepth( depth );
-
-						batches->Commit( batch );
+						meshBoneIx = joint;
 					}
+					// ... then from per-mesh into the skeleton
+					float* m = skinnedData->GetSkinningMatrix( animMapping[meshBoneIx] );
+					areaData->SetJointTransform( joint, m );
 				}
 			}
+			else
+			{
+				areaData->SetJointCount( TR2_MAX_BONES_PER_MESHAREA );
+				float idMatrix[4 * 3];
+				memset( idMatrix, 0, 4 * 3 * sizeof( float ) );
+				idMatrix[0] = idMatrix[5] = idMatrix[10] = 1.f;
+				for( unsigned int joint = 0; joint < TR2_MAX_BONES_PER_MESHAREA; ++joint )
+				{
+					areaData->SetJointTransform( joint, idMatrix );
+				}
+			}
+			areaData->SetPerObjectData( *skinnedData );
+
+			auto batch = CreateGeometryBatch( meshData, area, areaData );
+			batch.m_depth = depth;
+			batches->Commit( batch );
 		}
 	}
 }

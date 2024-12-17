@@ -51,6 +51,13 @@ namespace TrinityALImpl
 		ALResult Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderContextAL& renderContext );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+
+		uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+		uint32_t GetUavIndexInHeap( uint32_t mip ) const;
+
+
+		ID3D11Resource* GetResourceDx11() const;
+
 	private:
 		struct DepthOption
 		{

@@ -8,6 +8,7 @@
 #include "TriFrustum.h"
 #include "TriSettingsRegistrar.h"
 #include "Include/TriMath.h"
+#include "Resources/TriGeometryRes.h"
 
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "EveTrailsSet.h"
@@ -22,10 +23,6 @@ CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 // constants
 // how many planes per booster tree structure?
 const unsigned int EVE_BOOSTER_PLANES_COUNT[EveBoosterSet2::SHAPE_COUNT] = { 4, 6 };
-
-// externs
-extern float g_eveSpaceSceneLowDetailThreshold;
-extern float g_eveSpaceSceneMediumDetailThreshold;
 
 // registered globals
 // enable
@@ -49,14 +46,15 @@ bool g_lightNoiseInitialized = false;
 
 EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) : 
 	m_isVisible( false ),
-	m_boosterLOD( 0.f ),
-	m_trailsLOD( 0.f ),
 	m_parentRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_parentSpeed( 0.f ),
 	m_overallIntensity( 0.f ),
 	m_lastAccFactor( 0.f ),
 	m_lastValue( 0.f ),
+	m_boostersVisible( false ),
+	m_boosterHighLod( false ),
 	// Trails
+	m_trailsVisible( false ),
 	m_trailIntensity( 0.f ),
 	m_trailsTotalLength( 0.f ),
 	m_trailsTimeToNext( 0.f ),
@@ -77,6 +75,9 @@ EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) :
 
 	m_trailsOffsets = (XMVECTOR*)CCP_ALIGNED_MALLOC( "EveBoosterSet2::m_trailsOffsets", sizeof( XMVECTOR ) * EVE_MAX_POSITION_OFFSET_COUNT, 16 );
 	memset( m_trailsOffsets, 0, EVE_MAX_POSITION_OFFSET_COUNT * sizeof( XMVECTOR ) );
+
+	auto shape = Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI ? EveBoosterSet2::BOX : EveBoosterSet2::STAR;
+	Tr2Renderer::ReserveQuadListIndexBuffer( EVE_BOOSTER_PLANES_COUNT[shape] );
 }
 
 EveBoosterSet2Renderable::~EveBoosterSet2Renderable()
@@ -192,19 +193,34 @@ void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, 
 	}
 
 	// boosters visible based on LOD?
-	if( m_boosterLOD > g_eveSpaceSceneLowDetailThreshold )
+	if( m_boostersVisible )
 	{
-		TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
-		if( batch )
+		auto shape = Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI ? EveBoosterSet2::BOX : EveBoosterSet2::STAR;
+		auto& indexBuffer = Tr2Renderer::GetQuadListIndexBuffer();
+		if( !indexBuffer.IsValid() )
 		{
-			batch->SetPerObjectData( perObjectData );
-			batch->SetShaderMaterial( ( m_boosterLOD > g_eveSpaceSceneMediumDetailThreshold * 1.5f || !m_boosterSet->m_effectFar ) ? m_boosterSet->m_effect : m_boosterSet->m_effectFar );
-			batch->SetGeometryProvider( this );
-			batches->Commit( batch );
+			return;
 		}
+
+		Tr2RenderBatch batch;
+		batch.SetMaterial( ( m_boosterHighLod || !m_boosterSet->m_effectFar ) ? m_boosterSet->m_effect : m_boosterSet->m_effectFar );
+		batch.SetPerObjectData( perObjectData );
+		batch.SetVertexDeclaration( m_boosterSet->m_vertexDeclHandle );
+		auto& vb = m_boosterSet->m_vertexBuffer.GetSharedResource();
+		batch.SetStreamSource( 0, vb.GetBuffer(), vb.GetStride() );
+		batch.SetStreamSource( 1, m_boosterSet->m_instanceBuffer );
+		batch.SetInidices( indexBuffer );
+
+		batch.SetDrawIndexedInstanced(
+			3 * 2 * EVE_BOOSTER_PLANES_COUNT[shape],
+			uint32_t( m_boosterSet->m_singleBoosters.size() ),
+			indexBuffer.GetStartIndex() ,
+			vb.GetOffset() / vb.GetStride(),
+			m_boosterSet->m_instanceBuffer.GetOffset() / m_boosterSet->m_instanceBuffer.GetStride() );
+		batches->Commit( batch );
 	}
 
-	if( m_trailsLOD > g_eveSpaceSceneLowDetailThreshold )
+	if( m_trailsVisible )
 	{
 		if( m_boosterSet->m_trails )
 		{
@@ -272,34 +288,6 @@ Tr2PerObjectData* EveBoosterSet2Renderable::GetPerObjectData( ITriRenderBatchAcc
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Setup instanced reandering and call DIP
-// --------------------------------------------------------------------------------
-void EveBoosterSet2Renderable::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	// how many indiviual boosters are in this set?
-	unsigned int boosterCount = (unsigned int)m_boosterSet->m_singleBoosters.size();
-
-	auto shape = Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI ? EveBoosterSet2::BOX :EveBoosterSet2:: STAR;
-	auto indexBuffer = Tr2Renderer::GetQuadListIndexBuffer( EVE_BOOSTER_PLANES_COUNT[shape] );
-	if( !indexBuffer )
-	{
-		return;
-	}
-
-	// decl & index
-	renderContext.m_esm.ApplyVertexDeclaration( m_boosterSet->m_vertexDeclHandle );
-	renderContext.m_esm.ApplyIndexBuffer( *indexBuffer );
-	// stream0: "indexed", the star shape	
-	renderContext.m_esm.ApplyStreamSource( 0, m_boosterSet->m_vertexBuffer.GetSharedResource(), 0, sizeof( EveBoosterSet2::BoosterVertex ) );
-	// stream1: "instance", the star shape' position	
-	renderContext.m_esm.ApplyStreamSource( 1, m_boosterSet->m_instanceBuffer, 0, sizeof( EveBoosterSet2::InstanceVertex ) );
-	// draw	
-	renderContext.SetTopology( TOP_TRIANGLES );	
-	renderContext.DrawIndexedInstanced( 4 * EVE_BOOSTER_PLANES_COUNT[shape], 0, 2 * EVE_BOOSTER_PLANES_COUNT[shape], boosterCount );
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Transform and modify the saved bounding sphere, so it can be used for
 //   culling etc.
 // --------------------------------------------------------------------------------
@@ -314,15 +302,19 @@ void EveBoosterSet2Renderable::GetBoundingSphere( Vector4& boundingSphere ) cons
 }
 
 // --------------------------------------------------------------------------------
-void EveBoosterSet2Renderable::UpdateVisibility( const TriFrustum& frustum )
+void EveBoosterSet2Renderable::UpdateVisibility( const EveUpdateContext& updateContext )
 {
 
 	Vector4 transformedBoundingSphere;
 	GetBoundingSphere( transformedBoundingSphere );
 
+	auto& frustum = updateContext.GetFrustum();
+
 	// LOD for boosters: use the bounding sphere
-	m_boosterLOD = 2.f * frustum.GetPixelSizeAccross( &transformedBoundingSphere );
-	
+	float boosterLOD = 2.f * frustum.GetPixelSizeAccross( &transformedBoundingSphere );
+	m_boosterHighLod = boosterLOD > updateContext.GetMediumDetailThreshold() * 1.5f;
+	m_boostersVisible = boosterLOD > updateContext.GetLowDetailThreshold();
+
 	// LOD for trails: based on closest control point of spline with sphere around it
 	unsigned int cntrPosIdx = 0;
 	float sqDist = FLT_MAX;
@@ -337,7 +329,8 @@ void EveBoosterSet2Renderable::UpdateVisibility( const TriFrustum& frustum )
 		}
 	}
 	Vector4 tmp( m_trailsControlPositions[ cntrPosIdx ], transformedBoundingSphere.w );
-	m_trailsLOD = 7.5f * frustum.GetPixelSizeAccross( &tmp );
+	float trailsLOD = 7.5f * frustum.GetPixelSizeAccross( &tmp );
+	m_trailsVisible = trailsLOD > updateContext.GetLowDetailThreshold();
 
 	m_isVisible = frustum.IsSphereVisible( &transformedBoundingSphere ) || frustum.IsBoxVisible( m_trailsBoundsMin, m_trailsBoundsMax );
 }
@@ -558,7 +551,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 
 	// last tangent is always from before-last to last point
 	Vector3 lastDir = m_trailsControlPositions[ EVE_MAX_CONTROL_POINT_COUNT - 1 ] - m_trailsControlPositions[ EVE_MAX_CONTROL_POINT_COUNT - 2 ];
-	m_trailsControlNormals[ EVE_MAX_CONTROL_POINT_COUNT - 1 ] = 0.5 * lastDir;
+	m_trailsControlNormals[ EVE_MAX_CONTROL_POINT_COUNT - 1 ] = 0.5f * lastDir;
 
 	// the rest is calculated according to c-r (or something...)
 	for( unsigned int i = 1; i < EVE_MAX_CONTROL_POINT_COUNT - 1; ++i )
@@ -592,7 +585,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 
 namespace
 {
-	ALResult GetBoxVB( Tr2BufferAL& vb, Tr2PrimaryRenderContext& renderContext )
+	ALResult GetBoxVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
 	{
 		const uint32_t vertexCount = 4 * 6;
 		EveBoosterSet2::BoosterVertex vertices[vertexCount];
@@ -627,11 +620,10 @@ namespace
 		( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
 		( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
 
-		return vb.Create( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, &vertices[0], renderContext );
-
+		return g_sharedBuffer.Allocate( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
 	}
 
-	ALResult GetStarVB( Tr2BufferAL& vb, Tr2PrimaryRenderContext& renderContext )
+	ALResult GetStarVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
 	{
 		const uint32_t vertexCount = 4 * 4;
 		EveBoosterSet2::BoosterVertex vertices[vertexCount];
@@ -655,7 +647,7 @@ namespace
 			++p;
 		}
 
-		return vb.Create( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, &vertices[0], renderContext );
+		return g_sharedBuffer.Allocate( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
 	}
 }
 
@@ -1007,7 +999,7 @@ void EveBoosterSet2::SetTrail( EveTrailsSetPtr trail )
 // --------------------------------------------------------------------------------
 void EveBoosterSet2::ReleaseResources( TriStorage s )
 {
-	m_instanceBuffer = Tr2BufferAL();
+	g_sharedBuffer.Free( m_instanceBuffer );
 	m_vertexDeclHandle = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
 }
 
@@ -1072,7 +1064,7 @@ bool EveBoosterSet2::OnPrepareResources()
 void EveBoosterSet2::RebuildInstanceData( Tr2RenderContext& /*renderContext*/ )
 {
 	// get rid of old one
-	m_instanceBuffer = Tr2BufferAL();
+	g_sharedBuffer.Free( m_instanceBuffer );
 
 	// something there?
 	if( m_singleBoosters.empty() )
@@ -1094,30 +1086,28 @@ void EveBoosterSet2::RebuildInstanceData( Tr2RenderContext& /*renderContext*/ )
 		vertices[i].atlasIndex1 = float( m_singleBoosters[i].atlasIndex1 );
 	}
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	CR_RETURN( m_instanceBuffer.Create(	
-		sizeof( InstanceVertex ),
-		boosterCount, 
-		Tr2GpuUsage::VERTEX_BUFFER,
-		Tr2CpuUsage::NONE,
-		&vertices[0], 
-		renderContext ) );
+	CR_RETURN( g_sharedBuffer.Allocate( sizeof( InstanceVertex ),
+										boosterCount,
+										&vertices[0],
+										renderContext,
+										m_instanceBuffer ) );
 }
 
 
-void EveBoosterSet2::UpdateVisibility( const TriFrustum& frustum )
+void EveBoosterSet2::UpdateVisibility( const EveUpdateContext& updateContext )
 {
 	m_glowsVisible = false;
 	if( m_display )
 	{
 		for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 		{
-			(*it)->UpdateVisibility( frustum );
+			(*it)->UpdateVisibility( updateContext );
 		}
 		if( m_glows )
 		{
 			for( auto& renderable : m_boosterRenderables )
 			{
-				if( m_glows->UpdateVisibility( frustum, renderable->m_parentTransform, nullptr, 0 ) )
+				if( m_glows->UpdateVisibility( updateContext, renderable->m_parentTransform, nullptr, 0 ) )
 				{
 					m_glowsVisible = true;
 					break;
@@ -1272,7 +1262,7 @@ void EveBoosterSet2::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Mat
 
 	for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 	{
-		if( (*it)->m_boosterLOD > g_eveSpaceSceneLowDetailThreshold || !m_flareLodEnabled )
+		if( (*it)->m_boostersVisible || !m_flareLodEnabled )
 		{
 			m_glows->AddBoosterGlowToQuadRenderer( quadRenderer, (*it)->m_parentTransform, (*it)->m_overallIntensity, m_warpIntensity );
 		}
@@ -1330,4 +1320,10 @@ void EveBoosterSetPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL**
 {
 	FillAndSetConstants( *buffers[VERTEX_SHADER], m_vsData, VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
 	FillAndSetConstants( *buffers[PIXEL_SHADER ], m_psData, PIXEL_SHADER , Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+}
+
+void EveBoosterSetPerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	writer.SetPerObjectData( VERTEX_SHADER, &m_vsData, sizeof( m_vsData ) );
+	writer.SetPerObjectData( PIXEL_SHADER, &m_psData, sizeof( m_psData ) );
 }

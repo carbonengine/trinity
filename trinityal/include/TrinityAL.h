@@ -25,3 +25,7 @@
 #include "Tr2ResourceSetAL.h"
 #include "Tr2BufferAL.h"
 #include "Tr2PipelineStatsQueryAL.h"
+#include "Tr2RtBottomLevelAccelerationStructureAL.h"
+#include "Tr2RtTopLevelAccelerationStructureAL.h"
+#include "Tr2RtPipelineStateAL.h"
+#include "Tr2RtShaderTableAL.h"

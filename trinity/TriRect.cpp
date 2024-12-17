@@ -26,7 +26,7 @@ PyObject* TriRect::Repr( bool* handled )
 	*handled = true;
 	char buf[120];
 	sprintf_s(buf, "<Instance of 'TriRect' (left=%d top=%d right=%d bottom=%d)>", left, top, right, bottom);
-	return PyString_FromString(buf);
+	return PyUnicode_FromString(buf);
 }
 
 

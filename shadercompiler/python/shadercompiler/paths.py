@@ -7,7 +7,7 @@ def get_compiled_path(effect_path, shader_model=ShaderModel.DEPTH, platform=Plat
     if not effect_path.lower().endswith('.fx'):
         raise ValueError('invalid effect extension')
     components = re.split(r'([/\\])', effect_path)
-    for i in xrange(len(components) - 1, -1, -1):
+    for i in range(len(components) - 1, -1, -1):
         if components[i].lower() == 'effect':
             components[i] += '.%s' % PLATFORM_NAMES[platform]
             break

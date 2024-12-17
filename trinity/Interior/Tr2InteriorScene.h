@@ -153,9 +153,6 @@ private:
 	//////////////////////////////////////////////////////////////////////////
 	// Rendering utility functions
 
-	// Queue up a background cubemap batch
-	void PrepareBackgroundCubemapBatch( ITriRenderBatchAccumulator* batches );
-
 private:
 	// A shared depth stencil texture for light shadow maps
 	Tr2DepthStencilPtr m_lightDepthStencil;

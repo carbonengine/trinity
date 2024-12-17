@@ -42,7 +42,7 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
-		m_frameIndex = m_owner->GetCurrentFrameIndexDx12();
+		m_frameIndex = m_owner->GetRecordingFrameNumber();
 		return S_OK;
 	}
 
@@ -52,7 +52,7 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
-		isReached = m_owner->GetCompletedFrameIndexDx12() >= m_frameIndex;
+		isReached = m_owner->GetRenderedFrameNumber() >= m_frameIndex;
 		return S_OK;
 	}
 

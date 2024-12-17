@@ -4,7 +4,7 @@ struct VS_OUTPUT
 	float2 TexCoord : TEXCOORD;
 };
 
-RWTexture2D<float4> Output: register( u1, space1 );
+RWTexture2D<float4> Output: register( u1 );
 
 float4 main(VS_OUTPUT In) : SV_Target
 {

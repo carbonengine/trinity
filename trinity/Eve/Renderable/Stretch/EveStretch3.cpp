@@ -289,7 +289,7 @@ void EveStretch3::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* 
 }
 
 
-void EveStretch3::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveStretch3::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -371,7 +371,7 @@ void EveStretch3::UpdateSyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveStretch3::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveStretch3::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	if( !m_update )
 	{
@@ -445,12 +445,12 @@ void EveStretch3::UpdateAsyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveStretch3::UpdateEffectAsync( EveUpdateContext& updateContext )
+void EveStretch3::UpdateEffectAsync( const EveUpdateContext& updateContext )
 {
 	UpdateAsyncronous( updateContext );
 }
 
-void EveStretch3::UpdateEffectSync( EveUpdateContext& updateContext )
+void EveStretch3::UpdateEffectSync( const EveUpdateContext& updateContext )
 {
 	UpdateSyncronous( updateContext );
 }
@@ -459,7 +459,7 @@ void EveStretch3::StartMoving()
 {
 }
 
-void EveStretch3::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveStretch3::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	if( !m_display )
 	{
@@ -473,12 +473,12 @@ void EveStretch3::UpdateVisibility( const TriFrustum& frustum, const Matrix& par
 
 	if( m_sourceObject )
 	{
-		m_sourceObject->UpdateVisibility( frustum, sourceMatrix, TR2_LOD_HIGH );
+		m_sourceObject->UpdateVisibility( updateContext, sourceMatrix, TR2_LOD_HIGH );
 	}
 
 	if( m_destObject )
 	{
-		m_destObject->UpdateVisibility( frustum, destMatrix, TR2_LOD_HIGH );
+		m_destObject->UpdateVisibility( updateContext, destMatrix, TR2_LOD_HIGH );
 	}
 
 	if( m_stretchObject )
@@ -487,7 +487,7 @@ void EveStretch3::UpdateVisibility( const TriFrustum& frustum, const Matrix& par
 		// an inverse modifier to update this correctly
 		// Currently this will almost always be visible, because of the stretch
 		// If we can not make it stretched, then we could make it invisible sooner
-		m_stretchObject->UpdateVisibility( frustum, parentTransform, TR2_LOD_HIGH );
+		m_stretchObject->UpdateVisibility( updateContext, parentTransform, TR2_LOD_HIGH );
 	}
 
 	if( m_moveObject )
@@ -497,7 +497,7 @@ void EveStretch3::UpdateVisibility( const TriFrustum& frustum, const Matrix& par
 		TriQuaternionArcFromForward( &rotation, &directionVec );
 		auto moveMatrix = TransformationMatrix( Vector3( 1, 1, 1 ), rotation, movedPostition );
 
-		m_moveObject->UpdateVisibility( frustum, moveMatrix, TR2_LOD_HIGH );
+		m_moveObject->UpdateVisibility( updateContext, moveMatrix, TR2_LOD_HIGH );
 	}
 }
 

@@ -8,6 +8,7 @@ class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class TriPoolAllocator;
 class TriFrustum;
+class EveUpdateContext;
 
 BLUE_DECLARE_INTERFACE( ITr2Renderable );
 BLUE_DECLARE_IVECTOR( ITr2Renderable );
@@ -28,6 +29,7 @@ enum TriBatchType
 	TRIBATCHTYPE_GEOMETRY_ERASER,
 	TRIBATCHTYPE_FLARE,
 	TRIBATCHTYPE_DISTORTION,
+	TRIBATCHTYPE_DECAL_ADDITIVE,
 	TRIBATCHTYPE_COUNT_OF_BATCH_TYPES // This element must be last!
 };
 
@@ -41,7 +43,7 @@ enum Tr2RenderReason
 BLUE_INTERFACE( ITr2Renderable ) :
 	public IRoot
 {
-	virtual bool IsVisible( const TriFrustum & frustum ) const
+	virtual bool IsVisible( const EveUpdateContext& updateContext ) const
 	{
 		return true;
 	}
@@ -56,7 +58,7 @@ REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
 
 struct ITr2RenderableEntry
 {
-    ITr2RenderablePtr m_object;
+    ITr2Renderable* m_object;
     float m_distance;
     bool operator<( const ITr2RenderableEntry& other ) const
     {

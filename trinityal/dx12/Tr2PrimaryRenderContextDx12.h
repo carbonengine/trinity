@@ -15,12 +15,13 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2GpuTimerAL.h"
+#include "../Tr2AdapterStructures.h"
 
 #include "./util/GlobalDescriptorHeapAllocatorDx12.h"
 #include "./util/DescriptorHeapViewDx12.h"
 #include "./util/GpuMarkerBuffer.h"
 #include "./util/GpuCrashTracker.h"
-
+#include "upscaling/Tr2UpscalingALDx12.h"
 
 #define USE_BORDERLESS_WINDOW 1
 
@@ -56,6 +57,7 @@ public:
 	~Tr2PrimaryRenderContextAL();
 
 	ALResult CreateDevice( uint32_t adapter, Tr2WindowHandle  focusWindow, const Tr2PresentParametersAL& presentationParameters );
+
 	void Destroy();
 	bool IsValid() const;
 
@@ -70,13 +72,17 @@ public:
 	void AddShaderBinaryToCrashTracker(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath);
 	void UnRegisterFromCrashTracker(ID3D12GraphicsCommandList2* commandList);
 
+	bool SupportsBindlessTextures() const;
+
+	uint64_t GetRecordingFrameNumber() const;
+	uint64_t GetRenderedFrameNumber() const;
+
 public:
 	Tr2TextureAL m_defaultBackBuffer;
 
 	ITr2RenderContextEvents* m_events;
 
 	TrinityALImpl::GenerateMipsResources* m_genMipsResources;
-
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 
@@ -99,8 +105,7 @@ public:
 #else
 	void ReleaseLater(IUnknown* resource);
 #endif
-	uint64_t GetCurrentFrameIndexDx12() const;
-	uint64_t GetCompletedFrameIndexDx12() const;
+	void FlushPendingRelease();
 
 	void OnShaderProgramDestroyedDx12( TrinityALImpl::Tr2ShaderProgramAL* sp );
 	void OnVertexLayoutDestroyedDx12( TrinityALImpl::Tr2VertexLayoutAL* vl );
@@ -114,6 +119,12 @@ public:
 
 	void ScheduleSwapchainPresentDx12( IDXGISwapChain3* swapChain, const Tr2TextureAL& backbuffer, uint32_t presentInterval );
 
+
+	ID3D12DescriptorHeap* GetGlobalSrvUavHeap() const;
+	std::shared_ptr<ShaderResourceViewDx12> GetSrvHeapView() const;
+	std::shared_ptr<UnorderedAccessViewDx12> GetUavHeapView() const;
+	ID3D12DescriptorHeap* GetGlobalSamplerHeap() const;
+	std::shared_ptr<SamplerStateDx12> GetSamplerHeapView() const;
 
 	/** Create a ShaderResourceView */
 	HRESULT CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<ShaderResourceViewDx12>& srvView);
@@ -140,8 +151,32 @@ public:
 	bool FormatIsUAVCompatibleDx12( DXGI_FORMAT format ) const;
 	std::shared_ptr<ShaderResourceViewDx12> GetNullSrvDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
 	std::shared_ptr<UnorderedAccessViewDx12> GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
+	std::shared_ptr<SamplerStateDx12> GetNullSamplerDx12() const;
+	
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID ) const;
+	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params , uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	void DeleteUpscalingContext( uint32_t contextID );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID ) const;
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
+	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const;
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+	
+	HRESULT CreateSwapChainForHwnd(
+		CComPtr<IDXGIFactory4>& factory4,
+		ID3D12CommandQueue* commandQueue,
+		HWND hWnd,
+		const DXGI_SWAP_CHAIN_DESC1* pDesc,
+		const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc,
+		IDXGIOutput* pRestrictToOutput,
+		CComPtr<IDXGISwapChain4>& swapchain );
+	HRESULT CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device ) const;
+	HRESULT CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue ) const;
+	HRESULT CreateFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) const;
 
 private:
+
 	void ResetRenderTargets();
 
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;
@@ -256,14 +291,25 @@ private:
 
 	};
 
+	std::shared_ptr<GpuVisibleDescriptorAllocator> m_srvUavAllocator;
+	std::shared_ptr<GpuVisibleDescriptorAllocator> m_samplerAllocator;
 	std::shared_ptr<GlobalDescriptorHeapAllocator> m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
+	std::shared_ptr<ShaderResourceViewDx12> m_srvHeapStart;
+	std::shared_ptr<UnorderedAccessViewDx12> m_uavHeapStart;
+	std::shared_ptr<SamplerStateDx12> m_samplerHeapStart;
 
 	std::shared_ptr<ShaderResourceViewDx12> m_nullSrv[16];
 	std::shared_ptr<UnorderedAccessViewDx12> m_nullUav[16];
 
+	Tr2PresentParametersAL m_presentationParameters;
+	uint32_t m_adapter;
+	Tr2WindowHandle m_focusWindow;
+	TrinityALImpl::Tr2UpscalingTechniqueDx12* m_upscalingTechnique;
+
 public:
 	CComPtr<ID3D12Device> m_device;
-	CComPtr<IDXGISwapChain3> m_swapChain;
+	CComPtr<ID3D12Device5> m_device5;
+	CComPtr<IDXGISwapChain4> m_swapchain;
 	CComPtr<ID3D12CommandQueue> m_commandQueue;
 
 	D3D_ROOT_SIGNATURE_VERSION m_rootSignatureVersion;

@@ -106,15 +106,6 @@ bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned, Tr2RenderContext
 	return true;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned,
-													 Tr2RenderContextEnum::PixelFormat,
-													 unsigned,
-													 unsigned& msaaQuality )
-{
-	msaaQuality = 0;
-	return S_OK;
-}
-
 bool Tr2VideoAdapterInfo::AreAdaptersDifferent( unsigned adapter1,
 												unsigned adapter2 )
 {

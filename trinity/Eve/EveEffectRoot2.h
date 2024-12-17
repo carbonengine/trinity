@@ -70,9 +70,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	void UpdateSyncronous( EveUpdateContext& updateContext );
-	void UpdateAsyncronous( EveUpdateContext& updateContext );
-	void UpdateVisibility(  const TriFrustum& frustum, const Matrix& parentTransform );
+	void UpdateSyncronous( const EveUpdateContext& updateContext );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 	void GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpaceObjectPSData& psData ) const;
@@ -151,6 +151,9 @@ public:
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
 	void AddObserver( TriObserverLocalPtr observer ) override;
 
+	bool GetMute();
+	void SetMute( bool isMute );
+
 	void Start();
 	void Stop();
 
@@ -194,6 +197,7 @@ protected:
 	// general
 	std::string m_name;
 	bool m_display;
+	bool m_mute;
 	PIEveSpaceObjectChildVector m_effectChildren;
 
 	Vector3 m_scaling;

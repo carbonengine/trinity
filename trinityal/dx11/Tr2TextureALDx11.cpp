@@ -37,7 +37,7 @@ namespace
 		}
 	}
 
-	ALResult Create1D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Create1D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc&, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		D3D11_TEXTURE1D_DESC desc1D;
 		memset( &desc1D, 0, sizeof( desc1D ) );
@@ -1305,6 +1305,16 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	uint32_t Tr2TextureAL::GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace ) const
+	{
+		return 0xffffffff;
+	}
+	
+	uint32_t Tr2TextureAL::GetUavIndexInHeap( uint32_t ) const
+	{
+		return 0xffffffff;
+	}
+
 	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2TextureAL";
@@ -1316,11 +1326,11 @@ namespace TrinityALImpl
 		}
 
 		description["size"] = std::to_string( size * std::max( 1u, m_desc.GetArraySize() ) * std::max( 1u, m_msaa.samples ) );
-		description["width"] = std::to_string( long long( m_desc.GetWidth() ) );
-		description["height"] = std::to_string( long long( m_desc.GetHeight() ) );
+		description["width"] = std::to_string( m_desc.GetWidth() );
+		description["height"] = std::to_string( m_desc.GetHeight() );
 		description["depth"] = std::to_string( m_desc.GetDepth() );
-		description["mipLevels"] = std::to_string( long long( m_desc.GetTrueMipCount() ) );
-		description["format"] = std::to_string( long long( m_desc.GetFormat() ) );
+		description["mipLevels"] = std::to_string( m_desc.GetTrueMipCount() );
+		description["format"] = std::to_string( int( m_desc.GetFormat() ) );
 		description["texType"] = std::to_string( int( m_desc.GetType() ) );
 		description["array"] = std::to_string( m_desc.GetArraySize() );
 		description["cpuUsage"] = std::to_string( int( m_cpuUsage ) );
@@ -1351,6 +1361,12 @@ namespace TrinityALImpl
 		}
 		return S_OK;
 	}
+
+	ID3D11Resource* Tr2TextureAL::GetResourceDx11() const
+	{
+		return m_texture;
+	}
+
 }
 
 #endif

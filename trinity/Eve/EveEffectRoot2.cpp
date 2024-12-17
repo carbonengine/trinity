@@ -12,8 +12,6 @@
 #include "Eve/SpaceObject/Children/EveChildContainer.h"
 
 extern float g_eveSpaceObjectResourceUnloadingTimeThreshold;
-extern float g_eveSpaceSceneMediumDetailThreshold;
-extern float g_eveSpaceSceneLowDetailThreshold;
 
 EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	PARENTLOCK( m_observers ),
@@ -28,6 +26,7 @@ EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_estimatedSize( 0.0f ),
 	m_display( true ),
+	m_mute( false ),
 	m_startTime( 0 ),
 	m_effectDuration( -1 ),
 	m_lodLevel( TR2_LOD_HIGH ),
@@ -62,7 +61,6 @@ bool EveEffectRoot2::OnModified( Be::Var* val )
 	}
 	return true;
 }
-
 
 void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
@@ -137,7 +135,7 @@ void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 	}
 }
 
-void EveEffectRoot2::UpdateSyncronous( EveUpdateContext& updateContext ) 
+void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 {	
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -171,7 +169,7 @@ void EveEffectRoot2::UpdateSyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveEffectRoot2::UpdateAsyncronous( EveUpdateContext& updateContext ) 
+void EveEffectRoot2::UpdateAsyncronous( const EveUpdateContext& updateContext ) 
 {	
 	UpdateControllers();
 
@@ -200,7 +198,7 @@ void EveEffectRoot2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveEffectRoot2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) 
+void EveEffectRoot2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	if( !m_display )
 	{
@@ -213,19 +211,19 @@ void EveEffectRoot2::UpdateVisibility( const TriFrustum& frustum, const Matrix& 
 		GetBoundingSphere( boundingSphere );
 		BoundingSphereTransform( m_worldTransform, boundingSphere );
 		
-		if( frustum.IsSphereVisible( &boundingSphere ) )
+		if( updateContext.GetFrustum().IsSphereVisible( &boundingSphere ) )
 		{
-			m_estimatedSize = frustum.GetPixelSizeAccross( &boundingSphere );
+			m_estimatedSize = updateContext.GetFrustum().GetPixelSizeAccross( &boundingSphere );
 		}
 
 		Tr2Lod oldLod = m_lodLevel;
 		m_lodLevel = TR2_LOD_LOW;
 
-		if( m_estimatedSize >= g_eveSpaceSceneMediumDetailThreshold )
+		if( m_estimatedSize >= updateContext.GetMediumDetailThreshold() )
 		{
 			m_lodLevel = TR2_LOD_HIGH;
 		}
-		else if( m_estimatedSize >= g_eveSpaceSceneLowDetailThreshold )
+		else if( m_estimatedSize >= updateContext.GetLowDetailThreshold() )
 		{
 			m_lodLevel = TR2_LOD_MEDIUM;
 		}
@@ -235,7 +233,7 @@ void EveEffectRoot2::UpdateVisibility( const TriFrustum& frustum, const Matrix& 
 	
 	for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 	{
-		(*ecIt)->UpdateVisibility( frustum, parentTransform, m_lodLevel );
+		(*ecIt)->UpdateVisibility( updateContext, parentTransform, m_lodLevel );
 	}
 }
 
@@ -901,6 +899,23 @@ void EveEffectRoot2::AddObserver( TriObserverLocalPtr observer )
 	m_observers.Append( observer );
 }
 
+bool EveEffectRoot2::GetMute()
+{
+	return m_mute;
+}
+
+void EveEffectRoot2::SetMute( bool isMute )
+{
+	m_mute = isMute;
+	for( auto it : m_effectChildren )
+	{
+		it->SetMute( m_mute );
+	}
+	for( auto it : m_observers )
+	{
+		it->SetMute( m_mute );
+	}
+}
 
 void EveEffectRoot2::FreezeHighDetailMesh()
 {

@@ -164,7 +164,9 @@ Tr2SpriteObject::Tr2SpriteObject( IRoot* lockobj ) :
 	m_shadowColor( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_glowFactor( 0.0f ),
 	m_glowExpand( 0.0f ),
-	m_glowColor( 1.0f, 1.0f, 1.0f, 1.0f )
+	m_glowColor( 1.0f, 1.0f, 1.0f, 1.0f ),
+	m_outlineColor( 0.0f, 0.0f, 0.0f, 1.0f ),
+	m_outlineThreshold( 0.0f )
 {
 }
 
@@ -197,6 +199,14 @@ void Tr2SpriteObject::SetShadowRenderState( Tr2Sprite2dScene* renderer )
 	renderer->SetGlowBrightness( m_glowBrightness );
 	renderer->SetColor( c );
 	renderer->SetDepth( m_depth );
+}
+
+void Tr2SpriteObject::SetOutlineRenderState( Tr2Sprite2dScene* renderer )
+{
+	Color color = m_outlineColor;
+	color.a *= m_color.a;
+	renderer->SetOutlineColor( color );
+	renderer->SetOutlineThreshold( m_outlineThreshold );
 }
 
 Color Tr2SpriteObject::GetColor() const

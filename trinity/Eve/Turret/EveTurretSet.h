@@ -8,7 +8,6 @@
 #define EveTurretSet_H
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "include/ITriTargetable.h"
 #include "Tr2ShLightingManager.h"
 #include "Tr2GrannyAnimation.h"
@@ -18,6 +17,7 @@
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Eve/SpaceObject/Children/EveChildInstanceContainer.h"
 #include "Eve/SpaceObject/EveSpaceObject2.h"
+#include "Raytracing/Tr2RaytracingManager.h"
 
 // needed for override
 #include "Tr2PerObjectData.h"
@@ -30,8 +30,9 @@ struct ITr2Renderable;
 struct ViewDistanceInfo;
 class EveUpdateContext;
 class Tr2LightManager;
+class Tr2RaytracingMesh;
 
-BLUE_DECLARE( Tr2Mesh );
+//BLUE_DECLARE( Tr2Mesh );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( EveTurretFiringFX );
@@ -43,8 +44,6 @@ BLUE_DECLARE( TriObserverLocal );
 // constants
 // maximum number of single turrets per turret set
 const unsigned int EVE_MAX_TURRETS_PER_SET = 24;
-// maximum number of bones in all of the turret set
-const unsigned int EVE_MAX_TURRET_SET_BONES = EVE_MAX_TURRETS_PER_SET * 3;
 // maximum time offset for turret firing
 const float EVE_TURRET_RANDOM_DELAY_MAX = 0.6f;
 
@@ -52,14 +51,15 @@ struct EveTurretSetVSData {
     Vector4 m_baseCutoffData;
     Vector4 m_turretSetData;
     Matrix m_shipMatrix;
+	Matrix m_prevShipMatrix;
+
+	uint32_t m_currentBoneOffset;
+	uint32_t m_prevBoneOffset;
+	uint32_t _unused[2];
 
     // per turret data
     Vector4 m_turretTranslation[EVE_MAX_TURRETS_PER_SET];
     Quaternion m_turretRotation[EVE_MAX_TURRETS_PER_SET];
-
-    // pose information
-    // For each turret we have a position (Vector4) and then quaternion (and then position and then quaternion etc.)
-    float m_turretPosAndRotationBuffer[4 * 2 * EVE_MAX_TURRET_SET_BONES];
 };
 
 struct EveTurretSetPSData {
@@ -78,6 +78,7 @@ class EveTurretSetPerObjectData : public Tr2PerObjectData
 {
 public:
 	void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const override;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// vs per object data
     EveTurretSetVSData m_vsData;
@@ -99,7 +100,6 @@ public:
 BLUE_CLASS( EveTurretSet ):
 	public IInitialize,
 	public INotify,
-	public ITr2GeometryProvider,
 	public IBlueAsyncResNotifyTarget,
 	public Tr2DeviceResource,
 	public ITr2Renderable,
@@ -125,10 +125,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* value ) override;
-	
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
@@ -163,9 +159,11 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
-	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const override;
 	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
 
 	int GetState() const;
 
@@ -178,11 +176,11 @@ public:
 	void UpdateTurretTransforms(const Matrix* parentWorldMatrix);
 
 	// timing and worldspace positioning
-	void UpdateSyncronous( EveUpdateContext& updateContext, const Matrix* parentMatrix );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const Matrix* parentMatrix );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
 
 	// rendering
-	void UpdateVisibility( const TriFrustum& frustum );
+	void UpdateVisibility( const EveUpdateContext& updateContext );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, const Vector4* shLighting );
 	
 	// rebuild the bounding sphere size
@@ -286,7 +284,7 @@ private:
 	// cleanup
 	void Cleanup();
 	// determine LOD and check for change
-	bool UpdateLOD();
+	bool UpdateLOD( const EveUpdateContext& updateContext );
 	// set transform for tracking
 	void ModifySystemBoneTransform( SystemBones bone, const Vector3* target, granny_transform* transform, const Matrix* localTransform ) const;
 
@@ -307,7 +305,11 @@ private:
 	// calc best suited turret and target's locator
 	bool GetClosestTurretAndLocator( unsigned int& closestTurretIx, int& closestLocatorIx ) const;
 
-	void SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, const Vector3& poseTranslation, const Quaternion& poseRotation );
+	// Update raytracing mesh info
+	void UpdateRtMesh();
+	void UpdateRtSkeleton();
+
+	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 
 	// name
 	std::string m_name;
@@ -316,8 +318,6 @@ private:
 	bool m_displayEffects;
 	bool m_isOnline;
 	bool m_updatePitchPose;
-	// how many turrets can actually be displayed, due to bone count
-	unsigned int m_possibleTurretDisplayAmount;
 	// how many turrets visible in this frame?
 	unsigned int m_visibleCount;
 	// what is the highest onscreen size?
@@ -334,6 +334,7 @@ private:
 
 	// parent ship data
 	IEveSpaceObject2::ParentData m_parentData;
+	Matrix m_shipTransformPrev;
 	const Vector4* m_parentShLighting;
 
 	// keep a vector of data on each pair of the turret
@@ -352,6 +353,9 @@ private:
 		granny_model_instance*	grnModelInstance;
 		granny_local_pose*		grnLocalPose;
 		granny_world_pose*		grnWorldPose;
+
+		std::unique_ptr<Tr2RaytracingMesh> rtMesh;
+		std::unique_ptr<Tr2RaytracingMeshArea> rtMeshArea;
 	};
 	std::vector<SingleTurretData> m_singleTurrets;
 	std::vector<GrannyBoneBindingBounds> m_boneBounds;
@@ -375,7 +379,7 @@ private:
 	std::string m_geomResPath;
 	TriGeometryResPtr m_geometryResource;
 	// instance vertex stream
-	Tr2BufferAL m_instanceBuffer;
+	Tr2SuballocatedBuffer::Allocation m_instanceBuffer;
 
 	// Assign the target object
 	void SetTargetObject( IRoot* target );
@@ -468,6 +472,9 @@ private:
 	TriObserverLocalPtr m_turretMovementObserver;
 	std::wstring m_idleToTargetingMovementAudioEvent;
 	std::wstring m_targetingToIdleMovementAudioEvent;
+
+	Tr2BoneTransformOffsets m_boneOffsets;
+
 };
 
 TYPEDEF_BLUECLASS( EveTurretSet );

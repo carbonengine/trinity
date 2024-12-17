@@ -27,7 +27,6 @@ Tr2PrimitiveSet::Tr2PrimitiveSet( IRoot* lockobj ):
 	m_pythonUserData( NULL ),
 #endif
 	m_viewOriented( false ),
-	m_isDrawingForPicking( false ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_localTransform( IdentityMatrix() ),
 	m_worldTransform( IdentityMatrix() ),
@@ -52,33 +51,14 @@ void Tr2PrimitiveSet::GetBatches( ITriRenderBatchAccumulator* accumulator,
 							 const Tr2PerObjectData* perObjectData,
 	     					         Tr2RenderReason reason )
 {
-	m_isDrawingForPicking = false;
 	// Is only rendered as transparent or additive.
 	if( batchType == TRIBATCHTYPE_OPAQUE && m_effect )
 	{
-		GetBatchesImpl( accumulator, perObjectData, m_effect );
+		GetBatchesImpl( accumulator, perObjectData, m_effect, GetBatchesReason::Draw );
 	}
-	else if( batchType == TRIBATCHTYPE_PICKING )
-	{// we might be drawing for picking but the primitive might not have a picking effect
-		m_isDrawingForPicking = true; 
-		if( m_pickEffect )
-		{
-			GetBatchesImpl( accumulator, perObjectData, m_pickEffect );
-		}		
-	}
-}
-
-void Tr2PrimitiveSet::GetBatchesImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Effect* effect )
-{
-
-	TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-	if( batch )
+	else if( batchType == TRIBATCHTYPE_PICKING && m_pickEffect )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( effect );
-		batch->SetGeometryProvider( this );
-
-		accumulator->Commit( batch );
+		GetBatchesImpl( accumulator, perObjectData, m_pickEffect, GetBatchesReason::Picking );
 	}
 }
 

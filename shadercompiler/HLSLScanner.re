@@ -940,6 +940,8 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		"SamplerState" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_SAMPLER ); }
 		"SamplerComparisonState" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_SAMPLERCOMPARISON ); }
 
+		"DepthTexture2D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_DEPTHTEXTURE2D ); }
+		"DepthTexture2DArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_DEPTHTEXTURE2D ); }
 		[tT]"exture1D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE1D ); }
 		[tT]"exture2D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE2D ); }
 		[tT]"exture3D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE3D ); }
@@ -958,6 +960,13 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		"ConsumeStructuredBuffer" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_CONSUMESTRUCTUREDBUFFER ); }
 		"InputPatch" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_INPUTPATCH ); }
 		"OutputPatch" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_OUTPUTPATCH ); }
+
+		"BindlessHandleTexture2D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURE2D ); }
+		"BindlessHandleTexture3D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURE3D ); }
+		"BindlessHandleTextureCube" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURECUBE ); }
+		"BindlessHandleSampler" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLESAMPLER ); }
+		"RaytracingAccelerationStructure" { RETURN( OP_RAYTRACING_ACCELERATION_STRUCTURE ); }
+		"RayDesc" { RETURN( OP_RAY_DESC ); }
 
 		"RWBuffer" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_RWBUFFER ); }
 		"RWByteAddressBuffer" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_RWBYTEADDRESSBUFFER ); }
@@ -989,6 +998,7 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		"default" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_DEFAULT ); }
 
 		"technique" { RETURN( OP_TECHNIQUE ); }
+		"library" { RETURN( OP_LIBRARY ); }
 		"pass" { RETURN( OP_PASS ); }
 		"compile" { RETURN( OP_COMPILE ); }
 

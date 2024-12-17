@@ -79,13 +79,13 @@ const Be::ClassInfo* Tr2FontMeasurer::ExposeToBlue()
 			Be::READWRITE
 		)
 
-		MAP_ATTRIBUTE
+		MAP_PROPERTY
 		(
 			"color",
-			m_color,
+			GetColor,
+			SetColor,
 			"Color of the text when drawn to a texture. Can be set explicitly\n"
-			"or passed in via params to AddText",
-			Be::READWRITE
+			"or passed in via params to AddText"
 		)
 
 		MAP_ATTRIBUTE

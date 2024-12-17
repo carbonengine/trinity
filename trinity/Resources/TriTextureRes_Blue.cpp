@@ -96,17 +96,6 @@ static PyObject* PythonSave( PyObject* self, PyObject* args, bool async )
 			OK = pThis->Save( wcstr.c_str() );
 		}
 	}
-	else if( PyString_Check( file ) && BlueExtractArgument( file, cstr, 1 ) )
-	{
-		if( async )
-		{
-			OK = pThis->SaveAsync( CA2W( cstr.c_str() ) );
-		}
-		else
-		{
-			OK = pThis->Save( CA2W( cstr.c_str() ) );
-		}
-	}
 	else
 	{
 		PyErr_SetString( PyExc_TypeError, "Expected a filepath string" );
@@ -266,6 +255,8 @@ const Be::ClassInfo* TriTextureRes::ExposeToBlue()
 		MAP_ATTRIBUTE( "cutoutHeight",	m_cutoutHeight,	"height of cutout rectangle, range 0...1",			Be::READWRITE )
 		
 		MAP_ATTRIBUTE( "wrappedRenderTarget", m_wrappedRenderTarget, "Live view renderTarget being wrapped with SetFromRenderTarget", Be::READ );
+
+		MAP_PROPERTY_READONLY( "srvIndex", GetSrvIndexInHeap, "" )
 
 		MAP_METHOD_AND_WRAP
 		(

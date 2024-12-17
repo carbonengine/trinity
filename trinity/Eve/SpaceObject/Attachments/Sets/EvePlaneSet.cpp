@@ -10,15 +10,13 @@
 #include "EvePlaneSet.h"
 #include "EvePlaneSetItem.h"
 #include "Utilities/BoundingSphere.h"
-#include "Tr2PickingHelperBatch.h"
 #include "Tr2DebugRenderer.h"
 #include "Tr2Renderer.h"
 #include "Utilities/MatrixUtils.h"
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "Resources/TriTextureRes.h"
 #include "Resources/Tr2LightProfileRes.h"
-
-static const char* PLANESET_PICK_EFFECT_PATH = "res:/Graphics/Effect/Managed/Space/SpaceObject/FX/PlanePicking.fx";
+#include "Tr2QuadRenderer.h"
 
 EvePlaneLight::EvePlaneLight() :
 	lightData( LightData() ),
@@ -76,14 +74,11 @@ EvePlaneSet::EvePlaneSet( IRoot* lockobj ) :
 	PARENTLOCK( m_planes ),
 	m_display( true ),
 	m_hideOnLowQuality( false ),
+	m_isSkinned( false ),
 	m_pickBufferID( 0 ),
-	m_vertexCount( 0 ),
 	m_activationStrength( 0 ),
-	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	m_effectHash( 0 )
 {
-	// create picking effect
-	m_pickEffect.CreateInstance();
-	m_pickEffect->SetEffectPathName( PLANESET_PICK_EFFECT_PATH );
 }
 
 // --------------------------------------------------------------------------------
@@ -109,8 +104,11 @@ void EvePlaneSet::SetEffect( Tr2EffectPtr effect )
 // --------------------------------------------------------------------------------
 bool EvePlaneSet::Initialize()
 {
-	PrepareResources();
 	CreateBoundingBoxes();
+	if( m_effect )
+	{
+		m_effectHash = m_effect->GetHashValue();
+	}
 	return true;
 }
 
@@ -144,122 +142,83 @@ void EvePlaneSet::SetPickBufferID( uint8_t pickBufferID )
 	Rebuild();
 }
 
-// --------------------------------------------------------------------------------
-// Description:
-//   We have to free all device stuff, so release vertex declaration and free
-//   all the vertex buffer
-// --------------------------------------------------------------------------------
-void EvePlaneSet::ReleaseResources( TriStorage s )
+void EvePlaneSet::SetIsSkinned( bool isSkinned )
 {
-	m_vertexDeclHandle = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
-	m_vertexBuffer = Tr2BufferAL();
+	m_isSkinned = isSkinned;
 }
 
-// --------------------------------------------------------------------------------
-// Description:
-//   (Re)-allocate all device stuff: create a vertex declaration for the instanced
-//   rendering and a vertexbuffer
-// --------------------------------------------------------------------------------
-bool EvePlaneSet::OnPrepareResources()
+void EvePlaneSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
-	// Always clear the transform cache
-	m_cachedTransforms.clear();
-
-	if( m_vertexBuffer.IsValid() )
+	if( m_effect )
 	{
-		return true;
+		m_effectHash = m_effect->GetHashValue();
 	}
 
-	if( m_planes.empty() )
-	{
-		return true;
-	}
-
-	// register vertex declaration
 	static Tr2VertexDefinition s_spriteVertexDecl;
 	if( s_spriteVertexDecl.empty() )
 	{
 		Tr2VertexDefinition& vd = s_spriteVertexDecl;
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 0 );
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 1 );
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 2 );
-		vd.Add( vd.FLOAT32_4, vd.COLOR );
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 3 );
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 4 );
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 5 );
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 6 );
-		vd.Add( vd.UBYTE_4, vd.TEXCOORD, 7 );
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 8 );
-	}
-	m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_spriteVertexDecl );
-	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
-	{
-		return false;
+		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 0, 1, 1 );
+		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 1, 1, 1 );
+		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 2, 1, 1 );
+		vd.Add( vd.FLOAT32_4, vd.COLOR, 0, 1, 1 );
+		vd.Add( vd.FLOAT16_4, vd.TEXCOORD, 3, 1, 1 );
+		vd.Add( vd.FLOAT16_4, vd.TEXCOORD, 4, 1, 1 );
+		vd.Add( vd.FLOAT16_4, vd.TEXCOORD, 5, 1, 1 );
+		vd.Add( vd.FLOAT16_4, vd.TEXCOORD, 6, 1, 1 );
+		vd.Add( vd.FLOAT16_4, vd.TEXCOORD, 8, 1, 1 );
+		vd.Add( vd.UBYTE_4, vd.TEXCOORD, 7, 1, 1 );
 	}
 
-	// prepare buffers
-	m_vertexCount = (unsigned int)m_planes.GetSize() * 4;
-	std::vector<PlaneVertex> verts( m_vertexCount );
-
-	// fill it
-	unsigned int n = (unsigned int)m_planes.GetSize();
-	for( unsigned int i = 0; i < n; ++i )
-	{
-		// build transformation matrix out of the individual item data
-		Matrix itemTransform = TransformationMatrix( m_planes[i]->m_scaling, m_planes[i]->m_rotation, m_planes[i]->m_position );
-		for( unsigned int j = 0; j < 4; ++j )
-		{
-			PlaneVertex& vertex = verts[i * 4 + j];
-
-			vertex.transform1 = Vector4( itemTransform._11, itemTransform._21, itemTransform._31, itemTransform._41 );
-			vertex.transform2 = Vector4( itemTransform._12, itemTransform._22, itemTransform._32, itemTransform._42 );
-			vertex.transform3 = Vector4( itemTransform._13, itemTransform._23, itemTransform._33, itemTransform._43 );
-			vertex.color = Vector4( m_planes[i]->m_color.r, m_planes[i]->m_color.g, m_planes[i]->m_color.b, m_planes[i]->m_color.a );
-			vertex.layer1Transform = m_planes[i]->m_layer1Transform;
-			vertex.layer2Transform = m_planes[i]->m_layer2Transform;
-			vertex.layer1Scroll = m_planes[i]->m_layer1Scroll;
-			vertex.layer2Scroll = m_planes[i]->m_layer2Scroll;
-			vertex.index = j;
-			vertex.boneIndex = m_planes[i]->m_boneIndex;
-			vertex.maskMapAtlasIndex = m_planes[i]->m_maskAtlasID;
-			vertex.pickBufferID = m_pickBufferID;
-			vertex.blinkData = m_planes[i]->m_blinkData;
-		}
-		// We cache this for updating view distance info
-		m_cachedTransforms.push_back( itemTransform );
-	}
-
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	CR_RETURN_VAL( m_vertexBuffer.Create( sizeof( PlaneVertex ), m_vertexCount, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, &verts[0], renderContext ), false );
-
-	Tr2Renderer::GetQuadListIndexBuffer( m_vertexCount / 4 );
-
-	return true;
+	quadRenderer.RegisterEffect( m_effectHash, TRIBATCHTYPE_ADDITIVE, sizeof( PlaneVertex ), 1, s_spriteVertexDecl, m_effect );
 }
 
-// --------------------------------------------------------------------------------
-// Description:
-//   Setup instanced reandering and call DIP
-// --------------------------------------------------------------------------------
-void EvePlaneSet::SubmitGeometry( Tr2RenderContext& renderContext )
+void EvePlaneSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount )
 {
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( PlaneVertex ) );
-	auto ib = Tr2Renderer::GetQuadListIndexBuffer( m_vertexCount / 4 );
-	if( !ib )
+	if( !m_display )
 	{
 		return;
 	}
-	renderContext.m_esm.ApplyIndexBuffer( *ib );
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawIndexedPrimitive( m_vertexCount, 0, m_vertexCount / 2 );
+	if( m_hideOnLowQuality && Tr2Renderer::IsLowQuality() )
+	{
+		return;
+	}
+	if( m_items.empty() )
+	{
+		return;
+	}
+
+	Matrix boneTransform = IdentityMatrix();
+	size_t idx = 0;
+	for( auto& vertex : m_items )
+	{
+		// build transformation matrix out of the individual item data
+		auto data = m_volatileData[idx++];
+		if( m_isSkinned )
+		{
+			auto boneIndex = vertex.boneIndex;
+			if( boneIndex < boneCount )
+			{
+				TriMatrixCopyFrom3x4( &boneTransform, &bones[boneIndex] );
+				data.transform = data.transform * boneTransform;
+			}
+		}
+		data.transform = data.transform * parentTransform;
+
+		vertex.transform1 = Vector4( data.transform._11, data.transform._21, data.transform._31, data.transform._41 );
+		vertex.transform2 = Vector4( data.transform._12, data.transform._22, data.transform._32, data.transform._42 );
+		vertex.transform3 = Vector4( data.transform._13, data.transform._23, data.transform._33, data.transform._43 );
+		vertex.color = data.color * activation;
+	}
+
+	quadRenderer.AddQuads( m_effectHash, m_items.data(), m_items.size() );
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
 //   Get bounding box around planes, update visibility based on if box is visible or not
 // --------------------------------------------------------------------------------------
-bool EvePlaneSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EvePlaneSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -268,7 +227,7 @@ bool EvePlaneSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& par
 	}
 	aabb.Transform( parentTransform );
 
-	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
 void EvePlaneSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
@@ -298,63 +257,6 @@ AxisAlignedBoundingBox EvePlaneSet::GetAabb( const granny_matrix_3x4* bones, siz
 // --------------------------------------------------------------------------------
 void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	if( batchType != TRIBATCHTYPE_ADDITIVE && batchType != TRIBATCHTYPE_PICKING )
-	{
-		return;
-	}
-
-	if( m_hideOnLowQuality && Tr2Renderer::IsLowQuality() )
-	{
-		return;
-	}
-
-	if( !m_vertexBuffer.IsValid() )
-	{
-		return;
-	}
-
-	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
-	{
-		return;
-	}
-
-	if( !m_display )
-	{
-		return;
-	}
-
-	// handle different batch types
-	switch( batchType )
-	{
-	case TRIBATCHTYPE_ADDITIVE:
-		if( m_effect )
-		{
-			TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-			if( batch )
-			{
-				batch->SetPerObjectData( perObjectData );
-				batch->SetShaderMaterial( m_effect );
-				batch->SetGeometryProvider( this );
-				accumulator->Commit( batch );
-			}
-		}
-		break;
-	case TRIBATCHTYPE_PICKING:
-		if( m_pickEffect && m_pickBufferID )
-		{
-			TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-			if( batch )
-			{
-				batch->SetPerObjectData( perObjectData );
-				batch->SetShaderMaterial( m_pickEffect );
-				batch->SetGeometryProvider( this );
-				accumulator->Commit( batch );
-			}
-		}
-		break;
-	default:
-		return;
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -363,8 +265,30 @@ void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchT
 // --------------------------------------------------------------------------------
 void EvePlaneSet::Rebuild()
 {
-	ReleaseResources( 0 );
-	PrepareResources();
+	m_items.clear();
+	m_items.reserve( m_planes.size() );
+	m_volatileData.clear();
+	m_volatileData.reserve( m_planes.size() );
+	for( auto& plane : m_planes )
+	{
+		if( plane->m_color == Color( 0, 0, 0, 0 ) )
+		{
+			continue;
+		}
+		auto itemTransform = TransformationMatrix( plane->m_scaling, plane->m_rotation, plane->m_position );
+		m_volatileData.push_back( { itemTransform, Vector4( plane->m_color.r, plane->m_color.g, plane->m_color.b, plane->m_color.a ) } );
+
+		PlaneVertex item;
+		item.layer1Transform = Vector4_16( plane->m_layer1Transform );
+		item.layer2Transform = Vector4_16( plane->m_layer2Transform );
+		item.layer1Scroll = Vector4_16( plane->m_layer1Scroll );
+		item.layer2Scroll = Vector4_16( plane->m_layer2Scroll );
+		item.blinkData = Vector4_16( plane->m_blinkData );
+		item.boneIndex = plane->m_boneIndex;
+		item.maskMapAtlasIndex = plane->m_maskAtlasID;
+		m_items.push_back( item );
+	}
+
 	CreateBoundingBoxes();
 }
 
@@ -374,7 +298,37 @@ void EvePlaneSet::Rebuild()
 // --------------------------------------------------------------------------------------
 void EvePlaneSet::CreateBoundingBoxes()
 {
-	CreateItemSetBoundingBoxes( m_aabb, m_boundingBoxes, true, begin( m_planes ), end( m_planes ) );
+	m_boundingBoxes.clear();
+	m_aabb = CcpMath::AxisAlignedBox();
+
+	std::map<int32_t, CcpMath::AxisAlignedBox> boxes;
+
+	for( auto& item : m_planes )
+	{
+		if( item->m_color == Color( 0, 0, 0, 0 ) )
+		{
+			continue;
+		}
+		auto itemBounds = item->GetBounds();
+		auto boneIndex = item->GetBoneIndex();
+		if( m_isSkinned && boneIndex >= 0 )
+		{
+			auto found = boxes.find( boneIndex );
+			if( found != end( boxes ) )
+			{
+				found->second.Include( itemBounds );
+			}
+			else
+			{
+				boxes[boneIndex] = CcpMath::AxisAlignedBox( itemBounds );
+			}
+		}
+		else
+		{
+			m_aabb.Include( itemBounds );
+		}
+	}
+	m_boundingBoxes.insert( end( m_boundingBoxes ), begin( boxes ), end( boxes ) );
 }
 
 // --------------------------------------------------------------------------------
@@ -386,25 +340,6 @@ void EvePlaneSet::CreateBoundingBoxes()
 void EvePlaneSet::AddPlaneItem( EvePlaneSetItemPtr item )
 {
 	m_planes.Insert( -1, item );
-}
-
-void EvePlaneSet::GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData )
-{
-	for( auto it = m_cachedTransforms.begin(); it != m_cachedTransforms.end(); ++it )
-	{
-		if( auto batch = batches->Allocate<Tr2PickingHelperBatch>() )
-		{
-			batch->SetPerObjectData( perObjectData );
-			batch->AddBox( *it );
-			batch->SetAreaID( areaIDOffset );
-			batches->Commit( batch );
-		}
-		else
-		{
-			break;
-		}
-		++areaIDOffset;
-	}
 }
 
 EvePlaneSetItemVector* EvePlaneSet::GetPlanes()
@@ -595,7 +530,7 @@ void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parent
 
 		float fade = EveSpaceObjectAttachmentUtils::Fade( light.fadeType, light.blinkRate, light.blinkPhase );
 		lightDataCopy.brightness *= fade;
-		auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

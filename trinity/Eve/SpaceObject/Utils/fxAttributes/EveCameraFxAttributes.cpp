@@ -15,7 +15,7 @@ EveCameraFxAttributes::~EveCameraFxAttributes()
 {
 }
 
-void EveCameraFxAttributes::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveCameraFxAttributes::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	// gather attributes
 	Vector3 objPos(0.0, 0.0, 0.0);

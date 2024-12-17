@@ -13,7 +13,6 @@
 #include "Curves/TriCurveSet.h"
 #include "Shader/Tr2Effect.h"
 #include "Shader/Tr2Shader.h"
-#include "Tr2PickingHelperBatch.h"
 
 EveCloudVolumeBall::EveCloudVolumeBall( IRoot* lockobj )
 {

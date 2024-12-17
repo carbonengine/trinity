@@ -102,6 +102,7 @@ void ParserState::AddIntrinsics()
 	m_dx9Functions["InterlockedMin"] = AddFunction( table, "InterlockedMin", &FunctionDescription3<TypeIs<OP_VOID>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>> );
 	m_dx9Functions["InterlockedOr"] = AddFunction( table, "InterlockedOr", &FunctionDescription3<TypeIs<OP_VOID>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>> );
 	m_dx9Functions["InterlockedXor"] = AddFunction( table, "InterlockedXor", &FunctionDescription3<TypeIs<OP_VOID>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>> );
+	m_dx9Functions["NonUniformResourceIndex"] = AddFunction( table, "NonUniformResourceIndex", &FunctionDescription1<TypeIs<OP_UINT>, DimSameAsArg<0>, TypeIs<OP_UINT>, DimIs<1, 1>> );
 	m_dx9Functions["isfinite"] = AddFunction( table, "isfinite", &FunctionDescription1<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
 	m_dx9Functions["isinf"] = AddFunction( table, "isinf", &FunctionDescription1<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
 	m_dx9Functions["isnan"] = AddFunction( table, "isnan", &FunctionDescription1<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
@@ -153,6 +154,49 @@ void ParserState::AddIntrinsics()
 	m_dx9Functions["transpose"] = AddFunction( table, "transpose", &TransposeIntrinsicType );
 	m_dx9Functions["trunc"] = AddFunction( table, "trunc", &FunctionDescription1<TypeIs<OP_FLOAT>, DimSameAsArg<0>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
 
+	// DXR - raytracing
+	m_dx9Functions["DispatchRaysIndex"] = AddFunction( table, "DispatchRaysIndex", &FunctionDescription0<TypeIs<OP_UINT>, DimIs<3, 1>> );
+	m_dx9Functions["DispatchRaysDimensions"] = AddFunction( table, "DispatchRaysDimensions", &FunctionDescription0<TypeIs<OP_UINT>, DimIs<3, 1>> );
+
+	m_dx9Functions["WorldRayOrigin"] = AddFunction( table, "WorldRayOrigin", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<3, 1>> );
+	m_dx9Functions["WorldRayDirection"] = AddFunction( table, "WorldRayDirection", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<3, 1>> );
+	m_dx9Functions["RayTMin"] = AddFunction( table, "RayTMin", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<1, 1>> );
+	m_dx9Functions["RayTCurrent"] = AddFunction( table, "RayTCurrent", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<1, 1>> );
+	m_dx9Functions["RayFlags"] = AddFunction( table, "RayFlags", &FunctionDescription0<TypeIs<OP_UINT>, DimIs<1, 1>> );
+
+	m_dx9Functions["InstanceIndex"] = AddFunction( table, "InstanceIndex", &FunctionDescription0<TypeIs<OP_UINT>, DimIs<1, 1>> );
+	m_dx9Functions["InstanceID"] = AddFunction( table, "InstanceID", &FunctionDescription0<TypeIs<OP_UINT>, DimIs<1, 1>> );
+	m_dx9Functions["GeometryIndex"] = AddFunction( table, "GeometryIndex", &FunctionDescription0<TypeIs<OP_UINT>, DimIs<1, 1>> );
+	m_dx9Functions["PrimitiveIndex"] = AddFunction( table, "InstanceIndex", &FunctionDescription0<TypeIs<OP_UINT>, DimIs<1, 1>> );
+
+	m_dx9Functions["ObjectRayOrigin"] = AddFunction( table, "ObjectRayOrigin", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<3, 1>> );
+	m_dx9Functions["ObjectRayDirection"] = AddFunction( table, "ObjectRayDirection", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<3, 1>> );
+
+	m_dx9Functions["ObjectToWorld3x4"] = AddFunction( table, "ObjectToWorld3x4", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<3, 4>> );
+	m_dx9Functions["ObjectToWorld4x3"] = AddFunction( table, "ObjectToWorld4x3", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<4, 3>> );
+	m_dx9Functions["WorldToObject3x4"] = AddFunction( table, "WorldToObject3x4", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<3, 4>> );
+	m_dx9Functions["WorldToObject4x3"] = AddFunction( table, "WorldToObject4x3", &FunctionDescription0<TypeIs<OP_FLOAT>, DimIs<4, 3>> );
+
+	m_dx9Functions["HitKind"] = AddFunction( table, "HitKind", &FunctionDescription0<TypeIs<OP_UINT>, DimIs<1, 1>> );
+
+	m_dx9Functions["AcceptHitAndEndSearch"] = AddFunction( table, "AcceptHitAndEndSearch", &FunctionDescription0<TypeIs<OP_VOID>, DimIs<1, 1>> );
+	m_dx9Functions["IgnoreHit"] = AddFunction( table, "IgnoreHit", &FunctionDescription0<TypeIs<OP_VOID>, DimIs<1, 1>> );
+	m_dx9Functions["ReportHit"] = AddFunction( table, "PrimitiveIndex", &FunctionDescription3<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_VOID>, DimIs<1, 1>> );
+	m_dx9Functions["TraceRay"] = AddFunction(
+		table,
+		"TraceRay",
+		&FunctionDescription8<
+		TypeIs<OP_VOID>, DimIs<1, 1>,
+		TypeIs<OP_RAYTRACING_ACCELERATION_STRUCTURE>, DimIs<1, 1>,
+		TypeIs<OP_UINT>, DimIs<1, 1>,
+		TypeIs<OP_UINT>, DimIs<1, 1>,
+		TypeIs<OP_UINT>, DimIs<1, 1>,
+		TypeIs<OP_UINT>, DimIs<1, 1>,
+		TypeIs<OP_UINT>, DimIs<1, 1>,
+		TypeIs<OP_RAY_DESC>, DimIs<1, 1>,
+		TypeIs<OP_VOID>, DimIs<1, 1>
+		> );
+
 	m_dx9TextureFunctions.insert( AddFunction( table, "tex1D", &FunctionDescription4<TypeIs<OP_FLOAT>, DimIs<4, 1>, TypeIs<OP_SAMPLER>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>> ) );
 	m_dx9TextureFunctions.insert( AddFunction( table, "tex1Dbias", &FunctionDescription2<TypeIs<OP_FLOAT>, DimIs<4, 1>, TypeIs<OP_SAMPLER>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<4, 1>> ) );
 	m_dx9TextureFunctions.insert( AddFunction( table, "tex1Dgrad", &FunctionDescription4<TypeIs<OP_FLOAT>, DimIs<4, 1>, TypeIs<OP_SAMPLER>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>> ) );
@@ -178,6 +222,16 @@ void ParserState::AddIntrinsics()
 	{
 		m_dx9Functions[( *it )->name.start] = *it;
 	}
+
+	AddConstant( table, "RAY_FLAG_NONE", OP_UINT );
+	AddConstant( table, "RAY_FLAG_FORCE_OPAQUE", OP_UINT );
+	AddConstant( table, "RAY_FLAG_FORCE_NON_OPAQUE", OP_UINT );
+	AddConstant( table, "RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH", OP_UINT );
+	AddConstant( table, "RAY_FLAG_SKIP_CLOSEST_HIT_SHADER", OP_UINT );
+	AddConstant( table, "RAY_FLAG_CULL_BACK_FACING_TRIANGLES", OP_UINT );
+	AddConstant( table, "RAY_FLAG_CULL_FRONT_FACING_TRIANGLES", OP_UINT );
+	AddConstant( table, "RAY_FLAG_CULL_OPAQUE", OP_UINT );
+	AddConstant( table, "RAY_FLAG_CULL_NON_OPAQUE", OP_UINT );
 }
 
 
@@ -622,7 +676,7 @@ bool ParserState::DiscoverPermutations( Permutations& permutations )
 
 bool ParserState::Parse()
 {
-	tmFunction( 0, 0 );
+	ZoneScoped;
 
 	//PreprocessorParseTrace( stdout, "parser: " );
 	void* parser = ParseAlloc( malloc );
@@ -1142,4 +1196,9 @@ ASTNode* ParserState::NewNode( int nodeType )
 ASTNode* ParserState::NewNode( int nodeType, const ScannerToken& token )
 {
     return new ASTNode( ASTNodeType( nodeType ), GetCurrentLocation(), GetSymbolTable().GetCurrentScope(), &token );
+}
+
+void ParserState::AddBindlessSampler( const Symbol* name, ASTNode* definition )
+{
+	m_bindlessSamplers.push_back( { name, definition } );
 }

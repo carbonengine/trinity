@@ -10,11 +10,11 @@
 #include "EveHazeSet.h"
 #include "EveHazeSetItem.h"
 #include "Utilities/BoundingSphere.h"
-#include "Tr2PickingHelperBatch.h"
 #include "Tr2DebugRenderer.h"
 #include "Tr2Renderer.h"
 #include "Utilities/MatrixUtils.h"
 #include "Resources/Tr2LightProfileRes.h"
+#include "Resources/TriGeometryRes.h"
 
 
 // vertex layout struct
@@ -109,7 +109,7 @@ bool EveHazeSet::Initialize()
 void EveHazeSet::ReleaseResources( TriStorage s )
 {
 	m_vertexDeclHandle = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
-	m_vertexBuffer = Tr2BufferAL();
+	g_sharedBuffer.Free( m_vertexBuffer );
 }
 
 
@@ -197,34 +197,18 @@ bool EveHazeSet::OnPrepareResources()
 	}
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	CR_RETURN_VAL( m_vertexBuffer.Create( sizeof( HazeVertex ), m_vertexCount, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, &verts[0], renderContext ), false );
+	CR_RETURN_VAL( g_sharedBuffer.Allocate( sizeof( HazeVertex ), m_vertexCount, &verts[0], renderContext, m_vertexBuffer ), false );
+
+	Tr2Renderer::ReserveQuadListIndexBuffer( m_vertexCount / 4 );
 
 	return true;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Setup rendering and call DIP
-// --------------------------------------------------------------------------------
-void EveHazeSet::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( HazeVertex ) );
-	auto ib = Tr2Renderer::GetQuadListIndexBuffer( m_vertexCount / 4 );
-	if( !ib )
-	{
-		return;
-	}
-	renderContext.m_esm.ApplyIndexBuffer( *ib );
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawIndexedPrimitive( m_vertexCount, 0, m_vertexCount / 2 );
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
 //   Update visibility based on if bounding box surrounding the hazes is visible or not.
 // --------------------------------------------------------------------------------------
-bool EveHazeSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveHazeSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetItemSetAabb( m_aabb, m_boundingBoxes, bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -232,7 +216,7 @@ bool EveHazeSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 		return false;
 	}
 	aabb.Transform( parentTransform );
-	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
 void EveHazeSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
@@ -278,21 +262,27 @@ void EveHazeSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchTy
 		return;
 	}
 
-	// only additive
-	if( batchType == TRIBATCHTYPE_ADDITIVE )
+	if( !m_effect )
 	{
-		if( m_effect )
-		{
-			TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-			if( batch )
-			{
-				batch->SetPerObjectData( perObjectData );
-				batch->SetShaderMaterial( m_effect );
-				batch->SetGeometryProvider( this );
-				accumulator->Commit( batch );
-			}
-		}
+		return;
 	}
+
+	auto& indexBuffer = Tr2Renderer::GetQuadListIndexBuffer();
+	if( !indexBuffer.IsValid() )
+	{
+		return;
+	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetVertexDeclaration( m_vertexDeclHandle );
+	batch.SetStreamSource( 0, m_vertexBuffer.GetBuffer(), m_vertexBuffer.GetStride() );
+	batch.SetInidices( indexBuffer );
+
+	batch.SetDrawIndexedInstanced( m_vertexCount / 2 * 3, 1, indexBuffer.GetStartIndex(), m_vertexBuffer.GetOffset() / m_vertexBuffer.GetStride(), 0 );
+
+	accumulator->Commit( batch );
 }
 
 // --------------------------------------------------------------------------------
@@ -315,26 +305,6 @@ void EveHazeSet::Rebuild()
 void EveHazeSet::AddHazeItem( EveHazeSetItemPtr item )
 {
 	m_hazes.Insert( -1, item );
-}
-
-// --------------------------------------------------------------------------------
-void EveHazeSet::GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData )
-{
-	for( auto it = m_cachedTransforms.begin(); it != m_cachedTransforms.end(); ++it )
-	{
-		if( auto batch = batches->Allocate<Tr2PickingHelperBatch>() )
-		{
-			batch->SetPerObjectData( perObjectData );
-			batch->AddBox( *it );
-			batch->SetAreaID( areaIDOffset );
-			batches->Commit( batch );
-		}
-		else
-		{
-			break;
-		}
-		++areaIDOffset;
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -429,7 +399,7 @@ void EveHazeSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentT
 			features.parentBrightness *= m_boosterGain;
 		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
-		auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

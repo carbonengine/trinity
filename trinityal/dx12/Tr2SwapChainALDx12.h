@@ -20,12 +20,13 @@ namespace Tr2SwapChainUtils
 
 	DXGI_FORMAT SafeConvertD3DBackBufferFormat( Tr2RenderContextEnum::PixelFormat bbFormat );
 	
-	ALResult CreateSwapChain(
-		CComPtr<IDXGISwapChain3>& swapChain,
+	ALResult CreateSwapChain( 
+		CComPtr<IDXGISwapChain4>& swapChain,
 		Tr2WindowHandle focusWindow,
 		const Tr2PresentParametersAL& presentationParameters,
 		ID3D12CommandQueue* commandQueue,
-		IDXGIOutput* output );
+		IDXGIOutput* output,
+		Tr2PrimaryRenderContextAL& renderContext );
 	
 	ALResult FillPresentationParameters( Tr2PresentParametersAL& presentationParameters, Tr2WindowHandle windowHandle );
 }

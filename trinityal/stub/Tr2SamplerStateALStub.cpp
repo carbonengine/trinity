@@ -22,6 +22,11 @@ namespace TrinityALImpl
 		m_isValid = false;
 	}
 
+	uint32_t Tr2SamplerStateAL::GetIndexInHeap() const
+	{
+		return 0xffffffff;
+	}
+
 	bool Tr2SamplerStateAL::IsValid() const
 	{
 		return m_isValid;

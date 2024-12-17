@@ -18,7 +18,8 @@ Tr2Denoiser::Tr2Denoiser() :
 	m_normalWeight( 1.5f ),
 	m_planeWeight( 0 ),
 	m_bypass( false ),
-	m_parametersDirty( true )
+	m_parametersDirty( true ),
+	m_textureArraySize( 1 )
 {
 	m_noiseEstimate.CreateInstance();
 	m_intermediate.CreateInstance();
@@ -65,6 +66,11 @@ const BlueSharedString NORMAL_BUFFER = BlueSharedString( "NormalBuffer" );
 
 ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& depth, ITr2TextureProvider* normals, const Matrix& projection, Tr2RenderContext& renderContext )
 {
+	return Apply(source, depth, normals, projection, 0, renderContext );
+}
+
+ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& depth, ITr2TextureProvider* normals, const Matrix& projection, uint32_t index, Tr2RenderContext& renderContext )
+{
 	auto src = source.GetTexture();
 	auto depthMap = depth.GetTexture();
 	if( !src || !src->IsValid() || !depthMap || !depthMap->IsValid() )
@@ -92,9 +98,9 @@ ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& d
 	{
 		m_intermediate->Create( src->GetWidth(), src->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
 	}
-	if( !m_result->IsValid() || m_result->GetWidth() != src->GetWidth() || m_result->GetHeight() != src->GetHeight() )
+	if( !m_result->IsValid() || m_result->GetWidth() != src->GetWidth() || m_result->GetHeight() != src->GetHeight() || m_result->GetArraySize() != m_textureArraySize )
 	{
-		m_result->Create( src->GetWidth(), src->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
+		m_result->CreateArray( src->GetWidth(), src->GetHeight(), m_textureArraySize, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::TEX_TYPE_2D );
 	}
 
 	m_estimateNoise->SetParameter( SOURCE, &source );
@@ -130,27 +136,46 @@ ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& d
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	renderContext.m_esm.SetRenderTarget( 0, *m_intermediate );
-	renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-	Tr2Renderer::DrawScreenQuad( renderContext, m_estimateNoise );
+	{
+		GPU_REGION( renderContext, "Estimate noise" );
+		renderContext.m_esm.SetRenderTarget( 0, *m_intermediate );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_estimateNoise );
+	}
 
-	renderContext.m_esm.SetRenderTarget( 0, *m_noiseEstimate );
-	renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-	Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseEstimate );
+	{
+		GPU_REGION( renderContext, "Estimate denoising" );
+		renderContext.m_esm.SetRenderTarget( 0, *m_noiseEstimate );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseEstimate );
+	}
 
 	m_denoiseHoriz->SetParameter( SOURCE, &source );
-	SetParams( m_denoiseHoriz, Vector2( 1, 0 ) );
-	renderContext.m_esm.SetRenderTarget( 0, *m_intermediate );
-	renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-	Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseHoriz );
 
-	SetParams( m_denoiseVert, Vector2( 0, 1 ) );
-	renderContext.m_esm.SetRenderTarget( 0, *m_result );
-	renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-	Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseVert );
+	{
+		GPU_REGION( renderContext, "Denoise horizontal" );
+		SetParams( m_denoiseHoriz, Vector2( 1, 0 ) );
+		renderContext.m_esm.SetRenderTarget( 0, *m_intermediate );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseHoriz );
+	}
+
+	{
+		GPU_REGION( renderContext, "Denoise vertical" );
+		SetParams( m_denoiseVert, Vector2( 0, 1 ) );
+
+		renderContext.m_esm.SetRenderTarget( 0, *m_result, true, index );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseVert );
+	}
 
 	m_parametersDirty = false;
 	return S_OK;
+}
+
+void Tr2Denoiser::SetArraySize( uint32_t value )
+{
+	m_textureArraySize = max(1u, value);
 }
 
 ITr2TextureProvider* Tr2Denoiser::GetTexture() const
@@ -162,4 +187,9 @@ bool Tr2Denoiser::OnModified( Be::Var* )
 {
 	m_parametersDirty = true;
 	return true;
+}
+
+void Tr2Denoiser::SetRadius( uint32_t value )
+{
+	m_radius = value;
 }

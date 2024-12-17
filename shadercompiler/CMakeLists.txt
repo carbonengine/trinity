@@ -1,14 +1,19 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(ShaderCompiler VERSION 1.1.1)
+project(ShaderCompiler VERSION 1.2.3)
+
 
 if (APPLE)
     set(TELEMETRY_DEFAULT OFF)
+    set(DXC_DEFAULT OFF)
 else()
-    set(TELEMETRY_DEFAULT ON)
+    set(TELEMETRY_DEFAULT OFF)
+    set(DXC_DEFAULT ON)
 endif()
 
-option(WITH_TELEMETRY "Enable integration with RAD Game tools Telemetry SDK" ${TELEMETRY_DEFAULT})
+option(WITH_TELEMETRY "Enable integration with Tracy profiler" ${TELEMETRY_DEFAULT})
+
+option(WITH_DXC "Enable DXC Compiler" ${DXC_DEFAULT})
 
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
@@ -19,6 +24,8 @@ add_executable(ShaderCompiler
     CachingIncludeHandler.h
     CompileMessageQueue.cpp
     CompileMessageQueue.h
+    DxReflection.cpp
+    DxReflection.h
     EffectCompilerBase.h
     EffectCompilerDX11.cpp
     EffectCompilerDX11.h
@@ -142,32 +149,52 @@ target_include_directories(ShaderCompiler PRIVATE
 )
 set_target_properties(ShaderCompiler PROPERTIES 
     OUTPUT_NAME "ShaderCompiler$<$<CONFIG:DEBUG>:d>"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../../tools/ShaderCompiler/${CCP_VENDOR_PLATFORM}$<$<CONFIG:DEBUG>:>"
+    RUNTIME_OUTPUT_DIRECTORY "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}/carbon/tools/ShaderCompiler/${CCP_VENDOR_PLATFORM}$<$<CONFIG:DEBUG>:>"
 )
 
+get_filename_component(SHADER_COMPILER_BRANCH_PREFIX $ENV{CCP_EVE_PERFORCE_BRANCH_PATH} ABSOLUTE)
+
 if (WIN32)
+    if(WITH_DXC)
+        set(dxc_ROOT "${SHADER_COMPILER_BRANCH_PREFIX}/vendor/dxc/v1.7.2212.1")
+        find_package(dxc REQUIRED)
+    endif()
+
     target_link_libraries(ShaderCompiler PRIVATE
         d3dcompiler.lib
         d3d11.lib
         dxguid.lib
+        dxc
     )
     target_compile_options(ShaderCompiler PRIVATE /W4)
+
+    if(WITH_DXC)
+        get_target_property(DEST_DIR ShaderCompiler RUNTIME_OUTPUT_DIRECTORY)
+        add_custom_command(
+            TARGET ShaderCompiler POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${DXC_BIN_DIR}/x64/dxcompiler.dll" "${DEST_DIR}/dxcompiler.dll"
+            COMMAND cmd /C attrib -R "${DEST_DIR}/dxcompiler.dll"
+        )
+        add_custom_command(
+            TARGET ShaderCompiler POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${DXC_BIN_DIR}/x64/dxil.dll" "${DEST_DIR}/dxil.dll"
+            COMMAND cmd /C attrib -R "${DEST_DIR}/dxil.dll"
+        )
+    endif()
 else()
-    target_compile_options(ShaderCompiler PRIVATE -Wall -Wextra -pedantic -Wno-gnu-zero-variadic-macro-arguments)
+    target_compile_options(ShaderCompiler PRIVATE -Wall -Wextra -pedantic -Wno-gnu-zero-variadic-macro-arguments -Wno-unused-command-line-argument)
     set_source_files_properties(${GENERATED_SOURCES_DIR}/HLSLParser.c PROPERTIES COMPILE_FLAGS "-x c++ -Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable")
     set_source_files_properties(${GENERATED_SOURCES_DIR}/Preprocessor.c PROPERTIES COMPILE_FLAGS "-x c++ -Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable")
 endif()
 
-
 if(WITH_TELEMETRY)
-    find_package(RadGameToolsTelemetry REQUIRED NO_CMAKE_PATH)
-    target_link_libraries(ShaderCompiler PUBLIC RadGameTools::Telemetry)
-    target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=1)
+    #find_package(Tracy REQUIRED NO_CMAKE_PATH)
+    #target_link_libraries(ShaderCompiler PUBLIC Tracy::TracyClient)
+    #target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=1 TRACY_IMPORTS TRACY_ENABLE TRACY_FIBERS TRACY_ON_DEMAND TRACY_DELAYED_INIT TRACY_MANUAL_LIFETIME)
+    target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=0)
 else()
     target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=0)
 endif()
-
-get_filename_component(SHADER_COMPILER_BRANCH_PREFIX $ENV{CCP_EVE_PERFORCE_BRANCH_PATH} ABSOLUTE)
 
 # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
 install(
@@ -176,8 +203,9 @@ install(
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
     LIBRARY DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
     ARCHIVE DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-    RUNTIME DESTINATION ${SHADER_COMPILER_BRANCH_PREFIX}/carbon/tools/ShaderCompiler/${CCP_PLATFORM}/
+    RUNTIME DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
 )
+
 # Install rule for available public headers
 install(FILES ${PUBLIC_HEADER_FILES} DESTINATION shadercompiler/include)
 

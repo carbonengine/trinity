@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "../Tr2RenderContextEnum.h"
+
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 
@@ -127,6 +129,8 @@ namespace TrinityALImpl
 	};
 
 	void SetDebugName( ID3D12DeviceChild* resource, const char* name );
+
+	bool RequiresImmediateBarriers( Tr2GpuUsage::Type gpuUsage );
 }
 
 #endif

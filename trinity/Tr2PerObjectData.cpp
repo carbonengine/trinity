@@ -30,6 +30,11 @@ void Tr2PerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers,
 {
 }
 
+void Tr2PerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	CCP_ASSERT( false );
+}
+
 
 // cppcheck-suppress uninitMemberVar
 Tr2PerObjectDataStandard::Tr2PerObjectDataStandard()
@@ -57,6 +62,12 @@ void Tr2PerObjectDataStandard::SetPerObjectDataToDevice( Tr2ConstantBufferAL** b
 		PIXEL_SHADER,
 		Tr2Renderer::GetPerObjectPSStartRegister(),
 		renderContext );
+}
+
+void Tr2PerObjectDataStandard::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	writer.SetPerObjectData( VERTEX_SHADER, m_vertexShaderFloatConstantBuffer, m_vertexShaderFloatBufferSize );
+	writer.SetPerObjectData( PIXEL_SHADER, m_pixelShaderFloatConstantBuffer, m_pixelShaderFloatBufferSize );
 }
 
 void Tr2PerObjectDataSkinned::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
@@ -93,6 +104,24 @@ void Tr2PerObjectDataSkinned::SetPerObjectDataToDevice( Tr2ConstantBufferAL** bu
 		SetConstants( *buffers[VERTEX_SHADER], perFrameVsMask & constantTypeMask, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
 	}
 }
+
+void Tr2PerObjectDataSkinned::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	writer.SetPerObjectData( PIXEL_SHADER, m_pixelShaderFloatConstantBuffer, m_pixelShaderFloatBufferSize );
+
+	constexpr uint32_t totalSize = ( TR2_MAX_BONES_PER_MESHAREA * 3 + 5 + 4 ) * 16;
+	uint8_t buffer[totalSize];
+
+	memcpy( buffer + ( TR2_MAX_BONES_PER_MESHAREA * 3 ) * 16, &m_worldMat.m[0][0], 4 * 16 );
+	memcpy( buffer + ( TR2_MAX_BONES_PER_MESHAREA * 3 + 5 ) * 16, &m_mirrorMatrix.m[0][0], 4 * 16 );
+	writer.SetPerObjectData( VERTEX_SHADER, buffer, totalSize );
+}
+
+void Tr2PerObjectDataSkinned::ApplyPsConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	writer.SetPerObjectData( PIXEL_SHADER, m_pixelShaderFloatConstantBuffer, m_pixelShaderFloatBufferSize );
+}
+
 
 void Tr2PerObjectDataSkinned::UpdateVertexShaderCBMirror( void* destination, Tr2RenderContext& renderContext ) const
 {
@@ -147,6 +176,18 @@ void Tr2PerAreaDataSkinned::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buff
 	{
 		m_perObjectDataPtr->SetPerObjectDataToDevice( buffers, constantTypeMask, renderContext );
 	}
+}
+
+void Tr2PerAreaDataSkinned::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	constexpr unsigned totalSize = ( TR2_MAX_BONES_PER_MESHAREA * 3 + 5 + 4 ) * 16;
+	uint8_t buffer[totalSize];
+	const unsigned jointSize = m_jointCount * 3 * 16;
+	m_perObjectDataPtr->UpdateVertexShaderCBMirror( buffer, renderContext );
+	memcpy( buffer, &m_jointTransforms, jointSize );
+	writer.SetPerObjectData( VERTEX_SHADER, buffer, totalSize );
+
+	m_perObjectDataPtr->ApplyPsConstantBuffers( writer, renderContext );
 }
 
 void Tr2PerAreaDataSkinned::SetJointCount( unsigned int n )

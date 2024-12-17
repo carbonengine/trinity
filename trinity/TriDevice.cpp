@@ -7,6 +7,7 @@
 #include "RenderJob/Tr2RenderJobs.h"
 #include "Curves/TriCurveSet.h"
 #include "Include/TriMath.h"
+#include "Tr2SyncToGpu.h"
 
 #include <IBlueCallbackMan.h>
 
@@ -24,7 +25,8 @@ extern std::vector<HANDLE> g_D3DCreatedHeaps;
 extern int g_windowResized;
 #endif
 
-namespace {
+namespace
+{
 
 	HRESULT CreateDeviceInt(
 		uint32_t Adapter,
@@ -32,7 +34,7 @@ namespace {
 		const Tr2PresentParametersAL& pPresentationParameters )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-
+		
 #ifdef _WIN32
 		HANDLE heapsBefore[256];
 		const uint32_t countBefore = ::GetProcessHeaps( 256, heapsBefore );	
@@ -62,15 +64,26 @@ namespace {
 		}
 #endif
 
+		Tr2Renderer::InitializeSystemShaderOptions();
 
 		return hr;
 	}
+
+	BlueStructureDefinition Tr2UpscalingTechniqueInfoDefinition[] = {
+		{ "technique", Be::UINT32_1, 0, Tr2UpsclaingAL_UpscalingTechnique_Chooser },
+		{ "supportedSettings", Be::UINT32_1, 4, Tr2UpsclaingAL_UpscalingSetting_Chooser },
+		{ "framegeneration", Be::BOOL8_1, 8 },
+		{ 0 }
+	};
+
+	const Tr2UpscalingTechniqueInfo s_defaultUpscalingTechniqueInfo = { Tr2UpscalingAL::Technique::NONE, 0, false };
+
 }
 
 
 CCP_STATS_DECLARE( deviceOnTick, "Trinity/device/OnTick", true, CST_TIME, "Time spent in TriDevice::OnTick" );
 
-CCP_STATS_DECLARE( fpsRaw, "FPSRaw", false, CST_COUNTER_LOW, "Frames per second (raw values)");
+CCP_STATS_DECLARE( fpsRaw, "FPSRaw", false, CST_COUNTER_LOW, "Raw frames per second" );
 CCP_STATS_DECLARE( fps, "FPS", false, CST_COUNTER_LOW, "Frames per second");
 CCP_STATS_DECLARE( smoothedFrameTime, "Trinity/SmoothedFrameTime", false, CST_TIME, "Frame time smoothed over a number of frames");
 CCP_STATS_DECLARE( frameTime, "Trinity/FrameTime", false, CST_TIME, "Frame time" );
@@ -84,6 +97,8 @@ CCP_STATS_DECLARE( frameTimeAbove500ms, "Trinity/FrameTimeAbove500ms", false, CS
 CCP_STATS_DECLARE( presentTime, "Trinity/PresentTime", true, CST_TIME, "Time spent in Present call" );
 CCP_STATS_DECLARE( activeFrameTime, "Trinity/ActiveFrameTime", true, CST_TIME, "Frame time not counting persent or throttle time" );
 CCP_STATS_DECLARE( throttleTime, "Trinity/ThrottleTime", true, CST_TIME, "Time spent throttling" );
+CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
+CCP_STATS_DECLARE( smoothedGeneratedFrames, "Trinity/smoothedGeneratedFrames", false, CST_COUNTER_LOW, "Smoothed fps (+ generated) over a number of frames" );
 
 
 	// NOTE: This is a global pointer to a ROT object, initialized by it
@@ -98,6 +113,7 @@ bool TriDevice::s_iteratingForRelease = false;
 const char* TRINITY = "Trinity"; //cookie for the tick
 
 TriDevice::TriDevice(IRoot* lockobj) : 
+	PARENTLOCK( m_supportedUpscalingTechniques ),
 	mHwnd             ( 0 ),
 	mHeight           ( 0 ),
 	mWidth            ( 0 ),
@@ -116,8 +132,16 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	m_mipLevelSkipCount( 0U ),
 	PARENTLOCK( m_curveSets ),
 	m_throttlingState( 0 ),
-	m_allowThrottling( true )
+	m_allowThrottling( true ),
+	m_upscalingChanged(false),
+	m_upscalingTechnique( Tr2UpscalingAL::Technique::NONE ),
+	m_upscalingSetting( Tr2UpscalingAL::Setting::NATIVE ),
+	m_upscalingWithFrameGeneration( false )
 {	
+	
+	m_supportedUpscalingTechniques.SetStructureDefinition( Tr2UpscalingTechniqueInfoDefinition );
+	m_supportedUpscalingTechniques.SetDefaultValue( &s_defaultUpscalingTechniqueInfo );
+
 	Tr2DisplayModeInfo empty = {0};
 	mDisplayMode = empty;
 	// At this point, in the constructor, we are just setting defaults.  We really 
@@ -163,7 +187,6 @@ TriDevice::TriDevice(IRoot* lockobj) :
 TriDevice::~TriDevice()
 {
     m_scene = (ITr2Scene*)NULL;
-
 	BeOS->UnregisterForSimTimeRebase( this );
 }
 
@@ -205,11 +228,13 @@ bool TriDevice::CreateSimpleDevice(
 		pp.windowed = true;
 	}
 	pp.presentInterval = presentInterval;
+	pp.variableRefreshRateSupported = IsVariableRefreshRateSupported();
 
 	//take nvperfhud into account!
 	// Set default settings
 	uint32_t adapterToUse = adapter;
 
+	CreateUpscalingTechnique( adapter );
 	CreateDeviceInt( adapterToUse, hwnd, pp );
 
 	if( !DeviceExists() )
@@ -225,6 +250,7 @@ bool TriDevice::CreateSimpleDevice(
 	mHeight = height;
 	mHwnd = hwnd;
 	mDeviceLost = false;
+	bool adapterChanged = Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter );
 	mAdapter = adapter;
 
 	if( type != NO_ADAPTER && !SetPresentParameters( mAdapter, mPresentParam ) )
@@ -232,11 +258,16 @@ bool TriDevice::CreateSimpleDevice(
 		return false;
 	}
 
+
 	if( !InitD3DDevice() )
 	{
 		return false;
 	}
 
+	if( adapterChanged || m_supportedUpscalingTechniques.empty() )
+	{
+		UpdateAvailableUpscalingTechniques();
+	}
 	PrepareDeviceResources();
 
 	BeOS->RegisterForTicks(this, (void*)TRINITY);
@@ -280,7 +311,8 @@ bool TriDevice::ChangeDevice(
 		const Tr2PresentParametersAL* pp )
 {
 	bool resetOnly = true;
-	if( !DeviceExists()	||  hWnd != mHwnd || Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter ) )
+	bool adaptersChanged = Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter );
+	if( !DeviceExists()	||  hWnd != mHwnd || adaptersChanged )
 	{
 		resetOnly = false;	// reset is not enough, we need to recreate the device.
 	}
@@ -303,6 +335,10 @@ bool TriDevice::ChangeDevice(
 		ReleaseDeviceResources( TRISTORAGE_ALL );
 		Tr2RenderContext::DestroyMainThreadRenderContext();	
 	}
+
+	Tr2SyncToGpu::GetInstance().Flush();
+
+	CreateUpscalingTechnique( adapter );
 
 	if( FAILED( CreateDeviceInt( adapter, hWnd, *pp ) ) )
 	{
@@ -329,7 +365,10 @@ bool TriDevice::ChangeDevice(
 	}
 
 	InitD3DDevice();
-		
+	if( adaptersChanged || m_supportedUpscalingTechniques.empty() )
+	{
+		UpdateAvailableUpscalingTechniques();
+	}
 	PrepareDeviceResources(); //call python to recreate its stuff.
 
 	return true;
@@ -440,23 +479,29 @@ void TriDevice::ReleaseDeviceResources( TriStorage s )
 		auto gil = PyGILState_Ensure();
 		ON_BLOCK_EXIT( [&gil] { PyGILState_Release( gil ); } );
 
-		BluePySeq keys = BluePy( PyObject_CallMethod( m_pyResourceSet, const_cast<char*>( "keys" ), 0 ) );
-        if( !keys )
-        {
-            CCP_LOGERR( "TriDev: Python callback failed in \"ReleaseDeviceResources\"" );
-            PyOS->PyError();
-        }
-		Py_ssize_t n = keys.Size();
-		for( Py_ssize_t i = 0; i<n; i++ ) 
+		BluePy keys( PyObject_CallMethod( m_pyResourceSet, "keys", 0 ) );
+		if( !keys )
 		{
-			BluePy item(keys.Get(i));
-			if( !PyObject_HasAttrString( item.o, "OnInvalidate" ) )
+			CCP_LOGERR( "keys() method failed on resource set in \"ReleaseDeviceResources\"" );
+			PyOS->PyError();
+			return;
+		}
+		if( !PyIter_Check( keys.o ) )
+		{
+			CCP_LOGERR("Could not iterate through resource set keys in \"ReleaseDeviceResources\"");
+			return;
+		}
+
+		while( PyObject* next = PyIter_Next( keys ) )
+		{
+			BluePy item( next );
+			if( !PyObject_HasAttrString( next, "OnInvalidate" ) )
 			{
 				// OnInvalidate method is optional, often not needed
 				continue;
 			}
-			BluePy result( PyOS->CallMethodWithTrap(item, "OnInvalidate", "OnInvalidate", "(i)", (int)s) );
-			if (!result) 
+			BluePy result( PyOS->CallMethodWithTrap( item, "OnInvalidate", "OnInvalidate", "(i)", (int)s) );
+			if( !result )
 			{
 				PyOS->PyError();
 			}
@@ -479,18 +524,25 @@ void TriDevice::RebuildDeviceResourcesInPython()
 		auto gil = PyGILState_Ensure();
 		ON_BLOCK_EXIT( [&gil] { PyGILState_Release( gil ); } );
 
-		BluePySeq keys = BluePy( PyObject_CallMethod( m_pyResourceSet, const_cast<char*>( "keys" ), 0 ) );
-        if (!keys)
-        {
-            CCP_LOGERR( "TriDev: Python callback failed in \"RebuildDeviceResourcesInPython\"" );
-            PyOS->PyError();
-        }
-		Py_ssize_t n = keys.Size();
-		for( Py_ssize_t i = 0; i<n; i++ )
+		BluePy keys( PyObject_CallMethod( m_pyResourceSet, "keys", 0 ) );
+
+		if( !keys )
 		{
-			BluePy item(keys.Get(i));
-			BluePy result(PyOS->CallMethodWithTrap(item, "OnCreate", "OnCreate", "(N)", PyOS->WrapBlueObject(GetRawRoot())));
-			if (!result) 
+			CCP_LOGERR("keys() method failed on resource set in \"RebuildDeviceResourcesInPython\".");
+			PyOS->PyError();
+			return;
+		}
+		if( !PyIter_Check( keys.o ) )
+		{
+			CCP_LOGERR("Could not iterate through resource set keys in \"RebuildDeviceResourcesInPython\".");
+			return;
+		}
+
+		while( PyObject* next = PyIter_Next( keys ) )
+		{
+			BluePy item( next );
+			BluePy result( PyOS->CallMethodWithTrap( item, "OnCreate", "OnCreate", "(N)", PyOS->WrapBlueObject( GetRawRoot() ) ) );
+			if( !result )
 			{
 				PyOS->PyError();
 			}
@@ -551,8 +603,11 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	static BeTimer s_frameTimer;
 	static const int s_fpsValuesCount = 64;
 	static double s_frameTimeValues[s_fpsValuesCount] = {0.0};
+	static double s_generatedFrames[s_fpsValuesCount] = { 0 };
+
 	static double s_frameTimeSum = 0.0;
 	static int s_currentFpsValue = 0;
+	static double s_generatedFpsSum = 0;
 
 	double frameTime = s_frameTimer.GetSeconds();
 #if CCP_STATS_ENABLED
@@ -610,6 +665,21 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 		}
 	}
 
+	if( m_upscalingWithFrameGeneration )
+	{
+		s_generatedFpsSum -= s_generatedFrames[s_currentFpsValue];
+		double generatedSinceLastPresent = CCP_STATS_GET( generatedFrames );
+		s_generatedFrames[s_currentFpsValue] = generatedSinceLastPresent;
+		s_generatedFpsSum += generatedSinceLastPresent;
+
+		CCP_STATS_SET( generatedFrames, 0 );
+	}
+	else
+	{
+		s_generatedFrames[s_currentFpsValue] = 0;
+		s_generatedFpsSum = 0;
+	}
+	
 	s_frameTimeSum -= s_frameTimeValues[s_currentFpsValue];
 	s_frameTimeValues[s_currentFpsValue] = frameTime;
 	s_frameTimeSum += frameTime;
@@ -628,6 +698,7 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	CCP_STATS_SET( fps, 100.0 * avgFps );
 #if CCP_STATS_ENABLED
 	g_ccpStatistics_smoothedFrameTime.Set( avgFrametime );
+	CCP_STATS_SET( smoothedGeneratedFrames, 100.0 * ( s_generatedFpsSum / (double)s_fpsValuesCount ) * avgFps );
 #endif
 
 	s_frameTimer.Reset();
@@ -658,7 +729,6 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 		GrannyRecenterAllControlClocks( -ANIMATION_TIME_MAX );
 	}
 
-	BeOS->NextScheduledEvent( mTickInterval );
 	m_simTime = simTime;
 	m_realTime = realTime;
    
@@ -981,6 +1051,9 @@ bool TriDevice::Render()
 	Throttle();
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	Tr2SyncToGpu::GetInstance().Tick();
+
 	Tr2Viewport vp;
 	mViewport.ConvertToTr2Viewport( vp );
 	renderContext.SetViewport( vp );
@@ -992,7 +1065,7 @@ bool TriDevice::Render()
 
 	Tr2Renderer::BeginRenderContext();
 	
-	Tr2Renderer::GetQuadListIndexBuffer( std::numeric_limits<uint16_t>::max() / 6 );
+	Tr2Renderer::ReserveQuadListIndexBuffer( 0 );
 
 	if( m_renderJobs )
 	{		
@@ -1110,3 +1183,188 @@ bool TriDevice::IsVariableRefreshRateSupported() const
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	return renderContext.GetCaps().SupportsVariableRefreshRate();
 }
+
+void TriDevice::UpdateAvailableUpscalingTechniques()
+{
+	// this method needs to be called after a device has been called 
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	m_supportedUpscalingTechniques.clear();
+
+	for( auto& techInfo : renderContext.GetSupportedUpscalingTechniques( mAdapter ) )
+	{
+		Tr2UpscalingTechniqueInfo technique{};
+		std::tie( technique.technique, technique.supportedSettings, technique.framegen ) = techInfo;
+		m_supportedUpscalingTechniques.Append( &technique );
+	}
+}
+
+void TriDevice::CreateUpscalingTechnique( uint32_t adapter )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	auto upscalingResult = renderContext.EnableUpscaling( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration, adapter );
+	if( upscalingResult != Tr2UpscalingAL::Result::OK )
+	{
+		CCP_LOGWARN( "Could not enable upscaling" );
+	}
+	bool _temporal;
+	// if setting up failed, or we pass in incorrect technique or setting or framegen then this will let us know what was actually applied
+	renderContext.GetUpscalingSetup( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration, _temporal );
+
+	m_upscalingChanged = false;
+}
+
+void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration )
+{
+	m_upscalingChanged = technique != m_upscalingTechnique || setting != m_upscalingSetting || frameGeneration != m_upscalingWithFrameGeneration;
+	m_upscalingTechnique = technique;
+	m_upscalingSetting = setting;
+	m_upscalingWithFrameGeneration = frameGeneration;
+}
+
+uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, bool allowFramegen, Be::Optional<uint32_t> existingContext )
+{
+    CCP_STATS_ZONE( __FUNCTION__ );
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	Tr2UpscalingAL::UpscalingContextParams params = Tr2UpscalingAL::UpscalingContextParams(renderContext);
+	params.allowFramegen = allowFramegen;
+	params.displayWidth = displayWidth;
+	params.displayHeight = displayHeight;
+	params.sourceFormat = sourceFormat;
+	params.depthFormat = depthFormat;
+
+	auto context = renderContext.CreateUpscalingContext( params, existingContext.IsAssigned() ? existingContext.GetValue() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	if( context )
+	{
+		return context->GetID();
+	}
+	return Tr2UpscalingAL::INVALID_CONTEXT_ID;
+}
+
+void TriDevice::DeleteUpscalingContext( uint32_t contextID )
+{
+        CCP_STATS_ZONE( __FUNCTION__ );
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	renderContext.DeleteUpscalingContext( contextID );
+}
+
+Vector2 TriDevice::GetRenderResolution( uint32_t upscalingContextId )
+{
+	if( m_upscalingTechnique != Tr2UpscalingAL::Technique::NONE )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		auto upscalingContext = renderContext.GetUpscalingContext( upscalingContextId );
+
+		if( upscalingContext != nullptr )
+		{
+			uint32_t renderWidth, renderHeight;
+			upscalingContext->GetRenderDimensions( renderWidth, renderHeight );
+			return Vector2( float( renderWidth ), float( renderHeight ) );
+		}
+	}
+	return Vector2( -1.0f, -1.0 );
+}
+
+bool TriDevice::SupportsRaytracing()
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	return renderContext.GetCaps().SupportsRaytracing();
+}
+
+#if BLUE_WITH_PYTHON
+PyObject* TriDevice::PyGetUpscalingInfo( PyObject* args )
+{
+	uint32_t contextId = Tr2UpscalingAL::INVALID_CONTEXT_ID;
+
+	if( !PyArg_ParseTuple( args, "|I", &contextId ) )
+	{
+		return nullptr;
+	}
+
+	Tr2UpscalingAL::Technique technique;
+	Tr2UpscalingAL::Setting setting;
+	bool frameGeneration;
+	bool temporal;
+
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	renderContext.GetUpscalingSetup(technique, setting, frameGeneration, temporal);
+
+	auto result = PyDict_New();
+
+	auto value = PyUnicode_FromString( Tr2UpscalingAL::GetTechniqueName(technique) );
+	PyDict_SetItemString( result, "techniqueName", value );
+	Py_DecRef( value );
+
+	value = PyLong_FromSize_t( technique );
+	PyDict_SetItemString( result, "technique", value );
+	Py_DecRef( value );
+
+	value = PyUnicode_FromString( Tr2UpscalingAL::GetSettingName( setting ) );
+	PyDict_SetItemString( result, "settingName", value );
+	Py_DecRef( value );
+
+	value = PyLong_FromSize_t( setting );
+	PyDict_SetItemString( result, "setting", value );
+	Py_DecRef( value );
+
+	value = PyBool_FromLong( frameGeneration );
+	PyDict_SetItemString( result, "frameGeneration", value );
+	Py_DecRef( value );
+
+	value = PyBool_FromLong( temporal );
+	PyDict_SetItemString( result, "temporal", value );
+	Py_DecRef( value );
+
+	if( contextId != Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	{
+		auto info = renderContext.GetUpscalingInfo( contextId );
+		auto contextInfo = PyDict_New();
+		
+		value = PyLong_FromSize_t( contextId );
+		PyDict_SetItemString( contextInfo, "id", value );
+		Py_DecRef( value );
+
+		value = PyLong_FromSize_t( info.displayWidth );
+		PyDict_SetItemString( contextInfo, "displayWidth", value );
+		Py_DecRef( value );
+
+		value = PyLong_FromSize_t( info.displayHeight );
+		PyDict_SetItemString( contextInfo, "displayHeight", value );
+		Py_DecRef( value );
+
+		value = PyLong_FromSize_t( info.renderWidth );
+		PyDict_SetItemString( contextInfo, "renderWidth", value );
+		Py_DecRef( value );
+
+		value = PyLong_FromSize_t( info.renderHeight );
+		PyDict_SetItemString( contextInfo, "renderHeight", value );
+		Py_DecRef( value );
+		
+		value = PyBool_FromLong( info.hasSharpening );
+		PyDict_SetItemString( contextInfo, "hasSharpening", value );
+		Py_DecRef( value );
+
+		value = PyFloat_FromDouble( info.jitterX );
+		PyDict_SetItemString( contextInfo, "jitterX", value );
+		Py_DecRef( value );
+
+		value = PyFloat_FromDouble( info.jitterY );
+		PyDict_SetItemString( contextInfo, "jitterY", value );
+		Py_DecRef( value );
+
+		value = PyFloat_FromDouble( info.mipLevelBias );
+		PyDict_SetItemString( contextInfo, "mipLevelBias", value );
+		Py_DecRef( value );
+
+		value = PyFloat_FromDouble( info.upscalingAmount );
+		PyDict_SetItemString( contextInfo, "upscalingAmount", value );
+		Py_DecRef( value );
+
+		PyDict_SetItemString( result, "upsclaingContext", contextInfo );
+		Py_DecRef( contextInfo );
+	}
+	return result;
+}
+#endif

@@ -41,7 +41,7 @@ EveChildLink::~EveChildLink()
 // Description:
 //   Synchronous updates happen here
 // --------------------------------------------------------------------------------
-void EveChildLink::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildLink::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	EveChildMesh::UpdateSyncronous( updateContext, params );
 
@@ -75,7 +75,7 @@ void EveChildLink::UpdateSyncronous( EveUpdateContext& updateContext, const EveC
 // Description:
 //   Asynchronous updates happen here
 // --------------------------------------------------------------------------------
-void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildLink::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	// update the special link curves
 	for( ITriFunctionVector::const_iterator it = m_linkStrengthCurves.begin(); it != m_linkStrengthCurves.end(); ++it )
@@ -155,7 +155,7 @@ void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 	m_vsData.worldTransformLast = Transpose( linkRotationMat );
 }
 
-void EveChildLink::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildLink::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{

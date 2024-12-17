@@ -129,12 +129,7 @@ void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& renderContext )
 
 ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
 {
-	return m_buffer->MapForWriting( data, Tr2LockType::SYNCHRONIZED, renderContext );
-}
-
-ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
-{
-	return m_buffer->MapForWriting( data, lockType, renderContext );
+	return m_buffer->MapForWriting( data, renderContext );
 }
 
 void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
@@ -145,6 +140,16 @@ void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
 ALResult Tr2BufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL& renderContext )
 {
 	return m_buffer->UpdateBuffer( offset, size, data, renderContext );
+}
+
+uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+{
+	return m_buffer->GetSrvIndexInHeap();
+}
+
+uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+{
+	return m_buffer->GetUavIndexInHeap();
 }
 
 ALResult Tr2BufferAL::SetName( const char* name )

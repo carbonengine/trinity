@@ -7,10 +7,12 @@
 #pragma once
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 #include "Tr2DebugRenderer.h"
+#include "Tr2DepthStencil.h"
+#include "TriFrustumOrtho.h"
+#include "Utilities/BoundingBox.h"
 #include "../../EveEntity.h"
 #include "../../../ITr2VolumetricRenderable.h"
 
@@ -29,7 +31,6 @@ BLUE_DECLARE( Tr2TextureAnimation );
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveChildCloud2 ) :
 	public ITr2VolumetricRenderable,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public IInitialize,
 	public INotify,
@@ -56,10 +57,10 @@ public:
 	// IEveSpaceObjectChild
 	virtual const char* GetName() const override;
 	virtual void SetName( const char* name ) override;
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	virtual void GetLocalToWorldTransform( Matrix& transform ) const override;
-	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod ) override;
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override
@@ -75,18 +76,17 @@ public:
 	bool UpdateVolumetricLightmap( Tr2RenderContext & renderContext ) override;
 	void SetSceneInformation( const SceneInformation& sceneInformation ) override;
 	void GetVolumetricShadowBatches( ITriRenderBatchAccumulator* batches ) override;
+	void GetVolumetricShadowInfo( ShadowInfo & shadowInfo, Vector3 sunDir ) override;
+	bool PrepareCloudShadowMap( Tr2RenderContext & renderContext ) override;
+	void SetCloudShadowMapHandle() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	bool IsVisible( const TriFrustum& frustum ) const override;
+	bool IsVisible( const EveUpdateContext& updateContext ) const override;
 	void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 	bool HasTransparentBatches() override;
 	float GetSortValue() override;
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
@@ -97,8 +97,12 @@ public:
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
+	void ClearVariableStore();
+
 	void RegisterComponents() override;
 
+	void SetupShadowFrustum( ShadowInfo & shadowInfo, Vector3 sunDir );
+	
 	bool IsLightmapDirty() const;
 	void MarkLightmapDirty( bool );
 
@@ -129,6 +133,7 @@ public:
 		Vector2 unused2;
 		LightData lights[4];
 		Vector4 mapOffsets[3];
+		Matrix lightViewProj;
 	};
 
 private:
@@ -174,6 +179,9 @@ private:
 	Tr2VolumerticQuality m_minVisibleQuality;
 	Tr2VolumerticQuality m_currentQuality;
 
+	Tr2DepthStencilPtr m_shadowMapDS;
+	TriVariable* m_depthShadowMapHandle;
+
 	std::string m_name;
 	bool m_display;
 	bool m_castShadows;
@@ -183,6 +191,7 @@ private:
 
 	float m_sortingModifier;
 	float m_minScreenSize;
+	float m_adjustedMinScreenSize;
 
 	uint32_t m_lightmapWidth;
 	uint32_t m_lightmapHeight;
@@ -195,6 +204,22 @@ private:
 
 	Vector3 m_mapTiling[3];
 	Vector3 m_mapOffsets[3];
+
+	const Vector3 m_unitCube[8] = {
+	//The unit cube in DirectX is from( -1, -1, 0 ) to ( 1, 1, 1 )
+	Vector3( -1, -1, 0 ), // vertex 0
+	Vector3( -1, 1, 0 ), // vertex 1
+	Vector3( 1, 1, 0 ), // etc..
+	Vector3( 1, -1, 0 ),
+	Vector3( -1, -1, 1 ),
+	Vector3( -1, 1, 1 ),
+	Vector3( 1, 1, 1 ),
+	Vector3( 1, -1, 1 )
+	};
+
+	Matrix m_lightViewProj;
+	float m_zFar;
+	unsigned int m_shadowMapSize;
 };
 
 TYPEDEF_BLUECLASS( EveChildCloud2 );

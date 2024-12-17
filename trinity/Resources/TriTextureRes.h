@@ -76,6 +76,7 @@ public:
 	long UpdateSubresource( unsigned left, unsigned top, unsigned right, unsigned bottom, const void* source, unsigned sourcePitch );
 	void SetAverageColor( float red, float green, float blue, float alpha ) override;
 	const Tr2TextureAL* GetTexture() const;
+	OnTextureChangeEvent& OnTextureChange() override;
 	
 	bool SetTextureFromRT( Tr2RenderTarget* renderTarget );
 	
@@ -150,9 +151,12 @@ public:
 	size_t GetOriginalMemoryUsage() const;
 
 private:
+	void OnWrappedRenderTargetChanged();
+
 	Tr2TextureAL *m_texture;
 	Tr2TextureAL m_ownTexture;
 	Tr2RenderTargetPtr	m_wrappedRenderTarget;
+	OnTextureChangeEvent m_onTextureChange;
 
 	unsigned ComputeMipSkipCount();
 
@@ -217,6 +221,8 @@ private:
 	std::shared_ptr<Tr2ImageHandler> m_asyncSaveImage;
 
 	Tr2LoadPrepareFence m_pipelineFence;
+
+	uint32_t GetSrvIndexInHeap() const;
 
 public:
 	EXPOSE_TO_BLUE();

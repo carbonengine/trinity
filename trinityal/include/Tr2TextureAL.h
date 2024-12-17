@@ -14,7 +14,6 @@ namespace TrinityALImpl
 
 class Tr2PrimaryRenderContextAL;
 class Tr2RenderContextAL;
-struct Tr2BitmapDimensions;
 struct Tr2SubresourceData;
 struct Tr2MsaaDesc;
 struct Tr2TextureSubresource;
@@ -42,6 +41,7 @@ public:
 
 	uint32_t GetWidth() const;
 	uint32_t GetHeight() const;
+	uint32_t GetDepth() const;
 	uint32_t GetMipCount() const;
 	uint32_t GetTrueMipCount() const;
 	Tr2RenderContextEnum::PixelFormat GetFormat() const;
@@ -62,9 +62,13 @@ public:
 	ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 	uintptr_t GetSharedHandle() const;
 
+	TrinityALImpl::Tr2TextureAL* TrinityALImpl_GetObject() const;
+
+	uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+	uint32_t GetUavIndexInHeap( uint32_t mip ) const;
+
 	ALResult SetName( const char* name );
 
-	TrinityALImpl::Tr2TextureAL* TrinityALImpl_GetObject() const;
 private:
 	std::shared_ptr<TrinityALImpl::Tr2TextureAL> m_texture;
 

@@ -9,7 +9,7 @@ struct VS_OUTPUT
 	float2 TexCoord;
 };
 
-fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]], texture2d_ms<float> tex0 [[ texture(0) ]] SHADOW_PS_DECL )
+fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]], texture2d_ms<float> tex0 [[ texture(0) ]] )
 {
 	uint w = tex0.get_width();
 	uint h = tex0.get_height();

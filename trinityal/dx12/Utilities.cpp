@@ -581,6 +581,10 @@ namespace TrinityALImpl
 		}
 	}
 
+	bool RequiresImmediateBarriers( Tr2GpuUsage::Type gpuUsage )
+	{
+		return ( gpuUsage & ( Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::UNORDERED_ACCESS ) ) == 0;
+	}
 }
 
 

@@ -3,6 +3,7 @@
 #include "Tr2Mesh.h"
 #include "Utilities/BoundingBox.h"
 #include "Tr2Renderer.h"
+#include "Resources/TriGeometryRes.h"
 
 
 Tr2Model::Tr2Model( IRoot* lockobj ):
@@ -167,11 +168,19 @@ void Tr2Model::GetBatchesFromMesh( Tr2Mesh* mesh,
 	}
 
 	TriGeometryRes* geomRes = mesh->GetGeometryResource();
-	int meshIx = mesh->GetMeshIndex();
-
-	for( Tr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
+	if( !geomRes || !geomRes->IsGood() )
 	{
-		Tr2MeshArea* area = *it;
+		return;
+	}
+	int meshIx = mesh->GetMeshIndex();
+	TriGeometryResMeshData* meshData = geomRes->GetMeshData( meshIx );
+	if( !meshData || !meshData->m_allocationsValid )
+	{
+		return;
+	}
+
+	for( auto& area : *areas )
+	{
 		auto shader = area->GetMaterialInterface();
 
 		if( !area->GetDisplay() )
@@ -182,17 +191,9 @@ void Tr2Model::GetBatchesFromMesh( Tr2Mesh* mesh,
 		{
 			continue;
 		}
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
-		{
-			batch->SetShaderMaterial( shader );
-			batch->SetPerObjectData( data );
-			batch->SetGeometryResource( geomRes );
-			batch->SetMeshParameters( meshIx, area->GetIndex(), area->GetCount(), area->GetReversed() );
 
-			batches->Commit( batch );
-		}
+		auto batch = CreateGeometryBatch( meshData, area, data );
+		batches->Commit( batch );
 	}
 }
 

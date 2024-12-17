@@ -16,6 +16,10 @@ const Be::ClassInfo* Tr2PPEffect::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "display", m_display, "Should this be rendered", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "dirty", m_isDirty, "", Be::READ )
+		MAP_PROPERTY_READONLY( 
+			"active", 
+			IsActive,
+			"" )
 
 	EXPOSURE_END()
 

@@ -222,7 +222,7 @@ static PyObject* PyPick(PyObject* self, PyObject* args)
 	PyObject* result = PyDict_New();
 	if( results.components & ITr2PickableScene::PICK_OBJECT )
 	{
-		PyObject* key = PyInt_FromLong( ITr2PickableScene::PICK_OBJECT );
+		PyObject* key = PyLong_FromLong( ITr2PickableScene::PICK_OBJECT );
 		PyObject* value;
 		if( results.object )
 		{
@@ -242,7 +242,7 @@ static PyObject* PyPick(PyObject* self, PyObject* args)
 		unsigned int areaID = ((1<<8) - 1) & results.area;
 		unsigned int meshID = (results.area - areaID)>>8;
 
-		PyObject* key = PyInt_FromLong( ITr2PickableScene::PICK_AREA );
+		PyObject* key = PyLong_FromLong( ITr2PickableScene::PICK_AREA );
 
 		PyObject* value = PyTuple_New( 2 );
 		PyTuple_SET_ITEM( value, 0, PyLong_FromUnsignedLong( meshID ) ); 
@@ -255,7 +255,7 @@ static PyObject* PyPick(PyObject* self, PyObject* args)
 	}
 	if( results.components & ITr2PickableScene::PICK_POSITION )
 	{
-		PyObject* key = PyInt_FromLong( ITr2PickableScene::PICK_POSITION );
+		PyObject* key = PyLong_FromLong( ITr2PickableScene::PICK_POSITION );
 		PyObject* value = Py_BuildValue("(fff)", results.position.x, results.position.y, results.position.z );
 		PyDict_SetItem( result, key, value );
 		Py_DECREF( key );
@@ -263,7 +263,7 @@ static PyObject* PyPick(PyObject* self, PyObject* args)
 	}
 	if( results.components & ITr2PickableScene::PICK_UV )
 	{
-		PyObject* key = PyInt_FromLong( ITr2PickableScene::PICK_UV );
+		PyObject* key = PyLong_FromLong( ITr2PickableScene::PICK_UV );
 		PyObject* value = Py_BuildValue("(ff)", results.uv.x, results.uv.y );
 		PyDict_SetItem( result, key, value );
 		Py_DECREF( key );
@@ -569,4 +569,3 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 
 	EXPOSURE_END()
 }
-

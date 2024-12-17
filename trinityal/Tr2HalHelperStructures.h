@@ -3,8 +3,6 @@
 #define Tr2HalHelperStructures_h_
 
 #include "Tr2RenderContextEnum.h"
-#include "include/Tr2BitmapDimensions.h"
-#include "include/Tr2CubemapFace.h"
 
 class Tr2ShaderAL;
 class Tr2ConstantBufferAL;
@@ -47,8 +45,6 @@ struct Tr2Viewport
 	float	m_minZ;
 	float	m_maxZ;
 };
-
-struct Tr2BitmapDimensions;
 
 struct Tr2TextureCoordBox
 {

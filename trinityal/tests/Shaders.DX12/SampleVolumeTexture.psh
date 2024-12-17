@@ -4,11 +4,11 @@ struct VS_OUTPUT
 	float2 TexCoord : TEXCOORD;
 };
 
-Texture3D tex0: register( t0, space1 );
-SamplerState sampl: register( s0, space1 );
+Texture3D tex0: register( t0 );
+SamplerState sampl: register( s0 );
 
 
-cbuffer cb0: register(b0, space1)
+cbuffer cb0: register(b0)
 {
     struct PerObjectVSData
     {

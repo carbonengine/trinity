@@ -37,12 +37,12 @@ const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
 		MAP_ATTRIBUTE( "accumulationBuffer0", m_accumulationBuffer0, "TAA accumulation buffer", Be::READWRITE )
 		MAP_ATTRIBUTE( "accumulationBuffer1", m_accumulationBuffer1, "TAA accumulation buffer", Be::READWRITE )
 
-		MAP_ATTRIBUTE( "fsrEasuShader", m_fidelityFXFsrEASUShader, "FSR EASU", Be::READWRITE )
-		MAP_ATTRIBUTE( "fsrRCASShader", m_fidelityFXFsrRCASShader, "FSR RCASS", Be::READWRITE )
-		
 		MAP_ATTRIBUTE( "depthOfFieldCoCShader", m_depthOfFieldCoCShader, "The DoF Circle of Confusion shader", Be::READWRITE);
 		MAP_ATTRIBUTE( "depthOfFieldBokehBlurShader", m_depthOfFieldBokehBlurShader, "The bokeh blur shader", Be::READWRITE );
 		MAP_ATTRIBUTE( "depthOfFieldBokehFillShader", m_depthOfFieldBokehFillShader, "The bokeh fill shader", Be::READWRITE );
+		MAP_ATTRIBUTE( "exposure", m_exposureTexture, "exposure texture", Be::READ );
+		MAP_ATTRIBUTE( "dynamicExposureToTextureShader", m_dynamicExposureToTextureShader, "exposure texture", Be::READWRITE );
+		MAP_ATTRIBUTE( "reactive", m_reactiveMask, "reactive texture", Be::READ );
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "quality", m_quality, "The quality of the post process", Be::READWRITE | Be::ENUM | Be::NOTIFY, PostProcessQualityChooser )
 
@@ -50,7 +50,7 @@ const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
 		(
 			"__init__",
 			py__init__,
-			2,
+			0,
 			"Creates a render step that renders post processes\n"
 			":param scene: an ITr2Scene object\n"
 			":param source: an Tr2RenderTarget object"

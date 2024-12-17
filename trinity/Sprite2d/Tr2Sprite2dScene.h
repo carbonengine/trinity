@@ -82,6 +82,8 @@ public:
 	void SetSpriteTarget( Tr2SpriteTarget target );
 	void SetGlowBrightness( float glowBrightness );
 	void SetColor( const Color& color );
+	void SetOutlineColor( const Color& outlineColor );
+	void SetOutlineThreshold( float outlineThreshold );
 	void SetAccumulatedAlpha( float a );
 	float GetAccumulatedAlpha() const;
 
@@ -239,6 +241,8 @@ private:
 	float m_displayHeight;
 	Color m_backgroundColor;
 	Color m_color;
+	Color m_outlineColor;
+	float m_outlineThreshold;
 	float m_accumulatedAlpha;
 
 	Vector2 m_lastPickPos;

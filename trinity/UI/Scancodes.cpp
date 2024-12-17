@@ -186,7 +186,7 @@ void AddScancodesToDict(PyObject* dict)
 {
 	for (int i = 0; i < sizeof SCANCODES / sizeof SCANCODES[0]; i++)
 	{
-		PyObject* value = PyInt_FromLong( SCANCODES[i].mDIK );
+		PyObject* value = PyLong_FromLong( SCANCODES[i].mDIK );
 		PyDict_SetItemString(dict, (char*)SCANCODES[i].mName, value);
 		Py_DECREF(value);
 	}
@@ -360,7 +360,7 @@ const KeyDesc s_keyCodes[] = {
     { VK_OEM_5, kVK_ANSI_Backslash, "\\" },
     { VK_OEM_6, kVK_ANSI_RightBracket, "]" },
     { VK_OEM_7, kVK_ANSI_Quote, "\'" },
-    { VK_OEM_102, 10, "\xa7" },
+    { VK_OEM_102, 10, "<>" }, // This is not 100% accurate as this character is either "<>" or "\|" on RT 102-key kbd.
 };
 
 bool s_keysDown[256] = { false };

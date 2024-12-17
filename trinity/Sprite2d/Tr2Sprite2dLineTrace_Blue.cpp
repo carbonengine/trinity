@@ -27,10 +27,6 @@ bool ToFloatTuple( PyObject* value, ssize_t length, float* destination )
 			{
 				destination[i] = float( PyFloat_AsDouble( item ) );
 			}
-			else if( PyInt_Check( item ) )
-			{
-				destination[i] = float( PyInt_AsLong( item ) );
-			}
 			else if( PyLong_Check( item ) )
 			{
 				destination[i] = float( PyLong_AsDouble( item ) );
@@ -142,12 +138,12 @@ PyObject* Tr2Sprite2dLineTrace::PyAppendVertices( PyObject* self, PyObject* args
 				PyErr_Clear();
 				break;
 			}
-			if( !PyString_Check( item ) )
+			if( !PyUnicode_Check( item ) )
 			{
                 PyErr_SetString( PyExc_TypeError, "names parameter must be a sequence of strings" );
 				return nullptr;
 			}
-			name = PyString_AsString( item );
+			name = PyUnicode_AsUTF8( item );
 		}
 
 		Tr2Sprite2dLineTraceVertexPtr vertex;
@@ -234,7 +230,7 @@ PyObject* Tr2Sprite2dLineTrace::PySetVertices( PyObject* self, PyObject* args )
 	bool constName = true;
 	if( pyNames )
 	{
-		constName = PyString_Check( pyNames );
+		constName = PyUnicode_Check( pyNames );
 		if( !constName && !PySequence_Check( pyNames ) )
 		{
             PyErr_SetString( PyExc_TypeError, "names parameter must be a string or a sequence of strings" );
@@ -295,13 +291,13 @@ PyObject* Tr2Sprite2dLineTrace::PySetVertices( PyObject* self, PyObject* args )
 					PyErr_Clear();
 					break;
 				}
-				if( !PyString_Check( item ) )
+				if( !PyUnicode_Check( item ) )
 				{
 					Py_DECREF( item );
                     PyErr_SetString( PyExc_TypeError, "texCoords0 parameter must be a 2-tuple or a sequence of 2-tuples" );
 					return nullptr;
 				}
-				name = PyString_AsString( item );
+				name = PyUnicode_AsUTF8( item );
 				Py_DECREF( item );
 			}
 			vertex->m_name = name;
@@ -448,4 +444,3 @@ const Be::ClassInfo* Tr2Sprite2dLineTraceVertex::ExposeToBlue()
 		)
 	EXPOSURE_END()
 }
-

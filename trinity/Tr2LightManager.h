@@ -14,12 +14,25 @@
 #include "Tr2AddSafeGrowableBuffer.h"
 #include "TbbStub.h"
 
+#include "Raytracing/Tr2RaytracingGeometry.h"
+#include "Tr2Denoiser.h"
+
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( Tr2GpuStructuredBuffer );
+BLUE_DECLARE( Tr2DepthStencil );
+
+BLUE_DECLARE( TriTextureRes );
 
 class Tr2TextureArray;
 
+enum class ShadowQuality
+{
+	SHADOW_DISABLED,
+	SHADOW_LOW,
+	SHADOW_HIGH,
+	SHADOW_RAYTRACED
+};
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -31,6 +44,7 @@ class Tr2TextureArray;
 //     lightManager.SetFrustum( frustum );
 //     for each in scene.lights
 //       lightManager.AddPointLight( each ); // this can be done in parallel
+//	   lightManager.ResolveLightData();
 //     lightManager.UpdateLists();
 //     renderYourStuff();
 //  Light manager GPU buffers are accessed through variable store with names 
@@ -52,17 +66,46 @@ public:
 		uint16_t flags;
 
 		Vector3_16 direction;
-		uint16_t padding0;
+		Float_16 projectionPlaneDistance;
 
 		Float_16 outerAngle;
 		Float_16 innerAngle;
 
-		uint16_t padding1;
-		uint16_t padding2;
+		union
+		{
+			struct
+			{
+				uint32_t padding : 2;
+				uint32_t shadowMapScale : 10;
+				uint32_t shadowMapOffsetX : 10;
+				uint32_t shadowMapOffsetY : 10;
+			} ShadowMapping;
+			struct
+			{
+				uint16_t shadowMask;
+				uint16_t padding;
+			} Raytracing;
+		};
+		
 	};
+
+	struct ShadowMapAtlasSettings
+	{
+		uint32_t actualTextureSize;	// only updated once per frame. might be larger than size, as multiple eve space scenes might request different shadow qualities
+		uint32_t sizeLog2;
+		uint32_t size;
+		uint32_t entryMinSizeLog2;
+		uint32_t entryMinSize;
+		uint32_t entryInverseScaleFactorLog2;
+		uint32_t entryMaxSize;
+	};
+
+	void GetUnpackedShadowMapData( const PerLightData& lightData, uint32_t& shadowMapScale, uint32_t& shadowMapOffsetX, uint32_t& shadowMapOffsetY ) const;
 
 	static const uint16_t FLAG_AFFECTS_SURFACES = 1;
 	static const uint16_t FLAG_AFFECTS_PARTICLES = 1 << 1;
+	static const uint16_t FLAG_CASTS_SHADOWS = 1 << 2;
+	static const uint16_t FLAG_IS_VOLUMETRIC = 1 << 3;
 
 	static const uint16_t FLAG_DEFAULT = FLAG_AFFECTS_SURFACES;
 
@@ -70,8 +113,12 @@ public:
 	void SetFrustum( const TriFrustum& frustum );
 	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT );
 	void AddLight( PerLightData& data );
+	void ResolveLightData();
 	ALResult UpdateLists( Tr2RenderContext& renderContext );
 	void SetVariableStore();
+	void AdjustLightCutoff( float lodFactor );
+	
+	void SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter );
 
 	virtual void ReleaseResources( TriStorage s );
 
@@ -84,9 +131,39 @@ public:
 
 	static Tr2TextureArray& GetLightProfileArray();
 
+	const std::vector<uint32_t>& GetShadowCastingLights() const;
+	const std::vector<uint32_t>& GetVolumetricLights() const;
+	const Tr2LightManager::PerLightData& GetLightData( uint32_t index ) const;
+	Tr2DepthStencilPtr GetShadowMapAtlas();
+	const ShadowMapAtlasSettings& GetShadowMapAtlasSettings() const;
+
+	ShadowQuality GetCurrentSpaceSceneShadowQuality();
+
+	ITr2TextureProvider* GetRaytracedShadowMap() const;
+	void RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry, ITr2TextureProvider* depth, ITr2TextureProvider* normal, const CcpMath::Sphere* planets, size_t planetCount, Tr2RenderContext& renderContext );
+	Tr2RaytracingPipelineStateManager* GetRaytracingPipelineManager();
+	Tr2RtShaderTableDescriptionAL* GetRaytracingShaderTableDesc();
+
 private:
 	Tr2LightManager( const Tr2LightManager& );
 	Tr2LightManager& operator=( const Tr2LightManager& );
+
+	struct AtlasNode
+	{
+		uint32_t children[2];
+		uint32_t lightIndex;
+		int x;
+		int y;
+		int width;
+		int height;
+	};
+
+	// used for filtering out shadowcasting and volumetric lights
+	struct LightScreenSizeTuple
+	{
+		uint32_t lightIndex;
+		float sizeAcross;
+	};
 
 	virtual bool OnPrepareResources();
 
@@ -94,8 +171,17 @@ private:
 	ALResult ClearLightIndices( Tr2RenderContext& renderContext );
 	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
 
+	uint32_t InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
+
+	void UpdateShadowAtlasSize( ShadowQuality shadowQuality );
+	void UpdateRaytracingDestination( ShadowQuality shadowQuality );
+	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
+	void CreateShadowMapAtlas( uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples );
+
 	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
 	std::vector<PerLightData> m_lightData;
+	std::vector<uint32_t> m_shadowCastingLights;
+	std::vector<uint32_t> m_volumetricLights;
 	Tr2GpuStructuredBufferPtr m_lightBuffer;
 	Tr2GpuStructuredBufferPtr m_indexBuffer;
 
@@ -105,6 +191,37 @@ private:
 	Tr2Variable m_lightBufferVariable;
 	Tr2Variable m_indexBufferVariable;
 	TriFrustum m_frustum;
+
+	float m_adjustedCutoff;
+
+	uint32_t nextFrameShadowQuality;	// bitmask, collecting ShadowQualities during the current frame
+	ShadowQuality m_currentSpaceSceneShadowQuality;
+	uint64_t m_currentFrameCounter;
+
+	struct
+	{
+		Tr2Variable m_atlasVariable;
+		Tr2DepthStencilPtr m_atlasDepthStencil;
+		ShadowMapAtlasSettings m_atlasSettings;
+		std::vector<AtlasNode> m_atlasNodes;
+		ShadowQuality m_qualityUsedByAtlas;
+	} m_ShadowMap;
+
+	struct 
+	{
+		Tr2RaytracingPipelineStateManager m_pipelineManager;
+		Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
+
+		Tr2RaytracingGeometryPtr m_geometry;
+
+		Tr2EffectPtr m_effect;
+		unsigned m_effectHash;
+		Tr2RtShaderTableAL m_shaderTable;
+		Tr2ConstantBufferAL m_perFrameData;
+
+		Tr2RenderTargetPtr m_destTex;
+		TriTextureResPtr m_whiteTexture;
+	} m_Raytracing;
 };
 
 #endif

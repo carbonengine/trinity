@@ -7,6 +7,7 @@
 #pragma warning(push, 4)
 
 using namespace Tr2RenderContextEnum;
+using namespace Tr2UpscalingAL;
 
 const Be::VarChooser Tr2RenderContextEnum_ObjectType_Chooser[] =
 {
@@ -306,7 +307,6 @@ BLUE_REGISTER_ENUM_EX(
     ENUM_REG_ENUM_OBJECT_ON_MODULE
 );
 
-
 BLUE_DEFINE( Tr2RenderContext );
 
 #if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
@@ -393,7 +393,7 @@ namespace
 		{
 			for( auto it = description.begin(); it != description.end(); ++it )
 			{
-				PyObject* value = PyString_FromString( it->second.c_str() );
+				PyObject* value = PyUnicode_FromString( it->second.c_str() );
 				PyDict_SetItemString( item, it->first.c_str(), value );
 				Py_DECREF( value );
 			}

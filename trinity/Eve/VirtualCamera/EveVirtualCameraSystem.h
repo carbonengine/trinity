@@ -3,10 +3,10 @@
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Tr2DebugRenderer.h"
 
+class EveUpdateContext;
 BLUE_DECLARE( EveVirtualCamera );
 BLUE_DECLARE_VECTOR( EveVirtualCamera );
 BLUE_DECLARE( EveVirtualCameraTransitionBase );
-BLUE_DECLARE( EveUpdateContext );
 
 BLUE_CLASS( EveVirtualCameraSystem ) :
 	public IInitialize,

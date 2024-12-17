@@ -29,7 +29,7 @@ EveConnector::~EveConnector()
 {
 }
 
-void EveConnector::Update( EveUpdateContext& context )
+void EveConnector::Update( const EveUpdateContext& context )
 {
 	if( m_sourceObject )
 	{

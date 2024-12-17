@@ -30,6 +30,8 @@ struct Tr2SamplerOverride
 	float lodBias;
 	uint32_t maxMipLevel;
 	uint32_t maxAnisotropy;
+
+	Tr2SamplerStateAL sampler;
 };
 
 BLUE_DECLARE_STRUCTURE_LIST( Tr2SamplerOverride );
@@ -188,15 +190,16 @@ private:
 protected:
 	void MapPassResources( 
 		const Tr2EffectResourceMap& resources, 
-		Tr2EffectParamVector &pv );
+		Tr2EffectParamVector &pv,
+		bool& compatibleWithGdr );
 	void MapPassParameters(
-		size_t technique,
-		unsigned passIx,
-		Tr2EffectPassParameters& pp,
 		Tr2RenderContextEnum::ShaderType stage,
-		const Tr2EffectConstantVector& constants,
-		const Tr2EffectDescription& desc,
+		Tr2MaterialStageInput& stageInput,
+		PassParametersOwner& ppOwner,
+		const Tr2EffectStageInput& stageInputDesc,
+		const Tr2EffectDescription& descriptionDesc,
 		Tr2RenderContext& renderContext );
+	void AddLoddable( ITriEffectParameter* param, const char* name );
 
 	// Python
 	bool IsParameterUsedByTechnique( const std::string& parameterName );

@@ -14,7 +14,6 @@
 #include "PostProcess/Tr2PostProcessRenderInfo.h"
 #include "Shader/Tr2Effect.h"
 
-BLUE_DECLARE( Tr2PPFidelityFXEffect );
 BLUE_DECLARE( Tr2Effect );
 
 
@@ -71,8 +70,26 @@ namespace PostProcessBlur
 
 	BlueSharedString GetBlurChannelOptionValue( BlurChannel channel );
 	BlueSharedString GetBlurTypeOptionValue( BlurType type );
-    BlueSharedString GetProcessTypeOptionValue( BlurProcess process);
-    BlueSharedString GetFinalizeTypeOptionValue( BlurFinalize finalize );
+	BlueSharedString GetProcessTypeOptionValue( BlurProcess process);
+	BlueSharedString GetFinalizeTypeOptionValue( BlurFinalize finalize );
+}
+
+
+namespace AMDSharpening
+{
+	typedef union
+	{
+		uint32_t u[4];
+		float f[4];
+	} uintfloat4;
+
+	Vector4 AsVector( uintfloat4 v );
+
+	struct CASConstants
+	{
+		uintfloat4 const0 = {};
+		uintfloat4 const1 = {};
+	};
 }
 
 // -------------------------------------------------------------
@@ -108,6 +125,12 @@ public:
 	void py__init__( EveSpaceScene * scene, Tr2RenderTarget * source, Tr2RenderTarget* opaque_source );
 
 private:
+	// exposure texture 
+	void SetupExposureConversion( bool enable, float middleValue );
+
+	// optional sharpening
+	void ProcessSharpening( bool enable, uint32_t displayWidth, uint32_t displayHeight, float upscalingAmount );
+	Tr2PostProcessRenderInfo::Texture RenderSharpening( Tr2PostProcessRenderInfo::Texture& input, Tr2RenderContext& renderContext );
 
 	// bloom
 	bool ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure );
@@ -121,12 +144,13 @@ private:
 
 	// signal loss
 	bool ProcessSignalLoss( Tr2PPSignalLossEffect* signalLoss );
-	void RenderSignalLoss( Tr2RenderContext& renderContext, Tr2PPSignalLossEffect* signalLoss );
+	void RenderSignalLoss( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPSignalLossEffect* signalLoss );
 	Tr2EffectPtr m_signalLossEffect;
 
 	// dynamic exposure
-	bool ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom );
+	bool ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom, Tr2PostProcess2* postProcess );
 	void RenderDynamicExposure( Tr2RenderTarget* dest, Tr2RenderContext & renderContext, Tr2PPDynamicExposureEffect * dynamicExposure );
+	void RenderDynamicExposureDebug( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure );
 	Tr2GpuBufferPtr m_localHistograms;
 	Tr2GpuBufferPtr m_histogram;
 	Tr2GpuBufferPtr m_exposure;
@@ -136,23 +160,19 @@ private:
 	Tr2EffectPtr m_dynamicExposureCreateHistogramShader;
 	Tr2EffectPtr m_dynamicExposureMergeHistogramShader;
 	Tr2EffectPtr m_dynamicExposureMeasureExposureShader;
+	Tr2EffectPtr m_dynamicExposureToTextureShader;
+	Tr2EffectPtr m_dynamicExposureDebugShader;
+	Tr2RenderTargetPtr m_exposureTexture;
 
 	// depth of field
 	bool ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx );
-	void RenderDepthOfField( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* depthOfField, bool taa );	
+	void RenderDepthOfField( Tr2RenderTarget * dest, Tr2RenderContext & renderContext, Tr2PPDepthOfFieldEffect * depthOfField, bool temporal, float upscalingAmount );	
 	Tr2EffectPtr m_depthOfFieldCoCShader;
 	Tr2EffectPtr m_depthOfFieldBokehBlurShader;
 	Tr2EffectPtr m_depthOfFieldBokehFillShader;
 	Tr2EffectPtr m_depthOfFieldBokehTAAShader;
 	uint32_t m_bokehFrameCounter;
 	
-	// fidelityFX
-	bool ProcessFidelityFX( Tr2RenderContext& renderContext, Tr2PPFidelityFXEffect* fx );
-	Tr2PostProcessRenderInfo::Texture RenderFidelityFX( Tr2RenderTarget* src, Tr2RenderContext& renderContext, Tr2PPFidelityFXEffect* fx );
-	Tr2EffectPtr m_fidelityFXShader;
-	Tr2EffectPtr m_fidelityFXFsrEASUShader;
-	Tr2EffectPtr m_fidelityFXFsrRCASShader;
-
 	// fog
 	bool ProcessFog( Tr2PPFogEffect* fog );
 	void RenderFog( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPFogEffect* fog );
@@ -162,7 +182,6 @@ private:
 	// TAA
 	bool ProcessTaa( Tr2PPTaaEffect* taa );
 	void RenderTaa( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPTaaEffect* taa, Tr2PPDynamicExposureEffect* dynamic_exposure );
-	Tr2RenderTargetPtr m_velocityBuffer;
 	Tr2EffectPtr m_taaEffect, m_taaCopyEffect;
 	Tr2RenderTargetPtr m_accumulationBuffer0, m_accumulationBuffer1;
 	Tr2RenderTargetPtr m_cooldownBuffer;
@@ -181,10 +200,13 @@ private:
 	void ProcessFade( Tr2PPFadeEffect* fade );
 
 	// LUT
-	void ProcessLut( std::vector<Tr2PPLutEffect*> luts );
+	void ProcessLut( std::vector<const Tr2PPLutEffect*> luts );
 
 	// vignette
 	void ProcessVignette( Tr2PPVignetteEffect* vignette);
+
+	//Tr2Upscaling::UpscalingType ProcessUpscaling( Tr2PPUpscalingEffect * upscaling, Tr2RenderContext & renderContext );
+	Tr2PostProcessRenderInfo::Texture RenderUpscaling( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure );
 
 	// tonemapping
 	Tr2EffectPtr m_tonemappingEffect;
@@ -204,8 +226,16 @@ private:
 	Tr2RenderTargetPtr GetRenderTarget() const;
 
 
-    // General
+	// General
 	PostProcessingQuality m_quality;
+
+	// Reactive mask
+	Tr2EffectPtr m_reactiveMaskEffect;
+	Tr2RenderTargetPtr m_reactiveMask;
+
+	// Velocity Map
+	void SetupVelocityMap();
+	Tr2RenderTargetPtr m_velocityBuffer;
 
 	// Common
 	void Blur( Tr2RenderTarget& dest, Tr2RenderTarget& src, Tr2RenderContext& renderContext, PostProcessBlur::BlurContext& blurContext );
@@ -216,6 +246,12 @@ private:
 
 	Tr2EffectPtr m_blurBigVertical;
 	Tr2EffectPtr m_blurBigHorizontal;
+
+	// contrast adaptive sharpening, used if no upscaling is applied or if an upscaling does not have sharpening
+	Tr2EffectPtr m_fidelityFxCasShader;
+
+	Be::Time m_lastFrameTime;
+	uint32_t m_upscalingContextID;
 };
 
 TYPEDEF_BLUECLASS( TriStepRenderPostProcess );

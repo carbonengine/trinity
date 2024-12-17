@@ -22,10 +22,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveVolume
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor ) override;
 	float GetIntensity( Vector3 position ) override;
-	Vector4 GetBoundingSphere() const override;
-	void RegisterForChanges( std::function<void()> NotifyParent ) override;
+	const CcpMath::Sphere GetBoundingSphere() const override;
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
@@ -34,13 +33,8 @@ public:
 private:
 	BlueSharedString m_name;
 
-	Vector3 m_position;
-	Vector3 m_centerOffset;
-	float m_radius;
-	float m_innerRadius;
-
-	std::function<void()> m_notifyParentFunc;
-	bool m_notifyParent;
+	CcpMath::Sphere m_outerSphere;
+	CcpMath::Sphere m_innerSphere;
 
 };
 

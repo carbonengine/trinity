@@ -9,7 +9,6 @@
 #define EveChildCloud_H
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 #include "Tr2ShLightingManager.h"
@@ -26,7 +25,6 @@ BLUE_DECLARE_INTERFACE( ITriQuaternionFunction );
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveChildCloud ) :
 	public ITr2Renderable,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public IInitialize,
 	public INotify,
@@ -51,10 +49,10 @@ public:
 	// IEveSpaceObjectChild
 	virtual const char* GetName() const;
 	virtual void SetName( const char* name );
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	virtual void GetLocalToWorldTransform( Matrix &transform ) const;
-	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod );
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) {}
@@ -67,10 +65,6 @@ public:
 	virtual bool HasTransparentBatches();
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
@@ -117,6 +111,8 @@ private:
 
 	float m_cellScreenSize;
 	size_t m_currentIB;
+
+	float m_lastLodFactor;
 };
 
 TYPEDEF_BLUECLASS( EveChildCloud );

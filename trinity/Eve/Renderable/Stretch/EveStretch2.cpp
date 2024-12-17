@@ -15,6 +15,7 @@
 #include "Particle/Tr2GpuSharedEmitter.h"
 #include "TriObserverLocal.h"
 #include "Tr2Renderer.h"
+#include "Resources/TriGeometryRes.h"
 
 
 namespace
@@ -41,6 +42,12 @@ namespace
 				renderContext );
 		}
 
+		void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
+		{
+			writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, m_data, m_size );
+			writer.SetPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER, m_data, m_size );
+		}
+
 		void* m_data;
 		size_t m_size;
 	};
@@ -51,6 +58,22 @@ namespace
 		float cornerIndex;
 	};
 
+	const uint32_t MAX_QUAD_COUNT = 128;
+
+	ALResult GetEveStretch2Quads( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
+	{
+		std::vector<Vertex> data( MAX_QUAD_COUNT * 4 );
+		for( uint32_t i = 0; i < MAX_QUAD_COUNT; ++i )
+		{
+			for( uint32_t j = 0; j < 4; ++j )
+			{
+				data[i * 4 + j].quadIndex = float( i );
+				data[i * 4 + j].cornerIndex = float( j );
+			}
+		}
+
+		return g_sharedBuffer.Allocate( sizeof( Vertex ), MAX_QUAD_COUNT * 4, data.data(), renderContext, vb );
+	}
 
 }
 
@@ -67,7 +90,8 @@ EveStretch2::EveStretch2( IRoot* lockObj )
 	m_intensity( 1 ),
 	m_boundingRadius( 100 ),
 	m_sourceTransform( IdentityMatrix() ),
-	m_destinationTransform( IdentityMatrix() )
+	m_destinationTransform( IdentityMatrix() ),
+	m_vb( BlueSharedString( "EveStretch2VB" ), &GetEveStretch2Quads )
 {
 	m_effectData[0] = Vector4( 0, 0, 0, float( rand() ) / RAND_MAX );
 	m_effectData[0] = Vector4( 1, 0, 0, 0 );
@@ -83,7 +107,7 @@ bool EveStretch2::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_quadCount ) )
 	{
-		m_vb = Tr2BufferAL();
+		CCP_ASSERT( m_quadCount <= MAX_QUAD_COUNT );
 		ReleaseResources( TRISTORAGE_ALL );
 		PrepareResources();
 	}
@@ -174,17 +198,17 @@ void EveStretch2::SetIntensity( float intensity )
 	m_intensity = intensity;
 }
 
-void EveStretch2::UpdateEffectSync( EveUpdateContext& updateContext )
+void EveStretch2::UpdateEffectSync( const EveUpdateContext& updateContext )
 {
 	// do nothing here
 }
 
-void EveStretch2::UpdateEffectAsync( EveUpdateContext& updateContext ) 
+void EveStretch2::UpdateEffectAsync( const EveUpdateContext& updateContext )
 {
 	Update( updateContext );
 }
 
-void EveStretch2::Update(EveUpdateContext& updateContext)
+void EveStretch2::Update( const EveUpdateContext& updateContext )
 {
 	Be::Time time = updateContext.GetTime();
 	if( m_startTime == 0 )
@@ -269,14 +293,14 @@ void EveStretch2::GetEndPointTransforms( Matrix& source, Matrix& destination ) c
 	destination.GetTranslation() = m_destination;
 }
 
-void EveStretch2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveStretch2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	if( m_visible && m_intensity > 0 )
 	{
 		CcpMath::AxisAlignedBox box( Vector3( -m_boundingRadius, -m_boundingRadius, -m_boundingRadius ), Vector3( m_boundingRadius, m_boundingRadius, Length( m_destination - m_source ) + m_boundingRadius ) );
 		box.Transform( m_sourceTransform );
 
-		m_isInFrustum = frustum.IsBoxVisible( box );
+		m_isInFrustum = updateContext.GetFrustum().IsBoxVisible( box );
 	}
 	else
 	{
@@ -307,16 +331,23 @@ Tr2PerObjectData* EveStretch2::GetPerObjectData( ITriRenderBatchAccumulator* acc
 
 void EveStretch2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	if( batchType == TRIBATCHTYPE_ADDITIVE && m_effect && m_effect->GetShaderStateInterface() && m_vb.IsValid() )
+	if( batchType == TRIBATCHTYPE_ADDITIVE && m_effect && m_effect->GetShaderStateInterface() && m_vb.GetSharedResource().IsValid() )
 	{
-		TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
-		if( batch )
+		auto& ib = Tr2Renderer::GetQuadListIndexBuffer();
+		if( !ib.IsValid() )
 		{
-			batch->SetPerObjectData( perObjectData );
-			batch->SetShaderMaterial( m_effect );
-			batch->SetGeometryProvider( this );
-			batches->Commit( batch );
+			return;
 		}
+
+		auto& vb = m_vb.GetSharedResource();
+
+		Tr2RenderBatch batch;
+		batch.SetMaterial( m_effect );
+		batch.SetPerObjectData( perObjectData );
+		batch.SetGeometry( m_vertexDeclHandle, vb, ib );
+		batch.SetDrawIndexedInstanced( 6 * m_quadCount, 1, ib.GetStartIndex(), vb.GetOffset() / vb.GetStride(), 0 );
+
+		batches->Commit( batch );
 	}
 }
 
@@ -328,20 +359,6 @@ bool EveStretch2::HasTransparentBatches()
 float EveStretch2::GetSortValue()
 {
 	return 0;
-}
-
-void EveStretch2::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	auto ib = Tr2Renderer::GetQuadListIndexBuffer( m_quadCount );
-	if( !ib )
-	{
-		return;
-	}
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vb, 0, sizeof( Vertex ) );
-	renderContext.m_esm.ApplyIndexBuffer( *ib );
-	renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
-	renderContext.DrawIndexedPrimitive( 4 * m_quadCount, 0, 2 * m_quadCount );
 }
 
 void EveStretch2::ReleaseResources( TriStorage s )
@@ -358,19 +375,7 @@ bool EveStretch2::OnPrepareResources()
 
 	m_vertexDeclHandle = renderContext.m_esm.GetVertexDeclarationHandle( def );
 
-	if( m_quadCount && !m_vb.IsValid() )
-	{
-		std::vector<Vertex> data( m_quadCount * 4 );
-		for( uint32_t i = 0; i < m_quadCount; ++i )
-		{
-			for( uint32_t j = 0; j < 4; ++j )
-			{
-				data[i * 4 + j].quadIndex = float( i );
-				data[i * 4 + j].cornerIndex = float( j );
-			}
-		}
-		m_vb.Create( 4 * sizeof( Vertex ), m_quadCount, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, &data[0], renderContext );
-	}
+	Tr2Renderer::ReserveQuadListIndexBuffer( m_quadCount );
 	return true;
 }
 

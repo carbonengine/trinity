@@ -14,11 +14,12 @@ namespace TrinityALImpl
 		m_defaultState( D3D12_RESOURCE_STATE_COMMON ),
 		m_strategy( STATIC ),
 		m_gpuResource(),
-		m_mapped()
+		m_mapped(),
+		m_requiresImmediateBarriers( false )
 	{
 	}
 
-	ALResult Tr2ResourceHelper::Create( Strategy strategy, size_t size, D3D12_RESOURCE_FLAGS resourceFlags, D3D12_RESOURCE_STATES state, uint32_t initialDataCount, const D3D12_SUBRESOURCE_DATA* initialData, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2ResourceHelper::Create( Strategy strategy, size_t size, D3D12_RESOURCE_FLAGS resourceFlags, D3D12_RESOURCE_STATES state, bool requiresImmediateBarriers, uint32_t initialDataCount, const D3D12_SUBRESOURCE_DATA* initialData, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		if( strategy != DYNAMIC )
 		{
@@ -58,6 +59,10 @@ namespace TrinityALImpl
 				if( state != initialState )
 				{
 					renderContext.ResourceBarrierDx12( Transition( buffer, initialState, state ) );
+					if( requiresImmediateBarriers )
+					{
+						renderContext.FlushBarriersDx12( buffer );
+					}
 				}
 				if( strategy == STATIC )
 				{
@@ -65,7 +70,7 @@ namespace TrinityALImpl
 				}
 				else
 				{
-					Resource r = { scratch, renderContext.GetCurrentFrameIndexDx12(), nullptr, 0 };
+					Resource r = { scratch, renderContext.GetRecordingFrameNumber(), nullptr, 0 };
 					D3D12_RANGE readRange = { 0, 0 };
 					CR_RETURN_HR( scratch->Map( 0, &readRange, &r.cpuAddress ) );
 
@@ -73,7 +78,7 @@ namespace TrinityALImpl
 				}
 			}
 			m_gpuResource.resource = buffer;
-			m_gpuResource.frameIndex = renderContext.GetCurrentFrameIndexDx12();
+			m_gpuResource.frameIndex = renderContext.GetRecordingFrameNumber();
 			m_gpuResource.cpuAddress = nullptr;
 			m_gpuResource.gpuAddress = buffer->GetGPUVirtualAddress();
 		}
@@ -89,7 +94,7 @@ namespace TrinityALImpl
 				state,
 				nullptr,
 				IID_PPV_ARGS( &buffer ) ) );
-			Resource r = { buffer, renderContext.GetCurrentFrameIndexDx12(), nullptr, buffer->GetGPUVirtualAddress() };
+			Resource r = { buffer, renderContext.GetRecordingFrameNumber(), nullptr, buffer->GetGPUVirtualAddress() };
 			D3D12_RANGE readRange = { 0, 0 };
 			CR_RETURN_HR( buffer->Map( 0, &readRange, &r.cpuAddress ) );
 			if( initialDataCount )
@@ -102,6 +107,7 @@ namespace TrinityALImpl
 		m_size = size;
 		m_defaultState = state;
 		m_strategy = strategy;
+		m_requiresImmediateBarriers = requiresImmediateBarriers;
 		return S_OK;
 	}
 
@@ -119,11 +125,11 @@ namespace TrinityALImpl
 		m_resources.clear();
 	}
 
-	ALResult Tr2ResourceHelper::CreateScratch( Resource& resource, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2ResourceHelper::CreateScratch( Resource& resource, Tr2PrimaryRenderContextAL& renderContext, size_t size)
 	{
 		CComPtr<ID3D12Resource> buffer;
 		auto scratchHeap = HeapDesc( D3D12_HEAP_TYPE_UPLOAD );
-		auto scratchDesc = BufferDesc( m_size );
+		auto scratchDesc = BufferDesc( size );
 		CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
 			&scratchHeap,
 			D3D12_HEAP_FLAG_NONE,
@@ -135,7 +141,7 @@ namespace TrinityALImpl
 		D3D12_RANGE readRange = { 0, 0 };
 		CR_RETURN_HR( buffer->Map( 0, &readRange, &resource.cpuAddress ) );
 		resource.resource = buffer;
-		resource.frameIndex = renderContext.GetCurrentFrameIndexDx12();
+		resource.frameIndex = renderContext.GetRecordingFrameNumber();
 		resource.gpuAddress = buffer->GetGPUVirtualAddress();
 		if( !m_name.empty() )
 		{
@@ -146,19 +152,33 @@ namespace TrinityALImpl
 
 	ALResult Tr2ResourceHelper::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		if( lockType == Tr2LockType::NON_SYNCHRONIZED && m_strategy == DYNAMIC )
+		if( lockType == Tr2LockType::NON_SYNCHRONIZED )
 		{
-			for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
+			if( m_strategy == DYNAMIC )
 			{
-				if( it->resource == m_gpuResource.resource )
+				for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
 				{
-					it->frameIndex = renderContext.GetCurrentFrameIndexDx12();
-					break;
+					if( it->resource == m_gpuResource.resource )
+					{
+						it->frameIndex = renderContext.GetRecordingFrameNumber();
+						break;
+					}
 				}
+				m_mapped = m_gpuResource;
+				data = m_mapped.cpuAddress;
+				return S_OK;
 			}
-			m_mapped = m_gpuResource;
-			data = m_mapped.cpuAddress;
-			return S_OK;
+			else
+			{
+				if( m_resources.empty() )
+				{
+					FORWARD_HR( CreateScratch( m_mapped, renderContext ) );
+					m_resources.push_back( m_mapped );
+				}
+				m_mapped = m_resources.front();
+				data = m_mapped.cpuAddress;
+				return S_OK;
+			}
 		}
 		if( m_strategy == STATIC )
 		{
@@ -168,13 +188,13 @@ namespace TrinityALImpl
 		}
 		else
 		{
-			auto completed = renderContext.GetCompletedFrameIndexDx12();
+			auto completed = renderContext.GetRenderedFrameNumber();
 
 			for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
 			{
 				if( completed >= it->frameIndex )
 				{
-					it->frameIndex = renderContext.GetCurrentFrameIndexDx12();
+					it->frameIndex = renderContext.GetRecordingFrameNumber();
 					m_mapped = *it;
 					data = m_mapped.cpuAddress;
 					return S_OK;
@@ -208,6 +228,10 @@ namespace TrinityALImpl
 
 			std::swap( barrier.Transition.StateAfter, barrier.Transition.StateBefore );
 			renderContext.ResourceBarrierDx12( barrier );
+			if( m_requiresImmediateBarriers )
+			{
+				renderContext.FlushBarriersDx12( m_gpuResource.resource );
+			}
 
 			if( m_strategy == STATIC )
 			{
@@ -217,29 +241,53 @@ namespace TrinityALImpl
 		m_mapped = Resource();
 	}
 
-	ALResult Tr2ResourceHelper::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
+	ALResult Tr2ResourceHelper::UpdateBuffer( Tr2LockType::Type lockType, uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL& renderContext )
 	{
 		if( m_strategy == DYNAMIC )
 		{
 			return E_FAIL;
 		}
 
+		if( lockType == Tr2LockType::SYNCHRONIZED && m_strategy == STATIC )
+		{
+
+			FORWARD_HR( CreateScratch( m_mapped, *renderContext.m_ownerDevice, size ) );
+			memcpy( m_mapped.cpuAddress, data, size );
+
+			
+			auto barrier = Transition( m_gpuResource.resource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
+			renderContext.ResourceBarrierDx12( barrier );
+			renderContext.FlushBarriersDx12( m_gpuResource.resource );
+
+			renderContext.m_commandList->CopyBufferRegion( m_gpuResource.resource, offset, m_mapped.resource, 0, size );
+
+			std::swap( barrier.Transition.StateAfter, barrier.Transition.StateBefore );
+			renderContext.ResourceBarrierDx12( barrier );
+			if( m_requiresImmediateBarriers )
+			{
+				renderContext.FlushBarriersDx12( m_gpuResource.resource );
+			}
+
+			RELEASE_LATER( renderContext.m_ownerDevice, m_mapped.resource );
+
+			return S_OK;
+		}
+
 		void* dst = nullptr;
-		FORWARD_HR( MapForWriting( dst, Tr2LockType::SYNCHRONIZED, *renderContext.m_ownerDevice ) );
-		memcpy( dst, data, size );
+		FORWARD_HR( MapForWriting( dst, lockType, *renderContext.m_ownerDevice ) );
+		memcpy( static_cast<uint8_t*>( dst ) + offset, data, size );
 
 		auto barrier = Transition( m_gpuResource.resource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
 		renderContext.ResourceBarrierDx12( barrier );
 		renderContext.FlushBarriersDx12( m_gpuResource.resource );
 
-		renderContext.m_commandList->CopyBufferRegion( m_gpuResource.resource, offset, m_mapped.resource, 0, size );
+		renderContext.m_commandList->CopyBufferRegion( m_gpuResource.resource, offset, m_mapped.resource, offset, size );
 
 		std::swap( barrier.Transition.StateAfter, barrier.Transition.StateBefore );
 		renderContext.ResourceBarrierDx12( barrier );
-
-		if( m_strategy == STATIC )
+		if( m_requiresImmediateBarriers )
 		{
-			RELEASE_LATER( renderContext.m_ownerDevice, m_mapped.resource );
+			renderContext.FlushBarriersDx12( m_gpuResource.resource );
 		}
 		m_mapped = Resource();
 		return S_OK;

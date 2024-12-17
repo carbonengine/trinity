@@ -19,7 +19,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveSpaceObject2 override
 	virtual void UpdateWorldTransform( Be::Time time );
-	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 
 	// access
 	std::string GetNameForPickingAreaID( uint32_t areaID ) const;

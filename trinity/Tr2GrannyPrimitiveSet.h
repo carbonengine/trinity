@@ -47,13 +47,14 @@ public:
 #if TRINITYDEV
 	virtual void GetDescription( std::string& desc ) { desc = "<Tr2GrannyPrimitiveSet>"; }
 #endif
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	void SetGrannyResource();
 	void CreatePrimitive();
 	void CleanUp( void );
+
+protected:
+	void GetBatchesImpl( ITriRenderBatchAccumulator * accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect, GetBatchesReason reason ) override;
+
 private:
 	virtual bool OnPrepareResources();
 

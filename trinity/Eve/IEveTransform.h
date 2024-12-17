@@ -11,8 +11,8 @@ class EveUpdateContext;
 
 BLUE_INTERFACE( IEveTransform ) : public IRoot
 {
-	virtual void Update( EveUpdateContext& updateContext ) = 0;
-	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) = 0;
+	virtual void Update( const EveUpdateContext& updateContext ) = 0;
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) = 0;
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables ) = 0;
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const = 0;
 	virtual Tr2Lod GetLODLevel() const = 0;

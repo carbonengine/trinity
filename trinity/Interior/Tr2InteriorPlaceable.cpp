@@ -12,6 +12,7 @@
 #include "Curves/TriCurveSet.h"
 #include "TriFrustum.h"
 #include "Resources/TriTextureRes.h"
+#include "Resources/TriGeometryRes.h"
 #include "Tr2VariableStore.h"
 #include "Tr2Renderer.h"
 
@@ -311,59 +312,60 @@ void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches,
 				Tr2Mesh* mesh = model->GetMesh( i );
 
 				// Only gather transparent batches if the mesh isn't hidden
-				if( mesh->GetDisplay() )
+				if( !mesh->GetDisplay() )
 				{
-					// Get the transparent areas
-					Tr2MeshAreaVector* areas = mesh->GetAreas( batchType );
+					continue;
+				}
+				auto geometry = mesh->GetGeometryResource();
+				if( !geometry || !geometry->IsGood() )
+				{
+					continue;
+				}
+				auto meshData = geometry->GetMeshData( mesh->GetMeshIndex() );
+				if( !meshData )
+				{
+					continue;
+				}
 
-					if( areas )
+				// Get the transparent areas
+				Tr2MeshAreaVector* areas = mesh->GetAreas( batchType );
+
+				if( areas )
+				{
+					// Loop over the transparent areas
+					for( auto& area : *areas )
 					{
-						// Loop over the transparent areas
-						for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+						auto shader = area->GetMaterialInterface();
+
+						// If the area isn't hidden & has an effect
+						if( !area->GetDisplay() || !shader )
 						{
-							Tr2MeshArea* area = *it;
-							auto shader = area->GetMaterialInterface();
-
-							// If the area isn't hidden & has an effect
-							if( !area->GetDisplay() || !shader )
-							{
-								continue;
-							}
-
-							unsigned int depth = 0;
-							if( batchType == TRIBATCHTYPE_TRANSPARENT )
-							{
-								// Compute the depth
-								Vector3 center;
-								if( m_isBoundingBoxModified )
-								{
-									center = 0.5f * ( m_minBounds + m_maxBounds );
-								}
-								else
-								{
-									center = mesh->GetAreaBounds( area->GetIndex() ).Center();
-								}
-								center = TransformCoord( center, instanceToWorld );
-								center -= Tr2Renderer::GetViewPosition();
-								float z = std::min( std::max( ( Length( center ) + m_depthOffset ) / maxDepth, 0.f ), 1.f );
-
-								depth = ( unsigned int )( ( float )0xFFFFFFF * ( 1.0f - z ) );
-							}
-
-							TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-							// Note that this can fail if the accumulator can't add more batches!
-							if( batch )
-							{
-								batch->SetShaderMaterial( shader );
-								batch->SetPerObjectData( data );
-								batch->SetGeometryResource( mesh->GetGeometryResource() );
-
-								batch->SetMeshParameters( mesh->GetMeshIndex(), area->GetIndex(), area->GetCount(), area->GetReversed() );
-								batch->SetDepth( depth );
-
-								batches->Commit( batch );
-							}
+							continue;
 						}
+
+						unsigned int depth = 0;
+						if( batchType == TRIBATCHTYPE_TRANSPARENT )
+						{
+							// Compute the depth
+							Vector3 center;
+							if( m_isBoundingBoxModified )
+							{
+								center = 0.5f * ( m_minBounds + m_maxBounds );
+							}
+							else
+							{
+								center = mesh->GetAreaBounds( area->GetIndex() ).Center();
+							}
+							center = TransformCoord( center, instanceToWorld );
+							center -= Tr2Renderer::GetViewPosition();
+							float z = std::min( std::max( ( Length( center ) + m_depthOffset ) / maxDepth, 0.f ), 1.f );
+
+							depth = ( unsigned int )( ( float )0xFFFFFFF * ( 1.0f - z ) );
+						}
+
+						Tr2RenderBatch batch = CreateGeometryBatch( meshData, area, data );
+						batch.m_depth = depth;
+						batches->Commit( batch );
 					}
 				}
 			}

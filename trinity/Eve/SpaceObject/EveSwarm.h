@@ -44,7 +44,6 @@ public:
 	// PerObjectData
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
-
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveSwarmRenderable
@@ -55,7 +54,7 @@ public:
 	void SetShaderData( const EveSpaceObjectVSData& vsData, const EveSpaceObjectPSData& psData );
 	void InitDecals( const PEveSpaceObjectDecalVector &decals );
 	void PushDecals( std::vector<ITr2Renderable*>& renderables, float screensize );
-	void UpdateDecalVisibility( const TriFrustum& frustum, IEveSpaceObject2::ParentData& pd, Tr2GrannyAnimation* animationUpdater );
+	void UpdateDecalVisibility( const EveUpdateContext& updateContext, IEveSpaceObject2::ParentData& pd, Tr2GrannyAnimation* animationUpdater );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
@@ -66,7 +65,8 @@ public:
 	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
-	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const override;
 	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
 
@@ -213,11 +213,11 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveShip2 overrides
-	void UpdateSyncronous( EveUpdateContext& updateContext );
-	void UpdateAsyncronous( EveUpdateContext& updateContext );
-	void UpdateTurretsAsyncronous( EveUpdateContext& updateContext );
+	void UpdateSyncronous( const EveUpdateContext& updateContext );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	void UpdateTurretsAsyncronous( const EveUpdateContext& updateContext );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) override;
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
 	void PushRenderables( std::vector<ITr2Renderable*>& renderables );
 	void RebuildCachedData( BlueAsyncRes* p );
 	void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
@@ -245,7 +245,6 @@ public:
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
 protected:
-
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Object space damage locator information
 	virtual void GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator ) const;
@@ -258,7 +257,7 @@ protected:
 	Matrix GetObserverTransform() override;
 	const Matrix* GetTurretTransform( unsigned int turretSetIndex ) const;
 	
-	void UpdateBoosters( EveUpdateContext& updateContext ) {}
+	void UpdateBoosters( const EveUpdateContext& updateContext ) override {}
 	void UpdateWorldTransform( Be::Time time );
 
 private:
@@ -283,9 +282,6 @@ private:
 
 	int32_t m_count;
 	float m_debugSize;
-
-	// frustum so we can update the decal visibility
-	TriFrustum m_frustum;
 
 	// Squad bounds
 	Vector3 m_squadBoundsMin;

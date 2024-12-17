@@ -9,7 +9,7 @@
 
 #include "Tr2DebugRenderer.h"
 
-BLUE_DECLARE( EveUpdateContext );
+class EveUpdateContext;
 BLUE_DECLARE_INTERFACE( ITriVectorFunction );
 BLUE_DECLARE_VECTOR( ITriVectorFunction );
 BLUE_DECLARE( TriCurveSet );

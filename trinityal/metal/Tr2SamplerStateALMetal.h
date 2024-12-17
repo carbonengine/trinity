@@ -15,6 +15,8 @@ namespace TrinityALImpl
 		ALResult Create( const Tr2SamplerDescription& description, Tr2RenderContextAL& renderContext );
 		void Destroy();
 
+		uint32_t GetIndexInHeap() const;
+
 		bool IsValid() const;
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
@@ -27,6 +29,7 @@ namespace TrinityALImpl
 	private:
 		MetalContext* m_metalContext;
 		id<MTLSamplerState> m_mtlSamplerState;
+        uint32_t m_heapIndex;
 		std::string m_name;
 	};
 }

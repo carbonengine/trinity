@@ -78,14 +78,19 @@ public:
 	void GetBatches( ITriRenderBatchAccumulator* batches,
 					 const Tr2MeshAreaVector* areas, 
 					 const Tr2PerObjectData* data,
-					 float screenSize = std::numeric_limits<float>::max(),
-					 ITr2MeshBatchCallback* callback = nullptr ) const override;
+					 float screenSize = std::numeric_limits<float>::max() ) const override;
 
+
+	void GetBatches( ITriRenderBatchAccumulator * batches,
+					 const Tr2MeshAreaVector* areas,
+					 const Tr2PerObjectData* data,
+					 float screenSize,
+					 bool reverseAreas ) const;
 
 	CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr ) const override;
 	CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const override;
 	CcpMath::AxisAlignedBox GetInstanceBounds( ) const;
-	CcpMath::AxisAlignedBox GetInstanceBoundsClosestToPoint( const Vector3& point, Vector3 worldPos ) const;
+	CcpMath::Sphere GetInstanceBoundsClosestToPoint( const Vector3& point ) const;
 
 	void SetBoundingBox( const Vector3& min, const Vector3& max );
 	bool IsLoading() const;
@@ -98,37 +103,9 @@ public:
 
 	unsigned int GetVertexDeclaration() const;
 
-protected:
-	class Batch;
-
-	void RenderAreas( unsigned int areaIx, unsigned int areaCount, float screenSize, bool reversed, Tr2RenderContext& renderContext );
 private:
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   A key structure for mapping mesh area to indirect buffer.
-	// ----------------------------------------------------------------------------------
-	struct AreaKey
-	{
-		// Area starting index
-		unsigned index;
-		// Area count
-		unsigned count;
-		// Is area reversed
-		bool reversed;
-
-		bool operator==( const AreaKey& key ) const
-		{
-			return key.index == index && key.count == count && key.reversed == reversed;
-		}
-		operator size_t() const
-		{
-			return index | ( count << 8 ) | ( reversed ? 0xf0000 : 0 );
-		}
-	};
 
 	void CreateVertexDeclaration() const;
-	void RebuildIndirectBuffers();
-	Tr2BufferAL GetIndirectBuffer( const AreaKey& key );
 
 	// Path to instance geometry resource
 	std::string m_instanceGeometryResPath;
@@ -142,11 +119,6 @@ private:
 	mutable unsigned int m_vertexDeclaration;
 	// Cached instance geometry vertex declaration
 	mutable unsigned int m_instanceDeclaration;
-
-	// Map from area properties to indirect parameter buffers
-	std::map<AreaKey, Tr2BufferAL> m_indirectParams;
-	// Exposed instance count buffer pointer
-	ITr2GpuBufferPtr m_instanceCount;
 
 	BoundsMethod m_boundsMethod;
 

@@ -31,7 +31,8 @@ Tr2PrimaryRenderContextAL*& GetPrimaryRenderContextPointer()
 
 Tr2RenderContextAL::Tr2RenderContextAL()
 	: m_isValid(false),
-	m_events( nullptr )
+	m_events( nullptr ),
+	m_frameNumber( 0 )
 {
 	::GetPrimaryRenderContextPointer() = this;
 }
@@ -72,7 +73,12 @@ ALResult Tr2RenderContextAL::SetStreamSource( uint32_t, const Tr2BufferAL&, uint
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& ) throw( )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL&, uint32_t ) throw()
 {
 	return S_OK;
 }
@@ -129,6 +135,26 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 {
 	return S_OK;
 }
+
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	int32_t,
+	uint32_t )
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawInstanced(
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	uint32_t )
+{
+	return S_OK;
+}
+
 
 ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t, uint32_t )
 {
@@ -248,6 +274,7 @@ ALResult Tr2RenderContextAL::EndScene()
 
 ALResult Tr2RenderContextAL::Present()
 {
+	++m_frameNumber;
 	return S_OK;
 }
 
@@ -405,5 +432,72 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Dep
 void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
 {
 }
+
+ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type, const Tr2BindlessResourcesAL& )
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
+{
+    return S_OK;
+}
+
+bool Tr2RenderContextAL::SupportsBindlessTextures() const
+{
+	return false;
+}
+
+uint64_t Tr2RenderContextAL::GetRecordingFrameNumber() const 
+{
+	return m_frameNumber + 1;
+} 
+
+
+Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
+{
+	return Tr2UpscalingAL::Result::OK;
+}
+
+Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID )
+{
+	return nullptr;
+}
+
+Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext )
+{
+	return nullptr;
+}
+
+void Tr2RenderContextAL::DeleteUpscalingContext( uint32_t contextID )
+{}
+
+Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
+{
+	return Tr2UpscalingAL::UpscalingInfo();
+}
+
+void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal )
+{
+	technique = Tr2UpscalingAL::Technique::NONE;
+	setting = Tr2UpscalingAL::Setting::NATIVE;
+	framegeneration = false;
+	temporal = false;
+}
+
+std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
+{
+	return std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>>();
+}
+
+
+void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
+{
+}
+uint64_t Tr2RenderContextAL::GetRenderedFrameNumber() const
+{
+	return m_frameNumber;
+}
+
 
 #endif

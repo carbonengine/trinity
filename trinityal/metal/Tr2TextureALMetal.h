@@ -3,7 +3,6 @@
 #if( TRINITY_PLATFORM == TRINITY_METAL )
 
 #include "../include/Tr2TextureAL.h"
-#include "../include/Tr2BitmapDimensions.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2MemoryCounterAL.h"
 #include "MetalContext.h"
@@ -14,6 +13,7 @@ namespace TrinityALImpl
 	{
 	public:
 		Tr2TextureAL();
+        ~Tr2TextureAL();
 
 		ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
 		ALResult OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext );
@@ -44,6 +44,10 @@ namespace TrinityALImpl
 		id<MTLTexture> GetUAVMetalTexture( uint32_t mipLevel );
 
 		void AssignFromTexture( Tr2TextureAL& backBuffer );
+
+		uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+		uint32_t GetUavIndexInHeap( uint32_t mip ) const;
+
 	private:
 		Tr2BitmapDimensions m_desc;
 		Tr2MsaaDesc m_msaa;
@@ -67,12 +71,17 @@ namespace TrinityALImpl
 		id<MTLBuffer>   m_mtlReadBackBuffer;
 		id<MTLTexture>  m_mtlTexture;
 		id<MTLTexture>  m_mtlTextureSRGBView;
+        uint32_t m_srvHeapIndices[2];
 		std::vector<id<MTLTexture>>  m_mtlTextureUAV;
+        std::vector<uint32_t> m_uavHeapIndices;
+        
+        uint64_t m_usedInEncoder;
 
 		MetalContext   *m_metalContext;
 		std::string m_name;
 		Tr2MemoryCounterAL m_memory;
 		bool            m_wrappedTexture;
+        friend class ::Tr2RenderContextAL;
 	};
 }
 

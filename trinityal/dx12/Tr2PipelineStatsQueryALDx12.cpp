@@ -124,17 +124,17 @@ ALResult Tr2PipelineStatsQueryAL::End( Tr2RenderContextAL& renderContext )
 	}
 	renderContext.m_commandList->EndQuery( m_query, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0 );
 	renderContext.m_commandList->ResolveQueryData( m_query, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, 1, m_result, 0 );
-	m_frameIndex = m_owner->GetCurrentFrameIndexDx12();
+	m_frameIndex = m_owner->GetRecordingFrameNumber();
 	return S_OK;
 }
 
-ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2RenderContextAL& renderContext )
+ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2RenderContextAL& )
 {
 	if( !m_result )
 	{
 		return E_INVALIDCALL;
 	}
-	if( m_owner->GetCompletedFrameIndexDx12() < m_frameIndex )
+	if( m_owner->GetRenderedFrameNumber() < m_frameIndex )
 	{
 		return S_FALSE;
 	}
@@ -147,17 +147,17 @@ ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2Ren
 	return S_OK;
 }
 
-size_t Tr2PipelineStatsQueryAL::GetValueCount( const Tr2PipelineStatsDataAL& data )
+size_t Tr2PipelineStatsQueryAL::GetValueCount( const Tr2PipelineStatsDataAL& )
 {
 	return sizeof( s_fields ) / sizeof( s_fields[0] );
 }
 
-const char* Tr2PipelineStatsQueryAL::GetLabel( const Tr2PipelineStatsDataAL& data, size_t index )
+const char* Tr2PipelineStatsQueryAL::GetLabel( const Tr2PipelineStatsDataAL&, size_t index )
 {
 	return s_fields[index].label;
 }
 
-const char* Tr2PipelineStatsQueryAL::GetDescription( const Tr2PipelineStatsDataAL& data, size_t index )
+const char* Tr2PipelineStatsQueryAL::GetDescription( const Tr2PipelineStatsDataAL&, size_t index )
 {
 	return s_fields[index].description;
 }

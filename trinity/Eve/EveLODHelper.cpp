@@ -1,31 +1,27 @@
 #include "StdAfx.h"
 #include "EveLODHelper.h"
 
-#include "TriFrustum.h"
-
-// externs
-extern float g_eveSpaceSceneLowDetailThreshold;
-extern float g_eveSpaceSceneMediumDetailThreshold;
-
 
 // --------------------------------------------------------------------------------
 // Description:
 //   First calculate the LOD based on the provided sphere and frustum, then "merge"
 //   it with lod0
 // --------------------------------------------------------------------------------
-Tr2Lod EveLODHelper::MergeLOD( Tr2Lod lod0, const Vector4& sphere, const TriFrustum& frustum )
+Tr2Lod EveLODHelper::MergeLOD( Tr2Lod lod0, const Vector4& sphere, const EveUpdateContext& updateContext )
 {
+	auto& frustum = updateContext.GetFrustum();
+
 	// only change something if this thing is actually visible
 	if( frustum.IsSphereVisible( &sphere ) )
 	{
 		Tr2Lod lod1 = TR2_LOD_LOW;
 
 		float estimatedSize = frustum.GetPixelSizeAccross( &sphere );
-		if( estimatedSize >= g_eveSpaceSceneMediumDetailThreshold )
+		if( estimatedSize >= updateContext.GetMediumDetailThreshold() )
 		{
 			lod1 = TR2_LOD_HIGH;
 		}
-		else if( estimatedSize >= g_eveSpaceSceneLowDetailThreshold )
+		else if( estimatedSize >= updateContext.GetLowDetailThreshold() )
 		{
 			lod1 = TR2_LOD_MEDIUM;
 		}

@@ -19,6 +19,7 @@
 
 #include <D3Dcompiler.h>
 #include <d3d11.h>
+#include <dxcapi.h>
 
 #include <io.h>
 #include <stdio.h>
@@ -247,14 +248,17 @@ enum D3D11_FILL_MODE
 #include <optional>
 #include <atomic>
 #include <thread>
+#include <functional>
+
+#if !NDEBUG 
+#undef CCP_TELEMETRY_ENABLED
+#endif
 
 #if CCP_TELEMETRY_ENABLED
-#include "rad_tm.h"
+#include <tracy/Tracy.hpp>
 #else
-#define tmFunction( ... )
-#define tmZone( ... )
-#define tmThreadName( ... )
-
+#define ZoneScoped
+#define ZoneScopedN(x)
 #endif
 
 #ifndef _WIN32

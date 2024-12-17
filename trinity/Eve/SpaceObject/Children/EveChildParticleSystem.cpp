@@ -19,9 +19,6 @@
 #include "Utilities/BoundingSphere.h"
 
 
-extern float g_eveSpaceSceneLODFactor;
-
-
 EveChildParticleSystem::EveChildParticleSystem( IRoot* lockobj ):
 	EveChildTransform(),
 	PARENTLOCK( m_particleEmitters ),
@@ -103,13 +100,14 @@ void EveChildParticleSystem::Setup( const Vector3* scale, const Quaternion* rota
 	EveChildTransform::Setup( scale, rotation, translation, lowestLodVisible );
 }
 
-void EveChildParticleSystem::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildParticleSystem::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
+	auto& frustum = updateContext.GetFrustum();
 	m_isVisible = m_display && frustum.IsSphereVisible( &m_boundingSphere );
 	if( m_isVisible )
 	{
 		m_currentScreenSize = frustum.GetPixelSizeAccrossEst( &m_lodSphere );
-		m_isVisible &= m_currentScreenSize >= m_minScreenSize * g_eveSpaceSceneLODFactor;
+		m_isVisible &= m_currentScreenSize >= m_minScreenSize * updateContext.GetLodFactor();
 	}
 	else
 	{
@@ -125,9 +123,10 @@ void EveChildParticleSystem::UpdateVisibility( const TriFrustum& frustum, const 
 	}
 }
 
-bool EveChildParticleSystem::IsVisible( const TriFrustum& frustum ) const
+bool EveChildParticleSystem::IsVisible( const EveUpdateContext& updateContext ) const
 {
-	return frustum.IsSphereVisible( &m_boundingSphere ) && frustum.GetPixelSizeAccrossEst( &m_lodSphere ) >= m_minScreenSize * g_eveSpaceSceneLODFactor;
+	auto& frustum = updateContext.GetFrustum();
+	return frustum.IsSphereVisible( &m_boundingSphere ) && frustum.GetPixelSizeAccrossEst( &m_lodSphere ) >= m_minScreenSize * updateContext.GetLodFactor();
 }
 
 
@@ -170,27 +169,7 @@ void EveChildParticleSystem::GetBatches( ITriRenderBatchAccumulator* batches, Tr
 {
 	if( m_display && m_mesh && m_mesh->GetAreas(batchType)->size() != 0 )
 	{
-		if( reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION )
-		{
-			// rendering into the reflection cubemap is lefthanded, so we need to reverse all the areas 
-			auto areas = m_mesh->GetAreas( batchType );
-			for( auto it = areas->begin(); it != areas->end(); ++it )
-			{
-				( *it )->SetReversed( !( *it )->IsReversed() );
-			}
-		}
-
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData );
-
-		if( reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION )
-		{
-			// reverse them again!
-			auto areas = m_mesh->GetAreas( batchType );
-			for( auto it = areas->begin(); it != areas->end(); ++it )
-			{
-				( *it )->SetReversed( !( *it )->IsReversed() );
-			}
-		}
+		m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, std::numeric_limits<float>::max(), reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION );
 	}
 }
 
@@ -212,16 +191,24 @@ Tr2PerObjectData* EveChildParticleSystem::GetPerObjectData( ITriRenderBatchAccum
 
 	// column_major for shaders
 	data->m_world = Transpose( m_worldTransform );
+	data->m_worldLast = Transpose( m_worldTransformLast );
 	data->m_worldInverseTranspose = Inverse( m_worldTransform );
 
 	return data;
 }
 
-void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildParticleSystem::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
+	if( m_mesh )
+	{
+		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
+		{
+			m_mesh->ReverseIndexBuffers();
+		}
+	}
 }
 
-void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildParticleSystem::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform;
 	if( params.childParent )
@@ -236,6 +223,9 @@ void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext,
 	{
 		return;
 	}
+
+	m_worldTransformLast = m_worldTransform;
+
 	UpdateTransform( localToWorldTransform );
 	for( auto it = m_transformModifiers.begin(); it != m_transformModifiers.end(); ++it )
 	{
@@ -279,7 +269,7 @@ void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext,
 			{
 				TriFrustum frustum;
 				frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionRawTransform(), Tr2Renderer::GetViewport() );
-				if( frustum.GetPixelSizeAccrossEst( &m_lodSphere ) < m_minScreenSize * g_eveSpaceSceneLODFactor )
+				if( frustum.GetPixelSizeAccrossEst( &m_lodSphere ) < m_minScreenSize * updateContext.GetLodFactor() )
 				{
 					emitCountFactor = 0.f;
 				}

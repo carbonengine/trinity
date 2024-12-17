@@ -11,7 +11,7 @@ ASTNode::ASTNode( ASTNodeType type, const FileLocation& location, ScopeSymbolTab
 {
 	m_type.FromTokenType( 0 );
 	if( token )
-	{
+	{ 
 		m_token = *token;
 	}
 	else
@@ -35,7 +35,14 @@ ASTNode* ASTNode::Copy() const
 	result->m_type = m_type;
 	for( auto it = m_children.begin(); it != m_children.end(); ++it )
 	{
-		result->m_children.push_back( ( *it )->Copy() );
+		if( *it )
+		{
+			result->m_children.push_back( ( *it )->Copy() );
+		}
+		else
+		{
+			result->m_children.push_back( nullptr );
+		}
 	}
 	return result;
 }
@@ -53,6 +60,15 @@ void ASTNode::InsertChild( size_t place, ASTNode* child )
 void ASTNode::ReplaceChild( size_t place, ASTNode* child )
 {
 	m_children[place] = child;
+}
+
+void ASTNode::ReplaceChild( ASTNode* old, ASTNode* child )
+{
+    auto found = find( begin( m_children ), end( m_children ), old );
+    if( found != end( m_children ) )
+    {
+        *found = child;
+    }
 }
 
 void ASTNode::RemoveChild( size_t place )

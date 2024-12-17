@@ -18,7 +18,6 @@ BLUE_DECLARE_VECTOR( SplineTunnelGroup );
 BLUE_DECLARE( BehaviorGroup );
 BLUE_DECLARE_VECTOR( BehaviorGroup );
 
-class TriBehaviorSystemInstancingBatch;
 
 BLUE_CLASS( EveChildBehaviorSystem ) :
 	public IEveSpaceObjectChild,
@@ -44,7 +43,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveChildMesh
-	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
@@ -66,10 +65,10 @@ public:
 	const char* GetName() const;
 	void SetName( const char* name );
 
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void ChangeLOD( Tr2Lod lod );
@@ -79,7 +78,7 @@ public:
 
 	Matrix GetWorldTransform();
 
-	void ChangeBufferVertexCount();
+	void ChangeBufferInstanceCount();
 	const std::vector<SplineTunnel>* GetTunnels() const;
 	SplineTunnelGroupVector* GetSplineTunnels();
 
@@ -89,16 +88,10 @@ public:
 	unsigned int GetInstanceBufferCount() const;
 	unsigned int GetInstanceBufferVertexDeclaration( unsigned int bufferIndex ) const;
 	unsigned int GetInstanceBufferVertexCount( unsigned int bufferIndex ) const;
-	void GetVertexBuffer( unsigned int bufferIndex, Tr2BufferAL& buffer, unsigned& stride );
 	bool GetInstanceBufferBoundingBox( unsigned int bufferIndex, Vector3& minBounds, Vector3& maxBounds ) const;
 	bool HasTransparentBatches();
 	float GetSortValue();
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void Draw( TriBehaviorSystemInstancingBatch*, Tr2RenderContext& renderContext, int count, unsigned int vertexDecl,
-			  int groupIndex, RenderType renderType );
 
 	std::vector<std::pair<int, int>> GetVertexElementAddedThroughCode() const;
 
@@ -128,12 +121,6 @@ private:
 	void GetGroupBoosterBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType,
 								 const Tr2PerObjectData* perObjectData, BehaviorGroup* group );
 
-	void DrawMeshes( TriBehaviorSystemInstancingBatch* batch, Tr2RenderContext& renderContext, int count,
-		unsigned int vertexDecl, int groupIndex );
-	void DrawBoosters( TriBehaviorSystemInstancingBatch* batch, Tr2RenderContext& renderContext, int count,
-		unsigned int vertexDecl, int groupIndex );
-
-	std::vector<uint32_t> m_offsets;
 
 	EveSpaceObjectPSData m_psData;
 	EveSpaceObjectVSData m_vsData;
@@ -141,12 +128,15 @@ private:
 	bool m_display;
 	bool m_isVisible;
 
-	// Instance data as vertex buffer
-	Tr2BufferAL m_vertexBuffer;
+	// Instance data (vertex) buffer
+	Tr2BufferAL m_shipInstanceBuffer, m_boosterInstanceBuffer;
 	//number of locations in memory between beginnings of successive array elements
-	unsigned const m_stride;
+	unsigned const m_shipStride, m_boosterStride;
+
+	std::vector<uint32_t> m_startInstanceValues;
+
 	// Number of instances
-	unsigned m_vertexCount;
+	unsigned m_instanceCount;
 
 	PSplineTunnelGroupVector m_splineTunnels;
 	std::vector<SplineTunnel> m_tunnels;

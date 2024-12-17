@@ -86,7 +86,7 @@ bool GetRegistryValue( HKEY key, const char* name, std::string& value )
 bool DriverVersionToInt64( const char* driverVersion, int64_t& intVersion )
 {
 	unsigned parts[4];
-	if( sscanf_s( driverVersion, "%u.%u.%u.%u", &parts[0], &parts[1], &parts[2], &parts[3] ) == 4 )
+	if( sscanf_s( driverVersion, "%u.%u.%u.%u", &parts[0], &parts[0], &parts[0], &parts[0] ) == 4 )
 	{
 		intVersion = ( int64_t( parts[0] ) << 48 ) | ( int64_t( parts[1] ) << 32 ) | ( int64_t( parts[2] ) << 16 ) | int64_t( parts[3] );
 		return true;

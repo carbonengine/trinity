@@ -5,36 +5,8 @@
 
 #include "TriRenderBatch.h"
 #include "Tr2ConstantBufferFormats.h"
+#include "../Shader/Tr2Shader.h"
 
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This is a custom derivation of TriGeometryBatch for drawing the background cubemap 
-//   inline with the normal stream of render batches.  Needed to ensure that the 
-//   background is reflected correctly.
-// See Also
-//   TriRenderBatch, TriGeometryBatch
-// Summary
-//   Draws a cubemap as the background.
-// --------------------------------------------------------------------------------------
-class Tr2InteriorBackgroundCubemapBatch : public TriGeometryBatch
-{
-public:
-	// Destructor
-	virtual ~Tr2InteriorBackgroundCubemapBatch() {}
-
-	// Draws the background cubemap using the specified effect
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
-	// Don't render with override effects
-	virtual OverrideOptions RenderWithOverride( void ) const { return DO_NOT_RENDER_WITH_OVERRIDE; }
-
-	// For debugging in PIX
-	virtual const std::string& GetBatchTypeName( void ) const
-	{ 
-		static const std::string name = "Tr2InteriorBackgroundCubemapBatch";
-		return name; 
-	}
-};
 
 // --------------------------------------------------------------------------------------
 // Description
@@ -63,46 +35,41 @@ enum Tr2InteriorBatchGroup
 // --------------------------------------------------------------------------------------
 struct Tr2IntKeyGenerator
 {
-	// Generate a sort key for the interior render batch
-	void GenerateKey( RenderBatchSortEntry& entry ) const
+	static bool Less( const Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 )
 	{
-		const int64_t mask = 0x0000FFFF00000000;
-		const int64_t baseKey = entry.m_batch->GetUserData();
-		int64_t group = ( baseKey & mask ) >> 32;
-		const int64_t userDataMask = group << 56;
-
-		// Opaque batches are sort-by-effect
-		if( group == (unsigned int)WODINTBATCHGROUP_OPAQUE )
+		if( batch1.m_renderingMode < batch2.m_renderingMode )
 		{
-			// Get the effect sort key
-			int64_t effectKey = 0x00FFFFFFFFFFFFFF;
-			auto shaderMaterial = entry.m_batch->GetShaderMaterialInterface();
-			if( shaderMaterial )
-			{
-				effectKey = shaderMaterial->GetSortValue() & effectKey;
-			}
-
-			// Pack the effect sort key into the low 32 bits
-			entry.m_sortKey = userDataMask | effectKey;
+			return true;
 		}
-		// Everything else is sort-by-depth
+		if( batch1.m_renderingMode > batch2.m_renderingMode )
+		{
+			return false;
+		}
+		if( batch1.m_renderingMode == Tr2EffectStateManager::RM_ALPHA )
+		{
+			return batch1.m_depth < batch2.m_depth;
+		}
 		else
 		{
-			// Note: the depth key is set to zero because Umbra gives objects in front-to-back order,
-			// thus allowing us to pre-sort batches in front-to-back order (for decals) or
-			// back-to-front (for alpha-blend).
-			int64_t depthKey = entry.m_batch->GetDepth();
-
-			// Pack the depth key into the low 32 bits
-			entry.m_sortKey = userDataMask | depthKey;
+			if( batch1.m_shader < batch2.m_shader )
+			{
+				return true;
+			}
+			if( batch1.m_shader > batch2.m_shader )
+			{
+				return false;
+			}
+			return batch1.m_vertexDeclaration < batch2.m_vertexDeclaration;
 		}
 	}
 
 	// Get the sort type - need stable_sort so decals stay in artist-specified order
-	RenderBatchSortType GetSortType( void ) const 
+	static RenderBatchSortType GetSortType() 
 	{ 
 		return RENDERBATCHSORTTYPE_STABLE_SORT; 
 	}
+
+	static constexpr bool ALLOW_GDPR = false;
 };
 
 #endif

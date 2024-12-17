@@ -148,7 +148,7 @@ void EveChildPlug::SetName( const char* name )
 	m_name = BlueSharedString( name );
 }
 
-void EveChildPlug::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildPlug::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{
@@ -157,7 +157,7 @@ void EveChildPlug::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		(*it)->UpdateVisibility( frustum, parentTransform, parentLod );
+		(*it)->UpdateVisibility( updateContext, parentTransform, parentLod );
 	}
 }
 
@@ -209,7 +209,7 @@ void EveChildPlug::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRen
 	}
 }
 
-void EveChildPlug::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildPlug::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
@@ -221,7 +221,7 @@ void EveChildPlug::UpdateSyncronous( EveUpdateContext& updateContext, const EveC
 	}
 }
 
-void EveChildPlug::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildPlug::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	m_worldTransform = params.localToWorldTransform;
 	if( params.childParent )

@@ -35,6 +35,9 @@ const Be::ClassInfo* Tr2FactionLight::ExposeToBlue()
 		MAP_ATTRIBUTE( "noiseFrequency", m_lightData.noiseFrequency, "Brightness noise frequency\n:jessica-group: Noise", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "noiseOctaves", m_lightData.noiseOctaves, "Brightness turbulence octaves\n:jessica-group: Noise", Be::READWRITE | Be::PERSIST )
 
+		MAP_ATTRIBUTE_WITH_CHOOSER( "castsShadows", m_lightData.castsShadows, "Casts shadows. If the light is also volumetric, it will create godrays around the affected objects.", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, PerLightShadowSettingChooser );
+		MAP_ATTRIBUTE( "isVolumetric", m_lightData.isVolumetric, "Volumetric lights affect participating media such as fog.", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
+
 		MAP_ATTRIBUTE(
 			"lightProfilePath",
 			m_lightProfilePath,
