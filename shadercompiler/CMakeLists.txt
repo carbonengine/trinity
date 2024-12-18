@@ -66,7 +66,11 @@ set(_SOURCES
 )
 
 set(_TEST_SOURCES
+    tests/GlobalInputTest.cpp
+    tests/MetalConversionTest.cpp
+    tests/RayTracingTest.cpp
     tests/ShaderCompilerTest.cpp
+    tests/TesingUtils.h
 )
 
 
@@ -178,19 +182,12 @@ function(configure_shader_compiler target)
         )
         target_compile_options(${target} PRIVATE /W4)
 
-        if(WITH_DXC)
-            get_target_property(DEST_DIR ${target} RUNTIME_OUTPUT_DIRECTORY)
-            add_custom_command(
-                TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy "${DXC_BIN_DIR}/x64/dxcompiler.dll" "$<TARGET_FILE_DIR:${target}>/dxcompiler.dll"
-                COMMAND cmd /C attrib -R "$<TARGET_FILE_DIR:${target}>/dxcompiler.dll"
-            )
-            add_custom_command(
-                TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy "${DXC_BIN_DIR}/x64/dxil.dll" "$<TARGET_FILE_DIR:${target}>/dxil.dll"
-                COMMAND cmd /C attrib -R "$<TARGET_FILE_DIR:${target}>/dxil.dll"
-            )
-        endif()
+        # Copy DLL dependencies
+        add_custom_command(
+            TARGET ${target} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
+            COMMAND_EXPAND_LISTS
+        )
     else()
         target_compile_options(${target} PRIVATE -Wall -Wextra -pedantic -Wno-gnu-zero-variadic-macro-arguments -Wno-unused-command-line-argument)
         set_source_files_properties(${GENERATED_SOURCES_DIR}/HLSLParser.c PROPERTIES COMPILE_FLAGS "-x c++ -Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable")
@@ -258,6 +255,7 @@ if(BUILD_TESTING)
     target_compile_definitions(ShaderCompilerTest PRIVATE SHADER_COMPILER_TEST=1)
     target_link_libraries(ShaderCompilerTest PRIVATE GTest::GTest GTest::Main)
     target_sources(ShaderCompilerTest PRIVATE ${_TEST_SOURCES})
+    source_group(Tests FILES ${_TEST_SOURCES})
     configure_shader_compiler(ShaderCompilerTest)
     set_target_properties(ShaderCompilerTest PROPERTIES FOLDER "Tests")
 endif()

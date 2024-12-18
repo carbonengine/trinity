@@ -14,6 +14,7 @@ struct Type
 	bool IsTexture() const;
 	bool IsTextureArray() const;
 	bool IsSampler() const;
+	bool IsBuffer() const;
 	bool IsVector() const;
 	bool IsMatrix() const;
 	bool IsStruct() const;

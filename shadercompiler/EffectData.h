@@ -774,6 +774,7 @@ struct Library
 	StringReference hitGroupName;
 	StageData globalInputs;
 	StageData localInputs;
+	std::string source; // not persisted: for testing/debugging only
 };
 
 struct Technique

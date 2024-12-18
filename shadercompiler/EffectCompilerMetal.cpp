@@ -514,7 +514,7 @@ namespace
 						continue;
 					}
 
-					symbol->type.FromSymbol( varSymbol );
+					symbol->type = type;
 
 					// Textures and samplers do not need an address space attribute.
 					if( type.symbol &&
@@ -1613,22 +1613,8 @@ namespace
 		}
 	}
 
-	bool AutoAssignRegisters( ParserState& state, ASTNode* callNode )
+	bool AutoAssignRegistersForNode( ParserState& state, ASTNode* functionHeader, const FileLocation& messageLocation )
 	{
-		ZoneScoped;
-
-		Symbol* entryPointSymbol = callNode->GetSymbol();
-		if( !entryPointSymbol || !entryPointSymbol->definition )
-		{
-			return false;
-		}
-
-		ASTNode* functionHeader = entryPointSymbol->definition->GetChildOrNull( 0 );
-		if( !functionHeader )
-		{
-			return false;
-		}
-
 		auto GetAssignedSymbolNames = []( const std::vector<Symbol*>& symbols, size_t offset, size_t count ) {
 			std::string result;
 			for( size_t i = 0; i < count; ++i )
@@ -1949,7 +1935,7 @@ namespace
 				else
 				{
 					state.ShowMessage(
-						callNode->GetLocation(),
+						messageLocation,
 						EC_CUSTOM_ERROR,
 						"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
 						ToString( symbol->name ).c_str(),
@@ -1972,7 +1958,7 @@ namespace
 				else
 				{
 					state.ShowMessage(
-						callNode->GetLocation(),
+						messageLocation,
 						EC_CUSTOM_ERROR,
 						"Couldn't allocate a UAV register for %s. Reason: no free registers left. Already assigned UAVs: %s",
 						ToString( symbol->name ).c_str(),
@@ -2006,7 +1992,7 @@ namespace
 					else
 					{
 						state.ShowMessage(
-							callNode->GetLocation(),
+							messageLocation,
 							EC_CUSTOM_ERROR,
 							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
 							ToString( symbol->name ).c_str(),
@@ -2025,7 +2011,7 @@ namespace
 					else
 					{
 						state.ShowMessage(
-							callNode->GetLocation(),
+							messageLocation,
 							EC_CUSTOM_ERROR,
 							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
 							ToString( symbol->name ).c_str(),
@@ -2052,7 +2038,7 @@ namespace
 				else
 				{
 					state.ShowMessage(
-						callNode->GetLocation(),
+						messageLocation,
 						EC_CUSTOM_ERROR,
 						"Couldn't allocate a UAV register for %s. Reason: no free registers left. Already assigned UAVs: %s",
 						ToString( symbol->name ).c_str(),
@@ -2079,7 +2065,7 @@ namespace
 					else
 					{
 						state.ShowMessage(
-							callNode->GetLocation(),
+							messageLocation,
 							EC_CUSTOM_ERROR,
 							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
 							ToString( symbol->name ).c_str(),
@@ -2098,7 +2084,7 @@ namespace
 					else
 					{
 						state.ShowMessage(
-							callNode->GetLocation(),
+							messageLocation,
 							EC_CUSTOM_ERROR,
 							"Couldn't allocate a sampler register for %s. Reason: no free registers left. Already assigned samplers: %s",
 							ToString( symbol->name ).c_str(),
@@ -2116,6 +2102,24 @@ namespace
 		}
 
 		return true;
+	}
+
+	bool AutoAssignRegisters( ParserState& state, ASTNode* callNode )
+	{
+		ZoneScoped;
+
+		Symbol* entryPointSymbol = callNode->GetSymbol();
+		if( !entryPointSymbol || !entryPointSymbol->definition )
+		{
+			return false;
+		}
+
+		ASTNode* functionHeader = entryPointSymbol->definition->GetChildOrNull( 0 );
+		if( !functionHeader )
+		{
+			return false;
+		}
+		return AutoAssignRegistersForNode( state, functionHeader, callNode->GetLocation() );
 	}
 
 	ASTNode* NewStructMember( ParserState& state, Symbol* sourceSymbol )
@@ -2666,50 +2670,6 @@ namespace
 				params[i] = arg->GetSymbol();
 			}
 		}
-
-        if( shaderType == PatchShaderType::RAY_GEN )
-        {
-            header->AddChild( NewFunctionParameter( state, hlsl::uint3_t, "__dispatchRaysIndex", MetalSystemSemantics( MetalSystemSemanticsType::thread_position_in_grid ) ) );
-            header->AddChild( NewFunctionParameter( state, hlsl::uint3_t, "__dispatchRaysDimensions", MetalSystemSemantics( MetalSystemSemanticsType::threads_per_grid ) ) );
-
-            std::vector<ASTNode*> traceRay;
-            FindCallsToSymbol( entryPointSymbol->definition, state.GetSymbolTable().Lookup( MakeInlineString( "TraceRay" ) ), traceRay );
-            
-            if( !traceRay.empty() )
-            {
-                auto payload = traceRay[0]->GetChild( 7 );
-                if( traceRay.size() > 1 && payload )
-                {
-                    for( size_t i = 1; i < traceRay.size(); ++i )
-                    {
-                        if( traceRay[i]->GetChild( 7 ) && traceRay[i]->GetChild( 7 )->GetType() != payload->GetType() )
-                        {
-                            state.ShowMessage( traceRay[i]->GetChild( 7 )->GetLocation(), EC_CUSTOM_ERROR, "Metal does not support RayGen shaders that use multiple TraceRay calls with different payloads" );
-                            return nullptr;
-                        }
-                    }
-                }
-                
-                auto t = state.GetSymbolTable().AddSymbol( MakeInlineString( "intersection_function_table<__INTERSECION_TAGS>" ) );
-                t->isTypeName = true;
-                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__intersectionTable", RegisterSpecifier::Register( MetalRegister::SRV, METAL_INTERSECTION_FUNCTION_TABLE_SLOT ) ) );
-                
-                CompilerInputStream os( state, ShadingLanguage::MSL );
-                os << "visible_function_table<void(thread " << traceRay[0]->GetChild( 7 )->GetType() << "&, __MetalHitSV, device __RtLocalMaterial*)>";
-                
-                t = state.GetSymbolTable().AddSymbol( state.AllocateName( os.str().c_str() ) );
-                t->isTypeName = true;
-
-                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__missShaderFunctionTable", RegisterSpecifier::Register( MetalRegister::SRV, METAL_MISS_FUNCTION_TABLE_SLOT ) ) );
-                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__hitShaderFunctionTable", RegisterSpecifier::Register( MetalRegister::SRV, METAL_CLOSEST_HIT_FUNCTION_TABLE_SLOT ) ) );
-
-                t = state.GetSymbolTable().AddSymbol( MakeInlineString( "device __RtLocalMaterial*" ) );
-                t->isTypeName = true;
-
-                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__missMaterials", RegisterSpecifier::Register( MetalRegister::SRV, METAL_MISS_MATERIAL_SLOT ) ) );
-                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__hitMaterials", RegisterSpecifier::Register( MetalRegister::SRV, METAL_HIT_MATERIAL_SLOT ) ) );
-            }
-        }
         
 		if( inputsStruct )
 		{
@@ -2852,7 +2812,41 @@ namespace
 		return shader;
 	}
 
-    ASTNode* PatchRtShader( PatchShaderType shaderType, ASTNode* callNode, ParserState& state, std::vector<Symbol*>& rtConstantBuffers )
+	struct RtShaderSourceArguments
+	{
+		ASTNode* payloadArg = nullptr;
+		ASTNode* attributeArg = nullptr;
+		std::vector<ASTNode*> other;
+	};
+
+	RtShaderSourceArguments ClassifyRtShaderArguments( ASTNode* functionHeader )
+	{
+		RtShaderSourceArguments result;
+
+		for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
+		{
+			ASTNode* sourceArg = functionHeader->GetChild( i );
+			Symbol* sourceSymbol = sourceArg->GetSymbol();
+
+			bool isPayload = sourceArg->GetType().IsStruct() && sourceSymbol->addressSpace == AddressSpace::None && !result.payloadArg;
+			bool isAttribute = sourceArg->GetType().IsStruct() && sourceSymbol->addressSpace == AddressSpace::None && result.payloadArg;
+			if( isPayload )
+			{
+				result.payloadArg = sourceArg;
+			}
+			else if( isAttribute )
+			{
+				result.attributeArg = sourceArg;
+			}
+			else
+			{
+				result.other.push_back( sourceArg );
+			}
+		}
+		return result;
+	}
+
+    ASTNode* PatchRtShader( RtShaderType shaderType, ASTNode* callNode, ParserState& state, std::vector<Symbol*>& rtConstantBuffers, const std::vector<GlobalInputElement>& globalInput, ASTNode* globalInputsStruct, const Symbol* payloadType )
     {
         ZoneScoped;
 
@@ -2868,7 +2862,7 @@ namespace
             return nullptr;
         }
 
-        ScannerToken shaderName = ScannerToken::ID( GetEntryPointName( shaderType, callNode ) );
+        ScannerToken shaderName = ScannerToken::ID( callNode->GetSymbol()->name );
 
         state.GetCurrentLocation().fileName = shaderName.stringValue;
         state.GetCurrentLocation().lineNumber = 1;
@@ -2884,78 +2878,123 @@ namespace
 
         ASTNode* payloadArg = nullptr;
         ASTNode* attributeArg = nullptr;
-        
-        for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
+
+		auto sourceArguments = ClassifyRtShaderArguments( functionHeader );
+		if ( sourceArguments.payloadArg )
+		{
+			payloadArg = NewFunctionParameter( state, sourceArguments.payloadArg->GetType(), state.AllocateName( sourceArguments.payloadArg->GetSymbol()->name ) );
+			payloadArg->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
+			header->AddChild( payloadArg );
+		}
+		if ( sourceArguments.attributeArg )
+		{
+			attributeArg = NewFunctionParameter( state, sourceArguments.attributeArg->GetType(), state.AllocateName( sourceArguments.attributeArg->GetSymbol()->name ) );
+			header->AddChild( attributeArg );
+		}
+
+		ASTNode* localInputArg = nullptr;
+		{
+			auto t = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "device __RtLocalMaterial*" ) );
+			localInputArg = NewFunctionParameter( state, TypeFromSymbol( t ), "__rtMaterials", RegisterSpecifier::Register( MetalRegister::SRV, 0 ) );
+			header->AddChild( localInputArg );
+		}
+
+		ASTNode* globalInputArg = nullptr;
+		{
+			globalInputArg = NewFunctionParameter( state, TypeFromSymbol( globalInputsStruct->GetSymbol() ), "__rtGlobals", RegisterSpecifier::Register( MetalRegister::SRV, 1 ) );
+			globalInputArg->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
+			globalInputArg->GetSymbol()->addressSpace = AddressSpace::Constant;
+			header->AddChild( globalInputArg );
+		}
+
+		ASTNode* shaderTable = nullptr;
+		{
+			std::string shaderTableTypeName = "ShaderTableT<" + ToString( payloadType->name ) + "," + ToString( globalInputsStruct->GetSymbol()->name ) + ">";
+			auto t = state.GetSymbolTable().AddTypeSymbol( state.AllocateName( shaderTableTypeName.c_str() ) );
+
+			shaderTable = NewFunctionParameter( state, TypeFromSymbol( t ), "__rtShaderTable", RegisterSpecifier::Register( MetalRegister::SRV, 2 ) );
+			shaderTable->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
+			shaderTable->GetSymbol()->addressSpace = AddressSpace::Constant;
+			header->AddChild( shaderTable );
+		}
+
+		auto autoT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto" ) );
+
         {
-            // Add parameters for the rest of original shader inputs
-            ASTNode* sourceArg = functionHeader->GetChild( i );
-            Symbol* sourceSymbol = sourceArg->GetSymbol();
-            
-            bool isPayload = sourceArg->GetType().IsStruct() && sourceSymbol->addressSpace == AddressSpace::None && !payloadArg;
-            bool isAttribute = sourceArg->GetType().IsStruct() && sourceSymbol->addressSpace == AddressSpace::None && payloadArg;
-
-            auto arg = NewFunctionParameter( state, sourceArg->GetType(), state.AllocateName( sourceSymbol->name ) );
-            arg->GetSymbol()->addressSpace = sourceSymbol->addressSpace;
-            arg->GetSymbol()->registerSpecifier.swap( sourceSymbol->registerSpecifier );
-
-            if( isPayload )
+			for( auto arg : sourceArguments.other )
             {
-                ScannerToken ref = {};
-                ref.type = OP_INOUT;
-                arg->SetToken( &ref );
+				auto foundGlobal = find_if( begin( globalInput ), end( globalInput ), [arg]( auto& x ) { 
+					bool isCBuffer = x.type.symbol == nullptr && x.type.builtInType == 0;
+					if( isCBuffer )
+					{
+						return arg->GetType().symbol && arg->GetType().symbol->definition == x.declaration;
+					}
+					return x.name == arg->GetSymbol()->name; 
+					} );
 
-                payloadArg = arg;
-            }
-            if( isAttribute )
-            {
-                attributeArg = arg;
-            }
+				if( foundGlobal != end( globalInput ) )
+				{
+					auto localSymbol = state.GetSymbolTable().AddSymbol( arg->GetSymbol()->name, ALLOW_OVERRIDES );
+					localSymbol->type = TypeFromSymbol( autoT );
 
-            header->AddChild( arg );
+					auto memberName = foundGlobal == end( globalInput ) ? arg->GetSymbol()->name : foundGlobal->name;
+					auto rhs = NewDot( state, NewVarIdentifier( state, globalInputArg->GetSymbol() ), memberName );
+					if( arg->GetType().symbol )
+					{
+						auto access = state.NewNode( NT_POSTFIX_EXPRESSION, ScannerToken::FromTokenType( OP_LEFT_BRACKET ) );
+						access->AddChild( rhs );
+						access->AddChild( NewLiteralConst( state, 0u ) );
+						rhs = access;
+					}
+					else
+					{
+						rhs = NewCastExpression( state, arg->GetType(), rhs );
+					}
+					rhs->SetSymbol( arg->GetSymbol() );
+
+					auto decl = NewVarDeclaration( state, localSymbol, rhs );
+					localSymbol->definition = decl;
+					decl->GetChild( 0 )->AddChild( nullptr );
+					shaderBody->AddChild( decl );
+				}
+				else
+				{
+					int idx = -1;
+					Symbol* symbol = arg->GetSymbol();
+					if( symbol && !symbol->registerSpecifier.empty() )
+					{
+						const RegisterSpecifier& reg = symbol->registerSpecifier.cbegin()->second;
+						if( reg.registerType == MetalRegister::CBuffer )
+						{
+							idx = reg.registerNumber;
+						}
+					}
+					if( idx < 0 )
+					{
+						idx = GetCBufferIndex( arg->GetSymbol() );
+					}
+					if( idx >= 0 )
+					{
+						shaderBody->AddChild( NewVarDeclaration( state, arg->GetSymbol() ) );
+						auto registerNumber = uint32_t( idx );
+
+						if( rtConstantBuffers.size() <= registerNumber )
+						{
+							rtConstantBuffers.resize( registerNumber + 1 );
+							rtConstantBuffers[registerNumber] = arg->GetSymbol();
+						}
+
+						auto ctr = NewFunctionCall( state, hlsl::void_t, "__GetLocalRTBuffer", { NewLiteralConst( state, registerNumber ), NewVarIdentifier( state, arg->GetSymbol() ) } );
+						shaderBody->AddChild( NewExpressionStatement( state, ctr ) );
+
+						arg->GetSymbol()->registerSpecifier.clear();
+						arg->GetSymbol()->addressSpace = AddressSpace::None;
+					}
+				}
+            }
         }
 
-        {
-            auto t = state.GetSymbolTable().AddSymbol( MakeInlineString( "device __RtLocalMaterial*" ) );
-            t->isTypeName = true;
-            
-            auto materials = NewFunctionParameter( state, TypeFromSymbol( t ), "__rtMaterials", RegisterSpecifier::Register( MetalRegister::SRV, 0 ) );
-            
-            for( size_t i = 0; i < header->GetChildrenCount(); ++i )
-            {
-                auto arg = header->GetChild( i );
-                if( arg != payloadArg && arg != attributeArg )
-                {
-                    if( !arg->GetType().IsStruct() || arg->GetSymbol()->registerSpecifier.empty() )
-                    {
-                        continue;
-                    }
-                    
-                    shaderBody->AddChild( NewVarDeclaration( state, arg->GetSymbol() ) );
-                    auto registerNumber = uint32_t( arg->GetSymbol()->registerSpecifier.begin()->second.registerNumber );
-                    
-                    if( rtConstantBuffers.size() <= registerNumber )
-                    {
-                        rtConstantBuffers.resize( registerNumber + 1 );
-                        rtConstantBuffers[registerNumber] = arg->GetSymbol();
-                    }
-                    
-                    auto ctr = NewFunctionCall( state, hlsl::void_t, "__GetLocalRTBuffer", {
-                        NewLiteralConst( state, registerNumber ),
-                        NewVarIdentifier( state, materials->GetSymbol() )
-                    } );
-                    shaderBody->AddChild( NewExpressionStatement( state, ctr ) );
-
-                    arg->GetSymbol()->registerSpecifier.clear();
-                    arg->GetSymbol()->addressSpace = AddressSpace::None;
-                    
-                    header->RemoveChild( i-- );
-                }
-            }
-
-            header->AddChild( materials );
-        }
-
-        if( shaderType == PatchShaderType::ANY_HIT )
+        if( shaderType == RtShaderType::ANY_HIT )
         {
             if( payloadArg )
             {
@@ -2973,9 +3012,7 @@ namespace
                 header->ReplaceChild( attributeArg, arg );
             }
             
-            auto metalHitSVt = state.GetSymbolTable().AddSymbol( MakeInlineString( "__MetalHitSV" ) );
-            metalHitSVt->isTypeName = true;
-
+            auto metalHitSVt = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "__MetalHitSV" ) );
             auto metalHitSVDecl = NewVarDeclaration( state, TypeFromSymbol( metalHitSVt ), MakeInlineString( "__metalHitSV" ) );
             shaderBody->AddChild( metalHitSVDecl );
             auto metalHitSV = metalHitSVDecl->GetChild( 0 )->GetSymbol();
@@ -3000,10 +3037,14 @@ namespace
             AddSystemValue( hlsl::float_t, MetalSystemSemanticsType::distance );
 
         }
+		else if( shaderType == RtShaderType::RAY_GEN )
+		{
+			header->AddChild( NewFunctionParameter( state, hlsl::uint3_t, "__dispatchRaysIndex", MetalSystemSemantics( MetalSystemSemanticsType::thread_position_in_grid ) ) );
+			header->AddChild( NewFunctionParameter( state, hlsl::uint3_t, "__dispatchRaysDimensions", MetalSystemSemantics( MetalSystemSemanticsType::threads_per_grid ) ) );
+		}
         else
         {
-            auto metalHitSVt = state.GetSymbolTable().AddSymbol( MakeInlineString( "__MetalHitSV" ) );
-            metalHitSVt->isTypeName = true;
+            auto metalHitSVt = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "__MetalHitSV" ) );
             
             auto arg = NewFunctionParameter( state, TypeFromSymbol( metalHitSVt ), "__metalHitSV" );
             
@@ -3015,36 +3056,23 @@ namespace
                 auto declList = NewVarDeclaration( state, attributeArg->GetSymbol(), NewCastExpression( state, attributeArg->GetSymbol()->type, dot ) );
                 shaderBody->AddChild( declList );
                 
-                header->ReplaceChild( attributeArg, arg );
+                header->RemoveChild( attributeArg );
             }
-            else
-            {
-                header->AddChild( arg );
-            }
+            header->InsertChild( 1, arg );
         }
         
-        if( shaderType == PatchShaderType::MISS )
+		for( auto& stmt : entryPointSymbol->definition->GetChild( 1 )->GetChildren() )
         {
-            // order matters
-            assert( header->GetChildrenCount() == 3 );
-            std::swap( header->GetChildren()[1], header->GetChildren()[2] );
+            shaderBody->AddChild( stmt->Copy() );
         }
-        
+		if( shaderType == RtShaderType::ANY_HIT )
         {
-            auto& statements = entryPointSymbol->definition->GetChild( 1 )->GetChildren();
-            for( auto& stmt : statements )
-            {
-                shaderBody->AddChild( stmt->Copy() );
-            }
-            if( shaderType == PatchShaderType::ANY_HIT )
-            {
-                header->SetType( hlsl::bool_t );
-                shaderBody->AddChild( NewReturn( state, NewLiteralConst( state, true ) ) );
-            }
-            else
-            {
-                header->SetType( hlsl::void_t );
-            }
+            header->SetType( hlsl::bool_t );
+            shaderBody->AddChild( NewReturn( state, NewLiteralConst( state, true ) ) );
+        }
+        else
+        {
+            header->SetType( hlsl::void_t );
         }
 
         state.GetSymbolTable().LeaveScope();
@@ -3056,7 +3084,19 @@ namespace
         shader->AddChild( shaderBody );
 
         auto attribList = state.NewNode( NT_FUNCTION_ATTRIBUTE_LIST );
-        attribList->AddChild( state.NewNode( NT_FUNCTION_ATTRIBUTE, ScannerToken::ID( GetShaderAttribute( shaderType ) ) ) );
+
+		InlineString funcAttr;
+        switch( shaderType )
+		{
+		case RtShaderType::RAY_GEN:
+			funcAttr = MakeInlineString( "kernel" );
+		case RtShaderType::ANY_HIT:
+			funcAttr = MakeInlineString( "[[intersection(triangle, __INTERSECION_TAGS)]]" );
+		default:
+			funcAttr = MakeInlineString( "[[visible]]" );
+		}
+
+        attribList->AddChild( state.NewNode( NT_FUNCTION_ATTRIBUTE, ScannerToken::ID( funcAttr ) ) );
         shader->AddChild( attribList );
         state.GetTree()->AddChild( shader );
 
@@ -3555,54 +3595,23 @@ namespace
             return false;
         }
 
-        for( auto cb : rtConstantBuffers )
+		for( size_t i = 0; i < rtConstantBuffers.size(); ++i )
         {
-            if( !cb || !cb->type.symbol )
+            if( !rtConstantBuffers[i] )
             {
                 continue;
             }
-            if( cb->type.symbol->registerSpecifier.empty() )
+            RegisterInputDescription r = { RT_CONSTANT_BUFFER, (uint32_t)i, 1, 0 };
+            if( find( begin( stage.registerInputs ), end( stage.registerInputs ), r ) == end( stage.registerInputs ) )
             {
-                assert( false );
-                continue;
-            }
-            const RegisterSpecifier& reg = cb->type.symbol->registerSpecifier.cbegin()->second;
-
-            if( reg.registerType == MetalRegister::CBuffer )
-            {
-                RegisterInputDescription r = { RT_CONSTANT_BUFFER, (uint32_t)reg.registerNumber, 1, 0 };
-                if( find( begin( stage.registerInputs ), end( stage.registerInputs ), r ) == end( stage.registerInputs ) )
-                {
-                    stage.registerInputs.push_back( r );
-                }
-            }
-            else
-            {
-                assert( false );
+                stage.registerInputs.push_back( r );
             }
         }
         return true;
     }
 
-	bool GetStageData( ParserState& state, StageData& stage, ASTNode* callNode, std::map<StringReference, ParameterAnnotation>& annotations )
+	bool GetStageDataForNode( ParserState & state, StageData & stage, ASTNode * functionHeader, std::map<StringReference, ParameterAnnotation> & annotations )
 	{
-        if( !CollectConstants( state, stage, annotations ) )
-        {
-            return false;
-        }
-
-		Symbol* entryPointSymbol = callNode->GetSymbol();
-		if( !entryPointSymbol || !entryPointSymbol->definition )
-		{
-			return false;
-		}
-
-		ASTNode* functionHeader = entryPointSymbol->definition->GetChildOrNull( 0 );
-		if( !functionHeader )
-		{
-			return false;
-		}
-
 		for( size_t i = 0, n = functionHeader->GetChildrenCount(); i < n; ++i )
 		{
 			ASTNode* child = functionHeader->GetChild( i );
@@ -3878,6 +3887,52 @@ namespace
 
 		return true;
 	}
+
+	bool GetStageData( ParserState& state, StageData& stage, ASTNode* callNode, std::map<StringReference, ParameterAnnotation>& annotations )
+	{
+		if( !CollectConstants( state, stage, annotations ) )
+		{
+			return false;
+		}
+
+		Symbol* entryPointSymbol = callNode->GetSymbol();
+		if( !entryPointSymbol || !entryPointSymbol->definition )
+		{
+			return false;
+		}
+
+		ASTNode* functionHeader = entryPointSymbol->definition->GetChildOrNull( 0 );
+		if( !functionHeader )
+		{
+			return false;
+		}
+		return GetStageDataForNode( state, stage, functionHeader, annotations );
+	}
+
+	bool GetGlobalInputData( ParserState& state, StageData& stage, const std::vector<GlobalInputElement>& globalInputs, ASTNode* globalInputsStruct, std::map<StringReference, ParameterAnnotation>& annotations )
+	{
+		auto tmp = state.NewNode( NT_FUNCTION_HEADER );
+		for( size_t gi = 0; gi < globalInputs.size(); ++gi )
+		{
+			auto member = globalInputsStruct->GetChild( gi )->GetChild( 0 )->Copy();
+			member->SetType( globalInputs[gi].type );
+			tmp->InsertChild( 0, member );
+		}
+		if( !AutoAssignRegistersForNode( state, tmp, globalInputsStruct->GetLocation() ) )
+		{
+			return false;
+		}
+		if( !GetStageDataForNode( state, stage, tmp, annotations ) )
+		{
+			return false;
+		}
+		for( auto& element : tmp->GetChildren() )
+		{
+			element->GetSymbol()->registerSpecifier.clear();
+		}
+		return true;
+	}
+
 
 	std::pair<int, std::string> RunProcess( const char* commandLine )
 	{
@@ -4336,6 +4391,97 @@ namespace
         }
         return compiledCode;
     }
+
+	ASTNode* CreateGlobalInputsStruct( ParserState& state, const std::vector<GlobalInputElement>& globalInputs )
+	{
+		auto globalInputsStruct = NewStruct( state, state.AllocateNameWithPrefix( "__RtGlobalInput" ) );
+		state.GetSymbolTable().EnterScope();
+		for( auto& in : globalInputs )
+		{
+			auto existing = state.GetSymbolTable().LookupGlobal( ToString( in.name ).c_str() );
+			if( !existing )
+			{
+				existing = state.GetSymbolTable().LookupBuffer( in.name );
+			}
+			auto symbol = state.GetSymbolTable().AddSymbol( existing->name );
+			if ( existing->isTypeName )
+			{
+				symbol->type.FromSymbol( existing );
+				symbol->registerSpecifier = existing->registerSpecifier;
+			}
+			else
+			{
+				symbol->type = existing->type;
+			}
+			auto type = symbol->type;
+			if( type.symbol &&
+				type.symbol->definition &&
+				type.symbol->definition->GetNodeType() == NT_STRUCT )
+			{
+				symbol->type = TypeFromTokenType( OP_STRUCTUREDBUFFER );
+				symbol->type.templateParameter = new Type( type );
+				symbol->addressSpace = AddressSpace::Constant;
+			}
+			else
+			{
+				switch( type.builtInType )
+				{
+				case OP_BUFFER:
+				case OP_STRUCTUREDBUFFER:
+				case OP_RWBUFFER:
+				case OP_RWSTRUCTUREDBUFFER:
+				case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+					symbol->addressSpace = AddressSpace::Device;
+					if( type.arrayDimensions )
+					{
+						symbol->resourceRefWrapped = true;
+					}
+					break;
+				default:
+					if( type.arrayDimensions && ( type.IsTexture() || type.IsSampler() ) )
+					{
+						symbol->addressSpace = AddressSpace::Device;
+						symbol->resourceRefWrapped = true;
+					}
+					break;
+				}
+			}
+			auto decl = state.NewNode( NT_NAME_DECLARATION );
+			decl->SetSymbol( symbol );
+			decl->SetType( symbol->type );
+
+			if( !existing->isTypeName )
+			{
+				if( ASTNode* bracketList = existing->definition->GetChildOrNull( 0 ) )
+				{
+					decl->AddChild( bracketList->Copy() );
+				}
+			}
+			auto member = state.NewNode( NT_STRUCT_MEMBER );
+			member->AddChild( decl );
+			member->SetType( in.type );
+			globalInputsStruct->AddChild( member );
+		}
+		state.GetSymbolTable().LeaveScope();
+		bool inserted = false;
+		for( size_t i = 0; i < state.GetTree()->GetChildrenCount(); ++i )
+		{
+			if( auto child = state.GetTree()->GetChild( i ) )
+			{
+				if( child->GetNodeType() != NT_STRUCT )
+				{
+					state.GetTree()->InsertChild( i, globalInputsStruct );
+					inserted = true;
+					break;
+				}
+			}
+		}
+		if( !inserted )
+		{
+			state.GetTree()->AddChild( globalInputsStruct );
+		}
+		return globalInputsStruct;
+	}
 }
 
 const char* MetalSystemSemanticsType::GetString( int type )
@@ -4742,8 +4888,17 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
             library.localInputs.defaultValuesStr = INVALID_REFERENCE;
 
             std::map<std::string, std::string> shaders;
+			std::vector<GlobalInputElement> globalInputs;
+			ASTNode* globalInputsStruct = nullptr;
 
             state.GetSymbolTable().ResetUsedFlag();
+
+			Symbol* payloadType = ProcessPayloadTypeState( state, libNode );
+			if( !payloadType )
+			{
+				return false;
+			}
+
             for( size_t i = 0; i < libNode->GetChildrenCount(); ++i )
             {
                 auto childNode = libNode->GetChild( i );
@@ -4760,63 +4915,46 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
                         return false;
                     }
                     listing.literal( childNode->GetChild( 1 )->GetSymbol()->name );
-                    PatchShaderType patchShaderType;
-                    switch ( shaderExport.type )
-                    {
-                    case RtShaderType::RAY_GEN:
-                        patchShaderType = PatchShaderType::RAY_GEN;
-                        break;
-                    case RtShaderType::MISS:
-                        patchShaderType = PatchShaderType::MISS;
-                        break;
-                    case RtShaderType::CLOSEST_HIT:
-                        patchShaderType = PatchShaderType::CLOSEST_HIT;
-                        break;
-                    case RtShaderType::ANY_HIT:
-                        patchShaderType = PatchShaderType::ANY_HIT;
-                        break;
-                    default:
+
+                    if( shaderExport.type == RtShaderType ::INTERSECTION )
+					{
                         state.ShowMessage( childNode->GetLocation(), EC_CUSTOM_ERROR, "Shader type %i is not supported by Metal", int( shaderExport.type.operator RtShaderType() ) );
                         return false;
                     }
-                    
+
+					if( !ProcessGlobalInputAttribute( state, childNode->GetChild( 1 )->GetSymbol()->definition, globalInputs ) )
+					{
+						return false;
+					}
+					if( !globalInputsStruct )
+					{
+						globalInputsStruct = CreateGlobalInputsStruct( state, globalInputs );
+					}
+
                     std::vector<Symbol*> rtConstantBuffers;
-                    
-                    ASTNode* shader;
-                    if( patchShaderType == PatchShaderType::RAY_GEN )
-                    {
-                        shader = PatchShader( patchShaderType, childNode->GetChild( 1 ), state );
-                    }
-                    else
-                    {
-                        shader = PatchRtShader( patchShaderType, childNode->GetChild( 1 ), state, rtConstantBuffers );
-                    }
+                    ASTNode* shader = PatchRtShader( shaderExport.type, childNode->GetChild( 1 ), state, rtConstantBuffers, globalInputs, globalInputsStruct, payloadType );
                     
                     childNode->GetChild( 1 )->SetSymbol( shader->GetChild( 0 )->GetSymbol() );
 
                     ApplyPackedModifiersToConstantBuffers( shader );
 
                     MarkUsedSymbols( shader, state );
-                    if( patchShaderType == PatchShaderType::RAY_GEN )
+					for ( auto& gi : globalInputs )
+					{
+						MarkUsedSymbols( gi.declaration, state );
+					}
+
+					if( !GetGlobalInputData( state, library.globalInputs, globalInputs, globalInputsStruct, result.annotations ) )
+					{
+						return false;
+					}
+
+                    if( !GetStageData( state, library.localInputs, rtConstantBuffers, result.annotations ) )
                     {
-                        // Ray gen is just a compute shader
-                        if( !AutoAssignRegisters( state, childNode->GetChild( 1 ) ) )
-                        {
-                            return false;
-                        }
-                        if( !GetStageData( state, library.globalInputs, childNode->GetChild( 1 ), result.annotations ) )
-                        {
-                            return false;
-                        }
+                        return false;
                     }
-                    else
-                    {
-                        if( !GetStageData( state, library.localInputs, rtConstantBuffers, result.annotations ) )
-                        {
-                            return false;
-                        }
-                    }
-                    if( !library.globalInputs.defaultValues.empty() )
+
+					if( !library.globalInputs.defaultValues.empty() )
                     {
                         library.globalInputs.defaultValuesStr = g_stringTable.AddString( &library.globalInputs.defaultValues[0], library.globalInputs.defaultValues.size() );
                     }
@@ -4870,6 +5008,8 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
             os << MSL{ state.GetTree(), &state.GetSymbolTable() };
             //printf( "%s\n", SanitizeCode( os.str() ).c_str() );
+
+			library.source = os.str();
 
             auto compiledCode = CompileCode( os.str(), defines, false );
             if( compiledCode.empty() )
