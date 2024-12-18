@@ -28,7 +28,7 @@ namespace TrinityALImpl
 		const std::vector<TrinityALImpl::Tr2RootSignatureAL*>& GetLocalSignatures() const;
 		const TrinityALImpl::Tr2RootSignatureAL* GetLocalSignature( const wchar_t* name ) const;
 	private:
-		ALResult CreateRootSignature( TrinityALImpl::Tr2RootSignatureAL& rootSignature, const Tr2ShaderSignatureAL& signature, uint32_t space, D3D12_ROOT_SIGNATURE_FLAGS flags, Tr2PrimaryRenderContextAL& renderContext );
+		ALResult CreateRootSignature( TrinityALImpl::Tr2RootSignatureAL& rootSignature, const Tr2ShaderSignatureAL& signature, D3D12_ROOT_SIGNATURE_FLAGS flags, Tr2PrimaryRenderContextAL& renderContext );
 
 		CComPtr<ID3D12StateObject> m_state;
 		CComPtr<ID3D12StateObjectProperties> m_stateInfo;
