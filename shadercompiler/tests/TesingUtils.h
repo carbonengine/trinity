@@ -7,6 +7,8 @@
 
 extern CompileMessageQueue g_messages;
 
+
+
 template <typename Compiler>
 bool Compiles( const char* src )
 {

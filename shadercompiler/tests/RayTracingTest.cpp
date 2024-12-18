@@ -11,12 +11,16 @@ class RayTracing : public testing::Test
 {
 public:
 	using Compiler = T;
-	using List = std::list<T>;
 	static T shared_;
 	T value_;
 };
 
+#if _WIN32
 using RayTracingCompilers = ::testing::Types<EffectCompilerDX12, EffectCompilerMetal>;
+#else
+using RayTracingCompilers = ::testing::Types<EffectCompilerMetal>;
+#endif
+
 TYPED_TEST_SUITE( RayTracing, RayTracingCompilers );
 
 TYPED_TEST( RayTracing, NumericInputsAreLocal )
@@ -46,7 +50,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	EXPECT_FALSE( data.techniques[0].libraries[0].localInputs.constants.empty() );
 	EXPECT_TRUE( data.techniques[0].libraries[0].globalInputs.constants.empty() );
 }
@@ -79,7 +83,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	EXPECT_TRUE( data.techniques[0].libraries[0].localInputs.textures.empty() );
 	EXPECT_FALSE( data.techniques[0].libraries[0].globalInputs.textures.empty() );
 }
@@ -111,7 +115,7 @@ technique t0
 }
 )SRC";
 
-	ASSERT_FALSE( Compiles<TestFixture::Compiler>( src ) );
+	ASSERT_FALSE( Compiles<typename TestFixture::Compiler>( src ) );
 }
 
 TYPED_TEST( RayTracing, AssignsRegistersBasedOnGlobalInput )
@@ -143,7 +147,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	// GlobalInpt texture should be assigned to register (t1, space0)
 	EXPECT_TRUE( data.techniques[0].libraries[0].localInputs.textures.empty() );
 	auto& textures = data.techniques[0].libraries[0].globalInputs.textures;
@@ -184,7 +188,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	// GlobalInpt texture should be assigned to register (t1, space8)
 	EXPECT_TRUE( data.techniques[0].libraries[0].localInputs.textures.empty() );
 	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 2u );
@@ -221,7 +225,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	// GlobalInpt texture should be assigned to register (t1, space8)
 	EXPECT_TRUE( data.techniques[0].libraries[0].localInputs.textures.empty() );
 	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 2u );
@@ -260,7 +264,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	// GlobalInpt texture should be assigned to register (t1, space8)
 	EXPECT_TRUE( data.techniques[0].libraries[0].localInputs.textures.empty() );
 	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 2u );
@@ -299,7 +303,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	EXPECT_TRUE( data.techniques[0].libraries[0].localInputs.registerInputs.empty() );
 	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 1u );
 	EXPECT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs[0].registerType, RT_CONSTANT_BUFFER );
@@ -333,7 +337,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	ASSERT_FALSE( data.techniques[0].libraries[0].localInputs.constants.empty() );
 	ASSERT_EQ( std::string( "DefaultVisibility" ), g_stringTable.GetString( data.techniques[0].libraries[0].localInputs.constants[0].name ) );
 	ASSERT_FALSE( data.annotations.empty() );
@@ -371,7 +375,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.textures.empty() );
 	ASSERT_EQ( std::string( "TestMap" ), g_stringTable.GetString( data.techniques[0].libraries[0].globalInputs.textures[0].name ) );
 	ASSERT_FALSE( data.annotations.empty() );
@@ -417,10 +421,10 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.textures.empty() );
 	// on metal static samplers are not exposed
-	if( !std::is_same<TestFixture::Compiler, EffectCompilerMetal>::value )
+	if( !std::is_same<typename TestFixture::Compiler, EffectCompilerMetal>::value )
 	{
 		ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.staticSamplers.empty() );
 	}
@@ -468,7 +472,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.textures.empty() );
 	ASSERT_FALSE( data.techniques[0].libraries[0].localInputs.samplers.empty() );
 }
@@ -517,10 +521,10 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.textures.empty() );
 	// on metal static samplers are not exposed
-	if( !std::is_same<TestFixture::Compiler, EffectCompilerMetal>::value )
+	if( !std::is_same<typename TestFixture::Compiler, EffectCompilerMetal>::value )
 	{
 		ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.staticSamplers.empty() );
 	}
@@ -679,7 +683,7 @@ technique t1
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	ASSERT_EQ( data.techniques[0].libraries[0].localInputs.registerInputs.size(), 1u );
 	EXPECT_EQ( data.techniques[0].libraries[0].localInputs.registerInputs[0].registerType, RT_CONSTANT_BUFFER );
 
@@ -713,7 +717,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	EXPECT_TRUE( data.techniques[0].libraries[0].localInputs.constants.empty() );
 	EXPECT_TRUE( data.techniques[0].libraries[0].globalInputs.constants.empty() );
 }
@@ -750,7 +754,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	EXPECT_TRUE( data.techniques[0].libraries[0].globalInputs.constants.empty() );
 	ASSERT_FALSE( data.techniques[0].libraries[0].localInputs.registerInputs.empty() );
 	EXPECT_EQ( data.techniques[0].libraries[0].localInputs.registerInputs[0].registerType, RT_CONSTANT_BUFFER );
@@ -794,7 +798,7 @@ technique t0
 }
 )SRC";
 
-	auto data = Compile<TestFixture::Compiler>( src );
+	auto data = Compile<typename TestFixture::Compiler>( src );
 	EXPECT_TRUE( data.techniques[0].libraries[0].localInputs.constants.empty() );
 	ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.registerInputs.empty() );
 	EXPECT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs[0].registerType, RT_CONSTANT_BUFFER );
@@ -839,5 +843,5 @@ technique t0
 }
 )SRC";
 
-	ASSERT_TRUE( Compiles<TestFixture::Compiler>( src ) );
+	ASSERT_TRUE( Compiles<typename TestFixture::Compiler>( src ) );
 }

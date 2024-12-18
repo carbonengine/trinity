@@ -4,6 +4,11 @@
 #include "EffectData.h"
 #include "TesingUtils.h"
 
+#if _WIN32
+using DefaultCompiler = EffectCompilerDX12;
+#else
+using DefaultCompiler = EffectCompilerMetal;
+#endif
 
 TEST( GlobalInput, GlobalInputWithNoArgumentsIsAnError )
 {
@@ -29,7 +34,7 @@ technique t0
 }
 )SRC";
 
-	EXPECT_FALSE( Compiles<EffectCompilerDX12>( src ) );
+	EXPECT_FALSE( Compiles<DefaultCompiler>( src ) );
 }
 
 static const char* s_globalInputTest = R"SRC(
@@ -58,37 +63,37 @@ technique t0
 
 TEST( GlobalInput, EmptyGlobalInputIsAccepted )
 {
-	EXPECT_TRUE( Compiles<EffectCompilerDX12>( FormatString( s_globalInputTest, "", "" ).c_str() ) );
+	EXPECT_TRUE( Compiles<DefaultCompiler>( FormatString( s_globalInputTest, "", "" ).c_str() ) );
 }
 
 TEST( GlobalInput, ExpectsVarDeclarations )
 {
-	EXPECT_FALSE( Compiles<EffectCompilerDX12>( FormatString( s_globalInputTest, "", "blah" ).c_str() ) );
+	EXPECT_FALSE( Compiles<DefaultCompiler>( FormatString( s_globalInputTest, "", "blah" ).c_str() ) );
 }
 
 TEST( GlobalInput, NoNumericValues )
 {
-	EXPECT_FALSE( Compiles<EffectCompilerDX12>( FormatString( s_globalInputTest, "float abc;", "abc" ).c_str() ) );
+	EXPECT_FALSE( Compiles<DefaultCompiler>( FormatString( s_globalInputTest, "float abc;", "abc" ).c_str() ) );
 }
 
 TEST( GlobalInput, CanSpecifyCBuffer )
 {
-	EXPECT_TRUE( Compiles<EffectCompilerDX12>( FormatString( s_globalInputTest, "cbuffer Abc: register( b3 ) { float def; };", "Abc" ).c_str() ) );
+	EXPECT_TRUE( Compiles<DefaultCompiler>( FormatString( s_globalInputTest, "cbuffer Abc: register( b3 ) { float def; };", "Abc" ).c_str() ) );
 }
 
 TEST( GlobalInput, CanSpecifySrv )
 {
-	EXPECT_TRUE( Compiles<EffectCompilerDX12>( FormatString( s_globalInputTest, "Texture2D a;", "a" ).c_str() ) );
+	EXPECT_TRUE( Compiles<DefaultCompiler>( FormatString( s_globalInputTest, "Texture2D a;", "a" ).c_str() ) );
 }
 
 TEST( GlobalInput, AllowTrailingSemicolumn )
 {
-	EXPECT_TRUE( Compiles<EffectCompilerDX12>( FormatString( s_globalInputTest, "Texture2D a;", "a;" ).c_str() ) );
+	EXPECT_TRUE( Compiles<DefaultCompiler>( FormatString( s_globalInputTest, "Texture2D a;", "a;" ).c_str() ) );
 }
 
 TEST( GlobalInput, AllowsMultipleDeclarations )
 {
-	EXPECT_TRUE( Compiles<EffectCompilerDX12>( FormatString( s_globalInputTest, "Texture2D a; Texture2D b; Buffer<uint> c; SamplerState d;", "a;b; c; d" ).c_str() ) );
+	EXPECT_TRUE( Compiles<DefaultCompiler>( FormatString( s_globalInputTest, "Texture2D a; Texture2D b; Buffer<uint> c; SamplerState d;", "a;b; c; d" ).c_str() ) );
 }
 
 TEST( GlobalInput, MustMatchInsideLibrary )
@@ -128,8 +133,8 @@ technique t0
 }
 )SRC";
 
-	ASSERT_TRUE( Compiles<EffectCompilerDX12>( FormatString( templ, "abc;" ).c_str() ) );
+	ASSERT_TRUE( Compiles<DefaultCompiler>( FormatString( templ, "abc;" ).c_str() ) );
 
-	EXPECT_FALSE( Compiles<EffectCompilerDX12>( FormatString( templ, "def;" ).c_str() ) ); // Name mismatch
-	EXPECT_FALSE( Compiles<EffectCompilerDX12>( FormatString( templ, "abc; def;" ).c_str() ) ); // More inputs
+	EXPECT_FALSE( Compiles<DefaultCompiler>( FormatString( templ, "def;" ).c_str() ) ); // Name mismatch
+	EXPECT_FALSE( Compiles<DefaultCompiler>( FormatString( templ, "abc; def;" ).c_str() ) ); // More inputs
 }
