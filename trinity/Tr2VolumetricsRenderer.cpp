@@ -1079,8 +1079,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 		if( shadowType == SHADOWS_RAYTRACED )
 		{
-			resources.raytraceFroxels->SetParameter( BlueSharedString( "Scene" ), raytracingGeometry );
-			resources.raytraceFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.shadowFroxels );
+			resources.raytraceFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
+			resources.raytraceFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.shadowFroxels );
 			resources.raytraceFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 			renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
 			renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );

@@ -47,6 +47,48 @@ set(_SOURCES
     XrgbVolume.h
 )
 
+set(_SHADERS_DX11
+    Shaders.DX11/AddConstantToBuffer.csh
+    Shaders.DX11/AddVectors.csh
+    Shaders.DX11/ConstantColor.psh
+    Shaders.DX11/GroupShared.csh
+    Shaders.DX11/InstancedRendering.vsh
+    Shaders.DX11/LoadMsaaTexture.psh
+    Shaders.DX11/OutputTexCoord.psh
+    Shaders.DX11/OutputVector.csh
+    Shaders.DX11/PositionOnly.vsh
+    Shaders.DX11/PositionOnlyWithPerObjectData.vsh
+    Shaders.DX11/SampleTexture.csh
+    Shaders.DX11/SampleTextureFromTexCoord.psh
+    Shaders.DX11/SampleTextureMipFromTexCoord.psh
+    Shaders.DX11/SampleVolumeTexture.psh
+    Shaders.DX11/TexCoordAndPosition.vsh
+    Shaders.DX11/WriteToUav.psh
+)
+
+set(_SHADERS_DX12
+    Shaders.DX12/AddConstantToBuffer.csh
+    Shaders.DX12/AddVectors.csh
+    Shaders.DX12/ClosestHit.rsh
+    Shaders.DX12/ClosestHitWithMaterial.rsh
+    Shaders.DX12/ConstantColor.psh
+    Shaders.DX12/GroupShared.csh
+    Shaders.DX12/InstancedRendering.vsh
+    Shaders.DX12/LoadMsaaTexture.psh
+    Shaders.DX12/Miss.rsh
+    Shaders.DX12/OutputTexCoord.psh
+    Shaders.DX12/OutputVector.csh
+    Shaders.DX12/PositionOnly.vsh
+    Shaders.DX12/PositionOnlyWithPerObjectData.vsh
+    Shaders.DX12/RayGen.rsh
+    Shaders.DX12/SampleTexture.csh
+    Shaders.DX12/SampleTextureFromTexCoord.psh
+    Shaders.DX12/SampleTextureMipFromTexCoord.psh
+    Shaders.DX12/SampleVolumeTexture.psh
+    Shaders.DX12/TexCoordAndPosition.vsh
+    Shaders.DX12/WriteToUav.psh
+)
+
 set(_SHADERS_METAL
     Shaders.metal/AddConstantToBuffer.csh
     Shaders.metal/AddVectors.csh
@@ -70,6 +112,10 @@ set(_SHADERS_METAL
     Shaders.metal/TexCoordAndPosition.vsh
     Shaders.metal/WriteToUav.psh
 )
+
+set(dxc_ROOT "${BRANCH_ROOT_DIR}/vendor/dxc/v1.7.2212.1")
+
+set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
 find_package(GTest REQUIRED)
 
@@ -97,6 +143,8 @@ function(set_shared_trinityaltest_properties target)
     elseif(WIN32)
         target_link_options(${target} PRIVATE "/IGNORE:4049")
     endif()
+
+    target_include_directories(${target} PRIVATE ${GENERATED_SOURCES_DIR})
 
     # override the output directory to ensure that all TrinityALTest outputs end up in the same folder.
     # this is OK because we're differentiating them by OUTPUT_NAME
@@ -128,6 +176,27 @@ if(WIN32)
         COMMAND_EXPAND_LISTS
     )
 
+    target_sources(TrinityALTest_dx11 PRIVATE ${_SHADERS_DX11})
+    source_group(Shaders FILES ${_SHADERS_DX11})
+
+    foreach(shaderSource ${_SHADERS_DX11})
+        string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
+        if(${shaderSource} MATCHES ".*psh$")
+            set(SHADER_TARGET "/Tps_5_0")
+        elseif(${shaderSource} MATCHES ".*vsh$")
+            set(SHADER_TARGET "/Tvs_5_0")
+        else()
+            set(SHADER_TARGET "/Tcs_5_0")
+        endif()
+        add_custom_command(
+            OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.metal
+            COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fxc/fxc.exe /nologo ${SHADER_TARGET} /Fo ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource} 
+            COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
+            MAIN_DEPENDENCY ${shaderSource}
+        )
+    endforeach()
+
     ccp_add_executable(TrinityALTest_dx12 ${_SOURCES})
     target_link_libraries(TrinityALTest_dx12 PRIVATE TrinityAL_dx12)
     target_compile_definitions(TrinityALTest_dx12 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX12)
@@ -139,6 +208,31 @@ if(WIN32)
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:TrinityALTest_dx12> $<TARGET_FILE_DIR:TrinityALTest_dx12>
         COMMAND_EXPAND_LISTS
     )
+
+    target_sources(TrinityALTest_dx12 PRIVATE ${_SHADERS_DX12})
+    source_group(Shaders FILES ${_SHADERS_DX12})
+
+    foreach(shaderSource ${_SHADERS_DX12})
+        string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
+        set(FXC "${CMAKE_CURRENT_SOURCE_DIR}/fxc/fxc.exe")
+        if(${shaderSource} MATCHES ".*psh$")
+            set(SHADER_TARGET "/Tps_5_0")
+        elseif(${shaderSource} MATCHES ".*vsh$")
+            set(SHADER_TARGET "/Tvs_5_0")
+        elseif(${shaderSource} MATCHES ".*csh$")
+            set(SHADER_TARGET "/Tcs_5_0")
+        else()
+            set(FXC "${dxc_ROOT}/bin/${CCP_VENDOR_ARCH_PREFIX}/dxc.exe")
+            set(SHADER_TARGET "/Tlib_6_3")
+        endif()
+        add_custom_command(
+            OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.metal
+            COMMAND ${FXC} /nologo ${SHADER_TARGET} /Fo ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource} 
+            COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
+            MAIN_DEPENDENCY ${shaderSource}
+        )
+    endforeach()
 
     #GTest
     set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
@@ -156,10 +250,7 @@ elseif(APPLE)
     set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "Tests")
     #gtest_discover_tests(TrinityALTest_metal myListOfTests DISCOVERY_MODE PRE_TEST)
 
-    set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
-
     target_sources(TrinityALTest_metal PRIVATE ${_SHADERS_METAL})
-    target_include_directories(TrinityALTest_metal PRIVATE ${GENERATED_SOURCES_DIR})
     source_group(Shaders FILES ${_SHADERS_METAL})
 
     foreach(shaderSource ${_SHADERS_METAL})
