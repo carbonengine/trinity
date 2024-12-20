@@ -18,7 +18,7 @@ struct ReturnTypeIntersection {
 };
 
 [[visible]]
-void ClosestHit(	thread float4 & color, device void * )
+void ClosestHit(	thread float4 & color, __MetalHitSV, device __RtLocalMaterial*, constant float4&, constant ShaderTableT<float4, float4>& )
 {
     color = float4(0.f, 1.f, 0.f, 1.0f);
 }

@@ -47,6 +47,30 @@ set(_SOURCES
     XrgbVolume.h
 )
 
+set(_SHADERS_METAL
+    Shaders.metal/AddConstantToBuffer.csh
+    Shaders.metal/AddVectors.csh
+    Shaders.metal/ClosestHit.rsh
+    Shaders.metal/ClosestHitWithMaterial.rsh
+    Shaders.metal/ConstantColor.psh
+    Shaders.metal/GroupShared.csh
+    Shaders.metal/InstancedRendering.vsh
+    Shaders.metal/LoadMsaaTexture.psh
+    Shaders.metal/MetalDefines.h
+    Shaders.metal/Miss.rsh
+    Shaders.metal/OutputTexCoord.psh
+    Shaders.metal/OutputVector.csh
+    Shaders.metal/PositionOnly.vsh
+    Shaders.metal/PositionOnlyWithPerObjectData.vsh
+    Shaders.metal/RayGen.rsh
+    Shaders.metal/SampleTexture.csh
+    Shaders.metal/SampleTextureFromTexCoord.psh
+    Shaders.metal/SampleTextureMipFromTexCoord.psh
+    Shaders.metal/SampleVolumeTexture.psh
+    Shaders.metal/TexCoordAndPosition.vsh
+    Shaders.metal/WriteToUav.psh
+)
+
 find_package(GTest REQUIRED)
 
 function(set_shared_trinityaltest_properties target)
@@ -131,6 +155,23 @@ elseif(APPLE)
     #GTest
     set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "Tests")
     #gtest_discover_tests(TrinityALTest_metal myListOfTests DISCOVERY_MODE PRE_TEST)
+
+    set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
+
+    target_sources(TrinityALTest_metal PRIVATE ${_SHADERS_METAL})
+    target_include_directories(TrinityALTest_metal PRIVATE ${GENERATED_SOURCES_DIR})
+    source_group(Shaders FILES ${_SHADERS_METAL})
+
+    foreach(shaderSource ${_SHADERS_METAL})
+        string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
+        add_custom_command(
+            OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.metal
+            COMMAND xcrun metal -x metal -std=metal3.0 -gline-tables-only -MO ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource} -o ${GENERATED_SOURCES_DIR}/${shaderSource}.bin
+            COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
+            MAIN_DEPENDENCY ${shaderSource}
+        )
+    endforeach()
 endif()
 
 
