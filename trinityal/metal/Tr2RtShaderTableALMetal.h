@@ -44,6 +44,8 @@ namespace TrinityALImpl
         
         API_AVAILABLE( macos(13.0) )
         void AddUsedResources( uint32_t rayGenIndex, std::vector<id<MTLResource>>& readResources ) const;
+        
+        void SetGlobalInputBuffer( uint32_t rayGenIndex, const id<MTLBuffer>& buffer, uint32_t offset ) const;
 
     private:
         Tr2RtShaderTableDescriptionAL m_desc;

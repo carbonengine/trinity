@@ -3129,6 +3129,8 @@ void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTa
         readResources.push_back( allocator.GetPage( shaderTableGpu.page ) );
 
         shaderTable->AddUsedResources( rayGenIndex, readResources );
+        
+        shaderTable->SetGlobalInputBuffer( rayGenIndex, allocator.GetPage( globalInputGpu.page ), globalInputGpu.offset );
 
         [computeEncoder useResources:readResources.data() count:readResources.size() usage:MTLResourceUsageRead];
         [computeEncoder useResources:writeResources.data() count:writeResources.size() usage:MTLResourceUsageWrite];
@@ -3147,7 +3149,8 @@ void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTa
         
         // Dispatch the compute kernel to perform ray tracing.
         [computeEncoder dispatchThreadgroups:threadgroups threadsPerThreadgroup:threadsPerThreadgroup];
-        
+        shaderTable->SetGlobalInputBuffer( rayGenIndex, nullptr, 0 );
+
         ReleaseEncoder( false );
     }
 }

@@ -219,6 +219,14 @@ namespace TrinityALImpl
         readResources.push_back( m_materialBuffer );
     }
 
+    void Tr2RtShaderTableAL::SetGlobalInputBuffer( uint32_t rayGenIndex, const id<MTLBuffer>& buffer, uint32_t offset ) const
+    {
+        if (@available(macOS 11.0, *))
+        {
+            [m_functionTables[rayGenIndex].anyHit setBuffer:buffer offset:offset atIndex:1];
+        }
+    }
+
     Tr2ALMemoryType Tr2RtShaderTableAL::GetMemoryClass() const
     {
         return AL_MEMORY_MANAGED;
