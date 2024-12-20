@@ -172,6 +172,14 @@ elseif(APPLE)
             MAIN_DEPENDENCY ${shaderSource}
         )
     endforeach()
+
+    # Copy DLL dependencies; there must be a better way :(
+    add_custom_command(
+        TARGET TrinityALTest_metal POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CcpLog_DIR}/${CCP_VENDOR_LIB_PATH}/libCcpLog.dylib $<TARGET_FILE_DIR:TrinityALTest_metal>
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Tracy_DIR}/${CCP_VENDOR_LIB_PATH}/libTracyClient.0.11.1.dylib $<TARGET_FILE_DIR:TrinityALTest_metal>
+    )
+
 endif()
 
 
