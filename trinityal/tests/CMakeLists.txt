@@ -93,27 +93,16 @@ if(WIN32)
     target_compile_definitions(TrinityALTest_dx11 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX11)
     set_shared_trinityaltest_properties(TrinityALTest_dx11)
 
-    # This is a "temporary" workaround to allow tests as part of project build. For DX11 version
-    # TrintyALTest requires Aftermath DLL. We need to copy it to the output folder so that 
-    # gtest_discover_tests call would not fail.
-    # If we figure out a better way of copying dlls around this will become obsolete.
-    get_target_property(_AFTERMATH_DIR Nvidia::Aftermath INTERFACE_LINK_DIRECTORIES)
-    get_target_property(_AFTERMATH_LIB Nvidia::Aftermath INTERFACE_LINK_LIBRARIES)
-    add_custom_command(TARGET TrinityALTest_dx11 POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            "${_AFTERMATH_DIR}/${_AFTERMATH_LIB}.dll"
-            $<TARGET_FILE_DIR:TrinityALTest_dx11>)
-
-    #GTest
-    set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
-    #gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
-
     # Copy DLL dependencies
     add_custom_command(
         TARGET TrinityALTest_dx11 POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:TrinityALTest_dx11> $<TARGET_FILE_DIR:TrinityALTest_dx11>
         COMMAND_EXPAND_LISTS
     )
+
+    #GTest
+    set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
+    #gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
 
     ccp_add_executable(TrinityALTest_dx12 ${_SOURCES})
     target_link_libraries(TrinityALTest_dx12 PRIVATE TrinityAL_dx12)
