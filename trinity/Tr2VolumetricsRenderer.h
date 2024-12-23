@@ -137,6 +137,8 @@ public:
 		float _pad0;
 		float _pad1;
 		float _pad2;
+
+		CcpMath::Sphere planets[2];
 	};
 
 	void PopulatePerFrameData( FroxelPerFrameData& data );
@@ -278,9 +280,9 @@ private:
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
 		Matrix ShadowMatrix[16]; // Matrix that takes a coordinate from view space all the way to the packed cascades
 		Vector4 SplitInfo; // x = NrOfSplits, y = <unused>, z = <unused>, w = <unused>
-		/*	// TODO: intern, add back in once mac issue has been resolved
+		
 		Tr2LightManager::PerLightData DynamicLights[16];
-		*/
+		
 		CcpMath::Sphere planets[2];
 	};
 	Tr2ConstantBufferAL m_fogConstantBuffer;
