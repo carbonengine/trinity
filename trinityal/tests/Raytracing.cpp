@@ -845,7 +845,7 @@ TEST_F( Raytracing, CanUsePerObjectData )
     globalSignature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 1 ); //AccelStruct
 
     Tr2ShaderSignatureAL localSignature;
-    localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
+    localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 1 );
 
     const uint32_t PAYLOAD_SIZE = 4 * sizeof( float );
 
@@ -892,8 +892,8 @@ TEST_F( Raytracing, CanUsePerObjectData )
     Tr2RtShaderTableDescriptionAL shaderTableDesc;
     shaderTableDesc.AddRayGenShader( L"RayGen_12" );
     shaderTableDesc.AddMissShader( L"Miss_5" );
-    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb1 ) );
-    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb2 ) );
+    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 1, cb1 ) );
+    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 1, cb2 ) );
 
     const uint32_t WIDTH = 512;
     const uint32_t HEIGHT = 512;

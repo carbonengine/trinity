@@ -29,7 +29,7 @@ __MetalHitSV, device __RtLocalMaterial* resources, constant float4&, constant Sh
 { 
 
 	// this is a buffer of pointers (materials -> constantBuffer)
-	PerObjectData perObjectData = ((device PerObjectDataPtr*)resources)[0].perObjectData[0];
+	PerObjectData perObjectData = ((device PerObjectDataPtr*)resources)[1].perObjectData[0];
 	//PrimitiveData ppd = *primitiveData;
 	//color = ppd.material;
 
@@ -41,7 +41,7 @@ __MetalHitSV, device __RtLocalMaterial* resources, constant float4&, constant Sh
 void ClosestHitWithPerObjData(	thread float4 & color, __MetalHitSV, device __RtLocalMaterial* resources, constant float4&, constant ShaderTableT<float4, float4>&  )
 {
 
-	PerObjectData perObjectData = ((device PerObjectDataPtr*)resources)[0].perObjectData[0];
+	PerObjectData perObjectData = ((device PerObjectDataPtr*)resources)[1].perObjectData[0];
 
 	color = perObjectData.material;// * perObjectData.Clipdata1;
 }
