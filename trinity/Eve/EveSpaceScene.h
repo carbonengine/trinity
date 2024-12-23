@@ -258,7 +258,7 @@ protected:
 		// ShadowMapSettings2
 		Vector2 ShadowCameraRange;
 		float ShadowLightness;
-		float unused1;
+		uint32_t ShadowQuality;
 
 		// ProjectionData
 		Vector2 ProjectionToView;
@@ -395,6 +395,7 @@ protected:
 	void RenderVolumetrics( Tr2RenderContext & renderContext );
 
 	Tr2DepthStencilPtr GetShadowMapAtlas();
+	ITr2TextureProviderPtr GetRaytracedDynamicShadowAtlas();
 
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;

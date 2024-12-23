@@ -524,13 +524,13 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 			it->isTransparent = true;
 		}
 
-		it->materialIndex = materialIndex++;
 		if( it->perObjectData )
 		{
 			material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
 		}
 		it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, &it->mesh->GetVertexBuffer(), &it->mesh->GetIndexBuffer(), material, renderContext );
 
+		bool consumedMaterialIndex = false;
 		for( int32_t i = 0; i < numRaycasters; i++ )
 		{
 			auto foundLib = seenLibraries[i].find( lib.libraryHandle );
@@ -539,15 +539,23 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 				auto hitGroupName = pipelineManagers[i]->AddHitGroup( lib );
 				seenLibraries[i][lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
 				shaderTableDescs[i]->AddHitGroup( hitGroupName.c_str(), material );
+				it->materialIndex = materialIndex;
+				consumedMaterialIndex = true;
 			}
 			else if( !lib.localInput.signature.registers.empty() )
 			{
 				shaderTableDescs[i]->AddHitGroup( foundLib->second.first.c_str(), material );
+				it->materialIndex = materialIndex;
+				consumedMaterialIndex = true;
 			}
 			else
 			{
 				it->materialIndex = foundLib->second.second;
 			}
+		}
+		if( consumedMaterialIndex )
+		{
+			materialIndex++;
 		}
 	}
 }
