@@ -660,10 +660,38 @@ void Tr2VolumetricsRenderer::RenderFog(
 	bool froxelsEnabled = m_froxelFogSettings.thickness > 0.0f;
 	if( froxelsEnabled )
 	{
-		float scale = std::min(1 / 8.0f, 1.0f);
+
+		float scale;
+		uint32_t numLayers;
+
+		switch (m_quality)
+		{
+		case Tr2VolumerticQuality::Ultra:
+			scale = 1 / 6.0;
+			numLayers = 128;
+			break;
+
+		case Tr2VolumerticQuality::High:
+			scale = 1 / 8.0;
+			numLayers = 128;
+			break;
+
+		case Tr2VolumerticQuality::Medium:
+			scale = 1 / 12.0;
+			numLayers = 96;
+			break;
+
+		case Tr2VolumerticQuality::Low:
+		default:
+			scale = 1 / 16.0;
+			numLayers = 64;
+			break;
+		}
+
+
 		width = std::max( 4u, uint32_t( originalWidth * scale ) );
 		height = std::max( 4u, uint32_t( originalHeight * scale ) );
-		depth = std::max( 1u, 128u );
+		depth = std::max( 1u, numLayers );
 	}
 
 	auto temporalFog = resources.temporalFroxels0 && resources.temporalFroxels1;
@@ -761,9 +789,16 @@ void Tr2VolumetricsRenderer::RenderFog(
 	};
 
 	SHADOW_TYPE shadowType;
+
 	if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.raytraceFroxels && resources.raytraceFroxels->GetShaderStateInterface() )
 	{
+		//Hack to disable raytraced shadows on Metal, as it currently does not work.
+#if TRINITY_PLATFORM != TRINITY_METAL
 		shadowType = SHADOWS_RAYTRACED;
+#else
+		shadowType = SHADOWS_DISABLED;
+#endif
+		
 	}
 	else if( cascadedShadowMap && ( shadowQuality == ShadowQuality::SHADOW_LOW || shadowQuality == ShadowQuality::SHADOW_HIGH ) )
 	{
@@ -1046,7 +1081,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 				}
 
 			}
-			/*	// TODO: intern, add back in once mac issue has been resolved
+			
 			if ( auto lightManager = Tr2LightManager::GetInstance() )
 			{
 				CCP_ASSERT_M( lightManager->GetVolumetricLights().size() <= 16, "LightManager does not meet expectation of VolumetricsRenderer!" );
@@ -1065,7 +1100,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 				data->LightProfileTextureWidth = (float)lightManager->GetLightProfileArray().GetWidth();
 			}
-			else*/
+			else
 			{
 				data->NumDynamicLights = 0;
 				data->InverseShadowMapAtlasSize = 0.f;
@@ -1079,8 +1114,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 		if( shadowType == SHADOWS_RAYTRACED )
 		{
-			resources.raytraceFroxels->SetParameter( BlueSharedString( "Scene" ), raytracingGeometry );
-			resources.raytraceFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.shadowFroxels );
+			resources.raytraceFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
+			resources.raytraceFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.shadowFroxels );
 			resources.raytraceFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 			renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
 			renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
@@ -1159,6 +1194,11 @@ void Tr2VolumetricsRenderer::PopulatePerFrameData( FroxelPerFrameData& data )
 	data.EnvironmentIntensity = m_froxelFogSettings.environmentIntensity;
 
 	data.EnvironmentG = environmentG;
+
+	for( int32_t i = 0; i < m_planets.size(); i++ )
+	{
+		data.planets[i] = m_planets[i];
+	}
 }
 
 void Tr2VolumetricsRenderer::SetPlanets( const CcpMath::Sphere* planets, size_t planetCount )

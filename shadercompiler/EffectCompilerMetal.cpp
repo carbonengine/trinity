@@ -3180,8 +3180,10 @@ namespace
 		{
 		case RtShaderType::RAY_GEN:
 			funcAttr = MakeInlineString( "kernel" );
+			break;
 		case RtShaderType::ANY_HIT:
 			funcAttr = MakeInlineString( "[[intersection(triangle, __INTERSECION_TAGS)]]" );
+			break;
 		default:
 			funcAttr = MakeInlineString( "[[visible]]" );
 		}
@@ -4006,7 +4008,7 @@ namespace
 		{
 			auto member = globalInputsStruct->GetChild( gi )->GetChild( 0 )->Copy();
 			member->SetType( globalInputs[gi].type );
-			tmp->InsertChild( 0, member );
+			tmp->AddChild( member );
 		}
 		if( !AutoAssignRegistersForNode( state, tmp, globalInputsStruct->GetLocation() ) )
 		{
@@ -5014,11 +5016,6 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 						MarkUsedSymbols( gi.declaration, state );
 					}
 
-					if( !GetGlobalInputData( state, library.globalInputs, globalInputs, globalInputsStruct, result.annotations ) )
-					{
-						return false;
-					}
-
                     if( !GetStageData( state, library.localInputs, rtConstantBuffers, result.annotations ) )
                     {
                         return false;
@@ -5066,6 +5063,11 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
                 }
             }
             listing.end(); // exports list
+
+			if( !GetGlobalInputData( state, library.globalInputs, globalInputs, globalInputsStruct, result.annotations ) )
+			{
+				return false;
+			}
             
             CompilerInputStream os( state, ShadingLanguage::MSL );
             os << MSL_INCLUDE;

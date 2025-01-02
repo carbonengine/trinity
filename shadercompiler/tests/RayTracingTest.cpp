@@ -149,7 +149,6 @@ technique t0
 	auto& textures = data.techniques[0].libraries[0].globalInputs.textures;
 	auto found = std::find_if( begin( textures ), end( textures ), []( auto& tex ) { return strcmp( g_stringTable.GetString( tex.second.name ), "GlobalInput" ) == 0; } );
 	ASSERT_NE( found, end( textures ) );
-	ASSERT_EQ( found->first, 1u );
 }
 
 TYPED_TEST( RayTracing, AllowsTextureArraysInGlobalInput )

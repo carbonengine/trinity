@@ -37,19 +37,30 @@ public:
     
     Tr2ALMemoryType GetMemoryClass() const;
     void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
-    id <MTLComputePipelineState> GetRtPipeline();
-    ::Tr2ShaderProgramAL& GetShaderProgram();
-    const std::unordered_map<std::wstring, id <MTLFunction>>& GetFunctionMap();
-    const std::unordered_map<std::wstring, HitGroupFunctions>& GetHitGroupMap();
+    std::optional<uint32_t> GetRayGenIndex( const wchar_t* rayGenName ) const;
+    id<MTLComputePipelineState> GetRtPipeline( uint32_t rayGenIndex ) const;
+    const ::Tr2ShaderProgramAL& GetShaderProgram( uint32_t rayGenIndex ) const;
+    const std::unordered_map<std::wstring, id <MTLFunction>>& GetFunctionMap() const;
+    const std::unordered_map<std::wstring, HitGroupFunctions>& GetHitGroupMap() const;
     NSString* NSStringFromWchar( std::wstring name );
+
+    Tr2ShaderSignatureAL m_globalSignature;
 
 private:
     id <MTLFunction> CreateFunction( std::wstring name, id<MTLDevice> device, dispatch_data_t shaderData );
     
     std::unordered_map<std::wstring, id <MTLFunction>> m_intersectionFunctions;
     std::unordered_map<std::wstring, HitGroupFunctions> m_hitGroupMap;
-    id <MTLComputePipelineState> m_raytracingPipeline;
-    ::Tr2ShaderProgramAL m_shaderProgram;
+    
+    struct RayGenShader
+    {
+        std::wstring name;
+        ::Tr2ShaderProgramAL shaderProgram;
+        id <MTLComputePipelineState> pipeline;
+    };
+    std::vector<RayGenShader> m_rayGenShaders;
+    
+    friend class Tr2RtShaderTableAL;
 };
 }
 

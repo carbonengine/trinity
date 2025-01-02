@@ -51,7 +51,7 @@ namespace TrinityALImpl
             return E_INVALIDARG;
         }
         
-        const ::Tr2ShaderProgramAL program = pipeline.m_pipeline->GetShaderProgram();
+        const ::Tr2ShaderProgramAL program = pipeline.m_pipeline->GetShaderProgram( 0 );
     
         return Create(description, program, renderContext);
         

@@ -14,10 +14,15 @@
 #include "Tr2AddSafeGrowableBuffer.h"
 #include "TbbStub.h"
 
+#include "Raytracing/Tr2RaytracingGeometry.h"
+#include "Tr2Denoiser.h"
+
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( Tr2GpuStructuredBuffer );
 BLUE_DECLARE( Tr2DepthStencil );
+
+BLUE_DECLARE( TriTextureRes );
 
 class Tr2TextureArray;
 
@@ -66,11 +71,24 @@ public:
 		Float_16 outerAngle;
 		Float_16 innerAngle;
 
-		uint32_t padding : 2;
-		uint32_t shadowMapScale : 10;
-		uint32_t shadowMapOffsetX : 10;
-		uint32_t shadowMapOffsetY : 10;
+		union
+		{
+			struct
+			{
+				uint32_t padding : 2;
+				uint32_t shadowMapScale : 10;
+				uint32_t shadowMapOffsetX : 10;
+				uint32_t shadowMapOffsetY : 10;
+			} ShadowMapping;
+			struct
+			{
+				uint16_t shadowMask;
+				uint16_t padding;
+			} Raytracing;
+		};
+		
 	};
+
 	struct ShadowMapAtlasSettings
 	{
 		uint32_t actualTextureSize;	// only updated once per frame. might be larger than size, as multiple eve space scenes might request different shadow qualities
@@ -121,11 +139,16 @@ public:
 
 	ShadowQuality GetCurrentSpaceSceneShadowQuality();
 
+	ITr2TextureProvider* GetRaytracedShadowMap() const;
+	void RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry, ITr2TextureProvider* depth, ITr2TextureProvider* normal, const CcpMath::Sphere* planets, size_t planetCount, Tr2RenderContext& renderContext );
+	Tr2RaytracingPipelineStateManager* GetRaytracingPipelineManager();
+	Tr2RtShaderTableDescriptionAL* GetRaytracingShaderTableDesc();
+
 private:
 	Tr2LightManager( const Tr2LightManager& );
 	Tr2LightManager& operator=( const Tr2LightManager& );
 
-	struct ShadowMapNode
+	struct AtlasNode
 	{
 		uint32_t children[2];
 		uint32_t lightIndex;
@@ -135,15 +158,25 @@ private:
 		int height;
 	};
 
+	// used for filtering out shadowcasting and volumetric lights
+	struct LightScreenSizeTuple
+	{
+		uint32_t lightIndex;
+		float sizeAcross;
+	};
+
 	virtual bool OnPrepareResources();
 
 	ALResult DoUpdateLists( Tr2RenderContext& renderContext );
 	ALResult ClearLightIndices( Tr2RenderContext& renderContext );
 	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
 
+	uint32_t InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
+
 	void UpdateShadowAtlasSize( ShadowQuality shadowQuality );
-	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );	
-	uint32_t InsertShadowMapNode( uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
+	void UpdateRaytracingDestination( ShadowQuality shadowQuality );
+	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
+	void CreateShadowMapAtlas( uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples );
 
 	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
 	std::vector<PerLightData> m_lightData;
@@ -161,14 +194,34 @@ private:
 
 	float m_adjustedCutoff;
 
-	Tr2Variable m_shadowMapAtlasVariable;
-	Tr2DepthStencilPtr m_shadowMapAtlasDS;
-	ShadowMapAtlasSettings m_shadowMapAtlasSettings;
-	std::vector<ShadowMapNode> m_shadowMapNodes;
-	ShadowQuality m_qualityUsedByShadowAtlas;
-	ShadowQuality m_nextFrameQuality;
+	uint32_t nextFrameShadowQuality;	// bitmask, collecting ShadowQualities during the current frame
 	ShadowQuality m_currentSpaceSceneShadowQuality;
 	uint64_t m_currentFrameCounter;
+
+	struct
+	{
+		Tr2Variable m_atlasVariable;
+		Tr2DepthStencilPtr m_atlasDepthStencil;
+		ShadowMapAtlasSettings m_atlasSettings;
+		std::vector<AtlasNode> m_atlasNodes;
+		ShadowQuality m_qualityUsedByAtlas;
+	} m_ShadowMap;
+
+	struct 
+	{
+		Tr2RaytracingPipelineStateManager m_pipelineManager;
+		Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
+
+		Tr2RaytracingGeometryPtr m_geometry;
+
+		Tr2EffectPtr m_effect;
+		unsigned m_effectHash;
+		Tr2RtShaderTableAL m_shaderTable;
+		Tr2ConstantBufferAL m_perFrameData;
+
+		Tr2RenderTargetPtr m_destTex;
+		TriTextureResPtr m_whiteTexture;
+	} m_Raytracing;
 };
 
 #endif
