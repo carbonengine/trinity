@@ -4183,6 +4183,21 @@ namespace
 		return node->GetNodeType() == NT_POSTFIX_EXPRESSION && node->GetToken() && node->GetToken()->type == OP_LEFT_BRACKET;
 	}
 
+	void ExpandInitializerList( ASTNode* initializer, std::vector<ASTNode*>& children )
+	{
+		for( auto child : initializer->GetChildren() )
+		{
+			if( child->GetNodeType() == NT_INLINE_CONSTRUCTOR )
+			{
+				ExpandInitializerList( child, children );
+			}
+			else
+			{
+				children.push_back( child );
+			}
+		}
+	}
+
 	void PatchMatrixInitializer( ASTNode* parent, unsigned index, const Type& type )
 	{
 		// wrap matrix initializer in a "constructor", i.e. { a, b,..} -> float4x4( { a, b, ..} )
@@ -4199,6 +4214,25 @@ namespace
 		}
 		else
 		{
+			std::vector<ASTNode*> children;
+			ExpandInitializerList( initializer, children );
+
+			if( children.size() == type.width * type.height )
+			{
+				initializer->GetChildren().clear();
+
+				for( int row = 0; row < type.height; ++row )
+				{
+					auto rowNode = new ASTNode( NT_INLINE_CONSTRUCTOR, initializer->GetLocation(), initializer->GetScope(), nullptr );
+					rowNode->SetType( TypeFromTokenType( OP_FLOAT, type.width ) );
+					for( int col = 0; col < type.width; ++col )
+					{
+						rowNode->AddChild( children[ row * type.width + col ] );
+					}
+					initializer->AddChild( rowNode );
+				}
+			}
+
 			ScannerToken token;
 			token.type = type.builtInType;
 			token.fileLocation = initializer->GetLocation();
@@ -4217,7 +4251,7 @@ namespace
 		{
 			PatchMatrixInitializer( node, 1, node->GetType() );
 		}
-		
+
 		if( node->GetNodeType() == NT_FUNCTION_CALL && node->GetSymbol() == nullptr && node->GetType().IsMatrix() )
 		{
 			// transpose matrix constructors
