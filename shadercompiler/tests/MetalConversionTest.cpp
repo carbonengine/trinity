@@ -100,3 +100,38 @@ technique t0
 	// Transforms { 1, 2, 3, 4, 5, 6, 7, 8, 9 } into { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } }
 	EXPECT_NE( data.techniques[0].passes[0].stages[1].source.find( "{ 1, 2, 3 }" ), std::string::npos );
 }
+
+TEST( MetalConversion, AppliesPackedModifiersToRtLocalBuffers )
+{
+	const char* src = R"SRC(
+struct HitInfo
+{
+    float visibility;
+};
+
+
+cbuffer cb0: register( b3 )
+{
+	float3 Color;
+	float Intensity;
+}
+
+[shader("miss")]
+void Miss(inout HitInfo payload)
+{
+	payload.visibility = Intensity;
+}
+
+technique t0
+{
+	library p0
+	{
+		MissShader = compile lib_6_3 Miss();
+		payloadsize = 4;
+	}
+}
+)SRC";
+
+	auto data = Compile<EffectCompilerMetal>( src );
+	EXPECT_NE( data.techniques[0].libraries[0].source.find( "packed_float3 Color;" ), std::string::npos );
+}

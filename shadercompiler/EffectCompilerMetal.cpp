@@ -2962,6 +2962,8 @@ namespace
             return nullptr;
         }
 
+        ApplyPackedModifiersToConstantBuffers( entryPointSymbol->definition );
+
         ScannerToken shaderName = ScannerToken::ID( callNode->GetSymbol()->name );
 
         state.GetCurrentLocation().fileName = shaderName.stringValue;
@@ -5056,8 +5058,6 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
                     ASTNode* shader = PatchRtShader( shaderExport.type, childNode->GetChild( 1 ), state, rtConstantBuffers, globalInputs, globalInputsStruct );
                     
                     childNode->GetChild( 1 )->SetSymbol( shader->GetChild( 0 )->GetSymbol() );
-
-                    ApplyPackedModifiersToConstantBuffers( shader );
 
                     MarkUsedSymbols( shader, state );
 					for ( auto& gi : globalInputs )
