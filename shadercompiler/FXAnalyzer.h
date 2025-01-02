@@ -56,4 +56,3 @@ bool CastExpressionValue( ExpressionValue& value, const Type& from, const Type& 
 int EvaluateIntegerExpression( ParserState& state, ASTNode* node, int defaultValue );
 
 std::optional<RtShaderType> ParseRtShaderName( const InlineString& name );
-Symbol* ProcessPayloadTypeState( ParserState& state, ASTNode* libNode );

@@ -1311,11 +1311,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			state.GetSymbolTable().ResetUsedFlag();
 
-			if( !ProcessPayloadTypeState( state, libNode ) )
-			{
-				return false;
-			}
-
 			for( size_t i = 0; i < libNode->GetChildrenCount(); ++i )
 			{
 				auto childNode = libNode->GetChild( i );

@@ -501,7 +501,9 @@ void __GetLocalRTBufferT( device __RtLocalMaterial* materials, uint index, threa
 #define __GetLocalRTBuffer(index, dest) __GetLocalRTBufferT(__rtMaterials, index, dest)
 
 template <typename payload_t, typename global_input_t>
-void __TraceRay(
+void TraceRay(
+	constant ShaderTableT<payload_t, global_input_t>& shaderTable,
+
     device RaytracingAccelerationStructure accelerationStructure,
     uint rayFlags,
     uint instanceInclusionMask,
@@ -509,10 +511,7 @@ void __TraceRay(
     uint multiplierForGeometryContributionToHitGroupIndex,
     uint missShaderIndex,
     RayDesc ray_,
-    thread payload_t& payload,
-	
-	constant ShaderTableT<payload_t, global_input_t>& shaderTable,
-	constant global_input_t& globalInput )
+    thread payload_t& payload )
 {
     intersector<__INTERSECION_TAGS> i;
     i.assume_geometry_type(geometry_type::triangle);
@@ -537,7 +536,7 @@ void __TraceRay(
         hit.distance = r.max_distance;
         hit.barycentric_coord = { 0.0, 0.0 };
 
-        shaderTable.missShaderTable[missShaderIndex](payload, hit, shaderTable.missMaterials + 8 * missShaderIndex, globalInput, shaderTable);
+        shaderTable.missShaderTable[missShaderIndex](payload, hit, shaderTable.missMaterials + 8 * missShaderIndex, shaderTable.globalInput, shaderTable);
     }
     else if( ( rayFlags & RAY_FLAG_SKIP_CLOSEST_HIT_SHADER ) == 0 )
     {
@@ -550,12 +549,10 @@ void __TraceRay(
 
         uint offset = ((device uint*)accelerationStructure)[2 + intersection.instance_id];
 
-        shaderTable.hitShaderTable[intersection.instance_id](payload, hit, shaderTable.hitMaterials + 8 * offset, globalInput, shaderTable);
+        shaderTable.hitShaderTable[intersection.instance_id](payload, hit, shaderTable.hitMaterials + 8 * offset, shaderTable.globalInput, shaderTable);
     }
 }
 
-#define TraceRay(accelerationStructure, rayFlags, instanceInclusionMask, rayContributionToHitGroupIndex, multiplierForGeometryContributionToHitGroupIndex, missShaderIndex, ray, payload) \
-    __TraceRay(accelerationStructure, rayFlags, instanceInclusionMask, rayContributionToHitGroupIndex, multiplierForGeometryContributionToHitGroupIndex, missShaderIndex, ray, payload, __rtShaderTable, __rtGlobals )
 
 
 #define DispatchRaysIndex() (__dispatchRaysIndex)

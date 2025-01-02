@@ -29,7 +29,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -56,7 +55,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -128,7 +126,6 @@ technique t0
 		MissShader = compile lib_6_3 Miss();
 		ClosestHitShader = compile lib_6_3 ClosestHit();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";

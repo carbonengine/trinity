@@ -868,6 +868,97 @@ namespace
         }
 	}
 
+	void AddShaderTableArguments( ParserState& state, const std::map<Symbol*, ASTNode*>& functions )
+	{
+		auto traceRays = find_if( begin( state.GetDX9Functions() ), end( state.GetDX9Functions() ), []( auto& name ) { return strcmp( name.first, "TraceRay" ) == 0; } );
+		if( traceRays == end( state.GetDX9Functions() ) )
+		{
+			return;
+		}
+
+		// Find TraceRay calls and map them to the payload type.
+		std::map<Symbol*, Type> payloadTypes;
+		// Maps function to the shader table argument symbol.
+		std::map<Symbol*, Symbol*> patchedHeaders;
+		patchedHeaders[traceRays->second] = nullptr;
+
+		// Add shader table argument to functions that end up calling TraceRay.
+		bool modified = true;
+		while( modified )
+		{
+			modified = false;
+			for( auto& func : functions )
+			{
+				func.second->Map( [&]( ASTNode* node ) {
+					if( node->GetNodeType() == NT_FUNCTION_CALL )
+					{
+						Symbol* funcSymbol = node->GetSymbol();
+						if( patchedHeaders.find( funcSymbol ) != end( patchedHeaders ) )
+						{
+							if( patchedHeaders.find( func.first ) == patchedHeaders.end() )
+							{
+								Type payloadType;
+								if( funcSymbol == traceRays->second )
+								{
+									if( auto payloadArg = node->GetChildOrNull( 7 ) )
+									{
+										payloadType = payloadArg->GetType();
+									}
+								}
+								else
+								{
+									payloadType = payloadTypes[funcSymbol];
+								}
+								std::string shaderTableTypeName = "ShaderTableT<" + payloadType.ToString() + ",__RtGlobalInput>";
+								auto t = node->GetScope()->AddSymbol( state.AllocateName( shaderTableTypeName.c_str() ), DISALOW_OVERRIDES );
+								t->isTypeName = true;
+
+								auto shaderTable = state.NewNode( NT_FUNCTION_PARAMETER );
+								auto symbol = node->GetScope()->AddSymbol( MakeInlineString( "__rtShaderTable" ), DISALOW_OVERRIDES );
+								symbol->type = TypeFromSymbol( t );
+								symbol->definition = shaderTable;
+								symbol->registerSpecifier[MakeInlineString( "" )] = RegisterSpecifier::Register( MetalRegister::SRV, 2 );
+								symbol->addressSpace = AddressSpace::Constant;
+								shaderTable->SetType( symbol->type );
+								shaderTable->SetSymbol( symbol );
+								shaderTable->AddChild( nullptr );
+								shaderTable->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
+
+								ASTNode* header = func.second->GetChild( 0 );
+								header->InsertChild( 0, shaderTable );
+								patchedHeaders[func.first] = symbol;
+								payloadTypes[func.first] = payloadType;
+								
+								modified = true;
+							}
+						}
+					}
+					return node;
+				} );
+			}
+		}
+
+		// Add shader table argument to function calls.
+		for( auto& func : functions )
+		{
+			if( patchedHeaders.find( func.first ) == patchedHeaders.end() )
+			{
+				continue;
+			}
+			func.second->Map( [&]( ASTNode* node ) {
+				if( node->GetNodeType() == NT_FUNCTION_CALL )
+				{
+					Symbol* symbol = node->GetSymbol();
+					if( symbol && patchedHeaders.find( symbol ) != end( patchedHeaders ) )
+					{
+						node->InsertChild( 0, NewVarIdentifier( state, patchedHeaders[func.first] ) );
+					}
+				}
+				return node;
+			} );
+		}
+	}
+
 	void PrintAnnotations( YamlOutput& listing, const std::map<StringReference, Annotation>& annotations )
 	{
 		if( !listing.enabled() )
@@ -2816,6 +2907,7 @@ namespace
 	{
 		ASTNode* payloadArg = nullptr;
 		ASTNode* attributeArg = nullptr;
+		ASTNode* shaderTableArg = nullptr;
 		std::vector<ASTNode*> other;
 	};
 
@@ -2838,6 +2930,10 @@ namespace
 			{
 				result.attributeArg = sourceArg;
 			}
+			else if( sourceArg->GetType().symbol && ContainsSubstring( sourceArg->GetType().symbol->name, "ShaderTableT<" ) )
+			{
+				result.shaderTableArg = sourceArg;
+			}
 			else
 			{
 				result.other.push_back( sourceArg );
@@ -2846,7 +2942,7 @@ namespace
 		return result;
 	}
 
-    ASTNode* PatchRtShader( RtShaderType shaderType, ASTNode* callNode, ParserState& state, std::vector<Symbol*>& rtConstantBuffers, const std::vector<GlobalInputElement>& globalInput, ASTNode* globalInputsStruct, const Symbol* payloadType )
+    ASTNode* PatchRtShader( RtShaderType shaderType, ASTNode* callNode, ParserState& state, std::vector<Symbol*>& rtConstantBuffers, const std::vector<GlobalInputElement>& globalInput, ASTNode* globalInputsStruct )
     {
         ZoneScoped;
 
@@ -2880,13 +2976,13 @@ namespace
         ASTNode* attributeArg = nullptr;
 
 		auto sourceArguments = ClassifyRtShaderArguments( functionHeader );
-		if ( sourceArguments.payloadArg )
+		if( sourceArguments.payloadArg )
 		{
 			payloadArg = NewFunctionParameter( state, sourceArguments.payloadArg->GetType(), state.AllocateName( sourceArguments.payloadArg->GetSymbol()->name ) );
 			payloadArg->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
 			header->AddChild( payloadArg );
 		}
-		if ( sourceArguments.attributeArg )
+		if( sourceArguments.attributeArg )
 		{
 			attributeArg = NewFunctionParameter( state, sourceArguments.attributeArg->GetType(), state.AllocateName( sourceArguments.attributeArg->GetSymbol()->name ) );
 			header->AddChild( attributeArg );
@@ -2907,15 +3003,9 @@ namespace
 			header->AddChild( globalInputArg );
 		}
 
-		ASTNode* shaderTable = nullptr;
+		if( sourceArguments.shaderTableArg )
 		{
-			std::string shaderTableTypeName = "ShaderTableT<" + ToString( payloadType->name ) + "," + ToString( globalInputsStruct->GetSymbol()->name ) + ">";
-			auto t = state.GetSymbolTable().AddTypeSymbol( state.AllocateName( shaderTableTypeName.c_str() ) );
-
-			shaderTable = NewFunctionParameter( state, TypeFromSymbol( t ), "__rtShaderTable", RegisterSpecifier::Register( MetalRegister::SRV, 2 ) );
-			shaderTable->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
-			shaderTable->GetSymbol()->addressSpace = AddressSpace::Constant;
-			header->AddChild( shaderTable );
+			header->AddChild( sourceArguments.shaderTableArg->Copy() );
 		}
 
 		auto autoT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto" ) );
@@ -4368,34 +4458,18 @@ namespace
         } while( false );
 
         // Remove temp files.
-        if( shaderWriteSucceeded )
         {
             std::lock_guard withFileMutex( s_fileMutex );
-            int removeResult = remove( srcFilename );
-            if( removeResult != 0 )
-            {
-                // Can't delete shader source file.
-                // return false;
-            }
-        }
-
-        if( shaderCompileSucceeded )
-        {
-            std::lock_guard withFileMutex( s_fileMutex );
-            int removeResult = remove( binFilename );
-            if( removeResult != 0 )
-            {
-                // Can't delete compiled shader file.
-                // return false;
-            }
+            remove( srcFilename );
+            remove( binFilename );
         }
         return compiledCode;
     }
 
 	ASTNode* CreateGlobalInputsStruct( ParserState& state, const std::vector<GlobalInputElement>& globalInputs )
 	{
-		auto globalInputsStruct = NewStruct( state, state.AllocateNameWithPrefix( "__RtGlobalInput" ) );
 		state.GetSymbolTable().EnterScope();
+		auto globalInputsStruct = NewStruct( state, state.AllocateName( "__RtGlobalInput" ) );
 		for( auto& in : globalInputs )
 		{
 			auto existing = state.GetSymbolTable().LookupGlobal( ToString( in.name ).c_str() );
@@ -4576,6 +4650,8 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 	CollectFunctions( state, functions );
 	CollectGlobals( state, functions, globals );
+
+	AddShaderTableArguments( state, functions );
 
 	ConvertTextureFunctionsToMetal( state );
 	ConvertSyncFunctionsToMetal( functions );
@@ -4893,12 +4969,6 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
             state.GetSymbolTable().ResetUsedFlag();
 
-			Symbol* payloadType = ProcessPayloadTypeState( state, libNode );
-			if( !payloadType )
-			{
-				return false;
-			}
-
             for( size_t i = 0; i < libNode->GetChildrenCount(); ++i )
             {
                 auto childNode = libNode->GetChild( i );
@@ -4932,7 +5002,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 					}
 
                     std::vector<Symbol*> rtConstantBuffers;
-                    ASTNode* shader = PatchRtShader( shaderExport.type, childNode->GetChild( 1 ), state, rtConstantBuffers, globalInputs, globalInputsStruct, payloadType );
+                    ASTNode* shader = PatchRtShader( shaderExport.type, childNode->GetChild( 1 ), state, rtConstantBuffers, globalInputs, globalInputsStruct );
                     
                     childNode->GetChild( 1 )->SetSymbol( shader->GetChild( 0 )->GetSymbol() );
 

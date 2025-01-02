@@ -45,7 +45,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -78,7 +77,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -110,7 +108,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -142,7 +139,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -183,7 +179,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -220,7 +215,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -259,7 +253,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -298,7 +291,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -332,7 +324,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -370,7 +361,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -416,7 +406,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -467,7 +456,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -516,7 +504,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -667,7 +654,6 @@ technique t0
 		RayGenShader = compile lib_6_3 RayGen();
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 
@@ -678,7 +664,6 @@ technique t1
 		ClosestHitShader = compile lib_6_3 ClosestHit();
 		AnyHitShader = compile lib_6_3 AnyHit();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -712,7 +697,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -749,7 +733,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -793,7 +776,6 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
 	}
 }
 )SRC";
@@ -838,7 +820,140 @@ technique t0
 	{
 		MissShader = compile lib_6_3 Miss();
 		payloadsize = 4;
-		PayloadType = "HitInfo";
+	}
+}
+)SRC";
+
+	ASSERT_TRUE( Compiles<typename TestFixture::Compiler>( src ) );
+}
+
+
+TYPED_TEST( RayTracing, CanCallTraceRayInFunction )
+{
+	const char* src = R"SRC(
+
+RaytracingAccelerationStructure Scene <bool SasUiVisible = true; >;
+RWTexture2D<float4> ShadowDest <bool SasUiVisible = true;>;
+
+
+struct HitInfo
+{
+    float visibility;
+};
+
+float4x4 ProjectionInv;
+
+#define GLOBAL_INPUT "Scene; ShadowDest;"
+
+float GetVisibility( float2 dd )
+{
+	RayDesc ray;
+	ray.Origin = float3( dd, 0 );
+	ray.Direction = float3( 1, 0, 0 );
+
+	ray.TMin = 0.0f;
+	ray.TMax = 10000000.0; // camera far plane value
+	
+	HitInfo payload = {0.0};
+	TraceRay(
+		Scene,
+		RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,
+		0xFF,
+		0,
+		0,
+		0,
+		ray,
+		payload );
+	return payload.visibility;
+}
+
+[shader("raygeneration")]
+[globalinput(GLOBAL_INPUT)]
+void RayGen()
+{
+    uint3 launchIndex = DispatchRaysIndex();
+
+	float2 dd = ( float2( launchIndex.xy ) + 0.5) / 500 * 2.0f - 1.0f;
+	dd.y = -dd.y;
+
+	ShadowDest[launchIndex.xy] = GetVisibility( dd );
+}
+
+technique t0
+{
+	library p0
+	{
+		RayGenShader = compile lib_6_3 RayGen();
+		payloadsize = 4;
+	}
+}
+)SRC";
+
+	ASSERT_TRUE( Compiles<typename TestFixture::Compiler>( src ) );
+}
+
+TYPED_TEST( RayTracing, CanCallTraceRayInFunctionChain )
+{
+	const char* src = R"SRC(
+
+RaytracingAccelerationStructure Scene <bool SasUiVisible = true; >;
+RWTexture2D<float4> ShadowDest <bool SasUiVisible = true;>;
+
+
+struct HitInfo
+{
+    float visibility;
+};
+
+float4x4 ProjectionInv;
+
+#define GLOBAL_INPUT "Scene; ShadowDest;"
+
+float GetVisibility( float2 dd )
+{
+	RayDesc ray;
+	ray.Origin = float3( dd, 0 );
+	ray.Direction = float3( 1, 0, 0 );
+
+	ray.TMin = 0.0f;
+	ray.TMax = 10000000.0; // camera far plane value
+	
+	HitInfo payload = {0.0};
+	TraceRay(
+		Scene,
+		RAY_FLAG_ACCEPT_FIRST_HIT_AND_END_SEARCH | RAY_FLAG_SKIP_CLOSEST_HIT_SHADER,
+		0xFF,
+		0,
+		0,
+		0,
+		ray,
+		payload );
+	return payload.visibility;
+}
+
+float GetVisibility2( float2 dd )
+{
+	return GetVisibility( dd ) + GetVisibility( dd );
+}
+
+[shader("raygeneration")]
+[globalinput(GLOBAL_INPUT)]
+void RayGen()
+{
+    uint3 launchIndex = DispatchRaysIndex();
+
+	float2 dd = ( float2( launchIndex.xy ) + 0.5) / 500 * 2.0f - 1.0f;
+	dd.y = -dd.y;
+
+	ShadowDest[launchIndex.xy] = GetVisibility2( dd );
+}
+
+technique t0
+{
+	library p0
+	{
+		RayGenShader = compile lib_6_3 RayGen();
+		payloadsize = 4;
 	}
 }
 )SRC";
