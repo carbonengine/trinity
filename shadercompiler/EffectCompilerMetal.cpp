@@ -3013,6 +3013,7 @@ namespace
 		}
 
 		auto autoT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto" ) );
+		auto autoRefT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto&" ) );
 
         {
 			for( auto arg : sourceArguments.other )
@@ -3054,35 +3055,45 @@ namespace
 				else
 				{
 					int idx = -1;
-					Symbol* symbol = arg->GetSymbol();
-					if( symbol && !symbol->registerSpecifier.empty() )
+					if( Symbol* symbol = arg->GetSymbol() )
 					{
-						const RegisterSpecifier& reg = symbol->registerSpecifier.cbegin()->second;
-						if( reg.registerType == MetalRegister::CBuffer )
+						if( symbol && !symbol->registerSpecifier.empty() )
 						{
-							idx = reg.registerNumber;
+							const RegisterSpecifier& reg = symbol->registerSpecifier.cbegin()->second;
+							if( reg.registerType == MetalRegister::CBuffer )
+							{
+								idx = reg.registerNumber;
+							}
 						}
-					}
-					if( idx < 0 )
-					{
-						idx = GetCBufferIndex( arg->GetSymbol() );
-					}
-					if( idx >= 0 )
-					{
-						shaderBody->AddChild( NewVarDeclaration( state, arg->GetSymbol() ) );
-						auto registerNumber = uint32_t( idx );
-
-						if( rtConstantBuffers.size() <= registerNumber )
+						if( idx < 0 )
 						{
-							rtConstantBuffers.resize( registerNumber + 1 );
-							rtConstantBuffers[registerNumber] = arg->GetSymbol();
+							idx = GetCBufferIndex( arg->GetSymbol() );
 						}
+						if( idx >= 0 )
+						{
+							auto registerNumber = uint32_t( idx );
 
-						auto ctr = NewFunctionCall( state, hlsl::void_t, "__GetLocalRTBuffer", { NewLiteralConst( state, registerNumber ), NewVarIdentifier( state, arg->GetSymbol() ) } );
-						shaderBody->AddChild( NewExpressionStatement( state, ctr ) );
+							if( rtConstantBuffers.size() <= registerNumber )
+							{
+								rtConstantBuffers.resize( registerNumber + 1 );
+								rtConstantBuffers[registerNumber] = arg->GetSymbol();
+							}
 
-						arg->GetSymbol()->registerSpecifier.clear();
-						arg->GetSymbol()->addressSpace = AddressSpace::None;
+							std::string funcName = "__GetLocalRTBuffer<" + symbol->type.ToString() + ">";
+							auto ctr = NewFunctionCall( state, TypeFromSymbol( autoRefT ), state.AllocateName( funcName.c_str() ).start, { NewVarIdentifier( state, localInputArg->GetSymbol() ), NewLiteralConst( state, registerNumber ) } );
+
+							auto localSymbol = state.GetSymbolTable().AddSymbol( arg->GetSymbol()->name, ALLOW_OVERRIDES );
+							localSymbol->addressSpace = AddressSpace::Constant;
+							localSymbol->type = TypeFromSymbol( autoRefT );
+
+							auto decl = NewVarDeclaration( state, localSymbol, ctr );
+							localSymbol->definition = decl;
+							decl->GetChild( 0 )->AddChild( nullptr );
+							shaderBody->AddChild( decl );
+
+							arg->GetSymbol()->registerSpecifier.clear();
+							arg->GetSymbol()->addressSpace = AddressSpace::None;
+						}
 					}
 				}
             }

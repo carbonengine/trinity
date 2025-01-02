@@ -54,6 +54,40 @@ technique t0
 	EXPECT_TRUE( data.techniques[0].libraries[0].globalInputs.constants.empty() );
 }
 
+TYPED_TEST( RayTracing, CanAccessLocalInputFromFunctions )
+{
+	const char* src = R"SRC(
+struct HitInfo
+{
+    float visibility;
+};
+
+float LocalInput;
+
+float GetLocalInput()
+{
+	return LocalInput;
+}
+
+[shader("miss")]
+void Miss(inout HitInfo payload)
+{
+	payload.visibility = GetLocalInput();
+}
+
+technique t0
+{
+	library p0
+	{
+		MissShader = compile lib_6_3 Miss();
+		payloadsize = 4;
+	}
+}
+)SRC";
+
+	ASSERT_TRUE( Compiles<typename TestFixture::Compiler>( src ) );
+}
+
 TYPED_TEST( RayTracing, SrvsAreGlobal )
 {
 	const char* src = R"SRC(

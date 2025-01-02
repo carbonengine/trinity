@@ -470,7 +470,7 @@ struct __MetalHitSV
 
 struct __RtLocalMaterial
 {
-    device void* buffer;
+    constant void* buffer;
 };
 
 struct RaytracingAccelerationStructureT
@@ -493,12 +493,10 @@ struct ShaderTableT
 
 
 template <typename T>
-void __GetLocalRTBufferT( device __RtLocalMaterial* materials, uint index, thread T& dest )
+constant T& __GetLocalRTBuffer( device __RtLocalMaterial* materials, uint index )
 {
-    dest = ((device T*)materials[index].buffer)[0];
+    return ((constant T*)materials[index].buffer)[0];
 }
-
-#define __GetLocalRTBuffer(index, dest) __GetLocalRTBufferT(__rtMaterials, index, dest)
 
 template <typename payload_t, typename global_input_t>
 void TraceRay(
