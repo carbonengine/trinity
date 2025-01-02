@@ -2480,6 +2480,10 @@ namespace
 				{
 					ApplyPackedModifier( type.symbol->definition, false );
 				}
+				else if( type.IsStruct() && !symbol->registerSpecifier.empty() && symbol->registerSpecifier.begin()->second.registerType == MetalRegister::CBuffer )
+				{
+					ApplyPackedModifier( type.symbol->definition, false );
+				}
 				else if( type.symbol == nullptr && ( type.builtInType == OP_STRUCTUREDBUFFER || type.builtInType == OP_RWSTRUCTUREDBUFFER ) )
 				{
 					if( type.templateParameter && type.templateParameter->IsStruct() )

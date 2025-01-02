@@ -33,3 +33,37 @@ technique t0
 	auto data = Compile<EffectCompilerMetal>( src );
 	EXPECT_NE( data.techniques[0].passes[0].stages[1].source.find( "( ( tex ).read( (uint2)( int2( 0, 0 ) ) ) ).xyz" ), std::string::npos );
 }
+
+TEST( MetalConversion, AppliesPackedModifiersToCBuffers )
+{
+	const char* src = R"SRC(
+cbuffer cb0: register( b3 )
+{
+	float3 Color;
+	float Intensity;
+}
+
+float3 Fog;
+
+float4 vs(): SV_Position
+{
+	return float4( 0.0, 0.0, 0.0, 1.0 );
+}
+
+float4 ps(): SV_Target
+{
+	return float4( Color + Fog, 1.0 );
+}
+
+technique t0
+{
+	pass p0
+	{
+		vertexshader = compile vs_3_0 vs();	
+		pixelshader = compile ps_3_0 ps();
+	}
+}
+)SRC";
+	auto data = Compile<EffectCompilerMetal>( src );
+	EXPECT_NE( data.techniques[0].passes[0].stages[1].source.find( "packed_float3 Color;" ), std::string::npos );
+}
