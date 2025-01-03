@@ -868,6 +868,26 @@ namespace
         }
 	}
 
+	ASTNode* CreateShaderTableArgument( ParserState& state, const Type& payloadType, ScopeSymbolTable* scope )
+	{
+		std::string shaderTableTypeName = "ShaderTableT<" + payloadType.ToString() + ",__RtGlobalInput>";
+		auto t = scope->AddSymbol( state.AllocateName( shaderTableTypeName.c_str() ), DISALOW_OVERRIDES );
+		t->isTypeName = true;
+
+		auto shaderTable = state.NewNode( NT_FUNCTION_PARAMETER );
+		auto symbol = scope->AddSymbol( MakeInlineString( "__rtShaderTable" ), DISALOW_OVERRIDES );
+		symbol->type = TypeFromSymbol( t );
+		symbol->definition = shaderTable;
+		symbol->registerSpecifier[MakeInlineString( "" )] = RegisterSpecifier::Register( MetalRegister::SRV, 2 );
+		symbol->addressSpace = AddressSpace::Constant;
+		shaderTable->SetType( symbol->type );
+		shaderTable->SetSymbol( symbol );
+		shaderTable->AddChild( nullptr );
+		shaderTable->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
+
+		return shaderTable;
+	}
+
 	void AddShaderTableArguments( ParserState& state, const std::map<Symbol*, ASTNode*>& functions )
 	{
 		auto traceRays = find_if( begin( state.GetDX9Functions() ), end( state.GetDX9Functions() ), []( auto& name ) { return strcmp( name.first, "TraceRay" ) == 0; } );
@@ -909,24 +929,11 @@ namespace
 								{
 									payloadType = payloadTypes[funcSymbol];
 								}
-								std::string shaderTableTypeName = "ShaderTableT<" + payloadType.ToString() + ",__RtGlobalInput>";
-								auto t = node->GetScope()->AddSymbol( state.AllocateName( shaderTableTypeName.c_str() ), DISALOW_OVERRIDES );
-								t->isTypeName = true;
-
-								auto shaderTable = state.NewNode( NT_FUNCTION_PARAMETER );
-								auto symbol = node->GetScope()->AddSymbol( MakeInlineString( "__rtShaderTable" ), DISALOW_OVERRIDES );
-								symbol->type = TypeFromSymbol( t );
-								symbol->definition = shaderTable;
-								symbol->registerSpecifier[MakeInlineString( "" )] = RegisterSpecifier::Register( MetalRegister::SRV, 2 );
-								symbol->addressSpace = AddressSpace::Constant;
-								shaderTable->SetType( symbol->type );
-								shaderTable->SetSymbol( symbol );
-								shaderTable->AddChild( nullptr );
-								shaderTable->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
+								auto shaderTable = CreateShaderTableArgument( state, payloadType, node->GetScope() );
 
 								ASTNode* header = func.second->GetChild( 0 );
 								header->InsertChild( 0, shaderTable );
-								patchedHeaders[func.first] = symbol;
+								patchedHeaders[func.first] = shaderTable->GetSymbol();
 								payloadTypes[func.first] = payloadType;
 								
 								modified = true;
@@ -3015,21 +3022,7 @@ namespace
 		}
         else if( payloadArg )
         {
-            std::string shaderTableTypeName = "ShaderTableT<" + payloadArg->GetType().ToString() + ",__RtGlobalInput>";
-            auto t = state.GetSymbolTable().AddSymbol( state.AllocateName( shaderTableTypeName.c_str() ), ALLOW_OVERRIDES );
-            t->isTypeName = true;
-
-            auto shaderTable = state.NewNode( NT_FUNCTION_PARAMETER );
-            auto symbol = state.GetSymbolTable().AddSymbol( MakeInlineString( "__rtShaderTable" ), DISALOW_OVERRIDES );
-            symbol->type = TypeFromSymbol( t );
-            symbol->definition = shaderTable;
-            symbol->registerSpecifier[MakeInlineString( "" )] = RegisterSpecifier::Register( MetalRegister::SRV, 2 );
-            symbol->addressSpace = AddressSpace::Constant;
-            shaderTable->SetType( symbol->type );
-            shaderTable->SetSymbol( symbol );
-            shaderTable->AddChild( nullptr );
-            shaderTable->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
-
+			auto shaderTable = CreateShaderTableArgument( state, payloadArg->GetType(), state.GetSymbolTable().GetCurrentScope() );
             header->AddChild( shaderTable );
         }
 
