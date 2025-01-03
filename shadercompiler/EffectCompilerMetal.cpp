@@ -3013,6 +3013,25 @@ namespace
 		{
 			header->AddChild( sourceArguments.shaderTableArg->Copy() );
 		}
+        else if( payloadArg )
+        {
+            std::string shaderTableTypeName = "ShaderTableT<" + payloadArg->GetType().ToString() + ",__RtGlobalInput>";
+            auto t = state.GetSymbolTable().AddSymbol( state.AllocateName( shaderTableTypeName.c_str() ), ALLOW_OVERRIDES );
+            t->isTypeName = true;
+
+            auto shaderTable = state.NewNode( NT_FUNCTION_PARAMETER );
+            auto symbol = state.GetSymbolTable().AddSymbol( MakeInlineString( "__rtShaderTable" ), DISALOW_OVERRIDES );
+            symbol->type = TypeFromSymbol( t );
+            symbol->definition = shaderTable;
+            symbol->registerSpecifier[MakeInlineString( "" )] = RegisterSpecifier::Register( MetalRegister::SRV, 2 );
+            symbol->addressSpace = AddressSpace::Constant;
+            shaderTable->SetType( symbol->type );
+            shaderTable->SetSymbol( symbol );
+            shaderTable->AddChild( nullptr );
+            shaderTable->SetToken( ScannerToken::FromTokenType( OP_INOUT ) );
+
+            header->AddChild( shaderTable );
+        }
 
 		auto autoT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto" ) );
 		auto autoRefT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto&" ) );
