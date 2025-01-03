@@ -4230,7 +4230,7 @@ namespace
 			std::vector<ASTNode*> children;
 			ExpandInitializerList( initializer, children );
 
-			if( children.size() == type.width * type.height )
+			if( int( children.size() ) == type.width * type.height )
 			{
 				initializer->GetChildren().clear();
 
@@ -4361,9 +4361,6 @@ namespace
     std::vector<uint8_t> CompileCode( const std::string& code, const std::vector<Macro>& defines, bool forceOldVersion = true )
     {
         std::vector<uint8_t> compiledCode;
-        
-        bool shaderWriteSucceeded = false;
-        bool shaderCompileSucceeded = false;
 
         // "mktemp" function calls to "arc4random" which is not reentrant. So, we need to sync
         // our threads here to avoid parallel execution of this function.
@@ -4428,8 +4425,6 @@ namespace
                 }
             }
 
-            shaderWriteSucceeded = true;
-
             // Compile shader.
             {
                 ZoneScopedN( "Call compiler" );
@@ -4473,8 +4468,6 @@ namespace
                 // Disabled unused arguments detection because it provides nothing more than noise
                 // DetectUnusedArguments( binFilename, state, shaderNode );
             }
-
-            shaderCompileSucceeded = true;
 
             // Read shader binary.
             {
