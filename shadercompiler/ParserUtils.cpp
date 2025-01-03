@@ -858,6 +858,7 @@ void AssignGlobalInputRegisters( const std::vector<GlobalInputElement>& globalIn
 				if( r.second.explicitRegister && r.first == "" )
 				{
 					assigned = true;
+					globalInputRegisters.push_back( r.second );
 					break;
 				}
 			}
@@ -873,7 +874,10 @@ void AssignGlobalInputRegisters( const std::vector<GlobalInputElement>& globalIn
 				r.explicitSpace = false;
 				globalInputRegisters.push_back( r );
 			}
-
+		}
+		else
+		{
+			globalInputRegisters.push_back( RegisterSpecifier() );
 		}
 	}
 }
