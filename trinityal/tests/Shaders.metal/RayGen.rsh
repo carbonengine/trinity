@@ -33,8 +33,6 @@ struct GlobalInput
 };
 
 
-// Checks if a shadow ray hit something on the way to the light source. If not, the point the
-// shadow ray started from was not in shadow so it's color should be added to the output image.
 kernel void RayGen(
     device __RtLocalMaterial* __rtMaterials [[SRV(0)]],
     constant GlobalInput& __rtGlobals [[SRV(1)]],
