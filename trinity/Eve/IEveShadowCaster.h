@@ -12,17 +12,39 @@ CCP_STATS_DECLARED_ELSEWHERE( objectsCulledCount );
 class TriFrustum;
 struct IEveShadowCaster;
 
-namespace EveShadowCaster
+class IEveShadowFrustum
 {
-	inline bool IsVisible( const TriFrustum& camera, const TriFrustumOrtho& shadow, const Vector3& sunDir, const Vector4& boundingSphere )
+public:
+	virtual ~IEveShadowFrustum()
 	{
-		bool sphereIsVisible = shadow.IsSphereVisibleIgnoreFarPlane( boundingSphere.GetXYZ(), boundingSphere.w );
+	}
+	virtual bool IsVisible( const TriFrustum& camera, const Vector4& boundingSphere ) const = 0;
+	virtual float GetSizeInShadow( const Vector4& boundingSphere ) const = 0;
+	virtual const Vector3& GetEyePos() const = 0;
+};
+
+class TriShadowOrthoFrustum : public IEveShadowFrustum
+{
+	TriFrustumOrtho m_shadow;
+	uint32_t m_shadowMapSize;
+	Vector3 m_sunDir;
+
+public:
+	TriShadowOrthoFrustum( const TriFrustumOrtho& shadow, uint32_t shadowMapSize, const Vector3& sunDir ) :
+		m_shadow( shadow ),
+		m_shadowMapSize( shadowMapSize ),
+		m_sunDir( sunDir )
+	{
+	}
+	bool IsVisible( const TriFrustum& camera, const Vector4& boundingSphere ) const override
+	{
+		bool sphereIsVisible = m_shadow.IsSphereVisibleIgnoreFarPlane( boundingSphere.GetXYZ(), boundingSphere.w );
 		if( sphereIsVisible )
 		{
 			for( unsigned int j = 0; j < 6; ++j )
 			{
 				// first check if sun direction is perpendicular of the plane
-				float d = DotNormal( camera.m_planes[j], sunDir );
+				float d = DotNormal( camera.m_planes[j], m_sunDir );
 				// if it's not perpendicular then check if the object is "behind" the plane
 				if( d < 0 )
 				{
@@ -37,83 +59,38 @@ namespace EveShadowCaster
 		}
 		return sphereIsVisible;
 	}
-
-	inline bool IsVisible( const TriFrustum& camera, const TriFrustum& shadow, const Vector4& boundingSphere )
-	{
-		bool sphereIsVisible = shadow.IsSphereVisible( &boundingSphere );
-		// TODO: intern, do something smart to cull the shadowcasting sphere using the camera frustum
-		return sphereIsVisible;
-	}
-
-	inline float GetSizeInShadow( const TriFrustumOrtho& shadow, const uint32_t shadowMapSize, const Vector4& boundingSphere )
-	{
-		return shadow.GetPixelSize( boundingSphere, shadowMapSize );
-	}
-
-	inline float GetSizeInShadow( const TriFrustum& shadow, const Vector4& boundingSphere )
-	{
-		return shadow.GetPixelSizeAccross( &boundingSphere );
-	}
-}
-
-class IEveShadowFrustum
-{
-public:
-	virtual ~IEveShadowFrustum()
-	{
-	}
-	virtual bool IsVisible( const TriFrustum& camera, const Vector4& boundingSphere ) const = 0;
-	virtual float GetSizeInShadow( const Vector4& boundingSphere ) const = 0;
-	virtual const Vector3& GetEyePos() const = 0;
-};
-
-class TriShadowOrthoFrustum : public IEveShadowFrustum
-{
-	TriFrustumOrtho shadow;
-	Vector3 sunDir;
-	uint32_t shadowMapSize;
-
-public:
-	TriShadowOrthoFrustum( const TriFrustumOrtho& shadow, uint32_t shadowMapSize, const Vector3& sunDir ) :
-		shadow( shadow ),
-		shadowMapSize( shadowMapSize ),
-		sunDir( sunDir )
-	{
-	}
-	bool IsVisible( const TriFrustum& camera, const Vector4& boundingSphere ) const override
-	{
-		return EveShadowCaster::IsVisible( camera, shadow, sunDir, boundingSphere );
-	}
 	float GetSizeInShadow( const Vector4& boundingSphere ) const override
 	{
-		return EveShadowCaster::GetSizeInShadow( shadow, shadowMapSize, boundingSphere );
+		return m_shadow.GetPixelSize( boundingSphere, m_shadowMapSize );
 	}
 	const Vector3& GetEyePos() const override
 	{
-		return shadow.GetEyePos();
+		return m_shadow.GetEyePos();
 	}
 };
 
 class TriShadowFrustum : public IEveShadowFrustum
 {
-	TriFrustum shadow;
+	TriFrustum m_shadow;
 
 public:
 	TriShadowFrustum( const TriFrustum& shadow ) :
-		shadow( shadow )
+		m_shadow( shadow )
 	{
 	}
 	bool IsVisible( const TriFrustum& camera, const Vector4& boundingSphere ) const override
 	{
-		return EveShadowCaster::IsVisible( camera, shadow, boundingSphere );
+		bool sphereIsVisible = m_shadow.IsSphereVisible( &boundingSphere );
+		// TODO: intern, do something smart to cull the shadowcasting sphere using the camera frustum
+		return sphereIsVisible;
 	}
 	float GetSizeInShadow( const Vector4& boundingSphere ) const override
 	{
-		return EveShadowCaster::GetSizeInShadow( shadow, boundingSphere );
+		return m_shadow.GetPixelSizeAccross( &boundingSphere );
 	}
 	const Vector3& GetEyePos() const override
 	{
-		return shadow.m_viewPos;
+		return m_shadow.m_viewPos;
 	}
 };
 
