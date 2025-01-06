@@ -238,39 +238,6 @@ if(WIN32)
     set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
     #gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
 
-elseif(APPLE)
-    enable_language(OBJCXX)
-
-    ccp_add_executable(TrinityALTest_metal ${_SOURCES})
-    target_link_libraries(TrinityALTest_metal PRIVATE TrinityAL_metal)
-    target_compile_definitions(TrinityALTest_metal PRIVATE TRINITY_PLATFORM=TRINITY_METAL)
-    set_shared_trinityaltest_properties(TrinityALTest_metal)
-
-    #GTest
-    set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "Tests")
-    #gtest_discover_tests(TrinityALTest_metal myListOfTests DISCOVERY_MODE PRE_TEST)
-
-    target_sources(TrinityALTest_metal PRIVATE ${_SHADERS_METAL})
-    source_group(Shaders FILES ${_SHADERS_METAL})
-
-    foreach(shaderSource ${_SHADERS_METAL})
-        string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
-        add_custom_command(
-            OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.metal
-            COMMAND xcrun metal -x metal -std=metal3.0 -gline-tables-only -MO ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource} -o ${GENERATED_SOURCES_DIR}/${shaderSource}.bin
-            COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
-            MAIN_DEPENDENCY ${shaderSource}
-        )
-    endforeach()
-
-    # Copy DLL dependencies; there must be a better way :(
-    add_custom_command(
-        TARGET TrinityALTest_metal POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CcpLog_DIR}/${CCP_VENDOR_LIB_PATH}/libCcpLog.dylib $<TARGET_FILE_DIR:TrinityALTest_metal>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${Tracy_DIR}/${CCP_VENDOR_LIB_PATH}/libTracyClient.0.11.1.dylib $<TARGET_FILE_DIR:TrinityALTest_metal>
-    )
-
 endif()
 
 
