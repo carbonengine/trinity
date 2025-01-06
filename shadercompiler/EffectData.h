@@ -705,6 +705,7 @@ struct StageInput : public StageData
 	StringReference shaderDataStr;
 	uint32_t threadGroupSize[3];
 	std::vector<PipelineInputDescription> pipelineInputs;
+	std::string source; // not persisted: for testing/debugging only
 
 };
 
@@ -773,6 +774,7 @@ struct Library
 	StringReference hitGroupName;
 	StageData globalInputs;
 	StageData localInputs;
+	std::string source; // not persisted: for testing/debugging only
 };
 
 struct Technique

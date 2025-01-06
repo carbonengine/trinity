@@ -8,13 +8,6 @@
 
 namespace
 {
-	const uint32_t GLOBAL_SPACE = 7;
-	const uint32_t LOCAL_SPACE = 8;
-
-}
-
-namespace
-{
 	class DataStoreCache
 	{
 	public:
@@ -87,7 +80,7 @@ namespace TrinityALImpl
 			TrinityALImpl::Tr2RootSignatureAL* localSignature = new TrinityALImpl::Tr2RootSignatureAL();
 			localSignatures.push_back( localSignature );
 
-			CR_RETURN_HR( CreateRootSignature( *localSignature, *it, LOCAL_SPACE, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE, renderContext ) );
+			CR_RETURN_HR( CreateRootSignature( *localSignature, *it, D3D12_ROOT_SIGNATURE_FLAG_LOCAL_ROOT_SIGNATURE, renderContext ) );
 
 			auto signatureDesc = dataStore.AddData<D3D12_LOCAL_ROOT_SIGNATURE >();
 			signatureDesc->pLocalRootSignature = localSignature->m_rootSignature.p;
@@ -223,7 +216,7 @@ namespace TrinityALImpl
 		// SHADERPROGRAM
 		// Create the global root signature and store the empty signature
 		TrinityALImpl::Tr2RootSignatureAL rootSignature;
-		CR_RETURN_HR( CreateRootSignature( rootSignature, desc.m_globalSignature, GLOBAL_SPACE, D3D12_ROOT_SIGNATURE_FLAG_NONE, renderContext ) );
+		CR_RETURN_HR( CreateRootSignature( rootSignature, desc.m_globalSignature, D3D12_ROOT_SIGNATURE_FLAG_NONE, renderContext ) );
 
 		D3D12_STATE_SUBOBJECT globalRootSig;
 		globalRootSig.Type = D3D12_STATE_SUBOBJECT_TYPE_GLOBAL_ROOT_SIGNATURE;
@@ -310,7 +303,7 @@ namespace TrinityALImpl
 		return m_state;
 	}
 
-	ALResult Tr2RtPipelineStateAL::CreateRootSignature( TrinityALImpl::Tr2RootSignatureAL& rootSignature, const Tr2ShaderSignatureAL& signature, uint32_t space, D3D12_ROOT_SIGNATURE_FLAGS flags, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2RtPipelineStateAL::CreateRootSignature( TrinityALImpl::Tr2RootSignatureAL& rootSignature, const Tr2ShaderSignatureAL& signature, D3D12_ROOT_SIGNATURE_FLAGS flags, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		D3D12_ROOT_SIGNATURE_DESC signatureDesc;
 		memset( &signatureDesc, 0, sizeof( signatureDesc ) );
@@ -349,7 +342,7 @@ namespace TrinityALImpl
 					rootSignature.m_uavRegisters.push_back( cbr );
 					rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 				}
-				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE>( CreateRange( rangeType, reg.registerIndex, space, reg.arrayCount ) ) );
+				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE>( CreateRange( rangeType, reg.registerIndex, reg.registerSpace, reg.arrayCount ) ) );
 
 				D3D12_ROOT_PARAMETER parameter;
 				parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -366,7 +359,7 @@ namespace TrinityALImpl
 			if( reg.registerType == Tr2ShaderRegisterAL::CONSTANT_BUFFER )
 			{
 				parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-				parameter.Descriptor.RegisterSpace = space;
+				parameter.Descriptor.RegisterSpace = reg.registerSpace;
 				parameter.Descriptor.ShaderRegister = reg.registerIndex;
 				parameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
@@ -383,7 +376,7 @@ namespace TrinityALImpl
 				Tr2RootSignatureAL::CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType };
 				rootSignature.m_samplerRegisters.push_back( cbr );
 
-				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE>( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, reg.registerIndex, space, reg.arrayCount ) ) );
+				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE>( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, reg.registerIndex, reg.registerSpace, reg.arrayCount ) ) );
 
 				D3D12_ROOT_PARAMETER parameter;
 				parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;

@@ -308,7 +308,8 @@ struct QuadRenderer
         CR_RETURN_HR( renderContext->SetVertexLayout( m_vertexLayout ) );
         CR_RETURN_HR( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
         CR_RETURN_HR( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
-        CR_RETURN_HR( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		CR_RETURN_HR( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
+		CR_RETURN_HR( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
         CR_RETURN_HR( renderContext->SetStreamSource( 0, m_quadVb, 0, VB_STRIDE ) );
         CR_RETURN_HR( renderContext->SetShaderProgram( m_shaderProgram ) );
         CR_RETURN_HR( renderContext->SetResourceSet( m_resourceSet ) );
@@ -675,7 +676,7 @@ TEST_F( Raytracing, CanUseLocalConstants )
     globalSignature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 1 ); //AccelStruct
 
     Tr2ShaderSignatureAL localSignature;
-    localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
+    localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 1 );
 
     const uint32_t PAYLOAD_SIZE = 4 * sizeof( float );
 
@@ -713,8 +714,8 @@ TEST_F( Raytracing, CanUseLocalConstants )
     Tr2RtShaderTableDescriptionAL shaderTableDesc;
     shaderTableDesc.AddRayGenShader( L"RayGen_12" );
     shaderTableDesc.AddMissShader( L"Miss_5" );
-    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb1 ) );
-    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb2 ) );
+    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 1, cb1 ) );
+    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 1, cb2 ) );
 
     const uint32_t WIDTH = 512;
     const uint32_t HEIGHT = 512;
@@ -844,7 +845,7 @@ TEST_F( Raytracing, CanUsePerObjectData )
     globalSignature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 1 ); //AccelStruct
 
     Tr2ShaderSignatureAL localSignature;
-    localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
+    localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 1 );
 
     const uint32_t PAYLOAD_SIZE = 4 * sizeof( float );
 
@@ -891,8 +892,8 @@ TEST_F( Raytracing, CanUsePerObjectData )
     Tr2RtShaderTableDescriptionAL shaderTableDesc;
     shaderTableDesc.AddRayGenShader( L"RayGen_12" );
     shaderTableDesc.AddMissShader( L"Miss_5" );
-    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb1 ) );
-    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb2 ) );
+    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 1, cb1 ) );
+    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 1, cb2 ) );
 
     const uint32_t WIDTH = 512;
     const uint32_t HEIGHT = 512;
@@ -1027,8 +1028,8 @@ TEST_F( Raytracing, CanUseLocalTextures )
 	globalSignature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 1 );
 
 	Tr2ShaderSignatureAL localSignature;
-	localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
-	localSignature.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 );
+	localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 1 );
+	localSignature.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 2 );
 	localSignature.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
 	const uint32_t PAYLOAD_SIZE = 4 * sizeof( float );
@@ -1095,7 +1096,7 @@ TEST_F( Raytracing, CanUseLocalTextures )
 	Tr2RegisterMapAL localRegisterMap = Tr2RegisterMapAL( &shaderType, &localSignature, 1 );
 
 	Tr2ResourceSetDescriptionAL localRsDesc(localRegisterMap);
-	localRsDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, tex );
+	localRsDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 2, tex );
 	localRsDesc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, sampl );
 
 
@@ -1143,7 +1144,7 @@ TEST_F( Raytracing, CanUseLocalTextures )
 	ASSERT_HRESULT_SUCCEEDED( tlas.Create( 2, instances, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
 	Tr2RegisterMapAL globalRegisterMap = Tr2RegisterMapAL( &shaderType, &globalSignature, 1 );
 	Tr2ResourceSetDescriptionAL rsDesc(globalRegisterMap);
-	rsDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, tlas.GetBuffer() );
+	rsDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, tlas.GetBuffer() );
 	rsDesc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, result );
 
 	Tr2ResourceSetAL rs;

@@ -435,13 +435,6 @@ struct _ResourceRef
 
 using namespace raytracing;
 
-struct RaytracingAccelerationStructureT
-{
-     instance_acceleration_structure tlas;
-};
-
-#define RaytracingAccelerationStructure const RaytracingAccelerationStructureT*
-
 struct RayDesc
 {
     float3 Origin;
@@ -477,19 +470,38 @@ struct __MetalHitSV
 
 struct __RtLocalMaterial
 {
-    device void* buffer;
+    constant void* buffer;
 };
 
-template <typename T>
-void __GetLocalRTBufferT( device __RtLocalMaterial* materials, uint index, thread T& dest )
+struct RaytracingAccelerationStructureT
 {
-    dest = ((device T*)materials[index].buffer)[0];
+    instance_acceleration_structure tlas;
+};
+
+#define RaytracingAccelerationStructure const RaytracingAccelerationStructureT*
+
+template <typename payload_t, typename global_input_t>
+struct ShaderTableT
+{
+	intersection_function_table<__INTERSECION_TAGS> intersectionTable;
+    visible_function_table<void(thread payload_t&, __MetalHitSV, device __RtLocalMaterial*, constant global_input_t&, constant ShaderTableT<payload_t, global_input_t>&)> missShaderTable;
+    visible_function_table<void(thread payload_t&, __MetalHitSV, device __RtLocalMaterial*, constant global_input_t&, constant ShaderTableT<payload_t, global_input_t>&)> hitShaderTable;
+    device __RtLocalMaterial* missMaterials;
+    device __RtLocalMaterial* hitMaterials;
+	constant global_input_t& globalInput;
+};
+
+
+template <typename T>
+constant T& __GetLocalRTBuffer( device __RtLocalMaterial* materials, uint index )
+{
+    return ((constant T*)materials[index].buffer)[0];
 }
 
-#define __GetLocalRTBuffer(index, dest) __GetLocalRTBufferT(__rtMaterials, index, dest)
+template <typename payload_t, typename global_input_t>
+void TraceRay(
+	constant ShaderTableT<payload_t, global_input_t>& shaderTable,
 
-template <typename payload_t>
-void __TraceRay(
     device RaytracingAccelerationStructure accelerationStructure,
     uint rayFlags,
     uint instanceInclusionMask,
@@ -497,13 +509,7 @@ void __TraceRay(
     uint multiplierForGeometryContributionToHitGroupIndex,
     uint missShaderIndex,
     RayDesc ray_,
-    thread payload_t& payload,
-
-    intersection_function_table<__INTERSECION_TAGS> intersectionTable,
-    visible_function_table<void(thread payload_t&, __MetalHitSV, device __RtLocalMaterial*)> missShaderTable,
-    device __RtLocalMaterial* missMaterials,
-    visible_function_table<void(thread payload_t&, __MetalHitSV, device __RtLocalMaterial*)> hitShaderTable,
-    device __RtLocalMaterial* hitMaterials )
+    thread payload_t& payload )
 {
     intersector<__INTERSECION_TAGS> i;
     i.assume_geometry_type(geometry_type::triangle);
@@ -515,7 +521,7 @@ void __TraceRay(
     r.min_distance = ray_.TMin;
     r.max_distance = ray_.TMax;
 
-    typename intersector<__INTERSECION_TAGS>::result_type intersection = i.intersect(r, accelerationStructure[0].tlas, instanceInclusionMask, intersectionTable, payload);
+    typename intersector<__INTERSECION_TAGS>::result_type intersection = i.intersect(r, accelerationStructure[0].tlas, instanceInclusionMask, shaderTable.intersectionTable, payload);
 
     __MetalHitSV hit;
 
@@ -528,7 +534,7 @@ void __TraceRay(
         hit.distance = r.max_distance;
         hit.barycentric_coord = { 0.0, 0.0 };
 
-        missShaderTable[missShaderIndex](payload, hit, missMaterials + 8 * missShaderIndex);
+        shaderTable.missShaderTable[missShaderIndex](payload, hit, shaderTable.missMaterials + 8 * missShaderIndex, shaderTable.globalInput, shaderTable);
     }
     else if( ( rayFlags & RAY_FLAG_SKIP_CLOSEST_HIT_SHADER ) == 0 )
     {
@@ -541,12 +547,10 @@ void __TraceRay(
 
         uint offset = ((device uint*)accelerationStructure)[2 + intersection.instance_id];
 
-        hitShaderTable[intersection.instance_id](payload, hit, hitMaterials + 8 * offset);
+        shaderTable.hitShaderTable[intersection.instance_id](payload, hit, shaderTable.hitMaterials + 8 * offset, shaderTable.globalInput, shaderTable);
     }
 }
 
-#define TraceRay(accelerationStructure, rayFlags, instanceInclusionMask, rayContributionToHitGroupIndex, multiplierForGeometryContributionToHitGroupIndex, missShaderIndex, ray, payload) \
-    __TraceRay(accelerationStructure, rayFlags, instanceInclusionMask, rayContributionToHitGroupIndex, multiplierForGeometryContributionToHitGroupIndex, missShaderIndex, ray, payload, __intersectionTable, __missShaderFunctionTable, __missMaterials, __hitShaderFunctionTable, __hitMaterials)
 
 
 #define DispatchRaysIndex() (__dispatchRaysIndex)

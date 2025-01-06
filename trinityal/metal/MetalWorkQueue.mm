@@ -3044,38 +3044,114 @@ void MetalWorkQueue::Dispatch( id<MTLBuffer> indirectBuffer, uint32_t indirectBu
 	ReleaseEncoder( false );
 }
 
-void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t width, uint32_t height )
+ConstantBufferAllocator::Entry MetalWorkQueue::UploadArgumentBuffer( const Tr2ShaderSignatureAL& signature, std::vector<id<MTLResource>>& readResources, std::vector<id<MTLResource>>& writeResources ) const
+{
+    if (@available(macOS 13.0, *))
+    {
+        auto& allocator = m_context->GetConstantBufferAllocator();
+        std::vector<uint64_t> data;
+        
+        for( auto& reg : signature.registers )
+        {
+            switch( reg.registerType )
+            {
+            case Tr2ShaderRegisterAL::CONSTANT_BUFFER:
+                {
+                    auto& cbd = m_constBuffers[COMPUTE_SHADER][METAL_CONST_BUFFER_OFFSET + reg.registerIndex];
+                    data.push_back( allocator.GetPage( cbd.page ).gpuAddress + cbd.offset );
+                    readResources.push_back( allocator.GetPage( cbd.page ) );
+                }
+                break;
+            case Tr2ShaderRegisterAL::SAMPLER:
+                data.push_back( m_samplers[COMPUTE_SHADER][reg.registerIndex].gpuResourceID._impl );
+                break;
+            case Tr2ShaderRegisterAL::SRV_BUFFER:
+            case Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER:
+                {
+                    auto& buffer = m_buffers[COMPUTE_SHADER][METAL_SRV_BUFFER_OFFSET + reg.registerIndex];
+                    data.push_back( buffer.buffer.gpuAddress + buffer.offset );
+                    readResources.push_back( buffer.buffer );
+                }
+                break;
+            case Tr2ShaderRegisterAL::UAV_BUFFER:
+            case Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER:
+                {
+                    auto& buffer = m_buffers[COMPUTE_SHADER][METAL_UAV_BUFFER_OFFSET + reg.registerIndex];
+                    data.push_back( buffer.buffer.gpuAddress + buffer.offset );
+                    writeResources.push_back( buffer.buffer );
+                }
+                break;
+            default:
+                if( reg.IsUav() )
+                {
+                    auto& texture = m_textures[COMPUTE_SHADER][METAL_UAV_TEXTURE_OFFSET + reg.registerIndex];
+                    data.push_back( texture.gpuResourceID._impl );
+                    writeResources.push_back( texture );
+                }
+                else
+                {
+                    auto& texture = m_textures[COMPUTE_SHADER][METAL_SRV_TEXTURE_OFFSET + reg.registerIndex];
+                    data.push_back( texture.gpuResourceID._impl );
+                    readResources.push_back( texture );
+                }
+                break;
+            }
+        }
+        return allocator.Allocate( data.data(), uint32_t( data.size() * sizeof( uint64_t ) ) );
+    }
+    else
+    {
+        return {};
+    }
+}
+
+void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t rayGenIndex, uint32_t width, uint32_t height )
 {
     CCP_ASSERT( m_isPrimary );
-    id<MTLComputeCommandEncoder> computeEncoder = GetComputeEncoder();
-    
-    // Bind the required buffers and textures.
-    SetComputeBufferBindings();
-    
-    [computeEncoder setComputePipelineState: pipeline->GetRtPipeline() ];
-    [computeEncoder setIntersectionFunctionTable: shaderTable->GetAnyHitFunctionTable() atBufferIndex:12];
-    [computeEncoder setVisibleFunctionTable: shaderTable->GetMissShaderFunctionTable() atBufferIndex:13];
-    [computeEncoder setVisibleFunctionTable: shaderTable->GetClosestHitFunctionTable() atBufferIndex:14];
-    [computeEncoder setBuffer:shaderTable->GetMaterialBuffer() offset:0 atIndex:15];
-    [computeEncoder setBuffer:shaderTable->GetMaterialBuffer() offset:shaderTable->GetMissMaterialOffset() atIndex:16];
-    
-    [computeEncoder useResource:shaderTable->GetAnyHitFunctionTable() usage:MTLResourceUsageRead];
+    if (@available(macOS 13.0, *))
+    {
+        id<MTLComputeCommandEncoder> computeEncoder = GetComputeEncoder();
+        
+        auto& allocator = m_context->GetConstantBufferAllocator();
 
-    // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
-    // pixel. The sample needs to align the number of threads to a multiple of the threadgroup
-    // size, because earlier, when it created the pipeline objects, it declared that the pipeline
-    // would always use a threadgroup size that's a multiple of the thread execution width
-    // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
-    // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
-    MTLSize threadsPerThreadgroup = MTLSizeMake(8, 8, 1);
-    MTLSize threadgroups = MTLSizeMake((width  + threadsPerThreadgroup.width  - 1) / threadsPerThreadgroup.width,
-                                       (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
-                                       1);
-    
-    // Dispatch the compute kernel to perform ray tracing.
-    [computeEncoder dispatchThreadgroups:threadgroups threadsPerThreadgroup:threadsPerThreadgroup];
-    
-    ReleaseEncoder( false );
+        std::vector<id<MTLResource>> readResources;
+        std::vector<id<MTLResource>> writeResources;
+        
+        auto globalInputGpu = UploadArgumentBuffer( pipeline->m_globalSignature, readResources, writeResources );
+        
+        [computeEncoder setBuffer:allocator.GetPage( globalInputGpu.page ) offset:globalInputGpu.offset atIndex:METAL_SRV_BUFFER_OFFSET + 1];
+        readResources.push_back( allocator.GetPage( globalInputGpu.page ) );
+
+        auto shaderTableData = shaderTable->GetShaderTableData( rayGenIndex, allocator.GetPage( globalInputGpu.page ).gpuAddress + globalInputGpu.offset );
+        auto shaderTableGpu = allocator.Allocate( &shaderTableData, sizeof( shaderTableData ) );
+        [computeEncoder setBuffer:allocator.GetPage( shaderTableGpu.page ) offset:shaderTableGpu.offset atIndex:METAL_SRV_BUFFER_OFFSET + 2];
+        readResources.push_back( allocator.GetPage( shaderTableGpu.page ) );
+
+        shaderTable->AddUsedResources( rayGenIndex, readResources );
+        
+        shaderTable->SetGlobalInputBuffer( rayGenIndex, allocator.GetPage( globalInputGpu.page ), globalInputGpu.offset );
+
+        [computeEncoder useResources:readResources.data() count:readResources.size() usage:MTLResourceUsageRead];
+        [computeEncoder useResources:writeResources.data() count:writeResources.size() usage:MTLResourceUsageWrite];
+        [computeEncoder setComputePipelineState: pipeline->GetRtPipeline( rayGenIndex ) ];
+
+        // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
+        // pixel. The sample needs to align the number of threads to a multiple of the threadgroup
+        // size, because earlier, when it created the pipeline objects, it declared that the pipeline
+        // would always use a threadgroup size that's a multiple of the thread execution width
+        // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
+        // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
+        MTLSize threadsPerThreadgroup = MTLSizeMake(8, 8, 1);
+        MTLSize threadgroups = MTLSizeMake((width  + threadsPerThreadgroup.width  - 1) / threadsPerThreadgroup.width,
+                                           (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
+                                           1);
+        
+        // Dispatch the compute kernel to perform ray tracing.
+        [computeEncoder dispatchThreadgroups:threadgroups threadsPerThreadgroup:threadsPerThreadgroup];
+        shaderTable->SetGlobalInputBuffer( rayGenIndex, nullptr, 0 );
+
+        ReleaseEncoder( false );
+    }
 }
 
 

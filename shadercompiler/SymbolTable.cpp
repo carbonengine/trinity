@@ -72,6 +72,7 @@ Symbol::Symbol()
 	definition( nullptr ),
 	intrinsicType( nullptr ),
 	addressSpace( AddressSpace::None ),
+	resourceRefWrapped( false ),
 	used( false )
 {
 	name.start = name.end = nullptr;
@@ -439,6 +440,16 @@ Symbol* SymbolTable::AddSymbol( const InlineString& name, OverrideBehavior overr
 		}
 	}
 	return m_current->AddSymbol( name, overrideBehavior );
+}
+
+Symbol* SymbolTable::AddTypeSymbol( const InlineString& name, OverrideBehavior overrideBehavior )
+{
+	auto symbol = AddSymbol( name, overrideBehavior );
+	if( symbol )
+	{
+		symbol->isTypeName = true;
+	}
+	return symbol;
 }
 
 Symbol* SymbolTable::AddSymbol( Symbol* symbol, OverrideBehavior overrideBehavior )

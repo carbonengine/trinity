@@ -74,6 +74,18 @@ variable_identifier(A) ::= OP_ID(B).
 
 
 %type literal_constant {ScannerToken}
+%type string_literal {ScannerToken}
+
+string_literal(A) ::= OP_STRING_CONST(B).
+{
+	A = B;
+}
+
+string_literal(A) ::= string_literal(B) OP_STRING_CONST(C).
+{
+	A = B;
+	A.stringValue.end = C.stringValue.end;
+}
 
 literal_constant(A) ::= OP_INT_CONST(B).
 {
@@ -90,7 +102,7 @@ literal_constant(A) ::= OP_BOOL_CONST(B).
 	A = B;
 }
 
-literal_constant(A) ::= OP_STRING_CONST(B).
+literal_constant(A) ::= string_literal(B).
 {
 	A = B;
 }
@@ -2153,6 +2165,49 @@ type_specifier(A) ::= struct_named_specifier(B).
 	A = B->GetType();
 }
 
+
+struct_named_specifier(A) ::= OP_STRUCT enter_block OP_ID(B) OP_LEFT_BRACE  OP_RIGHT_BRACE.
+{
+	A = new ASTNode( NT_STRUCT, B.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
+
+	parserState->GetSymbolTable().LeaveScope();
+
+
+	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( B.stringValue ); 
+	if( !symbol ) 
+	{ 
+		parserState->ShowMessage(B, EC_IDENTIFIER_REDEFINITION, std::string( B.stringValue.start, B.stringValue.end ).c_str() );
+	}
+	else
+	{
+		symbol->isTypeName = true;
+		symbol->definition = A;
+		
+		Type type;
+		type.FromSymbol( symbol );
+
+		A->SetSymbol( symbol );
+		A->SetType( type );
+	}
+}
+
+
+struct_specifier(A) ::= OP_STRUCT(B) enter_block OP_LEFT_BRACE  OP_RIGHT_BRACE.
+{
+	A = new ASTNode( NT_STRUCT, B.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
+
+	parserState->GetSymbolTable().LeaveScope();
+
+	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( parserState->AllocateName() );
+	symbol->definition = A;
+	symbol->isTypeName = true;
+
+	Type type;
+	type.FromSymbol( symbol );
+
+	A->SetSymbol( symbol );
+	A->SetType( type );
+}
 
 struct_named_specifier(A) ::= OP_STRUCT enter_block OP_ID(B) OP_LEFT_BRACE struct_declaration_list(C) OP_RIGHT_BRACE.
 {

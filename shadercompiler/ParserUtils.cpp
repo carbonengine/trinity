@@ -500,6 +500,7 @@ static ASTNode* AddCBuffer( ParserState& state, ASTNode* node, int cbufferIndex,
 	reg.explicitRegister = true;
 	reg.explicitSpace = false;
 	cbufferName->registerSpecifier[reg.shaderProfile] = reg;
+	cbufferName->definition = cbuffer;
 	cbuffer->SetSymbol( cbufferName );
 	return cbuffer;
 }
@@ -723,7 +724,12 @@ namespace
 		}
 	}
 
-	void AssignRegisters( ASTNode* root, InputStageType stage, Registers& registers )
+	bool SymbolMatchesGlobalInput( const Symbol& symbol, const GlobalInputElement& element )
+	{
+		return symbol.name == element.name && symbol.type == element.type;
+	}
+
+	void AssignRegisters( ASTNode* root, InputStageType stage, Registers& registers, const std::vector<GlobalInputElement>& globalInput, std::vector<RegisterSpecifier>& globalInputRegisters )
 	{
 		if( !root )
 		{
@@ -764,35 +770,45 @@ namespace
 			}
 			if( auto registerType = GetRegisterType( root->GetSymbol()->type ) )
 			{
-				bool assigned = false;
-				for( auto& r : root->GetSymbol()->registerSpecifier )
+				auto globalElement = std::find_if( begin( globalInput ), end( globalInput ), [symbol = root->GetSymbol()]( const auto& element ) { return SymbolMatchesGlobalInput( *symbol, element ); } );
+				if ( globalElement != end( globalInput ) )
 				{
-					if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
-					{
-						assigned = true;
-						break;
-					}
-				}
-				if( !assigned )
-				{
-					bool isArray = root->GetChildOrNull( 0 ) && root->GetChildOrNull( 0 )->GetNodeType() == NT_BRACKET_LIST;
-
-					RegisterSpecifier r;
-					r.shaderProfile = MakeInlineString( "" );
-					r.registerType = registerType;
-					r.registerNumber = AllocateRegister( *GetRegisterSet( registers, registerType ) );
-					if( isArray )
-					{
-						r.space = AllocateRegister( registers.spaces );
-					}
-					else
-					{
-						r.space = 0;
-					}
-					r.subComponent = -1;
-					r.explicitRegister = false;
-					r.explicitSpace = false;
+					auto& r = globalInputRegisters[globalElement - begin( globalInput )];
 					root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
+				}
+				else
+				{
+
+					bool assigned = false;
+					for( auto& r : root->GetSymbol()->registerSpecifier )
+					{
+						if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
+						{
+							assigned = true;
+							break;
+						}
+					}
+					if( !assigned )
+					{
+						bool isArray = root->GetChildOrNull( 0 ) && root->GetChildOrNull( 0 )->GetNodeType() == NT_BRACKET_LIST;
+
+						RegisterSpecifier r;
+						r.shaderProfile = MakeInlineString( "" );
+						r.registerType = registerType;
+						r.registerNumber = AllocateRegister( *GetRegisterSet( registers, registerType ) );
+						if( isArray )
+						{
+							r.space = AllocateRegister( registers.spaces );
+						}
+						else
+						{
+							r.space = 0;
+						}
+						r.subComponent = -1;
+						r.explicitRegister = false;
+						r.explicitSpace = false;
+						root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
+					}
 				}
 			}
 			break;
@@ -800,7 +816,7 @@ namespace
 		case NT_VAR_DECLARATION_LIST:
 			for( size_t i = 0; i < root->GetChildrenCount(); ++i )
 			{
-				AssignRegisters( root->GetChild( i ), stage, registers );
+				AssignRegisters( root->GetChild( i ), stage, registers, globalInput, globalInputRegisters );
 			}
 			break;
 		default:
@@ -809,13 +825,74 @@ namespace
 	}
 }
 
-void AssignRegisters( ASTNode* root, int32_t stage )
+void AssignGlobalInputRegisters( const std::vector<GlobalInputElement>& globalInput, Registers& registers, std::vector<RegisterSpecifier>& globalInputRegisters )
+{
+	for ( auto& input : globalInput )
+	{
+		if( auto registerType = GetRegisterType( input.type ) )
+		{
+			bool isArray = input.type.arrayDimensions > 0;
+
+			RegisterSpecifier r;
+			r.shaderProfile = MakeInlineString( "" );
+			r.registerType = registerType;
+			r.registerNumber = AllocateRegister( *GetRegisterSet( registers, registerType ) );
+			if( isArray )
+			{
+				r.space = AllocateRegister( registers.spaces );
+			}
+			else
+			{
+				r.space = 0;
+			}
+			r.subComponent = -1;
+			r.explicitRegister = false;
+			r.explicitSpace = false;
+			globalInputRegisters.push_back( r );
+		}
+		else if ( input.declaration && input.declaration->GetNodeType() == NT_CBUFFER )
+		{
+			bool assigned = false;
+			for( auto& r : input.declaration->GetSymbol()->registerSpecifier )
+			{
+				if( r.second.explicitRegister && r.first == "" )
+				{
+					assigned = true;
+					globalInputRegisters.push_back( r.second );
+					break;
+				}
+			}
+			if( !assigned )
+			{
+				RegisterSpecifier r;
+				r.shaderProfile = MakeInlineString( "" );
+				r.registerType = 'b';
+				r.registerNumber = AllocateRegister( registers.b );
+				r.subComponent = -1;
+				r.space = 0;
+				r.explicitRegister = false;
+				r.explicitSpace = false;
+				globalInputRegisters.push_back( r );
+			}
+		}
+		else
+		{
+			globalInputRegisters.push_back( RegisterSpecifier() );
+		}
+	}
+}
+
+void AssignRegisters( ASTNode* root, int32_t stage, const std::vector<GlobalInputElement>& globalInput )
 {
 	ZoneScoped;
 
 	Registers registers;
 	registers.spaces.insert( 0 );
-	AssignRegisters( root, InputStageType( stage ), registers );
+
+	std::vector<RegisterSpecifier> globalInputRegisters;
+	AssignGlobalInputRegisters( globalInput, registers, globalInputRegisters );
+
+	AssignRegisters( root, InputStageType( stage ), registers, globalInput, globalInputRegisters );
 }
 
 int GetNodeOrder( ASTNode* t )
@@ -1165,4 +1242,106 @@ ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char*
     auto arg = NewFunctionParameter( state, type, state.AllocateName( name ) );
     arg->GetSymbol()->registerSpecifier[MakeInlineString( "" )] = reg;
     return arg;
+}
+
+std::optional<std::string> PreprocessString( const InlineString& input );
+std::optional<std::vector<InlineString>> TokenizeGlobalInput( const InlineString& input );
+
+
+std::optional<std::vector<GlobalInputElement>> ParseGlobalInput( ParserState& state, const ScannerToken& input )
+{
+	auto processed = PreprocessString( input.stringValue );
+	if ( !processed )
+	{
+		return {};
+	}
+
+	auto tokens = TokenizeGlobalInput( { processed->c_str(), processed->c_str() + processed->size() } );
+	if ( !tokens )
+	{
+		state.ShowMessage( input.fileLocation, EC_CUSTOM_ERROR, "Malformed globalinput string" );
+		return {};
+	}
+
+	std::vector<GlobalInputElement> result;
+	for( auto& name : *tokens )
+	{
+		auto symbol = state.GetSymbolTable().LookupGlobal( ToString( name ).c_str() );
+		bool isCBuffer = false;
+		bool useCBuffers = false; 
+		if ( useCBuffers )
+		{
+			if( symbol && symbol->type.IsStruct() )
+			{
+				symbol = nullptr;
+			}
+			if( !symbol )
+			{
+				symbol = state.GetSymbolTable().LookupBuffer( name );
+				isCBuffer = true;
+			}
+
+		}
+		else
+		{
+			if( !symbol )
+			{
+				symbol = state.GetSymbolTable().LookupBuffer( name );
+				isCBuffer = true;
+			}
+			if( symbol && symbol->type.IsStruct() )
+			{
+				isCBuffer = true;
+			}
+		}
+		if ( !symbol )
+		{
+			state.ShowMessage( input.fileLocation, EC_UNDECLARED_IDENTIFIER, ToString( name ).c_str() );
+			return {};
+		}
+		auto& type = symbol->type;
+		if( !isCBuffer && !type.IsTexture() && !type.IsSampler() && !type.IsBuffer() && !( type.symbol == nullptr && type.builtInType == OP_RAYTRACING_ACCELERATION_STRUCTURE ) )
+		{
+			state.ShowMessage( input.fileLocation, EC_CUSTOM_ERROR, "Unsupported type for \"%s\" in the globalinput", ToString( name ).c_str() );
+			return {};
+		}
+		result.push_back( { type, symbol->name, symbol->definition } );
+	}
+	return result;
+}
+
+bool ProcessGlobalInputAttribute( ParserState& state, ASTNode* func, std::vector<GlobalInputElement>& globalInput )
+{
+	if( auto attribs = func->GetChildOrNull( 2 ) )
+	{
+		for( auto& attrib : attribs->GetChildren() )
+		{
+			if( attrib->GetToken()->stringValue == "globalinput" )
+			{
+				if( !attrib->GetChildOrNull( 0 ) )
+				{
+					state.ShowMessage( attrib->GetToken()->fileLocation, EC_CUSTOM_ERROR, "Function annotation globalinput must have a string parameter with global input declarations" );
+					return false;
+				}
+				auto input = ParseGlobalInput( state, *attrib->GetChildOrNull( 0 )->GetToken() );
+				if( !input )
+				{
+					return false;
+				}
+				if( !globalInput.empty() )
+				{
+					if( globalInput != *input )
+					{
+						state.ShowMessage( attrib->GetToken()->fileLocation, EC_CUSTOM_ERROR, "Function annotations globalinput must match across all functions in the library" );
+						return false;
+					}
+				}
+				else
+				{
+					globalInput = *input;
+				}
+			}
+		}
+	}
+	return true;
 }

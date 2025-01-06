@@ -24,9 +24,9 @@ namespace
 	};
 
 	const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
-	const BlueSharedString RtShadowMapTechniqueName = BlueSharedString( "ShadowDest" );
-	const BlueSharedString NormalBufferTechniqueName = BlueSharedString( "NormalBuffer" );
-	const BlueSharedString RtSceneTechniqueName = BlueSharedString( "Scene" );
+	const BlueSharedString RtShadowMapTechniqueName = BlueSharedString( "RtShadowShadowDest" );
+	const BlueSharedString NormalBufferTechniqueName = BlueSharedString( "RtShadowNormalBuffer" );
+	const BlueSharedString RtSceneTechniqueName = BlueSharedString( "RtShadowScene" );
 }
 
 //***********************************************************

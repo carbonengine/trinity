@@ -1,8 +1,5 @@
 #pragma once
 
-//#ifndef DxReflection_H
-//#define DxReflection_H
-
 #include "stdafx.h"
 #include "EffectData.h"
 #include "ParserState.h"
@@ -10,7 +7,7 @@
 #include "CompileMessageQueue.h"
 #include "FxAnalyzer.h"
 #include "HLSLParser.h"
-//#include "ASTNode.h"
+#include "ParserUtils.h"
 
 
 extern StringTable g_stringTable;
@@ -178,40 +175,6 @@ namespace DxReflection
 		}
 	}
 
-	enum class RegisterSpaceFilterAction
-	{
-		ACCEPT_REGISTER,
-		IGNORE_REGISTER,
-		ERROR_REGISTER,
-	};
-
-	template <typename T>
-	struct RegisterSpaceFilter
-	{
-		static RegisterSpaceFilterAction Filter( const T&, uint32_t, const std::vector<uint32_t>& )
-		{
-			return RegisterSpaceFilterAction::ACCEPT_REGISTER;
-		}
-	};
-
-	template <>
-	struct RegisterSpaceFilter<D3D12_SHADER_INPUT_BIND_DESC>
-	{
-
-		static RegisterSpaceFilterAction Filter( const D3D12_SHADER_INPUT_BIND_DESC& desc, uint32_t accepted, const std::vector<uint32_t>& allowed )
-		{
-			if( allowed.empty() )
-			{
-				return RegisterSpaceFilterAction::ACCEPT_REGISTER;
-			}
-			if( desc.Space == accepted )
-			{
-				return RegisterSpaceFilterAction::ACCEPT_REGISTER;
-			}
-			return find( begin( allowed ), end( allowed ), desc.Space ) == end( allowed ) ? RegisterSpaceFilterAction::ERROR_REGISTER : RegisterSpaceFilterAction::IGNORE_REGISTER;
-		}
-	};
-
 	inline uint8_t GetSpaceFromDesc( const D3D11_SHADER_INPUT_BIND_DESC& )
 	{
 		return 0;
@@ -244,8 +207,15 @@ namespace DxReflection
 		using SignatureParamDesc = D3D12_SIGNATURE_PARAMETER_DESC;
 	};
 
+	enum class ReflectionTarget
+	{
+		SHADER_INPUT,
+		LOCAL_INPUT,
+		GLOBAL_INPUT,
+	};
+
 	template <typename Traits>
-	static bool ProcessReflection( ParserState& parserState, typename Traits::Reflection* reflection, bool collectStaticSamplers, StageData& stage, std::map<StringReference, ParameterAnnotation>& annotations, uint32_t acceptedSpace = 0xffffffff, const std::vector<uint32_t>& allowedSpaces = {} )
+	static bool ProcessReflection( ParserState& parserState, typename Traits::Reflection* reflection, bool collectStaticSamplers, StageData& stage, std::map<StringReference, ParameterAnnotation>& annotations, ReflectionTarget reflectionTarget = ReflectionTarget::SHADER_INPUT, const std::vector<GlobalInputElement>& filter = {} )
 	{
 		ZoneScoped;
 
@@ -274,6 +244,11 @@ namespace DxReflection
 				{
 					continue;
 				}
+			}
+
+			if( reflectionTarget == ReflectionTarget::GLOBAL_INPUT )
+			{
+				continue;
 			}
 
 			for( unsigned i = 0; i < cbDesc.Variables; ++i )
@@ -426,13 +401,43 @@ namespace DxReflection
 				continue;
 			}
 
-			switch( RegisterSpaceFilter<decltype(desc)>::Filter( desc, acceptedSpace, allowedSpaces ) )
+			switch ( reflectionTarget )
 			{
-			case RegisterSpaceFilterAction::ERROR_REGISTER:
-				g_messages.AddMessage( "\\memory(0): error X0000: Shader input %s has an invalid space", desc.Name );
-				return false;
-			case RegisterSpaceFilterAction::IGNORE_REGISTER:
-				continue;
+			case ReflectionTarget::LOCAL_INPUT:
+				if( desc.Type == D3D_SIT_CBUFFER )
+				{
+					auto found = std::find_if( begin( filter ), end( filter ), [desc]( const auto& f ) { return f.name == desc.Name; } );
+					if( found != end( filter ) )
+					{
+						continue;
+					}
+					break;
+				}
+				else
+				{
+					continue;
+				}
+			case ReflectionTarget::GLOBAL_INPUT:
+				if( desc.Type == D3D_SIT_CBUFFER )
+				{
+					auto found = std::find_if( begin( filter ), end( filter ), [desc]( const auto& f ) { return f.name == desc.Name; } );
+					if( found == end( filter ) )
+					{
+						continue;
+					}
+				}
+				else
+				{
+					auto found = std::find_if( begin( filter ), end( filter ), [desc]( const auto& f ) { return f.name == desc.Name; } );
+					if( found == end( filter ) )
+					{
+						g_messages.AddMessage( "\\memory(0): error X0000: Ray tracing shader may not use SRV/UAV/Sampler \"%s\" not declared in the globalinput", desc.Name );
+						return false;
+					}
+				}
+				break;
+			default:
+				break;
 			}
 
 			switch( desc.Type )
@@ -728,5 +733,3 @@ namespace DxReflection
 		return true;
 	}
 }
-
-//#endif // !DxReflection_H

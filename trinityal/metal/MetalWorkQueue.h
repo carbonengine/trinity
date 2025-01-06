@@ -9,6 +9,7 @@
 #import <QuartzCore/CAMetalLayer.h>
 
 #include "MetalUtils.h"
+#include "../include/Tr2ShaderAL.h"
 
 namespace TrinityALImpl
 {
@@ -336,7 +337,7 @@ namespace TrinityALImpl
 		void Dispatch( uint32_t groupDimX, uint32_t groupDimY, uint32_t groupDimZ );
 		void Dispatch( id<MTLBuffer> indirectBuffer, uint32_t indirectBufferOffset );
         API_AVAILABLE( macos(11.0) )
-        void DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t width, uint32_t height );
+        void DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t rayGenIndex, uint32_t width, uint32_t height );
         
 		void CreateVisibilityQueryBuffer(uint64_t maxNumQueries);
 		uint64_t StartVisibilityQuery();
@@ -389,6 +390,7 @@ namespace TrinityALImpl
 		void SetFragmentBufferBindings();
 		void SetComputeBufferBindings();
 		void SetupPresentBlitResources();
+        ConstantBufferAllocator::Entry UploadArgumentBuffer( const Tr2ShaderSignatureAL& signature, std::vector<id<MTLResource>>& readResources, std::vector<id<MTLResource>>& writeResources ) const;
 
 		size_t CalculateVertexDescriptorHash();
 		size_t CalculateAttachmentsHash();

@@ -1188,6 +1188,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 				stage.shaderSize = uint32_t( strippedEffectData->GetBufferSize() );
 				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
+				stage.source = code;
+
 
 				CComPtr<ID3D11ShaderReflection> reflection;
 				{
@@ -1305,8 +1307,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			library.hitGroupName = g_stringTable.AddString( "" );
 
 			std::map<std::string, std::string> shaders;
+			std::vector<GlobalInputElement> globalInputs;
 
 			state.GetSymbolTable().ResetUsedFlag();
+
 			for( size_t i = 0; i < libNode->GetChildrenCount(); ++i )
 			{
 				auto childNode = libNode->GetChild( i );
@@ -1326,6 +1330,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					MarkUsedSymbols( childNode->GetChild( 1 ), state );
 					shaderExport.name = g_stringTable.AddString( ToString( childNode->GetChild( 1 )->GetSymbol()->name ).c_str() );
 					library.exports.push_back( shaderExport );
+
+					if( !ProcessGlobalInputAttribute( state, childNode->GetChild( 1 )->GetSymbol()->definition, globalInputs ) )
+					{
+						return false;
+					}
 				}
 				else if( childNode->GetNodeType() == NT_STATE_ASSIGNMENT )
 				{
@@ -1361,7 +1370,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			if( compileOptions.addSpaces )
 			{
 				CreateGlobalsCB( state );
-				AssignRegisters( state.GetTree(), 8 );
+				AssignRegisters( state.GetTree(), 8, globalInputs );
 			}
 
 
@@ -1373,6 +1382,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			//m_dxilLibrary->CreateBlobWithEncodingFromPinned( os.str(), UINT32( os.pcount() ), CP_UTF8, &src );
 			std::string code = os.str();
 			m_dxilUtils->CreateBlobFromPinned( code.c_str(), UINT32(os.str().size() ), CP_UTF8, &src);
+
+			library.source = code;
 
 			CComPtr<IDxcCompiler> compiler;
 			DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
@@ -1420,13 +1431,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			for( UINT i = 0; i < desc.FunctionCount; ++i )
 			{
-				// global root signature space = 7
-				if( !DxReflection::ProcessReflection<DxReflection::FunctionDx12>( state, shaderReflection->GetFunctionByIndex( i ), compileOptions.useStaticSamplers, library.globalInputs, result.annotations, 7, { 7, 8 } ) )
+				if( !DxReflection::ProcessReflection<DxReflection::FunctionDx12>( state, shaderReflection->GetFunctionByIndex( i ), compileOptions.useStaticSamplers, library.globalInputs, result.annotations, DxReflection::ReflectionTarget::GLOBAL_INPUT, globalInputs ) )
 				{
 					return false;
 				}
-				// local root signature space = 8
-				if( !DxReflection::ProcessReflection<DxReflection::FunctionDx12>( state, shaderReflection->GetFunctionByIndex( i ), compileOptions.useStaticSamplers, library.localInputs, result.annotations, 8, { 7, 8 } ) )
+				if( !DxReflection::ProcessReflection<DxReflection::FunctionDx12>( state, shaderReflection->GetFunctionByIndex( i ), compileOptions.useStaticSamplers, library.localInputs, result.annotations, DxReflection::ReflectionTarget::LOCAL_INPUT, globalInputs ) )
 				{
 					return false;
 				}
