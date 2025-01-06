@@ -1102,3 +1102,140 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 	}
 	return false;
 }
+
+
+template<int base>
+static bool adddgt(unsigned long &u, unsigned long d)
+{
+    if (u > (ULONG_MAX - d) / base) {
+        return false;
+    }
+    u = u * base + d;
+    return true;
+}
+static bool lex_oct(const char *s, const char *e, unsigned long &u)
+{
+    for (u = 0, ++s; s < e; ++s) {
+        if (!adddgt<8>(u, *s - 0x30u)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool lex_dec(const char *s, const char *e, unsigned long &u)
+{
+    for (u = 0; s < e; ++s) {
+        if (!adddgt<10>(u, *s - 0x30u)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool lex_hex(const char *s, const char *e, unsigned long &u)
+{
+    for (u = 0, s += 2; s < e;) {
+    /*!re2c
+        re2c:yyfill:enable = 0;
+        re2c:define:YYCURSOR = s;
+        *     { if (!adddgt<16>(u, s[-1] - 0x30u))      return false; continue; }
+        [a-f] { if (!adddgt<16>(u, s[-1] - 0x61u + 10)) return false; continue; }
+        [A-F] { if (!adddgt<16>(u, s[-1] - 0x41u + 10)) return false; continue; }
+    */
+    }
+    return true;
+}
+
+std::optional<std::string> PreprocessString( const InlineString& input )
+{
+	auto q = input.start[0];
+	auto cur = input.start + 1;
+	std::string out;
+	const char* mar;
+	const char* tok;
+
+	while( cur < input.end )
+	{
+		for( char u = *cur;; out += u ) 
+		{
+			tok = cur;
+			unsigned long v;
+			/*!re2c
+				re2c:define:YYCURSOR = cur;
+				re2c:define:YYMARKER = mar;
+				re2c:define:YYLIMIT = input.end;
+				*                    { return {}; }
+				[^\n\\]              { u = tok[0]; if (u == q) break; continue; }
+				"\\a"                { u = '\a'; continue; }
+				"\\b"                { u = '\b'; continue; }
+				"\\f"                { u = '\f'; continue; }
+				"\\n"                { u = '\n'; continue; }
+				"\\r"                { u = '\r'; continue; }
+				"\\t"                { u = '\t'; continue; }
+				"\\v"                { u = '\v'; continue; }
+				"\\\\"               { u = '\\'; continue; }
+				"\\'"                { u = '\''; continue; }
+				"\\\""               { u = '"';  continue; }
+				"\\?"                { u = '?';  continue; }
+				"\\" [0-7]{1,3}      { lex_oct(tok, cur, v); u=(char)v; continue; }
+				"\\u" [0-9a-fA-F]{4} { lex_hex(tok, cur, v); u=(char)v; continue; }
+				"\\U" [0-9a-fA-F]{8} { lex_hex(tok, cur, v); u=(char)v; continue; }
+				"\\x" [0-9a-fA-F]+   { if (!lex_hex(tok, cur, v)) return {}; u=(char)v; continue; }
+			*/
+		}
+		while( cur != input.end )
+		{
+			if( *cur == q )
+			{
+				++cur;
+				break;
+			}
+			++cur;
+		}
+	}
+    return out;
+}
+
+std::optional<std::vector<InlineString>> TokenizeGlobalInput( const InlineString& input )
+{
+	std::vector<InlineString> result;
+	auto cur = input.start;
+	std::string out;
+
+	bool expectID = true;
+
+	while( cur < input.end )
+	{
+		auto start = cur;
+		/*!re2c
+			re2c:define:YYCURSOR = cur;
+			re2c:define:YYMARKER = mar;
+			re2c:define:YYLIMIT = input.end;
+			* { 
+				return {}; 
+			}
+			SPACE {
+				continue; 
+			}
+			ID { 
+				if( !expectID )
+				{
+					return {};
+				}
+				expectID = false;
+				result.push_back( { start, cur } ); 
+				continue;
+			}
+			";" { 
+				if( expectID )
+				{
+					return {};
+				}
+				expectID = true;
+				continue; 
+			}
+		*/
+	}
+	return result;
+}

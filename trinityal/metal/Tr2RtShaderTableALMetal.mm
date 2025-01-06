@@ -31,8 +31,8 @@ namespace TrinityALImpl
     // Shader tables contain shader records. Shader records contain a shader identifier and root arguments used to look up resources
     ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
     {        
-        if (@available(macOS 11.0, *)) {
-            
+        if (@available(macOS 13.0, *))
+        {
             auto missFunctionTableDescriptor = [[MTLVisibleFunctionTableDescriptor alloc] init];
             missFunctionTableDescriptor.functionCount = desc.m_missNames.size();
             
@@ -41,33 +41,11 @@ namespace TrinityALImpl
 
             auto anyHitFunctionTableDescriptor = [[MTLIntersectionFunctionTableDescriptor alloc] init];
             anyHitFunctionTableDescriptor.functionCount = desc.m_hitGroupNames.size();
-            // Create a table large enough to hold all of the intersection functions. Metal
-            // links intersection functions into the compute pipeline state, potentially with
-            // a different address for each compute pipeline. Therefore, the intersection
-            // function table is specific to the compute pipeline state that created it, and you
-            // can use it with only that pipeline.
-            m_pipeline = pipeline.TrinityALImpl_GetObject()->GetRtPipeline();
-            
-            m_missShaderFunctionTable = [m_pipeline newVisibleFunctionTableWithDescriptor:missFunctionTableDescriptor];
-            m_closestHitFunctionTable = [m_pipeline newVisibleFunctionTableWithDescriptor:closestHitFunctionTableDescriptor];
-            m_anyHitFunctionTable = [m_pipeline newIntersectionFunctionTableWithDescriptor:anyHitFunctionTableDescriptor];
-             
-            // add functions to the dictionary
-            auto& intersectionFunctions = pipeline.TrinityALImpl_GetObject()->GetFunctionMap();
-            auto& hitGroupMap = pipeline.TrinityALImpl_GetObject()->GetHitGroupMap();
             
             const int BUFFERS_PER_SHADER = sizeof( Tr2RtLocalMaterialDescriptionAL::m_constants ) / sizeof( Tr2RtLocalMaterialDescriptionAL::m_constants[0] );
             
-            auto SetFunction = [&]( auto& table, const id<MTLFunction>& function, int index )
-            {
-                auto handle = [m_pipeline functionHandleWithFunction:function];
-                if( !handle )
-                {
-                    return E_INVALIDARG;
-                }
-                [table setFunction:handle atIndex:index];
-                return S_OK;
-            };
+            std::vector<uint64_t> hitBuffers;
+            hitBuffers.reserve( desc.m_hitGroupNames.size() * BUFFERS_PER_SHADER );
             
             auto FillMaterial = [&]( auto& ptrs, auto& material )
             {
@@ -83,71 +61,100 @@ namespace TrinityALImpl
                         id<MTLBuffer> cBuffer = renderContext.GetMetalContext()->GetConstantBufferAllocator().GetPage( page );
                         
                         renderContext.UseConstantBuffer(cBuffer);
-                        
-                        if( @available(macOS 13.0, *) )
-                        {
-                            address = cBuffer.gpuAddress + offset;
-                        }
+                        address = cBuffer.gpuAddress + offset;
                     }
                     ptrs.push_back( address );
                 }
             };
+
+            auto& intersectionFunctions = pipeline.TrinityALImpl_GetObject()->GetFunctionMap();
+            auto& hitGroupMap = pipeline.TrinityALImpl_GetObject()->GetHitGroupMap();
             
-            std::vector<uint64_t> hitBuffers;
-            hitBuffers.reserve( desc.m_hitGroupNames.size() * BUFFERS_PER_SHADER );
+            std::vector<FunctionTables> functionTables;
             
-            // Map each piece of scene hit group to its intersection function.
-            int groupIndex = 0;
-            for( auto& hitGroup : desc.m_hitGroupNames )
+            // Create a table large enough to hold all of the intersection functions. Metal
+            // links intersection functions into the compute pipeline state, potentially with
+            // a different address for each compute pipeline. Therefore, the intersection
+            // function table is specific to the compute pipeline state that created it, and you
+            // can use it with only that pipeline.
+            for( auto& rayGen : pipeline.TrinityALImpl_GetObject()->m_rayGenShaders )
             {
-                auto found = hitGroupMap.find( hitGroup.name );
+                FunctionTables functions;
+                functions.miss = [rayGen.pipeline newVisibleFunctionTableWithDescriptor:missFunctionTableDescriptor];
+                functions.closestHit = [rayGen.pipeline newVisibleFunctionTableWithDescriptor:closestHitFunctionTableDescriptor];
+                functions.anyHit = [rayGen.pipeline newIntersectionFunctionTableWithDescriptor:anyHitFunctionTableDescriptor];
                 
-                // if hit group is found, then get the function name (ClosestHit)
-                if( found != end( hitGroupMap ) )
+                auto SetFunction = [&]( auto& table, const id<MTLFunction>& function, int index )
                 {
+                    auto handle = [rayGen.pipeline functionHandleWithFunction:function];
+                    if( !handle )
+                    {
+                        return E_INVALIDARG;
+                    }
+                    [table setFunction:handle atIndex:index];
+                    return S_OK;
+                };
+                
+                // Map each piece of scene hit group to its intersection function.
+                int groupIndex = 0;
+                for( auto& hitGroup : desc.m_hitGroupNames )
+                {
+                    auto found = hitGroupMap.find( hitGroup.name );
+                    if( found == end( hitGroupMap ) )
+                    {
+                        return E_FAIL;
+                    }
                     if( found->second.intersection )
                     {
                         return E_FAIL;
                     }
                     if( found->second.anyHit )
                     {
-                        CR_RETURN_HR( SetFunction( m_anyHitFunctionTable, found->second.anyHit, groupIndex ) );
+                        CR_RETURN_HR( SetFunction( functions.anyHit, found->second.anyHit, groupIndex ) );
                     }
                     else
                     {
                         auto signature = MTLIntersectionFunctionSignatureInstancing | MTLIntersectionFunctionSignatureTriangleData | MTLIntersectionFunctionSignatureWorldSpaceData;
-                        [m_anyHitFunctionTable setOpaqueTriangleIntersectionFunctionWithSignature:signature atIndex:groupIndex];
+                        [functions.anyHit setOpaqueTriangleIntersectionFunctionWithSignature:signature atIndex:groupIndex];
                     }
                     if( found->second.closestHit )
                     {
-                        CR_RETURN_HR( SetFunction( m_closestHitFunctionTable, found->second.closestHit, groupIndex ) );
+                        CR_RETURN_HR( SetFunction( functions.closestHit, found->second.closestHit, groupIndex ) );
                     }
-                    FillMaterial( hitBuffers, hitGroup.material );
+                    if( functionTables.empty() )
+                    {
+                        FillMaterial( hitBuffers, hitGroup.material );
+                    }
                     ++groupIndex;
                 }
-                else
+                if( functionTables.empty() )
                 {
-                    return E_FAIL;
+                    m_missMaterialOffset = hitBuffers.size() * sizeof( uint64_t );
                 }
-            }
-            
-            m_missMaterialOffset = hitBuffers.size() * sizeof( uint64_t );
-            
-            int missIndex = 0;
-            for( auto& names : desc.m_missNames )
-            {
-                auto found = intersectionFunctions.find( names.name );
-                // if we found nothing then the table is invalid
-                if( found != end( intersectionFunctions ) )
+                int missIndex = 0;
+                for( auto& names : desc.m_missNames )
                 {
-                    CR_RETURN_HR( !SetFunction( m_missShaderFunctionTable, found->second, missIndex ) );
-                    FillMaterial( hitBuffers, names.material );
+                    auto found = intersectionFunctions.find( names.name );
+                    if( found == end( intersectionFunctions ) )
+                    {
+                        return E_FAIL;
+                    }
+                    CR_RETURN_HR( !SetFunction( functions.miss, found->second, missIndex ) );
+                    if( functionTables.empty() )
+                    {
+                        FillMaterial( hitBuffers, names.material );
+                    }
                     missIndex++;
                 }
-                else
-                {
-                    return E_FAIL;
-                }
+                functionTables.push_back( functions );
+            }
+            
+            m_functionTables = std::move( functionTables );
+            
+            m_rayGenMaterialOffset = hitBuffers.size() * sizeof( uint64_t );
+            for( auto& name : desc.m_rayGenNames )
+            {
+                FillMaterial( hitBuffers, name.material );
             }
             
             id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
@@ -156,11 +163,10 @@ namespace TrinityALImpl
                 m_materialBuffer = [device newBufferWithBytes:hitBuffers.data()
                                                        length:hitBuffers.size() * sizeof( uint64_t )
                                                       options:MTLResourceStorageModeManaged];
-                
-                [m_anyHitFunctionTable setBuffer:m_materialBuffer offset:0 atIndex:0];
-                
-                // uncomment to debug the cbuffer
-                //renderContext.UseConstantBuffer( cBuffer );
+                for( auto& tables : m_functionTables )
+                {
+                    [tables.anyHit setBuffer:m_materialBuffer offset:0 atIndex:0];
+                }
             }
 
             return S_OK;
@@ -175,33 +181,51 @@ namespace TrinityALImpl
     {
         if( @available(macOS 11.0, *) )
         {
-            m_anyHitFunctionTable = nullptr;
-            m_closestHitFunctionTable = nullptr;
-            m_missShaderFunctionTable = nullptr;
+            m_functionTables.clear();
         }
         m_materialBuffer = nullptr;
-        m_pipeline = nullptr;
     }
 
     bool Tr2RtShaderTableAL::IsValid() const
     {
         if( @available(macOS 11.0, *) )
         {
-            return m_anyHitFunctionTable != nullptr || m_closestHitFunctionTable != nullptr || m_missShaderFunctionTable != nullptr;
+            return !m_functionTables.empty();
         }
         return false;
     }
 
-    id<MTLBuffer> Tr2RtShaderTableAL::GetMaterialBuffer() const
+    API_AVAILABLE( macos(13.0) )
+    Tr2RtShaderTableAL::ShaderTableData Tr2RtShaderTableAL::GetShaderTableData( uint32_t rayGenIndex, uint64_t globalInputAddress ) const
     {
-        return m_materialBuffer;
+        auto& tables = m_functionTables[rayGenIndex];
+        return ShaderTableData{
+            tables.anyHit.gpuResourceID,
+            tables.miss.gpuResourceID,
+            tables.closestHit.gpuResourceID,
+            m_materialBuffer.gpuAddress + m_missMaterialOffset,
+            m_materialBuffer.gpuAddress,
+            globalInputAddress
+        };
     }
 
-    NSUInteger Tr2RtShaderTableAL::GetMissMaterialOffset() const
+    API_AVAILABLE( macos(13.0) )
+    void Tr2RtShaderTableAL::AddUsedResources( uint32_t rayGenIndex, std::vector<id<MTLResource>>& readResources ) const
     {
-        return m_missMaterialOffset;
+        auto& tables = m_functionTables[rayGenIndex];
+        readResources.push_back( tables.anyHit );
+        readResources.push_back( tables.miss );
+        readResources.push_back( tables.closestHit );
+        readResources.push_back( m_materialBuffer );
     }
 
+    void Tr2RtShaderTableAL::SetGlobalInputBuffer( uint32_t rayGenIndex, const id<MTLBuffer>& buffer, uint32_t offset ) const
+    {
+        if (@available(macOS 11.0, *))
+        {
+            [m_functionTables[rayGenIndex].anyHit setBuffer:buffer offset:offset atIndex:1];
+        }
+    }
 
     Tr2ALMemoryType Tr2RtShaderTableAL::GetMemoryClass() const
     {

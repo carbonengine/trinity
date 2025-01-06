@@ -1059,7 +1059,7 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 			if( !textureType.isDepthTexture && textureType.templateParameter && textureType.templateParameter->width != 4 )
 			{
 				const char* xyzw = "xyzw";
-				ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + textureType.width ) );
+				ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + textureType.templateParameter->width ) );
 				ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, call->GetLocation(), call->GetScope(), &swizzle );
 				dot->AddChild( node );
 

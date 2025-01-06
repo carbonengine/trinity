@@ -8,6 +8,7 @@ struct Sampler;
 struct StaticSampler;
 class ParserState;
 struct Type;
+struct Symbol;
 
 struct ExpressionValueElement
 {

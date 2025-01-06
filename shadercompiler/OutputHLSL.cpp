@@ -1183,6 +1183,10 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		os << Children<HLSL>( hlsl, "" );
 		break;
 	case NT_FUNCTION_ATTRIBUTE:
+		if( node->GetToken()->stringValue == "globalinput" )
+		{
+			break;
+		}
 		os << '[' << node->GetToken()->stringValue;
 		if( node->GetChildrenCount() )
 		{
@@ -1417,8 +1421,33 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			os << node->GetType();
 			for( int i = 0; i < node->GetType().arrayDimensions; ++i )
 			{
+				if ( node->GetType().IsBuffer() )
+				{
+					switch( symbol->addressSpace )
+					{
+					case AddressSpace::Constant:
+						os << " constant ";
+						break;
+					case AddressSpace::Device:
+						os << " device ";
+						break;
+					case AddressSpace::Thread:
+						os << " thread ";
+						break;
+					case AddressSpace::Threadgroup:
+						os << " threadgroup ";
+						break;
+					default:
+						break;
+					}
+				}
 				os << '*';
 			}
+			if( symbol->addressSpace == AddressSpace::Constant && node->GetType().arrayDimensions == 0 )
+			{
+				os << "&";
+			}
+
 			os << ")( " << Child( 0 ) << " )";
 
 		}
@@ -1574,10 +1603,34 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			os << Child( 2 ) << ' ';
 		}
 #endif
-		auto isArrayOfTextures = symbol->type.arrayDimensions > 0 && ( symbol->type.IsTexture() || symbol->type.IsSampler() ) && symbol && !symbol->registerSpecifier.empty();
+		auto isArrayOfTextures = symbol->type.arrayDimensions > 0 && ( symbol->type.IsTexture() || symbol->type.IsBuffer() || symbol->type.IsSampler() ) && symbol && !symbol->registerSpecifier.empty();
 		if( isArrayOfTextures )
 		{
-			os << "const _ResourceRef<" << node->GetType() << ">*";
+			os << "const _ResourceRef<";
+			if( symbol->type.IsBuffer() )
+			{
+				switch( symbol->addressSpace )
+				{
+				case AddressSpace::Constant:
+					os << "constant ";
+					break;
+				case AddressSpace::Device:
+					os << "device ";
+					break;
+				case AddressSpace::Thread:
+					os << "thread ";
+					break;
+				case AddressSpace::Threadgroup:
+					os << "threadgroup ";
+					break;
+				case AddressSpace::RayData:
+					os << "ray_data ";
+					break;
+				default:
+					break;
+				}
+			}
+			os << node->GetType() << ">*";
 		}
 		else
 		{
@@ -1706,8 +1759,41 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			break;
 		}
 
-		os << symbol->type << " " << symbol->name;
-		if( node->GetChildOrNull( 0 ) )
+		auto isArrayOfTextures = symbol->resourceRefWrapped && symbol->type.arrayDimensions > 0 && ( symbol->type.IsTexture() || symbol->type.IsBuffer() || symbol->type.IsSampler() );
+		if( isArrayOfTextures )
+		{
+			os << "const _ResourceRef<";
+			if( symbol->type.IsBuffer() )
+			{
+				switch( symbol->addressSpace )
+				{
+				case AddressSpace::Constant:
+					os << "constant ";
+					break;
+				case AddressSpace::Device:
+					os << "device ";
+					break;
+				case AddressSpace::Thread:
+					os << "thread ";
+					break;
+				case AddressSpace::Threadgroup:
+					os << "threadgroup ";
+					break;
+				case AddressSpace::Constexpr:
+					os << "constexpr ";
+					break;
+				default:
+					break;
+				}
+			}
+			os << node->GetType() << ">*";
+		}
+		else
+		{
+			os << symbol->type;
+		}
+		os << " " << symbol->name;
+		if( !isArrayOfTextures && node->GetChildOrNull( 0 ) )
 		{
 			os << Child( 0 );
 		}

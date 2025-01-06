@@ -83,10 +83,8 @@ namespace TrinityALImpl
                 return E_INVALIDCALL;
             }
             
-            // create shader program for ray gen shader
-            ::Tr2ShaderProgramAL shaderProgram;
-            
-            ::Tr2ShaderAL rayGenShader;
+            // create shader programs for ray gen shaders
+            std::vector<RayGenShader> rayGenShaders;
             
             for( auto& shader : desc.m_shaders )
             {
@@ -94,25 +92,20 @@ namespace TrinityALImpl
                 {
                     if( name.name == L"RayGen" )
                     {
-                        rayGenShader.Create(Tr2RenderContextEnum::COMPUTE_SHADER, shader.bytecode, desc.m_globalSignature, "", renderContext);
+                        ::Tr2ShaderAL rayGenShader;
+                        FORWARD_HR( rayGenShader.Create(Tr2RenderContextEnum::COMPUTE_SHADER, shader.bytecode, desc.m_globalSignature, "", renderContext) );
                         rayGenShader.TrinityALImpl_GetObject()->m_entryPointNameOverride = NSStringFromWchar( name.name );
+                        
+                        ::Tr2ShaderProgramAL shaderProgram;
+                        FORWARD_HR( shaderProgram.Create( &rayGenShader, 1, renderContext ) );
+                        rayGenShaders.push_back( { name.exportName, shaderProgram } );
                     }
                 }
             }
-            
-            if( !rayGenShader.IsValid() )
+            if( rayGenShaders.empty() )
             {
-                return E_FAIL;
+                return E_INVALIDARG;
             }
-            
-            shaderProgram.Create( &rayGenShader, 1, renderContext );
-            
-            if( !shaderProgram.IsValid() )
-            {
-                return E_FAIL;
-            }
-            
-            m_shaderProgram = shaderProgram;
             
             id<MTLDevice> mtlDevice = renderContext.GetMetalContext()->GetDevice();
             
@@ -194,38 +187,36 @@ namespace TrinityALImpl
                 }
             }
             
-            id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
-            
-            MTLComputePipelineDescriptor *descriptor = [[MTLComputePipelineDescriptor alloc] init];
-            
-            NSError *error = nullptr;
-            
-            descriptor.computeFunction = shaderProgram.TrinityALImpl_GetObject()->GetComputeKernel();
-            
-            // add the functions to the pipeline
             MTLLinkedFunctions *mtlLinkedFunctions = nil;
-            
             // Attach the additional functions to an MTLLinkedFunctions object
             mtlLinkedFunctions = [[MTLLinkedFunctions alloc] init];
-            
             mtlLinkedFunctions.functions = linkedFunctions;
+
+            id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
             
-            descriptor.linkedFunctions = mtlLinkedFunctions;
-            
-            // Set to YES to allow the compiler to make certain optimizations.
-            descriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = YES;
-            
-            // Create compute pipelines will execute code on the GPU
-            // Create the compute pipeline state which does all the raytracing
-            m_raytracingPipeline = [device newComputePipelineStateWithDescriptor:descriptor
-                                                                         options:0
-                                                                      reflection:nil
-                                                                           error:&error];
-            
-            if( !m_raytracingPipeline )
+            for( auto& rayGen : rayGenShaders )
             {
-                CCP_LOGERR("SOMETHING WENT WRONG WITH CREATING THE SHADOW PIPELINE FOR RAYTRACING");
+                MTLComputePipelineDescriptor *descriptor = [[MTLComputePipelineDescriptor alloc] init];
+                descriptor.computeFunction = rayGen.shaderProgram.TrinityALImpl_GetObject()->GetComputeKernel();
+                // add the functions to the pipeline
+                descriptor.linkedFunctions = mtlLinkedFunctions;
+                // Set to YES to allow the compiler to make certain optimizations.
+                descriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = YES;
+                // Create compute pipelines will execute code on the GPU
+                // Create the compute pipeline state which does all the raytracing
+                NSError *error = nullptr;
+                rayGen.pipeline = [device newComputePipelineStateWithDescriptor:descriptor
+                                                                        options:0
+                                                                     reflection:nil
+                                                                          error:&error];
+                
+                if( !rayGen.pipeline )
+                {
+                    CCP_LOGERR("Failed to create a raytracing pipeline state: %s", error.localizedDescription.UTF8String );
+                }
             }
+            m_globalSignature = desc.m_globalSignature;
+            m_rayGenShaders = std::move( rayGenShaders );
             
             return S_OK;
         }
@@ -235,14 +226,25 @@ namespace TrinityALImpl
         }
     }
 
-    ::Tr2ShaderProgramAL& Tr2RtPipelineStateAL::GetShaderProgram()
+    std::optional<uint32_t> Tr2RtPipelineStateAL::GetRayGenIndex( const wchar_t* rayGenName ) const
     {
-        return m_shaderProgram;
+        auto found = find_if( begin( m_rayGenShaders ), end( m_rayGenShaders ), [rayGenName]( const auto& x ) { return x.name == rayGenName; } );
+        if( found == end( m_rayGenShaders ) )
+        {
+            return {};
+        }
+        return found - begin( m_rayGenShaders );
+
+    }
+
+    const ::Tr2ShaderProgramAL& Tr2RtPipelineStateAL::GetShaderProgram( uint32_t rayGenIndex ) const
+    {
+        return m_rayGenShaders[rayGenIndex].shaderProgram;
     }
 
     bool Tr2RtPipelineStateAL::IsValid() const
     {
-        return m_raytracingPipeline != nullptr;
+        return !m_rayGenShaders.empty();
     }
 
     Tr2ALMemoryType Tr2RtPipelineStateAL::GetMemoryClass() const
@@ -250,17 +252,16 @@ namespace TrinityALImpl
         return AL_MEMORY_MANAGED;
     }
 
-    id <MTLComputePipelineState> Tr2RtPipelineStateAL::GetRtPipeline()
+    id<MTLComputePipelineState> Tr2RtPipelineStateAL::GetRtPipeline( uint32_t rayGenIndex ) const
     {
-        return m_raytracingPipeline;
+        return m_rayGenShaders[rayGenIndex].pipeline;
     }
 
     void Tr2RtPipelineStateAL::Destroy()
     {
         m_intersectionFunctions.clear();
         m_hitGroupMap.clear();
-        m_raytracingPipeline = nullptr;
-        m_shaderProgram = ::Tr2ShaderProgramAL();
+        m_rayGenShaders.clear();
     }
     
     void Tr2RtPipelineStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
@@ -268,12 +269,12 @@ namespace TrinityALImpl
         description["type"] = "Tr2RtPipelineStateAL";
     }
 
-    const std::unordered_map<std::wstring, id <MTLFunction>>& Tr2RtPipelineStateAL::GetFunctionMap()
+    const std::unordered_map<std::wstring, id <MTLFunction>>& Tr2RtPipelineStateAL::GetFunctionMap() const
     {
         return m_intersectionFunctions;
     }
 
-    const std::unordered_map<std::wstring, Tr2RtPipelineStateAL::HitGroupFunctions>& Tr2RtPipelineStateAL::GetHitGroupMap()
+    const std::unordered_map<std::wstring, Tr2RtPipelineStateAL::HitGroupFunctions>& Tr2RtPipelineStateAL::GetHitGroupMap() const
     {
         return m_hitGroupMap;
     }
