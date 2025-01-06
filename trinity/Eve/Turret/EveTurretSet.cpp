@@ -1547,7 +1547,7 @@ int EveTurretSet::GetState() const
 // Description:
 //   Check if the object is casting a shadow in the camera/shadow frustums
 // --------------------------------------------------------------------------------
-bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
+bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	if( !m_display || !m_geometryResource)
 	{
@@ -1569,35 +1569,9 @@ bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 
 		if( transformedBoundingSphere.w > 0.0f )
 		{
-			if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, transformedBoundingSphere ) )
+			if( shadowFrustum.IsVisible( cameraFrustum, transformedBoundingSphere ) )
 			{
-				sizeInShadow = max( sizeInShadow, EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, transformedBoundingSphere ) );
-			}
-		}
-	}
-	return sizeInShadow > 5.f;
-}
-
-bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
-{
-	if( !m_display || !m_geometryResource )
-	{
-		return false;
-	}
-
-	sizeInShadow = 0;
-
-	for( auto& turret : m_singleTurrets )
-	{
-		Vector4 transformedBoundingSphere = m_boundingSphere;
-		// transform bounding sphere into world space to check against frustum
-		BoundingSphereTransform( turret.worldMatrix, transformedBoundingSphere );
-
-		if( transformedBoundingSphere.w > 0.0f )
-		{
-			if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, transformedBoundingSphere ) )
-			{
-				sizeInShadow = max( sizeInShadow, EveShadowCaster::GetSizeInShadow( shadowFrustum, transformedBoundingSphere ) );
+				sizeInShadow = max( sizeInShadow, shadowFrustum.GetSizeInShadow( transformedBoundingSphere ) );
 			}
 		}
 	}

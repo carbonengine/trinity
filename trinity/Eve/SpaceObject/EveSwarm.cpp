@@ -237,7 +237,7 @@ void EveSwarmRenderable::SetShaderOption( const BlueSharedString& name, const Bl
 
 //////////////////////////////////////////////////////////////////////////////////////
 // IEveShadowCaster
-bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
+bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	Vector4 boundingSphere;
 	if( !m_owner )
@@ -255,31 +255,9 @@ bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const
 		boundingSphere.GetXYZ() = m_worldTransform.GetTranslation();
 		sizeInShadow = 0;
 
-		if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, boundingSphere ) )
+		if( shadowFrustum.IsVisible( cameraFrustum, boundingSphere ) )
 		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, boundingSphere );
-		}
-		return sizeInShadow > 15.f;
-	}
-	return false;
-}
-
-bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
-{
-	Vector4 boundingSphere;
-	if( !m_owner )
-	{
-		return false;
-	}
-
-	if( m_owner->GetBoundingSphere( boundingSphere ) )
-	{
-		boundingSphere.GetXYZ() = m_worldTransform.GetTranslation();
-		sizeInShadow = 0;
-
-		if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, boundingSphere ) )
-		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, boundingSphere );
+			sizeInShadow = shadowFrustum.GetSizeInShadow( boundingSphere );
 		}
 		return sizeInShadow > 15.f;
 	}

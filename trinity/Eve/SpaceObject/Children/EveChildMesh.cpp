@@ -132,7 +132,7 @@ void EveChildMesh::RegisterComponents()
 // --------------------------------------------------------------------------------
 // Description:
 //   Check if the object is casting a shadow in the camera/shadow frustums
-bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
+bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	if( !m_display || !m_castShadow )
 	{
@@ -153,7 +153,7 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 		return false;
 	}
 
-	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, bs ) )
+	if( shadowFrustum.IsVisible( cameraFrustum, bs ) )
 	{
 		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 		{
@@ -161,54 +161,16 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 			{
 				instanceBounds.Transform( m_worldTransform );
 
-				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, Vector4( instanceBounds.center, instanceBounds.radius ) );
+				sizeInShadow = shadowFrustum.GetSizeInShadow( Vector4( instanceBounds.center, instanceBounds.radius ) );
 			}
 			else
 			{
-				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );
+				sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
 			}
 		}
 		else
 		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );	
-		}
-	}
-	return sizeInShadow > 5.f;
-}
-
-bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
-{
-	if( !m_display || !m_castShadow )
-	{
-		return false;
-	}
-
-	Vector4 bs;
-	GetBoundingSphere( bs );
-	sizeInShadow = 0;
-
-	if( bs.w <= 0.0f )
-	{
-		return false;
-	}
-
-	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, bs ) )
-	{
-		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
-		{
-			if( auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.m_viewPos, Inverse( m_worldTransform ) ) ) )
-			{
-				instanceBounds.Transform( m_worldTransform );
-				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, Vector4( instanceBounds.center, instanceBounds.radius ) );
-			}
-			else
-			{
-				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
-			}
-		}
-		else
-		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
+			sizeInShadow = shadowFrustum.GetSizeInShadow( bs );	
 		}
 	}
 	return sizeInShadow > 5.f;

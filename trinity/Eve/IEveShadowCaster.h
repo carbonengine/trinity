@@ -14,7 +14,7 @@ struct IEveShadowCaster;
 
 namespace EveShadowCaster
 {
-	inline bool IsVisible( const TriFrustum& camera, const TriFrustumOrtho& shadow, const Vector3 sunDir, const Vector4 boundingSphere )
+	inline bool IsVisible( const TriFrustum& camera, const TriFrustumOrtho& shadow, const Vector3& sunDir, const Vector4& boundingSphere )
 	{
 		bool sphereIsVisible = shadow.IsSphereVisibleIgnoreFarPlane( boundingSphere.GetXYZ(), boundingSphere.w );
 		if( sphereIsVisible )
@@ -38,23 +38,85 @@ namespace EveShadowCaster
 		return sphereIsVisible;
 	}
 
-	inline bool IsVisible( const TriFrustum& camera, const TriFrustum& shadow, const Vector4 boundingSphere )
+	inline bool IsVisible( const TriFrustum& camera, const TriFrustum& shadow, const Vector4& boundingSphere )
 	{
 		bool sphereIsVisible = shadow.IsSphereVisible( &boundingSphere );
 		// TODO: intern, do something smart to cull the shadowcasting sphere using the camera frustum
 		return sphereIsVisible;
 	}
 
-	inline float GetSizeInShadow( const TriFrustumOrtho& shadow, const uint32_t shadowMapSize, const Vector4 boundingSphere )
+	inline float GetSizeInShadow( const TriFrustumOrtho& shadow, const uint32_t shadowMapSize, const Vector4& boundingSphere )
 	{
 		return shadow.GetPixelSize( boundingSphere, shadowMapSize );
 	}
 
-	inline float GetSizeInShadow( const TriFrustum& shadow, const Vector4 boundingSphere )
+	inline float GetSizeInShadow( const TriFrustum& shadow, const Vector4& boundingSphere )
 	{
 		return shadow.GetPixelSizeAccross( &boundingSphere );
 	}
+}
+
+class IEveShadowFrustum
+{
+public:
+	virtual ~IEveShadowFrustum()
+	{
 	}
+	virtual bool IsVisible( const TriFrustum& camera, const Vector4& boundingSphere ) const = 0;
+	virtual float GetSizeInShadow( const Vector4& boundingSphere ) const = 0;
+	virtual const Vector3& GetEyePos() const = 0;
+};
+
+class TriShadowOrthoFrustum : public IEveShadowFrustum
+{
+	TriFrustumOrtho shadow;
+	Vector3 sunDir;
+	uint32_t shadowMapSize;
+
+public:
+	TriShadowOrthoFrustum( const TriFrustumOrtho& shadow, uint32_t shadowMapSize, const Vector3& sunDir ) :
+		shadow( shadow ),
+		shadowMapSize( shadowMapSize ),
+		sunDir( sunDir )
+	{
+	}
+	bool IsVisible( const TriFrustum& camera, const Vector4& boundingSphere ) const override
+	{
+		return EveShadowCaster::IsVisible( camera, shadow, sunDir, boundingSphere );
+	}
+	float GetSizeInShadow( const Vector4& boundingSphere ) const override
+	{
+		return EveShadowCaster::GetSizeInShadow( shadow, shadowMapSize, boundingSphere );
+	}
+	const Vector3& GetEyePos() const override
+	{
+		return shadow.GetEyePos();
+	}
+};
+
+class TriShadowFrustum : public IEveShadowFrustum
+{
+	TriFrustum shadow;
+
+public:
+	TriShadowFrustum( const TriFrustum& shadow ) :
+		shadow( shadow )
+	{
+	}
+	bool IsVisible( const TriFrustum& camera, const Vector4& boundingSphere ) const override
+	{
+		return EveShadowCaster::IsVisible( camera, shadow, boundingSphere );
+	}
+	float GetSizeInShadow( const Vector4& boundingSphere ) const override
+	{
+		return EveShadowCaster::GetSizeInShadow( shadow, boundingSphere );
+	}
+	const Vector3& GetEyePos() const override
+	{
+		return shadow.m_viewPos;
+	}
+};
+
 
 BLUE_DECLARE( Tr2RaytracingManager );
 
@@ -62,8 +124,7 @@ BLUE_INTERFACE( IEveShadowCaster ) :
 	public IRoot
 {
 	// Used for cascaded shadow map
-	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const = 0;
-	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const = 0;
+	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const = 0;
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) = 0;
 	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;
 	// raytraced shadows

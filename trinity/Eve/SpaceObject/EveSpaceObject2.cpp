@@ -1718,7 +1718,7 @@ void EveSpaceObject2::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Quad
 // Description:
 //   Check if the object is casting a shadow in the camera/shadow frustums
 // --------------------------------------------------------------------------------
-bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
+bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	if( !m_display || m_boundingSphereWorldRadius <= 0.0 )
 	{
@@ -1734,27 +1734,9 @@ bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const Tr
 
 	sizeInShadow = 0;
 
-	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, bs ) )
+	if( shadowFrustum.IsVisible( cameraFrustum, bs ) )
 	{
-		sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );
-	}
-	return sizeInShadow > 15.f;
-}
-
-bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
-{
-	if( !m_display || m_boundingSphereWorldRadius <= 0.0 )
-	{
-		return false;
-	}
-
-	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
-
-	sizeInShadow = 0;
-
-	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, bs ) )
-	{
-		sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
+		sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
 	}
 	return sizeInShadow > 15.f;
 }

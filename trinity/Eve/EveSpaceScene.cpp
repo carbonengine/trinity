@@ -646,7 +646,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 				for( auto& caster : shadowCasters )
 				{
 					float radius;
-					if( caster->IsCastingShadow( cameraFrustum, shadowFrustum, shadowMapSize, sunDir, renderReason, radius ) )
+					if( caster->IsCastingShadow( cameraFrustum, TriShadowOrthoFrustum( shadowFrustum, shadowMapSize, sunDir ), renderReason, radius ) )
 					{
 						frustumShadowCasterInfo.push_back( EveSpaceScene::ShadowInfo( radius, caster, nullptr ) );
 					}
@@ -2351,7 +2351,7 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
-			caster->IsCastingShadow( frustum, cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld, TR2RENDERREASON_NORMAL, sizeInShadow );
+			caster->IsCastingShadow( frustum, TriShadowOrthoFrustum( cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld ), TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
 			{
@@ -2454,7 +2454,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
-			caster->IsCastingShadow( m_updateContext.GetFrustum(), shadowFrustum, shadowMapScale, sizeInShadow );
+			caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowFrustum( shadowFrustum ), TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
 			{
