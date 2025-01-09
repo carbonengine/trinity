@@ -6,6 +6,8 @@
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "../ALLog.h"
 
+extern uint32_t g_forceAnisotropy;
+
 namespace
 {
 	class DataStoreCache
@@ -388,14 +390,59 @@ namespace TrinityALImpl
 			}
 		}
 
+		std::vector<D3D12_STATIC_SAMPLER_DESC> samplers;
+		for( auto& sampl : signature.samplers )
+		{
+			auto& description = sampl.sampler;
+			D3D12_STATIC_SAMPLER_DESC sampler;
+			if( g_forceAnisotropy != 1 && ( description.m_minFilter == Tr2RenderContextEnum::TF_ANISOTROPIC || description.m_magFilter == Tr2RenderContextEnum::TF_ANISOTROPIC || description.m_mipFilter == Tr2RenderContextEnum::TF_ANISOTROPIC ) )
+			{
+				sampler.Filter = D3D12_ENCODE_ANISOTROPIC_FILTER( description.m_isComparisonFilter ? 1 : 0 );
+			}
+			else
+			{
+				sampler.Filter = D3D12_ENCODE_BASIC_FILTER(
+					description.m_minFilter == Tr2RenderContextEnum::TF_POINT ? D3D12_FILTER_TYPE_POINT : D3D12_FILTER_TYPE_LINEAR,
+					description.m_magFilter == Tr2RenderContextEnum::TF_POINT ? D3D12_FILTER_TYPE_POINT : D3D12_FILTER_TYPE_LINEAR,
+					description.m_mipFilter == Tr2RenderContextEnum::TF_POINT || description.m_mipFilter == Tr2RenderContextEnum::TF_NONE ? D3D12_FILTER_TYPE_POINT : D3D12_FILTER_TYPE_LINEAR,
+					description.m_isComparisonFilter ? 1 : 0 );
+			}
+			sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE( description.m_addressU );
+			sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE( description.m_addressV );
+			sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE( description.m_addressW );
+			sampler.MipLODBias = description.m_mipLODBias;
+			sampler.MaxAnisotropy = g_forceAnisotropy ? g_forceAnisotropy : description.m_maxAnisotropy;
+			sampler.ComparisonFunc = D3D12_COMPARISON_FUNC( description.m_comparisonFunc );
+			if( description.m_borderColor[0] > 0 )
+			{
+				sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+			}
+			else if( description.m_borderColor[3] > 0 )
+			{
+				sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+			}
+			else
+			{
+				sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+			}
+			sampler.MinLOD = description.m_minLOD;
+			sampler.MaxLOD = description.m_mipFilter == Tr2RenderContextEnum::TF_NONE ? description.m_minLOD : description.m_maxLOD;
+
+			sampler.ShaderRegister = sampl.registerIndex;
+			sampler.RegisterSpace = sampl.registerSpace;
+			sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+			samplers.push_back( sampler );
+		}
+
 		signatureDesc.NumParameters = UINT( parameters.size() );
 		if( signatureDesc.NumParameters )
 		{
 			signatureDesc.pParameters = parameters.data();
 		}
 
-		signatureDesc.NumStaticSamplers = 0;
-		signatureDesc.pStaticSamplers = nullptr;
+		signatureDesc.NumStaticSamplers = UINT( samplers.size() );
+		signatureDesc.pStaticSamplers = samplers.data();
 
 		CComPtr<ID3DBlob> rootSignatureBlob;
 		CComPtr<ID3DBlob> errorBlob;
