@@ -88,6 +88,11 @@ inline Color Zero( Color )
 	return Color( 0, 0, 0, 0 );
 }
 
+inline bool Zero( bool )
+{
+	return false;
+}
+
 template <typename T>
 class SumAccumulator
 {
@@ -390,7 +395,6 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	auto colorGain = Accumulate( &Tr2PostProcessAttributes::colorGain, sources, debugObserver );
 	auto colorOffset = Accumulate( &Tr2PostProcessAttributes::colorOffset, sources, debugObserver );
 
-
 	postprocess.SetBloom( nullptr );
 	postprocess.SetDesaturate( nullptr );
 	postprocess.SetFade( nullptr );
@@ -491,6 +495,9 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 		vignetteEffect->m_detail2Scroll = vignetteDetail2Scroll;
 		vignetteEffect->m_shapePath = vignetteShapePath;
 		vignetteEffect->m_detailPath = vignetteDetailPath;
+		vignetteEffect->m_sineFrequency = vignetteSineFrequency;
+		vignetteEffect->m_sineMinimum = vignetteMinSineFrequency;
+		vignetteEffect->m_sineMaximum = vignetteMaxSineFrequency;
 
 		postprocess.SetVignette( vignetteEffect );
 	}

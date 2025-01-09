@@ -387,11 +387,14 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetTaa( m_sceneDefaultPostProcess->GetTaa() );
 			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemapping() );
 		}
+		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}
 	else
 	{
 		m_combinedPostProcess = nullptr;
 	}
+
+
 }
 
 BluePy EveSpaceScene::GetPostProcessDebug() const
