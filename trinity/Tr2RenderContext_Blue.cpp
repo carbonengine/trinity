@@ -393,7 +393,7 @@ namespace
 		{
 			for( auto it = description.begin(); it != description.end(); ++it )
 			{
-				PyObject* value = PyUnicode_FromString( it->second.c_str() );
+				PyObject* value = ToPython( it->second.c_str() );
 				PyDict_SetItemString( item, it->first.c_str(), value );
 				Py_DECREF( value );
 			}

@@ -143,7 +143,7 @@ PyObject* TriColor::Repr(
 	*handled = true;
 	char buf[120];
 	sprintf_s(buf, "<Instance of 'TriColor' (r=%0.2f g=%0.2f b=%0.2f a=%0.2f)>", r, g, b, a);
-	return PyUnicode_FromString(buf);
+	return ToPython( buf );
 }
 
 

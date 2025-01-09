@@ -71,7 +71,7 @@ PyObject* Tr2HostBitmap::PyGetRawData( PyObject* self, PyObject* args )
 
 	if( pThis->IsValid() )
 	{
-		PyObject *buffer = PyMemoryView_FromMemory( pThis->GetRawData(), pThis->GetHeight() * pThis->GetPitch(), PyBUF_WRITE );
+		PyObject* buffer = PyVerCompat::MemoryViewRW( pThis->GetRawData(), pThis->GetHeight() * pThis->GetPitch() );
 
 		PyObject *result = PyTuple_New(4);
 		if ( !result )
@@ -80,9 +80,9 @@ PyObject* Tr2HostBitmap::PyGetRawData( PyObject* self, PyObject* args )
 			Py_RETURN_FALSE;
 		}
 		PyTuple_SET_ITEM( result, 0, buffer );
-		PyTuple_SET_ITEM( result, 1, PyLong_FromLong( pThis->GetWidth() ) );
-		PyTuple_SET_ITEM( result, 2, PyLong_FromLong( pThis->GetHeight() ) );
-		PyTuple_SET_ITEM( result, 3, PyLong_FromLong( pThis->GetPitch() ) );
+		PyTuple_SET_ITEM( result, 1, ToPython( pThis->GetWidth() ) );
+		PyTuple_SET_ITEM( result, 2, ToPython( pThis->GetHeight() ) );
+		PyTuple_SET_ITEM( result, 3, ToPython( pThis->GetPitch() ) );
 
 		return result;
 	}
@@ -101,7 +101,7 @@ PyObject* Tr2HostBitmap::PyGetMipRawData( PyObject* self, PyObject* args )
 		if( !PyArg_ParseTuple( args, "i", &mipLevel ))
 			Py_RETURN_FALSE;
 
-        PyObject *buffer = PyMemoryView_FromMemory( pThis->GetRawData(), pThis->GetHeight() * pThis->GetPitch(), PyBUF_WRITE );
+        PyObject* buffer = PyVerCompat::MemoryViewRW( pThis->GetMipRawData( mipLevel ), pThis->GetMipHeight( mipLevel ) * pThis->GetMipPitch( mipLevel ) );
 
 		PyObject *result = PyTuple_New(4);
 		if ( !result )
@@ -110,9 +110,9 @@ PyObject* Tr2HostBitmap::PyGetMipRawData( PyObject* self, PyObject* args )
 			Py_RETURN_FALSE;
 		}
 		PyTuple_SET_ITEM( result, 0, buffer );
-		PyTuple_SET_ITEM( result, 1, PyLong_FromLong( pThis->GetMipWidth( mipLevel ) ) );
-		PyTuple_SET_ITEM( result, 2, PyLong_FromLong( pThis->GetMipHeight( mipLevel ) ) );
-		PyTuple_SET_ITEM( result, 3, PyLong_FromLong( pThis->GetMipPitch( mipLevel ) ) );
+		PyTuple_SET_ITEM( result, 1, ToPython( pThis->GetMipWidth( mipLevel ) ) );
+		PyTuple_SET_ITEM( result, 2, ToPython( pThis->GetMipHeight( mipLevel ) ) );
+		PyTuple_SET_ITEM( result, 3, ToPython( pThis->GetMipPitch( mipLevel ) ) );
 
 		return result;
 	}
@@ -168,6 +168,12 @@ PyObject* Tr2HostBitmap::PyCreateFromFile( PyObject* args )
 	{		 
 		CreateFromFile( wcstr );
 	}
+#if PY_MAJOR_VERSION == 2
+	else if( PyString_Check( file ) && BlueExtractArgument( file, cstr, 1 ) )
+	{
+		CreateFromFile( (const wchar_t*)CA2W( cstr.c_str() ) );
+	}
+#endif
 	else
 	{
 		PyErr_SetString( PyExc_TypeError, "Expected a filepath string" );
@@ -215,6 +221,19 @@ static PyObject* PythonSave( PyObject* self, PyObject* args, bool async )
 			OK = pThis->Save( wcstr.c_str() );
 		}
 	}
+#if PY_MAJOR_VERSION == 2
+	else if( PyString_Check( file ) && BlueExtractArgument( file, cstr, 1 ) )
+	{
+		if( async )
+		{
+			OK = pThis->SaveAsync( (const wchar_t*)CA2W( cstr.c_str() ) );
+		}
+		else
+		{
+			OK = pThis->Save( (const wchar_t*)CA2W( cstr.c_str() ) );
+		}
+	}
+#endif
 	else
 	{
 		PyErr_SetString( PyExc_TypeError, "Expected a filepath string" );
@@ -324,7 +343,7 @@ static PyObject* PyCompareBitmaps( PyObject* self, PyObject* args )
 			}
 		}
 
-		return PyLong_FromSize_t( count );
+		return ToPython( count );
 	}
 
 	if( diff )
@@ -369,7 +388,7 @@ static PyObject* PyCompareBitmaps( PyObject* self, PyObject* args )
 		}
 	}
 
-	return PyLong_FromSize_t( count );
+	return ToPython( count );
 }
 
 static PyObject* PyBgraToRgb( PyObject*, PyObject* args )
@@ -399,7 +418,7 @@ static PyObject* PyBgraToRgb( PyObject*, PyObject* args )
 		dst += 3;
 		src += 4;
 	}
-	return PyBytes_FromStringAndSize( reinterpret_cast<const char*>( output.get() ), count * 3 );
+	return PyVerCompat::ToPyBytes( reinterpret_cast<const char*>( output.get() ), count * 3 );
 }
 
 #endif

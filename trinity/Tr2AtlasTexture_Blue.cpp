@@ -28,17 +28,16 @@ static PyObject* PyLockBuffer( PyObject* self, PyObject* args )
 	unsigned int pitch = 0;
 	if( pThis->LockBuffer( pData, pitch ) )
 	{
-		PyObject *buffer = PyMemoryView_FromMemory( (char*)pData, pThis->GetHeight() * pitch, PyBUF_READ);
-
+		PyObject* buffer = PyVerCompat::MemoryViewRW( pData, pThis->GetHeight() * pitch );
 		PyObject *result = PyTuple_New(4);
 		if (!result) {
 			Py_DECREF(buffer);
 			return nullptr;
 		}
 		PyTuple_SET_ITEM( result, 0, buffer );
-		PyTuple_SET_ITEM( result, 1, PyLong_FromLong( pThis->GetWidth() ) );
-		PyTuple_SET_ITEM( result, 2, PyLong_FromLong( pThis->GetHeight() ) );
-		PyTuple_SET_ITEM( result, 3, PyLong_FromLong( pitch ) );
+		PyTuple_SET_ITEM( result, 1, ToPython( pThis->GetWidth() ) );
+		PyTuple_SET_ITEM( result, 2, ToPython( pThis->GetHeight() ) );
+		PyTuple_SET_ITEM( result, 3, ToPython( pitch ) );
 
 		return result;
 	}
@@ -59,18 +58,17 @@ static PyObject* PyLockBufferAndMargin( PyObject* self, PyObject* args )
 		const int height = pThis->GetHeight() + margin * 2;
 		const int width = pThis->GetWidth() + margin * 2;
 
-		PyObject* buffer = PyMemoryView_FromMemory( (char*)data, height * pitch, PyBUF_WRITE );
-
+		PyObject* buffer = PyVerCompat::MemoryViewRW( data, height * pitch );
 		PyObject *result = PyTuple_New(5);
 		if (!result) {
 			Py_DECREF(buffer);
 			return nullptr;
 		}
 		PyTuple_SET_ITEM( result, 0, buffer );
-		PyTuple_SET_ITEM( result, 1, PyLong_FromLong( width ) );
-		PyTuple_SET_ITEM( result, 2, PyLong_FromLong( height ) );
-		PyTuple_SET_ITEM( result, 3, PyLong_FromLong( pitch ) );
-		PyTuple_SET_ITEM( result, 4, PyLong_FromLong( margin ) );
+		PyTuple_SET_ITEM( result, 1, ToPython( width ) );
+		PyTuple_SET_ITEM( result, 2, ToPython( height ) );
+		PyTuple_SET_ITEM( result, 3, ToPython( pitch ) );
+		PyTuple_SET_ITEM( result, 4, ToPython( margin ) );
 
 		return result;
 	}

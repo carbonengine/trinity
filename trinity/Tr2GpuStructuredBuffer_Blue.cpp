@@ -41,7 +41,7 @@ namespace
 		}
 		ON_BLOCK_EXIT( [&]() { buffer->UnmapForReading( renderContext ); } );
 
-		return PyUnicode_FromStringAndSize( static_cast<const char*>( data ), buffer->GetSize() );
+		return PyVerCompat::ToPyBytes( static_cast<const char*>( data ), buffer->GetSize() );
 	}
 }
 #endif

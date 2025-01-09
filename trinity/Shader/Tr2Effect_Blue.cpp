@@ -16,26 +16,30 @@ static PyObject* PyGetParameterAnnotations( PyObject* self, PyObject* args )
 {
 	Tr2Effect* pThis = BluePythonCast<Tr2Effect*>( self );
 
-	PyObject *parameterObject = NULL;
-	if (!PyArg_ParseTuple(args, "O", &parameterObject))
+	PyObject* parameterObject = NULL;
+	if( !PyArg_ParseTuple( args, "O", &parameterObject ) )
 		return NULL;
 
 	std::string parameterNameString;
 
-	if (!pThis->GetShaderStateInterface())
+	if( !pThis->GetShaderStateInterface() )
 	{
-		Py_INCREF(Py_None);
+		Py_INCREF( Py_None );
 		return Py_None;
 	}
 
 	// If we got passed a string, look up the string, if we got passed a parameter, look up the name of that
-	if ( PyUnicode_Check( parameterObject ) )
-		parameterNameString = PyUnicode_AsUTF8( parameterObject );
+	if( PyVerCompat::IsPyString( parameterObject ) )
+	{
+		parameterNameString = FromPython<std::string>( parameterObject );
+	}
 	else
 	{
 		ITriEffectParameterPtr iParameterObject( parameterObject );
-		if ( iParameterObject != NULL )
+		if( iParameterObject != NULL )
+		{
 			parameterNameString = iParameterObject->GetParameterName();
+		}
 		else
 		{
 			Py_INCREF(Py_None);
@@ -56,25 +60,25 @@ static PyObject* PyGetParameterAnnotations( PyObject* self, PyObject* args )
 	{
 		if( annotation->type == Tr2EffectParameterAnnotation::BOOL )
 		{
-			tmpValue = PyBool_FromLong( annotation->boolValue ? 1 : 0 );
+			tmpValue = ToPython( annotation->boolValue );
 			PyDict_SetItemString( annotationDict, annotation->name, tmpValue );
 			Py_DECREF( tmpValue );
 		}
 		else if( annotation->type == Tr2EffectParameterAnnotation::INT )
 		{
-			tmpValue = PyLong_FromLong( annotation->intValue );
+			tmpValue = ToPython( annotation->intValue );
 			PyDict_SetItemString( annotationDict, annotation->name, tmpValue );
 			Py_DECREF( tmpValue );
 		}
 		else if( annotation->type == Tr2EffectParameterAnnotation::FLOAT )
 		{
-			tmpValue = PyFloat_FromDouble( annotation->floatValue );
+			tmpValue = ToPython( annotation->floatValue );
 			PyDict_SetItemString( annotationDict, annotation->name, tmpValue );
 			Py_DECREF( tmpValue );
 		}
 		else if( annotation->type == Tr2EffectParameterAnnotation::STRING )
 		{
-			tmpValue = PyUnicode_FromString( annotation->stringValue );
+			tmpValue = ToPython( annotation->stringValue );
 			PyDict_SetItemString( annotationDict, annotation->name, tmpValue );
 			Py_DECREF( tmpValue );
 		} 
