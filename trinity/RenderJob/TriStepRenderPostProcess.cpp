@@ -1549,21 +1549,19 @@ bool TriStepRenderPostProcess::ProcessTaa( Tr2PPTaaEffect* taa )
 			m_taaEffect->SetParameter( BlueSharedString( "EarlyOutThreshold" ), taa->m_earlyOutThreshold );
 
 
-			int quality = taa->m_quality;
 			BlueSharedString quality_option;
-			if( quality <= 1 )
+			switch(taa->m_quality)
 			{
-				quality_option = BlueSharedString( "QUALITY_LOW" );
+				case Tr2PPTaaEffect::Quality::TAA_LOW:
+					m_taaEffect->SetOption( BlueSharedString( "QUALITY" ), BlueSharedString( "QUALITY_LOW" ) );
+					break;
+				case Tr2PPTaaEffect::Quality::TAA_MEDIUM:
+					m_taaEffect->SetOption( BlueSharedString( "QUALITY" ), BlueSharedString( "QUALITY_MEDIUM" ) );
+					break;
+				case Tr2PPTaaEffect::Quality::TAA_HIGH:
+					m_taaEffect->SetOption( BlueSharedString( "QUALITY" ), BlueSharedString( "QUALITY_HIGH" ) );
+					break;
 			}
-			else if( quality == 2 )
-			{
-				quality_option = BlueSharedString( "QUALITY_MEDIUM" );
-			}
-			else //if( quality >= 3 )
-			{
-				quality_option = BlueSharedString( "QUALITY_HIGH" );
-			}
-			m_taaEffect->SetOption( BlueSharedString( "QUALITY" ), quality_option );
 
 
 			if(taa->m_showMotionVectors)
