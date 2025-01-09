@@ -295,7 +295,8 @@ extern "C" void
 	InitializeForPython();
 }
 
-#else PyMODINIT_FUNC
+#else 
+PyMODINIT_FUNC
 CCP_CONCATENATE( CCP_CONCATENATE( PyInit_, TRINITYNAME ), CCP_BUILD_FLAVOR )()
 {
 	StartDLL();

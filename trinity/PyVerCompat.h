@@ -41,7 +41,7 @@ inline PyObject* MemoryViewRW( void* data, Py_ssize_t size )
 #if PY_MAJOR_VERSION == 2
 	return PyBuffer_FromReadWriteMemory( data, size );
 #else
-	return PyMemoryView_FromMemory( data, size, PyBUF_WRITE );
+	return PyMemoryView_FromMemory( static_cast<char*>( data ), size, PyBUF_WRITE );
 #endif
 }
 
