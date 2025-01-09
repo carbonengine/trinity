@@ -1072,7 +1072,7 @@ GrannyMaterialWrapper::GrannyMaterialWrapper(granny_material * gmat, unsigned in
 					sprintf_s(tmpbuf,"%s_%s", materialMap->Usage, defs->Name);
 					
 					// set the actual value of this dict entry to the file path.
-					PyObject * matString = PyUnicode_FromString(targetString);
+					PyObject* matString = ToPython( targetString );
 					// set into the dict.
 					PyDict_SetItemString(m_dictionary, tmpbuf, matString);
 					

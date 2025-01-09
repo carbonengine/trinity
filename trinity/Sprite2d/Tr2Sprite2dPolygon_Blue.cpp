@@ -421,7 +421,7 @@ PyObject* Tr2Sprite2dPolygon::PyAppendTriangles( PyObject* self, PyObject* args 
 			break;
 		}
 		if( !PyTuple_Check( item ) || PyTuple_GET_SIZE( item ) != 3 ||
-			!PyLong_Check( PyTuple_GET_ITEM( item, 0 ) ) || !PyLong_Check( PyTuple_GET_ITEM( item, 1 ) ) || !PyLong_Check( PyTuple_GET_ITEM( item, 2 ) ) )
+			!PyVerCompat::IsPyInt( PyTuple_GET_ITEM( item, 0 ) ) || !PyVerCompat::IsPyInt( PyTuple_GET_ITEM( item, 1 ) ) || !PyVerCompat::IsPyInt( PyTuple_GET_ITEM( item, 2 ) ) )
 		{
 			Py_DECREF( item );
             PyErr_SetString( PyExc_TypeError, "triangles parameter must be a sequence of 3-tuples" );
@@ -430,9 +430,9 @@ PyObject* Tr2Sprite2dPolygon::PyAppendTriangles( PyObject* self, PyObject* args 
 		Tr2Sprite2dTrianglePtr triangle;
 		triangle.CreateInstance();
 
-		triangle->m_index[0] = uint16_t( PyLong_AsSsize_t( PyTuple_GET_ITEM( item, 0 ) ) );
-		triangle->m_index[1] = uint16_t( PyLong_AsSsize_t( PyTuple_GET_ITEM( item, 1 ) ) );
-		triangle->m_index[2] = uint16_t( PyLong_AsSsize_t( PyTuple_GET_ITEM( item, 2 ) ) );
+		triangle->m_index[0] = uint16_t( FromPython<int32_t>( PyTuple_GET_ITEM( item, 0 ) ) );
+		triangle->m_index[1] = uint16_t( FromPython<int32_t>( PyTuple_GET_ITEM( item, 1 ) ) );
+		triangle->m_index[2] = uint16_t( FromPython<int32_t>( PyTuple_GET_ITEM( item, 2 ) ) );
 
 		pThis->m_triangles.Append( triangle );
 

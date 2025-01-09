@@ -33,7 +33,7 @@ void AddTriConstants(PyObject* d)
 			// this obviously assumes that all values are LONG
 			// later perhaps call BlueToPython to convert types
 			// correctly
-			PyObject *value = PyLong_FromLong( j->mValue.mLong );
+			PyObject *value = ToPython( j->mValue.mLong );
 			PyDict_SetItemString(d, const_cast<char*>( j->mKey ), value );
 			Py_DECREF( value );
 		}

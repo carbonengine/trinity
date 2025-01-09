@@ -44,7 +44,7 @@ PyObject* PyRepr( PyObject* self, PyObject* args )
 	// the cast above will always succeed
 
 	std::string repr = pThis->GetReprString();
-	return PyUnicode_FromString( repr.c_str() );
+	return ToPython( repr.c_str() );
 }
 
 static PyObject* PyGetValue( PyObject* self, PyObject* args )

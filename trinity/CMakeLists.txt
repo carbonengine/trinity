@@ -1290,6 +1290,7 @@ set(_SOURCES
     ITr2WorldTransformUpdater.h
     ITriReroutable.h
     IWorldPosition.h
+    PyVerCompat.h
     PriorityBlend.h
     resource.h
     StdAfx.cpp
