@@ -361,15 +361,17 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 		else
 		{
 			renderables.push_back( this );
-			auto geometryRes = m_mesh->GetGeometryResource();
 
-			if( geometryRes )
+			if( !m_decals.empty() )
 			{
-				// run over every decal and update it
-				for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+				if( auto geometryRes = m_mesh->GetGeometryResource() )
 				{
-					// now prep to get the renderables
-					( *it )->GetRenderables( renderables, geometryRes, m_currentScreenSize );
+					// run over every decal and update it
+					for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+					{
+						// now prep to get the renderables
+						( *it )->GetRenderables( renderables, geometryRes, m_currentScreenSize );
+					}
 				}
 			}
 		}

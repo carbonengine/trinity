@@ -190,25 +190,44 @@ void EvePlaneSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix
 
 	Matrix boneTransform = IdentityMatrix();
 	size_t idx = 0;
-	for( auto& vertex : m_items )
+
+	if ( m_isSkinned )
 	{
-		// build transformation matrix out of the individual item data
-		auto data = m_volatileData[idx++];
-		if( m_isSkinned )
+		for( auto& vertex : m_items )
 		{
+			// build transformation matrix out of the individual item data
+			const auto& data = m_volatileData[idx++];
 			auto boneIndex = vertex.boneIndex;
+			Matrix transform;
 			if( boneIndex < boneCount )
 			{
 				TriMatrixCopyFrom3x4( &boneTransform, &bones[boneIndex] );
-				data.transform = data.transform * boneTransform;
+				transform = data.transform * boneTransform * parentTransform;
 			}
+			else
+			{
+				transform = data.transform * parentTransform;
+			}
+			vertex.transform1 = Vector4( transform._11, transform._21, transform._31, transform._41 );
+			vertex.transform2 = Vector4( transform._12, transform._22, transform._32, transform._42 );
+			vertex.transform3 = Vector4( transform._13, transform._23, transform._33, transform._43 );
+			vertex.color = data.color * activation;
 		}
-		data.transform = data.transform * parentTransform;
 
-		vertex.transform1 = Vector4( data.transform._11, data.transform._21, data.transform._31, data.transform._41 );
-		vertex.transform2 = Vector4( data.transform._12, data.transform._22, data.transform._32, data.transform._42 );
-		vertex.transform3 = Vector4( data.transform._13, data.transform._23, data.transform._33, data.transform._43 );
-		vertex.color = data.color * activation;
+	}
+	else
+	{
+		for( auto& vertex : m_items )
+		{
+			// build transformation matrix out of the individual item data
+			const auto& data = m_volatileData[idx++];
+			auto transform = data.transform * parentTransform;
+
+			vertex.transform1 = Vector4( transform._11, transform._21, transform._31, transform._41 );
+			vertex.transform2 = Vector4( transform._12, transform._22, transform._32, transform._42 );
+			vertex.transform3 = Vector4( transform._13, transform._23, transform._33, transform._43 );
+			vertex.color = data.color * activation;
+		}
 	}
 
 	quadRenderer.AddQuads( m_effectHash, m_items.data(), m_items.size() );
