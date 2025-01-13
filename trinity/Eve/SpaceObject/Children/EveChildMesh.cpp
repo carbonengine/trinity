@@ -450,17 +450,24 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	auto rtMesh = m_mesh->GetRtMesh();
 
-	USE_MAIN_THREAD_RENDER_CONTEXT();
+	auto UpdateRtPerObjectData = [this]( size_t idx, const Matrix* instanceTransform ) {
+		USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( !m_rtPerObjectData.IsValid() )
-	{
-		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
-	}
+		auto size = sizeof( EveSpaceObjectPSData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
+		if( !m_rtPerObjectData[idx].IsValid() || m_rtPerObjectData[idx].GetSize() != size )
+		{
+			m_rtPerObjectData[idx].Create( uint32_t( size ), renderContext );
+		}
 
-	EveSpaceObjectPSData* perObjectData;
-	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
-	*perObjectData = m_psData;
-	m_rtPerObjectData.Unlock( renderContext );
+		EveSpaceObjectPSData* perObjectData;
+		m_rtPerObjectData[idx].Lock( (void**)&perObjectData, renderContext );
+		*perObjectData = m_psData;
+		if( instanceTransform )
+		{
+			*reinterpret_cast<Matrix*>( perObjectData + 1 ) = Transpose( *instanceTransform );
+		}
+		m_rtPerObjectData[idx].Unlock( renderContext );
+	};
 
 	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 	{
@@ -469,9 +476,14 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			return;
 		}
 
+		m_rtPerObjectData.resize( m_instanceTransforms.size() );
+
+		size_t idx = 0;
 		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
 		{
 			const Matrix transform = *it * m_worldTransform;
+
+			UpdateRtPerObjectData( idx, &transform );
 
 			const Tr2MeshAreaVector* areas = instanced->GetAreas( TRIBATCHTYPE_OPAQUE );
 			for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
@@ -482,14 +494,17 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					auto geometry = area->GetRtMeshArea();
 					if( geometry )
 					{
-						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, transform );
+						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData[idx], transform );
 					}
 				}
 			}
+			++idx;
 		}
 	}
 	else
 	{
+		m_rtPerObjectData.resize( 1 );
+		UpdateRtPerObjectData( 0, nullptr );
 		const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 		for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 		{
@@ -499,7 +514,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 				auto geometry = area->GetRtMeshArea();
 				if( geometry )
 				{
-					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, m_worldTransform );
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData[0], m_worldTransform );
 				}
 			}
 		}
