@@ -142,8 +142,12 @@ void EveSwarmRenderable::SetShaderData( const EveSpaceObjectVSData& vsData, cons
 	m_vsData.ellpsoidRadii = vsData.ellpsoidRadii;
 	m_vsData.shipData = vsData.shipData;
 
-	m_psData.clipData = psData.clipData;
-	m_psData.miscData = psData.miscData;
+	m_psData.clipSphereCenter = psData.clipSphereCenter;
+	m_psData.clipRadiusSq = psData.clipRadiusSq;
+	m_psData.clipRadius2Sq = psData.clipRadius2Sq;
+	m_psData.impactDataOffset = psData.impactDataOffset;
+	m_psData.clipSphereFactor2 = psData.clipSphereFactor2;
+	m_psData.clipSphereFactor = psData.clipSphereFactor;
 	memcpy( (void*)&m_psData.shLightingCoefficients, (void*)&psData.shLightingCoefficients, sizeof( m_psData.shLightingCoefficients ) );
 	m_psData.shipData.y = psData.shipData.y;
 	m_psData.shipData.z = psData.shipData.z;
@@ -427,8 +431,12 @@ void EveSwarm::UpdateTurretsAsyncronous( const EveUpdateContext& updateContext )
 
 		pd.transform = *GetTurretTransform( (*it)->GetSwarmID() );
 		pd.shipData = m_spaceObjectShipData;
-		pd.clipData = m_psData.clipData;
-		(*it)->UpdateAsyncronous( updateContext, &pd );
+		pd.clipSphereCenter = m_psData.clipSphereCenter;
+		pd.clipRadiusSq = m_psData.clipRadiusSq;
+		pd.clipRadius2Sq = m_psData.clipRadius2Sq;
+		pd.clipFactor = m_psData.clipSphereFactor;
+		pd.clipFactor2 = m_psData.clipSphereFactor2;
+		( *it )->UpdateAsyncronous( updateContext, &pd );
 	}
 }
 

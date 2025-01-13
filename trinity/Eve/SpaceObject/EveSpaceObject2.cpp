@@ -180,6 +180,8 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_castShadow( false ),
 	m_clipSphereFactor( 0.f ),
 	m_oldClipSphereFactor( 0.f ),
+	m_clipSphereFactor2( 0.f ),
+	m_oldClipSphereFactor2( 0.f ),
 	m_clipSphereCenter( 0.f, 0.f, 0.f ),
 	m_localAabbMin( 0.f, 0.f, 0.f ),
 	m_localAabbMax( 0.f, 0.f, 0.f ),
@@ -216,6 +218,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	SetControllerVariable( "ArmorDamage", 0 );
 	SetControllerVariable( "HullDamage", 0 );
 	SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
+	SetControllerVariable( "ClipSphereFactor2", m_clipSphereFactor2 );
 }
 
 EveSpaceObject2::~EveSpaceObject2()
@@ -510,7 +513,7 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 
 	if( m_impactOverlay )
 	{
-		m_psData.miscData.y = (float)m_impactOverlay->GetDataTextureOffset();
+		m_psData.impactDataOffset = (float)m_impactOverlay->GetDataTextureOffset();
 	}
 
 	for( size_t i = 0; i < EVE_SPACEOBJECT_CUSTOWMASK_MAX; ++i )
@@ -611,8 +614,15 @@ void EveSpaceObject2::PrepareShaderData( const EveUpdateContext& updateContext )
 	float nearDist = std::max( 0.f, Length( m_clipSphereCenter ) - normalizedBoundingRadius );
 	float insideSpherePercentage = std::min( 1.f, Length( m_clipSphereCenter ) / normalizedBoundingRadius );
 	float disolveRadius = nearDist + m_clipSphereFactor * normalizedBoundingRadius * ( 1.f + insideSpherePercentage );
-	m_psData.clipData = m_vsData.clipData = Vector4( m_clipSphereCenter + GetBoundingSphereCenter(), TriFloatSign( disolveRadius ) * disolveRadius * disolveRadius );
-	m_psData.miscData.w = m_clipSphereFactor;
+
+	m_psData.clipSphereCenter = m_clipSphereCenter + GetBoundingSphereCenter();
+	m_psData.clipRadiusSq = TriFloatSign( disolveRadius ) * disolveRadius * disolveRadius;
+
+	m_vsData.clipData = Vector4( m_psData.clipSphereCenter, m_psData.clipRadiusSq );
+	float disolveRadius2 = nearDist + m_clipSphereFactor2 * normalizedBoundingRadius * ( 1.f + insideSpherePercentage );
+	m_psData.clipRadius2Sq = TriFloatSign( disolveRadius2 ) * disolveRadius2 * disolveRadius2;
+	m_psData.clipSphereFactor = m_clipSphereFactor;
+	m_psData.clipSphereFactor2 = m_clipSphereFactor2;
 }
 
 void EveSpaceObject2::GetDebugOptions( Tr2DebugRendererOptions& options )
@@ -719,6 +729,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if( renderer.HasOption( this, "ClipSphere" ) )
 	{
 		renderer.DrawSphere( this, TransformCoord( m_clipSphereCenter + GetBoundingSphereCenter(), m_worldTransform ), m_clipSphereFactor * m_boundingSphereWorldRadius, 16, Tr2DebugRenderer::Wireframe, 0xffff00ff );
+		renderer.DrawSphere( this, TransformCoord( m_clipSphereCenter + GetBoundingSphereCenter(), m_worldTransform ), m_clipSphereFactor2 * m_boundingSphereWorldRadius, 16, Tr2DebugRenderer::Wireframe, 0xffff00ff );
 	}
 
 
@@ -1660,7 +1671,11 @@ void EveSpaceObject2::GetParentData( ParentData* pd ) const
 	memset( pd, 0, sizeof( ParentData ) );
 	pd->transform = m_worldTransform;
 	pd->shipData = m_spaceObjectShipData;
-	pd->clipData = m_psData.clipData;
+	pd->clipSphereCenter = m_psData.clipSphereCenter;
+	pd->clipRadiusSq = m_psData.clipRadiusSq;
+	pd->clipRadius2Sq = m_psData.clipRadius2Sq;
+	pd->clipFactor = m_psData.clipSphereFactor;
+	pd->clipFactor2 = m_psData.clipSphereFactor2;
 	pd->shLighting = m_psData.shLightingCoefficients;
 }
 
@@ -1877,16 +1892,18 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 	{
 		SetControllerVariable( "DirtLevel", m_dirtLevel );
 	}
-	else if( IsMatch( val, m_clipSphereFactor ) )
+	else if( IsMatch( val, m_clipSphereFactor ) || IsMatch( val, m_clipSphereFactor2 ) )
 	{
-		bool clipping = m_clipSphereFactor != 0;
-		bool oldClipping = m_oldClipSphereFactor != 0;
+		bool clipping = m_clipSphereFactor != 0 || m_clipSphereFactor2 != 0;
+		bool oldClipping = m_oldClipSphereFactor != 0 || m_oldClipSphereFactor2 != 0;
 		if( clipping != oldClipping )
 		{
 			SetShaderOption( BlueSharedString( "SPACE_OBJECT_CLIPPING" ), clipping ? BlueSharedString( "SOC_ENABLED" ) : BlueSharedString( "SOC_DISABLED" ) );
 		}
 		m_oldClipSphereFactor = m_clipSphereFactor;
+		m_oldClipSphereFactor2 = m_clipSphereFactor2;
 		SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
+		SetControllerVariable( "ClipSphereFactor2", m_clipSphereFactor2 );
 	}
 	else if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display ) || IsMatch( val, m_castShadow ) )
 	{

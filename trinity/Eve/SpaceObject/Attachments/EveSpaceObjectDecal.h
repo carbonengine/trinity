@@ -42,6 +42,8 @@ struct DecalPSPerObjectData {
     Vector4 m_displayData;
     Vector4 m_shipData;
     Vector4 m_clipData;
+	float m_clipRadius2Sq;
+	Vector3 m_unused;
     Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 };
 

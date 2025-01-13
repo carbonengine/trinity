@@ -364,7 +364,8 @@ Tr2PerObjectData* EveSpaceObjectDecal::GetPerObjectData( ITriRenderBatchAccumula
 
 	// clip sphere data from parent
     perObjectData->m_psData.m_shipData = m_parentData.shipData;
-    perObjectData->m_psData.m_clipData = m_parentData.clipData;
+    perObjectData->m_psData.m_clipData = Vector4( m_parentData.clipSphereCenter, m_parentData.clipRadiusSq );
+	perObjectData->m_psData.m_clipRadius2Sq = m_parentData.clipRadius2Sq;
 
 	// display data
     perObjectData->m_psData.m_displayData = Vector4( (float)m_parentData.killCount, m_isVisible, 0.f, 0.f );
