@@ -49,7 +49,6 @@ private:
 
 	Color m_subSurfaceFrontScatterColor;
 	float m_subSurfaceScatteringWidth;
-	float m_subSurfaceScatteringFOV;
 
 	Tr2EffectPtr m_screenSpaceSubSurfaceScatteringEffect;
 	Tr2EffectPtr m_specularRecombineEffect;

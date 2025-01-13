@@ -19,7 +19,6 @@ const Be::ClassInfo* Tr2SSSSS::ExposeToBlue()
 		
 
 		MAP_ATTRIBUTE( "subSurfaceScatteringWidth", m_subSurfaceScatteringWidth, "How wide of a sample radius for the sub surface blur\n" ":jessica-group: Settings",Be::READWRITE )
-		MAP_ATTRIBUTE( "subSurfaceScatteringFOV", m_subSurfaceScatteringFOV, "What FOV should the virtual sub surface scatter use\n"":jessica-group: Settings", Be::READWRITE )
 		MAP_ATTRIBUTE( "subSurfaceFrontScatterColor", m_subSurfaceFrontScatterColor, "Defines what the scene level sub surface front scatter color should be\n" ":jessica-group: Settings", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "seprableSpecularTexture", m_seprableSpecularColorMap, ".", Be::READWRITE )

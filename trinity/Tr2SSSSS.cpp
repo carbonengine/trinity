@@ -29,8 +29,7 @@ using namespace Tr2RenderContextEnum;
 Tr2SSSSS::Tr2SSSSS( IRoot* lockobj ) : 
 	m_enabled( true ),
 	m_hasSSSSSInScene( true ),
-	m_subSurfaceScatteringWidth( 0.5f ),
-	m_subSurfaceScatteringFOV( 20.0f ),
+	m_subSurfaceScatteringWidth( 0.1277f ),
 	m_subSurfaceFrontScatterColor( Color( 1, 1, 1, 1 ) )
 {
 
@@ -124,7 +123,6 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), m_seprableSpecularColorMap );
 			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
 			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSWidth" ), m_subSurfaceScatteringWidth );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSS_FOVY" ), m_subSurfaceScatteringFOV );
 			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSDirection" ), Vector2( 1.0f, 0.0f ) );
 			m_screenSpaceSubSurfaceScatteringEffect->EndUpdate();
 		}
@@ -150,7 +148,6 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), m_seprableSpecularColorMap );
 			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
 			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSWidth" ), m_subSurfaceScatteringWidth );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSS_FOVY" ), m_subSurfaceScatteringFOV );
 			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSDirection" ), Vector2( 0.0f, 1.0f ) );
 			m_screenSpaceSubSurfaceScatteringEffect->EndUpdate();
 		}
