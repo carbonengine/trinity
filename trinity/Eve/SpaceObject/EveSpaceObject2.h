@@ -117,8 +117,12 @@ struct EveSpaceObjectPSData
 	Matrix worldTransformLast;
 	Matrix invWorldTransform;
 	Vector4 shipData;
-	Vector4 clipData;
-	Vector4 miscData;
+	Vector3 clipSphereCenter;
+	float clipRadiusSq;
+	float clipRadius2Sq;
+	float impactDataOffset;
+	float clipSphereFactor2;
+	float clipSphereFactor;
 	Vector4 shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 	Vector4 customMaskMaterialIDs[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskTargets[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
@@ -525,6 +529,8 @@ protected:
 	// dissolve
 	float m_clipSphereFactor;
 	float m_oldClipSphereFactor;
+	float m_clipSphereFactor2;
+	float m_oldClipSphereFactor2;
 	Vector3 m_clipSphereCenter;
 
 	bool m_impostorMode;
