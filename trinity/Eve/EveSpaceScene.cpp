@@ -2646,11 +2646,12 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 	}
 
 	// Write sub surface seprable specular and SSS mask information
-	m_sssss->SetupSeprableSpecularSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
+	bool hasSSSSSInScene = m_sssss->SetupSeprableSpecularSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
 
 
 	// Write sub surface scattering blur
-	m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_colorMap, m_opaqueColorMap, m_depthMap );
+	if(hasSSSSSInScene)
+		m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_colorMap, m_opaqueColorMap, m_depthMap );
 
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
 	

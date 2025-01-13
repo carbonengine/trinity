@@ -36,13 +36,14 @@ public:
 	Tr2SSSSS( IRoot* lockobj = NULL );
 	~Tr2SSSSS();
 
-	void SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext & renderContext, ITriRenderBatchAccumulator * batches );
+	bool SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext & renderContext, ITriRenderBatchAccumulator * batches );
 	void SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext & renderContext, Tr2RenderTargetPtr colorMap, Tr2RenderTargetPtr opaqueColorMap, Tr2DepthStencilPtr depthMap );
 	void UpdateSubSurfaceFrontScatterData( Tr2RenderContext & renderContext );
 
 private:
 
 	bool m_enabled;
+	bool m_hasSSSSSInScene;
 
 	Tr2RenderTargetPtr m_seprableSpecularColorMap; // RGB Specular, A SSSSS Mask
 
