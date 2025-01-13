@@ -8,6 +8,11 @@
 #include "Utilities/BoundingSphere.h"
 #include "Tr2VertexDefinitionUtilities.h"
 #include <algorithm>
+#include "TriSettingsRegistrar.h"
+
+int g_debugBoneLabelFont = TRI_DBG_FONT_MEDIUM;
+TRI_REGISTER_SETTING( "debugBoneLabelFont", g_debugBoneLabelFont );
+
 
 namespace Tr2GrannyAnimationUtils
 {
@@ -557,7 +562,7 @@ void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform )
 		pos = Transform( pos, mat );
 		pos.w = 2;
 		Tr2Renderer::DrawSphere( pos, 1, 0xffffffff );
-		Tr2Renderer::Printf( TRI_DBG_FONT_SMALL, Vector3( pos.x, pos.y, pos.z ), 0xffffffff, "  %s : %d", m_skeleton->Bones[bi[boneIdx]].Name, boneIdx );
+		Tr2Renderer::Printf( static_cast<TriDebugFont>( g_debugBoneLabelFont ), Vector3( pos.x, pos.y, pos.z ), 0xffffffff, "  %s : %d", m_skeleton->Bones[bi[boneIdx]].Name, boneIdx );
 	}
 }
 

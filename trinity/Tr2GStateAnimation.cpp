@@ -23,6 +23,9 @@ static const int MAX_JOINT_COUNT = 58;
 BLUE_DECLARE( Tr2GStateParameter );
 BLUE_DECLARE_VECTOR( Tr2GStateParameter );
 
+extern int g_debugBoneLabelFont;
+
+
 Tr2GStateAnimation::Tr2GStateAnimation( IRoot* lockobj ) :
 	m_skeleton( nullptr ),
 	m_boneList( "Tr2GStateAnimation/m_boneList" ),
@@ -791,7 +794,7 @@ void Tr2GStateAnimation::RenderBones( const Matrix& modelTransform )
 		pos = Transform( pos, mat );
 		pos.w = 2;
 		Tr2Renderer::DrawSphere( pos, 1, 0xffffffff );
-		Tr2Renderer::Printf( TRI_DBG_FONT_SMALL, Vector3( pos.x, pos.y, pos.z ), 0xffffffff, "  %s : %d", m_skeleton->Bones[bi[boneIdx]].Name, boneIdx );
+		Tr2Renderer::Printf( static_cast<TriDebugFont>( g_debugBoneLabelFont ), Vector3( pos.x, pos.y, pos.z ), 0xffffffff, "  %s : %d", m_skeleton->Bones[bi[boneIdx]].Name, boneIdx );
 	}
 }
 
