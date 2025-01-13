@@ -394,7 +394,7 @@ void EveTurretSet::InitializeAmbientEffect()
 
 bool EveTurretSet::IsAmbientVisible() const
 {
-	return m_display && m_displayEffects && m_parentData.clipData.w < 0.05;
+	return m_display && m_displayEffects && abs( m_parentData.clipRadiusSq ) < 0.05;
 }
 
 
@@ -1905,7 +1905,8 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 
 		// ps data
 		perObjectData->m_psData.m_shipData = m_parentData.shipData;
-		perObjectData->m_psData.m_clipData1 = m_parentData.clipData;
+		perObjectData->m_psData.m_clipData1 = Vector4( m_parentData.clipSphereCenter, m_parentData.clipRadiusSq );
+		perObjectData->m_psData.m_clipRadius2Sq = m_parentData.clipRadius2Sq;
 		if( m_parentShLighting )
 		{
 			memcpy( perObjectData->m_psData.m_shLightingCoefficients, m_parentShLighting, sizeof( perObjectData->m_psData.m_shLightingCoefficients ) );
@@ -1933,33 +1934,35 @@ void EveTurretSet::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( !m_rtPerObjectData.IsValid() )
-	{
-		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
-	}
-
-	EveTurretSetPSData* perObjectData;
-
-	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
-
-	perObjectData->m_shipData = m_parentData.shipData;
-	perObjectData->m_clipData1 = m_parentData.clipData;
-	if( m_parentShLighting )
-	{
-		memcpy( perObjectData->m_shLightingCoefficients, m_parentShLighting, sizeof( perObjectData->m_shLightingCoefficients ) );
-	}
-	else
-	{
-		memset( perObjectData->m_shLightingCoefficients, 0, sizeof( perObjectData->m_shLightingCoefficients ) );
-	}
-	
-	m_rtPerObjectData.Unlock( renderContext );
 	
 	for( auto it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
 	{
 		if( it->visible && it->valid && it->rtMesh && it->rtMeshArea )
 		{
-			rtManager.GetGeometry().AddGeometry( *it->rtMesh, *it->rtMeshArea, m_turretEffect, &m_rtPerObjectData, it->worldMatrix );
+			if( !it->rtPerObjectData.IsValid() )
+			{
+				it->rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
+			}
+
+			EveTurretSetPSData* perObjectData;
+
+			it->rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
+
+			perObjectData->m_shipData = m_parentData.shipData;
+			perObjectData->m_clipData1 = Vector4( TransformCoord( m_parentData.clipSphereCenter, Inverse( it->localMatrix ) ), m_parentData.clipRadiusSq );
+			perObjectData->m_clipRadius2Sq = m_parentData.clipRadius2Sq;
+			if( m_parentShLighting )
+			{
+				memcpy( perObjectData->m_shLightingCoefficients, m_parentShLighting, sizeof( perObjectData->m_shLightingCoefficients ) );
+			}
+			else
+			{
+				memset( perObjectData->m_shLightingCoefficients, 0, sizeof( perObjectData->m_shLightingCoefficients ) );
+			}
+
+			it->rtPerObjectData.Unlock( renderContext );
+
+			rtManager.GetGeometry().AddGeometry( *it->rtMesh, *it->rtMeshArea, m_turretEffect, &it->rtPerObjectData, it->worldMatrix );
 		}
 	}
 }

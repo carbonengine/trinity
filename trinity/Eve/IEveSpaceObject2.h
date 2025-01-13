@@ -24,7 +24,11 @@ BLUE_INTERFACE( IEveSpaceObject2 ) : public IRoot
 		Matrix transform;
 		uint32_t killCount;
 		Vector4 shipData;
-		Vector4 clipData;
+		Vector3 clipSphereCenter;
+		float clipRadiusSq;
+		float clipRadius2Sq;
+		float clipFactor;
+		float clipFactor2;
 		const Vector4* shLighting;
 	};
 

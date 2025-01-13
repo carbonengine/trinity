@@ -489,7 +489,7 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 
 		// need to move the clipdata inversely of the translation of the childmesh
 		m_vsData.clipData = Vector4( m_vsData.clipData.GetXYZ() - m_translation, m_vsData.clipData.w );
-		m_psData.clipData = Vector4( m_psData.clipData.GetXYZ() - m_translation, m_psData.clipData.w );
+		m_psData.clipSphereCenter = m_psData.clipSphereCenter - m_translation;
 	}
 
 	m_activationStrength = params.activationStrength;
