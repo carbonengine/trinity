@@ -24,5 +24,7 @@ const Be::ClassInfo* Tr2SSSSS::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "seprableSpecularTexture", m_seprableSpecularColorMap, ".", Be::READWRITE )
 
+		MAP_ATTRIBUTE( "hasSSSSSInScene", m_hasSSSSSInScene, ".", Be::READWRITE )
+		
 	EXPOSURE_END()
 }

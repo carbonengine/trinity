@@ -16,6 +16,7 @@
 #include "Tr2DepthStencil.h"
 #include "Tr2RenderTarget.h"
 #include "Tr2GpuBuffer.h"
+#include "TriRenderBatch.h"
 #include "Shader/Tr2Effect.h"
 #include "Shader/Tr2Shader.h"
 #include "Resources/TriTextureRes.h"
@@ -27,6 +28,7 @@ using namespace Tr2RenderContextEnum;
 
 Tr2SSSSS::Tr2SSSSS( IRoot* lockobj ) : 
 	m_enabled( true ),
+	m_hasSSSSSInScene( true ),
 	m_subSurfaceScatteringWidth( 0.5f ),
 	m_subSurfaceScatteringFOV( 20.0f ),
 	m_subSurfaceFrontScatterColor( Color( 1, 1, 1, 1 ) )
@@ -38,13 +40,16 @@ Tr2SSSSS::~Tr2SSSSS()
 {
 }
 
-void Tr2SSSSS::SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext& renderContext, ITriRenderBatchAccumulator* batches )
+bool Tr2SSSSS::SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext& renderContext, ITriRenderBatchAccumulator* batches )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_enabled || !m_seprableSpecularColorMap || m_seprableSpecularColorMap->GetWidth() == 0 || m_seprableSpecularColorMap->GetHeight() == 0 )
+
+	m_hasSSSSSInScene = renderContext.TechniqueInBatch( batches->GetBatches(), BlueSharedString( "SSSSS" ) );
+
+	if( !m_enabled || !m_seprableSpecularColorMap || m_seprableSpecularColorMap->GetWidth() == 0 || m_seprableSpecularColorMap->GetHeight() == 0 || !m_hasSSSSSInScene )
 	{
-		return;
+		return false;
 	}
 
 
@@ -76,6 +81,8 @@ void Tr2SSSSS::SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext& rend
 		renderContext.m_esm.PopRenderTarget();
 		renderContext.m_esm.PopViewport();
 	}
+
+	return m_hasSSSSSInScene;
 }
 
 void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderContext, Tr2RenderTargetPtr colorMap, Tr2RenderTargetPtr opaqueColorMap, Tr2DepthStencilPtr depthMap )
