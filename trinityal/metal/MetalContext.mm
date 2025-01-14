@@ -7,7 +7,7 @@
 #include "MetalContext.h"
 #include "ALLog.h"
 
-bool g_useParallelEncoding = true;
+bool g_useParallelEncoding = false;
 extern bool g_brokenMacOSNvidiaDrivers;
 
 namespace TrinityALImpl
