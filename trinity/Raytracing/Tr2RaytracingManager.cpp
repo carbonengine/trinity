@@ -148,11 +148,8 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 
 	{
 		CCP_STATS_ZONE( "Create shader table" );
-		// TODO: intern, either add local input data or remove material...
-		Tr2RtLocalMaterialDescriptionAL material;
-
-		m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
-		m_shaderTableDesc.AddMissShader( missName.c_str(), material );
+		m_shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
+		m_shaderTableDesc.AddMissShader( missName.c_str() );
 		m_shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
 	}
 

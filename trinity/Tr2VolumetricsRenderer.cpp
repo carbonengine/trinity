@@ -1112,10 +1112,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 				shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
 			}
-			//else
-			{
-				renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
-			}
+			
+			renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 		}
 
 		int workgroupSize = 4;
@@ -1125,11 +1123,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 		{
 			
-			if (shadowType == SHADOWS_RAYTRACED)
-			{
-				resources.rtCalculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_RAYTRACED" ) );
-			}
-			else if( shadowType == SHADOWS_CASCADED )
+			if( shadowType == SHADOWS_CASCADED )
 			{
 				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_CASCADED" ) );
 			}
@@ -1138,8 +1132,6 @@ void Tr2VolumetricsRenderer::RenderFog(
 				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_DISABLED" ) );
 			}
 
-			resources.rtCalculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
-			resources.rtCalculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
 			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
 			resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
