@@ -90,9 +90,21 @@ void Tr2RtShaderTableDescriptionAL::AddRayGenShader( const wchar_t* name )
 	m_rayGenNames.push_back( shaderRecord );
 }
 
+void Tr2RtShaderTableDescriptionAL::AddRayGenShader( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material )
+{
+	ShaderRecord shaderRecord = { name, material };
+	m_rayGenNames.push_back( shaderRecord );
+}
+
 void Tr2RtShaderTableDescriptionAL::AddMissShader( const wchar_t* name )
 {
 	ShaderRecord shaderRecord = { name };
+	m_missNames.push_back( shaderRecord );
+}
+
+void Tr2RtShaderTableDescriptionAL::AddMissShader( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material )
+{
+	ShaderRecord shaderRecord = { name, material };
 	m_missNames.push_back( shaderRecord );
 }
 

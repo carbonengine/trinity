@@ -38,7 +38,9 @@ class Tr2RtShaderTableDescriptionAL
 {
 public:
 	void AddRayGenShader( const wchar_t* name );
+	void AddRayGenShader( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
 	void AddMissShader( const wchar_t* name );
+	void AddMissShader( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
 	void AddHitGroup( const wchar_t* name );
 	void AddHitGroup( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
 
