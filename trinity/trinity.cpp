@@ -314,6 +314,7 @@ static void emptySignalHandler(int)
 
 #if BLUE_WITH_PYTHON
 
+#ifdef _WIN32
 static void DoDebugBreak()
 {
 	__try
@@ -326,6 +327,7 @@ static void DoDebugBreak()
 	{
 	}
 }
+#endif
 
 static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
 {
