@@ -232,8 +232,11 @@ void EveMobile::UpdateTurretsAsyncronous( const EveUpdateContext& updateContext 
 
 	pd.transform = *GetTurretTransform( 0 );
 	pd.shipData = m_spaceObjectShipData;
-	pd.clipData = m_psData.clipData;
-	pd.clipData.x = m_clipSphereFactor;
+	pd.clipSphereCenter = m_psData.clipSphereCenter;
+	pd.clipRadiusSq = m_psData.clipRadiusSq;
+	pd.clipRadius2Sq = m_psData.clipRadius2Sq;
+	pd.clipFactor = m_psData.clipSphereFactor;
+	pd.clipFactor2 = m_psData.clipSphereFactor2;
 
 	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
@@ -547,7 +550,7 @@ void EveMobile::RebuildTurretPositions()
 			}
 		}
 
-		if( m_clipSphereFactor != 0 )
+		if( m_clipSphereFactor != 0 || m_clipSphereFactor2 != 0 )
 		{
 			( *it )->SetShaderOption( BlueSharedString( "SPACE_OBJECT_CLIPPING" ), BlueSharedString( "SOC_ENABLED" ) );
 		}

@@ -335,6 +335,7 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		)
 
 		MAP_ATTRIBUTE( "clipSphereFactor", m_clipSphereFactor, "Object's clip state", Be::READWRITE | Be::NOTIFY )
+		MAP_ATTRIBUTE( "clipSphereFactor2", m_clipSphereFactor2, "Object's clip state for the second clip sphere", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "clipSphereCenter", m_clipSphereCenter, "Object's clip sphere center", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "boundingSphereCenter", m_boundingSphereCenter, "The center of the minimum bounding sphere of the model in local coordinates", Be::READWRITE | Be::PERSIST )

@@ -65,7 +65,9 @@ struct EveTurretSetVSData {
 struct EveTurretSetPSData {
     Vector4 m_shipData;
     Vector4 m_clipData1;
-    Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
+	float m_clipRadius2Sq;
+	Vector3 m_unused;
+	Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 };
 
 // --------------------------------------------------------------------------------
@@ -308,7 +310,6 @@ private:
 	void UpdateRtMesh();
 	void UpdateRtSkeleton();
 
-	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 
 	// name
 	std::string m_name;
@@ -355,6 +356,7 @@ private:
 
 		std::unique_ptr<Tr2RaytracingMesh> rtMesh;
 		std::unique_ptr<Tr2RaytracingMeshArea> rtMeshArea;
+		mutable Tr2ConstantBufferAL rtPerObjectData;
 	};
 	std::vector<SingleTurretData> m_singleTurrets;
 	std::vector<GrannyBoneBindingBounds> m_boneBounds;

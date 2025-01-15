@@ -180,7 +180,7 @@ protected:
 
 	void UpdateRtMesh();
 	void UpdateRtSkeleton();
-	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+	mutable std::vector<Tr2ConstantBufferAL> m_rtPerObjectData;
 	std::vector<Matrix> m_instanceTransforms;
 	unsigned int m_instanceCount;
 
