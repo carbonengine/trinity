@@ -284,6 +284,8 @@ protected:
 		Vector4 SplitInfo;
 		Matrix ProjectionInverseMat;
 
+		Vector4 ShadowMapDepthRanges[4];
+
 		Tr2VolumetricsRenderer::FroxelPerFrameData FroxelFogData;
 	};
 

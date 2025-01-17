@@ -93,6 +93,8 @@ public:
 
 		Matrix ShadowMatrixVal[SHADOW_FRUSTUM_COUNT];
 
+		Vector4 CascadeDepthRanges[SHADOW_FRUSTUM_COUNT];
+
 		Vector4 SplitInfo; // x = split count
 	};
 
