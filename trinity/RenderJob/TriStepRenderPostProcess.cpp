@@ -399,7 +399,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	Tr2PostProcessRenderInfo::Texture output;
 	if( upscalingEnabled )
 	{
-		output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight );
+		output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight, Tr2RenderContextEnum::EX_NONE, renderContext.GetPrimaryRenderContext().GetBackBufferFormat() );
 		if( upscalingInfo.temporal )
 		{
 			taa = nullptr;
@@ -449,7 +449,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	if( upscalingInfo.temporal )
 	{
 		auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
-		upscalingContext->SetHudLessTexture(output->GetTexture());
+		upscalingContext->SetHudLessTexture( output->GetTexture() );
+
 		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
 		// upscale the temp textures so everything hence forth is correct
 		uint32_t w, h;
@@ -1154,6 +1155,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.fieldOfView = Tr2Renderer::GetFieldOfView();
 	dispatchParameters.frameTimeDelta = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_lastFrameTime ) * 1000.0f;
 	dispatchParameters.preExposure = 0.4f;
+	dispatchParameters.currentFrameIndex = Tr2Renderer::GetCurrentFrameCounter();
 
 	memcpy( dispatchParameters.cameraPos, &Tr2Renderer::GetViewPosition(), 3 * sizeof( float ) );
 	memcpy( dispatchParameters.cameraForward, &view.GetZ(), 3 * sizeof( float ) );
