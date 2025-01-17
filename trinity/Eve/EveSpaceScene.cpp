@@ -3124,6 +3124,11 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 		data.ShadowMapValues[2] = shadowMap->m_perSplitData.ShadowMapValues[2];
 		data.ShadowMapValues[3] = shadowMap->m_perSplitData.ShadowMapValues[3];
 
+		data.ShadowMapDepthRanges[0] = shadowMap->m_perSplitData.CascadeDepthRanges[0];
+		data.ShadowMapDepthRanges[1] = shadowMap->m_perSplitData.CascadeDepthRanges[1];
+		data.ShadowMapDepthRanges[2] = shadowMap->m_perSplitData.CascadeDepthRanges[2];
+		data.ShadowMapDepthRanges[3] = shadowMap->m_perSplitData.CascadeDepthRanges[3];
+
 		for( int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 		{
 			Matrix matrix = Tr2Renderer::GetInverseViewTransform() * Transpose( shadowMap->m_perSplitData.ShadowMatrixVal[i] );
