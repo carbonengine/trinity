@@ -52,6 +52,7 @@ namespace Tr2UpscalingAL
 		Tr2TextureAL* exposure;
 		Tr2TextureAL* reactive;
 
+		unsigned long long currentFrameIndex;
 		float frontClip;
 		float backClip;
 		float fieldOfView;
@@ -164,6 +165,7 @@ public:
 	Tr2UpscalingContextAL( Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2UpscalingAL::UpscalingContextParams params );
 	virtual ~Tr2UpscalingContextAL();
 	bool Reuse( Tr2UpscalingAL::UpscalingContextParams params );
+	virtual void SetupForReuse();
 	// at what render resolution are we drawing to
 	void GetRenderDimensions( uint32_t& width, uint32_t& height ) const;
 	// What is the output dimensions

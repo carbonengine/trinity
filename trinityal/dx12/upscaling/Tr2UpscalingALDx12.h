@@ -12,6 +12,7 @@ namespace TrinityALImpl
 {
 	constexpr Tr2UpscalingAL::Technique AVAILABLE_UPSCALING_TECHNIQUES[]  = {
 		Tr2UpscalingAL::Technique::FSR1,
+		Tr2UpscalingAL::Technique::FSR3,
 		Tr2UpscalingAL::Technique::XESS,
 		Tr2UpscalingAL::Technique::DLSS,
 	};

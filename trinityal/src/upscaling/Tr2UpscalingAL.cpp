@@ -229,6 +229,7 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2UpscalingAL::U
         {
             if( context->second->Reuse( params) )
             {
+				context->second->SetupForReuse();
                 return context->second.get();
             }
         }
@@ -305,6 +306,12 @@ bool Tr2UpscalingContextAL::Reuse( Tr2UpscalingAL::UpscalingContextParams params
 {
 	return m_params == params;
 }
+
+void Tr2UpscalingContextAL::SetupForReuse()
+{
+
+}
+
 
 uint32_t Tr2UpscalingContextAL::GetID() const
 {
