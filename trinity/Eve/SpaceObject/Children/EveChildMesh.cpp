@@ -11,8 +11,6 @@
 #include "Utilities/BoundingBox.h"
 #include "Resources/TriGeometryRes.h"
 
-extern bool g_eveSpaceSceneRaytracedShadows;
-
 namespace
 {
 constexpr float s_instanceScreenSizeThreshold = 1.f;
@@ -244,7 +242,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 			( *it )->UpdateVisibility( updateContext, &m_parentData );
 		}
 
-		if( g_eveSpaceSceneRaytracedShadows )
+		if( updateContext.m_raytracingEnabled )
 		{
 			UpdateRtMesh();
 			UpdateRtSkeleton();
@@ -450,7 +448,7 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 
 void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
-	if( !m_display || !m_mesh || !m_castShadow || !g_eveSpaceSceneRaytracedShadows )
+	if( !m_display || !m_mesh || !m_castShadow )
 	{
 		return;
 	}

@@ -105,9 +105,6 @@ TRI_REGISTER_SETTING( "eveSpaceSceneDynamicLighting", g_eveSpaceSceneDynamicLigh
 int g_eveReflectionMode = EntityComponents::REFLECT_NEVER;
 TRI_REGISTER_SETTING( "eveReflectionSetting", g_eveReflectionMode );
 
-bool g_eveSpaceSceneRaytracedShadows = true;
-TRI_REGISTER_SETTING( "eveSpaceSceneRaytracedShadows", g_eveSpaceSceneRaytracedShadows );
-
 bool g_lensflaresInReflections = true;
 TRI_REGISTER_SETTING( "lensflaresInReflections", g_lensflaresInReflections );
 
@@ -162,7 +159,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_shadowQuality( ShadowQuality::SHADOW_RAYTRACED ),
 	m_enableShadows( true ),
 	m_displayShadowMap( false ),
-	m_enableRaytracing( false ),
 	m_visualizeMethod( VM_NONE ),
 	m_perFrameDebug( 0.f ),
 	m_pickBuffer( NULL, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1 ),
@@ -453,6 +449,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / m_upscalingAmount );
 	m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / m_upscalingAmount );
 	m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / m_upscalingAmount );
+	m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
 
 	{
 		for( auto it = m_backgroundObjects.begin(); it != m_backgroundObjects.end(); ++it )
@@ -2399,7 +2396,7 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	{
 		return;
 	}
-	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
+	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows, renderContext );
 
 	Color sunColor = m_currentSunColor;
 
@@ -3273,8 +3270,6 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 
 	if( IsMatch( value, m_shadowQuality ) )
 	{
-		g_eveSpaceSceneRaytracedShadows = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED;
-
 		if( m_shadowQuality == ShadowQuality::SHADOW_LOW )
 		{
 			if( m_cascadedShadowMap )

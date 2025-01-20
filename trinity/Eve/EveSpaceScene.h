@@ -53,9 +53,6 @@ extern float g_eveSpaceSceneHighDetailThreshold;
 // Setting for what reflection mode is used
 extern int g_eveReflectionMode;
 
-// raytracing shadow setting
-extern bool g_eveSpaceSceneRaytracedShadows;
-
 struct ShadowReceiver;
 
 BLUE_DECLARE( TriFrustum );
@@ -682,7 +679,6 @@ private:
 
 	// raytracing
 	Tr2RaytracingManagerPtr m_rtManager;
-	bool m_enableRaytracing;
 
 	// projection matrices
 	Matrix m_projection;
