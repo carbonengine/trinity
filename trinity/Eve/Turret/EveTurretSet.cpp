@@ -28,7 +28,6 @@ CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
 using namespace Tr2RenderContextEnum;
 extern bool g_brokenMacOSNvidiaDrivers;
-extern bool g_eveSpaceSceneRaytracedShadows;
 
 
 // names of system bones like they are in the granny file
@@ -1637,7 +1636,7 @@ void EveTurretSet::UpdateVisibility( const EveUpdateContext& updateContext )
 		ambientEffect->UpdateVisibility( updateContext, m_parentData.transform, currentLod );
 	}
 
-	if( g_eveSpaceSceneRaytracedShadows )
+	if( updateContext.m_raytracingEnabled )
 	{
 		UpdateRtMesh();
 		UpdateRtSkeleton();
