@@ -41,7 +41,6 @@ public:
 private:
 
 	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
-	bool m_attachedToSwapchain;
 	bool m_supportsFrameGeneration;
 
 	ffx::Context m_swapChainContext;
@@ -78,7 +77,6 @@ private:
 
 	FfxApiFrameGenerationDispatchFunc m_frameGenerationCallback;
 
-	bool m_updateFrameGenContext;
 	bool m_setup;
 	std::unique_ptr<Tr2TextureAL> m_reactiveMask;
 

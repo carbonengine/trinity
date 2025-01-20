@@ -115,7 +115,6 @@ namespace Fsr3Utils
 
 Tr2Fsr3UpscalingTechnique::Tr2Fsr3UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter ),
-	m_attachedToSwapchain( false ),
 	m_supportsFrameGeneration( true ),
 	m_swapChainContext( nullptr )
 {
@@ -219,7 +218,7 @@ Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( Tr2UpscalingAL::Setting settin
 	m_swapchainFfxContext( swapchainContext ),
 	m_frameGenerationConfig( {} ),
 	m_backendDesc( {} ),
-	m_updateFrameGenContext( false ),
+	m_frameGenerationCallback( nullptr ),
 	m_setup( false )
 {
 
@@ -298,9 +297,7 @@ void Tr2Fsr3UpscalingContext::SetupForReuse()
 	{
 		if( m_frameGeneration )
 		{
-			CCP_LOGNOTICE( "FSR3: Setting up things for reuse" );
-			// disable frame generation before destroying context
-			// also unset present callback, HUDLessColor and UiTexture to have the swapchain only present the backbuffer
+			// disable frame generation just for a moment (reenabled in dispatch) 
 			m_frameGenerationConfig.frameGenerationEnabled = false;
 			m_frameGenerationConfig.swapChain = m_params.renderContext.GetPrimaryRenderContext().m_swapchain;
 			m_frameGenerationConfig.frameGenerationCallback = nullptr;
@@ -314,8 +311,8 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::SetupUpscaling()
 {
 	ffx::CreateContextDescUpscale createFsr{};
 
-	createFsr.maxUpscaleSize = { m_params.displayWidth, m_params.displayHeight };
-	createFsr.maxRenderSize = { m_params.displayWidth, m_params.displayHeight };
+	createFsr.maxUpscaleSize = { m_displayWidth, m_displayHeight };
+	createFsr.maxRenderSize = { m_renderWidth, m_renderHeight };
 	createFsr.flags = FFX_UPSCALE_ENABLE_DEPTH_INVERTED | FFX_UPSCALE_ENABLE_HIGH_DYNAMIC_RANGE;
 
 	// Do error checking in debug
@@ -349,20 +346,18 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::SetupFrameGen()
 	{
 		m_frameGenerationCallback = []( ffxDispatchDescFrameGeneration* params, void* pUserCtx ) -> ffxReturnCode_t {
 			CCP_STATS_INC( generatedFrames );
-			return ffxDispatch( reinterpret_cast<ffxContext*>( pUserCtx ), &params->header );
+			return ffxDispatch( static_cast<ffxContext*>( pUserCtx ), &params->header );
 		};
 
 		ffx::CreateContextDescFrameGeneration createFg{};
 		createFg.displaySize = { m_displayWidth, m_displayHeight };
-		createFg.maxRenderSize = { m_displayWidth, m_displayHeight };
+		createFg.maxRenderSize = { m_renderWidth, m_renderHeight };
 		createFg.flags |= FFX_FRAMEGENERATION_ENABLE_DEPTH_INVERTED | FFX_FRAMEGENERATION_ENABLE_HIGH_DYNAMIC_RANGE;
 
 		createFg.backBufferFormat = Fsr3Utils::GetFfxSurfaceFormat( m_params.renderContext.GetPrimaryRenderContext().GetBackBufferFormat() );
-		CCP_LOGERR( "FSR3: backBufferFormat %d", createFg.backBufferFormat );
 		ffx::ReturnCode retCode;
 		ffx::CreateContextDescFrameGenerationHudless createFgHudless{};
 		createFgHudless.hudlessBackBufferFormat = FfxApiSurfaceFormat::FFX_API_SURFACE_FORMAT_B8G8R8A8_UNORM;
-		CCP_LOGERR( "FSR3: createFgHudless.hudlessBackBufferFormat %d", createFgHudless.hudlessBackBufferFormat );
 
 		retCode = ffx::CreateContext( m_framegenerationFfxContext, nullptr, createFg, m_backendDesc );
 
