@@ -83,6 +83,7 @@ public:
 		Tr2DepthStencil& sceneDepth,
 		const Vector3& sunDirection,
 		const float depthSlices[4],
+		bool raytracingEnabled,
 		Tr2RenderContext& renderContext );
 
 

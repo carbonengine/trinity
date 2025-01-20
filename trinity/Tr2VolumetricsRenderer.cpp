@@ -197,6 +197,7 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 	Tr2DepthStencil& sceneDepth,
 	const Vector3& sunDirection,
 	const float depthSlices[4],
+	bool raytracingEnabled,
 	Tr2RenderContext& renderContext )
 {
 	uint32_t slices = 4;
@@ -280,6 +281,7 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 	sceneInfo.sunDirection = sunDirection;
 	sceneInfo.receiveShadows = m_receiveShadows;
 	sceneInfo.castShadows = m_castShadows;
+	sceneInfo.raytracedShadows = raytracingEnabled;
 
 	registry.ProcessComponents<ITr2VolumetricRenderable>( [&sceneInfo] ( ITr2VolumetricRenderable* volumetric ) -> void {
 		volumetric->SetSceneInformation( sceneInfo );

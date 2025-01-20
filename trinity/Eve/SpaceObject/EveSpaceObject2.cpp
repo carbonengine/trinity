@@ -50,8 +50,6 @@ TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLighting
 
 const BlueSharedString DAMAGE_LOCATOR_SET_NAME( "damage" );
 
-extern bool g_eveSpaceSceneRaytracedShadows;
-
 
 void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 ITriRenderBatchAccumulator* batches,
@@ -1526,7 +1524,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 
 		m_mesh->UseWithScreenSize( m_meshScreenSize, m_boundingSphereWorldRadius );
 
-		if( g_eveSpaceSceneRaytracedShadows )
+		if( updateContext.m_raytracingEnabled )
 		{
 			UpdateRtMesh(updateContext);
 			UpdateRtSkeleton();
@@ -3645,7 +3643,7 @@ void EveSpaceObject2::SetMute( bool isMute )
 
 void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
-	if( !m_mesh || !m_display || !g_eveSpaceSceneRaytracedShadows )
+	if( !m_mesh || !m_display )
 	{
 		return;
 	}
