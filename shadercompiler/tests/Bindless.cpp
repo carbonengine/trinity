@@ -1,10 +1,16 @@
 #include "gtest/gtest.h"
 #include "EffectCompilerDX12.h"
+#include "EffectCompilerMetal.h"
 #include "EffectData.h"
 #include "TesingUtils.h"
 
 extern StringTable g_stringTable;
 
+#if _WIN32
+using BindlessCompiler = EffectCompilerDX12;
+#else
+using BindlessCompiler = EffectCompilerMetal;
+#endif
 
 TEST( Bindless, SamplerInitializerStored )
 {
@@ -46,7 +52,7 @@ technique t0
 
 )SRC";
 
-	auto data = Compile<EffectCompilerDX12>( src );
+	auto data = Compile<BindlessCompiler>( src );
 
 	ASSERT_FALSE( data.techniques[0].passes[0].stages[1].samplers.empty() );
 	auto& samplers = data.techniques[0].passes[0].stages[1].samplers;
