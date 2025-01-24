@@ -122,7 +122,10 @@ public:
 	granny_animation* FindAnimationByName( const char* name ) const;
 
 	void	Cleanup();
-	
+
+	void AddNotifyTarget( IBlueAsyncResNotifyTarget * p );
+	void RemoveNotifyTarget( IBlueAsyncResNotifyTarget * p );
+
 	granny_skeleton *m_skeleton;
 	granny_world_pose *m_worldPose;
 	granny_mesh_binding *m_meshBinding;
@@ -177,8 +180,36 @@ private:
 	void	ApplyBoneOffsets ( unsigned i );
 	
 	IBlueEventListenerPtr m_eventListener;
+	std::vector<IBlueAsyncResNotifyTarget*> m_notifyTargets;
 };
 
 TYPEDEF_BLUECLASS( Tr2GrannyAnimation );
+
+
+class Tr2AnimationMeshBinding : public IBlueAsyncResNotifyTarget
+{
+public:
+	Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex );
+	~Tr2AnimationMeshBinding();
+
+	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
+
+	TriGeometryRes* GetGeometryRes() const;
+	uint32_t GetMeshIndex() const;
+	Tr2GrannyAnimation* GetAnimation() const;
+
+private:
+	void CreateBinding();
+
+	void ReleaseCachedData( BlueAsyncRes* p ) override;
+	void RebuildCachedData( BlueAsyncRes* p ) override;
+
+	std::unique_ptr<granny_mesh_binding, decltype( &GrannyFreeMeshBinding )> m_meshBinding{ nullptr, &GrannyFreeMeshBinding };
+	std::unique_ptr<granny_matrix_3x4[]> m_boneTransforms;
+
+	Tr2GrannyAnimationPtr m_animation;
+	TriGeometryResPtr m_geometryRes;
+	uint32_t m_meshIndex = 0;
+};
 
 #endif //Tr2GrannyAnimation_h
