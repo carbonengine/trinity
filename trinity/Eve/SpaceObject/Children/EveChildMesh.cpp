@@ -132,7 +132,7 @@ void EveChildMesh::RegisterComponents()
 // --------------------------------------------------------------------------------
 // Description:
 //   Check if the object is casting a shadow in the camera/shadow frustums
-bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
+bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	if( !m_display || !m_castShadow )
 	{
@@ -153,7 +153,7 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 		return false;
 	}
 
-	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, bs ) )
+	if( shadowFrustum.IsVisible( cameraFrustum, bs ) )
 	{
 		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 		{
@@ -161,54 +161,16 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 			{
 				instanceBounds.Transform( m_worldTransform );
 
-				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, Vector4( instanceBounds.center, instanceBounds.radius ) );
+				sizeInShadow = shadowFrustum.GetSizeInShadow( Vector4( instanceBounds.center, instanceBounds.radius ) );
 			}
 			else
 			{
-				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );
+				sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
 			}
 		}
 		else
 		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );	
-		}
-	}
-	return sizeInShadow > 5.f;
-}
-
-bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
-{
-	if( !m_display || !m_castShadow )
-	{
-		return false;
-	}
-
-	Vector4 bs;
-	GetBoundingSphere( bs );
-	sizeInShadow = 0;
-
-	if( bs.w <= 0.0f )
-	{
-		return false;
-	}
-
-	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, bs ) )
-	{
-		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
-		{
-			if( auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.m_viewPos, Inverse( m_worldTransform ) ) ) )
-			{
-				instanceBounds.Transform( m_worldTransform );
-				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, Vector4( instanceBounds.center, instanceBounds.radius ) );
-			}
-			else
-			{
-				sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
-			}
-		}
-		else
-		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, bs );
+			sizeInShadow = shadowFrustum.GetSizeInShadow( bs );	
 		}
 	}
 	return sizeInShadow > 5.f;
@@ -400,15 +362,17 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 		else
 		{
 			renderables.push_back( this );
-			auto geometryRes = m_mesh->GetGeometryResource();
 
-			if( geometryRes )
+			if( !m_decals.empty() )
 			{
-				// run over every decal and update it
-				for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+				if( auto geometryRes = m_mesh->GetGeometryResource() )
 				{
-					// now prep to get the renderables
-					( *it )->GetRenderables( renderables, geometryRes, m_currentScreenSize );
+					// run over every decal and update it
+					for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+					{
+						// now prep to get the renderables
+						( *it )->GetRenderables( renderables, geometryRes, m_currentScreenSize );
+					}
 				}
 			}
 		}
@@ -494,17 +458,24 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	auto rtMesh = m_mesh->GetRtMesh();
 
-	USE_MAIN_THREAD_RENDER_CONTEXT();
+	auto UpdateRtPerObjectData = [this]( size_t idx, const Matrix* instanceTransform ) {
+		USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( !m_rtPerObjectData.IsValid() )
-	{
-		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
-	}
+		auto size = sizeof( EveSpaceObjectPSData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
+		if( !m_rtPerObjectData[idx].IsValid() || m_rtPerObjectData[idx].GetSize() != size )
+		{
+			m_rtPerObjectData[idx].Create( uint32_t( size ), renderContext );
+		}
 
-	EveSpaceObjectPSData* perObjectData;
-	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
-	*perObjectData = m_psData;
-	m_rtPerObjectData.Unlock( renderContext );
+		EveSpaceObjectPSData* perObjectData;
+		m_rtPerObjectData[idx].Lock( (void**)&perObjectData, renderContext );
+		*perObjectData = m_psData;
+		if( instanceTransform )
+		{
+			*reinterpret_cast<Matrix*>( perObjectData + 1 ) = Transpose( *instanceTransform );
+		}
+		m_rtPerObjectData[idx].Unlock( renderContext );
+	};
 
 	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 	{
@@ -513,6 +484,9 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			return;
 		}
 
+		m_rtPerObjectData.resize( m_instanceTransforms.size() );
+
+		size_t idx = 0;
 		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
 		{
 			const Matrix transform = *it * m_worldTransform;
@@ -526,14 +500,17 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					auto geometry = area->GetRtMeshArea();
 					if( geometry )
 					{
-						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, transform );
+						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData[idx], transform );
 					}
 				}
 			}
+			++idx;
 		}
 	}
 	else
 	{
+		m_rtPerObjectData.resize( 1 );
+		UpdateRtPerObjectData( 0, nullptr );
 		const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 		for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 		{
@@ -543,7 +520,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 				auto geometry = area->GetRtMeshArea();
 				if( geometry )
 				{
-					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, m_worldTransform );
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData[0], m_worldTransform );
 				}
 			}
 		}
@@ -649,7 +626,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 
 		// need to move the clipdata inversely of the translation of the childmesh
 		m_vsData.clipData = Vector4( m_vsData.clipData.GetXYZ() - m_translation, m_vsData.clipData.w );
-		m_psData.clipData = Vector4( m_psData.clipData.GetXYZ() - m_translation, m_psData.clipData.w );
+		m_psData.clipSphereCenter = m_psData.clipSphereCenter - m_translation;
 		
 		// update the world transform of the parent
 		m_parentData.transform = m_worldTransform;

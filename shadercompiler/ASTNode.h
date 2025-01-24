@@ -114,6 +114,7 @@ public:
 	void ReplaceChild( size_t place, ASTNode* child );
     void ReplaceChild( ASTNode* old, ASTNode* child );
 	void RemoveChild( size_t place );
+	void RemoveChild( ASTNode* child );
 
 	ASTNodeType GetNodeType() const;
 	void SetNodeType( ASTNodeType type );
@@ -127,6 +128,8 @@ public:
 
 	void SetToken( const ScannerToken* token );
 	const ScannerToken* GetToken() const;
+	void SetToken( const ScannerToken& token );
+	void ClearToken();
 
 	const FileLocation& GetLocation() const;
 	void SetLocation( const FileLocation& location );

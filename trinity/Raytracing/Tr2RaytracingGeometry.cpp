@@ -76,7 +76,7 @@ void Tr2RaytracingPipelineStateManager::AddLibrary( std::wstring& rayGenName, st
 		exportNamesRaw[count] = missName.c_str();
 		names[count++] = library.missName.c_str();
 	}
-	m_pipelineDesc.AddShaders( count, exportNamesRaw, *Tr2EffectStateManager::GetShaderLibraryCode( library.libraryHandle ), names, library.payloadSize );
+	m_pipelineDesc.AddShaders( count, exportNamesRaw, *Tr2EffectStateManager::GetShaderLibraryCode( library.libraryHandle ), names, library.payloadSize, library.localInput.signature );
 	m_pipelineDesc.AddGlobalSignature( library.globalInput.signature );
 
 	m_isDirty = true;

@@ -117,8 +117,12 @@ struct EveSpaceObjectPSData
 	Matrix worldTransformLast;
 	Matrix invWorldTransform;
 	Vector4 shipData;
-	Vector4 clipData;
-	Vector4 miscData;
+	Vector3 clipSphereCenter;
+	float clipRadiusSq;
+	float clipRadius2Sq;
+	float impactDataOffset;
+	float clipSphereFactor2;
+	float clipSphereFactor;
 	Vector4 shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 	Vector4 customMaskMaterialIDs[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskTargets[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
@@ -235,8 +239,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
-	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
-	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const override;
+	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
 	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
@@ -526,6 +529,8 @@ protected:
 	// dissolve
 	float m_clipSphereFactor;
 	float m_oldClipSphereFactor;
+	float m_clipSphereFactor2;
+	float m_oldClipSphereFactor2;
 	Vector3 m_clipSphereCenter;
 
 	bool m_impostorMode;

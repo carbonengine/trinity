@@ -22,7 +22,7 @@ EveSphereVolume::~EveSphereVolume()
 void EveSphereVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor )
 {
 	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center ) * parentTransform, m_outerSphere.radius, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.5f );
-	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center + m_innerSphere.center ) * parentTransform, m_innerSphere.radius, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.5f );
+	renderer.DrawSphere( this, TranslationMatrix( m_outerSphere.center + m_innerSphere.center ) * parentTransform, m_innerSphere.radius, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.6f );
 }
 
 const CcpMath::Sphere EveSphereVolume::GetBoundingSphere() const

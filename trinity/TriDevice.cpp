@@ -479,6 +479,29 @@ void TriDevice::ReleaseDeviceResources( TriStorage s )
 		auto gil = PyGILState_Ensure();
 		ON_BLOCK_EXIT( [&gil] { PyGILState_Release( gil ); } );
 
+#if PY_MAJOR_VERSION == 2
+		BluePySeq keys = BluePy( PyObject_CallMethod( m_pyResourceSet, const_cast<char*>( "keys" ), 0 ) );
+		if( !keys )
+		{
+			CCP_LOGERR( "TriDev: Python callback failed in \"ReleaseDeviceResources\"" );
+			PyOS->PyError();
+		}
+		Py_ssize_t n = keys.Size();
+		for( Py_ssize_t i = 0; i < n; i++ )
+		{
+			BluePy item( keys.Get( i ) );
+			if( !PyObject_HasAttrString( item.o, "OnInvalidate" ) )
+			{
+				// OnInvalidate method is optional, often not needed
+				continue;
+			}
+			BluePy result( PyOS->CallMethodWithTrap( item, "OnInvalidate", "OnInvalidate", "(i)", (int)s ) );
+			if( !result )
+			{
+				PyOS->PyError();
+			}
+		}
+#else
 		BluePy keys( PyObject_CallMethod( m_pyResourceSet, "keys", 0 ) );
 		if( !keys )
 		{
@@ -506,6 +529,7 @@ void TriDevice::ReleaseDeviceResources( TriStorage s )
 				PyOS->PyError();
 			}
 		}
+#endif
 	}
 #endif
 
@@ -524,6 +548,24 @@ void TriDevice::RebuildDeviceResourcesInPython()
 		auto gil = PyGILState_Ensure();
 		ON_BLOCK_EXIT( [&gil] { PyGILState_Release( gil ); } );
 
+#if PY_MAJOR_VERSION == 2
+		BluePySeq keys = BluePy( PyObject_CallMethod( m_pyResourceSet, const_cast<char*>( "keys" ), 0 ) );
+		if( !keys )
+		{
+			CCP_LOGERR( "TriDev: Python callback failed in \"RebuildDeviceResourcesInPython\"" );
+			PyOS->PyError();
+		}
+		Py_ssize_t n = keys.Size();
+		for( Py_ssize_t i = 0; i < n; i++ )
+		{
+			BluePy item( keys.Get( i ) );
+			BluePy result( PyOS->CallMethodWithTrap( item, "OnCreate", "OnCreate", "(N)", PyOS->WrapBlueObject( GetRawRoot() ) ) );
+			if( !result )
+			{
+				PyOS->PyError();
+			}
+		}
+#else
 		BluePy keys( PyObject_CallMethod( m_pyResourceSet, "keys", 0 ) );
 
 		if( !keys )
@@ -547,6 +589,7 @@ void TriDevice::RebuildDeviceResourcesInPython()
 				PyOS->PyError();
 			}
 		}
+#endif
 	}
 #endif
 }
@@ -729,6 +772,9 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 		GrannyRecenterAllControlClocks( -ANIMATION_TIME_MAX );
 	}
 
+#if PY_MAJOR_VERSION == 2
+	BeOS->NextScheduledEvent( mTickInterval );
+#endif
 	m_simTime = simTime;
 	m_realTime = realTime;
    
@@ -1293,19 +1339,19 @@ PyObject* TriDevice::PyGetUpscalingInfo( PyObject* args )
 
 	auto result = PyDict_New();
 
-	auto value = PyUnicode_FromString( Tr2UpscalingAL::GetTechniqueName(technique) );
+	auto value = ToPython( Tr2UpscalingAL::GetTechniqueName(technique) );
 	PyDict_SetItemString( result, "techniqueName", value );
 	Py_DecRef( value );
 
-	value = PyLong_FromSize_t( technique );
+	value = ToPython( technique );
 	PyDict_SetItemString( result, "technique", value );
 	Py_DecRef( value );
 
-	value = PyUnicode_FromString( Tr2UpscalingAL::GetSettingName( setting ) );
+	value = ToPython( Tr2UpscalingAL::GetSettingName( setting ) );
 	PyDict_SetItemString( result, "settingName", value );
 	Py_DecRef( value );
 
-	value = PyLong_FromSize_t( setting );
+	value = ToPython( setting );
 	PyDict_SetItemString( result, "setting", value );
 	Py_DecRef( value );
 

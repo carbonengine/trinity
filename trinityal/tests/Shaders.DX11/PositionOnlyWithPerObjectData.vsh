@@ -8,7 +8,7 @@ struct VS_INPUT
     float3 Position : POSITION;
 };
 
-cbuffer cb0: register(c0)
+cbuffer cb0: register(b0)
 {
     struct PerObjectVSData
     {

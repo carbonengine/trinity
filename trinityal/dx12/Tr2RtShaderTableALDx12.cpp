@@ -138,7 +138,12 @@ namespace TrinityALImpl
 				{
 					for( auto jt = begin( signature->m_srvRegisters ); jt != end( signature->m_srvRegisters ); ++jt )
 					{
-						auto& input = material.m_resourceSet.m_srv[jt->index];
+						auto index = material.m_resourceSet.m_registerMap.srvs[Tr2RenderContextEnum::COMPUTE_SHADER][jt->index];
+						if( index >= material.m_resourceSet.m_registerMap.srvCount )
+						{
+							return E_INVALIDARG;
+						}
+						auto& input = material.m_resourceSet.m_srv[index];
 						D3D12_GPU_DESCRIPTOR_HANDLE src;
 						switch( input.type )
 						{
@@ -155,7 +160,12 @@ namespace TrinityALImpl
 					}
 					for( auto jt = begin( signature->m_uavRegisters ); jt != end( signature->m_uavRegisters ); ++jt )
 					{
-						auto& input = material.m_resourceSet.m_uav[jt->index];
+						auto index = material.m_resourceSet.m_registerMap.uavs[Tr2RenderContextEnum::COMPUTE_SHADER][jt->index];
+						if( index >= material.m_resourceSet.m_registerMap.uavCount )
+						{
+							return E_INVALIDARG;
+						}
+						auto& input = material.m_resourceSet.m_uav[index];
 
 						D3D12_GPU_DESCRIPTOR_HANDLE src;
 						switch( input.type )
@@ -176,7 +186,12 @@ namespace TrinityALImpl
 				{
 					for( auto& sampler : signature->m_samplerRegisters )
 					{
-						auto& input = material.m_resourceSet.m_samplers[sampler.index];
+						auto index = material.m_resourceSet.m_registerMap.samplers[Tr2RenderContextEnum::COMPUTE_SHADER][sampler.index];
+						if( index >= material.m_resourceSet.m_registerMap.samplerCount )
+						{
+							return E_INVALIDARG;
+						}
+						auto& input = material.m_resourceSet.m_samplers[index];
 						D3D12_GPU_DESCRIPTOR_HANDLE handle;
 						switch( input.type )
 						{

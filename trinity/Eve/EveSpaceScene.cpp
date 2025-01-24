@@ -392,11 +392,14 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetTaa( m_sceneDefaultPostProcess->GetTaa() );
 			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemapping() );
 		}
+		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}
 	else
 	{
 		m_combinedPostProcess = nullptr;
 	}
+
+
 }
 
 BluePy EveSpaceScene::GetPostProcessDebug() const
@@ -651,7 +654,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 				for( auto& caster : shadowCasters )
 				{
 					float radius;
-					if( caster->IsCastingShadow( cameraFrustum, shadowFrustum, shadowMapSize, sunDir, renderReason, radius ) )
+					if( caster->IsCastingShadow( cameraFrustum, TriShadowOrthoFrustum( shadowFrustum, shadowMapSize, sunDir ), renderReason, radius ) )
 					{
 						frustumShadowCasterInfo.push_back( EveSpaceScene::ShadowInfo( radius, caster, nullptr ) );
 					}
@@ -2356,7 +2359,7 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
-			caster->IsCastingShadow( frustum, cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld, TR2RENDERREASON_NORMAL, sizeInShadow );
+			caster->IsCastingShadow( frustum, TriShadowOrthoFrustum( cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld ), TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
 			{
@@ -2401,7 +2404,6 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	{
 		return;
 	}
-	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 
 	Color sunColor = m_currentSunColor;
 
@@ -2410,15 +2412,22 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 
 	m_volumetricsRenderer->RenderFog(
 		renderContext,
-		m_depthMap->GetWidth(), m_depthMap->GetHeight(),
+		m_depthMap->GetWidth(),
+		m_depthMap->GetHeight(),
 		m_cascadedShadowMap,
 		m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_rtManager ? &m_rtManager->GetGeometry() : nullptr,
 		m_shadowQuality,
-		m_sunData.DirWorld, sunColor, 
-		origin, originShift,
-		Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), 
-		m_viewLast, m_projectionLast 
-	);
+		m_sunData.DirWorld,
+		sunColor,
+		origin,
+		originShift,
+		Tr2Renderer::GetViewTransform(),
+		Tr2Renderer::GetReversedDepthProjectionTransform(),
+		m_viewLast,
+		m_projectionLast );
+
+
+	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 }
 
 bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, Tr2DepthStencilPtr shadowMap )
@@ -2459,7 +2468,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
-			caster->IsCastingShadow( m_updateContext.GetFrustum(), shadowFrustum, shadowMapScale, sizeInShadow );
+			caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowFrustum( shadowFrustum ), TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
 			{

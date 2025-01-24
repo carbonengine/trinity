@@ -2145,13 +2145,17 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		childMesh.CreateInstance();
 
 		std::vector<EveSOFDataMgr::HullMeshInstance> instances;
+
+		std::vector<Matrix> instanceTransforms;
+		instanceTransforms.reserve( offsets.size() * him->instances.size() );
+
 		// propogate the instances to the offsets and resize the bounds
 		if( offsets.size() > 1 || offsets[0] != IdentityMatrix() )
 		{
 			instances.reserve( offsets.size() * him->instances.size() );
 			for( auto &offset : offsets )
 			{
-				std::transform( ( him->instances ).begin(), ( him->instances ).end(), std::back_inserter( instances ), [offset]( EveSOFDataMgr::HullMeshInstance instance ) -> EveSOFDataMgr::HullMeshInstance {
+				std::transform( ( him->instances ).begin(), ( him->instances ).end(), std::back_inserter( instances ), [&offset, &instanceTransforms]( EveSOFDataMgr::HullMeshInstance instance ) -> EveSOFDataMgr::HullMeshInstance {
 					
 					EveSOFDataMgr::HullMeshInstance i( instance );
 					
@@ -2169,6 +2173,8 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 					i.lastTransform1 = *reinterpret_cast<Vector4*>( &m.GetY() );
 					i.lastTransform2 = *reinterpret_cast<Vector4*>( &m.GetZ() );
 
+					instanceTransforms.push_back( m );
+
 					return i;
 				} );
 			}
@@ -2176,6 +2182,15 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		else
 		{
 			instances = him->instances;
+			for ( auto& i : him->instances )
+			{
+				Matrix m = Matrix( 
+					i.transform0.x, i.transform1.x, i.transform2.x, 0, 
+					i.transform0.y, i.transform1.y, i.transform2.y, 0, 
+					i.transform0.z, i.transform1.z, i.transform2.z, 0, 
+					i.transform0.w, i.transform1.w, i.transform2.w, 1 );
+				instanceTransforms.push_back( m );
+			}
 		}
 
 		auto instancedMesh = CreateInstancedMesh( instances, him->geometryResPath );
@@ -2234,6 +2249,7 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		}
 
 		childMesh->SetMesh( instancedMesh );
+		childMesh->SetInstanceTransforms( instanceTransforms );
 		childMesh->SetMinScreenSize( MIN_INSTANCED_MESH_SCREEN_SIZE );
 		childMesh->SetCastShadow( dna->CastShadow() );
 		childMesh->Setup( nullptr, nullptr, nullptr, him->lowestLodVisible );

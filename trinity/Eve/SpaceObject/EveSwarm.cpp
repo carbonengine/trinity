@@ -142,8 +142,12 @@ void EveSwarmRenderable::SetShaderData( const EveSpaceObjectVSData& vsData, cons
 	m_vsData.ellpsoidRadii = vsData.ellpsoidRadii;
 	m_vsData.shipData = vsData.shipData;
 
-	m_psData.clipData = psData.clipData;
-	m_psData.miscData = psData.miscData;
+	m_psData.clipSphereCenter = psData.clipSphereCenter;
+	m_psData.clipRadiusSq = psData.clipRadiusSq;
+	m_psData.clipRadius2Sq = psData.clipRadius2Sq;
+	m_psData.impactDataOffset = psData.impactDataOffset;
+	m_psData.clipSphereFactor2 = psData.clipSphereFactor2;
+	m_psData.clipSphereFactor = psData.clipSphereFactor;
 	memcpy( (void*)&m_psData.shLightingCoefficients, (void*)&psData.shLightingCoefficients, sizeof( m_psData.shLightingCoefficients ) );
 	m_psData.shipData.y = psData.shipData.y;
 	m_psData.shipData.z = psData.shipData.z;
@@ -237,7 +241,7 @@ void EveSwarmRenderable::SetShaderOption( const BlueSharedString& name, const Bl
 
 //////////////////////////////////////////////////////////////////////////////////////
 // IEveShadowCaster
-bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const
+bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	Vector4 boundingSphere;
 	if( !m_owner )
@@ -255,31 +259,9 @@ bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const
 		boundingSphere.GetXYZ() = m_worldTransform.GetTranslation();
 		sizeInShadow = 0;
 
-		if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, boundingSphere ) )
+		if( shadowFrustum.IsVisible( cameraFrustum, boundingSphere ) )
 		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, boundingSphere );
-		}
-		return sizeInShadow > 15.f;
-	}
-	return false;
-}
-
-bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const
-{
-	Vector4 boundingSphere;
-	if( !m_owner )
-	{
-		return false;
-	}
-
-	if( m_owner->GetBoundingSphere( boundingSphere ) )
-	{
-		boundingSphere.GetXYZ() = m_worldTransform.GetTranslation();
-		sizeInShadow = 0;
-
-		if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, boundingSphere ) )
-		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, boundingSphere );
+			sizeInShadow = shadowFrustum.GetSizeInShadow( boundingSphere );
 		}
 		return sizeInShadow > 15.f;
 	}
@@ -454,8 +436,12 @@ void EveSwarm::UpdateTurretsAsyncronous( const EveUpdateContext& updateContext )
 
 		pd.transform = *GetTurretTransform( (*it)->GetSwarmID() );
 		pd.shipData = m_spaceObjectShipData;
-		pd.clipData = m_psData.clipData;
-		(*it)->UpdateAsyncronous( updateContext, &pd );
+		pd.clipSphereCenter = m_psData.clipSphereCenter;
+		pd.clipRadiusSq = m_psData.clipRadiusSq;
+		pd.clipRadius2Sq = m_psData.clipRadius2Sq;
+		pd.clipFactor = m_psData.clipSphereFactor;
+		pd.clipFactor2 = m_psData.clipSphereFactor2;
+		( *it )->UpdateAsyncronous( updateContext, &pd );
 	}
 }
 

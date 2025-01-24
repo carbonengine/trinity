@@ -161,8 +161,8 @@ private:
 		Tr2TextureReferencePtr temporalFroxels0;
 		Tr2TextureReferencePtr temporalFroxels1;
 
-		Tr2EffectPtr raytraceFroxels;
 		Tr2EffectPtr calculateFroxels;
+		Tr2EffectPtr rtCalculateFroxels;
 		Tr2EffectPtr filterFroxels;
 		Tr2EffectPtr raymarchFroxels;
 		Tr2EffectPtr applyFroxels;
@@ -271,8 +271,12 @@ private:
 		Vector4 PreviousProjectParams;
 		Matrix ReprojectionMatrix;
 
-		Vector3 SunDirection;
+		Vector3 SunViewDirection;
 		float _pad4;
+
+		Vector3 SunWorldDirection;
+		float _pad5;
+
 		Vector3 SunColor;
 		float LightProfileTextureWidth;
 

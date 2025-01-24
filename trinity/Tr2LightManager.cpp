@@ -135,9 +135,9 @@ struct RtShadowPerFrameData
 };
 
 const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
-const BlueSharedString RtShadowMapTechniqueName = BlueSharedString( "ShadowDest" );
-const BlueSharedString RtNormalBufferTechniqueName = BlueSharedString( "NormalBuffer" );
-const BlueSharedString RtSceneTechniqueName = BlueSharedString( "Scene" );
+const BlueSharedString RtShadowMapTechniqueName = BlueSharedString( "RtShadowDest" );
+const BlueSharedString RtNormalBufferTechniqueName = BlueSharedString( "RtShadowNormalBuffer" );
+const BlueSharedString RtSceneTechniqueName = BlueSharedString( "RtShadowScene" );
 
 }
 
@@ -895,24 +895,10 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 		return;
 	}
 
-	{
-		CCP_STATS_ZONE( "Create shader table" );
-		m_Raytracing.m_shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
-		m_Raytracing.m_shaderTableDesc.AddMissShader( missName.c_str() );
-		m_Raytracing.m_shaderTable.Create( m_Raytracing.m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
-	}
-
 	if( !m_Raytracing.m_perFrameData.IsValid() )
 	{
 		m_Raytracing.m_perFrameData.Create( sizeof( RtShadowPerFrameData ), renderContext.GetPrimaryRenderContext() );
 	}
-	
-	const uint32_t clearValue[] = { 0, 0, 0, 0 };
-	renderContext.ClearUav( *m_Raytracing.m_destTex->GetTexture(), 0, clearValue );
-
-	m_Raytracing.m_effect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
-
-	renderContext.UseAccelerationStructure( geometry->GetTLAS() );
 
 	auto destTex = m_Raytracing.m_destTex->GetTexture();
 	{
@@ -933,7 +919,7 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 		for( uint32_t j = 0; j < m_shadowCastingLights.size(); j++ )
 		{
 			uint32_t lightIndex = m_shadowCastingLights[j];
-			PerLightData& lightData = m_lightData[lightIndex];		
+			PerLightData& lightData = m_lightData[lightIndex];
 			data->dynamicLights[j] = lightData;
 		}
 		data->numDynamicLights = (uint32_t)m_shadowCastingLights.size();
@@ -941,8 +927,21 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 		m_Raytracing.m_perFrameData.Unlock( renderContext );
 	}
 
-	renderContext.SetConstants( m_Raytracing.m_perFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
-	renderContext.DispatchRays( pipelineState, m_Raytracing.m_shaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
+	{
+		CCP_STATS_ZONE( "Create shader table" );
+		Tr2RtLocalMaterialDescriptionAL material;
+		material.SetConstants( 7, m_Raytracing.m_perFrameData );
 
+		m_Raytracing.m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
+		m_Raytracing.m_shaderTableDesc.AddMissShader( missName.c_str(), material );
+		m_Raytracing.m_shaderTable.Create( m_Raytracing.m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+	}
+
+	const uint32_t clearValue[] = { 0, 0, 0, 0 };
+	renderContext.ClearUav( *m_Raytracing.m_destTex->GetTexture(), 0, clearValue );
+
+	m_Raytracing.m_effect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+	renderContext.UseAccelerationStructure( geometry->GetTLAS() );
+	renderContext.DispatchRays( pipelineState, m_Raytracing.m_shaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
 	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", m_Raytracing.m_destTex );
 }

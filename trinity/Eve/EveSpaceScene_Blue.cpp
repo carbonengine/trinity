@@ -687,13 +687,13 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 
 	if( data->GetData() == 0 )
 	{
-		return PyLong_FromLong( -1 );
+		return ToPython( -1 );
 	}
 
 	const Tr2VertexDefinition& def = data->GetLayout();
 	if( def.m_items.empty() )
 	{
-		return PyLong_FromLong( -1 );
+		return ToPython( -1 );
 	}
 
 	const char* positionStream = nullptr;
@@ -709,7 +709,7 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 
 	if( positionStream == nullptr )
 	{
-		return PyLong_FromLong( -1 );
+		return ToPython( -1 );
 	}
 
 	float fx, fy;
@@ -728,7 +728,7 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 	Matrix projection2view;
 	if( !Inverse( projection2view, projMat ) )
 	{
-		return PyLong_FromLong( -1 );
+		return ToPython( -1 );
 	}
 
 	Vector3 rayStart( fx, fy, 0.0f );
@@ -775,7 +775,7 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 		positionStream += data->GetStride();
 	}
 
-	return PyLong_FromLong( closestParticleID );
+	return ToPython( closestParticleID );
 }
 
 MAP_FUNCTION(

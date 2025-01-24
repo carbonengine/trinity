@@ -105,8 +105,7 @@ public:
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
-	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3& sunDir, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
-	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustum& shadowFrustum, const uint32_t shadowMapSize, float& sizeInShadow ) const override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
 	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
 	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
@@ -183,7 +182,7 @@ protected:
 
 	void UpdateRtMesh();
 	void UpdateRtSkeleton();
-	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+	mutable std::vector<Tr2ConstantBufferAL> m_rtPerObjectData;
 	std::vector<Matrix> m_instanceTransforms;
 	unsigned int m_instanceCount;
 

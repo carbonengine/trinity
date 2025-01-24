@@ -76,6 +76,15 @@ void ASTNode::RemoveChild( size_t place )
 	m_children.erase( m_children.begin() + place );
 }
 
+void ASTNode::RemoveChild( ASTNode* child )
+{
+	auto found = find( begin( m_children ), end( m_children ), child );
+	if( found != end( m_children ) )
+	{
+		m_children.erase( found );
+	}
+}
+
 ASTNodeType ASTNode::GetNodeType() const
 {
 	return m_nodeType;
@@ -137,6 +146,16 @@ const ScannerToken* ASTNode::GetToken() const
 	{
 		return nullptr;
 	}
+}
+
+void ASTNode::SetToken(const ScannerToken& token)
+{
+	m_token = token;
+}
+
+void ASTNode::ClearToken()
+{
+	m_token.type = 0;
 }
 
 const FileLocation& ASTNode::GetLocation() const

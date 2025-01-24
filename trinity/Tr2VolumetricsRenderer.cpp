@@ -83,11 +83,11 @@ Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bo
 	currentTemporalFroxels = false;
 	froxelJitter = Vector3( 0, 0, 0 );
 
-	raytraceFroxels.CreateInstance();
-	raytraceFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/RaytraceFroxels.fx" );
-
 	calculateFroxels.CreateInstance();
 	calculateFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/CalculateFroxels.fx" );
+
+	rtCalculateFroxels.CreateInstance();
+	rtCalculateFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/RtCalculateFroxels.fx" );
 
 	filterFroxels.CreateInstance();
 	filterFroxels->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx" );
@@ -790,7 +790,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 	SHADOW_TYPE shadowType;
 
-	if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.raytraceFroxels && resources.raytraceFroxels->GetShaderStateInterface() )
+	if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.rtCalculateFroxels && resources.rtCalculateFroxels->GetShaderStateInterface() )
 	{
 		//Hack to disable raytraced shadows on Metal, as it currently does not work.
 #if TRINITY_PLATFORM != TRINITY_METAL
@@ -848,6 +848,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 		Tr2RtPipelineStateAL pipelineState;
 		Tr2RtShaderTableAL shadowShaderTable;
 		std::wstring rayGenName;
+		std::wstring missName;
 		{
 			if( !m_fogConstantBuffer.IsValid() )
 			{
@@ -1023,7 +1024,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 			data->ReprojectionMatrix = Transpose( reprojectionMatrix );
 
 			Vector4 tempSunDir = Vector4( -sunDirection, 0.0f ) * view;
-			data->SunDirection = Vector3(tempSunDir.x, tempSunDir.y, tempSunDir.z);
+			data->SunViewDirection = Vector3(tempSunDir.x, tempSunDir.y, tempSunDir.z);
+			data->SunWorldDirection = -sunDirection;
 
 			data->SunColor = Vector3( sunColor.r, sunColor.g, sunColor.b );
 
@@ -1057,13 +1059,12 @@ void Tr2VolumetricsRenderer::RenderFog(
 			}
 			else if( shadowType == SHADOWS_RAYTRACED )
 			{
-				if( !resources.raytraceFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
+				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
 				{
 					return; //TODO: Not good to exit the function completely, just disable shadows instead
 				}
 
-				std::wstring missName;
-				m_pipelineManager.AddLibrary( rayGenName, missName, resources.raytraceFroxels, BlueSharedString( "RtShadow" ) );
+				m_pipelineManager.AddLibrary( rayGenName, missName, resources.rtCalculateFroxels, BlueSharedString( "RtShadow" ) );
 
 				pipelineState = m_pipelineManager.GetPipelineState( renderContext );
 
@@ -1071,15 +1072,6 @@ void Tr2VolumetricsRenderer::RenderFog(
 				{
 					return; //TODO: Not good to exit the function completely, just disable shadows instead
 				}
-
-				{
-					CCP_STATS_ZONE( "Create shader table" );
-					m_shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
-					m_shaderTableDesc.AddMissShader( missName.c_str() );
-					
-					shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
-				}
-
 			}
 			
 			if ( auto lightManager = Tr2LightManager::GetInstance() )
@@ -1109,16 +1101,19 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 			m_fogConstantBuffer.Unlock( renderContext );
 
-			renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
-		}
+			if( shadowType == SHADOWS_RAYTRACED )
+			{
+				Tr2RtLocalMaterialDescriptionAL material;
+				material.SetConstants( Tr2Renderer::GetPerObjectVSStartRegister(), m_fogConstantBuffer );
 
-		if( shadowType == SHADOWS_RAYTRACED )
-		{
-			resources.raytraceFroxels->SetParameter( BlueSharedString( "Scene" ), raytracingGeometry );
-			resources.raytraceFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.shadowFroxels );
-			resources.raytraceFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
-			renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
-			renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
+				CCP_STATS_ZONE( "Create shader table" );
+				m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
+				m_shaderTableDesc.AddMissShader( missName.c_str(), material );
+
+				shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+			}
+			
+			renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 		}
 
 		int workgroupSize = 4;
@@ -1128,12 +1123,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 		{
 			
-			if (shadowType == SHADOWS_RAYTRACED)
-			{
-				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_RAYTRACED" ) );
-				resources.calculateFroxels->SetParameter( BlueSharedString( "RaytracedShadowTexture" ), resources.shadowFroxels );
-			}
-			else if( shadowType == SHADOWS_CASCADED )
+			if( shadowType == SHADOWS_CASCADED )
 			{
 				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_CASCADED" ) );
 			}
@@ -1142,11 +1132,24 @@ void Tr2VolumetricsRenderer::RenderFog(
 				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_DISABLED" ) );
 			}
 
+			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
+			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
 			resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
 			resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-			resources.calculateFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
-			Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
+			resources.calculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
+
+			if( shadowType == SHADOWS_RAYTRACED )
+			{
+				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
+				resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+				renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
+				renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
+			}
+			else
+			{
+				Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
+			}
 		}
 
 		if( temporalFog )

@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-find_package(FidelityFX REQUIRED)
 find_package(FidelityFX_FSR REQUIRED)
 find_package(FidelityFX_FSR3 REQUIRED)
 find_package(IntelXeSS REQUIRED)
@@ -419,7 +418,6 @@ if(WIN32)
                                                 NVIDIA::Streamline 
                                                 NVIDIA::dlss_sl_plugin 
                                                 NVIDIA::nis_sl_plugin 
-                                                AMD::FidelityFX
                                                 AMD::FidelityFX_FSR
                                                 legacy_stdio_definitions)
     set_shared_trinityal_properties(dx11)
@@ -436,7 +434,6 @@ if(WIN32)
                                                 NVIDIA::reflex_sl_plugin 
                                                 NVIDIA::pcl_sl_plugin 
                                                 AMD::FidelityFX_FSR3 
-                                                AMD::FidelityFX
                                                 AMD::FidelityFX_FSR
                                                 INTEL::xess)
     set_shared_trinityal_properties(dx12)

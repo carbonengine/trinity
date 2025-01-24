@@ -88,6 +88,11 @@ inline Color Zero( Color )
 	return Color( 0, 0, 0, 0 );
 }
 
+inline bool Zero( bool )
+{
+	return false;
+}
+
 template <typename T>
 class SumAccumulator
 {
@@ -151,21 +156,43 @@ public:
 
 	void Add( const T& value, float weight )
 	{
+		// if the value is already in the values, update the weight
 		for( size_t i = 0; i < m_result.count; ++i )
 		{
-			if( weight > m_result.values[i].weight )
+			if( m_result.values[i].value == value )
 			{
-				for( size_t j = N - 1; j > i; --j )
-				{
-					m_result.values[j] = m_result.values[j - 1];
-				}
-				m_result.values[i].value = value;
-				m_result.values[i].weight = weight;
-				if( m_result.count < N )
-				{
-					++m_result.count;
-				}
+				m_result.values[i].weight += weight;
 				return;
+			}
+		}
+
+
+		if( m_result.count < N )
+		{
+			m_result.values[m_result.count].value = value;
+			m_result.values[m_result.count].weight = weight;
+			++m_result.count;
+			std::sort( m_result.values.begin(), m_result.values.end(), []( const WeightedValue& a, const WeightedValue& b ) { return a.weight > b.weight; });
+		}
+		else
+		{
+			// insert the new value in the correct place
+			for( size_t i = 0; i < m_result.count; ++i )
+			{
+				if( weight > m_result.values[i].weight )
+				{
+					for( size_t j = N - 1; j > i; --j )
+					{
+						m_result.values[j] = m_result.values[j - 1];
+					}
+					m_result.values[i].value = value;
+					m_result.values[i].weight = weight;
+					if( m_result.count < N )
+					{
+						++m_result.count;
+					}
+					return;
+				}
 			}
 		}
 	}
@@ -254,8 +281,6 @@ void EndAttribute( Tr2PostProcessAttributesDebugObserver& observer, const typena
 	observer.EndAttribute( pyList );
 	Py_DECREF( pyList );
 }
-
-
 
 
 template <typename T, typename Accumulator = typename DefaultAccumulator<T>::Type>
@@ -370,7 +395,6 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	auto colorGain = Accumulate( &Tr2PostProcessAttributes::colorGain, sources, debugObserver );
 	auto colorOffset = Accumulate( &Tr2PostProcessAttributes::colorOffset, sources, debugObserver );
 
-
 	postprocess.SetBloom( nullptr );
 	postprocess.SetDesaturate( nullptr );
 	postprocess.SetFade( nullptr );
@@ -451,7 +475,7 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 		}
 		Tr2PPLutEffectPtr lutEffect;
 		lutEffect.CreateInstance();
-		lutEffect->m_influence = lut.weight;
+		lutEffect->m_influence = lut.weight * lutIntensity;
 		lutEffect->m_path = lut.value;
 
 		postprocess.AddLut( lutEffect );
@@ -471,6 +495,9 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 		vignetteEffect->m_detail2Scroll = vignetteDetail2Scroll;
 		vignetteEffect->m_shapePath = vignetteShapePath;
 		vignetteEffect->m_detailPath = vignetteDetailPath;
+		vignetteEffect->m_sineFrequency = vignetteSineFrequency;
+		vignetteEffect->m_sineMinimum = vignetteMinSineFrequency;
+		vignetteEffect->m_sineMaximum = vignetteMaxSineFrequency;
 
 		postprocess.SetVignette( vignetteEffect );
 	}

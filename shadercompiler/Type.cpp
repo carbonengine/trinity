@@ -165,6 +165,19 @@ bool Type::IsSampler() const
 		builtInType == OP_SAMPLERCOMPARISON );
 }
 
+bool Type::IsBuffer() const
+{
+	return symbol == nullptr &&
+		( builtInType == OP_BUFFER ||
+		  builtInType == OP_BYTEADDRESSBUFFER ||
+		  builtInType == OP_STRUCTUREDBUFFER ||
+		  builtInType == OP_APPENDSTRUCTUREDBUFFER ||
+		  builtInType == OP_CONSUMESTRUCTUREDBUFFER ||
+		  builtInType == OP_RWBUFFER ||
+		  builtInType == OP_RWSTRUCTUREDBUFFER ||
+		  builtInType == OP_RWBYTEADDRESSBUFFER );
+}
+
 bool Type::GetMethodType( ASTNode* methodCall, Type& returnType ) const
 {
 	if( symbol )

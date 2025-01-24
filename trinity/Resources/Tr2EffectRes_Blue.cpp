@@ -16,23 +16,23 @@ PyObject* Tr2EffectRes::GetPermutationDescription()
 	{
 		PyObject* desc = PyDict_New();
 		PyObject* element;
-		element = PyUnicode_FromString( m_permutations[i].name.c_str() );
+		element = ToPython( m_permutations[i].name );
 		PyDict_SetItemString( desc, "name", element );
 		Py_DECREF( element );
 		element = PyTuple_New( Py_ssize_t( m_permutations[i].options.size() ) );
 		for( size_t j = 0; j < m_permutations[i].options.size(); ++j )
 		{
-			PyTuple_SetItem( element, Py_ssize_t( j ), PyUnicode_FromString(m_permutations[i].options[j].c_str()));
+			PyTuple_SetItem( element, Py_ssize_t( j ), ToPython( m_permutations[i].options[j] ) );
 		}
 		PyDict_SetItemString( desc, "options", element );
 		Py_DECREF( element );
-		element = PyLong_FromSize_t( m_permutations[i].defaultOption );
+		element = ToPython( m_permutations[i].defaultOption );
 		PyDict_SetItemString( desc, "default", element );
 		Py_DECREF( element );
-		element = PyUnicode_FromString( m_permutations[i].description.c_str() );
+		element = ToPython( m_permutations[i].description );
 		PyDict_SetItemString( desc, "description", element );
 		Py_DECREF( element );
-		element = PyLong_FromSize_t( m_permutations[i].type );
+		element = ToPython( m_permutations[i].type );
 		PyDict_SetItemString( desc, "type", element );
 		Py_DECREF( element );
 

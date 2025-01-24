@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 project(trinity VERSION 1.0.0)
 
 find_package(libSquish REQUIRED)
-find_package(FidelityFX REQUIRED)
 find_package(IntelXeSS REQUIRED)
+find_package(FidelityFX_CAS REQUIRED)
 find_package(CACAO REQUIRED)
 find_package(IntelTBB REQUIRED)
 find_package(NanoVDB REQUIRED)
@@ -1290,6 +1290,7 @@ set(_SOURCES
     ITr2WorldTransformUpdater.h
     ITriReroutable.h
     IWorldPosition.h
+    PyVerCompat.h
     PriorityBlend.h
     resource.h
     StdAfx.cpp
@@ -1650,8 +1651,8 @@ function(set_shared_trinity_properties target)
             Blue
             Freetype::Freetype
             SQUISH::SQUISH
-            AMD::FidelityFX
             AMD::CACAO
+            AMD::FidelityFX_CAS
             RadGameTools::Granny
             Intel::TBB
             CcpMath

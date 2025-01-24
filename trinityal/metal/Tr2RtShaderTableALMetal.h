@@ -29,35 +29,40 @@ namespace TrinityALImpl
         Tr2ALMemoryType GetMemoryClass() const;
         void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
         
-        API_AVAILABLE( macos(11.0) )
-        id <MTLIntersectionFunctionTable> GetAnyHitFunctionTable() { return m_anyHitFunctionTable; }
+        struct API_AVAILABLE( macos(13.0)) ShaderTableData
+        {
+            MTLResourceID intersectionShaderTable;
+            MTLResourceID missShaderTable;
+            MTLResourceID closestHitShaderTable;
+            uint64_t missMaterials;
+            uint64_t hitMaterials;
+            uint64_t globalInput;
+        };
         
-        API_AVAILABLE( macos(11.0) )
-        id <MTLVisibleFunctionTable> GetClosestHitFunctionTable() { return m_closestHitFunctionTable; }
-
-        API_AVAILABLE( macos(11.0) )
-        id <MTLVisibleFunctionTable> GetMissShaderFunctionTable() { return m_missShaderFunctionTable; }
+        API_AVAILABLE( macos(13.0) )
+        ShaderTableData GetShaderTableData( uint32_t rayGenIndex, uint64_t globalInputAddress ) const;
         
-        id<MTLBuffer> GetMaterialBuffer() const;
-        NSUInteger GetMissMaterialOffset() const;
+        API_AVAILABLE( macos(13.0) )
+        void AddUsedResources( uint32_t rayGenIndex, std::vector<id<MTLResource>>& readResources ) const;
+        
+        void SetGlobalInputBuffer( uint32_t rayGenIndex, const id<MTLBuffer>& buffer, uint32_t offset ) const;
 
     private:
         Tr2RtShaderTableDescriptionAL m_desc;
 
+        struct API_AVAILABLE( macos(11.0) ) FunctionTables
+        {
+            id <MTLIntersectionFunctionTable> anyHit;
+            id <MTLVisibleFunctionTable> closestHit;
+            id <MTLVisibleFunctionTable> miss;
+        };
+        
         API_AVAILABLE( macos(11.0) )
-        id <MTLIntersectionFunctionTable> m_anyHitFunctionTable;
-
-        API_AVAILABLE( macos(11.0) )
-        id <MTLVisibleFunctionTable> m_closestHitFunctionTable;
-
-        API_AVAILABLE( macos(11.0) )
-        id <MTLVisibleFunctionTable> m_missShaderFunctionTable;
+        std::vector<FunctionTables> m_functionTables;
         
         id<MTLBuffer> m_materialBuffer;
         NSUInteger m_missMaterialOffset = 0;
-
-        id <MTLComputePipelineState> m_pipeline;
-        
+        NSUInteger m_rayGenMaterialOffset = 0;
     };
 }
 

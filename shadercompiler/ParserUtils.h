@@ -15,6 +15,19 @@ enum PatchAction
 };
 
 
+struct GlobalInputElement
+{
+	Type type;
+	InlineString name;
+	ASTNode* declaration;
+
+	bool operator==( const GlobalInputElement& other ) const
+	{
+		return type == other.type && name == other.name;
+	}
+};
+
+
 
 extern long ParseNumber( const char* start, const char* end );
 extern bool ParseRegisterID( const char* start, const char* end, char& registerType, int& registerNumber );
@@ -35,7 +48,7 @@ extern bool HasRegisterBinding( const Symbol* symbol, const char* shaderProfile,
 
 extern bool IsUniformInputArgument( ASTNode* argument );
 
-extern void AssignRegisters( ASTNode* root, int32_t stage );
+extern void AssignRegisters( ASTNode* root, int32_t stage, const std::vector<GlobalInputElement>& globalInput = {} );
 
 extern void SortProgramNodes( ASTNode* root );
 
@@ -64,3 +77,7 @@ ASTNode* NewReturn( ParserState& state, ASTNode* expr = nullptr );
 ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const InlineString& name = InlineString() );
 ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char* name );
 ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char* name, const RegisterSpecifier& reg );
+
+
+std::optional<std::vector<GlobalInputElement>> ParseGlobalInput( ParserState& state, const ScannerToken& input );
+bool ProcessGlobalInputAttribute( ParserState& state, ASTNode* func, std::vector<GlobalInputElement>& globalInput );

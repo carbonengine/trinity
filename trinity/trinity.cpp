@@ -68,6 +68,42 @@ void Tr2GrannyDeallocate( const char* file, granny_int32x line, void* memory )
 }
 
 #if BLUE_WITH_PYTHON
+
+#if PY_MAJOR_VERSION == 2
+const char* InitializeForPython()
+{
+	const PyMethodDef dummyMethods[] = { 0 };
+
+	// put myself into python as a module
+	PyObject* module = Py_InitModule( CCP_STRINGIZE( CCP_CONCATENATE( TRINITYNAME, CCP_BUILD_FLAVOR ) ), (PyMethodDef*)dummyMethods );
+	PyObject* dict = PyModule_GetDict( module );
+
+	// constants
+	AddTriConstants( dict );
+
+	// put UI into python as a separate module
+	PyObject* uiModule = Py_InitModule( "triui", (PyMethodDef*)dummyMethods );
+	PyObject* uiDict = PyModule_GetDict( uiModule );
+
+	AddScancodesToDict( uiDict );
+	AddUIChoosersToDict( uiDict );
+
+	BLUE_REGISTER_THUNKER( ITriScalarFunction_Thunk::Defs(), ITriScalarFunction_Thunk::IID() );
+	BLUE_REGISTER_THUNKER( ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID() );
+	BLUE_REGISTER_THUNKER( ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID() );
+	BLUE_REGISTER_THUNKER( ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID() );
+
+	BlueRegisterToModule( module, BlueRegistration::GetClassRegs(), BlueRegistration::GetFuncRegs(), BlueRegistration::GetEnumRegs(), BlueRegistration::GetTestRegs(), BlueRegistration::GetThunkerRegs(), BlueRegistration::GetFuncSignatures() );
+
+	BlueRegisterObjectsToModule( module, BlueRegistration::GetObjectRegs() );
+	BlueRegisterExceptionsToModule( module, BlueRegistration::GetExceptionRegs() );
+
+	PyModule_AddObject( module, "settings", BlueWrapObjectForPython( &Tr2Renderer::GetSettings() ) );
+	PyModule_AddObject( module, "fontMan", BlueWrapObjectForPython( g_fontManager ) );
+
+	return NULL;
+}
+#else
 PyObject* InitializeForPython()
 {
 	static PyMethodDef dummyMethods[] = {0};
@@ -129,6 +165,7 @@ PyObject* InitializeForPython()
 
 	return module;
 }
+#endif
 #endif
 
 extern bool g_requestDeviceDebugLayer;
@@ -245,13 +282,27 @@ static void StartDLL()
 //--------------------------------------------------------------------
 // inittrinity - python dll module entry function
 //--------------------------------------------------------------------
+#if PY_MAJOR_VERSION == 2
+extern "C" void
+#ifdef _MSC_VER
+	__declspec( dllexport )
+#else
+	__attribute__( ( visibility( "default" ) ) )
+#endif
+		CCP_CONCATENATE( CCP_CONCATENATE( init, TRINITYNAME ), CCP_BUILD_FLAVOR )()
+{
+	StartDLL();
+	InitializeForPython();
+}
+
+#else 
 PyMODINIT_FUNC
 CCP_CONCATENATE( CCP_CONCATENATE( PyInit_, TRINITYNAME ), CCP_BUILD_FLAVOR )()
 {
 	StartDLL();
 	return InitializeForPython();
 }
-
+#endif
 #endif
 
 
@@ -262,6 +313,22 @@ static void emptySignalHandler(int)
 #endif
 
 #if BLUE_WITH_PYTHON
+
+#ifdef _WIN32
+static void DoDebugBreak()
+{
+	__try
+	{
+		// This breakpoint exception is used by several D3D return value checking functions
+		// If you get, here, go up the stack and see what D3D function failed
+		DebugBreak();
+	}
+	__except( GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH )
+	{
+	}
+}
+#endif
+
 static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
 {
 #ifdef _WIN32
@@ -269,24 +336,15 @@ static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
 	if( PyTuple_GET_SIZE(args) == 1 )
 	{
 		PyObject* o = PyTuple_GetItem( args, 0 );
-		if( PyUnicode_Check( o ) )
+		if( PyVerCompat::IsPyString( o ) )
 		{
-			const char* context = PyUnicode_AsUTF8( o );
+			auto context = FromPython<std::string>( o );
 			OutputDebugString( "Python Triggered Breakpoint: " );
-			OutputDebugString( context );
+			OutputDebugString( context.c_str() );
 			OutputDebugString( "\n" );
 		}
 	}	
-
-	__try 
-	{
-		// This breakpoint exception is used by several D3D return value checking functions
-		// If you get, here, go up the stack and see what D3D function failed
-		DebugBreak();
-	}
-	__except(GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) 
-	{
-	}
+	DoDebugBreak();
 #else
     struct sigaction action, oldAction;
     memset( &action, 0, sizeof( action ) );

@@ -14,8 +14,11 @@ def _hex(d):
 
 def _to_hex(s):
     l = ''
-    for i in xrange(0, len(s), 1):
-        d = ord(s[i])
+    for i in range(0, len(s), 1):
+        if not isinstance(s[i], int):
+            d = ord(s[i])
+        else:
+            d = s[i]
         if l:
             l += ', '
         if i and i % 16 == 0:

@@ -17,6 +17,13 @@ BLUE_CLASS( Tr2PPTaaEffect ) :
 public:
 	EXPOSE_TO_BLUE();
 
+	enum Quality
+	{
+		TAA_LOW = 1,
+		TAA_MEDIUM = 2,
+		TAA_HIGH = 3
+	};
+
 	Tr2PPTaaEffect( IRoot* lockobj = NULL );
 	~Tr2PPTaaEffect();
 
@@ -29,7 +36,6 @@ public:
 	}
 
 	int m_quality;
-	bool m_applyMipBias;
 	bool m_showMotionVectors;
 	bool m_showEarlyOutMask;
 	float m_earlyOutThreshold;

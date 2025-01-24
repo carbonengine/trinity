@@ -494,6 +494,27 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		m_tonemappingEffect->SetParameter( ColorGain, postProcess->m_colorGain );
 		static auto ColorOffset = BlueSharedString( "ColorOffset" );
 		m_tonemappingEffect->SetParameter( ColorOffset, postProcess->m_colorOffset );
+
+		if( tonemapping )
+		{
+			static auto LinearAngle = BlueSharedString( "LinearAngle" );
+			m_tonemappingEffect->SetParameter( LinearAngle, tonemapping->m_linearAngle );
+
+			static auto LinearStrength = BlueSharedString( "LinearStrength" );
+			m_tonemappingEffect->SetParameter( LinearStrength, tonemapping->m_linearStrength );
+
+			static auto ShoulderStrength = BlueSharedString( "ShoulderStrength" );
+			m_tonemappingEffect->SetParameter( ShoulderStrength, tonemapping->m_shoulderStrength );
+
+			static auto ToeDenominator = BlueSharedString( "ToeDenominator" );
+			m_tonemappingEffect->SetParameter( ToeDenominator, tonemapping->m_toeDenominator );
+
+			static auto ToeNumerator = BlueSharedString( "ToeNumerator" );
+			m_tonemappingEffect->SetParameter( ToeNumerator, tonemapping->m_toeNumerator );
+
+			static auto WhiteScale = BlueSharedString( "WhiteScale" );
+			m_tonemappingEffect->SetParameter( WhiteScale, tonemapping->m_whiteScale );
+		}
 	}
 
 	bool doGrain = ProcessFilmGrain( filmGrain );
@@ -1528,21 +1549,19 @@ bool TriStepRenderPostProcess::ProcessTaa( Tr2PPTaaEffect* taa )
 			m_taaEffect->SetParameter( BlueSharedString( "EarlyOutThreshold" ), taa->m_earlyOutThreshold );
 
 
-			int quality = taa->m_quality;
 			BlueSharedString quality_option;
-			if( quality <= 1 )
+			switch(taa->m_quality)
 			{
-				quality_option = BlueSharedString( "QUALITY_LOW" );
+				case Tr2PPTaaEffect::Quality::TAA_LOW:
+					m_taaEffect->SetOption( BlueSharedString( "QUALITY" ), BlueSharedString( "QUALITY_LOW" ) );
+					break;
+				case Tr2PPTaaEffect::Quality::TAA_MEDIUM:
+					m_taaEffect->SetOption( BlueSharedString( "QUALITY" ), BlueSharedString( "QUALITY_MEDIUM" ) );
+					break;
+				case Tr2PPTaaEffect::Quality::TAA_HIGH:
+					m_taaEffect->SetOption( BlueSharedString( "QUALITY" ), BlueSharedString( "QUALITY_HIGH" ) );
+					break;
 			}
-			else if( quality == 2 )
-			{
-				quality_option = BlueSharedString( "QUALITY_MEDIUM" );
-			}
-			else //if( quality >= 3 )
-			{
-				quality_option = BlueSharedString( "QUALITY_HIGH" );
-			}
-			m_taaEffect->SetOption( BlueSharedString( "QUALITY" ), quality_option );
 
 
 			if(taa->m_showMotionVectors)

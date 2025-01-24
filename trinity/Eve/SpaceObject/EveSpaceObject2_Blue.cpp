@@ -90,7 +90,7 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 			PyObject* tuple = PyTuple_New( 3 );
 			PyTuple_SetItem( tuple, 0, Py_BuildValue( "(fff)", position.x, position.y, position.z ) );
 			PyTuple_SetItem( tuple, 1, Py_BuildValue( "(ffff)", rotation.x, rotation.y, rotation.z, rotation.w ) );
-			PyTuple_SetItem( tuple, 2, PyLong_FromLong( locator.boneIndex ) );
+			PyTuple_SetItem( tuple, 2, ToPython( locator.boneIndex ) );
 			PyList_SetItem( result, ssize_t( i ), tuple );
 		}
 		return result;
@@ -125,7 +125,7 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 			PyObject* tuple = PyTuple_New( 3 );
 			PyTuple_SetItem( tuple, 0, Py_BuildValue( "(fff)", position.x, position.y, position.z ) );
 			PyTuple_SetItem( tuple, 1, Py_BuildValue( "(ffff)", rotation.x, rotation.y, rotation.z, rotation.w ) );
-			PyTuple_SetItem( tuple, 2, PyLong_FromLong( boneIndex ) );
+			PyTuple_SetItem( tuple, 2, ToPython( boneIndex ) );
 			PyList_SetItem( result, ssize_t( i ), tuple );
 			Py_DECREF( item );
 		}
@@ -335,6 +335,7 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		)
 
 		MAP_ATTRIBUTE( "clipSphereFactor", m_clipSphereFactor, "Object's clip state", Be::READWRITE | Be::NOTIFY )
+		MAP_ATTRIBUTE( "clipSphereFactor2", m_clipSphereFactor2, "Object's clip state for the second clip sphere", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "clipSphereCenter", m_clipSphereCenter, "Object's clip sphere center", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "boundingSphereCenter", m_boundingSphereCenter, "The center of the minimum bounding sphere of the model in local coordinates", Be::READWRITE | Be::PERSIST )

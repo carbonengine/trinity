@@ -58,6 +58,8 @@ using std::max;
 #include <BluePySwrap.h> //simple wrapping
 #include <ITaskletTimer.h>
 
+#include "PyVerCompat.h"
+
 // here we define the directInput version we are going to use
 // If this is not defined here manually there is a build warning
 // which is very weird the dinput.h file should really define 

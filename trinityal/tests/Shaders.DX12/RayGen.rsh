@@ -1,12 +1,12 @@
-cbuffer cb0: register( b0, space7 )
+cbuffer cb0: register( b0 )
 {
   float4x4 ViewMat;
   float4 viewOriginAndTanHalfFovY;
   float2 resolution;
 }
 
-RaytracingAccelerationStructure Scene : register( t1, space7 );
-RWTexture2D<float4> RTOutput : register( u0, space7 );
+RaytracingAccelerationStructure Scene : register( t1 );
+RWTexture2D<float4> RTOutput : register( u0 );
 
 struct HitInfo
 {
