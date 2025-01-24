@@ -261,9 +261,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 	if( !m_attachments.empty() )
 	{
-		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
-		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+		auto [bones, boneCount] = GetBoneTransforms();
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
@@ -275,9 +273,11 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	{
 		for( auto it = m_decals.begin(); it != m_decals.end(); ++it )
 		{
-			if( m_animationUpdater && m_animationUpdater->GetMeshBoneCount() && m_animationUpdater->IsInitialized() )
+			if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 			{
-				( *it )->SetBoneMatrix( m_animationUpdater->GetMeshBoneMatrixList(), m_animationUpdater->GetMeshBoneCount() );
+				auto [bones, boneCount] = GetBoneTransforms();
+
+				( *it )->SetBoneMatrix( bones, int( boneCount ) );
 			}
 			( *it )->UpdateVisibility( updateContext, &m_parentData );
 		}
@@ -350,11 +350,12 @@ void EveChildMesh::UpdateRtSkeleton()
 		return; //no skinned areas
 	}
 
-	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
-	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	auto [bones, boneCount] = GetBoneTransforms();
+
+	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
 	auto offset = m_boneOffsets.GetCurrentFrameOffset();
 
-	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );
+	bool skeletonChanged = rtMesh->SetBoneTransforms( boneCount, bones, offset );
 
 	if( skeletonChanged )
 	{
@@ -570,9 +571,9 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 {
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
-		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
-		m_vsData.boneOffsets[2] = boneCount;
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+		auto [bones, boneCount] = GetBoneTransforms();
+		m_vsData.boneOffsets[2] = uint32_t( boneCount );
+		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
@@ -684,6 +685,22 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 		}
 
 		m_animationUpdater->PrePhysicsAnimation( 0, IdentityMatrix() );
+
+		if( m_mesh && !m_animationUpdater->m_meshBinding )
+		{
+			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != m_mesh->GetGeometryResource() || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
+			{
+				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex() );
+			}
+		}
+		else
+		{
+			m_meshBinding = {};
+		}
+	}
+	else
+	{
+		m_meshBinding = {};
 	}
 }
 
@@ -790,9 +807,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 	if( !m_attachments.empty() )
 	{
-		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
-		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+		auto [bones, boneCount] = GetBoneTransforms();
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
@@ -802,9 +817,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 	if( renderer.HasOption( GetRawRoot(), "Lights" ) )
 	{
-		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
-		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+		auto [bones, boneCount] = GetBoneTransforms();
 		for( auto it = m_lights.begin(); it != m_lights.end(); ++it )
 		{
 			( *it )->RenderDebugInfo( renderer, m_worldTransform, bones, boneCount );
@@ -851,15 +864,35 @@ void EveChildMesh::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 	}
 }
 
+std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() const
+{
+	size_t boneCount = 0;
+	const granny_matrix_3x4* bones = nullptr;
+
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
+	auto accumulatedTransforms = m_animationUpdater->GetAnimationTransforms();
+	if( m_animationUpdater->m_meshBinding )
+	{
+		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+		return std::make_pair( bones, boneCount );
+	}
+	else
+	{
+		return m_meshBinding->GetBoneTransforms();
+	}
+}
+	
 void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
 {
 	if( m_attachments.empty() || !m_isVisible || !m_display )
 	{
 		return;
 	}
-	size_t boneCount = 0;
-	const granny_matrix_3x4* bones = nullptr;
-	Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+	auto [bones, boneCount] = GetBoneTransforms();
 	for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 	{
 		// If we need boostergain then we will need to get it from the parent (the 0.0 in the param list)
@@ -874,9 +907,7 @@ void EveChildMesh::GetLights( Tr2LightManager& lightManager ) const
 		return;
 	}
 
-	size_t boneCount = 0;
-	const granny_matrix_3x4* bones = nullptr;
-	Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+	auto [bones, boneCount] = GetBoneTransforms();
 
 	for( auto it = std::begin( m_lights ); it != std::end( m_lights ); ++it )
 	{
