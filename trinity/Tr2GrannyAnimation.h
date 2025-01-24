@@ -190,7 +190,7 @@ class Tr2AnimationMeshBinding : public IBlueAsyncResNotifyTarget
 {
 public:
 	Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex );
-	~Tr2AnimationMeshBinding();
+	virtual ~Tr2AnimationMeshBinding();
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
 
