@@ -11,7 +11,7 @@
 #include "Tr2PostProcess2.h"
 #include <algorithm>
 
-using namespace PostProcess;
+using namespace PriorityBlend;
 
 Tr2PostProcessAttributes::Tr2PostProcessAttributes( IRoot* lockobj ) :
 	intensity(0.0f),
@@ -63,182 +63,6 @@ namespace
 {
 
 template <typename T>
-T Zero( T )
-{
-	return {};
-}
-
-inline Vector2 Zero( Vector2 )
-{
-	return Vector2( 0, 0 );
-}
-
-inline Vector3 Zero( Vector3 )
-{
-	return Vector3( 0, 0, 0 );
-}
-
-inline Vector4 Zero( Vector4 )
-{
-	return Vector4( 0, 0, 0, 0 );
-}
-
-inline Color Zero( Color )
-{
-	return Color( 0, 0, 0, 0 );
-}
-
-inline bool Zero( bool )
-{
-	return false;
-}
-
-template <typename T>
-class SumAccumulator
-{
-public:
-	using ResultType = T;
-
-	void Add( const T& value, float weight )
-	{
-		m_result += value * weight;
-	}
-
-	ResultType GetResult() const
-	{
-		return m_result;
-	}
-
-private:
-	ResultType m_result = Zero( T() );
-};
-
-
-template <typename T>
-class MaxWeightAccumulator
-{
-public:
-	using ResultType = T;
-
-	void Add( const T& value, float weight )
-	{
-		if( weight > m_weight )
-		{
-			m_weight = weight;
-			m_result = value;
-		}
-	}
-
-	ResultType GetResult() const
-	{
-		return m_result;
-	}
-
-private:
-	ResultType m_result = Zero( T() );
-	float m_weight = 0.0f;
-};
-
-template <typename T, size_t N>
-struct MaxNWeightsAccumulator
-{
-public:
-	struct WeightedValue
-	{
-		T value = Zero( T() );
-		float weight = 0;
-	};
-	struct ResultType
-	{
-		std::array<WeightedValue, N> values;
-		size_t count = 0;
-	};
-
-	void Add( const T& value, float weight )
-	{
-		// if the value is already in the values, update the weight
-		for( size_t i = 0; i < m_result.count; ++i )
-		{
-			if( m_result.values[i].value == value )
-			{
-				m_result.values[i].weight += weight;
-				return;
-			}
-		}
-
-
-		if( m_result.count < N )
-		{
-			m_result.values[m_result.count].value = value;
-			m_result.values[m_result.count].weight = weight;
-			++m_result.count;
-			std::sort( m_result.values.begin(), m_result.values.end(), []( const WeightedValue& a, const WeightedValue& b ) { return a.weight > b.weight; });
-		}
-		else
-		{
-			// insert the new value in the correct place
-			for( size_t i = 0; i < m_result.count; ++i )
-			{
-				if( weight > m_result.values[i].weight )
-				{
-					for( size_t j = N - 1; j > i; --j )
-					{
-						m_result.values[j] = m_result.values[j - 1];
-					}
-					m_result.values[i].value = value;
-					m_result.values[i].weight = weight;
-					if( m_result.count < N )
-					{
-						++m_result.count;
-					}
-					return;
-				}
-			}
-		}
-	}
-
-	ResultType GetResult() const
-	{
-		ResultType result = m_result;
-		float totalWeight = 0;
-		for( auto& value : result.values )
-		{
-			totalWeight += value.weight;
-		}
-		if( totalWeight > 0 )
-		{
-			for( auto& value : result.values )
-			{
-				value.weight /= totalWeight;
-			}
-		}
-		return result;
-	}
-
-private:
-	ResultType m_result;
-};
-
-
-template <typename T>
-struct DefaultAccumulator
-{
-	using Type = SumAccumulator<T>;
-};
-
-template <>
-struct DefaultAccumulator<BlueSharedString>
-{
-	using Type = MaxWeightAccumulator<BlueSharedString>;
-};
-
-template <>
-struct DefaultAccumulator<bool>
-{
-	using Type = MaxWeightAccumulator<bool>;
-};
-
-template <typename T>
 const char* GetAttributeName( T Tr2PostProcessAttributes::* attribute )
 {
 	auto a = reinterpret_cast<uintptr_t>( &reinterpret_cast<uint8_t&>( reinterpret_cast<Tr2PostProcessAttributes*>( 0 )->*attribute ) );
@@ -253,105 +77,22 @@ const char* GetAttributeName( T Tr2PostProcessAttributes::* attribute )
 	return "unknown";
 }
 
-template <typename T>
-void EndAttribute( Tr2PostProcessAttributesDebugObserver& observer, const T& value )
-{
-	auto pyValue = BlueWrapReturnValue( {}, value );
-	observer.EndAttribute( pyValue );
-	Py_DECREF( pyValue );
-}
-
-void EndAttribute( Tr2PostProcessAttributesDebugObserver& observer, const typename MaxNWeightsAccumulator<BlueSharedString, 4>::ResultType& value )
-{
-	auto pyList = PyList_New( 0 );
-	for (size_t i = 0; i < value.count; ++i)
-	{
-		auto element = PyDict_New();
-		auto pyValue = BlueWrapReturnValue( {}, value.values[i].value );
-		PyDict_SetItemString( element, "value", pyValue );
-		Py_DECREF( pyValue );
-
-		auto pyWeight = BlueWrapReturnValue( {}, value.values[i].weight );
-		PyDict_SetItemString( element, "weight", pyWeight );
-		Py_DECREF( pyWeight );
-
-		PyList_Append( pyList, element );
-		Py_DECREF( element );
-	}
-	observer.EndAttribute( pyList );
-	Py_DECREF( pyList );
-}
-
 
 template <typename T, typename Accumulator = typename DefaultAccumulator<T>::Type>
-typename Accumulator::ResultType Accumulate( PostProcess::Attribute<T> Tr2PostProcessAttributes::*attr, const std::vector<Tr2PostProcessAttributes*>& sources, Tr2PostProcessAttributesDebugObserver* observer, Accumulator accumulator = {} )
+typename Accumulator::ResultType Accumulate( PriorityBlend::Attribute<T> Tr2PostProcessAttributes::*attr, const std::vector<Tr2PostProcessAttributes*>& sources, AttributesDebugObserver<Tr2PostProcessAttributes>* observer, Accumulator accumulator = {} )
 {
-	// sources are assumed to be sorted by priority: high to low
-
-	float remainingWeight = 1.0f;
-
-	if( observer )
-	{
-		observer->BeginAttribute( GetAttributeName( attr ) );
-	}
-
-	for( auto it = begin( sources ); it != end( sources ); )
-	{
-		// figure out the range of sources with the same priority
-		auto jt = it;
-		while( jt != end( sources ) && ( *jt )->priority == ( *it )->priority )
-		{
-			++jt;
-		}
-
-		float totalPriorityIntensity = 0.0f;
-		for( auto kt = it; kt != jt; ++kt )
-		{
-			if( ( ( **kt ).*attr ).enabled )
-			{
-				totalPriorityIntensity += ( **kt ).intensity;
-			}
-		}
-		if( totalPriorityIntensity == 0.0f )
-		{
-			it = jt;
-			continue;
-		}
-
-		float normalizationFactor = 1.f / std::max( totalPriorityIntensity, 1.0f ) * remainingWeight;
-
-		for( auto kt = it; kt != jt; ++kt )
-		{
-			if( ( ( **kt ).*attr ).enabled )
-			{
-				float weight = ( **kt ).intensity * normalizationFactor;
-
-				accumulator.Add( ( ( **kt ).*attr ).value, weight );
-				if( observer )
-				{
-					observer->Influence( *kt, weight );
-				}
-			}
-		}
-
-		remainingWeight -= totalPriorityIntensity;
-		it = jt;
-		if( remainingWeight <= 0 )
-		{
-			break;
-		}
-	}
-	if( observer )
-	{
-		EndAttribute( *observer, accumulator.GetResult() );
-	}
-	return accumulator.GetResult();
+	return PriorityBlend::Accumulate( attr, sources, observer, GetAttributeName( attr ), accumulator );
 }
 
 }
 
-void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vector<Tr2PostProcessAttributes*>& sources, Tr2PostProcessAttributesDebugObserver* debugObserver )
+
+
+void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vector<Tr2PostProcessAttributes*>& sources, AttributesDebugObserver<Tr2PostProcessAttributes>* debugObserver )
 {
+
+//#define ACCUMULATE( attr, sources, debugObserver ) PriorityBlend::Accumulate( attr, sources, debugObserver, GetAttributeName( attr ) )
+
 	auto signalLossIntensity = Accumulate( &Tr2PostProcessAttributes::signalLossIntensity, sources, debugObserver );
 	auto bloomBrightness = Accumulate( &Tr2PostProcessAttributes::bloomBrightness, sources, debugObserver );
 	auto bloomLuminanceThreshold = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceThreshold, sources, debugObserver );
@@ -662,62 +403,4 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 	colorGamma = Attribute( postProcess->m_colorGamma, true );
 	colorGain = Attribute( postProcess->m_colorGain, true );
 	colorOffset = Attribute( postProcess->m_colorOffset, true );
-}
-
-Tr2PostProcessAttributesDebugObserver::Tr2PostProcessAttributesDebugObserver()
-{
-	m_debugObject = PyDict_New();
-}
-
-Tr2PostProcessAttributesDebugObserver::~Tr2PostProcessAttributesDebugObserver()
-{
-	Py_XDECREF( m_debugObject );
-}
-
-void Tr2PostProcessAttributesDebugObserver::BeginAttribute(const char* name)
-{
-	m_currentAttribute = PyDict_New();
-
-	auto pyName = BlueWrapReturnValue( {}, name );
-	PyDict_SetItemString( m_currentAttribute, "name", pyName );
-	Py_XDECREF( pyName );
-
-	m_currentInfluencers = PyList_New( 0 );
-	PyDict_SetItemString( m_currentAttribute, "influencers", m_currentInfluencers );
-	Py_XDECREF( m_currentInfluencers );
-
-
-	PyDict_SetItemString( m_debugObject, name, m_currentAttribute );
-	Py_XDECREF( m_currentAttribute );
-}
-
-void Tr2PostProcessAttributesDebugObserver::Influence(Tr2PostProcessAttributes* attributes, float weight)
-{
-	auto rec = PyDict_New();
-
-	auto pyAttributes = BlueWrapReturnValue( {}, attributes );
-	PyDict_SetItemString( rec, "attributes", pyAttributes );
-	Py_XDECREF( pyAttributes );
-
-	auto pyWeight = BlueWrapReturnValue( {}, weight );
-	PyDict_SetItemString( rec, "weight", pyWeight );
-	Py_XDECREF( pyWeight );
-
-	PyList_Append( m_currentInfluencers, rec );
-	Py_XDECREF( rec );
-}
-
-void Tr2PostProcessAttributesDebugObserver::EndAttribute( PyObject* value )
-{
-	if (value && m_currentAttribute)
-	{
-		PyDict_SetItemString( m_currentAttribute, "value", value );
-	}
-	m_currentAttribute = nullptr;
-	m_currentInfluencers = nullptr;
-}
-
-BluePy Tr2PostProcessAttributesDebugObserver::GetDict() const
-{
-	return BluePy( m_debugObject, true );
 }

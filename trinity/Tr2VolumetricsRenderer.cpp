@@ -21,55 +21,6 @@
 #include "include/TriMath.h"
 #include "Utilities/Vector4d.h"
 
-ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator*( float rhs ) const
-{
-	FroxelFogSettings result;
-	result.thickness = thickness * rhs;
-	result.lightDirectionality = lightDirectionality * rhs;
-	result.environmentIntensity = environmentIntensity * rhs;
-	result.environmentDirectionality = environmentDirectionality * rhs;
-	result.fogColor = fogColor * rhs;
-	result.backgroundVisibility = backgroundVisibility * rhs;
-
-	result.godRayNoiseIntensity = godRayNoiseIntensity * rhs;
-	result.godRayNoiseFrequency = godRayNoiseFrequency * rhs;
-	result.godRayNoiseAnimationSpeed = godRayNoiseAnimationSpeed * rhs;
-
-	result.fogNoiseIntensity = fogNoiseIntensity * rhs;
-	result.fogNoiseFrequency = fogNoiseFrequency * rhs;
-	result.fogNoiseMovementSpeed = fogNoiseMovementSpeed * rhs;
-
-	result.logThickness = logThickness * rhs;
-	result.intensity = rhs;
-
-	return result;
-
-}
-
-ITr2FroxelFogSettings::FroxelFogSettings ITr2FroxelFogSettings::FroxelFogSettings::operator+(const FroxelFogSettings& rhs) const
-{
-	FroxelFogSettings result;
-	result.thickness = thickness + rhs.thickness;
-	result.lightDirectionality = lightDirectionality + rhs.lightDirectionality;
-	result.environmentIntensity = environmentIntensity + rhs.environmentIntensity;
-	result.environmentDirectionality = environmentDirectionality + rhs.environmentDirectionality;
-	result.fogColor = fogColor + rhs.fogColor;
-	result.backgroundVisibility = backgroundVisibility + rhs.backgroundVisibility;
-
-	result.godRayNoiseIntensity = godRayNoiseIntensity + rhs.godRayNoiseIntensity;
-	result.godRayNoiseFrequency = godRayNoiseFrequency + rhs.godRayNoiseFrequency;
-	result.godRayNoiseAnimationSpeed = godRayNoiseAnimationSpeed + rhs.godRayNoiseAnimationSpeed;
-
-	result.fogNoiseIntensity = fogNoiseIntensity + rhs.fogNoiseIntensity;
-	result.fogNoiseFrequency = fogNoiseFrequency + rhs.fogNoiseFrequency;
-	result.fogNoiseMovementSpeed = fogNoiseMovementSpeed + rhs.fogNoiseMovementSpeed;
-
-	result.logThickness = logThickness + rhs.logThickness;
-	result.intensity = intensity + rhs.intensity;
-
-	return result;
-}
-
 
 Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bool temporalFroxels )
 {
@@ -440,71 +391,68 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 
 void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& registry, const EveUpdateContext& updateContext )
 {
-	std::vector<ITr2FroxelFogSettings::FroxelFogWeightedSettings> overrides;
+	std::vector<ITr2FroxelFogSettings::FroxelFogSettings*> overrides;
 	double logBlendingSmoothness = m_logBlendingSmoothness;
+
 	registry.ProcessComponents<ITr2FroxelFogSettings>( [&overrides, logBlendingSmoothness]( ITr2FroxelFogSettings* component ) -> void {
 
-		ITr2FroxelFogSettings::FroxelFogWeightedSettings fogSettings = component->GetFroxelFogSettings();
+		ITr2FroxelFogSettings::FroxelFogSettings* fogSettings = component->GetFroxelFogSettings();
 
 		//Compute log(1 + thickness * m_logBlendingSmoothness) for each fog
-		fogSettings.value.logThickness = log1p( (double)fogSettings.value.thickness * logBlendingSmoothness );
+		fogSettings->logThickness.value = log1p( (double)fogSettings->thickness.value * logBlendingSmoothness );
+		fogSettings->logThickness.enabled = fogSettings->thickness.enabled;
 
 		overrides.push_back( fogSettings );
 	} );
 	sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
-		return a.priority > b.priority;
+		return a->priority > b->priority;
 	} );
 
-	m_froxelFogSettings = PriorityBlend( overrides );
+	//m_froxelFogSettings = OldPriorityBlend( overrides );
+
+	//std::vector<ITr2FroxelFogSettings::FroxelFogSettings*> test;
+
+#define FROXEL_ACCUMULATE( setting ) m_froxelFogSettings.setting = PriorityBlend::Accumulate( &ITr2FroxelFogSettings::FroxelFogSettings::setting, overrides )
+
+	FROXEL_ACCUMULATE( thickness );
+
+	FROXEL_ACCUMULATE( lightDirectionality );
+
+	FROXEL_ACCUMULATE( environmentIntensity );
+	FROXEL_ACCUMULATE( environmentDirectionality );
+
+	FROXEL_ACCUMULATE( fogColor );
+	FROXEL_ACCUMULATE( backgroundVisibility );
+
+	FROXEL_ACCUMULATE( godRayNoiseIntensity );
+	FROXEL_ACCUMULATE( godRayNoiseFrequency );
+	FROXEL_ACCUMULATE( godRayNoiseAnimationSpeed );
+
+	FROXEL_ACCUMULATE( fogNoiseIntensity );
+	FROXEL_ACCUMULATE( fogNoiseFrequency );
+	FROXEL_ACCUMULATE( fogNoiseMovementSpeed );
 
 	if (m_logBlending)
 	{
 		//Replace the thickness with a logarithmically interpolated one, making the transition from 0 thickness more graceful.
-		m_froxelFogSettings.thickness = (float)( expm1( m_froxelFogSettings.logThickness ) / logBlendingSmoothness );
-	}
-
-
-	float intensity = m_froxelFogSettings.intensity;
-	if (intensity > 0.0000001f)
-	{
-		float inverseIntensity = 1.0f / intensity;
-		/*
-			Apart from thickness, the other settings should not be faded in from zero.
-		
-			Example: If we have a 0.1 intensity fog with a directionality of 0.5, we don't want to get a directionality of 0.05. We just want 0.5.
-
-			To accomplish this, we calculate the total intensity of the priority blend and divide those settings by it.
-		*/
-
-		m_froxelFogSettings.lightDirectionality *= inverseIntensity;
-		m_froxelFogSettings.environmentIntensity *= inverseIntensity;
-		m_froxelFogSettings.environmentDirectionality *= inverseIntensity;
-		m_froxelFogSettings.fogColor *= inverseIntensity;
-		m_froxelFogSettings.backgroundVisibility *= inverseIntensity;
-
-		m_froxelFogSettings.godRayNoiseIntensity *= inverseIntensity;
-		m_froxelFogSettings.godRayNoiseFrequency *= inverseIntensity;
-		m_froxelFogSettings.godRayNoiseAnimationSpeed *= inverseIntensity;
-
-		m_froxelFogSettings.fogNoiseIntensity *= inverseIntensity;
-		m_froxelFogSettings.fogNoiseFrequency *= inverseIntensity;
-		m_froxelFogSettings.fogNoiseMovementSpeed *= inverseIntensity;
+		FROXEL_ACCUMULATE( logThickness );
+		m_froxelFogSettings.thickness = (float)( expm1( m_froxelFogSettings.logThickness.value ) / logBlendingSmoothness );
 	}
 
 	float delta = updateContext.GetDeltaT();
 
-	m_godRayNoiseAnimation += m_froxelFogSettings.godRayNoiseAnimationSpeed * (delta / m_froxel3DNoise->GetDepth());
+	m_godRayNoiseAnimation += m_froxelFogSettings.godRayNoiseAnimationSpeed.value * (delta / m_froxel3DNoise->GetDepth());
 	m_godRayNoiseAnimation -= floor( m_godRayNoiseAnimation );
 
-	float fogFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency );
-	m_fogNoiseMovement += m_froxelFogSettings.fogNoiseMovementSpeed * delta;
+	float fogFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency.value );
+	m_fogNoiseMovement += m_froxelFogSettings.fogNoiseMovementSpeed.value * delta;
 
 
 }
 
 bool Tr2VolumetricsRenderer::HasFog() const
 {
-	return m_froxelFogSettings.thickness > 0.0f;
+	return m_froxelFogSettings.thickness.value > 0.0f;
 }
 
 void Tr2VolumetricsRenderer::RenderFog(
@@ -542,8 +490,8 @@ void Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
 
 void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderContext )
 {
-	bool froxelsEnabled = m_froxelFogSettings.thickness > 0.0f;
-	bool environmentLightingEnabled = froxelsEnabled && m_froxelFogSettings.environmentIntensity > 0;
+	bool froxelsEnabled = m_froxelFogSettings.thickness.value > 0.0f;
+	bool environmentLightingEnabled = froxelsEnabled && m_froxelFogSettings.environmentIntensity.value > 0;
 
 
 	uint32_t environmentMapResolution = 1;
@@ -608,8 +556,8 @@ void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderCo
 		m_environmentRandom = m_environmentRandom - floor( m_environmentRandom );
 
 		
-		float lightG = -std::clamp( m_froxelFogSettings.lightDirectionality, 0.001f, 0.999f );
-		float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality, 0.001f, 0.999f );
+		float lightG = -std::clamp( m_froxelFogSettings.lightDirectionality.value, 0.001f, 0.999f );
+		float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality.value, 0.001f, 0.999f );
 
 		m_environmentBlendCounter++;
 		float delta = abs( m_previousEnvironmentG - environmentG );
@@ -657,7 +605,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 	uint32_t height = 1;
 	uint32_t depth = 1;
 
-	bool froxelsEnabled = m_froxelFogSettings.thickness > 0.0f;
+	bool froxelsEnabled = m_froxelFogSettings.thickness.value > 0.0f;
 	if( froxelsEnabled )
 	{
 
@@ -813,21 +761,21 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 
 	float maxDistance = m_gameBackClip;
-	float maxDistanceVisibility = exp(-m_froxelFogSettings.thickness);
-	float baseDensity = m_froxelFogSettings.thickness / maxDistance;
+	float maxDistanceVisibility = exp( -m_froxelFogSettings.thickness.value );
+	float baseDensity = m_froxelFogSettings.thickness.value / maxDistance;
 
 
-	float environmentIntensity = m_froxelFogSettings.environmentIntensity;
+	float environmentIntensity = m_froxelFogSettings.environmentIntensity.value;
 
-	Color fogColor = m_froxelFogSettings.fogColor;
-	float backgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility, 0.0f, 1.0f );
+	Color fogColor = m_froxelFogSettings.fogColor.value;
+	float backgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility.value, 0.0f, 1.0f );
 
 
 	//G is negative when light is scattered in the direction the light was already going in.
 	//Expose this value as positive, then negate and clamp it so that it's always negative.
 	//Exactly 0.0 and 1.0 both cause issues with the math in the shader, so clamp to a slightly smaller range.
-	float lightG = -std::clamp( m_froxelFogSettings.lightDirectionality, 0.001f, 0.999f );
-	float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality, 0.001f, 0.999f );
+	float lightG = -std::clamp( m_froxelFogSettings.lightDirectionality.value, 0.001f, 0.999f );
+	float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality.value, 0.001f, 0.999f );
 
 	Matrix inverseView = Inverse( view );
 	Matrix inverseProjection = Inverse( projection );
@@ -881,8 +829,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 
 			{
-				float exactFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency );
-				float baseFrequency = exp2f( floor( -m_froxelFogSettings.fogNoiseFrequency ) );
+				float exactFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency.value );
+				float baseFrequency = exp2f( floor( -m_froxelFogSettings.fogNoiseFrequency.value ) );
 				float nextFrequency = baseFrequency * 2.0f;
 
 				
@@ -898,7 +846,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 				data->FogNoiseFrequency = baseFrequency;
 				data->FogNoiseLerp = ( exactFrequency - baseFrequency ) / ( nextFrequency - baseFrequency );
-				data->FogNoiseIntensity = m_froxelFogSettings.fogNoiseIntensity;
+				data->FogNoiseIntensity = m_froxelFogSettings.fogNoiseIntensity.value;
 			}
 
 
@@ -970,7 +918,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 				Matrix4dMultiply( relativeNoiseMatrix, originTranslation, m_godRayNoiseMatrix );
 
 				//Apply fmod() to the translation based on the noise frequency to avoid precision issues when converting to a 32-bit float matrix later.
-				float baseFrequency = exp2f( floor( -m_froxelFogSettings.godRayNoiseFrequency ) );
+				float baseFrequency = exp2f( floor( -m_froxelFogSettings.godRayNoiseFrequency.value ) );
 				float previousFrequency = baseFrequency * 2.0f;
 				relativeNoiseMatrix[12] = fmod( relativeNoiseMatrix[12], 1.0 / baseFrequency );
 				relativeNoiseMatrix[13] = fmod( relativeNoiseMatrix[13], 1.0 / baseFrequency );
@@ -982,8 +930,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 				
 
 				data->GodRayNoiseFrequency = baseFrequency;
-				data->GodRayNoiseLerp = ( exp2f( -m_froxelFogSettings.godRayNoiseFrequency ) - baseFrequency ) / ( previousFrequency - baseFrequency );
-				data->GodRayNoiseIntensity = m_froxelFogSettings.godRayNoiseIntensity;
+				data->GodRayNoiseLerp = ( exp2f( -m_froxelFogSettings.godRayNoiseFrequency.value ) - baseFrequency ) / ( previousFrequency - baseFrequency );
+				data->GodRayNoiseIntensity = m_froxelFogSettings.godRayNoiseIntensity.value;
 				data->GodRayNoiseAnimation = (float)m_godRayNoiseAnimation;
 
 			}
@@ -1134,8 +1082,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
 			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
-			resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
-			resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
+			resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
+			resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
 			resources.calculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
 
@@ -1174,7 +1122,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 	{
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
 
-		resources.applyFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity > 0 ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );
+		resources.applyFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity.value > 0 ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );
 		Tr2Renderer::DrawScreenQuad( renderContext, resources.applyFroxels );
 	}
 }
@@ -1182,19 +1130,20 @@ void Tr2VolumetricsRenderer::RenderFog(
 void Tr2VolumetricsRenderer::PopulatePerFrameData( FroxelPerFrameData& data )
 {
 	float maxDistance = m_gameBackClip;
-	float maxDistanceVisibility = exp( -m_froxelFogSettings.thickness );
-	float baseDensity = m_froxelFogSettings.thickness / maxDistance;
+	float maxDistanceVisibility = exp( -m_froxelFogSettings.thickness.value );
+	float baseDensity = m_froxelFogSettings.thickness.value / maxDistance;
 
-	float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality, 0.001f, 0.999f );
+	float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality.value, 0.001f, 0.999f );
 
 
-	data.FogColor = Vector3( m_froxelFogSettings.fogColor.r, m_froxelFogSettings.fogColor.g, m_froxelFogSettings.fogColor.b );
-	data.BackgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility, 0.0f, 1.0f );
+	auto fogColor = m_froxelFogSettings.fogColor.value;
+	data.FogColor = Vector3( fogColor.r, fogColor.g, fogColor.b );
+	data.BackgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility.value, 0.0f, 1.0f );
 
 	data.BaseDensity = baseDensity;
 	data.MaxDistance = maxDistance;
 	data.MaxDistanceVisibility = maxDistanceVisibility;
-	data.EnvironmentIntensity = m_froxelFogSettings.environmentIntensity;
+	data.EnvironmentIntensity = m_froxelFogSettings.environmentIntensity.value;
 
 	data.EnvironmentG = environmentG;
 

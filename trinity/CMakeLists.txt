@@ -1291,6 +1291,7 @@ set(_SOURCES
     ITriReroutable.h
     IWorldPosition.h
     PyVerCompat.h
+    PriorityBlend.cpp
     PriorityBlend.h
     resource.h
     StdAfx.cpp

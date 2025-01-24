@@ -13,6 +13,7 @@
 #include "Eve/EveUpdateContext.h"
 #include "PostProcess/Tr2PostProcessEnums.h"
 #include "Raytracing/Tr2RaytracingGeometry.h"
+#include "PriorityBlend.h"
 
 struct Vector3d;
 
@@ -30,42 +31,32 @@ BLUE_INTERFACE( ITr2FroxelFogSettings ) :
 public:
 	struct FroxelFogSettings
 	{
-		float thickness = 0.0f;
-
-		float lightDirectionality = 0.0f;
-
-		float environmentIntensity = 0.0f;
-		float environmentDirectionality = 0.0f;
-
-		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
-		float backgroundVisibility = 0.0f;
-
-
-		float godRayNoiseIntensity = 0.0f;
-		float godRayNoiseFrequency = 0.0f;
-		float godRayNoiseAnimationSpeed = 0.0f;
-
-		float fogNoiseIntensity = 0.0f;
-		float fogNoiseFrequency = 0.0f;
-		Vector3 fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
-
-
-
-
-		double logThickness = 0.0;
-		float intensity = 0.0f; //Used to normalize certain values if less than 1.0
-
-		FroxelFogSettings operator*( float rhs ) const;
-		FroxelFogSettings operator+( const FroxelFogSettings& rhs ) const;
-	};
-
-	struct FroxelFogWeightedSettings
-	{
 		PostProcessEnums::Priority priority = PostProcessEnums::MEDIUM_PRIORITY;
-		float intensity = 1;
-		FroxelFogSettings value;
+		float intensity = 1.0;
+
+		PriorityBlend::Attribute<float> thickness = 0.0f;
+
+		PriorityBlend::Attribute<float> lightDirectionality = 0.0f;
+
+		PriorityBlend::Attribute<float> environmentIntensity = 0.0f;
+		PriorityBlend::Attribute<float> environmentDirectionality = 0.0f;
+
+		PriorityBlend::Attribute<Color> fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+		PriorityBlend::Attribute<float> backgroundVisibility = 0.0f;
+
+
+		PriorityBlend::Attribute<float> godRayNoiseIntensity = 0.0f;
+		PriorityBlend::Attribute<float> godRayNoiseFrequency = 0.0f;
+		PriorityBlend::Attribute<float> godRayNoiseAnimationSpeed = 0.0f;
+
+		PriorityBlend::Attribute<float> fogNoiseIntensity = 0.0f;
+		PriorityBlend::Attribute<float> fogNoiseFrequency = 0.0f;
+		PriorityBlend::Attribute<Vector3> fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
+
+		PriorityBlend::Attribute<double> logThickness = 0.0;
+
 	};
-	virtual FroxelFogWeightedSettings GetFroxelFogSettings() = 0;
+	virtual FroxelFogSettings* GetFroxelFogSettings() = 0;
 };
 
 REGISTER_COMPONENT_TYPE( "FroxelFogSettings", ITr2FroxelFogSettings );

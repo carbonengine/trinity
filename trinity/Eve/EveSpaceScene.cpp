@@ -372,7 +372,7 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			} );
 		if( g_enablePostProcessDebugging )
 		{
-			Tr2PostProcessAttributesDebugObserver observer;
+			PriorityBlend::AttributesDebugObserver<Tr2PostProcessAttributes> observer;
 			Tr2PostProcessAttributes::MergeInto( *m_combinedPostProcess, postProcessAttributes, &observer );
 			m_postProcessDebug = observer.GetDict();
 		}
@@ -1323,7 +1323,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		baseline.value.reflectionIntensity = m_reflectionIntensity;
 		overrides.push_back( baseline );
 
-		auto over = PriorityBlend( overrides );
+		auto over = SimplePriorityBlend( overrides );
 		m_currentSunColor = over.sunColor * over.sunIntensity;
 		m_currentNebulaIntensity = over.backgroundIntensity;
 		m_currentRelfectionIntensity = over.reflectionIntensity;
