@@ -18,8 +18,8 @@ public:
 
 	Tr2Denoiser();
 
-	ALResult Apply( ITr2TextureProvider & source, ITr2TextureProvider & depth, ITr2TextureProvider * normals, const Matrix& projection, Tr2RenderContext& renderContext );
-	ALResult Apply( ITr2TextureProvider & source, ITr2TextureProvider & depth, ITr2TextureProvider * normals, const Matrix& projection, uint32_t index, Tr2RenderContext& renderContext );
+	ALResult Apply( ITr2TextureProvider & source, ITr2TextureProvider & depth, ITr2TextureProvider * normals, const Matrix& projection, float upscaling, Tr2RenderContext& renderContext );
+	ALResult Apply( ITr2TextureProvider & source, ITr2TextureProvider & depth, ITr2TextureProvider * normals, const Matrix& projection, uint32_t index, float upscaling, Tr2RenderContext& renderContext );
 
 	void SetArraySize( uint32_t value );
 

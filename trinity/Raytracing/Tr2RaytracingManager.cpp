@@ -91,7 +91,7 @@ ITr2TextureProvider* Tr2RaytracingManager::GetShadowMap() const
 	}
 }
 
-void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, const CcpMath::Sphere* planets, size_t planetCount, Tr2RenderContext& renderContext )
+void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, const CcpMath::Sphere* planets, size_t planetCount, float upscaling, Tr2RenderContext& renderContext )
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Raytraced shadows" );
@@ -195,7 +195,7 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 	}
 	if( m_denoiser && m_applyDenoiser )
 	{
-		m_denoiser->Apply( *m_destTex, *depth, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), renderContext );
+		m_denoiser->Apply( *m_destTex, *depth, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), upscaling, renderContext );
 		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_denoiser->GetTexture() );
 	}
 	else
