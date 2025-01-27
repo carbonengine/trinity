@@ -70,7 +70,7 @@ public:
 	bool PrepareShadowRendering( Tr2RenderContext& renderContext );
 	void BeginShadowRendering( Tr2RenderContext& renderContext, int splitIndex );
 	void EndShadowRendering( Tr2RenderContext& renderContext );
-	void DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2TextureProvider* depthMap );
+	void DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2TextureProvider* depthMap, float upscaling );
 	void SetShadowMap( Tr2RenderTargetPtr shadowMapRenderTarget );
 
 	Tr2DepthStencilPtr GetCascadedShadowMapDS() const;

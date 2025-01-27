@@ -64,12 +64,12 @@ const BlueSharedString NORMAL_BUFFER = BlueSharedString( "NormalBuffer" );
 
 }
 
-ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& depth, ITr2TextureProvider* normals, const Matrix& projection, Tr2RenderContext& renderContext )
+ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& depth, ITr2TextureProvider* normals, const Matrix& projection, float upscaling, Tr2RenderContext& renderContext )
 {
-	return Apply(source, depth, normals, projection, 0, renderContext );
+	return Apply(source, depth, normals, projection, 0, upscaling, renderContext );
 }
 
-ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& depth, ITr2TextureProvider* normals, const Matrix& projection, uint32_t index, Tr2RenderContext& renderContext )
+ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& depth, ITr2TextureProvider* normals, const Matrix& projection, uint32_t index, float upscaling, Tr2RenderContext& renderContext )
 {
 	auto src = source.GetTexture();
 	auto depthMap = depth.GetTexture();
@@ -116,9 +116,9 @@ ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& d
 			effect->SetParameter( PLANE_WEIGHT, m_planeWeight );
 			effect->SetParameter( PASS_THROUGH, m_bypass ? 1.f : 0.f );
 
-			effect->SetParameter( RADIUS, m_radius );
 			effect->SetParameter( AXIS, direction * float( m_stepSize ) );
 		}
+		effect->SetParameter( RADIUS, std::max( uint32_t( m_radius / upscaling + 0.5f ), 2u ) );
 
 		effect->SetParameter( PROJECTION_INV, projection );
 		effect->SetParameter( CLIP_INFO, Vector2( projection._43, projection._33 ) );

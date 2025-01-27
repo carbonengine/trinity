@@ -344,7 +344,7 @@ void Tr2ShadowMap::EndShadowRendering( Tr2RenderContext& renderContext )
 	}
 }
 
-void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2TextureProvider* depthMap )
+void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2TextureProvider* depthMap, float upscaling )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -377,7 +377,7 @@ void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2T
 			CCP_STATS_ZONE( "DO_DENOISER" );
 			if( m_denoiser && m_useDenoiser )
 			{
-				m_denoiser->Apply( *m_shadowMapResultRT, *depthMap, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), renderContext );
+				m_denoiser->Apply( *m_shadowMapResultRT, *depthMap, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), upscaling, renderContext );
 			}
 		}
 

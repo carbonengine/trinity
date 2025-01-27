@@ -730,7 +730,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 		PopulatePerFramePSData( m_perFramePS, &shadowMap, renderContext );
 		ApplyPerFrameData( renderContext );
 		SetupPlanetsAsShadowCaster( renderContext );
-		shadowMap.DrawToShadowMapResult( renderContext, depthMap );
+		shadowMap.DrawToShadowMapResult( renderContext, depthMap, m_upscalingAmount );
 
 		if( renderReason == TR2RENDERREASON_NORMAL && m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
 		{
@@ -2283,7 +2283,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 		if( volumetricCount + shadowCasterCount != 0 )
 		{
 			renderContext.SetReadOnlyDepth( true );
-			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, planets, maxPlanets, renderContext );
+			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, planets, maxPlanets, m_upscalingAmount, renderContext );
 
 			if( m_componentRegistry && m_volumetricsRenderer )
 			{
