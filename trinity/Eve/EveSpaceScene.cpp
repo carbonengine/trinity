@@ -35,8 +35,11 @@
 #include "VirtualCamera/EveVirtualCameraSystem.h"
 #include "Eve/EveEntity.h"
 #include "Tr2SSAO.h"
+#include "Tr2SSSSS.h"
 #include "Lights/ITr2LightOwner.h"
 #include "../Tr2BoneTransformBuffer.h"
+#include "../Tr2VolumetricsRenderer.h"
+#include "../Tr2GpuStructuredBuffer.h"
 #include <ScopedBlockTrap.h>
 #include "Raytracing/Tr2RaytracingManager.h"
 #include "../Resources/TriTextureRes.h"
@@ -279,6 +282,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_cameraAttachmentParent.CreateInstance();
 	m_reflectionProbe.CreateInstance();
 	m_componentRegistry.CreateInstance();
+	m_sssss.CreateInstance();
 
 	m_volumetricsRenderer.CreateInstance();
 
@@ -2649,6 +2653,16 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		renderContext.m_esm.PopDepthStencilBuffer();
 	}
 
+	// Write sub surface seprable specular and SSS mask information
+	bool hasSSSSSInScene = m_sssss->SetupSeprableSpecularSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
+
+
+	// Write sub surface scattering blur
+	if (hasSSSSSInScene)
+	{
+		m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_colorMap, m_opaqueColorMap, m_depthMap );
+	}
+
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
 	
 	PopulateAndApplyPerFrameData( renderContext );
@@ -3119,6 +3133,11 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 		data.ShadowMapValues[1] = shadowMap->m_perSplitData.ShadowMapValues[1];
 		data.ShadowMapValues[2] = shadowMap->m_perSplitData.ShadowMapValues[2];
 		data.ShadowMapValues[3] = shadowMap->m_perSplitData.ShadowMapValues[3];
+
+		data.ShadowMapDepthRanges[0] = shadowMap->m_perSplitData.CascadeDepthRanges[0];
+		data.ShadowMapDepthRanges[1] = shadowMap->m_perSplitData.CascadeDepthRanges[1];
+		data.ShadowMapDepthRanges[2] = shadowMap->m_perSplitData.CascadeDepthRanges[2];
+		data.ShadowMapDepthRanges[3] = shadowMap->m_perSplitData.CascadeDepthRanges[3];
 
 		for( int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 		{

@@ -66,6 +66,7 @@ BLUE_DECLARE_VECTOR( EveLensflare );
 BLUE_DECLARE( Tr2ShadowMap );
 BLUE_DECLARE( Tr2RenderTarget );
 BLUE_DECLARE( Tr2SSAO );
+BLUE_DECLARE( Tr2SSSSS );
 BLUE_DECLARE( EveTransform );
 BLUE_DECLARE_VECTOR( EveTransform );
 BLUE_DECLARE( EveDistanceField );
@@ -283,6 +284,8 @@ protected:
 		Vector4 SplitInfo;
 		Matrix ProjectionInverseMat;
 
+		Vector4 ShadowMapDepthRanges[4];
+
 		Tr2VolumetricsRenderer::FroxelPerFrameData FroxelFogData;
 	};
 
@@ -481,6 +484,7 @@ protected:
 	TriVariable* m_ssaoMapHandle;
 	Tr2RenderTargetPtr m_normalMap;
 	Tr2SSAOPtr m_ssao;
+	Tr2SSSSSPtr m_sssss;
 
 	Tr2RenderTargetPtr m_distortionMap;
 	Tr2RenderTargetPtr m_velocityMap;

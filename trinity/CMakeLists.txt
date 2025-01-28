@@ -1497,6 +1497,9 @@ set(_SOURCES
     Tr2SSAO.cpp
     Tr2SSAO.h
     Tr2SSAO_Blue.cpp
+    Tr2SSSSS.cpp
+    Tr2SSSSS.h
+    Tr2SSSSS_Blue.cpp
     Tr2StreamingBitmapSaver.cpp
     Tr2StreamingBitmapSaver.h
     Tr2StreamingBitmapSaver_Blue.cpp

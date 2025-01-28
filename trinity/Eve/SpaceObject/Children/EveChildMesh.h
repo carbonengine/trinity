@@ -136,6 +136,7 @@ protected:
 
 	bool DisplayDecals() const;
 
+	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
 
 	// general data
 	BlueSharedString m_name;
@@ -146,6 +147,7 @@ protected:
 
 	PIEveChildTransformModifierVector m_transformModifiers;
 	Tr2GrannyAnimationPtr m_animationUpdater;
+	std::unique_ptr<Tr2AnimationMeshBinding> m_meshBinding;
 
 	Tr2Lod m_lowestLodVisible;
 
