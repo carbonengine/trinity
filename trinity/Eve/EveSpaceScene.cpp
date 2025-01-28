@@ -282,7 +282,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_cameraAttachmentParent.CreateInstance();
 	m_reflectionProbe.CreateInstance();
 	m_componentRegistry.CreateInstance();
-	m_ssao.CreateInstance();
 	m_sssss.CreateInstance();
 
 	m_volumetricsRenderer.CreateInstance();
@@ -2659,8 +2658,10 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 
 
 	// Write sub surface scattering blur
-	if(hasSSSSSInScene)
+	if (hasSSSSSInScene)
+	{
 		m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_colorMap, m_opaqueColorMap, m_depthMap );
+	}
 
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
 	

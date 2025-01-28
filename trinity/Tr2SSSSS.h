@@ -7,8 +7,6 @@
 #pragma once
 
 #include "Tr2DeviceResource.h"
-#include "TriFrustum.h"
-#include "ffx_cacao.h"
 
 
 BLUE_DECLARE( Tr2Effect );

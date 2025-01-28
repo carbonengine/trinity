@@ -432,12 +432,12 @@ bool Tr2RenderContextBase::TechniqueInBatch( const std::vector<Tr2RenderBatch>& 
 		uint32_t technique;
 		if( !currentShader->GetTechniqueIndex( techniqueName, technique ) )
 		{
-			return false;
+			continue;
 		}
 		const uint32_t passCount = currentShader->GetPassCount( technique );
 		if( passCount == 0 )
 		{
-			return false;
+			continue;
 		}
 		return true;
 	}
