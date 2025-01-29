@@ -519,9 +519,22 @@ bool TriGeometryRes::DoPrepare()
 
 		if( gi->AnimationCount == 0 && m_pGrannyFile )
 		{
-			// Only meshes in the file - we've converted those to D3D structures.
-			GrannyFreeFile( m_pGrannyFile );
-			m_pGrannyFile = 0;
+			bool hasMeshBindings = false;
+			for( int i = 0; i < gi->MeshCount; ++i )
+			{
+				if( gi->Meshes[i]->BoneBindingCount > 0 )
+				{
+					hasMeshBindings = true;
+					break;
+				}
+			}
+
+			if( !hasMeshBindings )
+			{
+				// Only meshes in the file - we've converted those to D3D structures.
+				GrannyFreeFile( m_pGrannyFile );
+				m_pGrannyFile = 0;
+			}
 		}
 	}
 
