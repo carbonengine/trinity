@@ -28,6 +28,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_isVisible( false ),
 	m_instancesVisible( false ),
 	m_castShadow( false ),
+	m_updateAnimation( true ),
 	m_lowestLodVisible( TR2_LOD_LOW ),
 	m_minScreenSize( 0.f ),
 	m_currentScreenSize( -1.f ),
@@ -661,7 +662,10 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 			}
 		}
 
-		m_animationUpdater->PrePhysicsAnimation( 0, IdentityMatrix() );
+		if( m_updateAnimation )
+		{
+			m_animationUpdater->PrePhysicsAnimation( 0, IdentityMatrix() );
+		}
 
 		if( m_mesh && !m_animationUpdater->m_meshBinding )
 		{

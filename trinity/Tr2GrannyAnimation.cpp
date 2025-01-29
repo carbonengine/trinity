@@ -313,7 +313,7 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 	}
 
 
-	if( fi->ModelCount > 0 && fi->AnimationCount > 0 )
+	if( fi->ModelCount > 0 )
 	{
 		// By default we take the first model in the file
 		m_modelIndex = 0;
@@ -1460,10 +1460,24 @@ std::pair<const granny_matrix_3x4*, size_t> Tr2AnimationMeshBinding::GetBoneTran
 
 	auto boneCount = GrannyGetMeshBindingBoneCount( m_meshBinding.get() );
 
-	int const* meshToBone = GrannyGetMeshBindingToBoneIndices( m_meshBinding.get() );
+	auto meshToBone = GrannyGetMeshBindingFromBoneIndices( m_meshBinding.get() );
 	if( m_boneTransforms && meshToBone && boneCount )
 	{
-		GrannyBuildIndexedCompositeBufferTransposed( m_animation->m_skeleton, m_animation->m_worldPose, meshToBone, boneCount, m_boneTransforms.get() );
+		if( m_meshSkeleton != m_animation->m_skeleton )
+		{
+			const auto animBones = GrannyGetMeshBindingToBoneIndices( m_meshBinding.get() );
+			for( int32_t i = 0; i < boneCount; ++i )
+			{
+				GrannyColumnMatrixMultiply4x3Transpose(
+					(granny_real32*)m_boneTransforms[i],
+					(granny_real32*)m_meshSkeleton->Bones[meshToBone[i]].InverseWorld4x4,
+					(granny_real32*)GrannyGetWorldPose4x4( m_animation->m_worldPose, animBones[i] ) );
+			}
+		}
+		else
+		{
+			GrannyBuildIndexedCompositeBufferTransposed( m_animation->m_skeleton, m_animation->m_worldPose, meshToBone, boneCount, m_boneTransforms.get() );
+		}
 	}
 
 	return { m_boneTransforms.get(), boneCount };
@@ -1497,13 +1511,16 @@ void Tr2AnimationMeshBinding::CreateBinding()
 		{
 			return;
 		}
-		m_meshBinding.reset( GrannyNewMeshBinding( fi->Meshes[m_meshIndex], m_animation->m_skeleton, m_animation->m_skeleton ) );
+		auto meshSkeleton = fi->SkeletonCount > 0 ? fi->Skeletons[0] : m_animation->m_skeleton;
+
+		m_meshBinding.reset( GrannyNewMeshBinding( fi->Meshes[m_meshIndex], meshSkeleton, m_animation->m_skeleton ) );
 		if( m_meshBinding )
 		{
 			auto count = GrannyGetMeshBindingBoneCount( m_meshBinding.get() );
 			if( count > 0 )
 			{
 				m_boneTransforms.reset( new granny_matrix_3x4[count] );
+				m_meshSkeleton = meshSkeleton;
 			}
 		}
 	}
@@ -1513,6 +1530,7 @@ void Tr2AnimationMeshBinding::ReleaseCachedData( BlueAsyncRes* )
 {
 	m_meshBinding.reset();
 	m_boneTransforms.reset();
+	m_meshSkeleton = nullptr;
 }
 
 void Tr2AnimationMeshBinding::RebuildCachedData( BlueAsyncRes* )
