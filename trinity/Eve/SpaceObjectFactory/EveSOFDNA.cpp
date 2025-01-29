@@ -1789,6 +1789,10 @@ EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const
 	{
 		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
 	}
+	if( category == "asteroid" )
+	{
+		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
+	}
 	return EntityComponents::REFLECT_NEVER;
 
 }
