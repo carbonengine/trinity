@@ -169,6 +169,7 @@ protected:
 	bool m_isVisible;
 	bool m_instancesVisible;
 	bool m_castShadow;
+	bool m_updateAnimation;
 
 	float m_activationStrength;
 

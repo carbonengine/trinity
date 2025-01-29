@@ -206,6 +206,7 @@ private:
 
 	std::unique_ptr<granny_mesh_binding, decltype( &GrannyFreeMeshBinding )> m_meshBinding{ nullptr, &GrannyFreeMeshBinding };
 	std::unique_ptr<granny_matrix_3x4[]> m_boneTransforms;
+	granny_skeleton* m_meshSkeleton = nullptr;
 
 	Tr2GrannyAnimationPtr m_animation;
 	TriGeometryResPtr m_geometryRes;
