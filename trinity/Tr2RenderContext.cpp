@@ -416,32 +416,26 @@ void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* bat
 
 bool Tr2RenderContextBase::TechniqueInBatch( const std::vector<Tr2RenderBatch>& batches, const BlueSharedString& techniqueName )
 {
-	size_t batchCount = batches.size();
-
-	if( batchCount == 0 )
+	Tr2Shader* prevShader = nullptr;
+	for( auto& batch : batches )
 	{
-		return false;
-	}
-
-	for( auto currentBatch = batches.begin(); currentBatch != batches.end(); )
-	{
-		auto& firstBatch = *currentBatch;
-		auto endBatch = firstBatch + currentBatch->m_groupCount;
-
-		auto currentShader = firstBatch.m_material->GetShaderStateInterface();
-		uint32_t technique;
-		if( !currentShader->GetTechniqueIndex( techniqueName, technique ) )
+		if( batch.m_shader == prevShader )
 		{
 			continue;
 		}
-		const uint32_t passCount = currentShader->GetPassCount( technique );
+		prevShader = batch.m_shader;
+		uint32_t technique;
+		if( !batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
+		{
+			continue;
+		}
+		const uint32_t passCount = batch.m_shader->GetPassCount( technique );
 		if( passCount == 0 )
 		{
 			continue;
 		}
 		return true;
 	}
-
 	return false;
 }
 

@@ -80,7 +80,8 @@ bool Tr2SSSSS::SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext& rend
 		return false;
 	}
 
-	m_hasSSSSSInScene = renderContext.TechniqueInBatch( batches->GetBatches(), BlueSharedString( "SSSSS" ) );
+	static const auto SSSSS = BlueSharedString( "SSSSS" );
+	m_hasSSSSSInScene = renderContext.TechniqueInBatch( batches->GetGdprBatches(), SSSSS ) || renderContext.TechniqueInBatch( batches->GetBatches(), SSSSS );
 
 	if( !m_seprableSpecularColorMap || m_seprableSpecularColorMap->GetWidth() == 0 || m_seprableSpecularColorMap->GetHeight() == 0 || !m_hasSSSSSInScene )
 	{
@@ -106,7 +107,7 @@ bool Tr2SSSSS::SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext& rend
 
 		//ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
-		renderContext.RenderBatches( batches, BlueSharedString( "SSSSS" ) );
+		renderContext.RenderBatches( batches, SSSSS );
 	}
 
 
