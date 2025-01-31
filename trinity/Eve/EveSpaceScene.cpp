@@ -2046,7 +2046,7 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 		}
 		else
 		{
-			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::DONT_CARE } );
+			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
 			RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_COLOR );
 		}
 		if( !m_planets.empty() )
