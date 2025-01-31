@@ -197,6 +197,13 @@ EveSOFDataGenericVariant::EveSOFDataGenericVariant( IRoot* lockobj ) :
 	{}
 
 
+EveSOFDataGenericHullCategory::EveSOFDataGenericHullCategory( IRoot* lockobj ) :
+		m_categoryName( "" ),
+		m_reflectionMode( EntityComponents::REFLECT_NEVER )
+	{
+	}
+
+
 EveSOFDataFaction::EveSOFDataFaction( IRoot* lockobj ) :
 	PARENTLOCK( m_spotlightSets ),
 	PARENTLOCK( m_planeSets ),

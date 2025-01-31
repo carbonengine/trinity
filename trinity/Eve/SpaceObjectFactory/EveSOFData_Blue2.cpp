@@ -554,6 +554,17 @@ const Be::ClassInfo* EveSOFDataGenericVariant::ExposeToBlue()
 		EXPOSURE_END()
 }
 
+BLUE_DEFINE( EveSOFDataGenericHullCategory );
+const Be::ClassInfo* EveSOFDataGenericHullCategory::ExposeToBlue(){
+	EXPOSURE_BEGIN( EveSOFDataGenericHullCategory, "" )
+		MAP_INTERFACE( EveSOFDataGenericHullCategory )
+
+		MAP_ATTRIBUTE( "category name", m_categoryName, "The hull category", Be::READWRITE | Be::PERSIST )
+		//  | Be::NOTIFY what do and do i want it? 
+		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When this hull category is rendered in the cubemap", Be::READWRITE | Be::PERSIST | Be::ENUM, EntityComponents::ReflectionModeChooser )
+
+		EXPOSURE_END()
+}
 
 BLUE_DEFINE( EveSOFDataGeneric );
 const Be::ClassInfo* EveSOFDataGeneric::ExposeToBlue()

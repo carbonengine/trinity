@@ -496,6 +496,7 @@ void EveSOFDNA::SetupCustomData()
 	m_customHullData.resize( m_hullDatas.size() );
 	for( size_t i = 0; i < m_hullDatas.size(); ++i )
 	{
+		// do I care?
 		m_customHullData[i].buildClass = m_hullDatas[i]->buildClass;
 		m_customHullData[i].geometryResFilePath = m_hullDatas[i]->geometryResFilePath;
 		m_customHullData[i].boundingSphere = m_hullDatas[i]->boundingSphere;
@@ -1773,26 +1774,37 @@ BlueSharedString EveSOFDNA::GetRaceName() const
 
 EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const
 {
-	std::string category = m_hullDatas[0]->category;
-	
-	// Warning non future proofed code ahead!
-	// this should come from the category (as in the category being an object that has information about features)
-	if( category == "hangar" || category == "hangar4k" )
+	std::string categoryName = m_hullDatas[0]->category;
+	/*
+	if ( m_dataMgr->CategoryUpdateFeatureFlag )
 	{
-		return EntityComponents::REFLECT_LOW_MEDIUM_HIGH;
-	}
-	if( category.find( "station" ) != std::string::npos || category.find( "structure" ) != std::string::npos )
-	{
-		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
-	}
-	if( category == "jumpgate" )
-	{
-		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
-	}
-	if( category == "asteroid" )
-	{
-		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
-	}
-	return EntityComponents::REFLECT_NEVER;
+	*/
+	// See generic.red::hullCategories for adding more reflection overrides to HullCategories
+	auto it = m_dataMgr->GetGenericData()->categoryData.find( BlueSharedString( categoryName ) );
 
+	if( it != m_dataMgr->GetGenericData()->categoryData.end() )
+	{
+		return it->second;
+	}
+
+	return EntityComponents::REFLECT_NEVER;
+	/*}
+	else
+	{
+		if( categoryName == "hangar" || categoryName == "hangar4k" )
+		{
+			return EntityComponents::REFLECT_LOW_MEDIUM_HIGH;
+		}
+		if( categoryName.find( "station" ) != std::string::npos || categoryName.find( "structure" ) != std::string::npos )
+		{
+			return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
+		}
+		if( categoryName == "jumpgate" )
+		{
+			return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
+		}
+
+		return EntityComponents::REFLECT_NEVER;
+	}
+	*/
 }

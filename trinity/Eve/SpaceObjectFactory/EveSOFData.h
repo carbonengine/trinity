@@ -12,7 +12,7 @@
 
 
 // --------------------------------------------------------------------------------
-// All data storage classes for gerenal purposes
+// All data storage classes for general purposes
 // --------------------------------------------------------------------------------
 
 
@@ -2149,6 +2149,25 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataGenericVariant );
 BLUE_DECLARE_VECTOR( EveSOFDataGenericVariant );
 
+BLUE_CLASS( EveSOFDataGenericHullCategory ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataGenericHullCategory( IRoot* lockobj = NULL );
+	~EveSOFDataGenericHullCategory()
+	{
+	}
+
+	// hull categories
+	BlueSharedString m_categoryName;
+
+	// Reflection mode for the hull category
+	EntityComponents::ReflectionMode m_reflectionMode;
+};
+TYPEDEF_BLUECLASS( EveSOFDataGenericHullCategory );
+BLUE_DECLARE_VECTOR( EveSOFDataGenericHullCategory );
+
 
 BLUE_CLASS( EveSOFDataGeneric ) :
 	public IRoot
@@ -2198,7 +2217,7 @@ public:
 	PEveSOFDataVisibilityGroupVector m_visibilityGroups;
 
 	// hull categories
-	PEveSOFDataGenericStringVector m_hullCategories;
+	PEveSOFDataGenericHullCategoryVector m_hullCategories;
 };
 TYPEDEF_BLUECLASS( EveSOFDataGeneric );
 
