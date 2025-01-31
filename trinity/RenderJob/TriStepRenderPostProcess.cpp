@@ -480,6 +480,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	ProcessLut( luts );
 	ProcessVignette( vignette );
 
+	if( postProcess )
 	{
 		static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
 		m_tonemappingEffect->SetParameter( WhiteTemperature, postProcess->m_whiteTemperature );
@@ -495,27 +496,27 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		m_tonemappingEffect->SetParameter( ColorGain, postProcess->m_colorGain );
 		static auto ColorOffset = BlueSharedString( "ColorOffset" );
 		m_tonemappingEffect->SetParameter( ColorOffset, postProcess->m_colorOffset );
+	}
 
-		if( tonemapping )
-		{
-			static auto LinearAngle = BlueSharedString( "LinearAngle" );
-			m_tonemappingEffect->SetParameter( LinearAngle, tonemapping->m_linearAngle );
+	if( tonemapping )
+	{
+		static auto LinearAngle = BlueSharedString( "LinearAngle" );
+		m_tonemappingEffect->SetParameter( LinearAngle, tonemapping->m_linearAngle );
 
-			static auto LinearStrength = BlueSharedString( "LinearStrength" );
-			m_tonemappingEffect->SetParameter( LinearStrength, tonemapping->m_linearStrength );
+		static auto LinearStrength = BlueSharedString( "LinearStrength" );
+		m_tonemappingEffect->SetParameter( LinearStrength, tonemapping->m_linearStrength );
 
-			static auto ShoulderStrength = BlueSharedString( "ShoulderStrength" );
-			m_tonemappingEffect->SetParameter( ShoulderStrength, tonemapping->m_shoulderStrength );
+		static auto ShoulderStrength = BlueSharedString( "ShoulderStrength" );
+		m_tonemappingEffect->SetParameter( ShoulderStrength, tonemapping->m_shoulderStrength );
 
-			static auto ToeDenominator = BlueSharedString( "ToeDenominator" );
-			m_tonemappingEffect->SetParameter( ToeDenominator, tonemapping->m_toeDenominator );
+		static auto ToeDenominator = BlueSharedString( "ToeDenominator" );
+		m_tonemappingEffect->SetParameter( ToeDenominator, tonemapping->m_toeDenominator );
 
-			static auto ToeNumerator = BlueSharedString( "ToeNumerator" );
-			m_tonemappingEffect->SetParameter( ToeNumerator, tonemapping->m_toeNumerator );
+		static auto ToeNumerator = BlueSharedString( "ToeNumerator" );
+		m_tonemappingEffect->SetParameter( ToeNumerator, tonemapping->m_toeNumerator );
 
-			static auto WhiteScale = BlueSharedString( "WhiteScale" );
-			m_tonemappingEffect->SetParameter( WhiteScale, tonemapping->m_whiteScale );
-		}
+		static auto WhiteScale = BlueSharedString( "WhiteScale" );
+		m_tonemappingEffect->SetParameter( WhiteScale, tonemapping->m_whiteScale );
 	}
 
 	bool doGrain = ProcessFilmGrain( filmGrain );
@@ -1040,7 +1041,11 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderC
 			m_tonemappingEffect->EndUpdate();
 		}
 	}
-	auto exposureAdjustment = postProcess->m_exposureAdjustment;
+	float exposureAdjustment = 0;
+	if( postProcess )
+	{
+		exposureAdjustment = postProcess->m_exposureAdjustment;
+	}
 	if( dynamicExposure )
 	{
 		exposureAdjustment += dynamicExposure->m_adjustment;
