@@ -2040,6 +2040,18 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 		gd.genericWreckMaterialData.glowColor[std::make_pair( EveSOFDataArea::TYPE_WRECK, "GeneralGlowColor" )] = srcData->m_genericWreckMaterial->m_glowColorType;
 	}
 
+	// generic category to reflection setting mapping
+	gd.categoryData.clear();
+	for( auto hcit = srcData->m_hullCategoryData.begin(); hcit != srcData->m_hullCategoryData.end(); ++hcit )
+	{
+		EveSOFDataGenericHullCategoryPtr categoryData = ( *hcit );
+		if( categoryData->m_categoryName.empty() )
+		{
+			continue;
+		}
+		gd.categoryData[std::string( categoryData->m_categoryName.c_str())] = categoryData->m_reflectionMode;
+	}
+
 	// variants
 	gd.variants.clear();
 	for( auto vit = srcData->m_variants.begin(); vit != srcData->m_variants.end(); ++vit )

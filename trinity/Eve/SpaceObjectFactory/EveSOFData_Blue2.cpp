@@ -554,6 +554,16 @@ const Be::ClassInfo* EveSOFDataGenericVariant::ExposeToBlue()
 		EXPOSURE_END()
 }
 
+BLUE_DEFINE( EveSOFDataGenericHullCategory );
+const Be::ClassInfo* EveSOFDataGenericHullCategory::ExposeToBlue(){
+	EXPOSURE_BEGIN( EveSOFDataGenericHullCategory, "" )
+		MAP_INTERFACE( EveSOFDataGenericHullCategory )
+
+		MAP_ATTRIBUTE( "name", m_categoryName, "The hull category", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When this hull category is rendered in the cubemap", Be::READWRITE | Be::PERSIST | Be::ENUM, EntityComponents::ReflectionModeChooser )
+
+		EXPOSURE_END()
+}
 
 BLUE_DEFINE( EveSOFDataGeneric );
 const Be::ClassInfo* EveSOFDataGeneric::ExposeToBlue()
@@ -593,6 +603,7 @@ const Be::ClassInfo* EveSOFDataGeneric::ExposeToBlue()
 		MAP_ATTRIBUTE( "variants", m_variants, "All the hull  variants", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "visibilityGroups", m_visibilityGroups, "All the visibility groups", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "hullCategories", m_hullCategories, "All the hull categories", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "hullCategoriesData", m_hullCategoryData, "New hull categories that contain reflection settings", Be::READ | Be::PERSIST )
 
 		EXPOSURE_END()
 }

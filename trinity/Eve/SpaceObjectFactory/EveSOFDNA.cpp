@@ -1774,9 +1774,24 @@ BlueSharedString EveSOFDNA::GetRaceName() const
 EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const
 {
 	std::string category = m_hullDatas[0]->category;
-	
+
+	// New category data but keeping it backwards compatible
+	if( m_dataMgr->GetGenericData()->categoryData.empty() )
+	{
+		// See generic.red::hullCategories for adding more reflection overrides to HullCategories
+		auto it = m_dataMgr->GetGenericData()->categoryData.find( category );
+
+		if( it != m_dataMgr->GetGenericData()->categoryData.end() )
+		{
+			return it->second;
+		}
+
+		return EntityComponents::REFLECT_NEVER;
+	}
+
 	// Warning non future proofed code ahead!
 	// this should come from the category (as in the category being an object that has information about features)
+	// see above for the new way of doing this
 	if( category == "hangar" || category == "hangar4k" )
 	{
 		return EntityComponents::REFLECT_LOW_MEDIUM_HIGH;
@@ -1789,10 +1804,5 @@ EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const
 	{
 		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
 	}
-	if( category == "asteroid" )
-	{
-		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
-	}
 	return EntityComponents::REFLECT_NEVER;
-
 }
