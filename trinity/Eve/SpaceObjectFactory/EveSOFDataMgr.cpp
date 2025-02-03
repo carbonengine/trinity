@@ -2041,8 +2041,8 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 	}
 
 	// generic category to reflection setting mapping
-	gd.decalShaderData.clear();
-	for( auto hcit = srcData->m_hullCategories.begin(); hcit != srcData->m_hullCategories.end(); ++hcit )
+	gd.categoryData.clear();
+	for( auto hcit = srcData->m_hullCategoriesData.begin(); hcit != srcData->m_hullCategoriesData.end(); ++hcit )
 	{
 		EveSOFDataGenericHullCategoryPtr categoriesData = ( *hcit );
 		if( categoriesData->m_categoryName.empty() )
