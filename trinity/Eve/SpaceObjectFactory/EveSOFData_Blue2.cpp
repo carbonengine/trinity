@@ -604,6 +604,7 @@ const Be::ClassInfo* EveSOFDataGeneric::ExposeToBlue()
 		MAP_ATTRIBUTE( "variants", m_variants, "All the hull  variants", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "visibilityGroups", m_visibilityGroups, "All the visibility groups", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "hullCategories", m_hullCategories, "All the hull categories", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "hullCategoriesData", m_hullCategoriesData, "New hull categories that contain reflection settings", Be::READ | Be::PERSIST )
 
 		EXPOSURE_END()
 }
