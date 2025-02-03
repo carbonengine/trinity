@@ -1773,13 +1773,13 @@ BlueSharedString EveSOFDNA::GetRaceName() const
 
 EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const
 {
-	std::string categoryName = m_hullDatas[0]->category;
+	std::string category = m_hullDatas[0]->category;
 
 	// New category data but keeping it backwards compatible
-	if( m_dataMgr->GetGenericData()->categoryData.size() > 0 )
+	if( m_dataMgr->GetGenericData()->categoryData.empty() )
 	{
 		// See generic.red::hullCategories for adding more reflection overrides to HullCategories
-		auto it = m_dataMgr->GetGenericData()->categoryData.find( BlueSharedString( categoryName ) );
+		auto it = m_dataMgr->GetGenericData()->categoryData.find( category );
 
 		if( it != m_dataMgr->GetGenericData()->categoryData.end() )
 		{
@@ -1789,18 +1789,20 @@ EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const
 		return EntityComponents::REFLECT_NEVER;
 	}
 
-	if( categoryName == "hangar" || categoryName == "hangar4k" )
+	// Warning non future proofed code ahead!
+	// this should come from the category (as in the category being an object that has information about features)
+	// see above for the new way of doing this
+	if( category == "hangar" || category == "hangar4k" )
 	{
 		return EntityComponents::REFLECT_LOW_MEDIUM_HIGH;
 	}
-	if( categoryName.find( "station" ) != std::string::npos || categoryName.find( "structure" ) != std::string::npos )
+	if( category.find( "station" ) != std::string::npos || category.find( "structure" ) != std::string::npos )
 	{
 		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
 	}
-	if( categoryName == "jumpgate" )
+	if( category == "jumpgate" )
 	{
 		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
 	}
-
 	return EntityComponents::REFLECT_NEVER;
 }

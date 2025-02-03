@@ -2220,7 +2220,7 @@ public:
 	PEveSOFDataGenericStringVector m_hullCategories;
 
 	// hull category data
-	PEveSOFDataGenericHullCategoryVector m_hullCategoriesData;
+	PEveSOFDataGenericHullCategoryVector m_hullCategoryData;
 };
 TYPEDEF_BLUECLASS( EveSOFDataGeneric );
 
