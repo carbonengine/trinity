@@ -538,9 +538,10 @@ bool Tr2GrannyAnimation::GetDynamicBounds( Vector4& boundingSphere, Vector3 &aab
 	return true;
 }
 
-void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform )
+void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding )
 {
-	if( !m_meshBinding )
+	auto binding = meshBinding ? meshBinding->GetGrannyMeshBinding() : m_meshBinding;
+	if( !binding )
 	{
 		return;
 	}
@@ -553,16 +554,30 @@ void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform )
 		initialPlacement = *reinterpret_cast<Vector3*>( fi->Models[ m_modelIndex ]->InitialPlacement.Position );
 	}
 	initialTranslation = TranslationMatrix( initialPlacement );
+
+	auto viewProj = Tr2Renderer::GetViewTransform() * Tr2Renderer::GetProjectionTransform();
+	float screenRadius = 2.f / float( std::max( 1, std::min( Tr2Renderer::GetViewport().width, Tr2Renderer::GetViewport().height ) ) );
 	
-	for( int boneIdx = 0; boneIdx < m_meshBoneCount; boneIdx++ )
+	auto boneCount = GrannyGetMeshBindingBoneCount( binding );
+	for( int boneIdx = 0; boneIdx < boneCount; boneIdx++ )
 	{
-		const int* bi = GrannyGetMeshBindingFromBoneIndices( m_meshBinding );
+		const int* bi = GrannyGetMeshBindingToBoneIndices( binding );
 		Matrix mat = *reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_worldPose, bi[boneIdx] ) ) * modelTransform * initialTranslation;
-		Vector4 pos(0, 0, 0, 1);
-		pos = Transform( pos, mat );
-		pos.w = 2;
-		Tr2Renderer::DrawSphere( pos, 1, 0xffffffff );
+		Vector3 pos = TransformCoord( Vector3( 0, 0, 0 ), mat );
+
+		auto clipPos = Transform( pos, viewProj );
+		float radius = screenRadius * clipPos.w;
+
+		Tr2Renderer::DrawSphere( Vector4( pos, radius ), 1, 0x88ffffff );
 		Tr2Renderer::Printf( TRI_DBG_FONT_SMALL, Vector3( pos.x, pos.y, pos.z ), 0xffffffff, "  %s : %d", m_skeleton->Bones[bi[boneIdx]].Name, boneIdx );
+
+		auto parent = m_skeleton->Bones[bi[boneIdx]].ParentIndex;
+		if ( parent > 0 )
+		{
+			Matrix pmat = *reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_worldPose, parent ) ) * modelTransform * initialTranslation;
+			Vector3 ppos = TransformCoord( Vector3( 0, 0, 0 ), pmat );
+			Tr2Renderer::DrawLine( pos, ppos, 0x88888888 );
+		}
 	}
 }
 
@@ -1496,6 +1511,11 @@ uint32_t Tr2AnimationMeshBinding::GetMeshIndex() const
 Tr2GrannyAnimation* Tr2AnimationMeshBinding::GetAnimation() const
 {
 	return m_animation;
+}
+
+const granny_mesh_binding* Tr2AnimationMeshBinding::GetGrannyMeshBinding() const
+{
+	return m_meshBinding.get();
 }
 
 void Tr2AnimationMeshBinding::CreateBinding()
