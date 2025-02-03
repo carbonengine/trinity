@@ -2042,14 +2042,14 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 
 	// generic category to reflection setting mapping
 	gd.categoryData.clear();
-	for( auto hcit = srcData->m_hullCategoriesData.begin(); hcit != srcData->m_hullCategoriesData.end(); ++hcit )
+	for( auto hcit = srcData->m_hullCategoryData.begin(); hcit != srcData->m_hullCategoryData.end(); ++hcit )
 	{
-		EveSOFDataGenericHullCategoryPtr categoriesData = ( *hcit );
-		if( categoriesData->m_categoryName.empty() )
+		EveSOFDataGenericHullCategoryPtr categoryData = ( *hcit );
+		if( categoryData->m_categoryName.empty() )
 		{
 			continue;
 		}
-		gd.categoryData[categoriesData->m_categoryName] = categoriesData->m_reflectionMode;
+		gd.categoryData[std::string( categoryData->m_categoryName.c_str())] = categoryData->m_reflectionMode;
 	}
 
 	// variants
