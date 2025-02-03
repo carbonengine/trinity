@@ -219,9 +219,6 @@ private:
 
 	struct FogPerObjectData
 	{
-		Matrix ProjectionMatrix;
-		Matrix InverseProjectionMatrix;
-
 		uint32_t ResolutionX;
 		uint32_t ResolutionY;
 		uint32_t ResolutionZ;
