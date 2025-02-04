@@ -186,7 +186,8 @@ EveSOFDataGeneric::EveSOFDataGeneric( IRoot* lockobj ) :
 	PARENTLOCK( m_variants ),
 	PARENTLOCK( m_bannerShader ),
 	PARENTLOCK( m_visibilityGroups ),
-	PARENTLOCK( m_hullCategories )
+	PARENTLOCK( m_hullCategories ),
+	PARENTLOCK( m_hullCategoryData )
 {
 	std::fill( std::begin( m_decalMinScreenSizes ), std::end( m_decalMinScreenSizes ), 0.f );
 }
@@ -195,6 +196,13 @@ EveSOFDataGeneric::EveSOFDataGeneric( IRoot* lockobj ) :
 EveSOFDataGenericVariant::EveSOFDataGenericVariant( IRoot* lockobj ) :
 	m_isTransparent( false )
 	{}
+
+
+EveSOFDataGenericHullCategory::EveSOFDataGenericHullCategory( IRoot* lockobj ) :
+		m_categoryName( "" ),
+		m_reflectionMode( EntityComponents::REFLECT_NEVER )
+	{
+	}
 
 
 EveSOFDataFaction::EveSOFDataFaction( IRoot* lockobj ) :

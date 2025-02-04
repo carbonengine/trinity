@@ -568,10 +568,12 @@ struct SkinningShaderCBuffer
 	uint32_t stride;
 	uint32_t positionOffset;
 	uint32_t boneOffset;
+	uint32_t boneWeightsOffset;
 	uint32_t transformOffset;
 	uint32_t inVB;
 	uint32_t outVB;
 	uint32_t outVBOffset;
+	uint32_t _padding[3];
 };
 }
 
@@ -716,6 +718,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			auto offsets = FindOffsets( meshData->m_vertexDeclaration );
 			constData->positionOffset = offsets.positionOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
 			constData->boneOffset = offsets.boneOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
+			constData->boneWeightsOffset = offsets.boneWeightsOffset == 0xffffffff ? offsets.boneWeightsOffset : offsets.boneWeightsOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
 			constData->transformOffset = mesh->GetTransformOffset();
 			constData->inVB = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
 			constData->outVB = m_skinnedVertices.GetUavIndexInHeap();
@@ -846,7 +849,7 @@ Tr2RaytracingGeometry::VtxOffsets Tr2RaytracingGeometry::FindOffsets( unsigned d
 	{
 		return found->second;
 	}
-	VtxOffsets offsets = { 0, 0 };
+	VtxOffsets offsets = { 0, 0, 0xffffffff };
 	Tr2VertexDefinition def;
 	if( !Tr2EffectStateManager::GetVertexDeclarationElements( declHandle, def ) )
 	{
@@ -861,6 +864,10 @@ Tr2RaytracingGeometry::VtxOffsets Tr2RaytracingGeometry::FindOffsets( unsigned d
 		else if( it->m_usage == Tr2VertexDefinition::BLENDINDICES && it->m_usageIndex == 0 )
 		{
 			offsets.boneOffset = it->m_offset;
+		}
+		else if( it->m_usage == Tr2VertexDefinition::BLENDWEIGHTS && it->m_usageIndex == 0 )
+		{
+			offsets.boneWeightsOffset = it->m_offset;
 		}
 	}
 	m_offsets[declHandle] = offsets;

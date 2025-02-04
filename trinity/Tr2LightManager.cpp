@@ -164,6 +164,8 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 
 	m_Raytracing.m_destTex.CreateInstance();
 
+	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", m_Raytracing.m_destTex );
+
 	m_Raytracing.m_effect.CreateInstance();
 	m_Raytracing.m_effect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/rtdynamicshadows.fx" );
 

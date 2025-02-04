@@ -545,6 +545,8 @@ void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderCo
 
 	if( environmentLightingEnabled )
 	{
+		GPU_REGION( renderContext, "Update Fog Environment Map" );
+
 		const float g = 1.61803398874989484820;
 		const float g2 = 1.32471795724474602596;
 
@@ -671,7 +673,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 		if( froxelsEnabled )
 		{
 
-			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT, width, height, depth, 1, 1 );
+			//Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT, width, height, depth, 1, 1 );
+			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R11G11B10_FLOAT, width, height, depth, 1, 1 );
 
 			fogFroxels.Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
 			if( temporalFog )
@@ -728,6 +731,9 @@ void Tr2VolumetricsRenderer::RenderFog(
 		//We have nothing more we need to do.
 		return;
 	}
+
+	
+	GPU_REGION( renderContext, "Froxel Fog" );
 
 	enum SHADOW_TYPE
 	{
@@ -810,9 +816,6 @@ void Tr2VolumetricsRenderer::RenderFog(
 			data->ResolutionX = width;
 			data->ResolutionY = height;
 			data->ResolutionZ = depth;
-
-			data->ProjectionMatrix = Transpose( projection );
-			data->InverseProjectionMatrix = Transpose( inverseProjection );
 
 			data->Jitter = resources.froxelJitter;
 			data->Far = maxDistance;
@@ -1070,38 +1073,38 @@ void Tr2VolumetricsRenderer::RenderFog(
 		int wgZ = ( depth + workgroupSize - 1 ) / workgroupSize;
 
 		{
-			
-			if( shadowType == SHADOWS_CASCADED )
-			{
-				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_CASCADED" ) );
-			}
-			else
-			{
-				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( "SHADOWS_DISABLED" ) );
-			}
-
-			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-			resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
-			resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
-			resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
-			resources.calculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-			resources.calculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
+			GPU_REGION( renderContext, "Calculate froxels" );
 
 			if( shadowType == SHADOWS_RAYTRACED )
 			{
+				resources.rtCalculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
+				resources.rtCalculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
+
+				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
+				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
+
 				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
 				resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 				renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
+
 				renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
 			}
 			else
 			{
+				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( shadowType == SHADOWS_CASCADED  ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
+				resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
+				resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
+
+				resources.calculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
+				resources.calculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
+
 				Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
 			}
 		}
 
 		if( temporalFog )
 		{
+			GPU_REGION( renderContext, "Temporal filter" );
 			Tr2TextureReferencePtr& temporalInput = resources.currentTemporalFroxels ? resources.temporalFroxels0 : resources.temporalFroxels1;
 			Tr2TextureReferencePtr& temporalOutput = resources.currentTemporalFroxels ? resources.temporalFroxels1 : resources.temporalFroxels0;
 			resources.currentTemporalFroxels = !resources.currentTemporalFroxels;
@@ -1114,12 +1117,16 @@ void Tr2VolumetricsRenderer::RenderFog(
 			resources.raymarchFroxels->SetParameter( BlueSharedString( "InputTexture" ), temporalOutput );
 		}
 		
-		resources.raymarchFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
-		Tr2Renderer::RunComputeShader( resources.raymarchFroxels, ( width + 7 ) / 8, ( height + 7 ) / 8, 1, renderContext ); // 8x8 workgroup
+		{
+			GPU_REGION( renderContext, "Raymarch" );
+			resources.raymarchFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
+			Tr2Renderer::RunComputeShader( resources.raymarchFroxels, ( width + 7 ) / 8, ( height + 3 ) / 4, 1, renderContext ); // 8x4 workgroup is faster here
+		}
 	}
 
 
 	{
+		GPU_REGION( renderContext, "Apply to scene" );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
 
 		resources.applyFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity.value > 0 ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );

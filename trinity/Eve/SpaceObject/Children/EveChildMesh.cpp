@@ -775,7 +775,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 	if( m_animationUpdater && renderer.HasOption( GetRawRoot(), "Bones" ) )
 	{
-		m_animationUpdater->RenderBones( m_worldTransform );
+		m_animationUpdater->RenderBones( m_worldTransform, m_meshBinding.get() );
 	}
 
 	if( renderer.HasOption( GetRawRoot(), "Decals" ) )
