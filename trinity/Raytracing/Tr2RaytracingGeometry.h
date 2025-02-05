@@ -128,6 +128,7 @@ private:
 	{
 		uint32_t positionOffset;
 		uint32_t boneOffset;
+		uint32_t boneWeightsOffset;
 	};
 
 	struct GeometryData

@@ -10,6 +10,8 @@ BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2GrannyAnimation );
 
+class Tr2AnimationMeshBinding;
+
 namespace Tr2GrannyAnimationUtils
 {
 	bool GetBoneList( Tr2GrannyAnimation* animationUpdater, const granny_matrix_3x4*& bones, size_t& boneCount );
@@ -95,7 +97,7 @@ public:
 	Vector4 CalculateSkinnedBoundingSphere( granny_file_info* fi=nullptr );
 	bool CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform, Vector3& bbMin, Vector3& bbMax, granny_file_info* fi=nullptr );
 
-	void RenderBones( const Matrix& modelTransform );
+	void RenderBones( const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding = nullptr );
 
 	int GetMeshBoneCount() const;
 	const granny_matrix_3x4* GetMeshBoneMatrixList() const;
@@ -197,6 +199,8 @@ public:
 	TriGeometryRes* GetGeometryRes() const;
 	uint32_t GetMeshIndex() const;
 	Tr2GrannyAnimation* GetAnimation() const;
+
+	const granny_mesh_binding* GetGrannyMeshBinding() const;
 
 private:
 	void CreateBinding();

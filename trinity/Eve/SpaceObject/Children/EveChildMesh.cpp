@@ -775,7 +775,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 	if( m_animationUpdater && renderer.HasOption( GetRawRoot(), "Bones" ) )
 	{
-		m_animationUpdater->RenderBones( m_worldTransform );
+		m_animationUpdater->RenderBones( m_worldTransform, m_meshBinding.get() );
 	}
 
 	if( renderer.HasOption( GetRawRoot(), "Decals" ) )
@@ -861,10 +861,11 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
 		return std::make_pair( bones, boneCount );
 	}
-	else
+	if( m_meshBinding )
 	{
 		return m_meshBinding->GetBoneTransforms();
 	}
+	return std::make_pair( nullptr, 0 );
 }
 	
 void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
