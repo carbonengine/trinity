@@ -561,6 +561,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		m_sunData.DirWorld = -sunDirection;
 	}
 
+	
 	// every space scene has a reference position
 	Vector3d sceneReferencePoint = m_updateContext.GetOrigin();
 
@@ -2273,12 +2274,38 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	
 	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 
+
+
+
 	constexpr size_t maxPlanets = 2;
 	CcpMath::Sphere planets[maxPlanets];
 	SetupPlanetsAsShadowCaster( planets, maxPlanets );
 
+
 	if( m_volumetricsRenderer )
 	{
+
+		EvePlanet* sun = nullptr;
+		for( EvePlanet* planet : m_planets )
+		{
+			if( planet->GetTranslationCurve() != nullptr && planet->GetTranslationCurve() == m_sunBall )
+			{
+				sun = planet;
+				break;
+			}
+		}
+		float angle = 0.0f;
+
+		if( sun != nullptr )
+		{
+			Vector3 worldPosition = sun->GetWorldPosition();
+			float distance = Length( worldPosition );
+			float radius = sun->GetRadius() * 0.5f;
+			float cosAngle = sqrtf( distance * distance - radius * radius ) / distance;
+			angle = acosf( cosAngle );
+		}
+
+		m_volumetricsRenderer->SetSunAngle( angle );
 		m_volumetricsRenderer->SetPlanets( planets, maxPlanets );
 	}
 

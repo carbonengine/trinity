@@ -108,6 +108,7 @@ public:
 
 	void UpdateVariableStore();
 	void SetPlanets( const CcpMath::Sphere* planets, size_t planetCount );
+	void SetSunAngle( float angle );
 	void RenderShadows(
 		const EveComponentRegistry& registry,
 		ITr2TextureProvider* shadowMap,
@@ -260,10 +261,10 @@ private:
 		Matrix ReprojectionMatrix;
 
 		Vector3 SunViewDirection;
-		float _pad4;
+		float SunAngle;
 
 		Vector3 SunWorldDirection;
-		float _pad5;
+		float pad0;
 
 		Vector3 SunColor;
 		float LightProfileTextureWidth;
@@ -291,6 +292,7 @@ private:
 	bool m_castShadows;
 	bool m_receiveShadows;
 
+	float m_sunAngle;
 	std::array<CcpMath::Sphere, 2> m_planets;
 };
 

@@ -975,7 +975,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 			data->ReprojectionMatrix = Transpose( reprojectionMatrix );
 
 			Vector4 tempSunDir = Vector4( -sunDirection, 0.0f ) * view;
-			data->SunViewDirection = Vector3(tempSunDir.x, tempSunDir.y, tempSunDir.z);
+			data->SunViewDirection = Vector3( tempSunDir.x, tempSunDir.y, tempSunDir.z );
+			data->SunAngle = m_sunAngle;
 			data->SunWorldDirection = -sunDirection;
 
 			data->SunColor = Vector3( sunColor.r, sunColor.g, sunColor.b );
@@ -1165,6 +1166,13 @@ void Tr2VolumetricsRenderer::SetPlanets( const CcpMath::Sphere* planets, size_t 
 	CCP_ASSERT_M( planetCount == 2, "Tr2VolumetricsRenderer expects two planets!" );
 
 	memcpy( m_planets.data(), planets, planetCount * sizeof( CcpMath::Sphere ) );
+}
+
+
+
+void Tr2VolumetricsRenderer::SetSunAngle( float angle )
+{
+	m_sunAngle = angle;
 }
 
 void Tr2VolumetricsRenderer::RenderShadows(
