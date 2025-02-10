@@ -11,6 +11,18 @@ Be::VarChooser PostProcessQualityChooser[] =
 	{ 0 }
 };
 
+Be::VarChooser BloomDebugChooser[] = {
+	{ "None", BeCast( TriStepRenderPostProcess::BloomDebugMode::BLOOM_DEBUG_NONE ), "No Debug" },
+	{ "All", BeCast( TriStepRenderPostProcess::BloomDebugMode::BLOOM_DEBUG_ALL ), "Show all steps" },
+	{ "Step1", BeCast( TriStepRenderPostProcess::BloomDebugMode::BLOOM_DEBUG_STEP1 ), "Show step 1" },
+	{ "Step2", BeCast( TriStepRenderPostProcess::BloomDebugMode::BLOOM_DEBUG_STEP2 ), "Show step 2" },
+	{ "Step3", BeCast( TriStepRenderPostProcess::BloomDebugMode::BLOOM_DEBUG_STEP3 ), "Show step 3" },
+	{ "Step4", BeCast( TriStepRenderPostProcess::BloomDebugMode::BLOOM_DEBUG_STEP4 ), "Show step 4" },
+	{ "Step5", BeCast( TriStepRenderPostProcess::BloomDebugMode::BLOOM_DEBUG_STEP5 ), "Show step 5" },
+	{ "Step6", BeCast( TriStepRenderPostProcess::BloomDebugMode::BLOOM_DEBUG_STEP6 ), "Show step 6" },
+	{ 0 }
+};
+
 BLUE_REGISTER_ENUM_EX( "PostProcessQuality", TriStepRenderPostProcess::PostProcessingQuality, PostProcessQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
@@ -45,6 +57,8 @@ const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
 		MAP_ATTRIBUTE( "reactive", m_reactiveMask, "reactive texture", Be::READ );
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "quality", m_quality, "The quality of the post process", Be::READWRITE | Be::ENUM | Be::NOTIFY, PostProcessQualityChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "bloomDebugMode", m_bloomDebugMode, "bloom debug mode \n:jessica-group: Debug", Be::READWRITE | Be::NOTIFY | Be::ENUM, BloomDebugChooser )
+		MAP_ATTRIBUTE( "useNewBloom", m_useNewBloom, "Use the new bloom effect", Be::READWRITE | Be::NOTIFY )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
 		(

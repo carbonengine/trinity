@@ -161,7 +161,85 @@ BlueSharedString GetFinalizeTypeOptionValue( BlurFinalize finalize )
 	}
 	return BlueSharedString( "BLUR_FINALIZE_TYPE_NONE" );
 }
+}
 
+namespace GaussianDistribution
+{
+
+float NormalDistribution( float x, float sigma, float weight )
+{
+	const float dx = std::abs( x );
+	const float clampedOneMinusDX = std::max( 0.0f, 1.0f - ( dx * dx ) );
+
+	if( weight > 1.0f )
+	{
+		return std::pow( clampedOneMinusDX, weight );
+	}
+	const float gaussian = std::exp( -TRI_PI * 5.0f * ( ( dx * dx ) / ( sigma * sigma ) ) );
+	return Lerp( gaussian, clampedOneMinusDX, weight );
+}
+
+GaussianData CalculateGaussianPassParameters( float radius, float centerWeight, float normalizingFactor, Vector3 overallWeight, Vector2 direction )
+{
+
+	float clampedRadius = std::clamp( radius, 0.0001f, (float)Bloom::MAX_FILTER_STEPS - 1 );
+	int integerRadius = (int)std::ceilf( clampedRadius );
+
+	std::vector<std::pair<float, float>> taps;
+	taps.reserve( Bloom::MAX_FILTER_STEPS );
+	float weightSum = 0;
+	// calculate the weights and offsets
+	for( int i = -integerRadius; i <= integerRadius; i += 2 )
+	{
+		float weight = NormalDistribution( (float)i, clampedRadius, centerWeight );
+
+		// if we are in the last step, we don't want to tap outside of the radius, so we will set this to 0
+		float offsetWeight = i == integerRadius ? 0 : NormalDistribution( (float)i + 1, clampedRadius, centerWeight );
+
+		float sampleWeight = weight + offsetWeight;
+		if( sampleWeight == 0 )
+		{
+			continue;
+		}
+		float offset = ( (float)i + offsetWeight / sampleWeight ) * normalizingFactor;
+
+		// add the weight to the sum, so pixels that are outside of the screen still decrease the values of the pixels that land inside of the screen
+		// this is done so the pixels inside of the screen don't become brighter
+		weightSum += weight + offsetWeight;
+
+		if( offset < -1 || offset > 1 )
+		{
+			continue;
+		}
+
+		taps.push_back( std::make_pair( sampleWeight, offset ) );
+	}
+
+	// Since we pack the 2x weight and offset into a vector4 it is important that it is a multiple of 2...
+	if( taps.size() % 2 > 0 )
+	{
+		taps.push_back( std::make_pair( 0.0f, 0.0f ) );
+	}
+
+	GaussianData data;
+	data.overallWeight = overallWeight;
+	data.count = (uint32_t)(taps.size()/2);
+	uint32_t index = 0;
+
+	// Fill in the data
+	for( uint32_t i = 0; i < taps.size(); i+=2 )
+	{
+		// pack 2 weight and offset into a vector4
+		float weight1 = taps[i].first / weightSum;
+		float offset1 = taps[i].second;
+		float weight2 = taps[i + 1].first / weightSum;
+		float offset2 = taps[i + 1].second;
+
+		data.weightOffset[index++] = Vector4(weight1, offset1, weight2, offset2);
+	}
+
+	return data;
+}
 }
 
 namespace AMDSharpening
@@ -184,7 +262,9 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_vignetteEnabled( false ),
 	m_sceneDirty( false ),
 	m_lastFrameTime( std::numeric_limits<long long>().max() ),
-	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID ),
+	m_bloomDebugMode( BloomDebugMode::BLOOM_DEBUG_NONE ),
+	m_useNewBloom( true )
 {
 	m_renderInfo.CreateInstance();
 	m_tonemappingEffect.CreateInstance();
@@ -248,7 +328,7 @@ TriStepRenderPostProcess::~TriStepRenderPostProcess( void )
 	{
 		m_scene->SetVelocityMap( nullptr );
 	}
-
+	
 	m_scene = nullptr;
 }
 
@@ -291,6 +371,7 @@ void TriStepRenderPostProcess::SetupVelocityMap()
 bool TriStepRenderPostProcess::OnModified( Be::Var* value )
 {
 	m_sceneDirty = true;
+
 	return true;
 }
 
@@ -473,6 +554,11 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), bloomTexture ? bloomTexture.GetRenderTarget() : m_renderInfo->GetBlackTexture() );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), upscaledSource );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "OutputGamma" ), g_eveSpaceSceneGammaBrightness );
+
+	if( bloom && m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+	{
+		m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), bloomTexture );
+	}
 
 	ProcessDesaturate( desaturate );
 	ProcessFade( fade );
@@ -719,7 +805,7 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 	{
 		bool exposureDependant = bloom->m_exposureDependency && m_exposure != nullptr;
 
-		if( m_bloomHighPassFilter == nullptr )
+		if( m_downSamplerLuminancePreserve == nullptr || m_downSampler == nullptr || m_upsamplerVertical == nullptr || m_upsamplerHorizontal == nullptr )
 		{
 			m_bloomHighPassFilter.CreateInstance();
 			m_bloomHighPassFilter->StartUpdate();
@@ -738,13 +824,51 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrimeWeight" ), bloom->m_grimeWeight );
 			m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( "Grime" ), bloom->m_grimePath.c_str() );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			if(m_useNewBloom)
+			{
+				m_tonemappingEffect->SetOption( BlueSharedString( "NEW_BLOOM_TOGGLE" ), BlueSharedString( "NEW_BLOOM_ENABLED" ) );
+			}
+			else
+			{
+				m_tonemappingEffect->SetOption( BlueSharedString( "NEW_BLOOM_TOGGLE" ), BlueSharedString( "NEW_BLOOM_DISABLED" ) );
+			}
 
 			m_tonemappingEffect->EndUpdate();
+
+			m_downSamplerLuminancePreserve.CreateInstance();
+			m_downSamplerLuminancePreserve->StartUpdate();
+			m_downSamplerLuminancePreserve->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Downsample.fx" );
+			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
+			m_downSamplerLuminancePreserve->SetOption( BlueSharedString( "EXPOSURE_DEPENDANCE" ), hasDynamicExposure ? BlueSharedString( "EXPOSURE_DEPENDANCE_ON" ) : BlueSharedString("EXPOSURE_DEPENDANCE_OFF" ));
+			m_downSamplerLuminancePreserve->SetOption( BlueSharedString( "LUNINANCE_PRESERVE" ), BlueSharedString( "LUNINANCE_PRESERVE_ON" ) );
+			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
+
+			m_downSamplerLuminancePreserve->EndUpdate();
+			
+			m_downSampler.CreateInstance();
+			m_downSampler->StartUpdate();
+			m_downSampler->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Downsample.fx" );
+			m_downSampler->SetOption( BlueSharedString( "LUNINANCE_PRESERVE" ), BlueSharedString( "LUNINANCE_PRESERVE_OFF" ) );
+			m_downSampler->EndUpdate();
+			
+			m_upsamplerHorizontal.CreateInstance();
+			m_upsamplerHorizontal->StartUpdate();
+			m_upsamplerHorizontal->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Upsample.fx" );
+			m_upsamplerHorizontal->EndUpdate();
+
+			m_upsamplerVertical.CreateInstance();
+			m_upsamplerVertical->StartUpdate();
+			m_upsamplerVertical->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Upsample.fx" );
+			m_upsamplerVertical->SetOption( BlueSharedString( "UPSAMPLING_STEP" ), BlueSharedString( "UPSAMPLING_STEP_SECOND" ) );
+			m_upsamplerVertical->EndUpdate();
+
+			m_bloomConstantBuffer = Tr2ConstantBufferAL();
 
 			bloom->SetDirty( false );
 		}
 		else if( bloom->IsDirty() )
 		{
+			
 			m_bloomHighPassFilter->StartUpdate();
 			m_bloomHighPassFilter->SetParameter( BlueSharedString( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
 			m_bloomHighPassFilter->SetParameter( BlueSharedString( "LuminanceScale" ), bloom->m_luminanceScale );
@@ -755,16 +879,30 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 			}
 			m_bloomHighPassFilter->EndUpdate();
 
+			m_downSamplerLuminancePreserve->StartUpdate();
+			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
+			m_downSamplerLuminancePreserve->EndUpdate();
+
 			m_tonemappingEffect->StartUpdate();
 			m_tonemappingEffect->SetParameter( BlueSharedString( "BloomBrightness" ), bloom->m_bloomBrightness );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrimeWeight" ), bloom->m_grimeWeight );
+			if( m_useNewBloom )
+			{
+				m_tonemappingEffect->SetOption( BlueSharedString( "NEW_BLOOM_TOGGLE" ), BlueSharedString( "NEW_BLOOM_ENABLED" ) );
+			}
+			else
+			{
+				m_tonemappingEffect->SetOption( BlueSharedString( "NEW_BLOOM_TOGGLE" ), BlueSharedString( "NEW_BLOOM_DISABLED" ) );
+			}
 
 			TriTextureParameter* resource = dynamic_cast<TriTextureParameter*>( m_tonemappingEffect->GetResourceByName( "Grime" ) );
 			resource->SetResourcePath( bloom->m_grimePath.c_str() );
 
 			m_tonemappingEffect->EndUpdate();
-
+			
+			
 			bloom->SetDirty( false );
+			
 		}
 	}
 	else
@@ -772,6 +910,11 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 		if( m_bloomHighPassFilter != nullptr )
 		{
 			m_bloomHighPassFilter = nullptr;
+			m_downSamplerLuminancePreserve = nullptr;
+			m_downSampler = nullptr;
+			m_upsamplerVertical = nullptr;
+			m_upsamplerHorizontal = nullptr;
+			m_bloomDebugShader = nullptr;
 
 			m_tonemappingEffect->StartUpdate();
 			m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), m_renderInfo->GetBlackTexture() );
@@ -783,21 +926,180 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 	return bloom != nullptr && bloom->IsActive();
 }
 
-Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom )
+
+Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2PostProcessRenderInfo::Texture& dest, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom )
 {
 	GPU_REGION( renderContext, "Bloom" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	auto rt1 = m_renderInfo->GetTempTexture( "Bloom", 0.5f );
-	m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
-	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
+	if( !m_useNewBloom )
+	{
+		auto rt1 = m_renderInfo->GetTempTexture( "Bloom", 0.5f );
+		m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
+		DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
 
-	auto blurContext = PostProcessBlur::CreateBlurContext( 0.5f );
-	Blur( *rt1, *rt1, renderContext, blurContext);
+		auto blurContext = PostProcessBlur::CreateBlurContext( 0.5f );
+		Blur( *rt1, *rt1, renderContext, blurContext );
 
-	return rt1;
+		return rt1;
+	}
+
+	int depth = Bloom::MAX_BLOOM_STEPS;
+	auto black = m_renderInfo->GetBlackTexture();
+
+	float currentSize = 0.5f;
+
+	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> downsampleTexture;
+	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleTexture;
+	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
+	{
+		downsampleTexture[i] = m_renderInfo->GetTempTexture( "Downsample_" + i, currentSize );
+		upsampleTexture[i] = m_renderInfo->GetTempTexture( "Upsample_" + i, currentSize );
+
+		currentSize *= 0.5f;
+	}
+
+
+	auto lastRt = dest;
+	{
+		GPU_REGION( renderContext, "Downsample" )
+		for( int i = 0; i < depth; ++i )
+		{
+			auto rt = downsampleTexture[i];
+			auto effect = i == 0 ? m_downSamplerLuminancePreserve : m_downSampler;
+			auto invTexelSize = Vector2( 1.0f / (float)lastRt.GetRenderTarget()->GetWidth(), 1.0f / (float)lastRt.GetRenderTarget()->GetHeight() );
+
+			effect->SetParameter( BlueSharedString( "BlitCurrent" ), lastRt );
+
+			auto downsampleInfo = DownsampleData
+			{
+				invTexelSize
+			};
+			FillAndSetConstants( m_bloomConstantBuffer, &downsampleInfo, sizeof( downsampleInfo ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+				
+			DrawInto( *rt, Tr2LoadAction::DONT_CARE, effect, renderContext );
+
+			lastRt = rt;
+		}
+	}
+	
+	{
+	
+		GPU_REGION( renderContext, "Upsample" );
+
+		float tintScale = ( 1.0f / Bloom::MAX_BLOOM_STEPS ) * bloom->m_bloomBrightness;
+
+		Vector2 directionalWeight = Vector2( std::max( bloom->m_directionalWeight, 0.0f ), std::fabsf(bloom->m_directionalWeight) );
+		for( int i = depth - 1; i >= 0; --i )
+		{
+			lastRt = i == depth - 1 ? black : lastRt;
+
+			// do a two pass downsampling with gaussian blur on the downsampled texture
+			// then the last upsampled texture will be added on top
+
+			auto currentMip = downsampleTexture[i];
+			auto currentUpsampled = upsampleTexture[i];
+			auto tmp = m_renderInfo->GetTempTexture( "BloomTmp", currentUpsampled->GetWidth(), currentUpsampled->GetHeight() );
+
+			float radiusInPixels = std::max( (float)currentMip->GetWidth(), (float)currentMip->GetHeight() ) * bloom->m_sizeScale * bloom->m_stepSizes[i] * 0.01f * 0.5f;
+
+			auto invTexelSize = Vector2( 1.0f / (float)currentMip->GetWidth(), 1.0f / (float)currentMip->GetHeight() );
+			{
+				std::string name = "Horizontal Step " + std::to_string( i );
+				GPU_REGION( renderContext, name.c_str() );
+
+				m_upsamplerHorizontal->SetParameter( BlueSharedString( "BlitCurrent" ), currentMip );
+				auto gaussianOutput = GaussianDistribution::CalculateGaussianPassParameters( radiusInPixels, directionalWeight.x, invTexelSize.x, Vector3( 1, 1, 1 ), Vector2( 1, 0 ) );
+				FillAndSetConstants( m_bloomConstantBuffer, &gaussianOutput, sizeof( gaussianOutput ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+				DrawInto( *tmp, Tr2LoadAction::DONT_CARE, m_upsamplerHorizontal, renderContext );
+			}
+			
+			{
+				std::string name = "Vertical Step " + std::to_string( i );
+				GPU_REGION( renderContext, name.c_str() );
+
+				m_upsamplerVertical->SetParameter( BlueSharedString( "BlitCurrent" ), tmp );
+				m_upsamplerVertical->SetParameter( BlueSharedString( "LastMip" ), lastRt );
+
+				Vector4 tint = bloom->m_stepTints[i] * tintScale;
+				auto gaussianOutput = GaussianDistribution::CalculateGaussianPassParameters( radiusInPixels, directionalWeight.y, invTexelSize.y, tint.GetXYZ(), Vector2( 0, 1 ) );
+				FillAndSetConstants( m_bloomConstantBuffer, &gaussianOutput, sizeof( gaussianOutput ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+				DrawInto( *currentUpsampled, Tr2LoadAction::DONT_CARE, m_upsamplerVertical, renderContext );
+			}
+			
+
+			lastRt = currentUpsampled;
+		}
+	}
+
+	if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+	{
+		return RenderBloomDebug( downsampleTexture, upsampleTexture, dest, renderContext );
+	}
+	else
+	{
+		m_bloomDebugShader = nullptr;
+	}
+	
+	return lastRt;
 }
 
+Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloomDebug( std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS>& downsample, 
+std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
+																			  Tr2PostProcessRenderInfo::Texture& blitCurrent,
+																			  Tr2RenderContext& renderContext )
+{	
+	if( m_bloomDebugShader == nullptr )
+	{
+		m_bloomDebugShader.CreateInstance();
+		m_bloomDebugShader->StartUpdate();
+		m_bloomDebugShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/BloomDebug.fx" );
+		m_bloomDebugShader->EndUpdate();
+	}
+
+	m_bloomDebugShader->StartUpdate();
+	switch( m_bloomDebugMode )
+	{
+	case BloomDebugMode::BLOOM_DEBUG_ALL:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_ALL" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP1:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_1" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP2:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_2" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP3:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_3" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP4:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_4" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP5:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_5" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP6:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_6" ) );
+		break;
+	default:
+		break;
+	}
+	m_bloomDebugShader->EndUpdate();
+	
+	GPU_REGION( renderContext, "Debug" );
+	m_bloomDebugShader->SetParameter( BlueSharedString( "BlitCurrent" ), blitCurrent );
+	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
+	{
+		m_bloomDebugShader->SetParameter( BlueSharedString( "Downsample" + std::to_string( i + 1 ) ), downsample[i] );
+		m_bloomDebugShader->SetParameter( BlueSharedString( "Upsample" + std::to_string( i + 1 ) ), upsample[i] );
+	}
+
+	auto debugView = m_renderInfo->GetTempTexture();
+
+	DrawInto( *debugView, Tr2LoadAction::DONT_CARE, m_bloomDebugShader, renderContext );
+
+	return debugView;
+}
 
 bool TriStepRenderPostProcess::ProcessGodRays( Tr2PPGodRaysEffect* godrays )
 {

@@ -33,6 +33,23 @@ public:
 	PriorityBlend::Attribute<float> bloomLuminanceThreshold;
 	PriorityBlend::Attribute<float> bloomLuminanceScale;
 
+	PriorityBlend::Attribute<float> bloomSizeScale = Bloom::DEFAULT_BLOOM_SIZE_SCALE;
+	PriorityBlend::Attribute<float> bloomDirectionalWeight = Bloom::DEFAULT_BLOOM_DIRECTIONAL_WEIGHT;
+
+	PriorityBlend::Attribute<float> bloomStepSize1 = Bloom::DEFAULT_BLOOM_STEP_1_SIZE;
+	PriorityBlend::Attribute<float> bloomStepSize2 = Bloom::DEFAULT_BLOOM_STEP_2_SIZE;
+	PriorityBlend::Attribute<float> bloomStepSize3 = Bloom::DEFAULT_BLOOM_STEP_3_SIZE;
+	PriorityBlend::Attribute<float> bloomStepSize4 = Bloom::DEFAULT_BLOOM_STEP_4_SIZE;
+	PriorityBlend::Attribute<float> bloomStepSize5 = Bloom::DEFAULT_BLOOM_STEP_5_SIZE;
+	PriorityBlend::Attribute<float> bloomStepSize6 = Bloom::DEFAULT_BLOOM_STEP_6_SIZE;
+
+	PriorityBlend::Attribute<Color> bloomStepTint1 = Bloom::DEFAULT_BLOOM_STEP_1_TINT;
+	PriorityBlend::Attribute<Color> bloomStepTint2 = Bloom::DEFAULT_BLOOM_STEP_2_TINT;
+	PriorityBlend::Attribute<Color> bloomStepTint3 = Bloom::DEFAULT_BLOOM_STEP_3_TINT;
+	PriorityBlend::Attribute<Color> bloomStepTint4 = Bloom::DEFAULT_BLOOM_STEP_4_TINT;
+	PriorityBlend::Attribute<Color> bloomStepTint5 = Bloom::DEFAULT_BLOOM_STEP_5_TINT;
+	PriorityBlend::Attribute<Color> bloomStepTint6 = Bloom::DEFAULT_BLOOM_STEP_6_TINT;
+
 	PriorityBlend::Attribute<float> grimeIntensity;
 	PriorityBlend::Attribute<BlueSharedString> grimePath;
 
