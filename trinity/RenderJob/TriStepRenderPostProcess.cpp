@@ -953,8 +953,11 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleTexture;
 	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
 	{
-		downsampleTexture[i] = m_renderInfo->GetTempTexture( "Downsample_" + i, currentSize );
-		upsampleTexture[i] = m_renderInfo->GetTempTexture( "Upsample_" + i, currentSize );
+		auto name = "Downsample_" + std::to_string( i );
+		downsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
+
+		name = "Upsample_" + std::to_string( i );
+		upsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
 
 		currentSize *= 0.5f;
 	}
