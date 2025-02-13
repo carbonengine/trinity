@@ -214,7 +214,7 @@ private:
 	bool m_fadeEnabled;
 	uint8_t m_lutsEnabled;
 	bool m_vignetteEnabled;
-	void ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping, Tr2RenderTarget* blitCurrent, Tr2RenderTarget* blitOriginal );
+	void ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping );
 
 	bool m_sceneDirty;
 

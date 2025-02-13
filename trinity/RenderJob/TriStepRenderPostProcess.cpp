@@ -497,23 +497,11 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 		if( tonemapping )
 		{
-			static auto LinearAngle = BlueSharedString( "LinearAngle" );
-			m_tonemappingEffect->SetParameter( LinearAngle, tonemapping->m_linearAngle );
-
-			static auto LinearStrength = BlueSharedString( "LinearStrength" );
-			m_tonemappingEffect->SetParameter( LinearStrength, tonemapping->m_linearStrength );
-
-			static auto ShoulderStrength = BlueSharedString( "ShoulderStrength" );
-			m_tonemappingEffect->SetParameter( ShoulderStrength, tonemapping->m_shoulderStrength );
-
-			static auto ToeDenominator = BlueSharedString( "ToeDenominator" );
-			m_tonemappingEffect->SetParameter( ToeDenominator, tonemapping->m_toeDenominator );
-
-			static auto ToeNumerator = BlueSharedString( "ToeNumerator" );
-			m_tonemappingEffect->SetParameter( ToeNumerator, tonemapping->m_toeNumerator );
-
-			static auto WhiteScale = BlueSharedString( "WhiteScale" );
-			m_tonemappingEffect->SetParameter( WhiteScale, tonemapping->m_whiteScale );
+			ProcessTonemapping( tonemapping );
+		}
+		else
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_TOGGLE" ), BlueSharedString( "TONE_MAPPING_DISABLED" ) );
 		}
 	}
 
@@ -1670,22 +1658,102 @@ void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContex
 	DrawInto( *dest, Tr2LoadAction::DONT_CARE, m_taaCopyEffect, renderContext );
 }
 
-void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping, Tr2RenderTarget* blitCurrent, Tr2RenderTarget* blitOriginal )
+void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping )
 {
 	if( tonemapping->IsDirty() )
 	{
 		m_tonemappingEffect->StartUpdate();
-		m_tonemappingEffect->SetParameter( BlueSharedString( "ShoulderStrength" ), tonemapping->m_shoulderStrength );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "LinearStrength" ), tonemapping->m_linearStrength );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "LinearAngle" ), tonemapping->m_linearAngle );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeStrength" ), tonemapping->m_toeStrength );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeNumerator" ), tonemapping->m_toeNumerator );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeDenominator" ), tonemapping->m_toeDenominator );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "WhiteScale" ), tonemapping->m_whiteScale );
+
+		if ( tonemapping->IsActive() )
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_TOGGLE" ), BlueSharedString( "TONE_MAPPING_ENABLED" ) );
+		}
+		else
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_TOGGLE" ), BlueSharedString( "TONE_MAPPING_DISABLED" ) );
+		}
+
+		if( tonemapping->m_useSweeteners )
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "SWEETENER_TOGGLE" ), BlueSharedString( "SWEETENER_ENABLED" ) );
+		}
+		else
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "SWEETENER_TOGGLE" ), BlueSharedString( "SWEETENER_DISABLED" ) );
+		}
+		m_tonemappingEffect->SetParameter( BlueSharedString( "AcesSlope" ), tonemapping->m_slope );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "AcesToe" ), tonemapping->m_toe );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "AcesShoulder" ), tonemapping->m_shoulder );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "AcesBlackClip" ), tonemapping->m_blackClip );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "AcesWhiteClip" ), tonemapping->m_whiteClip );
+
+		// --- taken from: https://github.com/TheRealMJP/BakingLab/blob/master/BakingLab/ACES.hlsl ---
+		static const Matrix ACESInputMat = Transpose( Matrix(
+			0.59719f, 0.35458f, 0.04823f, 0.f,
+			0.07600f, 0.90834f, 0.01566f, 0.f,
+			0.02840f, 0.13383f, 0.83777f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		) );
+
+		// ODT_SAT => XYZ => D60_2_D65 => sRGB
+		static const Matrix ACESOutputMat = Transpose( Matrix(
+			1.60475, -0.53108, -0.07367, 0.f, 
+			-0.10208, 1.10813, -0.00605, 0.f,
+			-0.00327, -0.07276, 1.07602, 0.f,
+			 0.f, 0.f, 0.f, 1.f
+		) );
+		// --------------------------------------------------------------------------------------------
+
+		// --- taken from https://community.acescentral.com/t/colour-artefacts-or-breakup-using-aces/520/8 ---
+		const Matrix BlueCorrect = Matrix(
+			0.9404372683f, -0.0183068787f, 0.0778696104f, 0.f, 
+			0.0083786969f, 0.8286599939f, 0.1629613092f, 0.f, 
+			0.0005471261f, -0.0008833746f, 1.0003362486f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		);
+		const Matrix BlueCorrectInv = Matrix(
+			1.06318f, 0.0233956f, -0.0865726f, 0.f,
+			-0.0106337f, 1.20632f, -0.19569f, 0.f,
+			-0.000590887f, 0.00105248f, 0.999538f, 0.f,
+			0.f, 0.f, 0.f, 1.f
+		);
+		// ---------------------------------------------------------------------------------------------------
+
+		Matrix blueCorrection;
+		{
+			Vector3 row1 = Lerp( Vector3( 1.f, 0.f, 0.f ), BlueCorrect.GetX(), tonemapping->m_blueCorrection );
+			Vector3 row2 = Lerp( Vector3( 0.f, 1.f, 0.f ), BlueCorrect.GetY(), tonemapping->m_blueCorrection );
+			Vector3 row3 = Lerp( Vector3( 0.f, 0.f, 1.f ), BlueCorrect.GetZ(), tonemapping->m_blueCorrection );
+			blueCorrection = Transpose( Matrix(
+				row1.x, row1.y, row1.z, 0.,
+				row2.x, row2.y, row2.z, 0.,
+				row3.x, row3.y, row3.z, 0.,
+				0., 0., 0., 1.
+			) );
+		}
+		Matrix blueCorrectionInv;
+		{
+			Vector3 row1 = Lerp( Vector3( 1.f, 0.f, 0.f ), BlueCorrectInv.GetX(), tonemapping->m_blueCorrection );
+			Vector3 row2 = Lerp( Vector3( 0.f, 1.f, 0.f ), BlueCorrectInv.GetY(), tonemapping->m_blueCorrection );
+			Vector3 row3 = Lerp( Vector3( 0.f, 0.f, 1.f ), BlueCorrectInv.GetZ(), tonemapping->m_blueCorrection );
+			blueCorrectionInv = Transpose( Matrix(
+				row1.x, row1.y, row1.z, 0., 
+				row2.x, row2.y, row2.z, 0., 
+				row3.x, row3.y, row3.z, 
+				0., 0., 0., 0., 1. 
+			) );
+		}
+
+		Matrix scale = ScalingMatrix( Vector3( tonemapping->m_scale, tonemapping->m_scale, tonemapping->m_scale ) );
+
+		Matrix input = Transpose( ACESInputMat * blueCorrection * scale );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "AcesInputMat" ), input );
+
+		Matrix output = Transpose( blueCorrectionInv * ACESOutputMat );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "AcesOutputMat" ), output );
+
 		m_tonemappingEffect->EndUpdate();
 	}
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), blitCurrent );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), blitOriginal );
 }
 
 bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx )
