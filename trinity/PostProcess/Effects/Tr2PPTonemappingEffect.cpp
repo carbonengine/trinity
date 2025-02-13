@@ -9,13 +9,14 @@
 
 
 Tr2PPTonemappingEffect::Tr2PPTonemappingEffect( IRoot* lockobj ) :
-	m_shoulderStrength( 0.125f ),
-	m_linearStrength( 0.25f ),
-	m_linearAngle( 0.1f ),
-	m_toeStrength( 0.15f ),
-	m_toeNumerator( 0.021f ),
-	m_toeDenominator( 0.3f ),
-	m_whiteScale( 2.5f )
+	m_slope( 0.88f ),
+	m_toe( 0.55f ),
+	m_shoulder( 0.26f ),
+	m_blackClip( 0.f ),
+	m_whiteClip( 0.04f ),
+	m_scale( 1.f ),
+	m_blueCorrection( .0f ),
+	m_useSweeteners( true )
 {
 	
 }
