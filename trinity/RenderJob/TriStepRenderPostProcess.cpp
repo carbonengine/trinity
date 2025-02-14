@@ -936,11 +936,16 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 	auto black = m_renderInfo->GetBlackTexture();
 
 	float currentSize = 0.5f;
+	uint32_t minDim = std::min( dest.GetRenderTarget()->GetHeight(), dest.GetRenderTarget()->GetWidth() );
 
 	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> downsampleTexture;
 	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleTexture;
 	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
 	{
+		if( (uint32_t)( (float)minDim * currentSize ) == 0 )
+		{
+			break;
+		}
 		auto name = "Downsample_" + std::to_string( i );
 		downsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
 
@@ -948,13 +953,8 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 		upsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
 
 		currentSize *= 0.5f;
-		if( (int)currentSize == 0 )
-		{
-			break;
-		}
 		++depth;
 	}
-
 
 	auto lastRt = dest;
 	{
