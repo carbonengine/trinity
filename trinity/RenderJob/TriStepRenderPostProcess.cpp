@@ -942,10 +942,10 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
 	{
 		auto name = "Downsample_" + std::to_string( i );
-		downsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R11G11B10_FLOAT );
+		downsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
 
 		name = "Upsample_" + std::to_string( i );
-		upsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R11G11B10_FLOAT );
+		upsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
 
 		currentSize *= 0.5f;
 	}
@@ -977,7 +977,9 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 	}
 	
 	{
-	
+		// do a two pass downsampling with gaussian blur on the downsampled texture
+		// then the last upsampled texture will be added on top
+
 		GPU_REGION( renderContext, "Upsample" );
 
 		float tintScale = ( 1.0f / Bloom::MAX_BLOOM_STEPS ) * bloom->m_bloomBrightness;
@@ -986,10 +988,6 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 		for( int i = depth - 1; i >= 0; --i )
 		{
 			lastRt = i == depth - 1 ? black : lastRt;
-
-			// do a two pass downsampling with gaussian blur on the downsampled texture
-			// then the last upsampled texture will be added on top
-			Tr2ConstantBufferAL bloomConstantBuffer;
 
 			auto currentMip = downsampleTexture[i];
 			auto currentUpsampled = upsampleTexture[i];
@@ -1029,7 +1027,6 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 			// draw into the downsample texture, because they will not be used again
 			DrawInto( *currentMip, Tr2LoadAction::DONT_CARE, m_upsamplerVertical, renderContext );
 			
-
 			lastRt = currentMip;
 		}
 	}
