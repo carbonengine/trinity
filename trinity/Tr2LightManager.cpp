@@ -163,6 +163,7 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 	m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_DISABLED;
 
 	m_Raytracing.m_destTex.CreateInstance();
+    m_Raytracing.m_destTex->Create( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
 
 	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", m_Raytracing.m_destTex );
 
@@ -315,6 +316,8 @@ void Tr2LightManager::UpdateRaytracingDestination( ShadowQuality shadowQuality )
 		// Setup depth stencil texture
 		m_Raytracing.m_destTex = Tr2RenderTargetPtr();
 		m_Raytracing.m_destTex.CreateInstance();
+        m_Raytracing.m_destTex->Create( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
+        
 		// Texture is created on the fly in the render function when needed.
 	}
 }

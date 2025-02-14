@@ -746,13 +746,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 	if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.rtCalculateFroxels && resources.rtCalculateFroxels->GetShaderStateInterface() )
 	{
-		//Hack to disable raytraced shadows on Metal, as it currently does not work.
-#if TRINITY_PLATFORM != TRINITY_METAL
 		shadowType = SHADOWS_RAYTRACED;
-#else
-		shadowType = SHADOWS_DISABLED;
-#endif
-		
 	}
 	else if( cascadedShadowMap && ( shadowQuality == ShadowQuality::SHADOW_LOW || shadowQuality == ShadowQuality::SHADOW_HIGH ) )
 	{
@@ -1064,8 +1058,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 				shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
 			}
-			
-			renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
+            
+            renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 		}
 
 		int workgroupSize = 4;

@@ -479,7 +479,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	ProcessLut( luts );
 	ProcessVignette( vignette );
 
-	{
+	if( postProcess != nullptr ){
 		static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
 		m_tonemappingEffect->SetParameter( WhiteTemperature, postProcess->m_whiteTemperature );
 		static auto WhiteTint = BlueSharedString( "WhiteTint" );
@@ -902,6 +902,10 @@ void TriStepRenderPostProcess::RenderSignalLoss( Tr2RenderTarget* dest, Tr2Rende
 
 bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom, Tr2PostProcess2* postProcess )
 {
+    if( !postProcess )
+    {
+        return false;
+    }
 	if( !m_exposure || !m_exposure->IsValid() )
 	{
 		m_exposure = nullptr;
