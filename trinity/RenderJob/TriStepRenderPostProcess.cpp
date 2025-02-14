@@ -932,7 +932,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 		return rt1;
 	}
 
-	int depth = Bloom::MAX_BLOOM_STEPS;
+	int depth = 0;
 	auto black = m_renderInfo->GetBlackTexture();
 
 	float currentSize = 0.5f;
@@ -948,6 +948,11 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 		upsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
 
 		currentSize *= 0.5f;
+		if( (int)currentSize == 0 )
+		{
+			break;
+		}
+		++depth;
 	}
 
 
