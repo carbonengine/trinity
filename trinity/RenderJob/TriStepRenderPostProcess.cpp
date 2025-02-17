@@ -939,7 +939,9 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 	uint32_t minDim = std::min( dest.GetRenderTarget()->GetHeight(), dest.GetRenderTarget()->GetWidth() );
 
 	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> downsampleTexture;
+	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleHorizontalTexture;
 	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleTexture;
+
 	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
 	{
 		if( (uint32_t)( (float)minDim * currentSize ) == 0 )
@@ -952,6 +954,12 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 		name = "Upsample_" + std::to_string( i );
 		upsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
 
+		if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+		{
+			name = "Upsample_Horizontal_" + std::to_string( i );
+			upsampleHorizontalTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
+		}
+		
 		currentSize *= 0.5f;
 		++depth;
 	}
@@ -996,8 +1004,13 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 
 			auto currentMip = downsampleTexture[i];
 			auto currentUpsampled = upsampleTexture[i];
+			
+			if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+			{
+				currentUpsampled = upsampleHorizontalTexture[i];
+			}
 
-			float radiusInPixels = std::max( (float)currentMip->GetWidth(), (float)currentMip->GetHeight() ) * bloom->m_sizeScale * bloom->m_stepSizes[i] * 0.01f * 0.5f;
+			float radiusInPixels = std::max( (float)currentMip->GetWidth(), (float)currentMip->GetHeight() ) * bloom->m_sizeScale * bloom->m_stepSizes[i] * 0.01f;
 
 			auto invTexelSize = Vector2( 1.0f / (float)currentMip->GetWidth(), 1.0f / (float)currentMip->GetHeight() );
 			std::string name = "Horizontal Step " + std::to_string( i );
@@ -1015,7 +1028,13 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 			auto currentMip = downsampleTexture[i];
 			auto currentUpsampled = upsampleTexture[i];
 
-			float radiusInPixels = std::max( (float)currentMip->GetWidth(), (float)currentMip->GetHeight() ) * bloom->m_sizeScale * bloom->m_stepSizes[i] * 0.01f * 0.5f;
+			if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+			{
+				currentUpsampled = upsampleHorizontalTexture[i];
+				currentMip = upsampleTexture[i];
+			}
+
+			float radiusInPixels = std::max( (float)currentMip->GetWidth(), (float)currentMip->GetHeight() ) * bloom->m_sizeScale * bloom->m_stepSizes[i] * 0.01f;
 
 			auto invTexelSize = Vector2( 1.0f / (float)currentMip->GetWidth(), 1.0f / (float)currentMip->GetHeight() );
 			
@@ -1088,6 +1107,7 @@ std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
 	default:
 		break;
 	}
+	
 	m_bloomDebugShader->EndUpdate();
 	
 	GPU_REGION( renderContext, "Debug" );

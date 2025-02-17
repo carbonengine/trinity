@@ -48,6 +48,8 @@ const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
 		MAP_ATTRIBUTE( "taaEffect", m_taaEffect, "The taa effect", Be::READWRITE )
 		MAP_ATTRIBUTE( "accumulationBuffer0", m_accumulationBuffer0, "TAA accumulation buffer", Be::READWRITE )
 		MAP_ATTRIBUTE( "accumulationBuffer1", m_accumulationBuffer1, "TAA accumulation buffer", Be::READWRITE )
+		MAP_ATTRIBUTE( "bloomDebugShader", m_bloomDebugShader, "The bloom high pass effect", Be::READWRITE )
+
 
 		MAP_ATTRIBUTE( "depthOfFieldCoCShader", m_depthOfFieldCoCShader, "The DoF Circle of Confusion shader", Be::READWRITE);
 		MAP_ATTRIBUTE( "depthOfFieldBokehBlurShader", m_depthOfFieldBokehBlurShader, "The bokeh blur shader", Be::READWRITE );
