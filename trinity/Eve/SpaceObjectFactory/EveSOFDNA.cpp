@@ -1776,7 +1776,7 @@ EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const
 	std::string category = m_hullDatas[0]->category;
 
 	// New category data but keeping it backwards compatible
-	if( m_dataMgr->GetGenericData()->categoryData.empty() )
+	if( !m_dataMgr->GetGenericData()->categoryData.empty() )
 	{
 		// See generic.red::hullCategories for adding more reflection overrides to HullCategories
 		auto it = m_dataMgr->GetGenericData()->categoryData.find( category );

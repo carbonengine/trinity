@@ -28,6 +28,7 @@ namespace PriorityBlend
 			enabled( enabled )
 		{
 		}
+
 	};
 
 
@@ -63,7 +64,6 @@ namespace PriorityBlend
 	private:
 		ResultType m_result = Zero( T() );
 	};
-
 
 	template <typename T>
 	class MaxWeightAccumulator
@@ -165,7 +165,6 @@ namespace PriorityBlend
 			}
 			return result;
 		}
-
 	private:
 		ResultType m_result;
 	};
@@ -349,6 +348,7 @@ namespace PriorityBlend
 		{
 			EndAttribute( *observer, accumulator.GetResult() );
 		}
+
 		return accumulator.GetResult();
 	}
 

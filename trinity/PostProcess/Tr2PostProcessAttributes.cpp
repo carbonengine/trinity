@@ -90,13 +90,25 @@ typename Accumulator::ResultType Accumulate( PriorityBlend::Attribute<T> Tr2Post
 
 void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vector<Tr2PostProcessAttributes*>& sources, AttributesDebugObserver<Tr2PostProcessAttributes>* debugObserver )
 {
-
-//#define ACCUMULATE( attr, sources, debugObserver ) PriorityBlend::Accumulate( attr, sources, debugObserver, GetAttributeName( attr ) )
-
 	auto signalLossIntensity = Accumulate( &Tr2PostProcessAttributes::signalLossIntensity, sources, debugObserver );
 	auto bloomBrightness = Accumulate( &Tr2PostProcessAttributes::bloomBrightness, sources, debugObserver );
 	auto bloomLuminanceThreshold = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceThreshold, sources, debugObserver );
 	auto bloomLuminanceScale = Accumulate( &Tr2PostProcessAttributes::bloomLuminanceScale, sources, debugObserver );
+	auto bloomSizeScale = Accumulate( &Tr2PostProcessAttributes::bloomSizeScale, sources, debugObserver );
+	auto bloomDirectionalWeight = Accumulate( &Tr2PostProcessAttributes::bloomDirectionalWeight, sources, debugObserver );
+	auto bloomStepSize1 = Accumulate( &Tr2PostProcessAttributes::bloomStepSize1, sources, debugObserver );
+	auto bloomStepSize2 = Accumulate( &Tr2PostProcessAttributes::bloomStepSize2, sources, debugObserver );
+	auto bloomStepSize3 = Accumulate( &Tr2PostProcessAttributes::bloomStepSize3, sources, debugObserver );
+	auto bloomStepSize4 = Accumulate( &Tr2PostProcessAttributes::bloomStepSize4, sources, debugObserver );
+	auto bloomStepSize5 = Accumulate( &Tr2PostProcessAttributes::bloomStepSize5, sources, debugObserver );
+	auto bloomStepSize6 = Accumulate( &Tr2PostProcessAttributes::bloomStepSize6, sources, debugObserver );
+	auto bloomStepTint1 = Accumulate( &Tr2PostProcessAttributes::bloomStepTint1, sources, debugObserver );
+	auto bloomStepTint2 = Accumulate( &Tr2PostProcessAttributes::bloomStepTint2, sources, debugObserver );
+	auto bloomStepTint3 = Accumulate( &Tr2PostProcessAttributes::bloomStepTint3, sources, debugObserver );
+	auto bloomStepTint4 = Accumulate( &Tr2PostProcessAttributes::bloomStepTint4, sources, debugObserver );
+	auto bloomStepTint5 = Accumulate( &Tr2PostProcessAttributes::bloomStepTint5, sources, debugObserver );
+	auto bloomStepTint6 = Accumulate( &Tr2PostProcessAttributes::bloomStepTint6, sources, debugObserver );
+
 	auto grimeIntensity = Accumulate( &Tr2PostProcessAttributes::grimeIntensity, sources, debugObserver );
 	auto grimePath = Accumulate( &Tr2PostProcessAttributes::grimePath, sources, debugObserver );
 	auto exposureAdjustment = Accumulate( &Tr2PostProcessAttributes::exposureAdjustment, sources, debugObserver );
@@ -159,6 +171,12 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 		bloomEffect->m_bloomBrightness = bloomBrightness;
 		bloomEffect->m_luminanceThreshold = bloomLuminanceThreshold;
 		bloomEffect->m_luminanceScale = bloomLuminanceScale;
+
+		bloomEffect->m_sizeScale = bloomSizeScale;
+		bloomEffect->m_directionalWeight = bloomDirectionalWeight;
+		bloomEffect->m_stepSizes = { bloomStepSize1, bloomStepSize2, bloomStepSize3, bloomStepSize4, bloomStepSize5, bloomStepSize6 };
+		bloomEffect->m_stepTints = { bloomStepTint1, bloomStepTint2, bloomStepTint3, bloomStepTint4, bloomStepTint5, bloomStepTint6 };
+
 		postprocess.SetBloom( bloomEffect );
 	}
 	if( grimeIntensity > 0 )
@@ -274,6 +292,21 @@ void Tr2PostProcessAttributes::Reset()
 	bloomBrightness = Attribute( 0.0f );
 	bloomLuminanceThreshold = Attribute( 0.0f );
 	bloomLuminanceScale = Attribute( 0.0f );
+	bloomSizeScale = Bloom::DEFAULT_BLOOM_SIZE_SCALE;
+	bloomDirectionalWeight = Bloom::DEFAULT_BLOOM_DIRECTIONAL_WEIGHT;
+	bloomStepSize1 = Bloom::DEFAULT_BLOOM_STEP_1_SIZE;
+	bloomStepSize2 = Bloom::DEFAULT_BLOOM_STEP_2_SIZE;
+	bloomStepSize3 = Bloom::DEFAULT_BLOOM_STEP_3_SIZE;
+	bloomStepSize4 = Bloom::DEFAULT_BLOOM_STEP_4_SIZE;
+	bloomStepSize5 = Bloom::DEFAULT_BLOOM_STEP_5_SIZE;
+	bloomStepSize6 = Bloom::DEFAULT_BLOOM_STEP_6_SIZE;
+	bloomStepTint1 = Bloom::DEFAULT_BLOOM_STEP_1_TINT;
+	bloomStepTint2 = Bloom::DEFAULT_BLOOM_STEP_2_TINT;
+	bloomStepTint3 = Bloom::DEFAULT_BLOOM_STEP_3_TINT;
+	bloomStepTint4 = Bloom::DEFAULT_BLOOM_STEP_4_TINT;
+	bloomStepTint5 = Bloom::DEFAULT_BLOOM_STEP_5_TINT;
+	bloomStepTint6 = Bloom::DEFAULT_BLOOM_STEP_6_TINT;
+
 	grimeIntensity = Attribute( 0.0f );
 	grimePath = Attribute( BlueSharedString( "" ) );
 	exposureAdjustment = Attribute( 0.0f );
@@ -341,6 +374,21 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		bloomLuminanceThreshold = Attribute( bloom->m_luminanceThreshold, true );
 		grimeIntensity = Attribute( bloom->m_grimeWeight, true );
 		grimePath = Attribute( bloom->m_grimePath, true );
+
+		bloomSizeScale = Attribute( bloom->m_sizeScale, true );
+		bloomDirectionalWeight = Attribute( bloom->m_directionalWeight, true );
+		bloomStepSize1 = Attribute( bloom->m_stepSizes[0], true );
+		bloomStepSize2 = Attribute( bloom->m_stepSizes[1], true );
+		bloomStepSize3 = Attribute( bloom->m_stepSizes[2], true );
+		bloomStepSize4 = Attribute( bloom->m_stepSizes[3], true );
+		bloomStepSize5 = Attribute( bloom->m_stepSizes[4], true );
+		bloomStepSize6 = Attribute( bloom->m_stepSizes[5], true );
+		bloomStepTint1 = Attribute( bloom->m_stepTints[0], true );
+		bloomStepTint2 = Attribute( bloom->m_stepTints[1], true );
+		bloomStepTint3 = Attribute( bloom->m_stepTints[2], true );
+		bloomStepTint4 = Attribute( bloom->m_stepTints[3], true );
+		bloomStepTint5 = Attribute( bloom->m_stepTints[4], true );
+		bloomStepTint6 = Attribute( bloom->m_stepTints[5], true );
 	}
 	if( auto filmGrain = postProcess->GetFilmGrain() )
 	{
