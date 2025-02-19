@@ -329,7 +329,7 @@ private:
 	void SetupSkeletons( granny_file_info* gi );
 	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
 	void DetermineAreaBones( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
-	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
+	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi, int bytesPerVertex );
 	
 	// Create D3D mesh from data in m_pGrannyFile
 	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );

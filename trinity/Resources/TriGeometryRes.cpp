@@ -684,7 +684,7 @@ void TriGeometryRes::DetermineAreaBones( TriGeometryResAreaData& area, granny_me
 	}
 }
 
-bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex )
+bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi, int bytesPerVertex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	// offset to boneindex
@@ -693,6 +693,39 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 	if( boneIndexOffset == -1 )
 	{
 		return false;
+	}
+
+	auto FindRootBoneName = [&]() -> const char* {
+		for( int32_t i = 0; i < gi->ModelCount; ++i )
+		{
+			granny_model* model = gi->Models[i];
+			if( model->Skeleton && model->Skeleton->BoneCount > 1 )
+			{
+				for( int32_t j = 0; j < model->MeshBindingCount; ++j )
+				{
+					return model->Skeleton->Bones[0].Name;
+				}
+			}
+		}
+		return nullptr;
+	};
+
+	auto FindRootBoneIndex = [&]() -> std::optional<uint8_t> {
+		const char* rootBone = FindRootBoneName();
+		for( int32_t i = 0; i < myMesh->BoneBindingCount; ++i )
+		{
+			if( myMesh->BoneBindings[i].BoneName && strcmp( myMesh->BoneBindings[i].BoneName, rootBone ) == 0 )
+			{
+				return uint8_t( i );
+			}
+		}
+		return {};
+	};
+
+	auto rootBoneIndex = FindRootBoneIndex();
+	if( !rootBoneIndex.has_value() )
+	{
+		return true;
 	}
 
 	// pointers to bone indices
@@ -721,7 +754,7 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 		uint8_t boneIndex2 = *(pBoneIndex2 + index * bytesPerVertex);
 		uint8_t boneIndex3 = *(pBoneIndex3 + index * bytesPerVertex);
 
-		if( boneIndex0 != 0 || boneIndex1 != 0 || boneIndex2 != 0 || boneIndex3 != 0 )
+		if( boneIndex0 != *rootBoneIndex || boneIndex1 != *rootBoneIndex || boneIndex2 != *rootBoneIndex || boneIndex3 != *rootBoneIndex )
 		{
 			// found it attached to a bone so return early
 			return true;
@@ -835,7 +868,7 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 
 				pMesh->m_primitiveCount += area.m_primitiveCount;
 
-				area.m_isSkinned = IsAreaSkinned( area, myMesh, bytesPerVertex );
+				area.m_isSkinned = IsAreaSkinned( area, myMesh, gi, bytesPerVertex );
 
 				// only re-map the bone indices if there is a skeleton...
 				if( gi->SkeletonCount )
