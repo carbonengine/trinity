@@ -148,7 +148,6 @@ private:
 	{
 		explicit FogViewDependentResources( bool temporalFroxels );
 
-		Tr2TextureReferencePtr shadowFroxels;
 		Tr2TextureReferencePtr fogFroxels;
 		Tr2TextureReferencePtr temporalFroxels0;
 		Tr2TextureReferencePtr temporalFroxels1;
@@ -162,6 +161,9 @@ private:
 		Vector3 froxelJitter;
 		bool currentTemporalFroxels;
 	};
+
+	void UpdateTextures( FogViewDependentResources & resources, uint32_t width, uint32_t height, uint32_t depth, bool enabled );
+	
 
 	void RenderFog( 
 		FogViewDependentResources& resources, 
@@ -278,6 +280,9 @@ private:
 		
 		CcpMath::Sphere planets[2];
 	};
+
+	void UpdatePerObjectData( FogPerObjectData* data, const Matrix& view, const Matrix& projection, const Matrix& viewLast, const Matrix& projectionLast, const Vector3d& origin, const Vector3d& originShift, const Vector3& sunDirection, const Color& sunColor, uint32_t width, uint32_t height, uint32_t depth, const Vector3& jitter, const Tr2ShadowMap* cascadedShadowMap );
+
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
 	

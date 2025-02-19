@@ -24,7 +24,6 @@
 
 Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bool temporalFroxels )
 {
-	shadowFroxels.CreateInstance();
 	fogFroxels.CreateInstance();
 	if( temporalFroxels )
 	{
@@ -94,23 +93,23 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_gameBackClip = 1E6f; //must match what the actual game uses; not what Graphite is currently set to, as the user can change the back clip.
 
 	
-	int noise3DResolution = 64;
+	int noiseResolution = 64;
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 
-		int numTexels = noise3DResolution * noise3DResolution * noise3DResolution;
-		Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_SNORM, noise3DResolution, noise3DResolution, noise3DResolution, 1, 1 );
+		int numTexels = noiseResolution * noiseResolution * noiseResolution;
+		Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_SNORM, noiseResolution, noiseResolution, noiseResolution, 1, 1 );
 
 		int8_t* noiseData = new int8_t[numTexels];
 		for( int i = 0; i < numTexels; i++ )
 		{
-			noiseData[i] = (int8_t)TriRandInt( -127, +127 );
+			noiseData[i] = (int8_t)TriRandInt( -127, +128 );
 		}
 
 		Tr2SubresourceData initialData;
 		initialData.m_sysMem = noiseData;
-		initialData.m_sysMemPitch = noise3DResolution;
-		initialData.m_sysMemSlicePitch = noise3DResolution * noise3DResolution;
+		initialData.m_sysMemPitch = noiseResolution;
+		initialData.m_sysMemSlicePitch = noiseResolution * noiseResolution;
 
 		m_froxel3DNoise.CreateInstance();
 		m_froxel3DNoise->GetTexture()->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
@@ -455,38 +454,6 @@ bool Tr2VolumetricsRenderer::HasFog() const
 	return m_froxelFogSettings.thickness.value > 0.0f;
 }
 
-void Tr2VolumetricsRenderer::RenderFog(
-	Tr2RenderContext& renderContext,
-	uint32_t width,
-	uint32_t height,
-	Tr2ShadowMap* cascadedShadowMap,
-	Tr2RaytracingGeometryPtr raytracingGeometry,
-	ShadowQuality shadowQuality,
-	const Vector3& sunDirection,
-	const Color& sunColor,
-	const Vector3d origin,
-	const Vector3d originShift,
-	const Matrix& view,
-	const Matrix& projection,
-	const Matrix& viewLast,
-	const Matrix& projectionLast)
-{
-	RenderFog( m_fogResources, renderContext, width, height, cascadedShadowMap, raytracingGeometry, shadowQuality, sunDirection, sunColor, origin, originShift, view, projection, viewLast, projectionLast );
-}
-
-void Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
-	Tr2RenderContext& renderContext,
-	uint32_t width,
-	uint32_t height,
-	const Vector3& sunDirection,
-	const Color& sunColor,
-	const Vector3d origin,
-	const Matrix& view,
-	const Matrix& projection)
-{
-	RenderFog( m_fogReflectionResources, renderContext, width, height, nullptr, nullptr, ShadowQuality::SHADOW_DISABLED, sunDirection, sunColor, origin, Vector3d(0, 0, 0), view, projection, view, projection );
-}
-
 
 void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderContext )
 {
@@ -501,8 +468,6 @@ void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderCo
 
 		CCP_ASSERT( environmentMapResolution % 8 == 0 );
 	}
-
-
 
 	auto& mieEnvironmentMap = *m_mieEnvironmentMap->GetTexture();
 	if( !mieEnvironmentMap.IsValid() || mieEnvironmentMap.GetWidth() != environmentMapResolution )
@@ -577,6 +542,39 @@ void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderCo
 	}
 }
 
+
+void Tr2VolumetricsRenderer::RenderFog(
+	Tr2RenderContext& renderContext,
+	uint32_t width,
+	uint32_t height,
+	Tr2ShadowMap* cascadedShadowMap,
+	Tr2RaytracingGeometryPtr raytracingGeometry,
+	ShadowQuality shadowQuality,
+	const Vector3& sunDirection,
+	const Color& sunColor,
+	const Vector3d origin,
+	const Vector3d originShift,
+	const Matrix& view,
+	const Matrix& projection,
+	const Matrix& viewLast,
+	const Matrix& projectionLast )
+{
+	RenderFog( m_fogResources, renderContext, width, height, cascadedShadowMap, raytracingGeometry, shadowQuality, sunDirection, sunColor, origin, originShift, view, projection, viewLast, projectionLast );
+}
+
+void Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
+	Tr2RenderContext& renderContext,
+	uint32_t width,
+	uint32_t height,
+	const Vector3& sunDirection,
+	const Color& sunColor,
+	const Vector3d origin,
+	const Matrix& view,
+	const Matrix& projection )
+{
+	RenderFog( m_fogReflectionResources, renderContext, width, height, nullptr, nullptr, ShadowQuality::SHADOW_DISABLED, sunDirection, sunColor, origin, Vector3d( 0, 0, 0 ), view, projection, view, projection );
+}
+
 void Tr2VolumetricsRenderer::RenderFog(
 	FogViewDependentResources& resources,
 	Tr2RenderContext& renderContext,
@@ -595,14 +593,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 	const Matrix& projectionLast )
 {
 
-	//Vector3d origin = Vector3d( 123456789, 987654321, 135792468 );
-	//Vector3d origin = Vector3d( 123456, 987654, 135792 );
-	//Vector3d origin = Vector3d( 0, 0, 0 );
-
-	//m_testValue += 0.001;
-	//Vector3 sunDirection = Normalize( Vector3( sinf( m_testValue * 1.2345678f ), cosf( m_testValue * 1.3210987536f ), sinf( m_testValue * 0.99283659871f ) ) );
-
-
+	// Figure out the resolution we need.
 	uint32_t width = 1;
 	uint32_t height = 1;
 	uint32_t depth = 1;
@@ -638,91 +629,16 @@ void Tr2VolumetricsRenderer::RenderFog(
 			break;
 		}
 
-
 		width = std::max( 4u, uint32_t( originalWidth * scale ) );
 		height = std::max( 4u, uint32_t( originalHeight * scale ) );
 		depth = std::max( 1u, numLayers );
 	}
 
+	//Update textures to the new resolution, if needed.
+	UpdateTextures(resources, width, height, depth, froxelsEnabled );
+
+
 	auto temporalFog = resources.temporalFroxels0 && resources.temporalFroxels1;
-
-	auto& shadowFroxels = *resources.shadowFroxels->GetTexture();
-	if( !shadowFroxels.IsValid() || shadowFroxels.GetWidth() != width || shadowFroxels.GetHeight() != height || shadowFroxels.GetDepth() != depth )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		if( froxelsEnabled )
-		{
-			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, width, height, depth, 1, 1 );
-			shadowFroxels.Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
-		}
-		else
-		{
-			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, 1, 1, 1, 1, 1 );
-			shadowFroxels.Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
-		}
-	}
-
-	auto& fogFroxels = *resources.fogFroxels->GetTexture();
-	if( !fogFroxels.IsValid() || fogFroxels.GetWidth() != width || fogFroxels.GetHeight() != height || fogFroxels.GetDepth() != depth )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-
-		auto temporalFroxels0 = resources.temporalFroxels0 ? resources.temporalFroxels0->GetTexture() : nullptr;
-		auto temporalFroxels1 = resources.temporalFroxels0 ? resources.temporalFroxels1->GetTexture() : nullptr;
-
-		if( froxelsEnabled )
-		{
-
-			//Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT, width, height, depth, 1, 1 );
-			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R11G11B10_FLOAT, width, height, depth, 1, 1 );
-
-			fogFroxels.Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
-			if( temporalFog )
-			{
-				temporalFroxels0->Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
-				temporalFroxels1->Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
-			}
-
-		}
-		else
-		{
-			//Create dummy textures
-			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1, 1 );
-
-			uint8_t black[4] = {};
-			Tr2SubresourceData initialData;
-			initialData.m_sysMem = black;
-			initialData.m_sysMemPitch = 4;
-			initialData.m_sysMemSlicePitch = 4;
-
-			fogFroxels.Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
-			if( temporalFog )
-			{
-				temporalFroxels0->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
-				temporalFroxels1->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
-			}
-		}
-
-		if( !fogFroxels.IsValid() || ( temporalFog && ( !temporalFroxels0->IsValid() || !temporalFroxels1->IsValid() ) ) )
-		{
-			CCP_LOGERR( "Tr2VolumetricsRenderer failed to create froxel textures with size %ix%ix%i", int( width ), int( height ), int( depth ) );
-			return;
-		}
-
-		resources.fogFroxels->OnTextureChange().Broadcast();
-		if( temporalFog )
-		{
-			resources.temporalFroxels0->OnTextureChange().Broadcast();
-			resources.temporalFroxels1->OnTextureChange().Broadcast();
-		}
-	}
-
-	int workgroupSize = 4;
-	int wgX = ( width + workgroupSize - 1 ) / workgroupSize;
-	int wgY = ( height + workgroupSize - 1 ) / workgroupSize;
-	int wgZ = ( depth + workgroupSize - 1 ) / workgroupSize;
-
-
 	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", resources.fogFroxels );
 
 
@@ -735,6 +651,8 @@ void Tr2VolumetricsRenderer::RenderFog(
 	
 	GPU_REGION( renderContext, "Froxel Fog" );
 
+
+	//Determine the shadow type
 	enum SHADOW_TYPE
 	{
 		SHADOWS_DISABLED,
@@ -743,7 +661,6 @@ void Tr2VolumetricsRenderer::RenderFog(
 	};
 
 	SHADOW_TYPE shadowType;
-
 	if( raytracingGeometry && raytracingGeometry->HasGeometry() && shadowQuality == ShadowQuality::SHADOW_RAYTRACED && resources.rtCalculateFroxels && resources.rtCalculateFroxels->GetShaderStateInterface() )
 	{
 		shadowType = SHADOWS_RAYTRACED;
@@ -758,30 +675,9 @@ void Tr2VolumetricsRenderer::RenderFog(
 	}
 
 
-
-
-	float maxDistance = m_gameBackClip;
-	float maxDistanceVisibility = exp( -m_froxelFogSettings.thickness.value );
-	float baseDensity = m_froxelFogSettings.thickness.value / maxDistance;
-
-
-	float environmentIntensity = m_froxelFogSettings.environmentIntensity.value;
-
-	Color fogColor = m_froxelFogSettings.fogColor.value;
-	float backgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility.value, 0.0f, 1.0f );
-
-
-	//G is negative when light is scattered in the direction the light was already going in.
-	//Expose this value as positive, then negate and clamp it so that it's always negative.
-	//Exactly 0.0 and 1.0 both cause issues with the math in the shader, so clamp to a slightly smaller range.
-	float lightG = -std::clamp( m_froxelFogSettings.lightDirectionality.value, 0.001f, 0.999f );
-	float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality.value, 0.001f, 0.999f );
-
-	Matrix inverseView = Inverse( view );
-	Matrix inverseProjection = Inverse( projection );
-
 	if( temporalFog )
 	{
+		//Update the per-frame jitter offset
 		const float g = 1.61803398874989484820;
 		const float g2 = 1.32471795724474602596;
 
@@ -791,276 +687,22 @@ void Tr2VolumetricsRenderer::RenderFog(
 		resources.froxelJitter.z -= floor( resources.froxelJitter.z );
 	}
 
+	
+	if( !m_fogConstantBuffer.IsValid() )
 	{
-		uint32_t techniqueIndex;
-		Tr2RtPipelineStateAL pipelineState;
-		Tr2RtShaderTableAL shadowShaderTable;
-		std::wstring rayGenName;
-		std::wstring missName;
-		{
-			if( !m_fogConstantBuffer.IsValid() )
-			{
-				m_fogConstantBuffer.Create( uint32_t( sizeof( FogPerObjectData ) ), renderContext.GetPrimaryRenderContext() );
-			}
+		m_fogConstantBuffer.Create( uint32_t( sizeof( FogPerObjectData ) ), renderContext.GetPrimaryRenderContext() );
+	}
 
-			FogPerObjectData* data;
+	FogPerObjectData* data;
+	m_fogConstantBuffer.Lock( (void**)&data, renderContext );
 
-			m_fogConstantBuffer.Lock( (void**)&data, renderContext );
+	UpdatePerObjectData( data, view, projection, viewLast, projectionLast, origin, originShift, sunDirection, sunColor, width, height, depth, resources.froxelJitter, shadowType == SHADOWS_CASCADED ? cascadedShadowMap : nullptr );
 
-			data->ResolutionX = width;
-			data->ResolutionY = height;
-			data->ResolutionZ = depth;
+	m_fogConstantBuffer.Unlock( renderContext );
 
-			data->Jitter = resources.froxelJitter;
-			data->Far = maxDistance;
+	renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 
-			data->Scattering = Vector3( fogColor.r, fogColor.g, fogColor.b );
-			data->BaseDensity = baseDensity;
-
-			data->MaxDistanceVisibility = maxDistanceVisibility;
-			data->LightG = lightG;
-			data->EnvironmentIntensity = environmentIntensity;
-
-
-			//data->Extinction = extinction;
-
-
-			{
-				float exactFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency.value );
-				float baseFrequency = exp2f( floor( -m_froxelFogSettings.fogNoiseFrequency.value ) );
-				float nextFrequency = baseFrequency * 2.0f;
-
-				
-				double offsetX = origin.x * baseFrequency;
-				double offsetY = origin.y * baseFrequency;
-				double offsetZ = origin.z * baseFrequency;
-				offsetX -= floor( offsetX );
-				offsetY -= floor( offsetY );
-				offsetZ -= floor( offsetZ );
-
-				data->FogNoiseOffset = Vector3( (float)offsetX, (float)offsetY, (float)offsetZ );
-
-
-				data->FogNoiseFrequency = baseFrequency;
-				data->FogNoiseLerp = ( exactFrequency - baseFrequency ) / ( nextFrequency - baseFrequency );
-				data->FogNoiseIntensity = m_froxelFogSettings.fogNoiseIntensity.value;
-			}
-
-
-			{
-
-				/*
-					This code is used to re-align m_godRayNoiseMatrix so that it is always aligned with the sun's direction.
-					This gets complicated as we're trying to align a 2D texture along the sun's direction without causing popping/sudden changes.
-					It does this by finding how many radians it is off by, constructing a rotation axis and then rotating the matrix by said angle to re-align it.
-
-					This is the minimal rotation needed to re-align the matrix, but has some weird side effects:
-					- Rotating like this means that if the direction changes a lot and then returns to a previous position, the orientation of the noise texture can be different.
-					- When we rotate the matrix, the camera's position in "noise space" changes dramatically. We therefore cancel out this "motion" so that at least the camera ends up in the same position again.
-				*/
-				
-				//Get the current direction of the god ray noise matrix
-				Vector3 noiseDirection = Normalize(Vector3( (float)m_godRayNoiseMatrix[2], (float)m_godRayNoiseMatrix[6], (float)m_godRayNoiseMatrix[10] ));
-
-				//Check if the angle between the new sun direction is more than a small threshold
-				float angle = acos( std::clamp( Dot( sunDirection, noiseDirection ), -1.0f, 1.0f ) ); //Clamp to avoid going out of the acos() domain of [-1, +1] due to rounding.
-				if( angle > 0.001f )
-				{
-					//Construct the rotation axis
-					Vector3 axis = Normalize( Cross( sunDirection, noiseDirection ) );
-
-					//Create a rotation matrix and apply it to the god ray noise matrix.
-					double rotationMatrix[16];
-					Matrix4dFromMatrix( rotationMatrix, RotationMatrix( axis, angle ) );
-					double newMatrix[16];
-					Matrix4dMultiply( newMatrix, rotationMatrix, m_godRayNoiseMatrix );
-
-					
-					/* Vector3 noiseDirection2 = Normalize( Vector3( (float)newMatrix[2], (float)newMatrix[6], (float)newMatrix[10] ) );
-					float angle2 = acos( std::clamp( Dot( sunDirection, noiseDirection2 ), -1.0f, 1.0f ) );
-					CCP_LOGERR( "Angle before: %g, angle after: %g", angle, angle2 );*/
-					
-					
-					//Figure out where the camera used to be in noise space and where it is now.
-					Vector3d cameraPosition = origin + TransformCoord( Vector3( 0, 0, 0 ), inverseView );
-					Vector4d previousNoiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), m_godRayNoiseMatrix );
-					Vector4d noiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), newMatrix );
-
-					//Calculate the difference and update the new matrix to cancel out the motion resulting from the rotation.
-					Vector4d difference = previousNoiseCoords - noiseCoords;
-					newMatrix[12] += difference.x;
-					newMatrix[13] += difference.y;
-					newMatrix[14] += difference.z;
-
-					//Finally, copy the new matrix back to m_godRayNoiseMatrix
-					Matrix4dCopy( m_godRayNoiseMatrix, newMatrix );
-
-					
-					//Vector4d fixedNoiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), newMatrix );
-					//CCP_LOGERR( "Camera noise position: (%g, %g, %g)", fixedNoiseCoords.x, fixedNoiseCoords.y, fixedNoiseCoords.z );
-				}
-
-				//Since the shader operates relative to the origin, we need to add the origin in noise space to the translation here.
-				//Also apply fmod() to it so that we don't get huge values that break the floating point precision when casting to float.
-
-				//Build a translation matrix
-				double originTranslation[16];
-				Matrix4dFromMatrix( originTranslation, IdentityMatrix() );
-				originTranslation[12] = origin.x;
-				originTranslation[13] = origin.y;
-				originTranslation[14] = origin.z;
-
-				//Multiply it with the god ray noise matrix.
-				double relativeNoiseMatrix[16];
-				Matrix4dMultiply( relativeNoiseMatrix, originTranslation, m_godRayNoiseMatrix );
-
-				//Apply fmod() to the translation based on the noise frequency to avoid precision issues when converting to a 32-bit float matrix later.
-				float baseFrequency = exp2f( floor( -m_froxelFogSettings.godRayNoiseFrequency.value ) );
-				float previousFrequency = baseFrequency * 2.0f;
-				relativeNoiseMatrix[12] = fmod( relativeNoiseMatrix[12], 1.0 / baseFrequency );
-				relativeNoiseMatrix[13] = fmod( relativeNoiseMatrix[13], 1.0 / baseFrequency );
-				relativeNoiseMatrix[14] = fmod( relativeNoiseMatrix[14], 1.0 / baseFrequency );
-
-				//Convert to float and pray that it works.
-				data->GodRayNoiseMatrix = Transpose( Matrix4dToMatrix( relativeNoiseMatrix ) );
-
-				
-
-				data->GodRayNoiseFrequency = baseFrequency;
-				data->GodRayNoiseLerp = ( exp2f( -m_froxelFogSettings.godRayNoiseFrequency.value ) - baseFrequency ) / ( previousFrequency - baseFrequency );
-				data->GodRayNoiseIntensity = m_froxelFogSettings.godRayNoiseIntensity.value;
-				data->GodRayNoiseAnimation = (float)m_godRayNoiseAnimation;
-
-			}
-
-			data->InverseViewMatrix = Transpose( inverseView );
-
-			{
-				Vector4 topLeft = Vector4( -1, +1, 0, 1 ) * inverseProjection; // flipped Y
-				Vector4 botRight = Vector4( +1, -1, 0, 1 ) * inverseProjection;
-
-				//No need for W-divide here, because it cancels out when we divide by z: (xy/w) / (-z/w) = xy/-z
-
-				float invZ = 1.0f / -topLeft.z; //both have the same Z, since they have the same depth
-
-				float addX = topLeft.x * invZ;
-				float addY = topLeft.y * invZ;
-				float mulX = botRight.x * invZ - addX;
-				float mulY = botRight.y * invZ - addY;
-
-				data->UnprojectParams = Vector4( mulX, mulY, addX, addY );
-			}
-
-			{
-				Vector4 offset = Vector4( +1, -1, -1, 1 ) * projectionLast; //flipped Y
-
-				//because we set view space Z to -1, W will be 1.0, so we don't need to do a W divide here
-
-				float mulX = offset.x * 0.5f;
-				float mulY = offset.y * 0.5f;
-				float addX = 0.5f;
-				float addY = 0.5f;
-
-				data->PreviousProjectParams = Vector4( mulX, mulY, addX, addY );
-			}
-
-			Matrix originShiftMatrix = TranslationMatrix( (float)-originShift.x, (float)-originShift.y, (float)-originShift.z );
-			Matrix reprojectionMatrix = inverseView * originShiftMatrix * viewLast;
-			data->ReprojectionMatrix = Transpose( reprojectionMatrix );
-
-			Vector4 tempSunDir = Vector4( -sunDirection, 0.0f ) * view;
-			data->SunViewDirection = Vector3( tempSunDir.x, tempSunDir.y, tempSunDir.z );
-			data->SunAngle = m_sunAngle;
-			data->SunWorldDirection = -sunDirection;
-
-			data->SunColor = Vector3( sunColor.r, sunColor.g, sunColor.b );
-
-			for( int32_t i = 0; i < m_planets.size(); i++ )
-			{
-				data->planets[i] = m_planets[i];
-			}
-
-			if( shadowType == SHADOWS_CASCADED )
-			{
-				data->ShadowMapValues[0] = cascadedShadowMap->m_perSplitData.ShadowMapValues[0];
-				data->ShadowMapValues[1] = cascadedShadowMap->m_perSplitData.ShadowMapValues[1];
-				data->ShadowMapValues[2] = cascadedShadowMap->m_perSplitData.ShadowMapValues[2];
-				data->ShadowMapValues[3] = cascadedShadowMap->m_perSplitData.ShadowMapValues[3];
-
-				for( int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
-				{
-					Matrix matrix = inverseView * Transpose( cascadedShadowMap->m_perSplitData.ShadowMatrixVal[i] );
-
-					matrix *= ScalingMatrix( 0.5f, -0.5f, 1 ) * TranslationMatrix( 0.5f, 0.5f, 0 ); //Flip y and change range from (-1, +1) to (0, 1)
-
-					int cells_x = 8;
-					int cells_y = 2;
-					int x = i % cells_x;
-					int y = i / cells_x;
-					matrix *= ScalingMatrix( 1.0f / cells_x, 1.0f / cells_y, 1 ) * TranslationMatrix( (float)x / cells_x, (float)y / cells_y, 0 );
-
-					data->ShadowMatrix[i] = Transpose( matrix );
-				}
-				data->SplitInfo = cascadedShadowMap->m_perSplitData.SplitInfo;
-			}
-			else if( shadowType == SHADOWS_RAYTRACED )
-			{
-				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
-				{
-					return; //TODO: Not good to exit the function completely, just disable shadows instead
-				}
-
-				m_pipelineManager.AddLibrary( rayGenName, missName, resources.rtCalculateFroxels, BlueSharedString( "RtShadow" ) );
-
-				pipelineState = m_pipelineManager.GetPipelineState( renderContext );
-
-				if( !pipelineState.IsValid() )
-				{
-					return; //TODO: Not good to exit the function completely, just disable shadows instead
-				}
-			}
-			
-			if ( auto lightManager = Tr2LightManager::GetInstance() )
-			{
-				CCP_ASSERT_M( lightManager->GetVolumetricLights().size() <= 16, "LightManager does not meet expectation of VolumetricsRenderer!" );
-
-				data->NumDynamicLights = (uint32_t)lightManager->GetVolumetricLights().size();
-				data->InverseShadowMapAtlasSize = lightManager->GetShadowMapAtlasSettings().actualTextureSize > 0 ?
-					1.f / lightManager->GetShadowMapAtlasSettings().actualTextureSize :
-					0.f;
-				data->ShadowMapAtlasEntryMinSizeLog2 = lightManager->GetShadowMapAtlasSettings().entryMinSizeLog2;
-
-				for( uint32_t i = 0; i < lightManager->GetVolumetricLights().size(); i++ )
-				{
-					uint32_t lightIndex = lightManager->GetVolumetricLights()[i];
-					data->DynamicLights[i] = lightManager->GetLightData( lightIndex );
-				}
-
-				data->LightProfileTextureWidth = (float)lightManager->GetLightProfileArray().GetWidth();
-			}
-			else
-			{
-				data->NumDynamicLights = 0;
-				data->InverseShadowMapAtlasSize = 0.f;
-				data->ShadowMapAtlasEntryMinSizeLog2 = 0;
-			}
-
-			m_fogConstantBuffer.Unlock( renderContext );
-
-			if( shadowType == SHADOWS_RAYTRACED )
-			{
-				Tr2RtLocalMaterialDescriptionAL material;
-				material.SetConstants( Tr2Renderer::GetPerObjectVSStartRegister(), m_fogConstantBuffer );
-
-				CCP_STATS_ZONE( "Create shader table" );
-				m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
-				m_shaderTableDesc.AddMissShader( missName.c_str(), material );
-
-				shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
-			}
-            
-            renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
-		}
+	{
 
 		int workgroupSize = 4;
 		int wgX = ( width + workgroupSize - 1 ) / workgroupSize;
@@ -1072,6 +714,35 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 			if( shadowType == SHADOWS_RAYTRACED )
 			{
+				uint32_t techniqueIndex;
+				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
+				{
+					CCP_LOGERR( "Failed to get technique index for raytraced froxel fog shadows!" );
+					return;
+				}
+
+				std::wstring rayGenName;
+				std::wstring missName;
+				m_pipelineManager.AddLibrary( rayGenName, missName, resources.rtCalculateFroxels, BlueSharedString( "RtShadow" ) );
+
+				Tr2RtPipelineStateAL pipelineState = m_pipelineManager.GetPipelineState( renderContext );
+
+				if( !pipelineState.IsValid() )
+				{
+					CCP_LOGERR( "Failed to get pipeline state for raytraced froxel fog shadows!" );
+					return;
+				}
+
+				Tr2RtLocalMaterialDescriptionAL material;
+				material.SetConstants( Tr2Renderer::GetPerObjectVSStartRegister(), m_fogConstantBuffer );
+
+				CCP_STATS_ZONE( "Create shader table" );
+				m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
+				m_shaderTableDesc.AddMissShader( missName.c_str(), material );
+
+				Tr2RtShaderTableAL shadowShaderTable;
+				shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+
 				resources.rtCalculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
 				resources.rtCalculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 
@@ -1086,6 +757,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 			}
 			else
 			{
+				//Otherwise, just use a plain compute shader.
 				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( shadowType == SHADOWS_CASCADED  ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
 				resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
 				resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
@@ -1126,6 +798,301 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 		resources.applyFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity.value > 0 ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );
 		Tr2Renderer::DrawScreenQuad( renderContext, resources.applyFroxels );
+	}
+}
+
+void Tr2VolumetricsRenderer::UpdateTextures( FogViewDependentResources& resources, uint32_t width, uint32_t height, uint32_t depth, bool enabled )
+{
+	auto temporalFog = resources.temporalFroxels0 && resources.temporalFroxels1;
+
+	auto& fogFroxels = *resources.fogFroxels->GetTexture();
+	if( !fogFroxels.IsValid() || fogFroxels.GetWidth() != width || fogFroxels.GetHeight() != height || fogFroxels.GetDepth() != depth )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		auto temporalFroxels0 = resources.temporalFroxels0 ? resources.temporalFroxels0->GetTexture() : nullptr;
+		auto temporalFroxels1 = resources.temporalFroxels0 ? resources.temporalFroxels1->GetTexture() : nullptr;
+
+		if( enabled )
+		{
+
+			//Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT, width, height, depth, 1, 1 );
+			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R11G11B10_FLOAT, width, height, depth, 1, 1 );
+
+			fogFroxels.Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
+			if( temporalFog )
+			{
+				temporalFroxels0->Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
+				temporalFroxels1->Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
+			}
+		}
+		else
+		{
+			//Create dummy textures
+			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1, 1 );
+
+			uint8_t black[4] = {};
+			Tr2SubresourceData initialData;
+			initialData.m_sysMem = black;
+			initialData.m_sysMemPitch = 4;
+			initialData.m_sysMemSlicePitch = 4;
+
+			fogFroxels.Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
+			if( temporalFog )
+			{
+				temporalFroxels0->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
+				temporalFroxels1->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
+			}
+		}
+
+		if( !fogFroxels.IsValid() || ( temporalFog && ( !temporalFroxels0->IsValid() || !temporalFroxels1->IsValid() ) ) )
+		{
+			CCP_LOGERR( "Tr2VolumetricsRenderer failed to create froxel textures with size %ix%ix%i", int( width ), int( height ), int( depth ) );
+			return;
+		}
+
+		resources.fogFroxels->OnTextureChange().Broadcast();
+		if( temporalFog )
+		{
+			resources.temporalFroxels0->OnTextureChange().Broadcast();
+			resources.temporalFroxels1->OnTextureChange().Broadcast();
+		}
+	}
+}
+
+void Tr2VolumetricsRenderer::UpdatePerObjectData( FogPerObjectData* data, const Matrix& view, const Matrix& projection, const Matrix& viewLast, const Matrix& projectionLast, const Vector3d& origin, const Vector3d& originShift, const Vector3& sunDirection, const Color& sunColor, uint32_t width, uint32_t height, uint32_t depth, const Vector3& jitter, const Tr2ShadowMap* cascadedShadowMap )
+{
+	float maxDistance = m_gameBackClip;
+	float maxDistanceVisibility = exp( -m_froxelFogSettings.thickness.value );
+	float baseDensity = m_froxelFogSettings.thickness.value / maxDistance;
+
+	float environmentIntensity = m_froxelFogSettings.environmentIntensity.value;
+
+	Color fogColor = m_froxelFogSettings.fogColor.value;
+	float backgroundVisibility = std::clamp( m_froxelFogSettings.backgroundVisibility.value, 0.0f, 1.0f );
+
+
+	//G is negative when light is scattered in the direction the light was already going in.
+	//Expose this value as positive, then negate and clamp it so that it's always negative.
+	//Exactly 0.0 and 1.0 both cause issues with the math in the shader, so clamp to a slightly smaller range.
+	float lightG = -std::clamp( m_froxelFogSettings.lightDirectionality.value, 0.001f, 0.999f );
+	float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality.value, 0.001f, 0.999f );
+
+	Matrix inverseView = Inverse( view );
+	Matrix inverseProjection = Inverse( projection );
+
+	{
+
+		data->ResolutionX = width;
+		data->ResolutionY = height;
+		data->ResolutionZ = depth;
+
+		data->Jitter = jitter;
+		data->Far = maxDistance;
+
+		data->Scattering = Vector3( fogColor.r, fogColor.g, fogColor.b );
+		data->BaseDensity = baseDensity;
+
+		data->MaxDistanceVisibility = maxDistanceVisibility;
+		data->LightG = lightG;
+		data->EnvironmentIntensity = environmentIntensity;
+
+
+		//data->Extinction = extinction;
+
+
+		{
+			float exactFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency.value );
+			float baseFrequency = exp2f( floor( -m_froxelFogSettings.fogNoiseFrequency.value ) );
+			float nextFrequency = baseFrequency * 2.0f;
+
+
+			double offsetX = origin.x * baseFrequency;
+			double offsetY = origin.y * baseFrequency;
+			double offsetZ = origin.z * baseFrequency;
+			offsetX -= floor( offsetX );
+			offsetY -= floor( offsetY );
+			offsetZ -= floor( offsetZ );
+
+			data->FogNoiseOffset = Vector3( (float)offsetX, (float)offsetY, (float)offsetZ );
+
+
+			data->FogNoiseFrequency = baseFrequency;
+			data->FogNoiseLerp = ( exactFrequency - baseFrequency ) / ( nextFrequency - baseFrequency );
+			data->FogNoiseIntensity = m_froxelFogSettings.fogNoiseIntensity.value;
+		}
+
+
+		{
+
+			/*
+					This code is used to re-align m_godRayNoiseMatrix so that it is always aligned with the sun's direction.
+					This gets complicated as we're trying to align a 2D texture along the sun's direction without causing popping/sudden changes.
+					It does this by finding how many radians it is off by, constructing a rotation axis and then rotating the matrix by said angle to re-align it.
+
+					This is the minimal rotation needed to re-align the matrix, but has some weird side effects:
+					- Rotating like this means that if the direction changes a lot and then returns to a previous position, the orientation of the noise texture can be different.
+					- When we rotate the matrix, the camera's position in "noise space" changes dramatically. We therefore cancel out this "motion" so that at least the camera ends up in the same position again.
+				*/
+
+			//Get the current direction of the god ray noise matrix
+			Vector3 noiseDirection = Normalize( Vector3( (float)m_godRayNoiseMatrix[2], (float)m_godRayNoiseMatrix[6], (float)m_godRayNoiseMatrix[10] ) );
+
+			//Check if the angle between the new sun direction is more than a small threshold
+			float angle = acos( std::clamp( Dot( sunDirection, noiseDirection ), -1.0f, 1.0f ) ); //Clamp to avoid going out of the acos() domain of [-1, +1] due to rounding.
+			if( angle > 0.001f )
+			{
+				//Construct the rotation axis
+				Vector3 axis = Normalize( Cross( sunDirection, noiseDirection ) );
+
+				//Create a rotation matrix and apply it to the god ray noise matrix.
+				double rotationMatrix[16];
+				Matrix4dFromMatrix( rotationMatrix, RotationMatrix( axis, angle ) );
+				double newMatrix[16];
+				Matrix4dMultiply( newMatrix, rotationMatrix, m_godRayNoiseMatrix );
+
+				//Figure out where the camera used to be in noise space and where it is now.
+				Vector3d cameraPosition = origin + TransformCoord( Vector3( 0, 0, 0 ), inverseView );
+				Vector4d previousNoiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), m_godRayNoiseMatrix );
+				Vector4d noiseCoords = Matrix4dTransform( Vector4d( cameraPosition, 1.0 ), newMatrix );
+
+				//Calculate the difference and update the new matrix to cancel out the motion resulting from the rotation.
+				Vector4d difference = previousNoiseCoords - noiseCoords;
+				newMatrix[12] += difference.x;
+				newMatrix[13] += difference.y;
+				newMatrix[14] += difference.z;
+
+				//Finally, copy the new matrix back to m_godRayNoiseMatrix
+				Matrix4dCopy( m_godRayNoiseMatrix, newMatrix );
+			}
+
+			//Since the shader operates relative to the origin, we need to add the origin in noise space to the translation here.
+			//Also apply fmod() to it so that we don't get huge values that break the floating point precision when casting to float.
+
+			//Build a translation matrix
+			double originTranslation[16];
+			Matrix4dFromMatrix( originTranslation, IdentityMatrix() );
+			originTranslation[12] = origin.x;
+			originTranslation[13] = origin.y;
+			originTranslation[14] = origin.z;
+
+			//Multiply it with the god ray noise matrix.
+			double relativeNoiseMatrix[16];
+			Matrix4dMultiply( relativeNoiseMatrix, originTranslation, m_godRayNoiseMatrix );
+
+			//Apply fmod() to the translation based on the noise frequency to avoid precision issues when converting to a 32-bit float matrix later.
+			float baseFrequency = exp2f( floor( -m_froxelFogSettings.godRayNoiseFrequency.value ) );
+			float previousFrequency = baseFrequency * 2.0f;
+			relativeNoiseMatrix[12] = fmod( relativeNoiseMatrix[12], 1.0 / baseFrequency );
+			relativeNoiseMatrix[13] = fmod( relativeNoiseMatrix[13], 1.0 / baseFrequency );
+			relativeNoiseMatrix[14] = fmod( relativeNoiseMatrix[14], 1.0 / baseFrequency );
+
+			//Convert to float and pray that it works.
+			data->GodRayNoiseMatrix = Transpose( Matrix4dToMatrix( relativeNoiseMatrix ) );
+
+
+
+			data->GodRayNoiseFrequency = baseFrequency;
+			data->GodRayNoiseLerp = ( exp2f( -m_froxelFogSettings.godRayNoiseFrequency.value ) - baseFrequency ) / ( previousFrequency - baseFrequency );
+			data->GodRayNoiseIntensity = m_froxelFogSettings.godRayNoiseIntensity.value;
+			data->GodRayNoiseAnimation = (float)m_godRayNoiseAnimation;
+		}
+
+		data->InverseViewMatrix = Transpose( inverseView );
+
+		{
+			Vector4 topLeft = Vector4( -1, +1, 0, 1 ) * inverseProjection; // flipped Y
+			Vector4 botRight = Vector4( +1, -1, 0, 1 ) * inverseProjection;
+
+			//No need for W-divide here, because it cancels out when we divide by z: (xy/w) / (-z/w) = xy/-z
+
+			float invZ = 1.0f / -topLeft.z; //both have the same Z, since they have the same depth
+
+			float addX = topLeft.x * invZ;
+			float addY = topLeft.y * invZ;
+			float mulX = botRight.x * invZ - addX;
+			float mulY = botRight.y * invZ - addY;
+
+			data->UnprojectParams = Vector4( mulX, mulY, addX, addY );
+		}
+
+		{
+			Vector4 offset = Vector4( +1, -1, -1, 1 ) * projectionLast; //flipped Y
+
+			//because we set view space Z to -1, W will be 1.0, so we don't need to do a W divide here
+
+			float mulX = offset.x * 0.5f;
+			float mulY = offset.y * 0.5f;
+			float addX = 0.5f;
+			float addY = 0.5f;
+
+			data->PreviousProjectParams = Vector4( mulX, mulY, addX, addY );
+		}
+
+		Matrix originShiftMatrix = TranslationMatrix( (float)-originShift.x, (float)-originShift.y, (float)-originShift.z );
+		Matrix reprojectionMatrix = inverseView * originShiftMatrix * viewLast;
+		data->ReprojectionMatrix = Transpose( reprojectionMatrix );
+
+		Vector4 tempSunDir = Vector4( -sunDirection, 0.0f ) * view;
+		data->SunViewDirection = Vector3( tempSunDir.x, tempSunDir.y, tempSunDir.z );
+		data->SunAngle = m_sunAngle;
+		data->SunWorldDirection = -sunDirection;
+
+		data->SunColor = Vector3( sunColor.r, sunColor.g, sunColor.b );
+
+		for( int32_t i = 0; i < m_planets.size(); i++ )
+		{
+			data->planets[i] = m_planets[i];
+		}
+
+		if( cascadedShadowMap != nullptr )
+		{
+			data->ShadowMapValues[0] = cascadedShadowMap->m_perSplitData.ShadowMapValues[0];
+			data->ShadowMapValues[1] = cascadedShadowMap->m_perSplitData.ShadowMapValues[1];
+			data->ShadowMapValues[2] = cascadedShadowMap->m_perSplitData.ShadowMapValues[2];
+			data->ShadowMapValues[3] = cascadedShadowMap->m_perSplitData.ShadowMapValues[3];
+
+			for( int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
+			{
+				Matrix matrix = inverseView * Transpose( cascadedShadowMap->m_perSplitData.ShadowMatrixVal[i] );
+
+				matrix *= ScalingMatrix( 0.5f, -0.5f, 1 ) * TranslationMatrix( 0.5f, 0.5f, 0 ); //Flip y and change range from (-1, +1) to (0, 1)
+
+				int cells_x = 8;
+				int cells_y = 2;
+				int x = i % cells_x;
+				int y = i / cells_x;
+				matrix *= ScalingMatrix( 1.0f / cells_x, 1.0f / cells_y, 1 ) * TranslationMatrix( (float)x / cells_x, (float)y / cells_y, 0 );
+
+				data->ShadowMatrix[i] = Transpose( matrix );
+			}
+			data->SplitInfo = cascadedShadowMap->m_perSplitData.SplitInfo;
+		}
+
+		if( auto lightManager = Tr2LightManager::GetInstance() )
+		{
+			CCP_ASSERT_M( lightManager->GetVolumetricLights().size() <= 16, "LightManager does not meet expectation of VolumetricsRenderer!" );
+
+			data->NumDynamicLights = (uint32_t)lightManager->GetVolumetricLights().size();
+			data->InverseShadowMapAtlasSize = lightManager->GetShadowMapAtlasSettings().actualTextureSize > 0 ?
+				1.f / lightManager->GetShadowMapAtlasSettings().actualTextureSize :
+				0.f;
+			data->ShadowMapAtlasEntryMinSizeLog2 = lightManager->GetShadowMapAtlasSettings().entryMinSizeLog2;
+
+			for( uint32_t i = 0; i < lightManager->GetVolumetricLights().size(); i++ )
+			{
+				uint32_t lightIndex = lightManager->GetVolumetricLights()[i];
+				data->DynamicLights[i] = lightManager->GetLightData( lightIndex );
+			}
+
+			data->LightProfileTextureWidth = (float)lightManager->GetLightProfileArray().GetWidth();
+		}
+		else
+		{
+			data->NumDynamicLights = 0;
+			data->InverseShadowMapAtlasSize = 0.f;
+			data->ShadowMapAtlasEntryMinSizeLog2 = 0;
+		}
 	}
 }
 
