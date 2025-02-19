@@ -8,6 +8,7 @@
 #include "Curves/TriCurveSet.h"
 #include "Include/TriMath.h"
 #include "Tr2SyncToGpu.h"
+#include "TriSettingsRegistrar.h"
 
 #include <IBlueCallbackMan.h>
 
@@ -100,6 +101,12 @@ CCP_STATS_DECLARE( throttleTime, "Trinity/ThrottleTime", true, CST_TIME, "Time s
 CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 CCP_STATS_DECLARE( smoothedGeneratedFrames, "Trinity/smoothedGeneratedFrames", false, CST_COUNTER_LOW, "Smoothed fps (+ generated) over a number of frames" );
 
+
+bool g_newUpscalersEnabled = true;
+TRI_REGISTER_SETTING( "newUpscalersEnabled", g_newUpscalersEnabled );
+
+bool g_raytracingEnabled = true;
+TRI_REGISTER_SETTING( "raytracingEnabled", g_raytracingEnabled );
 
 	// NOTE: This is a global pointer to a ROT object, initialized by it
 // We never want this rot object to die, so we hold a reference here.
@@ -1232,10 +1239,23 @@ bool TriDevice::IsVariableRefreshRateSupported() const
 
 void TriDevice::UpdateAvailableUpscalingTechniques()
 {
-	// this method needs to be called after a device has been called 
-	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	m_supportedUpscalingTechniques.clear();
+
+	if( !g_newUpscalersEnabled )
+	{
+		// only allow FSR1 
+		Tr2UpscalingTechniqueInfo technique = {
+			Tr2UpscalingAL::FSR1,
+			Tr2UpscalingAL::Setting::PERFORMANCE | Tr2UpscalingAL::Setting::BALANCED | Tr2UpscalingAL::Setting::QUALITY | Tr2UpscalingAL::Setting::ULTRA_QUALITY,
+			false
+		};
+		m_supportedUpscalingTechniques.Append( &technique );
+		return;
+	}
+	
+	// this method needs to be called after a device has been called 
+	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	for( auto& techInfo : renderContext.GetSupportedUpscalingTechniques( mAdapter ) )
 	{
@@ -1272,6 +1292,7 @@ void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingA
 uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, bool allowFramegen, Be::Optional<uint32_t> existingContext )
 {
     CCP_STATS_ZONE( __FUNCTION__ );
+	
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	Tr2UpscalingAL::UpscalingContextParams params = Tr2UpscalingAL::UpscalingContextParams(renderContext);
@@ -1291,7 +1312,7 @@ uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t disp
 
 void TriDevice::DeleteUpscalingContext( uint32_t contextID )
 {
-        CCP_STATS_ZONE( __FUNCTION__ );
+	CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	renderContext.DeleteUpscalingContext( contextID );
 }
@@ -1316,7 +1337,7 @@ Vector2 TriDevice::GetRenderResolution( uint32_t upscalingContextId )
 bool TriDevice::SupportsRaytracing()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return renderContext.GetCaps().SupportsRaytracing();
+	return g_raytracingEnabled && renderContext.GetCaps().SupportsRaytracing();
 }
 
 #if BLUE_WITH_PYTHON
