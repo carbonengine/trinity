@@ -261,6 +261,7 @@ Tr2Fsr3UpscalingContext::~Tr2Fsr3UpscalingContext()
 {
 	if( m_setup )
 	{
+		m_params.renderContext.FlushAndSyncDx12();
 		if( m_frameGeneration )
 		{
 
