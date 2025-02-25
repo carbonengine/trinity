@@ -96,6 +96,7 @@ public:
 	PostProcess::Attribute<float> depthOfFieldFocalDistance;
 	PostProcess::Attribute<float> depthOfFieldFocalLength;
 	PostProcess::Attribute<Tr2Bokeh::Shape> depthOfFieldShape;
+	PostProcess::Attribute<bool> depthOfFieldForegroundBlurNeeded;
 
 	PostProcess::Attribute<float> whiteTemperature = 6500.f;
 	PostProcess::Attribute<float> whiteTint = 0.0f;
