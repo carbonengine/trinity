@@ -382,6 +382,7 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetDynamicExposure( m_sceneDefaultPostProcess->GetDynamicExposure() );
 			m_combinedPostProcess->SetTaa( m_sceneDefaultPostProcess->GetTaa() );
 			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemapping() );
+			m_combinedPostProcess->SetFog( m_sceneDefaultPostProcess->GetFog() );
 		}
 		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}
