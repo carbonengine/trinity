@@ -148,7 +148,46 @@ void Tr2RtPipelineStateDescriptionAL::AddHitGroup( const wchar_t* exportName, co
 
 void Tr2RtPipelineStateDescriptionAL::AddGlobalSignature( const Tr2ShaderSignatureAL& signature )
 {
-	m_globalSignature = signature;
+
+	if( m_globalSignature.threadGroupSize.x != signature.threadGroupSize.x || 
+		m_globalSignature.threadGroupSize.y != signature.threadGroupSize.y || 
+		m_globalSignature.threadGroupSize.z != signature.threadGroupSize.z )
+	{
+		CCP_LOGERR( "m_globalSignature.threadGroupSize does not match signature.threadGroupSize. Replacing instead of merging signatures. "
+					"globalSignature: %u %u %u . otherSignature: %u %u %u ",
+					m_globalSignature.threadGroupSize.x,
+					m_globalSignature.threadGroupSize.y,
+					m_globalSignature.threadGroupSize.z,
+					signature.threadGroupSize.x,
+					signature.threadGroupSize.y,
+					signature.threadGroupSize.z
+		);
+		m_globalSignature = signature;
+	}
+	else
+	{
+		for( const auto& pipelineInput : signature.pipelineInputs )
+		{
+			if( std::find( m_globalSignature.pipelineInputs.begin(), m_globalSignature.pipelineInputs.end(), pipelineInput ) == m_globalSignature.pipelineInputs.end() )
+			{
+				m_globalSignature.pipelineInputs.push_back( pipelineInput );
+			}
+		}
+		for( const auto& signatureRegister : signature.registers )
+		{
+			if( std::find( m_globalSignature.registers.begin(), m_globalSignature.registers.end(), signatureRegister ) == m_globalSignature.registers.end() )
+			{
+				m_globalSignature.registers.push_back( signatureRegister );
+			}
+		}
+		for( const auto& sampler : signature.samplers )
+		{
+			if( std::find( m_globalSignature.samplers.begin(), m_globalSignature.samplers.end(), sampler ) == m_globalSignature.samplers.end() )
+			{
+				m_globalSignature.samplers.push_back( sampler );
+			}
+		}
+	}
 }
 
 uint32_t Tr2RtPipelineStateDescriptionAL::AddLocalSignature( const Tr2ShaderSignatureAL& signature )

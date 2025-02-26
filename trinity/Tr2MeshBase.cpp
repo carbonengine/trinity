@@ -514,6 +514,10 @@ void Tr2MeshBase::CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksW
 		{
 			continue;
 		}
+		if( areaType == TRIBATCHTYPE_DECAL && !( *a )->IsCastingShadows() )
+		{
+			continue;
+		}
 		if( !collector.m_shaderMaterial && !!( *a )->GetMaterialInterface() )
 		{
 			collector.m_shaderMaterial = ( *a )->GetMaterialInterface();

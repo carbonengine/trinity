@@ -13,7 +13,8 @@ Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_castShadows( true ),
 	m_jointCount( 0 ),
 	m_jointMappingAnimRig( NULL ),
-	m_minLod( TR2_LOD_UNSPECIFIED )
+	m_minLod( TR2_LOD_UNSPECIFIED ),
+	m_transparencyTexture( nullptr )
 {
 }
 
@@ -39,6 +40,7 @@ Tr2MeshArea& Tr2MeshArea::operator=( const Tr2MeshArea& other )
 	m_display = other.m_display;
 	m_useSHLighting = other.m_useSHLighting;
 	m_generateDepthArea = other.m_generateDepthArea;
+	m_transparencyTexture = other.m_transparencyTexture;
 
 	return *this;
 }
@@ -109,6 +111,15 @@ void Tr2MeshArea::SetCastsShadows( bool castShadows )
 	m_castShadows = castShadows;
 }
 
+Tr2TextureAL* Tr2MeshArea::GetTransparencyTexture() const
+{
+	return m_transparencyTexture;
+}
+
+void Tr2MeshArea::SetTransparencyTexture( Tr2TextureAL* texture )
+{
+	m_transparencyTexture = texture;
+}
 
 // -------------------------------------------------------------
 // Description:

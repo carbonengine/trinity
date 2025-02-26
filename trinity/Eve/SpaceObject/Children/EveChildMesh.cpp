@@ -447,6 +447,9 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	if( m_display && m_mesh )
 	{
 		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize );
+		// TODO: intern, I assume I also have to get decal areas here? need to find a test asset for that.
+		// TODO: intern, check other GetShadowBatches implementations as well...
+		//m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_DECAL ), perObjectData, shadowPixelSize );
 	}
 }
 
@@ -461,7 +464,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	auto UpdateRtPerObjectData = [this]( size_t idx, const Matrix* instanceTransform ) {
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-
+		// TODO: intern, do I have to add stuff for alpha cutouts here as well?
 		auto size = sizeof( EveSpaceObjectPSData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
 		if( !m_rtPerObjectData[idx].IsValid() || m_rtPerObjectData[idx].GetSize() != size )
 		{

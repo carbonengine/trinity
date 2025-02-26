@@ -499,7 +499,8 @@ protected:
 	bool m_isPickable;
 	bool m_isAnimated;
 	bool m_castShadow;
-	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshAreas;
+	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshOpaqueAreas;
+	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshDecalAreas;
 
 	Matrix m_worldTransform;
 	Matrix m_invWorldTransform;
@@ -684,7 +685,8 @@ protected:
 
 	void UpdateRtMesh(const EveUpdateContext& updateContext);
 	void UpdateRtSkeleton();
-	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+	mutable Tr2ConstantBufferAL m_rtOpaquePerObjectData;
+	mutable std::vector<Tr2ConstantBufferAL> m_rtDecalPerObjectDatas;
 
 	Tr2BoneTransformOffsets m_boneOffsets;
 
