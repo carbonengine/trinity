@@ -2803,7 +2803,7 @@ namespace
             call->SetType( functionHeader->GetType() );
             for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
             {
-				if( ( params[i]->type.IsTexture() || params[i]->type.IsSampler() ) && params[i]->type.arrayDimensions > 0 )
+				if( ( params[i]->type.IsTexture() || params[i]->type.IsSampler() || params[i]->type.IsBuffer() ) && params[i]->type.arrayDimensions > 0 )
                 {
                     auto cast = state.NewNode( NT_CAST_EXPRESSION );
                     cast->SetType( params[i]->type );
@@ -4524,6 +4524,38 @@ namespace
         return compiledCode;
     }
 
+	void AssignDeviceSpaceToSymbols( ASTNode* node )
+	{
+		if( !node )
+		{
+			return;
+		}
+		if( auto symbol = node->GetSymbol() )
+		{
+			auto type = symbol->type;
+			switch( type.builtInType )
+			{
+			case OP_BUFFER:
+			case OP_STRUCTUREDBUFFER:
+			case OP_RWBUFFER:
+			case OP_RWSTRUCTUREDBUFFER:
+			case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+				symbol->addressSpace = AddressSpace::Device;
+				break;
+			default:
+				if( type.arrayDimensions && ( type.IsTexture() || type.IsSampler() ) )
+				{
+					symbol->addressSpace = AddressSpace::Device;
+				}
+				break;
+			}
+		}
+		for( auto child : node->GetChildren() )
+		{
+			AssignDeviceSpaceToSymbols( child );
+		}
+	}
+
 	ASTNode* CreateGlobalInputsStruct( ParserState& state, const std::vector<GlobalInputElement>& globalInputs )
 	{
 		state.GetSymbolTable().EnterScope();
@@ -4713,6 +4745,8 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 	ConvertTextureFunctionsToMetal( state );
 	ConvertSyncFunctionsToMetal( functions );
+
+	AssignDeviceSpaceToSymbols( state.GetTree() );
 
 	if( !globals.empty() )
 	{

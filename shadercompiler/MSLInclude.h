@@ -459,6 +459,7 @@ struct RayDesc
 struct __MetalHitSV
 {
     uint instance_id;
+	uint primitive_id;
     float3 origin;
     float3 direction;
     float min_distance;
@@ -528,6 +529,7 @@ void TraceRay(
     if (intersection.type == intersection_type::none)
     {
         hit.instance_id = 0;
+		hit.primitive_id = 0;
         hit.origin = r.origin;
         hit.direction = r.direction;
         hit.min_distance = r.min_distance;
@@ -539,6 +541,7 @@ void TraceRay(
     else if( ( rayFlags & RAY_FLAG_SKIP_CLOSEST_HIT_SHADER ) == 0 )
     {
         hit.instance_id = intersection.instance_id;
+		hit.primitive_id = intersection.primitive_id;
         hit.origin = intersection.world_to_object_transform * float4( r.origin, 1.0 );
         hit.direction = intersection.world_to_object_transform * float4( r.direction, 0.0 );
         hit.min_distance = r.min_distance;
@@ -558,6 +561,7 @@ void TraceRay(
 
 
 #define InstanceID() (__metalHitSV.instance_id)
+#define PrimitiveIndex() (__metalHitSV.primitive_id)
 #define ObjectRayOrigin() (__metalHitSV.origin)
 #define ObjectRayDirection() (__metalHitSV.direction)
 #define RayTMin() (__metalHitSV.min_distance)

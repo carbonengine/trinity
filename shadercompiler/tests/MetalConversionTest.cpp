@@ -135,3 +135,91 @@ technique t0
 	auto data = Compile<EffectCompilerMetal>( src );
 	EXPECT_NE( data.techniques[0].libraries[0].source.find( "packed_float3 Color;" ), std::string::npos );
 }
+
+TEST( MetalConversion, AllowBindlessResources )
+{
+	const char* src = R"SRC(
+
+Buffer<float4> HeapView_BufferFloat4[]
+<
+	bool IsHeapView = true;
+>;
+
+Texture2D<float4> HeapView_Texture2D[]
+<
+	bool IsHeapView = true;
+>;
+
+struct VSOut
+{
+	float4 position : SV_Position;
+	float2 uv : TEXCOORD0;
+};
+
+VSOut vs( float4 pos : POSITION, float2 uv : TEXCOORD0 )
+{
+	VSOut output;
+	output.position = pos;
+	output.uv = uv;
+	return output;
+}
+
+float4 ps( VSOut vsOut ): SV_Target
+{
+	return HeapView_Texture2D[0].Load( uint2( vsOut.uv ) ) + HeapView_BufferFloat4[0][uint(vsOut.uv.x)];
+}
+
+technique t0
+{
+	pass p0
+	{
+		vertexshader = compile vs_3_0 vs();	
+		pixelshader = compile ps_3_0 ps();
+	}
+}
+)SRC";
+
+	ASSERT_TRUE( Compiles<EffectCompilerMetal>( src ) );
+}
+
+TEST( MetalConversion, AllowLocalBufferVars )
+{
+	const char* src = R"SRC(
+
+Buffer<float4> HeapView_BufferFloat4[]
+<
+	bool IsHeapView = true;
+>;
+
+struct VSOut
+{
+	float4 position : SV_Position;
+	float2 uv : TEXCOORD0;
+};
+
+VSOut vs( float4 pos : POSITION, float2 uv : TEXCOORD0 )
+{
+	VSOut output;
+	output.position = pos;
+	output.uv = uv;
+	return output;
+}
+
+float4 ps( VSOut vsOut ): SV_Target
+{
+	Buffer<float4> buf = HeapView_BufferFloat4[0];
+	return buf.Load( uint( vsOut.uv.x ) );
+}
+
+technique t0
+{
+	pass p0
+	{
+		vertexshader = compile vs_3_0 vs();	
+		pixelshader = compile ps_3_0 ps();
+	}
+}
+)SRC";
+
+	ASSERT_TRUE( Compiles<EffectCompilerMetal>( src ) );
+}
