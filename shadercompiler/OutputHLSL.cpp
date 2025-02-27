@@ -1635,6 +1635,34 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		else
 		{
 			os << node->GetType();
+			if( symbol->type.arrayDimensions > 0 && symbol->type.IsBuffer() )
+			{
+				isArrayOfTextures = true;
+				for( int i = 0; i < node->GetType().arrayDimensions; ++i )
+				{
+					if( node->GetType().IsBuffer() )
+					{
+						switch( symbol->addressSpace )
+						{
+						case AddressSpace::Constant:
+							os << " constant ";
+							break;
+						case AddressSpace::Device:
+							os << " device ";
+							break;
+						case AddressSpace::Thread:
+							os << " thread ";
+							break;
+						case AddressSpace::Threadgroup:
+							os << " threadgroup ";
+							break;
+						default:
+							break;
+						}
+					}
+					os << '*';
+				}
+			}
 		}
 		if( isReference )
 		{
