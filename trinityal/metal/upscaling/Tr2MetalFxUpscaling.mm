@@ -94,7 +94,7 @@ Tr2MetalFxUpscalingTechnique::Tr2MetalFxUpscalingTechnique( Tr2RenderContextAL& 
         TrinityALImpl::MetalContext* metalContext = m_renderContext.GetPrimaryRenderContext().GetMetalContext();
         auto device = metalContext->GetDevice();
      
-        // temporal scalers are only available on silicon hardware, need to check if it supported
+        // need to check if system supports temporal upscalers
         m_temporal = [MTLFXTemporalScalerDescriptor supportsDevice:device];
     }
     this->SanitizeState();
@@ -156,27 +156,15 @@ Tr2MetalFxUpscalingContext::Tr2MetalFxUpscalingContext( Tr2UpscalingAL::Setting 
 		m_jitterXScale = 1.0f;
 		m_jitterYScale = -1.0f;
 		m_temporal = temporal;
-		
-		switch( m_setting ){
-			case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
-				m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
-				break;
-			case Tr2UpscalingAL::Setting::QUALITY:
-				m_upscaling = m_temporal ? 1.4 : 1.25;
-				break;
-			case Tr2UpscalingAL::Setting::BALANCED:
-				m_upscaling = m_temporal ? 1.7 : 1.5;
-				break;
-			case Tr2UpscalingAL::Setting::PERFORMANCE:
-				m_upscaling = m_temporal ? 2.0 : 1.75;
-				break;
-			case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
-				m_upscaling = m_temporal ? 2.3 : 2.0;
-				break;
-			default:
-				m_upscaling = 1.0;
-				break;
-		}
+        auto queue = m_renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
+        if( queue->IsSilicon() )
+        {
+            SetSiliconUpscalingAmount();
+        }
+        else
+        {
+            SetIntelUpscalingAmount();
+        }
 		
 		m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
 		m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
@@ -210,6 +198,80 @@ Tr2MetalFxUpscalingContext::~Tr2MetalFxUpscalingContext() {
 		}
 		m_mfxSpatialScaler = nil;
 	}
+}
+
+void Tr2MetalFxUpscalingContext::SetSiliconUpscalingAmount() 
+{
+    switch( m_setting )
+    {
+    case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
+        m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
+        break;
+    case Tr2UpscalingAL::Setting::QUALITY:
+        m_upscaling = 1.4;
+        break;
+    case Tr2UpscalingAL::Setting::BALANCED:
+        m_upscaling = 1.7;
+        break;
+    case Tr2UpscalingAL::Setting::PERFORMANCE:
+        m_upscaling = 2.0;
+        break;
+    case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
+        m_upscaling = 2.3;
+        break;
+    default:
+        m_upscaling = 1.0;
+        break;
+    }
+}
+
+void Tr2MetalFxUpscalingContext::SetIntelUpscalingAmount() 
+{
+    if( m_temporal )
+    {
+        switch( m_setting )
+        {
+        case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
+            m_upscaling = 1.1; // ultra quality is only available on temporal upscaler
+            break;
+        case Tr2UpscalingAL::Setting::QUALITY:
+            m_upscaling = 1.4;
+            break;
+        case Tr2UpscalingAL::Setting::BALANCED:
+            m_upscaling = 1.6;
+            break;
+        case Tr2UpscalingAL::Setting::PERFORMANCE:
+            m_upscaling = 1.8;
+            break;
+        case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
+            m_upscaling = 2.0;
+            break;
+        default:
+            m_upscaling = 1.0;
+            break;
+        }
+    }
+    else
+    {
+        switch( m_setting )
+        {
+        case Tr2UpscalingAL::Setting::QUALITY:
+            m_upscaling = 1.25;
+            break;
+        case Tr2UpscalingAL::Setting::BALANCED:
+            m_upscaling =  1.5;
+            break;
+        case Tr2UpscalingAL::Setting::PERFORMANCE:
+            m_upscaling =  1.75;
+            break;
+        case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
+            m_upscaling =  2.0;
+            break;
+        default:
+            m_upscaling = 1.0;
+            break;
+        }
+    }
 }
 
 void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
