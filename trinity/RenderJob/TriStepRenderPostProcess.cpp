@@ -3,6 +3,7 @@
 #include "PostProcess/Tr2PostProcess2.h"
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "Include/TriMath.h"
+#include "TriSettingsRegistrar.h"
 
 // FidelityFX headers
 #define A_CPU
@@ -10,6 +11,12 @@
 #include "ffx_cas.h"
 
 extern float g_eveSpaceSceneGammaBrightness;
+
+bool g_upscalingDebugView = false;
+TRI_REGISTER_SETTING( "upscalingDebugView", g_upscalingDebugView );
+
+bool g_frameGenDebugView = false;
+TRI_REGISTER_SETTING( "frameGenDebugView", g_frameGenDebugView );
 
 namespace
 {
@@ -1196,6 +1203,9 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.input = source ? source->GetTexture() : nullptr;
 	dispatchParameters.opaqueOnly = m_opaqueColorBuffer ? m_opaqueColorBuffer->GetTexture() : nullptr;
 	dispatchParameters.velocity = m_velocityBuffer ? m_velocityBuffer->GetTexture() : nullptr;
+
+	dispatchParameters.upscalingDebugView = g_upscalingDebugView;
+	dispatchParameters.frameGenDebugView = g_frameGenDebugView;
 
 	m_lastFrameTime = BeOS->GetCurrentFrameTime();
 	{

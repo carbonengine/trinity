@@ -67,6 +67,9 @@ namespace Tr2UpscalingAL
 		float invProjection[16];
 		float clipToPrevClip[16];
 		float prevClipToClip[16];
+
+		bool upscalingDebugView;
+		bool frameGenDebugView;
 	};
 	
 	enum DispatchRequirements

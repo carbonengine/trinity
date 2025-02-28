@@ -533,7 +533,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchUpscaling( Tr2UpscalingA
 	dispatchUpscale.cameraFar = dispatchParameters.frontClip;
 	dispatchUpscale.cameraNear = dispatchParameters.backClip;
 
-	dispatchUpscale.flags = 0;//FFX_UPSCALE_FLAG_DRAW_DEBUG_VIEW;
+	dispatchUpscale.flags = dispatchParameters.upscalingDebugView ? FFX_UPSCALE_FLAG_DRAW_DEBUG_VIEW : 0;
 
 	ffx::ReturnCode retCode = ffx::Dispatch( m_upscalingFfxContext, dispatchUpscale );
 	if( retCode != ffx::ReturnCode::Ok )
@@ -549,7 +549,8 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchFrameGen( Tr2UpscalingAL
 	dispatchFgPrep.commandList = m_params.renderContext.GetPrimaryRenderContext().m_commandList;
 	dispatchFgPrep.depth = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.depth, L"FSR3_InputDepth" );
 	dispatchFgPrep.motionVectors = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.velocity, L"FSR3_InputMotionVectors" );
-	dispatchFgPrep.flags = 0;// FFX_FRAMEGENERATION_FLAG_DRAW_DEBUG_VIEW;
+	dispatchFgPrep.flags = dispatchParameters.frameGenDebugView ? FFX_FRAMEGENERATION_FLAG_DRAW_DEBUG_VIEW : 0;
+	
 	m_frameGenerationConfig.flags = dispatchFgPrep.flags;
 	dispatchFgPrep.jitterOffset.x = m_jitterX;
 	dispatchFgPrep.jitterOffset.y = m_jitterY;
