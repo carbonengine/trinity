@@ -32,6 +32,10 @@ bool ToFloatTuple( PyObject* value, ssize_t length, float* destination )
 			{
 				destination[i] = float( PyLong_AsDouble( item ) );
 			}
+			else if( PyInt_Check( item ) )
+			{
+				destination[i] = float( PyInt_AsLong( item ) );
+			}
 			else
 			{
 				return false;

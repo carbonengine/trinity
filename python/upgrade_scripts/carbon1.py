@@ -53,6 +53,17 @@ class RemoveAttribute(BaseFileUpgrade):
         with open(filename, 'w') as f:
             f.write(contents)
 
+class ConvertRocks(BaseFileUpgrade):
+    def AppliesToFile(self, filename):
+        if not filename.lower().endswith('.red'):
+            return False
+        with open(filename, 'r') as f:
+            contents = f.read()
+        return "static/rocks.fx" in contents
+
+    def UpgradeFile(self, filename):
+        print("Please update '", filename, "' manually by removing the EveTransform (the type of this object should be Tr2InstancedMesh)")
+
 
 def UpgradeFilesInDirectory(directory: str, upgrades: list):
     toUpgrade = []
@@ -79,4 +90,4 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('directory')
     args = parser.parse_args()
-    UpgradeFilesInDirectory(args.directory, [RemoveAttribute('fidelityFX'), RemoveAttribute('useSpaceObjectData')])
+    UpgradeFilesInDirectory(args.directory, [RemoveAttribute('fidelityFX'), RemoveAttribute('useSpaceObjectData'), ConvertRocks()])

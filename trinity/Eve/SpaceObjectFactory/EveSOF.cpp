@@ -2973,6 +2973,12 @@ void EveSOF::SetupLocatorSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, c
 				obj->MergeToLocatorSet( *locSets );
 			}
 		}
+		// next hull needs offset update from hull's locator
+		const Vector3* nextSubsystemOffset = dna->GetHullNextSubsystemOffset( hullIdx );
+		if( nextSubsystemOffset )
+		{
+			hullOffset += *nextSubsystemOffset;
+		}
 	}
 }
 

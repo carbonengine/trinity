@@ -6,7 +6,7 @@
 #include "MetalContext.h"
 #include "ALLog.h"
 
-bool g_useParallelEncoding = true;
+bool g_useParallelEncoding = false;
 extern bool g_brokenMacOSNvidiaDrivers;
 
 CCP_STATS_DECLARE( constantDataSize, "Trinity/AL/constantDataSize", true, CST_MEMORY, "Total size of constant data uploaded per frame" );
