@@ -10,90 +10,104 @@
 #include "Tr2Fsr3Upscaling.h"
 #include "Tr2RenderContextAL.h"
 #include "Tr2PrimaryRenderContextAL.h"
-#include <FidelityFX/host/backends/dx12/ffx_dx12.h>
 
 extern bool g_upscalingDebug;
 CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
 namespace Fsr3Utils
 {
-	void LogFsr3Message( FfxMsgType type, const wchar_t* message )
+	void LogFsr3Message( uint32_t type, const wchar_t* message )
 	{
 		std::string m = std::string( "FSR3 Upscaling: " + std::string( CW2A( message ) ) );
 
-		if( type == FFX_MESSAGE_TYPE_ERROR )
+		switch( type )
 		{
+		case FFX_API_MESSAGE_TYPE_ERROR:
 			CCP_LOGERR( m.c_str() );
-		}
-		else if( type == FFX_MESSAGE_TYPE_WARNING )
-		{
+			break;
+		case FFX_API_MESSAGE_TYPE_WARNING:
 			CCP_LOGWARN( m.c_str() );
+			break;
+		default:
+			CCP_LOG( m.c_str() );
 		}
 	}
 
-	FfxResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* textureName )
+	FfxApiResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* textureName )
 	{
 		ID3D12Resource* res = nullptr;
+		FfxApiResource ffxRes;
+
 		if( texture && texture->IsValid() )
 		{
-			res = texture->TrinityALImpl_GetObject()->GetResourceDx12();
+			auto texObj = texture->TrinityALImpl_GetObject();
+			res = texObj->GetResourceDx12();
 			res->SetName( textureName );
+			ffxRes = ffxApiGetResourceDX12( res );
+			// Since we set the dx12 resource format as typeless and then we create views into that resource
+			// so we need to get the actual format here...
+			ffxRes.description.format = GetFfxSurfaceFormat( texture->GetFormat() );
+		}
+		else
+		{
+			ffxRes = ffxApiGetResourceDX12(nullptr);
 		}
 
-		auto desc = GetFfxResourceDescriptionDX12( res );
-		return ffxGetResourceDX12( res, desc, const_cast<wchar_t*>( textureName ), FFX_RESOURCE_STATE_PIXEL_COMPUTE_READ );
+		return ffxRes;
 	}
 
-	FfxSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format )
+	FfxApiSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format )
 	{
 		switch( format )
 		{
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_TYPELESS ):
-			return FFX_SURFACE_FORMAT_R32G32B32A32_TYPELESS;
+			return FFX_API_SURFACE_FORMAT_R32G32B32A32_TYPELESS;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_FLOAT ):
-			return FFX_SURFACE_FORMAT_R32G32B32A32_FLOAT;
+			return FFX_API_SURFACE_FORMAT_R32G32B32A32_FLOAT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16B16A16_FLOAT ):
-			return FFX_SURFACE_FORMAT_R16G16B16A16_FLOAT;
+			return FFX_API_SURFACE_FORMAT_R16G16B16A16_FLOAT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32_FLOAT ):
-			return FFX_SURFACE_FORMAT_R32G32_FLOAT;
+			return FFX_API_SURFACE_FORMAT_R32G32_FLOAT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8_UINT ):
-			return FFX_SURFACE_FORMAT_R8_UINT;
+			return FFX_API_SURFACE_FORMAT_R8_UINT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32_UINT ):
-			return FFX_SURFACE_FORMAT_R32_UINT;
+			return FFX_API_SURFACE_FORMAT_R32_UINT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_TYPELESS ):
-			return FFX_SURFACE_FORMAT_R8G8B8A8_TYPELESS;
+			return FFX_API_SURFACE_FORMAT_R8G8B8A8_TYPELESS;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_UNORM ):
-			return FFX_SURFACE_FORMAT_R8G8B8A8_UNORM;
+			return FFX_API_SURFACE_FORMAT_R8G8B8A8_UNORM;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB ):
-			return FFX_SURFACE_FORMAT_R8G8B8A8_SRGB;
+			return FFX_API_SURFACE_FORMAT_R8G8B8A8_SRGB;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R11G11B10_FLOAT ):
-			return FFX_SURFACE_FORMAT_R11G11B10_FLOAT;
+			return FFX_API_SURFACE_FORMAT_R11G11B10_FLOAT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16_FLOAT ):
-			return FFX_SURFACE_FORMAT_R16G16_FLOAT;
+			return FFX_API_SURFACE_FORMAT_R16G16_FLOAT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16_UINT ):
-			return FFX_SURFACE_FORMAT_R16G16_UINT;
+			return FFX_API_SURFACE_FORMAT_R16G16_UINT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_FLOAT ):
-			return FFX_SURFACE_FORMAT_R16_FLOAT;
+			return FFX_API_SURFACE_FORMAT_R16_FLOAT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_UINT ):
-			return FFX_SURFACE_FORMAT_R16_UINT;
+			return FFX_API_SURFACE_FORMAT_R16_UINT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_UNORM ):
-			return FFX_SURFACE_FORMAT_R16_UNORM;
+			return FFX_API_SURFACE_FORMAT_R16_UNORM;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_SNORM ):
-			return FFX_SURFACE_FORMAT_R16_SNORM;
+			return FFX_API_SURFACE_FORMAT_R16_SNORM;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8_UNORM ):
-			return FFX_SURFACE_FORMAT_R8_UNORM;
+			return FFX_API_SURFACE_FORMAT_R8_UNORM;
 		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8_UNORM:
-			return FFX_SURFACE_FORMAT_R8G8_UNORM;
+			return FFX_API_SURFACE_FORMAT_R8G8_UNORM;
 		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32_FLOAT:
 		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_D32_FLOAT:
-			return FFX_SURFACE_FORMAT_R32_FLOAT;
+			return FFX_API_SURFACE_FORMAT_R32_FLOAT;
 		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_UNKNOWN ):
-			return FFX_SURFACE_FORMAT_UNKNOWN;
+			return FFX_API_SURFACE_FORMAT_UNKNOWN;
 		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_UINT:
-			return FFX_SURFACE_FORMAT_R32G32B32A32_UINT;
+			return FFX_API_SURFACE_FORMAT_R32G32B32A32_UINT;
+		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_B8G8R8A8_UNORM:
+			return FFX_API_SURFACE_FORMAT_B8G8R8A8_UNORM;
 		default:
-			FFX_ASSERT_MESSAGE( false, "ValidationRemap: Unsupported format requested. Please implement." );
-			return FFX_SURFACE_FORMAT_UNKNOWN;
+			CCP_LOGERR( "FSR3: GetFfxSurfaceFormat: Unsupported format requested. Please implement." );
+			return FFX_API_SURFACE_FORMAT_UNKNOWN;
 		}
 	}
 
@@ -101,9 +115,8 @@ namespace Fsr3Utils
 
 Tr2Fsr3UpscalingTechnique::Tr2Fsr3UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter ),
-	m_framegenSwapchain( nullptr ), 
-	m_attachedToSwapchain( false ),
-	m_supportsFrameGeneration( true )
+	m_supportsFrameGeneration( true ),
+	m_swapChainContext( nullptr )
 {
 	OSVERSIONINFOEX osvi = {};
 	osvi.dwMajorVersion = 10;
@@ -123,42 +136,49 @@ bool Tr2Fsr3UpscalingTechnique::ReplacesSwapchain() const
 
 void Tr2Fsr3UpscalingTechnique::ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swapchain, Tr2WindowHandle hwnd, ID3D12CommandQueue* commandQueue )
 {
-	// Create frameinterpolation swapchain
-	m_framegenSwapchain = ffxGetSwapchainDX12( swapchain.Detach() );
 
-	auto result = ffxReplaceSwapchainForFrameinterpolationDX12( ffxGetCommandQueueDX12( commandQueue ), m_framegenSwapchain );
-	
-	if( result != FFX_OK )
+	ffx::CreateContextDescFrameGenerationSwapChainWrapDX12 wrapSwapchainDesc{};
+	wrapSwapchainDesc.gameQueue = commandQueue;
+	wrapSwapchainDesc.swapchain = &swapchain;
+	ffx::ReturnCode result = ffx::CreateContext( m_swapChainContext, nullptr, wrapSwapchainDesc );
+
+	if( result != ffx::ReturnCode::Ok )
 	{
-		swapchain.Attach( ffxGetDX12SwapchainPtr( m_framegenSwapchain ) );
 		m_frameGeneration = false;
-		m_framegenSwapchain = nullptr;
-		CCP_LOGERR( "Failed to replace DX12 swapchain with AMD frame interpolation swapchain. 0x%x", result );
+		m_swapChainContext = nullptr;
+		CCP_LOGERR( "FSR3: Failed to replace DX12 swapchain with AMD frame interpolation swapchain. 0x%x", result );
 		return;
 	}
-	swapchain.Attach( ffxGetDX12SwapchainPtr( m_framegenSwapchain ) );
 
-	m_attachedToSwapchain = true;
+	IDXGIFactory* factory = nullptr;
+	swapchain->GetParent( IID_PPV_ARGS( &factory ) );
+	HRESULT hr = factory->MakeWindowAssociation( hwnd, DXGI_MWA_NO_ALT_ENTER );
 
-	CCP_LOGNOTICE( "Successfully replaced DX12 swapchain with AMD frame interpolation swapchain" );
+	if( FAILED( hr ) )
+	{
+		CCP_LOGERR( "FSR3: Failed to make window association for swapchain. 0x%x", hr );
+	}
+
+	CCP_LOGNOTICE( "FSR3: Successfully replaced DX12 swapchain with AMD frame interpolation swapchain" );
 }
 
 Tr2Fsr3UpscalingTechnique::~Tr2Fsr3UpscalingTechnique()
 {
+	if( m_swapChainContext )
+	{
+		ffx::DestroyContext( m_swapChainContext );
+		m_swapChainContext = nullptr;
+	}
 }
 
 void Tr2Fsr3UpscalingTechnique::ReleaseResources()
 {
-	if( m_frameGeneration && m_framegenSwapchain )
+	if( m_frameGeneration && m_swapChainContext )
 	{
-		auto result = ffxWaitForPresents( m_framegenSwapchain );
-		if( result != FFX_OK )
-		{
-			CCP_LOGERR( "Failed to wait for presents. 0x%x", result );
-		}
+		ffx::DestroyContext( m_swapChainContext );
 	}
 
-	m_framegenSwapchain = nullptr;
+	m_swapChainContext = nullptr;
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2Fsr3UpscalingTechnique::GetAvailableSettings() const
@@ -184,127 +204,56 @@ bool Tr2Fsr3UpscalingTechnique::SupportsFrameGeneration() const
 void Tr2Fsr3UpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
 	Tr2UpscalingTechniqueAL::MarkFrameEvent( frameEvent );
-	if( m_frameGeneration && frameEvent == Tr2RenderContextEnum::FRAME_EVENT_UPDATE_STARTED )
-	{
-		for( auto& context : m_contexts )
-		{
-			( (Tr2Fsr3UpscalingContext*)context.second.get() )->GenerateFrame( m_renderContext );
-		}
-	}
 }
 
 Tr2UpscalingContextAL* Tr2Fsr3UpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
 {
-	return new Tr2Fsr3UpscalingContext( m_setting, m_frameGeneration, m_framegenSwapchain, params );
+	return new Tr2Fsr3UpscalingContext( m_setting, m_frameGeneration, m_swapChainContext, params );
 }	
 
-Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( Tr2UpscalingAL::Setting setting, bool frameGeneration, FfxSwapchain frameGenerationSwapchain, Tr2UpscalingAL::UpscalingContextParams params ) :
+Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( Tr2UpscalingAL::Setting setting, bool frameGeneration, ffx::Context swapchainContext, Tr2UpscalingAL::UpscalingContextParams params ) :
 	Tr2UpscalingContextAL( setting, frameGeneration, params ),
-	m_setup( false ),
-	m_framegenSwapchain( frameGenerationSwapchain )
+	m_upscalingFfxContext( nullptr ),
+	m_framegenerationFfxContext( nullptr ),
+	m_swapchainFfxContext( swapchainContext ),
+	m_frameGenerationConfig( {} ),
+	m_backendDesc( {} ),
+	m_frameGenerationCallback( nullptr ),
+	m_setup( false )
 {
+
 	switch( setting )
 	{
 	case Tr2UpscalingAL::Setting::ULTRA_QUALITY:
 		m_upscaling = 1.0f;
 		break;
 	case Tr2UpscalingAL::Setting::QUALITY:
-		m_upscaling = ffxFsr3GetUpscaleRatioFromQualityMode( FfxFsr3QualityMode::FFX_FSR3_QUALITY_MODE_QUALITY );
+		m_upscaling = 1.5f;
 		break;
 	case Tr2UpscalingAL::Setting::BALANCED:
-		m_upscaling = ffxFsr3GetUpscaleRatioFromQualityMode( FfxFsr3QualityMode::FFX_FSR3_QUALITY_MODE_BALANCED );
+		m_upscaling = 1.7f;
 		break;
 	case Tr2UpscalingAL::Setting::PERFORMANCE:
-		m_upscaling = ffxFsr3GetUpscaleRatioFromQualityMode( FfxFsr3QualityMode::FFX_FSR3_QUALITY_MODE_PERFORMANCE );
+		m_upscaling = 2.0f;
 		break;
 	case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
-		m_upscaling = ffxFsr3GetUpscaleRatioFromQualityMode( FfxFsr3QualityMode::FFX_FSR3_QUALITY_MODE_ULTRA_PERFORMANCE );
+		m_upscaling = 3.0f;
 		break;
 	default:
-		CCP_LOGERR( "Invalid upscaling setting applied: %d. Upscaling amount will be forced to 1.0" );
+		CCP_LOGERR( "FSR3: Invalid upscaling setting applied: %d. Upscaling amount will be forced to 1.0" );
 	}
+
+	m_backendDesc.header.type = FFX_API_CREATE_CONTEXT_DESC_TYPE_BACKEND_DX12;
+	m_backendDesc.device = params.renderContext.GetPrimaryRenderContext().m_device;
 
 	m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
 	m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
 
-	m_reset = true;
-
-	auto device = ffxGetDeviceDX12( params.renderContext.GetPrimaryRenderContext().m_device );
-
-	// Setup DX12 interface.
-	FfxErrorCode errorCode = 0;
-
-	int effectCounts[] = { 1, 1, 2 };
-	std::vector names{ "FSR3_BACKEND_SHARED_RESOURCES", "FSR3_BACKEND_UPSCALING", "FSR3_BACKEND_FRAME_INTERPOLATION" };
-	for( auto i = 0; i < FSR3_BACKEND_COUNT; i++ )
-	{
-		const size_t scratchBufferSize = ffxGetScratchMemorySizeDX12( effectCounts[i] );
-		void* scratchBuffer = CCP_CALLOC( names[i], scratchBufferSize, 1 );
-		memset( scratchBuffer, 0, scratchBufferSize );
-		errorCode |= ffxGetInterfaceDX12( &m_ffxFsr3Backends[i], device, scratchBuffer, scratchBufferSize, effectCounts[i] );
-	}
-
-	if( errorCode != FFX_OK )
-	{
-		CCP_LOGERR( "FSR3 setup could not create interface %d", errorCode );
-		return;
-	}
-
-	m_initializationParameters.backendInterfaceSharedResources = m_ffxFsr3Backends[FSR3_BACKEND_SHARED_RESOURCES];
-	m_initializationParameters.backendInterfaceUpscaling = m_ffxFsr3Backends[FSR3_BACKEND_UPSCALING];
-	m_initializationParameters.backendInterfaceFrameInterpolation = m_ffxFsr3Backends[FSR3_BACKEND_FRAME_INTERPOLATION];
-	m_initializationParameters.backBufferFormat = Fsr3Utils::GetFfxSurfaceFormat( params.sourceFormat );
-
-	m_initializationParameters.maxRenderSize.width = m_renderWidth;
-	m_initializationParameters.maxRenderSize.height = m_renderHeight;
-	m_initializationParameters.upscaleOutputSize.width = m_displayWidth;
-	m_initializationParameters.upscaleOutputSize.height = m_displayHeight;
-	m_initializationParameters.displaySize.width = m_displayWidth;
-	m_initializationParameters.displaySize.height = m_displayHeight;
-	m_initializationParameters.flags = FFX_FSR3_ENABLE_DEPTH_INVERTED;
-	m_initializationParameters.flags |= FFX_FSR3_ENABLE_HIGH_DYNAMIC_RANGE;
-	if( !m_frameGeneration )
-	{
-		m_initializationParameters.flags |= FFX_FSR3_ENABLE_UPSCALING_ONLY;
-	}
-
-	if( g_upscalingDebug )
-	{
-		m_initializationParameters.flags |= FFX_FSR3_ENABLE_DEBUG_CHECKING;
-		m_initializationParameters.fpMessage = &Fsr3Utils::LogFsr3Message;
-	}
-
-	errorCode = ffxFsr3ContextCreate( &m_context, &m_initializationParameters );
-	m_setup = errorCode == FFX_OK;
-	if( !m_setup )
-	{
-		CCP_LOGERR( "FSR3 setup could not create context %d", errorCode );
-		return;
-	}
-
-	auto desc = Tr2BitmapDimensions( m_renderWidth, m_renderHeight, 1, Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8_UNORM );
-	m_reactiveMask = std::make_unique<Tr2TextureAL>();
-	m_reactiveMask->Create( desc, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, params.renderContext.GetPrimaryRenderContext() );
+	m_setup = SetupUpscaling() == Tr2UpscalingAL::Result::OK;
 
 	if( m_frameGeneration )
 	{
-		m_frameGenerationConfig.frameGenerationEnabled = true;
-		m_frameGenerationConfig.flags = 0;
-
-		if( g_upscalingDebug )
-		{
-			m_frameGenerationConfig.flags |= FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_TEAR_LINES | FFX_FSR3_FRAME_GENERATION_FLAG_DRAW_DEBUG_VIEW;
-		}
-
-		m_frameGenerationConfig.onlyPresentInterpolated = true;
-		m_frameGenerationConfig.allowAsyncWorkloads = false;
-		m_frameGenerationConfig.frameGenerationCallback = []( const FfxFrameGenerationDispatchDescription* d) -> FfxErrorCode { 
-			CCP_STATS_INC( generatedFrames );
-
-			return ffxFsr3DispatchFrameGeneration(d); 
-		};
-		m_frameGenerationConfig.swapChain = m_framegenSwapchain;
-		m_frameGenerationConfig.HUDLessColor = Fsr3Utils::ConvertTextureToFfxResource( nullptr, L"FSR3_Hudless" );
+		m_frameGeneration = SetupFrameGen() == Tr2UpscalingAL::Result::OK;
 	}
 }
 
@@ -313,49 +262,153 @@ Tr2Fsr3UpscalingContext::~Tr2Fsr3UpscalingContext()
 	if( m_setup )
 	{
 		m_params.renderContext.FlushAndSyncDx12();
-
 		if( m_frameGeneration )
 		{
-			// the swapchain might be still interpolatin, so it is very important to wait for it...
-			auto result = ffxWaitForPresents( m_frameGenerationConfig.swapChain );
-			if( result != FFX_OK )
-			{
-				CCP_LOGERR( "Failed to wait for presents. 0x%x", result );
-			}
 
+			// disable frame generation before destroying context
+			// also unset present callback, HUDLessColor and UiTexture to have the swapchain only present the backbuffer
 			m_frameGenerationConfig.frameGenerationEnabled = false;
-			m_frameGenerationConfig.frameGenerationCallback = nullptr;
-			m_frameGenerationConfig.HUDLessColor = Fsr3Utils::ConvertTextureToFfxResource( nullptr, L"FSR3_Hudless" );
-			FfxErrorCode errorCode = ffxFsr3ConfigureFrameGeneration( &m_context, &m_frameGenerationConfig );
-			if( errorCode != FFX_OK )
+			m_frameGenerationConfig.swapChain = m_params.renderContext.GetPrimaryRenderContext().m_swapchain;
+			m_frameGenerationConfig.presentCallback = nullptr;
+			m_frameGenerationConfig.HUDLessColor = FfxApiResource( {} );
+			ffx::Configure( m_framegenerationFfxContext, m_frameGenerationConfig );
+
+			// Destroy the contexts
+			if( m_upscalingFfxContext )
 			{
-				CCP_LOGERR( "FSR3 could not disable framegeneration 0x%x", errorCode );
+				ffx::DestroyContext( m_upscalingFfxContext );
+				m_upscalingFfxContext = nullptr;
 			}
-			m_frameGeneration = false;
-			m_frameGenerationConfig = {};
+			ffx::DestroyContext( m_framegenerationFfxContext );
+			m_framegenerationFfxContext = nullptr;
 		}
-
-		auto errorCode = ffxFsr3ContextDestroy( &m_context );
-		if( errorCode != FFX_OK )
+		else if( m_upscalingFfxContext )
 		{
-			CCP_LOGERR( "FSR3 could not clear the context %d", errorCode );
+			ffx::DestroyContext( m_upscalingFfxContext );
+			m_upscalingFfxContext = nullptr;
 		}
-
-		for( auto& buffer : m_ffxFsr3Backends )
-		{
-			CCP_FREE( buffer.scratchBuffer );
-			buffer.scratchBuffer = nullptr;
-		}
+		m_frameGenerationCallback = nullptr;
 		m_setup = false;
 	}
+}
+
+void Tr2Fsr3UpscalingContext::SetupForReuse()
+{
+	if( m_setup )
+	{
+		if( m_frameGeneration )
+		{
+			// disable frame generation just for a moment (reenabled in dispatch) 
+			m_frameGenerationConfig.frameGenerationEnabled = false;
+			m_frameGenerationConfig.swapChain = m_params.renderContext.GetPrimaryRenderContext().m_swapchain;
+			m_frameGenerationConfig.frameGenerationCallback = nullptr;
+			m_frameGenerationConfig.HUDLessColor = FfxApiResource( {} );
+			ffx::Configure( m_framegenerationFfxContext, m_frameGenerationConfig );
+		}
+	}
+}
+
+Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::SetupUpscaling()
+{
+	ffx::CreateContextDescUpscale createFsr{};
+
+	createFsr.maxUpscaleSize = { m_displayWidth, m_displayHeight };
+	createFsr.maxRenderSize = { m_renderWidth, m_renderHeight };
+	createFsr.flags = FFX_UPSCALE_ENABLE_DEPTH_INVERTED | FFX_UPSCALE_ENABLE_HIGH_DYNAMIC_RANGE;
+
+	// Do error checking in debug
+	if( g_upscalingDebug )
+	{
+		createFsr.flags |= FFX_UPSCALE_ENABLE_DEBUG_CHECKING;
+		createFsr.fpMessage = &Fsr3Utils::LogFsr3Message;
+	}
+
+	// Create the FSR context
+	ffx::ReturnCode retCode = ffx::CreateContext( m_upscalingFfxContext, nullptr, createFsr, m_backendDesc );
+	if( retCode != ffx::ReturnCode::Ok )
+	{
+		CCP_LOGERR( "FSR3: could not create context %d", retCode );
+		return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+	}
+
+	FfxApiEffectMemoryUsage gpuMemoryUsageUpscaler;
+	ffx::QueryDescUpscaleGetGPUMemoryUsage upscalerGetGPUMemoryUsage{};
+	upscalerGetGPUMemoryUsage.gpuMemoryUsageUpscaler = &gpuMemoryUsageUpscaler;
+
+	ffx::Query( m_upscalingFfxContext, upscalerGetGPUMemoryUsage );
+	CCP_LOGNOTICE( "FSR3: Upscaler Context VRAM totalUsageInBytes %f MB aliasableUsageInBytes %f MB", gpuMemoryUsageUpscaler.totalUsageInBytes / 1048576.f, gpuMemoryUsageUpscaler.aliasableUsageInBytes / 1048576.f );
+
+	return Tr2UpscalingAL::Result::OK;
+}
+
+Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::SetupFrameGen()
+{
+	if( m_frameGeneration )
+	{
+		m_frameGenerationCallback = []( ffxDispatchDescFrameGeneration* params, void* pUserCtx ) -> ffxReturnCode_t {
+			CCP_STATS_INC( generatedFrames );
+			return ffxDispatch( static_cast<ffxContext*>( pUserCtx ), &params->header );
+		};
+
+		ffx::CreateContextDescFrameGeneration createFg{};
+		createFg.displaySize = { m_displayWidth, m_displayHeight };
+		createFg.maxRenderSize = { m_renderWidth, m_renderHeight };
+		createFg.flags |= FFX_FRAMEGENERATION_ENABLE_DEPTH_INVERTED | FFX_FRAMEGENERATION_ENABLE_HIGH_DYNAMIC_RANGE;
+
+		createFg.backBufferFormat = Fsr3Utils::GetFfxSurfaceFormat( m_params.renderContext.GetPrimaryRenderContext().GetBackBufferFormat() );
+		ffx::ReturnCode retCode;
+		ffx::CreateContextDescFrameGenerationHudless createFgHudless{};
+		createFgHudless.hudlessBackBufferFormat = FfxApiSurfaceFormat::FFX_API_SURFACE_FORMAT_B8G8R8A8_UNORM;
+
+		retCode = ffx::CreateContext( m_framegenerationFfxContext, nullptr, createFg, m_backendDesc );
+
+		if( retCode != ffx::ReturnCode::Ok )
+		{
+			CCP_LOGERR( "FSR3: could not create framegen context %d frame generation will not be enabled", retCode );
+			return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+		}
+
+		m_frameGenerationConfig.frameGenerationEnabled = true;
+		m_frameGenerationConfig.frameGenerationCallback = m_frameGenerationCallback;
+		
+		m_frameGenerationConfig.frameGenerationCallbackUserContext = &m_framegenerationFfxContext;
+		
+		m_frameGenerationConfig.presentCallback = nullptr;
+		m_frameGenerationConfig.presentCallbackUserContext = nullptr;
+		
+		m_frameGenerationConfig.swapChain = m_params.renderContext.GetPrimaryRenderContext().m_swapchain;
+		m_frameGenerationConfig.HUDLessColor = FfxApiResource( {} ); // we don't have a HUDless texture yet
+
+		m_frameGenerationConfig.frameID = 0;
+		m_frameGenerationConfig.allowAsyncWorkloads = false;
+		
+		retCode = ffx::Configure( m_framegenerationFfxContext, m_frameGenerationConfig );
+		if( retCode != ffx::ReturnCode::Ok )
+		{
+			CCP_LOGERR( "FSR3: could not configure framegen context %d frame generation will not be enabled", retCode );
+			return Tr2UpscalingAL::Result::CONTEXT_SETUP_FAILED;
+		}
+
+		FfxApiEffectMemoryUsage gpuMemoryUsageFrameGeneration;
+		ffx::QueryDescFrameGenerationGetGPUMemoryUsage frameGenGetGPUMemoryUsage{};
+		frameGenGetGPUMemoryUsage.gpuMemoryUsageFrameGeneration = &gpuMemoryUsageFrameGeneration;
+		ffx::Query( m_framegenerationFfxContext, frameGenGetGPUMemoryUsage );
+
+		CCP_LOGNOTICE( "FSR3: FrameGeneration Context VRAM totalUsageInBytes %f MB aliasableUsageInBytes %f MB", gpuMemoryUsageFrameGeneration.totalUsageInBytes / 1048576.f, gpuMemoryUsageFrameGeneration.aliasableUsageInBytes / 1048576.f );
+
+		FfxApiEffectMemoryUsage gpuMemoryUsageFrameGenerationSwapchain;
+		ffx::QueryFrameGenerationSwapChainGetGPUMemoryUsageDX12 frameGenSwapchainGetGPUMemoryUsage{};
+		frameGenSwapchainGetGPUMemoryUsage.gpuMemoryUsageFrameGenerationSwapchain = &gpuMemoryUsageFrameGenerationSwapchain;
+		ffx::Query( m_swapchainFfxContext, frameGenSwapchainGetGPUMemoryUsage );
+		CCP_LOGNOTICE( "FSR3: Swapchain Context VRAM totalUsageInBytes %f MB aliasableUsageInBytes %f MB", gpuMemoryUsageFrameGenerationSwapchain.totalUsageInBytes / 1048576.f, gpuMemoryUsageFrameGenerationSwapchain.aliasableUsageInBytes / 1048576.f );
+	}
+	return Tr2UpscalingAL::Result::OK;
 }
 
 void Tr2Fsr3UpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 {
 	if( m_frameGeneration && ( texture == nullptr || ( texture->TrinityALImpl_GetObject() != nullptr && m_frameGenerationConfig.HUDLessColor.resource != texture->TrinityALImpl_GetObject()->GetResourceDx12() ) ) )
 	{
-		ffxWaitForPresents( m_frameGenerationConfig.swapChain );
-
 		m_frameGenerationConfig.HUDLessColor = Fsr3Utils::ConvertTextureToFfxResource( texture, L"FSR3_Hudless" );
 	}
 }
@@ -371,35 +424,45 @@ void Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext::UpdateJitter()
 	{
 		m_jitterX = 0.0f;
 		m_jitterY = 0.0f;
+
+		 // Increment jitter index for frame
 		++m_jitterIndex;
-		const int32_t jitterPhaseCount = ffxFsr3UpscalerGetJitterPhaseCount( m_renderWidth, m_displayWidth );
-		ffxFsr3UpscalerGetJitterOffset( &m_jitterX, &m_jitterY, m_jitterIndex, jitterPhaseCount );
+
+		ffx::ReturnCode retCode;
+		int32_t jitterPhaseCount;
+		ffx::QueryDescUpscaleGetJitterPhaseCount getJitterPhaseDesc{};
+		getJitterPhaseDesc.displayWidth = m_displayWidth;
+		getJitterPhaseDesc.renderWidth = m_renderWidth;
+		getJitterPhaseDesc.pOutPhaseCount = &jitterPhaseCount;
+
+		retCode = ffx::Query( m_upscalingFfxContext, getJitterPhaseDesc );
+		if( retCode != ffx::ReturnCode::Ok )
+		{
+			CCP_LOGERR( "ffxQuery(FSR_GETJITTERPHASECOUNT) returned %d", retCode );
+			return;
+		}
+
+		ffx::QueryDescUpscaleGetJitterOffset getJitterOffsetDesc{};
+		getJitterOffsetDesc.index = m_jitterIndex;
+		getJitterOffsetDesc.phaseCount = jitterPhaseCount;
+		getJitterOffsetDesc.pOutX = &m_jitterX;
+		getJitterOffsetDesc.pOutY = &m_jitterY;
+
+		retCode = ffx::Query( m_upscalingFfxContext, getJitterOffsetDesc );
+		if( retCode != ffx::ReturnCode::Ok )
+		{
+			CCP_LOGERR( "ffxQuery(FSR_GETJITTEROFFSET) returned %d", retCode );
+			return;
+		}
 		m_jitterIndex = m_jitterIndex % jitterPhaseCount;
 	}
 }
 
 uint32_t Tr2Fsr3UpscalingContext::GetDispatchRequirements() const
 {
-	// we don't need to check for reactive, as it is generated by fsr3
-	return Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPAQUE_ONLY | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE | Tr2UpscalingAL::DispatchRequirements::VELOCITY;
+	return Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPAQUE_ONLY | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE | Tr2UpscalingAL::DispatchRequirements::VELOCITY| Tr2UpscalingAL::DispatchRequirements::VELOCITY;
 }
 
-
-void Tr2Fsr3UpscalingContext::GenerateFrame( Tr2RenderContextAL& renderContext )
-{
-	if( !m_setup || m_reset || !m_frameGeneration )
-	{
-		return;
-	}
-
-	FfxErrorCode errorCode = ffxFsr3ConfigureFrameGeneration( &m_context, &m_frameGenerationConfig );
-	if( errorCode != FFX_OK )
-	{
-		CCP_LOGERR( "FSR3 could not configure frame generation 0x%x", errorCode );
-		m_frameGeneration = false;
-		return;
-	}
-}
 
 Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
@@ -420,65 +483,10 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	GPU_REGION_AL( renderContext, "FSR3 Upscaling" );
 	renderContext.FlushBarriersDx12();
 
-	bool reactiveSuccess = true;
+	DispatchUpscaling( dispatchParameters );
+	if( m_frameGeneration )
 	{
-		FfxFsr3GenerateReactiveDescription generateReactiveParameters = {};
-		generateReactiveParameters.commandList = ffxGetCommandListDX12( renderContext.m_commandList );
-
-		generateReactiveParameters.renderSize.width = m_renderWidth;
-		generateReactiveParameters.renderSize.height = m_renderHeight;
-
-		generateReactiveParameters.scale = 1.f;
-		generateReactiveParameters.cutoffThreshold = 0.2f;
-		generateReactiveParameters.binaryValue = 0.7f;
-		generateReactiveParameters.flags = FFX_FSR3UPSCALER_AUTOREACTIVEFLAGS_APPLY_THRESHOLD |
-			FFX_FSR3UPSCALER_AUTOREACTIVEFLAGS_USE_COMPONENTS_MAX;
-
-		generateReactiveParameters.outReactive = Fsr3Utils::ConvertTextureToFfxResource( m_reactiveMask.get(), L"FSR3_ReactiveMask" );
-		generateReactiveParameters.colorOpaqueOnly = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.opaqueOnly, L"FSR3_Input_Opaque_Color" );
-		generateReactiveParameters.colorPreUpscale = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.input, L"FSR3_Input_PreUpscaleColor" );
-		FfxErrorCode errorCode = ffxFsr3ContextGenerateReactiveMask( &m_context, &generateReactiveParameters );
-		reactiveSuccess = errorCode == FFX_OK;
-		if( !reactiveSuccess )
-		{
-			CCP_LOGERR( "FSR3 error while generating reactive mask %d", errorCode );
-		}
-		renderContext.DirtyDescriptorCache();
-	}
-	
-	FfxFsr3DispatchUpscaleDescription dispatchDescription = {};
-	dispatchDescription.commandList = ffxGetCommandListDX12( renderContext.m_commandList );
-	dispatchDescription.color = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.input, L"FSR3_InputColor" );
-	dispatchDescription.depth = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.depth, L"FSR3_InputDepth" );
-	dispatchDescription.motionVectors = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.velocity, L"FSR3_InputMotionVectors" );
-	dispatchDescription.exposure = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.exposure, L"FSR3_InputExposure" );
-	dispatchDescription.reactive = Fsr3Utils::ConvertTextureToFfxResource( reactiveSuccess ? m_reactiveMask.get() : nullptr, reactiveSuccess ? L"FSR3_InputReactiveMap" : L"FSR3_EmptyInputReactiveMap" );
-	dispatchDescription.transparencyAndComposition = Fsr3Utils::ConvertTextureToFfxResource( nullptr, L"FSR3_EmptyTransparencyAndCompositionMap" );
-	dispatchDescription.upscaleOutput = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.output, L"FSR3_OutputColor" );
-
-	dispatchDescription.jitterOffset.x = m_jitterX;
-	dispatchDescription.jitterOffset.y = m_jitterY;
-	dispatchDescription.motionVectorScale.x = (float)m_renderWidth;
-	dispatchDescription.motionVectorScale.y = (float)m_renderHeight;
-	dispatchDescription.reset = m_reset;
-	dispatchDescription.enableSharpening = true;
-	dispatchDescription.sharpness = 0.9f;
-	dispatchDescription.frameTimeDelta = dispatchParameters.frameTimeDelta;
-
-	dispatchDescription.preExposure = dispatchParameters.preExposure;
-	dispatchDescription.renderSize.width = m_renderWidth;
-	dispatchDescription.renderSize.height = m_renderHeight;
-	dispatchDescription.cameraFar = dispatchParameters.frontClip; 
-	dispatchDescription.cameraNear = dispatchParameters.backClip; 
-	dispatchDescription.cameraFovAngleVertical = dispatchParameters.fieldOfView;
-	dispatchDescription.viewSpaceToMetersFactor = 1.0f;
-
-	renderContext.FlushBarriersDx12();
-
-	auto errorCode = ffxFsr3ContextDispatchUpscale( &m_context, &dispatchDescription );
-	if( errorCode != FFX_OK )
-	{
-		CCP_LOGERR( "FSR3 error while dispatching %d", errorCode );
+		DispatchFrameGen( dispatchParameters );
 	}
 
 	m_reset = false;
@@ -491,4 +499,93 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	return Tr2UpscalingAL::Result::OK;
 }
 
+Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchUpscaling( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+{
+	ffx::DispatchDescUpscale dispatchUpscale{};
+	dispatchUpscale.commandList = m_params.renderContext.GetPrimaryRenderContext().m_commandList;
+	dispatchUpscale.color = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.input, L"FSR3_InputColor" );
+	dispatchUpscale.depth = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.depth, L"FSR3_InputDepth" );
+	dispatchUpscale.motionVectors = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.velocity, L"FSR3_InputMotionVectors" );
+	dispatchUpscale.exposure = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.exposure, L"FSR3_InputExposure" );
+	dispatchUpscale.reactive = Fsr3Utils::ConvertTextureToFfxResource( nullptr, L"FSR3_EmptyInputReactiveMap" );
+	dispatchUpscale.transparencyAndComposition = Fsr3Utils::ConvertTextureToFfxResource( nullptr, L"FSR3_EmptyTransparencyAndCompositionMap" );
+	dispatchUpscale.output = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.output, L"FSR3_OutputColor" );
+
+	dispatchUpscale.jitterOffset.x = m_jitterX;
+	dispatchUpscale.jitterOffset.y = m_jitterY;
+	dispatchUpscale.motionVectorScale.x = (float)m_renderWidth;
+	dispatchUpscale.motionVectorScale.y = (float)m_renderHeight;
+	dispatchUpscale.reset = m_reset;
+	dispatchUpscale.enableSharpening = true;
+	dispatchUpscale.sharpness = 0.9f;
+
+	dispatchUpscale.frameTimeDelta = dispatchParameters.frameTimeDelta;
+
+	dispatchUpscale.preExposure = dispatchParameters.preExposure;
+	dispatchUpscale.renderSize.width = m_renderWidth;
+	dispatchUpscale.renderSize.height = m_renderHeight;
+	dispatchUpscale.upscaleSize.width = m_displayWidth;
+	dispatchUpscale.upscaleSize.height = m_displayHeight;
+
+	// Setup camera params as required
+	dispatchUpscale.cameraFovAngleVertical = dispatchParameters.fieldOfView;
+
+	dispatchUpscale.cameraFar = dispatchParameters.frontClip;
+	dispatchUpscale.cameraNear = dispatchParameters.backClip;
+
+	dispatchUpscale.flags = dispatchParameters.upscalingDebugView ? FFX_UPSCALE_FLAG_DRAW_DEBUG_VIEW : 0;
+
+	ffx::ReturnCode retCode = ffx::Dispatch( m_upscalingFfxContext, dispatchUpscale );
+	if( retCode != ffx::ReturnCode::Ok )
+	{
+		CCP_LOGERR( "FSR3 error while dispatching upscaling %d", retCode );
+	}
+	return Tr2UpscalingAL::Result::OK;
+}
+
+Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchFrameGen( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+{
+	ffx::DispatchDescFrameGenerationPrepare dispatchFgPrep{};
+	dispatchFgPrep.commandList = m_params.renderContext.GetPrimaryRenderContext().m_commandList;
+	dispatchFgPrep.depth = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.depth, L"FSR3_InputDepth" );
+	dispatchFgPrep.motionVectors = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.velocity, L"FSR3_InputMotionVectors" );
+	dispatchFgPrep.flags = dispatchParameters.frameGenDebugView ? FFX_FRAMEGENERATION_FLAG_DRAW_DEBUG_VIEW : 0;
+	
+	m_frameGenerationConfig.flags = dispatchFgPrep.flags;
+	dispatchFgPrep.jitterOffset.x = m_jitterX;
+	dispatchFgPrep.jitterOffset.y = m_jitterY;
+	dispatchFgPrep.motionVectorScale.x = (float)m_renderWidth;
+	dispatchFgPrep.motionVectorScale.y = (float)m_renderHeight;
+	dispatchFgPrep.frameTimeDelta = dispatchParameters.frameTimeDelta;
+
+	dispatchFgPrep.renderSize.width = m_renderWidth;
+	dispatchFgPrep.renderSize.height = m_renderHeight;
+	dispatchFgPrep.cameraFovAngleVertical = dispatchParameters.fieldOfView;
+	dispatchFgPrep.cameraFar = dispatchParameters.frontClip;
+	dispatchFgPrep.cameraNear = dispatchParameters.backClip;
+
+	dispatchFgPrep.viewSpaceToMetersFactor = 0.f;
+	dispatchFgPrep.frameID = dispatchParameters.currentFrameIndex;
+	
+	m_frameGenerationConfig.frameID = dispatchParameters.currentFrameIndex;
+	m_frameGenerationConfig.frameGenerationEnabled = true;
+	m_frameGenerationConfig.frameGenerationCallback = m_frameGenerationCallback;
+
+	auto retCode = ffx::Configure( m_framegenerationFfxContext, m_frameGenerationConfig );
+
+	if( retCode != ffx::ReturnCode::Ok )
+	{
+		CCP_LOGERR( "FSR3 error while configuring frame generation before dispatch %d", retCode );
+		m_frameGeneration = false;
+	}
+	else
+	{
+		if( ffx::Dispatch( m_framegenerationFfxContext, dispatchFgPrep ) != ffx::ReturnCode::Ok )
+		{
+			CCP_LOGERR( "FSR3 error while dispatching frame generation preparation during dispatch %d", retCode );
+		}
+	}
+	
+	return Tr2UpscalingAL::Result::OK;
+}
 #endif

@@ -82,6 +82,7 @@ public:
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 	virtual void SetHudLessTexture( Tr2TextureAL* texture ) override;
+	virtual void SetupForReuse() override;
 
 private:
 	void SetFrameToken( sl::FrameToken* token );

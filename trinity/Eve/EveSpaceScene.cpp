@@ -108,9 +108,6 @@ TRI_REGISTER_SETTING( "eveSpaceSceneDynamicLighting", g_eveSpaceSceneDynamicLigh
 int g_eveReflectionMode = EntityComponents::REFLECT_NEVER;
 TRI_REGISTER_SETTING( "eveReflectionSetting", g_eveReflectionMode );
 
-bool g_eveSpaceSceneRaytracedShadows = true;
-TRI_REGISTER_SETTING( "eveSpaceSceneRaytracedShadows", g_eveSpaceSceneRaytracedShadows );
-
 bool g_lensflaresInReflections = true;
 TRI_REGISTER_SETTING( "lensflaresInReflections", g_lensflaresInReflections );
 
@@ -165,7 +162,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_shadowQuality( ShadowQuality::SHADOW_RAYTRACED ),
 	m_enableShadows( true ),
 	m_displayShadowMap( false ),
-	m_enableRaytracing( false ),
 	m_visualizeMethod( VM_NONE ),
 	m_perFrameDebug( 0.f ),
 	m_pickBuffer( NULL, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1 ),
@@ -390,6 +386,7 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetDynamicExposure( m_sceneDefaultPostProcess->GetDynamicExposure() );
 			m_combinedPostProcess->SetTaa( m_sceneDefaultPostProcess->GetTaa() );
 			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemapping() );
+			m_combinedPostProcess->SetFog( m_sceneDefaultPostProcess->GetFog() );
 		}
 		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}
@@ -457,6 +454,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / m_upscalingAmount );
 	m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / m_upscalingAmount );
 	m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / m_upscalingAmount );
+	m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
 
 	{
 		for( auto it = m_backgroundObjects.begin(); it != m_backgroundObjects.end(); ++it )
@@ -738,7 +736,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 		PopulatePerFramePSData( m_perFramePS, &shadowMap, renderContext );
 		ApplyPerFrameData( renderContext );
 		SetupPlanetsAsShadowCaster( renderContext );
-		shadowMap.DrawToShadowMapResult( renderContext, depthMap );
+		shadowMap.DrawToShadowMapResult( renderContext, depthMap, m_upscalingAmount );
 
 		if( renderReason == TR2RENDERREASON_NORMAL && m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
 		{
@@ -2054,7 +2052,7 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 		}
 		else
 		{
-			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::DONT_CARE } );
+			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
 			RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_COLOR );
 		}
 		if( !m_planets.empty() )
@@ -2317,7 +2315,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 		if( volumetricCount + shadowCasterCount != 0 )
 		{
 			renderContext.SetReadOnlyDepth( true );
-			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, planets, maxPlanets, renderContext );
+			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, planets, maxPlanets, m_upscalingAmount, renderContext );
 
 			if( m_componentRegistry && m_volumetricsRenderer )
 			{
@@ -2452,8 +2450,7 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 		m_viewLast,
 		m_projectionLast );
 
-
-	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
+	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows, renderContext );
 }
 
 bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, Tr2DepthStencilPtr shadowMap )
@@ -3325,8 +3322,6 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 
 	if( IsMatch( value, m_shadowQuality ) )
 	{
-		g_eveSpaceSceneRaytracedShadows = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED;
-
 		if( m_shadowQuality == ShadowQuality::SHADOW_LOW )
 		{
 			if( m_cascadedShadowMap )

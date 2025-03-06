@@ -40,6 +40,9 @@ public:
 private:
     void CreateTemporalScaler( );
     void CreateSpatialScaler( );
+	
+	void SetSiliconUpscalingAmount( );
+	void SetIntelUpscalingAmount( );
     
     API_AVAILABLE(macos(13.0))
     id<MTLFXSpatialScaler> m_mfxSpatialScaler;

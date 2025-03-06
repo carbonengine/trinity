@@ -42,6 +42,7 @@ public:
 	void GetLights( Tr2LightManager& lightManager ) const override;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
+	void SetControllerVariable( const char* name, float value ) override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;

@@ -177,6 +177,8 @@ public:
 		return m_frustum;
 	}
 
+	bool m_raytracingEnabled = false;
+
 private:
 	Be::Time m_currentTime;
 	Be::Time m_lastTime;

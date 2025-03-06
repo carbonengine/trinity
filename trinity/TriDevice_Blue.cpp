@@ -460,6 +460,11 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"Deletes an upscaling context \n"
 			":param upscalingContextID: the id of the context to delete\n")
 
+		MAP_METHOD_AND_WRAP(
+			"UpdateAvailableUpscalingTechniques",
+			UpdateAvailableUpscalingTechniques,
+			"Updates the available upscaling techniques")
+
 #if BLUE_WITH_PYTHON
 		MAP_METHOD_AS_METHOD(
 			"GetUpscalingInfo",
