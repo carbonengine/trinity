@@ -128,6 +128,8 @@ struct EveSpaceObjectPSData
 	Vector4 customMaskTargets[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskClamps;
 	Vector4 screenSize;
+
+	Vector4 customData = { 0, 0, 0, 0 };
 };
 
 // ---------------------------------------------------------------------------------------
