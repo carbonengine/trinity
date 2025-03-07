@@ -61,6 +61,10 @@ bool EveEffectRoot2::OnModified( Be::Var* val )
 	{
 		ReRegister();
 	}
+	else if( IsMatch( val, m_mute ) )
+	{
+		SetMute( val );
+	}
 	return true;
 }
 
@@ -901,14 +905,8 @@ void EveEffectRoot2::AddObserver( TriObserverLocalPtr observer )
 	m_observers.Append( observer );
 }
 
-bool EveEffectRoot2::GetMute()
-{
-	return m_mute;
-}
-
 void EveEffectRoot2::SetMute( bool isMute )
 {
-	m_mute = isMute;
 	for( auto it : m_effectChildren )
 	{
 		it->SetMute( m_mute );

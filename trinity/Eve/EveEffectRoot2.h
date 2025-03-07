@@ -151,7 +151,6 @@ public:
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
 	void AddObserver( TriObserverLocalPtr observer ) override;
 
-	bool GetMute();
 	void SetMute( bool isMute );
 
 	void Start();

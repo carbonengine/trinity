@@ -1774,6 +1774,10 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 			m_impactOverlay->SetSeed( CcpHashFNV1( m_name.c_str(), m_name.length() ) );
 		}
 	}
+	else if( IsMatch( val, m_mute ) )
+	{
+		SetMute( val );
+	}
 
 	return true;
 }
@@ -3467,21 +3471,14 @@ void EveSpaceObject2::SetInheritProperties( const Color* colorSet )
 	}
 }
 
-bool EveSpaceObject2::GetMute()
-{
-	return m_mute;
-}
-
 void EveSpaceObject2::SetMute( bool isMute )
 {
-	m_mute = isMute;
 	for( auto it : m_effectChildren )
 	{
 		it->SetMute( m_mute );
 	}
 	for( auto it : m_observers )
 	{
-
 		it->SetMute( m_mute );
 	}
 }
