@@ -1677,6 +1677,7 @@ void EveSpaceObject2::GetParentData( ParentData* pd ) const
 	pd->clipFactor = m_psData.clipSphereFactor;
 	pd->clipFactor2 = m_psData.clipSphereFactor2;
 	pd->shLighting = m_psData.shLightingCoefficients;
+	pd->customData = m_psData.customData;
 }
 
 // --------------------------------------------------------------------------------

@@ -2185,7 +2185,7 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 // Description:
 //   Render opaque objects to populate a readable depth stencil.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
+void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const BlueSharedString& techniqueName )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
     
@@ -2203,12 +2203,25 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 		renderContext.AddGpuMarker( __FUNCTION__ );
 		GPU_REGION( renderContext, "Depth Pass" );
 
+		if( m_customStencil )
+		{
+			renderContext.m_esm.SetRenderTarget( 1, *m_customStencil );
+		}
+
 		Tr2EffectStateManager::RenderingMode renderingMode;
 		if( m_normalMap )
 		{
 			renderContext.m_esm.PushRenderTarget();
 			renderContext.m_esm.SetRenderTarget( 0, *m_normalMap );
-			renderContext.RenderPassHint( { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE } );
+			if( m_customStencil )
+			{
+				renderContext.RenderPassHint( { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE } );
+				renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 1 );
+			}
+			else
+			{
+				renderContext.RenderPassHint( { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE } );
+			}
 			renderContext.Clear( CLEARFLAGS_TARGET | CLEARFLAGS_ZBUFFER, 0, 0, 0 );
 			renderingMode = Tr2EffectStateManager::RM_OPAQUE;
 		}
@@ -2228,9 +2241,9 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 		ApplyPerFrameData( renderContext );
 
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
-		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_OPAQUE], BlueSharedString( "Depth" ) );
+		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
-		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
+		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 
 		// Planet z areas need special treatment
 		for( auto it = m_planets.begin(); it != m_planets.end(); ++it )
@@ -2247,9 +2260,9 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 
 			FinalizeBatches( m_secondaryBatches );
 			renderContext.m_esm.ApplyStandardStates( renderingMode );
-			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_OPAQUE], BlueSharedString( "Depth" ) );
+			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
 			renderContext.m_esm.ApplyStandardStates( renderingMode );
-			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
+			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 			ClearBatches( m_secondaryBatches );
 
 			visible.clear();
@@ -2268,6 +2281,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 			renderContext.m_esm.PopRenderTarget();
 #endif
 		}
+		renderContext.m_esm.SetRenderTarget( 1, Tr2TextureAL() );
 	}
 
 	renderContext.m_esm.EndManagedRendering();
@@ -2925,7 +2939,7 @@ ITr2MultiPassScene::RenderPassResult EveSpaceScene::RenderPass( PassType pass, T
 		RenderMainPass( renderContext );
 		break;
 	case RP_DEPTH_PASS:
-		RenderDepthPass( renderContext );
+		RenderDepthPass( renderContext, m_depthPassTechnique );
 		break;
 	case RP_SET_PERFRAME_DATA:
 		PopulateAndApplyPerFrameData( renderContext );

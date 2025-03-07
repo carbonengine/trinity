@@ -449,6 +449,9 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "perFrameDebug", m_perFrameDebug, "This is a debug/visualization value, which gets passed to the perframePS data, so the shader can use it.", Be::READWRITE )
 
+		MAP_ATTRIBUTE( "depthPassTechnique", m_depthPassTechnique, "Name of the shader technique used during the depth pass", Be::READWRITE )
+		MAP_ATTRIBUTE( "customStencil", m_customStencil, "Custom render target that can be bound during the depth pass", Be::READWRITE )
+
 		MAP_METHOD_AND_WRAP(
 			"GetPostProcessPSBuffer",
 			GetPostProcessPSBuffer,
