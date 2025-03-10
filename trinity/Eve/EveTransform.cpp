@@ -58,17 +58,17 @@ Tr2PerObjectData* EveTransform::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	// column_major for shaders
 	data->m_worldLast = Transpose( m_lastWorldTransform );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
-	if( !Inverse( data->m_worldInverseTranspose, m_worldTransform ) )
+	if( !Inverse( data->m_worldInverse, data->m_world ) )
 	{
 		// ok, so a complete row is 0.f -> find it and "fix" it
-		Matrix wm = m_worldTransform;
+		Matrix wm = data->m_world;
 		if( wm._11 == 0.f && wm._12 == 0.f && wm._13 == 0.f )
 			wm._11 = 0.1f;
 		else if( wm._21 == 0.f && wm._22 == 0.f && wm._23 == 0.f )
 			wm._22 = 0.1f;
 		else if( wm._31 == 0.f && wm._32 == 0.f && wm._33 == 0.f )
 			wm._33 = 0.1f;
-		data->m_worldInverseTranspose = Inverse( wm );
+		data->m_worldInverse = Inverse( wm );
 	}
 
 	return data;
