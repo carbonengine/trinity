@@ -499,7 +499,7 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 		m_perObjectDataVs.InvalidateBufferData();
 		m_perObjectDataPs.InvalidateBufferData();
 		m_vsData.worldTransform = Transpose( m_worldTransform );
-		m_vsData.invWorldTransform = Transpose( Inverse( m_worldTransform ) );
+		m_vsData.invWorldTransform = Inverse( m_vsData.worldTransform );
 		m_vsData.worldTransformLast = Transpose( lastWorldTransform );
 
 		m_psData.worldTransform = m_vsData.worldTransform;
