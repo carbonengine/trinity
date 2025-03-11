@@ -20,6 +20,7 @@ struct GlobalInputElement
 	Type type;
 	InlineString name;
 	ASTNode* declaration;
+	Symbol* symbol = nullptr;
 
 	bool operator==( const GlobalInputElement& other ) const
 	{

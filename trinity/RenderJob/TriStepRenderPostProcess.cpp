@@ -429,11 +429,11 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			godrays = postProcess->GetGodRays();
 			filmGrain = postProcess->GetFilmGrain();
 			fog = postProcess->GetFog();
-			dynamicExposure = postProcess->GetDynamicExposure();
 		case MEDIUM:
 			bloom = postProcess->GetBloom();
 			desaturate = postProcess->GetDesaturate();
 			vignette = postProcess->GetVignette();
+			dynamicExposure = postProcess->GetDynamicExposure();
 		case LOW:
 			tonemapping = postProcess->GetTonemapping();
 			signalLoss = postProcess->GetSignalLoss();
