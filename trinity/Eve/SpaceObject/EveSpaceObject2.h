@@ -105,6 +105,7 @@ struct EveSpaceObjectVSData
 	Matrix customMaskMatrix[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskData[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	uint32_t boneOffsets[4];
+	Vector4 customData = { 0, 0, 0, 0 };
 };
 
 // --------------------------------------------------------------------------------
