@@ -579,7 +579,7 @@ void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform, const Tr2Ani
 		{
 			Matrix pmat = *reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_worldPose, parent ) ) * modelTransform * initialTranslation;
 			Vector3 ppos = TransformCoord( Vector3( 0, 0, 0 ), pmat );
-			Tr2Renderer::DrawLine( pos, ppos, 0x88888888 );
+			Tr2Renderer::DrawLine( pos.GetXYZ(), ppos, 0x88888888 );
 		}
 	}
 }
