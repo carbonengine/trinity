@@ -157,6 +157,12 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
+			"mainPassRenderingEnabled",
+			m_mainPassRenderingEnabled,
+			"If true, main (color) pass is rendered along with shadows and SSAO.",
+			Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE(
 			"planets",
 			m_planets,
 			"Planets in space",
