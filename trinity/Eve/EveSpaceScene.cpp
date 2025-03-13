@@ -171,6 +171,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_pickBuffer( NULL, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1 ),
 	m_envMapRotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_backgroundRenderingEnabled( false ),
+	m_mainPassRenderingEnabled( true ),
 	m_updateContext( 0 ),
 	m_ssaoMapHandle( nullptr ),
 	m_staticEnvMapHandle( NULL ),
@@ -2324,7 +2325,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 	}
 
 
-	if( m_rtManager && m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows && m_depthMap && m_depthMap->IsValid() && !m_objects.empty() )
+	if( m_mainPassRenderingEnabled && m_rtManager && m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows && m_depthMap && m_depthMap->IsValid() && !m_objects.empty() )
 	{
 		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
 		size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
@@ -2352,7 +2353,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		}
 	}
 	
-	if( m_ssao )
+	if( m_mainPassRenderingEnabled && m_ssao )
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_ssao->SetInputBuffers( m_depthMap, m_normalMap );
@@ -2614,7 +2615,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 
 	renderContext.m_esm.BeginManagedRendering( cullmode );
 	
-	if( !m_display )
+	if( !m_display || !m_mainPassRenderingEnabled )
 	{
 		// We still need to pump GPU particles as technically this is not "rendering", and we need to avoid situations
 		// when we accumulate an unreasonable number of emit requests.

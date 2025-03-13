@@ -408,6 +408,7 @@ protected:
 	bool m_update;
 	bool m_displayShadowMap;
 	bool m_backgroundRenderingEnabled;
+	bool m_mainPassRenderingEnabled;
 
 	float m_planetScale;
 	float m_planetCameraScale;
