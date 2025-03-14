@@ -3717,7 +3717,7 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			uint32_t vertexBufferId;
 			uint32_t vertexBufferStride;
 			// TODO: intern, do we need offsets?
-			//uint vertexBufferOffset;
+			uint32_t vertexBufferOffset;
 			// TODO: intern, element type?
 
 			//uint vertexBufferType;
@@ -3733,7 +3733,7 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 			uint32_t alphaTextureId;
 
-			uint32_t padding[1];
+			//uint32_t padding[1];
 		} m_srvData;
 	};
 
@@ -3764,16 +3764,21 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		rtPerObjectData->m_srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();// rtMesh->GetVertexBuffer().GetDesc().stride; // TODO: intern, wtf, why is this 1??
 		rtPerObjectData->m_srvData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
 		rtPerObjectData->m_srvData.indexBufferStride = meshData->m_indexAllocation.GetStride(); // rtMesh->GetIndexBuffer().GetDesc().stride; // TODO: intern, wtf, why is this 1??
-		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex;
+		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * 4 + meshData->m_indexAllocation.GetOffset();
 
 		rtPerObjectData->m_srvData.texCoord0Offset = 0;
 		Tr2VertexDefinition def;
 		Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, def );
 		for( auto it = begin( def.m_items ); it != end( def.m_items ); ++it )
 		{
+			if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
+			{
+				rtPerObjectData->m_srvData.vertexBufferOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			}
+
 			if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
 			{
-				rtPerObjectData->m_srvData.texCoord0Offset = it->m_offset;
+				rtPerObjectData->m_srvData.texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
 			}
 		}
 
@@ -3794,6 +3799,16 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 				// TODO: intern, use GetGeometryConstants ?
 				//geometry->GetGeometryConstants( *rtMesh, renderContext );
+
+
+				if( area->GetTransparencyTexture() )
+				{
+					uint32_t techniqueIndex;
+					area->GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex );
+					Tr2BindlessResourcesAL usedTextures;
+					area->GetMaterialInterface()->GetUsedBindlessTextures( techniqueIndex, usedTextures );
+					usedTextures.Add( *area->GetTransparencyTexture() );
+				}
 
 				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtDecalPerObjectDatas[i], m_worldTransform );
 			}

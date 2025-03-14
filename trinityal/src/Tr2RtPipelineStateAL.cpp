@@ -148,7 +148,8 @@ void Tr2RtPipelineStateDescriptionAL::AddHitGroup( const wchar_t* exportName, co
 
 void Tr2RtPipelineStateDescriptionAL::AddGlobalSignature( const Tr2ShaderSignatureAL& signature )
 {
-
+	m_globalSignature = signature;
+	/*
 	if( m_globalSignature.threadGroupSize.x != signature.threadGroupSize.x || 
 		m_globalSignature.threadGroupSize.y != signature.threadGroupSize.y || 
 		m_globalSignature.threadGroupSize.z != signature.threadGroupSize.z )
@@ -188,6 +189,7 @@ void Tr2RtPipelineStateDescriptionAL::AddGlobalSignature( const Tr2ShaderSignatu
 			}
 		}
 	}
+	*/
 }
 
 uint32_t Tr2RtPipelineStateDescriptionAL::AddLocalSignature( const Tr2ShaderSignatureAL& signature )
