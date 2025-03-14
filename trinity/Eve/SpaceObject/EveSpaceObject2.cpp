@@ -1273,6 +1273,7 @@ Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator*
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
+	m_vsData.customData = m_psData.customData;
 
 	Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>>();
 	if( !perObjectData )
@@ -1315,6 +1316,7 @@ void EveSpaceObject2::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType sh
 void EveSpaceObject2::GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpaceObjectPSData& psData ) const
 {
 	vsData = m_vsData;
+	vsData.customData = m_psData.customData;
 	psData = m_psData;
 }
 
@@ -1675,6 +1677,7 @@ void EveSpaceObject2::GetParentData( ParentData* pd ) const
 	pd->clipFactor = m_psData.clipSphereFactor;
 	pd->clipFactor2 = m_psData.clipSphereFactor2;
 	pd->shLighting = m_psData.shLightingCoefficients;
+	pd->customData = m_psData.customData;
 }
 
 // --------------------------------------------------------------------------------

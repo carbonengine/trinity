@@ -118,7 +118,7 @@ public:
 
 	RenderPassResult RenderPass( PassType pass, Tr2RenderContext & renderContext );
 	void RenderMainPass( Tr2RenderContext & renderContext, Tr2RenderContextEnum::CullMode cullmode = Tr2RenderContextEnum::CULLMODE_CW );
-	void RenderDepthPass( Tr2RenderContext & renderContext );
+	void RenderDepthPass( Tr2RenderContext & renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
 	void RenderBackgroundPass( Tr2RenderContext & renderContext );
 	void RenderReflectionPass( Tr2RenderContext & renderContext );
 	void BeginRender( Tr2RenderContext & renderContext );
@@ -405,6 +405,7 @@ protected:
 	bool m_update;
 	bool m_displayShadowMap;
 	bool m_backgroundRenderingEnabled;
+	bool m_mainPassRenderingEnabled;
 
 	float m_planetScale;
 	float m_planetCameraScale;
@@ -431,6 +432,9 @@ protected:
 	// and so forth. Should be finalized and cleared each time they're used.
 	BatchMap m_secondaryBatches;
 	PerThreadBatchMap m_perThreadBatches;
+
+	BlueSharedString m_depthPassTechnique = BlueSharedString( "Depth" );
+	Tr2RenderTargetPtr m_customStencil;
 
 	// Utility batches.
 	std::vector<TriPoolAllocator> m_shadowAllocators;
