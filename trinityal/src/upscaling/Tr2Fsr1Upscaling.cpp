@@ -31,7 +31,7 @@ namespace FSR1
 	#else
 	const uint32_t SRV_REGISTER_INDEX = 0;
 	#endif
-
+    
 	struct FSRConstants
 	{
 		float Const0[4];
@@ -40,6 +40,8 @@ namespace FSR1
 		float Const3[4];
 	};
 }
+
+bool Tr2Fsr1UpscalingTechnique::FORCE_ON = false;
 
 Tr2Fsr1UpscalingTechnique::Tr2Fsr1UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TECHNIQUE_PARENT_CLASS( renderContext, technique, setting, frameGeneration, adapter )
@@ -71,7 +73,7 @@ bool Tr2Fsr1UpscalingTechnique::IsAvailable() const
 #if TRINITY_PLATFORM == TRINITY_METAL
 	if( @available( macOS 13.0, * ) )
 	{
-		return false;
+		return Tr2Fsr1UpscalingTechnique::FORCE_ON;
 	}
 #endif
 	return true;

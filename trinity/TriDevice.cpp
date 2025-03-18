@@ -9,7 +9,7 @@
 #include "Include/TriMath.h"
 #include "Tr2SyncToGpu.h"
 #include "TriSettingsRegistrar.h"
-
+#include "upscaling/Tr2Fsr1Upscaling.h"
 #include <IBlueCallbackMan.h>
 
 #ifdef _WIN32
@@ -1241,6 +1241,7 @@ void TriDevice::UpdateAvailableUpscalingTechniques()
 {
 
 	m_supportedUpscalingTechniques.clear();
+    Tr2Fsr1UpscalingTechnique::FORCE_ON = !g_newUpscalersEnabled;
 
 	if( !g_newUpscalersEnabled )
 	{
