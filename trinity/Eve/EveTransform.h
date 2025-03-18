@@ -133,19 +133,19 @@ public:
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 	{
 		FillAndSetConstants(	*buffers[Tr2RenderContextEnum::VERTEX_SHADER],
-											&m_world, sizeof( m_world ) +  sizeof( m_worldLast ) + sizeof( m_worldInverseTranspose ),
+											&m_world, sizeof( m_world ) +  sizeof( m_worldLast ) + sizeof( m_worldInverse ),
 											Tr2RenderContextEnum::VERTEX_SHADER,
 											Tr2Renderer::GetPerObjectVSStartRegister(),
 											renderContext );
 	}
 	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
 	{
-		writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, &m_world, sizeof( m_world ) + sizeof( m_world ) + sizeof( m_worldInverseTranspose ) );
+		writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, &m_world, sizeof( m_world ) + sizeof( m_world ) + sizeof( m_worldInverse ) );
 	}
 
 	Matrix m_world;
 	Matrix m_worldLast;
-	Matrix m_worldInverseTranspose;
+	Matrix m_worldInverse;
 };
 
 

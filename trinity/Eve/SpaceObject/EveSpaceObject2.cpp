@@ -212,9 +212,9 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 
 	SetControllerVariable( "DirtLevel", m_dirtLevel );
 	SetControllerVariable( "ActivationStrength", m_spaceObjectShipData.y );
-	SetControllerVariable( "ShieldDamage", 0 );
-	SetControllerVariable( "ArmorDamage", 0 );
-	SetControllerVariable( "HullDamage", 0 );
+	SetControllerVariable( "ShieldDamage", 1.0f );
+	SetControllerVariable( "ArmorDamage", 1.0f );
+	SetControllerVariable( "HullDamage", 1.0f );
 	SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
 	SetControllerVariable( "ClipSphereFactor2", m_clipSphereFactor2 );
 }

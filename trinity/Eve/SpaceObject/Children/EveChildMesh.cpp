@@ -634,7 +634,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	m_activationStrength = params.activationStrength;
 
 	m_vsData.worldTransform = Transpose( m_worldTransform );
-	m_vsData.invWorldTransform = Inverse( m_worldTransform );
+	m_vsData.invWorldTransform = Inverse( m_vsData.worldTransform );
 	m_vsData.worldTransformLast = Transpose( lastWorldTransform );
 
 	m_psData.worldTransform = m_vsData.worldTransform;
