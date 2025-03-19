@@ -51,15 +51,7 @@ struct Tr2IntKeyGenerator
 		}
 		else
 		{
-			if( batch1.m_shader < batch2.m_shader )
-			{
-				return true;
-			}
-			if( batch1.m_shader > batch2.m_shader )
-			{
-				return false;
-			}
-			return batch1.m_vertexDeclaration < batch2.m_vertexDeclaration;
+			return 0;
 		}
 	}
 
