@@ -25,9 +25,7 @@
 
 class Tr2Fsr1UpscalingTechnique : public TECHNIQUE_PARENT_CLASS
 {
-public:
-    static bool FORCE_ON;
-    
+public:    
 	Tr2Fsr1UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2Fsr1UpscalingTechnique();
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;

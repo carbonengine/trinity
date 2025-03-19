@@ -41,8 +41,6 @@ namespace FSR1
 	};
 }
 
-bool Tr2Fsr1UpscalingTechnique::FORCE_ON = false;
-
 Tr2Fsr1UpscalingTechnique::Tr2Fsr1UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TECHNIQUE_PARENT_CLASS( renderContext, technique, setting, frameGeneration, adapter )
 {
@@ -73,7 +71,7 @@ bool Tr2Fsr1UpscalingTechnique::IsAvailable() const
 #if TRINITY_PLATFORM == TRINITY_METAL
 	if( @available( macOS 13.0, * ) )
 	{
-		return Tr2Fsr1UpscalingTechnique::FORCE_ON;
+		return Tr2UpscalingAL::FORCE_FSR1_AVAILABILITY;
 	}
 #endif
 	return true;
