@@ -173,12 +173,12 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
-		MAP_PROPERTY
+		MAP_ATTRIBUTE
 		(
 			"mute",
-			GetMute,
-			SetMute,
-			"" 
+			m_mute,
+			"",
+			Be::READWRITE | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE
