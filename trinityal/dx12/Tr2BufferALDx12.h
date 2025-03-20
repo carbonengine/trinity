@@ -16,6 +16,8 @@
 
 namespace TrinityALImpl
 {
+	class Tr2RtShaderTableAL;
+
 	class Tr2BufferAL : public Tr2DeviceResourceAL<Tr2BufferAL>
 	{
 	public:
@@ -36,7 +38,7 @@ namespace TrinityALImpl
 		ALResult MapForReading( const void*& data, Tr2RenderContextAL& renderContext );
 		void UnmapForReading( Tr2RenderContextAL& renderContext );
 
-		ALResult MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext );
+		ALResult MapForWriting( void*& data, Tr2RenderContextAL& renderContext );
 		void UnmapForWriting( Tr2RenderContextAL& renderContext );
 
 		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
@@ -46,6 +48,10 @@ namespace TrinityALImpl
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+		D3D12_RESOURCE_STATES GetDefaultState() const;
+
+		uint32_t GetSrvIndexInHeap() const;
+		uint32_t GetUavIndexInHeap() const;
 
 	private:
 		Tr2BufferDescriptionAL m_desc;
@@ -63,6 +69,7 @@ namespace TrinityALImpl
 
 		friend class Tr2RenderContextAL;
 		friend class TrinityALImpl::Tr2ResourceSetAL;
+		friend class TrinityALImpl::Tr2RtShaderTableAL;
 	};
 }
 

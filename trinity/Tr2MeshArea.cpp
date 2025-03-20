@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2MeshArea.h"
+#include "Tr2MeshBase.h"
+#include "Raytracing/Tr2RaytracingGeometry.h"
 
 Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_display( true ),
@@ -132,6 +134,12 @@ bool Tr2MeshArea::GetReversed() const
 void Tr2MeshArea::SetReversed( bool reversed )
 {
 	m_reversed = reversed;
+	if( m_reversed )
+	{
+		for_each( begin( m_ownerMeshes ), end( m_ownerMeshes ), []( auto mesh ) {
+			mesh->ReverseIndexBufferIfNeeded();
+		} );
+	}
 }
 
 // -------------------------------------------------------------
@@ -178,6 +186,25 @@ unsigned int* Tr2MeshArea::GetJointMappingAnimRig() const
 	return m_jointMappingAnimRig;
 }
 
+void Tr2MeshArea::AddOwnerMesh( Tr2MeshBase* mesh )
+{
+	m_ownerMeshes.push_back( mesh );
+}
+
+void Tr2MeshArea::RemoveOwnerMesh( Tr2MeshBase* mesh )
+{
+	auto found = find( begin( m_ownerMeshes ), end( m_ownerMeshes ), mesh );
+	if( found != end( m_ownerMeshes ) )
+	{
+		*found = m_ownerMeshes.back();
+		m_ownerMeshes.pop_back();
+	}
+	else
+	{
+		CCP_ASSERT( false );
+	}
+}
+
 Tr2Lod Tr2MeshArea::GetMinLod() const
 {
 	return m_minLod;
@@ -186,4 +213,18 @@ Tr2Lod Tr2MeshArea::GetMinLod() const
 void Tr2MeshArea::SetMinLod( Tr2Lod lod )
 {
 	m_minLod = lod;
+}
+
+Tr2RaytracingMeshArea* Tr2MeshArea::GetOrCreateRtMeshArea()
+{
+	if( !m_rtMeshArea )
+	{
+		m_rtMeshArea.reset( new Tr2RaytracingMeshArea( m_index ) );
+	}
+	return m_rtMeshArea.get();
+}
+
+Tr2RaytracingMeshArea* Tr2MeshArea::GetRtMeshArea() const
+{
+	return m_rtMeshArea.get();
 }

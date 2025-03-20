@@ -16,7 +16,6 @@ const Be::ClassInfo* EveChildCloud2::ExposeToBlue()
     EXPOSURE_BEGIN( EveChildCloud2, "Cloud space object child" )
         MAP_INTERFACE( EveChildCloud2 )
 		MAP_INTERFACE( ITr2VolumetricRenderable )
-		MAP_INTERFACE( ITr2GeometryProvider )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IEveSpaceObjectChild )
@@ -49,7 +48,11 @@ const Be::ClassInfo* EveChildCloud2::ExposeToBlue()
 		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
 
 		MAP_ATTRIBUTE( "animation", m_animation, "Cloud texture animation", Be::READWRITE | Be::PERSIST )
-
+		MAP_ATTRIBUTE(
+			"shadowMapDS",
+			m_shadowMapDS,
+			"Depth stencil used for shadows.",
+			Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( 
 			"minScreenSize", 
 			m_minScreenSize, 

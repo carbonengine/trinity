@@ -118,6 +118,7 @@ EveSOF::EveSOF( IRoot* lockobj ) :
 	// pre-register some really needed vars in the global variable store
 	Tr2Variable var1( "DepthMap", (ITr2TextureProvider*)nullptr );
 	Tr2Variable var2( "DepthMapMsaa", (ITr2TextureProvider*)nullptr );
+    GlobalStore().RegisterVariable( "BoneTransforms", &Tr2BoneTransformBuffer::GetInstance() );
 
 	BlueSharedString gradientMap( "GradientMap" );
 
@@ -1001,6 +1002,9 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			planeSet->SetEffect( planeEffect );
 			uint32_t index = 0;
 			
+
+			planeSet->SetIsSkinned( isSkinned );
+
 			for( auto& offset : offsets )
 			{
 				// add all individual items
@@ -2048,7 +2052,10 @@ Tr2InstancedMeshPtr EveSOF::CreateInstancedMesh( std::vector<EveSOFDataMgr::Hull
 	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 0 ); // transform0
 	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 1 ); // transform1
 	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 2 ); // transform2
-	instanceDef.Add( Tr2VertexDefinition::BYTE_4, Tr2VertexDefinition::TEXCOORD, 3 ); // boneindex
+	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 3 ); // lastTransform0
+	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 4 ); // lastTransform1
+	instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 5 ); // lastTransform2
+	instanceDef.Add( Tr2VertexDefinition::BYTE_4, Tr2VertexDefinition::TEXCOORD, 6 ); // boneindex
 
 	Tr2RuntimeInstanceDataPtr instanceData;
 	instanceData.CreateInstance();
@@ -2136,15 +2143,19 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		
 		EveChildMeshPtr childMesh;
 		childMesh.CreateInstance();
-		
+
 		std::vector<EveSOFDataMgr::HullMeshInstance> instances;
+
+		std::vector<Matrix> instanceTransforms;
+		instanceTransforms.reserve( offsets.size() * him->instances.size() );
+
 		// propogate the instances to the offsets and resize the bounds
 		if( offsets.size() > 1 || offsets[0] != IdentityMatrix() )
 		{
 			instances.reserve( offsets.size() * him->instances.size() );
 			for( auto &offset : offsets )
 			{
-				std::transform( ( him->instances ).begin(), ( him->instances ).end(), std::back_inserter( instances ), [offset]( EveSOFDataMgr::HullMeshInstance instance ) -> EveSOFDataMgr::HullMeshInstance {
+				std::transform( ( him->instances ).begin(), ( him->instances ).end(), std::back_inserter( instances ), [&offset, &instanceTransforms]( EveSOFDataMgr::HullMeshInstance instance ) -> EveSOFDataMgr::HullMeshInstance {
 					
 					EveSOFDataMgr::HullMeshInstance i( instance );
 					
@@ -2158,16 +2169,30 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 					i.transform1 = *reinterpret_cast<Vector4*>( &m.GetY() );
 					i.transform2 = *reinterpret_cast<Vector4*>( &m.GetZ() );
 
+					i.lastTransform0 = *reinterpret_cast<Vector4*>( &m.GetX() );
+					i.lastTransform1 = *reinterpret_cast<Vector4*>( &m.GetY() );
+					i.lastTransform2 = *reinterpret_cast<Vector4*>( &m.GetZ() );
+
+					instanceTransforms.push_back( m );
+
 					return i;
 				} );
-
 			}
 		}
 		else
 		{
 			instances = him->instances;
+			for ( auto& i : him->instances )
+			{
+				Matrix m = Matrix( 
+					i.transform0.x, i.transform1.x, i.transform2.x, 0, 
+					i.transform0.y, i.transform1.y, i.transform2.y, 0, 
+					i.transform0.z, i.transform1.z, i.transform2.z, 0, 
+					i.transform0.w, i.transform1.w, i.transform2.w, 1 );
+				instanceTransforms.push_back( m );
+			}
 		}
-		
+
 		auto instancedMesh = CreateInstancedMesh( instances, him->geometryResPath );
 
 		Tr2MeshAreaVector* areas = instancedMesh->GetAreas( TRIBATCHTYPE_OPAQUE );
@@ -2224,6 +2249,7 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		}
 
 		childMesh->SetMesh( instancedMesh );
+		childMesh->SetInstanceTransforms( instanceTransforms );
 		childMesh->SetMinScreenSize( MIN_INSTANCED_MESH_SCREEN_SIZE );
 		childMesh->SetCastShadow( dna->CastShadow() );
 		childMesh->Setup( nullptr, nullptr, nullptr, him->lowestLodVisible );
@@ -2812,6 +2838,11 @@ void EveSOF::SetupDecalSets( IEveSpaceObjectDecalOwnerPtr obj, const EveSOFDNAPt
 							}
 						}
 					}
+
+					if( shaderData->additive )
+					{
+						decal->SetBatchType( TRIBATCHTYPE_DECAL_ADDITIVE );
+					}
 				}
 				
 				// Set the logo from the logoset
@@ -3144,7 +3175,7 @@ void EveSOF::ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacem
 		}
 		else
 		{
-	CreatePlacement( obj, placementDna, placement, locators, offsets );
+			CreatePlacement( obj, placementDna, placement, locators, offsets );
 		}
 	}
 
@@ -3427,6 +3458,9 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 				i.transform0 = *reinterpret_cast<Vector4*>( &transposed.GetX() );
 				i.transform1 = *reinterpret_cast<Vector4*>( &transposed.GetY() );
 				i.transform2 = *reinterpret_cast<Vector4*>( &transposed.GetZ() );
+				i.lastTransform0 = *reinterpret_cast<Vector4*>( &transposed.GetX() );
+				i.lastTransform1 = *reinterpret_cast<Vector4*>( &transposed.GetY() );
+				i.lastTransform2 = *reinterpret_cast<Vector4*>( &transposed.GetZ() );
 				i.boneIndex = loc->boneIndex;
 				instances.push_back( i );
 			}
@@ -3504,6 +3538,7 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 		child.CreateInstance();
 		child->SetMesh( instancedMesh );
 		child->SetName( "Instanced Hull" );
+		child->SetCastShadow( extensionDna->CastShadow() );
 
 		// Set the reflectionMode based on the category
 		child->SetReflectionMode( extensionDna->GetReflectionMode() );
@@ -3513,6 +3548,8 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 		SetupDecalSets( BlueCastPtr( child->GetRawRoot() ), extensionDna );
 		// do this last so it sets all the needed shaders as instanced
 		child->SetShaderOption( BlueSharedString( "SPACE_OBJECT_INSTANCED_ATTACHMENT" ), BlueSharedString( "SOIA_ENABLED" ) );
+
+		child->SetInstanceTransforms( placementOffsets );
 		
 		SetupAttachments( BlueCastPtr( container->GetRawRoot() ), extensionDna, placementOffsets, buildFlags );
 

@@ -29,11 +29,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveVolume
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& parentTransform, const Color& baseColor ) override;
 	float GetIntensity( Vector3 position ) override;
-	Vector4 GetBoundingSphere() const override;
-	void RegisterForChanges( std::function<void()> NotifyParent ) override;
-
+	const CcpMath::Sphere GetBoundingSphere() const override;
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* val );
@@ -57,8 +55,7 @@ private:
 	Vector3 m_innerIntersection;
 	Vector3 m_outerIntersection;
 
-	std::function<void()> m_notifyParentFunc;
-	bool m_notifyParent;
+	CcpMath::Sphere m_boundingSphere;
 
 	static const Vector3 MAX_AABB;
 	static const Vector3 MIN_AABB;

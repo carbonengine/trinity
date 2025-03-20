@@ -132,7 +132,8 @@ EveSOFDataGenericShader::EveSOFDataGenericShader( IRoot* lockobj ) :
 EveSOFDataGenericDecalShader::EveSOFDataGenericDecalShader( IRoot* lockobj ) :
 	PARENTLOCK( m_parameters ),
 	PARENTLOCK( m_defaultTextures ),
-	PARENTLOCK( m_parentTextures )
+	PARENTLOCK( m_parentTextures ),
+	m_additive( false )
 {}
 
 

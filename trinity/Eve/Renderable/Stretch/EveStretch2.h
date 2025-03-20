@@ -9,9 +9,9 @@
 #include "Eve/IEveFiringEffectElement.h"
 #include "Lights/ITr2LightOwner.h"
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Tr2DeviceResource.h"
 #include "Tr2DebugRenderer.h"
+#include "Tr2ProceduralResources.h"
 
 
 BLUE_DECLARE( Tr2Effect );
@@ -29,7 +29,6 @@ BLUE_DECLARE( TriObserverLocal );
 BLUE_CLASS( EveStretch2 )
 	:public IEveFiringEffectElement,
 	public ITr2Renderable,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public IInitialize,
 	public INotify,
@@ -56,11 +55,11 @@ public:
 	virtual void DisplayEndPoints( bool displaySource, bool displayDest );
 	virtual void SetIntensity( float intensity );
 
-	virtual void Update( EveUpdateContext& updateContext ) override;
-	virtual void UpdateEffectAsync( EveUpdateContext& updateContext ) override;
-	virtual void UpdateEffectSync( EveUpdateContext& updateContext ) override;
+	virtual void Update( const EveUpdateContext& updateContext ) override;
+	virtual void UpdateEffectAsync( const EveUpdateContext& updateContext ) override;
+	virtual void UpdateEffectSync( const EveUpdateContext& updateContext ) override;
 
-	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
@@ -82,7 +81,6 @@ public:
 protected:
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 private:
 	void GetEndPointTransforms( Matrix& source, Matrix& destination ) const;
 	Matrix GetDestinationTransform() const;
@@ -111,7 +109,7 @@ private:
 	Vector4 m_effectData[2];
 
 	uint32_t m_quadCount;
-	Tr2BufferAL m_vb;
+	Tr2ProceduralBuffer m_vb; 
 	unsigned int m_vertexDeclHandle;
 	float m_intensity;
 

@@ -33,10 +33,10 @@ public:
 #if BLUE_WITH_PYTHON
 	void ToBuffer( 
 		PyObject* dest, int width, int height, int pitch, 
-		int x, int y, uint32_t color );
+		int x, int y, int32_t color );
 	void ToBufferWithUnderline( 
 		PyObject* dest, int width, int height, int pitch, 
-		int x, int y, uint32_t color, int extraSpace );
+		int x, int y, int32_t color, int extraSpace );
 #endif
 
 

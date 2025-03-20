@@ -15,12 +15,12 @@
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 
+#include "Resources/TriGeometryRes.h"
+
 #include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpotlightSet.h"
 #include "Eve/Turret/EveTurretSet.h"
-
-extern float g_eveSpaceSceneLODFactor;
 
 EveSwarmRenderable::EveSwarmRenderable( IRoot* lockobj ) :
 PARENTLOCK( m_decals )
@@ -120,7 +120,11 @@ void EveSwarmRenderable::SetWorldTransform( const Matrix& transform )
 	m_worldTransform = transform;
 	m_vsData.worldTransformLast = m_vsData.worldTransform;
 	m_vsData.worldTransform = Transpose( m_worldTransform );
-	m_vsData.invWorldTransform = Inverse( m_worldTransform );
+	m_vsData.invWorldTransform = Inverse( m_vsData.worldTransform );
+
+	m_psData.worldTransform = m_vsData.worldTransform;
+	m_psData.worldTransformLast = m_vsData.worldTransformLast;
+	m_psData.invWorldTransform = m_vsData.invWorldTransform;
 	
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
@@ -138,8 +142,12 @@ void EveSwarmRenderable::SetShaderData( const EveSpaceObjectVSData& vsData, cons
 	m_vsData.ellpsoidRadii = vsData.ellpsoidRadii;
 	m_vsData.shipData = vsData.shipData;
 
-	m_psData.clipData = psData.clipData;
-	m_psData.miscData = psData.miscData;
+	m_psData.clipSphereCenter = psData.clipSphereCenter;
+	m_psData.clipRadiusSq = psData.clipRadiusSq;
+	m_psData.clipRadius2Sq = psData.clipRadius2Sq;
+	m_psData.impactDataOffset = psData.impactDataOffset;
+	m_psData.clipSphereFactor2 = psData.clipSphereFactor2;
+	m_psData.clipSphereFactor = psData.clipSphereFactor;
 	memcpy( (void*)&m_psData.shLightingCoefficients, (void*)&psData.shLightingCoefficients, sizeof( m_psData.shLightingCoefficients ) );
 	m_psData.shipData.y = psData.shipData.y;
 	m_psData.shipData.z = psData.shipData.z;
@@ -173,7 +181,7 @@ void EveSwarmRenderable::PushDecals( std::vector<ITr2Renderable*>& renderables, 
 	}
 }
 
-void EveSwarmRenderable::UpdateDecalVisibility( const TriFrustum& frustum, IEveSpaceObject2::ParentData &pd, Tr2GrannyAnimation* animationUpdater )
+void EveSwarmRenderable::UpdateDecalVisibility( const EveUpdateContext& updateContext, IEveSpaceObject2::ParentData& pd, Tr2GrannyAnimation* animationUpdater )
 {
 	TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
 
@@ -190,7 +198,7 @@ void EveSwarmRenderable::UpdateDecalVisibility( const TriFrustum& frustum, IEveS
 				( *it )->SetBoneMatrix( animationUpdater->GetMeshBoneMatrixList(), animationUpdater->GetMeshBoneCount() );
 			}
 			// now prep to get the renderables
-			( *it )->UpdateVisibility( frustum, &pd );
+			( *it )->UpdateVisibility( updateContext, &pd );
 		}
 	}
 }
@@ -233,10 +241,15 @@ void EveSwarmRenderable::SetShaderOption( const BlueSharedString& name, const Bl
 
 //////////////////////////////////////////////////////////////////////////////////////
 // IEveShadowCaster
-bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
+bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	Vector4 boundingSphere;
 	if( !m_owner )
+	{
+		return false;
+	}
+
+	if( renderReason == TR2RENDERREASON_REFLECTION )
 	{
 		return false;
 	}
@@ -246,9 +259,9 @@ bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const
 		boundingSphere.GetXYZ() = m_worldTransform.GetTranslation();
 		sizeInShadow = 0;
 
-		if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, boundingSphere ) )
+		if( shadowFrustum.IsVisible( cameraFrustum, boundingSphere ) )
 		{
-			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, boundingSphere );
+			sizeInShadow = shadowFrustum.GetSizeInShadow( boundingSphere );
 		}
 		return sizeInShadow > 15.f;
 	}
@@ -262,32 +275,29 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 		return;
 	}
 
-	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-
 	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
-	int meshIx = m_mesh->GetMeshIndex();
-
-	for( Tr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
+	if( !geomRes || !geomRes->IsGood() )
 	{
-		Tr2MeshArea* area = *it;
-		auto material = area->GetMaterialInterface();
+		return;
+	}
+	int meshIx = m_mesh->GetMeshIndex();
+	auto grannyMesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
+	if( !grannyMesh )
+	{
+		return;
+	}
 
-		if( !area->GetDisplay() || !material )
+	Tr2MeshAreaVector* areas = m_mesh->GetAreas(TRIBATCHTYPE_OPAQUE);
+	for (auto& area : *areas)
+	{
+		if( !area->GetDisplay() )
 		{
 			continue;
 		}
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
-		{
-			batch->SetShaderMaterial( material );
-			batch->SetPerObjectData( perObjectData );
-			batch->SetGeometryResource( geomRes );
-			batch->SetMeshParameters( meshIx, area->GetIndex(), area->GetCount() );
-
-			batches->Commit( batch );
-		}
+		Tr2RenderBatch batch = CreateGeometryBatch(grannyMesh, area, perObjectData);
+		batches->Commit(batch);
 	}
+
 }
 
 Tr2PerObjectData* EveSwarmRenderable::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
@@ -374,7 +384,7 @@ void EveSwarm::RebuildCachedData( BlueAsyncRes* p )
 // Description:
 //   From EveShip2
 // --------------------------------------------------------------------------------
-void EveSwarm::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveSwarm::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	if( m_swarmingEnabled )
 	{
@@ -417,7 +427,7 @@ void EveSwarm::UpdateOrientation( SwarmVehicle* vehicle, float timeDiff )
 }
 
 
-void EveSwarm::UpdateTurretsAsyncronous( EveUpdateContext& updateContext )
+void EveSwarm::UpdateTurretsAsyncronous( const EveUpdateContext& updateContext )
 {
 	for( EveTurretSetVector::iterator it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
@@ -426,8 +436,12 @@ void EveSwarm::UpdateTurretsAsyncronous( EveUpdateContext& updateContext )
 
 		pd.transform = *GetTurretTransform( (*it)->GetSwarmID() );
 		pd.shipData = m_spaceObjectShipData;
-		pd.clipData = m_psData.clipData;
-		(*it)->UpdateAsyncronous( updateContext, &pd );
+		pd.clipSphereCenter = m_psData.clipSphereCenter;
+		pd.clipRadiusSq = m_psData.clipRadiusSq;
+		pd.clipRadius2Sq = m_psData.clipRadius2Sq;
+		pd.clipFactor = m_psData.clipSphereFactor;
+		pd.clipFactor2 = m_psData.clipSphereFactor2;
+		( *it )->UpdateAsyncronous( updateContext, &pd );
 	}
 }
 
@@ -435,7 +449,7 @@ void EveSwarm::UpdateTurretsAsyncronous( EveUpdateContext& updateContext )
 // Description:
 //   From EveShip2
 // --------------------------------------------------------------------------------
-void EveSwarm::UpdateAsyncronous( EveUpdateContext& context )
+void EveSwarm::UpdateAsyncronous( const EveUpdateContext& context )
 {
 	if( !m_swarmingEnabled || m_count == 0 )
 	{
@@ -729,32 +743,33 @@ void EveSwarm::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 // --------------------------------------------------------------------------------
 void EveSwarm::PushRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	for( auto it = m_renderables.begin(); it != m_renderables.end(); it++ )
-	{
-		renderables.push_back( *it );
-	}
-
 	// are decals visible?
-	if (m_mesh && m_isMeshVisible)
+	if( m_mesh && m_isMeshVisible )
+	{
+		for (auto it = m_renderables.begin(); it != m_renderables.end(); it++)
+		{
+			renderables.push_back( *it );
+			( *it )->PushDecals( renderables, m_meshScreenSize );
+		}
+	}
+}
+
+void EveSwarm::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
+{
+	EveShip2::UpdateVisibility( updateContext, parentTransform );
+	
+	// are decals visible?
+	if( m_mesh && m_isMeshVisible )
 	{
 		// put together parent data for the decals
 		IEveSpaceObject2::ParentData pd;
 		GetParentData( &pd );
 
-		for (auto it = m_renderables.begin(); it != m_renderables.end(); it++)
+		for( auto it = m_renderables.begin(); it != m_renderables.end(); it++ )
 		{
-			( *it )->UpdateDecalVisibility( m_frustum, pd, m_animationUpdater );
-			( *it )->PushDecals( renderables, m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor );
+			( *it )->UpdateDecalVisibility( updateContext, pd, m_animationUpdater );
 		}
 	}
-}
-
-void EveSwarm::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
-{
-	EveShip2::UpdateVisibility(
-		frustum, parentTransform );
-
-	m_frustum = frustum;
 }
 
 
@@ -889,6 +904,7 @@ bool EveSwarm::OnModified( Be::Var* val )
 	{
 		EnableSwarmForceDebug( m_debugShowForces );
 	}
+
 	return true;
 }
 
@@ -937,12 +953,13 @@ Vector3 EveSwarm::RemoveSwarmer()
 		return Vector3(0, 0, 0);
 	}
 
+	auto componentRegistry = GetComponentRegistry();
+
 	SwarmVehicle v = m_vehicles[m_targetIndex];
 	m_vehicles[m_targetIndex] = m_vehicles.back();
 	m_vehicles.pop_back();
 	m_renderables[m_targetIndex]->InitializeRenderable( nullptr, nullptr );
 
-	auto componentRegistry = GetComponentRegistry();
 	if( componentRegistry )
 	{
 		m_renderables[m_targetIndex]->UnRegister( componentRegistry );
@@ -985,8 +1002,14 @@ void EveSwarm::SetCount( int count )
 
 void EveSwarm::RegisterComponents()
 {
+	// need to call this to register all the turrets and things
 	EveShip2::RegisterComponents();
 	auto reg = GetComponentRegistry();
+
+	// unregister all components from this, because this is just a container
+	// but at this point we have registered turrets and other things
+	reg->UnRegisterAllComponents( this );
+
 	if( reg )
 	{
 		for( auto& renderable : m_renderables )

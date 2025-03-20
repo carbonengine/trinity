@@ -103,6 +103,20 @@ void TriDevice::HandleRenderTick(  Be::Time realTime, Be::Time simTime )
 			return;
 		}
 	}
+
+	if( m_upscalingChanged )
+	{
+		CCP_LOGNOTICE( "DX12 device removed, reason: upscaler changed" );
+
+		ReleaseDeviceResources( TRISTORAGE_ALL );
+
+		mDeviceLost = true;
+		Tr2RenderContext::DestroyMainThreadRenderContext();
+
+		LogAllLiveResources();
+		return;
+	}
+
     
 	if( mDeviceLost )
 	{
@@ -124,7 +138,8 @@ void TriDevice::HandleRenderTick(  Be::Time realTime, Be::Time simTime )
 		CCP_STATS_SCOPED_TIME( presentTime );
 		CR_RETURN( Tr2RenderContext_GetMainThreadRenderContext().Present() );
 	}
-		
+
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED );
 	if( !Render() )
 	{
 		CCP_LOGERR( "Failed to render a frame" );

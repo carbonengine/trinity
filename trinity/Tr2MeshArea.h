@@ -6,6 +6,8 @@
 
 
 BLUE_DECLARE( Tr2Material );
+BLUE_DECLARE( Tr2MeshBase );
+class Tr2RaytracingMeshArea;
 
 BLUE_CLASS ( Tr2MeshArea ) :
 	public IRoot
@@ -46,6 +48,9 @@ public:
 	unsigned int GetJointCount() const;
 	void SetJointCount( unsigned int val );
 
+	void AddOwnerMesh( Tr2MeshBase * mesh );
+	void RemoveOwnerMesh( Tr2MeshBase * mesh );
+
 
 	unsigned int* GetJointMappingAnimRig() const;
 	
@@ -57,6 +62,9 @@ public:
 
 	Tr2Lod GetMinLod() const;
 	void SetMinLod( Tr2Lod lod );
+
+	Tr2RaytracingMeshArea* GetOrCreateRtMeshArea();
+	Tr2RaytracingMeshArea* GetRtMeshArea() const;
 private:
 	Tr2MaterialPtr m_material;
 	std::string m_name;
@@ -64,6 +72,11 @@ private:
 	int32_t m_count;
 
 	Tr2Lod m_minLod; // minimal visible lod
+
+	std::vector<Tr2MeshBase*> m_ownerMeshes;
+
+	// mesh used for raytracing
+	std::unique_ptr<Tr2RaytracingMeshArea> m_rtMeshArea;
 
 	bool m_display;
 	// Request reversed order of rendering triangles and reversed cull order 
@@ -77,6 +90,7 @@ private:
 
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;
+
 public:
 	EXPOSE_TO_BLUE();
 };

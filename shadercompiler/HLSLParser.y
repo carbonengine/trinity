@@ -74,6 +74,18 @@ variable_identifier(A) ::= OP_ID(B).
 
 
 %type literal_constant {ScannerToken}
+%type string_literal {ScannerToken}
+
+string_literal(A) ::= OP_STRING_CONST(B).
+{
+	A = B;
+}
+
+string_literal(A) ::= string_literal(B) OP_STRING_CONST(C).
+{
+	A = B;
+	A.stringValue.end = C.stringValue.end;
+}
 
 literal_constant(A) ::= OP_INT_CONST(B).
 {
@@ -90,7 +102,7 @@ literal_constant(A) ::= OP_BOOL_CONST(B).
 	A = B;
 }
 
-literal_constant(A) ::= OP_STRING_CONST(B).
+literal_constant(A) ::= string_literal(B).
 {
 	A = B;
 }
@@ -1664,6 +1676,15 @@ init_declarator_list(A) ::= init_declarator_list(B) OP_COMA name_declaration(C).
 	C->SetType( type );
 	B->AddChild( C );
 	A = B;
+
+	if( type == TypeFromTokenType( OP_BINDLESSHANDLESAMPLER ) )
+	{
+		if( auto stateBlock = C->GetChildOrNull( 1 ) )
+		{
+			parserState->AddBindlessSampler( C->GetSymbol(), C->Copy() );
+			C->ReplaceChild( 1, nullptr );
+		}
+	}
 }
 
 
@@ -1690,6 +1711,15 @@ single_declaration(A) ::= fully_specified_type(B) name_declaration(C).
 		symbol->definition = C;
 	}
 	A->SetType( B );
+
+	if( type == TypeFromTokenType( OP_BINDLESSHANDLESAMPLER ) )
+	{
+		if( auto stateBlock = C->GetChildOrNull( 1 ) )
+		{
+			parserState->AddBindlessSampler( C->GetSymbol(), C->Copy() );
+			C->ReplaceChild( 1, nullptr );
+		}
+	}
 }
 
 %type fully_specified_type {Type}
@@ -1869,6 +1899,36 @@ type_specifier(A) ::= OP_TEXTURE2DARRAY(B) OP_LESS type_specifier(C) OP_MORE.
 type_specifier(A) ::= OP_TEXTURE2DARRAY(B).
 {
 	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_DEPTHTEXTURE2D(B) OP_LESS type_specifier(C) OP_MORE.
+{
+	A.FromToken( B );
+	A.builtInType = OP_TEXTURE2D;
+	A.isDepthTexture = true;
+	A.templateParameter = new Type( C );
+}
+
+type_specifier(A) ::= OP_DEPTHTEXTURE2D(B).
+{
+	A.FromToken( B );
+	A.builtInType = OP_TEXTURE2D;
+	A.isDepthTexture = true;
+}
+
+type_specifier(A) ::= OP_DEPTHTEXTURE2DARRAY(B) OP_LESS type_specifier(C) OP_MORE.
+{
+	A.FromToken( B );
+	A.builtInType = OP_TEXTURE2DARRAY;
+	A.isDepthTexture = true;
+	A.templateParameter = new Type( C );
+}
+
+type_specifier(A) ::= OP_DEPTHTEXTURE2DARRAY(B).
+{
+	A.FromToken( B );
+	A.builtInType = OP_TEXTURE2DARRAY;
+	A.isDepthTexture = true;
 }
 
 type_specifier(A) ::= OP_TEXTURE3D(B) OP_LESS type_specifier(C) OP_MORE.
@@ -2057,6 +2117,36 @@ type_specifier(A) ::= OP_TRIANGLESTREAM(B) OP_LESS type_specifier(C) OP_MORE.
 	A.templateParameter = new Type( C );
 }
 
+type_specifier(A) ::= OP_BINDLESSHANDLETEXTURE2D(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_BINDLESSHANDLESAMPLER(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_BINDLESSHANDLETEXTURE3D(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_BINDLESSHANDLETEXTURECUBE(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_RAYTRACING_ACCELERATION_STRUCTURE(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_RAY_DESC(B).
+{
+	A.FromToken( B );
+}
+
 type_specifier(A) ::= OP_TYPE_NAME(B).
 {
 	const Symbol* symbol = parserState->GetSymbolTable().LookupType( B.stringValue ); 
@@ -2075,6 +2165,49 @@ type_specifier(A) ::= struct_named_specifier(B).
 	A = B->GetType();
 }
 
+
+struct_named_specifier(A) ::= OP_STRUCT enter_block OP_ID(B) OP_LEFT_BRACE  OP_RIGHT_BRACE.
+{
+	A = new ASTNode( NT_STRUCT, B.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
+
+	parserState->GetSymbolTable().LeaveScope();
+
+
+	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( B.stringValue ); 
+	if( !symbol ) 
+	{ 
+		parserState->ShowMessage(B, EC_IDENTIFIER_REDEFINITION, std::string( B.stringValue.start, B.stringValue.end ).c_str() );
+	}
+	else
+	{
+		symbol->isTypeName = true;
+		symbol->definition = A;
+		
+		Type type;
+		type.FromSymbol( symbol );
+
+		A->SetSymbol( symbol );
+		A->SetType( type );
+	}
+}
+
+
+struct_specifier(A) ::= OP_STRUCT(B) enter_block OP_LEFT_BRACE  OP_RIGHT_BRACE.
+{
+	A = new ASTNode( NT_STRUCT, B.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
+
+	parserState->GetSymbolTable().LeaveScope();
+
+	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( parserState->AllocateName() );
+	symbol->definition = A;
+	symbol->isTypeName = true;
+
+	Type type;
+	type.FromSymbol( symbol );
+
+	A->SetSymbol( symbol );
+	A->SetType( type );
+}
 
 struct_named_specifier(A) ::= OP_STRUCT enter_block OP_ID(B) OP_LEFT_BRACE struct_declaration_list(C) OP_RIGHT_BRACE.
 {
@@ -2777,6 +2910,14 @@ function_definition(A) ::= function_prototype(B) compount_statement_no_new_scope
 	parserState->GetSymbolTable().LeaveScope(); 
 }
 
+library(A) ::= OP_LIBRARY(P) OP_ID(B) enter_fx_mode OP_LEFT_BRACE state_list(C) OP_RIGHT_BRACE.
+{
+	A = C;
+	A->SetNodeType( NT_LIBRARY );
+	A->SetLocation( P.fileLocation );
+	A->SetToken( &B );
+	parserState->m_mode = ParserState::HLSL;
+}
 
 technique(A) ::= OP_TECHNIQUE(T) OP_ID(B) OP_LEFT_BRACE OP_RIGHT_BRACE.
 {
@@ -2790,8 +2931,17 @@ technique(A) ::= OP_TECHNIQUE(T) OP_ID(B) OP_LEFT_BRACE pass_list(C) OP_RIGHT_BR
 	A->SetLocation( T.fileLocation );
 }
 
+pass_list_element(A) ::= pass_declaration(B).
+{
+	A = B;
+}
 
-pass_list(A) ::= pass_declaration(B).
+pass_list_element(A) ::= library(B).
+{
+	A = B;
+}
+
+pass_list(A) ::= pass_list_element(B).
 {
 	A = new ASTNode( NT_TECHNIQUE, B->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	A->AddChild( B );

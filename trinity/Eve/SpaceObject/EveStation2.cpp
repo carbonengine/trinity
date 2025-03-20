@@ -26,7 +26,7 @@ EveStation2::~EveStation2()
 // Description:
 //   Override base ::PrepareShaderData() function
 // --------------------------------------------------------------------------------
-void EveStation2::PrepareShaderData( EveUpdateContext& updateContext )
+void EveStation2::PrepareShaderData( const EveUpdateContext& updateContext )
 {
 	EveSpaceObject2::PrepareShaderData( updateContext );
 

@@ -12,9 +12,14 @@ namespace Tr2Bokeh
 	enum Shape
 	{
 		Disk,
+		Triangle,
 		Rectangle,
-		Triangle
+		Pentagon,
+		Hexagon,
+		Heart
 	};
+
+	extern const Be::VarChooser BokehShapeChooser[];
 }
 
 extern bool g_postprocessDofEnabled;
@@ -25,14 +30,6 @@ BLUE_CLASS( Tr2PPDepthOfFieldEffect ) :
 public:
 	EXPOSE_TO_BLUE();
 		
-	enum DofDebug
-	{
-		DofDebug_Off,
-		DofDebug_CoC,
-		DofDebug_CoCBlurred,
-		DofDebug_BokehBlend,
-	};
-
 	Tr2PPDepthOfFieldEffect( IRoot* lockobj = NULL );
 	~Tr2PPDepthOfFieldEffect();
 
@@ -46,7 +43,6 @@ public:
 	float m_focalLength;
 	float m_scale;
 	bool m_foregroundBlurNeeded;
-	DofDebug m_debug;
 	float m_cocScale;
 	Tr2Bokeh::Shape m_bokehShape;
 	bool m_useTAAFriendlyBokeh;

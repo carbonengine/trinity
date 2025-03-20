@@ -54,10 +54,11 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// BehaviorGroup
 	void AddAgent();
+	void AddAgents( const std::vector<Vector3>& positions );
 	void RemoveAgent();
 	void RemoveSpecificAgent( int index );
-	void UpdateAsyncronous( EveUpdateContext & updateContext );
-	void UpdateSyncronous( EveUpdateContext & updateContext, const EveChildUpdateParams& params );
+	void UpdateAsyncronous( const EveUpdateContext & updateContext );
+	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params );
 	void UpdateAgents( const float dt, EveChildBehaviorSystem& system );
 	float AllTheSame();
 	bool IsGroupVisible() const;
@@ -75,7 +76,10 @@ public:
 	IBehavior* GetBehaviorByName( const std::string& name );
 	int GetGroupIndexIndicator() const;
 	unsigned int GetVertexDeclarationHandle() const;
-	void GetInfoForBuffer( uint8_t * data, const Matrix& parentWorldLocation );
+
+	void GetShipInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation );
+	void GetBoosterInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation );
+
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 
 	// Setters
@@ -84,7 +88,6 @@ public:
 	void SetVertexFunctionReferance( const std::function<void( void )>& F );
 
 	// Variables
-	TriFrustum m_frustum;
 	Matrix m_parentTransform;
 	bool m_display;
 	bool m_update; // we can have static drones so in those cases we don't want to update the behaviors and kd tree
@@ -96,7 +99,7 @@ public:
 	void InitializeGeometryResource();
 	Tr2MeshPtr GetMesh() const;
 
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 
 	void SetupRenderables();
 

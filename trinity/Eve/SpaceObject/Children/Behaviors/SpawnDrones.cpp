@@ -23,6 +23,8 @@ SpawnDrones::~SpawnDrones()
 
 void SpawnDrones::UpdateGrid(BehaviorGroup& group)
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	// for behaviors to work we always have to add one decoy drone, delete that one so he doesn't mess up the cube
 	for( unsigned int i = 0; i < group.GetCount(); i++ )
 	{
@@ -30,6 +32,7 @@ void SpawnDrones::UpdateGrid(BehaviorGroup& group)
 	}
 
 	Vector3 startPos = group.m_spawnPosition;
+	Vector3 position = startPos;
 	int xCount = int( m_gridInfo.x );
 	int yCount = int( m_gridInfo.y );
 	int zCount = int( m_gridInfo.z );
@@ -40,6 +43,9 @@ void SpawnDrones::UpdateGrid(BehaviorGroup& group)
 		distBetween = m_gridSpacing;
 	}
 	float fullnessFactor = m_gridFullnessFactor;
+
+	std::vector<Vector3> spawnPoints;
+	spawnPoints.reserve( xCount * yCount * zCount );
 
 	for( int i = 0; i < zCount; ++i )
 	{
@@ -55,16 +61,21 @@ void SpawnDrones::UpdateGrid(BehaviorGroup& group)
 				// the higher the gridRandomFactor the more full the grid should be
 				if( TriRand() <= fullnessFactor )
 				{
-					group.AddAgent();
+					spawnPoints.push_back( position );
 				}
 
-				group.m_spawnPosition.x += distBetween.x;
+				position.x += distBetween.x;
 			}
-			group.m_spawnPosition.y += distBetween.y;
-			group.m_spawnPosition.x = startPos.x;
+			position.y += distBetween.y;
+			position.x = startPos.x;
 		}
-		group.m_spawnPosition.z += distBetween.z;
-		group.m_spawnPosition.y = startPos.y;
+		position.z += distBetween.z;
+		position.y = startPos.y;
+	}
+
+	if( !spawnPoints.empty() )
+	{
+		group.AddAgents( spawnPoints );
 	}
 	m_regenerateDrones = false;
 	// reset the spawn position to zero because otherwise it will offset every group on next spawn
@@ -74,6 +85,8 @@ void SpawnDrones::UpdateGrid(BehaviorGroup& group)
 std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
 	BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	std::vector<Vector3> noNeedToReturnForces;
 	if( !m_enabled )
 	{
@@ -89,11 +102,9 @@ std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& ag
 	// If m_addByCount is toggled on the behavior adds agents by count
 	if( m_addByCount == true )
 	{
-		for( int i = 0; i < m_count; ++i )
-		{
-			group.AddAgent();
-		}
-		
+		std::vector<Vector3> spawnPoints;
+		spawnPoints.resize( m_count, group.m_spawnPosition );
+		group.AddAgents( spawnPoints );
 		m_addByCount = false;
 	}
 
@@ -123,10 +134,10 @@ std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& ag
 
 		group.m_spawnPosition = m_spawnPosition;
 
-		for( int i = 0; i < m_count; ++i )
-		{
-			group.AddAgent();
-		}
+		std::vector<Vector3> spawnPoints;
+		spawnPoints.resize( m_count, group.m_spawnPosition );
+		group.AddAgents( spawnPoints );
+
 		m_time = 0.0f;
 	}
 

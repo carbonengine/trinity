@@ -34,6 +34,11 @@ BLUE_INTERFACE(ITriEffectParameter) : public ITr2EffectValue
 	virtual void RebuildEffectHandles( Tr2Shader* effectRes ) = 0;
 
 	virtual unsigned GetHashValue( unsigned startingHash ) const = 0;
+
+	virtual bool SupportsDirtyNotification() const
+	{
+		return false;
+	}
 };
 BLUE_DECLARE_IVECTOR( ITriEffectParameter );
 typedef BlueDict<ITriEffectParameter> ITriEffectParameterDict;

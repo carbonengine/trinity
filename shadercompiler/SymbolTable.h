@@ -46,7 +46,10 @@ enum class AddressSpace
 	Constant,
 	Thread,
 	Threadgroup,
-	Threadgroup_imageblock
+	Threadgroup_imageblock,
+
+	Constexpr,
+    RayData,
 };
 
 typedef std::vector<SymbolAnnotation> SymbolAnnotations;
@@ -76,6 +79,7 @@ struct Symbol
 
 	// Specific to Metal shaders.
 	AddressSpace addressSpace;
+	bool resourceRefWrapped;  // type is wrapped in _ResourceRef structure
 
 	bool used;
 };
@@ -126,6 +130,7 @@ public:
 	Symbol* LookupBuffer( const InlineString& name ) const;
 	bool IsGlobal( Symbol* symbol ) const;
 	Symbol* AddSymbol( const InlineString& name, OverrideBehavior overrideBehavior = DISALOW_OVERRIDES );
+	Symbol* AddTypeSymbol( const InlineString& name, OverrideBehavior overrideBehavior = DISALOW_OVERRIDES );
 	Symbol* AddSymbol( Symbol* symbol, OverrideBehavior overrideBehavior = DISALOW_OVERRIDES );
 	Symbol* AddBufferSymbol( const InlineString& name );
 	void EnterScope();

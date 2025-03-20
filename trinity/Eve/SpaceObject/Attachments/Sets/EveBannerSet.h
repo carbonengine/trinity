@@ -58,7 +58,7 @@ public:
 
 	virtual bool Initialize();
 
-	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
@@ -74,7 +74,6 @@ public:
 	void SetKey( int32_t key );
 	void Rebuild();
 
-	void Render( Tr2RenderContext& renderContext ) const;
 	unsigned int GetPickingID() const;
 
 	int32_t GetReference( size_t index ) const;
@@ -105,8 +104,8 @@ private:
 	PEveBannerItemStructureList m_banners;
 	TriTextureParameterPtr m_primaryTextureParameter;
 
-	Tr2BufferAL m_vertexBuffer;
-	Tr2BufferAL m_indexBuffer;
+	Tr2SuballocatedBuffer::Allocation m_vertexBuffer;
+	Tr2SuballocatedBuffer::Allocation m_indexBuffer;
 	uint32_t m_vertexDeclaration;
 
 	AxisAlignedBoundingBox m_aabb;

@@ -3,7 +3,6 @@
 #define Tr2PrimitiveSet_h
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 
 BLUE_DECLARE( Tr2Effect );
 
@@ -18,7 +17,6 @@ BLUE_DECLARE( Tr2Effect );
 BLUE_CLASS( Tr2PrimitiveSet ):
 	public ITr2Renderable,	// An interface for batches, per user data and sorting
 	public ITr2Pickable,	// Make this a pickable object
-	public ITr2GeometryProvider, // We do our own submit of geometry for rendering
 	public INotify			// We want to be able to monitor edits through python
 {
 public:
@@ -28,8 +26,6 @@ public:
 	virtual const Matrix& GetWorldTransform( void ) const { return m_worldTransform; }
 	virtual Vector4 GetBoundingSphere( void );
 	virtual void UpdateTransform( void );
-
-	void GetBatchesImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Effect* effect );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
@@ -48,9 +44,12 @@ public:
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 	virtual void SetCurrentColor( Color& val ) { }
 
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext ) {}
+	enum class GetBatchesReason
+	{
+		Draw,
+		Picking,
+	};
+	virtual void GetBatchesImpl( ITriRenderBatchAccumulator * accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect, GetBatchesReason reason ) = 0;
 
 	// keeps score of the current scale that is applied to the model
 	float		m_scale; 
@@ -70,8 +69,6 @@ public:
 	PyObject*	m_pythonUserData; 
 #endif
 
-	// when we are drawing for picking
-	bool		m_isDrawingForPicking; 
 	// What is the main solid color of our primitive
 	Color		m_color;	
 

@@ -126,26 +126,6 @@ ALResult Tr2VideoAdapters::GetDisplayMode( unsigned adapterIndex,
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Query MSAA render target support.
-// Arguments:
-//   adapterIndex - index of display adapter (from 0 to GetAdapterCount)
-//   format - render target format
-//   windowed - if the application runs in windowed or fullscreen mode
-//   msaaType - MSAA type (number of samples)
-//   msaaQuality - (out) max MSAA quality (0 if MSAA type is unsupported)
-// Return Value:
-//   ALResult code of operation
-// --------------------------------------------------------------------------------------
-ALResult Tr2VideoAdapters::GetRenderTargetMsaaSupport( unsigned adapterIndex,
-													   int /*Tr2RenderContextEnum::PixelFormat*/ format,
-													   unsigned msaaType,
-													   unsigned& msaaQuality )
-{
-	return Tr2VideoAdapterInfo::GetAdapterMsaaSupport( adapterIndex, PixelFormat( format ), msaaType, msaaQuality );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Query if display adapter supports given back buffer format.
 // Arguments:
 //   adapterIndex - index of display adapter (from 0 to GetAdapterCount)

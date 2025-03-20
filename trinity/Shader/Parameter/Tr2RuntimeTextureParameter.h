@@ -27,6 +27,7 @@ public:
 		Tr2ResourceSetDescriptionAL& resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex ) const;
+	void AddUsedTexture( Tr2BindlessResourcesAL & usedTextures ) const override;
 	virtual const char* GetParameterName() const;
 	virtual void RebuildEffectHandles( Tr2Shader* effectRes );
 	virtual unsigned GetHashValue( unsigned startingHash ) const;

@@ -72,6 +72,7 @@ Symbol::Symbol()
 	definition( nullptr ),
 	intrinsicType( nullptr ),
 	addressSpace( AddressSpace::None ),
+	resourceRefWrapped( false ),
 	used( false )
 {
 	name.start = name.end = nullptr;
@@ -115,9 +116,7 @@ static bool compareSymbols( const Symbol* symbol0, const Symbol* symbol1 )
 
 Symbol* ScopeSymbolTable::Lookup( const InlineString& name )
 {
-	Symbol toFind;
-	toFind.name = name;
-	auto equals = [=]( Symbol* symbol ) { return compareSymbols( symbol, &toFind ); };
+	auto equals = [&]( Symbol* symbol ) { return symbol->name == name; };
 	auto jt = std::find_if( m_symbols.begin(), m_symbols.end(), equals );
 	if( jt != m_symbols.end() )
 	{
@@ -151,16 +150,13 @@ static bool MatchParameter( ASTNode* parameter, ASTNode* argument, int& casts )
 
 Symbol* ScopeSymbolTable::LookupFunctionDeclaration( const InlineString& name, ASTNode* header ) const
 {
-	Symbol toFind;
-	toFind.name = name;
-
 	std::vector<std::pair<Symbol*, int>> overrides;
 	const ScopeSymbolTable* scope = this;
 	while( scope )
 	{
 		for( auto it = scope->m_symbols.begin(); it != scope->m_symbols.end(); ++it )
 		{
-			if( compareSymbols( *it, &toFind ) && ( *it )->definition && ( *it )->definition->GetNodeType() == NT_FUNCTION_HEADER )
+			if( (*it)->name == name && (*it)->definition && (*it)->definition->GetNodeType() == NT_FUNCTION_HEADER )
 			{
 				overrides.push_back( std::make_pair( *it, 100000 ) );
 			}
@@ -206,8 +202,6 @@ Symbol* ScopeSymbolTable::LookupFunctionDeclaration( const InlineString& name, A
 Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* callNode, std::string& diagnosticMessage ) const
 {
 	diagnosticMessage = "";
-	Symbol toFind;
-	toFind.name = name;
 
 	std::vector<std::pair<Symbol*, int>> overrides;
 	const ScopeSymbolTable* scope = this;
@@ -215,7 +209,7 @@ Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* cal
 	{
 		for( auto it = scope->m_symbols.begin(); it != scope->m_symbols.end(); ++it )
 		{
-			if( compareSymbols( *it, &toFind ) )
+			if( (*it)->name == name )
 			{
 				overrides.push_back( std::make_pair( *it, 100000 ) );
 			}
@@ -338,9 +332,7 @@ Symbol* ScopeSymbolTable::AddSymbol( const InlineString& name, OverrideBehavior 
 {
 	if( overrideBehavior == DISALOW_OVERRIDES )
 	{
-		Symbol toFind;
-		toFind.name = name;
-		auto equals = [=]( Symbol* symbol ) { return compareSymbols( symbol, &toFind ); };
+		auto equals = [=]( Symbol* symbol ) { return symbol->name == name; };
 		auto it = std::find_if( m_symbols.begin(), m_symbols.end(), equals );
 		if( it != m_symbols.end() )
 		{
@@ -450,6 +442,16 @@ Symbol* SymbolTable::AddSymbol( const InlineString& name, OverrideBehavior overr
 	return m_current->AddSymbol( name, overrideBehavior );
 }
 
+Symbol* SymbolTable::AddTypeSymbol( const InlineString& name, OverrideBehavior overrideBehavior )
+{
+	auto symbol = AddSymbol( name, overrideBehavior );
+	if( symbol )
+	{
+		symbol->isTypeName = true;
+	}
+	return symbol;
+}
+
 Symbol* SymbolTable::AddSymbol( Symbol* symbol, OverrideBehavior overrideBehavior )
 {
 	Symbol* result = m_current->AddSymbol( symbol, overrideBehavior );
@@ -491,10 +493,8 @@ Symbol* SymbolTable::LookupGlobal( const char* string ) const
 	{
 		return nullptr;
 	}
-	Symbol toFind;
-	toFind.name.start = string;
-	toFind.name.end = string + strlen( string );
-	auto equals = [=]( Symbol* symbol ) { return compareSymbols( symbol, &toFind ); };
+	InlineString toFind = MakeInlineString( string );
+	auto equals = [=]( Symbol* symbol ) { return symbol->name == toFind; };
 	auto symbol = std::find_if( m_root->m_subBlocks[0]->m_symbols.begin(), m_root->m_subBlocks[0]->m_symbols.end(), equals );
 	if( symbol != m_root->m_subBlocks[0]->m_symbols.end() )
 	{

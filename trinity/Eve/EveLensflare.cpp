@@ -67,6 +67,7 @@ EveLensflare::EveLensflare( IRoot* lockobj ) :
 	PARENTLOCK( m_controllers ),
 	m_display( true ),
 	m_update( true ),
+	m_isVisible( false ),
 	m_position( 0.0f, 0.0f, 0.0f ),
 	m_cameraFactor( 20.f ),	
 	m_sunSize( 0.f ),
@@ -270,14 +271,7 @@ void EveLensflare::PrepareRender( const TriFrustum& frustum )
 void EveLensflare::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables )
 {
 	// display?
-	if( !m_display )
-	{
-		return;
-	}
-
-	// visibility?
-	float viewDotDir = Dot( frustum.m_viewDir, m_direction );	
-	if( viewDotDir < 0.f )
+	if( !m_display || !m_isVisible)
 	{
 		return;
 	}
@@ -285,13 +279,27 @@ void EveLensflare::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Re
 	// add all the single flares, which are renderbales
 	for( EveTransformVector::const_iterator it = m_flares.begin(); it != m_flares.end(); ++it )
 	{
-		(*it)->UpdateVisibility( frustum, m_transform );
 		(*it)->GetRenderables( renderables, nullptr );
 	}
 
 	if( m_mesh )
 	{
 		renderables.push_back( this );
+	}
+}
+
+void EveLensflare::UpdateVisibility( const EveUpdateContext& updateContext )
+{
+	m_isVisible = false;
+	auto& frustum = updateContext.GetFrustum();
+	// visibility?
+	float viewDotDir = Dot( frustum.m_viewDir, m_direction );
+	m_isVisible = viewDotDir >= 0.f;
+
+	// update visibility for all the flares
+	for( EveTransformVector::const_iterator it = m_flares.begin(); it != m_flares.end(); ++it )
+	{
+		( *it )->UpdateVisibility( updateContext, m_transform );
 	}
 }
 
@@ -305,7 +313,7 @@ void EveLensflare::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Re
 // SeeAlso:
 //   EveOccluder
 // --------------------------------------------------------------------------------
-void EveLensflare::RunOcclusionQueries( Tr2RenderContext& renderContext, const TriFrustum& frustum )
+void EveLensflare::RunOcclusionQueries( Tr2RenderContext& renderContext, const EveUpdateContext& updateContext )
 {
 	// debug
 	if( !m_display )
@@ -327,7 +335,7 @@ void EveLensflare::RunOcclusionQueries( Tr2RenderContext& renderContext, const T
 	uint32_t index = 0;
 	for( auto& occluder : m_occluders )
 	{
-		occluder->RunQuery( renderContext, frustum, m_transform, Tr2OcclusionBuffer::GetOccluderOffset( m_occlusionOffset, index++ ), 1 );
+		occluder->RunQuery( renderContext, updateContext, m_transform, Tr2OcclusionBuffer::GetOccluderOffset( m_occlusionOffset, index++ ), 1 );
 	}
 }
 
@@ -341,7 +349,7 @@ void EveLensflare::RunOcclusionQueries( Tr2RenderContext& renderContext, const T
 // SeeAlso:
 //   EveOccluder
 // --------------------------------------------------------------------------------
-void EveLensflare::RunBackgroundOcclusionQueries( Tr2RenderContext& renderContext, const TriFrustum& frustum )
+void EveLensflare::RunBackgroundOcclusionQueries( Tr2RenderContext& renderContext, const EveUpdateContext& updateContext )
 {
 	// debug
 	if( !m_display )
@@ -359,7 +367,7 @@ void EveLensflare::RunBackgroundOcclusionQueries( Tr2RenderContext& renderContex
 	uint32_t index = 0;
 	for( auto& occluder : m_backgroundOccluders )
 	{
-		occluder->RunQuery( renderContext, frustum, m_transform, Tr2OcclusionBuffer::GetOccluderOffset( m_backgroundOcclusionOffset, index++ ), 0 );
+		occluder->RunQuery( renderContext, updateContext, m_transform, Tr2OcclusionBuffer::GetOccluderOffset( m_backgroundOcclusionOffset, index++ ), 0 );
 	}
 }
 

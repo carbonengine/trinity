@@ -44,4 +44,5 @@ void TriDevice::ApplicationActivated( ApplicationActivation )
 {
 }
 
+
 #endif

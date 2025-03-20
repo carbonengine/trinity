@@ -17,8 +17,9 @@ BLUE_DECLARE( Tr2RenderContext );
 BLUE_DECLARE( Tr2VariableStore );
 BLUE_DECLARE( Tr2RenderContext );
 BLUE_DECLARE( Tr2RenderTarget );
+struct Tr2RenderBatch;
 
-// --------------------------------------------------------------------------------------
+	// --------------------------------------------------------------------------------------
 // Description:
 //   Common part of Tr2RenderContext and Tr2PrimaryRenderContext. Contains 
 //   Tr2EffectStateManager instance and local variable store.
@@ -57,8 +58,11 @@ struct Tr2RenderContextBase: public IRoot, public ITr2RenderContextEvents
 	Tr2ConstantBufferAL* GetConstantBuffer( int buffer ) { return &m_perObjectConstantBuffers[buffer]; }
 protected:
 	Tr2ConstantBufferAL		m_perObjectConstantBuffers[ Tr2RenderContextEnum::CBUFFER_COUNT ];
+
 private:
-	void RenderBatchesSortedByEffectHelper( TriRenderBatch* batch, TriRenderBatch* endBatch, const BlueSharedString& techniqueName );
+	void RenderGdprBatches( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName );
+	void RenderBatchGroup( std::vector<Tr2RenderBatch>::const_iterator startBatch, const BlueSharedString& techniqueName, Tr2ConstantBufferAL** buffers, Tr2RenderContext& renderContext );
+	void RenderSortedBatches( const std::vector<Tr2RenderBatch>& batches, const BlueSharedString& techniqueName, Tr2RenderContext& renderContext );
 
 	
 #if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
@@ -163,5 +167,7 @@ extern const Be::VarChooser Tr2RenderContextEnum_ScanlineOrdering_Chooser[];
 extern const Be::VarChooser Tr2RenderContextEnum_DisplayScaling_Chooser[];
 extern const Be::VarChooser Tr2RenderContextEnum_SwapEffect_Chooser[];
 extern const Be::VarChooser Tr2RenderContextEnum_PresentInterval_Chooser[];
+
+extern bool g_renderContextIsBeingDestroyed;
 
 #endif

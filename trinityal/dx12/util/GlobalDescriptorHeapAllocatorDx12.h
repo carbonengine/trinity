@@ -16,6 +16,8 @@
 /** A single page within a global descriptor heap */
 class GlobalDescriptorHeapPage
 {
+public:
+
 	/** Init args for DescriptorEntry */
 	struct DescriptorInitArgs
 	{
@@ -30,8 +32,6 @@ class GlobalDescriptorHeapPage
 		{
 		}
 	};
-
-public:
 
 	/** A single entry in the global descriptor heap */
 	struct DescriptorEntry
@@ -106,15 +106,12 @@ public:
 	/** Free an entry */
 	void Free(GlobalDescriptorHeapPage::DescriptorEntry* entry);
 
-	/** Gather stats for this heap */
-	HeapStats GetStats() const;
-
 private:
 
 	/** A freelist page entry */
 	struct HeapPageEntry
 	{
-		std::shared_ptr<GlobalDescriptorHeapPage> m_page;
+		std::unique_ptr<GlobalDescriptorHeapPage> m_page;
 
 		HeapPageEntry(uint32_t, const uint32_t&)
 			: m_page(nullptr)
@@ -123,7 +120,7 @@ private:
 	};
 
 	typedef FreeList<HeapPageEntry, uint32_t> PageList;
-	std::shared_ptr<PageList> m_pages;
+	PageList m_pages;
 	CcpMutex m_mutex;
 
 	CComPtr<ID3D12Device> m_device;
@@ -133,5 +130,46 @@ private:
 
 	uint32_t m_descriptorsInUse;
 };
+
+
+
+class GpuVisibleDescriptorAllocator
+{
+public:
+
+	GpuVisibleDescriptorAllocator( ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t initialSize );
+	~GpuVisibleDescriptorAllocator();
+
+	ID3D12DescriptorHeap* GetGpuVisibleHeap() const;
+
+	GlobalDescriptorHeapPage::DescriptorEntry* Allocate();
+	void Free( GlobalDescriptorHeapPage::DescriptorEntry* entry );
+
+	void SetFrameIndices( uint64_t recordingFrame, uint64_t renderedFrame );
+
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDescriptorInCpuHeap( GlobalDescriptorHeapPage::DescriptorEntry* entry );
+	uint32_t GetIndexInHeap( GlobalDescriptorHeapPage::DescriptorEntry* entry ) const;
+
+private:
+	bool Resize();
+
+	CComPtr<ID3D12Device> m_device;
+	CComPtr<ID3D12DescriptorHeap> m_gpuHeap;
+	CComPtr<ID3D12DescriptorHeap> m_cpuHeap;
+	CcpMutex m_mutex;
+	uint32_t m_size;
+	uint32_t m_sizeIncrement;
+
+	uint64_t m_frameNumber;
+	std::vector<std::pair<GlobalDescriptorHeapPage::DescriptorEntry*, uint64_t>> m_pendingFree;
+	std::vector<std::pair<CComPtr<ID3D12DescriptorHeap>, uint64_t>> m_pendingReleaseHeaps;
+
+
+	using DescriptorList = FreeList<GlobalDescriptorHeapPage::DescriptorEntry, GlobalDescriptorHeapPage::DescriptorInitArgs>;
+	std::unique_ptr<DescriptorList> m_freeList;
+	D3D12_DESCRIPTOR_HEAP_TYPE m_type;
+	UINT m_entrySize;
+};
+
 
 #endif

@@ -93,7 +93,7 @@ bool EveLineSet::OnPrepareResources()
 
 //////////////////////////////////////////////////////////////////////////////////////
 // IEveSpaceObject2
-void EveLineSet::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveLineSet::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -112,11 +112,11 @@ void EveLineSet::UpdateSyncronous( EveUpdateContext& updateContext )
 	m_worldTransform = TransformationMatrix( m_scaling, rotation, translation );
 }
 
-void EveLineSet::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveLineSet::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 }
 
-void EveLineSet::Update( EveUpdateContext& updateContext )
+void EveLineSet::Update( const EveUpdateContext& updateContext )
 {
 	UpdateSyncronous( updateContext );
 }
@@ -129,7 +129,7 @@ void EveLineSet::UpdateViewDependentData( const TriFrustum& frustum, const Matri
 {
 }
 
-void EveLineSet::UpdateVisibility(  const TriFrustum& frustum, const Matrix& parentTransform  )
+void EveLineSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 }
 
@@ -178,15 +178,24 @@ void EveLineSet::GetBatches( ITriRenderBatchAccumulator* accumulator,
 		return;
 	}
 
-	TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-	if( batch )
+	if( !m_vertexBuffer.IsValid() )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetGeometryProvider( this );
-
-		accumulator->Commit( batch );
+		return;
 	}
+
+	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	{
+		return;
+	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetVertexDeclaration( m_vertexDeclHandle );
+	batch.SetStreamSource( 0, m_vertexBuffer, sizeof( EveLineData ) / 2 );
+	batch.SetTopology( TOP_LINES );
+	batch.SetDrawInstanced( m_currentSubmittedLineCount * 2, 1, 0, 0 );
+	accumulator->Commit( batch );
 }
 
 float EveLineSet::GetSortValue()
@@ -216,31 +225,6 @@ Tr2PerObjectData* EveLineSet::GetPerObjectData( ITriRenderBatchAccumulator* accu
 	data->CopyToPSFloatBuffer( perObjectPSBuffer );
 
 	return data;
-}
-
-//////////////////////////////////////////////////////////////////////////
-// ITr2GeometryProvider
-void EveLineSet::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	if( !m_display )
-	{
-		return;
-	}
-
-	if( !m_vertexBuffer.IsValid() )
-	{
-		return;
-	}
-
-	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
-	{
-		return;
-	}
-
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( EveLineData ) / 2 );
-	renderContext.SetTopology( TOP_LINES );
-	renderContext.DrawPrimitive( 0, m_currentSubmittedLineCount );
 }
 
 // Python Exposed Methods

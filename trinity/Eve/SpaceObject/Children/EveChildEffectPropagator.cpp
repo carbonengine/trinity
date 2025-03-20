@@ -174,7 +174,7 @@ void EveChildEffectPropagator::ManageTriggers()
 // Description:
 //   Implements IEveSpaceObjectChild interface.
 // --------------------------------------------
-void EveChildEffectPropagator::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildEffectPropagator::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( m_trigger )
 	{
@@ -234,7 +234,7 @@ void EveChildEffectPropagator::UpdateSyncronous( EveUpdateContext& updateContext
 	}
 }
 
-void EveChildEffectPropagator::UpdateTriggerCurve( EveUpdateContext& updateContext )
+void EveChildEffectPropagator::UpdateTriggerCurve( const EveUpdateContext& updateContext )
 {
 	auto dt = updateContext.GetDeltaT();
 	m_playTime += dt;
@@ -276,7 +276,7 @@ void EveChildEffectPropagator::UpdateTriggerCurve( EveUpdateContext& updateConte
 	}
 }
 
-void EveChildEffectPropagator::UpdateTriggerInterval( EveUpdateContext& updateContext )
+void EveChildEffectPropagator::UpdateTriggerInterval( const EveUpdateContext& updateContext )
 {
 	auto dt = updateContext.GetDeltaT();
 	m_playTime += dt;
@@ -354,7 +354,7 @@ int EveChildEffectPropagator::GetSmartRandomLocatorIndex()
 	return locatorIndex;
 }
 
-void EveChildEffectPropagator::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildEffectPropagator::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( !IsRendering() )
 	{
@@ -390,11 +390,11 @@ void EveChildEffectPropagator::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRe
 	}
 }
 
-void EveChildEffectPropagator::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildEffectPropagator::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( m_effect != nullptr )
 	{
-		m_effect->UpdateVisibility( frustum, parentTransform, parentLod );
+		m_effect->UpdateVisibility( updateContext, parentTransform, parentLod );
 	}
 }
 

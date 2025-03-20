@@ -18,9 +18,6 @@
 // keep track of missiles
 CCP_STATS_DECLARE( eveVisibleWarheadObjects, "Trinity/Missiles/visibleWarheadObjects", true, CST_COUNTER_LOW, "Number of individual warheads visible in this frame.");
 
-extern float g_eveSpaceSceneMediumDetailThreshold;
-extern float g_eveSpaceSceneVisibilityThreshold;
-
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -112,7 +109,7 @@ void EveMissileWarhead::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Qu
 }
 
 // --------------------------------------------------------------------------------
-void EveMissileWarhead::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveMissileWarhead::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	m_isVisible = false;
 
@@ -129,7 +126,7 @@ void EveMissileWarhead::UpdateVisibility( const TriFrustum& frustum, const Matri
 	{
 		return;
 	}
-	
+	auto& frustum = updateContext.GetFrustum();
 	m_isVisible = true;
 	UpdateViewDependentData( frustum, parentTransform );
 	
@@ -142,13 +139,13 @@ void EveMissileWarhead::UpdateVisibility( const TriFrustum& frustum, const Matri
 			if( frustum.IsSphereVisible( &boundingSphere ) )
 	 		{
 				float estimatedSize = frustum.GetPixelSizeAccross( &boundingSphere );
-				if( estimatedSize >= g_eveSpaceSceneMediumDetailThreshold )
+				if( estimatedSize >= updateContext.GetMediumDetailThreshold() )
 				{
 					m_lodLevel = TR2_LOD_HIGH;
 				}
-				// we use g_eveSpaceSceneVisibilityThreshold insdead of g_eveSpaceSceneLowDetailThreshold because we
+				// we use VisibilityThreshold instead of LowDetailThreshold because we
 				// completely hide warhead mesh on low LOD
-				else if( estimatedSize >= g_eveSpaceSceneVisibilityThreshold )
+				else if( estimatedSize >= updateContext.GetVisibilityThreshold() )
 				{
 					m_lodLevel = TR2_LOD_MEDIUM;
 				}
@@ -473,7 +470,7 @@ EveMissileWarhead::StateChangeEvent EveMissileWarhead::CheckImpact( float deltaT
 // Description:
 //   EveTransform update
 // --------------------------------------------------------------------------------
-void EveMissileWarhead::Update( EveUpdateContext& updateContext )
+void EveMissileWarhead::Update( const EveUpdateContext& updateContext )
 {
 	double pos = m_flyingTime * m_pathOffsetNoiseSpeed + double( uintptr_t( this ) & 0xfff );
 	m_pathOffset.x = float( PerlinNoise1D( pos, 1.1, 2.0, 3 ) ) * m_pathOffsetNoiseScale;

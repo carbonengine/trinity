@@ -34,6 +34,12 @@ public:
 		uint32_t size, 
 		uint32_t& offset, 
 		Tr2RenderContext& renderContext );
+	ALResult PutData(
+		const void* data,
+		uint32_t size,
+		uint32_t alignment,
+		uint32_t& offset,
+		Tr2RenderContext& renderContext );
 	void DoneUsingData( Tr2RenderContext& renderContext );
 
 	void SetSizeIncrement( uint32_t sizeIncrement );
@@ -50,7 +56,7 @@ public:
 	virtual void ReleaseResources( TriStorage s );
 protected:
 	virtual ALResult CreateBuffer( uint32_t size ) = 0;
-	ALResult UpdateBuffer( const void* data, uint32_t offset, uint32_t size, Tr2LockType::Type lockType, Tr2RenderContext& renderContext );
+	ALResult UpdateBuffer( const void* data, uint32_t offset, uint32_t size, Tr2RenderContext& renderContext );
 	virtual bool OnPrepareResources();
 
 	// Size of buffer in bytes

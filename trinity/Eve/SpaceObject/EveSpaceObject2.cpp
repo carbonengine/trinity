@@ -30,6 +30,9 @@
 #include "Tr2ExternalParameter.h"
 #include "Controllers/ITr2Controller.h"
 #include "Eve/SpaceObject/Children/EveChildInheritProperties.h"
+#include "Shader/Tr2Shader.h"
+
+#include "../../Tr2BoneTransformBuffer.h"
 
 #include <limits>
 
@@ -47,8 +50,6 @@ TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLighting
 
 const BlueSharedString DAMAGE_LOCATOR_SET_NAME( "damage" );
 
-extern float g_eveSpaceSceneLODFactor;
-
 
 void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 ITriRenderBatchAccumulator* batches,
@@ -65,6 +66,12 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 	}
 
 	int meshIx = mesh->GetMeshIndex();
+
+	auto grannyMesh = geomRes->GetMeshData( meshIx, screenSize );
+	if( !grannyMesh )
+	{
+		return;
+	}
 
 	// build a sortable mesharea item list
 	Tr2MeshAreaItemList meshAreasToSort( "EveSpaceObject2/SortMeshAreaVector" );
@@ -104,17 +111,9 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 		{
 			continue;
 		}
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
-		{
-			batch->SetShaderMaterial( material );
-			batch->SetPerObjectData( perObjectData );
-			batch->SetGeometryResource( geomRes );
-			batch->SetMeshParameters( meshIx, area->GetIndex(), area->GetCount(), screenSize );
 
-			batches->Commit( batch );
-		}
+		Tr2RenderBatch batch = CreateGeometryBatch( grannyMesh, area, perObjectData );
+		batches->Commit( batch );
 	}
 }
 
@@ -159,6 +158,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_maxSpeed( 0 ),
 	m_estimatedPixelDiameter( 0.f ),
 	m_estimatedPixelDiameterWithChildren( 0.f ),
+	m_meshScreenSize( 0 ),
 	m_boundingSphereCenter( 0.f, 0.f, 0.f ),
 	m_boundingSphereRadius( -1.f ),
 	m_boundingSphereWorldCenter( 0.f, 0.f, 0.f ),
@@ -178,6 +178,8 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_castShadow( false ),
 	m_clipSphereFactor( 0.f ),
 	m_oldClipSphereFactor( 0.f ),
+	m_clipSphereFactor2( 0.f ),
+	m_oldClipSphereFactor2( 0.f ),
 	m_clipSphereCenter( 0.f, 0.f, 0.f ),
 	m_localAabbMin( 0.f, 0.f, 0.f ),
 	m_localAabbMax( 0.f, 0.f, 0.f ),
@@ -210,10 +212,11 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 
 	SetControllerVariable( "DirtLevel", m_dirtLevel );
 	SetControllerVariable( "ActivationStrength", m_spaceObjectShipData.y );
-	SetControllerVariable( "ShieldDamage", 0 );
-	SetControllerVariable( "ArmorDamage", 0 );
-	SetControllerVariable( "HullDamage", 0 );
+	SetControllerVariable( "ShieldDamage", 1.0f );
+	SetControllerVariable( "ArmorDamage", 1.0f );
+	SetControllerVariable( "HullDamage", 1.0f );
 	SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
+	SetControllerVariable( "ClipSphereFactor2", m_clipSphereFactor2 );
 }
 
 EveSpaceObject2::~EveSpaceObject2()
@@ -367,7 +370,7 @@ Matrix EveSpaceObject2::GetObserverTransform()
 	return m_worldTransform;
 }
 
-void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	Be::Time time = updateContext.GetTime();
 
@@ -467,8 +470,10 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
+	m_boneOffsets.AdvanceFrame();
+
 	if( !m_update )
 	{
 		return;
@@ -501,9 +506,12 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	m_vsData.ellpsoidRadii = Vector4( shapeRadius, 0.f );
 	m_vsData.ellpsoidCenter = Vector4( shapeCenter, 0.f );
 
+	m_psData.worldTransform = m_vsData.worldTransform;
+	m_psData.invWorldTransform = m_vsData.invWorldTransform;
+
 	if( m_impactOverlay )
 	{
-		m_psData.miscData.y = (float)m_impactOverlay->GetDataTextureOffset();
+		m_psData.impactDataOffset = (float)m_impactOverlay->GetDataTextureOffset();
 	}
 
 	for( size_t i = 0; i < EVE_SPACEOBJECT_CUSTOWMASK_MAX; ++i )
@@ -585,7 +593,7 @@ void EveSpaceObject2::UpdateWorldBounds()
 	}
 }
 
-void EveSpaceObject2::PrepareShaderData( EveUpdateContext& updateContext )
+void EveSpaceObject2::PrepareShaderData( const EveUpdateContext& updateContext )
 {
 	UpdateWorldBounds();
 
@@ -604,8 +612,15 @@ void EveSpaceObject2::PrepareShaderData( EveUpdateContext& updateContext )
 	float nearDist = std::max( 0.f, Length( m_clipSphereCenter ) - normalizedBoundingRadius );
 	float insideSpherePercentage = std::min( 1.f, Length( m_clipSphereCenter ) / normalizedBoundingRadius );
 	float disolveRadius = nearDist + m_clipSphereFactor * normalizedBoundingRadius * ( 1.f + insideSpherePercentage );
-	m_psData.clipData = m_vsData.clipData = Vector4( m_clipSphereCenter + GetBoundingSphereCenter(), TriFloatSign( disolveRadius ) * disolveRadius * disolveRadius );
-	m_psData.miscData.w = m_clipSphereFactor;
+
+	m_psData.clipSphereCenter = m_clipSphereCenter + GetBoundingSphereCenter();
+	m_psData.clipRadiusSq = TriFloatSign( disolveRadius ) * disolveRadius * disolveRadius;
+
+	m_vsData.clipData = Vector4( m_psData.clipSphereCenter, m_psData.clipRadiusSq );
+	float disolveRadius2 = nearDist + m_clipSphereFactor2 * normalizedBoundingRadius * ( 1.f + insideSpherePercentage );
+	m_psData.clipRadius2Sq = TriFloatSign( disolveRadius2 ) * disolveRadius2 * disolveRadius2;
+	m_psData.clipSphereFactor = m_clipSphereFactor;
+	m_psData.clipSphereFactor2 = m_clipSphereFactor2;
 }
 
 void EveSpaceObject2::GetDebugOptions( Tr2DebugRendererOptions& options )
@@ -712,6 +727,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if( renderer.HasOption( this, "ClipSphere" ) )
 	{
 		renderer.DrawSphere( this, TransformCoord( m_clipSphereCenter + GetBoundingSphereCenter(), m_worldTransform ), m_clipSphereFactor * m_boundingSphereWorldRadius, 16, Tr2DebugRenderer::Wireframe, 0xffff00ff );
+		renderer.DrawSphere( this, TransformCoord( m_clipSphereCenter + GetBoundingSphereCenter(), m_worldTransform ), m_clipSphereFactor2 * m_boundingSphereWorldRadius, 16, Tr2DebugRenderer::Wireframe, 0xffff00ff );
 	}
 
 
@@ -953,17 +969,15 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 
 	if( m_activationStrength != 0 )
 	{
-		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
+		for( auto& it : m_attachments )
 		{
-			( *it )->GetBatches( batches, batchType, perObjectData, reason );
+			it->GetBatches( batches, batchType, perObjectData, reason );
 		}
 	}
 
-	auto meshScreenSize = m_allowLodSelection ? m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor : std::numeric_limits<float>::max();
-
 	if( m_impactOverlay )
 	{
-		m_impactOverlay->GetBatches( batches, batchType, perObjectData, meshScreenSize );
+		m_impactOverlay->GetBatches( batches, batchType, perObjectData, m_meshScreenSize );
 	}
 
 	// Everything except for shadow batches
@@ -974,11 +988,11 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 		// transparent needs sorted meshareas
 		if( batchType != TRIBATCHTYPE_TRANSPARENT )
 		{
-			m_mesh->GetBatches( batches, areas, perObjectData, meshScreenSize );
+			m_mesh->GetBatches( batches, areas, perObjectData, m_meshScreenSize );
 		}
 		else
 		{
-			GetSortedBatchesFromMeshAreaVector( areas, batches, perObjectData, m_mesh, meshScreenSize, &m_worldTransform );
+			GetSortedBatchesFromMeshAreaVector( areas, batches, perObjectData, m_mesh, m_meshScreenSize, &m_worldTransform );
 		}
 	}
 
@@ -993,22 +1007,35 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 	{
 		return;
 	}
-
+	
 	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
+	if( !geomRes || !geomRes->IsGood() )
+	{
+		return;
+	}
 	int meshIx = m_mesh->GetMeshIndex();
+	auto mesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
+	if( !mesh || !mesh->m_allocationsValid )
+	{
+		return;
+	}
 
 	auto& shadowAreas = m_shadowMeshAreas.m_areaBlockVector;
 	Tr2Material* shadowShader = m_shadowMeshAreas.m_shaderMaterial;
 	for( auto& areaBlock : shadowAreas )
 	{
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
+		if( auto primCount = GetPrimitiveCount( *mesh, areaBlock.m_startIndex, areaBlock.m_count ) )
 		{
-			batch->SetShaderMaterial( shadowShader );
-			batch->SetPerObjectData( perObjectData );
-			batch->SetGeometryResource( geomRes );
-			batch->SetMeshParameters( meshIx, areaBlock.m_startIndex, areaBlock.m_count, shadowPixelSize );
+			Tr2RenderBatch batch;
+			batch.SetMaterial( shadowShader );
+			batch.SetGeometry( mesh->m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+			batch.SetPerObjectData( perObjectData );
+			batch.SetDrawIndexedInstanced(
+				primCount * 3,
+				1,
+				mesh->m_indexAllocation.GetStartIndex() + mesh->m_areas[areaBlock.m_startIndex].m_firstIndex,
+				mesh->m_vertexAllocation.GetOffset() / mesh->m_vertexAllocation.GetStride(),
+				0 );
 			batches->Commit( batch );
 		}
 	}
@@ -1029,39 +1056,51 @@ float EveSpaceObject2::GetSortValue()
 
 // ---------------------------------------------------------------------------------------
 //  Description:
-//    Given a pointer to a mesh overlay vector, gathers TriGeometryBatches for each.
+//    Given a pointer to a mesh overlay vector, gathers render batches for each.
 // ---------------------------------------------------------------------------------------
 void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType, Tr2MeshBase* mesh )
 {
-	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	Tr2Effect* impactOverlayEffect = nullptr;
+	// first the damage overlays
+	if( m_impactOverlay )
+	{
+		impactOverlayEffect = m_impactOverlay->GetArmorDamageShader( batchType );
+	}
+	if( !impactOverlayEffect && m_overlayEffects.empty() )
+	{
+		return;
+	}
 
-	if( !geomRes || !geomRes->IsGood() )
+	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	if( !geomRes->IsGood() )
 	{
 		return;
 	}
 
 	int meshIx = mesh->GetMeshIndex();
-
-	auto meshScreenSize = m_allowLodSelection ? m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor : std::numeric_limits<float>::max();
-
-	// first the damage overlays
-	if( m_impactOverlay )
+	auto meshData = geomRes->GetMeshData( meshIx, m_meshScreenSize );
+	if( !meshData || !meshData->m_allocationsValid )
 	{
-		Tr2EffectPtr effect = m_impactOverlay->GetArmorDamageShader( batchType );
-		if( effect )
+		return;
+	}
+
+	if( impactOverlayEffect )
+	{
+		for( auto& areaBlock : m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL] )
 		{
-			for( auto areaBlock = m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL].begin(); areaBlock != m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL].end(); ++areaBlock )
+			if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
 			{
-				TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-				// Note that this can fail if the accumulator can't add more batches!
-				if( batch )
-				{
-					batch->SetShaderMaterial( effect );
-					batch->SetPerObjectData( perObjectData );
-					batch->SetGeometryResource( geomRes );
-					batch->SetMeshParameters( meshIx, areaBlock->m_startIndex, areaBlock->m_count, meshScreenSize );
-					batches->Commit( batch );
-				}
+				Tr2RenderBatch batch;
+			batch.SetMaterial( impactOverlayEffect );
+				batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
+				batch.SetPerObjectData( perObjectData );
+				batch.SetDrawIndexedInstanced(
+					primCount * 3,
+					1,
+					meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[areaBlock.m_startIndex].m_firstIndex,
+					meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+					0 );
+				batches->Commit( batch );
 			}
 		}
 	}
@@ -1080,16 +1119,20 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 				Tr2EffectPtr effect = *eff;
 
 				// add all mesh area blocks
-				for( auto areaBlock = m_overlayMeshAreaBlocks[overlayType].begin(); areaBlock != m_overlayMeshAreaBlocks[overlayType].end(); ++areaBlock )
+				for( auto& areaBlock : m_overlayMeshAreaBlocks[overlayType] )
 				{
-					TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-					// Note that this can fail if the accumulator can't add more batches!
-					if( batch )
+					if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
 					{
-						batch->SetShaderMaterial( effect );
-						batch->SetPerObjectData( perObjectData );
-						batch->SetGeometryResource( geomRes );
-						batch->SetMeshParameters( meshIx, areaBlock->m_startIndex, areaBlock->m_count, meshScreenSize );
+						Tr2RenderBatch batch;
+						batch.SetMaterial( effect );
+						batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
+						batch.SetPerObjectData( perObjectData );
+						batch.SetDrawIndexedInstanced(
+							primCount * 3,
+							1,
+							meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[areaBlock.m_startIndex].m_firstIndex,
+							meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+							0 );
 						batches->Commit( batch );
 					}
 				}
@@ -1196,13 +1239,13 @@ bool EveSpaceObject2::FindLocatorTransformByName( const char* name, unsigned int
 	return false;
 }
 
-void EveSpaceObject2::UpdateShLighting( Tr2ShLightingManager& manager )
+void EveSpaceObject2::UpdateShLighting( Tr2ShLightingManager& manager, const EveUpdateContext& updateContext )
 {
 	memset( m_psData.shLightingCoefficients, 0, sizeof( m_psData.shLightingCoefficients ) );
-	if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneLowDetailThreshold )
+	if( m_estimatedPixelDiameterWithChildren > updateContext.GetLowDetailThreshold() )
 	{
-		float intensityFadeRadius = ( g_eveSpaceSceneMediumDetailThreshold - g_eveSpaceSceneLowDetailThreshold ) * 0.25f;
-		float intensity = ( m_estimatedPixelDiameterWithChildren - g_eveSpaceSceneLowDetailThreshold ) / intensityFadeRadius;
+		float intensityFadeRadius = ( updateContext.GetMediumDetailThreshold() - updateContext.GetLowDetailThreshold() ) * 0.25f;
+		float intensity = ( m_estimatedPixelDiameterWithChildren - updateContext.GetLowDetailThreshold() ) / intensityFadeRadius;
 		intensity = std::min( std::max( intensity, 0.f ), 1.f );
 		manager.GetLighting( m_worldPosition, intensity, m_boundingSphereRadius * g_secondaryLightingRadiusCutoffFactor, m_psData.shLightingCoefficients );
 	}
@@ -1222,6 +1265,15 @@ void EveSpaceObject2::ClearShLighting()
 // --------------------------------------------------------------------------------
 Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
+	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
+	{
+		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+		m_vsData.boneOffsets[2] = boneCount;
+		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	}
+	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
+	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
+
 	Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>>();
 	if( !perObjectData )
 	{
@@ -1240,14 +1292,7 @@ uint32_t EveSpaceObject2::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType
 	}
 	else
 	{
-		int boneCount = 0;
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-		{
-			boneCount = m_animationUpdater->GetMeshBoneCount();
-		}
-
-		return sizeof( m_vsData ) +
-			boneCount * 3 * 16; // m_vsBonesMatrix (3x4)
+		return sizeof( m_vsData );
 	}
 }
 
@@ -1263,15 +1308,7 @@ void EveSpaceObject2::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType sh
 	}
 	else
 	{
-		uint8_t* perObjectVS = (uint8_t*)data;
-		memcpy( perObjectVS, &m_vsData, sizeof( m_vsData ) );
-		perObjectVS += sizeof( m_vsData );
-
-		size -= sizeof( m_vsData );
-		if( size )
-		{
-			memcpy( perObjectVS, m_animationUpdater->GetMeshBoneMatrixList(), size );
-		}
+		memcpy( data, &m_vsData, sizeof( m_vsData ) );
 	}
 }
 
@@ -1309,7 +1346,7 @@ void EveSpaceObject2::PushRenderables( std::vector<ITr2Renderable*>& renderables
 	{
 		renderables.push_back( this );
 
-		if( m_estimatedPixelDiameter >= g_eveSpaceSceneLowDetailThreshold )
+		if( m_lodLevel >= TR2_LOD_MEDIUM )
 		{
 			CCP_STATS_INC( eveHighDetailObjects );
 		}
@@ -1351,13 +1388,13 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 			for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 			{
 				// now prep to get the renderables
-				( *it )->GetRenderables( renderables, geometryRes, m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor );
+				( *it )->GetRenderables( renderables, geometryRes, m_meshScreenSize );
 			}
 		}
 	}
 }
 
-void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1371,6 +1408,7 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	m_lodLevel = TR2_LOD_LOW;
 	m_lodLevelWithChildren = TR2_LOD_LOW;
 	m_impostorMode = false;
+	auto& frustum = updateContext.GetFrustum();
 
 	if( m_boundingSphereRadius > 0.0f )
 	{
@@ -1389,7 +1427,7 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
-			if( ( *it )->UpdateVisibility( frustum, m_worldTransform, bones, boneCount ) )
+			if( ( *it )->UpdateVisibility( updateContext, m_worldTransform, bones, boneCount ) )
 			{
 				m_isMeshVisible = true;
 				m_isVisible = true;
@@ -1403,14 +1441,14 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 		for( IEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
 		{
 			IEveTransform* p = *it;
-			p->UpdateVisibility( frustum, m_worldTransform );
+			p->UpdateVisibility( updateContext, m_worldTransform );
 		}
 	}
 	if( GetBoundingSphere( bounds, EVE_BOUNDS_WITH_CHILDREN ) )
 	{
 		m_isInFrustum = frustum.IsSphereVisible( &bounds );
 		m_estimatedPixelDiameterWithChildren = frustum.GetPixelSizeAccrossEst( &bounds );
-		if( m_isInFrustum && m_estimatedPixelDiameterWithChildren >= g_eveSpaceSceneVisibilityThreshold )
+		if( m_isInFrustum && m_estimatedPixelDiameterWithChildren >= updateContext.GetVisibilityThreshold() )
 		{
 			m_isVisible = true;
 		}
@@ -1418,11 +1456,11 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 	if( m_isVisible )
 	{
-		if( m_estimatedPixelDiameter > g_eveSpaceSceneMediumDetailThreshold )
+		if( m_estimatedPixelDiameter > updateContext.GetMediumDetailThreshold() )
 		{
 			m_lodLevel = TR2_LOD_HIGH;
 		}
-		else if( m_estimatedPixelDiameter > g_eveSpaceSceneLowDetailThreshold )
+		else if( m_estimatedPixelDiameter > updateContext.GetLowDetailThreshold() )
 		{
 			m_lodLevel = TR2_LOD_MEDIUM;
 		}
@@ -1431,15 +1469,15 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 			m_lodLevel = TR2_LOD_LOW;
 		}
 
-		if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneMediumDetailThreshold )
+		if( m_estimatedPixelDiameterWithChildren > updateContext.GetMediumDetailThreshold() )
 		{
 			m_lodLevelWithChildren = TR2_LOD_HIGH;
 		}
-		else if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneLowDetailThreshold )
+		else if( m_estimatedPixelDiameterWithChildren > updateContext.GetLowDetailThreshold() )
 		{
 			m_lodLevelWithChildren = TR2_LOD_MEDIUM;
 		}
-		else if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneLowDetailThreshold * 0.5f )
+		else if( m_estimatedPixelDiameterWithChildren > updateContext.GetLowDetailThreshold() * 0.5f )
 		{
 			m_lodLevelWithChildren = TR2_LOD_LOW;
 		}
@@ -1461,7 +1499,7 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 	for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 	{
-		( *ecIt )->UpdateVisibility( frustum, m_worldTransform, m_lodLevelWithChildren );
+		( *ecIt )->UpdateVisibility( updateContext, m_worldTransform, m_lodLevelWithChildren );
 	}
 
 	if( m_isMeshVisible )
@@ -1475,21 +1513,116 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 			{
 				( *it )->SetBoneMatrix( m_animationUpdater->GetMeshBoneMatrixList(), m_animationUpdater->GetMeshBoneCount() );
 			}
-			( *it )->UpdateVisibility( frustum, &pd );
+			( *it )->UpdateVisibility( updateContext, &pd );
 		}
 	}
 
 	if( m_mesh )
 	{
-		auto size = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
-		m_mesh->UseWithScreenSize( size, m_boundingSphereWorldRadius );
+		m_meshScreenSize = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) / updateContext.GetLodFactor();
+		m_meshScreenSize = m_allowLodSelection ? m_meshScreenSize : std::numeric_limits<float>::max();
+
+		m_mesh->UseWithScreenSize( m_meshScreenSize, m_boundingSphereWorldRadius );
+
+		if( updateContext.m_raytracingEnabled )
+		{
+			UpdateRtMesh(updateContext);
+			UpdateRtSkeleton();
+		}
 	}
 }
 
-bool EveSpaceObject2::IsVisible( const TriFrustum& frustum ) const
+void EveSpaceObject2::UpdateRtMesh( const EveUpdateContext& updateContext )
 {
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	if( !renderContext.GetCaps().SupportsRaytracing() )
+	{
+		return;
+	}
+
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	if( !areas->empty() )
+	{
+		auto rtMesh = m_mesh->GetOrCreateRtMesh();
+		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_meshScreenSize );
+
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			( *it )->GetOrCreateRtMeshArea();
+		}
+	}
+}
+
+void EveSpaceObject2::UpdateRtSkeleton()
+{
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return;
+	}
+
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	auto rtMesh = m_mesh->GetRtMesh();
+	if( areas->empty() || !rtMesh )
+	{
+		return; //no areas at all or no RT mesh
+	}
+
+	auto geo = m_mesh->GetGeometryResource();
+	if( !geo || !geo->IsGood() )
+	{
+		return;
+	}
+
+	auto meshIndex = m_mesh->GetMeshIndex();
+	auto meshData = geo->GetMeshData( meshIndex );
+	if( !meshData )
+	{
+		return;
+	}
+
+	bool hasSkinned = false;
+
+	for( auto& area : *areas )
+	{
+		auto index = area->GetIndex();
+
+		if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
+		{
+			hasSkinned = true;
+			break;
+		}
+	}
+
+	if( !hasSkinned )
+	{
+		return; //no skinned areas
+	}
+
+	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	auto offset = m_boneOffsets.GetCurrentFrameOffset();
+
+	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );
+
+	if( skeletonChanged )
+	{
+		//Skeleton has changed, so mark all area BLAS's as out-of-date.
+		for( auto& area : *areas )
+		{
+			auto meshAreaIndex = area->GetIndex();
+			if( meshAreaIndex >= 0 && meshAreaIndex < meshData->m_areas.size() && meshData->m_areas[meshAreaIndex].m_isSkinned )
+			{
+				area->GetRtMeshArea()->MarkBlasOutdated();
+			}
+		}
+	}
+}
+
+bool EveSpaceObject2::IsVisible( const EveUpdateContext& updateContext ) const
+{
+	auto& frustum = updateContext.GetFrustum();
 	return frustum.IsSphereVisible( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) &&
-		frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) >= g_eveSpaceSceneVisibilityThreshold;
+		frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) >= updateContext.GetVisibilityThreshold();
 }
 
 void EveSpaceObject2::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors )
@@ -1536,7 +1669,11 @@ void EveSpaceObject2::GetParentData( ParentData* pd ) const
 	memset( pd, 0, sizeof( ParentData ) );
 	pd->transform = m_worldTransform;
 	pd->shipData = m_spaceObjectShipData;
-	pd->clipData = m_psData.clipData;
+	pd->clipSphereCenter = m_psData.clipSphereCenter;
+	pd->clipRadiusSq = m_psData.clipRadiusSq;
+	pd->clipRadius2Sq = m_psData.clipRadius2Sq;
+	pd->clipFactor = m_psData.clipSphereFactor;
+	pd->clipFactor2 = m_psData.clipSphereFactor2;
 	pd->shLighting = m_psData.shLightingCoefficients;
 }
 
@@ -1589,24 +1726,30 @@ void EveSpaceObject2::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Quad
 	}
 }
 
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Check if the object is casting a shadow in the camera/shadow frustums
 // --------------------------------------------------------------------------------
-bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
+bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
 	if( !m_display || m_boundingSphereWorldRadius <= 0.0 )
 	{
 		return false;
 	}
 
-	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereRadius );
+	if( renderReason == TR2RENDERREASON_REFLECTION && !EntityComponents::ShouldReflect( m_reflectionMode ) )
+	{
+		return false;
+	}
+
+	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
 
 	sizeInShadow = 0;
 
-	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, bs ) )
+	if( shadowFrustum.IsVisible( cameraFrustum, bs ) )
 	{
-		sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );
+		sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
 	}
 	return sizeInShadow > 15.f;
 }
@@ -1752,16 +1895,18 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 	{
 		SetControllerVariable( "DirtLevel", m_dirtLevel );
 	}
-	else if( IsMatch( val, m_clipSphereFactor ) )
+	else if( IsMatch( val, m_clipSphereFactor ) || IsMatch( val, m_clipSphereFactor2 ) )
 	{
-		bool clipping = m_clipSphereFactor != 0;
-		bool oldClipping = m_oldClipSphereFactor != 0;
+		bool clipping = m_clipSphereFactor != 0 || m_clipSphereFactor2 != 0;
+		bool oldClipping = m_oldClipSphereFactor != 0 || m_oldClipSphereFactor2 != 0;
 		if( clipping != oldClipping )
 		{
 			SetShaderOption( BlueSharedString( "SPACE_OBJECT_CLIPPING" ), clipping ? BlueSharedString( "SOC_ENABLED" ) : BlueSharedString( "SOC_DISABLED" ) );
 		}
 		m_oldClipSphereFactor = m_clipSphereFactor;
+		m_oldClipSphereFactor2 = m_clipSphereFactor2;
 		SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
+		SetControllerVariable( "ClipSphereFactor2", m_clipSphereFactor2 );
 	}
 	else if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display ) || IsMatch( val, m_castShadow ) )
 	{
@@ -2289,6 +2434,7 @@ void EveSpaceObject2::UpdateWorldTransform( Be::Time time )
 	}
 	m_lastUpdateTransformTime = time;
 	m_vsData.worldTransformLast = Transpose( m_worldTransform );
+	m_psData.worldTransformLast = m_vsData.worldTransformLast;
 
 	if( m_ballPosition )
 	{
@@ -3275,6 +3421,16 @@ bool EveSpaceObject2::GetImpostorBoundingSphere( Vector4& sphere ) const
 	return GetBoundingSphere( sphere );
 }
 
+void EveSpaceObject2::GetLastImpostorBoundingSphere( Vector4& sphere ) const
+{
+	// Get the normal boundingsphere
+	GetImpostorBoundingSphere( sphere );
+	// remove the current world transform
+	sphere.GetXYZ() -= Vector3( m_vsData.worldTransform._14, m_vsData.worldTransform._24, m_vsData.worldTransform._34 );
+	// and add the last world transform
+	sphere.GetXYZ() += Vector3( m_vsData.worldTransformLast._14, m_vsData.worldTransformLast._24, m_vsData.worldTransformLast._34 );
+}
+
 void EveSpaceObject2::SetControllerVariable( const char* name, float value )
 {
 	m_controllerVariables[name] = value;
@@ -3433,8 +3589,7 @@ int EveSpaceObject2::GetLastUsedMeshLod() const
 	{
 		return 0;
 	}
-	auto meshScreenSize = m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor;
-	return m_mesh->GetGeometryResource()->GetLodIndexForScreenSize( unsigned( m_mesh->GetMeshIndex() ), meshScreenSize );
+	return m_mesh->GetGeometryResource()->GetLodIndexForScreenSize( unsigned( m_mesh->GetMeshIndex() ), m_meshScreenSize );
 }
 
 void EveSpaceObject2::SetProceduralContainerVariable( const char* name, float value )
@@ -3480,5 +3635,50 @@ void EveSpaceObject2::SetMute( bool isMute )
 	for( auto it : m_observers )
 	{
 		it->SetMute( m_mute );
+	}
+}
+
+void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
+{
+	if( !m_mesh || !m_display )
+	{
+		return;
+	}
+
+	if( m_boundingSphereRadius <= 0.0 )
+	{
+		return;
+	}
+
+	if( m_estimatedPixelDiameter <= 15.f )
+	{
+		return;
+	}
+
+	auto rtMesh = m_mesh->GetRtMesh();
+
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	if( !m_rtPerObjectData.IsValid() )
+	{
+		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
+	}
+	EveSpaceObjectPSData* perObjectData;
+	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
+	*perObjectData = m_psData;
+	m_rtPerObjectData.Unlock( renderContext );
+
+	const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+	{
+		auto area = *it;
+		if( area->GetDisplay() )
+		{
+			auto geometry = area->GetRtMeshArea();
+			if( geometry )
+			{
+				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, m_worldTransform );
+			}
+		}
 	}
 }

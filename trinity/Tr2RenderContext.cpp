@@ -12,26 +12,102 @@
 #include "TriRenderBatch.h"
 #include "Shader/Tr2Shader.h"
 #include "TbbStub.h"
+#include "Tr2Renderer.h"
+#include "TriSettingsRegistrar.h"
+#include "Tr2BoneTransformBuffer.h"
 
-CCP_STATS_DECLARE( batchCount, "Trinity/batchCount", true, CST_COUNTER_HIGH, "Batches rendered per frame");
+#include "Shader/Tr2Effect.h"
 
-Tr2RenderContextBase::Tr2RenderContextBase( Tr2RenderContext& renderContext )
-	:m_esm( renderContext )
+
+bool g_gdrEnabled = true;
+
+TRI_REGISTER_SETTING( "gdrEnabled", g_gdrEnabled );
+
+
+CCP_STATS_DECLARE( batchCount, "Trinity/batchCount", true, CST_COUNTER_HIGH, "Batches rendered per frame" );
+CCP_STATS_DECLARE( batchNormalDraws, "Trinity/batchNormalDraws", true, CST_COUNTER_HIGH, "Normal batch draw calls per frame" );
+CCP_STATS_DECLARE( batchIndirectDraws, "Trinity/batchIndirectDraws", true, CST_COUNTER_HIGH, "Draw calls in ExecuteIndirect() per frame" );
+CCP_STATS_DECLARE( batchExecuteIndirectCalls, "Trinity/batchExecuteIndirectCalls", true, CST_COUNTER_HIGH, "ExecuteIndirect() batch calls per frame" );
+
+namespace
+{
+
+void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName, Tr2RenderContextAL& renderContext )
+{
+#if TRINITY_PLATFORM_SUPPORTS_HEAP_VIEW
+	CCP_STATS_ZONE( __FUNCTION__ );
+	Tr2BindlessResourcesAL usedTextures;
+
+	usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_2D, "" ) );
+	usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_3D, "" ) );
+	usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_CUBE, "" ) );
+
+	auto ProcessBatch = [&usedTextures, &techniqueName]( auto& batch ) {
+		uint32_t technique;
+		if( batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
+		{
+			batch.m_material->GetUsedBindlessTextures( technique, usedTextures );
+		}
+	};
+
+	for( auto& batch : batches->GetGdprBatches() )
+	{
+		ProcessBatch( batch );
+	}
+	for( auto& batch : batches->GetBatches() )
+	{
+		ProcessBatch( batch );
+	}
+
+	{
+		CCP_STATS_ZONE( "renderContext.UseTextures" );
+		renderContext.UseTextures( Tr2GpuUsage::SHADER_RESOURCE, usedTextures );
+	}
+#endif
+}
+
+void SubmitGeometry( const Tr2RenderBatch& batch, Tr2RenderContext& renderContext )
+{
+	renderContext.SetTopology( batch.m_topology );
+	renderContext.m_esm.ApplyVertexDeclaration( batch.m_vertexDeclaration );
+	if( batch.m_vertexStreams[0] )
+	{
+		renderContext.m_esm.ApplyStreamSource( 0, *batch.m_vertexStreams[0], 0, batch.m_stride[0] );
+	}
+	if( batch.m_vertexStreams[1] )
+	{
+		renderContext.m_esm.ApplyStreamSource( 1, *batch.m_vertexStreams[1], 0, batch.m_stride[1] );
+	}
+	if( batch.m_indexBuffer )
+	{
+		renderContext.m_esm.ApplyIndexBuffer( *batch.m_indexBuffer, batch.m_indexStride );
+		renderContext.DrawIndexedInstanced( batch.m_indexCountPerInstance, batch.m_instanceCount, batch.m_startIndexLocation, batch.m_baseVertexLocation, batch.m_startInstanceLocation );
+	}
+	else
+	{
+		renderContext.DrawInstanced( batch.m_indexCountPerInstance, batch.m_instanceCount, batch.m_startIndexLocation, batch.m_startInstanceLocation );
+	}
+}
+
+}
+
+Tr2RenderContextBase::Tr2RenderContextBase( Tr2RenderContext& renderContext ) :
+	m_esm( renderContext )
 {
 	m_esm.Initialize();
 #if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	m_backBuffer.CreateInstance();
 	m_backBuffer->SetName( "backbuffer" );
 #endif
-	m_objectIdVariable		= GlobalStore().RegisterVariable( "objectId",	0.0f );
-	m_areaIdVariable		= GlobalStore().RegisterVariable( "areaId",		0.0f );
+	m_objectIdVariable = GlobalStore().RegisterVariable( "objectId", 0.0f );
+	m_areaIdVariable = GlobalStore().RegisterVariable( "areaId", 0.0f );
 }
 
 using namespace Tr2RenderContextEnum;
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Called by Tr2RenderContextAL when a primary or secondary context is created. 
+//   Called by Tr2RenderContextAL when a primary or secondary context is created.
 //   Initializes Tr2EffectStateManager instance.
 // Arguments:
 //   renderContext - AL render context created
@@ -46,10 +122,10 @@ void Tr2RenderContextBase::OnContextCreated( Tr2PrimaryRenderContextAL& renderCo
 #if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 // --------------------------------------------------------------------------------------
 // Description:
-//   Returns back buffer render target as Blue-exposed Tr2RenderTarget. Exposed to 
+//   Returns back buffer render target as Blue-exposed Tr2RenderTarget. Exposed to
 //   script.
 // Return Value:
-//   Back buffer render target 
+//   Back buffer render target
 // --------------------------------------------------------------------------------------
 Tr2RenderTargetPtr Tr2RenderContextBase::GetBackBuffer()
 {
@@ -58,8 +134,8 @@ Tr2RenderTargetPtr Tr2RenderContextBase::GetBackBuffer()
 #endif
 
 
-Tr2RenderContext::Tr2RenderContext()
-	:Tr2RenderContextBase( *this ),
+Tr2RenderContext::Tr2RenderContext() :
+	Tr2RenderContextBase( *this ),
 	m_parallelContextMutex( "Tr2RenderContext", "m_parallelContextMutex" ),
 	m_parallelContextSemaphore( 0, 1024 )
 {
@@ -91,7 +167,7 @@ uint32_t Tr2RenderContext::BeginParallelEncoding( uint32_t count )
 {
 #if TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS
 	CCP_STATS_ZONE( __FUNCTION__ );
-	
+
 	CCP_ASSERT( m_parallelContextsPool.empty() );
 
 	uint32_t available = 0;
@@ -102,7 +178,7 @@ uint32_t Tr2RenderContext::BeginParallelEncoding( uint32_t count )
 	if( available )
 	{
 		m_esm.SetupContextResources();
-		
+
 		for( size_t i = m_parallelContexts.size(); i < available; ++i )
 		{
 			Tr2RenderContextPtr context;
@@ -128,14 +204,14 @@ Tr2RenderContext* Tr2RenderContext::Fork()
 	while( true )
 	{
 		m_parallelContextSemaphore.Wait();
-		
+
 		CcpAutoMutex lock( m_parallelContextMutex );
-		
+
 		if( m_parallelContextsPool.empty() )
 		{
 			continue;
 		}
-		
+
 		auto ctx = m_parallelContextsPool.back();
 		m_parallelContextsPool.pop_back();
 		return ctx.Detach();
@@ -159,7 +235,7 @@ void Tr2RenderContext::EndParallelEncoding()
 		CCP_STATS_ZONE( "Tr2RenderContextAL::EndParallelEncoding" );
 		Tr2RenderContextAL::EndParallelEncoding();
 	}
-	
+
 	// Reset semaphore to 0
 	for( size_t i = 0; i < m_parallelContextsPool.size(); ++i )
 	{
@@ -171,8 +247,8 @@ void Tr2RenderContext::EndParallelEncoding()
 
 
 #if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
-Tr2PrimaryRenderContext::Tr2PrimaryRenderContext()
-	:Tr2RenderContextBase( *reinterpret_cast<Tr2RenderContext*>( this ) )
+Tr2PrimaryRenderContext::Tr2PrimaryRenderContext() :
+	Tr2RenderContextBase( *reinterpret_cast<Tr2RenderContext*>( this ) )
 {
 	m_backBuffer.CreateInstance();
 	m_backBuffer->SetName( "backbuffer" );
@@ -199,21 +275,25 @@ Tr2RenderTargetPtr Tr2PrimaryRenderContext::GetBackBuffer()
 #endif
 
 
-namespace {
+bool g_renderContextIsBeingDestroyed = false;
+
+namespace
+{
 #if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
-	Tr2PrimaryRenderContextPtr	s_mainThreadRenderContext;
+Tr2PrimaryRenderContextPtr s_mainThreadRenderContext;
 #else
-	Tr2RenderContextPtr s_mainThreadRenderContext;
+Tr2RenderContextPtr s_mainThreadRenderContext;
 #endif
 }
-	
+
 void Tr2RenderContext::DestroyMainThreadRenderContext()
 {
 	if( s_mainThreadRenderContext )
 	{
-		s_mainThreadRenderContext->Destroy();
-		s_mainThreadRenderContext.Unlock();
+		g_renderContextIsBeingDestroyed = true;
 		Tr2RenderContextAL::SetPrimaryRenderContext( nullptr );
+		s_mainThreadRenderContext.Unlock();
+		g_renderContextIsBeingDestroyed = false;
 	}
 }
 
@@ -256,275 +336,402 @@ const char* GetPassName( size_t passIndex )
 
 void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
+
 	D3DPERF_EVENT( L"Tr2RenderContext::RenderBatchesInOrder" );
 
+	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
 
-	const Tr2PerObjectData* curPerObjectData = nullptr;
+	CCP_STATS_ZONE( "Direct drawing (sorted)" );
+#if TRINITY_PLATFORM != TRINITY_METAL
+	GPU_REGION( *renderContext, "Direct drawing (sorted)" );
+#endif
 
-	Tr2ConstantBufferAL*	perObjectConstantBuffers[CBUFFER_COUNT];
+	UseTextures( batches, techniqueName, *renderContext );
+
+	Tr2ConstantBufferAL* perObjectConstantBuffers[CBUFFER_COUNT];
 	for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
 	{
 		perObjectConstantBuffers[i] = &m_perObjectConstantBuffers[i];
 	}
 
-	for( TriRenderBatch* it = batches->GetFirstBatch(); it != nullptr; it = it->GetNext() )
+	const Tr2PerObjectData* curPerObjectData = nullptr;
+	Tr2Shader* lastShader = nullptr;
+	uint32_t technique = 0;
+	uint32_t passCount = 0;
+	uint32_t shaderMask = 0;
+
+	for( auto& batch : batches->GetBatches() )
 	{
-		auto material = it->GetShaderMaterialInterface();
-
-		if( !material )
+		if( batch.m_renderingMode != Tr2EffectStateManager::RM_ANY )
 		{
-			continue;
+			m_esm.ApplyStandardStates( batch.m_renderingMode );
 		}
 
-		auto shader = it->GetShaderStateInterface();
-
-		if( shader == 0 )
+		if( batch.m_shader != lastShader )
 		{
-			continue;
+			if( !batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
+			{
+				continue;
+			}
+			passCount = batch.m_shader->GetPassCount( technique );
+			if( passCount == 0 )
+			{
+				continue;
+			}
+			shaderMask = batch.m_shader->GetShaderTypeMask( technique );
+			lastShader = batch.m_shader;
 		}
 
-		uint32_t technique;
-		if( !shader->GetTechniqueIndex( techniqueName, technique ) )
+		const char* effectPath = dynamic_cast<Tr2Effect*>( batch.m_material )->GetEffectPathName();
+		CCP_STATS_ZONE( effectPath );
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+		GPU_REGION( *renderContext, effectPath );
+#endif
+
+		if( batch.m_objectData && ( batch.m_objectData != curPerObjectData ) )
 		{
-			continue;
+			batch.m_objectData->SetPerObjectDataToDevice( perObjectConstantBuffers, shaderMask, *renderContext );
+			curPerObjectData = batch.m_objectData;
 		}
-
-		const Tr2PerObjectData* perObjectData = it->GetPerObjectData();
-		Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
-
-		if( perObjectData && ( perObjectData != curPerObjectData ) )
-		{
-			D3DPERF_EVENT(L"RenderBatchesInOrder::Set per-object data to device");
-			
-			perObjectData->SetPerObjectDataToDevice( perObjectConstantBuffers, shader->GetShaderTypeMask( technique ), *renderContext );
-			curPerObjectData = perObjectData;
-		}
-
-		uint32_t passCount = shader->GetPassCount( technique );
 
 		for( uint32_t passIx = 0; passIx < passCount; ++passIx )
 		{
 			D3DPERF_EVENT1( L"Pass %i", passIx );
-			shader->ApplyAllStateForPass( technique, passIx, *renderContext );
-			material->ApplyMaterialDataForPass( technique, passIx, *renderContext );
 
-			Tr2GpuProfiler::GetProfiler().Begin( material, GetPassName( passIx ), *renderContext );
-			it->SubmitGeometry( *renderContext );
+			batch.m_shader->ApplyAllStateForPass( technique, passIx, *renderContext );
+			batch.m_material->ApplyMaterialDataForPass( technique, passIx, *renderContext );
+
+			Tr2GpuProfiler::GetProfiler().Begin( batch.m_material, GetPassName( passIx ), *renderContext );
+			SubmitGeometry( batch, *renderContext );
 			Tr2GpuProfiler::GetProfiler().End( *renderContext );
 
 			CCP_STATS_INC( batchCount );
+			CCP_STATS_INC( batchNormalDraws );
 		}
 	}
 }
 
-void Tr2RenderContextBase::RenderBatchesSortedByEffectHelper( TriRenderBatch* batch, TriRenderBatch* endBatch, const BlueSharedString& techniqueName )
+void Tr2RenderContextBase::RenderBatchGroup( std::vector<Tr2RenderBatch>::const_iterator startBatch, const BlueSharedString& techniqueName, Tr2ConstantBufferAL** buffers, Tr2RenderContext& renderContext )
 {
-	Tr2RenderContext *renderContext = reinterpret_cast<Tr2RenderContext*>( this );
 
-	Tr2EffectStateManager::RenderingMode currentMode = Tr2EffectStateManager::RM_ANY;
-	const Tr2PerObjectData* curPerObjectData = nullptr;
-	unsigned int curShaderTypeMask = 0;
+	auto& firstBatch = *startBatch;
+	auto endBatch = startBatch + firstBatch.m_groupCount;
 
-	while( batch != endBatch )
+	if( firstBatch.m_renderingMode != Tr2EffectStateManager::RM_ANY )
 	{
-		Tr2ConstantBufferAL*	perObjectConstantBuffers[CBUFFER_COUNT];
-		for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
+		m_esm.ApplyStandardStates( firstBatch.m_renderingMode );
+	}
+
+	auto currentShader = firstBatch.m_material->GetShaderStateInterface();
+	uint32_t technique;
+	if( !currentShader->GetTechniqueIndex( techniqueName, technique ) )
+	{
+		return;
+	}
+	const uint32_t passCount = currentShader->GetPassCount( technique );
+	if( passCount == 0 )
+	{
+		return;
+	}
+
+	const char* effectPath = dynamic_cast<Tr2Effect*>( startBatch->m_material )->GetEffectPathName();
+	CCP_STATS_ZONE( effectPath );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	GPU_REGION( renderContext, effectPath );
+#endif
+
+	const auto currentShaderMask = currentShader->GetShaderTypeMask( technique );
+
+	m_esm.ApplyVertexDeclaration( firstBatch.m_vertexDeclaration );
+	if( firstBatch.m_vertexStreams[0] )
+	{
+		m_esm.ApplyStreamSource( 0, *firstBatch.m_vertexStreams[0], 0, firstBatch.m_stride[0] );
+	}
+	if( firstBatch.m_vertexStreams[1] )
+	{
+		m_esm.ApplyStreamSource( 1, *firstBatch.m_vertexStreams[1], 0, firstBatch.m_stride[1] );
+	}
+	if( firstBatch.m_indexBuffer )
+	{
+		m_esm.ApplyIndexBuffer( *firstBatch.m_indexBuffer, firstBatch.m_indexStride );
+	}
+
+	for( uint32_t passIx = 0; passIx < passCount; ++passIx )
+	{
+		auto batch = startBatch;
+
+		const auto& passDesc = currentShader->GetEffectDescription().techniques[technique].passes[passIx];
+
+		currentShader->ApplyAllStateForPass( technique, passIx, renderContext );
+
+		for( auto batch = startBatch; batch != endBatch; ++batch )
 		{
-			perObjectConstantBuffers[i] = renderContext->GetConstantBuffer( i );
-		}
-		
-		auto material = batch->GetShaderMaterialInterface();
-
-
-		// If the batch doesn't have an effect, it is a view-modifier batch,
-		// so we need to call SubmitGeometry (to make the view parameter change)
-		// and move to the next batch
-		if( !material )
-		{
-			D3DPERF_EVENT( CA2W(batch->GetBatchTypeName().c_str()) );
-			Tr2GpuProfiler::GetProfiler().Begin( nullptr, "Batch Without Material", *renderContext );
-			batch->SubmitGeometry( *renderContext );
-			Tr2GpuProfiler::GetProfiler().End( *renderContext );
-			batch = batch->GetNext();
-			continue;
-		}
-
-		auto currentShader = batch->GetShaderStateInterface();
-
-		if ( currentShader == 0)
-		{
-			batch = batch->GetNext();
-			continue;
-		}
-
-		uint32_t technique;
-		if( !currentShader->GetTechniqueIndex( techniqueName, technique ) )
-		{
-			batch = batch->GetNext();
-			continue;
-		}
-
-		const auto currentShaderMask = currentShader->GetShaderTypeMask( technique );
-
-		// Get the number of passes (must be at least 1 to SubmitGeometry)
-		const uint32_t passCount = currentShader->GetPassCount( technique );
-		if( passCount == 0)
-		{
-			batch = batch->GetNext();
-			continue;
-		}
-
-		// Change the rendering mode , if needed
-		const Tr2EffectStateManager::RenderingMode mode = batch->GetRenderingMode();
-		if( mode != Tr2EffectStateManager::RM_ANY )
-		{
-			m_esm.ApplyStandardStates( mode );
-			currentMode = mode;
-		}
-
-		TriRenderBatch* const startOfPass = batch;
-		for( uint32_t passIx = 0; passIx < passCount; ++passIx )
-		{
+			batch->m_material->ApplyMaterialDataForPass( technique, passIx, renderContext );
+			if( batch->m_objectData )
 			{
-				D3DPERF_EVENT1( L"Begin Pass %i", passIx );
-
-				currentShader->ApplyAllStateForPass( technique, passIx, *renderContext );
+				batch->m_objectData->SetPerObjectDataToDevice( buffers, currentShaderMask, renderContext );
 			}
-
-			batch = startOfPass;
-
-			// Figure out in advance, before we actually start applying state and submitting geometry, how many
-			// batches we will be able to batch based on rendering mode and shader sharing.
-			TriRenderBatch *lastBatch = batch;
-			while( lastBatch && lastBatch != endBatch )
+			renderContext.SetTopology( batch->m_topology );
+			Tr2GpuProfiler::GetProfiler().Begin( batch->m_material, GetPassName( passIx ), renderContext );
+			if( firstBatch.m_indexBuffer )
 			{
-				const Tr2EffectStateManager::RenderingMode mode = lastBatch->GetRenderingMode();
-				if( mode != Tr2EffectStateManager::RM_ANY && mode != currentMode )
-				{
-					break;
-				}
-
-				material = lastBatch->GetShaderMaterialInterface();
-				if( material )
-				{
-					if( lastBatch->GetShaderStateInterface() != currentShader )
-					{
-						break;
-					}
-				}
-				else
-				{
-					break;
-				}
-
-				lastBatch = lastBatch->GetNext();
+				renderContext.DrawIndexedInstanced( batch->m_indexCountPerInstance, batch->m_instanceCount, batch->m_startIndexLocation, batch->m_baseVertexLocation, batch->m_startInstanceLocation );
 			}
-
-			while( batch && batch != lastBatch )
+			else
 			{
-				D3DPERF_EVENT( CA2W( batch->GetBatchTypeName().c_str() ) );
-
-				// Set the data from the material, i.e constants and samplers for this pass
-				batch->GetShaderMaterialInterface()->ApplyMaterialDataForPass( technique, passIx, *renderContext );
-
-				// If the batch has per-object data, set it to the device
-				const Tr2PerObjectData* const perObjectData = batch->GetPerObjectData();
-				if( perObjectData && ( ( perObjectData != curPerObjectData ) || ( currentShaderMask != curShaderTypeMask ) ) )
-				{
-					D3DPERF_EVENT( L"Object - RenderBatchesSortedByEffect::SetPerObjectDataToDevice" );
-					curPerObjectData = perObjectData;
-					curShaderTypeMask = currentShaderMask;
-					perObjectData->SetPerObjectDataToDevice( perObjectConstantBuffers, currentShaderMask, *renderContext );
-				}
-
-				CCP_STATS_INC( batchCount );
-
-				// Submit the geometry for this batch
-				Tr2GpuProfiler::GetProfiler().Begin( batch->GetShaderMaterialInterface(), GetPassName( passIx ), *renderContext );
-				batch->SubmitGeometry( *renderContext );
-				Tr2GpuProfiler::GetProfiler().End( *renderContext );
-
-				batch = batch->GetNext();
+				renderContext.DrawInstanced( batch->m_indexCountPerInstance, batch->m_instanceCount, batch->m_startIndexLocation, batch->m_startInstanceLocation );
 			}
+			Tr2GpuProfiler::GetProfiler().End( renderContext );
 		}
+		CCP_STATS_ADD( batchCount, firstBatch.m_groupCount );
+		CCP_STATS_ADD( batchNormalDraws, firstBatch.m_groupCount );
 	}
 }
 
-void Tr2RenderContextBase::RenderBatchesSortedByEffect( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
+void Tr2RenderContextBase::RenderSortedBatches( const std::vector<Tr2RenderBatch>& batches, const BlueSharedString& techniqueName, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
-	D3DPERF_EVENT(L"Tr2EffectStateManager::RenderBatchesSortedByEffect");
+	size_t batchCount = batches.size();
 
-	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	if( batchCount == 0 )
+	{
+		return;
+	}
+
+	CCP_STATS_ZONE( "Direct drawing" );
+#if TRINITY_PLATFORM != TRINITY_METAL
+	GPU_REGION( renderContext, "Direct drawing" );
+#endif
+
 #if TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS
-	size_t batchCount = batches->GetBatchCount();
 	extern bool g_useParallelEncoding;
 	if( g_useParallelEncoding && batchCount > 256 && !Tr2GpuProfiler::GetProfiler().IsCapturing() )
 	{
-		const uint32_t coresCount = std::thread::hardware_concurrency();
-		uint32_t batchesPerEncoder = std::max( 32u, uint32_t( ( batchCount + coresCount ) / coresCount ) );
-		uint32_t taskCount = uint32_t( ( batchCount + batchesPerEncoder ) / batchesPerEncoder );
-		
-		std::vector<std::pair<int, TriRenderBatch*>> encodingTasks;
-		encodingTasks.reserve( taskCount );
-		
-		TriRenderBatch* batch = batches->GetFirstBatch();
-		int i = 0;
-		while( batch )
+		std::vector<std::vector<Tr2RenderBatch>::const_iterator> encodingTasks;
+		for( auto batch = batches.begin(); batch != batches.end(); )
 		{
-			if( batch->m_needsSyncronousSubmit )
-			{
-				batch->SyncronousSubmit( *primaryContext );
-			}
-			if( i == 0 )
-			{
-				encodingTasks.push_back( std::make_pair( encodingTasks.size(), batch ) );
-			}
-			++i %= batchesPerEncoder;
-			batch = batch->GetNext();
+			encodingTasks.push_back( batch );
+			batch += batch->m_groupCount;
 		}
 
-		if( primaryContext->BeginParallelEncoding( taskCount ) )
+		const uint32_t coresCount = std::thread::hardware_concurrency();
+		if( renderContext.BeginParallelEncoding( std::min( coresCount, uint32_t( encodingTasks.size() ) ) ) )
 		{
-			Tr2ParallelDo( encodingTasks.begin(), encodingTasks.end(), [&]( const std::pair<int, TriRenderBatch*>& task )
-			{
+			Tr2ParallelDo( encodingTasks.begin(), encodingTasks.end(), [&]( auto& task ) {
 #if __APPLE__
 				@autoreleasepool
 #endif
 				{
 					CCP_STATS_ZONE( "Parallel Encoding Task" );
 
-					Tr2RenderContext* ctx = primaryContext->Fork();
-					
-					TriRenderBatch* beginBatch = task.second;
-					TriRenderBatch* doneBatch = nullptr;
-					if( task.first < encodingTasks.size() - 1 )
+					Tr2RenderContext* ctx = renderContext.Fork();
+
+					Tr2ConstantBufferAL* perObjectConstantBuffers[CBUFFER_COUNT];
+					for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
 					{
-						doneBatch = encodingTasks[task.first + 1].second;
+						perObjectConstantBuffers[i] = ctx->GetConstantBuffer( i );
 					}
-					
-					ctx->RenderBatchesSortedByEffectHelper( beginBatch , doneBatch, techniqueName );
-					
-					primaryContext->Join( ctx );
+					ctx->RenderBatchGroup( task, techniqueName, perObjectConstantBuffers, *ctx );
+
+					renderContext.Join( ctx );
 				}
 			} );
-			primaryContext->EndParallelEncoding();
-		}
-		else
-		{
-			RenderBatchesSortedByEffectHelper( batches->GetFirstBatch(), nullptr, techniqueName );
+			renderContext.EndParallelEncoding();
+			return;
 		}
 	}
-	else
 #endif
+
+
+	Tr2ConstantBufferAL* perObjectConstantBuffers[CBUFFER_COUNT];
+	for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
 	{
-		RenderBatchesSortedByEffectHelper( batches->GetFirstBatch(), nullptr, techniqueName );
+		perObjectConstantBuffers[i] = renderContext.GetConstantBuffer( i );
 	}
+
+	for( auto firstBatch = batches.begin(); firstBatch != batches.end(); )
+	{
+		RenderBatchGroup( firstBatch, techniqueName, perObjectConstantBuffers, renderContext );
+		firstBatch += firstBatch->m_groupCount;
+	}
+}
+
+void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
+{
+
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
+
+	renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
+
+	auto& gdprBatches = batches->GetGdprBatches();
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
+	if( g_gdrEnabled )
+	{
+		CCP_STATS_ZONE( "Indirect drawing" );
+#if TRINITY_PLATFORM != TRINITY_METAL
+		GPU_REGION( *renderContext, "Indirect drawing" );
+#endif
+
+		Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+
+		static Tr2IndirectDrawBuffer s_buffer;
+		if( !s_buffer.IsValid() )
+		{
+			s_buffer.Create( 1024 * 1024 );
+			if( !s_buffer.IsValid() )
+			{
+				return;
+			}
+		}
+
+		s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetRecordingFrameNumber(), primaryContext->GetPrimaryRenderContext().GetRenderedFrameNumber() );
+
+		struct Bin
+		{
+			Tr2IndirectDrawBufferWriter writer;
+			uint32_t firstIndex;
+			uint32_t endIndex;
+			uint32_t technique;
+			uint32_t pass;
+			bool binStart;
+		};
+
+		std::vector<Bin> writers;
+		writers.reserve( gdprBatches.size() );
+
+		{
+			CCP_STATS_ZONE( "Prepare" );
+
+		uint32_t size = uint32_t( gdprBatches.size() );
+		uint32_t endIndex = 0;
+		for( uint32_t firstIndex = 0; firstIndex < size; firstIndex = endIndex )
+		{
+			auto& firstBatch = gdprBatches[firstIndex];
+			endIndex = firstIndex + firstBatch.m_groupCount;
+
+			uint32_t technique;
+				if( !firstBatch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
+			{
+				continue;
+			}
+				const uint32_t passCount = firstBatch.m_shader->GetPassCount( technique );
+			if( passCount == 0 )
+			{
+				continue;
+			}
+
+				for( uint32_t passIx = 0; passIx < passCount; ++passIx )
+				{
+					const auto& passDesc = firstBatch.m_shader->GetEffectDescription().techniques[technique].passes[passIx];
+					const uint32_t MAX_BATCHES = 64;
+					for( auto batch = firstIndex; batch < endIndex; batch += MAX_BATCHES )
+					{
+						Tr2IndirectDrawBufferWriter writer( s_buffer, passDesc.indirectLayout, std::min( MAX_BATCHES, uint32_t( endIndex - batch ) ), *renderContext );
+						writers.push_back( { writer, batch, std::min( endIndex, batch + MAX_BATCHES ), technique, passIx, batch == firstIndex } );
+					}
+				}
+			}
+		}
+
+		{
+			CCP_STATS_ZONE( "Record All" );
+
+			auto RecordBin = [&]( Bin& bin ) {
+				CCP_STATS_ZONE( "Record" );
+				for( uint32_t k = bin.firstIndex; k < bin.endIndex; ++k )
+				{
+					auto& batch = gdprBatches[k];
+					batch.m_material->ApplyConstantBuffers( bin.technique, bin.pass, bin.writer, *primaryContext );
+					if( batch.m_objectData )
+					{
+						batch.m_objectData->ApplyConstantBuffers( bin.writer, *primaryContext );
+					}
+					bin.writer.DrawIndexed( batch.m_indexCountPerInstance, batch.m_instanceCount, batch.m_startIndexLocation, batch.m_baseVertexLocation, batch.m_startInstanceLocation );
+					bin.writer.Next();
+				}
+			};
+
+			Tr2ParallelDo( begin( writers ), end( writers ), RecordBin );
+		}
+
+		s_buffer.CopyArguments();
+
+		{
+			CCP_STATS_ZONE( "Submit" );
+
+			uint32_t drawCalls = 0;
+			for( auto& bin : writers )
+			{
+
+				auto& firstBatch = gdprBatches[bin.firstIndex];
+
+				const char* effectPath = dynamic_cast<Tr2Effect*>( firstBatch.m_material )->GetEffectPathName();
+				CCP_STATS_ZONE( effectPath );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+				GPU_REGION( *renderContext, effectPath );
+#endif
+
+				if( bin.binStart )
+				{
+					m_esm.ApplyVertexDeclaration( firstBatch.m_vertexDeclaration );
+					if( firstBatch.m_vertexStreams[0] )
+					{
+						m_esm.ApplyStreamSource( 0, *firstBatch.m_vertexStreams[0], 0, firstBatch.m_stride[0] );
+					}
+					if( firstBatch.m_vertexStreams[1] )
+					{
+						m_esm.ApplyStreamSource( 1, *firstBatch.m_vertexStreams[1], 0, firstBatch.m_stride[1] );
+					}
+					m_esm.ApplyIndexBuffer( *firstBatch.m_indexBuffer, firstBatch.m_indexStride );
+
+					firstBatch.m_shader->ApplyAllStateForPass( bin.technique, bin.pass, *renderContext );
+					firstBatch.m_material->ApplyMaterialDataForPass( bin.technique, bin.pass, *renderContext );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+					renderContext->SetAllState();
+					renderContext->FlushGraphicsBarriersDx12();
+#elif TRINITY_PLATFORM == TRINITY_METAL
+                    renderContext->CheckDrawResources();
+#endif
+				}
+				s_buffer.Submit( bin.writer );
+				drawCalls += bin.endIndex - bin.firstIndex;
+			}
+			CCP_STATS_ADD( batchExecuteIndirectCalls, writers.size() );
+			CCP_STATS_ADD( batchIndirectDraws, drawCalls );
+			CCP_STATS_ADD( batchCount, drawCalls );
+		}
+		return;
+	}
+#endif
+
+	RenderSortedBatches( gdprBatches, techniqueName, *renderContext );
+}
+
+void Tr2RenderContextBase::RenderBatchesSortedByEffect( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	D3DPERF_EVENT( L"Tr2EffectStateManager::RenderBatchesSortedByEffect" );
+
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
+
+	UseTextures( batches, techniqueName, *primaryContext );
+
+
+	RenderGdprBatches( batches, techniqueName );
+	RenderSortedBatches( batches->GetBatches(), techniqueName, *primaryContext );
 }
 
 void Tr2RenderContextBase::RenderBatches( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
+
 	if( batches->IsChainedByEffect() )
 	{
 		RenderBatchesSortedByEffect( batches, techniqueName );
@@ -545,6 +752,9 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 		return;
 	}
 
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
+
 	D3DPERF_EVENT( L"Tr2RenderContextBase::RenderBatchesWithOverride" );
 
 	auto overrideShader = overrideEffect->GetShaderStateInterface();
@@ -553,164 +763,119 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 		return;
 	}
 
-	Tr2ConstantBufferAL*	perObjectConstantBuffers[CBUFFER_COUNT];
+	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
+	UseTextures( batches, techniqueName, *renderContext );
+
+	Tr2ConstantBufferAL* perObjectConstantBuffers[CBUFFER_COUNT];
 	for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
 	{
 		perObjectConstantBuffers[i] = &m_perObjectConstantBuffers[i];
 	}
 
-	auto overrideMaterial =  overrideEffect;
-	for( TriRenderBatch* it = batches->GetFirstBatch(); it != nullptr; it = it->GetNext() )
-	{
-		auto mode = it->RenderWithOverride();
-		if( mode == TriRenderBatch::DO_NOT_RENDER_WITH_OVERRIDE )
-		{
-			continue;
-		}
+	auto overrideMaterial = overrideEffect;
 
-		auto materialForThisBatch = it->GetShaderMaterialInterface();
-		auto shaderForThisBatch = it->GetShaderStateInterface();
-
-		if( !shaderForThisBatch )
-		{
-			continue;
-		}
-
+	auto RenderBatch = [&]( auto& batch ) {
 		uint32_t technique;
-		if( !shaderForThisBatch->GetTechniqueIndex( techniqueName, technique ) )
+		if( !batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
 		{
-			continue;
-		}
-		if( shaderForThisBatch->GetPassCount( technique ) == 0 )
-		{
-			continue;
+			return;
 		}
 
-		// Setting render states appropriate to this batch (e.g. wireframe)
-		m_esm.ApplyStandardStates( it->GetRenderingMode() );
+		m_esm.ApplyStandardStates( batch.m_renderingMode );
 
-		Tr2RenderContext *renderContext = reinterpret_cast<Tr2RenderContext*>( this );
-
-		// Get the per-object data
-		const Tr2PerObjectData* perObjectData = it->GetPerObjectData();
-
-		uint32_t passCount = overrideShader->GetPassCount( 0 );
-
+		uint32_t passCount = overrideShader->GetPassCount( technique );
 		for( uint32_t passIx = 0; passIx < passCount; ++passIx )
 		{
-			D3DPERF_EVENT1(L"Pass %i", passIx);
+			D3DPERF_EVENT1( L"Pass %i", passIx );
 
-			shaderForThisBatch->ApplyShaderOverride( technique, 0, *overrideShader, passIx, *renderContext );
+			auto program = batch.m_shader->ApplyShaderOverride( technique, 0, *overrideShader, passIx, *renderContext );
+			batch.m_material->ApplyMaterialDataForPassWithOverride( technique, 0, program, *renderContext );
+			overrideShader->ApplyRenderStates( 0, passIx, *renderContext );
 
-			materialForThisBatch->ApplyMaterialDataForPass( technique, 0, *renderContext );
-
-			if( mode != TriRenderBatch::DO_NOT_USE_OVERRIDE_SHADERS )
+			if( batch.m_objectData )
 			{
-				overrideShader->ApplyRenderStates( 0, passIx, *renderContext );
-			}
-			else
-			{
-				shaderForThisBatch->ApplyRenderStates( technique, passIx, *renderContext );
+				batch.m_objectData->SetPerObjectDataToDevice( perObjectConstantBuffers, overrideShader->GetShaderTypeMask( 0 ), *renderContext );
 			}
 
+			Tr2GpuProfiler::GetProfiler().Begin( batch.m_material, GetPassName( passIx ), *renderContext );
 
-			// Apply per-object data
-			//------------------------
-			// NOTE: it's necessary to set per-object data *after* applying constants
-			// and samplers from the effect, because the effect can stomp on the per-object
-			// data in some cases.
-			//
-			// TODO: ensure that the per-object data can be set outside of the pass loop (optimization)
-			// without the effect interfering with per-object parameters and data
-			// <delder> 18-11-2009
-			//
-			if( perObjectData )
-			{
-				D3DPERF_EVENT(L"Tr2RenderContextBase::RenderBatchesWithOverride - SetPerObjectDataToDevice");
-				perObjectData->SetPerObjectDataToDevice( perObjectConstantBuffers, overrideShader->GetShaderTypeMask( 0 ), *renderContext );
-			}
+			SubmitGeometry( batch, *renderContext );
 
-			Tr2GpuProfiler::GetProfiler().Begin( materialForThisBatch, GetPassName( passIx ), *renderContext );
-			it->SubmitGeometry( *renderContext );
 			Tr2GpuProfiler::GetProfiler().End( *renderContext );
 
 			CCP_STATS_INC( batchCount );
 		}
+	};
+
+	for( auto& batch : batches->GetGdprBatches() )
+	{
+		RenderBatch( batch );
+	}
+	for( auto& batch : batches->GetBatches() )
+	{
+		RenderBatch( batch );
 	}
 }
 
 void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	D3DPERF_EVENT(L"Tr2EffectStateManager::RenderBatchesForPicking");
+	D3DPERF_EVENT( L"Tr2EffectStateManager::RenderBatchesForPicking" );
 
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
+
+
+	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
+	UseTextures( batches, techniqueName, *renderContext );
 
 	const Tr2PerObjectData* curPerObjectData = nullptr;
 
-	Tr2ConstantBufferAL*	perObjectConstantBuffers[CBUFFER_COUNT];
+	Tr2ConstantBufferAL* perObjectConstantBuffers[CBUFFER_COUNT];
 	for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
 	{
 		perObjectConstantBuffers[i] = &m_perObjectConstantBuffers[i];
 	}
 
-	Tr2RenderContext *renderContext = reinterpret_cast<Tr2RenderContext*>( this );
-
-	for( TriRenderBatch* it = batches->GetFirstBatch(); it != nullptr; it = it->GetNext() )
+	for( auto& batch : batches->GetBatches() )
 	{
-		auto material = it->GetShaderMaterialInterface();
-
-		if( !material )
-		{
-			continue;
-		}
-
-		auto shader = it->GetShaderStateInterface();
-
-		if( !shader )
-		{
-			continue;
-		}
-
-		const Tr2PerObjectData* perObjectData = it->GetPerObjectData();
-
 		uint32_t technique;
-		if( !shader->GetTechniqueIndex( techniqueName, technique ) )
+		if( !batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
 		{
 			continue;
 		}
 
-		if( perObjectData )
+		if( batch.m_objectData )
 		{
-			if( perObjectData != curPerObjectData )
+			if( batch.m_objectData != curPerObjectData )
 			{
-				D3DPERF_EVENT(L"Set per-object data to device");
-				perObjectData->SetPerObjectDataToDevice( perObjectConstantBuffers, shader->GetShaderTypeMask( technique ), *renderContext );
-				curPerObjectData = perObjectData;
+				D3DPERF_EVENT( L"Set per-object data to device" );
+				batch.m_objectData->SetPerObjectDataToDevice( perObjectConstantBuffers, batch.m_shader->GetShaderTypeMask( technique ), *renderContext );
+				curPerObjectData = batch.m_objectData;
 			}
 
-			uint32_t id = perObjectData->GetUserData();
+			uint32_t id = batch.m_objectData->GetUserData();
 			if( m_objectIdVariable )
 			{
 				m_objectIdVariable->SetValue( (float)id );
 			}
 
-			uint32_t areaID = it->GetPickingData();
+			uint32_t areaID = batch.m_pickingData;
 			if( m_areaIdVariable )
 			{
 				m_areaIdVariable->SetValue( (float)areaID );
 			}
 		}
 
-		uint32_t passCount = shader->GetPassCount( technique );
+		uint32_t passCount = batch.m_shader->GetPassCount( technique );
 		CCP_ASSERT( passCount == 1 );
 
-		shader->ApplyAllStateForPass( technique, 0, *renderContext );
-		material->ApplyMaterialDataForPass( technique, 0, *renderContext );
-		Tr2GpuProfiler::GetProfiler().Begin( material, "", *renderContext );
-		it->SubmitGeometry( *renderContext );
+		batch.m_shader->ApplyAllStateForPass( technique, 0, *renderContext );
+		batch.m_material->ApplyMaterialDataForPass( technique, 0, *renderContext );
+		Tr2GpuProfiler::GetProfiler().Begin( batch.m_material, "", *renderContext );
+		SubmitGeometry( batch, *renderContext );
 		Tr2GpuProfiler::GetProfiler().End( *renderContext );
 
 		CCP_STATS_INC( batchCount );
-
 	}
 }

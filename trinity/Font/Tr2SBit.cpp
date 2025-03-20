@@ -25,39 +25,59 @@ Tr2SBitWrapper::~Tr2SBitWrapper()
 }
 
 #if BLUE_WITH_PYTHON
-bool GetBuf(void **buffer, int *bufLen, PyObject *arrayO)
+
+#if PY_MAJOR_VERSION == 2
+static bool GetBuf( void** buffer, PyObject* arrayO )
 {
 	//Get destination buffer interface
-	PyBufferProcs *bp = arrayO->ob_type->tp_as_buffer;
-	if (!bp || !bp->bf_getwritebuffer)
+	PyBufferProcs* bp = arrayO->ob_type->tp_as_buffer;
+	if( !bp || !bp->bf_getwritebuffer )
 	{
 		PyErr_SetString( PyExc_TypeError, "destination must support buffer interface" );
 		return false;
 	}
-	*bufLen = (int)(bp->bf_getwritebuffer)(arrayO, 0, buffer);
-	return *bufLen != -1;
+	auto bufLen = ( bp->bf_getwritebuffer )( arrayO, 0, buffer );
+	return bufLen != -1;
 }
+#endif
 
-void Tr2SBitWrapper::ToBuffer( PyObject* dest, int width, int height, int pitch, int x, int y, uint32_t color )
+void Tr2SBitWrapper::ToBuffer( PyObject* dest, int width, int height, int pitch, int x, int y, int32_t color )
 {
-	void *destPtr;
-	int destLen;
-	if( !GetBuf(&destPtr, &destLen, dest) )
+	void* data = nullptr;
+#if PY_MAJOR_VERSION == 2
+	if ( !GetBuf( &data, dest ) )
 	{
 		return;
 	}
-
-	SBit_To_RGBABuffer( destPtr, width, height, pitch, sbit, x, y, color );
+#else
+    Py_buffer buf;
+    if(PyObject_GetBuffer(dest, &buf, PyBUF_SIMPLE) == -1)
+    {
+        return;
+    }
+	ON_BLOCK_EXIT( [&] { PyBuffer_Release( &buf ); } );
+	data = buf.buf;
+#endif
+	SBit_To_RGBABuffer( data, width, height, pitch, sbit, x, y, color );
 }
 
-void Tr2SBitWrapper::ToBufferWithUnderline( PyObject* dest, int width, int height, int pitch, int x, int y, uint32_t color, int extraSpace )
+void Tr2SBitWrapper::ToBufferWithUnderline( PyObject* dest, int width, int height, int pitch, int x, int y, int32_t color, int extraSpace )
 {
-	void *destPtr;
-	int destLen;
-	if( !GetBuf(&destPtr, &destLen, dest) )
+	void* data = nullptr;
+#if PY_MAJOR_VERSION == 2
+	if( !GetBuf( &data, dest ) )
 	{
 		return;
 	}
+#else
+	Py_buffer buf;
+    if(PyObject_GetBuffer(dest, &buf, PyBUF_SIMPLE) == -1)
+    {
+        return;
+    }
+	ON_BLOCK_EXIT( [&] { PyBuffer_Release( &buf ); } );
+	data = buf.buf;
+#endif
 
 	FT_Face face = g_fontManager->LookupFace( faceId );
 
@@ -68,12 +88,11 @@ void Tr2SBitWrapper::ToBufferWithUnderline( PyObject* dest, int width, int heigh
 		underlineThickness = 1;
 	}
 
-	SBit_To_RGBABuffer( 
-		destPtr, width, height, pitch, 
+	SBit_To_RGBABuffer(
+		data, width, height, pitch,
 		sbit, x, y, color );
 	Underline_To_RGBABuffer( 
-		destPtr, width, height, pitch, 
+		data, width, height, pitch,
 		x, y + underlinePosition, sbit->xadvance + extraSpace, underlineThickness, color );
 }
 #endif
-

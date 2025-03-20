@@ -4,6 +4,9 @@
 
 #include "../include/Tr2ResourceSetAL.h"
 #include "MetalContext.h"
+#include "../include/Tr2RtPipelineStateAL.h"
+#include "../include/Tr2ShaderProgramAL.h"
+
 
 namespace TrinityALImpl
 {
@@ -15,7 +18,8 @@ namespace TrinityALImpl
 		~Tr2ResourceSetAL();
 
 		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
-		bool IsValid() const;
+        ALResult Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+        bool IsValid() const;
 
 		void Destroy();
 		Tr2ALMemoryType GetMemoryClass() const;
@@ -28,6 +32,7 @@ namespace TrinityALImpl
 		id<MTLSamplerState> m_samplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 
 		uint32_t m_buffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
+        uint32_t m_heapViewMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		NSRange m_texturesRange[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		NSRange m_samplersRange[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		std::string m_name;
@@ -35,6 +40,7 @@ namespace TrinityALImpl
 		bool m_isValid;
 
 		friend class ::Tr2RenderContextAL;
+        friend class ::Tr2RtPipelineStateAL;
 	};
 }
 

@@ -3,6 +3,8 @@
 #ifndef Tr2EffectDescription_H
 #define Tr2EffectDescription_H
 
+#include "../Tr2IndirectDrawBuffer.h"
+
 extern const BlueSharedString DEFAULT_TECHNIQUE;
 extern const BlueSharedString ANY_TECHNIQUE;
 
@@ -85,11 +87,14 @@ struct Tr2EffectResource
 		UAV_RWSTRUCTURED_WITH_COUNTER,
 	};
 
+	static const int BINDLESS_SAMPLER = 100;
+
 	// Texture name (string is managed by the owner of string table: Tr2EffectRes or
 	// Tr2HighLevelShader)
 	const char* name;
 	// Texture type
 	Type type;
+	uint32_t arrayElements;
 	// Is texture requested to be converted from sRGB to linear
 	bool isSRGB;
 	// Autoregister annotation value
@@ -196,7 +201,30 @@ struct Tr2Pass
 	unsigned int shaderTypeMask;
 	unsigned int shaderProgram;
 	Tr2ResourceSetDescriptionAL resourceSetDesc;
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
+	Tr2IndirectDrawBufferLayout indirectLayout;
+#endif
 };
+
+struct Tr2EffectLibrary
+{
+	uint32_t payloadSize;
+	uint32_t libraryHandle;
+
+	BlueSharedStringW rayGenName;
+	BlueSharedStringW missName;
+	BlueSharedStringW closestHitName;
+	BlueSharedStringW anyHitName;
+	BlueSharedStringW intersectionName;
+	BlueSharedStringW hitGroupName;
+
+	Tr2EffectStageInput globalInput;
+	Tr2EffectStageInput localInput;
+	Tr2ResourceSetDescriptionAL globalResourceSetDesc;
+	Tr2ResourceSetDescriptionAL localResourceSetDesc;
+};
+
 
 struct Tr2EffectTechnique
 {
@@ -208,6 +236,7 @@ struct Tr2EffectTechnique
 
 	BlueSharedString name;
 	TrackableStdVector<Tr2Pass> passes;
+	std::vector<Tr2EffectLibrary> libraries;
 	unsigned int shaderTypeMask;
 };
 
@@ -241,5 +270,9 @@ struct Tr2ShaderOption
 	BlueSharedString name;
 	BlueSharedString value;
 };
+
+
+const Tr2SamplerSetupMap::value_type* FindSamplerByName( const Tr2SamplerSetupMap& samplerMap, const char* name );
+
 
 #endif //Tr2EffectDescription_H

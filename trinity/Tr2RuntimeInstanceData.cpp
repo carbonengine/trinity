@@ -9,6 +9,7 @@
 #include "Utilities/BoundingBox.h"
 #include "Particle/Tr2ParticleSystem.h"
 #include "Tr2VertexDefinitionUtilities.h"
+#include "Resources/TriGeometryRes.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -145,7 +146,7 @@ bool Tr2RuntimeInstanceData::OnPrepareResources()
 		if( !m_vb.IsValid() )
 		{
 			USE_MAIN_THREAD_RENDER_CONTEXT();
-			auto hr = m_vb.Create( m_stride, m_count, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE, m_data.get(), renderContext );
+			auto hr = g_sharedBuffer.Allocate( m_stride, m_count, m_data.get(), renderContext, m_vb );
 			if( FAILED( hr ) )
 			{
 				return false;
@@ -175,7 +176,7 @@ bool Tr2RuntimeInstanceData::IsInstanceDataReady() const
 ITr2InstanceData::InstanceData Tr2RuntimeInstanceData::GetInstanceData( unsigned int bufferIndex, float screenSize ) const
 {
 	return {
-		m_vb, m_stride, m_count
+		m_vb.GetBuffer(), m_vb.GetOffset(), m_stride, m_count
 	};
 }
 
@@ -208,7 +209,7 @@ CcpMath::AxisAlignedBox Tr2RuntimeInstanceData::GetInstanceBufferBoundingBox( un
 // --------------------------------------------------------------------------------------
 Tr2BufferAL* Tr2RuntimeInstanceData::GetGpuBuffer( unsigned bufferIndex )
 {
-	return &m_vb;
+	return &m_vb.GetBuffer();
 }
 
 // --------------------------------------------------------------------------------------
@@ -290,7 +291,7 @@ unsigned Tr2RuntimeInstanceData::GetCount() const
 void Tr2RuntimeInstanceData::SetLayout( const Tr2VertexDefinition& layout )
 {
 	m_data.reset();
-	m_vb = Tr2BufferAL();
+	g_sharedBuffer.Free( m_vb );
 	m_stride = 0;
 	m_count = 0;
 	for( auto it = layout.m_items.begin(); it != layout.m_items.end(); ++it )
@@ -345,7 +346,7 @@ void* Tr2RuntimeInstanceData::GetData( unsigned count )
 		if( m_stride && m_count )
 		{
 			m_data.reset( new char[m_stride * m_count] );
-			m_vb = Tr2BufferAL();
+			g_sharedBuffer.Free( m_vb );
 		}
 		else
 		{
@@ -379,12 +380,7 @@ void Tr2RuntimeInstanceData::UpdateData()
 	if( m_vb.IsValid() )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		char* data;
-		if( SUCCEEDED( m_vb.MapForWriting( data, renderContext ) ) )
-		{
-			memcpy( data, m_data.get(), m_count * m_stride );
-			m_vb.UnmapForWriting( renderContext );
-		}
+		m_vb.Update( m_data.get(), renderContext );
 	}
 
 	if( !m_vb.IsValid() )
@@ -449,7 +445,7 @@ void Tr2RuntimeInstanceData::SetBoundingBox( const CcpMath::AxisAlignedBox& aabb
 // --------------------------------------------------------------------------------------
 void Tr2RuntimeInstanceData::DestroyData()
 {
-	m_vb = Tr2BufferAL();
+	g_sharedBuffer.Free( m_vb );
 	m_data.reset();
 	m_count = 0;
 }

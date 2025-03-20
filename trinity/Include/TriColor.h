@@ -3,7 +3,7 @@
 
 	TriColor.h
 
-	Author:    Hilmar Veigar Pétursson
+	Author:    Hilmar Veigar PÃ©tursson
 	Created:   November 2000
 	OS:        Win32
 	Project:   Trinity
@@ -124,7 +124,7 @@ public:
 	void PySetVector( ITriVector* vector, float alpha );
 	Vector3 PyGetHSV();
 	void PyFromInt( int color );
-	uint32_t PyAsInt();
+	int32_t PyAsInt();
 	PyObject* PyAdd( PyObject* args );	
 	PyObject* PyLerp( PyObject* args );
 };

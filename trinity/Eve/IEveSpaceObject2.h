@@ -2,6 +2,7 @@
 #define IEveSpaceObject2_H
 
 #include "EveLODHelper.h"
+#include "Eve/EveUpdateContext.h"
 
 struct ITr2Renderable;
 struct ViewDistanceInfo;
@@ -14,7 +15,6 @@ class Tr2QuadRenderer;
 class Tr2LightManager;
 class Tr2ImpostorManager;
 
-
 BLUE_INTERFACE( IEveSpaceObject2 ) : public IRoot
 {
 
@@ -24,13 +24,17 @@ BLUE_INTERFACE( IEveSpaceObject2 ) : public IRoot
 		Matrix transform;
 		uint32_t killCount;
 		Vector4 shipData;
-		Vector4 clipData;
+		Vector3 clipSphereCenter;
+		float clipRadiusSq;
+		float clipRadius2Sq;
+		float clipFactor;
+		float clipFactor2;
 		const Vector4* shLighting;
 	};
 
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext ) = 0;
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext ) = 0;
-	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) = 0;
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext ) = 0;
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext ) = 0;
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) = 0;
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) = 0;
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const = 0;
 

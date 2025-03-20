@@ -10,7 +10,6 @@
 #include "include/ITr2DebugRenderer2.h"
 
 BLUE_DECLARE( EvePlanet );
-BLUE_DECLARE( EveUpdateContext );
 BLUE_DECLARE_VECTOR( EvePlanet );
 BLUE_DECLARE( EveTransform ); 
 BLUE_DECLARE( Tr2ExternalParameter );
@@ -21,6 +20,8 @@ BLUE_DECLARE_VECTOR( IWorldPosition );
 class TriFrustum;
 struct ITr2Renderable;
 struct ViewDistanceInfo;
+class EveUpdateContext;
+
 
 BLUE_CLASS( EvePlanet ):
 	public EveEffectRoot2
@@ -30,9 +31,9 @@ public:
     EvePlanet( IRoot* lockobj = NULL );
 	~EvePlanet();
 
-	void UpdatePlanetSyncronous( EveUpdateContext& updateContext, float renderScale );
-	void UpdatePlanetVisibility( const TriFrustum& frustum, float renderScale );
-	void UpdateZOnlyVisibility( const TriFrustum& frustum );
+	void UpdatePlanetSyncronous( const EveUpdateContext & updateContext, float renderScale );
+	void UpdatePlanetVisibility( const EveUpdateContext& updateContext, float renderScale );
+	void UpdateZOnlyVisibility( const EveUpdateContext& updateContext );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables);
 	void GetZOnlyRenderables( std::vector<ITr2Renderable*>& renderables );
 	
@@ -51,7 +52,7 @@ public:
 	// ITr2SecondaryLightSource
 	virtual void RegisterSecondaryLightSource( Tr2ShLightingManager& );
 	virtual void UnregisterSecondaryLightSource( Tr2ShLightingManager& );
-	void UpdateEffectChildren( EveUpdateContext& updateContext, Matrix& worldTransform, float renderScale );
+	void UpdateEffectChildren( const EveUpdateContext& updateContext, Matrix& worldTransform, float renderScale );
 
 	// ITriTargetable
 	unsigned int GetDamageLocatorCount() const;

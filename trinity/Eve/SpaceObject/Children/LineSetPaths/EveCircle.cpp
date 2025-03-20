@@ -60,7 +60,7 @@ bool EveCircle::OnModified( Be::Var* value )
 	return true;
 }
 
-bool EveCircle::Update( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+bool EveCircle::Update( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( m_movementSpeed != 0 )
 	{

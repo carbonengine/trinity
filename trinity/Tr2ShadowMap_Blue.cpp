@@ -10,12 +10,6 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE(
-			"shadowQuality",
-			m_quality,
-			"Shadow quality",
-			Be::READWRITE | Be::NOTIFY )
-
-		MAP_ATTRIBUTE(
 			"size",
 			m_size,
 			"The size of the shadow map, is always quadric",
@@ -63,11 +57,6 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 			m_debugColorSplit,
 			"If enabled color pixels based on splits",
 			Be::READWRITE | Be::NOTIFY )
-
-		MAP_METHOD_AND_WRAP(
-			"SetNoShadow",
-			SetNoShadow,
-			"Set to disable shadows" )
 
 		MAP_ATTRIBUTE(
 			"SplitNr0",

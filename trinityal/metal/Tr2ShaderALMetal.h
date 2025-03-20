@@ -38,6 +38,8 @@ namespace TrinityALImpl
 		void SetNullShaderType( Tr2RenderContextEnum::ShaderType type );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+        
+        NSString* m_entryPointNameOverride = nullptr;
 
 	private:
 		Tr2ShaderSignatureAL m_signature;

@@ -3,7 +3,6 @@
 #define EVESPACEOBJECTDECAL_H
 
 
-#include "ITr2GeometryProvider.h"
 #include "ITr2Renderable.h"
 #include "Tr2PerObjectData.h"
 #include "TriRenderBatch.h"
@@ -11,6 +10,7 @@
 #include "Tr2ShLightingManager.h"
 #include "Tr2DebugRenderer.h"
 #include "Eve/IEveSpaceObject2.h"
+#include "Eve/EveUpdateContext.h"
 
 BLUE_DECLARE_INTERFACE( ITr2InstanceData );
 BLUE_DECLARE( Tr2Buffer );
@@ -20,6 +20,7 @@ BLUE_DECLARE( TriVariable );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2DebugRenderer );
 BLUE_DECLARE( Tr2InstancedMesh );
+BLUE_DECLARE( TriGeometryRes );
 
 struct DecalIndexBuffer
 {
@@ -41,6 +42,8 @@ struct DecalPSPerObjectData {
     Vector4 m_displayData;
     Vector4 m_shipData;
     Vector4 m_clipData;
+	float m_clipRadius2Sq;
+	Vector3 m_unused;
     Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 };
 
@@ -54,6 +57,7 @@ class EveDecalPerObjectData : public Tr2PerObjectData
 {
 public:
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// vs per object data
     DecalVSPerObjectData m_vsData;
@@ -67,7 +71,6 @@ public:
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveSpaceObjectDecal ) : 
 	public IInitialize,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public INotify,
 	public ITr2Pickable,
@@ -102,10 +105,6 @@ public:
 	virtual IRoot* GetID( uint16_t ) { return this->GetRawRoot(); }
 	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
 
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
-
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
@@ -117,7 +116,7 @@ public:
 	void CopyFrom( EveSpaceObjectDecal *object );
 
 	// access
-	void UpdateVisibility( const TriFrustum& frustum, const IEveSpaceObject2::ParentData* parentData );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, TriGeometryRes* geomRes, float screensize );
 	void GetInstancedRenderables( std::vector<ITr2Renderable*>& renderables, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
 
@@ -143,6 +142,8 @@ public:
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
 
 	void SetHighDetailDecalState( bool isFrozen );
+
+	void SetBatchType( TriBatchType batchType );
 
 private:
 	// create
@@ -186,11 +187,12 @@ private:
 
 	// new index buffers
 	std::vector<DecalIndexBuffer> m_indexBuffers;
-	Tr2BufferAL m_indexBuffer;
+	Tr2SuballocatedBuffer::Allocation m_indexBuffer;
 	bool m_rebuildIndexBuffers;
 	float m_isVisible;
 	float m_minScreenSize;
 	float m_instanceScreenSize;
+	TriBatchType m_batchType;
 
 	unsigned int m_vertexDeclarationOverride;
 	ITr2InstanceData* m_instanceData;

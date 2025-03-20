@@ -14,9 +14,6 @@
 #include "TriFrustum.h"
 
 
-extern float g_eveSpaceSceneLODFactor;
-
-
 namespace
 {
 	Tr2VertexDefinition& GetQuadDefinition()
@@ -49,7 +46,8 @@ EveChildQuad::EveChildQuad( IRoot* lockobj ):
 	m_minScreenSize( 0.f ),
 	m_currentScreenSize( -1 ),
 	m_display( true ),
-	m_editMode( false )
+	m_editMode( false ),
+	m_isVisible( false )
 {
 	memset( &m_quad, 0, sizeof( m_quad ) );
 }
@@ -102,22 +100,9 @@ void EveChildQuad::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 
 void EveChildQuad::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
 {
-	if( m_display && m_effect )
+	if( m_display && m_effect && m_isVisible )
 	{
-		Vector4 sphere = Vector4( 0.f, 0.f, 0.f, std::sqrt( 2.f ) );
-		BoundingSphereTransform( m_worldTransform, sphere );
-		if( frustum.IsSphereVisible( &sphere ) )
-		{
-			m_currentScreenSize = frustum.GetPixelSizeAccross( &sphere );
-			if( m_currentScreenSize >= m_minScreenSize * g_eveSpaceSceneLODFactor )
-			{
-				quadRenderer.AddQuads( m_effectKey, &m_quad, 1 );
-			}
-		}
-		else
-		{
-			m_currentScreenSize = -1;
-		}
+			quadRenderer.AddQuads( m_effectKey, &m_quad, 1 );
 	}
 }
 
@@ -149,7 +134,7 @@ float EveChildQuad::GetSortValue()
 }
 
 
-void EveChildQuad::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildQuad::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	if( m_editMode )
 	{
@@ -169,7 +154,7 @@ void EveChildQuad::UpdateSyncronous( EveUpdateContext& updateContext, const EveC
 	}
 }
 
-void EveChildQuad::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildQuad::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix parentTransform;
 	if( params.childParent )
@@ -199,6 +184,25 @@ void EveChildQuad::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 	m_quad.m_color[3] = Float_16( m_color.a );
 	m_quad.m_brightness[0] = Float_16( m_brightness );
 	m_quad.m_brightness[1] = Float_16( 0.f );
+}
+
+void EveChildQuad::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
+{
+	Vector4 sphere = Vector4( 0.f, 0.f, 0.f, std::sqrt( 2.f ) );
+	BoundingSphereTransform( m_worldTransform, sphere );
+
+	auto& frustum = updateContext.GetFrustum();
+
+	if( frustum.IsSphereVisible( &sphere ) )
+	{
+		m_currentScreenSize = frustum.GetPixelSizeAccross( &sphere );
+		m_isVisible = m_currentScreenSize >= m_minScreenSize * updateContext.GetLodFactor();
+	}
+	else
+	{
+		m_currentScreenSize = -1;
+		m_isVisible = false;
+	}
 }
 
 void EveChildQuad::GetLocalToWorldTransform( Matrix& transform ) const

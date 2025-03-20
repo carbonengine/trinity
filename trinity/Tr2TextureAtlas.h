@@ -63,6 +63,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2TextureProvider
 	Tr2TextureAL* GetTexture();
+	OnTextureChangeEvent& OnTextureChange() override;
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
@@ -133,6 +134,7 @@ private:
 	AreaList_t m_freeAreas;
 
 	Tr2TextureAL m_texture;
+	OnTextureChangeEvent m_onTextureChange;
 
 	Tr2RenderContextEnum::PixelFormat m_format;
 	unsigned int m_width;

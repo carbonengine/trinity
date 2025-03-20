@@ -6,14 +6,11 @@
 #include "ALLog.h"
 #include "Tr2RenderContextMetal.h"
 
-bool g_fullSizeConstantBuffers = false;
-
 namespace TrinityALImpl
 {
 	Tr2ConstantBufferAL::Tr2ConstantBufferAL()
 		: m_metalContext( nullptr ),
 		m_buffer( nullptr ),
-		m_lockTag( 0 ),
 		m_size( 0 )
 	{
 	}
@@ -41,7 +38,7 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 		
-		m_buffer = CCPAlignedMalloc( g_fullSizeConstantBuffers ? TRINITY_PLATFORM_MAX_CONSTANT_BUFFER_SIZE : size, 32 );
+		m_buffer = CCPAlignedMalloc( size, 32 );
 		if( !m_buffer )
 		{
 			return E_OUTOFMEMORY;
@@ -66,7 +63,7 @@ namespace TrinityALImpl
 		}
 
 		*data = m_buffer;
-		++m_lockTag;
+        m_token.Invalidate();
 		return S_OK;
 	}
 
@@ -83,7 +80,11 @@ namespace TrinityALImpl
 	{
 		if( m_buffer )
 		{
-			renderContext.GetMetalWorkQueue()->SetConstants( shaderType, m_buffer, g_fullSizeConstantBuffers ? TRINITY_PLATFORM_MAX_CONSTANT_BUFFER_SIZE : m_size, m_lockTag, METAL_CONST_BUFFER_OFFSET + constantIndex );
+			renderContext.GetMetalWorkQueue()->SetConstants( shaderType,
+                                                            m_buffer,
+                                                            m_size,
+                                                            m_token,
+                                                            METAL_CONST_BUFFER_OFFSET + constantIndex );
 		}
 
 		return S_OK;
@@ -103,6 +104,7 @@ namespace TrinityALImpl
 		m_metalContext = nullptr;
 		m_buffer = nullptr;
 		m_size = 0;
+        m_token.Reset();
 	}
 
 	uint32_t Tr2ConstantBufferAL::GetSize() const

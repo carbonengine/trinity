@@ -566,7 +566,23 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 					}
 					else
 					{
-						CCP_LOGWARN( "TriValueBinding: src float array size is bigger than dst, and not a matrix" );
+						switch( dstEntry->GetFloatArraySize() )
+						{
+						case 2:
+							m_copyFunc = CopyVector2;
+							dataSize = 8;
+							break;
+						case 3:
+							m_copyFunc = CopyVector3;
+							dataSize = 12;
+							break;
+						case 4:
+							m_copyFunc = CopyVector4;
+							dataSize = 16;
+							break;
+						default:
+							CCP_LOGWARN( "TriValueBinding: Float array size not handled" );
+						}
 					}
 				}
 			}

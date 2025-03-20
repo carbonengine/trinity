@@ -27,8 +27,6 @@ typedef uintptr_t Tr2WindowHandle;
 #define SHADER_PATH Shaders.DX11
 #elif( TRINITY_PLATFORM==TRINITY_DIRECTX12 )
 #define SHADER_PATH Shaders.DX12
-#elif( TRINITY_PLATFORM==TRINITY_VULKAN )
-#define SHADER_PATH Shaders.vulkan
 #elif( TRINITY_PLATFORM==TRINITY_METAL )
 #define SHADER_PATH Shaders.metal
 #else

@@ -11,6 +11,8 @@
 #import <Carbon/Carbon.h>
 #include <string>
 #include <cstdint>
+#include <map>
+#include <CCPLog.h>
 
 namespace
 {
@@ -151,7 +153,7 @@ const CGKeyCode s_ansiKeys[] = {
 
 CGKeyCode s_physicalToVirtual[0xff];
 CGKeyCode s_virtualToPhysical[0xff];
-char s_keyLabels[0xff];
+std::map<CGKeyCode, std::string> s_keyLabels;
 TISInputSourceRef s_activeKeyboard = nullptr;
 
 void ProcessKeyboardLayout()
@@ -174,8 +176,8 @@ void ProcessKeyboardLayout()
 	{
 		s_physicalToVirtual[keyCode] = CGKeyCode( keyCode );
 		s_virtualToPhysical[keyCode] = CGKeyCode( keyCode );
-		s_keyLabels[keyCode] = 0;
 	}
+	s_keyLabels.clear();
 	
 	if( CFDataRef layoutData = (CFDataRef)TISGetInputSourceProperty( currentKeyboard, kTISPropertyUnicodeKeyLayoutData ) )
 	{
@@ -207,7 +209,29 @@ void ProcessKeyboardLayout()
 					s_physicalToVirtual[keyCode] = CGKeyCode( key );
 					s_virtualToPhysical[key] = keyCode;
 				}
-				s_keyLabels[keyCode] = toupper( char( chars[0] ) );
+				NSString* str = [[NSString alloc] initWithCharacters:chars length:realLength];
+				if( !str )
+				{
+					CCP_LOGWARN( "ProcessKeyboardLayout: Failed to create string for character %u", keyCode );
+#if !__has_feature(objc_arc)
+					[str release];
+#endif
+					continue;
+				}
+				const char* utf8_str = [ [str localizedUppercaseString] UTF8String ];
+				if( !str )
+				{
+					CCP_LOGWARN( "ProcessKeyboardLayout: Failed to create utf-8 string for character %u", keyCode );
+#if !__has_feature(objc_arc)
+					[str release];
+#endif
+					continue;
+				}
+				s_keyLabels[keyCode] = std::string(utf8_str);
+
+#if !__has_feature(objc_arc)
+				[str release];
+#endif
 			}
 		}
 	}
@@ -233,9 +257,10 @@ CGKeyCode UnapplyKeyboardLayout( CGKeyCode keyCode )
 std::string CreateStringForKey( CGKeyCode keyCode )
 {
 	ProcessKeyboardLayout();
-	if( s_keyLabels[keyCode] )
+	auto it = s_keyLabels.find(keyCode);
+	if( it != s_keyLabels.end() )
 	{
-		return std::string( 1, s_keyLabels[keyCode] );
+		return it->second;
 	}
 	return "";
 }

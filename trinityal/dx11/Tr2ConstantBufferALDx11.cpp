@@ -171,8 +171,8 @@ namespace TrinityALImpl
 	void Tr2ConstantBufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ConstantBufferAL";
-		description["usage"] = std::to_string( long long( m_usage ) );
-		description["size"] = std::to_string( long long( m_size ) );
+		description["usage"] = std::to_string( int( m_usage ) );
+		description["size"] = std::to_string( m_size );
 		description["name"] = m_name;
 	}
 

@@ -295,7 +295,7 @@ void EveChildContainer::SetName( const char* name )
 	m_name = BlueSharedString( name );
 }
 
-void EveChildContainer::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
+void EveChildContainer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{
@@ -309,7 +309,7 @@ void EveChildContainer::UpdateVisibility( const TriFrustum& frustum, const Matri
 
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		( *it )->UpdateVisibility( frustum, parentTransform, parentLod );
+		( *it )->UpdateVisibility( updateContext, parentTransform, parentLod );
 	}
 
 	if( HasRenderables() )
@@ -323,7 +323,7 @@ void EveChildContainer::UpdateVisibility( const TriFrustum& frustum, const Matri
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
-			( *it )->UpdateVisibility( frustum, m_worldTransform, bones, boneCount);
+			( *it )->UpdateVisibility( updateContext, m_worldTransform, bones, boneCount);
 		}
 	}
 }
@@ -412,7 +412,7 @@ void EveChildContainer::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Qu
 	}	
 }
 
-void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildContainer::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( !IsUpdating() )
 	{
@@ -435,8 +435,10 @@ void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, const
 	}
 }
 
-void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildContainer::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
+	m_boneOffsets.AdvanceFrame();
+
 	if( !IsUpdating() )
 	{
 		return;
@@ -454,7 +456,7 @@ void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, cons
 	}
 }
 
-void EveChildContainer::DoUpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
@@ -496,7 +498,7 @@ void EveChildContainer::DoUpdateAsyncronous( EveUpdateContext& updateContext, co
 
 		// need to move the clipdata inversely of the translation of the childmesh
 		m_vsData.clipData = Vector4( m_vsData.clipData.GetXYZ() - m_translation, m_vsData.clipData.w );
-		m_psData.clipData = Vector4( m_psData.clipData.GetXYZ() - m_translation, m_psData.clipData.w );
+		m_psData.clipSphereCenter = m_psData.clipSphereCenter - m_translation;
 	}
 
 	m_activationStrength = params.activationStrength;
@@ -506,8 +508,12 @@ void EveChildContainer::DoUpdateAsyncronous( EveUpdateContext& updateContext, co
 		m_perObjectDataVs.InvalidateBufferData();
 		m_perObjectDataPs.InvalidateBufferData();
 		m_vsData.worldTransform = Transpose( m_worldTransform );
-		m_vsData.invWorldTransform = Transpose( Inverse( m_worldTransform ) );
+		m_vsData.invWorldTransform = Inverse( m_vsData.worldTransform );
 		m_vsData.worldTransformLast = Transpose( lastWorldTransform );
+
+		m_psData.worldTransform = m_vsData.worldTransform;
+		m_psData.worldTransformLast = m_vsData.worldTransformLast;
+		m_psData.invWorldTransform = m_vsData.invWorldTransform;
 	}
 	
 	EveChildUpdateParams newParams = params;
@@ -1060,14 +1066,7 @@ uint32_t EveChildContainer::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderTy
 {
 	if( shaderType == Tr2RenderContextEnum::VERTEX_SHADER )
 	{
-		int boneCount = 0;
-		if( m_animationOwner && m_animationOwner->GetAnimationController() && m_animationOwner->GetAnimationController()->IsInitialized() )
-		{
-			boneCount = m_animationOwner->GetAnimationController()->GetMeshBoneCount();
-		}
-
-		return sizeof( m_vsData ) +
-			boneCount * 3 * 16; // m_vsBonesMatrix (3x4)
+		return sizeof( m_vsData );
 	}
 	else if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER)
 	{
@@ -1080,28 +1079,29 @@ void EveChildContainer::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType 
 {
 	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
 	{
-		uint8_t* perObjectPS = (uint8_t*)data;
-		memcpy( perObjectPS, &m_psData, sizeof( m_psData ) );
+		memcpy( data, &m_psData, sizeof( m_psData ) );
 	}
 	else
 	{
-		uint8_t* perObjectVS = (uint8_t*)data;
-		memcpy( perObjectVS, &m_vsData, sizeof( m_vsData ) );
-		perObjectVS += sizeof( m_vsData );
-
-		size -= sizeof( m_vsData );
-		if( size )
-		{
-			if( m_animationOwner && m_animationOwner->GetAnimationController() && m_animationOwner->GetAnimationController()->IsInitialized() )
-			{
-				memcpy( perObjectVS, m_animationOwner->GetAnimationController()->GetMeshBoneMatrixList(), size );
-			}
-		}
+		memcpy( data, &m_vsData, sizeof( m_vsData ) );
 	}
 }
 
 Tr2PerObjectData* EveChildContainer::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
+	if( m_animationOwner )
+	{
+		auto animation = m_animationOwner->GetAnimationController();
+		if( animation && animation->IsInitialized() )
+		{
+			auto boneCount = uint32_t( animation->GetMeshBoneCount() );
+			m_vsData.boneOffsets[2] = boneCount;
+			m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( animation->GetMeshBoneMatrixList() ), boneCount );
+		}
+	}
+	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
+	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
+	
 	Tr2PerObjectDataWithPersistentBuffers<EveChildContainer>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildContainer>>();
 	if( !perObjectData )
 	{

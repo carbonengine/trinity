@@ -31,6 +31,9 @@ const Be::ClassInfo* Tr2TexturedPointLight::ExposeToBlue()
 		MAP_ATTRIBUTE( "texturePath", m_lightData.texturePath, ":jessica-group: Texture", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "texture", m_texture, ":jessica-group: Texture", Be::READ )
 
+		MAP_ATTRIBUTE_WITH_CHOOSER( "castsShadows", m_lightData.castsShadows, "Casts shadows. If the light is also volumetric, it will create godrays around the affected objects.", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, PerLightShadowSettingChooser );
+		MAP_ATTRIBUTE( "isVolumetric", m_lightData.isVolumetric, "Volumetric lights affect participating media such as fog.", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
+
 		MAP_ATTRIBUTE(
 			"lightProfilePath",
 			m_lightProfilePath,

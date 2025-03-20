@@ -35,9 +35,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext );
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
@@ -54,7 +54,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTranfrom
-	virtual void Update( EveUpdateContext& updateContext );
+	virtual void Update( const EveUpdateContext& updateContext );
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform ) {};
 	virtual Tr2Lod GetLODLevel() const { return m_lodLevel; }
 
@@ -65,7 +65,7 @@ public:
 	void SetDisplayDestObject( bool display ) { m_displayDestObject = display; }
 	void SetDisplaySourceObject( bool display ) { m_displaySourceObject = display; }
 
-	void UpdateCurves( EveUpdateContext& updateContext );
+	void UpdateCurves( const EveUpdateContext& updateContext );
 	void Start();
 
 	virtual void SetDisplay( bool display );
@@ -75,8 +75,8 @@ public:
 	virtual float GetCurveDuration();
 	virtual void StartFiring( float delay );
 	virtual void StopFiring();
-	virtual void UpdateEffectAsync( EveUpdateContext& updateContext ) override;
-	virtual void UpdateEffectSync( EveUpdateContext& updateContext ) override;
+	virtual void UpdateEffectAsync( const EveUpdateContext& updateContext ) override;
+	virtual void UpdateEffectSync( const EveUpdateContext& updateContext ) override;
 
 	virtual void SetFiringTransform( const Matrix& source, const Vector3& dest );
 	virtual void SetFiringTransform( const Vector3& source, const Vector3& dest );

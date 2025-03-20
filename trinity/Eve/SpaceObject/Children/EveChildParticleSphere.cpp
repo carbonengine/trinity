@@ -95,8 +95,9 @@ void EveChildParticleSphere::GetRenderables( std::vector<ITr2Renderable*>& rende
 }
 
 // -----------------------------------------------------------------------------
-void EveChildParticleSphere::UpdateVisibility( const TriFrustum& frustum, const Matrix&, Tr2Lod )
+void EveChildParticleSphere::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix&, Tr2Lod )
 {
+	auto& frustum = updateContext.GetFrustum();
 	auto isVisible = !( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) );
 	if( isVisible && m_particleSystem )
 	{
@@ -112,7 +113,7 @@ bool EveChildParticleSphere::GetBoundingSphere( Vector4& sphere, BoundingSphereQ
 }
 
 // -----------------------------------------------------------------------------
-void EveChildParticleSphere::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildParticleSphere::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	CheckBinding();
 
@@ -126,7 +127,7 @@ void EveChildParticleSphere::UpdateSyncronous( EveUpdateContext& updateContext, 
 }
 
 // -----------------------------------------------------------------------------
-void EveChildParticleSphere::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildParticleSphere::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix parent;
 	if( params.childParent )

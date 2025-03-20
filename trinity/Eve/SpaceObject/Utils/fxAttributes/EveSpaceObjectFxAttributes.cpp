@@ -22,7 +22,7 @@ EveSpaceObjectFxAttributes::~EveSpaceObjectFxAttributes()
 {
 }
 
-void EveSpaceObjectFxAttributes::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveSpaceObjectFxAttributes::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
     if (nullptr == params.spaceObjectParent)
     {

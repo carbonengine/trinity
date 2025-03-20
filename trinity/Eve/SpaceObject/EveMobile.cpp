@@ -117,7 +117,7 @@ void EveMobile::RegisterComponents()
 	{
 		for( auto& turretSet : m_turretSets )
 		{
-			turretSet->RegisterComponents();
+			turretSet->Register( registry );
 		}
 	}
 }
@@ -154,7 +154,7 @@ const Matrix* EveMobile::GetTurretTransform( unsigned int turretSetIndex ) const
 //   Override base ::UpdateSyncronous() function, so we can update the turrets and
 //   their positions (if they are attached to animated bones!)
 // --------------------------------------------------------------------------------
-void EveMobile::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveMobile::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	EveSpaceObject2::UpdateSyncronous( updateContext );
 
@@ -206,14 +206,14 @@ void EveMobile::UpdateSyncronous( EveUpdateContext& updateContext )
 // Description:
 //   Override base ::PrepareShaderData() function
 // --------------------------------------------------------------------------------
-void EveMobile::PrepareShaderData( EveUpdateContext& updateContext )
+void EveMobile::PrepareShaderData( const EveUpdateContext& updateContext )
 {
 	EveSpaceObject2::PrepareShaderData( updateContext );
 
 	m_spaceObjectShipData.y *= m_activationStrength;
 }
 
-void EveMobile::UpdateTurretsAsyncronous( EveUpdateContext& updateContext )
+void EveMobile::UpdateTurretsAsyncronous( const EveUpdateContext& updateContext )
 {
 	// now prep to get the renderables
 	IEveSpaceObject2::ParentData pd;
@@ -221,8 +221,11 @@ void EveMobile::UpdateTurretsAsyncronous( EveUpdateContext& updateContext )
 
 	pd.transform = *GetTurretTransform( 0 );
 	pd.shipData = m_spaceObjectShipData;
-	pd.clipData = m_psData.clipData;
-	pd.clipData.x = m_clipSphereFactor;
+	pd.clipSphereCenter = m_psData.clipSphereCenter;
+	pd.clipRadiusSq = m_psData.clipRadiusSq;
+	pd.clipRadius2Sq = m_psData.clipRadius2Sq;
+	pd.clipFactor = m_psData.clipSphereFactor;
+	pd.clipFactor2 = m_psData.clipSphereFactor2;
 
 	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
@@ -249,16 +252,16 @@ void EveMobile::SetShaderOption( const BlueSharedString& name, const BlueSharedS
 //   Override base ::UpdateAsyncronous() function, so we can update the turrets and
 //   their positions (if they are attached to animated bones!)
 // --------------------------------------------------------------------------------
-void EveMobile::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveMobile::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 	EveSpaceObject2::UpdateAsyncronous( updateContext );
 	UpdateTurretsAsyncronous( updateContext );
 }
 
-void EveMobile::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveMobile::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	// call base to get spaceobject's renderables
-	EveSpaceObject2::UpdateVisibility( frustum, parentTransform );
+	EveSpaceObject2::UpdateVisibility( updateContext, parentTransform );
 
 	if( !m_display )
 	{
@@ -268,7 +271,7 @@ void EveMobile::UpdateVisibility( const TriFrustum& frustum, const Matrix& paren
 	// collect renderables of the turrets
 	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
-		( *it )->UpdateVisibility( frustum );
+		( *it )->UpdateVisibility( updateContext );
 	}
 }
 // --------------------------------------------------------------------------------
@@ -536,7 +539,7 @@ void EveMobile::RebuildTurretPositions()
 			}
 		}
 
-		if( m_clipSphereFactor != 0 )
+		if( m_clipSphereFactor != 0 || m_clipSphereFactor2 != 0 )
 		{
 			( *it )->SetShaderOption( BlueSharedString( "SPACE_OBJECT_CLIPPING" ), BlueSharedString( "SOC_ENABLED" ) );
 		}

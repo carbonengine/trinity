@@ -68,49 +68,113 @@ void Tr2GrannyDeallocate( const char* file, granny_int32x line, void* memory )
 }
 
 #if BLUE_WITH_PYTHON
+
+#if PY_MAJOR_VERSION == 2
 const char* InitializeForPython()
 {
-	const PyMethodDef dummyMethods[] = {0};
+	const PyMethodDef dummyMethods[] = { 0 };
 
 	// put myself into python as a module
-	PyObject* module = Py_InitModule( CCP_STRINGIZE( CCP_CONCATENATE( TRINITYNAME, CCP_BUILD_FLAVOR ) ), (PyMethodDef*)dummyMethods);
-	PyObject* dict = PyModule_GetDict(module);
+	PyObject* module = Py_InitModule( CCP_STRINGIZE( CCP_CONCATENATE( TRINITYNAME, CCP_BUILD_FLAVOR ) ), (PyMethodDef*)dummyMethods );
+	PyObject* dict = PyModule_GetDict( module );
 
 	// constants
-	AddTriConstants(dict);
+	AddTriConstants( dict );
 
 	// put UI into python as a separate module
-	PyObject* uiModule = Py_InitModule("triui", (PyMethodDef*)dummyMethods);
-	PyObject* uiDict = PyModule_GetDict(uiModule);
+	PyObject* uiModule = Py_InitModule( "triui", (PyMethodDef*)dummyMethods );
+	PyObject* uiDict = PyModule_GetDict( uiModule );
 
-	AddScancodesToDict(uiDict);
-	AddUIChoosersToDict(uiDict);
+	AddScancodesToDict( uiDict );
+	AddUIChoosersToDict( uiDict );
 
-	BLUE_REGISTER_THUNKER(ITriScalarFunction_Thunk::Defs(), ITriScalarFunction_Thunk::IID());
-	BLUE_REGISTER_THUNKER(ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID());
-	BLUE_REGISTER_THUNKER(ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID());
-	BLUE_REGISTER_THUNKER(ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID());
+	BLUE_REGISTER_THUNKER( ITriScalarFunction_Thunk::Defs(), ITriScalarFunction_Thunk::IID() );
+	BLUE_REGISTER_THUNKER( ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID() );
+	BLUE_REGISTER_THUNKER( ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID() );
+	BLUE_REGISTER_THUNKER( ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID() );
 
-	BlueRegisterToModule( module, BlueRegistration::GetClassRegs(), 
-						  BlueRegistration::GetFuncRegs(),
-						  BlueRegistration::GetEnumRegs(),
-						  BlueRegistration::GetTestRegs(),
-						  BlueRegistration::GetThunkerRegs(),
-						  BlueRegistration::GetFuncSignatures() );
+	BlueRegisterToModule( module, BlueRegistration::GetClassRegs(), BlueRegistration::GetFuncRegs(), BlueRegistration::GetEnumRegs(), BlueRegistration::GetTestRegs(), BlueRegistration::GetThunkerRegs(), BlueRegistration::GetFuncSignatures() );
 
 	BlueRegisterObjectsToModule( module, BlueRegistration::GetObjectRegs() );
 	BlueRegisterExceptionsToModule( module, BlueRegistration::GetExceptionRegs() );
 
-	PyModule_AddObject( module, "settings", BlueWrapObjectForPython(&Tr2Renderer::GetSettings()) );
+	PyModule_AddObject( module, "settings", BlueWrapObjectForPython( &Tr2Renderer::GetSettings() ) );
 	PyModule_AddObject( module, "fontMan", BlueWrapObjectForPython( g_fontManager ) );
 
 	return NULL;
 }
+#else
+PyObject* InitializeForPython()
+{
+	static PyMethodDef dummyMethods[] = {0};
+
+	// put myself into python as a module
+    static struct PyModuleDef trinityDef = {
+        PyModuleDef_HEAD_INIT,
+        CCP_STRINGIZE( CCP_CONCATENATE( TRINITYNAME, CCP_BUILD_FLAVOR ) ),
+        "",
+        -1,
+        dummyMethods
+    };
+	PyObject* module = PyModule_Create(&trinityDef);
+    if ( module ) {
+        PyObject* dict = PyModule_GetDict(module);
+
+        // constants
+        AddTriConstants(dict);
+
+        // put UI into python as a separate module
+        static struct PyModuleDef triuiDef = {
+            PyModuleDef_HEAD_INIT,
+            "triui",
+            "",
+            -1,
+            dummyMethods
+        };
+        PyObject* uiModule = PyModule_Create(&triuiDef);
+        PyObject* uiDict = PyModule_GetDict(uiModule);
+
+        AddScancodesToDict(uiDict);
+        AddUIChoosersToDict(uiDict);
+
+        PyObject* sys_modules = PyImport_GetModuleDict();
+        if( PyDict_SetItemString( sys_modules, triuiDef.m_name, uiModule ) != 0 )
+        {
+            return nullptr;
+        }
+
+        BLUE_REGISTER_THUNKER(ITriScalarFunction_Thunk::Defs(), ITriScalarFunction_Thunk::IID());
+        BLUE_REGISTER_THUNKER(ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID());
+        BLUE_REGISTER_THUNKER(ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID());
+        BLUE_REGISTER_THUNKER(ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID());
+
+        BlueRegisterToModule( module, BlueRegistration::GetClassRegs(),
+                              BlueRegistration::GetFuncRegs(),
+                              BlueRegistration::GetEnumRegs(),
+                              BlueRegistration::GetTestRegs(),
+                              BlueRegistration::GetThunkerRegs(),
+                              BlueRegistration::GetFuncSignatures() );
+
+        BlueRegisterObjectsToModule( module, BlueRegistration::GetObjectRegs() );
+        BlueRegisterExceptionsToModule( module, BlueRegistration::GetExceptionRegs() );
+
+        PyModule_AddObject( module, "settings", BlueWrapObjectForPython(&Tr2Renderer::GetSettings()) );
+        PyModule_AddObject( module, "fontMan", BlueWrapObjectForPython( g_fontManager ) );
+
+    }
+
+	return module;
+}
+#endif
 #endif
 
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 extern bool g_gpuTimersEnabled;
+bool g_bindlessRenderingEnabled = true;
+TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
+extern bool g_gdrEnabled;
+extern bool g_upscalingDebug;
 
 #if TRINITY_PLATFORM == TRINITY_METAL
 extern bool g_enableMetalCounters;
@@ -128,17 +192,6 @@ void InitializeTrinity()
 	if( auto type = getenv( "METAL_DEVICE_WRAPPER_TYPE" ) )
 	{
 		isUsingMetalValidation = strcmp( type, "0" ) != 0;
-	}
-
-	extern bool g_fullSizeConstantBuffers;
-	g_fullSizeConstantBuffers = BeOS->HasStartupArg( L"fullcb" );
-	if( isUsingMetalValidation )
-	{
-		g_fullSizeConstantBuffers = true;
-	}
-	if( g_fullSizeConstantBuffers )
-	{
-		CCP_LOGNOTICE( "trinity is using full constant buffer uploads to bypass graphics validation issues" );
 	}
 #endif
 
@@ -169,6 +222,12 @@ void InitializeTrinity()
 		CCP_LOGNOTICE( "trinity is not using parallel encoding" );
 	}
 #endif
+
+	auto upsclingDebugArg = BeOS->GetStartupArgValue( L"upscalingDebug" );
+	if( !upsclingDebugArg.empty() )
+	{
+		g_upscalingDebug = upsclingDebugArg == L"1";
+	}
 	
 	auto debugArg = BeOS->GetStartupArgValue( L"deviceDebug" );
 	if( !debugArg.empty() )
@@ -188,6 +247,18 @@ void InitializeTrinity()
 		g_gpuTimersEnabled = timers != L"0";
 	}
 
+	auto bindlessRendering = BeOS->GetStartupArgValue( L"bindlessRendering" );
+	if( !bindlessRendering.empty() )
+	{
+		g_bindlessRenderingEnabled = bindlessRendering != L"0";
+	}
+
+	auto gdpr = BeOS->GetStartupArgValue( L"gdpr" );
+	if( !gdpr.empty() )
+	{
+		g_gdrEnabled = gdpr != L"0";
+	}
+    
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
 
 	Tr2FontManager::Initialize();
@@ -211,18 +282,27 @@ static void StartDLL()
 //--------------------------------------------------------------------
 // inittrinity - python dll module entry function
 //--------------------------------------------------------------------
+#if PY_MAJOR_VERSION == 2
 extern "C" void
 #ifdef _MSC_VER
-	__declspec(dllexport)
+	__declspec( dllexport )
 #else
-__attribute__((visibility("default")))
+	__attribute__( ( visibility( "default" ) ) )
 #endif
-CCP_CONCATENATE( CCP_CONCATENATE( init, TRINITYNAME ), CCP_BUILD_FLAVOR )()
+		CCP_CONCATENATE( CCP_CONCATENATE( init, TRINITYNAME ), CCP_BUILD_FLAVOR )()
 {
 	StartDLL();
 	InitializeForPython();
 }
 
+#else 
+PyMODINIT_FUNC
+CCP_CONCATENATE( CCP_CONCATENATE( PyInit_, TRINITYNAME ), CCP_BUILD_FLAVOR )()
+{
+	StartDLL();
+	return InitializeForPython();
+}
+#endif
 #endif
 
 
@@ -233,32 +313,38 @@ static void emptySignalHandler(int)
 #endif
 
 #if BLUE_WITH_PYTHON
-static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
-{
+
 #ifdef _WIN32
-
-	char* context = NULL;
-	if( PyTuple_GET_SIZE(args) == 1 )
-	{
-		PyObject* o = PyTuple_GetItem( args, 0 );
-		if( PyString_Check( o ) )
-		{
-			context = PyString_AsString( o );
-			OutputDebugString( "Python Triggered Breakpoint: " );
-			OutputDebugString( context );
-			OutputDebugString( "\n" );
-		}
-	}	
-
-	__try 
+static void DoDebugBreak()
+{
+	__try
 	{
 		// This breakpoint exception is used by several D3D return value checking functions
 		// If you get, here, go up the stack and see what D3D function failed
 		DebugBreak();
 	}
-	__except(GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) 
+	__except( GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH )
 	{
 	}
+}
+#endif
+
+static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
+{
+#ifdef _WIN32
+
+	if( PyTuple_GET_SIZE(args) == 1 )
+	{
+		PyObject* o = PyTuple_GetItem( args, 0 );
+		if( PyVerCompat::IsPyString( o ) )
+		{
+			auto context = FromPython<std::string>( o );
+			OutputDebugString( "Python Triggered Breakpoint: " );
+			OutputDebugString( context.c_str() );
+			OutputDebugString( "\n" );
+		}
+	}	
+	DoDebugBreak();
 #else
     struct sigaction action, oldAction;
     memset( &action, 0, sizeof( action ) );

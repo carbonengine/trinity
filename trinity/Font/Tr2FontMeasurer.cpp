@@ -1362,6 +1362,16 @@ unsigned short* Tr2FontMeasurer::AdjustIndicesIfNeeded( unsigned int startSprite
 	return indices;
 }
 
+int32_t Tr2FontMeasurer::GetColor()
+{
+	return static_cast<int32_t>(m_color);
+}
+
+void Tr2FontMeasurer::SetColor( int32_t color )
+{
+	m_color = static_cast<uint32_t>(color);
+}
+
 //-----------------------------------------------------------------------------
 // Implementation of buffer copy helpers.
 //-----------------------------------------------------------------------------

@@ -143,7 +143,10 @@ protected:
 	// Descender value for the current font
 	int m_currentDescender;
 
-	unsigned int m_color;
+	uint32_t m_color;
+	int32_t GetColor();
+	void SetColor(int32_t color);
+
 	bool m_underline;
 
 	float m_fadeLeftStart;

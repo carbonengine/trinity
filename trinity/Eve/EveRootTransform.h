@@ -24,8 +24,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext );
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriTargetable
@@ -43,7 +43,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Tr2Transform
-	virtual void Update( EveUpdateContext& updateContext );
+	virtual void Update( const EveUpdateContext& updateContext ) override;
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform );
 
 protected:

@@ -21,7 +21,7 @@ EveFiringEffectElementContainer::EveFiringEffectElementContainer( IRoot* lockObj
 {
 }
 
-void EveFiringEffectElementContainer::UpdateSyncronous( EveUpdateContext& updateContext )
+void EveFiringEffectElementContainer::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	if( m_element )
 	{
@@ -42,15 +42,15 @@ void EveFiringEffectElementContainer::UpdateSyncronous( EveUpdateContext& update
 	}
 }
 
-void EveFiringEffectElementContainer::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveFiringEffectElementContainer::UpdateAsyncronous( const EveUpdateContext& updateContext )
 {
 }
 
-void EveFiringEffectElementContainer::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveFiringEffectElementContainer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	if( m_element )
 	{
-		m_element->UpdateVisibility( frustum, parentTransform );
+		m_element->UpdateVisibility( updateContext, parentTransform );
 	}
 }
 void EveFiringEffectElementContainer::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors )

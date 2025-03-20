@@ -47,6 +47,19 @@ const Be::ClassInfo* Tr2RenderTarget::ExposeToBlue()
 			":param type: texture type (2D or CUBE)"
 		)
 
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"CreateArray",
+			Create,
+			5,
+			"Creates a new render target\n"
+			":jessica-deprecated:\n"
+			":param width: render target width\n"
+			":param height: render target height\n"
+			":param mipCount: number of mip levels (0 = full pyramid)\n"
+			":param format: pixel format (trinity.PIXEL_FORMAT)\n"
+			":param flags: trinity.EX_FLAG\n"
+			":param type: texture type (2D or CUBE)" )
+
 		MAP_METHOD_AND_WRAP
 		(
 			"GenerateMipMaps",
@@ -71,6 +84,7 @@ const Be::ClassInfo* Tr2RenderTarget::ExposeToBlue()
 		MAP_PROPERTY_READONLY( "mipCount", GetMipCount, "" );
 		MAP_PROPERTY_READONLY( "multiSampleType", GetMsaaType, "" );
 		MAP_PROPERTY_READONLY( "multiSampleQuality", GetMsaaQuality, "" );
+		MAP_PROPERTY_READONLY( "arraySize", GetArraySize, "" );
 
 		MAP_PROPERTY_READONLY( "format", GetFormat,	"" );
 		MAP_PROPERTY_READONLY( "type", GetType, "" );

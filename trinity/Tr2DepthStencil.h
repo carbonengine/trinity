@@ -25,6 +25,7 @@ public:
 	~Tr2DepthStencil();
 
 	virtual Tr2TextureAL* GetTexture();
+	OnTextureChangeEvent& OnTextureChange() override;
 
 	void py__init__(
 		Be::OptionalWithDefaultValue<unsigned, 0> width,
@@ -75,6 +76,7 @@ private:
 	Tr2MsaaDesc m_msaa;
 	Tr2RenderContextEnum::ExFlag m_flags;
 	std::string m_name;
+	OnTextureChangeEvent m_onTextureChange;
 };
 
 TYPEDEF_BLUECLASS( Tr2DepthStencil );

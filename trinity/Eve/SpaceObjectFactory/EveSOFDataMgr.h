@@ -462,6 +462,9 @@ public:
 		Vector4 transform0;
 		Vector4 transform1;
 		Vector4 transform2;
+		Vector4 lastTransform0;
+		Vector4 lastTransform1;
+		Vector4 lastTransform2;
 		int boneIndex;
 	};
 
@@ -763,6 +766,7 @@ public:
 		std::map<BlueSharedString, TextureData> defaultTextures;
 		// parent textures from the hull
 		std::vector<BlueSharedString> parentTextures;
+		bool additive;
 	};
 
 	struct VariantData

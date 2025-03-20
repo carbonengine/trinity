@@ -72,6 +72,7 @@ Tr2TextureArrayElement Tr2TextureArray::AddElement( const ImageIO::HostBitmap& b
 		return Tr2TextureArrayElement();
 	}
 	m_texture = newTexture;
+	m_onTextureChange();
 
 	Tr2TextureArrayElement element;
 	element.m_data.reset( new Tr2TextureArrayElement::Data );
@@ -84,6 +85,11 @@ Tr2TextureArrayElement Tr2TextureArray::AddElement( const ImageIO::HostBitmap& b
 Tr2TextureAL* Tr2TextureArray::GetTexture()
 {
 	return &m_texture;
+}
+
+Tr2TextureArray::OnTextureChangeEvent& Tr2TextureArray::OnTextureChange()
+{
+	return m_onTextureChange;
 }
 
 uint32_t Tr2TextureArray::GetElementCount() const
@@ -136,6 +142,7 @@ bool Tr2TextureArray::OnPrepareResources()
 	if( !m_texture.IsValid() && !m_elements.empty() )
 	{
 		m_texture = CreateTexture();
+		m_onTextureChange();
 	}
 	return true;
 }

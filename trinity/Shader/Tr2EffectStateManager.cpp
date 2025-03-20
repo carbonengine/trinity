@@ -14,8 +14,10 @@ namespace {
 
 	typedef std::vector<std::pair<Tr2VertexDefinition, Tr2VertexLayoutAL*>>	VertexLayoutMap_t;
 	VertexLayoutMap_t	s_vertexLayoutMap;
+	std::mutex s_vertexLayoutMutex;
 
 	std::vector<Tr2ShaderAL*> s_shaders;
+	std::vector<Tr2ShaderBytecodeAL*> s_shaderLibraries;
 	std::vector<std::pair<Tr2ShaderProgramAL*, std::vector<uint32_t>>> s_shaderPrograms;
 
 	typedef std::vector<uint32_t>		TRenderStateKeyValues;
@@ -265,6 +267,7 @@ void Tr2EffectStateManager::CurrentValues::Reset()
 
 	m_vertexDeclaration = UNKNOWN;
 	m_indexBuffer = Tr2BufferAL();
+	m_indexStride = 0;
 	for( int i = 0; i < VERTEX_STREAM_MAX_COUNT; ++i )
 	{
 		m_streams[i].m_vertexBuffer = Tr2BufferAL();
@@ -330,8 +333,11 @@ uint32_t Tr2EffectStateManager::RegisterShader(
 		{
 			if( memcmp( existingBytecode.bytecode, bytecode.bytecode, bytecode.size ) == 0 )
 			{
-				// We've seen this setup before
-				return (uint32_t)i;
+				if( existing.GetSignature().samplers == signature.samplers )
+				{
+					// We've seen this setup before
+					return (uint32_t)i;
+				}
 			}
 		}
 	}
@@ -350,6 +356,36 @@ uint32_t Tr2EffectStateManager::RegisterShader(
 	s_shaders.push_back( shader.release() );
 
 	return (uint32_t)s_shaders.size() - 1;
+}
+
+uint32_t Tr2EffectStateManager::RegisterShaderLibrary( const Tr2ShaderBytecodeAL& bytecode )
+{
+	for( size_t i = 0; i != s_shaderLibraries.size(); ++i )
+	{
+		auto& existing = *s_shaderLibraries[i];
+		if( existing.size == bytecode.size )
+		{
+			if( memcmp( existing.bytecode, bytecode.bytecode, bytecode.size ) == 0 )
+			{
+				return (uint32_t)i;
+			}
+		}
+	}
+
+	void* code = new uint8_t[bytecode.size];
+	memcpy( code, bytecode.bytecode, bytecode.size );
+	Tr2ShaderBytecodeAL* newBytecode = new Tr2ShaderBytecodeAL( code, bytecode.size );
+	s_shaderLibraries.push_back( newBytecode );
+	return uint32_t( s_shaderLibraries.size() - 1 );
+}
+
+const Tr2ShaderBytecodeAL* Tr2EffectStateManager::GetShaderLibraryCode( uint32_t handle )
+{
+	if( handle >= s_shaderLibraries.size() )
+	{
+		return nullptr;
+	}
+	return s_shaderLibraries[handle];
 }
 
 uint32_t Tr2EffectStateManager::RegisterShaderProgram( uint32_t* shaders, size_t count )
@@ -469,6 +505,13 @@ void Tr2EffectStateManager::Shutdown()
 		delete *it;
 	}
 	s_shaders.clear();
+
+	for( auto it = s_shaderLibraries.begin(); it != s_shaderLibraries.end(); ++it )
+	{
+		//delete[]( *it )->bytecode;
+		delete* it;
+	}
+	s_shaderLibraries.clear();
 }
 
 void Tr2EffectStateManager::BeginManagedRendering( Tr2RenderContextEnum::CullMode cullmode )
@@ -667,6 +710,8 @@ bool Tr2EffectStateManager::IsDepthTestInverted( void ) const
 
 uint32_t Tr2EffectStateManager::GetVertexDeclarationHandle( const Tr2VertexDefinition& vertexDefinition )
 {
+	std::scoped_lock lock( s_vertexLayoutMutex );
+
 	for( size_t i = 0; i != s_vertexLayoutMap.size(); ++i )
 	{
 		if( s_vertexLayoutMap[i].first == vertexDefinition )
@@ -714,6 +759,8 @@ void Tr2EffectStateManager::ApplyVertexDeclaration( uint32_t declaration )
 
 bool Tr2EffectStateManager::GetVertexDeclarationElements( uint32_t declaration, Tr2VertexDefinition& definition )
 {
+	std::scoped_lock lock( s_vertexLayoutMutex );
+
 	CCP_ASSERT( declaration < s_vertexLayoutMap.size() || declaration == UNINITIALIZED_DECLARATION );
 	if( declaration < s_vertexLayoutMap.size() )
 	{
@@ -723,7 +770,12 @@ bool Tr2EffectStateManager::GetVertexDeclarationElements( uint32_t declaration, 
 	return false;
 }
 
-void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2BufferAL & buffer, uint32_t offset, uint32_t stride )
+void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2SuballocatedBuffer::Allocation& vertices )
+{
+	ApplyStreamSource( stream, vertices.GetBuffer(), vertices.GetOffset(), vertices.GetStride() );
+}
+
+void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2BufferAL& buffer, uint32_t offset, uint32_t stride )
 {
 	
 	if( m_isManagedRendering )
@@ -743,19 +795,35 @@ void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2BufferA
 	m_renderContext.SetStreamSource( stream, buffer, offset, stride );
 }
 
-void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2BufferAL & indices )
+
+void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2BufferAL& indices )
 {
+	ApplyIndexBuffer( indices, indices.GetDesc().stride );
+}
+
+void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2SuballocatedBuffer::Allocation& indices )
+{
+	ApplyIndexBuffer( indices.GetBuffer(), indices.GetStride() );
+}
+
+void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2BufferAL& indices, const uint32_t stride )
+{
+	if( stride == 1 )
+	{
+		CCP_LOGWARN( "Oh no! This is a big bug!" );
+	}
 	
 	if( m_isManagedRendering )
 	{
-		if( indices == m_currentValues.m_indexBuffer )
+		if( indices == m_currentValues.m_indexBuffer && stride == m_currentValues.m_indexStride )
 		{
 			return;
 		}
 		m_currentValues.m_indexBuffer = indices;
+		m_currentValues.m_indexStride = stride;
 	}
 
-	m_renderContext.SetIndices( indices );
+	m_renderContext.SetIndices( indices, stride );
 }
 
 
@@ -785,6 +853,12 @@ void Tr2EffectStateManager::ReleaseDeviceResources( TriStorage s )
 			delete it->first;
 		}
 		s_shaderPrograms.clear();
+		for( auto it = s_shaderLibraries.begin(); it != s_shaderLibraries.end(); ++it )
+		{
+			//delete[]( *it )->bytecode;
+			delete* it;
+		}
+		s_shaderLibraries.clear();
 
 		s_renderStateSetups.erase( s_renderStateSetups.begin() + RM_COUNT, s_renderStateSetups.end() );
 		m_renderStates.clear();

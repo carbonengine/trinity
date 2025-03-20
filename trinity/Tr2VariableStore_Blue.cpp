@@ -134,9 +134,9 @@ static PyObject* PyRegisterVariable( PyObject* self, PyObject* args )
 	{
 		variable = pThis->RegisterVariable( name, value );
 	}
-	else if( PyInt_Check( valueArg ) )
+	else if( PyVerCompat::IsPyInt( valueArg ) )
 	{
-		variable = pThis->RegisterVariable( name, (int)PyInt_AsLong( valueArg ) );
+		variable = pThis->RegisterVariable( name, FromPython<int>( valueArg ) );
 	}
 	else if( BlueExtractFloat( valueArg, valFloat ) )
 	{

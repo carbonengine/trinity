@@ -77,6 +77,7 @@ protected:
 
 	Matrix m_localTransform;
 	Matrix m_worldTransform;
+	Matrix m_lastWorldTransform;
 
 	Tr2TransformModifier m_modifier;
 	bool m_useDistanceBasedScale;

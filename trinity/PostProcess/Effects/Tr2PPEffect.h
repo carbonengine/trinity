@@ -22,7 +22,7 @@ public:
 	virtual bool OnModified( Be::Var* value );
 
 	virtual bool IsActive();
-	bool IsDirty();
+	virtual bool IsDirty();
 	void SetDirty( bool dirty );
 
 protected:

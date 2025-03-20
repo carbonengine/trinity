@@ -58,6 +58,38 @@ bool TriFrustumOrtho::IsSphereVisibleAndInsideNearPlane( const Vector3& center, 
 	return true;
 }
 
+bool TriFrustumOrtho::IsSphereVisibleIgnoreFarPlane( const Vector3& center, float radius ) const
+{
+	Vector3 centerInView = TransformCoord( center, m_view );
+
+	float d = 0;
+
+	float* pCenter = (float*)&centerInView;
+	float* pMax = (float*)&m_boundsMax;
+	float* pMin = (float*)&m_boundsMin;
+	for( int i = 0; i < 3; ++i )
+	{
+		if( pCenter[i] < pMin[i] )
+		{
+			float a = pCenter[i] - pMin[i];
+			d += a * a;
+		}
+		else if( i != 2 && pCenter[i] > pMax[i] )
+		{
+			float a = pCenter[i] - pMax[i];
+			d += a * a;
+		}
+	}
+
+	float r2 = radius * radius;
+	if( d > r2 )
+	{
+		return false;
+	}
+
+	return true;
+}
+
 float TriFrustumOrtho::GetPixelSize( Vector4 sphere, uint16_t textureSize ) const
 {
 	Vector4 d = sphere;

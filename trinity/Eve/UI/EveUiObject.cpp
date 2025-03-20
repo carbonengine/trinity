@@ -39,9 +39,9 @@ void EveUiObject::UpdateWorldTransform( Be::Time time )
 }
 
 // --------------------------------------------------------------------------------
-void EveUiObject::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EveUiObject::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
-	EveSpaceObject2::UpdateVisibility( frustum, parentTransform );
+	EveSpaceObject2::UpdateVisibility( updateContext, parentTransform );
 
 	// no matter what gets calculated, ui models have NO lod
 	m_isVisible = m_isMeshVisible = m_isInFrustum = true;

@@ -28,8 +28,25 @@
 #include "include/ITr2InstanceData.h"
 #include "include/ITr2GpuBuffer.h"
 
+#include "Tr2SuballocatedBuffer.h"
+
+constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 64 * 1024 * 1024;
+extern Tr2SuballocatedBuffer g_sharedBuffer;
+
+
+
+
+
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
+
+struct TriRtGeometryConstants
+{
+	uint32_t indexBufferOffset;
+	uint32_t indexBufferStride;
+	uint32_t vertexBufferStride;
+	uint32_t texCoord0Offset;
+};
 
 struct TriGeometryResAreaData
 {
@@ -42,6 +59,10 @@ struct TriGeometryResAreaData
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;
 	TrackableStdVector<int> m_jointBindings;
+
+	Tr2RtBottomLevelAccelerationStructureAL m_staticBlas;
+	bool m_isSkinned;
+	Tr2ConstantBufferAL m_rtGeometryConstants;
 };
 
 struct TriGeometryResVertexData
@@ -85,11 +106,15 @@ struct TriGeometryResMeshData
 	unsigned int m_bytesPerVertex;
 	unsigned int m_vertexCount;
 	unsigned int m_primitiveCount;
-	Tr2BufferAL m_vertexBuffer;
-	Tr2BufferAL m_shaderResourceBuffer;
-	Tr2BufferAL m_indexBuffer;
+
+	bool m_allocationsValid;
+	Tr2SuballocatedBuffer::Allocation m_vertexAllocation;
+	Tr2SuballocatedBuffer::Allocation m_indexAllocation;
+
 	// Index buffer with indexes in reversed order (used by hair/clothing)
-	Tr2BufferAL	m_reversedIndexBuffer;
+	bool m_reversedIndicesValid;
+	Tr2SuballocatedBuffer::Allocation m_reversedIndexAllocation;
+
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;
 	Vector4 m_boundingSphere;
@@ -107,6 +132,9 @@ struct TriGeometryResMeshData
 	};
 	std::vector<LodRef> m_lods;
 };
+
+uint32_t GetPrimitiveCount( const TriGeometryResMeshData& mesh, uint32_t index, uint32_t count );
+
 
 struct TriGeometryResJointData
 {
@@ -136,8 +164,7 @@ BLUE_CLASS( TriGeometryRes ):
 	public BlueAsyncRes,
 	public ICacheable,
 	public Tr2DeviceResource,
-	public ITr2InstanceData,
-	public ITr2GpuBuffer
+	public ITr2InstanceData
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -200,7 +227,7 @@ public:
 		unsigned int areaIx=-1 );
 
 	std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>> GetIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir );
-	std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>> GetAreaIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir, unsigned int areaIx );
+	Be::Result<std::string> GetAreaIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir, int areaIx, std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>>& result );
 
 	bool GetBoundingBox( unsigned int meshIx, Vector3& min, Vector3& max ) const;
 	Be::Result<std::string> GetBoundingBoxFromScript( unsigned int meshIx, std::pair<Vector3, Vector3>& bounds ) const;
@@ -302,6 +329,7 @@ private:
 	void SetupSkeletons( granny_file_info* gi );
 	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
 	void DetermineAreaBones( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
+	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
 	
 	// Create D3D mesh from data in m_pGrannyFile
 	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );

@@ -61,10 +61,12 @@ public:
 	// rendering
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables );
 
+	void UpdateVisibility( const EveUpdateContext& updateContext );
+
 	// do the foreground occlusion rendering/querying
-	void RunOcclusionQueries( Tr2RenderContext& renderContext, const TriFrustum& frustum );
+	void RunOcclusionQueries( Tr2RenderContext& renderContext, const EveUpdateContext& updateContext );
 	// do the background occlusion rendering/querying
-	void RunBackgroundOcclusionQueries( Tr2RenderContext& renderContext, const TriFrustum& frustum );
+	void RunBackgroundOcclusionQueries( Tr2RenderContext& renderContext, const EveUpdateContext& updateContext );
 
 	bool Initialize();
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
@@ -94,6 +96,7 @@ private:
 	std::string m_name;
 	// toggle display
 	bool m_display;
+	bool m_isVisible;
 	// toggle updates
 	bool m_update;
 

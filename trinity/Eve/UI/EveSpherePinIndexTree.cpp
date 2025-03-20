@@ -120,7 +120,7 @@ inline void CarthesianToSpherical( Vector3& carth, Vector2& spherical )
 // ------------------------------------------------------------------------------------------------------
 bool ExtractVertices( TriGeometryResMeshData* mesh, std::vector<Vector2>& sphericalVerts, std::vector<Vector3>& verts, Tr2RenderContext& renderContext )
 {
-	if( !mesh->m_vertexBuffer.IsValid() )
+	if( !mesh->m_allocationsValid)
 	{
 		return 0;
 	}
@@ -132,11 +132,11 @@ bool ExtractVertices( TriGeometryResMeshData* mesh, std::vector<Vector2>& spheri
 
 	sphericalVerts.resize(numVerts);
 	verts.resize(numVerts);
-	if (FAILED(mesh->m_vertexBuffer.MapForReading( pVertices, renderContext )))
+	if (FAILED(mesh->m_vertexAllocation.MapForReading( pVertices, renderContext )))
 	{
 		return 0;
 	}
-	ON_BLOCK_EXIT( [&]{ mesh->m_vertexBuffer.UnmapForReading( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { mesh->m_vertexAllocation.UnmapForReading( renderContext ); } );
 
 	Tr2VertexDefinition vd;
 	if ( !Tr2EffectStateManager::GetVertexDeclarationElements( mesh->m_vertexDeclaration, vd ) )
@@ -171,7 +171,7 @@ bool ExtractVertices( TriGeometryResMeshData* mesh, std::vector<Vector2>& spheri
 // ------------------------------------------------------------------------------------------------------
 EveSpherePinIndexTree::Face* ExtractFaceData( TriGeometryResMeshData* mesh, std::vector<Vector3>& verts, Tr2RenderContext& renderContext )
 {
-	if( !mesh->m_indexBuffer.IsValid() )
+	if( !mesh->m_allocationsValid )
 	{
 		return 0;
 	}
@@ -179,23 +179,21 @@ EveSpherePinIndexTree::Face* ExtractFaceData( TriGeometryResMeshData* mesh, std:
 	const unsigned short* pShortIndices = nullptr;
 	const unsigned int  * pLongIndices = nullptr;
 	
-	if( mesh->m_indexBuffer.GetDesc().stride == 2 )
+	if( mesh->m_indexAllocation.GetStride() == 2 )
 	{
-		if (FAILED( mesh->m_indexBuffer.MapForReading( pShortIndices, renderContext )))
-		{		
-			mesh->m_vertexBuffer.UnmapForReading( renderContext );
+		if( FAILED( mesh->m_indexAllocation.MapForReading( pShortIndices, renderContext ) ) )
+		{
 			return 0;
 		}
 	}
 	else
 	{
-		if (FAILED( mesh->m_indexBuffer.MapForReading( pLongIndices, renderContext )))
-		{		
-			mesh->m_vertexBuffer.UnmapForReading( renderContext );
+		if( FAILED( mesh->m_indexAllocation.MapForReading( pLongIndices, renderContext ) ) )
+		{
 			return 0;
 		}
 	}
-	ON_BLOCK_EXIT( [&]{ mesh->m_indexBuffer.UnmapForReading( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { mesh->m_indexAllocation.UnmapForReading( renderContext ); } );
 
 	int numPrim = mesh->m_primitiveCount;
 	EveSpherePinIndexTree::Face* faces = new EveSpherePinIndexTree::Face[numPrim];

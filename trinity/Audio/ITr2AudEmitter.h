@@ -15,7 +15,6 @@
 BLUE_INTERFACE( ITr2AudEmitter ) : public IRoot
 {
 	virtual void Initialize( const std::string& name, const std::wstring& prefix, const Vector3& position ) = 0;
-	virtual void Mute() = 0;
 	virtual int SetPosition( const Vector3& front, const Vector3& top, const Vector3& pos ) = 0;
 	virtual void SetName( const std::string& name ) = 0;
 	virtual void SetPrefix( const std::wstring& prefix ) = 0;
@@ -25,6 +24,7 @@ BLUE_INTERFACE( ITr2AudEmitter ) : public IRoot
 	virtual bool SetAttenuationScalingFactor( const float scalingFactor ) = 0;
 	virtual std::string GetName() = 0;
 	virtual void SetVisibility( bool visible ) = 0;
+	virtual void Mute() = 0;
 	virtual void Unmute() = 0;
 };
 

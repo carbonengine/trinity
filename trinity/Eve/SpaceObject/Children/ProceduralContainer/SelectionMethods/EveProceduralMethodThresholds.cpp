@@ -111,7 +111,7 @@ EveChildRefPtr EveProceduralMethodThresholds::GetSelectedChild()
     return nullptr;
 }
 
-void EveProceduralMethodThresholds::UpdateASyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveProceduralMethodThresholds::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
     bool reselect = false;
     for( auto it = begin( m_parameters ); it != end( m_parameters ); ++it )

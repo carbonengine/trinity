@@ -1,0 +1,25 @@
+---
+Checks:          'cppcoreguidelines-pro-type-member-init,clang-analyzer-*,bugprone-*,-bugprone-easily-swappable-parameters,google-default-arguments,google-runtime-int,misc-const-correctness,misc-misplaced-const,misc-redundant-expression,misc-unconventional-assign-operator,misc-uniqueptr-reset-release,performance-*,readability-*,-readability-uppercase-literal-suffix,-readability-suspicious-call-argument,-readability-qualified-auto,-readability-named-parameter,-readability-inconsistent-declaration-parameter-name,-readability-identifier-length,-readability-magic-numbers,-readability-implicit-bool-conversion,-readability-convert-member-functions-to-static'
+WarningsAsErrors: ''
+HeaderFileExtensions:
+  - ''
+  - h
+  - hh
+  - hpp
+  - hxx
+ImplementationFileExtensions:
+  - c
+  - cc
+  - cpp
+  - cxx
+  - mm
+HeaderFilterRegex: ''
+AnalyzeTemporaryDtors: false
+FormatStyle:     file
+CheckOptions:
+  bugprone-assert-side-effect.AssertMacros: 'assert,CCP_ASSERT'
+  misc-const-correctness.AnalyzeValues: false
+  google-runtime-int.TypeSuffix: '_t'
+SystemHeaders:   false
+...
+

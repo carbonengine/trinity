@@ -14,7 +14,7 @@ struct VS_INPUT
     float2 Offset [[ attribute(1) ]];
 };
 
-vertex VS_OUTPUT mainVS( VS_INPUT input [[ stage_in ]] SHADOW_PS_DECL )
+vertex VS_OUTPUT mainVS( VS_INPUT input [[ stage_in ]] )
 {
 	VS_OUTPUT Output;
 	Output.Position = float4(input.Position + float3(input.Offset, 0), 1);

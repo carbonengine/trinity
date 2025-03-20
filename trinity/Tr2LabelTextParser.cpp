@@ -30,6 +30,27 @@ enum States
 };
 
 #if BLUE_WITH_PYTHON
+
+namespace
+{
+PyObject* ToPyUnicode( const wchar_t* str, Py_ssize_t size )
+{
+#if PY_MAJOR_VERSION == 2
+	return PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( str ), size );
+#else
+	return PyUnicode_FromWideChar( str, size );
+#endif
+}
+PyObject* ToPyUnicode( const wchar_t* str )
+{
+#if PY_MAJOR_VERSION == 2
+	return PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( str ), wcslen( str ) );
+#else
+	return PyUnicode_FromWideChar( str, -1 );
+#endif
+}
+}
+
 // Returns nullptr if the general attribute pattern of ((whitespace)*attrib=value)*> isn't matched
 // Returns Py_None if you're pointing at > already (no attributes)
 // Returns a dict of attributes on success.
@@ -167,10 +188,10 @@ PyObject* ParseAttribs( wchar_t *&curPos, const wchar_t *keyAlreadyParsed = NULL
                     {
                         goto error;
                     }
-
-                    value = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( curPos + 1 ), endOfValue - curPos - 1 );
-                    curPos = endOfValue + 1;
-                }
+					// Get string value without begin/end quotes then advance the current position after the end quote.
+					value = ToPyUnicode( curPos + 1, endOfValue - curPos - 1 );
+					curPos = endOfValue + 1;
+				}
                 else
                 {
                     // Not a quoted string...go until we find > or whitespace.
@@ -195,10 +216,10 @@ PyObject* ParseAttribs( wchar_t *&curPos, const wchar_t *keyAlreadyParsed = NULL
                         }
                     }
 
-                    value = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( startOfValue ), curPos - startOfValue );
-                }
+					value = ToPyUnicode( startOfValue, curPos - startOfValue );
+				}
 
-                PyObject* keyThunked = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( key ), wcslen( key ) );
+                PyObject* keyThunked = ToPyUnicode( key );
                 PyDict_SetItem( result, keyThunked, value );
 
                 astate = ASTATE_WHITEOREND;
@@ -233,13 +254,13 @@ error:
 #define CONSUME_TEXT                                                                                \
 {   /* Consume the text up to this point into a text-element */                                     \
     PyObject* textTuple = PyTuple_New( 2 );                                                         \
-    PyTuple_SetItem( textTuple, 0, PyInt_FromLong( 0 ) );                                           \
+    PyTuple_SetItem( textTuple, 0, ToPython( 0 ) );                                                 \
     PyObject* newString;                                                                            \
                                                                                                     \
     if( stringBeingBuilt.empty( ) )                                                                 \
     {                                                                                               \
         /* Simple case, we haven't done any substitutions. */                                       \
-        newString = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( marker ), curPos - marker );                               \
+        newString = ToPyUnicode( marker, ( curPos - marker ) );                                     \
     }                                                                                               \
     else                                                                                            \
     {                                                                                               \
@@ -248,7 +269,7 @@ error:
         {                                                                                           \
             stringBeingBuilt.append( marker, curPos - marker );                                     \
         }                                                                                           \
-        newString = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( stringBeingBuilt.c_str( ) ), stringBeingBuilt.size( ) );   \
+        newString = ToPyUnicode( stringBeingBuilt.c_str(), stringBeingBuilt.size() );               \
         stringBeingBuilt.clear( );                                                                  \
     }                                                                                               \
                                                                                                     \
@@ -259,13 +280,27 @@ error:
 
 static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
 {
-    wchar_t* paramString;
-    if( !PyArg_ParseTuple( args, "u", &paramString ) )
+#if PY_MAJOR_VERSION == 2
+	wchar_t* paramString;
+	if( !PyArg_ParseTuple( args, "u", &paramString ) )
+	{
+		return nullptr;
+	}
+
+	size_t stringLength = wcslen( paramString );
+#else
+    PyObject* paramObject;
+    if( !PyArg_ParseTuple( args, "U", &paramObject ) )
     {
         return nullptr;
     }
-
-    size_t stringLength = wcslen(paramString);
+    Py_ssize_t stringLength;
+    wchar_t* paramString = PyUnicode_AsWideCharString(paramObject, &stringLength );
+    if( !paramString )
+    {
+        return nullptr;
+    }
+#endif
     wchar_t* inString = CCP_NEW("ParseLabelText") wchar_t[stringLength + 1];
     wcscpy_s(inString, stringLength + 1, paramString);
 
@@ -409,8 +444,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                             matched = true;
 
                             PyObject* tagTuple = PyTuple_New( 3 );
-                            PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                            PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 6 ) );
+							PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+							PyTuple_SetItem( tagTuple, 1, ToPython( 6 ) );
                             PyTuple_SetItem( tagTuple, 2, attribs );
                             PyList_Append( currentTab, tagTuple );
 							Py_DECREF( tagTuple );
@@ -481,8 +516,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                         // Matched <b>
                         matched = true;
                         PyObject* tagTuple = PyTuple_New( 3 );
-                        PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                        PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 5 ) );
+						PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+						PyTuple_SetItem( tagTuple, 1, ToPython( 5 ) );
                         Py_INCREF( Py_None );
                         PyTuple_SetItem( tagTuple, 2, Py_None );
                         PyList_Append( currentTab, tagTuple );
@@ -501,8 +536,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                             // Matched <center>
                             matched = true;
                             PyObject* tagTuple = PyTuple_New( 3 );
-                            PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                            PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 102 ) );
+							PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+							PyTuple_SetItem( tagTuple, 1, ToPython( 102 ) );
                             Py_INCREF( Py_None );
                             PyTuple_SetItem( tagTuple, 2, Py_None );
                             PyList_Append( currentTab, tagTuple );
@@ -521,8 +556,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                             {
                                 matched = true;
                                 PyObject* tagTuple = PyTuple_New( 3 );
-                                PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                                PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( -0xBEEF ) );
+								PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+								PyTuple_SetItem( tagTuple, 1, ToPython( -0xBEEF ) );
                                 PyTuple_SetItem( tagTuple, 2, attribs );
                                 PyList_Append( currentTab, tagTuple );
 								Py_DECREF( tagTuple );
@@ -547,8 +582,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                                 {
                                     matched = true;
                                     PyObject* tagTuple = PyTuple_New( 3 );
-                                    PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                                    PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( -0xBEEF ) );
+									PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+									PyTuple_SetItem( tagTuple, 1, ToPython( -0xBEEF ) );
                                     PyTuple_SetItem( tagTuple, 2, attribs );
                                     PyList_Append(currentTab, tagTuple);
 									Py_DECREF( tagTuple );
@@ -563,8 +598,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                                 matched = true;
 
                                 PyObject* tagTuple = PyTuple_New( 3 );
-                                PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                                PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 1 ) );
+								PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+								PyTuple_SetItem( tagTuple, 1, ToPython( 1 ) );
                                 PyTuple_SetItem( tagTuple, 2, attribs );
                                 PyList_Append( currentTab, tagTuple );
 								Py_DECREF( tagTuple );
@@ -583,8 +618,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                         {
                             matched = true;
                             PyObject* tagTuple = PyTuple_New( 3 );
-                            PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                            PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( -0xBEEF ) );
+							PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+							PyTuple_SetItem( tagTuple, 1, ToPython( -0xBEEF ) );
                             PyTuple_SetItem( tagTuple, 2, attribs );
                             PyList_Append( currentTab, tagTuple );
 							Py_DECREF( tagTuple );
@@ -599,8 +634,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                         // Matched <i>
                         matched = true;
                         PyObject* tagTuple = PyTuple_New( 3 );
-                        PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                        PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 4 ) );
+						PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+						PyTuple_SetItem( tagTuple, 1, ToPython( 4 ) );
                         Py_INCREF( Py_None );
                         PyTuple_SetItem( tagTuple, 2, Py_None );
                         PyList_Append( currentTab, tagTuple );
@@ -624,8 +659,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                                 matched = true;
 
                                 PyObject* tagTuple = PyTuple_New( 3 );
-                                PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                                PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 7 ) );
+								PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+								PyTuple_SetItem( tagTuple, 1, ToPython( 7 ) );
                                 PyTuple_SetItem( tagTuple, 2, attribs );
                                 PyList_Append( currentTab, tagTuple );
 								Py_DECREF( tagTuple );
@@ -639,8 +674,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                             // Matched <left>
                             matched = true;
                             PyObject* tagTuple = PyTuple_New( 3 );
-                            PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                            PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 100 ) );
+							PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+							PyTuple_SetItem( tagTuple, 1, ToPython( 100 ) );
                             Py_INCREF( Py_None );
                             PyTuple_SetItem( tagTuple, 2, Py_None );
                             PyList_Append( currentTab, tagTuple );
@@ -656,8 +691,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                             {
                                 matched = true;
                                 PyObject* tagTuple = PyTuple_New( 3 );
-                                PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                                PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( -0xBEEF ) );
+								PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+								PyTuple_SetItem( tagTuple, 1, ToPython( -0xBEEF ) );
                                 PyTuple_SetItem( tagTuple, 2, attribs );
                                 PyList_Append( currentTab, tagTuple );
 								Py_DECREF( tagTuple );
@@ -673,8 +708,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                         // Matched <right>
                         matched = true;
                         PyObject* tagTuple = PyTuple_New( 3 );
-                        PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                        PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 101 ) );
+						PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+						PyTuple_SetItem( tagTuple, 1, ToPython( 101 ) );
                         Py_INCREF( Py_None );
                         PyTuple_SetItem( tagTuple, 2, Py_None );
                         PyList_Append( currentTab, tagTuple );
@@ -706,8 +741,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                         // Matched <u>
                         matched = true;
                         PyObject* tagTuple = PyTuple_New( 3 );
-                        PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                        PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 2 ) );
+						PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+						PyTuple_SetItem( tagTuple, 1, ToPython( 2 ) );
                         Py_INCREF( Py_None );
                         PyTuple_SetItem( tagTuple, 2, Py_None );
                         PyList_Append( currentTab, tagTuple );
@@ -733,8 +768,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                                 {
                                     matched = true;
                                     PyObject* tagTuple = PyTuple_New( 3 );
-                                    PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                                    PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( -0xBEEF ) );
+									PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+									PyTuple_SetItem( tagTuple, 1, ToPython( -0xBEEF ) );
                                     PyTuple_SetItem( tagTuple, 2, attribs );
                                     PyList_Append( currentTab, tagTuple );
 									Py_DECREF( tagTuple );
@@ -749,8 +784,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                             // Matched <uppercase>
                             matched = true;
                             PyObject* tagTuple = PyTuple_New( 3 );
-                            PyTuple_SetItem( tagTuple, 0, PyInt_FromLong( 1 ) );
-                            PyTuple_SetItem( tagTuple, 1, PyInt_FromLong( 3 ) );
+							PyTuple_SetItem( tagTuple, 0, ToPython( 1 ) );
+							PyTuple_SetItem( tagTuple, 1, ToPython( 3 ) );
                             Py_INCREF( Py_None );
                             PyTuple_SetItem( tagTuple, 2, Py_None );
                             PyList_Append( currentTab, tagTuple );
@@ -768,9 +803,9 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                     if( closeTag )
                     {
                         PyObject* unknownTag = PyTuple_New( 2 );
-                        PyTuple_SetItem( unknownTag, 0, PyInt_FromLong( 3 ) );
-                        PyTuple_SetItem( unknownTag, 1, PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( curPos ), closeTag - curPos ) );
-                        PyList_Append( currentTab, unknownTag );
+                        PyTuple_SetItem( unknownTag, 0, ToPython( 3 ) );
+						PyTuple_SetItem( unknownTag, 1, ToPyUnicode( curPos, closeTag - curPos ) );
+						PyList_Append( currentTab, unknownTag );
 						Py_DECREF( unknownTag );
 
                         curPos = closeTag + 1;
@@ -886,8 +921,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                 if( closeTagID != -1 )
                 {
                     PyObject* closeTuple = PyTuple_New( 2 );
-                    PyTuple_SetItem( closeTuple, 0, PyInt_FromLong( 2 ) );
-                    PyTuple_SetItem( closeTuple, 1, PyInt_FromLong( closeTagID ) );
+                    PyTuple_SetItem( closeTuple, 0, ToPython( 2 ) );
+					PyTuple_SetItem( closeTuple, 1, ToPython( closeTagID ) );
                     PyList_Append( currentTab, closeTuple );
 					Py_DECREF( closeTuple );
                 }

@@ -50,6 +50,7 @@ public:
 	Tr2TextureArrayElement AddElement( const ImageIO::HostBitmap& bitmap );
 
 	Tr2TextureAL* GetTexture() override;
+	OnTextureChangeEvent& OnTextureChange() override;
 
 	uint32_t GetElementCount() const;
 	const Tr2BitmapDimensions& GetDimensions() const;
@@ -77,6 +78,7 @@ private:
 	uint32_t m_increment = 16;
 	Tr2GpuUsage::Type m_gpuUsage = Tr2GpuUsage::SHADER_RESOURCE;
 	Tr2CpuUsage::Type m_cpuUsage = Tr2CpuUsage::NONE;
+	OnTextureChangeEvent m_onTextureChange;
 };
 
 TYPEDEF_BLUECLASS( Tr2TextureArray );

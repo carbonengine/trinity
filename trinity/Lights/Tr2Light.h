@@ -19,10 +19,17 @@ struct LightFeatures {
 	float parentBrightness;
 };
 
+enum class PerLightShadowSetting
+{
+	DISABLED,
+	ENABLED_ONLY_ON_HIGH_QUALITY,
+	ALWAYS_ENABLED
+};
+
 struct LightData {
 	LightData();
-	Tr2LightManager::PerLightData AsPerPointLightData( CXMMATRIX transform, LightFeatures& features ) const;
-	Tr2LightManager::PerLightData AsPerSpotLightData( CXMMATRIX transform, LightFeatures& features ) const;
+	Tr2LightManager::PerLightData AsPerPointLightData( CXMMATRIX transform, LightFeatures& features, ShadowQuality shadowQuality ) const;
+	Tr2LightManager::PerLightData AsPerSpotLightData( CXMMATRIX transform, LightFeatures& features, ShadowQuality shadowQuality ) const;
 
 	Vector3 position;
 	Color color;
@@ -46,6 +53,9 @@ struct LightData {
 	uint16_t flags;
 
 	Be::Time startTime;
+
+	PerLightShadowSetting castsShadows;
+	bool isVolumetric;
 };
 
 
@@ -54,12 +64,13 @@ struct LightData {
 	The reason why I did it this way instead of using virtual functions is that this is faster (no vtable).
 	Another reason is because the information in this ends up as PerLightData which needs to contain everything regardless of light type
 */
-BLUE_CLASS( Tr2Light ):
+BLUE_CLASS( Tr2Light ) :
 	public IInitialize,
 	public INotify
 {
 public:
-	enum LIGHT_TYPE {
+	enum LIGHT_TYPE
+	{
 		UNDEFINED_LIGHT,
 		POINT_LIGHT,
 		SPOT_LIGHT,
@@ -76,7 +87,7 @@ public:
 	virtual void Update();
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const granny_matrix_3x4* bones = nullptr, size_t boneCount = 0 );
 	virtual void SetLightData( LightData& baseData );
-	
+
 	void SetBoneMatrix( const granny_matrix_3x4* bones, size_t boneCount );
 	void SetBrightnessMultiplier( float multi );
 
@@ -104,4 +115,5 @@ protected:
 
 TYPEDEF_BLUECLASS( Tr2Light );
 
+extern const Be::VarChooser PerLightShadowSettingChooser[];
 extern const Be::VarChooser Tr2LightFlagChooser[];

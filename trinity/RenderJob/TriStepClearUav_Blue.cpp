@@ -64,10 +64,10 @@ PyObject* TriStepClearUav::py__init__( PyObject* self, PyObject* args )
 		else
 		{
 			pThis->m_clearWithFloat = false;
-			pThis->m_uintValue[0] = uint32_t( PyInt_AsSsize_t( PyTuple_GetItem( values, 0 ) ) );
-			pThis->m_uintValue[1] = uint32_t( PyInt_AsSsize_t( PyTuple_GetItem( values, 1 ) ) );
-			pThis->m_uintValue[2] = uint32_t( PyInt_AsSsize_t( PyTuple_GetItem( values, 2 ) ) );
-			pThis->m_uintValue[3] = uint32_t( PyInt_AsSsize_t( PyTuple_GetItem( values, 3 ) ) );
+			pThis->m_uintValue[0] = uint32_t( PyLong_AsSsize_t( PyTuple_GetItem( values, 0 ) ) );
+			pThis->m_uintValue[1] = uint32_t( PyLong_AsSsize_t( PyTuple_GetItem( values, 1 ) ) );
+			pThis->m_uintValue[2] = uint32_t( PyLong_AsSsize_t( PyTuple_GetItem( values, 2 ) ) );
+			pThis->m_uintValue[3] = uint32_t( PyLong_AsSsize_t( PyTuple_GetItem( values, 3 ) ) );
 		}
 	}
 

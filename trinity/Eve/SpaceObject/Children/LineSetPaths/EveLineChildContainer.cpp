@@ -29,7 +29,7 @@ void EveLineChildContainer::OnListModified( long event, ssize_t key, ssize_t key
 	m_regenerate = true;
 }
 
-bool EveLineChildContainer::Update( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+bool EveLineChildContainer::Update( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	bool updateBounds = false;
 

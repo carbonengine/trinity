@@ -210,7 +210,7 @@ void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2Ren
 	ON_BLOCK_EXIT( [&] { rt.UnmapForReading( renderContext ); } );
 
 	const uint8_t* rtRow = static_cast<const uint8_t*>( rtData );
-	const uint8_t* flRow = data.get();
+	//const uint8_t* flRow = data.get();
 	for( uint32_t i = 0; i < rt.GetHeight(); ++i )
 	{
 		for( uint32_t j = 0; j < width; ++j )
@@ -221,7 +221,7 @@ void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2Ren
 			}
 		}
 		rtRow += rtPitch;
-		flRow += 4 * width;
+		//flRow += 4 * width;
 	}
 	return ::testing::AssertionSuccess();
 }

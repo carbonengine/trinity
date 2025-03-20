@@ -17,6 +17,18 @@ namespace
 
 namespace TrinityALImpl
 {
+    Tr2BufferAL::Tr2BufferAL()
+    :   m_owner( nullptr ),
+        m_metalContext( nullptr ),
+        m_heapIndex( 0xffffffff )
+    {
+    }
+
+    Tr2BufferAL::~Tr2BufferAL()
+    {
+        Destroy();
+    }
+
 	ALResult Tr2BufferAL::Create(
 		const Tr2BufferDescriptionAL& desc,
 		const void* initialData,
@@ -51,18 +63,13 @@ namespace TrinityALImpl
 			stride = GetBytesPerPixel( desc.format );
 		}
 
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) && stride != 2 && stride != 4 )
-		{
-			return E_INVALIDARG;
-		}
-
 		m_metalContext = renderContext.GetMetalContext();
 		auto bufferSizeInBytes = desc.count * stride;
 
 		// Default to managed storage.
 		m_resourceMode = MTLResourceStorageModeManaged;
 
-        if ( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+        if ( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && !HasFlag( desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
 		{
 			// No point keeping a copy on the CPU side if they'll never be modified.
 			// JM - this needs support in the API to do a blit upload of the data so disabling for now
@@ -72,7 +79,10 @@ namespace TrinityALImpl
 		m_owner = &renderContext;
 		m_mtlBuffer = m_metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), bufferSizeInBytes, m_resourceMode, initialData);
 		m_desc = desc;
-        
+        if( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) || HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+        {
+            m_heapIndex = m_metalContext->AllocateHeapIndex( m_mtlBuffer );
+        }
         m_memory.Set( Tr2MemoryCounterAL::BUFFER, bufferSizeInBytes );
 
 		return m_mtlBuffer ? S_OK : E_FAIL;
@@ -80,17 +90,22 @@ namespace TrinityALImpl
 
 	void Tr2BufferAL::Destroy()
 	{
-		m_metalContext->DestroyMetalBuffer(m_mtlBuffer);
-		m_metalContext->DestroyMetalBuffer(m_mappedBuffer);
-		for( auto& staging : m_stagingBuffers )
-		{
-			m_metalContext->DestroyMetalBuffer( staging.buffer );
-		}
+        if( m_metalContext )
+        {
+            m_metalContext->DeallocateHeapIndex( m_heapIndex );
+            m_metalContext->DestroyMetalBuffer(m_mtlBuffer);
+            m_metalContext->DestroyMetalBuffer(m_mappedBuffer);
+            for( auto& staging : m_stagingBuffers )
+            {
+                m_metalContext->DestroyMetalBuffer( staging.buffer );
+            }
+        }
 		m_stagingBuffers.clear();
 		m_mtlBuffer    = nil;
 		m_mappedBuffer = nil;
 		m_metalContext = nil;
 		m_desc.count   = 0;
+        m_heapIndex = 0xffffffff;
 		m_owner = nullptr;
         m_memory.Reset();
 	}
@@ -136,7 +151,7 @@ namespace TrinityALImpl
         }
 	}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
 	{
 		if( !renderContext.IsValid() || !IsValid() )
 		{
@@ -148,7 +163,7 @@ namespace TrinityALImpl
 			return E_INVALIDCALL;
 		}
 
-		if( lockType == Tr2LockType::NON_SYNCHRONIZED )
+		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
 		{
 			if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 			{
@@ -166,7 +181,9 @@ namespace TrinityALImpl
 			}
 			else
 			{
-				return E_INVALIDARG;
+				m_mappedBuffer = m_mtlBuffer;
+				data = m_mappedBuffer.contents;
+				return S_OK;
 			}
 		}
 
@@ -207,7 +224,11 @@ namespace TrinityALImpl
 			return;
 		}
 		m_metalContext->IndicateBufferModified( m_mappedBuffer, 0, m_mtlBuffer.length );
-		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
+		{
+			m_mappedBuffer = nil;
+		}
+		else if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			if( HasFlag( m_desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) || HasFlag( m_desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 			{
@@ -244,12 +265,12 @@ namespace TrinityALImpl
 			return S_OK;
 		}
 
-		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) || HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
 		{
 			void* dest;
-			CR_RETURN_HR( MapForWriting( dest, Tr2LockType::SYNCHRONIZED, renderContext ) );
+			CR_RETURN_HR( MapForWriting( dest, renderContext ) );
 			uint8_t* dst = static_cast<uint8_t*>( dest ) + offset;
-			const uint8_t* src = static_cast<const uint8_t*>( data ) + offset;
+			const uint8_t* src = static_cast<const uint8_t*>( data );
 			memcpy( dst, src, size );
 			UnmapForWriting( renderContext );
 		}
@@ -266,6 +287,16 @@ namespace TrinityALImpl
 
 
 		return S_OK;
+	}
+
+	uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+	{
+		return m_heapIndex;
+	}
+	
+	uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+	{
+		return m_heapIndex;
 	}
 
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const

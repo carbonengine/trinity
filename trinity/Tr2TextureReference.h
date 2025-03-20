@@ -20,6 +20,7 @@ public:
 	Tr2TextureReference( IRoot* lockobj = nullptr );
 
 	virtual Tr2TextureAL* GetTexture();
+	OnTextureChangeEvent& OnTextureChange() override;
 
 	BeResultChoice<BlueStdResult, ImageIO::Result> Save( const std::wstring& path );
 
@@ -33,6 +34,7 @@ public:
 
 private:
 	Tr2TextureAL m_texture;
+	OnTextureChangeEvent m_onTextureChange;
 };
 
 TYPEDEF_BLUECLASS( Tr2TextureReference );
@@ -52,10 +54,12 @@ public:
 	Tr2TransientTextureReference( IRoot* lockobj = nullptr );
 
 	virtual Tr2TextureAL* GetTexture();
+	OnTextureChangeEvent& OnTextureChange() override;
 
 	void SetTexture( Tr2TextureAL* texture );
 private:
 	Tr2TextureAL* m_texture;
+	OnTextureChangeEvent m_onTextureChange;
 };
 
 TYPEDEF_BLUECLASS( Tr2TransientTextureReference );

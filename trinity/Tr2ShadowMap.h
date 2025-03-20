@@ -43,7 +43,7 @@ namespace ShadowMap
 //   This class holds a cascaded shadow map and takes care of splitting the frustum
 //
 // --------------------------------------------------------------------------------
-class Tr2ShadowMap : public INotify,
+BLUE_CLASS( Tr2ShadowMap ) : public INotify,
 					 public Tr2DeviceResource
 {
 public:
@@ -52,12 +52,7 @@ public:
 	Tr2ShadowMap( IRoot* lockobj = 0 );
 	~Tr2ShadowMap();
 
-	enum ShadowQuality
-	{
-		DISABLED,
-		LOW,
-		HIGH
-	};
+	void Setup( uint32_t elementSize, uint32_t elementCount, bool useDenoiser );
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
@@ -75,7 +70,7 @@ public:
 	bool PrepareShadowRendering( Tr2RenderContext& renderContext );
 	void BeginShadowRendering( Tr2RenderContext& renderContext, int splitIndex );
 	void EndShadowRendering( Tr2RenderContext& renderContext );
-	void DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2TextureProvider* depthMap );
+	void DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2TextureProvider* depthMap, float upscaling );
 	void SetShadowMap( Tr2RenderTargetPtr shadowMapRenderTarget );
 
 	Tr2DepthStencilPtr GetCascadedShadowMapDS() const;
@@ -86,9 +81,11 @@ public:
 	const unsigned int GetShadowMapSize() const;
 	Tr2EffectPtr GetShadowEffect() const;
 	bool GetDebugSplitValue() const;
-	void SetNoShadow();
+	void SetBlankTexture();
 
 	uint32_t GetDebugColors( int switchCase ) const;
+
+	void ShouldUseDenoiser( bool value );
 
 	struct PerSplitData
 	{
@@ -114,9 +111,7 @@ private:
 		Vector3( 1, -1, 1 )
 	};
 
-	ShadowQuality m_quality;
-
-	void SetHighSettingSplitValues();
+	void SetSplitValues();
 	void SetLowSettingSplitValues();
 	void CreateShadowMaps();
 
@@ -138,6 +133,7 @@ private:
 
 	// denoiser
 	Tr2DenoiserPtr m_denoiser;
+	bool m_useDenoiser;
 
 	// shadow shader
 	Tr2EffectPtr m_shadowEffect;

@@ -107,7 +107,7 @@ namespace TrinityALImpl
 		}
 		renderContext.m_commandList->EndQuery( m_query, D3D12_QUERY_TYPE_TIMESTAMP, 1 );
 		renderContext.m_commandList->ResolveQueryData( m_query, D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, m_result, 0 );
-		m_frameIndex = m_owner->GetCurrentFrameIndexDx12();
+		m_frameIndex = m_owner->GetRecordingFrameNumber();
 		m_state = END_ISSUED;
 	}
 
@@ -121,7 +121,7 @@ namespace TrinityALImpl
 		{
 			return m_lastTime;
 		}
-		if( m_owner->GetCompletedFrameIndexDx12() < m_frameIndex )
+		if( m_owner->GetRenderedFrameNumber() < m_frameIndex )
 		{
 			return m_lastTime;
 		}

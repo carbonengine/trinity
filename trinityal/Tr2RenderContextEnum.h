@@ -40,17 +40,6 @@ namespace Tr2RenderContextEnum
 		SHADER_TYPE_COUNT = INVALID_SHADER,
 	};
 
-	/** Representation of controllable GPU pipelines */
-	enum ShaderPipe
-	{
-		GRAPHICS_PIPE = 0,
-		COMPUTE_PIPE,
-		INVALID_PIPE,
-
-		SHADER_PIPE_FIRST = GRAPHICS_PIPE,
-		SHADER_PIPE_COUNT = INVALID_PIPE
-	};
-
 	// Special case constant buffers added to handle trinity
 	enum
 	{
@@ -274,6 +263,7 @@ namespace Tr2RenderContextEnum
 		RS_STENCILMASK               = 58,   /* Mask value used in stencil test */
 		RS_STENCILWRITEMASK          = 59,   /* Write mask applied to values written to stencil buffer */
 		RS_TEXTUREFACTOR             = 60,   /* D3DCOLOR used for multi-texture blend */
+		RS_DEPTH_CLIP_ENABLE		 = 61,   /* Corresponds to D3D12_RASTERIZER_DESC.DepthClipEnable */
 		RS_WRAP0                     = 128,  /* wrap for 1st texture coord. set */
 		RS_WRAP1                     = 129,  /* wrap for 2nd texture coord. set */
 		RS_WRAP2                     = 130,  /* wrap for 3rd texture coord. set */
@@ -427,6 +417,16 @@ namespace Tr2RenderContextEnum
 
 		CONTEXT_STATUS_INVALID,
 	};
+
+	enum FrameEvent
+	{
+		FRAME_EVENT_UPDATE_STARTED,
+		FRAME_EVENT_UPDATE_FINISHED,
+		FRAME_EVENT_PRESENT_STARTED,
+		FRAME_EVENT_PRESENT_FINISHED,
+		FRAME_EVENT_RENDERING_STARTED,
+		FRAME_EVENT_RENDERING_FINISHED
+	};
 }
 
 using Tr2BitmapDimensions = ImageIO::BitmapDimensions;
@@ -441,6 +441,7 @@ namespace Tr2CpuUsage
 		WRITE = 1 << 1,
 		READ_OFTEN = READ | ( 1 << 2 ),
 		WRITE_OFTEN = WRITE | ( 1 << 3 ),
+		NON_SYNCRONIZED_WRITE = 1 << 4,
 	};
 
 	inline Type operator|( Type a, Type b )
@@ -470,6 +471,8 @@ namespace Tr2GpuUsage
 		COPY_DESTINATION = 1 << 6,
 
 		DRAW_INDIRECT_ARGS = 1 << 7,
+
+		ACCELERATION_STRUCTURE = 1 << 8,
 
 		SHARED = 1 << 9,
 	};
