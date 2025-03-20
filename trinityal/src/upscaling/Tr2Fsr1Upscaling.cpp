@@ -76,7 +76,7 @@ bool Tr2Fsr1UpscalingTechnique::IsAvailable() const
 		return g_force_fsr1_availability;
 	}
 #endif
-	return g_force_fsr1_availability;
+	return true;
 } 
 
 Tr2UpscalingContextAL* Tr2Fsr1UpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
