@@ -1240,7 +1240,8 @@ void TriDevice::UpdateAvailableUpscalingTechniques()
 {
 
 	m_supportedUpscalingTechniques.clear();
-	Tr2UpscalingAL::FORCE_FSR1_AVAILABILITY = !g_newUpscalersEnabled;
+	extern bool g_force_fsr1_availability;
+	g_force_fsr1_availability = !g_newUpscalersEnabled;
 	if( !g_newUpscalersEnabled )
 	{
 		// only allow FSR1 

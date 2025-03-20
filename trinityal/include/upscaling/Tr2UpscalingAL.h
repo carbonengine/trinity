@@ -122,8 +122,6 @@ namespace Tr2UpscalingAL
 	const char* GetTechniqueName( Technique technique );
 	const char* GetSettingName( Setting setting );
 	const uint32_t INVALID_CONTEXT_ID = std::numeric_limits<uint32_t>::max();
-
-	static bool FORCE_FSR1_AVAILABILITY = false;
 }
 
 // forward

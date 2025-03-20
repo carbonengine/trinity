@@ -68,13 +68,15 @@ bool Tr2Fsr1UpscalingTechnique::IsTemporal() const
 
 bool Tr2Fsr1UpscalingTechnique::IsAvailable() const
 {
+	extern bool g_force_fsr1_availability;
+
 #if TRINITY_PLATFORM == TRINITY_METAL
 	if( @available( macOS 13.0, * ) )
 	{
-		return Tr2UpscalingAL::FORCE_FSR1_AVAILABILITY;
+		return g_force_fsr1_availability;
 	}
 #endif
-	return true;
+	return g_force_fsr1_availability;
 } 
 
 Tr2UpscalingContextAL* Tr2Fsr1UpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
