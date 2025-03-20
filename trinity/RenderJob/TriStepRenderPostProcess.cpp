@@ -3,6 +3,7 @@
 #include "PostProcess/Tr2PostProcess2.h"
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "Include/TriMath.h"
+#include "TriSettingsRegistrar.h"
 
 // FidelityFX headers
 #define A_CPU
@@ -10,6 +11,12 @@
 #include "ffx_cas.h"
 
 extern float g_eveSpaceSceneGammaBrightness;
+
+bool g_upscalingDebugView = false;
+TRI_REGISTER_SETTING( "upscalingDebugView", g_upscalingDebugView );
+
+bool g_frameGenDebugView = false;
+TRI_REGISTER_SETTING( "frameGenDebugView", g_frameGenDebugView );
 
 namespace
 {
@@ -483,7 +490,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	Tr2PostProcessRenderInfo::Texture output;
 	if( upscalingEnabled )
 	{
-		output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight );
+		output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight, Tr2RenderContextEnum::EX_NONE, renderContext.GetPrimaryRenderContext().GetBackBufferFormat() );
 		if( upscalingInfo.temporal )
 		{
 			taa = nullptr;
@@ -533,7 +540,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	if( upscalingInfo.temporal )
 	{
 		auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
-		upscalingContext->SetHudLessTexture(output->GetTexture());
+		upscalingContext->SetHudLessTexture( output->GetTexture() );
+
 		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
 		// upscale the temp textures so everything hence forth is correct
 		uint32_t w, h;
@@ -583,15 +591,15 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		m_tonemappingEffect->SetParameter( ColorGain, postProcess->m_colorGain );
 		static auto ColorOffset = BlueSharedString( "ColorOffset" );
 		m_tonemappingEffect->SetParameter( ColorOffset, postProcess->m_colorOffset );
+	}
 
-		if( tonemapping )
-		{
-			ProcessTonemapping( tonemapping );
-		}
-		else
-		{
-			m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_TOGGLE" ), BlueSharedString( "TONE_MAPPING_DISABLED" ) );
-		}
+	if( tonemapping )
+	{
+		ProcessTonemapping( tonemapping );
+	}
+	else
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_TOGGLE" ), BlueSharedString( "TONE_MAPPING_DISABLED" ) );
 	}
 
 	bool doGrain = ProcessFilmGrain( filmGrain );
@@ -1369,7 +1377,11 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderC
 			m_tonemappingEffect->EndUpdate();
 		}
 	}
-	auto exposureAdjustment = postProcess->m_exposureAdjustment;
+	float exposureAdjustment = 0;
+	if( postProcess )
+	{
+		exposureAdjustment = postProcess->m_exposureAdjustment;
+	}
 	if( dynamicExposure )
 	{
 		exposureAdjustment += dynamicExposure->m_adjustment;
@@ -1505,6 +1517,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.fieldOfView = Tr2Renderer::GetFieldOfView();
 	dispatchParameters.frameTimeDelta = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_lastFrameTime ) * 1000.0f;
 	dispatchParameters.preExposure = 0.4f;
+	dispatchParameters.currentFrameIndex = Tr2Renderer::GetCurrentFrameCounter();
 
 	memcpy( dispatchParameters.cameraPos, &Tr2Renderer::GetViewPosition(), 3 * sizeof( float ) );
 	memcpy( dispatchParameters.cameraForward, &view.GetZ(), 3 * sizeof( float ) );
@@ -1519,6 +1532,9 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.input = source ? source->GetTexture() : nullptr;
 	dispatchParameters.opaqueOnly = m_opaqueColorBuffer ? m_opaqueColorBuffer->GetTexture() : nullptr;
 	dispatchParameters.velocity = m_velocityBuffer ? m_velocityBuffer->GetTexture() : nullptr;
+
+	dispatchParameters.upscalingDebugView = g_upscalingDebugView;
+	dispatchParameters.frameGenDebugView = g_frameGenDebugView;
 
 	m_lastFrameTime = BeOS->GetCurrentFrameTime();
 	{

@@ -162,6 +162,10 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 
 	m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_DISABLED;
 
+	m_currentFrameCounter = -1;
+	m_shadowCastingLightsInSomeScene = false;
+	m_skipFrameBecauseThereWereNoShadowcastingLights = true;
+
 	m_Raytracing.m_destTex.CreateInstance();
     m_Raytracing.m_destTex->Create( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
 
@@ -257,12 +261,27 @@ void Tr2LightManager::AdjustLightCutoff( float lodFactor )
 	m_adjustedCutoff = CUTOFF_PIXEL_SIZE * lodFactor;
 }
 
+// This entire thing is annoyingly complex for what should be a simple thing...
+// The reason why it's such a mess is because we have multiple eve space scenes with different
+// shadow qualities, but want to share resources across them. But we also don't have a way
+// of getting all eve space scenes, so we have to collect the qualities during a frame 
+// and based on that decide which resources are needed for the next frame.
+// In addition we have different ways of rendering shadows: Shadowmapped with different 
+// atlas resolutions and raytraced shadows.
+// On top of that we don't want to use any resources when there are not shadowcasting lights
+// in any scenes - which are added to the light manager in a multithreaded way per scene...
 void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter )
 {
 	m_currentSpaceSceneShadowQuality = shadowQuality;
 
 	if ( m_currentFrameCounter != frameCounter )
 	{
+		if( !m_shadowCastingLightsInSomeScene )
+		{
+			nextFrameShadowQuality = 0u;
+		}
+		m_skipFrameBecauseThereWereNoShadowcastingLights = ! m_shadowCastingLightsInSomeScene;
+
 		// there must be a more elegant way of doing this...
 		if ( nextFrameShadowQuality & ( 1 << ( uint32_t)ShadowQuality::SHADOW_HIGH ) )
 		{
@@ -282,8 +301,8 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 		}
 		
 		nextFrameShadowQuality = 1 << (uint32_t)shadowQuality;
-
 		m_currentFrameCounter = frameCounter;
+		m_shadowCastingLightsInSomeScene = false;
 	}
 
 	nextFrameShadowQuality |= 1 << (uint32_t)shadowQuality;
@@ -365,6 +384,12 @@ void Tr2LightManager::AddLight( PerLightData& data )
 	{
 		return;
 	}
+
+	if( ( data.flags & Tr2LightManager::FLAG_CASTS_SHADOWS ) != 0 )
+	{
+		m_shadowCastingLightsInSomeScene = true;
+	}
+
 	float brightness = std::max( std::max( data.color.x, data.color.y ), data.color.z );
 	if( brightness <= 0 || data.radius <= 0 )
 	{
@@ -385,7 +410,8 @@ void Tr2LightManager::AddLight( PerLightData& data )
 
 		bool usingShadowMap = m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_LOW || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_HIGH;
 		if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED || 
-			( usingShadowMap && m_ShadowMap.m_qualityUsedByAtlas == ShadowQuality::SHADOW_DISABLED ) )
+			( usingShadowMap && m_ShadowMap.m_qualityUsedByAtlas == ShadowQuality::SHADOW_DISABLED ) ||
+			m_skipFrameBecauseThereWereNoShadowcastingLights )
 		{
 			data.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
 		}
@@ -553,11 +579,6 @@ void Tr2LightManager::ResolveLightData()
 	m_shadowCastingLights.clear();
 	m_volumetricLights.clear();
 
-	if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED )
-	{
-		return;
-	}
-
 	// filter volumetric lights
 	std::vector<LightScreenSizeTuple> lightTuples;
 	{
@@ -589,6 +610,11 @@ void Tr2LightManager::ResolveLightData()
 			Tr2LightManager::PerLightData& lightData = m_lightData[lightTuples[i].lightIndex];
 			lightData.flags &= ~Tr2LightManager::FLAG_IS_VOLUMETRIC;
 		}
+	}
+
+	if( m_skipFrameBecauseThereWereNoShadowcastingLights || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED )
+	{
+		return;
 	}
 
 	// filter shadowcasting lights
@@ -846,6 +872,7 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 	GPU_REGION( renderContext, "Raytraced dynamic shadows" );
 	CCP_STATS_ZONE( __FUNCTION__ );
 
+	// we could check m_skipFrameBecauseThereWereNoShadowcastingLights over here, but it's redundant with m_shadowCastingLights.size() == 0
 	if ( m_shadowCastingLights.size() == 0 )
 	{
 		return;

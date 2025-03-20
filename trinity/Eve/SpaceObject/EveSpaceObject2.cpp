@@ -50,8 +50,6 @@ TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLighting
 
 const BlueSharedString DAMAGE_LOCATOR_SET_NAME( "damage" );
 
-extern bool g_eveSpaceSceneRaytracedShadows;
-
 
 void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 ITriRenderBatchAccumulator* batches,
@@ -214,9 +212,9 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 
 	SetControllerVariable( "DirtLevel", m_dirtLevel );
 	SetControllerVariable( "ActivationStrength", m_spaceObjectShipData.y );
-	SetControllerVariable( "ShieldDamage", 0 );
-	SetControllerVariable( "ArmorDamage", 0 );
-	SetControllerVariable( "HullDamage", 0 );
+	SetControllerVariable( "ShieldDamage", 1.0f );
+	SetControllerVariable( "ArmorDamage", 1.0f );
+	SetControllerVariable( "HullDamage", 1.0f );
 	SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
 	SetControllerVariable( "ClipSphereFactor2", m_clipSphereFactor2 );
 }
@@ -1279,6 +1277,7 @@ Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator*
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
+	m_vsData.customData = m_psData.customData;
 
 	Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>>();
 	if( !perObjectData )
@@ -1321,6 +1320,7 @@ void EveSpaceObject2::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType sh
 void EveSpaceObject2::GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpaceObjectPSData& psData ) const
 {
 	vsData = m_vsData;
+	vsData.customData = m_psData.customData;
 	psData = m_psData;
 }
 
@@ -1530,7 +1530,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 
 		m_mesh->UseWithScreenSize( m_meshScreenSize, m_boundingSphereWorldRadius );
 
-		if( g_eveSpaceSceneRaytracedShadows )
+		if( updateContext.m_raytracingEnabled )
 		{
 			UpdateRtMesh(updateContext);
 			UpdateRtSkeleton();
@@ -1687,6 +1687,7 @@ void EveSpaceObject2::GetParentData( ParentData* pd ) const
 	pd->clipFactor = m_psData.clipSphereFactor;
 	pd->clipFactor2 = m_psData.clipSphereFactor2;
 	pd->shLighting = m_psData.shLightingCoefficients;
+	pd->customData = m_psData.customData;
 }
 
 // --------------------------------------------------------------------------------
@@ -3659,7 +3660,7 @@ void EveSpaceObject2::SetMute( bool isMute )
 
 void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
-	if( !m_mesh || !m_display || !g_eveSpaceSceneRaytracedShadows )
+	if( !m_mesh || !m_display )
 	{
 		return;
 	}
