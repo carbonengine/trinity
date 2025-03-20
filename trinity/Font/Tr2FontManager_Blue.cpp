@@ -13,6 +13,22 @@ BLUE_DEFINE_ABSTRACT( Tr2FontManager );
 const char* TR2_FONT_FALLBACK = "res:/ui/fonts/arialuni.ttf";
 
 #if BLUE_WITH_PYTHON
+
+#if PY_MAJOR_VERSION == 2
+static bool GetBuf( void** buffer, Py_ssize_t* bufLen, PyObject* arrayO )
+{
+	//Get destination buffer interface
+	PyBufferProcs* bp = arrayO->ob_type->tp_as_buffer;
+	if( !bp || !bp->bf_getwritebuffer )
+	{
+		PyErr_SetString( PyExc_TypeError, "destination must support buffer interface" );
+		return false;
+	}
+	*bufLen = ( bp->bf_getwritebuffer )( arrayO, 0, buffer );
+	return *bufLen != -1;
+}
+#endif
+
 PyObject* PyClearBuffer(PyObject *self, PyObject *args)
 {
 	PyObject *arrayO;
@@ -21,24 +37,31 @@ PyObject* PyClearBuffer(PyObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args,"Oiii|i", &arrayO, &width, &height, &pitch, &col))
 		return 0;
 
+	void* destPtr = nullptr;
+	Py_ssize_t destLen = 0;
+#if PY_MAJOR_VERSION == 2
+	if( !GetBuf( &destPtr, &destLen, arrayO ) )
+	{
+		return nullptr;
+	}
+#else
     Py_buffer buf;
     if(PyObject_GetBuffer(arrayO, &buf, PyBUF_SIMPLE) == -1)
 	{
 		return nullptr;
 	}
-    void *destPtr = buf.buf;
-    Py_ssize_t destLen = buf.len;
-
+	ON_BLOCK_EXIT( [&] { PyBuffer_Release( &buf ); } );
+    destPtr = buf.buf;
+    destLen = buf.len;
+#endif
 	if( width*4 > pitch )
 	{
-        PyBuffer_Release(&buf);
 		PyErr_SetString(PyExc_RuntimeError, "width larger than pitch!");
 		return nullptr;
 	}
 
 	if( height * pitch > destLen )
 	{
-        PyBuffer_Release(&buf);
 		PyErr_SetString(PyExc_RuntimeError, "destination too short!");
 		return nullptr;
 	}
@@ -50,8 +73,6 @@ PyObject* PyClearBuffer(PyObject *self, PyObject *args)
 			((int*)((char*)destPtr+i*pitch))[j] = col;
 		}
 	}
-
-    PyBuffer_Release(&buf);
 
 	Py_INCREF(Py_None);
 	return Py_None;

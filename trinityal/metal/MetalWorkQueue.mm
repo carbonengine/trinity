@@ -3430,6 +3430,11 @@ uint64_t MetalWorkQueue::GetCurrentEncoderIndex() const
     return m_encoderIndex;
 }
 
-} // TrinityALImpl
+bool MetalWorkQueue::IsSilicon() const {
+    return m_isAppleSilicon;
+}
 
-#endif
+}
+
+
+#endif // TrinityALImpl

@@ -626,6 +626,8 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 
 	MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
 
+	MAP_ATTRIBUTE( "customShaderData", m_psData.customData, "Custom data passed to space object shaders via per-object data", Be::READWRITE )
+
 	MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST | Be::NOTIFY );
 
 	MAP_ATTRIBUTE( "externalParameters", m_externalParameters, "List of external parameters to bind to object elements", Be::READ | Be::PERSIST )

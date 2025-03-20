@@ -92,6 +92,7 @@ public:
 	PriorityBlend::Attribute<float> depthOfFieldFocalDistance;
 	PriorityBlend::Attribute<float> depthOfFieldFocalLength;
 	PriorityBlend::Attribute<Tr2Bokeh::Shape> depthOfFieldShape;
+	PriorityBlend::Attribute<bool> depthOfFieldForegroundBlurNeeded;
 
 	PriorityBlend::Attribute<float> whiteTemperature = 6500.f;
 	PriorityBlend::Attribute<float> whiteTint = 0.0f;

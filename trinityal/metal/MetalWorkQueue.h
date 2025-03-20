@@ -373,6 +373,7 @@ namespace TrinityALImpl
         
         uint64_t GetCurrentEncoderIndex() const;
         void MarkConstantBuffersDirty();
+        bool IsSilicon() const;
         
 	private:
 		void CreateClearFunctions();

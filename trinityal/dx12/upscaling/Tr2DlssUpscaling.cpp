@@ -351,6 +351,17 @@ Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 	}
 }
 
+void Tr2DlssUpscalingContext::SetupForReuse()
+{
+	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
+	Tr2StreamlineAL::FreeResources( sl::kFeatureNIS, m_viewHandle );
+
+	if( m_frameGeneration )
+	{
+		Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS_G, m_viewHandle );
+	}
+}
+
 sl::Result Tr2DlssUpscalingContext::UpdateDlssG()
 {
 	if( SL_FAILED( res, Tr2StreamlineAL::GetDLSSGState( m_viewHandle, m_dlssgState, &m_dlssgOptions ) ) )
