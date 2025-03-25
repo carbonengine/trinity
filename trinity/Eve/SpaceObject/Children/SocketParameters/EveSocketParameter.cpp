@@ -67,13 +67,292 @@ void EveSocketParameterBindingBase::Propagate()
 	}
 }
 
-#if BLUE_WITH_PYTHON
-#define SOCKET_PARAMETER_GIL_LOCK Ccp::PyGilEnsure gilWrapper
-#define SOCKET_PARAMETER_CLEAR_ERROR PyErr_Clear()
-#else
-#define SOCKET_PARAMETER_GIL_LOCK
-#define SOCKET_PARAMETER_CLEAR_ERROR
-#endif
+namespace
+{
+bool GetExternalParameterValue( bool& value, const Tr2ExternalParameter& externalParameter )
+{
+	if( auto entry = externalParameter.GetDestinationEntry() )
+	{
+		auto src = externalParameter.GetDestination();
+		if( !src )
+		{
+			return false;
+		}
+		switch( entry->mType )
+		{
+		case Be::LONG:
+			value = *reinterpret_cast<const int32_t*>( src ) != 0;
+			return true;
+		case Be::FLOAT:
+			value = *reinterpret_cast<const float*>( src ) != 0.0f;
+			return true;
+		case Be::DOUBLE:
+			value = *reinterpret_cast<const double*>( src ) != 0.0;
+			return true;
+		case Be::BOOL:
+			value = *reinterpret_cast<const bool*>( src );
+			return true;
+		case Be::INT64:
+			value = *reinterpret_cast<const int64_t*>( src ) != 0;
+			return true;
+		case Be::BYTE:
+			value = *reinterpret_cast<const uint8_t*>( src ) != 0;
+			return true;
+		case Be::SHORT:
+			value = *reinterpret_cast<const int16_t*>( src ) != 0;
+			return true;
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
+bool GetExternalParameterValue( int& value, const Tr2ExternalParameter& externalParameter )
+{
+	if( auto entry = externalParameter.GetDestinationEntry() )
+	{
+		auto src = externalParameter.GetDestination();
+		if( !src )
+		{
+			return false;
+		}
+		switch( entry->mType )
+		{
+		case Be::LONG:
+			value = *reinterpret_cast<const int32_t*>( src );
+			return true;
+		case Be::FLOAT:
+			value = int( *reinterpret_cast<const float*>( src ) );
+			return true;
+		case Be::DOUBLE:
+			value = int( *reinterpret_cast<const double*>( src ) );
+			return true;
+		case Be::BOOL:
+			value = *reinterpret_cast<const bool*>( src ) ? 1 : 0;
+			return true;
+		case Be::INT64:
+			value = int( *reinterpret_cast<const int64_t*>( src ) );
+			return true;
+		case Be::BYTE:
+			value = int( *reinterpret_cast<const uint8_t*>( src ) );
+			return true;
+		case Be::SHORT:
+			value = *reinterpret_cast<const int16_t*>( src );
+			return true;
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
+bool GetExternalParameterValue( float& value, const Tr2ExternalParameter& externalParameter )
+{
+	if( auto entry = externalParameter.GetDestinationEntry() )
+	{
+		auto src = externalParameter.GetDestination();
+		if( !src )
+		{
+			return false;
+		}
+		switch( entry->mType )
+		{
+		case Be::LONG:
+			value = float( *reinterpret_cast<const int32_t*>( src ) );
+			return true;
+		case Be::FLOAT:
+			value = *reinterpret_cast<const float*>( src );
+			return true;
+		case Be::DOUBLE:
+			value = float( *reinterpret_cast<const double*>( src ) );
+			return true;
+		case Be::BOOL:
+			value = *reinterpret_cast<const bool*>( src ) ? 1.0f : 0.0f;
+			return true;
+		case Be::INT64:
+			value = float( *reinterpret_cast<const int64_t*>( src ) );
+			return true;
+		case Be::BYTE:
+			value = float( *reinterpret_cast<const uint8_t*>( src ) );
+			return true;
+		case Be::SHORT:
+			value = float( *reinterpret_cast<const int16_t*>( src ) );
+			return true;
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
+bool GetExternalParameterValue( Vector2& value, const Tr2ExternalParameter& externalParameter )
+{
+	if( auto entry = externalParameter.GetDestinationEntry() )
+	{
+		auto src = externalParameter.GetDestination();
+		if( !src )
+		{
+			return false;
+		}
+		switch( entry->mType )
+		{
+		case Be::FLOATARRAY: 
+			if( entry->GetFloatArraySize() == 2 )
+			{
+				auto v = reinterpret_cast<const float*>( src );
+				value = Vector2( v[0], v[1] );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		case Be::DOUBLEARRAY:
+			if( entry->GetDoubleArraySize() == 2 )
+			{
+				auto v = reinterpret_cast<const double*>( src );
+				value = Vector2( float( v[0] ), float( v[1] ) );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		case Be::INTARRAY:
+			if( entry->GetIntArraySize() == 2 )
+			{
+				auto v = reinterpret_cast<const int*>( src );
+				value = Vector2( float( v[0] ), float( v[1] ) );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
+bool GetExternalParameterValue( Vector3& value, const Tr2ExternalParameter& externalParameter )
+{
+	if( auto entry = externalParameter.GetDestinationEntry() )
+	{
+		auto src = externalParameter.GetDestination();
+		if( !src )
+		{
+			return false;
+		}
+		switch( entry->mType )
+		{
+		case Be::FLOATARRAY:
+			if( entry->GetFloatArraySize() == 3 )
+			{
+				auto v = reinterpret_cast<const float*>( src );
+				value = Vector3( v[0], v[1], v[2] );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		case Be::DOUBLEARRAY:
+			if( entry->GetDoubleArraySize() == 3 )
+			{
+				auto v = reinterpret_cast<const double*>( src );
+				value = Vector3( float( v[0] ), float( v[1] ), float( v[2] ) );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		case Be::INTARRAY:
+			if( entry->GetIntArraySize() == 3 )
+			{
+				auto v = reinterpret_cast<const int*>( src );
+				value = Vector3( float( v[0] ), float( v[1] ), float( v[2] ) );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
+bool GetExternalParameterValue( Vector4& value, const Tr2ExternalParameter& externalParameter )
+{
+	if( auto entry = externalParameter.GetDestinationEntry() )
+	{
+		auto src = externalParameter.GetDestination();
+		if( !src )
+		{
+			return false;
+		}
+		switch( entry->mType )
+		{
+		case Be::FLOATARRAY:
+			if( entry->GetFloatArraySize() == 4 )
+			{
+				auto v = reinterpret_cast<const float*>( src );
+				value = Vector4( v[0], v[1], v[2], v[3] );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		case Be::DOUBLEARRAY:
+			if( entry->GetDoubleArraySize() == 4 )
+			{
+				auto v = reinterpret_cast<const double*>( src );
+				value = Vector4( float( v[0] ), float( v[1] ), float( v[2] ), float( v[3] ) );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		case Be::INTARRAY:
+			if( entry->GetIntArraySize() == 4 )
+			{
+				auto v = reinterpret_cast<const int*>( src );
+				value = Vector4( float( v[0] ), float( v[1] ), float( v[2] ), float( v[3] ) );
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
+
+bool GetExternalParameterValue( Color& value, const Tr2ExternalParameter& externalParameter )
+{
+	Vector4 v;
+	if( GetExternalParameterValue( v, externalParameter ) )
+	{
+		value = Color( v );
+		return true;
+	}
+	return false;
+}
+
+
+}
 
 #define SOCKET_PARAMETER_DEFINE( _className, _valueType, _defaultValue )\
 	_className::_className( IRoot* lockobj ) :\
@@ -101,17 +380,13 @@ void EveSocketParameterBindingBase::Propagate()
 	}\
 	bool _className::ExtractDefault( const Tr2ExternalParameter& externalParameter )\
 	{\
-		SOCKET_PARAMETER_GIL_LOCK;\
 		_valueType value;\
-		BlueScriptValue blueValue;\
-		externalParameter.GetValue( blueValue );\
-		if ( BlueExtractArgument( blueValue, value, 0 ) )\
+		if( GetExternalParameterValue( value, externalParameter ) )\
 		{\
 			m_defaults.push_back( value );\
 		}\
 		else\
 		{\
-			SOCKET_PARAMETER_CLEAR_ERROR;\
 			m_defaults.push_back( _defaultValue );\
 		}\
 		return true;\
@@ -131,10 +406,10 @@ void EveSocketParameterBindingBase::Propagate()
 SOCKET_PARAMETER_DEFINE( EveSocketParameterBool, bool, false );
 SOCKET_PARAMETER_DEFINE( EveSocketParameterInt, int, 0 );
 SOCKET_PARAMETER_DEFINE( EveSocketParameterFloat, float, 0.0f );
-SOCKET_PARAMETER_DEFINE( EveSocketParameterVector2, Vector2, Vector2() );
-SOCKET_PARAMETER_DEFINE( EveSocketParameterVector3, Vector3, Vector3() );
-SOCKET_PARAMETER_DEFINE( EveSocketParameterVector4, Vector4, Vector4() );
-SOCKET_PARAMETER_DEFINE( EveSocketParameterColor, Color, Color() );
+SOCKET_PARAMETER_DEFINE( EveSocketParameterVector2, Vector2, Vector2( 0, 0 ) );
+SOCKET_PARAMETER_DEFINE( EveSocketParameterVector3, Vector3, Vector3( 0, 0, 0 ) );
+SOCKET_PARAMETER_DEFINE( EveSocketParameterVector4, Vector4, Vector4( 0, 0, 0, 0 ) );
+SOCKET_PARAMETER_DEFINE( EveSocketParameterColor, Color, Color( 0, 0, 0, 0 ) );
 
 EveSocketParameterString::EveSocketParameterString( IRoot* lockobj ) :
 	PARENTLOCK( m_externalParameters ),
