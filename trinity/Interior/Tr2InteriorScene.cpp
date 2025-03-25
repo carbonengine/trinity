@@ -607,6 +607,31 @@ void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
 	// Gather geometry batches
 	GatherFullForwardBatches( m_visibilityResults );
 
+	{
+		// We need to adjust sorting of transparent batches to match the legacy sorting used during Incarna times.
+		// The order of transparent batches for each individual object/character needs to be the reverse of the
+		// order they were commited.
+		auto& batches = m_primaryRenderBatches->GetBatches();
+		for( size_t start = 0; start < batches.size(); )
+		{
+			auto& batch1 = batches[start];
+			if( batch1.m_renderingMode == Tr2EffectStateManager::RM_ALPHA )
+			{
+				size_t end = start + 1;
+				while( end < batches.size() && batch1.m_depth == batches[end].m_depth )
+				{
+					++end;
+				}
+				std::reverse( &batch1, &batches[end] );
+				start = end;
+			}
+			else
+			{
+				++start;
+			}
+		}
+	}
+
 	// set per-frame data
 	PopulatePerFramePSData(m_perFramePSData, renderContext );
 	PopulatePerFrameVSData(m_perFrameVSData);

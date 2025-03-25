@@ -229,6 +229,7 @@ public:
 	virtual void Commit( const Tr2RenderBatch& batch ) = 0;
 	virtual const std::vector<Tr2RenderBatch>& GetGdprBatches() const = 0;
 	virtual const std::vector<Tr2RenderBatch>& GetBatches() const = 0;
+	virtual std::vector<Tr2RenderBatch>& GetBatches() = 0;
 
 	// Finalize & sort the accumulator
 	virtual void Finalize( void ) = 0;
@@ -333,6 +334,11 @@ public:
 	}
 
 	const std::vector<Tr2RenderBatch>& GetBatches() const override
+	{
+		return m_batches;
+	}
+
+	std::vector<Tr2RenderBatch>& GetBatches() override
 	{
 		return m_batches;
 	}
