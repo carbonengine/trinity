@@ -129,6 +129,7 @@ public:
 	void SetScaling( const Vector3& sc );
 	int GetBoneIndex() const;
 	void SetBoneIndex( int idx );
+	void ForceRebuildIndices();
 	void SetIndices( const std::vector<std::vector<uint32_t>>& indices );
 	void SetMinScreenSize( float minScreenSize );
 
@@ -189,6 +190,7 @@ private:
 	std::vector<DecalIndexBuffer> m_indexBuffers;
 	Tr2SuballocatedBuffer::Allocation m_indexBuffer;
 	bool m_rebuildIndexBuffers;
+	bool m_forceRebuildIndices;
 	float m_isVisible;
 	float m_minScreenSize;
 	float m_instanceScreenSize;

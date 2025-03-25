@@ -63,6 +63,7 @@ public:
 	private:
 		Tr2VirtualAllocator::VirtualAllocation m_allocation = {};
 		uint32_t m_allocatorIndex = 0;
+		std::unique_ptr<uint8_t[]> m_mappedCopy;
 
 		uint32_t m_offset = 0;
 		uint32_t m_size = 0;
@@ -91,14 +92,10 @@ private:
 	std::vector<Tr2VirtualAllocator> m_allocators;
 	std::vector<Allocation*> m_allocations;
 
-	const uint8_t* m_mappedPointer = nullptr;
-	int m_mapCounter = 0;
 
 	void Expand( uint32_t blockSize );
 
-	ALResult MapForReading( Tr2RenderContextAL& renderContext );
-
-	void UnmapForReading( Tr2RenderContextAL& renderContext );
+	ALResult ReadBuffer( std::unique_ptr<uint8_t[]>& dest, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext );
 };
 
 #endif

@@ -36,6 +36,7 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_scaling( 1.f, 1.f, 1.f ),
 	m_parentBoneIndex( -1 ),
 	m_rebuildIndexBuffers( false ),
+	m_forceRebuildIndices( false ),
 	m_geometryLodIndex( -1 ),
 	m_isVisible( 0 ),
 	m_decalMatrix( IdentityMatrix() ),
@@ -198,7 +199,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 			m_baseGeometryResource = geomRes;
 		}
 	}
-	else if( g_buildDecalBuffers )
+	else if( m_forceRebuildIndices || g_buildDecalBuffers )
 	{
 		// if we get a new mesh, we must re-build the index buffer. This should be avoided cause it is slow!
 		if( geomRes != m_baseGeometryResource )
@@ -210,6 +211,10 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 		if( m_rebuildIndexBuffers )
 		{
 			CreateDecalIndexBuffers( geomRes );
+			if( !m_rebuildIndexBuffers )
+			{
+				m_forceRebuildIndices = false;
+			}
 		}
 	}
 
@@ -768,6 +773,12 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes )
 	}
 
 	m_rebuildIndexBuffers = false;
+}
+
+void EveSpaceObjectDecal::ForceRebuildIndices()
+{
+	m_forceRebuildIndices = true;
+	m_rebuildIndexBuffers = true;
 }
 
 void EveSpaceObjectDecal::SetIndices( const std::vector<std::vector<uint32_t>>& indices )
