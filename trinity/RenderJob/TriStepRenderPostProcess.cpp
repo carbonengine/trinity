@@ -18,11 +18,13 @@ TRI_REGISTER_SETTING( "upscalingDebugView", g_upscalingDebugView );
 bool g_frameGenDebugView = false;
 TRI_REGISTER_SETTING( "frameGenDebugView", g_frameGenDebugView );
 
+
 namespace
 {
 const uint32_t HISTOGRAM_TILE_SIZE_X = 16;
 const uint32_t HISTOGRAM_TILE_SIZE_Y = 16;
 const uint32_t NUM_TILES_PER_THREAD_GROUP = 256;
+static Tr2UpscalingAL::Result s_lastUpscalingResult;
 
 ITr2TextureProvider* PLACEHOLDER = nullptr;
 
@@ -1211,10 +1213,11 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	{
 		GPU_REGION( renderContext, "UpscalingTechnique" );
 		auto result = upscalingContext->Dispatch( dispatchParameters );
-		if( result != Tr2UpscalingAL::OK )
+		if( result != Tr2UpscalingAL::OK && s_lastUpscalingResult != result )
 		{
 			Tr2UpscalingAL::LogResult(result);
 		}
+		s_lastUpscalingResult = result;
 	}
 	return dest;
 }
