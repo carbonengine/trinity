@@ -81,6 +81,8 @@ namespace Tr2UpscalingAL
 		OPTIONAL_EXPOSURE = 1 << 4,
 	};
 
+	void LogResult( Result result );
+
 	typedef std::vector<std::pair<float, float>> JitterSequence;
 	JitterSequence GenerateHaltonSequence( uint32_t totalPhases, uint32_t xBase, uint32_t yBase );
 	float Halton( uint32_t index, uint32_t base );
