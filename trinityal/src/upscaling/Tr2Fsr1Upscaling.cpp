@@ -174,6 +174,11 @@ uint32_t Tr2Fsr1UpscalingContext::GetDispatchRequirements() const
 
 Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
+	if( !AreDispatchParametersValid( dispatchParameters ) )
+	{
+		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
+	}
+
 	auto& renderContext = m_params.renderContext;
 
 	GPU_REGION_AL( renderContext, "FSR1 Upscaling" );

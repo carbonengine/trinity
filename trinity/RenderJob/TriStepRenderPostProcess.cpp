@@ -1210,8 +1210,11 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	m_lastFrameTime = BeOS->GetCurrentFrameTime();
 	{
 		GPU_REGION( renderContext, "UpscalingTechnique" );
-
-		upscalingContext->Dispatch( dispatchParameters );
+		auto result = upscalingContext->Dispatch( dispatchParameters );
+		if( result != Tr2UpscalingAL::OK )
+		{
+			Tr2UpscalingAL::LogResult(result);
+		}
 	}
 	return dest;
 }
