@@ -283,7 +283,7 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 			continue;
 		}
 
-		auto primCount = GetPrimitiveCount( *mesh, area->GetIndex(), area->GetCount() );
+		auto primCount = GetPrimitiveCount( *mesh, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
 		if( !primCount )
 		{
 			continue;
