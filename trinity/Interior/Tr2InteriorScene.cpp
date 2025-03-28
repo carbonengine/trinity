@@ -622,7 +622,9 @@ void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
 				{
 					++end;
 				}
-				std::reverse( &batch1, &batches[end] );
+				if( end < batches.size() ){
+					std::reverse( &batch1, &batches[end] );
+				}
 				start = end;
 			}
 			else
