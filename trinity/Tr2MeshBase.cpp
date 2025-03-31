@@ -365,8 +365,8 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 		return batch;
 	}
 
-	auto primCount = GetPrimitiveCount( *mesh, area->GetIndex(), area->GetCount() );
-	auto& meshArea = mesh->m_areas[area->GetIndex()];
+	auto primCount = GetPrimitiveCount( *mesh, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
+	auto& meshArea = mesh->m_areas[std::max( 0, area->GetIndex() )];
 
 	if( !primCount )
 	{
@@ -494,7 +494,7 @@ void Tr2MeshBase::CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& colle
 			// (for example scaffolding + build effect)
 			continue;
 		}
-		TriRenderBatchAreaBlock ab( (*a)->GetIndex(), (*a)->GetCount() );
+		TriRenderBatchAreaBlock ab( std::max( 0, (*a)->GetIndex() ), std::max( 0, (*a)->GetCount() ) );
 		collector.push_back( ab );
 	}
 }
@@ -518,7 +518,7 @@ void Tr2MeshBase::CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksW
 		{
 			collector.m_shaderMaterial = ( *a )->GetMaterialInterface();
 		}
-		TriRenderBatchAreaBlock ab( ( *a )->GetIndex(), ( *a )->GetCount() );
+		TriRenderBatchAreaBlock ab( std::max( 0, ( *a )->GetIndex() ), std::max( 0, ( *a )->GetCount() ) );
 		collector.m_areaBlockVector.push_back( ab );
 	}
 }
