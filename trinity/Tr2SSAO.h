@@ -103,6 +103,44 @@ private:
 
 	Tr2ConstantBufferAL m_constBuffers[SSAO_PASS_COUNT + 1]{};
 
+
+	//CORTAO stuff
+	struct CortaoPerObjectData
+	{
+		Vector4 resolution;
+
+		Vector4 unprojectParams;
+
+		Vector2 projectionParams;
+		float radius;
+		float normalBias;
+
+		float maxApparentCircleRadiusCoefficient;
+		float mipBias;
+		float radiusMultiplier;
+		float lookupOccluderRadiusScale;
+
+		uint32_t randomVectorSeedX;
+		uint32_t randomVectorSeedY;
+		float randomAngleOffset;
+		float inverseMaxSlopeWeight;
+
+		Vector4 depthParams;
+
+		Matrix viewMatrix;
+	};
+
+	bool m_cortaoEnabled;
+	Tr2ConstantBufferAL m_cortaoConstantBuffer;
+	Tr2EffectPtr m_cortaoEffect;
+
+	float m_cortaoStrength;
+	float m_cortaoRadius;
+	float m_cortaoMaxBlockerSearchRadius;
+
+	void ComputeCORTAO( Tr2RenderContext& renderContext );
+
+
 	// Input
 	Tr2DepthStencilPtr m_inputDepthBuffer;
 	Tr2RenderTargetPtr m_inputNormalBuffer;

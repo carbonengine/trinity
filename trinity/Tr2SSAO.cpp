@@ -53,6 +53,12 @@ void Tr2SSAO::Layer::ReleaseResources()
 
 Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 {
+
+	m_cortaoEnabled = true;
+	m_cortaoStrength = 1.0f;
+	m_cortaoRadius = 1.0E10f;
+	m_cortaoMaxBlockerSearchRadius = 0.25f;
+
 	m_detail.settings = FFX_CACAO_PRESETS[0].settings;
 	m_detail.settings.radius = 6;
 	m_detail.settings.shadowMultiplier = 1.0f;
@@ -65,6 +71,10 @@ Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 	m_loadCounterBuffer.CreateInstance();
 	m_blankOutputTexture.CreateInstance();
 	m_outputTarget.CreateInstance();
+
+
+	m_cortaoEffect.CreateInstance();
+	m_cortaoEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/CORTAO.fx" );
 
 	PrepareResources();
 }
@@ -374,10 +384,18 @@ void Tr2SSAO::Filter( Tr2RenderContext& renderContext )
 	}
 
 	GPU_REGION( renderContext, "SSAO" );
-	if( m_detail.enabled )
+	if( m_cortaoEnabled )
 	{
-		GPU_REGION( renderContext, "Detail" );
-		PerformPass( m_detail, false, renderContext );
+		GPU_REGION( renderContext, "CORTAO" );
+		ComputeCORTAO( renderContext );
+	}
+	else
+	{
+		if( m_detail.enabled )
+		{
+			GPU_REGION( renderContext, "Detail" );
+			PerformPass( m_detail, false, renderContext );
+		}
 	}
 }
 
@@ -624,4 +642,78 @@ void Tr2SSAO::PerformPass( const Layer& layer, bool reuseNormals, Tr2RenderConte
 
 		Tr2Renderer::RunComputeShader( layer.effect, BlueSharedString( shader.c_str() ), dimX, dimY, 1, renderContext );
 	}
+}
+
+void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
+{
+
+	int width = m_outputTarget->GetWidth();
+	int height = m_outputTarget->GetHeight();
+
+
+	if( !m_cortaoConstantBuffer.IsValid() )
+	{
+		m_cortaoConstantBuffer.Create( uint32_t( sizeof( CortaoPerObjectData ) ), renderContext.GetPrimaryRenderContext() );
+	}
+
+	CortaoPerObjectData* data;
+	m_cortaoConstantBuffer.Lock( (void**)&data, renderContext );
+	{
+		Matrix viewMatrix = Tr2Renderer::GetViewTransform();
+
+		Matrix projectionMatrix = Tr2Renderer::GetProjectionTransform();
+		Matrix inverseProjectionMatrix = Inverse( projectionMatrix ); 
+
+		Matrix projectionMatrix2 = Tr2Renderer::GetProjectionRawTransform();
+
+		float nearPlane = Tr2Renderer::GetBackClip();
+		float farPlane = Tr2Renderer::GetFrontClip();
+
+
+
+		data->resolution = Vector4( (float)width, (float)height, 1.0f / (float)width, 1.0f / (float)height );
+		
+		
+		data->unprojectParams = Vector4( +2.0f * inverseProjectionMatrix._11, -2.0f * inverseProjectionMatrix._22, -inverseProjectionMatrix._11, inverseProjectionMatrix._22 );
+
+		data->projectionParams = Vector2( projectionMatrix._11 * 0.5f, projectionMatrix._22 * -0.5f );
+		data->radius = m_cortaoRadius;
+
+		data->normalBias = inverseProjectionMatrix._11 * sqrtf( 2.0f ) / width;
+
+
+		float maxApparentCircleRadius = m_cortaoMaxBlockerSearchRadius * 2.0f * fminf( inverseProjectionMatrix._11, inverseProjectionMatrix._22 ); 
+		data->maxApparentCircleRadiusCoefficient = maxApparentCircleRadius / sqrtf( maxApparentCircleRadius * maxApparentCircleRadius + 1.0f );
+
+		float circleBias = 0.0f;
+		data->mipBias = -3.5f + circleBias;
+		data->radiusMultiplier = m_cortaoStrength;
+		data->lookupOccluderRadiusScale = 1.0f;
+
+		data->randomVectorSeedX = rand();
+		data->randomVectorSeedY = rand();
+		data->randomAngleOffset = 6.283185307179586476925286766559f * rand() / RAND_MAX;
+
+		data->inverseMaxSlopeWeight = 1.0f / 10.0f;
+
+
+		data->depthParams = Vector4( ( nearPlane - farPlane ) / ( nearPlane * farPlane ), 1.0f / nearPlane, 0, 0 );
+
+		data->viewMatrix = Transpose( viewMatrix );
+	}
+
+	m_cortaoConstantBuffer.Unlock( renderContext );
+
+
+	
+	m_cortaoEffect->SetParameter( BlueSharedString( "DepthBuffer" ), m_inputDepthBuffer );
+	m_cortaoEffect->SetParameter( BlueSharedString( "NormalBuffer" ), m_inputNormalBuffer );
+	m_cortaoEffect->SetParameter( BlueSharedString( "OutputBuffer" ), m_outputTarget );
+
+
+	renderContext.SetConstants( m_cortaoConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
+
+	uint32_t workGroupSize = 8;
+	Tr2Renderer::RunComputeShader( m_cortaoEffect, ( width + workGroupSize - 1 ) / workGroupSize, ( height + workGroupSize - 1 ) / workGroupSize, 1, renderContext );
+
 }
