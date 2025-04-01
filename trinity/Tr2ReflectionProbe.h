@@ -47,13 +47,8 @@ public:
 	Tr2RenderTargetPtr GetReflection();
 	void SetPosition( Vector3 position );
 
-	void SetBackLightColor( Color color );
-	void SetIntensity( float intensity);
-	void SetBackLightContrast( float contrast );
-
 	bool OnModified( Be::Var* value );
 
-	bool IsHollyWoodModeOn() const;
 	bool ReadyForDynamicObjectReflections() const;
 
 	uint8_t GetStartFace() const;
@@ -88,11 +83,6 @@ private:
 	ReflectionProbeRenderFrequency m_renderFrequency;
 	uint8_t m_currentFrame;
 	bool m_onePassDone;
-
-	// Controls for hollywood lighting
-	bool m_hollywoodMode;
-	Color m_backlightColor;
-	float m_backlightContrast;
 };
 
 TYPEDEF_BLUECLASS( Tr2ReflectionProbe );
