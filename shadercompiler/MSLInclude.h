@@ -11,8 +11,7 @@ using namespace metal;
 // These values must be synchronized with defines in TrinityAL/metal/MetalWorkQueue.h
 #define CBUFFER(i) buffer(4 + i)
 #define SRV(i) buffer(4 + i)
-#define UAV(i) buffer(24 + i)
-#define UAVT(i) texture(24 + i)
+#define UAV(i) buffer(4 + i)
 
 template< typename T, int n >
 vec<float, n> mix( vec<T, n> x, vec<T, n> y, float a )

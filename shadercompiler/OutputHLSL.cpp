@@ -1696,7 +1696,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 				}
 				else if( reg.registerType == MetalRegister::SRV )
 				{
-					os << " [[ SRV(" << reg.registerNumber << ") ]]";
+					os << " [[ buffer(" << reg.registerNumber << ") ]]";
 				}
 				else if( reg.registerType == MetalRegister::Texture )
 				{
@@ -1710,11 +1710,11 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 				{
 					if( node->GetType().IsTexture() )
 					{
-						os << " [[ UAVT(" << reg.registerNumber << ") ]]";
+						os << " [[ texture(" << reg.registerNumber << ") ]]";
 					}
 					else
 					{
-						os << " [[ UAV(" << reg.registerNumber << ") ]]";
+						os << " [[ buffer(" << reg.registerNumber << ") ]]";
 					}
 				}
 				else if( reg.registerType == MetalRegister::ThreadGroup )
