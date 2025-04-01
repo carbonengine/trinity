@@ -54,7 +54,7 @@ void Tr2SSAO::Layer::ReleaseResources()
 Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 {
 
-	m_cortaoEnabled = true;
+	m_cortaoEnabled = false;
 	m_cortaoStrength = 1.0f;
 	m_cortaoRadius = 1.0E10f;
 	m_cortaoMaxBlockerSearchRadius = 0.25f;
