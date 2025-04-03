@@ -375,7 +375,7 @@ void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2T
 
 		{
 			CCP_STATS_ZONE( "DO_DENOISER" );
-			if( m_denoiser && m_useDenoiser )
+			if( m_denoiser && m_useDenoiser && depthMap && depthMap->GetTexture()->IsValid() )
 			{
 				m_denoiser->Apply( *m_shadowMapResultRT, *depthMap, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), upscaling, renderContext );
 			}
