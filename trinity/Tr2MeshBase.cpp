@@ -366,12 +366,13 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 	}
 
 	auto primCount = GetPrimitiveCount( *mesh, area->GetIndex(), area->GetCount() );
+    
+    if( !primCount )
+    {
+        return batch;
+    }
+    
 	auto& meshArea = mesh->m_areas[area->GetIndex()];
-
-	if( !primCount )
-	{
-		return batch;
-	}
 
 	if( area->GetReversed() && !mesh->m_reversedIndicesValid )
 	{

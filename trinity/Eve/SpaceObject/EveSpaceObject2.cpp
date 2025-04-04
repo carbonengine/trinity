@@ -3750,9 +3750,11 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 		auto size = sizeof( RtDecalPerObjectData );
 		if( !m_rtDecalPerObjectDatas[i].IsValid() || m_rtDecalPerObjectDatas[i].GetSize() != size )
-		{
-			m_rtDecalPerObjectDatas[i].Create( uint32_t( size ), renderContext );
-		}
+        {
+            m_rtDecalPerObjectDatas[i].Create( uint32_t( size ), renderContext );
+            std::string name = "EveSpaceObject2::m_rtDecalPerObjectDatas[" + std::to_string(i) + "]";
+            m_rtDecalPerObjectDatas[i].SetName( name.c_str() );
+        }
 
 		// TODO: intern, add buffer and texture srv indices to per object data here
 
