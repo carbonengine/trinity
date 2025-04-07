@@ -1768,7 +1768,7 @@ void Tr2Effect::MapPassParameters(
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	static const size_t MAX_PARAMS = 64;
+	static const size_t MAX_PARAMS = 128;
 
 	Tr2EffectParamVector& pv = stageInput.m_shaderParameters;
 	auto& constants = stageInputDesc.constants;
