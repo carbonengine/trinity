@@ -3785,7 +3785,14 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			}
 		}
 
-		rtPerObjectData->m_srvData.alphaTextureId = area->GetTransparencyTexture() ? area->GetTransparencyTexture()->GetSrvIndexInHeap() : 0;
+		if( area->GetTransparencyTexture() && area->GetTransparencyTexture()->GetTexture() )
+		{
+			rtPerObjectData->m_srvData.alphaTextureId = area->GetTransparencyTexture()->GetTexture()->GetSrvIndexInHeap();
+		}
+		else
+		{
+			rtPerObjectData->m_srvData.alphaTextureId = 0;
+		}
 
 		rtPerObjectData->m_psData = m_psData;
 
@@ -3804,14 +3811,14 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 				//geometry->GetGeometryConstants( *rtMesh, renderContext );
 
 
-				if( area->GetTransparencyTexture() )
-				{
-					uint32_t techniqueIndex;
-					area->GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex );
-					Tr2BindlessResourcesAL usedTextures;
-					area->GetMaterialInterface()->GetUsedBindlessTextures( techniqueIndex, usedTextures );
-					usedTextures.Add( *area->GetTransparencyTexture() );
-				}
+				//if( area->GetTransparencyTexture() )
+				//{
+				//	uint32_t techniqueIndex;
+				//	area->GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex );
+				//	Tr2BindlessResourcesAL usedTextures;
+				//	area->GetMaterialInterface()->GetUsedBindlessTextures( techniqueIndex, usedTextures );
+				//	usedTextures.Add( *area->GetTransparencyTexture() );
+				//}
 
 				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtDecalPerObjectDatas[i], m_worldTransform );
 			}

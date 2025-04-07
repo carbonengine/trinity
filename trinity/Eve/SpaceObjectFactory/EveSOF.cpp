@@ -641,17 +641,18 @@ size_t EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchTy
 		// that's it for setting up this shader, must rebuild cache on it!
 		newShader->EndUpdate();
 
-		Tr2TextureAL* transparencyTexture = nullptr;
+		ITr2TextureProvider* transparencyTexture = nullptr;
 		if( auto param = newShader->GetResourceByName( shaderData->transparencyTextureName.c_str() ) )
 		{
 			if( TriTextureParameterPtr textureParam = BlueCastPtr( param ) )
 			{
 				if( auto resource = textureParam->GetResource() )
 				{
-					if( auto texture = textureParam->GetResource()->GetTexture() )
-					{
-						transparencyTexture = texture;
-					}
+					transparencyTexture = resource;
+					//if( auto texture = textureParam->GetResource()->GetTexture() )
+					//{
+					//	transparencyTexture = texture;
+					//}
 				}
 			}
 		}

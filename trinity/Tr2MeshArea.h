@@ -39,8 +39,8 @@ public:
 	bool GetGenerateDepthArea() const;
 	void SetGenerateDepthArea( bool generate );
 
-	Tr2TextureAL* GetTransparencyTexture() const;
-	void SetTransparencyTexture( Tr2TextureAL* texture );
+	ITr2TextureProvider* GetTransparencyTexture() const;
+	void SetTransparencyTexture( ITr2TextureProvider* texture );
 
 	bool GetUseSHLighting() const;
 
@@ -91,7 +91,7 @@ private:
 	// do we want this area to cast shadows?
 	bool m_castShadows;
 
-	Tr2TextureAL* m_transparencyTexture;
+	ITr2TextureProvider* m_transparencyTexture;
 
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;

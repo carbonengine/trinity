@@ -111,12 +111,12 @@ void Tr2MeshArea::SetCastsShadows( bool castShadows )
 	m_castShadows = castShadows;
 }
 
-Tr2TextureAL* Tr2MeshArea::GetTransparencyTexture() const
+ITr2TextureProvider* Tr2MeshArea::GetTransparencyTexture() const
 {
 	return m_transparencyTexture;
 }
 
-void Tr2MeshArea::SetTransparencyTexture( Tr2TextureAL* texture )
+void Tr2MeshArea::SetTransparencyTexture( ITr2TextureProvider* texture )
 {
 	m_transparencyTexture = texture;
 }
