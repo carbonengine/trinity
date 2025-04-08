@@ -594,6 +594,9 @@ set(_SOURCES
     Eve/UI/EveTacticalOverlay.cpp
     Eve/UI/EveTacticalOverlay.h
     Eve/UI/EveTacticalOverlay_Blue.cpp
+    Eve/UI/EveTacticalTrails.cpp
+    Eve/UI/EveTacticalTrails.h
+    Eve/UI/EveTacticalTrails_Blue.cpp
     Eve/UI/EveUiObject.cpp
     Eve/UI/EveUiObject.h
     Eve/UI/EveUiObject_Blue.cpp
@@ -1719,6 +1722,10 @@ function(set_shared_trinity_properties target)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake DESTINATION .)
     
     ccp_enable_vs_analizers(${target})
+
+    if(${MSVC})
+        target_compile_options(${target} PRIVATE "/bigobj") # The object file generated for EveSOFData.cpp has more than 2^16 sections.
+    endif()
 
 endfunction()
 
