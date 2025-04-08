@@ -594,6 +594,9 @@ set(_SOURCES
     Eve/UI/EveTacticalOverlay.cpp
     Eve/UI/EveTacticalOverlay.h
     Eve/UI/EveTacticalOverlay_Blue.cpp
+    Eve/UI/EveTacticalTrails.cpp
+    Eve/UI/EveTacticalTrails.h
+    Eve/UI/EveTacticalTrails_Blue.cpp
     Eve/UI/EveUiObject.cpp
     Eve/UI/EveUiObject.h
     Eve/UI/EveUiObject_Blue.cpp
