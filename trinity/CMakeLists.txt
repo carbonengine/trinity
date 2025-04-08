@@ -1723,6 +1723,10 @@ function(set_shared_trinity_properties target)
     
     ccp_enable_vs_analizers(${target})
 
+    if(${MSVC})
+        target_compile_options(${target} PRIVATE "/bigobj") # The object file generated for EveSOFData.cpp has more than 2^16 sections.
+    endif()
+
 endfunction()
 
 #[[
