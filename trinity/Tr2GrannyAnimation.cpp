@@ -1534,8 +1534,21 @@ void Tr2AnimationMeshBinding::CreateBinding()
 		{
 			return;
 		}
-		auto meshSkeleton = fi->SkeletonCount > 0 ? fi->Skeletons[0] : m_animation->m_skeleton;
-
+		auto mesh = fi->Meshes[m_meshIndex];
+		auto meshSkeleton = m_animation->m_skeleton;
+		for ( int32_t i = 0; i < fi->ModelCount; ++i )
+		{
+			auto model = fi->Models[i];
+			if( model && model->Skeleton )
+			{
+				auto found = std::find_if( model->MeshBindings, model->MeshBindings + model->MeshBindingCount, [mesh]( const auto& binding ) { return binding.Mesh == mesh; } );
+				if ( found != model->MeshBindings + model->MeshBindingCount )
+				{
+					meshSkeleton = model->Skeleton;
+					break;
+				}
+			}
+		}
 		m_meshBinding.reset( GrannyNewMeshBinding( fi->Meshes[m_meshIndex], meshSkeleton, m_animation->m_skeleton ) );
 		if( m_meshBinding )
 		{
