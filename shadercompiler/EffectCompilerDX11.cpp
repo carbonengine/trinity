@@ -1109,7 +1109,7 @@ bool AddGlobalInputs( StageData& globalsData, std::map<StringReference, Paramete
 			auto& reg = symbol->registerSpecifier.begin()->second;
 			auto outReg = GetRegisterInputDescription( symbol->type, reg );
 			auto existingReg = find_if( begin( globalsData.registerInputs ), end( globalsData.registerInputs ), [&outReg]( auto& x ) {
-				return outReg.registerIndex == x.registerIndex && outReg.registerSpace == x.registerSpace;
+				return outReg.registerIndex == x.registerIndex && outReg.registerSpace == x.registerSpace && outReg.registerType == x.registerType;
 			} );
 			if( existingReg != end( globalsData.registerInputs ) )
 			{
