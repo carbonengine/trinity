@@ -5,6 +5,7 @@
 #include "Resources/Tr2LodResource.h"
 
 
+BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2Material );
 BLUE_DECLARE( Tr2MeshBase );
 class Tr2RaytracingMeshArea;
@@ -39,12 +40,12 @@ public:
 	bool GetGenerateDepthArea() const;
 	void SetGenerateDepthArea( bool generate );
 
-	ITr2TextureProvider* GetTransparencyTexture() const;
-	void SetTransparencyTexture( ITr2TextureProvider* texture );
+	ITr2TextureProviderPtr GetTransparencyTexture();
+	void SetTransparencyTextureName( const BlueSharedString& textureName );
 
 	bool GetUseSHLighting() const;
 
-	void SetMaterial( Tr2Material* mat );
+	void SetMaterial( Tr2EffectPtr mat );
 
 	Tr2Material* GetMaterialInterface() const;
 
@@ -69,7 +70,7 @@ public:
 	Tr2RaytracingMeshArea* GetOrCreateRtMeshArea();
 	Tr2RaytracingMeshArea* GetRtMeshArea() const;
 private:
-	Tr2MaterialPtr m_material;
+	Tr2EffectPtr m_material;
 	std::string m_name;
 	int32_t m_index;
 	int32_t m_count;
@@ -91,7 +92,8 @@ private:
 	// do we want this area to cast shadows?
 	bool m_castShadows;
 
-	ITr2TextureProvider* m_transparencyTexture;
+	BlueSharedString m_transparencyTextureName;
+	ITr2TextureProviderPtr m_transparencyTexture;
 
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;

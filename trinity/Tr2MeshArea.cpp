@@ -2,6 +2,8 @@
 #include "Tr2MeshArea.h"
 #include "Tr2MeshBase.h"
 #include "Raytracing/Tr2RaytracingGeometry.h"
+#include "Shader/Parameter/TriTextureParameter.h"
+#include "ITr2TextureProvider.h"
 
 Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_display( true ),
@@ -14,7 +16,8 @@ Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_jointCount( 0 ),
 	m_jointMappingAnimRig( NULL ),
 	m_minLod( TR2_LOD_UNSPECIFIED ),
-	m_transparencyTexture( nullptr )
+	m_transparencyTexture(),
+	m_transparencyTextureName()
 {
 }
 
@@ -41,6 +44,7 @@ Tr2MeshArea& Tr2MeshArea::operator=( const Tr2MeshArea& other )
 	m_useSHLighting = other.m_useSHLighting;
 	m_generateDepthArea = other.m_generateDepthArea;
 	m_transparencyTexture = other.m_transparencyTexture;
+	m_transparencyTextureName = other.m_transparencyTextureName;
 
 	return *this;
 }
@@ -111,14 +115,29 @@ void Tr2MeshArea::SetCastsShadows( bool castShadows )
 	m_castShadows = castShadows;
 }
 
-ITr2TextureProvider* Tr2MeshArea::GetTransparencyTexture() const
+ITr2TextureProviderPtr Tr2MeshArea::GetTransparencyTexture()
 {
+	if ( !m_transparencyTexture && !m_transparencyTextureName.empty() )
+	{
+		ITr2TextureProvider* transparencyTexture = nullptr;
+		if( ITriEffectParameter* param = m_material->GetResourceByName( m_transparencyTextureName.c_str() ) )
+		{
+			if( TriTextureParameterPtr textureParam = BlueCastPtr( param ) )
+			{
+				if( auto resource = textureParam->GetResource() )
+				{
+					m_transparencyTexture = resource;
+				}
+			}
+		}
+	}
 	return m_transparencyTexture;
 }
 
-void Tr2MeshArea::SetTransparencyTexture( ITr2TextureProvider* texture )
+void Tr2MeshArea::SetTransparencyTextureName( const BlueSharedString& textureName )
 {
-	m_transparencyTexture = texture;
+	m_transparencyTextureName = textureName;
+	m_transparencyTexture.Unlock();
 }
 
 // -------------------------------------------------------------
@@ -172,7 +191,7 @@ Tr2Material* Tr2MeshArea::GetMaterialInterface() const
 	return m_material;
 }
 
-void Tr2MeshArea::SetMaterial( Tr2Material* mat )
+void Tr2MeshArea::SetMaterial( Tr2EffectPtr mat )
 {
 	m_material = mat;
 }

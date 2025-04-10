@@ -3785,9 +3785,10 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			}
 		}
 
-		if( area->GetTransparencyTexture() && area->GetTransparencyTexture()->GetTexture() )
+		ITr2TextureProviderPtr transparencyTexture = area->GetTransparencyTexture();
+		if( transparencyTexture && transparencyTexture->GetTexture() )
 		{
-			rtPerObjectData->m_srvData.alphaTextureId = area->GetTransparencyTexture()->GetTexture()->GetSrvIndexInHeap();
+			rtPerObjectData->m_srvData.alphaTextureId = transparencyTexture->GetTexture()->GetSrvIndexInHeap();
 		}
 		else
 		{
