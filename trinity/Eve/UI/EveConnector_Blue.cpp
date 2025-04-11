@@ -34,6 +34,16 @@ Be::VarChooser EveConnectorTypeChooser[] =
 		"Circle in xz plane going through the 'StraightAnchor' point with source as the center"
 	},
 	{
+		"Circle",
+		BeCast( EveConnector::Circle ),
+		"Circle in the plane normal plane"
+	},
+	{
+		"Ellipse",
+		BeCast( EveConnector::Ellipse ),
+		"Ellipse in the plane normal plane, radiusX is destPosition.x and radiusY is destPosition.y"
+	},
+	{
 		"Orbit",
 		BeCast( EveConnector::Orbit ),
 		"Draws an orbit using planeNormal and radius"
