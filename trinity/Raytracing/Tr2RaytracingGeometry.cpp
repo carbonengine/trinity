@@ -121,7 +121,6 @@ std::wstring Tr2RaytracingPipelineStateManager::AddHitGroup( const Tr2EffectLibr
 	m_pipelineDesc.AddShaders( count, exportNamesRaw, *Tr2EffectStateManager::GetShaderLibraryCode( library.libraryHandle ), names, library.payloadSize, library.localInput.signature );
 	auto hitGroup = GetUniqueName();
 	m_pipelineDesc.AddHitGroup( hitGroup.c_str(), anyHitName.c_str(), closestHitName.c_str(), intersectionName.c_str(), library.localInput.signature );
-	//m_pipelineDesc.AddGlobalSignature( library.globalInput.signature );
 	m_pipelineDesc.AddLocalSignature( library.localInput.signature );
 	m_hitGroups[library.libraryHandle] = hitGroup;
 	m_isDirty = true;

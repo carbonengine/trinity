@@ -519,6 +519,11 @@ void Tr2MeshBase::CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksW
 		{
 			continue;
 		}
+		// TODO: intern, doesn't work, the cache probably needs to be invalidated somehow for a change to m_display to be picked up? ask someone about this
+		if ( !( *a )->GetDisplay() )
+		{
+			continue;
+		}
 		if( !collector.m_shaderMaterial && !!( *a )->GetMaterialInterface() )
 		{
 			collector.m_shaderMaterial = ( *a )->GetMaterialInterface();
