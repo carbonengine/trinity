@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(ShaderCompiler VERSION 1.2.4)
+project(ShaderCompiler VERSION 1.2.5)
 
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 

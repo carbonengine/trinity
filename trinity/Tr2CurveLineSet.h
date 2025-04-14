@@ -62,7 +62,7 @@ public:
 	bool SubmitChanges();
 	// add
 	unsigned int AddStraightLine( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, float width );
-	unsigned int AddCurvedLineCrt( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& middle, float width );
+	unsigned int AddCurvedLineCrt( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& middle, float width, Be::OptionalWithDefaultValue<int, 20> segments = 20 );
 	unsigned int AddCurvedLineSph( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& center, const Vector3& middle, float width );
 	unsigned int AddSpheredLineCrt( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& center, float width );
 	unsigned int AddSpheredLineSph( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& center, float width );
