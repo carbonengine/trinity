@@ -754,7 +754,6 @@ bool Tr2EffectDescription::Read( const void* data,
 		{
 			Tr2RenderContextEnum::ShaderType type = Tr2RenderContextEnum::ShaderType::COMPUTE_SHADER;
 			// library.localInput should not contain anything other than constant buffers afaik, so that's why it's not doing the HeapView stuff here
-			//if ( library.globalInput.m_exists )	// TODO: intern, this is always false, seems like it's not set anywhere... either remove this check or set the variable somewhere...
 			{
 				for( auto& res : library.globalInput.resources )
 				{

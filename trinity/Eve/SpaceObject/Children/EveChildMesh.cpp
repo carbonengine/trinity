@@ -447,7 +447,6 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize );
 		// TODO: intern, I assume I also have to get decal areas here? need to find a test asset for that.
 		// TODO: intern, check other GetShadowBatches implementations as well...
-		//m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_DECAL ), perObjectData, shadowPixelSize );
 	}
 }
 
