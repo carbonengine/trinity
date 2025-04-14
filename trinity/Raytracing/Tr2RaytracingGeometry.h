@@ -116,11 +116,13 @@ public:
 	void BeginSceneUpdate();
 	void EndSceneUpdate( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform );
+	void AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform, const Tr2BindlessResourcesAL& usedResources );
 	bool HasGeometry() const;
 
 	void ReleaseResources( TriStorage s );
     
     Tr2RtTopLevelAccelerationStructureAL GetTLAS() const;
+	const Tr2BindlessResourcesAL& GetBindlessResources() const;
 
 	const BlueSharedString m_rtShadowTechniqueName = BlueSharedString( "RtShadow" );
 private:
@@ -160,6 +162,8 @@ private:
 	std::unordered_map<unsigned, VtxOffsets> m_offsets;
 
 	Tr2BufferAL m_skinnedVertices;
+
+	Tr2BindlessResourcesAL m_usedResources;
 };
 
 TYPEDEF_BLUECLASS( Tr2RaytracingGeometry );

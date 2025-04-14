@@ -3712,29 +3712,17 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	struct RtDecalPerObjectData
 	{
 		EveSpaceObjectPSData m_psData;
-		Matrix m_instance; // TODO: intern, try removing matrix with ifdef in shader and over here?
-		struct SRVData // TODO: intern, don't always allocate space but only when it's an alpha cutout?
+		Matrix m_instance;
+		struct SRVData
 		{
 			uint32_t vertexBufferId;
 			uint32_t vertexBufferStride;
-			// TODO: intern, do we need offsets?
 			uint32_t vertexBufferOffset;
-			// TODO: intern, element type?
-
-			//uint vertexBufferType;
-
 			uint32_t indexBufferId;
 			uint32_t indexBufferStride;
 			uint32_t indexBufferOffset;
-			// TODO: intern, do we need offsets?
-			//uint indexBufferOffset;
-			// TODO: intern, element type?
-
 			uint32_t texCoord0Offset;
-
 			uint32_t alphaTextureId;
-
-			//uint32_t padding[1];
 		} m_srvData;
 	};
 
@@ -3756,17 +3744,15 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
             m_rtDecalPerObjectDatas[i].SetName( name.c_str() );
         }
 
-		// TODO: intern, add buffer and texture srv indices to per object data here
-
 		auto meshData = rtMesh->GetMeshData();
 
 		RtDecalPerObjectData* rtPerObjectData;
 		m_rtDecalPerObjectDatas[i].Lock( (void**)&rtPerObjectData, renderContext );
 
 		rtPerObjectData->m_srvData.vertexBufferId = rtMesh->GetVertexBuffer().GetSrvIndexInHeap();
-		rtPerObjectData->m_srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();// rtMesh->GetVertexBuffer().GetDesc().stride; // TODO: intern, wtf, why is this 1??
+		rtPerObjectData->m_srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();
 		rtPerObjectData->m_srvData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
-		rtPerObjectData->m_srvData.indexBufferStride = meshData->m_indexAllocation.GetStride(); // rtMesh->GetIndexBuffer().GetDesc().stride; // TODO: intern, wtf, why is this 1??
+		rtPerObjectData->m_srvData.indexBufferStride = meshData->m_indexAllocation.GetStride();
 		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * 4 + meshData->m_indexAllocation.GetOffset();
 
 		rtPerObjectData->m_srvData.texCoord0Offset = 0;
@@ -3785,10 +3771,19 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			}
 		}
 
-		ITr2TextureProviderPtr transparencyTexture = area->GetTransparencyTexture();
-		if( transparencyTexture && transparencyTexture->GetTexture() )
+		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
+		Tr2TextureAL* transparencyTexture = nullptr;
+		Tr2BindlessResourcesAL usedResources;
+		if( transparencyTextureProvider )
 		{
-			rtPerObjectData->m_srvData.alphaTextureId = transparencyTexture->GetTexture()->GetSrvIndexInHeap();
+			transparencyTexture = transparencyTextureProvider->GetTexture();
+			if( transparencyTexture )
+			{
+				rtPerObjectData->m_srvData.alphaTextureId = transparencyTexture->GetSrvIndexInHeap();
+				usedResources.Add( *transparencyTexture );
+				usedResources.Add( rtMesh->GetVertexBuffer() );
+				usedResources.Add( rtMesh->GetIndexBuffer() );
+			}
 		}
 		else
 		{
@@ -3796,8 +3791,6 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		}
 
 		rtPerObjectData->m_psData = m_psData;
-
-		//*reinterpret_cast<SRVData*>( ( reinterpret_cast<Matrix*>( perObjectData + 1 ) + 1 ) ) = srvData;
 		
 		m_rtDecalPerObjectDatas[i].Unlock( renderContext );
 
@@ -3806,22 +3799,7 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			auto geometry = area->GetRtMeshArea();
 			if( geometry )
 			{
-				
-
-				// TODO: intern, use GetGeometryConstants ?
-				//geometry->GetGeometryConstants( *rtMesh, renderContext );
-
-
-				//if( area->GetTransparencyTexture() )
-				//{
-				//	uint32_t techniqueIndex;
-				//	area->GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex );
-				//	Tr2BindlessResourcesAL usedTextures;
-				//	area->GetMaterialInterface()->GetUsedBindlessTextures( techniqueIndex, usedTextures );
-				//	usedTextures.Add( *area->GetTransparencyTexture() );
-				//}
-
-				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtDecalPerObjectDatas[i], m_worldTransform );
+				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtDecalPerObjectDatas[i], m_worldTransform, usedResources );
 			}
 		}
 	}

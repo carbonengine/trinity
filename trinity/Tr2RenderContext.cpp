@@ -50,6 +50,8 @@ void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& t
 		}
 	};
 
+	// TODO: intern, shouldn't used bindless buffers also be handled here? (with renaming of function names from textures to resources)
+
 	for( auto& batch : batches->GetGdprBatches() )
 	{
 		ProcessBatch( batch );
@@ -60,8 +62,8 @@ void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& t
 	}
 
 	{
-		CCP_STATS_ZONE( "renderContext.UseTextures" );
-		renderContext.UseTextures( Tr2GpuUsage::SHADER_RESOURCE, usedTextures );
+		CCP_STATS_ZONE( "renderContext.UseResources" );
+		renderContext.UseResources( Tr2GpuUsage::SHADER_RESOURCE, usedTextures );
 	}
 #endif
 }

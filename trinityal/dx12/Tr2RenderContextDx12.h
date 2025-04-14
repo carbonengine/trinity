@@ -37,12 +37,14 @@ class Tr2BindlessResourcesAL
 {
 public:
 	void Add( const Tr2TextureAL& texture );
+	void Add( const Tr2BufferAL& buffer );
 	void Add( const Tr2BindlessResourcesAL& resources );
 	void Clear();
 	friend class Tr2RenderContextAL;
 
 private:
 	std::vector<TrinityALImpl::Tr2TextureAL*> m_textures;
+	std::vector<TrinityALImpl::Tr2BufferAL*> m_buffers;
 };
 
 
@@ -228,7 +230,7 @@ public:
 	void FlushGraphicsBarriersDx12( ID3D12Resource* resource = nullptr );
 	void FlushComputeBarriersDx12( ID3D12Resource* resource = nullptr );
 
-	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& textures );
+	ALResult UseResources( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
     ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
     
 	ALResult SetAllState();

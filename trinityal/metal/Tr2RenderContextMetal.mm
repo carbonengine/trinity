@@ -1526,7 +1526,7 @@ void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameE
 
 	return m_upscalingTechnique->MarkFrameEvent( frameEvent );
 }
-ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
+ALResult Tr2RenderContextAL::UseResources( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
 {
     if( resources.m_textures.empty() )
     {
@@ -1561,6 +1561,8 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
                         usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
         m_workQueue->ReleaseEncoder( false );
     }
+
+	// TODO: intern, add resources.m_buffers somehow...
     
 	return S_OK;
 }
@@ -1630,9 +1632,15 @@ void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )
 	m_textures.push_back( texture.TrinityALImpl_GetObject() );
 }
 
+void Tr2BindlessResourcesAL::Add( const Tr2BufferAL& buffer )
+{
+	m_buffers.push_back( buffer.TrinityALImpl_GetObject() );
+}
+
 void Tr2BindlessResourcesAL::Add( const Tr2BindlessResourcesAL& resources )
 {
 	m_textures.insert( end( m_textures ), begin( resources.m_textures ), end( resources.m_textures ) );
+	m_buffers.insert( end( m_buffers ), begin( resources.m_buffers ), end( resources.m_buffers ) );
 }
 
 void Tr2BindlessResourcesAL::Clear()
