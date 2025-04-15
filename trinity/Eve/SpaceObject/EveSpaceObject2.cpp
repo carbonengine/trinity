@@ -3658,6 +3658,141 @@ void EveSpaceObject2::SetMute( bool isMute )
 	}
 }
 
+Tr2BindlessResourcesAL GetBindlessRtResources( const Tr2MeshAreaVector* decalAreas, Tr2RaytracingMesh* rtMesh )
+{
+	Tr2BindlessResourcesAL usedResources;
+	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it )
+	{
+		auto area = *it;
+		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
+		Tr2TextureAL* transparencyTexture = nullptr;
+		if( transparencyTextureProvider )
+		{
+			transparencyTexture = transparencyTextureProvider->GetTexture();
+			if( transparencyTexture )
+			{
+				usedResources.Add( *transparencyTexture );
+			}
+		}
+	}
+	usedResources.Add( rtMesh->GetVertexBuffer() );
+	usedResources.Add( rtMesh->GetIndexBuffer() );
+	return usedResources;
+}
+
+void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* instanceTransform, Tr2PrimaryRenderContext& renderContext, Tr2MeshBasePtr mesh,
+	Tr2ConstantBufferAL& opaquePerObjectData, uint32_t decalPerObjectDatasCount, Tr2ConstantBufferAL* decalPerObjectDatas )
+{
+	auto rtMesh = mesh->GetRtMesh();
+
+#pragma region opque geometry
+	const Tr2MeshAreaVector* opaqueAreas = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+
+	auto size = sizeof( EveSpaceObjectPSData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
+
+	if( !opaquePerObjectData.IsValid() || opaquePerObjectData.GetSize() != size )
+	{
+		opaquePerObjectData.Create( uint32_t( size ), renderContext );
+	}
+
+	EveSpaceObjectPSData* perObjectData;
+	opaquePerObjectData.Lock( (void**)&perObjectData, renderContext );
+	*perObjectData = psData;
+	if( instanceTransform )
+	{
+		*reinterpret_cast<Matrix*>( perObjectData + 1 ) = Transpose( *instanceTransform );
+	}
+	opaquePerObjectData.Unlock( renderContext );
+#pragma endregion
+
+#pragma region decal geometry
+	const Tr2MeshAreaVector* decalAreas = mesh->GetAreas( TRIBATCHTYPE_DECAL );
+
+	struct RtDecalPerObjectData
+	{
+		EveSpaceObjectPSData m_psData;
+		struct SRVData
+		{
+			uint32_t vertexBufferId;
+			uint32_t vertexBufferStride;
+			uint32_t vertexBufferOffset;
+			uint32_t indexBufferId;
+			uint32_t indexBufferStride;
+			uint32_t indexBufferOffset;
+			uint32_t texCoord0Offset;
+			uint32_t alphaTextureId;
+		} m_srvData;
+	};
+
+	
+	CCP_ASSERT_M( decalPerObjectDatasCount == (uint32_t)decalAreas->size(), "A wrong amount of constant buffers were provided for raytraced alpha cutouts!" );
+
+	auto meshData = rtMesh->GetMeshData();
+
+	Tr2VertexDefinition def;
+	Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, def );
+	uint32_t vertexBufferOffset = 0;
+	uint32_t texCoord0Offset = 0;
+	for( auto it = begin( def.m_items ); it != end( def.m_items ); ++it )
+	{
+		if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			vertexBufferOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+		}
+
+		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+		}
+	}
+
+	uint32_t i = 0;
+	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
+	{
+		auto area = *it;
+
+		auto size = sizeof( RtDecalPerObjectData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
+		if( !decalPerObjectDatas[i].IsValid() || decalPerObjectDatas[i].GetSize() != size )
+		{
+			decalPerObjectDatas[i].Create( uint32_t( size ), renderContext );
+		}
+
+		RtDecalPerObjectData* rtPerObjectData;
+		decalPerObjectDatas[i].Lock( (void**)&rtPerObjectData, renderContext );
+
+		rtPerObjectData->m_srvData.vertexBufferId = rtMesh->GetVertexBuffer().GetSrvIndexInHeap();
+		rtPerObjectData->m_srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();
+		rtPerObjectData->m_srvData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
+		rtPerObjectData->m_srvData.indexBufferStride = meshData->m_indexAllocation.GetStride();
+		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * 4 + meshData->m_indexAllocation.GetOffset();
+		rtPerObjectData->m_srvData.vertexBufferOffset = vertexBufferOffset;
+		rtPerObjectData->m_srvData.texCoord0Offset = texCoord0Offset;
+
+		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
+		Tr2TextureAL* transparencyTexture = nullptr;
+		if( transparencyTextureProvider )
+		{
+			transparencyTexture = transparencyTextureProvider->GetTexture();
+			if( transparencyTexture )
+			{
+				rtPerObjectData->m_srvData.alphaTextureId = transparencyTexture->GetSrvIndexInHeap();
+			}
+		}
+		else
+		{
+			rtPerObjectData->m_srvData.alphaTextureId = 0;
+		}
+
+		rtPerObjectData->m_psData = psData;
+		if( instanceTransform )
+		{
+			*reinterpret_cast<Matrix*>( rtPerObjectData + 1 ) = Transpose( *instanceTransform );
+		}
+		decalPerObjectDatas[i].Unlock( renderContext );
+	}
+#pragma endregion
+}
+
 void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
 	if( !m_mesh || !m_display )
@@ -3679,18 +3814,17 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	#pragma region opque geometry
-	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	const Tr2MeshAreaVector* decalAreas = m_mesh->GetAreas( TRIBATCHTYPE_DECAL );
 
-	if( !m_rtOpaquePerObjectData.IsValid() )
+	if( m_rtDecalPerObjectDatas.size() != decalAreas->size() )
 	{
-		m_rtOpaquePerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
+		m_rtDecalPerObjectDatas.resize( decalAreas->size() );
 	}
 
-	EveSpaceObjectPSData* perObjectData;
-	m_rtOpaquePerObjectData.Lock( (void**)&perObjectData, renderContext );
-	*perObjectData = m_psData;
-	m_rtOpaquePerObjectData.Unlock( renderContext );
+	UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_mesh, m_rtOpaquePerObjectData, (uint32_t)m_rtDecalPerObjectDatas.size(), m_rtDecalPerObjectDatas.data() );
+
+	#pragma region opque geometry
+	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
 	for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it )
 	{
@@ -3707,101 +3841,22 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	#pragma endregion
 	
 	#pragma region decal geometry
-	const Tr2MeshAreaVector* decalAreas = m_mesh->GetAreas( TRIBATCHTYPE_DECAL );
-
-	struct RtDecalPerObjectData
-	{
-		EveSpaceObjectPSData m_psData;
-		Matrix m_instance;
-		struct SRVData
-		{
-			uint32_t vertexBufferId;
-			uint32_t vertexBufferStride;
-			uint32_t vertexBufferOffset;
-			uint32_t indexBufferId;
-			uint32_t indexBufferStride;
-			uint32_t indexBufferOffset;
-			uint32_t texCoord0Offset;
-			uint32_t alphaTextureId;
-		} m_srvData;
-	};
-
-	if( m_rtDecalPerObjectDatas.size() != decalAreas->size() )
-	{
-		m_rtDecalPerObjectDatas.resize( decalAreas->size() );
-	}
-
 	uint32_t i = 0;
 	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
 	{
 		auto area = *it;
-
-		auto size = sizeof( RtDecalPerObjectData );
-		if( !m_rtDecalPerObjectDatas[i].IsValid() || m_rtDecalPerObjectDatas[i].GetSize() != size )
-        {
-            m_rtDecalPerObjectDatas[i].Create( uint32_t( size ), renderContext );
-            std::string name = "EveSpaceObject2::m_rtDecalPerObjectDatas[" + std::to_string(i) + "]";
-            m_rtDecalPerObjectDatas[i].SetName( name.c_str() );
-        }
-
-		auto meshData = rtMesh->GetMeshData();
-
-		RtDecalPerObjectData* rtPerObjectData;
-		m_rtDecalPerObjectDatas[i].Lock( (void**)&rtPerObjectData, renderContext );
-
-		rtPerObjectData->m_srvData.vertexBufferId = rtMesh->GetVertexBuffer().GetSrvIndexInHeap();
-		rtPerObjectData->m_srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();
-		rtPerObjectData->m_srvData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
-		rtPerObjectData->m_srvData.indexBufferStride = meshData->m_indexAllocation.GetStride();
-		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * 4 + meshData->m_indexAllocation.GetOffset();
-
-		rtPerObjectData->m_srvData.texCoord0Offset = 0;
-		Tr2VertexDefinition def;
-		Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, def );
-		for( auto it = begin( def.m_items ); it != end( def.m_items ); ++it )
-		{
-			if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
-			{
-				rtPerObjectData->m_srvData.vertexBufferOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			}
-
-			if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
-			{
-				rtPerObjectData->m_srvData.texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			}
-		}
-
-		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
-		Tr2TextureAL* transparencyTexture = nullptr;
-		Tr2BindlessResourcesAL usedResources;
-		if( transparencyTextureProvider )
-		{
-			transparencyTexture = transparencyTextureProvider->GetTexture();
-			if( transparencyTexture )
-			{
-				rtPerObjectData->m_srvData.alphaTextureId = transparencyTexture->GetSrvIndexInHeap();
-				usedResources.Add( *transparencyTexture );
-				usedResources.Add( rtMesh->GetVertexBuffer() );
-				usedResources.Add( rtMesh->GetIndexBuffer() );
-			}
-		}
-		else
-		{
-			rtPerObjectData->m_srvData.alphaTextureId = 0;
-		}
-
-		rtPerObjectData->m_psData = m_psData;
-		
-		m_rtDecalPerObjectDatas[i].Unlock( renderContext );
 
 		if( area->GetDisplay() )
 		{
 			auto geometry = area->GetRtMeshArea();
 			if( geometry )
 			{
-				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtDecalPerObjectDatas[i], m_worldTransform, usedResources );
+				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtDecalPerObjectDatas[i], m_worldTransform );
 			}
 		}
 	}
+
+	Tr2BindlessResourcesAL usedResources = GetBindlessRtResources( decalAreas, rtMesh );
+	rtManager.GetGeometry().AddUsedResources( usedResources );
 	#pragma endregion
 }

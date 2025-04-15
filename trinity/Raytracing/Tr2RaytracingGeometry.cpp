@@ -815,15 +815,12 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
     }
 }
 
-void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform, const Tr2BindlessResourcesAL& usedResources )
+void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform )
 {
 	if( !mesh.IsGoodForArea( area.GetAreaIndex() ) )
 	{
 		return;
 	}
-
-	// TODO: intern, this is probably causing duplicates in usedResources. is that a problem?
-	m_usedResources.Add( usedResources );
 
 	GeometryData obj;
 	obj.mesh = &mesh;
@@ -837,10 +834,10 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 }
 
 
-void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform )
+void Tr2RaytracingGeometry::AddUsedResources( const Tr2BindlessResourcesAL& usedResources )
 {
-	Tr2BindlessResourcesAL usedResources;
-	AddGeometry( mesh, area, material, perObjectData, worldTransform, usedResources );
+	// TODO: intern, this is probably causing duplicates in usedResources. is that a problem?
+	m_usedResources.Add( usedResources );
 }
 
 bool Tr2RaytracingGeometry::HasGeometry() const

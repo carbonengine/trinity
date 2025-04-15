@@ -116,7 +116,7 @@ public:
 	void BeginSceneUpdate();
 	void EndSceneUpdate( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform );
-	void AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform, const Tr2BindlessResourcesAL& usedResources );
+	void AddUsedResources( const Tr2BindlessResourcesAL& usedResources );
 	bool HasGeometry() const;
 
 	void ReleaseResources( TriStorage s );
