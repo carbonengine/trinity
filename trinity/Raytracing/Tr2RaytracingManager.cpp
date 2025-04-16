@@ -191,6 +191,12 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 		renderContext.UseAccelerationStructure( m_geometry->GetTLAS() );
 
 		renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
+
+		{
+			CCP_STATS_ZONE( "renderContext.UseResources" );
+			renderContext.UseResources( Tr2GpuUsage::SHADER_RESOURCE, m_geometry->GetBindlessResources() );
+		}
+
 		renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
 	}
 	if( m_denoiser && m_applyDenoiser )

@@ -56,6 +56,7 @@
 #include "Lights/ITr2LightOwner.h"
 #include "Utilities/BoundingSphere.h"
 #include "BlueObjectMetadata.h"
+#include "ITr2TextureProvider.h"
 
 namespace
 {
@@ -554,6 +555,8 @@ size_t EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchTy
 		{
 		case TRIBATCHTYPE_DECAL:
 			newShader->SetOption( BlueSharedString( "SPACE_OBJECT_TRANSPARENCY" ), BlueSharedString( "SOT_CLIP" ) );
+			// TODO: intern, add feature flag for frontier only
+			castsShadows = true;
 			break;
 		case TRIBATCHTYPE_TRANSPARENT:
 			newShader->SetOption( BlueSharedString( "SPACE_OBJECT_TRANSPARENCY" ), BlueSharedString( "SOT_TRANSPARENT" ) );
@@ -646,7 +649,8 @@ size_t EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchTy
 		newMeshArea->SetIndex( area->index + (unsigned int)meshIndexOffset );
 		newMeshArea->SetCount( area->count );
 		newMeshArea->SetCastsShadows( castsShadows );
-		
+		newMeshArea->SetTransparencyTextureName( shaderData->transparencyTextureName );
+
 		meshAreaVector->Append( newMeshArea );
 	}
 
@@ -2100,7 +2104,7 @@ void EveSOF::SetupShaders( const EveSOFDNAPtr dna, Tr2MeshBase* mesh ) const
 	{
 		size_t cntr = 0;
 		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), TRIBATCHTYPE_OPAQUE, dna, hullIdx, meshIndexOffset );
-		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), TRIBATCHTYPE_DECAL, dna, hullIdx, meshIndexOffset );
+		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_DECAL ), TRIBATCHTYPE_DECAL, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), TRIBATCHTYPE_TRANSPARENT, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_ADDITIVE ), TRIBATCHTYPE_ADDITIVE, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_DISTORTION ), TRIBATCHTYPE_DISTORTION, dna, hullIdx, meshIndexOffset );

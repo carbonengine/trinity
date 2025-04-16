@@ -2240,6 +2240,8 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
 		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
+		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DECAL], techniqueName );
+		renderContext.m_esm.ApplyStandardStates( renderingMode );
 		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 
 		// Planet z areas need special treatment
@@ -2258,6 +2260,8 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 			FinalizeBatches( m_secondaryBatches );
 			renderContext.m_esm.ApplyStandardStates( renderingMode );
 			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
+			renderContext.m_esm.ApplyStandardStates( renderingMode );
+			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DECAL], techniqueName );
 			renderContext.m_esm.ApplyStandardStates( renderingMode );
 			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 			ClearBatches( m_secondaryBatches );

@@ -3083,6 +3083,7 @@ namespace
             };
             
             AddSystemValue( hlsl::uint_t, MetalSystemSemanticsType::instance_id );
+            AddSystemValue( hlsl::uint_t, MetalSystemSemanticsType::primitive_id );
             AddSystemValue( hlsl::float3_t, MetalSystemSemanticsType::origin );
             AddSystemValue( hlsl::float3_t, MetalSystemSemanticsType::direction );
             AddSystemValue( hlsl::float_t, MetalSystemSemanticsType::min_distance );
@@ -4590,6 +4591,7 @@ const char* MetalSystemSemanticsType::GetString( int type )
 		"front_facing",
 		"vertex_id",
 		"instance_id",
+		"primitive_id",
 		"clip_distance",
 		"point_size",
 		"color(0)",
