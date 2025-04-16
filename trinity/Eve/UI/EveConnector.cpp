@@ -49,6 +49,7 @@ void EveConnector::AddLine( EveCurveLineSet* lineSet )
 	Vector3 n( 0, 1, 0 );
 	float radiusX = m_destPosition.x;
 	float radiusY = m_destPosition.y;
+	float rotation = m_destPosition.z;
 	bool fade = false;
 	// Currently we assume we always project onto the x,0,z plane. This may change later on, in that case using sourcePosition
 	// as a point in the plane and for the relative position
@@ -82,10 +83,10 @@ void EveConnector::AddLine( EveCurveLineSet* lineSet )
 		AddCircle( lineSet, m_sourcePosition, length );
 		break;
 	case Circle:
-		AddCircle( lineSet, m_destPosition, m_length, m_normal );
+		AddCircle( lineSet, m_sourcePosition, m_length, m_normal );
 		break;
 	case Ellipse:
-		AddEllipse( lineSet, m_destPosition, radiusX, radiusY, m_normal );
+		AddEllipse( lineSet, m_sourcePosition, radiusX, radiusY, rotation, m_normal );
 		break;
 	case PointToPoint:
 		v = m_destPosition - m_sourcePosition;
@@ -205,7 +206,7 @@ inline void EveConnector::AddSpheredSegment( EveCurveLineSet* lineSet, const Vec
 	AnimateSegment( lineSet, id );
 }
 
-inline void EveConnector::AddEllipse( EveCurveLineSet* lineSet, const Vector3& center, float radiusX, float radiusY, const Vector3& normal )
+inline void EveConnector::AddEllipse( EveCurveLineSet* lineSet, const Vector3& center, float radiusX, float radiusY, float rotation, const Vector3& normal )
 {
 	Vector3 side( 1, 0, 0 ), front( 0, 0, -1 ), up( 0, 1, 0 ), upDir;
 
@@ -216,6 +217,13 @@ inline void EveConnector::AddEllipse( EveCurveLineSet* lineSet, const Vector3& c
 		side = Normalize( Cross( up, upDir ) );
 		front = Normalize( Cross( side, upDir ) );
 	}
+	
+	float rotationRad = rotation * TRI_PI / 180.0f;
+	float cosRot = cos( rotationRad );
+	float sinRot = sin( rotationRad );
+	
+	Vector3 rotatedSide = side * cosRot + front * sinRot;
+	Vector3 rotatedFront = -side * sinRot + front * cosRot;
 
 	const int numSegments = 32;
 	const float angleStep = 2.0f * TRI_PI / numSegments;
@@ -227,10 +235,10 @@ inline void EveConnector::AddEllipse( EveCurveLineSet* lineSet, const Vector3& c
 		float t2 = ( i + 1 ) * angleStep;
 		float tMid = ( t1 + t2 ) * 0.5f;
 
-		Vector3 p1 = center + ( side * cos( t1 ) * radiusX ) + ( front * sin( t1 ) * radiusY );
-		Vector3 p2 = center + ( side * cos( t2 ) * radiusX ) + ( front * sin( t2 ) * radiusY );
+		Vector3 p1 = center + ( rotatedSide * cos( t1 ) * radiusX ) + ( rotatedFront * sin( t1 ) * radiusY );
+		Vector3 p2 = center + ( rotatedSide * cos( t2 ) * radiusX ) + ( rotatedFront * sin( t2 ) * radiusY );
 		// magic number 1.01 is to make sure the line is not too jagged
-		Vector3 middle = center + ( ( side * cos( tMid ) * radiusX ) + ( front * sin( tMid ) * radiusY ) ) * 1.01;
+		Vector3 middle = center + ( ( rotatedSide * cos( tMid ) * radiusX ) + ( rotatedFront * sin( tMid ) * radiusY ) ) * 1.01;
 
 		// default of 20 was overkill for an ellipse with this many curved line segments
 		int lineSegments = 5;
