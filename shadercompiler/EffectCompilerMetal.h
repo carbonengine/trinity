@@ -31,7 +31,7 @@ struct MetalSystemSemanticsType
 		front_facing,
 		vertex_id,
 		instance_id,
-        primitive_id,
+		primitive_id,
 		clip_distance,
 		point_size,
 		color_0,

@@ -4591,7 +4591,7 @@ const char* MetalSystemSemanticsType::GetString( int type )
 		"front_facing",
 		"vertex_id",
 		"instance_id",
-        "primitive_id",
+		"primitive_id",
 		"clip_distance",
 		"point_size",
 		"color(0)",
