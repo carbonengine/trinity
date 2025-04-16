@@ -464,6 +464,11 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	auto rtMesh = m_mesh->GetRtMesh();
 
+	if ( !rtMesh )
+	{
+		return;
+	}
+
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	size_t rtPerObjectDataCount = 0;
