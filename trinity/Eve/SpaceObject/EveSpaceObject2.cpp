@@ -3658,28 +3658,6 @@ void EveSpaceObject2::SetMute( bool isMute )
 	}
 }
 
-Tr2BindlessResourcesAL GetBindlessRtResources( const Tr2MeshAreaVector* decalAreas, Tr2RaytracingMesh* rtMesh )
-{
-	Tr2BindlessResourcesAL usedResources;
-	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it )
-	{
-		auto area = *it;
-		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
-		Tr2TextureAL* transparencyTexture = nullptr;
-		if( transparencyTextureProvider )
-		{
-			transparencyTexture = transparencyTextureProvider->GetTexture();
-			if( transparencyTexture )
-			{
-				usedResources.Add( *transparencyTexture );
-			}
-		}
-	}
-	usedResources.Add( rtMesh->GetVertexBuffer() );
-	usedResources.Add( rtMesh->GetIndexBuffer() );
-	return usedResources;
-}
-
 void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* instanceTransform, Tr2PrimaryRenderContext& renderContext, Tr2MeshBasePtr mesh,
 	Tr2ConstantBufferAL& opaquePerObjectData, uint32_t decalPerObjectDatasCount, Tr2ConstantBufferAL* decalPerObjectDatas )
 {
@@ -3856,7 +3834,6 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		}
 	}
 
-	Tr2BindlessResourcesAL usedResources = GetBindlessRtResources( decalAreas, rtMesh );
-	rtManager.GetGeometry().AddUsedResources( usedResources );
+	rtManager.GetGeometry().AddBindlessResourcesForDecals( decalAreas, rtMesh );
 	#pragma endregion
 }

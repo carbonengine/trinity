@@ -542,8 +542,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			++idx;
 		}
 
-		Tr2BindlessResourcesAL usedResources = GetBindlessRtResources( decalAreas, rtMesh );
-		rtManager.GetGeometry().AddUsedResources( usedResources );
+		rtManager.GetGeometry().AddBindlessResourcesForDecals( decalAreas, rtMesh );
 	}
 	else
 	{
@@ -579,8 +578,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			}
 		}
 
-		Tr2BindlessResourcesAL usedResources = GetBindlessRtResources( decalAreas, rtMesh );
-		rtManager.GetGeometry().AddUsedResources( usedResources );
+		rtManager.GetGeometry().AddBindlessResourcesForDecals( decalAreas, rtMesh );
 		#pragma endregion
 	}
 }
