@@ -49,7 +49,7 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "transformModifiers", m_transformModifiers, "", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "origin", m_origin, "Where did this effect originate from", Be::READ )
-		MAP_ATTRIBUTE( "decals", m_decals, "Decals", Be::READ )
+		MAP_ATTRIBUTE( "decals", m_decals, "Decals", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "attachments", m_attachments, "Item sets attached to the object", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "lights", m_lights, "Lights attached to the object", Be::READ | Be::PERSIST )
 

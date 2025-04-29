@@ -52,6 +52,10 @@ const Be::ClassInfo* EveImpactOverlay::ExposeToBlue()
 			GetArmorImpactLifeTime,
 			"Value for how long the overlay effect plays.\n"
 		)
+		MAP_METHOD_AND_WRAP(
+			"GetLastDamageState",
+			GetLastDamageState,
+			"Last configured damage state (shield, armor, hull).\n" )
 
     EXPOSURE_END()
 }

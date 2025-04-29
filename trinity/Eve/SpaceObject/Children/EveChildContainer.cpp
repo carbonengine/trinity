@@ -543,7 +543,7 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 		( *it )->SetBoneMatrix( bones, boneCount );
 	}
 
-	if( params.spaceObjectParent && !params.childParent )
+	if( params.spaceObjectParent )
 	{
 		params.spaceObjectParent->GetWorldVelocity( m_worldVelocity );
 	}
