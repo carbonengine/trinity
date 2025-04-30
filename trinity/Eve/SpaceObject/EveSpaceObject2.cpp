@@ -3755,7 +3755,7 @@ void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* in
 		rtPerObjectData->m_srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();
 		rtPerObjectData->m_srvData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
 		rtPerObjectData->m_srvData.indexBufferStride = meshData->m_indexAllocation.GetStride();
-		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * 4 + meshData->m_indexAllocation.GetOffset();
+		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
 		rtPerObjectData->m_srvData.vertexBufferOffset = vertexBufferOffset;
 		rtPerObjectData->m_srvData.texCoord0Offset = texCoord0Offset;
 
