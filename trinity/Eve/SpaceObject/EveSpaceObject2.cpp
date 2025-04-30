@@ -1568,54 +1568,67 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	{
 		return;
 	}
-
+    
+	auto rtMesh = m_mesh->GetRtMesh();
+	if( !rtMesh )
+	{
+		return;
+	}
+    
+	auto geo = m_mesh->GetGeometryResource();
+	if( !geo || !geo->IsGood() )
+	{
+		return;
+	}
+	
+	auto meshIndex = m_mesh->GetMeshIndex();
+	auto meshData = geo->GetMeshData( meshIndex );
+	if( !meshData )
+	{
+		return;
+	}
+    
+	bool hasSkinned = false;
+    
 	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
 	for( auto areas : allAreas )
 	{
-		auto rtMesh = m_mesh->GetRtMesh();
-		if( areas->empty() || !rtMesh )
+		if( areas->empty() )
 		{
-			return; //no areas at all or no RT mesh
+			continue;
 		}
-
-		auto geo = m_mesh->GetGeometryResource();
-		if( !geo || !geo->IsGood() )
-		{
-			return;
-		}
-
-		auto meshIndex = m_mesh->GetMeshIndex();
-		auto meshData = geo->GetMeshData( meshIndex );
-		if( !meshData )
-		{
-			return;
-		}
-
-		bool hasSkinned = false;
-
+		
 		for( auto& area : *areas )
 		{
 			auto index = area->GetIndex();
-
+			
 			if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
 			{
 				hasSkinned = true;
 				break;
 			}
 		}
-
-		if( !hasSkinned )
+		
+		if( hasSkinned )
 		{
-			return; //no skinned areas
+			break;
 		}
+	}
 
-		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
-		auto offset = m_boneOffsets.GetCurrentFrameOffset();
+	if( !hasSkinned )
+	{
+		return; //no skinned areas
+	}
+	
+	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	auto offset = m_boneOffsets.GetCurrentFrameOffset();
 
-		bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );
+	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );
 
-		if( skeletonChanged )
+	if( skeletonChanged )
+	{
+		for( auto areas : allAreas )
 		{
 			//Skeleton has changed, so mark all area BLAS's as out-of-date.
 			for( auto& area : *areas )
