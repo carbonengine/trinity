@@ -288,20 +288,25 @@ void EveChildMesh::UpdateRtSkeleton()
 		return;
 	}
 
+	auto rtMesh = m_mesh->GetRtMesh();
+	if( !rtMesh )
+	{
+		return;
+	}
+	
+	auto meshIndex = m_mesh->GetMeshIndex();
+	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
+	
+	bool hasSkinned = false;
+	
 	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
 	for( auto areas : allAreas )
 	{
-		auto rtMesh = m_mesh->GetRtMesh();
-		if( areas->empty() || !rtMesh )
+		if( areas->empty() )
 		{
-			return; //no areas at all or no RT mesh
+			continue;
 		}
-
-		auto meshIndex = m_mesh->GetMeshIndex();
-		auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
-
-		bool hasSkinned = false;
-
+		
 		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
 			if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
@@ -310,20 +315,28 @@ void EveChildMesh::UpdateRtSkeleton()
 				break;
 			}
 		}
-
-		if( !hasSkinned )
+		
+		if( hasSkinned )
 		{
-			return; //no skinned areas
+			break;
 		}
+	}
 
-		auto [bones, boneCount] = GetBoneTransforms();
+	if( !hasSkinned )
+	{
+		return; //no skinned areas
+	}
 
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
-		auto offset = m_boneOffsets.GetCurrentFrameOffset();
+	auto [bones, boneCount] = GetBoneTransforms();
 
-		bool skeletonChanged = rtMesh->SetBoneTransforms( boneCount, bones, offset );
+	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
+	auto offset = m_boneOffsets.GetCurrentFrameOffset();
 
-		if( skeletonChanged )
+	bool skeletonChanged = rtMesh->SetBoneTransforms( boneCount, bones, offset );
+
+	if( skeletonChanged )
+	{
+		for( auto areas : allAreas )
 		{
 			//Skeleton has changed, so mark all area BLAS's as out-of-date.
 			for( auto it = begin( *areas ); it != end( *areas ); ++it )
