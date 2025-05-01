@@ -3820,7 +3820,7 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it )
 	{
 		auto area = *it;
-		if( area->GetDisplay() )
+		if( area->GetDisplay() && area->IsCastingShadows() )
 		{
 			auto geometry = area->GetRtMeshArea();
 			if( geometry )
@@ -3837,7 +3837,7 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	{
 		auto area = *it;
 
-		if( area->GetDisplay() )
+		if( area->GetDisplay() && area->IsCastingShadows() )
 		{
 			auto geometry = area->GetRtMeshArea();
 			if( geometry )

@@ -526,7 +526,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 			{
 				auto area = *it;
-				if( area->GetDisplay() )
+				if( area->GetDisplay() && area->IsCastingShadows() )
 				{
 					auto geometry = area->GetRtMeshArea();
 					if( geometry )
@@ -541,7 +541,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
 			{
 				auto area = *it;
-				if( area->GetDisplay() )
+				if( area->GetDisplay() && area->IsCastingShadows() )
 				{
 					auto geometry = area->GetRtMeshArea();
 					if( geometry )
@@ -565,7 +565,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 		{
 			auto area = *it;
-			if( area->GetDisplay() )
+			if( area->GetDisplay() && area->IsCastingShadows() )
 			{
 				auto geometry = area->GetRtMeshArea();
 				if( geometry )
@@ -581,7 +581,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
 		{
 			auto area = *it;
-			if( area->GetDisplay() )
+			if( area->GetDisplay() && area->IsCastingShadows() )
 			{
 				auto geometry = area->GetRtMeshArea();
 				if( geometry )
