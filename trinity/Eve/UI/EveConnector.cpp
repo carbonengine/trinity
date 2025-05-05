@@ -141,15 +141,8 @@ inline void EveConnector::AddCircle( EveCurveLineSet* lineSet, const Vector3& ce
 
 inline void EveConnector::AddCircle( EveCurveLineSet* lineSet, const Vector3& center, float radius, const Vector3& planeNormal )
 {
-	Vector3 side( 1, 0, 0 ), front( 0, 0, -1 ), up( 0, 1, 0 ), upDir;
-
-	// Draw the orbit circle
-	upDir = Normalize( planeNormal );
-	if( std::abs( Dot( upDir, up ) ) < 0.999 )
-	{
-		side = Normalize( Cross( up, upDir ) );
-		front = Normalize( Cross( side, upDir ) );
-	}
+	Vector3 side, front;
+	CalculateSideAndFront( planeNormal, side, front );
 	side *= radius;
 	front *= radius;
 
@@ -161,15 +154,9 @@ inline void EveConnector::AddCircle( EveCurveLineSet* lineSet, const Vector3& ce
 
 inline void EveConnector::AddOrbit( EveCurveLineSet* lineSet, const Vector3& center, float radius, const Vector3& planeNormal )
 {
-	Vector3 side( 1, 0, 0 ), front( 0, 0, -1 ), up( 0, 1, 0 ), upDir;
-
-	// Draw the orbit circle
-	upDir = Normalize( planeNormal );
-	if( std::abs( Dot( upDir, up ) ) < 0.999 )
-	{
-		side = Normalize( Cross( up, upDir ) );
-		front = Normalize( Cross( side, upDir ) );
-	}
+	Vector3 side, front;
+	Vector3 upDir = Normalize( planeNormal );
+	CalculateSideAndFront( upDir, side, front );
 	side *= radius;
 	front *= radius;
 
@@ -208,15 +195,8 @@ inline void EveConnector::AddSpheredSegment( EveCurveLineSet* lineSet, const Vec
 
 inline void EveConnector::AddEllipse( EveCurveLineSet* lineSet, const Vector3& center, float radiusX, float radiusY, float rotation, const Vector3& normal )
 {
-	Vector3 side( 1, 0, 0 ), front( 0, 0, -1 ), up( 0, 1, 0 ), upDir;
-
-	// Draw the orbit circle
-	upDir = Normalize( normal );
-	if( std::abs( Dot( upDir, up ) ) < 0.999 )
-	{
-		side = Normalize( Cross( up, upDir ) );
-		front = Normalize( Cross( side, upDir ) );
-	}
+	Vector3 side, front;
+	CalculateSideAndFront( normal, side, front );
 	
 	float rotationRad = rotation * TRI_PI / 180.0f;
 	float cosRot = cos( rotationRad );
@@ -252,4 +232,21 @@ inline void EveConnector::AddCurvedLine( EveCurveLineSet* lineSet, const Vector3
 	int lineId = lineSet->AddCurvedLineCrt( point1, ( Vector4 )m_color, point2, ( Vector4 )m_color, middle, m_width, segments );
 
 	AnimateSegment( lineSet, lineId );
+}
+
+void EveConnector::CalculateSideAndFront( const Vector3& upDir, Vector3& outSide, Vector3& outFront )
+{
+	Vector3 up( 0, 1, 0 );
+	Vector3 upDirection = Normalize( upDir );
+	if( std::abs( Dot( upDirection, up ) ) < 0.999 )
+	{
+		outSide = Normalize( Cross( up, upDirection ) );
+		outFront = Normalize( Cross( outSide, upDirection ) );
+	}
+	else
+	{
+		Vector3 altUp( 1, 0, 0 );
+		outSide = Normalize( Cross( altUp, upDirection ) );
+		outFront = Normalize( Cross( outSide, upDirection ) );
+	}
 }

@@ -58,7 +58,9 @@ private:
 	void AddOrbit( EveCurveLineSet* lineSet, const Vector3& center, float radius, const Vector3& normal );
 	void AddStraightLine( EveCurveLineSet* lineSet, const Vector3& source, const Vector3& destination, bool fadeEnd=false );
 	void AddSpheredSegment( EveCurveLineSet* lineSet, const Vector3& p0, const Vector3& p1, const Vector3& center );
-	void AddCurvedLine( EveCurveLineSet * lineSet, const Vector3& p0, const Vector3& p1, const Vector3& center, int segments );
+	void AddCurvedLine( EveCurveLineSet* lineSet, const Vector3& p0, const Vector3& p1, const Vector3& center, int segments );
+
+	void CalculateSideAndFront( const Vector3& upDir, Vector3& outSide, Vector3& outFront );
 };
 
 TYPEDEF_BLUECLASS( EveConnector );
