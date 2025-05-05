@@ -757,7 +757,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 				{
 					CCP_STATS_ZONE( "renderContext.UseResources" );
-					renderContext.UseResources( Tr2GpuUsage::SHADER_RESOURCE, raytracingGeometry->GetBindlessResources() );
+					renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, raytracingGeometry->GetBindlessResources() );
 				}
 
 				renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );

@@ -244,7 +244,7 @@ public:
 	
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
 
-	ALResult UseResources( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
+	ALResult UseResources( Tr2UseResourceDestination dest, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
     ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
     ALResult UseConstantBuffer( id<MTLBuffer> constantBuffer );
 

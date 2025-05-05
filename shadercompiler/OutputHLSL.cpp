@@ -975,7 +975,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 				os << " )";
 			}
 		}
-		if( node->GetChildOrNull( 1 ) )
+		if( node->GetChildOrNull( 1 ) && !node->GetType().IsSampler() )
 		{
 			os << " = " << Child( 1 );
 		}

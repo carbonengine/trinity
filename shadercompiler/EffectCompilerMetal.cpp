@@ -2959,6 +2959,14 @@ namespace
             header->AddChild( shaderTable );
         }
 
+		Symbol* hitGroupOffset = nullptr;
+		if( shaderType == RtShaderType::ANY_HIT )
+		{
+			auto arg = NewFunctionParameter( state, hlsl::uint_t, "__instance_intersection_function_table_offset", MetalSystemSemantics( MetalSystemSemanticsType::instance_intersection_function_table_offset ) );
+			header->AddChild( arg );
+			hitGroupOffset = arg->GetSymbol();
+		}
+
 		auto autoT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto" ) );
 		auto autoRefT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto&" ) );
 
@@ -3026,8 +3034,20 @@ namespace
 								rtConstantBuffers[registerNumber] = arg->GetSymbol();
 							}
 
+							ASTNode* hitGroupOffsetParam;
+							if ( shaderType == RtShaderType::ANY_HIT )
+							{
+								hitGroupOffsetParam = NewVarIdentifier( state, hitGroupOffset );
+							}
+							else
+							{
+								// For closest hit and miss shaders, the calleer takes care of the offset
+								hitGroupOffsetParam = NewLiteralConst( state, 0u );
+							}
+
 							std::string funcName = "__GetLocalRTBuffer<" + symbol->type.ToString() + ">";
-							auto ctr = NewFunctionCall( state, TypeFromSymbol( autoRefT ), state.AllocateName( funcName.c_str() ).start, { NewVarIdentifier( state, localInputArg->GetSymbol() ), NewLiteralConst( state, registerNumber ) } );
+							auto ctr = NewFunctionCall( state, TypeFromSymbol( autoRefT ), state.AllocateName( funcName.c_str() ).start, 
+								{ NewVarIdentifier( state, localInputArg->GetSymbol() ), hitGroupOffsetParam, NewLiteralConst( state, registerNumber ) } );
 
 							auto localSymbol = state.GetSymbolTable().AddSymbol( arg->GetSymbol()->name, ALLOW_OVERRIDES );
 							localSymbol->addressSpace = AddressSpace::Constant;
@@ -4616,6 +4636,7 @@ const char* MetalSystemSemanticsType::GetString( int type )
         "direction",
         "min_distance",
         "distance",
+		"instance_intersection_function_table_offset",
 	};
 
 	const int typeCount = sizeof( strings ) / sizeof( strings[0] );

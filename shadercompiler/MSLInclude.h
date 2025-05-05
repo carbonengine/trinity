@@ -493,9 +493,9 @@ struct ShaderTableT
 
 
 template <typename T>
-constant T& __GetLocalRTBuffer( device __RtLocalMaterial* materials, uint index )
+constant T& __GetLocalRTBuffer( device __RtLocalMaterial* materials, uint hitGroupIndex, uint index )
 {
-    return ((constant T*)materials[index].buffer)[0];
+    return ((constant T*)materials[hitGroupIndex * 8 + index].buffer)[0];
 }
 
 template <typename payload_t, typename global_input_t>

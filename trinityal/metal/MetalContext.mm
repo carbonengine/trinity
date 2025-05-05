@@ -215,7 +215,7 @@ namespace TrinityALImpl
 
 	void MetalContext::GenerateDummyTexture()
 	{
-		uint32_t textureDim = 8;
+		constexpr uint32_t textureDim = 8;
         // Enough size for TextureCube
 		uint32_t texData[textureDim][textureDim * textureDim];
 		

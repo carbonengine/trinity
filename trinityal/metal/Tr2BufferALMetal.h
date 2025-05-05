@@ -46,6 +46,8 @@ namespace TrinityALImpl
 		id<MTLBuffer> m_mtlBuffer;
         Tr2MemoryCounterAL m_memory;
         uint32_t m_heapIndex;
+        
+        uint64_t m_usedInEncoder;
 
         struct StagingBuffer
         {
@@ -56,7 +58,7 @@ namespace TrinityALImpl
         id<MTLBuffer> m_mappedBuffer;
 		std::string m_name;
 
-		friend class Tr2RenderContextAL;
+		friend class ::Tr2RenderContextAL;
 		friend class Tr2PrimaryRenderContextAL;
 	};
 }

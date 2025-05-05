@@ -977,7 +977,7 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 
 	{
 		CCP_STATS_ZONE( "renderContext.UseResources" );
-		renderContext.UseResources( Tr2GpuUsage::SHADER_RESOURCE, geometry->GetBindlessResources() );
+		renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, geometry->GetBindlessResources() );
 	}
 
 	renderContext.DispatchRays( pipelineState, m_Raytracing.m_shaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );

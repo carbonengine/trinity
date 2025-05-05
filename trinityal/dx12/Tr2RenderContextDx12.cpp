@@ -1816,7 +1816,7 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Col
 {
 }
 
-ALResult Tr2RenderContextAL::UseResources( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
+ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
 {
 	D3D12_RESOURCE_STATES state;
 	switch( usage )

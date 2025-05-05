@@ -1526,7 +1526,7 @@ void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameE
 
 	return m_upscalingTechnique->MarkFrameEvent( frameEvent );
 }
-ALResult Tr2RenderContextAL::UseResources( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
+ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination dest, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
 {
     if( resources.m_textures.empty() )
     {
@@ -1534,36 +1534,59 @@ ALResult Tr2RenderContextAL::UseResources( Tr2GpuUsage::Type usage, const Tr2Bin
     }
     if( @available( macOS 13.0, * ) )
     {
-        auto encoder = m_workQueue->GetRenderEncoder();
-        auto encoderIndex = m_workQueue->GetCurrentEncoderIndex();
 
-        std::vector<__unsafe_unretained id<MTLTexture>> textures;
-        textures.reserve( resources.m_textures.size() * 2 );
-        for( auto& tex : resources.m_textures )
-        {
-            if( tex->IsValid() && tex->m_usedInEncoder != encoderIndex )
+        std::vector<__unsafe_unretained id<MTLResource>> mtlResources;
+        mtlResources.reserve( resources.m_textures.size() * 2 + resources.m_buffers.size() );
+
+        auto CopyMtlResources = [&mtlResources, &resources]( uint64_t encoderIndex ) {
+            for( auto& tex : resources.m_textures )
             {
-                tex->m_usedInEncoder = encoderIndex;
-                __unsafe_unretained auto t0 = tex->m_mtlTexture;
-                if( t0 )
+                if( tex->IsValid() && tex->m_usedInEncoder != encoderIndex )
                 {
-                    textures.push_back( t0 );
-                }
-                __unsafe_unretained auto t1 = tex->m_mtlTextureSRGBView;
-                if( t1 && t1 != t0 )
-                {
-                    textures.push_back( t1 );
+                    tex->m_usedInEncoder = encoderIndex;
+                    __unsafe_unretained auto t0 = tex->m_mtlTexture;
+                    if( t0 )
+                    {
+                        mtlResources.push_back( t0 );
+                    }
+                    __unsafe_unretained auto t1 = tex->m_mtlTextureSRGBView;
+                    if( t1 && t1 != t0 )
+                    {
+                        mtlResources.push_back( t1 );
+                    }
                 }
             }
+            for( auto& buffer : resources.m_buffers )
+            {
+                if( buffer->IsValid() && buffer->m_usedInEncoder != encoderIndex )
+                {
+                    buffer->m_usedInEncoder = encoderIndex;
+                    __unsafe_unretained auto t0 = buffer->m_mtlBuffer;
+                    if( t0 )
+                    {
+                        mtlResources.push_back( t0 );
+                    }
+                }
+            }
+        };
+        if( dest == Tr2UseResourceDestination::RENDER )
+        {
+            auto encoder = m_workQueue->GetRenderEncoder();
+            CopyMtlResources( m_workQueue->GetCurrentEncoderIndex() );
+            [encoder useResources:mtlResources.data()
+                            count:NSUInteger( mtlResources.size())
+                            usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
         }
-        [encoder useResources:textures.data()
-                        count:NSUInteger( textures.size())
-                        usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
+        else
+        {
+            auto encoder = m_workQueue->GetComputeEncoder();
+            CopyMtlResources( m_workQueue->GetCurrentEncoderIndex() );
+            [encoder useResources:mtlResources.data()
+                            count:NSUInteger( mtlResources.size())
+                            usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
+        }
         m_workQueue->ReleaseEncoder( false );
     }
-
-	// TODO: intern, add resources.m_buffers somehow...
-    
 	return S_OK;
 }
 

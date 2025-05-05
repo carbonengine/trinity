@@ -2186,7 +2186,7 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Col
 {
 }
 
-ALResult Tr2RenderContextAL::UseResources( Tr2GpuUsage::Type, const Tr2BindlessResourcesAL& )
+ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination, Tr2GpuUsage::Type, const Tr2BindlessResourcesAL& )
 {
 	return S_OK;
 }

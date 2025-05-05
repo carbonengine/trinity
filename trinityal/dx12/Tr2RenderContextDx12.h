@@ -230,7 +230,7 @@ public:
 	void FlushGraphicsBarriersDx12( ID3D12Resource* resource = nullptr );
 	void FlushComputeBarriersDx12( ID3D12Resource* resource = nullptr );
 
-	ALResult UseResources( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
+	ALResult UseResources( Tr2UseResourceDestination dest, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
     ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
     
 	ALResult SetAllState();

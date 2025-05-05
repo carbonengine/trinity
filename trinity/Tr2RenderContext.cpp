@@ -63,7 +63,7 @@ void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& t
 
 	{
 		CCP_STATS_ZONE( "renderContext.UseResources" );
-		renderContext.UseResources( Tr2GpuUsage::SHADER_RESOURCE, usedTextures );
+		renderContext.UseResources( Tr2UseResourceDestination::RENDER, Tr2GpuUsage::SHADER_RESOURCE, usedTextures );
 	}
 #endif
 }

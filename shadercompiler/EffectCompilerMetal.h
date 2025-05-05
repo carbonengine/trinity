@@ -57,6 +57,7 @@ struct MetalSystemSemanticsType
         direction,
         min_distance,
         distance,
+		instance_intersection_function_table_offset,
 	};
 
 	static const char* GetString( int type );
