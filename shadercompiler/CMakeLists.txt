@@ -223,7 +223,7 @@ install(
     RUNTIME DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
 )
 if (WIN32)
-    install(FILES $<TARGET_PDB_FILE:ShaderCompiler> DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/ OPTIONAL)
+    install(FILES $<TARGET_PDB_FILE:ShaderCompiler> DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/ OPTIONAL)
 endif()
 
 # Install rule for available public headers
