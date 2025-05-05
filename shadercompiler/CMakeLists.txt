@@ -223,6 +223,8 @@ install(
     RUNTIME DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
 )
 
+install(FILES $<TARGET_PDB_FILE:ShaderCompiler> DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/ OPTIONAL)
+
 # Install rule for available public headers
 install(FILES ${PUBLIC_HEADER_FILES} DESTINATION shadercompiler/include)
 
