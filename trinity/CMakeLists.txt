@@ -1538,6 +1538,9 @@ set(_SOURCES
     Tr2VariableStore.cpp
     Tr2VariableStore.h
     Tr2VariableStore_Blue.cpp
+    Tr2VectorFunctionModifier.cpp
+    Tr2VectorFunctionModifier.h
+    Tr2VectorFunctionModifier_Blue.cpp
     Tr2VertexDefinitionUtilities.cpp
     Tr2VertexDefinitionUtilities.h
     Tr2VideoAdapters.cpp
