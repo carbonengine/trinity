@@ -41,7 +41,7 @@ Be::VarChooser EveConnectorTypeChooser[] =
 	{
 		"Ellipse",
 		BeCast( EveConnector::Ellipse ),
-		"Ellipse in the plane normal plane, radiusX is destPosition.x and radiusY is destPosition.y"
+		"Ellipse in the plane normal plane, radiusX is destPosition.x, radiusY is destPosition.y and ellipse rotation is destPosition.z"
 	},
 	{
 		"Orbit",
