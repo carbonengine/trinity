@@ -650,8 +650,6 @@ private:
 	EveVirtualCameraSystemPtr m_virtualCameraSystem;
 
 	float m_reflectionIntensity;
-	float m_reflectionBackLightingContrast;
-	Color m_reflectionBackLightingColor;
 	float m_currentRelfectionIntensity;
 
 	BlueSharedString m_name;

@@ -616,7 +616,7 @@ void EveChildCloud2::UpdateSyncronous( const EveUpdateContext& updateContext, co
 					{
 						if( auto resource = textureParam->GetResource() )
 						{
-							if( auto texture = textureParam->GetResource()->GetTexture() )
+							if( auto texture = resource->GetTexture() )
 							{
 								densityMap = *texture;
 							}

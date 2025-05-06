@@ -223,3 +223,112 @@ technique t0
 
 	ASSERT_TRUE( Compiles<EffectCompilerMetal>( src ) );
 }
+
+
+TEST( MetalConversion, AllowManySrvsUavs )
+{
+	const char* src = R"SRC(
+
+RWTexture2D<float4> Tex0;
+Texture2D<float4> Tex1;
+Texture2D<float4> Tex2;
+Texture2D<float4> Tex3;
+Texture2D<float4> Tex4;
+Texture2D<float4> Tex5;
+Texture2D<float4> Tex6;
+Texture2D<float4> Tex7;
+Texture2D<float4> Tex8;
+Texture2D<float4> Tex9;
+
+RWTexture2D<float4> Tex10;
+Texture2D<float4> Tex11;
+Texture2D<float4> Tex12;
+Texture2D<float4> Tex13;
+Texture2D<float4> Tex14;
+Texture2D<float4> Tex15;
+Texture2D<float4> Tex16;
+Texture2D<float4> Tex17;
+Texture2D<float4> Tex18;
+Texture2D<float4> Tex19;
+
+RWBuffer<float4> Buf20;
+Buffer<float4> Buf21;
+Buffer<float4> Buf22;
+Buffer<float4> Buf23;
+Buffer<float4> Buf24;
+Buffer<float4> Buf25;
+Buffer<float4> Buf26;
+Buffer<float4> Buf27;
+Buffer<float4> Buf28;
+Buffer<float4> Buf29;
+
+
+struct VSOut
+{
+	float4 position : SV_Position;
+	float2 uv : TEXCOORD0;
+};
+
+VSOut vs( float4 pos : POSITION, float2 uv : TEXCOORD0 )
+{
+	VSOut output;
+	output.position = pos;
+	output.uv = uv;
+	return output;
+}
+
+float4 ps( VSOut vsOut ): SV_Target
+{
+	float4 color = 0;
+	color += Tex0[uint2( vsOut.uv )];
+	color += Tex1.Load( uint2( vsOut.uv ) );
+	color += Tex2.Load( uint2( vsOut.uv ) );
+	color += Tex3.Load( uint2( vsOut.uv ) );
+	color += Tex4.Load( uint2( vsOut.uv ) );
+	color += Tex5.Load( uint2( vsOut.uv ) );
+	color += Tex6.Load( uint2( vsOut.uv ) );
+	color += Tex7.Load( uint2( vsOut.uv ) );
+	color += Tex8.Load( uint2( vsOut.uv ) );
+	color += Tex9.Load( uint2( vsOut.uv ) );
+	
+	color += Tex10[uint2( vsOut.uv )];
+	color += Tex11.Load( uint2( vsOut.uv ) );
+	color += Tex12.Load( uint2( vsOut.uv ) );
+	color += Tex13.Load( uint2( vsOut.uv ) );
+	color += Tex14.Load( uint2( vsOut.uv ) );
+	color += Tex15.Load( uint2( vsOut.uv ) );
+	color += Tex16.Load( uint2( vsOut.uv ) );
+	color += Tex17.Load( uint2( vsOut.uv ) );
+	color += Tex18.Load( uint2( vsOut.uv ) );
+	color += Tex19.Load( uint2( vsOut.uv ) );
+	
+	color += Buf20[0];
+	color += Buf21[0];
+	color += Buf22[0];
+	color += Buf23[0];
+	color += Buf24[0];
+	color += Buf25[0];
+	color += Buf26[0];
+	color += Buf27[0];
+	color += Buf28[0];
+	color += Buf29[0];
+
+	return color;
+}
+
+technique t0
+{
+	pass p0
+	{
+		vertexshader = compile vs_3_0 vs();	
+		pixelshader = compile ps_3_0 ps();
+	}
+}
+)SRC";
+
+	auto data = Compile<EffectCompilerMetal>( src );
+	EXPECT_EQ( data.techniques[0].passes[0].stages[1].registerInputs.size(), 30 );
+	EXPECT_EQ( data.techniques[0].passes[0].stages[1].textures.size(), 27 );
+	EXPECT_EQ( data.techniques[0].passes[0].stages[1].uavs.size(), 3 );
+	ASSERT_TRUE( Compiles<EffectCompilerMetal>( src ) );
+}

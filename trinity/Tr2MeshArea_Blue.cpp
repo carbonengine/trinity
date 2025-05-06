@@ -21,6 +21,7 @@ const Be::ClassInfo* Tr2MeshArea::ExposeToBlue()
         MAP_ATTRIBUTE( "useSHLighting", m_useSHLighting, "Use SH lighting instead of full-forward lighting", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "effect", m_material, "Shader or Material effect", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
+		MAP_ATTRIBUTE( "transparencyTextureName", m_transparencyTextureName, "Transparency Texture Name", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 
 	EXPOSURE_END()
 }

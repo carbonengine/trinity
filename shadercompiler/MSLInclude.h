@@ -11,8 +11,7 @@ using namespace metal;
 // These values must be synchronized with defines in TrinityAL/metal/MetalWorkQueue.h
 #define CBUFFER(i) buffer(4 + i)
 #define SRV(i) buffer(4 + i)
-#define UAV(i) buffer(24 + i)
-#define UAVT(i) texture(24 + i)
+#define UAV(i) buffer(4 + i)
 
 template< typename T, int n >
 vec<float, n> mix( vec<T, n> x, vec<T, n> y, float a )
@@ -494,9 +493,9 @@ struct ShaderTableT
 
 
 template <typename T>
-constant T& __GetLocalRTBuffer( device __RtLocalMaterial* materials, uint index )
+constant T& __GetLocalRTBuffer( device __RtLocalMaterial* materials, uint hitGroupIndex, uint index )
 {
-    return ((constant T*)materials[index].buffer)[0];
+    return ((constant T*)materials[hitGroupIndex * 8 + index].buffer)[0];
 }
 
 template <typename payload_t, typename global_input_t>

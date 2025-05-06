@@ -27,22 +27,9 @@ const char MSL_INCLUDE[] =
 #define METAL_MAX_VERTEX_STREAMS 32
 #define METAL_MAX_RENDER_TARGETS  4 // Matches DX12 define (RENDER_TARGET_COUNT)
 
-// #define METAL_VERTEX_STREAM_BUFFER_OFFSET 0
 #define METAL_VERTEX_STREAM_BUFFER_COUNT 4
-// #define METAL_CONST_BUFFER_OFFSET (METAL_VERTEX_STREAM_BUFFER_OFFSET + METAL_VERTEX_STREAM_BUFFER_COUNT)
-#define METAL_CONST_BUFFER_COUNT 20
-// #define METAL_SRV_BUFFER_OFFSET (METAL_CONST_BUFFER_OFFSET + METAL_CONST_BUFFER_COUNT)
-// #define METAL_SRV_BUFFER_OFFSET (METAL_VERTEX_STREAM_BUFFER_OFFSET + METAL_VERTEX_STREAM_BUFFER_COUNT)
-#define METAL_SRV_BUFFER_COUNT 20
-// #define METAL_UAV_BUFFER_OFFSET (METAL_SRV_BUFFER_OFFSET + METAL_SRV_BUFFER_COUNT)
-#define METAL_UAV_BUFFER_COUNT 7
-	static_assert( METAL_VERTEX_STREAM_BUFFER_COUNT + /* METAL_CONST_BUFFER_COUNT + */ METAL_SRV_BUFFER_COUNT + METAL_UAV_BUFFER_COUNT <= METAL_MAX_BOUND_BUFFERS, "buffer overflow" );
-
-// #define METAL_SRV_TEXTURE_OFFSET 0
-#define METAL_SRV_TEXTURE_COUNT 24
-// #define METAL_UAV_TEXTURE_OFFSET (METAL_SRV_TEXTURE_OFFSET + METAL_SRV_TEXTURE_COUNT)
-#define METAL_UAV_TEXTURE_COUNT 7
-	static_assert( METAL_SRV_TEXTURE_COUNT + METAL_UAV_TEXTURE_COUNT <= METAL_MAX_BOUND_TEXTURES, "texture overflow" );
+#define METAL_BUFFER_COUNT 27
+static_assert( METAL_VERTEX_STREAM_BUFFER_COUNT + METAL_BUFFER_COUNT <= METAL_MAX_BOUND_BUFFERS, "buffer overflow" );
 
 #define METAL_INTERSECTION_FUNCTION_TABLE_SLOT 8
 #define METAL_MISS_FUNCTION_TABLE_SLOT 9
@@ -1713,11 +1700,29 @@ namespace
 
 	bool AutoAssignRegistersForNode( ParserState& state, ASTNode* functionHeader, const FileLocation& messageLocation )
 	{
-		auto GetAssignedSymbolNames = []( const std::vector<Symbol*>& symbols, size_t offset, size_t count ) {
+		/*
+		
+		This function assigns "registers" i.e. Metal input attributes [[buffer(###)]] or [[texture(###)]] to the shader arguments.
+		Metal partitions the set off all inputs into "buffers" and "textures", which is somewhat different from DirectX that partitions
+		the inputs into "constant buffers", SRVs and UAVs. Since Trinity uses DirectX partitioning for inputs we need to adapt Metal
+		to that. This puts some extra limitations on the allocation of registers. For metal we use a single set or "registers" (up to
+		31 registers - the limit for min supported macOS): all SRV/UAV buffers and textures go into this set of "registers". Constant
+		buffers are in a separate set. We map these to sets to "buffers" and "textures" for Metal.
+		
+		Firstly, we reserve 4 first slots in [[buffer(###)]] metal set for IA buffers
+		Secondly, we reserve space in [[buffer(###)]] metal set for all constant buffers as they have an explicit register binding. We map
+		them with an offset of 4, so for example the Globals constant buffer (cb0) would be mapped to [[buffer(4)]].
+		Then we allocate any unused [[buffer(###)]] indices for SRV/UAV buffer inputs. For example, if [[buffer(5)]] is not assigned, the
+		next SRV/UAV buffer gets assigned to that slot and also recieves SRV register #5 as if it was declared register(t5) in HLSL.
+		Lastly we allocate SRV/UAV texture registers, making sure we don't put them into the same SRV "register" as a previously allocated
+		SRV/UAV buffer.
+
+		*/
+
+		auto GetAssignedSymbolNames = []( const std::vector<Symbol*>& symbols ) {
 			std::string result;
-			for( size_t i = 0; i < count; ++i )
+			for( auto symbol : symbols )
 			{
-				auto symbol = symbols[i + offset];
 				if( !result.empty() )
 				{
 					result += ", ";
@@ -1727,16 +1732,15 @@ namespace
 			return result;
 		};
 
-		auto RecordRegister = [&state]( int index, std::vector<Symbol*>& registers, ASTNode* node, const char* registerBankName ) {
+		auto RecordRegister = [&state]( int index, std::vector<Symbol*>& registers, ASTNode* node ) {
 			Symbol* symbol = node->GetSymbol();
 
-			if( index < 0 )
+			if( index < 0 || index >= int( registers.size() ) )
 			{
 				state.ShowMessage(
 					node->GetLocation(),
 					EC_CUSTOM_ERROR,
-					"Couldn't allocate %s register for %s. Reason: Invalid register index.",
-					registerBankName,
+					"Couldn't allocate a register for %s. Reason: Invalid register index.",
 					ToString( symbol->name ).c_str() );
 				return false;
 			}
@@ -1751,8 +1755,7 @@ namespace
 				state.ShowMessage(
 					node->GetLocation(),
 					EC_CUSTOM_ERROR,
-					"Couldn't allocate %s register for %s. Reason: register %d already assigned to %s.",
-					registerBankName,
+					"Couldn't allocate a register for %s. Reason: register %d already assigned to %s.",
 					ToString( symbol->name ).c_str(),
 					index,
 					ToString( registers[index]->name ).c_str() );
@@ -1760,9 +1763,17 @@ namespace
 			}
 		};
 
-		std::vector<Symbol*> srvs( METAL_MAX_BOUND_BUFFERS, nullptr );
-		std::vector<Symbol*> uavs( METAL_MAX_BOUND_TEXTURES, nullptr );
-		std::vector<Symbol*> samplers( METAL_MAX_BOUND_SAMPLERS, nullptr );
+		auto FindUnusedRegister = []( const std::vector<Symbol*>& registers, int& index ) {
+			for( size_t i = 0; i < registers.size(); ++i )
+			{
+				if( !registers[i] )
+				{
+					index = int( i );
+					return true;
+				}
+			}
+			return false;
+		};
 
 		RegisterSpecifier reg;
 		reg.shaderProfile.start = nullptr;
@@ -1774,6 +1785,39 @@ namespace
 		reg.explicitRegister = true;
 		reg.explicitSpace = false;
 
+		auto AssignRegister = [&]( Symbol* symbol, std::vector<Symbol*>& registers, MetalRegister::Enum registerType ) {
+			reg.registerType = registerType;
+			if( FindUnusedRegister( registers, reg.registerNumber ) )
+			{
+				symbol->registerSpecifier[reg.shaderProfile] = reg;
+				registers[reg.registerNumber] = symbol;
+				return true;
+			}
+			state.ShowMessage(
+				messageLocation,
+				EC_CUSTOM_ERROR,
+				"Couldn't allocate a register for %s. Reason: no free registers left. Already assigned registers: %s",
+				ToString( symbol->name ).c_str(),
+				GetAssignedSymbolNames( registers ).c_str() );
+			return false;
+		};
+
+
+		// strictly for constant buffers
+		std::vector<Symbol*> buffers( METAL_MAX_BOUND_BUFFERS, nullptr );
+		// shared between SRVs and UAVs: both textures and buffers
+		std::vector<Symbol*> textures( METAL_MAX_BOUND_TEXTURES, nullptr );
+		// samplers
+		std::vector<Symbol*> samplers( METAL_MAX_BOUND_SAMPLERS, nullptr );
+
+		// Mark the first 4 buffer slots as occupied for vertex streams
+		Symbol vertexStream;
+		buffers[0] = &vertexStream;
+		buffers[1] = &vertexStream;
+		buffers[2] = &vertexStream;
+		buffers[3] = &vertexStream;
+
+
 		// Accumulate already used registers.
 		for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
 		{
@@ -1781,18 +1825,16 @@ namespace
 			Symbol* symbol = paramNode->GetSymbol();
 
 			const Type& type = paramNode->GetType();
-			if( type.symbol &&
-				type.symbol->definition &&
-				type.symbol->definition->GetNodeType() == NT_STRUCT )
+			if( type.IsStruct() )
 			{
 				if( symbol->registerSpecifier.empty() )
 				{
 					int index = GetCBufferIndex( symbol );
 					if( index >= 0 )
 					{
-						assert( index < METAL_CONST_BUFFER_COUNT );
+						assert( index < METAL_BUFFER_COUNT );
 
-						if( RecordRegister( index, srvs, paramNode, "SRV" ) )
+						if( RecordRegister( index + METAL_VERTEX_STREAM_BUFFER_COUNT, buffers, paramNode ) )
 						{
 							reg.registerType = MetalRegister::CBuffer;
 							reg.registerNumber = index;
@@ -1810,24 +1852,11 @@ namespace
 					// Note: We only check the first register.
 					const RegisterSpecifier& existingReg = symbol->registerSpecifier.cbegin()->second;
 
-					if( existingReg.registerType == MetalRegister::CBuffer ||
-						existingReg.registerType == MetalRegister::SRV )
+					assert( existingReg.registerType != MetalRegister::SRV && existingReg.registerType != MetalRegister::UAV );
+					if( existingReg.registerType == MetalRegister::CBuffer )
 					{
 						int index = existingReg.registerNumber;
-						// assert( index < METAL_SRV_BUFFER_COUNT );
-						// assert( index < METAL_CONST_BUFFER_COUNT );
-
-						if( !RecordRegister( index, srvs, paramNode, "SRV" ) )
-						{
-							return false;
-						}
-					}
-					else if( existingReg.registerType == MetalRegister::UAV )
-					{
-						int index = existingReg.registerNumber;
-						// assert( index < METAL_UAV_BUFFER_COUNT );
-
-						if( !RecordRegister( index, uavs, paramNode, "UAV" ) )
+						if( !RecordRegister( index + METAL_VERTEX_STREAM_BUFFER_COUNT, buffers, paramNode ) )
 						{
 							return false;
 						}
@@ -1849,44 +1878,22 @@ namespace
 			{
 			case OP_BUFFER:
 			case OP_STRUCTUREDBUFFER:
-            case OP_RAYTRACING_ACCELERATION_STRUCTURE:
-			{
-				int index = existingReg.registerNumber;
-				if( existingReg.registerType == MetalRegister::CBuffer )
-				{
-					assert( index < METAL_CONST_BUFFER_COUNT );
-				}
-				else if( existingReg.registerType == MetalRegister::SRV )
-				{
-					assert( index < METAL_SRV_BUFFER_COUNT );
-				}
-				else
-				{
-					// Should never get here.
-					assert( false );
-				}
-
-				if( !RecordRegister( index, srvs, paramNode, "SRV" ) )
+			case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+				assert( existingReg.registerType == MetalRegister::SRV );
+				if( !RecordRegister( existingReg.registerNumber, textures, paramNode ) )
 				{
 					return false;
 				}
 				break;
-			}
 
 			case OP_RWBUFFER:
-			case OP_RWSTRUCTUREDBUFFER:
-			{
+			case OP_RWSTRUCTUREDBUFFER: 
 				assert( existingReg.registerType == MetalRegister::UAV );
-				assert( existingReg.registerNumber < METAL_UAV_BUFFER_COUNT );
-
-				int index = existingReg.registerNumber;
-
-				if( !RecordRegister( index, uavs, paramNode, "UAV" ) )
+				if( !RecordRegister( existingReg.registerNumber, textures, paramNode ) )
 				{
 					return false;
 				}
 				break;
-			}
 
 			case OP_TEXTURE:
 			case OP_TEXTURE1D:
@@ -1898,18 +1905,13 @@ namespace
 			case OP_TEXTURECUBE:
 			case OP_TEXTURECUBEARRAY:
 			case OP_TEXTURE2DMS:
-			case OP_TEXTURE2DMSARRAY:
-			{
+			case OP_TEXTURE2DMSARRAY: 
 				assert( existingReg.registerType == MetalRegister::Texture );
-				assert( existingReg.registerNumber < METAL_SRV_TEXTURE_COUNT );
-
-				int index = existingReg.registerNumber;
-				if( !RecordRegister( index, srvs, paramNode, "SRV" ) )
+				if( !RecordRegister( existingReg.registerNumber, textures, paramNode ) )
 				{
 					return false;
 				}
 				break;
-			}
 
 			case OP_RWTEXTURE1D:
 			case OP_RWTEXTURE1DARRAY:
@@ -1917,17 +1919,12 @@ namespace
 			case OP_RWTEXTURE2DARRAY:
 			case OP_RWTEXTURE3D:
 			// case OP_RWTEXTURE3DARRAY:
-			{
 				assert( existingReg.registerType == MetalRegister::UAV );
-				assert( existingReg.registerNumber < METAL_UAV_TEXTURE_COUNT );
-
-				int index = existingReg.registerNumber;
-				if( !RecordRegister( index, uavs, paramNode, "UAV" ) )
+				if( !RecordRegister( existingReg.registerNumber, textures, paramNode ) )
 				{
 					return false;
 				}
 				break;
-			}
 
 			case OP_SAMPLER:
 			case OP_SAMPLER2D:
@@ -1937,10 +1934,7 @@ namespace
 				if( type.arrayDimensions > 0 )
 				{
 					assert( existingReg.registerType == MetalRegister::Texture );
-					assert( existingReg.registerNumber < METAL_SRV_TEXTURE_COUNT );
-
-					int index = existingReg.registerNumber;
-					if( !RecordRegister( index, srvs, paramNode, "SRV" ) )
+					if( !RecordRegister( existingReg.registerNumber, textures, paramNode ) )
 					{
 						return false;
 					}
@@ -1948,10 +1942,7 @@ namespace
 				else
 				{
 					assert( existingReg.registerType == MetalRegister::Sampler );
-
-					int index = existingReg.registerNumber;
-
-					if( !RecordRegister( index, samplers, paramNode, "sampler" ) )
+					if( !RecordRegister( existingReg.registerNumber, samplers, paramNode ) )
 					{
 						return false;
 					}
@@ -1963,11 +1954,109 @@ namespace
 			}
 		}
 
-		int nextFreeSRV = 0;
-		int nextFreeUAV = 0;
-		int nextFreeSampler = 0;
+		// Assign registers for constant buffers
+		for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
+		{
+			ASTNode* paramNode = functionHeader->GetChild( functionHeader->GetChildrenCount() - 1 - i );
+			Symbol* symbol = paramNode->GetSymbol();
+			if( !symbol->registerSpecifier.empty() )
+			{
+				continue;
+			}
+			const Type& type = paramNode->GetType();
+			if( type.IsStruct() )
+			{
+				int index = GetCBufferIndex( symbol );
+				if( RecordRegister( index + METAL_VERTEX_STREAM_BUFFER_COUNT, buffers, paramNode ) )
+				{
+					reg.registerType = MetalRegister::CBuffer;
+					reg.registerNumber = index;
+					symbol->registerSpecifier[reg.shaderProfile] = reg;
+				}
+				else
+				{
+					return false;
+				}
+			}
+		}
 
-		// Assign registers.
+		// Assign registers for SRV/UAV buffers
+		for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
+		{
+			ASTNode* paramNode = functionHeader->GetChild( functionHeader->GetChildrenCount() - 1 - i );
+			Symbol* symbol = paramNode->GetSymbol();
+
+			if( !symbol->registerSpecifier.empty() )
+			{
+				continue;
+			}
+			const Type& type = paramNode->GetType();
+			if( type.IsStruct() )
+			{
+				continue;
+			}
+
+			reg.registerType = MetalRegister::Invalid;
+			reg.registerNumber = -1;
+
+			switch( type.builtInType )
+			{
+			case OP_BUFFER:
+			case OP_STRUCTUREDBUFFER:
+			case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+				reg.registerType = MetalRegister::SRV;
+				break;
+			case OP_RWBUFFER:
+			case OP_RWSTRUCTUREDBUFFER:
+				reg.registerType = MetalRegister::UAV;
+				break;
+			case OP_TEXTURE:
+			case OP_TEXTURE1D:
+			case OP_TEXTURE1DARRAY:
+			case OP_TEXTURE2D:
+			case OP_TEXTURE2DARRAY:
+			case OP_TEXTURE3D:
+			// case OP_TEXTURE3DARRAY:
+			case OP_TEXTURECUBE:
+			case OP_TEXTURECUBEARRAY:
+			case OP_TEXTURE2DMS:
+			case OP_TEXTURE2DMSARRAY:
+				if( type.arrayDimensions )
+				{
+					reg.registerType = MetalRegister::SRV;
+					break;
+				}
+				else
+				{
+					continue;
+				}
+			case OP_SAMPLER:
+			case OP_SAMPLER2D:
+			case OP_SAMPLER3D:
+			case OP_SAMPLERCUBE:
+			case OP_SAMPLERCOMPARISON:
+				if( symbol->type.arrayDimensions > 0 )
+				{
+					reg.registerType = MetalRegister::SRV;
+					break;
+				}
+				else
+				{
+					continue;
+				}
+			default:
+				continue;
+			}
+
+			if ( !AssignRegister( symbol, buffers, static_cast<MetalRegister::Enum>( reg.registerType ) ) )
+			{
+				return false;
+			}
+			// Also mark texture slot occupied
+			textures[reg.registerNumber] = symbol;
+		}
+
+		// Assign texture and sampler registers.
 		for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
 		{
 			ASTNode* paramNode = functionHeader->GetChild( functionHeader->GetChildrenCount() - 1 - i );
@@ -1981,92 +2070,17 @@ namespace
 				// The register already assigned.
 				continue;
 			}
-
 			const Type& type = paramNode->GetType();
-			if( type.symbol &&
-				type.symbol->definition &&
-				type.symbol->definition->GetNodeType() == NT_STRUCT )
+			if( type.IsStruct() )
 			{
-				int index = GetCBufferIndex( symbol );
-				assert( index < METAL_CONST_BUFFER_COUNT );
-
-				if( RecordRegister( index, srvs, paramNode, "SRV" ) )
-				{
-					reg.registerType = MetalRegister::CBuffer;
-					reg.registerNumber = index;
-					symbol->registerSpecifier[reg.shaderProfile] = reg;
-				}
-				else
-				{
-					return false;
-				}
 				continue;
 			}
 
 			reg.registerType = MetalRegister::Invalid;
 			reg.registerNumber = -1;
 
-			auto FindUnusedRegister = []( int& start, int limit, const std::vector<Symbol*>& registers, int& index ) {
-				for( int i = start; i < limit; ++i )
-				{
-					if( !registers[i] )
-					{
-						index = i;
-						start = i + 1;
-						return true;
-					}
-				}
-				return false;
-			};
-
 			switch( type.builtInType )
 			{
-			case OP_BUFFER:
-			case OP_STRUCTUREDBUFFER:
-            case OP_RAYTRACING_ACCELERATION_STRUCTURE:
-			{
-				reg.registerType = MetalRegister::SRV;
-				if( FindUnusedRegister( nextFreeSRV, METAL_SRV_BUFFER_COUNT, srvs, reg.registerNumber ) )
-				{
-					srvs[reg.registerNumber] = symbol;
-				}
-				else
-				{
-					state.ShowMessage(
-						messageLocation,
-						EC_CUSTOM_ERROR,
-						"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
-						ToString( symbol->name ).c_str(),
-						GetAssignedSymbolNames( srvs, 0, METAL_SRV_BUFFER_COUNT ).c_str() );
-					return false;
-				}
-
-				break;
-			}
-
-			case OP_RWBUFFER:
-			case OP_RWSTRUCTUREDBUFFER:
-			{
-				reg.registerType = MetalRegister::UAV;
-
-				if( FindUnusedRegister( nextFreeUAV, METAL_UAV_BUFFER_COUNT, uavs, reg.registerNumber ) )
-				{
-					uavs[reg.registerNumber] = symbol;
-				}
-				else
-				{
-					state.ShowMessage(
-						messageLocation,
-						EC_CUSTOM_ERROR,
-						"Couldn't allocate a UAV register for %s. Reason: no free registers left. Already assigned UAVs: %s",
-						ToString( symbol->name ).c_str(),
-						GetAssignedSymbolNames( uavs, 0, METAL_UAV_BUFFER_COUNT ).c_str() );
-					return false;
-				}
-
-				break;
-			}
-
 			case OP_TEXTURE:
 			case OP_TEXTURE1D:
 			case OP_TEXTURE1DARRAY:
@@ -2078,47 +2092,14 @@ namespace
 			case OP_TEXTURECUBEARRAY:
 			case OP_TEXTURE2DMS:
 			case OP_TEXTURE2DMSARRAY:
-			{
-				if( type.arrayDimensions )
+				if( type.arrayDimensions == 0 )
 				{
-					reg.registerType = MetalRegister::SRV;
-
-					if( FindUnusedRegister( nextFreeSRV, METAL_SRV_BUFFER_COUNT, srvs, reg.registerNumber ) )
+					if( !AssignRegister( symbol, textures, MetalRegister::Texture ) )
 					{
-						srvs[reg.registerNumber] = symbol;
-					}
-					else
-					{
-						state.ShowMessage(
-							messageLocation,
-							EC_CUSTOM_ERROR,
-							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
-							ToString( symbol->name ).c_str(),
-							GetAssignedSymbolNames( srvs, 0, METAL_SRV_BUFFER_COUNT ).c_str() );
-						return false;
-					}
-				}
-				else
-				{
-					reg.registerType = MetalRegister::Texture;
-
-					if( FindUnusedRegister( nextFreeSRV, METAL_SRV_TEXTURE_COUNT, srvs, reg.registerNumber ) )
-					{
-						srvs[reg.registerNumber] = symbol;
-					}
-					else
-					{
-						state.ShowMessage(
-							messageLocation,
-							EC_CUSTOM_ERROR,
-							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
-							ToString( symbol->name ).c_str(),
-							GetAssignedSymbolNames( srvs, 0, METAL_SRV_TEXTURE_COUNT ).c_str() );
 						return false;
 					}
 				}
 				break;
-			}
 
 			case OP_RWTEXTURE1D:
 			case OP_RWTEXTURE1DARRAY:
@@ -2126,77 +2107,29 @@ namespace
 			case OP_RWTEXTURE2DARRAY:
 			case OP_RWTEXTURE3D:
 			// case OP_RWTEXTURE3DARRAY:
-			{
-				reg.registerType = MetalRegister::UAV;
-
-				if( FindUnusedRegister( nextFreeUAV, METAL_UAV_TEXTURE_COUNT, uavs, reg.registerNumber ) )
+				if( !AssignRegister( symbol, textures, MetalRegister::UAV ) )
 				{
-					uavs[reg.registerNumber] = symbol;
-				}
-				else
-				{
-					state.ShowMessage(
-						messageLocation,
-						EC_CUSTOM_ERROR,
-						"Couldn't allocate a UAV register for %s. Reason: no free registers left. Already assigned UAVs: %s",
-						ToString( symbol->name ).c_str(),
-						GetAssignedSymbolNames( uavs, 0, METAL_UAV_TEXTURE_COUNT ).c_str() );
 					return false;
 				}
-
 				break;
-			}
 
 			case OP_SAMPLER:
 			case OP_SAMPLER2D:
 			case OP_SAMPLER3D:
 			case OP_SAMPLERCUBE:
 			case OP_SAMPLERCOMPARISON:
-				if ( symbol->type.arrayDimensions > 0 )
+				if ( symbol->type.arrayDimensions == 0 )
 				{
-					reg.registerType = MetalRegister::SRV;
-
-					if( FindUnusedRegister( nextFreeSRV, METAL_SRV_BUFFER_COUNT, srvs, reg.registerNumber ) )
+					if( !AssignRegister( symbol, samplers, MetalRegister::Sampler ) )
 					{
-						srvs[reg.registerNumber] = symbol;
-					}
-					else
-					{
-						state.ShowMessage(
-							messageLocation,
-							EC_CUSTOM_ERROR,
-							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
-							ToString( symbol->name ).c_str(),
-							GetAssignedSymbolNames( srvs, 0, METAL_SRV_BUFFER_COUNT ).c_str() );
-						return false;
-					}
-				}
-				else
-				{
-					reg.registerType = MetalRegister::Sampler;
-
-					if( FindUnusedRegister( nextFreeSampler, METAL_MAX_BOUND_SAMPLERS, samplers, reg.registerNumber ) )
-					{
-						samplers[reg.registerNumber] = symbol;
-					}
-					else
-					{
-						state.ShowMessage(
-							messageLocation,
-							EC_CUSTOM_ERROR,
-							"Couldn't allocate a sampler register for %s. Reason: no free registers left. Already assigned samplers: %s",
-							ToString( symbol->name ).c_str(),
-							GetAssignedSymbolNames( samplers, 0, METAL_MAX_BOUND_SAMPLERS ).c_str() );
 						return false;
 					}
 				}
 				break;
 
 			default:
-				break;
+				continue;
 			}
-
-			symbol->registerSpecifier[reg.shaderProfile] = reg;
 		}
 
 		return true;
@@ -3026,6 +2959,14 @@ namespace
             header->AddChild( shaderTable );
         }
 
+		Symbol* hitGroupOffset = nullptr;
+		if( shaderType == RtShaderType::ANY_HIT )
+		{
+			auto arg = NewFunctionParameter( state, hlsl::uint_t, "__instance_intersection_function_table_offset", MetalSystemSemantics( MetalSystemSemanticsType::instance_intersection_function_table_offset ) );
+			header->AddChild( arg );
+			hitGroupOffset = arg->GetSymbol();
+		}
+
 		auto autoT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto" ) );
 		auto autoRefT = state.GetSymbolTable().AddTypeSymbol( MakeInlineString( "auto&" ) );
 
@@ -3093,8 +3034,20 @@ namespace
 								rtConstantBuffers[registerNumber] = arg->GetSymbol();
 							}
 
+							ASTNode* hitGroupOffsetParam;
+							if ( shaderType == RtShaderType::ANY_HIT )
+							{
+								hitGroupOffsetParam = NewVarIdentifier( state, hitGroupOffset );
+							}
+							else
+							{
+								// For closest hit and miss shaders, the calleer takes care of the offset
+								hitGroupOffsetParam = NewLiteralConst( state, 0u );
+							}
+
 							std::string funcName = "__GetLocalRTBuffer<" + symbol->type.ToString() + ">";
-							auto ctr = NewFunctionCall( state, TypeFromSymbol( autoRefT ), state.AllocateName( funcName.c_str() ).start, { NewVarIdentifier( state, localInputArg->GetSymbol() ), NewLiteralConst( state, registerNumber ) } );
+							auto ctr = NewFunctionCall( state, TypeFromSymbol( autoRefT ), state.AllocateName( funcName.c_str() ).start, 
+								{ NewVarIdentifier( state, localInputArg->GetSymbol() ), hitGroupOffsetParam, NewLiteralConst( state, registerNumber ) } );
 
 							auto localSymbol = state.GetSymbolTable().AddSymbol( arg->GetSymbol()->name, ALLOW_OVERRIDES );
 							localSymbol->addressSpace = AddressSpace::Constant;
@@ -3150,6 +3103,7 @@ namespace
             };
             
             AddSystemValue( hlsl::uint_t, MetalSystemSemanticsType::instance_id );
+            AddSystemValue( hlsl::uint_t, MetalSystemSemanticsType::primitive_id );
             AddSystemValue( hlsl::float3_t, MetalSystemSemanticsType::origin );
             AddSystemValue( hlsl::float3_t, MetalSystemSemanticsType::direction );
             AddSystemValue( hlsl::float_t, MetalSystemSemanticsType::min_distance );
@@ -4657,6 +4611,7 @@ const char* MetalSystemSemanticsType::GetString( int type )
 		"front_facing",
 		"vertex_id",
 		"instance_id",
+		"primitive_id",
 		"clip_distance",
 		"point_size",
 		"color(0)",
@@ -4681,6 +4636,7 @@ const char* MetalSystemSemanticsType::GetString( int type )
         "direction",
         "min_distance",
         "distance",
+		"instance_intersection_function_table_offset",
 	};
 
 	const int typeCount = sizeof( strings ) / sizeof( strings[0] );

@@ -755,6 +755,11 @@ void Tr2VolumetricsRenderer::RenderFog(
 				resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 				renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
 
+				{
+					CCP_STATS_ZONE( "renderContext.UseResources" );
+					renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, raytracingGeometry->GetBindlessResources() );
+				}
+
 				renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
 			}
 			else

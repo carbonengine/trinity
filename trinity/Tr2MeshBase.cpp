@@ -366,12 +366,13 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 	}
 
 	auto primCount = GetPrimitiveCount( *mesh, area->GetIndex(), area->GetCount() );
+    
+    if( !primCount )
+    {
+        return batch;
+    }
+    
 	auto& meshArea = mesh->m_areas[area->GetIndex()];
-
-	if( !primCount )
-	{
-		return batch;
-	}
 
 	if( area->GetReversed() && !mesh->m_reversedIndicesValid )
 	{
@@ -511,6 +512,15 @@ void Tr2MeshBase::CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksW
 	for( auto a = areas->begin(); a != areas->end(); ++a )
 	{
 		if( areaType == TRIBATCHTYPE_OPAQUE && !( *a )->IsCastingShadows() )
+		{
+			continue;
+		}
+		if( areaType == TRIBATCHTYPE_DECAL && !( *a )->IsCastingShadows() )
+		{
+			continue;
+		}
+		// TODO: intern, doesn't work, the cache probably needs to be invalidated somehow for a change to m_display to be picked up? ask someone about this
+		if ( !( *a )->GetDisplay() )
 		{
 			continue;
 		}

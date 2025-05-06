@@ -264,16 +264,19 @@ void EveChildMesh::UpdateRtMesh()
 		return;
 	}
 
-	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-	if( !areas->empty() )
+	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
+	for( auto areas : allAreas )
 	{
-		auto rtMesh = m_mesh->GetOrCreateRtMesh();
-		// todo: dbl check with using currScreenSize
-		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_currentScreenSize );
-
-		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		if( !areas->empty() )
 		{
-			( *it )->GetOrCreateRtMeshArea();
+			auto rtMesh = m_mesh->GetOrCreateRtMesh();
+			// todo: dbl check with using currScreenSize
+			rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_currentScreenSize );
+
+			for( auto it = begin( *areas ); it != end( *areas ); ++it )
+			{
+				( *it )->GetOrCreateRtMeshArea();
+			}
 		}
 	}
 }
@@ -285,23 +288,36 @@ void EveChildMesh::UpdateRtSkeleton()
 		return;
 	}
 
-	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 	auto rtMesh = m_mesh->GetRtMesh();
-	if( areas->empty() || !rtMesh )
+	if( !rtMesh )
 	{
-		return; //no areas at all or no RT mesh
+		return;
 	}
-
+	
 	auto meshIndex = m_mesh->GetMeshIndex();
 	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
-
+	
 	bool hasSkinned = false;
-
-	for( auto it = begin( *areas ); it != end( *areas ); ++it )
+	
+	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
+	for( auto areas : allAreas )
 	{
-		if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
+		if( areas->empty() )
 		{
-			hasSkinned = true;
+			continue;
+		}
+		
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
+			{
+				hasSkinned = true;
+				break;
+			}
+		}
+		
+		if( hasSkinned )
+		{
 			break;
 		}
 	}
@@ -320,13 +336,16 @@ void EveChildMesh::UpdateRtSkeleton()
 
 	if( skeletonChanged )
 	{
-		//Skeleton has changed, so mark all area BLAS's as out-of-date.
-		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		for( auto areas : allAreas )
 		{
-			auto meshAreaIndex = ( *it )->GetIndex();
-			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
+			//Skeleton has changed, so mark all area BLAS's as out-of-date.
+			for( auto it = begin( *areas ); it != end( *areas ); ++it )
 			{
-				( *it )->GetRtMeshArea()->MarkBlasOutdated();
+				auto meshAreaIndex = ( *it )->GetIndex();
+				if( meshData->m_areas[meshAreaIndex].m_isSkinned )
+				{
+					( *it )->GetRtMeshArea()->MarkBlasOutdated();
+				}
 			}
 		}
 	}
@@ -445,6 +464,7 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	if( m_display && m_mesh )
 	{
 		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize );
+		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_DECAL ), perObjectData, shadowPixelSize );
 	}
 }
 
@@ -457,24 +477,33 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	auto rtMesh = m_mesh->GetRtMesh();
 
-	auto UpdateRtPerObjectData = [this]( size_t idx, const Matrix* instanceTransform ) {
-		USE_MAIN_THREAD_RENDER_CONTEXT();
+	if ( !rtMesh )
+	{
+		return;
+	}
 
-		auto size = sizeof( EveSpaceObjectPSData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
-		if( !m_rtPerObjectData[idx].IsValid() || m_rtPerObjectData[idx].GetSize() != size )
-		{
-			m_rtPerObjectData[idx].Create( uint32_t( size ), renderContext );
-		}
+	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-		EveSpaceObjectPSData* perObjectData;
-		m_rtPerObjectData[idx].Lock( (void**)&perObjectData, renderContext );
-		*perObjectData = m_psData;
-		if( instanceTransform )
-		{
-			*reinterpret_cast<Matrix*>( perObjectData + 1 ) = Transpose( *instanceTransform );
-		}
-		m_rtPerObjectData[idx].Unlock( renderContext );
-	};
+	size_t rtPerObjectDataCount = 0;
+	size_t decalAreasCount = 0;
+	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+	{
+		const Tr2MeshAreaVector* areas = instanced->GetAreas( TRIBATCHTYPE_DECAL );
+		rtPerObjectDataCount += m_instanceTransforms.size();	// opaque
+		decalAreasCount = areas->GetSize();
+		rtPerObjectDataCount += m_instanceTransforms.size() * decalAreasCount; // decal
+	}
+	else
+	{
+		const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_DECAL );
+		rtPerObjectDataCount += 1; // opaque
+		decalAreasCount = areas->GetSize();
+		rtPerObjectDataCount += 1 * decalAreasCount; // decal
+	}
+	if( m_rtPerObjectData.size() != rtPerObjectDataCount )
+	{
+		m_rtPerObjectData.resize( rtPerObjectDataCount );
+	}
 
 	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 	{
@@ -482,19 +511,22 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		{
 			return;
 		}
-
-		m_rtPerObjectData.resize( m_instanceTransforms.size() );
+		
+		const Tr2MeshAreaVector* decalAreas = m_mesh->GetAreas( TRIBATCHTYPE_DECAL );
 
 		size_t idx = 0;
 		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
 		{
 			const Matrix transform = *it * m_worldTransform;
 
+			size_t decalsOffset = m_instanceTransforms.size() + idx * decalAreasCount;
+			UpdateRtPerObjectData( m_psData, &transform, renderContext, m_mesh, m_rtPerObjectData[idx], (uint32_t)decalAreasCount, &m_rtPerObjectData[decalsOffset] );
+
 			const Tr2MeshAreaVector* areas = instanced->GetAreas( TRIBATCHTYPE_OPAQUE );
 			for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 			{
 				auto area = *it;
-				if( area->GetDisplay() )
+				if( area->GetDisplay() && area->IsCastingShadows() )
 				{
 					auto geometry = area->GetRtMeshArea();
 					if( geometry )
@@ -503,18 +535,37 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					}
 				}
 			}
+			#pragma region decal geometry
+
+			uint32_t i = 0;
+			for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
+			{
+				auto area = *it;
+				if( area->GetDisplay() && area->IsCastingShadows() )
+				{
+					auto geometry = area->GetRtMeshArea();
+					if( geometry )
+					{
+						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData[decalsOffset + i], transform );
+					}
+				}
+			}
+
+			#pragma endregion
 			++idx;
 		}
+
+		rtManager.GetGeometry().AddBindlessResourcesForDecals( decalAreas, rtMesh );
 	}
 	else
 	{
-		m_rtPerObjectData.resize( 1 );
-		UpdateRtPerObjectData( 0, nullptr );
+		UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_mesh, m_rtPerObjectData[0], (uint32_t)decalAreasCount, &m_rtPerObjectData[1] );
+
 		const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 		for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 		{
 			auto area = *it;
-			if( area->GetDisplay() )
+			if( area->GetDisplay() && area->IsCastingShadows() )
 			{
 				auto geometry = area->GetRtMeshArea();
 				if( geometry )
@@ -523,6 +574,25 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 				}
 			}
 		}
+		#pragma region decal geometry
+		const Tr2MeshAreaVector* decalAreas = m_mesh->GetAreas( TRIBATCHTYPE_DECAL );
+
+		uint32_t i = 0;
+		for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
+		{
+			auto area = *it;
+			if( area->GetDisplay() && area->IsCastingShadows() )
+			{
+				auto geometry = area->GetRtMeshArea();
+				if( geometry )
+				{
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData[1 + i], m_worldTransform );
+				}
+			}
+		}
+
+		rtManager.GetGeometry().AddBindlessResourcesForDecals( decalAreas, rtMesh );
+		#pragma endregion
 	}
 }
 

@@ -3158,7 +3158,6 @@ void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTa
         
         // Dispatch the compute kernel to perform ray tracing.
         [computeEncoder dispatchThreadgroups:threadgroups threadsPerThreadgroup:threadsPerThreadgroup];
-        shaderTable->SetGlobalInputBuffer( rayGenIndex, nullptr, 0 );
 
         ReleaseEncoder( false );
     }

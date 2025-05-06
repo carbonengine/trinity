@@ -8,6 +8,9 @@
 #include "Shader/Parameter/Tr2GeometryBufferParameter.h"
 #include "../Tr2BoneTransformBuffer.h"
 
+#include "Tr2MeshArea.h"
+#include "ITr2TextureProvider.h"
+
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 #include <../trinityal/dx12/Tr2BufferALDx12.h>
 #endif
@@ -471,6 +474,7 @@ Tr2BufferAL* Tr2RaytracingGeometry::GetGpuBuffer( unsigned )
 void Tr2RaytracingGeometry::BeginSceneUpdate()
 {
 	m_geometryData.clear();
+	m_usedResources.Clear();
 }
 
 
@@ -840,6 +844,33 @@ bool Tr2RaytracingGeometry::HasGeometry() const
 Tr2RtTopLevelAccelerationStructureAL Tr2RaytracingGeometry::GetTLAS() const
 {
     return m_tlas;
+}
+
+const Tr2BindlessResourcesAL& Tr2RaytracingGeometry::GetBindlessResources() const
+{
+	return m_usedResources;
+}
+
+void Tr2RaytracingGeometry::AddBindlessResourcesForDecals( const Tr2MeshAreaVector* decalAreas, Tr2RaytracingMesh* rtMesh )
+{
+	// TODO: intern, this is probably causing duplicates in m_usedResources. is that a problem?
+
+	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it )
+	{
+		auto area = *it;
+		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
+		Tr2TextureAL* transparencyTexture = nullptr;
+		if( transparencyTextureProvider )
+		{
+			transparencyTexture = transparencyTextureProvider->GetTexture();
+			if( transparencyTexture )
+			{
+				m_usedResources.Add( *transparencyTexture );
+			}
+		}
+	}
+	m_usedResources.Add( rtMesh->GetVertexBuffer() );
+	m_usedResources.Add( rtMesh->GetIndexBuffer() );
 }
 
 Tr2RaytracingGeometry::VtxOffsets Tr2RaytracingGeometry::FindOffsets( unsigned declHandle )

@@ -151,6 +151,8 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 float screenSize,
 										 const Matrix* worldTransform );
 
+void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* instanceTransform, Tr2PrimaryRenderContext& renderContext, Tr2MeshBasePtr mesh, Tr2ConstantBufferAL& opaquePerObjectData, uint32_t decalPerObjectDatasCount, Tr2ConstantBufferAL* decalPerObjectDatas );
+
 // --------------------------------------------------------------------------------
 // Description:
 //   EveSpaceObject2 is a base class for objects in space in Eve - namely stations and ships.
@@ -502,7 +504,8 @@ protected:
 	bool m_isPickable;
 	bool m_isAnimated;
 	bool m_castShadow;
-	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshAreas;
+	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshOpaqueAreas;
+	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshDecalAreas;
 
 	Matrix m_worldTransform;
 	Matrix m_invWorldTransform;
@@ -687,7 +690,8 @@ protected:
 
 	void UpdateRtMesh(const EveUpdateContext& updateContext);
 	void UpdateRtSkeleton();
-	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+	mutable Tr2ConstantBufferAL m_rtOpaquePerObjectData;
+	mutable std::vector<Tr2ConstantBufferAL> m_rtDecalPerObjectDatas;
 
 	Tr2BoneTransformOffsets m_boneOffsets;
 

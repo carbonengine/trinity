@@ -860,6 +860,111 @@ technique t0
 	ASSERT_TRUE( Compiles<typename TestFixture::Compiler>( src ) );
 }
 
+TYPED_TEST( RayTracing, NotUsedGlobalInputsAreExported )
+{
+	const char* src = R"SRC(
+struct HitInfo
+{
+    float visibility;
+};
+
+struct Foo
+{
+	float coefficient;
+};
+
+cbuffer PerFrame: register( b2 )
+{
+    Foo foo;
+};
+
+Texture2D Tex;
+Texture2D Bar;
+
+[shader("miss")]
+[globalinput("PerFrame;Tex;Bar")]
+void Miss(inout HitInfo payload)
+{
+	payload.visibility = // foo.coefficient + 
+		Bar.Load( uint3( 0, 0, 0 ) ).r;
+}
+
+technique t0
+{
+	library p0
+	{
+		MissShader = compile lib_6_3 Miss();
+		payloadsize = 4;
+	}
+}
+)SRC";
+
+	auto data = Compile<typename TestFixture::Compiler>( src );
+	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.textures.size(), 2 );
+	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 3 );
+}
+
+
+TYPED_TEST( RayTracing, NotUsedSamplerGlobalInputsAreExported )
+{
+	const char* src = R"SRC(
+SamplerState TestMapSampler1
+{
+    MinFilter = Linear;
+    MagFilter = Linear;
+    MipFilter = Point;
+    AddressU  = Clamp;
+    AddressV  = Clamp;
+};
+
+struct HitInfo
+{
+    float visibility;
+};
+
+struct Foo
+{
+	float coefficient;
+};
+
+cbuffer PerFrame: register( b2 )
+{
+    Foo foo;
+};
+
+Texture2D Tex;
+Texture2D Bar;
+
+[shader("miss")]
+[globalinput("PerFrame;Tex;Bar;TestMapSampler1")]
+void Miss(inout HitInfo payload)
+{
+	payload.visibility = // foo.coefficient + 
+		Bar.Load( uint3( 0, 0, 0 ) ).r;
+	//payload.visibility += Tex.SampleLevel( TestMapSampler1, float2( 0.5, 0.0 ), 0 ).r;
+}
+
+technique t0
+{
+	library p0
+	{
+		MissShader = compile lib_6_3 Miss();
+		payloadsize = 4;
+	}
+}
+)SRC";
+
+	auto data = Compile<typename TestFixture::Compiler>( src );
+	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.textures.size(), 2 );
+	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 3 );
+	// on metal static samplers are not exposed
+	if( !std::is_same<typename TestFixture::Compiler, EffectCompilerMetal>::value )
+	{
+		ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.staticSamplers.empty() );
+	}
+}
+
+
 
 TYPED_TEST( RayTracing, CanCallTraceRayInFunction )
 {

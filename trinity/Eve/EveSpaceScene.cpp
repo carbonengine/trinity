@@ -191,10 +191,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_sunColorWithDynamicLights( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_currentSunColor( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_useSunColorWithDynamicLights( false ),
-	m_reflectionIntensity( 1.35f ),
-	m_currentRelfectionIntensity( 1.35f ),
-	m_reflectionBackLightingContrast( 8.0f ),
-	m_reflectionBackLightingColor( 2.0f, 2.0f, 2.0f, 2.0f ),
+	m_reflectionIntensity( 1.0f ),
+	m_currentRelfectionIntensity( 1.0f ),
 	m_dynamicObjectReflectionEnabled( true ),
 	m_hasBackgroundDistortionBatches( false ),
 	m_hasForegroundDistortionBatches( false ),
@@ -2242,6 +2240,8 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
 		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
+		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DECAL], techniqueName );
+		renderContext.m_esm.ApplyStandardStates( renderingMode );
 		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 
 		// Planet z areas need special treatment
@@ -2260,6 +2260,8 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 			FinalizeBatches( m_secondaryBatches );
 			renderContext.m_esm.ApplyStandardStates( renderingMode );
 			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
+			renderContext.m_esm.ApplyStandardStates( renderingMode );
+			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DECAL], techniqueName );
 			renderContext.m_esm.ApplyStandardStates( renderingMode );
 			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 			ClearBatches( m_secondaryBatches );
@@ -3219,9 +3221,6 @@ bool EveSpaceScene::Initialize()
 	if( m_reflectionProbe && m_reflectionProbe->IsValid() )
 	{
 		m_envMapTextureRes = m_reflectionProbe->GetReflection();
-
-		m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
-		m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
 	}
 	else if( m_envMapHandle )
 	{
@@ -3281,25 +3280,11 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 		if( m_reflectionProbe && m_reflectionProbe->IsValid() )
 		{
 			m_envMapTextureRes = m_reflectionProbe->GetReflection();
-
-			m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
-			m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
 		}
 		else if( m_envMapHandle )
 		{
 			m_envMapTextureRes = m_staticEnvMapTextureRes;
 		}
-
-		/* if( HasReflectionProbe() )
-		{
-			m_envMapTextureRes = m_reflectionProbe->GetReflection();
-			m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
-			m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
-		}
-		else if( !m_envMapResPath.empty() )
-		{
-			BeResMan->GetResource( m_envMapResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_envMapTextureRes );
-		}*/
 	}
 	if( IsMatch( value, m_envMap1ResPath ) )
 	{
@@ -3324,15 +3309,6 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 		{
 			BeResMan->GetResource( m_envMap3ResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_envMap3 );
 		}
-	}
-
-	if( IsMatch( value, m_reflectionBackLightingColor ) && HasReflectionProbe() )
-	{
-		m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
-	}
-	if( IsMatch( value, m_reflectionBackLightingContrast ) && HasReflectionProbe() )
-	{
-		m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
 	}
 
 	if( IsMatch( value, m_shadowQuality ) )
