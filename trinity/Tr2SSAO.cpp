@@ -728,11 +728,6 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 		data->randomVectorSeedX = m_cortaoRandSeeds[0];
 		data->randomVectorSeedY = m_cortaoRandSeeds[1];
 		data->randomAngleOffset = ( 6.283185307179586476925286766559f / (float)0xFFFFFFFFu ) * (float)m_cortaoRandSeeds[2];
-		//data->randomVectorSeedX = 12345u;
-		//data->randomVectorSeedY = 12345u;
-		//data->randomAngleOffset = 0;
-
-		//CCP_LOGERR( "%f", data->randomAngleOffset );
 
 		data->inverseMaxSlopeWeight = 1.0f / 5.0f;
 
