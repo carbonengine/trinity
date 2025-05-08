@@ -1385,11 +1385,12 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 		TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
 		if( geometryRes )
 		{
+			DecalMeshCache meshCache;
 			// runn over every decal and update it
 			for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 			{
 				// now prep to get the renderables
-				( *it )->GetRenderables( renderables, geometryRes, m_meshScreenSize );
+				( *it )->GetRenderables( renderables, meshCache, geometryRes, m_meshScreenSize );
 			}
 		}
 	}

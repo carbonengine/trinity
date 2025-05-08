@@ -11,6 +11,7 @@
 #include "Tr2DebugRenderer.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/EveUpdateContext.h"
+#include "../../../Resources/TriGeometryRes.h"
 
 BLUE_DECLARE_INTERFACE( ITr2InstanceData );
 BLUE_DECLARE( Tr2Buffer );
@@ -20,14 +21,6 @@ BLUE_DECLARE( TriVariable );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2DebugRenderer );
 BLUE_DECLARE( Tr2InstancedMesh );
-BLUE_DECLARE( TriGeometryRes );
-
-struct DecalIndexBuffer
-{
-	std::vector<uint32_t> m_indices;
-	uint32_t m_startIndex{ 0 };
-	uint32_t m_primitiveCount{ 0 };
-};
 
 struct DecalVSPerObjectData {
     Matrix m_worldMatrix;
@@ -63,6 +56,16 @@ public:
     DecalVSPerObjectData m_vsData;
 	// pixel shader per object data
     DecalPSPerObjectData m_psData;
+};
+
+struct DecalMeshCache
+{
+	struct MeshBuffers
+	{
+		std::unique_ptr<uint8_t[]> vertexBuffer;
+		std::unique_ptr<uint8_t[]> indexBuffer;
+	};
+	std::vector<MeshBuffers> buffers;
 };
 
 // --------------------------------------------------------------------------------
@@ -117,8 +120,8 @@ public:
 
 	// access
 	void UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables, TriGeometryRes* geomRes, float screensize );
-	void GetInstancedRenderables( std::vector<ITr2Renderable*>& renderables, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
+	void GetRenderables( std::vector<ITr2Renderable*>& renderables, DecalMeshCache& meshCache, TriGeometryRes* geomRes, float screensize );
+	void GetInstancedRenderables( std::vector<ITr2Renderable*>& renderables, DecalMeshCache& meshCache, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
 
 	// access position etc.
 	const Vector3& GetPosition() const;
@@ -148,10 +151,10 @@ public:
 
 private:
 	// create
-	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes );
+	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache& meshCache );
 	// update
 	void UpdateDecalMatrix();
-	void CreateStaticIndexBuffers();
+	void CreateStaticIndexBuffers( TriGeometryResPtr geomRes );
 
 	bool HasStaticIndexBuffers() const;
 	std::vector<std::vector<uint32_t>> GetStaticIndexBuffers() const;
@@ -186,10 +189,9 @@ private:
 	TriGeometryResPtr m_baseGeometryResource;
 	int m_geometryLodIndex;
 
-	// new index buffers
-	std::vector<DecalIndexBuffer> m_indexBuffers;
-	Tr2SuballocatedBuffer::Allocation m_indexBuffer;
-	bool m_rebuildIndexBuffers;
+	std::shared_ptr<MeshDecalData> m_decalGeometry;
+	std::vector<std::vector<uint32_t>> m_staticIndexBuffers;
+
 	bool m_forceRebuildIndices;
 	float m_isVisible;
 	float m_minScreenSize;

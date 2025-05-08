@@ -172,11 +172,12 @@ void EveSwarmRenderable::PushDecals( std::vector<ITr2Renderable*>& renderables, 
 
 	if( geometryRes )
 	{
+		DecalMeshCache meshCache;
 		// run over every decal and update it
 		for (EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it)
 		{
 			// now prep to get the renderables
-			( *it )->GetRenderables( renderables, geometryRes, screensize );
+			( *it )->GetRenderables( renderables, meshCache, geometryRes, screensize );
 		}
 	}
 }

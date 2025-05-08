@@ -96,6 +96,19 @@ struct TriJointBinding
 	Vector3 m_obbMax;
 };
 
+struct MeshDecalLodData
+{
+	uint32_t startIndex = 0;
+	uint32_t primitiveCount = 0;
+};
+
+struct MeshDecalData
+{
+	Matrix invDecalMatrix = IdentityMatrix(); // used as a key
+	Tr2SuballocatedBuffer::Allocation ib;
+	std::vector<MeshDecalLodData> lods;
+};
+
 struct TriGeometryResMeshData
 {
 	TriGeometryResMeshData();
@@ -110,6 +123,8 @@ struct TriGeometryResMeshData
 	bool m_allocationsValid;
 	Tr2SuballocatedBuffer::Allocation m_vertexAllocation;
 	Tr2SuballocatedBuffer::Allocation m_indexAllocation;
+
+	std::vector<std::shared_ptr<MeshDecalData>> m_decals;
 
 	// Index buffer with indexes in reversed order (used by hair/clothing)
 	bool m_reversedIndicesValid;

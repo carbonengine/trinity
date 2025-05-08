@@ -346,11 +346,12 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 
 					if (geometryRes)
 					{
+						DecalMeshCache meshCache;
 						// run over every decal and update it
 						for (EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it)
 						{
 							// now prep to get the renderables
-							(*it)->GetInstancedRenderables(renderables, instanced, m_currentInstanceScreenSize);
+							( *it )->GetInstancedRenderables( renderables, meshCache, instanced, m_currentInstanceScreenSize );
 						}
 					}
 				}
@@ -364,11 +365,12 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 			{
 				if( auto geometryRes = m_mesh->GetGeometryResource() )
 				{
+					DecalMeshCache meshCache;
 					// run over every decal and update it
 					for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 					{
 						// now prep to get the renderables
-						( *it )->GetRenderables( renderables, geometryRes, m_currentScreenSize );
+						( *it )->GetRenderables( renderables, meshCache, geometryRes, m_currentScreenSize );
 					}
 				}
 			}
