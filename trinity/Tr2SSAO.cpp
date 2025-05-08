@@ -53,11 +53,12 @@ void Tr2SSAO::Layer::ReleaseResources()
 
 Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 {
-
-	m_cortaoEnabled = false;
+	m_cortaoEnabled = true;
 	m_cortaoStrength = 1.0f;
 	m_cortaoRadius = 1.0E10f;
 	m_cortaoMaxBlockerSearchRadius = 0.25f;
+	m_cortaoMipBias = -4.0f;
+	m_cortaoUseLookupTable = true;
 
 	m_detail.settings = FFX_CACAO_PRESETS[0].settings;
 	m_detail.settings.radius = 6;
@@ -75,6 +76,17 @@ Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 
 	m_cortaoEffect.CreateInstance();
 	m_cortaoEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/CORTAO.fx" );
+
+	m_cortaoDownsampleEffect.CreateInstance();
+	m_cortaoDownsampleEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/Downsample.fx" );
+
+
+	m_cortaoPackedBuffer.CreateInstance();
+
+	m_cortaoLookupTable.CreateInstance();
+	BeResMan->GetResource( "res:/texture/ssao/24x24x16x29.dds", "", m_cortaoLookupTable );
+	//BeResMan->GetResource( "res:/texture/ssao/32x32x24x29.dds", "", m_cortaoLookupTable );
+	//BeResMan->GetResource( "res:/texture/ssao/128x128x64x29.dds", "", m_cortaoLookupTable );
 
 	PrepareResources();
 }
@@ -644,11 +656,31 @@ void Tr2SSAO::PerformPass( const Layer& layer, bool reuseNormals, Tr2RenderConte
 	}
 }
 
+uint32_t Tr2SSAO::Hash( uint32_t n )
+{
+	return n * ( n ^ ( n >> 15u ) );
+}
+
 void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 {
 
-	int width = m_outputTarget->GetWidth();
-	int height = m_outputTarget->GetHeight();
+	uint32_t width = m_outputTarget->GetWidth();
+	uint32_t height = m_outputTarget->GetHeight();
+
+	
+	auto& packedBuffer = *m_cortaoPackedBuffer->GetTexture();
+	if( !packedBuffer.IsValid() || packedBuffer.GetWidth() != width || packedBuffer.GetHeight() != height )
+	{
+		uint32_t mipLevels = 1;
+		uint32_t res = max(width, height);
+		while( res > 32 )
+		{
+			mipLevels++;
+			res /= 2;
+		}
+		Tr2BitmapDimensions desc( width, height, mipLevels, PixelFormat::PIXEL_FORMAT_R32_FLOAT );
+		packedBuffer.Create( desc, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext.GetPrimaryRenderContext() );
+	}
 
 
 	if( !m_cortaoConstantBuffer.IsValid() )
@@ -663,8 +695,6 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 
 		Matrix projectionMatrix = Tr2Renderer::GetProjectionTransform();
 		Matrix inverseProjectionMatrix = Inverse( projectionMatrix ); 
-
-		Matrix projectionMatrix2 = Tr2Renderer::GetProjectionRawTransform();
 
 		float nearPlane = Tr2Renderer::GetBackClip();
 		float farPlane = Tr2Renderer::GetFrontClip();
@@ -685,35 +715,97 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 		float maxApparentCircleRadius = m_cortaoMaxBlockerSearchRadius * 2.0f * fminf( inverseProjectionMatrix._11, inverseProjectionMatrix._22 ); 
 		data->maxApparentCircleRadiusCoefficient = maxApparentCircleRadius / sqrtf( maxApparentCircleRadius * maxApparentCircleRadius + 1.0f );
 
-		float circleBias = 0.0f;
-		data->mipBias = -3.5f + circleBias;
+		float circleBias = log2f( projectionMatrix._11 * width * 0.5f );
+		data->mipBias = m_cortaoMipBias + circleBias;
 		data->radiusMultiplier = m_cortaoStrength;
 		data->lookupOccluderRadiusScale = 1.0f;
 
-		data->randomVectorSeedX = rand();
-		data->randomVectorSeedY = rand();
-		data->randomAngleOffset = 6.283185307179586476925286766559f * rand() / RAND_MAX;
+		for( int i = 0; i < 4; i++ )
+		{
+			m_cortaoRandSeeds[i] = Hash( m_cortaoRandSeeds[i] + rand() );
+		}
 
-		data->inverseMaxSlopeWeight = 1.0f / 10.0f;
+		data->randomVectorSeedX = m_cortaoRandSeeds[0];
+		data->randomVectorSeedY = m_cortaoRandSeeds[1];
+		data->randomAngleOffset = ( 6.283185307179586476925286766559f / (float)0xFFFFFFFFu ) * (float)m_cortaoRandSeeds[2];
+
+		data->inverseMaxSlopeWeight = 1.0f / 5.0f;
 
 
 		data->depthParams = Vector4( ( nearPlane - farPlane ) / ( nearPlane * farPlane ), 1.0f / nearPlane, 0, 0 );
 
-		data->viewMatrix = Transpose( viewMatrix );
+
+		//Remove the translation from the view matrix
+		Matrix normalMatrix = viewMatrix;
+		normalMatrix._41 = 0.0f;
+		normalMatrix._42 = 0.0f;
+		normalMatrix._43 = 0.0f;
+
+		//bias matrix to convert from [0, 1] to [-1, +1]
+		Matrix biasMatrix = ScalingMatrix( 2.0f, 2.0f, 2.0f ) * TranslationMatrix( -1.0f, -1.0f, -1.0f ); 
+
+		data->normalMatrix = Transpose( biasMatrix * normalMatrix );
 	}
 
 	m_cortaoConstantBuffer.Unlock( renderContext );
 
+	const char* const SAMPLE_COUNTS[] = {
+		"SAMPLE_COUNT_16", 
+		"SAMPLE_COUNT_12", 
+		"SAMPLE_COUNT_8", 
+		"SAMPLE_COUNT_6", 
+		"SAMPLE_COUNT_4"
+	};
 
-	
+	m_cortaoEffect->SetOption( BlueSharedString( "SAMPLE_COUNT" ), BlueSharedString( SAMPLE_COUNTS[static_cast<int>( m_detail.quality )] ) );
+	m_cortaoEffect->SetOption( BlueSharedString( "USE_LOOKUP_TABLE" ), BlueSharedString( m_cortaoUseLookupTable ? "USE_LOOKUP_TABLE_TRUE" : "USE_LOOKUP_TABLE_FALSE" ) );
 	m_cortaoEffect->SetParameter( BlueSharedString( "DepthBuffer" ), m_inputDepthBuffer );
 	m_cortaoEffect->SetParameter( BlueSharedString( "NormalBuffer" ), m_inputNormalBuffer );
+	m_cortaoEffect->SetParameter( BlueSharedString( "PackedOutputBuffer" ), m_cortaoPackedBuffer, 0 );
+	m_cortaoEffect->SetParameter( BlueSharedString( "PackedBuffer" ), m_cortaoPackedBuffer );
+	m_cortaoEffect->SetParameter( BlueSharedString( "LookupTable" ), m_cortaoLookupTable );
 	m_cortaoEffect->SetParameter( BlueSharedString( "OutputBuffer" ), m_outputTarget );
-
 
 	renderContext.SetConstants( m_cortaoConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 
-	uint32_t workGroupSize = 8;
-	Tr2Renderer::RunComputeShader( m_cortaoEffect, ( width + workGroupSize - 1 ) / workGroupSize, ( height + workGroupSize - 1 ) / workGroupSize, 1, renderContext );
+	{
+		GPU_REGION( renderContext, "Pack" );
+		uint32_t packWorkGroupSize = 8;
+		Tr2Renderer::RunComputeShader( m_cortaoEffect, BlueSharedString( "Pack" ), ( width + packWorkGroupSize - 1 ) / packWorkGroupSize, ( height + packWorkGroupSize - 1 ) / packWorkGroupSize, 1, renderContext );
+	}
+	{
+		GPU_REGION( renderContext, "Downsample" );
+
+		m_cortaoDownsampleEffect->SetParameter( BlueSharedString( "InputBuffer" ), m_cortaoPackedBuffer );
+
+
+		uint32_t w = width;
+		uint32_t h = height;
+
+		for( uint32_t i = 1; i < packedBuffer.GetMipCount(); i++ )
+		{
+			m_cortaoRandSeeds[3] = Hash( m_cortaoRandSeeds[3] + rand() );
+
+			m_cortaoDownsampleEffect->SetParameter( BlueSharedString( "OutputBuffer" ), m_cortaoPackedBuffer, i );
+
+			m_cortaoDownsampleEffect->SetParameter( BlueSharedString( "Width" ), w );
+			m_cortaoDownsampleEffect->SetParameter( BlueSharedString( "Height" ), h );
+			m_cortaoDownsampleEffect->SetParameter( BlueSharedString( "MipLevel" ), i-1 );
+			m_cortaoDownsampleEffect->SetParameter( BlueSharedString( "Random" ), m_cortaoRandSeeds[3] );
+
+			w = max( w / 2u, 1u );
+			h = max( h / 2u, 1u );
+
+			uint32_t downsampleWorkGroupSize = 8;
+			Tr2Renderer::RunComputeShader( m_cortaoDownsampleEffect, BlueSharedString( "Downsample" ), ( w + downsampleWorkGroupSize - 1 ) / downsampleWorkGroupSize, ( h + downsampleWorkGroupSize - 1 ) / downsampleWorkGroupSize, 1, renderContext );
+
+		}
+	}
+
+	{
+		GPU_REGION( renderContext, "Main pass" );
+		uint32_t mainPassWorkGroupSize = 16;
+		Tr2Renderer::RunComputeShader( m_cortaoEffect, BlueSharedString( "MainPass" ), ( width + mainPassWorkGroupSize - 1 ) / mainPassWorkGroupSize, ( height + mainPassWorkGroupSize - 1 ) / mainPassWorkGroupSize, 1, renderContext );
+	}
 
 }

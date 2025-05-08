@@ -2118,7 +2118,7 @@ void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2GpuBuffer* buffe
 }
 
 // --------------------------------------------------------------------------------------
-void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2TextureProvider* texture )
+void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2TextureProvider* texture, uint32_t uavMipLevel )
 {
 	auto existing = GetResourceByName( name.c_str() );
 	Tr2RuntimeTextureParameterPtr param = BlueCastPtr( existing );
@@ -2126,11 +2126,13 @@ void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2TextureProvider*
 	if( param )
 	{
 		param->SetTextureProvider( texture );
+		param->SetUavMipLevel( uavMipLevel );
 	}
 	else
 	{
 		param.CreateInstance();
 		param->Create( name, texture );
+		param->SetUavMipLevel( uavMipLevel );
 		AddResource( param );
 	}
 }
