@@ -754,15 +754,15 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 
 	m_cortaoConstantBuffer.Unlock( renderContext );
 
-	const char* const QUALITY_OPTIONS[] = {
-		"QUALITY_HIGHEST", 
-		"QUALITY_HIGH", 
-		"QUALITY_MEDIUM", 
-		"QUALITY_LOW", 
-		"QUALITY_LOWEST"
+	const char* const SAMPLE_COUNTS[] = {
+		"SAMPLE_COUNT_16", 
+		"SAMPLE_COUNT_12", 
+		"SAMPLE_COUNT_8", 
+		"SAMPLE_COUNT_6", 
+		"SAMPLE_COUNT_4"
 	};
 
-	m_cortaoEffect->SetOption( BlueSharedString( "QUALITY" ), BlueSharedString( QUALITY_OPTIONS[static_cast<int>(m_detail.quality)] ) );
+	m_cortaoEffect->SetOption( BlueSharedString( "SAMPLE_COUNT" ), BlueSharedString( SAMPLE_COUNTS[static_cast<int>( m_detail.quality )] ) );
 	m_cortaoEffect->SetOption( BlueSharedString( "USE_LOOKUP_TABLE" ), BlueSharedString( m_cortaoUseLookupTable ? "USE_LOOKUP_TABLE_TRUE" : "USE_LOOKUP_TABLE_FALSE" ) );
 	m_cortaoEffect->SetParameter( BlueSharedString( "DepthBuffer" ), m_inputDepthBuffer );
 	m_cortaoEffect->SetParameter( BlueSharedString( "NormalBuffer" ), m_inputNormalBuffer );
