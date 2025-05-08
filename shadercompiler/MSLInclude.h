@@ -7,6 +7,7 @@ using namespace metal;
 #define any(x) any((x) != 0)
 #define mul(a, b) ((a) * (b))
 #define sincos(x, s, c) do { float cc; ( s ) = sincos( ( x ), cc ); ( c ) = cc; } while( false )
+#define countbits(x) popcount(x)
 
 // These values must be synchronized with defines in TrinityAL/metal/MetalWorkQueue.h
 #define CBUFFER(i) buffer(4 + i)

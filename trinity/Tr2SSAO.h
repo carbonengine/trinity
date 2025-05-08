@@ -109,6 +109,8 @@ private:
 	{
 		Vector4 resolution;
 
+		Vector4 depthParams;
+
 		Vector4 unprojectParams;
 
 		Vector2 projectionParams;
@@ -125,18 +127,34 @@ private:
 		float randomAngleOffset;
 		float inverseMaxSlopeWeight;
 
-		Vector4 depthParams;
+		Matrix normalMatrix;
+	};
 
-		Matrix viewMatrix;
+	struct CortaoDownsamplePerObjectData
+	{
+		uint32_t width;
+		uint32_t height;
+		uint32_t mipLevel;
+		uint32_t random;
 	};
 
 	bool m_cortaoEnabled;
-	Tr2ConstantBufferAL m_cortaoConstantBuffer;
+	
 	Tr2EffectPtr m_cortaoEffect;
+	Tr2EffectPtr m_cortaoDownsampleEffect;
+	Tr2TextureReferencePtr m_cortaoPackedBuffer;
+	TriTextureResPtr m_cortaoLookupTable;
+	Tr2ConstantBufferAL m_cortaoConstantBuffer;
 
 	float m_cortaoStrength;
 	float m_cortaoRadius;
 	float m_cortaoMaxBlockerSearchRadius;
+	float m_cortaoMipBias;
+	bool m_cortaoUseLookupTable;
+
+	uint32_t m_cortaoRandSeeds[4];
+
+	uint32_t Hash(uint32_t n);
 
 	void ComputeCORTAO( Tr2RenderContext& renderContext );
 
