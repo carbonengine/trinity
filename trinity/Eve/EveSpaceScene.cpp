@@ -3795,6 +3795,12 @@ void EveSpaceScene::ClearRenderTargetIfNoBatches( Tr2RenderTarget* rt, uint32_t 
 
 void EveSpaceScene::SetupPlanetsAsShadowCaster( CcpMath::Sphere* planets, size_t maxPlanets )
 {
+	Vector3 sunPosition = { 0, 0, 0 };
+	if ( m_sunBall )
+	{
+		m_sunBall->GetValueAt( &sunPosition, m_updateContext.GetTime() );
+	}
+
 	std::vector<PlanetInfo> visiblePlanets;
 	for( EvePlanet* obj : m_planets )
 	{
@@ -3805,6 +3811,19 @@ void EveSpaceScene::SetupPlanetsAsShadowCaster( CcpMath::Sphere* planets, size_t
 			if( obj->GetTranslationCurve() != nullptr && obj->GetTranslationCurve() == m_sunBall )
 			{
 				continue;
+			}
+			if( obj->GetTranslationCurve() && m_sunBall )
+			{
+				// Check if the planet is behind the sun. The check is for an exotic case when a large
+				// planet is close enogh to the sun and the player is at the opposite side of the sun.
+				// In this case we can't treat the sun as an infinely far light source.
+				Vector3 planetPosition = { 0, 0, 0 };
+				obj->GetTranslationCurve()->GetValueAt( &planetPosition, m_updateContext.GetTime() );
+
+				if( Dot( planetPosition - sunPosition, Vector3( 0, 0, 0 ) - sunPosition ) < 0 )
+				{
+					continue;
+				}
 			}
 			Vector3 planetWorldPos = obj->GetWorldPosition();
 			float radius = obj->GetRadius();
