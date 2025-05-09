@@ -12,6 +12,8 @@
 
 #include "TexturePipeline/Tr2TexturePipeline.h"
 #include "Tr2TextureLodManager.h"
+#include "Procedural/GradientTexture.h"
+#include "Procedural/SolidColorTexture.h"
 
 
 using namespace Tr2RenderContextEnum;
@@ -173,6 +175,39 @@ unsigned TriTextureRes::ComputeMipSkipCount()
 	return 0;
 }
 
+void TriTextureRes::RasterizeProceduralTexture( const wchar_t* data, void ( *Rastrization )( const std::string_view&, ImageIO::HostBitmap& ) )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	m_isGood = false;
+	m_isPrepared = false;
+	m_isLoading = true;
+
+	ImageIO::HostBitmap bmp;
+	( *Rastrization )( static_cast<const char*>( CW2A( data ) ), bmp );
+	m_isLoading = false;
+	m_isGood = false;
+	if( bmp.IsValid() )
+	{
+		if( !Tr2Renderer::IsResourceCreationAllowed() )
+		{
+			return;
+		}
+		m_isPrepared = true;
+
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		uint32_t memoryUse;
+		if( !Tr2ImageIOHelpers::CreateTexture( bmp, m_ownTexture, memoryUse, renderContext, USAGE_IMMUTABLE ) )
+		{
+			CCP_LOGWARN( "Tr2ImageHandler failed to create texture '%S'", GetPath() );
+			return;
+		}
+		m_ownTexture.SetName( CW2A( GetPath() ) );
+
+		SetTexture( m_ownTexture );
+	}
+}
+
 void TriTextureRes::Initialize( const wchar_t* name, const wchar_t* ext )
 {
 	m_pipelineFence.Cancel();
@@ -181,6 +216,21 @@ void TriTextureRes::Initialize( const wchar_t* name, const wchar_t* ext )
 
 	m_pipeline = nullptr;
 	m_pipelineInputs.clear();
+
+	if( IsGradientTexturePath( name ) )
+	{
+		m_path = name;
+		m_ext = ext;
+		RasterizeProceduralTexture( name, &RasterizeGradient );
+		return;
+	}
+	if( IsSolidColorTexturePath( name ) )
+	{
+		m_path = name;
+		m_ext = ext;
+		RasterizeProceduralTexture( name, &RasterizeSolidColor );
+		return;
+	}
 
 	if( IsCtrPath( name ) )
 	{
