@@ -3802,6 +3802,10 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	}
 
 	auto rtMesh = m_mesh->GetRtMesh();
+	if( !rtMesh )
+	{
+		return;
+	}
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
