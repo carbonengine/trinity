@@ -28,15 +28,15 @@ struct Header
 	Channel a;
 };
 
-constexpr std::string_view gradientPrefix = "dynamic:/gradient/";
-constexpr std::wstring_view gradientPrefixW = L"dynamic:/gradient/";
+constexpr std::string_view gradientPrefix = "dynamic:/gradient_1d/";
+constexpr std::wstring_view gradientPrefixW = L"dynamic:/gradient_1d/";
 
 
 struct GradientTextureConstructor : public IBlueDynamicResourceConstructor
 {
 	GradientTextureConstructor()
 	{
-		BeResMan->RegisterResourceConstructor( L"gradient", this );
+		BeResMan->RegisterResourceConstructor( L"gradient_1d", this );
 	}
 	IBlueResource* GetResource( const wchar_t* query ) override
 	{
@@ -154,14 +154,14 @@ void RasterizeGradient( const std::string_view& path, ImageIO::HostBitmap& bitma
 	auto data = Base64::Decode( std::string_view( path.data() + gradientPrefix.size(), path.size() - gradientPrefix.size() ) );
 	if( data.size() < sizeof( Header ) )
 	{
-		CCP_LOGERR( "Failed to parse dynamic:/gradient/ texture path: the path %s is invalid", std::string( path ).c_str() );
+		CCP_LOGERR( "Failed to parse dynamic:/gradient_1d/ texture path: the path %s is invalid", std::string( path ).c_str() );
 		return;
 	}
 	Header* header = reinterpret_cast<Header*>( data.data() );
 	auto keyCount = header->r.keyCount + header->g.keyCount + header->b.keyCount + header->a.keyCount;
 	if( data.size() != sizeof( Header ) + keyCount * sizeof( Tr2CurveScalarKey ) )
 	{
-		CCP_LOGERR( "Failed to parse dynamic:/gradient/ texture path: the path %s is invalid", std::string( path ).c_str() );
+		CCP_LOGERR( "Failed to parse dynamic:/gradient_1d/ texture path: the path %s is invalid", std::string( path ).c_str() );
 		return;
 	}
 	if( header->width == 0 )
@@ -202,13 +202,13 @@ bool IsGradientTexturePath( const wchar_t* path )
 MAP_FUNCTION_AND_WRAP( 
 	"GradientPathToCurve", 
 	GradientPathToCurve, 
-	"Constructs a Tr2CurveColor object with curves set up to represent the given dynamic:/gradient/... res path.\n"
+	"Constructs a Tr2CurveColor object with curves set up to represent the given dynamic:/gradient_1d/... res path.\n"
 	"Returns either a tuple with Tr2CurveColor object and texture width or (None, 0) if the path is malformed.\n\n"
-	":param path: dynamic:/gradient/... res path\n" );
+	":param path: dynamic:/gradient_1d/... res path\n" );
 
 MAP_FUNCTION_AND_WRAP(
 	"CurveToGradientPath",
 	CurveToGradientPath,
-	"Constructs a dynamic:/gradient/... res path from the given Tr2CurveColor object\n\n"
+	"Constructs a dynamic:/gradient_1d/... res path from the given Tr2CurveColor object\n\n"
 	":param curve: Tr2CurveColor object\n"
 	":param width: width of the gradient texture\n" );
