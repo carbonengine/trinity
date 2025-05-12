@@ -59,6 +59,7 @@ Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 	m_cortaoMaxBlockerSearchRadius = 0.25f;
 	m_cortaoMipBias = -4.0f;
 	m_cortaoUseLookupTable = true;
+	m_cortaoBlur = true;
 
 	m_detail.settings = FFX_CACAO_PRESETS[0].settings;
 	m_detail.settings.radius = 6;
@@ -80,8 +81,12 @@ Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 	m_cortaoDownsampleEffect.CreateInstance();
 	m_cortaoDownsampleEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/Downsample.fx" );
 
+	m_cortaoBlurEffect.CreateInstance();
+	m_cortaoBlurEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/Blur.fx" );
+
 
 	m_cortaoPackedBuffer.CreateInstance();
+	m_cortaoBlurBuffer.CreateInstance();
 
 	m_cortaoLookupTable.CreateInstance();
 	BeResMan->GetResource( "res:/texture/ssao/24x24x16x29.dds", "", m_cortaoLookupTable );
@@ -384,7 +389,7 @@ HRESULT Tr2SSAO::ApplyConstBuffer( unsigned pass, Tr2RenderContext& renderContex
 	return renderContext.SetConstants( m_constBuffers[std::min( pass, SSAO_PASS_COUNT )], COMPUTE_SHADER, Tr2Renderer::GetPerFramePSStartRegister() );
 }
 
-void Tr2SSAO::Filter( Tr2RenderContext& renderContext )
+void Tr2SSAO::Filter( Tr2RenderContext& renderContext, bool temporal )
 {
 	if( !IsValid() )
 	{
@@ -399,7 +404,7 @@ void Tr2SSAO::Filter( Tr2RenderContext& renderContext )
 	if( m_cortaoEnabled )
 	{
 		GPU_REGION( renderContext, "CORTAO" );
-		ComputeCORTAO( renderContext );
+		ComputeCORTAO( renderContext, temporal );
 	}
 	else
 	{
@@ -661,12 +666,12 @@ uint32_t Tr2SSAO::Hash( uint32_t n )
 	return n * ( n ^ ( n >> 15u ) );
 }
 
-void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
+void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 {
+
 
 	uint32_t width = m_outputTarget->GetWidth();
 	uint32_t height = m_outputTarget->GetHeight();
-
 	
 	auto& packedBuffer = *m_cortaoPackedBuffer->GetTexture();
 	if( !packedBuffer.IsValid() || packedBuffer.GetWidth() != width || packedBuffer.GetHeight() != height )
@@ -699,10 +704,7 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 		float nearPlane = Tr2Renderer::GetBackClip();
 		float farPlane = Tr2Renderer::GetFrontClip();
 
-
-
 		data->resolution = Vector4( (float)width, (float)height, 1.0f / (float)width, 1.0f / (float)height );
-		
 		
 		data->unprojectParams = Vector4( +2.0f * inverseProjectionMatrix._11, -2.0f * inverseProjectionMatrix._22, -inverseProjectionMatrix._11, inverseProjectionMatrix._22 );
 
@@ -720,9 +722,12 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 		data->radiusMultiplier = m_cortaoStrength;
 		data->lookupOccluderRadiusScale = 1.0f;
 
-		for( int i = 0; i < 4; i++ )
+		if( temporal )
 		{
-			m_cortaoRandSeeds[i] = Hash( m_cortaoRandSeeds[i] + rand() );
+			for( int i = 0; i < 4; i++ )
+			{
+				m_cortaoRandSeeds[i] = Hash( m_cortaoRandSeeds[i] + rand() );
+			}
 		}
 
 		data->randomVectorSeedX = m_cortaoRandSeeds[0];
@@ -750,15 +755,16 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 	m_cortaoConstantBuffer.Unlock( renderContext );
 
 	const char* const SAMPLE_COUNTS[] = {
-		"SAMPLE_COUNT_16", 
-		"SAMPLE_COUNT_12", 
-		"SAMPLE_COUNT_8", 
-		"SAMPLE_COUNT_6", 
+		"SAMPLE_COUNT_16",
+		"SAMPLE_COUNT_12",
+		"SAMPLE_COUNT_8",
+		"SAMPLE_COUNT_6",
 		"SAMPLE_COUNT_4"
 	};
 
 	m_cortaoEffect->SetOption( BlueSharedString( "SAMPLE_COUNT" ), BlueSharedString( SAMPLE_COUNTS[static_cast<int>( m_detail.quality )] ) );
 	m_cortaoEffect->SetOption( BlueSharedString( "USE_LOOKUP_TABLE" ), BlueSharedString( m_cortaoUseLookupTable ? "USE_LOOKUP_TABLE_TRUE" : "USE_LOOKUP_TABLE_FALSE" ) );
+
 	m_cortaoEffect->SetParameter( BlueSharedString( "DepthBuffer" ), m_inputDepthBuffer );
 	m_cortaoEffect->SetParameter( BlueSharedString( "NormalBuffer" ), m_inputNormalBuffer );
 	m_cortaoEffect->SetParameter( BlueSharedString( "PackedOutputBuffer" ), m_cortaoPackedBuffer, 0 );
@@ -767,6 +773,8 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 	m_cortaoEffect->SetParameter( BlueSharedString( "OutputBuffer" ), m_outputTarget );
 
 	renderContext.SetConstants( m_cortaoConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
+
+
 
 	{
 		GPU_REGION( renderContext, "Pack" );
@@ -784,7 +792,10 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 
 		for( uint32_t i = 1; i < packedBuffer.GetMipCount(); i++ )
 		{
-			m_cortaoRandSeeds[3] = Hash( m_cortaoRandSeeds[3] + rand() );
+			if (temporal)
+			{
+				m_cortaoRandSeeds[3] = Hash( m_cortaoRandSeeds[3] + rand() );
+			}
 
 			m_cortaoDownsampleEffect->SetParameter( BlueSharedString( "OutputBuffer" ), m_cortaoPackedBuffer, i );
 
@@ -806,6 +817,41 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext )
 		GPU_REGION( renderContext, "Main pass" );
 		uint32_t mainPassWorkGroupSize = 16;
 		Tr2Renderer::RunComputeShader( m_cortaoEffect, BlueSharedString( "MainPass" ), ( width + mainPassWorkGroupSize - 1 ) / mainPassWorkGroupSize, ( height + mainPassWorkGroupSize - 1 ) / mainPassWorkGroupSize, 1, renderContext );
+	}
+
+	if( m_cortaoBlur && !temporal )
+	{
+
+		auto& blurBuffer = *m_cortaoBlurBuffer->GetTexture();
+		if( !blurBuffer.IsValid() || blurBuffer.GetWidth() != width || blurBuffer.GetHeight() != height )
+		{
+			Tr2BitmapDimensions desc( width, height, 1, PixelFormat::PIXEL_FORMAT_R8_UNORM );
+			blurBuffer.Create( desc, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext.GetPrimaryRenderContext() );
+		}
+
+		uint32_t blurWorkGroupSize = 8;
+		{
+			GPU_REGION( renderContext, "Blur" );
+
+			m_cortaoBlurEffect->SetParameter( BlueSharedString( "PackedDataBuffer" ), m_cortaoPackedBuffer );
+
+			{
+				GPU_REGION( renderContext, "Pass 1" );
+				m_cortaoBlurEffect->SetOption( BlueSharedString( "MODE" ), BlueSharedString( temporal ? "MODE_TEMPORAL" : "MODE_PASS1" ) );
+				m_cortaoBlurEffect->SetParameter( BlueSharedString( "SSAOInputBuffer" ), m_outputTarget );
+				m_cortaoBlurEffect->SetParameter( BlueSharedString( "SSAOOutputBuffer" ), m_cortaoBlurBuffer );
+				Tr2Renderer::RunComputeShader( m_cortaoBlurEffect, BlueSharedString( "Blur" ), ( width + blurWorkGroupSize - 1 ) / blurWorkGroupSize, ( height + blurWorkGroupSize - 1 ) / blurWorkGroupSize, 1, renderContext );
+			}
+			{
+				GPU_REGION( renderContext, "Pass 2" );
+				m_cortaoBlurEffect->SetOption( BlueSharedString( "MODE" ), BlueSharedString( temporal ? "MODE_TEMPORAL" : "MODE_PASS2" ) );
+				m_cortaoBlurEffect->SetParameter( BlueSharedString( "SSAOInputBuffer" ), m_cortaoBlurBuffer );
+				m_cortaoBlurEffect->SetParameter( BlueSharedString( "SSAOOutputBuffer" ), m_outputTarget );
+				Tr2Renderer::RunComputeShader( m_cortaoBlurEffect, BlueSharedString( "Blur" ), ( width + blurWorkGroupSize - 1 ) / blurWorkGroupSize, ( height + blurWorkGroupSize - 1 ) / blurWorkGroupSize, 1, renderContext );
+			}
+		}
+
+	
 	}
 
 }

@@ -46,7 +46,7 @@ public:
 
 	void SetInputBuffers( Tr2DepthStencilPtr depthBuffer, Tr2RenderTargetPtr normalBuffer );
 
-	void Filter( Tr2RenderContext& renderContext );
+	void Filter( Tr2RenderContext& renderContext, bool temporal );
 
 	Tr2RenderTargetPtr GetOutput() const;
 	ITr2TextureProviderPtr GetBlankOutput() const;
@@ -142,6 +142,7 @@ private:
 	
 	Tr2EffectPtr m_cortaoEffect;
 	Tr2EffectPtr m_cortaoDownsampleEffect;
+	Tr2EffectPtr m_cortaoBlurEffect;
 	Tr2TextureReferencePtr m_cortaoPackedBuffer;
 	TriTextureResPtr m_cortaoLookupTable;
 	Tr2ConstantBufferAL m_cortaoConstantBuffer;
@@ -152,11 +153,15 @@ private:
 	float m_cortaoMipBias;
 	bool m_cortaoUseLookupTable;
 
+	bool m_cortaoBlur;
+	Tr2TextureReferencePtr m_cortaoBlurBuffer;
+
+
 	uint32_t m_cortaoRandSeeds[4];
 
 	uint32_t Hash(uint32_t n);
 
-	void ComputeCORTAO( Tr2RenderContext& renderContext );
+	void ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal );
 
 
 	// Input
