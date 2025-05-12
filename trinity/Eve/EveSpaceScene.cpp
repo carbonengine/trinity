@@ -2356,8 +2356,23 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 	if( m_mainPassRenderingEnabled && m_ssao )
 	{
 		renderContext.SetReadOnlyDepth( true );
+
+
+		bool temporal = false;
+		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
+		if( m_sceneDefaultPostProcess )
+		{
+			auto taa = m_sceneDefaultPostProcess->GetTaa();
+			temporal = upscalingInfo.temporal || ( taa && taa->IsActive() );
+		}
+		else
+		{
+
+			temporal = upscalingInfo.temporal;
+		}
+
 		m_ssao->SetInputBuffers( m_depthMap, m_normalMap );
-		m_ssao->Filter( renderContext );
+		m_ssao->Filter( renderContext, temporal );
 		renderContext.SetReadOnlyDepth( false );
 	}
 }

@@ -18,6 +18,7 @@ const Be::VarChooser SSAOQualityChooser[] = {
 	{}
 };
 
+
 BLUE_REGISTER_ENUM_EX( "SSAOQuality", SSAOQuality, SSAOQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 const Be::ClassInfo* Tr2SSAO::ExposeToBlue()
@@ -43,6 +44,7 @@ const Be::ClassInfo* Tr2SSAO::ExposeToBlue()
 		MAP_ATTRIBUTE( "cortaoMipBias", m_cortaoMipBias, "Mip bias applied to samples. Should be a negative value around -3.5.\n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "cortaoRadius", m_cortaoRadius, "The maximum world space radius of CORTAO. Can be set to an extremely high value to make the radius only limited by the max blocker search radius.\n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "cortaoUseLookupTable", m_cortaoUseLookupTable, "Enables the occluder lookup table, which greatly improves performance. Should only be disabled for debugging purposes.\n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY )
+		MAP_ATTRIBUTE( "cortaoBlur", m_cortaoBlur, "Enables a blur to reduces noise when needed. Temporal anti-aliasing and upscaling can filter out the noise, so this blur is only activated when both those are disabled..\n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY )
 
 		MAP_ATTRIBUTE( "deinterleavedDepthTarget", m_detail.resources.deinterleavedDepthTarget, "", Be::READ )
 		MAP_ATTRIBUTE( "deinterleavedNormalTarget", m_detail.resources.deinterleavedNormalTarget, "", Be::READ )
