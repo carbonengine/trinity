@@ -76,6 +76,23 @@ struct Tr2CurveScalarKey
 BLUE_DECLARE_STRUCTURE_LIST( Tr2CurveScalarKey );
 
 
+struct Tr2CurveScalarDefinition
+{
+	const Tr2CurveScalarKey* keys;
+	uint32_t keyCount;
+	Tr2CurveExtrapolation::Type extrapolationBefore;
+	Tr2CurveExtrapolation::Type extrapolationAfter;
+};
+
+
+struct Tr2CurveRasterizeDestination
+{
+	uint32_t width;  // destination texture width in pixels
+	uint32_t stride; // destination texture stride in float16 elements
+	Float_16* data;
+};
+
+
 BLUE_CLASS( Tr2CurveScalar ): public ITriScalarFunction, public ITriCurveLength
 {
 public:
@@ -119,9 +136,16 @@ public:
 	void SetExtrapolation( Tr2CurveExtrapolation::Type extrapolation );
 
 	Tr2CurveScalarKeyStructureList& GetKeys();
+
+	void SetDefinition( const Tr2CurveScalarDefinition& definition );
+	Tr2CurveScalarDefinition GetDefinition() const;
+
+	void Rasterize( const Tr2CurveRasterizeDestination& destination ) const;
+	static void Rasterize( const Tr2CurveRasterizeDestination& destination, const Tr2CurveScalarDefinition& definition );
+
 private:
 	float GetLocalTime( double time ) const;
-	float GetSegmentValue( float time, const Tr2CurveScalarKey& k0, const Tr2CurveScalarKey& k1 ) const;
+	static float GetSegmentValue( float time, const Tr2CurveScalarKey& k0, const Tr2CurveScalarKey& k1 );
 	float GetSegmentTangent( float time, const Tr2CurveScalarKey& k0, const Tr2CurveScalarKey& k1 ) const;
 
 	PTr2CurveScalarKeyStructureList m_keys;

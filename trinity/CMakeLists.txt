@@ -1055,6 +1055,12 @@ set(_SOURCES
     RenderJob/TriStepUpdate.cpp
     RenderJob/TriStepUpdate.h
     RenderJob/TriStepUpdate_Blue.cpp
+    Resources/Procedural/Base64Encoding.cpp
+    Resources/Procedural/Base64Encoding.h
+    Resources/Procedural/GradientTexture.cpp
+    Resources/Procedural/GradientTexture.h
+    Resources/Procedural/SolidColorTexture.cpp
+    Resources/Procedural/SolidColorTexture.h
     Resources/TexturePipeline/ITr2TexturePipelineStep.h
     Resources/TexturePipeline/Tr2TexturePipeline.cpp
     Resources/TexturePipeline/Tr2TexturePipeline.h

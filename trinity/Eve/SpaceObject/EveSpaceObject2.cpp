@@ -609,15 +609,16 @@ void EveSpaceObject2::PrepareShaderData( const EveUpdateContext& updateContext )
 	// object: 0.0 = fully visible, 1.0 = invisible.
 	// the following formula calculates a special number to pass to the shader to help determine this
 	float normalizedBoundingRadius = GetBoundingSphereRadius() / ( m_modelScale == 0 ? 1.f : m_modelScale );
-	float nearDist = std::max( 0.f, Length( m_clipSphereCenter ) - normalizedBoundingRadius );
-	float insideSpherePercentage = std::min( 1.f, Length( m_clipSphereCenter ) / normalizedBoundingRadius );
-	float disolveRadius = nearDist + m_clipSphereFactor * normalizedBoundingRadius * ( 1.f + insideSpherePercentage );
+	float clipOffset = Length( m_clipSphereCenter );
+	normalizedBoundingRadius += clipOffset;
+	float insideSpherePercentage = std::min( 1.f, clipOffset / normalizedBoundingRadius );
+	float disolveRadius = m_clipSphereFactor * normalizedBoundingRadius * ( 1.f + insideSpherePercentage );
 
 	m_psData.clipSphereCenter = m_clipSphereCenter + GetBoundingSphereCenter();
 	m_psData.clipRadiusSq = TriFloatSign( disolveRadius ) * disolveRadius * disolveRadius;
 
 	m_vsData.clipData = Vector4( m_psData.clipSphereCenter, m_psData.clipRadiusSq );
-	float disolveRadius2 = nearDist + m_clipSphereFactor2 * normalizedBoundingRadius * ( 1.f + insideSpherePercentage );
+	float disolveRadius2 = m_clipSphereFactor2 * normalizedBoundingRadius * ( 1.f + insideSpherePercentage );
 	m_psData.clipRadius2Sq = TriFloatSign( disolveRadius2 ) * disolveRadius2 * disolveRadius2;
 	m_psData.clipSphereFactor = m_clipSphereFactor;
 	m_psData.clipSphereFactor2 = m_clipSphereFactor2;
@@ -1390,11 +1391,12 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 		TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
 		if( geometryRes )
 		{
+			DecalMeshCache meshCache;
 			// runn over every decal and update it
 			for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 			{
 				// now prep to get the renderables
-				( *it )->GetRenderables( renderables, geometryRes, m_meshScreenSize );
+				( *it )->GetRenderables( renderables, meshCache, geometryRes, m_meshScreenSize );
 			}
 		}
 	}
@@ -1947,6 +1949,10 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 		{
 			m_impactOverlay->SetSeed( CcpHashFNV1( m_name.c_str(), m_name.length() ) );
 		}
+	}
+	else if( IsMatch( val, m_mute ) )
+	{
+		SetMute( val );
 	}
 
 	return true;
@@ -3652,21 +3658,14 @@ void EveSpaceObject2::SetInheritProperties( const Color* colorSet )
 	}
 }
 
-bool EveSpaceObject2::GetMute()
-{
-	return m_mute;
-}
-
 void EveSpaceObject2::SetMute( bool isMute )
 {
-	m_mute = isMute;
 	for( auto it : m_effectChildren )
 	{
 		it->SetMute( m_mute );
 	}
 	for( auto it : m_observers )
 	{
-
 		it->SetMute( m_mute );
 	}
 }

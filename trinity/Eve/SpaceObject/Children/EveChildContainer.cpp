@@ -77,17 +77,26 @@ bool EveChildContainer::OnModified( Be::Var* val )
 	{
 		ReRegister();
 	}
-	return true;
-}
+	else if( IsMatch( val, m_mute ) )
+	{
+		MuteChildren();
+	}
 
-bool EveChildContainer::GetMute()
-{
-	return m_mute;
+	return true;
 }
 
 void EveChildContainer::SetMute( bool isMute )
 {
-	m_mute = isMute;
+	if( isMute != m_mute )
+	{
+		m_mute = isMute;
+		MuteChildren();
+	}
+	
+}
+
+void EveChildContainer::MuteChildren()
+{
 	for( auto it : m_objects )
 	{
 		it->SetMute( m_mute );
@@ -534,7 +543,7 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 		( *it )->SetBoneMatrix( bones, boneCount );
 	}
 
-	if( params.spaceObjectParent && !params.childParent )
+	if( params.spaceObjectParent )
 	{
 		params.spaceObjectParent->GetWorldVelocity( m_worldVelocity );
 	}

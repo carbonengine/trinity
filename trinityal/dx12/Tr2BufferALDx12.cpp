@@ -300,6 +300,17 @@ namespace TrinityALImpl
 
 	ALResult Tr2BufferAL::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )
 	{
+		auto stride = m_desc.stride;
+		if( m_desc.format != Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
+		{
+			stride = GetBytesPerPixel( m_desc.format );
+		}
+		auto size = m_desc.count * stride;
+		return MapForReading( data, 0, size, renderContext );
+	}
+
+	ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+	{
 		if( !IsValid() )
 		{
 			return E_INVALIDCALL;
@@ -317,14 +328,17 @@ namespace TrinityALImpl
 			return E_INVALIDCALL;
 		}
 
-		CComPtr<ID3D12Resource> scratch;
 		auto stride = m_desc.stride;
 		if( m_desc.format != Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
 		{
 			stride = GetBytesPerPixel( m_desc.format );
 		}
-		auto size = m_desc.count * stride;
+		if( size == 0 || offset + size > m_desc.count * stride )
+		{
+			return E_INVALIDARG;
+		}
 
+		CComPtr<ID3D12Resource> scratch;
 		auto scratchDesc = BufferDesc( size );
 		auto scratchHeap = HeapDesc( D3D12_HEAP_TYPE_READBACK );
 		CR_RETURN_HR( m_owner->m_device->CreateCommittedResource(
@@ -337,7 +351,7 @@ namespace TrinityALImpl
 
 		renderContext.ResourceBarrierDx12( Transition( m_buffer.GetResource(), m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE ) );
 		renderContext.FlushBarriersDx12( m_buffer.GetResource() );
-		renderContext.m_commandList->CopyBufferRegion( scratch, 0, m_buffer.GetResource(), 0, size );
+		renderContext.m_commandList->CopyBufferRegion( scratch, 0, m_buffer.GetResource(), offset, size );
 		renderContext.ResourceBarrierDx12( Transition( m_buffer.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
 		if( RequiresImmediateBarriers( m_desc.gpuUsage ) )
 		{

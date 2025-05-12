@@ -363,6 +363,11 @@ void EveChildLineSet::CreateSpriteVertexDeclaration()
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 8, 1, 1 );
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 9, 1, 1 );
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 10, 1, 1 );
+				// We alias previous frame transform to the current frame transform. Ideally, we would
+				// maintain the previous frame tranform, but it is nearly impossible with the procedural
+				// nature of these points. This workaround may become a problem if we start using opaque
+				// objects as line points (this is not the case for now).
+				def.m_nextOffset[1] = 0;
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 11, 1, 1 );
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 12, 1, 1 );
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 13, 1, 1 );

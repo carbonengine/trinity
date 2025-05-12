@@ -93,6 +93,7 @@ public:
 	bool HasShieldEllipsoid() const;
 	float GetActivationStrength( const EveUpdateContext& updateContext ) const;
 	float GetArmorImpactLifeTime() const;
+	Vector3 GetLastDamageState() const;
 
 	// setters
 	void SetSeed( const unsigned int seed );
@@ -131,6 +132,7 @@ private:
 	float m_armorImpactLifeTime;
 	unsigned int m_seed;
 	unsigned int m_damageLocatorCount;
+	Vector3 m_lastDamageState;
 
 	// priotiy
 	float m_renderPriority;

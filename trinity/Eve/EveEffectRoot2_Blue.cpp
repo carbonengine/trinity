@@ -36,11 +36,11 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 		
-		MAP_PROPERTY( 
+		MAP_ATTRIBUTE( 
 			"mute",
-			GetMute, 
-			SetMute, 
-			"" 
+			m_mute, 
+			"",
+			Be::READWRITE | Be::NOTIFY
 		)
 
 		

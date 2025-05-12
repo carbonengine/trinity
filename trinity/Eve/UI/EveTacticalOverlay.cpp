@@ -337,8 +337,8 @@ void EveTacticalOverlay::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Q
 		return;
 	}
 
-	quadRenderer.AddQuads( m_connectorEffectHash, &m_connectorBuffer[0], m_connectorBuffer.size() );
-	quadRenderer.AddQuads( m_anchorEffectHash, &m_anchorBuffer[0], m_anchorBuffer.size() );
-	quadRenderer.AddQuads( m_velocityEffectHash, &m_velocityBuffer[0], m_velocityBuffer.size() );
+	quadRenderer.AddQuads( m_connectorEffectHash, m_connectorBuffer.data(), m_connectorBuffer.size() );
+	quadRenderer.AddQuads( m_anchorEffectHash, m_anchorBuffer.data(), m_anchorBuffer.size() );
+	quadRenderer.AddQuads( m_velocityEffectHash, m_velocityBuffer.data(), m_velocityBuffer.size() );
 }
 

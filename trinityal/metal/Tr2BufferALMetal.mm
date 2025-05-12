@@ -124,6 +124,21 @@ namespace TrinityALImpl
 			data = nullptr;
 			return E_INVALIDCALL;
 		}
+		return MapForReading( data, 0, uint32_t( m_mtlBuffer.length ), renderContext );
+	}
+
+	ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+	{
+		if( !renderContext.IsValid() || !IsValid() )
+		{
+			data = nullptr;
+			return E_INVALIDCALL;
+		}
+		if( size == 0 || offset + size > m_desc.stride * m_desc.count )
+		{
+			data = nullptr;
+			return E_INVALIDARG;
+		}
 
 		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ ) )
 		{
@@ -132,11 +147,11 @@ namespace TrinityALImpl
 
 		MetalContext *metalContext = renderContext.GetMetalContext();
 
-		m_mappedBuffer = metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), m_mtlBuffer.length, MTLResourceStorageModeManaged, nil );
-		renderContext.GetMetalWorkQueue()->CopyBufferToBuffer( m_mappedBuffer, 0, m_mtlBuffer, 0, m_mtlBuffer.length );
+		m_mappedBuffer = metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), size, MTLResourceStorageModeManaged, nil );
+		renderContext.GetMetalWorkQueue()->CopyBufferToBuffer( m_mappedBuffer, 0, m_mtlBuffer, offset, size );
 		renderContext.GetMetalWorkQueue()->ReadBackBufferToCPU( m_mappedBuffer, true );
         
-        m_memory.Grow( m_mtlBuffer.length );
+        m_memory.Grow( m_mappedBuffer.length );
 
 		data = m_mappedBuffer.contents;
 		return S_OK;

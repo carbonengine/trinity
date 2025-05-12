@@ -31,7 +31,7 @@ namespace FSR1
 	#else
 	const uint32_t SRV_REGISTER_INDEX = 0;
 	#endif
-
+    
 	struct FSRConstants
 	{
 		float Const0[4];
@@ -68,10 +68,12 @@ bool Tr2Fsr1UpscalingTechnique::IsTemporal() const
 
 bool Tr2Fsr1UpscalingTechnique::IsAvailable() const
 {
+	extern bool g_force_fsr1_availability;
+
 #if TRINITY_PLATFORM == TRINITY_METAL
 	if( @available( macOS 13.0, * ) )
 	{
-		return false;
+		return g_force_fsr1_availability;
 	}
 #endif
 	return true;
@@ -172,6 +174,11 @@ uint32_t Tr2Fsr1UpscalingContext::GetDispatchRequirements() const
 
 Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
+	if( !AreDispatchParametersValid( dispatchParameters ) )
+	{
+		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
+	}
+
 	auto& renderContext = m_params.renderContext;
 
 	GPU_REGION_AL( renderContext, "FSR1 Upscaling" );

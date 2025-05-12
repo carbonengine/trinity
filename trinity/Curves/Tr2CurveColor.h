@@ -40,13 +40,14 @@ public:
 		Be::OptionalWithDefaultValue<Tr2CurveTangentType::Type, Tr2CurveTangentType::AUTO_CLAMP> tangentType );
 
 	void SetExtrapolation( Tr2CurveExtrapolation::Type extrapolation );
-private:
-	std::string m_name;
 
 	PTr2CurveScalar m_r;
 	PTr2CurveScalar m_g;
 	PTr2CurveScalar m_b;
 	PTr2CurveScalar m_a;
+
+private:
+	std::string m_name;
 
 	Color m_currentValue;
 

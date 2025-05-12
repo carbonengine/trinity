@@ -25,6 +25,7 @@ namespace TrinityALImpl
 		const Tr2BufferDescriptionAL& GetDesc() const { return m_desc; }
 
 		ALResult MapForReading( const void*& data, Tr2RenderContextAL& renderContext );
+		ALResult MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext );
 		void UnmapForReading( Tr2RenderContextAL& renderContext );
 		ALResult MapForWriting( void*& data, Tr2RenderContextAL& renderContext );
 		void UnmapForWriting( Tr2RenderContextAL& renderContext );

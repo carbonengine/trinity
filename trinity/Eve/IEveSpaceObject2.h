@@ -21,17 +21,17 @@ BLUE_INTERFACE( IEveSpaceObject2 ) : public IRoot
 	// public struct to pass this info to children
 	struct ParentData
 	{
-		Matrix transform;
-		uint32_t killCount;
-		Vector4 shipData;
-		Vector3 clipSphereCenter;
-		float clipRadiusSq;
-		float clipRadius2Sq;
-		float clipFactor;
-		float clipFactor2;
-		const Vector4* shLighting;
-		Vector4 customData;
-	};
+		Matrix transform = IdentityMatrix();
+		uint32_t killCount = 0;
+		Vector4 shipData = Vector4( 0, 0, 0, 0 );
+		Vector3 clipSphereCenter = Vector3( 0, 0, 0 );
+		float clipRadiusSq = 0;
+		float clipRadius2Sq = 0;
+		float clipFactor = 0;
+		float clipFactor2 = 0;
+		const Vector4* shLighting = nullptr;
+		Vector4 customData = Vector4( 0, 0, 0, 0 );
+};
 
 	virtual void UpdateSyncronous( const EveUpdateContext& updateContext ) = 0;
 	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext ) = 0;

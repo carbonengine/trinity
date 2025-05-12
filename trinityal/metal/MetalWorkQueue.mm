@@ -782,7 +782,10 @@ void MetalWorkQueue::ApplyRenderPassHint()
 	{
 		if( m_currentRenderPassDescriptor.depthAttachment.texture )
 		{
-			m_currentRenderPassDescriptor.depthAttachment.loadAction = m_pendingRenderPassHint.depth.load;
+			if( m_currentRenderPassDescriptor.depthAttachment.loadAction != MTLLoadActionClear )
+			{
+				m_currentRenderPassDescriptor.depthAttachment.loadAction = m_pendingRenderPassHint.depth.load;
+			}
 			m_currentRenderPassDescriptor.depthAttachment.storeAction = m_pendingRenderPassHint.depth.store;
 			m_currentRenderPassDescriptor.depthAttachment.clearDepth = m_pendingRenderPassHint.depth.clearValue;
 		}
@@ -790,7 +793,10 @@ void MetalWorkQueue::ApplyRenderPassHint()
 		{
 			if( m_currentRenderPassDescriptor.colorAttachments[i].texture )
 			{
-				m_currentRenderPassDescriptor.colorAttachments[i].loadAction = m_pendingRenderPassHint.color[i].load;
+				if( m_currentRenderPassDescriptor.colorAttachments[i].loadAction != MTLLoadActionClear )
+				{
+					m_currentRenderPassDescriptor.colorAttachments[i].loadAction = m_pendingRenderPassHint.color[i].load;
+				}
 				m_currentRenderPassDescriptor.colorAttachments[i].storeAction = m_pendingRenderPassHint.color[i].store;
 				m_currentRenderPassDescriptor.colorAttachments[i].clearColor = m_pendingRenderPassHint.color[i].clearColor;
 			}

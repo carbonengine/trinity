@@ -177,28 +177,18 @@ void Tr2SuballocatedBuffer::Expand( uint32_t blockSize )
 	CCP_LOGNOTICE( "Allocating more buffer memory for buffer '%s'. Total memory allocated: %zu MBs", m_name.c_str(), newBufferSize / BYTES_TO_MEGABYTES );
 }
 
-ALResult Tr2SuballocatedBuffer::MapForReading( Tr2RenderContextAL& renderContext )
+ALResult Tr2SuballocatedBuffer::ReadBuffer( std::unique_ptr<uint8_t[]>& dest, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
 {
-	if( m_mapCounter == 0 )
+	const void* data = nullptr;
+	CR_RETURN_HR( m_buffer.MapForReading( data, offset, size, renderContext ) );
+	if ( data == nullptr )
 	{
-		CR_RETURN_HR( m_buffer.MapForReading( m_mappedPointer, renderContext ) );
+		return E_FAIL;
 	}
-	m_mapCounter++;
-
-	CCP_ASSERT( m_mapCounter < 10 ); //Sanity check to make sure we're not leaking mappings. We should never need more than 2 realistically.
-
+	dest.reset( new uint8_t[size] );
+	memcpy( dest.get(), data, size );
+	m_buffer.UnmapForReading( renderContext );
 	return S_OK;
-}
-
-void Tr2SuballocatedBuffer::UnmapForReading( Tr2RenderContextAL& renderContext )
-{
-	CCP_ASSERT( m_mapCounter > 0 );
-
-	if( --m_mapCounter == 0 )
-	{
-		m_buffer.UnmapForReading( renderContext );
-		m_mappedPointer = nullptr;
-	}
 }
 
 
@@ -248,16 +238,13 @@ void Tr2SuballocatedBuffer::Allocation::Update( const void* data, Tr2RenderConte
 
 ALResult Tr2SuballocatedBuffer::Allocation::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )
 {
-	ALResult result = m_parent->MapForReading( renderContext );
-	if( !FAILED( result ) )
-	{
-		data = (void*)( m_parent->m_mappedPointer + m_offset );
-	}
-	return result;
+	CR_RETURN_HR( m_parent->ReadBuffer( m_mappedCopy, m_offset, m_size, renderContext ) );
+	data = m_mappedCopy.get();
+	return S_OK;
 }
 
 
 void Tr2SuballocatedBuffer::Allocation::UnmapForReading( Tr2RenderContextAL& renderContext )
 {
-	m_parent->UnmapForReading( renderContext );
+	m_mappedCopy.reset();
 }

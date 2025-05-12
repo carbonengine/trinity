@@ -90,6 +90,26 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+	{
+		if( !renderContext.IsValid() || !IsValid() )
+		{
+			data = nullptr;
+			return E_INVALIDCALL;
+		}
+		if( size == 0 || offset + size > m_desc.stride * m_desc.count )
+		{
+			data = nullptr;
+			return E_INVALIDARG;
+		}
+		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ ) )
+		{
+			return E_INVALIDCALL;
+		}
+		data = m_buffer.get();
+		return S_OK;
+	}
+
 	void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& )
 	{
 	}

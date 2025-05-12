@@ -53,7 +53,8 @@ EveImpactOverlay::EveImpactOverlay( IRoot* lockobj ) :
 	m_shieldImpactParentSize( 0.f ),
 	m_hullDamageFactor( 0.f ),
 	m_seed( 0 ),
-	m_damageLocatorCount( 0 )
+	m_damageLocatorCount( 0 ),
+	m_lastDamageState( 1.f, 1.f, 1.f )
 {
 	// 0
 	memset( &m_impactTexelHeader, 0, sizeof( DataRow ) );
@@ -525,6 +526,15 @@ float EveImpactOverlay::GetArmorImpactLifeTime() const
 
 // --------------------------------------------------------------------------------
 // Description:
+//    Get Last configured damage state (shield, armor, hull)
+// --------------------------------------------------------------------------------
+Vector3 EveImpactOverlay::GetLastDamageState() const
+{
+	return m_lastDamageState;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Easy-to-use access to the internal effects/faders
 // --------------------------------------------------------------------------------
 void EveImpactOverlay::ToggleEffect( const std::string& name, bool on, float duration )
@@ -602,6 +612,8 @@ void EveImpactOverlay::SetDamageState( float shield, float armor, float hull, bo
 			CreateArmorImpact( damageLocatorDistribution( generator ), damageSizeDistribution( generator ), m_debugForceSpawnDebris );
 		}
 	}
+
+	m_lastDamageState = Vector3( shield, armor, hull );
 }
 
 // --------------------------------------------------------------------------------

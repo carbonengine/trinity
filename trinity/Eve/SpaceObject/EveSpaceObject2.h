@@ -468,7 +468,6 @@ public:
 
 	void SetInheritProperties( const Color* colorSet ) override;
 
-	bool GetMute();
 	void SetMute( bool isMute );
 
 protected:

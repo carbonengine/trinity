@@ -286,7 +286,7 @@ void EveChildEffectPropagator::UpdateTriggerInterval( const EveUpdateContext& up
 		return;
 	}
 	
-	if( m_stopAfterNumTriggers > 0.0 && m_playTime > ( m_stopAfterNumTriggers / m_frequency + m_effectDuration ) )
+	if( m_stopAfterNumTriggers > 0.0 && m_effectDuration != -1.f && m_playTime > ( m_stopAfterNumTriggers / m_frequency + m_effectDuration ) )
 	{
 		Stop();
 		return;
@@ -307,7 +307,7 @@ void EveChildEffectPropagator::UpdateTriggerInterval( const EveUpdateContext& up
 		m_currentTriggerIndex++;
 	}
 	
-	if( m_playTime > ( (float)m_numDeleted / m_frequency ) + m_effectDuration )
+	if( m_effectDuration != -1.f && m_playTime > ( (float)m_numDeleted / m_frequency ) + m_effectDuration )
 	{
 		m_effect->PopFront();
 		m_numDeleted++;

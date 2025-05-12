@@ -401,6 +401,10 @@ void EveChildPlug::SetControllerVariable( const char* name, float value )
 	{
 		( *it )->SetVariable( name, value );
 	}
+	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
+	{
+		( *it )->SetControllerVariable( name, value );
+	}
 }
 
 void EveChildPlug::HandleControllerEvent( const char* name )

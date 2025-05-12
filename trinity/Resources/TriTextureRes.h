@@ -152,6 +152,7 @@ public:
 
 private:
 	void OnWrappedRenderTargetChanged();
+	void RasterizeProceduralTexture( const wchar_t* data, void ( *Rastrization )( const std::string_view&, ImageIO::HostBitmap& ) );
 
 	Tr2TextureAL *m_texture;
 	Tr2TextureAL m_ownTexture;

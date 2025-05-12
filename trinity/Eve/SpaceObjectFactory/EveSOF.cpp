@@ -2794,9 +2794,9 @@ void EveSOF::SetupDecalSets( IEveSpaceObjectDecalOwnerPtr obj, const EveSOFDNAPt
 				decal->SetMinScreenSize( MIN_DECAL_SCREEN_SIZE );
 
 				// pre-calculated index buffer is only valid for first multi-hull
-				if( itemData.indexBuffers.empty() || hullIdx != 0 )
+				if( hullIdx != 0 )
 				{
-					decal->SetIndices( {} );
+					decal->ForceRebuildIndices();
 				}
 				else
 				{

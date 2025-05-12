@@ -8,8 +8,7 @@
 #include "Curves/TriCurveSet.h"
 #include "Include/TriMath.h"
 #include "Tr2SyncToGpu.h"
-#include "TriSettingsRegistrar.h"
-
+#include "TriSettingsRegistrar.h" 
 #include <IBlueCallbackMan.h>
 
 #ifdef _WIN32
@@ -1241,7 +1240,8 @@ void TriDevice::UpdateAvailableUpscalingTechniques()
 {
 
 	m_supportedUpscalingTechniques.clear();
-
+	extern bool g_force_fsr1_availability;
+	g_force_fsr1_availability = !g_newUpscalersEnabled;
 	if( !g_newUpscalersEnabled )
 	{
 		// only allow FSR1 

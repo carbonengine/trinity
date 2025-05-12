@@ -204,11 +204,17 @@ namespace TrinityALImpl
 		return m_desc;
 	}
 
-	ALResult Tr2BufferAL::CreateStagingBuffer( Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::CreateStagingBuffer( uint32_t size, Tr2RenderContextAL& renderContext )
 	{
 		if( m_staging )
 		{
-			return S_OK;
+			D3D11_BUFFER_DESC desc;
+			m_staging->GetDesc( &desc );
+			if( desc.ByteWidth >= size )
+			{
+				return S_OK;
+			}
+			m_staging = nullptr;
 		}
 		D3D11_BUFFER_DESC bd;
 		memset( &bd, 0, sizeof( bd ) );
@@ -241,9 +247,47 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
-		CR_RETURN_HR( CreateStagingBuffer( renderContext ) );
+		CR_RETURN_HR( CreateStagingBuffer( m_desc.stride * m_desc.count, renderContext ) );
 
 		renderContext.m_context->CopyResource( m_staging, m_buffer );
+
+		D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
+		auto hr = renderContext.m_context->Map( m_staging, 0, D3D11_MAP_READ, 0, &ms );
+		if( !ms.pData )
+		{
+			return E_FAIL;
+		}
+		data = ms.pData;
+		return hr;
+	}
+
+	ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+	{
+		if( !renderContext.IsValid() || !IsValid() )
+		{
+			data = nullptr;
+			return E_INVALIDCALL;
+		}
+		if( size == 0 || offset + size > m_desc.stride * m_desc.count )
+		{
+			data = nullptr;
+			return E_INVALIDARG;
+		}
+		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ ) )
+		{
+			return E_INVALIDCALL;
+		}
+		CR_RETURN_HR( CreateStagingBuffer( size, renderContext ) );
+
+		if( size == m_desc.stride * m_desc.count )
+		{
+			renderContext.m_context->CopyResource( m_staging, m_buffer );
+		}
+		else
+		{
+			D3D11_BOX box = { offset, 0, 0, offset + size, 1, 1 };
+			renderContext.m_context->CopySubresourceRegion( m_staging, 0, 0, 0, 0, m_buffer, 0, &box );
+		}
 
 		D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
 		auto hr = renderContext.m_context->Map( m_staging, 0, D3D11_MAP_READ, 0, &ms );

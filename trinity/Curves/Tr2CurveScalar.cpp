@@ -408,7 +408,7 @@ float Tr2CurveScalar::GetLocalTime( double time ) const
 }
 
 // --------------------------------------------------------------------------------
-float Tr2CurveScalar::GetSegmentValue( float time, const Tr2CurveScalarKey& k0, const Tr2CurveScalarKey& k1 ) const
+float Tr2CurveScalar::GetSegmentValue( float time, const Tr2CurveScalarKey& k0, const Tr2CurveScalarKey& k1 )
 {
 	switch( k0.m_interpolation )
 	{
@@ -551,4 +551,42 @@ void Tr2CurveScalar::SetExtrapolation( Tr2CurveExtrapolation::Type extrapolation
 Tr2CurveScalarKeyStructureList& Tr2CurveScalar::GetKeys()
 {
 	return m_keys;
+}
+
+void Tr2CurveScalar::SetDefinition( const Tr2CurveScalarDefinition& definition )
+{
+	m_extrapolationBefore = definition.extrapolationBefore;
+	m_extrapolationAfter = definition.extrapolationAfter;
+	m_keys.Resize( definition.keyCount );
+	if( definition.keyCount )
+	{
+		memcpy( &m_keys[0], definition.keys, definition.keyCount * sizeof( Tr2CurveScalarKey ) );
+	}
+	OnKeysChanged();
+}
+
+Tr2CurveScalarDefinition Tr2CurveScalar::GetDefinition() const
+{
+	if( m_keys.empty() )
+	{
+		return { 0, 0, m_extrapolationBefore, m_extrapolationAfter };
+	}
+	return { &m_keys[0], uint32_t( m_keys.size() ), m_extrapolationBefore, m_extrapolationAfter };
+}
+
+void Tr2CurveScalar::Rasterize( const Tr2CurveRasterizeDestination& destination ) const
+{
+	for( uint32_t i = 0; i < destination.width; ++i )
+	{
+		float t = destination.width == 1 ? 0.5f : float( i ) / float( destination.width - 1 );
+		float value = GetValue( t );
+		destination.data[i * destination.stride] = Float_16( value );
+	}
+}
+
+void Tr2CurveScalar::Rasterize( const Tr2CurveRasterizeDestination& destination, const Tr2CurveScalarDefinition& definition )
+{
+	CTr2CurveScalar curve;
+	curve.SetDefinition( definition );
+	curve.Rasterize( destination );
 }

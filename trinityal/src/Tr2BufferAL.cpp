@@ -122,6 +122,11 @@ ALResult Tr2BufferAL::MapForReading( const void*& data, Tr2RenderContextAL& rend
 	return m_buffer->MapForReading( data, renderContext );
 }
 
+ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+{
+	return m_buffer->MapForReading( data, offset, size, renderContext );
+}
+
 void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& renderContext )
 {
 	m_buffer->UnmapForReading( renderContext );
