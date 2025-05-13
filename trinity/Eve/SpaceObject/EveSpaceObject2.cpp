@@ -3699,20 +3699,50 @@ void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* in
 #pragma region decal geometry
 	const Tr2MeshAreaVector* decalAreas = mesh->GetAreas( TRIBATCHTYPE_DECAL );
 
+	struct SRVData
+	{
+		uint32_t indexBufferId;
+		uint32_t indexBufferStride;
+
+		uint32_t indexOffset;
+
+		uint32_t vertexBufferId;
+		uint32_t vertexBufferStride;
+
+		uint32_t positionOffset;
+		uint32_t positionType;
+
+		uint32_t normalOffset;
+		uint32_t normalType;
+
+		uint32_t tangentOffset;
+		uint32_t tangentType;
+
+		uint32_t bitangentOffset;
+		uint32_t bitangentType;
+
+		uint32_t texCoord0Offset;
+		uint32_t texCoord0Type;
+
+		uint32_t texCoord1Offset;
+		uint32_t texCoord1Type;
+
+		uint32_t texCoord2Offset;
+		uint32_t texCoord2Type;
+
+		//uint32_t colorOffset;
+		//uint32_t colorType;
+
+		uint32_t alphaTextureId;
+
+		//uint32_t padding0;
+		//uint32_t padding1;
+	};
+
 	struct RtDecalPerObjectData
 	{
 		EveSpaceObjectPSData m_psData;
-		struct SRVData
-		{
-			uint32_t vertexBufferId;
-			uint32_t vertexBufferStride;
-			uint32_t vertexBufferOffset;
-			uint32_t indexBufferId;
-			uint32_t indexBufferStride;
-			uint32_t indexBufferOffset;
-			uint32_t texCoord0Offset;
-			uint32_t alphaTextureId;
-		} m_srvData;
+		SRVData m_srvData;
 	};
 
 	
@@ -3722,20 +3752,108 @@ void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* in
 
 	Tr2VertexDefinition def;
 	Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, def );
-	uint32_t vertexBufferOffset = 0;
-	uint32_t texCoord0Offset = 0;
+	SRVData srvData{};
 	for( auto it = begin( def.m_items ); it != end( def.m_items ); ++it )
 	{
 		if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
 		{
-			vertexBufferOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.positionOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.positionType = it->m_dataType;
+
+			uint32_t type = srvData.positionType;
+			CCP_ASSERT_M( 
+				type == Tr2VertexDefinition::DataType::FLOAT32_3, 
+				"position type has to be FLOAT32_3!" 
+			);
+		}
+
+		if( it->m_usage == Tr2VertexDefinition::NORMAL && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			srvData.normalOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.normalType = it->m_dataType;
+
+			uint32_t type = srvData.normalType;
+			CCP_ASSERT_M( 
+				type == Tr2VertexDefinition::DataType::FLOAT16_3 || 
+				type == Tr2VertexDefinition::DataType::FLOAT32_3, 
+				"normal type has to be FLOAT16_3 or FLOAT32_3!" 
+			);
+		}
+
+		if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			srvData.tangentOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.tangentType = it->m_dataType;
+
+			uint32_t type = srvData.tangentType;
+			CCP_ASSERT_M( 
+				type == Tr2VertexDefinition::DataType::FLOAT16_3 || 
+				type == Tr2VertexDefinition::DataType::FLOAT32_3 || 
+				type == Tr2VertexDefinition::DataType::UBYTE_4_NORM || 
+				type == Tr2VertexDefinition::DataType::USHORT_4_NORM, 
+				"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
+			);
+		}
+
+		if( it->m_usage == Tr2VertexDefinition::BITANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			srvData.bitangentOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.bitangentType = it->m_dataType;
+
+			uint32_t type = srvData.bitangentType;
+			CCP_ASSERT_M(
+				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+				type == Tr2VertexDefinition::DataType::FLOAT32_3,
+				"bitangent type has to be FLOAT16_3 or FLOAT32_3!" 
+			);
 		}
 
 		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
 		{
-			texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.texCoord0Type = it->m_dataType;
+
+			uint32_t type = srvData.texCoord0Type;
+			CCP_ASSERT_M( 
+				type == Tr2VertexDefinition::DataType::FLOAT16_2 || 
+				type == Tr2VertexDefinition::DataType::FLOAT32_2, 
+				"texCoord0 type has to be FLOAT16_2 or FLOAT32_2!" 
+			);
 		}
+
+		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 1 && it->m_stream == 0 )
+		{
+			srvData.texCoord1Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.texCoord1Type = it->m_dataType;
+			
+			uint32_t type = srvData.texCoord1Type;
+			CCP_ASSERT_M( 
+				type == Tr2VertexDefinition::DataType::FLOAT16_2 || 
+				type == Tr2VertexDefinition::DataType::FLOAT32_2, 
+				"texCoord1 type has to be FLOAT16_2 or FLOAT32_2!" 
+			);
+		}
+
+		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 2 && it->m_stream == 0 )
+		{
+			srvData.texCoord2Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+			srvData.texCoord2Type = it->m_dataType;
+			
+			uint32_t type = srvData.texCoord2Type;
+			CCP_ASSERT_M( 
+				type == Tr2VertexDefinition::DataType::FLOAT16_2 || 
+				type == Tr2VertexDefinition::DataType::FLOAT32_2, 
+				"texCoord2 type has to be FLOAT16_2 or FLOAT32_2!" 
+			);
+		}
+
+		// skipping blending data because we get gpu skinned meshes as input (see SkinVertices.fx), so it shouldn't be required for raytracing shaders
 	}
+
+	srvData.vertexBufferId = rtMesh->GetVertexBuffer().GetSrvIndexInHeap();
+	srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();
+	srvData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
+	srvData.indexBufferStride = meshData->m_indexAllocation.GetStride();
 
 	uint32_t i = 0;
 	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
@@ -3751,13 +3869,9 @@ void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* in
 		RtDecalPerObjectData* rtPerObjectData;
 		decalPerObjectDatas[i].Lock( (void**)&rtPerObjectData, renderContext );
 
-		rtPerObjectData->m_srvData.vertexBufferId = rtMesh->GetVertexBuffer().GetSrvIndexInHeap();
-		rtPerObjectData->m_srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();
-		rtPerObjectData->m_srvData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
-		rtPerObjectData->m_srvData.indexBufferStride = meshData->m_indexAllocation.GetStride();
-		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
-		rtPerObjectData->m_srvData.vertexBufferOffset = vertexBufferOffset;
-		rtPerObjectData->m_srvData.texCoord0Offset = texCoord0Offset;
+		srvData.indexOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
+
+		rtPerObjectData->m_srvData = srvData;
 
 		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
 		Tr2TextureAL* transparencyTexture = nullptr;
@@ -3848,5 +3962,9 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	}
 
 	rtManager.GetGeometry().AddBindlessResourcesForDecals( decalAreas, rtMesh );
+
+
+
+
 	#pragma endregion
 }
