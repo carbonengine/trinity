@@ -652,7 +652,6 @@ size_t EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchTy
 		newMeshArea->SetIndex( area->index + (unsigned int)meshIndexOffset );
 		newMeshArea->SetCount( area->count );
 		newMeshArea->SetCastsShadows( castsShadows );
-		newMeshArea->SetTransparencyTextureName( shaderData->transparencyTextureName );
 
 		meshAreaVector->Append( newMeshArea );
 	}

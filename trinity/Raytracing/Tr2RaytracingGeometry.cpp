@@ -528,6 +528,9 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 			it->isTransparent = true;
 		}
 
+		//it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
+		//material.SetConstants( 0, ;
+
 		if( it->perObjectData )
 		{
 			material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
@@ -854,21 +857,6 @@ const Tr2BindlessResourcesAL& Tr2RaytracingGeometry::GetBindlessResources() cons
 void Tr2RaytracingGeometry::AddBindlessResourcesForDecals( const Tr2MeshAreaVector* decalAreas, Tr2RaytracingMesh* rtMesh )
 {
 	// TODO: intern, this is probably causing duplicates in m_usedResources. is that a problem?
-
-	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it )
-	{
-		auto area = *it;
-		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
-		Tr2TextureAL* transparencyTexture = nullptr;
-		if( transparencyTextureProvider )
-		{
-			transparencyTexture = transparencyTextureProvider->GetTexture();
-			if( transparencyTexture )
-			{
-				m_usedResources.Add( *transparencyTexture );
-			}
-		}
-	}
 	m_usedResources.Add( rtMesh->GetVertexBuffer() );
 	m_usedResources.Add( rtMesh->GetIndexBuffer() );
 }

@@ -40,9 +40,6 @@ public:
 	bool GetGenerateDepthArea() const;
 	void SetGenerateDepthArea( bool generate );
 
-	ITr2TextureProviderPtr GetTransparencyTexture();
-	void SetTransparencyTextureName( const BlueSharedString& textureName );
-
 	bool GetUseSHLighting() const;
 
 	void SetMaterial( Tr2EffectPtr mat );
@@ -91,9 +88,6 @@ private:
 	bool m_generateDepthArea;
 	// do we want this area to cast shadows?
 	bool m_castShadows;
-
-	BlueSharedString m_transparencyTextureName;
-	ITr2TextureProviderPtr m_transparencyTexture;
 
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;

@@ -3730,13 +3730,7 @@ void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* in
 		uint32_t texCoord2Offset;
 		uint32_t texCoord2Type;
 
-		//uint32_t colorOffset;
-		//uint32_t colorType;
-
-		uint32_t alphaTextureId;
-
-		//uint32_t padding0;
-		//uint32_t padding1;
+		uint32_t padding;
 	};
 
 	struct RtDecalPerObjectData
@@ -3872,21 +3866,6 @@ void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* in
 		srvData.indexOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
 
 		rtPerObjectData->m_srvData = srvData;
-
-		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
-		Tr2TextureAL* transparencyTexture = nullptr;
-		if( transparencyTextureProvider )
-		{
-			transparencyTexture = transparencyTextureProvider->GetTexture();
-			if( transparencyTexture )
-			{
-				rtPerObjectData->m_srvData.alphaTextureId = transparencyTexture->GetSrvIndexInHeap();
-			}
-		}
-		else
-		{
-			rtPerObjectData->m_srvData.alphaTextureId = 0;
-		}
 
 		rtPerObjectData->m_psData = psData;
 		if( instanceTransform )
