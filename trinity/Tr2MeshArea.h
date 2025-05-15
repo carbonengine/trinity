@@ -52,6 +52,7 @@ public:
 	void AddOwnerMesh( Tr2MeshBase * mesh );
 	void RemoveOwnerMesh( Tr2MeshBase * mesh );
 
+	bool HasVertexBufferAccessInRtShadow();
 
 	unsigned int* GetJointMappingAnimRig() const;
 	

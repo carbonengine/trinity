@@ -4,6 +4,7 @@
 #include "Raytracing/Tr2RaytracingGeometry.h"
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "ITr2TextureProvider.h"
+#include "Tr2Renderer.h"
 
 Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_display( true ),
@@ -204,6 +205,28 @@ void Tr2MeshArea::RemoveOwnerMesh( Tr2MeshBase* mesh )
 	{
 		CCP_ASSERT( false );
 	}
+}
+
+bool Tr2MeshArea::HasVertexBufferAccessInRtShadow()
+{
+	// this information could potentially be cached if we can invalidate the cache on material changes
+	const BlueSharedString techniqueName = BlueSharedString( "RtShadow" );
+	auto effect = GetMaterialInterface()->GetShaderStateInterface()->GetEffect();
+	uint32_t techniqueIndex;
+	GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( techniqueName, techniqueIndex );
+	for( const auto& library : effect.techniques[techniqueIndex].libraries )
+	{
+		for( const auto& localRegister : library.localInput.signature.registers )
+		{
+			if( localRegister.registerType == Tr2ShaderRegisterAL::CONSTANT_BUFFER &&
+				localRegister.registerSpace == 8 &&
+				localRegister.registerIndex == Tr2Renderer::GetPerObjectRTVertexBufferDataRegister() )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 Tr2Lod Tr2MeshArea::GetMinLod() const

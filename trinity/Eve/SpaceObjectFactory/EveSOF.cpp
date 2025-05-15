@@ -2106,15 +2106,7 @@ void EveSOF::SetupShaders( const EveSOFDNAPtr dna, Tr2MeshBase* mesh ) const
 	{
 		size_t cntr = 0;
 		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), TRIBATCHTYPE_OPAQUE, dna, hullIdx, meshIndexOffset );
-		// if we don't use alpha cutout shadows, then putting the decals into the opaque bucket might save some performance
-		if ( g_alphaCutoutShadowsEnabled )
-		{
-			cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_DECAL ), TRIBATCHTYPE_DECAL, dna, hullIdx, meshIndexOffset );
-		}
-		else
-		{
-			cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), TRIBATCHTYPE_DECAL, dna, hullIdx, meshIndexOffset );
-		}
+		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), TRIBATCHTYPE_DECAL, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), TRIBATCHTYPE_TRANSPARENT, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_ADDITIVE ), TRIBATCHTYPE_ADDITIVE, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_DISTORTION ), TRIBATCHTYPE_DISTORTION, dna, hullIdx, meshIndexOffset );

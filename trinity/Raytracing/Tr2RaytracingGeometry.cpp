@@ -528,12 +528,13 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 			it->isTransparent = true;
 		}
 
-		//it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
-		//material.SetConstants( 0, ;
-
 		if( it->perObjectData )
 		{
 			material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
+		}
+		if( it->vertexBufferData )
+		{
+			material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *it->vertexBufferData );
 		}
 		it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, &it->mesh->GetVertexBuffer(), &it->mesh->GetIndexBuffer(), material, renderContext );
 
@@ -821,7 +822,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
     }
 }
 
-void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform )
+void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform )
 {
 	if( !mesh.IsGoodForArea( area.GetAreaIndex() ) )
 	{
@@ -833,6 +834,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.area = &area;
 	obj.material = material;
 	obj.perObjectData = perObjectData;
+	obj.vertexBufferData = vertexBufferData;
 	obj.worldTransform = worldTransform;
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
@@ -854,9 +856,10 @@ const Tr2BindlessResourcesAL& Tr2RaytracingGeometry::GetBindlessResources() cons
 	return m_usedResources;
 }
 
-void Tr2RaytracingGeometry::AddBindlessResourcesForDecals( const Tr2MeshAreaVector* decalAreas, Tr2RaytracingMesh* rtMesh )
+void Tr2RaytracingGeometry::AddBindlessResources( const Tr2MeshAreaVector* decalAreas, Tr2RaytracingMesh* rtMesh )
 {
 	// TODO: intern, this is probably causing duplicates in m_usedResources. is that a problem?
+	// TODO: intern, what about PaintMaskMap and others?
 	m_usedResources.Add( rtMesh->GetVertexBuffer() );
 	m_usedResources.Add( rtMesh->GetIndexBuffer() );
 }
