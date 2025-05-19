@@ -856,10 +856,15 @@ const Tr2BindlessResourcesAL& Tr2RaytracingGeometry::GetBindlessResources() cons
 	return m_usedResources;
 }
 
-void Tr2RaytracingGeometry::AddBindlessResources( const Tr2MeshAreaVector* decalAreas, Tr2RaytracingMesh* rtMesh )
+void Tr2RaytracingGeometry::AddBindlessResources( const Tr2MeshAreaVector* areas, Tr2RaytracingMesh* rtMesh )
 {
 	// TODO: intern, this is probably causing duplicates in m_usedResources. is that a problem?
-	// TODO: intern, what about PaintMaskMap and others?
+	for( auto& area : *areas )
+	{
+		uint32_t techniqueIndex;
+		area->GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex );
+		area->GetMaterialInterface()->GetUsedBindlessTextures( techniqueIndex, m_usedResources );
+	}
 	m_usedResources.Add( rtMesh->GetVertexBuffer() );
 	m_usedResources.Add( rtMesh->GetIndexBuffer() );
 }
