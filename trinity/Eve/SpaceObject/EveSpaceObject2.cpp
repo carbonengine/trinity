@@ -1020,11 +1020,10 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		return;
 	}
 
-	TriRenderBatchAreaBlocksWithSharedMaterial* shadowMeshAreas[2] = { &m_shadowMeshOpaqueAreas, &m_shadowMeshDecalAreas };
-	for( TriRenderBatchAreaBlocksWithSharedMaterial* shadowMeshArea : shadowMeshAreas )
+	for( TriRenderBatchAreaBlocksWithSharedMaterial& shadowMeshArea : m_shadowMeshOpaqueAreas )
 	{
-		auto& shadowAreas = shadowMeshArea->m_areaBlockVector;
-		Tr2Material* shadowShader = shadowMeshArea->m_shaderMaterial;
+		auto& shadowAreas = shadowMeshArea.m_areaBlockVector;
+		Tr2Material* shadowShader = shadowMeshArea.m_shaderMaterial;
 		for( auto& areaBlock : shadowAreas )
 		{
 			if( auto primCount = GetPrimitiveCount( *mesh, areaBlock.m_startIndex, areaBlock.m_count ) )
@@ -1545,19 +1544,15 @@ void EveSpaceObject2::UpdateRtMesh( const EveUpdateContext& updateContext )
 	{
 		return;
 	}
-
-	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
-	for( auto areas : allAreas )
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	if( !areas->empty() )
 	{
-		if( !areas->empty() )
-		{
-			auto rtMesh = m_mesh->GetOrCreateRtMesh();
-			rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_meshScreenSize );
+		auto rtMesh = m_mesh->GetOrCreateRtMesh();
+		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_meshScreenSize );
 
-			for( auto it = begin( *areas ); it != end( *areas ); ++it )
-			{
-				( *it )->GetOrCreateRtMeshArea();
-			}
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			( *it )->GetOrCreateRtMeshArea();
 		}
 	}
 }
@@ -1590,27 +1585,14 @@ void EveSpaceObject2::UpdateRtSkeleton()
     
 	bool hasSkinned = false;
     
-	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
-	for( auto areas : allAreas )
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	for( auto& area : *areas )
 	{
-		if( areas->empty() )
-		{
-			continue;
-		}
+		auto index = area->GetIndex();
 		
-		for( auto& area : *areas )
+		if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
 		{
-			auto index = area->GetIndex();
-			
-			if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
-			{
-				hasSkinned = true;
-				break;
-			}
-		}
-		
-		if( hasSkinned )
-		{
+			hasSkinned = true;
 			break;
 		}
 	}
@@ -1628,16 +1610,13 @@ void EveSpaceObject2::UpdateRtSkeleton()
 
 	if( skeletonChanged )
 	{
-		for( auto areas : allAreas )
+		//Skeleton has changed, so mark all area BLAS's as out-of-date.
+		for( auto& area : *areas )
 		{
-			//Skeleton has changed, so mark all area BLAS's as out-of-date.
-			for( auto& area : *areas )
+			auto meshAreaIndex = area->GetIndex();
+			if( meshAreaIndex >= 0 && meshAreaIndex < meshData->m_areas.size() && meshData->m_areas[meshAreaIndex].m_isSkinned )
 			{
-				auto meshAreaIndex = area->GetIndex();
-				if( meshAreaIndex >= 0 && meshAreaIndex < meshData->m_areas.size() && meshData->m_areas[meshAreaIndex].m_isSkinned )
-				{
-					area->GetRtMeshArea()->MarkBlasOutdated();
-				}
+				area->GetRtMeshArea()->MarkBlasOutdated();
 			}
 		}
 	}
@@ -1863,8 +1842,7 @@ void EveSpaceObject2::ReleaseCachedData( BlueAsyncRes* p )
 	{
 		m_overlayMeshAreaBlocks[i].clear();
 	}
-	m_shadowMeshOpaqueAreas.Clear();
-	m_shadowMeshDecalAreas.Clear();
+	m_shadowMeshOpaqueAreas.clear();
 }
 
 void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
@@ -1882,10 +1860,11 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 			TriRenderBatchAreaBlock::Optimize( m_overlayMeshAreaBlocks[i] );
 		}
 
-		m_mesh->CollectAreaBlocksWithSharedMaterial( m_shadowMeshOpaqueAreas, TRIBATCHTYPE_OPAQUE );
-		m_mesh->CollectAreaBlocksWithSharedMaterial( m_shadowMeshDecalAreas, TRIBATCHTYPE_DECAL );
-		m_shadowMeshOpaqueAreas.Optimize();
-		m_shadowMeshDecalAreas.Optimize();
+		m_mesh->CollectAreaBlocksWithSharedMaterials( m_shadowMeshOpaqueAreas, TRIBATCHTYPE_OPAQUE );
+		for( auto& collector : m_shadowMeshOpaqueAreas )
+		{
+			collector.Optimize();
+		}
 	}
 
 	// If we already have a model we don't want to go through here

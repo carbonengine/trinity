@@ -264,19 +264,16 @@ void EveChildMesh::UpdateRtMesh()
 		return;
 	}
 
-	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
-	for( auto areas : allAreas )
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	if( !areas->empty() )
 	{
-		if( !areas->empty() )
-		{
-			auto rtMesh = m_mesh->GetOrCreateRtMesh();
-			// todo: dbl check with using currScreenSize
-			rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_currentScreenSize );
+		auto rtMesh = m_mesh->GetOrCreateRtMesh();
+		// todo: dbl check with using currScreenSize
+		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_currentScreenSize );
 
-			for( auto it = begin( *areas ); it != end( *areas ); ++it )
-			{
-				( *it )->GetOrCreateRtMeshArea();
-			}
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			( *it )->GetOrCreateRtMeshArea();
 		}
 	}
 }
@@ -299,25 +296,12 @@ void EveChildMesh::UpdateRtSkeleton()
 	
 	bool hasSkinned = false;
 	
-	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
-	for( auto areas : allAreas )
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );	
+	for( auto it = begin( *areas ); it != end( *areas ); ++it )
 	{
-		if( areas->empty() )
+		if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
 		{
-			continue;
-		}
-		
-		for( auto it = begin( *areas ); it != end( *areas ); ++it )
-		{
-			if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
-			{
-				hasSkinned = true;
-				break;
-			}
-		}
-		
-		if( hasSkinned )
-		{
+			hasSkinned = true;
 			break;
 		}
 	}
@@ -336,21 +320,17 @@ void EveChildMesh::UpdateRtSkeleton()
 
 	if( skeletonChanged )
 	{
-		for( auto areas : allAreas )
+		//Skeleton has changed, so mark all area BLAS's as out-of-date.
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
-			//Skeleton has changed, so mark all area BLAS's as out-of-date.
-			for( auto it = begin( *areas ); it != end( *areas ); ++it )
+			auto meshAreaIndex = ( *it )->GetIndex();
+			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
 			{
-				auto meshAreaIndex = ( *it )->GetIndex();
-				if( meshData->m_areas[meshAreaIndex].m_isSkinned )
-				{
-					( *it )->GetRtMeshArea()->MarkBlasOutdated();
-				}
+				( *it )->GetRtMeshArea()->MarkBlasOutdated();
 			}
 		}
 	}
 }
-
 
 void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {

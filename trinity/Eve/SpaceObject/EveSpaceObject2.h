@@ -505,9 +505,8 @@ protected:
 	bool m_isPickable;
 	bool m_isAnimated;
 	bool m_castShadow;
-	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshOpaqueAreas;
-	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshDecalAreas;
-
+	std::vector<TriRenderBatchAreaBlocksWithSharedMaterial> m_shadowMeshOpaqueAreas;
+	
 	Matrix m_worldTransform;
 	Matrix m_invWorldTransform;
 	Vector3 m_worldPosition; // used to expose the position of the object to python
