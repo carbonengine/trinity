@@ -112,6 +112,7 @@ Tr2EffectLibraryParameters::Tr2EffectLibraryParameters()
 void Tr2EffectLibraryParameters::AddUsedResource( ITr2EffectValuePtr resource )
 {
 	m_usedResources.push_back( resource );
+	m_usedTexturesDirty = true;
 }
 
 void Tr2EffectLibraryParameters::AddReroutable( ITriReroutable* reroutable )
@@ -396,6 +397,12 @@ void Tr2Material::InvalidateResourceSets()
 
 			params->m_usedTexturesDirty = true;
 		}
+		for( auto pit = begin( tit->libraries ); pit != end( tit->libraries ); ++pit )
+		{
+			auto params = pit->get();
+
+			params->m_usedTexturesDirty = true;
+		}
 	}
 	m_resourceSetHash = 0;
 }
@@ -408,6 +415,10 @@ void Tr2Material::ResourceChanged()
 		{
 			pass->m_resourceSetHash = 0;
 			pass->m_resourceSetDirty = true;
+			pass->m_usedTexturesDirty = true;
+		}
+		for( auto& pass : technique.libraries )
+		{
 			pass->m_usedTexturesDirty = true;
 		}
 	}
@@ -458,6 +469,19 @@ void Tr2Material::GetUsedBindlessTextures( uint32_t techniqueIndex, Tr2BindlessR
 			}
 		}
 		usedTextures.Add( pass->m_usedTextures );
+	}
+	for( auto& library : m_parametersForPasses[techniqueIndex].libraries )
+	{
+		if( library->m_usedTexturesDirty )
+		{
+			library->m_usedTexturesDirty = false;
+			library->m_usedTextures.Clear();
+			for( auto& res : library->m_usedResources )
+			{
+				res->AddUsedTexture( library->m_usedTextures );
+			}
+		}
+		usedTextures.Add( library->m_usedTextures );
 	}
 }
 bool Tr2Material::CompatibleWithGdr() const
