@@ -788,7 +788,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	}
 
 	m_currentBackBufferIndex = m_swapchain->GetCurrentBackBufferIndex();
-	WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] );
+	FORWARD_HR( WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] ) );
 
 	PopPendingRelease( m_currentBackBufferIndex );
 	m_srvUavAllocator->SetFrameIndices( GetRecordingFrameNumber(), GetRenderedFrameNumber() );
@@ -917,13 +917,24 @@ uint64_t Tr2PrimaryRenderContextAL::SignalDx12()
 ALResult Tr2PrimaryRenderContextAL::WaitForFenceDx12( uint64_t value )
 {
 	CR_RETURN_HR( m_presentFence->SetEventOnCompletion( value, m_presentFenceEvent ) );
-	if( WaitForSingleObject( m_presentFenceEvent, 1000 ) == WAIT_TIMEOUT )
+	for( uint32_t count = 0; ; ++count )
 	{
-		return E_FAIL;
+		if( WaitForSingleObject( m_presentFenceEvent, 1000 ) == WAIT_OBJECT_0 )
+		{
+			m_completedFrameIndex = value;
+			return S_OK;
+		}
+		auto hr = m_device->GetDeviceRemovedReason();
+		if( FAILED( hr ) )
+		{
+			CCP_LOGERR( "Detected GPU device removed while waiting for GPU. Removed reason is: 0x%08X", hr );
+			return hr;
+		}
+		if( count == 3 )
+		{
+			CCP_LOGWARN( "Waiting for GPU takes more than %d seconds", count );
+		}
 	}
-	m_completedFrameIndex = value;
-
-	return S_OK;
 }
 
 #if ENABLE_RELEASE_LATER_TAG
@@ -1006,7 +1017,8 @@ ALResult Tr2PrimaryRenderContextAL::FlushAndSyncDx12( Tr2RenderContextAL& render
 	ID3D12CommandList* const commandLists[] = { renderContext.m_commandList };
 	m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
 
-	WaitForFenceDx12( SignalDx12() );
+	FORWARD_HR( WaitForFenceDx12( SignalDx12() ) );
+
 	m_pendingPresents.erase(
 		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );
