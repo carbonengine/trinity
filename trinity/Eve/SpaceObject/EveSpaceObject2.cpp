@@ -3111,6 +3111,10 @@ void EveSpaceObject2::EstimatePixelDiameter( const TriFrustum& frustum )
 	// estimate the pixel diameter using the local bounding box,
 	// as the bounding sphere may not pepresent the mesh bounding sphere,
 	// but rather the bounding sphere of the object and it's EveChildMesh attachments
+	if( m_mesh )
+	{
+		m_mesh->GetBoundingBox( m_localAabbMin, m_localAabbMax );
+	}
 	Vector4 sphere;
 	BoundingSphereFromBox( sphere, m_localAabbMin, m_localAabbMax, &m_worldTransform );
 	m_estimatedPixelDiameter = frustum.GetPixelSizeAccross( sphere.GetXYZ(), sphere.w );
