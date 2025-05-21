@@ -30,7 +30,8 @@
 
 #include "Tr2SuballocatedBuffer.h"
 
-constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 64 * 1024 * 1024;
+constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 32u * 1024u * 1024u;
+constexpr uint32_t SHARED_BUFFER_MAX_SIZE = 2048u * 1024u * 1024u;
 extern Tr2SuballocatedBuffer g_sharedBuffer;
 
 

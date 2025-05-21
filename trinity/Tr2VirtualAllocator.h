@@ -1,6 +1,9 @@
 #pragma once
+
 #ifndef Tr2VirtualBlock_H
 #define Tr2VirtualBlock_H
+
+#include <vector>
 
 // --------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------
@@ -16,17 +19,29 @@ public:
 		size_t size;
 	};
 
-	Tr2VirtualAllocator( size_t size );
+	Tr2VirtualAllocator( size_t blockSize, size_t maxSize, size_t initialSize );
+	bool Expand();
 	void Free();
 
 	bool Allocate( size_t size, size_t alignment, VirtualAllocation& result );
 	void Free( VirtualAllocation allocation );
 
-	size_t GetSize() const;
+	
+	size_t GetBlockSize() const;
+	size_t GetMaxSize() const;
+	size_t GetCurrentSize() const;
+	size_t GetAllocatedMemory() const;
 
 private:
+	const size_t m_blockSize;
+	const size_t m_maxSize;
+	size_t m_currentSize;
+
+	size_t m_allocatedMemory;
+
+	std::vector<VirtualAllocation> m_reservedBlocks;
+
 	void* block;
-	const size_t m_size;
 };
 
 #endif
