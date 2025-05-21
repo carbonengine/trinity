@@ -306,6 +306,9 @@ private:
 	Tr2WindowHandle m_focusWindow;
 	TrinityALImpl::Tr2UpscalingTechniqueDx12* m_upscalingTechnique;
 
+	class MemoryWatchdog;
+	std::unique_ptr<MemoryWatchdog> m_memoryWatchdog;
+
 public:
 	CComPtr<ID3D12Device> m_device;
 	CComPtr<ID3D12Device5> m_device5;

@@ -172,7 +172,13 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED );
 	{
 		CCP_STATS_SCOPED_TIME( presentTime );
-		CR_RETURN( Tr2RenderContext_GetMainThreadRenderContext().Present() );
+		if( FAILED( Tr2RenderContext_GetMainThreadRenderContext().Present() ) )
+		{
+			if( HandleLostDevice() )
+			{
+				return;
+			}
+		}
 	}
 	if( HandleLostDevice() )
 	{

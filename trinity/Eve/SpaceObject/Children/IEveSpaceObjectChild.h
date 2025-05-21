@@ -22,7 +22,8 @@ struct EveChildUpdateParams
 		ownerMaxSpeed( 0 ),
         activationStrength( 1 ),
 		isVisible( true ),
-		localToWorldTransform( IdentityMatrix() )
+		localToWorldTransform( IdentityMatrix() ),
+		worldVelocity( 0.f, 0.f, 0.f )
 	{
 	}
 
@@ -34,6 +35,7 @@ struct EveChildUpdateParams
     float activationStrength;
 	bool isVisible;
 	Matrix localToWorldTransform;
+	Vector3 worldVelocity;
 };
 
 BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
