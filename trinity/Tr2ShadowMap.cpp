@@ -198,7 +198,8 @@ void Tr2ShadowMap::ShouldUseDenoiser( bool val )
 //  Go through all i count of frustum splits. Calculate the corresponding 
 //	bounding box based on zNear and zFar values.
 // --------------------------------------------------------------------------------
-ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear )
+ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, 
+	float zNear, float leftDivNear, float rightDivNear, float topDivNear, float bottomDivNear )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -215,7 +216,12 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	// to save some shader data mem we combine the zFar values into a float4 array of 4 so (x,y,z,w) are zFar values
 	m_perSplitData.ShadowMapValues[splitIndex / 4][splitIndex % 4] = zFar;
 
-	auto projection = PerspectiveFovMatrix( Tr2Renderer::GetFieldOfView(), Tr2Renderer::GetAspectRatio(), m_oldZFar, zFar );
+	float left = leftDivNear * m_oldZFar;
+	float right = rightDivNear * m_oldZFar;
+	float top = topDivNear * m_oldZFar;
+	float bottom = bottomDivNear * m_oldZFar;
+	auto projection = PerspectiveOffCenterMatrix( left, right, bottom, top, m_oldZFar, zFar );
+
 	m_oldZFar = zFar;
 
 	// we can apply the inverse of the view and projection matrices on the corner points of the unit cube to get the frustum corners in world space
