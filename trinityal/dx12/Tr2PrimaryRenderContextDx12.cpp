@@ -33,6 +33,9 @@ CCP_STATS_DECLARE( dx12HSInvocations, "Trinity/AL/Pipeline/HSInvocations", false
 CCP_STATS_DECLARE( dx12DSInvocations, "Trinity/AL/Pipeline/DSInvocations", false, CST_COUNTER_HIGH, "Number of times a domain shader was invoked" );
 CCP_STATS_DECLARE( gpuFrameTime, "Trinity/AL/GpuFrameTime", false, CST_TIME, "Time spent on GPU processing a frame" );
 
+CCP_STATS_DECLARE( dx12GpuMemoryUsageLocal, "Trinity/AL/gpuMemory/usageLocal", false, CST_MEMORY, "Local (L1) video memory usage as reported by DXGI" );
+CCP_STATS_DECLARE( dx12GpuMemoryBudgetLocal, "Trinity/AL/gpuMemory/budgetLocal", false, CST_MEMORY, "Local (L1) video memory budget as reported by DXGI" );
+
 
 namespace
 {
@@ -92,6 +95,131 @@ namespace
 	
 	size_t s_perFrameMinReleaseCount = 100;
 }
+
+
+class Tr2PrimaryRenderContextAL::MemoryWatchdog
+{
+public:
+	MemoryWatchdog( ID3D12Device* device, IDXGIAdapter1* adapter )
+	{
+		CComQIPtr<IDXGIAdapter3> adapter3( adapter );
+		if( adapter3 )
+		{
+			m_adapter = adapter3;
+
+			bool isUMA = false;
+			D3D12_FEATURE_DATA_ARCHITECTURE architecture = {};
+			if( SUCCEEDED( device->CheckFeatureSupport( D3D12_FEATURE_ARCHITECTURE, &architecture, sizeof( architecture ) ) ) )
+			{
+				isUMA = architecture.UMA;
+			}
+			CCP_LOGNOTICE( "Detected GPU device architecture to be %s", isUMA ? "UMA" : "NUMA" );
+
+			DXGI_QUERY_VIDEO_MEMORY_INFO info;
+			if( SUCCEEDED( adapter3->QueryVideoMemoryInfo( 0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info ) ) )
+			{
+				CCP_LOGNOTICE( "GPU memory budget: %uMB", uint32_t( info.Budget / 1024 / 1024 ) );
+
+				CCP_STATS_SET( dx12GpuMemoryBudgetLocal, info.Budget );
+				BeCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( info.Budget / 1024 / 1024 ) + "MB" ).c_str() );
+			}
+			else
+			{
+				CCP_LOGERR( "Failed to query video memory info" );
+			}
+
+			auto event = CreateEvent( nullptr, FALSE, FALSE, nullptr );
+			DWORD cookie = 0;
+			if( SUCCEEDED( adapter3->RegisterVideoMemoryBudgetChangeNotificationEvent( event, &cookie ) ) )
+			{
+				CCP_LOG( "Registered for video memory budget change notifications" );
+				m_bugdetChangeEvent = event;
+				m_budgetChangeCookie = cookie;
+
+				m_stopEvent = CreateEvent( nullptr, FALSE, FALSE, nullptr );
+				m_watchdogThread = std::thread( [this] { this->Watcher(); } );
+			}
+			else
+			{
+				CCP_LOGWARN( "Failed to register for video memory budget change notifications" );
+				CloseHandle( event );
+			}
+		}
+	}
+
+	~MemoryWatchdog()
+	{
+		if ( m_watchdogThread.joinable() )
+		{
+			SetEvent( m_stopEvent );
+			m_watchdogThread.join();
+		}
+		if( m_adapter && m_bugdetChangeEvent )
+		{
+			m_adapter->UnregisterVideoMemoryBudgetChangeNotification( m_budgetChangeCookie );
+		}
+		if( m_stopEvent )
+		{
+			CloseHandle( m_stopEvent );
+		}
+		if ( m_bugdetChangeEvent )
+		{
+			CloseHandle( m_bugdetChangeEvent );
+		}
+	}
+
+private:
+
+	void Watcher()
+	{
+		while( true )
+		{
+			HANDLE handles[] = { m_bugdetChangeEvent, m_stopEvent };
+			switch( WaitForMultipleObjects( 2, handles, FALSE, 1000 ) )
+			{
+			case WAIT_OBJECT_0:
+			case WAIT_TIMEOUT:
+				ReportMemory();
+				break;
+			default:
+				return;
+			}
+		}
+	}
+
+	void ReportMemory()
+	{
+		DXGI_QUERY_VIDEO_MEMORY_INFO info;
+		if( SUCCEEDED( m_adapter->QueryVideoMemoryInfo( 0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info ) ) )
+		{
+			if( info.Budget <= info.CurrentUsage )
+			{
+				CCP_LOGERR( "Video memory over the budget. Current usage is %uMB and the budget is %uMB", uint32_t( info.CurrentUsage / 1024 / 1024 ), uint32_t( info.Budget / 1024 / 1024 ) );
+			}
+			else if( info.Budget / 5 * 4 <= info.CurrentUsage )
+			{
+				CCP_LOGWARN( "Video memory close to the budget. Current usage is %uMB and the budget is %uMB", uint32_t( info.CurrentUsage / 1024 / 1024 ), uint32_t( info.Budget / 1024 / 1024 ) );
+			}
+			if( m_budget != 0 && info.Budget != m_budget )
+			{
+				CCP_LOGNOTICE( "Video memory budget has changed from %u to %u. Memory usage is %dMB", uint32_t( m_budget / 1024 / 1024 ), uint32_t( info.Budget / 1024 / 1024 ), uint32_t( info.CurrentUsage / 1024 / 1024 ) );
+			}
+			m_budget = info.Budget;
+
+			CCP_STATS_SET( dx12GpuMemoryUsageLocal, info.CurrentUsage );
+			CCP_STATS_SET( dx12GpuMemoryBudgetLocal, info.Budget );
+			BeCrashes->SetCrashKeyValue( "gpuMemoryUsageLocal", ( std::to_string( info.CurrentUsage / 1024 / 1024 ) + "MB" ).c_str() );
+			BeCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( info.Budget / 1024 / 1024 ) + "MB" ).c_str() );
+		}
+	}
+
+	std::thread m_watchdogThread;
+	CComPtr<IDXGIAdapter3> m_adapter;
+	HANDLE m_bugdetChangeEvent = {};
+	HANDLE m_stopEvent = {};
+	UINT64 m_budget = 0;
+	DWORD m_budgetChangeCookie = 0;
+};
 
 
 Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL() :
@@ -486,6 +614,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	m_frameTimer.Create( *this );
 
+	m_memoryWatchdog = std::make_unique<MemoryWatchdog>( device, dxgiAdapter );
+
 	return S_OK;
 }
 
@@ -583,6 +713,8 @@ void Tr2PrimaryRenderContextAL::Destroy()
 		delete m_gpuCrashTracker;
 		m_gpuCrashTracker = nullptr;
 	}
+
+	m_memoryWatchdog.reset();
 
 	TrinityALImpl::Destroy();
 }
@@ -788,7 +920,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	}
 
 	m_currentBackBufferIndex = m_swapchain->GetCurrentBackBufferIndex();
-	WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] );
+	FORWARD_HR( WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] ) );
 
 	PopPendingRelease( m_currentBackBufferIndex );
 	m_srvUavAllocator->SetFrameIndices( GetRecordingFrameNumber(), GetRenderedFrameNumber() );
@@ -917,13 +1049,24 @@ uint64_t Tr2PrimaryRenderContextAL::SignalDx12()
 ALResult Tr2PrimaryRenderContextAL::WaitForFenceDx12( uint64_t value )
 {
 	CR_RETURN_HR( m_presentFence->SetEventOnCompletion( value, m_presentFenceEvent ) );
-	if( WaitForSingleObject( m_presentFenceEvent, 1000 ) == WAIT_TIMEOUT )
+	for( uint32_t count = 0; ; ++count )
 	{
-		return E_FAIL;
+		if( WaitForSingleObject( m_presentFenceEvent, 1000 ) == WAIT_OBJECT_0 )
+		{
+			m_completedFrameIndex = value;
+			return S_OK;
+		}
+		auto hr = m_device->GetDeviceRemovedReason();
+		if( FAILED( hr ) )
+		{
+			CCP_LOGERR( "Detected GPU device removed while waiting for GPU. Removed reason is: 0x%08X", hr );
+			return hr;
+		}
+		if( count == 3 )
+		{
+			CCP_LOGWARN( "Waiting for GPU takes more than %d seconds", count );
+		}
 	}
-	m_completedFrameIndex = value;
-
-	return S_OK;
 }
 
 #if ENABLE_RELEASE_LATER_TAG
@@ -1006,7 +1149,8 @@ ALResult Tr2PrimaryRenderContextAL::FlushAndSyncDx12( Tr2RenderContextAL& render
 	ID3D12CommandList* const commandLists[] = { renderContext.m_commandList };
 	m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
 
-	WaitForFenceDx12( SignalDx12() );
+	FORWARD_HR( WaitForFenceDx12( SignalDx12() ) );
+
 	m_pendingPresents.erase(
 		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );

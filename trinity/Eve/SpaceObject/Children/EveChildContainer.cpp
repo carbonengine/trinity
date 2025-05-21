@@ -522,6 +522,19 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 	newParams.boneCount = boneCount;
 	newParams.bones = bones;
 
+	if( params.spaceObjectParent )
+	{
+		if( !params.childParent )
+		{
+			params.spaceObjectParent->GetWorldVelocity( m_worldVelocity );
+			newParams.worldVelocity = m_worldVelocity;
+		}
+		else
+		{
+			m_worldVelocity = params.worldVelocity;
+		}
+	}
+
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
 		( *it )->UpdateAsyncronous( updateContext, newParams );
@@ -541,11 +554,6 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 	for( auto it = m_lights.begin(); it != m_lights.end(); ++it)
 	{
 		( *it )->SetBoneMatrix( bones, boneCount );
-	}
-
-	if( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetWorldVelocity( m_worldVelocity );
 	}
 }
 
