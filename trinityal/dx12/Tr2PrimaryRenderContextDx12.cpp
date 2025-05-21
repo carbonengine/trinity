@@ -121,7 +121,6 @@ public:
 				CCP_LOGNOTICE( "GPU memory budget: %uMB", uint32_t( info.Budget / 1024 / 1024 ) );
 
 				CCP_STATS_SET( dx12GpuMemoryBudgetLocal, info.Budget );
-				BeCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( info.Budget / 1024 / 1024 ) + "MB" ).c_str() );
 			}
 			else
 			{
@@ -208,8 +207,6 @@ private:
 
 			CCP_STATS_SET( dx12GpuMemoryUsageLocal, info.CurrentUsage );
 			CCP_STATS_SET( dx12GpuMemoryBudgetLocal, info.Budget );
-			BeCrashes->SetCrashKeyValue( "gpuMemoryUsageLocal", ( std::to_string( info.CurrentUsage / 1024 / 1024 ) + "MB" ).c_str() );
-			BeCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( info.Budget / 1024 / 1024 ) + "MB" ).c_str() );
 		}
 	}
 
