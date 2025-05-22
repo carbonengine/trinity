@@ -411,6 +411,19 @@ namespace TrinityALImpl
 			FORWARD_HR( Create2D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
 		}
 
+		uint32_t priority;
+		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) || HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) || HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+		{
+			//Writable textures are generally very important to keep in VRAM.
+			priority = DXGI_RESOURCE_PRIORITY_HIGH;
+		}
+		else
+		{
+			//Read-only textures are generally not as critical.
+			priority = DXGI_RESOURCE_PRIORITY_LOW;
+		}
+		texture->SetEvictionPriority( priority );
+
 		// Behold! A workaround for WARP device crash when creating multiple SRVs into a BC7 texture!
 		if( !renderContext.m_dxgiOutput && desc.GetFormat() == Tr2RenderContextEnum::PIXEL_FORMAT_BC7_UNORM )
 		{

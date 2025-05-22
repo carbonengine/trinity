@@ -445,6 +445,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 
 	m_device = device;
+	device.QueryInterface( &m_device1 );
 	device.QueryInterface( &m_device5 );
 	m_commandQueue = commandQueue;
 	m_swapchain = swapchain;
@@ -693,6 +694,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	}
 
 	m_device5 = nullptr;
+	m_device1 = nullptr;
 	m_device = nullptr;
 
 	if( m_presentFenceEvent )

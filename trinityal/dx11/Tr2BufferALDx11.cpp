@@ -134,6 +134,19 @@ namespace TrinityALImpl
 			return hr;
 		}
 
+		uint32_t priority;
+		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+		{
+			//Unordered access views are written and read by the GPU, so keep them in VRAM if possible.
+			priority = DXGI_RESOURCE_PRIORITY_NORMAL;
+		}
+		else
+		{
+			//Read-only buffers are generally not as critical as other things.
+			priority = DXGI_RESOURCE_PRIORITY_MINIMUM;
+		}
+		m_buffer->SetEvictionPriority(priority);
+
 		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
 			D3D11_SHADER_RESOURCE_VIEW_DESC descSRV;

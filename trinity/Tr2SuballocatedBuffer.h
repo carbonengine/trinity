@@ -17,12 +17,8 @@
 // --------------------------------------------------------------------------------------
 class Tr2SuballocatedBuffer : public Tr2DeviceResource
 {
-
 public:
-	Tr2SuballocatedBuffer( const char* name, const Tr2GpuUsage::Type gpuUsage, const uint32_t blockSize );
-
-	~Tr2SuballocatedBuffer();
-
+	Tr2SuballocatedBuffer( const char* name, const Tr2GpuUsage::Type gpuUsage, const uint32_t blockSize, const uint32_t maxSize );
 
 	Tr2SuballocatedBuffer( const Tr2SuballocatedBuffer& obj ) = delete;
 	void operator=( const Tr2SuballocatedBuffer& ) = delete;
@@ -62,7 +58,6 @@ public:
 
 	private:
 		Tr2VirtualAllocator::VirtualAllocation m_allocation = {};
-		uint32_t m_allocatorIndex = 0;
 		std::unique_ptr<uint8_t[]> m_mappedCopy;
 
 		uint32_t m_offset = 0;
@@ -72,7 +67,7 @@ public:
 		Tr2SuballocatedBuffer* m_parent = nullptr;
 	};
 
-	ALResult Allocate( size_t stride, size_t count, void* data, Tr2RenderContextAL& renderContext, Allocation& result );
+	ALResult Allocate( uint32_t stride, uint32_t count, void* data, Tr2RenderContextAL& renderContext, Allocation& result );
 
 	void Free( Allocation& allocation );
 
@@ -84,16 +79,15 @@ protected:
 private:
 	const std::string m_name;
 	const Tr2GpuUsage::Type m_gpuUsage;
-	const uint32_t m_blockSize;
 
 
 	Tr2BufferAL m_buffer;
 
-	std::vector<Tr2VirtualAllocator> m_allocators;
+	Tr2VirtualAllocator m_allocator;
 	std::vector<Allocation*> m_allocations;
 
 
-	void Expand( uint32_t blockSize );
+	ALResult Expand();
 
 	ALResult ReadBuffer( std::unique_ptr<uint8_t[]>& dest, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext );
 };
