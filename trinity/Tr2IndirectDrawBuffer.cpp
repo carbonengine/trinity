@@ -548,6 +548,15 @@ void Tr2IndirectDrawBuffer::Resize( uint32_t newSize )
 			CCP_LOGERR( "Failed to create indirect draw buffer (hr=0x%x)", result );
 			return;
 		}
+
+		if( renderContext.m_device1 )
+		{
+			//Don't need a super high priority on this.
+			ID3D12Pageable* resource = defaultBuffer;
+			D3D12_RESIDENCY_PRIORITY priority = D3D12_RESIDENCY_PRIORITY_NORMAL;
+
+			renderContext.m_device1->SetResidencyPriority( 1, &resource, &priority );
+		}
 	}
 
 	m_uploadBuffer = uploadBuffer;
