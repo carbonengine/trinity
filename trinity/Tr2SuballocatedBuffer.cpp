@@ -132,7 +132,7 @@ ALResult Tr2SuballocatedBuffer::Expand()
 	//We have reached the allocator's max size. This probably means we're leaking a lot of memory.
 	if (m_allocator.GetCurrentSize() == m_allocator.GetMaxSize())
 	{
-		CCP_LOGERR( "Max size reached for buffer '%s'. This probably means we're leaking a lot of memory." );
+		CCP_LOGERR( "Max size reached for buffer '%s'. This probably means we're leaking a lot of memory.", m_name.c_str() );
 		return E_OUTOFMEMORY;
 	}
 
