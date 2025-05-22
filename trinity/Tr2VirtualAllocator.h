@@ -20,8 +20,12 @@ public:
 	};
 
 	Tr2VirtualAllocator( size_t blockSize, size_t maxSize, size_t initialSize );
+	~Tr2VirtualAllocator();
+
+	Tr2VirtualAllocator( const Tr2VirtualAllocator& obj ) = delete;
+	void operator=( const Tr2VirtualAllocator& ) = delete;
+
 	bool Expand();
-	void Free();
 
 	bool Allocate( size_t size, size_t alignment, VirtualAllocation& result );
 	void Free( VirtualAllocation allocation );

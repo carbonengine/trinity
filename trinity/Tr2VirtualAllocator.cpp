@@ -54,6 +54,12 @@ Tr2VirtualAllocator::Tr2VirtualAllocator( size_t blockSize, size_t maxSize, size
 	}
 }
 
+Tr2VirtualAllocator::~Tr2VirtualAllocator()
+{
+	vmaClearVirtualBlock( (VmaVirtualBlock)block );
+	vmaDestroyVirtualBlock( (VmaVirtualBlock)block );
+}
+
 bool Tr2VirtualAllocator::Expand()
 {
 	if( m_reservedBlocks.empty() )
@@ -68,12 +74,6 @@ bool Tr2VirtualAllocator::Expand()
 	m_reservedBlocks.pop_back();
 
 	return true;
-}
-
-void Tr2VirtualAllocator::Free()
-{
-	vmaClearVirtualBlock( (VmaVirtualBlock)block );
-	vmaDestroyVirtualBlock( (VmaVirtualBlock)block );
 }
 
 bool Tr2VirtualAllocator::Allocate( size_t size, size_t alignment, VirtualAllocation& result )
@@ -104,7 +104,7 @@ bool Tr2VirtualAllocator::Allocate( size_t size, size_t alignment, VirtualAlloca
 	result.size = size;
 
 	m_allocatedMemory += size;
-	CCP_LOGWARN( "Allocated %zu bytes at offset %zu with alignment %zu from %p. Memory usage: %zu / %zu MBs ", size, result.offset, alignment, block, GetAllocatedMemory() / size_t( 1024 * 1024 ), m_currentSize / size_t( 1024 * 1024 ) );
+	CCP_LOG( "Allocated %zu bytes at offset %zu with alignment %zu from %p. Memory usage: %zu / %zu MBs ", size, result.offset, alignment, block, GetAllocatedMemory() / size_t( 1024 * 1024 ), m_currentSize / size_t( 1024 * 1024 ) );
 
 	return true;
 }
@@ -114,7 +114,7 @@ void Tr2VirtualAllocator::Free( VirtualAllocation allocation )
 	vmaVirtualFree( (VmaVirtualBlock)block, (VmaVirtualAllocation)allocation.allocation );
 
 	m_allocatedMemory -= allocation.size;
-	CCP_LOGWARN( "Freed %zu bytes at offset %zu from %p. Memory usage: %zu / %zu MBs", allocation.size, allocation.offset, block, GetAllocatedMemory() / size_t( 1024 * 1024 ), m_currentSize / size_t( 1024 * 1024 ) );
+	CCP_LOG( "Freed %zu bytes at offset %zu from %p. Memory usage: %zu / %zu MBs", allocation.size, allocation.offset, block, GetAllocatedMemory() / size_t( 1024 * 1024 ), m_currentSize / size_t( 1024 * 1024 ) );
 
 }
 

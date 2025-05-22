@@ -17,12 +17,8 @@
 // --------------------------------------------------------------------------------------
 class Tr2SuballocatedBuffer : public Tr2DeviceResource
 {
-
 public:
 	Tr2SuballocatedBuffer( const char* name, const Tr2GpuUsage::Type gpuUsage, const uint32_t blockSize, const uint32_t maxSize );
-
-	~Tr2SuballocatedBuffer();
-
 
 	Tr2SuballocatedBuffer( const Tr2SuballocatedBuffer& obj ) = delete;
 	void operator=( const Tr2SuballocatedBuffer& ) = delete;

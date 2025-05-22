@@ -8,18 +8,25 @@
 
 #include "Tr2SuballocatedBuffer.h"
 
-#include "Tr2SyncToGpu.h"
+
+
+CCP_STATS_DECLARE( suballocatedBufferAllocated, "Trinity/SuballocatedBuffer/Allocated", false, CST_COUNTER_HIGH, "The currently number of bytes currently in use in the buffer." );
+CCP_STATS_DECLARE( suballocatedBufferCapacity, "Trinity/SuballocatedBuffer/Capacity", false, CST_COUNTER_HIGH, "The buffer's current capacity." );
+
+
+
+
+
+
+
 
 Tr2SuballocatedBuffer::Tr2SuballocatedBuffer( const char* name, const Tr2GpuUsage::Type gpuUsage, const uint32_t blockSize, const uint32_t maxSize ) :
 	m_name( name ),
 	m_gpuUsage( gpuUsage ),
 	m_allocator( blockSize, maxSize, blockSize )
 {
-}
-
-Tr2SuballocatedBuffer::~Tr2SuballocatedBuffer()
-{
-	m_allocator.Free();
+	CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
+	CCP_STATS_SET( suballocatedBufferCapacity, m_allocator.GetMaxSize() );
 }
 
 ALResult Tr2SuballocatedBuffer::Allocate( uint32_t stride, uint32_t count, void* data, Tr2RenderContextAL& renderContext, Allocation& result )
@@ -53,6 +60,8 @@ ALResult Tr2SuballocatedBuffer::Allocate( uint32_t stride, uint32_t count, void*
 			result.Update( data, renderContext );
 		}
 
+		CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
+
 		return S_OK;
 	}
 
@@ -73,6 +82,7 @@ void Tr2SuballocatedBuffer::Free( Allocation& allocation )
 		{
 			m_allocations.erase( found );
 		}
+		CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
 	}
 }
 
@@ -85,8 +95,13 @@ void Tr2SuballocatedBuffer::ReleaseResources( TriStorage s )
 		auto allocations = m_allocations;
 		for( auto& allocation : allocations )
 		{
-			Free( *allocation );
+			m_allocator.Free( allocation->m_allocation );
+			allocation->m_parent = nullptr;
 		}
+
+		allocations.clear();
+
+		CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
 	}
 }
 
@@ -146,7 +161,8 @@ ALResult Tr2SuballocatedBuffer::Expand()
 
 	CCP_ASSERT( m_allocator.GetCurrentSize() == newBufferSize );
 
-	CCP_LOGNOTICE( "Allocating more buffer memory for buffer '%s'. Total memory allocated: %zu MBs", m_name.c_str(), newBufferSize / size_t( 1024 * 1024 ) );
+	CCP_LOG( "Allocating more buffer memory for buffer '%s'. Total memory allocated: %zu MBs", m_name.c_str(), newBufferSize / size_t( 1024 * 1024 ) );
+	CCP_STATS_SET( suballocatedBufferCapacity, m_allocator.GetMaxSize() );
 
 	return S_OK;
 }
