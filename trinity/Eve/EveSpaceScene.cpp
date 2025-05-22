@@ -587,10 +587,24 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 	TriFrustumOrtho shadowFrustums[SHADOW_FRUSTUM_COUNT];
 	ShadowMap::SplitSetup splitSetup[SHADOW_FRUSTUM_COUNT];
 
+	// Let's compute left, right, top, bottom of the frustum divided by the near clipping plane. We need this for SetupShadowSplit.
+	Matrix projection = Tr2Renderer::GetProjectionTransform();
+	// projection._11													//	= 2.0f * zn / ( r - l )
+	// projection._22													//	= -2.0f * zn / ( b - t )
+	// projection._31													//	= 1.0f + 2.0f * l / ( r - l )
+	// projection._32													//	= -1.0f - 2.0f * t / ( b - t )
+	float rightMinusLeft = 2.f / projection._11;						//	= ( r - l ) / zn
+	float bottomMinusTop = 2.f / -projection._22;						//	= ( b - t ) / zn
+	float left = ( projection._31 - 1.f ) / 2.f * rightMinusLeft;		//	= l / zn
+	float top = ( -projection._32 - 1.f ) / 2.f * bottomMinusTop;		//	= t / zn
+	float right = rightMinusLeft + left;								//	= r / zn
+	float bottom = bottomMinusTop + top;								//	= b / zn
+
 	// set up frustums
 	for( unsigned int splitIndex = 0; splitIndex < SHADOW_FRUSTUM_COUNT; ++splitIndex )
 	{
-		ShadowMap::SplitSetup splitSetupInfo = shadowMap.SetupShadowSplit( splitIndex, Tr2Renderer::GetInverseViewTransform(), m_sunData.DirWorld, viewFrustum.m_zNear );
+		ShadowMap::SplitSetup splitSetupInfo = shadowMap.SetupShadowSplit( splitIndex, Tr2Renderer::GetInverseViewTransform(), 
+			m_sunData.DirWorld, viewFrustum.m_zNear, left, right, top, bottom );
 
 		// Get the split up camera frustum so we can use it to do some "half space culling" for objects
 		TriFrustum frustum;

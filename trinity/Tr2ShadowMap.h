@@ -65,7 +65,7 @@ public:
 
 	void ClearVariableStore();
 
-	ShadowMap::SplitSetup SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear );
+	ShadowMap::SplitSetup SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear, float leftDivNear, float rightDivNear, float topDivNear, float bottomDivNear );
 
 	bool PrepareShadowRendering( Tr2RenderContext& renderContext );
 	void BeginShadowRendering( Tr2RenderContext& renderContext, int splitIndex );
