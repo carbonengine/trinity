@@ -109,11 +109,11 @@ private:
 	{
 		Vector4 resolution;
 
-		Vector4 depthParams;
+		Vector4 projectionParams;
 
 		Vector4 unprojectParams;
 
-		Vector2 projectionParams;
+		Vector2 depthParams;
 		float radius;
 		float normalBias;
 

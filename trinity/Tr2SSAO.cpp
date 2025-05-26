@@ -706,9 +706,22 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 
 		data->resolution = Vector4( (float)width, (float)height, 1.0f / (float)width, 1.0f / (float)height );
 		
-		data->unprojectParams = Vector4( +2.0f * inverseProjectionMatrix._11, -2.0f * inverseProjectionMatrix._22, -inverseProjectionMatrix._11, inverseProjectionMatrix._22 );
+		data->projectionParams = Vector4(
+			+0.5f * projectionMatrix._11,
+			-0.5f * projectionMatrix._22,
+			-0.5f + projectionMatrix._31 * +0.5f,
+			-0.5f + projectionMatrix._32 * -0.5f
+		);
 
-		data->projectionParams = Vector2( projectionMatrix._11 * 0.5f, projectionMatrix._22 * -0.5f );
+		data->unprojectParams = Vector4(
+			+2.0f * inverseProjectionMatrix._11,
+			-2.0f * inverseProjectionMatrix._22,
+			-inverseProjectionMatrix._11 + inverseProjectionMatrix._41,
+			+inverseProjectionMatrix._22 - inverseProjectionMatrix._42
+		);
+		
+		data->depthParams = Vector2( ( nearPlane - farPlane ) / ( nearPlane * farPlane ), 1.0f / nearPlane );
+		
 		data->radius = m_cortaoRadius;
 
 		data->normalBias = inverseProjectionMatrix._11 * sqrtf( 2.0f ) / width;
@@ -737,7 +750,6 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 		data->inverseMaxSlopeWeight = 1.0f / 5.0f;
 
 
-		data->depthParams = Vector4( ( nearPlane - farPlane ) / ( nearPlane * farPlane ), 1.0f / nearPlane, 0, 0 );
 
 
 		//Remove the translation from the view matrix
