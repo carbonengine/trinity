@@ -204,6 +204,16 @@ namespace
 
 	void CreateFallbackTexturesWithColor( uint32_t color, Tr2TextureAL* outputTextures, Tr2PrimaryRenderContext& renderContext )
 	{
+		bool tex0Valid = outputTextures[0].IsValid();
+		bool tex1Valid = outputTextures[1].IsValid();
+		bool tex2Valid = outputTextures[2].IsValid();
+
+		// only rebuild the textures if they are not valid
+		if( tex0Valid && tex1Valid && tex2Valid )
+		{
+			return;
+		}
+
 		Tr2SubresourceData initialData[CUBEMAP_FACE_COUNT];
 		for( int i = 0; i < CUBEMAP_FACE_COUNT; ++i )
 		{
@@ -211,13 +221,23 @@ namespace
 			initialData[i].m_sysMemSlicePitch = 4;
 			initialData[i].m_sysMem = &color;
 		}
-		outputTextures[0].Create( Tr2BitmapDimensions( 1, 1, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, initialData, renderContext );
-		outputTextures[1].Create( Tr2BitmapDimensions( TEX_TYPE_3D, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, initialData, renderContext );
-		outputTextures[2].Create( Tr2BitmapDimensions( TEX_TYPE_CUBE, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, initialData, renderContext );
+		if( !tex0Valid )
+		{
+			outputTextures[0].Create( Tr2BitmapDimensions( 1, 1, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, initialData, renderContext );
+		}
+		if( !tex1Valid )
+		{
+			outputTextures[1].Create( Tr2BitmapDimensions( TEX_TYPE_3D, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, initialData, renderContext );
+		}
+		if( !tex2Valid )
+		{
+			outputTextures[2].Create( Tr2BitmapDimensions( TEX_TYPE_CUBE, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, initialData, renderContext );
+		}
 	}
 
 	void DestroyFallbackTextures( Tr2TextureAL* fallbackTextures )
 	{
+		// this may cause a device hung since the texture index may be used in a constant buffer somewhere and therefore may be in use
 		fallbackTextures[0] = Tr2TextureAL();
 		fallbackTextures[1] = Tr2TextureAL();
 		fallbackTextures[2] = Tr2TextureAL();
@@ -1290,8 +1310,6 @@ void Tr2Renderer::ReleaseDeviceResources( TriStorage s )
 	{
 		g_sharedBuffer.Free( s_quadListIndexBuffer );
 	}
-	DestroyFallbackTextures( s_fallbackTextures[0] );
-	DestroyFallbackTextures( s_fallbackTextures[1] );
 }
 
 void Tr2Renderer::DrawLine( const Vector3& from, const Vector3& to, uint32_t color /*= 0xffffffff */ )
@@ -1384,9 +1402,15 @@ void Tr2Renderer::EnableFallbackTextureDebugging()
 {
 	if( !s_debugFallbackTexture )
 	{
+		DestroyFallbackTextures( s_fallbackTextures[0] );
+
 		s_debugFallbackTexture = true;
+
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		CreateFallbackTextures( renderContext );
+
+		// Reinitialize registered Tr2Effects
+		ReinitializeRegisteredEffects();
 	}
 }
 
@@ -1394,9 +1418,16 @@ void Tr2Renderer::DisableFallbackTextureDebugging()
 {
 	if( s_debugFallbackTexture )
 	{
+		DestroyFallbackTextures( s_fallbackTextures[0] );
+		DestroyFallbackTextures( s_fallbackTextures[1] );
+
 		s_debugFallbackTexture = false;
+
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		CreateFallbackTextures( renderContext );
+
+		// Reinitialize registered Tr2Effects
+		ReinitializeRegisteredEffects();
 	}
 }
 
@@ -1405,9 +1436,14 @@ const Tr2TextureAL& Tr2Renderer::GetFallbackTexture( Tr2EffectResource::Type tex
 	uint32_t textureSet = 0;
 	if( s_debugFallbackTexture )
 	{
-		CCP_LOGWARN( "Using fallback texture for %s", debugContext );
-		textureSet = uint32_t( GetAnimationTime() * 20 ) % 2;
+		textureSet = uint32_t( GetAnimationTime() * 20 ) % 2;	
+
+		if( strlen( debugContext ) > 0 )
+		{
+			CCP_LOGWARN( "Using fallback texture for %s, using textureSet %d", debugContext, textureSet );
+		}
 	}
+
 	switch( textureType )
 	{
 	case Tr2EffectResource::TEXTURE_1D:
