@@ -1679,7 +1679,7 @@ init_declarator_list(A) ::= init_declarator_list(B) OP_COMA name_declaration(C).
 
 	if( type == TypeFromTokenType( OP_BINDLESSHANDLESAMPLER ) )
 	{
-		if( auto stateBlock = C->GetChildOrNull( 1 ) )
+		if( C->GetChildOrNull( 1 ) )
 		{
 			parserState->AddBindlessSampler( C->GetSymbol(), C->Copy() );
 			C->ReplaceChild( 1, nullptr );
@@ -1714,7 +1714,7 @@ single_declaration(A) ::= fully_specified_type(B) name_declaration(C).
 
 	if( type == TypeFromTokenType( OP_BINDLESSHANDLESAMPLER ) )
 	{
-		if( auto stateBlock = C->GetChildOrNull( 1 ) )
+		if( C->GetChildOrNull( 1 ) )
 		{
 			parserState->AddBindlessSampler( C->GetSymbol(), C->Copy() );
 			C->ReplaceChild( 1, nullptr );
