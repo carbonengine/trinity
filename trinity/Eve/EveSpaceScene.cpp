@@ -2711,6 +2711,14 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		}
 	}
 
+	// Write sub surface seprable specular and SSS mask information
+	bool hasSSSSSInScene = m_sssss->SetupSeprableSpecularSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
+
+	if( hasSSSSSInScene && m_opaqueColorMap == nullptr )
+	{
+		m_opaqueColorMap.CreateInstance();
+		m_opaqueColorMap->Create( renderContext.m_esm.GetRenderTargetWidth(), renderContext.m_esm.GetRenderTargetHeight(), 1, PIXEL_FORMAT_R16G16B16A16_FLOAT );
+	}
 
 	if( m_opaqueColorMap != nullptr )
 	{
@@ -2722,10 +2730,6 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		renderContext.m_esm.PopRenderTarget();
 		renderContext.m_esm.PopDepthStencilBuffer();
 	}
-
-	// Write sub surface seprable specular and SSS mask information
-	bool hasSSSSSInScene = m_sssss->SetupSeprableSpecularSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
-
 
 	// Write sub surface scattering blur
 	if (hasSSSSSInScene)
