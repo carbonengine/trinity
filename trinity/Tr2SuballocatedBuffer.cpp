@@ -74,15 +74,19 @@ void Tr2SuballocatedBuffer::Free( Allocation& allocation )
 {
 	if( allocation.m_parent )
 	{
-		m_allocator.Free( allocation.m_allocation );
-		allocation.m_parent = nullptr;
-
 		auto found = find( begin( m_allocations ), end( m_allocations ), &allocation );
 		if( found != end( m_allocations ) )
 		{
+			m_allocator.Free( allocation.m_allocation );
+			allocation.m_parent = nullptr;
+
 			m_allocations.erase( found );
+			CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
 		}
-		CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
+		else
+		{
+			CCP_LOGERR( "Memory corruption in Tr2SuballocatedBuffer::Free()! Trying to free an allocation that has already been freed!" );
+		}
 	}
 }
 
@@ -92,14 +96,13 @@ void Tr2SuballocatedBuffer::ReleaseResources( TriStorage s )
 	{
 		m_buffer = Tr2BufferAL();
 
-		auto allocations = m_allocations;
-		for( auto& allocation : allocations )
+		for( auto& allocation : m_allocations )
 		{
 			m_allocator.Free( allocation->m_allocation );
 			allocation->m_parent = nullptr;
 		}
 
-		allocations.clear();
+		m_allocations.clear();
 
 		CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
 	}
