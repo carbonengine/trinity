@@ -42,9 +42,12 @@ namespace
 	bool EnableDebugLayer()
 	{
 		CComPtr<ID3D12Debug> debugInterface;
+		CComPtr<ID3D12Debug1> debugInterface1;
 		if( SUCCEEDED( D3D12GetDebugInterface( IID_PPV_ARGS( &debugInterface ) ) ) )
 		{
+			debugInterface->QueryInterface( IID_PPV_ARGS( &debugInterface1 ) );
 			debugInterface->EnableDebugLayer();
+			debugInterface1->SetEnableGPUBasedValidation( true );
 			return true;
 		}
 		else
