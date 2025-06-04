@@ -10,7 +10,7 @@
 #include "Resources/TriGeometryRes.h"
 #include "TriFrustumOrtho.h"
 
-#include "Audio/ITr2AudEmitter.h"
+#include <ITr2AudEmitter.h>
 #include "Eve/EveTransform.h"
 #include "EveSpaceObject2.h"
 #include "Eve/EveSpaceScene.h"

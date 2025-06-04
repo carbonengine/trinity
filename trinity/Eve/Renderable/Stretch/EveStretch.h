@@ -7,7 +7,7 @@
 #include "Eve/EveTransform.h"
 #include "Curves/TriCurveSet.h"
 #include "Eve/IEveFiringEffectElement.h"
-#include "Audio/ITr2Audio.h"
+#include <ITr2Audio.h>
 #include "Tr2DebugRenderer.h"
 
 BLUE_DECLARE( EveStretch );
