@@ -93,7 +93,10 @@ void Tr2MeshBase::OnListModified(
 		if( Tr2MeshAreaPtr area = BlueCastPtr( value ) )
 		{
 			area->AddOwnerMesh( this );
-			ReverseIndexBufferIfNeeded();
+			if ( area->IsReversed() )
+			{
+				ReverseIndexBuffers();
+			}
 		}
 		break;
 	case BELIST_REMOVED:
@@ -110,7 +113,10 @@ void Tr2MeshBase::OnListModified(
 				entity->AddOwnerMesh( this );
 			}
 		}
-		ReverseIndexBufferIfNeeded();
+		if( HasReversedAreas() )
+		{
+			ReverseIndexBuffers();
+		}
 		break;
 	case BELIST_UNLOADSTART:
 		for( ssize_t i = 0; i < list->GetSize(); ++i )
@@ -126,7 +132,7 @@ void Tr2MeshBase::OnListModified(
 	}
 }
 
-void Tr2MeshBase::ReverseIndexBufferIfNeeded()
+bool Tr2MeshBase::HasReversedAreas() const
 {
 	for( auto& list : m_areaLookupArray )
 	{
@@ -134,37 +140,18 @@ void Tr2MeshBase::ReverseIndexBufferIfNeeded()
 		{
 			if( area->IsReversed() )
 			{
-				ReverseIndexBuffers();
-				return;
+				return true;
 			}
 		}
 	}
+	return false;
 }
 
 void Tr2MeshBase::ReverseIndexBuffers()
 {
-	auto geometry = GetGeometryResource();
-	if( geometry && geometry->IsGood() )
+	if( auto geometry = GetGeometryResource() )
 	{
-		if( auto mesh = geometry->GetMeshData( m_meshIndex ) )
-		{
-			if( !mesh->m_reversedIndicesValid )
-			{
-				USE_MAIN_THREAD_RENDER_CONTEXT();
-				geometry->ReverseIndexBuffer( *mesh, renderContext );
-			}
-			for( auto lod : mesh->m_lods )
-			{
-				if( auto meshLod = geometry->GetMeshData( unsigned( lod.meshIndex ) ) )
-				{
-					if( !meshLod->m_reversedIndicesValid )
-					{
-						USE_MAIN_THREAD_RENDER_CONTEXT();
-						geometry->ReverseIndexBuffer( *meshLod, renderContext );
-					}
-				}
-			}
-		}
+		geometry->RequestReversedIndexBuffers();
 	}
 }
 

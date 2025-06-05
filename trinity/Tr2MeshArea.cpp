@@ -137,7 +137,7 @@ void Tr2MeshArea::SetReversed( bool reversed )
 	if( m_reversed )
 	{
 		for_each( begin( m_ownerMeshes ), end( m_ownerMeshes ), []( auto mesh ) {
-			mesh->ReverseIndexBufferIfNeeded();
+			mesh->ReverseIndexBuffers();
 		} );
 	}
 }
