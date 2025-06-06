@@ -169,6 +169,23 @@ namespace
 		return 0;
 	}
 
+	float ShaderQuality()
+	{
+		TR2SHADERMODEL settings = Tr2Renderer::GetShaderModel();
+
+		switch( settings )
+		{
+		case TR2SM_3_0_LO:
+			return 0.f;
+		case TR2SM_3_0_HI:
+			return 1.f;
+		case TR2SM_3_0_DEPTH:
+			return 2.f;
+		default:
+			return 0.f;
+		}
+	}
+
 	float ShipMaxSpeed( IRoot* ctx )
 	{
 		if( g_controllerFunctionOverrideEnabled )
@@ -433,6 +450,7 @@ namespace
 		CcpParser::Function( "ServerTimePhase", TimePhase ),
 		CcpParser::Function( "ServerTimeGreaterThan", ServerTimeGreaterThan ),
 		CcpParser::Function( "ServerTimeLessThanOrEqual", ServerTimeLessThanOrEqual ),
+		CcpParser::Function( "ShaderQuality", ShaderQuality ),
 	};
 
 
@@ -561,6 +579,7 @@ void Tr2ControllerExpression::GetExpressionTermInfo( std::vector<Tr2ExpressionTe
 	info.push_back( Tr2ExpressionTermInfo::Function( "Controller", "KillCount", "Owning ship kill count" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "Controller", "BoundingSphereRadius", "Owning object's bounding sphere radius" ) );
 
+	info.push_back( Tr2ExpressionTermInfo::Function( "GraphicSettings", "ShaderQuality", "User shader quality setting, low = 0, medium = 1, high = 2" ) );
 
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "IsWeekend", "is it the weekend (output: 1.0 = yes, 0.0 = no)" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerYear", "returns a year for current server time" ) );
