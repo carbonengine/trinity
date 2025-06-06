@@ -865,6 +865,11 @@ EveSOFDataHullDecalSet::EveSOFDataHullDecalSet( IRoot* lockobj ):
 	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP )
 {}
 
+EveSOFDataMultiHullDecalIndexBuffers::EveSOFDataMultiHullDecalIndexBuffers( IRoot* lockobj ) :
+	PARENTLOCK( m_indexBuffers )
+{
+}
+
 EveSOFDataHullDecalSetItem::EveSOFDataHullDecalSetItem( IRoot* lockobj ) :
 	m_usage( USAGE_STANDARD ),
 	m_position( 0.f, 0.f, 0.f ),
@@ -876,7 +881,8 @@ EveSOFDataHullDecalSetItem::EveSOFDataHullDecalSetItem( IRoot* lockobj ) :
 	m_logoType( EveSOFDataLogoSet::TYPE_PRIMARY ),
 	PARENTLOCK( m_textures ),
 	PARENTLOCK( m_parameters ),
-	PARENTLOCK( m_indexBuffers )
+	PARENTLOCK( m_indexBuffers ),
+	PARENTLOCK( m_multiHullIndexBuffers )
 {
 }
 
