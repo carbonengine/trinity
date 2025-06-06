@@ -323,7 +323,7 @@ void EveChildMesh::UpdateRtSkeleton()
 		//Skeleton has changed, so mark all area BLAS's as out-of-date.
 		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
-			auto meshAreaIndex = std::max(0, ( *it )->GetIndex() );
+			auto meshAreaIndex = std::max( 0, ( *it )->GetIndex() );
 			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
 			{
 				( *it )->GetRtMeshArea()->MarkBlasOutdated();
