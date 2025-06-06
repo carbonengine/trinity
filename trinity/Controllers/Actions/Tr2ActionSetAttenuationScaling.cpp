@@ -13,7 +13,8 @@
 
 
 Tr2ActionSetAttenuationScaling::Tr2ActionSetAttenuationScaling( IRoot* lockobj ) :
-	m_scalingFactor( 1.0f )
+	m_scalingFactor( 1.0f ),
+	m_controller( nullptr )
 {
 }
 
