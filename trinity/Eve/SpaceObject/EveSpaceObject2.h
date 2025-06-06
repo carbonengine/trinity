@@ -151,7 +151,8 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 float screenSize,
 										 const Matrix* worldTransform );
 
-void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* instanceTransform, Tr2PrimaryRenderContext& renderContext, Tr2MeshBasePtr mesh, Tr2ConstantBufferAL& opaquePerObjectData, uint32_t decalPerObjectDatasCount, Tr2ConstantBufferAL* decalPerObjectDatas );
+void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* instanceTransform, Tr2PrimaryRenderContext& renderContext, Tr2ConstantBufferAL& perObjectData );
+void UpdateRtVertexBufferData( Tr2PrimaryRenderContext& renderContext, Tr2MeshBasePtr mesh, std::vector<Tr2ConstantBufferAL>& vertexBufferDatas, TriBatchType areaType );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -503,9 +504,8 @@ protected:
 	bool m_isPickable;
 	bool m_isAnimated;
 	bool m_castShadow;
-	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshOpaqueAreas;
-	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshDecalAreas;
-
+	std::vector<TriRenderBatchAreaBlocksWithSharedMaterial> m_shadowMeshOpaqueAreas;
+	
 	Matrix m_worldTransform;
 	Matrix m_invWorldTransform;
 	Vector3 m_worldPosition; // used to expose the position of the object to python
@@ -689,8 +689,8 @@ protected:
 
 	void UpdateRtMesh(const EveUpdateContext& updateContext);
 	void UpdateRtSkeleton();
-	mutable Tr2ConstantBufferAL m_rtOpaquePerObjectData;
-	mutable std::vector<Tr2ConstantBufferAL> m_rtDecalPerObjectDatas;
+	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+	mutable std::vector<Tr2ConstantBufferAL> m_rtVertexBufferDatas;
 
 	Tr2BoneTransformOffsets m_boneOffsets;
 

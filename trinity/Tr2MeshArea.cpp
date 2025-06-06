@@ -4,6 +4,7 @@
 #include "Raytracing/Tr2RaytracingGeometry.h"
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "ITr2TextureProvider.h"
+#include "Tr2Renderer.h"
 
 Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_display( true ),
@@ -15,9 +16,7 @@ Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_castShadows( true ),
 	m_jointCount( 0 ),
 	m_jointMappingAnimRig( NULL ),
-	m_minLod( TR2_LOD_UNSPECIFIED ),
-	m_transparencyTexture(),
-	m_transparencyTextureName()
+	m_minLod( TR2_LOD_UNSPECIFIED )
 {
 }
 
@@ -43,8 +42,6 @@ Tr2MeshArea& Tr2MeshArea::operator=( const Tr2MeshArea& other )
 	m_display = other.m_display;
 	m_useSHLighting = other.m_useSHLighting;
 	m_generateDepthArea = other.m_generateDepthArea;
-	m_transparencyTexture = other.m_transparencyTexture;
-	m_transparencyTextureName = other.m_transparencyTextureName;
 
 	return *this;
 }
@@ -113,31 +110,6 @@ bool Tr2MeshArea::IsCastingShadows() const
 void Tr2MeshArea::SetCastsShadows( bool castShadows )
 {
 	m_castShadows = castShadows;
-}
-
-ITr2TextureProviderPtr Tr2MeshArea::GetTransparencyTexture()
-{
-	if ( !m_transparencyTexture && !m_transparencyTextureName.empty() )
-	{
-		ITr2TextureProvider* transparencyTexture = nullptr;
-		if( ITriEffectParameter* param = m_material->GetResourceByName( m_transparencyTextureName.c_str() ) )
-		{
-			if( TriTextureParameterPtr textureParam = BlueCastPtr( param ) )
-			{
-				if( auto resource = textureParam->GetResource() )
-				{
-					m_transparencyTexture = resource;
-				}
-			}
-		}
-	}
-	return m_transparencyTexture;
-}
-
-void Tr2MeshArea::SetTransparencyTextureName( const BlueSharedString& textureName )
-{
-	m_transparencyTextureName = textureName;
-	m_transparencyTexture.Unlock();
 }
 
 // -------------------------------------------------------------
@@ -233,6 +205,28 @@ void Tr2MeshArea::RemoveOwnerMesh( Tr2MeshBase* mesh )
 	{
 		CCP_ASSERT( false );
 	}
+}
+
+bool Tr2MeshArea::HasVertexBufferAccessInRtShadow()
+{
+	// this information could potentially be cached if we can invalidate the cache on material changes
+	const BlueSharedString techniqueName = BlueSharedString( "RtShadow" );
+	auto effect = GetMaterialInterface()->GetShaderStateInterface()->GetEffect();
+	uint32_t techniqueIndex;
+	GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( techniqueName, techniqueIndex );
+	for( const auto& library : effect.techniques[techniqueIndex].libraries )
+	{
+		for( const auto& localRegister : library.localInput.signature.registers )
+		{
+			if( localRegister.registerType == Tr2ShaderRegisterAL::CONSTANT_BUFFER &&
+				localRegister.registerSpace == 8 &&
+				localRegister.registerIndex == Tr2Renderer::GetPerObjectRTVertexBufferDataRegister() )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 Tr2Lod Tr2MeshArea::GetMinLod() const
