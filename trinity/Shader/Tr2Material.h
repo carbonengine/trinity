@@ -167,8 +167,8 @@ struct Tr2EffectLibraryParameters : public PassParametersOwner
 	Tr2ResourceSetAL m_globalResourceSet;
 	std::vector<ITriReroutable*> m_reroutedParameters;
 	std::vector<ITr2EffectValuePtr> m_usedResources;
-	bool m_globalResourceSetDirty;
 	Tr2BindlessResourcesAL m_usedTextures;
+	bool m_globalResourceSetDirty;
 	bool m_usedTexturesDirty;
 
 	void AddUsedResource( ITr2EffectValuePtr resource ) override;

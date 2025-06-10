@@ -459,7 +459,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	auto rtMesh = m_mesh->GetRtMesh();
 
-	if ( !rtMesh )
+	if ( !rtMesh || !rtMesh->IsGood() )
 	{
 		return;
 	}
@@ -479,8 +479,6 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	{
 		m_rtPerObjectDatas.resize( rtPerObjectDataCount );
 	}
-
-	UpdateRtVertexBufferData( renderContext, m_mesh, m_rtVertexBufferDatas, TRIBATCHTYPE_OPAQUE );
 
 	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
@@ -507,11 +505,10 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					auto geometry = area->GetRtMeshArea();
 					if( geometry )
 					{
-						Tr2ConstantBufferAL* vertexBufferData = nullptr;
+						const Tr2ConstantBufferAL* vertexBufferData = nullptr;
 						if( area->HasVertexBufferAccessInRtShadow() )
 						{
-							CCP_ASSERT_M( m_rtVertexBufferDatas[vertexBufferDataIndex].IsValid(), "constant buffer at vertexBufferDataIndex has to be valid!" );
-							vertexBufferData = &m_rtVertexBufferDatas[vertexBufferDataIndex];
+							vertexBufferData = &area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 						}
 						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[idx], vertexBufferData, transform );
 					}
@@ -519,8 +516,6 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			}
 			++idx;
 		}
-
-		rtManager.GetGeometry().AddBindlessResources( opaqueAreas, rtMesh );
 	}
 	else
 	{
@@ -535,17 +530,18 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 				auto geometry = area->GetRtMeshArea();
 				if( geometry )
 				{
-					Tr2ConstantBufferAL* vertexBufferData = nullptr;
+					const Tr2ConstantBufferAL* vertexBufferData = nullptr;
 					if( area->HasVertexBufferAccessInRtShadow() )
 					{
-						CCP_ASSERT_M( m_rtVertexBufferDatas[vertexBufferDataIndex].IsValid(), "constant buffer at vertexBufferDataIndex has to be valid!" );
-						vertexBufferData = &m_rtVertexBufferDatas[vertexBufferDataIndex];
+						vertexBufferData = &area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 					}
 					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[0], vertexBufferData, m_worldTransform );
 				}
 			}
 		}
 	}
+
+	rtManager.GetGeometry().AddBindlessResources( *opaqueAreas, *rtMesh );
 }
 
 void EveChildMesh::SetInstanceTransforms( std::vector<Matrix> instances )

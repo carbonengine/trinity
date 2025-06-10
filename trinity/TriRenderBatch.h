@@ -6,6 +6,7 @@
 #include "TriPoolAllocator.h"
 #include "include/Rect.h"
 #include "Shader/Tr2Material.h"
+#include "Shader/Tr2Effect.h"
 #include "Shader/Tr2Shader.h"
 
 class Tr2PerObjectData;
@@ -34,11 +35,10 @@ class TriRenderBatchAreaBlocksWithSharedMaterial : public TriRenderBatchAreaBloc
 {
 public:
 	TriRenderBatchAreaBlocksWithSharedMaterial();
-	TriRenderBatchAreaBlocksWithSharedMaterial( std::vector<TriRenderBatchAreaBlock>& areaBlockVector, Tr2Material* shader );
 	void Optimize();
 	void Clear();
 
-	Tr2MaterialPtr m_shaderMaterial;
+	Tr2EffectPtr m_shaderMaterial;
 	std::vector<TriRenderBatchAreaBlock> m_areaBlockVector;
 
 };

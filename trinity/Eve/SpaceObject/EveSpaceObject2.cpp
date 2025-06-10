@@ -3672,189 +3672,6 @@ void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* in
 	perObjectData.Unlock( renderContext );
 }
 
-void UpdateRtVertexBufferData( Tr2PrimaryRenderContext& renderContext, Tr2MeshBasePtr mesh, std::vector<Tr2ConstantBufferAL>& vertexBufferDatas, TriBatchType areaType )
-{
-	const Tr2MeshAreaVector* opaqueAreas = mesh->GetAreas( areaType );
-
-	struct VertexBufferData
-	{
-		uint32_t indexBufferId;
-		uint32_t indexBufferStride;
-
-		uint32_t indexOffset;
-
-		uint32_t vertexBufferId;
-		uint32_t vertexBufferStride;
-
-		uint32_t positionOffset;
-		uint32_t positionType;
-
-		uint32_t normalOffset;
-		uint32_t normalType;
-
-		uint32_t tangentOffset;
-		uint32_t tangentType;
-
-		uint32_t bitangentOffset;
-		uint32_t bitangentType;
-
-		uint32_t texCoord0Offset;
-		uint32_t texCoord0Type;
-
-		uint32_t texCoord1Offset;
-		uint32_t texCoord1Type;
-
-		uint32_t texCoord2Offset;
-		uint32_t texCoord2Type;
-
-		uint32_t padding;
-	} vbData{};
-
-	auto rtMesh = mesh->GetRtMesh();
-	auto meshData = rtMesh->GetMeshData();
-
-	Tr2VertexDefinition def;
-	Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, def );
-	for( auto it = begin( def.m_items ); it != end( def.m_items ); ++it )
-	{
-		if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			vbData.positionOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			vbData.positionType = it->m_dataType;
-
-			uint32_t type = vbData.positionType;
-			CCP_ASSERT_M( 
-				type == Tr2VertexDefinition::DataType::FLOAT32_3, 
-				"position type has to be FLOAT32_3!" 
-			);
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::NORMAL && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			vbData.normalOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			vbData.normalType = it->m_dataType;
-
-			uint32_t type = vbData.normalType;
-			CCP_ASSERT_M( 
-				type == Tr2VertexDefinition::DataType::FLOAT16_3 || 
-				type == Tr2VertexDefinition::DataType::FLOAT32_3, 
-				"normal type has to be FLOAT16_3 or FLOAT32_3!" 
-			);
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			vbData.tangentOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			vbData.tangentType = it->m_dataType;
-
-			uint32_t type = vbData.tangentType;
-			CCP_ASSERT_M( 
-				type == Tr2VertexDefinition::DataType::FLOAT16_3 || 
-				type == Tr2VertexDefinition::DataType::FLOAT32_3 || 
-				type == Tr2VertexDefinition::DataType::UBYTE_4_NORM || 
-				type == Tr2VertexDefinition::DataType::USHORT_4_NORM, 
-				"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
-			);
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::BITANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			vbData.bitangentOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			vbData.bitangentType = it->m_dataType;
-
-			uint32_t type = vbData.bitangentType;
-			CCP_ASSERT_M(
-				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-				type == Tr2VertexDefinition::DataType::FLOAT32_3,
-				"bitangent type has to be FLOAT16_3 or FLOAT32_3!" 
-			);
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			vbData.texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			vbData.texCoord0Type = it->m_dataType;
-
-			uint32_t type = vbData.texCoord0Type;
-			CCP_ASSERT_M( 
-				type == Tr2VertexDefinition::DataType::FLOAT16_2 || 
-				type == Tr2VertexDefinition::DataType::FLOAT32_2, 
-				"texCoord0 type has to be FLOAT16_2 or FLOAT32_2!" 
-			);
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 1 && it->m_stream == 0 )
-		{
-			vbData.texCoord1Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			vbData.texCoord1Type = it->m_dataType;
-			
-			uint32_t type = vbData.texCoord1Type;
-			CCP_ASSERT_M( 
-				type == Tr2VertexDefinition::DataType::FLOAT16_2 || 
-				type == Tr2VertexDefinition::DataType::FLOAT32_2, 
-				"texCoord1 type has to be FLOAT16_2 or FLOAT32_2!" 
-			);
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 2 && it->m_stream == 0 )
-		{
-			vbData.texCoord2Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-			vbData.texCoord2Type = it->m_dataType;
-			
-			uint32_t type = vbData.texCoord2Type;
-			CCP_ASSERT_M( 
-				type == Tr2VertexDefinition::DataType::FLOAT16_2 || 
-				type == Tr2VertexDefinition::DataType::FLOAT32_2, 
-				"texCoord2 type has to be FLOAT16_2 or FLOAT32_2!" 
-			);
-		}
-
-		// skipping blending data because we get gpu skinned meshes as input (see SkinVertices.fx), so it shouldn't be required for raytracing shaders
-	}
-
-	vbData.vertexBufferId = rtMesh->GetVertexBuffer().GetSrvIndexInHeap();
-	vbData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();
-	vbData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
-	vbData.indexBufferStride = meshData->m_indexAllocation.GetStride();
-
-	if( vertexBufferDatas.size() != opaqueAreas->size() )
-	{
-		vertexBufferDatas.resize( opaqueAreas->size() );
-	}
-
-	uint32_t vertexBufferDataIndex = 0;
-	for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it, ++vertexBufferDataIndex )
-	{
-		auto area = *it;
-
-		if( area->GetDisplay() && area->IsCastingShadows() )
-		{
-			auto geometry = area->GetRtMeshArea();
-			if( geometry )
-			{
-				Tr2ConstantBufferAL vertexBufferData;
-				if( area->HasVertexBufferAccessInRtShadow() )
-				{
-					auto size = sizeof( VertexBufferData );
-					if( !vertexBufferDatas[vertexBufferDataIndex].IsValid() || vertexBufferDatas[vertexBufferDataIndex].GetSize() != size )
-					{
-						vertexBufferDatas[vertexBufferDataIndex].Create( uint32_t( size ), renderContext );
-					}
-
-					VertexBufferData* rtVertexBufferData;
-					vertexBufferDatas[vertexBufferDataIndex].Lock( (void**)&rtVertexBufferData, renderContext );
-
-					vbData.indexOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
-
-					*rtVertexBufferData = vbData;
-
-					vertexBufferDatas[vertexBufferDataIndex].Unlock( renderContext );
-				}
-			}
-		}
-	}
-}
-
 void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
 	if( !m_mesh || !m_display || !m_castShadow )
@@ -3873,12 +3690,8 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	}
 
 	auto rtMesh = m_mesh->GetRtMesh();
-	if( !rtMesh )
-	{
-		return;
-	}
 
-	if( !rtMesh )
+	if( !rtMesh || !rtMesh->IsGood() )
 	{
 		return;
 	}
@@ -3888,7 +3701,6 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
 	UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_rtPerObjectData );
-	UpdateRtVertexBufferData( renderContext, m_mesh, m_rtVertexBufferDatas, TRIBATCHTYPE_OPAQUE );
 	
 	#pragma region geometry
 	uint32_t vertexBufferDataIndex = 0;
@@ -3900,11 +3712,10 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			auto geometry = area->GetRtMeshArea();
 			if( geometry )
 			{
-				Tr2ConstantBufferAL* vertexBufferData = nullptr;
+				const Tr2ConstantBufferAL* vertexBufferData = nullptr;
 				if( area->HasVertexBufferAccessInRtShadow() )
 				{
-					CCP_ASSERT_M( m_rtVertexBufferDatas[vertexBufferDataIndex].IsValid(), "constant buffer at vertexBufferDataIndex has to be valid!" );
-					vertexBufferData = &m_rtVertexBufferDatas[vertexBufferDataIndex];
+					vertexBufferData = &area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 				}
 				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_worldTransform );
 			}
@@ -3912,5 +3723,5 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	}
 #pragma endregion
 
-	rtManager.GetGeometry().AddBindlessResources( opaqueAreas, rtMesh );
+	rtManager.GetGeometry().AddBindlessResources( *opaqueAreas, *rtMesh );
 }

@@ -504,46 +504,9 @@ void Tr2MeshBase::CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& colle
 // Description:
 //   Put the very basic info of a mesharea (block) into a class that contains the list of areas and a pointer to a material
 // -------------------------------------------------------------
-void Tr2MeshBase::CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksWithSharedMaterial& collector, TriBatchType areaType ) const
-{
-	const Tr2MeshAreaVector* areas = GetAreas( areaType );
-	collector.m_areaBlockVector.reserve( areas->size() );
-
-	for( auto a = areas->begin(); a != areas->end(); ++a )
-	{
-		if( areaType == TRIBATCHTYPE_OPAQUE && !( *a )->IsCastingShadows() )
-		{
-			continue;
-		}
-		if( areaType == TRIBATCHTYPE_DECAL && !( *a )->IsCastingShadows() )
-		{
-			continue;
-		}
-		// TODO: intern, doesn't work, the cache probably needs to be invalidated somehow for a change to m_display to be picked up? ask someone about this
-		if ( !( *a )->GetDisplay() )
-		{
-			continue;
-		}
-		if( !collector.m_shaderMaterial && !!( *a )->GetMaterialInterface() )
-		{
-			collector.m_shaderMaterial = ( *a )->GetMaterialInterface();
-		}
-		TriRenderBatchAreaBlock ab( std::max( 0, ( *a )->GetIndex() ), std::max( 0, ( *a )->GetCount() ) );
-		collector.m_areaBlockVector.push_back( ab );
-	}
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Put the very basic info of a mesharea (block) into a class that contains the list of areas and a pointer to a material
-// -------------------------------------------------------------
 void Tr2MeshBase::CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBatchAreaBlocksWithSharedMaterial>& collectors, TriBatchType areaType ) const
 {
 	const Tr2MeshAreaVector* areas = GetAreas( areaType );
-
-	// maybe a linear search would be faster? depends on how many entries there are
-	std::unordered_map<Tr2Material*, TriRenderBatchAreaBlocksWithSharedMaterial> map;
-
 	for( auto a = areas->begin(); a != areas->end(); ++a )
 	{
 		if( areaType == TRIBATCHTYPE_OPAQUE && !( *a )->IsCastingShadows() )
@@ -551,31 +514,27 @@ void Tr2MeshBase::CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBat
 			continue;
 		}
 		if( areaType == TRIBATCHTYPE_DECAL && !( *a )->IsCastingShadows() )
-		{
-			continue;
-		}
-		// TODO: intern, doesn't work, the cache probably needs to be invalidated somehow for a change to m_display to be picked up? ask someone about this
-		if( !( *a )->GetDisplay() )
 		{
 			continue;
 		}
 		
-		TriRenderBatchAreaBlocksWithSharedMaterial* collector;
-		if( map.find( ( *a )->GetMaterialInterface() ) == map.end() )
+		uint32_t i = 0;
+		for ( ; i < collectors.size(); i++ )
+		{
+			if( collectors[i].m_shaderMaterial->GetHashValue() == ( *a )->GetMaterialInterface()->GetHashValue() )
+			{
+				break;
+			}
+		}
+		if ( i == collectors.size() )
 		{
 			auto entry = TriRenderBatchAreaBlocksWithSharedMaterial();
 			entry.m_shaderMaterial = ( *a )->GetMaterialInterface();
-			map[( *a )->GetMaterialInterface()] = entry;
+			collectors.push_back( entry );
 		}
-		collector = &map[( *a )->GetMaterialInterface()];
 
 		TriRenderBatchAreaBlock ab( ( *a )->GetIndex(), ( *a )->GetCount() );
-		collector->m_areaBlockVector.push_back( ab );
-	}
-
-	for ( auto& entry : map )
-	{
-		collectors.push_back( entry.second );
+		collectors[i].m_areaBlockVector.push_back( ab );
 	}
 }
 

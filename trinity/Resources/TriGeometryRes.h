@@ -42,10 +42,36 @@ class Tr2RenderContext;
 
 struct TriRtGeometryConstants
 {
-	uint32_t indexBufferOffset;
+	uint32_t indexBufferId;
 	uint32_t indexBufferStride;
+
+	uint32_t indexOffset;
+
+	uint32_t vertexBufferId;
 	uint32_t vertexBufferStride;
+
+	uint32_t positionOffset;
+	uint32_t positionType;
+
+	uint32_t normalOffset;
+	uint32_t normalType;
+
+	uint32_t tangentOffset;
+	uint32_t tangentType;
+
+	uint32_t bitangentOffset;
+	uint32_t bitangentType;
+
 	uint32_t texCoord0Offset;
+	uint32_t texCoord0Type;
+
+	uint32_t texCoord1Offset;
+	uint32_t texCoord1Type;
+
+	uint32_t texCoord2Offset;
+	uint32_t texCoord2Type;
+
+	uint32_t padding;
 };
 
 struct TriGeometryResAreaData
