@@ -346,7 +346,7 @@ public:
     // Call this after committing the last batch.
     virtual void Finalize( void )
 	{
-		if constexpr ( m_keyGen.GetSortType() == RENDERBATCHSORTTYPE_SORT )
+		if constexpr( KeyGenerator::GetSortType() == RENDERBATCHSORTTYPE_SORT )
 		{
 			if( KeyGenerator::ALLOW_GDPR )
 			{
@@ -358,7 +358,7 @@ public:
 				sort( begin( m_batches ), end( m_batches ), KeyGenerator::Less );
 			}
 		}
-		else if constexpr ( m_keyGen.GetSortType() == RENDERBATCHSORTTYPE_STABLE_SORT )
+		else if constexpr( KeyGenerator::GetSortType() == RENDERBATCHSORTTYPE_STABLE_SORT )
 		{
 			if( KeyGenerator::ALLOW_GDPR )
 			{
