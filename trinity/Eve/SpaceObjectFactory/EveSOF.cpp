@@ -2847,11 +2847,6 @@ void EveSOF::SetupDecalSets( IEveSpaceObjectDecalOwnerPtr obj, const EveSOFDNAPt
 							}
 						}
 					}
-
-					if( shaderData->additive )
-					{
-						decal->SetBatchType( TRIBATCHTYPE_DECAL_ADDITIVE );
-					}
 				}
 				
 				// Set the logo from the logoset

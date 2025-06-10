@@ -76,6 +76,11 @@ void Tr2RenderBatch::SetMaterial( Tr2Material* material )
 	m_shader = material->GetShaderStateInterface();
 }
 
+void Tr2RenderBatch::SetPriority( uint32_t priority )
+{
+	m_priority = priority;
+}
+
 void Tr2RenderBatch::SetGeometry( unsigned vertexDecl, const Tr2BufferAL& vb, uint32_t stride, const Tr2BufferAL& ib, uint32_t indexStride )
 {
 	m_vertexDeclaration = vertexDecl;
@@ -205,4 +210,33 @@ bool CanBeBinned( Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 )
 		return false;
 	}
 	return true;
+}
+
+bool Compare( const Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 )
+{
+	if ( batch1.m_priority != batch2.m_priority )
+	{
+		return batch1.m_priority > batch2.m_priority;
+	}
+	if( batch1.m_shader != batch2.m_shader )
+	{
+		return batch1.m_shader < batch2.m_shader;
+	}
+	if( batch1.m_vertexDeclaration != batch2.m_vertexDeclaration )
+	{
+		return batch1.m_vertexDeclaration < batch2.m_vertexDeclaration;
+	}
+	if( batch1.m_indexStride != batch2.m_indexStride )
+	{
+		return batch1.m_indexStride < batch2.m_indexStride;
+	}
+	if( batch1.m_vertexStreams[0] != batch2.m_vertexStreams[0] )
+	{
+		return batch1.m_vertexStreams[0] < batch2.m_vertexStreams[0];
+	}
+	if( batch1.m_vertexStreams[1] != batch2.m_vertexStreams[1] )
+	{
+		return batch1.m_vertexStreams[1] < batch2.m_vertexStreams[1];
+	}
+	return batch1.m_renderingMode < batch2.m_renderingMode;
 }

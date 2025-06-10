@@ -209,6 +209,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_lights.SetNotify( this );
 	m_effectChildren.SetNotify( this );
 	m_overlayEffects.SetNotify( this );
+	m_decals.SetNotify( this );
 
 	SetControllerVariable( "DirtLevel", m_dirtLevel );
 	SetControllerVariable( "ActivationStrength", m_spaceObjectShipData.y );
@@ -241,6 +242,11 @@ bool EveSpaceObject2::Initialize()
 		{
 			controller->Link( *GetRawRoot() );
 		}
+	}
+
+	for( uint32_t i = 0; i < m_decals.size(); i++ )
+	{
+		m_decals[i]->SetPriority( i );
 	}
 
 	return true;
@@ -349,6 +355,43 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 			if( IEveInheritPropertiesOwnerPtr light = BlueCastPtr( value ) )
 			{
 				light->SetInheritProperties( m_inheritProperties->GetProperties() );
+			}
+		}
+	}
+
+	if( list == &m_decals )
+	{
+		if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED && key == m_decals.size() )
+		{
+			// this is here in case someone calls the append function of bluelist from python. Remove this once the off by one error has been fixed!
+			m_decals[m_decals.size() - 1]->SetPriority( (uint32_t)m_decals.size() - 1 );
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED )
+		{
+			for( size_t i = key; i < m_decals.size(); i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
+			}
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_REMOVED )
+		{
+			for( size_t i = key; i < m_decals.size(); i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
+			}
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_SWAPPED )
+		{
+			m_decals[key]->SetPriority( (uint32_t)key );
+			m_decals[key2]->SetPriority( (uint32_t)key2 );
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_MOVED )
+		{
+			size_t low = min( key, key2 );
+			size_t high = max( key, key2 );
+			for( size_t i = low; i <= high; i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
 			}
 		}
 	}
@@ -1092,7 +1135,8 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 			if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
 			{
 				Tr2RenderBatch batch;
-			batch.SetMaterial( impactOverlayEffect );
+				batch.SetMaterial( impactOverlayEffect );
+				batch.SetPriority( 0xFFFFFFFF );
 				batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
 				batch.SetPerObjectData( perObjectData );
 				batch.SetDrawIndexedInstanced(
@@ -2630,7 +2674,8 @@ void EveSpaceObject2::AddDecal( EveSpaceObjectDecalPtr newDecal )
 	{
 		newDecal->SetHighDetailDecalState( true );
 	}
-	m_decals.Append( newDecal->GetRawRoot() );
+	newDecal->SetPriority( (uint32_t)m_decals.size() );
+	m_decals.Insert( -1, newDecal->GetRawRoot() );
 }
 
 // --------------------------------------------------------------------------------

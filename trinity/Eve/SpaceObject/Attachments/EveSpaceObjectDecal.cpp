@@ -43,6 +43,7 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_minScreenSize( 0 ),
 	m_instanceScreenSize( -1 ),
 	m_batchType( TRIBATCHTYPE_DECAL ),
+	m_priority( 0 ),
 	m_vertexDeclarationOverride( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_instanceData( nullptr ),
 	m_minBounds( 0, 0, 0 ),
@@ -298,6 +299,7 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 	}
 
 	Tr2RenderBatch batch;
+	batch.SetPriority( m_priority );
 	batch.SetMaterial( m_decalEffect );
 	auto declaration = m_vertexDeclarationOverride != Tr2EffectStateManager::UNINITIALIZED_DECLARATION ? m_vertexDeclarationOverride : meshData->m_vertexDeclaration;
 	batch.SetGeometry( declaration, meshData->m_vertexAllocation, m_decalGeometry->ib );
@@ -933,6 +935,11 @@ std::vector<uint32_t> EveSpaceObjectDecal::GetDecalPrimitiveCounts() const
 void EveSpaceObjectDecal::SetBatchType( TriBatchType batchType )
 {
 	m_batchType = batchType;
+}
+
+void EveSpaceObjectDecal::SetPriority( uint32_t priority )
+{
+	m_priority = priority;
 }
 
 // --------------------------------------------------------------------------------
