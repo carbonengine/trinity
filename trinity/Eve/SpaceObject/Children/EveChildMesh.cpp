@@ -47,6 +47,8 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_psData.shipData.y = 1.f;
 	m_psData.shipData.w = 1.f;
 	m_psData.screenSize = Vector4( 0.5f, 0.5f, 0.5f, 1.f );
+
+	m_decals.SetNotify( this );
 }
 
 EveChildMesh::~EveChildMesh()
@@ -62,7 +64,52 @@ bool EveChildMesh::Initialize()
 
 	InitializeAnimation();
 
+	for( uint32_t i = 0; i < m_decals.size(); i++ )
+	{
+		m_decals[i]->SetPriority( i );
+	}
+
 	return true;
+}
+
+void EveChildMesh::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
+{
+	if( list == &m_decals )
+	{
+		if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED && key == m_decals.size() )
+		{
+			// this is here in case someone calls the append function of bluelist from python. Remove this once the off by one error has been fixed!
+			m_decals[m_decals.size() - 1]->SetPriority( (uint32_t)m_decals.size() - 1 );
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED )
+		{
+			for( size_t i = key; i < m_decals.size(); i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
+			}
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_REMOVED )
+		{
+			for( size_t i = key; i < m_decals.size(); i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
+			}
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_SWAPPED )
+		{
+			m_decals[key]->SetPriority( (uint32_t)key );
+			m_decals[key2]->SetPriority( (uint32_t)key2 );
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_MOVED )
+		{
+			size_t low = min( key, key2 );
+			size_t high = max( key, key2 );
+			for( size_t i = low; i <= high; i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
+			}
+		}
+	}
 }
 
 bool EveChildMesh::OnModified( Be::Var* val )
@@ -807,7 +854,8 @@ void EveChildMesh::SetAnimationController( Tr2GrannyAnimation* animation )
 
 void EveChildMesh::AddDecal( EveSpaceObjectDecalPtr newDecal )
 {
-	m_decals.Append( newDecal->GetRawRoot() );
+	newDecal->SetPriority( (uint32_t)m_decals.size() );
+	m_decals.Insert( -1, newDecal->GetRawRoot() );
 }
 
 void EveChildMesh::AddAttachment( IEveSpaceObjectAttachment* attachment )
