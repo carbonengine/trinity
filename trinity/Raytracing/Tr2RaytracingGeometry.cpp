@@ -437,19 +437,112 @@ const Tr2ConstantBufferAL& Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 			TriRtGeometryConstants* data;
 			if( SUCCEEDED( meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Lock( (void**)&data, renderContext ) ) )
 			{
-				data->indexBufferOffset = meshData->m_areas[m_areaIndex].m_firstIndex;
-				data->indexBufferStride = meshData->m_indexAllocation.GetStride();
-				data->vertexBufferStride = meshData->m_vertexAllocation.GetStride();
-				data->texCoord0Offset = 0;
+				*data = TriRtGeometryConstants{};
 				Tr2VertexDefinition def;
 				Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, def );
 				for( auto it = begin( def.m_items ); it != end( def.m_items ); ++it )
 				{
+					if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
+					{
+						data->positionOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->positionType = it->m_dataType;
+
+						uint32_t type = data->positionType;
+						CCP_ASSERT_M(
+							type == Tr2VertexDefinition::DataType::FLOAT32_3,
+							"position type has to be FLOAT32_3!" 
+						);
+					}
+
+					if( it->m_usage == Tr2VertexDefinition::NORMAL && it->m_usageIndex == 0 && it->m_stream == 0 )
+					{
+						data->normalOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->normalType = it->m_dataType;
+
+						uint32_t type = data->normalType;
+						CCP_ASSERT_M(
+							type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+							type == Tr2VertexDefinition::DataType::FLOAT32_3,
+							"normal type has to be FLOAT16_3 or FLOAT32_3!" 
+						);
+					}
+
+					if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
+					{
+						data->tangentOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->tangentType = it->m_dataType;
+
+						uint32_t type = data->tangentType;
+						CCP_ASSERT_M(
+							type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+							type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
+							type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
+							type == Tr2VertexDefinition::DataType::USHORT_4_NORM,
+							"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
+						);
+					}
+
+					if( it->m_usage == Tr2VertexDefinition::BITANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
+					{
+						data->bitangentOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->bitangentType = it->m_dataType;
+
+						uint32_t type = data->bitangentType;
+						CCP_ASSERT_M(
+							type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+							type == Tr2VertexDefinition::DataType::FLOAT32_3,
+							"bitangent type has to be FLOAT16_3 or FLOAT32_3!" 
+						);
+					}
+
 					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
 					{
-						data->texCoord0Offset = it->m_offset;
+						data->texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->texCoord0Type = it->m_dataType;
+
+						uint32_t type = data->texCoord0Type;
+						CCP_ASSERT_M(
+							type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
+							type == Tr2VertexDefinition::DataType::FLOAT32_2,
+							"texCoord0 type has to be FLOAT16_2 or FLOAT32_2!" 
+						);
 					}
+
+					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 1 && it->m_stream == 0 )
+					{
+						data->texCoord1Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->texCoord1Type = it->m_dataType;
+
+						uint32_t type = data->texCoord1Type;
+						CCP_ASSERT_M(
+							type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
+							type == Tr2VertexDefinition::DataType::FLOAT32_2,
+							"texCoord1 type has to be FLOAT16_2 or FLOAT32_2!" 
+						);
+					}
+
+					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 2 && it->m_stream == 0 )
+					{
+						data->texCoord2Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->texCoord2Type = it->m_dataType;
+
+						uint32_t type = data->texCoord2Type;
+						CCP_ASSERT_M(
+							type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
+							type == Tr2VertexDefinition::DataType::FLOAT32_2,
+							"texCoord2 type has to be FLOAT16_2 or FLOAT32_2!" 
+						);
+					}
+
+					// skipping blending data because we get gpu skinned meshes as input (see SkinVertices.fx), so it shouldn't be required for raytracing shaders
 				}
+
+				data->vertexBufferId = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
+				data->vertexBufferStride = meshData->m_vertexAllocation.GetStride();
+				data->indexBufferId = meshData->m_indexAllocation.GetBuffer().GetSrvIndexInHeap();
+				data->indexBufferStride = meshData->m_indexAllocation.GetStride();
+				data->indexOffset = meshData->m_areas[m_areaIndex].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
+
 				meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Unlock( renderContext );
 			}
 		}
@@ -856,17 +949,16 @@ const Tr2BindlessResourcesAL& Tr2RaytracingGeometry::GetBindlessResources() cons
 	return m_usedResources;
 }
 
-void Tr2RaytracingGeometry::AddBindlessResources( const Tr2MeshAreaVector* areas, Tr2RaytracingMesh* rtMesh )
+void Tr2RaytracingGeometry::AddBindlessResources( const Tr2MeshAreaVector& areas, const Tr2RaytracingMesh& rtMesh )
 {
-	// TODO: intern, this is probably causing duplicates in m_usedResources. is that a problem?
-	for( auto& area : *areas )
+	for( auto& area : areas )
 	{
 		uint32_t techniqueIndex;
 		area->GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex );
 		area->GetMaterialInterface()->GetUsedBindlessTextures( techniqueIndex, m_usedResources );
 	}
-	m_usedResources.Add( rtMesh->GetVertexBuffer() );
-	m_usedResources.Add( rtMesh->GetIndexBuffer() );
+	m_usedResources.Add( rtMesh.GetVertexBuffer() );
+	m_usedResources.Add( rtMesh.GetIndexBuffer() );
 }
 
 Tr2RaytracingGeometry::VtxOffsets Tr2RaytracingGeometry::FindOffsets( unsigned declHandle )

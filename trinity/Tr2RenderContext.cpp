@@ -50,8 +50,6 @@ void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& t
 		}
 	};
 
-	// TODO: intern, shouldn't used bindless buffers also be handled here? (with renaming of function names from textures to resources)
-
 	for( auto& batch : batches->GetGdprBatches() )
 	{
 		ProcessBatch( batch );

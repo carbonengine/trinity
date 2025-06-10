@@ -690,7 +690,6 @@ protected:
 	void UpdateRtMesh(const EveUpdateContext& updateContext);
 	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
-	mutable std::vector<Tr2ConstantBufferAL> m_rtVertexBufferDatas;
 
 	Tr2BoneTransformOffsets m_boneOffsets;
 

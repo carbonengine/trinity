@@ -119,7 +119,7 @@ public:
 	void BeginSceneUpdate();
 	void EndSceneUpdate( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void AddGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area, Tr2Material * material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform );
-	void AddBindlessResources( const Tr2MeshAreaVector* decalAreas, Tr2RaytracingMesh* rtMesh );
+	void AddBindlessResources( const Tr2MeshAreaVector& areas, const Tr2RaytracingMesh& rtMesh );
 	bool HasGeometry() const;
 
 	void ReleaseResources( TriStorage s );

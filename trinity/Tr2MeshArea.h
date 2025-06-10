@@ -44,7 +44,7 @@ public:
 
 	void SetMaterial( Tr2EffectPtr mat );
 
-	Tr2Material* GetMaterialInterface() const;
+	Tr2Effect* GetMaterialInterface() const;
 
 	unsigned int GetJointCount() const;
 	void SetJointCount( unsigned int val );
