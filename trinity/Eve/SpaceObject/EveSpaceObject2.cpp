@@ -1136,7 +1136,7 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 			{
 				Tr2RenderBatch batch;
 				batch.SetMaterial( impactOverlayEffect );
-				batch.SetPriority( 0xFFFFFFFF );
+				batch.SetPriority( 0 );
 				batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
 				batch.SetPerObjectData( perObjectData );
 				batch.SetDrawIndexedInstanced(

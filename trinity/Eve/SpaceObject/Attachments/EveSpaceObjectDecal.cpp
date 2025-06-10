@@ -939,7 +939,8 @@ void EveSpaceObjectDecal::SetBatchType( TriBatchType batchType )
 
 void EveSpaceObjectDecal::SetPriority( uint32_t priority )
 {
-	m_priority = priority;
+	// impactOverlayEffect has to be rendered first and has a priority of 0, so this is just an arbitrary offset
+	m_priority = priority + 100;
 }
 
 // --------------------------------------------------------------------------------

@@ -216,7 +216,7 @@ bool Compare( const Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 )
 {
 	if ( batch1.m_priority != batch2.m_priority )
 	{
-		return batch1.m_priority > batch2.m_priority;
+		return batch1.m_priority < batch2.m_priority;
 	}
 	if( batch1.m_shader != batch2.m_shader )
 	{
