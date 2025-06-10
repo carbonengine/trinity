@@ -109,6 +109,7 @@ struct Tr2RenderBatch
 };
 
 bool CanBeBinned( Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 );
+bool Compare( const Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 );
 
 template <class ForwardIt>
 void Tr2GdprBatchFullPartition( ForwardIt first, ForwardIt last )
