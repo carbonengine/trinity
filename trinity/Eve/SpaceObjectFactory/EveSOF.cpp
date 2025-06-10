@@ -2779,9 +2779,18 @@ void EveSOF::SetupDecalSets( IEveSpaceObjectDecalOwnerPtr obj, const EveSOFDNAPt
 				decal->SetMinScreenSize( MIN_DECAL_SCREEN_SIZE );
 
 				// pre-calculated index buffer is only valid for first multi-hull
-				if( hullIdx != 0 )
+				if( dna->GetMultiHullCount() > 1 )
 				{
-					decal->ForceRebuildIndices();
+					auto geometryPath = dna->GetHullGeometryResPath();
+					transform( geometryPath.begin(), geometryPath.end(), geometryPath.begin(), ::tolower );
+					for( auto& mhIB : itemData.multiHullIndexBuffers )
+					{
+						if( mhIB.combinedGeometryResPath == geometryPath )
+						{
+							decal->SetIndices( mhIB.indexBuffers );
+							break;
+						}
+					}
 				}
 				else
 				{

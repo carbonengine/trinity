@@ -1221,6 +1221,20 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataDecalIndexBuffer );
 BLUE_DECLARE_VECTOR( EveSOFDataDecalIndexBuffer );
 
+BLUE_CLASS( EveSOFDataMultiHullDecalIndexBuffers ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	EveSOFDataMultiHullDecalIndexBuffers( IRoot* lockobj = NULL );
+
+	std::string m_combinedGeometryResPath;
+	PEveSOFDataDecalIndexBufferVector m_indexBuffers;
+};
+TYPEDEF_BLUECLASS( EveSOFDataMultiHullDecalIndexBuffers );
+BLUE_DECLARE_VECTOR( EveSOFDataMultiHullDecalIndexBuffers );
+
 BLUE_CLASS( EveSOFDataHullDecalSetItem ) :
 	public IRoot
 {
@@ -1254,6 +1268,7 @@ public:
 	PEveSOFDataTextureVector m_textures;
 	PEveSOFDataParameterVector m_parameters;
 	PEveSOFDataDecalIndexBufferVector m_indexBuffers;
+	PEveSOFDataMultiHullDecalIndexBuffersVector m_multiHullIndexBuffers;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullDecalSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullDecalSetItem );

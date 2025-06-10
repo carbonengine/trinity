@@ -155,6 +155,16 @@ LightData EveSOFDataMgr::SpotLightAttachment::AsLightData( Color& color, float s
 	return data;
 }
 
+EveSOFDataMgr::MultiHullDecalIndexBuffers::MultiHullDecalIndexBuffers( const EveSOFDataMultiHullDecalIndexBuffers& buffers ) :
+	combinedGeometryResPath( buffers.m_combinedGeometryResPath )
+{
+	indexBuffers.reserve( buffers.m_indexBuffers.size() );
+	for( auto& buffer : buffers.m_indexBuffers )
+	{
+		indexBuffers.push_back( buffer->m_indexBuffer );
+	}
+}
+
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -943,6 +953,11 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			for( const auto buffer : itemPtr->m_indexBuffers )
 			{
 				itemData.indexBuffers.push_back( buffer->m_indexBuffer );
+			}
+
+			for ( const auto& mhBuffers : itemPtr->m_multiHullIndexBuffers )
+			{
+				itemData.multiHullIndexBuffers.push_back( MultiHullDecalIndexBuffers( *mhBuffers ) );
 			}
 
 			for( auto hdtit = itemPtr->m_textures.begin(); hdtit != itemPtr->m_textures.end(); ++hdtit )
