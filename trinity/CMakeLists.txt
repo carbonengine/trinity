@@ -50,8 +50,6 @@ set(PUBLIC_HEADER_FILES
 )
 
 set(_SOURCES
-    Audio/ITr2AudEmitter.h
-    Audio/ITr2Audio.h
     Audio/Tr2AudioStretchAuto.cpp
     Audio/Tr2AudioStretchAuto.h
     Audio/Tr2AudioStretchAuto_Blue.cpp
@@ -1652,6 +1650,7 @@ find_package(CcpMath REQUIRED NO_CMAKE_PATH)
 find_package(ImageIO REQUIRED NO_CMAKE_PATH)
 find_package(JPEG REQUIRED NO_CMAKE_PATH)
 find_package(CcpParser REQUIRED NO_CMAKE_PATH)
+find_package(CarbonTrinityAudioAPI REQUIRED)
 
 # utility function that sets properties shared between all trinity targets
 function(set_shared_trinity_properties target)
@@ -1659,6 +1658,8 @@ function(set_shared_trinity_properties target)
     target_include_directories(${target} PUBLIC "$<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>")
 
     target_link_libraries(${target}
+        PUBLIC
+            CarbonTrinityAudioAPI
         PRIVATE
             ImageIO
             Blue

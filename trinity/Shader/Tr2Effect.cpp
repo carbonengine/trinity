@@ -1503,7 +1503,8 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 		else if( TriVariable* v = GetVariableStore().FindVariable( name ) )
 		{
 			if( v->GetType() == TRIVARIABLE_TEXTURE_RES || 
-				v->GetType() == TRIVARIABLE_GPUBUFFER )
+				v->GetType() == TRIVARIABLE_GPUBUFFER ||
+				ss.isAutoregister )
 			{
 				param.m_sourceValue = v;
 			}
