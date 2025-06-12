@@ -614,7 +614,7 @@ void EveChildCloud2::UpdateSyncronous( const EveUpdateContext& updateContext, co
 				{
 					if( TriTextureParameterPtr textureParam = BlueCastPtr( param ) )
 					{
-						if( auto resource = textureParam->GetResource() )
+						if( textureParam->GetResource() )
 						{
 							if( auto texture = textureParam->GetResource()->GetTexture() )
 							{
