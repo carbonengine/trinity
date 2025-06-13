@@ -1021,11 +1021,10 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		return;
 	}
 
-	TriRenderBatchAreaBlocksWithSharedMaterial* shadowMeshAreas[2] = { &m_shadowMeshOpaqueAreas, &m_shadowMeshDecalAreas };
-	for( TriRenderBatchAreaBlocksWithSharedMaterial* shadowMeshArea : shadowMeshAreas )
+	for( TriRenderBatchAreaBlocksWithSharedMaterial& shadowMeshArea : m_shadowMeshOpaqueAreas )
 	{
-		auto& shadowAreas = shadowMeshArea->m_areaBlockVector;
-		Tr2Material* shadowShader = shadowMeshArea->m_shaderMaterial;
+		auto& shadowAreas = shadowMeshArea.m_areaBlockVector;
+		Tr2Material* shadowShader = shadowMeshArea.m_shaderMaterial;
 		for( auto& areaBlock : shadowAreas )
 		{
 			if( auto primCount = GetPrimitiveCount( *mesh, areaBlock.m_startIndex, areaBlock.m_count ) )
@@ -1547,19 +1546,15 @@ void EveSpaceObject2::UpdateRtMesh( const EveUpdateContext& updateContext )
 	{
 		return;
 	}
-
-	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
-	for( auto areas : allAreas )
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	if( !areas->empty() )
 	{
-		if( !areas->empty() )
-		{
-			auto rtMesh = m_mesh->GetOrCreateRtMesh();
-			rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_meshScreenSize );
+		auto rtMesh = m_mesh->GetOrCreateRtMesh();
+		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_meshScreenSize );
 
-			for( auto it = begin( *areas ); it != end( *areas ); ++it )
-			{
-				( *it )->GetOrCreateRtMeshArea();
-			}
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			( *it )->GetOrCreateRtMeshArea();
 		}
 	}
 }
@@ -1592,27 +1587,14 @@ void EveSpaceObject2::UpdateRtSkeleton()
     
 	bool hasSkinned = false;
     
-	Tr2MeshAreaVector* allAreas[] = { m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), m_mesh->GetAreas( TRIBATCHTYPE_DECAL ) };
-	for( auto areas : allAreas )
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	for( auto& area : *areas )
 	{
-		if( areas->empty() )
-		{
-			continue;
-		}
+		auto index = area->GetIndex();
 		
-		for( auto& area : *areas )
+		if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
 		{
-			auto index = area->GetIndex();
-			
-			if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
-			{
-				hasSkinned = true;
-				break;
-			}
-		}
-		
-		if( hasSkinned )
-		{
+			hasSkinned = true;
 			break;
 		}
 	}
@@ -1630,16 +1612,13 @@ void EveSpaceObject2::UpdateRtSkeleton()
 
 	if( skeletonChanged )
 	{
-		for( auto areas : allAreas )
+		//Skeleton has changed, so mark all area BLAS's as out-of-date.
+		for( auto& area : *areas )
 		{
-			//Skeleton has changed, so mark all area BLAS's as out-of-date.
-			for( auto& area : *areas )
+			auto meshAreaIndex = area->GetIndex();
+			if( meshAreaIndex >= 0 && meshAreaIndex < meshData->m_areas.size() && meshData->m_areas[meshAreaIndex].m_isSkinned )
 			{
-				auto meshAreaIndex = area->GetIndex();
-				if( meshAreaIndex >= 0 && meshAreaIndex < meshData->m_areas.size() && meshData->m_areas[meshAreaIndex].m_isSkinned )
-				{
-					area->GetRtMeshArea()->MarkBlasOutdated();
-				}
+				area->GetRtMeshArea()->MarkBlasOutdated();
 			}
 		}
 	}
@@ -1865,8 +1844,7 @@ void EveSpaceObject2::ReleaseCachedData( BlueAsyncRes* p )
 	{
 		m_overlayMeshAreaBlocks[i].clear();
 	}
-	m_shadowMeshOpaqueAreas.Clear();
-	m_shadowMeshDecalAreas.Clear();
+	m_shadowMeshOpaqueAreas.clear();
 }
 
 void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
@@ -1884,10 +1862,11 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 			TriRenderBatchAreaBlock::Optimize( m_overlayMeshAreaBlocks[i] );
 		}
 
-		m_mesh->CollectAreaBlocksWithSharedMaterial( m_shadowMeshOpaqueAreas, TRIBATCHTYPE_OPAQUE );
-		m_mesh->CollectAreaBlocksWithSharedMaterial( m_shadowMeshDecalAreas, TRIBATCHTYPE_DECAL );
-		m_shadowMeshOpaqueAreas.Optimize();
-		m_shadowMeshDecalAreas.Optimize();
+		m_mesh->CollectAreaBlocksWithSharedMaterials( m_shadowMeshOpaqueAreas, TRIBATCHTYPE_OPAQUE );
+		for( auto& collector : m_shadowMeshOpaqueAreas )
+		{
+			collector.Optimize();
+		}
 	}
 
 	// If we already have a model we don't want to go through here
@@ -3674,122 +3653,28 @@ void EveSpaceObject2::SetMute( bool isMute )
 	}
 }
 
-void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* instanceTransform, Tr2PrimaryRenderContext& renderContext, Tr2MeshBasePtr mesh,
-	Tr2ConstantBufferAL& opaquePerObjectData, uint32_t decalPerObjectDatasCount, Tr2ConstantBufferAL* decalPerObjectDatas )
+void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* instanceTransform, Tr2PrimaryRenderContext& renderContext, Tr2ConstantBufferAL& perObjectData )
 {
-	auto rtMesh = mesh->GetRtMesh();
-
-#pragma region opque geometry
-	const Tr2MeshAreaVector* opaqueAreas = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-
 	auto size = sizeof( EveSpaceObjectPSData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
 
-	if( !opaquePerObjectData.IsValid() || opaquePerObjectData.GetSize() != size )
+	if( !perObjectData.IsValid() || perObjectData.GetSize() != size )
 	{
-		opaquePerObjectData.Create( uint32_t( size ), renderContext );
+		perObjectData.Create( uint32_t( size ), renderContext );
 	}
 
-	EveSpaceObjectPSData* perObjectData;
-	opaquePerObjectData.Lock( (void**)&perObjectData, renderContext );
-	*perObjectData = psData;
+	EveSpaceObjectPSData* bufferPtr;
+	perObjectData.Lock( (void**)&bufferPtr, renderContext );
+	*bufferPtr = psData;
 	if( instanceTransform )
 	{
-		*reinterpret_cast<Matrix*>( perObjectData + 1 ) = Transpose( *instanceTransform );
+		*reinterpret_cast<Matrix*>( bufferPtr + 1 ) = Transpose( *instanceTransform );
 	}
-	opaquePerObjectData.Unlock( renderContext );
-#pragma endregion
-
-#pragma region decal geometry
-	const Tr2MeshAreaVector* decalAreas = mesh->GetAreas( TRIBATCHTYPE_DECAL );
-
-	struct RtDecalPerObjectData
-	{
-		EveSpaceObjectPSData m_psData;
-		struct SRVData
-		{
-			uint32_t vertexBufferId;
-			uint32_t vertexBufferStride;
-			uint32_t vertexBufferOffset;
-			uint32_t indexBufferId;
-			uint32_t indexBufferStride;
-			uint32_t indexBufferOffset;
-			uint32_t texCoord0Offset;
-			uint32_t alphaTextureId;
-		} m_srvData;
-	};
-
-	
-	CCP_ASSERT_M( decalPerObjectDatasCount == (uint32_t)decalAreas->size(), "A wrong amount of constant buffers were provided for raytraced alpha cutouts!" );
-
-	auto meshData = rtMesh->GetMeshData();
-
-	Tr2VertexDefinition def;
-	Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, def );
-	uint32_t vertexBufferOffset = 0;
-	uint32_t texCoord0Offset = 0;
-	for( auto it = begin( def.m_items ); it != end( def.m_items ); ++it )
-	{
-		if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			vertexBufferOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
-		}
-	}
-
-	uint32_t i = 0;
-	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
-	{
-		auto area = *it;
-
-		auto size = sizeof( RtDecalPerObjectData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
-		if( !decalPerObjectDatas[i].IsValid() || decalPerObjectDatas[i].GetSize() != size )
-		{
-			decalPerObjectDatas[i].Create( uint32_t( size ), renderContext );
-		}
-
-		RtDecalPerObjectData* rtPerObjectData;
-		decalPerObjectDatas[i].Lock( (void**)&rtPerObjectData, renderContext );
-
-		rtPerObjectData->m_srvData.vertexBufferId = rtMesh->GetVertexBuffer().GetSrvIndexInHeap();
-		rtPerObjectData->m_srvData.vertexBufferStride = meshData->m_vertexAllocation.GetStride();
-		rtPerObjectData->m_srvData.indexBufferId = rtMesh->GetIndexBuffer().GetSrvIndexInHeap();
-		rtPerObjectData->m_srvData.indexBufferStride = meshData->m_indexAllocation.GetStride();
-		rtPerObjectData->m_srvData.indexBufferOffset = meshData->m_areas[area->GetIndex()].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
-		rtPerObjectData->m_srvData.vertexBufferOffset = vertexBufferOffset;
-		rtPerObjectData->m_srvData.texCoord0Offset = texCoord0Offset;
-
-		ITr2TextureProviderPtr transparencyTextureProvider = area->GetTransparencyTexture();
-		Tr2TextureAL* transparencyTexture = nullptr;
-		if( transparencyTextureProvider )
-		{
-			transparencyTexture = transparencyTextureProvider->GetTexture();
-			if( transparencyTexture )
-			{
-				rtPerObjectData->m_srvData.alphaTextureId = transparencyTexture->GetSrvIndexInHeap();
-			}
-		}
-		else
-		{
-			rtPerObjectData->m_srvData.alphaTextureId = 0;
-		}
-
-		rtPerObjectData->m_psData = psData;
-		if( instanceTransform )
-		{
-			*reinterpret_cast<Matrix*>( rtPerObjectData + 1 ) = Transpose( *instanceTransform );
-		}
-		decalPerObjectDatas[i].Unlock( renderContext );
-	}
-#pragma endregion
+	perObjectData.Unlock( renderContext );
 }
 
 void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
-	if( !m_mesh || !m_display )
+	if( !m_mesh || !m_display || !m_castShadow )
 	{
 		return;
 	}
@@ -3805,55 +3690,38 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	}
 
 	auto rtMesh = m_mesh->GetRtMesh();
-	if( !rtMesh )
+
+	if( !rtMesh || !rtMesh->IsGood() )
 	{
 		return;
 	}
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-
-	const Tr2MeshAreaVector* decalAreas = m_mesh->GetAreas( TRIBATCHTYPE_DECAL );
-
-	if( m_rtDecalPerObjectDatas.size() != decalAreas->size() )
-	{
-		m_rtDecalPerObjectDatas.resize( decalAreas->size() );
-	}
-
-	UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_mesh, m_rtOpaquePerObjectData, (uint32_t)m_rtDecalPerObjectDatas.size(), m_rtDecalPerObjectDatas.data() );
-
-	#pragma region opque geometry
+	
 	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
-	for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it )
-	{
-		auto area = *it;
-		if( area->GetDisplay() && area->IsCastingShadows() )
-		{
-			auto geometry = area->GetRtMeshArea();
-			if( geometry )
-			{
-				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtOpaquePerObjectData, m_worldTransform );
-			}
-		}
-	}
-	#pragma endregion
+	UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_rtPerObjectData );
 	
-	#pragma region decal geometry
-	uint32_t i = 0;
-	for( Tr2MeshAreaVector::const_iterator it = decalAreas->begin(); it != decalAreas->end(); ++it, ++i )
+	#pragma region geometry
+	uint32_t vertexBufferDataIndex = 0;
+	for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it, ++vertexBufferDataIndex )
 	{
 		auto area = *it;
-
 		if( area->GetDisplay() && area->IsCastingShadows() )
 		{
 			auto geometry = area->GetRtMeshArea();
 			if( geometry )
 			{
-				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtDecalPerObjectDatas[i], m_worldTransform );
+				const Tr2ConstantBufferAL* vertexBufferData = nullptr;
+				if( area->HasVertexBufferAccessInRtShadow() )
+				{
+					vertexBufferData = &area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
+				}
+				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_worldTransform );
 			}
 		}
 	}
+#pragma endregion
 
-	rtManager.GetGeometry().AddBindlessResourcesForDecals( decalAreas, rtMesh );
-	#pragma endregion
+	rtManager.GetGeometry().AddBindlessResources( *opaqueAreas, *rtMesh );
 }

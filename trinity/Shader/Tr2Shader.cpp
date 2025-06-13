@@ -10,7 +10,8 @@ using namespace Tr2RenderContextEnum;
 //   Constructor.  Initializes members to default values.
 // --------------------------------------------------------------------------------------
 Tr2Shader::Tr2Shader( IRoot* lockobj )
-	:m_sortValue( 0 )
+	:m_sortValue( 0 ),
+	m_hasVertexBufferAccessInRtShadow( false )
 {	
 }
 
@@ -203,6 +204,12 @@ Tr2EffectDescription& Tr2Shader::GetEffect()
 }
 
 // --------------------------------------------------------------------------------------
+bool Tr2Shader::HasVertexBufferAccessInRtShadow()
+{
+	return m_hasVertexBufferAccessInRtShadow;
+}
+
+// --------------------------------------------------------------------------------------
 // Description:
 //   Refreshes effect-dependent variables.
 // --------------------------------------------------------------------------------------
@@ -241,6 +248,26 @@ void Tr2Shader::ProcessEffect()
 			if( auto program = renderContext.m_esm.GetShaderProgram( pass.shaderProgram ) )
 			{
 				pass.indirectLayout = Tr2IndirectDrawBufferLayout( *program, renderContext );
+			}
+		}
+	}
+
+	m_hasVertexBufferAccessInRtShadow = false;
+	const BlueSharedString techniqueName = BlueSharedString( "RtShadow" );
+	auto effect = GetEffect();
+	uint32_t techniqueIndex;
+	if ( GetTechniqueIndex( techniqueName, techniqueIndex ) )
+	{
+		for( const auto& library : effect.techniques[techniqueIndex].libraries )
+		{
+			for( const auto& localRegister : library.localInput.signature.registers )
+			{
+				if( localRegister.registerType == Tr2ShaderRegisterAL::CONSTANT_BUFFER &&
+					localRegister.registerSpace == 8 &&
+					localRegister.registerIndex == Tr2Renderer::GetPerObjectRTVertexBufferDataRegister() )
+				{
+					m_hasVertexBufferAccessInRtShadow = true;
+				}
 			}
 		}
 	}
