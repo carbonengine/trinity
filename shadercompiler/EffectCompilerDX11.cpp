@@ -1191,9 +1191,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 {
 	ZoneScoped;
 
-	CComPtr<ID3D10Blob> effectData;
-	CComPtr<ID3D10Blob> errors;
-
 	ParserState state( MakeInlineString( source, source + sourceLength ) );
 	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
@@ -1325,8 +1322,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						profile = "ps_5_0";
 					}
 				}
-				effectData = nullptr;
-				errors = nullptr;
+				ID3D10Blob* effectData = nullptr;
+				CComPtr<ID3D10Blob> errors = nullptr;
 
 
 				if( shaderNode->GetChild( 1 )->GetSymbol() == nullptr )
@@ -1378,6 +1375,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 				if( !hasCompiled )
 				{
+					CComPtr<ID3D10Blob> compiledEffectData;
 					HRESULT hr;
 					{
 						ZoneScopedN( "D3DCompile" );
@@ -1391,7 +1389,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							profile.c_str(),
 							(compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | (g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0),
 							0,
-							&effectData,
+							&compiledEffectData,
 							&errors );
 					}
 					if( FAILED( hr ) )
@@ -1408,7 +1406,25 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 					{
 						std::lock_guard scope( m_compiledCS );
-						m_compiled[code] = effectData;
+						auto found = m_compiled.find( code );
+						if ( found != end( m_compiled ) )
+						{
+							// let's not overwrite stuff in the cache, so that we don't mess with its reference counter
+							effectData = found->second;
+							if( !effectData )
+							{
+								// This check should be unnecessary, because if our compilation succeeded, then the previous compilation should also have succeeded.
+								// But better safe than sorry, I guess... Might wanna remove this after discussion with Filipp.
+								return false;
+							}
+						}
+						else
+						{
+							effectData = compiledEffectData;
+							// I admit this is weird. Just trying to make sure that the reference counter is not modified outside lockguard's scope
+							m_compiled[code] = CComPtr<ID3D10Blob>();
+							m_compiled[code].Attach( compiledEffectData.Detach() );
+						}
 					}
 
 					if( g_printWarnings && errors )
@@ -1417,6 +1433,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 				}
 
+				auto handleStrippedData = [&]( ID3DBlob* blob ) 
+				{
+					// No idea what happens when assigning strippedEffectData = effectData, with effectData now being a raw pointer, and not taking any chances...
+					// Also, is the unstripped stuff what we want for shader debugging? :O
+					stage.shaderSize = uint32_t( blob->GetBufferSize() );
+					stage.shaderDataStr = g_stringTable.AddString( blob->GetBufferPointer(), blob->GetBufferSize() );
+					stage.source = code;
+				};
 				CComPtr<ID3DBlob> strippedEffectData;
 				{
 					ZoneScopedN( "D3DStripShader" );
@@ -1426,12 +1450,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
 						&strippedEffectData ) ) )
 					{
-						strippedEffectData = effectData;
+						handleStrippedData( effectData );
+					}
+					else
+					{
+						handleStrippedData( strippedEffectData );
 					}
 				}
-				stage.shaderSize = uint32_t( strippedEffectData->GetBufferSize() );
-				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
-				stage.source = code;
+				
 
 
 				CComPtr<ID3D11ShaderReflection> reflection;
