@@ -35,6 +35,7 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 	m_displayFilter( SHADER_ALL ),
 	m_worldVelocity( 0, 0, 0 ),
 	m_display( true ),
+	m_previousDisplay( true ),
 	m_mute( false ),
 	m_isAlwaysOn( false ),
 	m_isPlacementRoot( false ),
@@ -73,7 +74,15 @@ bool EveChildContainer::Initialize()
 
 bool EveChildContainer::OnModified( Be::Var* val )
 {
-	if( IsMatch( val, m_display ) || IsMatch( val, m_displayFilter ) )
+	if( IsMatch( val, m_display ) )
+	{
+		if( m_previousDisplay != m_display )
+		{
+			m_previousDisplay = m_display;
+			ReRegister();
+		}
+	}
+	else if( IsMatch( val, m_displayFilter ) )
 	{
 		ReRegister();
 	}
