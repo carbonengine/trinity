@@ -163,7 +163,8 @@ protected:
 	EveSpaceObjectPSData m_psData;
 	EveSpaceObjectVSData m_vsData;
 
-	bool m_display;
+	bool m_display, m_previousDisplay;
+
 	bool m_isVisible;
 	bool m_instancesVisible;
 	bool m_castShadow;
