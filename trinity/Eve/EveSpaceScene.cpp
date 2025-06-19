@@ -208,7 +208,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_primaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_primaryBatches[TRIBATCHTYPE_DECAL] = CCP_NEW( "EveSpaceScene/m_decalBatches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
-	m_primaryBatches[TRIBATCHTYPE_DECAL_ADDITIVE] = CCP_NEW( "EveSpaceScene/m_decalAdditiveBatches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_primaryBatches[TRIBATCHTYPE_ADDITIVE] = CCP_NEW( "EveSpaceScene/m_additiveBatches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_primaryBatches[TRIBATCHTYPE_DISTORTION] = CCP_NEW( "EveSpaceScene/m_distortionBatches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_primaryBatches[TRIBATCHTYPE_TRANSPARENT] = CCP_NEW( "EveSpaceScene/m_sortedBatches" ) TriRenderBatchAccumulator<>( allocator );
@@ -216,7 +215,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 
 	m_secondaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_secondaryBatches[TRIBATCHTYPE_DECAL] = CCP_NEW( "EveSpaceScene/m_decalBatches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
-	m_secondaryBatches[TRIBATCHTYPE_DECAL_ADDITIVE] = CCP_NEW( "EveSpaceScene/m_decalAdditiveBatches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_secondaryBatches[TRIBATCHTYPE_ADDITIVE] = CCP_NEW( "EveSpaceScene/m_additiveBatches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_secondaryBatches[TRIBATCHTYPE_DISTORTION] = CCP_NEW( "EveSpaceScene/m_distortionBatches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_secondaryBatches[TRIBATCHTYPE_TRANSPARENT] = CCP_NEW( "EveSpaceScene/m_sortedBatches2" ) TriRenderBatchAccumulator<>( allocator );
@@ -224,7 +222,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 
 	m_perThreadBatches[TRIBATCHTYPE_OPAQUE] = {};
 	m_perThreadBatches[TRIBATCHTYPE_DECAL] = {};
-	m_perThreadBatches[TRIBATCHTYPE_DECAL_ADDITIVE] = {};
 	m_perThreadBatches[TRIBATCHTYPE_ADDITIVE] = {};
 	m_perThreadBatches[TRIBATCHTYPE_DISTORTION] = {};
 	m_perThreadBatches[TRIBATCHTYPE_TRANSPARENT] = {};
@@ -909,7 +906,6 @@ void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& 
 		{
 			TRIBATCHTYPE_OPAQUE,
 			TRIBATCHTYPE_DECAL,
-			TRIBATCHTYPE_DECAL_ADDITIVE,
 			TRIBATCHTYPE_ADDITIVE,
 			TRIBATCHTYPE_DEPTH,
 			TRIBATCHTYPE_DISTORTION
@@ -1084,16 +1080,12 @@ void EveSpaceScene::RenderOpaqueBatches( BatchMap& batches, Tr2RenderContext& re
 		renderContext.RenderBatchesWithOverride( batches[TRIBATCHTYPE_OPAQUE], visualizerEffect.effect );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DECAL );
 		renderContext.RenderBatchesWithOverride( batches[TRIBATCHTYPE_DECAL], visualizerEffect.effect );
-		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA_ADDITIVE );
-		renderContext.RenderBatchesWithOverride( batches[TRIBATCHTYPE_DECAL_ADDITIVE], visualizerEffect.effect );
 		break;
 	case VisualizerEffect::FULL_SCREEN_QUAD_OVERLAY:
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatches( batches[TRIBATCHTYPE_OPAQUE] );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DECAL );
 		renderContext.RenderBatches( batches[TRIBATCHTYPE_DECAL] );
-		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA_ADDITIVE );
-		renderContext.RenderBatches( batches[TRIBATCHTYPE_DECAL_ADDITIVE] );
 		break;
 	default:
 		break;
@@ -2123,7 +2115,7 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 			RenderOpaqueBatches( m_secondaryBatches, renderContext );
 			RenderTransparentBatches( m_secondaryBatches, renderContext );
 
-			if( m_secondaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() || m_secondaryBatches[TRIBATCHTYPE_DECAL]->GetBatchCount() || m_secondaryBatches[TRIBATCHTYPE_DECAL_ADDITIVE]->GetBatchCount() )
+			if( m_secondaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() || m_secondaryBatches[TRIBATCHTYPE_DECAL]->GetBatchCount() )
 			{
 				renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
 			}

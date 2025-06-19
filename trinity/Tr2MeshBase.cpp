@@ -27,7 +27,6 @@ Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
 	PARENTLOCK( m_decalPrepassAreas ),
 	PARENTLOCK( m_flareAreas ),
 	PARENTLOCK( m_distortionAreas ),
-	PARENTLOCK( m_decalAdditiveAreas ),
 	m_display( true ),
 	m_meshIndex( 0 ),
     m_pBoneList(NULL),
@@ -64,7 +63,6 @@ Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
 	m_areaLookupArray[ TRIBATCHTYPE_GEOMETRY_ERASER ] = &m_geometryEraserAreas;
 	m_areaLookupArray[ TRIBATCHTYPE_FLARE ] = &m_flareAreas;
 	m_areaLookupArray[ TRIBATCHTYPE_DISTORTION ] = &m_distortionAreas;
-	m_areaLookupArray[TRIBATCHTYPE_DECAL_ADDITIVE] = &m_decalAdditiveAreas;
 }
 
 
