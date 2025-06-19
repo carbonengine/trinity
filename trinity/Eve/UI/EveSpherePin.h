@@ -166,8 +166,6 @@ private:
 
 	int m_rebuildIndices;
 	EveSpherePinIndexTree* m_tree;
-
-	static std::map<TriGeometryResPtr, EveSpherePinIndexTree*>* s_treeMap;
 };
 
 TYPEDEF_BLUECLASS( EveSpherePin );
