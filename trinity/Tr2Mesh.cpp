@@ -63,6 +63,10 @@ void Tr2Mesh::SetGeometryRes( TriGeometryRes* res )
 	if( m_geometryResource )
 	{
 		m_geometryResource->AddNotifyTarget( this );
+		if( HasReversedAreas() )
+		{
+			m_geometryResource->RequestReversedIndexBuffers();
+		}
 	}
 }
 
@@ -79,6 +83,10 @@ void Tr2Mesh::SetLowResGeometryRes( TriGeometryRes* res )
 	if( m_lowResGeometryResource )
 	{
 		m_lowResGeometryResource->AddNotifyTarget( this );
+		if( HasReversedAreas() )
+		{
+			m_lowResGeometryResource->RequestReversedIndexBuffers();
+		}
 	}
 }
 
@@ -135,7 +143,6 @@ void Tr2Mesh::RebuildCachedData( BlueAsyncRes* p )
 	if( p == m_geometryResource || p == m_lowResGeometryResource )
 	{
 		CacheBounds();
-		ReverseIndexBufferIfNeeded();
 	}
 	if( p == m_geometryResource )
 	{
@@ -170,4 +177,16 @@ TriGeometryRes* Tr2Mesh::GetGeometryResource() const
 bool Tr2Mesh::IsLoading() const
 {
 	return !m_loadFence.IsReached();
+}
+
+void Tr2Mesh::ReverseIndexBuffers()
+{
+	if( m_geometryResource )
+	{
+		m_geometryResource->RequestReversedIndexBuffers();
+	}
+	if( m_lowResGeometryResource )
+	{
+		m_lowResGeometryResource->RequestReversedIndexBuffers();
+	}
 }

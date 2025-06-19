@@ -87,8 +87,8 @@ public:
 
 	void UseWithScreenSize( float screenSize, float worldRadius ) const;
 
-	void ReverseIndexBufferIfNeeded();
-	void ReverseIndexBuffers();
+	virtual void ReverseIndexBuffers();
+	bool HasReversedAreas() const;
 
 protected:
 	unsigned int FindJoint( const std::string* boneList, const int numBones, const char* name ) const;

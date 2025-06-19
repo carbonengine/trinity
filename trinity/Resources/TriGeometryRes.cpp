@@ -181,7 +181,43 @@ uint32_t GetPrimitiveCount( const TriGeometryResMeshData& mesh, uint32_t index, 
 	return primCount;
 }
 
+namespace
+{
+ALResult ReverseIndexBuffer( TriGeometryResMeshData& mesh, granny_mesh& grannyMesh, Tr2RenderContext& renderContext ) 
+{
+	uint32_t bytesPerIndex = 2;
+	auto indexCount = grannyMesh.PrimaryTopology->Index16Count;
+	if( indexCount == 0 )
+	{
+		indexCount = grannyMesh.PrimaryTopology->IndexCount;
+		if( indexCount == 0 )
+		{
+			return S_OK;
+		}
+		if( grannyMesh.PrimaryVertexData->VertexCount > 65535 )
+		{
+			bytesPerIndex = 4;
+		}
+	}
 
+	std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
+	GrannyCopyMeshIndices( &grannyMesh, bytesPerIndex, tempBuffer.data() );
+
+	if( bytesPerIndex == 2 )
+	{
+		std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
+	}
+	else
+	{
+		std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
+	}
+
+	CR_RETURN_HR( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, mesh.m_reversedIndexAllocation ) );
+	mesh.m_reversedIndicesValid = true;
+	return S_OK;
+}
+
+}
 
 
 TriGeometryRes::TriGeometryRes(IRoot* lockobj) :
@@ -1523,60 +1559,47 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 {
 }
 
-// -------------------------------------------------------------
-// Description:
-//   Reverses the original mesh index buffer. This is needed for
-//   hair rendering to render hair meshes back-side in "backwards"
-//   order.
-// -------------------------------------------------------------
-void TriGeometryRes::ReverseIndexBuffer( TriGeometryResMeshData& meshData, Tr2RenderContext& renderContext )
+void TriGeometryRes::RequestReversedIndexBuffers()
 {
-	if( !meshData.m_allocationsValid)
+	if ( m_reversedIndexBuffersRequested )
 	{
 		return;
 	}
-	if( meshData.m_reversedIndicesValid ) // already done?
+	m_reversedIndexBuffersRequested = true;
+	if( !m_isPrepared )
 	{
 		return;
 	}
-
-	auto& source = meshData.m_indexAllocation;
-
-	std::unique_ptr<uint8_t[]> reversedData( new uint8_t[source.GetSize()] );
-	if( source.GetStride() == 2 )
+	if( m_sourceGranny )
 	{
-		const uint16_t* originalData = nullptr;
-		CR_RETURN( source.MapForReading( originalData, renderContext ) );
-		ON_BLOCK_EXIT( [&] { source.UnmapForReading( renderContext ); } );
-
-		uint16_t *invertedData = reinterpret_cast<uint16_t*>( reversedData.get() );
-
-		unsigned length = meshData.m_primitiveCount * 3;
-		for( unsigned int i = 0; i < length; ++i )
+		if( !m_isGood )
 		{
-			invertedData[length - i - 1] = originalData[i];
+			return;
+		}
+		granny_file* f = m_sourceGranny->GetGrannyFile();
+		if( !f )
+		{
+			return;
+		}
+		granny_file_info* gi = GrannyGetFileInfo( f );
+
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		for( auto& mesh : m_meshes )
+		{
+			auto grannyMesh = gi->Meshes[mesh->m_grannyMeshIndex];
+			ReverseIndexBuffer( *mesh, *grannyMesh, renderContext );
+		}
+		for( auto& mesh : m_meshLods )
+		{
+			auto grannyMesh = gi->Meshes[mesh->m_grannyMeshIndex];
+			ReverseIndexBuffer( *mesh, *grannyMesh, renderContext );
 		}
 	}
 	else
 	{
-		const uint32_t* originalData = nullptr;
-		CR_RETURN( source.MapForReading( originalData, renderContext ) );
-		ON_BLOCK_EXIT( [&] { source.UnmapForReading( renderContext ); } );
-
-		uint16_t *invertedData = reinterpret_cast<uint16_t*>( reversedData.get() );
-
-		unsigned length = meshData.m_primitiveCount * 3;
-		for( unsigned int i = 0; i < length; ++i )
-		{
-			invertedData[length - i - 1] = originalData[i];
-		}
+		Reload();
 	}
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		CR_RETURN(g_sharedBuffer.Allocate( source.GetStride(), source.GetSize() / source.GetStride(), reversedData.get(), renderContext, meshData.m_reversedIndexAllocation ));
-	}
-
-	meshData.m_reversedIndicesValid = true;
 }
 
 bool TriGeometryRes::RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed )
@@ -1584,7 +1607,7 @@ bool TriGeometryRes::RenderAreas( unsigned int meshIx, unsigned int areaIx, unsi
 	return RenderAreas( std::numeric_limits<float>::max(), meshIx, areaIx, areaCount, renderContext, reversed );
 }
 
-bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed, bool buildReversed )
+bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed )
 {
     if( !m_isGood )
     {
@@ -1628,11 +1651,7 @@ bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigne
 	{
 		if( reversed )
 		{
-			if( buildReversed )
-			{
-				ReverseIndexBuffer( *pMesh, renderContext );
-			}
-			else if( !pMesh->m_reversedIndicesValid )
+			if( !pMesh->m_reversedIndicesValid )
 			{
 				return false;
 			}
@@ -1723,6 +1742,26 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 			g_sharedBuffer.Free( pMesh->m_vertexAllocation );
 			return false;	
 		}
+
+		if ( m_reversedIndexBuffersRequested )
+		{
+			if( bytesPerIndex == 2 )
+			{
+				std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
+			}
+			else
+			{
+				std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
+			}
+
+			if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, pMesh->m_reversedIndexAllocation ) ) )
+			{
+				g_sharedBuffer.Free( pMesh->m_vertexAllocation );
+				g_sharedBuffer.Free( pMesh->m_indexAllocation );
+				return false;
+			}
+			pMesh->m_reversedIndicesValid = true;
+		}
 	}
 
 
@@ -1734,6 +1773,10 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 	pMesh->m_allocationsValid = true;
 
 	m_memoryUse += vbSize + ibSize; // Memory use is only approximate as a hint for the resource cache
+	if( m_reversedIndexBuffersRequested )
+	{
+		m_memoryUse += ibSize;
+	}
 	
 	return true;
 }
