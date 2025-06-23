@@ -823,7 +823,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			constData->transformOffset = mesh->GetTransformOffset();
 			constData->inVB = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
 			constData->outVB = m_skinnedVertices.GetUavIndexInHeap();
-			constData->outVBOffset = outOffset * 3;
+			constData->outVBOffset = outOffset;
 
 			m_skinVerticesData.Unlock( renderContext );
 
