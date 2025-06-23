@@ -43,6 +43,7 @@ const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
 		MAP_ATTRIBUTE( "exposure", m_exposureTexture, "exposure texture", Be::READ );
 		MAP_ATTRIBUTE( "dynamicExposureToTextureShader", m_dynamicExposureToTextureShader, "exposure texture", Be::READWRITE );
 		MAP_ATTRIBUTE( "reactive", m_reactiveMask, "reactive texture", Be::READ );
+		MAP_ATTRIBUTE( "transparency", m_transparencyMask, "transparency texture", Be::READ );
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "quality", m_quality, "The quality of the post process", Be::READWRITE | Be::ENUM | Be::NOTIFY, PostProcessQualityChooser )
 
