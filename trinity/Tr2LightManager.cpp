@@ -45,6 +45,8 @@ const uint32_t HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE = 1 << 13;
 const uint32_t MAX_NUM_SHADOWCASTING_LIGHTS = 16;
 const uint32_t MAX_NUM_VOLUMETRIC_LIGHTS = 16;
 
+const uint32_t RAYTRACING_DUMMY_RESOLUTION = 4;
+
 struct PerFrameData
 {
 	Matrix viewInverse;
@@ -157,7 +159,9 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 
 	m_currentSpaceSceneShadowQuality = ShadowQuality::SHADOW_DISABLED;
 
-
+	
+	m_ShadowMap.m_atlasDepthStencil = Tr2DepthStencilPtr();
+	m_ShadowMap.m_atlasDepthStencil.CreateInstance();
 	m_ShadowMap.m_atlasVariable.Register( "ShadowMapAtlas", m_ShadowMap.m_atlasDepthStencil );
 
 	m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_DISABLED;
@@ -166,8 +170,11 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 	m_shadowCastingLightsInSomeScene = false;
 	m_skipFrameBecauseThereWereNoShadowcastingLights = true;
 
+	m_Raytracing.m_destTex = Tr2RenderTargetPtr();
 	m_Raytracing.m_destTex.CreateInstance();
-    m_Raytracing.m_destTex->Create( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
+	// Create dummy texture, because of some mac issue.
+	m_Raytracing.m_destTex->Create( RAYTRACING_DUMMY_RESOLUTION, RAYTRACING_DUMMY_RESOLUTION, 1, 
+		Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
 
 	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", m_Raytracing.m_destTex );
 
@@ -297,7 +304,14 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 		}
 		if( ! ( nextFrameShadowQuality & ( 1 << (uint32_t)ShadowQuality::SHADOW_RAYTRACED ) ) )
 		{
-			UpdateRaytracingDestination( ShadowQuality::SHADOW_DISABLED );
+			if( m_Raytracing.m_destTex->IsValid() && m_Raytracing.m_destTex->GetWidth() != RAYTRACING_DUMMY_RESOLUTION )
+			{
+				// Create dummy texture, because of some mac issue.
+				m_Raytracing.m_destTex->Create( RAYTRACING_DUMMY_RESOLUTION, RAYTRACING_DUMMY_RESOLUTION, 1, 
+					Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
+
+				// Proper texture is created on the fly in the render function when needed, so that it can react to resolution changes.
+			}
 		}
 		
 		nextFrameShadowQuality = 1 << (uint32_t)shadowQuality;
@@ -309,7 +323,8 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 
 	ShadowQuality tmpShadowQuality = (ShadowQuality)min( (uint32_t)shadowQuality, (uint32_t)m_ShadowMap.m_qualityUsedByAtlas );
 	m_ShadowMap.m_atlasSettings = CalculateShadowMapAtlasSettings( tmpShadowQuality );
-	m_ShadowMap.m_atlasSettings.actualTextureSize = m_ShadowMap.m_atlasDepthStencil ? m_ShadowMap.m_atlasDepthStencil->GetWidth() : 0;
+	m_ShadowMap.m_atlasSettings.actualTextureSize = 
+		( m_ShadowMap.m_atlasDepthStencil && m_ShadowMap.m_atlasDepthStencil->IsValid() ) ? m_ShadowMap.m_atlasDepthStencil->GetWidth() : 0;
 }
 
 void Tr2LightManager::UpdateShadowAtlasSize( ShadowQuality shadowQuality )
@@ -317,28 +332,14 @@ void Tr2LightManager::UpdateShadowAtlasSize( ShadowQuality shadowQuality )
 	if( m_ShadowMap.m_qualityUsedByAtlas != shadowQuality )
 	{
 		// Setup depth stencil texture
-		m_ShadowMap.m_atlasDepthStencil = Tr2DepthStencilPtr();
-		m_ShadowMap.m_atlasDepthStencil.CreateInstance();
+		m_ShadowMap.m_atlasDepthStencil->Destroy();
 		if ( shadowQuality != ShadowQuality::SHADOW_DISABLED )
 		{
 			Tr2LightManager::ShadowMapAtlasSettings settings = CalculateShadowMapAtlasSettings( shadowQuality );
 			m_ShadowMap.m_atlasDepthStencil->Create( settings.size, settings.size, Tr2RenderContextEnum::DSFMT_D32F, 0, 0 );
 		}
 	}
-	m_ShadowMap.m_qualityUsedByAtlas = shadowQuality;
-}
-
-void Tr2LightManager::UpdateRaytracingDestination( ShadowQuality shadowQuality )
-{
-	if( ( shadowQuality == ShadowQuality::SHADOW_DISABLED ) && m_Raytracing.m_destTex->IsValid() )
-	{
-		// Setup depth stencil texture
-		m_Raytracing.m_destTex = Tr2RenderTargetPtr();
-		m_Raytracing.m_destTex.CreateInstance();
-        m_Raytracing.m_destTex->Create( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
-        
-		// Texture is created on the fly in the render function when needed.
-	}
+	m_ShadowMap.m_qualityUsedByAtlas = m_ShadowMap.m_atlasDepthStencil->IsValid() ? shadowQuality : ShadowQuality::SHADOW_DISABLED;
 }
 
 void Tr2LightManager::AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius, uint16_t flags )

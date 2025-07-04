@@ -2503,7 +2503,7 @@ bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, 
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	CCP_ASSERT( shadowMap && shadowMap->IsValid() );
+	CCP_ASSERT_M( shadowMap && shadowMap->IsValid() && shadowMap->IsReadable(), "Dynamic light shadow map atlas is null or invalid or not readable!" );
 
 	// Using depth stencil as shadow map
 	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
@@ -2669,14 +2669,17 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		{
 			GPU_REGION( renderContext, "PointLight/SpotLight Shadow Maps" );
 			Tr2DepthStencilPtr shadowMap = lightManager->GetShadowMapAtlas();
-			PrepareShadowMapForLights( renderContext, shadowMap );
-			std::vector<IEveShadowCaster*> shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
-			for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
+			if( shadowMap && shadowMap->IsValid() )	// I HATE THIS. But it makes sense. The shadow map creation might fail, i.e. if we run out of memory.
 			{
-				const Tr2LightManager::PerLightData& lightData = lightManager->GetLightData( lightIndex );
-				RenderShadowMapForLight( renderContext, shadowCasters, lightData, shadowMap );
+				PrepareShadowMapForLights( renderContext, shadowMap );
+				std::vector<IEveShadowCaster*> shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
+				for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
+				{
+					const Tr2LightManager::PerLightData& lightData = lightManager->GetLightData( lightIndex );
+					RenderShadowMapForLight( renderContext, shadowCasters, lightData, shadowMap );
+				}
+				FinishRenderingShadowMapForLights( renderContext );
 			}
-			FinishRenderingShadowMapForLights( renderContext );
 		}
 		{
 			GPU_REGION( renderContext, "Lighting" );
