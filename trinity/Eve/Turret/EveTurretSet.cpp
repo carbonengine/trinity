@@ -16,7 +16,7 @@
 #include "Tr2Renderer.h"
 #include "Tr2BoneTransformBuffer.h"
 
-#include "Audio/ITr2AudEmitter.h"
+#include <ITr2AudEmitter.h>
 #include "Eve/EveUpdateContext.h"
 #include "Eve/Turret/EveTurretTarget.h"
 #include "EveTurretFiringFX.h"

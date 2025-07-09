@@ -5,7 +5,7 @@
 //
 
 #include "StdAfx.h"
-#include "Audio/ITr2AudEmitter.h"
+#include <ITr2AudEmitter.h>
 #include "Controllers/Tr2Controller.h"
 #include "Controllers/Tr2ControllerFloatVariable.h"
 #include "ITr2SoundEmitterOwner.h"

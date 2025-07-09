@@ -11,7 +11,7 @@
 #include "EveSOFUtils.h"
 #include "Tr2ExternalParameter.h"
 #include "Controllers/ITr2ControllerOwner.h"
-#include "Audio/ITr2AudEmitter.h"
+#include <ITr2AudEmitter.h>
 #include "Eve/EveTransform.h"
 #include "Eve/Turret/EveTurretSet.h"
 #include "Eve/SpaceObject/EveShip2.h"

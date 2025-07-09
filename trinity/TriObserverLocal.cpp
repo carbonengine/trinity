@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Audio/ITr2AudEmitter.h"
+#include <ITr2AudEmitter.h>
 #include "TriObserverLocal.h"
 
 

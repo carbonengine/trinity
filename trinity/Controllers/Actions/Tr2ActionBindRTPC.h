@@ -9,7 +9,7 @@
 #include "Include/ITriFunction.h"
 #include "ITr2ControllerAction.h"
 #include "Controllers/Tr2ControllerExpression.h"
-#include "Audio/ITr2AudEmitter.h"
+#include <ITr2AudEmitter.h>
 
 
 BLUE_DECLARE( Tr2ExpressionTermInfo );
