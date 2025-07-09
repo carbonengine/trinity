@@ -209,7 +209,14 @@ void Tr2MeshArea::RemoveOwnerMesh( Tr2MeshBase* mesh )
 
 bool Tr2MeshArea::HasVertexBufferAccessInRtShadow()
 {
-	return GetMaterialInterface()->GetShaderStateInterface()->HasVertexBufferAccessInRtShadow();
+	if( GetMaterialInterface() )
+	{
+		if( auto shader = GetMaterialInterface()->GetShaderStateInterface() )
+		{
+			return shader->HasVertexBufferAccessInRtShadow();
+		}
+	}
+	return false;
 }
 
 Tr2Lod Tr2MeshArea::GetMinLod() const
