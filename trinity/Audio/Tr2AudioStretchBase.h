@@ -12,8 +12,8 @@
 #pragma once
 
 #include "Tr2DebugRenderer.h"
-#include "ITr2Audio.h"
-#include "ITr2AudEmitter.h"
+#include <ITr2Audio.h>
+#include <ITr2AudEmitter.h>
 
 BLUE_CLASS( Tr2AudioStretchBase ):
 	public IInitialize,
