@@ -25,6 +25,9 @@ extern std::vector<HANDLE> g_D3DCreatedHeaps;
 extern int g_windowResized;
 #endif
 
+bool g_masstestSelectRandomUpscaler = false;
+TRI_REGISTER_SETTING( "masstestSelectRandomUpscaler", g_masstestSelectRandomUpscaler );
+
 namespace
 {
 
@@ -1283,6 +1286,7 @@ void TriDevice::CreateUpscalingTechnique( uint32_t adapter )
 
 void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration )
 {
+	if( g_masstestSelectRandomUpscaler )
 	{ // TEMP MASSTEST CODE, DO NOT KEEP : START
 		// The first time we hit this code path is during loading the settings from py, here we override the setting for the first call only.
 		// All future calls will skip this code if the user decides to switch upscaler or turn it off
