@@ -300,14 +300,15 @@ unsigned int TriGeometryRes::GetMeshCount() const
 
 TriGeometryResMeshData* TriGeometryRes::GetMeshData( unsigned int meshIx ) const
 {
+	if( !m_isGood )
+	{
+		return nullptr;
+	}
 	if( meshIx < m_meshes.size() )
 	{
 		return m_meshes[meshIx].get();
 	}
-	else
-	{
-		return 0;
-	}
+	return nullptr;
 }
 
 TriGeometryResMeshData* TriGeometryRes::GetMeshData( unsigned int meshIx, float screenSize ) const
