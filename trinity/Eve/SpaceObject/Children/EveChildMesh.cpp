@@ -508,7 +508,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 						const Tr2ConstantBufferAL* vertexBufferData = nullptr;
 						if( area->HasVertexBufferAccessInRtShadow() )
 						{
-							vertexBufferData = &area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
+							vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 						}
 						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[idx], vertexBufferData, transform );
 					}
@@ -533,7 +533,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					const Tr2ConstantBufferAL* vertexBufferData = nullptr;
 					if( area->HasVertexBufferAccessInRtShadow() )
 					{
-						vertexBufferData = &area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
+						vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 					}
 					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[0], vertexBufferData, m_worldTransform );
 				}

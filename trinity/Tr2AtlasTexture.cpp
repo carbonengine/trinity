@@ -338,7 +338,7 @@ bool Tr2AtlasTexture::LockBuffer( void*& pData, unsigned int& pitch )
 
 	if( FAILED( hr ) )
 	{
-		CCP_LOGERR( "Tr2AtlasTexture::LockBuffer failed - another atlas texture may be locked already (HR: %08x)", hr );
+		CCP_LOGERR( "Tr2AtlasTexture::LockBuffer failed - another atlas texture may be locked already (HR: %08lx)", hr );
 		return false;
 	}
 
@@ -376,7 +376,7 @@ bool Tr2AtlasTexture::LockBufferAndMargin( void *&data, unsigned &pitch, unsigne
 
 	if( FAILED( hr ) )
 	{
-		CCP_LOGERR( "Tr2AtlasTexture::LockBufferAndMargin failed - another atlas texture may be locked already (HR: %08x)", hr );
+		CCP_LOGERR( "Tr2AtlasTexture::LockBufferAndMargin failed - another atlas texture may be locked already (HR: %08lx)", hr );
 		return false;
 	}
 

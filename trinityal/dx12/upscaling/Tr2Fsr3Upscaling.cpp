@@ -240,7 +240,7 @@ Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( Tr2UpscalingAL::Setting settin
 		m_upscaling = 3.0f;
 		break;
 	default:
-		CCP_LOGERR( "FSR3: Invalid upscaling setting applied: %d. Upscaling amount will be forced to 1.0" );
+		CCP_LOGERR( "FSR3: Invalid upscaling setting applied: %d. Upscaling amount will be forced to 1.0", int( setting ) );
 	}
 
 	m_backendDesc.header.type = FFX_API_CREATE_CONTEXT_DESC_TYPE_BACKEND_DX12;

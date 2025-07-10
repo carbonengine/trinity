@@ -427,10 +427,14 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 	return meshData->m_areas[m_areaIndex].m_staticBlas;
 }
 
-const Tr2ConstantBufferAL& Tr2RaytracingMeshArea::GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const
+const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const
 {
 	TriGeometryResMeshData* meshData = mesh.GetMeshData();
-	if( meshData && !meshData->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
+	if( !meshData || m_areaIndex >= meshData->m_areas.size() )
+	{
+		return nullptr; //No mesh data or area index out of bounds
+	}
+	if( !meshData->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
 	{
 		if( SUCCEEDED( meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Create( sizeof( TriRtGeometryConstants ), renderContext.GetPrimaryRenderContext() ) ) )
 		{
@@ -547,7 +551,7 @@ const Tr2ConstantBufferAL& Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 			}
 		}
 	}
-	return meshData->m_areas[m_areaIndex].m_rtGeometryConstants;
+	return &meshData->m_areas[m_areaIndex].m_rtGeometryConstants;
 }
 
 // ***************** Tr2RaytracingGeometry *****************

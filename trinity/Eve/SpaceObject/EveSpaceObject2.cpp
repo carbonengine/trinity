@@ -1883,7 +1883,7 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 
 	if( m_boundingSphereRadius < 0.0f )
 	{
-		CCP_LOGWARN( "Bounding sphere not set for '%s' - calculating from '%s'", m_name.c_str(), m_geometryResFromMesh->GetPath() );
+		CCP_LOGWARN( "Bounding sphere not set for '%s' - calculating from '%ls'", m_name.c_str(), m_geometryResFromMesh->GetPath() );
 		m_geometryResFromMesh->RecalculateBoundingSphere();
 		Vector4 sphere;
 		if( m_mesh )
@@ -3715,7 +3715,7 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 				const Tr2ConstantBufferAL* vertexBufferData = nullptr;
 				if( area->HasVertexBufferAccessInRtShadow() )
 				{
-					vertexBufferData = &area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
+					vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 				}
 				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_worldTransform );
 			}

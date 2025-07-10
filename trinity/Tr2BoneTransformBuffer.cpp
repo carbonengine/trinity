@@ -35,7 +35,7 @@ uint32_t Tr2BoneTransformBuffer::UploadTransforms( const Float4x3* data, uint32_
 	}
 	if( m_head < m_tail && m_head + matrixCount >= m_tail )
 	{
-		CCP_LOG( "Resizing bone transform buffer to %uKB", ( m_size * 2 * sizeof( Float4x3 ) ) / 1024 );
+		CCP_LOG( "Resizing bone transform buffer to %uKB", uint32_t( m_size * 2 * sizeof( Float4x3 ) ) / 1024 );
 		Resize( m_size * 2 );
 	}
 

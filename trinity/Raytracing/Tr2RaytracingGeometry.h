@@ -96,7 +96,7 @@ class Tr2RaytracingMeshArea
 public:
 	Tr2RaytracingMeshArea( uint32_t index );
 	const Tr2RtBottomLevelAccelerationStructureAL& BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
-	const Tr2ConstantBufferAL& GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const;
+	const Tr2ConstantBufferAL* GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const;
 	uint32_t GetAreaIndex(){ return m_areaIndex; }
 	void MarkBlasOutdated() { m_blasOutdated = true; }
 	bool IsBlasOutdated() const { return m_blasOutdated || !m_blas.IsValid(); }

@@ -689,7 +689,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_srvUavAllocator = nullptr;
 	m_samplerHeapStart = nullptr;
 	m_samplerAllocator = nullptr;
-	for (int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES + 1; ++idx)
+	for (int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++idx)
 	{
 		m_allocators[idx] = nullptr;
 	}

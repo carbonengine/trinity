@@ -71,10 +71,6 @@ void Tr2RuntimeTextureParameter::AddUsedTexture( Tr2BindlessResourcesAL& usedTex
 	{
 		usedTextures.Add( *tex );
 	}
-	else
-	{
-		usedTextures.Add( *tex );
-	}
 }
 
 
