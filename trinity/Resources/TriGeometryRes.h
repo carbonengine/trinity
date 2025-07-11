@@ -30,7 +30,8 @@
 
 #include "Tr2SuballocatedBuffer.h"
 
-constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 64 * 1024 * 1024;
+constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 32u * 1024u * 1024u;
+constexpr uint32_t SHARED_BUFFER_MAX_SIZE = 2048u * 1024u * 1024u;
 extern Tr2SuballocatedBuffer g_sharedBuffer;
 
 
@@ -244,7 +245,7 @@ public:
 
 	// Render multiple consecutive areas, starting at 'areaIx'
 	bool RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );
-	bool RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false, bool buildReversed = true );
+	bool RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );
 
 	void RebuildCachedData();
 	
@@ -331,7 +332,7 @@ public:
 	typedef void( *PerTriangleCallback )( void* context, const Vector3& p1, const Vector3& p2, const Vector3& p3 );
 	void ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, void* cbContext );
 
-	void ReverseIndexBuffer( TriGeometryResMeshData& meshData, Tr2RenderContext & renderContext );
+	void RequestReversedIndexBuffers();
 
 	void Reload();
 
@@ -354,6 +355,7 @@ private:
 
 	uint32_t m_forcedLodIndex = 0;
 	bool m_forceLod = false;
+	bool m_reversedIndexBuffersRequested = false;
 
 private:
 	// Provide the functions that do the actual work of loading and preparing.

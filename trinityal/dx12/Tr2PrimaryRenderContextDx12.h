@@ -311,6 +311,7 @@ private:
 
 public:
 	CComPtr<ID3D12Device> m_device;
+	CComPtr<ID3D12Device1> m_device1;
 	CComPtr<ID3D12Device5> m_device5;
 	CComPtr<IDXGISwapChain4> m_swapchain;
 	CComPtr<ID3D12CommandQueue> m_commandQueue;

@@ -20,6 +20,7 @@
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 bool g_gatherPipelineStatistics = false;
+extern ICrashReporter* TrinityALCrashes;
 
 CCP_STATS_DECLARE( dx12IAVertices, "Trinity/AL/Pipeline/IAVertices", false, CST_COUNTER_HIGH, "Number of vertices read by input assembler" );
 CCP_STATS_DECLARE( dx12IAPrimitives, "Trinity/AL/Pipeline/IAPrimitives", false, CST_COUNTER_HIGH, "Number of primitives read by input assembler" );
@@ -126,6 +127,10 @@ public:
 				CCP_LOGNOTICE( "GPU memory budget: %uMB", uint32_t( info.Budget / 1024 / 1024 ) );
 
 				CCP_STATS_SET( dx12GpuMemoryBudgetLocal, info.Budget );
+				if( TrinityALCrashes )
+				{
+					TrinityALCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( info.Budget / 1024 / 1024 ) + "MB" ).c_str() );
+				}
 			}
 			else
 			{
@@ -196,22 +201,38 @@ private:
 		DXGI_QUERY_VIDEO_MEMORY_INFO info;
 		if( SUCCEEDED( m_adapter->QueryVideoMemoryInfo( 0, DXGI_MEMORY_SEGMENT_GROUP_LOCAL, &info ) ) )
 		{
+			auto budgetMB = uint32_t( info.Budget / 1024 / 1024 );
+			auto usageMB = uint32_t( info.CurrentUsage / 1024 / 1024 );
+			auto prevBudgetMB = uint32_t( m_budget / 1024 / 1024 );
+			auto prevUsageMB = uint32_t( m_usage / 1024 / 1024 );
 			if( info.Budget <= info.CurrentUsage )
 			{
-				CCP_LOGERR( "Video memory over the budget. Current usage is %uMB and the budget is %uMB", uint32_t( info.CurrentUsage / 1024 / 1024 ), uint32_t( info.Budget / 1024 / 1024 ) );
+				if( budgetMB < prevBudgetMB || usageMB > prevUsageMB )
+				{
+					CCP_LOGERR( "Video memory over the budget. Current usage is %uMB and the budget is %uMB", usageMB, usageMB );
+				}
 			}
 			else if( info.Budget / 5 * 4 <= info.CurrentUsage )
 			{
-				CCP_LOGWARN( "Video memory close to the budget. Current usage is %uMB and the budget is %uMB", uint32_t( info.CurrentUsage / 1024 / 1024 ), uint32_t( info.Budget / 1024 / 1024 ) );
+				if( budgetMB < prevBudgetMB || usageMB > prevUsageMB )
+				{
+					CCP_LOGWARN( "Video memory close to the budget. Current usage is %uMB and the budget is %uMB", usageMB, usageMB );
+				}
 			}
 			if( m_budget != 0 && info.Budget != m_budget )
 			{
-				CCP_LOGNOTICE( "Video memory budget has changed from %u to %u. Memory usage is %dMB", uint32_t( m_budget / 1024 / 1024 ), uint32_t( info.Budget / 1024 / 1024 ), uint32_t( info.CurrentUsage / 1024 / 1024 ) );
+				CCP_LOGNOTICE( "Video memory budget has changed from %u to %u. Memory usage is %dMB", prevBudgetMB, budgetMB, usageMB );
 			}
 			m_budget = info.Budget;
+			m_usage = info.CurrentUsage;
 
 			CCP_STATS_SET( dx12GpuMemoryUsageLocal, info.CurrentUsage );
 			CCP_STATS_SET( dx12GpuMemoryBudgetLocal, info.Budget );
+			if( TrinityALCrashes )
+			{
+				TrinityALCrashes->SetCrashKeyValue( "gpuMemoryUsageLocal", ( std::to_string( usageMB ) + "MB" ).c_str() );
+				TrinityALCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( budgetMB ) + "MB" ).c_str() );
+			}
 		}
 	}
 
@@ -220,6 +241,7 @@ private:
 	HANDLE m_bugdetChangeEvent = {};
 	HANDLE m_stopEvent = {};
 	UINT64 m_budget = 0;
+	UINT64 m_usage = 0;
 	DWORD m_budgetChangeCookie = 0;
 };
 
@@ -447,6 +469,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 
 	m_device = device;
+	device.QueryInterface( &m_device1 );
 	device.QueryInterface( &m_device5 );
 	m_commandQueue = commandQueue;
 	m_swapchain = swapchain;
@@ -695,6 +718,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	}
 
 	m_device5 = nullptr;
+	m_device1 = nullptr;
 	m_device = nullptr;
 
 	if( m_presentFenceEvent )
