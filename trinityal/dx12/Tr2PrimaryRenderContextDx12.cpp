@@ -20,6 +20,7 @@
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 bool g_gatherPipelineStatistics = false;
+extern ICrashReporter* TrinityALCrashes;
 
 CCP_STATS_DECLARE( dx12IAVertices, "Trinity/AL/Pipeline/IAVertices", false, CST_COUNTER_HIGH, "Number of vertices read by input assembler" );
 CCP_STATS_DECLARE( dx12IAPrimitives, "Trinity/AL/Pipeline/IAPrimitives", false, CST_COUNTER_HIGH, "Number of primitives read by input assembler" );
@@ -121,7 +122,10 @@ public:
 				CCP_LOGNOTICE( "GPU memory budget: %uMB", uint32_t( info.Budget / 1024 / 1024 ) );
 
 				CCP_STATS_SET( dx12GpuMemoryBudgetLocal, info.Budget );
-				BeCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( info.Budget / 1024 / 1024 ) + "MB" ).c_str() );
+				if( TrinityALCrashes )
+				{
+					TrinityALCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( info.Budget / 1024 / 1024 ) + "MB" ).c_str() );
+				}
 			}
 			else
 			{
@@ -219,8 +223,11 @@ private:
 
 			CCP_STATS_SET( dx12GpuMemoryUsageLocal, info.CurrentUsage );
 			CCP_STATS_SET( dx12GpuMemoryBudgetLocal, info.Budget );
-			BeCrashes->SetCrashKeyValue( "gpuMemoryUsageLocal", ( std::to_string( usageMB ) + "MB" ).c_str() );
-			BeCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( budgetMB ) + "MB" ).c_str() );
+			if( TrinityALCrashes )
+			{
+				TrinityALCrashes->SetCrashKeyValue( "gpuMemoryUsageLocal", ( std::to_string( usageMB ) + "MB" ).c_str() );
+				TrinityALCrashes->SetCrashKeyValue( "gpuMemoryBudgetLocal", ( std::to_string( budgetMB ) + "MB" ).c_str() );
+			}
 		}
 	}
 

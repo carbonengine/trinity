@@ -13,6 +13,7 @@ bool g_requestDeviceDebugLayer = true;
 #else
 bool g_requestDeviceDebugLayer = false;
 #endif
+ICrashReporter* TrinityALCrashes = nullptr;
 
 
 namespace
