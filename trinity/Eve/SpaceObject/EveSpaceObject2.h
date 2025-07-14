@@ -492,7 +492,7 @@ protected:
 	std::string m_dna;
 
 	bool m_update;
-	bool m_display, m_previousDisplay;
+	bool m_display;
 	bool m_mute;
 	bool m_allowLodSelection;
 	bool m_isPickable;

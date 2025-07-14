@@ -26,7 +26,6 @@ EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_estimatedSize( 0.0f ),
 	m_display( true ),
-	m_previousDisplay( true ),
 	m_mute( false ),
 	m_startTime( 0 ),
 	m_effectDuration( -1 ),
@@ -58,11 +57,7 @@ bool EveEffectRoot2::OnModified( Be::Var* val )
 {
 	if( IsMatch( val, m_display ) )
 	{
-		if( m_previousDisplay != m_display )
-		{
-			m_previousDisplay = m_display;
-			ReRegister();
-		}
+		ReRegister();
 	}
 	else if( IsMatch( val, m_mute ) )
 	{

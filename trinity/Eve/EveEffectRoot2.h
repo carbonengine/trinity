@@ -195,7 +195,7 @@ private:
 protected:
 	// general
 	std::string m_name;
-	bool m_display, m_previousDisplay;
+	bool m_display;
 	bool m_mute;
 	PIEveSpaceObjectChildVector m_effectChildren;
 

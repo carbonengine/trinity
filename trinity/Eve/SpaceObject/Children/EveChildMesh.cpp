@@ -23,7 +23,6 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	PARENTLOCK( m_attachments ),
 	PARENTLOCK( m_lights ),
 	m_display( true ),
-	m_previousDisplay( true ),
 	m_isVisible( false ),
 	m_instancesVisible( false ),
 	m_castShadow( false ),
@@ -68,19 +67,10 @@ bool EveChildMesh::Initialize()
 
 bool EveChildMesh::OnModified( Be::Var* val )
 {
-	if( IsMatch( val, m_display ) )
-	{
-		if( m_previousDisplay != m_display )
-		{
-			m_previousDisplay = m_display;
-			ReRegister();
-		}
-	}
-	else if( IsMatch( val, m_reflectionMode ) ||  IsMatch( val, m_mesh) || IsMatch( val, m_castShadow ) )
+	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display) || IsMatch( val, m_mesh) || IsMatch( val, m_castShadow ) )
 	{
 		ReRegister();
 	}
-
 	if( IsMatch( val, m_mesh ) || IsMatch( val, m_animationUpdater ) )
 	{
 		InitializeAnimation();

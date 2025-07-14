@@ -192,7 +192,7 @@ protected:
 	Vector3 m_worldVelocity;
 	float m_activationStrength;
 	float m_ownerMaxSpeed;
-	bool m_display, m_previousDisplay;
+	bool m_display;
 	bool m_mute;
 	DisplayQualityModifier m_displayFilter;
 	bool m_isAlwaysOn;

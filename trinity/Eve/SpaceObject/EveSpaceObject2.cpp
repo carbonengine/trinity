@@ -150,7 +150,6 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	PARENTLOCK( m_controllers ),
 	m_impostorMode( false ),
 	m_display( true ),
-	m_previousDisplay( true ),
 	m_mute( false ),
 	m_update( true ),
 	m_allowLodSelection( true ),
@@ -1911,15 +1910,7 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 		SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
 		SetControllerVariable( "ClipSphereFactor2", m_clipSphereFactor2 );
 	}
-	else if( IsMatch( val, m_display ) )
-	{
-		if( m_previousDisplay != m_display )
-		{
-			m_previousDisplay = m_display;
-			ReRegister();
-		}
-	}
-	else if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_castShadow ) )
+	else if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display ) || IsMatch( val, m_castShadow ) )
 	{
 		ReRegister();
 	}
