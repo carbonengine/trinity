@@ -80,11 +80,13 @@ float g_eveSpaceSceneLowDetailThreshold = 100.0f;
 float g_eveSpaceSceneMediumDetailThreshold = 400.0f;
 float g_eveSpaceSceneHighDetailThreshold = 800.0f;
 float g_eveSpaceSceneLODFactor = 1.0f;
+float g_eveSpaceSceneDefaultReflectionIntensity = 1.0f;
 
 TRI_REGISTER_SETTING( "eveSpaceSceneLowDetailThreshold", g_eveSpaceSceneLowDetailThreshold );
 TRI_REGISTER_SETTING( "eveSpaceSceneMediumDetailThreshold", g_eveSpaceSceneMediumDetailThreshold );
 TRI_REGISTER_SETTING( "eveSpaceSceneHighDetailThreshold", g_eveSpaceSceneHighDetailThreshold );
 TRI_REGISTER_SETTING( "eveSpaceSceneLODFactor", g_eveSpaceSceneLODFactor );
+TRI_REGISTER_SETTING( "eveSpaceSceneDefaultReflectionIntensity", g_eveSpaceSceneDefaultReflectionIntensity );
 
 
 // These variables determine how frequently curve sets are updated for objects with low and medium LODs.
@@ -191,8 +193,10 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_sunColorWithDynamicLights( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_currentSunColor( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_useSunColorWithDynamicLights( false ),
-	m_reflectionIntensity( 1.0f ),
-	m_currentRelfectionIntensity( 1.0f ),
+	m_reflectionIntensity( 1.35f ),
+	m_currentReflectionIntensity( g_eveSpaceSceneDefaultReflectionIntensity ),
+	m_reflectionBackLightingContrast( 8.0f ),
+	m_reflectionBackLightingColor( 2.0f, 2.0f, 2.0f, 2.0f ),
 	m_dynamicObjectReflectionEnabled( true ),
 	m_hasBackgroundDistortionBatches( false ),
 	m_hasForegroundDistortionBatches( false ),
@@ -1334,7 +1338,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		auto over = SimplePriorityBlend( overrides );
 		m_currentSunColor = over.sunColor * over.sunIntensity;
 		m_currentNebulaIntensity = over.backgroundIntensity;
-		m_currentRelfectionIntensity = over.reflectionIntensity;
+		m_currentReflectionIntensity = over.reflectionIntensity;
 	}
 
 	if( m_volumetricsRenderer )
@@ -1770,10 +1774,10 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	// lower the reflection intensity for the objects rendered into the reflection
 	// (so the reflections in the reflections don't get brighter and brighter)
 	// we cap it at 0.8 for no good reason, just felt like a good number to cap the reflection intensity in the reflections
-	auto tmp = m_currentRelfectionIntensity;
-	if( m_currentRelfectionIntensity != 0.0f )
+	auto tmp = m_currentReflectionIntensity;
+	if( m_currentReflectionIntensity != 0.0f )
 	{
-		m_currentRelfectionIntensity = min( 0.8f, 1.0f / ( m_currentRelfectionIntensity * m_currentRelfectionIntensity ) );
+		m_currentReflectionIntensity = min( 0.8f, 1.0f / ( m_currentReflectionIntensity * m_currentReflectionIntensity ) );
 	}
 
 	// disable ssao
@@ -1975,7 +1979,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 		}
 
 		// reset the reflection intensity
-		m_currentRelfectionIntensity = tmp;
+		m_currentReflectionIntensity = tmp;
 	}
 
 	PopulatePerFramePSData( m_perFramePS, renderContext );
@@ -3124,7 +3128,7 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.Sun.DirWorld = -Normalize( data.Sun.DirWorld );
 	data.AmbientColor = Vector3( m_ambientColor.r, m_ambientColor.g, m_ambientColor.b );
 
-	data.ReflectionIntensity = m_currentRelfectionIntensity;
+	data.ReflectionIntensity = m_currentReflectionIntensity;
 	data.FogColor = Vector4( m_fogColor.r, m_fogColor.g, m_fogColor.b, m_fogMax );
 
 	// ps gamma brightness
@@ -3249,6 +3253,9 @@ bool EveSpaceScene::Initialize()
 	if( m_reflectionProbe && m_reflectionProbe->IsValid() )
 	{
 		m_envMapTextureRes = m_reflectionProbe->GetReflection();
+
+		m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
+		m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
 	}
 	else if( m_envMapHandle )
 	{
@@ -3308,11 +3315,25 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 		if( m_reflectionProbe && m_reflectionProbe->IsValid() )
 		{
 			m_envMapTextureRes = m_reflectionProbe->GetReflection();
+
+			m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
+			m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
 		}
 		else if( m_envMapHandle )
 		{
 			m_envMapTextureRes = m_staticEnvMapTextureRes;
 		}
+
+		/* if( HasReflectionProbe() )
+		{
+			m_envMapTextureRes = m_reflectionProbe->GetReflection();
+			m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
+			m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
+		}
+		else if( !m_envMapResPath.empty() )
+		{
+			BeResMan->GetResource( m_envMapResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_envMapTextureRes );
+		}*/
 	}
 	if( IsMatch( value, m_envMap1ResPath ) )
 	{
@@ -3337,6 +3358,15 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 		{
 			BeResMan->GetResource( m_envMap3ResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_envMap3 );
 		}
+	}
+
+	if( IsMatch( value, m_reflectionBackLightingColor ) && HasReflectionProbe() )
+	{
+		m_reflectionProbe->SetBackLightColor( m_reflectionBackLightingColor );
+	}
+	if( IsMatch( value, m_reflectionBackLightingContrast ) && HasReflectionProbe() )
+	{
+		m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
 	}
 
 	if( IsMatch( value, m_shadowQuality ) )

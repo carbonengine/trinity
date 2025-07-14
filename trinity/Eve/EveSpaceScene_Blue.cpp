@@ -531,6 +531,21 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_ATTRIBUTE(
+			"reflectionBackLightingContrast",
+			m_reflectionBackLightingContrast,
+			"Reflection probe back light contrast\n"
+			":jessica-group: Lighting",
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+
+		MAP_ATTRIBUTE(
+			"reflectionBackLightingColor",
+			m_reflectionBackLightingColor,
+			"Reflection probe back light color\n"
+			":jessica-group: Lighting\n"
+			":jessica-widget: color",
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+
+		MAP_ATTRIBUTE(
 			"dynamicObjectReflectionEnabled",
 			m_dynamicObjectReflectionEnabled,
 			"Are reflections enabled for selected dynamic objects\n"
