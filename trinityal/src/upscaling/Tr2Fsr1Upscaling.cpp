@@ -103,7 +103,7 @@ Tr2Fsr1UpscalingContext::Tr2Fsr1UpscalingContext( Tr2UpscalingAL::Setting settin
 		m_upscaling = 2.0f;
 		break;
 	default:
-		CCP_LOGERR( "Invalid upscaling setting applied: %d. Upscaling amount will be forced to 1.0" );
+		CCP_LOGERR( "Invalid upscaling setting applied: %d. Upscaling amount will be forced to 1.0", int( setting ) );
 	}
 
 	m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );

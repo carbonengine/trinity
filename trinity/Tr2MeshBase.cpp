@@ -27,7 +27,6 @@ Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
 	PARENTLOCK( m_decalPrepassAreas ),
 	PARENTLOCK( m_flareAreas ),
 	PARENTLOCK( m_distortionAreas ),
-	PARENTLOCK( m_decalAdditiveAreas ),
 	m_display( true ),
 	m_meshIndex( 0 ),
     m_pBoneList(NULL),
@@ -64,7 +63,6 @@ Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
 	m_areaLookupArray[ TRIBATCHTYPE_GEOMETRY_ERASER ] = &m_geometryEraserAreas;
 	m_areaLookupArray[ TRIBATCHTYPE_FLARE ] = &m_flareAreas;
 	m_areaLookupArray[ TRIBATCHTYPE_DISTORTION ] = &m_distortionAreas;
-	m_areaLookupArray[TRIBATCHTYPE_DECAL_ADDITIVE] = &m_decalAdditiveAreas;
 }
 
 
@@ -93,7 +91,10 @@ void Tr2MeshBase::OnListModified(
 		if( Tr2MeshAreaPtr area = BlueCastPtr( value ) )
 		{
 			area->AddOwnerMesh( this );
-			ReverseIndexBufferIfNeeded();
+			if ( area->IsReversed() )
+			{
+				ReverseIndexBuffers();
+			}
 		}
 		break;
 	case BELIST_REMOVED:
@@ -110,7 +111,10 @@ void Tr2MeshBase::OnListModified(
 				entity->AddOwnerMesh( this );
 			}
 		}
-		ReverseIndexBufferIfNeeded();
+		if( HasReversedAreas() )
+		{
+			ReverseIndexBuffers();
+		}
 		break;
 	case BELIST_UNLOADSTART:
 		for( ssize_t i = 0; i < list->GetSize(); ++i )
@@ -126,7 +130,7 @@ void Tr2MeshBase::OnListModified(
 	}
 }
 
-void Tr2MeshBase::ReverseIndexBufferIfNeeded()
+bool Tr2MeshBase::HasReversedAreas() const
 {
 	for( auto& list : m_areaLookupArray )
 	{
@@ -134,37 +138,18 @@ void Tr2MeshBase::ReverseIndexBufferIfNeeded()
 		{
 			if( area->IsReversed() )
 			{
-				ReverseIndexBuffers();
-				return;
+				return true;
 			}
 		}
 	}
+	return false;
 }
 
 void Tr2MeshBase::ReverseIndexBuffers()
 {
-	auto geometry = GetGeometryResource();
-	if( geometry && geometry->IsGood() )
+	if( auto geometry = GetGeometryResource() )
 	{
-		if( auto mesh = geometry->GetMeshData( m_meshIndex ) )
-		{
-			if( !mesh->m_reversedIndicesValid )
-			{
-				USE_MAIN_THREAD_RENDER_CONTEXT();
-				geometry->ReverseIndexBuffer( *mesh, renderContext );
-			}
-			for( auto lod : mesh->m_lods )
-			{
-				if( auto meshLod = geometry->GetMeshData( unsigned( lod.meshIndex ) ) )
-				{
-					if( !meshLod->m_reversedIndicesValid )
-					{
-						USE_MAIN_THREAD_RENDER_CONTEXT();
-						geometry->ReverseIndexBuffer( *meshLod, renderContext );
-					}
-				}
-			}
-		}
+		geometry->RequestReversedIndexBuffers();
 	}
 }
 

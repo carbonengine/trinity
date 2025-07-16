@@ -57,6 +57,7 @@ enum RenderBatchSortType
 struct Tr2RenderBatch
 {
 	void SetMaterial( Tr2Material* material );
+	void SetPriority( uint32_t priority );
 
 	void SetGeometry( unsigned vertexDecl, const Tr2BufferAL& vb, uint32_t stride, const Tr2BufferAL& ib, uint32_t indexStride );
 	void SetGeometry( unsigned vertexDecl, const Tr2SuballocatedBuffer::Allocation& vb, const Tr2SuballocatedBuffer::Allocation& ib );
@@ -102,40 +103,58 @@ struct Tr2RenderBatch
 	uint32_t m_pickingData = 0;
 	uint32_t m_depth = 0;
 
+	uint32_t m_priority = 0;
+
 	uint32_t m_groupCount = 1;
 };
 
 bool CanBeBinned( Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 );
+bool Compare( const Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 );
 
 template <class ForwardIt>
 void Tr2GdprBatchFullPartition( ForwardIt first, ForwardIt last )
 {
-	while( first != last )
+	CCP_ASSERT_M( first <= last, "Tr2GdprBatchFullPartition first shouldn't be greater than last! " );
+
+	if( first == last )
 	{
-		auto groupEnd = std::partition( first, last, [&first]( auto& x ) { return first->m_shader == x.m_shader; } );
-		while( first != groupEnd )
+		return;
+	}
+
+	std::sort( first, last, Compare );
+
+	for( auto current = first; current < last; current++ )
+	{
+		if( !CanBeBinned( *first, *current ) )
 		{
-			auto binEnd = std::partition( first, groupEnd, [&first]( auto& x ) { return CanBeBinned( *first, x ); } );
-			first->m_groupCount = uint32_t( binEnd - first );
-			first = binEnd;
+			first->m_groupCount = uint32_t( current - first );
+			first = current;
 		}
 	}
+	first->m_groupCount = uint32_t( last - first );
 }
 
 template <class BidirIt>
 void Tr2GdprBatchStableFullPartition( BidirIt first, BidirIt last )
 {
-	while( first != last )
+	CCP_ASSERT_M( first <= last, "Tr2GdprBatchStableFullPartition first shouldn't be greater than last! " );
+
+	if( first == last )
 	{
-		auto groupEnd = std::stable_partition( first, last, [&first]( auto& x ) { return first->m_shader == x.m_shader; } );
-		first->m_groupCount = uint32_t( groupEnd - first );
-		while( first != groupEnd )
+		return;
+	}
+
+	std::stable_sort( first, last, Compare );
+
+	for( auto current = first; current < last; current++ )
+	{
+		if( !CanBeBinned( *first, *current ) )
 		{
-			auto binEnd = std::stable_partition( first, groupEnd, [&first]( auto& x ) { return CanBeBinned( *first, x ); } );
-			first->m_groupCount = uint32_t( binEnd - first );
-			first = binEnd;
+			first->m_groupCount = uint32_t( current - first );
+			first = current;
 		}
 	}
+	first->m_groupCount = uint32_t( last - first );
 }
 
 
@@ -154,7 +173,7 @@ struct DefaultKeyGenerator
 	}
 
 	// Gets the sort type (no sorting)
-	static RenderBatchSortType GetSortType()
+	constexpr static RenderBatchSortType GetSortType()
 	{
 		return RENDERBATCHSORTTYPE_NONE;
 	}
@@ -178,7 +197,7 @@ struct EffectKeyGenerator
 	}
 
 	// Requests regular std::sort
-	static RenderBatchSortType GetSortType()
+	constexpr static RenderBatchSortType GetSortType()
 	{
 		return RENDERBATCHSORTTYPE_SORT;
 	}
@@ -346,7 +365,7 @@ public:
     // Call this after committing the last batch.
     virtual void Finalize( void )
 	{
-		if( m_keyGen.GetSortType() == RENDERBATCHSORTTYPE_SORT )
+		if constexpr( KeyGenerator::GetSortType() == RENDERBATCHSORTTYPE_SORT )
 		{
 			if( KeyGenerator::ALLOW_GDPR )
 			{
@@ -358,7 +377,7 @@ public:
 				sort( begin( m_batches ), end( m_batches ), KeyGenerator::Less );
 			}
 		}
-		else if( m_keyGen.GetSortType() == RENDERBATCHSORTTYPE_STABLE_SORT )
+		else if constexpr( KeyGenerator::GetSortType() == RENDERBATCHSORTTYPE_STABLE_SORT )
 		{
 			if( KeyGenerator::ALLOW_GDPR )
 			{

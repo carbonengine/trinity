@@ -175,6 +175,7 @@ bool g_bindlessRenderingEnabled = true;
 TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
 extern bool g_gdrEnabled;
 extern bool g_upscalingDebug;
+extern ICrashReporter* TrinityALCrashes;
 
 #if TRINITY_PLATFORM == TRINITY_METAL
 extern bool g_enableMetalCounters;
@@ -183,6 +184,8 @@ TRI_REGISTER_SETTING( "enableMetalCounters", g_enableMetalCounters );
 
 void InitializeTrinity()
 {
+	TrinityALCrashes = BeCrashes;
+
 	GlobalStore().RegisterVariable( "BlitOriginal", static_cast<ITr2TextureProvider*>( nullptr ) );
 	GlobalStore().RegisterVariable( "BlitCurrent", static_cast<ITr2TextureProvider*>( nullptr ) );
 	GlobalStore().RegisterVariable( "g_texelSize", Vector4() );

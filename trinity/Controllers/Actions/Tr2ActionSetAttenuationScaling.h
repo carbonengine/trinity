@@ -24,7 +24,7 @@ public:
 	float GetScalingFactor() const;
 
 protected:
-	Tr2ControllerPtr m_controller;
+	Tr2Controller* m_controller;
 
 	std::string m_emitterName;
 	std::string m_controllerVariableName;

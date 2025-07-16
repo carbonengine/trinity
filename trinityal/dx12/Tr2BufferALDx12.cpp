@@ -131,6 +131,29 @@ namespace TrinityALImpl
 		}
 		FORWARD_HR( m_buffer.Create( strategy, size, resourceFlags, defaultState, RequiresImmediateBarriers( desc.gpuUsage ), initialData ? 1 : 0, initialData ? &subresourceData : nullptr, renderContext ) );
 
+		if (renderContext.m_device1)
+		{
+			ID3D12Pageable* resource = m_buffer.GetResource();
+			D3D12_RESIDENCY_PRIORITY priority;
+			if( HasFlag( desc.gpuUsage, Tr2GpuUsage::ACCELERATION_STRUCTURE ) )
+			{
+				//Acceleration structures are very important to keep in VRAM.
+				priority = D3D12_RESIDENCY_PRIORITY_MAXIMUM;
+			}
+			else if( HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+			{
+				//Unordered access views are written and read by the GPU, so keep them in VRAM if possible.
+				priority = D3D12_RESIDENCY_PRIORITY_NORMAL;
+			}
+			else
+			{
+				//Read-only buffers are generally not as critical as other things.
+				priority = D3D12_RESIDENCY_PRIORITY_MINIMUM;
+			}
+
+			renderContext.m_device1->SetResidencyPriority( 1, &resource, &priority );
+		}
+
 		m_desc = desc;
 		m_owner = &renderContext;
 		m_defaultState = defaultState;

@@ -35,7 +35,6 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_scaling( 1.f, 1.f, 1.f ),
 	m_parentBoneIndex( -1 ),
-	m_forceRebuildIndices( false ),
 	m_geometryLodIndex( -1 ),
 	m_isVisible( 0 ),
 	m_decalMatrix( IdentityMatrix() ),
@@ -44,6 +43,7 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_minScreenSize( 0 ),
 	m_instanceScreenSize( -1 ),
 	m_batchType( TRIBATCHTYPE_DECAL ),
+	m_priority( 0 ),
 	m_vertexDeclarationOverride( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_instanceData( nullptr ),
 	m_minBounds( 0, 0, 0 ),
@@ -199,7 +199,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 			CreateStaticIndexBuffers( geomRes );
 		}
 	}
-	else if( m_forceRebuildIndices || g_buildDecalBuffers )
+	else if( g_buildDecalBuffers )
 	{
 		// if we get a new mesh, we must re-build the index buffer. This should be avoided cause it is slow!
 		if( geomRes != m_baseGeometryResource )
@@ -299,6 +299,7 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 	}
 
 	Tr2RenderBatch batch;
+	batch.SetPriority( m_priority );
 	batch.SetMaterial( m_decalEffect );
 	auto declaration = m_vertexDeclarationOverride != Tr2EffectStateManager::UNINITIALIZED_DECLARATION ? m_vertexDeclarationOverride : meshData->m_vertexDeclaration;
 	batch.SetGeometry( declaration, meshData->m_vertexAllocation, m_decalGeometry->ib );
@@ -812,12 +813,6 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 	m_decalGeometry = newDecal;
 }
 
-void EveSpaceObjectDecal::ForceRebuildIndices()
-{
-	m_forceRebuildIndices = true;
-	m_decalGeometry = nullptr;
-}
-
 void EveSpaceObjectDecal::SetIndices( const std::vector<std::vector<uint32_t>>& indices )
 {
 	m_decalGeometry = nullptr;
@@ -940,6 +935,11 @@ std::vector<uint32_t> EveSpaceObjectDecal::GetDecalPrimitiveCounts() const
 void EveSpaceObjectDecal::SetBatchType( TriBatchType batchType )
 {
 	m_batchType = batchType;
+}
+
+void EveSpaceObjectDecal::SetPriority( uint32_t priority )
+{
+	m_priority = priority;
 }
 
 // --------------------------------------------------------------------------------

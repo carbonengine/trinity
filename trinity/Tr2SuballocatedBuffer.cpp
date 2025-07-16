@@ -8,26 +8,30 @@
 
 #include "Tr2SuballocatedBuffer.h"
 
-#include "Tr2SyncToGpu.h"
 
-Tr2SuballocatedBuffer::Tr2SuballocatedBuffer( const char* name, const Tr2GpuUsage::Type gpuUsage, const uint32_t blockSize ) :
+
+CCP_STATS_DECLARE( suballocatedBufferAllocated, "Trinity/SuballocatedBuffer/Allocated", false, CST_COUNTER_HIGH, "The currently number of bytes currently in use in the buffer." );
+CCP_STATS_DECLARE( suballocatedBufferCapacity, "Trinity/SuballocatedBuffer/Capacity", false, CST_COUNTER_HIGH, "The buffer's current capacity." );
+
+
+
+
+
+
+
+
+Tr2SuballocatedBuffer::Tr2SuballocatedBuffer( const char* name, const Tr2GpuUsage::Type gpuUsage, const uint32_t blockSize, const uint32_t maxSize ) :
 	m_name( name ),
 	m_gpuUsage( gpuUsage ),
-	m_blockSize( blockSize )
+	m_allocator( blockSize, maxSize, blockSize )
 {
+	CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
+	CCP_STATS_SET( suballocatedBufferCapacity, m_allocator.GetMaxSize() );
 }
 
-Tr2SuballocatedBuffer::~Tr2SuballocatedBuffer()
+ALResult Tr2SuballocatedBuffer::Allocate( uint32_t stride, uint32_t count, void* data, Tr2RenderContextAL& renderContext, Allocation& result )
 {
-	for( uint32_t i = 0; i < m_allocators.size(); i++ )
-	{
-		m_allocators[i].Free();
-	}
-}
-
-ALResult Tr2SuballocatedBuffer::Allocate( size_t stride, size_t count, void* data, Tr2RenderContextAL& renderContext, Allocation& result )
-{
-	if( !m_buffer.IsValid() && !m_allocators.empty() )
+	if( !m_buffer.IsValid() )
 	{
 		PrepareResources();
 		if( !m_buffer.IsValid() )
@@ -36,39 +40,14 @@ ALResult Tr2SuballocatedBuffer::Allocate( size_t stride, size_t count, void* dat
 		}
 	}
 	size_t size = count * stride;
-	size_t paddedSize = size;
-	size_t alignment = stride;
-	if( m_blockSize % stride != 0 )
+
+	Tr2VirtualAllocator::VirtualAllocation allocation = {};
+	if( m_allocator.Allocate( size, stride, allocation ) )
 	{
-		// Each suballocator has their own local 0 offset.
-		// This makes alignment management quite complicated if the block size is not divisible by the stride.
-		// We need to consveratively allocate and manually align the allocation in this case.
-		paddedSize += stride;
-		alignment = 1;
-	}
+		result.m_offset = static_cast<uint32_t>(allocation.offset);
+		result.m_size = static_cast<uint32_t>(size);
 
-	size_t blockOffset = 0;
-
-	for( uint32_t i = 0; i < m_allocators.size(); i++ )
-	{
-		auto allocator = m_allocators[i];
-
-		Tr2VirtualAllocator::VirtualAllocation allocation = {};
-		if( !allocator.Allocate( paddedSize, alignment, allocation ) )
-		{
-			blockOffset += allocator.GetSize();
-			continue; //This allocators is full, try the next one!
-		}
-
-		auto Align = []( size_t offset, size_t alignment ) {
-			return ( offset + ( alignment - 1 ) ) / alignment * alignment;
-		};
-
-		result.m_allocatorIndex = i;
-		result.m_offset = static_cast<uint32_t>( Align( blockOffset + allocation.offset, stride ) );
-		result.m_size = static_cast<uint32_t>( size ); //Make sure to save the unpadded size.
-
-		result.m_stride = static_cast<uint32_t>( stride );
+		result.m_stride = static_cast<uint32_t>(stride);
 
 		result.m_allocation = allocation;
 		result.m_parent = this;
@@ -81,13 +60,13 @@ ALResult Tr2SuballocatedBuffer::Allocate( size_t stride, size_t count, void* dat
 			result.Update( data, renderContext );
 		}
 
+		CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
+
 		return S_OK;
 	}
-	//All allocators are full! Expand the buffer and try again!
-	// If the requested size is larger than the default block size, we need to increase the next block size, but do this 
-	// in m_blockSize increments so that alignment is still correct.
-	auto blockSize = uint32_t( ( ( paddedSize + m_blockSize - 1 ) / m_blockSize ) * m_blockSize );
-	Expand( blockSize );
+
+	FORWARD_HR( Expand() );
+
 	return Allocate( stride, count, data, renderContext, result );
 }
 
@@ -95,15 +74,18 @@ void Tr2SuballocatedBuffer::Free( Allocation& allocation )
 {
 	if( allocation.m_parent )
 	{
-		SyncToGpu( [allocator = m_allocators[allocation.m_allocatorIndex], alloc = allocation.m_allocation]() {
-			Tr2VirtualAllocator( allocator ).Free( alloc );
-		} );
-		allocation.m_parent = nullptr;
-
 		auto found = find( begin( m_allocations ), end( m_allocations ), &allocation );
 		if( found != end( m_allocations ) )
 		{
+			m_allocator.Free( allocation.m_allocation );
+			allocation.m_parent = nullptr;
+
 			m_allocations.erase( found );
+			CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
+		}
+		else
+		{
+			CCP_LOGERR( "Memory corruption in Tr2SuballocatedBuffer::Free()! Trying to free an allocation that has already been freed!" );
 		}
 	}
 }
@@ -114,11 +96,15 @@ void Tr2SuballocatedBuffer::ReleaseResources( TriStorage s )
 	{
 		m_buffer = Tr2BufferAL();
 
-		auto allocations = m_allocations;
-		for( auto& allocation : allocations )
+		for( auto& allocation : m_allocations )
 		{
-			Free( *allocation );
+			m_allocator.Free( allocation->m_allocation );
+			allocation->m_parent = nullptr;
 		}
+
+		m_allocations.clear();
+
+		CCP_STATS_SET( suballocatedBufferAllocated, m_allocator.GetAllocatedMemory() );
 	}
 }
 
@@ -131,11 +117,7 @@ bool Tr2SuballocatedBuffer::OnPrepareResources()
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	uint32_t bufferSize = 0;
-	for( auto& allocator : m_allocators )
-	{
-		bufferSize += uint32_t( allocator.GetSize() );
-	}
+	uint32_t bufferSize = static_cast<uint32_t>(m_allocator.GetCurrentSize());
 
 	Tr2BufferAL buffer;
 	Tr2BufferDescriptionAL desc( 1, bufferSize, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
@@ -146,26 +128,31 @@ bool Tr2SuballocatedBuffer::OnPrepareResources()
 	return true;
 }
 
-void Tr2SuballocatedBuffer::Expand( uint32_t blockSize )
+ALResult Tr2SuballocatedBuffer::Expand()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	uint32_t oldBufferSize = 0;
-	for( auto& allocator : m_allocators )
+	//We have reached the allocator's max size. This probably means we're leaking a lot of memory.
+	if (m_allocator.GetCurrentSize() == m_allocator.GetMaxSize())
 	{
-		oldBufferSize += uint32_t( allocator.GetSize() );
+		CCP_LOGERR( "Max size reached for buffer '%s'. This probably means we're leaking a lot of memory.", m_name.c_str() );
+		return E_OUTOFMEMORY;
 	}
 
-	Tr2VirtualAllocator allocator( blockSize );
-	m_allocators.push_back( allocator );
-
-	uint32_t newBufferSize = oldBufferSize + blockSize;
+	uint32_t oldBufferSize = static_cast<uint32_t>( m_allocator.GetCurrentSize() );
+	uint32_t newBufferSize = oldBufferSize + static_cast<uint32_t>( m_allocator.GetBlockSize() );
 
 	Tr2BufferAL newBuffer;
 	Tr2BufferDescriptionAL desc( 1, newBufferSize, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
-	newBuffer.Create( desc, nullptr, renderContext );
+	ALResult result = newBuffer.Create( desc, nullptr, renderContext );
+	if( FAILED( result ) )
+	{
+		CCP_LOGERR( "Failed to allocate %zu MBs for buffer '%s'.", newBufferSize / size_t( 1024 * 1024 ), m_name.c_str() );
+		return result;
+	}
 	newBuffer.SetName( m_name.c_str() );
 
+	//If the previous buffer had valid data, we copy it over to the new buffer.
 	if( m_buffer.IsValid() )
 	{
 		renderContext.CopySubBuffer( newBuffer, 0, m_buffer, 0, oldBufferSize );
@@ -173,8 +160,14 @@ void Tr2SuballocatedBuffer::Expand( uint32_t blockSize )
 
 	m_buffer = newBuffer;
 
-	size_t BYTES_TO_MEGABYTES = size_t( 1024 ) * 1024;
-	CCP_LOGNOTICE( "Allocating more buffer memory for buffer '%s'. Total memory allocated: %zu MBs", m_name.c_str(), newBufferSize / BYTES_TO_MEGABYTES );
+	m_allocator.Expand(); //Cannot fail, as we checked this first.
+
+	CCP_ASSERT( m_allocator.GetCurrentSize() == newBufferSize );
+
+	CCP_LOG( "Allocating more buffer memory for buffer '%s'. Total memory allocated: %zu MBs", m_name.c_str(), newBufferSize / size_t( 1024 * 1024 ) );
+	CCP_STATS_SET( suballocatedBufferCapacity, m_allocator.GetMaxSize() );
+
+	return S_OK;
 }
 
 ALResult Tr2SuballocatedBuffer::ReadBuffer( std::unique_ptr<uint8_t[]>& dest, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )

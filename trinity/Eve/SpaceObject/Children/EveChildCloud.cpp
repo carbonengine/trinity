@@ -407,7 +407,7 @@ Tr2PerObjectData* EveChildCloud::GetPerObjectData( ITriRenderBatchAccumulator* a
 	float x = ( box.m_max.x - box.m_min.x ) * w;
 	float y = ( box.m_max.y - box.m_min.y ) * w;
 	float size = std::max( x, y ) / m_preTesselationLevel;
-	size /= 1 + logf( m_lastLodFactor );
+	size /= m_lastLodFactor;
 
 	m_currentIB = 0;
 	while( size < m_cellScreenSize && m_currentIB + 1 < m_indexBuffers.size() )

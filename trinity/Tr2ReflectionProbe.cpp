@@ -20,6 +20,14 @@ const unsigned MIP_COUNT = 7;
 const unsigned FILTER_SIZE = 128;
 const unsigned FILTER_GROUP_DIM = 342; // ceil(sum(2**(x+x) for x in range(1, MIP_COUNT + 1)) / GROUP_SIZE)
 
+namespace
+{
+
+const auto s_backLightColorName = BlueSharedString( "BackLightColor" );
+const auto s_backLightContrastName = BlueSharedString( "BackLightContrast" );
+const auto s_viewDirectionName = BlueSharedString( "ViewDirection" );
+
+}
 
 Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj ) :
 	m_initialized( false ),
@@ -32,7 +40,10 @@ Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj ) :
 	m_currentFrame( 0 ),
 	m_onePassDone( false ),
 	m_hdrOutput( true ),
-	m_lockPosition( false )
+	m_hollywoodMode( true ),
+	m_lockPosition( false ),
+	m_backlightColor( 1, 1, 1, 1 ),
+	m_backlightContrast( 16 )
 {
 	for( unsigned i = 0; i < 6; i++ )
 	{
@@ -202,6 +213,16 @@ Tr2RenderTargetPtr Tr2ReflectionProbe::GetReflection()
 	return m_postFilterTarget;
 }
 
+void Tr2ReflectionProbe::SetBackLightColor( Color color )
+{
+	m_backlightColor = color;
+}
+
+void Tr2ReflectionProbe::SetBackLightContrast( float contrast )
+{
+	m_backlightContrast = contrast;
+}
+
 void Tr2ReflectionProbe::ReleaseResources( TriStorage s )
 {
 	m_initialized = false;
@@ -265,6 +286,14 @@ bool Tr2ReflectionProbe::DoPrepareResources( ImageIO::PixelFormat rtFormat, Tr2P
 		m_preFilterEffect->SetParameter( BlueSharedString( "tex_hi_res" ), source ? source : static_cast<ITr2TextureProvider*>( m_renderTargetCube ) );
 		m_preFilterEffect->SetParameter( BlueSharedString( "tex_lo_res" ), m_preFilterTarget );
 
+		m_preFilterEffect->SetOption( BlueSharedString( "HOLLYWOOD_MODE" ), BlueSharedString( m_hollywoodMode ? "HOLLYWOOD_ON" : "HOLLYWOOD_OFF" ) );
+		if( m_hollywoodMode )
+		{
+			m_preFilterEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
+			m_preFilterEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
+			m_preFilterEffect->SetParameter( s_viewDirectionName, Vector3( 0, 1, 0 ) );
+		}
+
 		m_filterEffect->SetParameter( BlueSharedString( "tex_in" ), m_preFilterTarget );
 
 		for( int i = 0; i < MIP_COUNT; i++ )
@@ -282,6 +311,13 @@ bool Tr2ReflectionProbe::DoPrepareResources( ImageIO::PixelFormat rtFormat, Tr2P
 		m_copyMipEffect->SetEffectPathName( "res:/graphics/effect/managed/space/System/Reflection/CopyCube.fx" );
 		m_copyMipEffect->SetParameter( BlueSharedString( "tex_hi_res" ), source ? source : static_cast<ITr2TextureProvider*>( m_renderTargetCube ) );
 		m_copyMipEffect->SetParameter( BlueSharedString( "tex_lo_res" ), m_postFilterTarget );
+		m_copyMipEffect->SetOption( BlueSharedString( "HOLLYWOOD_MODE" ), BlueSharedString( m_hollywoodMode ? "HOLLYWOOD_ON" : "HOLLYWOOD_OFF" ) );
+		if( m_hollywoodMode )
+		{
+			m_copyMipEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
+			m_copyMipEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
+			m_copyMipEffect->SetParameter( s_viewDirectionName, Vector3( 0, 1, 0 ) );
+		}
 
 		m_initialized = true;
 	}
@@ -320,6 +356,18 @@ void Tr2ReflectionProbe::Filter( Tr2RenderContext &renderContext )
 
 	{
 		GPU_REGION( renderContext, "Reflection Pre Filter" );
+
+		if( m_hollywoodMode )
+		{
+			m_preFilterEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
+			m_preFilterEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
+			m_preFilterEffect->SetParameter( s_viewDirectionName, Tr2Renderer::GetInverseViewTransform().GetZ() );
+
+			m_copyMipEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
+			m_copyMipEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
+			m_copyMipEffect->SetParameter( s_viewDirectionName, Tr2Renderer::GetInverseViewTransform().GetZ() );
+		}
+
 		Tr2Renderer::RunComputeShader( m_preFilterEffect, FILTER_SIZE * 2 / 8, FILTER_SIZE * 2 / 8, 6, renderContext );
 	}
 
@@ -343,6 +391,11 @@ void Tr2ReflectionProbe::RunFilter()
 	DestroyRenderTargets();
 	DoPrepareResources( PIXEL_FORMAT_R16G16B16A16_FLOAT, renderContext );
 	Filter( renderContext );
+}
+
+bool Tr2ReflectionProbe::IsHollyWoodModeOn() const
+{
+	return m_hollywoodMode;
 }
 
 bool Tr2ReflectionProbe::ReadyForDynamicObjectReflections() const

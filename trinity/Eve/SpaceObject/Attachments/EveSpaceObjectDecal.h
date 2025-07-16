@@ -132,7 +132,6 @@ public:
 	void SetScaling( const Vector3& sc );
 	int GetBoneIndex() const;
 	void SetBoneIndex( int idx );
-	void ForceRebuildIndices();
 	void SetIndices( const std::vector<std::vector<uint32_t>>& indices );
 	void SetMinScreenSize( float minScreenSize );
 
@@ -148,6 +147,8 @@ public:
 	void SetHighDetailDecalState( bool isFrozen );
 
 	void SetBatchType( TriBatchType batchType );
+
+	void SetPriority( uint32_t priority );
 
 private:
 	// create
@@ -192,11 +193,12 @@ private:
 	std::shared_ptr<MeshDecalData> m_decalGeometry;
 	std::vector<std::vector<uint32_t>> m_staticIndexBuffers;
 
-	bool m_forceRebuildIndices;
 	float m_isVisible;
 	float m_minScreenSize;
 	float m_instanceScreenSize;
 	TriBatchType m_batchType;
+
+	uint32_t m_priority;
 
 	unsigned int m_vertexDeclarationOverride;
 	ITr2InstanceData* m_instanceData;

@@ -34,6 +34,7 @@ BLUE_CLASS( EveChildMesh ) :
 	public ITr2Renderable,
 	public IInitialize,
 	public ITr2DebugRenderable,
+	public IListNotify,
 	public ITr2GrannyAnimationOwner,
 	public EveEntity,
 	public INotify,
@@ -87,6 +88,10 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	virtual bool Initialize();
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// IListNotify
+	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify

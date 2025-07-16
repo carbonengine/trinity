@@ -2884,25 +2884,14 @@ void MetalWorkQueue::DrawIndexedPrimitives(
 	id<MTLRenderCommandEncoder> renderEncoder = GetRenderEncoder();
 	if( EmitRenderEncoderState() )
 	{
-		if ( numInstances <= 1 && baseVertex == 0 ) 
-		{
-			[renderEncoder drawIndexedPrimitives:primitiveType
-									  indexCount:numIndices
-									   indexType:indexType
-									 indexBuffer:indexBuffer
-							   indexBufferOffset:startIndex * ( indexType == MTLIndexTypeUInt16 ? 2 : 4 )];
-		}
-		else
-		{
-			[renderEncoder drawIndexedPrimitives:primitiveType
-									  indexCount:numIndices
-									   indexType:indexType
-									 indexBuffer:indexBuffer
-							   indexBufferOffset:startIndex * ( indexType == MTLIndexTypeUInt16 ? 2 : 4 )
-								   instanceCount:numInstances
-									  baseVertex:baseVertex
-									baseInstance:baseInstance];
-		}
+        [renderEncoder drawIndexedPrimitives:primitiveType
+                                  indexCount:numIndices
+                                   indexType:indexType
+                                 indexBuffer:indexBuffer
+                           indexBufferOffset:startIndex * ( indexType == MTLIndexTypeUInt16 ? 2 : 4 )
+                               instanceCount:MAX(1, numInstances)
+                                  baseVertex:baseVertex
+                                baseInstance:baseInstance];
 	}
 	ReleaseEncoder(false);
 }

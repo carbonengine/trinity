@@ -25,6 +25,9 @@ extern std::vector<HANDLE> g_D3DCreatedHeaps;
 extern int g_windowResized;
 #endif
 
+bool g_masstestSelectRandomUpscaler = false;
+TRI_REGISTER_SETTING( "masstestSelectRandomUpscaler", g_masstestSelectRandomUpscaler );
+
 namespace
 {
 
@@ -1283,6 +1286,34 @@ void TriDevice::CreateUpscalingTechnique( uint32_t adapter )
 
 void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration )
 {
+	if( g_masstestSelectRandomUpscaler )
+	{ // TEMP MASSTEST CODE, DO NOT KEEP : START
+		// The first time we hit this code path is during loading the settings from py, here we override the setting for the first call only.
+		// All future calls will skip this code if the user decides to switch upscaler or turn it off
+		static bool codeExecuted = false;
+		if( !codeExecuted )
+		{
+			codeExecuted = true;
+
+			// Generate a list of supported techniques that dose not include FSR1
+			std::vector<Tr2UpscalingTechniqueInfo> reducedSupportedUpscalingTechniques;
+
+			for( int i = 0; i < m_supportedUpscalingTechniques.size(); i++ )
+			{
+				if( m_supportedUpscalingTechniques[i].technique != Tr2UpscalingAL::Technique::FSR1 )
+				{
+					reducedSupportedUpscalingTechniques.push_back( m_supportedUpscalingTechniques[i] );
+				}
+			}
+
+			if( reducedSupportedUpscalingTechniques.size() > 0 )
+			{
+				technique = (Tr2UpscalingAL::Technique)reducedSupportedUpscalingTechniques[rand() % reducedSupportedUpscalingTechniques.size()].technique;
+				setting = Tr2UpscalingAL::BALANCED;
+			}
+		}
+	} // TEMP MASSTEST CODE, DO NOT KEEP : END
+
 	m_upscalingChanged = technique != m_upscalingTechnique || setting != m_upscalingSetting || frameGeneration != m_upscalingWithFrameGeneration;
 	m_upscalingTechnique = technique;
 	m_upscalingSetting = setting;

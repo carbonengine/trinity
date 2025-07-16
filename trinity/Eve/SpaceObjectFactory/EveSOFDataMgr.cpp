@@ -155,6 +155,16 @@ LightData EveSOFDataMgr::SpotLightAttachment::AsLightData( Color& color, float s
 	return data;
 }
 
+EveSOFDataMgr::MultiHullDecalIndexBuffers::MultiHullDecalIndexBuffers( const EveSOFDataMultiHullDecalIndexBuffers& buffers ) :
+	combinedGeometryResPath( buffers.m_combinedGeometryResPath )
+{
+	indexBuffers.reserve( buffers.m_indexBuffers.size() );
+	for( auto& buffer : buffers.m_indexBuffers )
+	{
+		indexBuffers.push_back( buffer->m_indexBuffer );
+	}
+}
+
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -520,7 +530,7 @@ bool EveSOFDataMgr::SetData( EveSOFData* dbData )
 		CCP_LOGERR( "Error loading hull data!" );
 		return false;
 	}
-	CCP_LOGNOTICE( "SOF: loaded %d hulls", m_hullData.size() );
+	CCP_LOGNOTICE( "SOF: loaded %zu hulls", m_hullData.size() );
 
 	// load faction data
 	if( !LoadFactionData( dbData ) )
@@ -528,7 +538,7 @@ bool EveSOFDataMgr::SetData( EveSOFData* dbData )
 		CCP_LOGERR( "Error loading faction data!" );
 		return false;
 	}
-	CCP_LOGNOTICE( "SOF: loaded %d factions", m_factionData.size() );
+	CCP_LOGNOTICE( "SOF: loaded %zu factions", m_factionData.size() );
 
 	// load race data
 	if( !LoadRaceData( dbData ) )
@@ -536,7 +546,7 @@ bool EveSOFDataMgr::SetData( EveSOFData* dbData )
 		CCP_LOGERR( "Error loading race data!" );
 		return false;
 	}
-	CCP_LOGNOTICE( "SOF: loaded %d races", m_raceData.size() );
+	CCP_LOGNOTICE( "SOF: loaded %zu races", m_raceData.size() );
 
 	// load material data
 	if( !LoadMaterialData( dbData ) )
@@ -544,7 +554,7 @@ bool EveSOFDataMgr::SetData( EveSOFData* dbData )
 		CCP_LOGERR( "Error loading material data!" );
 		return false;
 	}
-	CCP_LOGNOTICE( "SOF: loaded %d materials", m_materialData.size() );
+	CCP_LOGNOTICE( "SOF: loaded %zu materials", m_materialData.size() );
 
 	// load pattern data
 	if( !LoadPatternData( dbData ) )
@@ -552,7 +562,7 @@ bool EveSOFDataMgr::SetData( EveSOFData* dbData )
 		CCP_LOGERR( "Error loading pattern data!" );
 		return false;
 	}
-	CCP_LOGNOTICE( "SOF: loaded %d patterns", m_patternData.size() );
+	CCP_LOGNOTICE( "SOF: loaded %zu patterns", m_patternData.size() );
 
 	// load layoutdata
 	if( !LoadLayoutData( dbData ) )
@@ -560,7 +570,7 @@ bool EveSOFDataMgr::SetData( EveSOFData* dbData )
 		CCP_LOGERR( "Error loading layout data!" );
 		return false;
 	}
-	CCP_LOGNOTICE( "SOF: loaded %d layouts", m_layoutData.size() );
+	CCP_LOGNOTICE( "SOF: loaded %zu layouts", m_layoutData.size() );
 
 	// load generic data
 	if( !LoadGenericData( dbData ) )
@@ -943,6 +953,11 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			for( const auto buffer : itemPtr->m_indexBuffers )
 			{
 				itemData.indexBuffers.push_back( buffer->m_indexBuffer );
+			}
+
+			for ( const auto& mhBuffers : itemPtr->m_multiHullIndexBuffers )
+			{
+				itemData.multiHullIndexBuffers.push_back( MultiHullDecalIndexBuffers( *mhBuffers ) );
 			}
 
 			for( auto hdtit = itemPtr->m_textures.begin(); hdtit != itemPtr->m_textures.end(); ++hdtit )

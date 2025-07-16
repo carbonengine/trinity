@@ -8,12 +8,12 @@ find_package(CACAO REQUIRED)
 find_package(IntelTBB REQUIRED)
 find_package(NanoVDB REQUIRED)
 find_package(VMA REQUIRED)
+find_package(CarbonTrinityAudioAPI REQUIRED)
 
 set(PUBLIC_HEADER_FILES
     Include/IEveBallpark.h
     Include/IEveReferencePoint.h
     Include/ITr2AnimationUpdater.h
-    Include/ITr2AudioEmitter.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
     Include/ITr2DebugRenderer2.h
@@ -694,7 +694,6 @@ set(_SOURCES
     Include/IEveBallpark.h
     Include/IEveReferencePoint.h
     Include/ITr2AnimationUpdater.h
-    Include/ITr2AudioEmitter.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
     Include/ITr2DebugRenderer2.h
@@ -1650,7 +1649,7 @@ find_package(CcpMath REQUIRED NO_CMAKE_PATH)
 find_package(ImageIO REQUIRED NO_CMAKE_PATH)
 find_package(JPEG REQUIRED NO_CMAKE_PATH)
 find_package(CcpParser REQUIRED NO_CMAKE_PATH)
-find_package(CarbonTrinityAudioAPI REQUIRED)
+find_package(CarbonTrinityAudioAPI REQUIRED NO_CMAKE_PATH)
 
 # utility function that sets properties shared between all trinity targets
 function(set_shared_trinity_properties target)

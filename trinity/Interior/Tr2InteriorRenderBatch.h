@@ -56,7 +56,7 @@ struct Tr2IntKeyGenerator
 	}
 
 	// Get the sort type - need stable_sort so decals stay in artist-specified order
-	static RenderBatchSortType GetSortType() 
+	constexpr static RenderBatchSortType GetSortType() 
 	{ 
 		return RENDERBATCHSORTTYPE_STABLE_SORT; 
 	}

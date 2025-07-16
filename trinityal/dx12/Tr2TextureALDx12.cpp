@@ -719,6 +719,24 @@ namespace TrinityALImpl
 			creationState,
 			nullptr,
 			IID_PPV_ARGS( &texture ) ) );
+		
+		if( renderContext.m_device1 )
+		{
+			ID3D12Pageable* resource = texture;
+			D3D12_RESIDENCY_PRIORITY priority;
+			if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) || HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) || HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+			{
+				//Writable textures are generally very important to keep in VRAM.
+				priority = D3D12_RESIDENCY_PRIORITY_HIGH;
+			}
+			else
+			{
+				//Read-only textures are generally not as critical.
+				priority = D3D12_RESIDENCY_PRIORITY_LOW;
+			}
+
+			renderContext.m_device1->SetResidencyPriority( 1, &resource, &priority );
+		}
 
 		CComPtr<ID3D12Resource> scratch;
 		uint64_t writeScratchSize = 0;

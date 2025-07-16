@@ -33,6 +33,10 @@ const Be::ClassInfo* Tr2ReflectionProbe::ExposeToBlue()
 		MAP_ATTRIBUTE_WITH_CHOOSER( "renderFrequency", m_renderFrequency, "", Be::READWRITE | Be::NOTIFY | Be::ENUM, RenderFrequencyChooser )
 		MAP_ATTRIBUTE( "currentFrame", m_currentFrame, "", Be::READ )
 
+		MAP_ATTRIBUTE( "hollywoodMode", m_hollywoodMode, "Enables/Disables Hollywood backlight mode \n:jessica-group: Hollywood", Be::READWRITE | Be::NOTIFY )
+		MAP_ATTRIBUTE( "backlightContrast", m_backlightContrast, "Back light shape/size. Set by the scene\n:jessica-group: Hollywood", Be::READ )
+		MAP_ATTRIBUTE( "backlightColor", m_backlightColor, "Back light color. Set by the scene\n:jessica-group: Hollywood", Be::READ )
+
 		MAP_METHOD_AND_WRAP( "RunFilter", RunFilter, "Filters the currently set texture" )
 	EXPOSURE_END()
 }
