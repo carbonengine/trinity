@@ -15,6 +15,27 @@
 #include "winuser.h"
 #endif
 
+
+#if TBB_ENABLED
+	#include <oneapi/tbb.h>
+
+	size_t g_currentThreadCount = tbb::info::default_concurrency();
+	tbb::global_control* g_threadCountControl = new tbb::global_control( tbb::global_control::max_allowed_parallelism, g_currentThreadCount );
+
+
+	void SetThreadCount( size_t newThreadCount )
+	{
+		if( g_currentThreadCount != newThreadCount )
+		{
+			CCP_LOGNOTICE( "Thread count changed from %zu to %zu.", g_currentThreadCount, newThreadCount );
+			g_currentThreadCount = newThreadCount;
+			delete g_threadCountControl;
+			g_threadCountControl = new tbb::global_control( tbb::global_control::max_allowed_parallelism, newThreadCount );
+		}
+	}
+
+#endif 
+
 using namespace Tr2RenderContextEnum;
 
 #ifdef _WIN32
@@ -1105,6 +1126,9 @@ bool TriDevice::Render()
 	// We need to throttle the client right after Present call, so that GPU can have a break
 	Throttle();
 
+
+
+
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	Tr2SyncToGpu::GetInstance().Tick();
@@ -1173,24 +1197,26 @@ bool TriDevice::SupportsRenderTargetFormat( Tr2RenderContextEnum::PixelFormat fo
 
 void TriDevice::Throttle() const
 {
-	if( !m_allowThrottling )
-	{
-		return;
-	}
-
 	uint32_t sleepTime = 0;
+	uint32_t numThreads = std::max( tbb::info::default_concurrency(), 1 );
 
-	if( GetThrottling( WINDOW_OUT_OF_FOCUS ) )
+	if( m_allowThrottling )
 	{
-		sleepTime = std::max( sleepTime, 10u );
-	}
-	if( GetThrottling( THERMAL_STATE ) )
-	{
-		sleepTime = std::max( sleepTime, 20u );
-	}
-	if( GetThrottling( WINDOW_HIDDEN ) )
-	{
-		sleepTime = std::max( sleepTime, 20u );
+		if( GetThrottling( WINDOW_OUT_OF_FOCUS ) )
+		{
+			sleepTime = std::max( sleepTime, 10u );
+			numThreads = std::max( numThreads / 4, 1u ); //Reduce thread count to 1/4th, clamped to at least 1.
+		}
+		if( GetThrottling( THERMAL_STATE ) )
+		{
+			sleepTime = std::max( sleepTime, 20u );
+			numThreads = 1;
+		}
+		if( GetThrottling( WINDOW_HIDDEN ) )
+		{
+			sleepTime = std::max( sleepTime, 20u );
+			numThreads = 1;
+		}
 	}
 
 	if( sleepTime > 0 )
@@ -1198,6 +1224,10 @@ void TriDevice::Throttle() const
 		CCP_STATS_SCOPED_TIME( throttleTime );
 		CcpThreadSleep( sleepTime );
 	}
+
+#if TBB_ENABLED
+	SetThreadCount( numThreads );
+#endif
 }
 
 bool TriDevice::ShouldSkipFrame() const

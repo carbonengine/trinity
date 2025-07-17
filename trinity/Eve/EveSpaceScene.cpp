@@ -450,6 +450,8 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
 
 	{
+		CCP_STATS_ZONE( "UpdateBackgroundObjects" );
+		
 		for( auto it = m_backgroundObjects.begin(); it != m_backgroundObjects.end(); ++it )
 		{
 			( *it )->UpdateSyncronous( m_updateContext );
@@ -525,14 +527,20 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 
 		Tr2ParallelTaskGroup taskGroup = {};
 		m_updateContext.SetTaskGroup( &taskGroup );
+		
 		for( auto& object : m_objects )
 		{
-			taskGroup.run( [object, this] { object->UpdateAsyncronous( m_updateContext ); } );
+			taskGroup.run( [object, this] {
+				object->UpdateAsyncronous( m_updateContext ); 
+			} );
 		}
 		for( auto& object : m_uiObjects )
 		{
-			taskGroup.run( [object, this] { object->UpdateAsyncronous( m_updateContext ); } );
+			taskGroup.run( [object, this] {
+				object->UpdateAsyncronous( m_updateContext );
+			} );
 		}
+
 		taskGroup.wait();
 		m_updateContext.SetTaskGroup( nullptr );
 	}
