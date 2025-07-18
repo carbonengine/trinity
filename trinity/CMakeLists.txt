@@ -845,6 +845,9 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPBloomEffect.cpp
     PostProcess/Effects/Tr2PPBloomEffect.h
     PostProcess/Effects/Tr2PPBloomEffect_Blue.cpp
+    PostProcess/Effects/Tr2PPColorCorrectionEffect.cpp
+    PostProcess/Effects/Tr2PPColorCorrectionEffect.h
+    PostProcess/Effects/Tr2PPColorCorrectionEffect_Blue.cpp
     PostProcess/Effects/Tr2PPDepthOfFieldEffect.cpp
     PostProcess/Effects/Tr2PPDepthOfFieldEffect.h
     PostProcess/Effects/Tr2PPDepthOfFieldEffect_Blue.cpp

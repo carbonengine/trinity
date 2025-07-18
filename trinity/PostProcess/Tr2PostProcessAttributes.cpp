@@ -278,13 +278,17 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 
 	postprocess.m_exposureAdjustment = exposureAdjustment;
 
-	postprocess.m_whiteTemperature = whiteTemperature;
-	postprocess.m_whiteTint = whiteTint;
-	postprocess.m_colorSaturation = colorSaturation;
-	postprocess.m_colorContrast = colorContrast;
-	postprocess.m_colorGamma = colorGamma;
-	postprocess.m_colorGain = colorGain;
-	postprocess.m_colorOffset = colorOffset;
+
+	Tr2PPColorCorrectionEffectPtr colorCorrectionEffect;
+	colorCorrectionEffect.CreateInstance();
+	colorCorrectionEffect->m_whiteTemperature = whiteTemperature;
+	colorCorrectionEffect->m_whiteTint = whiteTint;
+	colorCorrectionEffect->m_colorSaturation = colorSaturation;
+	colorCorrectionEffect->m_colorContrast = colorContrast;
+	colorCorrectionEffect->m_colorGamma = colorGamma;
+	colorCorrectionEffect->m_colorGain = colorGain;
+	colorCorrectionEffect->m_colorOffset = colorOffset;
+	postprocess.SetColorCorrection( colorCorrectionEffect );
 }
 
 void Tr2PostProcessAttributes::Reset()
@@ -471,11 +475,14 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		break;
 	}
 
-	whiteTemperature = Attribute( postProcess->m_whiteTemperature, true );
-	whiteTint = Attribute( postProcess->m_whiteTint, true );
-	colorSaturation = Attribute( postProcess->m_colorSaturation, true );
-	colorContrast = Attribute( postProcess->m_colorContrast, true );
-	colorGamma = Attribute( postProcess->m_colorGamma, true );
-	colorGain = Attribute( postProcess->m_colorGain, true );
-	colorOffset = Attribute( postProcess->m_colorOffset, true );
+	if( auto colorCorrection = postProcess->GetColorCorrection() )
+	{
+		whiteTemperature = Attribute( colorCorrection->m_whiteTemperature, true );
+		whiteTint = Attribute( colorCorrection->m_whiteTint, true );
+		colorSaturation = Attribute( colorCorrection->m_colorSaturation, true );
+		colorContrast = Attribute( colorCorrection->m_colorContrast, true );
+		colorGamma = Attribute( colorCorrection->m_colorGamma, true );
+		colorGain = Attribute( colorCorrection->m_colorGain, true );
+		colorOffset = Attribute( colorCorrection->m_colorOffset, true );
+	}
 }

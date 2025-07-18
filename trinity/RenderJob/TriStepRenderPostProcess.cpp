@@ -429,6 +429,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	Tr2PPTaaEffectPtr taa = nullptr;
 	Tr2PPDepthOfFieldEffectPtr dof = nullptr;
 	Tr2PPTonemappingEffectPtr tonemapping = nullptr;
+	Tr2PPColorCorrectionEffectPtr colorCorrection = nullptr;
 
 	if( postProcess != nullptr )
 	{
@@ -451,6 +452,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			postProcess->GetLuts( luts );
 		default:
 			taa = postProcess->GetTaa();
+			colorCorrection = postProcess->GetColorCorrection();
 			break;
 		}
 
@@ -579,21 +581,13 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	ProcessLut( luts );
 	ProcessVignette( vignette );
 
-	if( postProcess != nullptr ){
-		static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
-		m_tonemappingEffect->SetParameter( WhiteTemperature, postProcess->m_whiteTemperature );
-		static auto WhiteTint = BlueSharedString( "WhiteTint" );
-		m_tonemappingEffect->SetParameter( WhiteTint, postProcess->m_whiteTint );
-		static auto ColorSaturation = BlueSharedString( "ColorSaturation" );
-		m_tonemappingEffect->SetParameter( ColorSaturation, postProcess->m_colorSaturation );
-		static auto ColorContrast = BlueSharedString( "ColorContrast" );
-		m_tonemappingEffect->SetParameter( ColorContrast, postProcess->m_colorContrast );
-		static auto ColorGamma = BlueSharedString( "ColorGamma" );
-		m_tonemappingEffect->SetParameter( ColorGamma, postProcess->m_colorGamma );
-		static auto ColorGain = BlueSharedString( "ColorGain" );
-		m_tonemappingEffect->SetParameter( ColorGain, postProcess->m_colorGain );
-		static auto ColorOffset = BlueSharedString( "ColorOffset" );
-		m_tonemappingEffect->SetParameter( ColorOffset, postProcess->m_colorOffset );
+	if( colorCorrection )
+	{
+		ProcessColorCorrection( colorCorrection );
+	}
+	else
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_DISABLED" ) );
 	}
 
 	if( tonemapping )
@@ -2023,6 +2017,41 @@ void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContex
 	DrawInto( *dest, Tr2LoadAction::DONT_CARE, m_taaCopyEffect, renderContext );
 }
 
+void TriStepRenderPostProcess::ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection )
+{
+	if( colorCorrection->IsDirty() )
+	{
+		m_tonemappingEffect->StartUpdate();
+
+		if( colorCorrection->IsActive() )
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_ENABLED" ) );
+			static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
+			m_tonemappingEffect->SetParameter( WhiteTemperature, colorCorrection->m_whiteTemperature );
+			static auto WhiteTint = BlueSharedString( "WhiteTint" );
+			m_tonemappingEffect->SetParameter( WhiteTint, colorCorrection->m_whiteTint );
+			static auto ColorSaturation = BlueSharedString( "ColorSaturation" );
+			m_tonemappingEffect->SetParameter( ColorSaturation, colorCorrection->m_colorSaturation );
+			static auto ColorContrast = BlueSharedString( "ColorContrast" );
+			m_tonemappingEffect->SetParameter( ColorContrast, colorCorrection->m_colorContrast );
+			static auto ColorGamma = BlueSharedString( "ColorGamma" );
+			m_tonemappingEffect->SetParameter( ColorGamma, colorCorrection->m_colorGamma );
+			static auto ColorGain = BlueSharedString( "ColorGain" );
+			m_tonemappingEffect->SetParameter( ColorGain, colorCorrection->m_colorGain );
+			static auto ColorOffset = BlueSharedString( "ColorOffset" );
+			m_tonemappingEffect->SetParameter( ColorOffset, colorCorrection->m_colorOffset );
+		}
+		else
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_DISABLED" ) );
+		}
+
+		m_tonemappingEffect->EndUpdate();
+
+		colorCorrection->SetDirty( false );
+	}
+}
+
 void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping )
 {
 	if ( !tonemapping->IsDirty() )
@@ -2137,6 +2166,8 @@ void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonem
 	}
 
 	m_tonemappingEffect->EndUpdate();
+
+	tonemapping->SetDirty( false );
 }
 
 bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx )
