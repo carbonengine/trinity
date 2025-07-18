@@ -480,6 +480,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		SetDirtyIfNotNull( fog );
 		SetDirtyIfNotNull( taa );
 		SetDirtyIfNotNull( dof );
+		SetDirtyIfNotNull( tonemapping );
+		SetDirtyIfNotNull( colorCorrection );
 	}
 	// Processing effects will set velocity map if it is needed
 	m_scene->SetVelocityMap( nullptr );
@@ -2019,37 +2021,39 @@ void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContex
 
 void TriStepRenderPostProcess::ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection )
 {
-	if( colorCorrection->IsDirty() )
+	if( !colorCorrection->IsDirty() )
 	{
-		m_tonemappingEffect->StartUpdate();
-
-		if( colorCorrection->IsActive() )
-		{
-			m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_ENABLED" ) );
-			static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
-			m_tonemappingEffect->SetParameter( WhiteTemperature, colorCorrection->m_whiteTemperature );
-			static auto WhiteTint = BlueSharedString( "WhiteTint" );
-			m_tonemappingEffect->SetParameter( WhiteTint, colorCorrection->m_whiteTint );
-			static auto ColorSaturation = BlueSharedString( "ColorSaturation" );
-			m_tonemappingEffect->SetParameter( ColorSaturation, colorCorrection->m_colorSaturation );
-			static auto ColorContrast = BlueSharedString( "ColorContrast" );
-			m_tonemappingEffect->SetParameter( ColorContrast, colorCorrection->m_colorContrast );
-			static auto ColorGamma = BlueSharedString( "ColorGamma" );
-			m_tonemappingEffect->SetParameter( ColorGamma, colorCorrection->m_colorGamma );
-			static auto ColorGain = BlueSharedString( "ColorGain" );
-			m_tonemappingEffect->SetParameter( ColorGain, colorCorrection->m_colorGain );
-			static auto ColorOffset = BlueSharedString( "ColorOffset" );
-			m_tonemappingEffect->SetParameter( ColorOffset, colorCorrection->m_colorOffset );
-		}
-		else
-		{
-			m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_DISABLED" ) );
-		}
-
-		m_tonemappingEffect->EndUpdate();
-
-		colorCorrection->SetDirty( false );
+		return;
 	}
+
+	m_tonemappingEffect->StartUpdate();
+
+	if( colorCorrection->IsActive() )
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_ENABLED" ) );
+		static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
+		m_tonemappingEffect->SetParameter( WhiteTemperature, colorCorrection->m_whiteTemperature );
+		static auto WhiteTint = BlueSharedString( "WhiteTint" );
+		m_tonemappingEffect->SetParameter( WhiteTint, colorCorrection->m_whiteTint );
+		static auto ColorSaturation = BlueSharedString( "ColorSaturation" );
+		m_tonemappingEffect->SetParameter( ColorSaturation, colorCorrection->m_colorSaturation );
+		static auto ColorContrast = BlueSharedString( "ColorContrast" );
+		m_tonemappingEffect->SetParameter( ColorContrast, colorCorrection->m_colorContrast );
+		static auto ColorGamma = BlueSharedString( "ColorGamma" );
+		m_tonemappingEffect->SetParameter( ColorGamma, colorCorrection->m_colorGamma );
+		static auto ColorGain = BlueSharedString( "ColorGain" );
+		m_tonemappingEffect->SetParameter( ColorGain, colorCorrection->m_colorGain );
+		static auto ColorOffset = BlueSharedString( "ColorOffset" );
+		m_tonemappingEffect->SetParameter( ColorOffset, colorCorrection->m_colorOffset );
+	}
+	else
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_DISABLED" ) );
+	}
+
+	m_tonemappingEffect->EndUpdate();
+
+	colorCorrection->SetDirty( false );
 }
 
 void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping )
