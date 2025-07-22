@@ -8,12 +8,6 @@
 
 #include "PostProcess/Effects/Tr2PPEffect.h"
 
-namespace Tr2ColorCorrection
-{
-
-extern const Be::VarChooser ColorCorrectionDebugChooser[];
-}
-
 BLUE_CLASS( Tr2PPColorCorrectionEffect ) :
 	public Tr2PPEffect
 {
