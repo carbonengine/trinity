@@ -142,6 +142,13 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	auto depthOfFieldFocalLength = Accumulate( &Tr2PostProcessAttributes::depthOfFieldFocalLength, sources, debugObserver );
 	auto depthOfFieldShape = Accumulate( &Tr2PostProcessAttributes::depthOfFieldShape, sources, debugObserver, MaxWeightAccumulator<Tr2Bokeh::Shape>() );
 	auto depthOfFieldForegroundBlurNeeded = Accumulate( &Tr2PostProcessAttributes::depthOfFieldForegroundBlurNeeded, sources, debugObserver );
+	auto whiteTemperature = Accumulate( &Tr2PostProcessAttributes::whiteTemperature, sources, debugObserver );
+	auto whiteTint = Accumulate( &Tr2PostProcessAttributes::whiteTint, sources, debugObserver );
+	auto colorSaturation = Accumulate( &Tr2PostProcessAttributes::colorSaturation, sources, debugObserver );
+	auto colorContrast = Accumulate( &Tr2PostProcessAttributes::colorContrast, sources, debugObserver );
+	auto colorGamma = Accumulate( &Tr2PostProcessAttributes::colorGamma, sources, debugObserver );
+	auto colorGain = Accumulate( &Tr2PostProcessAttributes::colorGain, sources, debugObserver );
+	auto colorOffset = Accumulate( &Tr2PostProcessAttributes::colorOffset, sources, debugObserver );
 
 	postprocess.SetBloom( nullptr );
 	postprocess.SetDesaturate( nullptr );
@@ -150,6 +157,7 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	postprocess.SetSignalLoss( nullptr );
 	postprocess.SetVignette( nullptr );
 	postprocess.SetDepthOfField( nullptr );
+	postprocess.SetColorCorrection( nullptr );
 	postprocess.ClearLuts();
 
 	if( signalLossIntensity > 0 )
@@ -270,6 +278,22 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	}
 
 	postprocess.m_exposureAdjustment = exposureAdjustment;
+
+	// All color correction attributes are enabled because of weird interpolation issues when entering the post processing volumes.
+	// Due to that, this check is always going to be true. So we cannot _really_ turn color correction off...
+	if( whiteTemperature > 0 )
+	{
+		Tr2PPColorCorrectionEffectPtr colorCorrectionEffect;
+		colorCorrectionEffect.CreateInstance();
+		colorCorrectionEffect->m_whiteTemperature = whiteTemperature;
+		colorCorrectionEffect->m_whiteTint = whiteTint;
+		colorCorrectionEffect->m_colorSaturation = colorSaturation;
+		colorCorrectionEffect->m_colorContrast = colorContrast;
+		colorCorrectionEffect->m_colorGamma = colorGamma;
+		colorCorrectionEffect->m_colorGain = colorGain;
+		colorCorrectionEffect->m_colorOffset = colorOffset;
+		postprocess.SetColorCorrection( colorCorrectionEffect );
+	}
 }
 
 void Tr2PostProcessAttributes::Reset()
@@ -327,6 +351,16 @@ void Tr2PostProcessAttributes::Reset()
 	depthOfFieldFocalDistance = Attribute( 0.0f );
 	depthOfFieldFocalLength = Attribute( 0.0f );
 	depthOfFieldShape = Attribute( Tr2Bokeh::Disk );
+
+	// We enable all color correction options because otherwise it would interpolate from zero to whatever the 
+	// postprocess volume has set, giving us weird results when entering the volume.
+	whiteTemperature = Attribute( 6500.0f, true );
+	whiteTint = Attribute( 0.0f, true );
+	colorSaturation = Attribute( 1.0f, true );
+	colorContrast = Attribute( 1.0f, true );
+	colorGamma = Attribute( 1.0f, true );
+	colorGain = Attribute( Vector3( 1.0f, 1.0f, 1.0f ), true );
+	colorOffset = Attribute( Vector3( 0.0f, 0.0f, 0.0f ), true );
 }
 
 void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, PostProcessEnums::Priority inPriority, float inIntensity )
@@ -446,5 +480,19 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		lutIntensity = Attribute( lut->m_influence, true );
 		lutPath = Attribute( lut->m_path, true );
 		break;
+	}
+
+	if( auto colorCorrection = postProcess->GetColorCorrection() )
+	{
+		if ( colorCorrection->IsActive() )
+		{
+			whiteTemperature = Attribute( colorCorrection->m_whiteTemperature, true );
+			whiteTint = Attribute( colorCorrection->m_whiteTint, true );
+			colorSaturation = Attribute( colorCorrection->m_colorSaturation, true );
+			colorContrast = Attribute( colorCorrection->m_colorContrast, true );
+			colorGamma = Attribute( colorCorrection->m_colorGamma, true );
+			colorGain = Attribute( colorCorrection->m_colorGain, true );
+			colorOffset = Attribute( colorCorrection->m_colorOffset, true );
+		}
 	}
 }

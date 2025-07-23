@@ -105,5 +105,13 @@ const Be::ClassInfo* Tr2PostProcessAttributes::ExposeToBlue()
 		POSTPROCESSATTRIBUTE_DEFINE( depthOfFieldFocalLength, Depth Of Field, "" )
 		POSTPROCESSATTRIBUTE_DEFINE_ENUM( depthOfFieldShape, Depth Of Field, "DOES NOT BLEND!", Tr2Bokeh::BokehShapeChooser )
 
+		POSTPROCESSATTRIBUTE_DEFINE( whiteTemperature, Color Correction, "\n:jessica-numeric-range: (3000, 15000)" )
+		POSTPROCESSATTRIBUTE_DEFINE( whiteTint, Color Correction, "\n:jessica-numeric-range: (-1.0, 1.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorSaturation, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorContrast, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorGamma, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorGain, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+		POSTPROCESSATTRIBUTE_DEFINE( colorOffset, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
+
 	EXPOSURE_END()
 }

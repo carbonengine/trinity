@@ -93,6 +93,14 @@ public:
 	PriorityBlend::Attribute<float> depthOfFieldFocalLength;
 	PriorityBlend::Attribute<Tr2Bokeh::Shape> depthOfFieldShape;
 	PriorityBlend::Attribute<bool> depthOfFieldForegroundBlurNeeded;
+
+	PriorityBlend::Attribute<float> whiteTemperature = 6500.f;
+	PriorityBlend::Attribute<float> whiteTint = 0.0f;
+	PriorityBlend::Attribute<float> colorSaturation = 1.f;
+	PriorityBlend::Attribute<float> colorContrast = 1.f;
+	PriorityBlend::Attribute<float> colorGamma = 1.f;
+	PriorityBlend::Attribute<Vector3> colorGain = Vector3( 1, 1, 1 );
+	PriorityBlend::Attribute<Vector3> colorOffset = Vector3( 0, 0, 0 );
 };
 
 TYPEDEF_BLUECLASS( Tr2PostProcessAttributes );
