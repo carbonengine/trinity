@@ -1,9 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Created:		January 2019
-// Copyright:	CCP 2019
-//
-
 #pragma once
 
 #include "PostProcess/Effects/Tr2PPEffect.h"

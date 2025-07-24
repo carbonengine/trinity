@@ -1,9 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Created:		January 2019
-// Copyright:	CCP 2019
-//
-
 #include "StdAfx.h"
 #include "Tr2PPColorCorrectionEffect.h"
 
