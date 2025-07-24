@@ -29,57 +29,7 @@ const Be::ClassInfo* Tr2PostProcess2::ExposeToBlue()
 		MAP_ATTRIBUTE( "depthOfField", m_depthOfField, "Accesses the dof effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "taa", m_taa, "Accesses the temporal antialiasing effect", Be::READWRITE )
 		MAP_ATTRIBUTE( "tonemapping", m_tonemapping, "Accesses the tonemapping effect", Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE( 
-			"whiteTemperature", 
-			m_whiteTemperature, 
-			"Color grading white temperature\n"
-			":jessica-group: Color Correction\n"
-			":jessica-numeric-range: (3000, 15000)", 
-			Be::READWRITE )
-		MAP_ATTRIBUTE( 
-			"whiteTint", 
-			m_whiteTint, 
-			"Color grading white tint\n"
-			":jessica-group: Color Correction\n"
-			":jessica-numeric-range: (-1.0, 1.0)", 
-			Be::READWRITE )
-		MAP_ATTRIBUTE( 
-			"colorSaturation", 
-			m_colorSaturation, 
-			"Color saturation\n"
-			":jessica-group: Color Correction\n"
-			":jessica-numeric-range: (0.0, 2.0)",
-			Be::READWRITE )
-		MAP_ATTRIBUTE( 
-			"colorContrast", 
-			m_colorContrast, 
-			"Image contrast\n"
-			":jessica-group: Color Correction\n"
-			":jessica-numeric-range: (0.0, 2.0)",
-			Be::READWRITE )
-		MAP_ATTRIBUTE( 
-			"colorGamma", 
-			m_colorGamma, 
-			"Image gamma\n"
-			":jessica-group: Color Correction\n"
-			":jessica-numeric-range: (0.0, 2.0)",
-			Be::READWRITE )
-		MAP_ATTRIBUTE( 
-			"colorGain", 
-			m_colorGain, 
-			"Image color gain (scale)\n"
-			":jessica-group: Color Correction\n"
-			":jessica-numeric-range: (0.0, 2.0)",
-			Be::READWRITE )
-		MAP_ATTRIBUTE( 
-			"colorOffset", 
-			m_colorOffset, 
-			"Image color offset\n"
-			":jessica-group: Color Correction\n"
-			":jessica-numeric-range: (0.0, 2.0)",
-			Be::READWRITE )
-
+		MAP_ATTRIBUTE( "colorCorrection", m_colorCorrection, "Accesses the color correction effect", Be::READWRITE | Be::PERSIST )
 
     EXPOSURE_END()
 }

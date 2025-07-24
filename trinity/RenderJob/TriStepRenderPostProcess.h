@@ -261,6 +261,7 @@ private:
 	bool m_fadeEnabled;
 	uint8_t m_lutsEnabled;
 	bool m_vignetteEnabled;
+	void ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection );
 	void ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping );
 
 	bool m_sceneDirty;

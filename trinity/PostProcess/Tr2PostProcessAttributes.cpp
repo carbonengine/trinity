@@ -157,6 +157,7 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	postprocess.SetSignalLoss( nullptr );
 	postprocess.SetVignette( nullptr );
 	postprocess.SetDepthOfField( nullptr );
+	postprocess.SetColorCorrection( nullptr );
 	postprocess.ClearLuts();
 
 	if( signalLossIntensity > 0 )
@@ -278,13 +279,21 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 
 	postprocess.m_exposureAdjustment = exposureAdjustment;
 
-	postprocess.m_whiteTemperature = whiteTemperature;
-	postprocess.m_whiteTint = whiteTint;
-	postprocess.m_colorSaturation = colorSaturation;
-	postprocess.m_colorContrast = colorContrast;
-	postprocess.m_colorGamma = colorGamma;
-	postprocess.m_colorGain = colorGain;
-	postprocess.m_colorOffset = colorOffset;
+	// All color correction attributes are enabled because of weird interpolation issues when entering the post processing volumes.
+	// Due to that, this check is always going to be true. So we cannot _really_ turn color correction off...
+	if( whiteTemperature > 0 )
+	{
+		Tr2PPColorCorrectionEffectPtr colorCorrectionEffect;
+		colorCorrectionEffect.CreateInstance();
+		colorCorrectionEffect->m_whiteTemperature = whiteTemperature;
+		colorCorrectionEffect->m_whiteTint = whiteTint;
+		colorCorrectionEffect->m_colorSaturation = colorSaturation;
+		colorCorrectionEffect->m_colorContrast = colorContrast;
+		colorCorrectionEffect->m_colorGamma = colorGamma;
+		colorCorrectionEffect->m_colorGain = colorGain;
+		colorCorrectionEffect->m_colorOffset = colorOffset;
+		postprocess.SetColorCorrection( colorCorrectionEffect );
+	}
 }
 
 void Tr2PostProcessAttributes::Reset()
@@ -343,13 +352,15 @@ void Tr2PostProcessAttributes::Reset()
 	depthOfFieldFocalLength = Attribute( 0.0f );
 	depthOfFieldShape = Attribute( Tr2Bokeh::Disk );
 
-	whiteTemperature = 0;
-	whiteTint = 0;
-	colorSaturation = 0;
-	colorContrast = 0;
-	colorGamma = 0;
-	colorGain = Vector3( 0.0f, 0.0f, 0.0f );
-	colorOffset = Vector3( 0.0f, 0.0f, 0.0f );
+	// We enable all color correction options because otherwise it would interpolate from zero to whatever the 
+	// postprocess volume has set, giving us weird results when entering the volume.
+	whiteTemperature = Attribute( 6500.0f, true );
+	whiteTint = Attribute( 0.0f, true );
+	colorSaturation = Attribute( 1.0f, true );
+	colorContrast = Attribute( 1.0f, true );
+	colorGamma = Attribute( 1.0f, true );
+	colorGain = Attribute( Vector3( 1.0f, 1.0f, 1.0f ), true );
+	colorOffset = Attribute( Vector3( 0.0f, 0.0f, 0.0f ), true );
 }
 
 void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, PostProcessEnums::Priority inPriority, float inIntensity )
@@ -471,11 +482,17 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		break;
 	}
 
-	whiteTemperature = Attribute( postProcess->m_whiteTemperature, true );
-	whiteTint = Attribute( postProcess->m_whiteTint, true );
-	colorSaturation = Attribute( postProcess->m_colorSaturation, true );
-	colorContrast = Attribute( postProcess->m_colorContrast, true );
-	colorGamma = Attribute( postProcess->m_colorGamma, true );
-	colorGain = Attribute( postProcess->m_colorGain, true );
-	colorOffset = Attribute( postProcess->m_colorOffset, true );
+	if( auto colorCorrection = postProcess->GetColorCorrection() )
+	{
+		if ( colorCorrection->IsActive() )
+		{
+			whiteTemperature = Attribute( colorCorrection->m_whiteTemperature, true );
+			whiteTint = Attribute( colorCorrection->m_whiteTint, true );
+			colorSaturation = Attribute( colorCorrection->m_colorSaturation, true );
+			colorContrast = Attribute( colorCorrection->m_colorContrast, true );
+			colorGamma = Attribute( colorCorrection->m_colorGamma, true );
+			colorGain = Attribute( colorCorrection->m_colorGain, true );
+			colorOffset = Attribute( colorCorrection->m_colorOffset, true );
+		}
+	}
 }
