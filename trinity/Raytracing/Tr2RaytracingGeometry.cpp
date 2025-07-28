@@ -551,6 +551,19 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 			}
 		}
 	}
+	else
+	{
+		TriRtGeometryConstants* data;
+		if( SUCCEEDED( meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Lock( (void**)&data, renderContext ) ) )
+		{
+			data->vertexBufferId = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
+			data->vertexBufferStride = meshData->m_vertexAllocation.GetStride();
+			data->indexBufferId = meshData->m_indexAllocation.GetBuffer().GetSrvIndexInHeap();
+			data->indexBufferStride = meshData->m_indexAllocation.GetStride();
+			data->indexOffset = meshData->m_areas[m_areaIndex].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
+			meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Unlock( renderContext );
+		}
+	}
 	return &meshData->m_areas[m_areaIndex].m_rtGeometryConstants;
 }
 
@@ -633,7 +646,7 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		{
 			material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *it->vertexBufferData );
 		}
-		it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, &it->mesh->GetVertexBuffer(), &it->mesh->GetIndexBuffer(), material, renderContext );
+		it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
 
 		bool consumedMaterialIndex = false;
 		for( int32_t i = 0; i < numRaycasters; i++ )

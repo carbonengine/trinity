@@ -193,7 +193,7 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 
 		{
 			CCP_STATS_ZONE( "renderContext.UseResources" );
-			renderContext.UseResources( Tr2UseResourceDestination::RENDER, Tr2GpuUsage::SHADER_RESOURCE, m_geometry->GetBindlessResources() );
+			renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, m_geometry->GetBindlessResources() );
 		}
 
         renderContext.UseAccelerationStructure( m_geometry->GetTLAS() );

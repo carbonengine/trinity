@@ -350,7 +350,6 @@ void Tr2Material::UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, 
 			}
 			input.m_constantBufferDirty = false;
 		}
-		renderContext.SetConstants( cb, shaderType, Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS );
 	}
 }
 
@@ -437,6 +436,17 @@ void Tr2Material::MarkConstantBuffersDirty()
 				{
 					stage.m_constantBufferDirty = true;
 				}
+			}
+		}
+		for ( auto& library : technique.libraries )
+		{
+			if( !library->m_globalInput.m_shaderParametersWithNotification.empty() )
+			{
+				library->m_globalInput.m_constantBufferDirty = true;
+			}
+			if( !library->m_localInput.m_shaderParametersWithNotification.empty() )
+			{
+				library->m_localInput.m_constantBufferDirty = true;
 			}
 		}
 	}
@@ -582,7 +592,7 @@ void Tr2Material::ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr
 	renderContext.SetResourceSet( pp.m_globalResourceSet );
 }
 
-void Tr2Material::ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, const Tr2BufferAL* vb, const Tr2BufferAL* ib, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const
+void Tr2Material::ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const
 {
 	if( !m_shader )
 	{
@@ -596,22 +606,6 @@ void Tr2Material::ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, const
 		localMaterial.SetConstants( Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS, cb );
 	}
 
-	if( vb || ib )
-	{
-		auto& desc = m_shader->GetEffectDescription();
-		auto& resources = desc.techniques[techniqueIndex].libraries[0].localInput.resources;
-		for( auto it = begin( resources ); it != end( resources ); ++it )
-		{
-			if( vb && strcmp( it->second.name, "RtVertexBuffer" ) == 0 )
-			{
-				pp.m_localResourceSetDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, it->first, *vb );
-			}
-			else if( ib && strcmp( it->second.name, "RtIndexBuffer" ) == 0 )
-			{
-				pp.m_localResourceSetDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, it->first, *ib );
-			}
-		}
-	}
 	UpdateResourceSetDesc( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_localInput, pp.m_localResourceSetDesc );
 	localMaterial.SetResourceSet( pp.m_localResourceSetDesc );
 }
