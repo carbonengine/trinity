@@ -1924,7 +1924,14 @@ void EveSOF::SetupEffectChildren( EveSpaceObject2Ptr newObj, IEveEffectChildrenO
 				for( auto& offset : offsets )
 				{
 					EveTransformPtr transformedChild;
-					BeClasses->CopyTo( child->GetRawRoot(), (IRoot**)&transformedChild );
+					if( &offset != &offsets.back() )
+					{
+						BeClasses->CopyTo( child->GetRawRoot(), (IRoot**)&transformedChild );
+					}
+					else
+					{
+						transformedChild = child;
+					}
 
 					// set up the position data
 					Vector3 tmp, pos;
@@ -1942,7 +1949,14 @@ void EveSOF::SetupEffectChildren( EveSpaceObject2Ptr newObj, IEveEffectChildrenO
 				for( auto& offset : offsets )
 				{
 					IEveSpaceObjectChildPtr transformedChild;
-					BeClasses->CopyTo( effectChild->GetRootObject(), (IRoot**)&transformedChild );
+					if( &offset != &offsets.back() )
+					{
+						BeClasses->CopyTo( effectChild->GetRootObject(), (IRoot**)&transformedChild );
+					}
+					else
+					{
+						transformedChild = effectChild;
+					}
 
 					// set up the position data
 					Vector3 tmp, pos;
