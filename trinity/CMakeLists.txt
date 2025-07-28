@@ -399,6 +399,50 @@ set(_SOURCES
     Eve/SpaceObject/Children/ProceduralContainer/SelectionMethods/EveProceduralMethodThresholds.h
     Eve/SpaceObject/Children/ProceduralContainer/SelectionMethods/EveProceduralMethodThresholds_Blue.cpp
     Eve/SpaceObject/Children/ProceduralContainer/SelectionMethods/IEveProceduralSelectionMethod.h
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierBucket.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierBucket.h
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierBucket_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierCameraDependency.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierCameraDependency.h
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierCameraDependency_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierControllerVariableListener.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierControllerVariableListener.h
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierControllerVariableListener_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierExpressionBucket.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierExpressionBucket.h
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierExpressionBucket_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierNoise.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierNoise.h
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierNoise_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierColor.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierColor.h
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightAttributeModifierColor_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightBaseAttributeModifier.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightBaseAttributeModifier.h
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/EveSmartLightBaseAttributeModifier_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/attributeModifiers/IEveSmartLightGroupAttributeModifier.h
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightBaseGroup.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightBaseGroup_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightBaseGroup.h
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightColorShareGroup.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightColorShareGroup_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightColorShareGroup.h
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightMesh_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightMesh.h
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightMesh.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightPointLight_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightPointLight.h
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightPointLight.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveChildSmartLightSet.h
+    Eve/SpaceObject/Children/SmartLightSets/EveChildSmartLightSet_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveChildSmartLightSet.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightSpotLight_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightSpotLight.h
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightSpotLight.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightQuad_Blue.cpp
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightQuad.h
+    Eve/SpaceObject/Children/SmartLightSets/EveSmartLightQuad.cpp
+    Eve/SpaceObject/Children/SmartLightSets/IEveSmartLightGroup.h
     Eve/SpaceObject/Children/SocketParameters/EveSocketParameter.cpp
     Eve/SpaceObject/Children/SocketParameters/EveSocketParameter.h
     Eve/SpaceObject/Children/SocketParameters/EveSocketParameter_Blue.cpp
@@ -471,6 +515,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildInstanceContainer.cpp
     Eve/SpaceObject/Children/EveChildInstanceContainer.h
     Eve/SpaceObject/Children/EveChildInstanceContainer_Blue.cpp
+    Eve/SpaceObject/Children/EveChildInstanceMeshRenderer.cpp
+    Eve/SpaceObject/Children/EveChildInstanceMeshRenderer.h
+    Eve/SpaceObject/Children/EveChildInstanceMeshRenderer_Blue.cpp
     Eve/SpaceObject/Children/EveChildLineSet.cpp
     Eve/SpaceObject/Children/EveChildLineSet.h
     Eve/SpaceObject/Children/EveChildLineSet_Blue.cpp
@@ -508,6 +555,62 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveCloudEditableVolume_Blue.cpp
     Eve/SpaceObject/Children/IEveEffectChildrenOwner.h
     Eve/SpaceObject/Children/IEveSpaceObjectChild.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierProcessLifetime.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierProcessLifetime.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierProcessLifetime_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierTransformOffset.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierTransformOffset.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierTransformOffset_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierScaleBySpaceObjectParent.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierScaleBySpaceObjectParent.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierScaleBySpaceObjectParent_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/IEveDistributionModifier.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorLocators.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorLocators.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorLocators_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorParentLocators.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorParentLocators.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorParentLocators_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorVolume.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorVolume.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/EveDistributionPlacementGeneratorVolume_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionPlacementGenerators/IEveDistributionPlacementGenerators.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerBurst.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerBurst.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerBurst_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerInterval.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerInterval.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerInterval_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerSnake.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerSnake.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerSnake_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerSphere.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerSphere.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerSphere_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerPlane.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerPlane.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerTriggerPlane_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerControllerTrigger.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerControllerTrigger.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/EveDistributionSpawnerControllerTrigger_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawners/IEveDistributionSpawner.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomOffset.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomOffset.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomOffset_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomRotation.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomRotation.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomRotation_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomScale.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomScale.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierRandomScale_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierLifeTimeOffset.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierLifeTimeOffset.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/EveDistributionSpawnModifierLifeTimeOffset_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/DistributionSpawnModifiers/IEveDistributionSpawnModifier.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/EveBaseDistributionMethod.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/EveBaseDistributionMethod.h
+    Eve/SpaceObject/Utils/EveDistributionMethods/EveBaseDistributionMethod_Blue.cpp
+    Eve/SpaceObject/Utils/EveDistributionMethods/IEveDistributionMethod.h
     Eve/SpaceObject/Utils/fxAttributes/EveCameraFxAttributes.cpp
     Eve/SpaceObject/Utils/fxAttributes/EveCameraFxAttributes.h
     Eve/SpaceObject/Utils/fxAttributes/EveCameraFxAttributes_Blue.cpp

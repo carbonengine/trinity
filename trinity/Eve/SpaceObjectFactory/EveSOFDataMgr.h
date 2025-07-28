@@ -44,7 +44,7 @@ public:
 
 		operator Locator() const
 		{
-			return Locator{ position, rotation, boneIndex };
+			return Locator{ position, rotation, scaling, boneIndex };
 		};
 	};
 

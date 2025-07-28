@@ -12,7 +12,8 @@ static BlueStructureDefinition LocatorStructureDef[] =
 {
 	{ "position", Be::FLOAT32_3, 0 },
 	{ "direction", Be::FLOAT32_4, 12 },
-	{ "boneIndex", Be::INT32_1, 28 },
+	{ "scale", Be::FLOAT32_3, 28 },
+	{ "boneIndex", Be::INT32_1, 40 },
 	{ 0 }
 };
 

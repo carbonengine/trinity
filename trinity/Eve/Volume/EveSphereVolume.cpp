@@ -8,10 +8,12 @@
 #include "EveSphereVolume.h"
 #include "ITr2Renderable.h"
 #include "Tr2Renderer.h"
+#include "include/TriMath.h"
 
 EveSphereVolume::EveSphereVolume( IRoot* lockobj ) :
 	m_innerSphere( Vector3(0.0f, 0.0f, 0.0f), 1.0f ),
-	m_outerSphere( Vector3( 0.0f, 0.0f, 0.0f ), 1.0f )
+	m_outerSphere( Vector3( 0.0f, 0.0f, 0.0f ), 1.0f ),
+	m_nextCallbackID( 1 )
 {
 }
 
@@ -52,11 +54,100 @@ float EveSphereVolume::GetIntensity( Vector3 position )
 	return 0.0f;
 }
 
+void EveSphereVolume::GeneratePointsInVolume( std::vector<Vector3>& points, size_t howManyToAdd, bool excludeInnerVolume, float fallOffFactor )
+{
+	Vector3 position;
+	Quaternion rotation;
+	float circleDiffRange = m_outerSphere.radius - m_innerSphere.radius;
+	points.reserve( points.size() + howManyToAdd );
+
+	if( excludeInnerVolume )
+	{
+		for( size_t i = 0; i < howManyToAdd; i++ )
+		{
+			float dist = m_innerSphere.radius + circleDiffRange * pow( (float)rand() / RAND_MAX, 1.f / 3.f );
+
+			float a = TRI_2PI * ( float( rand() ) / RAND_MAX );
+			float z = ( float( rand() ) / RAND_MAX ) * 2.f - 1.f;
+			Vector3 angle( sqrt( 1.f - z * z ) * cos( a ), sqrt( 1.f - z * z ) * sin( a ), z );
+
+			position = angle * dist;
+
+			points.push_back( position );
+		}
+	}
+	else
+	{
+		// as the outer volume is only half filled we use the difference multiplied by 0.5 (and pi is a shared constant so we skip it)
+		float sizeDifference = pow( m_innerSphere.radius, 2.f ) / pow( m_innerSphere.radius + 0.5f * circleDiffRange, 2.f );
+		float dist = 0.f;
+
+		for( size_t i = 0; i < howManyToAdd; i++ )
+		{
+			if( (float) rand() / RAND_MAX < sizeDifference )
+			{
+				// inner volume
+				dist = m_innerSphere.radius * pow( (float)rand() / RAND_MAX, 1.f / 3.f );
+			}
+			else
+			{
+				// outer volume
+				dist = m_innerSphere.radius + circleDiffRange * pow( (float)rand() / RAND_MAX, fallOffFactor );
+			}
+
+			float a = TRI_2PI * ( float( rand() ) / RAND_MAX );
+			float z = ( float( rand() ) / RAND_MAX ) * 2.f - 1.f;
+			Vector3 angle( sqrt( 1.f - z * z ) * cos( a ), sqrt( 1.f - z * z ) * sin( a ), z );
+
+			position = angle * dist;
+
+			points.push_back( position );
+		}
+	}
+	
+}
+
+uint32_t EveSphereVolume::RegisterForChanges( const std::function<void()>& callBack )
+{
+	m_onChangeCallbacks[m_nextCallbackID] = callBack;
+	return m_nextCallbackID++;
+}
+
+void EveSphereVolume::UnregisterForChanges( uint32_t callbackID )
+{
+	m_onChangeCallbacks.erase( callbackID );
+}
+
 //////////////////////////////////////////////////////////////////////////
 // INotify
 bool EveSphereVolume::OnModified( Be::Var* val )
 {
-	m_innerSphere.radius = min( m_innerSphere.radius, m_outerSphere.radius );
+	
+	if( IsMatch( val, m_innerSphere.radius ) )
+	{
+		if( m_innerSphere.radius > m_outerSphere.radius )
+		{
+			m_outerSphere.radius = m_innerSphere.radius;
+		}
+	}
+
+	if( IsMatch( val, m_outerSphere.radius ) )
+	{
+		m_outerSphere.radius = max( 0.f, m_outerSphere.radius );
+
+		if( m_innerSphere.radius > m_outerSphere.radius )
+		{
+			m_innerSphere.radius = m_outerSphere.radius; 
+		}
+	}
+
+	for( auto callBack : m_onChangeCallbacks )
+	{
+		if( callBack.second != nullptr )
+		{
+			callBack.second();
+		}
+	}
 
 	return true;
 }

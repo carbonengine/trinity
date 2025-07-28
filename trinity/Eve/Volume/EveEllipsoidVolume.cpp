@@ -9,6 +9,7 @@
 #include "ITr2Renderable.h"
 #include "Tr2Renderer.h"
 #include "Utilities/BoundingSphere.h"
+#include "include/TriMath.h"
 
 EveEllipsoidVolume::EveEllipsoidVolume( IRoot* lockobj ) :
 	m_position( 0, 0, 0 ),
@@ -20,7 +21,8 @@ EveEllipsoidVolume::EveEllipsoidVolume( IRoot* lockobj ) :
 	m_rotationMatrix( IdentityMatrix() ),
 	m_inverseRotationMatrix( IdentityMatrix() ),
 	m_debugShowIntersection( false ),
-	m_boundingSphere( Vector3( 0, 0, 0 ), 0 )
+	m_boundingSphere( Vector3( 0, 0, 0 ), 0 ),
+	m_nextCallbackID( 1 )
 {
 }
 
@@ -46,6 +48,14 @@ void EveEllipsoidVolume::Setup()
 
 	m_boundingSphere.center = m_position;
 	m_boundingSphere.radius = max( m_shape.x, max( m_shape.y, m_shape.z ) );
+
+	for( auto callBack : m_onChangeCallbacks )
+	{
+		if( callBack.second != nullptr )
+		{
+			callBack.second();
+		}
+	}
 }
 
 void EveEllipsoidVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor )
@@ -89,6 +99,52 @@ float EveEllipsoidVolume::GetIntensity( Vector3 position )
 		IntersectEllipsoidRayClosest( m_innerIntersection, m_position, m_innerShape, position, rayDir );
 	}
 	return LengthSq( position - m_outerIntersection ) / LengthSq( m_innerIntersection - m_outerIntersection );
+}
+
+uint32_t EveEllipsoidVolume::RegisterForChanges( const std::function<void()>& callBack )
+{
+	m_onChangeCallbacks[m_nextCallbackID] = callBack;
+	return m_nextCallbackID++;
+}
+
+void EveEllipsoidVolume::UnregisterForChanges( uint32_t callbackID )
+{
+	m_onChangeCallbacks.erase( callbackID );
+}
+
+void EveEllipsoidVolume::GeneratePointsInVolume( std::vector<Vector3>& points, size_t howManyToAdd, bool excludeInnerVolume, float fallOffFactor )
+{
+	Vector3 position;
+	Quaternion rotation;
+	points.reserve( points.size() + howManyToAdd );
+	float sizeDifference = 0.f;
+
+	if( !excludeInnerVolume )
+	{
+		sizeDifference = ( m_innerShape.x * m_innerShape.y * m_innerShape.z ) / ( m_shape.x * m_shape.y * m_shape.z );
+		sizeDifference = 1.f - pow( 1.f - sizeDifference, 0.6f + 0.4f * fallOffFactor ); // absorb more points into innerSphere based on falloff
+	}
+
+	for( size_t i = 0; i < howManyToAdd; i++ )
+	{
+		float a = TRI_2PI * ( float( rand() ) / RAND_MAX );
+		float z = ( float( rand() ) / RAND_MAX ) * 2.f - 1.f;
+		Vector3 angle( sqrt( 1.f - z * z ) * cos( a ), sqrt( 1.f - z * z ) * sin( a ), z );
+		angle = Normalize( angle );
+
+		if( (float( rand() ) / RAND_MAX) > sizeDifference )
+		{
+			position = angle * ( m_innerShape + ( m_shape - m_innerShape ) * pow( (float)rand() / RAND_MAX, 0.75f * fallOffFactor ) );
+		}
+		else
+		{
+			position = angle * ( m_innerShape * pow( (float)rand() / RAND_MAX, 1.f / 3.f ) );
+		}
+
+		points.push_back( position );
+	}
+
+	return;
 }
 
 //////////////////////////////////////////////////////////////////////////

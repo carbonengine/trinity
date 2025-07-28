@@ -32,6 +32,10 @@ public:
 	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& parentTransform, const Color& baseColor ) override;
 	float GetIntensity( Vector3 position ) override;
 	const CcpMath::Sphere GetBoundingSphere() const override;
+	uint32_t RegisterForChanges( const std::function<void()>& callBack ) override;
+	void UnregisterForChanges( uint32_t callbackID ) override;
+	void GeneratePointsInVolume( std::vector<Vector3> & points, size_t howManyToAdd, bool excludeInnerVolume, float fallOffFactor ) override;
+
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* val );
@@ -59,6 +63,9 @@ private:
 
 	static const Vector3 MAX_AABB;
 	static const Vector3 MIN_AABB;
+
+	std::map<uint32_t, std::function<void()>> m_onChangeCallbacks;
+	uint32_t m_nextCallbackID;
 };
 
 TYPEDEF_BLUECLASS( EveBoxVolume );
