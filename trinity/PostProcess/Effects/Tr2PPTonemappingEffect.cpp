@@ -6,7 +6,6 @@
 
 #include "StdAfx.h"
 #include "Tr2PPTonemappingEffect.h"
-#include "TriSettingsRegistrar.h"
 
 Tr2PPTonemappingEffect::Tr2PPTonemappingEffect( IRoot* lockobj )
 {
