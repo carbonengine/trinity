@@ -193,7 +193,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_sunColorWithDynamicLights( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_currentSunColor( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_useSunColorWithDynamicLights( false ),
-	m_reflectionIntensity( 1.35f ),
+	m_reflectionIntensity( g_eveSpaceSceneDefaultReflectionIntensity ),
 	m_currentReflectionIntensity( g_eveSpaceSceneDefaultReflectionIntensity ),
 	m_reflectionBackLightingContrast( 8.0f ),
 	m_reflectionBackLightingColor( 2.0f, 2.0f, 2.0f, 2.0f ),
