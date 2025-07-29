@@ -18,6 +18,11 @@ TRI_REGISTER_SETTING( "upscalingDebugView", g_upscalingDebugView );
 bool g_frameGenDebugView = false;
 TRI_REGISTER_SETTING( "frameGenDebugView", g_frameGenDebugView );
 
+bool g_newBloom = true;
+TRI_REGISTER_SETTING( "newBloom", g_newBloom );
+
+int32_t g_dynamicExposureQualityRequirement = TriStepRenderPostProcess::PostProcessingQuality::MEDIUM;
+TRI_REGISTER_SETTING( "dynamicExposureQualityRequirement", g_dynamicExposureQualityRequirement );
 
 namespace
 {
@@ -276,7 +281,7 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_lastFrameTime( std::numeric_limits<long long>().max() ),
 	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID ),
 	m_bloomDebugMode( BloomDebugMode::BLOOM_DEBUG_NONE ),
-	m_useNewBloom( true )
+	m_useNewBloom( g_newBloom )
 {
 	m_renderInfo.CreateInstance();
 	m_tonemappingEffect.CreateInstance();
@@ -444,7 +449,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			bloom = postProcess->GetBloom();
 			desaturate = postProcess->GetDesaturate();
 			vignette = postProcess->GetVignette();
-			dynamicExposure = postProcess->GetDynamicExposure();
 		case LOW:
 			tonemapping = postProcess->GetTonemapping();
 			signalLoss = postProcess->GetSignalLoss();
@@ -455,6 +459,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			colorCorrection = postProcess->GetColorCorrection();
 			break;
 		}
+
+		dynamicExposure = m_quality >= g_dynamicExposureQualityRequirement ? postProcess->GetDynamicExposure() : nullptr;
 
 		if( g_postprocessDofEnabled )
 		{

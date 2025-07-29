@@ -7,9 +7,6 @@
 #include "StdAfx.h"
 #include "Tr2PPBloomEffect.h"
 
-
-
-
 Tr2PPBloomEffect::Tr2PPBloomEffect( IRoot* lockobj ) :
 	m_luminanceThreshold( -1.0f ),
 	m_luminanceScale( 0.5f ),

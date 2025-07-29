@@ -7,7 +7,6 @@
 #include "StdAfx.h"
 #include "Tr2PPTonemappingEffect.h"
 
-
 Tr2PPTonemappingEffect::Tr2PPTonemappingEffect( IRoot* lockobj )
 {
 	m_uncharted2 = {};

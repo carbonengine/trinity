@@ -37,7 +37,7 @@ const Be::ClassInfo* Tr2SSAO::ExposeToBlue()
 		MAP_ATTRIBUTE( "shadowClamp", m_detail.settings.shadowClamp, "Effect max limit (applied after multiplier but before blur)\n:jessica-group: Settings", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sharpness", m_detail.settings.sharpness, "How much to bleed over edges (1: not at all, 0.5: half-half; 0.0: completely ignore edges).\n:jessica-group: Settings", Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE( "cortaoEnabled", m_cortaoEnabled, "Enables CORTAO, an advanced physically correct SSAO technique. \n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY )
+		MAP_ATTRIBUTE( "cortaoEnabled", m_cortaoEnabled, "Enables CORTAO, an advanced physically correct SSAO technique. \n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 		MAP_ATTRIBUTE( "cortaoRadius", m_cortaoRadius, "The radius of CORTAO. Can be set to an extremely high value to make the radius only limited by the max blocker search radius.\n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "cortaoStrength", m_cortaoStrength, "The strength of CORTAO. This SHOULD be set to 1.0 for physical correctness, but can be tweaked for artistic purposes in special cases.\n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "cortaoMaxBlockerSearchRadius", m_cortaoMaxBlockerSearchRadius, "The maximum radius to search for neighboring blocker pixels, as a percentage of the screen resolution. 0.25 = 25% of the screen.\n:jessica-group: CORTAO", Be::READWRITE | Be::NOTIFY )

@@ -493,7 +493,6 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	if( m_display && m_mesh )
 	{
 		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize );
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_DECAL ), perObjectData, shadowPixelSize );
 	}
 }
 
