@@ -6,7 +6,10 @@
 
 #include "StdAfx.h"
 #include "Tr2PPTonemappingEffect.h"
+#include "TriSettingsRegistrar.h"
 
+bool g_acesAsDefault = true;
+TRI_REGISTER_SETTING( "acesAsDefault", g_acesAsDefault );
 
 Tr2PPTonemappingEffect::Tr2PPTonemappingEffect( IRoot* lockobj )
 {
@@ -29,7 +32,7 @@ Tr2PPTonemappingEffect::Tr2PPTonemappingEffect( IRoot* lockobj )
 	m_aces.m_blueCorrection = .0f;
 	m_aces.m_useSweeteners = true;
 
-	m_method = Aces;
+	m_method = g_acesAsDefault ? Aces : Uncharted2;
 }
 
 Tr2PPTonemappingEffect::~Tr2PPTonemappingEffect()
