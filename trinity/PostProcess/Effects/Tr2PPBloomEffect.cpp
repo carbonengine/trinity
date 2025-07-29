@@ -6,12 +6,13 @@
 
 #include "StdAfx.h"
 #include "Tr2PPBloomEffect.h"
+#include "TriSettingsRegistrar.h"
 
-
-
+float g_defaultBloomLuminanceThreshold = -1.0f;
+TRI_REGISTER_SETTING( "defaultBloomLuminanceThreshold", g_defaultBloomLuminanceThreshold );
 
 Tr2PPBloomEffect::Tr2PPBloomEffect( IRoot* lockobj ) :
-	m_luminanceThreshold( -1.0f ),
+	m_luminanceThreshold( g_defaultBloomLuminanceThreshold ),
 	m_luminanceScale( 0.5f ),
 	m_bloomBrightness( 0.2f ),
 	m_sizeScale( 4.0f ),
