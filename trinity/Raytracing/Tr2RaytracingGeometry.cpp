@@ -971,8 +971,14 @@ void Tr2RaytracingGeometry::AddBindlessResources( const Tr2MeshAreaVector& areas
 	for( auto& area : areas )
 	{
 		uint32_t techniqueIndex;
-		area->GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex );
-		area->GetMaterialInterface()->GetUsedBindlessTextures( techniqueIndex, m_usedResources );
+		if( !area->GetMaterialInterface() || !area->GetMaterialInterface()->GetShaderStateInterface() )
+		{
+			continue;
+		}
+		if( area->GetMaterialInterface()->GetShaderStateInterface()->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
+		{
+			area->GetMaterialInterface()->GetUsedBindlessTextures( techniqueIndex, m_usedResources );
+		}
 	}
 	m_usedResources.Add( rtMesh.GetVertexBuffer() );
 	m_usedResources.Add( rtMesh.GetIndexBuffer() );
