@@ -63,6 +63,7 @@ BLUE_DECLARE_VECTOR( EveLensflare );
 BLUE_DECLARE( Tr2ShadowMap );
 BLUE_DECLARE( Tr2RenderTarget );
 BLUE_DECLARE( Tr2SSAO );
+BLUE_DECLARE( Tr2SSSSS );
 BLUE_DECLARE( EveTransform );
 BLUE_DECLARE_VECTOR( EveTransform );
 BLUE_DECLARE( EveDistanceField );
@@ -117,7 +118,7 @@ public:
 
 	RenderPassResult RenderPass( PassType pass, Tr2RenderContext & renderContext );
 	void RenderMainPass( Tr2RenderContext & renderContext, Tr2RenderContextEnum::CullMode cullmode = Tr2RenderContextEnum::CULLMODE_CW );
-	void RenderDepthPass( Tr2RenderContext & renderContext );
+	void RenderDepthPass( Tr2RenderContext & renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
 	void RenderBackgroundPass( Tr2RenderContext & renderContext );
 	void RenderReflectionPass( Tr2RenderContext & renderContext );
 	void BeginRender( Tr2RenderContext & renderContext );
@@ -280,6 +281,8 @@ protected:
 		Vector4 SplitInfo;
 		Matrix ProjectionInverseMat;
 
+		Vector4 ShadowMapDepthRanges[4];
+
 		Tr2VolumetricsRenderer::FroxelPerFrameData FroxelFogData;
 	};
 
@@ -402,6 +405,7 @@ protected:
 	bool m_update;
 	bool m_displayShadowMap;
 	bool m_backgroundRenderingEnabled;
+	bool m_mainPassRenderingEnabled;
 
 	float m_planetScale;
 	float m_planetCameraScale;
@@ -428,6 +432,9 @@ protected:
 	// and so forth. Should be finalized and cleared each time they're used.
 	BatchMap m_secondaryBatches;
 	PerThreadBatchMap m_perThreadBatches;
+
+	BlueSharedString m_depthPassTechnique = BlueSharedString( "Depth" );
+	Tr2RenderTargetPtr m_customStencil;
 
 	// Utility batches.
 	std::vector<TriPoolAllocator> m_shadowAllocators;
@@ -478,6 +485,7 @@ protected:
 	TriVariable* m_ssaoMapHandle;
 	Tr2RenderTargetPtr m_normalMap;
 	Tr2SSAOPtr m_ssao;
+	Tr2SSSSSPtr m_sssss;
 
 	Tr2RenderTargetPtr m_distortionMap;
 	Tr2RenderTargetPtr m_velocityMap;
@@ -644,7 +652,7 @@ private:
 	float m_reflectionIntensity;
 	float m_reflectionBackLightingContrast;
 	Color m_reflectionBackLightingColor;
-	float m_currentRelfectionIntensity;
+	float m_currentReflectionIntensity;
 
 	BlueSharedString m_name;
 

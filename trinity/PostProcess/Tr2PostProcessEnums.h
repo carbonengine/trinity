@@ -48,7 +48,6 @@ namespace PostProcessEnums
 		COLOR_GAIN,
 		COLOR_OFFSET,
 
-
 		POST_PROCESS_ATTRIBUTE_TYPE_COUNT 
 	};
 

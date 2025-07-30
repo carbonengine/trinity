@@ -65,7 +65,7 @@ public:
 
 	void ClearVariableStore();
 
-	ShadowMap::SplitSetup SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear );
+	ShadowMap::SplitSetup SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear, float leftDivNear, float rightDivNear, float topDivNear, float bottomDivNear );
 
 	bool PrepareShadowRendering( Tr2RenderContext& renderContext );
 	void BeginShadowRendering( Tr2RenderContext& renderContext, int splitIndex );
@@ -92,6 +92,8 @@ public:
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
 
 		Matrix ShadowMatrixVal[SHADOW_FRUSTUM_COUNT];
+
+		Vector4 CascadeDepthRanges[SHADOW_FRUSTUM_COUNT];
 
 		Vector4 SplitInfo; // x = split count
 	};

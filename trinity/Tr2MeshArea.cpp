@@ -2,6 +2,9 @@
 #include "Tr2MeshArea.h"
 #include "Tr2MeshBase.h"
 #include "Raytracing/Tr2RaytracingGeometry.h"
+#include "Shader/Parameter/TriTextureParameter.h"
+#include "ITr2TextureProvider.h"
+#include "Tr2Renderer.h"
 
 Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_display( true ),
@@ -109,7 +112,6 @@ void Tr2MeshArea::SetCastsShadows( bool castShadows )
 	m_castShadows = castShadows;
 }
 
-
 // -------------------------------------------------------------
 // Description:
 //   Returns a flag indicating that the area requires rendering
@@ -156,12 +158,12 @@ bool Tr2MeshArea::GetUseSHLighting() const
 	return m_useSHLighting;
 }
 
-Tr2Material* Tr2MeshArea::GetMaterialInterface() const
+Tr2Effect* Tr2MeshArea::GetMaterialInterface() const
 {
 	return m_material;
 }
 
-void Tr2MeshArea::SetMaterial( Tr2Material* mat )
+void Tr2MeshArea::SetMaterial( Tr2EffectPtr mat )
 {
 	m_material = mat;
 }
@@ -203,6 +205,18 @@ void Tr2MeshArea::RemoveOwnerMesh( Tr2MeshBase* mesh )
 	{
 		CCP_ASSERT( false );
 	}
+}
+
+bool Tr2MeshArea::HasVertexBufferAccessInRtShadow()
+{
+	if( GetMaterialInterface() )
+	{
+		if( auto shader = GetMaterialInterface()->GetShaderStateInterface() )
+		{
+			return shader->HasVertexBufferAccessInRtShadow();
+		}
+	}
+	return false;
 }
 
 Tr2Lod Tr2MeshArea::GetMinLod() const

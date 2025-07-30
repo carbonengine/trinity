@@ -55,6 +55,7 @@ public:
 	static unsigned int GetPerFramePSStartRegister();
 	static unsigned int GetPerObjectVSStartRegister();
 	static unsigned int GetPerObjectPSStartRegister();
+	static unsigned int GetPerObjectRTVertexBufferDataRegister();
 	static unsigned int GetPerObjectVSGUIStartRegister();
 
 

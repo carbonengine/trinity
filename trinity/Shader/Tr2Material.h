@@ -167,7 +167,9 @@ struct Tr2EffectLibraryParameters : public PassParametersOwner
 	Tr2ResourceSetAL m_globalResourceSet;
 	std::vector<ITriReroutable*> m_reroutedParameters;
 	std::vector<ITr2EffectValuePtr> m_usedResources;
+	Tr2BindlessResourcesAL m_usedTextures;
 	bool m_globalResourceSetDirty;
+	bool m_usedTexturesDirty;
 
 	void AddUsedResource( ITr2EffectValuePtr resource ) override;
 	void AddReroutable( ITriReroutable* reroutable ) override;
@@ -213,8 +215,7 @@ public:
 	void ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContext& renderContext ) const;
 	void ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex, unsigned int passIndex, uint32_t overrideProgram, Tr2RenderContext& renderContext ) const;
 	void ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr2RtPipelineStateAL& rtPipelineState, Tr2RenderContext& renderContext ) const;
-	//void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;
-	void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, const Tr2BufferAL* vb, const Tr2BufferAL* ib, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;
+	void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;
 	uint64_t GetSortValue() const;
 	Tr2Shader* GetShaderStateInterface() const;
 

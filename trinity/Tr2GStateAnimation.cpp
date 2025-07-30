@@ -19,7 +19,7 @@
 using namespace gstate;
 using namespace std;
 
-static const int MAX_JOINT_COUNT = 58;
+static const int MAX_JOINT_COUNT = 254;
 BLUE_DECLARE( Tr2GStateParameter );
 BLUE_DECLARE_VECTOR( Tr2GStateParameter );
 

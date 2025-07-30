@@ -31,6 +31,7 @@ struct MetalSystemSemanticsType
 		front_facing,
 		vertex_id,
 		instance_id,
+		primitive_id,
 		clip_distance,
 		point_size,
 		color_0,
@@ -56,6 +57,7 @@ struct MetalSystemSemanticsType
         direction,
         min_distance,
         distance,
+		instance_intersection_function_table_offset,
 	};
 
 	static const char* GetString( int type );

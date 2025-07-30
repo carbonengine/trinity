@@ -199,7 +199,7 @@ namespace TrinityALImpl
 							handle = input.sampler.TrinityALImpl_GetObject()->m_samplerState->GetHandleGPU();
 							break;
 						case Tr2ResourceSetDescriptionAL::Sampler::HEAP_VIEW:
-							auto handle = renderContext.GetSamplerHeapView()->GetHandleGPU();
+							handle = renderContext.GetSamplerHeapView()->GetHandleGPU();
 							break;
 						default:
 							return E_INVALIDARG;

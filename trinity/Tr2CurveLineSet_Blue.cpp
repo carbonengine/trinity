@@ -33,9 +33,10 @@ const Be::ClassInfo* Tr2CurveLineSet::ExposeToBlue()
 			"\n:param endColor: The color of the line at end position"
 			"\n:param lineWidth: The width of the line in pixel" )
 
-		MAP_METHOD_AND_WRAP(
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"AddCurvedLineCrt",
 			AddCurvedLineCrt,
+			1,
 			"Adds a curved line (based on splines) to the line set using cartesian coordinates, but does not submit it"
 			"\n" 
 			"\n:param startPosition: The start position of the line in 3d cartesian space"
@@ -43,7 +44,8 @@ const Be::ClassInfo* Tr2CurveLineSet::ExposeToBlue()
 			"\n:param endPosition: The end position of the line in 3d cartesian space"
 			"\n:param endColor: The color of the line at end position"
 			"\n:param middle: The center control point"
-			"\n:param lineWidth: The width of the line in pixel" )
+			"\n:param lineWidth: The width of the line in pixel"
+			"\n:param segments: the number of line subdivisions, defaults to 20" )
 
 		MAP_METHOD_AND_WRAP(
 			"AddCurvedLineSph",

@@ -732,8 +732,52 @@ bool Tr2EffectDescription::Read( const void* data,
 
 	}
 
+	auto IsHeapView = [&]( const char* name ) {
+		if( !name )
+		{
+			return false;
+		}
+		auto it = std::find_if( annotations.begin(), annotations.end(), [&]( Tr2EffectAnnotationMap::const_reference key ) { return strcmp( key.first, name ) == 0; } );
+		if( it != annotations.end() )
+		{
+			auto value = std::find_if( it->second.begin(), it->second.end(), [&]( const Tr2EffectParameterAnnotation& a ) { return strcmp( a.name, "IsHeapView" ) == 0; } );
+			if( value != it->second.end() && value->type == Tr2EffectParameterAnnotation::BOOL )
+			{
+				return value->boolValue;
+			}
+		}
+		return false;
+	};
 	for( auto& technique : techniques )
 	{
+		for( auto& library : technique.libraries )
+		{
+			Tr2RenderContextEnum::ShaderType type = Tr2RenderContextEnum::ShaderType::COMPUTE_SHADER;
+			// library.localInput should not contain anything other than constant buffers afaik, so that's why it's not doing the HeapView stuff here
+			{
+				for( auto& res : library.globalInput.resources )
+				{
+					if( IsHeapView( res.second.name ) )
+					{
+						library.globalResourceSetDesc.SetSrvHeapView( type, res.first );
+					}
+				}
+				for( auto& res : library.globalInput.uavs )
+				{
+					if( IsHeapView( res.second.name ) )
+					{
+						library.globalResourceSetDesc.SetUavHeapView( type, res.first );
+					}
+				}
+				for( auto& res : library.globalInput.samplers )
+				{
+					if( IsHeapView( res.second.name ) )
+					{
+						library.globalResourceSetDesc.SetSamplerHeapView( type, res.first );
+					}
+				}
+			}
+		}
 		for( auto& pass : technique.passes )
 		{
 			uint32_t type = 0;
@@ -741,22 +785,6 @@ bool Tr2EffectDescription::Read( const void* data,
 			{
 				if (stage.m_exists)
 				{
-					auto IsHeapView = [&]( const char* name ) {
-						if( !name )
-						{
-							return false;
-						}
-						auto it = std::find_if( annotations.begin(), annotations.end(), [&]( Tr2EffectAnnotationMap::const_reference key ) { return strcmp( key.first, name ) == 0; } );
-						if( it != annotations.end() )
-						{
-							auto value = std::find_if( it->second.begin(), it->second.end(), [&]( const Tr2EffectParameterAnnotation& a ) { return strcmp( a.name, "IsHeapView" ) == 0; } );
-							if( value != it->second.end() && value->type == Tr2EffectParameterAnnotation::BOOL )
-							{
-								return value->boolValue;
-							}
-						}
-						return false;
-					};
 					for( auto& res : stage.resources )
 					{
 						auto isHeapView = IsHeapView( res.second.name );

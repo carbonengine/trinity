@@ -1816,7 +1816,7 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Col
 {
 }
 
-ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& textures )
+ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
 {
 	D3D12_RESOURCE_STATES state;
 	switch( usage )
@@ -1831,23 +1831,32 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
 		return E_INVALIDARG;
 	}
 	std::vector<D3D12_RESOURCE_BARRIER> barriers;
-	barriers.reserve( textures.m_textures.size() );
-	std::vector<ID3D12Resource*> resources;
-	resources.reserve( textures.m_textures.size() );
-	for( size_t i = 0; i < textures.m_textures.size(); ++i )
+	barriers.reserve( resources.m_textures.size() + resources.m_buffers.size() );
+	std::vector<ID3D12Resource*> dxResources;
+	dxResources.reserve( resources.m_textures.size() + resources.m_buffers.size() );
+	for( size_t i = 0; i < resources.m_textures.size(); ++i )
 	{
-		auto obj = textures.m_textures[i];
+		auto obj = resources.m_textures[i];
 		if( ( obj->m_defaultState & state ) != state )
 		{
 			barriers.push_back( TrinityALImpl::Transition( obj->GetResourceDx12(), obj->m_defaultState, state ) );
-			resources.push_back( obj->GetResourceDx12() );
+			dxResources.push_back( obj->GetResourceDx12() );
+		}
+	}
+	for( size_t i = 0; i < resources.m_buffers.size(); ++i )
+	{
+		auto obj = resources.m_buffers[i];
+		if( ( obj->m_defaultState & state ) != state )
+		{
+			barriers.push_back( TrinityALImpl::Transition( obj->GetGpuResource(), obj->m_defaultState, state ) );
+			dxResources.push_back( obj->GetGpuResource() );
 		}
 	}
 	if( !barriers.empty() )
 	{
 		ResourceBarrierDx12( barriers.size(), barriers.data() );
 		// TODO: can we postpone this until the draw/dispatch command? Or maybe it's an imaginary problem?
-		FlushBarriersDx12( resources.size(), resources.data() );
+		FlushBarriersDx12( dxResources.size(), dxResources.data() );
 		for( auto& barrier : barriers )
 		{
 			std::swap( barrier.Transition.StateBefore, barrier.Transition.StateAfter );
@@ -1867,6 +1876,14 @@ void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )
 	if( texture.IsValid() && !TrinityALImpl::RequiresImmediateBarriers( texture.GetGpuUsage() ) )
 	{
 		m_textures.push_back( texture.TrinityALImpl_GetObject() );
+	}
+}
+
+void Tr2BindlessResourcesAL::Add( const Tr2BufferAL& buffer )
+{
+	if( buffer.IsValid() && !TrinityALImpl::RequiresImmediateBarriers( buffer.GetDesc().gpuUsage ) )
+	{
+		m_buffers.push_back( buffer.TrinityALImpl_GetObject() );
 	}
 }
 

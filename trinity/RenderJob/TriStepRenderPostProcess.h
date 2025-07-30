@@ -13,6 +13,7 @@
 #include "Tr2RenderTarget.h"
 #include "PostProcess/Tr2PostProcessRenderInfo.h"
 #include "Shader/Tr2Effect.h"
+#include <PostProcess/Effects/Tr2PPBloomEffect.h>
 
 BLUE_DECLARE( Tr2Effect );
 
@@ -74,6 +75,19 @@ namespace PostProcessBlur
 	BlueSharedString GetFinalizeTypeOptionValue( BlurFinalize finalize );
 }
 
+namespace GaussianDistribution
+{
+	struct GaussianData
+	{
+		Vector3 overallWeight;
+		uint32_t count;
+		Vector4 weightOffset[Bloom::MAX_FILTER_STEPS / 2];
+	};
+
+	float NormalDistribution( float x, float sigma, float weight );
+	GaussianData CalculateGaussianPassParameters( float radius, float centerWeight, float normalizingFactor, Vector3 overallWeight, Vector2 direction );
+}
+
 
 namespace AMDSharpening
 {
@@ -116,6 +130,18 @@ public:
 		COUNT
 	};
 
+	enum class BloomDebugMode
+	{
+		BLOOM_DEBUG_NONE,
+		BLOOM_DEBUG_ALL,
+		BLOOM_DEBUG_STEP1,
+		BLOOM_DEBUG_STEP2,
+		BLOOM_DEBUG_STEP3,
+		BLOOM_DEBUG_STEP4,
+		BLOOM_DEBUG_STEP5,
+		BLOOM_DEBUG_STEP6,
+	};
+
 	//RenderStep
 	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
 
@@ -125,6 +151,14 @@ public:
 	void py__init__( EveSpaceScene * scene, Tr2RenderTarget * source, Tr2RenderTarget* opaque_source );
 
 private:
+
+	struct DownsampleData
+	{
+		Vector2 invSourceSize;
+		float _padding1;
+		float _padding2;
+	};
+
 	// exposure texture 
 	void SetupExposureConversion( bool enable, float middleValue );
 
@@ -134,8 +168,22 @@ private:
 
 	// bloom
 	bool ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure );
-	Tr2PostProcessRenderInfo::Texture RenderBloom( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom );
+	Tr2PostProcessRenderInfo::Texture RenderBloom( Tr2PostProcessRenderInfo::Texture&, Tr2RenderContext & renderContext, Tr2PPBloomEffect * bloom );
+	Tr2PostProcessRenderInfo::Texture RenderBloomDebug( std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> & downsample,
+														std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> & upsample,
+														Tr2PostProcessRenderInfo::Texture & blitCurrent,
+														Tr2RenderContext& renderContext );
+	Tr2EffectPtr m_downSamplerLuminancePreserve;
+	Tr2EffectPtr m_downSampler;
+	Tr2EffectPtr m_upsamplerHorizontal;
+	Tr2EffectPtr m_upsamplerVertical;
 	Tr2EffectPtr m_bloomHighPassFilter;
+	Tr2ConstantBufferAL m_bloomConstantBuffer;
+
+	bool m_useNewBloom;
+	BloomDebugMode m_bloomDebugMode;
+	Tr2EffectPtr m_bloomDebugShader;
+
 
 	// godRays
 	bool ProcessGodRays( Tr2PPGodRaysEffect* godrays );
@@ -213,7 +261,8 @@ private:
 	bool m_fadeEnabled;
 	uint8_t m_lutsEnabled;
 	bool m_vignetteEnabled;
-	void ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping, Tr2RenderTarget* blitCurrent, Tr2RenderTarget* blitOriginal );
+	void ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection );
+	void ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping );
 
 	bool m_sceneDirty;
 
