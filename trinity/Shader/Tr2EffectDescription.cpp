@@ -598,7 +598,7 @@ bool Tr2EffectDescription::Read( const void* data,
 
 					if( pass.stageInputs[type].m_shader == unsigned( -1 ) )
 					{
-						const char* stageName = "<unknown shader stage>";
+						const char* stageName;
 						switch (type)
 						{
 						case Tr2RenderContextEnum::VERTEX_SHADER:
@@ -609,6 +609,9 @@ bool Tr2EffectDescription::Read( const void* data,
 							break;
 						case Tr2RenderContextEnum::COMPUTE_SHADER:
 							stageName = "compute";
+							break;
+						default:
+							stageName = "<unknown shader stage>";
 							break;
 						}
 						CCP_LOGERR( "Error compiling %s shader in effect \"%s\".", stageName, effectName );
