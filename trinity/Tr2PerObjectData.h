@@ -86,7 +86,7 @@ protected:
 	unsigned int m_vertexShaderFloatBufferSize;
 };
 
-#define TR2_MAX_BONES_PER_MESHAREA (254)
+#define TR2_MAX_BONES_PER_MESHAREA (69)
 
 class Tr2PerObjectDataSkinned : public Tr2PerObjectDataPSBuffer
 {

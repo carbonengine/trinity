@@ -626,101 +626,6 @@ void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& ar
 	area.m_vertexCount = (int)vertexIndicesSeen.size();
 }
 
-void TriGeometryRes::DetermineAreaBones( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	// offset to boneindex
-	int boneIndexOffset = GetVertexComponentOffset( myMesh, GrannyVertexBoneIndicesName );
-	// if there are no bone-indices , we are done
-	if( boneIndexOffset == -1 )
-		return;
-
-	// collect all bones used by this mesh
-	TrackableStdVector<uint8_t> usedBones( "DetermineAreaBones/usedBones", myMesh->BoneBindingCount, 0xff );
-	
-	// keep track of verts we already re-mapped
-	TrackableStdVector<bool> changedVerts( "DetermineAreaBones/changedVerts", myMesh->PrimaryVertexData->VertexCount );
-	
-	// prepare collection of new per-area-bones
-	area.m_jointBindings.clear();
-
-	// pointers to bone indices
-	uint8_t* pBoneIndex0 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 0;
-	uint8_t* pBoneIndex1 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 1;
-	uint8_t* pBoneIndex2 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 2;
-	uint8_t* pBoneIndex3 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 3;
-
-	// cycle thorugh all vertices of this area and collect bone indices
-	for( int vIx = 0; vIx < area.m_primitiveCount * 3; ++vIx )
-	{
-		int index;
-
-		if( myMesh->PrimaryTopology->Indices16 )
-		{
-			index = myMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
-		}
-		else
-		{
-			index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
-		}
-
-		if( changedVerts[index] )
-		{
-			continue;
-		}
-
-		// bones
-		uint8_t boneIndex0 = *(pBoneIndex0 + index * bytesPerVertex);
-		uint8_t boneIndex1 = *(pBoneIndex1 + index * bytesPerVertex);
-		uint8_t boneIndex2 = *(pBoneIndex2 + index * bytesPerVertex);
-		uint8_t boneIndex3 = *(pBoneIndex3 + index * bytesPerVertex);
-
-		// bone0 already used?
-		if( usedBones[boneIndex0] == 0xff)
-		{
-			// new bone!
-			usedBones[boneIndex0] = (uint8_t)area.m_jointBindings.size();
-			area.m_jointBindings.push_back( boneIndex0 );
-		}
-		// re-map in vertex-data
-		*(pBoneIndex0 + index * bytesPerVertex) = usedBones[boneIndex0];
-
-		// bone1 already used?
-		if( usedBones[boneIndex1] == 0xff)
-		{
-			// new bone!
-			usedBones[boneIndex1] = (uint8_t)area.m_jointBindings.size();
-			area.m_jointBindings.push_back( boneIndex1 );
-		}
-		// re-map in vertex-data
-		*(pBoneIndex1 + index * bytesPerVertex) = usedBones[boneIndex1];
-
-		// bone2 already used?
-		if( usedBones[boneIndex2] == 0xff)
-		{
-			// new bone!
-			usedBones[boneIndex2] = (uint8_t)area.m_jointBindings.size();
-			area.m_jointBindings.push_back( boneIndex2 );
-		}
-		// re-map in vertex-data
-		*(pBoneIndex2 + index * bytesPerVertex) = usedBones[boneIndex2];
-
-		// bone3 already used?
-		if( usedBones[boneIndex3] == 0xff)
-		{
-			// new bone!
-			usedBones[boneIndex3] = (uint8_t)area.m_jointBindings.size();
-			area.m_jointBindings.push_back( boneIndex3 );
-		}
-		// re-map in vertex-data
-		*(pBoneIndex3 + index * bytesPerVertex) = usedBones[boneIndex3];
-
-		// this one is now re-mapped
-		changedVerts[index] = true;
-	}
-}
-
 bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi, int bytesPerVertex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -906,17 +811,6 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				pMesh->m_primitiveCount += area.m_primitiveCount;
 
 				area.m_isSkinned = IsAreaSkinned( area, myMesh, gi, bytesPerVertex );
-
-				// only re-map the bone indices if there is a skeleton...
-				if( gi->SkeletonCount )
-				{
-					if( myMesh->BoneBindingCount > TR2_MAX_BONES_PER_MESHAREA )
-					{
-						DetermineAreaBones( area, myMesh, bytesPerVertex );
-						// flag this re-bone-mapping
-						pMesh->m_hasPerMeshAreaBoneBindings = true;
-					}
-				}
 
 				if( mbi )
 				{
@@ -1597,7 +1491,6 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 	m_primitiveCount( 0 ),
 	m_areas( "TriGeometryResMeshData/m_areas" ),
 	m_jointBindings( "TriGeometryResMeshData/m_jointBindings" ),
-	m_hasPerMeshAreaBoneBindings( false ),
 	m_isLodMesh( false ),
 	m_pVertexData( NULL ),
 	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),

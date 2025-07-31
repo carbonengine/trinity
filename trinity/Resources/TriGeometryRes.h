@@ -161,7 +161,6 @@ struct TriGeometryResMeshData
 	Vector3 m_maxBounds;
 	Vector4 m_boundingSphere;
 	int32_t m_grannyMeshIndex;
-	bool m_hasPerMeshAreaBoneBindings;
 	bool m_isLodMesh;
 	TrackableStdVector<TriJointBinding> m_jointBindings;
 	TriGeometryResVertexData* m_pVertexData;
@@ -371,7 +370,6 @@ private:
 	bool SetupMeshes( granny_file_info* gi );
 	void SetupSkeletons( granny_file_info* gi );
 	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
-	void DetermineAreaBones( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
 	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi, int bytesPerVertex );
 	
 	// Create D3D mesh from data in m_pGrannyFile
