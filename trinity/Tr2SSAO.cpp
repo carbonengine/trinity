@@ -53,6 +53,7 @@ void Tr2SSAO::Layer::ReleaseResources()
 
 Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 {
+
 	m_cortaoEnabled = true;
 	m_cortaoStrength = 1.0f;
 	m_cortaoRadius = 1.0E10f;
@@ -60,6 +61,8 @@ Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 	m_cortaoMipBias = -4.0f;
 	m_cortaoUseLookupTable = true;
 	m_cortaoBlur = true;
+
+	m_cortaoInitialized = false;
 
 	m_detail.settings = FFX_CACAO_PRESETS[0].settings;
 	m_detail.settings.radius = 6;
@@ -75,23 +78,6 @@ Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 	m_outputTarget.CreateInstance();
 
 
-	m_cortaoEffect.CreateInstance();
-	m_cortaoEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/CORTAO.fx" );
-
-	m_cortaoDownsampleEffect.CreateInstance();
-	m_cortaoDownsampleEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/Downsample.fx" );
-
-	m_cortaoBlurEffect.CreateInstance();
-	m_cortaoBlurEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/Blur.fx" );
-
-
-	m_cortaoPackedBuffer.CreateInstance();
-	m_cortaoBlurBuffer.CreateInstance();
-
-	m_cortaoLookupTable.CreateInstance();
-	BeResMan->GetResource( "res:/texture/ssao/24x24x16x29.dds", "", m_cortaoLookupTable );
-	//BeResMan->GetResource( "res:/texture/ssao/32x32x24x29.dds", "", m_cortaoLookupTable );
-	//BeResMan->GetResource( "res:/texture/ssao/128x128x64x29.dds", "", m_cortaoLookupTable );
 
 	PrepareResources();
 }
@@ -403,6 +389,29 @@ void Tr2SSAO::Filter( Tr2RenderContext& renderContext, bool temporal )
 	GPU_REGION( renderContext, "SSAO" );
 	if( m_cortaoEnabled )
 	{
+
+		//Lazily initialize CORTAO, as EVE currently doesn't use it, so it doesn't have the shaders/lookup table for it.
+		if (!m_cortaoInitialized)
+		{
+			m_cortaoEffect.CreateInstance();
+			m_cortaoEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/CORTAO.fx" );
+
+			m_cortaoDownsampleEffect.CreateInstance();
+			m_cortaoDownsampleEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/Downsample.fx" );
+
+			m_cortaoBlurEffect.CreateInstance();
+			m_cortaoBlurEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/Blur.fx" );
+
+
+			m_cortaoPackedBuffer.CreateInstance();
+			m_cortaoBlurBuffer.CreateInstance();
+
+			m_cortaoLookupTable.CreateInstance();
+			BeResMan->GetResource( "res:/texture/ssao/24x24x16x29.dds", "", m_cortaoLookupTable );
+
+			m_cortaoInitialized = true;
+		}
+
 		GPU_REGION( renderContext, "CORTAO" );
 		ComputeCORTAO( renderContext, temporal );
 	}

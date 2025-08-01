@@ -140,6 +140,7 @@ private:
 
 	bool m_cortaoEnabled;
 	
+	bool m_cortaoInitialized;
 	Tr2EffectPtr m_cortaoEffect;
 	Tr2EffectPtr m_cortaoDownsampleEffect;
 	Tr2EffectPtr m_cortaoBlurEffect;
