@@ -5,6 +5,7 @@
 #include "Resources/Tr2LodResource.h"
 
 
+BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2Material );
 BLUE_DECLARE( Tr2MeshBase );
 class Tr2RaytracingMeshArea;
@@ -41,9 +42,9 @@ public:
 
 	bool GetUseSHLighting() const;
 
-	void SetMaterial( Tr2Material* mat );
+	void SetMaterial( Tr2EffectPtr mat );
 
-	Tr2Material* GetMaterialInterface() const;
+	Tr2Effect* GetMaterialInterface() const;
 
 	unsigned int GetJointCount() const;
 	void SetJointCount( unsigned int val );
@@ -51,6 +52,7 @@ public:
 	void AddOwnerMesh( Tr2MeshBase * mesh );
 	void RemoveOwnerMesh( Tr2MeshBase * mesh );
 
+	bool HasVertexBufferAccessInRtShadow();
 
 	unsigned int* GetJointMappingAnimRig() const;
 	
@@ -66,7 +68,7 @@ public:
 	Tr2RaytracingMeshArea* GetOrCreateRtMeshArea();
 	Tr2RaytracingMeshArea* GetRtMeshArea() const;
 private:
-	Tr2MaterialPtr m_material;
+	Tr2EffectPtr m_material;
 	std::string m_name;
 	int32_t m_index;
 	int32_t m_count;

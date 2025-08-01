@@ -23,7 +23,7 @@ public:
 	EveConnector( IRoot* lockobj = NULL );
 	~EveConnector();
 
-	enum ConnectorType { PointToPoint, XZ_CircleStraight, XZ_Circle, StraightAnchor, CurvedAnchor, Orbit };
+	enum ConnectorType { PointToPoint, XZ_CircleStraight, XZ_Circle, StraightAnchor, CurvedAnchor, Orbit, Circle, Ellipse };
 
 	void Update( const EveUpdateContext& context );
 	void AddLine( EveCurveLineSet* lineSet );
@@ -53,9 +53,14 @@ private:
 	// Some helper functions(inline)
 	void AnimateSegment( EveCurveLineSet* lineSet, int lineID );
 	void AddCircle( EveCurveLineSet* lineSet, const Vector3& center, float radius );
+	void AddCircle( EveCurveLineSet* lineSet, const Vector3& center, float radius, const Vector3& normal );
+	void AddEllipse( EveCurveLineSet * lineSet, const Vector3& center, float radiusX, float radiusY, float rotation, const Vector3& normal );
 	void AddOrbit( EveCurveLineSet* lineSet, const Vector3& center, float radius, const Vector3& normal );
 	void AddStraightLine( EveCurveLineSet* lineSet, const Vector3& source, const Vector3& destination, bool fadeEnd=false );
 	void AddSpheredSegment( EveCurveLineSet* lineSet, const Vector3& p0, const Vector3& p1, const Vector3& center );
+	void AddCurvedLine( EveCurveLineSet* lineSet, const Vector3& p0, const Vector3& p1, const Vector3& center, int segments );
+
+	void CalculateSideAndFront( const Vector3& upDir, Vector3& outSide, Vector3& outFront );
 };
 
 TYPEDEF_BLUECLASS( EveConnector );

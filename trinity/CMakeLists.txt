@@ -695,6 +695,9 @@ set(_SOURCES
     Eve/UI/EveTacticalOverlay.cpp
     Eve/UI/EveTacticalOverlay.h
     Eve/UI/EveTacticalOverlay_Blue.cpp
+    Eve/UI/EveTacticalTrails.cpp
+    Eve/UI/EveTacticalTrails.h
+    Eve/UI/EveTacticalTrails_Blue.cpp
     Eve/UI/EveUiObject.cpp
     Eve/UI/EveUiObject.h
     Eve/UI/EveUiObject_Blue.cpp
@@ -945,6 +948,9 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPBloomEffect.cpp
     PostProcess/Effects/Tr2PPBloomEffect.h
     PostProcess/Effects/Tr2PPBloomEffect_Blue.cpp
+    PostProcess/Effects/Tr2PPColorCorrectionEffect.cpp
+    PostProcess/Effects/Tr2PPColorCorrectionEffect.h
+    PostProcess/Effects/Tr2PPColorCorrectionEffect_Blue.cpp
     PostProcess/Effects/Tr2PPDepthOfFieldEffect.cpp
     PostProcess/Effects/Tr2PPDepthOfFieldEffect.h
     PostProcess/Effects/Tr2PPDepthOfFieldEffect_Blue.cpp
@@ -1397,6 +1403,7 @@ set(_SOURCES
     ITriReroutable.h
     IWorldPosition.h
     PyVerCompat.h
+    PriorityBlend.cpp
     PriorityBlend.h
     resource.h
     StdAfx.cpp
@@ -1602,6 +1609,9 @@ set(_SOURCES
     Tr2SSAO.cpp
     Tr2SSAO.h
     Tr2SSAO_Blue.cpp
+    Tr2SSSSS.cpp
+    Tr2SSSSS.h
+    Tr2SSSSS_Blue.cpp
     Tr2StreamingBitmapSaver.cpp
     Tr2StreamingBitmapSaver.h
     Tr2StreamingBitmapSaver_Blue.cpp
@@ -1637,6 +1647,9 @@ set(_SOURCES
     Tr2VariableStore.cpp
     Tr2VariableStore.h
     Tr2VariableStore_Blue.cpp
+    Tr2VectorFunctionModifier.cpp
+    Tr2VectorFunctionModifier.h
+    Tr2VectorFunctionModifier_Blue.cpp
     Tr2VertexDefinitionUtilities.cpp
     Tr2VertexDefinitionUtilities.h
     Tr2VideoAdapters.cpp
@@ -1824,6 +1837,10 @@ function(set_shared_trinity_properties target)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake DESTINATION .)
     
     ccp_enable_vs_analizers(${target})
+
+    if(${MSVC})
+        target_compile_options(${target} PRIVATE "/bigobj") # The object file generated for EveSOFData.cpp has more than 2^16 sections.
+    endif()
 
 endfunction()
 

@@ -36,12 +36,14 @@ class Tr2BindlessResourcesAL
 {
 public:
 	void Add( const Tr2TextureAL& texture );
+	void Add( const Tr2BufferAL& buffer );
 	void Add( const Tr2BindlessResourcesAL& resources );
 	void Clear();
 	friend class Tr2RenderContextAL;
 
 private:
 	std::vector<TrinityALImpl::Tr2TextureAL*> m_textures;
+	std::vector<TrinityALImpl::Tr2BufferAL*> m_buffers;
 };
 
 // -------------------------------------------------------------
@@ -242,7 +244,7 @@ public:
 	
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
 
-	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
+	ALResult UseResources( Tr2UseResourceDestination dest, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
     ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
     ALResult UseConstantBuffer( id<MTLBuffer> constantBuffer );
 

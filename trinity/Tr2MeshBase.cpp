@@ -351,12 +351,13 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 	}
 
 	auto primCount = GetPrimitiveCount( *mesh, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
-	auto& meshArea = mesh->m_areas[std::max( 0, area->GetIndex() )];
 
 	if( !primCount )
 	{
 		return batch;
 	}
+
+	auto& meshArea = mesh->m_areas[std::max( 0, area->GetIndex() )];
 
 	if( area->GetReversed() && !mesh->m_reversedIndicesValid )
 	{
@@ -488,23 +489,37 @@ void Tr2MeshBase::CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& colle
 // Description:
 //   Put the very basic info of a mesharea (block) into a class that contains the list of areas and a pointer to a material
 // -------------------------------------------------------------
-void Tr2MeshBase::CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksWithSharedMaterial& collector, TriBatchType areaType ) const
+void Tr2MeshBase::CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBatchAreaBlocksWithSharedMaterial>& collectors, TriBatchType areaType ) const
 {
 	const Tr2MeshAreaVector* areas = GetAreas( areaType );
-	collector.m_areaBlockVector.reserve( areas->size() );
-
 	for( auto a = areas->begin(); a != areas->end(); ++a )
 	{
 		if( areaType == TRIBATCHTYPE_OPAQUE && !( *a )->IsCastingShadows() )
 		{
 			continue;
 		}
-		if( !collector.m_shaderMaterial && !!( *a )->GetMaterialInterface() )
+		if( areaType == TRIBATCHTYPE_DECAL && !( *a )->IsCastingShadows() )
 		{
-			collector.m_shaderMaterial = ( *a )->GetMaterialInterface();
+			continue;
 		}
-		TriRenderBatchAreaBlock ab( std::max( 0, ( *a )->GetIndex() ), std::max( 0, ( *a )->GetCount() ) );
-		collector.m_areaBlockVector.push_back( ab );
+		
+		uint32_t i = 0;
+		for ( ; i < collectors.size(); i++ )
+		{
+			if( collectors[i].m_shaderMaterial->GetHashValue() == ( *a )->GetMaterialInterface()->GetHashValue() )
+			{
+				break;
+			}
+		}
+		if ( i == collectors.size() )
+		{
+			auto entry = TriRenderBatchAreaBlocksWithSharedMaterial();
+			entry.m_shaderMaterial = ( *a )->GetMaterialInterface();
+			collectors.push_back( entry );
+		}
+
+		TriRenderBatchAreaBlock ab( ( *a )->GetIndex(), ( *a )->GetCount() );
+		collectors[i].m_areaBlockVector.push_back( ab );
 	}
 }
 

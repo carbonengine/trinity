@@ -821,6 +821,7 @@ public:
 		// swarm behavior
 		EveSwarm::BehaviorProperties swarmBehavior;
 		GenericBannerShaderData bannerShader;
+		std::map<std::string, EntityComponents::ReflectionMode> categoryData;
 	};
 
 

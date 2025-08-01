@@ -59,19 +59,9 @@ void Tr2SkinnedModel::GetBatchesForArea( Tr2MeshAreaVector* areas, Tr2Mesh* mesh
 		// Note that this can fail if the accumulator can't add more batches!
 		if( areaData )
 		{
-			unsigned int n = 0;
-
 			// if we have bone-remapping, get jointbindings from area
 			TriGeometryResAreaData* areaRes = geomRes->GetAreaData( meshIx, area->GetIndex() );
-			if( areaRes && meshData->m_hasPerMeshAreaBoneBindings )
-			{
-				// number of per this area
-				n = (unsigned int)areaRes->m_jointBindings.size();
-			}
-			else
-			{
-				n = area->GetJointCount();
-			}
+			unsigned int n = area->GetJointCount();
 
 			// Much more than this would trash the per-frame data
 			if( n > TR2_MAX_BONES_PER_MESHAREA )
@@ -88,15 +78,7 @@ void Tr2SkinnedModel::GetBatchesForArea( Tr2MeshAreaVector* areas, Tr2Mesh* mesh
 				for( unsigned int joint = 0; joint < n; ++joint )
 				{
 					// apply a lookup to change the bone-index from per-mesharea to per-mesh, if we have per-mesharea
-					int meshBoneIx = 0;
-					if( areaRes && meshData->m_hasPerMeshAreaBoneBindings )
-					{
-						meshBoneIx = areaRes->m_jointBindings[joint];
-					}
-					else
-					{
-						meshBoneIx = joint;
-					}
+					int meshBoneIx = joint;
 					// ... then from per-mesh into the skeleton
 					float* m = skinnedData->GetSkinningMatrix( animMapping[meshBoneIx] );
 					areaData->SetJointTransform( joint, m );

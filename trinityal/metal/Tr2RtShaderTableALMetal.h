@@ -46,6 +46,10 @@ namespace TrinityALImpl
         void AddUsedResources( uint32_t rayGenIndex, std::vector<id<MTLResource>>& readResources ) const;
         
         void SetGlobalInputBuffer( uint32_t rayGenIndex, const id<MTLBuffer>& buffer, uint32_t offset ) const;
+        
+        id<MTLBuffer> GetMaterialBuffer() const;
+        NSUInteger GetRayGenMaterialOffset(uint32_t rayGenIndex) const;
+        
 
     private:
         Tr2RtShaderTableDescriptionAL m_desc;

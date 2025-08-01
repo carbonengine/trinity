@@ -1305,7 +1305,7 @@ std::optional<std::vector<GlobalInputElement>> ParseGlobalInput( ParserState& st
 			state.ShowMessage( input.fileLocation, EC_CUSTOM_ERROR, "Unsupported type for \"%s\" in the globalinput", ToString( name ).c_str() );
 			return {};
 		}
-		result.push_back( { type, symbol->name, symbol->definition } );
+		result.push_back( { type, symbol->name, symbol->definition, symbol } );
 	}
 	return result;
 }

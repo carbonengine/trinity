@@ -23,6 +23,7 @@
 #include "Effects/Tr2PPTaaEffect.h"
 #include "Effects/Tr2PPDepthOfFieldEffect.h"
 #include "Effects/Tr2PPTonemappingEffect.h"
+#include "Effects/Tr2PPColorCorrectionEffect.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2PPSignalLossEffect );
@@ -40,6 +41,7 @@ BLUE_DECLARE( Tr2PPTaaEffect );
 BLUE_DECLARE( Tr2PPDepthOfFieldEffect );
 BLUE_DECLARE( Tr2PPUpscalingEffect );
 BLUE_DECLARE( Tr2PPTonemappingEffect );
+BLUE_DECLARE( Tr2PPColorCorrectionEffect );
 
 BLUE_CLASS( Tr2PostProcess2 ) :
 	public IRoot
@@ -62,6 +64,7 @@ public:
 	Tr2PPTaaEffectPtr GetTaa() const { return m_taa; }
 	Tr2PPDepthOfFieldEffectPtr GetDepthOfField() const { return m_depthOfField; }
 	Tr2PPTonemappingEffectPtr GetTonemapping() const { return m_tonemapping; }
+	Tr2PPColorCorrectionEffectPtr GetColorCorrection() const { return m_colorCorrection; }
 
 	
 	void GetLuts( std::vector<const Tr2PPLutEffect*> & container ) const;
@@ -80,6 +83,7 @@ public:
 	void SetTaa(Tr2PPTaaEffectPtr effect) { m_taa = effect; }
 	void SetDepthOfField(Tr2PPDepthOfFieldEffectPtr effect) { m_depthOfField = effect; }
 	void SetTonemapping(Tr2PPTonemappingEffectPtr effect) { m_tonemapping = effect; }
+	void SetColorCorrection(Tr2PPColorCorrectionEffectPtr effect) { m_colorCorrection = effect; }
 
 	// Helper method for scenes to decide on miplodbias
 	float GetMipLodBias() const;
@@ -89,13 +93,6 @@ public:
 	void GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y );
 
 	float m_exposureAdjustment = 0;
-	float m_whiteTemperature = 6500.0f;
-	float m_whiteTint = 0.0f;
-	float m_colorSaturation = 1.0f;
-	float m_colorContrast = 1.0f;
-	float m_colorGamma = 1.0f;
-	Vector3 m_colorGain = Vector3( 1.0f, 1.0f, 1.0f );
-	Vector3 m_colorOffset = Vector3( 0.0f, 0.0f, 0.0f );
 
 private:
 	Tr2PPSignalLossEffectPtr m_signalLoss;
@@ -113,6 +110,7 @@ private:
 	Tr2PPTaaEffectPtr m_taa;
 	Tr2PPDepthOfFieldEffectPtr m_depthOfField;
 	Tr2PPTonemappingEffectPtr m_tonemapping;
+	Tr2PPColorCorrectionEffectPtr m_colorCorrection;
 };
 TYPEDEF_BLUECLASS( Tr2PostProcess2 );
 

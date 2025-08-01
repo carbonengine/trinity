@@ -13,6 +13,7 @@
 #include "Eve/EveUpdateContext.h"
 #include "PostProcess/Tr2PostProcessEnums.h"
 #include "Raytracing/Tr2RaytracingGeometry.h"
+#include "PriorityBlend.h"
 
 struct Vector3d;
 
@@ -30,42 +31,32 @@ BLUE_INTERFACE( ITr2FroxelFogSettings ) :
 public:
 	struct FroxelFogSettings
 	{
-		float thickness = 0.0f;
-
-		float lightDirectionality = 0.0f;
-
-		float environmentIntensity = 0.0f;
-		float environmentDirectionality = 0.0f;
-
-		Color fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
-		float backgroundVisibility = 0.0f;
-
-
-		float godRayNoiseIntensity = 0.0f;
-		float godRayNoiseFrequency = 0.0f;
-		float godRayNoiseAnimationSpeed = 0.0f;
-
-		float fogNoiseIntensity = 0.0f;
-		float fogNoiseFrequency = 0.0f;
-		Vector3 fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
-
-
-
-
-		double logThickness = 0.0;
-		float intensity = 0.0f; //Used to normalize certain values if less than 1.0
-
-		FroxelFogSettings operator*( float rhs ) const;
-		FroxelFogSettings operator+( const FroxelFogSettings& rhs ) const;
-	};
-
-	struct FroxelFogWeightedSettings
-	{
 		PostProcessEnums::Priority priority = PostProcessEnums::MEDIUM_PRIORITY;
-		float intensity = 1;
-		FroxelFogSettings value;
+		float intensity = 1.0;
+
+		PriorityBlend::Attribute<float> thickness = 0.0f;
+
+		PriorityBlend::Attribute<float> lightDirectionality = 0.0f;
+
+		PriorityBlend::Attribute<float> environmentIntensity = 0.0f;
+		PriorityBlend::Attribute<float> environmentDirectionality = 0.0f;
+
+		PriorityBlend::Attribute<Color> fogColor = Color( 0.0f, 0.0f, 0.0f, 0.0f );
+		PriorityBlend::Attribute<float> backgroundVisibility = 0.0f;
+
+
+		PriorityBlend::Attribute<float> godRayNoiseIntensity = 0.0f;
+		PriorityBlend::Attribute<float> godRayNoiseFrequency = 0.0f;
+		PriorityBlend::Attribute<float> godRayNoiseAnimationSpeed = 0.0f;
+
+		PriorityBlend::Attribute<float> fogNoiseIntensity = 0.0f;
+		PriorityBlend::Attribute<float> fogNoiseFrequency = 0.0f;
+		PriorityBlend::Attribute<Vector3> fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
+
+		PriorityBlend::Attribute<double> logThickness = 0.0;
+
 	};
-	virtual FroxelFogWeightedSettings GetFroxelFogSettings() = 0;
+	virtual FroxelFogSettings* GetFroxelFogSettings() = 0;
 };
 
 REGISTER_COMPONENT_TYPE( "FroxelFogSettings", ITr2FroxelFogSettings );
@@ -118,6 +109,7 @@ public:
 
 	void UpdateVariableStore();
 	void SetPlanets( const CcpMath::Sphere* planets, size_t planetCount );
+	void SetSunAngle( float angle );
 	void RenderShadows(
 		const EveComponentRegistry& registry,
 		ITr2TextureProvider* shadowMap,
@@ -157,7 +149,6 @@ private:
 	{
 		explicit FogViewDependentResources( bool temporalFroxels );
 
-		Tr2TextureReferencePtr shadowFroxels;
 		Tr2TextureReferencePtr fogFroxels;
 		Tr2TextureReferencePtr temporalFroxels0;
 		Tr2TextureReferencePtr temporalFroxels1;
@@ -171,6 +162,9 @@ private:
 		Vector3 froxelJitter;
 		bool currentTemporalFroxels;
 	};
+
+	void UpdateTextures( FogViewDependentResources & resources, uint32_t width, uint32_t height, uint32_t depth, bool enabled );
+	
 
 	void RenderFog( 
 		FogViewDependentResources& resources, 
@@ -229,9 +223,6 @@ private:
 
 	struct FogPerObjectData
 	{
-		Matrix ProjectionMatrix;
-		Matrix InverseProjectionMatrix;
-
 		uint32_t ResolutionX;
 		uint32_t ResolutionY;
 		uint32_t ResolutionZ;
@@ -273,10 +264,10 @@ private:
 		Matrix ReprojectionMatrix;
 
 		Vector3 SunViewDirection;
-		float _pad4;
+		float SunAngle;
 
 		Vector3 SunWorldDirection;
-		float _pad5;
+		float pad0;
 
 		Vector3 SunColor;
 		float LightProfileTextureWidth;
@@ -290,6 +281,9 @@ private:
 		
 		CcpMath::Sphere planets[2];
 	};
+
+	void UpdatePerObjectData( FogPerObjectData* data, const Matrix& view, const Matrix& projection, const Matrix& viewLast, const Matrix& projectionLast, const Vector3d& origin, const Vector3d& originShift, const Vector3& sunDirection, const Color& sunColor, uint32_t width, uint32_t height, uint32_t depth, const Vector3& jitter, const Tr2ShadowMap* cascadedShadowMap );
+
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
 	
@@ -304,6 +298,7 @@ private:
 	bool m_castShadows;
 	bool m_receiveShadows;
 
+	float m_sunAngle;
 	std::array<CcpMath::Sphere, 2> m_planets;
 };
 

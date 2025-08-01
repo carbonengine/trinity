@@ -40,17 +40,15 @@ namespace TrinityALImpl
 #define METAL_CONST_BUFFER_OFFSET (METAL_VERTEX_STREAM_BUFFER_OFFSET + METAL_VERTEX_STREAM_BUFFER_COUNT)
 #define METAL_CONST_BUFFER_COUNT 20
 // #define METAL_SRV_BUFFER_OFFSET (METAL_CONST_BUFFER_OFFSET + METAL_CONST_BUFFER_COUNT)
-#define METAL_SRV_BUFFER_OFFSET (METAL_VERTEX_STREAM_BUFFER_OFFSET + METAL_VERTEX_STREAM_BUFFER_COUNT)
-#define METAL_SRV_BUFFER_COUNT 20
-#define METAL_UAV_BUFFER_OFFSET (METAL_SRV_BUFFER_OFFSET + METAL_SRV_BUFFER_COUNT)
-#define METAL_UAV_BUFFER_COUNT 7
-	static_assert( METAL_VERTEX_STREAM_BUFFER_COUNT + /* METAL_CONST_BUFFER_COUNT +  */METAL_SRV_BUFFER_COUNT + METAL_UAV_BUFFER_COUNT <= METAL_MAX_BOUND_BUFFERS, "buffer overflow" );
+#define METAL_SRV_BUFFER_OFFSET 0
+#define METAL_SRV_BUFFER_COUNT 31
+#define METAL_UAV_BUFFER_OFFSET 0
+#define METAL_UAV_BUFFER_COUNT 31
 
 #define METAL_SRV_TEXTURE_OFFSET 0
-#define METAL_SRV_TEXTURE_COUNT 24
-#define METAL_UAV_TEXTURE_OFFSET (METAL_SRV_TEXTURE_OFFSET + METAL_SRV_TEXTURE_COUNT)
-#define METAL_UAV_TEXTURE_COUNT 7
-	static_assert( METAL_SRV_TEXTURE_COUNT + METAL_UAV_TEXTURE_COUNT <= METAL_MAX_BOUND_TEXTURES, "texture overflow" );
+#define METAL_SRV_TEXTURE_COUNT 31
+#define METAL_UAV_TEXTURE_OFFSET 0
+#define METAL_UAV_TEXTURE_COUNT 31
 
 // 8 (depth compare functions) * 2 (depth on / off) + 1 (temporary state)
 #define METAL_DEPTHSTENCIL_CACHE_SIZE 17
@@ -338,7 +336,7 @@ namespace TrinityALImpl
 		void Dispatch( uint32_t groupDimX, uint32_t groupDimY, uint32_t groupDimZ );
 		void Dispatch( id<MTLBuffer> indirectBuffer, uint32_t indirectBufferOffset );
         API_AVAILABLE( macos(11.0) )
-        void DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t rayGenIndex, uint32_t width, uint32_t height );
+        void DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t rayGenIndex, uint32_t width, uint32_t height, uint32_t depth );
         
 		void CreateVisibilityQueryBuffer(uint64_t maxNumQueries);
 		uint64_t StartVisibilityQuery();

@@ -56,6 +56,11 @@
 #include "Lights/ITr2LightOwner.h"
 #include "Utilities/BoundingSphere.h"
 #include "BlueObjectMetadata.h"
+#include "ITr2TextureProvider.h"
+#include "TriSettingsRegistrar.h"
+
+bool g_alphaCutoutShadowsEnabled = false; // alpha cutout refers to TRIBATCHTYPE_DECAL
+TRI_REGISTER_SETTING( "alphaCutoutShadowsEnabled", g_alphaCutoutShadowsEnabled );
 
 namespace
 {
@@ -554,6 +559,7 @@ size_t EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchTy
 		{
 		case TRIBATCHTYPE_DECAL:
 			newShader->SetOption( BlueSharedString( "SPACE_OBJECT_TRANSPARENCY" ), BlueSharedString( "SOT_CLIP" ) );
+			castsShadows = g_alphaCutoutShadowsEnabled;
 			break;
 		case TRIBATCHTYPE_TRANSPARENT:
 			newShader->SetOption( BlueSharedString( "SPACE_OBJECT_TRANSPARENCY" ), BlueSharedString( "SOT_TRANSPARENT" ) );
@@ -646,7 +652,7 @@ size_t EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchTy
 		newMeshArea->SetIndex( area->index + (unsigned int)meshIndexOffset );
 		newMeshArea->SetCount( area->count );
 		newMeshArea->SetCastsShadows( castsShadows );
-		
+
 		meshAreaVector->Append( newMeshArea );
 	}
 
@@ -1453,7 +1459,7 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const
 			};
 			static_assert( sizeof( names ) / sizeof( names[0] ) == EveSOFDataHullBanner::_USAGE_COUNT, "Banner usage names mismatch" );
 
-			const char* externalParamName = nullptr;
+			const char* externalParamName = "";
 			if( bannerData.usage >= 0 && bannerData.usage < EveSOFDataHullBanner::_USAGE_COUNT )
 			{
 				externalParamName = names[bannerData.usage];
@@ -1608,7 +1614,7 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 				};
 				static_assert( sizeof( names ) / sizeof( names[0] ) == EveSOFDataHullBannerSetItem::_USAGE_COUNT, "Banner usage names mismatch" );
 
-				const char* externalParamName = nullptr;
+				const char* externalParamName = "";
 				if( usage >= 0 && usage < EveSOFDataHullBannerSetItem::_USAGE_COUNT )
 				{
 					externalParamName = names[usage];
@@ -2534,7 +2540,7 @@ void EveSOF::SetupLights( ITr2LightOwnerPtr spaceObject, const EveSOFDNAPtr dna,
 					}
 					else
 					{
-						CCP_LOGERR( "EveSOF::SetupLights: Invalid light set item type %s for hull %s", lightSetItem.type, dna->GetDnaString() );
+						CCP_LOGERR( "EveSOF::SetupLights: Invalid light set item type %d for hull %s", lightSetItem.type, dna->GetDnaString() );
 						continue;
 					}
 
@@ -3618,7 +3624,7 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 	// setup nested layout
 	SetupLayout( parent, extensionDna, placementOffsets );
 
-	CCP_LOGNOTICE( "Creating %d extensions on %d places. Total: %d", placement.isInstanced ? " instanced" : "", locators.size(), nestedOffsets.size(), placementOffsets.size() );
+	CCP_LOGNOTICE( "Creating %s extensions on %zu places", placement.isInstanced ? " instanced" : "", locators.size() );
 
 	return container;
 }
