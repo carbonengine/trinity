@@ -2612,6 +2612,7 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 	}
 	else
 	{
+		// spotlight
 		// we flip near and far plane for reverse z
 		float zn = lightData.radius;
 		float zf = lightData.radius / 1000.f;
