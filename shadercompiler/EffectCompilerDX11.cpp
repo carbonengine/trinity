@@ -22,6 +22,8 @@
 
 #include "DxReflection.h"
 
+#include <iostream>
+
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) (                            \
   (uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
   (uint32_t)(uint8_t)(ch2) << 16  | (uint32_t)(uint8_t)(ch3) << 24   \
@@ -1191,6 +1193,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 {
 	ZoneScoped;
 
+	//static std::atomic<uint32_t> cacheCounter = 0;
+	//static std::atomic<uint32_t> compileCounter = 0;
+	//static std::atomic<uint32_t> recompileCounter = 0;
+
 	ParserState state( MakeInlineString( source, source + sourceLength ) );
 	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
@@ -1359,26 +1365,41 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				state.ResetPragmaUsage();
 				std::string code = os.str();
 
-				bool hasCompiled = false;
+
+				// Let only one thread compile this permutation.
+				bool needsToCompile = false;
+				std::shared_ptr<SyncData> syncData;
 				{
 					std::lock_guard scope( m_compiledCS );
 					auto found = m_compiled.find( code );
-					if( found != end( m_compiled ) )
+					if ( found == end(m_compiled) )
 					{
-						effectData = found->second;
-						if( !effectData )
-						{
-							return false;
-						}
-						hasCompiled = true;
+						// Yep, this thread will have to compile. Make an entry into the cache.
+						syncData = std::make_shared<SyncData>();
+						m_compiled[code] = syncData;
+						needsToCompile = true;
+					}
+					else
+					{
+						// Some other thread is going to compile for us. Grab his stuff from the cache.
+						syncData = found->second;
 					}
 				}
-				if( !hasCompiled )
+
+				if ( !needsToCompile )
 				{
+					// Let's wait for the other thread to compile for us
+					std::unique_lock<std::mutex> lock( syncData->mutex );
+					syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+				}
+				else
+				{
+					// We need to compile, nobody else is doing it for this permutation.
 					CComPtr<ID3D10Blob> compiledEffectData;
 					HRESULT hr;
 					{
 						ZoneScopedN( "D3DCompile" );
+						//std::cerr << "D3DCompile opt " << compileCounter++ << std::endl;
 						hr = D3DCompile(
 							code.c_str(),
 							code.length(),
@@ -1387,56 +1408,54 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							nullptr,
 							patchEntryPoint.c_str(),
 							profile.c_str(),
-							(compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | (g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0),
+							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
 							0,
 							&compiledEffectData,
 							&errors );
 					}
+					
 					if( FAILED( hr ) )
 					{
-						{
-							std::lock_guard scope( m_compiledCS );
-							m_compiled[code] = nullptr;
-						}
+						// We failed compilation, let's print errors.
+						syncData->resource = nullptr;
 						if( errors )
 						{
 							g_messages.AddMessages( errors );
 						}
-						return false;
 					}
+					else
 					{
-						std::lock_guard scope( m_compiledCS );
-						auto found = m_compiled.find( code );
-						if ( found != end( m_compiled ) )
-						{
-							// let's not overwrite stuff in the cache, so that we don't mess with its reference counter
-							effectData = found->second;
-							if( !effectData )
-							{
-								// This check should be unnecessary, because if our compilation succeeded, then the previous compilation should also have succeeded.
-								// But better safe than sorry, I guess... Might wanna remove this after discussion with Filipp.
-								return false;
-							}
-						}
-						else
-						{
-							effectData = compiledEffectData;
-							// I admit this is weird. Just trying to make sure that the reference counter is not modified outside lockguard's scope
-							m_compiled[code] = CComPtr<ID3D10Blob>();
-							m_compiled[code].Attach( compiledEffectData.Detach() );
-						}
+						// Compilation succeeded! Hand over the resource to the cache entry.
+						syncData->resource.Attach( compiledEffectData.Detach() );
 					}
 
-					if( g_printWarnings && errors )
+					// Let's wake up everyone waiting for this permutation's compilation.
 					{
-						g_messages.AddMessages( errors );
+						std::lock_guard scope( syncData->mutex );
+						syncData->compiled = true;
 					}
+					syncData->conditionVariable.notify_all();
 				}
+
+				if ( !syncData->resource )
+				{
+					// No resource on the cache entry! This means compilation must have failed.
+					return false;
+				}
+
+				// Grab a raw pointer from the cache. This is to avoid whatever funny business is going on with CComPtr reference counters.
+				effectData = syncData->resource;
+				
+				{
+					// Not sure if this is necessary to avoid reference counter bugs. But anyway...
+					std::lock_guard scope( m_compiledCS );
+					syncData.reset();
+				}
+
 
 				auto handleStrippedData = [&]( ID3DBlob* blob ) 
 				{
 					// No idea what happens when assigning strippedEffectData = effectData, with effectData now being a raw pointer, and not taking any chances...
-					// Also, is the unstripped stuff what we want for shader debugging? :O
 					stage.shaderSize = uint32_t( blob->GetBufferSize() );
 					stage.shaderDataStr = g_stringTable.AddString( blob->GetBufferPointer(), blob->GetBufferSize() );
 					stage.source = code;
@@ -1457,7 +1476,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						handleStrippedData( strippedEffectData );
 					}
 				}
-				
 
 
 				CComPtr<ID3D11ShaderReflection> reflection;

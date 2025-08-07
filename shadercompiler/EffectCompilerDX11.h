@@ -19,7 +19,15 @@ public:
 	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions );
 
 private:
-	std::unordered_map<std::string, CComPtr<ID3D10Blob>> m_compiled;
+	struct SyncData
+	{
+		bool compiled = false;
+		std::condition_variable conditionVariable;
+		std::mutex mutex;
+		CComPtr<ID3D10Blob> resource;
+	};
+
+	std::unordered_map<std::string, std::shared_ptr<SyncData>> m_compiled;
 	std::mutex m_compiledCS;
 	CComPtr<IDxcUtils> m_dxilUtils;
 };
