@@ -22,8 +22,6 @@
 
 #include "DxReflection.h"
 
-#include <iostream>
-
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) (                            \
   (uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
   (uint32_t)(uint8_t)(ch2) << 16  | (uint32_t)(uint8_t)(ch3) << 24   \
@@ -1192,10 +1190,6 @@ bool AddGlobalInputs( StageData& globalsData, std::map<StringReference, Paramete
 bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions )
 {
 	ZoneScoped;
-
-	//static std::atomic<uint32_t> cacheCounter = 0;
-	//static std::atomic<uint32_t> compileCounter = 0;
-	//static std::atomic<uint32_t> recompileCounter = 0;
 
 	ParserState state( MakeInlineString( source, source + sourceLength ) );
 	for( auto it = begin( defines ); it != end( defines ); ++it )

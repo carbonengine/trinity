@@ -4931,7 +4931,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				{
 					// We need to compile, nobody else is doing it for this permutation.
 					auto compiledCode = CompileCode( os.str(), defines );
-					syncData->resource = compiledCode;
+					syncData->compiledCode = compiledCode;
 
 					// Let's wake up everyone waiting for this permutation's compilation.
 					{
@@ -4941,7 +4941,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 					syncData->conditionVariable.notify_all();
 				}
 
-				auto& resource = syncData->resource;
+				auto& compiledCode = syncData->compiledCode;
 
 				{
 					// Not sure if this is necessary to avoid reference counter bugs. But anyway...
@@ -4949,14 +4949,14 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 					syncData.reset();
 				}
 
-				if( resource.empty() )
+				if( compiledCode.empty() )
 				{
-					// No resource on the cache entry! This means compilation must have failed.
+					// No compiledCode on the cache entry! This means compilation must have failed.
 					return false;
 				}
 
-				stage.shaderSize = uint32_t( resource.size() );
-				stage.shaderDataStr = g_stringTable.AddString( resource.data(), resource.size() );
+				stage.shaderSize = uint32_t( compiledCode.size() );
+				stage.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
 				
 
 				if( !GetStageData( state, stage, shaderNode->GetChild( 1 ), result.annotations ) )
@@ -5186,7 +5186,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 			{
 				// We need to compile, nobody else is doing it for this permutation.
 				auto compiledCode = CompileCode( os.str(), defines, false );
-				syncData->resource = compiledCode;
+				syncData->compiledCode = compiledCode;
 
 				// Let's wake up everyone waiting for this permutation's compilation.
 				{
@@ -5196,7 +5196,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				syncData->conditionVariable.notify_all();
 			}
 
-			auto& resource = syncData->resource;
+			auto& compiledCode = syncData->compiledCode;
 
 			{
 				// Not sure if this is necessary to avoid reference counter bugs. But anyway...
@@ -5204,14 +5204,14 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				syncData.reset();
 			}
 
-			if( resource.empty() )
+			if( compiledCode.empty() )
 			{
-				// No resource on the cache entry! This means compilation must have failed.
+				// No compiledCode on the cache entry! This means compilation must have failed.
 				return false;
 			}
 
-			library.shaderSize = uint32_t( resource.size() );
-			library.shaderDataStr = g_stringTable.AddString( resource.data(), resource.size() );
+			library.shaderSize = uint32_t( compiledCode.size() );
+			library.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
 
 
             technique.libraries.push_back( library );

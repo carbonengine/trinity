@@ -75,7 +75,7 @@ private:
 		bool compiled = false;
 		std::condition_variable conditionVariable;
 		std::mutex mutex;
-		std::vector<uint8_t> resource;
+		std::vector<uint8_t> compiledCode;
 	};
 
 	std::unordered_map<std::string, std::shared_ptr<SyncData>> m_compiled;
