@@ -617,7 +617,9 @@ int main(int argc, char* argv[])
 	g_includeHandler.SetRootPath( args.shaderPath );
 	g_messages.SetEntryFileName( args.shaderPath );
 
-	CompileQueue compileQueue( args.coreCount, &CompileShader );
+	const int32_t coreFactor = 3;
+
+	CompileQueue compileQueue( args.coreCount * coreFactor, &CompileShader );
 
 	Permutations permutations;
 	{
@@ -837,7 +839,7 @@ int main(int argc, char* argv[])
 	}
 
 	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	std::cerr << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>( end - begin ).count() << "[ns]" << std::endl;
+	std::cerr << coreFactor << " coreFactor, " << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>( end - begin ).count() << "[ns]" << std::endl;
 
 	return 0;
 }
