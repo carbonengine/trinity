@@ -1393,7 +1393,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					HRESULT hr;
 					{
 						ZoneScopedN( "D3DCompile" );
-						//std::cerr << "D3DCompile opt " << compileCounter++ << std::endl;
 						hr = D3DCompile(
 							code.c_str(),
 							code.length(),
