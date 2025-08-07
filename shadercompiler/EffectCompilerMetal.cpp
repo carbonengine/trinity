@@ -4941,20 +4941,23 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 					syncData->conditionVariable.notify_all();
 				}
 
-				if( syncData->resource.empty() )
-				{
-					// No resource on the cache entry! This means compilation must have failed.
-					return false;
-				}
+				auto& resource = syncData->resource;
 
-				stage.shaderSize = uint32_t( syncData->resource.size() );
-				stage.shaderDataStr = g_stringTable.AddString( syncData->resource.data(), syncData->resource.size() );
-				
 				{
 					// Not sure if this is necessary to avoid reference counter bugs. But anyway...
 					std::lock_guard scope( m_compiledCS );
 					syncData.reset();
 				}
+
+				if( resource.empty() )
+				{
+					// No resource on the cache entry! This means compilation must have failed.
+					return false;
+				}
+
+				stage.shaderSize = uint32_t( resource.size() );
+				stage.shaderDataStr = g_stringTable.AddString( resource.data(), resource.size() );
+				
 
 				if( !GetStageData( state, stage, shaderNode->GetChild( 1 ), result.annotations ) )
 				{
@@ -5193,20 +5196,22 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				syncData->conditionVariable.notify_all();
 			}
 
-			if( syncData->resource.empty() )
-			{
-				// No resource on the cache entry! This means compilation must have failed.
-				return false;
-			}
-
-			library.shaderSize = uint32_t( syncData->resource.size() );
-			library.shaderDataStr = g_stringTable.AddString( syncData->resource.data(), syncData->resource.size() );
+			auto& resource = syncData->resource;
 
 			{
 				// Not sure if this is necessary to avoid reference counter bugs. But anyway...
 				std::lock_guard scope( m_compiledCS );
 				syncData.reset();
 			}
+
+			if( resource.empty() )
+			{
+				// No resource on the cache entry! This means compilation must have failed.
+				return false;
+			}
+
+			library.shaderSize = uint32_t( resource.size() );
+			library.shaderDataStr = g_stringTable.AddString( resource.data(), resource.size() );
 
 
             technique.libraries.push_back( library );

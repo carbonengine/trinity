@@ -24,7 +24,8 @@ private:
 		bool compiled = false;
 		std::condition_variable conditionVariable;
 		std::mutex mutex;
-		CComPtr<ID3D10Blob> resource;
+		CComPtr<ID3D10Blob> passResource;
+		CComPtr<IDxcBlob> libraryResource;
 	};
 
 	std::unordered_map<std::string, std::shared_ptr<SyncData>> m_compiled;

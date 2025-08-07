@@ -1417,7 +1417,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					if( FAILED( hr ) )
 					{
 						// We failed compilation, let's print errors.
-						syncData->resource = nullptr;
+						syncData->passResource = nullptr;
 						if( errors )
 						{
 							g_messages.AddMessages( errors );
@@ -1426,7 +1426,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					else
 					{
 						// Compilation succeeded! Hand over the resource to the cache entry.
-						syncData->resource.Attach( compiledEffectData.Detach() );
+						syncData->passResource.Attach( compiledEffectData.Detach() );
 					}
 
 					// Let's wake up everyone waiting for this permutation's compilation.
@@ -1437,19 +1437,19 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					syncData->conditionVariable.notify_all();
 				}
 
-				if ( !syncData->resource )
-				{
-					// No resource on the cache entry! This means compilation must have failed.
-					return false;
-				}
-
 				// Grab a raw pointer from the cache. This is to avoid whatever funny business is going on with CComPtr reference counters.
-				effectData = syncData->resource;
-				
+				effectData = syncData->passResource;
+
 				{
 					// Not sure if this is necessary to avoid reference counter bugs. But anyway...
 					std::lock_guard scope( m_compiledCS );
 					syncData.reset();
+				}
+
+				if( !effectData )
+				{
+					// No resource on the cache entry! This means compilation must have failed.
+					return false;
 				}
 
 
@@ -1683,35 +1683,96 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			library.source = code;
 
-			CComPtr<IDxcCompiler> compiler;
-			DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
 
-			CComPtr<IDxcOperationResult> opResult;
-			compiler->Compile(
-				src,
-				L"memory",
-				L"",
-				L"lib_6_3",
-				nullptr, 0,
-				nullptr, 0,
-				nullptr,
-				&opResult );
-
-			HRESULT hrCompilation;
-			opResult->GetStatus( &hrCompilation );
-
-			CComPtr<IDxcBlobEncoding> messages;
-			if( SUCCEEDED( opResult->GetErrorBuffer( &messages ) ) )
+			// Let only one thread compile this permutation.
+			bool needsToCompile = false;
+			std::shared_ptr<SyncData> syncData;
 			{
-				g_messages.AddMessages( messages );
+				std::lock_guard scope( m_compiledCS );
+				auto found = m_compiled.find( code );
+				if( found == end( m_compiled ) )
+				{
+					// Yep, this thread will have to compile. Make an entry into the cache.
+					syncData = std::make_shared<SyncData>();
+					m_compiled[code] = syncData;
+					needsToCompile = true;
+				}
+				else
+				{
+					// Some other thread is going to compile for us. Grab his stuff from the cache.
+					syncData = found->second;
+				}
 			}
-			if( FAILED( hrCompilation ) )
+
+			if( !needsToCompile )
 			{
+				// Let's wait for the other thread to compile for us
+				std::unique_lock<std::mutex> lock( syncData->mutex );
+				syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+			}
+			else
+			{
+				// We need to compile, nobody else is doing it for this permutation.
+				CComPtr<IDxcCompiler> compiler;
+				DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
+
+				CComPtr<IDxcOperationResult> opResult;
+				compiler->Compile(
+					src,
+					L"memory",
+					L"",
+					L"lib_6_3",
+					nullptr,
+					0,
+					nullptr,
+					0,
+					nullptr,
+					&opResult );
+
+				HRESULT hrCompilation;
+				opResult->GetStatus( &hrCompilation );
+				
+				if( FAILED( hrCompilation ) )
+				{
+					// We failed compilation, let's print errors.
+					syncData->libraryResource = nullptr;
+					CComPtr<IDxcBlobEncoding> messages;
+					if( SUCCEEDED( opResult->GetErrorBuffer( &messages ) ) )
+					{
+						g_messages.AddMessages( messages );
+					}
+				}
+				else
+				{
+					// Compilation succeeded! Hand over the resource to the cache entry.
+					CComPtr<IDxcBlob> compiled;
+					opResult->GetResult( &compiled );
+					syncData->libraryResource.Attach( compiled.Detach() );
+				}
+
+				// Let's wake up everyone waiting for this permutation's compilation.
+				{
+					std::lock_guard scope( syncData->mutex );
+					syncData->compiled = true;
+				}
+				syncData->conditionVariable.notify_all();
+			}
+
+			// Grab a raw pointer from the cache. This is to avoid whatever funny business is going on with CComPtr reference counters.
+			IDxcBlob* compiled = syncData->libraryResource;
+
+			{
+				// Not sure if this is necessary to avoid reference counter bugs. But anyway...
+				std::lock_guard scope( m_compiledCS );
+				syncData.reset();
+			}
+
+			if( !compiled )
+			{
+				// No resource on the cache entry! This means compilation must have failed.
 				return false;
 			}
 
-			CComPtr<IDxcBlob> compiled;
-			opResult->GetResult( &compiled );
 
 			library.shaderDataStr = g_stringTable.AddString( compiled->GetBufferPointer(), compiled->GetBufferSize() );
 			library.shaderSize = uint32_t( compiled->GetBufferSize() );
@@ -1745,6 +1806,9 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			if( listing.enabled() )
 			{
+				CComPtr<IDxcCompiler> compiler;
+				DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
+
 				listing.literal( "profile" ).literal( "lib_6_3" );
 				listing.literal( "original" ).dict();
 				std::string osSrc;
