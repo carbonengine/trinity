@@ -89,7 +89,7 @@ public:
 	void ClearAllResources();
 
 	void SetParameter( const BlueSharedString& name, ITr2GpuBuffer* buffer );
-	void SetParameter( const BlueSharedString& name, ITr2TextureProvider* texture );
+	void SetParameter( const BlueSharedString& name, ITr2TextureProvider* texture, uint32_t uavMipLevel = 0 );
 	void SetParameter( const BlueSharedString& name, uint32_t value );
 	void SetParameter( const BlueSharedString& name, float value );
 	void SetParameter( const BlueSharedString& name, const Vector2& value ); 

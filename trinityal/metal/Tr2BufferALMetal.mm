@@ -20,7 +20,8 @@ namespace TrinityALImpl
     Tr2BufferAL::Tr2BufferAL()
     :   m_owner( nullptr ),
         m_metalContext( nullptr ),
-        m_heapIndex( 0xffffffff )
+        m_heapIndex( 0xffffffff ),
+        m_usedInEncoder( 0 )
     {
     }
 
@@ -108,6 +109,7 @@ namespace TrinityALImpl
         m_heapIndex = 0xffffffff;
 		m_owner = nullptr;
         m_memory.Reset();
+        m_usedInEncoder = 0;
 	}
 
 	bool Tr2BufferAL::IsValid() const

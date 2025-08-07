@@ -69,25 +69,13 @@ void Tr2Sprite2dDisplayList::Entry::SubmitGeometry( Tr2RenderContext& renderCont
 		transposedMatrixes[i] = Transpose( transformArray[i] );
 	}
 
-	HRESULT result = FillAndSetConstants(	
-											*m_uiTransformsCb, 
-											transposedMatrixes,
-											sizeof( transposedMatrixes[0] ) * TR2_SS_MAX_TRANSFORM_COUNT, 
-											VERTEX_SHADER,
-											Tr2Renderer::GetPerObjectVSGUIStartRegister(),
-											renderContext );
-
-	if( FAILED(result) )
-	{
-		CCP_LOGWARN( "%s - couldn't set VS constant", __FUNCTION__ );
-	}
-	else
-	{
-		if( FAILED(result) )
-		{
-			CCP_LOGWARN( "%s - couldn't commit transform changes", __FUNCTION__ );
-		}
-	}
+	FillAndSetConstants(
+		*m_uiTransformsCb, 
+		transposedMatrixes,
+		sizeof( transposedMatrixes[0] ) * TR2_SS_MAX_TRANSFORM_COUNT, 
+		VERTEX_SHADER,
+		Tr2Renderer::GetPerObjectVSGUIStartRegister(),
+		renderContext );
 
 	renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
 	CR( renderContext.DrawIndexedPrimitive( numVertices, startIndex, primitiveCount ) );

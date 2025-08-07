@@ -12,7 +12,7 @@ Tr2PPTaaEffect::Tr2PPTaaEffect( IRoot* lockobj ) :
 	m_quality( Tr2PPTaaEffect::Quality::TAA_HIGH ),
 	m_showMotionVectors( false ),
 	m_showEarlyOutMask( false ),
-	m_earlyOutThreshold( 0.01 ),
+	m_earlyOutThreshold( 0.001 ),
 	m_jitterX( 0.0f ),
 	m_jitterY( 0.0f )
 {

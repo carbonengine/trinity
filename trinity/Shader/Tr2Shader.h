@@ -36,9 +36,12 @@ public:
 
 	void ProcessEffect();
 
+	bool HasVertexBufferAccessInRtShadow();
+
 private:
 	unsigned int m_sortValue;
 	Tr2EffectDescription m_effect;
+	bool m_hasVertexBufferAccessInRtShadow;
 };
 
 TYPEDEF_BLUECLASS( Tr2Shader );

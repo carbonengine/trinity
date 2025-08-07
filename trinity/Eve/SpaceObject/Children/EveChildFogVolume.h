@@ -62,7 +62,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2FroxelFogSettings
-	FroxelFogWeightedSettings GetFroxelFogSettings() override;
+	FroxelFogSettings* GetFroxelFogSettings() override;
 
 private:
 	void UpdateTransformFromParent( const EveChildUpdateParams& params );
@@ -72,7 +72,7 @@ private:
 
 	float m_intensity;
 
-	FroxelFogWeightedSettings m_settings;
+	FroxelFogSettings m_settings;
 
 	CcpMath::Sphere m_boundingSphere;
 };

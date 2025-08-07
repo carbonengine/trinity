@@ -60,8 +60,8 @@ void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& t
 	}
 
 	{
-		CCP_STATS_ZONE( "renderContext.UseTextures" );
-		renderContext.UseTextures( Tr2GpuUsage::SHADER_RESOURCE, usedTextures );
+		CCP_STATS_ZONE( "renderContext.UseResources" );
+		renderContext.UseResources( Tr2UseResourceDestination::RENDER, Tr2GpuUsage::SHADER_RESOURCE, usedTextures );
 	}
 #endif
 }
@@ -412,6 +412,31 @@ void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* bat
 			CCP_STATS_INC( batchNormalDraws );
 		}
 	}
+}
+
+bool Tr2RenderContextBase::TechniqueInBatch( const std::vector<Tr2RenderBatch>& batches, const BlueSharedString& techniqueName )
+{
+	Tr2Shader* prevShader = nullptr;
+	for( auto& batch : batches )
+	{
+		if( batch.m_shader == prevShader )
+		{
+			continue;
+		}
+		prevShader = batch.m_shader;
+		uint32_t technique;
+		if( !batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
+		{
+			continue;
+		}
+		const uint32_t passCount = batch.m_shader->GetPassCount( technique );
+		if( passCount == 0 )
+		{
+			continue;
+		}
+		return true;
+	}
+	return false;
 }
 
 void Tr2RenderContextBase::RenderBatchGroup( std::vector<Tr2RenderBatch>::const_iterator startBatch, const BlueSharedString& techniqueName, Tr2ConstantBufferAL** buffers, Tr2RenderContext& renderContext )

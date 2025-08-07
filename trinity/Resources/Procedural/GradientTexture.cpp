@@ -166,7 +166,7 @@ void RasterizeGradient( const std::string_view& path, ImageIO::HostBitmap& bitma
 	}
 	if( header->width == 0 )
 	{
-		CCP_LOGERR( "The texture path %s has texture width of zero: the path %s is invalid", std::string( path ).c_str() );
+		CCP_LOGERR( "The texture path %s has texture width of zero: the path is invalid", std::string( path ).c_str() );
 		return;
 	}
 	auto keys = reinterpret_cast<Tr2CurveScalarKey*>( data.data() + sizeof( Header ) );

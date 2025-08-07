@@ -33,6 +33,9 @@ public:
 	void Add( const Tr2TextureAL& )
 	{
 	}
+	void Add( const Tr2BufferAL& )
+	{
+	}
 	void Add( const Tr2BindlessResourcesAL& )
 	{
 	}
@@ -248,7 +251,7 @@ public:
 		uint32_t& depth,
 		uint32_t& mips ) const;
 
-	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
+	ALResult UseResources( Tr2UseResourceDestination dest, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
     ALResult UseAccelerationStructure(Tr2RtTopLevelAccelerationStructureAL tlas );
     
 	bool SupportsBindlessTextures() const;

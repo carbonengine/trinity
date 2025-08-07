@@ -20,6 +20,10 @@
 #include "ITr2TextureProvider.h"
 #include "Tr2RenderTarget.h"
 
+#include "TriSettingsRegistrar.h"
+
+bool g_useDynamicLightsShadows = false;
+TRI_REGISTER_SETTING( "useDynamicLightsShadows", g_useDynamicLightsShadows );
 
 CCP_STATS_DECLARE( lightsGathered, "Trinity/Tr2LightManager/lightsGathered", true, CST_COUNTER_LOW, "How many lights were pushed to GPU" );
 
@@ -44,6 +48,8 @@ const uint32_t HIGH_QUALITY_ATLAS_SIZE_LOG2 = 14;
 const uint32_t HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE = 1 << 13;
 const uint32_t MAX_NUM_SHADOWCASTING_LIGHTS = 16;
 const uint32_t MAX_NUM_VOLUMETRIC_LIGHTS = 16;
+
+const uint32_t RAYTRACING_DUMMY_RESOLUTION = 4;
 
 struct PerFrameData
 {
@@ -157,16 +163,22 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 
 	m_currentSpaceSceneShadowQuality = ShadowQuality::SHADOW_DISABLED;
 
-
+	
+	m_ShadowMap.m_atlasDepthStencil = Tr2DepthStencilPtr();
+	m_ShadowMap.m_atlasDepthStencil.CreateInstance();
 	m_ShadowMap.m_atlasVariable.Register( "ShadowMapAtlas", m_ShadowMap.m_atlasDepthStencil );
 
 	m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_DISABLED;
 
 	m_currentFrameCounter = -1;
-	m_shadowCastingLightsInSomeScene = false;
-	m_skipFrameBecauseThereWereNoShadowcastingLights = true;
 
+	m_Raytracing.m_destTex = Tr2RenderTargetPtr();
 	m_Raytracing.m_destTex.CreateInstance();
+	// Create dummy texture, because of some mac issue.
+	m_Raytracing.m_destTex->Create( RAYTRACING_DUMMY_RESOLUTION, RAYTRACING_DUMMY_RESOLUTION, 1, 
+		Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
+
+	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", m_Raytracing.m_destTex );
 
 	m_Raytracing.m_effect.CreateInstance();
 	m_Raytracing.m_effect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/rtdynamicshadows.fx" );
@@ -265,19 +277,17 @@ void Tr2LightManager::AdjustLightCutoff( float lodFactor )
 // and based on that decide which resources are needed for the next frame.
 // In addition we have different ways of rendering shadows: Shadowmapped with different 
 // atlas resolutions and raytraced shadows.
-// On top of that we don't want to use any resources when there are not shadowcasting lights
-// in any scenes - which are added to the light manager in a multithreaded way per scene...
+// On top of that we don't want to use any resources when the feature flag is false.
 void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter )
 {
 	m_currentSpaceSceneShadowQuality = shadowQuality;
 
 	if ( m_currentFrameCounter != frameCounter )
 	{
-		if( !m_shadowCastingLightsInSomeScene )
+		if( !g_useDynamicLightsShadows )
 		{
 			nextFrameShadowQuality = 0u;
 		}
-		m_skipFrameBecauseThereWereNoShadowcastingLights = ! m_shadowCastingLightsInSomeScene;
 
 		// there must be a more elegant way of doing this...
 		if ( nextFrameShadowQuality & ( 1 << ( uint32_t)ShadowQuality::SHADOW_HIGH ) )
@@ -294,19 +304,26 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 		}
 		if( ! ( nextFrameShadowQuality & ( 1 << (uint32_t)ShadowQuality::SHADOW_RAYTRACED ) ) )
 		{
-			UpdateRaytracingDestination( ShadowQuality::SHADOW_DISABLED );
+			if( m_Raytracing.m_destTex->IsValid() && m_Raytracing.m_destTex->GetWidth() != RAYTRACING_DUMMY_RESOLUTION )
+			{
+				// Create dummy texture, because of some mac issue.
+				m_Raytracing.m_destTex->Create( RAYTRACING_DUMMY_RESOLUTION, RAYTRACING_DUMMY_RESOLUTION, 1, 
+					Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
+
+				// Proper texture is created on the fly in the render function when needed, so that it can react to resolution changes.
+			}
 		}
 		
 		nextFrameShadowQuality = 1 << (uint32_t)shadowQuality;
 		m_currentFrameCounter = frameCounter;
-		m_shadowCastingLightsInSomeScene = false;
 	}
 
 	nextFrameShadowQuality |= 1 << (uint32_t)shadowQuality;
 
 	ShadowQuality tmpShadowQuality = (ShadowQuality)min( (uint32_t)shadowQuality, (uint32_t)m_ShadowMap.m_qualityUsedByAtlas );
 	m_ShadowMap.m_atlasSettings = CalculateShadowMapAtlasSettings( tmpShadowQuality );
-	m_ShadowMap.m_atlasSettings.actualTextureSize = m_ShadowMap.m_atlasDepthStencil ? m_ShadowMap.m_atlasDepthStencil->GetWidth() : 0;
+	m_ShadowMap.m_atlasSettings.actualTextureSize = 
+		( m_ShadowMap.m_atlasDepthStencil && m_ShadowMap.m_atlasDepthStencil->IsValid() ) ? m_ShadowMap.m_atlasDepthStencil->GetWidth() : 0;
 }
 
 void Tr2LightManager::UpdateShadowAtlasSize( ShadowQuality shadowQuality )
@@ -314,26 +331,14 @@ void Tr2LightManager::UpdateShadowAtlasSize( ShadowQuality shadowQuality )
 	if( m_ShadowMap.m_qualityUsedByAtlas != shadowQuality )
 	{
 		// Setup depth stencil texture
-		m_ShadowMap.m_atlasDepthStencil = Tr2DepthStencilPtr();
-		m_ShadowMap.m_atlasDepthStencil.CreateInstance();
+		m_ShadowMap.m_atlasDepthStencil->Destroy();
 		if ( shadowQuality != ShadowQuality::SHADOW_DISABLED )
 		{
 			Tr2LightManager::ShadowMapAtlasSettings settings = CalculateShadowMapAtlasSettings( shadowQuality );
 			m_ShadowMap.m_atlasDepthStencil->Create( settings.size, settings.size, Tr2RenderContextEnum::DSFMT_D32F, 0, 0 );
 		}
 	}
-	m_ShadowMap.m_qualityUsedByAtlas = shadowQuality;
-}
-
-void Tr2LightManager::UpdateRaytracingDestination( ShadowQuality shadowQuality )
-{
-	if( ( shadowQuality == ShadowQuality::SHADOW_DISABLED ) && m_Raytracing.m_destTex->IsValid() )
-	{
-		// Setup depth stencil texture
-		m_Raytracing.m_destTex = Tr2RenderTargetPtr();
-		m_Raytracing.m_destTex.CreateInstance();
-		// Texture is created on the fly in the render function when needed.
-	}
+	m_ShadowMap.m_qualityUsedByAtlas = m_ShadowMap.m_atlasDepthStencil->IsValid() ? shadowQuality : ShadowQuality::SHADOW_DISABLED;
 }
 
 void Tr2LightManager::AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius, uint16_t flags )
@@ -380,11 +385,6 @@ void Tr2LightManager::AddLight( PerLightData& data )
 		return;
 	}
 
-	if( ( data.flags & Tr2LightManager::FLAG_CASTS_SHADOWS ) != 0 )
-	{
-		m_shadowCastingLightsInSomeScene = true;
-	}
-
 	float brightness = std::max( std::max( data.color.x, data.color.y ), data.color.z );
 	if( brightness <= 0 || data.radius <= 0 )
 	{
@@ -406,7 +406,7 @@ void Tr2LightManager::AddLight( PerLightData& data )
 		bool usingShadowMap = m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_LOW || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_HIGH;
 		if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED || 
 			( usingShadowMap && m_ShadowMap.m_qualityUsedByAtlas == ShadowQuality::SHADOW_DISABLED ) ||
-			m_skipFrameBecauseThereWereNoShadowcastingLights )
+			!g_useDynamicLightsShadows )
 		{
 			data.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
 		}
@@ -607,7 +607,7 @@ void Tr2LightManager::ResolveLightData()
 		}
 	}
 
-	if( m_skipFrameBecauseThereWereNoShadowcastingLights || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED )
+	if( !g_useDynamicLightsShadows || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED )
 	{
 		return;
 	}
@@ -867,8 +867,7 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 	GPU_REGION( renderContext, "Raytraced dynamic shadows" );
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	// we could check m_skipFrameBecauseThereWereNoShadowcastingLights over here, but it's redundant with m_shadowCastingLights.size() == 0
-	if ( m_shadowCastingLights.size() == 0 )
+	if( m_shadowCastingLights.size() == 0 || !g_useDynamicLightsShadows )
 	{
 		return;
 	}
@@ -969,6 +968,12 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 
 	m_Raytracing.m_effect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 	renderContext.UseAccelerationStructure( geometry->GetTLAS() );
+
+	{
+		CCP_STATS_ZONE( "renderContext.UseResources" );
+		renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, geometry->GetBindlessResources() );
+	}
+
 	renderContext.DispatchRays( pipelineState, m_Raytracing.m_shaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
 	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", m_Raytracing.m_destTex );
 }

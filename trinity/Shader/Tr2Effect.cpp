@@ -1503,7 +1503,8 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 		else if( TriVariable* v = GetVariableStore().FindVariable( name ) )
 		{
 			if( v->GetType() == TRIVARIABLE_TEXTURE_RES || 
-				v->GetType() == TRIVARIABLE_GPUBUFFER )
+				v->GetType() == TRIVARIABLE_GPUBUFFER ||
+				ss.isAutoregister )
 			{
 				param.m_sourceValue = v;
 			}
@@ -1768,7 +1769,7 @@ void Tr2Effect::MapPassParameters(
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	static const size_t MAX_PARAMS = 64;
+	static const size_t MAX_PARAMS = 128;
 
 	Tr2EffectParamVector& pv = stageInput.m_shaderParameters;
 	auto& constants = stageInputDesc.constants;
@@ -2118,7 +2119,7 @@ void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2GpuBuffer* buffe
 }
 
 // --------------------------------------------------------------------------------------
-void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2TextureProvider* texture )
+void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2TextureProvider* texture, uint32_t uavMipLevel )
 {
 	auto existing = GetResourceByName( name.c_str() );
 	Tr2RuntimeTextureParameterPtr param = BlueCastPtr( existing );
@@ -2126,11 +2127,13 @@ void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2TextureProvider*
 	if( param )
 	{
 		param->SetTextureProvider( texture );
+		param->SetUavMipLevel( uavMipLevel );
 	}
 	else
 	{
 		param.CreateInstance();
 		param->Create( name, texture );
+		param->SetUavMipLevel( uavMipLevel );
 		AddResource( param );
 	}
 }

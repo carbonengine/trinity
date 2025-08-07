@@ -42,7 +42,7 @@ namespace Tr2GrannyAnimationUtils
 
 
 
-static const int MAX_JOINT_COUNT = 58;
+static const int MAX_JOINT_COUNT = 254;
 
 Tr2GrannyAnimation::Tr2GrannyAnimation( IRoot* lockobj ) :
 	PARENTLOCK( m_boneOffset ),
@@ -318,7 +318,7 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 	}
 
 
-	if( fi->ModelCount > 0 && fi->AnimationCount > 0 )
+	if( fi->ModelCount > 0 )
 	{
 		// By default we take the first model in the file
 		m_modelIndex = 0;
@@ -444,6 +444,11 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 		// Pump animation immediately, so that we have valid pose before the next update.
 		PrePhysicsAnimation( 0, IdentityMatrix() );
 	}
+
+	for( auto& notify : m_notifyTargets )
+	{
+		notify->RebuildCachedData( p );
+	}
 }
 
 void Tr2GrannyAnimation::ClearAnimationLayers()
@@ -538,9 +543,10 @@ bool Tr2GrannyAnimation::GetDynamicBounds( Vector4& boundingSphere, Vector3 &aab
 	return true;
 }
 
-void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform )
+void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding )
 {
-	if( !m_meshBinding )
+	auto binding = meshBinding ? meshBinding->GetGrannyMeshBinding() : m_meshBinding;
+	if( !binding )
 	{
 		return;
 	}
@@ -553,16 +559,28 @@ void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform )
 		initialPlacement = *reinterpret_cast<Vector3*>( fi->Models[ m_modelIndex ]->InitialPlacement.Position );
 	}
 	initialTranslation = TranslationMatrix( initialPlacement );
+
+	auto viewProj = Tr2Renderer::GetViewTransform() * Tr2Renderer::GetProjectionTransform();
+	float screenRadius = 2.f / float( std::max( 1, std::min( Tr2Renderer::GetViewport().width, Tr2Renderer::GetViewport().height ) ) );
 	
-	for( int boneIdx = 0; boneIdx < m_meshBoneCount; boneIdx++ )
+	auto boneCount = GrannyGetMeshBindingBoneCount( binding );
+	for( int boneIdx = 0; boneIdx < boneCount; boneIdx++ )
 	{
-		const int* bi = GrannyGetMeshBindingFromBoneIndices( m_meshBinding );
+		const int* bi = GrannyGetMeshBindingToBoneIndices( binding );
 		Matrix mat = *reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_worldPose, bi[boneIdx] ) ) * modelTransform * initialTranslation;
 		Vector4 pos(0, 0, 0, 1);
 		pos = Transform( pos, mat );
 		pos.w = 2;
 		Tr2Renderer::DrawSphere( pos, 1, 0xffffffff );
 		Tr2Renderer::Printf( static_cast<TriDebugFont>( g_debugBoneLabelFont ), Vector3( pos.x, pos.y, pos.z ), 0xffffffff, "  %s : %d", m_skeleton->Bones[bi[boneIdx]].Name, boneIdx );
+
+		auto parent = m_skeleton->Bones[bi[boneIdx]].ParentIndex;
+		if ( parent > 0 )
+		{
+			Matrix pmat = *reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_worldPose, parent ) ) * modelTransform * initialTranslation;
+			Vector3 ppos = TransformCoord( Vector3( 0, 0, 0 ), pmat );
+			Tr2Renderer::DrawLine( pos.GetXYZ(), ppos, 0x88888888 );
+		}
 	}
 }
 
@@ -1040,6 +1058,14 @@ const Matrix* Tr2GrannyAnimation::GetAnimationTransforms()
 
 void Tr2GrannyAnimation::Cleanup()
 {
+	if( m_grannyRes || m_geometryRes )
+	{
+		for( auto& notify : m_notifyTargets )
+		{
+			notify->ReleaseCachedData( m_grannyRes ? static_cast<BlueAsyncRes*>( m_grannyRes ) : m_geometryRes );
+		}
+	}
+
 	m_baseLayer.Cleanup();
 	for( auto it = m_animationLayers.begin(); it != m_animationLayers.end(); it++ )
 	{
@@ -1400,4 +1426,150 @@ std::vector<std::string> Tr2GrannyAnimation::GetAnimationNames() const
 	}
 
 	return names;
+}
+
+void Tr2GrannyAnimation::AddNotifyTarget( IBlueAsyncResNotifyTarget* p )
+{
+	if( find( begin( m_notifyTargets ), end( m_notifyTargets ), p ) == end( m_notifyTargets ) )
+	{
+		m_notifyTargets.push_back( p );
+	}
+}
+
+void Tr2GrannyAnimation::RemoveNotifyTarget( IBlueAsyncResNotifyTarget* p )
+{
+	m_notifyTargets.erase( remove( begin( m_notifyTargets ), end( m_notifyTargets ), p ), end( m_notifyTargets ) );
+}
+
+
+Tr2AnimationMeshBinding::Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex ) :
+	m_animation( animationUpdater ),
+	m_geometryRes( geometryRes ),
+	m_meshIndex( meshIndex )
+{
+	if( geometryRes )
+	{
+		geometryRes->AddNotifyTarget( this );
+	}
+	if( animationUpdater )
+	{
+		animationUpdater->AddNotifyTarget( this );
+	}
+}
+
+Tr2AnimationMeshBinding::~Tr2AnimationMeshBinding()
+{
+	if( m_geometryRes )
+	{
+		m_geometryRes->RemoveNotifyTarget( this );
+	}
+	if( m_animation )
+	{
+		m_animation->RemoveNotifyTarget( this );
+	}
+}
+
+std::pair<const granny_matrix_3x4*, size_t> Tr2AnimationMeshBinding::GetBoneTransforms() const
+{
+	if( !m_meshBinding || !m_boneTransforms )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
+	auto boneCount = GrannyGetMeshBindingBoneCount( m_meshBinding.get() );
+
+	auto meshToBone = GrannyGetMeshBindingFromBoneIndices( m_meshBinding.get() );
+	if( m_boneTransforms && meshToBone && boneCount )
+	{
+		if( m_meshSkeleton != m_animation->m_skeleton )
+		{
+			const auto animBones = GrannyGetMeshBindingToBoneIndices( m_meshBinding.get() );
+			for( int32_t i = 0; i < boneCount; ++i )
+			{
+				GrannyColumnMatrixMultiply4x3Transpose(
+					(granny_real32*)m_boneTransforms[i],
+					(granny_real32*)m_meshSkeleton->Bones[meshToBone[i]].InverseWorld4x4,
+					(granny_real32*)GrannyGetWorldPose4x4( m_animation->m_worldPose, animBones[i] ) );
+			}
+		}
+		else
+		{
+			GrannyBuildIndexedCompositeBufferTransposed( m_animation->m_skeleton, m_animation->m_worldPose, meshToBone, boneCount, m_boneTransforms.get() );
+		}
+	}
+
+	return { m_boneTransforms.get(), boneCount };
+}
+
+TriGeometryRes* Tr2AnimationMeshBinding::GetGeometryRes() const
+{
+	return m_geometryRes;
+}
+
+uint32_t Tr2AnimationMeshBinding::GetMeshIndex() const
+{
+	return m_meshIndex;
+}
+
+Tr2GrannyAnimation* Tr2AnimationMeshBinding::GetAnimation() const
+{
+	return m_animation;
+}
+
+const granny_mesh_binding* Tr2AnimationMeshBinding::GetGrannyMeshBinding() const
+{
+	return m_meshBinding.get();
+}
+
+void Tr2AnimationMeshBinding::CreateBinding()
+{
+	if( m_geometryRes && m_geometryRes->IsGood() && m_animation && m_animation->IsInitialized() )
+	{
+		auto fi = m_geometryRes->GetGrannyInfo();
+		if( !fi )
+		{
+			return;
+		}
+		if( int( m_meshIndex ) >= fi->MeshCount )
+		{
+			return;
+		}
+		auto mesh = fi->Meshes[m_meshIndex];
+		auto meshSkeleton = m_animation->m_skeleton;
+		for ( int32_t i = 0; i < fi->ModelCount; ++i )
+		{
+			auto model = fi->Models[i];
+			if( model && model->Skeleton )
+			{
+				auto found = std::find_if( model->MeshBindings, model->MeshBindings + model->MeshBindingCount, [mesh]( const auto& binding ) { return binding.Mesh == mesh; } );
+				if ( found != model->MeshBindings + model->MeshBindingCount )
+				{
+					meshSkeleton = model->Skeleton;
+					break;
+				}
+			}
+		}
+		m_meshBinding.reset( GrannyNewMeshBinding( fi->Meshes[m_meshIndex], meshSkeleton, m_animation->m_skeleton ) );
+		if( m_meshBinding )
+		{
+			auto count = GrannyGetMeshBindingBoneCount( m_meshBinding.get() );
+			if( count > 0 )
+			{
+				m_boneTransforms.reset( new granny_matrix_3x4[count] );
+				m_meshSkeleton = meshSkeleton;
+			}
+		}
+	}
+}
+
+void Tr2AnimationMeshBinding::ReleaseCachedData( BlueAsyncRes* )
+{
+	m_meshBinding.reset();
+	m_boneTransforms.reset();
+	m_meshSkeleton = nullptr;
+}
+
+void Tr2AnimationMeshBinding::RebuildCachedData( BlueAsyncRes* )
+{
+	CreateBinding();
 }

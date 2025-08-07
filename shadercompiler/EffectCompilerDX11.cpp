@@ -944,12 +944,252 @@ DWORD GetOptimizationLevel()
 	}
 }
 
+RegisterInputDescription GetRegisterInputDescription( const Type& type, const RegisterSpecifier& reg )
+{
+	RegisterInputDescription desc;
+
+	switch( type.builtInType )
+	{
+	case OP_BUFFER:
+	case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+		desc.registerType = RT_SRV_BUFFER;
+		break;
+	case OP_STRUCTUREDBUFFER:
+		desc.registerType = RT_SRV_STRUCTURED_BUFFER;
+		break;
+	case OP_TEXTURE1D:
+		desc.registerType = RT_SRV_TEXTURE1D;
+		break;
+	case OP_TEXTURE1DARRAY:
+		desc.registerType = RT_SRV_TEXTURE1DARRAY;
+		break;
+	case OP_TEXTURE:
+	case OP_TEXTURE2D:
+		desc.registerType = RT_SRV_TEXTURE2D;
+		break;
+	case OP_TEXTURE2DARRAY:
+		desc.registerType = RT_SRV_TEXTURE2DARRAY;
+		break;
+	case OP_TEXTURE2DMS:
+		desc.registerType = RT_SRV_TEXTURE2DMS;
+		break;
+	case OP_TEXTURE2DMSARRAY:
+		desc.registerType = RT_SRV_TEXTURE2DMSARRAY;
+		break;
+	case OP_TEXTURE3D:
+		desc.registerType = RT_SRV_TEXTURE3D;
+		break;
+	case OP_TEXTURECUBE:
+		desc.registerType = RT_SRV_TEXTURECUBE;
+		break;
+	case OP_TEXTURECUBEARRAY:
+		desc.registerType = RT_SRV_TEXTURECUBEARRAY;
+		break;
+	case OP_RWBUFFER:
+		desc.registerType = RT_UAV_BUFFER;
+		break;
+	case OP_RWSTRUCTUREDBUFFER:
+		desc.registerType = RT_UAV_STRUCTURED_BUFFER;
+		break;
+	case OP_RWTEXTURE1D:
+		desc.registerType = RT_UAV_TEXTURE1D;
+		break;
+	case OP_RWTEXTURE1DARRAY:
+		desc.registerType = RT_UAV_TEXTURE1DARRAY;
+		break;
+	case OP_RWTEXTURE2D:
+		desc.registerType = RT_UAV_TEXTURE2D;
+		break;
+	case OP_RWTEXTURE2DARRAY:
+		desc.registerType = RT_UAV_TEXTURE2DARRAY;
+		break;
+	case OP_RWTEXTURE3D:
+		desc.registerType = RT_UAV_TEXTURE3D;
+		break;
+	case OP_SAMPLER:
+	case OP_SAMPLER1D:
+	case OP_SAMPLER2D:
+	case OP_SAMPLER3D:
+	case OP_SAMPLERCUBE:
+	case OP_SAMPLERCOMPARISON:
+		desc.registerType = RT_SAMPLER;
+		break;
+	default:
+		desc.registerType = RT_CONSTANT_BUFFER;
+		break;
+	}
+	desc.registerIndex = uint32_t( reg.registerNumber );
+	desc.registerSpace = uint8_t( reg.space );
+	desc.registerCount = 1;
+	for( int i = 0; i < type.arrayDimensions; ++i )
+	{
+		desc.registerCount *= type.arraySizes[i];
+	}
+	desc.registerCount = std::max( desc.registerCount, 1u );
+	return desc;
+}
+
+
+TextureType TypeToTextureType( const Type& type ) 
+{
+	switch( type.builtInType )
+	{
+	case OP_TEXTURE1D:
+	case OP_RWTEXTURE1D:
+		return TEX_TYPE_1D;
+	case OP_TEXTURE:
+	case OP_TEXTURE2D:
+	case OP_RWTEXTURE2D:
+		return TEX_TYPE_2D;
+	case OP_TEXTURE3D:
+	case OP_RWTEXTURE3D:
+		return TEX_TYPE_3D;
+	case OP_TEXTURECUBE:
+		return TEX_TYPE_CUBE;
+	case OP_TEXTURE2DARRAY:
+	case OP_RWTEXTURE2DARRAY:
+	case OP_TEXTURE2DMS:
+	case OP_TEXTURE2DMSARRAY:
+	case OP_TEXTURE3DARRAY:
+	case OP_RWTEXTURE3DARRAY:
+	case OP_TEXTURECUBEARRAY:
+		return TEX_TYPE_TYPELESS;
+	case OP_BUFFER:
+		return TEX_TYPE_BUFFER;
+	case OP_STRUCTUREDBUFFER:
+		return TEX_TYPE_STRUCTURED_BUFFER;
+	case OP_TBUFFER:
+		return TEX_TYPE_TBUFFER;
+	case OP_BYTEADDRESSBUFFER:
+		return TEX_TYPE_BYTEADDRESS_BUFFER;
+	case OP_RWBUFFER:
+		return TEX_TYPE_UAV_RWTYPED;
+	case OP_RWSTRUCTUREDBUFFER:
+		return TEX_TYPE_UAV_RWSTRUCTURED;
+	case OP_RWBYTEADDRESSBUFFER:
+		return TEX_TYPE_UAV_RWBYTEADDRESS;
+	case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+		return TEX_TYPE_RAYTRACING_ACCELERATION_STRUCTURE;
+	default:
+		return TEX_TYPE_TYPELESS;
+	}
+}
+
+
+bool AddGlobalInputs( StageData& globalsData, std::map<StringReference, ParameterAnnotation>& annotations, const std::vector<GlobalInputElement>& globalInputs, ParserState& state, bool useStaticSamplers )
+{
+	auto AddAnnotations = [&annotations]( const Symbol* symbol, bool& srgb, bool& autoregister ) {
+		if( symbol && symbol->annotations )
+		{
+			ParameterAnnotation paramAnnotations;
+			for( auto ai = symbol->annotations->begin(); ai != symbol->annotations->end(); ++ai )
+			{
+				Annotation result;
+				if( DxReflection::MakeEffectAnnotationFromSymbolAnnotation( *ai, result, srgb, autoregister ) )
+				{
+					paramAnnotations.annotations[g_stringTable.AddString( ToString( ai->name ).c_str() )] = result;
+				}
+			}
+			if( !paramAnnotations.annotations.empty() )
+			{
+				annotations[g_stringTable.AddString( symbol->name )] = paramAnnotations;
+			}
+		}
+	};
+
+	for( auto& gi : globalInputs )
+	{
+		if( !gi.symbol )
+		{
+			continue;
+		}
+		auto symbol = gi.symbol;
+		if( !symbol->registerSpecifier.empty() )
+		{
+			auto& reg = symbol->registerSpecifier.begin()->second;
+			auto outReg = GetRegisterInputDescription( symbol->type, reg );
+			auto existingReg = find_if( begin( globalsData.registerInputs ), end( globalsData.registerInputs ), [&outReg]( auto& x ) {
+				return outReg.registerIndex == x.registerIndex && outReg.registerSpace == x.registerSpace && outReg.registerType == x.registerType;
+			} );
+			if( existingReg != end( globalsData.registerInputs ) )
+			{
+				continue;
+			}
+
+			switch( reg.registerType )
+			{
+			case 's': {
+				Sampler sampler;
+				if( !GetSamplerState( state, symbol->definition, sampler ) )
+				{
+					return false;
+				}
+				StaticSampler staticSampler;
+				if( symbol->type.arrayDimensions == 0 && useStaticSamplers && ConvertToStaticSampler( staticSampler, sampler ) )
+				{
+					staticSampler.registerIndex = reg.registerNumber;
+					staticSampler.registerSpace = uint8_t( reg.space );
+					auto found = find_if( begin( globalsData.staticSamplers ), end( globalsData.staticSamplers ), [&staticSampler]( auto& x ) {
+						return staticSampler.registerIndex == x.registerIndex && staticSampler.registerSpace == x.registerSpace;
+					} );
+					if( found == end( globalsData.staticSamplers ) )
+					{
+						globalsData.staticSamplers.push_back( staticSampler );
+					}
+				}
+				else
+				{
+					sampler.name = g_stringTable.AddString( symbol->name );
+					globalsData.samplers[uint8_t( reg.registerNumber )] = sampler;
+					globalsData.registerInputs.push_back( outReg );
+				}
+				bool srgb, autoregister;
+				AddAnnotations( symbol, srgb, autoregister );
+				break;
+			}
+			case 'u': {
+				globalsData.registerInputs.push_back( outReg );
+
+				Uav uav;
+				uav.name = g_stringTable.AddString( symbol->name );
+				uav.type = TypeToTextureType( symbol->type );
+				uav.count = outReg.registerCount;
+				uav.isAutoregister = false;
+
+				bool srgb;
+				AddAnnotations( symbol, srgb, uav.isAutoregister );
+				globalsData.uavs[uint8_t( reg.registerNumber )] = uav;
+				break;
+			}
+			case 't': {
+				globalsData.registerInputs.push_back( outReg );
+
+				Texture texture;
+				texture.name = g_stringTable.AddString( symbol->name );
+				texture.type = TypeToTextureType( symbol->type );
+				texture.count = outReg.registerCount;
+				texture.isSRGB = false;
+				texture.isAutoregister = false;
+
+				AddAnnotations( symbol, texture.isSRGB, texture.isAutoregister );
+				globalsData.textures[uint8_t( reg.registerNumber )] = texture;
+				break;
+			}
+			case 'b': {
+				globalsData.registerInputs.push_back( outReg );
+				break;
+			}
+			default:
+				break;
+			}
+		}
+	}
+	return true;
+}
+
 bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions )
 {
 	ZoneScoped;
-
-	CComPtr<ID3D10Blob> effectData;
-	CComPtr<ID3D10Blob> errors;
 
 	ParserState state( MakeInlineString( source, source + sourceLength ) );
 	for( auto it = begin( defines ); it != end( defines ); ++it )
@@ -1082,8 +1322,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						profile = "ps_5_0";
 					}
 				}
-				effectData = nullptr;
-				errors = nullptr;
+				ID3D10Blob* effectData = nullptr;
+				CComPtr<ID3D10Blob> errors = nullptr;
 
 
 				if( shaderNode->GetChild( 1 )->GetSymbol() == nullptr )
@@ -1135,6 +1375,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 				if( !hasCompiled )
 				{
+					CComPtr<ID3D10Blob> compiledEffectData;
 					HRESULT hr;
 					{
 						ZoneScopedN( "D3DCompile" );
@@ -1148,7 +1389,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							profile.c_str(),
 							(compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | (g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0),
 							0,
-							&effectData,
+							&compiledEffectData,
 							&errors );
 					}
 					if( FAILED( hr ) )
@@ -1165,7 +1406,25 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 					{
 						std::lock_guard scope( m_compiledCS );
-						m_compiled[code] = effectData;
+						auto found = m_compiled.find( code );
+						if ( found != end( m_compiled ) )
+						{
+							// let's not overwrite stuff in the cache, so that we don't mess with its reference counter
+							effectData = found->second;
+							if( !effectData )
+							{
+								// This check should be unnecessary, because if our compilation succeeded, then the previous compilation should also have succeeded.
+								// But better safe than sorry, I guess... Might wanna remove this after discussion with Filipp.
+								return false;
+							}
+						}
+						else
+						{
+							effectData = compiledEffectData;
+							// I admit this is weird. Just trying to make sure that the reference counter is not modified outside lockguard's scope
+							m_compiled[code] = CComPtr<ID3D10Blob>();
+							m_compiled[code].Attach( compiledEffectData.Detach() );
+						}
 					}
 
 					if( g_printWarnings && errors )
@@ -1174,6 +1433,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 				}
 
+				auto handleStrippedData = [&]( ID3DBlob* blob ) 
+				{
+					// No idea what happens when assigning strippedEffectData = effectData, with effectData now being a raw pointer, and not taking any chances...
+					// Also, is the unstripped stuff what we want for shader debugging? :O
+					stage.shaderSize = uint32_t( blob->GetBufferSize() );
+					stage.shaderDataStr = g_stringTable.AddString( blob->GetBufferPointer(), blob->GetBufferSize() );
+					stage.source = code;
+				};
 				CComPtr<ID3DBlob> strippedEffectData;
 				{
 					ZoneScopedN( "D3DStripShader" );
@@ -1183,12 +1450,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
 						&strippedEffectData ) ) )
 					{
-						strippedEffectData = effectData;
+						handleStrippedData( effectData );
+					}
+					else
+					{
+						handleStrippedData( strippedEffectData );
 					}
 				}
-				stage.shaderSize = uint32_t( strippedEffectData->GetBufferSize() );
-				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
-				stage.source = code;
+				
 
 
 				CComPtr<ID3D11ShaderReflection> reflection;
@@ -1327,7 +1596,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						return false;
 					}
 					listing.literal( childNode->GetChild( 1 )->GetSymbol()->name );
-					MarkUsedSymbols( childNode->GetChild( 1 ), state );
 					shaderExport.name = g_stringTable.AddString( ToString( childNode->GetChild( 1 )->GetSymbol()->name ).c_str() );
 					library.exports.push_back( shaderExport );
 
@@ -1335,6 +1603,18 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					{
 						return false;
 					}
+					for ( auto& gi : globalInputs )
+					{
+						if( gi.symbol )
+						{
+							gi.symbol->used = true;
+							if( auto type = gi.symbol->type.symbol )
+							{
+								const_cast<Symbol*>( type )->used = true;
+							}
+						}
+					}
+					MarkUsedSymbols( childNode->GetChild( 1 ), state );
 				}
 				else if( childNode->GetNodeType() == NT_STATE_ASSIGNMENT )
 				{
@@ -1440,6 +1720,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					return false;
 				}
 			}
+
+			AddGlobalInputs( library.globalInputs, result.annotations, globalInputs, state, compileOptions.useStaticSamplers );
 
 			technique.libraries.push_back( library );
 

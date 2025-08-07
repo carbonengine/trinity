@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(ShaderCompiler VERSION 1.2.4)
+project(ShaderCompiler VERSION 1.2.6)
 
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
@@ -222,6 +222,9 @@ install(
     ARCHIVE DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
     RUNTIME DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
 )
+if (WIN32)
+    install(FILES $<TARGET_PDB_FILE:ShaderCompiler> DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/ OPTIONAL)
+endif()
 
 # Install rule for available public headers
 install(FILES ${PUBLIC_HEADER_FILES} DESTINATION shadercompiler/include)
