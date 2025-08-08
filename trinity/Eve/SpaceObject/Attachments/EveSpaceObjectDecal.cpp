@@ -865,7 +865,7 @@ void EveSpaceObjectDecal::CreateStaticIndexBuffers( TriGeometryResPtr geomRes )
 	{
 		if( lod->m_originalLodIndex >= m_staticIndexBuffers.size() )
 		{
-			CCP_LOGERR( "Static index buffers missing for lod %d for mesh %s!", lod->m_originalLodIndex, originalMeshData->m_name );
+			CCP_LOGERR( "Static index buffers missing for lod %d for mesh %s!", lod->m_originalLodIndex, originalMeshData->m_name.c_str() );
 			break;
 		}
 		auto& buffer = m_staticIndexBuffers[lod->m_originalLodIndex];
