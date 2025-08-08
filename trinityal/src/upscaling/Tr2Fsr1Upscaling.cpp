@@ -28,8 +28,10 @@ namespace FSR1
 	//For some reason, metal uses the same register space for SRVs and UAVs, so the index is different for the Metal shader.
 	#if TRINITY_PLATFORM == TRINITY_METAL
 	const uint32_t SRV_REGISTER_INDEX = 1;
+    const uint32_t UAV_REGISTER_INDEX = 24;
 	#else
 	const uint32_t SRV_REGISTER_INDEX = 0;
+    const uint32_t UAV_REGISTER_INDEX = 0;
 	#endif
     
 	struct FSRConstants
@@ -114,7 +116,7 @@ Tr2Fsr1UpscalingContext::Tr2Fsr1UpscalingContext( Tr2UpscalingAL::Setting settin
 						 .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
 						 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, FSR1::SRV_REGISTER_INDEX )
 						 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
-						 .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 )
+						 .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, FSR1::UAV_REGISTER_INDEX )
 						 .Add( Tr2ShaderThreadGroupSizeAL( 64, 1, 1 ) );
 
 	auto& renderContext = params.renderContext;
@@ -187,7 +189,7 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 		
 	Tr2ResourceSetDescriptionAL desc( m_easuProgram );
 	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::SRV_REGISTER_INDEX, *dispatchParameters.input );
-	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, *dispatchParameters.output );
+	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::UAV_REGISTER_INDEX, *dispatchParameters.output );
 	desc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, m_sampler );
 
 	Tr2ResourceSetAL resourceSet;
