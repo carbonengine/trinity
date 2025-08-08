@@ -373,8 +373,8 @@ void EveSpherePin::GetBatchWithEffect( ITriRenderBatchAccumulator* accumulator, 
 		return;
 	}
 
-	const TriGeometryResMeshData* meshData = m_geometryResource->GetMeshData( 0 );
-	if( !meshData )
+	const TriGeometryResLodData* lod = m_geometryResource->GetMeshLod( 0, 0 );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -384,16 +384,11 @@ void EveSpherePin::GetBatchWithEffect( ITriRenderBatchAccumulator* accumulator, 
 		return;
 	}
 
-	if( !meshData->m_allocationsValid )
-	{
-		return;
-	}
-
 	Tr2RenderBatch batch;
 	batch.SetMaterial( effect );
 	batch.SetPerObjectData( perObjectData );
-	batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation.GetBuffer(), meshData->m_vertexAllocation.GetStride(), m_indexBuffer, m_indexBuffer.GetDesc().stride );
-	batch.SetDrawIndexedInstanced( m_primitiveCount * 3, 1, 0, meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(), 0 );
+	batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation.GetBuffer(), lod->m_vertexAllocation.GetStride(), m_indexBuffer, m_indexBuffer.GetDesc().stride );
+	batch.SetDrawIndexedInstanced( m_primitiveCount * 3, 1, 0, lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(), 0 );
 	accumulator->Commit( batch );
 }
 

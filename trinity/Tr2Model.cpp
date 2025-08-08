@@ -173,8 +173,8 @@ void Tr2Model::GetBatchesFromMesh( Tr2Mesh* mesh,
 		return;
 	}
 	int meshIx = mesh->GetMeshIndex();
-	TriGeometryResMeshData* meshData = geomRes->GetMeshData( meshIx );
-	if( !meshData || !meshData->m_allocationsValid )
+	TriGeometryResLodData* lod = geomRes->GetMeshLod( meshIx, 0 );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -192,7 +192,7 @@ void Tr2Model::GetBatchesFromMesh( Tr2Mesh* mesh,
 			continue;
 		}
 
-		auto batch = CreateGeometryBatch( meshData, area, data );
+		auto batch = CreateGeometryBatch( lod, area, data );
 		batches->Commit( batch );
 	}
 }

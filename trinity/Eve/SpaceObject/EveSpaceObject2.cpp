@@ -67,8 +67,8 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 
 	int meshIx = mesh->GetMeshIndex();
 
-	auto grannyMesh = geomRes->GetMeshData( meshIx, screenSize );
-	if( !grannyMesh )
+	auto lod = geomRes->GetMeshLod( meshIx, screenSize );
+	if( !lod )
 	{
 		return;
 	}
@@ -112,7 +112,7 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 			continue;
 		}
 
-		Tr2RenderBatch batch = CreateGeometryBatch( grannyMesh, area, perObjectData );
+		Tr2RenderBatch batch = CreateGeometryBatch( lod, area, perObjectData );
 		batches->Commit( batch );
 	}
 }
@@ -1058,8 +1058,8 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		return;
 	}
 	int meshIx = m_mesh->GetMeshIndex();
-	auto mesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
-	if( !mesh || !mesh->m_allocationsValid )
+	auto lod = geomRes->GetMeshLod( meshIx, shadowPixelSize );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -1070,17 +1070,17 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		Tr2Material* shadowShader = shadowMeshArea.m_shaderMaterial;
 		for( auto& areaBlock : shadowAreas )
 		{
-			if( auto primCount = GetPrimitiveCount( *mesh, areaBlock.m_startIndex, areaBlock.m_count ) )
+			if( auto primCount = GetPrimitiveCount( *lod, areaBlock.m_startIndex, areaBlock.m_count ) )
 			{
 				Tr2RenderBatch batch;
 				batch.SetMaterial( shadowShader );
-				batch.SetGeometry( mesh->m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+				batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
 				batch.SetPerObjectData( perObjectData );
 				batch.SetDrawIndexedInstanced(
 					primCount * 3,
 					1,
-					mesh->m_indexAllocation.GetStartIndex() + mesh->m_areas[areaBlock.m_startIndex].m_firstIndex,
-					mesh->m_vertexAllocation.GetOffset() / mesh->m_vertexAllocation.GetStride(),
+					lod->m_indexAllocation.GetStartIndex() + lod->m_areas[areaBlock.m_startIndex].m_firstIndex,
+					lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 					0 );
 				batches->Commit( batch );
 			}
@@ -1125,8 +1125,8 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 	}
 
 	int meshIx = mesh->GetMeshIndex();
-	auto meshData = geomRes->GetMeshData( meshIx, m_meshScreenSize );
-	if( !meshData || !meshData->m_allocationsValid )
+	auto lod = geomRes->GetMeshLod( meshIx, m_meshScreenSize );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -1135,18 +1135,18 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 	{
 		for( auto& areaBlock : m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL] )
 		{
-			if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
+			if( auto primCount = GetPrimitiveCount( *lod, areaBlock.m_startIndex, areaBlock.m_count ) )
 			{
 				Tr2RenderBatch batch;
 				batch.SetMaterial( impactOverlayEffect );
 				batch.SetPriority( 0xFFFFFFFF );
-				batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
+				batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
 				batch.SetPerObjectData( perObjectData );
 				batch.SetDrawIndexedInstanced(
 					primCount * 3,
 					1,
-					meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[areaBlock.m_startIndex].m_firstIndex,
-					meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+					lod->m_indexAllocation.GetStartIndex() + lod->m_areas[areaBlock.m_startIndex].m_firstIndex,
+					lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 					0 );
 				batches->Commit( batch );
 			}
@@ -1169,17 +1169,17 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 				// add all mesh area blocks
 				for( auto& areaBlock : m_overlayMeshAreaBlocks[overlayType] )
 				{
-					if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
+					if( auto primCount = GetPrimitiveCount( *lod, areaBlock.m_startIndex, areaBlock.m_count ) )
 					{
 						Tr2RenderBatch batch;
 						batch.SetMaterial( effect );
-						batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
+						batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
 						batch.SetPerObjectData( perObjectData );
 						batch.SetDrawIndexedInstanced(
 							primCount * 3,
 							1,
-							meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[areaBlock.m_startIndex].m_firstIndex,
-							meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+							lod->m_indexAllocation.GetStartIndex() + lod->m_areas[areaBlock.m_startIndex].m_firstIndex,
+							lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 							0 );
 						batches->Commit( batch );
 					}
@@ -1573,6 +1573,8 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 		m_meshScreenSize = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) / updateContext.GetLodFactor();
 		m_meshScreenSize = m_allowLodSelection ? m_meshScreenSize : std::numeric_limits<float>::max();
 
+		//CCP_LOGERR( "Screen size: %f", m_meshScreenSize );
+
 		m_mesh->UseWithScreenSize( m_meshScreenSize, m_boundingSphereWorldRadius );
 
 		if( updateContext.m_raytracingEnabled )
@@ -1623,8 +1625,8 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	}
 	
 	auto meshIndex = m_mesh->GetMeshIndex();
-	auto meshData = geo->GetMeshData( meshIndex );
-	if( !meshData )
+	auto lod = geo->GetMeshLod( meshIndex, m_meshScreenSize );
+	if( !lod )
 	{
 		return;
 	}
@@ -1635,8 +1637,7 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	for( auto& area : *areas )
 	{
 		auto index = area->GetIndex();
-		
-		if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
+		if( index >= 0 && index < lod->m_areas.size() && lod->m_areas[index].m_isSkinned )
 		{
 			hasSkinned = true;
 			break;
@@ -1660,7 +1661,7 @@ void EveSpaceObject2::UpdateRtSkeleton()
 		for( auto& area : *areas )
 		{
 			auto meshAreaIndex = area->GetIndex();
-			if( meshAreaIndex >= 0 && meshAreaIndex < meshData->m_areas.size() && meshData->m_areas[meshAreaIndex].m_isSkinned )
+			if( meshAreaIndex >= 0 && meshAreaIndex < lod->m_areas.size() && lod->m_areas[meshAreaIndex].m_isSkinned )
 			{
 				area->GetRtMeshArea()->MarkBlasOutdated();
 			}

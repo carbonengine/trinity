@@ -2,6 +2,7 @@
 
 #include "TriDevice.h"
 #include "Tr2Renderer.h"
+#include "Resources\TriGeometryRes.h"
 
 #include "TriPythonContext.h"
 #include "RenderJob/Tr2RenderJobs.h"
@@ -142,20 +143,20 @@ bool TriDevice::s_iteratingForRelease = false;
 
 const char* TRINITY = "Trinity"; //cookie for the tick
 
-TriDevice::TriDevice(IRoot* lockobj) : 
+TriDevice::TriDevice( IRoot* lockobj ) :
 	PARENTLOCK( m_supportedUpscalingTechniques ),
-	mHwnd             ( 0 ),
-	mHeight           ( 0 ),
-	mWidth            ( 0 ),
+	mHwnd( 0 ),
+	mHeight( 0 ),
+	mWidth( 0 ),
 
 	// default render states
-	mBackBufferCount ( 1                     ),
-	mSwapEffect		 ( SWAP_EFFECT_DISCARD ),
+	mBackBufferCount( 1 ),
+	mSwapEffect( SWAP_EFFECT_DISCARD ),
 	mDeviceLost( true ),
 	m_deviceType( TriDevice::DEVICE_TYPE_HARDWARE ),
 
-	mAdapter ( 0 ),
-	mTickInterval ( 0 ),
+	mAdapter( 0 ),
+	mTickInterval( 0 ),
 	PARENTLOCK( mViewport ),
 	m_animationTime( 0.0f ),
 	m_animationTimeScale( 1.0f ),
@@ -163,10 +164,12 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	PARENTLOCK( m_curveSets ),
 	m_throttlingState( 0 ),
 	m_allowThrottling( true ),
-	m_upscalingChanged(false),
+	m_upscalingChanged( false ),
 	m_upscalingTechnique( Tr2UpscalingAL::Technique::NONE ),
 	m_upscalingSetting( Tr2UpscalingAL::Setting::NATIVE ),
-	m_upscalingWithFrameGeneration( false )
+	m_upscalingWithFrameGeneration( false ),
+
+	m_minimumModelLOD( 0 )
 {	
 	
 	m_supportedUpscalingTechniques.SetStructureDefinition( Tr2UpscalingTechniqueInfoDefinition );
@@ -1496,3 +1499,32 @@ PyObject* TriDevice::PyGetUpscalingInfo( PyObject* args )
 	return result;
 }
 #endif
+
+int TriDevice::GetMinimumModelLOD()
+{
+	return m_minimumModelLOD;
+}
+
+void TriDevice::SetMinimumModelLOD( int minimumModelLOD )
+{
+	if( m_minimumModelLOD == minimumModelLOD )
+	{
+		return;
+	}
+
+	m_minimumModelLOD = minimumModelLOD;
+
+	CcpAutoMutex guard( GetResourcesRegisteredMutex() );
+	
+	auto& rs = GetResourcesRegistered();
+	for (auto it = rs.begin(); it != rs.end(); ++it)
+	{
+		TriGeometryRes* geometry = dynamic_cast<TriGeometryRes*>( *it );
+		if( !geometry )
+		{
+			continue;
+		}
+
+		geometry->Reload();
+	}
+}

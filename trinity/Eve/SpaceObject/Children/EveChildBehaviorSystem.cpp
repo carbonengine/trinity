@@ -300,8 +300,8 @@ void EveChildBehaviorSystem::GetGroupBatches( ITriRenderBatchAccumulator* batche
 		return;
 	}
 
-	TriGeometryResMeshData* meshData = geometry->GetMeshData( mesh->GetMeshIndex() );
-	if( !meshData || !meshData->m_allocationsValid )
+	TriGeometryResLodData* lod = geometry->GetMeshLod( mesh->GetMeshIndex(), 0 );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -309,7 +309,7 @@ void EveChildBehaviorSystem::GetGroupBatches( ITriRenderBatchAccumulator* batche
 	auto areaList = mesh->GetAreas( batchType );
 	for( auto& area : *areaList )
 	{
-		Tr2RenderBatch batch = CreateGeometryBatch( meshData, area, perObjectData );
+		Tr2RenderBatch batch = CreateGeometryBatch( lod, area, perObjectData );
 		batch.SetVertexDeclaration( group->GetVertexDeclarationHandle() );
 		batch.SetStreamSource( 1, m_shipInstanceBuffer, m_shipStride );
 		batch.m_startInstanceLocation = m_startInstanceValues[group->GetGroupIndexIndicator()];

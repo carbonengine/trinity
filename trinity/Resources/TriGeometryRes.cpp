@@ -4,6 +4,7 @@
 #include "TriGrannyRes.h"
 #include "Tr2PerObjectData.h"
 #include "Tr2VertexDefinitionUtilities.h"
+#include "TriDevice.h"
 
 #include "TriSettingsRegistrar.h"
 
@@ -159,31 +160,31 @@ static void ConvertDataToVector3( Tr2VertexDefinition::DataType elementType, con
 }
 
 
-uint32_t GetPrimitiveCount( const TriGeometryResMeshData& mesh, uint32_t index, uint32_t count )
+uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, uint32_t count )
 {
-	if( index >= mesh.m_areas.size() )
+	if( index >= lod.m_areas.size() )
 	{
-			return 0;
+		return 0;
 	}
 
-	if( index + count > mesh.m_areas.size() )
+	if( index + count > lod.m_areas.size() )
 	{
-			count = uint32_t( mesh.m_areas.size() - index );
+		count = uint32_t( lod.m_areas.size() - index );
 	}
 
-	auto& meshArea = mesh.m_areas[index];
+	auto& meshArea = lod.m_areas[index];
 
 	uint32_t primCount = uint32_t( meshArea.m_primitiveCount );
 	for( uint32_t i = 1; i < count; ++i )
 	{
-			primCount += mesh.m_areas[index + i].m_primitiveCount;
+		primCount += lod.m_areas[index + i].m_primitiveCount;
 	}
 	return primCount;
 }
 
 namespace
 {
-ALResult ReverseIndexBuffer( TriGeometryResMeshData& mesh, granny_mesh& grannyMesh, Tr2RenderContext& renderContext ) 
+ALResult ReverseIndexBuffer( TriGeometryResLodData& lod, granny_mesh& grannyMesh, Tr2RenderContext& renderContext ) 
 {
 	uint32_t bytesPerIndex = 2;
 	auto indexCount = grannyMesh.PrimaryTopology->Index16Count;
@@ -212,8 +213,8 @@ ALResult ReverseIndexBuffer( TriGeometryResMeshData& mesh, granny_mesh& grannyMe
 		std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
 	}
 
-	CR_RETURN_HR( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, mesh.m_reversedIndexAllocation ) );
-	mesh.m_reversedIndicesValid = true;
+	CR_RETURN_HR( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod.m_reversedIndexAllocation ) );
+	lod.m_reversedIndicesValid = true;
 	return S_OK;
 }
 
@@ -224,8 +225,6 @@ TriGeometryRes::TriGeometryRes(IRoot* lockobj) :
 	m_pGrannyFile( NULL ),
 	m_memoryUse( 0 ),
 	m_meshes( "TriGeometryRes/m_meshes" ),
-	m_meshLods( "TriGeometryRes/m_meshLods" ),
-	m_models( "TriGeometryRes/m_models" ),
 	m_skeletons( "TriGeometryRes/m_skeletons" ),
 	m_inMemoryInfo( NULL )
 {
@@ -240,8 +239,6 @@ TriGeometryRes::~TriGeometryRes()
 void TriGeometryRes::ClearGrannyData()
 {
 	m_meshes.clear();
-	m_meshLods.clear();
-	m_models.clear();
 	m_skeletons.clear();
 
 	if( m_pGrannyFile )
@@ -276,23 +273,6 @@ unsigned int TriGeometryRes::GetAnimationCount() const
 	return 0;
 }
 
-unsigned int TriGeometryRes::GetModelCount() const
-{
-	return unsigned( m_models.size() );
-}
-
-TriGeometryResModelData* TriGeometryRes::GetModelData( unsigned int modelIx ) const
-{
-	if( modelIx < m_models.size() )
-	{
-		return m_models[modelIx].get();
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
 unsigned int TriGeometryRes::GetMeshCount() const
 {
 	return unsigned( m_meshes.size() );
@@ -300,67 +280,72 @@ unsigned int TriGeometryRes::GetMeshCount() const
 
 TriGeometryResMeshData* TriGeometryRes::GetMeshData( unsigned int meshIx ) const
 {
-	if( !m_isGood )
+	if( !m_isGood || meshIx >= m_meshes.size() )
 	{
 		return nullptr;
 	}
-	if( meshIx < m_meshes.size() )
-	{
-		return m_meshes[meshIx].get();
-	}
-	return nullptr;
+
+	return m_meshes[meshIx].get();
 }
 
-TriGeometryResMeshData* TriGeometryRes::GetMeshData( unsigned int meshIx, float screenSize ) const
+TriGeometryResLodData* TriGeometryRes::GetMeshLod( unsigned int meshIx, float screenSize ) const
 {
 	auto mesh = GetMeshData( meshIx );
-	if( mesh )
+
+	if( !mesh )
 	{
-		int lodIndex = GetLodIndexForScreenSize( meshIx, screenSize );
-		if( lodIndex >= 0 )
-		{
-			mesh = m_meshLods[mesh->m_lods[lodIndex].meshIndex].get();
-		}
+		return nullptr;
 	}
-	return mesh;
+
+	int lodIndex = GetLodIndexForScreenSize( meshIx, screenSize );
+	return mesh->m_lods[lodIndex].get();
 }
 
-TriGeometryResMeshData* TriGeometryRes::GetMeshDataLod( unsigned int meshIx, int lodIndex ) const
+TriGeometryResLodData* TriGeometryRes::GetMeshLod( unsigned int meshIx, int lodIndex ) const
 {
+
 	auto mesh = GetMeshData( meshIx );
-	if( mesh && lodIndex >= 0 && lodIndex < mesh->m_lods.size() )
+
+	if( !mesh || lodIndex < 0 || lodIndex >= mesh->m_lods.size() )
 	{
-		return m_meshLods[mesh->m_lods[lodIndex].meshIndex].get();
+		CCP_ASSERT( lodIndex >= 0 && lodIndex < mesh->m_lods.size() ); //This should never happen, so assert it.
+		return nullptr;
 	}
 
-	return nullptr;
+	return mesh->m_lods[lodIndex].get();
 }
 
 int TriGeometryRes::GetLodIndexForScreenSize( unsigned int meshIx, float screenSize ) const
 {
 	auto mesh = GetMeshData( meshIx );
-	if( mesh && !isinf( screenSize ) )
-	{
-		if( m_forceLod && m_forcedLodIndex > 0 )
-		{
-			return int( std::min( m_forcedLodIndex, uint32_t( mesh->m_lods.size() ) ) - 1 );
-		}
 
-		for( int i = static_cast<int>( mesh->m_lods.size() - 1 ); i >= 0; i-- )
+	if( !mesh )
+	{
+		return -1;
+	}
+
+	int32_t lastLod = static_cast<int32_t>( mesh->m_lods.size() ) - 1;
+	if( m_forceLod && m_forcedLodIndex >= 0 )
+	{
+		return int( std::min( m_forcedLodIndex, lastLod ) );
+	}
+
+	for( int32_t i = lastLod; i >= 0; i-- )
+	{
+		if( mesh->m_lods[i]->m_maxScreenSize >= screenSize )
 		{
-			if( mesh->m_lods[i].maxScreenSize >= screenSize )
-			{
-				return i;
-			}
+			return i;
 		}
 	}
-	return -1;
+	//If we end up here, it's because we requested a LOD size larger than the best one we have.
+	//Just return the highest quality LOD in this case.
+	return 0;
 }
 
-int TriGeometryRes::GetVertexComponentOffset( const granny_mesh* myMesh, const char* componentName ) const
+int TriGeometryRes::GetVertexComponentOffset( const granny_mesh* grannyMesh, const char* componentName ) const
 {
 	// now scan granny's vertex-declaration for the component's part and count the offsets
-	granny_data_type_definition* vertexFormat = myMesh->PrimaryVertexData->VertexType;
+	granny_data_type_definition* vertexFormat = grannyMesh->PrimaryVertexData->VertexType;
 	int componentIx = 0, offset = 0;
 	while( vertexFormat[componentIx].Type != GrannyEndMember )
 	{
@@ -380,14 +365,14 @@ int TriGeometryRes::GetVertexComponentOffset( const granny_mesh* myMesh, const c
 
 bool TriGeometryRes::GetBoundingBox( unsigned int meshIx, Vector3& min, Vector3& max ) const
 {
-	TriGeometryResMeshData* pMesh = GetMeshData( meshIx );
-	if( !pMesh )
+	TriGeometryResMeshData* mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
 		return false;
 	}
 
-	min = pMesh->m_minBounds;
-	max = pMesh->m_maxBounds;
+	min = mesh->m_minBounds;
+	max = mesh->m_maxBounds;
 
 	return true;
 }
@@ -398,34 +383,37 @@ Be::Result<std::string> TriGeometryRes::GetBoundingBoxFromScript( unsigned int m
 	{
 		return Be::Result<std::string>( "Mesh index out of bounds" );
 	}
-	TriGeometryResMeshData* pMesh = m_meshes[meshIx].get();
-	if( !pMesh )
+	TriGeometryResMeshData* mesh = m_meshes[meshIx].get();
+	if( !mesh )
 	{
 		return Be::Result<std::string>( "Invalid mesh" );
 	}
 
-	bounds = std::make_pair( pMesh->m_minBounds, pMesh->m_maxBounds );
+	bounds = std::make_pair( mesh->m_minBounds, mesh->m_maxBounds );
 
 	return Be::Result<std::string>();
 }
 
 bool TriGeometryRes::GetAreaBoundingBox( unsigned int meshIx, unsigned int areaIx, Vector3& min, Vector3& max ) const
 {
-	TriGeometryResMeshData* pMesh = GetMeshData( meshIx );
-	if( !pMesh )
+	auto mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
 		return false;
 	}
 
+	//Get the first LOD.
+	auto& lod = mesh->m_lods[0];
+
 	// Bail out if the area index is out of range
-	if( areaIx >= pMesh->m_areas.size() )
+	if( areaIx >= lod->m_areas.size() )
 	{
 		return false;
 	}
 
 	// Finally, get the min and max bounds for the mesh area
-	min = pMesh->m_areas[areaIx].m_minBounds;
-	max = pMesh->m_areas[areaIx].m_maxBounds;
+	min = lod->m_areas[areaIx].m_minBounds;
+	max = lod->m_areas[areaIx].m_maxBounds;
 
 	return true;
 }
@@ -433,41 +421,48 @@ bool TriGeometryRes::GetAreaBoundingBox( unsigned int meshIx, unsigned int areaI
 
 bool TriGeometryRes::GetBoundingSphere( unsigned int meshIx, Vector4& sphere ) const
 {
-	TriGeometryResMeshData* pMesh = GetMeshData( meshIx );
-	if( !pMesh )
+	TriGeometryResMeshData* mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
 		return false;
 	}
 
-	sphere = pMesh->m_boundingSphere;
+	sphere = mesh->m_boundingSphere;
 
 	return true;
 }
 
 unsigned int TriGeometryRes::GetAreaCount( unsigned int meshIx ) const
 {
-	if( meshIx >= m_meshes.size() || m_meshes[meshIx] == NULL )
+	auto mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
 		return 0;
 	}
-	return (unsigned int)m_meshes[meshIx]->m_areas.size();
+	
+	//Get the first LOD.
+	auto& lod = mesh->m_lods[0];
+
+	return (unsigned int)lod->m_areas.size();
 }
 
 TriGeometryResAreaData* TriGeometryRes::GetAreaData( unsigned int meshIx, unsigned int areaIx ) const
 {
-	TriGeometryResMeshData* meshData = GetMeshData( meshIx );
-	if( !meshData )
+	auto mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
 		return NULL;
 	}
-	if( areaIx < GetAreaCount( meshIx ) )
-	{
-		return &meshData->m_areas[areaIx];
-	}
-	else
+
+	//Get the first LOD.
+	auto& lod = mesh->m_lods[0];
+
+	if( areaIx < 0 || areaIx >= lod->m_areas.size() )
 	{
 		return NULL;
 	}
+
+	return &lod->m_areas[areaIx];
 }
 
 bool TriGeometryRes::OnPrepareResources()
@@ -585,7 +580,7 @@ bool TriGeometryRes::DoPrepare()
 	return true;
 }
 
-void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex )
+void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* grannyMesh, int bytesPerVertex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -595,7 +590,7 @@ void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& ar
 	// set up some data for the vertex fetcher.
 	unsigned int  positionOffset;
 	Tr2VertexDefinition::DataType positionType;
-	GetVertexPositionOffsetAndType( myMesh, positionOffset, positionType );
+	GetVertexPositionOffsetAndType( grannyMesh, positionOffset, positionType );
 
 	BoundingBoxInitialize( area.m_minBounds, area.m_maxBounds );
 
@@ -605,20 +600,20 @@ void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& ar
 	{
 		int index;
 
-		if( myMesh->PrimaryTopology->Indices16 )
+		if( grannyMesh->PrimaryTopology->Indices16 )
 		{
-			index = myMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
+			index = grannyMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
 		}
 		else
 		{
-			index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
+			index = grannyMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
 		}
 
 		vertexIndicesSeen.insert( index );
 
 		// vertices are NOT GUARENTEED to be float3 or fp16_4, so this helps with that.
 		Vector3 vertexPosition;
-		GetMeshVertexPosition(myMesh, index, vertexPosition, (unsigned int) bytesPerVertex, positionOffset, positionType);
+		GetMeshVertexPosition(grannyMesh, index, vertexPosition, (unsigned int) bytesPerVertex, positionOffset, positionType);
 
 		BoundingBoxUpdate( area.m_minBounds, area.m_maxBounds, vertexPosition );
 	}
@@ -626,11 +621,11 @@ void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& ar
 	area.m_vertexCount = (int)vertexIndicesSeen.size();
 }
 
-bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi, int bytesPerVertex )
+bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* grannyMesh, granny_file_info* gi, int bytesPerVertex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	// offset to boneindex
-	int boneIndexOffset = GetVertexComponentOffset( myMesh, GrannyVertexBoneIndicesName );
+	int boneIndexOffset = GetVertexComponentOffset( grannyMesh, GrannyVertexBoneIndicesName );
 	// if there are no bone-indices , we are done
 	if( boneIndexOffset == -1 )
 	{
@@ -654,9 +649,9 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 
 	auto FindRootBoneIndex = [&]() -> std::optional<uint8_t> {
 		const char* rootBone = FindRootBoneName();
-		for( int32_t i = 0; i < myMesh->BoneBindingCount; ++i )
+		for( int32_t i = 0; i < grannyMesh->BoneBindingCount; ++i )
 		{
-			if( myMesh->BoneBindings[i].BoneName && strcmp( myMesh->BoneBindings[i].BoneName, rootBone ) == 0 )
+			if( grannyMesh->BoneBindings[i].BoneName && strcmp( grannyMesh->BoneBindings[i].BoneName, rootBone ) == 0 )
 			{
 				return uint8_t( i );
 			}
@@ -671,23 +666,23 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 	}
 
 	// pointers to bone indices
-	uint8_t* pBoneIndex0 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 0;
-	uint8_t* pBoneIndex1 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 1;
-	uint8_t* pBoneIndex2 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 2;
-	uint8_t* pBoneIndex3 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 3;
+	uint8_t* pBoneIndex0 = (uint8_t*)grannyMesh->PrimaryVertexData->Vertices + boneIndexOffset + 0;
+	uint8_t* pBoneIndex1 = (uint8_t*)grannyMesh->PrimaryVertexData->Vertices + boneIndexOffset + 1;
+	uint8_t* pBoneIndex2 = (uint8_t*)grannyMesh->PrimaryVertexData->Vertices + boneIndexOffset + 2;
+	uint8_t* pBoneIndex3 = (uint8_t*)grannyMesh->PrimaryVertexData->Vertices + boneIndexOffset + 3;
 	
 	// cycle thorugh all vertices of this area and collect bone indices
 	for( int vIx = 0; vIx < area.m_primitiveCount * 3; ++vIx )
 	{
 		int index;
 
-		if( myMesh->PrimaryTopology->Indices16 )
+		if( grannyMesh->PrimaryTopology->Indices16 )
 		{
-			index = myMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
+			index = grannyMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
 		}
 		else
 		{
-			index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
+			index = grannyMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
 		}
 
 		// bones
@@ -706,63 +701,40 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 	return false;
 }
 
+
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	m_meshes.reserve( gi->MeshCount );
-	std::vector<std::pair<granny_int32, float>> lods;
-	std::vector<granny_int32> meshIndices;
-	
+	//Used by LOD meshes to find the model they belong to.
+	std::vector<TriGeometryResMeshData*> grannyMeshIndexToMeshMap;
+	grannyMeshIndexToMeshMap.resize( gi->MeshCount );
 
-	for( int32_t meshIx = 0; meshIx < gi->MeshCount; ++meshIx )
+	for( int32_t meshIndex = 0; meshIndex < gi->MeshCount; ++meshIndex )
 	{
-		granny_mesh* myMesh = gi->Meshes[meshIx];
 
-        if( myMesh == NULL || !myMesh->PrimaryVertexData )
-        {
-            CCP_LOGWARN( "Trying to load geometry with no primary vertex data" );
-            return false;
-        }
+		granny_mesh* grannyMesh = gi->Meshes[meshIndex];
 
-		granny_data_type_definition* grannyVertexDecl = myMesh->PrimaryVertexData->VertexType;
-
-		int bytesPerVertex = GrannyGetTotalObjectSize( grannyVertexDecl );
-
-		int vertexCount = myMesh->PrimaryVertexData->VertexCount;
-
-		std::unique_ptr<TriGeometryResMeshData> pMesh( new TriGeometryResMeshData() );
-		if( pMesh == nullptr )
+		if( grannyMesh == NULL || !grannyMesh->PrimaryVertexData || !grannyMesh->PrimaryTopology )
 		{
-			CCP_LOGWARN( "Out of memory in TriGeometryRes::SetupMeshes" );
+			CCP_LOGWARN( "Trying to load geometry with no primary vertex data and/or topology" );
 			return false;
 		}
 
-		CopyGrannyName( pMesh->m_name, myMesh->Name );
-		pMesh->m_grannyMeshIndex = meshIx;
-		pMesh->m_bytesPerVertex = bytesPerVertex;
-		pMesh->m_vertexCount = vertexCount;
-		pMesh->m_primitiveCount = 0;
-
-		for( int jointIx = 0; jointIx < myMesh->BoneBindingCount; ++jointIx )
-		{
-			TriJointBinding binding;
-			binding.m_name = myMesh->BoneBindings[jointIx].BoneName;
-			binding.m_obbMin = *reinterpret_cast<const Vector3*>( myMesh->BoneBindings[jointIx].OBBMin );
-			binding.m_obbMax = *reinterpret_cast<const Vector3*>( myMesh->BoneBindings[jointIx].OBBMax );
-			pMesh->m_jointBindings.push_back( binding );
-		}
-
+		granny_data_type_definition* grannyVertexDecl = grannyMesh->PrimaryVertexData->VertexType;
+		Tr2VertexDefinition vertexDefinition = BuildFromGrannyVertexDecl( grannyVertexDecl );
+		const uint32_t vertexDeclarationHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( vertexDefinition );
+		unsigned int bytesPerVertex = vertexDefinition.m_nextOffset[0];
 
 		MeshBoundsInfo* mbi = NULL;
 
 		// Look for mesh bounds info in the Granny file
-		if( myMesh->ExtendedData.Object )
+		if( grannyMesh->ExtendedData.Object )
 		{
 			// The mesh has extended data - ask Granny to convert it to our current version of the bounds
 			// info data structure.
-			mbi = static_cast<MeshBoundsInfo*>( GrannyConvertTree( myMesh->ExtendedData.Type, myMesh->ExtendedData.Object, MeshBoundsInfoType, nullptr, nullptr ) );
-			if( !mbi->typeName || (strcmp( mbi->typeName, "MeshBoundsInfo" ) != 0) )
+			mbi = static_cast<MeshBoundsInfo*>( GrannyConvertTree( grannyMesh->ExtendedData.Type, grannyMesh->ExtendedData.Object, MeshBoundsInfoType, nullptr, nullptr ) );
+			if( !mbi->typeName || ( strcmp( mbi->typeName, "MeshBoundsInfo" ) != 0 ) )
 			{
 				// This extended data doesn't match our expectations
 				GrannyFreeBuilderResult( (void*)mbi );
@@ -770,140 +742,191 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 			}
 		}
 
-		if( mbi && mbi->uvDensityCount > 0 && mbi->uvDensities )
+		//First we need to find the mesh for this LOD.
+
+		TriGeometryResMeshData* mesh = NULL;
+		float maxScreenSize = std::numeric_limits<float>::infinity();
+		;
+
+		if( mbi && mbi->maxScreenSize > 0 )
 		{
-			pMesh->m_uvDensities.assign( mbi->uvDensities, mbi->uvDensities + mbi->uvDensityCount );
-		}
-		if( !mbi )
-		{
-			BoundingBoxInitialize( pMesh->m_minBounds, pMesh->m_maxBounds );
+			//We are an LOD of an existing mesh. Add ourselves to it.
+			int32_t sourceMeshIndex = mbi->sourceMeshIndex;
+
+			//We assume the list is sorted so that we don't reference previous meshes.
+			CCP_ASSERT( sourceMeshIndex < meshIndex );
+
+			mesh = grannyMeshIndexToMeshMap[sourceMeshIndex];
+
+			CCP_ASSERT( mesh->m_vertexDeclarationHandle == vertexDeclarationHandle );
+			CCP_ASSERT( mesh->m_bytesPerVertex == bytesPerVertex );
+
+			maxScreenSize = float( mbi->maxScreenSize );
 		}
 		else
 		{
-			pMesh->m_minBounds = *reinterpret_cast<Vector3*>( &mbi->bounds.min[0] );
-			pMesh->m_maxBounds = *reinterpret_cast<Vector3*>( &mbi->bounds.max[0] );
-		}
-		pMesh->m_boundingSphere = Vector4( 0.f, 0.f, 0.f, 0.f );
-		 
-		if( myMesh->PrimaryTopology )
-		{
-			pMesh->m_areas.resize( myMesh->PrimaryTopology->GroupCount );
+			//We are the main LOD of a mesh, so we need to create a new mesh.
 
-			for( int groupIx = 0; groupIx < myMesh->PrimaryTopology->GroupCount; ++groupIx )
+			mesh = new TriGeometryResMeshData();
+
+			if( mesh == nullptr )
 			{
-				const granny_tri_material_group& grp = myMesh->PrimaryTopology->Groups[groupIx];
+				CCP_LOGWARN( "Out of memory in TriGeometryRes::SetupModels" );
+				return false;
+			}
 
-				TriGeometryResAreaData& area = pMesh->m_areas[groupIx];
-				area.m_name = "";
-				
-				if( myMesh->MaterialBindingCount > grp.MaterialIndex )
+			CopyGrannyName( mesh->m_name, grannyMesh->Name );
+
+			//Initialize the bounding box so that we can include the various meshes and LODs into it.
+			BoundingBoxInitialize( mesh->m_minBounds, mesh->m_maxBounds );
+
+			//The bounding sphere is computed later, so just initialize it for now.
+			mesh->m_boundingSphere = Vector4( 0.f, 0.f, 0.f, 0.f );
+
+			mesh->m_vertexDeclarationHandle = vertexDeclarationHandle;
+			mesh->m_bytesPerVertex = bytesPerVertex;
+
+
+			for( int jointIndex = 0; jointIndex < grannyMesh->BoneBindingCount; ++jointIndex )
+			{
+				TriJointBinding binding;
+				binding.m_name = grannyMesh->BoneBindings[jointIndex].BoneName;
+				binding.m_obbMin = *reinterpret_cast<const Vector3*>( grannyMesh->BoneBindings[jointIndex].OBBMin );
+				binding.m_obbMax = *reinterpret_cast<const Vector3*>( grannyMesh->BoneBindings[jointIndex].OBBMax );
+				mesh->m_jointBindings.push_back( binding );
+			}
+
+			m_meshes.push_back( std::unique_ptr<TriGeometryResMeshData>( mesh ) );
+		}
+
+		//When we load a LOD mesh, it references the granny mesh index which is the "parent" mesh.
+		//Therefore, we update the mapping so that future meshes can reference this mesh.
+		grannyMeshIndexToMeshMap[meshIndex] = mesh;
+
+
+
+		//Setup a new LOD, which will be added as an LOD of the mesh.
+
+		std::unique_ptr<TriGeometryResLodData> lod( new TriGeometryResLodData() );
+		if( lod == nullptr )
+		{
+			CCP_LOGWARN( "Out of memory in TriGeometryRes::SetupModels" );
+			return false;
+		}
+
+		lod->m_mesh = mesh;
+
+		lod->m_grannyMeshIndex = meshIndex;
+
+		CopyGrannyName( lod->m_name, grannyMesh->Name );
+
+		lod->m_maxScreenSize = maxScreenSize;
+
+		lod->m_vertexCount = grannyMesh->PrimaryVertexData->VertexCount;
+		lod->m_primitiveCount = 0; //Will be summed up by looping over areas.
+
+		if( mbi )
+		{
+			//Get the UV densities if available, which are used for texture streaming.
+			if( mbi->uvDensityCount > 0 && mbi->uvDensities )
+			{
+				lod->m_uvDensities.assign( mbi->uvDensities, mbi->uvDensities + mbi->uvDensityCount );
+			}
+			
+			Vector3 meshMin = *reinterpret_cast<Vector3*>( &mbi->bounds.min[0] );
+			Vector3 meshMax = *reinterpret_cast<Vector3*>( &mbi->bounds.max[0] );
+			BoundingBoxUpdate( mesh->m_minBounds, mesh->m_maxBounds, meshMin, meshMax );
+		}
+
+
+		
+		lod->m_areas.resize( grannyMesh->PrimaryTopology->GroupCount );
+
+		for( int groupIndex = 0; groupIndex < grannyMesh->PrimaryTopology->GroupCount; ++groupIndex )
+		{
+			const granny_tri_material_group& grp = grannyMesh->PrimaryTopology->Groups[groupIndex];
+
+			TriGeometryResAreaData& area = lod->m_areas[groupIndex];
+			area.m_name = "";
+
+			if( grannyMesh->MaterialBindingCount > grp.MaterialIndex )
+			{
+				if( grannyMesh->MaterialBindings[grp.MaterialIndex].Material != NULL )
 				{
-					if( myMesh->MaterialBindings[grp.MaterialIndex].Material != NULL )
-					{
-						const granny_material_binding& mb = myMesh->MaterialBindings[grp.MaterialIndex];
-						CopyGrannyName( area.m_name, mb.Material->Name );
-					}
+					const granny_material_binding& mb = grannyMesh->MaterialBindings[grp.MaterialIndex];
+					CopyGrannyName( area.m_name, mb.Material->Name );
 				}
+			}
 
-				area.m_firstIndex = myMesh->PrimaryTopology->Groups[groupIx].TriFirst * 3;
-				area.m_primitiveCount = myMesh->PrimaryTopology->Groups[groupIx].TriCount;
+			area.m_firstIndex = grannyMesh->PrimaryTopology->Groups[groupIndex].TriFirst * 3;
+			area.m_primitiveCount = grannyMesh->PrimaryTopology->Groups[groupIndex].TriCount;
 
-				pMesh->m_primitiveCount += area.m_primitiveCount;
+			lod->m_primitiveCount += area.m_primitiveCount;
 
-				area.m_isSkinned = IsAreaSkinned( area, myMesh, gi, bytesPerVertex );
+			area.m_isSkinned = IsAreaSkinned( area, grannyMesh, gi, bytesPerVertex );
 
-				if( mbi )
+			if( mbi )
+			{
+				CCP_ASSERT( groupIndex < mbi->areaCount );
+				area.m_minBounds = *reinterpret_cast<Vector3*>( &mbi->areaInfos[groupIndex].bounds.min[0] );
+				area.m_maxBounds = *reinterpret_cast<Vector3*>( &mbi->areaInfos[groupIndex].bounds.max[0] );
+				area.m_vertexCount = mbi->areaInfos[groupIndex].vertexCount;
+			}
+			else
+			{
+				DetermineAreaBoundsAndVertCount( area, grannyMesh, bytesPerVertex );
+
+				// if the area doesn't have any verts, the bounding box is invalid, so DON't use it!
+				if( area.m_primitiveCount )
 				{
-					CCP_ASSERT( groupIx < mbi->areaCount );
-					area.m_minBounds = *reinterpret_cast<Vector3*>( &mbi->areaInfos[groupIx].bounds.min[0] );
-					area.m_maxBounds = *reinterpret_cast<Vector3*>( &mbi->areaInfos[groupIx].bounds.max[0] );
-					area.m_vertexCount = mbi->areaInfos[groupIx].vertexCount;
+					BoundingBoxUpdate( mesh->m_minBounds, mesh->m_maxBounds, area.m_minBounds, area.m_maxBounds );
 				}
-				else
-				{
-					DetermineAreaBoundsAndVertCount( area, myMesh, bytesPerVertex );
-
-					// if the area doesn't have any verts, the bounding box is invalid, so DON't use it!
-					if( area.m_primitiveCount )
-					{
-						BoundingBoxUpdate( pMesh->m_minBounds, pMesh->m_maxBounds, area.m_minBounds, area.m_maxBounds );
-					}
-				}
-
 			}
 		}
 
-		if( mbi && mbi->maxScreenSize > 0)
-		{
-			lods.push_back( { mbi->sourceMeshIndex, float( mbi->maxScreenSize ) } );
-			pMesh->m_isLodMesh = true;
-			m_meshLods.push_back( std::move( pMesh ) );
-			meshIndices.push_back( -1 );
-		}
-		else
-		{
-			meshIndices.push_back( granny_int32( m_meshes.size() ) );
-			m_meshes.push_back( std::move( pMesh ) );
-		}
 
+
+
+
+		mesh->m_lods.push_back( std::move( lod ) );
 
 		if( mbi )
 		{
 			GrannyFreeBuilderResult( (void*)mbi );
 		}
-
 	}
 
-	for( size_t i = 0; i < m_meshLods.size(); ++i )
-	{
-		auto idx = lods[i].first;
-		if( idx >= 0 && idx < meshIndices.size() && meshIndices[idx] >= 0 )
-		{
-			m_meshes[meshIndices[idx]]->m_lods.push_back( { i, lods[i].second } );
-		}
-		else
-		{
-			CCP_LOGWARN( "Invalid mesh index %i for LOD mesh \"%s\" in \"%ls\"", int( idx ), m_meshLods[i]->m_name.c_str(), GetPath () );
-		}
-	}
+	int minimumLOD = gTriDev->GetMinimumModelLOD();
 
 	for( auto& mesh : m_meshes )
 	{
-		sort( begin( mesh->m_lods ), end( mesh->m_lods ), []( auto& a, auto& b ) { return a.maxScreenSize > b.maxScreenSize; } );
-	}
+		sort( begin( mesh->m_lods ), end( mesh->m_lods ), []( auto& a, auto& b ) { return a->m_maxScreenSize > b->m_maxScreenSize; } );
 
-    return true;
-}
-
-void TriGeometryRes::SetupModels( granny_file_info* gi )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	m_models.resize( gi->ModelCount );
-
-	for(int modelIndex = 0;modelIndex<gi->ModelCount;modelIndex++)
-	{
-		granny_model* model = gi->Models[modelIndex];
-
-		std::unique_ptr<TriGeometryResModelData> pModel( new TriGeometryResModelData() );
-		if( pModel == nullptr )
+		for( size_t i = 0; i < mesh->m_lods.size(); i++ )
 		{
-			CCP_LOGWARN( "Out of memory in TriGeometryRes::SetupModels" );
-			return;
+			mesh->m_lods[i]->m_originalLodIndex = (int32_t)i;
 		}
-		CopyGrannyName( pModel->m_name, model->Name );
 
-		pModel->m_translation[0] = model->InitialPlacement.Position[0];
-		pModel->m_translation[1] = model->InitialPlacement.Position[1];
-		pModel->m_translation[2] = model->InitialPlacement.Position[2];
+		if( minimumLOD > 0 )
+		{
+			size_t toRemove = min( (size_t)minimumLOD, mesh->m_lods.size() - 1 );
+			if( toRemove > 0 )
+			{
+				mesh->m_lods.erase( mesh->m_lods.begin(), mesh->m_lods.begin() + toRemove );
+			}
+		}
 
-		pModel->m_orientation[0] = model->InitialPlacement.Orientation[0];
-		pModel->m_orientation[1] = model->InitialPlacement.Orientation[1];
-		pModel->m_orientation[2] = model->InitialPlacement.Orientation[2];
-		pModel->m_orientation[3] = model->InitialPlacement.Orientation[3];
 
-		std::swap( m_models[modelIndex], pModel );
+		uint32_t lodMask = 0u;
+		for( size_t i = 0; i < mesh->m_lods.size(); i++ )
+		{
+			lodMask |= 1u << mesh->m_lods[i]->m_originalLodIndex;
+		}
+
+		mesh->m_lodMask = lodMask;
 	}
+
+	return true;
 }
 
 void TriGeometryRes::SetupSkeletons( granny_file_info* gi )
@@ -988,7 +1011,6 @@ bool TriGeometryRes::ReadGrannyFile( granny_file_info* gi )
         return false;
     }
 
-	SetupModels( gi );
 	SetupSkeletons( gi );
 
 	return true;
@@ -1007,7 +1029,6 @@ void TriGeometryRes::PrepareFromGrannyRes( TriGrannyRes* g )
 	granny_file_info* gi = GrannyGetFileInfo( f );
 
 	SetupMeshes( gi );
-	SetupModels( gi );
 	SetupSkeletons( gi );
 	CreateMeshesFromGrannyFile( gi, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE, renderContext );
 
@@ -1017,47 +1038,46 @@ void TriGeometryRes::PrepareFromGrannyRes( TriGrannyRes* g )
 	SetGood( true );
 }
 
+//This entire function is sus. We should be able to compute this when we upload the mesh to the GPU, as it can never change unless the vertex data changes.
 void TriGeometryRes::RecalculateBoundingSphere()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	for ( auto& mesh : m_meshes )
+	for( auto& mesh : m_meshes )
 	{
-		if( mesh == nullptr )
+		//Try to get the vertex declaration elements
+		Tr2VertexDefinition decl;
+		if( mesh == nullptr || !Tr2EffectStateManager::GetVertexDeclarationElements( mesh->m_vertexDeclarationHandle, decl ) )
 		{
 			continue;
 		}
 
-		// need all the verts
-		if( !mesh->m_allocationsValid )
-		{
-			continue;
-		}
-
-		// vertex info
 		uint32_t vertSize = mesh->m_bytesPerVertex;
+
+		//For now, we just compute the bounding sphere of the first LOD and ignore the lower LODs, assuming that they should fit in the highest quality LOD's bounding sphere.
+		auto& lod = mesh->m_lods[0];
+
+
+		//Get the vertex data of the 
+
 		const uint8_t* pVertices;
-		if( SUCCEEDED( mesh->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
+		if( !lod->m_allocationsValid || FAILED( lod->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 		{
-			// need vertex declaration to get offset of position element in the vertex
-			Tr2VertexDefinition decl;
-			if( Tr2EffectStateManager::GetVertexDeclarationElements( mesh->m_vertexDeclaration, decl ) )
-			{
-				auto position = decl.Find( decl.POSITION, 0 );
-
-				// build a list of pointers to the positions
-				std::vector<const Vector3*> points( mesh->m_vertexCount );
-				for( uint32_t p = 0; p < mesh->m_vertexCount; ++p )
-				{
-					points[p] = (const Vector3*)&pVertices[p * vertSize + position->m_offset];
-				}
-
-				// all is done in this recursive function
-				BoundingSphereFromPoints( mesh->m_boundingSphere, &points[0], points.size() );
-			}
-			mesh->m_vertexAllocation.UnmapForReading( renderContext );
+			continue;
 		}
+		auto position = decl.Find( decl.POSITION, 0 );
+
+		// build a list of pointers to the positions
+		std::vector<const Vector3*> points( lod->m_vertexCount );
+		for( uint32_t p = 0; p < lod->m_vertexCount; ++p )
+		{
+			points[p] = (const Vector3*)&pVertices[p * vertSize + position->m_offset];
+		}
+
+		// all is done in this recursive function
+		BoundingSphereFromPoints( mesh->m_boundingSphere, &points[0], points.size() );
+		lod->m_vertexAllocation.UnmapForReading( renderContext );
 	}
 }
 
@@ -1110,7 +1130,16 @@ void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, v
 
 	int i = meshIx;
 
-	if( m_meshes[i] == NULL || !m_meshes[i]->m_allocationsValid )
+	if( m_meshes[i] == NULL )
+	{
+		return;
+	}
+
+	auto& mesh = m_meshes[i];
+
+	auto& lod = mesh->m_lods[0];
+
+	if( !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -1118,24 +1147,25 @@ void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, v
 	const uint8_t* pVertices;
 	const uint8_t* pIndices;
 
-	int vertSize = m_meshes[i]->m_bytesPerVertex;
-	if( FAILED( m_meshes[i]->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
+	int vertSize = mesh->m_bytesPerVertex;
+
+	if( FAILED( lod->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 	{
 		return;
 	}
-	ON_BLOCK_EXIT( [&] { m_meshes[i]->m_vertexAllocation.UnmapForReading( renderContext ); } );
-	if( FAILED( m_meshes[i]->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
+	ON_BLOCK_EXIT( [&] { lod->m_vertexAllocation.UnmapForReading( renderContext ); } );
+	if( FAILED( lod->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
 	{
 		return;
 	}
-	ON_BLOCK_EXIT( [&] { m_meshes[i]->m_indexAllocation.UnmapForReading( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { lod->m_indexAllocation.UnmapForReading( renderContext ); } );
 
 	const uint16_t* pShortIndices = (uint16_t*)pIndices;
 	const uint32_t* pLongIndices = (uint32_t*)pIndices;
 	
 
 	Tr2VertexDefinition decl;
-	if ( !Tr2EffectStateManager::GetVertexDeclarationElements( m_meshes[i]->m_vertexDeclaration, decl ) )
+	if ( !Tr2EffectStateManager::GetVertexDeclarationElements( mesh->m_vertexDeclarationHandle, decl ) )
 	{
 		return;
 	}
@@ -1148,7 +1178,7 @@ void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, v
 	unsigned int positionByteOffset = foundPosition->m_offset;
 	Tr2VertexDefinition::DataType declType = foundPosition->m_dataType;
 
-	int numPrim = m_meshes[i]->m_primitiveCount;
+	int numPrim = lod->m_primitiveCount;
 	for ( int j = 0; j < numPrim; j++ )
 	{
 		unsigned int index1 = 0;
@@ -1157,7 +1187,7 @@ void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, v
 		Vector3 p1;
 		Vector3 p2;
 		Vector3 p3;
-		if (m_meshes[i]->m_indexAllocation.GetStride() == 2 )
+		if( lod->m_indexAllocation.GetStride() == 2 )
 		{
 			index1 = pShortIndices[j*3];
 			index2 = pShortIndices[(j*3)+1];
@@ -1278,7 +1308,7 @@ static bool IntersectTri(
 	return false;
 }
 
-bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3*dir, Vector3* hitpointNear, Vector3* hitpointNearNormal, Vector3* hitpointFar, Vector3* hitpointFarNormal, int* boneIndexNear, int* boneIndexFar, unsigned int areaIx )
+bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3* dir, Vector3* hitpointNear, Vector3* hitpointNearNormal, Vector3* hitpointFar, Vector3* hitpointFarNormal, int* boneIndexNear, int* boneIndexFar, unsigned int areaIx )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1289,34 +1319,37 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3*di
 	float minDist = FLT_MAX;
 	float maxDist = FLT_MIN;
 	bool result = false;
-	size_t nMeshes = m_meshes.size();
-	for ( size_t i = 0; i < nMeshes; i++ )
+
+	for( size_t i = 0; i < m_meshes.size(); i++ )
 	{
 		if( m_meshes[i] == NULL )
 		{
 			continue;
 		}
 
+		//Get the first LOD.
+		auto& lod = m_meshes[i]->m_lods[0];
+
 		const uint8_t* pVertices;
 		const uint8_t* pIndices;
 
 		int vertSize = m_meshes[i]->m_bytesPerVertex;
-		if( FAILED( m_meshes[i]->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
+		if( FAILED( lod->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 		{
 			return 0;
 		}
-		ON_BLOCK_EXIT( [&] { m_meshes[i]->m_vertexAllocation.UnmapForReading( renderContext ); } );
-		if( FAILED( m_meshes[i]->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
+		ON_BLOCK_EXIT( [&] { lod->m_vertexAllocation.UnmapForReading( renderContext ); } );
+		if( FAILED( lod->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
 		{			
 			return false;
 		}
-		ON_BLOCK_EXIT( [&] { m_meshes[i]->m_indexAllocation.UnmapForReading( renderContext ); } );
+		ON_BLOCK_EXIT( [&] { lod->m_indexAllocation.UnmapForReading( renderContext ); } );
 		
 		const uint16_t* pShortIndices = (uint16_t*)pIndices;
 		const uint32_t* pLongIndices = (uint32_t*)pIndices;
 		
 		Tr2VertexDefinition decl;
-		if ( !Tr2EffectStateManager::GetVertexDeclarationElements( m_meshes[i]->m_vertexDeclaration, decl ) )
+		if ( !Tr2EffectStateManager::GetVertexDeclarationElements( m_meshes[i]->m_vertexDeclarationHandle, decl ) )
 		{
 			return false;
 		}
@@ -1327,16 +1360,16 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3*di
 		}
 		
 		const Tr2VertexDefinition::Item* const blendIndices = decl.Find( decl.BLENDINDICES );
-		int numPrim = m_meshes[i]->m_primitiveCount;
+		int numPrim = lod->m_primitiveCount;
 		auto currentIndex = 0;
 		if ( areaIx != -1 )
 		{
-			if ( areaIx >= m_meshes[i]->m_areas.size() )
+			if ( areaIx >= lod->m_areas.size() )
 			{
 				continue;
 			}
-			currentIndex = m_meshes[i]->m_areas[areaIx].m_firstIndex;
-			numPrim = m_meshes[i]->m_areas[areaIx].m_primitiveCount;
+			currentIndex = lod->m_areas[areaIx].m_firstIndex;
+			numPrim = lod->m_areas[areaIx].m_primitiveCount;
 		}
 
 		for ( int j = 0; j < numPrim; j++ )
@@ -1348,7 +1381,7 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3*di
 			Vector3 p2;
 			Vector3 p3;
 			float pu, pv, dist;
-			if( m_meshes[i]->m_indexAllocation.GetStride() == 2 )
+			if( lod->m_indexAllocation.GetStride() == 2 )
 			{
 				index1 = pShortIndices[currentIndex++];
 				index2 = pShortIndices[currentIndex++];
@@ -1442,7 +1475,7 @@ void TriGeometryRes::Initialize( const wchar_t* name, const wchar_t* ext )
 void TriGeometryRes::ReleaseResourcesHelper()
 {
 	m_meshes.clear();
-	m_meshLods.clear();
+	//TODO: Do we need to clear skeletons here too?
 
 	CCP_STATS_ADD( geometryResBytes, -(int)m_memoryUse );
 	m_memoryUse = 0;
@@ -1485,17 +1518,23 @@ TriGeometryResAreaData::TriGeometryResAreaData() :
 {
 }
 
-TriGeometryResMeshData::TriGeometryResMeshData() :
-	m_bytesPerVertex( 0 ),
+TriGeometryResLodData::TriGeometryResLodData() :
 	m_vertexCount( 0 ),
 	m_primitiveCount( 0 ),
 	m_areas( "TriGeometryResMeshData/m_areas" ),
-	m_jointBindings( "TriGeometryResMeshData/m_jointBindings" ),
-	m_isLodMesh( false ),
-	m_pVertexData( NULL ),
-	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_allocationsValid(false),
-	m_reversedIndicesValid(false)
+	m_reversedIndicesValid(false),
+	m_uvDensities()
+{
+}
+
+
+TriGeometryResMeshData::TriGeometryResMeshData() :
+
+	m_vertexDeclarationHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
+	m_bytesPerVertex( -1 ),
+	m_jointBindings( "TriGeometryResMeshData/m_jointBindings" ),
+	m_lods( "TriGeometryResModelData/m_lods" )
 {
 }
 
@@ -1527,13 +1566,11 @@ void TriGeometryRes::RequestReversedIndexBuffers()
 
 		for( auto& mesh : m_meshes )
 		{
-			auto grannyMesh = gi->Meshes[mesh->m_grannyMeshIndex];
-			ReverseIndexBuffer( *mesh, *grannyMesh, renderContext );
-		}
-		for( auto& mesh : m_meshLods )
-		{
-			auto grannyMesh = gi->Meshes[mesh->m_grannyMeshIndex];
-			ReverseIndexBuffer( *mesh, *grannyMesh, renderContext );
+			for( auto& lod : mesh->m_lods )
+			{
+				auto grannyMesh = gi->Meshes[lod->m_grannyMeshIndex];
+				ReverseIndexBuffer( *lod, *grannyMesh, renderContext );
+			}
 		}
 	}
 	else
@@ -1559,96 +1596,78 @@ bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigne
         return false;
     }
 
-    TriGeometryResMeshData* pMesh = m_meshes[meshIx].get();
-    if( !pMesh )
+    TriGeometryResMeshData* mesh = m_meshes[meshIx].get();
+	if( !mesh )
     {
         return false;
     }
 
-	if( m_forceLod )
-	{
-		if( !pMesh->m_lods.empty() && m_forcedLodIndex > 0 )
-		{
-			auto lod = pMesh->m_lods[std::min( m_forcedLodIndex, uint32_t( pMesh->m_lods.size() ) ) - 1];
-			pMesh = m_meshLods[lod.meshIndex].get();
-		}
-	}
-	else
-	{
-		for( auto lod : pMesh->m_lods )
-		{
-			if( lod.maxScreenSize < screenSize )
-			{
-				break;
-			}
-			pMesh = m_meshLods[lod.meshIndex].get();
-		}
-	}
+	TriGeometryResLodData* lod = GetMeshLod( meshIx, screenSize );
 
-    unsigned int primCount = GetPrimitiveCount( *pMesh, areaIx, areaCount );
+    unsigned int primCount = GetPrimitiveCount( *lod, areaIx, areaCount );
 
 	if( primCount )
 	{
 		if( reversed )
 		{
-			if( !pMesh->m_reversedIndicesValid )
+			if( !lod->m_reversedIndicesValid )
 			{
 				return false;
 			}
 		}
 
-		const TriGeometryResAreaData& area = pMesh->m_areas[areaIx];
-		renderContext.m_esm.ApplyVertexDeclaration( pMesh->m_vertexDeclaration );
-		renderContext.m_esm.ApplyStreamSource( 0, pMesh->m_vertexAllocation );
+		const TriGeometryResAreaData& area = lod->m_areas[areaIx];
+		renderContext.m_esm.ApplyVertexDeclaration( mesh->m_vertexDeclarationHandle );
+		renderContext.m_esm.ApplyStreamSource( 0, lod->m_vertexAllocation );
 
-		auto& indices = reversed ? pMesh->m_reversedIndexAllocation : pMesh->m_indexAllocation;
+		auto& indices = reversed ? lod->m_reversedIndexAllocation : lod->m_indexAllocation;
 		renderContext.m_esm.ApplyIndexBuffer( indices );
 
 		renderContext.SetTopology( TOP_TRIANGLES );
 		if( reversed )
 		{
-			renderContext.DrawIndexedPrimitive( pMesh->m_vertexCount, indices.GetStartIndex() + pMesh->m_primitiveCount * 3 - area.m_firstIndex - primCount * 3, primCount );
+			renderContext.DrawIndexedPrimitive( lod->m_vertexCount, indices.GetStartIndex() + lod->m_primitiveCount * 3 - area.m_firstIndex - primCount * 3, primCount );
 		}
 		else
 		{
-			renderContext.DrawIndexedPrimitive( pMesh->m_vertexCount, indices.GetStartIndex() + area.m_firstIndex, primCount );
+			renderContext.DrawIndexedPrimitive( lod->m_vertexCount, indices.GetStartIndex() + area.m_firstIndex, primCount );
 		}
 	}
 
     return true;
 }
 
-bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryResMeshData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride )
+bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeometryResLodData* lod, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !Tr2Renderer::IsResourceCreationAllowed() || myMesh == NULL )
+	if( !Tr2Renderer::IsResourceCreationAllowed() || grannyMesh == NULL )
 	{
 		return false;
 	}
 
 	const int kVertexComponentMaxCount = 13;
 	
-	granny_data_type_definition* grannyVertexDecl = myMesh->PrimaryVertexData->VertexType;
+	granny_data_type_definition* grannyVertexDecl = grannyMesh->PrimaryVertexData->VertexType;
 
 	Tr2VertexDefinition vertexDefinition = BuildFromGrannyVertexDecl( grannyVertexDecl );
 	const unsigned bytesPerVertex = vertexDefinition.m_nextOffset[0];
 
 	unsigned bytesPerIndex = 2;
 
-	int vertexCount = myMesh->PrimaryVertexData->VertexCount;
+	int vertexCount = grannyMesh->PrimaryVertexData->VertexCount;
 	int vbSize = vertexCount * bytesPerVertex;
 
 	void* pSrc = pVBOverride;
 	if( !pSrc )
 	{
-		pSrc = GrannyGetMeshVertices( myMesh );
+		pSrc = GrannyGetMeshVertices( grannyMesh );
 	}
 
-	int indexCount = myMesh->PrimaryTopology->Index16Count;
+	int indexCount = grannyMesh->PrimaryTopology->Index16Count;
 	if( indexCount == 0 )
 	{
-		indexCount = myMesh->PrimaryTopology->IndexCount;
+		indexCount = grannyMesh->PrimaryTopology->IndexCount;
 
 		if( indexCount == 0 )
 		{
@@ -1664,22 +1683,22 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 		}
 	}
 
-	CR_RETURN_VAL( g_sharedBuffer.Allocate( bytesPerVertex, vertexCount, pSrc, renderContext, pMesh->m_vertexAllocation ), false );
+	CR_RETURN_VAL( g_sharedBuffer.Allocate( bytesPerVertex, vertexCount, pSrc, renderContext, lod->m_vertexAllocation ), false );
 	
 	// create d3d index buffer, this one is shared, either for dynamic or static geometry
 	int ibSize = indexCount * bytesPerIndex;
 
 	{
 		std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
-		GrannyCopyMeshIndices( myMesh, bytesPerIndex, &tempBuffer[0] );
+		GrannyCopyMeshIndices( grannyMesh, bytesPerIndex, &tempBuffer[0] );
 
 		
 
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		ALResult hr = g_sharedBuffer.Allocate( bytesPerIndex, indexCount, &tempBuffer[0], renderContext, pMesh->m_indexAllocation );
+		ALResult hr = g_sharedBuffer.Allocate( bytesPerIndex, indexCount, &tempBuffer[0], renderContext, lod->m_indexAllocation );
 		if( FAILED( hr ) )
 		{
-			g_sharedBuffer.Free( pMesh->m_vertexAllocation );
+			g_sharedBuffer.Free( lod->m_vertexAllocation );
 			return false;	
 		}
 
@@ -1694,23 +1713,17 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 				std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
 			}
 
-			if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, pMesh->m_reversedIndexAllocation ) ) )
+			if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod->m_reversedIndexAllocation ) ) )
 			{
-				g_sharedBuffer.Free( pMesh->m_vertexAllocation );
-				g_sharedBuffer.Free( pMesh->m_indexAllocation );
+				g_sharedBuffer.Free( lod->m_vertexAllocation );
+				g_sharedBuffer.Free( lod->m_indexAllocation );
 				return false;
 			}
-			pMesh->m_reversedIndicesValid = true;
+			lod->m_reversedIndicesValid = true;
 		}
 	}
 
-
-	pMesh->m_bytesPerVertex = bytesPerVertex;
-	pMesh->m_vertexCount = vertexCount;
-
-	pMesh->m_vertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( vertexDefinition );
-
-	pMesh->m_allocationsValid = true;
+	lod->m_allocationsValid = true;
 
 	m_memoryUse += vbSize + ibSize; // Memory use is only approximate as a hint for the resource cache
 	if( m_reversedIndexBuffersRequested )
@@ -1727,11 +1740,10 @@ bool TriGeometryRes::CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsa
 
 	for( auto& mesh : m_meshes )
 	{
-		CreateMeshFromGrannyMesh( gi->Meshes[mesh->m_grannyMeshIndex], mesh.get(), cpuUsage, renderContext );
-	}
-	for( auto& mesh : m_meshLods )
-	{
-		CreateMeshFromGrannyMesh( gi->Meshes[mesh->m_grannyMeshIndex], mesh.get(), cpuUsage, renderContext );
+		for( auto& lod : mesh->m_lods )
+		{
+			CreateLodFromGrannyMesh( gi->Meshes[lod->m_grannyMeshIndex], lod.get(), cpuUsage, renderContext );
+		}
 	}
 	CCP_STATS_ADD( geometryResBytes, m_memoryUse );
 
@@ -1760,7 +1772,14 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( !pMesh || !pMesh->m_allocationsValid || pMesh->m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	if( !pMesh || pMesh->m_vertexDeclarationHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	{
+		return false;
+	}
+
+	auto& lod = pMesh->m_lods[0];
+
+	if( !lod->m_allocationsValid )
 	{
 		return false;
 	}
@@ -1768,7 +1787,7 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 	granny_data_type_definition grannyVertexDecl[16];
 	
 	Tr2VertexDefinition decl;
-	if( !Tr2EffectStateManager::GetVertexDeclarationElements( pMesh->m_vertexDeclaration, decl ) )
+	if( !Tr2EffectStateManager::GetVertexDeclarationElements( pMesh->m_vertexDeclarationHandle, decl ) )
 	{
 		return false;
 	}
@@ -1779,49 +1798,49 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 	}
 
 	const void* pVertices;
-	if( FAILED( pMesh->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
+	if( FAILED( lod->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 	{
 		return false;
 	}
-	ON_BLOCK_EXIT( [&] { pMesh->m_vertexAllocation.UnmapForReading( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { lod->m_vertexAllocation.UnmapForReading( renderContext ); } );
 
 	const void* pIndices;
-	if( FAILED( pMesh->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
+	if( FAILED( lod->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
 	{
 		return false;
 	}
-	ON_BLOCK_EXIT( [&] { pMesh->m_indexAllocation.UnmapForReading( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { lod->m_indexAllocation.UnmapForReading( renderContext ); } );
 
 
 	granny_vertex_data myVertexData;
 	memset( &myVertexData, 0, sizeof( myVertexData ) );
 	myVertexData.Vertices = (granny_uint8*)pVertices;
-	myVertexData.VertexCount = pMesh->m_vertexCount;
+	myVertexData.VertexCount = lod->m_vertexCount;
 	myVertexData.VertexType = grannyVertexDecl;
 
 	granny_tri_topology myTopology;
 	memset( &myTopology, 0, sizeof( myTopology ) );
 
-	if( pMesh->m_vertexCount <= 65535 )
+	if( lod->m_vertexCount <= 65535 )
 	{
 		myTopology.Indices16 = (granny_uint16*)pIndices;
-		myTopology.Index16Count = pMesh->m_primitiveCount * 3;
+		myTopology.Index16Count = lod->m_primitiveCount * 3;
 	}
 	else
 	{
 		myTopology.Indices = (granny_int32*)pIndices;
-		myTopology.IndexCount = pMesh->m_primitiveCount * 3;
+		myTopology.IndexCount = lod->m_primitiveCount * 3;
 	}
 
-	myTopology.GroupCount = (granny_int32)pMesh->m_areas.size();
+	myTopology.GroupCount = (granny_int32)lod->m_areas.size();
 	myTopology.Groups = CCP_NEW("myTopology.Groups") granny_tri_material_group[myTopology.GroupCount];
 	if( myTopology.Groups )
 	{
 		for( int i = 0; i < myTopology.GroupCount; ++i )
 		{
 			myTopology.Groups[i].MaterialIndex = i;
-			myTopology.Groups[i].TriFirst = pMesh->m_areas[i].m_firstIndex / 3;
-			myTopology.Groups[i].TriCount = pMesh->m_areas[i].m_primitiveCount;
+			myTopology.Groups[i].TriFirst = lod->m_areas[i].m_firstIndex / 3;
+			myTopology.Groups[i].TriCount = lod->m_areas[i].m_primitiveCount;
 		}
 	}
 	else
@@ -1829,18 +1848,18 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 		myTopology.GroupCount = 0;
 	}
 
-	granny_mesh myMesh;
-	memset( &myMesh, 0, sizeof( myMesh ) );
+	granny_mesh grannyMesh;
+	memset( &grannyMesh, 0, sizeof( grannyMesh ) );
 
-	myMesh.PrimaryVertexData = &myVertexData;
-	myMesh.PrimaryTopology = &myTopology;
+	grannyMesh.PrimaryVertexData = &myVertexData;
+	grannyMesh.PrimaryTopology = &myTopology;
 
     granny_file_info fileInfo;
 	memset( &fileInfo, 0, sizeof( fileInfo ) );
 
-	granny_mesh* meshes[] = { &myMesh };
-	granny_tri_topology* topologies[] = { myMesh.PrimaryTopology };
-	granny_vertex_data* vertexDatas[] = { myMesh.PrimaryVertexData };
+	granny_mesh* meshes[] = { &grannyMesh };
+	granny_tri_topology* topologies[] = { grannyMesh.PrimaryTopology };
+	granny_vertex_data* vertexDatas[] = { grannyMesh.PrimaryVertexData };
 
 	fileInfo.ModelCount = 0;
 	fileInfo.Models = 0;
@@ -1851,18 +1870,18 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 	fileInfo.TriTopologyCount = 1;
 	fileInfo.TriTopologies = topologies;
 
-	fileInfo.MaterialCount = (granny_int32)pMesh->m_areas.size();
+	fileInfo.MaterialCount = (granny_int32)lod->m_areas.size();
 	fileInfo.Materials = CCP_NEW("fileInfo.Materials") granny_material*[fileInfo.MaterialCount];
 	if( fileInfo.Materials == nullptr )
 	{
 		fileInfo.MaterialCount = 0;
 	}
 
-	myMesh.MaterialBindingCount = fileInfo.MaterialCount;
-	myMesh.MaterialBindings = CCP_NEW("myMesh.MaterialBindings") granny_material_binding[fileInfo.MaterialCount];
-	if( myMesh.MaterialBindings == nullptr )
+	grannyMesh.MaterialBindingCount = fileInfo.MaterialCount;
+	grannyMesh.MaterialBindings = CCP_NEW("grannyMesh.MaterialBindings") granny_material_binding[fileInfo.MaterialCount];
+	if( grannyMesh.MaterialBindings == nullptr )
 	{
-		myMesh.MaterialBindingCount = 0;
+		grannyMesh.MaterialBindingCount = 0;
 	}
 
 	granny_material* pMaterials = nullptr;
@@ -1876,31 +1895,31 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 			for( int i = 0; i < fileInfo.MaterialCount; ++i )
 			{
 				fileInfo.Materials[i] = &pMaterials[i];
-				fileInfo.Materials[i]->Name = pMesh->m_areas[i].m_name.c_str();
-				myMesh.MaterialBindings[i].Material = fileInfo.Materials[i];
+				fileInfo.Materials[i]->Name = lod->m_areas[i].m_name.c_str();
+				grannyMesh.MaterialBindings[i].Material = fileInfo.Materials[i];
 			}
 		}
 	}
 	
 	// Bones
-	myMesh.BoneBindingCount = (granny_int32)pMesh->m_jointBindings.size();
-	myMesh.BoneBindings = CCP_NEW("myMesh.BoneBindings") granny_bone_binding[myMesh.BoneBindingCount];
-	if( myMesh.BoneBindings == nullptr )
+	grannyMesh.BoneBindingCount = (granny_int32)pMesh->m_jointBindings.size();
+	grannyMesh.BoneBindings = CCP_NEW("grannyMesh.BoneBindings") granny_bone_binding[grannyMesh.BoneBindingCount];
+	if( grannyMesh.BoneBindings == nullptr )
 	{
-		myMesh.BoneBindingCount = 0;
+		grannyMesh.BoneBindingCount = 0;
 	}
-	if( myMesh.BoneBindingCount > 0 )
+	if( grannyMesh.BoneBindingCount > 0 )
 	{
-		memset( myMesh.BoneBindings, 0, sizeof( granny_bone_binding ) * myMesh.BoneBindingCount );
-		for( int i = 0; i < myMesh.BoneBindingCount; ++i )
+		memset( grannyMesh.BoneBindings, 0, sizeof( granny_bone_binding ) * grannyMesh.BoneBindingCount );
+		for( int i = 0; i < grannyMesh.BoneBindingCount; ++i )
 		{
-			myMesh.BoneBindings[i].BoneName = pMesh->m_jointBindings[i].m_name.c_str();
-			myMesh.BoneBindings[i].OBBMin[0] = pMesh->m_jointBindings[i].m_obbMin.x;
-			myMesh.BoneBindings[i].OBBMin[1] = pMesh->m_jointBindings[i].m_obbMin.y;
-			myMesh.BoneBindings[i].OBBMin[2] = pMesh->m_jointBindings[i].m_obbMin.z;
-			myMesh.BoneBindings[i].OBBMax[0] = pMesh->m_jointBindings[i].m_obbMax.x;
-			myMesh.BoneBindings[i].OBBMax[1] = pMesh->m_jointBindings[i].m_obbMax.y;
-			myMesh.BoneBindings[i].OBBMax[2] = pMesh->m_jointBindings[i].m_obbMax.z;
+			grannyMesh.BoneBindings[i].BoneName = pMesh->m_jointBindings[i].m_name.c_str();
+			grannyMesh.BoneBindings[i].OBBMin[0] = pMesh->m_jointBindings[i].m_obbMin.x;
+			grannyMesh.BoneBindings[i].OBBMin[1] = pMesh->m_jointBindings[i].m_obbMin.y;
+			grannyMesh.BoneBindings[i].OBBMin[2] = pMesh->m_jointBindings[i].m_obbMin.z;
+			grannyMesh.BoneBindings[i].OBBMax[0] = pMesh->m_jointBindings[i].m_obbMax.x;
+			grannyMesh.BoneBindings[i].OBBMax[1] = pMesh->m_jointBindings[i].m_obbMax.y;
+			grannyMesh.BoneBindings[i].OBBMax[2] = pMesh->m_jointBindings[i].m_obbMax.z;
 		}
 	}
 
@@ -1919,8 +1938,8 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 	GrannyEndFile( Builder, CW2A( fullPath.c_str() ) );
 
 	CCP_DELETE [] pMaterials;
-	CCP_DELETE [] myMesh.MaterialBindings;
-	CCP_DELETE [] myMesh.BoneBindings;
+	CCP_DELETE [] grannyMesh.MaterialBindings;
+	CCP_DELETE [] grannyMesh.BoneBindings;
 	CCP_DELETE [] fileInfo.Materials;
 
 	return true;
@@ -1941,15 +1960,18 @@ bool TriGeometryRes::IsInstanceDataReady() const
 
 ITr2InstanceData::InstanceData TriGeometryRes::GetInstanceData( unsigned int bufferIndex, float screenSize ) const
 {
-	auto mesh = GetMeshData( bufferIndex, screenSize );
-	if( mesh )
+	auto mesh = GetMeshData( bufferIndex );
+
+	if( !mesh )
 	{
-		return {
-			mesh->m_vertexAllocation.GetBuffer(), mesh->m_vertexAllocation.GetOffset(), mesh->m_bytesPerVertex, mesh->m_vertexCount
-		};
+		static Tr2BufferAL nullVB;
+		return { nullVB };
 	}
-	static Tr2BufferAL nullVB;
-	return { nullVB };
+	
+	auto lod = GetMeshLod( bufferIndex, screenSize );
+	return {
+		lod->m_vertexAllocation.GetBuffer(), lod->m_vertexAllocation.GetOffset(), mesh->m_bytesPerVertex, lod->m_vertexCount
+	};
 }
 
 // --------------------------------------------------------------------------------------
@@ -1965,7 +1987,7 @@ unsigned int TriGeometryRes::GetInstanceBufferVertexDeclaration( unsigned int bu
 {
 	if( bufferIndex < m_meshes.size() && m_meshes[bufferIndex] )
 	{
-		return m_meshes[bufferIndex]->m_vertexDeclaration;
+		return m_meshes[bufferIndex]->m_vertexDeclarationHandle;
 	}
 	return Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
 }
@@ -1980,102 +2002,73 @@ CcpMath::AxisAlignedBox TriGeometryRes::GetInstanceBufferBoundingBox( unsigned i
 	return CcpMath::AxisAlignedBox( mesh->m_minBounds, mesh->m_maxBounds );
 }
 
-Be::Result<std::string> TriGeometryRes::GetModelName( unsigned int ix, std::string& name ) const
+Be::Result<std::string> TriGeometryRes::GetMeshName( unsigned int meshIx, std::string& name ) const
 {
-	if( ix >= GetModelCount() )
+	TriGeometryResMeshData* mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
-		return Be::Result<std::string>( "Model index out of range" );
+		return Be::Result<std::string>( "Mesh index out of range, or invalid mesh" );
 	}
 
-	TriGeometryResModelData* pModel = GetModelData( ix );
-	if( !pModel )
-	{
-		return Be::Result<std::string>( "Invalid model" );
-	}
-
-	name = pModel->m_name;
+	name = mesh->m_name;
 
 	return Be::Result<std::string>();
 }
 
-Be::Result<std::string> TriGeometryRes::GetMeshName( unsigned int ix, std::string& name ) const
+Be::Result<std::string> TriGeometryRes::GetMeshAreaCount( unsigned int meshIx, int& count ) const
 {
-	if( ix >= GetMeshCount() )
+	TriGeometryResMeshData* mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
-		return Be::Result<std::string>( "Mesh index out of range" );
+		return Be::Result<std::string>( "Mesh index out of range, or invalid mesh" );
 	}
 
-	TriGeometryResMeshData* pMesh = GetMeshData( ix );
-	if( !pMesh )
-	{
-		return Be::Result<std::string>( "Invalid mesh" );
-	}
+	//Get the first LOD.
+	auto& lod = mesh->m_lods[0];
 
-	name = pMesh->m_name;
-
-	return Be::Result<std::string>();
-}
-
-Be::Result<std::string> TriGeometryRes::GetMeshAreaCount( unsigned int ix, int& count ) const
-{
-	if( ix >= GetMeshCount() )
-	{
-		return Be::Result<std::string>( "Mesh index out of range" );
-	}
-
-	TriGeometryResMeshData* pMesh = GetMeshData( ix );
-	if( !pMesh )
-	{
-		return Be::Result<std::string>( "Invalid mesh" );
-	}
-
-	count = (int)pMesh->m_areas.size();
+	count = (int)lod->m_areas.size();
 
 	return Be::Result<std::string>();
 }
 
 Be::Result<std::string> TriGeometryRes::GetMeshAreaName( unsigned int meshIx, unsigned int areaIx, std::string& name ) const
 {
-	if( meshIx >= GetMeshCount() )
+	TriGeometryResMeshData* mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
-		return Be::Result<std::string>( "Mesh index out of range" );
+		return Be::Result<std::string>( "Mesh index out of range, or invalid mesh" );
 	}
 
-	TriGeometryResMeshData* pMesh = GetMeshData( meshIx );
-	if( !pMesh )
-	{
-		return Be::Result<std::string>( "Invalid mesh" );
-	}
+	//Get the first LOD.
+	auto& lod = mesh->m_lods[0];
 
-	if( areaIx >= pMesh->m_areas.size() )
+	if (areaIx < 0 || areaIx >= lod->m_areas.size())
 	{
 		return Be::Result<std::string>( "Area index out of range" );
 	}
 
-	name = pMesh->m_areas[areaIx].m_name;
+	name = lod->m_areas[areaIx].m_name;
 
 	return Be::Result<std::string>();
 }
 
 Be::Result<std::string> TriGeometryRes::GetAreaBoundingBoxFromScript( unsigned int meshIx, unsigned int areaIx, std::pair<Vector3, Vector3>& bounds )
 {
-	if( meshIx >= GetMeshCount() )
+	TriGeometryResMeshData* mesh = GetMeshData( meshIx );
+	if( !mesh )
 	{
-		return Be::Result<std::string>( "Mesh index out of range" );
+		return Be::Result<std::string>( "Mesh index out of range, or invalid mesh" );
 	}
 
-	TriGeometryResMeshData* pMesh = GetMeshData( meshIx );
-	if( !pMesh )
-	{
-		return Be::Result<std::string>( "Invalid mesh" );
-	}
+	//Get the first LOD.
+	auto& lod = mesh->m_lods[0];
 
-	if( areaIx >= pMesh->m_areas.size() )
+	if( areaIx < 0 || areaIx >= lod->m_areas.size() )
 	{
 		return Be::Result<std::string>( "Area index out of range" );
 	}
 
-	bounds = std::make_pair( pMesh->m_areas[areaIx].m_minBounds, pMesh->m_areas[areaIx].m_maxBounds );
+	bounds = std::make_pair( lod->m_areas[areaIx].m_minBounds, lod->m_areas[areaIx].m_maxBounds );
 
 	return Be::Result<std::string>();
 }
@@ -2086,13 +2079,13 @@ Be::Result<std::string> TriGeometryRes::GetBoundingSphereFromScript( unsigned in
 	{
 		return Be::Result<std::string>( "Mesh index out of range" );
 	}
-	auto& pMesh = m_meshes[meshIx];
-	if( !pMesh )
+	auto& mesh = m_meshes[meshIx];
+	if( !mesh )
 	{
 		return Be::Result<std::string>( "Invalid mesh" );
 	}
 
-	bounds = std::make_pair( Vector3( pMesh->m_boundingSphere.x, pMesh->m_boundingSphere.y, pMesh->m_boundingSphere.z ), pMesh->m_boundingSphere.w );
+	bounds = std::make_pair( Vector3( mesh->m_boundingSphere.x, mesh->m_boundingSphere.y, mesh->m_boundingSphere.z ), mesh->m_boundingSphere.w );
 	return Be::Result<std::string>();
 }
 
@@ -2102,8 +2095,8 @@ Be::Result<std::string> TriGeometryRes::CalculateBoundingBoxFromTransform( unsig
 	{
 		return Be::Result<std::string>( "Mesh index out of range" );
 	}
-	auto& pMesh = m_meshes[meshIx];
-	if( !pMesh )
+	auto& mesh = m_meshes[meshIx];
+	if( !mesh )
 	{
 		return Be::Result<std::string>( "Invalid mesh" );
 	}
@@ -2138,7 +2131,7 @@ BlueStdResult TriGeometryRes::GetMeshVertexElements( size_t meshIndex, std::vect
 
 	auto& mesh = m_meshes[meshIndex];
 	Tr2VertexDefinition decl;
-	if ( !Tr2EffectStateManager::GetVertexDeclarationElements( mesh->m_vertexDeclaration, decl ) )
+	if ( !Tr2EffectStateManager::GetVertexDeclarationElements( mesh->m_vertexDeclarationHandle, decl ) )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "could not retrieve vertex declaration" );
 	}

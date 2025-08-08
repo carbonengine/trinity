@@ -38,7 +38,7 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_geometryLodIndex( -1 ),
 	m_isVisible( 0 ),
 	m_decalMatrix( IdentityMatrix() ),
-	m_invDecalMatrix( IdentityMatrix() ),
+	m_inverseDecalMatrix( IdentityMatrix() ),
 	m_parentBoneMatrix( IdentityMatrix() ),
 	m_minScreenSize( 0 ),
 	m_instanceScreenSize( -1 ),
@@ -68,7 +68,7 @@ void EveSpaceObjectDecal::UpdateDecalMatrix()
 	// update decal matrix
 	m_decalMatrix = TransformationMatrix( m_scaling, m_rotation, m_position );
 	// and calc the inverse right away, is needed for intersection
-	m_invDecalMatrix = Inverse( m_decalMatrix );
+	m_inverseDecalMatrix = Inverse( m_decalMatrix );
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -106,7 +106,7 @@ void EveSpaceObjectDecal::ReleaseResources( TriStorage )
 bool EveSpaceObjectDecal::OnPrepareResources()
 {
 	// create new index buffer
-	if( m_decalGeometry && !m_decalGeometry->ib.IsValid() )
+	if( m_decalGeometry && !m_decalGeometry->m_indexBuffer.IsValid() )
 	{
 		m_decalGeometry = nullptr;
 	}
@@ -185,29 +185,22 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 		return;
 	}
 
-	m_geometryLodIndex = m_isGeometryFrozen ? -1 : geomRes->GetLodIndexForScreenSize( 0, screensize );
-
-	if( HasStaticIndexBuffers() )
+	// if we get a new mesh, we must re-build the index buffer. This should be avoided cause it is slow!
+	if( geomRes != m_baseGeometryResource )
 	{
-		if( geomRes != m_baseGeometryResource )
-		{
-			m_decalGeometry = nullptr;
-			m_baseGeometryResource = geomRes;
-		}
-		if( !m_decalGeometry )
+		m_decalGeometry = nullptr;
+		m_baseGeometryResource = geomRes;
+	}
+
+	auto mesh = geomRes->GetMeshData( 0 );
+
+	if( !m_decalGeometry || (mesh && mesh->m_lodMask != m_decalGeometry->m_lodMask) )
+	{
+		if( HasStaticIndexBuffers() )
 		{
 			CreateStaticIndexBuffers( geomRes );
 		}
-	}
-	else if( g_buildDecalBuffers )
-	{
-		// if we get a new mesh, we must re-build the index buffer. This should be avoided cause it is slow!
-		if( geomRes != m_baseGeometryResource )
-		{
-			m_decalGeometry = nullptr;
-			m_baseGeometryResource = geomRes;
-		}
-		if( !m_decalGeometry )
+		else if( g_buildDecalBuffers )
 		{
 			CreateDecalIndexBuffers( geomRes, meshCache );
 		}
@@ -218,10 +211,11 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 		return;
 	}
 
-	int index = m_geometryLodIndex + 1;
-	if( index >= m_decalGeometry->lods.size() ||
-		!m_decalGeometry->ib.IsValid() ||
-		!m_decalGeometry->lods[index].primitiveCount )
+	m_geometryLodIndex = m_isGeometryFrozen ? 0 : geomRes->GetLodIndexForScreenSize( 0, screensize );
+
+	if( m_geometryLodIndex >= m_decalGeometry->m_lods.size() ||
+		!m_decalGeometry->m_indexBuffer.IsValid() ||
+		!m_decalGeometry->m_lods[m_geometryLodIndex].m_primitiveCount )
 	{
 		return;
 	}
@@ -281,19 +275,18 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 	{
 		return;
 	}
-	if( !m_decalGeometry || !m_decalGeometry->ib.IsValid() )
+	if( !m_decalGeometry || !m_decalGeometry->m_indexBuffer.IsValid() )
 	{
 		return;
 	}
-	int index = m_geometryLodIndex + 1;
-	if( index >= m_decalGeometry->lods.size() ||
-		!m_decalGeometry->lods[index].primitiveCount )
+	if( m_geometryLodIndex >= m_decalGeometry->m_lods.size() ||
+		!m_decalGeometry->m_lods[m_geometryLodIndex].m_primitiveCount )
 	{
 		return;
 	}
 
-	const TriGeometryResMeshData* meshData = m_geometryLodIndex < 0 ? m_baseGeometryResource->GetMeshData( 0 ) : m_baseGeometryResource->GetMeshDataLod( 0, m_geometryLodIndex );
-	if( !meshData || !meshData->m_allocationsValid )
+	const TriGeometryResLodData* lod = m_baseGeometryResource->GetMeshLod( 0, m_geometryLodIndex );
+	if( !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -301,8 +294,8 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 	Tr2RenderBatch batch;
 	batch.SetPriority( m_priority );
 	batch.SetMaterial( m_decalEffect );
-	auto declaration = m_vertexDeclarationOverride != Tr2EffectStateManager::UNINITIALIZED_DECLARATION ? m_vertexDeclarationOverride : meshData->m_vertexDeclaration;
-	batch.SetGeometry( declaration, meshData->m_vertexAllocation, m_decalGeometry->ib );
+	auto declaration = m_vertexDeclarationOverride != Tr2EffectStateManager::UNINITIALIZED_DECLARATION ? m_vertexDeclarationOverride : lod->m_mesh->m_vertexDeclarationHandle;
+	batch.SetGeometry( declaration, lod->m_vertexAllocation, m_decalGeometry->m_indexBuffer );
 
 	batch.SetPerObjectData( perObjectData );
 
@@ -310,10 +303,10 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 	{
 		ITr2InstanceData::InstanceData data = m_instanceData->GetInstanceData( 0, std::numeric_limits<float>::max() );
 		batch.SetDrawIndexedInstanced(
-			m_decalGeometry->lods[index].primitiveCount * 3,
+			m_decalGeometry->m_lods[m_geometryLodIndex].m_primitiveCount * 3,
 			data.count,
-			m_decalGeometry->ib.GetStartIndex() + m_decalGeometry->lods[index].startIndex,
-			meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+			m_decalGeometry->m_indexBuffer.GetStartIndex() + m_decalGeometry->m_lods[m_geometryLodIndex].m_startIndex,
+			lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 			data.offset / data.stride );
 		batch.m_vertexStreams[1] = &data.buffer;
 		batch.m_stride[1] = data.stride;
@@ -321,10 +314,10 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 	else
 	{
 		batch.SetDrawIndexedInstanced(
-			m_decalGeometry->lods[index].primitiveCount * 3,
+			m_decalGeometry->m_lods[m_geometryLodIndex].m_primitiveCount * 3,
 			1,
-			m_decalGeometry->ib.GetStartIndex() + m_decalGeometry->lods[index].startIndex,
-			meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+			m_decalGeometry->m_indexBuffer.GetStartIndex() + m_decalGeometry->m_lods[m_geometryLodIndex].m_startIndex,
+			lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 			0 );
 	}
 
@@ -365,7 +358,7 @@ Tr2PerObjectData* EveSpaceObjectDecal::GetPerObjectData( ITriRenderBatchAccumula
 
 	// decal matrix (both nrm and inv)
     perObjectData->m_vsData.m_decalMatrix = Transpose( m_decalMatrix );
-    perObjectData->m_vsData.m_invDecalMatrix = Transpose( m_invDecalMatrix );
+    perObjectData->m_vsData.m_inverseDecalMatrix = Transpose( m_inverseDecalMatrix );
 
 	// matrix from possible bone animation of parent
     perObjectData->m_vsData.m_parentBoneMatrix = Transpose( m_parentBoneMatrix );
@@ -400,7 +393,7 @@ void EveSpaceObjectDecal::CopyFrom( EveSpaceObjectDecal *object )
 	m_parentBoneIndex = object->m_parentBoneIndex;
 	m_geometryLodIndex = object->m_geometryLodIndex;
 	m_decalMatrix = object->m_decalMatrix;
-	m_invDecalMatrix = object->m_invDecalMatrix;
+	m_inverseDecalMatrix = object->m_inverseDecalMatrix;
 	m_decalEffect = object->m_decalEffect;
 	m_minScreenSize = object->m_minScreenSize;
 }
@@ -622,10 +615,16 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 
 	std::vector<uint32_t> allIndices;
 
-	TriGeometryResMeshData* originalMeshData = geomRes->GetMeshData( 0 );
-	for( auto& existingDecal : originalMeshData->m_decals )
+	TriGeometryResMeshData* meshData = geomRes->GetMeshData( 0 );
+
+	if (!meshData)
 	{
-		if( existingDecal->invDecalMatrix == m_invDecalMatrix )
+		return;
+	}
+
+	for( auto& existingDecal : meshData->m_decals )
+	{
+		if( existingDecal->m_inverseDecalMatrix == m_inverseDecalMatrix )
 		{
 			m_decalGeometry = existingDecal;
 			return;
@@ -633,18 +632,14 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 	}
 
 	std::shared_ptr<MeshDecalData> newDecal = std::make_shared<MeshDecalData>(); 
-	newDecal->invDecalMatrix = m_invDecalMatrix;
+	newDecal->m_inverseDecalMatrix = m_inverseDecalMatrix;
+	newDecal->m_lodMask = meshData->m_lodMask;
 
-	for( int i = -1; i < static_cast<int>( originalMeshData->m_lods.size() ); i++ )
+	for( int i = 0; i < static_cast<int>( meshData->m_lods.size() ); i++ )
 	{
-		TriGeometryResMeshData* meshData = i == -1 ? originalMeshData : geomRes->GetMeshDataLod( 0, i );
+		TriGeometryResLodData* lod = meshData->m_lods[i].get();
 
-		if( !meshData )
-		{
-			return;
-		}
-
-		if( !meshData->m_allocationsValid )
+		if( !lod->m_allocationsValid )
 		{
 			return;
 		}
@@ -654,38 +649,38 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 		const unsigned char* originalIndices = NULL;
 
 		bool readingBuffers = true;
-		if ( meshCache.buffers.size() > size_t( i + 1 ) )
+		if( i < meshCache.buffers.size() )
 		{
-			originalVertices = meshCache.buffers[i + 1].vertexBuffer.get();
-			originalIndices = meshCache.buffers[i + 1].indexBuffer.get();
+			originalVertices = meshCache.buffers[i].vertexBuffer.get();
+			originalIndices = meshCache.buffers[i].indexBuffer.get();
 			readingBuffers = false;
 		}
 
 		if( readingBuffers )
 		{
-			if( FAILED( meshData->m_vertexAllocation.MapForReading( originalVertices, renderContext ) ) )
+			if( FAILED( lod->m_vertexAllocation.MapForReading( originalVertices, renderContext ) ) )
 			{
 				return;
 			}
 		}
-		ON_BLOCK_EXIT( [&] { if( readingBuffers ) meshData->m_vertexAllocation.UnmapForReading( renderContext ); } );
+		ON_BLOCK_EXIT( [&] { if( readingBuffers ) lod->m_vertexAllocation.UnmapForReading( renderContext ); } );
 
 		if( readingBuffers )
 		{
-			if( FAILED( meshData->m_indexAllocation.MapForReading( originalIndices, renderContext ) ) )
+			if( FAILED( lod->m_indexAllocation.MapForReading( originalIndices, renderContext ) ) )
 			{
 				return;
 			}
 		}
-		ON_BLOCK_EXIT( [&] { if( readingBuffers ) meshData->m_indexAllocation.UnmapForReading( renderContext ); } );
+		ON_BLOCK_EXIT( [&] { if( readingBuffers ) lod->m_indexAllocation.UnmapForReading( renderContext ); } );
 
-		if( meshCache.buffers.size() == size_t( i + 1 ) )
+		if( i == meshCache.buffers.size() )
 		{
 			DecalMeshCache::MeshBuffers buffers;
-			buffers.vertexBuffer.reset( new uint8_t[meshData->m_vertexAllocation.GetSize()] );
-			memcpy( buffers.vertexBuffer.get(), originalVertices, meshData->m_vertexAllocation.GetSize() );
-			buffers.indexBuffer.reset( new uint8_t[meshData->m_indexAllocation.GetSize()] );
-			memcpy( buffers.indexBuffer.get(), originalIndices, meshData->m_indexAllocation.GetSize() );
+			buffers.vertexBuffer.reset( new uint8_t[lod->m_vertexAllocation.GetSize()] );
+			memcpy( buffers.vertexBuffer.get(), originalVertices, lod->m_vertexAllocation.GetSize() );
+			buffers.indexBuffer.reset( new uint8_t[lod->m_indexAllocation.GetSize()] );
+			memcpy( buffers.indexBuffer.get(), originalIndices, lod->m_indexAllocation.GetSize() );
 			meshCache.buffers.push_back( std::move( buffers ) );
 		}
 
@@ -695,20 +690,20 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 		// collect indices for decal geometry
 		std::vector<unsigned int> decalIndices32;
 		std::vector<unsigned short> decalIndices16;
-		bool is16bit = meshData->m_indexAllocation.GetStride() == 2;
+		bool is16bit = lod->m_indexAllocation.GetStride() == 2;
 		if( is16bit )
 		{
-			decalIndices16.reserve( meshData->m_primitiveCount * 3 );
+			decalIndices16.reserve( lod->m_primitiveCount * 3 );
 		}
 		else
 		{
-			decalIndices32.reserve( meshData->m_primitiveCount * 3 );
+			decalIndices32.reserve( lod->m_primitiveCount * 3 );
 		}
 
 		// is vertex compressed to 16bit floats?
 		bool vertexPositionCompressed = false;
 		Tr2VertexDefinition vd;
-		if( Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, vd ) )
+		if( Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclarationHandle, vd ) )
 		{
 			if( auto pos = vd.Find( vd.POSITION ) )
 			{
@@ -721,7 +716,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 		Vector3 aabbMax( 1.f, 1.f, 1.f );
 		BoundingBoxTransform( aabbMin, aabbMax, m_decalMatrix );
 
-		for( unsigned int t = 0; t < meshData->m_primitiveCount; ++t )
+		for( unsigned int t = 0; t < lod->m_primitiveCount; ++t )
 		{
 			// get triangle indices
 			unsigned int index0 = is16bit ? indices16[0] : indices32[0];
@@ -736,7 +731,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 				pos[2] = *reinterpret_cast<const Vector3_16*>( originalVertices + index2 * meshData->m_bytesPerVertex );
 				if( IntersectTriangleAABB( pos, pos + 1, pos + 2, aabbMin, aabbMax ) )
 				{
-					if( IntersectTriangleOrientedBox( pos, pos + 1, pos + 2, m_invDecalMatrix ) )
+					if( IntersectTriangleOrientedBox( pos, pos + 1, pos + 2, m_inverseDecalMatrix ) )
 					{
 						if( is16bit )
 						{
@@ -761,7 +756,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 
 				if( IntersectTriangleAABB( v0, v1, v2, aabbMin, aabbMax ) )
 				{
-					if( IntersectTriangleOrientedBox( v0, v1, v2, m_invDecalMatrix ) )
+					if( IntersectTriangleOrientedBox( v0, v1, v2, m_inverseDecalMatrix ) )
 					{
 						if( is16bit )
 						{
@@ -785,31 +780,31 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 
 		// primitive count and index size
 		MeshDecalLodData buffer;
-		buffer.startIndex = uint32_t( allIndices.size() );
+		buffer.m_startIndex = uint32_t( allIndices.size() );
 		if( is16bit )
 		{
-			buffer.primitiveCount = unsigned( decalIndices16.size() / 3 );
+			buffer.m_primitiveCount = unsigned( decalIndices16.size() / 3 );
 			allIndices.insert( end( allIndices ), begin( decalIndices16 ), end( decalIndices16 ) );
 		}
 		else
 		{
-			buffer.primitiveCount = unsigned( decalIndices32.size() / 3 );
+			buffer.m_primitiveCount = unsigned( decalIndices32.size() / 3 );
 			allIndices.insert( end( allIndices ), begin( decalIndices32 ), end( decalIndices32 ) );
 		}
 
-		newDecal->lods.push_back( buffer );
+		newDecal->m_lods.push_back( buffer );
 	}
 
 	// dont create empty buffer
 	if( !allIndices.empty() )
 	{
-		if( !SUCCEEDED( g_sharedBuffer.Allocate( 4, uint32_t( allIndices.size() ), allIndices.data(), renderContext, newDecal->ib ) ) )
+		if( !SUCCEEDED( g_sharedBuffer.Allocate( 4, uint32_t( allIndices.size() ), allIndices.data(), renderContext, newDecal->m_indexBuffer ) ) )
 		{
 			return;
 		}
 	}
 
-	originalMeshData->m_decals.push_back( newDecal );
+	meshData->m_decals.push_back( newDecal );
 	m_decalGeometry = newDecal;
 }
 
@@ -854,7 +849,7 @@ void EveSpaceObjectDecal::CreateStaticIndexBuffers( TriGeometryResPtr geomRes )
 	TriGeometryResMeshData* originalMeshData = geomRes->GetMeshData( 0 );
 	for( auto& existingDecal : originalMeshData->m_decals )
 	{
-		if( existingDecal->invDecalMatrix == m_invDecalMatrix )
+		if( existingDecal->m_inverseDecalMatrix == m_inverseDecalMatrix )
 		{
 			m_decalGeometry = existingDecal;
 			return;
@@ -862,26 +857,42 @@ void EveSpaceObjectDecal::CreateStaticIndexBuffers( TriGeometryResPtr geomRes )
 	}
 
 	std::shared_ptr<MeshDecalData> newDecal = std::make_shared<MeshDecalData>();
-	newDecal->invDecalMatrix = m_invDecalMatrix;
+	newDecal->m_inverseDecalMatrix = m_inverseDecalMatrix;
+	newDecal->m_lodMask = originalMeshData->m_lodMask;
 
 	uint32_t total = 0;
-	for( auto& buffer : m_staticIndexBuffers )
+	for( auto& lod : originalMeshData->m_lods )
 	{
-		MeshDecalLodData lod;
-		lod.startIndex = total;
-		lod.primitiveCount = uint32_t( buffer.size() / 3 );
-		newDecal->lods.push_back( lod );
+		if( lod->m_originalLodIndex >= m_staticIndexBuffers.size() )
+		{
+			CCP_LOGERR( "Static index buffers missing for lod %d for mesh %s!", lod->m_originalLodIndex, originalMeshData->m_name );
+			break;
+		}
+		auto& buffer = m_staticIndexBuffers[lod->m_originalLodIndex];
+
+		MeshDecalLodData decalLod;
+		decalLod.m_startIndex = total;
+		decalLod.m_primitiveCount = uint32_t( buffer.size() / 3 );
+
+		newDecal->m_lods.push_back( decalLod );
+
 		total += uint32_t( buffer.size() );
 	}
 
 	std::vector<uint32_t> indices;
 	indices.reserve( total );
-	
-	for( auto& buffer : m_staticIndexBuffers )
+
+	for( auto& lod : originalMeshData->m_lods )
 	{
+		if( lod->m_originalLodIndex >= m_staticIndexBuffers.size() )
+		{
+			break;
+		}
+		auto& buffer = m_staticIndexBuffers[lod->m_originalLodIndex];
+
 		indices.insert( end( indices ), begin( buffer ), end( buffer ) );
 	}
-	if( !SUCCEEDED( g_sharedBuffer.Allocate( 4, uint32_t( indices.size() ), indices.data(), renderContext, newDecal->ib ) ) )
+	if( !SUCCEEDED( g_sharedBuffer.Allocate( 4, uint32_t( indices.size() ), indices.data(), renderContext, newDecal->m_indexBuffer ) ) )
 	{
 		return;
 	}
@@ -916,17 +927,26 @@ std::vector<uint32_t> EveSpaceObjectDecal::GetDecalPrimitiveCounts() const
 	std::vector<uint32_t> counts;
 	if( m_decalGeometry )
 	{
-		for( auto& buffer : m_decalGeometry->lods )
+		for( auto& buffer : m_decalGeometry->m_lods )
 		{
-			counts.push_back( buffer.primitiveCount );
+			counts.push_back( buffer.m_primitiveCount );
 		}
-
 	}
 	else
 	{
-		for( auto& buffer : m_staticIndexBuffers )
+		TriGeometryResMeshData* meshData = m_baseGeometryResource->GetMeshData( 0 );
+
+		if( meshData )
 		{
-			counts.push_back( uint32_t( buffer.size() / 3 ) );
+			for( auto& lod : meshData->m_lods )
+			{
+				if( lod->m_originalLodIndex >= m_staticIndexBuffers.size() )
+				{
+					break;
+				}
+				auto& buffer = m_staticIndexBuffers[lod->m_originalLodIndex];
+				counts.push_back( uint32_t( buffer.size() / 3 ) );
+			}
 		}
 	}
 	return counts;

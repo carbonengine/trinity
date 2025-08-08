@@ -321,8 +321,8 @@ void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches,
 				{
 					continue;
 				}
-				auto meshData = geometry->GetMeshData( mesh->GetMeshIndex() );
-				if( !meshData )
+				auto lod = geometry->GetMeshLod( mesh->GetMeshIndex(), 0 );
+				if( !lod || !lod->m_allocationsValid)
 				{
 					continue;
 				}
@@ -363,7 +363,7 @@ void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches,
 							depth = ( unsigned int )( ( float )0xFFFFFFF * ( 1.0f - z ) );
 						}
 
-						Tr2RenderBatch batch = CreateGeometryBatch( meshData, area, data );
+						Tr2RenderBatch batch = CreateGeometryBatch( lod, area, data );
 						batch.m_depth = depth;
 						batches->Commit( batch );
 					}

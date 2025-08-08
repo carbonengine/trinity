@@ -838,10 +838,10 @@ void BehaviorGroup::CreateVertexDeclaration()
 		if( ( meshPtr->GetGeometryResource() )->IsGood() )
 		{
 			TriGeometryResMeshData* meshData = meshPtr->GetGeometryResource()->GetMeshData( meshPtr->GetMeshIndex() );
-			if( meshData->m_vertexDeclaration != m_cachedVD )
+			if( meshData->m_vertexDeclarationHandle != m_cachedVD )
 			{
 				Tr2VertexDefinition s_agentInstancedVertex;
-				Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, s_agentInstancedVertex );
+				Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclarationHandle, s_agentInstancedVertex );
 
 				Tr2VertexDefinition& def = s_agentInstancedVertex;
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 8, 1, 1 );
@@ -854,7 +854,7 @@ void BehaviorGroup::CreateVertexDeclaration()
 				// create vertex-declarartion
 				m_vertexDeclarationHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_agentInstancedVertex );
 
-				m_cachedVD = meshData->m_vertexDeclaration;
+				m_cachedVD = meshData->m_vertexDeclarationHandle;
 			}
 			return;
 		}

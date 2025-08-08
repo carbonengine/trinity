@@ -695,10 +695,10 @@ void EveTurretSet::RebuildCachedData( BlueAsyncRes* p )
 			if( meshData )
 			{
 				// gemoetry's original vertex-decl must exist
-				if( meshData->m_vertexDeclaration != Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+				if( meshData->m_vertexDeclarationHandle != Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 				{
 					// get gemoetry's original vertex-decl...
-					Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, m_turretVertexDecl );
+					Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclarationHandle, m_turretVertexDecl );
 					// ...expand it with instances stream elements...
 					auto& item = m_turretVertexDecl.Add( m_turretVertexDecl.FLOAT32_1, m_turretVertexDecl.TEXCOORD, 2, 1, 1 );
 					item.m_offset = 0;
@@ -1718,21 +1718,21 @@ void EveTurretSet::GetBatches( ITriRenderBatchAccumulator* batches,
 	{
 		return;
 	}
-	const TriGeometryResMeshData* meshData = m_geometryResource->GetMeshData( 0 );
-	if( !meshData || !meshData->m_allocationsValid )
+	const TriGeometryResLodData* lod = m_geometryResource->GetMeshLod( 0, 0 );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
 
 	Tr2RenderBatch batch;
 	batch.SetMaterial( m_turretEffect );
-	batch.SetGeometry( m_vertexDeclHandle, meshData->m_vertexAllocation, m_instanceBuffer, meshData->m_indexAllocation );
+	batch.SetGeometry( m_vertexDeclHandle, lod->m_vertexAllocation, m_instanceBuffer, lod->m_indexAllocation );
 	batch.SetPerObjectData( perObjectData );
 	batch.SetDrawIndexedInstanced( 
-		meshData->m_primitiveCount * 3, 
+		lod->m_primitiveCount * 3, 
 		m_visibleCount, 
-		meshData->m_indexAllocation.GetStartIndex(), 
-		meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(), 
+		lod->m_indexAllocation.GetStartIndex(), 
+		lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(), 
 		m_instanceBuffer.GetOffset() / m_instanceBuffer.GetStride() );
 
 	if( batch )
@@ -1759,22 +1759,22 @@ void EveTurretSet::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	{
 		return;
 	}
-	const TriGeometryResMeshData* meshData = m_geometryResource->GetMeshData( 0 );
-	if( !meshData || !meshData->m_allocationsValid )
+	const TriGeometryResLodData* lod = m_geometryResource->GetMeshLod( 0, 0 );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
 
 	Tr2RenderBatch batch;
 	batch.SetMaterial( m_turretEffect );
-	batch.SetGeometry( m_vertexDeclHandle, meshData->m_vertexAllocation, m_instanceBuffer, meshData->m_indexAllocation );
+	batch.SetGeometry( m_vertexDeclHandle, lod->m_vertexAllocation, m_instanceBuffer, lod->m_indexAllocation );
 	batch.SetPerObjectData( perObjectData );
 
 	batch.SetDrawIndexedInstanced(
-		meshData->m_primitiveCount * 3,
+		lod->m_primitiveCount * 3,
 		m_visibleCount,
-		meshData->m_indexAllocation.GetStartIndex(),
-		meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+		lod->m_indexAllocation.GetStartIndex(),
+		lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 		m_instanceBuffer.GetOffset() / m_instanceBuffer.GetStride() );
 
 	batches->Commit( batch );

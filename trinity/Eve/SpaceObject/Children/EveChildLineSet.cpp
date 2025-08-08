@@ -354,10 +354,10 @@ void EveChildLineSet::CreateSpriteVertexDeclaration()
 		if( ( meshPtr->GetGeometryResource() )->IsGood() )
 		{
 			TriGeometryResMeshData* meshData = meshPtr->GetGeometryResource()->GetMeshData( meshPtr->GetMeshIndex() );
-			if( meshData->m_vertexDeclaration != m_cachedSVD )
+			if( meshData->m_vertexDeclarationHandle != m_cachedSVD )
 			{
 				Tr2VertexDefinition s_InstancedVertex;
-				Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, s_InstancedVertex );
+				Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclarationHandle, s_InstancedVertex );
 
 				Tr2VertexDefinition& def = s_InstancedVertex;
 				def.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 8, 1, 1 );
@@ -374,7 +374,7 @@ void EveChildLineSet::CreateSpriteVertexDeclaration()
 
 				// create vertex-declarartion
 				m_vertexDeclarationHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_InstancedVertex );
-				m_cachedSVD = meshData->m_vertexDeclaration;
+				m_cachedSVD = meshData->m_vertexDeclarationHandle;
 			}
 			return;
 		}
@@ -483,8 +483,8 @@ void EveChildLineSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 		return;
 	}
 
-	TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
-	if( !meshData || !meshData->m_allocationsValid )
+	TriGeometryResLodData* lod = geometry->GetMeshLod( 0, 0 );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -493,7 +493,7 @@ void EveChildLineSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 
 	for( auto& area : *areaList )
 	{
-		auto batch = CreateGeometryBatch( meshData, area, perObjectData );
+		auto batch = CreateGeometryBatch( lod, area, perObjectData );
 		batch.SetVertexDeclaration( m_vertexDeclarationHandle );
 		batch.SetStreamSource( 1, m_vertexBuffer, m_stride );
 		batch.m_instanceCount = m_totalObjectCount;

@@ -339,14 +339,13 @@ void EveChildMesh::UpdateRtSkeleton()
 	}
 	
 	auto meshIndex = m_mesh->GetMeshIndex();
-	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
-	
+	auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
 	bool hasSkinned = false;
 	
 	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );	
 	for( auto it = begin( *areas ); it != end( *areas ); ++it )
 	{
-		if( meshData->m_areas[std::max( 0, ( *it )->GetIndex() )].m_isSkinned )
+		if( lod->m_areas[std::max( 0, ( *it )->GetIndex() )].m_isSkinned )
 		{
 			hasSkinned = true;
 			break;
@@ -371,7 +370,7 @@ void EveChildMesh::UpdateRtSkeleton()
 		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
 			auto meshAreaIndex = std::max( 0, ( *it )->GetIndex() );
-			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
+			if( lod->m_areas[meshAreaIndex].m_isSkinned )
 			{
 				( *it )->GetRtMeshArea()->MarkBlasOutdated();
 			}
