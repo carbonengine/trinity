@@ -2,7 +2,7 @@
 
 #include "TriDevice.h"
 #include "Tr2Renderer.h"
-#include "Resources\TriGeometryRes.h"
+#include "Resources/TriGeometryRes.h"
 
 #include "TriPythonContext.h"
 #include "RenderJob/Tr2RenderJobs.h"
