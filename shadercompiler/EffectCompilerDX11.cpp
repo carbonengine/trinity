@@ -1366,7 +1366,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				{
 					std::lock_guard scope( m_compiledCS );
 					auto found = m_compiled.find( code );
-					if ( found == end(m_compiled) )
+					if ( found == end( m_compiled ) )
 					{
 						// Yep, this thread will have to compile. Make an entry into the cache.
 						syncData = std::make_shared<SyncData>();
