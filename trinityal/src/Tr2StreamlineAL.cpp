@@ -135,7 +135,7 @@ namespace Tr2StreamlineAL
 		return m;
 	}
 
-	sl::Result InitializeStreamline()
+	sl::Result InitializeStreamline( uint32_t appID )
 	{
 		if( STREAMLINE_INITIALIZED )
 		{
@@ -226,6 +226,7 @@ namespace Tr2StreamlineAL
 				pref.showConsole = true; // for debugging, set to false in production
 				pref.logLevel = sl::LogLevel::eVerbose;
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
+				// note that imgui will only work for non-production builds of streamline plugins 
 				features.push_back( sl::kFeatureImGUI );
 #endif
 			}
@@ -240,11 +241,8 @@ namespace Tr2StreamlineAL
 			pref.featuresToLoad = featuresToEnable;
 			pref.logMessageCallback = Tr2StreamlineLog;
 
-			// the ID of Eve Online
-			const uint32_t EVE_ONLINE_APP_ID = 101109911;
-
-			pref.applicationId = EVE_ONLINE_APP_ID;
-			pref.engine = sl::EngineType::eCustom;
+			// the appID comes from python, through the trinity settings
+			pref.applicationId = appID;
 			pref.flags |= sl::PreferenceFlags::eUseManualHooking;
 			STREAMLINE_INITIALIZATION_RESULT = FUNCTIONS.m_slInit( pref, sl::kSDKVersion );
 

@@ -30,7 +30,7 @@ namespace Tr2StreamlineAL
 
 	void Tr2StreamlineLog( sl::LogType type, const char* msg );
 
-	sl::Result InitializeStreamline( );
+	sl::Result InitializeStreamline( uint32_t appID );
 	void ReleaseStreamline( );
 
 	

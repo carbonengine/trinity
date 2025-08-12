@@ -128,6 +128,9 @@ CCP_STATS_DECLARE( smoothedGeneratedFrames, "Trinity/smoothedGeneratedFrames", f
 bool g_newUpscalersEnabled = true;
 TRI_REGISTER_SETTING( "newUpscalersEnabled", g_newUpscalersEnabled );
 
+extern uint32_t g_streamlineAppID;
+TRI_REGISTER_SETTING( "streamlineAppID", g_streamlineAppID );	
+
 bool g_raytracingEnabled = true;
 TRI_REGISTER_SETTING( "raytracingEnabled", g_raytracingEnabled );
 
