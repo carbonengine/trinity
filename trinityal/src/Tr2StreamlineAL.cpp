@@ -26,9 +26,12 @@ namespace Tr2StreamlineAL
 	#define INITIALIZE_FUNCTION( func ) \
 		FUNCTIONS.m_##func = reinterpret_cast<PFun_##func*>( GetProcAddress( STREAMLINE_MODULE, #func ) )
 
-	#define INITIALIZE_FEATURE_FUNCTION( feature, func )                                    \
-		if( SL_FAILED( res, FUNCTIONS.m_slGetFeatureFunction( feature, #func, (void*&)FEATURE_FUNCTIONS.m_##func ) ) ) \
-			CCP_LOGERR( "Unable to find function %s for feature %s Error code: %d", #func, #feature, res ); 
+	#define INITIALIZE_FEATURE_FUNCTION( feature, func )																				\
+		if( SL_FAILED( res, FUNCTIONS.m_slGetFeatureFunction( feature, #func, (void*&)FEATURE_FUNCTIONS.m_##func ) ) )					\
+		{																																\
+			CCP_LOGERR( "Unable to find function %s for feature %s Error: %s", #func, #feature, GetSlResultMessage( res ) );            \
+			return res;																													\
+		}
 	
 
 	//These two structs are automatically zero-initialized
