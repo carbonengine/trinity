@@ -667,5 +667,8 @@ void EveChildEffectPropagator::SetEffect( EveChildInstanceContainer* effect )
 
 void EveChildEffectPropagator::SetControllerVariable( const char* name, float value )
 {
-	m_effect->SetControllerVariable( name, value );
+	if( m_effect )
+	{
+		m_effect->SetControllerVariable( name, value );
+	}
 }

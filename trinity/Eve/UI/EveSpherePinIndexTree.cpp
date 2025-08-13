@@ -1,9 +1,7 @@
 #include "StdAfx.h"
 #include "EveSpherePinIndexTree.h"
 #include <vector>
-#include "include/TriMath.h"
-#include "Resources/TriGeometryRes.h"
-#include "Shader/Tr2EffectStateManager.h"
+#include "Resources/TriGrannyRes.h"
 
 const float PHI_MIN = -XM_PI;
 const float PHI_MAX = XM_PI;
@@ -118,48 +116,46 @@ inline void CarthesianToSpherical( Vector3& carth, Vector2& spherical )
 }
 
 // ------------------------------------------------------------------------------------------------------
-bool ExtractVertices( TriGeometryResMeshData* mesh, std::vector<Vector2>& sphericalVerts, std::vector<Vector3>& verts, Tr2RenderContext& renderContext )
+bool ExtractVertices( const granny_mesh& mesh, std::vector<Vector2>& sphericalVerts, std::vector<Vector3>& verts )
 {
-	if( !mesh->m_allocationsValid)
+	auto grannyVertexDecl = mesh.PrimaryVertexData->VertexType;
+	int vertSize = GrannyGetTotalObjectSize( grannyVertexDecl );
+
+	const auto pVertices = mesh.PrimaryVertexData->Vertices;
+
+	const granny_data_type_definition* position = nullptr;
+	uint32_t positionOffset = 0;
+	while( grannyVertexDecl->Type != GrannyEndMember )
 	{
-		return 0;
+		if( !strncmp( grannyVertexDecl->Name, GrannyVertexPositionName, strlen( GrannyVertexPositionName ) ) )
+		{
+			char index = grannyVertexDecl->Name[strlen( GrannyVertexPositionName )];
+			if( index == 0 || index == '0' )
+			{
+				position = grannyVertexDecl;
+				break;
+			}
+		}
+		positionOffset += GrannyGetMemberTypeSize( grannyVertexDecl );
 	}
-
-	const uint8_t* pVertices;
-
-	int numVerts = mesh->m_vertexCount;
-	int vertSize = mesh->m_bytesPerVertex;
-
-	sphericalVerts.resize(numVerts);
-	verts.resize(numVerts);
-	if (FAILED(mesh->m_vertexAllocation.MapForReading( pVertices, renderContext )))
-	{
-		return 0;
-	}
-	ON_BLOCK_EXIT( [&] { mesh->m_vertexAllocation.UnmapForReading( renderContext ); } );
-
-	Tr2VertexDefinition vd;
-	if ( !Tr2EffectStateManager::GetVertexDeclarationElements( mesh->m_vertexDeclaration, vd ) )
-	{	
-		return false;
-	}
-
-	auto position = vd.Find( vd.POSITION );
 	if( !position )
 	{
 		return false;
 	}
 
+	int numVerts = mesh.PrimaryVertexData->VertexCount;
+	sphericalVerts.resize(numVerts);
+	verts.resize(numVerts);
 	for ( int i = 0; i < numVerts; i++ )
 	{
 		Vector3 p1;
-		if( position->m_dataType == vd.FLOAT16_4 )
+		if( position->Type == GrannyReal16Member )
 		{
-			p1 = *reinterpret_cast<const Vector3_16*>( pVertices + position->m_offset + i * vertSize );
+			p1 = *reinterpret_cast<const Vector3_16*>( pVertices + positionOffset + i * vertSize );
 		}
 		else
 		{
-			p1 = *reinterpret_cast<const Vector3*>( pVertices + position->m_offset + i * vertSize );
+			p1 = *reinterpret_cast<const Vector3*>( pVertices + positionOffset + i * vertSize );
 		}
 		verts[i] = p1;
 		CarthesianToSpherical( p1, sphericalVerts[i] );
@@ -169,33 +165,27 @@ bool ExtractVertices( TriGeometryResMeshData* mesh, std::vector<Vector2>& spheri
 }
 
 // ------------------------------------------------------------------------------------------------------
-EveSpherePinIndexTree::Face* ExtractFaceData( TriGeometryResMeshData* mesh, std::vector<Vector3>& verts, Tr2RenderContext& renderContext )
+EveSpherePinIndexTree::Face* ExtractFaceData( const granny_mesh& mesh, std::vector<Vector3>& verts )
 {
-	if( !mesh->m_allocationsValid )
-	{
-		return 0;
-	}
+	const uint16_t* pShortIndices = nullptr;
+	const uint32_t* pLongIndices = nullptr;
+	int numPrim = 0;
 
-	const unsigned short* pShortIndices = nullptr;
-	const unsigned int  * pLongIndices = nullptr;
-	
-	if( mesh->m_indexAllocation.GetStride() == 2 )
+	if( mesh.PrimaryTopology->Indices )
 	{
-		if( FAILED( mesh->m_indexAllocation.MapForReading( pShortIndices, renderContext ) ) )
-		{
-			return 0;
-		}
+		pLongIndices = reinterpret_cast<const uint32_t*>( mesh.PrimaryTopology->Indices );
+		numPrim = mesh.PrimaryTopology->IndexCount / 3;
+	}
+	else if( mesh.PrimaryTopology->Indices16 )
+	{
+		pShortIndices = mesh.PrimaryTopology->Indices16;
+		numPrim = mesh.PrimaryTopology->Index16Count / 3;
 	}
 	else
 	{
-		if( FAILED( mesh->m_indexAllocation.MapForReading( pLongIndices, renderContext ) ) )
-		{
-			return 0;
-		}
+		return nullptr;
 	}
-	ON_BLOCK_EXIT( [&] { mesh->m_indexAllocation.UnmapForReading( renderContext ); } );
-
-	int numPrim = mesh->m_primitiveCount;
+	
 	EveSpherePinIndexTree::Face* faces = new EveSpherePinIndexTree::Face[numPrim];
 
 	for ( int i = 0; i < numPrim; i++ )
@@ -341,7 +331,8 @@ void ClearTree( EveSpherePinIndexTree::TreeNode* node )
 }
 
 // ------------------------------------------------------------------------------------------------------
-EveSpherePinIndexTree::EveSpherePinIndexTree(void) :
+EveSpherePinIndexTree::EveSpherePinIndexTree( TriGrannyRes* granny ) :
+	m_granny( granny ),
 	m_initialized( 0 ),
 	m_tree( 0 ),
 	m_faces( 0 )
@@ -365,18 +356,23 @@ EveSpherePinIndexTree::~EveSpherePinIndexTree(void)
 }
 
 // ------------------------------------------------------------------------------------------------------
-int EveSpherePinIndexTree::Initialize( TriGeometryResMeshData *mesh )
+int EveSpherePinIndexTree::Initialize()
 {
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-
 	m_initialized = 0;
-
-	if( !mesh )
+	if( !m_granny || !m_granny->IsGood() )
 	{
 		return 0;
 	}
-
-	int triangleCount = mesh->m_primitiveCount;
+	auto mesh = m_granny->GetGrannyMesh( 0 );
+	if( !mesh || !mesh->PrimaryTopology || !mesh->PrimaryVertexData )
+	{
+		return 0;
+	}
+	int triangleCount = mesh->PrimaryTopology->IndexCount / 3;
+	if( triangleCount == 0 )
+	{
+		triangleCount = mesh->PrimaryTopology->Index16Count / 3;
+	}
 
 	if( m_tree )
 	{
@@ -394,9 +390,9 @@ int EveSpherePinIndexTree::Initialize( TriGeometryResMeshData *mesh )
 
 	std::vector<Vector2> sphericalVerts;
 	std::vector<Vector3> verts;
-	ExtractVertices( mesh, sphericalVerts, verts, renderContext );
+	ExtractVertices( *mesh, sphericalVerts, verts );
 
-	m_faces = ExtractFaceData( mesh, verts, renderContext );
+	m_faces = ExtractFaceData( *mesh, verts );
 
 	for( int i = 0; i < triangleCount; i++ )
 	{

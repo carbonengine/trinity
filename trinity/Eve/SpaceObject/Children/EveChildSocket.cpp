@@ -504,7 +504,7 @@ bool EveChildSocket::LoadChild()
 	// unregister the current child
 	UnRegisterComponents();
 
-	CCP_LOG( "Loading child red file...", m_plugResPath.c_str() );
+	CCP_LOG( "Loading child red file %s", m_plugResPath.c_str() );
 	m_plug = BeResMan->LoadObject<EveChildPlug>( m_plugResPath.c_str() );
 	if ( !m_plug )
 	{

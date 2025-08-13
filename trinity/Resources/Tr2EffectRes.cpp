@@ -217,7 +217,7 @@ BlueAsyncRes::LoadingResult Tr2EffectRes::DoLoad()
 
 		if( headerSize == 0 )
 		{
-			CCP_LOGERR( "File \"%s\" contains no compiled effects", GetPath() );
+			CCP_LOGERR( "File \"%ls\" contains no compiled effects", GetPath() );
 			return LR_FAILED;
 		}
 
@@ -294,7 +294,7 @@ BlueAsyncRes::LoadingResult Tr2EffectRes::DoLoad()
 
 		if( headerSize == 0 )
 		{
-			CCP_LOGERR( "File \"%s\" contains no compiled effects", GetPath() );
+			CCP_LOGERR( "File \"%ls\" contains no compiled effects", GetPath() );
 			return LR_FAILED;
 		}
 

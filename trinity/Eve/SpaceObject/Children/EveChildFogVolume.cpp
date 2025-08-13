@@ -16,20 +16,20 @@ EveChildFogVolume::EveChildFogVolume( IRoot* lockobj ) :
 {
 
 	//Set some default values
-	m_settings.value.thickness = 1.0f;
-	m_settings.value.lightDirectionality = 0.5f;
-	m_settings.value.environmentIntensity = 1.0f;
-	m_settings.value.environmentDirectionality = 0.75f;
-	m_settings.value.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
-	m_settings.value.backgroundVisibility = 0.0f;
+	m_settings.thickness = 1.0f;
+	m_settings.lightDirectionality = 0.5f;
+	m_settings.environmentIntensity = 1.0f;
+	m_settings.environmentDirectionality = 0.75f;
+	m_settings.fogColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
+	m_settings.backgroundVisibility = 0.0f;
 
-	m_settings.value.godRayNoiseIntensity = 0.0f;
-	m_settings.value.godRayNoiseFrequency = 15.0f;
-	m_settings.value.godRayNoiseAnimationSpeed = 0.0f;
+	m_settings.godRayNoiseIntensity = 0.0f;
+	m_settings.godRayNoiseFrequency = 15.0f;
+	m_settings.godRayNoiseAnimationSpeed = 0.0f;
 
-	m_settings.value.fogNoiseIntensity = 0.0f;
-	m_settings.value.fogNoiseFrequency = 15.0f;
-	m_settings.value.fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
+	m_settings.fogNoiseIntensity = 0.0f;
+	m_settings.fogNoiseFrequency = 15.0f;
+	m_settings.fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
 
 }
 
@@ -207,7 +207,7 @@ void EveChildFogVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 }
 
-ITr2FroxelFogSettings::FroxelFogWeightedSettings EveChildFogVolume::GetFroxelFogSettings()
+ITr2FroxelFogSettings::FroxelFogSettings* EveChildFogVolume::GetFroxelFogSettings()
 {
-	return m_settings;
+	return &m_settings;
 }

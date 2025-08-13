@@ -46,10 +46,12 @@ void TriValueBinding::CopyValue()
 
 	if( m_copyFunc )
 	{
-		m_copyFunc( (Be::Var*)m_source, (Be::Var*)m_destination, m_scale, m_offset );
-		if( m_notifyPtr )
+		if( m_copyFunc( (Be::Var*)m_source, (Be::Var*)m_destination, m_scale, m_offset ) )
 		{
-			m_notifyPtr->OnModified( (Be::Var*)m_destination );
+			if( m_notifyPtr )
+			{
+				m_notifyPtr->OnModified( (Be::Var*)m_destination );
+			}
 		}
 	}
 	else if( m_copyValueCallable )
@@ -70,233 +72,218 @@ bool TriValueBinding::OnModified( Be::Var* val )
 	return true;
 }
 
-static void Copy8Bit( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+template <typename SrcT, typename DestT = SrcT>
+static bool Copy( void* srcVar, void* dstVar, float, const Vector4& )
 {
-	*(uint8_t*)dstVar = (uint8_t)(*static_cast<bool*>( srcVar ) * scale + offset.x);
+	auto src = static_cast<DestT>( *static_cast<SrcT*>( srcVar ) );
+	auto& dst = *static_cast<DestT*>( dstVar );
+	if( src != dst )
+	{
+		dst = src;
+		return true;
+	}
+	return false;
 }
 
-static void Copy16Bit( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+template <typename SrcT, typename DestT = SrcT, typename TransformT = float>
+static bool TransformAndCopy( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	*static_cast<int16_t*>( dstVar ) = int16_t( *static_cast<float*>( srcVar ) * scale + offset.x );
+	auto src = static_cast<DestT>( static_cast<TransformT>( *static_cast<SrcT*>( srcVar ) ) * scale + offset.x );
+	auto& dst = *static_cast<DestT*>( dstVar );
+	if( src != dst )
+	{
+		dst = src;
+		return true;
+	}
+	return false;
 }
 
-static void Copy32Bit( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+template <typename T>
+static bool TransformAndCopyVector( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	*static_cast<int32_t*>( dstVar ) = int32_t( *static_cast<float*>( srcVar ) * scale + offset.x );
+	auto src = *static_cast<T*>( srcVar ) * scale + *reinterpret_cast<const T*>( &offset );
+	auto& dst = *static_cast<T*>( dstVar );
+	if( src != dst )
+	{
+		dst = src;
+		return true;
+	}
+	return false;
 }
 
-static void Copy32BitFloat( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool ExtractMatrixPos3( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	*static_cast<float*>( dstVar ) = *static_cast<float*>( srcVar ) * scale + offset.x;
+	return TransformAndCopyVector<Vector3>( &static_cast<Matrix*>( srcVar )->GetTranslation(), dstVar, scale, offset );
 }
 
-static void Copy32BitFloatToBool( void* srcVar, void* dstVar, float /*scale*/, const Vector4& /*offset*/ )
+static bool ExtractMatrixPos4( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	*static_cast<bool*>( dstVar ) = *static_cast<float*>( srcVar ) != 0.0f;
+	return TransformAndCopyVector<Vector4>( &static_cast<Matrix*>( srcVar )->GetTranslation(), dstVar, scale, offset );
 }
 
-static void Copy64BitFloat( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	*static_cast<double*>( dstVar ) = *static_cast<double*>( srcVar ) * static_cast<double>( scale ) + static_cast<double>( offset.x );
-}
-
-static void CopyInt64( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	// todo scale
-	*static_cast<int64_t*>( dstVar ) = *static_cast<int64_t*>( srcVar );
-}
-
-static void CopyVector2( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	Vector2 &d = *static_cast<Vector2*>( dstVar );
-	d = *static_cast<Vector2*>( srcVar ) * scale;
-	d.x += offset.x;
-	d.y += offset.y;
-}
-
-static void CopyVector3( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	*static_cast<Vector3*>( dstVar ) = *static_cast<Vector3*>( srcVar ) * scale;
-	Vector3 &d = *static_cast<Vector3*>( dstVar );
-	d.x += offset.x;
-	d.y += offset.y;
-	d.z += offset.z;
-}
-
-static void CopyVector4( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	Vector4 &d = *static_cast<Vector4*>( dstVar );
-	d = *static_cast<Vector4*>( srcVar ) * scale;
-	d.x += offset.x;
-	d.y += offset.y;
-	d.z += offset.z;
-	d.w += offset.w;
-}
-
-static void CopyMatrix( void* srcVar, void* dstVar, float /*scale*/, const Vector4& /*offset*/ )
-{
-	// todo scale
-	memcpy( dstVar, srcVar, 16 * sizeof( float ) );
-}
-
-static void ExtractMatrixPos3( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	CopyVector3( static_cast<float*>( srcVar ) + 3 * 4, dstVar, scale, offset );
-}
-
-static void ExtractMatrixPos4( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	CopyVector4( static_cast<float*>( srcVar ) + 3 * 4, dstVar, scale, offset );	
-}
-
-static void Copy32BitFloatToVector3( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool Copy32BitFloatToVector3( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
 	float value = *static_cast<float*>( srcVar ) * scale;
-	Vector3* dest = static_cast<Vector3*>( dstVar );
-	dest->x = value + offset.x;
-	dest->y = value + offset.y;
-	dest->z = value + offset.z;
+	Vector3 src( value + offset.x, value + offset.y, value + offset.z );
+	Vector3& dest = *static_cast<Vector3*>( dstVar );
+	if( src != dest )
+	{
+		dest = src;
+		return true;
+	}
+	return false;
 }
 
-static void Copy32BitFloatToVector4( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool Copy32BitFloatToVector4( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
 	float value = *static_cast<float*>( srcVar ) * scale;
-	Vector4* dest = static_cast<Vector4*>( dstVar );
-	dest->x = value + offset.x;
-	dest->y = value + offset.y;
-	dest->z = value + offset.z;
-	dest->w = value + offset.w;
+	Vector4 src( value + offset.x, value + offset.y, value + offset.z, value + offset.w );
+	Vector4& dest = *static_cast<Vector4*>( dstVar );
+	if( src != dest )
+	{
+		dest = src;
+		return true;
+	}
+	return false;
 }
 
-static void Copy32BitFloatToDouble( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	*static_cast<double*>( dstVar ) = double( *static_cast<float*>( srcVar ) ) * double( scale ) + double( offset.x );
-}
-
-static void CopyDoubleTo32BitFloat( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	*static_cast<float*>( dstVar ) = float( *static_cast<double*>( srcVar ) * scale + offset.x );
-}
-
-static void CopyTriVectorToVector3( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool CopyTriVectorToVector3( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
 	ITriVectorPtr vp;
 	if( static_cast<IRoot*>( srcVar )->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
 	{
-		vp->CopyVector( static_cast<Vector3*>( dstVar ) );
-		*static_cast<Vector3*>( dstVar ) = *static_cast<Vector3*>( dstVar ) * scale;
-		static_cast<Vector3*>( dstVar )->x += offset.x;
-		static_cast<Vector3*>( dstVar )->y += offset.y;
-		static_cast<Vector3*>( dstVar )->z += offset.z;
+		Vector3 src;
+		vp->CopyVector( &src );
+		src = src * scale + offset.GetXYZ();
+		auto& dst = *static_cast<Vector3*>( dstVar );
+		if( src != dst )
+		{
+			dst = src;
+			return true;
+		}
 	}
+	return false;
 }
 
-static void CopyTriVectorToVector2( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool CopyTriVectorToVector2( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	ITriVectorPtr vp;
-	if( static_cast<IRoot*>( srcVar )->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
+	if( ITriVectorPtr vp = BlueCastPtr( static_cast<IRoot*>( srcVar ) ) )
 	{
 		const Vector3* p = vp->GetVector();
-		Vector2* dst = static_cast<Vector2*>( dstVar );
-		dst->x = p->x * scale + offset.x;
-		dst->y = p->y * scale + offset.y;
+		Vector2 src( p->x * scale + offset.x, p->y * scale + offset.y );
+		Vector2& dst = *static_cast<Vector2*>( dstVar );
+		if( src != dst )
+		{
+			dst = src;
+			return true;
+		}
 	}
+	return false;
 }
 
-static void CopyTriVectorToVector4( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool CopyTriColorToFloatArray( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	ITriVectorPtr vp;
-	if( static_cast<IRoot*>( srcVar )->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
+	if( ITriColorPtr cp = BlueCastPtr( static_cast<IRoot*>( srcVar ) ) )
 	{
-		const Vector3* p = vp->GetVector();
-		Vector4* dst = static_cast<Vector4*>( dstVar );
-		dst->x = p->x * scale + offset.x;
-		dst->y = p->y * scale + offset.y;
-		dst->z = p->z * scale + offset.z;
+		Color color;
+		cp->CopyColor( &color );
+		Vector4 src = Vector4( color ) * scale + offset;
+		Vector4& d = *static_cast<Vector4*>( dstVar );
+		if( src != d )
+		{
+			d = src;
+			return true;
+		}
 	}
+	return false;
 }
 
-static void CopyTriColorToFloatArray( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool CopyTriQuaternionToFloatArray( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	// TODO: Doing this QueryInterface per frame is quite expensive!
-	ITriColorPtr cp;
-	if( static_cast<IRoot*>( srcVar )->QueryInterface( BlueInterfaceIID<ITriColor>(), (void**)&cp, BEQI_SILENT ) )
+	if( ITriQuaternionPtr cp = BlueCastPtr( static_cast<IRoot*>( srcVar ) ) )
 	{
-		cp->CopyColor( static_cast<Color*>( dstVar ) );
-		Vector4 &d = *static_cast<Vector4*>( dstVar );
-		d = d * scale + offset;
+		Quaternion q;
+		cp->CopyQuaternion( &q );
+		Vector4 src( q.x * scale + offset.x, q.y * scale + offset.y, q.z * scale + offset.z, q.w * scale + offset.w );
+		Vector4& d = *static_cast<Vector4*>( dstVar );
+		if( src != d )
+		{
+			d = src;
+			return true;
+		}
 	}
+	return false;
 }
 
-static void CopyTriQuaternionToFloatArray( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool CopyMatrixToTriMatrix( void* srcVar, void* dstVar, float /*scale*/, const Vector4& /*offset*/ )
 {
-	ITriQuaternionPtr cp;
-	if( static_cast<IRoot*>( srcVar )->QueryInterface( BlueInterfaceIID<ITriQuaternion>(), (void**)&cp, BEQI_SILENT ) )
+	if( ITriMatrixPtr mp = BlueCastPtr( static_cast<IRoot*>( srcVar ) ) )
 	{
-		cp->CopyQuaternion( static_cast<Quaternion*>( dstVar ) );
-		Vector4 &d = *static_cast<Vector4*>( dstVar );
-		d = d * scale + offset;
+		auto src = static_cast<Matrix*>( srcVar );
+		auto dst = mp->GetMatrix();
+		if( *src != *dst )
+		{
+			mp->SetMatrix( static_cast<Matrix*>( srcVar ) );
+			return true;
+		}
 	}
+	return false;
 }
 
-static void CopyMatrixToTriMatrix( void* srcVar, void* dstVar, float /*scale*/, const Vector4& /*offset*/ )
+static bool CopyVector3ToTriVector( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	ITriMatrixPtr mp;
-	if( static_cast<IRoot*>( dstVar )->QueryInterface( BlueInterfaceIID<ITriMatrix>(), (void**)&mp, BEQI_SILENT ) )
+	if( ITriVectorPtr vp = BlueCastPtr( static_cast<IRoot*>( srcVar ) ) )
 	{
-		mp->SetMatrix( static_cast<Matrix*>( srcVar ) );
+		Vector3 src = *static_cast<Vector3*>( srcVar ) * scale + offset.GetXYZ();
+		auto dest = *vp->GetVector();
+		if( src != dest )
+		{
+			vp->SetXYZ( src.x, src.y, src.z );
+			return true;
+		}
 	}
+	return false;
 }
 
-static void CopyVector3ToTriVector( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool CopyFloatArrayToTriColor( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	ITriVectorPtr vp;
-	if( static_cast<IRoot*>( dstVar )->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
+	if( ITriColorPtr cp = BlueCastPtr( static_cast<IRoot*>( srcVar ) ) )
 	{
-		Vector3* src = static_cast<Vector3*>( srcVar );
-		vp->SetXYZ( src->x * scale, src->y * scale, src->z * scale );
+		Vector4 src = *static_cast<Color*>( srcVar ) * scale + offset;
+		Vector4 dst = *cp->GetColor();
+		if( src != dst )
+		{
+			cp->SetRGB( src.x, src.y, src.z, src.w );
+			return true;
+		}
 	}
+	return false;
 }
 
-static void CopyVector4ToTriVector( void* srcVar, void* dstVar, float scale, const Vector4& offset )
+static bool CopyFloatArrayToTriQuaternion( void* srcVar, void* dstVar, float scale, const Vector4& offset )
 {
-	ITriVectorPtr vp;
-	if( static_cast<IRoot*>( dstVar )->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
+	if( ITriQuaternionPtr cp = BlueCastPtr( static_cast<IRoot*>( srcVar ) ) )
 	{
-		Vector3* src = static_cast<Vector3*>( srcVar );
-		vp->SetXYZ( src->x * scale, src->y * scale, src->z * scale );
+		Vector4 src = *static_cast<Vector4*>( srcVar ) * scale + offset;
+		Vector4 dst = *reinterpret_cast<const Vector4*>( cp->GetQuaternion() );
+		if( src != dst )
+		{
+			cp->SetXYZW( src.x, src.y, src.z, src.w );
+			return true;
+		}
 	}
-}
-
-static void CopyFloatArrayToTriColor( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	ITriColorPtr cp;
-	if( static_cast<IRoot*>( dstVar )->QueryInterface( BlueInterfaceIID<ITriColor>(), (void**)&cp, BEQI_SILENT ) )
-	{
-		Color* src = static_cast<Color*>( srcVar );
-		cp->SetRGB( src->r * scale, src->g * scale, src->b * scale, src->a * scale );
-	}
-}
-
-static void CopyFloatArrayToTriQuaternion( void* srcVar, void* dstVar, float scale, const Vector4& offset )
-{
-	ITriQuaternionPtr cp;
-	if( static_cast<IRoot*>( dstVar )->QueryInterface( BlueInterfaceIID<ITriQuaternion>(), (void**)&cp, BEQI_SILENT ) )
-	{
-		Quaternion* src = static_cast<Quaternion*>( srcVar );
-		cp->SetXYZW( src->x * scale, src->y * scale, src->z * scale, src->w * scale );
-	}
+	return false;
 }
 
 const Be::VarEntry* TriValueBinding::FindEntry( const char* name, const Be::ClassInfo* type, ssize_t& offs )
 {
 	offs = 0;
 	// Loop over all entries - this double loop covers chaining
-	for (; type; offs += type->mOffsetToParent, type = type->mParentClassInfo)
+	for( ; type; offs += type->mOffsetToParent, type = type->mParentClassInfo )
 	{
 		for( const Be::VarEntry* entry = type->mMemberTable; entry->mName; entry++ )
 		{
-			if( !entry->mGetProperty && strcmp(entry->mName, name) == 0 )
+			if( !entry->mGetProperty && strcmp( entry->mName, name ) == 0 )
 			{
 				return entry;
 			}
@@ -431,7 +418,7 @@ void TriValueBinding::Initialize()
 			rp->GetDestination( dest, size );
 			if( size >= dataSize )
 			{
-				m_destination = (void*)((uint8_t*)dest + m_destItemOffset);
+				m_destination = (void*)( (uint8_t*)dest + m_destItemOffset );
 			}
 			else
 			{
@@ -443,7 +430,7 @@ void TriValueBinding::Initialize()
 
 void TriValueBinding::RerouteDestination( void* dest )
 {
-	m_destination = (void*)((uint8_t*)dest + m_destItemOffset);
+	m_destination = (void*)( (uint8_t*)dest + m_destItemOffset );
 }
 
 size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const Be::VarEntry* dstEntry, size_t dataSize, bool sourceFloatArrayAsFloat, bool destFloatArrayAsFloat )
@@ -461,36 +448,40 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 
 	if( srcEntry->mType == dstEntry->mType )
 	{
-		switch(srcEntry->mType)
+		switch( srcEntry->mType )
 		{
 		case Be::BYTE:
+			m_copyFunc = TransformAndCopy<uint8_t>;
+			dataSize = 1;
+			break;
+
 		case Be::BOOL:
-			m_copyFunc = Copy8Bit;
+			m_copyFunc = TransformAndCopy<bool>;
 			dataSize = 1;
 			break;
 
 		case Be::SHORT:
-			m_copyFunc = Copy16Bit;
+			m_copyFunc = TransformAndCopy<int16_t>;
 			dataSize = 2;
 			break;
 
 		case Be::LONG:
-			m_copyFunc = Copy32Bit;
+			m_copyFunc = TransformAndCopy<int32_t>;
 			dataSize = 4;
 			break;
 
 		case Be::FLOAT:
-			m_copyFunc = Copy32BitFloat;
+			m_copyFunc = TransformAndCopy<float>;
 			dataSize = 4;
 			break;
 
 		case Be::DOUBLE:
-			m_copyFunc = Copy64BitFloat;
+			m_copyFunc = TransformAndCopy<double, double, double>;
 			dataSize = 8;
 			break;
 
 		case Be::INT64:
-			m_copyFunc = CopyInt64;
+			m_copyFunc = Copy<int64_t>;
 			dataSize = 8;
 			break;
 
@@ -499,20 +490,20 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 			{
 				if( destFloatArrayAsFloat )
 				{
-					m_copyFunc = Copy32BitFloat;
-					m_source = (void*)((uint8_t*)m_source + m_sourceItemOffset);
-					m_destination = (void*)((uint8_t*)m_destination + m_destItemOffset);
+					m_copyFunc = TransformAndCopy<float>;
+					m_source = (void*)( (uint8_t*)m_source + m_sourceItemOffset );
+					m_destination = (void*)( (uint8_t*)m_destination + m_destItemOffset );
 					dataSize = 4;
 				}
 				else if( dstEntry->GetFloatArraySize() == 3 )
 				{
-					m_source = (void*)((uint8_t*)m_source + m_sourceItemOffset);
+					m_source = (void*)( (uint8_t*)m_source + m_sourceItemOffset );
 					m_copyFunc = Copy32BitFloatToVector3;
 					dataSize = 12;
 				}
 				else if( dstEntry->GetFloatArraySize() == 4 )
 				{
-					m_source = (void*)((uint8_t*)m_source + m_sourceItemOffset);
+					m_source = (void*)( (uint8_t*)m_source + m_sourceItemOffset );
 					m_copyFunc = Copy32BitFloatToVector4;
 					dataSize = 16;
 				}
@@ -524,19 +515,19 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 					switch( srcEntry->GetFloatArraySize() )
 					{
 					case 2:
-						m_copyFunc = CopyVector2;
+						m_copyFunc = TransformAndCopyVector<Vector2>;
 						dataSize = 12;
 						break;
 					case 3:
-						m_copyFunc = CopyVector3;
+						m_copyFunc = TransformAndCopyVector<Vector3>;
 						dataSize = 12;
 						break;
 					case 4:
-						m_copyFunc = CopyVector4;
+						m_copyFunc = TransformAndCopyVector<Vector4>;
 						dataSize = 16;
 						break;
 					case 16:
-						m_copyFunc = CopyMatrix;
+						m_copyFunc = Copy<Matrix>;
 						dataSize = 64;
 						break;
 
@@ -569,15 +560,15 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 						switch( dstEntry->GetFloatArraySize() )
 						{
 						case 2:
-							m_copyFunc = CopyVector2;
+							m_copyFunc = TransformAndCopyVector<Vector2>;
 							dataSize = 8;
 							break;
 						case 3:
-							m_copyFunc = CopyVector3;
+							m_copyFunc = TransformAndCopyVector<Vector3>;
 							dataSize = 12;
 							break;
 						case 4:
-							m_copyFunc = CopyVector4;
+							m_copyFunc = TransformAndCopyVector<Vector4>;
 							dataSize = 16;
 							break;
 						default:
@@ -605,24 +596,24 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 			break;
 		}
 	}
-	else if( sourceFloatArrayAsFloat && srcEntry->mType == Be::FLOATARRAY && dstEntry->mType == Be::FLOAT  )
+	else if( sourceFloatArrayAsFloat && srcEntry->mType == Be::FLOATARRAY && dstEntry->mType == Be::FLOAT )
 	{
-		m_copyFunc = Copy32BitFloat;
-		m_source = (void*)((uint8_t*)m_source + m_sourceItemOffset);
+		m_copyFunc = TransformAndCopy<float>;
+		m_source = (void*)( (uint8_t*)m_source + m_sourceItemOffset );
 		dataSize = 4;
 	}
-	else if( sourceFloatArrayAsFloat && srcEntry->mType == Be::FLOATARRAY && dstEntry->mType == Be::DOUBLE  )
+	else if( sourceFloatArrayAsFloat && srcEntry->mType == Be::FLOATARRAY && dstEntry->mType == Be::DOUBLE )
 	{
-		m_copyFunc = Copy32BitFloatToDouble;
-		m_source = (void*)((uint8_t*)m_source + m_sourceItemOffset);
-		dataSize = 1;
+		m_copyFunc = TransformAndCopy<float, double, double>;
+		m_source = (void*)( (uint8_t*)m_source + m_sourceItemOffset );
+		dataSize = 8;
 	}
-	else if( srcEntry->mType == Be::FLOAT && dstEntry->mType == Be::FLOATARRAY  )
+	else if( srcEntry->mType == Be::FLOAT && dstEntry->mType == Be::FLOATARRAY )
 	{
 		if( destFloatArrayAsFloat )
 		{
-			m_copyFunc = Copy32BitFloat;
-			m_destination = (void*)((uint8_t*)m_destination + m_destItemOffset);
+			m_copyFunc = TransformAndCopy<float>;
+			m_destination = (void*)( (uint8_t*)m_destination + m_destItemOffset );
 			dataSize = 4;
 		}
 		else if( dstEntry->GetFloatArraySize() == 3 )
@@ -638,23 +629,23 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 	}
 	else if( srcEntry->mType == Be::FLOAT && dstEntry->mType == Be::BOOL )
 	{
-		m_copyFunc = Copy32BitFloatToBool;
+		m_copyFunc = Copy<float, bool>;
 		dataSize = 1;
 	}
 	else if( srcEntry->mType == Be::FLOAT && dstEntry->mType == Be::DOUBLE )
 	{
-		m_copyFunc = Copy32BitFloatToDouble;
+		m_copyFunc = TransformAndCopy<float, double, double>;
 		dataSize = 1;
 	}
 	else if( srcEntry->mType == Be::DOUBLE && dstEntry->mType == Be::FLOAT )
 	{
-		m_copyFunc = CopyDoubleTo32BitFloat;
+		m_copyFunc = TransformAndCopy<double, float>;
 		dataSize = 1;
 	}
 	else if( srcEntry->mType == Be::IROOT )
 	{
 		ITriVectorPtr vp;
-		if( ((IRoot*)m_source)->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
+		if( ( (IRoot*)m_source )->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
 		{
 			if( dstEntry->mType == Be::FLOATARRAY )
 			{
@@ -670,14 +661,15 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 				}
 				else if( dstEntry->GetFloatArraySize() == 4 )
 				{
-					m_copyFunc = CopyTriVectorToVector4;
+					// The source is 3-component, so we can reuse the 3-component copy function
+					m_copyFunc = CopyTriVectorToVector3;
 					dataSize = 16;
 				}
 			}
 		}
 
 		ITriColorPtr cp;
-		if( ((IRoot*)m_source)->QueryInterface( BlueInterfaceIID<ITriColor>(), (void**)&cp, BEQI_SILENT ) )
+		if( ( (IRoot*)m_source )->QueryInterface( BlueInterfaceIID<ITriColor>(), (void**)&cp, BEQI_SILENT ) )
 		{
 			if( dstEntry->mType == Be::FLOATARRAY && dstEntry->GetFloatArraySize() >= 4 )
 			{
@@ -687,7 +679,7 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 		}
 
 		ITriQuaternionPtr qp;
-		if( ((IRoot*)m_source)->QueryInterface( BlueInterfaceIID<ITriQuaternion>(), (void**)&qp, BEQI_SILENT ) )
+		if( ( (IRoot*)m_source )->QueryInterface( BlueInterfaceIID<ITriQuaternion>(), (void**)&qp, BEQI_SILENT ) )
 		{
 			if( dstEntry->mType == Be::FLOATARRAY && dstEntry->GetFloatArraySize() >= 4 )
 			{
@@ -704,7 +696,7 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 	else if( dstEntry->mType == Be::IROOT )
 	{
 		ITriMatrixPtr mp;
-		if( ((IRoot*)m_destination)->QueryInterface( BlueInterfaceIID<ITriMatrix>(), (void**)&mp, BEQI_SILENT ) )
+		if( ( (IRoot*)m_destination )->QueryInterface( BlueInterfaceIID<ITriMatrix>(), (void**)&mp, BEQI_SILENT ) )
 		{
 			if( srcEntry->mType == Be::FLOATARRAY )
 			{
@@ -716,7 +708,7 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 			}
 		}
 		ITriVectorPtr vp;
-		if( ((IRoot*)m_destination)->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
+		if( ( (IRoot*)m_destination )->QueryInterface( BlueInterfaceIID<ITriVector>(), (void**)&vp, BEQI_SILENT ) )
 		{
 			if( srcEntry->mType == Be::FLOATARRAY )
 			{
@@ -727,14 +719,14 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 				}
 				else if( srcEntry->GetFloatArraySize() == 4 )
 				{
-					m_copyFunc = CopyVector4ToTriVector;
+					m_copyFunc = CopyVector3ToTriVector;
 					dataSize = 12;
 				}
 			}
 		}
 
 		ITriColorPtr cp;
-		if( ((IRoot*)m_destination)->QueryInterface( BlueInterfaceIID<ITriColor>(), (void**)&cp, BEQI_SILENT ) )
+		if( ( (IRoot*)m_destination )->QueryInterface( BlueInterfaceIID<ITriColor>(), (void**)&cp, BEQI_SILENT ) )
 		{
 			if( srcEntry->mType == Be::FLOATARRAY && srcEntry->GetFloatArraySize() == 4 )
 			{
@@ -744,7 +736,7 @@ size_t TriValueBinding::DetermineCopyFunc( const Be::VarEntry* srcEntry, const B
 		}
 
 		ITriQuaternionPtr qp;
-		if( ((IRoot*)m_destination)->QueryInterface( BlueInterfaceIID<ITriQuaternion>(), (void**)&qp, BEQI_SILENT ) )
+		if( ( (IRoot*)m_destination )->QueryInterface( BlueInterfaceIID<ITriQuaternion>(), (void**)&qp, BEQI_SILENT ) )
 		{
 			if( srcEntry->mType == Be::FLOATARRAY && srcEntry->GetFloatArraySize() == 4 )
 			{

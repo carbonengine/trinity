@@ -171,6 +171,11 @@ bool Tr2GrannyAnimationLayer::PlayAnimation( const Tr2GrannyAnimation* grannyAni
 				binding = GrannyModelControlsNext( binding ) )
 		{
 			granny_control *control = GrannyGetControlFromBinding( binding );
+			if( !control )
+			{
+				CCP_LOGERR( "Failed to play animation %s: could not create granny control instance. Possible reason is the skeleton mismatch", animName );
+				return false;
+			}
 
 			// Force control to stop at the end of its current loop iteration
 			int loopCount = max(0, GrannyGetControlLoopIndex( control ));
@@ -189,7 +194,12 @@ bool Tr2GrannyAnimationLayer::PlayAnimation( const Tr2GrannyAnimation* grannyAni
 	}
 	startTime += delay;
 
-	granny_control* control = GrannyPlayControlledAnimation( startTime, animation, m_modelInstance );    
+	granny_control* control = GrannyPlayControlledAnimation( startTime, animation, m_modelInstance );  
+	if( !control )
+	{
+		CCP_LOGERR( "Failed to play animation %s: could not create granny control instance. Possible reason is the skeleton mismatch", animName );
+		return false;
+	}
 	GrannyEaseControlIn( control, 0.0f, false );
 	GrannySetControlLoopCount( control, loopCount );
 	GrannySetControlSpeed( control, speed );

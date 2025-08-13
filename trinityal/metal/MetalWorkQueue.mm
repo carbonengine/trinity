@@ -3101,7 +3101,7 @@ ConstantBufferAllocator::Entry MetalWorkQueue::UploadArgumentBuffer( const Tr2Sh
     }
 }
 
-void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t rayGenIndex, uint32_t width, uint32_t height )
+void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t rayGenIndex, uint32_t width, uint32_t height, uint32_t depth )
 {
     CCP_ASSERT( m_isPrimary );
     if (@available(macOS 13.0, *))
@@ -3112,6 +3112,10 @@ void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTa
 
         std::vector<id<MTLResource>> readResources;
         std::vector<id<MTLResource>> writeResources;
+        
+        
+        [computeEncoder setBuffer:shaderTable->GetMaterialBuffer() offset:shaderTable->GetRayGenMaterialOffset(rayGenIndex) atIndex:METAL_SRV_BUFFER_OFFSET + 0];
+        
         
         auto globalInputGpu = UploadArgumentBuffer( pipeline->m_globalSignature, readResources, writeResources );
         
@@ -3138,13 +3142,17 @@ void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTa
         // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
         // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
         MTLSize threadsPerThreadgroup = MTLSizeMake(8, 8, 1);
+        if(depth > 1)
+        {
+            threadsPerThreadgroup = MTLSizeMake(4, 4, 4);
+        }
+            
         MTLSize threadgroups = MTLSizeMake((width  + threadsPerThreadgroup.width  - 1) / threadsPerThreadgroup.width,
                                            (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
-                                           1);
+                                           (depth + threadsPerThreadgroup.depth  - 1) / threadsPerThreadgroup.depth);
         
         // Dispatch the compute kernel to perform ray tracing.
         [computeEncoder dispatchThreadgroups:threadgroups threadsPerThreadgroup:threadsPerThreadgroup];
-        shaderTable->SetGlobalInputBuffer( rayGenIndex, nullptr, 0 );
 
         ReleaseEncoder( false );
     }

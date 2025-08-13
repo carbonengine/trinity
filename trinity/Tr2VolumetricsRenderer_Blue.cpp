@@ -81,87 +81,76 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 
 		MAP_ATTRIBUTE(
 			"thickness",
-			m_froxelFogSettings.thickness,
+			m_froxelFogSettings.thickness.value,
 			"Overall thickness of the fog. A higher thickness makes the fog more intense close up to the camera, making god ray shadows pop more.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"lightDirectionality",
-			m_froxelFogSettings.lightDirectionality,
+			m_froxelFogSettings.lightDirectionality.value,
 			"Scattering directionality for the sun and dynamic local lights. A higher value causes the fog to light up only when looking directly towards light sources.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"environmentIntensity",
-			m_froxelFogSettings.environmentIntensity,
+			m_froxelFogSettings.environmentIntensity.value,
 			"The visibility of the skybox behind the fog, blurred by the directionality setting above.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"environmentDirectionality",
-			m_froxelFogSettings.environmentDirectionality,
+			m_froxelFogSettings.environmentDirectionality.value,
 			"Scattering directionality for the environment map. A lower value causes a more uniform environment color, while a higher value causes the fog to light up only when looking directly at bright areas of the environment map.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"fogColor",
-			m_froxelFogSettings.fogColor,
+			m_froxelFogSettings.fogColor.value,
 			"The color of the fog itself. Changing this will change what light is scattered from the sun, dynamic lights and the fog.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"backgroundVisibility",
-			m_froxelFogSettings.backgroundVisibility,
+			m_froxelFogSettings.backgroundVisibility.value,
 			"How transparent the fog is. Increasing this causes the skybox and objects to become visible, no matter how high the fog thickness is set.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 
 		MAP_ATTRIBUTE(
 			"godRayNoiseIntensity",
-			m_froxelFogSettings.godRayNoiseIntensity,
+			m_froxelFogSettings.godRayNoiseIntensity.value,
 			"The intensity of the 2D noise added to the incoming sun light. This adds god rays even when there are no shadows being cast by objects. \n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"godRayNoiseFrequency",
-			m_froxelFogSettings.godRayNoiseFrequency,
+			m_froxelFogSettings.godRayNoiseFrequency.value,
 			"The frequency of the 2D noise added to the incoming sun light. A higher value makes the god rays larger and less detailed. Around 15.0 is a good starting point. \n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"godRayNoiseAnimationSpeed",
-			m_froxelFogSettings.godRayNoiseAnimationSpeed,
+			m_froxelFogSettings.godRayNoiseAnimationSpeed.value,
 			"The animation speed of the 2D noise added to the incoming sun light. Setting this above 0.0 makes the god rays shift and morph over time. \n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 
 		MAP_ATTRIBUTE(
 			"fogNoiseIntensity",
-			m_froxelFogSettings.fogNoiseIntensity,
+			m_froxelFogSettings.fogNoiseIntensity.value,
 			"The intensity of the 3D noise used to modify the fog color. Setting this to 0 gives you a uniform fog, while values above 0.0 will add more variation to the fog color, similar to puffy clouds. \n "
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"fogNoiseFrequency",
-			m_froxelFogSettings.fogNoiseFrequency,
+			m_froxelFogSettings.fogNoiseFrequency.value,
 			"The frequency of the 3D noise used to modify the fog color. A higher value makes the cloud puffs larger and less detailed, while a smaller value makes the puffs smaller and more numerous. Around 15.0 is a good starting point. \n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 		MAP_ATTRIBUTE(
 			"fogNoiseMovementSpeed",
-			m_froxelFogSettings.fogNoiseMovementSpeed,
+			m_froxelFogSettings.fogNoiseMovementSpeed.value,
 			"The animation speed of the 3D noise used to modify the fog color. This is used to scroll the fog over time, simulating a simple 'wind' effect. \n"
-			":jessica-group: Froxel Fog",
-			Be::READ )
-
-
-
-
-
-		MAP_ATTRIBUTE(
-			"intensity",
-			m_froxelFogSettings.intensity,
-			"Total intensity accumulated from fog volumes. For debugging purposes only.\n"
 			":jessica-group: Froxel Fog",
 			Be::READ )
 

@@ -11,6 +11,7 @@
 #include "EveChildTransform.h"
 #include "ITr2Renderable.h"
 
+
 BLUE_DECLARE( Tr2Effect );
 
 BLUE_CLASS( EveChildQuad ) :
@@ -24,6 +25,8 @@ public:
 
 	EveChildQuad( IRoot* lockobj = NULL );
 	~EveChildQuad();
+
+	static Tr2VertexDefinition& GetQuadDefinition();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild

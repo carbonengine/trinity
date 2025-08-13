@@ -763,7 +763,7 @@ unsigned int Tr2CurveLineSet::AddStraightLine( const Vector3& position1, const V
 // Return value:
 //   The line's id
 // -------------------------------------------------------------
-unsigned int Tr2CurveLineSet::AddCurvedLineCrt( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& middle, float width )
+unsigned int Tr2CurveLineSet::AddCurvedLineCrt( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& middle, float width, Be::OptionalWithDefaultValue<int, 20> segments )
 {
 	LineData newLine;
 
@@ -779,7 +779,7 @@ unsigned int Tr2CurveLineSet::AddCurvedLineCrt( const Vector3& position1, const 
 	newLine.overlayColor = Color( 0.f, 0.f, 0.f, 0.f );
 	newLine.animationSpeed = 0.f;
 	newLine.animationScale = 1.f;
-	newLine.numOfSegments = 20;
+	newLine.numOfSegments = segments > 0 ? segments.GetValue() : 1;
 
 	// use helper function to put this line in list
 	return addLineData( &newLine );

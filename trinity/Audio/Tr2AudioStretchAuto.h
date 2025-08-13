@@ -13,7 +13,7 @@
 #pragma once
 
 #include "Tr2AudioStretchBase.h"
-#include "ITr2Audio.h"
+#include <ITr2Audio.h>
 
 BLUE_CLASS( Tr2AudioStretchAuto ) :
 	public Tr2AudioStretchBase

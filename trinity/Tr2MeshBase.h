@@ -41,7 +41,8 @@ public:
 	Tr2MeshAreaVector* GetAreas( TriBatchType areaType );
 	const Tr2MeshAreaVector* GetAreas( TriBatchType areaType ) const;
 	void CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& areaBlockVector, TriBatchType areaType ) const;
-	void CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksWithSharedMaterial& collector, TriBatchType areaType ) const;
+	void CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBatchAreaBlocksWithSharedMaterial> & collectors, TriBatchType areaType ) const;
+
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
 
@@ -87,8 +88,8 @@ public:
 
 	void UseWithScreenSize( float screenSize, float worldRadius ) const;
 
-	void ReverseIndexBufferIfNeeded();
-	void ReverseIndexBuffers();
+	virtual void ReverseIndexBuffers();
+	bool HasReversedAreas() const;
 
 protected:
 	unsigned int FindJoint( const std::string* boneList, const int numBones, const char* name ) const;
@@ -113,7 +114,6 @@ protected:
 	PTr2MeshAreaVector m_geometryEraserAreas;
 	PTr2MeshAreaVector m_flareAreas;
 	PTr2MeshAreaVector m_distortionAreas;
-	PTr2MeshAreaVector m_decalAdditiveAreas;
 
 	PTr2MeshAreaVector* m_areaLookupArray[ TRIBATCHTYPE_COUNT_OF_BATCH_TYPES ];
 

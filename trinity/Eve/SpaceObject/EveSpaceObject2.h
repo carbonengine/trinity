@@ -105,6 +105,7 @@ struct EveSpaceObjectVSData
 	Matrix customMaskMatrix[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskData[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	uint32_t boneOffsets[4];
+	Vector4 customData = { 0, 0, 0, 0 };
 };
 
 // --------------------------------------------------------------------------------
@@ -128,6 +129,8 @@ struct EveSpaceObjectPSData
 	Vector4 customMaskTargets[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskClamps;
 	Vector4 screenSize;
+
+	Vector4 customData = { 0, 0, 0, 0 };
 };
 
 // ---------------------------------------------------------------------------------------
@@ -147,6 +150,9 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 const Tr2MeshBase* mesh,
 										 float screenSize,
 										 const Matrix* worldTransform );
+
+void UpdateRtPerObjectData( const EveSpaceObjectPSData& psData, const Matrix* instanceTransform, Tr2PrimaryRenderContext& renderContext, Tr2ConstantBufferAL& perObjectData );
+void UpdateRtVertexBufferData( Tr2PrimaryRenderContext& renderContext, Tr2MeshBasePtr mesh, std::vector<Tr2ConstantBufferAL>& vertexBufferDatas, TriBatchType areaType );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -498,8 +504,8 @@ protected:
 	bool m_isPickable;
 	bool m_isAnimated;
 	bool m_castShadow;
-	TriRenderBatchAreaBlocksWithSharedMaterial m_shadowMeshAreas;
-
+	std::vector<TriRenderBatchAreaBlocksWithSharedMaterial> m_shadowMeshOpaqueAreas;
+	
 	Matrix m_worldTransform;
 	Matrix m_invWorldTransform;
 	Vector3 m_worldPosition; // used to expose the position of the object to python

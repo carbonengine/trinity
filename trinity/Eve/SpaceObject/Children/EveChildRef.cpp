@@ -370,7 +370,7 @@ bool EveChildRef::LoadChild()
 	// unregister the old child
 	UnRegisterComponents();
 	
-	CCP_LOG( "Loading child red file...", m_resPath.c_str() );
+	CCP_LOG( "Loading child red file %s", m_resPath.c_str() );
 	m_child = BeResMan->LoadObject<IEveSpaceObjectChild>( m_resPath.c_str() );
 	if ( !m_child )
 	{

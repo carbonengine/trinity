@@ -80,7 +80,7 @@ protected:
 	Vector4 m_offset;
 	INotify* m_notifyPtr;
 
-	typedef void (*CopyFunc)( void* srcVar, void* dstVar, float scale, const Vector4& offset );
+	typedef bool (*CopyFunc)( void* srcVar, void* dstVar, float scale, const Vector4& offset );
 	CopyFunc m_copyFunc;
 
 	BlueScriptCallback m_copyValueCallable;

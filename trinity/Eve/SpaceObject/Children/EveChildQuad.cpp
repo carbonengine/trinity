@@ -14,29 +14,6 @@
 #include "TriFrustum.h"
 
 
-namespace
-{
-	Tr2VertexDefinition& GetQuadDefinition()
-	{
-		static Tr2VertexDefinition def;
-		if( def.empty() )
-		{
-			def.Add( def.FLOAT32_1, def.TEXCOORD, 5 );
-
-			def.Add( def.FLOAT32_4, def.POSITION, 0, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 1, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 2, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 3, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 4, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 5, 1, 1 );
-
-			def.Add( def.FLOAT16_4, def.TEXCOORD, 0, 1, 1 );
-			def.Add( def.FLOAT16_2, def.TEXCOORD, 1, 1, 1 );
-		}
-		return def;
-	}
-}
-
 EveChildQuad::EveChildQuad( IRoot* lockobj ):
 	m_effectKey( 0 ),
 	m_position( 0.f, 0.f, 0.f ),
@@ -54,6 +31,26 @@ EveChildQuad::EveChildQuad( IRoot* lockobj ):
 
 EveChildQuad::~EveChildQuad()
 {
+}
+
+Tr2VertexDefinition& EveChildQuad::GetQuadDefinition()
+{
+	static Tr2VertexDefinition def;
+	if( def.empty() )
+	{
+		def.Add( def.FLOAT32_1, def.TEXCOORD, 5 );
+
+		def.Add( def.FLOAT32_4, def.POSITION, 0, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 1, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 2, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 3, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 4, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 5, 1, 1 );
+
+		def.Add( def.FLOAT16_4, def.TEXCOORD, 0, 1, 1 );
+		def.Add( def.FLOAT16_2, def.TEXCOORD, 1, 1, 1 );
+	}
+	return def;
 }
 
 bool EveChildQuad::Initialize()

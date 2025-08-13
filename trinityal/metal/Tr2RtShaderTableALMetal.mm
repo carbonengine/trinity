@@ -203,6 +203,7 @@ namespace TrinityALImpl
             tables.anyHit.gpuResourceID,
             tables.miss.gpuResourceID,
             tables.closestHit.gpuResourceID,
+            
             m_materialBuffer.gpuAddress + m_missMaterialOffset,
             m_materialBuffer.gpuAddress,
             globalInputAddress
@@ -225,6 +226,18 @@ namespace TrinityALImpl
         {
             [m_functionTables[rayGenIndex].anyHit setBuffer:buffer offset:offset atIndex:1];
         }
+    }
+
+
+    id<MTLBuffer> Tr2RtShaderTableAL::GetMaterialBuffer() const
+    {
+        return m_materialBuffer;
+    }
+
+    NSUInteger Tr2RtShaderTableAL::GetRayGenMaterialOffset(uint32_t rayGenIndex) const
+    {
+        const int BUFFERS_PER_SHADER = sizeof( Tr2RtLocalMaterialDescriptionAL::m_constants ) / sizeof( Tr2RtLocalMaterialDescriptionAL::m_constants[0] );
+        return m_rayGenMaterialOffset + sizeof(uint64_t) * BUFFERS_PER_SHADER * rayGenIndex;
     }
 
     Tr2ALMemoryType Tr2RtShaderTableAL::GetMemoryClass() const
