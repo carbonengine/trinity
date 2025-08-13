@@ -30,7 +30,8 @@ BLUE_INTERFACE( IEveSpaceObject2 ) : public IRoot
 		float clipFactor = 0;
 		float clipFactor2 = 0;
 		const Vector4* shLighting = nullptr;
-	};
+		Vector4 customData = Vector4( 0, 0, 0, 0 );
+};
 
 	virtual void UpdateSyncronous( const EveUpdateContext& updateContext ) = 0;
 	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext ) = 0;

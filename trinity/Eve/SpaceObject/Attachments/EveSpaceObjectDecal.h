@@ -148,6 +148,8 @@ public:
 
 	void SetBatchType( TriBatchType batchType );
 
+	void SetPriority( uint32_t priority );
+
 private:
 	// create
 	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache& meshCache );
@@ -195,6 +197,8 @@ private:
 	float m_minScreenSize;
 	float m_instanceScreenSize;
 	TriBatchType m_batchType;
+
+	uint32_t m_priority;
 
 	unsigned int m_vertexDeclarationOverride;
 	ITr2InstanceData* m_instanceData;

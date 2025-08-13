@@ -43,10 +43,36 @@ class Tr2RenderContext;
 
 struct TriRtGeometryConstants
 {
-	uint32_t indexBufferOffset;
+	uint32_t indexBufferId;
 	uint32_t indexBufferStride;
+
+	uint32_t indexOffset;
+
+	uint32_t vertexBufferId;
 	uint32_t vertexBufferStride;
+
+	uint32_t positionOffset;
+	uint32_t positionType;
+
+	uint32_t normalOffset;
+	uint32_t normalType;
+
+	uint32_t tangentOffset;
+	uint32_t tangentType;
+
+	uint32_t bitangentOffset;
+	uint32_t bitangentType;
+
 	uint32_t texCoord0Offset;
+	uint32_t texCoord0Type;
+
+	uint32_t texCoord1Offset;
+	uint32_t texCoord1Type;
+
+	uint32_t texCoord2Offset;
+	uint32_t texCoord2Type;
+
+	uint32_t padding;
 };
 
 struct TriGeometryResAreaData
@@ -135,7 +161,6 @@ struct TriGeometryResMeshData
 	Vector3 m_maxBounds;
 	Vector4 m_boundingSphere;
 	int32_t m_grannyMeshIndex;
-	bool m_hasPerMeshAreaBoneBindings;
 	bool m_isLodMesh;
 	TrackableStdVector<TriJointBinding> m_jointBindings;
 	TriGeometryResVertexData* m_pVertexData;
@@ -219,7 +244,7 @@ public:
 
 	// Render multiple consecutive areas, starting at 'areaIx'
 	bool RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );
-	bool RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false, bool buildReversed = true );
+	bool RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );
 
 	void RebuildCachedData();
 	
@@ -306,7 +331,7 @@ public:
 	typedef void( *PerTriangleCallback )( void* context, const Vector3& p1, const Vector3& p2, const Vector3& p3 );
 	void ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, void* cbContext );
 
-	void ReverseIndexBuffer( TriGeometryResMeshData& meshData, Tr2RenderContext & renderContext );
+	void RequestReversedIndexBuffers();
 
 	void Reload();
 
@@ -329,6 +354,7 @@ private:
 
 	uint32_t m_forcedLodIndex = 0;
 	bool m_forceLod = false;
+	bool m_reversedIndexBuffersRequested = false;
 
 private:
 	// Provide the functions that do the actual work of loading and preparing.
@@ -344,8 +370,7 @@ private:
 	bool SetupMeshes( granny_file_info* gi );
 	void SetupSkeletons( granny_file_info* gi );
 	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
-	void DetermineAreaBones( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
-	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
+	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi, int bytesPerVertex );
 	
 	// Create D3D mesh from data in m_pGrannyFile
 	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );

@@ -25,6 +25,9 @@ public:
 	// IEveVolume
 	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& parentTransform, const Color& baseColor ) override;
 	float GetIntensity( Vector3 position ) override;
+	uint32_t RegisterForChanges( const std::function<void()>& callBack ) override;
+	void UnregisterForChanges( uint32_t callbackID ) override;
+	void GeneratePointsInVolume( std::vector<Vector3> & points, size_t howManyToAdd, bool excludeInnerVolume, float fallOffFactor ) override;
 	const CcpMath::Sphere GetBoundingSphere() const override;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -53,8 +56,9 @@ private:
 	Matrix m_inverseRotationMatrix;
 
 	CcpMath::Sphere m_boundingSphere;
-	std::function<void()> m_notifyParentFunc;
-	bool m_notifyParent;
+
+	std::map<int, std::function<void()>> m_onChangeCallbacks;
+	uint32_t m_nextCallbackID;
 
 };
 

@@ -55,6 +55,8 @@ struct Tr2RenderContextBase: public IRoot, public ITr2RenderContextEvents
 	// be minimized by taking advantage of sorting that has been done.
 	void RenderBatchesSortedByEffect( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName = DEFAULT_TECHNIQUE );
 
+	bool TechniqueInBatch( const std::vector<Tr2RenderBatch>& batches, const BlueSharedString& techniqueName = DEFAULT_TECHNIQUE );
+
 	Tr2ConstantBufferAL* GetConstantBuffer( int buffer ) { return &m_perObjectConstantBuffers[buffer]; }
 protected:
 	Tr2ConstantBufferAL		m_perObjectConstantBuffers[ Tr2RenderContextEnum::CBUFFER_COUNT ];

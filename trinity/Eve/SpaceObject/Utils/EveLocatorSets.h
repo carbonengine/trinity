@@ -13,6 +13,7 @@ struct Locator
 {
 	Vector3 position;
 	Quaternion direction;
+	Vector3 scale;
 	int boneIndex;
 };
 BLUE_DECLARE_STRUCTURE_LIST( Locator );

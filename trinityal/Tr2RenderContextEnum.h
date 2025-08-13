@@ -519,4 +519,10 @@ namespace Tr2LockType
 	};
 }
 
+enum class Tr2UseResourceDestination
+{
+    RENDER,
+    COMPUTE,
+};
+
 #endif // Tr2RenderContextEnum_h

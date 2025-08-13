@@ -5,7 +5,7 @@
 //
 
 #pragma once
-#include "Audio/ITr2Audio.h"
+#include <ITr2Audio.h>
 #include "Eve/IEveFiringEffectElement.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Tr2DebugRenderer.h"

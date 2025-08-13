@@ -15,6 +15,27 @@
 #include "winuser.h"
 #endif
 
+
+#if TBB_ENABLED
+	#include <oneapi/tbb.h>
+
+	size_t g_currentThreadCount = tbb::info::default_concurrency();
+	tbb::global_control* g_threadCountControl = new tbb::global_control( tbb::global_control::max_allowed_parallelism, g_currentThreadCount );
+
+
+	void SetThreadCount( size_t newThreadCount )
+	{
+		if( g_currentThreadCount != newThreadCount )
+		{
+			CCP_LOGNOTICE( "Thread count changed from %zu to %zu.", g_currentThreadCount, newThreadCount );
+			g_currentThreadCount = newThreadCount;
+			delete g_threadCountControl;
+			g_threadCountControl = new tbb::global_control( tbb::global_control::max_allowed_parallelism, newThreadCount );
+		}
+	}
+
+#endif 
+
 using namespace Tr2RenderContextEnum;
 
 #ifdef _WIN32
@@ -24,6 +45,9 @@ extern std::vector<HANDLE> g_D3DCreatedHeaps;
 #if defined(__ANDROID__)
 extern int g_windowResized;
 #endif
+
+bool g_masstestSelectRandomUpscaler = false;
+TRI_REGISTER_SETTING( "masstestSelectRandomUpscaler", g_masstestSelectRandomUpscaler );
 
 namespace
 {
@@ -1102,6 +1126,9 @@ bool TriDevice::Render()
 	// We need to throttle the client right after Present call, so that GPU can have a break
 	Throttle();
 
+
+
+
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	Tr2SyncToGpu::GetInstance().Tick();
@@ -1170,24 +1197,26 @@ bool TriDevice::SupportsRenderTargetFormat( Tr2RenderContextEnum::PixelFormat fo
 
 void TriDevice::Throttle() const
 {
-	if( !m_allowThrottling )
-	{
-		return;
-	}
-
 	uint32_t sleepTime = 0;
+	uint32_t numThreads = std::max( tbb::info::default_concurrency(), 1 );
 
-	if( GetThrottling( WINDOW_OUT_OF_FOCUS ) )
+	if( m_allowThrottling )
 	{
-		sleepTime = std::max( sleepTime, 10u );
-	}
-	if( GetThrottling( THERMAL_STATE ) )
-	{
-		sleepTime = std::max( sleepTime, 20u );
-	}
-	if( GetThrottling( WINDOW_HIDDEN ) )
-	{
-		sleepTime = std::max( sleepTime, 20u );
+		if( GetThrottling( WINDOW_OUT_OF_FOCUS ) )
+		{
+			sleepTime = std::max( sleepTime, 10u );
+			numThreads = std::max( numThreads / 4, 1u ); //Reduce thread count to 1/4th, clamped to at least 1.
+		}
+		if( GetThrottling( THERMAL_STATE ) )
+		{
+			sleepTime = std::max( sleepTime, 20u );
+			numThreads = 1;
+		}
+		if( GetThrottling( WINDOW_HIDDEN ) )
+		{
+			sleepTime = std::max( sleepTime, 20u );
+			numThreads = 1;
+		}
 	}
 
 	if( sleepTime > 0 )
@@ -1195,6 +1224,10 @@ void TriDevice::Throttle() const
 		CCP_STATS_SCOPED_TIME( throttleTime );
 		CcpThreadSleep( sleepTime );
 	}
+
+#if TBB_ENABLED
+	SetThreadCount( numThreads );
+#endif
 }
 
 bool TriDevice::ShouldSkipFrame() const
@@ -1283,6 +1316,34 @@ void TriDevice::CreateUpscalingTechnique( uint32_t adapter )
 
 void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration )
 {
+	if( g_masstestSelectRandomUpscaler )
+	{ // TEMP MASSTEST CODE, DO NOT KEEP : START
+		// The first time we hit this code path is during loading the settings from py, here we override the setting for the first call only.
+		// All future calls will skip this code if the user decides to switch upscaler or turn it off
+		static bool codeExecuted = false;
+		if( !codeExecuted )
+		{
+			codeExecuted = true;
+
+			// Generate a list of supported techniques that dose not include FSR1
+			std::vector<Tr2UpscalingTechniqueInfo> reducedSupportedUpscalingTechniques;
+
+			for( int i = 0; i < m_supportedUpscalingTechniques.size(); i++ )
+			{
+				if( m_supportedUpscalingTechniques[i].technique != Tr2UpscalingAL::Technique::FSR1 )
+				{
+					reducedSupportedUpscalingTechniques.push_back( m_supportedUpscalingTechniques[i] );
+				}
+			}
+
+			if( reducedSupportedUpscalingTechniques.size() > 0 )
+			{
+				technique = (Tr2UpscalingAL::Technique)reducedSupportedUpscalingTechniques[rand() % reducedSupportedUpscalingTechniques.size()].technique;
+				setting = Tr2UpscalingAL::BALANCED;
+			}
+		}
+	} // TEMP MASSTEST CODE, DO NOT KEEP : END
+
 	m_upscalingChanged = technique != m_upscalingTechnique || setting != m_upscalingSetting || frameGeneration != m_upscalingWithFrameGeneration;
 	m_upscalingTechnique = technique;
 	m_upscalingSetting = setting;

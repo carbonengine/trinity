@@ -975,7 +975,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 				os << " )";
 			}
 		}
-		if( node->GetChildOrNull( 1 ) )
+		if( node->GetChildOrNull( 1 ) && !node->GetType().IsSampler() )
 		{
 			os << " = " << Child( 1 );
 		}
@@ -1635,6 +1635,34 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		else
 		{
 			os << node->GetType();
+			if( symbol->type.arrayDimensions > 0 && symbol->type.IsBuffer() )
+			{
+				isArrayOfTextures = true;
+				for( int i = 0; i < node->GetType().arrayDimensions; ++i )
+				{
+					if( node->GetType().IsBuffer() )
+					{
+						switch( symbol->addressSpace )
+						{
+						case AddressSpace::Constant:
+							os << " constant ";
+							break;
+						case AddressSpace::Device:
+							os << " device ";
+							break;
+						case AddressSpace::Thread:
+							os << " thread ";
+							break;
+						case AddressSpace::Threadgroup:
+							os << " threadgroup ";
+							break;
+						default:
+							break;
+						}
+					}
+					os << '*';
+				}
+			}
 		}
 		if( isReference )
 		{
@@ -1668,7 +1696,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 				}
 				else if( reg.registerType == MetalRegister::SRV )
 				{
-					os << " [[ SRV(" << reg.registerNumber << ") ]]";
+					os << " [[ buffer(" << reg.registerNumber << ") ]]";
 				}
 				else if( reg.registerType == MetalRegister::Texture )
 				{
@@ -1682,11 +1710,11 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 				{
 					if( node->GetType().IsTexture() )
 					{
-						os << " [[ UAVT(" << reg.registerNumber << ") ]]";
+						os << " [[ texture(" << reg.registerNumber << ") ]]";
 					}
 					else
 					{
-						os << " [[ UAV(" << reg.registerNumber << ") ]]";
+						os << " [[ buffer(" << reg.registerNumber << ") ]]";
 					}
 				}
 				else if( reg.registerType == MetalRegister::ThreadGroup )

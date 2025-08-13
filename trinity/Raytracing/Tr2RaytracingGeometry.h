@@ -3,6 +3,9 @@
 #include "include/ITr2GpuBuffer.h"
 #include "Shader/Tr2Effect.h"
 
+BLUE_DECLARE( Tr2MeshArea );
+BLUE_DECLARE_VECTOR( Tr2MeshArea );
+
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2RaytracingGeometry );
@@ -93,7 +96,7 @@ class Tr2RaytracingMeshArea
 public:
 	Tr2RaytracingMeshArea( uint32_t index );
 	const Tr2RtBottomLevelAccelerationStructureAL& BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
-	const Tr2ConstantBufferAL& GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const;
+	const Tr2ConstantBufferAL* GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const;
 	uint32_t GetAreaIndex(){ return m_areaIndex; }
 	void MarkBlasOutdated() { m_blasOutdated = true; }
 	bool IsBlasOutdated() const { return m_blasOutdated || !m_blas.IsValid(); }
@@ -115,12 +118,14 @@ public:
 	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
 	void BeginSceneUpdate();
 	void EndSceneUpdate( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
-	void AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform );
+	void AddGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area, Tr2Material * material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform );
+	void AddBindlessResources( const Tr2MeshAreaVector& areas, const Tr2RaytracingMesh& rtMesh );
 	bool HasGeometry() const;
 
 	void ReleaseResources( TriStorage s );
     
     Tr2RtTopLevelAccelerationStructureAL GetTLAS() const;
+	const Tr2BindlessResourcesAL& GetBindlessResources() const;
 
 	const BlueSharedString m_rtShadowTechniqueName = BlueSharedString( "RtShadow" );
 private:
@@ -128,6 +133,7 @@ private:
 	{
 		uint32_t positionOffset;
 		uint32_t boneOffset;
+		uint32_t boneWeightsOffset;
 	};
 
 	struct GeometryData
@@ -136,6 +142,7 @@ private:
 		Tr2RaytracingMeshArea* area;
 		const Tr2Material* material;
 		const Tr2ConstantBufferAL* perObjectData;
+		const Tr2ConstantBufferAL* vertexBufferData;
 		Matrix worldTransform;
 		uint32_t materialIndex;
 		bool isTransparent;
@@ -159,6 +166,8 @@ private:
 	std::unordered_map<unsigned, VtxOffsets> m_offsets;
 
 	Tr2BufferAL m_skinnedVertices;
+
+	Tr2BindlessResourcesAL m_usedResources;
 };
 
 TYPEDEF_BLUECLASS( Tr2RaytracingGeometry );

@@ -18,6 +18,11 @@ TRI_REGISTER_SETTING( "upscalingDebugView", g_upscalingDebugView );
 bool g_frameGenDebugView = false;
 TRI_REGISTER_SETTING( "frameGenDebugView", g_frameGenDebugView );
 
+bool g_newBloom = true;
+TRI_REGISTER_SETTING( "newBloom", g_newBloom );
+
+int32_t g_dynamicExposureQualityRequirement = TriStepRenderPostProcess::PostProcessingQuality::MEDIUM;
+TRI_REGISTER_SETTING( "dynamicExposureQualityRequirement", g_dynamicExposureQualityRequirement );
 
 namespace
 {
@@ -170,7 +175,88 @@ BlueSharedString GetFinalizeTypeOptionValue( BlurFinalize finalize )
 	}
 	return BlueSharedString( "BLUR_FINALIZE_TYPE_NONE" );
 }
+}
 
+namespace GaussianDistribution
+{
+
+float NormalDistribution( float x, float sigma, float weight )
+{
+	const float dx = std::abs( x );
+	const float clampedOneMinusDX = std::max( 0.0f, 1.0f - ( dx * dx ) );
+
+	if( weight > 1.0f )
+	{
+		return std::pow( clampedOneMinusDX, weight );
+	}
+	const float gaussian = std::exp( -TRI_PI * 5.0f * ( ( dx * dx ) / ( sigma * sigma ) ) );
+	return Lerp( gaussian, clampedOneMinusDX, weight );
+}
+
+GaussianData CalculateGaussianPassParameters( float radius, float centerWeight, float normalizingFactor, Vector3 overallWeight, Vector2 direction )
+{
+
+	float clampedRadius = std::clamp( radius, 0.0001f, (float)Bloom::MAX_FILTER_STEPS - 1 );
+	int integerRadius = (int)std::ceilf( clampedRadius );
+
+	std::vector<std::pair<float, float>> taps;
+	taps.reserve( Bloom::MAX_FILTER_STEPS );
+	float weightSum = 0;
+	// calculate the weights and offsets
+	for( int i = -integerRadius; i <= integerRadius; i += 2 )
+	{
+		float weight = NormalDistribution( (float)i, clampedRadius, centerWeight );
+
+		// if we are in the last step, we don't want to tap outside of the radius, so we will set this to 0
+		float offsetWeight = i == integerRadius ? 0 : NormalDistribution( (float)i + 1, clampedRadius, centerWeight );
+
+		float sampleWeight = weight + offsetWeight;
+		if( sampleWeight == 0 )
+		{
+			continue;
+		}
+		float offset = ( (float)i + offsetWeight / sampleWeight ) * normalizingFactor;
+
+		// add the weight to the sum, so pixels that are outside of the screen still decrease the values of the pixels that land inside of the screen
+		// this is done so the pixels inside of the screen don't become brighter
+		weightSum += weight + offsetWeight;
+
+		if( offset < -1 || offset > 1 )
+		{
+			continue;
+		}
+
+		taps.push_back( std::make_pair( sampleWeight, offset ) );
+	}
+
+	// Since we pack the 2x weight and offset into a vector4 it is important that it is a multiple of 2...
+	if( taps.size() % 2 > 0 )
+	{
+		taps.push_back( std::make_pair( 0.0f, 0.0f ) );
+	}
+
+	GaussianData data;
+	data.overallWeight = overallWeight;
+	data.count = (uint32_t)taps.size() / 2;
+	
+	std::fill( std::begin( data.weightOffset ), std::end( data.weightOffset ), Vector4(0,0,0,0) );
+
+	uint32_t index = 0;
+
+	// Fill in the data
+	for( uint32_t i = 0; i < taps.size(); i+=2 )
+	{
+		// pack 2 weight and offset into a vector4
+		float weight1 = taps[i].first / weightSum;
+		float offset1 = taps[i].second;
+		float weight2 = taps[i + 1].first / weightSum;
+		float offset2 = taps[i + 1].second;
+
+		data.weightOffset[index++] = Vector4(weight1, offset1, weight2, offset2);
+	}
+
+	return data;
+}
 }
 
 namespace AMDSharpening
@@ -193,7 +279,9 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_vignetteEnabled( false ),
 	m_sceneDirty( false ),
 	m_lastFrameTime( std::numeric_limits<long long>().max() ),
-	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID ),
+	m_bloomDebugMode( BloomDebugMode::BLOOM_DEBUG_NONE ),
+	m_useNewBloom( g_newBloom )
 {
 	m_renderInfo.CreateInstance();
 	m_tonemappingEffect.CreateInstance();
@@ -201,7 +289,8 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_tonemappingEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ToneMapping.fx" );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteDetailScroll" ), Vector4( 0.0, 0.0, 0.0, 0.0 ) );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "GrainColorAmount" ), 0.600000023842f );
-	m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_TOGGLE" ), BlueSharedString( "TONE_MAPPING_ENABLED" ) );
+	m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_METHOD" ), BlueSharedString( "TONE_MAPPING_ACES" ) );
+	m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_ENABLED" ) );
 	m_tonemappingEffect->SetOption( BlueSharedString( "DESATURATE_TOGGLE" ), BlueSharedString( "DESATURATE_DISABLED" ) );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteColor" ), Vector4( 1.0, 1.0, 1.0, 1.0 ) );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteSineRange" ), Vector4( 0.0, 1.0, 0.0, 0.0 ) );
@@ -260,7 +349,7 @@ TriStepRenderPostProcess::~TriStepRenderPostProcess( void )
 	{
 		m_scene->SetVelocityMap( nullptr );
 	}
-
+	
 	m_scene = nullptr;
 }
 
@@ -303,6 +392,7 @@ void TriStepRenderPostProcess::SetupVelocityMap()
 bool TriStepRenderPostProcess::OnModified( Be::Var* value )
 {
 	m_sceneDirty = true;
+
 	return true;
 }
 
@@ -347,6 +437,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	Tr2PPTaaEffectPtr taa = nullptr;
 	Tr2PPDepthOfFieldEffectPtr dof = nullptr;
 	Tr2PPTonemappingEffectPtr tonemapping = nullptr;
+	Tr2PPColorCorrectionEffectPtr colorCorrection = nullptr;
 
 	if( postProcess != nullptr )
 	{
@@ -357,7 +448,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			godrays = postProcess->GetGodRays();
 			filmGrain = postProcess->GetFilmGrain();
 			fog = postProcess->GetFog();
-			dynamicExposure = postProcess->GetDynamicExposure();
 		case MEDIUM:
 			bloom = postProcess->GetBloom();
 			desaturate = postProcess->GetDesaturate();
@@ -369,8 +459,11 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			postProcess->GetLuts( luts );
 		default:
 			taa = postProcess->GetTaa();
+			colorCorrection = postProcess->GetColorCorrection();
 			break;
 		}
+
+		dynamicExposure = m_quality >= g_dynamicExposureQualityRequirement ? postProcess->GetDynamicExposure() : nullptr;
 
 		if( g_postprocessDofEnabled )
 		{
@@ -396,6 +489,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		SetDirtyIfNotNull( fog );
 		SetDirtyIfNotNull( taa );
 		SetDirtyIfNotNull( dof );
+		SetDirtyIfNotNull( tonemapping );
+		SetDirtyIfNotNull( colorCorrection );
 	}
 	// Processing effects will set velocity map if it is needed
 	m_scene->SetVelocityMap( nullptr );
@@ -487,48 +582,32 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), upscaledSource );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "OutputGamma" ), g_eveSpaceSceneGammaBrightness );
 
+	if( bloom && m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+	{
+		m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), bloomTexture );
+	}
+
 	ProcessDesaturate( desaturate );
 	ProcessFade( fade );
 	ProcessLut( luts );
 	ProcessVignette( vignette );
 
-	if( postProcess )
+	if( colorCorrection )
 	{
-		static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
-		m_tonemappingEffect->SetParameter( WhiteTemperature, postProcess->m_whiteTemperature );
-		static auto WhiteTint = BlueSharedString( "WhiteTint" );
-		m_tonemappingEffect->SetParameter( WhiteTint, postProcess->m_whiteTint );
-		static auto ColorSaturation = BlueSharedString( "ColorSaturation" );
-		m_tonemappingEffect->SetParameter( ColorSaturation, postProcess->m_colorSaturation );
-		static auto ColorContrast = BlueSharedString( "ColorContrast" );
-		m_tonemappingEffect->SetParameter( ColorContrast, postProcess->m_colorContrast );
-		static auto ColorGamma = BlueSharedString( "ColorGamma" );
-		m_tonemappingEffect->SetParameter( ColorGamma, postProcess->m_colorGamma );
-		static auto ColorGain = BlueSharedString( "ColorGain" );
-		m_tonemappingEffect->SetParameter( ColorGain, postProcess->m_colorGain );
-		static auto ColorOffset = BlueSharedString( "ColorOffset" );
-		m_tonemappingEffect->SetParameter( ColorOffset, postProcess->m_colorOffset );
+		ProcessColorCorrection( colorCorrection );
+	}
+	else
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_DISABLED" ) );
 	}
 
 	if( tonemapping )
 	{
-		static auto LinearAngle = BlueSharedString( "LinearAngle" );
-		m_tonemappingEffect->SetParameter( LinearAngle, tonemapping->m_linearAngle );
-
-		static auto LinearStrength = BlueSharedString( "LinearStrength" );
-		m_tonemappingEffect->SetParameter( LinearStrength, tonemapping->m_linearStrength );
-
-		static auto ShoulderStrength = BlueSharedString( "ShoulderStrength" );
-		m_tonemappingEffect->SetParameter( ShoulderStrength, tonemapping->m_shoulderStrength );
-
-		static auto ToeDenominator = BlueSharedString( "ToeDenominator" );
-		m_tonemappingEffect->SetParameter( ToeDenominator, tonemapping->m_toeDenominator );
-
-		static auto ToeNumerator = BlueSharedString( "ToeNumerator" );
-		m_tonemappingEffect->SetParameter( ToeNumerator, tonemapping->m_toeNumerator );
-
-		static auto WhiteScale = BlueSharedString( "WhiteScale" );
-		m_tonemappingEffect->SetParameter( WhiteScale, tonemapping->m_whiteScale );
+		ProcessTonemapping( tonemapping );
+	}
+	else
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_METHOD" ), BlueSharedString( "TONE_MAPPING_DISABLED" ) );
 	}
 
 	bool doGrain = ProcessFilmGrain( filmGrain );
@@ -733,7 +812,7 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 	{
 		bool exposureDependant = bloom->m_exposureDependency && m_exposure != nullptr;
 
-		if( m_bloomHighPassFilter == nullptr )
+		if( m_downSamplerLuminancePreserve == nullptr || m_downSampler == nullptr || m_upsamplerVertical == nullptr || m_upsamplerHorizontal == nullptr )
 		{
 			m_bloomHighPassFilter.CreateInstance();
 			m_bloomHighPassFilter->StartUpdate();
@@ -748,17 +827,54 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 			m_bloomHighPassFilter->EndUpdate();
 
 			m_tonemappingEffect->StartUpdate();
-			m_tonemappingEffect->SetParameter( BlueSharedString( "BloomBrightness" ), bloom->m_bloomBrightness );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrimeWeight" ), bloom->m_grimeWeight );
 			m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( "Grime" ), bloom->m_grimePath.c_str() );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			if(m_useNewBloom)
+			{
+				m_tonemappingEffect->SetParameter( BlueSharedString( "BloomBrightness" ), 1.0f );
+			}
+			else
+			{
+				m_tonemappingEffect->SetParameter( BlueSharedString( "BloomBrightness" ), bloom->m_bloomBrightness );
+			}
 
 			m_tonemappingEffect->EndUpdate();
+
+			m_downSamplerLuminancePreserve.CreateInstance();
+			m_downSamplerLuminancePreserve->StartUpdate();
+			m_downSamplerLuminancePreserve->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Downsample.fx" );
+			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
+			m_downSamplerLuminancePreserve->SetOption( BlueSharedString( "EXPOSURE_DEPENDANCE" ), hasDynamicExposure ? BlueSharedString( "EXPOSURE_DEPENDANCE_ON" ) : BlueSharedString("EXPOSURE_DEPENDANCE_OFF" ));
+			m_downSamplerLuminancePreserve->SetOption( BlueSharedString( "LUNINANCE_PRESERVE" ), BlueSharedString( "LUNINANCE_PRESERVE_ON" ) );
+			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
+
+			m_downSamplerLuminancePreserve->EndUpdate();
+			
+			m_downSampler.CreateInstance();
+			m_downSampler->StartUpdate();
+			m_downSampler->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Downsample.fx" );
+			m_downSampler->SetOption( BlueSharedString( "LUNINANCE_PRESERVE" ), BlueSharedString( "LUNINANCE_PRESERVE_OFF" ) );
+			m_downSampler->EndUpdate();
+			
+			m_upsamplerHorizontal.CreateInstance();
+			m_upsamplerHorizontal->StartUpdate();
+			m_upsamplerHorizontal->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Upsample.fx" );
+			m_upsamplerHorizontal->EndUpdate();
+
+			m_upsamplerVertical.CreateInstance();
+			m_upsamplerVertical->StartUpdate();
+			m_upsamplerVertical->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Upsample.fx" );
+			m_upsamplerVertical->SetOption( BlueSharedString( "UPSAMPLING_STEP" ), BlueSharedString( "UPSAMPLING_STEP_SECOND" ) );
+			m_upsamplerVertical->EndUpdate();
+
+			m_bloomConstantBuffer = Tr2ConstantBufferAL();
 
 			bloom->SetDirty( false );
 		}
 		else if( bloom->IsDirty() )
 		{
+			
 			m_bloomHighPassFilter->StartUpdate();
 			m_bloomHighPassFilter->SetParameter( BlueSharedString( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
 			m_bloomHighPassFilter->SetParameter( BlueSharedString( "LuminanceScale" ), bloom->m_luminanceScale );
@@ -769,16 +885,29 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 			}
 			m_bloomHighPassFilter->EndUpdate();
 
+			m_downSamplerLuminancePreserve->StartUpdate();
+			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
+			m_downSamplerLuminancePreserve->EndUpdate();
+
 			m_tonemappingEffect->StartUpdate();
-			m_tonemappingEffect->SetParameter( BlueSharedString( "BloomBrightness" ), bloom->m_bloomBrightness );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrimeWeight" ), bloom->m_grimeWeight );
+			if( m_useNewBloom )
+			{
+				m_tonemappingEffect->SetParameter( BlueSharedString( "BloomBrightness" ), 1.0f );
+			}
+			else
+			{
+				m_tonemappingEffect->SetParameter( BlueSharedString( "BloomBrightness" ), bloom->m_bloomBrightness );
+			}
 
 			TriTextureParameter* resource = dynamic_cast<TriTextureParameter*>( m_tonemappingEffect->GetResourceByName( "Grime" ) );
 			resource->SetResourcePath( bloom->m_grimePath.c_str() );
 
 			m_tonemappingEffect->EndUpdate();
-
+			
+			
 			bloom->SetDirty( false );
+			
 		}
 	}
 	else
@@ -786,7 +915,11 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 		if( m_bloomHighPassFilter != nullptr )
 		{
 			m_bloomHighPassFilter = nullptr;
-
+			m_downSamplerLuminancePreserve = nullptr;
+			m_downSampler = nullptr;
+			m_upsamplerVertical = nullptr;
+			m_upsamplerHorizontal = nullptr;
+			m_bloomDebugShader = nullptr;
 			m_tonemappingEffect->StartUpdate();
 			m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), m_renderInfo->GetBlackTexture() );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "Grime" ), m_renderInfo->GetBlackTexture() );
@@ -797,21 +930,216 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 	return bloom != nullptr && bloom->IsActive();
 }
 
-Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom )
+
+Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2PostProcessRenderInfo::Texture& dest, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom )
 {
 	GPU_REGION( renderContext, "Bloom" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	auto rt1 = m_renderInfo->GetTempTexture( "Bloom", 0.5f );
-	m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
-	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
+	if( !m_useNewBloom )
+	{
+		auto rt1 = m_renderInfo->GetTempTexture( "Bloom", 0.5f );
+		m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
+		DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
 
-	auto blurContext = PostProcessBlur::CreateBlurContext( 0.5f );
-	Blur( *rt1, *rt1, renderContext, blurContext);
+		auto blurContext = PostProcessBlur::CreateBlurContext( 0.5f );
+		Blur( *rt1, *rt1, renderContext, blurContext );
 
-	return rt1;
+		return rt1;
+	}
+
+	int depth = 0;
+	auto black = m_renderInfo->GetBlackTexture();
+
+	float currentSize = 0.5f;
+	uint32_t minDim = std::min( dest.GetRenderTarget()->GetHeight(), dest.GetRenderTarget()->GetWidth() );
+
+	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> downsampleTexture;
+	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleHorizontalTexture;
+	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleTexture;
+
+	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
+	{
+		if( (uint32_t)( (float)minDim * currentSize ) == 0 )
+		{
+			break;
+		}
+		auto name = "Downsample_" + std::to_string( i );
+		downsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
+
+		name = "Upsample_" + std::to_string( i );
+		upsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
+
+		if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+		{
+			name = "Upsample_Horizontal_" + std::to_string( i );
+			upsampleHorizontalTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
+		}
+		
+		currentSize *= 0.5f;
+		++depth;
+	}
+
+	auto lastRt = dest;
+	{
+		GPU_REGION( renderContext, "Downsample" )
+		for( int i = 0; i < depth; ++i )
+		{
+			std::string name = "Downsample Step " + std::to_string( i );
+			GPU_REGION( renderContext, name.c_str() );
+			auto rt = downsampleTexture[i];
+			auto effect = i == 0 && bloom->m_luminanceThreshold > -1.0f ? m_downSamplerLuminancePreserve : m_downSampler;
+			auto invTexelSize = Vector2( 1.0f / (float)lastRt.GetRenderTarget()->GetWidth(), 1.0f / (float)lastRt.GetRenderTarget()->GetHeight() );
+
+			effect->SetParameter( BlueSharedString( "BlitCurrent" ), lastRt );
+
+			auto downsampleInfo = DownsampleData
+			{
+				invTexelSize
+			};
+			FillAndSetConstants( m_bloomConstantBuffer, &downsampleInfo, sizeof( downsampleInfo ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+				
+			DrawInto( *rt, Tr2LoadAction::DONT_CARE, effect, renderContext );
+
+			lastRt = rt;
+		}
+	}
+	
+	{
+		// do a two pass downsampling with gaussian blur on the downsampled texture
+		// then the last upsampled texture will be added on top
+
+		GPU_REGION( renderContext, "Upsample" );
+
+		float tintScale = ( 1.0f / Bloom::MAX_BLOOM_STEPS ) * bloom->m_bloomBrightness;
+
+		Vector2 directionalWeight = Vector2( std::max( bloom->m_directionalWeight, 0.0f ), std::fabsf(bloom->m_directionalWeight) );
+		for( int i = depth - 1; i >= 0; --i )
+		{
+			lastRt = i == depth - 1 ? black : lastRt;
+
+			auto currentMip = downsampleTexture[i];
+			auto currentUpsampled = upsampleTexture[i];
+			
+			if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+			{
+				currentUpsampled = upsampleHorizontalTexture[i];
+			}
+
+			float radiusInPixels = std::max( (float)currentMip->GetWidth(), (float)currentMip->GetHeight() ) * bloom->m_sizeScale * bloom->m_stepSizes[i] * 0.01f;
+
+			auto invTexelSize = Vector2( 1.0f / (float)currentMip->GetWidth(), 1.0f / (float)currentMip->GetHeight() );
+			std::string name = "Horizontal Step " + std::to_string( i );
+			GPU_REGION( renderContext, name.c_str() );
+
+			m_upsamplerHorizontal->SetParameter( BlueSharedString( "BlitCurrent" ), currentMip );
+			auto gaussianOutput = GaussianDistribution::CalculateGaussianPassParameters( radiusInPixels, directionalWeight.x, invTexelSize.x, Vector3( 1, 1, 1 ), Vector2( 1, 0 ) );
+			FillAndSetConstants( m_bloomConstantBuffer, &gaussianOutput, sizeof( gaussianOutput ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+			DrawInto( *currentUpsampled, Tr2LoadAction::DONT_CARE, m_upsamplerHorizontal, renderContext );
+		}
+		for( int i = depth - 1; i >= 0; --i )
+		{
+			lastRt = i == depth - 1 ? black : lastRt;
+
+			auto currentMip = downsampleTexture[i];
+			auto currentUpsampled = upsampleTexture[i];
+
+			if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+			{
+				currentUpsampled = upsampleHorizontalTexture[i];
+				currentMip = upsampleTexture[i];
+			}
+
+			float radiusInPixels = std::max( (float)currentMip->GetWidth(), (float)currentMip->GetHeight() ) * bloom->m_sizeScale * bloom->m_stepSizes[i] * 0.01f;
+
+			auto invTexelSize = Vector2( 1.0f / (float)currentMip->GetWidth(), 1.0f / (float)currentMip->GetHeight() );
+			
+			std::string name = "Vertical Step " + std::to_string( i );
+			GPU_REGION( renderContext, name.c_str() );
+
+			// current upsampled is the horizontally blurred mip
+			m_upsamplerVertical->SetParameter( BlueSharedString( "BlitCurrent" ), currentUpsampled );
+			m_upsamplerVertical->SetParameter( BlueSharedString( "LastMip" ), lastRt );
+
+			Vector4 tint = bloom->m_stepTints[i] * tintScale;
+			auto gaussianOutput = GaussianDistribution::CalculateGaussianPassParameters( radiusInPixels, directionalWeight.y, invTexelSize.y, tint.GetXYZ(), Vector2( 0, 1 ) );
+			FillAndSetConstants( m_bloomConstantBuffer, &gaussianOutput, sizeof( gaussianOutput ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+			// draw into the downsample texture, because they will not be used again
+			DrawInto( *currentMip, Tr2LoadAction::DONT_CARE, m_upsamplerVertical, renderContext );
+			
+			lastRt = currentMip;
+		}
+	}
+
+	if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
+	{
+		return RenderBloomDebug( downsampleTexture, upsampleTexture, dest, renderContext );
+	}
+	else
+	{
+		m_bloomDebugShader = nullptr;
+	}
+	
+	return lastRt;
 }
 
+Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloomDebug( std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS>& downsample, 
+std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
+																			  Tr2PostProcessRenderInfo::Texture& blitCurrent,
+																			  Tr2RenderContext& renderContext )
+{	
+	if( m_bloomDebugShader == nullptr )
+	{
+		m_bloomDebugShader.CreateInstance();
+		m_bloomDebugShader->StartUpdate();
+		m_bloomDebugShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/BloomDebug.fx" );
+		m_bloomDebugShader->EndUpdate();
+	}
+
+	m_bloomDebugShader->StartUpdate();
+	switch( m_bloomDebugMode )
+	{
+	case BloomDebugMode::BLOOM_DEBUG_ALL:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_ALL" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP1:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_1" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP2:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_2" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP3:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_3" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP4:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_4" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP5:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_5" ) );
+		break;
+	case BloomDebugMode::BLOOM_DEBUG_STEP6:
+		m_bloomDebugShader->SetOption( BlueSharedString( "BLOOM_DEBUG_MODE" ), BlueSharedString( "BLOOM_DEBUG_MODE_6" ) );
+		break;
+	default:
+		break;
+	}
+	
+	m_bloomDebugShader->EndUpdate();
+	
+	GPU_REGION( renderContext, "Debug" );
+	m_bloomDebugShader->SetParameter( BlueSharedString( "BlitCurrent" ), blitCurrent );
+	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
+	{
+		m_bloomDebugShader->SetParameter( BlueSharedString( "Downsample" + std::to_string( i + 1 ) ), downsample[i] );
+		m_bloomDebugShader->SetParameter( BlueSharedString( "Upsample" + std::to_string( i + 1 ) ), upsample[i] );
+	}
+
+	auto debugView = m_renderInfo->GetTempTexture();
+
+	DrawInto( *debugView, Tr2LoadAction::DONT_CARE, m_bloomDebugShader, renderContext );
+
+	return debugView;
+}
 
 bool TriStepRenderPostProcess::ProcessGodRays( Tr2PPGodRaysEffect* godrays )
 {
@@ -916,6 +1244,10 @@ void TriStepRenderPostProcess::RenderSignalLoss( Tr2RenderTarget* dest, Tr2Rende
 
 bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom, Tr2PostProcess2* postProcess )
 {
+    if( !postProcess )
+    {
+        return false;
+    }
 	if( !m_exposure || !m_exposure->IsValid() )
 	{
 		m_exposure = nullptr;
@@ -1712,22 +2044,159 @@ void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContex
 	DrawInto( *dest, Tr2LoadAction::DONT_CARE, m_taaCopyEffect, renderContext );
 }
 
-void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping, Tr2RenderTarget* blitCurrent, Tr2RenderTarget* blitOriginal )
+void TriStepRenderPostProcess::ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection )
 {
-	if( tonemapping->IsDirty() )
+	if( !colorCorrection->IsDirty() )
 	{
-		m_tonemappingEffect->StartUpdate();
-		m_tonemappingEffect->SetParameter( BlueSharedString( "ShoulderStrength" ), tonemapping->m_shoulderStrength );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "LinearStrength" ), tonemapping->m_linearStrength );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "LinearAngle" ), tonemapping->m_linearAngle );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeStrength" ), tonemapping->m_toeStrength );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeNumerator" ), tonemapping->m_toeNumerator );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeDenominator" ), tonemapping->m_toeDenominator );
-		m_tonemappingEffect->SetParameter( BlueSharedString( "WhiteScale" ), tonemapping->m_whiteScale );
-		m_tonemappingEffect->EndUpdate();
+		return;
 	}
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), blitCurrent );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), blitOriginal );
+
+	m_tonemappingEffect->StartUpdate();
+
+	if( colorCorrection->IsActive() )
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_ENABLED" ) );
+		static auto WhiteTemperature = BlueSharedString( "WhiteTemperature" );
+		m_tonemappingEffect->SetParameter( WhiteTemperature, colorCorrection->m_whiteTemperature );
+		static auto WhiteTint = BlueSharedString( "WhiteTint" );
+		m_tonemappingEffect->SetParameter( WhiteTint, colorCorrection->m_whiteTint );
+		static auto ColorSaturation = BlueSharedString( "ColorSaturation" );
+		m_tonemappingEffect->SetParameter( ColorSaturation, colorCorrection->m_colorSaturation );
+		static auto ColorContrast = BlueSharedString( "ColorContrast" );
+		m_tonemappingEffect->SetParameter( ColorContrast, colorCorrection->m_colorContrast );
+		static auto ColorGamma = BlueSharedString( "ColorGamma" );
+		m_tonemappingEffect->SetParameter( ColorGamma, colorCorrection->m_colorGamma );
+		static auto ColorGain = BlueSharedString( "ColorGain" );
+		m_tonemappingEffect->SetParameter( ColorGain, colorCorrection->m_colorGain );
+		static auto ColorOffset = BlueSharedString( "ColorOffset" );
+		m_tonemappingEffect->SetParameter( ColorOffset, colorCorrection->m_colorOffset );
+	}
+	else
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "COLOR_CORRECTION_TOGGLE" ), BlueSharedString( "COLOR_CORRECTION_DISABLED" ) );
+	}
+
+	m_tonemappingEffect->EndUpdate();
+
+	colorCorrection->SetDirty( false );
+}
+
+void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping )
+{
+	if ( !tonemapping->IsDirty() )
+	{
+		return;
+	}
+	
+	m_tonemappingEffect->StartUpdate();
+
+	if ( tonemapping->IsActive() )
+	{
+		if( tonemapping->m_method == Tr2PPTonemappingEffect::Aces )
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_METHOD" ), BlueSharedString( "TONE_MAPPING_ACES" ) );
+
+			if( tonemapping->m_aces.m_useSweeteners )
+			{
+				m_tonemappingEffect->SetOption( BlueSharedString( "SWEETENER_TOGGLE" ), BlueSharedString( "SWEETENER_ENABLED" ) );
+			}
+			else
+			{
+				m_tonemappingEffect->SetOption( BlueSharedString( "SWEETENER_TOGGLE" ), BlueSharedString( "SWEETENER_DISABLED" ) );
+			}
+
+			m_tonemappingEffect->SetParameter( BlueSharedString( "AcesSlope" ), tonemapping->m_aces.m_slope );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "AcesToe" ), tonemapping->m_aces.m_toe );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "AcesShoulder" ), tonemapping->m_aces.m_shoulder );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "AcesBlackClip" ), tonemapping->m_aces.m_blackClip );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "AcesWhiteClip" ), tonemapping->m_aces.m_whiteClip );
+
+			// --- taken from: https://github.com/TheRealMJP/BakingLab/blob/master/BakingLab/ACES.hlsl ---
+			static const Matrix ACESInputMat = Transpose( Matrix(
+				0.59719f, 0.35458f, 0.04823f, 0.f, 
+				0.07600f, 0.90834f, 0.01566f, 0.f, 
+				0.02840f, 0.13383f, 0.83777f, 0.f, 
+				0.f, 0.f, 0.f, 1.f 
+			) );
+
+			// ODT_SAT => XYZ => D60_2_D65 => sRGB
+			static const Matrix ACESOutputMat = Transpose( Matrix(
+				1.60475, -0.53108, -0.07367, 0.f, 
+				-0.10208, 1.10813, -0.00605, 0.f, 
+				-0.00327, -0.07276, 1.07602, 0.f, 
+				0.f, 0.f, 0.f, 1.f 
+			) );
+			// --------------------------------------------------------------------------------------------
+
+			// --- taken from https://community.acescentral.com/t/colour-artefacts-or-breakup-using-aces/520/8 ---
+			const Matrix BlueCorrect = Matrix(
+				0.9404372683f, -0.0183068787f, 0.0778696104f, 0.f, 
+				0.0083786969f, 0.8286599939f, 0.1629613092f, 0.f, 
+				0.0005471261f, -0.0008833746f, 1.0003362486f, 0.f, 
+				0.f, 0.f, 0.f, 1.f 
+			);
+			const Matrix BlueCorrectInv = Matrix(
+				1.06318f, 0.0233956f, -0.0865726f, 0.f, 
+				-0.0106337f, 1.20632f, -0.19569f, 0.f, 
+				-0.000590887f, 0.00105248f, 0.999538f, 0.f, 
+				0.f, 0.f, 0.f, 1.f 
+			);
+			// ---------------------------------------------------------------------------------------------------
+
+			Matrix blueCorrection;
+			{
+				Vector3 row1 = Lerp( Vector3( 1.f, 0.f, 0.f ), BlueCorrect.GetX(), tonemapping->m_aces.m_blueCorrection );
+				Vector3 row2 = Lerp( Vector3( 0.f, 1.f, 0.f ), BlueCorrect.GetY(), tonemapping->m_aces.m_blueCorrection );
+				Vector3 row3 = Lerp( Vector3( 0.f, 0.f, 1.f ), BlueCorrect.GetZ(), tonemapping->m_aces.m_blueCorrection );
+				blueCorrection = Transpose( Matrix(
+					row1.x, row1.y, row1.z, 0., 
+					row2.x, row2.y, row2.z, 0., 
+					row3.x, row3.y, row3.z, 0., 
+					0., 0., 0., 1. 
+				) );
+			}
+			Matrix blueCorrectionInv;
+			{
+				Vector3 row1 = Lerp( Vector3( 1.f, 0.f, 0.f ), BlueCorrectInv.GetX(), tonemapping->m_aces.m_blueCorrection );
+				Vector3 row2 = Lerp( Vector3( 0.f, 1.f, 0.f ), BlueCorrectInv.GetY(), tonemapping->m_aces.m_blueCorrection );
+				Vector3 row3 = Lerp( Vector3( 0.f, 0.f, 1.f ), BlueCorrectInv.GetZ(), tonemapping->m_aces.m_blueCorrection );
+				blueCorrectionInv = Transpose( Matrix(
+					row1.x, row1.y, row1.z, 0., 
+					row2.x, row2.y, row2.z, 0., 
+					row3.x, row3.y, row3.z, 0., 
+					0., 0., 0., 1. 
+				) );
+			}
+
+			Matrix scale = ScalingMatrix( Vector3( tonemapping->m_aces.m_scale, tonemapping->m_aces.m_scale, tonemapping->m_aces.m_scale ) );
+
+			Matrix input = Transpose( ACESInputMat * blueCorrection * scale );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "AcesInputMat" ), input );
+
+			Matrix output = Transpose( blueCorrectionInv * ACESOutputMat );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "AcesOutputMat" ), output );
+		}
+		else
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_METHOD" ), BlueSharedString( "TONE_MAPPING_UNCHARTED2" ) );
+
+			m_tonemappingEffect->SetParameter( BlueSharedString( "ShoulderStrength" ), tonemapping->m_uncharted2.m_shoulderStrength );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "LinearStrength" ), tonemapping->m_uncharted2.m_linearStrength );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "LinearAngle" ), tonemapping->m_uncharted2.m_linearAngle );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "ToeStrength" ), tonemapping->m_uncharted2.m_toeStrength );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "ToeNumerator" ), tonemapping->m_uncharted2.m_toeNumerator );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "ToeDenominator" ), tonemapping->m_uncharted2.m_toeDenominator );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "WhiteScale" ), tonemapping->m_uncharted2.m_whiteScale );
+		}
+	}
+	else
+	{
+		m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_METHOD" ), BlueSharedString( "TONE_MAPPING_DISABLED" ) );
+	}
+
+	m_tonemappingEffect->EndUpdate();
+
+	tonemapping->SetDirty( false );
 }
 
 bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx )

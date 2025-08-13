@@ -197,8 +197,6 @@ private:
 	uint32_t nextFrameShadowQuality;	// bitmask, collecting ShadowQualities during the current frame
 	ShadowQuality m_currentSpaceSceneShadowQuality;
 	uint64_t m_currentFrameCounter;
-	bool m_shadowCastingLightsInSomeScene;
-	bool m_skipFrameBecauseThereWereNoShadowcastingLights;
 
 	struct
 	{

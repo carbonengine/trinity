@@ -26,6 +26,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_isVisible( false ),
 	m_instancesVisible( false ),
 	m_castShadow( false ),
+	m_updateAnimation( true ),
 	m_lowestLodVisible( TR2_LOD_LOW ),
 	m_minScreenSize( 0.f ),
 	m_currentScreenSize( -1.f ),
@@ -47,6 +48,8 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_psData.shipData.y = 1.f;
 	m_psData.shipData.w = 1.f;
 	m_psData.screenSize = Vector4( 0.5f, 0.5f, 0.5f, 1.f );
+
+	m_decals.SetNotify( this );
 }
 
 EveChildMesh::~EveChildMesh()
@@ -62,7 +65,52 @@ bool EveChildMesh::Initialize()
 
 	InitializeAnimation();
 
+	for( uint32_t i = 0; i < m_decals.size(); i++ )
+	{
+		m_decals[i]->SetPriority( i );
+	}
+
 	return true;
+}
+
+void EveChildMesh::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
+{
+	if( list == &m_decals )
+	{
+		if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED && key == m_decals.size() )
+		{
+			// this is here in case someone calls the append function of bluelist from python. Remove this once the off by one error has been fixed!
+			m_decals[m_decals.size() - 1]->SetPriority( (uint32_t)m_decals.size() - 1 );
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED )
+		{
+			for( size_t i = key; i < m_decals.size(); i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
+			}
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_REMOVED )
+		{
+			for( size_t i = key; i < m_decals.size(); i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
+			}
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_SWAPPED )
+		{
+			m_decals[key]->SetPriority( (uint32_t)key );
+			m_decals[key2]->SetPriority( (uint32_t)key2 );
+		}
+		else if( ( event & BELIST_EVENTMASK ) == BELIST_MOVED )
+		{
+			size_t low = min( key, key2 );
+			size_t high = max( key, key2 );
+			for( size_t i = low; i <= high; i++ )
+			{
+				m_decals[i]->SetPriority( (uint32_t)i );
+			}
+		}
+	}
 }
 
 bool EveChildMesh::OnModified( Be::Var* val )
@@ -221,9 +269,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 	if( !m_attachments.empty() )
 	{
-		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
-		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+		auto [bones, boneCount] = GetBoneTransforms();
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
@@ -235,9 +281,11 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	{
 		for( auto it = m_decals.begin(); it != m_decals.end(); ++it )
 		{
-			if( m_animationUpdater && m_animationUpdater->GetMeshBoneCount() && m_animationUpdater->IsInitialized() )
+			if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 			{
-				( *it )->SetBoneMatrix( m_animationUpdater->GetMeshBoneMatrixList(), m_animationUpdater->GetMeshBoneCount() );
+				auto [bones, boneCount] = GetBoneTransforms();
+
+				( *it )->SetBoneMatrix( bones, int( boneCount ) );
 			}
 			( *it )->UpdateVisibility( updateContext, &m_parentData );
 		}
@@ -284,18 +332,22 @@ void EveChildMesh::UpdateRtSkeleton()
 		return;
 	}
 
-	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 	auto rtMesh = m_mesh->GetRtMesh();
-	if( areas->empty() || !rtMesh )
+	if( !rtMesh )
 	{
-		return; //no areas at all or no RT mesh
+		return;
 	}
-
+	
 	auto meshIndex = m_mesh->GetMeshIndex();
 	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
-
+	if( !meshData )
+	{
+		return;
+	}
+	
 	bool hasSkinned = false;
-
+	
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );	
 	for( auto it = begin( *areas ); it != end( *areas ); ++it )
 	{
 		if( meshData->m_areas[std::max( 0, ( *it )->GetIndex() )].m_isSkinned )
@@ -310,11 +362,12 @@ void EveChildMesh::UpdateRtSkeleton()
 		return; //no skinned areas
 	}
 
-	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
-	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	auto [bones, boneCount] = GetBoneTransforms();
+
+	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
 	auto offset = m_boneOffsets.GetCurrentFrameOffset();
 
-	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );
+	bool skeletonChanged = rtMesh->SetBoneTransforms( boneCount, bones, offset );
 
 	if( skeletonChanged )
 	{
@@ -329,7 +382,6 @@ void EveChildMesh::UpdateRtSkeleton()
 		}
 	}
 }
-
 
 void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
@@ -457,24 +509,28 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	auto rtMesh = m_mesh->GetRtMesh();
 
-	auto UpdateRtPerObjectData = [this]( size_t idx, const Matrix* instanceTransform ) {
-		USE_MAIN_THREAD_RENDER_CONTEXT();
+	if ( !rtMesh || !rtMesh->IsGood() )
+	{
+		return;
+	}
 
-		auto size = sizeof( EveSpaceObjectPSData ) + ( instanceTransform ? sizeof( Matrix ) : 0 );
-		if( !m_rtPerObjectData[idx].IsValid() || m_rtPerObjectData[idx].GetSize() != size )
-		{
-			m_rtPerObjectData[idx].Create( uint32_t( size ), renderContext );
-		}
+	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-		EveSpaceObjectPSData* perObjectData;
-		m_rtPerObjectData[idx].Lock( (void**)&perObjectData, renderContext );
-		*perObjectData = m_psData;
-		if( instanceTransform )
-		{
-			*reinterpret_cast<Matrix*>( perObjectData + 1 ) = Transpose( *instanceTransform );
-		}
-		m_rtPerObjectData[idx].Unlock( renderContext );
-	};
+	size_t rtPerObjectDataCount = 0;
+	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+	{
+		rtPerObjectDataCount = m_instanceTransforms.size();
+	}
+	else
+	{
+		rtPerObjectDataCount = 1;
+	}
+	if( m_rtPerObjectDatas.size() != rtPerObjectDataCount )
+	{
+		m_rtPerObjectDatas.resize( rtPerObjectDataCount );
+	}
+
+	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
 	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 	{
@@ -483,23 +539,28 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			return;
 		}
 
-		m_rtPerObjectData.resize( m_instanceTransforms.size() );
-
 		size_t idx = 0;
 		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
 		{
 			const Matrix transform = *it * m_worldTransform;
 
-			const Tr2MeshAreaVector* areas = instanced->GetAreas( TRIBATCHTYPE_OPAQUE );
-			for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+			UpdateRtPerObjectData( m_psData, &transform, renderContext, m_rtPerObjectDatas[idx] );
+
+			uint32_t vertexBufferDataIndex = 0;
+			for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it, ++vertexBufferDataIndex )
 			{
 				auto area = *it;
-				if( area->GetDisplay() )
+				if( area->GetDisplay() && area->IsCastingShadows() )
 				{
 					auto geometry = area->GetRtMeshArea();
 					if( geometry )
 					{
-						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData[idx], transform );
+						const Tr2ConstantBufferAL* vertexBufferData = nullptr;
+						if( area->HasVertexBufferAccessInRtShadow() )
+						{
+							vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
+						}
+						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[idx], vertexBufferData, transform );
 					}
 				}
 			}
@@ -508,22 +569,29 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	}
 	else
 	{
-		m_rtPerObjectData.resize( 1 );
-		UpdateRtPerObjectData( 0, nullptr );
-		const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-		for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+		UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_rtPerObjectDatas[0] );
+
+		uint32_t vertexBufferDataIndex = 0;
+		for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it, ++vertexBufferDataIndex )
 		{
 			auto area = *it;
-			if( area->GetDisplay() )
+			if( area->GetDisplay() && area->IsCastingShadows() )
 			{
 				auto geometry = area->GetRtMeshArea();
 				if( geometry )
 				{
-					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData[0], m_worldTransform );
+					const Tr2ConstantBufferAL* vertexBufferData = nullptr;
+					if( area->HasVertexBufferAccessInRtShadow() )
+					{
+						vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
+					}
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[0], vertexBufferData, m_worldTransform );
 				}
 			}
 		}
 	}
+
+	rtManager.GetGeometry().AddBindlessResources( *opaqueAreas, *rtMesh );
 }
 
 void EveChildMesh::SetInstanceTransforms( std::vector<Matrix> instances )
@@ -547,9 +615,9 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 {
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
-		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
-		m_vsData.boneOffsets[2] = boneCount;
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+		auto [bones, boneCount] = GetBoneTransforms();
+		m_vsData.boneOffsets[2] = uint32_t( boneCount );
+		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
@@ -660,7 +728,26 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 			}
 		}
 
-		m_animationUpdater->PrePhysicsAnimation( 0, IdentityMatrix() );
+		if( m_updateAnimation )
+		{
+			m_animationUpdater->PrePhysicsAnimation( 0, IdentityMatrix() );
+		}
+
+		if( m_mesh && !m_animationUpdater->m_meshBinding )
+		{
+			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != m_mesh->GetGeometryResource() || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
+			{
+				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex() );
+			}
+		}
+		else
+		{
+			m_meshBinding = {};
+		}
+	}
+	else
+	{
+		m_meshBinding = {};
 	}
 }
 
@@ -754,7 +841,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 	if( m_animationUpdater && renderer.HasOption( GetRawRoot(), "Bones" ) )
 	{
-		m_animationUpdater->RenderBones( m_worldTransform );
+		m_animationUpdater->RenderBones( m_worldTransform, m_meshBinding.get() );
 	}
 
 	if( renderer.HasOption( GetRawRoot(), "Decals" ) )
@@ -767,9 +854,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 	if( !m_attachments.empty() )
 	{
-		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
-		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+		auto [bones, boneCount] = GetBoneTransforms();
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
@@ -779,9 +864,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 	if( renderer.HasOption( GetRawRoot(), "Lights" ) )
 	{
-		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
-		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+		auto [bones, boneCount] = GetBoneTransforms();
 		for( auto it = m_lights.begin(); it != m_lights.end(); ++it )
 		{
 			( *it )->RenderDebugInfo( renderer, m_worldTransform, bones, boneCount );
@@ -807,7 +890,8 @@ void EveChildMesh::SetAnimationController( Tr2GrannyAnimation* animation )
 
 void EveChildMesh::AddDecal( EveSpaceObjectDecalPtr newDecal )
 {
-	m_decals.Append( newDecal->GetRawRoot() );
+	newDecal->SetPriority( (uint32_t)m_decals.size() );
+	m_decals.Insert( -1, newDecal->GetRawRoot() );
 }
 
 void EveChildMesh::AddAttachment( IEveSpaceObjectAttachment* attachment )
@@ -828,15 +912,36 @@ void EveChildMesh::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 	}
 }
 
+std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() const
+{
+	size_t boneCount = 0;
+	const granny_matrix_3x4* bones = nullptr;
+
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
+	auto accumulatedTransforms = m_animationUpdater->GetAnimationTransforms();
+	if( m_animationUpdater->m_meshBinding )
+	{
+		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+		return std::make_pair( bones, boneCount );
+	}
+	if( m_meshBinding )
+	{
+		return m_meshBinding->GetBoneTransforms();
+	}
+	return std::make_pair( nullptr, 0 );
+}
+	
 void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
 {
 	if( m_attachments.empty() || !m_isVisible || !m_display )
 	{
 		return;
 	}
-	size_t boneCount = 0;
-	const granny_matrix_3x4* bones = nullptr;
-	Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+	auto [bones, boneCount] = GetBoneTransforms();
 	for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 	{
 		// If we need boostergain then we will need to get it from the parent (the 0.0 in the param list)
@@ -851,9 +956,7 @@ void EveChildMesh::GetLights( Tr2LightManager& lightManager ) const
 		return;
 	}
 
-	size_t boneCount = 0;
-	const granny_matrix_3x4* bones = nullptr;
-	Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+	auto [bones, boneCount] = GetBoneTransforms();
 
 	for( auto it = std::begin( m_lights ); it != std::end( m_lights ); ++it )
 	{

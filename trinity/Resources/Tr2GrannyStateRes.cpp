@@ -203,7 +203,7 @@ void Tr2GrannyStateRes::RebuildCachedData( BlueAsyncRes* p )
 
 		if (!GStateBindCharacterFileReferences(character_info, static_cast<gstate_file_ref_callback*>(GStateAnimationBindingCallback), static_cast<void*>(&m_callbackData)))
 		{
-			CCP_LOGERR("'%s' Granny State file refers to invalid or unavailable animation.", m_path.c_str());
+			CCP_LOGERR("'%ls' Granny State file refers to invalid or unavailable animation.", m_path.c_str());
 		}
 
 		m_anim_bound = true;

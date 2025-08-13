@@ -20,7 +20,7 @@ CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
 using namespace Tr2RenderContextEnum;
 
-std::map<TriGeometryResPtr, EveSpherePinIndexTree*>* EveSpherePin::s_treeMap = new std::map<TriGeometryResPtr, EveSpherePinIndexTree*>();
+std::map<TriGrannyResPtr, EveSpherePinIndexTree*>* s_treeMap = new std::map<TriGrannyResPtr, EveSpherePinIndexTree*>();
 
 // ------------------------------------------------------------------------------------------------------
 EveSpherePin::EveSpherePin( IRoot* lockobj /*= NULL*/ ):
@@ -188,22 +188,26 @@ void EveSpherePin::UpdateSyncronous( const EveUpdateContext& updateContext )
 
 	if( !m_tree )
 	{
-		if( m_geometryResource && !m_geomResPath.empty() && m_geometryResource->IsGood() )
+		if( !m_geomResPath.empty() )
 		{
-			if( !(*s_treeMap)[m_geometryResource] ) 
+			TriGrannyResPtr granny;
+			BeResMan->GetResource( m_geomResPath, "raw", granny );
+			if ( granny )
 			{
-				(*s_treeMap)[m_geometryResource] = new EveSpherePinIndexTree();
+				if( !( *s_treeMap )[granny] )
+				{
+					( *s_treeMap )[granny] = new EveSpherePinIndexTree( granny );
+				}
+				m_tree = ( *s_treeMap )[granny];
 			}
-			m_tree = (*s_treeMap)[m_geometryResource];
-
 			m_rebuildIndices = 1;
 		}
 	}
 	if( m_tree && m_rebuildIndices )
 	{
-		if( !m_tree->IsInitialized() && m_geometryResource )
+		if( !m_tree->IsInitialized() )
 		{
-			if( m_tree->Initialize( m_geometryResource->GetMeshData( 0 ) ) )
+			if( m_tree->Initialize() )
 			{
 				CreateIndexBuffer();
 			}

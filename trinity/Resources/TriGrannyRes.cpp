@@ -268,7 +268,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 
 	if( weights.size() != numBlends && !nameToWeight )
 	{
-		CCP_LOGERR( "TriGrannyRes::BakeBlendshape: Incorrect number of weights - %d given, %d expected", weights.size(), numBlends );
+		CCP_LOGERR( "TriGrannyRes::BakeBlendshape: Incorrect number of weights - %zu given, %d expected", weights.size(), numBlends );
 		return false;
 	}
 

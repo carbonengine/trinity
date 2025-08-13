@@ -750,6 +750,48 @@ void SplitCoordVec( ASTNode* call, const Type& textureType, size_t coordOffset =
 };
 
 
+void PatchMetalBufferCalls( ParserState& state, ASTNode* node )
+{
+	if( !node )
+	{
+		return;
+	}
+	if( node->GetNodeType() == NT_POSTFIX_EXPRESSION &&
+		node->GetToken() &&
+		node->GetToken()->type == OP_DOT &&
+		node->GetChildrenCount() == 2 &&
+		node->GetChild( 0 )->GetType().IsBuffer() &&
+		node->GetChild( 1 )->GetNodeType() == NT_FUNCTION_CALL )
+	{
+		ASTNode* call = node->GetChild( 1 );
+		auto functionToken = *call->GetToken();
+		if( functionToken.stringValue == "Load" )
+		{
+			// b.Load(index) -> b[index]
+			if ( call->GetChildrenCount() == 2 )
+			{
+				state.ShowMessage( call->GetLocation(), EC_CUSTOM_ERROR, "Metal does not support Load with status argument" );
+			}
+			else
+			{
+				auto token = *node->GetToken();
+				token.type = OP_LEFT_BRACKET;
+				node->SetToken( &token );
+				node->AddChild( call->GetChild( 0 ) );
+				node->RemoveChild( 1 );
+			}
+		}
+		else if ( functionToken.stringValue == "GetDimensions" )
+		{
+			state.ShowMessage( call->GetLocation(), EC_CUSTOM_ERROR, "Metal does not support GetDimensions method for buffers" );
+		}
+	}
+	for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
+	{
+		PatchMetalBufferCalls( state, node->GetChild( i ) );
+	}
+}
+
 ASTNode* PatchMetalTextureCall( ASTNode* node )
 {
 	auto textureType = node->GetChild( 0 )->GetType();
@@ -1211,6 +1253,7 @@ void ConvertTextureFunctionsToMetal( ParserState& state )
 {
 	ConvertTextureFunctionsDX11( state );
 	PatchMetalTextureCalls( state, state.GetTree() );
+	PatchMetalBufferCalls( state, state.GetTree() );
 }
 
 

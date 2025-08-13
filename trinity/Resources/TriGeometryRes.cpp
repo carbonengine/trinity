@@ -181,7 +181,43 @@ uint32_t GetPrimitiveCount( const TriGeometryResMeshData& mesh, uint32_t index, 
 	return primCount;
 }
 
+namespace
+{
+ALResult ReverseIndexBuffer( TriGeometryResMeshData& mesh, granny_mesh& grannyMesh, Tr2RenderContext& renderContext ) 
+{
+	uint32_t bytesPerIndex = 2;
+	auto indexCount = grannyMesh.PrimaryTopology->Index16Count;
+	if( indexCount == 0 )
+	{
+		indexCount = grannyMesh.PrimaryTopology->IndexCount;
+		if( indexCount == 0 )
+		{
+			return S_OK;
+		}
+		if( grannyMesh.PrimaryVertexData->VertexCount > 65535 )
+		{
+			bytesPerIndex = 4;
+		}
+	}
 
+	std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
+	GrannyCopyMeshIndices( &grannyMesh, bytesPerIndex, tempBuffer.data() );
+
+	if( bytesPerIndex == 2 )
+	{
+		std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
+	}
+	else
+	{
+		std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
+	}
+
+	CR_RETURN_HR( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, mesh.m_reversedIndexAllocation ) );
+	mesh.m_reversedIndicesValid = true;
+	return S_OK;
+}
+
+}
 
 
 TriGeometryRes::TriGeometryRes(IRoot* lockobj) :
@@ -264,14 +300,15 @@ unsigned int TriGeometryRes::GetMeshCount() const
 
 TriGeometryResMeshData* TriGeometryRes::GetMeshData( unsigned int meshIx ) const
 {
+	if( !m_isGood )
+	{
+		return nullptr;
+	}
 	if( meshIx < m_meshes.size() )
 	{
 		return m_meshes[meshIx].get();
 	}
-	else
-	{
-		return 0;
-	}
+	return nullptr;
 }
 
 TriGeometryResMeshData* TriGeometryRes::GetMeshData( unsigned int meshIx, float screenSize ) const
@@ -519,9 +556,22 @@ bool TriGeometryRes::DoPrepare()
 
 		if( gi->AnimationCount == 0 && m_pGrannyFile )
 		{
-			// Only meshes in the file - we've converted those to D3D structures.
-			GrannyFreeFile( m_pGrannyFile );
-			m_pGrannyFile = 0;
+			bool hasMeshBindings = false;
+			for( int i = 0; i < gi->MeshCount; ++i )
+			{
+				if( gi->Meshes[i]->BoneBindingCount > 0 )
+				{
+					hasMeshBindings = true;
+					break;
+				}
+			}
+
+			if( !hasMeshBindings )
+			{
+				// Only meshes in the file - we've converted those to D3D structures.
+				GrannyFreeFile( m_pGrannyFile );
+				m_pGrannyFile = 0;
+			}
 		}
 	}
 
@@ -576,102 +626,7 @@ void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& ar
 	area.m_vertexCount = (int)vertexIndicesSeen.size();
 }
 
-void TriGeometryRes::DetermineAreaBones( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	// offset to boneindex
-	int boneIndexOffset = GetVertexComponentOffset( myMesh, GrannyVertexBoneIndicesName );
-	// if there are no bone-indices , we are done
-	if( boneIndexOffset == -1 )
-		return;
-
-	// collect all bones used by this mesh
-	TrackableStdVector<uint8_t> usedBones( "DetermineAreaBones/usedBones", myMesh->BoneBindingCount, 0xff );
-	
-	// keep track of verts we already re-mapped
-	TrackableStdVector<bool> changedVerts( "DetermineAreaBones/changedVerts", myMesh->PrimaryVertexData->VertexCount );
-	
-	// prepare collection of new per-area-bones
-	area.m_jointBindings.clear();
-
-	// pointers to bone indices
-	uint8_t* pBoneIndex0 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 0;
-	uint8_t* pBoneIndex1 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 1;
-	uint8_t* pBoneIndex2 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 2;
-	uint8_t* pBoneIndex3 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 3;
-
-	// cycle thorugh all vertices of this area and collect bone indices
-	for( int vIx = 0; vIx < area.m_primitiveCount * 3; ++vIx )
-	{
-		int index;
-
-		if( myMesh->PrimaryTopology->Indices16 )
-		{
-			index = myMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
-		}
-		else
-		{
-			index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
-		}
-
-		if( changedVerts[index] )
-		{
-			continue;
-		}
-
-		// bones
-		uint8_t boneIndex0 = *(pBoneIndex0 + index * bytesPerVertex);
-		uint8_t boneIndex1 = *(pBoneIndex1 + index * bytesPerVertex);
-		uint8_t boneIndex2 = *(pBoneIndex2 + index * bytesPerVertex);
-		uint8_t boneIndex3 = *(pBoneIndex3 + index * bytesPerVertex);
-
-		// bone0 already used?
-		if( usedBones[boneIndex0] == 0xff)
-		{
-			// new bone!
-			usedBones[boneIndex0] = (uint8_t)area.m_jointBindings.size();
-			area.m_jointBindings.push_back( boneIndex0 );
-		}
-		// re-map in vertex-data
-		*(pBoneIndex0 + index * bytesPerVertex) = usedBones[boneIndex0];
-
-		// bone1 already used?
-		if( usedBones[boneIndex1] == 0xff)
-		{
-			// new bone!
-			usedBones[boneIndex1] = (uint8_t)area.m_jointBindings.size();
-			area.m_jointBindings.push_back( boneIndex1 );
-		}
-		// re-map in vertex-data
-		*(pBoneIndex1 + index * bytesPerVertex) = usedBones[boneIndex1];
-
-		// bone2 already used?
-		if( usedBones[boneIndex2] == 0xff)
-		{
-			// new bone!
-			usedBones[boneIndex2] = (uint8_t)area.m_jointBindings.size();
-			area.m_jointBindings.push_back( boneIndex2 );
-		}
-		// re-map in vertex-data
-		*(pBoneIndex2 + index * bytesPerVertex) = usedBones[boneIndex2];
-
-		// bone3 already used?
-		if( usedBones[boneIndex3] == 0xff)
-		{
-			// new bone!
-			usedBones[boneIndex3] = (uint8_t)area.m_jointBindings.size();
-			area.m_jointBindings.push_back( boneIndex3 );
-		}
-		// re-map in vertex-data
-		*(pBoneIndex3 + index * bytesPerVertex) = usedBones[boneIndex3];
-
-		// this one is now re-mapped
-		changedVerts[index] = true;
-	}
-}
-
-bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex )
+bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi, int bytesPerVertex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	// offset to boneindex
@@ -682,6 +637,39 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 		return false;
 	}
 
+	auto FindRootBoneName = [&]() -> const char* {
+		for( int32_t i = 0; i < gi->ModelCount; ++i )
+		{
+			granny_model* model = gi->Models[i];
+			if( model->Skeleton && model->Skeleton->BoneCount > 1 )
+			{
+				for( int32_t j = 0; j < model->MeshBindingCount; ++j )
+				{
+					return model->Skeleton->Bones[0].Name;
+				}
+			}
+		}
+		return nullptr;
+	};
+
+	auto FindRootBoneIndex = [&]() -> std::optional<uint8_t> {
+		const char* rootBone = FindRootBoneName();
+		for( int32_t i = 0; i < myMesh->BoneBindingCount; ++i )
+		{
+			if( myMesh->BoneBindings[i].BoneName && strcmp( myMesh->BoneBindings[i].BoneName, rootBone ) == 0 )
+			{
+				return uint8_t( i );
+			}
+		}
+		return {};
+	};
+
+	auto rootBoneIndex = FindRootBoneIndex();
+	if( !rootBoneIndex.has_value() )
+	{
+		return true;
+	}
+
 	// pointers to bone indices
 	uint8_t* pBoneIndex0 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 0;
 	uint8_t* pBoneIndex1 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 1;
@@ -708,7 +696,7 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 		uint8_t boneIndex2 = *(pBoneIndex2 + index * bytesPerVertex);
 		uint8_t boneIndex3 = *(pBoneIndex3 + index * bytesPerVertex);
 
-		if( boneIndex0 != 0 || boneIndex1 != 0 || boneIndex2 != 0 || boneIndex3 != 0 )
+		if( boneIndex0 != *rootBoneIndex || boneIndex1 != *rootBoneIndex || boneIndex2 != *rootBoneIndex || boneIndex3 != *rootBoneIndex )
 		{
 			// found it attached to a bone so return early
 			return true;
@@ -822,18 +810,7 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 
 				pMesh->m_primitiveCount += area.m_primitiveCount;
 
-				area.m_isSkinned = IsAreaSkinned( area, myMesh, bytesPerVertex );
-
-				// only re-map the bone indices if there is a skeleton...
-				if( gi->SkeletonCount )
-				{
-					if( myMesh->BoneBindingCount > TR2_MAX_BONES_PER_MESHAREA )
-					{
-						DetermineAreaBones( area, myMesh, bytesPerVertex );
-						// flag this re-bone-mapping
-						pMesh->m_hasPerMeshAreaBoneBindings = true;
-					}
-				}
+				area.m_isSkinned = IsAreaSkinned( area, myMesh, gi, bytesPerVertex );
 
 				if( mbi )
 				{
@@ -1514,7 +1491,6 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 	m_primitiveCount( 0 ),
 	m_areas( "TriGeometryResMeshData/m_areas" ),
 	m_jointBindings( "TriGeometryResMeshData/m_jointBindings" ),
-	m_hasPerMeshAreaBoneBindings( false ),
 	m_isLodMesh( false ),
 	m_pVertexData( NULL ),
 	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
@@ -1523,60 +1499,47 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 {
 }
 
-// -------------------------------------------------------------
-// Description:
-//   Reverses the original mesh index buffer. This is needed for
-//   hair rendering to render hair meshes back-side in "backwards"
-//   order.
-// -------------------------------------------------------------
-void TriGeometryRes::ReverseIndexBuffer( TriGeometryResMeshData& meshData, Tr2RenderContext& renderContext )
+void TriGeometryRes::RequestReversedIndexBuffers()
 {
-	if( !meshData.m_allocationsValid)
+	if ( m_reversedIndexBuffersRequested )
 	{
 		return;
 	}
-	if( meshData.m_reversedIndicesValid ) // already done?
+	m_reversedIndexBuffersRequested = true;
+	if( !m_isPrepared )
 	{
 		return;
 	}
-
-	auto& source = meshData.m_indexAllocation;
-
-	std::unique_ptr<uint8_t[]> reversedData( new uint8_t[source.GetSize()] );
-	if( source.GetStride() == 2 )
+	if( m_sourceGranny )
 	{
-		const uint16_t* originalData = nullptr;
-		CR_RETURN( source.MapForReading( originalData, renderContext ) );
-		ON_BLOCK_EXIT( [&] { source.UnmapForReading( renderContext ); } );
-
-		uint16_t *invertedData = reinterpret_cast<uint16_t*>( reversedData.get() );
-
-		unsigned length = meshData.m_primitiveCount * 3;
-		for( unsigned int i = 0; i < length; ++i )
+		if( !m_isGood )
 		{
-			invertedData[length - i - 1] = originalData[i];
+			return;
+		}
+		granny_file* f = m_sourceGranny->GetGrannyFile();
+		if( !f )
+		{
+			return;
+		}
+		granny_file_info* gi = GrannyGetFileInfo( f );
+
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		for( auto& mesh : m_meshes )
+		{
+			auto grannyMesh = gi->Meshes[mesh->m_grannyMeshIndex];
+			ReverseIndexBuffer( *mesh, *grannyMesh, renderContext );
+		}
+		for( auto& mesh : m_meshLods )
+		{
+			auto grannyMesh = gi->Meshes[mesh->m_grannyMeshIndex];
+			ReverseIndexBuffer( *mesh, *grannyMesh, renderContext );
 		}
 	}
 	else
 	{
-		const uint32_t* originalData = nullptr;
-		CR_RETURN( source.MapForReading( originalData, renderContext ) );
-		ON_BLOCK_EXIT( [&] { source.UnmapForReading( renderContext ); } );
-
-		uint16_t *invertedData = reinterpret_cast<uint16_t*>( reversedData.get() );
-
-		unsigned length = meshData.m_primitiveCount * 3;
-		for( unsigned int i = 0; i < length; ++i )
-		{
-			invertedData[length - i - 1] = originalData[i];
-		}
+		Reload();
 	}
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		CR_RETURN(g_sharedBuffer.Allocate( source.GetStride(), source.GetSize() / source.GetStride(), reversedData.get(), renderContext, meshData.m_reversedIndexAllocation ));
-	}
-
-	meshData.m_reversedIndicesValid = true;
 }
 
 bool TriGeometryRes::RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed )
@@ -1584,7 +1547,7 @@ bool TriGeometryRes::RenderAreas( unsigned int meshIx, unsigned int areaIx, unsi
 	return RenderAreas( std::numeric_limits<float>::max(), meshIx, areaIx, areaCount, renderContext, reversed );
 }
 
-bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed, bool buildReversed )
+bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed )
 {
     if( !m_isGood )
     {
@@ -1628,11 +1591,7 @@ bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigne
 	{
 		if( reversed )
 		{
-			if( buildReversed )
-			{
-				ReverseIndexBuffer( *pMesh, renderContext );
-			}
-			else if( !pMesh->m_reversedIndicesValid )
+			if( !pMesh->m_reversedIndicesValid )
 			{
 				return false;
 			}
@@ -1723,6 +1682,26 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 			g_sharedBuffer.Free( pMesh->m_vertexAllocation );
 			return false;	
 		}
+
+		if ( m_reversedIndexBuffersRequested )
+		{
+			if( bytesPerIndex == 2 )
+			{
+				std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
+			}
+			else
+			{
+				std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
+			}
+
+			if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, pMesh->m_reversedIndexAllocation ) ) )
+			{
+				g_sharedBuffer.Free( pMesh->m_vertexAllocation );
+				g_sharedBuffer.Free( pMesh->m_indexAllocation );
+				return false;
+			}
+			pMesh->m_reversedIndicesValid = true;
+		}
 	}
 
 
@@ -1734,6 +1713,10 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 	pMesh->m_allocationsValid = true;
 
 	m_memoryUse += vbSize + ibSize; // Memory use is only approximate as a hint for the resource cache
+	if( m_reversedIndexBuffersRequested )
+	{
+		m_memoryUse += ibSize;
+	}
 	
 	return true;
 }

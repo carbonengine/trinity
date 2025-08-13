@@ -19,6 +19,12 @@
 #include "ShaderCompilerConfig.h"
 #include <atomic>
 
+#if _WIN32
+#include <winnt.h>
+#include <process.h>
+#include <dbghelp.h>
+#pragma comment( lib, "dbghelp.lib" )
+#endif
 
 
 struct CompiledData
@@ -505,6 +511,51 @@ struct WithTelemetry
 
 #if !SHADER_COMPILER_TEST
 
+
+#if _WIN32
+
+CRITICAL_SECTION s_exceptionMutex;
+
+LONG WINAPI ReportException( _In_ EXCEPTION_POINTERS* )
+{
+	EnterCriticalSection( &s_exceptionMutex );
+
+	const DWORD TRACE_MAX_STACK_FRAMES = 1024;
+	const DWORD TRACE_MAX_FUNCTION_NAME_LENGTH = 1024;
+
+	void* stack[TRACE_MAX_STACK_FRAMES];
+	HANDLE process = GetCurrentProcess();
+	SymInitialize( process, NULL, TRUE );
+	WORD numberOfFrames = RtlCaptureStackBackTrace( 0, TRACE_MAX_STACK_FRAMES, stack, NULL );
+	char buf[sizeof( SYMBOL_INFO ) + ( TRACE_MAX_FUNCTION_NAME_LENGTH - 1 ) * sizeof( TCHAR )];
+	SYMBOL_INFO* symbol = (SYMBOL_INFO*)buf;
+	symbol->MaxNameLen = TRACE_MAX_FUNCTION_NAME_LENGTH;
+	symbol->SizeOfStruct = sizeof( SYMBOL_INFO );
+	DWORD displacement;
+	IMAGEHLP_LINE64 line;
+	line.SizeOfStruct = sizeof( IMAGEHLP_LINE64 );
+	fprintf( stderr, "error: ShaderCompiler.exe has crashed\n" );
+	for( int i = 0; i < numberOfFrames; i++ )
+	{
+		DWORD64 address = (DWORD64)( stack[i] );
+		SymFromAddr( process, address, NULL, symbol );
+		if( SymGetLineFromAddr64( process, address, &displacement, &line ) )
+		{
+			fprintf( stderr, "\t#%03d at %s in %s: line: %lu: address: 0x%0llX\n", i, symbol->Name, line.FileName, line.LineNumber, symbol->Address );
+		}
+		else
+		{
+			fprintf( stderr, "\t#%03d at <unknown>, address 0x%0llX.\n", i, address );
+		}
+	}
+	LeaveCriticalSection( &s_exceptionMutex );
+
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
+#endif
+
+
 #if _WIN32
 int _tmain(int argc, _TCHAR* argv[])
 #else
@@ -512,6 +563,9 @@ int main(int argc, char* argv[])
 #endif
 {
 #if _WIN32
+	InitializeCriticalSection( &s_exceptionMutex );
+	SetUnhandledExceptionFilter( &ReportException );
+
 	char metalToolsPath[MAX_PATH] = { 0 };
 	size_t metalToolsPathSize;
 	if( getenv_s( &metalToolsPathSize, metalToolsPath, "METAL_TOOLS_PATH" ) == 0 )
