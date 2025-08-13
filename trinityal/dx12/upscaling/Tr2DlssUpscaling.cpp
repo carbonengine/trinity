@@ -341,25 +341,10 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
 	m_params.renderContext.FlushAndSyncDx12();
-
-	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
-	Tr2StreamlineAL::FreeResources( sl::kFeatureNIS, m_viewHandle );
-
-	if( m_frameGeneration )
-	{
-		Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS_G, m_viewHandle );
-	}
 }
 
 void Tr2DlssUpscalingContext::SetupForReuse()
 {
-	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
-	Tr2StreamlineAL::FreeResources( sl::kFeatureNIS, m_viewHandle );
-
-	if( m_frameGeneration )
-	{
-		Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS_G, m_viewHandle );
-	}
 }
 
 sl::Result Tr2DlssUpscalingContext::UpdateDlssG()
@@ -520,10 +505,8 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 
 	if( m_frameGeneration )
 	{
-		Tr2StreamlineAL::AllocateResources( renderContext, sl::kFeatureDLSS_G, m_viewHandle );
 		UpdateDlssG();
 	}
-	Tr2StreamlineAL::AllocateResources( renderContext, sl::kFeatureDLSS, m_viewHandle );
 
 	if( SL_FAILED( res, ReadyDLSSResources( dispatchParameters ) ) )
 	{

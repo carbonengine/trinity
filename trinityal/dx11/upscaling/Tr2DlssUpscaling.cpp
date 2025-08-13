@@ -229,8 +229,6 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
-	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
-	Tr2StreamlineAL::FreeResources( sl::kFeatureNIS, m_viewHandle );
 }
 
 void Tr2DlssUpscalingContext::SetFrameToken( sl::FrameToken* frameToken )
