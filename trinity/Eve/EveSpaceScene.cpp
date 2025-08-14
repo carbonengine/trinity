@@ -2371,7 +2371,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		}
 	}
 	
-	if( m_mainPassRenderingEnabled && m_ssao )
+	if( m_mainPassRenderingEnabled && m_ssao && m_depthMap )
 	{
 		renderContext.SetReadOnlyDepth( true );
 
