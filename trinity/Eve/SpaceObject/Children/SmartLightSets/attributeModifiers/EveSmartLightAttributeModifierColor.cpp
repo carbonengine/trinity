@@ -35,7 +35,7 @@ Color EveSmartLightAttributeModifierColor::GetGroupColor() const
 
 void EveSmartLightAttributeModifierColor::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, float activationMultiplier )
 {
-	this->UpdateActivationStrength( params.activationStrength * activationMultiplier, updateContext.GetDeltaT() );
+	this->UpdateActivationStrength( activationMultiplier, updateContext.GetDeltaT() );
 }
 
 void EveSmartLightAttributeModifierColor::ProcessAttributeModifier( Vector3& attribute, const PlacementDataWithIdentifier& placement, const Vector3& entityPosition, const Vector3& entityDirection, float modifierStrength )
@@ -61,7 +61,7 @@ void EveSmartLightAttributeModifierColor::ProcessAttributeModifier( Vector3& att
 	}
 	
 	activeColor *= activationAdjustedBrightnessMultiplier;
-	attribute.x = activeColor.r;
-	attribute.y = activeColor.g;
-	attribute.z = activeColor.b;
+	attribute.x = min( 1.f, max( 0.f, activeColor.r ) );
+	attribute.y = min( 1.f, max( 0.f, activeColor.g ) );
+	attribute.z = min( 1.f, max( 0.f, activeColor.b ) );
 }

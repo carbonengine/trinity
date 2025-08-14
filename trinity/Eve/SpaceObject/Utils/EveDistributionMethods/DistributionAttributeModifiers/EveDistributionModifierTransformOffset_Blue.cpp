@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionModifierTransformOffset );
 
 const Be::ClassInfo* EveDistributionModifierTransformOffset::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionModifierTransformOffset, ":jessica-icon: up-down-left-right\n" )
+	EXPOSURE_BEGIN( EveDistributionModifierTransformOffset, ":jessica-icon: clock-rotate-left\n" )
 		MAP_INTERFACE( EveDistributionModifierTransformOffset )
 		MAP_INTERFACE( IEveDistributionModifier )
 

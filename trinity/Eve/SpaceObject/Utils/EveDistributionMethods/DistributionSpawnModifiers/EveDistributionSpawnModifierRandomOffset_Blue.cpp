@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionSpawnModifierRandomOffset );
 
 const Be::ClassInfo* EveDistributionSpawnModifierRandomOffset::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionSpawnModifierRandomOffset, "" )
+	EXPOSURE_BEGIN( EveDistributionSpawnModifierRandomOffset, ":jessica-icon: fa-arrows-up-down-left-right\n" )
 		MAP_INTERFACE( EveDistributionSpawnModifierRandomOffset )
 		MAP_INTERFACE( IEveDistributionSpawnModifier )
 		MAP_INTERFACE( IInitialize )

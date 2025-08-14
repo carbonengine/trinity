@@ -6,7 +6,7 @@ BLUE_DEFINE( EveSmartLightAttributeModifierColor );
 
 const Be::ClassInfo* EveSmartLightAttributeModifierColor::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightAttributeModifierColor, "" )
+	EXPOSURE_BEGIN( EveSmartLightAttributeModifierColor, ":jessica-icon: paint-roller\n:jessica-icon-color: (255, 115, 35)\n" )
 		MAP_INTERFACE( EveSmartLightAttributeModifierColor )
 		MAP_INTERFACE( IEveSmartLightGroupAttributeModifier )
 

@@ -28,6 +28,8 @@ private:
 	bool m_inverselookAtFormula;
 	bool m_useCameraPlacement;
 	bool m_inversePlacementFormula;
+	bool m_overwritePosition;
+	bool m_overwriteDirection;
 
 	float m_minimumActivation;
 	float m_maximumActivation;
@@ -36,6 +38,9 @@ private:
 	float m_lookAtIntencity;
 	float m_lookAtVisionCone;
 	float m_placementIntencity;
+
+	Vector3 m_positionOverwrite;
+	Vector3 m_angleOverwrite;
 };
 
 TYPEDEF_BLUECLASS( EveSmartLightAttributeModifierCameraDependency );

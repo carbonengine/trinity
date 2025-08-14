@@ -5,7 +5,7 @@ BLUE_DEFINE( EveSmartLightAttributeModifierNoise );
 
 const Be::ClassInfo* EveSmartLightAttributeModifierNoise::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightAttributeModifierNoise, "" )
+	EXPOSURE_BEGIN( EveSmartLightAttributeModifierNoise, ":jessica-icon: poo-storm\n:jessica-icon-color: (255, 115, 35)\n" )
 		MAP_INTERFACE( EveSmartLightAttributeModifierNoise )
 		MAP_INTERFACE( IEveSmartLightGroupAttributeModifier )
 

@@ -6,7 +6,7 @@ BLUE_DEFINE( EveSmartLightAttributeModifierExpressionBucket );
 
 const Be::ClassInfo* EveSmartLightAttributeModifierExpressionBucket::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightAttributeModifierExpressionBucket, "" )
+	EXPOSURE_BEGIN( EveSmartLightAttributeModifierExpressionBucket, ":jessica-icon: square-root-variable\n:jessica-icon-color: (112, 192, 29)\n" )
 		MAP_INTERFACE( EveSmartLightAttributeModifierExpressionBucket )
 		MAP_INTERFACE( EveSmartLightAttributeModifierBucket )
 		MAP_INTERFACE( IEveSmartLightGroupAttributeModifier )

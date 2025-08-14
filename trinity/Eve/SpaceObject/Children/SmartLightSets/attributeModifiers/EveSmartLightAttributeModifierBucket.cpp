@@ -33,7 +33,7 @@ void EveSmartLightAttributeModifierBucket::SetInheritProperties( const Color* co
 
 void EveSmartLightAttributeModifierBucket::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, float activationMultiplier )
 {
-	this->UpdateActivationStrength( activationMultiplier*params.activationStrength, updateContext.GetDeltaT() );
+	this->UpdateActivationStrength( activationMultiplier, updateContext.GetDeltaT() );
 	activationMultiplier *= m_finalActivationStrength;
 
 	for( auto attributeModifier : m_attributeModifiers )
