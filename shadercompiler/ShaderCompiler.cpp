@@ -616,7 +616,7 @@ int main(int argc, char* argv[])
 	g_includeHandler.SetRootPath( args.shaderPath );
 	g_messages.SetEntryFileName( args.shaderPath );
 
-	const int32_t coreFactor = 4;	// TODO: intern, adjust how many idling threads there should be
+	const int32_t coreFactor = 4;
 
 	CompileQueue compileQueue( args.coreCount * coreFactor, args.coreCount, &CompileShader );
 
