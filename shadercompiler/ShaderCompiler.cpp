@@ -26,6 +26,8 @@
 #pragma comment( lib, "dbghelp.lib" )
 #endif
 
+#include <chrono>
+#include <iostream>
 
 struct CompiledData
 {
@@ -111,7 +113,7 @@ struct CompileShaderArguments
 // Return value:
 //   0 always
 // --------------------------------------------------------------------------------------
-bool CompileShader( const CompileShaderArguments& arguments )
+bool CompileShader( const CompileShaderArguments& arguments, IWorkQueue* workQueue, size_t id )
 {
 	if( g_error.load( std::memory_order_relaxed ) )
 	{
@@ -173,7 +175,8 @@ bool CompileShader( const CompileShaderArguments& arguments )
 			compiler = found->second.get();
 		}
 	}
-	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, compiledData->data ) )
+
+	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, compiledData->data, workQueue, id ) )
 	{
 		g_error = 1;
 		return false;
@@ -421,7 +424,7 @@ bool PrintPermutations( const char* shaderPath )
 	return true;
 }
 
-typedef WorkQueue<CompileShaderArguments, decltype( &CompileShader )> CompileQueue;
+typedef WorkQueue2<CompileShaderArguments, decltype( &CompileShader )> CompileQueue;
 
 void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permutations, bool ignorePermutations, const std::vector<Macro>& defines )
 {
@@ -562,6 +565,7 @@ int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char* argv[])
 #endif
 {
+	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
 #if _WIN32
 	InitializeCriticalSection( &s_exceptionMutex );
@@ -613,9 +617,9 @@ int main(int argc, char* argv[])
 	g_includeHandler.SetRootPath( args.shaderPath );
 	g_messages.SetEntryFileName( args.shaderPath );
 
-	const int32_t coreFactor = 3;
+	const int32_t coreFactor = 5;	// TODO: intern, adjust how many idling threads there should be
 
-	CompileQueue compileQueue( args.coreCount * coreFactor, &CompileShader );
+	CompileQueue compileQueue( args.coreCount * coreFactor, args.coreCount, &CompileShader );
 
 	Permutations permutations;
 	{
@@ -833,6 +837,9 @@ int main(int argc, char* argv[])
 		fwrite( g_listing.c_str(), 1, g_listing.length(), file );
 		fclose( file );
 	}
+
+	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+	std::cerr << coreFactor << " coreFactor, " << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>( end - begin ).count() << "[ns]" << std::endl;
 
 	return 0;
 }

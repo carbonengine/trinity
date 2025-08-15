@@ -13,6 +13,7 @@
 #include "StringTable.h"
 #include "TextureFunctionConversionDX11.h"
 #include "YamlOutput.h"
+#include "WorkQueue.h"
 
 extern std::string g_metalToolsPath;
 
@@ -4659,7 +4660,7 @@ bool EffectCompilerMetal::Create()
 	return true;
 }
 
-bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
+bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, IWorkQueue* workQueue, size_t id )
 {
 	ZoneScoped;
 
@@ -4924,8 +4925,18 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				if( !needsToCompile )
 				{
 					// Let's wait for the other thread to compile for us
-					std::unique_lock<std::mutex> lock( syncData->mutex );
-					syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+					if( workQueue )
+					{
+						workQueue->OnBlocked( id );
+					}
+					{
+						std::unique_lock<std::mutex> lock( syncData->mutex );
+						syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+					}
+					if( workQueue )
+					{
+						workQueue->OnUnblocked( id );
+					}
 				}
 				else
 				{
@@ -5179,8 +5190,18 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 			if( !needsToCompile )
 			{
 				// Let's wait for the other thread to compile for us
-				std::unique_lock<std::mutex> lock( syncData->mutex );
-				syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+				if( workQueue )
+				{
+					workQueue->OnBlocked( id );
+				}
+				{
+					std::unique_lock<std::mutex> lock( syncData->mutex );
+					syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+				}
+				if( workQueue )
+				{
+					workQueue->OnUnblocked( id );
+				}
 			}
 			else
 			{

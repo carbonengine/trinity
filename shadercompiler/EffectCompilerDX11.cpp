@@ -21,6 +21,7 @@
 #include "OutputHLSL.h"
 
 #include "DxReflection.h"
+#include <WorkQueue.h>
 
 #define DXIL_FOURCC(ch0, ch1, ch2, ch3) (                            \
   (uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
@@ -924,9 +925,9 @@ bool ParseShaderName( const InlineString& name, InputStageType& type )
 	return true;
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, IWorkQueue* workQueue, size_t id )
 {
-	return CompileEffect( source, sourceLength, defines, result, { nullptr, false } );
+	return CompileEffect( source, sourceLength, defines, result, { nullptr, false }, workQueue, id );
 }
 
 DWORD GetOptimizationLevel()
@@ -1187,7 +1188,7 @@ bool AddGlobalInputs( StageData& globalsData, std::map<StringReference, Paramete
 	return true;
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions, IWorkQueue* workQueue, size_t id )
 {
 	ZoneScoped;
 
@@ -1380,11 +1381,21 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 				}
 
-				if ( !needsToCompile )
+				if( !needsToCompile )
 				{
 					// Let's wait for the other thread to compile for us
-					std::unique_lock<std::mutex> lock( syncData->mutex );
-					syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+					if( workQueue )
+					{
+						workQueue->OnBlocked( id );
+					}
+					{
+						std::unique_lock<std::mutex> lock( syncData->mutex );
+						syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+					}
+					if( workQueue )
+					{
+						workQueue->OnUnblocked( id );
+					}
 				}
 				else
 				{
@@ -1700,8 +1711,18 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			if( !needsToCompile )
 			{
 				// Let's wait for the other thread to compile for us
-				std::unique_lock<std::mutex> lock( syncData->mutex );
-				syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+				if( workQueue )
+				{
+					workQueue->OnBlocked( id );
+				}
+				{
+					std::unique_lock<std::mutex> lock( syncData->mutex );
+					syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+				}
+				if( workQueue )
+				{
+					workQueue->OnUnblocked( id );
+				}
 			}
 			else
 			{
