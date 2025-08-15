@@ -107,6 +107,7 @@ private:
 class IWorkQueue
 {
 public:
+	virtual ~IWorkQueue() = default;
 	virtual void OnBlocked() = 0;
 	virtual void OnUnblocked() = 0;
 };
