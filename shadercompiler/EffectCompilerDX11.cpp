@@ -925,9 +925,9 @@ bool ParseShaderName( const InlineString& name, InputStageType& type )
 	return true;
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, IWorkQueue* workQueue, size_t id )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, IWorkQueue* workQueue )
 {
-	return CompileEffect( source, sourceLength, defines, result, { nullptr, false }, workQueue, id );
+	return CompileEffect( source, sourceLength, defines, result, { nullptr, false }, workQueue );
 }
 
 DWORD GetOptimizationLevel()
@@ -1188,7 +1188,7 @@ bool AddGlobalInputs( StageData& globalsData, std::map<StringReference, Paramete
 	return true;
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions, IWorkQueue* workQueue, size_t id )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions, IWorkQueue* workQueue )
 {
 	ZoneScoped;
 
@@ -1386,7 +1386,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					// Let's wait for the other thread to compile for us
 					if( workQueue )
 					{
-						workQueue->OnBlocked( id );
+						workQueue->OnBlocked();
 					}
 					{
 						std::unique_lock<std::mutex> lock( syncData->mutex );
@@ -1394,7 +1394,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 					if( workQueue )
 					{
-						workQueue->OnUnblocked( id );
+						workQueue->OnUnblocked();
 					}
 				}
 				else
@@ -1713,7 +1713,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				// Let's wait for the other thread to compile for us
 				if( workQueue )
 				{
-					workQueue->OnBlocked( id );
+					workQueue->OnBlocked();
 				}
 				{
 					std::unique_lock<std::mutex> lock( syncData->mutex );
@@ -1721,7 +1721,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 				if( workQueue )
 				{
-					workQueue->OnUnblocked( id );
+					workQueue->OnUnblocked();
 				}
 			}
 			else

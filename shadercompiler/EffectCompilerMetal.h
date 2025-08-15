@@ -67,7 +67,7 @@ class EffectCompilerMetal: public EffectCompilerBase
 {
 public:
 	bool Create() override;
-	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, class IWorkQueue* workQueue, size_t id ) override;
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, class IWorkQueue* workQueue ) override;
 
 private:
 	struct SyncData

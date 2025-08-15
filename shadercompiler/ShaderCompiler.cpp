@@ -113,7 +113,7 @@ struct CompileShaderArguments
 // Return value:
 //   0 always
 // --------------------------------------------------------------------------------------
-bool CompileShader( const CompileShaderArguments& arguments, IWorkQueue* workQueue, size_t id )
+bool CompileShader( const CompileShaderArguments& arguments, IWorkQueue* workQueue )
 {
 	if( g_error.load( std::memory_order_relaxed ) )
 	{
@@ -176,7 +176,7 @@ bool CompileShader( const CompileShaderArguments& arguments, IWorkQueue* workQue
 		}
 	}
 
-	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, compiledData->data, workQueue, id ) )
+	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, compiledData->data, workQueue ) )
 	{
 		g_error = 1;
 		return false;

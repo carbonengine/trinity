@@ -107,11 +107,9 @@ private:
 class IWorkQueue
 {
 public:
-	virtual void OnBlocked( size_t i ) = 0;
-	virtual void OnUnblocked( size_t i ) = 0;
+	virtual void OnBlocked() = 0;
+	virtual void OnUnblocked() = 0;
 };
-
-
 
 template <typename T, typename Processor>
 class WorkQueue2 : IWorkQueue
@@ -120,43 +118,21 @@ public:
 	WorkQueue2( size_t totalWorkerCount, size_t activeWorkersCount, Processor processor ) :
 		m_processor( processor )
 	{
-		//g_messages.AddMessage( "%s", "Testestest" );
-
 		m_totalWorkerCount = totalWorkerCount;
 		m_activeWorkersCount = activeWorkersCount;
 
-		m_activeWorkersSemaphore = CreateSemaphore(
-			NULL, // default security attributes
-			(long)activeWorkersCount, // initial count
-			(long)activeWorkersCount, // maximum count
-			NULL ); // unnamed semaphore
+		m_activeWorkersSemaphore = CreateSemaphore( NULL, (long)activeWorkersCount, (long)activeWorkersCount, NULL );
 		if( m_activeWorkersSemaphore == NULL )
 		{
-			g_messages.AddMessage( "%s %d", "WorkQueue2: Creating m_activeWorkersSemaphore failed!", GetLastError() );
+			g_messages.AddMessage( "WorkQueue2: Creating m_activeWorkersSemaphore failed! Error: %d", GetLastError() );
 		}
 
 		started = false;
 		
 		for( size_t i = 0; i < totalWorkerCount; ++i )
 		{
-			m_workerThreads.emplace_back( std::thread( [this, i] { WorkerThread( i ); } ) );
-			//m_workerThreadStates.push_back( ThreadState::Idle );
+			m_workerThreads.emplace_back( std::thread( [this] { WorkerThread(); } ) );
 		}
-
-
-
-		//for( size_t i = 0; i < activeWorkersCount; ++i )
-		//{
-		//	activeWorkersSemaphore.release();
-		//}
-		//
-		//// TODO: intern, is this necessary?
-		//for( size_t i = 0; i < workerCount; ++i )
-		//{
-		//	totalWorkersSemaphore.release();
-		//}
-
-		
 	}
 
 	virtual ~WorkQueue2()
@@ -169,18 +145,13 @@ public:
 				m_queue.pop();
 			}
 		}
-
-		CloseHandle( m_activeWorkersSemaphore );
-
-		//g_messages.AddMessage( "%s", "Destructor Testestest" );
-
 		Join();
+		CloseHandle( m_activeWorkersSemaphore );
 	}
 
 	void Put( const T& item )
 	{
-		// Don't call this after the queue already started working! 
-		// TODO: intern, maybe check some flag here?
+		assert( ( "Don't call WorkQueue2::Put after WorkQueue2::Join! ", !started ) );
 		PutPtr( new T( item ) );
 	}
 
@@ -191,7 +162,6 @@ public:
 			started = true;
 			m_waitToStart.notify_all();
 		}
-
 		for( auto& thread : m_workerThreads )
 		{
 			thread.join();
@@ -199,49 +169,48 @@ public:
 		m_workerThreads.clear();
 	}
 
-	virtual void OnBlocked( size_t ) override
+	virtual void OnBlocked() override
 	{
-		//m_workerThreadStates[i] = ThreadState::Blocked;
-		//activeWorkersSemaphore.release();
-		if( !ReleaseSemaphore(
-				m_activeWorkersSemaphore, // handle to semaphore
-				1, // increase count by one
-				NULL ) ) // not interested in previous count
-		{
-			g_messages.AddMessage( "OnBlocked: ReleaseSemaphore m_activeWorkersSemaphore error: %d", GetLastError() );
-		}
+		FreeSemaphore();
 	}
 
-	virtual void OnUnblocked( size_t ) override
+	virtual void OnUnblocked() override
 	{
-		//m_workerThreadStates[i] = ThreadState::Ready;
-		//activeWorkersSemaphore.acquire();
-		DWORD waitResult = WaitForSingleObject(
-			m_activeWorkersSemaphore, // handle to semaphore
-			INFINITE ); // TODO: intern, changed this from zero to infinite, as documentation is conflicting. test if this works...
+		AquireSemaphore();
+	}
+
+private:
+	void AquireSemaphore()
+	{
+		DWORD waitResult = WaitForSingleObject( m_activeWorkersSemaphore, INFINITE );
 		if( waitResult != WAIT_OBJECT_0 )
 		{
 			if( waitResult == WAIT_FAILED )
 			{
-				g_messages.AddMessage( "%s %d %d", "OnUnblocked: Waiting on m_activeWorkersSemaphore failed!", waitResult, GetLastError() );
+				g_messages.AddMessage( "WorkQueue2: Waiting on m_activeWorkersSemaphore failed! Error: %d %d", waitResult, GetLastError() );
 			}
 			else
 			{
-				g_messages.AddMessage( "%s %d", "OnUnblocked: Waiting on m_activeWorkersSemaphore failed!", waitResult );
+				g_messages.AddMessage( "WorkQueue2: Waiting on m_activeWorkersSemaphore failed! Error: %d", waitResult );
 			}
 		}
-		//m_workerThreadStates[i] = ThreadState::Active;
 	}
 
-private:
+	void FreeSemaphore()
+	{
+		if( !ReleaseSemaphore( m_activeWorkersSemaphore, 1, NULL ) )
+		{
+			g_messages.AddMessage( "WorkQueue2::OnBlocked: ReleaseSemaphore m_activeWorkersSemaphore error: %d", GetLastError() );
+		}
+	}
+
 	void PutPtr( T* item )
 	{
-		// TODO: intern, this shouldn't be required if nothing is added to the queue after starting, assuming the caller is not multithreaded
-		//std::lock_guard scope( m_queueMutex );
+		// mutex guard shouldn't be required. nothing should added to the queue after WorkQueue2::Join
 		m_queue.push( item );
 	}
 
-	void WorkerThread( size_t i )
+	void WorkerThread()
 	{
 #if CCP_TELEMETRY_ENABLED
 		tracy::SetThreadName( "Compile Worker Thread" );
@@ -252,29 +221,10 @@ private:
 			m_waitToStart.wait( scope, [this] { return started; } );
 		}
 
-		DWORD waitResult = WaitForSingleObject(
-			m_activeWorkersSemaphore, // handle to semaphore
-			INFINITE ); // TODO: intern, changed this from zero to infinite, as documentation is conflicting. test if this works...
-		if( waitResult != WAIT_OBJECT_0 )
-		{
-			if( waitResult == WAIT_FAILED )
-			{
-				g_messages.AddMessage( "%s %d %d", "WorkerThread: Waiting on m_activeWorkersSemaphore failed!", waitResult, GetLastError() );
-			}
-			else
-			{
-				g_messages.AddMessage( "%s %d", "WorkerThread: Waiting on m_activeWorkersSemaphore failed!", waitResult );
-			}
-		}
+		AquireSemaphore();
 
 		while( true )
 		{
-			//m_workerThreadStates[i] = ThreadState::Idle;
-			//m_activeWorkersSemaphore.acquire();
-
-
-			//m_workerThreadStates[i] = ThreadState::Active;
-
 			T* item = nullptr;
 			{
 				std::unique_lock scope( m_queueMutex );
@@ -286,55 +236,25 @@ private:
 				m_queue.pop();
 			}
 
-			//auto blockedCallback = [this]() { OnBlocked( i ); };
-			//auto unblockedCallback = [this]() { OnUnBlocked( i ); };
-			if( !m_processor( *item, this, i ) ) //blockedCallback, unblockedCallback ) )
+			if( !m_processor( *item, this ) )
 			{
-				// TODO: intern, what m_processor's return value? some critical error that should kill thread?
+				// some terrible failure?
+				delete item;
 				break;
 			}
 			delete item;
-
-			// TODO:intern, I think addeding this was wrong... think more about it
-			// 
-			//if( !ReleaseSemaphore(
-			//		m_activeWorkersSemaphore, // handle to semaphore
-			//		1, // increase count by one
-			//		NULL ) ) // not interested in previous count
-			//{
-			//	g_messages.AddMessage( "WorkerThread: ReleaseSemaphore m_activeWorkersSemaphore error: %d", GetLastError() );
-			//}
 		}
 
-		if( !ReleaseSemaphore(
-				m_activeWorkersSemaphore, // handle to semaphore
-				1, // increase count by one
-				NULL ) ) // not interested in previous count
-		{
-			g_messages.AddMessage( "WorkerThread: ReleaseSemaphore m_activeWorkersSemaphore error: %d", GetLastError() );
-		}
-
-		//m_workerThreadStates[i] = ThreadState::Finished;
+		FreeSemaphore();
 	}
-
-	enum ThreadState
-	{
-		Idle,
-		Active,
-		Blocked,
-		Ready,
-		Finished
-	};
 
 	Processor m_processor;
 	std::queue<T*> m_queue;
 	std::mutex m_queueMutex;
 	std::vector<std::thread> m_workerThreads;
-	//std::vector<ThreadState> m_workerThreadStates;
 	size_t m_totalWorkerCount;
 	size_t m_activeWorkersCount;
 	HANDLE m_activeWorkersSemaphore;
-
 	bool started = false;
 	std::mutex m_startMutex;
 	std::condition_variable m_waitToStart;

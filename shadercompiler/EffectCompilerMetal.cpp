@@ -4660,7 +4660,7 @@ bool EffectCompilerMetal::Create()
 	return true;
 }
 
-bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, IWorkQueue* workQueue, size_t id )
+bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, IWorkQueue* workQueue )
 {
 	ZoneScoped;
 
@@ -4927,7 +4927,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 					// Let's wait for the other thread to compile for us
 					if( workQueue )
 					{
-						workQueue->OnBlocked( id );
+						workQueue->OnBlocked();
 					}
 					{
 						std::unique_lock<std::mutex> lock( syncData->mutex );
@@ -4935,7 +4935,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 					}
 					if( workQueue )
 					{
-						workQueue->OnUnblocked( id );
+						workQueue->OnUnblocked();
 					}
 				}
 				else
@@ -5192,7 +5192,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				// Let's wait for the other thread to compile for us
 				if( workQueue )
 				{
-					workQueue->OnBlocked( id );
+					workQueue->OnBlocked();
 				}
 				{
 					std::unique_lock<std::mutex> lock( syncData->mutex );
@@ -5200,7 +5200,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				}
 				if( workQueue )
 				{
-					workQueue->OnUnblocked( id );
+					workQueue->OnUnblocked();
 				}
 			}
 			else

@@ -8,7 +8,7 @@ class EffectCompilerDX11 : public EffectCompilerBase
 {
 public:
 	bool Create() override;
-	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, class IWorkQueue* workQueue, size_t id ) override;
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, class IWorkQueue* workQueue ) override;
 
 	struct CompileOptions
 	{
@@ -16,7 +16,7 @@ public:
 		bool addSpaces; // add space declarations to shader resources (dx12)
 		bool useStaticSamplers; // dx12
 	};
-	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions, class IWorkQueue* workQueue, size_t id );
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions, class IWorkQueue* workQueue );
 
 private:
 	struct SyncData
