@@ -565,7 +565,6 @@ int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char* argv[])
 #endif
 {
-	std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
 #if _WIN32
 	InitializeCriticalSection( &s_exceptionMutex );
@@ -837,9 +836,6 @@ int main(int argc, char* argv[])
 		fwrite( g_listing.c_str(), 1, g_listing.length(), file );
 		fclose( file );
 	}
-
-	std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-	std::cerr << coreFactor << " coreFactor, " << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>( end - begin ).count() << "[ns]" << std::endl;
 
 	return 0;
 }
