@@ -104,13 +104,17 @@ Tr2VertexDefinition BuildFromGrannyVertexDecl( const granny_data_type_definition
 			char C = src.Name[ strlen( GrannyVertexNormalName ) ];
 			item.m_usageIndex = C ? unsigned( C - '0' ) : 0;
 		}		
-		else if( !strcmp( src.Name, GrannyVertexTangentName ) )
+		else if( !strncmp( src.Name, GrannyVertexTangentName, strlen( GrannyVertexTangentName ) ) )
 		{
 			item.m_usage = vd.TANGENT;
+			char C = src.Name[strlen( GrannyVertexTangentName )];
+			item.m_usageIndex = C ? unsigned( C - '0' ) : 0;
 		}
-		else if( !strcmp( src.Name, GrannyVertexBinormalName ) )
+		else if( !strncmp( src.Name, GrannyVertexBinormalName, strlen( GrannyVertexBinormalName ) ) )
 		{
 			item.m_usage = vd.BITANGENT;
+			char C = src.Name[strlen( GrannyVertexBinormalName )];
+			item.m_usageIndex = C ? unsigned( C - '0' ) : 0;
 		}
 		else if( !strncmp( src.Name, GrannyVertexTextureCoordinatesName, strlen( GrannyVertexTextureCoordinatesName ) ) )
 		{
