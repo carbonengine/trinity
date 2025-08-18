@@ -1,5 +1,9 @@
 #pragma once
 
+#if( TRINITY_PLATFORM == TRINITY_METAL )
+#include <mach/semaphore.h>
+#include <mach/mach.h>
+#endif
 
 #include "CompileMessageQueue.h"
 extern CompileMessageQueue g_messages;
@@ -122,12 +126,15 @@ public:
 		m_totalWorkerCount = totalWorkerCount;
 		m_activeWorkersCount = activeWorkersCount;
 
+#if( TRINITY_PLATFORM == TRINITY_METAL )
+		semaphore_create( current_task(), &m_activeWorkersSemaphore, SYNC_POLICY_FIFO, (int32_t)activeWorkersCount );
+#else
 		m_activeWorkersSemaphore = CreateSemaphore( NULL, (long)activeWorkersCount, (long)activeWorkersCount, NULL );
 		if( m_activeWorkersSemaphore == NULL )
 		{
 			g_messages.AddMessage( "WorkQueue2: Creating m_activeWorkersSemaphore failed! Error: %d", GetLastError() );
 		}
-
+#endif
 		started = false;
 		
 		for( size_t i = 0; i < totalWorkerCount; ++i )
@@ -147,7 +154,11 @@ public:
 			}
 		}
 		Join();
+#if( TRINITY_PLATFORM == TRINITY_METAL )
+		semaphore_destroy( current_task(), m_activeWorkersSemaphore );
+#else
 		CloseHandle( m_activeWorkersSemaphore );
+#endif
 	}
 
 	void Put( const T& item )
@@ -183,6 +194,13 @@ public:
 private:
 	void AquireSemaphore()
 	{
+#if( TRINITY_PLATFORM == TRINITY_METAL )
+		auto waitResult = semaphore_wait( m_activeWorkersSemaphore );
+		if ( waitResult != KERN_SUCCESS )
+		{
+			g_messages.AddMessage( "WorkQueue2: Waiting on m_activeWorkersSemaphore failed! Error: %d", waitResult );
+		}
+#else
 		DWORD waitResult = WaitForSingleObject( m_activeWorkersSemaphore, INFINITE );
 		if( waitResult != WAIT_OBJECT_0 )
 		{
@@ -195,14 +213,19 @@ private:
 				g_messages.AddMessage( "WorkQueue2: Waiting on m_activeWorkersSemaphore failed! Error: %d", waitResult );
 			}
 		}
+#endif
 	}
 
 	void FreeSemaphore()
 	{
+#if( TRINITY_PLATFORM == TRINITY_METAL )
+		semaphore_signal( m_activeWorkersSemaphore );
+#else
 		if( !ReleaseSemaphore( m_activeWorkersSemaphore, 1, NULL ) )
 		{
 			g_messages.AddMessage( "WorkQueue2::OnBlocked: ReleaseSemaphore m_activeWorkersSemaphore error: %d", GetLastError() );
 		}
+#endif
 	}
 
 	void PutPtr( T* item )
@@ -255,7 +278,11 @@ private:
 	std::vector<std::thread> m_workerThreads;
 	size_t m_totalWorkerCount;
 	size_t m_activeWorkersCount;
+#if( TRINITY_PLATFORM == TRINITY_METAL )
+	semaphore_t m_activeWorkersSemaphore;
+#else
 	HANDLE m_activeWorkersSemaphore;
+#endif
 	bool started = false;
 	std::mutex m_startMutex;
 	std::condition_variable m_waitToStart;
