@@ -163,7 +163,11 @@ public:
 
 	void Put( const T& item )
 	{
-		assert( ( "Don't call WorkQueue2::Put after WorkQueue2::Join! ", !started ) );
+		if( started )
+		{
+			g_messages.AddMessage( "Don't call WorkQueue2::Put after WorkQueue2::Join!" );
+			return;
+		}
 		PutPtr( new T( item ) );
 	}
 
