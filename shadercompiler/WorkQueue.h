@@ -1,6 +1,6 @@
 #pragma once
 
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#ifdef __APPLE__
 #include <mach/semaphore.h>
 #include <mach/mach.h>
 #endif
@@ -126,7 +126,7 @@ public:
 		m_totalWorkerCount = totalWorkerCount;
 		m_activeWorkersCount = activeWorkersCount;
 
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#ifdef __APPLE__
 		semaphore_create( current_task(), &m_activeWorkersSemaphore, SYNC_POLICY_FIFO, (int32_t)activeWorkersCount );
 #else
 		m_activeWorkersSemaphore = CreateSemaphore( NULL, (long)activeWorkersCount, (long)activeWorkersCount, NULL );
@@ -154,7 +154,7 @@ public:
 			}
 		}
 		Join();
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#ifdef __APPLE__
 		semaphore_destroy( current_task(), m_activeWorkersSemaphore );
 #else
 		CloseHandle( m_activeWorkersSemaphore );
@@ -194,7 +194,7 @@ public:
 private:
 	void AquireSemaphore()
 	{
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#ifdef __APPLE__
 		auto waitResult = semaphore_wait( m_activeWorkersSemaphore );
 		if ( waitResult != KERN_SUCCESS )
 		{
@@ -218,7 +218,7 @@ private:
 
 	void FreeSemaphore()
 	{
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#ifdef __APPLE__
 		semaphore_signal( m_activeWorkersSemaphore );
 #else
 		if( !ReleaseSemaphore( m_activeWorkersSemaphore, 1, NULL ) )
@@ -278,7 +278,7 @@ private:
 	std::vector<std::thread> m_workerThreads;
 	size_t m_totalWorkerCount;
 	size_t m_activeWorkersCount;
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#ifdef __APPLE__
 	semaphore_t m_activeWorkersSemaphore;
 #else
 	HANDLE m_activeWorkersSemaphore;
