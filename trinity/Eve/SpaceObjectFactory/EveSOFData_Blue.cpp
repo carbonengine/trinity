@@ -944,7 +944,7 @@ const Be::ClassInfo* EveSOFDataHullController::ExposeToBlue()
 			m_path,
 			"Path to the red file for the controller\n"
 			":jessica-widget: filepath\n"
-			":jessica-file-filter : redfile",
+			":jessica-file-filter: redfile",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "buildFilter", m_buildFilter, "", Be::READWRITE | Be::PERSIST, EveSOFDataHullBuildFilterChooser )
 	EXPOSURE_END()
