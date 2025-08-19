@@ -139,7 +139,7 @@ private:
 
 	// ITr2ControllerOwner
 	PITr2ControllerVector m_controllers;
-	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
+	std::vector<std::pair<std::string, float>> m_controllerVariables;
 
 	Tr2OcclusionBuffer::Offset m_occlusionOffset;
 	Tr2OcclusionBuffer::Offset m_backgroundOcclusionOffset;

@@ -40,7 +40,6 @@ EveChildInstanceContainer::EveChildInstanceContainer( IRoot* lockobj ) :
 	PARENTLOCK( m_instances ),
 	PARENTLOCK( m_transforms ),
 	PARENTLOCK( m_transformModifiers ),
-	m_controllerVariables( "EveChildInstanceContainer::m_controllerVariables" ),
 	m_worldVelocity( 0, 0, 0 ),
 	m_display( true ),
 	m_isAlwaysOn( false ),
@@ -508,7 +507,15 @@ void EveChildInstanceContainer::RemoveFromEffectChildrenList( IEveSpaceObjectChi
 void EveChildInstanceContainer::SetControllerVariable( const char* name, float value )
 {
 	m_source->SetControllerVariable( name, value );
-	m_controllerVariables[name] = value;
+	auto found = find_if( begin( m_controllerVariables ), end( m_controllerVariables ), [name]( auto& x ) { return x.first == name; } );
+	if( found == end( m_controllerVariables ) )
+	{
+		m_controllerVariables.push_back( { name, value } );
+	}
+	else
+	{
+		found->second = value;
+	}
 	RunOnInstances( [&name, &value]( IEveSpaceObjectChild* c ) { c->SetControllerVariable( name, value ); } );
 }
 

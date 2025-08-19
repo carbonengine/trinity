@@ -155,7 +155,8 @@ bool EveBannerSet::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 	if( m_effect )
 	{
-		m_effect->UsedWithScreenSize( screenSize, m_maxBannerRadius, { 1.f } );
+		static const std::vector<float> uvDensities = { 1.f };
+		m_effect->UsedWithScreenSize( screenSize, m_maxBannerRadius, uvDensities );
 	}
 
 	if( isLoddedOut )

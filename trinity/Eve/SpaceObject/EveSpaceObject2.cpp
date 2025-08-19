@@ -195,7 +195,6 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_lastDamageLocatorHit( -1 ),
 	m_worldTransform( XMMatrixIdentity() ),
 	m_invWorldTransform( XMMatrixIdentity() ),
-	m_controllerVariables( "EveSpaceObject2::m_controllerVariables" ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER )
 {
 	m_positionDelta.CreateInstance();
@@ -3493,7 +3492,15 @@ void EveSpaceObject2::GetLastImpostorBoundingSphere( Vector4& sphere ) const
 
 void EveSpaceObject2::SetControllerVariable( const char* name, float value )
 {
-	m_controllerVariables[name] = value;
+	auto found = find_if( begin( m_controllerVariables ), end( m_controllerVariables ), [name]( auto& x ) { return x.first == name; } );
+	if( found == end( m_controllerVariables ) )
+	{
+		m_controllerVariables.push_back( { name, value } );
+	}
+	else
+	{
+		found->second = value;
+	}
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
 		( *it )->SetVariable( name, value );

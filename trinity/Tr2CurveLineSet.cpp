@@ -398,8 +398,8 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 		}
 
 		size_t byteSize = m_vertexBufferSize * 6 * sizeof( LineVertex );
-		CcpMallocBuffer buffer( "curveLineSetBuffer", byteSize );
-		LineVertex* vertexBuffer = reinterpret_cast<LineVertex*>( buffer.get() );
+		auto buffer = Tr2Renderer::GetPoolAllocator()->Allocate( byteSize );
+		LineVertex* vertexBuffer = reinterpret_cast<LineVertex*>( buffer );
 
 		for( unsigned int i = 0; i < m_lines.size(); ++i )
 		{
@@ -595,7 +595,7 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 		// lock and fill it
 		CR_RETURN_VAL( m_vertexBuffer.MapForWriting( vertexBuffer, renderContext ), false );
 
-		memcpy( vertexBuffer, buffer.get(), byteSize );
+		memcpy( vertexBuffer, buffer, byteSize );
 
 		m_vertexBuffer.UnmapForWriting( renderContext );
 	}

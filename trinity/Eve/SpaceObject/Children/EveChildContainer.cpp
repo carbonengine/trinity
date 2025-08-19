@@ -31,7 +31,6 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 	PARENTLOCK( m_controllers ),
 	PARENTLOCK( m_fxAttributes ),
 	PARENTLOCK( m_attachments ),
-	m_controllerVariables( "EveChildContainer::m_controllerVariables" ),
 	m_displayFilter( SHADER_ALL ),
 	m_worldVelocity( 0, 0, 0 ),
 	m_display( true ),
@@ -848,7 +847,15 @@ void EveChildContainer::AddController( ITr2Controller* controller )
 
 void EveChildContainer::SetControllerVariable( const char* name, float value )
 {
-	m_controllerVariables[name] = value;
+	auto found = find_if( begin( m_controllerVariables ), end( m_controllerVariables ), [name]( auto& x ) { return x.first == name; } );
+	if ( found == end( m_controllerVariables ) )
+	{
+		m_controllerVariables.push_back( { name, value } );
+	}
+	else
+	{
+		found->second = value;
+	}
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
 		( *it )->SetVariable( name, value );

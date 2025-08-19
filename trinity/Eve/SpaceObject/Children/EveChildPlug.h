@@ -106,7 +106,7 @@ protected:
 	BlueSharedString m_name;
 
 	PITr2ControllerVector m_controllers;
-	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
+	std::vector<std::pair<std::string, float>> m_controllerVariables;
 	PTr2ExternalParameterVector m_externalParameters;
 	EveChildInheritPropertiesPtr m_inheritProperties;
 	Matrix m_worldTransform;
