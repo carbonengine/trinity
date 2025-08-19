@@ -5,7 +5,8 @@ BLUE_DEFINE( EveSmartLightColorShareGroup );
 
 const Be::ClassInfo* EveSmartLightColorShareGroup::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightColorShareGroup, "" )
+
+	EXPOSURE_BEGIN( EveSmartLightColorShareGroup, ":jessica-icon: folder-gear\n:jessica-icon-color: (118, 205, 255)\n" )
 		MAP_INTERFACE( EveSmartLightColorShareGroup )
 		MAP_INTERFACE( EveSmartLightBaseGroup )
 		MAP_INTERFACE( IListNotify )

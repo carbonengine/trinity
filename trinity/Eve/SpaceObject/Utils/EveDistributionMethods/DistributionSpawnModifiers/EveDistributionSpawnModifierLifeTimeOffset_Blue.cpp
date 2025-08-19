@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionSpawnModifierLifeTimeOffset );
 
 const Be::ClassInfo* EveDistributionSpawnModifierLifeTimeOffset::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionSpawnModifierLifeTimeOffset, "" )
+	EXPOSURE_BEGIN( EveDistributionSpawnModifierLifeTimeOffset, ":jessica-icon: fa-timeline-arrow\n" )
 		MAP_INTERFACE( EveDistributionSpawnModifierLifeTimeOffset )
 		MAP_INTERFACE( IEveDistributionSpawnModifier )
 		MAP_INTERFACE( IInitialize )

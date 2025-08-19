@@ -5,7 +5,7 @@ BLUE_DEFINE( EveSmartLightAttributeModifierCameraDependency );
 
 const Be::ClassInfo* EveSmartLightAttributeModifierCameraDependency::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightAttributeModifierCameraDependency, "" )
+	EXPOSURE_BEGIN( EveSmartLightAttributeModifierCameraDependency, ":jessica-icon: video\n:jessica-icon-color: (112, 192, 29)\n" )
 		MAP_INTERFACE( EveSmartLightAttributeModifierCameraDependency )
 		MAP_INTERFACE( EveSmartLightAttributeModifierBucket )
 		MAP_INTERFACE( IEveSmartLightGroupAttributeModifier )
@@ -32,6 +32,11 @@ const Be::ClassInfo* EveSmartLightAttributeModifierCameraDependency::ExposeToBlu
 		
 		MAP_ATTRIBUTE( "attributeMultiplier", m_activationStrength, "scale modifier effect\n:jessica-group: AttributeModifierBlending", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "finalAttributeMultiplier", m_finalActivationStrength, "to visualize/debug compound activationStrength\n:jessica-group: AttributeModifierBlending", Be::READ )
+
+		MAP_ATTRIBUTE( "overwritePosition", m_overwritePosition, "want to have the instances react to a static point instead of their own position?\n:jessica-group: overwriteObjectData", Be::READWRITE | Be::PERSIST );
+		MAP_ATTRIBUTE( "overwriteObjectDirection", m_overwriteDirection, "want to have the instances react to a static angle instead of their own?\n:jessica-group: overwriteObjectData", Be::READWRITE | Be::PERSIST );
+		MAP_ATTRIBUTE( "positionOverwrite", m_positionOverwrite, "set the overwrite value of the point\n:jessica-group: overwriteObjectData", Be::READWRITE | Be::PERSIST );
+		MAP_ATTRIBUTE( "angleOverwrite", m_angleOverwrite, "set the overwrite value of the angle\n:jessica-group: overwriteObjectData", Be::READWRITE | Be::PERSIST );
 
 	EXPOSURE_END()
 }

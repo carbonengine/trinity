@@ -15,7 +15,7 @@ BLUE_DEFINE( EveChildInstanceMeshRenderer );
 
 const Be::ClassInfo* EveChildInstanceMeshRenderer::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveChildInstanceMeshRenderer, "" )
+	EXPOSURE_BEGIN( EveChildInstanceMeshRenderer, ":jessica-icon: stars\n:jessica-icon-color: (192, 17, 0)\n" )
 		MAP_INTERFACE( EveChildInstanceMeshRenderer )
 		MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( EveChildMesh )
@@ -28,7 +28,7 @@ const Be::ClassInfo* EveChildInstanceMeshRenderer::ExposeToBlue()
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE( "distribution", m_distribution, "distributionMethod for entities ", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "distribution", m_distribution, "distributionMethod for entities\n:jessica-icon: map-location-dot\n", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "mesh", m_mesh, "the rendered mesh", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "rotationConstraint", m_rotationConstraint, "", Be::READWRITE | Be::PERSIST | Be::ENUM, RotationalConstraintsChooser );
@@ -37,6 +37,8 @@ const Be::ClassInfo* EveChildInstanceMeshRenderer::ExposeToBlue()
 		MAP_ATTRIBUTE( "staticOffsetRotation", m_staticOffsetRotation, "additional rotation in place at the location distribution placementData", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "staticOffsetScale", m_staticOffsetScale, "scale all rendered meshes", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "minScreenSize", m_minScreenSize, "", Be::READWRITE | Be::PERSIST )
+
+		MAP_METHOD_AND_WRAP( "RefreshStaticGeometry", RefreshStaticGeometry, "if static geo parameters were changed during authoring: refresh here\n:jessica-placement: TOOLBAR" )
 		
 	EXPOSURE_END()
 }

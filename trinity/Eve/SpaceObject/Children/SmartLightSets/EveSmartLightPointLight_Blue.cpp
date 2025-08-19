@@ -7,7 +7,7 @@ BLUE_DEFINE( EveSmartLightPointLight );
 
 const Be::ClassInfo* EveSmartLightPointLight::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightPointLight, "" )
+	EXPOSURE_BEGIN( EveSmartLightPointLight, ":jessica-icon: brightness\n" )
 		MAP_INTERFACE( EveSmartLightPointLight )
 		MAP_INTERFACE( EveSmartLightBaseGroup )
 		MAP_INTERFACE( IInitialize )

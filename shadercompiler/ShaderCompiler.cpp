@@ -26,6 +26,8 @@
 #pragma comment( lib, "dbghelp.lib" )
 #endif
 
+#include <chrono>
+#include <iostream>
 
 struct CompiledData
 {
@@ -111,7 +113,7 @@ struct CompileShaderArguments
 // Return value:
 //   0 always
 // --------------------------------------------------------------------------------------
-bool CompileShader( const CompileShaderArguments& arguments )
+bool CompileShader( const CompileShaderArguments& arguments, IWorkQueue* workQueue )
 {
 	if( g_error.load( std::memory_order_relaxed ) )
 	{
@@ -173,7 +175,8 @@ bool CompileShader( const CompileShaderArguments& arguments )
 			compiler = found->second.get();
 		}
 	}
-	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, compiledData->data ) )
+
+	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, compiledData->data, workQueue ) )
 	{
 		g_error = 1;
 		return false;
@@ -421,7 +424,7 @@ bool PrintPermutations( const char* shaderPath )
 	return true;
 }
 
-typedef WorkQueue<CompileShaderArguments, decltype( &CompileShader )> CompileQueue;
+typedef WorkQueue2<CompileShaderArguments, decltype( &CompileShader )> CompileQueue;
 
 void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permutations, bool ignorePermutations, const std::vector<Macro>& defines )
 {
@@ -562,6 +565,7 @@ int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char* argv[])
 #endif
 {
+
 #if _WIN32
 	InitializeCriticalSection( &s_exceptionMutex );
 	SetUnhandledExceptionFilter( &ReportException );
@@ -612,7 +616,9 @@ int main(int argc, char* argv[])
 	g_includeHandler.SetRootPath( args.shaderPath );
 	g_messages.SetEntryFileName( args.shaderPath );
 
-	CompileQueue compileQueue( args.coreCount, &CompileShader );
+	const int32_t coreFactor = 4;
+
+	CompileQueue compileQueue( args.coreCount * coreFactor, args.coreCount, &CompileShader );
 
 	Permutations permutations;
 	{

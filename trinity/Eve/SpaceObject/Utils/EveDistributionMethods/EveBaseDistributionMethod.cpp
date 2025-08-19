@@ -336,6 +336,13 @@ void EveBaseDistributionMethod::GetPlacement( PlacementDataWithIdentifier& place
 	{
 		spawnModifiers->ProcessSpawnModifier( placement, m_initialPlacements.size() );
 	}
+
+	EveChildUpdateParams params;
+
+	for( auto distributionModifier : m_distributionModifiers )
+	{
+		distributionModifier->ProcessDistributionModifier( placement, 0.f, params );
+	}
 }
 
 void EveBaseDistributionMethod::GetRandomPlacement( PlacementDataWithIdentifier& placement )

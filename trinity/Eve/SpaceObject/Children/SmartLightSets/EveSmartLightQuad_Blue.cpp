@@ -5,7 +5,7 @@ BLUE_DEFINE( EveSmartLightQuad );
 
 const Be::ClassInfo* EveSmartLightQuad::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightQuad, "" )
+	EXPOSURE_BEGIN( EveSmartLightQuad, ":jessica-icon: diamond\n" )
 		MAP_INTERFACE( EveSmartLightQuad )
 		MAP_INTERFACE( EveSmartLightBaseGroup )
 		MAP_INTERFACE( IInitialize )

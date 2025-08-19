@@ -281,6 +281,10 @@ private:
 	Tr2EffectPtr m_reactiveMaskEffect;
 	Tr2RenderTargetPtr m_reactiveMask;
 
+	// transparency mask
+	Tr2EffectPtr m_transparencyMaskEffect;
+	Tr2RenderTargetPtr m_transparencyMask;
+
 	// Velocity Map
 	void SetupVelocityMap();
 	Tr2RenderTargetPtr m_velocityBuffer;

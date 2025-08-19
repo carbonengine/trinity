@@ -67,9 +67,17 @@ class EffectCompilerMetal: public EffectCompilerBase
 {
 public:
 	bool Create() override;
-	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result ) override;
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, class IWorkQueue* workQueue ) override;
 
 private:
-	std::unordered_map<std::string, std::vector<uint8_t>> m_compiled;
+	struct SyncData
+	{
+		bool compiled = false;
+		std::condition_variable conditionVariable;
+		std::mutex mutex;
+		std::vector<uint8_t> compiledCode;
+	};
+
+	std::unordered_map<std::string, std::shared_ptr<SyncData>> m_compiled;
 	std::mutex m_compiledCS;
 };

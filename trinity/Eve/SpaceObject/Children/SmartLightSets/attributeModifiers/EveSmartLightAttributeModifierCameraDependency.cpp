@@ -17,14 +17,18 @@ EveSmartLightAttributeModifierCameraDependency::EveSmartLightAttributeModifierCa
 	m_lookAtVisionCone( 30.f ),
 	m_useCameraPlacement( false ),
 	m_inversePlacementFormula( false ),
-	m_placementIntencity( 1.f )
+	m_placementIntencity( 1.f ),
+	m_overwritePosition( false ), 
+	m_overwriteDirection( false ),
+	m_positionOverwrite( 0.f, 0.f, 0.f ),
+	m_angleOverwrite( 0.f, 0.f, 0.f )
 {
 	m_name = "CameraDependency";
 }
 
 void EveSmartLightAttributeModifierCameraDependency::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, float activationMultiplier )
 {
-	this->UpdateActivationStrength( params.activationStrength * activationMultiplier, updateContext.GetDeltaT() );
+	this->UpdateActivationStrength( activationMultiplier, updateContext.GetDeltaT() );
 }
 
 const float EveSmartLightAttributeModifierCameraDependency::GetDistanceAmplitude( const Vector3& vec2obj )
@@ -69,7 +73,8 @@ const float EveSmartLightAttributeModifierCameraDependency::GetPlacementAmplitud
 {
 	if( m_useCameraPlacement )
 	{
-		float placementAmplitude = max( 0.f, -Dot( Normalize( vec2obj ), entityDirection ) );
+		Vector3 eDir = m_overwriteDirection ? Normalize(m_angleOverwrite) : entityDirection;
+		float placementAmplitude = max( 0.f, -Dot( Normalize( vec2obj ), eDir ) );
 
 		if( m_placementIntencity != 1.f )
 		{
@@ -88,7 +93,7 @@ const float EveSmartLightAttributeModifierCameraDependency::GetPlacementAmplitud
 const float EveSmartLightAttributeModifierCameraDependency::GetActivationValue( const Vector3& objectPosition, const Vector3& entityDirection )
 {
 	const Vector3 camPos = Tr2Renderer::GetViewPosition();
-	const Vector3 vec2obj = objectPosition - camPos;
+	const Vector3 vec2obj = m_overwritePosition ? m_positionOverwrite - camPos : objectPosition - camPos;
 	float activationValue = 1.f;
 	activationValue *= GetDistanceAmplitude( vec2obj );
 	activationValue *= GetLookAtAmplitude( vec2obj );
