@@ -7,6 +7,8 @@
 #include "include/upscaling/Tr2UpscalingAL.h"
 
 bool g_upscalingDebug = false;
+uint32_t g_streamlineAppID = 0;
+
 CCP_STATS_DECLARE( generatedFrames, "GeneratedFrames", false, CST_COUNTER_LOW, "Generated Frames between presents" );
 bool g_force_fsr1_availability = false;
 
