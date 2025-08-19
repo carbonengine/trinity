@@ -184,7 +184,7 @@ private:
 	
 	PTr2LightVector m_lights;
 	PITr2ControllerVector m_controllers;
-	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
+	std::vector<std::pair<std::string, float>> m_controllerVariables;
 	float GetBoundingSphereRadius() { return m_boundingSphere.w; }
 
 	float m_estimatedSize;

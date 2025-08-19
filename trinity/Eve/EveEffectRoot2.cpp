@@ -34,8 +34,7 @@ EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	m_changeLOD( true ),
 	m_secondaryLightingSphereRadiusLocal( 0.5f ),
 	m_secondaryLightingSphereRadiusWorld( 0.5f ),
-	m_secondaryLightingEmissiveColor( 0.f, 0.f, 0.f, 0.f ),
-	m_controllerVariables( "EveEffectRoot2::m_controllerVariables" )
+	m_secondaryLightingEmissiveColor( 0.f, 0.f, 0.f, 0.f )
 {
 	m_controllers.SetNotify( this );
 	m_effectChildren.SetNotify( this );
@@ -783,7 +782,15 @@ void EveEffectRoot2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 // -----------------------------------------------------------------------------
 void EveEffectRoot2::SetControllerVariable( const char* name, float value )
 {
-	m_controllerVariables[name] = value;
+	auto found = find_if( begin( m_controllerVariables ), end( m_controllerVariables ), [name]( auto& x ) { return x.first == name; } );
+	if( found == end( m_controllerVariables ) )
+	{
+		m_controllerVariables.push_back( { name, value } );
+	}
+	else
+	{
+		found->second = value;
+	}
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
 		( *it )->SetVariable( name, value );

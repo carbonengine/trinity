@@ -21,7 +21,7 @@ const Be::ClassInfo* Tr2ActionChildEffect::ExposeToBlue()
 			m_path, 
 			"Overlay .red file path\n"
 			":jessica-widget: filepath\n"
-			":jessica-file-filter : redfile",
+			":jessica-file-filter: redfile",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "childName", m_childName, "Name to assign to the loaded child", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "targetAnotherOwner", m_targetAnotherOwner, "Designate a child or a MultiEffect parameter to target for the load (defaults to controller's owner)", Be::READWRITE | Be::PERSIST )

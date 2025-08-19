@@ -73,8 +73,7 @@ EveLensflare::EveLensflare( IRoot* lockobj ) :
 	m_sunSize( 0.f ),
 	m_directionVar( "LensflareFxDirectionScale", Vector4( 0.f, 0.f, 0.f, 1.f ) ),
 	m_occScaleVar( "LensflareFxOccScale", Vector4( 1.f, 0.f, 0.f, 0.f ) ),
-	m_transform( IdentityMatrix() ),
-	m_controllerVariables( "EveLensflare::m_controllerVariables" )
+	m_transform( IdentityMatrix() )
 {
 	m_controllers.SetNotify( this );
 }
@@ -472,7 +471,15 @@ float EveLensflare::GetRangeDuration( const std::string& name, const std::string
 // --------------------------Controllers-----------------------------------------
 void EveLensflare::SetControllerVariable( const char* name, float value )
 {
-	m_controllerVariables[name] = value;
+	auto found = find_if( begin( m_controllerVariables ), end( m_controllerVariables ), [name]( auto& x ) { return x.first == name; } );
+	if( found == end( m_controllerVariables ) )
+	{
+		m_controllerVariables.push_back( { name, value } );
+	}
+	else
+	{
+		found->second = value;
+	}
 	for( auto it = m_controllers.begin(); it != m_controllers.end(); ++it )
 	{
 		( *it )->SetVariable( name, value );

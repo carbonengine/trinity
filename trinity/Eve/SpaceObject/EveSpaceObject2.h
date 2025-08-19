@@ -683,7 +683,7 @@ protected:
 	PTr2ExternalParameterVector m_externalParameters;
 
 	PITr2ControllerVector m_controllers;
-	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
+	std::vector<std::pair<std::string, float>> m_controllerVariables;
 
 	EntityComponents::ReflectionMode m_reflectionMode;
 

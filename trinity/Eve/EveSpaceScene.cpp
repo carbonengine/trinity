@@ -659,6 +659,10 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 		CCP_STATS_ZONE( "GetBatches" );
 		unsigned int shadowMapSize = shadowMap.GetShadowMapSize();
 		auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
+		for( auto& vector : shadowCasterInfo )
+		{
+			vector.reserve( shadowCasters.size() );
+		}
 
 		{
 			CCP_STATS_ZONE( "Find shadow casters" );

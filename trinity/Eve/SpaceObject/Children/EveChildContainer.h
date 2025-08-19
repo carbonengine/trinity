@@ -187,7 +187,7 @@ protected:
 	PTriObserverLocalVector m_observers;
 	PTr2LightVector m_lights;
 	PITr2ControllerVector m_controllers;
-	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
+	std::vector<std::pair<std::string, float>> m_controllerVariables;
 	PIEveChildTransformModifierVector m_transformModifiers;
 	Vector3 m_worldVelocity;
 	float m_activationStrength;
