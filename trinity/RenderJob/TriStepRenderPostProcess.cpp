@@ -329,6 +329,9 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 
 	m_reactiveMaskEffect.CreateInstance();
 	m_reactiveMaskEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ReactiveMask.fx" );
+
+	m_transparencyMaskEffect.CreateInstance();
+	m_transparencyMaskEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/TransparencyMask.fx" );
 }
 
 TriStepRenderPostProcess::~TriStepRenderPostProcess( void )
@@ -1508,6 +1511,22 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 		m_reactiveMaskEffect->SetParameter( BlueSharedString( "OpaqueAndTransparency" ), source );
 		DrawInto( *m_reactiveMask, Tr2LoadAction::DONT_CARE, m_reactiveMaskEffect, renderContext );
 		dispatchParameters.reactive = m_reactiveMask ? m_reactiveMask->GetTexture() : nullptr;
+	}
+
+	if( dispatchRequirements & Tr2UpscalingAL::DispatchRequirements::TRANSPARENCY )
+	{
+		GPU_REGION( renderContext, "Transparency" );
+		if( !m_transparencyMask )
+		{
+			m_transparencyMask.CreateInstance();
+			m_transparencyMask->SetName( "TransparencyMask" );
+			m_transparencyMask->Create( source->GetWidth(), source->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, source->GetMsaaType(), 0 );
+		}
+
+		m_transparencyMaskEffect->SetParameter( BlueSharedString( "OpaqueOnly" ), m_opaqueColorBuffer );
+		m_transparencyMaskEffect->SetParameter( BlueSharedString( "OpaqueAndTransparency" ), source );
+		DrawInto( *m_transparencyMask, Tr2LoadAction::DONT_CARE, m_transparencyMaskEffect, renderContext );
+		dispatchParameters.transparency = m_transparencyMask ? m_transparencyMask->GetTexture() : nullptr;
 	}
 
 	auto view = Tr2Renderer::GetViewTransform();

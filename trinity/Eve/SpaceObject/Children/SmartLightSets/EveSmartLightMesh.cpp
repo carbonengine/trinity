@@ -2,12 +2,18 @@
 #include "EveSmartLightMesh.h"
 #include "Shader/Tr2Effect.h"
 #include "Tr2InstancedMesh.h"
+#include "trimath.h"
 
 EveSmartLightMesh::EveSmartLightMesh( IRoot* lockobj ) :
 	EveChildInstanceMeshRenderer( lockobj ),
 	m_shaderParamColorName( "" ),
 	m_lastAreaColor( 0.f, 0.f, 0.f, 1.f )
 {
+}
+
+uint32_t EveSmartLightMesh::GetNumberOfEntities() const
+{
+	return m_lastEntityCount;
 }
 
 void EveSmartLightMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, IEveDistributionMethod* distribution )
@@ -25,14 +31,22 @@ void EveSmartLightMesh::UpdateSyncronous( const EveUpdateContext& updateContext,
 		{
 			const PlacementDataWithIdentifierStructureList& placements = *distribution->GetPlacementData();
 			Vector4 currentColor = this->GetGroupColor() * m_activationStrength;
-			Vector3 lightPosition( 0.f, 0.f, 0.f );
-			Vector3 lightRotation( 0.f, 1.f, 0.f );
 
-			for( auto attributeModifier : m_attributeModifiers )
+			if( !m_attributeModifiers.empty() )
 			{
+				PlacementDataWithIdentifier firstPlacement = placements[0];
+				Vector3 firstRotation( 0.f, 1.f, 0.f );
 				// use first placement as a ref for modifiers as we can't set the shader params per instance
-				PlacementDataWithIdentifier placement = placements[0];
-				attributeModifier->ProcessAttributeModifier( currentColor.GetXYZ(), placement, lightPosition, lightRotation, params.activationStrength );
+
+				Quaternion firstRotationQuad = firstPlacement.initialRotation * firstPlacement.additionalRotation;
+				TriVectorRotateQuaternion( &firstRotation, &firstRotation, &firstRotationQuad );
+				TriVectorRotateMatrix( &firstRotation, &firstRotation, &m_worldTransform );
+				Vector3 Center = distribution->GetPlacementDataCenter();
+
+				for( auto attributeModifier : m_attributeModifiers )
+				{
+					attributeModifier->ProcessAttributeModifier( currentColor.GetXYZ(), firstPlacement, Center, firstRotation, params.activationStrength );
+				}
 			}
 
 			SetMeshColorParameter( currentColor );
@@ -44,7 +58,7 @@ void EveSmartLightMesh::UpdateSyncronous( const EveUpdateContext& updateContext,
 					// happens once
 					ConfigureInstanceData();
 					UpdateGeometryResource( placements, numPlacements );
-					UpdateBoundingSphere( placements );
+					UpdateBoundingSphere( placements, distribution );
 				}
 				else
 				{
@@ -52,7 +66,7 @@ void EveSmartLightMesh::UpdateSyncronous( const EveUpdateContext& updateContext,
 					if( updateCount || alwaysUpdate )
 					{
 						UpdateGeometryResource( placements, numPlacements );
-						UpdateBoundingSphere( placements );
+						UpdateBoundingSphere( placements, distribution );
 					}
 				}
 			}

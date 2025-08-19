@@ -16,6 +16,8 @@
 #include "include/Tr2StreamlineAL.h"
 
 extern bool g_upscalingDebug;
+extern uint32_t g_streamlineAppID;
+
 CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
 namespace DlssUtils
@@ -44,7 +46,7 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 	
 	//We need to create a dummy device to figure out if DLSS and frame generation actually is supported.
 	{
-		if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline() ) )
+		if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( g_streamlineAppID ) ) )
 		{
 			CCP_LOGERR( "Streamline initialization failed with error %d", res );
 			return;
@@ -70,8 +72,7 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 
 
 	//We're done gathering info, initialize Streamline again and await the actual device!
-	
-	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline() ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( g_streamlineAppID ) ) )
 	{
 		CCP_LOGERR( "Streamline initialization failed with error %d", res );
 		return;
@@ -341,25 +342,10 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
 	m_params.renderContext.FlushAndSyncDx12();
-
-	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
-	Tr2StreamlineAL::FreeResources( sl::kFeatureNIS, m_viewHandle );
-
-	if( m_frameGeneration )
-	{
-		Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS_G, m_viewHandle );
-	}
 }
 
 void Tr2DlssUpscalingContext::SetupForReuse()
 {
-	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
-	Tr2StreamlineAL::FreeResources( sl::kFeatureNIS, m_viewHandle );
-
-	if( m_frameGeneration )
-	{
-		Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS_G, m_viewHandle );
-	}
 }
 
 sl::Result Tr2DlssUpscalingContext::UpdateDlssG()
@@ -520,10 +506,8 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 
 	if( m_frameGeneration )
 	{
-		Tr2StreamlineAL::AllocateResources( renderContext, sl::kFeatureDLSS_G, m_viewHandle );
 		UpdateDlssG();
 	}
-	Tr2StreamlineAL::AllocateResources( renderContext, sl::kFeatureDLSS, m_viewHandle );
 
 	if( SL_FAILED( res, ReadyDLSSResources( dispatchParameters ) ) )
 	{

@@ -340,6 +340,10 @@ void EveChildMesh::UpdateRtSkeleton()
 	
 	auto meshIndex = m_mesh->GetMeshIndex();
 	auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
+	if( !lod )
+	{
+		return;
+	}
 	bool hasSkinned = false;
 	
 	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );	

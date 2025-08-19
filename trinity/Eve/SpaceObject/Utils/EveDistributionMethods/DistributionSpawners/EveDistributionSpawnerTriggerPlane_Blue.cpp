@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionSpawnerTriggerPlane );
 
 const Be::ClassInfo* EveDistributionSpawnerTriggerPlane::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionSpawnerTriggerPlane, "" )
+	EXPOSURE_BEGIN( EveDistributionSpawnerTriggerPlane, ":jessica-icon: person-walking-dashed-line-arrow-right\n" )
 		MAP_INTERFACE( EveDistributionSpawnerTriggerPlane )
 		MAP_INTERFACE( IEveDistributionSpawner )
 

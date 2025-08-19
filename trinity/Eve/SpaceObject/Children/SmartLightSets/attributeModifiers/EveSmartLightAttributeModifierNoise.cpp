@@ -11,7 +11,7 @@ EveSmartLightAttributeModifierNoise::EveSmartLightAttributeModifierNoise( IRoot*
 
 void EveSmartLightAttributeModifierNoise::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, float activationMultiplier )
 {
-	this->UpdateActivationStrength( params.activationStrength * activationMultiplier, updateContext.GetDeltaT() );
+	this->UpdateActivationStrength( activationMultiplier, updateContext.GetDeltaT() );
 }
 
 void EveSmartLightAttributeModifierNoise::ProcessAttributeModifier( Vector3& attribute, const PlacementDataWithIdentifier& placement, const Vector3& entityPosition, const Vector3& entityDirection, float modifierStrength )

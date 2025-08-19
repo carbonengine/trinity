@@ -7,7 +7,7 @@ BLUE_DEFINE_INTERFACE( IEveDistributionPlacementGenerators );
 
 const Be::ClassInfo* EveDistributionPlacementGeneratorVolume::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionPlacementGeneratorVolume, "" )
+	EXPOSURE_BEGIN( EveDistributionPlacementGeneratorVolume, ":jessica-icon: chart-scatter-3d\n" )
 		MAP_INTERFACE( EveDistributionPlacementGeneratorVolume )
 		MAP_INTERFACE( IEveDistributionPlacementGenerators )
 		MAP_INTERFACE( IInitialize )

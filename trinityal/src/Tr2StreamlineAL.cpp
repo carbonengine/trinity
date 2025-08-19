@@ -26,9 +26,12 @@ namespace Tr2StreamlineAL
 	#define INITIALIZE_FUNCTION( func ) \
 		FUNCTIONS.m_##func = reinterpret_cast<PFun_##func*>( GetProcAddress( STREAMLINE_MODULE, #func ) )
 
-	#define INITIALIZE_FEATURE_FUNCTION( feature, func )                                    \
-		if( SL_FAILED( res, FUNCTIONS.m_slGetFeatureFunction( feature, #func, (void*&)FEATURE_FUNCTIONS.m_##func ) ) ) \
-			CCP_LOGERR( "Unable to find function %s for feature %s Error code: %d", #func, #feature, res ); 
+	#define INITIALIZE_FEATURE_FUNCTION( feature, func )																				\
+		if( SL_FAILED( res, FUNCTIONS.m_slGetFeatureFunction( feature, #func, (void*&)FEATURE_FUNCTIONS.m_##func ) ) )					\
+		{																																\
+			CCP_LOGERR( "Unable to find function %s for feature %s Error: %s", #func, #feature, GetSlResultMessage( res ) );            \
+			return res;																													\
+		}
 	
 
 	//These two structs are automatically zero-initialized
@@ -49,10 +52,6 @@ namespace Tr2StreamlineAL
 
 		//frame tokens
 		PFun_slGetNewFrameToken* m_slGetNewFrameToken;
-
-		//resource allocation
-		PFun_slAllocateResources* m_slAllocateResources;
-		PFun_slFreeResources* m_slFreeResources;
 
 		//dispatching
 		PFun_slSetTag* m_slSetTag;
@@ -135,7 +134,120 @@ namespace Tr2StreamlineAL
 		return m;
 	}
 
-	sl::Result InitializeStreamline()
+	const char* GetSlResultMessage( sl::Result res )
+	{
+		switch( res )
+		{
+		case sl::Result::eOk:
+			return "No error";
+		case sl::Result::eErrorIO:
+			return "I/O error";
+		case sl::Result::eErrorDriverOutOfDate:
+			return "Driver out of date";
+		case sl::Result::eErrorOSOutOfDate:
+			return "Operating system out of date";
+		case sl::Result::eErrorOSDisabledHWS:
+			return "Operating system disabled hardware support";
+		case sl::Result::eErrorDeviceNotCreated:
+			return "Device not created";
+		case sl::Result::eErrorNoSupportedAdapterFound:
+			return "No supported adapter found";
+		case sl::Result::eErrorAdapterNotSupported:
+			return "Adapter not supported";
+		case sl::Result::eErrorNoPlugins:
+			return "No plugins found";
+		case sl::Result::eErrorVulkanAPI:
+			return "Vulkan API error";
+		case sl::Result::eErrorDXGIAPI:
+			return "DXGI API error";
+		case sl::Result::eErrorD3DAPI:
+			return "D3D API error";
+		case sl::Result::eErrorNRDAPI:
+			return "NRD API error";
+		case sl::Result::eErrorNVAPI:
+			return "NVAPI error";
+		case sl::Result::eErrorReflexAPI:
+			return "Reflex API error";
+		case sl::Result::eErrorNGXFailed:
+			return "NGX failed to load";
+		case sl::Result::eErrorJSONParsing:
+			return "JSON parsing error";
+		case sl::Result::eErrorMissingProxy:
+			return "Missing proxy";
+		case sl::Result::eErrorMissingResourceState:
+			return "Missing resource state";
+		case sl::Result::eErrorInvalidIntegration:
+			return "Invalid integration";
+		case sl::Result::eErrorMissingInputParameter:
+			return "Missing input parameter";
+		case sl::Result::eErrorNotInitialized:
+			return "Not initialized";
+		case sl::Result::eErrorComputeFailed:
+			return "Compute shader failed";
+		case sl::Result::eErrorInitNotCalled:
+			return "Initialization not called";
+		case sl::Result::eErrorExceptionHandler:
+			return "Exception handler error";
+		case sl::Result::eErrorInvalidParameter:
+			return "Invalid parameter";
+		case sl::Result::eErrorMissingConstants:
+			return "Missing constants";
+		case sl::Result::eErrorDuplicatedConstants:
+			return "Duplicate constants";
+		case sl::Result::eErrorMissingOrInvalidAPI:
+			return "Missing or invalid API";
+		case sl::Result::eErrorCommonConstantsMissing:
+			return "Common constants missing";
+		case sl::Result::eErrorUnsupportedInterface:
+			return "Unsupported interface";
+		case sl::Result::eErrorFeatureMissing:
+			return "Feature missing";
+		case sl::Result::eErrorFeatureNotSupported:
+			return "Feature not supported";
+		case sl::Result::eErrorFeatureMissingHooks:
+			return "Feature missing hooks";
+		case sl::Result::eErrorFeatureFailedToLoad:
+			return "Feature failed to load";
+		case sl::Result::eErrorFeatureWrongPriority:
+			return "Feature wrong priority";
+		case sl::Result::eErrorFeatureMissingDependency:
+			return "Feature missing dependency";
+		case sl::Result::eErrorFeatureManagerInvalidState:
+			return "Feature manager in invalid state";
+		case sl::Result::eErrorInvalidState:
+			return "Invalid state";
+		case sl::Result::eWarnOutOfVRAM:
+			return "Warning: Out of VRAM";
+		default:
+			return "Unknown error";
+		}
+	}
+
+	sl::Result ReportSlError( sl::Result res, const char* file, int line, const char* message )
+	{
+		if( res != sl::Result::eOk )
+		{
+			CCP_LOGERR( "Streamline error %s in %s", message, GetSlResultMessage( res ) );
+			if( g_upscalingDebug )
+			{
+				char buffer[1024] = "";
+				_snprintf_s( buffer, _TRUNCATE, "%s(%i): error streamline %s: %s\n", file, line, GetSlResultMessage( res ), message );
+				OutputDebugString( buffer );
+				__try
+				{
+					DebugBreak();
+				}
+				__except( GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH )
+				{
+				}
+			}
+		}
+		return res;
+	}
+
+#define CR_SL( res ) ReportSlError( res, __FILE__, __LINE__, #res)
+
+	sl::Result InitializeStreamline( uint32_t appID )
 	{
 		if( STREAMLINE_INITIALIZED )
 		{
@@ -182,9 +294,6 @@ namespace Tr2StreamlineAL
 
 			INITIALIZE_FUNCTION( slGetNewFrameToken );
 
-			INITIALIZE_FUNCTION( slAllocateResources );
-			INITIALIZE_FUNCTION( slFreeResources );
-
 			INITIALIZE_FUNCTION( slSetTag );
 			INITIALIZE_FUNCTION( slSetConstants );
 			INITIALIZE_FUNCTION( slEvaluateFeature );
@@ -226,6 +335,7 @@ namespace Tr2StreamlineAL
 				pref.showConsole = true; // for debugging, set to false in production
 				pref.logLevel = sl::LogLevel::eVerbose;
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
+				// note that imgui will only work for non-production builds of streamline plugins 
 				features.push_back( sl::kFeatureImGUI );
 #endif
 			}
@@ -240,11 +350,8 @@ namespace Tr2StreamlineAL
 			pref.featuresToLoad = featuresToEnable;
 			pref.logMessageCallback = Tr2StreamlineLog;
 
-			// the ID of Eve Online
-			const uint32_t EVE_ONLINE_APP_ID = 101109911;
-
-			pref.applicationId = EVE_ONLINE_APP_ID;
-			pref.engine = sl::EngineType::eCustom;
+			// the appID comes from python, through the trinity settings
+			pref.applicationId = appID;
 			pref.flags |= sl::PreferenceFlags::eUseManualHooking;
 			STREAMLINE_INITIALIZATION_RESULT = FUNCTIONS.m_slInit( pref, sl::kSDKVersion );
 
@@ -349,7 +456,7 @@ namespace Tr2StreamlineAL
 			return sl::Result::eOk;
 		}
 
-		sl::Result result = FUNCTIONS.m_slSetD3DDevice( d3dDevice );
+		sl::Result result = CR_SL( FUNCTIONS.m_slSetD3DDevice( d3dDevice ) );
 
 		if (result != sl::Result::eOk)
 		{
@@ -401,43 +508,33 @@ namespace Tr2StreamlineAL
 
 	sl::Result UpgradeInterface( void** nativeInterface )
 	{
-		return FUNCTIONS.m_slUpgradeInterface( nativeInterface );
+		return CR_SL( FUNCTIONS.m_slUpgradeInterface( nativeInterface ) );
 	}
 
 	sl::Result SetFeatureLoaded( sl::Feature feature, bool enable )
 	{
-		return FUNCTIONS.m_slSetFeatureLoaded( feature, enable );
+		return CR_SL( FUNCTIONS.m_slSetFeatureLoaded( feature, enable ) );
 	}
 
 	sl::Result GetNewFrameToken( sl::FrameToken*& m_frameToken )
 	{
-		return FUNCTIONS.m_slGetNewFrameToken( m_frameToken, nullptr );
-	}
-
-	sl::Result AllocateResources( Tr2RenderContextAL& renderContext, sl::Feature feature, const sl::ViewportHandle& viewport )
-	{
-		return FUNCTIONS.m_slAllocateResources( GetCommandBuffer(renderContext), feature, viewport );
-	}
-
-	sl::Result FreeResources( sl::Feature feature, const sl::ViewportHandle& viewport )
-	{
-		return FUNCTIONS.m_slFreeResources( feature, viewport );
+		return CR_SL( FUNCTIONS.m_slGetNewFrameToken( m_frameToken, nullptr ) );
 	}
 
 
 	sl::Result SetTags( Tr2RenderContextAL& renderContext, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags )
 	{
-		return FUNCTIONS.m_slSetTag( viewport, tags, numTags, GetCommandBuffer( renderContext ) );
+		return CR_SL( FUNCTIONS.m_slSetTag( viewport, tags, numTags, GetCommandBuffer( renderContext ) ) );
 	}
 
 	sl::Result SetConstants( const sl::Constants& values, const sl::FrameToken& frame, const sl::ViewportHandle& viewport )
 	{
-		return FUNCTIONS.m_slSetConstants( values, frame, viewport );
+		return CR_SL( FUNCTIONS.m_slSetConstants( values, frame, viewport ) );
 	}
 
 	sl::Result EvaluateFeature( Tr2RenderContextAL& renderContext, sl::Feature feature, const sl::FrameToken& frame, const sl::BaseStructure** inputs, uint32_t numInputs )
 	{
-		return FUNCTIONS.m_slEvaluateFeature( feature, frame, inputs, numInputs, GetCommandBuffer( renderContext ) );
+		return CR_SL( FUNCTIONS.m_slEvaluateFeature( feature, frame, inputs, numInputs, GetCommandBuffer( renderContext ) ) );
 	}
 
 
@@ -445,17 +542,17 @@ namespace Tr2StreamlineAL
 
 	sl::Result GetDLSSOptimalSettings( const sl::DLSSOptions& options, sl::DLSSOptimalSettings& settings )
 	{
-		return FEATURE_FUNCTIONS.m_slDLSSGetOptimalSettings( options, settings );
+		return CR_SL( FEATURE_FUNCTIONS.m_slDLSSGetOptimalSettings( options, settings ) );
 	}
 
 	sl::Result SetDLSSOptions( const sl::ViewportHandle& viewport, const sl::DLSSOptions& options )
 	{
-		return FEATURE_FUNCTIONS.m_slDLSSSetOptions( viewport, options );
+		return CR_SL( FEATURE_FUNCTIONS.m_slDLSSSetOptions( viewport, options ) );
 	}
 
 	sl::Result SetNISOptions( const sl::ViewportHandle& viewport, const sl::NISOptions& options )
 	{
-		return FEATURE_FUNCTIONS.m_slNISSetOptions( viewport, options );
+		return CR_SL( FEATURE_FUNCTIONS.m_slNISSetOptions( viewport, options ) );
 	}
 
 	
@@ -463,18 +560,18 @@ namespace Tr2StreamlineAL
 	
 	sl::Result SetDLSSGOptions( const sl::ViewportHandle& viewport, const sl::DLSSGOptions& options )
 	{
-		return FEATURE_FUNCTIONS.m_slDLSSGSetOptions(viewport, options);
+		return CR_SL( FEATURE_FUNCTIONS.m_slDLSSGSetOptions(viewport, options) );
 	}
 
 	sl::Result GetDLSSGState( const sl::ViewportHandle& viewport, sl::DLSSGState& state, const sl::DLSSGOptions* options )
 	{
-		return FEATURE_FUNCTIONS.m_slDLSSGGetState( viewport, state, options );
+		return CR_SL( FEATURE_FUNCTIONS.m_slDLSSGGetState( viewport, state, options ) );
 	}
 
 
 	sl::Result SetReflexOptions( const sl::ReflexOptions& options )
 	{
-		return FEATURE_FUNCTIONS.m_slReflexSetOptions( options );
+		return CR_SL( FEATURE_FUNCTIONS.m_slReflexSetOptions( options ) ); 
 	}
 
 

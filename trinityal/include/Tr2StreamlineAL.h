@@ -30,7 +30,7 @@ namespace Tr2StreamlineAL
 
 	void Tr2StreamlineLog( sl::LogType type, const char* msg );
 
-	sl::Result InitializeStreamline( );
+	sl::Result InitializeStreamline( uint32_t appID );
 	void ReleaseStreamline( );
 
 	
@@ -43,9 +43,6 @@ namespace Tr2StreamlineAL
 	sl::Result SetFeatureLoaded( sl::Feature feature, bool enable );
 
 	sl::Result GetNewFrameToken( sl::FrameToken*& m_frameToken );
-
-	sl::Result AllocateResources( Tr2RenderContextAL& renderContext, sl::Feature feature, const sl::ViewportHandle& viewport );
-	sl::Result FreeResources( sl::Feature feature, const sl::ViewportHandle& viewport );
 
 	sl::Result SetTags( Tr2RenderContextAL& renderContext, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags );
 	sl::Result SetConstants( const sl::Constants& values, const sl::FrameToken& frame, const sl::ViewportHandle& viewport );

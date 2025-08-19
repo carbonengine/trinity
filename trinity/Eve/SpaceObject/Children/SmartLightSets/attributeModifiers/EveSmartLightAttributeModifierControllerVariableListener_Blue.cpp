@@ -6,7 +6,7 @@ BLUE_DEFINE( EveSmartLightAttributeModifierControllerVariableListener );
 
 const Be::ClassInfo* EveSmartLightAttributeModifierControllerVariableListener::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightAttributeModifierControllerVariableListener, "" )
+	EXPOSURE_BEGIN( EveSmartLightAttributeModifierControllerVariableListener, ":jessica-icon: computer-classic\n:jessica-icon-color: (112, 192, 29)\n" )
 		MAP_INTERFACE( EveSmartLightAttributeModifierControllerVariableListener )
 		MAP_INTERFACE( EveSmartLightAttributeModifierBucket )
 		MAP_INTERFACE( IEveSmartLightGroupAttributeModifier )

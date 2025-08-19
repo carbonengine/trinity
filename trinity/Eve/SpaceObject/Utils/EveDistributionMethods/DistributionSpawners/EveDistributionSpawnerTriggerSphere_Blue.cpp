@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionSpawnerTriggerSphere );
 
 const Be::ClassInfo* EveDistributionSpawnerTriggerSphere::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionSpawnerTriggerSphere, "" )
+	EXPOSURE_BEGIN( EveDistributionSpawnerTriggerSphere, ":jessica-icon: globe\n" )
 		MAP_INTERFACE( EveDistributionSpawnerTriggerSphere )
 		MAP_INTERFACE( IEveDistributionSpawner )
 

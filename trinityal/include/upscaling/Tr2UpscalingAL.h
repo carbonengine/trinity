@@ -51,6 +51,7 @@ namespace Tr2UpscalingAL
 		Tr2TextureAL* velocity;
 		Tr2TextureAL* exposure;
 		Tr2TextureAL* reactive;
+		Tr2TextureAL* transparency;
 
 		unsigned long long currentFrameIndex;
 		float frontClip;
@@ -79,6 +80,7 @@ namespace Tr2UpscalingAL
 		DEPTH = 1 << 2,
 		REACTIVE = 1 << 3, 
 		OPTIONAL_EXPOSURE = 1 << 4,
+		TRANSPARENCY = 1 << 5,
 	};
 
 	void LogResult( Result result );

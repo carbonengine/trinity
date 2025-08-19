@@ -7,7 +7,7 @@ BLUE_DEFINE( EveDistributionSpawnModifierRandomScale );
 
 const Be::ClassInfo* EveDistributionSpawnModifierRandomScale::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionSpawnModifierRandomScale, "" )
+	EXPOSURE_BEGIN( EveDistributionSpawnModifierRandomScale, ":jessica-icon: fa-scale-balanced\n" )
 		MAP_INTERFACE( EveDistributionSpawnModifierRandomScale )
 		MAP_INTERFACE( IEveDistributionSpawnModifier )
 		MAP_INTERFACE( IInitialize )
