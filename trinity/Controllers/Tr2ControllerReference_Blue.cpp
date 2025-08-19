@@ -16,7 +16,7 @@ const Be::ClassInfo* Tr2ControllerReference::ExposeToBlue()
 			m_path, 
 			"Path to a controller\n" 
 			":jessica-widget: filepath\n"
-			":jessica-file-filter : redfile",
+			":jessica-file-filter: redfile",
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "controller", m_controller, "Loaded controller", Be::READ )
 

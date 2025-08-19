@@ -21,7 +21,7 @@ const Be::ClassInfo* Tr2ActionOverlay::ExposeToBlue()
 			m_path, 
 			"Overlay .red file path\n"
 			":jessica-widget: filepath\n"
-			":jessica-file-filter : redfile",
+			":jessica-file-filter: redfile",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( 
 			"targetAnotherOwner", 
