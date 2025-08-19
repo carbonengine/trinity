@@ -13,6 +13,7 @@
 #include "StringTable.h"
 #include "TextureFunctionConversionDX11.h"
 #include "YamlOutput.h"
+#include "WorkQueue.h"
 
 extern std::string g_metalToolsPath;
 
@@ -4659,7 +4660,7 @@ bool EffectCompilerMetal::Create()
 	return true;
 }
 
-bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
+bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, IWorkQueue* workQueue )
 {
 	ZoneScoped;
 
@@ -4900,36 +4901,74 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				os << AtomicFn{ "xor", "Xor" };
 				os << MSL{ state.GetTree(), &state.GetSymbolTable() };
 
-				bool hasCompiled = false;
-				{
-                    std::lock_guard scope( m_compiledCS );
-                    auto found = m_compiled.find( shaderCacheKey );
-                    if( found != end( m_compiled ) )
-                    {
-                        if( found->second.empty() )
-                        {
-                            return false;
-                        }
 
-                        stage.shaderSize = uint32_t( found->second.size() );
-                        stage.shaderDataStr = g_stringTable.AddString( found->second.data(), found->second.size() );
-                        hasCompiled = true;
-                    }
-				}
-				if( !hasCompiled )
+				// Let only one thread compile this permutation.
+				bool needsToCompile = false;
+				std::shared_ptr<SyncData> syncData;
 				{
-                    auto compiledCode = CompileCode( os.str(), defines );
-                    {
-                        std::lock_guard scope( m_compiledCS );
-                        m_compiled[shaderCacheKey] = compiledCode;
-                    }
-                    if( compiledCode.empty() )
-                    {
-                        return false;
-                    }
-                    stage.shaderSize = uint32_t( compiledCode.size() );
-                    stage.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
+					std::lock_guard scope( m_compiledCS );
+					auto found = m_compiled.find( shaderCacheKey );
+					if( found == end( m_compiled ) )
+					{
+						// Yep, this thread will have to compile. Make an entry into the cache.
+						syncData = std::make_shared<SyncData>();
+						m_compiled[shaderCacheKey] = syncData;
+						needsToCompile = true;
+					}
+					else
+					{
+						// Some other thread is going to compile for us. Grab his stuff from the cache.
+						syncData = found->second;
+					}
 				}
+
+				if( !needsToCompile )
+				{
+					// Let's wait for the other thread to compile for us
+					if( workQueue )
+					{
+						workQueue->OnBlocked();
+					}
+					{
+						std::unique_lock<std::mutex> lock( syncData->mutex );
+						syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+					}
+					if( workQueue )
+					{
+						workQueue->OnUnblocked();
+					}
+				}
+				else
+				{
+					// We need to compile, nobody else is doing it for this permutation.
+					auto compiledCode = CompileCode( os.str(), defines );
+					syncData->compiledCode = compiledCode;
+
+					// Let's wake up everyone waiting for this permutation's compilation.
+					{
+						std::lock_guard scope( syncData->mutex );
+						syncData->compiled = true;
+					}
+					syncData->conditionVariable.notify_all();
+				}
+
+				auto& compiledCode = syncData->compiledCode;
+
+				{
+					// Not sure if this is necessary to avoid reference counter bugs. But anyway...
+					std::lock_guard scope( m_compiledCS );
+					syncData.reset();
+				}
+
+				if( compiledCode.empty() )
+				{
+					// No compiledCode on the cache entry! This means compilation must have failed.
+					return false;
+				}
+
+				stage.shaderSize = uint32_t( compiledCode.size() );
+				stage.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
+				
 
 				if( !GetStageData( state, stage, shaderNode->GetChild( 1 ), result.annotations ) )
 				{
@@ -5127,13 +5166,74 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 			library.source = os.str();
 
-            auto compiledCode = CompileCode( os.str(), defines, false );
-            if( compiledCode.empty() )
-            {
-                return false;
-            }
-            library.shaderSize = uint32_t( compiledCode.size() );
-            library.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
+
+			// Let only one thread compile this permutation.
+			bool needsToCompile = false;
+			std::shared_ptr<SyncData> syncData;
+			{
+				std::lock_guard scope( m_compiledCS );
+				auto found = m_compiled.find( os.str() );
+				if( found == end( m_compiled ) )
+				{
+					// Yep, this thread will have to compile. Make an entry into the cache.
+					syncData = std::make_shared<SyncData>();
+					m_compiled[os.str()] = syncData;
+					needsToCompile = true;
+				}
+				else
+				{
+					// Some other thread is going to compile for us. Grab his stuff from the cache.
+					syncData = found->second;
+				}
+			}
+
+			if( !needsToCompile )
+			{
+				// Let's wait for the other thread to compile for us
+				if( workQueue )
+				{
+					workQueue->OnBlocked();
+				}
+				{
+					std::unique_lock<std::mutex> lock( syncData->mutex );
+					syncData->conditionVariable.wait( lock, [&syncData] { return syncData->compiled; } );
+				}
+				if( workQueue )
+				{
+					workQueue->OnUnblocked();
+				}
+			}
+			else
+			{
+				// We need to compile, nobody else is doing it for this permutation.
+				auto compiledCode = CompileCode( os.str(), defines, false );
+				syncData->compiledCode = compiledCode;
+
+				// Let's wake up everyone waiting for this permutation's compilation.
+				{
+					std::lock_guard scope( syncData->mutex );
+					syncData->compiled = true;
+				}
+				syncData->conditionVariable.notify_all();
+			}
+
+			auto& compiledCode = syncData->compiledCode;
+
+			{
+				// Not sure if this is necessary to avoid reference counter bugs. But anyway...
+				std::lock_guard scope( m_compiledCS );
+				syncData.reset();
+			}
+
+			if( compiledCode.empty() )
+			{
+				// No compiledCode on the cache entry! This means compilation must have failed.
+				return false;
+			}
+
+			library.shaderSize = uint32_t( compiledCode.size() );
+			library.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
+
 
             technique.libraries.push_back( library );
 

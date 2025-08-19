@@ -17,7 +17,7 @@ bool Compiles( const char* src )
 	[created] { ASSERT_TRUE( created ) << "Failed to create a compiler object: the environment is not set up correctly"; }();
 
 	EffectData data;
-	auto compiled = compiler.CompileEffect( src + 1, strlen( src ), {}, data );
+	auto compiled = compiler.CompileEffect( src + 1, strlen( src ), {}, data, nullptr );
 	g_messages.Flush();
 	return compiled;
 }
@@ -30,7 +30,7 @@ EffectData Compile( const char* src )
 	[created] { ASSERT_TRUE( created ) << "Failed to create a compiler object: the environment is not set up correctly"; }();
 
 	EffectData data;
-	auto compiled = compiler.CompileEffect( src + 1, strlen( src ), {}, data );
+	auto compiled = compiler.CompileEffect( src + 1, strlen( src ), {}, data, nullptr );
 	g_messages.Flush();
 	[compiled] { ASSERT_TRUE( compiled ); }();
 	return data;
