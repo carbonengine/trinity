@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionSpawnModifierRandomRotation );
 
 const Be::ClassInfo* EveDistributionSpawnModifierRandomRotation::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionSpawnModifierRandomRotation, "" )
+	EXPOSURE_BEGIN( EveDistributionSpawnModifierRandomRotation, ":jessica-icon: rotate-left\n" )
 		MAP_INTERFACE( EveDistributionSpawnModifierRandomRotation )
 		MAP_INTERFACE( IEveDistributionSpawnModifier )
 		MAP_INTERFACE( IInitialize )

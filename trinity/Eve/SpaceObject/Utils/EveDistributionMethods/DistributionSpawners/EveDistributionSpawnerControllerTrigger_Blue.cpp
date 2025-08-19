@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionSpawnerControllerTrigger );
 
 const Be::ClassInfo* EveDistributionSpawnerControllerTrigger::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionSpawnerControllerTrigger, "" )
+	EXPOSURE_BEGIN( EveDistributionSpawnerControllerTrigger, ":jessica-icon: computer-classic\n" )
 		MAP_INTERFACE( EveDistributionSpawnerControllerTrigger )
 		MAP_INTERFACE( IEveDistributionSpawner )
 		MAP_INTERFACE( INotify )

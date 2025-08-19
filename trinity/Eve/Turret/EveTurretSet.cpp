@@ -1941,7 +1941,7 @@ void EveTurretSet::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	
 	for( auto it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
 	{
-		if( it->visible && it->valid && it->rtMesh && it->rtMeshArea )
+		if( it->visible && it->valid && it->rtMesh && it->rtMesh->IsGood() && it->rtMeshArea )
 		{
 			if( !it->rtPerObjectData.IsValid() )
 			{

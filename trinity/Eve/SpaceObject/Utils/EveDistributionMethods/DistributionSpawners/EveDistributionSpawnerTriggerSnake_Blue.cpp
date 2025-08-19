@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionSpawnerTriggerSnake );
 
 const Be::ClassInfo* EveDistributionSpawnerTriggerSnake::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionSpawnerTriggerSnake, "" )   // not visible in editor until fully implemented
+	EXPOSURE_BEGIN( EveDistributionSpawnerTriggerSnake, ":jessica-icon: snake\n" )
 		MAP_INTERFACE( EveDistributionSpawnerTriggerSnake )
 		MAP_INTERFACE( IEveDistributionSpawner )
 

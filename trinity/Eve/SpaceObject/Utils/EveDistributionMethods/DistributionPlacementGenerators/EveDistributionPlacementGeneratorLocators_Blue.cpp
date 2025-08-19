@@ -5,7 +5,7 @@ BLUE_DEFINE( EveDistributionPlacementGeneratorLocators );
 
 const Be::ClassInfo* EveDistributionPlacementGeneratorLocators::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionPlacementGeneratorLocators, "" )
+	EXPOSURE_BEGIN( EveDistributionPlacementGeneratorLocators, ":jessica-icon: folder-tree\n" )
 		MAP_INTERFACE( EveDistributionPlacementGeneratorLocators )
 		MAP_INTERFACE( IEveDistributionPlacementGenerators )
 

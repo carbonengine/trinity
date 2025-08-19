@@ -749,10 +749,10 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 	}
 
-	if( !m_skinnedVertices.IsValid() || m_skinnedVertices.GetDesc().count < skinnedVertexCount )
+	if( !m_skinnedVertices.IsValid() || m_skinnedVertices.GetDesc().count < 3 * skinnedVertexCount )
 	{
-		const uint32_t vertexSize = 3 * sizeof( float );
-		m_skinnedVertices.Create( Tr2BufferDescriptionAL( vertexSize, skinnedVertexCount, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ), nullptr, renderContext.GetPrimaryRenderContext() );
+		const uint32_t vertexSize = sizeof( float );
+		m_skinnedVertices.Create( Tr2BufferDescriptionAL( vertexSize, 3 * skinnedVertexCount, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ), nullptr, renderContext.GetPrimaryRenderContext() );
 	}
 
 	if( outdatedMeshes.empty() )
@@ -840,7 +840,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			constData->transformOffset = mesh->GetTransformOffset();
 			constData->inVB = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
 			constData->outVB = m_skinnedVertices.GetUavIndexInHeap();
-			constData->outVBOffset = outOffset;
+			constData->outVBOffset = outOffset * 3;
 
 			m_skinVerticesData.Unlock( renderContext );
 

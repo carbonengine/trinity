@@ -17,26 +17,49 @@ EveChildInstanceMeshRenderer::EveChildInstanceMeshRenderer( IRoot* lockobj ) :
 	m_staticOffsetRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_totalObjectCount( 0 ),
 	m_rotationConstraint( RotationalConstraints::NONE ),
-	m_lastEntityCount( 0 )
+	m_lastEntityCount( 0 ),
+	m_refreshStaticGeometry( false )
 {
 }
 
 bool EveChildInstanceMeshRenderer::IsVisible( const EveUpdateContext& updateContext ) const
 {
+	if( GetNumberOfEntities() == 0 )
+	{
+		return false;
+	}
+
 	if( m_boundingSphere.w != 0 )
 	{
 		auto& frustum = updateContext.GetFrustum();
-		if( frustum.IsSphereVisible( m_boundingSphere.GetXYZ(), m_boundingSphere.w ) )
+		Vector3 SpacePosition = TransformCoord( m_boundingSphere.GetXYZ(), m_worldTransform );
+		if( frustum.IsSphereVisible( SpacePosition, m_boundingSphere.w ) )
 		{
-			return frustum.GetPixelSizeAccrossEst( m_boundingSphere.GetXYZ(), m_boundingSphere.w ) >= updateContext.GetVisibilityThreshold();
+			return frustum.GetPixelSizeAccrossEst( SpacePosition, m_boundingSphere.w ) >= updateContext.GetVisibilityThreshold();
 		}
 	}
 	return false;
 }
 
-void EveChildInstanceMeshRenderer::UpdateBoundingSphere( const PlacementDataWithIdentifierStructureList& placements )
+void EveChildInstanceMeshRenderer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
-	if( m_mesh == nullptr || m_distribution == nullptr )
+	m_isVisible = IsVisible( updateContext );
+
+	if( m_isVisible )
+	{
+		EveChildMesh::UpdateVisibility( updateContext, parentTransform, parentLod );
+	}
+	else
+	{
+		m_currentScreenSize = -1;
+		m_instancesVisible = false;
+		m_currentInstanceScreenSize = -1.0f;
+	}
+}
+
+void EveChildInstanceMeshRenderer::UpdateBoundingSphere( const PlacementDataWithIdentifierStructureList& placements, IEveDistributionMethod* distribution )
+{
+	if( m_mesh == nullptr || distribution == nullptr )
 	{
 		return;
 	}
@@ -52,7 +75,7 @@ void EveChildInstanceMeshRenderer::UpdateBoundingSphere( const PlacementDataWith
 		}
 	}
 
-	Vector3 center = m_distribution->GetPlacementDataCenter();
+	Vector3 center = distribution->GetPlacementDataCenter();
 	float longestDistance = 0.f;
 	float largestScale = 0.f;
 
@@ -81,6 +104,11 @@ bool EveChildInstanceMeshRenderer::GetBoundingSphere( Vector4& sphere, BoundingS
 	return true;
 }
 
+void EveChildInstanceMeshRenderer::RefreshStaticGeometry()
+{
+	m_refreshStaticGeometry = true;
+}
+
 void EveChildInstanceMeshRenderer::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	EveChildMesh::UpdateSyncronous( updateContext, params );
@@ -101,15 +129,16 @@ void EveChildInstanceMeshRenderer::UpdateSyncronous( const EveUpdateContext& upd
 			{
 				ConfigureInstanceData();
 				UpdateGeometryResource( placements, currentEntityCount );
-				UpdateBoundingSphere( placements );
+				UpdateBoundingSphere( placements, m_distribution );
 			}
 			else
 			{
 				bool alwaysUpdate = m_distribution->GetHasDynamicMovement() || m_rotationConstraint != EveChildInstanceMeshRenderer::NONE;
-				if( updateCount || alwaysUpdate )
+				if( updateCount || alwaysUpdate || m_refreshStaticGeometry )
 				{
 					UpdateGeometryResource( placements, currentEntityCount );
-					UpdateBoundingSphere( placements );
+					UpdateBoundingSphere( placements, m_distribution );
+					m_refreshStaticGeometry = false;
 				}
 			}
 		}

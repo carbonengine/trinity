@@ -4,6 +4,8 @@
 #include "Macro.h"
 #include "Platforms.h"
 
+#include "CompileMessageQueue.h"
+extern CompileMessageQueue g_messages;
 
 bool EffectCompilerDX12::Create()
 {
@@ -12,7 +14,7 @@ bool EffectCompilerDX12::Create()
 	return m_compiler.Create();
 }
 
-bool EffectCompilerDX12::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
+bool EffectCompilerDX12::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, IWorkQueue* workQueue )
 {
 	std::vector<Macro> newDefines = defines;
 	if( auto define = FindMacro( newDefines, "PLATFORM" ) )
@@ -23,6 +25,6 @@ bool EffectCompilerDX12::CompileEffect( const char* source, size_t sourceLength,
 	{
 		newDefines.push_back( { "PLATFORM", GetPlatformIdString( PLATFORM_DX12 ) } );
 	}
-	return m_compiler.CompileEffect( source, sourceLength, defines, result, { "5_1", true, true } );
+	return m_compiler.CompileEffect( source, sourceLength, defines, result, { "5_1", true, true }, workQueue );
 }
 #endif

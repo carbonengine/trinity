@@ -7,7 +7,7 @@ extern Be::VarChooser RotationalConstraintsChooser[];
 
 const Be::ClassInfo* EveSmartLightMesh::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveSmartLightMesh, "" )
+	EXPOSURE_BEGIN( EveSmartLightMesh, ":jessica-icon: ufo\n" )
 		MAP_INTERFACE( EveSmartLightMesh )
 		MAP_INTERFACE( EveChildInstanceMeshRenderer )
 		MAP_INTERFACE( IEveSmartLightGroup )
@@ -36,6 +36,8 @@ const Be::ClassInfo* EveSmartLightMesh::ExposeToBlue()
 		MAP_ATTRIBUTE( "minScreenSize", m_minScreenSize, "", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "attributeModifiers", m_attributeModifiers, "list of attribute modifiers", Be::READ | Be::PERSIST | Be::NOTIFY )
+		
+		MAP_METHOD_AND_WRAP( "RefreshStaticGeometry", RefreshStaticGeometry, "if static geo parameters were changed during authoring: refresh here\n:jessica-placement: TOOLBAR" )
 				
 	EXPOSURE_END()
 }

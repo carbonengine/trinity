@@ -340,6 +340,10 @@ void EveChildMesh::UpdateRtSkeleton()
 	
 	auto meshIndex = m_mesh->GetMeshIndex();
 	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
+	if( !meshData )
+	{
+		return;
+	}
 	
 	bool hasSkinned = false;
 	

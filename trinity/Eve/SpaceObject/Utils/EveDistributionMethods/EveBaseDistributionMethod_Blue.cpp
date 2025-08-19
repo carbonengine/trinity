@@ -9,7 +9,7 @@ BLUE_DEFINE( EveBaseDistributionMethod );
 
 const Be::ClassInfo* EveBaseDistributionMethod::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveBaseDistributionMethod, "" )
+	EXPOSURE_BEGIN( EveBaseDistributionMethod, ":jessica-icon: map-location\n" )
 		MAP_INTERFACE( EveBaseDistributionMethod )
 		MAP_INTERFACE( IEveDistributionMethod )
 		MAP_INTERFACE( IEveDistributionRulesParent )

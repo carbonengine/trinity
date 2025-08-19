@@ -2371,7 +2371,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		}
 	}
 	
-	if( m_mainPassRenderingEnabled && m_ssao )
+	if( m_mainPassRenderingEnabled && m_ssao && m_depthMap )
 	{
 		renderContext.SetReadOnlyDepth( true );
 
@@ -2613,9 +2613,20 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 	else
 	{
 		// spotlight
-		float fov = 2.f * acos( float( lightData.outerAngle ) );
 		// we flip near and far plane for reverse z
-		auto projection = PerspectiveFovMatrix( fov, 1.f, lightData.radius, lightData.radius / 1000.f );
+		float zn = lightData.radius;
+		float zf = lightData.radius / 1000.f;
+		float aspect = 1.f;
+		float d = float( lightData.projectionPlaneDistance ); 
+
+		Matrix projection = IdentityMatrix();
+		projection.m[0][0] = d / aspect;
+		projection.m[1][1] = d;
+		projection.m[2][2] = zf / ( zn - zf );
+		projection.m[2][3] = -1.0f;
+		projection.m[3][2] = ( zf * zn ) / ( zn - zf );
+		projection.m[3][3] = 0.0f;
+
 		Vector3 up = abs( lightData.direction.y ) < .7f ? Vector3( 0.f, 1.f, 0.f ) : Vector3( 1.f, 0.f, 0.f );
 		Matrix view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
 		uint32_t shadowMapScale;

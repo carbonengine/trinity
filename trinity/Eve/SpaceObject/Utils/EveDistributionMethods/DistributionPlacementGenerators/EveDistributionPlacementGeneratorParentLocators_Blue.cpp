@@ -4,7 +4,7 @@ BLUE_DEFINE( EveDistributionPlacementGeneratorParentLocators );
 
 const Be::ClassInfo* EveDistributionPlacementGeneratorParentLocators::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveDistributionPlacementGeneratorParentLocators, "" )
+	EXPOSURE_BEGIN( EveDistributionPlacementGeneratorParentLocators, ":jessica-icon: person-pregnant\n" )
 		MAP_INTERFACE( EveDistributionPlacementGeneratorParentLocators )
 		MAP_INTERFACE( IEveDistributionPlacementGenerators )
 		MAP_INTERFACE( INotify )
