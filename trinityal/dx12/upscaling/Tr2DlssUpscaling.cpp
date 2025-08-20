@@ -405,8 +405,6 @@ uint32_t Tr2DlssUpscalingContext::GetDispatchRequirements() const
 
 sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
-	auto& renderContext = m_params.renderContext;
-
 	auto inputResource = DlssUtils::GenerateTextureResource( dispatchParameters.input );
 	auto outputResource = DlssUtils::GenerateTextureResource( &m_dlssOutput );
 	auto depthResource = DlssUtils::GenerateTextureResource( dispatchParameters.depth );
@@ -423,7 +421,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::Dispatch
 	
 	sl::ResourceTag resources[] = { colorInTag, opaqueColorInTag, colorOutTag, depthTag, mvecTag, exposureTag };
 
-	if( SL_FAILED( res, Tr2StreamlineAL::SetTags( renderContext, m_viewHandle, resources, 6 ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, resources, 6 ) ) )
 	{
 		CCP_LOGERR( "DLSS Failed to tag resources (%d)", res );
 		return res;
@@ -433,7 +431,6 @@ sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::Dispatch
 
 sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
-	auto& renderContext = m_params.renderContext;
 	auto inputResource = DlssUtils::GenerateTextureResource( &m_dlssOutput );
 	auto outputResource = DlssUtils::GenerateTextureResource( dispatchParameters.output );
 
@@ -442,7 +439,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2UpscalingAL::DispatchP
 
 	sl::ResourceTag resources[] = { colorInTag, colorOutTag };
 
-	if( SL_FAILED( res, Tr2StreamlineAL::SetTags( renderContext, m_viewHandle, resources, 2 ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, resources, 2 ) ) )
 	{
 		CCP_LOGERR( "NIS Failed to tag resources (%d)", res );
 		return res;
@@ -546,7 +543,7 @@ void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 		auto resource = DlssUtils::GenerateTextureResource( texture );
 		sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
 
-		if( SL_FAILED( res, Tr2StreamlineAL::SetTags( m_params.renderContext, m_viewHandle, &tag, 1 ) ) )
+		if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, &tag, 1 ) ) )
 		{
 			CCP_LOGERR( "Failed to tag HudLess texture (%d)", res );
 		}

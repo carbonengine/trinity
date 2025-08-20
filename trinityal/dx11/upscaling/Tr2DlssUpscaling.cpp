@@ -287,7 +287,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::Dispatch
 
 	sl::ResourceTag resources[] = { colorInTag, opaqueColorInTag, colorOutTag, depthTag, mvecTag, exposureTag };
 	
-	if( SL_FAILED( res, Tr2StreamlineAL::SetTags( m_params.renderContext, m_viewHandle, resources, 6 ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, resources, 6 ) ) )
 	{
 		CCP_LOGERR( "DLSS Failed to tag resources (%d)", res );
 		return res;
@@ -310,7 +310,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2UpscalingAL::DispatchP
 
 	sl::ResourceTag resources[] = { colorInTag, colorOutTag };
 
-	if( SL_FAILED( res, Tr2StreamlineAL::SetTags( m_params.renderContext, m_viewHandle, resources, 2 ) ) )
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, resources, 2 ) ) )
 	{
 		CCP_LOGERR( "NIS Failed to tag resources (%d)", res );
 		return res;

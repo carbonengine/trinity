@@ -54,7 +54,7 @@ namespace Tr2StreamlineAL
 		PFun_slGetNewFrameToken* m_slGetNewFrameToken;
 
 		//dispatching
-		PFun_slSetTag* m_slSetTag;
+		PFun_slSetTagForFrame* m_slSetTagForFrame;
 		PFun_slSetConstants* m_slSetConstants;
 		PFun_slEvaluateFeature* m_slEvaluateFeature;
 
@@ -294,7 +294,7 @@ namespace Tr2StreamlineAL
 
 			INITIALIZE_FUNCTION( slGetNewFrameToken );
 
-			INITIALIZE_FUNCTION( slSetTag );
+			INITIALIZE_FUNCTION( slSetTagForFrame );
 			INITIALIZE_FUNCTION( slSetConstants );
 			INITIALIZE_FUNCTION( slEvaluateFeature );
 		}
@@ -352,7 +352,7 @@ namespace Tr2StreamlineAL
 
 			// the appID comes from python, through the trinity settings
 			pref.applicationId = appID;
-			pref.flags |= sl::PreferenceFlags::eUseManualHooking;
+			pref.flags |= sl::PreferenceFlags::eUseManualHooking | sl::PreferenceFlags::eUseFrameBasedResourceTagging;
 			STREAMLINE_INITIALIZATION_RESULT = FUNCTIONS.m_slInit( pref, sl::kSDKVersion );
 
 			if( STREAMLINE_INITIALIZATION_RESULT != sl::Result::eOk )
@@ -521,10 +521,9 @@ namespace Tr2StreamlineAL
 		return CR_SL( FUNCTIONS.m_slGetNewFrameToken( m_frameToken, nullptr ) );
 	}
 
-
-	sl::Result SetTags( Tr2RenderContextAL& renderContext, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags )
+	sl::Result SetTagsForFrame( Tr2RenderContextAL& renderContext, const sl::FrameToken& frame, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags )
 	{
-		return CR_SL( FUNCTIONS.m_slSetTag( viewport, tags, numTags, GetCommandBuffer( renderContext ) ) );
+		return CR_SL( FUNCTIONS.m_slSetTagForFrame( frame, viewport, tags, numTags, GetCommandBuffer( renderContext ) ) );
 	}
 
 	sl::Result SetConstants( const sl::Constants& values, const sl::FrameToken& frame, const sl::ViewportHandle& viewport )
@@ -536,9 +535,6 @@ namespace Tr2StreamlineAL
 	{
 		return CR_SL( FUNCTIONS.m_slEvaluateFeature( feature, frame, inputs, numInputs, GetCommandBuffer( renderContext ) ) );
 	}
-
-
-
 
 	sl::Result GetDLSSOptimalSettings( const sl::DLSSOptions& options, sl::DLSSOptimalSettings& settings )
 	{
