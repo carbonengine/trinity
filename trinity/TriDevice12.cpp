@@ -252,14 +252,14 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 				{
 					if( node->ObjectNameW )
 					{
-						CCP_LOGERR( "Page Fault Allocation on: %s", node->ObjectNameW );
+						CCP_LOGERR( "Page Fault Allocation on: %ls", node->ObjectNameW );
 					}
 				}
 				for( auto node = dredPageFaultOutput.pHeadRecentFreedAllocationNode; node != nullptr; node = node->pNext )
 				{
 					if( node->ObjectNameW )
 					{
-						CCP_LOGERR( "Page Fault Free on: %s", node->ObjectNameW );
+						CCP_LOGERR( "Page Fault Free on: %ls", node->ObjectNameW );
 					}
 				}
 			}
