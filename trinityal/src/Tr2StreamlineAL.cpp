@@ -39,6 +39,8 @@ namespace Tr2StreamlineAL
 	{
 		//initialization
 		PFun_slInit* m_slInit;
+
+		// shutdown
 		PFun_slShutdown* m_slShutdown;
 
 		//wrapping
@@ -119,6 +121,8 @@ namespace Tr2StreamlineAL
 			return "ImGUI";
 		case sl::kFeatureReflex:
 			return "Reflex";
+		case sl::kFeaturePCL:
+			return "PCL";
 		default:
 			return "N/A";
 		}
@@ -290,7 +294,6 @@ namespace Tr2StreamlineAL
 			INITIALIZE_FUNCTION( slIsFeatureSupported );
 			INITIALIZE_FUNCTION( slSetFeatureLoaded );
 			INITIALIZE_FUNCTION( slGetFeatureFunction );
-			
 
 			INITIALIZE_FUNCTION( slGetNewFrameToken );
 
@@ -401,7 +404,6 @@ namespace Tr2StreamlineAL
 		}
 	}
 
-
 	sl::CommandBuffer* GetCommandBuffer( Tr2RenderContextAL& renderContext )
 	{
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
@@ -413,38 +415,19 @@ namespace Tr2StreamlineAL
 
 	bool CheckFeature( sl::AdapterInfo adapterInfo, sl::Feature feature )
 	{
-
 		auto pluginName = GetPluginName( feature );
 
 		auto result = FUNCTIONS.m_slIsFeatureSupported( feature, adapterInfo );
 		if( result != sl::Result::eOk )
 		{
-			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is available", pluginName );
-			switch( result )
-			{
-			case sl::Result::eErrorOSOutOfDate: // inform user to update OS
-				CCP_LOGWARN( "OS is out of date, please update OS to use %s", pluginName );
-				break;
-			case sl::Result::eErrorDriverOutOfDate: // inform user to update driver
-				CCP_LOGWARN( "Driver is out of date, please update driver to use %s", pluginName );
-				break;
-			case sl::Result::eErrorAdapterNotSupported:
-				CCP_LOGWARN( "Current adapter doesn't support %s", pluginName );
-				break;
-			case sl::Result::eErrorMissingOrInvalidAPI:
-				CCP_LOGWARN( "Graphics API not supported for %s", pluginName );
-				break;
-			default:
-				CCP_LOGWARN( "NVidia Streamline plugin '%s' is not supported, Streamline error: %d", pluginName, result );
-			};
-
-			return false;
+			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is not available", pluginName );
+			CR_SL( result );
 		}
 		else
 		{
 			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is available", pluginName );
 		}
-		return true;
+		return result == sl::Result::eOk;
 	}
 
 

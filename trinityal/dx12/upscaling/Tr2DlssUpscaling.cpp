@@ -147,19 +147,12 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 	CCP_ASSERT_M( m_isAvailable == Tr2StreamlineAL::IsDLSSAvailable(), "DLSS is unexpectedly unavailable!" );
 	CCP_ASSERT_M( m_supportsFrameGeneration == Tr2StreamlineAL::IsFrameGenerationAvailable(), "Frame generation is unexpectedly unavailable!" );
 
+	auto reflexConst = sl::ReflexOptions{};
+	reflexConst.mode = m_frameGeneration ? sl::ReflexMode::eLowLatency : sl::ReflexMode::eOff;
 
-	if( m_frameGeneration )
+	if( SL_FAILED( result, Tr2StreamlineAL::SetReflexOptions( reflexConst ) ) )
 	{
-		auto reflexConst = sl::ReflexOptions{};
-		reflexConst.mode = m_frameGeneration ? sl::ReflexMode::eLowLatency : sl::ReflexMode::eOff;
-		reflexConst.useMarkersToOptimize = true;
-		reflexConst.virtualKey = VK_F13;
-		reflexConst.frameLimitUs = 0;
-
-		if( SL_FAILED( result, Tr2StreamlineAL::SetReflexOptions( reflexConst ) ) )
-		{
-			CCP_LOGERR( "Reflex failed to set options (%d)", result );
-		}
+		CCP_LOGERR( "Reflex failed to set options (%d)", result );
 	}
 
 	return proxy;
@@ -528,6 +521,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	// the descriptor cache is dirty, mark it so
 	renderContext.DirtyDescriptorCache();
 	renderContext.FlushBarriersDx12();
+
 	return Tr2UpscalingAL::OK;
 }
 
