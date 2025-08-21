@@ -220,7 +220,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	sl::FrameToken* frameToken ) :
 	Tr2UpscalingContextAL( setting, frameGeneration, params ),
 	m_dlssMode( sl::DLSSMode::eOff ),
-	m_viewHandle( sl::ViewportHandle( contextNumber ) ),
+	m_viewHandle( sl::ViewportHandle( 0 ) ), // BTW this will cause horribleness if we try to enable dlss on more than 1 viewport 
 	m_frameToken( frameToken ),
 	m_setup( false ),
 	m_vramUsage( 0 ),
