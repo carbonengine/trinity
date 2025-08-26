@@ -1515,7 +1515,7 @@ void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
 		return;
 	}
 
-	return m_upscalingTechnique->DeleteContext( contextID );
+	m_upscalingTechnique->DeleteContext( contextID );
 }
 
 Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID ) const

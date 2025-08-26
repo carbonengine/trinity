@@ -39,6 +39,8 @@ namespace Tr2StreamlineAL
 	{
 		//initialization
 		PFun_slInit* m_slInit;
+
+		// shutdown
 		PFun_slShutdown* m_slShutdown;
 
 		//wrapping
@@ -54,7 +56,7 @@ namespace Tr2StreamlineAL
 		PFun_slGetNewFrameToken* m_slGetNewFrameToken;
 
 		//dispatching
-		PFun_slSetTag* m_slSetTag;
+		PFun_slSetTagForFrame* m_slSetTagForFrame;
 		PFun_slSetConstants* m_slSetConstants;
 		PFun_slEvaluateFeature* m_slEvaluateFeature;
 
@@ -119,6 +121,8 @@ namespace Tr2StreamlineAL
 			return "ImGUI";
 		case sl::kFeatureReflex:
 			return "Reflex";
+		case sl::kFeaturePCL:
+			return "PCL";
 		default:
 			return "N/A";
 		}
@@ -290,11 +294,10 @@ namespace Tr2StreamlineAL
 			INITIALIZE_FUNCTION( slIsFeatureSupported );
 			INITIALIZE_FUNCTION( slSetFeatureLoaded );
 			INITIALIZE_FUNCTION( slGetFeatureFunction );
-			
 
 			INITIALIZE_FUNCTION( slGetNewFrameToken );
 
-			INITIALIZE_FUNCTION( slSetTag );
+			INITIALIZE_FUNCTION( slSetTagForFrame );
 			INITIALIZE_FUNCTION( slSetConstants );
 			INITIALIZE_FUNCTION( slEvaluateFeature );
 		}
@@ -352,7 +355,7 @@ namespace Tr2StreamlineAL
 
 			// the appID comes from python, through the trinity settings
 			pref.applicationId = appID;
-			pref.flags |= sl::PreferenceFlags::eUseManualHooking;
+			pref.flags |= sl::PreferenceFlags::eUseManualHooking | sl::PreferenceFlags::eUseFrameBasedResourceTagging;
 			STREAMLINE_INITIALIZATION_RESULT = FUNCTIONS.m_slInit( pref, sl::kSDKVersion );
 
 			if( STREAMLINE_INITIALIZATION_RESULT != sl::Result::eOk )
@@ -401,7 +404,6 @@ namespace Tr2StreamlineAL
 		}
 	}
 
-
 	sl::CommandBuffer* GetCommandBuffer( Tr2RenderContextAL& renderContext )
 	{
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
@@ -413,38 +415,19 @@ namespace Tr2StreamlineAL
 
 	bool CheckFeature( sl::AdapterInfo adapterInfo, sl::Feature feature )
 	{
-
 		auto pluginName = GetPluginName( feature );
 
 		auto result = FUNCTIONS.m_slIsFeatureSupported( feature, adapterInfo );
 		if( result != sl::Result::eOk )
 		{
-			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is available", pluginName );
-			switch( result )
-			{
-			case sl::Result::eErrorOSOutOfDate: // inform user to update OS
-				CCP_LOGWARN( "OS is out of date, please update OS to use %s", pluginName );
-				break;
-			case sl::Result::eErrorDriverOutOfDate: // inform user to update driver
-				CCP_LOGWARN( "Driver is out of date, please update driver to use %s", pluginName );
-				break;
-			case sl::Result::eErrorAdapterNotSupported:
-				CCP_LOGWARN( "Current adapter doesn't support %s", pluginName );
-				break;
-			case sl::Result::eErrorMissingOrInvalidAPI:
-				CCP_LOGWARN( "Graphics API not supported for %s", pluginName );
-				break;
-			default:
-				CCP_LOGWARN( "NVidia Streamline plugin '%s' is not supported, Streamline error: %d", pluginName, result );
-			};
-
-			return false;
+			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is not available", pluginName );
+			CR_SL( result );
 		}
 		else
 		{
 			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is available", pluginName );
 		}
-		return true;
+		return result == sl::Result::eOk;
 	}
 
 
@@ -521,10 +504,9 @@ namespace Tr2StreamlineAL
 		return CR_SL( FUNCTIONS.m_slGetNewFrameToken( m_frameToken, nullptr ) );
 	}
 
-
-	sl::Result SetTags( Tr2RenderContextAL& renderContext, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags )
+	sl::Result SetTagsForFrame( Tr2RenderContextAL& renderContext, const sl::FrameToken& frame, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags )
 	{
-		return CR_SL( FUNCTIONS.m_slSetTag( viewport, tags, numTags, GetCommandBuffer( renderContext ) ) );
+		return CR_SL( FUNCTIONS.m_slSetTagForFrame( frame, viewport, tags, numTags, GetCommandBuffer( renderContext ) ) );
 	}
 
 	sl::Result SetConstants( const sl::Constants& values, const sl::FrameToken& frame, const sl::ViewportHandle& viewport )
@@ -536,9 +518,6 @@ namespace Tr2StreamlineAL
 	{
 		return CR_SL( FUNCTIONS.m_slEvaluateFeature( feature, frame, inputs, numInputs, GetCommandBuffer( renderContext ) ) );
 	}
-
-
-
 
 	sl::Result GetDLSSOptimalSettings( const sl::DLSSOptions& options, sl::DLSSOptimalSettings& settings )
 	{

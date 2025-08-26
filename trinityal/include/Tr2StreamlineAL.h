@@ -44,7 +44,7 @@ namespace Tr2StreamlineAL
 
 	sl::Result GetNewFrameToken( sl::FrameToken*& m_frameToken );
 
-	sl::Result SetTags( Tr2RenderContextAL& renderContext, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags );
+	sl::Result SetTagsForFrame( Tr2RenderContextAL& renderContext, const sl::FrameToken& frame, const sl::ViewportHandle& viewport, const sl::ResourceTag* tags, uint32_t numTags );
 	sl::Result SetConstants( const sl::Constants& values, const sl::FrameToken& frame, const sl::ViewportHandle& viewport );
 	sl::Result EvaluateFeature( Tr2RenderContextAL& renderContext, sl::Feature feature, const sl::FrameToken& frame, const sl::BaseStructure** inputs, uint32_t numInputs );
 
