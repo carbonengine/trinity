@@ -558,7 +558,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
 		upscalingContext->SetHudLessTexture( output->GetTexture() );
 
-		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure, nonMsaaSource.GetRenderTarget()->GetFormat() );
+		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
 		// upscale the temp textures so everything hence forth is correct
 		uint32_t w, h;
 		upscalingContext->GetDisplayDimensions( w, h );
@@ -610,22 +610,20 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_METHOD" ), BlueSharedString( "TONE_MAPPING_DISABLED" ) );
 	}
 
-	ImageIO::PixelFormat tonemappingOutputFormat = Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM;
-
 	bool doGrain = ProcessFilmGrain( filmGrain );
 	if( !upscalingInfo.temporal || doGrain )
 	{
 		if( upscalingEnabled && !upscalingInfo.temporal )
 		{
 			
-			auto temp = m_renderInfo->GetTempTexture( "Tonemapping Result", 1.0f, Tr2RenderContextEnum::EX_NONE, tonemappingOutputFormat );
+			auto temp = m_renderInfo->GetTempTexture( "Tonemapping Result", 1.0f, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM );
 
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 			DrawInto( *temp, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 			
 			auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
 			
-			output = RenderUpscaling( temp, renderContext, upscalingContext, dynamicExposure, tonemappingOutputFormat );
+			output = RenderUpscaling( temp, renderContext, upscalingContext, dynamicExposure );
 			
 			// upscale the temp textures so everything hence forth is correct
 			uint32_t w, h;
@@ -1468,7 +1466,7 @@ void TriStepRenderPostProcess::RenderDynamicExposureDebug( Tr2RenderContext& ren
 	}
 }
 
-Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure, ImageIO::PixelFormat outputFormat )
+Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	GPU_REGION( renderContext, "Upscaling" );
 	if( renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContextID ).temporal )
@@ -1482,7 +1480,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 
 	Tr2UpscalingAL::DispatchParameters dispatchParameters = {};
 	auto dispatchRequirements = upscalingContext->GetDispatchRequirements();
-	auto dest = m_renderInfo->GetTempTexture( w, h, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS, outputFormat );
+	auto dest = m_renderInfo->GetTempTexture( w, h, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS, source->GetFormat() );
 	dispatchParameters.output = dest.GetRenderTarget()->GetTexture();
 
 	bool wantsExposure = dispatchRequirements & Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE;
