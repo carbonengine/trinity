@@ -532,15 +532,12 @@ void Tr2DlssUpscalingContext::SetFrameToken( sl::FrameToken* token )
 
 void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 {
-	if( texture )
-	{
-		auto resource = DlssUtils::GenerateTextureResource( texture );
-		sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	auto resource = DlssUtils::GenerateTextureResource( texture );
+	sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
 
-		if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, &tag, 1 ) ) )
-		{
-			CCP_LOGERR( "Failed to tag HudLess texture (%d)", res );
-		}
+	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, &tag, 1 ) ) )
+	{
+		CCP_LOGERR( "Failed to tag HudLess texture (%d)", res );
 	}
 }
 
