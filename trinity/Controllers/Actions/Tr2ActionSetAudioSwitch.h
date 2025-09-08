@@ -17,8 +17,9 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	void Start( Tr2Controller& controller ) override;
-	void StartWithController( PyObject * controller );
+	void Start( ITr2ActionController& controller ) override;
+	void StartWithController( ITr2ActionController* controller );
+
 private:
 	std::string m_emitterName;
 	std::wstring m_switchGroup;

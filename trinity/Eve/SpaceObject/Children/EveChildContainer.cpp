@@ -1009,11 +1009,11 @@ bool EveChildContainer::GetControllerValueByName( const char* name, float& out )
 {
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
-		if( Tr2ControllerPtr controller = BlueCastPtr( *it ) )
+		if( ITr2ActionControllerPtr controller = BlueCastPtr( *it ) )
 		{
-			if( auto var = controller->GetVariableByName( name ) )
+			if( auto var = controller->GetFloatVariableByName( name ) )
 			{
-				out = var->GetValue();
+				out = *var;
 				return true;
 			}
 		}

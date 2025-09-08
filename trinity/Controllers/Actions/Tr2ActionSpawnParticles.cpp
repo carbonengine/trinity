@@ -14,7 +14,7 @@ Tr2ActionSpawnParticles::Tr2ActionSpawnParticles( IRoot* )
 {
 }
 
-void Tr2ActionSpawnParticles::Start( Tr2Controller& )
+void Tr2ActionSpawnParticles::Start( ITr2ActionController& )
 {
 	if( !m_emitter )
 	{

@@ -37,7 +37,7 @@ Tr2ActionChildEffect::Tr2ActionChildEffect( IRoot* ) :
 {
 }
 
-void Tr2ActionChildEffect::Link( Tr2Controller& controller )
+void Tr2ActionChildEffect::Link( ITr2ActionController& controller )
 {
 	if( m_path.empty() )
 	{
@@ -69,7 +69,7 @@ void Tr2ActionChildEffect::Link( Tr2Controller& controller )
 }
 
 
-void Tr2ActionChildEffect::Start( Tr2Controller& controller )
+void Tr2ActionChildEffect::Start( ITr2ActionController& controller )
 {
 	IEveEffectChildrenOwnerPtr owner = BlueCastPtr( controller.GetOwner() );
 	bool rebind = false;
@@ -139,7 +139,7 @@ void Tr2ActionChildEffect::Start( Tr2Controller& controller )
 	}
 }
 
-void Tr2ActionChildEffect::Stop( Tr2Controller& controller )
+void Tr2ActionChildEffect::Stop( ITr2ActionController& controller )
 {
 	if( m_child && m_removeOnStop )
 	{

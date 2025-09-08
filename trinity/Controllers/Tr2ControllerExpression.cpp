@@ -503,7 +503,7 @@ std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2S
 	return CreateParser( expression, {} );
 }
 
-std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2Controller& controller, const CcpParser::FunctionView& extraFunctions )
+std::string Tr2ControllerExpression::SetExpr( const char* expression, const ITr2ActionController& controller, const CcpParser::FunctionView& extraFunctions )
 {
 	Clear();
 	m_stateMachine = nullptr;

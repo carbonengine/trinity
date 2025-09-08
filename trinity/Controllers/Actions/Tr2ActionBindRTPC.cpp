@@ -50,7 +50,7 @@ Tr2ActionBindRTPC::Tr2ActionBindRTPC( IRoot* ):
 {
 }
 
-void Tr2ActionBindRTPC::Link( Tr2Controller& controller )
+void Tr2ActionBindRTPC::Link( ITr2ActionController& controller )
 {
 	m_controller = &controller;
 	m_evaluator.SetExpr( m_value.c_str(), controller, s_extraFunctions );
@@ -62,7 +62,7 @@ void Tr2ActionBindRTPC::Unlink()
 	m_evaluator.Clear();
 }
 
-void Tr2ActionBindRTPC::Start( Tr2Controller& controller )
+void Tr2ActionBindRTPC::Start( ITr2ActionController& controller )
 {
 	m_startTime = BeOS->GetCurrentFrameTime();
 	controller.RegisterUpdateable( *this );
@@ -76,9 +76,8 @@ void Tr2ActionBindRTPC::Start( Tr2Controller& controller )
 	}
 }
 
-void Tr2ActionBindRTPC::StartWithController( PyObject* obj )
+void Tr2ActionBindRTPC::StartWithController( ITr2ActionController* controller )
 {
-	Tr2Controller* controller = BluePythonCast<Tr2Controller*>( obj );
 	if( !controller )
 	{
 		PyErr_SetString( PyExc_TypeError, "StartWithController expects a Tr2Controller as a parameter." );
@@ -87,14 +86,13 @@ void Tr2ActionBindRTPC::StartWithController( PyObject* obj )
 	Start( *controller );
 }
 
-void Tr2ActionBindRTPC::Stop( Tr2Controller& controller )
+void Tr2ActionBindRTPC::Stop( ITr2ActionController& controller )
 {
 	controller.UnRegisterUpdateable( *this );
 }
 
-void Tr2ActionBindRTPC::StopWithController( PyObject* obj )
+void Tr2ActionBindRTPC::StopWithController( ITr2ActionController* controller )
 {
-	Tr2Controller* controller = BluePythonCast<Tr2Controller*>( obj );
 	if( !controller )
 	{
 		PyErr_SetString( PyExc_TypeError, "StopWithController expects a Tr2Controller as a parameter." );
@@ -147,11 +145,7 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2ActionBindRTPC::GetExpressionTermInfo()
 
 	if( m_controller )
 	{
-		auto& variables = m_controller->GetVariables();
-		for( auto it = begin( variables ); it != end( variables ); ++it )
-		{
-			result.push_back( Tr2ExpressionTermInfo::Variable( "Variables", ( *it )->GetName().c_str(), "controller variable" ) );
-		}
+		m_controller->GetExpressionTermInfo( result );
 	}
 	return result;
 }

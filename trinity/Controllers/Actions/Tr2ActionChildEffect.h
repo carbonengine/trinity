@@ -17,9 +17,10 @@ public:
 	Tr2ActionChildEffect( IRoot* lockobj = nullptr );
 	EXPOSE_TO_BLUE();
 
-	virtual void Start( Tr2Controller& controller );
-	virtual void Stop( Tr2Controller& controller );
-	virtual void Link( Tr2Controller& controller );
+	void Start( ITr2ActionController& controller ) override;
+	void Stop( ITr2ActionController& controller ) override;
+	void Link( ITr2ActionController& controller ) override;
+
 private:
 	std::string m_path;
 	std::string m_childName;

@@ -9,7 +9,7 @@
 #include "Controllers/Tr2Controller.h"
 #include "Shader/IShaderConfigurer.h"
 
-void Tr2ActionSetShaderOption::Start( Tr2Controller& controller )
+void Tr2ActionSetShaderOption::Start( ITr2ActionController& controller )
 {
 	IShaderConfigurerPtr owner = BlueCastPtr( controller.GetOwner() );
 	if ( nullptr == owner )

@@ -6,6 +6,7 @@
 
 #include "StdAfx.h"
 #include "Tr2ActionSetAudioSwitch.h"
+#include "../ITr2Controller.h"
 
 
 BLUE_DEFINE( Tr2ActionSetAudioSwitch );

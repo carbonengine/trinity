@@ -7,6 +7,7 @@
 #include "StdAfx.h"
 #include "Tr2StateMachineState.h"
 #include "Tr2StateMachine.h"
+#include "Tr2Controller.h"
 #include "Tr2StateMachineTransition.h"
 #include "Actions/ITr2ControllerAction.h"
 #include "Finalizers/ITr2StateMachineStateFinalizer.h"

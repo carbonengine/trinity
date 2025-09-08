@@ -43,7 +43,7 @@ void Tr2ControllerEventHandler::OnListModified( long event, ssize_t key, ssize_t
 	}
 }
 
-void Tr2ControllerEventHandler::Link( Tr2Controller& controller )
+void Tr2ControllerEventHandler::Link( ITr2ActionController& controller )
 {
 	Unlink();
 
@@ -71,7 +71,7 @@ const char* Tr2ControllerEventHandler::GetName() const
 	return m_name.c_str();
 }
 
-void Tr2ControllerEventHandler::Execute( Tr2Controller& controller )
+void Tr2ControllerEventHandler::Execute( ITr2ActionController& controller )
 {
 	for( auto it = begin( m_actions ); it != end( m_actions ); ++it )
 	{
