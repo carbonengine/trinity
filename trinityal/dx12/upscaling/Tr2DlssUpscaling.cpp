@@ -147,14 +147,17 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 	CCP_ASSERT_M( m_isAvailable == Tr2StreamlineAL::IsDLSSAvailable(), "DLSS is unexpectedly unavailable!" );
 	CCP_ASSERT_M( m_supportsFrameGeneration == Tr2StreamlineAL::IsFrameGenerationAvailable(), "Frame generation is unexpectedly unavailable!" );
 
-	auto reflexConst = sl::ReflexOptions{};
-	reflexConst.mode = m_frameGeneration ? sl::ReflexMode::eLowLatency : sl::ReflexMode::eOff;
-
-	if( SL_FAILED( result, Tr2StreamlineAL::SetReflexOptions( reflexConst ) ) )
+	if( m_frameGeneration )
 	{
-		CCP_LOGERR( "Reflex failed to set options (%d)", result );
-	}
+		auto reflexConst = sl::ReflexOptions{};
+		reflexConst.mode = sl::ReflexMode::eLowLatency;
 
+		if( SL_FAILED( result, Tr2StreamlineAL::SetReflexOptions( reflexConst ) ) )
+		{
+			CCP_LOGERR( "Reflex failed to set options (%d)", result );
+		}
+	}
+	
 	return proxy;
 }
 
