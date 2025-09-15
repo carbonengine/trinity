@@ -18,7 +18,7 @@ Tr2ActionSetValue::Tr2ActionSetValue( IRoot* )
 
 }
 
-void Tr2ActionSetValue::Link( Tr2Controller& controller )
+void Tr2ActionSetValue::Link( ITr2ActionController& controller )
 {
 	m_controller = &controller;
 	if( !HasDelayedBinding() )
@@ -35,7 +35,7 @@ void Tr2ActionSetValue::Unlink()
 	m_evaluator.Clear();
 }
 
-void Tr2ActionSetValue::Start( Tr2Controller& controller )
+void Tr2ActionSetValue::Start( ITr2ActionController& controller )
 {
 	if( HasDelayedBinding() )
 	{
@@ -100,16 +100,12 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2ActionSetValue::GetExpressionTermInfo()
 
 	if( m_controller )
 	{
-		auto& variables = m_controller->GetVariables();
-		for( auto it = begin( variables ); it != end( variables ); ++it )
-		{
-			result.push_back( Tr2ExpressionTermInfo::Variable( "Variables", ( *it )->GetName().c_str(), "controller variable" ) );
-		}
+		m_controller->GetExpressionTermInfo( result );
 	}
 	return result;
 }
 
-void Tr2ActionSetValue::LinkDestination( const Tr2Controller& controller )
+void Tr2ActionSetValue::LinkDestination( const ITr2ActionController& controller )
 {
 	m_destination.Link( controller.GetBindingPathRoots() );
 }

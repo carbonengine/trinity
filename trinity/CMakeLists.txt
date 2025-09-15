@@ -84,6 +84,9 @@ set(_SOURCES
     Controllers/Actions/Tr2ActionPlaySound.cpp
     Controllers/Actions/Tr2ActionPlaySound.h
     Controllers/Actions/Tr2ActionPlaySound_Blue.cpp
+    Controllers/Actions/Tr2ActionPython.cpp
+    Controllers/Actions/Tr2ActionPython.h
+    Controllers/Actions/Tr2ActionPython_Blue.cpp
     Controllers/Actions/Tr2ActionResetClipSphereCenter.cpp
     Controllers/Actions/Tr2ActionResetClipSphereCenter.h
     Controllers/Actions/Tr2ActionResetClipSphereCenter_Blue.cpp
@@ -139,6 +142,9 @@ set(_SOURCES
     Controllers/Tr2StateMachineTransition.cpp
     Controllers/Tr2StateMachineTransition.h
     Controllers/Tr2StateMachineTransition_Blue.cpp
+    Controllers/Tr2TimelineController.cpp
+    Controllers/Tr2TimelineController.h
+    Controllers/Tr2TimelineController_Blue.cpp
     Curves/Fader/Tr2ScalarFader.cpp
     Curves/Fader/Tr2ScalarFader.h
     Curves/Fader/Tr2ScalarFader_Blue.cpp

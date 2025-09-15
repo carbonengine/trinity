@@ -420,8 +420,7 @@ namespace Tr2StreamlineAL
 		auto result = FUNCTIONS.m_slIsFeatureSupported( feature, adapterInfo );
 		if( result != sl::Result::eOk )
 		{
-			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is not available", pluginName );
-			CR_SL( result );
+			CCP_LOGNOTICE( "NVidia Streamline plugin '%s' is not available because of error %d: '%s'", pluginName, result, GetSlResultMessage(result) );
 		}
 		else
 		{

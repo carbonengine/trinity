@@ -9,7 +9,7 @@
 
 BLUE_DECLARE_INTERFACE( ITr2ControllerAction );
 BLUE_DECLARE_IVECTOR( ITr2ControllerAction );
-BLUE_DECLARE( Tr2Controller );
+BLUE_DECLARE_INTERFACE( ITr2ActionController );
 
 
 BLUE_CLASS( Tr2ControllerEventHandler ): public IListNotify
@@ -21,16 +21,17 @@ public:
 
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list ) override;
 
-	void Link( Tr2Controller& controller );
+	void Link( ITr2ActionController & controller );
 	void Unlink();
 
 	const char* GetName() const;
-	void Execute( Tr2Controller& controller );
+	void Execute( ITr2ActionController & controller );
+
 private:
 	std::string m_name;
 	PITr2ControllerActionVector m_actions;
 
-	Tr2Controller* m_controller;
+	ITr2ActionController* m_controller;
 };
 
 TYPEDEF_BLUECLASS( Tr2ControllerEventHandler );

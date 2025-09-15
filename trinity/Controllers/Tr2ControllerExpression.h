@@ -10,7 +10,7 @@
 
 
 BLUE_DECLARE( Tr2StateMachine );
-BLUE_DECLARE( Tr2Controller );
+BLUE_DECLARE_INTERFACE( ITr2ActionController );
 BLUE_DECLARE( Tr2ExpressionTermInfo );
 
 
@@ -20,7 +20,7 @@ public:
 	Tr2ControllerExpression();
 
 	std::string SetExpr( const char* expression, const Tr2StateMachine& stateMachine );
-	std::string SetExpr( const char* expression, const Tr2Controller& controller, const CcpParser::FunctionView& extraFunctions = {} );
+	std::string SetExpr( const char* expression, const ITr2ActionController& controller, const CcpParser::FunctionView& extraFunctions = {} );
 	std::pair<bool, float> Eval( void* extraBuffer = nullptr ) const;
 	void Clear();
 	bool IsExpressionValid() const;
@@ -38,6 +38,6 @@ private:
 	CcpParser::Program m_program;
 
 	const Tr2StateMachine* m_stateMachine;
-	const Tr2Controller* m_controller;
+	const ITr2ActionController* m_controller;
 	uint64_t m_variableMask;
 };

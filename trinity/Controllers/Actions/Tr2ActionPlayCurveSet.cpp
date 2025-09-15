@@ -23,7 +23,7 @@ Tr2ActionPlayCurveSet::Tr2ActionPlayCurveSet( IRoot* )
 {
 }
 
-void Tr2ActionPlayCurveSet::Start( Tr2Controller& controller )
+void Tr2ActionPlayCurveSet::Start( ITr2ActionController& controller )
 {
 	m_duration = 0;
 	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( controller.GetOwner() ) )
@@ -40,7 +40,7 @@ void Tr2ActionPlayCurveSet::Start( Tr2Controller& controller )
 	}
 }
 
-void Tr2ActionPlayCurveSet::Stop( Tr2Controller& controller )
+void Tr2ActionPlayCurveSet::Stop( ITr2ActionController& controller )
 {
 	controller.UnRegisterUpdateable( *this );
 	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( controller.GetOwner() ) )

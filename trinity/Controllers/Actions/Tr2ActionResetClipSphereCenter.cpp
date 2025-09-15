@@ -25,7 +25,7 @@ void Tr2ActionResetClipSphereCenter::ResetClipSphereToLocator( EveSpaceObject2* 
 	}
 }
 
-void Tr2ActionResetClipSphereCenter::Start( Tr2Controller& controller )
+void Tr2ActionResetClipSphereCenter::Start( ITr2ActionController& controller )
 {	
 	if( EveSpaceObject2Ptr owner = BlueCastPtr( controller.GetOwner() ) )
 	{

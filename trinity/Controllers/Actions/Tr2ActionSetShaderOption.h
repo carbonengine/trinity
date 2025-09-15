@@ -13,7 +13,7 @@ BLUE_CLASS( Tr2ActionSetShaderOption ) : public ITr2ControllerAction
 public:
 	EXPOSE_TO_BLUE();
 
-	void Start( Tr2Controller& controller ) override;
+	void Start( ITr2ActionController& controller ) override;
 
 private:
 	BlueSharedString m_optionKey;

@@ -6,6 +6,7 @@
 
 #include "StdAfx.h"
 #include "Tr2ActionSetAudioEmitterPrefix.h"
+#include "../ITr2Controller.h"
 
 
 BLUE_DEFINE( Tr2ActionSetAudioEmitterPrefix );

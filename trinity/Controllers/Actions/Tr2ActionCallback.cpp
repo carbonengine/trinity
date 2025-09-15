@@ -8,7 +8,7 @@
 #include "Tr2ActionCallback.h"
 #include "Controllers/Tr2Controller.h"
 
-void Tr2ActionCallback::Start( Tr2Controller& controller )
+void Tr2ActionCallback::Start( ITr2ActionController& controller )
 {
 	if( !m_callbackName.empty() )
 	{

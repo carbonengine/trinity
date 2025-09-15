@@ -17,11 +17,11 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	virtual void Start( Tr2Controller& controller );
-	virtual void Stop( Tr2Controller& controller );
-	virtual void RebaseSimTime( Be::Time diff );
+	void Start( ITr2ActionController& controller ) override;
+	void Stop( ITr2ActionController& controller ) override;
+	void RebaseSimTime( Be::Time diff ) override;
 
-	virtual bool CanTransition() const;
+	bool CanTransition() const override;
 
 	virtual void Update( Be::Time realTime, Be::Time simTime );
 private:

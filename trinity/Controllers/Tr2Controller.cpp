@@ -10,6 +10,7 @@
 #include "Tr2ControllerFloatVariable.h"
 #include "Tr2ControllerEventHandler.h"
 #include "Include/ITr2Updateable.h"
+#include "../Tr2ExpressionTermInfo.h"
 #include <ScopedBlockTrap.h>
 
 
@@ -309,6 +310,24 @@ Tr2ControllerFloatVariable* Tr2Controller::GetVariableByName( const char* name )
 	return nullptr;
 }
 
+std::optional<float> Tr2Controller::GetFloatVariableByName( const char* name ) const
+{
+	auto var = GetVariableByName( name );
+	if( var )
+	{
+		return var->GetValue();
+	}
+	return std::nullopt;
+}
+
+void Tr2Controller::GetExpressionTermInfo( std::vector<Tr2ExpressionTermInfoPtr>& out ) const
+{
+	for( auto it = begin( m_variables ); it != end( m_variables ); ++it )
+	{
+		out.push_back( Tr2ExpressionTermInfo::Variable( "Variables", ( *it )->GetName().c_str(), "controller variable" ) );
+	}
+}
+	
 const PTr2ControllerFloatVariableVector& Tr2Controller::GetVariables() const
 {
 	return m_variables;
