@@ -654,11 +654,14 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 
 	auto FindRootBoneIndex = [&]() -> std::optional<uint8_t> {
 		const char* rootBone = FindRootBoneName();
-		for( int32_t i = 0; i < myMesh->BoneBindingCount; ++i )
+		if( rootBone != nullptr )
 		{
-			if( myMesh->BoneBindings[i].BoneName && strcmp( myMesh->BoneBindings[i].BoneName, rootBone ) == 0 )
+			for( int32_t i = 0; i < myMesh->BoneBindingCount; ++i )
 			{
-				return uint8_t( i );
+				if( myMesh->BoneBindings[i].BoneName && strcmp( myMesh->BoneBindings[i].BoneName, rootBone ) == 0 )
+				{
+					return uint8_t( i );
+				}
 			}
 		}
 		return {};
