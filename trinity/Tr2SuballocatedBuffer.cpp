@@ -229,6 +229,12 @@ void Tr2SuballocatedBuffer::Allocation::Update( const void* data, Tr2RenderConte
 	m_parent->m_buffer.UpdateBuffer( GetOffset(), GetSize(), data, renderContext );
 }
 
+void Tr2SuballocatedBuffer::Allocation::Update( const void* data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+{
+	CCP_ASSERT_M( GetSize() - offset >= size, "Writeing data outside the allocated bounds of the suballocation buffer" );
+	m_parent->m_buffer.UpdateBuffer( GetOffset() + offset, size, data, renderContext );
+}
+
 ALResult Tr2SuballocatedBuffer::Allocation::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )
 {
 	CR_RETURN_HR( m_parent->ReadBuffer( m_mappedCopy, m_offset, m_size, renderContext ) );

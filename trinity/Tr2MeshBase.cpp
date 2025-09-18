@@ -10,6 +10,9 @@
 #include "Utilities/BoundingBox.h"
 #include "Raytracing/Tr2RaytracingGeometry.h"
 
+#include "Tr2GpuBuffer.h"
+#include "Tr2GpuStructuredBuffer.h"
+
 CCP_STATS_DECLARE( tr2MeshBindToRig, "Trinity/BindToRig", true, CST_COUNTER_LOW, "Number of times a mesh executed bind to a new rig" );
 
 Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
@@ -350,6 +353,11 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 		return batch;
 	}
 
+	if( mesh->m_morphTargetBuffer )
+	{
+		shadMat->SetParameter( BlueSharedString("MorphTargetsBuffer"), mesh->m_morphTargetBuffer );
+	}
+
 	auto primCount = GetPrimitiveCount( *mesh, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
 
 	if( !primCount )
@@ -366,6 +374,11 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 
 	batch.SetMaterial( shadMat );
 	batch.SetGeometry( mesh->m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+
+	/* if( mesh->m_morphTargetAllocation.IsValid() )
+	{
+		batch.SetStreamSource( 1, mesh->m_morphTargetAllocation.GetBuffer(), mesh->m_morphTargetAllocation.GetStride() );
+	}*/
 
 	batch.SetPerObjectData( data );
 

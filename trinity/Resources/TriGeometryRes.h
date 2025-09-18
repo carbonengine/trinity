@@ -38,6 +38,7 @@ extern Tr2SuballocatedBuffer g_sharedBuffer;
 
 
 
+BLUE_DECLARE( Tr2GpuStructuredBuffer );
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
 
@@ -156,6 +157,11 @@ struct TriGeometryResMeshData
 	// Index buffer with indexes in reversed order (used by hair/clothing)
 	bool m_reversedIndicesValid;
 	Tr2SuballocatedBuffer::Allocation m_reversedIndexAllocation;
+
+	//Tr2SuballocatedBuffer::Allocation m_morphTargetAllocation;
+	Tr2GpuStructuredBufferPtr m_morphTargetBuffer;
+
+	int m_morphTargetAllocationCount;
 
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;
