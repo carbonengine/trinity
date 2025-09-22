@@ -39,6 +39,8 @@ namespace
 	unsigned int s_perObjectPSStartRegister = 4;
 	unsigned int s_perObjectRTVertexBufferDataRegister = 5;
 	unsigned int s_perObjectVSGUIStartRegister = 6;
+	unsigned int s_perObjectMorphTargetVertexBufferDataStartRegister = 7;
+	unsigned int s_perObjectMorphTargetAnimationDataStartRegister = 8;
 
 	uint32_t s_upscalingContextID = Tr2UpscalingAL::INVALID_CONTEXT_ID;
 
@@ -1227,6 +1229,16 @@ unsigned int Tr2Renderer::GetPerObjectPSStartRegister()
 unsigned int Tr2Renderer::GetPerObjectRTVertexBufferDataRegister()
 {
 	return s_perObjectRTVertexBufferDataRegister;
+}
+
+unsigned int Tr2Renderer::GetPerObjectMorphTargetVertexBufferDataStartRegister()
+{
+	return s_perObjectMorphTargetVertexBufferDataStartRegister;
+}
+
+unsigned int Tr2Renderer::GetPerObjectMorphTargetAnimationDataStartRegister()
+{
+	return s_perObjectMorphTargetAnimationDataStartRegister;
 }
 
 void Tr2Renderer::ReserveQuadListIndexBuffer( uint32_t numOfQuads )

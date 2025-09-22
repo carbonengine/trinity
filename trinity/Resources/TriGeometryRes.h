@@ -38,7 +38,7 @@ extern Tr2SuballocatedBuffer g_sharedBuffer;
 
 
 
-BLUE_DECLARE( Tr2GpuStructuredBuffer );
+BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
 
@@ -72,6 +72,28 @@ struct TriRtGeometryConstants
 
 	uint32_t texCoord2Offset;
 	uint32_t texCoord2Type;
+
+	uint32_t padding;
+};
+
+struct TriMorphTargetGeometryConstants
+{
+	uint32_t vertexBufferStride;
+
+	uint32_t positionOffset;
+	uint32_t positionType;
+
+	uint32_t normalOffset;
+	uint32_t normalType;
+
+	uint32_t tangentOffset;
+	uint32_t tangentType;
+
+	uint32_t bitangentOffset;
+	uint32_t bitangentType;
+
+	uint32_t texCoord0Offset;
+	uint32_t texCoord0Type;
 
 	uint32_t padding;
 };
@@ -159,9 +181,10 @@ struct TriGeometryResMeshData
 	Tr2SuballocatedBuffer::Allocation m_reversedIndexAllocation;
 
 	//Tr2SuballocatedBuffer::Allocation m_morphTargetAllocation;
-	Tr2GpuStructuredBufferPtr m_morphTargetBuffer;
-
-	int m_morphTargetAllocationCount;
+	//int m_morphTargetAllocationCount;
+	Tr2GpuBufferPtr m_morphTargetBuffer;
+	Tr2ConstantBufferAL m_morphTargetGeometryConstants;
+	
 
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;

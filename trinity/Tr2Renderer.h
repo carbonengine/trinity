@@ -57,6 +57,8 @@ public:
 	static unsigned int GetPerObjectPSStartRegister();
 	static unsigned int GetPerObjectRTVertexBufferDataRegister();
 	static unsigned int GetPerObjectVSGUIStartRegister();
+	static unsigned int GetPerObjectMorphTargetVertexBufferDataStartRegister();
+	static unsigned int GetPerObjectMorphTargetAnimationDataStartRegister();
 
 
 	template<Tr2RenderContextEnum::ShaderType shaderType>
