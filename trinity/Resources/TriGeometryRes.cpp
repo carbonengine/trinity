@@ -1625,90 +1625,81 @@ bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigne
 
 namespace
 {
-const void CreateMorphGeometryConstants( Tr2ConstantBufferAL& m_morphTargetGeometryConstants, const Tr2VertexDefinition& vertexDefinition, uint32_t stride, Tr2RenderContext& renderContext )
+TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDefinition& vertexDefinition, uint32_t stride, uint32_t vertexCount, Tr2RenderContext& renderContext )
 {
-	CCP_ASSERT_M( !m_morphTargetGeometryConstants.IsValid(), "CreateMorphGeometryConstants: m_morphTargetGeometryConstants has already been created!" );
-	
-	if( SUCCEEDED( m_morphTargetGeometryConstants.Create( sizeof( TriMorphTargetGeometryConstants ), renderContext.GetPrimaryRenderContext() ) ) )
+	TriMorphTargetGeometryConstants data = TriMorphTargetGeometryConstants{};
+	for( auto it = begin( vertexDefinition.m_items ); it != end( vertexDefinition.m_items ); ++it )
 	{
-		TriMorphTargetGeometryConstants* data;
-
-		if( SUCCEEDED( m_morphTargetGeometryConstants.Lock( (void**)&data, renderContext ) ) )
+		if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
 		{
-			*data = TriMorphTargetGeometryConstants{};
-			for( auto it = begin( vertexDefinition.m_items ); it != end( vertexDefinition.m_items ); ++it )
-			{
-				if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
-				{
-					data->positionOffset = it->m_offset;
-					data->positionType = it->m_dataType;
+			data.positionOffset = it->m_offset;
+			data.positionType = it->m_dataType;
 
-					uint32_t type = data->positionType;
-					CCP_ASSERT_M(
-						type == Tr2VertexDefinition::DataType::FLOAT32_3,
-						"position type has to be FLOAT32_3!" 
-					);
-				}
+			uint32_t type = data.positionType;
+			CCP_ASSERT_M(
+				type == Tr2VertexDefinition::DataType::FLOAT32_3,
+				"position type has to be FLOAT32_3!" 
+			);
+		}
 
-				if( it->m_usage == Tr2VertexDefinition::NORMAL && it->m_usageIndex == 0 && it->m_stream == 0 )
-				{
-					data->normalOffset = it->m_offset;
-					data->normalType = it->m_dataType;
+		if( it->m_usage == Tr2VertexDefinition::NORMAL && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			data.normalOffset = it->m_offset;
+			data.normalType = it->m_dataType;
 
-					uint32_t type = data->normalType;
-					CCP_ASSERT_M(
-						type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-						type == Tr2VertexDefinition::DataType::FLOAT32_3,
-						"normal type has to be FLOAT16_3 or FLOAT32_3!" 
-					);
-				}
+			uint32_t type = data.normalType;
+			CCP_ASSERT_M(
+				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+				type == Tr2VertexDefinition::DataType::FLOAT32_3,
+				"normal type has to be FLOAT16_3 or FLOAT32_3!" 
+			);
+		}
 
-				if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
-				{
-					data->tangentOffset = it->m_offset;
-					data->tangentType = it->m_dataType;
+		if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			data.tangentOffset = it->m_offset;
+			data.tangentType = it->m_dataType;
 
-					uint32_t type = data->tangentType;
-					CCP_ASSERT_M(
-						type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-						type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
-						type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
-						type == Tr2VertexDefinition::DataType::USHORT_4_NORM,
-						"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
-					);
-				}
+			uint32_t type = data.tangentType;
+			CCP_ASSERT_M(
+				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+				type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
+				type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
+				type == Tr2VertexDefinition::DataType::USHORT_4_NORM,
+				"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
+			);
+		}
 
-				if( it->m_usage == Tr2VertexDefinition::BITANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
-				{
-					data->bitangentOffset = it->m_offset;
-					data->bitangentType = it->m_dataType;
+		if( it->m_usage == Tr2VertexDefinition::BITANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			data.bitangentOffset = it->m_offset;
+			data.bitangentType = it->m_dataType;
 
-					uint32_t type = data->bitangentType;
-					CCP_ASSERT_M(
-						type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-						type == Tr2VertexDefinition::DataType::FLOAT32_3,
-						"bitangent type has to be FLOAT16_3 or FLOAT32_3!" 
-					);
-				}
+			uint32_t type = data.bitangentType;
+			CCP_ASSERT_M(
+				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+				type == Tr2VertexDefinition::DataType::FLOAT32_3,
+				"bitangent type has to be FLOAT16_3 or FLOAT32_3!" 
+			);
+		}
 
-				if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
-				{
-					data->texCoord0Offset = it->m_offset;
-					data->texCoord0Type = it->m_dataType;
+		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			data.texCoord0Offset = it->m_offset;
+			data.texCoord0Type = it->m_dataType;
 
-					uint32_t type = data->texCoord0Type;
-					CCP_ASSERT_M(
-						type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
-						type == Tr2VertexDefinition::DataType::FLOAT32_2,
-						"texCoord0 type has to be FLOAT16_2 or FLOAT32_2!" 
-					);
-				}
-			}
-
-			data->vertexBufferStride = stride;
-			m_morphTargetGeometryConstants.Unlock( renderContext );
-		}	
+			uint32_t type = data.texCoord0Type;
+			CCP_ASSERT_M(
+				type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
+				type == Tr2VertexDefinition::DataType::FLOAT32_2,
+				"texCoord0 type has to be FLOAT16_2 or FLOAT32_2!" 
+			);
+		}
 	}
+
+	data.vertexBufferStride = stride;
+	data.vertexCount = vertexCount;
+	return data;
 }
 }
 
@@ -1812,7 +1803,8 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 
 			uint32_t morphDataSize = firstMorphTarget.VertexData->VertexCount * bytesPerMorphTargetVertex;
 			
-			CR_RETURN_HR( pMesh->m_morphTargetBuffer->Create( ( morphDataSize >> 2 ) * myMesh->MorphTargetCount, PIXEL_FORMAT_R32_UINT, Tr2GpuBuffer::CPU_WRITABLE ) );
+			uint32_t morphTargetBufferSize = ( morphDataSize >> 2 ) * myMesh->MorphTargetCount + ( sizeof( TriMorphTargetGeometryConstants ) >> 2 );
+			CR_RETURN_HR( pMesh->m_morphTargetBuffer->Create( morphTargetBufferSize, PIXEL_FORMAT_R32_UINT, Tr2GpuBuffer::CPU_WRITABLE ) );
 			pMesh->m_morphTargetBuffer->SetName( "Morph Target buffer" );
 
 			/* CR_RETURN_VAL( g_sharedBuffer.Allocate( 
@@ -1825,6 +1817,10 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 
 			char* data;
 			CR_RETURN_HR( pMesh->m_morphTargetBuffer->GetGpuBuffer( 0 )->MapForWriting( data, renderContext ) );
+
+			TriMorphTargetGeometryConstants morphTargetConstants = CreateMorphGeometryConstants( firstMorphTargetVertexDefinition, bytesPerMorphTargetVertex, firstMorphTarget.VertexData->VertexCount, renderContext );
+
+			memcpy( data, &morphTargetConstants, sizeof( TriMorphTargetGeometryConstants ) );
 
 			for ( int i = 0; i < myMesh->MorphTargetCount; ++i )
 			{
@@ -1839,12 +1835,10 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 
 				//pMesh->m_morphTargetAllocation.Update( pMorphSrc, morphDataSize * i, morphDataSize, renderContext );
 
-				memcpy( data + ( morphDataSize * i ), pMorphSrc, morphDataSize );
+				memcpy( data + ( morphDataSize * i ) + sizeof( TriMorphTargetGeometryConstants ), pMorphSrc, morphDataSize );
 			}
 
 			pMesh->m_morphTargetBuffer->GetGpuBuffer( 0 )->UnmapForWriting( renderContext );
-
-			CreateMorphGeometryConstants( pMesh->m_morphTargetGeometryConstants, firstMorphTargetVertexDefinition, bytesPerMorphTargetVertex, renderContext );
 		}
 	}
 

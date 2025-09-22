@@ -95,7 +95,7 @@ struct TriMorphTargetGeometryConstants
 	uint32_t texCoord0Offset;
 	uint32_t texCoord0Type;
 
-	uint32_t padding;
+	uint32_t vertexCount;
 };
 
 struct TriGeometryResAreaData
