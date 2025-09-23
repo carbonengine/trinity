@@ -353,20 +353,23 @@ namespace TrinityALImpl
 			barrierUAV.UAV.pResource = staging;
 
 			// Barrier for transitioning the subresources to UAVs
-			D3D12_RESOURCE_BARRIER srv2uavDesc = {};
-			srv2uavDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			srv2uavDesc.Transition.pResource = staging;
-			srv2uavDesc.Transition.Subresource = 0;
-			srv2uavDesc.Transition.StateBefore = readState;
-			srv2uavDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			std::vector<D3D12_RESOURCE_BARRIER> srv2uavDescs( desc.DepthOrArraySize );
+			std::vector<D3D12_RESOURCE_BARRIER> uav2srvDescs( desc.DepthOrArraySize );
+			for(int i = 0 ; i < desc.DepthOrArraySize; ++i )
+			{
+				srv2uavDescs[i].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+				srv2uavDescs[i].Transition.pResource = staging;
+				srv2uavDescs[i].Transition.Subresource = i;
+				srv2uavDescs[i].Transition.StateBefore = readState;
+				srv2uavDescs[i].Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
-			// Barrier for transitioning the subresources to SRVs
-			D3D12_RESOURCE_BARRIER uav2srvDesc = {};
-			uav2srvDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			uav2srvDesc.Transition.pResource = staging;
-			uav2srvDesc.Transition.Subresource = 0;
-			uav2srvDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-			uav2srvDesc.Transition.StateAfter = readState;
+
+				uav2srvDescs[i].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+				uav2srvDescs[i].Transition.pResource = staging;
+				uav2srvDescs[i].Transition.Subresource = i;
+				uav2srvDescs[i].Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+				uav2srvDescs[i].Transition.StateAfter = readState;
+			}
 
 			// Set up state
 			commandList->SetComputeRootSignature( m_device.m_genMipsResources->rootSignature );
@@ -386,8 +389,12 @@ namespace TrinityALImpl
 				mipHeight = std::max<uint32_t>( 1, mipHeight >> 1 );
 
 				// Transition the mip to a UAV
-				srv2uavDesc.Transition.Subresource = mip;
-				commandList->ResourceBarrier( 1, &srv2uavDesc );
+				for ( int i = 0; i < desc.DepthOrArraySize; ++i )
+				{
+					srv2uavDescs[i].Transition.Subresource = mip + ( i * desc.MipLevels );
+					uav2srvDescs[i].Transition.Subresource = mip + ( i * desc.MipLevels );
+				}
+				commandList->ResourceBarrier( desc.DepthOrArraySize, srv2uavDescs.data() );
 
 				// Bind the mip subresources
 				commandList->SetComputeRootDescriptorTable( TrinityALImpl::GenerateMipsResources::TargetTexture, uavH );
@@ -412,8 +419,7 @@ namespace TrinityALImpl
 				commandList->ResourceBarrier( 1, &barrierUAV );
 
 				// Transition the mip to an SRV
-				uav2srvDesc.Transition.Subresource = mip;
-				commandList->ResourceBarrier( 1, &uav2srvDesc );
+				commandList->ResourceBarrier( desc.DepthOrArraySize, uav2srvDescs.data() );
 
 				// Offset the descriptor heap handles
 				uavH.ptr += descriptorSize;

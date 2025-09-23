@@ -42,12 +42,21 @@ namespace
 {
 	bool EnableDebugLayer()
 	{
+		CComPtr<ID3D12DeviceRemovedExtendedDataSettings1> pDredSettings;
+		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings))))
+		{
+			// Turn on auto-breadcrumbs and page fault reporting.
+			pDredSettings->SetAutoBreadcrumbsEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
+			pDredSettings->SetPageFaultEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
+		}
+
+
 		CComPtr<ID3D12Debug> debugInterface;
 		CComPtr<ID3D12Debug1> debugInterface1;
 		if( SUCCEEDED( D3D12GetDebugInterface( IID_PPV_ARGS( &debugInterface ) ) ) )
 		{
 			debugInterface->EnableDebugLayer();
-			if( SUCCEEDED( debugInterface->QueryInterface( IID_PPV_ARGS( &debugInterface1 ) ) ))
+			if( SUCCEEDED( debugInterface->QueryInterface( IID_PPV_ARGS( &debugInterface1 ) ) ) )
 			{
 				debugInterface1->SetEnableGPUBasedValidation( true );
 			}
