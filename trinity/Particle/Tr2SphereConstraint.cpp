@@ -10,6 +10,7 @@
 #include "Tr2ParticleSystem.h"
 #include "ITr2GenericEmitter.h"
 #include "TbbStub.h"
+#include "../Include/ITr2DebugRenderer2.h"
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -327,4 +328,13 @@ void Tr2SphereConstraint::Bind( Tr2ParticleSystem* system )
 		}
 	}
 	m_isValid = true;
+}
+
+void Tr2SphereConstraint::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const
+{
+	if( !m_isValid )
+	{
+		return;
+	}
+	renderer.DrawSphere( this, worldTransform, m_position, m_radius, 20, ITr2DebugRenderer2::Wireframe, 0xffff4444 );
 }

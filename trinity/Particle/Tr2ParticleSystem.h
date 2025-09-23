@@ -11,6 +11,7 @@
 #include "include/ITr2InstanceData.h"
 #include "include/ITr2GpuBuffer.h"
 #include "ITr2GenericEmitter.h"
+#include "../Include/ITr2DebugRenderer2.h"
 
 BLUE_DECLARE_INTERFACE( ITr2ParticleForce );
 BLUE_DECLARE_IVECTOR( ITr2ParticleForce );
@@ -118,6 +119,9 @@ public:
 		constraint( m_buffers, m_vertexSizes, m_aliveCount );
 		m_bufferDirty = true;
 	}
+
+	void GetDebugOptions( Tr2DebugRendererOptions& options ) const;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform ) const;
 
 
 	// ----------------------------------------------------------------------------------

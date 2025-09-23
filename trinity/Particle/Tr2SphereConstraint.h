@@ -56,6 +56,8 @@ public:
 	virtual void ApplyConstraint( const ITr2GenericEmitter::UpdateArguments& arguments, float** particle, unsigned* strides, unsigned count, float dt );
 	virtual void Bind( Tr2ParticleSystem* system );
 
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const override;
+
 private:
 	// Collision sphere center
 	Vector3 m_position;
