@@ -94,7 +94,6 @@ public:
 	float GetRangeDuration( const std::string& name, const std::string& rangeName ) const;
 
 	void ChangeLOD( Tr2Lod lod );
-	void GetLights( Tr2LightManager& lightManager ) const;
 
 	void SetControllerVariable( const char* name, float value );
 	void HandleControllerEvent( const char* name );

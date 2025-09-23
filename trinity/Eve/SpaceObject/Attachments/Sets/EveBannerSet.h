@@ -9,6 +9,7 @@
 #include "IEveSpaceObjectAttachment.h"
 #include "Utilities/BoundingBox.h"
 #include "Resources/Tr2LodResource.h"
+#include "Lights/ITr2LightOwner.h"
 
 
 
@@ -49,27 +50,29 @@ BLUE_CLASS( EveBannerSet )
 	: public IEveSpaceObjectAttachment,
 	public IInitialize,
 	public IBlueStructureListNotify,
-	public Tr2DeviceResource
+	public Tr2DeviceResource,
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
 
 	EveBannerSet( IRoot* lockobj = nullptr );
 
-	virtual bool Initialize();
+	virtual bool Initialize() override;
 
-	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
-	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
+	virtual void UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 
-	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	void AddBanner( const EveBannerItem& banner );
 	void SetEffect( Tr2Effect* effect );
 	void SetPrimaryTextureParameter( TriTextureParameterPtr primaryTextureParameter );
-	void AddLight( const EveBannerLight& light );
+	void AddLightFromSOF( const EveBannerLight& light );
 	
 	void SetKey( int32_t key );
 	void Rebuild();
@@ -80,14 +83,22 @@ public:
 
 	static float GetBannerAspectRatio( const EveBannerItem& banner );
 
-	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const;
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager& lightManager ) const override;
+
 	Color GetAverageColor() const;
 
 protected:
-	virtual void ReleaseResources( TriStorage s );
-	virtual bool OnPrepareResources();
+	virtual void ReleaseResources( TriStorage s ) override;
+	virtual bool OnPrepareResources() override;
 
-	virtual void OnStructureListModified( Event event, const void* item, size_t index, IBlueStructureList* list );
+	virtual void OnStructureListModified( Event event, const void* item, size_t index, IBlueStructureList* list ) override;
 private:
 	struct Vertex;
 

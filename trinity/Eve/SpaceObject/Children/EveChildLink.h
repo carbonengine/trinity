@@ -32,7 +32,6 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod ) {};
-	void GetLights( Tr2LightManager& lightManager ) const {};
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const;
 
 

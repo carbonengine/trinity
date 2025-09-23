@@ -18,7 +18,8 @@ class EveStretch:
 	public IEveTransform,
 	public IEveSpaceObject2,
 	public ITr2DebugRenderable,
-	public ITr2LightOwner
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
     EXPOSE_TO_BLUE();
@@ -48,9 +49,11 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	virtual void GetLights( Tr2LightManager& lightManager ) const;
-	virtual void AddLight( Tr2Light* light ){};
-	virtual void ClearLights(){};
+	virtual void GetLights( Tr2LightManager& lightManager ) const override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTranfrom

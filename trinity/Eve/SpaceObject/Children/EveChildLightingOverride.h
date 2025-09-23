@@ -66,7 +66,6 @@ public:
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void GetLocalToWorldTransform( Matrix & transform ) const override;
 	void ChangeLOD( Tr2Lod lod ) override{};
-	void GetLights( Tr2LightManager & lightManager ) const override{};
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override;
 	bool IsAlwaysOn() const override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override{};

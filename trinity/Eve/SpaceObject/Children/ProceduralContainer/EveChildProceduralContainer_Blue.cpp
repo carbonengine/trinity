@@ -18,6 +18,7 @@ const Be::ClassInfo* EveChildProceduralContainer::ExposeToBlue()
 		MAP_INTERFACE( IShaderConfigurer )
 		MAP_INTERFACE( ITr2SoundEmitterOwner )
 		MAP_INTERFACE( IEveInheritPropertiesOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )

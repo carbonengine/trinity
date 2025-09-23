@@ -152,13 +152,22 @@ bool EveSpotlightSet::UpdateVisibility( const EveUpdateContext& updateContext, c
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveSpotlightSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveSpotlightSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
 		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
 		{
 			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+			light.boneMatrix._14 = 0.f;
+			light.boneMatrix._24 = 0.f;
+			light.boneMatrix._34 = 0.f;
+			light.boneMatrix._44 = 1.f;
+			light.boneMatrix *= parentTransform;
+		}
+		else
+		{
+			light.boneMatrix = parentTransform;
 		}
 	}
 	m_activationStrength = activationStrength;
@@ -485,7 +494,7 @@ void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 	{
 		for( auto& l : m_lights )
 		{
-			Matrix t = RotationMatrix( l.lightData.rotation ) * TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+			Matrix t = RotationMatrix( l.lightData.rotation ) * TranslationMatrix( l.lightData.position ) * l.boneMatrix;
 			Color c = l.lightData.color;
 
 			c.a = 0.5;
@@ -516,12 +525,21 @@ void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 	}
 }
 
-void EveSpotlightSet::AddLight( const EveSpotlightLight& light )
+void EveSpotlightSet::AddLightFromSOF( const EveSpotlightLight& light )
 {
 	m_lights.push_back( light );
 }
 
-void EveSpotlightSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+void EveSpotlightSet::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
+}
+
+void EveSpotlightSet::GetLights( Tr2LightManager& lightManager ) const
 {
 	LightFeatures features = LightFeatures();
 
@@ -533,7 +551,7 @@ void EveSpotlightSet::GetLights( Tr2LightManager& lightManager, const Matrix& pa
 		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-		auto perLightData = light.lightData.AsPerSpotLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
+		auto perLightData = light.lightData.AsPerSpotLightData( light.boneMatrix, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

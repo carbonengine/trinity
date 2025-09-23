@@ -44,7 +44,6 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) override;
 	bool GetLocalBoundingBox( Vector3 &min, Vector3 &max ) override;
-	void GetLights(Tr2LightManager& lightManager) const override;
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) override;
 	void SetControllerVariable( const char* name, float value ) override;

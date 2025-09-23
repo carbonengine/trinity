@@ -60,7 +60,9 @@ const Be::ClassInfo* EveChildInstanceContainer::ExposeToBlue()
 			"Start all controllers"
 		)
 
-		MAP_ATTRIBUTE( "source", m_source, "The sourceObject to instance", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "source", m_source, "The sourceObject to instance", Be::PERSISTONLY )
+		MAP_PROPERTY( "source", GetSource, SetSource, "The sourceObject to instance" )
+
 		MAP_ATTRIBUTE( "locatorSet", m_locatorSetName, "The name of the locatorset to distribute across", Be::READWRITE | Be::PERSIST |  Be::NOTIFY )
 		MAP_ATTRIBUTE( "reset", m_reset, "Redistributes the source", Be::READWRITE )
 		MAP_ATTRIBUTE( "instances", m_instances, "The generated instances\n:jessica-skip-validation:", Be::READ )

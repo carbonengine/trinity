@@ -15,6 +15,8 @@ const Be::ClassInfo* EveBannerSet::ExposeToBlue()
 		MAP_INTERFACE( EveBannerSet )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( IEveSpaceObjectAttachment )
+		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "key", m_key, "Banner contents type", Be::READWRITE | Be::PERSIST )

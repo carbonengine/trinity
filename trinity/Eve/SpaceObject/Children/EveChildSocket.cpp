@@ -200,6 +200,10 @@ bool EveChildSocket::OnModified( Be::Var* value )
 	{
 		Initialize();
 	}
+	if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
+	}
 	return true;
 }
 
@@ -432,14 +436,6 @@ void EveChildSocket::ChangeLOD( Tr2Lod lod )
 	if ( m_plug )
 	{
 		m_plug->ChangeLOD( lod );
-	}
-};
-
-void EveChildSocket::GetLights( Tr2LightManager& lightManager ) const
-{
-	if ( m_plug )
-	{
-		return m_plug->GetLights( lightManager );
 	}
 };
 

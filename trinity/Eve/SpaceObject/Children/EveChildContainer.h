@@ -48,6 +48,7 @@ BLUE_CLASS( EveChildContainer ) :
 	public ITr2ControllerOwner,
 	public IEveInheritPropertiesOwner,
 	public IEveSpaceObjectAttachmentOwner,
+	public ITr2LightOwner,
 	public EveEntity
 {
 public:
@@ -127,7 +128,10 @@ public:
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, Matrix& parentTransform );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod );
-	void GetLights( Tr2LightManager& lightManager ) const;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager& lightManager ) const override;
 
 	void SetOrigin( Origin origin );
 

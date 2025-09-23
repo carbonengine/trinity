@@ -8,7 +8,6 @@ BLUE_INTERFACE( IEveSmartLightGroup ) :
 {
 public:
 	virtual void SetColor( const Color& color ) {};
-	virtual void GetLights( const PlacementDataWithIdentifierStructureList& placements, size_t size, Tr2LightManager& lightManager ) const {};
 	virtual void AddQuadsToQuadRenderer( const PlacementDataWithIdentifierStructureList& placements, size_t size, const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const {};
 	virtual void GetRenderables( std::vector<ITr2Renderable*> & renderables ) {};
 	virtual void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params, IEveDistributionMethod* distribution ){};

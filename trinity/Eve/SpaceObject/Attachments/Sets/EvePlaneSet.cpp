@@ -249,13 +249,22 @@ bool EvePlaneSet::UpdateVisibility( const EveUpdateContext& updateContext, const
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EvePlaneSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EvePlaneSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
 		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
 		{
 			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+			light.boneMatrix._14 = 0.f;
+			light.boneMatrix._24 = 0.f;
+			light.boneMatrix._34 = 0.f;
+			light.boneMatrix._44 = 1.f;
+			light.boneMatrix *= parentTransform;
+		}
+		else
+		{
+			light.boneMatrix = parentTransform;
 		}
 	}
 	m_activationStrength = activationStrength;
@@ -432,7 +441,7 @@ void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& p
 
 		for( auto& l : m_lights )
 		{
-			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix;
 
 			Color c = l.lightData.color;
 			float fade = EveSpaceObjectAttachmentUtils::Fade( l.fadeType, l.blinkRate, l.blinkPhase );
@@ -523,12 +532,21 @@ Color EvePlaneSet::GetAverageColor( const TriTextureParameterPtr& map ) const
 	return resource->GetAverageColor();
 }
 
-void EvePlaneSet::AddLight( const EvePlaneLight& light )
+void EvePlaneSet::AddLightFromSOF( const EvePlaneLight& light )
 {
 	m_lights.push_back( light );
 }
 
-void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+void EvePlaneSet::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
+}
+
+void EvePlaneSet::GetLights( Tr2LightManager& lightManager ) const
 {
 	LightFeatures features = LightFeatures();
 
@@ -549,7 +567,7 @@ void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parent
 
 		float fade = EveSpaceObjectAttachmentUtils::Fade( light.fadeType, light.blinkRate, light.blinkPhase );
 		lightDataCopy.brightness *= fade;
-		auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
+		auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

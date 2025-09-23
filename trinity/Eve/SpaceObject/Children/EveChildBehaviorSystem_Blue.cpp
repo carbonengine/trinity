@@ -8,6 +8,7 @@ const Be::ClassInfo* EveChildBehaviorSystem::ExposeToBlue()
 		MAP_INTERFACE( EveChildBehaviorSystem )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2Renderable )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )

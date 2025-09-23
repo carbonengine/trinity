@@ -10,6 +10,8 @@ const Be::ClassInfo* PlayFX::ExposeToBlue()
 	EXPOSURE_BEGIN( PlayFX, "" )
 		MAP_INTERFACE( PlayFX )
 		MAP_INTERFACE( IBehavior )
+		MAP_INTERFACE( IListNotify )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "behaviorPriority", m_priority, "control what priority this behavior should have", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, BehaviorPriorityChooser )
 

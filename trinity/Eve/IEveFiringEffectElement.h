@@ -24,8 +24,6 @@ BLUE_INTERFACE( IEveFiringEffectElement ): public IRoot
 	
 	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) = 0;
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables ) = 0;
-
-	virtual void GetLights( Tr2LightManager& lightManager ) const = 0;
 	
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) {}
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) {}

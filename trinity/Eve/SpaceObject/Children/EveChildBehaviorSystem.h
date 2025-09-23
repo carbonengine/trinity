@@ -24,9 +24,11 @@ BLUE_CLASS( EveChildBehaviorSystem ) :
 	public Tr2DeviceResource,
 	public ITr2Renderable,
 	public IInitialize,
+	public INotify,
 	public IListNotify,
 	public EveChildTransform,
-	public ITr2DebugRenderable
+	public ITr2DebugRenderable,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -50,6 +52,8 @@ public:
 	// IInitialize
 	bool Initialize();
 
+	bool OnModified( Be::Var* value ) override;
+
 	void OnListModified(
 		long event,		// BLUELISTEVENT values
 		ssize_t key,
@@ -72,7 +76,12 @@ public:
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void ChangeLOD( Tr2Lod lod );
-	void GetLights( Tr2LightManager& lightManager ) const;
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
+
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
 

@@ -12,6 +12,7 @@
 #include "Tr2GrannyAnimation.h"
 #include "Utilities/BoundingBox.h"
 #include "EveSpaceObjectAttachmentUtils.h"
+#include "Lights/ITr2LightOwner.h"
 
 #include "EvePlaneSetItem.h"
 
@@ -55,7 +56,9 @@ struct EvePlaneLight
 BLUE_CLASS( EvePlaneSet ):
 	public IEveSpaceObjectAttachment,
 	public IInitialize,
-	public INotify
+	public INotify,
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -77,15 +80,22 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
-	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
+	virtual void UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
 	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
 	void AddToQuadRenderer( Tr2QuadRenderer & quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount ) override;
 	virtual void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 
-	void AddLight( const EvePlaneLight& light ) ;
-	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+	void AddLightFromSOF( const EvePlaneLight& light );
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager& lightManager ) const override;
 
 	void SetImageMapParameter( TriTextureParameterPtr imageMapParameter );
 	void SetLayerMap1Parameter( TriTextureParameterPtr layerMap1Parameter );

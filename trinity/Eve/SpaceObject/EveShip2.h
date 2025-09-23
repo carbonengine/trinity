@@ -5,6 +5,7 @@
 
 #include "EveMobile.h"
 #include "TriFloat.h"
+#include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
 
 // forwards
 BLUE_DECLARE( EveBoosterSet2 );
@@ -24,14 +25,13 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Overrides of EveSpaceObject2 implementations
-	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
-	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
-	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
-	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
-	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
-	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
-	virtual void GetLights( Tr2LightManager& lightManager ) const;
-	virtual void GetParentData( EveSpaceObject2::ParentData * pd ) const;
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext ) override;
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext ) override;
+	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
+	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) override;
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
+	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) override;
+	virtual void GetParentData( EveSpaceObject2::ParentData * pd ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable - overriding EveSpaceObject2 implementations
@@ -46,6 +46,9 @@ public:
     virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
     virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
+
 	// boosters
 	void SetBoosterSet( EveBoosterSet2Ptr set );
 	// re-positions all attached boosters to the corresponding locators
@@ -54,6 +57,9 @@ public:
     float GetKillCounterValue() const;
 	float GetMaxSpeed() const;
 	float GetBoosterIntensity() const;
+
+	EveBoosterSet2* GetBoosters();
+	void SetBoosters( EveBoosterSet2* boosters );
 
 protected:
 	// keep track of some ship's speed (in m/s)

@@ -11,6 +11,8 @@
 #include "Tr2DebugRenderer.h"
 #include "Tr2ProceduralResources.h"
 #include "Eve/EveUpdateContext.h"
+#include "Eve/EveEntity.h"
+#include "Lights/ITr2LightOwner.h"
 
 // forwards
 class ITriRenderBatchAccumulator;
@@ -167,7 +169,9 @@ BLUE_DECLARE_VECTOR( EveBoosterSet2Renderable );
 BLUE_CLASS( EveBoosterSet2 ):
 	public IInitialize,
 	public INotify,
-	public Tr2DeviceResource
+	public Tr2DeviceResource,
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -196,6 +200,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
 
 	friend class EveBoosterSet2Renderable;
 private:
@@ -256,7 +264,9 @@ public:
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& pool );
 	void AddToQuadRenderer( Tr2QuadRenderer& pool, const Matrix& world );
 
-	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const;
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager& lightManager ) const override;
 
 private:
 	// indivual data of each booster (position, etc.)

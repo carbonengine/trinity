@@ -43,6 +43,7 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 {
 	m_controllers.SetNotify( this );
     m_objects.SetNotify( this );
+    m_attachments.SetNotify( this );
     m_lights.SetNotify( this );
 
 	memset( &m_vsData, 0, sizeof( EveSpaceObjectVSData ) );
@@ -106,7 +107,6 @@ void EveChildContainer::MuteChildren()
 	}
 }
 
-
 void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
 	if( list == &m_controllers && ( event & BELIST_LOADING ) == 0 )
@@ -166,6 +166,39 @@ void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, I
 		}
     }
 
+	if( list == &m_attachments && ( event & BELIST_LOADING ) == 0 )
+	{
+		if( IsInRegistry() )
+		{
+			switch( event & BELIST_EVENTMASK )
+			{
+			case BELIST_INSERTED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_REMOVED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_UNLOADSTART:
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
     if( list == &m_objects && (event & BELIST_EVENTMASK) == BELIST_INSERTED )
     {
         if( m_inheritProperties )
@@ -187,6 +220,27 @@ void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, I
 			}
         }		
 	}
+
+	if( list == &m_lights )
+	{
+		auto maskedEvent = event & BELIST_EVENTMASK;
+		if( ( maskedEvent == BELIST_UNLOADSTART ) || ( ( maskedEvent == BELIST_REMOVED ) && m_lights.empty() ) )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->UnRegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+		else if( ( maskedEvent == BELIST_INSERTED ) && m_lights.size() == 1 )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->RegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -199,11 +253,24 @@ void EveChildContainer::RegisterComponents()
 	auto registry = this->GetComponentRegistry();
 	if( registry && m_display && IsUpdating() )
 	{
+		if ( !m_lights.empty() )
+		{
+			registry->RegisterComponent<ITr2LightOwner>( this );
+		}
+
 		for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( *it ) )
 			{
 				entity->Register( registry );			
+			}
+		}
+
+		for( auto& it : m_attachments )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( it ) )
+			{
+				entity->Register( registry );
 			}
 		}
 	}
@@ -221,6 +288,14 @@ void EveChildContainer::UnRegisterComponents()
 		for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
+
+		for( auto& it : m_attachments )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( it ) )
 			{
 				entity->UnRegister( registry );
 			}
@@ -554,6 +629,11 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 	{
 		( *it )->SetBoneMatrix( bones, boneCount );
 	}
+
+	for( auto& attachment : m_attachments )
+	{
+		attachment->UpdateLights( m_worldTransform, bones, boneCount, m_activationStrength, 0.0 );
+	}
 }
 
 
@@ -587,15 +667,6 @@ void EveChildContainer::GetLights( Tr2LightManager& lightManager ) const
 	for( auto it = std::begin( m_lights ); it != std::end( m_lights ); ++it )
 	{
 		( *it )->AddLight( lightManager, worldTransform, scaling );
-	}
-	for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
-	{
-		( *it )->GetLights( lightManager );
-	}
-
-	for(auto& it: m_attachments)
-	{
-		it->GetLights( lightManager, worldTransform );
 	}
 }
 

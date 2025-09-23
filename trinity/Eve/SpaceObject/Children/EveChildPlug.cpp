@@ -98,6 +98,15 @@ void EveChildPlug::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 	}
 }
 
+bool EveChildPlug::OnModified( Be::Var* val )
+{
+	if( IsMatch( val, m_display ) )
+	{
+		ReRegister();
+	}
+	return true;
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //    Registers itself and its children with the scene registration container.
@@ -256,18 +265,6 @@ void EveChildPlug::ChangeLOD( Tr2Lod lod )
 	for ( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
 		( *it )->ChangeLOD( lod );
-	}
-}
-
-void EveChildPlug::GetLights( Tr2LightManager& lightManager ) const
-{
-	if ( !m_display )
-	{
-		return;
-	}
-	for ( auto it = m_objects.begin(); it != m_objects.end(); ++it )
-	{
-		( *it )->GetLights( lightManager );
 	}
 }
 

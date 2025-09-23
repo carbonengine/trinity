@@ -191,6 +191,7 @@ void EveStretch2::DisplayEndPoints( bool displaySource, bool displayDest )
 void EveStretch2::SetDisplay( bool display )
 {
 	m_visible = display;
+	ReRegister();
 }
 
 void EveStretch2::SetIntensity( float intensity )
@@ -377,6 +378,15 @@ bool EveStretch2::OnPrepareResources()
 
 	Tr2Renderer::ReserveQuadListIndexBuffer( m_quadCount );
 	return true;
+}
+
+void EveStretch2::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_visible )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
 }
 
 void EveStretch2::GetLights( Tr2LightManager& lightManager ) const

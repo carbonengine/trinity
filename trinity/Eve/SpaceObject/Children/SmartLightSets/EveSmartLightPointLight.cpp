@@ -47,14 +47,28 @@ void EveSmartLightPointLight::UpdateSyncronous( const EveUpdateContext& updateCo
 	{
 		attributeModifier->UpdateSyncronous( updateContext, params, 1.f );
 	}
+
+	m_distribution = distribution;
 }
 
-void EveSmartLightPointLight::GetLights( const PlacementDataWithIdentifierStructureList& placements, size_t size, Tr2LightManager& lightManager ) const
+void EveSmartLightPointLight::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )	
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
+}
+
+void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 {
 	if( !m_display )
 	{
 		return;
 	}
+
+	const PlacementDataWithIdentifierStructureList& placements = *m_distribution->GetPlacementData();
+	size_t size = m_distribution->GetNumberOfPlacements();
 
 	float scaling = XMVectorGetX( XMVectorAdd( XMVector3LengthEst( m_worldTransform.GetX() ),
 											   XMVectorAdd( XMVector3LengthEst( m_worldTransform.GetY() ), 

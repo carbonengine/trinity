@@ -119,7 +119,7 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "sysBonePitch03Factor", m_sysBonePitch03Factor, "pitch 03 factor", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sysBonePitch03Offset", m_sysBonePitch03Offset, "pitch 03 offset (in degrees!)", Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE( "firingEffect", m_firingEffect, "The module for the firing effect of this turret", Be::READWRITE | Be::NOTIFY )
+		MAP_PROPERTY( "firingEffect", GetFiringEffect, SetFiringEffect, "The module for the firing effect of this turret" )
 		MAP_ATTRIBUTE( "firingEffectResPath", m_firingEffectResPath, "A res path to the redfile containing the primary firing effect", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "useLowLodFiringTransform", m_useLowLodFiringTransform, "When the turret is lodded out, should we use a specific transform to offset the firing position?", Be::READWRITE | Be::PERSIST )
@@ -136,7 +136,8 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "chooseRandomLocator", m_chooseRandomLocator, "Allow choosing a random locator instead of the closest one", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "randomizeExplosionRotation", m_randomizeExplosionRotation, "Can be unchecked to have the explosion use the damage-locator rotation instead", Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE( "ambientEffect", m_ambientEffect, "The ambient effect around the turret", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "ambientEffect", m_ambientEffect, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "ambientEffect", GetAmbientEffect, SetAmbientEffect, "The ambient effect around the turret" )
 		MAP_ATTRIBUTE( "generatedDistributedAmbientEffect", m_generatedDistributedAmbientEffect, "The generated and distributed ambient effect across all turret locations", Be::READ )
 		MAP_ATTRIBUTE( "ambientEffectEditingMode", m_ambientEffectEditingMode, "This toggles on/off the ambient effect editing mode \n:jessica-group: Editing", Be::READWRITE | Be::NOTIFY )
 

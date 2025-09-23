@@ -51,7 +51,6 @@ public:
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	bool IsAlwaysOn() const override;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override;
-	void GetLights( Tr2LightManager & lightManager ) const override {};
 	void GetLocalToWorldTransform( Matrix & transform ) const override;
 
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;

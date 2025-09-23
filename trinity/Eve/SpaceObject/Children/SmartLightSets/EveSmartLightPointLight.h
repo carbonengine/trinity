@@ -12,15 +12,21 @@
 BLUE_CLASS( EveSmartLightPointLight ) :
 	public EveSmartLightBaseGroup,
 	public IInitialize,
-	public INotify
+	public INotify,
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
 
 	EveSmartLightPointLight( IRoot* lockobj = nullptr );
 	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params, IEveDistributionMethod* distribution ) override;
-	void GetLights( const PlacementDataWithIdentifierStructureList& placements, size_t size, Tr2LightManager& lightManager ) const override;
 	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const PlacementDataWithIdentifierStructureList& placements, size_t size ) override;
+
+	void RegisterComponents() override;
+
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager& lightManager ) const override;
 
 	// INotify
 	bool OnModified( Be::Var * value );
@@ -41,6 +47,7 @@ private:
 	float m_activationStrength;
 	std::wstring m_lightProfilePath;
 	Tr2LightProfileResPtr m_lightProfile;
+	IEveDistributionMethod* m_distribution;
 };
 
 TYPEDEF_BLUECLASS( EveSmartLightPointLight );

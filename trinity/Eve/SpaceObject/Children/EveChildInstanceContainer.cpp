@@ -76,7 +76,7 @@ bool EveChildInstanceContainer::OnModified( Be::Var* value )
 	{
 		m_reset = true;
 	}
-	if( IsMatch( value, m_display ) )
+	if( IsMatch( value, m_display ) || IsMatch( value, m_disableEditMode ) )
 	{
 		ReRegister();
 	}
@@ -95,6 +95,14 @@ void EveChildInstanceContainer::RegisterComponents()
 				entity->Register( this->GetComponentRegistry() );
 			}
 		}
+
+		if( m_instances.empty() && !m_disableEditMode )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( m_source ) )
+			{
+				entity->Register( this->GetComponentRegistry() );
+			}
+		}
 	}
 }
 
@@ -109,13 +117,40 @@ void EveChildInstanceContainer::UnRegisterComponents()
 				entity->UnRegister( this->GetComponentRegistry() );
 			}
 		}
+
+		if( EveEntityPtr entity = BlueCastPtr( m_source ) )
+		{
+			entity->UnRegister( this->GetComponentRegistry() );
+		}
 	}
 }
 
 void EveChildInstanceContainer::SetSourceEffect( IEveSpaceObjectChildPtr sourceEffect )
 {
-	m_source = sourceEffect;
+	SetSource( sourceEffect );
 	m_reset = true;
+}
+
+IEveSpaceObjectChild* EveChildInstanceContainer::GetSource()
+{
+	return m_source;
+}
+
+void EveChildInstanceContainer::SetSource( IEveSpaceObjectChild* source )
+{
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_source ) )
+	{
+		entity->UnRegister( registry );
+	}
+	m_source = source;
+	if( m_instances.empty() && !m_disableEditMode )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_source ) )
+		{
+			entity->Register( registry );
+		}
+	}
 }
 
 void EveChildInstanceContainer::AddInstanceTransform( const Vector3& scale, const Quaternion& rotation, const Vector3& translation, int32_t boneIndex )
@@ -139,7 +174,6 @@ void EveChildInstanceContainer::OnListModified( long event, ssize_t key, ssize_t
 		m_reset = true;
 	}
 }
-
 
 void EveChildInstanceContainer::OnStructureListModified( Event event, const void* item, size_t index, IBlueStructureList* list )
 {
@@ -453,11 +487,6 @@ void EveChildInstanceContainer::AddQuadsToQuadRenderer( const TriFrustum& frustu
 void EveChildInstanceContainer::ChangeLOD( Tr2Lod lod )
 {
 	RunOnInstances( [&lod]( IEveSpaceObjectChild* c ) { c->ChangeLOD( lod ); } );
-}
-
-void EveChildInstanceContainer::GetLights( Tr2LightManager& lightManager ) const
-{
-	RunOnInstances( [&lightManager]( IEveSpaceObjectChild* c ) { c->GetLights( lightManager ); } );
 }
 
 void EveChildInstanceContainer::SetOrigin( Origin origin )

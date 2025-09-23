@@ -16,7 +16,9 @@ BLUE_CLASS( EveChildSmartLightSet ) :
 	public EveChildTransform,
 	public ITr2DebugRenderable,
 	public IEveInheritPropertiesOwner,
-	public IListNotify
+	public INotify,
+	public IListNotify,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -40,11 +42,18 @@ public:
 	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) {};
 	void ChangeLOD( Tr2Lod lod ) {};
-	void GetLights( Tr2LightManager & lightManager ) const;
 	void SetControllerVariable( const char* name, float value ) override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	// IEveInheritPropertiesOwner
 	void SetInheritProperties( const Color* colorSet );
+
+	// INotify
+	bool OnModified( Be::Var* value );
 
 	// IListNotify
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList );

@@ -1395,26 +1395,15 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		lightManager->SetFrustum( m_updateContext.GetFrustum() );
 		lightManager->AdjustLightCutoff( m_updateContext.GetLodFactor() );
 
-		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
+		auto lightOwners = m_componentRegistry->GetComponents<ITr2LightOwner>();
+
+		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, lightOwners.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
 			for( auto i = range.begin(); i != range.end(); ++i )
 			{
-				ITr2LightOwnerPtr lightOwner( BlueCastPtr( m_objects[i] ) );
-				if( lightOwner )
-				{
-					lightOwner->GetLights( *lightManager );
-				}
-			}
-		} );
-
-		for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
-		{
-			ITr2LightOwnerPtr lightOwner( BlueCastPtr( *it ) );
-			if( lightOwner )
-			{
+				ITr2LightOwnerPtr lightOwner = lightOwners[i];
 				lightOwner->GetLights( *lightManager );
 			}
-		}
-		m_cameraAttachmentParent->GetLights( *lightManager );
+		} );
 
 		lightManager->ResolveLightData();
 	}
@@ -3314,8 +3303,9 @@ bool EveSpaceScene::Initialize()
 		}
 		( *it )->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 	}
-	m_cameraAttachmentParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 
+	m_cameraAttachmentParent->Register( m_componentRegistry );
+	m_cameraAttachmentParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 
 	for( auto it = begin( m_uiObjects ); it != end( m_uiObjects ); ++it )
 	{
@@ -3410,7 +3400,7 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 			}
 		}
 	}
-		
+
 	return true;
 }
 
@@ -4066,6 +4056,7 @@ void EveSpaceScene::ReregisterEntities()
 			m_componentRegistry->ReRegister( entity );
 		}
 	}
+	m_componentRegistry->ReRegister( m_cameraAttachmentParent );
 }
 
 Tr2DepthStencilPtr EveSpaceScene::GetShadowMapAtlas()
@@ -4096,6 +4087,7 @@ void EveSpaceScene::ClearComponentRegistry()
 			entity->UnRegister( m_componentRegistry );
 		}
 	}
+	m_cameraAttachmentParent->UnRegister( m_componentRegistry );
 	m_componentRegistry = nullptr;
 }
 
