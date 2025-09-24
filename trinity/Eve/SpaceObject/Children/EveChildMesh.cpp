@@ -383,6 +383,8 @@ void EveChildMesh::UpdateRtSkeleton()
 	}
 }
 
+// TODO: intern, UpdateRtMorphTargets
+
 void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	if( m_isVisible )
@@ -618,11 +620,17 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 		auto [bones, boneCount] = GetBoneTransforms();
 		m_vsData.boneOffsets[2] = uint32_t( boneCount );
 		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
+
+		auto [morphTargets, morphTargetCount] = GetMorphTargets();
+		m_vsData.activeMorphTargetsCount = uint32_t( morphTargetCount );
+		m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationDataBuffer::AnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
 
+	m_vsData.morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
 	m_vsData.morphTargetVertexDataOffset = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() )->m_morphTargetAllocation.GetOffset();
+	// TODO: intern, for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
 
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
@@ -661,6 +669,7 @@ void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shade
 void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	m_boneOffsets.AdvanceFrame();
+	m_morphTargetOffsets.AdvanceFrame();
 
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
@@ -935,6 +944,43 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 		return m_meshBinding->GetBoneTransforms();
 	}
 	return std::make_pair( nullptr, 0 );
+}
+
+// TODO: intern, remove dummy data
+static std::array<Tr2MorphTargetAnimationDataBuffer::AnimationData, 3> morphTargets;
+
+std::pair<const Tr2MorphTargetAnimationDataBuffer::AnimationData*, size_t> EveChildMesh::GetMorphTargets() const
+{
+	// TODO: intern, remove dummy data
+	static auto startTime = BeOS->GetCurrentFrameTime();
+	auto currentTime = BeOS->GetCurrentFrameTime() - startTime;
+	float time = TimeAsFloat( currentTime );
+	
+	morphTargets[0] = Tr2MorphTargetAnimationDataBuffer::AnimationData{ 0, sin( time * 1.000f ) * .5f + .5f };
+	morphTargets[1] = Tr2MorphTargetAnimationDataBuffer::AnimationData{ 1, sin( time * 1.234f ) * .5f + .5f };
+	morphTargets[2] = Tr2MorphTargetAnimationDataBuffer::AnimationData{ 2, sin( time * 1.567f ) * .5f + .5f };
+
+	return std::make_pair( morphTargets.data(), morphTargets.size() );
+	
+	//size_t morphTargetCount = 0;
+	//const Tr2MorphTargetAnimationDataBuffer::AnimationData* morphTargets = nullptr;
+	//
+	//if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	//{
+	//	return std::make_pair( nullptr, 0 );
+	//}
+	//
+	////auto accumulatedTransforms = m_animationUpdater->GetAnimationTransforms();
+	//if( m_animationUpdater->m_meshBinding )
+	//{
+	//	Tr2GrannyAnimationUtils::GetMorphTargetList( m_animationUpdater, morphTargets, morphTargetCount );
+	//	return std::make_pair( morphTargets, morphTargetCount );
+	//}
+	//if( m_meshBinding )
+	//{
+	//	return m_meshBinding->GetMorphTargetList();
+	//}
+	//return std::make_pair( nullptr, 0 );
 }
 	
 void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const

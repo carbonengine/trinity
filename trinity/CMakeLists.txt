@@ -1532,6 +1532,9 @@ set(_SOURCES
     Tr2Model.cpp
     Tr2Model.h
     Tr2Model_Blue.cpp
+    Tr2MorphTargetAnimationDataBuffer.cpp
+    Tr2MorphTargetAnimationDataBuffer.h
+    Tr2MorphTargetAnimationDataBuffer_Blue.cpp
     Tr2NamedPipeListener.cpp
     Tr2NamedPipeListener.h
     Tr2NamedPipeListener_Blue.cpp

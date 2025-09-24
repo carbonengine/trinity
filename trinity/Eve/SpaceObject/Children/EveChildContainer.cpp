@@ -1112,6 +1112,8 @@ Tr2PerObjectData* EveChildContainer::GetPerObjectData( ITriRenderBatchAccumulato
 			auto boneCount = uint32_t( animation->GetMeshBoneCount() );
 			m_vsData.boneOffsets[2] = boneCount;
 			m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( animation->GetMeshBoneMatrixList() ), boneCount );
+		
+			// TODO: intern, morph target?
 		}
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();

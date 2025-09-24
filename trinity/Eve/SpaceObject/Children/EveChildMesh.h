@@ -22,6 +22,7 @@
 #include "TransformModifiers/IEveChildTransformModifier.h"
 #include "Tr2DebugRenderer.h"
 #include "Raytracing/Tr2RaytracingManager.h"
+#include "../Tr2MorphTargetAnimationDataBuffer.h"
 
 class EveUpdateContext;
 BLUE_DECLARE( TriFrustum );
@@ -142,6 +143,7 @@ protected:
 	bool DisplayDecals() const;
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
+	std::pair<const Tr2MorphTargetAnimationDataBuffer::AnimationData*, size_t> GetMorphTargets() const;
 
 	// general data
 	BlueSharedString m_name;
@@ -165,6 +167,7 @@ protected:
 
 	// per-object data
 	Tr2BoneTransformOffsets m_boneOffsets;
+	Tr2MorphTargetAnimationDataOffsets m_morphTargetOffsets;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataVs;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataPs;
 	EveSpaceObjectPSData m_psData;
