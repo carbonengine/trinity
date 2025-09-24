@@ -184,7 +184,10 @@ ALResult Tr2SuballocatedBuffer::ReadBuffer( std::unique_ptr<uint8_t[]>& dest, ui
 	return S_OK;
 }
 
-
+const Tr2BufferAL& Tr2SuballocatedBuffer::GetBuffer() const
+{
+	return m_buffer;
+}
 
 Tr2SuballocatedBuffer::Allocation::~Allocation()
 {

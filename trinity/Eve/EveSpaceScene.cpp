@@ -182,6 +182,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_envMapTransformVar( "EnvMapTransform", IdentityMatrix() ),
 	m_reflectionMapTransformVar( "ReflectionMapTransform", IdentityMatrix() ),
 	m_suncVecVar( "SunVec", Vector3( 0.0f, 0.0f, 1.0f ) ),
+	m_sharedIndexVertexBufferVar( "SharedIndexVertexBuffer", (ITr2GpuBuffer*)nullptr ),
 	m_nebulaIntensity( 1.f ),
 	m_currentNebulaIntensity( 1.f ),
 	m_backgroundReflectionIntensity( 1.f ),
@@ -3058,6 +3059,9 @@ void EveSpaceScene::UpdateVariableStore()
 	{
 		m_volumetricsRenderer->UpdateVariableStore();
 	}
+
+	m_sharedIndexVertexBufferWrapper.SetGpuBuffer( g_sharedBuffer.GetBuffer() );
+	m_sharedIndexVertexBufferVar = &m_sharedIndexVertexBufferWrapper;
 }
 
 void EveSpaceScene::ClearVariableStore()
@@ -3072,6 +3076,8 @@ void EveSpaceScene::ClearVariableStore()
 	{
 		m_cascadedShadowMap->ClearVariableStore();
 	}
+
+	m_sharedIndexVertexBufferVar.Clear();
 }
 
 

@@ -1790,55 +1790,49 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 	}
 
 	{ // Morph Target
-
 		if ( myMesh->MorphTargetCount > 0 )
 		{
-			pMesh->m_morphTargetBuffer.CreateInstance();
-
 			// Allocate the morph target array based on the size of the first morph target
 			const granny_morph_target& firstMorphTarget = myMesh->MorphTargets[0];
-
 			Tr2VertexDefinition firstMorphTargetVertexDefinition = BuildFromGrannyVertexDecl( firstMorphTarget.VertexData->VertexType );
 			const uint32_t bytesPerMorphTargetVertex = firstMorphTargetVertexDefinition.m_nextOffset[0];
-
 			uint32_t morphDataSize = firstMorphTarget.VertexData->VertexCount * bytesPerMorphTargetVertex;
-			
-			uint32_t morphTargetBufferSize = ( morphDataSize >> 2 ) * myMesh->MorphTargetCount + ( sizeof( TriMorphTargetGeometryConstants ) >> 2 );
-			CR_RETURN_HR( pMesh->m_morphTargetBuffer->Create( morphTargetBufferSize, PIXEL_FORMAT_R32_UINT, Tr2GpuBuffer::CPU_WRITABLE ) );
-			pMesh->m_morphTargetBuffer->SetName( "Morph Target buffer" );
+			uint32_t morphTargetBufferSize = ( morphDataSize * myMesh->MorphTargetCount + sizeof( TriMorphTargetGeometryConstants ) );
 
-			/* CR_RETURN_VAL( g_sharedBuffer.Allocate( 
-				primaryMorphBytesPerVertex, 
-				primaryMorphTarget.VertexData->VertexCount * myMesh->MorphTargetCount,
+			CR_RETURN_VAL( g_sharedBuffer.Allocate( 
+				4, 
+				morphTargetBufferSize >> 2,
 				nullptr,
 				renderContext,
 				pMesh->m_morphTargetAllocation ),
-				false );*/
+				false 
+			);
 
-			char* data;
-			CR_RETURN_HR( pMesh->m_morphTargetBuffer->GetGpuBuffer( 0 )->MapForWriting( data, renderContext ) );
+			TriMorphTargetGeometryConstants morphTargetConstants = CreateMorphGeometryConstants( 
+				firstMorphTargetVertexDefinition, 
+				bytesPerMorphTargetVertex, 
+				firstMorphTarget.VertexData->VertexCount, 
+				renderContext 
+			);
 
-			TriMorphTargetGeometryConstants morphTargetConstants = CreateMorphGeometryConstants( firstMorphTargetVertexDefinition, bytesPerMorphTargetVertex, firstMorphTarget.VertexData->VertexCount, renderContext );
-
-			memcpy( data, &morphTargetConstants, sizeof( TriMorphTargetGeometryConstants ) );
+			pMesh->m_morphTargetAllocation.Update( &morphTargetConstants, 0, sizeof( TriMorphTargetGeometryConstants ), renderContext );
 
 			for ( int i = 0; i < myMesh->MorphTargetCount; ++i )
 			{
 				const granny_morph_target& morphTarget = myMesh->MorphTargets[i];
-
 				Tr2VertexDefinition morphTargetVertexDefinition = BuildFromGrannyVertexDecl( morphTarget.VertexData->VertexType );
 
 				CCP_ASSERT_M( morphTargetVertexDefinition == firstMorphTargetVertexDefinition, "Morph targets have different definitions, these need to match!" );
 				CCP_ASSERT_M( firstMorphTarget.VertexData->VertexCount == morphTarget.VertexData->VertexCount, "Morph targets have different vertex counts, these need to match!" );
 
 				void* pMorphSrc = GrannyGetMeshMorphVertices( myMesh, i );
-
-				//pMesh->m_morphTargetAllocation.Update( pMorphSrc, morphDataSize * i, morphDataSize, renderContext );
-
-				memcpy( data + ( morphDataSize * i ) + sizeof( TriMorphTargetGeometryConstants ), pMorphSrc, morphDataSize );
+				pMesh->m_morphTargetAllocation.Update( 
+					pMorphSrc, 
+					morphDataSize * i + sizeof( TriMorphTargetGeometryConstants ), 
+					morphDataSize, 
+					renderContext 
+				);
 			}
-
-			pMesh->m_morphTargetBuffer->GetGpuBuffer( 0 )->UnmapForWriting( renderContext );
 		}
 	}
 

@@ -75,6 +75,8 @@ public:
 
 	void ReleaseResources( TriStorage ) override;
 
+	const Tr2BufferAL& GetBuffer() const;
+
 protected:
 	bool OnPrepareResources();
 

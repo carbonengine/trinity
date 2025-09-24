@@ -475,6 +475,9 @@ protected:
 	Tr2Variable m_envMapTransformVar;
 	Tr2Variable m_reflectionMapTransformVar;
 	Tr2Variable m_suncVecVar;
+	
+	CTr2RuntimeGpuBuffer m_sharedIndexVertexBufferWrapper;
+	Tr2Variable m_sharedIndexVertexBufferVar;
 		
 	Tr2RenderTargetPtr m_colorMap;
 	Tr2RenderTargetPtr m_opaqueColorMap;

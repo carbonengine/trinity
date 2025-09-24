@@ -622,6 +622,8 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
 
+	m_vsData.morphTargetVertexDataOffset = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() )->m_morphTargetAllocation.GetOffset();
+
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
 	{

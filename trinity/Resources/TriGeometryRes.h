@@ -180,10 +180,10 @@ struct TriGeometryResMeshData
 	bool m_reversedIndicesValid;
 	Tr2SuballocatedBuffer::Allocation m_reversedIndexAllocation;
 
-	//Tr2SuballocatedBuffer::Allocation m_morphTargetAllocation;
+	Tr2SuballocatedBuffer::Allocation m_morphTargetAllocation;
 	//int m_morphTargetAllocationCount;
-	Tr2GpuBufferPtr m_morphTargetBuffer;
-	Tr2ConstantBufferAL m_morphTargetGeometryConstants;
+	//Tr2GpuBufferPtr m_morphTargetBuffer;
+	//Tr2ConstantBufferAL m_morphTargetGeometryConstants;
 	
 
 	Vector3 m_minBounds;

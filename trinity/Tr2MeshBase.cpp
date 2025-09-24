@@ -353,10 +353,10 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 		return batch;
 	}
 
-	if( mesh->m_morphTargetBuffer )
-	{
-		shadMat->SetParameter( BlueSharedString("MorphTargetsBuffer"), mesh->m_morphTargetBuffer );
-	}
+	//if( mesh->m_morphTargetBuffer )
+	//{
+	//	shadMat->SetParameter( BlueSharedString("MorphTargetsBuffer"), mesh->m_morphTargetBuffer );
+	//}
 
 	auto primCount = GetPrimitiveCount( *mesh, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
 
