@@ -615,6 +615,8 @@ Tr2PerObjectData* EveChildMesh::GetShadowPerObjectData( ITriRenderBatchAccumulat
 
 Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
+	m_vsData.activeMorphTargetsCount = 0;
+
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
 		auto [bones, boneCount] = GetBoneTransforms();
@@ -629,7 +631,18 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
 
 	m_vsData.morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
-	m_vsData.morphTargetVertexDataOffset = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() )->m_morphTargetAllocation.GetOffset();
+	
+	if( auto mesh = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() ) )
+	{
+		if ( mesh->m_morphTargetAllocation.IsValid() )
+		{
+			m_vsData.morphTargetVertexDataOffset = mesh->m_morphTargetAllocation.GetOffset();
+		}
+		else
+		{
+			m_vsData.activeMorphTargetsCount = 0;
+		}
+	}
 	// TODO: intern, for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
 
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
