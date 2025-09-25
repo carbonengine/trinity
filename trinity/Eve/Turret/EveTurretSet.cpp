@@ -372,6 +372,11 @@ void EveTurretSet::InitializeFiringEffect()
 // --------------------------------------------------------------------------------
 void EveTurretSet::InitializeAmbientEffect()
 {
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_generatedDistributedAmbientEffect ) )
+	{
+		entity->UnRegister( registry );
+	}
 	m_generatedDistributedAmbientEffect = nullptr;
 
 	if( nullptr == m_ambientEffect )
@@ -400,6 +405,21 @@ void EveTurretSet::InitializeAmbientEffect()
 
 	// This will either return the source or the generated effect
 	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
+
+	if( m_ambientEffectEditingMode )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_ambientEffect ) )
+		{
+			entity->Register( registry );
+		}
+	}
+	else
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_generatedDistributedAmbientEffect ) )
+		{
+			entity->Register( registry );
+		}
+	}
 
 	switch( m_state )
 	{
@@ -2914,26 +2934,8 @@ void EveTurretSet::SetAmbientEffect( IEveSpaceObjectChild* ambientEffect )
 	{
 		entity->UnRegister( registry );
 	}
-	if( EveEntityPtr entity = BlueCastPtr( m_generatedDistributedAmbientEffect ) )
-	{
-		entity->UnRegister( registry );
-	}
 	m_ambientEffect = ambientEffect;
 	InitializeAmbientEffect();
-	if( m_ambientEffectEditingMode )
-	{
-		if( EveEntityPtr entity = BlueCastPtr( m_ambientEffect ) )
-		{
-			entity->Register( registry );
-		}
-	}
-	else
-	{
-		if( EveEntityPtr entity = BlueCastPtr( m_generatedDistributedAmbientEffect ) )
-		{
-			entity->Register( registry );
-		}
-	}
 }
 
 
