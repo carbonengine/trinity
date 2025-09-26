@@ -50,6 +50,8 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_psData.screenSize = Vector4( 0.5f, 0.5f, 0.5f, 1.f );
 
 	m_decals.SetNotify( this );
+	m_lights.SetNotify( this );
+	m_attachments.SetNotify( this );
 }
 
 EveChildMesh::~EveChildMesh()
@@ -111,6 +113,60 @@ void EveChildMesh::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 			}
 		}
 	}
+
+	if ( list == &m_lights )
+	{
+		auto maskedEvent = event & BELIST_EVENTMASK;
+		if( ( maskedEvent == BELIST_UNLOADSTART ) || ( ( maskedEvent == BELIST_REMOVED ) && m_lights.empty() ) )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->UnRegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+		else if( ( maskedEvent == BELIST_INSERTED ) && m_lights.size() == 1 )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->RegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+	}
+
+	if( list == &m_attachments && ( event & BELIST_LOADING ) == 0 )
+	{
+		if( IsInRegistry() )
+		{
+			switch( event & BELIST_EVENTMASK )
+			{
+			case BELIST_INSERTED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_REMOVED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_UNLOADSTART:
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
 }
 
 bool EveChildMesh::OnModified( Be::Var* val )
@@ -162,15 +218,50 @@ void EveChildMesh::InitializeAnimation()
 void EveChildMesh::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry && m_display && m_mesh != nullptr )
+	if( registry && m_display  )
 	{
-		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
+		if( !m_lights.empty() )
 		{
-			registry->RegisterComponent<ITr2Renderable>( this );
+			registry->RegisterComponent<ITr2LightOwner>( this );
 		}
-		if( m_castShadow )
+
+		if( m_mesh != nullptr )
 		{
-			registry->RegisterComponent<IEveShadowCaster>( this );
+			if( EntityComponents::ShouldReflect( m_reflectionMode ) )
+			{
+				registry->RegisterComponent<ITr2Renderable>( this );
+			}
+			if( m_castShadow )
+			{
+				registry->RegisterComponent<IEveShadowCaster>( this );
+			}
+		}
+
+		for( auto it = std::begin( m_attachments ); it != std::end( m_attachments ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );
+			}
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Unregisters itself and its children with the scene registration container.
+// --------------------------------------------------------------------------------
+void EveChildMesh::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		for( auto it = std::begin( m_attachments ); it != std::end( m_attachments ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
 		}
 	}
 }
@@ -738,6 +829,16 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	auto screen_height = Tr2Renderer::GetViewport().height;
 	m_psData.screenSize.x = min( float( m_currentScreenSize / screen_width ), 1.0f );
 	m_psData.screenSize.y = min( float( m_currentScreenSize / screen_height ), 1.0f );
+
+	if( !m_attachments.empty() )
+	{
+		auto [bones, boneCount] = GetBoneTransforms();
+		for( auto& attachment : m_attachments )
+		{
+			// If we need boostergain then we will need to get it from the parent (the 0.0 in the param list)
+			attachment->UpdateLights( m_worldTransform, bones, boneCount, m_activationStrength, 0.0 );
+		}
+	}
 }
 
 void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
@@ -1023,11 +1124,6 @@ void EveChildMesh::GetLights( Tr2LightManager& lightManager ) const
 	{
 		( *it )->AddLight( lightManager, m_worldTransform, 1.0f, bones, boneCount );
 		( *it )->SetBrightnessMultiplier( m_activationStrength );
-	}
-
-	for( auto it = std::begin( m_attachments ); it != std::end( m_attachments ); ++it )
-	{
-		( *it )->GetLights( lightManager, m_worldTransform );
 	}
 }
 

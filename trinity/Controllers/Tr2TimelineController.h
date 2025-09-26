@@ -21,18 +21,19 @@ struct Tr2TimelineEntry
 {
 	float startTime;
 	float endTime;
+	uint32_t trackID;
 };
 
 BLUE_DECLARE_STRUCTURE_LIST( Tr2TimelineEntry );
 
 
-BLUE_CLASS( Tr2TimelineContoller ) :
+BLUE_CLASS( Tr2TimelineController ) :
 	public ITr2ActionController,
 	public ISimTimeRebaseNotify
 {
 public:
-	Tr2TimelineContoller( IRoot* lockobj = nullptr );
-	~Tr2TimelineContoller();
+	Tr2TimelineController( IRoot* lockobj = nullptr );
+	~Tr2TimelineController();
 
 	EXPOSE_TO_BLUE();
 
@@ -63,16 +64,26 @@ public:
 	BlueStdResult GetAction( size_t index, ITr2ControllerActionPtr& action );
 	BlueStdResult GetActionStartTime( size_t index, float& value ) const;
 	BlueStdResult GetActionEndTime( size_t index, float& value ) const;
+	BlueStdResult GetActionTrackID( size_t index, uint32_t& trackID ) const;
 	BlueStdResult SetActionStartTime( size_t index, float startTime );
 	BlueStdResult SetActionEndTime( size_t index, float endTime );
-	void AddAction( ITr2ControllerAction* action, float startTime, float endTime );
+	BlueStdResult SetActionTrackID( size_t index, uint32_t trackID );
+	void AddAction( ITr2ControllerAction* action, float startTime, float endTime, uint32_t trackID = 0 );
 	BlueStdResult RemoveAction( size_t index );
+
+	bool IsActionEnabled( size_t index ) const;
+
+	bool IsTrackEnabled( uint32_t trackID ) const;
+	void EnableTrack( uint32_t trackID, bool enable );
 
 	void RegisterCallback( const BlueSharedString& callbackName, const BlueScriptCallback& callback );
 	void ClearCallbacks();
 
 	float GetTime() const;
 	void SetTime( float time );
+
+	void Pause();
+	void Resume();
 
 	void ReLink();
 
@@ -84,6 +95,8 @@ private:
 	PTr2ControllerEventHandlerVector m_eventHandlers;
 
 	std::vector<std::pair<BlueSharedString, BlueScriptCallback>> m_callbacks;
+
+	std::vector<uint32_t> m_disabledTracks;
 
 	Be::Time m_lastUpdateTime = 0;
 	float m_time = 0;
@@ -101,4 +114,4 @@ private:
 	bool m_isPaused = false;
 };
 
-TYPEDEF_BLUECLASS( Tr2TimelineContoller );
+TYPEDEF_BLUECLASS( Tr2TimelineController );

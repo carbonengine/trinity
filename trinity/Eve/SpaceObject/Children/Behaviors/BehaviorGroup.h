@@ -4,6 +4,7 @@
 #include "TriFrustum.h"
 #include "EveKDdroneManagementTree.h"
 #include "Eve/SpaceObject/EveSpaceObject2.h"
+#include "Eve/EveEntity.h"
 
 struct ITr2Renderable;
 
@@ -21,7 +22,9 @@ BLUE_DECLARE( PlayFX );
 BLUE_CLASS( BehaviorGroup ) :
 	public IInitialize,
 	public IListNotify,
-	public INotify
+	public INotify,
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -104,7 +107,17 @@ public:
 	void SetupRenderables();
 
 	BehaviorGroupBoosterPtr GetBooster() const;
-	void AddLights( Tr2LightManager & lightManger, const Matrix& parentTransform );
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager & lightManager ) const override;
+	void AddLight( Tr2Light * light ) override{};
+	void ClearLights() override {};
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	Vector3 m_spawnPosition;
 

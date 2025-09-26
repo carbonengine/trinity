@@ -1553,3 +1553,25 @@ void Tr2ParticleSystem::SetThreadSafeFlag()
 		m_insertDeleteMutex = CCP_NEW( "Tr2ParticleSystem::m_insertDeleteMutex" ) CcpMutex( "Tr2ParticleSystem", "m_mutex", 1000 );
 	}
 }
+
+void Tr2ParticleSystem::GetDebugOptions( Tr2DebugRendererOptions& options ) const
+{
+	options.insert( "Particle Systems" );
+}
+
+void Tr2ParticleSystem::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform ) const
+{
+	if ( !renderer.HasOption( this, "Particle Systems" ) )
+	{
+		return;
+	}
+	auto aabb = CcpMath::AxisAlignedBox( m_AabbMin, m_AabbMax );
+	for( auto& force : m_forces )
+	{
+		force->RenderDebugInfo( renderer, worldTransform, aabb );
+	}
+	for( auto& force : m_constraints )
+	{
+		force->RenderDebugInfo( renderer, worldTransform, aabb );
+	}
+}

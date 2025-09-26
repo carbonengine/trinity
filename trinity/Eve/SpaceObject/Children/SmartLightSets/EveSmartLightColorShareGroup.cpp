@@ -12,6 +12,15 @@ EveSmartLightColorShareGroup::EveSmartLightColorShareGroup( IRoot* lockobj ) :
 	m_lightGroups.SetNotify( this );
 }
 
+bool EveSmartLightColorShareGroup::OnModified( Be::Var* value )
+{
+	if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
+	}
+	return true;
+}
+
 void EveSmartLightColorShareGroup::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList )
 {
 	if( theList == &m_attributeModifiers )
@@ -35,19 +44,68 @@ void EveSmartLightColorShareGroup::OnListModified( long event, ssize_t key, ssiz
 			}
 		}
 	}
+
+	if( theList == &m_lightGroups && ( event & BELIST_LOADING ) == 0 )
+	{
+		if( IsInRegistry() )
+		{
+			switch( event & BELIST_EVENTMASK )
+			{
+			case BELIST_INSERTED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_REMOVED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_UNLOADSTART:
+				for( ssize_t i = 0; i < theList->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( theList->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
 }
 
-
-void EveSmartLightColorShareGroup::GetLights( const PlacementDataWithIdentifierStructureList& placements, size_t size, Tr2LightManager& lightManager ) const
+void EveSmartLightColorShareGroup::RegisterComponents()
 {
-	if( !m_display )
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
 	{
-		return;
+		for( auto group : m_lightGroups )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( group ) )
+			{
+				entity->Register( registry );
+			}
+		}
 	}
+}
 
-	for( auto group : m_lightGroups )
+void EveSmartLightColorShareGroup::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
 	{
-		group->GetLights( placements, size, lightManager );
+		for( auto group : m_lightGroups )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( group ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
 	}
 }
 

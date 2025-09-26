@@ -219,13 +219,22 @@ bool EveHazeSet::UpdateVisibility( const EveUpdateContext& updateContext, const 
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveHazeSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveHazeSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights )
 	{
 		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
 		{
 			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+			light.boneMatrix._14 = 0.f;
+			light.boneMatrix._24 = 0.f;
+			light.boneMatrix._34 = 0.f;
+			light.boneMatrix._44 = 1.f;
+			light.boneMatrix *= parentTransform;
+		}
+		else
+		{
+			light.boneMatrix = parentTransform;
 		}
 	}
 	m_activationStrength = activationStrength;
@@ -344,7 +353,7 @@ void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& pa
 	{
 		for( auto& l : m_lights )
 		{
-			Matrix t =  TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+			Matrix t =  TranslationMatrix( l.lightData.position ) * l.boneMatrix;
 
 			Color c = l.lightData.color;
 
@@ -382,16 +391,24 @@ void EveHazeSet::SetShaderOption( const BlueSharedString& name, const BlueShared
 }
 
 
-void EveHazeSet::AddLight( const EveHazeSetLight& light )
+void EveHazeSet::AddLightFromSOF( const EveHazeSetLight& light )
 {
 	m_lights.push_back( light );
 }
 
-void EveHazeSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+void EveHazeSet::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
+}
+
+void EveHazeSet::GetLights( Tr2LightManager& lightManager ) const
 {
 	LightFeatures features = LightFeatures();
 	
-
 	for( auto& light : m_lights )
 	{
 		features.parentBrightness = m_activationStrength;
@@ -399,7 +416,7 @@ void EveHazeSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentT
 			features.parentBrightness *= m_boosterGain;
 		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
-		auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
+		auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		lightManager.AddLight( perLightData );
 	}
 }

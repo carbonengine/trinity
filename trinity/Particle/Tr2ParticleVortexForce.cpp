@@ -6,6 +6,7 @@
 
 #include "StdAfx.h"
 #include "Tr2ParticleVortexForce.h"
+#include "../Include/ITr2DebugRenderer2.h"
 
 Tr2ParticleVortexForce::Tr2ParticleVortexForce( IRoot* lockobj ):
 	m_magnitude( 1.f ),
@@ -39,4 +40,20 @@ XMVECTOR Tr2ParticleVortexForce::GetForce( FXMVECTOR position, FXMVECTOR velocit
 	direction = XMVectorSelect( XMVectorMultiply( direction, length ), g_XMZero, isInf );
 
 	return XMVectorScale( direction, m_magnitude );
+}
+
+void Tr2ParticleVortexForce::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const
+{
+	auto world = OrthoNormalBasisZ( m_axis ) * TranslationMatrix( m_position ) * worldTransform;
+	auto radius = 20.f;
+
+	renderer.DrawLine( this, TransformCoord( Vector3( 0, 0, -radius ), world ), TransformCoord( Vector3( 0, 0, radius ), world ), 0xffaaaa00 );
+	for( int i = 0; i < 16; ++i )
+	{
+		float angle0 = (float)i / 16.f * XM_2PI;
+		float angle1 = (float)( i + 1 ) / 16.f * XM_2PI;
+		Vector3 p0( cosf( angle0 ) * radius, sinf( angle0 ) * radius, 0 );
+		Vector3 p1( cosf( angle1 ) * radius, sinf( angle1 ) * radius, 0 );
+		renderer.DrawLine( this, TransformCoord( p0, world ), TransformCoord( p1, world ), 0xffaaaa00 );
+	}
 }

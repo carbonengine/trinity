@@ -15,6 +15,8 @@ const Be::ClassInfo* EveSpotlightSet::ExposeToBlue()
 		MAP_INTERFACE( EveSpotlightSet )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( IEveSpaceObjectAttachment )
+		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE
 		(

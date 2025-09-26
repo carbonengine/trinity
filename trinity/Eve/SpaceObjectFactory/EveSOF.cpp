@@ -755,7 +755,7 @@ void EveSOF::SetupSpriteSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSO
 								lightData.boneIndex = spriteSetItem->m_boneIndex;
 
 								EveSpriteLight light( lightData, itemData->blinkPhase, itemData->blinkRate, itemData->minScale, itemData->maxScale, index, itemData->light->lightProfilePath );
-								spriteSet->AddLight( light );
+								spriteSet->AddLightFromSOF( light );
 							}
 							index++;
 						}
@@ -907,7 +907,7 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 							data.rotation = rotation;
 							data.brightness *= ssiit.coneIntensity;
 
-							spotlightSet->AddLight( EveSpotlightLight( data, index, ssiit.light->lightProfilePath, ssiit.boosterGainInfluence ) );
+							spotlightSet->AddLightFromSOF( EveSpotlightLight( data, index, ssiit.light->lightProfilePath, ssiit.boosterGainInfluence ) );
 						}
 						index++;
 					}					
@@ -1071,7 +1071,7 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 							lightData.rotation = Normalize( lightData.rotation * planeSetItem->m_rotation );
 							lightData.boneIndex = planeSetItem->m_boneIndex;
 
-							planeSet->AddLight( EvePlaneLight( lightData, pslight.saturation, index, pslight.lightProfilePath, (EveSpaceObjectAttachmentUtils::FadeType) psiit.blinkMode, psiit.phase, psiit.rate ) );
+							planeSet->AddLightFromSOF( EvePlaneLight( lightData, pslight.saturation, index, pslight.lightProfilePath, (EveSpaceObjectAttachmentUtils::FadeType)psiit.blinkMode, psiit.phase, psiit.rate ) );
 						}
 
 						index++;
@@ -1188,7 +1188,7 @@ void EveSOF::SetupSpriteLineSets( IEveSpaceObjectAttachmentOwnerPtr obj, const E
 									light.minScale = itemData->minScale;
 									light.maxScale = itemData->maxScale;
 
-									spriteLineSet->AddLight( light );
+									spriteLineSet->AddLightFromSOF( light );
 								}
 							}
 							index++;
@@ -1304,7 +1304,7 @@ void EveSOF::SetupHazeSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOFD
 
 								EveHazeSetLight hazeSetLight( lightData, index, light.lightProfilePath, itemData->boosterGainInfluence );
 
-								hazeSet->AddLight( hazeSetLight );
+								hazeSet->AddLightFromSOF( hazeSetLight );
 							}
 						}
 						
@@ -1392,7 +1392,7 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const
 					bannerLight.lightData = data;
 					bannerLight.saturation = itemData.bannerLight.saturation;
 					bannerLight.index = index;
-					bannerSet->AddLight( bannerLight );
+					bannerSet->AddLightFromSOF( bannerLight );
 					index++;
 				}
 			}
@@ -1544,7 +1544,7 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 							
 							EveBannerLight bannerLight( lightData, banner.light->saturation, index, banner.light->lightProfilePath );
 
-							bannerSet->AddLight( bannerLight );
+							bannerSet->AddLightFromSOF( bannerLight );
 						}
 					}
 					index++;

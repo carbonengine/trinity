@@ -361,7 +361,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	virtual void GetLights( Tr2LightManager& lightManager ) const;
+	virtual void GetLights( Tr2LightManager& lightManager ) const override;
 	virtual void AddLight( Tr2Light* newLight );
 	virtual void ClearLights();
 

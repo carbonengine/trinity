@@ -972,12 +972,21 @@ void BehaviorGroup::SetPlayFXBehavior()
 		auto tmp = dynamic_cast<PlayFX*>( behavior );
 		if( tmp )
 		{
+			auto registry = this->GetComponentRegistry();
+			if( EveEntityPtr entity = BlueCastPtr( m_playFXBehavior ) )
+			{
+				entity->UnRegister( registry );
+			}
 			m_playFXBehavior = tmp;
+			if( EveEntityPtr entity = BlueCastPtr( m_playFXBehavior ) )
+			{
+				entity->Register( registry );
+			}
 		}
 	}
 }
 
-void BehaviorGroup::AddLights( Tr2LightManager& lightManager, const Matrix& parentTransform )
+void BehaviorGroup::GetLights(Tr2LightManager& lightManager) const
 {
 	if( m_booster && m_booster->GetDisplay() )
 	{
@@ -985,13 +994,34 @@ void BehaviorGroup::AddLights( Tr2LightManager& lightManager, const Matrix& pare
 		{
 			Vector4 info = it->second;
 
-			m_booster->AddLight( lightManager, info.GetXYZ(), info.w, it->first, parentTransform );
+			m_booster->AddLight( lightManager, info.GetXYZ(), info.w, it->first, m_parentTransform );
 		}
 	}
+}
 
-	if( m_playFXBehavior != nullptr )
+void BehaviorGroup::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
 	{
-		m_playFXBehavior->GetLights( lightManager );
+		registry->RegisterComponent<ITr2LightOwner>( this );
+
+		if( EveEntityPtr entity = BlueCastPtr( m_playFXBehavior ) )
+		{
+			entity->Register( registry );
+		}
+	}
+}
+
+void BehaviorGroup::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_playFXBehavior ) )
+		{
+			entity->UnRegister( registry );
+		}
 	}
 }
 

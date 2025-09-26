@@ -37,7 +37,8 @@ class EveTurretFiringFX :
 	public IInitialize,
 	public INotify,
 	public ITr2ControllerOwner,
-	public ITr2DebugRenderable
+	public ITr2DebugRenderable,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -118,7 +119,8 @@ public:
 	void SetDisplaySourceObject( bool display ) { m_displaySourceObject = display; }
 	bool GetDisplaySourceObject() const { return m_displaySourceObject; }
 
-	void GetLights( Tr2LightManager& lightManager ) const;
+	virtual void RegisterComponents() override;
+	virtual void UnRegisterComponents() override;
 
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );

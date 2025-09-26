@@ -209,6 +209,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_effectChildren.SetNotify( this );
 	m_overlayEffects.SetNotify( this );
 	m_decals.SetNotify( this );
+	m_attachments.SetNotify( this );
 
 	SetControllerVariable( "DirtLevel", m_dirtLevel );
 	SetControllerVariable( "ActivationStrength", m_spaceObjectShipData.y );
@@ -358,6 +359,27 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 		}
 	}
 
+	if( list == &m_lights )
+	{
+		auto maskedEvent = event & BELIST_EVENTMASK;
+		if( ( maskedEvent == BELIST_UNLOADSTART ) || ( ( maskedEvent == BELIST_REMOVED ) && m_lights.empty() ) )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->UnRegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+		else if( ( maskedEvent == BELIST_INSERTED ) && m_lights.size() == 1 )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->RegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+	}
+
 	if( list == &m_decals )
 	{
 		if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED && key == m_decals.size() )
@@ -392,6 +414,42 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 			{
 				m_decals[i]->SetPriority( (uint32_t)i );
 			}
+		}
+	}
+
+	if( list == &m_attachments && ( event & BELIST_LOADING ) == 0 )
+	{
+		switch( event & BELIST_EVENTMASK )
+		{
+		case BELIST_INSERTED:
+			if( IsInRegistry() )
+			{
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( this->GetComponentRegistry() );
+				}
+			}
+			break;
+		case BELIST_REMOVED:
+			if( EveEntityPtr entity = BlueCastPtr( value ) )
+			{
+				entity->UnRegister( this->GetComponentRegistry() );
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			if( IsInRegistry() )
+			{
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+			}
+			break;
+		default:
+			break;
 		}
 	}
 }
@@ -610,7 +668,7 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 
 		for( auto& attachment : m_attachments )
 		{
-			attachment->UpdateLights( bones, boneCount, m_spaceObjectShipData.y, m_spaceObjectShipData.x );
+			attachment->UpdateLights( m_worldTransform, bones, boneCount, m_spaceObjectShipData.y, m_spaceObjectShipData.x );
 		}
 	}
 
@@ -3336,18 +3394,6 @@ void EveSpaceObject2::GetLights( Tr2LightManager& lightManager ) const
 		( *it )->SetBrightnessMultiplier( m_activationStrength );
 	}
 	auto displayChildren = DisplayChildren();
-	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
-	{
-		if( displayChildren || ( *it )->IsAlwaysOn() )
-		{
-			( *it )->GetLights( lightManager );
-		}
-	}
-
-	for( auto it = std::begin( m_attachments ); it != std::end( m_attachments ); ++it )
-	{
-		( *it )->GetLights( lightManager, worldTransform );
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -3366,6 +3412,11 @@ void EveSpaceObject2::RegisterComponents()
 	auto registry = this->GetComponentRegistry();
 	if( registry && m_display )
 	{
+		if ( !m_lights.empty() )
+		{
+			registry->RegisterComponent<ITr2LightOwner>( this );
+		}
+
 		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
 		{
 			registry->RegisterComponent<ITr2Renderable>( this );
@@ -3377,6 +3428,14 @@ void EveSpaceObject2::RegisterComponents()
 		}
 
 		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );
+			}
+		}
+
+		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( *it ) )
 			{
@@ -3396,6 +3455,14 @@ void EveSpaceObject2::UnRegisterComponents()
 	if( registry )
 	{
 		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
+
+		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( *it ) )
 			{

@@ -15,6 +15,7 @@
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Lights/ITr2LightOwner.h"
 #include "Lights/Tr2Light.h"
+#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 
 BLUE_DECLARE( EveStretch3 );
 BLUE_DECLARE( TriFloat );
@@ -43,7 +44,7 @@ BLUE_CLASS( EveStretch3 ):
 	public IInitialize,
 	public ITr2CurveSetOwner,
 	public ITr2SoundEmitterOwner,
-	public ITr2LightOwner
+	public EveEntity
 {
 public:
     EXPOSE_TO_BLUE();
@@ -73,10 +74,9 @@ public:
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// ITr2LightOwner
-	virtual void GetLights( Tr2LightManager& lightManager ) const;
-	virtual void AddLight( Tr2Light* light ){};
-	virtual void ClearLights(){};
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ControllerOwner
@@ -127,6 +127,15 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2SoundEmitterOwner
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
+
+	IEveSpaceObjectChild* GetSourceObject();
+	void SetSourceObject( IEveSpaceObjectChild* sourceObject );
+	IEveSpaceObjectChild* GetDestObject();
+	void SetDestObject( IEveSpaceObjectChild* destObject );
+	IEveSpaceObjectChild* GetStretchObject();
+	void SetStretchObject( IEveSpaceObjectChild* stretchObject );
+	IEveSpaceObjectChild* GetMoveObject();
+	void SetMoveObject( IEveSpaceObjectChild* moveObject );
 
 private:
 

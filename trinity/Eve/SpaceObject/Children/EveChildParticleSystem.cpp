@@ -344,6 +344,10 @@ void EveChildParticleSystem::GetDebugOptions( Tr2DebugRendererOptions& options )
 	{
 		m_mesh->GetDebugOptions( options );
 	}
+	for( auto& ps : m_particleSystems )
+	{
+		ps->GetDebugOptions( options );
+	}
 }
 
 void EveChildParticleSystem::RenderDebugInfo( ITr2DebugRenderer2& renderer )
@@ -351,6 +355,10 @@ void EveChildParticleSystem::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if( m_display && m_mesh )
 	{
 		m_mesh->RenderDebugInfo( m_worldTransform, renderer );
+	}
+	for( auto& ps : m_particleSystems )
+	{
+		ps->RenderDebugInfo( renderer, m_worldTransform );
 	}
 }
 

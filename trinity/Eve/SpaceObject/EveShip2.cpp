@@ -119,6 +119,45 @@ void EveShip2::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2Imp
 	}
 }
 
+EveBoosterSet2* EveShip2::GetBoosters()
+{
+	return m_boosters;
+}
+
+void EveShip2::SetBoosters( EveBoosterSet2* boosters )
+{
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_boosters ) )
+	{
+		entity->UnRegister( registry );
+	}
+	m_boosters = boosters;
+	if( EveEntityPtr entity = BlueCastPtr( m_boosters ) )
+	{
+		entity->Register( registry );
+	}
+}
+
+void EveShip2::RegisterComponents()
+{
+	EveMobile::RegisterComponents();
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_boosters )
+	{
+		m_boosters->Register( registry );
+	}
+}
+
+void EveShip2::UnRegisterComponents()
+{
+	EveMobile::UnRegisterComponents();
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_boosters )
+	{
+		m_boosters->UnRegister( registry );
+	}
+}
+
 void EveShip2::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
 	EveMobile::RegisterWithQuadRenderer( quadRenderer );
@@ -194,7 +233,7 @@ void EveShip2::RebuildCachedData( BlueAsyncRes* p )
 // -----------------------------------------------------------------------------
 void EveShip2::SetBoosterSet( EveBoosterSet2Ptr set )
 {
-	m_boosters = set;
+	SetBoosters( set );
 }
 
 void EveShip2::RebuildBoosterSet()
@@ -343,26 +382,6 @@ void EveShip2::UpdateShipSpeedForAudio()
 			m_audioSpeedNotify->OnModified( (Be::Var*)m_audioParameterInfo.destinationValue );
 		}
 
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Adds ship dynamic lights to the manager.
-// Arguments:
-//   lightManager - light manager
-// --------------------------------------------------------------------------------
-void EveShip2::GetLights( Tr2LightManager& lightManager ) const
-{
-	if( !m_display )
-	{
-		return;
-	}
-
-	EveMobile::GetLights( lightManager );
-	if( m_boosters )
-	{
-		m_boosters->GetLights( lightManager, m_worldTransform );
 	}
 }
 

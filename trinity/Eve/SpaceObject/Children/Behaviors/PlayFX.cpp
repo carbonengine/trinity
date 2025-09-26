@@ -13,6 +13,7 @@ PlayFX::PlayFX( IRoot* lockobj ) :
 	m_stop( false ),
 	m_priority( LEAST_PRIORITY )
 {
+	m_firingEffects.SetNotify( this );
 }
 
 PlayFX::~PlayFX()
@@ -160,11 +161,69 @@ void PlayFX::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 	}
 }
 
-void PlayFX::GetLights( Tr2LightManager& lightManager ) const
+void PlayFX::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
-	for( auto fx = m_firingEffects.begin(); fx != m_firingEffects.end(); ++fx )
+	if( list == &m_firingEffects && ( event & BELIST_LOADING ) == 0 )
 	{
-		( *fx )->GetLights( lightManager );
+		if( IsInRegistry() )
+		{
+			switch( event & BELIST_EVENTMASK )
+			{
+			case BELIST_INSERTED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_REMOVED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_UNLOADSTART:
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+void PlayFX::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		for( auto fx = m_firingEffects.begin(); fx != m_firingEffects.end(); ++fx )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *fx ) )
+			{
+				entity->Register( GetComponentRegistry() );
+			}
+		}
+	}
+}
+
+void PlayFX::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		for( auto fx = m_firingEffects.begin(); fx != m_firingEffects.end(); ++fx )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *fx ) )
+			{
+				entity->UnRegister( GetComponentRegistry() );
+			}
+		}
 	}
 }
 

@@ -73,6 +73,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectDecalOwner
@@ -105,9 +106,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveLightOwner
-	virtual void GetLights( Tr2LightManager& lightManager ) const;
-	virtual void AddLight( Tr2Light* newLight );
-	virtual void ClearLights();
+	virtual void GetLights( Tr2LightManager& lightManager ) const override;
+	virtual void AddLight( Tr2Light* newLight ) override;
+	virtual void ClearLights() override;
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster

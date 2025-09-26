@@ -166,13 +166,22 @@ bool EveBannerSet::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	return m_isVisible;
 }
 
-void EveBannerSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveBannerSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
 		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
 		{
 			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+			light.boneMatrix._14 = 0.f;
+			light.boneMatrix._24 = 0.f;
+			light.boneMatrix._34 = 0.f;
+			light.boneMatrix._44 = 1.f;
+			light.boneMatrix *= parentTransform;
+		}
+		else
+		{
+			light.boneMatrix = parentTransform;
 		}
 	}
 	m_activationStrength = activationStrength;
@@ -276,7 +285,7 @@ void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 		{
 			Quaternion q = Quaternion(0, 0, 0, 1);
 			Vector3 scale = Vector3( 1, 1, 1 );
-			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix;
 
 			Color c = Saturate(l.lightData.color, l.saturation);
 
@@ -331,7 +340,7 @@ void EveBannerSet::SetKey( int32_t key )
 	m_key = key;
 }
 
-void EveBannerSet::AddLight( const EveBannerLight& light )
+void EveBannerSet::AddLightFromSOF( const EveBannerLight& light )
 {
 	m_lights.push_back(light);
 }
@@ -451,7 +460,16 @@ Color EveBannerSet::GetAverageColor() const
 	return resource->GetAverageColor();
 }
 
-void EveBannerSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+void EveBannerSet::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
+}
+
+void EveBannerSet::GetLights( Tr2LightManager& lightManager ) const
 {
 	if( !m_display || m_lights.size() == 0 )
 	{
@@ -472,7 +490,7 @@ void EveBannerSet::GetLights( Tr2LightManager& lightManager, const Matrix& paren
 		light.lightData.color = Saturate(averageColor, light.saturation);
 		lightFeatures.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, lightFeatures, lightManager.GetCurrentSpaceSceneShadowQuality() );
+		auto data = light.lightData.AsPerPointLightData( light.boneMatrix, lightFeatures, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		
 		lightManager.AddLight( data );
 	}
