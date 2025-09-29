@@ -3,24 +3,23 @@
 #include "include/ITr2GpuBuffer.h"
 #include "Tr2DeviceResource.h"
 
+struct Tr2MorphTargetAnimationData
+{
+	Tr2MorphTargetAnimationData() = default;
+	explicit Tr2MorphTargetAnimationData( uint32_t index, float weight );
+
+	uint32_t m_index;
+	float m_weight;
+};
 
 BLUE_CLASS( Tr2MorphTargetAnimationDataBuffer ) :
 	public ITr2GpuBuffer,
 	public Tr2DeviceResource
 {
 public:
-	EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();	
 
-	struct AnimationData
-	{
-		AnimationData() = default;
-		explicit AnimationData( uint32_t index, float weight );
-
-		uint32_t m_index;
-		float m_weight;
-	};
-
-	uint32_t UploadTransforms( const AnimationData* data, uint32_t matrixCount );
+	uint32_t UploadTransforms( const Tr2MorphTargetAnimationData* data, uint32_t matrixCount );
 	void PrepareBuffer( Tr2RenderContext& renderContext );
 	void SetFrameNumbers( uint64_t recordingFrame, uint64_t completedFrame );
 
@@ -36,7 +35,7 @@ private:
 
 	std::mutex m_mutex;
 	Tr2BufferAL m_buffer;
-	std::vector<AnimationData> m_mirror;
+	std::vector<Tr2MorphTargetAnimationData> m_mirror;
 
 	uint64_t m_frame = 0;
 	uint32_t m_head = 0;
@@ -68,7 +67,7 @@ public:
 	uint32_t GetCurrentFrameOffset() const;
 	uint32_t GetPreviousFrameOffset() const;
 
-	void UploadTransforms( Tr2MorphTargetAnimationDataBuffer& buffer, const Tr2MorphTargetAnimationDataBuffer::AnimationData* transforms, uint32_t count );
+	void UploadTransforms( Tr2MorphTargetAnimationDataBuffer& buffer, const Tr2MorphTargetAnimationData* transforms, uint32_t count );
 	void AdvanceFrame();
 
 	static const uint32_t INVALID_OFFSET = 0xffffffff;

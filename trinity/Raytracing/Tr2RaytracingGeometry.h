@@ -13,6 +13,7 @@ BLUE_DECLARE( Tr2RaytracingGeometry );
 struct TriGeometryResMeshData;
 class Tr2RtMesh;
 class Tr2RtMeshArea;
+struct Tr2MorphTargetAnimationData;
 
 class Tr2RaytracingPipelineStateManager
 {
@@ -54,7 +55,6 @@ public:
 };
 TYPEDEF_BLUECLASS( Tr2RuntimeGpuBuffer );
 
-
 class Tr2RaytracingMesh
 {
 public:
@@ -62,6 +62,7 @@ public:
 
 	void UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize );
 	bool SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms, uint32_t offset );
+	bool SetMorphAnimations( size_t count, const Tr2MorphTargetAnimationData* morphTargets, uint32_t morphTargetAnimationDataOffset );
 
 	bool IsGood() const;
 	bool IsGoodForArea( uint32_t area ) const;
@@ -84,6 +85,9 @@ private:
 	std::vector<float> m_transforms;
 	uint32_t m_boneOffset;
 	uint32_t m_skinnedVertexOffset;
+	std::vector<byte> m_morphAnimationDatas;
+	uint32_t m_morphAnimationDataOffset;
+	uint32_t m_morphAnimationDataCount;
 	bool m_isDirty;
 	float m_screenSize;
 	int m_lodIndex;

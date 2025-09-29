@@ -448,25 +448,37 @@ void EveChildMesh::UpdateRtSkeleton()
 		}
 	}
 
-	if( !hasSkinned )
+	bool skeletonChanged = false;
+	if( hasSkinned )
 	{
-		return; //no skinned areas
+		auto [bones, boneCount] = GetBoneTransforms();
+
+		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
+		auto boneOffset = m_boneOffsets.GetCurrentFrameOffset();
+
+		skeletonChanged = rtMesh->SetBoneTransforms( boneCount, bones, boneOffset );
 	}
 
-	auto [bones, boneCount] = GetBoneTransforms();
+	bool morphChanged = false;
+	if( meshData->m_morphTargetAllocation.IsValid() )
+	{
+		auto [morphTargets, morphTargetCount] = GetMorphTargets();
 
-	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
-	auto offset = m_boneOffsets.GetCurrentFrameOffset();
+		m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
+		auto morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
 
-	bool skeletonChanged = rtMesh->SetBoneTransforms( boneCount, bones, offset );
+		morphChanged = rtMesh->SetMorphAnimations( morphTargetCount, morphTargets, morphTargetAnimationDataOffset );
+	}
 
-	if( skeletonChanged )
+
+	if( skeletonChanged || morphChanged )
 	{
 		//Skeleton has changed, so mark all area BLAS's as out-of-date.
 		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
 			auto meshAreaIndex = std::max( 0, ( *it )->GetIndex() );
-			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
+			// TODO: intern, introduce isMorphed to meshAreas? it could be used here instead of checking morphChanged. see TriGeometryRes::IsAreaSkinned
+			if( meshData->m_areas[meshAreaIndex].m_isSkinned || morphChanged )
 			{
 				( *it )->GetRtMeshArea()->MarkBlasOutdated();
 			}
@@ -710,31 +722,26 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
+		if( auto mesh = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() ) )
+		{
+			if( mesh->m_morphTargetAllocation.IsValid() )
+			{
+				auto [morphTargets, morphTargetCount] = GetMorphTargets();
+				m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
+
+				// TODO: intern, for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
+				m_vsData.activeMorphTargetsCount = uint32_t( morphTargetCount );
+				m_vsData.morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
+				m_vsData.morphTargetVertexDataOffset = mesh->m_morphTargetAllocation.GetOffset();
+			}
+		}		
+
 		auto [bones, boneCount] = GetBoneTransforms();
 		m_vsData.boneOffsets[2] = uint32_t( boneCount );
 		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
-
-		auto [morphTargets, morphTargetCount] = GetMorphTargets();
-		m_vsData.activeMorphTargetsCount = uint32_t( morphTargetCount );
-		m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationDataBuffer::AnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
-
-	m_vsData.morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
-	
-	if( auto mesh = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() ) )
-	{
-		if ( mesh->m_morphTargetAllocation.IsValid() )
-		{
-			m_vsData.morphTargetVertexDataOffset = mesh->m_morphTargetAllocation.GetOffset();
-		}
-		else
-		{
-			m_vsData.activeMorphTargetsCount = 0;
-		}
-	}
-	// TODO: intern, for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
 
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
@@ -1061,23 +1068,23 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 }
 
 // TODO: intern, remove dummy data
-static std::array<Tr2MorphTargetAnimationDataBuffer::AnimationData, 3> morphTargets;
+static std::array<Tr2MorphTargetAnimationData, 3> morphTargets;
 
-std::pair<const Tr2MorphTargetAnimationDataBuffer::AnimationData*, size_t> EveChildMesh::GetMorphTargets() const
+std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets() const
 {
 	// TODO: intern, remove dummy data
 	static auto startTime = BeOS->GetCurrentFrameTime();
 	auto currentTime = BeOS->GetCurrentFrameTime() - startTime;
 	float time = TimeAsFloat( currentTime );
 	
-	morphTargets[0] = Tr2MorphTargetAnimationDataBuffer::AnimationData{ 0, sin( time * 1.000f ) * .5f + .5f };
-	morphTargets[1] = Tr2MorphTargetAnimationDataBuffer::AnimationData{ 1, sin( time * 1.234f ) * .5f + .5f };
-	morphTargets[2] = Tr2MorphTargetAnimationDataBuffer::AnimationData{ 2, sin( time * 1.567f ) * .5f + .5f };
+	morphTargets[0] = Tr2MorphTargetAnimationData{ 0, sin( time * 1.000f ) * .5f + .5f };
+	morphTargets[1] = Tr2MorphTargetAnimationData{ 1, sin( time * 1.234f ) * .5f + .5f };
+	morphTargets[2] = Tr2MorphTargetAnimationData{ 2, sin( time * 1.567f ) * .5f + .5f };
 
 	return std::make_pair( morphTargets.data(), morphTargets.size() );
 	
 	//size_t morphTargetCount = 0;
-	//const Tr2MorphTargetAnimationDataBuffer::AnimationData* morphTargets = nullptr;
+	//const Tr2MorphTargetAnimationData* morphTargets = nullptr;
 	//
 	//if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
 	//{

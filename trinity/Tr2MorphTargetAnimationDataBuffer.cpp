@@ -6,14 +6,14 @@ namespace
 constexpr uint32_t INITIAL_SIZE = 16 * 1024;
 }
 
-Tr2MorphTargetAnimationDataBuffer::AnimationData::AnimationData( uint32_t index, float weight )
+Tr2MorphTargetAnimationData::Tr2MorphTargetAnimationData( uint32_t index, float weight )
 {
 	m_index = index;
 	m_weight = weight;
 }
 
 
-uint32_t Tr2MorphTargetAnimationDataBuffer::UploadTransforms( const AnimationData* data, uint32_t dataCount )
+uint32_t Tr2MorphTargetAnimationDataBuffer::UploadTransforms( const Tr2MorphTargetAnimationData* data, uint32_t dataCount )
 {
 	std::unique_lock lock( m_mutex );
 	if( m_head >= m_tail )
@@ -25,7 +25,7 @@ uint32_t Tr2MorphTargetAnimationDataBuffer::UploadTransforms( const AnimationDat
 	}
 	if( m_head < m_tail && m_head + dataCount >= m_tail )
 	{
-		CCP_LOG( "Resizing morph target animation data buffer to %uKB", uint32_t( m_size * 2 * sizeof( AnimationData ) ) / 1024 );
+		CCP_LOG( "Resizing morph target animation data buffer to %uKB", uint32_t( m_size * 2 * sizeof( Tr2MorphTargetAnimationData ) ) / 1024 );
 		Resize( m_size * 2 );
 	}
 
@@ -55,7 +55,7 @@ void Tr2MorphTargetAnimationDataBuffer::PrepareBuffer( Tr2RenderContext& renderC
 	{
 		if( region.size )
 		{
-			m_buffer.UpdateBuffer( region.offset * sizeof( AnimationData ), region.size * sizeof( AnimationData ), m_mirror.data() + region.offset, renderContext );
+			m_buffer.UpdateBuffer( region.offset * sizeof( Tr2MorphTargetAnimationData ), region.size * sizeof( Tr2MorphTargetAnimationData ), m_mirror.data() + region.offset, renderContext );
 			m_lockedRegions.push_back( { m_frame, region.offset + region.size } );
 		}
 	}
@@ -99,7 +99,7 @@ void Tr2MorphTargetAnimationDataBuffer::Resize( uint32_t size )
 	m_tail = m_size;
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	m_buffer.Create( sizeof( AnimationData ), size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
+	m_buffer.Create( sizeof( Tr2MorphTargetAnimationData ), size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
 	m_buffer.SetName( "Bone transforms" );
 }
 
@@ -127,7 +127,7 @@ bool Tr2MorphTargetAnimationDataBuffer::OnPrepareResources()
 	if( !m_mirror.empty() && !m_buffer.IsValid() )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		m_buffer.Create( sizeof( AnimationData ), m_size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, m_mirror.data(), renderContext );
+		m_buffer.Create( sizeof( Tr2MorphTargetAnimationData ), m_size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, m_mirror.data(), renderContext );
 		m_buffer.SetName( "Bone transforms" );
 	}
 	return true;
@@ -145,7 +145,7 @@ uint32_t Tr2MorphTargetAnimationDataOffsets::GetPreviousFrameOffset() const
 	return m_previousFrameOffset;
 }
 
-void Tr2MorphTargetAnimationDataOffsets::UploadTransforms( Tr2MorphTargetAnimationDataBuffer& buffer, const Tr2MorphTargetAnimationDataBuffer::AnimationData* transforms, uint32_t count )
+void Tr2MorphTargetAnimationDataOffsets::UploadTransforms( Tr2MorphTargetAnimationDataBuffer& buffer, const Tr2MorphTargetAnimationData* transforms, uint32_t count )
 {
 	if( m_currentFrameOffset != INVALID_OFFSET )
 	{

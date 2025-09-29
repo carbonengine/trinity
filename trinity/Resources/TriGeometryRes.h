@@ -166,7 +166,9 @@ struct TriGeometryResMeshData
 	std::string m_name;
 	TrackableStdVector<TriGeometryResAreaData> m_areas;
 	unsigned int m_vertexDeclaration;
+	unsigned int m_morphVertexDeclaration;
 	unsigned int m_bytesPerVertex;
+	unsigned int m_bytesPerMorphTargetVertex;
 	unsigned int m_vertexCount;
 	unsigned int m_primitiveCount;
 
@@ -181,10 +183,6 @@ struct TriGeometryResMeshData
 	Tr2SuballocatedBuffer::Allocation m_reversedIndexAllocation;
 
 	Tr2SuballocatedBuffer::Allocation m_morphTargetAllocation;
-	//int m_morphTargetAllocationCount;
-	//Tr2GpuBufferPtr m_morphTargetBuffer;
-	//Tr2ConstantBufferAL m_morphTargetGeometryConstants;
-	
 
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;

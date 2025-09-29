@@ -7,6 +7,7 @@
 #include "Shader/Tr2Shader.h"
 #include "Shader/Parameter/Tr2GeometryBufferParameter.h"
 #include "../Tr2BoneTransformBuffer.h"
+#include "../Tr2MorphTargetAnimationDataBuffer.h"
 
 #include "Tr2MeshArea.h"
 #include "ITr2TextureProvider.h"
@@ -217,6 +218,27 @@ bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4
 	return m_isDirty;
 }
 
+bool Tr2RaytracingMesh::SetMorphAnimations( size_t count, const Tr2MorphTargetAnimationData* morphTargets, uint32_t morphTargetAnimationDataOffset )
+{
+	auto newSize = count * sizeof( Tr2MorphTargetAnimationData );
+	if( m_morphAnimationDatas.size() != newSize )
+	{
+		m_morphAnimationDatas.resize( newSize );
+		m_isDirty = true;
+	}
+
+	if( newSize > 0 && memcmp( m_morphAnimationDatas.data(), morphTargets, newSize ) != 0 )
+	{
+		memcpy( m_morphAnimationDatas.data(), morphTargets, newSize );
+		m_isDirty = true;
+	}
+
+	m_morphAnimationDataOffset = morphTargetAnimationDataOffset;
+	m_morphAnimationDataCount = uint32_t( count );
+
+	return m_isDirty;
+}
+
 bool Tr2RaytracingMesh::IsGood() const
 {
 	return m_geometry && m_geometry->IsGood() && GetMeshData();
@@ -328,7 +350,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 	{
 		return m_blas;
 	}
-	if( meshData->m_areas[m_areaIndex].m_isSkinned )
+	if( meshData->m_areas[m_areaIndex].m_isSkinned || meshData->m_morphTargetAllocation.IsValid() )
 	{
 		if( m_blas.IsValid() && !m_blasOutdated )
 		{
@@ -691,7 +713,12 @@ struct SkinningShaderCBuffer
 	uint32_t inVB;
 	uint32_t outVB;
 	uint32_t outVBOffset;
-	uint32_t _padding[3];
+	uint32_t morphAnimationDataOffset;
+	uint32_t morphAnimationDataCount;
+	uint32_t morphTargetPositionOffset;
+	uint32_t morphTargetStride;
+	uint32_t morphTargetSize;
+	uint32_t _padding[2];
 };
 }
 
@@ -724,6 +751,10 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		CCP_STATS_ZONE( "Tr2BoneTransformBuffer" );
 		Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( renderContext );
 	}
+	{
+		CCP_STATS_ZONE( "Tr2MorphTargetAnimationDataBuffer" );
+		Tr2MorphTargetAnimationDataBuffer::GetInstance().PrepareBuffer( renderContext );
+	}
 
 	uint32_t skinnedVertexCount = 0;
 
@@ -736,7 +767,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 		Tr2RaytracingMesh* mesh = it->mesh;
 		TriGeometryResMeshData* meshData = mesh->GetMeshData();
-		if( meshData && meshData->m_areas[it->area->GetAreaIndex()].m_isSkinned )
+		if( meshData && ( meshData->m_areas[it->area->GetAreaIndex()].m_isSkinned || meshData->m_morphTargetAllocation.IsValid() ) )
 		{
 			if( !mesh->GetAndResetDirtyFlag() )
 			{
@@ -749,15 +780,15 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 	}
 
+	if( outdatedMeshes.empty() )
+	{
+		return;
+	}
+
 	if( !m_skinnedVertices.IsValid() || m_skinnedVertices.GetDesc().count < 3 * skinnedVertexCount )
 	{
 		const uint32_t vertexSize = sizeof( float );
 		m_skinnedVertices.Create( Tr2BufferDescriptionAL( vertexSize, 3 * skinnedVertexCount, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ), nullptr, renderContext.GetPrimaryRenderContext() );
-	}
-
-	if( outdatedMeshes.empty() )
-	{
-		return;
 	}
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -841,7 +872,20 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			constData->inVB = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
 			constData->outVB = m_skinnedVertices.GetUavIndexInHeap();
 			constData->outVBOffset = outOffset * 3;
-
+			constData->morphAnimationDataOffset = 0;
+			constData->morphAnimationDataCount = 0;
+			constData->morphTargetPositionOffset = 0;
+			constData->morphTargetStride = 0;
+			constData->morphTargetSize = 0;
+			if ( meshData->m_morphTargetAllocation.IsValid() )
+			{
+				auto morphOffsets = FindOffsets( meshData->m_morphVertexDeclaration );
+				constData->morphAnimationDataOffset = mesh->m_morphAnimationDataOffset;
+				constData->morphAnimationDataCount = mesh->m_morphAnimationDataCount;
+				constData->morphTargetPositionOffset = ( meshData->m_morphTargetAllocation.GetOffset() + sizeof( TriMorphTargetGeometryConstants ) + morphOffsets.positionOffset ) >> 2;
+				constData->morphTargetStride = meshData->m_bytesPerMorphTargetVertex >> 2;
+				constData->morphTargetSize = ( meshData->m_bytesPerMorphTargetVertex * vertexCount ) >> 2;
+			}
 			m_skinVerticesData.Unlock( renderContext );
 
 			renderContext.SetConstants( m_skinVerticesData, Tr2RenderContextEnum::COMPUTE_SHADER, perObjVSRegister );

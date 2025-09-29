@@ -1789,13 +1789,15 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 		}
 	}
 
+	pMesh->m_morphVertexDeclaration = -1;
+	uint32_t bytesPerMorphTargetVertex = 0;
 	{ // Morph Target
 		if ( myMesh->MorphTargetCount > 0 )
 		{
 			// Allocate the morph target array based on the size of the first morph target
 			const granny_morph_target& firstMorphTarget = myMesh->MorphTargets[0];
 			Tr2VertexDefinition firstMorphTargetVertexDefinition = BuildFromGrannyVertexDecl( firstMorphTarget.VertexData->VertexType );
-			const uint32_t bytesPerMorphTargetVertex = firstMorphTargetVertexDefinition.m_nextOffset[0];
+			bytesPerMorphTargetVertex = firstMorphTargetVertexDefinition.m_nextOffset[0];
 			uint32_t morphDataSize = firstMorphTarget.VertexData->VertexCount * bytesPerMorphTargetVertex;
 			uint32_t morphTargetBufferSize = ( morphDataSize * myMesh->MorphTargetCount + sizeof( TriMorphTargetGeometryConstants ) );
 
@@ -1823,7 +1825,7 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 				Tr2VertexDefinition morphTargetVertexDefinition = BuildFromGrannyVertexDecl( morphTarget.VertexData->VertexType );
 
 				CCP_ASSERT_M( morphTargetVertexDefinition == firstMorphTargetVertexDefinition, "Morph targets have different definitions, these need to match!" );
-				CCP_ASSERT_M( firstMorphTarget.VertexData->VertexCount == morphTarget.VertexData->VertexCount, "Morph targets have different vertex counts, these need to match!" );
+				CCP_ASSERT_M( vertexCount == morphTarget.VertexData->VertexCount, "Morph targets have different vertex counts, these need to match!" );
 
 				void* pMorphSrc = GrannyGetMeshMorphVertices( myMesh, i );
 				pMesh->m_morphTargetAllocation.Update( 
@@ -1833,11 +1835,14 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 					renderContext 
 				);
 			}
+
+			pMesh->m_morphVertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( firstMorphTargetVertexDefinition );
 		}
 	}
 
 
 	pMesh->m_bytesPerVertex = bytesPerVertex;
+	pMesh->m_bytesPerMorphTargetVertex = bytesPerMorphTargetVertex;
 	pMesh->m_vertexCount = vertexCount;
 
 	pMesh->m_vertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( vertexDefinition );

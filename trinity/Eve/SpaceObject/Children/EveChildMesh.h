@@ -144,7 +144,7 @@ protected:
 	bool DisplayDecals() const;
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
-	std::pair<const Tr2MorphTargetAnimationDataBuffer::AnimationData*, size_t> GetMorphTargets() const;
+	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets() const;
 
 	// general data
 	BlueSharedString m_name;
