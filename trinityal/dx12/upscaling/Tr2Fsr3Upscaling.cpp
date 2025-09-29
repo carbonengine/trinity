@@ -566,6 +566,14 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchFrameGen( Tr2UpscalingAL
 	dispatchFgPrep.commandList = m_params.renderContext.GetPrimaryRenderContext().m_commandList;
 	dispatchFgPrep.viewSpaceToMetersFactor = 1.f;
 	dispatchFgPrep.frameID = dispatchParameters.currentFrameIndex;
+
+	ffxDispatchDescFrameGenerationPrepareCameraInfo cameraInfo {};
+	std::copy( std::begin( dispatchParameters.cameraForward ), std::end( dispatchParameters.cameraForward ), cameraInfo.cameraForward );
+	std::copy( std::begin( dispatchParameters.cameraRight ), std::end( dispatchParameters.cameraRight ), cameraInfo.cameraRight );
+	std::copy( std::begin( dispatchParameters.cameraUp ), std::end( dispatchParameters.cameraUp ), cameraInfo.cameraUp );
+	std::copy( std::begin( dispatchParameters.cameraPos ), std::end( dispatchParameters.cameraPos ), cameraInfo.cameraPosition );
+
+	dispatchFgPrep.header.pNext = &cameraInfo.header;
 	
 	m_frameGenerationConfig.frameID = dispatchParameters.currentFrameIndex;
 	m_frameGenerationConfig.frameGenerationEnabled = true;
