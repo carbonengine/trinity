@@ -865,7 +865,10 @@ void EveSpaceObjectDecal::CreateStaticIndexBuffers( TriGeometryResPtr geomRes )
 	{
 		if( lod->m_originalLodIndex >= m_staticIndexBuffers.size() )
 		{
-			CCP_LOGERR( "Static index buffers missing for lod %d for mesh %s!", lod->m_originalLodIndex, originalMeshData->m_name.c_str() );
+			// LOD generation may completely remove some parts of the model.
+			// If we have a decal on that part, it will suddenly have an empty index buffer.
+			// The precomputed decal LODs will omit LODs with an empty index buffer.
+			// Therefore, this case is a possibility and can be safely ignored.
 			break;
 		}
 		auto& buffer = m_staticIndexBuffers[lod->m_originalLodIndex];
