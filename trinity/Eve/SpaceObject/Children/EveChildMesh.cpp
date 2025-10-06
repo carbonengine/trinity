@@ -1072,16 +1072,26 @@ static std::array<Tr2MorphTargetAnimationData, 3> morphTargets;
 
 std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets() const
 {
-	// TODO: intern, remove dummy data
-	static auto startTime = BeOS->GetCurrentFrameTime();
-	auto currentTime = BeOS->GetCurrentFrameTime() - startTime;
-	float time = TimeAsFloat( currentTime );
-	
-	morphTargets[0] = Tr2MorphTargetAnimationData{ 0, sin( time * 1.000f ) * .5f + .5f };
-	morphTargets[1] = Tr2MorphTargetAnimationData{ 1, sin( time * 1.234f ) * .5f + .5f };
-	morphTargets[2] = Tr2MorphTargetAnimationData{ 2, sin( time * 1.567f ) * .5f + .5f };
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
 
-	return std::make_pair( morphTargets.data(), morphTargets.size() );
+	if( m_meshBinding )
+	{
+		return m_meshBinding->GetMorphTargets();
+	}
+
+	//// TODO: intern, remove dummy data
+	//static auto startTime = BeOS->GetCurrentFrameTime();
+	//auto currentTime = BeOS->GetCurrentFrameTime() - startTime;
+	//float time = TimeAsFloat( currentTime );
+	//
+	//morphTargets[0] = Tr2MorphTargetAnimationData{ 0, sin( time * 1.000f ) * .5f + .5f };
+	//morphTargets[1] = Tr2MorphTargetAnimationData{ 1, sin( time * 1.234f ) * .5f + .5f };
+	//morphTargets[2] = Tr2MorphTargetAnimationData{ 2, sin( time * 1.567f ) * .5f + .5f };
+	//
+	//return std::make_pair( morphTargets.data(), morphTargets.size() );
 	
 	//size_t morphTargetCount = 0;
 	//const Tr2MorphTargetAnimationData* morphTargets = nullptr;
@@ -1101,7 +1111,8 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 	//{
 	//	return m_meshBinding->GetMorphTargetList();
 	//}
-	//return std::make_pair( nullptr, 0 );
+	
+	return std::make_pair( nullptr, 0 );
 }
 	
 void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const

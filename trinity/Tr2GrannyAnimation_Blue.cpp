@@ -7,6 +7,39 @@
 BLUE_DEFINE_INTERFACE( ITr2GrannyAnimationOwner );
 
 
+
+const Be::VarChooser MorphTargetStateChooser[] = {
+	{ "Driven By Animation", BeCast( Tr2MorphTargetState::DrivenByAnimation ), "Driven by animation from granny files." },
+	{ "Manually Overwritten", BeCast( Tr2MorphTargetState::Overwritten ), "Manual overwrite for debugging." },
+	{ 0 }
+};
+
+
+BLUE_DEFINE( Tr2MorphTarget );
+
+const Be::ClassInfo* Tr2MorphTarget::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( Tr2MorphTarget, "" )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "state", m_state, "", Be::READWRITE | Be::ENUM, MorphTargetStateChooser )
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READ )
+		MAP_ATTRIBUTE( "index", m_index, "", Be::READ )
+		MAP_ATTRIBUTE( "weight", m_weight, ":jessica-numeric-range: (0.0, 1.0)", Be::READWRITE )
+	EXPOSURE_END()
+}
+
+
+BLUE_DEFINE( Tr2MorphTargetContainer );
+
+const Be::ClassInfo* Tr2MorphTargetContainer::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( Tr2MorphTargetContainer, "" )
+		MAP_ATTRIBUTE( "meshIndex", m_meshIndex, "", Be::READ )
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READ )
+		MAP_ATTRIBUTE( "morphTargets", m_morphTargets, "Morph Targets", Be::READ )
+	EXPOSURE_END()
+}
+
+
 BLUE_DEFINE( Tr2GrannyAnimation );
 
 const Be::ClassInfo* Tr2GrannyAnimation::ExposeToBlue()
@@ -15,6 +48,8 @@ const Be::ClassInfo* Tr2GrannyAnimation::ExposeToBlue()
         MAP_INTERFACE( Tr2GrannyAnimation )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( ITr2AnimationUpdater )
+
+		MAP_ATTRIBUTE( "morphTargets", m_morphTargets, "Morph Targets", Be::READ )
 
 		MAP_PROPERTY( "resPath", GetResPath, SetResPath, "The resource path to the Granny file containing the animations to be played." )
 		MAP_ATTRIBUTE( "resPath_", m_resPath, "", Be::PERSISTONLY )

@@ -41,11 +41,34 @@ namespace Tr2GrannyAnimationUtils
 };
 
 
+Tr2MorphTarget::Tr2MorphTarget( IRoot* lockobj )
+{
+
+}
+
+Tr2MorphTarget::~Tr2MorphTarget()
+{
+
+}
+
+
+Tr2MorphTargetContainer::Tr2MorphTargetContainer( IRoot* lockobj ) :
+	PARENTLOCK( m_morphTargets )
+{
+
+}
+
+Tr2MorphTargetContainer::~Tr2MorphTargetContainer()
+{
+
+}
+
 
 static const int MAX_JOINT_COUNT = 254;
 
 Tr2GrannyAnimation::Tr2GrannyAnimation( IRoot* lockobj ) :
 	PARENTLOCK( m_boneOffset ),
+	PARENTLOCK( m_morphTargets ),
 	m_boneList( "Tr2GrannyAnimation/m_boneList" ),
 	m_skeleton( nullptr ),
 	m_worldPose( nullptr ),
@@ -399,6 +422,39 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 						m_meshBoneCount = MAX_JOINT_COUNT;
 					}
 					m_meshBoneMatrixList = (granny_matrix_3x4*)CCP_ALIGNED_MALLOC( "Tr2GrannyAnimation/m_boneMatrixList", m_meshBoneCount * sizeof( granny_matrix_3x4 ), 16 );
+				}
+			}
+
+			// TODO: intern, does doing this make any sense over here?
+			if( m_geometryRes && m_meshBindingIndex != -1 )
+			{
+				// TODO: intern, pull names out of granny_info instead of using m_morphTargetNames?
+				//for( size_t i = 0; i < m_geometryRes->GetMeshData( m_modelIndex )->m_morphTargetNames.size(); i++ )
+				//{
+				//	const auto& name = m_geometryRes->GetMeshData( m_modelIndex )->m_morphTargetNames[i];
+				//	m_morphTargets.Insert( -1, nullptr );
+				//	m_morphTargets[i]->m_index = uint32_t( i );
+				//	m_morphTargets[i]->m_name = name;
+				//	m_morphTargets[i]->m_state = Tr2MorphTargetState::DrivenByAnimation;
+				//	m_morphTargets[i]->m_weight = 0.f;
+				//}
+			
+				granny_mesh* mesh = fi->Models[m_modelIndex]->MeshBindings[m_meshBindingIndex].Mesh;
+				if( mesh )
+				{
+					for( int32_t i = 0; i < fi->ModelCount; ++i )
+					{
+						auto model = fi->Models[i];
+						if( model )
+						{
+							auto found = std::find_if( model->MeshBindings, model->MeshBindings + model->MeshBindingCount, [mesh]( const auto& binding ) { return binding.Mesh == mesh; } );
+							if( found != model->MeshBindings + model->MeshBindingCount )
+							{
+								this->CreateMorphTargets( mesh->Name, m_meshBindingIndex, mesh->MorphTargetCount, mesh->MorphTargets );
+								break;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -1441,6 +1497,64 @@ void Tr2GrannyAnimation::RemoveNotifyTarget( IBlueAsyncResNotifyTarget* p )
 	m_notifyTargets.erase( remove( begin( m_notifyTargets ), end( m_notifyTargets ), p ), end( m_notifyTargets ) );
 }
 
+void Tr2GrannyAnimation::CreateMorphTargets( const char* name, uint32_t meshIndex, granny_int32 morphTargetsCount, granny_morph_target* morphTargets )
+{
+	Tr2MorphTargetContainerPtr container = nullptr;
+	for ( int32_t i = 0; i < m_morphTargets.size(); i++ )
+	{
+		if ( m_morphTargets[i]->m_meshIndex == meshIndex )
+		{
+			container = m_morphTargets[i];
+			break;
+		}
+	}
+
+	if( container )
+	{
+		container->m_morphTargets.Clear();
+	}
+	else
+	{
+		container.CreateInstance();
+		m_morphTargets.Append( container );
+	}
+
+	container->m_meshIndex = meshIndex;
+	container->m_name = name;
+	for( int32_t i = 0; i < morphTargetsCount; i++ )
+	{
+		Tr2MorphTargetPtr morphTarget;
+		morphTarget.CreateInstance();
+		const auto& name = morphTargets[i].ScalarName;
+		morphTarget->m_index = uint32_t( i );
+		morphTarget->m_name = name;
+		morphTarget->m_state = Tr2MorphTargetState::DrivenByAnimation;
+		morphTarget->m_weight = 0.f;
+		container->m_morphTargets.Insert( -1, morphTarget );
+	}
+	container->m_buffer.resize( container->m_morphTargets.size() );
+}
+
+// TODO: intern, implement these functions or get rid of them
+std::vector<std::string> Tr2GrannyAnimation::GetMorphTargetNames() const
+{
+	return {};
+}
+
+void Tr2GrannyAnimation::SetMorphTargetWeight( const char* name, float weight )
+{
+
+}
+
+float Tr2GrannyAnimation::GetMorphTargetWeight( const char* name )
+{
+	return 0.f;
+}
+
+const PTr2MorphTargetContainerVector& Tr2GrannyAnimation::GetMorphTargets() const 
+{
+	return m_morphTargets;
+}
 
 Tr2AnimationMeshBinding::Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex ) :
 	m_animation( animationUpdater ),
@@ -1501,6 +1615,45 @@ std::pair<const granny_matrix_3x4*, size_t> Tr2AnimationMeshBinding::GetBoneTran
 	return { m_boneTransforms.get(), boneCount };
 }
 
+std::pair<const Tr2MorphTargetAnimationData*, size_t> Tr2AnimationMeshBinding::GetMorphTargets() const
+{
+	// TODO: intern, is this check necessary?
+	if( !m_meshBinding )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
+	Tr2MorphTargetContainerPtr morphTargetContainer = nullptr;
+	for( auto morphTargets : m_animation->GetMorphTargets() )
+	{
+		if( morphTargets->m_meshIndex == m_meshIndex )
+		{
+			morphTargetContainer = morphTargets;
+		}
+	}
+
+	if ( !morphTargetContainer )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
+	if ( morphTargetContainer->m_buffer.size() < morphTargetContainer->m_morphTargets.size() )
+	{
+		morphTargetContainer->m_buffer.resize( morphTargetContainer->m_morphTargets.size() );
+	}
+
+	size_t count = 0;
+	for( auto morphTarget : morphTargetContainer->m_morphTargets )
+	{
+		if ( morphTarget->m_weight != 0.f )
+		{
+			morphTargetContainer->m_buffer[count++] = Tr2MorphTargetAnimationData( morphTarget->m_index, morphTarget->m_weight );
+		}
+	}
+
+	return std::make_pair( morphTargetContainer->m_buffer.data(), count );
+}
+
 TriGeometryRes* Tr2AnimationMeshBinding::GetGeometryRes() const
 {
 	return m_geometryRes;
@@ -1549,6 +1702,23 @@ void Tr2AnimationMeshBinding::CreateBinding()
 				}
 			}
 		}
+
+		// TODO: intern, not sure if this is really the right place for this...
+		for( int32_t i = 0; i < fi->ModelCount; ++i )
+		{
+			auto model = fi->Models[i];
+			if( model )
+			{
+				auto found = std::find_if( model->MeshBindings, model->MeshBindings + model->MeshBindingCount, [mesh]( const auto& binding ) { return binding.Mesh == mesh; } );
+				if( found != model->MeshBindings + model->MeshBindingCount )
+				{
+					// TODO: intern, how to ensure that unused Tr2MorphTargetContainer with old, invalid index will be removed??
+					m_animation->CreateMorphTargets( mesh->Name, m_meshIndex, mesh->MorphTargetCount, mesh->MorphTargets );
+					break;
+				}
+			}
+		}
+
 		m_meshBinding.reset( GrannyNewMeshBinding( fi->Meshes[m_meshIndex], meshSkeleton, m_animation->m_skeleton ) );
 		if( m_meshBinding )
 		{
