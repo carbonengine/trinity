@@ -748,7 +748,9 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 		float maxScreenSize = std::numeric_limits<float>::infinity();
 		;
 
-		if( mbi && mbi->maxScreenSize > 0 )
+		const auto mainLod = !mbi || mbi->maxScreenSize <= 0;
+
+		if( !mainLod )
 		{
 			//We are an LOD of an existing mesh. Add ourselves to it.
 			int32_t sourceMeshIndex = mbi->sourceMeshIndex;
@@ -833,9 +835,12 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				lod->m_uvDensities.assign( mbi->uvDensities, mbi->uvDensities + mbi->uvDensityCount );
 			}
 			
-			Vector3 meshMin = *reinterpret_cast<Vector3*>( &mbi->bounds.min[0] );
-			Vector3 meshMax = *reinterpret_cast<Vector3*>( &mbi->bounds.max[0] );
-			BoundingBoxUpdate( mesh->m_minBounds, mesh->m_maxBounds, meshMin, meshMax );
+			if( mainLod )
+			{
+				Vector3 meshMin = *reinterpret_cast<Vector3*>( &mbi->bounds.min[0] );
+				Vector3 meshMax = *reinterpret_cast<Vector3*>( &mbi->bounds.max[0] );
+				BoundingBoxUpdate( mesh->m_minBounds, mesh->m_maxBounds, meshMin, meshMax );
+			}
 		}
 
 
@@ -877,7 +882,7 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				DetermineAreaBoundsAndVertCount( area, grannyMesh, bytesPerVertex );
 
 				// if the area doesn't have any verts, the bounding box is invalid, so DON't use it!
-				if( area.m_primitiveCount )
+				if( mainLod && area.m_primitiveCount )
 				{
 					BoundingBoxUpdate( mesh->m_minBounds, mesh->m_maxBounds, area.m_minBounds, area.m_maxBounds );
 				}
