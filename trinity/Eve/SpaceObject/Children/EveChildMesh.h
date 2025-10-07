@@ -137,6 +137,10 @@ public:
 
 	void SetInstanceTransforms( std::vector<Matrix> instances );
 
+	std::vector<std::string> GetMorphTargetNames() const;
+	void SetMorphTargetWeight( const char* name, float weight );
+	float GetMorphTargetWeight( const char* name );
+
 protected:
 	void InitializeAnimation();
 	bool ShouldReflect() const;
@@ -144,7 +148,7 @@ protected:
 	bool DisplayDecals() const;
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
-	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets() const;
+	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets();
 
 	// general data
 	BlueSharedString m_name;
@@ -196,6 +200,7 @@ protected:
 	std::vector<Matrix> m_instanceTransforms;
 	unsigned int m_instanceCount;
 
+	std::vector<Tr2MorphTargetAnimationData> m_morphAnimationBuffer;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );

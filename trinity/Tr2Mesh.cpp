@@ -46,6 +46,10 @@ bool Tr2Mesh::OnModified( Be::Var* value )
 			Initialize();
 		}
 	}
+	else if ( IsMatch(value, m_meshIndex) )
+	{
+		InitializeMorphTargets();
+	}
 
 	return true;
 }
@@ -138,11 +142,24 @@ void Tr2Mesh::InitializeGeometryResource()
 	SetGeometryRes( res );
 }
 
+void Tr2Mesh::InitializeMorphTargets()
+{
+	auto morphTargetNames = GetMorphTargetNames();
+
+	// TODO: intern, keep existing entries?
+	m_morphAnimations.clear();
+	for( int32_t i = 0; i < morphTargetNames.size(); i++ )
+	{
+		m_morphAnimations[morphTargetNames[i]] = Tr2MorphTargetAnimationData( i, 0.f );
+	}
+}
+
 void Tr2Mesh::RebuildCachedData( BlueAsyncRes* p )
 {
 	if( p == m_geometryResource || p == m_lowResGeometryResource )
 	{
 		CacheBounds();
+		InitializeMorphTargets();
 	}
 	if( p == m_geometryResource )
 	{
@@ -189,4 +206,55 @@ void Tr2Mesh::ReverseIndexBuffers()
 	{
 		m_lowResGeometryResource->RequestReversedIndexBuffers();
 	}
+}
+
+std::vector<std::string> Tr2Mesh::GetMorphTargetNames() const
+{
+	if( !GetGeometryResource() )
+	{
+		return {};
+	}
+
+	auto mesh = GetGeometryResource()->GetMeshData( GetMeshIndex() );
+
+	if( !mesh )
+	{
+		return {};
+	}
+
+	return mesh->m_morphTargetNames;
+}
+
+void Tr2Mesh::SetMorphTargetWeight( const char* name, float weight )
+{
+	auto anim = m_morphAnimations.find( name );
+
+	if( anim != m_morphAnimations.end() )
+	{
+		anim->second.m_weight = weight;
+	}
+	else
+	{
+		CCP_LOGWARN( "Tr2Mesh::SetMorphTargetWeight cannot find %s", name );
+	}
+}
+
+float Tr2Mesh::GetMorphTargetWeight( const char* name )
+{
+	auto anim = m_morphAnimations.find( name );
+
+	if( anim != m_morphAnimations.end() )
+	{
+		return anim->second.m_weight;
+	}
+	else
+	{
+		CCP_LOGWARN( "Tr2Mesh::GetMorphTargetWeight cannot find %s", name );
+	}
+	return 0.f;
+}
+
+const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& Tr2Mesh::GetMorphAnimations() const
+{
+	return m_morphAnimations;
 }

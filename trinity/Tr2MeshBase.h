@@ -14,6 +14,7 @@
 #include "Tr2DebugRenderer.h"
 #include "Utilities/Tr2MaterialBoundsAdjustment.h"
 
+#include "Tr2MorphTargetAnimationDataBuffer.h"
 
 BLUE_DECLARE( TriGeometryRes );
 
@@ -63,6 +64,11 @@ public:
 	bool GetDisplay() const;
 
 	virtual TriGeometryRes* GetGeometryResource() const = 0;
+
+	virtual std::vector<std::string> GetMorphTargetNames() const = 0;
+	virtual void SetMorphTargetWeight( const char* name, float weight ) = 0;
+	virtual float GetMorphTargetWeight( const char* name ) = 0;
+	virtual const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& GetMorphAnimations() const = 0;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify

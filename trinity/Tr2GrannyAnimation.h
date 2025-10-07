@@ -10,10 +10,6 @@
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2GrannyAnimation );
-BLUE_DECLARE( Tr2MorphTarget );
-BLUE_DECLARE_VECTOR( Tr2MorphTarget );
-BLUE_DECLARE( Tr2MorphTargetContainer );
-BLUE_DECLARE_VECTOR( Tr2MorphTargetContainer );
 
 class Tr2AnimationMeshBinding;
 
@@ -33,43 +29,6 @@ enum Tr2MorphTargetState
 	DrivenByAnimation,
 	Overwritten
 };
-
-BLUE_CLASS( Tr2MorphTarget ) :
-	public IRoot
-{
-public:
-	EXPOSE_TO_BLUE();
-
-	Tr2MorphTarget( IRoot* lockobj = NULL );
-	~Tr2MorphTarget();
-
-	Tr2MorphTargetState m_state;
-	std::string m_name;
-	uint32_t m_index;
-	float m_weight;
-};
-
-TYPEDEF_BLUECLASS( Tr2MorphTarget );
-//BLUE_DECLARE_VECTOR( Tr2MorphTarget );
-
-
-BLUE_CLASS( Tr2MorphTargetContainer ) :
-	public IRoot
-{
-public:
-	EXPOSE_TO_BLUE();
-
-	Tr2MorphTargetContainer( IRoot* lockobj = NULL );
-	~Tr2MorphTargetContainer();
-
-	uint32_t m_meshIndex = 0;
-	std::string m_name;
-	PTr2MorphTargetVector m_morphTargets;
-	// TODO: intern, reconsider whether putting this here is a good idea...
-	std::vector<Tr2MorphTargetAnimationData> m_buffer;
-};
-
-TYPEDEF_BLUECLASS( Tr2MorphTargetContainer );
 
 
 BLUE_INTERFACE( ITr2GrannyAnimationOwner ) :
@@ -154,12 +113,6 @@ public:
 
 	std::vector<std::string> GetAnimationNames() const;
 	
-	void CreateMorphTargets( const char* name, uint32_t meshIndex, granny_int32 morphTargetsCount, granny_morph_target* morphTargets );
-	std::vector<std::string> GetMorphTargetNames() const;
-	void SetMorphTargetWeight( const char* name, float weight );
-	float GetMorphTargetWeight( const char* name );
-	const PTr2MorphTargetContainerVector& GetMorphTargets() const;
-
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
@@ -216,8 +169,6 @@ private:
 	int m_modelIndex;
 	int m_meshBindingIndex;
 
-	PTr2MorphTargetContainerVector m_morphTargets;
-
 	bool m_debugRenderSkeleton;
 	bool m_debugRenderJointNames;
 	bool m_aimingBone;
@@ -253,7 +204,7 @@ public:
 	virtual ~Tr2AnimationMeshBinding();
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
-	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets() const;
+	//std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets() const;
 
 	TriGeometryRes* GetGeometryRes() const;
 	uint32_t GetMeshIndex() const;

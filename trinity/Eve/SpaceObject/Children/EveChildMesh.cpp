@@ -209,7 +209,6 @@ void EveChildMesh::InitializeAnimation()
 	}
 }
 
-
 // --------------------------------------------------------------------------------
 // Description:
 //    Registers itself and its children with the scene registration container.
@@ -1084,52 +1083,31 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 	return std::make_pair( nullptr, 0 );
 }
 
-// TODO: intern, remove dummy data
-static std::array<Tr2MorphTargetAnimationData, 3> morphTargets;
-
-std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets() const
+std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets()
 {
-	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
-	{
-		return std::make_pair( nullptr, 0 );
-	}
-
-	if( m_meshBinding )
-	{
-		return m_meshBinding->GetMorphTargets();
-	}
-
-	//// TODO: intern, remove dummy data
-	//static auto startTime = BeOS->GetCurrentFrameTime();
-	//auto currentTime = BeOS->GetCurrentFrameTime() - startTime;
-	//float time = TimeAsFloat( currentTime );
-	//
-	//morphTargets[0] = Tr2MorphTargetAnimationData{ 0, sin( time * 1.000f ) * .5f + .5f };
-	//morphTargets[1] = Tr2MorphTargetAnimationData{ 1, sin( time * 1.234f ) * .5f + .5f };
-	//morphTargets[2] = Tr2MorphTargetAnimationData{ 2, sin( time * 1.567f ) * .5f + .5f };
-	//
-	//return std::make_pair( morphTargets.data(), morphTargets.size() );
-	
-	//size_t morphTargetCount = 0;
-	//const Tr2MorphTargetAnimationData* morphTargets = nullptr;
-	//
 	//if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
 	//{
 	//	return std::make_pair( nullptr, 0 );
 	//}
-	//
-	////auto accumulatedTransforms = m_animationUpdater->GetAnimationTransforms();
-	//if( m_animationUpdater->m_meshBinding )
-	//{
-	//	Tr2GrannyAnimationUtils::GetMorphTargetList( m_animationUpdater, morphTargets, morphTargetCount );
-	//	return std::make_pair( morphTargets, morphTargetCount );
-	//}
-	//if( m_meshBinding )
-	//{
-	//	return m_meshBinding->GetMorphTargetList();
-	//}
 	
-	return std::make_pair( nullptr, 0 );
+	// TODO: intern, update weights based on granny animation
+
+	auto morphAnimations = m_mesh->GetMorphAnimations();
+	if( m_morphAnimationBuffer.size() != morphAnimations.size() )
+	{
+		m_morphAnimationBuffer.resize( morphAnimations.size() );
+	}
+	
+	size_t count = 0;
+	for ( auto& morph : morphAnimations )
+	{
+		if ( morph.second.m_weight != 0.f )
+		{
+			m_morphAnimationBuffer[count++] = morph.second;
+		}
+	}
+	
+	return std::make_pair( m_morphAnimationBuffer.data(), count );
 }
 	
 void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
@@ -1189,4 +1167,34 @@ void EveChildMesh::SetCastShadow( bool castShadow )
 void EveChildMesh::SetMinScreenSize( float minScreenSize )
 {
 	m_minScreenSize = minScreenSize;
+}
+
+std::vector<std::string> EveChildMesh::GetMorphTargetNames() const
+{
+	if( !m_mesh )
+	{
+		return {};
+	}
+
+	return m_mesh->GetMorphTargetNames();
+}
+
+void EveChildMesh::SetMorphTargetWeight( const char* name, float weight )
+{
+	if( !m_mesh )
+	{
+		return;
+	}
+
+	return m_mesh->SetMorphTargetWeight( name, weight );
+}
+
+float EveChildMesh::GetMorphTargetWeight( const char* name )
+{
+	if( !m_mesh )
+	{
+		return 0.f;
+	}
+
+	return m_mesh->GetMorphTargetWeight( name );
 }

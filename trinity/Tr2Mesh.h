@@ -4,6 +4,7 @@
 
 #include "Tr2MeshBase.h"
 #include "Resources/Tr2LoadPrepareFence.h"
+//#include "../Tr2MorphTargetAnimationDataBuffer.h"
 
 
 BLUE_CLASS( Tr2Mesh ):
@@ -45,8 +46,16 @@ public:
 	// IBlueAsyncResNotifyTarget
 	virtual void ReleaseCachedData( BlueAsyncRes* p );
 	virtual void RebuildCachedData( BlueAsyncRes* p );
+
+	std::vector<std::string> GetMorphTargetNames() const override;
+	void SetMorphTargetWeight( const char* name, float weight ) override;
+	float GetMorphTargetWeight( const char* name ) override;
+	const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& GetMorphAnimations() const override;
+
 private:
 	void InitializeGeometryResource();
+
+	void InitializeMorphTargets();
 
 	void PySetGeometryRes( TriGeometryRes* geometryRes );
 	int GetAreasCount() const;
@@ -59,6 +68,8 @@ private:
 	std::string m_geomResourceEx;
 
 	Tr2LoadPrepareFence m_loadFence;
+
+	std::unordered_map<std::string, Tr2MorphTargetAnimationData> m_morphAnimations;
 
 protected:
 	bool m_deferGeometryLoad;
