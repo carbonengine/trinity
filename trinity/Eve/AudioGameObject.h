@@ -84,6 +84,30 @@ public:
 	 */
 	unsigned int PlayAudioEvent( const std::wstring& eventName );
 
+	/**
+	 * @brief Gets the event name configured to play on wake.
+	 * @return Event name, or empty string if not set
+	 */
+	std::wstring GetEventName() const;
+
+	/**
+	 * @brief Sets the event name to play on wake.
+	 * @param eventName Wwise event name
+	 */
+	void SetEventName( const std::wstring& eventName );
+
+	/**
+	 * @brief Gets whether the emitter will play its event on initialization.
+	 * @return True if event will auto-play on Initialize()
+	 */
+	bool GetPlayOnWake() const;
+
+	/**
+	 * @brief Sets whether the emitter will play its event on initialization.
+	 * @param enable True to enable auto-play on Initialize()
+	 */
+	void SetPlayOnWake( bool enable );
+
 	Quaternion m_rotation;
 	Vector3 m_translation;
 
