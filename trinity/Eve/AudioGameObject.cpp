@@ -137,30 +137,12 @@ unsigned int AudioGameObject::PlayAudioEvent( const std::wstring& eventName )
 	return 0;
 }
 
-std::wstring AudioGameObject::GetEventName() const
+void AudioGameObject::SetEventName( const wchar_t* eventName )
 {
-	if( m_audioEmitter )
-	{
-		return m_audioEmitter->GetEventName();
-	}
-	return L"";
-}
-
-void AudioGameObject::SetEventName( const std::wstring& eventName )
-{
-	if( m_audioEmitter )
+	if( m_audioEmitter && eventName )
 	{
 		m_audioEmitter->SetEventName( eventName );
 	}
-}
-
-bool AudioGameObject::GetPlayOnWake() const
-{
-	if( m_audioEmitter )
-	{
-		return m_audioEmitter->GetPlayOnWake();
-	}
-	return false;
 }
 
 void AudioGameObject::SetPlayOnWake( bool enable )
