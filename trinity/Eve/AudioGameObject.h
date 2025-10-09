@@ -101,7 +101,6 @@ protected:
 	bool m_mute;
 
 	std::string m_name;
-	std::wstring m_audioEvent;
 
 	PTr2ExternalParameterVector m_externalParameters;
 };

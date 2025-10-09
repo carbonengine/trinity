@@ -6,8 +6,7 @@ AudioGameObject::AudioGameObject( IRoot* lockobj ) :
 	PARENTLOCK( m_externalParameters ),
 	m_rotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_translation( 0.0f, 0.0f, 0.0f ),
-	m_mute( false ),
-	m_audioEvent( L"" )
+	m_mute( false )
 {
 	Initialize();
 }
@@ -206,13 +205,6 @@ bool AudioGameObject::OnModified( Be::Var* val )
 			{
 				m_audioEmitter->Unmute();
 			}
-		}
-	}
-	else if( IsMatch( val, m_audioEvent ) )
-	{
-		if( m_audioEmitter && !m_audioEvent.empty() )
-		{
-			PlayAudioEvent( m_audioEvent );
 		}
 	}
 	else if( IsMatch( val, m_name ) )

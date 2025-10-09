@@ -59,14 +59,6 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 			"Function for animated rotation updates",
 			Be::READWRITE | Be::PERSIST
 		)
-		
-		MAP_ATTRIBUTE
-		(
-			"audioEvent",
-			m_audioEvent,
-			"Audio event name to play on this emitter",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
-		)
 
 		MAP_ATTRIBUTE
 		(
