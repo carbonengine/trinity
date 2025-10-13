@@ -7,6 +7,7 @@
 #include "StdAfx.h"
 #include "Tr2ActionPython.h"
 #include "../Tr2Controller.h"
+#include "../../ContinueOnMainThread.h"
 
 namespace
 {
@@ -106,11 +107,12 @@ void Tr2ActionPython::Start( ITr2ActionController& controller )
 	{
 		controller.RegisterUpdateable( *this );
 	}
-	if( !m_vtable.onStart )
+	if( m_vtable.onStart )
 	{
-		return;
+		ContinueOnMainThread( [self = Tr2ActionPythonPtr( this ), controllerPtr = ITr2ActionControllerPtr( &controller ), owner = IRootPtr( controller.GetOwner() )]() {
+			self->m_vtable.onStart.CallVoid( owner, controllerPtr );
+		} );
 	}
-	m_vtable.onStart.CallVoid( controller.GetOwner(), &controller );
 	m_prevRealTime = BeOS->GetActualTime();
 	m_prevSimTime = BeOS->GetCurrentFrameTime();
 }
@@ -123,12 +125,22 @@ void Tr2ActionPython::Stop( ITr2ActionController& controller )
 	{
 		return;
 	}
-	m_vtable.onStop.CallVoid( controller.GetOwner(), &controller );
+	ContinueOnMainThread( [self = Tr2ActionPythonPtr( this ), controllerPtr = ITr2ActionControllerPtr( &controller ), owner = IRootPtr( controller.GetOwner() )]() {
+		self->m_vtable.onStop.CallVoid( owner, controllerPtr );
+	} );
 }
 
 void Tr2ActionPython::Update( Be::Time realTime, Be::Time simTime )
 {
-	m_vtable.onUpdate.CallVoid( m_controller->GetOwner(), m_controller, TimeAsFloat( realTime - m_prevRealTime ), TimeAsFloat( simTime - m_prevSimTime ) );
+	ContinueOnMainThread( [
+		self = Tr2ActionPythonPtr( this ), 
+		controllerPtr = ITr2ActionControllerPtr( m_controller ), 
+		owner = IRootPtr( m_controller->GetOwner() ),
+		realDt = TimeAsFloat( realTime - m_prevRealTime ),
+		simDt = TimeAsFloat( simTime - m_prevSimTime )]() {
+
+		self->m_vtable.onUpdate.CallVoid( owner, controllerPtr, realDt, simDt );
+	} );
 	m_prevRealTime = realTime;
 	m_prevSimTime = simTime;
 }
