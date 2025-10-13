@@ -144,13 +144,16 @@ void Tr2Mesh::InitializeGeometryResource()
 
 void Tr2Mesh::InitializeMorphTargets()
 {
-	auto morphTargetNames = GetMorphTargetNames();
-
 	// TODO: intern, keep existing entries?
 	m_morphAnimations.clear();
-	for( int32_t i = 0; i < morphTargetNames.size(); i++ )
+	auto names = GetMorphTargetNames();
+	if( names )
 	{
-		m_morphAnimations[morphTargetNames[i]] = Tr2MorphTargetAnimationData( i, 0.f );
+		std::vector<std::string>& morphTargetNames = *names;
+		for( int32_t i = 0; i < morphTargetNames.size(); i++ )
+		{
+			m_morphAnimations[morphTargetNames[i]] = Tr2MorphTargetAnimationData( i, 0.f );
+		}
 	}
 }
 
@@ -208,21 +211,21 @@ void Tr2Mesh::ReverseIndexBuffers()
 	}
 }
 
-std::vector<std::string> Tr2Mesh::GetMorphTargetNames() const
+std::vector<std::string>* Tr2Mesh::GetMorphTargetNames() const
 {
 	if( !GetGeometryResource() )
 	{
-		return {};
+		return nullptr;
 	}
 
 	auto mesh = GetGeometryResource()->GetMeshData( GetMeshIndex() );
 
 	if( !mesh )
 	{
-		return {};
+		return nullptr;
 	}
 
-	return mesh->m_morphTargetNames;
+	return &mesh->m_morphTargetNames;
 }
 
 void Tr2Mesh::SetMorphTargetWeight( const char* name, float weight )

@@ -1827,8 +1827,11 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 				CCP_ASSERT_M( morphTargetVertexDefinition == firstMorphTargetVertexDefinition, "Morph targets have different definitions, these need to match!" );
 				CCP_ASSERT_M( vertexCount == morphTarget.VertexData->VertexCount, "Morph targets have different vertex counts, these need to match!" );
 
-				// TODO: intern, remove? we can pull this from granny_info in the animation code from the looks of it
-				pMesh->m_morphTargetNames.push_back( morphTarget.ScalarName );
+				size_t nameLength = strlen( morphTarget.ScalarName );
+				// By convention (due to the exporter), the morph target name ends with "Shape". Assert that it does, and also that it is not an empty string!
+				CCP_ASSERT_M( nameLength > 5 && strcmp( morphTarget.ScalarName + nameLength - 5, "Shape" ) == 0, "Invalid morph target name!" );
+
+				pMesh->m_morphTargetNames.push_back( std::string( morphTarget.ScalarName, nameLength - 5 ) );
 
 				void* pMorphSrc = GrannyGetMeshMorphVertices( myMesh, i );
 				pMesh->m_morphTargetAllocation.Update( 

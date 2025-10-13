@@ -7,6 +7,8 @@
 #include "GrannyBoneOffset.h"
 #include <BlueAsyncRes.h>
 
+#include "./Curves/Tr2GrannyVectorTrack.h"
+
 class Tr2GrannyAnimation;
 
 struct TextEventTrack
@@ -19,6 +21,16 @@ private:
 	int m_lastIndex;
 	int m_lastLoop;
 	granny_text_track* m_grannyTrack;
+};
+
+struct MorphTrack
+{
+	MorphTrack( granny_vector_track* grannyTrack ) : m_grannyTrack( grannyTrack ), m_value( 0.f ) {}
+
+	const float SampleTrack( float time, int loop, float duration );
+
+	granny_vector_track* m_grannyTrack;
+	float m_value;	// TODO: intern, do you really need this?
 };
 
 class Tr2GrannyAnimationLayer
@@ -38,8 +50,8 @@ public:
 	void ConsumeAnimationQueue( const Tr2GrannyAnimation* grannyAnimation );
 	void Cleanup();
 	
-	void SampleAnimation( float animationTime, granny_local_pose* resultPose, IBlueEventListener* listener );
-	void SampleAnimation( float animationTime, granny_local_pose* compositePose, granny_local_pose* resultPose, IBlueEventListener* listener, bool additive=false );
+	void SampleAnimation( float animationTime, granny_local_pose* resultPose, IBlueEventListener* listener, std::unordered_map<std::string, float>& morphAnimations );
+	void SampleAnimation( float animationTime, granny_local_pose* compositePose, granny_local_pose* resultPose, IBlueEventListener* listener, std::unordered_map<std::string, float>& morphAnimations, bool additive = false );
 	void AddBone( const Tr2GrannyAnimation* grannyAnimation, const char* name );
 	void AddAllBones( const Tr2GrannyAnimation* grannyAnimation );
 	void RemoveBone( const Tr2GrannyAnimation* grannyAnimation, const char* name );
@@ -68,9 +80,13 @@ private:
 	};
 	std::vector<AnimationRequest> m_animationQueue;
 	std::map<granny_control*, std::vector<TextEventTrack>> m_controlTextTracks;
+	std::map<granny_control*, std::vector<MorphTrack>> m_controlMorphTracks;
 	void ClearTextTracks( granny_control* control );
+	void ClearMorphTracks( granny_control* control );
 	void RegisterTextTracks( granny_control* control, const granny_animation* animation );
+	void RegisterMorphTracks( granny_control* control, const granny_animation* animation );
 	void SampleTextTracks( IBlueEventListener* listener);
+	void SampleMorphTracks( float animationTime, std::unordered_map<std::string, float>& morphAnimations, bool additive = false );
 	void UpdateControlParam( float control_increment );
 	float GetLayerAnimationTime();
 

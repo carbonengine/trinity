@@ -38,7 +38,8 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
 	m_instanceCount( 0 ),
 	EveChildTransform(),
-	EveEntity( lockobj )
+	EveEntity( lockobj ),
+	m_overwriteMorphTargetAnimations( false )
 {
 	// init per-object data with default values
 	memset( &m_vsData, 0, sizeof( EveSpaceObjectVSData ) );
@@ -493,8 +494,6 @@ void EveChildMesh::UpdateRtSkeleton()
 	}
 }
 
-// TODO: intern, UpdateRtMorphTargets
-
 void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	if( m_isVisible )
@@ -869,6 +868,7 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 
 		if( m_updateAnimation )
 		{
+			m_morphAnimationData.clear();
 			m_animationUpdater->PrePhysicsAnimation( 0, IdentityMatrix() );
 		}
 
@@ -1085,28 +1085,54 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 
 std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets()
 {
-	//if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
-	//{
-	//	return std::make_pair( nullptr, 0 );
-	//}
-	
-	// TODO: intern, update weights based on granny animation
-
-	auto morphAnimations = m_mesh->GetMorphAnimations();
-	if( m_morphAnimationBuffer.size() != morphAnimations.size() )
-	{
-		m_morphAnimationBuffer.resize( morphAnimations.size() );
-	}
-	
 	size_t count = 0;
-	for ( auto& morph : morphAnimations )
+
+	if( m_overwriteMorphTargetAnimations )
 	{
-		if ( morph.second.m_weight != 0.f )
+		auto morphAnimations = m_mesh->GetMorphAnimations();
+		if( m_morphAnimationBuffer.size() != morphAnimations.size() )
 		{
-			m_morphAnimationBuffer[count++] = morph.second;
+			m_morphAnimationBuffer.resize( morphAnimations.size() );
+		}
+
+		for( auto& morph : morphAnimations )
+		{
+			if( morph.second.m_weight != 0.f )
+			{
+				m_morphAnimationBuffer[count++] = morph.second;
+			}
 		}
 	}
-	
+	else
+	{
+		if( !m_animationUpdater || !m_animationUpdater->IsInitialized() || !m_mesh->GetMorphTargetNames() )
+		{
+			return std::make_pair( nullptr, 0 );
+		}
+
+		const std::unordered_map<std::string, float>& morphsAnimations = m_animationUpdater->GetMorphAnimations();
+		std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
+
+		if( m_morphAnimationBuffer.size() != names.size() )
+		{
+			m_morphAnimationBuffer.resize( names.size() );
+		}
+
+		for( uint32_t i = 0; i < names.size(); ++i )
+		{
+			auto morph = morphsAnimations.find( names[i] );
+			if( morph == morphsAnimations.end() )
+			{
+				continue;
+			}
+
+			if( morph->second != 0.f )
+			{
+				m_morphAnimationBuffer[count++] = Tr2MorphTargetAnimationData( i, morph->second );
+			}
+		}
+	}
+
 	return std::make_pair( m_morphAnimationBuffer.data(), count );
 }
 	
@@ -1171,12 +1197,12 @@ void EveChildMesh::SetMinScreenSize( float minScreenSize )
 
 std::vector<std::string> EveChildMesh::GetMorphTargetNames() const
 {
-	if( !m_mesh )
+	if( !m_mesh || !m_mesh->GetMorphTargetNames() )
 	{
 		return {};
 	}
 
-	return m_mesh->GetMorphTargetNames();
+	return *m_mesh->GetMorphTargetNames();
 }
 
 void EveChildMesh::SetMorphTargetWeight( const char* name, float weight )

@@ -200,7 +200,6 @@ struct TriGeometryResMeshData
 	};
 	std::vector<LodRef> m_lods;
 
-	// TODO: intern, remove? we can pull this from granny_info in the animation code from the looks of it
 	std::vector<std::string> m_morphTargetNames;
 };
 

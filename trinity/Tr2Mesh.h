@@ -47,7 +47,7 @@ public:
 	virtual void ReleaseCachedData( BlueAsyncRes* p );
 	virtual void RebuildCachedData( BlueAsyncRes* p );
 
-	std::vector<std::string> GetMorphTargetNames() const override;
+	std::vector<std::string>* GetMorphTargetNames() const override;
 	void SetMorphTargetWeight( const char* name, float weight ) override;
 	float GetMorphTargetWeight( const char* name ) override;
 	const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& GetMorphAnimations() const override;
