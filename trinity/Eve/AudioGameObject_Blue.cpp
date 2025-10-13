@@ -68,9 +68,13 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 			Be::READ | Be::PERSIST
 		)
 
-		MAP_METHOD_AND_WRAP( "SetEventName", SetEventName, "Sets the event name to play on wake" )
-
-		MAP_METHOD_AND_WRAP( "SetPlayOnWake", SetPlayOnWake, "Sets whether to automatically play eventName when Initialize() is called" )
+		MAP_ATTRIBUTE
+		(
+			"audioEmitter",
+			m_audioEmitter,
+			"Exposure of the audio emitter object",
+			Be::READWRITE | Be::PERSIST
+		)
 
 		MAP_METHOD_AND_WRAP( "GetAudioEmitter", GetAudioEmitter, "Gets the audio emitter for this object" )
 

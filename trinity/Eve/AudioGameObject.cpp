@@ -137,22 +137,6 @@ unsigned int AudioGameObject::PlayAudioEvent( const std::wstring& eventName )
 	return 0;
 }
 
-void AudioGameObject::SetEventName( const wchar_t* eventName )
-{
-	if( m_audioEmitter && eventName )
-	{
-		m_audioEmitter->SetEventName( eventName );
-	}
-}
-
-void AudioGameObject::SetPlayOnWake( bool enable )
-{
-	if( m_audioEmitter )
-	{
-		m_audioEmitter->SetPlayOnWake( enable );
-	}
-}
-
 void AudioGameObject::UpdateWorldTransform( Be::Time time )
 {
 	Quaternion rotation;
