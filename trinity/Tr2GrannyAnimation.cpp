@@ -584,40 +584,6 @@ void Tr2GrannyAnimation::RenderBones( const Matrix& modelTransform, const Tr2Ani
 	}
 }
 
-CcpMath::AxisAlignedBox Tr2GrannyAnimation::GetBoundingBox( CcpMath::AxisAlignedBox& boundingBox, const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding )
-{
-	auto binding = meshBinding ? meshBinding->GetGrannyMeshBinding() : m_meshBinding;
-	if( !binding )
-	{
-		return boundingBox;
-	}
-
-	Vector3 initialPlacement( 0, 0, 0 );
-	const granny_file_info* fi = GetFileInfo();
-	Matrix initialTranslation;
-	if( fi )
-	{
-		initialPlacement = *reinterpret_cast<Vector3*>( fi->Models[m_modelIndex]->InitialPlacement.Position );
-	}
-	initialTranslation = TranslationMatrix( initialPlacement );
-
-	auto viewProj = Tr2Renderer::GetViewTransform() * Tr2Renderer::GetProjectionTransform();
-	float screenRadius = 2.f / float( std::max( 1, std::min( Tr2Renderer::GetViewport().width, Tr2Renderer::GetViewport().height ) ) );
-
-	auto boneCount = GrannyGetMeshBindingBoneCount( binding );
-
-	for( int boneIdx = 0; boneIdx < boneCount; boneIdx++ )
-	{
-		const int* bi = GrannyGetMeshBindingToBoneIndices( binding );
-		Matrix mat = *reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_worldPose, bi[boneIdx] ) ) * modelTransform * initialTranslation;
-		Vector4 pos( 0, 0, 0, 1 );
-		pos = Transform( pos, mat );
-		pos.w = 2;
-		boundingBox.IncludePoint( pos.GetXYZ() );
-	}
-	return boundingBox;
-}
-
 void Tr2GrannyAnimation::RenderDynamicBounds( const Matrix& modelTransform )
 {
 	Vector3 transformed[8];

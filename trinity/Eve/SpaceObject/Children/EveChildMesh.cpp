@@ -323,16 +323,8 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 	if( m_mesh )
 	{
-		CcpMath::AxisAlignedBox bounds = m_mesh->GetBounds();
-
-		if( m_animationUpdater )
-		{
-			bounds = m_animationUpdater->GetBoundingBox( bounds, m_worldTransform, m_meshBinding.get() );
-		}
-		else
-		{
-			bounds.Transform( m_worldTransform );
-		}
+		auto bounds = m_mesh->GetBounds();
+		bounds.Transform( m_worldTransform );
 
 		m_currentScreenSize = frustum.GetPixelSizeAccross( bounds );
 
@@ -976,16 +968,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 	if( m_mesh )
 	{
-		if (m_animationUpdater)
-		{
-			CcpMath::AxisAlignedBox bounds = m_mesh->GetBounds();
-			bounds = m_animationUpdater->GetBoundingBox( bounds, m_worldTransform, m_meshBinding.get() );
-			renderer.DrawBox( this, IdentityMatrix(), bounds.m_min, bounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xffaa8800, 0x22aa8800 ) );
-		}
-		else
-		{
-			m_mesh->RenderDebugInfo( m_worldTransform, renderer );
-		}
+		m_mesh->RenderDebugInfo( m_worldTransform, renderer );
 	}
 	if( m_animationUpdater && renderer.HasOption( GetRawRoot(), "Bones" ) )
 	{

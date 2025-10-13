@@ -106,8 +106,6 @@ public:
 
 	void RenderBones( const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding = nullptr );
 
-	CcpMath::AxisAlignedBox GetBoundingBox( CcpMath::AxisAlignedBox& boundingBox, const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding = nullptr );
-
 	int GetMeshBoneCount() const;
 	const granny_matrix_3x4* GetMeshBoneMatrixList() const;
 
