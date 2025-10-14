@@ -85,7 +85,7 @@ private:
 	std::vector<float> m_transforms;
 	uint32_t m_boneOffset;
 	uint32_t m_skinnedVertexOffset;
-	std::vector<byte> m_morphAnimationDatas;
+	std::vector<BYTE> m_morphAnimationDatas;
 	uint32_t m_morphAnimationDataOffset;
 	uint32_t m_morphAnimationDataCount;
 	bool m_isDirty;
