@@ -11,6 +11,7 @@
 #include "EveSpriteLineSetItem.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "Utilities/BoundingBox.h"
+#include "Lights/ITr2LightOwner.h"
 
 // forwards
 BLUE_DECLARE( EveSpriteLineSet );
@@ -23,7 +24,9 @@ BLUE_DECLARE( Tr2Effect );
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveSpriteLineSet ):
 	public IEveSpaceObjectAttachment,
-	public IInitialize
+	public IInitialize,
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -40,7 +43,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
-	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
+	virtual void UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
@@ -51,8 +54,15 @@ public:
 	void Setup( Tr2EffectPtr effect, bool isSkinned );
 	void Add( EveSpriteLineSetItemPtr newItem );
 
-	void AddLight( const EveSpriteLight& light );
-	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+	void AddLightFromSOF( const EveSpriteLight& light );
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager& lightManager ) const override;
 
 	// rebuild resources
 	void Rebuild();

@@ -15,6 +15,7 @@
 #include "Utilities/BoundingBox.h"
 #include "../../EveEntity.h"
 #include "../../../ITr2VolumetricRenderable.h"
+#include "Lights/ITr2LightOwner.h"
 
 BLUE_DECLARE_INTERFACE( ITriVectorFunction );
 BLUE_DECLARE_INTERFACE( ITriQuaternionFunction );
@@ -34,9 +35,11 @@ BLUE_CLASS( EveChildCloud2 ) :
 	public Tr2DeviceResource,
 	public IInitialize,
 	public INotify,
+	public IListNotify,
 	public IEveSpaceObjectChild,
 	public ITr2DebugRenderable,
 	public ITr2Renderable,
+	public ITr2LightOwner,
 	public EveEntity
 {
 public:
@@ -52,6 +55,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	virtual bool OnModified( Be::Var* value );
+	
+	//////////////////////////////////////////////////////////////////////////
+	// IListNotify
+	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
@@ -67,6 +74,9 @@ public:
 	{
 	}
 	virtual void ChangeLOD( Tr2Lod lod ) override {}
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
 	void GetLights( Tr2LightManager& lightManager ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////

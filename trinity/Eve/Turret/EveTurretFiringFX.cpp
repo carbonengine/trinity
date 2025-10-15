@@ -200,6 +200,10 @@ bool EveTurretFiringFX::OnModified( Be::Var* val )
 			m_firingDuration = GetCurveDuration();
 		}
 	}
+	if( IsMatch( val, m_display ) )
+	{
+		ReRegister();
+	}
 	return true;
 }
 
@@ -687,16 +691,34 @@ bool EveTurretFiringFX::IsLooping() const
 }
 
 // --------------------------------------------------------------------------------
-void EveTurretFiringFX::GetLights( Tr2LightManager& lightManager ) const
+void EveTurretFiringFX::RegisterComponents()
 {
-	if( !m_display || !m_isFiring )
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
 	{
-		return;
+		for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );
+			}
+		}
 	}
+}
 
-	for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
+// --------------------------------------------------------------------------------
+void EveTurretFiringFX::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
 	{
-		( *it )->GetLights( lightManager );
+		for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
 	}
 }
 

@@ -7,6 +7,7 @@
 #include "StdAfx.h"
 #include "Tr2ActionBindRTPC.h"
 #include "Tr2ExpressionTermInfo.h"
+#include "../ITr2Controller.h"
 
 
 BLUE_DEFINE( Tr2ActionBindRTPC );

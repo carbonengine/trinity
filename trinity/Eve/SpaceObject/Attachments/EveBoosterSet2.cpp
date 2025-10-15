@@ -1269,21 +1269,29 @@ void EveBoosterSet2::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Mat
 	}
 }
 
+
+void EveBoosterSet2::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if ( registry )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Adds lights from boosters to light manager
 // Arguments:
 //   lightManager - light manager
-//   parentTransform - parent local to world transform
 // --------------------------------------------------------------------------------
-void EveBoosterSet2::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+void EveBoosterSet2::GetLights( Tr2LightManager& lightManager ) const
 {
 	if( ( m_lightRadius <= 0.f && m_lightWarpRadius <= 0.f ) )
 	{
 		return;
 	}
 
-	
 	for( auto dit = m_boosterRenderables.begin(); dit != m_boosterRenderables.end(); dit++ )
 	{
 		if( (*dit)->m_overallIntensity <= 0 )

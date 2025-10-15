@@ -151,13 +151,22 @@ bool EveSpriteLineSet::UpdateVisibility( const EveUpdateContext& updateContext, 
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveSpriteLineSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveSpriteLineSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
 		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
 		{
 			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+			light.boneMatrix._14 = 0.f;
+			light.boneMatrix._24 = 0.f;
+			light.boneMatrix._34 = 0.f;
+			light.boneMatrix._44 = 1.f;
+			light.boneMatrix *= parentTransform;
+		}
+		else
+		{
+			light.boneMatrix = parentTransform;
 		}
 	}
 	m_activationStrength = activationStrength;
@@ -304,7 +313,7 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 	{
 		for( auto& l : m_lights )
 		{
-			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix;
 
 			Color c = l.lightData.color;
 			float blinkScale = EveSpaceObjectAttachmentUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
@@ -334,12 +343,21 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 	}
 }
 
-void EveSpriteLineSet::AddLight( const EveSpriteLight& light )
+void EveSpriteLineSet::AddLightFromSOF( const EveSpriteLight& light )
 {
 	m_lights.push_back( light );
 }
 
-void EveSpriteLineSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+void EveSpriteLineSet::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
+}
+
+void EveSpriteLineSet::GetLights( Tr2LightManager& lightManager ) const
 {
 	LightFeatures features = LightFeatures();
 	features.parentBrightness = m_activationStrength;
@@ -348,7 +366,7 @@ void EveSpriteLineSet::GetLights( Tr2LightManager& lightManager, const Matrix& p
 	{
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
+		auto data = light.lightData.AsPerPointLightData( light.boneMatrix, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
 		float blinkScale = EveSpaceObjectAttachmentUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
 		data.radius *= blinkScale;
 		data.innerRadius = Float_16( float( data.innerRadius ) * blinkScale );

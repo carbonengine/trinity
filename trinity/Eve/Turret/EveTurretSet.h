@@ -158,6 +158,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
@@ -221,7 +222,6 @@ public:
 	float GetShotTimeVariance() const { return EVE_TURRET_RANDOM_DELAY_MAX; }
 	size_t MissQueueSize() const;
 
-	void GetLights( Tr2LightManager& lightManager ) const;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	   
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
@@ -278,7 +278,7 @@ private:
 	void InitializeFiringEffect();
 	// setup the attached ambient effect
 	void InitializeAmbientEffect();
-	IEveSpaceObjectChild* GetAmbientEffect() const;
+	IEveSpaceObjectChild* GetAmbientEffectOrGeneratedEffect() const;
 	void SetAmbientEffectControllerVariableOnInstance( int index, const char* name, float value );
 	bool IsAmbientVisible() const;
 
@@ -310,6 +310,11 @@ private:
 	void UpdateRtMesh();
 	void UpdateRtSkeleton();
 
+	EveTurretFiringFX* GetFiringEffect();
+	void SetFiringEffect( EveTurretFiringFX* firingEffect );
+
+	IEveSpaceObjectChild* GetAmbientEffect();
+	void SetAmbientEffect( IEveSpaceObjectChild* ambientEffect );
 
 	// name
 	std::string m_name;

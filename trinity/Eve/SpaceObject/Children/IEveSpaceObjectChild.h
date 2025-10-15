@@ -65,8 +65,6 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 
 	virtual void ChangeLOD( Tr2Lod lod ) = 0;
 
-	virtual void GetLights( Tr2LightManager& lightManager ) const = 0;
-
 	virtual void SetControllerVariable( const char* name, float value ) {};
 	virtual void HandleControllerEvent( const char* name ) {};
 	virtual void StartControllers() {};

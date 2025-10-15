@@ -23,11 +23,11 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	virtual void Link( Tr2Controller& controller );
-	virtual void Unlink();
-	virtual void Start( Tr2Controller& controller );
-	virtual void Stop( Tr2Controller& controller );
-	virtual void RebaseSimTime( Be::Time diff );
+	void Link( ITr2ActionController& controller ) override;
+	void Unlink() override;
+	void Start( ITr2ActionController& controller ) override;
+	void Stop( ITr2ActionController& controller ) override;
+	void RebaseSimTime( Be::Time diff ) override;
 
 
 	virtual void Update( Be::Time realTime, Be::Time simTime );
@@ -49,7 +49,7 @@ private:
 
 	Be::Time m_startTime;
 	Be::Time m_lastSimTime;
-	const Tr2Controller* m_controller;
+	const ITr2ActionController* m_controller;
 };
 
 TYPEDEF_BLUECLASS( Tr2ActionAnimateCurveSet );

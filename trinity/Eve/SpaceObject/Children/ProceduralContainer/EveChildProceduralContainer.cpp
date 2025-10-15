@@ -153,7 +153,16 @@ void EveChildProceduralContainer::ConfigureSelectedObject()
             child->SetProceduralContainerVariable( it->first.c_str(), it->second );
         }
     }
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
+	{
+		entity->UnRegister( registry );
+	}
     m_selectedObject = child;
+	if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
+	{
+		entity->Register( registry );
+	}
 }
 
 void EveChildProceduralContainer::SetProceduralContainerVariable(const char *name, float value)
@@ -311,16 +320,36 @@ void EveChildProceduralContainer::SetShaderOption( const BlueSharedString& name,
     }
 }
 
-void EveChildProceduralContainer::GetLights( Tr2LightManager& lightManager ) const
+bool EveChildProceduralContainer::OnModified( Be::Var* val )
 {
-    if( !m_display )
-    {
-        return;
-    }
+	if( IsMatch( val, m_display ) )
+	{
+		ReRegister();
+	}
+	return true;
+}
 
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->GetLights(lightManager);
+void EveChildProceduralContainer::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+
+    if( registry && m_display )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
+		{
+			entity->Register( GetComponentRegistry() );
+		}
+	}
+}
+void EveChildProceduralContainer::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+    if ( registry )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
+		{
+			entity->UnRegister( GetComponentRegistry() );
+		}
     }
 }
 

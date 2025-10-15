@@ -24,9 +24,9 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	virtual void Link( Tr2Controller& controller );
-	virtual void Unlink();
-	virtual void Start( Tr2Controller& controller );
+	void Link( ITr2ActionController& controller ) override;
+	void Unlink() override;
+	void Start( ITr2ActionController& controller ) override;
 
 	virtual bool OnModified( Be::Var* value );
 
@@ -42,7 +42,7 @@ private:
 	float m_value;
 	bool m_startControllers;
 
-	const Tr2Controller* m_controller;
+	const ITr2ActionController* m_controller;
 	Tr2ControllerExpression m_evaluator;
 };
 TYPEDEF_BLUECLASS( Tr2ActionSetExternalControllerVariable );

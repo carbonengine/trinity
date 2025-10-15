@@ -15,7 +15,8 @@ BLUE_CLASS( Tr2ActionCallback ) : public ITr2ControllerAction
 public:
 	EXPOSE_TO_BLUE();
 
-	virtual void Start( Tr2Controller& controller );
+	void Start( ITr2ActionController& controller ) override;
+
 private:
 	BlueSharedString m_callbackName;
 };

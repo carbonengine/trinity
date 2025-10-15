@@ -323,21 +323,6 @@ void EveMobile::GetDebugOptions( Tr2DebugRendererOptions& options )
 }
 
 // --------------------------------------------------------------------------------
-void EveMobile::GetLights( Tr2LightManager& lightManager ) const
-{
-	if( !m_display )
-	{
-		return;
-	}
-
-	EveSpaceObject2::GetLights( lightManager );
-	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
-	{
-		( *it )->GetLights( lightManager );
-	}
-}
-
-// --------------------------------------------------------------------------------
 // Description:
 //   TBD.
 // --------------------------------------------------------------------------------

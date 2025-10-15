@@ -347,6 +347,7 @@ void EveStretch::Start()
 void EveStretch::SetDisplay( bool display )
 {
 	m_display = display;
+	ReRegister();
 }
 
 bool EveStretch::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
@@ -562,5 +563,14 @@ void EveStretch::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if (auto tmp = dynamic_cast< Tr2AudioStretchBase* > ( m_audio.p ))
 	{
 		tmp->RenderDebugInfo( renderer );
+	}
+}
+
+void EveStretch::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
 	}
 }

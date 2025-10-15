@@ -302,14 +302,6 @@ void EveChildRef::ChangeLOD( Tr2Lod lod )
 	}
 };
 
-void EveChildRef::GetLights( Tr2LightManager& lightManager ) const
-{
-	if( m_display && m_child )
-	{
-		return m_child->GetLights( lightManager );
-	}
-};
-
 void EveChildRef::SetControllerVariable( const char* name, float value )
 {
 	if ( m_child )

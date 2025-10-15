@@ -69,7 +69,6 @@ public:
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, Matrix& parentTransform );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod );
-	void GetLights( Tr2LightManager& lightManager ) const;
 	void SetOrigin( Origin origin );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	bool IsAlwaysOn() const override;
@@ -132,6 +131,9 @@ public:
 	void SetSourceEffect( IEveSpaceObjectChildPtr sourceEffect );
 	void AddInstanceTransform( const Vector3& scale, const Quaternion& rotation, const Vector3& translation, int32_t boneIndex = -1 );
 	void UpdateInstance( const uint32_t index, const Vector3& scale, const Quaternion& rotation, const Vector3& translation );
+
+	IEveSpaceObjectChild* GetSource();
+	void SetSource( IEveSpaceObjectChild* source );
 
 protected:
 	void CreateInstances( IEveSpaceObject2* parent );

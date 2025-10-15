@@ -23,9 +23,9 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	virtual void Link( Tr2Controller& controller );
-	virtual void Unlink();
-	virtual void Start( Tr2Controller& controller );
+	void Link( ITr2ActionController& controller ) override;
+	void Unlink() override;
+	void Start( ITr2ActionController& controller ) override;
 
 	virtual bool OnModified( Be::Var* value );
 
@@ -37,7 +37,7 @@ public:
 	BlueStdResult EvaluateExpression( const char* expression, float& value ) const;
 private:
 	bool IsAttrExpressionValid( const char* attributeName ) const;
-	void LinkDestination( const Tr2Controller& controller );
+	void LinkDestination( const ITr2ActionController& controller );
 	bool HasDelayedBinding() const;
 
 	Tr2BindingPoint m_destination;
@@ -45,7 +45,7 @@ private:
 
 	Tr2ControllerExpression m_evaluator;
 
-	const Tr2Controller* m_controller;
+	const ITr2ActionController* m_controller;
 
 	bool m_delayBinding;
 };

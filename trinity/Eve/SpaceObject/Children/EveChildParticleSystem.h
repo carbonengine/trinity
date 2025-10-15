@@ -56,7 +56,6 @@ public:
 	void PlayCurveSet( const std::string& name, const std::string& rangeName ) {};
 	void StopCurveSet( const std::string& name ) {};
 	float GetCurveSetDuration( const std::string& name ) const { return 0; } 
-	void GetLights( Tr2LightManager& lightManager ) const {};
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void AddTransformModifier( IEveChildTransformModifier* modifier ) override;
 	

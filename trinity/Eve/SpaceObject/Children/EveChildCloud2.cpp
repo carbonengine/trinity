@@ -117,10 +117,36 @@ EveChildCloud2::EveChildCloud2( IRoot* lockobj ) :
 	PrepareResources();
 
 	m_depthShadowMapHandle = GlobalStore().RegisterVariable( "DepthShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
+
+	m_lights.SetNotify( this );
 }
 
 EveChildCloud2::~EveChildCloud2()
 {
+}
+
+void EveChildCloud2::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList )
+{
+	if( theList == &m_lights )
+	{
+		auto maskedEvent = event & BELIST_EVENTMASK;
+		if( ( maskedEvent == BELIST_UNLOADSTART ) || ( ( maskedEvent == BELIST_REMOVED ) && m_lights.empty() ) )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->UnRegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+		else if( ( maskedEvent == BELIST_INSERTED ) && m_lights.size() == 1 )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->RegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+	}
 }
 
 void EveChildCloud2::RegisterComponents()
@@ -128,6 +154,10 @@ void EveChildCloud2::RegisterComponents()
 	auto registry = GetComponentRegistry();
 	if( registry )
 	{
+		if( !m_lights.empty() )
+		{
+			registry->RegisterComponent<ITr2LightOwner>( this );
+		}
 		registry->RegisterComponent<ITr2VolumetricRenderable>( this );
 		if( EntityComponents::ShouldReflect( m_reflectionMode ) && m_display && m_reflectionEffect )
 		{
@@ -709,7 +739,6 @@ void EveChildCloud2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		renderer.DrawSphere( this, m_boundingSphere.center, m_boundingSphere.radius, 18, Tr2DebugRenderer::Wireframe, 0xff00ff00 );
 	}
 }
-
 
 void EveChildCloud2::GetLights( Tr2LightManager& lightManager ) const
 {

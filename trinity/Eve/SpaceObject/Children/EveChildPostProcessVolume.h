@@ -47,7 +47,6 @@ public:
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod ) {};
-	void GetLights( Tr2LightManager& lightManager ) const {};
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override;
 	bool IsAlwaysOn() const;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) {} ;

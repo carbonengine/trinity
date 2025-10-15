@@ -74,6 +74,15 @@ bool EveChildBehaviorSystem::Initialize()
 	return true;
 }
 
+bool EveChildBehaviorSystem::OnModified( Be::Var* value )
+{
+	if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
+	}
+	return true;
+}
+
 void EveChildBehaviorSystem::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList )
 {
 	if ( theList == &m_behaviorGroups )
@@ -135,6 +144,38 @@ void EveChildBehaviorSystem::OnListModified( long event, ssize_t key, ssize_t ke
 			break;
 		default:
 			break;
+		}
+	}
+	if( theList == &m_behaviorGroups && ( event & BELIST_LOADING ) == 0 )
+	{
+		if( IsInRegistry() )
+		{
+			switch( event & BELIST_EVENTMASK )
+			{
+			case BELIST_INSERTED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_REMOVED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_UNLOADSTART:
+				for( ssize_t i = 0; i < theList->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( theList->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+				break;
+			default:
+				break;
+			}
 		}
 	}
 }
@@ -643,7 +684,7 @@ void EveChildBehaviorSystem::ChangeLOD( Tr2Lod lod )
 {
 }
 
-void EveChildBehaviorSystem::GetLights( Tr2LightManager& lightManager ) const
+void EveChildBehaviorSystem::RegisterComponents()
 {
 	if( !m_display )
 	{
@@ -652,7 +693,21 @@ void EveChildBehaviorSystem::GetLights( Tr2LightManager& lightManager ) const
 
 	for( auto it = begin( m_behaviorGroups ); it != end( m_behaviorGroups ); ++it )
 	{
-		( *it )->AddLights( lightManager, m_worldTransform );
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->Register( GetComponentRegistry() );
+		}
+	}
+}
+
+void EveChildBehaviorSystem::UnRegisterComponents()
+{
+	for( auto it = begin( m_behaviorGroups ); it != end( m_behaviorGroups ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( GetComponentRegistry() );
+		}
 	}
 }
 

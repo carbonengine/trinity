@@ -22,7 +22,7 @@ Tr2ActionPlayMeshAnimation::Tr2ActionPlayMeshAnimation( IRoot* lockobj )
 {
 }
 
-void Tr2ActionPlayMeshAnimation::Link( Tr2Controller& controller )
+void Tr2ActionPlayMeshAnimation::Link( ITr2ActionController& controller )
 {
 	m_controller = &controller;
 	if( !HasDelayedBinding() )
@@ -37,7 +37,7 @@ void Tr2ActionPlayMeshAnimation::Unlink()
 	m_destination.Unlink();
 }
 
-void Tr2ActionPlayMeshAnimation::Start( Tr2Controller& controller )
+void Tr2ActionPlayMeshAnimation::Start( ITr2ActionController& controller )
 {
 	if( m_animation.empty() )
 	{
@@ -64,7 +64,7 @@ void Tr2ActionPlayMeshAnimation::Start( Tr2Controller& controller )
 	ac->PlayLayerAnimationByName( m_mask.empty() ? nullptr : m_mask.c_str(), m_animation.c_str(), m_playAction == PLAY, std::max( m_loops, 0 ), m_delay, m_speed, false );
 }
 
-void Tr2ActionPlayMeshAnimation::Stop( Tr2Controller& controller )
+void Tr2ActionPlayMeshAnimation::Stop( ITr2ActionController& controller )
 {
 	if( m_animation.empty() )
 	{
@@ -114,7 +114,7 @@ bool Tr2ActionPlayMeshAnimation::OnModified( Be::Var* value )
 	return true;
 }
 
-void Tr2ActionPlayMeshAnimation::LinkDestination( const Tr2Controller& controller )
+void Tr2ActionPlayMeshAnimation::LinkDestination( const ITr2ActionController& controller )
 {
 	if( m_destinationType == DestinationType::OWNER )
 	{

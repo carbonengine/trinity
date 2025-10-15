@@ -6,6 +6,8 @@
 
 #include "StdAfx.h"
 #include "Tr2ForceSphereVolume.h"
+#include "../Include/ITr2DebugRenderer2.h"
+
 
 Tr2ForceSphereVolume::Tr2ForceSphereVolume( IRoot* lockobj )
 	:PARENTLOCK( m_forces ),
@@ -36,7 +38,7 @@ XMVECTOR FASTCALL Tr2ForceSphereVolume::GetForce( FXMVECTOR position, FXMVECTOR 
 	XMVECTOR distance = XMVector3Length( XMVectorSubtract( position, m_position ) );
 	XMVECTOR radius = XMVectorReplicate( m_radius );
 	
-	if( XMVectorGetX( XMVectorLess( distance, radius ) ) )
+	if( XMVectorGetIntX( XMVectorLess( distance, radius ) ) )
 	{
 		for( auto it = m_forces.begin(); it != m_forces.end(); ++it )
 		{
@@ -54,4 +56,13 @@ XMVECTOR FASTCALL Tr2ForceSphereVolume::GetForce( FXMVECTOR position, FXMVECTOR 
 			);
 	}
 	return force;
+}
+
+void Tr2ForceSphereVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const
+{
+	renderer.DrawSphere( this, worldTransform, m_position, m_radius, 20, ITr2DebugRenderer2::Wireframe, 0xffaaaa00 );
+	for ( auto& force : m_forces )
+	{
+		force->RenderDebugInfo( renderer, worldTransform, aabb );
+	}
 }

@@ -22,9 +22,11 @@ BLUE_CLASS( EveChildProceduralContainer ) :
 	public EveChildTransform,
     public ITr2SoundEmitterOwner,
 	public IInitialize,
+	public INotify,
 	public IListNotify,
 	public ITr2DebugRenderable,
-	public IShaderConfigurer
+	public IShaderConfigurer,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -41,6 +43,10 @@ public:
     //////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize() override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// INotify
+	bool OnModified( Be::Var* value ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify
@@ -79,9 +85,13 @@ public:
 	void GetLocalToWorldTransform( Matrix& transform ) const override;
     void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	void ChangeLOD( Tr2Lod lod ) override;
-    void GetLights( Tr2LightManager& lightManager ) const override;
     ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
     void SetInheritProperties( const Color* colorSet ) override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
     /////////////////////////////////////////////////////////////////////////////////////
     //  EveChildTransform
@@ -92,8 +102,8 @@ public:
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
-	IEveSpaceObjectChildPtr m_selectedObject;
 protected:
+	IEveSpaceObjectChildPtr m_selectedObject;
     IEveProceduralSelectionMethodPtr m_selectionMethod;
 
 	BlueSharedString m_name;

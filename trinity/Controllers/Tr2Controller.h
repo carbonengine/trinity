@@ -18,7 +18,7 @@ BLUE_DECLARE_VECTOR( Tr2ControllerEventHandler );
 BLUE_DECLARE_INTERFACE( ITr2Updateable );
 
 BLUE_CLASS( Tr2Controller ):
-	public ITr2Controller,
+	public ITr2ActionController,
 	public IListNotify
 {
 public:
@@ -40,9 +40,11 @@ public:
 
 	void HandleEvent( const char* eventName ) override;
 
-	IRoot* GetOwner() const;
+	IRoot* GetOwner() const override;
 	Tr2ControllerFloatVariable* GetVariableByName( const char* name ) const;
+	std::optional<float> GetFloatVariableByName( const char* name ) const override;
 
+	void GetExpressionTermInfo( std::vector<Tr2ExpressionTermInfoPtr> & out ) const override;
 	const PTr2ControllerFloatVariableVector& GetVariables() const;
 	CcpParser::VariableView GetVariableView() const;
 	void* GetVariableBuffer() const;

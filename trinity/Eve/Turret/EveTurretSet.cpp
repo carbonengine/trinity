@@ -194,15 +194,9 @@ bool EveTurretSet::OnModified( Be::Var* value )
 		// new gr2 file specified -> reload!
 		InitializeGeometryResource();
 	}
-	else if( IsMatch( value, m_firingEffect ) )
+	else if( IsMatch( value, m_ambientEffectEditingMode ) )
 	{
-		// attached firing effect has changed -> relink!
-		InitializeFiringEffect();
-	}
-	else if( IsMatch( value, m_ambientEffect ) || IsMatch( value, m_ambientEffectEditingMode ) )
-	{
-		// redistribute the ambient effect across the turret locators
-		InitializeAmbientEffect();
+		SetAmbientEffect( m_ambientEffect );
 	}
 	else if( IsMatch( value, m_laserMissBehaviour ) || IsMatch( value, m_projectileMissBehaviour ) || IsMatch( value, m_impactSize ) || IsMatch( value, m_impactBehaviour ) )
 	{
@@ -226,6 +220,35 @@ void EveTurretSet::RegisterComponents()
 	if( registry && m_display )
 	{
 		registry->RegisterComponent<IEveShadowCaster>( this );
+
+		if( EveEntityPtr entity = BlueCastPtr( m_firingEffect ) )
+		{
+			entity->Register( registry );
+		}
+
+		auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
+		if( EveEntityPtr entity = BlueCastPtr( ambientEffect ) )
+		{
+			entity->Register( registry );
+		}
+	}
+}
+
+void EveTurretSet::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_firingEffect ) )
+		{
+			entity->UnRegister( registry );
+		}
+
+		auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
+		if( EveEntityPtr entity = BlueCastPtr( ambientEffect ) )
+		{
+			entity->UnRegister( registry );
+		}
 	}
 }
 
@@ -349,6 +372,11 @@ void EveTurretSet::InitializeFiringEffect()
 // --------------------------------------------------------------------------------
 void EveTurretSet::InitializeAmbientEffect()
 {
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_generatedDistributedAmbientEffect ) )
+	{
+		entity->UnRegister( registry );
+	}
 	m_generatedDistributedAmbientEffect = nullptr;
 
 	if( nullptr == m_ambientEffect )
@@ -376,7 +404,22 @@ void EveTurretSet::InitializeAmbientEffect()
 	}
 
 	// This will either return the source or the generated effect
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
+
+	if( m_ambientEffectEditingMode )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_ambientEffect ) )
+		{
+			entity->Register( registry );
+		}
+	}
+	else
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_generatedDistributedAmbientEffect ) )
+		{
+			entity->Register( registry );
+		}
+	}
 
 	switch( m_state )
 	{
@@ -397,7 +440,7 @@ bool EveTurretSet::IsAmbientVisible() const
 }
 
 
-IEveSpaceObjectChild* EveTurretSet::GetAmbientEffect() const
+IEveSpaceObjectChild* EveTurretSet::GetAmbientEffectOrGeneratedEffect() const
 {
 	if( m_ambientEffectEditingMode )
 	{
@@ -968,11 +1011,11 @@ void EveTurretSet::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 		m_firingEffect->GetStartPosition( p );
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		EveChildUpdateParams params;
-		params.isVisible = m_display;
+		params.isVisible = IsAmbientVisible();
 		params.localToWorldTransform = m_ambientOffsetMatrix * m_parentData.transform;
 		ambientEffect->UpdateSyncronous( updateContext, params );
 	}
@@ -1141,7 +1184,7 @@ void EveTurretSet::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 		}
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		EveChildUpdateParams params;
@@ -1493,7 +1536,7 @@ void EveTurretSet::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		RenderDynamicBounds();
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		if( auto debuggable = dynamic_cast<ITr2DebugRenderable*>( ambientEffect ) )
@@ -1516,7 +1559,7 @@ void EveTurretSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "TurretBounds" );
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		if( auto debuggable = dynamic_cast<ITr2DebugRenderable*>( ambientEffect ) )
@@ -1620,7 +1663,7 @@ void EveTurretSet::UpdateVisibility( const EveUpdateContext& updateContext )
 		m_firingEffect->UpdateVisibility( updateContext );
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		Tr2Lod currentLod = Tr2Lod::TR2_LOD_HIGH;
@@ -1676,7 +1719,7 @@ void EveTurretSet::GetRenderables( std::vector<ITr2Renderable*>& renderables, co
 		m_firingEffect->GetRenderables( renderables );
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect && IsAmbientVisible() )
 	{
 		ambientEffect->GetRenderables( renderables );
@@ -2183,7 +2226,7 @@ void EveTurretSet::EnterStateDeactive()
 	// finally, we can set state
 	m_state = STATE_DEACTIVE;
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->SetControllerVariable( "TurretState", float( m_state ) );
@@ -2248,7 +2291,7 @@ void EveTurretSet::EnterStateIdle()
 	// finally, we can set state
 	m_state = STATE_IDLE;
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->SetControllerVariable( "TurretState", float( m_state ) );
@@ -2311,7 +2354,7 @@ void EveTurretSet::EnterStateTargeting()
 	// finally, we can set state
 	m_state = STATE_TARGETING;
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->SetControllerVariable( "TurretState", float( m_state ) );
@@ -2456,7 +2499,7 @@ bool EveTurretSet::SetupFiringState()
 		break;
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		if( m_state == STATE_FIRING )
@@ -2519,7 +2562,7 @@ void EveTurretSet::EnterStateReloading()
 	// finally, we can set state
 	m_state = STATE_RELOADING;
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->SetControllerVariable( "TurretState", float( m_state ) );
@@ -2859,6 +2902,43 @@ void EveTurretSet::UpdateRtSkeleton()
 	}
 }
 
+EveTurretFiringFX* EveTurretSet::GetFiringEffect()
+{
+	return m_firingEffect;
+}
+
+void EveTurretSet::SetFiringEffect( EveTurretFiringFX* firingEffect )
+{
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_firingEffect ) )
+	{
+		entity->UnRegister( registry );
+	}
+	m_firingEffect = firingEffect;
+	if( EveEntityPtr entity = BlueCastPtr( m_firingEffect ) )
+	{
+		entity->Register( registry );
+	}
+	InitializeFiringEffect();
+}
+
+IEveSpaceObjectChild* EveTurretSet::GetAmbientEffect()
+{
+	return m_ambientEffect;
+}
+
+void EveTurretSet::SetAmbientEffect( IEveSpaceObjectChild* ambientEffect )
+{
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_ambientEffect ) )
+	{
+		entity->UnRegister( registry );
+	}
+	m_ambientEffect = ambientEffect;
+	InitializeAmbientEffect();
+}
+
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Make the shader accessable to the outside (const version)
@@ -3048,26 +3128,6 @@ float EveTurretSet::GetBonePitchOffset( unsigned int boneIndex ) const
 }
 
 // --------------------------------------------------------------------------------
-void EveTurretSet::GetLights( Tr2LightManager& lightManager ) const
-{
-	if( !m_display )
-	{
-		return;
-	}
-
-	if( m_firingEffect )
-	{
-		m_firingEffect->GetLights( lightManager );
-	}
-
-	auto ambientEffect = GetAmbientEffect();
-	if( ambientEffect && IsAmbientVisible() )
-	{
-		ambientEffect->GetLights( lightManager );
-	}
-}
-
-// --------------------------------------------------------------------------------
 void EveTurretSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
 	if( nullptr != m_firingEffect )
@@ -3075,7 +3135,7 @@ void EveTurretSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 		m_firingEffect->RegisterWithQuadRenderer( quadRenderer );
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->RegisterWithQuadRenderer( quadRenderer );
@@ -3095,7 +3155,7 @@ void EveTurretSet::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRen
 		m_firingEffect->AddQuadsToQuadRenderer( frustum, quadRenderer );
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect && IsAmbientVisible() )
 	{
 		ambientEffect->AddQuadsToQuadRenderer( frustum, quadRenderer );
@@ -3110,7 +3170,7 @@ void EveTurretSet::SetControllerVariable( const char* name, float value )
 		m_firingEffect->SetControllerVariable( name, value );
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->SetControllerVariable( name, value );
@@ -3124,7 +3184,7 @@ void EveTurretSet::HandleControllerEvent( const char* name )
 		m_firingEffect->HandleControllerEvent( name );
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->HandleControllerEvent( name );
@@ -3138,7 +3198,7 @@ void EveTurretSet::StartControllers()
 		m_firingEffect->StartControllers();
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->StartControllers();
@@ -3152,7 +3212,7 @@ void EveTurretSet::SetShaderOption( const BlueSharedString& name, const BlueShar
 		m_turretEffect->SetOption( name, value );
 	}
 
-	auto ambientEffect = GetAmbientEffect();
+	auto ambientEffect = GetAmbientEffectOrGeneratedEffect();
 	if( ambientEffect )
 	{
 		ambientEffect->SetShaderOption( name, value );

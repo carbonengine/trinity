@@ -24,7 +24,9 @@ BLUE_DECLARE_INTERFACE( IEveFiringEffectElement );
 BLUE_DECLARE_IVECTOR( IEveFiringEffectElement );
 
 BLUE_CLASS( PlayFX ) :
-	public IBehavior
+	public IBehavior,
+	public IListNotify,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -41,12 +43,24 @@ public:
 	int GetProcessPriority();
 
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	void GetLights( Tr2LightManager & lightManager ) const;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
+
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	void UpdateSyncronous( const EveUpdateContext& updateContext );
 	void UpdateState( bool state ) { m_stop = state; }
 	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
+
+	void OnListModified(
+		long event, // BLUELISTEVENT values
+		ssize_t key,
+		ssize_t key2,
+		IRoot* value,
+		const struct IList* theList ) override;
 
 private:
 	void CheckCount( size_t agentSize );

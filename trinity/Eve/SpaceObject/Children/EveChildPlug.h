@@ -26,6 +26,7 @@ BLUE_CLASS( EveChildPlug ) :
 	public EveChildTransform,
 	public ITr2CurveSetOwner,
 	public IInitialize,
+	public INotify,
 	public IListNotify,	
 	public IEveEffectChildrenOwner,
 	public ITr2DebugRenderable,
@@ -46,6 +47,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// INotify
+	bool OnModified( Be::Var * value ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
@@ -84,7 +89,6 @@ public:
 	float GetRangeDuration( const std::string& name, const std::string& rangeName ) const;
 
 	void ChangeLOD( Tr2Lod lod );
-	void GetLights( Tr2LightManager& lightManager ) const;
 
 	void SetControllerVariable( const char* name, float value );
 	void HandleControllerEvent( const char* name );

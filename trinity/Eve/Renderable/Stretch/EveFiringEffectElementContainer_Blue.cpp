@@ -14,6 +14,7 @@ const Be::ClassInfo* EveFiringEffectElementContainer::ExposeToBlue()
 	EXPOSURE_BEGIN( EveFiringEffectElementContainer, "" )
 		MAP_INTERFACE( EveFiringEffectElementContainer )
 		MAP_INTERFACE( IEveSpaceObject2 )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE
 		(
@@ -28,7 +29,15 @@ const Be::ClassInfo* EveFiringEffectElementContainer::ExposeToBlue()
 			"element",
 			m_element,
 			"Firing element",
-			Be::READWRITE | Be::PERSIST
+			Be::PERSISTONLY
+		)
+		
+		MAP_PROPERTY
+		( 
+			"element", 
+			GetElement, 
+			SetElement, 
+			"Firing element" 
 		)
 
 		MAP_PROPERTY

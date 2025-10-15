@@ -17,6 +17,7 @@ const Be::ClassInfo* EveTurretFiringFX::ExposeToBlue()
         MAP_INTERFACE( IInitialize )
         MAP_INTERFACE( INotify )
         MAP_INTERFACE( ITr2ControllerOwner )
+		MAP_INTERFACE( EveEntity )
 		
 		MAP_ATTRIBUTE( "name", m_name, "A name for this firing effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "Toggle rendering", Be::READWRITE )

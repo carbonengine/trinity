@@ -122,10 +122,37 @@ bool EveFiringEffectElementContainer::GetActive() const
 	return m_isActive;
 }
 
-void EveFiringEffectElementContainer::GetLights( Tr2LightManager& lightManager ) const
+void EveFiringEffectElementContainer::SetElement( IEveFiringEffectElement* element )
 {
-	if( m_element )
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_element ) )
 	{
-		m_element->GetLights( lightManager );
+		entity->UnRegister( registry );
+	}
+	m_element = element;
+	if( EveEntityPtr entity = BlueCastPtr( m_element ) )
+	{
+		entity->Register( registry );
+	}
+}
+
+IEveFiringEffectElement* EveFiringEffectElementContainer::GetElement()
+{
+	return m_element;
+}
+
+void EveFiringEffectElementContainer::RegisterComponents()
+{
+	if( EveEntityPtr entity = BlueCastPtr( m_element ) )
+	{
+		entity->Register( GetComponentRegistry() );
+	}
+}
+
+void EveFiringEffectElementContainer::UnRegisterComponents()
+{
+	if( EveEntityPtr entity = BlueCastPtr( m_element ) )
+	{
+		entity->UnRegister( GetComponentRegistry() );
 	}
 }

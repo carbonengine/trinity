@@ -49,7 +49,7 @@ Tr2ActionAnimateValue::Tr2ActionAnimateValue( IRoot* )
 {
 }
 
-void Tr2ActionAnimateValue::Link( Tr2Controller& controller )
+void Tr2ActionAnimateValue::Link( ITr2ActionController& controller )
 {
 	m_controller = &controller;
 	if( !HasDelayedBinding() )
@@ -66,7 +66,7 @@ void Tr2ActionAnimateValue::Unlink()
 	m_evaluator.Clear();
 }
 
-void Tr2ActionAnimateValue::Start( Tr2Controller& controller )
+void Tr2ActionAnimateValue::Start( ITr2ActionController& controller )
 {
 	if( HasDelayedBinding() )
 	{
@@ -80,7 +80,7 @@ void Tr2ActionAnimateValue::Start( Tr2Controller& controller )
 	controller.RegisterUpdateable( *this );
 }
 
-void Tr2ActionAnimateValue::Stop( Tr2Controller& controller )
+void Tr2ActionAnimateValue::Stop( ITr2ActionController& controller )
 {
 	controller.UnRegisterUpdateable( *this );
 }
@@ -164,16 +164,12 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2ActionAnimateValue::GetExpressionTermIn
 
 	if( m_controller )
 	{
-		auto& variables = m_controller->GetVariables();
-		for( auto it = begin( variables ); it != end( variables ); ++it )
-		{
-			result.push_back( Tr2ExpressionTermInfo::Variable( "Variables", ( *it )->GetName().c_str(), "controller variable" ) );
-		}
+		m_controller->GetExpressionTermInfo( result );
 	}
 	return result;
 }
 
-void Tr2ActionAnimateValue::LinkDestination( const Tr2Controller& controller )
+void Tr2ActionAnimateValue::LinkDestination( const ITr2ActionController& controller )
 {
 	m_destination.Link( controller.GetBindingPathRoots() );
 }
