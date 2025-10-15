@@ -7,6 +7,25 @@
 //#include "../Tr2MorphTargetAnimationDataBuffer.h"
 
 
+BLUE_DECLARE( Tr2SerializedMorphAnimation );
+
+BLUE_CLASS( Tr2SerializedMorphAnimation ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	Tr2SerializedMorphAnimation( IRoot* lockobj = NULL ) : m_weight( 0.f ) {};
+	~Tr2SerializedMorphAnimation() {};
+
+	std::string m_name;
+	float m_weight;
+};
+
+TYPEDEF_BLUECLASS( Tr2SerializedMorphAnimation );
+BLUE_DECLARE_VECTOR( Tr2SerializedMorphAnimation );
+
+
 BLUE_CLASS( Tr2Mesh ):
 	public Tr2MeshBase,
 	public IInitialize,
@@ -70,6 +89,7 @@ private:
 	Tr2LoadPrepareFence m_loadFence;
 
 	std::unordered_map<std::string, Tr2MorphTargetAnimationData> m_morphAnimations;
+	PTr2SerializedMorphAnimationVector m_serializedMorphAnimations;
 
 protected:
 	bool m_deferGeometryLoad;

@@ -4,6 +4,7 @@
 
 
 Tr2Mesh::Tr2Mesh( IRoot* lockobj ) :
+	PARENTLOCK( m_serializedMorphAnimations ),
 	m_deferGeometryLoad( false )
 {
 }
@@ -144,15 +145,45 @@ void Tr2Mesh::InitializeGeometryResource()
 
 void Tr2Mesh::InitializeMorphTargets()
 {
-	// TODO: intern, keep existing entries?
 	m_morphAnimations.clear();
 	auto names = GetMorphTargetNames();
+
 	if( names )
 	{
 		std::vector<std::string>& morphTargetNames = *names;
+
+		bool clearSerializedData = false;
+		if ( morphTargetNames.size() == m_serializedMorphAnimations.size() )
+		{
+			for( int32_t i = 0; i < morphTargetNames.size(); i++ )
+			{
+				if( morphTargetNames[i] != m_serializedMorphAnimations[i]->m_name )
+				{
+					clearSerializedData = true;
+					break;
+				}
+			}
+		}
+		else
+		{
+			clearSerializedData = true;
+		}
+		if ( clearSerializedData )
+		{
+			m_serializedMorphAnimations.Clear();
+			for( int32_t i = 0; i < morphTargetNames.size(); i++ )
+			{
+				Tr2SerializedMorphAnimationPtr serializedWeight;
+				serializedWeight.CreateInstance();
+				serializedWeight->m_name = morphTargetNames[i];
+				serializedWeight->m_weight = 0.f;
+				m_serializedMorphAnimations.Append( serializedWeight );
+			}
+		}
+		
 		for( int32_t i = 0; i < morphTargetNames.size(); i++ )
 		{
-			m_morphAnimations[morphTargetNames[i]] = Tr2MorphTargetAnimationData( i, 0.f );
+			m_morphAnimations[morphTargetNames[i]] = Tr2MorphTargetAnimationData( i, m_serializedMorphAnimations[i]->m_weight );
 		}
 	}
 }
@@ -235,6 +266,7 @@ void Tr2Mesh::SetMorphTargetWeight( const char* name, float weight )
 	if( anim != m_morphAnimations.end() )
 	{
 		anim->second.m_weight = weight;
+		m_serializedMorphAnimations[anim->second.m_index]->m_weight = weight;
 	}
 	else
 	{
