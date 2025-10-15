@@ -6,7 +6,8 @@ AudioGameObject::AudioGameObject( IRoot* lockobj ) :
 	PARENTLOCK( m_externalParameters ),
 	m_rotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_translation( 0.0f, 0.0f, 0.0f ),
-	m_mute( false )
+	m_mute( false ),
+	m_display( true )
 {
 	Initialize();
 }

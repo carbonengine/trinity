@@ -46,7 +46,7 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 		
 		MAP_ATTRIBUTE
 		(
-			"ballPosition",
+			"translationCurve",
 			m_ballPosition,
 			"Function for animated position updates",
 			Be::READWRITE | Be::PERSIST
@@ -54,10 +54,18 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 		
 		MAP_ATTRIBUTE
 		(
-			"ballRotation",
+			"rotationCurve",
 			m_ballRotation,
 			"Function for animated rotation updates",
 			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"display",
+			m_display,
+			"",
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE

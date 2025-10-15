@@ -94,6 +94,7 @@ protected:
 	
 	ITriVectorFunctionPtr m_ballPosition;
 	ITriQuaternionFunctionPtr m_ballRotation;
+	bool m_display;
 
 	Matrix m_worldTransform;
 
