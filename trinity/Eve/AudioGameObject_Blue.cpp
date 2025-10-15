@@ -90,5 +90,7 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP( "PlayAudioEvent", PlayAudioEvent, "Plays an audio event on this object's emitter" )
 
+	MAP_METHOD_AND_WRAP( "__init__", py__init__, "Initialize the audio emitter after construction/deserialization" )
+
     EXPOSURE_END();
 }

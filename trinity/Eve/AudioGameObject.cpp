@@ -44,8 +44,13 @@ bool AudioGameObject::Initialize()
 
 		return true;
 	}
-	
+
 	return false;
+}
+
+void AudioGameObject::py__init__()
+{
+	Initialize();
 }
 
 void AudioGameObject::UpdateSyncronous( const EveUpdateContext& updateContext )

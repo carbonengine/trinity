@@ -40,8 +40,10 @@ public:
     EXPOSE_TO_BLUE();
 
 	AudioGameObject( IRoot* lockobj = NULL );
-	
+
 	bool Initialize();
+
+	void py__init__();
 	
 	virtual bool OnModified( Be::Var* val );
 
