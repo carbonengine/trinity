@@ -7,9 +7,7 @@ AudioGameObject::AudioGameObject( IRoot* lockobj ) :
 	m_rotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_mute( false )
-{
-	Initialize();
-}
+{}
 
 bool AudioGameObject::Initialize()
 {
@@ -43,8 +41,13 @@ bool AudioGameObject::Initialize()
 
 		return true;
 	}
-	
+
 	return false;
+}
+
+void AudioGameObject::py__init__()
+{
+	Initialize();
 }
 
 void AudioGameObject::UpdateSyncronous( const EveUpdateContext& updateContext )
