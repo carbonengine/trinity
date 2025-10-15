@@ -3829,8 +3829,11 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 
 	auto oldReadOnlyDepth = renderContext.GetReadOnlyDepth();
 	renderContext.SetReadOnlyDepth( true );
+	renderContext.m_esm.PushRenderTarget( 1 );
+	renderContext.m_esm.SetRenderTarget( 1, {} );
 	RenderTransparentBatches( m_secondaryBatches, renderContext );
 	renderContext.SetReadOnlyDepth( oldReadOnlyDepth );
+	renderContext.m_esm.PopRenderTarget( 1 );
 	ClearBatches( m_secondaryBatches );
 
 	// Put view/projection back to normal
