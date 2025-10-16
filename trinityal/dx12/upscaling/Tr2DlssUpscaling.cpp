@@ -20,21 +20,6 @@ extern uint32_t g_streamlineAppID;
 
 CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
-namespace DlssUtils
-{
-	sl::Resource GenerateTextureResource( Tr2TextureAL* texture, std::string info )
-	{
-		if( texture && texture->IsValid() )
-		{
-			auto res = texture->TrinityALImpl_GetObject()->GetResourceDx12();
-			return { sl::ResourceType::eTex2d, texture->TrinityALImpl_GetObject()->GetResourceDx12(), nullptr, nullptr, (uint32_t)texture->TrinityALImpl_GetObject()->GetResourceState() };
-		}
-
-		return { sl::ResourceType::eTex2d, nullptr, nullptr, nullptr, 0 };
-	}
-
-}
-
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter ),
 	m_adapter( adapter ),

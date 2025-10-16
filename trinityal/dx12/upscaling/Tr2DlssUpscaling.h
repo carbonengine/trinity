@@ -16,16 +16,6 @@
 #include <sl_reflex.h>
 #include <sl_pcl.h>
 
-
-namespace DlssUtils
-{
-	void Log( sl::LogType type, const char* msg );
-	sl::Resource GenerateTextureResource( Tr2TextureAL* texture );
-	const char* GetPluginName( sl::Feature feature );
-	sl::float4x4 AsFloat4x4( float f[16] );
-
-}
-
 class Tr2DlssUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
