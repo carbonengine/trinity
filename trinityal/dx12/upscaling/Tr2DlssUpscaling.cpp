@@ -22,15 +22,17 @@ CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
 namespace DlssUtils
 {
-	sl::Resource GenerateTextureResource( Tr2TextureAL* texture )
+	sl::Resource GenerateTextureResource( Tr2TextureAL* texture, std::string info )
 	{
 		if( texture && texture->IsValid() )
 		{
+			auto res = texture->TrinityALImpl_GetObject()->GetResourceDx12();
 			return { sl::ResourceType::eTex2d, texture->TrinityALImpl_GetObject()->GetResourceDx12(), nullptr, nullptr, (uint32_t)texture->TrinityALImpl_GetObject()->GetResourceState() };
 		}
 
 		return { sl::ResourceType::eTex2d, nullptr, nullptr, nullptr, 0 };
 	}
+
 }
 
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
@@ -223,14 +225,13 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	sl::FrameToken* frameToken ) :
 	Tr2UpscalingContextAL( setting, frameGeneration, params ),
 	m_dlssMode( sl::DLSSMode::eOff ),
-	m_viewHandle( sl::ViewportHandle( 0 ) ), // BTW this will cause horribleness if we try to enable dlss on more than 1 viewport 
+	m_viewHandle( sl::ViewportHandle( contextNumber ) ), 
 	m_frameToken( frameToken ),
 	m_setup( false ),
 	m_vramUsage( 0 ),
 	m_minWidthHeight( 0 ),
 	m_actualFrames( 0 )
 {
-
 	m_dlssMode = sl::DLSSMode::eOff;
 	switch( m_setting )
 	{
@@ -318,30 +319,24 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 		return;
 	}
 
-	m_nisOptions.hdrMode = sl::NISHDR::eLinear;
-	m_nisOptions.mode = sl::NISMode::eScaler;
-	m_nisOptions.sharpness = 0.1f;
-
-	if( SL_FAILED( res, Tr2StreamlineAL::SetNISOptions( m_viewHandle, m_nisOptions ) ) )
-	{
-		CCP_LOGERR( "Setting NIS Options failed with (%d)", res );
-		return;
-	}
-
-	auto dims = Tr2BitmapDimensions( m_displayWidth, m_displayHeight, 1, m_params.sourceFormat );
-	m_dlssOutput.Create( dims, Tr2GpuUsage::UNORDERED_ACCESS, m_params.renderContext.GetPrimaryRenderContext() );
-
 	CCP_LOGNOTICE( "DLSS Options set successfully" );
 	m_setup = true;
 }
 
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
+	m_hudlessTexture.SetTexture( nullptr );
+	ReleaseResourceReferences();
+	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
+
 	m_params.renderContext.FlushAndSyncDx12();
 }
 
 void Tr2DlssUpscalingContext::SetupForReuse()
 {
+	m_hudlessTexture.SetTexture( nullptr );
+	ReleaseResourceReferences();
+	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
 }
 
 sl::Result Tr2DlssUpscalingContext::UpdateDlssG()
@@ -380,7 +375,10 @@ sl::Result Tr2DlssUpscalingContext::UpdateDlssG()
 
 bool Tr2DlssUpscalingContext::HasSharpening() const
 {
-	return true;
+	// nvidia has their own sharpening which is probably faster,
+	// but their FreeResources (for nis) is not working properly,
+	// will reimplement when the bug is fixed: https://github.com/NVIDIA-RTX/Streamline/issues/85#issuecomment-3255500539
+	return false;
 }
 
 void Tr2DlssUpscalingContext::UpdateJitter()
@@ -399,48 +397,27 @@ uint32_t Tr2DlssUpscalingContext::GetDispatchRequirements() const
 	return Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPAQUE_ONLY | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE | Tr2UpscalingAL::DispatchRequirements::VELOCITY;
 }
 
-sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+sl::Result Tr2DlssUpscalingContext::EvaluateDLSS( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
-	auto inputResource = DlssUtils::GenerateTextureResource( dispatchParameters.input );
-	auto outputResource = DlssUtils::GenerateTextureResource( &m_dlssOutput );
-	auto depthResource = DlssUtils::GenerateTextureResource( dispatchParameters.depth );
-	auto velocityResource = DlssUtils::GenerateTextureResource( dispatchParameters.velocity );
-	auto exposureResource = DlssUtils::GenerateTextureResource( dispatchParameters.exposure );
-	auto opaqueOnlyResource = DlssUtils::GenerateTextureResource( dispatchParameters.opaqueOnly );
+	auto& renderContext = m_params.renderContext;
 
-	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
-	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
-	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
-	sl::ResourceTag depthTag = sl::ResourceTag{ &depthResource, sl::kBufferTypeDepth, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
-	sl::ResourceTag mvecTag = sl::ResourceTag{ &velocityResource, sl::kBufferTypeMotionVectors, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
-	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	auto inputResource = sl::Resource{ sl::ResourceType::eTex2d, m_input.texture, m_input.state };
+	auto outputResource = sl::Resource{ sl::ResourceType::eTex2d, m_output.texture, m_output.state };
+	auto depthResource = sl::Resource{ sl::ResourceType::eTex2d, m_depth.texture, m_depth.state };
+	auto velocityResource = sl::Resource{ sl::ResourceType::eTex2d, m_velocity.texture, m_velocity.state };
+	auto exposureResource = sl::Resource{ sl::ResourceType::eTex2d, m_exposure.texture, m_exposure.state };
+	auto opaqueOnlyResource = sl::Resource{ sl::ResourceType::eTex2d, m_opaque.texture, m_opaque.state };
+
+	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
+	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
+	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
+	sl::ResourceTag depthTag = sl::ResourceTag{ &depthResource, sl::kBufferTypeDepth, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
+	sl::ResourceTag mvecTag = sl::ResourceTag{ &velocityResource, sl::kBufferTypeMotionVectors, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
+	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
 	
-	sl::ResourceTag resources[] = { colorInTag, opaqueColorInTag, colorOutTag, depthTag, mvecTag, exposureTag };
+	const sl::BaseStructure* resources[] = { &m_viewHandle, &colorInTag, &opaqueColorInTag, &colorOutTag, &depthTag, &mvecTag, &exposureTag };
 
-	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, resources, 6 ) ) )
-	{
-		CCP_LOGERR( "DLSS Failed to tag resources (%d)", res );
-		return res;
-	}
-	return sl::Result::eOk;
-}
-
-sl::Result Tr2DlssUpscalingContext::ReadyNISResources( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
-{
-	auto inputResource = DlssUtils::GenerateTextureResource( &m_dlssOutput );
-	auto outputResource = DlssUtils::GenerateTextureResource( dispatchParameters.output );
-
-	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
-	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilPresent,  };
-
-	sl::ResourceTag resources[] = { colorInTag, colorOutTag };
-
-	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, resources, 2 ) ) )
-	{
-		CCP_LOGERR( "NIS Failed to tag resources (%d)", res );
-		return res;
-	}
-	return sl::Result::eOk;
+	return Tr2StreamlineAL::EvaluateFeature( renderContext, sl::kFeatureDLSS, *m_frameToken, resources, _countof( resources ) );
 }
 
 void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
@@ -451,6 +428,7 @@ void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParame
 	m_commonConstants.cameraFOV = dispatchParameters.fieldOfView;
 	m_commonConstants.cameraMotionIncluded = sl::eTrue;
 	m_commonConstants.cameraNear = dispatchParameters.frontClip;
+	m_commonConstants.cameraPinholeOffset = sl::float2( 0, 0 );
 
 	m_commonConstants.cameraFwd = sl::float3( dispatchParameters.cameraForward[0], dispatchParameters.cameraForward[1], dispatchParameters.cameraForward[2] );
 	m_commonConstants.cameraPos = sl::float3( dispatchParameters.cameraPos[0], dispatchParameters.cameraPos[1], dispatchParameters.cameraPos[2] );
@@ -468,14 +446,12 @@ void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParame
 	m_commonConstants.mvecScale = sl::float2( 1, 1 );
 	m_commonConstants.orthographicProjection = sl::eFalse;
 	m_commonConstants.prevClipToClip = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.prevClipToClip );
-	m_commonConstants.reset = m_reset ? sl::eTrue : sl::eFalse;
-
+	m_commonConstants.reset = dispatchParameters.reset ? sl::eTrue : sl::eFalse;
 
 	if( SL_FAILED( result, Tr2StreamlineAL::SetConstants( m_commonConstants, *m_frameToken, m_viewHandle ) ) )
 	{
 		CCP_LOGERR( "Setting Nvidia Streamline common constants failed (%d)", result );
 	}
-	m_reset = false;
 }
 
 Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
@@ -494,31 +470,16 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	renderContext.FlushBarriersDx12();
 
 	SetCommonConstants( dispatchParameters );
-
-	const sl::BaseStructure* handle[] = { &m_viewHandle };
+	AddResourceReferences( dispatchParameters );
 
 	if( m_frameGeneration )
 	{
 		UpdateDlssG();
 	}
 
-	if( SL_FAILED( res, ReadyDLSSResources( dispatchParameters ) ) )
+	if( SL_FAILED( result, EvaluateDLSS( dispatchParameters ) ) )
 	{
-		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
-	}
-	if( SL_FAILED( result, Tr2StreamlineAL::EvaluateFeature( renderContext, sl::kFeatureDLSS, *m_frameToken, handle, _countof( handle ) ) ) )
-	{
-		CCP_LOGERR( "Failed to Dispatch DLSS (%d)", result );
-	}
-
-	
-	if( SL_FAILED( res, ReadyNISResources( dispatchParameters ) ) )
-	{
-		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
-	}
-	if( SL_FAILED( result, Tr2StreamlineAL::EvaluateFeature( renderContext, sl::kFeatureNIS, *m_frameToken, handle, _countof( handle ) ) ) )
-	{
-		CCP_LOGERR( "Failed to Dispatch NIS (%d)", result );
+		CCP_LOGERR( "DLSS Failed to dispatch DLSS (%d) - %s", result, Tr2StreamlineAL::GetSlResultMessage( result ) );
 	}
 
 	// the descriptor cache is dirty, mark it so
@@ -535,8 +496,14 @@ void Tr2DlssUpscalingContext::SetFrameToken( sl::FrameToken* token )
 
 void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 {
-	auto resource = DlssUtils::GenerateTextureResource( texture );
-	sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eValidUntilPresent, nullptr };
+	if( !m_frameGeneration )
+	{
+		return;
+	}
+	m_hudlessTexture.SetTexture( texture );
+	sl::Resource resource = { sl::ResourceType::eTex2d, m_hudlessTexture.texture, nullptr, nullptr, m_hudlessTexture.state };
+
+	sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eOnlyValidNow, nullptr };
 
 	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, &tag, 1 ) ) )
 	{
@@ -544,6 +511,24 @@ void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 	}
 }
 
+void Tr2DlssUpscalingContext::ReleaseResourceReferences()
+{ 
+	m_output.SetTexture( nullptr );
+	m_input.SetTexture( nullptr );
+	m_depth.SetTexture( nullptr );
+	m_opaque.SetTexture( nullptr );
+	m_velocity.SetTexture( nullptr );
+	m_exposure.SetTexture( nullptr );
+}
 
+void Tr2DlssUpscalingContext::AddResourceReferences( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
+{
+	m_input.SetTexture( dispatchParameters.input );
+	m_output.SetTexture( dispatchParameters.output );
+	m_depth.SetTexture( dispatchParameters.depth );
+	m_opaque.SetTexture( dispatchParameters.opaqueOnly );
+	m_velocity.SetTexture( dispatchParameters.velocity );
+	m_exposure.SetTexture( dispatchParameters.exposure );
+}
 
 #endif

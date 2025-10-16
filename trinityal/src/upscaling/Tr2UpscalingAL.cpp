@@ -280,7 +280,6 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( Tr2UpscalingAL::Setting setting, b
 	m_renderWidth( 0 ),
 	m_renderHeight( 0 ),
 	m_upscaling( 0 ),
-	m_reset( true ),
 	m_jitterIndex( 0 ),
 	m_jitterX( 0.0f ),
 	m_jitterY( 0.0f ),
@@ -356,11 +355,6 @@ float Tr2UpscalingContextAL::GetMipLevelBias( bool temporal ) const
 float Tr2UpscalingContextAL::GetUpscalingAmount() const
 {
 	return m_upscaling;
-}
-
-void Tr2UpscalingContextAL::Reset()
-{
-	m_reset = true;
 }
 
 bool Tr2UpscalingContextAL::AreDispatchParametersValid( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) const

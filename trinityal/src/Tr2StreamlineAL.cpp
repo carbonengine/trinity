@@ -42,6 +42,7 @@ namespace Tr2StreamlineAL
 
 		// shutdown
 		PFun_slShutdown* m_slShutdown;
+		PFun_slFreeResources* m_slFreeResources;
 
 		//wrapping
 		PFun_slSetD3DDevice* m_slSetD3DDevice;
@@ -287,6 +288,7 @@ namespace Tr2StreamlineAL
 		{
 			INITIALIZE_FUNCTION( slInit );
 			INITIALIZE_FUNCTION( slShutdown );
+			INITIALIZE_FUNCTION( slFreeResources );
 
 			INITIALIZE_FUNCTION( slSetD3DDevice );
 			INITIALIZE_FUNCTION( slUpgradeInterface );
@@ -325,7 +327,6 @@ namespace Tr2StreamlineAL
 			std::vector<sl::Feature> features;
 
 			features.push_back( sl::kFeatureDLSS ); // dlss module
-			features.push_back( sl::kFeatureNIS ); // image sharpening module
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 			features.push_back( sl::kFeatureDLSS_G ); // frame generation is only available on dx12
@@ -456,13 +457,10 @@ namespace Tr2StreamlineAL
 
 		bool dlssSupported = true;
 		dlssSupported &= CheckFeature( info, sl::kFeatureDLSS );
-		dlssSupported &= CheckFeature( info, sl::kFeatureNIS );
 		if (dlssSupported)
 		{
 			INITIALIZE_FEATURE_FUNCTION( sl::kFeatureDLSS, slDLSSGetOptimalSettings );
 			INITIALIZE_FEATURE_FUNCTION( sl::kFeatureDLSS, slDLSSSetOptions );
-
-			INITIALIZE_FEATURE_FUNCTION( sl::kFeatureNIS, slNISSetOptions );
 			STREAMLINE_DLSS_SUPPORTED = true;
 		}
 
@@ -483,7 +481,6 @@ namespace Tr2StreamlineAL
 			STREAMLINE_FRAME_GENERATION_SUPPORTED = true;
 		}
 #endif
-
 
 		return result;
 	}
@@ -612,7 +609,14 @@ namespace Tr2StreamlineAL
 		return STREAMLINE_FRAME_GENERATION_SUPPORTED;
 	}
 #endif
-
+	
+	void FreeResources( sl::Feature feature, const sl::ViewportHandle& viewport )
+	{
+		if( SL_FAILED(res, FUNCTIONS.m_slFreeResources(feature, viewport) ) )
+		{
+			CCP_LOGERR( "Tr2StreamlineAL::FreeResources failed to free resources for %s", GetPluginName( feature ) );
+		}
+	}
 
 }
 #endif
