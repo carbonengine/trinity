@@ -393,12 +393,12 @@ sl::Result Tr2DlssUpscalingContext::EvaluateDLSS( Tr2UpscalingAL::DispatchParame
 	auto exposureResource = sl::Resource{ sl::ResourceType::eTex2d, m_exposure.texture, m_exposure.state };
 	auto opaqueOnlyResource = sl::Resource{ sl::ResourceType::eTex2d, m_opaque.texture, m_opaque.state };
 
-	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
-	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
-	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
-	sl::ResourceTag depthTag = sl::ResourceTag{ &depthResource, sl::kBufferTypeDepth, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
-	sl::ResourceTag mvecTag = sl::ResourceTag{ &velocityResource, sl::kBufferTypeMotionVectors, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
-	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilEvaluate, nullptr };
+	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilEvaluate };
+	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilEvaluate };
+	sl::ResourceTag colorOutTag = sl::ResourceTag{ &outputResource, sl::kBufferTypeScalingOutputColor, sl::ResourceLifecycle::eValidUntilEvaluate };
+	sl::ResourceTag depthTag = sl::ResourceTag{ &depthResource, sl::kBufferTypeDepth, sl::ResourceLifecycle::eValidUntilEvaluate };
+	sl::ResourceTag mvecTag = sl::ResourceTag{ &velocityResource, sl::kBufferTypeMotionVectors, sl::ResourceLifecycle::eValidUntilEvaluate };
+	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilEvaluate };
 	
 	const sl::BaseStructure* resources[] = { &m_viewHandle, &colorInTag, &opaqueColorInTag, &colorOutTag, &depthTag, &mvecTag, &exposureTag };
 
@@ -486,9 +486,9 @@ void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 		return;
 	}
 	m_hudlessTexture.SetTexture( texture );
-	sl::Resource resource = { sl::ResourceType::eTex2d, m_hudlessTexture.texture, nullptr, nullptr, m_hudlessTexture.state };
+	sl::Resource resource = { sl::ResourceType::eTex2d, m_hudlessTexture.texture, m_hudlessTexture.state };
 
-	sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eOnlyValidNow, nullptr };
+	sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eOnlyValidNow };
 
 	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, &tag, 1 ) ) )
 	{
