@@ -64,8 +64,8 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 		(
 			"display",
 			m_display,
-			"",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
+			"Not really used for audio objects, but here for consistency with the EveSpaceObject interface",
+			Be::READWRITE
 		)
 
 		MAP_ATTRIBUTE
