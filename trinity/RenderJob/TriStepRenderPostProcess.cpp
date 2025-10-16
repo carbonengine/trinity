@@ -1494,7 +1494,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 		m_dynamicExposureToTextureShader->SetParameter( BlueSharedString( "ExposureBuffer" ), m_exposure );
 		m_dynamicExposureToTextureShader->SetParameter( BlueSharedString( "ExposureTexture" ), m_exposureTexture );
 		Tr2Renderer::RunComputeShader( m_dynamicExposureToTextureShader, 1, 1, 1, renderContext );
-		dispatchParameters.exposure = m_exposureTexture ? m_exposureTexture->GetTexture() : nullptr;
+		dispatchParameters.exposure = m_exposureTexture->GetTexture();
 	}
 
 	if( dispatchRequirements & Tr2UpscalingAL::DispatchRequirements::REACTIVE )
@@ -1542,6 +1542,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.frameTimeDelta = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_lastFrameTime ) * 1000.0f;
 	dispatchParameters.preExposure = 0.4f;
 	dispatchParameters.currentFrameIndex = Tr2Renderer::GetCurrentFrameCounter();
+	dispatchParameters.reset = m_sceneDirty;
 
 	memcpy( dispatchParameters.cameraPos, &Tr2Renderer::GetViewPosition(), 3 * sizeof( float ) );
 	memcpy( dispatchParameters.cameraForward, &view.GetZ(), 3 * sizeof( float ) );
