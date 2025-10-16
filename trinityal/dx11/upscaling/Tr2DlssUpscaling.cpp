@@ -343,13 +343,12 @@ void Tr2DlssUpscalingContext::SetCommonConstants( Tr2UpscalingAL::DispatchParame
 	m_commonConstants.prevClipToClip = Tr2StreamlineAL::F16AsFloat4x4( dispatchParameters.prevClipToClip );
 	// unused things
 	m_commonConstants.cameraPinholeOffset = sl::float2( 0, 0 );
-	m_commonConstants.reset = m_reset ? sl::eTrue : sl::eFalse;
+	m_commonConstants.reset = dispatchParameters.reset ? sl::eTrue : sl::eFalse;
 
 	if( SL_FAILED( result, Tr2StreamlineAL::SetConstants( m_commonConstants, *m_frameToken, m_viewHandle ) ) )
 	{
 		CCP_LOGERR( "Setting Nvidia Streamline common constants failed (%d)", result );
 	}
-	m_reset = false;
 }
 
 Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
