@@ -138,7 +138,6 @@ private:
 	ResourceReference m_exposure;
 	ResourceReference m_input;
 	ResourceReference m_output;
-	ResourceReference m_nisInput;
 
 	friend class Tr2DlssUpscalingTechnique;
 };
