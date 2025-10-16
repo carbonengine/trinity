@@ -556,6 +556,9 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	if( upscalingInfo.temporal )
 	{
+		// need to set the hudless texture as it is needed for frame generation (and needs to be set before the upscaling call)
+		upscalingContext->SetHudLessTexture( output->GetTexture() );
+
 		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
 		// upscale the temp textures so everything hence forth is correct
 		uint32_t w, h;
@@ -661,11 +664,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	renderContext.m_esm.PopDepthStencilBuffer();
 	renderContext.m_esm.PopRenderTarget();
-
-	if( upscalingContext ) 
-	{
-		upscalingContext->SetHudLessTexture( output->GetTexture() );
-	}
 
 	m_sceneDirty = false;
 	return RS_OK;
