@@ -501,6 +501,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	}
 	
 	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContextID );
+	auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
 
 	auto upscalingEnabled = upscalingInfo.technique != Tr2UpscalingAL::NONE;
 	Tr2PostProcessRenderInfo::Texture output;
@@ -555,9 +556,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	if( upscalingInfo.temporal )
 	{
-		auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
-		upscalingContext->SetHudLessTexture( output->GetTexture() );
-
 		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
 		// upscale the temp textures so everything hence forth is correct
 		uint32_t w, h;
@@ -622,7 +620,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			DrawInto( *temp, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 			
 			auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
-			
+						
 			output = RenderUpscaling( temp, renderContext, upscalingContext, dynamicExposure );
 			
 			// upscale the temp textures so everything hence forth is correct
@@ -650,8 +648,10 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	}
 	else
 	{
-		Tr2Renderer::DrawTexture( renderContext, m_tonemappingEffect, *output, Vector2( 0, 0 ), Vector2( 1, 1 ) );
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
+		DrawInto( *output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 		output = RenderSharpening( output, renderContext );
+		Tr2Renderer::DrawTexture( renderContext, *output );
 	}
 
 	if( ProcessSignalLoss( signalLoss ) )
@@ -663,7 +663,12 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	renderContext.m_esm.PopDepthStencilBuffer();
 	renderContext.m_esm.PopRenderTarget();
-	
+
+	if( upscalingContext ) 
+	{
+		upscalingContext->SetHudLessTexture( output->GetTexture() );
+	}
+
 	m_sceneDirty = false;
 	return RS_OK;
 }
