@@ -8,9 +8,7 @@ AudioGameObject::AudioGameObject( IRoot* lockobj ) :
 	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_mute( false ),
 	m_display( true )
-{
-	Initialize();
-}
+{}
 
 bool AudioGameObject::Initialize()
 {
