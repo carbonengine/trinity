@@ -20,6 +20,22 @@ extern uint32_t g_streamlineAppID;
 
 CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
+namespace DlssUtils
+{
+sl::Resource GenerateTextureResource( Tr2TextureAL* texture )
+{
+	sl::Resource resource;
+	if( texture && texture->IsValid() )
+	{
+		auto trinityAlImpObject = texture->TrinityALImpl_GetObject();
+		return { sl::ResourceType::eTex2d, trinityAlImpObject->GetResourceDx12(), (uint32_t)trinityAlImpObject->GetResourceState() };
+	}
+
+	return sl::Resource{ sl::ResourceType::eTex2d, nullptr };
+}
+
+}
+
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter ),
 	m_adapter( adapter ),
@@ -310,8 +326,6 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 {
-	m_hudlessTexture.SetTexture( nullptr );
-	ReleaseResourceReferences();
 	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
 
 	m_params.renderContext.FlushAndSyncDx12();
@@ -319,8 +333,6 @@ Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
 
 void Tr2DlssUpscalingContext::SetupForReuse()
 {
-	m_hudlessTexture.SetTexture( nullptr );
-	ReleaseResourceReferences();
 	Tr2StreamlineAL::FreeResources( sl::kFeatureDLSS, m_viewHandle );
 }
 
@@ -386,12 +398,12 @@ sl::Result Tr2DlssUpscalingContext::EvaluateDLSS( Tr2UpscalingAL::DispatchParame
 {
 	auto& renderContext = m_params.renderContext;
 
-	auto inputResource = sl::Resource{ sl::ResourceType::eTex2d, m_input.texture, m_input.state };
-	auto outputResource = sl::Resource{ sl::ResourceType::eTex2d, m_output.texture, m_output.state };
-	auto depthResource = sl::Resource{ sl::ResourceType::eTex2d, m_depth.texture, m_depth.state };
-	auto velocityResource = sl::Resource{ sl::ResourceType::eTex2d, m_velocity.texture, m_velocity.state };
-	auto exposureResource = sl::Resource{ sl::ResourceType::eTex2d, m_exposure.texture, m_exposure.state };
-	auto opaqueOnlyResource = sl::Resource{ sl::ResourceType::eTex2d, m_opaque.texture, m_opaque.state };
+	auto inputResource = DlssUtils::GenerateTextureResource( dispatchParameters.input );
+	auto outputResource = DlssUtils::GenerateTextureResource( dispatchParameters.output );
+	auto depthResource = DlssUtils::GenerateTextureResource( dispatchParameters.depth );
+	auto velocityResource = DlssUtils::GenerateTextureResource( dispatchParameters.velocity ); 
+	auto exposureResource = DlssUtils::GenerateTextureResource( dispatchParameters.exposure ); 
+	auto opaqueOnlyResource = DlssUtils::GenerateTextureResource( dispatchParameters.opaqueOnly );
 
 	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilEvaluate };
 	sl::ResourceTag colorInTag = sl::ResourceTag{ &inputResource, sl::kBufferTypeScalingInputColor, sl::ResourceLifecycle::eValidUntilEvaluate };
@@ -455,7 +467,6 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	renderContext.FlushBarriersDx12();
 
 	SetCommonConstants( dispatchParameters );
-	AddResourceReferences( dispatchParameters );
 
 	if( m_frameGeneration )
 	{
@@ -485,35 +496,13 @@ void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
 	{
 		return;
 	}
-	m_hudlessTexture.SetTexture( texture );
-	sl::Resource resource = { sl::ResourceType::eTex2d, m_hudlessTexture.texture, m_hudlessTexture.state };
-
+	sl::Resource resource = DlssUtils::GenerateTextureResource( texture );
 	sl::ResourceTag tag = sl::ResourceTag{ &resource, sl::kBufferTypeHUDLessColor, sl::ResourceLifecycle::eOnlyValidNow };
 
 	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, &tag, 1 ) ) )
 	{
 		CCP_LOGERR( "Failed to tag HudLess texture (%d)", res );
 	}
-}
-
-void Tr2DlssUpscalingContext::ReleaseResourceReferences()
-{ 
-	m_output.SetTexture( nullptr );
-	m_input.SetTexture( nullptr );
-	m_depth.SetTexture( nullptr );
-	m_opaque.SetTexture( nullptr );
-	m_velocity.SetTexture( nullptr );
-	m_exposure.SetTexture( nullptr );
-}
-
-void Tr2DlssUpscalingContext::AddResourceReferences( Tr2UpscalingAL::DispatchParameters& dispatchParameters )
-{
-	m_input.SetTexture( dispatchParameters.input );
-	m_output.SetTexture( dispatchParameters.output );
-	m_depth.SetTexture( dispatchParameters.depth );
-	m_opaque.SetTexture( dispatchParameters.opaqueOnly );
-	m_velocity.SetTexture( dispatchParameters.velocity );
-	m_exposure.SetTexture( dispatchParameters.exposure );
 }
 
 #endif
