@@ -318,8 +318,6 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
         m_temporalScaler->device = device;
         
         s_queue.Add( m_temporalScaler );
-        
-        m_reset = true;
     }
 }
 
@@ -390,6 +388,8 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2UpscalingAL::Dis
         {
             return Tr2UpscalingAL::Result::INCORRECT_INPUT;
         }
+
+        bool reset = dispatchParameters.reset;
         
         auto& renderContext = m_params.renderContext;
 
