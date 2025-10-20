@@ -540,7 +540,7 @@ void EvePlaneSet::AddLightFromSOF( const EvePlaneLight& light )
 void EvePlaneSet::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry )
+	if( registry && !m_lights.empty() )
 	{
 		registry->RegisterComponent<ITr2LightOwner>( this );
 	}

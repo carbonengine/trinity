@@ -533,7 +533,7 @@ void EveSpotlightSet::AddLightFromSOF( const EveSpotlightLight& light )
 void EveSpotlightSet::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry )
+	if( registry && !m_lights.empty() )
 	{
 		registry->RegisterComponent<ITr2LightOwner>( this );
 	}

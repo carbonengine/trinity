@@ -15,6 +15,7 @@ BLUE_DECLARE( TriFloat );
 
 class EveStretch:
 	public IEveFiringEffectElement,
+	public INotify,
 	public IEveTransform,
 	public IEveSpaceObject2,
 	public ITr2DebugRenderable,
@@ -50,6 +51,10 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
 	virtual void GetLights( Tr2LightManager& lightManager ) const override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// INotify
+	bool OnModified( Be::Var* value ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity

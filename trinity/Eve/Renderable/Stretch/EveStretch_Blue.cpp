@@ -9,11 +9,13 @@ const Be::ClassInfo* EveStretch::ExposeToBlue()
 {
     EXPOSURE_BEGIN( EveStretch, "" )
         MAP_INTERFACE( EveStretch )
+		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IEveTransform )
 		MAP_INTERFACE( IEveSpaceObject2 )
 		MAP_INTERFACE( IEveFiringEffectElement )
 		MAP_INTERFACE( ITr2DebugRenderable )
 		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE
 		(
@@ -30,7 +32,7 @@ const Be::ClassInfo* EveStretch::ExposeToBlue()
 			"If set, this transform hierarchy is displayed.\n"
 			"Note that turning off display does not automatically turn\n"
 			"off update.",
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
 		MAP_METHOD_AND_WRAP
