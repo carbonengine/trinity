@@ -40,8 +40,10 @@ public:
     EXPOSE_TO_BLUE();
 
 	AudioGameObject( IRoot* lockobj = NULL );
-	
+
 	bool Initialize();
+
+	void py__init__();
 	
 	virtual bool OnModified( Be::Var* val );
 
@@ -94,6 +96,7 @@ protected:
 	
 	ITriVectorFunctionPtr m_ballPosition;
 	ITriQuaternionFunctionPtr m_ballRotation;
+	bool m_display;
 
 	Matrix m_worldTransform;
 
@@ -101,7 +104,6 @@ protected:
 	bool m_mute;
 
 	std::string m_name;
-	std::wstring m_audioEvent;
 
 	PTr2ExternalParameterVector m_externalParameters;
 };

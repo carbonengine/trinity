@@ -46,7 +46,7 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 		
 		MAP_ATTRIBUTE
 		(
-			"ballPosition",
+			"translationCurve",
 			m_ballPosition,
 			"Function for animated position updates",
 			Be::READWRITE | Be::PERSIST
@@ -54,18 +54,18 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 		
 		MAP_ATTRIBUTE
 		(
-			"ballRotation",
+			"rotationCurve",
 			m_ballRotation,
 			"Function for animated rotation updates",
 			Be::READWRITE | Be::PERSIST
 		)
-		
+
 		MAP_ATTRIBUTE
 		(
-			"audioEvent",
-			m_audioEvent,
-			"Audio event name to play on this emitter",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
+			"display",
+			m_display,
+			"Not really used for audio objects, but here for consistency with the EveSpaceObject interface",
+			Be::READWRITE
 		)
 
 		MAP_ATTRIBUTE
@@ -76,11 +76,21 @@ const Be::ClassInfo* AudioGameObject::ExposeToBlue()
 			Be::READ | Be::PERSIST
 		)
 
+		MAP_ATTRIBUTE
+		(
+			"audioEmitter",
+			m_audioEmitter,
+			"Exposure of the audio emitter object",
+			Be::READWRITE | Be::PERSIST
+		)
+
 		MAP_METHOD_AND_WRAP( "GetAudioEmitter", GetAudioEmitter, "Gets the audio emitter for this object" )
 
 		MAP_METHOD_AND_WRAP( "SetEmitterName", SetEmitterName, "Sets the name of this object's audio emitter" )
 
 		MAP_METHOD_AND_WRAP( "PlayAudioEvent", PlayAudioEvent, "Plays an audio event on this object's emitter" )
+
+	MAP_METHOD_AND_WRAP( "__init__", py__init__, "Initialize the audio emitter after construction/deserialization" )
 
     EXPOSURE_END();
 }
