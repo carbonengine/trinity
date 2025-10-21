@@ -96,7 +96,7 @@ public:
 	bool IsLoading() const;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer ) override;
+	void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr ) override;
 
 	void SetDynamicBounds( float maxInstanceSize );
 	void SetDynamicScaledBounds( float maxScale );
