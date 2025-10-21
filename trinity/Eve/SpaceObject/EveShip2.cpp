@@ -227,15 +227,6 @@ void EveShip2::RebuildCachedData( BlueAsyncRes* p )
 	RebuildTurretPositions();
 }
 
-// -----------------------------------------------------------------------------
-// Description:
-//   Set the boosterset of this ship from the outside
-// -----------------------------------------------------------------------------
-void EveShip2::SetBoosterSet( EveBoosterSet2Ptr set )
-{
-	SetBoosters( set );
-}
-
 void EveShip2::RebuildBoosterSet()
 {
 	if( !m_boosters )

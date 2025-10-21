@@ -7,7 +7,8 @@ EveSmartLightPointLight::EveSmartLightPointLight( IRoot* lockobj ):
 	m_staticOffsetTranslation( 0.f, 0.f, 0.f),
 	m_staticOffsetRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_activationStrength( 1.f ),
-	m_display( true )
+	m_display( true ),
+	m_distribution( nullptr )
 {
 	m_lightGroupData = LightData();
 	m_lightType = Tr2Light::POINT_LIGHT;

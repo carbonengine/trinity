@@ -49,8 +49,8 @@ public:
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
 
-	// boosters
-	void SetBoosterSet( EveBoosterSet2Ptr set );
+	EveBoosterSet2* GetBoosters();
+	void SetBoosters( EveBoosterSet2* boosters );
 	// re-positions all attached boosters to the corresponding locators
 	void RebuildBoosterSet();
 
@@ -58,8 +58,6 @@ public:
 	float GetMaxSpeed() const;
 	float GetBoosterIntensity() const;
 
-	EveBoosterSet2* GetBoosters();
-	void SetBoosters( EveBoosterSet2* boosters );
 
 protected:
 	// keep track of some ship's speed (in m/s)

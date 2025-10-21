@@ -312,6 +312,10 @@ bool EveStretch3::OnModified( Be::Var* value )
 			m_stretchModifier->SetDest( m_dest );
 		}
 	}
+	else if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
+	}
 
 	return true;
 }

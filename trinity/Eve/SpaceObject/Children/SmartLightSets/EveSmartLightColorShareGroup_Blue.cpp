@@ -14,7 +14,7 @@ const Be::ClassInfo* EveSmartLightColorShareGroup::ExposeToBlue()
 		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_ATTRIBUTE( "lightGroups", m_lightGroups, "list of lights and light-renderables", Be::READ | Be::PERSIST | Be::NOTIFY )
 

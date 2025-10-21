@@ -2754,7 +2754,7 @@ void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 	}
 	// add it to ship
 	set->PrepareResources();
-	ship->SetBoosterSet( set );
+	ship->SetBoosters( set );
 }
 
 // --------------------------------------------------------------------------------
