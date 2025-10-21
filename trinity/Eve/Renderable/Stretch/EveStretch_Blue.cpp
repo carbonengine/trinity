@@ -4,6 +4,7 @@
 
 BLUE_DEFINE( EveStretch );
 BLUE_DEFINE_INTERFACE( ITr2DebugRenderable );
+BLUE_DEFINE_INTERFACE( IStrechAudio );
 
 const Be::ClassInfo* EveStretch::ExposeToBlue()
 {
@@ -181,7 +182,14 @@ const Be::ClassInfo* EveStretch::ExposeToBlue()
 		(
 			"audio",
 			m_audio,
-			"The type of audio to be used for this asset",
+			"The type of audio to be used for this asset\n:jessica-deprecated: True\n:jessica-hidden: True",
+			Be::READWRITE | Be::PERSIST
+		)
+		MAP_ATTRIBUTE
+		(
+			"stretchAudio",
+			m_stretchAudio,
+			"An audio object specifically for stretch effects.",
 			Be::READWRITE | Be::PERSIST
 		)
 
