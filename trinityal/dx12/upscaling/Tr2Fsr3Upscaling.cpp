@@ -490,7 +490,6 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 		DispatchFrameGen( dispatchParameters );
 	}
 
-	m_reset = false;
 	// increase the generated frame, so we at least have one frame active...
 	CCP_STATS_INC( generatedFrames );
 
@@ -516,7 +515,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchUpscaling( Tr2UpscalingA
 	dispatchUpscale.jitterOffset.y = m_jitterY;
 	dispatchUpscale.motionVectorScale.x = (float)m_renderWidth;
 	dispatchUpscale.motionVectorScale.y = (float)m_renderHeight;
-	dispatchUpscale.reset = m_reset;
+	dispatchUpscale.reset = dispatchParameters.reset;
 	dispatchUpscale.enableSharpening = true;
 	dispatchUpscale.sharpness = 0.9f;
 
