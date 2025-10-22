@@ -263,7 +263,14 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms ) c
 				for( size_t i = 0; i < m_jointMappingAnimRig.size(); ++i )
 				{
 					auto& joint = meshData->m_jointBindings[i];
-					auto& m = boneTransforms[m_jointMappingAnimRig[i]];
+
+					uint32_t j = m_jointMappingAnimRig[i];
+					if ( j == 0xffffffff )
+					{
+						continue;
+					}
+
+					auto& m = boneTransforms[j];
 
 					CcpMath::AxisAlignedBox( joint.m_obbMin, joint.m_obbMax ).EnumerateVertices( [&]( const Vector3& vtx ) {
 						aabb.IncludePoint( TransformCoord( vtx, m ) );
@@ -560,11 +567,11 @@ void Tr2MeshBase::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Mesh Bounds" );
 }
 
-void Tr2MeshBase::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer )
+void Tr2MeshBase::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms )
 {
 	if( renderer.HasOption( this, "Mesh Bounds" ) )
 	{
-		auto bounds = GetBounds( nullptr );
+		auto bounds = GetBounds( boneTransforms );
 		renderer.DrawBox( this, worldTransform, bounds.m_min, bounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xffaa8800, 0x22aa8800 ) );
 	}
 }

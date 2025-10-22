@@ -82,7 +82,7 @@ public:
 		);
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
-	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer );
+	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr );
 
 	Tr2RaytracingMesh* GetOrCreateRtMesh();
 	Tr2RaytracingMesh* GetRtMesh() const;

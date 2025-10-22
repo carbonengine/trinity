@@ -10,6 +10,7 @@
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2GrannyAnimation );
+BLUE_DECLARE( Tr2MeshBase );
 
 class Tr2AnimationMeshBinding;
 
@@ -202,7 +203,7 @@ TYPEDEF_BLUECLASS( Tr2GrannyAnimation );
 class Tr2AnimationMeshBinding : public IBlueAsyncResNotifyTarget
 {
 public:
-	Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex );
+	Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex, Tr2MeshBasePtr mesh );
 	virtual ~Tr2AnimationMeshBinding();
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
@@ -227,6 +228,7 @@ private:
 	Tr2GrannyAnimationPtr m_animation;
 	TriGeometryResPtr m_geometryRes;
 	uint32_t m_meshIndex = 0;
+	Tr2MeshBasePtr m_mesh;
 };
 
 #endif //Tr2GrannyAnimation_h

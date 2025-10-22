@@ -36,6 +36,7 @@ class Tr2LightManager;
 class EveTurretFiringFX :
 	public IInitialize,
 	public INotify,
+	public IListNotify,
 	public ITr2ControllerOwner,
 	public ITr2DebugRenderable,
 	public EveEntity
@@ -58,6 +59,11 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* val );
+
+	
+	//////////////////////////////////////////////////////////////////////////
+	// IListNotify
+	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
 
 	// max muzzle effects
 	enum MaxMuzzleCount

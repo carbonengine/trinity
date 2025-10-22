@@ -547,7 +547,7 @@ void Tr2InstancedMesh::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Instance Mesh Bounds" );
 }
 
-void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer )
+void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms )
 {
 	if( renderer.HasOption( this, "Instance Mesh Bounds" ) )
 	{

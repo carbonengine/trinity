@@ -49,6 +49,7 @@
 #include "SpaceObject/Children/EveChildLightingOverride.h"
 #include "PriorityBlend.h"
 #include "Tr2TextureReference.h"
+#include "../ContinueOnMainThread.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -556,6 +557,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		taskGroup.wait();
 		m_updateContext.SetTaskGroup( nullptr );
 	}
+	ExecuteMainThreadActions();
 
 	// update the combined postprocess attributes 
 	UpdatePostProcessAttributes();

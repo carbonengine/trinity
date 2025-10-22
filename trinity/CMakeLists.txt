@@ -739,6 +739,9 @@ set(_SOURCES
     Eve/EveDistanceField.cpp
     Eve/EveDistanceField.h
     Eve/EveDistanceField_Blue.cpp
+    Eve/AudioGameObject.cpp
+    Eve/AudioGameObject.h
+    Eve/AudioGameObject_Blue.cpp
     Eve/EveEffectRoot2.cpp
     Eve/EveEffectRoot2.h
     Eve/EveEffectRoot2_Blue.cpp
@@ -1383,6 +1386,8 @@ set(_SOURCES
     ALResultBlue.cpp
     ALResultBlue.h
     autoversion.h
+    ContinueOnMainThread.cpp
+    ContinueOnMainThread.h
     EveSprite2dBracket.cpp
     EveSprite2dBracket.h
     EveSprite2dBracket_Blue.cpp

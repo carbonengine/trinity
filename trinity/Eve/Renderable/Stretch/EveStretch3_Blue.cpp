@@ -39,7 +39,7 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 			"If set, this transform hierarchy is displayed.\n"
 			"Note that turning off display does not automatically turn\n"
 			"off update.",
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE

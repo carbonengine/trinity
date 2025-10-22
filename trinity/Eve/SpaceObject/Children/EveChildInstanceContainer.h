@@ -132,7 +132,7 @@ public:
 	void AddInstanceTransform( const Vector3& scale, const Quaternion& rotation, const Vector3& translation, int32_t boneIndex = -1 );
 	void UpdateInstance( const uint32_t index, const Vector3& scale, const Quaternion& rotation, const Vector3& translation );
 
-	IEveSpaceObjectChild* GetSource();
+	IEveSpaceObjectChildPtr GetSource();
 	void SetSource( IEveSpaceObjectChild* source );
 
 protected:

@@ -10,6 +10,7 @@
 #include "Tr2SyncToGpu.h"
 #include "TriSettingsRegistrar.h" 
 #include <IBlueCallbackMan.h>
+#include "ContinueOnMainThread.h"
 
 #ifdef _WIN32
 #include "winuser.h"
@@ -810,6 +811,8 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
    
 	Update( realTime, simTime );
 	HandleRenderTick( realTime, simTime );
+
+	ExecuteMainThreadActions();
 }
 
 void TriDevice::OnSimClockRebase( Be::Time oldTime, Be::Time newTime )

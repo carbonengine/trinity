@@ -38,6 +38,15 @@ EveStretch::EveStretch( IRoot* lockobj ) :
 	m_length.CreateInstance();
 }
 
+bool EveStretch::OnModified( Be::Var* value )
+{
+	if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
+	}
+	return true;
+}
+
 // start the update mess!
 void EveStretch::UpdateSyncronous( const EveUpdateContext& updateContext )
 {

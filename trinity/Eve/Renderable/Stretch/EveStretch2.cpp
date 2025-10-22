@@ -190,13 +190,23 @@ void EveStretch2::DisplayEndPoints( bool displaySource, bool displayDest )
 
 void EveStretch2::SetDisplay( bool display )
 {
+	bool prev = m_visible;
 	m_visible = display;
-	ReRegister();
+	if( m_visible != prev )
+	{
+		ReRegister();	
+	}
 }
 
 void EveStretch2::SetIntensity( float intensity )
 {
+	float prev = m_intensity;
 	m_intensity = intensity;
+
+	if( ( prev == 0 && intensity > 0 ) || (prev > 0 && intensity == 0 ) )
+	{
+		ReRegister();
+	}
 }
 
 void EveStretch2::UpdateEffectSync( const EveUpdateContext& updateContext )
@@ -383,7 +393,9 @@ bool EveStretch2::OnPrepareResources()
 void EveStretch2::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry && m_visible )
+	bool isActive = m_visible && m_intensity > 0;
+	bool hasLights = m_sourceLight || m_destinationLight;
+	if( registry && isActive && hasLights )
 	{
 		registry->RegisterComponent<ITr2LightOwner>( this );
 	}
@@ -391,7 +403,7 @@ void EveStretch2::RegisterComponents()
 
 void EveStretch2::GetLights( Tr2LightManager& lightManager ) const
 {
-	if( !m_visible )
+	if( !m_visible || m_intensity == 0)
 	{
 		return;
 	}
