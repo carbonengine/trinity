@@ -1084,6 +1084,8 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 
 std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets()
 {
+	const float EPSILON = .001f;
+
 	size_t count = 0;
 
 	if( m_overwriteMorphTargetAnimations )
@@ -1096,7 +1098,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 
 		for( auto& morph : morphAnimations )
 		{
-			if( morph.second.m_weight != 0.f )
+			if( abs( morph.second.m_weight ) > EPSILON )
 			{
 				m_morphAnimationBuffer[count++] = morph.second;
 			}
@@ -1125,7 +1127,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 				continue;
 			}
 
-			if( morph->second != 0.f )
+			if( abs( morph->second ) > EPSILON /* && !IsBaked( names[i] ) */ )
 			{
 				m_morphAnimationBuffer[count++] = Tr2MorphTargetAnimationData( i, morph->second );
 			}
