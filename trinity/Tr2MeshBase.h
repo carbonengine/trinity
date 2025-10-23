@@ -49,7 +49,7 @@ public:
 
 	int GetMeshIndex() const { return m_meshIndex; };
 
-	virtual CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr ) const;
+	virtual CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) const;
 	virtual CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const;
 
 	bool GetBoundingBox( Vector3 & min, Vector3 & max ) const;
@@ -82,7 +82,7 @@ public:
 		);
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
-	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr );
+	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 );
 
 	Tr2RaytracingMesh* GetOrCreateRtMesh();
 	Tr2RaytracingMesh* GetRtMesh() const;

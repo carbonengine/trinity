@@ -250,7 +250,7 @@ bool Tr2MeshBase::BindToRig( const std::string* boneList, const int numBones, Tr
 	return true;
 }
 
-CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms ) const
+CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, const Tr2MorphTargetAnimationData* morphTargets, size_t morphTargetsCount ) const
 {
 	if( boneTransforms )
 	{
@@ -259,6 +259,7 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms ) c
 			TriGeometryResMeshData* meshData = geometry->GetMeshData( m_meshIndex );
 			if( meshData && !m_jointMappingAnimRig.empty() )
 			{
+				// TODO: intern, this code seems too expensive: Characters have 100+ joints. Can we use a subset of joints here? Some skeletal lod?
 				auto aabb = CcpMath::AxisAlignedBox();
 				for( size_t i = 0; i < m_jointMappingAnimRig.size(); ++i )
 				{
@@ -276,6 +277,19 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms ) c
 						aabb.IncludePoint( TransformCoord( vtx, m ) );
 					} );
 				}
+
+				// TODO: intern, this now only gets updated when it's a skeletal mesh. move this out of the branch? (alongside the return)
+				// TODO: intern, also fairly expensive. we can have 100+ morph targets at the same time.
+				// TODO: intern, it inflates the bounding box too much... :( is there a better way?
+				float morphDeformation = 0.f;
+				for( size_t i = 0; i < morphTargetsCount; i++ )
+				{
+					auto morph = morphTargets[i];
+					CCP_ASSERT_M( morph.m_index < meshData->m_morphTargetDeformationAmounts.size(), "Tr2MeshBase::GetBounds: morph.m_index is too large!" );
+					morphDeformation += meshData->m_morphTargetDeformationAmounts[morph.m_index] * morph.m_weight;
+				}
+				aabb.Grow( morphDeformation );
+
 				return m_boundsAdjustment.AdjustBounds( aabb );
 			}
 		}
@@ -567,11 +581,11 @@ void Tr2MeshBase::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Mesh Bounds" );
 }
 
-void Tr2MeshBase::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms )
+void Tr2MeshBase::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms, const Tr2MorphTargetAnimationData* morphTargets, size_t morphTargetsCount )
 {
 	if( renderer.HasOption( this, "Mesh Bounds" ) )
 	{
-		auto bounds = GetBounds( boneTransforms );
+		auto bounds = GetBounds( boneTransforms, morphTargets, morphTargetsCount );
 		renderer.DrawBox( this, worldTransform, bounds.m_min, bounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xffaa8800, 0x22aa8800 ) );
 	}
 }

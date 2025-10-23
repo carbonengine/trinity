@@ -87,7 +87,7 @@ public:
 					 float screenSize,
 					 bool reverseAreas ) const;
 
-	CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr ) const override;
+	CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) const override;
 	CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const override;
 	CcpMath::AxisAlignedBox GetInstanceBounds( ) const;
 	CcpMath::Sphere GetInstanceBoundsClosestToPoint( const Vector3& point ) const;
@@ -96,7 +96,7 @@ public:
 	bool IsLoading() const;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr ) override;
+	void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) override;
 
 	void SetDynamicBounds( float maxInstanceSize );
 	void SetDynamicScaledBounds( float maxScale );

@@ -327,7 +327,7 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 	}
 }
 
-CcpMath::AxisAlignedBox Tr2InstancedMesh::GetBounds( const Matrix* boneTransforms ) const
+CcpMath::AxisAlignedBox Tr2InstancedMesh::GetBounds( const Matrix* boneTransforms, const Tr2MorphTargetAnimationData* morphTargets, size_t morphTargetsCount ) const
 {
 	CcpMath::AxisAlignedBox aabb;
 	if( m_boundsMethod == STATIC )
@@ -547,7 +547,7 @@ void Tr2InstancedMesh::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Instance Mesh Bounds" );
 }
 
-void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms )
+void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms, const Tr2MorphTargetAnimationData* morphTargets, size_t morphTargetsCount )
 {
 	if( renderer.HasOption( this, "Instance Mesh Bounds" ) )
 	{

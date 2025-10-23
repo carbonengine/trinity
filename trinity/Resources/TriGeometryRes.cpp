@@ -1703,6 +1703,54 @@ TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDef
 }
 }
 
+float CalculateMorphDeformationAmount( bool dataIsDeltas, int32_t vertexCount, uint8_t* pMorphSrc, Tr2VertexDefinition morphDecl, uint8_t* pVertices, Tr2VertexDefinition decl )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	const unsigned bytesPerVertex = decl.m_nextOffset[0];
+
+	auto foundPosition = decl.Find( Tr2VertexDefinition::POSITION, 0 );
+	CCP_ASSERT_M( foundPosition, "CalculateMorphDeformationAmount: Couldn't find Tr2VertexDefinition::POSITION for primary data." );
+	
+	unsigned int positionByteOffset = foundPosition->m_offset;
+	Tr2VertexDefinition::DataType declType = foundPosition->m_dataType;
+
+	
+	const unsigned morphBytesPerVertex = morphDecl.m_nextOffset[0];
+
+	auto morphFoundPosition = morphDecl.Find( Tr2VertexDefinition::POSITION, 0 );
+	CCP_ASSERT_M( morphFoundPosition, "CalculateMorphDeformationAmount: Couldn't find Tr2VertexDefinition::POSITION for morph data." );
+
+	unsigned int morphPositionByteOffset = morphFoundPosition->m_offset;
+	Tr2VertexDefinition::DataType morphDeclType = morphFoundPosition->m_dataType;
+
+
+	float maxAmount = 0.f;
+	for( int j = 0; j < vertexCount; j++ )
+	{
+		Vector3 vertex;
+		ConvertDataToVector3( declType, pVertices + positionByteOffset + j * bytesPerVertex, &vertex );
+	
+		Vector3 morphVertex;
+		ConvertDataToVector3( morphDeclType, pMorphSrc + morphPositionByteOffset + j * morphBytesPerVertex, &morphVertex );
+
+		Vector3 diff;
+		if ( dataIsDeltas )
+		{
+			diff = morphVertex;
+		}
+		else
+		{
+			diff = morphVertex - vertex;
+		}
+		
+		float squaredDist = Dot( diff, diff );
+		maxAmount = max( maxAmount, squaredDist );
+	}
+
+	return sqrt( maxAmount );
+}
+
 bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryResMeshData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1840,6 +1888,9 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 					morphDataSize, 
 					renderContext 
 				);
+
+				float deformationAmount = CalculateMorphDeformationAmount( morphTarget.DataIsDeltas, vertexCount, (uint8_t*)pMorphSrc, morphTargetVertexDefinition, (uint8_t*)pSrc, vertexDefinition );
+				pMesh->m_morphTargetDeformationAmounts.push_back( deformationAmount );
 			}
 
 			pMesh->m_morphVertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( firstMorphTargetVertexDefinition );

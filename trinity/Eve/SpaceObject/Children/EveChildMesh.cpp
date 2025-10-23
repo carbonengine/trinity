@@ -326,7 +326,8 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		CcpMath::AxisAlignedBox bounds;
 		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
-			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms() );
+			auto [morphTargets, morphTargetCount] = GetMorphTargets();
+			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms(), morphTargets, morphTargetCount );
 		}
 		else
 		{
@@ -979,7 +980,8 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	{
 		if ( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
-			m_mesh->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater->GetAnimationTransforms() );
+			auto [morphTargets, morphTargetCount] = GetMorphTargets();
+			m_mesh->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater->GetAnimationTransforms(), morphTargets, morphTargetCount );
 		}
 		else
 		{

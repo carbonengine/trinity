@@ -201,6 +201,7 @@ struct TriGeometryResMeshData
 	std::vector<LodRef> m_lods;
 
 	std::vector<std::string> m_morphTargetNames;
+	std::vector<float> m_morphTargetDeformationAmounts;
 };
 
 uint32_t GetPrimitiveCount( const TriGeometryResMeshData& mesh, uint32_t index, uint32_t count );
