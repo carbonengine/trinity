@@ -46,7 +46,6 @@ static const int MAX_JOINT_COUNT = 254;
 
 Tr2GrannyAnimation::Tr2GrannyAnimation( IRoot* lockobj ) :
 	PARENTLOCK( m_boneOffset ),
-	//PARENTLOCK( m_morphTargets ),
 	m_boneList( "Tr2GrannyAnimation/m_boneList" ),
 	m_skeleton( nullptr ),
 	m_worldPose( nullptr ),
@@ -921,6 +920,7 @@ void Tr2GrannyAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& model
 	{
 		float animationTime = GetAnimationTime();
 
+		// TODO: intern, yay for simplicity, nay for performance. There has to be a better way.
 		m_morphAnimations.clear();
 
 		// TODO: Should this be done here? Seems wasteful to sample animations and build the pose

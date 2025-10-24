@@ -5,7 +5,6 @@
 #include "Include/ITr2AnimationUpdater.h"
 #include "GrannyBoneOffset.h"
 #include "Tr2GrannyAnimationLayer.h"
-#include "../Tr2MorphTargetAnimationDataBuffer.h"
 
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( TriGeometryRes );
@@ -23,12 +22,6 @@ struct GrannyBoneBindingBounds
 {
 	int m_boneIndex;
 	Vector3 m_corners[8];
-};
-
-enum Tr2MorphTargetState
-{
-	DrivenByAnimation,
-	Overwritten
 };
 
 
@@ -207,7 +200,6 @@ public:
 	virtual ~Tr2AnimationMeshBinding();
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
-	//std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets() const;
 
 	TriGeometryRes* GetGeometryRes() const;
 	uint32_t GetMeshIndex() const;

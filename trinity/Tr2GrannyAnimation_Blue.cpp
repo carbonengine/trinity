@@ -7,7 +7,6 @@
 BLUE_DEFINE_INTERFACE( ITr2GrannyAnimationOwner );
 
 
-
 BLUE_DEFINE( Tr2GrannyAnimation );
 
 const Be::ClassInfo* Tr2GrannyAnimation::ExposeToBlue()
@@ -16,7 +15,6 @@ const Be::ClassInfo* Tr2GrannyAnimation::ExposeToBlue()
         MAP_INTERFACE( Tr2GrannyAnimation )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( ITr2AnimationUpdater )
-
 
 		MAP_PROPERTY( "resPath", GetResPath, SetResPath, "The resource path to the Granny file containing the animations to be played." )
 		MAP_ATTRIBUTE( "resPath_", m_resPath, "", Be::PERSISTONLY )

@@ -157,10 +157,6 @@ bool Tr2GrannyAnimationLayer::PlayAnimation( const Tr2GrannyAnimation* grannyAni
 		return false;
 	}
 
-	auto n1 = grannyAnimation->GetGrannyModel()->Name;
-	auto n2 = grannyAnimation->m_skeleton->Name;
-	auto n3 = grannyAnimation->m_meshBinding;
-
 	if( replace )
 	{
 		ClearAnimations();
@@ -330,8 +326,9 @@ const float MorphTrack::SampleTrack( float time, int loop, float duration )
 	// TODO: intern, what about loop?
 
 	float defaultValue = 0.f;
-	GrannyEvaluateCurveAtT( 1, false, false, &m_grannyTrack->ValueCurve, false, duration, (float)time, (float*)&m_value, &defaultValue );
-	return m_value;
+	float value = 0.f;
+	GrannyEvaluateCurveAtT( 1, false, false, &m_grannyTrack->ValueCurve, false, duration, (float)time, (float*)&value, &defaultValue );
+	return value;
 }
 
 void Tr2GrannyAnimationLayer::SampleTextTracks( IBlueEventListener* listener )

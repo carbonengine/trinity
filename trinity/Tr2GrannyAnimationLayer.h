@@ -25,12 +25,11 @@ private:
 
 struct MorphTrack
 {
-	MorphTrack( granny_vector_track* grannyTrack ) : m_grannyTrack( grannyTrack ), m_value( 0.f ) {}
+	MorphTrack( granny_vector_track* grannyTrack ) : m_grannyTrack( grannyTrack ) {}
 
 	const float SampleTrack( float time, int loop, float duration );
 
 	granny_vector_track* m_grannyTrack;
-	float m_value;	// TODO: intern, do you really need this?
 };
 
 class Tr2GrannyAnimationLayer

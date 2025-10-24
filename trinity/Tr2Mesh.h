@@ -4,7 +4,6 @@
 
 #include "Tr2MeshBase.h"
 #include "Resources/Tr2LoadPrepareFence.h"
-//#include "../Tr2MorphTargetAnimationDataBuffer.h"
 
 
 BLUE_DECLARE( Tr2SerializedMorphAnimation );
