@@ -155,6 +155,8 @@ Tr2RaytracingMesh::Tr2RaytracingMesh() :
 	m_meshIndex( 0 ),
 	m_boneOffset( 0 ),
 	m_skinnedVertexOffset( 0 ),
+	m_morphAnimationDataOffset( 0 ),
+	m_morphAnimationDataCount( 0 ),
 	m_isDirty( true ),
 	m_screenSize( 0.f ),
 	m_lodIndex( 0 )

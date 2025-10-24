@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 #include "Include/TriMath.h"
-#include "Tr2GpuBuffer.h"
-#include "Tr2GpuStructuredBuffer.h"
 #include "TriGeometryRes.h"
 #include "TriGrannyRes.h"
 #include "Tr2PerObjectData.h"
@@ -1492,6 +1490,7 @@ TriGeometryResAreaData::TriGeometryResAreaData() :
 
 TriGeometryResMeshData::TriGeometryResMeshData() :
 	m_bytesPerVertex( 0 ),
+	m_bytesPerMorphTargetVertex( 0 ),
 	m_vertexCount( 0 ),
 	m_primitiveCount( 0 ),
 	m_areas( "TriGeometryResMeshData/m_areas" ),
@@ -1499,6 +1498,7 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 	m_isLodMesh( false ),
 	m_pVertexData( NULL ),
 	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
+	m_morphVertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_allocationsValid(false),
 	m_reversedIndicesValid(false)
 {

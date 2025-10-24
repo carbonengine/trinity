@@ -38,7 +38,6 @@ extern Tr2SuballocatedBuffer g_sharedBuffer;
 
 
 
-BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
 
