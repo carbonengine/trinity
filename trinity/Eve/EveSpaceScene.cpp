@@ -4061,6 +4061,21 @@ void EveSpaceScene::ReregisterEntities()
 			m_componentRegistry->ReRegister( entity );
 		}
 	}
+	for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			m_componentRegistry->ReRegister( entity );
+		}
+	}
+
+	for( auto it = begin( m_planets ); it != end( m_planets ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			m_componentRegistry->ReRegister( entity );
+		}
+	}
 	m_componentRegistry->ReRegister( m_cameraAttachmentParent );
 }
 
@@ -4086,6 +4101,22 @@ ITr2TextureProviderPtr EveSpaceScene::GetRaytracedDynamicShadowAtlas()
 void EveSpaceScene::ClearComponentRegistry()
 {
 	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+		}
+	}
+
+	for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+		}
+	}
+
+	for( auto it = begin( m_planets ); it != end( m_planets ); ++it )
 	{
 		if( EveEntityPtr entity = BlueCastPtr( *it ) )
 		{
