@@ -1630,8 +1630,6 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 		m_meshScreenSize = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) / updateContext.GetLodFactor();
 		m_meshScreenSize = m_allowLodSelection ? m_meshScreenSize : std::numeric_limits<float>::max();
 
-		//CCP_LOGERR( "Screen size: %f", m_meshScreenSize );
-
 		m_mesh->UseWithScreenSize( m_meshScreenSize, m_boundingSphereWorldRadius );
 
 		if( updateContext.m_raytracingEnabled )
