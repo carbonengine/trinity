@@ -312,6 +312,10 @@ bool EveStretch3::OnModified( Be::Var* value )
 			m_stretchModifier->SetDest( m_dest );
 		}
 	}
+	else if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
+	}
 
 	return true;
 }
@@ -516,6 +520,11 @@ void EveStretch3::UpdateAsyncronous( const EveUpdateContext& updateContext )
 	{
 		tmp->Update( m_sourcePosition, m_destinationPosition );
 	}
+
+	if( m_stretchAudio != nullptr )
+	{
+		m_stretchAudio->Update( m_sourcePosition, m_destinationPosition );
+	}
 }
 
 void EveStretch3::UpdateEffectAsync( const EveUpdateContext& updateContext )
@@ -652,12 +661,22 @@ void EveStretch3::StartFiring( float delay )
 	// can't change the controllers since this could be called asyncronously
 	m_delay = delay;
 	m_stretchState = STRETCH_STATE_STARTING;
+
+	if( m_stretchAudio != nullptr )
+	{
+		m_stretchAudio->Start();
+	}
 }
 
 void EveStretch3::StopFiring()
 {
 	// can't change the controllers since this could be called asyncronously
 	m_stretchState = STRETCH_STATE_STOPPING;
+
+	if( m_stretchAudio != nullptr )
+	{
+		m_stretchAudio->Stop();
+	}
 }
 
 void EveStretch3::SetFiringTransform( const Matrix& source, const Vector3& dest )
@@ -820,7 +839,12 @@ void EveStretch3::GetDebugOptions( Tr2DebugRendererOptions& options )
 		}
 	} );
 
-	if( auto tmp = dynamic_cast<Tr2AudioStretchBase*>( m_audio.p ) )
+	if(auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audio.p ) )
+	{
+		tmp->GetDebugOptions( options );
+	}
+
+	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_stretchAudio.p ) )
 	{
 		tmp->GetDebugOptions( options );
 	}
@@ -840,7 +864,12 @@ void EveStretch3::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		}
 	} );
 
-	if( auto tmp = dynamic_cast<Tr2AudioStretchBase*>( m_audio.p ) )
+	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_audio.p ) )
+	{
+		tmp->RenderDebugInfo( renderer );
+	}
+
+	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_stretchAudio.p ) )
 	{
 		tmp->RenderDebugInfo( renderer );
 	}
@@ -981,6 +1010,11 @@ ITr2AudEmitterPtr EveStretch3::FindSoundEmitter( const char* name )
 	if( auto tmp = dynamic_cast<Tr2AudioStretchBase*>( m_audio.p ) )
 	{
 		return tmp->FindEmitterByName( name );
+	}
+
+	if( m_stretchAudio != nullptr )
+	{
+		return m_stretchAudio->FindEmitterByName( name );
 	}
 	return nullptr;
 }

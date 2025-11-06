@@ -76,7 +76,7 @@ bool EveChildInstanceContainer::OnModified( Be::Var* value )
 	{
 		m_reset = true;
 	}
-	if( IsMatch( value, m_display ) || IsMatch( value, m_disableEditMode ) )
+	if( IsMatch( value, m_display ) )
 	{
 		ReRegister();
 	}
@@ -131,7 +131,7 @@ void EveChildInstanceContainer::SetSourceEffect( IEveSpaceObjectChildPtr sourceE
 	m_reset = true;
 }
 
-IEveSpaceObjectChild* EveChildInstanceContainer::GetSource()
+IEveSpaceObjectChildPtr EveChildInstanceContainer::GetSource()
 {
 	return m_source;
 }
@@ -337,6 +337,7 @@ void EveChildInstanceContainer::RunOnInstances( std::function<void( IEveSpaceObj
 void EveChildInstanceContainer::DisableEditMode( bool disable )
 {
 	m_disableEditMode = disable;
+	ReRegister();
 }
 
 void EveChildInstanceContainer::ClearInstanceList()

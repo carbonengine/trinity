@@ -7,10 +7,8 @@ AudioGameObject::AudioGameObject( IRoot* lockobj ) :
 	m_rotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_mute( false ),
-	m_audioEvent( L"" )
-{
-	Initialize();
-}
+	m_display( true )
+{}
 
 bool AudioGameObject::Initialize()
 {
@@ -44,8 +42,13 @@ bool AudioGameObject::Initialize()
 
 		return true;
 	}
-	
+
 	return false;
+}
+
+void AudioGameObject::py__init__()
+{
+	Initialize();
 }
 
 void AudioGameObject::UpdateSyncronous( const EveUpdateContext& updateContext )
@@ -206,13 +209,6 @@ bool AudioGameObject::OnModified( Be::Var* val )
 			{
 				m_audioEmitter->Unmute();
 			}
-		}
-	}
-	else if( IsMatch( val, m_audioEvent ) )
-	{
-		if( m_audioEmitter && !m_audioEvent.empty() )
-		{
-			PlayAudioEvent( m_audioEvent );
 		}
 	}
 	else if( IsMatch( val, m_name ) )

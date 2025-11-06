@@ -318,8 +318,6 @@ void Tr2MetalFxUpscalingContext::CreateTemporalScaler()
         m_temporalScaler->device = device;
         
         s_queue.Add( m_temporalScaler );
-        
-        m_reset = true;
     }
 }
 
@@ -390,6 +388,8 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2UpscalingAL::Dis
         {
             return Tr2UpscalingAL::Result::INCORRECT_INPUT;
         }
+
+        bool reset = dispatchParameters.reset;
         
         auto& renderContext = m_params.renderContext;
 
@@ -397,7 +397,7 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2UpscalingAL::Dis
         {
             if( m_mfxSpatialScaler )
             {
-                m_reset = true;
+                reset = true;
                 m_mfxSpatialScaler = nil;
             }
             
@@ -405,7 +405,7 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2UpscalingAL::Dis
             auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
             queue->EndEncoder();
             
-            scaler.reset = m_reset;
+            scaler.reset = reset;
             scaler.colorTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.input );
             scaler.depthTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.depth );
             scaler.motionTexture = MetalUpscalingUtils::GetMetalTexture( dispatchParameters.velocity );
@@ -416,7 +416,6 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2UpscalingAL::Dis
             
             [scaler encodeToCommandBuffer:queue->GetCommandBuffer()];
             
-            m_reset = false;
             return Tr2UpscalingAL::Result::OK;
         }
         

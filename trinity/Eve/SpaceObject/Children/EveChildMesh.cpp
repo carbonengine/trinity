@@ -1051,7 +1051,7 @@ void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRen
 
 void EveChildMesh::GetLights( Tr2LightManager& lightManager ) const
 {
-	if( ( m_lights.empty() && m_attachments.empty() ) || !m_display )
+	if( m_lights.empty() || !m_display )
 	{
 		return;
 	}

@@ -43,6 +43,10 @@ EveEntity::EveEntity( IRoot* root ) :
 
 EveEntity::~EveEntity()
 {
+	if( m_registry )
+	{
+		CCP_LOGERR( "EveEntity being destroyed while still registered with a component registry." );
+	}
 	m_registry = nullptr;
 }
 

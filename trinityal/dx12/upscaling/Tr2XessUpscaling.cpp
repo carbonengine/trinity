@@ -352,7 +352,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	params.jitterOffsetY = m_jitterY;
 	params.inputWidth = m_renderWidth;
 	params.inputHeight = m_renderHeight;
-	params.resetHistory = m_reset ? 1 : 0;
+	params.resetHistory = dispatchParameters.reset ? 1 : 0;
 	params.exposureScale = 1.0f;
 
 	params.pColorTexture = dispatchParameters.input->TrinityALImpl_GetObject()->GetResourceDx12();
@@ -376,7 +376,6 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	}
 	// the descriptor cache is dirty, mark it so
 	renderContext.DirtyDescriptorCache();
-	m_reset = false;
 
 	// transition back to what it was
 	TransitionFrom( renderContext, dispatchParameters.output, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );

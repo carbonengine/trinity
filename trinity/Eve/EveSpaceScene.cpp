@@ -3829,8 +3829,11 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 
 	auto oldReadOnlyDepth = renderContext.GetReadOnlyDepth();
 	renderContext.SetReadOnlyDepth( true );
+	renderContext.m_esm.PushRenderTarget( 1 );
+	renderContext.m_esm.SetRenderTarget( 1, {} );
 	RenderTransparentBatches( m_secondaryBatches, renderContext );
 	renderContext.SetReadOnlyDepth( oldReadOnlyDepth );
+	renderContext.m_esm.PopRenderTarget( 1 );
 	ClearBatches( m_secondaryBatches );
 
 	// Put view/projection back to normal
@@ -4058,6 +4061,21 @@ void EveSpaceScene::ReregisterEntities()
 			m_componentRegistry->ReRegister( entity );
 		}
 	}
+	for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			m_componentRegistry->ReRegister( entity );
+		}
+	}
+
+	for( auto it = begin( m_planets ); it != end( m_planets ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			m_componentRegistry->ReRegister( entity );
+		}
+	}
 	m_componentRegistry->ReRegister( m_cameraAttachmentParent );
 }
 
@@ -4083,6 +4101,22 @@ ITr2TextureProviderPtr EveSpaceScene::GetRaytracedDynamicShadowAtlas()
 void EveSpaceScene::ClearComponentRegistry()
 {
 	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+		}
+	}
+
+	for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+		}
+	}
+
+	for( auto it = begin( m_planets ); it != end( m_planets ); ++it )
 	{
 		if( EveEntityPtr entity = BlueCastPtr( *it ) )
 		{

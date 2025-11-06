@@ -5,6 +5,7 @@
 //
 
 #pragma once
+#include <IStretchAudio.h>
 #include <ITr2Audio.h>
 #include "Eve/IEveFiringEffectElement.h"
 #include "Eve/IEveSpaceObject2.h"
@@ -192,6 +193,7 @@ private:
 
 	StretchState m_stretchState;
 
+	IStretchAudioPtr m_stretchAudio;
 	ITr2AudioPtr m_audio;
 };
 
