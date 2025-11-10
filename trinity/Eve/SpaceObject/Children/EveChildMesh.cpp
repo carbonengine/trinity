@@ -38,8 +38,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
 	m_instanceCount( 0 ),
 	EveChildTransform(),
-	EveEntity( lockobj ),
-	m_overwriteMorphTargetAnimations( false )
+	EveEntity( lockobj )
 {
 	// init per-object data with default values
 	memset( &m_vsData, 0, sizeof( EveSpaceObjectVSData ) );
@@ -1088,9 +1087,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 {
 	const float EPSILON = .001f;
 
-	size_t count = 0;
-
-	if( m_overwriteMorphTargetAnimations )
+	// fill the buffer with debug values
 	{
 		auto morphAnimations = m_mesh->GetMorphAnimations();
 		if( m_morphAnimationBuffer.size() != morphAnimations.size() )
@@ -1100,26 +1097,15 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 
 		for( auto& morph : morphAnimations )
 		{
-			if( abs( morph.second.m_weight ) > EPSILON )
-			{
-				m_morphAnimationBuffer[count++] = morph.second;
-			}
+			m_morphAnimationBuffer[morph.second.m_index] = morph.second;
 		}
 	}
-	else
-	{
-		if( !m_animationUpdater || !m_animationUpdater->IsInitialized() || !m_mesh->GetMorphTargetNames() )
-		{
-			return std::make_pair( nullptr, 0 );
-		}
 
+	// overwrite entries in buffer with animation values
+	if( m_animationUpdater && m_animationUpdater->IsInitialized() && m_mesh->GetMorphTargetNames() )
+	{
 		const std::unordered_map<std::string, float>& morphsAnimations = m_animationUpdater->GetMorphAnimations();
 		std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
-
-		if( m_morphAnimationBuffer.size() != names.size() )
-		{
-			m_morphAnimationBuffer.resize( names.size() );
-		}
 
 		for( uint32_t i = 0; i < names.size(); ++i )
 		{
@@ -1129,9 +1115,27 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 				continue;
 			}
 
-			if( abs( morph->second ) > EPSILON /* && !IsBaked( names[i] ) */ )
+			m_morphAnimationBuffer[i] = Tr2MorphTargetAnimationData( i, morph->second );
+		}
+	}
+
+	// compact the buffer
+	int32_t count = int32_t(m_morphAnimationBuffer.size());
+	for( int32_t i = 0; i < count; i++ )
+	{
+		if( m_morphAnimationBuffer[i].m_weight > EPSILON )
+		{
+			continue;
+		}
+
+		// found free spot, now try to find something to move here
+		for( int32_t j = count - 1; j >= i; j-- )
+		{
+			count -= 1;
+			if( m_morphAnimationBuffer[j].m_weight > EPSILON )
 			{
-				m_morphAnimationBuffer[count++] = Tr2MorphTargetAnimationData( i, morph->second );
+				m_morphAnimationBuffer[i] = m_morphAnimationBuffer[j];
+				break;
 			}
 		}
 	}
