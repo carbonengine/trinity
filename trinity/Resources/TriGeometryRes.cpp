@@ -1642,19 +1642,6 @@ TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDef
 			);
 		}
 
-		if( it->m_usage == Tr2VertexDefinition::NORMAL && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			data.normalOffset = it->m_offset;
-			data.normalType = it->m_dataType;
-
-			uint32_t type = data.normalType;
-			CCP_ASSERT_M(
-				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-				type == Tr2VertexDefinition::DataType::FLOAT32_3,
-				"normal type has to be FLOAT16_3 or FLOAT32_3!" 
-			);
-		}
-
 		if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
 		{
 			data.tangentOffset = it->m_offset;
@@ -1667,19 +1654,6 @@ TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDef
 				type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
 				type == Tr2VertexDefinition::DataType::USHORT_4_NORM,
 				"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
-			);
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::BITANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			data.bitangentOffset = it->m_offset;
-			data.bitangentType = it->m_dataType;
-
-			uint32_t type = data.bitangentType;
-			CCP_ASSERT_M(
-				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-				type == Tr2VertexDefinition::DataType::FLOAT32_3,
-				"bitangent type has to be FLOAT16_3 or FLOAT32_3!" 
 			);
 		}
 
@@ -1872,8 +1846,12 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 				const granny_morph_target& morphTarget = myMesh->MorphTargets[i];
 				Tr2VertexDefinition morphTargetVertexDefinition = BuildFromGrannyVertexDecl( morphTarget.VertexData->VertexType );
 
+				uint32_t currentBytesPerMorphTargetVertex = morphTargetVertexDefinition.m_nextOffset[0];
+				uint32_t currentMorphDataSize = firstMorphTarget.VertexData->VertexCount * bytesPerMorphTargetVertex;
+
 				CCP_ASSERT_M( morphTargetVertexDefinition == firstMorphTargetVertexDefinition, "Morph targets have different definitions, these need to match!" );
 				CCP_ASSERT_M( vertexCount == morphTarget.VertexData->VertexCount, "Morph targets have different vertex counts, these need to match!" );
+				CCP_ASSERT_M( morphDataSize == currentMorphDataSize, "Morph sizes need to match!" );
 
 				size_t nameLength = strlen( morphTarget.ScalarName );
 				// By convention (due to the exporter), the morph target name ends with "Shape". Assert that it does, and also that it is not an empty string!
