@@ -202,7 +202,6 @@ protected:
 
 	std::vector<Tr2MorphTargetAnimationData> m_morphAnimationBuffer;
 	std::unordered_map<std::string, Tr2MorphTargetAnimationData> m_morphAnimationData;
-	bool m_overwriteMorphTargetAnimations;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );
