@@ -247,26 +247,21 @@ bool Tr2MeshBase::BindToRig( const std::string* boneList, const int numBones, Tr
 	return true;
 }
 
-CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms ) const
+CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, const int32_t* meshBindingIndices, size_t boneCount ) const
 {
 	if( boneTransforms )
 	{
 		if( auto geometry = GetGeometryResource() )
 		{
 			TriGeometryResMeshData* meshData = geometry->GetMeshData( m_meshIndex );
-			if( meshData && !m_jointMappingAnimRig.empty() )
+			if( meshData && boneCount > 0 )
 			{
 				auto aabb = CcpMath::AxisAlignedBox();
-				for( size_t i = 0; i < m_jointMappingAnimRig.size(); ++i )
+				for( size_t i = 0; i < boneCount; ++i )
 				{
 					auto& joint = meshData->m_jointBindings[i];
 
-					uint32_t j = m_jointMappingAnimRig[i];
-					if ( j == 0xffffffff )
-					{
-						continue;
-					}
-
+					uint32_t j = meshBindingIndices[i];
 					auto& m = boneTransforms[j];
 
 					CcpMath::AxisAlignedBox( joint.m_obbMin, joint.m_obbMax ).EnumerateVertices( [&]( const Vector3& vtx ) {
@@ -554,11 +549,11 @@ void Tr2MeshBase::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Mesh Bounds" );
 }
 
-void Tr2MeshBase::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms )
+void Tr2MeshBase::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms, const int32_t* meshBindingIndices, size_t boneCount )
 {
 	if( renderer.HasOption( this, "Mesh Bounds" ) )
 	{
-		auto bounds = GetBounds( boneTransforms );
+		auto bounds = GetBounds( boneTransforms, meshBindingIndices, boneCount );
 		renderer.DrawBox( this, worldTransform, bounds.m_min, bounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xffaa8800, 0x22aa8800 ) );
 	}
 }

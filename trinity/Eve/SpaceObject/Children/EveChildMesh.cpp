@@ -326,7 +326,8 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		CcpMath::AxisAlignedBox bounds;
 		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
-			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms() );
+			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
+			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount );
 		}
 		else
 		{
@@ -847,7 +848,7 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 		{
 			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != m_mesh->GetGeometryResource() || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
 			{
-				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_mesh );
+				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex() );
 			}
 		}
 		else
@@ -949,7 +950,8 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	{
 		if ( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
-			m_mesh->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater->GetAnimationTransforms() );
+			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
+			m_mesh->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount );
 		}
 		else
 		{
@@ -1048,6 +1050,26 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 	if( m_meshBinding )
 	{
 		return m_meshBinding->GetBoneTransforms();
+	}
+	return std::make_pair( nullptr, 0 );
+}
+
+const std::pair<const int32_t*, size_t> EveChildMesh::GetMeshBindingIndices() const
+{
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
+	if( m_animationUpdater->m_meshBinding )
+	{
+		auto boneCount = GrannyGetMeshBindingBoneCount( m_animationUpdater->m_meshBinding );
+		return std::make_pair( GrannyGetMeshBindingToBoneIndices( m_animationUpdater->m_meshBinding ), boneCount );
+	}
+	if( m_meshBinding && m_meshBinding->GetGrannyMeshBinding() )
+	{
+		auto boneCount = GrannyGetMeshBindingBoneCount( m_meshBinding->GetGrannyMeshBinding() );
+		return std::make_pair( GrannyGetMeshBindingToBoneIndices( m_meshBinding->GetGrannyMeshBinding() ), boneCount );
 	}
 	return std::make_pair( nullptr, 0 );
 }

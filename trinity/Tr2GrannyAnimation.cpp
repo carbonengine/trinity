@@ -9,7 +9,6 @@
 #include "Tr2VertexDefinitionUtilities.h"
 #include <algorithm>
 #include "TriSettingsRegistrar.h"
-#include "Tr2MeshBase.h"
 
 int g_debugBoneLabelFont = TRI_DBG_FONT_MEDIUM;
 TRI_REGISTER_SETTING( "debugBoneLabelFont", g_debugBoneLabelFont );
@@ -1443,11 +1442,10 @@ void Tr2GrannyAnimation::RemoveNotifyTarget( IBlueAsyncResNotifyTarget* p )
 }
 
 
-Tr2AnimationMeshBinding::Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex, Tr2MeshBasePtr mesh ) :
+Tr2AnimationMeshBinding::Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex ) :
 	m_animation( animationUpdater ),
 	m_geometryRes( geometryRes ),
-	m_meshIndex( meshIndex ),
-	m_mesh( mesh )
+	m_meshIndex( meshIndex )
 {
 	if( geometryRes )
 	{
@@ -1574,16 +1572,4 @@ void Tr2AnimationMeshBinding::ReleaseCachedData( BlueAsyncRes* )
 void Tr2AnimationMeshBinding::RebuildCachedData( BlueAsyncRes* )
 {
 	CreateBinding();
-
-	if( m_mesh && m_geometryRes && GetGrannyMeshBinding() && m_geometryRes->GetSkeletonCount() > 0 )
-	{
-		CCP_ASSERT_M( m_geometryRes->GetSkeletonCount() == 1, "Tr2AnimationMeshBinding::RebuildCachedData: GetSkeletonCount is greater than 1!" );
-
-		if( TriGeometryResSkeletonData* skel = m_geometryRes->GetSkeletonData( 0 ) )
-		{
-			uint32_t numBones;
-			const std::string* boneList = m_animation->GetAnimationBoneList( numBones );
-			m_mesh->BindToRig( boneList, numBones, skel, true );
-		}
-	}
 }

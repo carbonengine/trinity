@@ -143,6 +143,7 @@ protected:
 	bool DisplayDecals() const;
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
+	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
 
 	// general data
 	BlueSharedString m_name;
