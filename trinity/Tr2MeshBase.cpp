@@ -261,11 +261,28 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, co
 				{
 					auto& joint = meshData->m_jointBindings[i];
 					auto& m = boneTransforms[meshBindingIndices[i]];
+					
+					Vector3 rightMin = m.GetX() * joint.m_obbMin.x;
+					Vector3 upMin = m.GetY() * joint.m_obbMin.y;
+					Vector3 forwardMin = m.GetZ() * joint.m_obbMin.z;
+					Vector3 rightMax = m.GetX() * joint.m_obbMax.x;
+					Vector3 upMax = m.GetY() * joint.m_obbMax.y;
+					Vector3 forwardMax = m.GetZ() * joint.m_obbMax.z;
+					Vector3 translation = m.GetTranslation();
 
-					CcpMath::AxisAlignedBox( joint.m_obbMin, joint.m_obbMax ).EnumerateVertices( [&]( const Vector3& vtx ) {
-						aabb.IncludePoint( TransformCoord( vtx, m ) );
-					} );
+					Vector3 a;
+					a.x = min( rightMin.x, rightMax.x ) + min( upMin.x, upMax.x ) + min( forwardMin.x, forwardMax.x ) + translation.x;
+					a.y = min( rightMin.y, rightMax.y ) + min( upMin.y, upMax.y ) + min( forwardMin.y, forwardMax.y ) + translation.y;
+					a.z = min( rightMin.z, rightMax.z ) + min( upMin.z, upMax.z ) + min( forwardMin.z, forwardMax.z ) + translation.z;
+					aabb.IncludePoint( a );
+
+					Vector3 b;
+					b.x = max( rightMin.x, rightMax.x ) + max( upMin.x, upMax.x ) + max( forwardMin.x, forwardMax.x ) + translation.x;
+					b.y = max( rightMin.y, rightMax.y ) + max( upMin.y, upMax.y ) + max( forwardMin.y, forwardMax.y ) + translation.y;
+					b.z = max( rightMin.z, rightMax.z ) + max( upMin.z, upMax.z ) + max( forwardMin.z, forwardMax.z ) + translation.z;
+					aabb.IncludePoint( b );
 				}
+
 				return m_boundsAdjustment.AdjustBounds( aabb );
 			}
 		}
