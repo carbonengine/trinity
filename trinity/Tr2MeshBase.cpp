@@ -260,9 +260,7 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, co
 				for( size_t i = 0; i < boneCount; ++i )
 				{
 					auto& joint = meshData->m_jointBindings[i];
-
-					uint32_t j = meshBindingIndices[i];
-					auto& m = boneTransforms[j];
+					auto& m = boneTransforms[meshBindingIndices[i]];
 
 					CcpMath::AxisAlignedBox( joint.m_obbMin, joint.m_obbMax ).EnumerateVertices( [&]( const Vector3& vtx ) {
 						aabb.IncludePoint( TransformCoord( vtx, m ) );

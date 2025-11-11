@@ -195,7 +195,6 @@ public:
 	virtual ~Tr2AnimationMeshBinding();
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
-	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
 
 	TriGeometryRes* GetGeometryRes() const;
 	uint32_t GetMeshIndex() const;
