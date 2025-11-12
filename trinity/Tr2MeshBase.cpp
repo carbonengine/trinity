@@ -254,6 +254,14 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, co
 		if( auto geometry = GetGeometryResource() )
 		{
 			TriGeometryResMeshData* meshData = geometry->GetMeshData( m_meshIndex );
+
+			if ( !m_jointMappingAnimRig.empty() )
+			{
+				// for old character stuff
+				boneCount = m_jointMappingAnimRig.size();
+				meshBindingIndices = (const int32_t*)m_jointMappingAnimRig.data();
+			}
+
 			if( meshData && boneCount > 0 )
 			{
 				auto aabb = CcpMath::AxisAlignedBox();
