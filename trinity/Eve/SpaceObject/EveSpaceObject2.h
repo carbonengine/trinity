@@ -211,9 +211,9 @@ public:
 	Tr2MeshBase* GetMesh() const { return m_mesh; }
 	void SetMesh( Tr2MeshBase* mesh );
 
-	void PlayAnimation( const char* animName, bool replace, int loopCount, float start, float speed );
+	void PlayAnimation( const char* animName, bool replace, int loopCount, float start, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone );
 	void PlayAnimationOnce( const char* animName );
-	void PlayAnimationEx( const char* animName, int loopCount, float start, float speed );
+	void PlayAnimationEx( const char* animName, int loopCount, float start, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone );
 	void ChainAnimation( const char* animName );
 	void ChainAnimationEx( const char* animName, int loopCount, float start, float speed );
 	void EndAnimation();

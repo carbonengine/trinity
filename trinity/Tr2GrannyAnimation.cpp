@@ -1145,9 +1145,9 @@ void Tr2GrannyAnimation::PlayAnimationOnce( const char* animName )
 	PlayAnimation( animName, true, 1, 0.0f, 1.0f );
 }
 
-void Tr2GrannyAnimation::PlayAnimationEx( const char* animName, int loopCount, float delay, float speed )
+void Tr2GrannyAnimation::PlayAnimationEx( const char* animName, int loopCount, float delay, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone )
 {
-	PlayAnimation( animName, true, loopCount, delay, speed );
+	PlayAnimation( animName, true, loopCount, delay, speed, clearWhenDone );
 }
 
 void Tr2GrannyAnimation::ChainAnimation( const char* animName )
