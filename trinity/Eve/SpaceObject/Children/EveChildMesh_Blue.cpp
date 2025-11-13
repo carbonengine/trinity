@@ -58,8 +58,6 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		
 		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
 		
-		MAP_ATTRIBUTE( "overwriteMorphTargetAnimations", m_overwriteMorphTargetAnimations, "use manually set morph target weights instead of weights read from animations for debugging purposes", Be::READWRITE | Be::PERSIST )
-
 		MAP_METHOD_AND_WRAP(
 			"GetMorphTargetNames",
 			GetMorphTargetNames,

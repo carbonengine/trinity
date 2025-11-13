@@ -27,7 +27,7 @@ struct MorphTrack
 {
 	MorphTrack( granny_vector_track* grannyTrack ) : m_grannyTrack( grannyTrack ) {}
 
-	const float SampleTrack( float time, int loop, float duration );
+	const float SampleTrack( float time, float duration );
 
 	granny_vector_track* m_grannyTrack;
 };

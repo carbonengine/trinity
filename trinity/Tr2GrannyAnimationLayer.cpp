@@ -321,7 +321,7 @@ const char* TextEventTrack::SampleTrack( float time, int loop )
 	return nullptr;
 }
 
-const float MorphTrack::SampleTrack( float time, int loop, float duration )
+const float MorphTrack::SampleTrack( float time, float duration )
 {
 	// TODO: intern, what about loop?
 
@@ -363,7 +363,6 @@ void Tr2GrannyAnimationLayer::SampleMorphTracks( float animationTime, std::unord
 	for( auto it = m_controlMorphTracks.begin(); it != m_controlMorphTracks.end(); it++ )
 	{
 		granny_control* control = it->first;
-		int currentLoop = GrannyGetControlLoopIndex( control );
 		granny_real32 t = GrannyGetControlRawLocalClock( control );
 
 		auto duration = GrannyGetControlDuration( control );
@@ -375,7 +374,7 @@ void Tr2GrannyAnimationLayer::SampleMorphTracks( float animationTime, std::unord
 
 		for( auto trackIt = it->second.begin(); trackIt != it->second.end(); trackIt++ )
 		{
-			float trackValue = trackIt->SampleTrack( t, currentLoop, duration ) * m_layerWeight;
+			float trackValue = trackIt->SampleTrack( t, duration ) * m_layerWeight;
 			auto entry = morphAnimations.find( trackIt->m_grannyTrack->Name );
 			if ( entry != morphAnimations.end() )
 			{
