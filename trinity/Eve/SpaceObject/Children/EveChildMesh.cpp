@@ -445,6 +445,7 @@ void EveChildMesh::UpdateRtSkeleton()
 		return;
 	}
 	
+	// check skinning
 	bool hasSkinned = false;
 	
 	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );	
@@ -468,8 +469,11 @@ void EveChildMesh::UpdateRtSkeleton()
 		skeletonChanged = rtMesh->SetBoneTransforms( boneCount, bones, boneOffset );
 	}
 
+	// check morphing
+	bool hasMorphed = meshData->m_morphTargetAllocation.IsValid();
+
 	bool morphChanged = false;
-	if( meshData->m_morphTargetAllocation.IsValid() )
+	if( hasMorphed )
 	{
 		auto [morphTargets, morphTargetCount] = GetMorphTargets();
 
@@ -479,15 +483,15 @@ void EveChildMesh::UpdateRtSkeleton()
 		morphChanged = rtMesh->SetMorphAnimations( morphTargetCount, morphTargets, morphTargetAnimationDataOffset );
 	}
 
-
+	// marking blas based on skinning and morphing
 	if( skeletonChanged || morphChanged )
 	{
-		//Skeleton has changed, so mark all area BLAS's as out-of-date.
+		// skeleton or morph targets have changed, so mark all area BLAS's as out-of-date.
 		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
 			auto meshAreaIndex = std::max( 0, ( *it )->GetIndex() );
-			// TODO: intern, introduce isMorphed to meshAreas? it could be used here instead of checking morphChanged. see TriGeometryRes::IsAreaSkinned
-			if( meshData->m_areas[meshAreaIndex].m_isSkinned || morphChanged )
+			
+			if( meshData->m_areas[meshAreaIndex].m_isSkinned || meshData->m_areas[meshAreaIndex].m_isMorphed )
 			{
 				( *it )->GetRtMeshArea()->MarkBlasOutdated();
 			}
