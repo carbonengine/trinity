@@ -171,7 +171,7 @@ void AudioGameObject::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Audio Speaker" );
 
-	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audioEmitter.p ) )
+	if( ITr2DebugRenderablePtr tmp = BlueCastPtr( m_audioEmitter ) )
 	{
 		tmp->GetDebugOptions( options );
 	}
@@ -186,8 +186,7 @@ void AudioGameObject::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		renderer.DrawAudioSpeaker( this, m_worldTransform, 30, 5, Tr2DebugRenderer::Wireframe, 0xffff00ff );
 	}
 
-	auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audioEmitter.p );
-	if( tmp )
+	if( ITr2DebugRenderablePtr tmp = BlueCastPtr( m_audioEmitter ) )
 	{
 		tmp->RenderDebugInfo( renderer );
 	}
