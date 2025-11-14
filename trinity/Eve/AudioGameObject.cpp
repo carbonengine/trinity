@@ -169,7 +169,7 @@ void AudioGameObject::UpdateWorldTransform( Be::Time time )
 
 void AudioGameObject::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	options.insert( "Bounding Sphere" );
+	options.insert( "Audio Speaker" );
 
 	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audioEmitter.p ) )
 	{
@@ -179,13 +179,11 @@ void AudioGameObject::GetDebugOptions( Tr2DebugRendererOptions& options )
 
 void AudioGameObject::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-	if( renderer.HasOption( GetRawRoot(), "Bounding Sphere" ) )
+	if( renderer.HasOption( GetRawRoot(), "Audio Speaker" ) )
 	{
-		Vector4 boundingSphere;
-		if( GetBoundingSphere( boundingSphere ) )
-		{
-			renderer.DrawSphere( this, boundingSphere.GetXYZ(), boundingSphere.w, 8, Tr2DebugRenderer::Wireframe, 0xffff00ff );
-		}
+		Matrix rotationMatrix = RotationMatrix( m_rotation );
+		Vector3 orientation = rotationMatrix.GetZ(); // Z-axis is typically the forward direction
+		renderer.DrawAudioSpeaker( this, m_worldTransform, 30, 5, Tr2DebugRenderer::Wireframe, 0xffff00ff );
 	}
 
 	auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audioEmitter.p );
