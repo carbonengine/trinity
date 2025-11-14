@@ -352,7 +352,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 	{
 		return m_blas;
 	}
-	if( meshData->m_areas[m_areaIndex].m_isSkinned || meshData->m_morphTargetAllocation.IsValid() )
+	if( meshData->m_areas[m_areaIndex].m_isSkinned || meshData->m_areas[m_areaIndex].m_isMorphed )
 	{
 		if( m_blas.IsValid() && !m_blasOutdated )
 		{
@@ -769,7 +769,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 		Tr2RaytracingMesh* mesh = it->mesh;
 		TriGeometryResMeshData* meshData = mesh->GetMeshData();
-		if( meshData && ( meshData->m_areas[it->area->GetAreaIndex()].m_isSkinned || meshData->m_morphTargetAllocation.IsValid() ) )
+		if( meshData && ( meshData->m_areas[it->area->GetAreaIndex()].m_isSkinned || meshData->m_areas[it->area->GetAreaIndex()].m_isMorphed ) )
 		{
 			if( !mesh->GetAndResetDirtyFlag() )
 			{

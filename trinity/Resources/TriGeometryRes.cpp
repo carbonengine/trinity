@@ -709,6 +709,89 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 	return false;
 }
 
+bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	
+	if ( myMesh->MorphTargetCount == 0 )
+	{
+		return false;
+	}
+
+	const float EPSILON = .001f;
+
+	// primary mesh vertex declaration
+	granny_data_type_definition* grannyVertexDecl = myMesh->PrimaryVertexData->VertexType;
+
+	Tr2VertexDefinition vertexDefinition = BuildFromGrannyVertexDecl( grannyVertexDecl );
+	const unsigned bytesPerVertex = vertexDefinition.m_nextOffset[0];
+
+	auto foundPosition = vertexDefinition.Find( Tr2VertexDefinition::POSITION, 0 );
+	CCP_ASSERT_M( foundPosition, "CalculateMorphDeformationAmount: Couldn't find Tr2VertexDefinition::POSITION for primary data." );
+
+	unsigned int positionByteOffset = foundPosition->m_offset;
+	Tr2VertexDefinition::DataType declType = foundPosition->m_dataType;
+
+	// morph target vertex declaration
+	granny_data_type_definition* grannyMorphVertexDecl = myMesh->MorphTargets[0].VertexData->VertexType;
+
+	Tr2VertexDefinition vertexMorphDefinition = BuildFromGrannyVertexDecl( grannyMorphVertexDecl );
+	const unsigned morphBytesPerVertex = vertexMorphDefinition.m_nextOffset[0];
+
+	auto morphFoundPosition = vertexMorphDefinition.Find( Tr2VertexDefinition::POSITION, 0 );
+	CCP_ASSERT_M( morphFoundPosition, "CalculateMorphDeformationAmount: Couldn't find Tr2VertexDefinition::POSITION for morph data." );
+
+	unsigned int morphPositionByteOffset = morphFoundPosition->m_offset;
+	Tr2VertexDefinition::DataType morphDeclType = morphFoundPosition->m_dataType;
+
+	// let's try to find at least one vertex that is being affected by at least morph target
+	bool dataIsDeltas = myMesh->MorphTargets->DataIsDeltas;
+	auto pVertices = (uint8_t*)GrannyGetMeshVertices( myMesh );
+
+	for( int i = 0; i < myMesh->MorphTargetCount; ++i )
+	{
+		auto pMorphSrc = (uint8_t*)GrannyGetMeshMorphVertices( myMesh, i );
+
+		for( int vIx = 0; vIx < area.m_primitiveCount * 3; ++vIx )
+		{
+			int index;
+
+			if( myMesh->PrimaryTopology->Indices16 )
+			{
+				index = myMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
+			}
+			else
+			{
+				index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
+			}
+
+			Vector3 vertex;
+			ConvertDataToVector3( declType, pVertices + positionByteOffset + index * bytesPerVertex, &vertex );
+
+			Vector3 morphVertex;
+			ConvertDataToVector3( morphDeclType, pMorphSrc + morphPositionByteOffset + index * morphBytesPerVertex, &morphVertex );
+
+			Vector3 diff;
+			if( dataIsDeltas )
+			{
+				diff = morphVertex;
+			}
+			else
+			{
+				diff = morphVertex - vertex;
+			}
+
+			float squaredDist = Dot( diff, diff );
+			if( squaredDist > EPSILON )
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -814,6 +897,7 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				pMesh->m_primitiveCount += area.m_primitiveCount;
 
 				area.m_isSkinned = IsAreaSkinned( area, myMesh, gi, bytesPerVertex );
+				area.m_isMorphed = IsAreaMorphed( area, myMesh, gi );
 
 				if( mbi )
 				{
@@ -1484,7 +1568,8 @@ TriGeometryResAreaData::TriGeometryResAreaData() :
 	m_primitiveCount( 0 ),
 	m_vertexCount( 0 ),
 	m_jointBindings( "TriGeometryResAreaData/m_jointBindings" ),
-	m_isSkinned( false )
+	m_isSkinned( false ),
+	m_isMorphed( false )
 {
 }
 
