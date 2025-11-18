@@ -325,8 +325,9 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		CcpMath::AxisAlignedBox bounds;
 		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
+			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
 			auto [morphTargets, morphTargetCount] = GetMorphTargets();
-			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms(), morphTargets, morphTargetCount );
+			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount, morphTargets, morphTargetCount );
 		}
 		else
 		{
@@ -877,7 +878,7 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 		{
 			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != m_mesh->GetGeometryResource() || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
 			{
-				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_mesh );
+				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex() );
 			}
 		}
 		else
@@ -979,8 +980,9 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	{
 		if ( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
+			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
 			auto [morphTargets, morphTargetCount] = GetMorphTargets();
-			m_mesh->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater->GetAnimationTransforms(), morphTargets, morphTargetCount );
+			m_mesh->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount, morphTargets, morphTargetCount );
 		}
 		else
 		{
@@ -1141,6 +1143,27 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 	}
 
 	return std::make_pair( m_morphAnimationBuffer.data(), count );
+}
+	
+
+const std::pair<const int32_t*, size_t> EveChildMesh::GetMeshBindingIndices() const
+{
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
+	if( m_animationUpdater->m_meshBinding )
+	{
+		auto boneCount = GrannyGetMeshBindingBoneCount( m_animationUpdater->m_meshBinding );
+		return std::make_pair( GrannyGetMeshBindingToBoneIndices( m_animationUpdater->m_meshBinding ), boneCount );
+	}
+	if( m_meshBinding && m_meshBinding->GetGrannyMeshBinding() )
+	{
+		auto boneCount = GrannyGetMeshBindingBoneCount( m_meshBinding->GetGrannyMeshBinding() );
+		return std::make_pair( GrannyGetMeshBindingToBoneIndices( m_meshBinding->GetGrannyMeshBinding() ), boneCount );
+	}
+	return std::make_pair( nullptr, 0 );
 }
 	
 void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
