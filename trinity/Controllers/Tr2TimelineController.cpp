@@ -210,8 +210,8 @@ void Tr2TimelineController::Update()
 				}
 				else if( InRange( entry.startTime, { oldTime, m_time } ) && InRange( entry.endTime, { oldTime, m_time } ) )
 				{
-					action->Stop( *this );
 					action->Start( *this );
+					action->Stop( *this );
 				}
 			}
 		}
