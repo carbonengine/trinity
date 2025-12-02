@@ -199,11 +199,19 @@ void EveEffectRoot2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 
 	if( m_display )
 	{
-		float ht = updateContext.GetHighDetailThreshold();
-		if( ht > 0.f )
+		if( m_dynamicLODSelection )
 		{
-			controllerUpdateFrequency = min( 1.f, m_estimatedSize / updateContext.GetHighDetailThreshold() );
+			float ht = updateContext.GetHighDetailThreshold();
+			if( ht > 0.f )
+			{
+				controllerUpdateFrequency = min( 1.f, m_estimatedSize / ht );
+			}
 		}
+		else
+		{
+			controllerUpdateFrequency = 0.5f;
+		}
+		
 	}
 
 	UpdateControllers( controllerUpdateFrequency );
