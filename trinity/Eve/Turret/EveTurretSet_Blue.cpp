@@ -119,6 +119,7 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "sysBonePitch03Factor", m_sysBonePitch03Factor, "pitch 03 factor", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sysBonePitch03Offset", m_sysBonePitch03Offset, "pitch 03 offset (in degrees!)", Be::READWRITE | Be::PERSIST )
 
+		MAP_ATTRIBUTE( "firingEffect", m_firingEffect, "", Be::HIDDEN )
 		MAP_PROPERTY( "firingEffect", GetFiringEffect, SetFiringEffect, "The module for the firing effect of this turret" )
 		MAP_ATTRIBUTE( "firingEffectResPath", m_firingEffectResPath, "A res path to the redfile containing the primary firing effect", Be::READWRITE | Be::PERSIST )
 
