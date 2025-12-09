@@ -282,8 +282,8 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 		return;
 	}
 	int meshIx = m_mesh->GetMeshIndex();
-	auto grannyMesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
-	if( !grannyMesh )
+	auto lod = geomRes->GetMeshLod( meshIx, shadowPixelSize );
+	if( !lod )
 	{
 		return;
 	}
@@ -295,7 +295,7 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 		{
 			continue;
 		}
-		Tr2RenderBatch batch = CreateGeometryBatch(grannyMesh, area, perObjectData);
+		Tr2RenderBatch batch = CreateGeometryBatch( lod, area, perObjectData );
 		batches->Commit(batch);
 	}
 

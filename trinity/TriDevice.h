@@ -230,6 +230,8 @@ public:
 
 	bool IsVariableRefreshRateSupported() const;
 
+	int GetMinimumModelLOD();
+
 private:
 	bool InitD3DDevice();  //call when a new device has been set
 	void DestroyRenderContext();
@@ -262,6 +264,7 @@ private:
 
 	bool SupportsRaytracing();
 
+
 private:
 	BlueScriptCallback m_onDeviceRemoved;
 
@@ -293,6 +296,12 @@ private:
 	Tr2UpscalingAL::Technique m_upscalingTechnique;
 	Tr2UpscalingAL::Setting m_upscalingSetting;
 	bool m_upscalingWithFrameGeneration;
+	
+	int m_minimumModelLOD;
+
+
+	void SetMinimumModelLOD( int minimumModelLOD );
+
 
 	float m_animationTime;
 	float m_animationTimeScale;
