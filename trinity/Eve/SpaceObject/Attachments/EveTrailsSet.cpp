@@ -135,10 +135,10 @@ void EveTrailsSet::RebuildCachedData( BlueAsyncRes* p )
 			if( meshData )
 			{
 				// gemoetry's original vertex-decl must exist
-				if( meshData->m_vertexDeclaration != Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+				if( meshData->m_vertexDeclarationHandle != Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 				{
 					// get gemoetry's original vertex-decl...
-					if( Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, m_trailVertexDecl ) )
+					if( Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclarationHandle, m_trailVertexDecl ) )
 					{
 						// ...expand it with instances stream elements...
 						auto& item = m_trailVertexDecl.Add( m_trailVertexDecl.FLOAT32_4, m_trailVertexDecl.TEXCOORD, 1, 1, 1 );
@@ -324,7 +324,9 @@ void EveTrailsSet::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr
 	{
 		return;
 	}
-	if( !meshData->m_allocationsValid )
+
+	auto& lodData = meshData->m_lods[0];
+	if( !lodData->m_allocationsValid )
 	{
 		return;
 	}
@@ -332,12 +334,12 @@ void EveTrailsSet::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr
 	Tr2RenderBatch batch;
 	batch.SetMaterial( m_effect );
 	batch.SetPerObjectData( perObjectData );
-	batch.SetGeometry( m_vertexDeclHandle, meshData->m_vertexAllocation, m_instanceBuffer, meshData->m_indexAllocation );
+	batch.SetGeometry( m_vertexDeclHandle, lodData->m_vertexAllocation, m_instanceBuffer, lodData->m_indexAllocation );
 	batch.SetDrawIndexedInstanced(
-		meshData->m_primitiveCount * 3,
+		lodData->m_primitiveCount * 3,
 		uint32_t( m_trailData.size() ),
-		meshData->m_indexAllocation.GetStartIndex(),
-		meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+		lodData->m_indexAllocation.GetStartIndex(),
+		lodData->m_vertexAllocation.GetOffset() / lodData->m_vertexAllocation.GetStride(),
 		m_instanceBuffer.GetOffset() / m_instanceBuffer.GetStride() );
 	accumulator->Commit( batch );
 }
