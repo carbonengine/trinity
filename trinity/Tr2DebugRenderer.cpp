@@ -970,3 +970,70 @@ std::vector<Tr2DebugRendererOption> Tr2DebugRenderer::GetDefaultOptions() const
 	result.insert( result.end(), m_defaultOptions.begin(), m_defaultOptions.end() );
 	return result;
 }
+
+void Tr2DebugRenderer::DrawAudioSpeaker( Tr2DebugObjectReference owner, const Matrix& transform, float size, uint32_t segments, Effect effect, Tr2DebugColor color )
+{
+    if( segments < 3 )
+    {
+        segments = 3;
+    }
+
+    const float coneWidth = size * 0.3f;
+    const float coneHeight = size * 0.5f;
+    const float waveOffset = size * 0.6f;
+    const float waveSpacing = size * 0.2f;
+    const float halfConeHeight = coneHeight * 0.5f;
+    const float coneWidthNarrow = coneWidth * 0.3f;
+
+    const Vector2 coneVertices[] = { 
+        Vector2( -halfConeHeight, coneWidthNarrow ),  // Back narrow end
+        Vector2( -halfConeHeight, coneWidthNarrow ), 
+        Vector2( halfConeHeight, coneWidth ),         // Front wide end
+        Vector2( halfConeHeight, coneWidth ) 
+    };
+    const Vector2 coneNormals[] = { 
+        Vector2( -1, 0 ), Vector2( -1, 0 ), 
+        Vector2( 0, 1 ), Vector2( 0, 1 ) 
+    };
+    
+    DrawExtrusionShape( owner, transform, coneVertices, coneNormals, 
+                        sizeof( coneVertices ) / sizeof( coneVertices[0] ), segments, effect, color );
+
+    static const uint32_t MAX_WAVE_SEGMENTS = 32;
+	uint32_t waveSegments = std::min( std::max( segments / 2, 8u ), MAX_WAVE_SEGMENTS);
+
+    static const float arcAngle = XM_PI * 0.6f; // 108 degrees total arc
+    static const float halfArcAngle = arcAngle * 0.5f;
+    const float arcStep = arcAngle / float( waveSegments );
+    
+    const Vector3 waveBasePoint( halfConeHeight, 0, 0 );
+    const Vector3 transformedWaveBase = Vector3( XMVector3TransformCoord( waveBasePoint, transform ) );
+    
+    for( int wave = 0; wave < 3; ++wave )
+    {
+        float waveRadius = waveOffset + ( float )wave * waveSpacing;
+        Vector3 arcPoints[MAX_WAVE_SEGMENTS + 1];
+        uint32_t arcCount = waveSegments + 1;
+        
+        for( uint32_t i = 0; i < arcCount; ++i )
+        {
+            float angle = -halfArcAngle + ( float )i * arcStep;
+            float cosAngle = cos( angle );
+            float sinAngle = sin( angle );
+            
+            Vector3 localOffset(
+                0,
+                cosAngle * waveRadius,
+                sinAngle * waveRadius
+            );
+            
+            Vector3 transformedOffset = Vector3( XMVector3TransformNormal( localOffset, transform ) );
+            arcPoints[i] = transformedWaveBase + transformedOffset;
+        }
+        
+        for( uint32_t i = 0; i < waveSegments; ++i )
+        {
+            DrawLine( owner, arcPoints[i], arcPoints[i + 1], color );
+        }
+    }
+}

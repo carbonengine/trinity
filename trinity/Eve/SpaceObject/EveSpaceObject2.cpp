@@ -2083,32 +2083,32 @@ void EveSpaceObject2::SetCastsShadow( bool castShadow )
 	m_castShadow = castShadow;
 }
 
-void EveSpaceObject2::PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed )
+void EveSpaceObject2::PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone )
 {
 	if( m_animationUpdater )
 	{
-		m_animationUpdater->PlayAnimation( animName, replace, loopCount, delay, speed );
+		m_animationUpdater->PlayAnimation( animName, replace, loopCount, delay, speed, clearWhenDone );
 	}
 }
 
 void EveSpaceObject2::PlayAnimationOnce( const char* animName )
 {
-	PlayAnimation( animName, true, 1, 0.0f, 1.0f );
+	PlayAnimation( animName, true, 1, 0.0f, 1.0f, true );
 }
 
-void EveSpaceObject2::PlayAnimationEx( const char* animName, int loopCount, float start, float speed )
+void EveSpaceObject2::PlayAnimationEx( const char* animName, int loopCount, float start, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone )
 {
-	PlayAnimation( animName, true, loopCount, start, speed );
+	PlayAnimation( animName, true, loopCount, start, speed, clearWhenDone );
 }
 
 void EveSpaceObject2::ChainAnimation( const char* animName )
 {
-	PlayAnimation( animName, false, 1, 0.0f, 1.0f );
+	PlayAnimation( animName, false, 1, 0.0f, 1.0f, true );
 }
 
 void EveSpaceObject2::ChainAnimationEx( const char* animName, int loopCount, float start, float speed )
 {
-	PlayAnimation( animName, false, loopCount, start, speed );
+	PlayAnimation( animName, false, loopCount, start, speed, true );
 }
 
 void EveSpaceObject2::EndAnimation()
