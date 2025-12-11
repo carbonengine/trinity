@@ -1412,7 +1412,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							nullptr,
 							patchEntryPoint.c_str(),
 							profile.c_str(),
-							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
+							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
 							0,
 							&compiledEffectData,
 							&errors );
@@ -1467,18 +1467,18 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				CComPtr<ID3DBlob> strippedEffectData;
 				{
 					ZoneScopedN( "D3DStripShader" );
-					//if( FAILED( D3DStripShader(
-					//	effectData->GetBufferPointer(),
-					//	effectData->GetBufferSize(),
-					//	D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
-					//	&strippedEffectData ) ) )
-					//{
+					if( FAILED( D3DStripShader(
+						effectData->GetBufferPointer(),
+						effectData->GetBufferSize(),
+						D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
+						&strippedEffectData ) ) )
+					{
 						handleStrippedData( effectData );
-					//}
-					//else
-					//{
-					//	handleStrippedData( strippedEffectData );
-					//}
+					}
+					else
+					{
+						handleStrippedData( strippedEffectData );
+					}
 				}
 
 
