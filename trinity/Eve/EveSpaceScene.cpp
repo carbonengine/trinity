@@ -185,6 +185,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_reflectionMapTransformVar( "ReflectionMapTransform", IdentityMatrix() ),
 	m_suncVecVar( "SunVec", Vector3( 0.0f, 0.0f, 1.0f ) ),
 	m_sharedIndexVertexBufferVar( "SharedIndexVertexBuffer", (ITr2GpuBuffer*)nullptr ),
+	m_bakedMorphTargetBufferVar( "BakedMorphTargetBuffer", (ITr2GpuBuffer*)nullptr ),
 	m_nebulaIntensity( 1.f ),
 	m_currentNebulaIntensity( 1.f ),
 	m_backgroundReflectionIntensity( 1.f ),
@@ -2211,6 +2212,20 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 
 	renderContext.m_esm.BeginManagedRendering();
 
+	{ // Update mesh morphs
+		bool cleanUpMorphTasks = false;
+		for( auto& meshMorph : m_componentRegistry->GetComponents<ITr2MeshMorph>() )
+		{
+			cleanUpMorphTasks = true;
+			meshMorph->UpdateMeshMorphs( renderContext );
+			meshMorph->UpdateMeshMorphs( renderContext );
+		}
+		if( cleanUpMorphTasks )
+		{
+			m_componentRegistry->Clear<ITr2MeshMorph>();
+		}
+	}
+
 	std::vector<ITr2Renderable*> visible;
 
 	// Render to depth map
@@ -3056,6 +3071,9 @@ void EveSpaceScene::UpdateVariableStore()
 
 	m_sharedIndexVertexBufferWrapper.SetGpuBuffer( g_sharedBuffer.GetBuffer() );
 	m_sharedIndexVertexBufferVar = &m_sharedIndexVertexBufferWrapper;
+
+	m_bakedMorphTargetBufferWrapper.SetGpuBuffer( g_bakedMorphTargetBuffer.GetBuffer() );
+	m_bakedMorphTargetBufferVar = &m_bakedMorphTargetBufferWrapper;
 }
 
 void EveSpaceScene::ClearVariableStore()

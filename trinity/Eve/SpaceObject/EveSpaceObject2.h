@@ -108,7 +108,7 @@ struct EveSpaceObjectVSData
 	uint32_t morphTargetVertexDataOffset;
 	uint32_t morphTargetAnimationDataOffset;
 	uint32_t activeMorphTargetsCount;
-	uint32_t padding;
+	uint32_t bakedMorphTargetVertexDataOffset;
 	Vector4 customData = { 0, 0, 0, 0 };
 };
 

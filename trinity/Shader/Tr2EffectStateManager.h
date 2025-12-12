@@ -123,6 +123,7 @@ public:
 	void SetInvertedDepthTest( bool invertedDepthTest );
 	bool IsDepthTestInverted() const;
 
+	static bool GetVertexDefinition( uint32_t handle, Tr2VertexDefinition& definition );
 	static uint32_t GetVertexDeclarationHandle( const Tr2VertexDefinition& vertexDefinition );
 	void ApplyVertexDeclaration( uint32_t declaration );
 	static bool GetVertexDeclarationElements( uint32_t declaration, Tr2VertexDefinition& definition );

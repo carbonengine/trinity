@@ -76,6 +76,16 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 			"GetMorphTargetWeight( name )\n\n"
 			"Returns the weight of the morph target. Returns 0 if no morph target with that name was found.\n"
 			":param name: morph target name\n" )
+		MAP_METHOD_AND_WRAP(
+			"BakeMorphs",
+			BakeMorphs,
+			"BakeMorphs( )\n\n"
+			"Takes the current list of morphs, bakes in the morphs with Base_, Org_ or Sc_ prefixes in the names\n" )
+		MAP_METHOD_AND_WRAP(
+			"UnbakeMorphs",
+			UnbakeMorphs,
+			"UnbakeMorphs( )\n\n"
+			"Takes the current list of baked morphs and unbakes them, restoring the original morph targets.\n" )
 
     EXPOSURE_END()
 }

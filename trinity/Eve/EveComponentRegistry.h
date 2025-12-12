@@ -100,6 +100,9 @@ public:
 
 	void Clear();
 
+	template <typename T>
+	void Clear();
+
 	// Runs over all the components and calls the processor to process it, returns true/false if it ran the processor
 	template <typename T, typename R>
 	void ProcessComponents( R processor ) const;
@@ -243,6 +246,26 @@ void EveComponentRegistry::UnRegisterComponent( EveEntity* entity )
 	}
 
 	RemoveFromCollection( collection, entity );
+}
+
+
+template <typename T>
+void EveComponentRegistry::Clear()
+{
+	const char* componentName = GetComponentName<T>();
+	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+	auto collection = GetComponentCollection( componentName );
+	if( collection == nullptr )
+	{
+		return;
+	}
+	for( auto& component : static_cast<EveComponentCollection<T>*>( collection )->m_collection )
+	{
+		EveEntity* entity = dynamic_cast<EveEntity*>( component );
+
+		collection->RemoveState( entity->m_state );
+	}
+	collection->Clear();
 }
 
 template <typename T, typename R>

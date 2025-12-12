@@ -18,16 +18,34 @@
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachment.h"
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachmentOwner.h"
 #include "ITr2Renderable.h"
+#include "ITr2MeshMorph.h"
 #include "Resources/Tr2LodResource.h"
 #include "TransformModifiers/IEveChildTransformModifier.h"
 #include "Tr2DebugRenderer.h"
 #include "Raytracing/Tr2RaytracingManager.h"
 #include "../Tr2MorphTargetAnimationDataBuffer.h"
+#include "Tr2SuballocatedBuffer.h"
 
 class EveUpdateContext;
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2MeshBase );
 BLUE_DECLARE( EveSpaceObject2 );
+BLUE_DECLARE( Tr2GpuBufferWrapper );
+
+extern Tr2SuballocatedBuffer g_bakedMorphTargetBuffer;
+
+struct MergeMorphsConstantBuffer
+{
+	uint32_t morphTargetVertexDataOffset;
+	uint32_t morphTargetAnimationDataOffset;
+	uint32_t activeMorphTargetsCount;
+	uint32_t bakedMorphTargetVertexDataOffset;
+	uint32_t vertexDataOffset;
+	uint32_t vertexDataStride;
+	uint32_t vertexDataPositionOffset;
+	uint32_t vertexDataTangentOffset;
+	uint32_t vertexCount;
+};
 
 BLUE_CLASS( EveChildMesh ) :
 	public IEveSpaceObjectChild,
@@ -42,7 +60,8 @@ BLUE_CLASS( EveChildMesh ) :
 	public IEveSpaceObjectDecalOwner,
 	public IEveSpaceObjectAttachmentOwner,
 	public ITr2LightOwner,
-	public IEveShadowCaster
+	public IEveShadowCaster,
+	public ITr2MeshMorph
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -141,15 +160,26 @@ public:
 	void SetMorphTargetWeight( const char* name, float weight );
 	float GetMorphTargetWeight( const char* name );
 
+	void BakeMorphs();
+	void UnbakeMorphs();
+
+	void UpdateMeshMorphs( Tr2RenderContext & renderContext ) override;
+
+	bool IsMorphsBaked();
+
 protected:
 	void InitializeAnimation();
 	bool ShouldReflect() const;
 
 	bool DisplayDecals() const;
 
+	// Returns true if morph buffers were prepared
+	void PrepareMorphBuffers( Tr2RenderContext & renderContext );
+
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
 	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
-	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets();
+	bool MorphAllowedToBeProcessed( int index, bool bakedOnly );
+	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets( bool bakedOnly = false );
 
 	// general data
 	BlueSharedString m_name;
@@ -184,6 +214,7 @@ protected:
 	bool m_instancesVisible;
 	bool m_castShadow;
 	bool m_updateAnimation;
+	bool m_bakeMorphs;
 
 	float m_activationStrength;
 
@@ -203,6 +234,10 @@ protected:
 
 	std::vector<Tr2MorphTargetAnimationData> m_morphAnimationBuffer;
 	std::unordered_map<std::string, Tr2MorphTargetAnimationData> m_morphAnimationData;
+	Tr2SuballocatedBuffer::Allocation m_bakedMorphAllocation;
+	Tr2EffectPtr m_mergeMorphsEffect;
+	Tr2ConstantBufferAL m_mergeMorphsConstantBuffer;
+	bool m_isMorphsBaked;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );

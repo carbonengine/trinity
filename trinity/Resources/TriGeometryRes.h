@@ -355,6 +355,8 @@ public:
 
 	void Reload();
 
+	TriGeometryResMeshData* GetGeometryResMesh( uint32_t index ) const;
+
 	// name for logging/debugging
 	std::string m_name;
 

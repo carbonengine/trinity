@@ -1473,6 +1473,18 @@ void TriGeometryRes::Reload()
 	BlueAsyncRes::Reload();
 }
 
+TriGeometryResMeshData* TriGeometryRes::GetGeometryResMesh( uint32_t index ) const
+{
+	if( index >= m_meshes.size() )
+	{
+		return nullptr;
+	}
+	if( m_meshes[index] == nullptr )
+	{
+		return nullptr;
+	}
+	return m_meshes[index].get();
+}
 
 TriGeometryResSkeletonData::TriGeometryResSkeletonData() :
 	m_joints( "TriGeometryResSkeletonData/m_joints" )

@@ -10,6 +10,7 @@
 #include "TriFrustumOrtho.h"
 #include "Utilities/BoundingBox.h"
 #include "Resources/TriGeometryRes.h"
+#include "Tr2GpuStructuredBuffer.h"
 
 namespace
 {
@@ -17,7 +18,9 @@ constexpr float s_instanceScreenSizeThreshold = 1.f;
 
 }
 
-EveChildMesh::EveChildMesh( IRoot* lockobj ):
+Tr2SuballocatedBuffer g_bakedMorphTargetBuffer( "Baked Morph Target Buffer", Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, SHARED_BUFFER_BLOCK_SIZE, SHARED_BUFFER_MAX_SIZE );
+
+EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 	PARENTLOCK( m_transformModifiers ),
 	PARENTLOCK( m_decals ),
 	PARENTLOCK( m_attachments ),
@@ -27,6 +30,8 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_instancesVisible( false ),
 	m_castShadow( false ),
 	m_updateAnimation( true ),
+	m_bakeMorphs( false ),
+	m_isMorphsBaked( false ),
 	m_lowestLodVisible( TR2_LOD_LOW ),
 	m_minScreenSize( 0.f ),
 	m_currentScreenSize( -1.f ),
@@ -741,6 +746,15 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 				m_vsData.activeMorphTargetsCount = uint32_t( morphTargetCount );
 				m_vsData.morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
 				m_vsData.morphTargetVertexDataOffset = mesh->m_morphTargetAllocation.GetOffset();
+
+				if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
+				{
+					m_vsData.bakedMorphTargetVertexDataOffset = m_bakedMorphAllocation.GetOffset();
+				}
+				else
+				{
+					m_vsData.bakedMorphTargetVertexDataOffset = UINT32_MAX;
+				}
 			}
 		}		
 
@@ -1085,7 +1099,28 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 	return std::make_pair( nullptr, 0 );
 }
 
-std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets()
+bool IsBakedName( std::string name )
+{
+	// if name starts with bs its baked
+	return name.substr( 0, 5 ) == "Base_" || name.substr( 0, 4 ) == "Org_" || name.substr( 0, 3 ) == "Sc_";
+}
+
+bool EveChildMesh::MorphAllowedToBeProcessed( int index, bool bakedOnly )
+{
+	std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
+	if(names.size() <= index)
+	{
+		return false;
+	}
+	bool bakedName = IsBakedName( names[index] );
+	// Return true only if
+	// 1. We are processing baked only and the name is baked. This dose not factor in m_isBaked as we want to process all baked morphs
+	// 2. The mesh is baked and we are getting a non baked morph
+	// 3. The mesh is not baked and we are getting all morphs
+	return ( bakedName && bakedOnly ) || ( !bakedOnly && ( ( m_isMorphsBaked && !bakedName ) || !m_isMorphsBaked ) ) ;
+}
+
+std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets( bool bakedOnly )
 {
 	const float EPSILON = .001f;
 
@@ -1103,11 +1138,11 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 		}
 	}
 
+	std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
 	// overwrite entries in buffer with animation values
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() && m_mesh->GetMorphTargetNames() )
 	{
 		const std::unordered_map<std::string, float>& morphsAnimations = m_animationUpdater->GetMorphAnimations();
-		std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
 
 		for( uint32_t i = 0; i < names.size(); ++i )
 		{
@@ -1125,7 +1160,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 	int32_t count = int32_t(m_morphAnimationBuffer.size());
 	for( int32_t i = 0; i < count; i++ )
 	{
-		if( m_morphAnimationBuffer[i].m_weight > EPSILON )
+		if( m_morphAnimationBuffer[i].m_weight > EPSILON && MorphAllowedToBeProcessed( i, bakedOnly ) )
 		{
 			continue;
 		}
@@ -1134,7 +1169,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 		for( int32_t j = count - 1; j >= i; j-- )
 		{
 			count -= 1;
-			if( m_morphAnimationBuffer[j].m_weight > EPSILON )
+			if( m_morphAnimationBuffer[j].m_weight > EPSILON && MorphAllowedToBeProcessed( j, bakedOnly ) )
 			{
 				m_morphAnimationBuffer[i] = m_morphAnimationBuffer[j];
 				break;
@@ -1144,7 +1179,151 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 
 	return std::make_pair( m_morphAnimationBuffer.data(), count );
 }
-	
+
+void EveChildMesh::BakeMorphs()
+{
+	EveComponentRegistry* registry = GetComponentRegistry();
+	if( registry )
+	{
+		registry->RegisterComponent<ITr2MeshMorph>( this );
+	}
+
+	if( !m_mergeMorphsEffect )
+	{
+		m_mergeMorphsEffect.CreateInstance();
+		m_mergeMorphsEffect->StartUpdate();
+		m_mergeMorphsEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/MorphBaking.fx" );
+		m_mergeMorphsEffect->EndUpdate();
+	}
+
+	// Set baked morph weights
+	m_bakeMorphs = true;
+}
+
+void EveChildMesh::UnbakeMorphs()
+{
+	m_isMorphsBaked = false;
+}
+
+
+void EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
+{
+	if( !m_bakedMorphAllocation.IsValid() )
+	{
+		TriGeometryResMeshData* geometryResMesh = m_mesh->GetGeometryResource()->GetGeometryResMesh( m_mesh->GetMeshIndex() );
+
+		if( geometryResMesh )
+		{
+			uint32_t vertexSize = geometryResMesh->m_bytesPerMorphTargetVertex;
+			uint32_t vertexCount = geometryResMesh->m_vertexCount;
+			uint32_t dataSize = vertexSize * vertexCount;
+
+			ALResult result = g_bakedMorphTargetBuffer.Allocate(
+				sizeof( uint32_t ),
+				dataSize >> 2,
+				nullptr,
+				renderContext,
+				m_bakedMorphAllocation );
+		}
+	}
+	if( !m_mergeMorphsConstantBuffer.IsValid() )
+	{
+		m_mergeMorphsConstantBuffer.Create( uint32_t( sizeof( MergeMorphsConstantBuffer ) ), renderContext.GetPrimaryRenderContext() );
+	}
+
+	auto [morphTargets, morphTargetCount] = GetMorphTargets( true );
+
+	m_morphTargetOffsets.AdvanceFrame();
+	m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
+
+	CCP_STATS_ZONE( "Tr2MorphTargetAnimationDataBuffer" );
+	Tr2MorphTargetAnimationDataBuffer::GetInstance().PrepareBuffer( renderContext );
+
+	MergeMorphsConstantBuffer* data;
+	m_mergeMorphsConstantBuffer.Lock( (void**)&data, renderContext );
+	{
+		auto meshData = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() );
+
+		data->activeMorphTargetsCount = uint32_t( morphTargetCount );
+		data->morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
+		data->morphTargetVertexDataOffset = meshData->m_morphTargetAllocation.GetOffset();
+		data->bakedMorphTargetVertexDataOffset = m_bakedMorphAllocation.GetOffset();
+		data->vertexDataOffset = meshData->m_vertexAllocation.GetOffset();
+		data->vertexDataStride = meshData->m_vertexAllocation.GetStride();
+		data->vertexCount = meshData->m_vertexCount;
+
+		Tr2VertexDefinition vertexDefinition;
+		if( Tr2EffectStateManager::GetVertexDefinition( meshData->m_vertexDeclaration, vertexDefinition ) )
+		{
+			Tr2VertexDefinition::Item* positionItem = vertexDefinition.Find( Tr2VertexDefinition::POSITION );
+			Tr2VertexDefinition::Item* tangentItem = vertexDefinition.Find( Tr2VertexDefinition::TANGENT );
+
+			if(positionItem)
+			{
+				data->vertexDataPositionOffset = positionItem->m_offset;
+			}
+			else
+			{
+				data->vertexDataPositionOffset = UINT32_MAX;
+			}
+
+			if( tangentItem )
+			{
+				data->vertexDataTangentOffset = tangentItem->m_offset;
+			}
+			else
+			{
+				data->vertexDataTangentOffset = UINT32_MAX;
+			}
+		}
+
+	}
+
+	m_mergeMorphsConstantBuffer.Unlock( renderContext );
+}
+
+
+void EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
+{
+	GPU_REGION( renderContext, "MeshMorphs" );
+
+	if( m_bakeMorphs )
+	{
+		PrepareMorphBuffers( renderContext );
+
+		auto meshIndex = m_mesh->GetMeshIndex();
+		auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
+		uint32_t vertexCount = meshData->m_vertexCount;
+
+		renderContext.SetConstants( m_mergeMorphsConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
+
+		// Run compute
+		if( !m_mergeMorphsEffect )
+		{
+			m_mergeMorphsEffect.CreateInstance();
+			m_mergeMorphsEffect->StartUpdate();
+			m_mergeMorphsEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/MorphBaking.fx" );
+			m_mergeMorphsEffect->EndUpdate();
+		}		
+
+		Tr2Renderer::RunComputeShader(
+			m_mergeMorphsEffect,
+			BlueSharedString( "MorphBaking" ),
+			(vertexCount + 31) / 32,
+			1,
+			1,
+			renderContext
+		);
+	}
+
+	m_isMorphsBaked = true;
+}
+
+
+bool EveChildMesh::IsMorphsBaked()
+{
+	return m_isMorphsBaked;
+}
 
 const std::pair<const int32_t*, size_t> EveChildMesh::GetMeshBindingIndices() const
 {
