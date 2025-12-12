@@ -332,3 +332,90 @@ technique t0
 	EXPECT_EQ( data.techniques[0].passes[0].stages[1].uavs.size(), 3 );
 	ASSERT_TRUE( Compiles<EffectCompilerMetal>( src ) );
 }
+
+
+TEST( MetalShaderPatching, CanHaveSystemSemantics )
+{
+	const char* src = R"SRC(
+
+struct VSIn
+{
+	float4 position : POSITION;
+	;
+};
+
+struct VSOut
+{
+	float4 position : SV_Position;
+	float2 uv : TEXCOORD0;
+};
+
+VSOut vs( VSIn input, uint vertexID : SV_VertexID )
+{
+	VSOut output;
+	output.position = input.position;
+	output.uv = float2( vertexID, 0 );
+	return output;
+}
+
+float4 ps( VSOut vsOut ) : SV_Target
+{
+return float4( 1, 0, 0, 1 );
+}
+
+technique t0
+{
+	pass p0
+	{
+		vertexshader = compile vs_3_0 vs();	
+		pixelshader = compile ps_3_0 ps();
+	}
+}
+)SRC";
+
+	auto data = Compile<EffectCompilerMetal>( src );
+	EXPECT_NE( data.techniques[0].passes[0].stages[0].source.find( "[[vertex_id]]" ), std::string::npos );
+}
+
+TEST( MetalShaderPatching, CanHaveSystemSemanticsWithIAInputs )
+{
+	const char* src = R"SRC(
+
+struct VSIn
+{
+	float4 position : POSITION;
+	uint vertexID : SV_VertexID;
+};
+
+struct VSOut
+{
+	float4 position : SV_Position;
+	float2 uv : TEXCOORD0;
+};
+
+VSOut vs( VSIn input )
+{
+	VSOut output;
+	output.position = input.position;
+	output.uv = float2( input.vertexID, 0 );
+	return output;
+}
+
+float4 ps( VSOut vsOut ) : SV_Target
+{
+return float4( 1, 0, 0, 1 );
+}
+
+technique t0
+{
+	pass p0
+	{
+		vertexshader = compile vs_3_0 vs();	
+		pixelshader = compile ps_3_0 ps();
+	}
+}
+)SRC";
+
+	auto data = Compile<EffectCompilerMetal>( src );
+	EXPECT_NE( data.techniques[0].passes[0].stages[0].source.find( "[[vertex_id]]" ), std::string::npos );
+}
