@@ -1107,6 +1107,10 @@ bool IsBakedName( std::string name )
 
 bool EveChildMesh::MorphAllowedToBeProcessed( int index, bool bakedOnly )
 {
+	if( !m_mesh->GetMorphTargetNames() )
+	{
+		return false;
+	}
 	std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
 	if(names.size() <= index)
 	{
@@ -1136,6 +1140,11 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 		{
 			m_morphAnimationBuffer[morph.second.m_index] = morph.second;
 		}
+	}
+
+	if( !m_mesh->GetMorphTargetNames() )
+	{
+		return std::make_pair( nullptr, 0 );
 	}
 
 	std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
@@ -1210,7 +1219,7 @@ void EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 {
 	if( !m_bakedMorphAllocation.IsValid() )
 	{
-		TriGeometryResMeshData* geometryResMesh = m_mesh->GetGeometryResource()->GetGeometryResMesh( m_mesh->GetMeshIndex() );
+		TriGeometryResMeshData* geometryResMesh = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() );
 
 		if( geometryResMesh )
 		{
@@ -1309,7 +1318,7 @@ void EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 		Tr2Renderer::RunComputeShader(
 			m_mergeMorphsEffect,
 			BlueSharedString( "MorphBaking" ),
-			(vertexCount + 31) / 32,
+			(vertexCount + 63) / 64,
 			1,
 			1,
 			renderContext

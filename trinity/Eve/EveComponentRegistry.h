@@ -263,7 +263,7 @@ void EveComponentRegistry::Clear()
 	{
 		EveEntity* entity = dynamic_cast<EveEntity*>( component );
 
-		collection->RemoveState( entity->m_state );
+		RemoveFromCollection( collection, entity );
 	}
 	collection->Clear();
 }
