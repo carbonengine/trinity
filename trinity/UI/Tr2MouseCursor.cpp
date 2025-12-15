@@ -365,7 +365,7 @@ bool Tr2MouseCursor::Create( Tr2HostBitmap* bitmap, int hotspotX, int hotspotY, 
 	// For such bitmap CreateIconIndirect function creates an incorrect
 	// cursor without transparency
 	bool allTransparent = true;
-	for( unsigned i = 0; i < 32 * 32; ++i )
+	for( unsigned i = 0; i < bitmap->GetWidth() * bitmap->GetHeight(); ++i )
 	{
 		if( reinterpret_cast<char*>( bits )[i * 4 + 3] )
 		{
