@@ -173,7 +173,6 @@ protected:
 
 	bool DisplayDecals() const;
 
-	// Returns true if morph buffers were prepared
 	void PrepareMorphBuffers( Tr2RenderContext & renderContext );
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;

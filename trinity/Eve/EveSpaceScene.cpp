@@ -2218,7 +2218,6 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		{
 			cleanUpMorphTasks = true;
 			meshMorph->UpdateMeshMorphs( renderContext );
-			meshMorph->UpdateMeshMorphs( renderContext );
 		}
 		if( cleanUpMorphTasks )
 		{
