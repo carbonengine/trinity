@@ -85,9 +85,6 @@ struct TriMorphTargetGeometryConstants
 	uint32_t tangentOffset;
 	uint32_t tangentType;
 
-	uint32_t texCoord0Offset;
-	uint32_t texCoord0Type;
-
 	uint32_t vertexCount;
 };
 

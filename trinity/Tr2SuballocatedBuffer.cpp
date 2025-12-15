@@ -120,7 +120,7 @@ bool Tr2SuballocatedBuffer::OnPrepareResources()
 	uint32_t bufferSize = static_cast<uint32_t>(m_allocator.GetCurrentSize());
 
 	Tr2BufferAL buffer;
-	Tr2BufferDescriptionAL desc( 1, bufferSize, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
+	Tr2BufferDescriptionAL desc( 4, bufferSize / 4, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
 	buffer.Create( desc, nullptr, renderContext );
 
 	m_buffer = buffer;

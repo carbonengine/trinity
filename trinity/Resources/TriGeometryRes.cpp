@@ -1557,7 +1557,6 @@ void TriGeometryRes::Reload()
 	BlueAsyncRes::Reload();
 }
 
-
 TriGeometryResSkeletonData::TriGeometryResSkeletonData() :
 	m_joints( "TriGeometryResSkeletonData/m_joints" )
 {
@@ -1739,19 +1738,6 @@ TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDef
 				type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
 				type == Tr2VertexDefinition::DataType::USHORT_4_NORM,
 				"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
-			);
-		}
-
-		if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			data.texCoord0Offset = it->m_offset;
-			data.texCoord0Type = it->m_dataType;
-
-			uint32_t type = data.texCoord0Type;
-			CCP_ASSERT_M(
-				type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
-				type == Tr2VertexDefinition::DataType::FLOAT32_2,
-				"texCoord0 type has to be FLOAT16_2 or FLOAT32_2!" 
 			);
 		}
 	}
