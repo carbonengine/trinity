@@ -1402,6 +1402,7 @@ set(_SOURCES
     ITr2CurveSetOwner.h
     ITr2DynamicBindingOwner.h
     ITr2EffectValue.h
+    ITr2MeshMorph.h
     ITr2PickableScene.cpp
     ITr2PickableScene.h
     ITr2Renderable.h
