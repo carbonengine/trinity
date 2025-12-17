@@ -682,7 +682,12 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 						{
 							vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 						}
-						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[idx], vertexBufferData, transform );
+						uint32_t bakedMorphOffset = UINT32_MAX;
+						if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
+						{
+							bakedMorphOffset = m_bakedMorphAllocation.GetOffset();
+						}
+						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[idx], vertexBufferData, transform, bakedMorphOffset );
 					}
 				}
 			}
@@ -707,7 +712,12 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					{
 						vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 					}
-					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[0], vertexBufferData, m_worldTransform );
+					uint32_t bakedMorphOffset = UINT32_MAX;
+					if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
+					{
+						bakedMorphOffset = m_bakedMorphAllocation.GetOffset();
+					}
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[0], vertexBufferData, m_worldTransform, bakedMorphOffset );
 				}
 			}
 		}
@@ -1106,7 +1116,7 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 bool IsBakedName( std::string name )
 {
 	// if name starts with bs its baked
-	return name.substr( 0, 5 ) == "Base_" || name.substr( 0, 4 ) == "Org_" || name.substr( 0, 3 ) == "Sc_";
+	return name.compare( 0, 5, "Base_" ) == 0 || name.compare( 0, 4, "Org_" ) == 0 || name.compare( 0, 3, "Sc_" ) == 0;
 }
 
 bool EveChildMesh::MorphAllowedToBeProcessed( int index, bool bakedOnly )
@@ -1333,7 +1343,7 @@ void EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 }
 
 
-bool EveChildMesh::IsMorphsBaked()
+bool EveChildMesh::IsMorphsBaked() const
 {
 	return m_isMorphsBaked;
 }

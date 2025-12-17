@@ -165,7 +165,7 @@ public:
 
 	void UpdateMeshMorphs( Tr2RenderContext & renderContext ) override;
 
-	bool IsMorphsBaked();
+	bool IsMorphsBaked() const;
 
 protected:
 	void InitializeAnimation();

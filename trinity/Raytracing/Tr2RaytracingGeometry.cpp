@@ -720,7 +720,8 @@ struct SkinningShaderCBuffer
 	uint32_t morphTargetPositionOffset;
 	uint32_t morphTargetStride;
 	uint32_t morphTargetSize;
-	uint32_t _padding[2];
+	uint32_t bakedMorphTargetPositionOffset;
+	uint32_t _padding;
 };
 }
 
@@ -746,7 +747,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 	}
 
-	std::vector<Tr2RaytracingMesh*> outdatedMeshes;
+	std::vector<GeometryData*> outdatedMeshes;
 	outdatedMeshes.reserve( m_geometryData.size() );
 
 	{
@@ -776,7 +777,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 				continue;
 			}
 
-			outdatedMeshes.push_back( mesh );
+			outdatedMeshes.push_back( &(*it) );
 
 			skinnedVertexCount += meshData->m_vertexCount;
 		}
@@ -852,7 +853,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 		for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
 		{
-			Tr2RaytracingMesh* mesh = *it;
+			Tr2RaytracingMesh* mesh = ( *it )->mesh;
 			TriGeometryResMeshData* meshData = mesh->GetMeshData();
 			if( !meshData )
 			{
@@ -879,6 +880,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			constData->morphTargetPositionOffset = 0;
 			constData->morphTargetStride = 0;
 			constData->morphTargetSize = 0;
+			constData->bakedMorphTargetPositionOffset= UINT32_MAX;
 			if ( meshData->m_morphTargetAllocation.IsValid() )
 			{
 				auto morphOffsets = FindOffsets( meshData->m_morphVertexDeclaration );
@@ -887,6 +889,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 				constData->morphTargetPositionOffset = ( meshData->m_morphTargetAllocation.GetOffset() + sizeof( TriMorphTargetGeometryConstants ) + morphOffsets.positionOffset ) >> 2;
 				constData->morphTargetStride = meshData->m_bytesPerMorphTargetVertex >> 2;
 				constData->morphTargetSize = ( meshData->m_bytesPerMorphTargetVertex * vertexCount ) >> 2;
+				constData->bakedMorphTargetPositionOffset = ( *it )->bakedMorphOffset;
+
 			}
 			m_skinVerticesData.Unlock( renderContext );
 
@@ -978,7 +982,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
     }
 }
 
-void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform )
+void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform, uint32_t bakedMorphOffset )
 {
 	if( !mesh.IsGoodForArea( area.GetAreaIndex() ) )
 	{
@@ -994,6 +998,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.worldTransform = worldTransform;
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
+	obj.bakedMorphOffset = bakedMorphOffset;
 	m_geometryData.push_back( obj );
 }
 
