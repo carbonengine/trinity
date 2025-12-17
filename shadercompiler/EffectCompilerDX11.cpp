@@ -1434,11 +1434,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						if( g_generatePDB )
 						{
 							// Get debug info and it's name.
-							CComPtr<ID3DBlob> pPDB;
-							D3DGetBlobPart( compiledEffectData->GetBufferPointer(), compiledEffectData->GetBufferSize(), D3D_BLOB_PDB, 0, &pPDB );
+							CComPtr<ID3DBlob> pdbBlob;
+							D3DGetBlobPart( compiledEffectData->GetBufferPointer(), compiledEffectData->GetBufferSize(), D3D_BLOB_PDB, 0, &pdbBlob );
 
-							CComPtr<ID3DBlob> pPDBName;
-							D3DGetBlobPart( compiledEffectData->GetBufferPointer(), compiledEffectData->GetBufferSize(), D3D_BLOB_DEBUG_NAME, 0, &pPDBName );
+							CComPtr<ID3DBlob> pdbName;
+							D3DGetBlobPart( compiledEffectData->GetBufferPointer(), compiledEffectData->GetBufferSize(), D3D_BLOB_DEBUG_NAME, 0, &pdbName );
 
 							struct ShaderDebugName
 							{
@@ -1446,14 +1446,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 								uint16_t nameLength;
 							};
 
-							auto pDebugNameData = reinterpret_cast<const ShaderDebugName*>( pPDBName->GetBufferPointer() );
-							auto pName = reinterpret_cast<const char*>( pDebugNameData + 1 );
+							auto debugNameData = reinterpret_cast<const ShaderDebugName*>( pdbName->GetBufferPointer() );
+							auto name = reinterpret_cast<const char*>( debugNameData + 1 );
 							{
 								// TODO: intern, I'm actually not sure if we need a mutex here at all...
 								std::lock_guard scope( m_pdbCS );
 								PDB pdb;
-								pdb.name = pName;
-								pdb.pdbBlob = pPDB;
+								pdb.name = name;
+								pdb.pdbBlob = pdbBlob;
 								result.pdbs.push_back( pdb );
 							}
 						}
