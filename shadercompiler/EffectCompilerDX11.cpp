@@ -52,7 +52,8 @@ extern StringTable g_stringTable;
 extern bool g_printWarnings;
 extern unsigned g_optimizationLevel;
 extern bool g_avoidFlowControl;
-extern bool g_generatePBD;
+extern bool g_generatePDB;
+extern bool g_skipOptimization;
 
 
 static bool FindParameterBySemantics( ASTNode* node, const char** semantics, std::vector<Symbol*>* path, bool outParameter = false )
@@ -1413,7 +1414,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							nullptr,
 							patchEntryPoint.c_str(),
 							profile.c_str(),
-							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | ( g_generatePBD ? ( D3DCOMPILE_DEBUG | D3DCOMPILE_DEBUG_NAME_FOR_SOURCE ) : 0 ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
+							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | ( g_generatePDB ? ( D3DCOMPILE_DEBUG | D3DCOMPILE_DEBUG_NAME_FOR_SOURCE ) : 0 ) | ( g_skipOptimization ? D3DCOMPILE_SKIP_OPTIMIZATION : GetOptimizationLevel() ) | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
 							0,
 							&compiledEffectData,
 							&errors );
@@ -1430,7 +1431,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 					else
 					{
-						if ( g_generatePBD )
+						if( g_generatePDB )
 						{
 							// Get debug info and it's name.
 							CComPtr<ID3DBlob> pPDB;
@@ -1750,17 +1751,20 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				CComPtr<IDxcBlobEncoding> src;
 				m_dxilUtils->CreateBlobFromPinned( code.c_str(), UINT32( code.size() ), CP_UTF8, &src );
 
-				LPCWSTR arguments[6];
+				LPCWSTR arguments[7];
 				uint32_t argumentsSize = 5;
 				arguments[0] = L"-T";
 				arguments[1] = L"lib_6_3";
 				arguments[2] = L"-Qstrip_debug";
 				arguments[3] = L"-Qstrip_reflect";
 				arguments[4] = DXC_ARG_WARNINGS_ARE_ERRORS; //-WX
-				if ( g_generatePBD )
+				if( g_generatePDB )
 				{
-					arguments[5] = DXC_ARG_DEBUG; //-Zi
-					argumentsSize += 1;
+					arguments[argumentsSize++] = DXC_ARG_DEBUG; //-Zi
+				}
+				if ( g_skipOptimization )
+				{
+					arguments[argumentsSize++] = DXC_ARG_SKIP_OPTIMIZATIONS; //-Od
 				}
 
 				DxcBuffer sourceBuffer;
@@ -1792,7 +1796,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					pCompileResult->GetOutput( DXC_OUT_REFLECTION, IID_PPV_ARGS( &pReflectionData ), nullptr );
 					syncData->libraryReflection.Attach( pReflectionData.Detach() );
 
-					if ( g_generatePBD )
+					if( g_generatePDB )
 					{
 						// Get debug info and it's name.
 						CComPtr<IDxcBlob> pdbBlob;

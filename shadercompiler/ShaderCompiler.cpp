@@ -58,7 +58,9 @@ std::string g_metalToolsPath;
 // Generate DX11 HLSL listing file
 bool g_generateListing = false;
 // Generate pdb files for debugging
-bool g_generatePBD = false;
+bool g_generatePDB = false;
+// Skip optimization for debugging
+bool g_skipOptimization = false;
 // Listing text
 std::string g_listing;
 // CS for listing access
@@ -355,7 +357,7 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 		}
 		else if( strcmp( argv[i], "/pdb" ) == 0 )
 		{
-			g_generatePBD = true;
+			g_generatePDB = true;
 			++i;
 			if( i < argc )
 			{
@@ -365,6 +367,10 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 			{
 				return false;
 			}
+		}
+		else if( strcmp( argv[i], "/Od" ) == 0 )
+		{
+			g_skipOptimization = true;
 		}
 		else if( strncmp( argv[i], "/O", 2 ) == 0 && strlen( argv[i] ) == 3 && argv[i][2] >= '0' && argv[i][2] <= '3' )
 		{
