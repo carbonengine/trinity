@@ -52,6 +52,7 @@ extern StringTable g_stringTable;
 extern bool g_printWarnings;
 extern unsigned g_optimizationLevel;
 extern bool g_avoidFlowControl;
+extern bool g_generatePBD;
 
 
 static bool FindParameterBySemantics( ASTNode* node, const char** semantics, std::vector<Symbol*>* path, bool outParameter = false )
@@ -1412,7 +1413,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							nullptr,
 							patchEntryPoint.c_str(),
 							profile.c_str(),
-							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
+							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | ( g_generatePBD ? ( D3DCOMPILE_DEBUG | D3DCOMPILE_DEBUG_NAME_FOR_SOURCE ) : 0 ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
 							0,
 							&compiledEffectData,
 							&errors );
@@ -1429,6 +1430,33 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 					else
 					{
+						if ( g_generatePBD )
+						{
+							// Get debug info and it's name.
+							CComPtr<ID3DBlob> pPDB;
+							D3DGetBlobPart( compiledEffectData->GetBufferPointer(), compiledEffectData->GetBufferSize(), D3D_BLOB_PDB, 0, &pPDB );
+
+							CComPtr<ID3DBlob> pPDBName;
+							D3DGetBlobPart( compiledEffectData->GetBufferPointer(), compiledEffectData->GetBufferSize(), D3D_BLOB_DEBUG_NAME, 0, &pPDBName );
+
+							struct ShaderDebugName
+							{
+								uint16_t flags;
+								uint16_t nameLength;
+							};
+
+							auto pDebugNameData = reinterpret_cast<const ShaderDebugName*>( pPDBName->GetBufferPointer() );
+							auto pName = reinterpret_cast<const char*>( pDebugNameData + 1 );
+							{
+								// TODO: intern, I'm actually not sure if we need a mutex here at all...
+								std::lock_guard scope( m_pdbCS );
+								PDB pdb;
+								pdb.name = pName;
+								pdb.pdbBlob = pPDB;
+								result.pdbs.push_back( pdb );
+							}
+						}
+
 						// Compilation succeeded! Hand over the resource to the cache entry.
 						syncData->passResource.Attach( compiledEffectData.Detach() );
 					}
@@ -1675,18 +1703,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				AssignRegisters( state.GetTree(), 8, globalInputs );
 			}
 
-
 			CompilerInputStream os( state, ShadingLanguage::HLSL );
 			os << HLSL{ state.GetTree(), & state.GetSymbolTable() };
-
-			CComPtr<IDxcBlobEncoding> src;
-
-			//m_dxilLibrary->CreateBlobWithEncodingFromPinned( os.str(), UINT32( os.pcount() ), CP_UTF8, &src );
 			std::string code = os.str();
-			m_dxilUtils->CreateBlobFromPinned( code.c_str(), UINT32(os.str().size() ), CP_UTF8, &src);
-
 			library.source = code;
-
 
 			// Let only one thread compile this permutation.
 			bool needsToCompile = false;
@@ -1727,40 +1747,77 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			else
 			{
 				// We need to compile, nobody else is doing it for this permutation.
-				CComPtr<IDxcCompiler> compiler;
+				CComPtr<IDxcBlobEncoding> src;
+				m_dxilUtils->CreateBlobFromPinned( code.c_str(), UINT32( code.size() ), CP_UTF8, &src );
+
+				LPCWSTR arguments[6];
+				uint32_t argumentsSize = 5;
+				arguments[0] = L"-T";
+				arguments[1] = L"lib_6_3";
+				arguments[2] = L"-Qstrip_debug";
+				arguments[3] = L"-Qstrip_reflect";
+				arguments[4] = DXC_ARG_WARNINGS_ARE_ERRORS; //-WX
+				if ( g_generatePBD )
+				{
+					arguments[5] = DXC_ARG_DEBUG; //-Zi
+					argumentsSize += 1;
+				}
+
+				DxcBuffer sourceBuffer;
+				sourceBuffer.Ptr = src->GetBufferPointer();
+				sourceBuffer.Size = src->GetBufferSize();
+				sourceBuffer.Encoding = 0;
+
+				CComPtr<IDxcCompiler3> compiler;
 				DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
 
-				CComPtr<IDxcOperationResult> opResult;
-				compiler->Compile(
-					src,
-					L"memory",
-					L"",
-					L"lib_6_3",
-					nullptr,
-					0,
-					nullptr,
-					0,
-					nullptr,
-					&opResult );
-
-				HRESULT hrCompilation;
-				opResult->GetStatus( &hrCompilation );
+				CComPtr<IDxcResult> pCompileResult;
+				HRESULT hrCompilation = compiler->Compile( &sourceBuffer, arguments, argumentsSize, nullptr, IID_PPV_ARGS( &pCompileResult ) );
 				
 				if( FAILED( hrCompilation ) )
 				{
 					// We failed compilation, let's print errors.
 					syncData->libraryResource = nullptr;
-					CComPtr<IDxcBlobEncoding> messages;
-					if( SUCCEEDED( opResult->GetErrorBuffer( &messages ) ) )
+					
+					CComPtr<IDxcBlobUtf8> pErrors;
+					pCompileResult->GetOutput( DXC_OUT_ERRORS, IID_PPV_ARGS( &pErrors ), nullptr );
+					if( pErrors && pErrors->GetStringLength() > 0 )
 					{
-						g_messages.AddMessages( messages );
+						g_messages.AddMessages( pErrors );
 					}
 				}
 				else
 				{
+					CComPtr<IDxcBlob> pReflectionData;
+					pCompileResult->GetOutput( DXC_OUT_REFLECTION, IID_PPV_ARGS( &pReflectionData ), nullptr );
+					syncData->libraryReflection.Attach( pReflectionData.Detach() );
+
+					if ( g_generatePBD )
+					{
+						// Get debug info and it's name.
+						CComPtr<IDxcBlob> pdbBlob;
+						CComPtr<IDxcBlobUtf16> pdbName;
+						pCompileResult->GetOutput( DXC_OUT_PDB, IID_PPV_ARGS( &pdbBlob ), &pdbName );
+
+						char outputString[128];
+						size_t outputSize = pdbName->GetStringLength() + 1;
+						size_t charsConverted = 0;
+						const wchar_t* inputW = pdbName->GetStringPointer();
+						wcstombs_s( &charsConverted, outputString, outputSize, inputW, pdbName->GetStringLength() );
+
+						{
+							// TODO: intern, I'm actually not sure if we need a mutex here at all...
+							std::lock_guard scope( m_pdbCS );
+							PDB pdb;
+							pdb.name = outputString;
+							pdb.pdbBlob = pdbBlob;
+							result.pdbs.push_back( pdb );
+						}
+					}
+
 					// Compilation succeeded! Hand over the resource to the cache entry.
 					CComPtr<IDxcBlob> compiled;
-					opResult->GetResult( &compiled );
+					pCompileResult->GetOutput( DXC_OUT_OBJECT, IID_PPV_ARGS( &compiled ), nullptr );
 					syncData->libraryResource.Attach( compiled.Detach() );
 				}
 
@@ -1774,6 +1831,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			// Grab a raw pointer from the cache. This is to avoid whatever funny business is going on with CComPtr reference counters.
 			IDxcBlob* compiled = syncData->libraryResource;
+			IDxcBlob* pReflectionData = syncData->libraryResource;
 
 			{
 				// Not sure if this is necessary to avoid reference counter bugs. But anyway...
@@ -1791,14 +1849,13 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			library.shaderDataStr = g_stringTable.AddString( compiled->GetBufferPointer(), compiled->GetBufferSize() );
 			library.shaderSize = uint32_t( compiled->GetBufferSize() );
 
-			CComPtr<IDxcContainerReflection> reflection;
-			DxcCreateInstance( CLSID_DxcContainerReflection, IID_PPV_ARGS( &reflection ) );
-			reflection->Load( compiled );
-			UINT32 shaderIdx;
-			reflection->FindFirstPartKind( DFCC_DXIL, &shaderIdx );
-
+			DxcBuffer reflectionBuffer;
+			reflectionBuffer.Ptr = pReflectionData->GetBufferPointer();
+			reflectionBuffer.Size = pReflectionData->GetBufferSize();
+			reflectionBuffer.Encoding = 0;
 			CComPtr<ID3D12LibraryReflection> shaderReflection;
-			reflection->GetPartReflection( shaderIdx, IID_PPV_ARGS( &shaderReflection ) );
+			m_dxilUtils->CreateReflection( &reflectionBuffer, IID_PPV_ARGS( &shaderReflection ) );
+
 			D3D12_LIBRARY_DESC desc;
 			shaderReflection->GetDesc( &desc );
 
