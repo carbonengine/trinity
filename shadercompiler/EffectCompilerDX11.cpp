@@ -1783,18 +1783,18 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					// We failed compilation, let's print errors.
 					syncData->libraryResource = nullptr;
 					
-					CComPtr<IDxcBlobUtf8> pErrors;
-					pCompileResult->GetOutput( DXC_OUT_ERRORS, IID_PPV_ARGS( &pErrors ), nullptr );
-					if( pErrors && pErrors->GetStringLength() > 0 )
+					CComPtr<IDxcBlobUtf8> errors;
+					pCompileResult->GetOutput( DXC_OUT_ERRORS, IID_PPV_ARGS( &errors ), nullptr );
+					if( errors && errors->GetStringLength() > 0 )
 					{
-						g_messages.AddMessages( pErrors );
+						g_messages.AddMessages( errors );
 					}
 				}
 				else
 				{
-					CComPtr<IDxcBlob> pReflectionData;
-					pCompileResult->GetOutput( DXC_OUT_REFLECTION, IID_PPV_ARGS( &pReflectionData ), nullptr );
-					syncData->libraryReflection.Attach( pReflectionData.Detach() );
+					CComPtr<IDxcBlob> reflectionData;
+					pCompileResult->GetOutput( DXC_OUT_REFLECTION, IID_PPV_ARGS( &reflectionData ), nullptr );
+					syncData->libraryReflection.Attach( reflectionData.Detach() );
 
 					if( g_generatePDB )
 					{
@@ -1835,7 +1835,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			// Grab a raw pointer from the cache. This is to avoid whatever funny business is going on with CComPtr reference counters.
 			IDxcBlob* compiled = syncData->libraryResource;
-			IDxcBlob* pReflectionData = syncData->libraryResource;
+			IDxcBlob* reflectionData = syncData->libraryResource;
 
 			{
 				// Not sure if this is necessary to avoid reference counter bugs. But anyway...
@@ -1854,8 +1854,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			library.shaderSize = uint32_t( compiled->GetBufferSize() );
 
 			DxcBuffer reflectionBuffer;
-			reflectionBuffer.Ptr = pReflectionData->GetBufferPointer();
-			reflectionBuffer.Size = pReflectionData->GetBufferSize();
+			reflectionBuffer.Ptr = reflectionData->GetBufferPointer();
+			reflectionBuffer.Size = reflectionData->GetBufferSize();
 			reflectionBuffer.Encoding = 0;
 			CComPtr<ID3D12LibraryReflection> shaderReflection;
 			m_dxilUtils->CreateReflection( &reflectionBuffer, IID_PPV_ARGS( &shaderReflection ) );
