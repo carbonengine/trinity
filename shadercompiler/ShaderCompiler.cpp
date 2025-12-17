@@ -865,7 +865,9 @@ int main(int argc, char* argv[])
 							fflush( stdout );
 							return 1;
 						}
+#if _WIN32
 						fwrite( pdb.pdbBlob->GetBufferPointer(), pdb.pdbBlob->GetBufferSize(), 1, pdbFile );
+#endif
 						fclose( pdbFile );
 					}
 				}
