@@ -169,6 +169,9 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 
 	char upscalingBuffer[256];
 
+	char fpsCounterBuffer[32];
+	sprintf_s( fpsCounterBuffer, "%11.2f", m_averageFPS );
+
 	if( upscalingInfo.technique != Tr2UpscalingAL::Technique::NONE )
 	{
 		std::string formattedUpscalingText = 
@@ -208,6 +211,8 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		if( upscalingInfo.frameGeneration )
 		{
 			settingName += "/FG";
+			float gen = static_cast<float>( CCP_STATS_GET( smoothedGeneratedFrames ) ) ;
+			sprintf_s( fpsCounterBuffer, "%5.1f/%5.1f", m_averageFPS, gen / 100.0f );
 		}
 		sprintf_s(
 			upscalingBuffer,
@@ -229,7 +234,7 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		"%s" // This is upscaling information
 		"Display Res: %11s\n"
 		"      Frame: %11.0lld\n"
-		"        FPS: %11.2f\n"
+		"        FPS: %11s\n"
 		"         MS: %11.2f\n"
 		" Draw Calls: %11.0d\n"
 		" Vert Count: %11.0d";
@@ -257,7 +262,7 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		upscalingBuffer,
 		displayResolution.c_str(),
 		Tr2Renderer::GetCurrentFrameCounter(),
-		m_averageFPS,
+		fpsCounterBuffer,
 		m_averageMSPerFrame,
 		dpCount,
 		vertCount,
