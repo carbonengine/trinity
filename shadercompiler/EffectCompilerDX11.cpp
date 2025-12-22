@@ -1835,7 +1835,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			// Grab a raw pointer from the cache. This is to avoid whatever funny business is going on with CComPtr reference counters.
 			IDxcBlob* compiled = syncData->libraryResource;
-			IDxcBlob* reflectionData = syncData->libraryResource;
+			IDxcBlob* reflectionData = syncData->libraryReflection;
 
 			{
 				// Not sure if this is necessary to avoid reference counter bugs. But anyway...
