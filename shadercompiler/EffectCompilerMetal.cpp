@@ -2207,7 +2207,7 @@ namespace
 			{
 				for( auto name : member->GetChildren() )
 				{
-					GatherFields( destStruct, accessors, NewDot( state, accessParent->Copy(), name->GetSymbol() ), name->GetType().symbol->definition, state );
+					GatherSystemFields( destStruct, accessors, argumentAccessors, NewDot( state, accessParent->Copy(), name->GetSymbol() ), name->GetType().symbol->definition, state );
 				}
 			}
 			else
