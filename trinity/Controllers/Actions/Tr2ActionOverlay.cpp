@@ -20,7 +20,7 @@ Tr2ActionOverlay::Tr2ActionOverlay( IRoot* ) :
 {
 }
 
-void Tr2ActionOverlay::Start( Tr2Controller& controller )
+void Tr2ActionOverlay::Start( ITr2ActionController& controller )
 {
 	EveSpaceObject2Ptr owner = BlueCastPtr( controller.GetOwner() );
     bool rebind = false;
@@ -91,7 +91,7 @@ void Tr2ActionOverlay::Start( Tr2Controller& controller )
     }
 }
 
-void Tr2ActionOverlay::Stop( Tr2Controller& controller )
+void Tr2ActionOverlay::Stop( ITr2ActionController& controller )
 {
 	if( !m_overlay )
 	{

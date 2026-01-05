@@ -13,6 +13,7 @@ const Be::ClassInfo* EveSmartLightPointLight::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IListNotify )
+		MAP_INTERFACE( EveEntity )
 
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )

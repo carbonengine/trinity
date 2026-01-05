@@ -38,6 +38,7 @@ EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 {
 	m_controllers.SetNotify( this );
 	m_effectChildren.SetNotify( this );
+	m_lights.SetNotify( this );
 }
 
 bool EveEffectRoot2::Initialize()
@@ -134,6 +135,26 @@ void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 			}
 		default:
 			break;
+		}
+	}
+	else if( list == &m_lights )
+	{
+		auto maskedEvent = event & BELIST_EVENTMASK;
+		if( ( maskedEvent == BELIST_UNLOADSTART ) || ( ( maskedEvent == BELIST_REMOVED ) && m_lights.empty() ) )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->UnRegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+		else if( ( maskedEvent == BELIST_INSERTED ) && m_lights.size() == 1 )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->RegisterComponent<ITr2LightOwner>( this );
+			}
 		}
 	}
 }
@@ -386,10 +407,6 @@ void EveEffectRoot2::GetLights( Tr2LightManager& lightManager ) const
 	{
 		( *it )->AddLight( lightManager, worldTransform, scaling );
 	}
-	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
-	{
-		( *it )->GetLights( lightManager );
-	}
 }
 
 
@@ -445,6 +462,10 @@ void EveEffectRoot2::RegisterComponents( )
 	auto registry = GetComponentRegistry();
 	if( registry && m_display )
 	{
+		if ( !m_lights.empty() )
+		{
+			registry->RegisterComponent<ITr2LightOwner>( this );
+		}
 		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( *it ) )

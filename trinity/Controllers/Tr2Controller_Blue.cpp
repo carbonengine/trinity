@@ -10,6 +10,7 @@
 
 BLUE_DEFINE_INTERFACE( ITr2ControllerAction );
 BLUE_DEFINE_INTERFACE( ITr2Controller );
+BLUE_DEFINE_INTERFACE( ITr2ActionController );
 
 BLUE_DEFINE( Tr2Controller );
 
@@ -18,6 +19,7 @@ const Be::ClassInfo* Tr2Controller::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2Controller, "" )
 		MAP_INTERFACE( Tr2Controller )
 		MAP_INTERFACE( ITr2Controller )
+		MAP_INTERFACE( ITr2ActionController )
 		MAP_INTERFACE( IListNotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )

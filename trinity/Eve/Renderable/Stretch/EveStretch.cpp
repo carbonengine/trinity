@@ -38,6 +38,15 @@ EveStretch::EveStretch( IRoot* lockobj ) :
 	m_length.CreateInstance();
 }
 
+bool EveStretch::OnModified( Be::Var* value )
+{
+	if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
+	}
+	return true;
+}
+
 // start the update mess!
 void EveStretch::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
@@ -100,6 +109,11 @@ void EveStretch::UpdateAsyncronous( const EveUpdateContext& updateContext )
 	if (auto tmp = dynamic_cast< Tr2AudioStretchBase* > ( m_audio.p ))
 	{
 		tmp->Update( m_sourcePosition, m_destinationPosition );
+	}
+
+	if (m_stretchAudio != nullptr )
+	{
+		m_stretchAudio->Update( m_sourcePosition, m_destinationPosition );
 	}
 }
 
@@ -335,18 +349,13 @@ void EveStretch::Start()
 	if ( !m_curveSets.empty() )
 	{
 		m_curveSets.front()->Play();
-
-		if ( auto tmp = dynamic_cast< Tr2AudioStretchAuto* > ( m_audio.p ) )
-		{
-			tmp->TriggerOutburstEvent();
-			tmp->TriggerImpactEvent();
-		}
 	}
 }
 
 void EveStretch::SetDisplay( bool display )
 {
 	m_display = display;
+	ReRegister();
 }
 
 bool EveStretch::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
@@ -450,6 +459,18 @@ void EveStretch::StartFiring( float delay )
 			}
 		}
 	}
+
+	if ( auto tmp = dynamic_cast< Tr2AudioStretchAuto* > ( m_audio.p ) )
+	{
+		tmp->TriggerOutburstEvent();
+		tmp->TriggerImpactEvent();
+		tmp->TriggerStretchEvent();
+	}
+
+	if ( m_stretchAudio != nullptr )
+	{
+		m_stretchAudio->Start();
+	}
 }
 
 void EveStretch::StopFiring()
@@ -473,6 +494,11 @@ void EveStretch::StopFiring()
 				curveSet->Play();
 			}
 		}
+	}
+
+	if( nullptr != m_stretchAudio )
+	{
+		m_stretchAudio->Stop();
 	}
 }
 
@@ -551,7 +577,12 @@ void EveStretch::GetLights( Tr2LightManager& lightManager ) const
 
 void EveStretch::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	if (auto tmp = dynamic_cast< Tr2AudioStretchBase* > ( m_audio.p ))
+	if (auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_audio.p ))
+	{
+		tmp->GetDebugOptions( options );
+	}
+
+	if (auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_stretchAudio.p ))
 	{
 		tmp->GetDebugOptions( options );
 	}
@@ -559,8 +590,22 @@ void EveStretch::GetDebugOptions( Tr2DebugRendererOptions& options )
 
 void EveStretch::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-	if (auto tmp = dynamic_cast< Tr2AudioStretchBase* > ( m_audio.p ))
+	if (auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_audio.p ))
 	{
 		tmp->RenderDebugInfo( renderer );
+	}
+
+	if (auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_stretchAudio.p ))
+	{
+		tmp->RenderDebugInfo( renderer );
+	}
+}
+
+void EveStretch::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
 	}
 }

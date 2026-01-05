@@ -6,6 +6,7 @@
 
 #include "StdAfx.h"
 #include "Tr2ParticleAttractorForce.h"
+#include "../Include/ITr2DebugRenderer2.h"
 
 Tr2ParticleAttractorForce::Tr2ParticleAttractorForce( IRoot* lockobj ):
 	m_magnitude( 1.f ),
@@ -35,4 +36,14 @@ XMVECTOR Tr2ParticleAttractorForce::GetForce( FXMVECTOR position, FXMVECTOR velo
 	XMVECTOR isInf = XMVectorEqual( length, g_XMInfinity );
 	direction = XMVectorSelect( XMVectorMultiply( direction, length ), g_XMZero, isInf );
 	return XMVectorScale( direction, m_magnitude );
+}
+
+void Tr2ParticleAttractorForce::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const
+{
+	auto center = TransformCoord( m_position, worldTransform );
+	auto size = 10.f;
+	renderer.DrawLine( this, center - Vector3( size, size, size ), center + Vector3( size, size, size ), 0xffaaaa00 );
+	renderer.DrawLine( this, center - Vector3( -size, size, size ), center + Vector3( -size, size, size ), 0xffaaaa00 );
+	renderer.DrawLine( this, center - Vector3( size, -size, size ), center + Vector3( size, -size, size ), 0xffaaaa00 );
+	renderer.DrawLine( this, center - Vector3( size, size, -size ), center + Vector3( size, size, -size ), 0xffaaaa00 );
 }

@@ -33,6 +33,8 @@ const Be::ClassInfo* EveBoosterSet2::ExposeToBlue()
         MAP_INTERFACE( EveBoosterSet2 )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( 
 			"display", 

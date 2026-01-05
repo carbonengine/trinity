@@ -7,7 +7,8 @@ EveSmartLightPointLight::EveSmartLightPointLight( IRoot* lockobj ):
 	m_staticOffsetTranslation( 0.f, 0.f, 0.f),
 	m_staticOffsetRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_activationStrength( 1.f ),
-	m_display( true )
+	m_display( true ),
+	m_distribution( nullptr )
 {
 	m_lightGroupData = LightData();
 	m_lightType = Tr2Light::POINT_LIGHT;
@@ -47,14 +48,28 @@ void EveSmartLightPointLight::UpdateSyncronous( const EveUpdateContext& updateCo
 	{
 		attributeModifier->UpdateSyncronous( updateContext, params, 1.f );
 	}
+
+	m_distribution = distribution;
 }
 
-void EveSmartLightPointLight::GetLights( const PlacementDataWithIdentifierStructureList& placements, size_t size, Tr2LightManager& lightManager ) const
+void EveSmartLightPointLight::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )	
+	{
+		registry->RegisterComponent<ITr2LightOwner>( this );
+	}
+}
+
+void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 {
 	if( !m_display )
 	{
 		return;
 	}
+
+	const PlacementDataWithIdentifierStructureList& placements = *m_distribution->GetPlacementData();
+	size_t size = m_distribution->GetNumberOfPlacements();
 
 	float scaling = XMVectorGetX( XMVectorAdd( XMVector3LengthEst( m_worldTransform.GetX() ),
 											   XMVectorAdd( XMVector3LengthEst( m_worldTransform.GetY() ), 

@@ -233,8 +233,8 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 		}
 
 		int meshIx = mesh->GetMeshIndex();
-		TriGeometryResMeshData* meshData = geomRes->GetMeshData( meshIx );
-		if( !meshData || !meshData->m_allocationsValid )
+		TriGeometryResLodData* lod = geomRes->GetMeshLod( meshIx, 0 );
+		if( !lod || !lod->m_allocationsValid )
 		{
 			continue;
 		}
@@ -271,10 +271,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 
 				for( unsigned int joint = 0; joint < n; ++joint )
 				{
-					// apply a lookup to change the bone-index from per-mesharea to per-mesh, if we have per-mesharea
-					int meshBoneIx = joint;
-					// ... then from per-mesh into the skeleton
-					float* m = skinnedData->GetSkinningMatrix( animMapping[meshBoneIx] );
+					float* m = skinnedData->GetSkinningMatrix( animMapping[joint] );
 					areaData->SetJointTransform( joint, m );
 				}
 			}
@@ -291,7 +288,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 			}
 			areaData->SetPerObjectData( *skinnedData );
 
-			auto batch = CreateGeometryBatch( meshData, area, areaData );
+			auto batch = CreateGeometryBatch( lod, area, areaData );
 			batch.m_depth = depth;
 			batches->Commit( batch );
 		}

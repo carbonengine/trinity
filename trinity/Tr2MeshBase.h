@@ -20,7 +20,7 @@ BLUE_DECLARE( TriGeometryRes );
 struct TriGeometryResSkeletonData;
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
-struct TriGeometryResMeshData;
+struct TriGeometryResLodData;
 class TriRenderBatch;
 class Tr2RaytracingMesh;
 
@@ -135,7 +135,7 @@ TYPEDEF_BLUECLASS( Tr2MeshBase );
 BLUE_DECLARE_VECTOR( Tr2MeshBase );
 
 
-Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* area, const Tr2PerObjectData* data );
+Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* area, const Tr2PerObjectData* data );
 
 
 #endif // Tr2MeshBase_h

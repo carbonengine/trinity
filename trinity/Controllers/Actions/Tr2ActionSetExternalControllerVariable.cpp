@@ -23,7 +23,7 @@ Tr2ActionSetExternalControllerVariable::Tr2ActionSetExternalControllerVariable( 
 {
 }
 
-void Tr2ActionSetExternalControllerVariable::Link( Tr2Controller& controller )
+void Tr2ActionSetExternalControllerVariable::Link( ITr2ActionController& controller )
 {
 	m_controller = &controller;
 	LinkToDestinationOwner();
@@ -35,7 +35,7 @@ void Tr2ActionSetExternalControllerVariable::Unlink()
 	m_destination = nullptr;
 }
 
-void Tr2ActionSetExternalControllerVariable::Start( Tr2Controller& controller )
+void Tr2ActionSetExternalControllerVariable::Start( ITr2ActionController& controller )
 {
 	if( !IsDestinationValid() )
 	{
@@ -57,9 +57,9 @@ void Tr2ActionSetExternalControllerVariable::Start( Tr2Controller& controller )
 		float value = m_value;
 		if( !m_sourceVariable.empty() )
 		{
-			if( auto var = m_controller->GetVariableByName( m_sourceVariable.c_str() ) )
+			if( auto var = m_controller->GetFloatVariableByName( m_sourceVariable.c_str() ) )
 			{
-				value = var->GetValue();
+				value = *var;
 			}
 		}
 

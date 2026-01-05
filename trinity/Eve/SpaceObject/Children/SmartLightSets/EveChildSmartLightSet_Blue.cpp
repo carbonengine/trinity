@@ -9,8 +9,10 @@ const Be::ClassInfo* EveChildSmartLightSet::ExposeToBlue()
 		MAP_INTERFACE( EveChildSmartLightSet )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2DebugRenderable )
+		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IListNotify )
 		MAP_INTERFACE( IEveInheritPropertiesOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )

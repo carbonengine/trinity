@@ -11,6 +11,7 @@
 #include "ITr2Renderable.h"
 #include "Utilities/BoundingBox.h"
 #include "EveHazeSetItem.h"
+#include "Lights/ITr2LightOwner.h"
 
 // forwards
 BLUE_DECLARE( Tr2Effect );
@@ -42,7 +43,9 @@ struct EveHazeSetLight
 BLUE_CLASS( EveHazeSet ) :
 	public IEveSpaceObjectAttachment,
 	public IInitialize,
-	public Tr2DeviceResource
+	public Tr2DeviceResource,
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -63,15 +66,22 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
-	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
-	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
-	virtual void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL );
-	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
+	virtual void UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
+	virtual void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL ) override;
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
-	void AddLight( const EveHazeSetLight& light );
-	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+	void AddLightFromSOF( const EveHazeSetLight& light );
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager& lightManager ) const override;
 
 	// setup
 	void Setup( Tr2EffectPtr effect );

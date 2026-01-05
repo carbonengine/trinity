@@ -7,7 +7,8 @@
 #pragma once
 
 #include "Eve/IEveSpaceObject2.h"
-#include "Lights/ITr2LightOwner.h"
+#include "Eve/EveEntity.h"
+#include "Eve/IEveFiringEffectElement.h"
 
 BLUE_DECLARE_INTERFACE( IEveFiringEffectElement );
 
@@ -19,7 +20,7 @@ BLUE_DECLARE_INTERFACE( IEveFiringEffectElement );
 // --------------------------------------------------------------------------------------
 BLUE_CLASS( EveFiringEffectElementContainer ) :
 	public IEveSpaceObject2,
-	public ITr2LightOwner
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -32,10 +33,10 @@ public:
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	
-	// lights
-	virtual void GetLights( Tr2LightManager& lightManager ) const;
-	virtual void AddLight( Tr2Light* light ){};
-	virtual void ClearLights(){};
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	// This version of the function should perform an update on the model / ball position
 	virtual void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
@@ -53,6 +54,10 @@ public:
 
 	void SetActive( bool active );
 	bool GetActive() const;
+
+	IEveFiringEffectElement* GetElement();
+	void SetElement( IEveFiringEffectElement* element );
+
 private:
 
 	IEveFiringEffectElementPtr m_element;

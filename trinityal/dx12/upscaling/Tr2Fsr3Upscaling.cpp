@@ -490,7 +490,6 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 		DispatchFrameGen( dispatchParameters );
 	}
 
-	m_reset = false;
 	// increase the generated frame, so we at least have one frame active...
 	CCP_STATS_INC( generatedFrames );
 
@@ -516,7 +515,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchUpscaling( Tr2UpscalingA
 	dispatchUpscale.jitterOffset.y = m_jitterY;
 	dispatchUpscale.motionVectorScale.x = (float)m_renderWidth;
 	dispatchUpscale.motionVectorScale.y = (float)m_renderHeight;
-	dispatchUpscale.reset = m_reset;
+	dispatchUpscale.reset = dispatchParameters.reset;
 	dispatchUpscale.enableSharpening = true;
 	dispatchUpscale.sharpness = 0.9f;
 
@@ -566,6 +565,14 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchFrameGen( Tr2UpscalingAL
 	dispatchFgPrep.commandList = m_params.renderContext.GetPrimaryRenderContext().m_commandList;
 	dispatchFgPrep.viewSpaceToMetersFactor = 1.f;
 	dispatchFgPrep.frameID = dispatchParameters.currentFrameIndex;
+
+	ffxDispatchDescFrameGenerationPrepareCameraInfo cameraInfo {};
+	std::copy( std::begin( dispatchParameters.cameraForward ), std::end( dispatchParameters.cameraForward ), cameraInfo.cameraForward );
+	std::copy( std::begin( dispatchParameters.cameraRight ), std::end( dispatchParameters.cameraRight ), cameraInfo.cameraRight );
+	std::copy( std::begin( dispatchParameters.cameraUp ), std::end( dispatchParameters.cameraUp ), cameraInfo.cameraUp );
+	std::copy( std::begin( dispatchParameters.cameraPos ), std::end( dispatchParameters.cameraPos ), cameraInfo.cameraPosition );
+
+	dispatchFgPrep.header.pNext = &cameraInfo.header;
 	
 	m_frameGenerationConfig.frameID = dispatchParameters.currentFrameIndex;
 	m_frameGenerationConfig.frameGenerationEnabled = true;

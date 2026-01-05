@@ -15,6 +15,7 @@
 #include "EveSpotlightSetItem.h"
 #include "TriFrustum.h"
 #include "Utilities/BoundingBox.h"
+#include "Lights/ITr2LightOwner.h"
 
 BLUE_DECLARE( ITriRenderBatchAccumulator );
 BLUE_DECLARE( Tr2PerObjectData );
@@ -43,7 +44,9 @@ struct EveSpotlightLight {
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveSpotlightSet ):
 	public IEveSpaceObjectAttachment,
-	public IInitialize
+	public IInitialize,
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
     EXPOSE_TO_BLUE();
@@ -57,14 +60,21 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
-	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
+	virtual void UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo(ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount);
 
-	void AddLight( const EveSpotlightLight& light );
-	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+	void AddLightFromSOF( const EveSpotlightLight& light );
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2LightOwner
+	void GetLights( Tr2LightManager& lightManager ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize

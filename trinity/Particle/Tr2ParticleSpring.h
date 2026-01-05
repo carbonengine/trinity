@@ -33,6 +33,8 @@ public:
 	XMVECTOR FASTCALL GetForce( FXMVECTOR position, FXMVECTOR velocity, float dt, float mass );
 	virtual void Update( float dt ) {}
 
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const override;
+
 private:
 	// Spring coefficient
 	float m_springConstant;

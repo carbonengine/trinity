@@ -16,15 +16,15 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	void Link( Tr2Controller& controller ) override;
+	void Link( ITr2ActionController& controller ) override;
 	void Unlink() override;
-	void Start( Tr2Controller& controller ) override;
-	void StartWithController( PyObject * controller );
+	void Start( ITr2ActionController& controller ) override;
+	void StartWithController( ITr2ActionController* controller );
 
 	float GetScalingFactor() const;
 
 protected:
-	Tr2Controller* m_controller;
+	ITr2ActionController* m_controller;
 
 	std::string m_emitterName;
 	std::string m_controllerVariableName;

@@ -36,10 +36,10 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	void Link( Tr2Controller & controller ) override;
+	void Link( ITr2ActionController& controller ) override;
 	void Unlink() override;
-	void Start( Tr2Controller & controller ) override;
-	void Stop( Tr2Controller & controller ) override;
+	void Start( ITr2ActionController& controller ) override;
+	void Stop( ITr2ActionController& controller ) override;
 
 	bool OnModified( Be::Var * value ) override;
 
@@ -48,11 +48,11 @@ public:
 	IRootPtr GetDestination() const;
 
 private:
-	void LinkDestination( const Tr2Controller& controller );
+	void LinkDestination( const ITr2ActionController& controller );
 	bool HasDelayedBinding() const;
 
 	Tr2BindingPoint m_destination;
-	const Tr2Controller* m_controller;
+	const ITr2ActionController* m_controller;
 	std::string m_animation;
 	std::string m_mask;
 	DestinationType m_destinationType;

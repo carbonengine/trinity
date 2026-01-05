@@ -23,6 +23,8 @@ public:
 	XMVECTOR FASTCALL GetForce( FXMVECTOR position, FXMVECTOR velocity, float dt, float mass );
 	void Update( float dt ) {}
 
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const override;
+
 private:
 	// Forces in volume
 	PITr2ParticleForceVector m_forces; 

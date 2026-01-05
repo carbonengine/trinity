@@ -12,6 +12,8 @@ BLUE_DECLARE( Tr2ParticleSystem );
 
 #include "ITr2GenericEmitter.h"
 
+struct ITr2DebugRenderer2;
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   ITr2GenericParticleConstraint is a particle constraint type for Tr2ParticleSystem.
@@ -44,6 +46,10 @@ BLUE_INTERFACE( ITr2GenericParticleConstraint ) : public IRoot
 	//   system - Particle system the constaint is attached to.
 	// ----------------------------------------------------------------------------------
 	virtual void Bind( Tr2ParticleSystem* system ) = 0;
+
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const
+	{
+	}
 };
 
 BLUE_DECLARE_IVECTOR( ITr2GenericParticleConstraint );

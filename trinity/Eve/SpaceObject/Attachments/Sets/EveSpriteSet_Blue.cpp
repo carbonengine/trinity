@@ -10,6 +10,8 @@ const Be::ClassInfo* EveSpriteSet::ExposeToBlue()
         MAP_INTERFACE( EveSpriteSet )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( IEveSpaceObjectAttachment )
+		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE
 		( 

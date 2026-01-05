@@ -15,14 +15,11 @@
 #include <sl_dlss_g.h>
 #include <sl_reflex.h>
 #include <sl_pcl.h>
-#include <sl_nis.h>
+
 
 namespace DlssUtils
 {
-	void Log( sl::LogType type, const char* msg );
-	sl::Resource GenerateTextureResource( Tr2TextureAL* texture );
-	const char* GetPluginName( sl::Feature feature );
-	sl::float4x4 AsFloat4x4( float f[16] );
+sl::Resource GenerateTextureResource( Tr2TextureAL* texture );
 }
 
 class Tr2DlssUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
@@ -50,8 +47,6 @@ public:
 
 private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
-
-	void TogglePlugin( sl::Feature feature, bool enable );
 
 	uint32_t m_adapter;
 	
@@ -86,18 +81,15 @@ public:
 
 private:
 	void SetFrameToken( sl::FrameToken* token );
-	sl::Result ReadyDLSSResources( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
-	sl::Result ReadyNISResources( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
+	sl::Result EvaluateDLSS( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
 	void SetCommonConstants( Tr2UpscalingAL::DispatchParameters& dispatchParameters );
 
 	sl::Result UpdateDlssG();
-
 	Tr2UpscalingAL::JitterSequence m_jitterSequence;
 
 	sl::DLSSMode m_dlssMode;
 	sl::DLSSOptions m_dlssOptions;
 	sl::DLSSGOptions m_dlssgOptions;
-	sl::NISOptions m_nisOptions;
 
 	sl::DLSSOptimalSettings m_optimalSettings;
 
@@ -105,10 +97,7 @@ private:
 	sl::DLSSGState m_dlssgState;
 	sl::Constants m_commonConstants;
 
-	HMODULE m_streamlineModule;
 	sl::FrameToken* m_frameToken;
-
-	Tr2TextureAL m_dlssOutput;
 
 	bool m_setup;
 

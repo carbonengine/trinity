@@ -9,6 +9,7 @@
 #include "ITr2AttributeGenerator.h"
 #include "Tr2ParticleSystem.h"
 #include "ITr2GenericEmitter.h"
+#include "../Include/ITr2DebugRenderer2.h"
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -249,4 +250,30 @@ void Tr2PlaneConstraint::Bind( Tr2ParticleSystem* system )
 		}
 	}
 	m_isValid = true;
+}
+
+void Tr2PlaneConstraint::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const
+{
+	if( !m_isValid )
+	{
+		return;
+	}
+	auto local = TranslationMatrix( 0, 0, -m_normalizedPlane.d ) * OrthoNormalBasisZ( Vector3( m_normalizedPlane.a, m_normalizedPlane.b, m_normalizedPlane.c ) );
+	auto world = local * worldTransform;
+	auto center = TransformCoord( aabb.Center(), Inverse( local ) );
+	center.z = 0;
+	float radius = std::max( 10.f, Length( aabb.Size() ) * 0.25f );
+	float step = radius * 0.2f;
+	for( int i = -5; i <= 5; ++i )
+	{ 
+		Vector3 p0( float( i ) * step, -radius, 0 );
+		Vector3 p1( float( i ) * step, radius, 0 );
+		renderer.DrawLine( this, TransformCoord( p0 + center, world ), TransformCoord( p1 + center, world ), 0xffff4444 );
+	}
+	for( int i = -5; i <= 5; ++i )
+	{
+		Vector3 p0( -radius, float( i ) * step, 0 );
+		Vector3 p1( radius, float( i ) * step, 0 );
+		renderer.DrawLine( this, TransformCoord( p0 + center, world ), TransformCoord( p1 + center, world ), 0xffff4444 );
+	}
 }

@@ -207,24 +207,97 @@ std::unordered_map<std::string, IRoot*> EveStretch3::GetParameterMap() const
 	return parameterMap;
 }
 
-bool EveStretch3::OnModified( Be::Var* value )
+IEveSpaceObjectChild* EveStretch3::GetSourceObject()
 {
-	if( IsMatch( value, m_stretchObject ) )
+	return m_sourceObject;
+}
+
+void EveStretch3::SetSourceObject( IEveSpaceObjectChild* sourceObject )
+{
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_sourceObject ) )
 	{
-		if( m_stretchObject )
+		entity->UnRegister( registry );
+	}
+	m_sourceObject = sourceObject;
+	if( EveEntityPtr entity = BlueCastPtr( m_sourceObject ) )
+	{
+		entity->Register( registry );
+	}
+}
+
+IEveSpaceObjectChild* EveStretch3::GetDestObject()
+{
+	return m_destObject;
+}
+
+void EveStretch3::SetDestObject( IEveSpaceObjectChild* destObject )
+{
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_destObject ) )
+	{
+		entity->UnRegister( registry );
+	}
+	m_destObject = destObject;
+	if( EveEntityPtr entity = BlueCastPtr( m_destObject ) )
+	{
+		entity->Register( registry );
+	}
+}
+
+IEveSpaceObjectChild* EveStretch3::GetStretchObject()
+{
+	return m_stretchObject;
+}
+
+void EveStretch3::SetStretchObject( IEveSpaceObjectChild* stretchObject )
+{
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_stretchObject ) )
+	{
+		entity->UnRegister( registry );
+	}
+	m_stretchObject = stretchObject;
+	if( m_stretchObject )
+	{
+		m_stretchModifier.CreateInstance();
+		if( m_dest )
 		{
-			m_stretchModifier.CreateInstance();
-			if( m_dest )
-			{
-				m_stretchModifier->SetDest( m_dest );
-			}
-		}
-		else
-		{
-			m_stretchModifier = nullptr;
+			m_stretchModifier->SetDest( m_dest );
 		}
 	}
-	else if( IsMatch( value, m_dest ) )
+	else
+	{
+		m_stretchModifier = nullptr;
+	}
+	if( EveEntityPtr entity = BlueCastPtr( m_stretchObject ) )
+	{
+		entity->Register( registry );
+	}
+}
+
+IEveSpaceObjectChild* EveStretch3::GetMoveObject()
+{
+	return m_moveObject;
+}
+
+void EveStretch3::SetMoveObject( IEveSpaceObjectChild* moveObject )
+{
+	auto registry = GetComponentRegistry();
+	if( EveEntityPtr entity = BlueCastPtr( m_moveObject ) )
+	{
+		entity->UnRegister( registry );
+	}
+	m_moveObject = moveObject;
+	if( EveEntityPtr entity = BlueCastPtr( m_moveObject ) )
+	{
+		entity->Register( registry );
+	}
+}
+
+bool EveStretch3::OnModified( Be::Var* value )
+{
+	if( IsMatch( value, m_dest ) )
 	{
 		if( m_dest == nullptr )
 		{
@@ -238,6 +311,10 @@ bool EveStretch3::OnModified( Be::Var* value )
 			}
 			m_stretchModifier->SetDest( m_dest );
 		}
+	}
+	else if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
 	}
 
 	return true;
@@ -443,6 +520,11 @@ void EveStretch3::UpdateAsyncronous( const EveUpdateContext& updateContext )
 	{
 		tmp->Update( m_sourcePosition, m_destinationPosition );
 	}
+
+	if( m_stretchAudio != nullptr )
+	{
+		m_stretchAudio->Update( m_sourcePosition, m_destinationPosition );
+	}
 }
 
 void EveStretch3::UpdateEffectAsync( const EveUpdateContext& updateContext )
@@ -519,6 +601,7 @@ void EveStretch3::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2
 void EveStretch3::SetDisplay( bool display )
 {
 	m_display = display;
+	ReRegister();
 }
 
 bool EveStretch3::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
@@ -578,12 +661,22 @@ void EveStretch3::StartFiring( float delay )
 	// can't change the controllers since this could be called asyncronously
 	m_delay = delay;
 	m_stretchState = STRETCH_STATE_STARTING;
+
+	if( m_stretchAudio != nullptr )
+	{
+		m_stretchAudio->Start();
+	}
 }
 
 void EveStretch3::StopFiring()
 {
 	// can't change the controllers since this could be called asyncronously
 	m_stretchState = STRETCH_STATE_STOPPING;
+
+	if( m_stretchAudio != nullptr )
+	{
+		m_stretchAudio->Stop();
+	}
 }
 
 void EveStretch3::SetFiringTransform( const Matrix& source, const Vector3& dest )
@@ -615,14 +708,38 @@ void EveStretch3::DisplayEndPoints( bool displaySource, bool displayDest )
 {
 }
 
-void EveStretch3::GetLights( Tr2LightManager& lightManager ) const
+void EveStretch3::RegisterComponents()
 {
-	if( !m_display )
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
 	{
-		return;
+		RunOnComponents( 
+			[this]( IEveSpaceObjectChild* c ) 
+			{ 
+				if( EveEntityPtr entity = BlueCastPtr( c ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+			} 
+		);
 	}
+}
 
-	RunOnComponents( [&lightManager]( IEveSpaceObjectChild* c ) { c->GetLights( lightManager ); } );
+void EveStretch3::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		RunOnComponents( 
+			[this]( IEveSpaceObjectChild* c ) 
+			{ 
+				if( EveEntityPtr entity = BlueCastPtr( c ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+			} 
+		);
+	}
 }
 
 void EveStretch3::GetBindingRoots( std::unordered_map<std::string, IRoot*>& variables )
@@ -722,7 +839,12 @@ void EveStretch3::GetDebugOptions( Tr2DebugRendererOptions& options )
 		}
 	} );
 
-	if( auto tmp = dynamic_cast<Tr2AudioStretchBase*>( m_audio.p ) )
+	if(auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audio.p ) )
+	{
+		tmp->GetDebugOptions( options );
+	}
+
+	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_stretchAudio.p ) )
 	{
 		tmp->GetDebugOptions( options );
 	}
@@ -742,7 +864,12 @@ void EveStretch3::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		}
 	} );
 
-	if( auto tmp = dynamic_cast<Tr2AudioStretchBase*>( m_audio.p ) )
+	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_audio.p ) )
+	{
+		tmp->RenderDebugInfo( renderer );
+	}
+
+	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_stretchAudio.p ) )
 	{
 		tmp->RenderDebugInfo( renderer );
 	}
@@ -883,6 +1010,11 @@ ITr2AudEmitterPtr EveStretch3::FindSoundEmitter( const char* name )
 	if( auto tmp = dynamic_cast<Tr2AudioStretchBase*>( m_audio.p ) )
 	{
 		return tmp->FindEmitterByName( name );
+	}
+
+	if( m_stretchAudio != nullptr )
+	{
+		return m_stretchAudio->FindEmitterByName( name );
 	}
 	return nullptr;
 }

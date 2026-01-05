@@ -86,9 +86,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	void GetLights( Tr2LightManager& lightManager ) const;
-	void AddLight( Tr2Light* light );
-	void ClearLights( );
+	void GetLights( Tr2LightManager& lightManager ) const override;
+	void AddLight( Tr2Light* light ) override;
+	void ClearLights() override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2SecondaryLightSource

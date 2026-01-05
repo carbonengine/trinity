@@ -33,7 +33,7 @@ Tr2ActionAnimateCurveSet::Tr2ActionAnimateCurveSet( IRoot* )
 {
 }
 
-void Tr2ActionAnimateCurveSet::Link( Tr2Controller& controller )
+void Tr2ActionAnimateCurveSet::Link( ITr2ActionController& controller )
 {
 	m_controller = &controller;
 	m_evaluator.SetExpr( m_value.c_str(), controller, s_extraFunctions );
@@ -45,7 +45,7 @@ void Tr2ActionAnimateCurveSet::Unlink()
 	m_evaluator.Clear();
 }
 
-void Tr2ActionAnimateCurveSet::Start( Tr2Controller& controller )
+void Tr2ActionAnimateCurveSet::Start( ITr2ActionController& controller )
 {
 	if( !m_curveSet )
 	{
@@ -55,7 +55,7 @@ void Tr2ActionAnimateCurveSet::Start( Tr2Controller& controller )
 	controller.RegisterUpdateable( *this );
 }
 
-void Tr2ActionAnimateCurveSet::Stop( Tr2Controller& controller )
+void Tr2ActionAnimateCurveSet::Stop( ITr2ActionController& controller )
 {
 	controller.UnRegisterUpdateable( *this );
 }
@@ -112,11 +112,7 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2ActionAnimateCurveSet::GetExpressionTer
 
 	if( m_controller )
 	{
-		auto& variables = m_controller->GetVariables();
-		for( auto it = begin( variables ); it != end( variables ); ++it )
-		{
-			result.push_back( Tr2ExpressionTermInfo::Variable( "Variables", ( *it )->GetName().c_str(), "controller variable" ) );
-		}
+		m_controller->GetExpressionTermInfo( result );
 	}
 	return result;
 }

@@ -48,6 +48,7 @@ EveChildExplosion::~EveChildExplosion()
 // --------------------------------------------------------------------------------
 void EveChildExplosion::RegisterComponents()
 {
+	EveChildContainer::RegisterComponents();
 }
 
 // --------------------------------------------------------------------------------
@@ -64,6 +65,7 @@ void EveChildExplosion::UnRegisterComponents()
 			entity->UnRegister( GetComponentRegistry() );
 		}
 	}
+	EveChildContainer::UnRegisterComponents();
 }
 
 // --------------------------------------------------------------------------------------
@@ -99,10 +101,7 @@ void EveChildExplosion::Stop()
 	// manually unregister the global explosion container
 	if( this->IsInRegistry() )
 	{
-		if( EveEntityPtr entity = BlueCastPtr( m_globalExplosionContainer ) )
-		{
-			entity->UnRegister( GetComponentRegistry() );
-		}
+		UnRegisterComponents();
 	}
 	m_objects.Clear();
 	m_isPlaying = false;

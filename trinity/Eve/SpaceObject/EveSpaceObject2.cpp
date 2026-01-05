@@ -67,8 +67,8 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 
 	int meshIx = mesh->GetMeshIndex();
 
-	auto grannyMesh = geomRes->GetMeshData( meshIx, screenSize );
-	if( !grannyMesh )
+	auto lod = geomRes->GetMeshLod( meshIx, screenSize );
+	if( !lod )
 	{
 		return;
 	}
@@ -112,7 +112,7 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 			continue;
 		}
 
-		Tr2RenderBatch batch = CreateGeometryBatch( grannyMesh, area, perObjectData );
+		Tr2RenderBatch batch = CreateGeometryBatch( lod, area, perObjectData );
 		batches->Commit( batch );
 	}
 }
@@ -209,6 +209,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_effectChildren.SetNotify( this );
 	m_overlayEffects.SetNotify( this );
 	m_decals.SetNotify( this );
+	m_attachments.SetNotify( this );
 
 	SetControllerVariable( "DirtLevel", m_dirtLevel );
 	SetControllerVariable( "ActivationStrength", m_spaceObjectShipData.y );
@@ -358,6 +359,27 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 		}
 	}
 
+	if( list == &m_lights )
+	{
+		auto maskedEvent = event & BELIST_EVENTMASK;
+		if( ( maskedEvent == BELIST_UNLOADSTART ) || ( ( maskedEvent == BELIST_REMOVED ) && m_lights.empty() ) )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->UnRegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+		else if( ( maskedEvent == BELIST_INSERTED ) && m_lights.size() == 1 )
+		{
+			auto registry = this->GetComponentRegistry();
+			if( registry )
+			{
+				registry->RegisterComponent<ITr2LightOwner>( this );
+			}
+		}
+	}
+
 	if( list == &m_decals )
 	{
 		if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED && key == m_decals.size() )
@@ -392,6 +414,42 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 			{
 				m_decals[i]->SetPriority( (uint32_t)i );
 			}
+		}
+	}
+
+	if( list == &m_attachments && ( event & BELIST_LOADING ) == 0 )
+	{
+		switch( event & BELIST_EVENTMASK )
+		{
+		case BELIST_INSERTED:
+			if( IsInRegistry() )
+			{
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( this->GetComponentRegistry() );
+				}
+			}
+			break;
+		case BELIST_REMOVED:
+			if( EveEntityPtr entity = BlueCastPtr( value ) )
+			{
+				entity->UnRegister( this->GetComponentRegistry() );
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			if( IsInRegistry() )
+			{
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+			}
+			break;
+		default:
+			break;
 		}
 	}
 }
@@ -610,7 +668,7 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 
 		for( auto& attachment : m_attachments )
 		{
-			attachment->UpdateLights( bones, boneCount, m_spaceObjectShipData.y, m_spaceObjectShipData.x );
+			attachment->UpdateLights( m_worldTransform, bones, boneCount, m_spaceObjectShipData.y, m_spaceObjectShipData.x );
 		}
 	}
 
@@ -1057,8 +1115,8 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		return;
 	}
 	int meshIx = m_mesh->GetMeshIndex();
-	auto mesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
-	if( !mesh || !mesh->m_allocationsValid )
+	auto lod = geomRes->GetMeshLod( meshIx, shadowPixelSize );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -1069,17 +1127,17 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		Tr2Material* shadowShader = shadowMeshArea.m_shaderMaterial;
 		for( auto& areaBlock : shadowAreas )
 		{
-			if( auto primCount = GetPrimitiveCount( *mesh, areaBlock.m_startIndex, areaBlock.m_count ) )
+			if( auto primCount = GetPrimitiveCount( *lod, areaBlock.m_startIndex, areaBlock.m_count ) )
 			{
 				Tr2RenderBatch batch;
 				batch.SetMaterial( shadowShader );
-				batch.SetGeometry( mesh->m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+				batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
 				batch.SetPerObjectData( perObjectData );
 				batch.SetDrawIndexedInstanced(
 					primCount * 3,
 					1,
-					mesh->m_indexAllocation.GetStartIndex() + mesh->m_areas[areaBlock.m_startIndex].m_firstIndex,
-					mesh->m_vertexAllocation.GetOffset() / mesh->m_vertexAllocation.GetStride(),
+					lod->m_indexAllocation.GetStartIndex() + lod->m_areas[areaBlock.m_startIndex].m_firstIndex,
+					lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 					0 );
 				batches->Commit( batch );
 			}
@@ -1124,8 +1182,8 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 	}
 
 	int meshIx = mesh->GetMeshIndex();
-	auto meshData = geomRes->GetMeshData( meshIx, m_meshScreenSize );
-	if( !meshData || !meshData->m_allocationsValid )
+	auto lod = geomRes->GetMeshLod( meshIx, m_meshScreenSize );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -1134,18 +1192,18 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 	{
 		for( auto& areaBlock : m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL] )
 		{
-			if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
+			if( auto primCount = GetPrimitiveCount( *lod, areaBlock.m_startIndex, areaBlock.m_count ) )
 			{
 				Tr2RenderBatch batch;
 				batch.SetMaterial( impactOverlayEffect );
 				batch.SetPriority( 0xFFFFFFFF );
-				batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
+				batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
 				batch.SetPerObjectData( perObjectData );
 				batch.SetDrawIndexedInstanced(
 					primCount * 3,
 					1,
-					meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[areaBlock.m_startIndex].m_firstIndex,
-					meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+					lod->m_indexAllocation.GetStartIndex() + lod->m_areas[areaBlock.m_startIndex].m_firstIndex,
+					lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 					0 );
 				batches->Commit( batch );
 			}
@@ -1168,17 +1226,17 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 				// add all mesh area blocks
 				for( auto& areaBlock : m_overlayMeshAreaBlocks[overlayType] )
 				{
-					if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
+					if( auto primCount = GetPrimitiveCount( *lod, areaBlock.m_startIndex, areaBlock.m_count ) )
 					{
 						Tr2RenderBatch batch;
 						batch.SetMaterial( effect );
-						batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
+						batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
 						batch.SetPerObjectData( perObjectData );
 						batch.SetDrawIndexedInstanced(
 							primCount * 3,
 							1,
-							meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[areaBlock.m_startIndex].m_firstIndex,
-							meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+							lod->m_indexAllocation.GetStartIndex() + lod->m_areas[areaBlock.m_startIndex].m_firstIndex,
+							lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 							0 );
 						batches->Commit( batch );
 					}
@@ -1622,8 +1680,8 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	}
 	
 	auto meshIndex = m_mesh->GetMeshIndex();
-	auto meshData = geo->GetMeshData( meshIndex );
-	if( !meshData )
+	auto lod = geo->GetMeshLod( meshIndex, m_meshScreenSize );
+	if( !lod )
 	{
 		return;
 	}
@@ -1634,8 +1692,7 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	for( auto& area : *areas )
 	{
 		auto index = area->GetIndex();
-		
-		if( index >= 0 && index < meshData->m_areas.size() && meshData->m_areas[index].m_isSkinned )
+		if( index >= 0 && index < lod->m_areas.size() && lod->m_areas[index].m_isSkinned )
 		{
 			hasSkinned = true;
 			break;
@@ -1659,7 +1716,7 @@ void EveSpaceObject2::UpdateRtSkeleton()
 		for( auto& area : *areas )
 		{
 			auto meshAreaIndex = area->GetIndex();
-			if( meshAreaIndex >= 0 && meshAreaIndex < meshData->m_areas.size() && meshData->m_areas[meshAreaIndex].m_isSkinned )
+			if( meshAreaIndex >= 0 && meshAreaIndex < lod->m_areas.size() && lod->m_areas[meshAreaIndex].m_isSkinned )
 			{
 				area->GetRtMeshArea()->MarkBlasOutdated();
 			}
@@ -2026,32 +2083,32 @@ void EveSpaceObject2::SetCastsShadow( bool castShadow )
 	m_castShadow = castShadow;
 }
 
-void EveSpaceObject2::PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed )
+void EveSpaceObject2::PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone )
 {
 	if( m_animationUpdater )
 	{
-		m_animationUpdater->PlayAnimation( animName, replace, loopCount, delay, speed );
+		m_animationUpdater->PlayAnimation( animName, replace, loopCount, delay, speed, clearWhenDone );
 	}
 }
 
 void EveSpaceObject2::PlayAnimationOnce( const char* animName )
 {
-	PlayAnimation( animName, true, 1, 0.0f, 1.0f );
+	PlayAnimation( animName, true, 1, 0.0f, 1.0f, true );
 }
 
-void EveSpaceObject2::PlayAnimationEx( const char* animName, int loopCount, float start, float speed )
+void EveSpaceObject2::PlayAnimationEx( const char* animName, int loopCount, float start, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone )
 {
-	PlayAnimation( animName, true, loopCount, start, speed );
+	PlayAnimation( animName, true, loopCount, start, speed, clearWhenDone );
 }
 
 void EveSpaceObject2::ChainAnimation( const char* animName )
 {
-	PlayAnimation( animName, false, 1, 0.0f, 1.0f );
+	PlayAnimation( animName, false, 1, 0.0f, 1.0f, true );
 }
 
 void EveSpaceObject2::ChainAnimationEx( const char* animName, int loopCount, float start, float speed )
 {
-	PlayAnimation( animName, false, loopCount, start, speed );
+	PlayAnimation( animName, false, loopCount, start, speed, true );
 }
 
 void EveSpaceObject2::EndAnimation()
@@ -3334,18 +3391,6 @@ void EveSpaceObject2::GetLights( Tr2LightManager& lightManager ) const
 		( *it )->SetBrightnessMultiplier( m_activationStrength );
 	}
 	auto displayChildren = DisplayChildren();
-	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
-	{
-		if( displayChildren || ( *it )->IsAlwaysOn() )
-		{
-			( *it )->GetLights( lightManager );
-		}
-	}
-
-	for( auto it = std::begin( m_attachments ); it != std::end( m_attachments ); ++it )
-	{
-		( *it )->GetLights( lightManager, worldTransform );
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -3364,6 +3409,11 @@ void EveSpaceObject2::RegisterComponents()
 	auto registry = this->GetComponentRegistry();
 	if( registry && m_display )
 	{
+		if ( !m_lights.empty() )
+		{
+			registry->RegisterComponent<ITr2LightOwner>( this );
+		}
+
 		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
 		{
 			registry->RegisterComponent<ITr2Renderable>( this );
@@ -3375,6 +3425,14 @@ void EveSpaceObject2::RegisterComponents()
 		}
 
 		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );
+			}
+		}
+
+		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( *it ) )
 			{
@@ -3394,6 +3452,14 @@ void EveSpaceObject2::UnRegisterComponents()
 	if( registry )
 	{
 		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
+
+		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
 			if( EveEntityPtr entity = BlueCastPtr( *it ) )
 			{

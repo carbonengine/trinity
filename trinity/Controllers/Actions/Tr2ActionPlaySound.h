@@ -16,7 +16,7 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	void Start( Tr2Controller& controller ) override;
+	void Start( ITr2ActionController& controller ) override;
 	void StartWithController( PyObject * controller );
 private:
 	BlueSharedString m_emitterName;

@@ -68,7 +68,7 @@ namespace Tr2UpscalingAL
 		float invProjection[16];
 		float clipToPrevClip[16];
 		float prevClipToClip[16];
-
+		bool reset;
 		bool upscalingDebugView;
 		bool frameGenDebugView;
 	};
@@ -187,7 +187,6 @@ public:
 	
 	float GetUpscalingAmount() const;
 	float GetMipLevelBias( bool temporal ) const;
-	void Reset();
 
 	uint32_t GetID() const;
 
@@ -206,7 +205,6 @@ protected:
 	uint32_t m_renderWidth;
 	uint32_t m_renderHeight;
 	float m_upscaling;
-	bool m_reset;
 
 	uint32_t m_jitterIndex;
 	float m_jitterX;

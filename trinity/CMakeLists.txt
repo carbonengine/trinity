@@ -84,6 +84,9 @@ set(_SOURCES
     Controllers/Actions/Tr2ActionPlaySound.cpp
     Controllers/Actions/Tr2ActionPlaySound.h
     Controllers/Actions/Tr2ActionPlaySound_Blue.cpp
+    Controllers/Actions/Tr2ActionPython.cpp
+    Controllers/Actions/Tr2ActionPython.h
+    Controllers/Actions/Tr2ActionPython_Blue.cpp
     Controllers/Actions/Tr2ActionResetClipSphereCenter.cpp
     Controllers/Actions/Tr2ActionResetClipSphereCenter.h
     Controllers/Actions/Tr2ActionResetClipSphereCenter_Blue.cpp
@@ -139,6 +142,9 @@ set(_SOURCES
     Controllers/Tr2StateMachineTransition.cpp
     Controllers/Tr2StateMachineTransition.h
     Controllers/Tr2StateMachineTransition_Blue.cpp
+    Controllers/Tr2TimelineController.cpp
+    Controllers/Tr2TimelineController.h
+    Controllers/Tr2TimelineController_Blue.cpp
     Curves/Fader/Tr2ScalarFader.cpp
     Curves/Fader/Tr2ScalarFader.h
     Curves/Fader/Tr2ScalarFader_Blue.cpp
@@ -733,6 +739,9 @@ set(_SOURCES
     Eve/EveDistanceField.cpp
     Eve/EveDistanceField.h
     Eve/EveDistanceField_Blue.cpp
+    Eve/AudioGameObject.cpp
+    Eve/AudioGameObject.h
+    Eve/AudioGameObject_Blue.cpp
     Eve/EveEffectRoot2.cpp
     Eve/EveEffectRoot2.h
     Eve/EveEffectRoot2_Blue.cpp
@@ -1377,6 +1386,8 @@ set(_SOURCES
     ALResultBlue.cpp
     ALResultBlue.h
     autoversion.h
+    ContinueOnMainThread.cpp
+    ContinueOnMainThread.h
     EveSprite2dBracket.cpp
     EveSprite2dBracket.h
     EveSprite2dBracket_Blue.cpp

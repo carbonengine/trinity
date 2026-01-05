@@ -33,6 +33,39 @@ void EveChildSmartLightSet::OnListModified( long event, ssize_t key, ssize_t key
 			}
 		}
 	}
+
+	if( list == &m_lightGroups && ( event & BELIST_LOADING ) == 0 )
+	{
+		if( IsInRegistry() )
+		{
+			switch( event & BELIST_EVENTMASK )
+			{
+			case BELIST_INSERTED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_REMOVED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_UNLOADSTART:
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
 }
 
 void EveChildSmartLightSet::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
@@ -50,7 +83,7 @@ void EveChildSmartLightSet::UpdateSyncronous( const EveUpdateContext& updateCont
 	}
 }
 
- void EveChildSmartLightSet::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void EveChildSmartLightSet::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	if( m_distribution != nullptr )
 	{
@@ -63,25 +96,52 @@ void EveChildSmartLightSet::UpdateSyncronous( const EveUpdateContext& updateCont
 	}
 }
 
-
- void EveChildSmartLightSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
- {
-	 if( m_distribution != nullptr && m_display )
-	 {
-		 for( auto it : m_lightGroups )
-		 {
-			 it->UpdateVisibility( updateContext, parentTransform, parentLod );
-		 }
-	 }
- }
-
-void EveChildSmartLightSet::GetLights( Tr2LightManager& lightManager ) const
+void EveChildSmartLightSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( m_distribution != nullptr && m_display )
 	{
 		for( auto it : m_lightGroups )
 		{
-			it->GetLights( *m_distribution->GetPlacementData(), m_distribution->GetNumberOfPlacements(), lightManager );
+			it->UpdateVisibility( updateContext, parentTransform, parentLod );
+		}
+	}
+}
+
+bool EveChildSmartLightSet::OnModified( Be::Var* value )
+{
+	if( IsMatch( value, m_display ) || IsMatch( value, m_distribution ) )
+	{
+		ReRegister();
+	}
+	return true;
+}
+
+void EveChildSmartLightSet::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_distribution && m_display )
+	{
+		for( auto it : m_lightGroups )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( it ) )
+			{
+				entity->Register( registry );
+			}
+		}
+	}
+}
+
+void EveChildSmartLightSet::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		for( auto it : m_lightGroups )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( it ) )
+			{
+				entity->UnRegister( registry );
+			}
 		}
 	}
 }

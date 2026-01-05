@@ -27,12 +27,6 @@ const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
 
 		MAP_PROPERTY_READONLY
 		(
-			"modelCount",
-			GetModelCount,
-			"Gets the count of models in this geometry resource"
-		)
-		MAP_PROPERTY_READONLY
-		(
 			"meshCount",
 			GetMeshCount,
 			"Gets the count of meshes in this geometry resource"
@@ -47,21 +41,6 @@ const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "forceLod", m_forceLod, "Force geometry to use a specific LOD\n:jessica-group: Debug", Be::READWRITE )
 		MAP_ATTRIBUTE( "forcedLodIndex", m_forcedLodIndex, "LOD index to use when forceLod is on\n:jessica-group: Debug", Be::READWRITE )
-		
-		MAP_METHOD_AND_WRAP
-		(
-			"GetModelCount", 
-			GetModelCount, 
-			"Gets the count of models"
-		)
-
-		MAP_METHOD_AND_WRAP
-		(
-			"GetModelName", 
-			GetModelName, 
-			"Gets the name of the indexed model\n"
-			":param idx: model index"
-		)
 
 		MAP_METHOD_AND_WRAP
 		(

@@ -15,6 +15,8 @@ const Be::ClassInfo* EvePlaneSet::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IEveSpaceObjectAttachment )
+		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( "display", m_display, "Specifies whether to render this set or not", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "hideOnLowQuality", m_hideOnLowQuality, "Disables this whole planeset when low quaility is selected.", Be::READWRITE | Be::PERSIST )

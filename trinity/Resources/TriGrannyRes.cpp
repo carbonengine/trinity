@@ -1207,17 +1207,17 @@ Be::Result<std::string> TriGrannyRes::BakeBlendshapeFromScript( unsigned int mes
 	}
 
 
-	TriGeometryResMeshData* meshData = geom->GetMeshData( meshIx );
-	if( !meshData )
+	TriGeometryResLodData* lod = geom->GetMeshLod( meshIx, 0 );
+	if( !lod )
 	{
-		return Be::Result<std::string>( "Trying to bake using geometryRes with NULL meshData" );
+		return Be::Result<std::string>( "Trying to bake using geometryRes with NULL lod" );
 	}
-	if( !meshData->m_allocationsValid )
+	if( !lod->m_allocationsValid )
 	{
 		return Be::Result<std::string>( "Trying to bake to a null vertex buffer" );
 	}
 
-	bool success = BakeBlendshape( meshIx, weights, meshData->m_vertexAllocation, renderContext, meshData->m_vertexCount * meshData->m_bytesPerVertex );
+	bool success = BakeBlendshape( meshIx, weights, lod->m_vertexAllocation, renderContext, lod->m_vertexCount * lod->m_mesh->m_bytesPerVertex );
 
 	return success ? Be::Result<std::string>() : Be::Result<std::string>( " TriGrannyRes::BakeBlendshape encountered problems. ");
 }

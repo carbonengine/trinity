@@ -87,7 +87,100 @@ void NotifyDeviceRemoved( HRESULT hr, BlueScriptCallback& onDeviceRemoved )
 };
 
 }
-
+constexpr char const* DredBreadcrumbOpName( D3D12_AUTO_BREADCRUMB_OP op )
+{
+	switch( op )
+	{
+	case D3D12_AUTO_BREADCRUMB_OP_SETMARKER:
+		return "Set marker";
+	case D3D12_AUTO_BREADCRUMB_OP_BEGINEVENT:
+		return "Begin event";
+	case D3D12_AUTO_BREADCRUMB_OP_ENDEVENT:
+		return "End event";
+	case D3D12_AUTO_BREADCRUMB_OP_DRAWINSTANCED:
+		return "Draw instanced";
+	case D3D12_AUTO_BREADCRUMB_OP_DRAWINDEXEDINSTANCED:
+		return "Draw indexed instanced";
+	case D3D12_AUTO_BREADCRUMB_OP_EXECUTEINDIRECT:
+		return "Execute indirect";
+	case D3D12_AUTO_BREADCRUMB_OP_DISPATCH:
+		return "Dispatch";
+	case D3D12_AUTO_BREADCRUMB_OP_COPYBUFFERREGION:
+		return "Copy buffer region";
+	case D3D12_AUTO_BREADCRUMB_OP_COPYTEXTUREREGION:
+		return "Copy texture region";
+	case D3D12_AUTO_BREADCRUMB_OP_COPYRESOURCE:
+		return "Copy resource";
+	case D3D12_AUTO_BREADCRUMB_OP_COPYTILES:
+		return "Copy tiles";
+	case D3D12_AUTO_BREADCRUMB_OP_RESOLVESUBRESOURCE:
+		return "Resolve subresource";
+	case D3D12_AUTO_BREADCRUMB_OP_CLEARRENDERTARGETVIEW:
+		return "Clear render target view";
+	case D3D12_AUTO_BREADCRUMB_OP_CLEARUNORDEREDACCESSVIEW:
+		return "Clear unordered access view";
+	case D3D12_AUTO_BREADCRUMB_OP_CLEARDEPTHSTENCILVIEW:
+		return "Clear depth stencil view";
+	case D3D12_AUTO_BREADCRUMB_OP_RESOURCEBARRIER:
+		return "Resource barrier";
+	case D3D12_AUTO_BREADCRUMB_OP_EXECUTEBUNDLE:
+		return "Execute bundle";
+	case D3D12_AUTO_BREADCRUMB_OP_PRESENT:
+		return "Present";
+	case D3D12_AUTO_BREADCRUMB_OP_RESOLVEQUERYDATA:
+		return "Resolve query data";
+	case D3D12_AUTO_BREADCRUMB_OP_BEGINSUBMISSION:
+		return "Begin submission";
+	case D3D12_AUTO_BREADCRUMB_OP_ENDSUBMISSION:
+		return "End submission";
+	case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME:
+		return "Decode frame";
+	case D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES:
+		return "Process frames";
+	case D3D12_AUTO_BREADCRUMB_OP_ATOMICCOPYBUFFERUINT:
+		return "Atomic copy buffer uint";
+	case D3D12_AUTO_BREADCRUMB_OP_ATOMICCOPYBUFFERUINT64:
+		return "Atomic copy buffer uint64";
+	case D3D12_AUTO_BREADCRUMB_OP_RESOLVESUBRESOURCEREGION:
+		return "Resolve subresource region";
+	case D3D12_AUTO_BREADCRUMB_OP_WRITEBUFFERIMMEDIATE:
+		return "Write buffer immediate";
+	case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME1:
+		return "Decode frame 1";
+	case D3D12_AUTO_BREADCRUMB_OP_SETPROTECTEDRESOURCESESSION:
+		return "Set protected resource session";
+	case D3D12_AUTO_BREADCRUMB_OP_DECODEFRAME2:
+		return "Decode frame 2";
+	case D3D12_AUTO_BREADCRUMB_OP_PROCESSFRAMES1:
+		return "Process frames 1";
+	case D3D12_AUTO_BREADCRUMB_OP_BUILDRAYTRACINGACCELERATIONSTRUCTURE:
+		return "Build raytracing acceleration structure";
+	case D3D12_AUTO_BREADCRUMB_OP_EMITRAYTRACINGACCELERATIONSTRUCTUREPOSTBUILDINFO:
+		return "Emit raytracing acceleration structure post build info";
+	case D3D12_AUTO_BREADCRUMB_OP_COPYRAYTRACINGACCELERATIONSTRUCTURE:
+		return "Copy raytracing acceleration structure";
+	case D3D12_AUTO_BREADCRUMB_OP_DISPATCHRAYS:
+		return "Dispatch rays";
+	case D3D12_AUTO_BREADCRUMB_OP_INITIALIZEMETACOMMAND:
+		return "Initialize meta command";
+	case D3D12_AUTO_BREADCRUMB_OP_EXECUTEMETACOMMAND:
+		return "Execute meta command";
+	case D3D12_AUTO_BREADCRUMB_OP_ESTIMATEMOTION:
+		return "Estimate motion";
+	case D3D12_AUTO_BREADCRUMB_OP_RESOLVEMOTIONVECTORHEAP:
+		return "Resolve motion vector heap";
+	case D3D12_AUTO_BREADCRUMB_OP_SETPIPELINESTATE1:
+		return "Set pipeline state 1";
+	case D3D12_AUTO_BREADCRUMB_OP_INITIALIZEEXTENSIONCOMMAND:
+		return "Initialize extension command";
+	case D3D12_AUTO_BREADCRUMB_OP_EXECUTEEXTENSIONCOMMAND:
+		return "Execute extension command";
+	case D3D12_AUTO_BREADCRUMB_OP_DISPATCHMESH:
+		return "Dispatch mesh";
+	default:
+		return "Unknown";
+	}
+}
 
 void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 {
@@ -104,10 +197,80 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 		LogAllLiveResources();
 	};
 
+	auto HandleDREDDebugging = [&]() {
+		// Example sourced from https://github.com/NANAnoo/Adria/blob/f25306f66fab1bba35fc0622880ff876d230a8c8/Adria/Graphics/GfxDevice.cpp
+
+		CComPtr<ID3D12DeviceRemovedExtendedData1> pDred;
+		if( SUCCEEDED( Tr2RenderContext_GetMainThreadRenderContext().m_device->QueryInterface( IID_PPV_ARGS( &pDred ) ) ) )
+		{
+			D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT1 dredAutoBreadcrumbsOutput;
+			D3D12_DRED_PAGE_FAULT_OUTPUT1 dredPageFaultOutput;
+			if( SUCCEEDED( pDred->GetAutoBreadcrumbsOutput1( &dredAutoBreadcrumbsOutput ) ) )
+			{
+
+				CCP_LOGERR( "[DRED] Last tracked GPU operations:" );
+				std::map<UINT, std::wstring> contextStrings;
+				D3D12_AUTO_BREADCRUMB_NODE1 const* pNode = dredAutoBreadcrumbsOutput.pHeadAutoBreadcrumbNode;
+				while( pNode && pNode->pLastBreadcrumbValue )
+				{
+					UINT lastCompletedOp = *pNode->pLastBreadcrumbValue;
+					if( lastCompletedOp != (int)pNode->BreadcrumbCount && lastCompletedOp != 0 )
+					{
+						CCP_LOGERR( "[DRED] Commandlist completed %d of %d commands", lastCompletedOp, pNode->BreadcrumbCount );
+
+						UINT firstOp = std::max<UINT>( lastCompletedOp - 100, 0 );
+						UINT lastOp = std::min<UINT>( lastCompletedOp + 20, UINT( pNode->BreadcrumbCount ) - 1 );
+
+						contextStrings.clear();
+						for( UINT breadcrumbContext = firstOp; breadcrumbContext < pNode->BreadcrumbContextsCount; ++breadcrumbContext )
+						{
+							const D3D12_DRED_BREADCRUMB_CONTEXT& context = pNode->pBreadcrumbContexts[breadcrumbContext];
+							contextStrings[context.BreadcrumbIndex] = context.pContextString;
+						}
+
+						for( UINT op = firstOp; op <= lastOp; ++op )
+						{
+							D3D12_AUTO_BREADCRUMB_OP breadcrumbOp = pNode->pCommandHistory[op];
+
+							std::wstring contextString;
+							auto it = contextStrings.find( op );
+							if( it != contextStrings.end() )
+							{
+								contextString = it->second;
+							}
+
+							char const* opName = DredBreadcrumbOpName( breadcrumbOp );
+							CCP_LOGERR( "\tOp: %d, %s%ls%s", op, opName, contextString.c_str(), ( op + 1 == lastCompletedOp ) ? " - Last completed" : "" );
+						}
+					}
+					pNode = pNode->pNext;
+				}
+			}
+			if( SUCCEEDED( pDred->GetPageFaultAllocationOutput1( &dredPageFaultOutput ) ) )
+			{
+				for( auto node = dredPageFaultOutput.pHeadExistingAllocationNode; node != nullptr; node = node->pNext )
+				{
+					if( node->ObjectNameW )
+					{
+						CCP_LOGERR( "Page Fault Allocation on: %ls", node->ObjectNameW );
+					}
+				}
+				for( auto node = dredPageFaultOutput.pHeadRecentFreedAllocationNode; node != nullptr; node = node->pNext )
+				{
+					if( node->ObjectNameW )
+					{
+						CCP_LOGERR( "Page Fault Free on: %ls", node->ObjectNameW );
+					}
+				}
+			}
+		}
+	};
+
 	auto HandleLostDevice = [&]() {
 		HRESULT hr = Tr2RenderContext_GetMainThreadRenderContext().m_device->GetDeviceRemovedReason();
 		if( FAILED( hr ) || g_emulateDriverReset )
 		{
+			HandleDREDDebugging();
 			g_emulateDriverReset = false;
 			if( !mDeviceLost )
 			{

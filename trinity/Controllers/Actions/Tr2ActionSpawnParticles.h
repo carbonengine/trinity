@@ -18,7 +18,8 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	virtual void Start( Tr2Controller& controller );
+	void Start( ITr2ActionController& controller ) override;
+
 private:
 	Tr2DynamicEmitterPtr m_emitter;
 	float m_rate;

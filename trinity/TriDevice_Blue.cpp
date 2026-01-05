@@ -285,8 +285,15 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"supportedUpscalingTechniques",
 			m_supportedUpscalingTechniques,
 			"List of the supported upscaling techniques.\n",
-			Be::READ 
-		)
+			Be::READ )
+
+		MAP_PROPERTY(
+			"minimumModelLOD",
+			GetMinimumModelLOD,
+			SetMinimumModelLOD,
+			"Prevents the first <minimumModelLOD> model LOD levels from being loaded in, reducing VRAM usage. Does nothing if set to 0 (default)." )
+
+
 
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets that are update each frame. Finished curve sets are removed automatically.", Be::READ | Be::PERSIST ) 
 		

@@ -20,7 +20,7 @@ Tr2ActionPlaySound::Tr2ActionPlaySound( IRoot* ) :
 {
 }
 
-void Tr2ActionPlaySound::Start( Tr2Controller& controller )
+void Tr2ActionPlaySound::Start( ITr2ActionController& controller )
 {
 	ITr2SoundEmitterOwnerPtr owner = BlueCastPtr( controller.GetOwner() );
 

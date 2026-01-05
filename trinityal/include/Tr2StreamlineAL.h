@@ -33,6 +33,7 @@ namespace Tr2StreamlineAL
 	sl::Result InitializeStreamline( uint32_t appID );
 	void ReleaseStreamline( );
 
+	const char* GetSlResultMessage( sl::Result result );
 	
 
 	//Streamline functions
@@ -67,7 +68,8 @@ namespace Tr2StreamlineAL
 	void SetPCLMarker( Tr2RenderContextEnum::FrameEvent& frameEvent, sl::FrameToken* m_frameToken );
 
 #endif
-
+	
+	void FreeResources( sl::Feature feature, const sl::ViewportHandle& viewport );
 
 	bool IsDLSSAvailable();
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12

@@ -8,6 +8,7 @@
 #include "EveStretch3.h"
 
 BLUE_DEFINE( EveStretch3 );
+BLUE_DEFINE_INTERFACE( IStretchAudio );
 
 const Be::ClassInfo* EveStretch3::ExposeToBlue()
 {
@@ -22,7 +23,7 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 		MAP_INTERFACE( ITr2CurveSetOwner )
 		MAP_INTERFACE( ITr2DynamicBindingOwner )
 		MAP_INTERFACE( ITr2SoundEmitterOwner )
-		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE
 		(
@@ -39,7 +40,7 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 			"If set, this transform hierarchy is displayed.\n"
 			"Note that turning off display does not automatically turn\n"
 			"off update.",
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE
@@ -111,32 +112,64 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 			"sourceObject",
 			m_sourceObject,
 			"Object to be rendered at the source",
-			Be::READWRITE | Be::PERSIST
+			Be::PERSISTONLY
 		)
+		
+		MAP_PROPERTY
+		( 
+			"sourceObject", 
+			GetSourceObject, 
+			SetSourceObject, 
+			"Object to be rendered at the source" 
+		)
+
 		MAP_ATTRIBUTE
 		(
 			"destObject",
 			m_destObject,
 			"Object to be rendered at the destination",
-			Be::READWRITE | Be::PERSIST
+			Be::PERSISTONLY
 		)
+		
+		MAP_PROPERTY
+		( 
+			"destObject", 
+			GetDestObject, 
+			SetDestObject, 
+			"Object to be rendered at the destination" 
+		)
+
 		MAP_ATTRIBUTE
 		(
 			"stretchObject",
 			m_stretchObject,
 			"Object to be stretched from source to destination",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
+			Be::PERSISTONLY
 		)
-
+		
+		MAP_PROPERTY
+		( 
+			"stretchObject", 
+			GetStretchObject, 
+			SetStretchObject, 
+			"Object to be stretched from source to destination" 
+		)
 
 		MAP_ATTRIBUTE
 		(
 			"moveObject",
 			m_moveObject,
 			"Unstretched object to be translated from source to destination",
-			Be::READWRITE | Be::PERSIST
+			Be::PERSISTONLY
 		)
-
+		
+		MAP_PROPERTY
+		( 
+			"moveObject", 
+			GetMoveObject, 
+			SetMoveObject, 
+			"Unstretched object to be translated from source to destination" 
+		)
 
 		MAP_ATTRIBUTE
 		(
@@ -183,7 +216,15 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 		(
 			"audio",
 			m_audio,
-			"The type of audio to be used for this asset",
+			"The type of audio to be used for this asset\n:jessica-deprecated: True\n:jessica-hidden: True",
+			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"stretchAudio",
+			m_stretchAudio,
+			"An audio object specifically for stretch effects.",
 			Be::READWRITE | Be::PERSIST
 		)
 

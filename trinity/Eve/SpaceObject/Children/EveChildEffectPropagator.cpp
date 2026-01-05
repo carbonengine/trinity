@@ -553,14 +553,6 @@ void EveChildEffectPropagator::RecalculateLocatorSizes()
 	}
 }
 
-void EveChildEffectPropagator::GetLights( Tr2LightManager& lightManager ) const
-{
-	if( m_effect != nullptr )
-	{
-		m_effect->GetLights( lightManager );
-	}
-}
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Based on a menu selection this function populates the vector maintaining all the

@@ -6,6 +6,7 @@
 
 #include "StdAfx.h"
 #include "Tr2ActionSetAttenuationScaling.h"
+#include "../ITr2Controller.h"
 
 
 BLUE_DEFINE( Tr2ActionSetAttenuationScaling );

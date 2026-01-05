@@ -20,6 +20,7 @@ const Be::ClassInfo* EveChildSocket::ExposeToBlue()
 		MAP_INTERFACE( IEveEffectChildrenOwner )
 		MAP_INTERFACE( IShaderConfigurer )
 		MAP_INTERFACE( ITr2SoundEmitterOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "resPath", m_plugResPath, "Path to the plug (must be a red file with just an EveChildPlug).", Be::READWRITE | Be::PERSIST | Be::NOTIFY )

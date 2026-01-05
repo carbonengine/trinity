@@ -10,7 +10,7 @@ BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2RaytracingGeometry );
 
-struct TriGeometryResMeshData;
+struct TriGeometryResLodData;
 class Tr2RtMesh;
 class Tr2RtMeshArea;
 
@@ -67,8 +67,8 @@ public:
 	bool IsGoodForArea( uint32_t area ) const;
 	bool GetAndResetDirtyFlag();
 
-	TriGeometryResMeshData* GetMeshData() const;
-	TriGeometryResMeshData* GetHighestLodMeshData() const;
+	TriGeometryResLodData* GetCurrentLodData() const;
+	TriGeometryResLodData* GetHighestLodData() const;
 	uint32_t GetTransformOffset() const;
 	const Tr2BufferAL* GetSkinnedVertexBuffer() const;
 	const Tr2BufferAL& GetVertexBuffer() const;

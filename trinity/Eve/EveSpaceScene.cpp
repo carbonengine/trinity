@@ -48,6 +48,7 @@
 #include "SpaceObject/Children/EveChildLightingOverride.h"
 #include "PriorityBlend.h"
 #include "Tr2TextureReference.h"
+#include "../ContinueOnMainThread.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -387,6 +388,7 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetTaa( m_sceneDefaultPostProcess->GetTaa() );
 			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemapping() );
 			m_combinedPostProcess->SetFog( m_sceneDefaultPostProcess->GetFog() );
+			m_combinedPostProcess->SetGodRays( m_sceneDefaultPostProcess->GetGodRays() );
 		}
 		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}
@@ -551,6 +553,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		taskGroup.wait();
 		m_updateContext.SetTaskGroup( nullptr );
 	}
+	ExecuteMainThreadActions();
 
 	// update the combined postprocess attributes 
 	UpdatePostProcessAttributes();
@@ -1394,26 +1397,15 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		lightManager->SetFrustum( m_updateContext.GetFrustum() );
 		lightManager->AdjustLightCutoff( m_updateContext.GetLodFactor() );
 
-		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
+		auto lightOwners = m_componentRegistry->GetComponents<ITr2LightOwner>();
+
+		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, lightOwners.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
 			for( auto i = range.begin(); i != range.end(); ++i )
 			{
-				ITr2LightOwnerPtr lightOwner( BlueCastPtr( m_objects[i] ) );
-				if( lightOwner )
-				{
-					lightOwner->GetLights( *lightManager );
-				}
-			}
-		} );
-
-		for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
-		{
-			ITr2LightOwnerPtr lightOwner( BlueCastPtr( *it ) );
-			if( lightOwner )
-			{
+				ITr2LightOwnerPtr lightOwner = lightOwners[i];
 				lightOwner->GetLights( *lightManager );
 			}
-		}
-		m_cameraAttachmentParent->GetLights( *lightManager );
+		} );
 
 		lightManager->ResolveLightData();
 	}
@@ -3313,8 +3305,9 @@ bool EveSpaceScene::Initialize()
 		}
 		( *it )->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 	}
-	m_cameraAttachmentParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 
+	m_cameraAttachmentParent->Register( m_componentRegistry );
+	m_cameraAttachmentParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 
 	for( auto it = begin( m_uiObjects ); it != end( m_uiObjects ); ++it )
 	{
@@ -3409,7 +3402,7 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 			}
 		}
 	}
-		
+
 	return true;
 }
 
@@ -3836,8 +3829,11 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 
 	auto oldReadOnlyDepth = renderContext.GetReadOnlyDepth();
 	renderContext.SetReadOnlyDepth( true );
+	renderContext.m_esm.PushRenderTarget( 1 );
+	renderContext.m_esm.SetRenderTarget( 1, {} );
 	RenderTransparentBatches( m_secondaryBatches, renderContext );
 	renderContext.SetReadOnlyDepth( oldReadOnlyDepth );
+	renderContext.m_esm.PopRenderTarget( 1 );
 	ClearBatches( m_secondaryBatches );
 
 	// Put view/projection back to normal
@@ -4065,6 +4061,22 @@ void EveSpaceScene::ReregisterEntities()
 			m_componentRegistry->ReRegister( entity );
 		}
 	}
+	for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			m_componentRegistry->ReRegister( entity );
+		}
+	}
+
+	for( auto it = begin( m_planets ); it != end( m_planets ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			m_componentRegistry->ReRegister( entity );
+		}
+	}
+	m_componentRegistry->ReRegister( m_cameraAttachmentParent );
 }
 
 Tr2DepthStencilPtr EveSpaceScene::GetShadowMapAtlas()
@@ -4095,6 +4107,23 @@ void EveSpaceScene::ClearComponentRegistry()
 			entity->UnRegister( m_componentRegistry );
 		}
 	}
+
+	for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+		}
+	}
+
+	for( auto it = begin( m_planets ); it != end( m_planets ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+		}
+	}
+	m_cameraAttachmentParent->UnRegister( m_componentRegistry );
 	m_componentRegistry = nullptr;
 }
 

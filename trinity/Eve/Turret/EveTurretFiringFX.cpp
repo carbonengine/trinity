@@ -48,6 +48,8 @@ EveTurretFiringFX::EveTurretFiringFX( IRoot* lockobj ) :
 	m_scaleEffectTarget( false ),
 	m_impactConfiguration( ITriTargetable::ImpactConfiguration::IMPACT_INVALID )
 {
+	m_stretch.SetNotify( this );
+
 	for( unsigned int i = 0; i < MUZZLECOUNT_MAX; ++i )
 	{
 		m_perMuzzleData[i].started = false;
@@ -200,7 +202,43 @@ bool EveTurretFiringFX::OnModified( Be::Var* val )
 			m_firingDuration = GetCurveDuration();
 		}
 	}
+	if( IsMatch( val, m_display ) )
+	{
+		ReRegister();
+	}
 	return true;
+}
+
+void EveTurretFiringFX::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
+{
+	if( m_isFiring && list == &m_stretch && ( event & BELIST_LOADING ) == 0 )
+	{
+		switch( event & BELIST_EVENTMASK )
+		{
+		case BELIST_INSERTED:
+			if( EveEntityPtr entity = BlueCastPtr( value ) )
+			{
+				auto registry = this->GetComponentRegistry();
+				if( registry && m_display && m_isFiring )
+				{
+					entity->Register( registry );
+				}
+			}
+			break;
+		case BELIST_REMOVED:
+			if( EveEntityPtr entity = BlueCastPtr( value ) )
+			{
+				auto registry = this->GetComponentRegistry();
+				if( registry )
+				{
+					entity->UnRegister( registry );
+				}
+			}
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -213,8 +251,15 @@ void EveTurretFiringFX::PrepareFiringEffectMoveObjects()
 	{
 		m_stretch[i]->StartMoving();
 	}
+
+	bool prevFiring = m_isFiring;
 	// we are firing
 	m_isFiring = true;
+
+	if( prevFiring != m_isFiring )
+	{
+		ReRegister();
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -246,8 +291,14 @@ void EveTurretFiringFX::PrepareFiring( float delay, unsigned int muzzleID, unsig
 			m_perMuzzleData[i].elapsedTime = 0.f;
 		}
 	}
+	bool prevFiring = m_isFiring;
 	// we are firing
 	m_isFiring = true;
+
+	if( prevFiring != m_isFiring )
+	{
+		ReRegister();	
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -378,6 +429,7 @@ void EveTurretFiringFX::StopFiring()
 		m_perMuzzleData[ m ].readyToStart = false;
 		m_perMuzzleData[ m ].currentStartDelay = 0.f;
 		m_perMuzzleData[ m ].elapsedTime = 0.f;
+		
 	}
 
 	if( m_startCurveSet )
@@ -390,6 +442,7 @@ void EveTurretFiringFX::StopFiring()
 	}
 	// no longer firing
 	m_isFiring = false;
+	ReRegister();
 }
 
 // --------------------------------------------------------------------------------
@@ -687,16 +740,34 @@ bool EveTurretFiringFX::IsLooping() const
 }
 
 // --------------------------------------------------------------------------------
-void EveTurretFiringFX::GetLights( Tr2LightManager& lightManager ) const
+void EveTurretFiringFX::RegisterComponents()
 {
-	if( !m_display || !m_isFiring )
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display && m_isFiring )
 	{
-		return;
+		for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );
+			}
+		}
 	}
+}
 
-	for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
+// --------------------------------------------------------------------------------
+void EveTurretFiringFX::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
 	{
-		( *it )->GetLights( lightManager );
+		for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
 	}
 }
 

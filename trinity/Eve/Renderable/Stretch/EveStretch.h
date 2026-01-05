@@ -3,11 +3,13 @@
 #define EveStretch_h
 
 
+#include <IStretchAudio.h>
+#include <ITr2Audio.h>
+
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "Eve/EveTransform.h"
 #include "Curves/TriCurveSet.h"
 #include "Eve/IEveFiringEffectElement.h"
-#include <ITr2Audio.h>
 #include "Tr2DebugRenderer.h"
 
 BLUE_DECLARE( EveStretch );
@@ -15,10 +17,12 @@ BLUE_DECLARE( TriFloat );
 
 class EveStretch:
 	public IEveFiringEffectElement,
+	public INotify,
 	public IEveTransform,
 	public IEveSpaceObject2,
 	public ITr2DebugRenderable,
-	public ITr2LightOwner
+	public ITr2LightOwner,
+	public EveEntity
 {
 public:
     EXPOSE_TO_BLUE();
@@ -48,9 +52,15 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	virtual void GetLights( Tr2LightManager& lightManager ) const;
-	virtual void AddLight( Tr2Light* light ){};
-	virtual void ClearLights(){};
+	virtual void GetLights( Tr2LightManager& lightManager ) const override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// INotify
+	bool OnModified( Be::Var* value ) override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTranfrom
@@ -141,6 +151,7 @@ private:
 	TriFloatPtr m_length;
 
 	ITr2AudioPtr m_audio;
+	IStretchAudioPtr m_stretchAudio;
 };
 
 TYPEDEF_BLUECLASS( EveStretch );
