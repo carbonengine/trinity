@@ -368,7 +368,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 		if( frustum.IsBoxVisible( bounds ) )
 		{
-			m_isVisible = parentLod >= m_lowestLodVisible && m_currentScreenSize >= m_minScreenSize;
+			m_isVisible = parentLod >= m_lowestLodVisible&& m_currentScreenSize >= m_minScreenSize;
 			m_instancesVisible = m_isVisible && m_currentInstanceScreenSize >= s_instanceScreenSizeThreshold;
 		}
 	}
@@ -401,6 +401,11 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 			UpdateRtMesh();
 			UpdateRtSkeleton();
 		}
+	}
+	// We need to do a check to see if we are not visible by the main frustum, but still need to update the RT data for shadows
+	else if( updateContext.m_raytracingEnabled )
+	{
+		UpdateRtSkeleton();
 	}
 }
 
