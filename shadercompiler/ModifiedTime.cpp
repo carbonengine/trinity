@@ -135,6 +135,8 @@ namespace
 
 extern unsigned g_optimizationLevel;
 extern bool g_avoidFlowControl;
+extern bool g_generatePDB;
+extern bool g_skipOptimization;
 
 std::string GetSourceHash( const char* sourcePath, const std::vector<Macro>& defines )
 {
@@ -149,8 +151,11 @@ std::string GetSourceHash( const char* sourcePath, const std::vector<Macro>& def
 		md5.add( each.value.c_str(), each.value.length() );
 	}
 	
+	// safety mechanism so that teamcity overwrites submitted shaders that have been built with undesirable settings
 	md5.add( &g_optimizationLevel, sizeof( g_optimizationLevel ) );
 	md5.add( &g_avoidFlowControl, sizeof( g_avoidFlowControl ) );
+	md5.add( &g_generatePDB, sizeof( g_generatePDB ) );
+	md5.add( &g_skipOptimization, sizeof( g_skipOptimization ) );
 	
 	GetSourceHash( sourcePath, nullptr, sourcePath, visited, md5 );
 	return md5.getHash();
