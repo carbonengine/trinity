@@ -317,6 +317,31 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveS
 	return sizeInShadow > 5.f;
 }
 
+bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, Vector3 position, float radius, Tr2RenderReason renderReason ) const
+{
+	if( !m_display || !m_castShadow )
+	{
+		return false;
+	}
+
+	if( renderReason == TR2RENDERREASON_REFLECTION && !EntityComponents::ShouldReflect( m_reflectionMode ) )
+	{
+		return false;
+	}
+
+	Vector4 bs;
+	GetBoundingSphere( bs );
+
+	if( bs.w <= 0.0f )
+	{
+		return false;
+	}
+
+	float distance = Length( bs.GetXYZ() - position );
+
+	return distance - ( radius + bs.w ) < 0.0f;
+}
+
 void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	m_isVisible = false;
@@ -403,9 +428,11 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		}
 	}
 	// We need to do a check to see if we are not visible by the main frustum, but still need to update the RT data for shadows
-	else if( updateContext.m_raytracingEnabled )
+	else if( m_dirtyRtMesh )
 	{
+		UpdateRtMesh();
 		UpdateRtSkeleton();
+		m_dirtyRtMesh = false;
 	}
 }
 
@@ -729,6 +756,16 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	}
 
 	rtManager.GetGeometry().AddBindlessResources( *opaqueAreas, *rtMesh );
+}
+
+void EveChildMesh::MarkRtDirty()
+{
+	m_dirtyRtMesh = true;
+}
+
+bool EveChildMesh::IsShadowCastingDirty() const
+{
+	return m_dirtyRtMesh;
 }
 
 void EveChildMesh::SetInstanceTransforms( std::vector<Matrix> instances )

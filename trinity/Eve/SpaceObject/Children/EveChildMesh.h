@@ -132,9 +132,12 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, Vector3 position, float radius, Tr2RenderReason renderReason ) const override;
 	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
 	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
+	void MarkRtDirty() override;
+	bool IsShadowCastingDirty() const override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
@@ -214,6 +217,7 @@ protected:
 	bool m_castShadow;
 	bool m_updateAnimation;
 	bool m_bakeMorphs;
+	bool m_dirtyRtMesh;
 
 	float m_activationStrength;
 

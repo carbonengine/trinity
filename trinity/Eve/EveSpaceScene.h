@@ -400,6 +400,8 @@ protected:
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;
 
+	void ProcessOutdatedRTAnimations( Tr2RenderContext & renderContext );
+
 protected:
 	bool m_display;
 	bool m_update;

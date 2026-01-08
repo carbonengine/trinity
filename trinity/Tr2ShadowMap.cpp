@@ -237,7 +237,7 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	// Now transform the unit cube based off matrices
 	for( unsigned int i = 0; i < 8; ++i )
 	{
-		Vector3 vertex = m_unitCube[i];
+		Vector3 vertex = DX_UNIT_CUBE[i];
 		// view space
 		Vector4 transformedVertex = Transform( Vector4( vertex, 1.0 ), Inverse( projection ) );
 
@@ -458,7 +458,7 @@ bool Tr2ShadowMap::GetDebugSplitValue() const
 
 void Tr2ShadowMap::SetSplitValues()
 {
-	m_splitValues[0] = 25.f;
+	m_splitValues[0] = MIN_SHADOW_SPLIT;
 	m_splitValues[1] = 75.f;
 	m_splitValues[2] = 150.f;
 	m_splitValues[3] = 300.f;
@@ -473,7 +473,7 @@ void Tr2ShadowMap::SetSplitValues()
 	m_splitValues[12] = 153600.f;
 	m_splitValues[13] = 307200.f;
 	m_splitValues[14] = 614400.f;
-	m_splitValues[15] = 1228800.f;
+	m_splitValues[15] = MAX_SHADOW_SPLIT;
 }
 
 uint32_t Tr2ShadowMap::GetDebugColors( int switchCase ) const

@@ -1544,6 +1544,7 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 		caster->PushRtGeometry( *m_rtManager );
 	} );
 
+	ProcessOutdatedRTAnimations( renderContext );
 
 	Tr2RtShaderTableDescriptionAL* shaderTableDescs[3];
 	Tr2RaytracingPipelineStateManager* pipelineManagers[3];
@@ -4148,4 +4149,133 @@ void EveSpaceScene::EnableShadowsInReflections( bool enable )
 bool EveSpaceScene::IsShadowsInReflectionsEnabled() const
 {
 	return m_reflectionShadowMap != nullptr;
+}
+
+void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext )
+{
+	{ // Process Sun light
+		// Let's compute left, right, top, bottom of the frustum divided by the near clipping plane. We need this for SetupShadowSplit.
+		Matrix cameraProjection = Tr2Renderer::GetProjectionTransform();
+		float rightMinusLeft = 2.f / cameraProjection._11; //	= ( r - l ) / zn
+		float bottomMinusTop = 2.f / -cameraProjection._22; //	= ( b - t ) / zn
+		float left = ( cameraProjection._31 - 1.f ) / 2.f * rightMinusLeft; //	= l / zn
+		float top = ( -cameraProjection._32 - 1.f ) / 2.f * bottomMinusTop; //	= t / zn
+		float right = rightMinusLeft + left; //	= r / zn
+		float bottom = bottomMinusTop + top; //	= b / zn
+
+		// Make a projection matrix that fills
+		auto sunProjection = PerspectiveOffCenterMatrix( left, right, bottom, top, MIN_SHADOW_SPLIT, MAX_SHADOW_SPLIT );
+
+		// we can apply the inverse of the view and projection matrices on the corner points of the unit cube to get the frustum corners in world space
+		Matrix invViewProj = Inverse( sunProjection ) * Tr2Renderer::GetInverseViewTransform();
+
+		// Find light view
+		Matrix lightView = Inverse( OrthoNormalBasisZ( -m_sunData.DirWorld ) );
+
+		AxisAlignedBoundingBox aabb;
+
+		Vector3 corners[8];
+
+		// Now transform the unit cube based off matrices
+		for( unsigned int i = 0; i < 8; ++i )
+		{
+			Vector3 vertex = DX_UNIT_CUBE[i];
+			// view space
+			Vector4 transformedVertex = Transform( Vector4( vertex, 1.0 ), Inverse( sunProjection ) );
+
+			transformedVertex /= transformedVertex.w;
+
+			// world space
+			transformedVertex = Transform( transformedVertex, Tr2Renderer::GetInverseViewTransform() );
+			corners[i] = TransformCoord( transformedVertex.GetXYZ(), ( lightView ) );
+			// light view space
+			aabb.IncludePoint( TransformCoord( transformedVertex.GetXYZ(), ( lightView ) ) );
+		}
+
+		// create shadow frustum out from lightView, aabb.min, aabb.max
+		TriFrustumOrtho shadowFrustum;
+		shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
+
+		auto sunDir = m_sunData.DirWorld;
+
+		// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
+		m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&]( IEveShadowCaster* caster ) -> void {
+			if( !caster->IsShadowCastingDirty() )
+			{
+				float radius;
+				if( caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowOrthoFrustum( shadowFrustum, SHADOW_MAP_SIZE, sunDir ), TR2RENDERREASON_NORMAL, radius ) )
+				{
+					caster->MarkRtDirty();
+				}
+			}
+		} );
+	}
+	
+	// Process other lights
+	if( auto lightManager = Tr2LightManager::GetInstance() )
+	{
+		if( lightManager->GetShadowCastingLights().size() > 0 )
+		{
+			for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
+			{
+				const Tr2LightManager::PerLightData& lightData = lightManager->GetLightData( lightIndex );
+
+				// Point light
+				if( lightData.innerAngle <= 0. )
+				{
+					// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
+					m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&lightData, this]( IEveShadowCaster* caster ) -> void {
+						if( !caster->IsShadowCastingDirty() )
+						{
+							if( caster->IsCastingShadow( m_updateContext.GetFrustum(), lightData.position, lightData.radius, TR2RENDERREASON_NORMAL ) )
+							{
+								caster->MarkRtDirty();
+							}
+						}
+					} );
+				}
+				else // Spot light
+				{
+					// spotlight
+					// we flip near and far plane for reverse z
+					float zn = lightData.radius;
+					float zf = lightData.radius / 1000.f;
+					float aspect = 1.f;
+					float d = float( lightData.projectionPlaneDistance );
+
+					Matrix projection = IdentityMatrix();
+					projection.m[0][0] = d / aspect;
+					projection.m[1][1] = d;
+					projection.m[2][2] = zf / ( zn - zf );
+					projection.m[2][3] = -1.0f;
+					projection.m[3][2] = ( zf * zn ) / ( zn - zf );
+					projection.m[3][3] = 0.0f;
+
+					Vector3 up = abs( lightData.direction.y ) < .7f ? Vector3( 0.f, 1.f, 0.f ) : Vector3( 1.f, 0.f, 0.f );
+					Matrix view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
+
+					const Matrix viewProj = view * projection;
+
+					TriFrustum shadowFrustum;
+					shadowFrustum.DeriveFrustum( &view, &lightData.position, &projection, renderContext.m_esm.GetViewport() );
+					{
+						float sizeInShadow = 0.0f;
+
+						// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
+						m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&]( IEveShadowCaster* caster ) -> void {
+							if( !caster->IsShadowCastingDirty() )
+							{
+								caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowFrustum( shadowFrustum ), TR2RENDERREASON_NORMAL, sizeInShadow );
+								// special threshold check
+								if( sizeInShadow > 5.0f )
+								{
+									caster->MarkRtDirty();
+								}
+							}
+						} );
+					}
+				}
+			}
+		}
+	}
 }
