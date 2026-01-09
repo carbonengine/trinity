@@ -15,6 +15,7 @@
 #include "Shader/Tr2Shader.h"
 #include "Resources/TriTextureRes.h"
 #include "Tr2GpuStructuredBuffer.h"
+#include "../Tr2GpuResourcePool.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -67,36 +68,31 @@ Tr2SSSSS::Tr2SSSSS( IRoot* lockobj ) :
 
 }
 
-Tr2SSSSS::~Tr2SSSSS()
-{
-}
-
-bool Tr2SSSSS::SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext& renderContext, ITriRenderBatchAccumulator* batches )
+void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderContext, ITriRenderBatchAccumulator* batches, const Tr2TextureAL& colorMap, const Tr2TextureAL& opaqueColorMap, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if (!m_enabled)
+	if( !m_enabled )
 	{
-		return false;
+		return;
 	}
 
 	static const auto SSSSS = BlueSharedString( "SSSSS" );
 	m_hasSSSSSInScene = renderContext.TechniqueInBatch( batches->GetGdprBatches(), SSSSS ) || renderContext.TechniqueInBatch( batches->GetBatches(), SSSSS );
-
-	if( !m_seprableSpecularColorMap || m_seprableSpecularColorMap->GetWidth() == 0 || m_seprableSpecularColorMap->GetHeight() == 0 || !m_hasSSSSSInScene )
+	if( !m_hasSSSSSInScene )
 	{
-		return false;
+		return;
 	}
 
-
+	auto seprableSpecularColorMap = gpuResourcePool.GetTempTexture( "SeprableSpecularColorMap", colorMap.GetWidth(), colorMap.GetHeight(), ImageIO::PIXEL_FORMAT_R16G16B16A16_FLOAT, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 	// Update RT
 	{
 		// Using depth stencil as shadow map
 		renderContext.m_esm.PushViewport();
-		renderContext.m_esm.PushRenderTarget( *m_seprableSpecularColorMap );
+		renderContext.m_esm.PushRenderTarget( seprableSpecularColorMap );
 
 
-		renderContext.m_esm.UpdateRenderTargetViewport( m_seprableSpecularColorMap->GetWidth(), m_seprableSpecularColorMap->GetHeight() );
+		renderContext.m_esm.UpdateRenderTargetViewport( seprableSpecularColorMap->GetWidth(), seprableSpecularColorMap->GetHeight() );
 
 		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0 );
 	}
@@ -105,7 +101,6 @@ bool Tr2SSSSS::SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext& rend
 	{
 		CCP_STATS_ZONE( "SeprableSpecularRendering" );
 
-		//ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatches( batches, SSSSS );
 	}
@@ -117,17 +112,6 @@ bool Tr2SSSSS::SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext& rend
 		renderContext.m_esm.PopViewport();
 	}
 
-	return m_hasSSSSSInScene;
-}
-
-void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderContext, Tr2RenderTargetPtr colorMap, Tr2RenderTargetPtr opaqueColorMap, Tr2DepthStencilPtr depthMap )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	if( !m_enabled || !m_seprableSpecularColorMap || m_seprableSpecularColorMap->GetWidth() == 0 || m_seprableSpecularColorMap->GetHeight() == 0 )
-	{
-		return;
-	}
 
 	// Setup the blur effect as well as the buffers required for the blur
 	if( m_screenSpaceSubSurfaceScatteringEffect == nullptr )
@@ -140,11 +124,10 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 
 		// Create and configure the basic effect settings
 		m_screenSpaceSubSurfaceScatteringEffect.CreateInstance();
-		//m_screenSpaceSubSurfaceScatteringEffect->StartUpdate();
 		m_screenSpaceSubSurfaceScatteringEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/Characters/SSSSSBlur.fx" );
 		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SubSurfaceFrontScatterColorBuffer" ), m_subSurfaceFrontScatterColorBuffer );
-		//m_screenSpaceSubSurfaceScatteringEffect->EndUpdate();
 	}
+
 
 	// Generate from the incoming data defined via blue the blur kernal
 	UpdateSubSurfaceFrontScatterData( renderContext );
@@ -152,17 +135,11 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 
 	// 1: Blur X
 	{
-		if( m_screenSpaceSubSurfaceScatteringEffect != nullptr )
-		{
-			m_screenSpaceSubSurfaceScatteringEffect->StartUpdate();
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "BlitCurrent" ), opaqueColorMap );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), m_seprableSpecularColorMap );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSWidth" ), m_subSurfaceScatteringWidth );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSDirection" ), Vector2( 1.0f, 0.0f ) );
-			m_screenSpaceSubSurfaceScatteringEffect->EndUpdate();
-		}
-
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSWidth" ), m_subSurfaceScatteringWidth );
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSDirection" ), Vector2( 1.0f, 0.0f ) );
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "BlitCurrent" ), opaqueColorMap );
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), seprableSpecularColorMap );
 		Tr2Renderer::DrawScreenQuad( renderContext, m_screenSpaceSubSurfaceScatteringEffect );
 	}
 
@@ -172,22 +149,16 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 		// Update RT
 		{
 			renderContext.m_esm.PushViewport();
-			renderContext.m_esm.PushRenderTarget( *opaqueColorMap );
+			renderContext.m_esm.PushRenderTarget( opaqueColorMap );
 
-			renderContext.m_esm.UpdateRenderTargetViewport( opaqueColorMap->GetWidth(), opaqueColorMap->GetHeight() );
+			renderContext.m_esm.UpdateRenderTargetViewport( opaqueColorMap.GetWidth(), opaqueColorMap.GetHeight() );
 		}
 
-		if( m_screenSpaceSubSurfaceScatteringEffect != nullptr )
-		{
-			m_screenSpaceSubSurfaceScatteringEffect->StartUpdate();
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "BlitCurrent" ), colorMap );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), m_seprableSpecularColorMap );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSWidth" ), m_subSurfaceScatteringWidth );
-			m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSDirection" ), Vector2( 0.0f, 1.0f ) );
-			m_screenSpaceSubSurfaceScatteringEffect->EndUpdate();
-		}
-
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSWidth" ), m_subSurfaceScatteringWidth );
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SSSDirection" ), Vector2( 0.0f, 1.0f ) );
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "BlitCurrent" ), colorMap );
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
+		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), seprableSpecularColorMap );
 		Tr2Renderer::DrawScreenQuad( renderContext, m_screenSpaceSubSurfaceScatteringEffect );
 
 		// Reset render target back to OG
@@ -196,6 +167,10 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 			renderContext.m_esm.PopViewport();
 		}
 	}
+
+	m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
+	m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL{} );
+	m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), Tr2TextureAL{} );
 
 	// 3: Specular Recombine after blur
 	{
@@ -207,15 +182,10 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 			m_specularRecombineEffect->EndUpdate();
 		}
 
-		if( m_screenSpaceSubSurfaceScatteringEffect != nullptr )
-		{
-			m_specularRecombineEffect->StartUpdate();
-			m_specularRecombineEffect->SetParameter( BlueSharedString( "BlitCurrent" ), opaqueColorMap );
-			m_specularRecombineEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), m_seprableSpecularColorMap );
-			m_specularRecombineEffect->EndUpdate();
-		}
-
+		m_specularRecombineEffect->SetParameter( BlueSharedString( "BlitCurrent" ), opaqueColorMap );
+		m_specularRecombineEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), seprableSpecularColorMap );
 		Tr2Renderer::DrawScreenQuad( renderContext, m_specularRecombineEffect );
+		m_specularRecombineEffect->SetParameter( BlueSharedString( "SeprableSpecularMap" ), Tr2TextureAL{} );
 	}
 }
 

@@ -24,16 +24,6 @@ namespace TrinityALImpl
 	{
 		Destroy();
 
-		if( ( desc.gpuUsage & ( ~Tr2GpuUsage::VERTEX_BUFFER & ~Tr2GpuUsage::INDEX_BUFFER ) ) != 0 )
-		{
-			return E_INVALIDARG;
-		}
-
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) && HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) )
-		{
-			return E_INVALIDARG;
-		}
-
 		if( desc.count == 0 )
 		{
 			return E_INVALIDARG;

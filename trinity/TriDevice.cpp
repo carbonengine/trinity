@@ -10,6 +10,7 @@
 #include "Include/TriMath.h"
 #include "Tr2SyncToGpu.h"
 #include "TriSettingsRegistrar.h" 
+#include "Tr2GpuResourcePool.h"
 #include <IBlueCallbackMan.h>
 #include "ContinueOnMainThread.h"
 
@@ -816,6 +817,7 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	HandleRenderTick( realTime, simTime );
 
 	ExecuteMainThreadActions();
+	Tr2GpuResourcePool::ClearAllUnusedResources();
 }
 
 void TriDevice::OnSimClockRebase( Be::Time oldTime, Be::Time newTime )

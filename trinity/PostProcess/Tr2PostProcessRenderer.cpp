@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "TriStepRenderPostProcess.h"
+#include "Tr2PostProcessRenderer.h"
 #include "PostProcess/Tr2PostProcess2.h"
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "Include/TriMath.h"
@@ -21,7 +21,7 @@ TRI_REGISTER_SETTING( "frameGenDebugView", g_frameGenDebugView );
 bool g_newBloom = true;
 TRI_REGISTER_SETTING( "newBloom", g_newBloom );
 
-int32_t g_dynamicExposureQualityRequirement = TriStepRenderPostProcess::PostProcessingQuality::MEDIUM;
+int32_t g_dynamicExposureQualityRequirement = Tr2PostProcessRenderer::PostProcessingQuality::MEDIUM;
 TRI_REGISTER_SETTING( "dynamicExposureQualityRequirement", g_dynamicExposureQualityRequirement );
 
 namespace
@@ -31,9 +31,7 @@ const uint32_t HISTOGRAM_TILE_SIZE_Y = 16;
 const uint32_t NUM_TILES_PER_THREAD_GROUP = 256;
 static Tr2UpscalingAL::Result s_lastUpscalingResult;
 
-ITr2TextureProvider* PLACEHOLDER = nullptr;
-
-void DrawInto( Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, Tr2TextureAL& src, Tr2RenderContext& renderContext )
+void DrawInto( const Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, const Tr2TextureAL& src, Tr2RenderContext& renderContext )
 {
 	renderContext.RenderPassHint( { loadAction, Tr2StoreAction::STORE }, {} );
 	renderContext.m_esm.PushRenderTarget( dest );
@@ -41,7 +39,7 @@ void DrawInto( Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, Tr2TextureAL&
 	renderContext.m_esm.PopRenderTarget();
 }
 
-void DrawPartiallyInto( Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, Tr2TextureAL& src, Tr2RenderContext& renderContext, const Vector2 tlTextureCoords = Vector2( 0, 0 ), const Vector2 brTextureCoords = Vector2( 1, 1 ) )
+void DrawPartiallyInto( const Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, const Tr2TextureAL& src, Tr2RenderContext& renderContext, const Vector2 tlTextureCoords = Vector2( 0, 0 ), const Vector2 brTextureCoords = Vector2( 1, 1 ) )
 {
 	renderContext.RenderPassHint( { loadAction, Tr2StoreAction::STORE }, {} );
 	renderContext.m_esm.PushRenderTarget( dest );
@@ -49,7 +47,7 @@ void DrawPartiallyInto( Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, Tr2T
 	renderContext.m_esm.PopRenderTarget();
 }
 
-void DrawInto( Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, Tr2Effect* effect, Tr2RenderContext& renderContext )
+void DrawInto( const Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, Tr2Effect* effect, Tr2RenderContext& renderContext )
 {
 	renderContext.RenderPassHint( { loadAction, Tr2StoreAction::STORE }, {} );
 	renderContext.m_esm.PushRenderTarget( dest );
@@ -57,67 +55,42 @@ void DrawInto( Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, Tr2Effect* ef
 	renderContext.m_esm.PopRenderTarget();
 }
 
+
+template <typename T>
+struct TempParameterT
+{
+	TempParameterT( Tr2Effect* effect, const BlueSharedString& name, const T& newValue ) :
+		m_effect( effect ), m_name( name )
+	{
+		m_effect->SetParameter( m_name, newValue );
+	}
+	~TempParameterT()
+	{
+		m_effect->SetParameter( m_name, T{} );
+	}
+	Tr2Effect* m_effect;
+	BlueSharedString m_name;
+};
+
+template <typename T>
+[[nodiscard]] TempParameterT<T> TempParameter( Tr2Effect* effect, const BlueSharedString& name, const T& newValue )
+{
+	return TempParameterT<T>( effect, name, newValue );
+}
+
+#define TEMP_PARAM( effect, name, value ) auto ANONYMOUS_VARIABLE( tempParameter ) = TempParameter( effect, BlueSharedString( name ), value )
+
+const auto RENDER_TARGET = Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE;
 }
 
 namespace PostProcessBlur
 {
 
-BlurContext CreateBlurContext( float outputSize )
-{
-	BlurContext context;
-
-	context.outputSize = outputSize;
-
-	context.type = BlurType::BT_Big;
-	context.channel = BlurChannel::BC_rgba;
-	context.process = BlurProcess::BP_None;
-	context.finalize = BlurFinalize::BF_None;
-	return context;
-}
-
-BlurContext CreateBlurContext( float outputSize, BlurType type )
-{
-	BlurContext context;
-
-	context.type = type;
-	context.outputSize = outputSize;
-
-	context.channel = BlurChannel::BC_rgba;
-	context.process = BlurProcess::BP_None;
-	context.finalize = BlurFinalize::BF_None;
-	return context;
-}
-
-BlurContext CreateBlurContext( BlurType type, BlurChannel channel, float outputSize )
+BlurContext CreateBlurContext( BlurType type, BlurChannel channel, BlurProcess process, BlurFinalize finalize )
 {
 	BlurContext context;
 	context.type = type;
 	context.channel = channel;
-	context.outputSize = outputSize;
-
-	context.process = BlurProcess::BP_None;
-	context.finalize = BlurFinalize::BF_None;
-	return context;
-}
-
-BlurContext CreateBlurContext( BlurType type, BlurChannel channel, BlurProcess process, float outputSize )
-{
-	BlurContext context;
-	context.type = type;
-	context.channel = channel;
-	context.outputSize = outputSize;
-	context.process = process;
-
-	context.finalize = BlurFinalize::BF_None;
-	return context;
-}
-
-BlurContext CreateBlurContext( BlurType type, BlurChannel channel, BlurProcess process, BlurFinalize finalize, float outputSize )
-{
-	BlurContext context;
-	context.type = type;
-	context.channel = channel;
-	context.outputSize = outputSize;
 	context.process = process;
 	context.finalize = finalize;
 
@@ -267,23 +240,18 @@ namespace AMDSharpening
 	}
 }
 
-TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
+Tr2PostProcessRenderer::Tr2PostProcessRenderer( IRoot* lockobj ) :
 	m_quality( HIGH ),
-	m_tilesX( 0 ),
-	m_tilesY( 0 ),
-	m_localHistogramCount( 0 ),
-	m_mergeHistogramXDim( 0 ),
 	m_desaturateEnabled( false ),
 	m_fadeEnabled( false ),
 	m_lutsEnabled( 0 ),
 	m_vignetteEnabled( false ),
-	m_sceneDirty( false ),
 	m_lastFrameTime( std::numeric_limits<long long>().max() ),
-	m_upscalingContextID( Tr2UpscalingAL::INVALID_CONTEXT_ID ),
 	m_bloomDebugMode( BloomDebugMode::BLOOM_DEBUG_NONE ),
-	m_useNewBloom( g_newBloom )
+	m_useNewBloom( g_newBloom ),
+	m_bokehFrameCounter( 0 ),
+	m_taaFrameCounter( 0 )
 {
-	m_renderInfo.CreateInstance();
 	m_tonemappingEffect.CreateInstance();
 	m_tonemappingEffect->StartUpdate();
 	m_tonemappingEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ToneMapping.fx" );
@@ -321,8 +289,8 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( "TexLUT" ), "res:/dx9/scene/postprocess/LUTdefault.dds" );
 	m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( "VignetteDetail" ), "res:/texture/global/white.dds" );
 	m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( "VignetteShape" ), "res:/texture/global/black.dds" );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), PLACEHOLDER );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), Tr2TextureAL{} );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "OutputGamma" ), g_eveSpaceSceneGammaBrightness );
 
 	m_tonemappingEffect->EndUpdate();
@@ -334,95 +302,45 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_transparencyMaskEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/TransparencyMask.fx" );
 }
 
-TriStepRenderPostProcess::~TriStepRenderPostProcess( void )
+Tr2PostProcessRenderer::PostProcessingQuality Tr2PostProcessRenderer::GetPostProcessingQuality() const
 {
-	if( m_upscalingContextID != Tr2UpscalingAL::INVALID_CONTEXT_ID )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		auto context = renderContext.GetUpscalingContext(m_upscalingContextID);
-		if( context )
-		{
-			context->SetHudLessTexture( nullptr );
-		}
-	}
-	if( m_scene )
-	{
-		m_scene->SetVelocityMap( nullptr );
-	}
-	
-	m_scene = nullptr;
+	return m_quality;
 }
 
-void TriStepRenderPostProcess::py__init__( EveSpaceScene* scene, Tr2RenderTarget* source, Tr2RenderTarget* opaque_source )
+void Tr2PostProcessRenderer::SetPostProcessingQuality( PostProcessingQuality quality )
 {
-	if( scene == nullptr )
+	if( m_quality == quality )
 	{
 		return;
 	}
-
-	m_scene = scene;
-	m_sceneDirty = true;
-
-	SetRenderTarget( source );
-	m_opaqueColorBuffer = opaque_source;
-	SetupVelocityMap();
-	m_lastFrameTime = BeOS->GetCurrentFrameTime();
+	m_quality = quality;
 }
 
-void SetDirtyIfNotNull( Tr2PPEffect* effect )
-{
-	if( nullptr != effect )
-	{
-		effect->SetDirty( true );
-	}
-}
 
-void TriStepRenderPostProcess::SetupVelocityMap()
-{
-	auto sourceBuffer = m_renderInfo->GetSourceBuffer();
-
-	if( sourceBuffer && sourceBuffer->IsValid() )
-	{
-		m_velocityBuffer.CreateInstance();
-		m_velocityBuffer->SetName( "VelocityMap" );
-		m_velocityBuffer->Create( sourceBuffer->GetWidth(), sourceBuffer->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16_FLOAT, sourceBuffer->GetMsaaType(), 0 );
-	}
-}
-
-bool TriStepRenderPostProcess::OnModified( Be::Var* value )
-{
-	m_sceneDirty = true;
-
-	return true;
-}
-
-TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )
+void Tr2PostProcessRenderer::Execute( 
+	const Tr2TextureAL& destination, 
+	Tr2GpuResourcePool::Texture sourceBuffer, 
+	Tr2GpuResourcePool::Texture depthMap, 
+	Tr2GpuResourcePool::Texture velocity, 
+	Tr2GpuResourcePool::Texture opaqueColor, 
+	EveSpaceScene* scene,
+	Tr2UpscalingContextAL* upscalingContext, 
+	Tr2GpuResourcePool& gpuResourcePool, 
+	Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_renderInfo->Setup( renderContext ) )
+	if( !sourceBuffer.IsValid() )
 	{
-		return RS_FAILED;
+		CCP_LOGERR( "Tr2PostProcessRenderer::Execute: Source buffer is invalid!" );
+		return;
 	}
-
-	if( m_scene == nullptr )
-	{
-		return RS_OK;
-	}
-
-	auto sourceBuffer = m_renderInfo->GetSourceBuffer();
-
-	if( !sourceBuffer || !sourceBuffer->IsValid() )
-	{
-		CCP_LOGERR( "TriStepRenderPostProcess::Execute: Source buffer is invalid!" );
-		return RS_OK;
-	}
-
-	m_renderInfo->SetRenderSize( sourceBuffer->GetWidth(), sourceBuffer->GetHeight() );
+	const auto renderSize = TextureSize2D{ sourceBuffer->GetWidth(), sourceBuffer->GetHeight() };
+	auto displaySize = renderSize;
 
 	GPU_REGION( renderContext, "Post-processing" );
 
-	Tr2PostProcess2Ptr postProcess = m_scene->GetPostProcess();
+	Tr2PostProcess2Ptr postProcess = scene->GetPostProcess();
 
 	Tr2PPGodRaysEffect* godrays = nullptr;
 	Tr2PPBloomEffect* bloom = nullptr;
@@ -475,39 +393,16 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	renderContext.m_esm.PushRenderTarget();
 	renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
-
-	if( m_sceneDirty )
-	{
-		SetDirtyIfNotNull( godrays );
-		SetDirtyIfNotNull( bloom );
-		SetDirtyIfNotNull( signalLoss );
-		SetDirtyIfNotNull( dynamicExposure );
-		SetDirtyIfNotNull( filmGrain );
-		SetDirtyIfNotNull( desaturate );
-		SetDirtyIfNotNull( fade );
-		SetDirtyIfNotNull( vignette );
-		SetDirtyIfNotNull( fog );
-		SetDirtyIfNotNull( taa );
-		SetDirtyIfNotNull( dof );
-		SetDirtyIfNotNull( tonemapping );
-		SetDirtyIfNotNull( colorCorrection );
-	}
-	// Processing effects will set velocity map if it is needed
-	m_scene->SetVelocityMap( nullptr );
-
-	if( m_upscalingContextID == Tr2UpscalingAL::INVALID_CONTEXT_ID )
-	{
-		m_upscalingContextID = Tr2Renderer::GetUpscalingContextID();
-	}
 	
-	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContextID );
-	auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( m_upscalingContextID );
+	const auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( upscalingContext ? upscalingContext->GetID() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
 
 	auto upscalingEnabled = upscalingInfo.technique != Tr2UpscalingAL::NONE;
-	Tr2PostProcessRenderInfo::Texture output;
+	Tr2GpuResourcePool::Texture output;
 	if( upscalingEnabled )
 	{
-		output = m_renderInfo->GetTempTexture( upscalingInfo.displayWidth, upscalingInfo.displayHeight, Tr2RenderContextEnum::EX_NONE, renderContext.GetPrimaryRenderContext().GetBackBufferFormat() );
+		displaySize = { upscalingInfo.displayWidth, upscalingInfo.displayHeight };
+
+		output = gpuResourcePool.GetTempTexture( "Final Result", displaySize, destination.GetFormat(), RENDER_TARGET );
 		if( upscalingInfo.temporal )
 		{
 			taa = nullptr;
@@ -515,72 +410,92 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	}
 	else
 	{
-		output = m_renderInfo->GetTempTexture();
+		output = gpuResourcePool.GetTempTexture( "Final Result", displaySize, destination.GetFormat(), RENDER_TARGET );
 	}
 
-	ProcessSharpening( !upscalingInfo.hasSharpening, output->GetWidth(), output->GetHeight(), upscalingInfo.upscalingAmount );
+	ProcessSharpening( !upscalingInfo.hasSharpening, displaySize.width, displaySize.height, upscalingInfo.upscalingAmount );
 
 
 	// Always copy
-	auto nonMsaaSource = m_renderInfo->GetTempTexture();
-	sourceBuffer->GetRenderTarget().Resolve( *nonMsaaSource, renderContext );
+	auto nonMsaaSource = gpuResourcePool.GetTempTexture( "Pre-upscaling Composite", renderSize, sourceBuffer->GetFormat(), RENDER_TARGET );
+	sourceBuffer->Resolve( nonMsaaSource, renderContext );
 
 	if( ProcessFog( fog ) )
 	{
-		RenderFog( nonMsaaSource, renderContext, fog );
+		RenderFog( nonMsaaSource, sourceBuffer, gpuResourcePool, renderContext, fog );
 	}
+	sourceBuffer = {};
 
 	if( ProcessGodRays( godrays ) )
 	{
-		RenderGodRays( nonMsaaSource, renderContext, godrays );
+		RenderGodRays( nonMsaaSource, depthMap, gpuResourcePool, renderContext, godrays );
 	}
 
 	if( ProcessDepthOfField( renderContext, dof ) )
 	{
 		bool temporal = upscalingInfo.temporal || ( taa && taa->IsActive() );
-		RenderDepthOfField( nonMsaaSource, renderContext, dof, temporal, upscalingInfo.upscalingAmount );
+		RenderDepthOfField( nonMsaaSource, gpuResourcePool, renderContext, dof, temporal, upscalingInfo.upscalingAmount );
 	}
 
 	bool hasDynamicExposure = ProcessDynamicExposure( renderContext, dynamicExposure, bloom, postProcess );
 	if( ProcessTaa( taa ) )
 	{
-		RenderTaa( nonMsaaSource, renderContext, taa, dynamicExposure );
+		RenderTaa( nonMsaaSource, velocity, opaqueColor, gpuResourcePool, renderContext, taa, dynamicExposure );
+		if ( !upscalingContext )
+		{
+			velocity = {};
+			opaqueColor = {};
+		}
 	}
 
+	Tr2GpuResourcePool::Buffer histogramBuffer;
 	if( hasDynamicExposure )
 	{
-		RenderDynamicExposure( nonMsaaSource, renderContext, dynamicExposure );
+		histogramBuffer = RenderDynamicExposure( nonMsaaSource, gpuResourcePool, renderContext, dynamicExposure );
+		if ( !dynamicExposure->m_debug )
+		{
+			histogramBuffer = {};
+		}
 	}
 
-	Tr2PostProcessRenderInfo::Texture upscaledSource;
+	Tr2GpuResourcePool::Texture upscaledSource;
 
-	if( upscalingInfo.temporal )
+	if( upscalingContext && upscalingInfo.temporal )
 	{
 		// need to set the hudless texture as it is needed for frame generation (and needs to be set before the upscaling call)
-		upscalingContext->SetHudLessTexture( output->GetTexture() );
+		upscalingContext->SetHudLessTexture( &output.Get() );
 
-		upscaledSource = RenderUpscaling( nonMsaaSource, renderContext, upscalingContext, dynamicExposure );
-		// upscale the temp textures so everything hence forth is correct
-		uint32_t w, h;
-		upscalingContext->GetDisplayDimensions( w, h );
-		m_renderInfo->SetRenderSize( w, h );
+		upscaledSource = RenderUpscaling( nonMsaaSource, depthMap, velocity, opaqueColor, scene->GetReprojectionMatrix(), gpuResourcePool, renderContext, upscalingContext, dynamicExposure );
+		depthMap = {};
+		velocity = {};
+		opaqueColor = {};
+
 		// need to reset the perframedata so we have the correct viewport size etc
-		m_scene->ApplyUpscalingToPerFrameData( w, h, renderContext );
+		scene->ApplyUpscalingToPerFrameData( displaySize.width, displaySize.height, renderContext );
 	}
 	else
 	{
 		upscaledSource = nonMsaaSource;
+		if ( !upscalingContext )
+		{
+			depthMap = {};
+			velocity = {};
+			opaqueColor = {};
+		}
 	}
+	nonMsaaSource = {};
 
 	// this needs to be after dynamic exposure, since bloom can be exposure dependent
-	Tr2PostProcessRenderInfo::Texture bloomTexture;
+	Tr2GpuResourcePool::Texture bloomTexture;
 	if( ProcessBloom( bloom, dynamicExposure ) )
 	{
-		bloomTexture = RenderBloom( upscaledSource, renderContext, bloom );
+		bloomTexture = RenderBloom( upscaledSource, gpuResourcePool, renderContext, bloom );
 	}
 
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), bloomTexture ? bloomTexture.GetRenderTarget() : m_renderInfo->GetBlackTexture() );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), upscaledSource );
+	TEMP_PARAM( m_tonemappingEffect, "BlitCurrent", bloomTexture.IsValid() ? bloomTexture : GetBlackTexture( gpuResourcePool ) );
+	TEMP_PARAM( m_tonemappingEffect, "BlitOriginal", upscaledSource );
+	TEMP_PARAM( m_tonemappingEffect, "Exposure", GetExposureBuffer( gpuResourcePool ) );
+	TEMP_PARAM( m_tonemappingEffect, "Histogram", histogramBuffer );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "OutputGamma" ), g_eveSpaceSceneGammaBrightness );
 
 	if( bloom && m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
@@ -614,45 +529,45 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	bool doGrain = ProcessFilmGrain( filmGrain );
 	if( !upscalingInfo.temporal || doGrain )
 	{
-		if( upscalingEnabled && !upscalingInfo.temporal )
+		if( upscalingContext && !upscalingInfo.temporal )
 		{
 			
-			auto temp = m_renderInfo->GetTempTexture( "Tonemapping Result" );
+			auto temp = gpuResourcePool.GetTempTexture( "Tonemapping Result", renderSize, destination.GetFormat(), RENDER_TARGET );
 
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-			DrawInto( *temp, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
-						
-			output = RenderUpscaling( temp, renderContext, upscalingContext, dynamicExposure );
+			DrawInto( temp, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 			
-			// upscale the temp textures so everything hence forth is correct
-			uint32_t w, h;
-			upscalingContext->GetDisplayDimensions( w, h );
-			m_renderInfo->SetRenderSize( w, h );
+			output = RenderUpscaling( temp, depthMap, velocity, opaqueColor, scene->GetReprojectionMatrix(), gpuResourcePool, renderContext, upscalingContext, dynamicExposure );
+			depthMap = {};
+			velocity = {};
+			opaqueColor = {};
+			
 			// need to reset the perframedata so we have the correct viewport size etc
-			m_scene->ApplyUpscalingToPerFrameData( w, h, renderContext );
+			scene->ApplyUpscalingToPerFrameData( displaySize.width, displaySize.height, renderContext );
 		}
 		else
 		{
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-			DrawInto( *output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
+			DrawInto( output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 		}
-		output = RenderSharpening( output, renderContext );
+		output = RenderSharpening( output, gpuResourcePool, renderContext );
 
+		renderContext.m_esm.SetRenderTarget( 0, destination );
 		if( doGrain )
 		{
 			RenderFilmGrain( output, renderContext, filmGrain );
 		}
 		else
 		{
-			Tr2Renderer::DrawTexture( renderContext, *output );
+			Tr2Renderer::DrawTexture( renderContext, output );
 		}
 	}
 	else
 	{
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-		DrawInto( *output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
-		output = RenderSharpening( output, renderContext );
-		Tr2Renderer::DrawTexture( renderContext, *output );
+		DrawInto( output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
+		output = RenderSharpening( output, gpuResourcePool, renderContext );
+		Tr2Renderer::DrawTexture( renderContext, output );
 	}
 
 	if( ProcessSignalLoss( signalLoss ) )
@@ -660,22 +575,18 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		RenderSignalLoss( output, renderContext, signalLoss );
 	}
 
-	RenderDynamicExposureDebug( renderContext, dynamicExposure );
+	RenderDynamicExposureDebug( gpuResourcePool, renderContext, dynamicExposure, histogramBuffer );
 
 	renderContext.m_esm.PopDepthStencilBuffer();
 	renderContext.m_esm.PopRenderTarget();
-
-	m_sceneDirty = false;
-	return RS_OK;
 }
 
-void TriStepRenderPostProcess::SetupExposureConversion( bool enable, float middleValue )
+void Tr2PostProcessRenderer::SetupExposureConversion( bool enable, float middleValue )
 {
 	if( enable )
 	{
-		if( !m_exposureTexture || !m_dynamicExposureToTextureShader )
+		if( !m_dynamicExposureToTextureShader )
 		{
-			m_exposureTexture = m_renderInfo->GetTempTexture( 1, 1, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT );
 			m_dynamicExposureToTextureShader.CreateInstance();
 			m_dynamicExposureToTextureShader->StartUpdate();
 			m_dynamicExposureToTextureShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ExposureToTexture.fx" );
@@ -686,48 +597,52 @@ void TriStepRenderPostProcess::SetupExposureConversion( bool enable, float middl
 	else
 	{
 		m_dynamicExposureToTextureShader = nullptr;
-		m_exposureTexture = nullptr;
 	}
 }
 
-void TriStepRenderPostProcess::ProcessSharpening( bool enable, uint32_t displayWidth, uint32_t displayHeight, float upscalingAmount )
+void Tr2PostProcessRenderer::ProcessSharpening( bool enable, uint32_t displayWidth, uint32_t displayHeight, float upscalingAmount )
 {
-	if( enable && !m_fidelityFxCasShader )
+	if( !enable )
 	{
-		float casIntensity = 0.5f;
-
-		m_fidelityFxCasShader.CreateInstance();
-		m_fidelityFxCasShader->StartUpdate();
-		m_fidelityFxCasShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/CAS.fx" );
-		
-		AF1 outWidth = static_cast<AF1>( displayWidth );
-		AF1 outHeight = static_cast<AF1>( displayHeight );
-		
-		AMDSharpening::CASConstants casConst;
-
-		CasSetup( casConst.const0.u, casConst.const1.u, casIntensity, outWidth, outHeight, outWidth, outHeight );
-
-		m_fidelityFxCasShader->SetParameter( BlueSharedString( "InputTexture" ), PLACEHOLDER );
-		m_fidelityFxCasShader->SetParameter( BlueSharedString( "OutputTexture" ), PLACEHOLDER );
-		m_fidelityFxCasShader->SetParameter( BlueSharedString( "const0" ), AMDSharpening::AsVector( casConst.const0 ) );
-		m_fidelityFxCasShader->SetParameter( BlueSharedString( "const1" ), AMDSharpening::AsVector( casConst.const1 ) );
-
-		m_fidelityFxCasShader->EndUpdate();
-
+		return;
 	}
+	if( !m_fidelityFxCasShader )
+	{
+		m_fidelityFxCasShader.CreateInstance();
+		m_fidelityFxCasShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/CAS.fx" );
+	}
+	float casIntensity = 10.5f;
+
+	AF1 outWidth = static_cast<AF1>( displayWidth );
+	AF1 outHeight = static_cast<AF1>( displayHeight );
+		
+	AMDSharpening::CASConstants casConst;
+
+	CasSetup( casConst.const0.u, casConst.const1.u, casIntensity, outWidth, outHeight, outWidth, outHeight );
+
+	m_fidelityFxCasShader->SetParameter( BlueSharedString( "InputTexture" ), Tr2TextureAL{} );
+	m_fidelityFxCasShader->SetParameter( BlueSharedString( "OutputTexture" ), Tr2TextureAL{} );
+	m_fidelityFxCasShader->SetParameter( BlueSharedString( "const0" ), AMDSharpening::AsVector( casConst.const0 ) );
+	m_fidelityFxCasShader->SetParameter( BlueSharedString( "const1" ), AMDSharpening::AsVector( casConst.const1 ) );
 }
 
-Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderSharpening( Tr2PostProcessRenderInfo::Texture& input, Tr2RenderContext& renderContext )
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderSharpening( Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
 	if( m_fidelityFxCasShader )
 	{
 		GPU_REGION( renderContext, "CAS Sharpening" );
 
 		static const uint32_t CAS_THREAD_GROUP_WORK_REGION_DIM = 16;
-		Tr2PostProcessRenderInfo::Texture output = m_renderInfo->GetTempTexture( 1.0f, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
+		auto format = input->GetFormat();
+		if( format == ImageIO::PIXEL_FORMAT_B8G8R8X8_UNORM || format == ImageIO::PIXEL_FORMAT_B8G8R8A8_UNORM )
+		{
+			// There must be a better way to detect and handle formats that are not UAV-compatible
+			format = ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM;
+		}
+		auto output = gpuResourcePool.GetTempTexture( "Sharpening Output", input->GetWidth(), input->GetHeight(), format, RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS );
 
-		m_fidelityFxCasShader->SetParameter( BlueSharedString( "InputTexture" ), input );
-		m_fidelityFxCasShader->SetParameter( BlueSharedString( "OutputTexture" ), output );
+		TEMP_PARAM( m_fidelityFxCasShader, "InputTexture", input );
+		TEMP_PARAM( m_fidelityFxCasShader, "OutputTexture", output );
 
 		auto renderWidth = output->GetWidth();
 		auto renderHeight = output->GetHeight();
@@ -741,7 +656,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderSharpening( Tr
 }
 
 // Helper function to blur certain channel of a source render target to a destination render target with a blur type (Big/Small)
-void TriStepRenderPostProcess::Blur( Tr2RenderTarget& dest, Tr2RenderTarget& src, Tr2RenderContext& renderContext, PostProcessBlur::BlurContext& blurContext )
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::Blur( Tr2GpuResourcePool::Texture src, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, const PostProcessBlur::BlurContext& blurContext )
 {
 	GPU_REGION( renderContext, "Blur" );
 
@@ -785,33 +700,39 @@ void TriStepRenderPostProcess::Blur( Tr2RenderTarget& dest, Tr2RenderTarget& src
 		effects = lookup->second;
 	}
 
-	auto rt2 = m_renderInfo->GetTempTexture( blurContext.outputSize, Tr2RenderContextEnum::EX_NONE, src.GetFormat() );
+	auto rt2 = gpuResourcePool.GetTempTexture( "Blur Temp 1", src->GetWidth(), src->GetHeight(), src->GetFormat(), RENDER_TARGET );
+	TEMP_PARAM( effects.first, "BlitCurrent", src );
+	DrawInto( rt2, Tr2LoadAction::DONT_CARE, effects.first, renderContext );
+	src = {};
 
-	effects.first->SetParameter( BlueSharedString( "BlitCurrent" ), &src );
-	effects.second->SetParameter( BlueSharedString( "BlitCurrent" ), rt2 );
-
-	DrawInto( *rt2, Tr2LoadAction::DONT_CARE, effects.first, renderContext );
-	DrawInto( dest, Tr2LoadAction::DONT_CARE, effects.second, renderContext );
+	auto rt1 = gpuResourcePool.GetTempTexture( "Blur Temp 2", rt2->GetWidth(), rt2->GetHeight(), rt2->GetFormat(), RENDER_TARGET );
+	TEMP_PARAM( effects.second, "BlitCurrent", rt2 );
+	DrawInto( rt1, Tr2LoadAction::DONT_CARE, effects.second, renderContext );
+	return rt1;
 }
 
-void TriStepRenderPostProcess::DownSampleDepth( Tr2RenderContext& renderContext, Tr2RenderTarget* destination )
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::DownSampleDepth( const Tr2TextureAL& depth, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
 	if( !m_downsampleDepthEffect )
 	{
 		m_downsampleDepthEffect.CreateInstance();
 		m_downsampleDepthEffect->StartUpdate();
 		m_downsampleDepthEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/DownsampleDepth.fx" );
+		m_downsampleDepthEffect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL{} );
 		m_downsampleDepthEffect->EndUpdate();
 	}
 
-	DrawInto( *destination, Tr2LoadAction::DONT_CARE, m_downsampleDepthEffect, renderContext );
+	TEMP_PARAM( m_downsampleDepthEffect, "DepthMap", depth );
+	auto destination = gpuResourcePool.GetTempTexture( "Down-sampled Depth", TextureSize2D( depth.GetDesc() ) * 0.5f, ImageIO::PIXEL_FORMAT_R32_FLOAT, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
+	DrawInto( destination, Tr2LoadAction::DONT_CARE, m_downsampleDepthEffect, renderContext );
+	return destination;
 }
 
-bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure )
+bool Tr2PostProcessRenderer::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	if( bloom && bloom->IsActive() )
 	{
-		bool exposureDependant = bloom->m_exposureDependency && m_exposure != nullptr;
+		bool exposureDependant = bloom->m_exposureDependency;
 
 		if( m_downSamplerLuminancePreserve == nullptr || m_downSampler == nullptr || m_upsamplerVertical == nullptr || m_upsamplerHorizontal == nullptr )
 		{
@@ -820,17 +741,17 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 			m_bloomHighPassFilter->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/HighPassFilter.fx" );
 			m_bloomHighPassFilter->SetParameter( BlueSharedString( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
 			m_bloomHighPassFilter->SetParameter( BlueSharedString( "LuminanceScale" ), bloom->m_luminanceScale );
-			m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
 
 			bool hasDynamicExposure = dynamicExposure != nullptr && dynamicExposure->IsActive();
 			m_bloomHighPassFilter->SetParameter( BlueSharedString( "ExposureDependency" ), bloom->m_exposureDependency && hasDynamicExposure ? 1.0f : 0.0f );
-			m_bloomHighPassFilter->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
+			m_bloomHighPassFilter->SetParameter( BlueSharedString( "Exposure" ), Tr2BufferAL{} );
 			m_bloomHighPassFilter->EndUpdate();
 
 			m_tonemappingEffect->StartUpdate();
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrimeWeight" ), bloom->m_grimeWeight );
 			m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( "Grime" ), bloom->m_grimePath.c_str() );
-			m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
 			if(m_useNewBloom)
 			{
 				m_tonemappingEffect->SetParameter( BlueSharedString( "BloomBrightness" ), 1.0f );
@@ -845,7 +766,7 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 			m_downSamplerLuminancePreserve.CreateInstance();
 			m_downSamplerLuminancePreserve->StartUpdate();
 			m_downSamplerLuminancePreserve->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Downsample.fx" );
-			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
+			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "Exposure" ), Tr2BufferAL{} );
 			m_downSamplerLuminancePreserve->SetOption( BlueSharedString( "EXPOSURE_DEPENDANCE" ), hasDynamicExposure ? BlueSharedString( "EXPOSURE_DEPENDANCE_ON" ) : BlueSharedString("EXPOSURE_DEPENDANCE_OFF" ));
 			m_downSamplerLuminancePreserve->SetOption( BlueSharedString( "LUNINANCE_PRESERVE" ), BlueSharedString( "LUNINANCE_PRESERVE_ON" ) );
 			m_downSamplerLuminancePreserve->SetParameter( BlueSharedString( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
@@ -882,7 +803,7 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 			m_bloomHighPassFilter->SetParameter( BlueSharedString( "ExposureDependency" ), exposureDependant ? 1.0f : 0.0f );
 			if( exposureDependant )
 			{
-				m_bloomHighPassFilter->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
+				m_bloomHighPassFilter->SetParameter( BlueSharedString( "Exposure" ), Tr2BufferAL{} );
 			}
 			m_bloomHighPassFilter->EndUpdate();
 
@@ -921,10 +842,10 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 			m_upsamplerVertical = nullptr;
 			m_upsamplerHorizontal = nullptr;
 			m_bloomDebugShader = nullptr;
-			m_tonemappingEffect->StartUpdate();
-			m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), m_renderInfo->GetBlackTexture() );
-			m_tonemappingEffect->SetParameter( BlueSharedString( "Grime" ), m_renderInfo->GetBlackTexture() );
-			m_tonemappingEffect->EndUpdate();
+			if( TriTextureParameterPtr resource = BlueCastPtr( m_tonemappingEffect->GetResourceByName( "Grime" ) ) )
+			{
+				resource->SetResourcePath( "res:/texture/global/black.dds" );
+			}
 		}
 	}
 
@@ -932,32 +853,30 @@ bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynam
 }
 
 
-Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2PostProcessRenderInfo::Texture& dest, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom )
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourcePool::Texture& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom )
 {
 	GPU_REGION( renderContext, "Bloom" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 	if( !m_useNewBloom )
 	{
-		auto rt1 = m_renderInfo->GetTempTexture( "Bloom", 0.5f );
-		m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
-		DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
+		auto rt1 = gpuResourcePool.GetTempTexture( "Bloom", TextureSize2D( dest->GetDesc() ) * 0.5f, dest->GetFormat(), RENDER_TARGET );
+		TEMP_PARAM( m_bloomHighPassFilter, "BlitCurrent", dest );
+		TEMP_PARAM( m_bloomHighPassFilter, "Exposure", GetExposureBuffer( gpuResourcePool ) );
+		DrawInto( rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
 
-		auto blurContext = PostProcessBlur::CreateBlurContext( 0.5f );
-		Blur( *rt1, *rt1, renderContext, blurContext );
-
-		return rt1;
+		return Blur( std::move( rt1 ), gpuResourcePool, renderContext, {} );
 	}
 
 	int depth = 0;
-	auto black = m_renderInfo->GetBlackTexture();
+	auto black = GetBlackTexture( gpuResourcePool );
 
 	float currentSize = 0.5f;
-	uint32_t minDim = std::min( dest.GetRenderTarget()->GetHeight(), dest.GetRenderTarget()->GetWidth() );
+	uint32_t minDim = std::min( dest->GetHeight(), dest->GetWidth() );
 
-	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> downsampleTexture;
-	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleHorizontalTexture;
-	std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS> upsampleTexture;
+	std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS> downsampleTexture;
+	std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS> upsampleHorizontalTexture;
+	std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS> upsampleTexture;
 
 	for( int i = 0; i < Bloom::MAX_BLOOM_STEPS; ++i )
 	{
@@ -965,16 +884,19 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 		{
 			break;
 		}
+
+		auto size = TextureSize2D( dest->GetDesc() ) * currentSize;
+
 		auto name = "Downsample_" + std::to_string( i );
-		downsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
+		downsampleTexture[i] = gpuResourcePool.GetTempTexture( name.c_str(), size, dest->GetFormat(), RENDER_TARGET );
 
 		name = "Upsample_" + std::to_string( i );
-		upsampleTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
+		upsampleTexture[i] = gpuResourcePool.GetTempTexture( name.c_str(), size, dest->GetFormat(), RENDER_TARGET );
 
 		if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
 		{
 			name = "Upsample_Horizontal_" + std::to_string( i );
-			upsampleHorizontalTexture[i] = m_renderInfo->GetTempTexture( name.c_str(), currentSize );
+			upsampleHorizontalTexture[i] = gpuResourcePool.GetTempTexture( name.c_str(), size, dest->GetFormat(), RENDER_TARGET );
 		}
 		
 		currentSize *= 0.5f;
@@ -990,9 +912,10 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 			GPU_REGION( renderContext, name.c_str() );
 			auto rt = downsampleTexture[i];
 			auto effect = i == 0 && bloom->m_luminanceThreshold > -1.0f ? m_downSamplerLuminancePreserve : m_downSampler;
-			auto invTexelSize = Vector2( 1.0f / (float)lastRt.GetRenderTarget()->GetWidth(), 1.0f / (float)lastRt.GetRenderTarget()->GetHeight() );
+			auto invTexelSize = Vector2( 1.0f / (float)lastRt->GetWidth(), 1.0f / (float)lastRt->GetHeight() );
 
-			effect->SetParameter( BlueSharedString( "BlitCurrent" ), lastRt );
+			TEMP_PARAM( effect, "BlitCurrent", lastRt );
+			TEMP_PARAM( effect, "Exposure", GetExposureBuffer( gpuResourcePool ) );
 
 			auto downsampleInfo = DownsampleData
 			{
@@ -1000,7 +923,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 			};
 			FillAndSetConstants( m_bloomConstantBuffer, &downsampleInfo, sizeof( downsampleInfo ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 				
-			DrawInto( *rt, Tr2LoadAction::DONT_CARE, effect, renderContext );
+			DrawInto( rt, Tr2LoadAction::DONT_CARE, effect, renderContext );
 
 			lastRt = rt;
 		}
@@ -1036,7 +959,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 			m_upsamplerHorizontal->SetParameter( BlueSharedString( "BlitCurrent" ), currentMip );
 			auto gaussianOutput = GaussianDistribution::CalculateGaussianPassParameters( radiusInPixels, directionalWeight.x, invTexelSize.x, Vector3( 1, 1, 1 ), Vector2( 1, 0 ) );
 			FillAndSetConstants( m_bloomConstantBuffer, &gaussianOutput, sizeof( gaussianOutput ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
-			DrawInto( *currentUpsampled, Tr2LoadAction::DONT_CARE, m_upsamplerHorizontal, renderContext );
+			DrawInto( currentUpsampled, Tr2LoadAction::DONT_CARE, m_upsamplerHorizontal, renderContext );
 		}
 		for( int i = depth - 1; i >= 0; --i )
 		{
@@ -1066,7 +989,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 			auto gaussianOutput = GaussianDistribution::CalculateGaussianPassParameters( radiusInPixels, directionalWeight.y, invTexelSize.y, tint.GetXYZ(), Vector2( 0, 1 ) );
 			FillAndSetConstants( m_bloomConstantBuffer, &gaussianOutput, sizeof( gaussianOutput ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 			// draw into the downsample texture, because they will not be used again
-			DrawInto( *currentMip, Tr2LoadAction::DONT_CARE, m_upsamplerVertical, renderContext );
+			DrawInto( currentMip, Tr2LoadAction::DONT_CARE, m_upsamplerVertical, renderContext );
 			
 			lastRt = currentMip;
 		}
@@ -1074,7 +997,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 
 	if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
 	{
-		return RenderBloomDebug( downsampleTexture, upsampleTexture, dest, renderContext );
+		return RenderBloomDebug( downsampleTexture, upsampleTexture, dest, gpuResourcePool, renderContext );
 	}
 	else
 	{
@@ -1084,10 +1007,12 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Post
 	return lastRt;
 }
 
-Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloomDebug( std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS>& downsample, 
-std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
-																			  Tr2PostProcessRenderInfo::Texture& blitCurrent,
-																			  Tr2RenderContext& renderContext )
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloomDebug( 
+	std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& downsample, 
+	std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
+	Tr2GpuResourcePool::Texture& blitCurrent,
+	Tr2GpuResourcePool& gpuResourcePool, 
+	Tr2RenderContext& renderContext )
 {	
 	if( m_bloomDebugShader == nullptr )
 	{
@@ -1135,14 +1060,14 @@ std::array<Tr2PostProcessRenderInfo::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
 		m_bloomDebugShader->SetParameter( BlueSharedString( "Upsample" + std::to_string( i + 1 ) ), upsample[i] );
 	}
 
-	auto debugView = m_renderInfo->GetTempTexture();
+	auto debugView = gpuResourcePool.GetTempTexture( "Bloom Debug", blitCurrent->GetWidth(), blitCurrent->GetHeight(), blitCurrent->GetFormat(), RENDER_TARGET );
 
-	DrawInto( *debugView, Tr2LoadAction::DONT_CARE, m_bloomDebugShader, renderContext );
+	DrawInto( debugView, Tr2LoadAction::DONT_CARE, m_bloomDebugShader, renderContext );
 
 	return debugView;
 }
 
-bool TriStepRenderPostProcess::ProcessGodRays( Tr2PPGodRaysEffect* godrays )
+bool Tr2PostProcessRenderer::ProcessGodRays( Tr2PPGodRaysEffect* godrays )
 {
 	if( godrays && godrays->IsActive() )
 	{
@@ -1155,7 +1080,7 @@ bool TriStepRenderPostProcess::ProcessGodRays( Tr2PPGodRaysEffect* godrays )
 			m_godrayEffect->SetParameter( BlueSharedString( "Intensity" ), Vector4( godrays->m_intensity, 0.0f, 1.0f, 1.0f ) );
 			m_godrayEffect->SetParameter( BlueSharedString( "grFactors" ), godrays->grFactors );
 			m_godrayEffect->AddResourceTexture2D( BlueSharedString( "NoiseTexMap" ), godrays->m_noiseTexturePath.c_str() );
-			m_godrayEffect->SetParameter( BlueSharedString( "DepthMap" ), PLACEHOLDER );
+			m_godrayEffect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL{} );
 			m_godrayEffect->EndUpdate();
 			godrays->SetDirty( false );
 		}
@@ -1182,30 +1107,29 @@ bool TriStepRenderPostProcess::ProcessGodRays( Tr2PPGodRaysEffect* godrays )
 }
 
 
-void TriStepRenderPostProcess::RenderGodRays( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPGodRaysEffect* godrays )
+void Tr2PostProcessRenderer::RenderGodRays( const Tr2TextureAL& dest, const Tr2TextureAL& depth, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPGodRaysEffect* godrays )
 {
 	GPU_REGION( renderContext, "Godrays" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 	// Downsample depth
-	auto rt1 = m_renderInfo->GetTempTexture( "Down-sampled Depth", 0.5f );
-	DownSampleDepth( renderContext, rt1 );
+	auto rt1 = DownSampleDepth( depth, gpuResourcePool, renderContext );
 
 	// God rays
-	auto rt2 = m_renderInfo->GetTempTexture( "God rays", 0.5f );
-	m_godrayEffect->SetParameter( BlueSharedString( "DepthMap" ), rt1 );
-	renderContext.m_esm.PushRenderTarget( *rt2 );
+	auto rt2 = gpuResourcePool.GetTempTexture( "God rays", TextureSize2D( dest.GetDesc() ) * 0.5f, dest.GetFormat(), RENDER_TARGET );
+	renderContext.m_esm.PushRenderTarget( rt2 );
 	renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0 ); // clear is needed because godray vertex shader can opt out of rendering
+	TEMP_PARAM( m_godrayEffect, "DepthMap", rt1 );
 	Tr2Renderer::DrawScreenQuad( renderContext, m_godrayEffect );
 	renderContext.m_esm.PopRenderTarget();
 
 	// Blit
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA_ADDITIVE );
-	DrawInto( *dest, Tr2LoadAction::LOAD, *rt2, renderContext );
+	DrawInto( dest, Tr2LoadAction::LOAD, rt2, renderContext );
 }
 
 
-bool TriStepRenderPostProcess::ProcessSignalLoss( Tr2PPSignalLossEffect* signalLoss )
+bool Tr2PostProcessRenderer::ProcessSignalLoss( Tr2PPSignalLossEffect* signalLoss )
 {
 	if( signalLoss && signalLoss->IsActive() )
 	{
@@ -1235,55 +1159,41 @@ bool TriStepRenderPostProcess::ProcessSignalLoss( Tr2PPSignalLossEffect* signalL
 }
 
 
-void TriStepRenderPostProcess::RenderSignalLoss( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPSignalLossEffect* signalLoss )
+void Tr2PostProcessRenderer::RenderSignalLoss( const Tr2TextureAL& dest, Tr2RenderContext& renderContext, Tr2PPSignalLossEffect* signalLoss )
 {
 	GPU_REGION( renderContext, "Signal Loss" );
 	
-	Tr2Renderer::DrawTexture( renderContext, m_signalLossEffect, *dest, Vector2( 0, 0 ), Vector2( 1, 1 ) );
+	Tr2Renderer::DrawTexture( renderContext, m_signalLossEffect, dest, Vector2( 0, 0 ), Vector2( 1, 1 ) );
 }
 
 
-bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom, Tr2PostProcess2* postProcess )
+bool Tr2PostProcessRenderer::ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom, Tr2PostProcess2* postProcess )
 {
     if( !postProcess )
     {
         return false;
     }
-	if( !m_exposure || !m_exposure->IsValid() )
-	{
-		m_exposure = nullptr;
-		m_exposure.CreateInstance();
-		m_exposure->Create( 8, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 2 );
-		const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-		renderContext.ClearUav( *m_exposure, clearValue );
-	}
 	if( dynamicExposure && dynamicExposure->IsActive() )
 	{
 		if( m_dynamicExposureCreateHistogramShader == nullptr || m_dynamicExposureMergeHistogramShader == nullptr || m_dynamicExposureMeasureExposureShader == nullptr )
 		{
-			m_localHistograms.CreateInstance();
-			m_histogram.CreateInstance();
-
-			m_localHistograms->Create( m_localHistogramCount, Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_UINT, 2 );
-			m_histogram->Create( 65, Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, 2 );
-
 			m_dynamicExposureCreateHistogramShader.CreateInstance();
 			m_dynamicExposureCreateHistogramShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/CreateHistograms.fx" );
 			m_dynamicExposureCreateHistogramShader->StartUpdate();
 			m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "MinLuminance" ), log( dynamicExposure->m_minLuminance ) );
 			m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "MaxLuminance" ), log( dynamicExposure->m_maxLuminance ) );
-			m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "ScreenTilesX" ), float( m_tilesX ) );
-			m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "LocalHistograms" ), m_localHistograms );
-			m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "BlitOriginal" ), PLACEHOLDER );
+			m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "ScreenTilesX" ), float( 1 ) );
+			m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "LocalHistograms" ), Tr2BufferAL{} );
+			m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "BlitOriginal" ), Tr2TextureAL{} );
 			m_dynamicExposureCreateHistogramShader->EndUpdate();
 
 			m_dynamicExposureMergeHistogramShader.CreateInstance();
 			m_dynamicExposureMergeHistogramShader->StartUpdate();
 			m_dynamicExposureMergeHistogramShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/MergeHistograms.fx" );
-			m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "ScreenTilesX" ), float( m_tilesX ) );
-			m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "ScreenTilesY" ), float( m_tilesY ) );
-			m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "LocalHistograms" ), m_localHistograms );
-			m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "Histogram" ), m_histogram );
+			m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "ScreenTilesX" ), float( 1 ) );
+			m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "ScreenTilesY" ), float( 1 ) );
+			m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "LocalHistograms" ), Tr2BufferAL{} );
+			m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "Histogram" ), Tr2BufferAL{} );
 			m_dynamicExposureMergeHistogramShader->EndUpdate();
 
 			m_dynamicExposureMeasureExposureShader.CreateInstance();
@@ -1297,15 +1207,15 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderC
 			m_dynamicExposureMeasureExposureShader->SetParameter( BlueSharedString( "DecreaseSpeed" ), dynamicExposure->m_decreaseSpeed );
 			m_dynamicExposureMeasureExposureShader->SetParameter( BlueSharedString( "MinExposure" ), dynamicExposure->m_minExposure );
 			m_dynamicExposureMeasureExposureShader->SetParameter( BlueSharedString( "MaxExposure" ), dynamicExposure->m_maxExposure );
-			m_dynamicExposureMeasureExposureShader->SetParameter( BlueSharedString( "Histogram" ), m_histogram );
-			m_dynamicExposureMeasureExposureShader->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
+			m_dynamicExposureMeasureExposureShader->SetParameter( BlueSharedString( "Histogram" ), Tr2BufferAL{} );
+			m_dynamicExposureMeasureExposureShader->SetParameter( BlueSharedString( "Exposure" ), Tr2BufferAL{} );
 
 			m_dynamicExposureMeasureExposureShader->EndUpdate();
 
 			// we also need to update the tonemapping buffer
 			m_tonemappingEffect->StartUpdate();
-			m_tonemappingEffect->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
-			m_tonemappingEffect->SetParameter( BlueSharedString( "Histogram" ), m_histogram );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "Exposure" ), Tr2BufferAL{} );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "Histogram" ), Tr2BufferAL{} );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureMiddleValue" ), dynamicExposure->m_middleValue );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureInfluence" ), dynamicExposure->m_influence );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "MinExposure" ), dynamicExposure->m_minExposure );
@@ -1366,14 +1276,11 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderC
 	}
 	else
 	{
-		if( m_dynamicExposureCreateHistogramShader != nullptr || m_dynamicExposureMeasureExposureShader != nullptr || m_dynamicExposureMergeHistogramShader != nullptr ||
-			m_localHistograms != nullptr || m_histogram != nullptr )
+		if( m_dynamicExposureCreateHistogramShader != nullptr || m_dynamicExposureMeasureExposureShader != nullptr || m_dynamicExposureMergeHistogramShader != nullptr )
 		{
 			m_dynamicExposureCreateHistogramShader = nullptr;
 			m_dynamicExposureMeasureExposureShader = nullptr;
 			m_dynamicExposureMergeHistogramShader = nullptr;
-			m_localHistograms = nullptr;
-			m_histogram = nullptr;
 
 			// mark the bloom as dirty so it can decide what to do with the exposure
 			if( bloom != nullptr )
@@ -1401,32 +1308,55 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2RenderContext& renderC
 }
 
 
-void TriStepRenderPostProcess::RenderDynamicExposure( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure )
+Tr2GpuResourcePool::Buffer Tr2PostProcessRenderer::RenderDynamicExposure( const Tr2TextureAL& source, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	GPU_REGION( renderContext, "Exposure" );
 
-	m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "BlitOriginal" ), dest );
+	uint32_t tilesX = source.GetWidth() / HISTOGRAM_TILE_SIZE_X + 1;
+	uint32_t tilesY = source.GetHeight() / HISTOGRAM_TILE_SIZE_Y + 1;
+
+	uint32_t localHistogramCount = tilesX * tilesY * 16;
+
+	auto localHistograms = gpuResourcePool.GetTempBuffer( 
+		"LocalHistograms", 
+		Tr2BufferDescriptionAL(  Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_UINT, localHistogramCount, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::NONE ) );
+
+
+	auto histogram = gpuResourcePool.GetTempBuffer(
+		"Histogram",
+		Tr2BufferDescriptionAL( Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, 65, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::NONE ) );
+
+
+	m_dynamicExposureCreateHistogramShader->SetParameter( BlueSharedString( "ScreenTilesX" ), float( tilesX ) );
+	TEMP_PARAM( m_dynamicExposureCreateHistogramShader, "BlitOriginal", source );
+	TEMP_PARAM( m_dynamicExposureCreateHistogramShader, "LocalHistograms", localHistograms );
+	m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "ScreenTilesX" ), float( tilesX ) );
+	m_dynamicExposureMergeHistogramShader->SetParameter( BlueSharedString( "ScreenTilesY" ), float( tilesY ) );
+	TEMP_PARAM( m_dynamicExposureMergeHistogramShader, "LocalHistograms", localHistograms );
+	TEMP_PARAM( m_dynamicExposureMergeHistogramShader, "Histogram", histogram );
 
 	uint32_t m_uintValue[4] = { 0, 0, 0, 0 };
 	// Clear local histograms
-	auto lhbuffer = m_localHistograms->GetGpuBuffer( 0 );
-	renderContext.ClearUav( *lhbuffer, m_uintValue );
+	renderContext.ClearUav( localHistograms, m_uintValue );
 
 	// Clear histograms
-	auto hbuffer = m_histogram->GetGpuBuffer( 0 );
-	renderContext.ClearUav( *hbuffer, m_uintValue );
+	renderContext.ClearUav( histogram, m_uintValue );
 
 	// Create histograms
-	Tr2Renderer::RunComputeShader( m_dynamicExposureCreateHistogramShader, m_tilesX, m_tilesY, 1, renderContext );
+	Tr2Renderer::RunComputeShader( m_dynamicExposureCreateHistogramShader, tilesX, tilesY, 1, renderContext );
 
 	// Merge histogram
-	Tr2Renderer::RunComputeShader( m_dynamicExposureMergeHistogramShader, m_mergeHistogramXDim, 1, 1, renderContext );
+	uint32_t mergeHistogramXDim = tilesX * tilesY / NUM_TILES_PER_THREAD_GROUP + 1;
+	Tr2Renderer::RunComputeShader( m_dynamicExposureMergeHistogramShader, mergeHistogramXDim, 1, 1, renderContext );
 
 	// Measure histogram
+	TEMP_PARAM( m_dynamicExposureMeasureExposureShader, "Histogram", histogram );
+	TEMP_PARAM( m_dynamicExposureMeasureExposureShader, "Exposure", GetExposureBuffer( gpuResourcePool ) );
 	Tr2Renderer::RunComputeShader( m_dynamicExposureMeasureExposureShader, 1, 1, 1, renderContext );
+	return histogram;
 }
 
-void TriStepRenderPostProcess::RenderDynamicExposureDebug( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure )
+void Tr2PostProcessRenderer::RenderDynamicExposureDebug( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, const Tr2BufferAL& histogramBuffer )
 {
 	if( dynamicExposure && dynamicExposure->IsActive() && dynamicExposure->m_debug )
 	{
@@ -1442,8 +1372,9 @@ void TriStepRenderPostProcess::RenderDynamicExposureDebug( Tr2RenderContext& ren
 			m_dynamicExposureDebugShader.CreateInstance();
 			m_dynamicExposureDebugShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ExposureDebug.fx" );
 		}
-		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
-		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "Histogram" ), m_histogram );
+		auto exposure = GetExposureBuffer( gpuResourcePool );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "Exposure" ), exposure );
+		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "Histogram" ), histogramBuffer );
 		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "MinLuminance" ), log( dynamicExposure->m_minLuminance ) );
 		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "MaxLuminance" ), log( dynamicExposure->m_maxLuminance ) );
 		m_dynamicExposureDebugShader->SetParameter( BlueSharedString( "RectSize" ), Vector2( float( rect.left - rect.right ), float( rect.bottom - rect.top ) ) );
@@ -1452,13 +1383,13 @@ void TriStepRenderPostProcess::RenderDynamicExposureDebug( Tr2RenderContext& ren
 		Tr2Renderer::DrawTexture( renderContext, m_dynamicExposureDebugShader, noTexture, Vector2( 0, 0 ), Vector2( 1, 1 ), Vector2( 0, 0.7f ), Vector2( 1, 1 ) );
 
 		const float* exposureData = nullptr;
-		if( SUCCEEDED( m_exposure->GetGpuBuffer( 0 )->MapForReading( exposureData, renderContext ) ) )
+		if( SUCCEEDED( exposure->MapForReading( exposureData, renderContext ) ) )
 		{
 			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_CENTER, 0xff00ff00, "Middle gray: %.2f", exposureData[0] );
 			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_LEFT, 0xff00ff00, "Min: %.2f", exposureData[5] );
 			Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_SMALL, rect, TRI_DFS_RIGHT, 0xff00ff00, "Max: %.2f", exposureData[6] );
 
-			m_exposure->GetGpuBuffer( 0 )->UnmapForReading( renderContext );
+			exposure->UnmapForReading( renderContext );
 		}
 	}
 	else
@@ -1467,13 +1398,18 @@ void TriStepRenderPostProcess::RenderDynamicExposureDebug( Tr2RenderContext& ren
 	}
 }
 
-Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure )
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderUpscaling( 
+	const Tr2TextureAL& source, 
+	const Tr2TextureAL& depth, 
+	const Tr2TextureAL& velocity, 
+	const Tr2TextureAL& opaqueColor, 
+	const Matrix& reprojection,
+	Tr2GpuResourcePool& gpuResourcePool, 
+	Tr2RenderContext& renderContext, 
+	Tr2UpscalingContextAL* upscalingContext, 
+	Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	GPU_REGION( renderContext, "Upscaling" );
-	if( renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContextID ).temporal )
-	{
-		m_scene->SetVelocityMap( m_velocityBuffer );
-	}
 	
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 	uint32_t w, h;
@@ -1481,59 +1417,51 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 
 	Tr2UpscalingAL::DispatchParameters dispatchParameters = {};
 	auto dispatchRequirements = upscalingContext->GetDispatchRequirements();
-	auto dest = m_renderInfo->GetTempTexture( w, h, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
-	dispatchParameters.output = dest.GetRenderTarget()->GetTexture();
+	auto dest = gpuResourcePool.GetTempTexture( "Upscaled Output", w, h, source.GetFormat(), RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS );
+	dispatchParameters.output = &dest.Get();
 
 	bool wantsExposure = dispatchRequirements & Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE;
 	bool canHaveExposure = dynamicExposure && dynamicExposure->IsActive();
 	float middleValue = dynamicExposure ? dynamicExposure->m_middleValue : 0.0f;
 	SetupExposureConversion( wantsExposure && canHaveExposure, middleValue );
 
-	if( wantsExposure && m_exposureTexture )
+	Tr2GpuResourcePool::Texture exposureTexture;
+	if( wantsExposure && canHaveExposure )
 	{
 		GPU_REGION( renderContext, "ExposureToTexture" );
-		m_dynamicExposureToTextureShader->SetParameter( BlueSharedString( "ExposureBuffer" ), m_exposure );
-		m_dynamicExposureToTextureShader->SetParameter( BlueSharedString( "ExposureTexture" ), m_exposureTexture );
+		TEMP_PARAM( m_dynamicExposureToTextureShader, "ExposureBuffer", GetExposureBuffer( gpuResourcePool ) );
+		exposureTexture = gpuResourcePool.GetTempTexture( "Exposure", 1, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS );
+		TEMP_PARAM( m_dynamicExposureToTextureShader, "ExposureTexture", exposureTexture );
 		Tr2Renderer::RunComputeShader( m_dynamicExposureToTextureShader, 1, 1, 1, renderContext );
-		dispatchParameters.exposure = m_exposureTexture->GetTexture();
+		m_dynamicExposureToTextureShader->SetParameter( BlueSharedString( "ExposureTexture" ), Tr2TextureAL{} );
+		dispatchParameters.exposure = &exposureTexture.Get();
 	}
 
+	Tr2GpuResourcePool::Texture reactiveMask;
 	if( dispatchRequirements & Tr2UpscalingAL::DispatchRequirements::REACTIVE )
 	{
 		GPU_REGION( renderContext, "ReactiveMask" );
-		if( !m_reactiveMask )
-		{
-			m_reactiveMask.CreateInstance();
-			m_reactiveMask->SetName( "ReactiveMask" );
-			m_reactiveMask->Create( source->GetWidth(), source->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, source->GetMsaaType(), 0 );
-		}
-
-		m_reactiveMaskEffect->SetParameter( BlueSharedString( "OpaqueOnly" ), m_opaqueColorBuffer );
-		m_reactiveMaskEffect->SetParameter( BlueSharedString( "OpaqueAndTransparency" ), source );
-		DrawInto( *m_reactiveMask, Tr2LoadAction::DONT_CARE, m_reactiveMaskEffect, renderContext );
-		dispatchParameters.reactive = m_reactiveMask ? m_reactiveMask->GetTexture() : nullptr;
+		reactiveMask = gpuResourcePool.GetTempTexture( "ReactiveMask", source.GetWidth(), source.GetHeight(), Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, RENDER_TARGET );
+		TEMP_PARAM( m_reactiveMaskEffect, "OpaqueOnly", opaqueColor );
+		TEMP_PARAM( m_reactiveMaskEffect, "OpaqueAndTransparency", source );
+		DrawInto( reactiveMask, Tr2LoadAction::DONT_CARE, m_reactiveMaskEffect, renderContext );
+		dispatchParameters.reactive = &reactiveMask.Get();
 	}
 
+	Tr2GpuResourcePool::Texture transparencyMask;
 	if( dispatchRequirements & Tr2UpscalingAL::DispatchRequirements::TRANSPARENCY )
 	{
 		GPU_REGION( renderContext, "Transparency" );
-		if( !m_transparencyMask )
-		{
-			m_transparencyMask.CreateInstance();
-			m_transparencyMask->SetName( "TransparencyMask" );
-			m_transparencyMask->Create( source->GetWidth(), source->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, source->GetMsaaType(), 0 );
-		}
-
-		m_transparencyMaskEffect->SetParameter( BlueSharedString( "OpaqueOnly" ), m_opaqueColorBuffer );
-		m_transparencyMaskEffect->SetParameter( BlueSharedString( "OpaqueAndTransparency" ), source );
-		DrawInto( *m_transparencyMask, Tr2LoadAction::DONT_CARE, m_transparencyMaskEffect, renderContext );
-		dispatchParameters.transparency = m_transparencyMask ? m_transparencyMask->GetTexture() : nullptr;
+		transparencyMask = gpuResourcePool.GetTempTexture( "TransparencyMask", source.GetWidth(), source.GetHeight(), Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, RENDER_TARGET );
+		TEMP_PARAM( m_transparencyMaskEffect, "OpaqueOnly", opaqueColor );
+		TEMP_PARAM( m_transparencyMaskEffect, "OpaqueAndTransparency", source );
+		DrawInto( transparencyMask, Tr2LoadAction::DONT_CARE, m_transparencyMaskEffect, renderContext );
+		dispatchParameters.transparency = &transparencyMask.Get();
 	}
 
 	auto view = Tr2Renderer::GetViewTransform();
 	auto projection = Tr2Renderer::GetProjectionTransform();
 	auto inverseProjection = Inverse( projection );
-	auto reprojection = m_scene->GetReprojectionMatrix();
 	auto invReprojection = Inverse( reprojection );
 
 	dispatchParameters.aspectRatio = Tr2Renderer::GetAspectRatio();
@@ -1543,7 +1471,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	dispatchParameters.frameTimeDelta = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_lastFrameTime ) * 1000.0f;
 	dispatchParameters.preExposure = 0.4f;
 	dispatchParameters.currentFrameIndex = Tr2Renderer::GetCurrentFrameCounter();
-	dispatchParameters.reset = m_sceneDirty;
+	dispatchParameters.reset = false;
 
 	memcpy( dispatchParameters.cameraPos, &Tr2Renderer::GetViewPosition(), 3 * sizeof( float ) );
 	memcpy( dispatchParameters.cameraForward, &view.GetZ(), 3 * sizeof( float ) );
@@ -1554,10 +1482,10 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	memcpy( dispatchParameters.clipToPrevClip, &reprojection, 16 * sizeof( float ) );
 	memcpy( dispatchParameters.prevClipToClip, &invReprojection, 16 * sizeof( float ) );
 
-	dispatchParameters.depth = m_scene->GetDepth() ? m_scene->GetDepth()->GetTexture() : nullptr;
-	dispatchParameters.input = source ? source->GetTexture() : nullptr;
-	dispatchParameters.opaqueOnly = m_opaqueColorBuffer ? m_opaqueColorBuffer->GetTexture() : nullptr;
-	dispatchParameters.velocity = m_velocityBuffer ? m_velocityBuffer->GetTexture() : nullptr;
+	dispatchParameters.depth = &depth;
+	dispatchParameters.input = &source;
+	dispatchParameters.opaqueOnly = &opaqueColor;
+	dispatchParameters.velocity = &velocity;
 
 	dispatchParameters.upscalingDebugView = g_upscalingDebugView;
 	dispatchParameters.frameGenDebugView = g_frameGenDebugView;
@@ -1575,7 +1503,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	return dest;
 }
 
-bool TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain )
+bool Tr2PostProcessRenderer::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain )
 {
 	if( filmGrain && filmGrain->IsActive() )
 	{
@@ -1592,7 +1520,7 @@ bool TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain
 
 			//shared parameters
 			m_grainShader->SetParameter( BlueSharedString( "GrainColorAmount" ), filmGrain->m_colored ? filmGrain->m_colorAmount : 0.0f );
-			m_grainShader->SetParameter( BlueSharedString( "InputTexture" ), PLACEHOLDER );
+			m_grainShader->SetParameter( BlueSharedString( "InputTexture" ), Tr2TextureAL{} );
 
 			float threshold = 1.0f - filmGrain->m_grainDensity;
 			float edge = 1.0f / ( filmGrain->m_grainContrast * filmGrain->m_grainSize );
@@ -1615,7 +1543,7 @@ bool TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain
 	return false;
 }
 
-void TriStepRenderPostProcess::RenderFilmGrain( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPFilmGrainEffect* filmGrain )
+void Tr2PostProcessRenderer::RenderFilmGrain( const Tr2TextureAL& dest, Tr2RenderContext& renderContext, Tr2PPFilmGrainEffect* filmGrain )
 {
 	GPU_REGION( renderContext, "Film grain" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
@@ -1623,7 +1551,7 @@ void TriStepRenderPostProcess::RenderFilmGrain( Tr2RenderTarget* dest, Tr2Render
 	Tr2Renderer::DrawScreenQuad( renderContext, m_grainShader );
 }
 
-void TriStepRenderPostProcess::ProcessDesaturate( Tr2PPDesaturateEffect* desaturate )
+void Tr2PostProcessRenderer::ProcessDesaturate( Tr2PPDesaturateEffect* desaturate )
 {
 	if( desaturate && desaturate->IsActive() )
 	{
@@ -1648,7 +1576,7 @@ void TriStepRenderPostProcess::ProcessDesaturate( Tr2PPDesaturateEffect* desatur
 	}
 }
 
-void TriStepRenderPostProcess::ProcessFade( Tr2PPFadeEffect* fade )
+void Tr2PostProcessRenderer::ProcessFade( Tr2PPFadeEffect* fade )
 {
 	if( fade && fade->IsActive() )
 	{
@@ -1674,7 +1602,7 @@ void TriStepRenderPostProcess::ProcessFade( Tr2PPFadeEffect* fade )
 	}
 }
 
-void TriStepRenderPostProcess::ProcessLut( std::vector<const Tr2PPLutEffect*> luts )
+void Tr2PostProcessRenderer::ProcessLut( std::vector<const Tr2PPLutEffect*> luts )
 {
 	bool tomeppingEffectUpdating = false;
 	uint8_t lutsActive = 0;
@@ -1741,7 +1669,7 @@ void TriStepRenderPostProcess::ProcessLut( std::vector<const Tr2PPLutEffect*> lu
 	m_lutsEnabled = lutsActive;
 }
 
-void TriStepRenderPostProcess::ProcessVignette( Tr2PPVignetteEffect* vignette )
+void Tr2PostProcessRenderer::ProcessVignette( Tr2PPVignetteEffect* vignette )
 {
 	if( vignette && vignette->IsActive() )
 	{
@@ -1793,7 +1721,7 @@ void TriStepRenderPostProcess::ProcessVignette( Tr2PPVignetteEffect* vignette )
 	}
 }
 
-bool TriStepRenderPostProcess::ProcessFog( Tr2PPFogEffect* fog )
+bool Tr2PostProcessRenderer::ProcessFog( Tr2PPFogEffect* fog )
 {
 	if( fog && fog->IsActive() )
 	{
@@ -1802,7 +1730,7 @@ bool TriStepRenderPostProcess::ProcessFog( Tr2PPFogEffect* fog )
 			m_fogColorEffect.CreateInstance();
 			m_fogColorEffect->StartUpdate();
 			m_fogColorEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/EnvironmentFogColor.fx" );
-			m_fogColorEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			m_fogColorEffect->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
 			m_fogColorEffect->SetParameter( BlueSharedString( "Params" ), Vector4( fog->m_nebulaInfluence, fog->m_nebulaBlur, fog->m_originalBrightenOnly, fog->m_colorInfluence ) );
 			m_fogColorEffect->SetParameter( BlueSharedString( "Color" ), Vector4( fog->m_color ) );
 			m_fogColorEffect->EndUpdate();
@@ -1810,8 +1738,8 @@ bool TriStepRenderPostProcess::ProcessFog( Tr2PPFogEffect* fog )
 			m_fogCompositeEffect.CreateInstance();
 			m_fogCompositeEffect->StartUpdate();
 			m_fogCompositeEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/EnvironmentFogComposit.fx" );
-			m_fogCompositeEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
-			m_fogCompositeEffect->SetParameter( BlueSharedString( "BlitOriginal" ), PLACEHOLDER ); // this used _fogsource in eve.yaml, but I'm trying _source here
+			m_fogCompositeEffect->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
+			m_fogCompositeEffect->SetParameter( BlueSharedString( "BlitOriginal" ), Tr2TextureAL{} ); // this used _fogsource in eve.yaml, but I'm trying _source here
 			m_fogCompositeEffect->SetParameter( BlueSharedString( "FogParameters" ), Vector4( fog->m_totalAmount, fog->m_totalPower, fog->m_backgroundOcclusion, fog->m_intensity ) );
 			m_fogCompositeEffect->SetParameter( BlueSharedString( "BrightnessAdjustment" ), Vector4( fog->m_brightnessThreshold0, fog->m_brightnessThreshold1, fog->m_brightnessAdjustmentAmount, 0.0f ) );
 			m_fogCompositeEffect->SetParameter( BlueSharedString( "BlendFunction0" ), Vector4( fog->m_blendDistance0, fog->m_blendBias0, fog->m_blendAmount0, fog->m_blendPower0 ) );
@@ -1851,64 +1779,47 @@ bool TriStepRenderPostProcess::ProcessFog( Tr2PPFogEffect* fog )
 	return fog && fog->IsActive();
 }
 
-void TriStepRenderPostProcess::RenderFog( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPFogEffect* fog )
+
+void Tr2PostProcessRenderer::RenderFog( const Tr2TextureAL& dest, const Tr2TextureAL& source, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPFogEffect* fog )
 {
 	GPU_REGION( renderContext, "Fog" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	auto tempCopy = m_renderInfo->GetTempTexture();
-	DrawInto( *tempCopy, Tr2LoadAction::DONT_CARE, *dest, renderContext );
-
 	// render fog color
-	auto rt1 = m_renderInfo->GetTempTexture( "Fog Color", 0.5f );
-	m_fogColorEffect->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
-	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_fogColorEffect, renderContext );
+	auto rt1 = gpuResourcePool.GetTempTexture( "Fog Color", TextureSize2D( dest.GetDesc() ) * 0.5f, dest.GetFormat(), RENDER_TARGET );
+	TEMP_PARAM( m_fogColorEffect, "BlitCurrent", dest );
+	DrawInto( rt1, Tr2LoadAction::DONT_CARE, m_fogColorEffect, renderContext );
 
 	// blur
-	auto blurContext = PostProcessBlur::CreateBlurContext( 0.5f );
-	Blur( *rt1, *rt1, renderContext, blurContext );
+	auto blurred = Blur( std::move( rt1 ), gpuResourcePool, renderContext, {} );
 
 	// final composite
-	m_fogCompositeEffect->SetParameter( BlueSharedString( "BlitCurrent" ), rt1 );
-	m_fogCompositeEffect->SetParameter( BlueSharedString( "BlitOriginal" ), tempCopy );
-	DrawInto( *dest, Tr2LoadAction::DONT_CARE, m_fogCompositeEffect, renderContext );
+	TEMP_PARAM( m_fogCompositeEffect, "BlitCurrent", blurred );
+	TEMP_PARAM( m_fogCompositeEffect, "BlitOriginal", source );
+	DrawInto( dest, Tr2LoadAction::DONT_CARE, m_fogCompositeEffect, renderContext );
 }
 
-bool TriStepRenderPostProcess::ProcessTaa( Tr2PPTaaEffect* taa )
+bool Tr2PostProcessRenderer::ProcessTaa( Tr2PPTaaEffect* taa )
 {
 	if( taa && taa->IsActive() )
 	{
 		if( 
-				m_taaEffect == nullptr || m_taaCopyEffect == nullptr || m_accumulationBuffer0 == nullptr || m_accumulationBuffer1 == nullptr || m_cooldownBuffer == nullptr
+				m_taaEffect == nullptr || m_taaCopyEffect == nullptr
 		)
 		{
-
-			auto source = m_renderInfo->GetSourceBuffer();
-
-			m_accumulationBuffer0.CreateInstance();
-			m_accumulationBuffer0->Create( source->GetWidth(), source->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_UNORM );
-			m_accumulationBuffer0->SetName( "m_accumulationBuffer0" );
-
-			m_accumulationBuffer1.CreateInstance();
-			m_accumulationBuffer1->Create( source->GetWidth(), source->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_UNORM );
-			m_accumulationBuffer1->SetName( "m_accumulationBuffer1" );
-
-			m_cooldownBuffer.CreateInstance();
-			m_cooldownBuffer->Create( source->GetWidth(), source->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
-			m_cooldownBuffer->SetName( "m_cooldownBuffer" );
 
 			m_taaEffect.CreateInstance();
 			m_taaEffect->StartUpdate();
 			m_taaEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/TAA.fx" );
-			m_taaEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
-			m_taaEffect->SetParameter( BlueSharedString( "LastFrame" ), PLACEHOLDER );
-			m_taaEffect->SetParameter( BlueSharedString( "VelocityMap" ), m_velocityBuffer );
+			m_taaEffect->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
+			m_taaEffect->SetParameter( BlueSharedString( "LastFrame" ), Tr2TextureAL{} );
+			m_taaEffect->SetParameter( BlueSharedString( "VelocityMap" ), Tr2TextureAL{} );
 			m_taaEffect->EndUpdate();
 
 			m_taaCopyEffect.CreateInstance();
 			m_taaCopyEffect->StartUpdate(); 
 			m_taaCopyEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/TAACopy.fx" );
-			m_taaCopyEffect->SetParameter( BlueSharedString( "AccumulationBuffer" ), PLACEHOLDER );
+			m_taaCopyEffect->SetParameter( BlueSharedString( "AccumulationBuffer" ), Tr2TextureAL{} );
 			m_taaCopyEffect->EndUpdate();
 
 
@@ -1955,62 +1866,78 @@ bool TriStepRenderPostProcess::ProcessTaa( Tr2PPTaaEffect* taa )
 
 			m_taaEffect->EndUpdate();
 
-			m_taaFrameCounter = 0;
-
 			taa->SetDirty( false );
 		}
-
-		m_scene->SetVelocityMap( m_velocityBuffer );
 	}
 	else
 	{
-		if( m_taaEffect != nullptr || m_taaCopyEffect != nullptr || m_accumulationBuffer0 != nullptr || m_accumulationBuffer1 != nullptr || m_cooldownBuffer != nullptr )
-		{
-			m_taaEffect = nullptr;
-			m_taaCopyEffect = nullptr;
-			m_accumulationBuffer0 = nullptr;
-			m_accumulationBuffer1 = nullptr;
-			m_cooldownBuffer = nullptr;
-		}
+		m_taaEffect = nullptr;
+		m_taaCopyEffect = nullptr;
 	}
 
 	return taa && taa->IsActive();
 }
 
-void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPTaaEffect* taa, Tr2PPDynamicExposureEffect* dynamicExposure )
+void Tr2PostProcessRenderer::RenderTaa( const Tr2TextureAL& dest, const Tr2TextureAL& velocity, const Tr2TextureAL& opaqueColor, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPTaaEffect* taa, Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	GPU_REGION( renderContext, "TAA" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	auto source = m_renderInfo->GetSourceBuffer();
+	auto Clear = []( const Tr2TextureAL& tex, Tr2RenderContextAL& renderContext )
+	{
+		renderContext.SetRenderTarget( tex, 0 );
+		renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 1.0f );
+	};
+	auto ClearUav = []( const Tr2TextureAL& tex, Tr2RenderContextAL& renderContext ) {
+		uint32_t zeroes[4] = {};
+		renderContext.ClearUav( tex, 0, zeroes );
+	};
 
-	m_scene->GetPostProcessPSBuffer()->ApplyBuffer( renderContext );
+	auto accumulationBuffer0 = gpuResourcePool.GetPersistentTexture( 
+		"TAA Accumulation 0", 
+		dest.GetWidth(), 
+		dest.GetHeight(), 
+		Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_UNORM, 
+		Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, 
+		Clear );
+	auto accumulationBuffer1 = gpuResourcePool.GetPersistentTexture(
+		"TAA Accumulation 1",
+		dest.GetWidth(),
+		dest.GetHeight(),
+		Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_UNORM,
+		Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE,
+		Clear );
 
-	Tr2RenderTarget* input;
-	Tr2RenderTarget* output;
-	bool inputValid = true;
+	auto cooldownBuffer = gpuResourcePool.GetPersistentTexture(
+		"TAA Cooldown",
+		dest.GetWidth(),
+		dest.GetHeight(),
+		Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT,
+		Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE,
+		ClearUav );
+
+
+	Tr2TextureAL input;
+	Tr2TextureAL output;
 
 	uint32_t frame_count = m_taaFrameCounter++;
 	if( ( frame_count & 1 ) == 0 )
 	{
-		input = m_accumulationBuffer0;
-		output = m_accumulationBuffer1;
+		input = accumulationBuffer0;
+		output = accumulationBuffer1;
 	}
 	else
 	{
-		input = m_accumulationBuffer1;
-		output = m_accumulationBuffer0;
+		input = accumulationBuffer1;
+		output = accumulationBuffer0;
 	}
 
 
 	Tr2EffectPtr effects[] = {m_taaEffect, m_taaCopyEffect};
-	for( Tr2EffectPtr effect : effects )
+	for( auto& effect : effects )
 	{
-		effect->StartUpdate();
-
 		if( dynamicExposure && dynamicExposure->IsActive() )
 		{
-			effect->SetParameter( BlueSharedString( "Exposure" ), m_exposure );
 			effect->SetParameter( BlueSharedString( "ExposureAdjust" ), pow( 2.0f, dynamicExposure->m_adjustment ) );
 			effect->SetParameter( BlueSharedString( "ExposureMiddleValue" ), dynamicExposure->m_middleValue );
 			effect->SetParameter( BlueSharedString( "ExposureInfluence" ), dynamicExposure->m_influence );
@@ -2021,32 +1948,31 @@ void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContex
 		{
 			effect->SetOption( BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE" ), BlueSharedString( "DYNAMIC_EXPOSURE_DISABLED" ) );
 		}
-
-		effect->EndUpdate();
 	}
-		
-
 
 	m_taaEffect->SetParameter( BlueSharedString( "FrameIndex" ), frame_count );
 
-	m_taaEffect->SetParameter( BlueSharedString( "CurrentFrame" ), dest );
-	m_taaEffect->SetParameter( BlueSharedString( "CurrentFrameOpaque" ), m_opaqueColorBuffer );
-	m_taaEffect->SetParameter( BlueSharedString( "AccumulationBuffer" ), input );
-	m_taaEffect->SetParameter( BlueSharedString( "CooldownMap" ), m_cooldownBuffer );
+	TEMP_PARAM( m_taaEffect, "CurrentFrame", dest );
+	TEMP_PARAM( m_taaEffect, "CurrentFrameOpaque", opaqueColor );
+	TEMP_PARAM( m_taaEffect, "AccumulationBuffer", input );
+	TEMP_PARAM( m_taaEffect, "CooldownMap", cooldownBuffer );
+	TEMP_PARAM( m_taaEffect, "VelocityMap", velocity );
+	TEMP_PARAM( m_taaEffect, "Exposure", ( dynamicExposure && dynamicExposure->IsActive() ) ? GetExposureBuffer( gpuResourcePool ) : Tr2BufferAL{} );
 
 	float max_weight = 0.96f;
 	float weight = min( (float)frame_count / ( (float)frame_count + 1.0f ), max_weight );
 	m_taaEffect->SetParameter( BlueSharedString( "BlendWeight" ), weight );
 
-	DrawInto( *output, Tr2LoadAction::DONT_CARE, m_taaEffect, renderContext );
+	DrawInto( output, Tr2LoadAction::DONT_CARE, m_taaEffect, renderContext );
 
 
-	m_taaCopyEffect->SetParameter( BlueSharedString( "AccumulationBuffer" ), output );
+	TEMP_PARAM( m_taaCopyEffect, "AccumulationBuffer", output );
+	TEMP_PARAM( m_taaCopyEffect, "Exposure", ( dynamicExposure && dynamicExposure->IsActive() ) ? GetExposureBuffer( gpuResourcePool ) : Tr2BufferAL{} );
 
-	DrawInto( *dest, Tr2LoadAction::DONT_CARE, m_taaCopyEffect, renderContext );
+	DrawInto( dest, Tr2LoadAction::DONT_CARE, m_taaCopyEffect, renderContext );
 }
 
-void TriStepRenderPostProcess::ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection )
+void Tr2PostProcessRenderer::ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection )
 {
 	if( !colorCorrection->IsDirty() )
 	{
@@ -2083,7 +2009,7 @@ void TriStepRenderPostProcess::ProcessColorCorrection( Tr2PPColorCorrectionEffec
 	colorCorrection->SetDirty( false );
 }
 
-void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping )
+void Tr2PostProcessRenderer::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping )
 {
 	if ( !tonemapping->IsDirty() )
 	{
@@ -2201,7 +2127,7 @@ void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonem
 	tonemapping->SetDirty( false );
 }
 
-bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx )
+bool Tr2PostProcessRenderer::ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx )
 {
 	if( fx && fx->IsActive() )
 	{
@@ -2213,8 +2139,8 @@ bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderCont
 			m_depthOfFieldBokehBlurShader.CreateInstance();
 			m_depthOfFieldBokehBlurShader->StartUpdate();
 			m_depthOfFieldBokehBlurShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Bokeh.fx" );
-			m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "CoCMap" ), PLACEHOLDER );
-			m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "CoCMap" ), Tr2TextureAL{} );
+			m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
 			m_depthOfFieldBokehBlurShader->SetOption( BlueSharedString( "BOKEH_PIXEL_METHOD" ), BlueSharedString( "BOKEH_PIXEL_AVERAGE" ) );
 			m_depthOfFieldBokehBlurShader->SetOption( BlueSharedString( "BOKEH_SHAPE" ), fx->GetBokehShapeString() );
 			m_depthOfFieldBokehBlurShader->EndUpdate();
@@ -2222,8 +2148,8 @@ bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderCont
 			m_depthOfFieldBokehFillShader.CreateInstance();
 			m_depthOfFieldBokehFillShader->StartUpdate();
 			m_depthOfFieldBokehFillShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Bokeh.fx" );
-			m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "CoCMap" ), PLACEHOLDER );
-			m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "CoCMap" ), Tr2TextureAL{} );
+			m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
 			m_depthOfFieldBokehFillShader->SetOption( BlueSharedString( "BOKEH_PIXEL_METHOD" ), BlueSharedString( "BOKEH_PIXEL_MAX" ) );
 			m_depthOfFieldBokehFillShader->SetOption( BlueSharedString( "BOKEH_SHAPE" ), fx->GetBokehShapeString() );
 			m_depthOfFieldBokehFillShader->EndUpdate();
@@ -2231,15 +2157,14 @@ bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderCont
 			m_depthOfFieldBokehTAAShader.CreateInstance();
 			m_depthOfFieldBokehTAAShader->StartUpdate();
 			m_depthOfFieldBokehTAAShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/BokehTAA.fx" );
-			m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "CoCMap" ), PLACEHOLDER );
-			m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "CoCMap" ), Tr2TextureAL{} );
+			m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "BlitCurrent" ), Tr2TextureAL{} );
 			m_depthOfFieldBokehTAAShader->SetOption( BlueSharedString( "BOKEH_SHAPE" ), fx->GetBokehShapeString() );
 			m_depthOfFieldBokehTAAShader->EndUpdate();
 
 			m_depthOfFieldCoCShader.CreateInstance();
 			m_depthOfFieldCoCShader->StartUpdate();
 			m_depthOfFieldCoCShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/CircleOfConfusion.fx" );
-			m_depthOfFieldCoCShader->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
 			m_depthOfFieldCoCShader->SetParameter( BlueSharedString( "FocalInfo" ), Vector4( fx->m_focalDistance, fx->m_focalLength, fx->m_scale, 0.0 ) );
 			m_depthOfFieldCoCShader->SetOption( BlueSharedString( "CoCMode" ), BlueSharedString( "CoCBack" ) );
 			m_depthOfFieldCoCShader->SetOption( BlueSharedString( "COC_OUTPUT_CHANNEL_COUNT" ), fx->m_foregroundBlurNeeded ? BlueSharedString( "COC_OUTPUT_CHANNEL_COUNT_2" ) : BlueSharedString( "COC_OUTPUT_CHANNEL_COUNT_1" ) );
@@ -2281,43 +2206,44 @@ bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderCont
 	return fx && fx->IsActive();
 }
 
-void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* depthOfField, bool temporal, float upscalingAmount )
+void Tr2PostProcessRenderer::RenderDepthOfField( const Tr2TextureAL& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* depthOfField, bool temporal, float upscalingAmount )
 {
 	GPU_REGION( renderContext, "DepthOfField" );
 	{
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 		{
-			Tr2PostProcessRenderInfo::Texture coc;
+			Tr2GpuResourcePool::Texture coc;
+
+			auto cocSize = TextureSize2D( dest.GetDesc() ) * depthOfField->m_cocScale;
 
 			if( !depthOfField->m_foregroundBlurNeeded )
 			{
 				GPU_REGION( renderContext, "CoC" );
-				coc = m_renderInfo->GetTempTexture( "CoC", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
-				DrawInto( *coc, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
+
+				coc = gpuResourcePool.GetTempTexture( "CoC", cocSize, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, RENDER_TARGET );
+				DrawInto( coc, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
 			}
 			else
 			{
 				GPU_REGION( renderContext, "CoC" );
-				auto coc2 = m_renderInfo->GetTempTexture( "CoC", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8_UNORM );
+				auto coc2 = gpuResourcePool.GetTempTexture( "CoC", cocSize, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8_UNORM, RENDER_TARGET );
 
-				DrawInto( *coc2, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
+				DrawInto( coc2, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
 				{
 					GPU_REGION( renderContext, "CoC Blur" );
 
 					auto blurContext = PostProcessBlur::CreateBlurContext( PostProcessBlur::BT_Big,
 																		   PostProcessBlur::BC_r,
 																		   PostProcessBlur::BP_Maximum,
-																		   PostProcessBlur::BF_MaxOfAllChannels,
-																		   depthOfField->m_cocScale );
-					coc = m_renderInfo->GetTempTexture( "CoC Blurred", depthOfField->m_cocScale, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM );
-					Blur( *coc, *coc2, renderContext, blurContext );
+																		   PostProcessBlur::BF_MaxOfAllChannels );
+					coc = Blur( coc2, gpuResourcePool, renderContext, blurContext );
 				}
 			}
 
 			float adjustedScale = depthOfField->m_scale / upscalingAmount;
 
-			auto blur = m_renderInfo->GetTempTexture( "Bokeh Blend" );
+			auto blur = gpuResourcePool.GetTempTexture( "Bokeh Blend", dest.GetWidth(), dest.GetHeight(), dest.GetFormat(), RENDER_TARGET );
 
 			if( depthOfField->m_useTAAFriendlyBokeh )
 			{
@@ -2343,15 +2269,15 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 
 				{
 					GPU_REGION( renderContext, "Bokeh" );
-					m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
-					m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "CoCMap" ), coc );
+					TEMP_PARAM( m_depthOfFieldBokehTAAShader, "BlitCurrent", dest );
+					TEMP_PARAM( m_depthOfFieldBokehTAAShader, "CoCMap", coc );
 					m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( adjustedScale, angle, samplesPerPixel, 0.0f ) );
-					DrawInto( *blur, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehTAAShader, renderContext );
+					DrawInto( blur, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehTAAShader, renderContext );
 				}
 				{
 
 					GPU_REGION( renderContext, "Copy back" );
-					DrawInto( *dest, Tr2LoadAction::DONT_CARE, *blur, renderContext );
+					DrawInto( dest, Tr2LoadAction::DONT_CARE, blur, renderContext );
 				}
 			}
 			else
@@ -2359,40 +2285,35 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 
 				{
 					GPU_REGION( renderContext, "Bokeh Blend" );
-					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
-					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "CoCMap" ), coc );
+					auto blitCurrent = TempParameter( m_depthOfFieldBokehBlurShader, BlueSharedString( "BlitCurrent" ), dest );
+					auto cocMap = TempParameter( m_depthOfFieldBokehBlurShader, BlueSharedString( "CoCMap" ), coc );
 					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( adjustedScale, 0.0f, 0.0f, 0.0f ) );
-					DrawInto( *blur, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehBlurShader, renderContext );
+					DrawInto( blur, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehBlurShader, renderContext );
 				}
 				{
 					GPU_REGION( renderContext, "Bokeh Fill" );
-					m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "BlitCurrent" ), blur );
-					m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "CoCMap" ), coc );
+					auto blitCurrent = TempParameter( m_depthOfFieldBokehFillShader, BlueSharedString( "BlitCurrent" ), blur );
+					auto cocMap = TempParameter( m_depthOfFieldBokehFillShader, BlueSharedString( "CoCMap" ), coc );
 					m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( adjustedScale, 0.0f, 0.0f, 0.0f ) );
-					DrawInto( *dest, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehFillShader, renderContext );
+					DrawInto( dest, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehFillShader, renderContext );
 				}
 			}
 		}
 	}
 }
 
-
-void TriStepRenderPostProcess::SetRenderTarget( Tr2RenderTarget* rt )
+Tr2GpuResourcePool::Buffer Tr2PostProcessRenderer::GetExposureBuffer( Tr2GpuResourcePool& gpuResourcePool ) const
 {
-	if( rt != GetRenderTarget() )
-	{
-		m_renderInfo->SetSourceBuffer( rt );
-		if( rt != nullptr && rt->IsValid() )
-		{
-			m_tilesX = rt->GetWidth() / HISTOGRAM_TILE_SIZE_X + 1;
-			m_tilesY = rt->GetHeight() / HISTOGRAM_TILE_SIZE_Y + 1;
-			m_localHistogramCount = m_tilesX * m_tilesY * 16;
-			m_mergeHistogramXDim = m_tilesX * m_tilesY / NUM_TILES_PER_THREAD_GROUP + 1;
-		}
-	}
+	const float zeroes[8] = {};
+	return gpuResourcePool.GetPersistentBuffer( 
+		"Exposure Buffer", 
+		Tr2BufferDescriptionAL( Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 8, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ), 
+		zeroes );
 }
 
-Tr2RenderTargetPtr TriStepRenderPostProcess::GetRenderTarget() const
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::GetBlackTexture( Tr2GpuResourcePool& gpuResourcePool ) const
 {
-	return m_renderInfo->GetSourceBuffer().GetRenderTarget();
+	const uint32_t blackColor[4 * 4] = {};
+	Tr2SubresourceData initData = { blackColor, 4 * sizeof( uint32_t ), 4 * 4 * sizeof( uint32_t ) };
+	return gpuResourcePool.GetPersistentTexture( "Black", 4, 4, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2GpuUsage::SHADER_RESOURCE, &initData );
 }

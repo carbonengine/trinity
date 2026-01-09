@@ -57,9 +57,9 @@ public:
 	void UnmapForWriting( Tr2RenderContextAL& renderContext );
 
 	ALResult UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext );
-	ALResult CopySubresourceRegion( const Tr2TextureSubresource& destSubresource, Tr2TextureAL& source, const Tr2TextureSubresource& sourceSubresource, Tr2RenderContextAL& renderContext );
-	ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
-	ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
+	ALResult CopySubresourceRegion( const Tr2TextureSubresource& destSubresource, const Tr2TextureAL& source, const Tr2TextureSubresource& sourceSubresource, Tr2RenderContextAL& renderContext ) const;
+	ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext ) const;
+	ALResult Resolve( const Tr2TextureAL& destination, Tr2RenderContextAL& renderContext ) const;
 	uintptr_t GetSharedHandle() const;
 
 	TrinityALImpl::Tr2TextureAL* TrinityALImpl_GetObject() const;
@@ -68,6 +68,7 @@ public:
 	uint32_t GetUavIndexInHeap( uint32_t mip ) const;
 
 	ALResult SetName( const char* name );
+	const char* GetName() const;
 
 private:
 	std::shared_ptr<TrinityALImpl::Tr2TextureAL> m_texture;

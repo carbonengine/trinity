@@ -175,7 +175,7 @@ ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, c
 	return m_texture->UpdateSubresource( region, source, pitch, slicePitch, renderContext );
 }
 
-ALResult Tr2TextureAL::CopySubresourceRegion( const Tr2TextureSubresource& destSubresource, Tr2TextureAL& source, const Tr2TextureSubresource& sourceSubresource, Tr2RenderContextAL& renderContext )
+ALResult Tr2TextureAL::CopySubresourceRegion( const Tr2TextureSubresource& destSubresource, const Tr2TextureAL& source, const Tr2TextureSubresource& sourceSubresource, Tr2RenderContextAL& renderContext ) const
 {
 	return m_texture->CopySubresourceRegion( destSubresource, *source.m_texture, sourceSubresource, renderContext );
 }
@@ -197,7 +197,7 @@ namespace
 	}
 }
 
-ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext )
+ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext ) const
 {
 	if( !IsValid() )
 	{
@@ -216,7 +216,7 @@ ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext )
 	return m_texture->GenerateMipMaps( renderContext );
 }
 
-ALResult Tr2TextureAL::Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext )
+ALResult Tr2TextureAL::Resolve( const Tr2TextureAL& destination, Tr2RenderContextAL& renderContext ) const
 {
 	return m_texture->Resolve( *destination.m_texture, renderContext );
 }
@@ -247,6 +247,15 @@ ALResult Tr2TextureAL::SetName( const char* name )
 		return E_INVALIDARG;
 	}
 	return m_texture->SetName( name );
+}
+
+const char* Tr2TextureAL::GetName() const
+{
+	if( !IsValid() )
+	{
+		return nullptr;
+	}
+	return m_texture->GetName();
 }
 
 TrinityALImpl::Tr2TextureAL* Tr2TextureAL::TrinityALImpl_GetObject() const

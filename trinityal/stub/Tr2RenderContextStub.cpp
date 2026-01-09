@@ -83,12 +83,12 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL&, uint32_t ) throw()
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( const Tr2BufferAL&, const float[4] ) throw()
 {
 	return E_FAIL;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const uint32_t[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( const Tr2BufferAL&, const uint32_t[4] ) throw()
 {
 	return E_FAIL;
 }

@@ -37,6 +37,7 @@ namespace TrinityALImpl
 		ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 		uintptr_t GetSharedHandle() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		const char* GetName() const;
 		ALResult SetName( const char* name );
 
 		id<MTLTexture> GetMetalTexture() { return m_mtlTexture; };

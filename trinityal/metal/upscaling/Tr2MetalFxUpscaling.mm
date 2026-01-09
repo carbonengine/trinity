@@ -16,7 +16,7 @@
 
 namespace MetalUpscalingUtils
 {
-    id<MTLTexture> GetMetalTexture(Tr2TextureAL* texture)
+    id<MTLTexture> GetMetalTexture( const Tr2TextureAL* texture )
     {
         if( texture && texture->TrinityALImpl_GetObject())
         {

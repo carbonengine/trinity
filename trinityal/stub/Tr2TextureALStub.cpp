@@ -356,6 +356,11 @@ namespace TrinityALImpl
 	{
 		return S_OK;
 	}
+
+	const char* Tr2TextureAL::GetName() const
+	{
+		return nullptr;
+	}
 }
 
 #endif

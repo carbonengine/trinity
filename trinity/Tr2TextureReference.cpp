@@ -95,7 +95,11 @@ Tr2RenderContextEnum::PixelFormat Tr2TextureReference::GetFormat() const
 	return m_texture.GetDesc().GetFormat();
 }
 
-
+std::string Tr2TextureReference::GetName() const
+{
+	auto name = m_texture.GetName();
+	return name ? name : "";
+}
 
 Tr2TransientTextureReference::Tr2TransientTextureReference( IRoot* )
 	:m_texture( nullptr )

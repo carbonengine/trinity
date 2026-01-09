@@ -2,6 +2,7 @@
 
 #include "Tr2RaytracingGeometry.h"
 #include "Tr2Denoiser.h"
+#include "Tr2ShadowMap.h"
 
 class Tr2RtShaderTableAL;
 
@@ -17,12 +18,18 @@ public:
 
 	Tr2RaytracingGeometry& GetGeometry();
 
-	void RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, const CcpMath::Sphere* planets, size_t planetCount, float upscaling, Tr2RenderContext& renderContext );
+	Tr2GpuResourcePool::Texture RenderShadows(
+		const Tr2TextureAL& depth, 
+		const Tr2TextureAL& normal, 
+		const Vector3& sunDirection, 
+		const CcpMath::Sphere* planets, 
+		size_t planetCount, 
+		float upscaling, 
+		Tr2GpuResourcePool& gpuResourcePool,
+		Tr2RenderContext& renderContext );
 	
 	bool OnPrepareResources();
 	void ReleaseResources( TriStorage s );
-
-	ITr2TextureProvider* GetShadowMap() const;
 
 	Tr2RaytracingPipelineStateManager m_pipelineManager;
 	Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
@@ -34,7 +41,6 @@ private:
 	Tr2EffectPtr m_shadowEffect;
 	unsigned m_shadowEffectHash;
 	Tr2RtShaderTableAL m_shadowShaderTable;
-	Tr2RenderTargetPtr m_destTex;
 	Tr2ConstantBufferAL m_shadowPerFrameData;
 
 	// denoiser
@@ -43,9 +49,6 @@ private:
 	float m_sunAngle;
 	// debug
 	bool m_applyDenoiser;
-
-	// White texture for no shadow
-	TriTextureResPtr m_whiteTexture;
 };
 
 TYPEDEF_BLUECLASS( Tr2RaytracingManager );

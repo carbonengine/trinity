@@ -59,6 +59,11 @@ public:
 	uint8_t GetStartFace() const;
 	uint8_t GetEndFace() const;
 
+	const Tr2TextureAL& GetDepthBuffer( unsigned face ) const
+	{
+		return m_stencilMaps[face];
+	}
+
 private:
 	void RunFilter();
 	void Filter( Tr2RenderContext &renderContext );

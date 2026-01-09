@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Tr2DeviceResource.h"
+#include "Tr2GpuResourcePool.h"
 #include "TriFrustum.h"
 #include "ffx_cacao.h"
 
@@ -20,68 +20,27 @@ enum class SSAOQuality
 };
 
 BLUE_DECLARE( Tr2Effect );
-BLUE_DECLARE( Tr2TextureReference );
-BLUE_DECLARE( Tr2RenderTarget );
-BLUE_DECLARE( Tr2DepthStencil );
-BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( TriTextureRes );
-BLUE_DECLARE_INTERFACE( ITriTextureRes );
 
 BLUE_CLASS( Tr2SSAO ) :
-	public INotify,
-	public Tr2DeviceResource
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
 
 	Tr2SSAO( IRoot* lockobj = NULL );
-	~Tr2SSAO();
 
-	void ReleaseResources( TriStorage s );
-	bool OnPrepareResources();
+	Tr2GpuResourcePool::Texture Filter( const Tr2TextureAL& depthBuffer, const Tr2TextureAL& normalBuffer, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, bool temporal );
 
-	bool IsValid();
-
-	bool OnModified( Be::Var* value );
-
-	void SetInputBuffers( Tr2DepthStencilPtr depthBuffer, Tr2RenderTargetPtr normalBuffer );
-
-	void Filter( Tr2RenderContext& renderContext, bool temporal );
-
-	Tr2RenderTargetPtr GetOutput() const;
-	ITr2TextureProviderPtr GetBlankOutput() const;
+	void Enable( bool enable );
+	void SetQuality( SSAOQuality quality, bool downsampled );
 
 private:
 	struct SSAOResources;
 	static constexpr unsigned SSAO_PASS_COUNT = 4;
 
-
-	struct SSAOResources
-	{
-		SSAOResources();
-		void ReleaseResources();
-
-		// Prepare
-		Tr2TextureAL deinterleavedDepthTexture;
-		Tr2TextureAL deinterleavedNormalTexture;
-		Tr2RenderTargetPtr deinterleavedDepthTarget;
-		Tr2RenderTargetPtr deinterleavedNormalTarget;
-
-		// SSAO
-		Tr2TextureAL ssaoWorkerTextureA;
-		Tr2TextureAL ssaoWorkerTextureB;
-		Tr2RenderTargetPtr ssaoWorkerTargetA;
-		Tr2RenderTargetPtr ssaoWorkerTargetB;
-
-		// Importance
-		Tr2RenderTargetPtr importanceTargetA;
-		Tr2RenderTargetPtr importanceTargetB;
-	};
-
 	struct Layer
 	{
-		void ReleaseResources();
-
 		bool enabled = true;
 		SSAOQuality quality;
 		bool downsampled;
@@ -89,17 +48,12 @@ private:
 	
 		FFX_CACAO_Settings settings;
 		Tr2EffectPtr effect;
-		SSAOResources resources;
 	};
 
 	HRESULT ApplyConstBuffer( unsigned pass, Tr2RenderContext& renderContext );
-	void PerformPass( const Layer& layer, bool reuseNormals, Tr2RenderContext& renderContext );
-	void UpdateEffect( Layer& layer );
-	bool PrepareSsaoResources( Layer& layer, const Layer* prevLayer, Tr2PrimaryRenderContext& renderContext );
+	Tr2GpuResourcePool::Texture PerformPass( const Layer& layer, const Tr2TextureAL& depthBuffer, const Tr2TextureAL& normalBuffer, bool reuseNormals, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
 	Layer m_detail = { true, SSAOQuality::HIGHEST, false, 5.f };
-
-	bool m_initialized = false;
 
 	Tr2ConstantBufferAL m_constBuffers[SSAO_PASS_COUNT + 1]{};
 
@@ -144,7 +98,6 @@ private:
 	Tr2EffectPtr m_cortaoEffect;
 	Tr2EffectPtr m_cortaoDownsampleEffect;
 	Tr2EffectPtr m_cortaoBlurEffect;
-	Tr2TextureReferencePtr m_cortaoPackedBuffer;
 	TriTextureResPtr m_cortaoLookupTable;
 	Tr2ConstantBufferAL m_cortaoConstantBuffer;
 
@@ -155,25 +108,14 @@ private:
 	bool m_cortaoUseLookupTable;
 
 	bool m_cortaoBlur;
-	Tr2TextureReferencePtr m_cortaoBlurBuffer;
 
 
 	uint32_t m_cortaoRandSeeds[4];
 
 	uint32_t Hash(uint32_t n);
 
-	void ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal );
+	Tr2GpuResourcePool::Texture ComputeCORTAO( const Tr2TextureAL& depthBuffer, const Tr2TextureAL& normalBuffer, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, bool temporal );
 
-
-	// Input
-	Tr2DepthStencilPtr m_inputDepthBuffer;
-	Tr2RenderTargetPtr m_inputNormalBuffer;
-
-	Tr2GpuBufferPtr m_loadCounterBuffer;
-
-	// Output
-	TriTextureResPtr m_blankOutputTexture;
-	Tr2RenderTargetPtr m_outputTarget;
 };
 
 TYPEDEF_BLUECLASS( Tr2SSAO );

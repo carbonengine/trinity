@@ -17,7 +17,7 @@
 namespace Fsr3Utils
 {
 	void LogFsr3Message( uint32_t type, const wchar_t* message );
-	FfxApiResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* textureName );
+	FfxApiResource ConvertTextureToFfxResource( const Tr2TextureAL* texture, const wchar_t* textureName );
 	FfxApiSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format );
 }
 
@@ -56,7 +56,7 @@ public:
 	virtual bool HasSharpening() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
-	virtual void SetHudLessTexture( Tr2TextureAL* texture ) override;
+	virtual void SetHudLessTexture( const Tr2TextureAL* texture ) override;
 	virtual void SetupForReuse() override;
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;

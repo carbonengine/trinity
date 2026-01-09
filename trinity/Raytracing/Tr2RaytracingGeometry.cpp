@@ -7,6 +7,7 @@
 #include "Shader/Tr2Shader.h"
 #include "Shader/Parameter/Tr2GeometryBufferParameter.h"
 #include "../Tr2BoneTransformBuffer.h"
+#include "../Tr2RuntimeGpuBuffer.h"
 
 #include "Tr2MeshArea.h"
 #include "ITr2TextureProvider.h"

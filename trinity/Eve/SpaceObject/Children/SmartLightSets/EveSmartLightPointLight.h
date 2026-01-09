@@ -47,7 +47,7 @@ private:
 	float m_activationStrength;
 	std::wstring m_lightProfilePath;
 	Tr2LightProfileResPtr m_lightProfile;
-	IEveDistributionMethod* m_distribution;
+	IEveDistributionMethodPtr m_distribution;
 };
 
 TYPEDEF_BLUECLASS( EveSmartLightPointLight );

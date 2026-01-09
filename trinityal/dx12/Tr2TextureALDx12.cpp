@@ -1723,6 +1723,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	const char* Tr2TextureAL::GetName() const
+	{
+		return m_name.c_str();
+	}
+
 	bool Tr2TextureAL::operator==( const Tr2TextureAL& other ) const
 	{
 		return GetResourceDx12() == other.GetResourceDx12();

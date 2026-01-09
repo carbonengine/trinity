@@ -86,10 +86,10 @@ public:
 	ALResult SetIndices( const Tr2BufferAL& buffer ) throw( );
 	ALResult SetIndices( const Tr2BufferAL& buffer, int stride ) throw();
 
-	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
-	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
-	ALResult ClearUav( Tr2TextureAL& texture, uint32_t mipLevel, const float values[4] ) throw( );
-	ALResult ClearUav( Tr2TextureAL& texture, uint32_t mipLevel, const uint32_t values[4] ) throw( );
+	ALResult ClearUav( const Tr2BufferAL& buffer, const float values[4] ) throw();
+	ALResult ClearUav( const Tr2BufferAL& buffer, const uint32_t values[4] ) throw();
+	ALResult ClearUav( const Tr2TextureAL& texture, uint32_t mipLevel, const float values[4] ) throw();
+	ALResult ClearUav( const Tr2TextureAL& texture, uint32_t mipLevel, const uint32_t values[4] ) throw();
 
 	ALResult CopySubBuffer(
 		Tr2BufferAL& dest,

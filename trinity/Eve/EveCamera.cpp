@@ -215,6 +215,11 @@ const TriViewPtr EveCamera::GetViewMatrix()
 	return m_viewMatrix;
 }
 
+const TriProjectionPtr EveCamera::GetProjection()
+{
+	return m_projectionMatrix;
+}
+
 const Vector3* EveCamera::GetPosition(
 	)
 {

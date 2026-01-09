@@ -28,12 +28,12 @@ public:
 	// 2d blits unfiltered (point sampling)
 	bool DrawInCameraSpace( Tr2RenderContext& renderContext, Tr2Shader* shader, Tr2Material* material );
 
-	bool Draw( Tr2RenderContext& renderContext, Tr2TextureAL& texture, const Vector2& tlTexCoord = Vector2( 0.0f, 0.0f ), const Vector2& brTexCoord = Vector2( 1.0f, 1.0f ), Filtering filter = FILTER_POINT );
-    bool Draw( Tr2RenderContext& renderContext, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
+	bool Draw( Tr2RenderContext& renderContext, const Tr2TextureAL& texture, const Vector2& tlTexCoord = Vector2( 0.0f, 0.0f ), const Vector2& brTexCoord = Vector2( 1.0f, 1.0f ), Filtering filter = FILTER_POINT );
+	bool Draw( Tr2RenderContext& renderContext, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
 		
-	bool Draw( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture );
-	bool Draw( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord );
-    bool Draw( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
+	bool Draw( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture );
+	bool Draw( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord );
+	bool Draw( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
 	
 	bool Draw( Tr2RenderContext& renderContext, Tr2Material* effect );
 	bool Draw( Tr2RenderContext& renderContext, Tr2Material* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord );
@@ -50,7 +50,7 @@ private:
 		Tr2RenderContext& renderContext,
 		Tr2Shader* shader, 
 		Tr2Material* material,
-		Tr2TextureAL* halTexture,
+		const Tr2TextureAL* halTexture,
 		bool isCameraSpace,
 		const Vector2& tlTexCoord = Vector2( 0.0f, 0.0f ), 
 		const Vector2& brTexCoord = Vector2( 1.0f, 1.0f ),

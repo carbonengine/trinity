@@ -200,10 +200,10 @@ public:
 
 	static void RenderDebugInfo( Tr2RenderContext& renderContext );
 
-	static bool DrawTexture( Tr2RenderContext& renderContext, Tr2TextureAL& texture, const Vector2& tlTexCoord = Vector2( 0.0f, 0.0f ), const Vector2& brTexCoord = Vector2( 1.0f, 1.0f ), Tr2Blitter::Filtering filter = Tr2Blitter::FILTER_POINT );
-	static bool DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture );
-	static bool DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord );
-    static bool DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
+	static bool DrawTexture( Tr2RenderContext& renderContext, const Tr2TextureAL& texture, const Vector2& tlTexCoord = Vector2( 0.0f, 0.0f ), const Vector2& brTexCoord = Vector2( 1.0f, 1.0f ), Tr2Blitter::Filtering filter = Tr2Blitter::FILTER_POINT );
+	static bool DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture );
+	static bool DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord );
+	static bool DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
 	static bool DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord );
 
 	static void DrawScreenQuad( Tr2RenderContext& renderContext, Tr2Material* effect );

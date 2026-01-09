@@ -102,11 +102,9 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 	EXPOSURE_BEGIN( EveSpaceScene, "" )
 		MAP_INTERFACE( EveSpaceScene )
 		MAP_INTERFACE( ITr2Scene )
-		MAP_INTERFACE( ITr2MultiPassScene )
 		MAP_INTERFACE( ITr2Updateable )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
-		MAP_INTERFACE( ITr2NamedPredicate )
 
 		MAP_ATTRIBUTE(
 			"name",
@@ -154,12 +152,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"backgroundRenderingEnabled",
 			m_backgroundRenderingEnabled,
 			"If true, background (nebula, starfield, and background objects) are rendered.",
-			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
-			"mainPassRenderingEnabled",
-			m_mainPassRenderingEnabled,
-			"If true, main (color) pass is rendered along with shadows and SSAO.",
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
@@ -310,11 +302,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			":jessica-group: Lighting",
 			Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE(
-			"depthTexture",
-			m_depthMap,
-			".",
-			Be::READWRITE )
-		MAP_ATTRIBUTE(
 			"cascadedShadowMap",
 			m_cascadedShadowMap,
 			"This should get created in python.",
@@ -325,63 +312,17 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"Set quality for shadows \n"
 			"jessica-hidden: True",
 			Be::READWRITE | Be::NOTIFY )
-		MAP_ATTRIBUTE(
-			"freezeFrustum",
-			m_freezeFrustum,
-			"If true, zoom out to see the frustum split\n"
-			":jessica-group: Shadows",
-			Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE(
-			"displayShadowMap",
-			m_displayShadowMap,
-			"Displays the shadowmap on top of the screen (unfiltered).\n"
-			":jessica-group: Shadows",
-			Be::READWRITE )
 		MAP_ATTRIBUTE( 
 			"raytracingManager",
 			m_rtManager,
 			"Raytracing manager\n"
 			": jessica - group : Raytracing ",
 			Be::READWRITE )
-		MAP_METHOD_AND_WRAP(
-			"DisableShadows",
-			DisableShadows,
-			"Set to disable shadows" )
-		MAP_ATTRIBUTE(
-			"colorTexture",
-			m_colorMap,
-			".",
-			Be::READWRITE )
-		MAP_ATTRIBUTE(
-			"opaqueColorTexture",
-			m_opaqueColorMap,
-			".",
-			Be::READWRITE )
-		MAP_ATTRIBUTE(
-			"normalTexture",
-			m_normalMap,
-			".",
-			Be::READWRITE )
-		MAP_ATTRIBUTE(
-			"SSAO",
-			m_ssao,
-			".",
-			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"subSurfaceScattering",
 			m_sssss,
 			"Screen Space Sub Surface Scattering",
 			Be::READ )
-		MAP_ATTRIBUTE(
-			"distortionTexture",
-			m_distortionMap,
-			".",
-			Be::READWRITE )
-		MAP_ATTRIBUTE(
-			"velocityMap",
-			m_velocityMap,
-			".",
-			Be::READWRITE )
 		MAP_ATTRIBUTE(
 			"sunBall",
 			m_sunBall,
@@ -454,14 +395,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			EveVisualizerChooser )
 
 		MAP_ATTRIBUTE( "perFrameDebug", m_perFrameDebug, "This is a debug/visualization value, which gets passed to the perframePS data, so the shader can use it.", Be::READWRITE )
-
-		MAP_ATTRIBUTE( "depthPassTechnique", m_depthPassTechnique, "Name of the shader technique used during the depth pass", Be::READWRITE )
-		MAP_ATTRIBUTE( "customStencil", m_customStencil, "Custom render target that can be bound during the depth pass", Be::READWRITE )
-
-		MAP_METHOD_AND_WRAP(
-			"GetPostProcessPSBuffer",
-			GetPostProcessPSBuffer,
-			"" )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"PickObject",
@@ -605,9 +538,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"Enables/disables shadows in the reflection cubemap (only if shadows are enabled)\n\n"
 			":jessica-group: Shadows"
 		)
-
-		MAP_PROPERTY_READONLY( "Shadow Map Atlas", GetShadowMapAtlas, "" )
-		MAP_PROPERTY_READONLY( "Raytraced Dynamic Shadow Atlas", GetRaytracedDynamicShadowAtlas, "" )
 
 	EXPOSURE_END()
 }

@@ -16,6 +16,8 @@
 #include "Shader/Parameter/TriVariableParameter.h"
 #include "Shader/Parameter/Tr2RuntimeTextureParameter.h"
 #include "Shader/Parameter/Tr2Matrix4Parameter.h"
+#include "../Tr2TextureReference.h"
+#include "../Tr2RuntimeGpuBuffer.h"
 
 BLUE_DEFINE_INTERFACE( ITr2EffectValue );
 BLUE_DEFINE_INTERFACE( ITr2ScreenSizeAwareValue );
@@ -2224,5 +2226,71 @@ void Tr2Effect::SetParameter( const BlueSharedString& name, const Matrix& matrix
 		param->m_name = name;
 		param->SetValue( matrix );
 		m_parameters.Append( param->GetRawRoot() );
+	}
+}
+
+void Tr2Effect::SetParameter( const BlueSharedString& name, const Tr2TextureAL& texture, uint32_t uavMipLevel )
+{
+	auto existing = GetResourceByName( name.c_str() );
+	Tr2RuntimeTextureParameterPtr param = BlueCastPtr( existing );
+
+	if( param )
+	{
+		param->SetUavMipLevel( uavMipLevel );
+		if( Tr2TextureReferencePtr ref = BlueCastPtr( param->GetTextureProvider() ) )
+		{
+			if( *ref->GetTexture() == texture )
+			{
+				return;
+			}
+			*ref->GetTexture() = texture;
+			ref->OnTextureChange().Broadcast();
+			return;
+		}
+	}
+
+	Tr2TextureReferencePtr ref;
+	ref.CreateInstance();
+	*ref->GetTexture() = texture;
+
+	if( param )
+	{
+		param->SetTextureProvider( ref );
+	}
+	else
+	{
+		param.CreateInstance();
+		param->Create( name, ref );
+		param->SetUavMipLevel( uavMipLevel );
+		AddResource( param );
+	}
+}
+
+void Tr2Effect::SetParameter( const BlueSharedString& name, const Tr2BufferAL& value )
+{
+	auto existing = GetResourceByName( name.c_str() );
+	Tr2GeometryBufferParameterPtr param = BlueCastPtr( existing );
+	if( param )
+	{
+		if( Tr2RuntimeGpuBufferPtr buffer = BlueCastPtr( param->GetGpuBuffer() ) )
+		{
+			buffer->SetGpuBuffer( value );
+			return;
+		}
+	}
+	Tr2RuntimeGpuBufferPtr buffer;
+	buffer.CreateInstance();
+	buffer->SetGpuBuffer( value );
+
+	if( param )
+	{
+		param->SetGpuBuffer( buffer );
+	}
+	else
+	{
+		param.CreateInstance();
+		param->m_name = name;
+		param->SetGpuBuffer( buffer );
+		AddResource( param );
 	}
 }

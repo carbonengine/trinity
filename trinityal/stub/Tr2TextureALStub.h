@@ -35,6 +35,7 @@ namespace TrinityALImpl
 		uintptr_t GetSharedHandle() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+		const char* GetName() const;
 
 		uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
 		uint32_t GetUavIndexInHeap( uint32_t mip ) const;

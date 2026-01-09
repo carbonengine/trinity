@@ -33,7 +33,7 @@ namespace Fsr3Utils
 		}
 	}
 
-	FfxApiResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* textureName )
+	FfxApiResource ConvertTextureToFfxResource( const Tr2TextureAL* texture, const wchar_t* textureName )
 	{
 		ID3D12Resource* res = nullptr;
 		FfxApiResource ffxRes;
@@ -405,7 +405,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::SetupFrameGen()
 	return Tr2UpscalingAL::Result::OK;
 }
 
-void Tr2Fsr3UpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
+void Tr2Fsr3UpscalingContext::SetHudLessTexture( const Tr2TextureAL* texture )
 {
 	if( m_frameGeneration && ( texture == nullptr || ( texture->TrinityALImpl_GetObject() != nullptr && m_frameGenerationConfig.HUDLessColor.resource != texture->TrinityALImpl_GetObject()->GetResourceDx12() ) ) )
 	{

@@ -338,7 +338,7 @@ void Tr2UpscalingContextAL::GetJitter( float& x, float& y ) const
 	y = m_jitterYScale * m_jitterY / (float)m_renderHeight;
 }
 
-void Tr2UpscalingContextAL::SetHudLessTexture( Tr2TextureAL* texture )
+void Tr2UpscalingContextAL::SetHudLessTexture( const Tr2TextureAL* texture )
 {
 }
 

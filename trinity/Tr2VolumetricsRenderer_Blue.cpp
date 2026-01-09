@@ -61,21 +61,6 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			"Volumetrics receive shadows from opaque geometry\n"
 			":jessica-group: Clouds",
 			Be::READWRITE )
-		MAP_ATTRIBUTE(
-			"volumeSlices",
-			m_volumeSlices,
-			"Frustum-align volume texture (represented as texture array) containing volumetic colors/density",
-			Be::READ )
-		MAP_ATTRIBUTE(
-			"downsampledDepth",
-			m_downsampledDepth,
-			"",
-			Be::READ )
-		MAP_ATTRIBUTE(
-			"blurScratch",
-			m_blurScratch,
-			"",
-			Be::READ )
 
 
 
@@ -183,11 +168,6 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 		MAP_ATTRIBUTE(
 			"mieEnvironmentMap",
 			m_mieEnvironmentMap,
-			"",
-			Be::READ )
-		MAP_ATTRIBUTE(
-			"fogFroxels",
-			m_fogResources.fogFroxels,
 			"",
 			Be::READ )
 
