@@ -2222,7 +2222,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		}
 		if( cleanUpMorphTasks )
 		{
-			//m_componentRegistry->Clear<ITr2MeshMorph>();
+			m_componentRegistry->Clear<ITr2MeshMorph>();
 		}
 	}
 
