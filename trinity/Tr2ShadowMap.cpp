@@ -193,6 +193,25 @@ void Tr2ShadowMap::ShouldUseDenoiser( bool val )
 	m_useDenoiser = val;
 }
 
+AxisAlignedBoundingBox Tr2ShadowMap::CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3 (&corners)[8] )
+{
+	AxisAlignedBoundingBox aabb;
+	for( unsigned int i = 0; i < 8; ++i )
+	{
+		Vector3 vertex = DX_UNIT_CUBE[i];
+		// view space
+		Vector4 transformedVertex = Transform( Vector4( vertex, 1.0 ), Inverse( projection ) );
+
+		transformedVertex /= transformedVertex.w;
+
+		// world space
+		transformedVertex = Transform( transformedVertex, invViewTransform );
+		corners[i] = TransformCoord( transformedVertex.GetXYZ(), ( lightView ) );
+		// light view space
+		aabb.IncludePoint( TransformCoord( transformedVertex.GetXYZ(), ( lightView ) ) );
+	}
+	return aabb;
+}
 // --------------------------------------------------------------------------------
 // Description:
 //  Go through all i count of frustum splits. Calculate the corresponding 
@@ -230,25 +249,9 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	// Find light view
 	Matrix lightView = Inverse( OrthoNormalBasisZ( -lightDirection ) );
 
-	AxisAlignedBoundingBox aabb;
-
 	Vector3 corners[8];
 
-	// Now transform the unit cube based off matrices
-	for( unsigned int i = 0; i < 8; ++i )
-	{
-		Vector3 vertex = DX_UNIT_CUBE[i];
-		// view space
-		Vector4 transformedVertex = Transform( Vector4( vertex, 1.0 ), Inverse( projection ) );
-
-		transformedVertex /= transformedVertex.w;
-
-		// world space
-		transformedVertex = Transform( transformedVertex, invViewTransform );
-		corners[i] = TransformCoord( transformedVertex.GetXYZ(), ( lightView ) );
-		// light view space
-		aabb.IncludePoint( TransformCoord( transformedVertex.GetXYZ(), ( lightView ) ) );
-	}
+	AxisAlignedBoundingBox aabb = CalculateAABB( projection, invViewTransform, lightView, corners );
 
 	// Snap the projection in texel-sized increments to avoid crawling shadows on still objects
 	if( m_disableShimmer )

@@ -400,6 +400,8 @@ protected:
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;
 
+	void GetLightMatrices( const Tr2LightManager::PerLightData& lightData, Matrix& projection, Matrix& view );
+
 	void ProcessOutdatedRTAnimations( Tr2RenderContext & renderContext );
 
 protected:

@@ -337,9 +337,12 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, Vector3 pos
 		return false;
 	}
 
-	float distance = Length( bs.GetXYZ() - position );
+	Vector3 distanceDiff = bs.GetXYZ() - position;
+	float squaredDist = Dot( distanceDiff, distanceDiff );
 
-	return distance - ( radius + bs.w ) < 0.0f;
+	float squaredRadius = ( radius + bs.w ) * ( radius + bs.w );
+
+	return squaredDist - squaredRadius < 0.0f;
 }
 
 void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
@@ -356,7 +359,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
 			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
-			auto [morphTargets, morphTargetCount] = GetMorphTargets();
+			auto [morphTargets, morphTargetCount] = GetMorphTargets( false, true );
 			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount, morphTargets, morphTargetCount );
 		}
 		else
@@ -1051,7 +1054,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		if ( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
 			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
-			auto [morphTargets, morphTargetCount] = GetMorphTargets();
+			auto [morphTargets, morphTargetCount] = GetMorphTargets( false, true );
 			m_mesh->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount, morphTargets, morphTargetCount );
 		}
 		else
@@ -1177,10 +1180,10 @@ bool EveChildMesh::MorphAllowedToBeProcessed( int index, bool bakedOnly )
 	// 1. We are processing baked only and the name is baked. This dose not factor in m_isBaked as we want to process all baked morphs
 	// 2. The mesh is baked and we are getting a non baked morph
 	// 3. The mesh is not baked and we are getting all morphs
-	return ( bakedName && bakedOnly ) || ( !bakedOnly && ( ( m_isMorphsBaked && !bakedName ) || !m_isMorphsBaked ) ) ;
+	return ( bakedOnly && bakedName ) || ( !bakedOnly && !bakedName ) || ( !bakedOnly && !m_isMorphsBaked );
 }
 
-std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets( bool bakedOnly )
+std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets( bool bakedOnly, bool forceAll )
 {
 	const float EPSILON = .001f;
 
@@ -1225,7 +1228,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 	int32_t count = int32_t(m_morphAnimationBuffer.size());
 	for( int32_t i = 0; i < count; i++ )
 	{
-		if( m_morphAnimationBuffer[i].m_weight > EPSILON && MorphAllowedToBeProcessed( i, bakedOnly ) )
+		if( m_morphAnimationBuffer[i].m_weight > EPSILON && ( forceAll || MorphAllowedToBeProcessed( i, bakedOnly ) ) )
 		{
 			continue;
 		}
@@ -1234,7 +1237,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 		for( int32_t j = count - 1; j >= i; j-- )
 		{
 			count -= 1;
-			if( m_morphAnimationBuffer[j].m_weight > EPSILON && MorphAllowedToBeProcessed( j, bakedOnly ) )
+			if( m_morphAnimationBuffer[j].m_weight > EPSILON && ( forceAll || MorphAllowedToBeProcessed( j, bakedOnly ) ) )
 			{
 				m_morphAnimationBuffer[i] = m_morphAnimationBuffer[j];
 				break;

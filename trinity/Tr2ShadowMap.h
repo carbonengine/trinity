@@ -115,6 +115,8 @@ public:
 
 	PerSplitData m_perSplitData;
 
+	static AxisAlignedBoundingBox CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3 (&corners)[8] );
+
 private:
 
 	void SetSplitValues();
