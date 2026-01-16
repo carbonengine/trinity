@@ -55,6 +55,16 @@ void DrawInto( const Tr2TextureAL& dest, Tr2LoadAction::Type loadAction, Tr2Effe
 	renderContext.m_esm.PopRenderTarget();
 }
 
+ImageIO::PixelFormat GetUavCompatibleFormat( ImageIO::PixelFormat format )
+{
+	if( format == ImageIO::PIXEL_FORMAT_B8G8R8X8_UNORM || format == ImageIO::PIXEL_FORMAT_B8G8R8A8_UNORM )
+	{
+		// There must be a better way to detect and handle formats that are not UAV-compatible
+		format = ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM;
+	}
+	return format;
+}
+
 
 template <typename T>
 struct TempParameterT
@@ -633,12 +643,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderSharpening( Tr2GpuReso
 		GPU_REGION( renderContext, "CAS Sharpening" );
 
 		static const uint32_t CAS_THREAD_GROUP_WORK_REGION_DIM = 16;
-		auto format = input->GetFormat();
-		if( format == ImageIO::PIXEL_FORMAT_B8G8R8X8_UNORM || format == ImageIO::PIXEL_FORMAT_B8G8R8A8_UNORM )
-		{
-			// There must be a better way to detect and handle formats that are not UAV-compatible
-			format = ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM;
-		}
+		auto format = GetUavCompatibleFormat( input->GetFormat() );
 		auto output = gpuResourcePool.GetTempTexture( "Sharpening Output", input->GetWidth(), input->GetHeight(), format, RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS );
 
 		TEMP_PARAM( m_fidelityFxCasShader, "InputTexture", input );
@@ -1417,7 +1422,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderUpscaling(
 
 	Tr2UpscalingAL::DispatchParameters dispatchParameters = {};
 	auto dispatchRequirements = upscalingContext->GetDispatchRequirements();
-	auto dest = gpuResourcePool.GetTempTexture( "Upscaled Output", w, h, source.GetFormat(), RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS );
+	auto dest = gpuResourcePool.GetTempTexture( "Upscaled Output", w, h, GetUavCompatibleFormat( source.GetFormat() ), RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS );
 	dispatchParameters.output = &dest.Get();
 
 	bool wantsExposure = dispatchRequirements & Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE;
