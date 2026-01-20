@@ -272,6 +272,11 @@ bool Tr2RaytracingMesh::GetAndResetDirtyFlag()
 	return false;
 }
 
+void Tr2RaytracingMesh::MarkDirty()
+{
+	m_isDirty = true;
+}
+
 TriGeometryResLodData* Tr2RaytracingMesh::GetCurrentLodData() const
 {
 	return m_geometry->GetMeshLod( m_meshIndex, m_lodIndex );

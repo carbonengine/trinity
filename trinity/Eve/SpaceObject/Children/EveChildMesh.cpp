@@ -437,6 +437,13 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		UpdateRtSkeleton();
 		m_dirtyRtMesh = false;
 	}
+
+	auto rtMesh = m_mesh->GetRtMesh();
+
+	if( rtMesh )
+	{
+		rtMesh->MarkDirty();
+	}
 }
 
 void EveChildMesh::UpdateRtMesh()
@@ -1162,7 +1169,6 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 
 bool IsBakedName( std::string name )
 {
-	return true;
 	// if name starts with bs its baked
 	return name.compare( 0, 5, "Base_" ) == 0 || name.compare( 0, 4, "Org_" ) == 0 || name.compare( 0, 3, "Sc_" ) == 0;
 }
@@ -1274,6 +1280,13 @@ void EveChildMesh::BakeMorphs()
 void EveChildMesh::UnbakeMorphs()
 {
 	m_isMorphsBaked = false;
+
+	auto rtMesh = m_mesh->GetRtMesh();
+
+	if( rtMesh )
+	{
+		rtMesh->MarkDirty();
+	}
 }
 
 
@@ -1388,6 +1401,13 @@ void EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 			1,
 			renderContext
 		);
+
+		auto rtMesh = m_mesh->GetRtMesh();
+
+		if( rtMesh )
+		{
+			rtMesh->MarkDirty();
+		}
 	}
 
 	m_isMorphsBaked = true;

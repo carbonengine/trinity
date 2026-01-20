@@ -49,6 +49,7 @@ public:
 	bool IsGood() const;
 	bool IsGoodForArea( uint32_t area ) const;
 	bool GetAndResetDirtyFlag();
+	void MarkDirty();
 
 	TriGeometryResLodData* GetCurrentLodData() const;
 	TriGeometryResLodData* GetHighestLodData() const;
