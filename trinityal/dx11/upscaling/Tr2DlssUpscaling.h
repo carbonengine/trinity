@@ -16,7 +16,7 @@
 
 namespace DlssUtils
 {
-	sl::Resource GenerateTextureResource( Tr2TextureAL* texture );
+	sl::Resource GenerateTextureResource( const Tr2TextureAL* texture );
 	const char* GetPluginName( sl::Feature feature );
 	sl::float4x4 AsFloat4x4( float f[16] );
 }

@@ -73,6 +73,7 @@ namespace TrinityALImpl
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+		const char* GetName() const;
 
 		bool operator==( const Tr2TextureAL& other ) const;
 

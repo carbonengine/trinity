@@ -21,7 +21,6 @@ set(PUBLIC_HEADER_FILES
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
     Include/ITr2MultiPassScene.h
-    Include/ITr2NamedPredicate.h
     Include/ITr2Scene.h
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h
@@ -783,6 +782,9 @@ set(_SOURCES
     Eve/EveSpaceScene.cpp
     Eve/EveSpaceScene.h
     Eve/EveSpaceScene_Blue.cpp
+    Eve/EveSpaceSceneRenderDriver.cpp
+    Eve/EveSpaceSceneRenderDriver.h
+    Eve/EveSpaceSceneRenderDriver_Blue.cpp
     Eve/EveStarfield.cpp
     Eve/EveStarfield.h
     Eve/EveStarfield_Blue.cpp
@@ -813,7 +815,6 @@ set(_SOURCES
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
     Include/ITr2MultiPassScene.h
-    Include/ITr2NamedPredicate.h
     Include/ITr2Scene.h
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h
@@ -1006,10 +1007,10 @@ set(_SOURCES
     PostProcess/Tr2PostProcessAttributes.cpp
     PostProcess/Tr2PostProcessAttributes.h
     PostProcess/Tr2PostProcessAttributes_Blue.cpp
+    PostProcess/Tr2PostProcessRenderer.cpp
+    PostProcess/Tr2PostProcessRenderer.h
+    PostProcess/Tr2PostProcessRenderer_Blue.cpp
     PostProcess/Tr2PostProcessEnums.h
-    PostProcess/Tr2PostProcessRenderInfo.cpp
-    PostProcess/Tr2PostProcessRenderInfo.h
-    PostProcess/Tr2PostProcessRenderInfo_Blue.cpp
     RenderJob/ITriRenderStep.h
     RenderJob/Tr2RenderJobs.cpp
     RenderJob/Tr2RenderJobs.h
@@ -1032,6 +1033,9 @@ set(_SOURCES
     RenderJob/TriStepEnableWireframeMode.cpp
     RenderJob/TriStepEnableWireframeMode.h
     RenderJob/TriStepEnableWireframeMode_Blue.cpp
+    RenderJob/Tr2StepExecuteRenderNode.cpp
+    RenderJob/Tr2StepExecuteRenderNode.h
+    RenderJob/Tr2StepExecuteRenderNode_Blue.cpp
     RenderJob/TriStepFilterVisibilityResults.cpp
     RenderJob/TriStepFilterVisibilityResults.h
     RenderJob/TriStepFilterVisibilityResults_Blue.cpp
@@ -1053,9 +1057,6 @@ set(_SOURCES
     RenderJob/TriStepPopViewTransform.cpp
     RenderJob/TriStepPopViewTransform.h
     RenderJob/TriStepPopViewTransform_Blue.cpp
-    RenderJob/TriStepPredicated.cpp
-    RenderJob/TriStepPredicated.h
-    RenderJob/TriStepPredicated_Blue.cpp
     RenderJob/TriStepPresentSwapChain.cpp
     RenderJob/TriStepPresentSwapChain.h
     RenderJob/TriStepPresentSwapChain_Blue.cpp
@@ -1104,9 +1105,6 @@ set(_SOURCES
     RenderJob/TriStepRenderPass.cpp
     RenderJob/TriStepRenderPass.h
     RenderJob/TriStepRenderPass_Blue.cpp
-    RenderJob/TriStepRenderPostProcess.cpp
-    RenderJob/TriStepRenderPostProcess.h
-    RenderJob/TriStepRenderPostProcess_Blue.cpp
     RenderJob/TriStepRenderScene.cpp
     RenderJob/TriStepRenderScene.h
     RenderJob/TriStepRenderScene_Blue.cpp
@@ -1406,6 +1404,7 @@ set(_SOURCES
     ITr2PickableScene.cpp
     ITr2PickableScene.h
     ITr2Renderable.h
+    ITr2RenderNode.h
     ITr2SkinnedObject.h
     ITr2SoundEmitterOwner.h
     ITr2TextureProvider.h
@@ -1476,6 +1475,8 @@ set(_SOURCES
     Tr2GpuProfiler.cpp
     Tr2GpuProfiler.h
     Tr2GpuProfiler_Blue.cpp
+    Tr2GpuResourcePool.cpp
+    Tr2GpuResourcePool.h
     Tr2GpuStructuredBuffer.cpp
     Tr2GpuStructuredBuffer.h
     Tr2GpuStructuredBuffer_Blue.cpp
@@ -1590,6 +1591,12 @@ set(_SOURCES
     Tr2Renderer.cpp
     Tr2Renderer.h
     Tr2Renderer_Blue.cpp
+    Tr2RenderNodeEffect.cpp
+    Tr2RenderNodeEffect.h
+    Tr2RenderNodeEffect_Blue.cpp
+    Tr2RenderNodeSprite2dScene.cpp
+    Tr2RenderNodeSprite2dScene.h
+    Tr2RenderNodeSprite2dScene_Blue.cpp
     Tr2RenderTarget.cpp
     Tr2RenderTarget.h
     Tr2RenderTarget_Blue.cpp
@@ -1598,6 +1605,9 @@ set(_SOURCES
     Tr2RotationTool.cpp
     Tr2RotationTool.h
     Tr2RotationTool_Blue.cpp
+    Tr2RuntimeGpuBuffer.cpp
+    Tr2RuntimeGpuBuffer.h
+    Tr2RuntimeGpuBuffer_Blue.cpp
     Tr2RuntimeInstanceData.cpp
     Tr2RuntimeInstanceData.h
     Tr2RuntimeInstanceData_Blue.cpp

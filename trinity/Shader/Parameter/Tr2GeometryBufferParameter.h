@@ -57,6 +57,7 @@ public:
 	bool IsValid() const;
 
 	void SetGpuBuffer( ITr2GpuBuffer* buffer );
+	ITr2GpuBufferPtr GetGpuBuffer() const;
 
 	BlueSharedString m_name;
 protected:

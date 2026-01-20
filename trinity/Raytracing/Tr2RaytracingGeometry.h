@@ -10,7 +10,7 @@ BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2RaytracingGeometry );
 
-struct TriGeometryResMeshData;
+struct TriGeometryResLodData;
 class Tr2RtMesh;
 class Tr2RtMeshArea;
 struct Tr2MorphTargetAnimationData;
@@ -37,24 +37,6 @@ private:
 };
 
 
-BLUE_CLASS( Tr2RuntimeGpuBuffer ) : public ITr2GpuBuffer
-{
-public:
-	EXPOSE_TO_BLUE();
-
-	Tr2BufferAL* GetGpuBuffer( unsigned ) override
-	{
-		return &m_buffer;
-	}
-	void SetGpuBuffer( const Tr2BufferAL& buffer )
-	{
-		m_buffer = buffer;
-	}
-
-	Tr2BufferAL m_buffer;
-};
-TYPEDEF_BLUECLASS( Tr2RuntimeGpuBuffer );
-
 class Tr2RaytracingMesh
 {
 public:
@@ -68,8 +50,8 @@ public:
 	bool IsGoodForArea( uint32_t area ) const;
 	bool GetAndResetDirtyFlag();
 
-	TriGeometryResMeshData* GetMeshData() const;
-	TriGeometryResMeshData* GetHighestLodMeshData() const;
+	TriGeometryResLodData* GetCurrentLodData() const;
+	TriGeometryResLodData* GetHighestLodData() const;
 	uint32_t GetTransformOffset() const;
 	const Tr2BufferAL* GetSkinnedVertexBuffer() const;
 	const Tr2BufferAL& GetVertexBuffer() const;

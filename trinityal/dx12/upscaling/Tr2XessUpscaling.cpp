@@ -304,14 +304,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 		Setup();
 	}
 
-	auto namer = []( Tr2TextureAL* texture, const char* name ) {
-		if( texture )
-		{
-			texture->SetName( name );
-		}
-	};
-
-	auto TransitionTo = []( Tr2RenderContextAL& renderContext, Tr2TextureAL* texture, D3D12_RESOURCE_STATES newState ) {
+	auto TransitionTo = []( Tr2RenderContextAL& renderContext, const Tr2TextureAL* texture, D3D12_RESOURCE_STATES newState ) {
 		if( texture && texture->TrinityALImpl_GetObject() )
 		{
 			auto tex = texture->TrinityALImpl_GetObject();
@@ -319,19 +312,13 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 		}
 	};
 
-	auto TransitionFrom = []( Tr2RenderContextAL& renderContext, Tr2TextureAL* texture, D3D12_RESOURCE_STATES oldState ) {
+	auto TransitionFrom = []( Tr2RenderContextAL& renderContext, const Tr2TextureAL* texture, D3D12_RESOURCE_STATES oldState ) {
 		if( texture && texture->TrinityALImpl_GetObject() )
 		{
 			auto tex = texture->TrinityALImpl_GetObject();
 			renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( tex->GetResourceDx12(), oldState, tex->GetResourceState() ) );
 		}
 	};
-
-	namer( dispatchParameters.input, "xess input" );
-	namer( dispatchParameters.output, "xess output" );
-	namer( dispatchParameters.depth, "xess depth" );
-	namer( dispatchParameters.velocity, "xess velocity" );
-	namer( dispatchParameters.exposure, "xess exposure" );
 
 	auto& renderContext = m_params.renderContext;
 
@@ -352,7 +339,7 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	params.jitterOffsetY = m_jitterY;
 	params.inputWidth = m_renderWidth;
 	params.inputHeight = m_renderHeight;
-	params.resetHistory = m_reset ? 1 : 0;
+	params.resetHistory = dispatchParameters.reset ? 1 : 0;
 	params.exposureScale = 1.0f;
 
 	params.pColorTexture = dispatchParameters.input->TrinityALImpl_GetObject()->GetResourceDx12();
@@ -376,7 +363,6 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	}
 	// the descriptor cache is dirty, mark it so
 	renderContext.DirtyDescriptorCache();
-	m_reset = false;
 
 	// transition back to what it was
 	TransitionFrom( renderContext, dispatchParameters.output, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );

@@ -8,6 +8,7 @@
 #include "Shader/Parameter/Tr2GeometryBufferParameter.h"
 #include "../Tr2BoneTransformBuffer.h"
 #include "../Tr2MorphTargetAnimationDataBuffer.h"
+#include "../Tr2RuntimeGpuBuffer.h"
 
 #include "Tr2MeshArea.h"
 #include "ITr2TextureProvider.h"
@@ -243,7 +244,7 @@ bool Tr2RaytracingMesh::SetMorphAnimations( size_t count, const Tr2MorphTargetAn
 
 bool Tr2RaytracingMesh::IsGood() const
 {
-	return m_geometry && m_geometry->IsGood() && GetMeshData();
+	return m_geometry && m_geometry->IsGood() && GetCurrentLodData();
 }
 
 bool Tr2RaytracingMesh::IsGoodForArea( uint32_t area ) const
@@ -252,7 +253,7 @@ bool Tr2RaytracingMesh::IsGoodForArea( uint32_t area ) const
 	{
 		return false;
 	}
-	auto data = GetMeshData();
+	auto data = GetCurrentLodData();
 	if( !data )
 	{
 		return false;
@@ -271,18 +272,14 @@ bool Tr2RaytracingMesh::GetAndResetDirtyFlag()
 	return false;
 }
 
-TriGeometryResMeshData* Tr2RaytracingMesh::GetMeshData() const
+TriGeometryResLodData* Tr2RaytracingMesh::GetCurrentLodData() const
 {
-	if( m_lodIndex < 0 )
-	{
-		return m_geometry->GetMeshData( m_meshIndex );
-	}
-	return m_geometry->GetMeshDataLod( m_meshIndex, m_lodIndex );
+	return m_geometry->GetMeshLod( m_meshIndex, m_lodIndex );
 }
 
-TriGeometryResMeshData* Tr2RaytracingMesh::GetHighestLodMeshData() const
+TriGeometryResLodData* Tr2RaytracingMesh::GetHighestLodData() const
 {
-	return m_geometry->GetMeshData( m_meshIndex );
+	return m_geometry->GetMeshLod( m_meshIndex, 0 );
 }
 
 uint32_t Tr2RaytracingMesh::GetTransformOffset() const
@@ -308,12 +305,12 @@ uint32_t Tr2RaytracingMesh::GetSkinnedVertexOffset() const
 
 const Tr2BufferAL& Tr2RaytracingMesh::GetVertexBuffer() const
 {
-	return GetMeshData()->m_vertexAllocation.GetBuffer();
+	return GetCurrentLodData()->m_vertexAllocation.GetBuffer();
 }
 
 const Tr2BufferAL& Tr2RaytracingMesh::GetIndexBuffer() const
 {
-	return GetMeshData()->m_indexAllocation.GetBuffer();
+	return GetCurrentLodData()->m_indexAllocation.GetBuffer();
 }
 
 // ***************** Tr2RaytracingMeshArea *****************
@@ -347,12 +344,12 @@ For compaction, a general rule is: compact for static geometry, for fully dynami
 
 const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext )
 {
-	auto meshData = mesh.GetMeshData();
-	if( !meshData || m_areaIndex >= meshData->m_areas.size() )
+	auto lod = mesh.GetCurrentLodData();
+	if( !lod || m_areaIndex >= lod->m_areas.size() )
 	{
 		return m_blas;
 	}
-	if( meshData->m_areas[m_areaIndex].m_isSkinned || meshData->m_areas[m_areaIndex].m_isMorphed )
+	if( lod->m_areas[m_areaIndex].m_isSkinned  || lod->m_areas[m_areaIndex].m_isMorphed )
 	{
 		if( m_blas.IsValid() && !m_blasOutdated )
 		{
@@ -380,11 +377,11 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 		geometry.positions = Tr2RtPositionStreamAL( 
 			*skinnedVB, 
 			3 * sizeof( float ),
-			meshData->m_vertexCount,
+			lod->m_vertexCount,
 			mesh.GetSkinnedVertexOffset(),
 			0,
 			Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT );
-		geometry.indices = Tr2RtIndicesStreamAL( meshData->m_indexAllocation.GetBuffer(), meshData->m_indexAllocation.GetStride(), meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[m_areaIndex].m_firstIndex, meshData->m_areas[m_areaIndex].m_primitiveCount * 3 );
+		geometry.indices = Tr2RtIndicesStreamAL( lod->m_indexAllocation.GetBuffer(), lod->m_indexAllocation.GetStride(), lod->m_indexAllocation.GetStartIndex() + lod->m_areas[m_areaIndex].m_firstIndex, lod->m_areas[m_areaIndex].m_primitiveCount * 3 );
 
 		if( update )
 		{
@@ -401,19 +398,19 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
             CCP_STATS_ZONE( "BLAS rebuild" );
 
 			auto capacity = geometry;
-			auto lod0 = mesh.GetHighestLodMeshData();
+			auto highestLod = mesh.GetHighestLodData();
 
-			if( lod0 != meshData )
+			if( highestLod != lod )
 			{
 				// provide the capacity for the BLAS to grow into
 				capacity.positions = Tr2RtPositionStreamAL(
 					geometry.positions.m_vertexBuffer,
 					3 * sizeof( float ),
-					lod0->m_vertexCount,
+					highestLod->m_vertexCount,
 					mesh.GetSkinnedVertexOffset(),
 					geometry.positions.m_positionOffset,
 					Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT );
-				capacity.indices = Tr2RtIndicesStreamAL( lod0->m_indexAllocation.GetBuffer(), lod0->m_indexAllocation.GetStride(), lod0->m_indexAllocation.GetStartIndex() + lod0->m_areas[m_areaIndex].m_firstIndex, lod0->m_areas[m_areaIndex].m_primitiveCount * 3 );
+				capacity.indices = Tr2RtIndicesStreamAL( highestLod->m_indexAllocation.GetBuffer(), highestLod->m_indexAllocation.GetStride(), highestLod->m_indexAllocation.GetStartIndex() + highestLod->m_areas[m_areaIndex].m_firstIndex, highestLod->m_areas[m_areaIndex].m_primitiveCount * 3 );
 			}
 
 			if( FAILED( m_blas.Create( geometry, capacity, Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_BUILD | Tr2RtBuildFlags::ALLOW_UPDATE, renderContext.GetPrimaryRenderContext() ) ) )
@@ -427,52 +424,53 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 		return m_blas;
 	}
 
-	if( !meshData->m_areas[m_areaIndex].m_staticBlas.IsValid() )
+	if( !lod->m_areas[m_areaIndex].m_staticBlas.IsValid() )
 	{
 		auto vertexStream = Tr2RtPositionStreamAL(
-			meshData->m_vertexAllocation.GetBuffer(),
-			meshData->m_vertexAllocation.GetStride(),
-			meshData->m_vertexCount,
-			meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+			lod->m_vertexAllocation.GetBuffer(),
+			lod->m_vertexAllocation.GetStride(),
+			lod->m_vertexCount,
+			lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 			0,
 			Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32_FLOAT );
 		auto indexStream = Tr2RtIndicesStreamAL(
-			meshData->m_indexAllocation.GetBuffer(),
-			meshData->m_indexAllocation.GetStride(),
-			meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[m_areaIndex].m_firstIndex,
-			meshData->m_areas[m_areaIndex].m_primitiveCount * 3 );
+			lod->m_indexAllocation.GetBuffer(),
+			lod->m_indexAllocation.GetStride(),
+			lod->m_indexAllocation.GetStartIndex() + lod->m_areas[m_areaIndex].m_firstIndex,
+			lod->m_areas[m_areaIndex].m_primitiveCount * 3 );
 
-		meshData->m_areas[m_areaIndex].m_staticBlas.Create(
+		lod->m_areas[m_areaIndex].m_staticBlas.Create(
 			{ vertexStream, indexStream },
 			Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY,
 			Tr2RtBuildFlags::PREFER_FAST_TRACE,
 			renderContext.GetPrimaryRenderContext() );
 	}
-	return meshData->m_areas[m_areaIndex].m_staticBlas;
+	return lod->m_areas[m_areaIndex].m_staticBlas;
 }
 
 const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const
 {
-	TriGeometryResMeshData* meshData = mesh.GetMeshData();
-	if( !meshData || m_areaIndex >= meshData->m_areas.size() )
+	TriGeometryResLodData* lod = mesh.GetCurrentLodData();
+	if( !lod || m_areaIndex >= lod->m_areas.size() )
 	{
 		return nullptr; //No mesh data or area index out of bounds
 	}
-	if( !meshData->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
+	if( !lod->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
 	{
-		if( SUCCEEDED( meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Create( sizeof( TriRtGeometryConstants ), renderContext.GetPrimaryRenderContext() ) ) )
+		if( SUCCEEDED( lod->m_areas[m_areaIndex].m_rtGeometryConstants.Create( sizeof( TriRtGeometryConstants ), renderContext.GetPrimaryRenderContext() ) ) )
 		{
 			TriRtGeometryConstants* data;
-			if( SUCCEEDED( meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Lock( (void**)&data, renderContext ) ) )
+			if( SUCCEEDED( lod->m_areas[m_areaIndex].m_rtGeometryConstants.Lock( (void**)&data, renderContext ) ) )
 			{
 				*data = TriRtGeometryConstants{};
+
 				Tr2VertexDefinition def;
-				Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, def );
+				Tr2EffectStateManager::GetVertexDeclarationElements( lod->m_mesh->m_vertexDeclarationHandle, def );
 				for( auto it = begin( def.m_items ); it != end( def.m_items ); ++it )
 				{
 					if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
 					{
-						data->positionOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->positionOffset = it->m_offset + lod->m_vertexAllocation.GetOffset();
 						data->positionType = it->m_dataType;
 
 						uint32_t type = data->positionType;
@@ -484,7 +482,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 
 					if( it->m_usage == Tr2VertexDefinition::NORMAL && it->m_usageIndex == 0 && it->m_stream == 0 )
 					{
-						data->normalOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->normalOffset = it->m_offset + lod->m_vertexAllocation.GetOffset();
 						data->normalType = it->m_dataType;
 
 						uint32_t type = data->normalType;
@@ -497,7 +495,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 
 					if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
 					{
-						data->tangentOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->tangentOffset = it->m_offset + lod->m_vertexAllocation.GetOffset();
 						data->tangentType = it->m_dataType;
 
 						uint32_t type = data->tangentType;
@@ -512,7 +510,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 
 					if( it->m_usage == Tr2VertexDefinition::BITANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
 					{
-						data->bitangentOffset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->bitangentOffset = it->m_offset + lod->m_vertexAllocation.GetOffset();
 						data->bitangentType = it->m_dataType;
 
 						uint32_t type = data->bitangentType;
@@ -525,7 +523,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 
 					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
 					{
-						data->texCoord0Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->texCoord0Offset = it->m_offset + lod->m_vertexAllocation.GetOffset();
 						data->texCoord0Type = it->m_dataType;
 
 						uint32_t type = data->texCoord0Type;
@@ -538,7 +536,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 
 					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 1 && it->m_stream == 0 )
 					{
-						data->texCoord1Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->texCoord1Offset = it->m_offset + lod->m_vertexAllocation.GetOffset();
 						data->texCoord1Type = it->m_dataType;
 
 						uint32_t type = data->texCoord1Type;
@@ -551,7 +549,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 
 					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 2 && it->m_stream == 0 )
 					{
-						data->texCoord2Offset = it->m_offset + meshData->m_vertexAllocation.GetOffset();
+						data->texCoord2Offset = it->m_offset + lod->m_vertexAllocation.GetOffset();
 						data->texCoord2Type = it->m_dataType;
 
 						uint32_t type = data->texCoord2Type;
@@ -565,30 +563,30 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 					// skipping blending data because we get gpu skinned meshes as input (see SkinVertices.fx), so it shouldn't be required for raytracing shaders
 				}
 
-				data->vertexBufferId = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
-				data->vertexBufferStride = meshData->m_vertexAllocation.GetStride();
-				data->indexBufferId = meshData->m_indexAllocation.GetBuffer().GetSrvIndexInHeap();
-				data->indexBufferStride = meshData->m_indexAllocation.GetStride();
-				data->indexOffset = meshData->m_areas[m_areaIndex].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
+				data->vertexBufferId = lod->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
+				data->vertexBufferStride = lod->m_vertexAllocation.GetStride();
+				data->indexBufferId = lod->m_indexAllocation.GetBuffer().GetSrvIndexInHeap();
+				data->indexBufferStride = lod->m_indexAllocation.GetStride();
+				data->indexOffset = lod->m_areas[m_areaIndex].m_firstIndex * lod->m_indexAllocation.GetStride() + lod->m_indexAllocation.GetOffset();
 
-				meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Unlock( renderContext );
+				lod->m_areas[m_areaIndex].m_rtGeometryConstants.Unlock( renderContext );
 			}
 		}
 	}
 	else
 	{
 		TriRtGeometryConstants* data;
-		if( SUCCEEDED( meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Lock( (void**)&data, renderContext ) ) )
+		if( SUCCEEDED( lod->m_areas[m_areaIndex].m_rtGeometryConstants.Lock( (void**)&data, renderContext ) ) )
 		{
-			data->vertexBufferId = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
-			data->vertexBufferStride = meshData->m_vertexAllocation.GetStride();
-			data->indexBufferId = meshData->m_indexAllocation.GetBuffer().GetSrvIndexInHeap();
-			data->indexBufferStride = meshData->m_indexAllocation.GetStride();
-			data->indexOffset = meshData->m_areas[m_areaIndex].m_firstIndex * meshData->m_indexAllocation.GetStride() + meshData->m_indexAllocation.GetOffset();
-			meshData->m_areas[m_areaIndex].m_rtGeometryConstants.Unlock( renderContext );
+			data->vertexBufferId = lod->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
+			data->vertexBufferStride = lod->m_vertexAllocation.GetStride();
+			data->indexBufferId = lod->m_indexAllocation.GetBuffer().GetSrvIndexInHeap();
+			data->indexBufferStride = lod->m_indexAllocation.GetStride();
+			data->indexOffset = lod->m_areas[m_areaIndex].m_firstIndex * lod->m_indexAllocation.GetStride() + lod->m_indexAllocation.GetOffset();
+			lod->m_areas[m_areaIndex].m_rtGeometryConstants.Unlock( renderContext );
 		}
 	}
-	return &meshData->m_areas[m_areaIndex].m_rtGeometryConstants;
+	return &lod->m_areas[m_areaIndex].m_rtGeometryConstants;
 }
 
 // ***************** Tr2RaytracingGeometry *****************
@@ -769,8 +767,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 
 		Tr2RaytracingMesh* mesh = it->mesh;
-		TriGeometryResMeshData* meshData = mesh->GetMeshData();
-		if( meshData && ( meshData->m_areas[it->area->GetAreaIndex()].m_isSkinned || meshData->m_areas[it->area->GetAreaIndex()].m_isMorphed ) )
+		TriGeometryResLodData* lod = mesh->GetCurrentLodData();
+		if( lod && ( lod->m_areas[it->area->GetAreaIndex()].m_isSkinned  || lod->m_areas[it->area->GetAreaIndex()].m_isMorphed ) )
 		{
 			if( !mesh->GetAndResetDirtyFlag() )
 			{
@@ -779,7 +777,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 			outdatedMeshes.push_back( &(*it) );
 
-			skinnedVertexCount += meshData->m_vertexCount;
+			skinnedVertexCount += lod->m_vertexCount;
 		}
 	}
 
@@ -854,25 +852,25 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
 		{
 			Tr2RaytracingMesh* mesh = ( *it )->mesh;
-			TriGeometryResMeshData* meshData = mesh->GetMeshData();
-			if( !meshData )
+			TriGeometryResLodData* lod = mesh->GetCurrentLodData();
+			if( !lod )
 			{
 				return;
 			}
 
-			auto vertexCount = meshData->m_vertexCount;
+			auto vertexCount = lod->m_vertexCount;
 
 			SkinningShaderCBuffer* constData;
 			m_skinVerticesData.Lock( (void**)&constData, renderContext );
 
 			constData->vertexCount = vertexCount;
-			constData->stride = meshData->m_vertexAllocation.GetStride() / 4;
-			auto offsets = FindOffsets( meshData->m_vertexDeclaration );
-			constData->positionOffset = offsets.positionOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
-			constData->boneOffset = offsets.boneOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
-			constData->boneWeightsOffset = offsets.boneWeightsOffset == 0xffffffff ? offsets.boneWeightsOffset : offsets.boneWeightsOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
+			constData->stride = lod->m_vertexAllocation.GetStride() / 4;
+			auto offsets = FindOffsets( lod->m_mesh->m_vertexDeclarationHandle );
+			constData->positionOffset = offsets.positionOffset / 4 + lod->m_vertexAllocation.GetOffset() / 4;
+			constData->boneOffset = offsets.boneOffset / 4 + lod->m_vertexAllocation.GetOffset() / 4;
+			constData->boneWeightsOffset = offsets.boneWeightsOffset == 0xffffffff ? offsets.boneWeightsOffset : offsets.boneWeightsOffset / 4 + lod->m_vertexAllocation.GetOffset() / 4;
 			constData->transformOffset = mesh->GetTransformOffset();
-			constData->inVB = meshData->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
+			constData->inVB = lod->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
 			constData->outVB = m_skinnedVertices.GetUavIndexInHeap();
 			constData->outVBOffset = outOffset * 3;
 			constData->morphAnimationDataOffset = 0;
@@ -880,15 +878,15 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			constData->morphTargetPositionOffset = 0;
 			constData->morphTargetStride = 0;
 			constData->morphTargetSize = 0;
-			constData->bakedMorphTargetPositionOffset= UINT32_MAX;
-			if ( meshData->m_morphTargetAllocation.IsValid() )
+			constData->bakedMorphTargetPositionOffset = UINT32_MAX;
+			if( lod->m_morphTargetAllocation.IsValid() )
 			{
-				auto morphOffsets = FindOffsets( meshData->m_morphVertexDeclaration );
+				auto morphOffsets = FindOffsets( lod->m_morphVertexDeclaration );
 				constData->morphAnimationDataOffset = mesh->m_morphAnimationDataOffset;
 				constData->morphAnimationDataCount = mesh->m_morphAnimationDataCount;
-				constData->morphTargetPositionOffset = ( meshData->m_morphTargetAllocation.GetOffset() + sizeof( TriMorphTargetGeometryConstants ) + morphOffsets.positionOffset ) >> 2;
-				constData->morphTargetStride = meshData->m_bytesPerMorphTargetVertex >> 2;
-				constData->morphTargetSize = ( meshData->m_bytesPerMorphTargetVertex * vertexCount ) >> 2;
+				constData->morphTargetPositionOffset = ( lod->m_morphTargetAllocation.GetOffset() + sizeof( TriMorphTargetGeometryConstants ) + morphOffsets.positionOffset ) >> 2;
+				constData->morphTargetStride = lod->m_bytesPerMorphTargetVertex >> 2;
+				constData->morphTargetSize = ( lod->m_bytesPerMorphTargetVertex * vertexCount ) >> 2;
 				constData->bakedMorphTargetPositionOffset = ( *it )->bakedMorphOffset;
 
 			}
@@ -897,7 +895,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			renderContext.SetConstants( m_skinVerticesData, Tr2RenderContextEnum::COMPUTE_SHADER, perObjVSRegister );
 
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12
-			inVB.m_buffer = meshData->m_vertexAllocation.GetBuffer();
+			inVB.m_buffer = lod->m_vertexAllocation.GetBuffer();
             inVbParam->SetGpuBuffer( &inVB );
 #endif
 			// cheat a bit instead of calling RunComputeShader() to make things more performant
@@ -924,7 +922,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 			mesh->SetSkinnedVertices( m_skinnedVertices, outOffset );
 
-			outOffset += meshData->m_vertexCount;
+			outOffset += lod->m_vertexCount;
 		}
 	}
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12

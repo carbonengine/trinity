@@ -256,8 +256,8 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 		}
 	}
 
-	auto mesh = geometryResource->GetMeshData( m_meshIndex );
-	if( !mesh || !mesh->m_allocationsValid )
+	auto lod = geometryResource->GetMeshLod( m_meshIndex, screenSize );
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
@@ -283,7 +283,7 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 			continue;
 		}
 
-		auto primCount = GetPrimitiveCount( *mesh, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
+		auto primCount = GetPrimitiveCount( *lod, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
 		if( !primCount )
 		{
 			continue;
@@ -293,34 +293,34 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 		{
 			reversed = !reversed;
 		}
-		if( reversed && !mesh->m_reversedIndicesValid )
+		if( reversed && !lod->m_reversedIndicesValid )
 		{
 			continue;
 		}
-		auto& meshArea = mesh->m_areas[area->GetIndex()];
+		auto& lodArea = lod->m_areas[area->GetIndex()];
 
 		Tr2RenderBatch batch;
 		batch.SetMaterial( shadMat );
 		batch.SetPerObjectData( data );
-		batch.SetGeometry( m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+		batch.SetGeometry( m_vertexDeclaration, lod->m_vertexAllocation, lod->m_indexAllocation );
 		batch.SetStreamSource( 1, instanceData.buffer, instanceData.stride );
 
-		auto& indices = reversed ? mesh->m_reversedIndexAllocation : mesh->m_indexAllocation;
+		auto& indices = reversed ? lod->m_reversedIndexAllocation : lod->m_indexAllocation;
 		uint32_t startIndex;
 		if( reversed )
 		{
-			startIndex = indices.GetStartIndex() + mesh->m_primitiveCount * 3 - meshArea.m_firstIndex - primCount * 3;
+			startIndex = indices.GetStartIndex() + lod->m_primitiveCount * 3 - lodArea.m_firstIndex - primCount * 3;
 		}
 		else
 		{
-			startIndex = indices.GetStartIndex() + meshArea.m_firstIndex;
+			startIndex = indices.GetStartIndex() + lodArea.m_firstIndex;
 		}
 
 		batch.SetDrawIndexedInstanced(
 			primCount * 3,
 			instanceData.count,
 			startIndex,
-			mesh->m_vertexAllocation.GetOffset() / mesh->m_vertexAllocation.GetStride(),
+			lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 			instanceData.offset / instanceData.stride );
 
 		batches->Commit( batch );
@@ -460,7 +460,7 @@ static bool GetMeshVertexDeclaration( TriGeometryRes* geometryRes, int meshIndex
 	{
 		return false;
 	}
-	return Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, vd );
+	return Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclarationHandle, vd );
 }
 
 // --------------------------------------------------------------------------------------

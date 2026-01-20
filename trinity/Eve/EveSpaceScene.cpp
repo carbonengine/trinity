@@ -59,7 +59,6 @@ CCP_STATS_DECLARE( shadowsRendered, "Trinity/EveSpaceScene/shadowsRendered", tru
 CCP_STATS_DECLARE( raytracedShadowsTime, "Trinity/EveSpaceScene/raytracedShadowsTime", true, CST_TIME, "Time it took to set up raytraced shadows" );
 CCP_STATS_DECLARE( shLightingUpdateTime, "Trinity/EveSpaceScene/shLightingUpdateTime", true, CST_TIME, "Time took to update SH lighting for EveSpaceScene" );
 CCP_STATS_DECLARE( gatherDynamicLights, "Trinity/EveSpaceScene/gatherDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
-CCP_STATS_DECLARE( updateDynamicLightLists, "Trinity/EveSpaceScene/updateDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
 
 
 
@@ -165,15 +164,12 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_update( true ),
 	m_shadowQuality( ShadowQuality::SHADOW_RAYTRACED ),
 	m_enableShadows( true ),
-	m_displayShadowMap( false ),
 	m_visualizeMethod( VM_NONE ),
 	m_perFrameDebug( 0.f ),
 	m_pickBuffer( NULL, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1 ),
 	m_envMapRotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_backgroundRenderingEnabled( false ),
-	m_mainPassRenderingEnabled( true ),
 	m_updateContext( 0 ),
-	m_ssaoMapHandle( nullptr ),
 	m_staticEnvMapHandle( NULL ),
 	m_envMapHandle( NULL ),
 	m_envMap1Var( "EnvMap1", m_envMap1 ),
@@ -202,9 +198,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_reflectionBackLightingContrast( 8.0f ),
 	m_reflectionBackLightingColor( 2.0f, 2.0f, 2.0f, 2.0f ),
 	m_dynamicObjectReflectionEnabled( true ),
-	m_hasBackgroundDistortionBatches( false ),
-	m_hasForegroundDistortionBatches( false ),
-	m_freezeFrustum( false ),
 	m_velocityMapDirty( false ),
 	m_virtualCameraSystem(),
 	m_projection( IdentityMatrix() ),
@@ -212,8 +205,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_jitteredProjection( IdentityMatrix() ),
 	m_reprojectionMatrix( IdentityMatrix() ),
 	m_jitter( 0.f, 0.f, 0.f, 0.f ),
-	m_upscalingAmount( 1.0f ),
-	m_usingUpscaling( false )
+	m_upscalingAmount( 1.0f )
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_primaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -248,7 +240,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	// register variable handle to texture
 	m_envMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneEnvMap", (ITr2TextureProvider*)nullptr );
 	m_staticEnvMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneStaticEnvMap", (ITr2TextureProvider*)nullptr );
-	m_ssaoMapHandle = GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
+	GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2BoneTransformBuffer::GetInstance() );
 	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2MorphTargetAnimationDataBuffer::GetInstance() );
 
@@ -273,7 +265,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_uiObjects.SetNotify( this );
 
 	m_dataTextureMgr.CreateInstance();
-	m_postProcessPSBuffer.CreateInstance();
 	m_planetPerObjBuffer.CreateInstance();
 
 	m_visualizerEffects[VW_LIGHT_COUNT].type = VisualizerEffect::FULL_SCREEN_QUAD_OVERLAY;
@@ -288,9 +279,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_volumetricsRenderer.CreateInstance();
 
 	m_rtManager.CreateInstance();
-
-	m_emptyShadowMap.CreateInstance();
-	BeResMan->GetResource( "res:/texture/global/white.dds", "", m_emptyShadowMap );
 
 	m_sceneDefaultPostProcessAttributes.CreateInstance();
 	m_combinedPostProcessAttributes.CreateInstance();
@@ -328,11 +316,6 @@ void EveSpaceScene::ReleaseResources( TriStorage s )
 	if( m_envMapHandle )
 	{
 		m_envMapHandle->Clear();
-	}
-
-	if( m_ssaoMapHandle )
-	{
-		m_ssaoMapHandle->Clear();
 	}
 
 	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
@@ -418,16 +401,6 @@ Tr2PostProcess2Ptr EveSpaceScene::GetPostProcess()
 	return m_combinedPostProcess;
 }
 
-Tr2ShaderBufferPtr EveSpaceScene::GetPostProcessPSBuffer()
-{
-	return m_postProcessPSBuffer;
-}
-
-void EveSpaceScene::SetVelocityMap( Tr2RenderTargetPtr velocityMap )
-{
-	m_velocityMap = velocityMap;
-}
-
 bool EveSpaceScene::OnPrepareResources()
 {
 	return true;
@@ -439,8 +412,30 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		Tr2BoneTransformBuffer::GetInstance().SetFrameNumbers( renderContext.GetRecordingFrameNumber(), renderContext.GetRenderedFrameNumber() );
-		Tr2MorphTargetAnimationDataBuffer::GetInstance().SetFrameNumbers( renderContext.GetRecordingFrameNumber(), renderContext.GetRenderedFrameNumber() );
+		auto frame = renderContext.GetRecordingFrameNumber();
+		Tr2BoneTransformBuffer::GetInstance().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
+		Tr2MorphTargetAnimationDataBuffer::GetInstance().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
+		
+		if( frame == m_lastUpdateFrame )
+		{
+			// already updated this frame
+
+			TriFrustum frustum;
+			frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), Tr2Renderer::GetViewport() );
+
+			m_updateContext.SetFrustum( frustum );
+			m_updateContext.SetHighDetailThreshold( g_eveSpaceSceneHighDetailThreshold / m_upscalingAmount );
+			m_updateContext.SetMediumDetailThreshold( g_eveSpaceSceneMediumDetailThreshold / m_upscalingAmount );
+			m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / m_upscalingAmount );
+			m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / m_upscalingAmount );
+			m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / m_upscalingAmount );
+			m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
+
+			// update the combined postprocess attributes
+			UpdatePostProcessAttributes();
+			return;
+		}
+		m_lastUpdateFrame = frame;
 	}
 
 	if( !m_update )
@@ -582,13 +577,13 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateTime = simTime;
 }
 
-void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap& shadowMap, const TriFrustum& viewFrustum, Tr2DepthStencil* depthMap, Tr2RenderContext& renderContext )
+EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap& shadowMap, const TriFrustum& viewFrustum, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_componentRegistry )
 	{
-		return;
+		return {};
 	}
 
 	size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
@@ -597,7 +592,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 
 	if( shadowCasterCount + volumetricCount + fogCount == 0 )
 	{
-		return;
+		return {};
 	}
 
 	TriFrustum cameraFrustums[SHADOW_FRUSTUM_COUNT];
@@ -630,26 +625,14 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 		cameraFrustums[splitIndex] = frustum;
 
 		shadowFrustums[splitIndex] = splitSetupInfo.shadowFrustum;
-
-		// debug frustum
-		if( m_debugRenderer && m_freezeFrustum )
-		{
-			Vector3 min = Vector3( -1, -1, 0 );
-			Vector3 max = Vector3( 1, 1, 1 );
-			Vector3 aabbMin = splitSetupInfo.aabb.m_min;
-			Vector3 aabbMax = splitSetupInfo.aabb.m_max;
-
-			m_debugRenderer->DrawBox( this, splitSetupInfo.invViewProj, min, max, Tr2DebugRenderer::Wireframe, shadowMap.GetDebugColors( splitIndex ) );
-			m_debugRenderer->DrawBox( this, Inverse( splitSetupInfo.lightViewProjection ), aabbMin, aabbMax, Tr2DebugRenderer::Wireframe, shadowMap.GetDebugColors( splitIndex ) );
-		}
-
 		splitSetup[splitIndex] = splitSetupInfo;
 	}
 
 	// if the shadow map DS isn't set then skip everything
-	if( !shadowMap.PrepareShadowRendering( renderContext ) )
+	auto cascadedShadowDepth = shadowMap.PrepareShadowRendering( gpuResourcePool, renderContext );
+	if( !cascadedShadowDepth.IsValid() )
 	{
-		return;
+		return {};
 	}
 
 	// Get shadow batches in parallel
@@ -770,12 +753,13 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2Shado
 		PopulatePerFramePSData( m_perFramePS, &shadowMap, renderContext );
 		ApplyPerFrameData( renderContext );
 		SetupPlanetsAsShadowCaster( renderContext );
-		shadowMap.DrawToShadowMapResult( renderContext, depthMap, m_upscalingAmount );
+		auto result = shadowMap.DrawToShadowMapResult( renderContext, gpuResourcePool, depthMap, cascadedShadowDepth, m_upscalingAmount );
 
 		if( renderReason == TR2RENDERREASON_NORMAL && m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
 		{
-			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, shadowMap.GetShadowMap(), renderContext );
+			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, result, renderContext );
 		}
+		return { result, cascadedShadowDepth };
 	}
 }
 
@@ -792,11 +776,6 @@ void EveSpaceScene::ApplyUpscalingToPerFrameData( uint32_t width, uint32_t heigh
 	m_perFramePS.ViewportSize.x = (float)width;
 	m_perFramePS.ViewportSize.y = (float)height;
 	ApplyPerFrameData( renderContext );
-}
-
-void EveSpaceScene::DisableShadows()
-{
-	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 }
 
 void EveSpaceScene::ApplyPerFrameData( Tr2RenderContext& renderContext )
@@ -937,7 +916,7 @@ void GetBatchesFromRenderables(
 //   objectsWithTransparencies - out, a list of renderables with transparencies
 //   batches - the batch map to be used
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason )
+void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason )
 {
 	if( objectRenderables.empty() || !Tr2Renderer::GetPoolAllocator() )
 	{
@@ -954,7 +933,7 @@ void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& 
 		};
 
 	unsigned typeCount = unsigned( sizeof( s_allTypes ) / sizeof( s_allTypes[0] ) );
-	if( !m_distortionMap )
+	if( !includeDistortions )
 	{
 		typeCount -= 1;
 	}
@@ -1020,7 +999,7 @@ void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>
 //   objectsWithTransparencies - a list of renderables with transparencies
 //   batches - the batch map to be used
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason )
+void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1035,7 +1014,7 @@ void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Render
 			TRIBATCHTYPE_DISTORTION
 		};
 
-	unsigned typeCount = m_distortionMap ? 2 : 1;
+	unsigned typeCount = includeDistortions ? 2 : 1;
 
 	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, m_perThreadBatches, s_allTypes, typeCount, reason );
 }
@@ -1209,22 +1188,22 @@ void EveSpaceScene::RenderTransparentBatches2( BatchMap& batches, Tr2RenderConte
 //   renderingContext - Tr2RenderContext for rendering( unused at the moment ).
 //   batches - BatchMap that contains the distortion batches to be rendered
 // --------------------------------------------------------------------------------------
-bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, Tr2RenderContext& renderContext )
+bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, const Tr2TextureAL& distortionMap, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_distortionMap || !batches[TRIBATCHTYPE_DISTORTION]->GetBatchCount() )
+	if( !batches[TRIBATCHTYPE_DISTORTION]->GetBatchCount() )
 	{
 		return false;
 	}
 
 	// Hold on to original depth stencil and back buffer
-	Tr2PushPopRT pushPopRT( *m_distortionMap, renderContext );
+	Tr2PushPopRT pushPopRT( distortionMap, renderContext );
 	Tr2PushPopDS pushPopDS( renderContext );
 
-	if( m_depthMap && m_depthMap->IsValid() )
+	if( depthMap.IsValid() )
 	{
-		renderContext.m_esm.SetDepthStencilBuffer( *m_depthMap );
+		renderContext.m_esm.SetDepthStencilBuffer( depthMap );
 	}
 
 
@@ -1243,19 +1222,28 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 	m_projection = Tr2Renderer::GetProjectionTransform();
 
 	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-	if( m_usingUpscaling && upscalingInfo.temporal )
+	if( upscalingInfo.technique != Tr2UpscalingAL::NONE && upscalingInfo.temporal )
 	{	
 		m_jitter.x = upscalingInfo.jitterX;
 		m_jitter.y = upscalingInfo.jitterY;
 		m_jitterMatrix = TranslationMatrix( Vector3( m_jitter.x, m_jitter.y, 0 ) );
 		m_jitteredProjection = m_projection * m_jitterMatrix;
 	}
-	else if( m_sceneDefaultPostProcess )
+	else if( m_sceneDefaultPostProcess && m_sceneDefaultPostProcess->GetTaa() && m_sceneDefaultPostProcess->GetTaa()->IsActive() )
 	{
 		auto rtWidth = renderContext.m_esm.GetRenderTargetWidth();
 		auto rtHeight = renderContext.m_esm.GetRenderTargetHeight();
+		const Vector2 samplingPatterns[] = { Vector2( .125f, -.375f ),
+												Vector2( -.125f, .375f ),
+												Vector2( .375f, .125f ),
+												Vector2( -.375f, -.125f ) };
 
-		m_sceneDefaultPostProcess->GetJitter( rtWidth, rtHeight, m_jitter.x, m_jitter.y );
+		auto frame = renderContext.GetPrimaryRenderContext().GetRecordingFrameNumber();
+		auto samplingIndex = frame % ( sizeof( samplingPatterns ) / sizeof( samplingPatterns[0] ) );
+
+		m_jitter.x = 2.0f * samplingPatterns[samplingIndex].x / float( rtWidth );
+		m_jitter.y = 2.0f * samplingPatterns[samplingIndex].y / float( rtHeight );
+
 		auto currJitterOffset = Vector3( m_jitter.x, m_jitter.y, 0 );
 
 		m_jitterMatrix = TranslationMatrix( currJitterOffset );
@@ -1269,20 +1257,12 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 	}
 }
 
-void EveSpaceScene::UpdatePostProcessPSData()
-{
-	m_postProcessPSData.DeltaT = m_updateContext.GetDeltaT();
-	m_postProcessPSData.OriginShift = m_updateContext.GetOriginShift();
-
-	m_postProcessPSBuffer->SetData( (void*)&m_postProcessPSData, sizeof( m_postProcessPSData ) );
-}
-
 
 // --------------------------------------------------------------------------------------
 // Description:
 //   Set up rendering states, frustum and gather all batches.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
+void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1291,15 +1271,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
-	if( !allocator )
-	{
-		return;
-	}
-
 	renderContext.AddGpuMarker( __FUNCTION__ );
-	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-	m_usingUpscaling = upscalingInfo.technique != Tr2UpscalingAL::NONE;
 
 	if( m_visualizeMethod != VM_NONE )
 	{
@@ -1323,8 +1295,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	Jitter( renderContext );
 
-	m_frameData.projection = m_jitteredProjection;
-	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
+	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
 	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( Tr2Renderer::GetViewTransform() ) * m_viewLast * m_projectionLast;
 	
 	m_velocityMapDirty = false;
@@ -1383,14 +1354,13 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		Tr2LightManager::DeleteInstance();
 	}
 
-	GatherBatches( renderContext );
+	GatherBatches( enableDistortion, renderContext );
 
 	if( m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows )
 	{
 		PrepareRaytracedShadows( renderContext );
 	}
 
-	UpdatePostProcessPSData();
 	UpdateVariableStore();
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
@@ -1421,14 +1391,6 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		( *it )->PrepareRender( m_updateContext.GetFrustum() );
 	}
 
-	if( m_velocityMap )
-	{
-#if !TRINITY_PLATFORM_SUPPORTS_RENDER_PASS_HINTS
-		Tr2PushPopRT rt( *m_velocityMap, renderContext, 1 );
-		renderContext.Clear( CLEARFLAGS_TARGET, 0x00000000, 1.f, 0, 1 );
-#endif
-	}
-
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
 	ApplyPerFrameData( renderContext );
@@ -1438,7 +1400,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 // Description:
 //   Gather all batches into the m_primaryBatches BatchMap.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
+void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1517,7 +1479,7 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_OPAQUE, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
 	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_ADDITIVE, m_primaryBatches[TRIBATCHTYPE_ADDITIVE] );
 
-	GetAllBatchesFromRenderables( renderables, transparentObjects, m_primaryBatches );
+	GetAllBatchesFromRenderables( renderables, transparentObjects, includeDistortions, m_primaryBatches );
 	PrepareTransparentBatch( transparentObjects, m_primaryBatches );
 
 	FinalizeBatches( m_primaryBatches );
@@ -1593,10 +1555,6 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 	m_impostorManager->BeginUpdateAtlas( renderContext );
 	ON_BLOCK_EXIT( [&] { m_impostorManager->EndUpdateAtlas( renderContext ); } );
 
-	Tr2DepthStencilPtr bkDepthMap = m_depthMap;
-	m_depthMap = m_impostorManager->GetItemDepthStencil();
-	ON_BLOCK_EXIT( [&] { m_depthMap = bkDepthMap; } );
-
 	ITr2TextureProvider* bkDepthMapTexVar = nullptr;
 
 	if( m_depthMapVar.GetType() == TRIVARIABLE_TEXTURE_RES )
@@ -1622,16 +1580,9 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 	} );
 
 	UpdateVariableStore();
-	if( m_ssao )
-	{
-		m_ssaoMapHandle->SetValue( m_ssao->GetBlankOutput() );
-	}
 
 	Vector3 eye = Tr2Renderer::GetInverseViewTransform().GetTranslation();
 	Vector3 up = TransformNormal( Vector3( 0, 1, 0 ), Tr2Renderer::GetInverseViewTransform() );
-
-	// disable shadows because otherwise we get black ships all the time
-	DisableShadows();
 
 	for( size_t i = 0; i < m_impostorManager->GetRenderQueueLength(); ++i )
 	{
@@ -1769,7 +1720,7 @@ Tr2QuadRenderer* EveSpaceScene::GetQuadRenderer() const
 	return Tr2QuadRenderer::Instance();
 }
 
-void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
+void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
 	if( !HasReflectionProbe() || !m_display )
 	{
@@ -1789,15 +1740,6 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	{
 		m_currentReflectionIntensity = min( 0.8f, 1.0f / ( m_currentReflectionIntensity * m_currentReflectionIntensity ) );
 	}
-
-	// disable ssao
-	if( m_ssao )
-	{
-		m_ssaoMapHandle->SetValue( m_ssao->GetBlankOutput() );
-	}
-
-	// disable shadows
-	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
 
 	{
 		// Override DepthMap in the variable store
@@ -1874,7 +1816,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 			TriFrustum currentFrustum = m_reflectionProbe->GetFrustum( i, renderContext );
 			m_updateContext.SetFrustum( currentFrustum );
 			// get the background reflection renderables from the component registry
-			RenderBackgroundPassObjects( renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );
+			RenderBackgroundPassObjects( {}, {}, renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );
 
 			if( g_lensflaresInReflections && !m_lensflares.empty() && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA )
 			{
@@ -1926,7 +1868,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 					renderContext.m_esm.BeginManagedRendering( CullMode::CULLMODE_NONE );
 
 					Tr2RenderableSortList transparentObjects;
-					GetAllBatchesFromRenderables( visibleRenderables, transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
+					GetAllBatchesFromRenderables( visibleRenderables, transparentObjects, false, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
 
 					PrepareTransparentBatch( transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
 					FinalizeBatches( m_secondaryBatches );
@@ -1934,6 +1876,8 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 					renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DEPTH_ONLY );
 					renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_OPAQUE], BlueSharedString( "Depth" ) );
 					renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
+
+					EveSpaceScene::ShadowResources shadowResources;
 
 					if( m_enableShadows && m_shadowQuality != ShadowQuality::SHADOW_DISABLED && m_reflectionShadowMap )
 					{
@@ -1951,26 +1895,33 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 						if( reallyHaveShadows )
 						{
 							renderContext.m_esm.SetInvertedCullMode( false );
-							SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, currentFrustum, nullptr, renderContext );
+							shadowResources = SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, currentFrustum, m_reflectionProbe->GetDepthBuffer( i ), gpuResourcePool, renderContext );
 							renderContext.m_esm.SetInvertedCullMode( true );
 						}
 					}
 
 					// TODO: raytraced shadows here
+					RegisterWithVariableStore( shadowResources, gpuResourcePool );
 
 					renderContext.SetReadOnlyDepth( true );
 
 					RenderOpaqueBatches( m_secondaryBatches, renderContext );
 
+					Tr2GpuResourcePool::Texture froxelFog;
 					if( m_volumetricsRenderer )
 					{
 						uint32_t width = Tr2Renderer::GetViewport().width;
 						uint32_t height = Tr2Renderer::GetViewport().height;
 						Vector3d origin = m_updateContext.GetOrigin();
-						m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, width, height, m_sunData.DirWorld, m_currentSunColor, origin, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
+						froxelFog = m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, gpuResourcePool, width, height, m_sunData.DirWorld, m_currentSunColor, origin, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
 					}
+					GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
+
 					RenderTransparentBatches( m_secondaryBatches, renderContext );
 					renderContext.SetReadOnlyDepth( false );
+
+					GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", Tr2TextureAL{} );
+					RegisterWithVariableStore( ShadowResources{}, gpuResourcePool );
 
 					ClearBatches( m_secondaryBatches );
 					renderContext.m_esm.EndManagedRendering();
@@ -1981,12 +1932,6 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 		m_reflectionProbe->EndRenderPass( renderContext );
 
 		m_updateContext.SetFrustum( normalFrustum );
-
-		// reset ssao
-		if( m_ssao )
-		{
-			m_ssaoMapHandle->SetValue( m_ssao->GetOutput() );
-		}
 
 		// reset the reflection intensity
 		m_currentReflectionIntensity = tmp;
@@ -2003,27 +1948,21 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 // Returns:
 //   boolean indicating whether background distortion is required.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
+bool EveSpaceScene::RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	m_hasBackgroundDistortionBatches = false;
+	bool hasBackgroundDistortionBatches = false;
 
 	// "background" rendering
 	if( !m_backgroundRenderingEnabled )
 	{
-		return;
+		return hasBackgroundDistortionBatches;
 	}
 
 	if( !m_display )
 	{
-		return;
-	}
-
-	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
-	if( !allocator )
-	{
-		return;
+		return hasBackgroundDistortionBatches;
 	}
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
@@ -2057,22 +1996,18 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	{
 		GPU_REGION( renderContext, "Background" );
 
-		if( m_velocityMap )
+		if( velocityMap.IsValid() )
 		{
-			if( !m_velocityMapDirty )
-			{
-				ClearRenderTargetIfNoBatches( m_velocityMap, 1, renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
-			}
-
-			Tr2PushPopRT rt( *m_velocityMap, renderContext, 1 );
+			Tr2PushPopRT rt( velocityMap, renderContext, 1 );
 			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { m_velocityMapDirty ? Tr2LoadAction::LOAD : Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
-			RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_COLOR );
+			renderContext.Clear( CLEARFLAGS_TARGET, 0x00000000, 1.f, 0, 1 );
+			hasBackgroundDistortionBatches = RenderBackgroundPassObjects( depthMap, distortionMap, renderContext, BACKGROUND_RENDER_COLOR );
 			m_velocityMapDirty = true;
 		}
 		else
 		{
 			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
-			RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_COLOR );
+			hasBackgroundDistortionBatches = RenderBackgroundPassObjects( depthMap, distortionMap, renderContext, BACKGROUND_RENDER_COLOR );
 		}
 		if( !m_planets.empty() )
 		{
@@ -2081,6 +2016,7 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	}
 
 	renderContext.m_esm.EndManagedRendering();
+	return hasBackgroundDistortionBatches;
 }
 
 // --------------------------------------------------------------------------------------
@@ -2089,12 +2025,14 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 // Returns:
 //   boolean indicating whether background distortion is required.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext, BackgroundRenderingReason reason )
+bool EveSpaceScene::RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, Tr2RenderContext& renderContext, BackgroundRenderingReason reason )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<ITr2Renderable*> visible;
 	Tr2RenderableSortList transparentObjects;
+
+	bool hasBackgroundDistortionBatches = false;
 
 
 	// nebula
@@ -2137,7 +2075,7 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 		}
 		if( !visible.empty() )
 		{
-			GetAllBatchesFromRenderables( visible, transparentObjects, m_secondaryBatches );
+			GetAllBatchesFromRenderables( visible, transparentObjects, false, m_secondaryBatches );
 			PrepareTransparentBatch( transparentObjects, m_secondaryBatches );
 			FinalizeBatches( m_secondaryBatches );
 
@@ -2184,25 +2122,29 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 		m_warpTunnel->UpdateVisibility( m_updateContext, IdentityMatrix() );
 		m_warpTunnel->GetRenderables( visible, nullptr );
 
-		GetTransparentBatchesFromRenderables( visible, transparentObjects, m_secondaryBatches );
+		GetTransparentBatchesFromRenderables( visible, transparentObjects, distortionMap.IsValid(), m_secondaryBatches );
 		PrepareTransparentBatch( transparentObjects, m_secondaryBatches );
 		FinalizeBatches( m_secondaryBatches );
 		RenderTransparentBatches( m_secondaryBatches, renderContext );
 		if( reason == BACKGROUND_RENDER_COLOR )
 		{
-			m_hasBackgroundDistortionBatches = RenderDistortionBatches( m_secondaryBatches, renderContext );
+			if( distortionMap.IsValid() )
+			{
+				hasBackgroundDistortionBatches = RenderDistortionBatches( m_primaryBatches, distortionMap, depthMap, renderContext );
+			}
 		}
 		ClearBatches( m_secondaryBatches );
 	}
 
 	renderContext.m_esm.EndManagedRendering();
+	return hasBackgroundDistortionBatches;
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
 //   Render opaque objects to populate a readable depth stencil.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const BlueSharedString& techniqueName )
+void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
     
@@ -2233,17 +2175,14 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		renderContext.AddGpuMarker( __FUNCTION__ );
 		GPU_REGION( renderContext, "Depth Pass" );
 
-		if( m_customStencil )
-		{
-			renderContext.m_esm.SetRenderTarget( 1, *m_customStencil );
-		}
+		renderContext.m_esm.SetRenderTarget( 1, customStencil );
 
 		Tr2EffectStateManager::RenderingMode renderingMode;
-		if( m_normalMap )
+		if( normalMap.IsValid() )
 		{
 			renderContext.m_esm.PushRenderTarget();
-			renderContext.m_esm.SetRenderTarget( 0, *m_normalMap );
-			if( m_customStencil )
+			renderContext.m_esm.SetRenderTarget( 0, normalMap );
+			if( customStencil.IsValid() )
 			{
 				renderContext.RenderPassHint( { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE } );
 				renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 1 );
@@ -2262,9 +2201,18 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 			Tr2TextureAL nullTex;
 			renderContext.SetRenderTarget( nullTex, 0 );
 #endif
-			renderContext.RenderPassHint( {}, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE } );
+			if( customStencil.IsValid() )
+			{
+				renderContext.RenderPassHint( {}, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE } );
+				renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 1 );
+				renderingMode = Tr2EffectStateManager::RM_OPAQUE;
+			}
+			else
+			{
+				renderContext.RenderPassHint( {}, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE } );
+				renderingMode = Tr2EffectStateManager::RM_DEPTH_ONLY;
+			}
 			renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
-			renderingMode = Tr2EffectStateManager::RM_DEPTH_ONLY;
 		}
 
 
@@ -2278,6 +2226,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 
 		// Planet z areas need special treatment
+		std::vector<ITr2Renderable*> visible;
 		for( auto it = m_planets.begin(); it != m_planets.end(); ++it )
 		{
 			EvePlanet* obj = *it;
@@ -2298,11 +2247,9 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 			renderContext.m_esm.ApplyStandardStates( renderingMode );
 			renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 			ClearBatches( m_secondaryBatches );
-
-			visible.clear();
 		}
 
-		if( m_normalMap )
+		if( normalMap.IsValid() )
 		{
 #if TRINITY_PLATFORM_SUPPORTS_RENDER_PASS_HINTS
 			renderContext.EndRenderPassHint();
@@ -2319,20 +2266,9 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 	}
 
 	renderContext.m_esm.EndManagedRendering();
-	
-	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_emptyShadowMap );
-
-
-
-
-	constexpr size_t maxPlanets = 2;
-	CcpMath::Sphere planets[maxPlanets];
-	SetupPlanetsAsShadowCaster( planets, maxPlanets );
-
 
 	if( m_volumetricsRenderer )
 	{
-
 		EvePlanet* sun = nullptr;
 		for( EvePlanet* planet : m_planets )
 		{
@@ -2343,7 +2279,6 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 			}
 		}
 		float angle = 0.0f;
-
 		if( sun != nullptr )
 		{
 			Vector3 worldPosition = sun->GetWorldPosition();
@@ -2352,62 +2287,15 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext, const Blue
 			float cosAngle = sqrtf( distance * distance - radius * radius ) / distance;
 			angle = acosf( cosAngle );
 		}
-
 		m_volumetricsRenderer->SetSunAngle( angle );
+
+		constexpr size_t maxPlanets = 2;
+		CcpMath::Sphere planets[maxPlanets];
+		SetupPlanetsAsShadowCaster( planets, maxPlanets );
+
 		m_volumetricsRenderer->SetPlanets( planets, maxPlanets );
 	}
 
-
-	if( m_mainPassRenderingEnabled && m_rtManager && m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows && m_depthMap && m_depthMap->IsValid() && !m_objects.empty() )
-	{
-		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
-		size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
-		if( volumetricCount + shadowCasterCount != 0 )
-		{
-			renderContext.SetReadOnlyDepth( true );
-			m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, planets, maxPlanets, m_upscalingAmount, renderContext );
-
-			if( m_componentRegistry && m_volumetricsRenderer )
-			{
-				m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_rtManager->GetShadowMap(), renderContext );
-
-				RenderVolumetricShadowMap( renderContext );
-
-				PopulatePerFramePSData( m_perFramePS, renderContext );
-				ApplyPerFrameData( renderContext );
-			}
-
-			if( auto lightManager = Tr2LightManager::GetInstance() )
-			{
-				lightManager->RenderRaytracedShadows( &m_rtManager->GetGeometry(), m_depthMap, m_normalMap, planets, maxPlanets, renderContext );
-			}
-
-			renderContext.SetReadOnlyDepth( false );
-		}
-	}
-	
-	if( m_mainPassRenderingEnabled && m_ssao && m_depthMap )
-	{
-		renderContext.SetReadOnlyDepth( true );
-
-
-		bool temporal = false;
-		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-		if( m_sceneDefaultPostProcess )
-		{
-			auto taa = m_sceneDefaultPostProcess->GetTaa();
-			temporal = upscalingInfo.temporal || ( taa && taa->IsActive() );
-		}
-		else
-		{
-
-			temporal = upscalingInfo.temporal;
-		}
-
-		m_ssao->SetInputBuffers( m_depthMap, m_normalMap );
-		m_ssao->Filter( renderContext, temporal );
-		renderContext.SetReadOnlyDepth( false );
-	}
 }
 
 void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
@@ -2487,11 +2375,11 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 	renderContext.m_esm.PopViewport();
 }
 
-void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
+std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScene::RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
-	if( !m_componentRegistry || !m_volumetricsRenderer || !m_depthMap )
+	if( !m_componentRegistry || !m_volumetricsRenderer || !depthMap.IsValid() )
 	{
-		return;
+		return { Tr2VolumetricsRenderer::GetEmptyVolumetricTexture( gpuResourcePool ), Tr2VolumetricsRenderer::GetEmptyFogTexture( gpuResourcePool ) };
 	}
 
 	Color sunColor = m_currentSunColor;
@@ -2499,10 +2387,11 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	Vector3d origin = m_updateContext.GetOrigin();
 	Vector3d originShift = m_updateContext.GetOriginShift();
 
-	m_volumetricsRenderer->RenderFog(
+	auto froxelFog = m_volumetricsRenderer->RenderFog(
 		renderContext,
-		m_depthMap->GetWidth(),
-		m_depthMap->GetHeight(),
+		gpuResourcePool,
+		depthMap.GetWidth(),
+		depthMap.GetHeight(),
 		m_cascadedShadowMap,
 		m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_rtManager ? &m_rtManager->GetGeometry() : nullptr,
 		m_shadowQuality,
@@ -2515,18 +2404,26 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 		m_viewLast,
 		m_projectionLast );
 
-	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_updateContext.GetFrustum(), *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows, renderContext );
+	auto clouds = m_volumetricsRenderer->RenderVolumetrics( 
+		*m_componentRegistry, 
+		m_updateContext.GetFrustum(), 
+		depthMap,
+        froxelFog,
+		m_sunData.DirWorld,
+		m_perFramePS.VolumetricSlices, 
+		m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows, 
+		gpuResourcePool,
+		renderContext );
+	return { froxelFog, clouds };
 }
 
-bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, Tr2DepthStencilPtr shadowMap )
+bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, const Tr2TextureAL& shadowMap )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	CCP_ASSERT_M( shadowMap && shadowMap->IsValid() && shadowMap->IsReadable(), "Dynamic light shadow map atlas is null or invalid or not readable!" );
-
 	// Using depth stencil as shadow map
 	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
-	renderContext.m_esm.PushDepthStencilBuffer( *shadowMap->GetTexture() );
+	renderContext.m_esm.PushDepthStencilBuffer( shadowMap );
 
 	// we want a clean depth buffer for this
 	renderContext.SetReadOnlyDepth( false );
@@ -2535,13 +2432,21 @@ bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, 
 	return true;
 }
 
-void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, 
-	uint32_t shadowMapScale, uint32_t shadowMapOffsetX, uint32_t shadowMapOffsetY, const Vector3& lightPosition, const Matrix& view, const Matrix& projection, Tr2DepthStencilPtr shadowMap )
+void EveSpaceScene::RenderShadowMapForSpotLight( 
+	Tr2RenderContext& renderContext, 
+	const std::vector<IEveShadowCaster*>& shadowCasters, 
+	uint32_t shadowMapScale, 
+	uint32_t shadowMapOffsetX, 
+	uint32_t shadowMapOffsetY, 
+	const Vector3& lightPosition, 
+	const Matrix& view, 
+	const Matrix& projection, 
+	const Tr2TextureAL& shadowMap )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	renderContext.m_esm.PushViewport();
-	renderContext.m_esm.UpdateRenderTargetViewport( shadowMap->GetWidth(), shadowMap->GetHeight() );
+	renderContext.m_esm.UpdateRenderTargetViewport( shadowMap.GetWidth(), shadowMap.GetHeight() );
 	renderContext.m_esm.SetViewport( shadowMapScale, shadowMapScale, shadowMapOffsetX, shadowMapOffsetY, 0, 1 );
 	
 	const float margin = 16.f;
@@ -2594,7 +2499,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight( Tr2RenderContext& renderContext
 	renderContext.m_esm.PopViewport();
 }
 
-void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, Tr2DepthStencilPtr shadowMap )
+void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, const Tr2TextureAL& shadowMap )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -2650,45 +2555,57 @@ void EveSpaceScene::FinishRenderingShadowMapForLights( Tr2RenderContext& renderC
 	ApplyPerFrameData( renderContext );
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Main rendering of foreground objects.
-// --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cullmode )
+EveSpaceScene::ShadowResources EveSpaceScene::RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	m_hasForegroundDistortionBatches = false;
-
-	renderContext.m_esm.BeginManagedRendering( cullmode );
-	
-	if( !m_display || !m_mainPassRenderingEnabled )
+	if( !m_display || !m_enableShadows )
 	{
-		// We still need to pump GPU particles as technically this is not "rendering", and we need to avoid situations
-		// when we accumulate an unreasonable number of emit requests.
-		if( GetGpuParticleSystem() )
+		return {};
+	}
+
+	EveSpaceScene::ShadowResources result;
+	if( m_cascadedShadowMap && ( m_shadowQuality == ShadowQuality::SHADOW_LOW || m_shadowQuality == ShadowQuality::SHADOW_HIGH ) )
+	{
+		result = SetupCascadedShadows( TR2RENDERREASON_NORMAL, *m_cascadedShadowMap, m_updateContext.GetFrustum(), depthMap, gpuResourcePool, renderContext );
+	}
+	else if( m_rtManager && m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && !m_objects.empty() )
+	{
+		constexpr size_t maxPlanets = 2;
+		CcpMath::Sphere planets[maxPlanets];
+		SetupPlanetsAsShadowCaster( planets, maxPlanets );
+
+		size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
+		size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
+		if( volumetricCount + shadowCasterCount != 0 )
 		{
-			GPU_REGION( renderContext, "Particles" );
-			GetGpuParticleSystem()->Update( m_updateTime, m_updateContext.GetOriginShift(), renderContext );
-		}
-		return;
-	}
-	
-	if( !m_freezeFrustum && m_enableShadows && m_cascadedShadowMap && ( m_shadowQuality == ShadowQuality::SHADOW_LOW || m_shadowQuality == ShadowQuality::SHADOW_HIGH ) )
-	{
-		SetupCascadedShadows( TR2RENDERREASON_NORMAL, *m_cascadedShadowMap, m_updateContext.GetFrustum(), m_depthMap, renderContext );
-	}
-	renderContext.AddGpuMarker( __FUNCTION__ );
+			renderContext.SetReadOnlyDepth( true );
+			result = { m_rtManager->RenderShadows( depthMap, normalMap, m_sunData.DirWorld, planets, maxPlanets, m_upscalingAmount, gpuResourcePool, renderContext ) };
 
-	renderContext.SetReadOnlyDepth( true );
+			if( m_componentRegistry && m_volumetricsRenderer )
+			{
+				m_volumetricsRenderer->RenderShadows( *m_componentRegistry, result.shadowMap, renderContext );
+
+				RenderVolumetricShadowMap( renderContext );
+
+				PopulatePerFramePSData( m_perFramePS, renderContext );
+				ApplyPerFrameData( renderContext );
+			}
+
+			if( auto lightManager = Tr2LightManager::GetInstance() )
+			{
+				result.pointLightShadowMap = lightManager->RenderRaytracedShadows( &m_rtManager->GetGeometry(), depthMap, normalMap, planets, maxPlanets, gpuResourcePool, renderContext );
+			}
+
+			renderContext.SetReadOnlyDepth( false );
+		}
+	}
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
 		if( lightManager->GetShadowCastingLights().size() > 0 && m_shadowQuality != ShadowQuality::SHADOW_DISABLED && m_shadowQuality != ShadowQuality::SHADOW_RAYTRACED )
 		{
 			GPU_REGION( renderContext, "PointLight/SpotLight Shadow Maps" );
-			Tr2DepthStencilPtr shadowMap = lightManager->GetShadowMapAtlas();
-			if( shadowMap && shadowMap->IsValid() )	// I HATE THIS. But it makes sense. The shadow map creation might fail, i.e. if we run out of memory.
+			auto shadowMap = lightManager->GetShadowMapAtlas( gpuResourcePool );
+			if( shadowMap.IsValid() ) // I HATE THIS. But it makes sense. The shadow map creation might fail, i.e. if we run out of memory.
 			{
 				PrepareShadowMapForLights( renderContext, shadowMap );
 				std::vector<IEveShadowCaster*> shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
@@ -2698,14 +2615,40 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 					RenderShadowMapForLight( renderContext, shadowCasters, lightData, shadowMap );
 				}
 				FinishRenderingShadowMapForLights( renderContext );
+				result.pointLightShadowDepth = shadowMap;
 			}
 		}
-		{
-			GPU_REGION( renderContext, "Lighting" );
-			CCP_STATS_SCOPED_TIME( updateDynamicLightLists );
-			lightManager->UpdateLists( renderContext );
-		}
 	}
+	return result;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Main rendering of foreground objects.
+// --------------------------------------------------------------------------------------
+bool EveSpaceScene::RenderMainPass( 
+	const Tr2TextureAL& colorMap, 
+	const Tr2TextureAL& depthMap, 
+	const Tr2TextureAL& distortionMap, 
+	const Tr2TextureAL& velocityMap, 
+	const Tr2TextureAL& opaqueColorMap, 
+	Tr2GpuResourcePool& gpuResourcePool,
+	Tr2RenderContext& renderContext )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	bool hasForegroundDistortionBatches = false;
+
+	renderContext.m_esm.BeginManagedRendering();
+	
+	if( !m_display )
+	{
+		return hasForegroundDistortionBatches;
+	}
+	
+	renderContext.AddGpuMarker( __FUNCTION__ );
+
+	renderContext.SetReadOnlyDepth( true );
 
 	GPU_REGION( renderContext, "Color Pass" );
 
@@ -2713,14 +2656,14 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		GPU_REGION( renderContext, "Opaque" );
 
 		{
-			if( m_velocityMap )
+			if( velocityMap.IsValid() )
 			{
 				if( !m_velocityMapDirty )
 				{
-					ClearRenderTargetIfNoBatches( m_velocityMap, 1, renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
+					ClearRenderTargetIfNoBatches( velocityMap, 1, renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
 				}
 
-				Tr2PushPopRT rt( *m_velocityMap, renderContext, 1 );
+				Tr2PushPopRT rt( velocityMap, renderContext, 1 );
 				renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { m_velocityMapDirty ? Tr2LoadAction::LOAD : Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
 				RenderOpaqueBatches( m_primaryBatches, renderContext );
 				m_velocityMapDirty = true;
@@ -2733,63 +2676,54 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		}
 	}
 
-	// Write sub surface seprable specular and SSS mask information
-	bool hasSSSSSInScene = m_sssss->SetupSeprableSpecularSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
-
-	if( hasSSSSSInScene && m_opaqueColorMap == nullptr )
-	{
-		m_opaqueColorMap.CreateInstance();
-		m_opaqueColorMap->Create( renderContext.m_esm.GetRenderTargetWidth(), renderContext.m_esm.GetRenderTargetHeight(), 1, PIXEL_FORMAT_R16G16B16A16_FLOAT );
-	}
-
-	if( m_opaqueColorMap != nullptr )
+	if( opaqueColorMap.IsValid() )
 	{
 		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
 		renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
-		renderContext.m_esm.PushRenderTarget( *m_opaqueColorMap );
+		renderContext.m_esm.PushRenderTarget( opaqueColorMap );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-		Tr2Renderer::DrawTexture( renderContext, *m_colorMap );
+		Tr2Renderer::DrawTexture( renderContext, colorMap );
 		renderContext.m_esm.PopRenderTarget();
 		renderContext.m_esm.PopDepthStencilBuffer();
 	}
 
-	// Write sub surface scattering blur
-	if (hasSSSSSInScene)
-	{
-		m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_colorMap, m_opaqueColorMap, m_depthMap );
-	}
+	m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE], colorMap, opaqueColorMap, depthMap, gpuResourcePool );
 
-	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
+	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
 	
 	PopulateAndApplyPerFrameData( renderContext );
-	RenderVolumetrics( renderContext );
+	auto [froxelFog, volumetricSlices] = RenderVolumetrics( depthMap, gpuResourcePool, renderContext );
+	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", volumetricSlices );
+	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
 
-	{
-		GPU_REGION( renderContext, "Transparent" );
-
-		RenderTransparentBatches( m_primaryBatches, renderContext );
-		m_hasForegroundDistortionBatches = RenderDistortionBatches( m_primaryBatches, renderContext );
-	}
-
-	// at first, do all the occlusion queries
-	for( auto& lensflare : m_lensflares )
-	{
-		lensflare->RunOcclusionQueries( renderContext, m_updateContext );
-	}
+    RenderTransparentBatches( m_primaryBatches, renderContext );
+    if( distortionMap.IsValid() )
+    {
+        hasForegroundDistortionBatches = RenderDistortionBatches( m_primaryBatches, distortionMap, depthMap, renderContext );
+    }
 
 	//GPU particles
 	if( GetGpuParticleSystem() )
 	{
-		GPU_REGION( renderContext, "Particles" );
-		GetGpuParticleSystem()->Update( m_updateTime, m_updateContext.GetOriginShift(), renderContext );
 		GetGpuParticleSystem()->Render( renderContext );
 	}
 
-	Tr2OcclusionBuffer::GetInstance().ProcessBuffer( renderContext );
+	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", Tr2TextureAL{} );
+	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", Tr2TextureAL{} );
 
 	renderContext.SetReadOnlyDepth( false );
 
 	renderContext.m_esm.EndManagedRendering();
+	return hasForegroundDistortionBatches;
+}
+
+void EveSpaceScene::RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
+{
+	for( auto& lensflare : m_lensflares )
+	{
+		lensflare->RunOcclusionQueries( renderContext, m_updateContext );
+	}
+	Tr2OcclusionBuffer::GetInstance().ProcessBuffer( renderContext );
 }
 
 // --------------------------------------------------------------------------------------
@@ -2866,16 +2800,6 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 
 	// Clear primary batches
 	ClearBatches( m_primaryBatches );
-
-	if( m_displayShadowMap && m_cascadedShadowMap )
-	{
-		Tr2RenderTargetPtr shadowMapRT = m_cascadedShadowMap->GetCascadedShadowMapRT();
-		if( shadowMapRT && shadowMapRT->IsValid() )
-		{
-			Tr2TextureAL* texture = shadowMapRT->GetTexture();
-			Tr2Renderer::DrawTexture( renderContext, *texture );
-		}
-	}
 	
 	// Store the view transform from this frame
 	m_viewLast = Tr2Renderer::GetViewTransform();
@@ -2923,7 +2847,7 @@ void EveSpaceScene::Render3DUI( Tr2RenderContext& renderContext )
 		obj->GetRenderables( renderables, nullptr );
 	}
 
-	GetAllBatchesFromRenderables( renderables, transparentObjects, m_secondaryBatches );
+	GetAllBatchesFromRenderables( renderables, transparentObjects, false, m_secondaryBatches );
 	PrepareTransparentBatch( transparentObjects, m_secondaryBatches );
 
 	UpdateQuadRenderer( frustum, m_uiObjects, renderContext );
@@ -2959,53 +2883,8 @@ void EveSpaceScene::PopulateAndApplyPerFrameData( Tr2RenderContext& renderContex
 	ApplyPerFrameData( renderContext );
 }
 
-void EveSpaceScene::Render( Tr2RenderContext& renderContext )
+void EveSpaceScene::Render( Tr2RenderContext& )
 {
-	renderContext.m_esm.SetInvertedDepthTest( true );
-	ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
-
-	BeginRender( renderContext );
-	RenderBackgroundPass( renderContext );
-	//RenderDepthPass( renderContext );
-	RenderMainPass( renderContext );
-	EndRender( renderContext );
-}
-
-ITr2MultiPassScene::RenderPassResult EveSpaceScene::RenderPass( PassType pass, Tr2RenderContext& renderContext )
-{
-	renderContext.m_esm.SetInvertedDepthTest( true );
-	ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
-
-	switch( pass )
-	{
-	case RP_BEGIN_RENDER:
-		BeginRender( renderContext );
-		break;
-	case RP_END_RENDER:
-		EndRender( renderContext );
-		break;
-	case RP_REFLECTION_RENDER:
-		RenderReflectionPass( renderContext );
-		break;
-	case RP_BACKGROUND_RENDER:
-		RenderBackgroundPass( renderContext );
-		break;
-	case RP_MAIN_RENDER:
-		RenderMainPass( renderContext );
-		break;
-	case RP_DEPTH_PASS:
-		RenderDepthPass( renderContext, m_depthPassTechnique );
-		break;
-	case RP_SET_PERFRAME_DATA:
-		PopulateAndApplyPerFrameData( renderContext );
-		break;
-	case RP_RENDER_UI:
-		Render3DUI( renderContext );
-		break;
-	default:
-		break;
-	}
-	return PASS_RESULT_OK;
 }
 
 // --------------------------------------------------------------------------------------
@@ -3049,10 +2928,6 @@ void EveSpaceScene::UpdateVariableStore()
 	m_staticEnvMapHandle->SetValue( m_staticEnvMapTextureRes );
 	m_envMapHandle->SetValue( m_envMapTextureRes );
 
-	if( m_ssao )
-	{
-		m_ssaoMapHandle->SetValue( m_ssao->GetOutput() );
-	}
 	if( m_volumetricsRenderer )
 	{
 		m_volumetricsRenderer->UpdateVariableStore();
@@ -3071,14 +2946,6 @@ void EveSpaceScene::ClearVariableStore()
 	m_envMap2Var.Clear();
 	m_reflectionMapVar.Clear();
 	m_reflectionMaskMapVar.Clear();
-
-	// shadowmap: clear store here
-	if( m_cascadedShadowMap )
-	{
-		m_cascadedShadowMap->ClearVariableStore();
-	}
-
-	m_sharedIndexVertexBufferVar.Clear();
 }
 
 
@@ -3214,10 +3081,9 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.SceneMipLodBias = 0.0f;
 	m_upscalingAmount = 1.0f;
 
-	if( m_usingUpscaling )
+	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
+	if( upscalingInfo.technique != Tr2UpscalingAL::NONE )
 	{
-		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-
 		m_upscalingAmount = upscalingInfo.upscalingAmount;
 		data.SceneMipLodBias = upscalingInfo.mipLevelBias;
 		if( !upscalingInfo.temporal && m_sceneDefaultPostProcess )
@@ -3835,7 +3701,7 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 	ApplyPerFrameData( renderContext );
 
 	Tr2RenderableSortList renderablesWithTransparencies;
-	GetAllBatchesFromRenderables( planetRenderables, renderablesWithTransparencies, m_secondaryBatches );
+	GetAllBatchesFromRenderables( planetRenderables, renderablesWithTransparencies, false, m_secondaryBatches );
 	PrepareTransparentBatch( renderablesWithTransparencies, m_secondaryBatches );
 	FinalizeBatches( m_secondaryBatches );
 
@@ -3845,8 +3711,11 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 
 	auto oldReadOnlyDepth = renderContext.GetReadOnlyDepth();
 	renderContext.SetReadOnlyDepth( true );
+	renderContext.m_esm.PushRenderTarget( 1 );
+	renderContext.m_esm.SetRenderTarget( 1, {} );
 	RenderTransparentBatches( m_secondaryBatches, renderContext );
 	renderContext.SetReadOnlyDepth( oldReadOnlyDepth );
+	renderContext.m_esm.PopRenderTarget( 1 );
 	ClearBatches( m_secondaryBatches );
 
 	// Put view/projection back to normal
@@ -3871,13 +3740,13 @@ Matrix EveSpaceScene::CreatePlanetViewMatrix( const Matrix& original )
 	return planetViewMatrix;
 }
 
-void EveSpaceScene::ClearRenderTargetIfNoBatches( Tr2RenderTarget* rt, uint32_t slot, Tr2RenderContext& renderContext, size_t batchCount )
+void EveSpaceScene::ClearRenderTargetIfNoBatches( const Tr2TextureAL& rt, uint32_t slot, Tr2RenderContext& renderContext, size_t batchCount )
 {
 #if TRINITY_PLATFORM_SUPPORTS_RENDER_PASS_HINTS
 	if( batchCount == 0 )
 	{
 		renderContext.RenderPassHint( {}, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, {} );
-		Tr2PushPopRT pprt( *rt, renderContext, slot );
+		Tr2PushPopRT pprt( rt, renderContext, slot );
 		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 1 );
 	}
 #endif
@@ -4016,11 +3885,6 @@ void EveSpaceScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 			m_virtualCameraSystem->RenderDebugInfo( *m_debugRenderer );
 		}
 
-		if( m_freezeFrustum && m_cascadedShadowMap && ( m_shadowQuality == ShadowQuality::SHADOW_HIGH || m_shadowQuality == ShadowQuality::SHADOW_LOW ) )
-		{
-			SetupCascadedShadows( TR2RENDERREASON_NORMAL, *m_cascadedShadowMap, m_updateContext.GetFrustum(), m_depthMap, renderContext );
-		}
-
 		m_debugRenderer->EndRender( renderContext );
 
 		Tr2Renderer::RenderDebugInfo( renderContext );
@@ -4045,19 +3909,6 @@ void EveSpaceScene::UpdateSceneFromScript( Be::Time time )
 	Update( time, time );
 }
 
-bool EveSpaceScene::GetPredicate( const char* name ) const
-{
-	if( strcmp( name, "hasBackgroundDistortionBatches" ) == 0 )
-	{
-		return m_hasBackgroundDistortionBatches;
-	}
-	else if( strcmp( name, "hasForegroundDistortionBatches" ) == 0 )
-	{
-		return m_hasForegroundDistortionBatches;
-	}
-	return false;
-}
-
 // Checks if we have a reflection probe
 bool EveSpaceScene::HasReflectionProbe() const
 {
@@ -4074,26 +3925,22 @@ void EveSpaceScene::ReregisterEntities()
 			m_componentRegistry->ReRegister( entity );
 		}
 	}
+	for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			m_componentRegistry->ReRegister( entity );
+		}
+	}
+
+	for( auto it = begin( m_planets ); it != end( m_planets ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			m_componentRegistry->ReRegister( entity );
+		}
+	}
 	m_componentRegistry->ReRegister( m_cameraAttachmentParent );
-}
-
-Tr2DepthStencilPtr EveSpaceScene::GetShadowMapAtlas()
-{
-	if( auto lightManager = Tr2LightManager::GetInstance() )
-	{
-		return lightManager->GetShadowMapAtlas();
-	}
-	return nullptr;
-}
-
-
-ITr2TextureProviderPtr EveSpaceScene::GetRaytracedDynamicShadowAtlas()
-{
-	if( auto lightManager = Tr2LightManager::GetInstance() )
-	{
-		return lightManager->GetRaytracedShadowMap();
-	}
-	return nullptr;
 }
 
 void EveSpaceScene::ClearComponentRegistry()
@@ -4105,13 +3952,24 @@ void EveSpaceScene::ClearComponentRegistry()
 			entity->UnRegister( m_componentRegistry );
 		}
 	}
+
+	for( auto it = begin( m_backgroundObjects ); it != end( m_backgroundObjects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+		}
+	}
+
+	for( auto it = begin( m_planets ); it != end( m_planets ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+		}
+	}
 	m_cameraAttachmentParent->UnRegister( m_componentRegistry );
 	m_componentRegistry = nullptr;
-}
-
-Tr2DepthStencil* EveSpaceScene::GetDepth()
-{
-	return m_depthMap;
 }
 
 Matrix EveSpaceScene::GetReprojectionMatrix() const
@@ -4256,4 +4114,18 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 			}
 		}
 	}
+}
+void RegisterWithVariableStore( const EveSpaceScene::ShadowResources& shadowResources, Tr2GpuResourcePool& gpuResourcePool )
+{
+	const uint8_t whiteR8[1] = { 255 };
+	Tr2SubresourceData initData = { whiteR8, 1, 1 };
+
+	GlobalStore().RegisterVariable( 
+		"EveSpaceSceneShadowMap", 
+		shadowResources.shadowMap.IsValid() ? shadowResources.shadowMap : gpuResourcePool.GetPersistentTexture( "EmptyShadow", 1, 1, ImageIO::PIXEL_FORMAT_R8_UNORM, Tr2GpuUsage::SHADER_RESOURCE, &initData ) );
+	GlobalStore().RegisterVariable( "EveSpaceSceneCascadedShadowMap", shadowResources.cascadedShadowDepth );
+	GlobalStore().RegisterVariable(
+        "EveSpaceSceneDynamicShadowMap",
+        shadowResources.pointLightShadowMap.IsValid() ? shadowResources.pointLightShadowMap : gpuResourcePool.GetPersistentTexture( "EmptyShadowUint", 1, 1, ImageIO::PIXEL_FORMAT_R8_UINT, Tr2GpuUsage::SHADER_RESOURCE, &initData )                           );
+	GlobalStore().RegisterVariable( "ShadowMapAtlas", shadowResources.pointLightShadowDepth );
 }

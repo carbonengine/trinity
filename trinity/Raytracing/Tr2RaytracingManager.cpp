@@ -38,15 +38,12 @@ Tr2RaytracingManager::Tr2RaytracingManager( IRoot* lockobj ) :
 	m_applyDenoiser( true )
 {
 	m_geometry.CreateInstance();
-	m_destTex.CreateInstance();
 
 	m_shadowEffect.CreateInstance();
 	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/rtshadows.fx" );
 
 	m_denoiser.CreateInstance();
 	m_denoiser->SetRadius( 3 );
-
-	m_whiteTexture.CreateInstance();
 }
 
 Tr2RaytracingManager::~Tr2RaytracingManager()
@@ -70,7 +67,6 @@ void Tr2RaytracingManager::ReleaseResources( TriStorage s )
 
 	m_geometry = nullptr;
 	m_shadowEffect = nullptr;
-	m_destTex = Tr2RenderTargetPtr();
 	m_denoiser = nullptr;
 
 	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
@@ -79,61 +75,44 @@ void Tr2RaytracingManager::ReleaseResources( TriStorage s )
 	}
 }
 
-ITr2TextureProvider* Tr2RaytracingManager::GetShadowMap() const
-{
-	if( m_denoiser )
-	{
-		return m_denoiser->GetTexture();
-	}
-	else
-	{
-		return m_destTex;
-	}
-}
-
-void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, const CcpMath::Sphere* planets, size_t planetCount, float upscaling, Tr2RenderContext& renderContext )
+Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows( 
+	const Tr2TextureAL& depth, 
+	const Tr2TextureAL& normal, 
+	const Vector3& sunDirection, 
+	const CcpMath::Sphere* planets, 
+	size_t planetCount, 
+	float upscaling, 
+	Tr2GpuResourcePool& gpuResourcePool,
+	Tr2RenderContext& renderContext )
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Raytraced shadows" );
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	auto depthTex = depth->GetTexture();
-	if( !depthTex )
-	{
-		return;
-	}
-
-	if( !m_destTex->IsValid() || m_destTex->GetWidth() != depthTex->GetWidth() || m_destTex->GetHeight() != depthTex->GetHeight() )
-	{
-		// Create the output resource. The dimensions and format should match the swap-chain
-		if( FAILED( m_destTex->Create( depthTex->GetWidth(), depthTex->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS ) ) )
-		{
-			return;
-		}
-		m_destTex->SetName( "raytracing_shadow_dest" );
-	}
+	auto destination = gpuResourcePool.GetTempTexture( "raytracing_shadow_dest", depth.GetWidth(), depth.GetHeight(), Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE );
 
 	// texture uav
-	m_shadowEffect->SetParameter( RtShadowMapTechniqueName, m_destTex );
+	m_shadowEffect->SetParameter( RtShadowMapTechniqueName, destination );
 	m_shadowEffect->SetParameter( NormalBufferTechniqueName, normal );
+	ON_BLOCK_EXIT( [&] { m_shadowEffect->SetParameter( RtShadowMapTechniqueName, Tr2TextureAL() ); } );
 
 	// scene srv
 	m_shadowEffect->SetParameter( RtSceneTechniqueName, m_geometry );
 
 	if( !m_shadowEffect->GetEffectRes() || !m_shadowEffect->GetEffectRes()->IsGood() )
 	{
-		return;
+		return {};
 	}
 
 	if( !m_geometry->HasGeometry() )
 	{
-		return;
+		return {};
 	}
 
 	uint32_t techniqueIndex;
 	if( !m_shadowEffect->GetShaderStateInterface()->GetTechniqueIndex( RtShadowTechniqueName, techniqueIndex ) )
 	{
-		return;
+		return {};
 	}
 
 	std::wstring rayGenName, missName;
@@ -143,7 +122,7 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 
 	if( !pipelineState.IsValid() )
 	{
-		return;
+		return {};
 	}
 
 	{
@@ -158,7 +137,6 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 		m_shadowPerFrameData.Create( sizeof( ShadowPerFrameData ), renderContext.GetPrimaryRenderContext() );
 	}
 
-	auto destTex = m_destTex->GetTexture();
 	{
 		ShadowPerFrameData* data;
 		m_shadowPerFrameData.Lock( reinterpret_cast<void**>(&data), renderContext );
@@ -175,14 +153,14 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 			data->planets[i] = planets[i];
 		}
 
-		data->resolution = Vector2( float( destTex->GetWidth() ), float( destTex->GetHeight() ) );
+		data->resolution = Vector2( float( destination->GetWidth() ), float( destination->GetHeight() ) );
 		data->frameIndex = uint32_t( Tr2Renderer::GetCurrentFrameCounter() & 0xffffffff );
 
 		m_shadowPerFrameData.Unlock( renderContext );
 	}
 
 	const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	renderContext.ClearUav( *destTex, 0, clearValue );
+	renderContext.ClearUav( destination, 0, clearValue );
 
 	if( m_shadowShaderTable.IsValid() )
 	{
@@ -197,15 +175,14 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 		}
 
         renderContext.UseAccelerationStructure( m_geometry->GetTLAS() );
-		renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
+		renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destination->GetWidth(), destination->GetHeight(), 1 );
 	}
 	if( m_denoiser && m_applyDenoiser )
 	{
-		m_denoiser->Apply( *m_destTex, *depth, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), upscaling, renderContext );
-		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_denoiser->GetTexture() );
+		return m_denoiser->Apply( std::move( destination ), depth, {}, Tr2Renderer::GetReversedDepthProjectionTransform(), upscaling, gpuResourcePool, renderContext );
 	}
 	else
 	{
-		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_destTex );
+		return destination;
 	}
 }

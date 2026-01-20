@@ -8,6 +8,7 @@
 #include "EveStretch3.h"
 
 BLUE_DEFINE( EveStretch3 );
+BLUE_DEFINE_INTERFACE( IStretchAudio );
 
 const Be::ClassInfo* EveStretch3::ExposeToBlue()
 {
@@ -215,7 +216,15 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 		(
 			"audio",
 			m_audio,
-			"The type of audio to be used for this asset",
+			"The type of audio to be used for this asset\n:jessica-deprecated: True\n:jessica-hidden: True",
+			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"stretchAudio",
+			m_stretchAudio,
+			"An audio object specifically for stretch effects.",
 			Be::READWRITE | Be::PERSIST
 		)
 

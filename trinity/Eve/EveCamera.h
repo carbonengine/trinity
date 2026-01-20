@@ -68,6 +68,7 @@ public:
 	void Zoom( Be::OptionalWithDefaultValue<int, -1> key );
 
 	const TriViewPtr GetViewMatrix();
+	const TriProjectionPtr GetProjection();
 
 	const Vector3* GetPosition();
 

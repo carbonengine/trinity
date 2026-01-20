@@ -28,7 +28,6 @@ public:
 	~Tr2PPTaaEffect();
 
 	void IncrementJitter();
-	void GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y );
 
 	bool IsActive() override
 	{
@@ -39,11 +38,6 @@ public:
 	bool m_showMotionVectors;
 	bool m_showEarlyOutMask;
 	float m_earlyOutThreshold;
-private:
-	Vector2 m_samplingPatterns[4];
-	int m_samplingIndex;
-	float m_jitterX;
-	float m_jitterY;
 };
 
 TYPEDEF_BLUECLASS( Tr2PPTaaEffect );

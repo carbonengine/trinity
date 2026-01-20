@@ -254,6 +254,7 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, co
 		if( auto geometry = GetGeometryResource() )
 		{
 			TriGeometryResMeshData* meshData = geometry->GetMeshData( m_meshIndex );
+			TriGeometryResLodData* lod = geometry->GetMeshLod( m_meshIndex, 0 );
 
 			if ( !m_jointMappingAnimRig.empty() )
 			{
@@ -298,8 +299,8 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, co
 				for( size_t i = 0; i < morphTargetsCount; i++ )
 				{
 					auto morph = morphTargets[i];
-					CCP_ASSERT_M( morph.m_index < meshData->m_morphTargetDeformationAmounts.size(), "Tr2MeshBase::GetBounds: morph.m_index is too large!" );
-					morphDeformation += meshData->m_morphTargetDeformationAmounts[morph.m_index] * morph.m_weight;
+					CCP_ASSERT_M( morph.m_index < lod->m_morphTargetDeformationAmounts.size(), "Tr2MeshBase::GetBounds: morph.m_index is too large!" );
+					morphDeformation += lod->m_morphTargetDeformationAmounts[morph.m_index] * morph.m_weight;
 				}
 				aabb.Grow( morphDeformation );
 
@@ -372,11 +373,11 @@ bool Tr2MeshBase::GetDisplay() const
 	return m_display;
 }
 
-Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* area, const Tr2PerObjectData* data )
+Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* area, const Tr2PerObjectData* data )
 {
 	Tr2RenderBatch batch;
 
-	if( !area->GetDisplay() || !mesh->m_allocationsValid )
+	if( !area->GetDisplay() || !lod->m_allocationsValid )
 	{
 		return batch;
 	}
@@ -387,30 +388,30 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 		return batch;
 	}
 
-	auto primCount = GetPrimitiveCount( *mesh, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
+	auto primCount = GetPrimitiveCount( *lod, std::max( 0, area->GetIndex() ), std::max( 0, area->GetCount() ) );
 
 	if( !primCount )
 	{
 		return batch;
 	}
 
-	auto& meshArea = mesh->m_areas[std::max( 0, area->GetIndex() )];
+	auto& meshArea = lod->m_areas[std::max( 0, area->GetIndex() )];
 
-	if( area->GetReversed() && !mesh->m_reversedIndicesValid )
+	if( area->GetReversed() && !lod->m_reversedIndicesValid )
 	{
 		return batch;
 	}
 
 	batch.SetMaterial( shadMat );
-	batch.SetGeometry( mesh->m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+	batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
 
 	batch.SetPerObjectData( data );
 
-	auto& indices = area->GetReversed() ? mesh->m_reversedIndexAllocation : mesh->m_indexAllocation;
+	auto& indices = area->GetReversed() ? lod->m_reversedIndexAllocation : lod->m_indexAllocation;
 	uint32_t startIndex;
 	if( area->GetReversed() )
 	{
-		startIndex = indices.GetStartIndex() + mesh->m_primitiveCount * 3 - meshArea.m_firstIndex - primCount * 3;
+		startIndex = indices.GetStartIndex() + lod->m_primitiveCount * 3 - meshArea.m_firstIndex - primCount * 3;
 	}
 	else
 	{
@@ -421,7 +422,7 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* a
 		primCount * 3,
 		1,
 		startIndex,
-		mesh->m_vertexAllocation.GetOffset() / mesh->m_vertexAllocation.GetStride(),
+		lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 		0 );
 	return batch;
 }
@@ -443,15 +444,16 @@ void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches,
 	{
 		return;
 	}
-	auto mesh = geometry->GetMeshData( m_meshIndex, screenSize );
-	if( !mesh || !mesh->m_allocationsValid )
+	TriGeometryResLodData* lod = geometry->GetMeshLod( m_meshIndex, screenSize );
+
+	if( !lod || !lod->m_allocationsValid )
 	{
 		return;
 	}
 
 	for( auto& area : *areas )
 	{
-		if( auto batch = CreateGeometryBatch( mesh, area, data ) )
+		if( auto batch = CreateGeometryBatch( lod, area, data ) )
 		{
 			batch.SetPickingData( m_meshIndex, area->GetIndex() );
 			batches->Commit( batch );
@@ -621,7 +623,7 @@ void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 {
 	if (auto geometry = GetGeometryResource() )
 	{
-		if( auto mesh = geometry->GetMeshData( m_meshIndex ) )
+		if( auto lod = geometry->GetMeshLod( m_meshIndex, screenSize ) )
 		{
 			for( auto areaType : m_areaLookupArray )
 			{
@@ -631,7 +633,7 @@ void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 					{
 						if( area && area->GetMaterialInterface() )
 						{
-							area->GetMaterialInterface()->UsedWithScreenSize( screenSize, worldRadius, mesh->m_uvDensities );
+							area->GetMaterialInterface()->UsedWithScreenSize( screenSize, worldRadius, lod->m_uvDensities );
 						}
 					}
 				}

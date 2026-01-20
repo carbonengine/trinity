@@ -13,6 +13,7 @@
 #include "TriFrustumOrtho.h"
 #include "Tr2Denoiser.h"
 #include "Utilities/BoundingBox.h"
+#include "Tr2GpuResourcePool.h"
 
 const uint16_t SHADOW_MAP_SIZE = 2048;
 const uint8_t SHADOW_FRUSTUM_COUNT = 16;
@@ -58,14 +59,12 @@ namespace ShadowMap
 //   This class holds a cascaded shadow map and takes care of splitting the frustum
 //
 // --------------------------------------------------------------------------------
-BLUE_CLASS( Tr2ShadowMap ) : public INotify,
-					 public Tr2DeviceResource
+BLUE_CLASS( Tr2ShadowMap ) : public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
 
 	Tr2ShadowMap( IRoot* lockobj = 0 );
-	~Tr2ShadowMap();
 
 	void Setup( uint32_t elementSize, uint32_t elementCount, bool useDenoiser );
 
@@ -73,30 +72,17 @@ public:
 	// INotify
 	bool OnModified( Be::Var* val );
 
-	/////////////////////////////////////////////////////////////
-	// ITriDeviceResource
-	virtual void ReleaseResources( TriStorage s );
-	bool OnPrepareResources();
-
-	void ClearVariableStore();
-
 	ShadowMap::SplitSetup SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear, float leftDivNear, float rightDivNear, float topDivNear, float bottomDivNear );
 
-	bool PrepareShadowRendering( Tr2RenderContext& renderContext );
+	Tr2GpuResourcePool::Texture PrepareShadowRendering( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 	void BeginShadowRendering( Tr2RenderContext& renderContext, int splitIndex );
 	void EndShadowRendering( Tr2RenderContext& renderContext );
-	void DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2TextureProvider* depthMap, float upscaling );
-	void SetShadowMap( Tr2RenderTargetPtr shadowMapRenderTarget );
-
-	Tr2DepthStencilPtr GetCascadedShadowMapDS() const;
-	Tr2RenderTargetPtr GetCascadedShadowMapRT() const;
-	ITr2TextureProvider* GetShadowMap() const;
+	Tr2GpuResourcePool::Texture DrawToShadowMapResult( Tr2RenderContext& renderContext, Tr2GpuResourcePool& gpuResourcePool, const Tr2TextureAL& depthMap, const Tr2TextureAL& cascadedShadowDepth, float upscaling );
 
 	const unsigned int GetShadowSplitCount() const;
 	const unsigned int GetShadowMapSize() const;
 	Tr2EffectPtr GetShadowEffect() const;
 	bool GetDebugSplitValue() const;
-	void SetBlankTexture();
 
 	uint32_t GetDebugColors( int switchCase ) const;
 
@@ -120,8 +106,6 @@ public:
 private:
 
 	void SetSplitValues();
-	void SetLowSettingSplitValues();
-	void CreateShadowMaps();
 
 	// width and height of shadow map
 	unsigned int m_size; // texture res
@@ -130,24 +114,12 @@ private:
 	unsigned int m_splitCount;
 	float m_oldZFar;
 
-	// texture to draw shader on
-	Tr2DepthStencilPtr m_cascadedShadowMapDS;
-	Tr2RenderTargetPtr m_shadowMapResultRT;
-	// White texture for no shadow
-	TriTextureResPtr m_whiteTexture;
-
-	// the handle to the depth atlas variable
-	TriVariable* m_cascadedShadowMapHandle;
-
 	// denoiser
 	Tr2DenoiserPtr m_denoiser;
 	bool m_useDenoiser;
 
 	// shadow shader
 	Tr2EffectPtr m_shadowEffect;
-
-	// the handle to the rt variable
-	TriVariable* m_shadowMapHandle;
 
 	float m_splitValues[SHADOW_FRUSTUM_COUNT]; // zFar values
 

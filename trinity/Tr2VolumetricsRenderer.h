@@ -68,21 +68,24 @@ BLUE_CLASS( Tr2VolumetricsRenderer ) :
 public:
 	Tr2VolumetricsRenderer( IRoot* lockobj = nullptr );
 
-	void RenderVolumetrics(
+	Tr2GpuResourcePool::Texture RenderVolumetrics(
 		const EveComponentRegistry& registry,
 		const TriFrustum& frustum,
-		Tr2DepthStencil& sceneDepth,
+		const Tr2TextureAL& sceneDepth,
+        const Tr2TextureAL& froxelFog,
 		const Vector3& sunDirection,
 		const float depthSlices[4],
 		bool raytracingEnabled,
+		Tr2GpuResourcePool& gpuResourcePool,
 		Tr2RenderContext& renderContext );
-
+	static Tr2GpuResourcePool::Texture GetEmptyVolumetricTexture( Tr2GpuResourcePool & gpuResourcePool );
 
 	void UpdateFogSettings( const EveComponentRegistry& registry, const EveUpdateContext& updateContext );
 	bool HasFog() const;
 
-	void RenderFog( 
+	Tr2GpuResourcePool::Texture RenderFog( 
 		Tr2RenderContext & renderContext, 
+		Tr2GpuResourcePool & gpuResourcePool,
 		uint32_t width, 
 		uint32_t height, 
 		Tr2ShadowMap* cascadedShadowMap, 
@@ -96,8 +99,9 @@ public:
 		const Matrix& projection, 
 		const Matrix& viewLast, 
 		const Matrix& projectionLast );
-	void RenderFogIntoReflectionMap( 
+	Tr2GpuResourcePool::Texture RenderFogIntoReflectionMap( 
 		Tr2RenderContext& renderContext, 
+		Tr2GpuResourcePool & gpuResourcePool,
 		uint32_t width, 
 		uint32_t height, 
 		const Vector3& sunDirection, 
@@ -105,6 +109,7 @@ public:
 		const Vector3d origin,
 		const Matrix& view, 
 		const Matrix& projection );
+	static Tr2GpuResourcePool::Texture GetEmptyFogTexture( Tr2GpuResourcePool & gpuResourcePool );
 	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
 
 	void UpdateVariableStore();
@@ -112,7 +117,7 @@ public:
 	void SetSunAngle( float angle );
 	void RenderShadows(
 		const EveComponentRegistry& registry,
-		ITr2TextureProvider* shadowMap,
+		const Tr2TextureAL& shadowMap,
 		Tr2RenderContext& renderContext );
 
 
@@ -136,7 +141,7 @@ public:
 
 	void PopulatePerFrameData( FroxelPerFrameData& data );
 
-
+	void SetQuality( Tr2VolumerticQuality quality );
 
 	EXPOSE_TO_BLUE();
 
@@ -149,10 +154,6 @@ private:
 	{
 		explicit FogViewDependentResources( bool temporalFroxels );
 
-		Tr2TextureReferencePtr fogFroxels;
-		Tr2TextureReferencePtr temporalFroxels0;
-		Tr2TextureReferencePtr temporalFroxels1;
-
 		Tr2EffectPtr calculateFroxels;
 		Tr2EffectPtr rtCalculateFroxels;
 		Tr2EffectPtr filterFroxels;
@@ -160,15 +161,15 @@ private:
 		Tr2EffectPtr applyFroxels;
 
 		Vector3 froxelJitter;
+		bool useTemporalFroxels;
 		bool currentTemporalFroxels;
 	};
-
-	void UpdateTextures( FogViewDependentResources & resources, uint32_t width, uint32_t height, uint32_t depth, bool enabled );
 	
 
-	void RenderFog( 
+	Tr2GpuResourcePool::Texture RenderFog( 
 		FogViewDependentResources& resources, 
 		Tr2RenderContext& renderContext, 
+		Tr2GpuResourcePool & gpuResourcePool,
 		uint32_t originalWidth, 
 		uint32_t originalHeight, 
 		Tr2ShadowMap* cascadedShadowMap, 
@@ -187,10 +188,10 @@ private:
 	Tr2EffectPtr m_downsampleDepth;
 	Tr2EffectPtr m_hBlur;
 	Tr2EffectPtr m_vBlur;
-	Tr2TextureReferencePtr m_volumeSlices;
-	Tr2RenderTargetPtr m_downsampledDepth;
-	Tr2RenderTargetPtr m_blurScratch;
 
+	uint32_t m_lastRequestedWidth = 0;
+	uint32_t m_lastRequestedHeight = 0;
+	
 	
 
 	
@@ -287,14 +288,12 @@ private:
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
 	
-	
 	std::unique_ptr<ITriRenderBatchAccumulator> m_batches;
 	
 	Tr2ConstantBufferAL m_shadowPerFrameVSBuffer;
 	Tr2VolumerticQuality m_quality;
 	float m_scaleFactor;
 	bool m_blur;
-	bool m_volumeHasContent;
 	bool m_castShadows;
 	bool m_receiveShadows;
 

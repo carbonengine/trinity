@@ -33,7 +33,7 @@ namespace Fsr3Utils
 		}
 	}
 
-	FfxApiResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* textureName )
+	FfxApiResource ConvertTextureToFfxResource( const Tr2TextureAL* texture, const wchar_t* textureName )
 	{
 		ID3D12Resource* res = nullptr;
 		FfxApiResource ffxRes;
@@ -405,7 +405,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::SetupFrameGen()
 	return Tr2UpscalingAL::Result::OK;
 }
 
-void Tr2Fsr3UpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
+void Tr2Fsr3UpscalingContext::SetHudLessTexture( const Tr2TextureAL* texture )
 {
 	if( m_frameGeneration && ( texture == nullptr || ( texture->TrinityALImpl_GetObject() != nullptr && m_frameGenerationConfig.HUDLessColor.resource != texture->TrinityALImpl_GetObject()->GetResourceDx12() ) ) )
 	{
@@ -490,7 +490,6 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 		DispatchFrameGen( dispatchParameters );
 	}
 
-	m_reset = false;
 	// increase the generated frame, so we at least have one frame active...
 	CCP_STATS_INC( generatedFrames );
 
@@ -516,7 +515,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchUpscaling( Tr2UpscalingA
 	dispatchUpscale.jitterOffset.y = m_jitterY;
 	dispatchUpscale.motionVectorScale.x = (float)m_renderWidth;
 	dispatchUpscale.motionVectorScale.y = (float)m_renderHeight;
-	dispatchUpscale.reset = m_reset;
+	dispatchUpscale.reset = dispatchParameters.reset;
 	dispatchUpscale.enableSharpening = true;
 	dispatchUpscale.sharpness = 0.9f;
 

@@ -85,8 +85,8 @@ public:
 		uint32_t stride ) throw( );
 	ALResult SetIndices( const Tr2BufferAL& buffer ) throw( );
 	ALResult SetIndices( const Tr2BufferAL& buffer, uint32_t stride ) throw();
-	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
-	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
+	ALResult ClearUav( const Tr2BufferAL& buffer, const float values[4] ) throw();
+	ALResult ClearUav( const Tr2BufferAL& buffer, const uint32_t values[4] ) throw();
 
 	ALResult CopySubBuffer(
 		Tr2BufferAL& dest,
@@ -99,12 +99,12 @@ public:
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
 
 
-	ALResult ClearUav( Tr2TextureAL&, uint32_t, const float[4] ) throw( )
+	ALResult ClearUav( const Tr2TextureAL&, uint32_t, const float[4] ) throw()
 	{
 		return E_FAIL;
 	}
 
-	ALResult ClearUav( Tr2TextureAL&, uint32_t, const uint32_t[4] ) throw( )
+	ALResult ClearUav( const Tr2TextureAL&, uint32_t, const uint32_t[4] ) throw()
 	{
 		return E_FAIL;
 	}

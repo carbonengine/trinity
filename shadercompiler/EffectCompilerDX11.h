@@ -26,10 +26,12 @@ private:
 		std::mutex mutex;
 		CComPtr<ID3D10Blob> passResource;
 		CComPtr<IDxcBlob> libraryResource;
+		CComPtr<IDxcBlob> libraryReflection;
 	};
 
 	std::unordered_map<std::string, std::shared_ptr<SyncData>> m_compiled;
 	std::mutex m_compiledCS;
+	std::mutex m_pdbCS;
 	CComPtr<IDxcUtils> m_dxilUtils;
 };
 #endif

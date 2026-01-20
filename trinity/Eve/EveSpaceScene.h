@@ -19,7 +19,6 @@
 #include "Tr2QuadRenderer.h"
 #include "Tr2LightManager.h"
 #include "PostProcess/Tr2PostProcess2.h"
-#include "Include/ITr2NamedPredicate.h"
 #include "Eve/EveComponentRegistry.h"
 #include "Tr2Variable.h"
 #include "TriFrustumOrtho.h"
@@ -27,9 +26,11 @@
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
 #include "PostProcess/ITr2PostProcessOwner.h"
 #include "../Tr2VolumetricsRenderer.h"
+#include "../Tr2RuntimeGpuBuffer.h"
 
 class TriProjection;
 class TriView;
+class Tr2GpuResourcePool;
 
 // Objects are allowed to unload their resources if they're out of view for
 // some time. This can help reduce memory use.
@@ -92,12 +93,10 @@ BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
 
 BLUE_CLASS( EveSpaceScene ) :
 	public ITr2Scene,
-	public ITr2MultiPassScene,
 	public IInitialize,
 	public INotify,
 	public Tr2DeviceResource,
-	public IListNotify,
-	public ITr2NamedPredicate
+	public IListNotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -116,18 +115,40 @@ public:
 	virtual void Render( Tr2RenderContext& renderContext );
 	virtual void RenderDebugInfo( Tr2RenderContext & renderContext );
 
-	RenderPassResult RenderPass( PassType pass, Tr2RenderContext & renderContext );
-	void RenderMainPass( Tr2RenderContext & renderContext, Tr2RenderContextEnum::CullMode cullmode = Tr2RenderContextEnum::CULLMODE_CW );
-	void RenderDepthPass( Tr2RenderContext & renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
-	void RenderBackgroundPass( Tr2RenderContext & renderContext );
-	void RenderReflectionPass( Tr2RenderContext & renderContext );
-	void BeginRender( Tr2RenderContext & renderContext );
+
+	struct ShadowResources
+	{
+		// Screen space shadow map (greyscale): valid for both shadow maps and raytraced shadows
+		Tr2GpuResourcePool::Texture shadowMap;
+		// Cascaded shadow map depth buffer atlas: only valid for shadow maps
+		Tr2GpuResourcePool::Texture cascadedShadowDepth;
+		// Screen space shadow indices for point lights : only valid for raytraced shadows
+		Tr2GpuResourcePool::Texture pointLightShadowMap;
+		// Depth buffer atlas for point light shadows : only valid for shadow maps
+		Tr2GpuResourcePool::Texture pointLightShadowDepth;
+	};
+
+	ShadowResources RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	bool RenderMainPass( 
+		const Tr2TextureAL& colorMap, 
+		const Tr2TextureAL& depthMap, 
+		const Tr2TextureAL& distortionMap, 
+		const Tr2TextureAL& velocityMap, 
+		const Tr2TextureAL& opaqueColorMap, 
+		Tr2GpuResourcePool& gpuResourcePool,
+		Tr2RenderContext& renderContext );
+	void RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
+	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
+
+	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext );
+	void RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	void BeginRender( bool enableDistortion, Tr2RenderContext & renderContext );
 	void EndRender( Tr2RenderContext & renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
 	void PopulateAndApplyPerFrameData( Tr2RenderContext & renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext & renderContext );
 
-	void GatherBatches( Tr2RenderContext & renderContext );
+	void GatherBatches( bool includeDistortions, Tr2RenderContext & renderContext );
 	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -146,10 +167,6 @@ public:
 		ssize_t key2,
 		IRoot* value,
 		const struct IList* theList );
-
-	//////////////////////////////////////////////////////////////////////////
-	// ITr2NamedPredicate
-	bool GetPredicate( const char* name ) const override;
 
 	// all eve-specific visualize methods
 	enum EveVisualizeMethod
@@ -190,22 +207,8 @@ public:
 		return m_objects;
 	}
 	Tr2PostProcess2Ptr GetPostProcess();
-	Tr2ShaderBufferPtr GetPostProcessPSBuffer();
 
-	void SetVelocityMap( Tr2RenderTargetPtr velocityMap );
-	Tr2DepthStencil* GetDepth();
 	Matrix GetReprojectionMatrix() const;
-
-
-protected:
-	// Data shared between the different rendering method chunks
-	struct FrameData
-	{
-		Matrix projection;
-
-		std::vector<ShadowReceiver> objectsReceivingShadow;
-	};
-	FrameData m_frameData;
 
 	// Per-frame pixel constants for rendering scene
 	struct SunData
@@ -333,18 +336,6 @@ protected:
 	EvePlanetPerObjData m_planetPerObjData;
 	Tr2ShaderBufferPtr m_planetPerObjBuffer;
 
-	struct PostProcessPSData
-	{
-		Vector3 OriginShift;
-		float DeltaT;
-	};
-
-
-	PostProcessPSData m_postProcessPSData;
-	Tr2ShaderBufferPtr m_postProcessPSBuffer;
-
-	void UpdatePostProcessPSData();
-
 	void PopulatePerFrameVSData( PerFrameVSData & data, Tr2RenderContext & renderContext );
 	void PopulatePerFramePSData( PerFramePSData & data, Tr2RenderContext & renderContext );
 	void PopulatePerFramePSData( PerFramePSData & data, Tr2ShadowMap* shadowMap, Tr2RenderContext & renderContext );
@@ -364,17 +355,17 @@ protected:
 	void DecodeBufferPixel( const void* pBuffer, unsigned short& objId, unsigned short& areaId, float& depth ) const;
 
 	// Batch gathering and preparation
-	void GetAllBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetAllBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, bool includeDistortions, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	void GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	void GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	void GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	void PrepareTransparentBatch( Tr2RenderableSortList & objectsWithTransparencies, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	// Batch rendering
 	void RenderOpaqueBatches( BatchMap & batches, Tr2RenderContext & renderContext );
 	void RenderTransparentBatches( BatchMap & batches, Tr2RenderContext & renderContext );
 	void RenderTransparentBatches2( BatchMap & batches, Tr2RenderContext & renderContext, bool pass );
-	bool RenderDistortionBatches( BatchMap& batches, Tr2RenderContext& renderContext );
+	bool RenderDistortionBatches( BatchMap& batches, const Tr2TextureAL& distortionMap, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 
 	// Utility rendering functions
 	void RenderBatch( ITriRenderBatchAccumulator * batch,
@@ -392,10 +383,7 @@ protected:
 	void ReregisterEntities();
 	void ClearComponentRegistry();
 
-	void RenderVolumetrics( Tr2RenderContext & renderContext );
-
-	Tr2DepthStencilPtr GetShadowMapAtlas();
-	ITr2TextureProviderPtr GetRaytracedDynamicShadowAtlas();
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;
@@ -407,9 +395,7 @@ protected:
 protected:
 	bool m_display;
 	bool m_update;
-	bool m_displayShadowMap;
 	bool m_backgroundRenderingEnabled;
-	bool m_mainPassRenderingEnabled;
 
 	float m_planetScale;
 	float m_planetCameraScale;
@@ -417,7 +403,6 @@ protected:
 	//cascaded shadow map
 	Tr2ShadowMapPtr m_cascadedShadowMap;
 	Tr2ShadowMapPtr m_reflectionShadowMap;
-	TriTextureResPtr m_emptyShadowMap;
 
 	PIEveSpaceObject2Vector	m_backgroundObjects;
 	PEvePlanetVector		m_planets;
@@ -436,9 +421,6 @@ protected:
 	// and so forth. Should be finalized and cleared each time they're used.
 	BatchMap m_secondaryBatches;
 	PerThreadBatchMap m_perThreadBatches;
-
-	BlueSharedString m_depthPassTechnique = BlueSharedString( "Depth" );
-	Tr2RenderTargetPtr m_customStencil;
 
 	// Utility batches.
 	std::vector<TriPoolAllocator> m_shadowAllocators;
@@ -486,24 +468,14 @@ protected:
 	CTr2RuntimeGpuBuffer m_bakedMorphTargetBufferWrapper;
 	Tr2Variable m_bakedMorphTargetBufferVar;
 		
-	Tr2RenderTargetPtr m_colorMap;
-	Tr2RenderTargetPtr m_opaqueColorMap;
-	Tr2DepthStencilPtr m_depthMap;
 	Tr2Variable m_depthMapVar;
 
-
-	TriVariable* m_ssaoMapHandle;
-	Tr2RenderTargetPtr m_normalMap;
-	Tr2SSAOPtr m_ssao;
 	Tr2SSSSSPtr m_sssss;
-
-	Tr2RenderTargetPtr m_distortionMap;
-	Tr2RenderTargetPtr m_velocityMap;
 
 	// has the velocity map been written to?
 	bool m_velocityMapDirty; 
 
-	void ClearRenderTargetIfNoBatches( Tr2RenderTarget* rt, uint32_t slot, Tr2RenderContext& renderContext, size_t batchCount );
+	void ClearRenderTargetIfNoBatches( const Tr2TextureAL& rt, uint32_t slot, Tr2RenderContext& renderContext, size_t batchCount );
 
 	SunData m_sunData;
 	Color m_sunColor;
@@ -547,7 +519,6 @@ protected:
 	Vector3 PickInfinity( int x, int y, Matrix proj, Matrix view );
 
 	//For GPU particles
-private:
 	Tr2GpuParticleSystem* GetGpuParticleSystem() const
 	{
 		return m_updateContext.GetGpuParticleSystem();
@@ -567,8 +538,7 @@ private:
 	Tr2ConstantBufferAL	m_shadowPerFrameVSBuffer;
 
 	// Cascaded shadows
-	void SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap & shadowMap, const TriFrustum& viewFrustum, Tr2DepthStencil* depthMap, Tr2RenderContext& renderContext );
-	void DisableShadows();
+	ShadowResources SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap & shadowMap, const TriFrustum& viewFrustum, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
 	// Picking
 	void SetupTransformsForPicking( float fx, float fy, TriProjection* proj,  TriView* view, TriViewport* viewport, Tr2RenderContext& renderContext );
@@ -629,16 +599,12 @@ private:
 		BACKGROUND_RENDER_REFLECTION,
 	};
 
-	void RenderBackgroundPassObjects( Tr2RenderContext & renderContext, BackgroundRenderingReason reason );
+	bool RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, Tr2RenderContext& renderContext, BackgroundRenderingReason reason );
 
 	Tr2ShLightingManagerPtr m_shLightingManager;
 
 	float m_upscalingAmount;
-	bool m_usingUpscaling; 
 	Vector4 m_jitter; // xy: projection offset, zw: pixel offset
-
-	bool m_hasBackgroundDistortionBatches;
-	bool m_hasForegroundDistortionBatches;
 
 	void Jitter( Tr2RenderContext& renderContext );
 
@@ -651,6 +617,8 @@ private:
 	void UpdatePostProcessAttributes();
 	BluePy GetPostProcessDebug() const;
 	Tr2PostProcess2Ptr m_combinedPostProcess;
+
+public:
 	Tr2PostProcess2Ptr m_sceneDefaultPostProcess;
 	Tr2PostProcessAttributesPtr m_sceneDefaultPostProcessAttributes;
 	Tr2PostProcessAttributesPtr m_combinedPostProcessAttributes;
@@ -667,9 +635,18 @@ private:
 	BlueSharedString m_name;
 
 	// Dynamic light shadow maps
-	bool PrepareShadowMapForLights( Tr2RenderContext & renderContext, Tr2DepthStencilPtr shadowMap );
-	void RenderShadowMapForSpotLight( Tr2RenderContext & renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, uint32_t shadowMapScale, uint32_t shadowMapOffsetX, uint32_t shadowMapOffsetY, const Vector3& lightPosition, const Matrix& view, const Matrix& projection, Tr2DepthStencilPtr shadowMap );
-	void RenderShadowMapForLight( Tr2RenderContext & renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, Tr2DepthStencilPtr shadowMap );
+	bool PrepareShadowMapForLights( Tr2RenderContext & renderContext, const Tr2TextureAL& shadowMap );
+	void RenderShadowMapForSpotLight( 
+		Tr2RenderContext & renderContext, 
+		const std::vector<IEveShadowCaster*>& shadowCasters, 
+		uint32_t shadowMapScale, 
+		uint32_t shadowMapOffsetX, 
+		uint32_t shadowMapOffsetY, 
+		const Vector3& lightPosition, 
+		const Matrix& view, 
+		const Matrix& projection, 
+		const Tr2TextureAL& shadowMap );
+	void RenderShadowMapForLight( Tr2RenderContext & renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, const Tr2TextureAL& shadowMap );
 	void FinishRenderingShadowMapForLights( Tr2RenderContext & renderContext );
 
 	// Object to gather all components
@@ -679,8 +656,6 @@ private:
 
 	bool m_dynamicObjectReflectionEnabled;
 
-	// Cascaded shadow debugging
-	bool m_freezeFrustum;
 	// for "fake" scenes like ship fitting etc
 	bool m_enableShadows;
 
@@ -695,6 +670,10 @@ private:
 	void RenderVolumetricShadowMap( Tr2RenderContext & renderContext );
 	void RenderIntoCloudShadowMap( Tr2RenderContext & renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, std::vector<IEveShadowCaster*> shadowCasters );
 
+	// Frame index when Update was last called
+	uint64_t m_lastUpdateFrame = std::numeric_limits<uint64_t>::max();
+
+public:
 	// raytracing
 	Tr2RaytracingManagerPtr m_rtManager;
 
@@ -704,6 +683,8 @@ private:
 
 	// reprojection matrix
 	Matrix m_reprojectionMatrix;
+
+	friend class EveSpaceSceneRenderDriver;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceScene );
@@ -721,5 +702,7 @@ TYPEDEF_BLUECLASS( EveSpaceScene );
 //  reason - Why do we need the renderabes (either normal or reflections)
 void GetBatchesFromRenderables( ITr2Renderable** objectRenderables, const unsigned renderableCount, Tr2RenderableSortList* objectsWithTransparencies, EveSpaceScene::BatchMap& batches, const TriBatchType* batchTypes, const unsigned batchTypeCount, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
+
+void RegisterWithVariableStore( const EveSpaceScene::ShadowResources& shadowResources, Tr2GpuResourcePool& gpuResourcePool );
 
 #endif // EveSpaceScene_H

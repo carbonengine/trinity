@@ -9,46 +9,22 @@
 #include "Tr2Renderer.h"
 #include "Shader/Tr2Effect.h"
 #include "Shader/Tr2EffectStateManager.h"
-#include "TriRenderBatch.h"
-#include "Tr2RenderTarget.h"
-#include "Tr2TextureArray.h"
-#include "Resources/TriTextureRes.h"
 
 namespace
 {
-
-struct DepthSizeHash
-{
-	size_t operator()( const std::pair<uint32_t, uint32_t>& ds ) const
-	{
-		return std::hash<uint32_t>()( ds.first ) ^ std::hash<uint32_t>()( ds.second );
-	}
+const Vector3 unitCube[8] = {
+	//The unit cube in DirectX is from( -1, -1, 0 ) to ( 1, 1, 1 )
+	Vector3( -1, -1, 0 ), // vertex 0
+	Vector3( -1, 1, 0 ), // vertex 1
+	Vector3( 1, 1, 0 ), // etc..
+	Vector3( 1, -1, 0 ),
+	Vector3( -1, -1, 1 ),
+	Vector3( -1, 1, 1 ),
+	Vector3( 1, 1, 1 ),
+	Vector3( 1, -1, 1 )
 };
 
-std::unordered_map<std::pair<uint32_t, uint32_t>, BlueWeakRef<Tr2DepthStencil>, DepthSizeHash> s_sharedDepthMaps;
-
-Tr2DepthStencilPtr GetShadowAtlas( uint32_t width, uint32_t height )
-{
-	Tr2DepthStencilPtr result;
-	auto& found = s_sharedDepthMaps[{ width, height }];
-	if( !found )
-	{
-		result.CreateInstance();
-		found = result.p;
-	}
-	else
-	{
-		result = found;
-	}
-	if( !result->IsValid() )
-	{
-		result->Create( width, height, Tr2RenderContextEnum::DSFMT_D32F, 1, 0, Tr2RenderContextEnum::EX_NONE );
-	}
-	return result;
 }
-
-}
-
 
 using namespace Tr2RenderContextEnum;
 Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
@@ -58,29 +34,19 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_splitCount( SHADOW_FRUSTUM_COUNT ),
 	m_disableShimmer( true ),
 	m_oldZFar( 0.0 ),
-	m_shadowMapHandle( NULL ),
-	m_cascadedShadowMapHandle( NULL ),
 	m_useDenoiser( true ),
 	m_debugColorSplit( false )
 {
 	m_shadowEffect.CreateInstance();
 	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/ShadowDepth.fx" );
-	m_shadowMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
-	m_cascadedShadowMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneCascadedShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
+	m_shadowEffect->SetParameter( BlueSharedString( "EveSpaceSceneCascadedShadowMap" ), Tr2TextureAL{} );
+	m_shadowEffect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL{} );
+	GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
+	GlobalStore().RegisterVariable( "EveSpaceSceneCascadedShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 
-	m_cascadedShadowMapDS = GetShadowAtlas( m_size * m_width, m_size * m_height );
-
-	m_whiteTexture.CreateInstance();
 	m_denoiser.CreateInstance();
-	
-	PrepareResources();
 
 	SetSplitValues();
-}
-
-Tr2ShadowMap::~Tr2ShadowMap()
-{
-	ReleaseResources( TRISTORAGE_ALL );
 }
 
 void Tr2ShadowMap::Setup( uint32_t elementSize, uint32_t elementCount, bool useDenoiser )
@@ -89,8 +55,7 @@ void Tr2ShadowMap::Setup( uint32_t elementSize, uint32_t elementCount, bool useD
 	{
 		m_size = elementSize;
 		m_splitCount = elementCount;
-		ReleaseResources( TRISTORAGE_ALL );
-		PrepareResources();
+		m_perSplitData.SplitInfo.x = float( m_splitCount );
 	}
 	m_useDenoiser = useDenoiser;
 	if( !useDenoiser )
@@ -112,80 +77,8 @@ bool Tr2ShadowMap::OnModified( Be::Var* value )
 			m_shadowEffect->SetOption( BlueSharedString( "SHADOW_DEBUG_MODE" ), BlueSharedString( "SDM_NONE" ) );
 		}
 	}
-
-	if( IsMatch( value, m_size ) )
-	{
-		ReleaseResources( TRISTORAGE_ALL );
-		PrepareResources();
-	}
-
-	return true;
-}
-
-void Tr2ShadowMap::ReleaseResources( TriStorage s )
-{
-	if( m_cascadedShadowMapHandle )
-	{
-		m_cascadedShadowMapHandle->Clear();
-	}
-
-	if( m_shadowMapHandle )
-	{
-		m_shadowMapHandle->Clear();
-	}
-
-	m_cascadedShadowMapDS = Tr2DepthStencilPtr();
-	m_shadowMapResultRT = Tr2RenderTargetPtr();
-
-	m_denoiser = nullptr;
-
-	SetBlankTexture();
-}
-
-
-void Tr2ShadowMap::ClearVariableStore()
-{
-	if( m_cascadedShadowMapHandle )
-	{
-		m_cascadedShadowMapHandle->Clear();
-	}
-
-	if( m_shadowMapHandle )
-	{
-		m_shadowMapHandle->Clear();
-	}
-}
-
-bool Tr2ShadowMap::OnPrepareResources()
-{
-	if( m_size == 0 )
-	{
-		return true;
-	}
-
 	m_perSplitData.SplitInfo.x = float( m_splitCount );
-
-	if( !m_cascadedShadowMapDS )
-	{
-		m_cascadedShadowMapDS = GetShadowAtlas( m_size * m_width, m_size * m_height );
-	}
-
-	if( !m_whiteTexture->IsValid() )
-	{
-		BeResMan->GetResource( "res:/texture/global/white.dds", "", m_whiteTexture );
-	}
-
-	SetBlankTexture();
-
 	return true;
-}
-
-void Tr2ShadowMap::SetBlankTexture()
-{
-	if( m_shadowMapHandle )
-	{
-		m_shadowMapHandle->SetValue( m_whiteTexture );
-	}
 }
 
 void Tr2ShadowMap::ShouldUseDenoiser( bool val )
@@ -300,29 +193,31 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	return splitSetup;
 }
 
-bool Tr2ShadowMap::PrepareShadowRendering( Tr2RenderContext& renderContext )
+Tr2GpuResourcePool::Texture Tr2ShadowMap::PrepareShadowRendering( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_cascadedShadowMapDS || m_cascadedShadowMapDS->GetTexture() == nullptr )
+	auto cascadedShadowDepth = gpuResourcePool.GetTempTexture( "cascadedShadowDepth", m_size * m_width, m_size * m_height, PixelFormat::PIXEL_FORMAT_D32_FLOAT, Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE );
+
+	if( !cascadedShadowDepth.IsValid() )
 	{
 		// This could happen if device is lost
-		return false;
+		return {};
 	}
 
 	// Using depth stencil as shadow map
 	renderContext.m_esm.PushViewport();
 	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
-	renderContext.m_esm.PushDepthStencilBuffer( *m_cascadedShadowMapDS->GetTexture() );
+	renderContext.m_esm.PushDepthStencilBuffer( cascadedShadowDepth );
 
-	renderContext.m_esm.UpdateRenderTargetViewport( m_cascadedShadowMapDS->GetWidth(), m_cascadedShadowMapDS->GetHeight() );
+	renderContext.m_esm.UpdateRenderTargetViewport( cascadedShadowDepth->GetWidth(), cascadedShadowDepth->GetHeight() );
 
 	// we want a clean depth buffer for this
 	CR( renderContext.Clear( CLEARFLAGS_ZBUFFER, 0xffffffff, 1, 0 ) );
 
 	renderContext.SetReadOnlyDepth( false );
 
-	return true;
+	return cascadedShadowDepth;
 }
 
 void Tr2ShadowMap::BeginShadowRendering( Tr2RenderContext& renderContext, int splitIndex )
@@ -348,95 +243,36 @@ void Tr2ShadowMap::EndShadowRendering( Tr2RenderContext& renderContext )
 	renderContext.m_esm.PopRenderTarget();
 	renderContext.m_esm.PopDepthStencilBuffer();
 	renderContext.m_esm.PopViewport();
-
-	if( m_cascadedShadowMapDS->IsValid() )
-	{
-		m_cascadedShadowMapHandle->SetValue( m_cascadedShadowMapDS );
-	}
 }
 
-void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2TextureProvider* depthMap, float upscaling )
+Tr2GpuResourcePool::Texture Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, Tr2GpuResourcePool& gpuResourcePool, const Tr2TextureAL& depthMap, const Tr2TextureAL& cascadedShadowDepth, float upscaling )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	auto width = Tr2Renderer::GetViewport().width;
-	auto height = Tr2Renderer::GetViewport().height;
-	bool viewportChanged = false;
+	auto shadowMapResult = gpuResourcePool.GetTempTexture( "shadowMapResult", depthMap.GetWidth(), depthMap.GetHeight(), PixelFormat::PIXEL_FORMAT_R8_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 
-	if( m_shadowMapResultRT )
+	GPU_REGION( renderContext, "Denoising" );
+	renderContext.m_esm.PushRenderTarget( shadowMapResult );
+	renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
+
+	m_shadowEffect->SetParameter( BlueSharedString( "EveSpaceSceneCascadedShadowMap" ), cascadedShadowDepth );
+	m_shadowEffect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
+	Tr2Renderer::DrawScreenQuad( renderContext, m_shadowEffect );
+	m_shadowEffect->SetParameter( BlueSharedString( "EveSpaceSceneCascadedShadowMap" ), Tr2TextureAL{} );
+	m_shadowEffect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL{} );
+
 	{
-		viewportChanged = m_shadowMapResultRT->GetWidth() != uint32_t( width ) || m_shadowMapResultRT->GetHeight() != uint32_t( height );
-	}
-
-	if( !m_shadowMapResultRT || !m_shadowMapResultRT->IsValid() || viewportChanged )
-	{
-		m_shadowMapResultRT = nullptr;
-		m_shadowMapResultRT.CreateInstance();
-		m_shadowMapResultRT->SetName("shadow_map_rt");
-		m_shadowMapResultRT->Create( width, height, 1, PixelFormat::PIXEL_FORMAT_R8_UNORM );
-	}
-
-	if( m_shadowMapResultRT || m_shadowMapResultRT->IsValid() )
-	{
-		GPU_REGION( renderContext, "Denoising" );
-		renderContext.m_esm.PushRenderTarget( *m_shadowMapResultRT );
-		renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
-
-		Tr2Renderer::DrawTexture( renderContext, m_shadowEffect, m_shadowMapResultRT->GetRenderTarget() );
-
+		CCP_STATS_ZONE( "DO_DENOISER" );
+		if( m_denoiser && m_useDenoiser && depthMap.IsValid() )
 		{
-			CCP_STATS_ZONE( "DO_DENOISER" );
-			if( m_denoiser && m_useDenoiser && depthMap && depthMap->GetTexture()->IsValid() )
-			{
-				m_denoiser->Apply( *m_shadowMapResultRT, *depthMap, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), upscaling, renderContext );
-			}
+			shadowMapResult = m_denoiser->Apply( std::move( shadowMapResult ), depthMap, {}, Tr2Renderer::GetReversedDepthProjectionTransform(), upscaling, gpuResourcePool, renderContext );
 		}
-
-		if( m_shadowMapHandle )
-		{
-			if( m_denoiser && m_useDenoiser )
-			{
-				m_shadowMapHandle->SetValue( m_denoiser->GetTexture() );
-			}
-			else
-			{
-				m_shadowMapHandle->SetValue( m_shadowMapResultRT );
-			}
-		}
-
-		renderContext.m_esm.PopRenderTarget();
-		renderContext.m_esm.PopDepthStencilBuffer();
 	}
-}
 
-void Tr2ShadowMap::SetShadowMap( Tr2RenderTargetPtr shadowMapRenderTarget )
-{
-	if( m_shadowMapHandle )
-	{
-		m_shadowMapHandle->SetValue( shadowMapRenderTarget );
-	}
-}
+	renderContext.m_esm.PopRenderTarget();
+	renderContext.m_esm.PopDepthStencilBuffer();
 
-Tr2DepthStencilPtr Tr2ShadowMap::GetCascadedShadowMapDS() const
-{
-	return m_cascadedShadowMapDS;
-}
-
-Tr2RenderTargetPtr Tr2ShadowMap::GetCascadedShadowMapRT() const
-{
-	return m_shadowMapResultRT;
-}
-
-ITr2TextureProvider* Tr2ShadowMap::GetShadowMap() const
-{
-	if( m_denoiser )
-	{
-		return m_denoiser->GetTexture();
-	}
-	else
-	{
-		return m_shadowMapResultRT;
-	}
+	return shadowMapResult;
 }
 
 const unsigned int Tr2ShadowMap::GetShadowSplitCount() const
@@ -520,4 +356,3 @@ uint32_t Tr2ShadowMap::GetDebugColors( int switchCase ) const
 	}
 	return color;
 }
-

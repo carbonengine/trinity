@@ -52,16 +52,18 @@ const Be::ClassInfo* Tr2GrannyAnimation::ExposeToBlue()
 			"PlayAnimation( animName )\n\nPlays the given animation, replacing whatever animation was playing before.\n"
 			":param animName: animation name"
 		)
-		MAP_METHOD_AND_WRAP
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
 		(
 			"PlayAnimationEx",
 			PlayAnimationEx,
-			"PlayAnimationEx( animName, loopCount, delay, speed )\n\n"
+			1,
+			"PlayAnimationEx( animName, loopCount, delay, speed, clearWhenDone=True )\n\n"
 			"Plays the given animation, replacing whatever animation was playing before.\n"
 			":param animName: animation name\n"
 			":param loopCount: can be 0 to loop forever.\n"
 			":param delay: time (in seconds) from now before animation should start playing.\n"
 			":param speed: can be used speed up or slow down playback - use negative values to play backwards.\n"
+			":param clearWhenDone: boolean True to clear animation when done, boolean False to keep it playing. Defaults to True\n"
 		)
 		MAP_METHOD_AND_WRAP
 		(

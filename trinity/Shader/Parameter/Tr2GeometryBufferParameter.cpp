@@ -159,3 +159,8 @@ void Tr2GeometryBufferParameter::SetGpuBuffer( ITr2GpuBuffer* buffer )
 	m_resourcePath = L"";
 	m_gpuBuffer = buffer;
 }
+
+ITr2GpuBufferPtr Tr2GeometryBufferParameter::GetGpuBuffer() const
+{
+	return m_gpuBuffer;
+}

@@ -480,8 +480,8 @@ void EveChildMesh::UpdateRtSkeleton()
 	}
 	
 	auto meshIndex = m_mesh->GetMeshIndex();
-	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
-	if( !meshData )
+	auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
+	if( !lod )
 	{
 		return;
 	}
@@ -492,7 +492,7 @@ void EveChildMesh::UpdateRtSkeleton()
 	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );	
 	for( auto it = begin( *areas ); it != end( *areas ); ++it )
 	{
-		if( meshData->m_areas[std::max( 0, ( *it )->GetIndex() )].m_isSkinned )
+		if( lod->m_areas[std::max( 0, ( *it )->GetIndex() )].m_isSkinned )
 		{
 			hasSkinned = true;
 			break;
@@ -511,7 +511,7 @@ void EveChildMesh::UpdateRtSkeleton()
 	}
 
 	// check morphing
-	bool hasMorphed = meshData->m_morphTargetAllocation.IsValid();
+	bool hasMorphed = lod->m_morphTargetAllocation.IsValid();
 
 	bool morphChanged = false;
 	if( hasMorphed )
@@ -532,7 +532,7 @@ void EveChildMesh::UpdateRtSkeleton()
 		{
 			auto meshAreaIndex = std::max( 0, ( *it )->GetIndex() );
 			
-			if( meshData->m_areas[meshAreaIndex].m_isSkinned || meshData->m_areas[meshAreaIndex].m_isMorphed )
+			if( lod->m_areas[meshAreaIndex].m_isSkinned || lod->m_areas[meshAreaIndex].m_isMorphed )
 			{
 				( *it )->GetRtMeshArea()->MarkBlasOutdated();
 			}
@@ -794,9 +794,11 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
-		if( auto mesh = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() ) )
+		auto meshIndex = m_mesh->GetMeshIndex();
+		if( auto mesh = m_mesh->GetGeometryResource()->GetMeshData( meshIndex ) )
 		{
-			if( mesh->m_morphTargetAllocation.IsValid() )
+			auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
+			if( lod->m_morphTargetAllocation.IsValid() )
 			{
 				auto [morphTargets, morphTargetCount] = GetMorphTargets();
 				m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
@@ -804,7 +806,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 				// TODO: intern, for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
 				m_vsData.activeMorphTargetsCount = uint32_t( morphTargetCount );
 				m_vsData.morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
-				m_vsData.morphTargetVertexDataOffset = mesh->m_morphTargetAllocation.GetOffset();
+				m_vsData.morphTargetVertexDataOffset = lod->m_morphTargetAllocation.GetOffset();
 
 				if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
 				{
@@ -1160,6 +1162,7 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 
 bool IsBakedName( std::string name )
 {
+	return true;
 	// if name starts with bs its baked
 	return name.compare( 0, 5, "Base_" ) == 0 || name.compare( 0, 4, "Org_" ) == 0 || name.compare( 0, 3, "Sc_" ) == 0;
 }
@@ -1276,14 +1279,17 @@ void EveChildMesh::UnbakeMorphs()
 
 void EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 {
+	auto lod = m_mesh->GetGeometryResource()->GetMeshLod( m_mesh->GetMeshIndex(), m_currentScreenSize );
+
 	if( !m_bakedMorphAllocation.IsValid() )
 	{
 		TriGeometryResMeshData* geometryResMesh = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() );
 
 		if( geometryResMesh )
 		{
-			uint32_t vertexSize = geometryResMesh->m_bytesPerMorphTargetVertex;
-			uint32_t vertexCount = geometryResMesh->m_vertexCount;
+
+			uint32_t vertexSize = lod->m_bytesPerMorphTargetVertex;
+			uint32_t vertexCount = lod->m_vertexCount;
 			uint32_t dataSize = vertexSize * vertexCount;
 
 			ALResult result = g_bakedMorphTargetBuffer.Allocate(
@@ -1314,14 +1320,14 @@ void EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 
 		data->activeMorphTargetsCount = uint32_t( morphTargetCount );
 		data->morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
-		data->morphTargetVertexDataOffset = meshData->m_morphTargetAllocation.GetOffset();
+		data->morphTargetVertexDataOffset = lod->m_morphTargetAllocation.GetOffset();
 		data->bakedMorphTargetVertexDataOffset = m_bakedMorphAllocation.GetOffset();
-		data->vertexDataOffset = meshData->m_vertexAllocation.GetOffset();
-		data->vertexDataStride = meshData->m_vertexAllocation.GetStride();
-		data->vertexCount = meshData->m_vertexCount;
+		data->vertexDataOffset = lod->m_vertexAllocation.GetOffset();
+		data->vertexDataStride = lod->m_vertexAllocation.GetStride();
+		data->vertexCount = lod->m_vertexCount;
 
 		Tr2VertexDefinition vertexDefinition;
-		if( Tr2EffectStateManager::GetVertexDefinition( meshData->m_vertexDeclaration, vertexDefinition ) )
+		if( Tr2EffectStateManager::GetVertexDefinition( meshData->m_vertexDeclarationHandle, vertexDefinition ) )
 		{
 			Tr2VertexDefinition::Item* positionItem = vertexDefinition.Find( Tr2VertexDefinition::POSITION );
 			Tr2VertexDefinition::Item* tangentItem = vertexDefinition.Find( Tr2VertexDefinition::TANGENT );
@@ -1360,8 +1366,8 @@ void EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 		PrepareMorphBuffers( renderContext );
 
 		auto meshIndex = m_mesh->GetMeshIndex();
-		auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
-		uint32_t vertexCount = meshData->m_vertexCount;
+		auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
+		uint32_t vertexCount = lod->m_vertexCount;
 
 		renderContext.SetConstants( m_mergeMorphsConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 

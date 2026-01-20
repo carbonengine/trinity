@@ -96,6 +96,8 @@ public:
 	void SetParameter( const BlueSharedString& name, const Vector3& value ); 
 	void SetParameter( const BlueSharedString& name, const Vector4& value );
 	void SetParameter( const BlueSharedString& name, const Matrix& matrix );
+	void SetParameter( const BlueSharedString& name, const Tr2TextureAL& texture, uint32_t uavMipLevel = 0 );
+	void SetParameter( const BlueSharedString& name, const Tr2BufferAL& value );
 
 	void SetOption( const BlueSharedString& name, const BlueSharedString& value );
 	void ResetOption( const BlueSharedString& name );

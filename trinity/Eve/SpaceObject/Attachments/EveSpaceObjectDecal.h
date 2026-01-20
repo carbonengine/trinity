@@ -26,7 +26,7 @@ struct DecalVSPerObjectData {
     Matrix m_worldMatrix;
     Matrix m_invWorldMatrix;
     Matrix m_decalMatrix;
-    Matrix m_invDecalMatrix;
+    Matrix m_inverseDecalMatrix;
     Matrix m_parentBoneMatrix;
     Matrix m_invParentBoneMatrix;
 };
@@ -184,7 +184,7 @@ private:
 
 	// matrices representing the "volume" of the decal projection
 	Matrix m_decalMatrix;
-	Matrix m_invDecalMatrix;
+	Matrix m_inverseDecalMatrix;
 
 	// base mesh geometry
 	TriGeometryResPtr m_baseGeometryResource;

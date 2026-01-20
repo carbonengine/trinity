@@ -801,6 +801,13 @@ struct Technique
 	std::vector<Library> libraries;
 };
 
+struct PDB
+{
+	std::string name;
+#if _WIN32
+	CComPtr<IDxcBlob> pdbBlob;	// this is for dx11/dx12. metal will require another field.
+#endif
+};
 
 struct EffectData
 {
@@ -834,6 +841,7 @@ struct EffectData
 		}
 	}
 
+	std::vector<PDB> pdbs;
 	std::vector<Technique> techniques;
 	std::map<StringReference, ParameterAnnotation> annotations;
 };

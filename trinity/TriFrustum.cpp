@@ -275,16 +275,17 @@ float TriFrustum::GetPixelSizeAccrossEst( const Vector3& center, float radius ) 
 	}
 	Vector3 d( center - m_viewPos );
 
-	if( LengthSq( d ) < radius * radius )
+	float lengthSqrd = LengthSq( d );
+	float radiusSqrd = radius * radius;
+	if( lengthSqrd < radius * radius )
 	{
+		//The camera is inside the object, it essentially has infinite screen size.
 		return std::numeric_limits<float>::max();
 	}
 
-	const float epsilon = 1e-5f;
-	float distance = std::max( epsilon, Length( d ) );
-	float ratio = radius / distance;
-
-	return ( ratio * m_halfWidthProjection ) * 2.f;
+	//adjusted distance based on the visible part of the sphere, that properly goes to infinity as you enter the sphere.
+	float distance = sqrt( lengthSqrd - radiusSqrd ); 
+	return ( radius / distance * m_halfWidthProjection * 2.0f );
 }
 
 float TriFrustum::GetPixelSizeAccross( const CcpMath::Sphere& sphere ) const

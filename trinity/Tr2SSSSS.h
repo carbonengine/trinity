@@ -11,12 +11,12 @@
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
-BLUE_DECLARE( Tr2RenderTarget );
 BLUE_DECLARE( Tr2DepthStencil );
 BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( TriTextureRes );
 BLUE_DECLARE( Tr2GpuStructuredBuffer );
 BLUE_DECLARE_INTERFACE( ITriTextureRes );
+class Tr2GpuResourcePool;
 
 BLUE_CLASS( Tr2SSSSS ) :
 	public IRoot
@@ -32,18 +32,14 @@ public:
 	EXPOSE_TO_BLUE();
 
 	Tr2SSSSS( IRoot* lockobj = NULL );
-	~Tr2SSSSS();
 
-	bool SetupSeprableSpecularSubSurfaceScattering( Tr2RenderContext & renderContext, ITriRenderBatchAccumulator * batches );
-	void SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext & renderContext, Tr2RenderTargetPtr colorMap, Tr2RenderTargetPtr opaqueColorMap, Tr2DepthStencilPtr depthMap );
+	void SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext & renderContext, ITriRenderBatchAccumulator * batches, const Tr2TextureAL& colorMap, const Tr2TextureAL& opaqueColorMap, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool );
 	void UpdateSubSurfaceFrontScatterData( Tr2RenderContext & renderContext );
 
 private:
 
 	bool m_enabled;
 	bool m_hasSSSSSInScene;
-
-	Tr2RenderTargetPtr m_seprableSpecularColorMap; // RGB Specular, A SSSSS Mask
 
 	Color m_subSurfaceFrontScatterColor;
 	float m_subSurfaceScatteringWidth;

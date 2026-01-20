@@ -86,7 +86,7 @@ public:
 	bool GetAdditiveBlendMode();
 
 	void PlayAnimationOnce( const char* animName );
-	void PlayAnimationEx( const char* animName, int loopCount, float delay, float speed );
+	void PlayAnimationEx( const char* animName, int loopCount, float delay, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone );
 	void ChainAnimation( const char* animName );
 	void ChainAnimationEx( const char* animName, int loopCount, float delay, float speed );
 

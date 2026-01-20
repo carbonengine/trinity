@@ -57,6 +57,10 @@ std::string g_metalToolsPath;
 
 // Generate DX11 HLSL listing file
 bool g_generateListing = false;
+// Generate pdb files for debugging
+bool g_generatePDB = false;
+// Skip optimization for debugging
+bool g_skipOptimization = false;
 // Listing text
 std::string g_listing;
 // CS for listing access
@@ -212,6 +216,7 @@ void PrintUsage()
 	printf( "  /telemetry - Enable RAD Telemetry\n" );
 #endif
 	printf( "  /metal <path> - Path to Metal Developer Tools for Windows\n" );
+	printf( "  /pdb <path> - Path to output debug files\n" );
 	printf( "input_file - Path to input HLSL file\n" );
 	printf( "output_file - Path to output binary file\n" );
 }
@@ -247,6 +252,7 @@ struct ProgramArguments
 	ProgramArguments()
 		:shaderPath( nullptr ),
 		outputPath( nullptr ),
+		pdbPath( nullptr ),
 		coreCount( std::max( 1u, std::thread::hardware_concurrency() ) ),
 		listingFile( nullptr ),
 		checkMTime( false ),
@@ -259,6 +265,7 @@ struct ProgramArguments
 
 	char* shaderPath;
 	char* outputPath;
+	char* pdbPath;
 	unsigned coreCount;
 	std::vector<Macro> defines;
 	char* listingFile;
@@ -347,6 +354,23 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 			{
 				return false;
 			}
+		}
+		else if( strcmp( argv[i], "/pdb" ) == 0 )
+		{
+			g_generatePDB = true;
+			++i;
+			if( i < argc )
+			{
+				args.pdbPath = argv[i];
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else if( strcmp( argv[i], "/Od" ) == 0 )
+		{
+			g_skipOptimization = true;
 		}
 		else if( strncmp( argv[i], "/O", 2 ) == 0 && strlen( argv[i] ) == 3 && argv[i][2] >= '0' && argv[i][2] <= '3' )
 		{
@@ -822,6 +846,33 @@ int main(int argc, char* argv[])
 
 		fclose( file );
 		file = nullptr;
+
+		// write pdbs
+		if( args.pdbPath )
+		{
+			for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
+			{
+				if( it->second )
+				{
+					for ( const auto& pdb : it->second->data.pdbs )
+					{
+						// Open the output pdbFile
+						FILE* pdbFile = nullptr;
+						std::string totalPath = std::string( args.pdbPath ) + "\\" + pdb.name;
+						if( fopen_s( &pdbFile, totalPath.c_str(), "wb" ) != 0 )
+						{
+							printf( "%s: error X0000: Could not open pdb file \"%s\" for writing\n", args.shaderPath, totalPath.c_str() );
+							fflush( stdout );
+							return 1;
+						}
+#if _WIN32
+						fwrite( pdb.pdbBlob->GetBufferPointer(), pdb.pdbBlob->GetBufferSize(), 1, pdbFile );
+#endif
+						fclose( pdbFile );
+					}
+				}
+			}
+		}
 	}
 
 	if( g_generateListing )

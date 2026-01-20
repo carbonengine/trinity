@@ -41,7 +41,7 @@ bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2Material* effect,
                        tlVertexCoord, brVertexCoord );
 }
 
-bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, Filtering filter )
+bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, Filtering filter )
 {
 	switch( filter )
 	{
@@ -53,7 +53,7 @@ bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2TextureAL& texture, c
 	return false;
 }
 
-bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2TextureAL& texture,
+bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, const Tr2TextureAL& texture,
                        const Vector2& tlTexCoord, const Vector2& brTexCoord,
                        const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
 {
@@ -61,17 +61,17 @@ bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2TextureAL& texture,
                        tlTexCoord, brTexCoord, tlVertexCoord, brVertexCoord );
 }
 
-bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture )
+bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture )
 {
 	return DrawHelper( renderContext, effect->GetShaderStateInterface(), effect, &texture, false );
 }
 
-bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord )
+bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord )
 {
 	return DrawHelper( renderContext, effect->GetShaderStateInterface(), effect, &texture, false, tlTexCoord, brTexCoord );
 }
 
-bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture,
+bool Tr2Blitter::Draw( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture,
                        const Vector2& tlTexCoord, const Vector2& brTexCoord, 
                        const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
 {
@@ -106,8 +106,7 @@ bool Tr2Blitter::DrawInCameraSpace( Tr2RenderContext& renderContext, Tr2Shader* 
 	return DrawHelper( renderContext, shader, material, NULL, true );
 }
 
-bool Tr2Blitter::DrawHelper( Tr2RenderContext& renderContext, Tr2Shader* shader, Tr2Material* material,
-                             Tr2TextureAL* halTexture,
+bool Tr2Blitter::DrawHelper( Tr2RenderContext& renderContext, Tr2Shader* shader, Tr2Material* material, const Tr2TextureAL* halTexture,
 							 bool isCameraSpace,
 							 const Vector2& tlTexCoord, const Vector2& brTexCoord,
                              const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
@@ -150,9 +149,11 @@ bool Tr2Blitter::DrawHelper( Tr2RenderContext& renderContext, Tr2Shader* shader,
 	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( Tr2ScreenVertex ) );
 
 	static CTr2TransientTextureReference textureReference;
+	Tr2TextureAL texCopy;
 	if( halTexture )
 	{
-		textureReference.SetTexture( halTexture );
+		texCopy = *halTexture;
+		textureReference.SetTexture( &texCopy );
 		GlobalStore().GetVariable( "BlitSource" )->SetValue( &textureReference );
 	}
 

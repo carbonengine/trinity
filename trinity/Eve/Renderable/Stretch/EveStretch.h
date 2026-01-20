@@ -3,11 +3,13 @@
 #define EveStretch_h
 
 
+#include <IStretchAudio.h>
+#include <ITr2Audio.h>
+
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "Eve/EveTransform.h"
 #include "Curves/TriCurveSet.h"
 #include "Eve/IEveFiringEffectElement.h"
-#include <ITr2Audio.h>
 #include "Tr2DebugRenderer.h"
 
 BLUE_DECLARE( EveStretch );
@@ -149,6 +151,7 @@ private:
 	TriFloatPtr m_length;
 
 	ITr2AudioPtr m_audio;
+	IStretchAudioPtr m_stretchAudio;
 };
 
 TYPEDEF_BLUECLASS( EveStretch );
