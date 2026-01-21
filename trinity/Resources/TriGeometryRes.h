@@ -172,24 +172,7 @@ struct TriGeometryResMeshData
 	TriGeometryResMeshData();
 
 	std::string m_name;
-	/*TrackableStdVector<TriGeometryResAreaData> m_areas;
-	unsigned int m_vertexDeclaration;
-	unsigned int m_morphVertexDeclaration;
-	unsigned int m_bytesPerVertex;
-	unsigned int m_bytesPerMorphTargetVertex;
-	unsigned int m_vertexCount;
-	unsigned int m_primitiveCount;
-
-	bool m_allocationsValid;
-	Tr2SuballocatedBuffer::Allocation m_vertexAllocation;
-	Tr2SuballocatedBuffer::Allocation m_indexAllocation;
-
-	std::vector<std::shared_ptr<MeshDecalData>> m_decals;
-
-	// Index buffer with indexes in reversed order (used by hair/clothing)
-	bool m_reversedIndicesValid;
-	Tr2SuballocatedBuffer::Allocation m_reversedIndexAllocation;*/
-
+	
 	unsigned int m_vertexDeclarationHandle;
 	unsigned int m_bytesPerVertex;
 
@@ -203,7 +186,6 @@ struct TriGeometryResMeshData
 
 	uint32_t m_lodMask; //A bit mask of which LODs have been loaded.
 	TrackableStdVector<std::unique_ptr<TriGeometryResLodData>> m_lods;
-
 };
 
 uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, uint32_t count );

@@ -856,7 +856,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 		for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
 		{
-			Tr2RaytracingMesh* mesh = ( *it )->mesh;
+			//Tr2RaytracingMesh* mesh = ( *it )->mesh;
+			Tr2RaytracingMesh* mesh = *it;
 			TriGeometryResLodData* lod = mesh->GetCurrentLodData();
 			if( !lod )
 			{

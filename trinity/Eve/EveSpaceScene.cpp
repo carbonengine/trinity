@@ -2168,8 +2168,6 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 		}
 	}
 
-	std::vector<ITr2Renderable*> visible;
-
 	// Render to depth map
 	{
 		renderContext.AddGpuMarker( __FUNCTION__ );

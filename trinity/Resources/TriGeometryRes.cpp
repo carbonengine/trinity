@@ -308,8 +308,11 @@ TriGeometryResLodData* TriGeometryRes::GetMeshLod( unsigned int meshIx, int lodI
 
 	if( !mesh || lodIndex < 0 || lodIndex >= mesh->m_lods.size() )
 	{
-		//broken what is mesh is null
-		//CCP_ASSERT( lodIndex >= 0 && lodIndex < mesh->m_lods.size() ); //This should never happen, so assert it.
+		CCP_ASSERT( lodIndex >= 0 ); //This should never happen, so assert it.
+		if( mesh )
+		{
+			CCP_ASSERT( lodIndex < mesh->m_lods.size() ); //This should never happen, so assert it.
+		}
 		return nullptr;
 	}
 
@@ -1613,15 +1616,9 @@ TriGeometryResAreaData::TriGeometryResAreaData() :
 }
 
 TriGeometryResLodData::TriGeometryResLodData() :
-	//m_bytesPerVertex( 0 ),
-	//m_bytesPerMorphTargetVertex( 0 ),
 	m_vertexCount( 0 ),
 	m_primitiveCount( 0 ),
 	m_areas( "TriGeometryResMeshData/m_areas" ),
-	//m_jointBindings( "TriGeometryResMeshData/m_jointBindings" ),
-	//m_isLodMesh( false ),
-	//m_pVertexData( NULL ),
-	//m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_morphVertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_allocationsValid(false),
 	m_reversedIndicesValid(false),
