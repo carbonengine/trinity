@@ -20,7 +20,7 @@ extern uint32_t g_streamlineAppID;
 
 namespace DlssUtils
 {
-	sl::Resource GenerateTextureResource( Tr2TextureAL* texture )
+	sl::Resource GenerateTextureResource( const Tr2TextureAL* texture )
 	{
 		if( texture && texture->IsValid() )
 		{

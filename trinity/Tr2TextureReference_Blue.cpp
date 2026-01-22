@@ -17,6 +17,7 @@ const Be::ClassInfo* Tr2TextureReference::ExposeToBlue()
 		MAP_PROPERTY_READONLY( "mipCount", GetMipCount, "Number of mip levels" )
 		MAP_PROPERTY_READONLY( "format", GetFormat, "Texture pixel format" )
 		MAP_PROPERTY_READONLY( "arraySize", GetArraySize, "Number of textures in the array" )
+		MAP_PROPERTY_READONLY( "name", GetName, "Texture name" )
 
 		MAP_METHOD_AND_WRAP( 
 			"Save", 

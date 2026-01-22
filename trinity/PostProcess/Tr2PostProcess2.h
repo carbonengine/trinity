@@ -8,7 +8,6 @@
 #ifndef Tr2PostProcess2_H
 #define Tr2PostProcess2_H
 
-#include "Tr2PostProcessRenderInfo.h"
 #include "Shader/Tr2Effect.h"
 #include "Effects/Tr2PPSignalLossEffect.h"
 #include "Effects/Tr2PPGodRaysEffect.h"
@@ -66,6 +65,8 @@ public:
 	Tr2PPTonemappingEffectPtr GetTonemapping() const { return m_tonemapping; }
 	Tr2PPColorCorrectionEffectPtr GetColorCorrection() const { return m_colorCorrection; }
 
+	void MarkAllDirty();
+
 	
 	void GetLuts( std::vector<const Tr2PPLutEffect*> & container ) const;
 	void ClearLuts();
@@ -87,10 +88,6 @@ public:
 
 	// Helper method for scenes to decide on miplodbias
 	float GetMipLodBias() const;
-
-
-	// Jittering
-	void GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y );
 
 	float m_exposureAdjustment = 0;
 

@@ -77,8 +77,8 @@ public:
 		uint32_t stride ) throw( );
 	ALResult SetIndices( const Tr2BufferAL& buffer ) throw( );
 	ALResult SetIndices( const Tr2BufferAL& buffer, uint32_t stride ) throw();
-	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
-	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
+	ALResult ClearUav( const Tr2BufferAL& buffer, const float values[4] ) throw();
+	ALResult ClearUav( const Tr2BufferAL& buffer, const uint32_t values[4] ) throw();
 
 	ALResult CopySubBuffer(
 		Tr2BufferAL& dest,
@@ -91,8 +91,8 @@ public:
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw();
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
 
-	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( );
-	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw( );
+	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( );
+	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw();
 
 	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
 	

@@ -7,7 +7,6 @@
 #include "StdAfx.h"
 #include "Tr2PostProcess2.h"
 #include "Tr2Renderer.h"
-#include "Tr2PostProcessRenderInfo.h"
 
 
 Tr2PostProcess2::Tr2PostProcess2( IRoot* lockobj ):
@@ -33,16 +32,31 @@ float Tr2PostProcess2::GetMipLodBias() const
 	return taa_bias;
 }
 
-void Tr2PostProcess2::GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y )
+void Tr2PostProcess2::MarkAllDirty()
 {
-	if( m_taa )
+	auto SetDirtyIfNotNull = []( const auto& effect ) {
+		if( effect )
+		{
+			effect->SetDirty( true );
+		}
+	};
+
+	SetDirtyIfNotNull( m_signalLoss );
+	SetDirtyIfNotNull( m_godRays );
+	SetDirtyIfNotNull( m_bloom );
+	SetDirtyIfNotNull( m_dynamicExposure );
+	SetDirtyIfNotNull( m_filmGrain );
+	SetDirtyIfNotNull( m_desaturate );
+	SetDirtyIfNotNull( m_fade );
+	SetDirtyIfNotNull( m_vignette );
+	SetDirtyIfNotNull( m_fog );
+	SetDirtyIfNotNull( m_taa );
+	SetDirtyIfNotNull( m_depthOfField );
+	SetDirtyIfNotNull( m_tonemapping );
+	SetDirtyIfNotNull( m_colorCorrection );
+	for( auto& lut : m_luts )
 	{
-		m_taa->GetJitter( renderWidth, renderHeight, x, y );		
-	}
-	else
-	{
-		x = 0;
-		y = 0;
+		SetDirtyIfNotNull( lut );
 	}
 }
 

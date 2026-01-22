@@ -1362,6 +1362,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	const char* Tr2TextureAL::GetName() const
+	{
+		return m_name.c_str();
+	}
+
 	ID3D11Resource* Tr2TextureAL::GetResourceDx11() const
 	{
 		return m_texture;

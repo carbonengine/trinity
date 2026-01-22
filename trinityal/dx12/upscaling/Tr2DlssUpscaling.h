@@ -19,7 +19,7 @@
 
 namespace DlssUtils
 {
-sl::Resource GenerateTextureResource( Tr2TextureAL* texture );
+sl::Resource GenerateTextureResource( const Tr2TextureAL* texture );
 }
 
 class Tr2DlssUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
@@ -76,7 +76,7 @@ public:
 	virtual uint32_t GetDispatchRequirements() const override;
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
-	virtual void SetHudLessTexture( Tr2TextureAL* texture ) override;
+	virtual void SetHudLessTexture( const Tr2TextureAL* texture ) override;
 	virtual void SetupForReuse() override;
 
 private:

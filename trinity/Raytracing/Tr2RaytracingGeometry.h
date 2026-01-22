@@ -36,25 +36,6 @@ private:
 };
 
 
-BLUE_CLASS( Tr2RuntimeGpuBuffer ) : public ITr2GpuBuffer
-{
-public:
-	EXPOSE_TO_BLUE();
-
-	Tr2BufferAL* GetGpuBuffer( unsigned ) override
-	{
-		return &m_buffer;
-	}
-	void SetGpuBuffer( const Tr2BufferAL& buffer )
-	{
-		m_buffer = buffer;
-	}
-
-	Tr2BufferAL m_buffer;
-};
-TYPEDEF_BLUECLASS( Tr2RuntimeGpuBuffer );
-
-
 class Tr2RaytracingMesh
 {
 public:

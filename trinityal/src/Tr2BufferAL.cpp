@@ -117,17 +117,17 @@ bool Tr2BufferAL::operator==( const Tr2BufferAL& other ) const
 	return m_buffer == other.m_buffer;
 }
 
-ALResult Tr2BufferAL::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )
+ALResult Tr2BufferAL::MapForReading( const void*& data, Tr2RenderContextAL& renderContext ) const
 {
 	return m_buffer->MapForReading( data, renderContext );
 }
 
-ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext ) const
 {
 	return m_buffer->MapForReading( data, offset, size, renderContext );
 }
 
-void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& renderContext )
+void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& renderContext ) const
 {
 	m_buffer->UnmapForReading( renderContext );
 }

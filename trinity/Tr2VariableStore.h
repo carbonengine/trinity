@@ -44,6 +44,7 @@ public:
 
 	TriVariable* RegisterVariable( const char* name, ITr2TextureProvider* value );
 	TriVariable* RegisterVariable( const char* name, ITr2GpuBuffer* value );
+	TriVariable* RegisterVariable( const char* name, const Tr2TextureAL& value );
 
     void UnregisterVariable( const char* name );
 	bool UnregisterLocalVariable( const char* name );

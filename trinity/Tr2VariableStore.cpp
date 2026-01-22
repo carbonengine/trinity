@@ -6,6 +6,8 @@
 
 #include "StdAfx.h"
 #include "Tr2VariableStore.h"
+#include "Tr2TextureReference.h"
+
 
 Tr2VariableStore::Tr2VariableStore( IRoot* lockobj )
 	:m_variableMap( "Tr2VariableStore::m_variableMap" )
@@ -216,6 +218,26 @@ TriVariable* Tr2VariableStore::RegisterVariable( const char* name, ITr2TexturePr
 TriVariable* Tr2VariableStore::RegisterVariable( const char* name, ITr2GpuBuffer* value )
 {
 	return RegisterVariableInternal( name, value );
+}
+
+TriVariable* Tr2VariableStore::RegisterVariable( const char* name, const Tr2TextureAL& value )
+{
+	Tr2TextureReferencePtr ref;
+	auto var = GlobalStore().GetVariable( name );
+	if( var && var->GetType() == TRIVARIABLE_TEXTURE_RES )
+	{
+		ITr2TextureProvider* oldProvider = nullptr;
+		var->GetValue( oldProvider );
+		ref = BlueCastPtr( oldProvider );
+		if( ref )
+		{
+			*ref->GetTexture() = value;
+			return var;
+		}
+	}
+	ref.CreateInstance();
+	*ref->GetTexture() = value;
+	return RegisterVariable( name, ref );
 }
 
 // -------------------------------------------------------------

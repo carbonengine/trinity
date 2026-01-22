@@ -20,6 +20,8 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 
 	m_postUpdateCallbacks->Update();
 
+	CR_RETURN( Tr2RenderContext_GetMainThreadRenderContext().Present() );
+
 	Render();
 }
 

@@ -163,27 +163,14 @@ Tr2LightManager::Tr2LightManager( const char* effectPath )
 
 	m_currentSpaceSceneShadowQuality = ShadowQuality::SHADOW_DISABLED;
 
-	
-	m_ShadowMap.m_atlasDepthStencil = Tr2DepthStencilPtr();
-	m_ShadowMap.m_atlasDepthStencil.CreateInstance();
-	m_ShadowMap.m_atlasVariable.Register( "ShadowMapAtlas", m_ShadowMap.m_atlasDepthStencil );
-
 	m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_DISABLED;
 
 	m_currentFrameCounter = -1;
 
-	m_Raytracing.m_destTex = Tr2RenderTargetPtr();
-	m_Raytracing.m_destTex.CreateInstance();
-	// Create dummy texture, because of some mac issue.
-	m_Raytracing.m_destTex->Create( RAYTRACING_DUMMY_RESOLUTION, RAYTRACING_DUMMY_RESOLUTION, 1, 
-		Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
-
-	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", m_Raytracing.m_destTex );
+	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", Tr2TextureAL{} );
 
 	m_Raytracing.m_effect.CreateInstance();
 	m_Raytracing.m_effect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/rtdynamicshadows.fx" );
-
-	m_Raytracing.m_whiteTexture.CreateInstance();
 
 	PrepareResources();
 }
@@ -232,14 +219,12 @@ void Tr2LightManager::SetVariableStore()
 {
 	m_lightBufferVariable = m_lightBuffer;
 	m_indexBufferVariable = m_indexBuffer;
-	m_ShadowMap.m_atlasVariable = m_ShadowMap.m_atlasDepthStencil;
 }
 
 void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 {
 	m_lightBufferVariable = m_lightBuffer;
 	m_indexBufferVariable = m_indexBuffer;
-	m_ShadowMap.m_atlasVariable = m_ShadowMap.m_atlasDepthStencil;
 	ClearLightIndices( renderContext );
 
 	for ( auto& data : m_tlsLightData )
@@ -292,28 +277,16 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 		// there must be a more elegant way of doing this...
 		if ( nextFrameShadowQuality & ( 1 << ( uint32_t)ShadowQuality::SHADOW_HIGH ) )
 		{
-			UpdateShadowAtlasSize( ShadowQuality::SHADOW_HIGH );
+			m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_HIGH;
 		}
 		else if( nextFrameShadowQuality & ( 1 << (uint32_t)ShadowQuality::SHADOW_LOW ) )
 		{
-			UpdateShadowAtlasSize( ShadowQuality::SHADOW_LOW );
+			m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_LOW;
 		}
 		else
 		{
-			UpdateShadowAtlasSize( ShadowQuality::SHADOW_DISABLED );
+			m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_DISABLED;
 		}
-		if( ! ( nextFrameShadowQuality & ( 1 << (uint32_t)ShadowQuality::SHADOW_RAYTRACED ) ) )
-		{
-			if( m_Raytracing.m_destTex->IsValid() && m_Raytracing.m_destTex->GetWidth() != RAYTRACING_DUMMY_RESOLUTION )
-			{
-				// Create dummy texture, because of some mac issue.
-				m_Raytracing.m_destTex->Create( RAYTRACING_DUMMY_RESOLUTION, RAYTRACING_DUMMY_RESOLUTION, 1, 
-					Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
-
-				// Proper texture is created on the fly in the render function when needed, so that it can react to resolution changes.
-			}
-		}
-		
 		nextFrameShadowQuality = 1 << (uint32_t)shadowQuality;
 		m_currentFrameCounter = frameCounter;
 	}
@@ -322,23 +295,7 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 
 	ShadowQuality tmpShadowQuality = (ShadowQuality)min( (uint32_t)shadowQuality, (uint32_t)m_ShadowMap.m_qualityUsedByAtlas );
 	m_ShadowMap.m_atlasSettings = CalculateShadowMapAtlasSettings( tmpShadowQuality );
-	m_ShadowMap.m_atlasSettings.actualTextureSize = 
-		( m_ShadowMap.m_atlasDepthStencil && m_ShadowMap.m_atlasDepthStencil->IsValid() ) ? m_ShadowMap.m_atlasDepthStencil->GetWidth() : 0;
-}
-
-void Tr2LightManager::UpdateShadowAtlasSize( ShadowQuality shadowQuality )
-{
-	if( m_ShadowMap.m_qualityUsedByAtlas != shadowQuality )
-	{
-		// Setup depth stencil texture
-		m_ShadowMap.m_atlasDepthStencil->Destroy();
-		if ( shadowQuality != ShadowQuality::SHADOW_DISABLED )
-		{
-			Tr2LightManager::ShadowMapAtlasSettings settings = CalculateShadowMapAtlasSettings( shadowQuality );
-			m_ShadowMap.m_atlasDepthStencil->Create( settings.size, settings.size, Tr2RenderContextEnum::DSFMT_D32F, 0, 0 );
-		}
-	}
-	m_ShadowMap.m_qualityUsedByAtlas = m_ShadowMap.m_atlasDepthStencil->IsValid() ? shadowQuality : ShadowQuality::SHADOW_DISABLED;
+	m_ShadowMap.m_atlasSettings.actualTextureSize = CalculateShadowMapAtlasSettings( m_ShadowMap.m_qualityUsedByAtlas ).size;
 }
 
 void Tr2LightManager::AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius, uint16_t flags )
@@ -445,7 +402,7 @@ ALResult Tr2LightManager::UpdateLightBuffer( Tr2RenderContext& renderContext )
 	return S_OK;
 }
 
-ALResult Tr2LightManager::DoUpdateLists(Tr2RenderContext& renderContext )
+ALResult Tr2LightManager::DoUpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
 	if( !m_lightBuffer->IsValid() || !m_indexBuffer->IsValid() || !m_indexBufferCounter->IsValid() )
 	{
@@ -464,6 +421,11 @@ ALResult Tr2LightManager::DoUpdateLists(Tr2RenderContext& renderContext )
 	perFrameData.tilesY = ( perFrameData.height + ( TILE_HEIGHT - 1 ) ) / TILE_HEIGHT;
 	perFrameData.lightCount = std::min( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( m_lightData.size() ) );
 	perFrameData.indexBufferSize = INDEX_BUFFER_SIZE;
+
+
+	m_effect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
+	ON_BLOCK_EXIT( [&] { m_effect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL() ); } );
+
 	if( !FillAndSetConstants( m_perFrameData, perFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerFramePSStartRegister(), renderContext ) )
 	{
 		return E_FAIL;
@@ -661,18 +623,17 @@ void Tr2LightManager::ResolveLightData()
 	}
 }
 
-ALResult Tr2LightManager::UpdateLists( Tr2RenderContext& renderContext )
+ALResult Tr2LightManager::UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
 	m_lightBufferVariable = m_lightBuffer;
 	m_indexBufferVariable = m_indexBuffer;
-	m_ShadowMap.m_atlasVariable = m_ShadowMap.m_atlasDepthStencil;
 
 	if( m_lightData.empty() )
 	{
 		return ClearLightIndices( renderContext );
 	}
 
-	auto hr = DoUpdateLists( renderContext );
+	auto hr = DoUpdateLists( depthMap, renderContext );
 	if( FAILED( hr ) )
 	{
 		ClearLightIndices( renderContext );
@@ -712,6 +673,7 @@ bool Tr2LightManager::OnPrepareResources()
 	m_effect->SetParameter( BlueSharedString( "LightBuffer" ), m_lightBuffer );
 	m_effect->SetParameter( BlueSharedString( "LightIndices" ), m_indexBuffer );
 	m_effect->SetParameter( BlueSharedString( "LightIndexCount" ), m_indexBufferCounter );
+	m_effect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL() );
 
 	return true;
 }
@@ -742,9 +704,9 @@ const Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t ind
 	return m_lightData[index];
 }
 
-Tr2DepthStencilPtr Tr2LightManager::GetShadowMapAtlas()
+Tr2GpuResourcePool::Texture Tr2LightManager::GetShadowMapAtlas( Tr2GpuResourcePool& gpuResourcePool )
 {
-	return m_ShadowMap.m_atlasDepthStencil;
+	return gpuResourcePool.GetTempTexture( "EveSpaceSceneDynamicShadowMap", m_ShadowMap.m_atlasSettings.actualTextureSize, m_ShadowMap.m_atlasSettings.actualTextureSize, ImageIO::PIXEL_FORMAT_D32_FLOAT, Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE );
 }
 
 const Tr2LightManager::ShadowMapAtlasSettings& Tr2LightManager::GetShadowMapAtlasSettings() const
@@ -856,12 +818,14 @@ void Tr2LightManager::GetUnpackedShadowMapData( const PerLightData& lightData, u
 	shadowMapOffsetY = lightData.ShadowMapping.shadowMapOffsetY << m_ShadowMap.m_atlasSettings.entryMinSizeLog2;
 }
 
-ITr2TextureProvider* Tr2LightManager::GetRaytracedShadowMap() const
-{
-	return m_Raytracing.m_destTex;
-}
-
-void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry, ITr2TextureProvider* depth, ITr2TextureProvider* normal, const CcpMath::Sphere* planets, size_t planetCount, Tr2RenderContext& renderContext )
+Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows( 
+	Tr2RaytracingGeometry* geometry, 
+	const Tr2TextureAL& depth, 
+	const Tr2TextureAL& normal, 
+	const CcpMath::Sphere* planets, 
+	size_t planetCount, 
+	Tr2GpuResourcePool& gpuResourcePool, 
+	Tr2RenderContext& renderContext )
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Raytraced dynamic shadows" );
@@ -869,46 +833,33 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 
 	if( m_shadowCastingLights.size() == 0 || !g_useDynamicLightsShadows )
 	{
-		return;
+		return {};
 	}
 
-	auto depthTex = depth->GetTexture();
-	if( !depthTex )
-	{
-		return;
-	}
-
-	if( !m_Raytracing.m_destTex->IsValid() || m_Raytracing.m_destTex->GetWidth() != depthTex->GetWidth() || m_Raytracing.m_destTex->GetHeight() != depthTex->GetHeight() )
-	{
-		// Create the output resource. The dimensions and format should match the swap-chain
-		if( FAILED( m_Raytracing.m_destTex->Create( depthTex->GetWidth(), depthTex->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS ) ) )
-		{
-			return;
-		}
-		m_Raytracing.m_destTex->SetName( "raytracing_dynamic_shadow_dest" );
-	}
+	auto destTex = gpuResourcePool.GetTempTexture( "raytracing_dynamic_shadow_dest", depth.GetWidth(), depth.GetHeight(), Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS );
 
 	// texture uav
-	m_Raytracing.m_effect->SetParameter( RtShadowMapTechniqueName, m_Raytracing.m_destTex );
+	m_Raytracing.m_effect->SetParameter( RtShadowMapTechniqueName, destTex );
 	m_Raytracing.m_effect->SetParameter( RtNormalBufferTechniqueName, normal );
+	ON_BLOCK_EXIT( [&] { m_Raytracing.m_effect->SetParameter( RtNormalBufferTechniqueName, Tr2TextureAL() ); } );
 
 	// scene srv
 	m_Raytracing.m_effect->SetParameter( RtSceneTechniqueName, geometry );
 
 	if( !m_Raytracing.m_effect->GetEffectRes() || !m_Raytracing.m_effect->GetEffectRes()->IsGood() )
 	{
-		return;
+		return {};
 	}
 
 	if( !geometry->HasGeometry() )
 	{
-		return;
+		return {};
 	}
 
 	uint32_t techniqueIndex;
 	if( !m_Raytracing.m_effect->GetShaderStateInterface()->GetTechniqueIndex( RtShadowTechniqueName, techniqueIndex ) )
 	{
-		return;
+		return {};
 	}
 
 	std::wstring rayGenName, missName;
@@ -918,7 +869,7 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 
 	if( !pipelineState.IsValid() )
 	{
-		return;
+		return {};
 	}
 
 	if( !m_Raytracing.m_perFrameData.IsValid() )
@@ -926,7 +877,6 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 		m_Raytracing.m_perFrameData.Create( sizeof( RtShadowPerFrameData ), renderContext.GetPrimaryRenderContext() );
 	}
 
-	auto destTex = m_Raytracing.m_destTex->GetTexture();
 	{
 		RtShadowPerFrameData* data;
 		m_Raytracing.m_perFrameData.Lock( reinterpret_cast<void**>( &data ), renderContext );
@@ -964,7 +914,7 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 	}
 
 	const uint32_t clearValue[] = { 0, 0, 0, 0 };
-	renderContext.ClearUav( *m_Raytracing.m_destTex->GetTexture(), 0, clearValue );
+	renderContext.ClearUav( destTex, 0, clearValue );
 
 	m_Raytracing.m_effect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 	renderContext.UseAccelerationStructure( geometry->GetTLAS() );
@@ -975,5 +925,5 @@ void Tr2LightManager::RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry,
 	}
 
 	renderContext.DispatchRays( pipelineState, m_Raytracing.m_shaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
-	GlobalStore().RegisterVariable( "EveSpaceSceneDynamicShadowMap", m_Raytracing.m_destTex );
+	return destTex;
 }

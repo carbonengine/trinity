@@ -826,6 +826,11 @@ namespace TrinityALImpl
 		}
 		return S_OK;
 	}
+
+	const char* Tr2TextureAL::GetName() const
+	{
+		return m_name.c_str();
+	}
 	
 	void Tr2TextureAL::AssignFromTexture( Tr2TextureAL& backBuffer )
 	{

@@ -22,14 +22,9 @@
 #include "Utilities/Vector4d.h"
 
 
-Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bool temporalFroxels )
+Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bool temporalFroxels ) :
+	useTemporalFroxels( temporalFroxels )
 {
-	fogFroxels.CreateInstance();
-	if( temporalFroxels )
-	{
-		temporalFroxels0.CreateInstance();
-		temporalFroxels1.CreateInstance();
-	}
 	currentTemporalFroxels = false;
 	froxelJitter = Vector3( 0, 0, 0 );
 
@@ -55,7 +50,6 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_quality( Tr2VolumerticQuality::High ),
 	m_scaleFactor( 0.7f ),
 	m_blur( true ),
-	m_volumeHasContent( false ),
 	m_castShadows( false ),
 	m_receiveShadows( false ),
 	m_fogResources( true ),
@@ -63,15 +57,8 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_logBlending( true ),
 	m_logBlendingSmoothness( 4.0 )
 {
-
-	m_volumeSlices.CreateInstance();
-	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", m_volumeSlices );
-
-	m_downsampledDepth.CreateInstance();
-	GlobalStore().RegisterVariable( "VolumetricDepthMap", m_downsampledDepth );
-
-	m_blurScratch.CreateInstance();
-
+	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", Tr2TextureAL{} );
+	GlobalStore().RegisterVariable( "VolumetricDepthMap", Tr2TextureAL{} );
 
 	m_volumeBlit.CreateInstance();
 	m_volumeBlit->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/VolumeBlit.fx" );
@@ -86,7 +73,6 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	m_vBlur.CreateInstance();
 	m_vBlur->SetOption( BlueSharedString( "SOURCE_TYPE" ), BlueSharedString( "SOURCE_TYPE_TEXTURE" ) );
 	m_vBlur->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpecialFX/Volumetric/BlurVolumetric.fx" );
-	m_vBlur->SetParameter( BlueSharedString( "SourceMap" ), m_blurScratch );
 
 	m_batches.reset( new TriRenderBatchAccumulator<>( Tr2Renderer::GetPoolAllocator() ) );
 
@@ -130,10 +116,9 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 		m_environmentRandom = 0.0f;
 		m_previousEnvironmentG = 0.0f;
 		m_environmentBlendCounter = 0.0f;
-
-		GlobalStore().RegisterVariable( "EveSceneDistanceFogMap", m_fogResources.fogFroxels );
-
 	}
+
+	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", Tr2TextureAL{} );
 
 	{
 		m_updateMieEnvironmentMap.CreateInstance();
@@ -141,13 +126,42 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	}
 }
 
-void Tr2VolumetricsRenderer::RenderVolumetrics(
+Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::GetEmptyVolumetricTexture( Tr2GpuResourcePool& gpuResourcePool )
+{
+	const uint32_t slices = 4;
+
+	uint8_t black[4] = {};
+	Tr2SubresourceData initialData[slices];
+	for( uint32_t i = 0; i < slices; ++i )
+	{
+		initialData[i].m_sysMem = black;
+		initialData[i].m_sysMemPitch = 4;
+		initialData[i].m_sysMemSlicePitch = 4;
+	}
+
+	return gpuResourcePool.GetPersistentTexture(
+		"EmptyEmptyVolumetricSlices",
+		Tr2BitmapDimensions(
+			Tr2RenderContextEnum::TEX_TYPE_2D,
+			Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM,
+			1,
+			1,
+			1,
+			1,
+			slices ),
+		Tr2GpuUsage::SHADER_RESOURCE,
+		initialData );
+}
+
+Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderVolumetrics(
 	const EveComponentRegistry& registry,
 	const TriFrustum& frustum,
-	Tr2DepthStencil& sceneDepth,
+	const Tr2TextureAL& sceneDepth,
+    const Tr2TextureAL& froxelFog,
 	const Vector3& sunDirection,
 	const float depthSlices[4],
 	bool raytracingEnabled,
+	Tr2GpuResourcePool& gpuResourcePool,
 	Tr2RenderContext& renderContext )
 {
 	const uint32_t slices = 4;
@@ -158,70 +172,37 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 	auto width = std::min( originalWidth, std::max( 1u, uint32_t( originalWidth * m_scaleFactor ) ) );
 	auto height = std::min( originalHeight, std::max( 1u, uint32_t( originalHeight * m_scaleFactor ) ) );
 
-	auto& volumeSlices = *m_volumeSlices->GetTexture();
-
 	auto volumetricsCount = registry.ComponentCount<ITr2VolumetricRenderable>();
 
 	if( volumetricsCount == 0 )
 	{
-		if( !volumeSlices.IsValid() )
+		if( width == m_lastRequestedWidth && height == m_lastRequestedHeight )
 		{
-			USE_MAIN_THREAD_RENDER_CONTEXT();
-			uint8_t black[4] = {};
-			Tr2SubresourceData initialData[slices];
-			for( uint32_t i = 0; i < slices; ++i )
-			{
-				initialData[i].m_sysMem = black;
-				initialData[i].m_sysMemPitch = 4;
-				initialData[i].m_sysMemSlicePitch = 4;
-			}
-			volumeSlices.Create( Tr2BitmapDimensions(
-									 Tr2RenderContextEnum::TEX_TYPE_2D,
-									 Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM,
-									 1,
-									 1,
-									 1,
-									 1,
-									 slices ),
-								 Tr2GpuUsage::SHADER_RESOURCE,
-								 Tr2CpuUsage::NONE,
-								 initialData,
-								 renderContext );
-			m_volumeSlices->OnTextureChange().Broadcast();
-			m_volumeHasContent = false;
+			// Keep the real volume slice texture alive in case we need it again soon.
+			(void)gpuResourcePool.GetTempTexture( 
+				"VolumetricSlices", 
+				Tr2BitmapDimensions(
+					Tr2RenderContextEnum::TEX_TYPE_2D,
+					Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT,
+					width,
+					height,
+					1,
+					1,
+					slices ),
+				Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 		}
-		if( m_volumeHasContent && volumeSlices.IsValid() )
-		{
-			renderContext.m_esm.PushRenderTarget( 0 );
-			renderContext.m_esm.PushRenderTarget( 1 );
-			renderContext.m_esm.PushRenderTarget( 2 );
-			renderContext.m_esm.PushRenderTarget( 3 );
-			renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
 
-			renderContext.m_esm.SetRenderTarget( 0, volumeSlices, true, 0 );
-			renderContext.m_esm.SetRenderTarget( 1, volumeSlices, true, 1 );
-			renderContext.m_esm.SetRenderTarget( 2, volumeSlices, true, 2 );
-			renderContext.m_esm.SetRenderTarget( 3, volumeSlices, true, 3 );
-
-			renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0, 0, 0 );
-			renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0, 0, 1 );
-			renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0, 0, 2 );
-			renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0, 0, 3 );
-		
-			renderContext.m_esm.PopRenderTarget( 3 );
-			renderContext.m_esm.PopRenderTarget( 2 );
-			renderContext.m_esm.PopRenderTarget( 1 );
-			renderContext.m_esm.PopRenderTarget( 0 );
-			renderContext.m_esm.PopDepthStencilBuffer();
-			m_volumeHasContent = false;
-		}
-		return;
+		return GetEmptyVolumetricTexture( gpuResourcePool );
 	}
 
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Volumetrics" );
+    
+    GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
+    ON_BLOCK_EXIT( []{ GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", Tr2TextureAL{} ); } );
+
 
 	ITr2VolumetricRenderable::SceneInformation sceneInfo;
 	sceneInfo.quality = m_quality;
@@ -243,44 +224,20 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 			return volumetric->UpdateVolumetricLightmap( renderContext );
 			} );
 	}
-	if( !volumeSlices.IsValid() || volumeSlices.GetWidth() != width || volumeSlices.GetHeight() != height )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		volumeSlices.Create( Tr2BitmapDimensions(
-								 Tr2RenderContextEnum::TEX_TYPE_2D,
-								 Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT,
-								 width,
-								 height,
-								 1,
-								 1,
-								 slices ),
-							 Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE,
-							 renderContext );
-		m_volumeSlices->OnTextureChange().Broadcast();
-		if( !volumeSlices.IsValid() )
-		{
-			CCP_LOGERR( "Tr2VolumetricsRenderer failed to create slices texture with size %ix%ix%i", int( width ), int( height ), int( slices ) );
-			return;
-		}
-	}
 
-	if( m_blur )
-	{
-		if( !m_blurScratch->IsValid() || m_blurScratch->GetWidth() != width || m_blurScratch->GetHeight() != height )
-		{
-			USE_MAIN_THREAD_RENDER_CONTEXT();
-			m_blurScratch->Create( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT );
-			if( !m_blurScratch->IsValid() )
-			{
-				CCP_LOGERR( "Tr2VolumetricsRenderer failed to create blur scratch texture with size %ix%i", int( width ), int( height ) );
-				return;
-			}
-		}
-	}
-	else
-	{
-		m_blurScratch->Destroy();
-	}
+	auto volumeSlices = gpuResourcePool.GetTempTexture(
+		"VolumetricSlices",
+		Tr2BitmapDimensions(
+			Tr2RenderContextEnum::TEX_TYPE_2D,
+			Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT,
+			width,
+			height,
+			1,
+			1,
+			slices ),
+		Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
+	m_lastRequestedWidth = width;
+	m_lastRequestedHeight = height;
 
 	renderContext.m_esm.PushRenderTarget( 0 );
 	renderContext.m_esm.PushRenderTarget( 1 );
@@ -288,41 +245,27 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 	renderContext.m_esm.PushRenderTarget( 3 );
 	renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
 
+	Tr2GpuResourcePool::Texture volumetricDepth;
 	if( originalWidth == width && originalHeight == height )
 	{
-		GlobalStore().RegisterVariable( "VolumetricDepthMap", &sceneDepth );
 		m_volumeBlit->SetOption( BlueSharedString( "CLOUD_UPSAMPLING" ), BlueSharedString( "CLOUD_UPSAMPLING_NONE" ) );
-		if( m_downsampledDepth->IsValid() )
-		{
-			m_downsampledDepth->Destroy();
-		}
 	}
 	else
 	{
+		volumetricDepth = gpuResourcePool.GetTempTexture( "VolumetricDepth", width, height, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 		m_volumeBlit->SetOption( BlueSharedString( "CLOUD_UPSAMPLING" ), BlueSharedString( "CLOUD_UPSAMPLING_BILINEAR" ) );
 
-		if( !m_downsampledDepth->IsValid() || m_downsampledDepth->GetWidth() != width || m_downsampledDepth->GetHeight() != height )
-		{
-			if( FAILED( m_downsampledDepth->Create( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT ) ) )
-			{
-				CCP_LOGERR( "Tr2VolumetricsRenderer failed to create depth map with size %ix%i", int( width ), int( height ) );
-				renderContext.m_esm.PopRenderTarget( 3 );
-				renderContext.m_esm.PopRenderTarget( 2 );
-				renderContext.m_esm.PopRenderTarget( 1 );
-				renderContext.m_esm.PopRenderTarget( 0 );
-				renderContext.m_esm.PopDepthStencilBuffer();
-				return;
-			}
-		}
-		GlobalStore().RegisterVariable( "VolumetricDepthMap", m_downsampledDepth );
-
-		renderContext.m_esm.SetRenderTarget( 0, *m_downsampledDepth );
+		renderContext.m_esm.SetRenderTarget( 0, volumetricDepth );
 		renderContext.m_esm.SetRenderTarget( 1, Tr2TextureAL() );
 		m_downsampleDepth->SetParameter( BlueSharedString( "DepthSizes" ), Vector4( float( width ), float( height ), float( originalWidth ), float( originalHeight ) ) );
+		m_downsampleDepth->SetParameter( BlueSharedString( "DepthMap" ), sceneDepth );
 		Tr2GpuProfiler::GetProfiler().Begin( m_downsampleDepth->GetRawRoot(), "Pass #1", renderContext );
 		Tr2Renderer::DrawScreenQuad( renderContext, m_downsampleDepth );
 		Tr2GpuProfiler::GetProfiler().End( renderContext );
+		m_downsampleDepth->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL{} );
 	}
+
+	GlobalStore().RegisterVariable( "VolumetricDepthMap", volumetricDepth.IsValid() ? volumetricDepth.Get() : sceneDepth );
 
 	renderContext.m_esm.SetRenderTarget( 0, volumeSlices, true, 0 );
 	renderContext.m_esm.SetRenderTarget( 1, volumeSlices, true, 1 );
@@ -357,21 +300,27 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 
 	if( m_blur )
 	{
+		auto blurScratch = gpuResourcePool.GetTempTexture( "VolumetricBlurScratch", width, height, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
+
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-		renderContext.m_esm.SetRenderTarget( 0, *m_blurScratch );
+		renderContext.m_esm.SetRenderTarget( 0, blurScratch );
 		renderContext.m_esm.SetRenderTarget( 1, Tr2TextureAL() );
 		renderContext.m_esm.SetRenderTarget( 2, Tr2TextureAL() );
 		renderContext.m_esm.SetRenderTarget( 3, Tr2TextureAL() );
+		m_hBlur->SetParameter( BlueSharedString( "EveSceneFogVolumeMap" ), volumeSlices );
 		m_hBlur->SetParameter( BlueSharedString( "DepthSizes" ), Vector4( float( width ), float( height ), 1.f / float( width ), 0 ) );
 		Tr2GpuProfiler::GetProfiler().Begin( m_hBlur->GetRawRoot(), "Pass #1", renderContext );
 		Tr2Renderer::DrawScreenQuad( renderContext, m_hBlur );
 		Tr2GpuProfiler::GetProfiler().End( renderContext );
+		m_hBlur->SetParameter( BlueSharedString( "EveSceneFogVolumeMap" ), Tr2TextureAL{} );
 
 		renderContext.m_esm.SetRenderTarget( 0, volumeSlices, true, 3 );
 		m_vBlur->SetParameter( BlueSharedString( "DepthSizes" ), Vector4( float( width ), float( height ), 0, 1.f / float( height ) ) );
+		m_vBlur->SetParameter( BlueSharedString( "SourceMap" ), blurScratch );
 		Tr2GpuProfiler::GetProfiler().Begin( m_vBlur->GetRawRoot(), "Pass #1", renderContext );
 		Tr2Renderer::DrawScreenQuad( renderContext, m_vBlur );
 		Tr2GpuProfiler::GetProfiler().End( renderContext );
+		m_vBlur->SetParameter( BlueSharedString( "SourceMap" ), Tr2TextureAL{} );
 	}
 
 	renderContext.m_esm.PopRenderTarget( 3 );
@@ -382,12 +331,16 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
 	Tr2GpuProfiler::GetProfiler().Begin( m_volumeBlit->GetRawRoot(), "Pass #1", renderContext );
 	m_volumeBlit->SetParameter( BlueSharedString( "DepthSizes" ), Vector4( float( width ), float( height ), float( originalWidth ), float( originalHeight ) ) );
+	m_volumeBlit->SetParameter( BlueSharedString( "EveSceneFogVolumeMap" ), volumeSlices );
 	Tr2Renderer::DrawScreenQuad( renderContext, m_volumeBlit );
+	m_volumeBlit->SetParameter( BlueSharedString( "EveSceneFogVolumeMap" ), Tr2TextureAL{} );
 	Tr2GpuProfiler::GetProfiler().End( renderContext );
 
 	renderContext.m_esm.PopDepthStencilBuffer();
 
-	m_volumeHasContent = true;
+	GlobalStore().RegisterVariable( "VolumetricDepthMap", Tr2TextureAL{} );
+
+	return volumeSlices;
 }
 
 void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& registry, const EveUpdateContext& updateContext )
@@ -545,8 +498,9 @@ void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderCo
 }
 
 
-void Tr2VolumetricsRenderer::RenderFog(
+Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 	Tr2RenderContext& renderContext,
+	Tr2GpuResourcePool& gpuResourcePool,
 	uint32_t width,
 	uint32_t height,
 	Tr2ShadowMap* cascadedShadowMap,
@@ -561,11 +515,17 @@ void Tr2VolumetricsRenderer::RenderFog(
 	const Matrix& viewLast,
 	const Matrix& projectionLast )
 {
-	RenderFog( m_fogResources, renderContext, width, height, cascadedShadowMap, raytracingGeometry, shadowQuality, sunDirection, sunColor, origin, originShift, view, projection, viewLast, projectionLast );
+	auto fog = RenderFog( m_fogResources, renderContext, gpuResourcePool, width, height, cascadedShadowMap, raytracingGeometry, shadowQuality, sunDirection, sunColor, origin, originShift, view, projection, viewLast, projectionLast );
+	if( !fog.IsValid() )
+	{
+		return GetEmptyFogTexture( gpuResourcePool );
+	}
+	return fog;
 }
 
-void Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
+Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
 	Tr2RenderContext& renderContext,
+	Tr2GpuResourcePool& gpuResourcePool,
 	uint32_t width,
 	uint32_t height,
 	const Vector3& sunDirection,
@@ -574,12 +534,35 @@ void Tr2VolumetricsRenderer::RenderFogIntoReflectionMap(
 	const Matrix& view,
 	const Matrix& projection )
 {
-	RenderFog( m_fogReflectionResources, renderContext, width, height, nullptr, nullptr, ShadowQuality::SHADOW_DISABLED, sunDirection, sunColor, origin, Vector3d( 0, 0, 0 ), view, projection, view, projection );
+	auto fog = RenderFog( m_fogReflectionResources, renderContext, gpuResourcePool, width, height, nullptr, nullptr, ShadowQuality::SHADOW_DISABLED, sunDirection, sunColor, origin, Vector3d( 0, 0, 0 ), view, projection, view, projection );
+	if( !fog.IsValid() )
+	{
+		return GetEmptyFogTexture( gpuResourcePool );
+	}
+	return fog;
 }
 
-void Tr2VolumetricsRenderer::RenderFog(
+Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::GetEmptyFogTexture( Tr2GpuResourcePool& gpuResourcePool )
+{
+	Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, 1, 1 );
+
+	uint8_t black[4] = {};
+	Tr2SubresourceData initialData;
+	initialData.m_sysMem = black;
+	initialData.m_sysMemPitch = 4;
+	initialData.m_sysMemSlicePitch = 4;
+
+	return gpuResourcePool.GetPersistentTexture(
+		"EmptyFroxelFog",
+		dimensions,
+		Tr2GpuUsage::SHADER_RESOURCE,
+		&initialData );
+}
+
+Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 	FogViewDependentResources& resources,
 	Tr2RenderContext& renderContext,
+	Tr2GpuResourcePool& gpuResourcePool,
 	uint32_t originalWidth,
 	uint32_t originalHeight,
 	Tr2ShadowMap* cascadedShadowMap,
@@ -598,7 +581,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 	// Figure out the resolution we need.
 	uint32_t width = 1;
 	uint32_t height = 1;
-	uint32_t depth = 1;
+	uint32_t depth = 1; 
 
 	bool froxelsEnabled = m_froxelFogSettings.thickness.value > 0.0f;
 	if( froxelsEnabled )
@@ -636,18 +619,13 @@ void Tr2VolumetricsRenderer::RenderFog(
 		depth = std::max( 1u, numLayers );
 	}
 
-	//Update textures to the new resolution, if needed.
-	UpdateTextures(resources, width, height, depth, froxelsEnabled );
 
-
-	auto temporalFog = resources.temporalFroxels0 && resources.temporalFroxels1;
-	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", resources.fogFroxels );
+	auto temporalFog = resources.useTemporalFroxels;
 
 
 	if (!froxelsEnabled)
 	{
-		//We have nothing more we need to do.
-		return;
+		return {};
 	}
 
 	
@@ -704,6 +682,13 @@ void Tr2VolumetricsRenderer::RenderFog(
 
 	renderContext.SetConstants( m_fogConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 
+
+	Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R11G11B10_FLOAT, width, height, depth, 1, 1 );
+	auto fogFroxels = gpuResourcePool.GetTempTexture(
+		"FogFroxels",
+		dimensions,
+		Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE );
+
 	{
 
 		int workgroupSize = 4;
@@ -720,7 +705,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
 				{
 					CCP_LOGERR( "Failed to get technique index for raytraced froxel fog shadows!" );
-					return;
+					return {};
 				}
 
 				std::wstring rayGenName;
@@ -732,7 +717,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 				if( !pipelineState.IsValid() )
 				{
 					CCP_LOGERR( "Failed to get pipeline state for raytraced froxel fog shadows!" );
-					return;
+					return {};
 				}
 
 				Tr2RtLocalMaterialDescriptionAL material;
@@ -749,7 +734,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 				resources.rtCalculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 
 				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
+				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), fogFroxels );
 
 				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
 				resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
@@ -770,7 +755,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 				resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 
 				resources.calculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-				resources.calculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), resources.fogFroxels );
+				resources.calculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), fogFroxels );
 
 				Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
 			}
@@ -779,11 +764,30 @@ void Tr2VolumetricsRenderer::RenderFog(
 		if( temporalFog )
 		{
 			GPU_REGION( renderContext, "Temporal filter" );
-			Tr2TextureReferencePtr& temporalInput = resources.currentTemporalFroxels ? resources.temporalFroxels0 : resources.temporalFroxels1;
-			Tr2TextureReferencePtr& temporalOutput = resources.currentTemporalFroxels ? resources.temporalFroxels1 : resources.temporalFroxels0;
+
+			auto temporalFroxels0 = gpuResourcePool.GetPersistentTexture( 
+				"TemporalFroxelFog0", 
+				dimensions, 
+				Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE,
+				[]( auto& texture, auto& renderCtx ) {
+					const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+					renderCtx.ClearUav( texture, 0, clearValue );
+				} );
+
+			auto temporalFroxels1 = gpuResourcePool.GetPersistentTexture(
+				"TemporalFroxelFog1",
+				dimensions,
+				Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE,
+				[]( auto& texture, auto& renderCtx ) {
+					const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+					renderCtx.ClearUav( texture, 0, clearValue );
+				} );
+
+			auto& temporalInput = resources.currentTemporalFroxels ? temporalFroxels0 : temporalFroxels1;
+			auto& temporalOutput = resources.currentTemporalFroxels ? temporalFroxels1 : temporalFroxels0;
 			resources.currentTemporalFroxels = !resources.currentTemporalFroxels;
 
-			resources.filterFroxels->SetParameter( BlueSharedString( "InputTexture" ), resources.fogFroxels );
+			resources.filterFroxels->SetParameter( BlueSharedString( "InputTexture" ), fogFroxels );
 			resources.filterFroxels->SetParameter( BlueSharedString( "PreviousTexture" ), temporalInput );
 			resources.filterFroxels->SetParameter( BlueSharedString( "OutputTexture" ), temporalOutput );
 			Tr2Renderer::RunComputeShader( resources.filterFroxels, wgX, wgY, wgZ, renderContext );
@@ -793,7 +797,7 @@ void Tr2VolumetricsRenderer::RenderFog(
 		
 		{
 			GPU_REGION( renderContext, "Raymarch" );
-			resources.raymarchFroxels->SetParameter( BlueSharedString( "OutputTexture" ), resources.fogFroxels );
+			resources.raymarchFroxels->SetParameter( BlueSharedString( "OutputTexture" ), fogFroxels );
 			Tr2Renderer::RunComputeShader( resources.raymarchFroxels, ( width + 7 ) / 8, ( height + 3 ) / 4, 1, renderContext ); // 8x4 workgroup is faster here
 		}
 	}
@@ -804,67 +808,11 @@ void Tr2VolumetricsRenderer::RenderFog(
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
 
 		resources.applyFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity.value > 0 ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );
+		resources.applyFroxels->SetParameter( BlueSharedString( "EveSceneFroxelFogMap" ), fogFroxels );
 		Tr2Renderer::DrawScreenQuad( renderContext, resources.applyFroxels );
+		resources.applyFroxels->SetParameter( BlueSharedString( "EveSceneFroxelFogMap" ), Tr2TextureAL{} );
 	}
-}
-
-void Tr2VolumetricsRenderer::UpdateTextures( FogViewDependentResources& resources, uint32_t width, uint32_t height, uint32_t depth, bool enabled )
-{
-	auto temporalFog = resources.temporalFroxels0 && resources.temporalFroxels1;
-
-	auto& fogFroxels = *resources.fogFroxels->GetTexture();
-	if( !fogFroxels.IsValid() || fogFroxels.GetWidth() != width || fogFroxels.GetHeight() != height || fogFroxels.GetDepth() != depth )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-
-		auto temporalFroxels0 = resources.temporalFroxels0 ? resources.temporalFroxels0->GetTexture() : nullptr;
-		auto temporalFroxels1 = resources.temporalFroxels0 ? resources.temporalFroxels1->GetTexture() : nullptr;
-
-		if( enabled )
-		{
-
-			//Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT, width, height, depth, 1, 1 );
-			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R11G11B10_FLOAT, width, height, depth, 1, 1 );
-
-			fogFroxels.Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
-			if( temporalFog )
-			{
-				temporalFroxels0->Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
-				temporalFroxels1->Create( dimensions, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext );
-			}
-		}
-		else
-		{
-			//Create dummy textures
-			Tr2BitmapDimensions dimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, 1, 1 );
-
-			uint8_t black[4] = {};
-			Tr2SubresourceData initialData;
-			initialData.m_sysMem = black;
-			initialData.m_sysMemPitch = 4;
-			initialData.m_sysMemSlicePitch = 4;
-
-			fogFroxels.Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
-			if( temporalFog )
-			{
-				temporalFroxels0->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
-				temporalFroxels1->Create( dimensions, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData, renderContext );
-			}
-		}
-
-		if( !fogFroxels.IsValid() || ( temporalFog && ( !temporalFroxels0->IsValid() || !temporalFroxels1->IsValid() ) ) )
-		{
-			CCP_LOGERR( "Tr2VolumetricsRenderer failed to create froxel textures with size %ix%ix%i", int( width ), int( height ), int( depth ) );
-			return;
-		}
-
-		resources.fogFroxels->OnTextureChange().Broadcast();
-		if( temporalFog )
-		{
-			resources.temporalFroxels0->OnTextureChange().Broadcast();
-			resources.temporalFroxels1->OnTextureChange().Broadcast();
-		}
-	}
+	return fogFroxels;
 }
 
 void Tr2VolumetricsRenderer::UpdatePerObjectData( FogPerObjectData* data, const Matrix& view, const Matrix& projection, const Matrix& viewLast, const Matrix& projectionLast, const Vector3d& origin, const Vector3d& originShift, const Vector3& sunDirection, const Color& sunColor, uint32_t width, uint32_t height, uint32_t depth, const Vector3& jitter, const Tr2ShadowMap* cascadedShadowMap )
@@ -1129,6 +1077,34 @@ void Tr2VolumetricsRenderer::PopulatePerFrameData( FroxelPerFrameData& data )
 	}
 }
 
+void Tr2VolumetricsRenderer::SetQuality( Tr2VolumerticQuality quality )
+{
+	m_quality = quality;
+	switch( quality )
+	{
+	case Tr2VolumerticQuality::Ultra:
+		m_scaleFactor = 1;
+		m_castShadows = true;
+		m_receiveShadows = true;
+		break;
+	case Tr2VolumerticQuality::High:
+		m_scaleFactor = 0.7f;
+		m_castShadows = true;
+		m_receiveShadows = false;
+		break;
+	case Tr2VolumerticQuality::Medium:
+		m_scaleFactor = 0.5f;
+		m_castShadows = false;
+		m_receiveShadows = false;
+		break;
+	default:
+		m_scaleFactor = 0.3f;
+		m_castShadows = false;
+		m_receiveShadows = false;
+		break;
+	}
+}
+
 void Tr2VolumetricsRenderer::SetPlanets( const CcpMath::Sphere* planets, size_t planetCount )
 {
 	CCP_ASSERT_M( planetCount == 2, "Tr2VolumetricsRenderer expects two planets!" );
@@ -1145,11 +1121,11 @@ void Tr2VolumetricsRenderer::SetSunAngle( float angle )
 
 void Tr2VolumetricsRenderer::RenderShadows(
 	const EveComponentRegistry& registry,
-	ITr2TextureProvider* shadowMap,
+	const Tr2TextureAL& shadowMap,
 	Tr2RenderContext& renderContext )
 {
 	auto volumetricsCount = registry.ComponentCount<ITr2VolumetricRenderable>();
-	if( !shadowMap || !shadowMap->GetTexture() || !m_castShadows )
+	if( !shadowMap.IsValid() || !m_castShadows )
 	{
 		return;
 	}
@@ -1164,7 +1140,7 @@ void Tr2VolumetricsRenderer::RenderShadows(
 
 		m_batches->Finalize();
 
-		renderContext.m_esm.PushRenderTarget( *shadowMap->GetTexture() );
+		renderContext.m_esm.PushRenderTarget( shadowMap );
 		renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
 
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
@@ -1178,6 +1154,5 @@ void Tr2VolumetricsRenderer::RenderShadows(
 
 void Tr2VolumetricsRenderer::UpdateVariableStore()
 {
-	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", m_volumeSlices );
 	GlobalStore().RegisterVariable( "EveSceneMieEnvironmentMap", m_mieEnvironmentMap );
 }

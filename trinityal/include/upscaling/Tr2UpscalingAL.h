@@ -44,14 +44,14 @@ namespace Tr2UpscalingAL
 
 	struct DispatchParameters
 	{
-		Tr2TextureAL* input;
-		Tr2TextureAL* opaqueOnly;
-		Tr2TextureAL* output;
-		Tr2TextureAL* depth;
-		Tr2TextureAL* velocity;
-		Tr2TextureAL* exposure;
-		Tr2TextureAL* reactive;
-		Tr2TextureAL* transparency;
+		const Tr2TextureAL* input;
+		const Tr2TextureAL* opaqueOnly;
+		const Tr2TextureAL* output;
+		const Tr2TextureAL* depth;
+		const Tr2TextureAL* velocity;
+		const Tr2TextureAL* exposure;
+		const Tr2TextureAL* reactive;
+		const Tr2TextureAL* transparency;
 
 		unsigned long long currentFrameIndex;
 		float frontClip;
@@ -190,7 +190,7 @@ public:
 
 	uint32_t GetID() const;
 
-	virtual void SetHudLessTexture( Tr2TextureAL* texture );
+	virtual void SetHudLessTexture( const Tr2TextureAL* texture );
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) = 0;
 

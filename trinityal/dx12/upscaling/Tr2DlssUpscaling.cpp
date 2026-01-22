@@ -22,7 +22,7 @@ CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
 namespace DlssUtils
 {
-sl::Resource GenerateTextureResource( Tr2TextureAL* texture )
+sl::Resource GenerateTextureResource( const Tr2TextureAL* texture )
 {
 	sl::Resource resource;
 	if( texture && texture->IsValid() )
@@ -490,7 +490,7 @@ void Tr2DlssUpscalingContext::SetFrameToken( sl::FrameToken* token )
 	m_frameToken = token;
 }
 
-void Tr2DlssUpscalingContext::SetHudLessTexture( Tr2TextureAL* texture )
+void Tr2DlssUpscalingContext::SetHudLessTexture( const Tr2TextureAL* texture )
 {
 	if( !m_frameGeneration )
 	{

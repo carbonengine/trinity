@@ -1293,13 +1293,13 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, uint32_t str
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw()
+ALResult Tr2RenderContextAL::ClearUav( const Tr2BufferAL& buffer, const float values[4] ) throw()
 {
 	m_context->ClearUnorderedAccessViewFloat( buffer.m_buffer->m_uav, values );
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw()
+ALResult Tr2RenderContextAL::ClearUav( const Tr2BufferAL& buffer, const uint32_t values[4] ) throw()
 {
 	m_context->ClearUnorderedAccessViewUint( buffer.m_buffer->m_uav, values );
 	return S_OK;
@@ -1903,7 +1903,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw()
 {
 	if( rt.m_texture->m_uav.size() <= mipLevel )
 	{
@@ -1915,7 +1915,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, cons
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw()
 {
 	if( rt.m_texture->m_uav.size() <= mipLevel )
 	{

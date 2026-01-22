@@ -743,7 +743,7 @@ void Tr2Renderer::Printf( TriDebugFont font, int fontStyle, const Vector3& pos, 
 	s_debugTextRenderer->Vprintf( font, rect, fontStyle, color, msg, args );
 }
 
-bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture )
+bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture )
 {
 	if( s_blitter )
 	{
@@ -770,7 +770,7 @@ bool Tr2Renderer::DrawFullScreenWithShader( Tr2RenderContext& renderContext, Tr2
 	return false;
 }
 
-bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, Tr2Blitter::Filtering filter )
+bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, Tr2Blitter::Filtering filter )
 {
 	if( s_blitter )
 	{
@@ -783,7 +783,7 @@ bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2TextureAL& te
 	return false;
 }
 
-bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord )
+bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord )
 {
 	if( s_blitter )
 	{
@@ -809,7 +809,7 @@ bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* eff
 	return false;
 }
 
-bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, Tr2TextureAL& texture,
+bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture,
                                const Vector2& tlTexCoord, const Vector2& brTexCoord,
                                const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
 {

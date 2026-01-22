@@ -13,7 +13,7 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 			"size",
 			m_size,
 			"The size of the shadow map, is always quadric",
-			Be::READWRITE | Be::NOTIFY )
+			Be::READWRITE )
 
 		MAP_ATTRIBUTE(
 			"disableShimmer",
@@ -31,18 +31,6 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 			"cascadeEffect",
 			m_shadowEffect,
 			"Effect used for calculating which split the pixel belongs to and determing the shadow factor.",
-			Be::READWRITE )
-		
-		MAP_ATTRIBUTE( 
-			"cascadedShadowMapDS", 
-			m_cascadedShadowMapDS, 
-			"Depth stencil used for shadows.", 
-			Be::READWRITE | Be::NOTIFY )
-
-		MAP_ATTRIBUTE( 
-			"shadowMapResultRT", 
-			m_shadowMapResultRT,
-			"", 
 			Be::READWRITE )
 
 	

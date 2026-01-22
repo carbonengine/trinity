@@ -114,7 +114,7 @@ public:
 	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT );
 	void AddLight( PerLightData& data );
 	void ResolveLightData();
-	ALResult UpdateLists( Tr2RenderContext& renderContext );
+	ALResult UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 	void SetVariableStore();
 	void AdjustLightCutoff( float lodFactor );
 	
@@ -134,13 +134,19 @@ public:
 	const std::vector<uint32_t>& GetShadowCastingLights() const;
 	const std::vector<uint32_t>& GetVolumetricLights() const;
 	const Tr2LightManager::PerLightData& GetLightData( uint32_t index ) const;
-	Tr2DepthStencilPtr GetShadowMapAtlas();
+	Tr2GpuResourcePool::Texture GetShadowMapAtlas( Tr2GpuResourcePool& gpuResourcePool );
 	const ShadowMapAtlasSettings& GetShadowMapAtlasSettings() const;
 
 	ShadowQuality GetCurrentSpaceSceneShadowQuality();
 
-	ITr2TextureProvider* GetRaytracedShadowMap() const;
-	void RenderRaytracedShadows( Tr2RaytracingGeometryPtr geometry, ITr2TextureProvider* depth, ITr2TextureProvider* normal, const CcpMath::Sphere* planets, size_t planetCount, Tr2RenderContext& renderContext );
+	Tr2GpuResourcePool::Texture RenderRaytracedShadows( 
+		Tr2RaytracingGeometry* geometry, 
+		const Tr2TextureAL& depth, 
+		const Tr2TextureAL& normal, 
+		const CcpMath::Sphere* planets, 
+		size_t planetCount, 
+		Tr2GpuResourcePool& gpuResourcePool, 
+		Tr2RenderContext& renderContext );
 	Tr2RaytracingPipelineStateManager* GetRaytracingPipelineManager();
 	Tr2RtShaderTableDescriptionAL* GetRaytracingShaderTableDesc();
 
@@ -167,14 +173,12 @@ private:
 
 	virtual bool OnPrepareResources();
 
-	ALResult DoUpdateLists( Tr2RenderContext& renderContext );
+	ALResult DoUpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 	ALResult ClearLightIndices( Tr2RenderContext& renderContext );
 	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
 
 	uint32_t InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
 
-	void UpdateShadowAtlasSize( ShadowQuality shadowQuality );
-	void UpdateRaytracingDestination( ShadowQuality shadowQuality );
 	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
 	void CreateShadowMapAtlas( uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples );
 
@@ -200,8 +204,6 @@ private:
 
 	struct
 	{
-		Tr2Variable m_atlasVariable;
-		Tr2DepthStencilPtr m_atlasDepthStencil;
 		ShadowMapAtlasSettings m_atlasSettings;
 		std::vector<AtlasNode> m_atlasNodes;
 		ShadowQuality m_qualityUsedByAtlas;
@@ -218,9 +220,6 @@ private:
 		unsigned m_effectHash;
 		Tr2RtShaderTableAL m_shaderTable;
 		Tr2ConstantBufferAL m_perFrameData;
-
-		Tr2RenderTargetPtr m_destTex;
-		TriTextureResPtr m_whiteTexture;
 	} m_Raytracing;
 };
 

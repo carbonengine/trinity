@@ -31,6 +31,7 @@ public:
 	uint32_t GetMipCount() const;
 	uint32_t GetArraySize() const;
 	Tr2RenderContextEnum::PixelFormat GetFormat() const;
+	std::string GetName() const;
 
 private:
 	Tr2TextureAL m_texture;
