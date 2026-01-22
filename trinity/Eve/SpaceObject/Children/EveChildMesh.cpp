@@ -437,12 +437,14 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		UpdateRtSkeleton();
 		m_dirtyRtMesh = false;
 	}
-
-	auto rtMesh = m_mesh->GetRtMesh();
-
-	if( rtMesh )
+	if( m_mesh )
 	{
-		rtMesh->MarkDirty();
+		auto rtMesh = m_mesh->GetRtMesh();
+
+		if( rtMesh )
+		{
+			rtMesh->MarkDirty();
+		}
 	}
 }
 

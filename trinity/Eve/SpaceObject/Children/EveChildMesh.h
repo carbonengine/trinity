@@ -45,6 +45,9 @@ struct MergeMorphsConstantBuffer
 	uint32_t vertexDataPositionOffset;
 	uint32_t vertexDataTangentOffset;
 	uint32_t vertexCount;
+	uint32_t padding1;
+	uint32_t padding2;
+	uint32_t padding3;
 };
 
 BLUE_CLASS( EveChildMesh ) :
