@@ -1260,6 +1260,14 @@ void EveChildMesh::BakeMorphs()
 		registry->RegisterComponent<ITr2MeshMorph>( this );
 	}
 
+	if( !m_mergeMorphsEffect )
+	{
+		m_mergeMorphsEffect.CreateInstance();
+		m_mergeMorphsEffect->StartUpdate();
+		m_mergeMorphsEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/MorphBaking.fx" );
+		m_mergeMorphsEffect->EndUpdate();
+	}		
+
 	// Set baked morph weights
 	m_bakeMorphs = true;
 }
@@ -1277,8 +1285,10 @@ void EveChildMesh::UnbakeMorphs()
 }
 
 
-void EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
+bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 {
+	bool isReady = true;
+
 	auto lod = m_mesh->GetGeometryResource()->GetMeshLod( m_mesh->GetMeshIndex(), m_currentScreenSize );
 
 	if( !m_bakedMorphAllocation.IsValid() )
@@ -1298,11 +1308,13 @@ void EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 				nullptr,
 				renderContext,
 				m_bakedMorphAllocation );
+			isReady = false;
 		}
 	}
 	if( !m_mergeMorphsConstantBuffer.IsValid() )
 	{
 		m_mergeMorphsConstantBuffer.Create( uint32_t( sizeof( MergeMorphsConstantBuffer ) ), renderContext.GetPrimaryRenderContext() );
+		isReady = false;
 	}
 
 	auto [morphTargets, morphTargetCount] = GetMorphTargets( true );
@@ -1354,16 +1366,20 @@ void EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 	}
 
 	m_mergeMorphsConstantBuffer.Unlock( renderContext );
+	return isReady;
 }
 
 
-void EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
+bool EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 {
 	GPU_REGION( renderContext, "MeshMorphs" );
 
 	if( m_bakeMorphs )
 	{
-		PrepareMorphBuffers( renderContext );
+		if( !PrepareMorphBuffers( renderContext ) )
+		{
+			return false;
+		}
 
 		auto meshIndex = m_mesh->GetMeshIndex();
 		auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
@@ -1371,14 +1387,6 @@ void EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 
 		renderContext.SetConstants( m_mergeMorphsConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
 
-		// Run compute
-		if( !m_mergeMorphsEffect )
-		{
-			m_mergeMorphsEffect.CreateInstance();
-			m_mergeMorphsEffect->StartUpdate();
-			m_mergeMorphsEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/MorphBaking.fx" );
-			m_mergeMorphsEffect->EndUpdate();
-		}		
 
 		Tr2Renderer::RunComputeShader(
 			m_mergeMorphsEffect,
@@ -1398,6 +1406,7 @@ void EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 	}
 
 	m_isMorphsBaked = true;
+	return true;
 }
 
 
