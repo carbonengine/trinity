@@ -100,7 +100,7 @@ void Tr2MorphTargetAnimationDataBuffer::Resize( uint32_t size )
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	m_buffer.Create( sizeof( Tr2MorphTargetAnimationData ), size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
-	m_buffer.SetName( "Bone transforms" );
+	m_buffer.SetName( "Morph Animation Data" );
 }
 
 Tr2MorphTargetAnimationDataBuffer& Tr2MorphTargetAnimationDataBuffer::GetInstance()
@@ -128,7 +128,7 @@ bool Tr2MorphTargetAnimationDataBuffer::OnPrepareResources()
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		m_buffer.Create( sizeof( Tr2MorphTargetAnimationData ), m_size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, m_mirror.data(), renderContext );
-		m_buffer.SetName( "Bone transforms" );
+		m_buffer.SetName( "Morph Animation Data" );
 	}
 	return true;
 }

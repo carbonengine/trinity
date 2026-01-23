@@ -259,6 +259,23 @@ std::vector<std::string>* Tr2Mesh::GetMorphTargetNames() const
 	return &mesh->m_morphTargetNames;
 }
 
+bool Tr2Mesh::IsBakedMorph( int index ) const
+{
+	if( !GetGeometryResource() )
+	{
+		return false;
+	}
+
+	auto mesh = GetGeometryResource()->GetMeshLod( GetMeshIndex(), 0 );
+
+	if( !mesh )
+	{
+		return false;
+	}
+
+	return mesh->m_isBakedMorphTarget[index];
+}
+
 void Tr2Mesh::SetMorphTargetWeight( const char* name, float weight )
 {
 	auto anim = m_morphAnimations.find( name );

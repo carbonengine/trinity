@@ -1622,7 +1622,8 @@ TriGeometryResLodData::TriGeometryResLodData() :
 	m_morphVertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_allocationsValid(false),
 	m_reversedIndicesValid(false),
-	m_uvDensities()
+	m_uvDensities(),
+	m_bytesPerMorphTargetVertex( 0 )
 {
 }
 
@@ -1954,7 +1955,10 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 				// By convention (due to the exporter), the morph target name ends with "Shape". Assert that it does, and also that it is not an empty string!
 				CCP_ASSERT_M( nameLength > 5 && strcmp( morphTarget.ScalarName + nameLength - 5, "Shape" ) == 0, "Invalid morph target name!" );
 
-				lod->m_morphTargetNames.push_back( std::string( morphTarget.ScalarName, nameLength - 5 ) );
+				std::string morphTargetName( morphTarget.ScalarName, nameLength - 5 );
+				lod->m_morphTargetNames.push_back( morphTargetName );
+
+				lod->m_isBakedMorphTarget.push_back( morphTargetName.compare( 0, 5, "Base_" ) == 0 || morphTargetName.compare( 0, 4, "Org_" ) == 0 || morphTargetName.compare( 0, 3, "Sc_" ) == 0 );
 
 				void* pMorphSrc = GrannyGetMeshMorphVertices( grannyMesh, i );
 				lod->m_morphTargetAllocation.Update( 

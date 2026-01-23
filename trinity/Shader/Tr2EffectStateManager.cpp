@@ -708,18 +708,6 @@ bool Tr2EffectStateManager::IsDepthTestInverted( void ) const
 	return m_renderStateOverrides[RS_ZFUNC] != nullptr;
 }
 
-bool Tr2EffectStateManager::GetVertexDefinition( uint32_t handle, Tr2VertexDefinition& definition )
-{
-	std::scoped_lock lock( s_vertexLayoutMutex );
-	CCP_ASSERT( handle < s_vertexLayoutMap.size() || handle == UNINITIALIZED_DECLARATION );
-	if( handle < s_vertexLayoutMap.size() )
-	{
-		definition = s_vertexLayoutMap[ handle ].first;
-		return true;
-	}
-	return false;
-}
-
 uint32_t Tr2EffectStateManager::GetVertexDeclarationHandle( const Tr2VertexDefinition& vertexDefinition )
 {
 	std::scoped_lock lock( s_vertexLayoutMutex );
