@@ -169,7 +169,7 @@ void EveLensflare::Update( Be::Time realTime, Be::Time simTime )
 
 	for( auto it = m_controllers.begin(); it != m_controllers.end(); ++it )
 	{
-		( *it )->Update();
+		( *it )->Update( 0.5f );
 	}
 }
 

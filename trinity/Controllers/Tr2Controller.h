@@ -8,6 +8,7 @@
 
 #include "ITr2Controller.h"
 #include "ccpparser.h"
+#include "Eve/SpaceObject/Utils/EveThrottleable.h"
 
 BLUE_DECLARE( Tr2ControllerFloatVariable );
 BLUE_DECLARE_VECTOR( Tr2ControllerFloatVariable );
@@ -19,7 +20,8 @@ BLUE_DECLARE_INTERFACE( ITr2Updateable );
 
 BLUE_CLASS( Tr2Controller ):
 	public ITr2ActionController,
-	public IListNotify
+	public IListNotify,
+	public EveThrottleable
 {
 public:
 	Tr2Controller( IRoot* lockobj = nullptr );
@@ -34,7 +36,7 @@ public:
 
 	virtual void Start();
 	virtual void Stop();
-	virtual void Update();
+	virtual void Update( float normalizedUpdateFrequency ) override;
 
 	virtual void SetVariable( const char* name, float value );
 

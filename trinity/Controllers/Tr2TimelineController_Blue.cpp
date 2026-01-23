@@ -169,5 +169,5 @@ const Be::ClassInfo* Tr2TimelineController::ExposeToBlue()
 			":param trackID: ID of the track\n"
 			":param enable: True of False to enable or disable the track" )
 
-	EXPOSURE_END()
+	EXPOSURE_CHAINTO( EveThrottleable )
 }
