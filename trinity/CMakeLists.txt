@@ -632,6 +632,9 @@ set(_SOURCES
     Eve/SpaceObject/Utils/EveLocatorSets.cpp
     Eve/SpaceObject/Utils/EveLocatorSets.h
     Eve/SpaceObject/Utils/EveLocatorSets_Blue.cpp
+    Eve/SpaceObject/Utils/EveThrottleable.cpp
+    Eve/SpaceObject/Utils/EveThrottleable.h
+    Eve/SpaceObject/Utils/EveThrottleable_Blue.cpp
     Eve/SpaceObject/EveMissile.cpp
     Eve/SpaceObject/EveMissile.h
     Eve/SpaceObject/EveMissile_Blue.cpp

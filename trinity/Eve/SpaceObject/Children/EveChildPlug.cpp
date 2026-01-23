@@ -251,7 +251,7 @@ void EveChildPlug::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	}
 	for ( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
-		( *it )->Update();
+		( *it )->Update( params.controllerUpdateFrequency );
 	}
 }
 

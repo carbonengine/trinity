@@ -58,6 +58,11 @@ struct MetalSystemSemanticsType
         min_distance,
         distance,
 		instance_intersection_function_table_offset,
+
+		// these two are only available since shader model 6.8 in hlsl, which we don't use (yet).
+		// but we need them to emulate the behaviour of SV_VertexID and SV_InstanceID
+		base_vertex,
+		base_instance,
 	};
 
 	static const char* GetString( int type );

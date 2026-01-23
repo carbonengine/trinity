@@ -23,7 +23,6 @@ CCP_STATS_DECLARE( controllerLinkCount, "Trinity/Controllers/LinkCount", false, 
 
 CcpMutex g_controllerMutex( "", "g_controllerMutex" );
 
-
 Tr2Controller::Tr2Controller( IRoot* lockobj )
 	:PARENTLOCK( m_stateMachines ),
 	PARENTLOCK( m_variables ),
@@ -233,12 +232,22 @@ void Tr2Controller::Stop()
 	m_isActive = false;
 }
 
-void Tr2Controller::Update()
+
+// param normalizedUpdateFrequency : value [0:1] on how freqeuntly the controller should be updating
+void Tr2Controller::Update( float normalizedUpdateFrequency )
 {
 	if( !m_isActive )
 	{
 		return;
 	}
+
+	if( EveThrottleable::ShouldSkipUpdate( normalizedUpdateFrequency ) )
+	{
+		return;
+	}
+
+
+	auto currentTime = BeOS->GetActualTime();
 
 	{
 		CCP_STATS_INC( controllerUpdateCount );
@@ -255,18 +264,16 @@ void Tr2Controller::Update()
 		{
 			CCP_STATS_SCOPED_TIME( controllerUpdateablesTime );
 
-			auto realTime = BeOS->GetActualTime();
 			auto simTime = BeOS->GetCurrentFrameTime();
 
 			CcpAutoMutex lock( g_controllerMutex );
 
 			for( auto& updatable : m_updateables )
 			{
-				updatable->Update( realTime, simTime );
+				updatable->Update( currentTime, simTime );
 			}
 		}
 	}
-
 }
 
 void Tr2Controller::SetVariable( const char* name, float value )

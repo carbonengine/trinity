@@ -273,6 +273,6 @@ void EveMeshOverlayEffect::Update( Be::Time realTime, Be::Time simTime )
 
     for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
     {
-        ( *it )->Update();
+        ( *it )->Update( 0.5f );
     }
 }

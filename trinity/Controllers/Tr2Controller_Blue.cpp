@@ -29,8 +29,8 @@ const Be::ClassInfo* Tr2Controller::ExposeToBlue()
 		MAP_ATTRIBUTE( "eventHandlers", m_eventHandlers, "", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "isPlaying", m_isActive, "", Be::READ )
 		MAP_PROPERTY_READONLY( "callbackCount", GetCallbackCount, "Returns the number of callbacks that are attached to this controller" )
-
-		MAP_METHOD_AND_WRAP( 
+		
+		MAP_METHOD_AND_WRAP(
 			"Start", 
 			Start, 
 			"Starts the controller\n"
@@ -72,5 +72,5 @@ const Be::ClassInfo* Tr2Controller::ExposeToBlue()
 			ReLink,
 			"Re-links the controller with the assigned owner. Used by tools only." )
 
-	EXPOSURE_END()
+	EXPOSURE_CHAINTO( EveThrottleable )
 }
