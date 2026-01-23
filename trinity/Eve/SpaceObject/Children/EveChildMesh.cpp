@@ -811,7 +811,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 				auto [morphTargets, morphTargetCount] = GetMorphTargets();
 				m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 
-				// TODO: intern, for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
+				// for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
 				m_vsData.activeMorphTargetsCount = uint32_t( morphTargetCount );
 				m_vsData.morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
 				m_vsData.morphTargetVertexDataOffset = lod->m_morphTargetAllocation.GetOffset();

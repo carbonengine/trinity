@@ -919,11 +919,8 @@ void Tr2GrannyAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& model
 	{
 		float animationTime = GetAnimationTime();
 
-		// TODO: intern, yay for simplicity, nay for performance. There has to be a better way.
 		m_morphAnimations.clear();
 
-		// TODO: Should this be done here? Seems wasteful to sample animations and build the pose
-		// for objects that are off-screen.
 		m_baseLayer.SampleAnimation( animationTime, m_localPose, m_eventListener, m_morphAnimations );
 		for( auto it = m_animationLayers.begin(); it != m_animationLayers.end(); it++ )
 		{
