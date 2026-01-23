@@ -644,11 +644,6 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderSharpening( Tr2GpuReso
 
 		static const uint32_t CAS_THREAD_GROUP_WORK_REGION_DIM = 16;
 		auto format = GetUavCompatibleFormat( input->GetFormat() );
-		if( format == ImageIO::PIXEL_FORMAT_B8G8R8X8_UNORM || format == ImageIO::PIXEL_FORMAT_B8G8R8A8_UNORM )
-		{
-			// There must be a better way to detect and handle formats that are not UAV-compatible
-			format = GetUavCompatibleFormat( ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM );
-		}
 		auto output = gpuResourcePool.GetTempTexture( "Sharpening Output", input->GetWidth(), input->GetHeight(), format, RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS );
 
 		TEMP_PARAM( m_fidelityFxCasShader, "InputTexture", input );

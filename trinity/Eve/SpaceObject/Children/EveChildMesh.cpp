@@ -396,8 +396,16 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 		if( frustum.IsBoxVisible( bounds ) )
 		{
-			m_isVisible = parentLod >= m_lowestLodVisible&& m_currentScreenSize >= m_minScreenSize;
+			m_isVisible = parentLod >= m_lowestLodVisible && m_currentScreenSize >= m_minScreenSize;
 			m_instancesVisible = m_isVisible && m_currentInstanceScreenSize >= s_instanceScreenSizeThreshold;
+		}
+
+		if( updateContext.m_raytracingEnabled )
+		{
+			if( auto rtMesh = m_mesh->GetRtMesh() )
+			{
+				rtMesh->MarkDirty();
+			}
 		}
 	}
 
@@ -436,15 +444,6 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		UpdateRtMesh();
 		UpdateRtSkeleton();
 		m_dirtyRtMesh = false;
-	}
-	if( m_mesh )
-	{
-		auto rtMesh = m_mesh->GetRtMesh();
-
-		if( rtMesh )
-		{
-			rtMesh->MarkDirty();
-		}
 	}
 }
 
@@ -1169,12 +1168,6 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 	return std::make_pair( nullptr, 0 );
 }
 
-bool IsBakedName( std::string name )
-{
-	// if name starts with bs its baked
-	return name.compare( 0, 5, "Base_" ) == 0 || name.compare( 0, 4, "Org_" ) == 0 || name.compare( 0, 3, "Sc_" ) == 0;
-}
-
 bool EveChildMesh::MorphAllowedToBeProcessed( int index, bool bakedOnly )
 {
 	if( !m_mesh->GetMorphTargetNames() )
@@ -1186,7 +1179,7 @@ bool EveChildMesh::MorphAllowedToBeProcessed( int index, bool bakedOnly )
 	{
 		return false;
 	}
-	bool bakedName = IsBakedName( names[index] );
+	bool bakedName = m_mesh->IsBakedMorph( index );
 	// Return true only if
 	// 1. We are processing baked only and the name is baked. This dose not factor in m_isBaked as we want to process all baked morphs
 	// 2. The mesh is baked and we are getting a non baked morph
@@ -1198,7 +1191,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 {
 	const float EPSILON = .001f;
 
-	// fill the buffer with debug values
+	// fill the buffer with the animation values
 	{
 		auto morphAnimations = m_mesh->GetMorphAnimations();
 		if( m_morphAnimationBuffer.size() != morphAnimations.size() )
@@ -1265,14 +1258,6 @@ void EveChildMesh::BakeMorphs()
 	if( registry )
 	{
 		registry->RegisterComponent<ITr2MeshMorph>( this );
-	}
-
-	if( !m_mergeMorphsEffect )
-	{
-		m_mergeMorphsEffect.CreateInstance();
-		m_mergeMorphsEffect->StartUpdate();
-		m_mergeMorphsEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/MorphBaking.fx" );
-		m_mergeMorphsEffect->EndUpdate();
 	}
 
 	// Set baked morph weights
@@ -1342,7 +1327,7 @@ void EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 		data->vertexCount = lod->m_vertexCount;
 
 		Tr2VertexDefinition vertexDefinition;
-		if( Tr2EffectStateManager::GetVertexDefinition( meshData->m_vertexDeclarationHandle, vertexDefinition ) )
+		if( Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclarationHandle, vertexDefinition ) )
 		{
 			Tr2VertexDefinition::Item* positionItem = vertexDefinition.Find( Tr2VertexDefinition::POSITION );
 			Tr2VertexDefinition::Item* tangentItem = vertexDefinition.Find( Tr2VertexDefinition::TANGENT );

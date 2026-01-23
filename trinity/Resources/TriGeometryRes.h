@@ -158,6 +158,7 @@ struct TriGeometryResLodData
 
 	std::vector<std::string> m_morphTargetNames;
 	std::vector<float> m_morphTargetDeformationAmounts;
+	std::vector<bool> m_isBakedMorphTarget;
 
 	unsigned int m_morphVertexDeclaration;
 	unsigned int m_bytesPerMorphTargetVertex;

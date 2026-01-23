@@ -6,7 +6,7 @@
 struct Tr2MorphTargetAnimationData
 {
 	Tr2MorphTargetAnimationData() = default;
-	explicit Tr2MorphTargetAnimationData( uint32_t index, float weight );
+	Tr2MorphTargetAnimationData( uint32_t index, float weight );
 
 	uint32_t m_index;
 	float m_weight;
