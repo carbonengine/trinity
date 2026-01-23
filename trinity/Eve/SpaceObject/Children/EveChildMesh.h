@@ -169,7 +169,7 @@ public:
 	void BakeMorphs();
 	void UnbakeMorphs();
 
-	void UpdateMeshMorphs( Tr2RenderContext & renderContext ) override;
+	bool UpdateMeshMorphs( Tr2RenderContext & renderContext ) override;
 
 	bool IsMorphsBaked() const;
 
@@ -179,7 +179,7 @@ protected:
 
 	bool DisplayDecals() const;
 
-	void PrepareMorphBuffers( Tr2RenderContext & renderContext );
+	bool PrepareMorphBuffers( Tr2RenderContext & renderContext );
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
 	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;

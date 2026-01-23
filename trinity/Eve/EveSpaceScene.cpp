@@ -2156,15 +2156,21 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 	renderContext.m_esm.BeginManagedRendering();
 
 	{ // Update mesh morphs
-		bool cleanUpMorphTasks = false;
-		for( auto& meshMorph : m_componentRegistry->GetComponents<ITr2MeshMorph>() )
+		auto& meshMorphs = m_componentRegistry->GetComponents<ITr2MeshMorph>();
+		if( meshMorphs.size() > 0 )
 		{
-			cleanUpMorphTasks = true;
-			meshMorph->UpdateMeshMorphs( renderContext );
-		}
-		if( cleanUpMorphTasks )
-		{
-			m_componentRegistry->Clear<ITr2MeshMorph>();
+			bool cleanUpMorphTasks = true;
+			for( auto& meshMorph : meshMorphs )
+			{
+				if( !meshMorph->UpdateMeshMorphs( renderContext ) )
+				{
+					cleanUpMorphTasks = false;
+				}
+			}
+			if( cleanUpMorphTasks )
+			{
+				m_componentRegistry->Clear<ITr2MeshMorph>();
+			}
 		}
 	}
 
