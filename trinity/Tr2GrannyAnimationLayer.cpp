@@ -323,8 +323,6 @@ const char* TextEventTrack::SampleTrack( float time, int loop )
 
 const float MorphTrack::SampleTrack( float time, float duration )
 {
-	// TODO: intern, what about loop?
-
 	float defaultValue = 0.f;
 	float value = 0.f;
 	GrannyEvaluateCurveAtT( 1, false, false, &m_grannyTrack->ValueCurve, false, duration, (float)time, (float*)&value, &defaultValue );

@@ -292,9 +292,6 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, co
 					aabb.IncludePoint( b );
 				}
 
-				// TODO: intern, this now only gets updated when it's a skeletal mesh. move this out of the branch? (alongside the return)
-				// TODO: intern, also fairly expensive. we can have 100+ morph targets at the same time.
-				// TODO: intern, it inflates the bounding box too much... :( is there a better way?
 				float morphDeformation = 0.f;
 				for( size_t i = 0; i < morphTargetsCount; i++ )
 				{
