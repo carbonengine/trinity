@@ -397,7 +397,7 @@ void EveStretch3::UpdateSyncronous( const EveUpdateContext& updateContext )
 
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
-		( *it )->Update();
+		( *it )->Update( 0.5f );
 	}
 
 	if( m_source )

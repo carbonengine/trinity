@@ -98,7 +98,7 @@ void EvePlanet::UpdatePlanetSyncronous( const EveUpdateContext& updateContext, f
 	}
 
 	// Update the controllers
-	EveEffectRoot2::UpdateControllers();
+	EveEffectRoot2::UpdateControllers( 0.5f );
 
 	// Used for audio for suns.
 	TriObserverLocalVector::iterator observersEnd = m_observers.end();

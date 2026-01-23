@@ -20,9 +20,10 @@ struct EveChildUpdateParams
 		boneCount( 0 ),
 		bones( nullptr ),
 		ownerMaxSpeed( 0 ),
-        activationStrength( 1 ),
+		activationStrength( 1 ),
 		isVisible( true ),
 		localToWorldTransform( IdentityMatrix() ),
+		controllerUpdateFrequency( 0.5f ),
 		worldVelocity( 0.f, 0.f, 0.f )
 	{
 	}
@@ -32,7 +33,8 @@ struct EveChildUpdateParams
 	size_t boneCount;
 	const granny_matrix_3x4* bones;
 	float ownerMaxSpeed;
-    float activationStrength;
+	float activationStrength;
+	float controllerUpdateFrequency;
 	bool isVisible;
 	Matrix localToWorldTransform;
 	Vector3 worldVelocity;
@@ -69,7 +71,7 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual void HandleControllerEvent( const char* name ) {};
 	virtual void StartControllers() {};
 
-    virtual void SetProceduralContainerVariable( const char* name, float value ) {};
+	virtual void SetProceduralContainerVariable( const char* name, float value ) {};
 
 	virtual void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) {};
 

@@ -9,6 +9,7 @@
 
 #include "ITr2Controller.h"
 #include "Actions/ITr2ControllerAction.h"
+#include "Eve/SpaceObject/Utils/EveThrottleable.h"
 
 BLUE_DECLARE( Tr2ControllerFloatVariable );
 BLUE_DECLARE_VECTOR( Tr2ControllerFloatVariable );
@@ -29,7 +30,8 @@ BLUE_DECLARE_STRUCTURE_LIST( Tr2TimelineEntry );
 
 BLUE_CLASS( Tr2TimelineController ) :
 	public ITr2ActionController,
-	public ISimTimeRebaseNotify
+	public ISimTimeRebaseNotify,
+	public EveThrottleable
 {
 public:
 	Tr2TimelineController( IRoot* lockobj = nullptr );
@@ -42,7 +44,7 @@ public:
 	bool IsLinked() const override;
 	void Start() override;
 	void Stop() override;
-	void Update() override;
+	void Update( float normalizedUpdateFrequency ) override;
 	void SetVariable( const char* name, float value ) override;
 	void HandleEvent( const char* eventName ) override;
 

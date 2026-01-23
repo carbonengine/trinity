@@ -161,7 +161,7 @@ public:
 	void SetTransform( const Matrix& transform );
 
 	void FreezeHighDetailMesh();
-	void UpdateControllers();
+	void UpdateControllers( float updateFrequency );
 
 	bool ShouldReflect() const;
 

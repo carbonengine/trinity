@@ -195,7 +195,25 @@ void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 
 void EveEffectRoot2::UpdateAsyncronous( const EveUpdateContext& updateContext ) 
 {	
-	UpdateControllers();
+	float controllerUpdateFrequency = 0.f;
+
+	if( m_display )
+	{
+		if( m_dynamicLODSelection )
+		{
+			float ht = updateContext.GetHighDetailThreshold();
+			if( ht > 0.f )
+			{
+				controllerUpdateFrequency = min( 1.f, m_estimatedSize / ht );
+			}
+		}
+		else
+		{
+			controllerUpdateFrequency = 0.5f;
+		}
+	}
+
+	UpdateControllers( controllerUpdateFrequency );
 
 	Be::Time time = updateContext.GetTime();
 	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
@@ -214,6 +232,7 @@ void EveEffectRoot2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		params.bones = nullptr;
 		params.localToWorldTransform = worldTransform;
 		params.isVisible = m_display;
+		params.controllerUpdateFrequency = controllerUpdateFrequency;
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
@@ -285,11 +304,11 @@ void EveEffectRoot2::GetRenderables( std::vector<ITr2Renderable*>& renderables, 
 }
 
 
-void EveEffectRoot2::UpdateControllers() 
+void EveEffectRoot2::UpdateControllers( float updateFrequency )
 {
 	for ( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
-		(*it)->Update();
+		( *it )->Update( updateFrequency );
 	}
 }
 

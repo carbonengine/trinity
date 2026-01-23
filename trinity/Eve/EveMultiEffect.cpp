@@ -294,7 +294,7 @@ void EveMultiEffect::UpdateSyncronous( const EveUpdateContext& updateContext )
 
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
-		( *it )->Update();
+		( *it )->Update( 0.5f );
 	}
 
 	for( auto binding = m_bindings.begin(); binding != m_bindings.end(); ++binding )
