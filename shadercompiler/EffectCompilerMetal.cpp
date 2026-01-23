@@ -2188,8 +2188,73 @@ namespace
 			{
 				for( auto name : member->GetChildren() )
 				{
-					destStruct->AddChild( NewStructMember( state, name->GetSymbol() ) );
-					accessors.push_back( NewDot( state, accessParent->Copy(), name->GetSymbol() ) );
+					auto it = s_systemSemantics.find( name->GetSymbol()->semantic );
+					if( it == s_systemSemantics.end() )
+					{
+						destStruct->AddChild( NewStructMember( state, name->GetSymbol() ) );
+						accessors.push_back( NewDot( state, accessParent->Copy(), name->GetSymbol() ) );
+					}
+				}
+			}
+		}
+	}
+
+	void GatherSystemFields( ASTNode* destStruct, std::vector<ASTNode*>& accessors, std::vector<ASTNode*>& argumentAccessors, ASTNode* accessParent, ASTNode* sourceStruct, ASTNode* shaderBody, ParserState& state )
+	{
+		for( auto member : sourceStruct->GetChildren() )
+		{
+			if( member->GetType().IsStruct() )
+			{
+				for( auto name : member->GetChildren() )
+				{
+					GatherSystemFields( destStruct, accessors, argumentAccessors, NewDot( state, accessParent->Copy(), name->GetSymbol() ), name->GetType().symbol->definition, shaderBody, state );
+				}
+			}
+			else
+			{
+				for( auto name : member->GetChildren() )
+				{
+					auto it = s_systemSemantics.find( name->GetSymbol()->semantic );
+					if( it != s_systemSemantics.end() )
+					{
+						auto param = NewFunctionParameter( state, name->GetType() );
+						param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( it->second );
+						destStruct->AddChild( param );
+						argumentAccessors.push_back( NewVarIdentifier( state, param->GetSymbol() ) );
+						accessors.push_back( NewDot( state, accessParent->Copy(), name->GetSymbol() ) );
+
+						// subtract base_vertex from vertex_id to match dx12 behaviour for SV_VertexID
+						if( name->GetSymbol()->semantic == "SV_VertexID" )
+						{
+							auto base_param = NewFunctionParameter( state, hlsl::uint_t );
+							base_param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( MetalSystemSemanticsType::Enum::base_vertex );
+							destStruct->AddChild( base_param );
+
+							auto assignment = NewBinaryExpression(
+								state,
+								OP_SUB_ASSIGN,
+								NewVarIdentifier( state, param->GetSymbol() ),
+								NewVarIdentifier( state, base_param->GetSymbol() ) );
+							ASTNode* node = NewExpressionStatement( state, assignment );
+							shaderBody->AddChild( node );
+						}
+
+						// subtract base_instance from instance_id to match dx12 behaviour for SV_InstanceID
+						if( name->GetSymbol()->semantic == "SV_InstanceID" )
+						{
+							auto base_param = NewFunctionParameter( state, hlsl::uint_t );
+							base_param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( MetalSystemSemanticsType::Enum::base_instance );
+							destStruct->AddChild( base_param );
+
+							auto assignment = NewBinaryExpression(
+								state,
+								OP_SUB_ASSIGN,
+								NewVarIdentifier( state, param->GetSymbol() ),
+								NewVarIdentifier( state, base_param->GetSymbol() ) );
+							ASTNode* node = NewExpressionStatement( state, assignment );
+							shaderBody->AddChild( node );
+						}
+					}
 				}
 			}
 		}
@@ -2253,6 +2318,77 @@ namespace
 			{
 				destStruct->AddChild( NewStructMember( state, symbol ) );
 				accessors.push_back( NewVarIdentifier( state, params[i] ) );
+			}
+		}
+	}
+
+	void GatherSystemInputs( ASTNode* destStruct, std::vector<ASTNode*>& accessors, std::vector<ASTNode*>& argumentAccessors, const std::vector<Symbol*>& params, ASTNode* header, ASTNode* shaderBody, ParserState& state )
+	{
+		for( size_t i = 0; i < header->GetChildrenCount(); ++i )
+		{
+			auto arg = header->GetChild( i );
+
+			if( IsUniformInputArgument( arg ) || arg->GetSymbol()->addressSpace != AddressSpace::None )
+			{
+				continue;
+			}
+			bool isIn = arg->GetToken() == 0 || arg->GetToken()->type == OP_IN;
+			if( !isIn )
+			{
+				continue;
+			}
+
+			Symbol* symbol = arg->GetSymbol();
+			if( !symbol )
+			{
+				continue;
+			}
+
+			if( HasSystemRegister( symbol ) )
+			{
+				// subtract base_vertex from vertex_id to match dx12 behaviour for SV_VertexID
+				if( symbol->semantic == "SV_VertexID" )
+				{
+					auto param = NewFunctionParameter( state, hlsl::uint_t );
+					param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( MetalSystemSemanticsType::Enum::base_vertex );
+					destStruct->AddChild( param );
+
+					auto assignment = NewBinaryExpression(
+						state,
+						OP_SUB_ASSIGN,
+						NewVarIdentifier( state, header->GetChild( i )->GetSymbol() ),
+						NewVarIdentifier( state, param->GetSymbol() ) );
+					ASTNode* node = NewExpressionStatement( state, assignment );
+					shaderBody->AddChild( node );
+				}
+
+				// subtract base_instance from instance_id to match dx12 behaviour for SV_InstanceID
+				if( symbol->semantic == "SV_InstanceID" )
+				{
+					auto param = NewFunctionParameter( state, hlsl::uint_t );
+					param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( MetalSystemSemanticsType::Enum::base_instance );
+					destStruct->AddChild( param );
+
+					auto assignment = NewBinaryExpression(
+						state,
+						OP_SUB_ASSIGN,
+						NewVarIdentifier( state, header->GetChild( i )->GetSymbol() ),
+						NewVarIdentifier( state, param->GetSymbol() ) );
+					ASTNode* node = NewExpressionStatement( state, assignment );
+					shaderBody->AddChild( node );
+				}
+
+				continue;
+			}
+
+			if( !params[i] )
+			{
+				continue;
+			}
+
+			if( symbol->type.IsStruct() )
+			{
+				GatherSystemFields( destStruct, accessors, argumentAccessors, NewVarIdentifier( state, params[i] ), symbol->type.symbol->definition, shaderBody, state );
 			}
 		}
 	}
@@ -2624,7 +2760,9 @@ namespace
 
 		std::vector<ASTNode*> inputAccessors;
 		std::vector<ASTNode*> outputAccessors;
+		std::vector<ASTNode*> argumentAccessors;
 
+		GatherSystemInputs( header, inputAccessors, argumentAccessors, params, functionHeader, shaderBody, state );
 		GatherInputs( inputsStruct, inputAccessors, params, functionHeader, state );
 		GatherOutputs( outputsStruct, outputAccessors, params, functionHeader, state );
 
@@ -2659,7 +2797,6 @@ namespace
 			state.GetTree()->AddChild( outputsStruct );
 		}
 
-		std::vector<ASTNode*> argumentAccessors;
 
 		if( inputsStruct )
 		{
@@ -4638,6 +4775,8 @@ const char* MetalSystemSemanticsType::GetString( int type )
         "min_distance",
         "distance",
 		"instance_intersection_function_table_offset",
+		"base_vertex",
+		"base_instance",
 	};
 
 	const int typeCount = sizeof( strings ) / sizeof( strings[0] );
