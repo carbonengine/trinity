@@ -4024,6 +4024,9 @@ void EveSpaceScene::GetLightMatrices( const Tr2LightManager::PerLightData& light
 
 void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext )
 {
+	TriFrustumOrtho sunShadowFrustum;
+	auto sunDir = m_sunData.DirWorld;
+
 	{ // Process Sun light
 		// Let's compute left, right, top, bottom of the frustum divided by the near clipping plane. We need this for SetupShadowSplit.
 		Matrix cameraProjection = Tr2Renderer::GetProjectionTransform();
@@ -4048,23 +4051,11 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 		AxisAlignedBoundingBox aabb = Tr2ShadowMap::CalculateAABB( sunProjection, Tr2Renderer::GetInverseViewTransform(), lightView, corners );
 
 		// create shadow frustum out from lightView, aabb.min, aabb.max
-		TriFrustumOrtho shadowFrustum;
-		shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
-
-		auto sunDir = m_sunData.DirWorld;
-
-		// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
-		m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&]( IEveShadowCaster* caster ) -> void {
-			if( !caster->IsShadowCastingDirty() )
-			{
-				float radius;
-				if( caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowOrthoFrustum( shadowFrustum, SHADOW_MAP_SIZE, sunDir ), TR2RENDERREASON_NORMAL, radius ) )
-				{
-					caster->MarkRtDirty();
-				}
-			}
-		} );
+		sunShadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
 	}
+
+	std::vector<const Tr2LightManager::PerLightData*> pointsLightDatas;
+	std::vector<TriFrustum> spotLightFrustums;
 	
 	// Process other lights
 	if( auto lightManager = Tr2LightManager::GetInstance() )
@@ -4073,52 +4064,68 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 		{
 			for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
 			{
-				const Tr2LightManager::PerLightData& lightData = lightManager->GetLightData( lightIndex );
+				const Tr2LightManager::PerLightData* lightData = &lightManager->GetLightData( lightIndex );
 
 				// Point light
-				if( lightData.innerAngle <= 0.0f )
+				if( lightData->innerAngle <= 0.0f )
 				{
-					// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
-					m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&lightData, this]( IEveShadowCaster* caster ) -> void {
-						if( !caster->IsShadowCastingDirty() )
-						{
-							if( caster->IsCastingShadow( m_updateContext.GetFrustum(), lightData.position, lightData.radius, TR2RENDERREASON_NORMAL ) )
-							{
-								caster->MarkRtDirty();
-							}
-						}
-					} );
+					pointsLightDatas.push_back( lightData );
 				}
 				else // Spot light
 				{
 					Matrix projection;
 					Matrix view;
-
-					GetLightMatrices( lightData, projection, view );
+					GetLightMatrices( *lightData, projection, view );
 
 					TriFrustum shadowFrustum;
-					shadowFrustum.DeriveFrustum( &view, &lightData.position, &projection, renderContext.m_esm.GetViewport() );
-					{
-						float sizeInShadow = 0.0f;
-
-						// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
-						m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&]( IEveShadowCaster* caster ) -> void {
-							if( !caster->IsShadowCastingDirty() )
-							{
-								caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowFrustum( shadowFrustum ), TR2RENDERREASON_NORMAL, sizeInShadow );
-								// special threshold check
-								if( sizeInShadow > 5.0f )
-								{
-									caster->MarkRtDirty();
-								}
-							}
-						} );
-					}
+					shadowFrustum.DeriveFrustum( &view, &lightData->position, &projection, renderContext.m_esm.GetViewport() );
+					spotLightFrustums.push_back( shadowFrustum );
 				}
 			}
 		}
 	}
+
+	// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
+	m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&]( IEveShadowCaster* caster ) -> void 
+	{
+		if( caster->IsShadowCastingDirty() )
+		{
+			return;
+		}
+
+		{
+			float radius;
+			if( caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowOrthoFrustum( sunShadowFrustum, SHADOW_MAP_SIZE, sunDir ), TR2RENDERREASON_NORMAL, radius ) )
+			{
+				caster->MarkRtDirty();
+				return;
+			}
+		}
+
+		
+		for( auto lightData : pointsLightDatas )
+		{
+			if( caster->IsCastingShadow( m_updateContext.GetFrustum(), lightData->position, lightData->radius, TR2RENDERREASON_NORMAL ) )
+			{
+				caster->MarkRtDirty();
+				return;
+			}
+		}
+		
+		for( const auto& shadowFrustum : spotLightFrustums )
+		{
+			float sizeInShadow = 0.0f;
+			caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowFrustum( shadowFrustum ), TR2RENDERREASON_NORMAL, sizeInShadow );
+			// special threshold check
+			if( sizeInShadow > 5.0f )
+			{
+				caster->MarkRtDirty();
+				return;
+			}
+		}
+	} );
 }
+
 void RegisterWithVariableStore( const EveSpaceScene::ShadowResources& shadowResources, Tr2GpuResourcePool& gpuResourcePool )
 {
 	const uint8_t whiteR8[1] = { 255 };
