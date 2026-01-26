@@ -324,7 +324,7 @@ const char* TextEventTrack::SampleTrack( float time, int loop )
 	return nullptr;
 }
 
-const float MorphTrack::SampleTrack( float time, float duration )
+float MorphTrack::SampleTrack( float time, float duration ) const
 {
 	float defaultValue = 0.f;
 	float value = 0.f;
