@@ -774,7 +774,7 @@ bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* m
 	MorphToBaseData baseData = InitMorphToBaseData( vertexDefinition );
 	MorphToBaseData morphData = InitMorphToBaseData( vertexMorphDefinition );
 
-	// let's try to find at least one vertex that is being affected by at least morph target
+	// let's try to find at least one vertex that is being affected by at least one morph target
 	bool dataIsDeltas = myMesh->MorphTargets->DataIsDeltas;
 	auto pVertices = (uint8_t*)GrannyGetMeshVertices( myMesh );
 
