@@ -399,14 +399,6 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 			m_isVisible = parentLod >= m_lowestLodVisible && m_currentScreenSize >= m_minScreenSize;
 			m_instancesVisible = m_isVisible && m_currentInstanceScreenSize >= s_instanceScreenSizeThreshold;
 		}
-
-		if( updateContext.m_raytracingEnabled )
-		{
-			if( auto rtMesh = m_mesh->GetRtMesh() )
-			{
-				rtMesh->MarkDirty();
-			}
-		}
 	}
 
 	if( !m_attachments.empty() )
