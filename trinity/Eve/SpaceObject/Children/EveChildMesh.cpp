@@ -1221,27 +1221,12 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 	}
 
 	// compact the buffer
-	int32_t count = int32_t(m_morphAnimationBuffer.size());
-	for( int32_t i = 0; i < count; i++ )
-	{
-		if( m_morphAnimationBuffer[i].m_weight > EPSILON && ( forceAll || MorphAllowedToBeProcessed( i, bakedOnly ) ) )
-		{
-			continue;
-		}
+	auto end = std::remove_if( m_morphAnimationBuffer.begin(), m_morphAnimationBuffer.end(), [this, bakedOnly, forceAll]( const Tr2MorphTargetAnimationData& data ) {
+		const float EPSILON = .001f;
+		return ( m_morphAnimationBuffer[data.m_index].m_weight <= EPSILON || ( !forceAll && !MorphAllowedToBeProcessed( data.m_index, bakedOnly ) ) );
+	} );
 
-		// found free spot, now try to find something to move here
-		for( int32_t j = count - 1; j >= i; j-- )
-		{
-			count -= 1;
-			if( m_morphAnimationBuffer[j].m_weight > EPSILON && ( forceAll || MorphAllowedToBeProcessed( j, bakedOnly ) ) )
-			{
-				m_morphAnimationBuffer[i] = m_morphAnimationBuffer[j];
-				break;
-			}
-		}
-	}
-
-	return std::make_pair( m_morphAnimationBuffer.data(), count );
+	return std::make_pair( m_morphAnimationBuffer.data(), std::distance( m_morphAnimationBuffer.begin(), end ) );
 }
 
 void EveChildMesh::BakeMorphs()
