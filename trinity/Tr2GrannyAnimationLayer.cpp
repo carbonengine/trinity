@@ -243,7 +243,10 @@ void Tr2GrannyAnimationLayer::RegisterMorphTracks( granny_control* control, cons
 		{
 			for( int trackIdx = 0; trackIdx < trackGroup->VectorTrackCount; trackIdx++ )
 			{
-				m_controlMorphTracks[control].push_back( MorphTrack( &trackGroup->VectorTracks[trackIdx] ) );
+				if ( trackGroup->VectorTracks[trackIdx].Dimension == 1 )
+				{
+					m_controlMorphTracks[control].push_back( MorphTrack( &trackGroup->VectorTracks[trackIdx] ) );
+				}
 			}
 			break;
 		}
