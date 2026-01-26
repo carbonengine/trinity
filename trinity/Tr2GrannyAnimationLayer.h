@@ -85,7 +85,7 @@ private:
 	void RegisterTextTracks( granny_control* control, const granny_animation* animation );
 	void RegisterMorphTracks( granny_control* control, const granny_animation* animation );
 	void SampleTextTracks( IBlueEventListener* listener);
-	void SampleMorphTracks( float animationTime, std::unordered_map<std::string, float>& morphAnimations, bool additive = false );
+	void SampleMorphTracks( std::unordered_map<std::string, float>& morphAnimations, bool additive = false );
 	void UpdateControlParam( float control_increment );
 	float GetLayerAnimationTime();
 

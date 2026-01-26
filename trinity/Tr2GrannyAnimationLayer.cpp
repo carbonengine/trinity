@@ -359,14 +359,14 @@ void Tr2GrannyAnimationLayer::SampleTextTracks( IBlueEventListener* listener )
 	}
 }
 
-void Tr2GrannyAnimationLayer::SampleMorphTracks( float animationTime, std::unordered_map<std::string, float>& morphAnimations, bool additive )
+void Tr2GrannyAnimationLayer::SampleMorphTracks( std::unordered_map<std::string, float>& morphAnimations, bool additive )
 {
 	for( auto it = m_controlMorphTracks.begin(); it != m_controlMorphTracks.end(); it++ )
 	{
 		granny_control* control = it->first;
 		granny_real32 t = GrannyGetControlRawLocalClock( control );
 
-		auto duration = GrannyGetControlDuration( control );
+		auto duration = GrannyGetControlLocalDuration( control );
 
 		if( t < 0 || t >= duration )
 		{
@@ -394,7 +394,7 @@ void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local
 {
 	GrannySetModelClock( m_modelInstance, animationTime );
 	SampleTextTracks( listener );
-	SampleMorphTracks( animationTime, morphAnimations );
+	SampleMorphTracks( morphAnimations );
 	FreeCompletedControls();
 	if ( m_controlParamEnabled )
 	{
@@ -408,7 +408,7 @@ void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local
 {
 	GrannySetModelClock( m_modelInstance, animationTime );
 	SampleTextTracks( listener );
-	SampleMorphTracks( animationTime, morphAnimations, additive );
+	SampleMorphTracks( morphAnimations, additive );
 	FreeCompletedControls();
 	if ( m_controlParamEnabled )
 	{
