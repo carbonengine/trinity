@@ -1191,6 +1191,11 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 {
 	const float EPSILON = .001f;
 
+	if( !m_mesh || !m_mesh->GetMorphTargetNames() )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
 	// fill the buffer with the animation values
 	{
 		auto morphAnimations = m_mesh->GetMorphAnimations();
@@ -1205,15 +1210,10 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 		}
 	}
 
-	if( !m_mesh->GetMorphTargetNames() )
-	{
-		return std::make_pair( nullptr, 0 );
-	}
-
-	std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
 	// overwrite entries in buffer with animation values
-	if( m_animationUpdater && m_animationUpdater->IsInitialized() && m_mesh->GetMorphTargetNames() )
+	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
+		std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
 		const std::unordered_map<std::string, float>& morphsAnimations = m_animationUpdater->GetMorphAnimations();
 
 		for( uint32_t i = 0; i < names.size(); ++i )
