@@ -2109,6 +2109,10 @@ void Tr2PostProcessRenderer::ProcessTonemapping( Tr2PPTonemappingEffect* tonemap
 			Matrix output = Transpose( blueCorrectionInv * ACESOutputMat );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "AcesOutputMat" ), output );
 		}
+		else if( tonemapping->m_method == Tr2PPTonemappingEffect::AgX )
+		{
+			m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_METHOD" ), BlueSharedString( "TONE_MAPPING_AGX" ) );
+		}
 		else
 		{
 			m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_METHOD" ), BlueSharedString( "TONE_MAPPING_UNCHARTED2" ) );
