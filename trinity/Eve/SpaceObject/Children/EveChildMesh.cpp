@@ -1492,7 +1492,7 @@ void EveChildMesh::SetMorphTargetWeight( const char* name, float weight )
 		return;
 	}
 
-	return m_mesh->SetMorphTargetWeight( name, weight );
+	m_mesh->SetMorphTargetWeight( name, weight );
 }
 
 std::vector<bool> EveChildMesh::GetAllBakedMorphTargetStates() const
