@@ -69,6 +69,9 @@ public:
 	virtual bool IsBakedMorph( int index ) const = 0;
 	virtual void SetMorphTargetWeight( const char* name, float weight ) = 0;
 	virtual float GetMorphTargetWeight( const char* name ) = 0;
+	virtual std::vector<bool>* GetAllBakedMorphTargetStates() const = 0;
+	virtual void SetBakedMorphTarget( const char* name, bool isBaked ) = 0;
+	virtual bool GetBakedMorphTarget( const char* name ) = 0;
 	virtual const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& GetMorphAnimations() const = 0;
 
 	/////////////////////////////////////////////////////////////////////////////////////

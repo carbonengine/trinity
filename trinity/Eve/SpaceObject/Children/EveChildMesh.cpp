@@ -1276,6 +1276,10 @@ void EveChildMesh::UnbakeMorphs()
 	}
 }
 
+bool EveChildMesh::IsMeshBaked()
+{
+	return m_bakeMorphs;
+}
 
 bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 {
@@ -1506,6 +1510,16 @@ void EveChildMesh::SetMorphTargetWeight( const char* name, float weight )
 	return m_mesh->SetMorphTargetWeight( name, weight );
 }
 
+std::vector<bool> EveChildMesh::GetAllBakedMorphTargetStates() const
+{
+	if( !m_mesh || !m_mesh->GetAllBakedMorphTargetStates() )
+	{
+		return {};
+	}
+
+	return *m_mesh->GetAllBakedMorphTargetStates();
+}
+
 float EveChildMesh::GetMorphTargetWeight( const char* name )
 {
 	if( !m_mesh )
@@ -1514,4 +1528,24 @@ float EveChildMesh::GetMorphTargetWeight( const char* name )
 	}
 
 	return m_mesh->GetMorphTargetWeight( name );
+}
+
+void EveChildMesh::SetBakedMorphTarget( const char* name, bool isBaked )
+{
+	if( !m_mesh )
+	{
+		return;
+	}
+
+	m_mesh->SetBakedMorphTarget( name, isBaked );
+}
+
+bool EveChildMesh::GetBakedMorphTarget( const char* name )
+{
+	if( !m_mesh )
+	{
+		return false;
+	}
+
+	return m_mesh->GetBakedMorphTarget( name );
 }

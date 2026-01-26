@@ -69,6 +69,9 @@ public:
 	bool IsBakedMorph( int index ) const override;
 	void SetMorphTargetWeight( const char* name, float weight ) override;
 	float GetMorphTargetWeight( const char* name ) override;
+	std::vector<bool>* GetAllBakedMorphTargetStates() const override;
+	void SetBakedMorphTarget( const char* name, bool isBaked ) override;
+	bool GetBakedMorphTarget( const char* name ) override;
 	const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& GetMorphAnimations() const override;
 
 private:

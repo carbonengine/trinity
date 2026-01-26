@@ -1940,7 +1940,7 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 				std::string morphTargetName( morphTarget.ScalarName, nameLength - 5 );
 				lod->m_morphTargetNames.push_back( morphTargetName );
 
-				lod->m_isBakedMorphTarget.push_back( morphTargetName.compare( 0, 5, "Base_" ) == 0 || morphTargetName.compare( 0, 4, "Org_" ) == 0 || morphTargetName.compare( 0, 3, "Sc_" ) == 0 );
+				lod->m_isBakedMorphTarget.push_back( false );
 
 				void* pMorphSrc = GrannyGetMeshMorphVertices( grannyMesh, i );
 				lod->m_morphTargetAllocation.Update( 

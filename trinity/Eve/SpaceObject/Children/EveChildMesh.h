@@ -166,8 +166,13 @@ public:
 	void SetMorphTargetWeight( const char* name, float weight );
 	float GetMorphTargetWeight( const char* name );
 
+	std::vector<bool> GetAllBakedMorphTargetStates() const;
+	void SetBakedMorphTarget( const char* name, bool isBaked );
+	bool GetBakedMorphTarget( const char* name );
+
 	void BakeMorphs();
 	void UnbakeMorphs();
+	bool IsMeshBaked();
 
 	bool UpdateMeshMorphs( Tr2RenderContext & renderContext ) override;
 
