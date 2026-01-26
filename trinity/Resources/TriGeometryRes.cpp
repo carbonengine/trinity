@@ -160,6 +160,50 @@ static void ConvertDataToVector3( Tr2VertexDefinition::DataType elementType, con
 }
 
 
+namespace
+{
+struct MorphToBaseData
+{
+	unsigned int bytesPerVertex;
+	Tr2VertexDefinition::Item* foundPosition;
+	unsigned int positionByteOffset;
+	Tr2VertexDefinition::DataType declType;
+};
+
+MorphToBaseData InitMorphToBaseData( Tr2VertexDefinition decl )
+{
+	MorphToBaseData data{};
+	data.bytesPerVertex = decl.m_nextOffset[0];
+	data.foundPosition = decl.Find( Tr2VertexDefinition::POSITION, 0 );
+	CCP_ASSERT_M( data.foundPosition, "InitMorphToBaseData: Couldn't find Tr2VertexDefinition::POSITION." );
+	data.positionByteOffset = data.foundPosition->m_offset;
+	data.declType = data.foundPosition->m_dataType;
+	return data;
+}
+
+float SquaredDistMorphToBase( int index, bool dataIsDeltas, uint8_t* pVertices, MorphToBaseData baseData, uint8_t* pMorphSrc, MorphToBaseData morphData )
+{
+	Vector3 vertex;
+	ConvertDataToVector3( baseData.declType, pVertices + baseData.positionByteOffset + index * baseData.bytesPerVertex, &vertex );
+
+	Vector3 morphVertex;
+	ConvertDataToVector3( morphData.declType, pMorphSrc + morphData.positionByteOffset + index * morphData.bytesPerVertex, &morphVertex );
+
+	Vector3 diff;
+	if( dataIsDeltas )
+	{
+		diff = morphVertex;
+	}
+	else
+	{
+		diff = morphVertex - vertex;
+	}
+
+	return Dot( diff, diff );
+}
+}
+
+
 uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, uint32_t count )
 {
 	if( index >= lod.m_areas.size() )
@@ -721,27 +765,14 @@ bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* m
 
 	// primary mesh vertex declaration
 	granny_data_type_definition* grannyVertexDecl = myMesh->PrimaryVertexData->VertexType;
-
 	Tr2VertexDefinition vertexDefinition = BuildFromGrannyVertexDecl( grannyVertexDecl );
-	const unsigned bytesPerVertex = vertexDefinition.m_nextOffset[0];
-
-	auto foundPosition = vertexDefinition.Find( Tr2VertexDefinition::POSITION, 0 );
-	CCP_ASSERT_M( foundPosition, "CalculateMorphDeformationAmount: Couldn't find Tr2VertexDefinition::POSITION for primary data." );
-
-	unsigned int positionByteOffset = foundPosition->m_offset;
-	Tr2VertexDefinition::DataType declType = foundPosition->m_dataType;
 
 	// morph target vertex declaration
 	granny_data_type_definition* grannyMorphVertexDecl = myMesh->MorphTargets[0].VertexData->VertexType;
-
 	Tr2VertexDefinition vertexMorphDefinition = BuildFromGrannyVertexDecl( grannyMorphVertexDecl );
-	const unsigned morphBytesPerVertex = vertexMorphDefinition.m_nextOffset[0];
 
-	auto morphFoundPosition = vertexMorphDefinition.Find( Tr2VertexDefinition::POSITION, 0 );
-	CCP_ASSERT_M( morphFoundPosition, "CalculateMorphDeformationAmount: Couldn't find Tr2VertexDefinition::POSITION for morph data." );
-
-	unsigned int morphPositionByteOffset = morphFoundPosition->m_offset;
-	Tr2VertexDefinition::DataType morphDeclType = morphFoundPosition->m_dataType;
+	MorphToBaseData baseData = InitMorphToBaseData( vertexDefinition );
+	MorphToBaseData morphData = InitMorphToBaseData( vertexMorphDefinition );
 
 	// let's try to find at least one vertex that is being affected by at least morph target
 	bool dataIsDeltas = myMesh->MorphTargets->DataIsDeltas;
@@ -764,23 +795,7 @@ bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* m
 				index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
 			}
 
-			Vector3 vertex;
-			ConvertDataToVector3( declType, pVertices + positionByteOffset + index * bytesPerVertex, &vertex );
-
-			Vector3 morphVertex;
-			ConvertDataToVector3( morphDeclType, pMorphSrc + morphPositionByteOffset + index * morphBytesPerVertex, &morphVertex );
-
-			Vector3 diff;
-			if( dataIsDeltas )
-			{
-				diff = morphVertex;
-			}
-			else
-			{
-				diff = morphVertex - vertex;
-			}
-
-			float squaredDist = Dot( diff, diff );
+			float squaredDist = SquaredDistMorphToBase( index, dataIsDeltas, pVertices, baseData, pMorphSrc, morphData );
 			if( squaredDist > EPSILON )
 			{
 				return true;
@@ -790,9 +805,6 @@ bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* m
 
 	return false;
 }
-
-
-
 
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 {
@@ -1781,49 +1793,19 @@ float CalculateMorphDeformationAmount( bool dataIsDeltas, int32_t vertexCount, u
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	const unsigned bytesPerVertex = decl.m_nextOffset[0];
-
-	auto foundPosition = decl.Find( Tr2VertexDefinition::POSITION, 0 );
-	CCP_ASSERT_M( foundPosition, "CalculateMorphDeformationAmount: Couldn't find Tr2VertexDefinition::POSITION for primary data." );
-	
-	unsigned int positionByteOffset = foundPosition->m_offset;
-	Tr2VertexDefinition::DataType declType = foundPosition->m_dataType;
-
-	
-	const unsigned morphBytesPerVertex = morphDecl.m_nextOffset[0];
-
-	auto morphFoundPosition = morphDecl.Find( Tr2VertexDefinition::POSITION, 0 );
-	CCP_ASSERT_M( morphFoundPosition, "CalculateMorphDeformationAmount: Couldn't find Tr2VertexDefinition::POSITION for morph data." );
-
-	unsigned int morphPositionByteOffset = morphFoundPosition->m_offset;
-	Tr2VertexDefinition::DataType morphDeclType = morphFoundPosition->m_dataType;
-
+	MorphToBaseData baseData = InitMorphToBaseData( decl );
+	MorphToBaseData morphData = InitMorphToBaseData( morphDecl );
 
 	float maxAmount = 0.f;
 	for( int j = 0; j < vertexCount; j++ )
 	{
-		Vector3 vertex;
-		ConvertDataToVector3( declType, pVertices + positionByteOffset + j * bytesPerVertex, &vertex );
-	
-		Vector3 morphVertex;
-		ConvertDataToVector3( morphDeclType, pMorphSrc + morphPositionByteOffset + j * morphBytesPerVertex, &morphVertex );
-
-		Vector3 diff;
-		if ( dataIsDeltas )
-		{
-			diff = morphVertex;
-		}
-		else
-		{
-			diff = morphVertex - vertex;
-		}
-		
-		float squaredDist = Dot( diff, diff );
+		float squaredDist = SquaredDistMorphToBase( j, dataIsDeltas, pVertices, baseData, pMorphSrc, morphData );
 		maxAmount = max( maxAmount, squaredDist );
 	}
 
 	return sqrt( maxAmount );
 }
+
 bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeometryResLodData* lod, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
