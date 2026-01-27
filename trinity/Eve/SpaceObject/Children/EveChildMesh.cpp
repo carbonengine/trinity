@@ -359,7 +359,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
 			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
-			auto [morphTargets, morphTargetCount] = GetMorphTargets( false, true );
+			auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::ALL );
 			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount, morphTargets, morphTargetCount );
 		}
 		else
@@ -516,7 +516,7 @@ void EveChildMesh::UpdateRtSkeleton()
 	bool morphChanged = false;
 	if( hasMorphed )
 	{
-		auto [morphTargets, morphTargetCount] = GetMorphTargets();
+		auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::RUNTIME_EVALUATED );
 
 		m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 		auto morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
@@ -800,7 +800,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 			auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
 			if( lod->m_morphTargetAllocation.IsValid() )
 			{
-				auto [morphTargets, morphTargetCount] = GetMorphTargets();
+				auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::RUNTIME_EVALUATED );
 				m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 
 				// for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
@@ -929,6 +929,8 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 			attachment->UpdateLights( m_worldTransform, bones, boneCount, m_activationStrength, 0.0 );
 		}
 	}
+
+	UpdateMorphAnimationBuffer();
 }
 
 void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
@@ -1056,7 +1058,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		if ( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
 			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
-			auto [morphTargets, morphTargetCount] = GetMorphTargets( false, true );
+			auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::ALL );
 			m_mesh->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount, morphTargets, morphTargetCount );
 		}
 		else
@@ -1160,37 +1162,52 @@ std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() co
 	return std::make_pair( nullptr, 0 );
 }
 
-bool EveChildMesh::MorphAllowedToBeProcessed( int index, bool bakedOnly )
+std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets( MorphTargetAnimationFilter filter )
 {
-	if( !m_mesh->GetMorphTargetNames() )
+	std::pair<const Tr2MorphTargetAnimationData*, size_t> result;
+
+	switch( filter )
 	{
-		return false;
+	case MorphTargetAnimationFilter::ALL:
+		result = std::make_pair( m_morphAnimationBuffer.data(), m_morphAnimationOffsets.m_allCount );
+		break;
+	case MorphTargetAnimationFilter::RUNTIME_EVALUATED:
+		if ( m_isMorphsBaked )
+		{
+			result = std::make_pair( m_morphAnimationBuffer.data() + m_morphAnimationOffsets.m_runtimeEvaluatedOffset, m_morphAnimationOffsets.m_runtimeEvaluatedCount );
+		}
+		else
+		{ 
+			// as long as the baking code hasn't been executed yet, we will rely on runtime evaluation for everything
+			result = std::make_pair( m_morphAnimationBuffer.data(), m_morphAnimationOffsets.m_allCount );
+		}
+		break;
+	case MorphTargetAnimationFilter::BAKED:
+		result = std::make_pair( m_morphAnimationBuffer.data() + m_morphAnimationOffsets.m_bakedOffset, m_morphAnimationOffsets.m_bakedCount );
+		break;
 	}
-	std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
-	if(names.size() <= index)
-	{
-		return false;
-	}
-	bool bakedName = m_mesh->IsBakedMorph( index );
-	// Return true only if
-	// 1. We are processing baked only and the name is baked. This dose not factor in m_isBaked as we want to process all baked morphs
-	// 2. The mesh is baked and we are getting a non baked morph
-	// 3. The mesh is not baked and we are getting all morphs
-	return ( bakedOnly && bakedName ) || ( !bakedOnly && !bakedName ) || ( !bakedOnly && !m_isMorphsBaked );
+
+	return result;
 }
 
-std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets( bool bakedOnly, bool forceAll )
+void EveChildMesh::UpdateMorphAnimationBuffer()
 {
 	const float EPSILON = .001f;
 
+	// reset offsets
+	m_morphAnimationOffsets = {};
+
 	if( !m_mesh || !m_mesh->GetMorphTargetNames() )
 	{
-		return std::make_pair( nullptr, 0 );
+		return;
 	}
 
-	// fill the buffer with the animation values
+	// fill the buffer with the animation values from the mesh, which are originating from python
 	{
 		auto morphAnimations = m_mesh->GetMorphAnimations();
+
+		CCP_ASSERT_M( morphAnimations.size() == m_mesh->GetMorphTargetNames()->size(), "Morph animations on the mesh have to match the morph target names found on the mesh!" );
+
 		if( m_morphAnimationBuffer.size() != morphAnimations.size() )
 		{
 			m_morphAnimationBuffer.resize( morphAnimations.size() );
@@ -1202,7 +1219,7 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 		}
 	}
 
-	// overwrite entries in buffer with animation values
+	// overwrite entries in buffer with animation values from animator
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
 		std::vector<std::string>& names = *m_mesh->GetMorphTargetNames();
@@ -1220,13 +1237,23 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 		}
 	}
 
-	// compact the buffer
-	auto end = std::remove_if( m_morphAnimationBuffer.begin(), m_morphAnimationBuffer.end(), [this, bakedOnly, forceAll]( const Tr2MorphTargetAnimationData& data ) {
-		const float EPSILON = .001f;
-		return ( m_morphAnimationBuffer[data.m_index].m_weight <= EPSILON || ( !forceAll && !MorphAllowedToBeProcessed( data.m_index, bakedOnly ) ) );
+	// move runtime evaluated values to the beginning of the buffer
+	auto runtimeEvaluatedEnd = std::partition( m_morphAnimationBuffer.begin(), m_morphAnimationBuffer.end(), [&]( const Tr2MorphTargetAnimationData& data ) {
+		return data.m_weight >= EPSILON && !m_mesh->IsBakedMorph( data.m_index );
 	} );
 
-	return std::make_pair( m_morphAnimationBuffer.data(), std::distance( m_morphAnimationBuffer.begin(), end ) );
+	m_morphAnimationOffsets.m_runtimeEvaluatedOffset = 0;
+	m_morphAnimationOffsets.m_runtimeEvaluatedCount = uint32_t( std::distance( m_morphAnimationBuffer.begin(), runtimeEvaluatedEnd ) );
+	
+	// the baked values follow the runtime evaluated values in the buffer
+	auto bakedEnd = std::partition( runtimeEvaluatedEnd, m_morphAnimationBuffer.end(), [&]( const Tr2MorphTargetAnimationData& data ) {
+		return data.m_weight >= EPSILON && m_mesh->IsBakedMorph( data.m_index );
+	} );
+
+	m_morphAnimationOffsets.m_bakedOffset = m_morphAnimationOffsets.m_runtimeEvaluatedCount;
+	m_morphAnimationOffsets.m_bakedCount = uint32_t( std::distance( runtimeEvaluatedEnd, bakedEnd ) );
+
+	m_morphAnimationOffsets.m_allCount = m_morphAnimationOffsets.m_runtimeEvaluatedCount + m_morphAnimationOffsets.m_bakedCount;
 }
 
 void EveChildMesh::BakeMorphs()
@@ -1303,7 +1330,7 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 		isReady = false;
 	}
 
-	auto [morphTargets, morphTargetCount] = GetMorphTargets( true );
+	auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::BAKED );
 
 	m_morphTargetOffsets.AdvanceFrame();
 	m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
