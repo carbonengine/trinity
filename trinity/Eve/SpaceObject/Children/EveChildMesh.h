@@ -50,6 +50,13 @@ struct MergeMorphsConstantBuffer
 	uint32_t padding3;
 };
 
+enum class MorphTargetAnimationFilter : uint8_t
+{
+	RUNTIME_EVALUATED,
+	BAKED,
+	ALL
+};
+
 BLUE_CLASS( EveChildMesh ) :
 	public IEveSpaceObjectChild,
 	public EveChildTransform,
@@ -193,7 +200,8 @@ protected:
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
 	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
 	bool MorphAllowedToBeProcessed( int index, bool bakedOnly );
-	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets( bool bakedOnly = false, bool forceAll = false );
+	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets( MorphTargetAnimationFilter filter );
+	void UpdateMorphAnimationBuffer();
 
 	// general data
 	BlueSharedString m_name;
@@ -253,6 +261,14 @@ protected:
 	Tr2EffectPtr m_mergeMorphsEffect;
 	Tr2ConstantBufferAL m_mergeMorphsConstantBuffer;
 	bool m_isMorphsBaked;
+	struct
+	{
+		uint32_t m_runtimeEvaluatedOffset;
+		uint32_t m_runtimeEvaluatedCount;
+		uint32_t m_bakedOffset;
+		uint32_t m_bakedCount;
+		uint32_t m_allCount;
+	} m_morphAnimationOffsets;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );
