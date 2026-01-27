@@ -1253,6 +1253,11 @@ void EveChildMesh::UnbakeMorphs()
 {
 	m_isMorphsBaked = false;
 
+	if(!m_mesh)
+	{
+		return;
+	}
+
 	auto rtMesh = m_mesh->GetRtMesh();
 
 	if( rtMesh )
