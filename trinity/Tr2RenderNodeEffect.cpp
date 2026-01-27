@@ -5,6 +5,11 @@
 #include "Tr2Renderer.h"
 
 
+Tr2RenderNodeEffect::Tr2RenderNodeEffect( IRoot* lockobj ) :
+	PARENTLOCK( m_inputNodes )
+{
+}
+
 bool Tr2RenderNodeEffect::Validate( const Span<const Tr2BitmapDimensions>& destDimensions, const Span<const BlueSharedString>& outputs, Be::Time realTime, Be::Time simTime )
 {
 	if( destDimensions.size == 0 )
@@ -131,4 +136,6 @@ void Tr2RenderNodeEffect::AddSource( const char* name, ITr2RenderNode* source, c
 			}
 		}
 	}
+
+	m_inputNodes.Append( source );
 }
