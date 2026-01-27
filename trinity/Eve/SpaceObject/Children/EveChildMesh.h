@@ -64,6 +64,7 @@ BLUE_CLASS( EveChildMesh ) :
 	public IEveSpaceObjectAttachmentOwner,
 	public ITr2LightOwner,
 	public IEveShadowCaster,
+	public Tr2DeviceResource,
 	public ITr2MeshMorph
 {
 public:
@@ -179,6 +180,9 @@ public:
 	bool IsMorphsBaked() const;
 
 protected:
+	virtual void ReleaseResources( TriStorage s );
+	virtual bool OnPrepareResources();
+
 	void InitializeAnimation();
 	bool ShouldReflect() const;
 

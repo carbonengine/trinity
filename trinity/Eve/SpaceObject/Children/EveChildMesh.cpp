@@ -1362,6 +1362,11 @@ bool EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 
 	if( m_bakeMorphs )
 	{
+		auto shader = m_mergeMorphsEffect->GetShaderStateInterface();
+		if( !shader )
+		{
+			return false;
+		}
 		if( !PrepareMorphBuffers( renderContext ) )
 		{
 			return false;
@@ -1399,6 +1404,26 @@ bool EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 bool EveChildMesh::IsMorphsBaked() const
 {
 	return m_isMorphsBaked;
+}
+
+void EveChildMesh::ReleaseResources( TriStorage s )
+{
+	g_bakedMorphTargetBuffer.Free( m_bakedMorphAllocation );
+
+	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
+	{
+		m_mergeMorphsConstantBuffer = Tr2ConstantBufferAL();
+	}
+}
+
+bool EveChildMesh::OnPrepareResources()
+{
+	if( m_isMorphsBaked )
+	{
+		BakeMorphs();
+	}
+
+	return true;
 }
 
 const std::pair<const int32_t*, size_t> EveChildMesh::GetMeshBindingIndices() const
