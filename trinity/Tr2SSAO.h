@@ -139,6 +139,7 @@ private:
 	};
 
 	bool m_cortaoEnabled;
+	bool m_cortaoBentNormal;
 	
 	bool m_cortaoInitialized;
 	Tr2EffectPtr m_cortaoEffect;

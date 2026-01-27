@@ -55,6 +55,8 @@ Tr2SSAO::Tr2SSAO( IRoot* lockobj )
 {
 
 	m_cortaoEnabled = true;
+	m_cortaoBentNormal = true;
+
 	m_cortaoStrength = 1.0f;
 	m_cortaoRadius = 1.0E10f;
 	m_cortaoMaxBlockerSearchRadius = 0.25f;
@@ -262,9 +264,12 @@ bool Tr2SSAO::OnPrepareResources()
 		return false;
 	}
 
+	uint32_t width = m_inputDepthBuffer->GetWidth();
+	uint32_t height = m_inputDepthBuffer->GetHeight();
+
 	// Check if the smallest map is still large enough
 	FFX_CACAO_BufferSizeInfo size{};
-	FFX_CACAO_UpdateBufferSizeInfo( m_inputDepthBuffer->GetWidth(), m_inputDepthBuffer->GetHeight(), m_detail.downsampled, &size );
+	FFX_CACAO_UpdateBufferSizeInfo( width, height, m_detail.downsampled, &size );
 	if( !size.importanceMapWidth || !size.importanceMapHeight )
 	{
 		return false;
@@ -290,10 +295,14 @@ bool Tr2SSAO::OnPrepareResources()
 		}
 	}
 
-	if( !m_outputTarget->IsValid() || m_outputTarget->IsAttached() )
+	// Switch to a signed for the bent normal.
+	// 7 bits of precision is more than enough for the SSAO occlusion value (5 bits would suffice).
+	PixelFormat outputFormat = m_cortaoEnabled && m_cortaoBentNormal ? PIXEL_FORMAT_R8G8B8A8_SNORM : PIXEL_FORMAT_R8_UNORM;
+
+	if( !m_outputTarget->IsValid() || m_outputTarget->IsAttached() || m_outputTarget->GetWidth() != width || m_outputTarget->GetHeight() != height || m_outputTarget->GetFormat() != outputFormat )
 	{
 		m_outputTarget->Detach();
-		CR_RETURN_VAL( m_outputTarget->Create( m_inputDepthBuffer->GetWidth(), m_inputDepthBuffer->GetHeight(), 1, PIXEL_FORMAT_R16_FLOAT, 1, 0, EX_BIND_UNORDERED_ACCESS ), false );
+		CR_RETURN_VAL( m_outputTarget->Create( width, height, 1, outputFormat, 1, 0, EX_BIND_UNORDERED_ACCESS ), false );
 	}
 
 	if( !m_initialized )
@@ -407,7 +416,11 @@ void Tr2SSAO::Filter( Tr2RenderContext& renderContext, bool temporal )
 			m_cortaoBlurBuffer.CreateInstance();
 
 			m_cortaoLookupTable.CreateInstance();
-			BeResMan->GetResource( "res:/texture/ssao/24x24x16x29.dds", "", m_cortaoLookupTable );
+
+			//Available lookup tables, the lowest resolution one is sufficient for our sample counts.
+			BeResMan->GetResource( "res:/texture/ssao/24x24x16x16.dds", "", m_cortaoLookupTable );
+			//BeResMan->GetResource( "res:/texture/ssao/32x32x24x16.dds", "", m_cortaoLookupTable );
+			//BeResMan->GetResource( "res:/texture/ssao/64x64x32x16.dds", "", m_cortaoLookupTable );
 
 			m_cortaoInitialized = true;
 		}
@@ -677,8 +690,6 @@ uint32_t Tr2SSAO::Hash( uint32_t n )
 
 void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 {
-
-
 	uint32_t width = m_outputTarget->GetWidth();
 	uint32_t height = m_outputTarget->GetHeight();
 	
@@ -686,7 +697,7 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 	if( !packedBuffer.IsValid() || packedBuffer.GetWidth() != width || packedBuffer.GetHeight() != height )
 	{
 		uint32_t mipLevels = 1;
-		uint32_t res = max(width, height);
+		uint32_t res = max( width, height );
 		while( res > 32 )
 		{
 			mipLevels++;
@@ -739,7 +750,7 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 		float maxApparentCircleRadius = m_cortaoMaxBlockerSearchRadius * 2.0f * fminf( inverseProjectionMatrix._11, inverseProjectionMatrix._22 ); 
 		data->maxApparentCircleRadiusCoefficient = maxApparentCircleRadius / sqrtf( maxApparentCircleRadius * maxApparentCircleRadius + 1.0f );
 
-		float circleBias = log2f( projectionMatrix._11 * width * 0.5f );
+		float circleBias = log2f( projectionMatrix._11 * width * 0.5f );	
 		data->mipBias = m_cortaoMipBias + circleBias;
 		data->radiusMultiplier = m_cortaoStrength;
 		data->lookupOccluderRadiusScale = 1.0f;
@@ -784,7 +795,8 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 	};
 
 	m_cortaoEffect->SetOption( BlueSharedString( "SAMPLE_COUNT" ), BlueSharedString( SAMPLE_COUNTS[static_cast<int>( m_detail.quality )] ) );
-	m_cortaoEffect->SetOption( BlueSharedString( "USE_LOOKUP_TABLE" ), BlueSharedString( m_cortaoUseLookupTable ? "USE_LOOKUP_TABLE_TRUE" : "USE_LOOKUP_TABLE_FALSE" ) );
+	m_cortaoEffect->SetOption( BlueSharedString( "LOOKUP_TABLE" ), BlueSharedString( m_cortaoUseLookupTable ? "LOOKUP_TABLE_ENABLED" : "LOOKUP_TABLE_DISABLED" ) );
+	m_cortaoEffect->SetOption( BlueSharedString( "BENT_NORMAL" ), BlueSharedString( m_cortaoBentNormal ? "BENT_NORMAL_ENABLED" : "BENT_NORMAL_DISABLED" ) );
 
 	m_cortaoEffect->SetParameter( BlueSharedString( "DepthBuffer" ), m_inputDepthBuffer );
 	m_cortaoEffect->SetParameter( BlueSharedString( "NormalBuffer" ), m_inputNormalBuffer );
@@ -813,7 +825,7 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 
 		for( uint32_t i = 1; i < packedBuffer.GetMipCount(); i++ )
 		{
-			if (temporal)
+			if( temporal )
 			{
 				m_cortaoRandSeeds[3] = Hash( m_cortaoRandSeeds[3] + rand() );
 			}
@@ -836,17 +848,18 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 
 	{
 		GPU_REGION( renderContext, "Main pass" );
-		uint32_t mainPassWorkGroupSize = 16;
+		uint32_t mainPassWorkGroupSize = 32;
 		Tr2Renderer::RunComputeShader( m_cortaoEffect, BlueSharedString( "MainPass" ), ( width + mainPassWorkGroupSize - 1 ) / mainPassWorkGroupSize, ( height + mainPassWorkGroupSize - 1 ) / mainPassWorkGroupSize, 1, renderContext );
 	}
 
-	if( m_cortaoBlur && !temporal )
+	if( m_cortaoBlur )
 	{
 
 		auto& blurBuffer = *m_cortaoBlurBuffer->GetTexture();
-		if( !blurBuffer.IsValid() || blurBuffer.GetWidth() != width || blurBuffer.GetHeight() != height )
+		PixelFormat blurFormat = m_cortaoBentNormal ? PixelFormat::PIXEL_FORMAT_R8G8B8A8_SNORM : PixelFormat::PIXEL_FORMAT_R8_UNORM;
+		if( !blurBuffer.IsValid() || blurBuffer.GetWidth() != width || blurBuffer.GetHeight() != height || blurBuffer.GetFormat() != blurFormat )
 		{
-			Tr2BitmapDimensions desc( width, height, 1, PixelFormat::PIXEL_FORMAT_R8_UNORM );
+			Tr2BitmapDimensions desc( width, height, 1, blurFormat );
 			blurBuffer.Create( desc, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, renderContext.GetPrimaryRenderContext() );
 		}
 
@@ -855,6 +868,8 @@ void Tr2SSAO::ComputeCORTAO( Tr2RenderContext& renderContext, bool temporal )
 			GPU_REGION( renderContext, "Blur" );
 
 			m_cortaoBlurEffect->SetParameter( BlueSharedString( "PackedDataBuffer" ), m_cortaoPackedBuffer );
+
+			m_cortaoBlurEffect->SetOption( BlueSharedString( "BENT_NORMAL" ), BlueSharedString( m_cortaoBentNormal ? "BENT_NORMAL_ENABLED" : "BENT_NORMAL_DISABLED" ) );
 
 			{
 				GPU_REGION( renderContext, "Pass 1" );
