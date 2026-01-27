@@ -88,7 +88,12 @@ HRESULT Tr2SSAO::ApplyConstBuffer( unsigned pass, Tr2RenderContext& renderContex
 
 Tr2GpuResourcePool::Texture Tr2SSAO::Filter( const Tr2TextureAL& depthBuffer, const Tr2TextureAL& normalBuffer, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, bool temporal )
 {
-	Tr2GpuResourcePool::Texture result;
+
+	if( !m_detail.enabled )
+	{
+		return {};
+	}
+
 	GPU_REGION( renderContext, "SSAO" );
 	if( m_cortaoEnabled )
 	{
@@ -118,16 +123,11 @@ Tr2GpuResourcePool::Texture Tr2SSAO::Filter( const Tr2TextureAL& depthBuffer, co
 
 		GPU_REGION( renderContext, "CORTAO" );
 		return ComputeCORTAO( depthBuffer, normalBuffer, gpuResourcePool, renderContext, temporal );
+
+	} else {
+		GPU_REGION( renderContext, "Detail" );
+		return PerformPass( m_detail, depthBuffer, normalBuffer, false, gpuResourcePool, renderContext );
 	}
-	else
-	{
-		if( m_detail.enabled )
-		{
-			GPU_REGION( renderContext, "Detail" );
-			return PerformPass( m_detail, depthBuffer, normalBuffer, false, gpuResourcePool, renderContext );
-		}
-	}
-	return {};
 }
 
 Tr2GpuResourcePool::Texture Tr2SSAO::PerformPass( const Layer& layer, const Tr2TextureAL& depthBuffer, const Tr2TextureAL& normalBuffer, bool reuseNormals, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
@@ -523,8 +523,8 @@ uint32_t Tr2SSAO::Hash( uint32_t n )
 
 Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuffer, const Tr2TextureAL& normalBuffer, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, bool temporal )
 {
-	uint32_t width = m_outputTarget->GetWidth();
-	uint32_t height = m_outputTarget->GetHeight();
+	uint32_t width = depthBuffer.GetWidth();
+	uint32_t height = depthBuffer.GetHeight();
 	
 	Tr2GpuResourcePool::Texture packedBuffer;
 	{
