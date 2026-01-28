@@ -3,6 +3,7 @@
 #include "include/ITr2GpuBuffer.h"
 #include "Shader/Tr2Effect.h"
 #include "../TbbStub.h"
+#include "./Tr2RingBuffer.h"
 
 BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
@@ -102,14 +103,6 @@ public:
 	EXPOSE_TO_BLUE();
 
 	Tr2RaytracingGeometry();
-
-	struct Float4x3
-	{
-		Float4x3() = default;
-		explicit Float4x3( const Matrix& m );
-
-		float elements[12];
-	};
 
 	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
 	void BeginSceneUpdate();

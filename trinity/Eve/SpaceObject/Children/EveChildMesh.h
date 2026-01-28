@@ -72,7 +72,7 @@ BLUE_CLASS( EveChildMesh ) :
 	public ITr2LightOwner,
 	public IEveShadowCaster,
 	public Tr2DeviceResource,
-	public ITr2MeshMorph
+	public ITr2MeshMorph,
 	public ITr2Pickable
 {
 public:
@@ -263,7 +263,7 @@ protected:
 	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 	std::vector<Matrix> m_instanceTransforms;
-	mutable std::vector<Tr2RaytracingGeometry::Float4x3> m_instanceWorldTransforms;
+	mutable std::vector<Float4x3> m_instanceWorldTransforms;
 	unsigned int m_instanceCount;
 
 	std::vector<Tr2MorphTargetAnimationData> m_morphAnimationBuffer;

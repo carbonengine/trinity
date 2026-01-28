@@ -682,7 +682,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		for( const auto& instanceTransform : m_instanceTransforms )
 		{
 			auto m = XMMatrixMultiply( instanceTransform, m_worldTransform );
-			m_instanceWorldTransforms.push_back( Tr2RaytracingGeometry::Float4x3( Matrix( m ) ) );
+			m_instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
 		}
 		
 		auto idm = IdentityMatrix();
@@ -1596,6 +1596,8 @@ bool EveChildMesh::GetBakedMorphTarget( const char* name )
 	}
 
 	return m_mesh->GetBakedMorphTarget( name );
+}
+
 BluePy EveChildMesh::GetSofSourceLocator( uint32_t areaId ) const
 {
 	IWeakObjectPtr weak = BlueCastPtr( GetRawRoot() );
