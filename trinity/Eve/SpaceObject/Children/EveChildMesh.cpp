@@ -1321,6 +1321,12 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 				nullptr,
 				renderContext,
 				m_bakedMorphAllocation );
+
+			if( !SUCCEEDED( result ) )
+			{
+				return false;
+			}
+
 			isReady = false;
 		}
 	}
