@@ -717,7 +717,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 						{
 							vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 						}
-						uint32_t bakedMorphOffset = UINT32_MAX;
+						uint32_t bakedMorphOffset = std::numeric_limits<uint32_t>::max();
 						if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
 						{
 							bakedMorphOffset = m_bakedMorphAllocation.GetOffset();
@@ -747,7 +747,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					{
 						vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 					}
-					uint32_t bakedMorphOffset = UINT32_MAX;
+					uint32_t bakedMorphOffset = std::numeric_limits<uint32_t>::max();
 					if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
 					{
 						bakedMorphOffset = m_bakedMorphAllocation.GetOffset();
@@ -814,7 +814,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 				}
 				else
 				{
-					m_vsData.bakedMorphTargetVertexDataOffset = UINT32_MAX;
+					m_vsData.bakedMorphTargetVertexDataOffset = std::numeric_limits<uint32_t>::max();
 				}
 			}
 		}		
@@ -1363,7 +1363,7 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 			}
 			else
 			{
-				data->vertexDataPositionOffset = UINT32_MAX;
+				data->vertexDataPositionOffset = std::numeric_limits<uint32_t>::max();
 			}
 
 			if( tangentItem )
@@ -1372,7 +1372,7 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 			}
 			else
 			{
-				data->vertexDataTangentOffset = UINT32_MAX;
+				data->vertexDataTangentOffset = std::numeric_limits<uint32_t>::max();
 			}
 		}
 

@@ -882,7 +882,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			constData->morphTargetPositionOffset = 0;
 			constData->morphTargetStride = 0;
 			constData->morphTargetSize = 0;
-			constData->bakedMorphTargetPositionOffset = UINT32_MAX;
+			constData->bakedMorphTargetPositionOffset = std::numeric_limits<uint32_t>::max();
 			if( lod->m_morphTargetAllocation.IsValid() )
 			{
 				auto morphOffsets = FindOffsets( lod->m_morphVertexDeclaration );
