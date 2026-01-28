@@ -199,7 +199,6 @@ protected:
 
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
 	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
-	bool MorphAllowedToBeProcessed( int index, bool bakedOnly );
 	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets( MorphTargetAnimationFilter filter );
 	void UpdateMorphAnimationBuffer();
 
