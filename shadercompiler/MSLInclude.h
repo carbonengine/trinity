@@ -465,6 +465,8 @@ struct __MetalHitSV
     float min_distance;
     float distance;
     float2 barycentric_coord;
+	float4x3 world_to_object_transform;
+	float4x3 object_to_world_transform;
 };
 
 #define __INTERSECION_TAGS instancing, triangle_data, world_space_data
@@ -522,7 +524,7 @@ void TraceRay(
     r.min_distance = ray_.TMin;
     r.max_distance = ray_.TMax;
 
-    typename intersector<__INTERSECION_TAGS>::result_type intersection = i.intersect(r, accelerationStructure[0].tlas, instanceInclusionMask, shaderTable.intersectionTable, payload);
+    auto intersection = i.intersect(r, accelerationStructure[0].tlas, instanceInclusionMask, shaderTable.intersectionTable, payload);
 
     __MetalHitSV hit;
 
@@ -535,6 +537,8 @@ void TraceRay(
         hit.min_distance = r.min_distance;
         hit.distance = r.max_distance;
         hit.barycentric_coord = { 0.0, 0.0 };
+		hit.world_to_object_transform = float4x3(1.0);
+		hit.object_to_world_transform = float4x3(1.0);
 
         shaderTable.missShaderTable[missShaderIndex](payload, hit, shaderTable.missMaterials + 8 * missShaderIndex, shaderTable.globalInput, shaderTable);
     }
@@ -547,6 +551,8 @@ void TraceRay(
         hit.min_distance = r.min_distance;
         hit.distance = intersection.distance;
         hit.barycentric_coord = intersection.triangle_barycentric_coord;
+		hit.world_to_object_transform = intersection.world_to_object_transform;
+		hit.object_to_world_transform = intersection.object_to_world_transform;
 
         uint offset = ((device uint*)accelerationStructure)[2 + intersection.instance_id];
 
@@ -566,6 +572,8 @@ void TraceRay(
 #define ObjectRayDirection() (__metalHitSV.direction)
 #define RayTMin() (__metalHitSV.min_distance)
 #define RayTCurrent() (__metalHitSV.distance)
+#define ObjectToWorld4x3() (transpose(__metalHitSV.object_to_world_transform))
+#define WorldToObject4x3() (transpose(__metalHitSV.world_to_object_transform))
 
 #define IgnoreHit() return false
 

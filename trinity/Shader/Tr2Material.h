@@ -157,10 +157,8 @@ public:
 struct Tr2EffectLibraryParameters : public PassParametersOwner
 {
 	Tr2EffectLibraryParameters();
-    //~Tr2EffectLibraryParameters();
 
 	Tr2MaterialStageInput m_localInput;
-	Tr2ResourceSetDescriptionAL m_localResourceSetDesc;
 
 	Tr2MaterialStageInput m_globalInput;
 	Tr2ResourceSetDescriptionAL m_globalResourceSetDesc;

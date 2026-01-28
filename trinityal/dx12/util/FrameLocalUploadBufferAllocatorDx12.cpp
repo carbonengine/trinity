@@ -67,7 +67,7 @@ ConstantBufferAllocator::Entry ConstantBufferAllocator::Allocate( const void* da
 
 		if( !m_spillPage.buffer || m_spillOffset + size > m_spillPage.size )
 	{
-			m_spillPage.size += CONST_PAGE_SIZE;
+			m_spillPage.size *= 2;
 			CreatePage( m_spillPage );
 		}
 		entry.m_cpuAddr = m_spillPage.cpuAddr + m_spillOffset;

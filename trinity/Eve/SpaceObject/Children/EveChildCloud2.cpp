@@ -692,15 +692,7 @@ void EveChildCloud2::UpdateAsyncronous( const EveUpdateContext& updateContext, c
 {
 	m_localTransform = TransformationMatrix( m_scaling, m_rotation, m_translation );
 
-	Matrix parent;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( parent );
-	}
-	else
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( parent );
-	}
+	Matrix parent = params.localToWorldTransform;
 	auto prevLocation = m_worldTransform.GetTranslation();
 	m_worldTransform = m_localTransform * parent;
 

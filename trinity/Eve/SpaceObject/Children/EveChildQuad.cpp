@@ -153,19 +153,7 @@ void EveChildQuad::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 
 void EveChildQuad::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	Matrix parentTransform;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( parentTransform );
-	}
-	else if ( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( parentTransform );
-	}
-	else 
-	{
-		return;
-	}
+	Matrix parentTransform = params.localToWorldTransform;
 
 	UpdateTransform( parentTransform );
 

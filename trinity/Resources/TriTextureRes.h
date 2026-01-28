@@ -75,6 +75,7 @@ public:
 	Tr2RenderContextEnum::TextureType GetType() const { return Tr2BitmapDimensions::GetType(); }
 	long UpdateSubresource( unsigned left, unsigned top, unsigned right, unsigned bottom, const void* source, unsigned sourcePitch );
 	void SetAverageColor( float red, float green, float blue, float alpha ) override;
+
 	const Tr2TextureAL* GetTexture() const;
 	OnTextureChangeEvent& OnTextureChange() override;
 	
@@ -105,10 +106,11 @@ public:
 
 	Tr2TexturePipeline* GetPipeline() const;
 
-	void RequestResolution( float resolutionFraction );
+	void RequestResolution( const uint32_t requestedLod );
 	void UpdateLodRequest( Tr2TextureLodUpdateRequest& request, Tr2TextureLodManager & manager );
 	void ProcessLodRequest( const Tr2TextureLodUpdateRequest& request, Tr2TextureLodManager& manager );
 	uint32_t GetOriginalResolution() const;
+	float GetOriginalResolutionAsFloat() const;
 
 	
 	//////////////////////////////////////////////////////////////////////////

@@ -32,6 +32,8 @@ CCP_STATS_DECLARE( batchExecuteIndirectCalls, "Trinity/batchExecuteIndirectCalls
 namespace
 {
 
+Tr2EnumerableThreadSpecific<Tr2BindlessResourcesAL> s_perThreadUsedTextures;
+
 void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName, Tr2RenderContextAL& renderContext )
 {
 #if TRINITY_PLATFORM_SUPPORTS_HEAP_VIEW
@@ -42,23 +44,39 @@ void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& t
 	usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_3D, "" ) );
 	usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_CUBE, "" ) );
 
-	auto ProcessBatch = [&usedTextures, &techniqueName]( auto& batch ) {
+	auto ProcessBatch = [&techniqueName]( auto& batch, Tr2BindlessResourcesAL& resources ) {
 		uint32_t technique;
 		if( batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
 		{
-			batch.m_material->GetUsedBindlessTextures( technique, usedTextures );
+			batch.m_material->GetUsedBindlessTextures( technique, resources );
 		}
 	};
-
-	for( auto& batch : batches->GetGdprBatches() )
-	{
-		ProcessBatch( batch );
-	}
-	for( auto& batch : batches->GetBatches() )
-	{
-		ProcessBatch( batch );
-	}
-
+	auto ProcessBatches = [&ProcessBatch, &usedTextures]( auto& batches ) {
+		const size_t partitionSize = 500;
+		if( batches.size() > partitionSize )
+		{
+			Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, batches.size(), partitionSize ), [&]( Tr2BlockedRange<size_t> range ) {
+				for( auto i = range.begin(); i != range.end(); ++i )
+				{
+					ProcessBatch( batches[i], s_perThreadUsedTextures.local() );
+				}
+			} );
+			for( auto& threadResources : s_perThreadUsedTextures )
+			{
+				usedTextures.Add( threadResources );
+				threadResources.Clear();
+			}
+		}
+		else
+		{
+			for( auto& batch : batches )
+			{
+				ProcessBatch( batch, usedTextures );
+			}
+		}
+	};
+	ProcessBatches( batches->GetGdprBatches() );
+	ProcessBatches( batches->GetBatches() );
 	{
 		CCP_STATS_ZONE( "renderContext.UseResources" );
 		renderContext.UseResources( Tr2UseResourceDestination::RENDER, Tr2GpuUsage::SHADER_RESOURCE, usedTextures );

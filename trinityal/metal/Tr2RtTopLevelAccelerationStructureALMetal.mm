@@ -84,7 +84,7 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
             // Fill out instance descriptors.
             for( NSUInteger instanceIndex = 0; instanceIndex < count; ++instanceIndex ) {
                 
-                if( !instances[instanceIndex].blas.IsValid())
+                if( !instances[instanceIndex].blas->IsValid())
                 {
                     return E_INVALIDARG;
                 }
@@ -116,7 +116,7 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
                     for(int row = 0; row < 3; row++)
                         instanceDescriptors[instanceIndex].transformationMatrix.columns[column][row] = instances[instanceIndex].transform[row][column];
                 
-                id<MTLAccelerationStructure> blas = instances[instanceIndex].blas.TrinityALImpl_GetObject()->m_primitiveAccelerationStructure;
+                id<MTLAccelerationStructure> blas = instances[instanceIndex].blas->m_primitiveAccelerationStructure;
                 
                 if( blas != nil )
                 {

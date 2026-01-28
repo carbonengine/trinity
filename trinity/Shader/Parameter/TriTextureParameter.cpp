@@ -52,6 +52,7 @@ void TriTextureParameter::UsedWithScreenSize( float screenSize, float worldRadiu
 {
 	if( m_textureRes )
 	{
+		uint32_t requestedLod = 0;
 		if( m_textureLodEnabled && !uvDensities.empty() )
 		{
 			size_t i = 0;
@@ -74,15 +75,27 @@ void TriTextureParameter::UsedWithScreenSize( float screenSize, float worldRadiu
 					resolution = std::max( resolution, screenSize / density );
 				}
 			}
-			if( resolution == 0 )
+			if( resolution != 0 )
 			{
-				resolution = std::numeric_limits<float>::max();
+				auto requestedResolution = std::max( 1.f, resolution );
+				auto resolutionChange = (uint32_t)( m_textureRes->GetOriginalResolutionAsFloat() / requestedResolution );
+				if( resolutionChange > 0 )
+				{
+					// quickly calculate log2 of resolutionChange, which gives us the required LOD
+#if __APPLE__
+					requestedLod = 31 - (uint32_t)__builtin_clz( resolutionChange );
+#else
+					unsigned long reverse;
+					_BitScanReverse( &reverse, resolutionChange );
+					requestedLod = reverse;
+#endif
+				}
 			}
-			m_textureRes->RequestResolution( resolution );
+			m_textureRes->RequestResolution( requestedLod );
 		}
 		else
 		{
-			m_textureRes->RequestResolution( std::numeric_limits<float>::max() );
+			m_textureRes->RequestResolution( requestedLod );
 		}
 	}
 }

@@ -4,6 +4,13 @@
 
 BLUE_DECLARE( TriViewport );
 
+enum class TriFrustumTestResult
+{
+	Outside,
+	Intersect,
+	Inside
+};
+
 class TriFrustum
 {
 public:
@@ -61,6 +68,8 @@ public:
 	float GetPixelSizeAccross( const CcpMath::AxisAlignedBox& box ) const;
 
 	void ExtractFrustum( const Matrix* proj );
+
+	TriFrustumTestResult SphereTest( const CcpMath::Sphere& sphere ) const;
 
 private:
 	void CacheTransformationData( const Matrix* view, const Vector3* campos, const Matrix* projection, const TriViewport& viewport );

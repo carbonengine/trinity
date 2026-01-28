@@ -334,14 +334,6 @@ void EveChildSocket::UpdateSyncronous( const EveUpdateContext& updateContext, co
 void EveChildSocket::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform = params.localToWorldTransform;
-	if ( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else if ( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
 
 	UpdateTransform( localToWorldTransform );
 

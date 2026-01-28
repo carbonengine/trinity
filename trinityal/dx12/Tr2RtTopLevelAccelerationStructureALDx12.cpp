@@ -28,7 +28,7 @@ namespace
 		CR_RETURN_HR( uploadBuffer->Map( 0, nullptr, reinterpret_cast<void**>( &data ) ) );
 		for( size_t i = 0; i < count; ++i )
 		{
-			if( !instances[i].blas.IsValid() )
+			if( !instances[i].blas->IsValid() )
 			{
 				uploadBuffer->Unmap( 0, nullptr );
 				return E_INVALIDARG;
@@ -38,7 +38,7 @@ namespace
 			d.InstanceContributionToHitGroupIndex = instances[i].materialIndex;
 			d.InstanceMask = 0xff;
 			memcpy( d.Transform, instances[i].transform, 12 * sizeof( float ) );
-			d.AccelerationStructure = instances[i].blas.TrinityALImpl_GetObject()->GetGPUVirtualAddress();
+			d.AccelerationStructure = instances[i].blas->GetGPUVirtualAddress();
 			d.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE | instances[i].flags;
 			memcpy( data + i, &d, sizeof( d ) );
 		}

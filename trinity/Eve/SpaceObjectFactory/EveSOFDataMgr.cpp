@@ -1638,6 +1638,7 @@ EveSOFDataMgr::ExtensionPlacementData EveSOFDataMgr::UnpackPlacementData( IEveSO
 		placementData.locatorSetName = BlueSharedString( placement->m_locatorSetName );
 		placementData.descriptor = descriptor;
 		placementData.isInstanced = placement->m_isInstanced;
+		placementData.isShared = placement->m_isShared;
 		placementData.extendsBoundingSphere = placement->m_extendsBoundingSphere;
 		placementData.extendsShieldEllipsoid = placement->m_extendsShieldEllipsoid;
 

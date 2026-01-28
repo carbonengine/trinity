@@ -58,6 +58,8 @@ struct MetalSystemSemanticsType
         min_distance,
         distance,
 		instance_intersection_function_table_offset,
+		object_to_world_transform,
+		world_to_object_transform,
 
 		// these two are only available since shader model 6.8 in hlsl, which we don't use (yet).
 		// but we need them to emulate the behaviour of SV_VertexID and SV_InstanceID

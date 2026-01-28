@@ -534,14 +534,6 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 {
 	Matrix lastWorldTransform = m_worldTransform;
 	Matrix localToWorldTransform = params.localToWorldTransform;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else if( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
 
 	UpdateTransform( localToWorldTransform );
 
@@ -565,22 +557,21 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 
 	m_activationStrength = params.activationStrength;
 
-	// need to update the data we get from the parent to be relevant to us!
-	if( nullptr != params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetPerObjectStructs( m_vsData, m_psData );
-
-		// need to move the clipdata inversely of the translation of the childmesh
-		m_vsData.clipData = Vector4( m_vsData.clipData.GetXYZ() - m_translation, m_vsData.clipData.w );
-		m_psData.clipSphereCenter = m_psData.clipSphereCenter - m_translation;
-	}
-
-	m_activationStrength = params.activationStrength;
-
 	if( HasRenderables() )
 	{
 		m_perObjectDataVs.InvalidateBufferData();
 		m_perObjectDataPs.InvalidateBufferData();
+
+		// need to update the data we get from the parent to be relevant to us!
+		if( nullptr != params.spaceObjectParent )
+		{
+			params.spaceObjectParent->GetPerObjectStructs( m_vsData, m_psData );
+
+			// need to move the clipdata inversely of the translation of the childmesh
+			m_vsData.clipData = Vector4( m_vsData.clipData.GetXYZ() - m_translation, m_vsData.clipData.w );
+			m_psData.clipSphereCenter = m_psData.clipSphereCenter - m_translation;
+		}
+
 		m_vsData.worldTransform = Transpose( m_worldTransform );
 		m_vsData.invWorldTransform = Inverse( m_vsData.worldTransform );
 		m_vsData.worldTransformLast = Transpose( lastWorldTransform );
@@ -595,6 +586,7 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 	newParams.childParent = this;
 	newParams.boneCount = boneCount;
 	newParams.bones = bones;
+	newParams.localToWorldTransform = m_worldTransform;
 
 	if( params.spaceObjectParent )
 	{
@@ -614,10 +606,13 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 		( *it )->UpdateAsyncronous( updateContext, newParams );
 	}
 
-	Be::Time time = updateContext.GetTime();
-	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
+	if( !m_curveSets.empty() )
 	{
-		( *it )->Update( time, time );
+		Be::Time time = updateContext.GetTime();
+		for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
+		{
+			( *it )->Update( time, time );
+		}
 	}
 
 	for( auto it = m_fxAttributes.begin(); it != m_fxAttributes.end(); it++ )

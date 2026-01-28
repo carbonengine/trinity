@@ -41,6 +41,7 @@ BLUE_CLASS( EveChildMesh ) :
 	public IEveSpaceObjectDecalOwner,
 	public IEveSpaceObjectAttachmentOwner,
 	public ITr2LightOwner,
+	public ITr2Pickable,
 	public IEveShadowCaster
 {
 public:
@@ -124,6 +125,11 @@ public:
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
 
+	//////////////////////////////////////////////////////////////////////////
+	// ITr2Pickable
+	IRoot* GetID( uint16_t ) override;
+	void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
+
 	// access
 	void SetMesh( Tr2MeshBase* mesh );
 	void SetOrigin( Origin origin );
@@ -135,6 +141,8 @@ public:
 	void SetAnimationController( Tr2GrannyAnimation* animation );
 
 	void SetInstanceTransforms( std::vector<Matrix> instances );
+
+	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 
 protected:
 	void InitializeAnimation();
@@ -149,6 +157,7 @@ protected:
 
 	// the mesh
 	Tr2MeshBasePtr m_mesh;
+	Tr2InstancedMeshPtr m_instancedMesh;  // Cached downcast of m_mesh
 	IEveSpaceObject2::ParentData m_parentData;
 
 	PIEveChildTransformModifierVector m_transformModifiers;
@@ -171,6 +180,9 @@ protected:
 	EveSpaceObjectPSData m_psData;
 	EveSpaceObjectVSData m_vsData;
 
+	CcpMath::AxisAlignedBox m_worldBoundingBox; // AABB in world space
+	CcpMath::Sphere m_worldBoundingSphere; // bounding sphere in world space
+
 	bool m_display;
 	bool m_isVisible;
 	bool m_instancesVisible;
@@ -189,8 +201,9 @@ protected:
 
 	void UpdateRtMesh();
 	void UpdateRtSkeleton();
-	mutable std::vector<Tr2ConstantBufferAL> m_rtPerObjectDatas;
+	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 	std::vector<Matrix> m_instanceTransforms;
+	mutable std::vector<Tr2RaytracingGeometry::Float4x3> m_instanceWorldTransforms;
 	unsigned int m_instanceCount;
 
 };

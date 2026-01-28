@@ -48,6 +48,7 @@ private:
 	void CreatePage( Page& page );
 
 	std::atomic<uint32_t> m_offset;
+	uint8_t m_gap[64]; // prevent false sharing
 	Page m_page;
 
 	std::mutex m_spillMutex;
