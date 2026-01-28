@@ -10,6 +10,8 @@ BLUE_CLASS( Tr2RenderNodeEffect ) :
 	public ITr2RenderNode
 {
 public:
+	Tr2RenderNodeEffect( IRoot* lockobj = NULL );
+
 	EXPOSE_TO_BLUE();
 
 	bool Validate( const Span<const Tr2BitmapDimensions>& destDimensions, const Span<const BlueSharedString>& outputs, Be::Time realTime, Be::Time simTime ) override;
@@ -33,6 +35,7 @@ private:
 		std::vector<TempOutput> outputs;
 	};
 	Tr2EffectPtr m_effect;
+	PITr2RenderNodeVector m_inputNodes;
 	std::vector<Source> m_sources;
 	TriViewportPtr m_viewport;
 	Tr2EffectStateManager::RenderingMode m_renderingMode = Tr2EffectStateManager::RenderingMode::RM_FULLSCREEN;

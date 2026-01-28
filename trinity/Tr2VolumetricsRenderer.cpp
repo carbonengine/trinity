@@ -708,8 +708,8 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 					return {};
 				}
 
-				std::wstring rayGenName;
-				std::wstring missName;
+				BlueSharedStringW rayGenName;
+				BlueSharedStringW missName;
 				m_pipelineManager.AddLibrary( rayGenName, missName, resources.rtCalculateFroxels, BlueSharedString( "RtShadow" ) );
 
 				Tr2RtPipelineStateAL pipelineState = m_pipelineManager.GetPipelineState( renderContext );

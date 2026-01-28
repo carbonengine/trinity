@@ -232,14 +232,6 @@ void EveChildPlug::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 void EveChildPlug::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	m_worldTransform = params.localToWorldTransform;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( m_worldTransform );
-	}
-	else if( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( m_worldTransform );
-	}
 
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;

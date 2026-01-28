@@ -1031,6 +1031,7 @@ EveSOFDataHullExtensionPlacement::EveSOFDataHullExtensionPlacement( IRoot*  lock
 	m_locatorSetName( "" ),
 	m_offset( 0.f, 0.f, 0.f ),
 	m_isInstanced( true ),
+	m_isShared( false ),
 	m_extendsShieldEllipsoid( true ),
 	m_extendsBoundingSphere( true ),
 	m_enabled( true )

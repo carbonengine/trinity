@@ -195,7 +195,15 @@ Tr2IndirectDrawBuffer::Allocation Tr2IndirectDrawBuffer::Allocate( uint32_t size
 	{
 		if( m_head + int32_t( size ) > m_size )
 		{
-			m_head = 0;
+			if( m_tail >= int32_t( size ) )
+			{
+				m_head = 0;
+			}
+			else
+			{
+				CCP_LOGNOTICE( "Resizing indirect draw buffer" );
+				Resize( m_size * 2 );
+			}
 		}
 	}
 	if( m_head < m_tail && m_head + int32_t( size ) >= m_tail )

@@ -233,6 +233,10 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 		}
 
 		int meshIx = mesh->GetMeshIndex();
+		if( meshIx < 0 || meshIx >= int( geomRes->GetMeshCount() ) )
+		{
+			continue;
+		}
 		TriGeometryResLodData* lod = geomRes->GetMeshLod( meshIx, 0 );
 		if( !lod || !lod->m_allocationsValid )
 		{

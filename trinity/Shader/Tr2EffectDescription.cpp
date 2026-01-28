@@ -723,11 +723,6 @@ bool Tr2EffectDescription::Read( const void* data,
 
 					ReadRegisters( library.localInput.signature, stream, version, shaderType );
 					ReadInput( library.localInput, stream, version, shaderType, renderContext );
-					library.localResourceSetDesc = Tr2ResourceSetDescriptionAL( Tr2RegisterMapAL( &shaderType, &library.localInput.signature, 1 ) );
-					for( auto sampler = begin( library.localInput.samplers ); sampler != end( library.localInput.samplers ); ++sampler )
-					{
-						library.localResourceSetDesc.SetSampler( shaderType, sampler->first, sampler->second.sampler );
-					}
 				}
 			}
 		}

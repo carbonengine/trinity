@@ -172,7 +172,14 @@ namespace TrinityALImpl
 
 				for( size_t i = 0; i < shader.names.size(); ++i )
 				{
-					m_signatureForName[shader.names[i].exportName] = localSignatures[shader.localSignature];
+					m_shaderInfoForName[shader.names[i].exportName] = { localSignatures[shader.localSignature] };
+				}
+			}
+			else
+			{
+				for( size_t i = 0; i < shader.names.size(); ++i )
+				{
+					m_shaderInfoForName[shader.names[i].exportName] = { nullptr };
 				}
 			}
 		}
@@ -211,7 +218,11 @@ namespace TrinityALImpl
 
 				subObjects.push_back( subobject );
 
-				m_signatureForName[hitGroup.exportName] = localSignatures[hitGroup.localSignature];
+				m_shaderInfoForName[hitGroup.exportName] = { localSignatures[hitGroup.localSignature] };
+			}
+			else
+			{
+				m_shaderInfoForName[hitGroup.exportName] = { nullptr };
 			}
 		}
 		// **************
@@ -245,6 +256,12 @@ namespace TrinityALImpl
 		// device5 = dxrDevice
 		CR_RETURN_HR( renderContext.m_device5->CreateStateObject( &pipelineDesc, IID_PPV_ARGS( &m_state ) ) );
         m_state.QueryInterface( &m_stateInfo );
+
+		for( auto& data : m_shaderInfoForName )
+		{
+			data.second.shaderIdentifier = m_stateInfo->GetShaderIdentifier( data.first.c_str() );
+		}
+
 		m_globalSignature = rootSignature;
 		m_localSignatures = localSignatures;
 		localSignatures.clear();
@@ -270,7 +287,7 @@ namespace TrinityALImpl
 			m_state = nullptr;
 			m_stateInfo = nullptr;
 			m_owner = nullptr;
-			m_signatureForName.clear();
+			m_shaderInfoForName.clear();
 		}
 	}
 
@@ -476,14 +493,14 @@ namespace TrinityALImpl
 		return m_localSignatures;
 	}
 
-	const TrinityALImpl::Tr2RootSignatureAL* Tr2RtPipelineStateAL::GetLocalSignature( const wchar_t* name ) const
+	const Tr2RtPipelineStateAL::ShaderInfo* Tr2RtPipelineStateAL::GetShaderInfo( const wchar_t* name ) const
 	{
-		auto found = m_signatureForName.find( name );
-		if( found == m_signatureForName.end() )
+		auto found = m_shaderInfoForName.find( name );
+		if( found == m_shaderInfoForName.end() )
 		{
 			return nullptr;
 		}
-		return found->second;
+		return &found->second;
 	}
 }
 

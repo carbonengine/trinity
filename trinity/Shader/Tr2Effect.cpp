@@ -688,7 +688,6 @@ void Tr2Effect::RebuildSamplerOverrides()
 			auto& pp = *m_parametersForPasses[technique].libraries[passIx];
 
 			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].globalInput, pp.m_globalResourceSetDesc );
-			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].localInput, pp.m_localResourceSetDesc );
 		}
 	}
 }
@@ -783,7 +782,6 @@ void Tr2Effect::RebuildCachedDataInternal()
 					auto& lib = *m_parametersForPasses[technique].libraries[libIx];
 					lib.m_globalResourceSetDesc = desc.techniques[technique].libraries[libIx].globalResourceSetDesc;
 					lib.m_globalResourceSetDirty = true;
-					lib.m_localResourceSetDesc = desc.techniques[technique].libraries[libIx].localResourceSetDesc;
 
 
 					bool compatibleWithGdr = true; //we don't care

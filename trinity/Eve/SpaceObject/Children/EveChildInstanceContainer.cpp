@@ -425,14 +425,6 @@ void EveChildInstanceContainer::UpdateAsyncronous( const EveUpdateContext& updat
 	}
 
 	Matrix localToWorldTransform = params.localToWorldTransform;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else if( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
 
 	UpdateTransform( localToWorldTransform );
 

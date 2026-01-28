@@ -91,6 +91,8 @@ BLUE_DECLARE( Tr2RaytracingManager );
 BLUE_DECLARE( Tr2PostProcessAttributes );
 BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
 
+class EveInstancedMeshManager;
+
 BLUE_CLASS( EveSpaceScene ) :
 	public ITr2Scene,
 	public IInitialize,
@@ -683,6 +685,8 @@ public:
 
 	// reprojection matrix
 	Matrix m_reprojectionMatrix;
+
+	std::unique_ptr<EveInstancedMeshManager> m_instancedMeshManager;
 
 	friend class EveSpaceSceneRenderDriver;
 };

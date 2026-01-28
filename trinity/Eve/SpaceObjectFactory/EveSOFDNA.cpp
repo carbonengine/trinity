@@ -1092,6 +1092,11 @@ size_t EveSOFDNA::GetMultiHullCount() const
 	return m_hullDatas.size();
 }
 
+const std::vector<std::string>& EveSOFDNA::GetHullNames() const
+{
+	return m_hullNames;
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Return the build class for this hull

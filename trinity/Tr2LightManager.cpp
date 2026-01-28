@@ -862,7 +862,7 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 		return {};
 	}
 
-	std::wstring rayGenName, missName;
+	BlueSharedStringW rayGenName, missName;
 	m_Raytracing.m_pipelineManager.AddLibrary( rayGenName, missName, m_Raytracing.m_effect, RtShadowTechniqueName );
 
 	auto pipelineState = m_Raytracing.m_pipelineManager.GetPipelineState( renderContext );

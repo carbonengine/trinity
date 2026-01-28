@@ -43,7 +43,8 @@ public:
 	enum
 	{
 		Uncharted2,
-		Aces
+		Aces,
+		AgX,
 	} m_method;
 };
 

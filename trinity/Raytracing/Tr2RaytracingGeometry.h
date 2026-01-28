@@ -2,6 +2,7 @@
 
 #include "include/ITr2GpuBuffer.h"
 #include "Shader/Tr2Effect.h"
+#include "../TbbStub.h"
 
 BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
@@ -20,9 +21,9 @@ class Tr2RaytracingPipelineStateManager
 public:
 	Tr2RaytracingPipelineStateManager();
 
-	bool AddLibrary( std::wstring& rayGenName, std::wstring& missName, Tr2Material* material, const BlueSharedString& techniqueName );
-	void AddLibrary( std::wstring& rayGenName, std::wstring& missName, const Tr2EffectLibrary& library );
-	std::wstring AddHitGroup( const Tr2EffectLibrary& library );
+	bool AddLibrary( BlueSharedStringW& rayGenName, BlueSharedStringW& missName, Tr2Material* material, const BlueSharedString& techniqueName );
+	void AddLibrary( BlueSharedStringW& rayGenName, BlueSharedStringW& missName, const Tr2EffectLibrary& library );
+	BlueSharedStringW AddHitGroup( const Tr2EffectLibrary& library );
 	Tr2RtPipelineStateAL GetPipelineState( Tr2RenderContext& renderContext );
 
 private:
@@ -30,8 +31,8 @@ private:
 
 	Tr2RtPipelineStateDescriptionAL m_pipelineDesc;
 	Tr2RtPipelineStateAL m_pipelineState;
-	std::unordered_map<uint32_t, std::wstring> m_hitGroups;
-	std::unordered_map<uint32_t, std::pair<std::wstring, std::wstring>> m_libraries;
+	std::unordered_map<uint32_t, BlueSharedStringW> m_hitGroups;
+	std::unordered_map<uint32_t, std::pair<BlueSharedStringW, BlueSharedStringW>> m_libraries;
 	uint32_t m_nextName;
 	bool m_isDirty;
 };
@@ -102,10 +103,19 @@ public:
 
 	Tr2RaytracingGeometry();
 
+	struct Float4x3
+	{
+		Float4x3() = default;
+		explicit Float4x3( const Matrix& m );
+
+		float elements[12];
+	};
+
 	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
 	void BeginSceneUpdate();
 	void EndSceneUpdate( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void AddGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area, Tr2Material * material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform, uint32_t bakedMorphOffset = std::numeric_limits<uint32_t>::max() );
+	void AddGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area, Tr2Material * material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount );
 	void AddBindlessResources( const Tr2MeshAreaVector& areas, const Tr2RaytracingMesh& rtMesh );
 	bool HasGeometry() const;
 
@@ -131,6 +141,8 @@ private:
 		const Tr2ConstantBufferAL* perObjectData;
 		const Tr2ConstantBufferAL* vertexBufferData;
 		Matrix worldTransform;
+		const Float4x3* worldTransforms = nullptr;
+		uint32_t instanceCount = 1;
 		uint32_t materialIndex;
 		bool isTransparent;
 		uint32_t bakedMorphOffset;
@@ -147,6 +159,7 @@ private:
 	VtxOffsets FindOffsets( unsigned declHandle );
 	
 	std::vector<GeometryData> m_geometryData;
+	Tr2EnumerableThreadSpecific<std::vector<GeometryData>> m_threadLocalGeometryData;
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;
 
 	Tr2EffectPtr m_skinVerticesEffect;
@@ -156,6 +169,7 @@ private:
 	Tr2BufferAL m_skinnedVertices;
 
 	Tr2BindlessResourcesAL m_usedResources;
+	Tr2EnumerableThreadSpecific<Tr2BindlessResourcesAL> m_threadLocalUsedResources;
 };
 
 TYPEDEF_BLUECLASS( Tr2RaytracingGeometry );

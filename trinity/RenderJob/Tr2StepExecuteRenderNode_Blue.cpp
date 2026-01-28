@@ -24,7 +24,7 @@ const Be::ClassInfo* Tr2StepExecuteRenderNode::ExposeToBlue()
 			"node",
 			m_node,
 			"Render node to execute",
-			Be::READWRITE )
+			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"clearTargetOnFailure",
 			m_clearTargetOnFailure,

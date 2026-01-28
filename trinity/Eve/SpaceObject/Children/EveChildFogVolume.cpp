@@ -143,19 +143,7 @@ void EveChildFogVolume::UpdateAsyncronous( const EveUpdateContext& updateContext
 
 void EveChildFogVolume::UpdateTransformFromParent( const EveChildUpdateParams& params )
 {
-	Matrix localToWorldTransform;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else if( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else
-	{
-		return;
-	}
+	Matrix localToWorldTransform = params.localToWorldTransform;
 
 	UpdateTransform( localToWorldTransform );
 }

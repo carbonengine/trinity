@@ -34,6 +34,8 @@ public:
 	void ChangeLOD( Tr2Lod lod ) {};
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const;
 
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
+
 
 private:
 	// what's it pointing at?

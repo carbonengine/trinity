@@ -79,6 +79,8 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 			SetScene,
 			"The scene to render" )
 
+		MAP_ATTRIBUTE( "scene", m_scene, "", Be::PERSISTONLY ) // Purely for blue.Find methods to work
+
 		MAP_ATTRIBUTE(
 			"SSAO",
 			m_ssao,

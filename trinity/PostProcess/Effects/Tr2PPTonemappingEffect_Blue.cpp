@@ -11,6 +11,7 @@ BLUE_DEFINE( Tr2PPTonemappingEffect );
 
 const Be::VarChooser TonemappingEffectMethodChooser[] = {
 	{ "Aces (new)", BeCast( Tr2PPTonemappingEffect::Aces ), "Aces tonemapper introduced in Frontier." },
+	{ "AgX (new)", BeCast( Tr2PPTonemappingEffect::AgX ), "AgX tonemapper used in Frontier." },
 	{ "Uncharted 2 (old)", BeCast( Tr2PPTonemappingEffect::Uncharted2 ), "Uncharted 2 tonemapper used in Eve" },
 	{ 0 }
 };

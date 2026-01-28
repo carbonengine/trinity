@@ -484,6 +484,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera.h
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera_Blue.cpp
     Eve/SpaceObject/Children/TransformModifiers/IEveChildTransformModifier.h
+    Eve/SpaceObject/Children/EveChildAudio_Blue.cpp
+    Eve/SpaceObject/Children/EveChildAudio.cpp
+    Eve/SpaceObject/Children/EveChildAudio.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
     Eve/SpaceObject/Children/EveChildBehaviorSystem.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem_Blue.cpp
@@ -523,6 +526,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildInstanceMeshRenderer.cpp
     Eve/SpaceObject/Children/EveChildInstanceMeshRenderer.h
     Eve/SpaceObject/Children/EveChildInstanceMeshRenderer_Blue.cpp
+    Eve/SpaceObject/Children/EveChildInstancedMeshes.cpp
+    Eve/SpaceObject/Children/EveChildInstancedMeshes.h
+    Eve/SpaceObject/Children/EveChildInstancedMeshes_Blue.cpp
     Eve/SpaceObject/Children/EveChildLineSet.cpp
     Eve/SpaceObject/Children/EveChildLineSet.h
     Eve/SpaceObject/Children/EveChildLineSet_Blue.cpp
@@ -750,6 +756,8 @@ set(_SOURCES
     Eve/EveEntity.cpp
     Eve/EveEntity.h
     Eve/EveEntity_Blue.cpp
+    Eve/EveInstancedMeshManager.cpp
+    Eve/EveInstancedMeshManager.h
     Eve/EveLensflare.cpp
     Eve/EveLensflare.h
     Eve/EveLensflare_Blue.cpp

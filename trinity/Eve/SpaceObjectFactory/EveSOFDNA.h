@@ -73,6 +73,7 @@ public:
 
 	// get hull data
 	size_t GetMultiHullCount() const;
+	const std::vector<std::string>& GetHullNames() const;
 	EveSOFDataHull::BuildClass GetBuildClass() const;
 	CcpMath::Sphere GetHullBoundingSphere() const;
 	CcpMath::Sphere GetParentBoundingSphere() const;

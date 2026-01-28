@@ -52,9 +52,9 @@ namespace TrinityALImpl
                 for( auto& cb : material.m_constants )
                 {
                     uint64_t address = 0;
-                    if( cb.IsValid() )
+                    if( cb && cb->IsValid() )
                     {
-                        uint64_t offset = renderContext.UploadConstants( cb );
+                        uint64_t offset = renderContext.UploadConstants( *cb );
                         uint32_t page = uint32_t( offset >> 32 );
                         // have a vector of offsets (gpu address + addr) so for each instance it has it's own pointer into a large buffer.
                         // then bind that vector to the shadertable

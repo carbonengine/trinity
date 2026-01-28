@@ -263,7 +263,6 @@ void Tr2Shader::ProcessEffect()
 			for( const auto& localRegister : library.localInput.signature.registers )
 			{
 				if( localRegister.registerType == Tr2ShaderRegisterAL::CONSTANT_BUFFER &&
-					localRegister.registerSpace == 8 &&
 					localRegister.registerIndex == Tr2Renderer::GetPerObjectRTVertexBufferDataRegister() )
 				{
 					m_hasVertexBufferAccessInRtShadow = true;

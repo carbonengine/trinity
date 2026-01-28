@@ -14,12 +14,12 @@ const Be::ClassInfo* Tr2RenderNodeSprite2dScene::ExposeToBlue()
 			"background",
 			m_background,
 			"Node to render at the background of the 2D scene. Can be None.",
-			Be::READWRITE )
+			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
 			"scene",
 			m_scene,
 			"2D scene to render",
-			Be::READWRITE )
+			Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
 }

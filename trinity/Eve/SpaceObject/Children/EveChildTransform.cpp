@@ -48,6 +48,12 @@ void EveChildTransform::SetupWithStaticRotation( const Vector3* scale, const Qua
 	Setup( scale, rotation, translation, lowestLodVisible );
 }
 
+void EveChildTransform::SetupWithStaticTransform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
+{
+	m_staticTransform = true;
+	Setup( scale, rotation, translation, lowestLodVisible );
+}
+
 void EveChildTransform::UpdateTransform( const Matrix& parentTransform ) 
 {
 	if( m_staticTransform || !m_useSRT )

@@ -16,6 +16,7 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		MAP_INTERFACE( ITr2GrannyAnimationOwner )
 		MAP_INTERFACE( IEveSpaceObjectAttachmentOwner )
 		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( ITr2Pickable )
 		MAP_INTERFACE( IEveShadowCaster )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST	)
@@ -57,6 +58,16 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "RebuildLocalTransform", RebuildLocalTransform, "Rebuilds local transform if useSRT is set." )
 		
 		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
+
+		MAP_METHOD_AND_WRAP( 
+			"GetSofSourceLocator", 
+			GetSofSourceLocator, 
+			"Returns SOF locator source information for the mesh given the picked areaID.\n"
+			"Returns a tuple (SOF hull name, locator set name, locator index) or None if no SOF source is found.\n"
+			"For the method to work the space object should have been built using SOF in the editor mode.\n\n"
+			":param areaId: The areaID returned from mouse picking method\n"
+			":rtype: None | (str, str, int)"
+		)
 		
 		MAP_METHOD_AND_WRAP(
 			"GetMorphTargetNames",

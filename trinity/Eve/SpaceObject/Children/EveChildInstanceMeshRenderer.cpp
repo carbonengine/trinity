@@ -41,6 +41,60 @@ bool EveChildInstanceMeshRenderer::IsVisible( const EveUpdateContext& updateCont
 	return false;
 }
 
+bool EveChildInstanceMeshRenderer::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
+{
+	if( !m_display || !m_castShadow )
+	{
+		return false;
+	}
+
+	if( renderReason == TR2RENDERREASON_REFLECTION && !EntityComponents::ShouldReflect( m_reflectionMode ) )
+	{
+		return false;
+	}
+
+	if( !m_mesh )
+	{
+		return false;
+	}
+
+	Vector4 bs;
+	{
+		auto s = CcpMath::Sphere( m_boundingSphere );
+		s.Transform( m_worldTransform );
+		bs = Vector4( s.center, s.radius );
+	}
+	sizeInShadow = 0;
+
+	if( bs.w <= 0.0f )
+	{
+		return false;
+	}
+
+	if( shadowFrustum.IsVisible( cameraFrustum, bs ) )
+	{
+		if( m_instancedMesh )
+		{
+			if( auto instanceBounds = m_instancedMesh->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.GetEyePos(), Inverse( m_worldTransform ) ) ) )
+			{
+				instanceBounds.Transform( m_worldTransform );
+
+				sizeInShadow = shadowFrustum.GetSizeInShadow( Vector4( instanceBounds.center, instanceBounds.radius ) );
+			}
+			else
+			{
+				sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
+			}
+		}
+		else
+		{
+			sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
+		}
+	}
+	return sizeInShadow > 5.f;
+}
+
+
 void EveChildInstanceMeshRenderer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	m_isVisible = IsVisible( updateContext );

@@ -712,23 +712,14 @@ bool TriTextureRes::DoPrepare()
 	return isOK;
 }
 
-void TriTextureRes::RequestResolution( float resolutionFraction )
+void TriTextureRes::RequestResolution( const uint32_t requestedLod )
 {
-	if( m_originalResolution == 0 )
+	if( m_requestedMip == requestedLod || m_originalResolution == 0 )
 	{
 		return;
 	}
 	m_hadLodRequests = true;
-	uint32_t requestedLod = 0;
-	if( resolutionFraction < float( m_originalResolution ) )
-	{
-		auto requestedResolution = std::max( uint32_t( std::max( 1.f, resolutionFraction ) ), 1u );
-		while( requestedResolution * 2 <= m_originalResolution )
-		{
-			requestedResolution *= 2;
-			++requestedLod;
-		}
-	}
+	
 	AtomicMinUpdate( m_requestedMip, requestedLod );
 }
 
@@ -826,6 +817,11 @@ void TriTextureRes::ProcessLodRequest( const Tr2TextureLodUpdateRequest& request
 uint32_t TriTextureRes::GetOriginalResolution() const
 {
 	return m_originalResolution;
+}
+
+float TriTextureRes::GetOriginalResolutionAsFloat() const
+{
+	return (float)m_originalResolution;
 }
 
 void TriTextureRes::TrimLods( uint32_t startLod, Tr2TextureLodManager& manager )

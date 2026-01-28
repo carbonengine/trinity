@@ -1895,6 +1895,7 @@ void Tr2BindlessResourcesAL::Add( const Tr2BindlessResourcesAL& resources )
 void Tr2BindlessResourcesAL::Clear()
 {
 	m_textures.clear();
+	m_buffers.clear();
 }
 
 #endif

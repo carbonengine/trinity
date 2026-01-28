@@ -38,14 +38,15 @@ namespace EntityComponents
 
 EveEntity::EveEntity( IRoot* root ) :
 	m_registry( nullptr ),
-	m_state( 0 )
+	m_componentIndexLookup( {} ),
+	m_indexInRegistry( -1 )
 {}
 
 EveEntity::~EveEntity()
 {
 	if( m_registry )
 	{
-		CCP_LOGERR( "EveEntity being destroyed while still registered with a component registry." );
+		CCP_LOGERR( "EveEntity being destroyed while still registered in a component registry." );
 	}
 	m_registry = nullptr;
 }
@@ -74,12 +75,12 @@ void EveEntity::Register( EveComponentRegistry* registry )
 		return;
 	}
 
-	m_registry = registry;
+	registry->Register( this );
 	this->RegisterComponents();
 }
 
 
-/// Unregisteres the entity, but only if it is registered with the registry, else we just ignore this call
+/// Unregisters the entity, but only if it is registered with the registry, else we just ignore this call
 void EveEntity::UnRegister( EveComponentRegistry* registry )
 {
 	if( m_registry != registry || registry == nullptr )
@@ -92,8 +93,7 @@ void EveEntity::UnRegister( EveComponentRegistry* registry )
 
 	// unregister children
 	this->UnRegisterComponents();
-
-	m_registry = nullptr;
+	m_registry->UnRegister( this );
 }
 
 void EveEntity::ReRegister()
@@ -107,4 +107,44 @@ void EveEntity::ReRegister()
 EveComponentRegistry* EveEntity::GetComponentRegistry() const
 {
 	return m_registry;
+}
+
+std::optional<uint32_t> EveEntity::GetComponentIndex( uint32_t componentBit ) const
+{
+	auto index = std::find_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(),
+		[componentBit]( const auto& pair )
+		{
+			return pair.first == componentBit;
+	} );
+
+	return index == m_componentIndexLookup.end() ? std::nullopt : std::make_optional(index->second);
+}
+
+void EveEntity::SetComponentState( uint32_t componentBit, uint32_t index )
+{
+	auto componentIndex = std::find_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(), 
+		[componentBit]( const auto& pair ) 
+		{
+			return pair.first == componentBit;
+	} );
+
+	if( componentIndex == m_componentIndexLookup.end() )
+	{
+		m_componentIndexLookup.push_back( { componentBit, index } );
+	}
+	else
+	{
+		componentIndex->second = index;
+	}
+}
+
+void EveEntity::RemoveComponentState( uint32_t componentBit )
+{
+	auto removed = std::remove_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(),
+		[componentBit]( const auto& pair )
+		{
+			return pair.first == componentBit;
+	} );
+
+	m_componentIndexLookup.erase( removed, m_componentIndexLookup.end() );
 }

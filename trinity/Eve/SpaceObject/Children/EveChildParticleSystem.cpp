@@ -210,19 +210,7 @@ void EveChildParticleSystem::UpdateSyncronous( const EveUpdateContext& updateCon
 
 void EveChildParticleSystem::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	Matrix localToWorldTransform;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else if ( params.spaceObjectParent )
-	{
-		params.spaceObjectParent ->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else 
-	{
-		return;
-	}
+	Matrix localToWorldTransform = params.localToWorldTransform;
 
 	m_worldTransformLast = m_worldTransform;
 

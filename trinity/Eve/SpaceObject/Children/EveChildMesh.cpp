@@ -11,6 +11,7 @@
 #include "Utilities/BoundingBox.h"
 #include "Resources/TriGeometryRes.h"
 #include "Tr2GpuStructuredBuffer.h"
+#include <IBlueObjectMetadata.h>
 
 namespace
 {
@@ -182,6 +183,7 @@ bool EveChildMesh::OnModified( Be::Var* val )
 	}
 	if( IsMatch( val, m_mesh ) || IsMatch( val, m_animationUpdater ) )
 	{
+		m_instancedMesh = BlueCastPtr( m_mesh );
 		InitializeAnimation();
 	}
 	return true;
@@ -285,8 +287,7 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveS
 		return false;
 	}
 
-	Vector4 bs;
-	GetBoundingSphere( bs );
+	Vector4 bs = Vector4( m_worldBoundingSphere.center, m_worldBoundingSphere.radius );
 	sizeInShadow = 0;
 
 	if( bs.w <= 0.0f )
@@ -296,9 +297,9 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveS
 
 	if( shadowFrustum.IsVisible( cameraFrustum, bs ) )
 	{
-		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+		if( m_instancedMesh )
 		{
-			if( auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.GetEyePos(), Inverse( m_worldTransform ) ) ) )
+			if( auto instanceBounds = m_instancedMesh->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.GetEyePos(), Inverse( m_worldTransform ) ) ) )
 			{
 				instanceBounds.Transform( m_worldTransform );
 
@@ -352,6 +353,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	m_instancesVisible = false;
 	m_currentInstanceScreenSize = -1.0f;
 	auto& frustum = updateContext.GetFrustum();
+	auto invLodFactor = updateContext.GetInvLodFactor();
 
 	if( m_mesh )
 	{
@@ -368,12 +370,11 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		}
 		
 		bounds.Transform( m_worldTransform );
+		m_currentScreenSize = frustum.GetPixelSizeAccross( m_worldBoundingSphere );
 
-		m_currentScreenSize = frustum.GetPixelSizeAccross( bounds );
-
-		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+		if( m_instancedMesh )
 		{
-			if( auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( TransformCoord( frustum.m_viewPos, Inverse( m_worldTransform ) ) ) )
+			if( auto instanceBounds = m_instancedMesh->GetInstanceBoundsClosestToPoint( TransformCoord( frustum.m_viewPos, Inverse( m_worldTransform ) ) ) )
 			{
 				instanceBounds.Transform( m_worldTransform );
 				m_currentInstanceScreenSize = frustum.GetPixelSizeAccross( instanceBounds );
@@ -382,19 +383,19 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 			else
 			{
 				m_currentInstanceScreenSize = std::numeric_limits<float>::max();
-				m_mesh->UseWithScreenSize( m_currentScreenSize, CcpMath::Sphere( bounds ).radius );
+				m_mesh->UseWithScreenSize( m_currentScreenSize, m_worldBoundingSphere.radius );
 			}
 		}
 		else
 		{
 			m_currentInstanceScreenSize = std::numeric_limits<float>::max();
-			m_mesh->UseWithScreenSize( m_currentScreenSize, CcpMath::Sphere( bounds ).radius );
+			m_mesh->UseWithScreenSize( m_currentScreenSize, m_worldBoundingSphere.radius );
 		}
 
-		m_currentScreenSize /= updateContext.GetLodFactor();
-		m_currentInstanceScreenSize /= updateContext.GetLodFactor();
+		m_currentScreenSize *= invLodFactor;
+		m_currentInstanceScreenSize *= invLodFactor;
 
-		if( frustum.IsBoxVisible( bounds ) )
+		if( frustum.IsBoxVisible( m_worldBoundingBox ) )
 		{
 			m_isVisible = parentLod >= m_lowestLodVisible && m_currentScreenSize >= m_minScreenSize;
 			m_instancesVisible = m_isVisible && m_currentInstanceScreenSize >= s_instanceScreenSizeThreshold;
@@ -544,7 +545,7 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	if( m_isVisible )
 	{
-		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) ) 
+		if( m_instancedMesh ) 
 		{
 			if( m_instancesVisible )
 			{
@@ -560,7 +561,7 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 						for (EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it)
 						{
 							// now prep to get the renderables
-							( *it )->GetInstancedRenderables( renderables, meshCache, instanced, m_currentInstanceScreenSize );
+							( *it )->GetInstancedRenderables( renderables, meshCache, m_instancedMesh, m_currentInstanceScreenSize );
 						}
 					}
 				}
@@ -589,15 +590,10 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 
 bool EveChildMesh::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
-	if( m_mesh )
+	if( m_worldBoundingSphere )
 	{
-		if( auto aabb = m_mesh->GetBounds() )
-		{
-			auto s = CcpMath::Sphere( aabb );
-			s.Transform( m_worldTransform );
-			sphere = Vector4( s.center, s.radius );
-			return true;
-		}
+		sphere = Vector4( m_worldBoundingSphere.center, m_worldBoundingSphere.radius );
+		return true;
 	}
 
 	return false;
@@ -615,14 +611,12 @@ bool EveChildMesh::HasTransparentBatches()
 
 bool EveChildMesh::IsVisible( const EveUpdateContext& updateContext ) const
 {
-	Vector4 boundingSphere;
-
-	if( GetBoundingSphere( boundingSphere ) && boundingSphere.w != 0)
+	if( m_worldBoundingSphere.radius > 0 )
 	{
 		auto& frustum = updateContext.GetFrustum();
-		if( frustum.IsSphereVisible( boundingSphere.GetXYZ(), boundingSphere.w ) )
+		if( frustum.IsSphereVisible( m_worldBoundingSphere.center, m_worldBoundingSphere.radius ) )
 		{
-			return frustum.GetPixelSizeAccrossEst( boundingSphere.GetXYZ(), boundingSphere.w ) >= updateContext.GetVisibilityThreshold();
+			return frustum.GetPixelSizeAccrossEst( m_worldBoundingSphere.center, m_worldBoundingSphere.radius ) >= updateContext.GetVisibilityThreshold();
 		}
 	}
 	return false;
@@ -673,65 +667,26 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	size_t rtPerObjectDataCount = 0;
-	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
-	{
-		rtPerObjectDataCount = m_instanceTransforms.size();
-	}
-	else
-	{
-		rtPerObjectDataCount = 1;
-	}
-	if( m_rtPerObjectDatas.size() != rtPerObjectDataCount )
-	{
-		m_rtPerObjectDatas.resize( rtPerObjectDataCount );
-	}
-
 	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
-	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+	if( m_instancedMesh )
 	{
-		if( !instanced->GetDisplay() )
+		if( !m_instancedMesh->GetDisplay() || m_instanceTransforms.empty() )
 		{
 			return;
 		}
 
-		size_t idx = 0;
-		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
+		m_instanceWorldTransforms.clear();
+		m_instanceWorldTransforms.reserve( m_instanceTransforms.size() );
+
+		for( const auto& instanceTransform : m_instanceTransforms )
 		{
-			const Matrix transform = *it * m_worldTransform;
-
-			UpdateRtPerObjectData( m_psData, &transform, renderContext, m_rtPerObjectDatas[idx] );
-
-			uint32_t vertexBufferDataIndex = 0;
-			for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it, ++vertexBufferDataIndex )
-			{
-				auto area = *it;
-				if( area->GetDisplay() && area->IsCastingShadows() )
-				{
-					auto geometry = area->GetRtMeshArea();
-					if( geometry )
-					{
-						const Tr2ConstantBufferAL* vertexBufferData = nullptr;
-						if( area->HasVertexBufferAccessInRtShadow() )
-						{
-							vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
-						}
-						uint32_t bakedMorphOffset = std::numeric_limits<uint32_t>::max();
-						if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
-						{
-							bakedMorphOffset = m_bakedMorphAllocation.GetOffset();
-						}
-						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[idx], vertexBufferData, transform, bakedMorphOffset );
-					}
-				}
-			}
-			++idx;
+			auto m = XMMatrixMultiply( instanceTransform, m_worldTransform );
+			m_instanceWorldTransforms.push_back( Tr2RaytracingGeometry::Float4x3( Matrix( m ) ) );
 		}
-	}
-	else
-	{
-		UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_rtPerObjectDatas[0] );
+		
+		auto idm = IdentityMatrix();
+		UpdateRtPerObjectData( m_psData, &idm, renderContext, m_rtPerObjectData );
 
 		uint32_t vertexBufferDataIndex = 0;
 		for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it, ++vertexBufferDataIndex )
@@ -747,12 +702,30 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					{
 						vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 					}
-					uint32_t bakedMorphOffset = std::numeric_limits<uint32_t>::max();
-					if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_instanceWorldTransforms.data(), m_instanceWorldTransforms.size() );
+				}
+			}
+		}
+	}
+	else
+	{
+		UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_rtPerObjectData );
+
+		uint32_t vertexBufferDataIndex = 0;
+		for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it, ++vertexBufferDataIndex )
+		{
+			auto area = *it;
+			if( area->GetDisplay() && area->IsCastingShadows() )
+			{
+				auto geometry = area->GetRtMeshArea();
+				if( geometry )
+				{
+					const Tr2ConstantBufferAL* vertexBufferData = nullptr;
+					if( area->HasVertexBufferAccessInRtShadow() )
 					{
-						bakedMorphOffset = m_bakedMorphAllocation.GetOffset();
+						vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 					}
-					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectDatas[0], vertexBufferData, m_worldTransform, bakedMorphOffset );
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_worldTransform );
 				}
 			}
 		}
@@ -848,6 +821,36 @@ uint32_t EveChildMesh::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType sh
 	}
 }
 
+IRoot* EveChildMesh::GetID( uint16_t )
+{
+	return GetRawRoot();
+}
+
+void EveChildMesh::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData )
+{
+	if( ( pickTypes & PICK_TYPE_OPAQUE ) != 0 )
+	{
+		GetBatches( batches, TRIBATCHTYPE_OPAQUE, perObjectData );
+		GetBatches( batches, TRIBATCHTYPE_DECAL, perObjectData );
+	}
+	if( ( pickTypes & PICK_TYPE_TRANSPARENT ) != 0 )
+	{
+		if( !m_mesh || !m_mesh->GetDisplay() )
+		{
+			return;
+		}
+
+		if( auto areas = m_mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ) )
+		{
+			m_mesh->GetBatches( batches, areas, perObjectData );
+		}
+		if( auto areas = m_mesh->GetAreas( TRIBATCHTYPE_ADDITIVE ) )
+		{
+			m_mesh->GetBatches( batches, areas, perObjectData );
+		}
+	}
+}
+
 void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* data )
 {
 	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
@@ -868,21 +871,8 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
 
-	Matrix localToWorldTransform;
+	Matrix localToWorldTransform = params.localToWorldTransform;
 	Matrix lastWorldTransform = m_worldTransform;
-	
-	if( nullptr != params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else if( nullptr != params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else 
-	{
-		localToWorldTransform = params.localToWorldTransform;
-	}
 
 	UpdateTransform( localToWorldTransform );
 	for( auto it = m_transformModifiers.begin(); it != m_transformModifiers.end(); it++ )
@@ -931,6 +921,15 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	}
 
 	UpdateMorphAnimationBuffer();
+	if( ( m_worldBoundingBox = m_mesh->GetBounds() ) )
+	{
+		m_worldBoundingBox.Transform( m_worldTransform );
+		m_worldBoundingSphere = CcpMath::Sphere( m_worldBoundingBox );
+	}
+	else
+	{
+		m_worldBoundingSphere = {};
+	}
 }
 
 void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
@@ -981,6 +980,7 @@ void EveChildMesh::ChangeLOD( Tr2Lod )
 void EveChildMesh::SetMesh( Tr2MeshBase* mesh )
 {
 	m_mesh = mesh;
+	m_instancedMesh = BlueCastPtr( m_mesh );
 }
 
 void EveChildMesh::SetOrigin( Origin origin )
@@ -1596,4 +1596,39 @@ bool EveChildMesh::GetBakedMorphTarget( const char* name )
 	}
 
 	return m_mesh->GetBakedMorphTarget( name );
+BluePy EveChildMesh::GetSofSourceLocator( uint32_t areaId ) const
+{
+	IWeakObjectPtr weak = BlueCastPtr( GetRawRoot() );
+	if( auto metadata = BeObjectMetadata->GetMetadata( weak ) )
+	{
+		auto hull = metadata->find( "SofParentHullName" );
+		if( hull == metadata->end() )
+		{
+			return BluePy( Py_None, true );
+		}
+		auto locatorSet = metadata->find( "SofLocatorSetName" );
+		if( locatorSet == metadata->end() )
+		{
+			return BluePy( Py_None, true );
+		}
+		uint32_t locatorIndex = 0;
+		if( m_instancedMesh )
+		{
+			locatorIndex = areaId;
+		}
+		else
+		{
+			auto locatorIndexStr = metadata->find( "SofLocatorIndex" );
+			if( locatorIndexStr != metadata->end() )
+			{
+				locatorIndex = (uint32_t)strtoul( locatorIndexStr->second.c_str(), nullptr, 10 );
+			}
+		}
+		BluePy result = BluePy( PyTuple_New( 3 ) );
+		PyTuple_SetItem( result, 0, ToPython( hull->second.c_str() ) );
+		PyTuple_SetItem( result, 1, ToPython( locatorSet->second.c_str() ) );
+		PyTuple_SetItem( result, 2, ToPython( locatorIndex ) );
+		return result;
+	}
+	return BluePy( Py_None, true );
 }
