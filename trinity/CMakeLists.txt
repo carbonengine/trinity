@@ -484,6 +484,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera.h
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera_Blue.cpp
     Eve/SpaceObject/Children/TransformModifiers/IEveChildTransformModifier.h
+    Eve/SpaceObject/Children/EveChildAudio_Blue.cpp
+    Eve/SpaceObject/Children/EveChildAudio.cpp
+    Eve/SpaceObject/Children/EveChildAudio.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
     Eve/SpaceObject/Children/EveChildBehaviorSystem.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem_Blue.cpp
