@@ -14,7 +14,7 @@
 #include "Tr2DebugRenderer.h"
 #include "Utilities/Tr2MaterialBoundsAdjustment.h"
 
-#include "Tr2MorphTargetAnimationDataBuffer.h"
+#include "Tr2RingBuffer.h"
 
 BLUE_DECLARE( TriGeometryRes );
 

@@ -37,8 +37,7 @@
 #include "Tr2SSAO.h"
 #include "Tr2SSSSS.h"
 #include "Lights/ITr2LightOwner.h"
-#include "../Tr2BoneTransformBuffer.h"
-#include "../Tr2MorphTargetAnimationDataBuffer.h"
+#include "../Tr2RingBuffer.h"
 #include "../Tr2VolumetricsRenderer.h"
 #include "../Tr2GpuStructuredBuffer.h"
 #include <ScopedBlockTrap.h>
@@ -241,8 +240,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_envMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneEnvMap", (ITr2TextureProvider*)nullptr );
 	m_staticEnvMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneStaticEnvMap", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
-	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2BoneTransformBuffer::GetInstance() );
-	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2MorphTargetAnimationDataBuffer::GetInstance() );
+	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2RingBuffer::GetInstance<Float4x3>() );
+	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>() );
 
 	// Picking batches
 	m_pickingBatches = CCP_NEW( "EveSpaceScene/m_pickingBatches" ) TriRenderBatchAccumulator<>( allocator );
@@ -413,8 +412,8 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		auto frame = renderContext.GetRecordingFrameNumber();
-		Tr2BoneTransformBuffer::GetInstance().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
-		Tr2MorphTargetAnimationDataBuffer::GetInstance().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
+		Tr2RingBuffer::GetInstance<Float4x3>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
+		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
 		
 		if( frame == m_lastUpdateFrame )
 		{

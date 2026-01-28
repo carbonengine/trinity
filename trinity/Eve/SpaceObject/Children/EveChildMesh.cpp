@@ -504,7 +504,7 @@ void EveChildMesh::UpdateRtSkeleton()
 	{
 		auto [bones, boneCount] = GetBoneTransforms();
 
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
+		m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( bones ), uint32_t( boneCount ) );
 		auto boneOffset = m_boneOffsets.GetCurrentFrameOffset();
 
 		skeletonChanged = rtMesh->SetBoneTransforms( boneCount, bones, boneOffset );
@@ -518,7 +518,7 @@ void EveChildMesh::UpdateRtSkeleton()
 	{
 		auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::RUNTIME_EVALUATED );
 
-		m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
+		m_morphTargetOffsets.UploadTransforms<Tr2MorphTargetAnimationData>( Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 		auto morphTargetAnimationDataOffset = m_morphTargetOffsets.GetCurrentFrameOffset();
 
 		morphChanged = rtMesh->SetMorphAnimations( morphTargetCount, morphTargets, morphTargetAnimationDataOffset );
@@ -801,7 +801,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 			if( lod->m_morphTargetAllocation.IsValid() )
 			{
 				auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::RUNTIME_EVALUATED );
-				m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
+				m_morphTargetOffsets.UploadTransforms<Tr2MorphTargetAnimationData>( Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 
 				// for velocity buffer, we would need previous morphTargetAnimationDataOffset and previous activeMorphTargetsCount!
 				m_vsData.activeMorphTargetsCount = uint32_t( morphTargetCount );
@@ -821,7 +821,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 
 		auto [bones, boneCount] = GetBoneTransforms();
 		m_vsData.boneOffsets[2] = uint32_t( boneCount );
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( bones ), uint32_t( boneCount ) );
+		m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( bones ), uint32_t( boneCount ) );
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
@@ -1333,10 +1333,10 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 	auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::BAKED );
 
 	m_morphTargetOffsets.AdvanceFrame();
-	m_morphTargetOffsets.UploadTransforms( Tr2MorphTargetAnimationDataBuffer::GetInstance(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
+	m_morphTargetOffsets.UploadTransforms<Tr2MorphTargetAnimationData>( Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 
-	CCP_STATS_ZONE( "Tr2MorphTargetAnimationDataBuffer" );
-	Tr2MorphTargetAnimationDataBuffer::GetInstance().PrepareBuffer( renderContext );
+	CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
+	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 
 	MergeMorphsConstantBuffer* data;
 	m_mergeMorphsConstantBuffer.Lock( (void**)&data, renderContext );

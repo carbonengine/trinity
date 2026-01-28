@@ -14,7 +14,6 @@
 #include "TriObserverLocal.h"
 #include "TriRenderBatch.h"
 #include "Tr2Renderer.h"
-#include "Tr2BoneTransformBuffer.h"
 
 #include <ITr2AudEmitter.h>
 #include "Eve/EveUpdateContext.h"
@@ -1908,9 +1907,9 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 			}
 		}
 
-		if (m_boneOffsets.GetCurrentFrameOffset() == Tr2BoneTransformOffsets::INVALID_OFFSET)
+		if ( m_boneOffsets.GetCurrentFrameOffset() == Tr2RingBufferOffsets::INVALID_OFFSET )
 		{
-			auto transforms = static_cast<Tr2BoneTransformBuffer::Float4x3*>( accumulator->Allocate( sizeof( Tr2BoneTransformBuffer::Float4x3 ) * m_singleTurrets.size() * boneCount ) );
+			auto transforms = static_cast<Float4x3*>( accumulator->Allocate( sizeof( Float4x3 ) * m_singleTurrets.size() * boneCount ) );
 
 			for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 			{
@@ -1933,14 +1932,14 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 						{
 							bone = IdentityMatrix();
 						}
-						transforms[boneIndex++] = Tr2BoneTransformBuffer::Float4x3( bone );
+						transforms[boneIndex++] = Float4x3( bone );
 					}
 				}
 			}
 
 			if( boneIndex != 0 )
 			{
-				m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), transforms, boneIndex );
+				m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), transforms, boneIndex );
 			}
 		}
 
@@ -2840,7 +2839,7 @@ void EveTurretSet::UpdateRtSkeleton()
 		unsigned int boneCount = m_grnMeshBinding ? GrannyGetMeshBindingBoneCount( m_grnMeshBinding ) : defaultBonesPerTurret;
 
 		//std::vector<EveTurretBoneData> boneTransformList;
-		std::vector<Tr2BoneTransformBuffer::Float4x3> boneTransformList;
+		std::vector<Float4x3> boneTransformList;
 
 		boneTransformList.reserve( boneCount );
 
@@ -2867,7 +2866,7 @@ void EveTurretSet::UpdateRtSkeleton()
 						bone = IdentityMatrix();
 					}
 
-					boneTransformList.push_back( Tr2BoneTransformBuffer::Float4x3( bone ) );
+					boneTransformList.push_back( Float4x3( bone ) );
 				}
 			}
 		}
@@ -2877,7 +2876,7 @@ void EveTurretSet::UpdateRtSkeleton()
 			return;
 		}
 		
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), boneTransformList.data(), uint32_t( boneTransformList.size() ) );
+		m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), boneTransformList.data(), uint32_t( boneTransformList.size() ) );
 		uint32_t offset = 0;
 
 		for( auto& turret : m_singleTurrets )

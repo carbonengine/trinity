@@ -1431,9 +1431,6 @@ set(_SOURCES
     Tr2BindingVector3_Blue.cpp
     Tr2Blitter.cpp
     Tr2Blitter.h
-    Tr2BoneTransformBuffer.cpp
-    Tr2BoneTransformBuffer.h
-    Tr2BoneTransformBuffer_Blue.cpp
     Tr2BoundingLineSet.cpp
     Tr2BoundingLineSet.h
     Tr2BoundingLineSet_Blue.cpp
@@ -1542,9 +1539,6 @@ set(_SOURCES
     Tr2Model.cpp
     Tr2Model.h
     Tr2Model_Blue.cpp
-    Tr2MorphTargetAnimationDataBuffer.cpp
-    Tr2MorphTargetAnimationDataBuffer.h
-    Tr2MorphTargetAnimationDataBuffer_Blue.cpp
     Tr2NamedPipeListener.cpp
     Tr2NamedPipeListener.h
     Tr2NamedPipeListener_Blue.cpp
@@ -1605,6 +1599,9 @@ set(_SOURCES
     Tr2RenderTarget_Blue.cpp
     Tr2RenderUtils.cpp
     Tr2RenderUtils.h
+    Tr2RingBuffer.cpp
+    Tr2RingBuffer.h
+    Tr2RingBuffer_Blue.cpp
     Tr2RotationTool.cpp
     Tr2RotationTool.h
     Tr2RotationTool_Blue.cpp

@@ -479,7 +479,7 @@ private:
 	std::wstring m_idleToTargetingMovementAudioEvent;
 	std::wstring m_targetingToIdleMovementAudioEvent;
 
-	Tr2BoneTransformOffsets m_boneOffsets;
+	Tr2RingBufferOffsets m_boneOffsets;
 
 };
 

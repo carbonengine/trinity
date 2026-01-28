@@ -6,8 +6,7 @@
 #include "Tr2Renderer.h"
 #include "Shader/Tr2Shader.h"
 #include "Shader/Parameter/Tr2GeometryBufferParameter.h"
-#include "../Tr2BoneTransformBuffer.h"
-#include "../Tr2MorphTargetAnimationDataBuffer.h"
+#include "../Tr2RingBuffer.h"
 #include "../Tr2RuntimeGpuBuffer.h"
 
 #include "Tr2MeshArea.h"
@@ -754,12 +753,12 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	outdatedMeshes.reserve( m_geometryData.size() );
 
 	{
-		CCP_STATS_ZONE( "Tr2BoneTransformBuffer" );
-		Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( renderContext );
+		CCP_STATS_ZONE( "Prepare BoneTransformBuffer" );
+		Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( renderContext );
 	}
 	{
-		CCP_STATS_ZONE( "Tr2MorphTargetAnimationDataBuffer" );
-		Tr2MorphTargetAnimationDataBuffer::GetInstance().PrepareBuffer( renderContext );
+		CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer" );
+		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 	}
 
 	uint32_t skinnedVertexCount = 0;

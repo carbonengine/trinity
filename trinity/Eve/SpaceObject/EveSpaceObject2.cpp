@@ -32,7 +32,7 @@
 #include "Eve/SpaceObject/Children/EveChildInheritProperties.h"
 #include "Shader/Tr2Shader.h"
 
-#include "../../Tr2BoneTransformBuffer.h"
+#include "../../Tr2RingBuffer.h"
 
 #include <limits>
 
@@ -1385,7 +1385,7 @@ Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator*
 	{
 		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
 		m_vsData.boneOffsets[2] = boneCount;
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+		m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
@@ -1716,7 +1716,7 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	}
 	
 	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
-	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
 	auto offset = m_boneOffsets.GetCurrentFrameOffset();
 
 	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );

@@ -209,7 +209,7 @@ protected:
 	PIEveSpaceObjectAttachmentVector m_attachments;
 
 	// per-object data only used for the attachments
-	Tr2BoneTransformOffsets m_boneOffsets;
+	Tr2RingBufferOffsets m_boneOffsets;
 	Tr2PersistentPerObjectData<EveChildContainer> m_perObjectDataVs;
 	Tr2PersistentPerObjectData<EveChildContainer> m_perObjectDataPs;
 	EveSpaceObjectPSData m_psData;

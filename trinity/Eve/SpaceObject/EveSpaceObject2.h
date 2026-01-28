@@ -36,7 +36,7 @@
 #include "Lights/ITr2LightOwner.h"
 #include "Tr2GrannyAnimation.h"
 #include "Raytracing/Tr2RaytracingManager.h"
-#include "Tr2BoneTransformBuffer.h"
+#include "Tr2RingBuffer.h"
 
 
 // consts
@@ -695,7 +695,7 @@ protected:
 	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 
-	Tr2BoneTransformOffsets m_boneOffsets;
+	Tr2RingBufferOffsets m_boneOffsets;
 
 };
 

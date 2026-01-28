@@ -23,7 +23,7 @@
 #include "TransformModifiers/IEveChildTransformModifier.h"
 #include "Tr2DebugRenderer.h"
 #include "Raytracing/Tr2RaytracingManager.h"
-#include "../Tr2MorphTargetAnimationDataBuffer.h"
+#include "../Tr2RingBuffer.h"
 #include "Tr2SuballocatedBuffer.h"
 
 class EveUpdateContext;
@@ -224,8 +224,8 @@ protected:
 	float m_sortValueScale;
 
 	// per-object data
-	Tr2BoneTransformOffsets m_boneOffsets;
-	Tr2MorphTargetAnimationDataOffsets m_morphTargetOffsets;
+	Tr2RingBufferOffsets m_boneOffsets;
+	Tr2RingBufferOffsets m_morphTargetOffsets;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataVs;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataPs;
 	EveSpaceObjectPSData m_psData;

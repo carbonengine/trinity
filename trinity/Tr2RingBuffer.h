@@ -4,37 +4,50 @@
 #include "Tr2DeviceResource.h"
 
 
-BLUE_CLASS( Tr2BoneTransformBuffer ) :
+struct Float4x3
+{
+	Float4x3() = default;
+	explicit Float4x3( const Matrix& m );
+
+	float elements[12];
+};
+
+struct Tr2MorphTargetAnimationData
+{
+	Tr2MorphTargetAnimationData() = default;
+	Tr2MorphTargetAnimationData( uint32_t index, float weight );
+
+	uint32_t m_index;
+	float m_weight;
+};
+
+BLUE_CLASS( Tr2RingBuffer ) :
 	public ITr2GpuBuffer,
 	public Tr2DeviceResource
 {
 public:
-	EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();	
 
-	struct Float4x3
-	{
-		Float4x3() = default;
-		explicit Float4x3( const Matrix& m );
-
-		float elements[12];
-	};
-
-	uint32_t UploadTransforms( const Float4x3* data, uint32_t matrixCount );
+	template <typename T>
+	uint32_t UploadTransforms( const T* data, uint32_t matrixCount );
 	void PrepareBuffer( Tr2RenderContext& renderContext );
 	void SetFrameNumbers( uint64_t recordingFrame, uint64_t completedFrame );
 
 	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
 
-	static Tr2BoneTransformBuffer& GetInstance();
+	template<typename T>
+	static Tr2RingBuffer& GetInstance();
+
 private:
 	void ReleaseResources( TriStorage s ) override;
 	bool OnPrepareResources() override;
 
 	void Resize( uint32_t size );
 
+	uint32_t m_stride;
 	std::mutex m_mutex;
 	Tr2BufferAL m_buffer;
-	std::vector<Float4x3> m_mirror;
+	std::vector<byte> m_mirror;
 
 	uint64_t m_frame = 0;
 	uint32_t m_head = 0;
@@ -57,16 +70,17 @@ private:
 	std::vector<LockedRegion> m_lockedRegions;
 };
 
-TYPEDEF_BLUECLASS( Tr2BoneTransformBuffer );
+TYPEDEF_BLUECLASS( Tr2RingBuffer );
 
 
-class Tr2BoneTransformOffsets
+class Tr2RingBufferOffsets
 {
 public:
 	uint32_t GetCurrentFrameOffset() const;
 	uint32_t GetPreviousFrameOffset() const;
 
-	void UploadTransforms( Tr2BoneTransformBuffer& buffer, const Tr2BoneTransformBuffer::Float4x3* transforms, uint32_t count );
+	template <typename T>
+	void UploadTransforms( Tr2RingBuffer& buffer, const T* transforms, uint32_t count );
 	void AdvanceFrame();
 
 	static const uint32_t INVALID_OFFSET = 0xffffffff;

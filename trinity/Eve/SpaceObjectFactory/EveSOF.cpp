@@ -123,8 +123,8 @@ EveSOF::EveSOF( IRoot* lockobj ) :
 	// pre-register some really needed vars in the global variable store
 	Tr2Variable var1( "DepthMap", (ITr2TextureProvider*)nullptr );
 	Tr2Variable var2( "DepthMapMsaa", (ITr2TextureProvider*)nullptr );
-    GlobalStore().RegisterVariable( "BoneTransforms", &Tr2BoneTransformBuffer::GetInstance() );
-	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2MorphTargetAnimationDataBuffer::GetInstance() );
+	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2RingBuffer::GetInstance<Float4x3>() );
+	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>() );
 
 	BlueSharedString gradientMap( "GradientMap" );
 
