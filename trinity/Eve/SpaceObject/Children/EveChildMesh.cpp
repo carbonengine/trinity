@@ -1280,7 +1280,7 @@ void EveChildMesh::UnbakeMorphs()
 {
 	m_isMorphsBaked = false;
 
-	if(!m_mesh)
+	if( !m_mesh )
 	{
 		return;
 	}
