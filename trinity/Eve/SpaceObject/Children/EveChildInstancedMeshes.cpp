@@ -136,7 +136,7 @@ void EveChildInstancedMeshes::PushRtGeometry( Tr2RaytracingManager& rtManager ) 
 			XMMATRIX m = *reinterpret_cast<const Matrix*>( instanceTransform.worldTransform );
 			m.r[3] = XMVectorSet( 0, 0, 0, 1 ); 
 			m = XMMatrixMultiply( XMMatrixTranspose( m ), m_worldTransform );
-			mesh.rtMeshes[lodIndex].instanceWorldTransforms.push_back( Tr2RaytracingGeometry::Float4x3( Matrix( m ) ) );
+			mesh.rtMeshes[lodIndex].instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
 		}
 
 		for( auto& lod : mesh.rtMeshes )
