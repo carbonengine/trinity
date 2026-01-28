@@ -47,7 +47,7 @@ private:
 	uint32_t m_stride;
 	std::mutex m_mutex;
 	Tr2BufferAL m_buffer;
-	std::vector<byte> m_mirror;
+	std::vector<uint8_t> m_mirror;
 
 	uint64_t m_frame = 0;
 	uint32_t m_head = 0;
