@@ -1034,7 +1034,6 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
 	obj.bakedMorphOffset = bakedMorphOffset;
-	m_geometryData.push_back( obj );
 	m_threadLocalGeometryData.local().push_back( obj );
 }
 
