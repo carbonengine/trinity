@@ -108,7 +108,7 @@ public:
 	void BeginSceneUpdate();
 	void EndSceneUpdate( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void AddGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area, Tr2Material * material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform, uint32_t bakedMorphOffset = std::numeric_limits<uint32_t>::max() );
-	void AddGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area, Tr2Material * material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount );
+	void AddGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area, Tr2Material * material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount, uint32_t bakedMorphOffset = std::numeric_limits<uint32_t>::max() );
 	void AddBindlessResources( const Tr2MeshAreaVector& areas, const Tr2RaytracingMesh& rtMesh );
 	bool HasGeometry() const;
 

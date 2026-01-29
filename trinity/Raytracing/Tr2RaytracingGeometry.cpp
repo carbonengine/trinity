@@ -1038,7 +1038,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	m_threadLocalGeometryData.local().push_back( obj );
 }
 
-void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount )
+void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount, uint32_t bakedMorphOffset )
 {
 	if( !mesh.IsGoodForArea( area.GetAreaIndex() ) )
 	{
@@ -1055,7 +1055,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.instanceCount = uint32_t( instanceCount );
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
-	obj.bakedMorphOffset = std::numeric_limits<uint32_t>::max();
+	obj.bakedMorphOffset = bakedMorphOffset;
 	m_threadLocalGeometryData.local().push_back( obj );
 }
 

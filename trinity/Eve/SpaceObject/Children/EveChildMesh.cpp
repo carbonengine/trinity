@@ -358,7 +358,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	if( m_mesh )
 	{
 		CcpMath::AxisAlignedBox bounds;
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
+		if( m_animationUpdater && m_animationUpdater->IsInitialized() && m_animationUpdater->GetAnimationTransforms() )
 		{
 			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
 			auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::ALL );
@@ -669,6 +669,12 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
+	uint32_t bakedMorphOffset = std::numeric_limits<uint32_t>::max();
+	if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
+	{
+		bakedMorphOffset = m_bakedMorphAllocation.GetOffset();
+	}
+
 	if( m_instancedMesh )
 	{
 		if( !m_instancedMesh->GetDisplay() || m_instanceTransforms.empty() )
@@ -702,7 +708,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					{
 						vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 					}
-					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_instanceWorldTransforms.data(), m_instanceWorldTransforms.size() );
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_instanceWorldTransforms.data(), m_instanceWorldTransforms.size(), bakedMorphOffset );
 				}
 			}
 		}
@@ -725,7 +731,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 					{
 						vertexBufferData = area->GetRtMeshArea()->GetGeometryConstants( *rtMesh, renderContext );
 					}
-					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_worldTransform );
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, vertexBufferData, m_worldTransform, bakedMorphOffset );
 				}
 			}
 		}
@@ -921,7 +927,23 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	}
 
 	UpdateMorphAnimationBuffer();
-	if( ( m_worldBoundingBox = m_mesh->GetBounds() ) )
+
+	m_worldBoundingBox = CcpMath::AxisAlignedBox();
+	if( m_mesh )
+	{
+		if( m_animationUpdater && m_animationUpdater->IsInitialized() && m_animationUpdater->GetAnimationTransforms() )
+		{
+			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
+			auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::ALL );
+			m_worldBoundingBox = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount, morphTargets, morphTargetCount );
+		}
+		else
+		{
+			m_worldBoundingBox = m_mesh->GetBounds();
+		}
+	}
+
+	if( m_worldBoundingBox )
 	{
 		m_worldBoundingBox.Transform( m_worldTransform );
 		m_worldBoundingSphere = CcpMath::Sphere( m_worldBoundingBox );
