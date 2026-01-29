@@ -43,6 +43,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 	m_origin( SPACE ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
 	m_instanceCount( 0 ),
+	m_morphAnimationOffsets( {} ),
 	EveChildTransform(),
 	EveEntity( lockobj )
 {

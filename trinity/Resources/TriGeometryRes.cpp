@@ -352,7 +352,6 @@ TriGeometryResLodData* TriGeometryRes::GetMeshLod( unsigned int meshIx, int lodI
 
 	if( !mesh || lodIndex < 0 || lodIndex >= mesh->m_lods.size() )
 	{
-		CCP_ASSERT( mesh && lodIndex >= 0 && lodIndex < mesh->m_lods.size() ); //This should never happen, so assert it.
 		return nullptr;
 	}
 
