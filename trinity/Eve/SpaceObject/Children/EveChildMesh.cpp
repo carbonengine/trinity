@@ -1334,9 +1334,10 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 		if( geometryResMesh )
 		{
 
-			uint32_t vertexSize = lod->m_bytesPerMorphTargetVertex;
+			// This is the stride of the vertex data that gets passed dynamicly between the Baked Morphs shader and the opaque shaders
+			const uint32_t bakedMorphVertexStride = 32;
 			uint32_t vertexCount = lod->m_vertexCount;
-			uint32_t dataSize = vertexSize * vertexCount;
+			uint32_t dataSize = bakedMorphVertexStride * vertexCount;
 
 			ALResult result = g_bakedMorphTargetBuffer.Allocate(
 				sizeof( uint32_t ),
