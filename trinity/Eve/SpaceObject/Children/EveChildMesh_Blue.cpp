@@ -75,11 +75,6 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 			"GetMorphTargetNames()\n\n"
 			"Returns names of the morph targets of the mesh. Empty if no mesh has been set.\n" )
 		MAP_METHOD_AND_WRAP(
-			"GetAllBakedMorphTargetStates",
-			GetAllBakedMorphTargetStates,
-			"GetAllBakedMorphTargetStates()\n\n"
-			"Returns all the bool states of if a morph target is toggled to be baked or not.\n" )
-		MAP_METHOD_AND_WRAP(
 			"SetMorphTargetWeight",
 			SetMorphTargetWeight,
 			"SetMorphTargetWeight( name, weight )\n\n"
@@ -92,33 +87,5 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 			"GetMorphTargetWeight( name )\n\n"
 			"Returns the weight of the morph target. Returns 0 if no morph target with that name was found.\n"
 			":param name: morph target name\n" )
-		MAP_METHOD_AND_WRAP(
-			"SetBakedMorphTarget",
-			SetBakedMorphTarget,
-			"SetBakedMorphTarget( name, isBaked )\n\n"
-			"Sets if a morph target should be baked when bake command is ran. By default, all morphs are marked false (Dont Bake)\n"
-			":param name: morph target name\n"
-			":param isBaked: is the morph baked\n" )
-		MAP_METHOD_AND_WRAP(
-			"GetBakedMorphTarget",
-			GetBakedMorphTarget,
-			"GetBakedMorphTarget( name )\n\n"
-			"Returns is the morph is baked.\n"
-			":param name: morph target name\n" )
-		MAP_METHOD_AND_WRAP(
-			"BakeMorphs",
-			BakeMorphs,
-			"BakeMorphs( )\n\n"
-			"Takes the current list of morphs, bakes in the morphs with Base_, Org_ or Sc_ prefixes in the names\n" )
-		MAP_METHOD_AND_WRAP(
-			"UnbakeMorphs",
-			UnbakeMorphs,
-			"UnbakeMorphs( )\n\n"
-			"Takes the current list of baked morphs and unbakes them, restoring the original morph targets.\n" )
-		MAP_METHOD_AND_WRAP(
-			"IsMeshBaked",
-			IsMeshBaked,
-			"IsMeshBaked( )\n\n"
-			"Is the mesh currently baked\n" )
     EXPOSURE_END()
 }
