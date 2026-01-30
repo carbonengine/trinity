@@ -130,6 +130,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"Effect used for rendering background. Geometry rendered is a camera space full-screen quad.",
 			Be::READWRITE | Be::PERSIST )
 
+
+
 		MAP_ATTRIBUTE(
 			"starfield",
 			m_starfield,
@@ -228,6 +230,14 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_shLightingManager,
 			"",
 			Be::PERSISTONLY )
+
+
+		MAP_ATTRIBUTE(
+			"reflectionCorrectionEnabled",
+			m_reflectionCorrectionEnabled,
+			"Enables ambient light reflection angle correction, improving the ambient light specular reflections on rough surfaces\n"
+			":jessica-group: Lighting",
+			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
 			"envMapRotation",

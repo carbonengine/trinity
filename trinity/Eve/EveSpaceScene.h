@@ -424,6 +424,11 @@ protected:
 
 	Tr2EffectPtr m_backgroundEffect;
 
+	
+	bool m_reflectionCorrectionEnabled;
+	TriTextureResPtr m_reflectionCorrectionMap;
+	TriVariable* m_reflectionCorrectionMapHandle;
+
 	Quaternion m_envMapRotation;
 
 	std::string m_envMapResPath;
