@@ -120,6 +120,7 @@ private:
 
 	void AddToCollection( IEveComponentCollection* collection, EveEntity* entity );
 	void RemoveFromCollection( IEveComponentCollection* collection, EveEntity* entity );
+	void RemoveCollectionFromEntityState( IEveComponentCollection * collection, EveEntity * entity );
 
 	template<typename T>
 	IEveComponentCollection* AddCollection( const char* componentName );
@@ -243,7 +244,7 @@ void EveComponentRegistry::Clear()
 	for( auto& component : static_cast<EveComponentCollection<T>*>( collection )->m_collection )
 	{
 		EveEntity* entity = dynamic_cast<EveEntity*>( component );
-		entity->RemoveComponentState( collection ->GetBit() );
+		RemoveCollectionFromEntityState( collection, entity );
 	}
 	collection->Clear();
 }

@@ -146,6 +146,11 @@ void EveComponentRegistry::RemoveFromCollection( IEveComponentCollection* collec
 	}
 }
 
+void EveComponentRegistry::RemoveCollectionFromEntityState( IEveComponentCollection* collection, EveEntity* entity )
+{
+	entity->RemoveComponentState( collection->GetBit() );
+}
+
 std::vector<std::pair<const char*, size_t>> EveComponentRegistry::GetComponentInfo() const
 {
 	std::shared_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
