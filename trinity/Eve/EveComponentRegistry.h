@@ -243,8 +243,7 @@ void EveComponentRegistry::Clear()
 	for( auto& component : static_cast<EveComponentCollection<T>*>( collection )->m_collection )
 	{
 		EveEntity* entity = dynamic_cast<EveEntity*>( component );
-
-		RemoveFromCollection( collection, entity );
+		entity->RemoveComponentState( collection ->GetBit() );
 	}
 	collection->Clear();
 }
