@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "EveChildInstancedMeshes.h"
+#include "./Tr2RingBuffer.h"
 
 
 EveChildInstancedMeshes::EveChildInstancedMeshes( IRoot* lockobj )

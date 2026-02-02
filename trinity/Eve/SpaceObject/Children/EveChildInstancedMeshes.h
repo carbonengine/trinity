@@ -2,7 +2,6 @@
 
 #include "IEveSpaceObjectChild.h"
 #include "../../EveInstancedMeshManager.h"
-#include "./Tr2RingBuffer.h"
 
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2Effect );
