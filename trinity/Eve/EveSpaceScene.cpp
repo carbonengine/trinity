@@ -255,7 +255,9 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_staticEnvMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneStaticEnvMap", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2RingBuffer::GetInstance<Float4x3>() );
+	Tr2RingBuffer::GetInstance<Float4x3>().SetName( "BoneTransformsBuffer" );
 	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>() );
+	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().SetName( "MorphTargetAnimationsBuffer" );
 
 	// Picking batches
 	m_pickingBatches = CCP_NEW( "EveSpaceScene/m_pickingBatches" ) TriRenderBatchAccumulator<>( allocator );

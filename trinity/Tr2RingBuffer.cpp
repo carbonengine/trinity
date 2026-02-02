@@ -44,7 +44,7 @@ uint32_t Tr2RingBuffer::UploadTransforms( const T* data, uint32_t dataCount )
 	}
 	if( m_head < m_tail && m_head + dataCount >= m_tail )
 	{
-		CCP_LOG( "Resizing morph target animation data buffer to %uKB", uint32_t( m_size * 2 * m_stride ) / 1024 );
+		CCP_LOG( "Resizing Tr2RingBuffer %s to %uKB", m_name.c_str(), uint32_t( m_size * 2 * m_stride ) / 1024 );
 		Resize( m_size * 2 );
 	}
 
@@ -119,7 +119,7 @@ void Tr2RingBuffer::Resize( uint32_t size )
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	m_buffer.Create( m_stride, size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
-	m_buffer.SetName( "Morph Animation Data" );
+	m_buffer.SetName( m_name.c_str() );
 }
 
 template <typename T>
@@ -141,6 +141,15 @@ Tr2RingBuffer& Tr2RingBuffer::GetInstance()
 	return *self;
 }
 
+void Tr2RingBuffer::SetName( const std::string& name )
+{
+	this->m_name = name;
+	if ( m_buffer.IsValid() )
+	{
+		m_buffer.SetName( m_name.c_str() );
+	}
+}
+
 void Tr2RingBuffer::ReleaseResources( TriStorage )
 {
 }
@@ -151,7 +160,7 @@ bool Tr2RingBuffer::OnPrepareResources()
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		m_buffer.Create( m_stride, m_size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, m_mirror.data(), renderContext );
-		m_buffer.SetName( "Morph Animation Data" );
+		m_buffer.SetName( m_name.c_str() );
 	}
 	return true;
 }

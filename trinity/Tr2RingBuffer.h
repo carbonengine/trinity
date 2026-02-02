@@ -38,11 +38,15 @@ public:
 	template<typename T>
 	static Tr2RingBuffer& GetInstance();
 
+	void SetName( const std::string& name );
+
 private:
 	void ReleaseResources( TriStorage s ) override;
 	bool OnPrepareResources() override;
 
 	void Resize( uint32_t size );
+
+	std::string m_name;
 
 	uint32_t m_stride;
 	std::mutex m_mutex;
