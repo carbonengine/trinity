@@ -813,13 +813,22 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 		}
 	}
 
-	if( ( m_worldBoundingBox = m_mesh->GetBounds() ) )
+	if( m_mesh )
 	{
-		m_worldBoundingBox.Transform( m_worldTransform );
-		m_worldBoundingSphere = CcpMath::Sphere( m_worldBoundingBox );
+		m_worldBoundingBox = m_mesh->GetBounds();
+		if( m_worldBoundingBox )
+		{
+			m_worldBoundingBox.Transform( m_worldTransform );
+			m_worldBoundingSphere = CcpMath::Sphere( m_worldBoundingBox );
+		}
+		else
+		{
+			m_worldBoundingSphere = {};
+		}
 	}
 	else
 	{
+		m_worldBoundingBox = {};
 		m_worldBoundingSphere = {};
 	}
 }
