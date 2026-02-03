@@ -34,6 +34,7 @@ const Be::ClassInfo* EveSmartLightMesh::ExposeToBlue()
 		MAP_ATTRIBUTE( "customColor", m_color, "Quad color\n:jessica-tuple-type: linearcolor\n:jessica-group: ShaderColorOverride", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "minScreenSize", m_minScreenSize, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "currentScreenSize", m_currentScreenSize, "", Be::READ )
 
 		MAP_ATTRIBUTE( "attributeModifiers", m_attributeModifiers, "list of attribute modifiers", Be::READ | Be::PERSIST | Be::NOTIFY )
 		

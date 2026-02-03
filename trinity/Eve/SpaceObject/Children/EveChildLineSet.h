@@ -76,7 +76,7 @@ public:
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void ChangeLOD( Tr2Lod lod ) override;
-
+	bool IsUpdating() const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Debug

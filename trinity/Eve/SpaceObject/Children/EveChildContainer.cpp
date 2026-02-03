@@ -34,6 +34,7 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 	m_displayFilter( SHADER_ALL ),
 	m_worldVelocity( 0, 0, 0 ),
 	m_display( true ),
+	m_updateOnDisplay( true ),
 	m_mute( false ),
 	m_isAlwaysOn( false ),
 	m_isPlacementRoot( false ),
@@ -356,7 +357,7 @@ bool EveChildContainer::IsRendering() const
 
 bool EveChildContainer::IsUpdating() const
 {
-	return IsRendering() || m_displayFilter == ONLY_REFLECTIONS;
+	return ( m_display || !m_updateOnDisplay ) && ( IsRendering() || m_displayFilter == ONLY_REFLECTIONS );
 }
 
 const char* EveChildContainer::GetName() const

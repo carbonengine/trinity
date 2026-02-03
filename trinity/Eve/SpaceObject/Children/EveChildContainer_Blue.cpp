@@ -53,6 +53,7 @@ const Be::ClassInfo* EveChildContainer::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "updateOnDisplay", m_updateOnDisplay, "If true, it only updates the child container.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "mute", m_mute, "", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "objects", m_objects, "", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "transformModifiers", m_transformModifiers, "", Be::READ | Be::PERSIST )
