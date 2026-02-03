@@ -1460,6 +1460,9 @@ set(_SOURCES
     Tr2DepthStencil_Blue.cpp
     Tr2DeviceResource.cpp
     Tr2DeviceResource.h
+    Tr2DirectInstanceData.cpp
+    Tr2DirectInstanceData.h
+    Tr2DirectInstanceData_Blue.cpp
     Tr2DxtCompressor.cpp
     Tr2DxtCompressor.h
     Tr2DxtCompressor_Blue.cpp

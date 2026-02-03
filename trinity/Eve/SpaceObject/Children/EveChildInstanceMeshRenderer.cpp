@@ -7,7 +7,7 @@
 #include "TriMath.h"
 #include "TransformModifiers/EveChildModifierTransformCommon.h"
 #include "Eve/EveConstantBufferFormats.h"
-#include "Tr2RuntimeInstanceData.h"
+#include "Tr2DirectInstanceData.h"
 #include "Tr2InstancedMesh.h"
 
 
@@ -224,7 +224,7 @@ void EveChildInstanceMeshRenderer::UpdateGeometryResource( const PlacementDataWi
 {
 	m_totalObjectCount = uint32_t( size );
 
-	if( !m_isVisible || !m_display || m_totalObjectCount == 0 )
+	if( !m_isVisible || !m_display || m_totalObjectCount == 0 || m_currentScreenSize < m_minScreenSize )
 	{
 		return;
 	}
@@ -342,7 +342,7 @@ void EveChildInstanceMeshRenderer::ConfigureInstanceData() const
 		instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 5 ); // lastTransform2
 		instanceDef.Add( Tr2VertexDefinition::BYTE_4, Tr2VertexDefinition::TEXCOORD, 6 ); // boneindex
 
-		Tr2RuntimeInstanceDataPtr instanceData;
+		Tr2DirectInstanceDataPtr instanceData;
 		instanceData.CreateInstance();
 		instanceData->SetLayout( instanceDef );
 		mesh->SetInstanceGeometryRes( instanceData );
@@ -361,12 +361,12 @@ void EveChildInstanceMeshRenderer::UpdateInstanceData( std::vector<PerInstanceDa
 			geometryResource = mesh->GetInstanceGeometryResource();
 		}
 
-		if( Tr2RuntimeInstanceDataPtr geoRes = BlueCastPtr( geometryResource ) )
+		if( Tr2DirectInstanceDataPtr geoRes = BlueCastPtr( geometryResource ) )
 		{
 			auto dest = geoRes->GetData( unsigned( instances.size() ) );
 			memcpy( dest, &instances[0], sizeof( instances[0] ) * instances.size() );
 			geoRes->UpdateData();
-
+	
 			float maxScale = 0;
 			CcpMath::AxisAlignedBox aabb;
 			for( auto& instance : instances )
