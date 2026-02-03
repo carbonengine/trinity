@@ -197,6 +197,7 @@ protected:
 	float m_activationStrength;
 	float m_ownerMaxSpeed;
 	bool m_display;
+	bool m_updateOnDisplay;
 	bool m_mute;
 	DisplayQualityModifier m_displayFilter;
 	bool m_isAlwaysOn;

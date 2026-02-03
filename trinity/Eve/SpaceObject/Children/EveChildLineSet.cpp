@@ -234,16 +234,10 @@ void EveChildLineSet::UpdateVisibility( const EveUpdateContext& updateContext, c
 
 void EveChildLineSet::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	if( !m_display )
+	if( !IsUpdating() )
 	{
 		return;
 	}
-
-	if( !m_isVisible )
-	{
-		return;
-	}
-
 
 	if( m_updateLineSet )
 	{
@@ -292,6 +286,11 @@ void EveChildLineSet::UpdateSyncronous( const EveUpdateContext& updateContext, c
 	if( updateBounds )
 	{
 		UpdateBoundingSphere( false );
+	}
+
+	if( !IsUpdating() )
+	{
+		return;
 	}
 
 	if( m_type == OBJECT_RENDER || m_type == BOTH )
@@ -509,6 +508,11 @@ void EveChildLineSet::GetLocalToWorldTransform( Matrix& transform ) const
 
 void EveChildLineSet::ChangeLOD( Tr2Lod lod )
 {
+}
+
+bool EveChildLineSet::IsUpdating() const
+{
+	return ( m_display && m_isVisible );
 }
 
 void EveChildLineSet::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
