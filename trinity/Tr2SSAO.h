@@ -82,6 +82,8 @@ private:
 		float inverseMaxSlopeWeight;
 
 		Matrix normalMatrix;
+
+		uint32_t mipCount;
 	};
 
 	struct CortaoDownsamplePerObjectData
@@ -97,7 +99,6 @@ private:
 	
 	bool m_cortaoInitialized;
 	Tr2EffectPtr m_cortaoEffect;
-	Tr2EffectPtr m_cortaoDownsampleEffect;
 	Tr2EffectPtr m_cortaoBlurEffect;
 	TriTextureResPtr m_cortaoLookupTable;
 	Tr2ConstantBufferAL m_cortaoConstantBuffer;
@@ -106,7 +107,6 @@ private:
 	float m_cortaoRadius;
 	float m_cortaoMaxBlockerSearchRadius;
 	float m_cortaoMipBias;
-	bool m_cortaoUseLookupTable;
 
 	bool m_cortaoBlur;
 
