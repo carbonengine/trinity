@@ -308,6 +308,8 @@ IRoot* EveSpaceScene::GetCameraAttachments() const
 
 EveSpaceScene::~EveSpaceScene()
 {
+	ClearVariableStore();
+
 	SetShLightingManager( nullptr );
 	for( auto it = m_primaryBatches.begin(); it != m_primaryBatches.end(); ++it )
 	{
@@ -3001,6 +3003,8 @@ void EveSpaceScene::UpdateVariableStore()
 
 void EveSpaceScene::ClearVariableStore()
 {
+	m_sharedIndexVertexBufferVar.Clear();
+	m_bakedMorphTargetBufferVar.Clear();
 	m_envMap1Var.Clear();
 	m_envMap2Var.Clear();
 	m_reflectionMapVar.Clear();
