@@ -3057,6 +3057,7 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sh
 		return;
 	}
 
+	bool addLayoutContainer = false;
 	EveChildContainerPtr layoutContainer = BlueCastPtr( obj->GetEffectChildByName( "layouts" ) );
 	if( !layoutContainer )
 	{
@@ -3065,7 +3066,7 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sh
 		layoutContainer->SetOrigin( IEveSpaceObjectChild::SOF );
 		layoutContainer->SetIsPlacementRoot( true );
 		layoutContainer->SetAlwaysOn( true );
-		obj->AddToEffectChildrenList( layoutContainer );
+		addLayoutContainer = true;
 	}
 	
 	// dna can have multiple layouts
@@ -3096,6 +3097,11 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sh
 		{
 			TriSrand( oldSeed + seedOverwrite ); // restore seed if scrambled for parent proceduralness
 		}
+	}
+
+	if( layoutContainer->m_objects.size() != 0 && addLayoutContainer )
+	{
+		obj->AddToEffectChildrenList( layoutContainer );
 	}
 }
 

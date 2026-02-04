@@ -867,8 +867,6 @@ void GetBatchesFromRenderables( ITr2Renderable** const objectRenderables, const 
 	}
 }
 
-static Tr2EnumerableThreadSpecific<std::vector<ITr2RenderableEntry>> s_threadLocalTransparencies;
-
 void GetBatchesFromRenderables(
 	ITr2Renderable** const objectRenderables,
 	const unsigned renderableCount,
@@ -903,13 +901,6 @@ void GetBatchesFromRenderables(
 			{
 				r->GetBatches( &perThreadBatches[batchTypes[type]].local(), batchTypes[type], perObjectData[i], reason );
 			}
-			if( objectsWithTransparencies && r->HasTransparentBatches() )
-			{
-				ITr2RenderableEntry entry;
-				entry.m_object = r;
-				entry.m_distance = r->GetSortValue();
-				s_threadLocalTransparencies.local().push_back( entry );
-			}
 		} );
 	}
 	{
@@ -929,10 +920,17 @@ void GetBatchesFromRenderables(
 		CCP_STATS_ZONE( "Transparencies" );
 
 		objectsWithTransparencies->reserve( renderableCount );
-		for( auto& localList : s_threadLocalTransparencies )
+
+		for( unsigned i = 0; i != renderableCount; ++i )
 		{
-			objectsWithTransparencies->insert( objectsWithTransparencies->end(), localList.begin(), localList.end() );
-			localList.clear();
+			ITr2Renderable* r = objectRenderables[i];
+			if( r->HasTransparentBatches() )
+			{
+				ITr2RenderableEntry entry;
+				entry.m_object = r;
+				entry.m_distance = r->GetSortValue();
+				objectsWithTransparencies->push_back( entry );
+			}
 		}
 	}
 }
