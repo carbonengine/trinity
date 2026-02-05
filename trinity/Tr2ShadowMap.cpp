@@ -35,7 +35,8 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_disableShimmer( true ),
 	m_oldZFar( 0.0 ),
 	m_useDenoiser( true ),
-	m_debugColorSplit( false )
+	m_debugColorSplit( false ),
+	m_automaticShadowSplits( true )
 {
 	m_shadowEffect.CreateInstance();
 	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/ShadowDepth.fx" );
@@ -45,8 +46,6 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	GlobalStore().RegisterVariable( "EveSpaceSceneCascadedShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 
 	m_denoiser.CreateInstance();
-
-	SetSplitValues();
 }
 
 void Tr2ShadowMap::Setup( uint32_t elementSize, uint32_t elementCount, bool useDenoiser )
@@ -84,6 +83,20 @@ bool Tr2ShadowMap::OnModified( Be::Var* value )
 void Tr2ShadowMap::ShouldUseDenoiser( bool val )
 {
 	m_useDenoiser = val;
+}
+
+void Tr2ShadowMap::UpdateSplitValues( float nearClip, float farClip )
+{
+	if( m_automaticShadowSplits )
+	{
+		float logNearClip = log2f( nearClip );
+		float logFarClip = log2f( farClip );
+
+		for( uint32_t i = 0; i < m_splitCount; i++ )
+		{
+			m_splitValues[i] = exp2f( logNearClip + ( ( logFarClip - logNearClip ) * ( ( i + 1 ) / float( m_splitCount ) ) ) );
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -177,7 +190,8 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	
 	splitSetup.lightViewProjection = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
 
-	m_perSplitData.CascadeDepthRanges[splitIndex / 4][splitIndex % 4] = aabb.m_max.z - aabb.m_min.z;
+	//m_perSplitData.CascadeDepthRanges[splitIndex / 4][splitIndex % 4] = aabb.m_max.z - aabb.m_min.z;
+	m_perSplitData.CascadeRanges[splitIndex] = Vector4( aabb.m_max.x - aabb.m_min.x, aabb.m_max.y - aabb.m_min.y, aabb.m_max.z - aabb.m_min.z, 0 );
 
 	// 4th element of shadowMatrix is always the same
 	m_perSplitData.ShadowMatrixVal[splitIndex] = Transpose( splitSetup.lightViewProjection );
@@ -290,26 +304,6 @@ Tr2EffectPtr Tr2ShadowMap::GetShadowEffect() const
 bool Tr2ShadowMap::GetDebugSplitValue() const
 {
 	return m_debugColorSplit;
-}
-
-void Tr2ShadowMap::SetSplitValues()
-{
-	m_splitValues[0] = 25.f;
-	m_splitValues[1] = 75.f;
-	m_splitValues[2] = 150.f;
-	m_splitValues[3] = 300.f;
-	m_splitValues[4] = 600.f;
-	m_splitValues[5] = 1200.f;
-	m_splitValues[6] = 2400.f;
-	m_splitValues[7] = 4800.f;
-	m_splitValues[8] = 9600.f;
-	m_splitValues[9] = 19200.f;
-	m_splitValues[10] = 38400.f;
-	m_splitValues[11] = 76800.f;
-	m_splitValues[12] = 153600.f;
-	m_splitValues[13] = 307200.f;
-	m_splitValues[14] = 614400.f;
-	m_splitValues[15] = 1228800.f;
 }
 
 uint32_t Tr2ShadowMap::GetDebugColors( int switchCase ) const

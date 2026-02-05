@@ -47,6 +47,13 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 			Be::READWRITE | Be::NOTIFY )
 
 		MAP_ATTRIBUTE(
+			"automaticShadowSplits",
+			m_automaticShadowSplits,
+			"The size of the shadow map, is always quadric\n"
+			":jessica-group: Split Info",
+			Be::READWRITE | Be::NOTIFY )
+
+		MAP_ATTRIBUTE(
 			"SplitNr0",
 			m_splitValues[0],
 			"Set z far value of split"

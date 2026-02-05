@@ -124,7 +124,7 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 
 		// Create and configure the basic effect settings
 		m_screenSpaceSubSurfaceScatteringEffect.CreateInstance();
-		m_screenSpaceSubSurfaceScatteringEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/Characters/SSSSSBlur.fx" );
+		m_screenSpaceSubSurfaceScatteringEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpaceObject/V5/PBR/Global/SSSSSBlur.fx" );
 		m_screenSpaceSubSurfaceScatteringEffect->SetParameter( BlueSharedString( "SubSurfaceFrontScatterColorBuffer" ), m_subSurfaceFrontScatterColorBuffer );
 	}
 
@@ -178,7 +178,7 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 		{
 			m_specularRecombineEffect.CreateInstance();
 			m_specularRecombineEffect->StartUpdate();
-			m_specularRecombineEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/Characters/SSSSSRecombine.fx" );
+			m_specularRecombineEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/SpaceObject/V5/PBR/Global/SSSSSRecombine.fx" );
 			m_specularRecombineEffect->EndUpdate();
 		}
 
