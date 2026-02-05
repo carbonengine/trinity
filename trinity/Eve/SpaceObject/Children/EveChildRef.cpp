@@ -197,6 +197,7 @@ void EveChildRef::UpdateSyncronous( const EveUpdateContext& updateContext, const
 		EveChildUpdateParams newParams = params;
 		newParams.isVisible &= m_display;
 		newParams.childParent = this;
+		newParams.localToWorldTransform = m_worldTransform;
 
 		m_child->UpdateSyncronous( updateContext, newParams );
 	}
@@ -211,6 +212,7 @@ void EveChildRef::UpdateAsyncronous( const EveUpdateContext& updateContext, cons
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
+	newParams.localToWorldTransform = m_worldTransform;
 
 	if ( m_child )
 	{
