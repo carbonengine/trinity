@@ -190,7 +190,6 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	
 	splitSetup.lightViewProjection = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
 
-	//m_perSplitData.CascadeDepthRanges[splitIndex / 4][splitIndex % 4] = aabb.m_max.z - aabb.m_min.z;
 	m_perSplitData.CascadeRanges[splitIndex] = Vector4( aabb.m_max.x - aabb.m_min.x, aabb.m_max.y - aabb.m_min.y, aabb.m_max.z - aabb.m_min.z, 0 );
 
 	// 4th element of shadowMatrix is always the same
