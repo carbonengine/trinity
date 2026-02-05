@@ -96,6 +96,7 @@ void EveChildProceduralContainer::UpdateSyncronous( const EveUpdateContext& upda
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
+	newParams.localToWorldTransform = m_worldTransform;
 
     if ( nullptr != m_selectedObject )
     {
@@ -122,6 +123,7 @@ void EveChildProceduralContainer::UpdateAsyncronous( const EveUpdateContext& upd
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
+	newParams.localToWorldTransform = m_worldTransform;
 
     if ( nullptr != m_selectedObject )
     {

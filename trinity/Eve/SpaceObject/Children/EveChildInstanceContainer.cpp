@@ -407,6 +407,7 @@ void EveChildInstanceContainer::UpdateSyncronous( const EveUpdateContext& update
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
+	newParams.localToWorldTransform = m_worldTransform;
 
 	RunOnInstances( [&updateContext, &newParams]( IEveSpaceObjectChild* c ) { c->UpdateSyncronous( updateContext, newParams ); } );
 }
@@ -431,7 +432,7 @@ void EveChildInstanceContainer::UpdateAsyncronous( const EveUpdateContext& updat
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
-	newParams.localToWorldTransform = localToWorldTransform;
+	newParams.localToWorldTransform = m_worldTransform;
 
 	RunOnInstances( [&updateContext, &newParams]( IEveSpaceObjectChild* c ) { c->UpdateAsyncronous( updateContext, newParams ); } );
 
