@@ -36,9 +36,8 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_oldZFar( 0.0 ),
 	m_useDenoiser( true ),
 	m_debugColorSplit( false ),
-	m_dynamicShadowSplits( false ),
-	m_usingStaticShadowSplits( false),
-	m_manualShadowSplits( false )
+	m_setShadowSplits( false ),
+	m_shadowSplitMode( Tr2ShadowMap::ShadowSplitMode::STATIC )
 {
 	m_shadowEffect.CreateInstance();
 	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/ShadowDepth.fx" );
@@ -91,9 +90,9 @@ void Tr2ShadowMap::ShouldUseDenoiser( bool val )
 
 void Tr2ShadowMap::UpdateSplitValues( float nearClip, float farClip )
 {
-	if( m_dynamicShadowSplits )
+	if( m_shadowSplitMode == Tr2ShadowMap::DYNAMIC )
 	{
-		m_usingStaticShadowSplits = false;
+		m_setShadowSplits = false;
 		float logNearClip = log2f( nearClip );
 		float logFarClip = log2f( farClip );
 
@@ -102,9 +101,12 @@ void Tr2ShadowMap::UpdateSplitValues( float nearClip, float farClip )
 			m_splitValues[i] = exp2f( logNearClip + ( ( logFarClip - logNearClip ) * ( ( i + 1 ) / float( m_splitCount ) ) ) );
 		}
 	}
-	else if( !m_usingStaticShadowSplits )
+	else if( m_shadowSplitMode == Tr2ShadowMap::STATIC )
 	{
-		SetStaticShadowSplits();
+		if( !m_setShadowSplits )
+		{
+			SetStaticShadowSplits();
+		}
 	}
 }
 
@@ -358,7 +360,7 @@ uint32_t Tr2ShadowMap::GetDebugColors( int switchCase ) const
 
 void Tr2ShadowMap::SetStaticShadowSplits()
 {
-	m_usingStaticShadowSplits = true;
+	m_setShadowSplits = true;
 	m_splitValues[0] = 25.f;
 	m_splitValues[1] = 75.f;
 	m_splitValues[2] = 150.f;

@@ -38,7 +38,6 @@ namespace ShadowMap
 		AxisAlignedBoundingBox aabb;
 	};
 }
-
 // --------------------------------------------------------------------------------
 // Description:
 //   This class holds a cascaded shadow map and takes care of splitting the frustum
@@ -88,6 +87,13 @@ public:
 
 	PerSplitData m_perSplitData;
 
+	enum ShadowSplitMode
+	{
+		STATIC,
+		DYNAMIC,
+		MANUAL
+	};
+
 private:
 	void SetStaticShadowSplits();
 
@@ -109,8 +115,8 @@ private:
 
 	bool m_debugColorSplit;
 	bool m_disableShimmer;
-	bool m_dynamicShadowSplits;
-	bool m_manualShadowSplits;
-	bool m_usingStaticShadowSplits;
+	bool m_setShadowSplits;
+
+	ShadowSplitMode m_shadowSplitMode;
 };
 TYPEDEF_BLUECLASS( Tr2ShadowMap );
