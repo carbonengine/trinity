@@ -89,6 +89,7 @@ public:
 	PerSplitData m_perSplitData;
 
 private:
+	void SetStaticShadowSplits();
 
 	// width and height of shadow map
 	unsigned int m_size; // texture res
@@ -108,6 +109,8 @@ private:
 
 	bool m_debugColorSplit;
 	bool m_disableShimmer;
-	bool m_automaticShadowSplits;
+	bool m_dynamicShadowSplits;
+	bool m_manualShadowSplits;
+	bool m_usingStaticShadowSplits;
 };
 TYPEDEF_BLUECLASS( Tr2ShadowMap );

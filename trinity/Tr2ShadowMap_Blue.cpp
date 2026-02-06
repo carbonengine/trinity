@@ -47,9 +47,16 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 			Be::READWRITE | Be::NOTIFY )
 
 		MAP_ATTRIBUTE(
-			"automaticShadowSplits",
-			m_automaticShadowSplits,
-			"The size of the shadow map, is always quadric\n"
+			"dynamicShadowSplits",
+			m_dynamicShadowSplits,
+			"Automaticly gnerate shadow splits when enabled, othewise use staticly defined ones\n"
+			":jessica-group: Split Info",
+			Be::READWRITE | Be::NOTIFY )
+
+		MAP_ATTRIBUTE(
+			"manualShadowSplits",
+			m_manualShadowSplits,
+			"Used to manually control shadow splits in graphite.\n"
 			":jessica-group: Split Info",
 			Be::READWRITE | Be::NOTIFY )
 

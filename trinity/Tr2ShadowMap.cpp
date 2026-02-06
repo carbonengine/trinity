@@ -36,7 +36,9 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_oldZFar( 0.0 ),
 	m_useDenoiser( true ),
 	m_debugColorSplit( false ),
-	m_automaticShadowSplits( true )
+	m_dynamicShadowSplits( false ),
+	m_usingStaticShadowSplits( false),
+	m_manualShadowSplits( false )
 {
 	m_shadowEffect.CreateInstance();
 	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/ShadowDepth.fx" );
@@ -46,6 +48,8 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	GlobalStore().RegisterVariable( "EveSpaceSceneCascadedShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 
 	m_denoiser.CreateInstance();
+
+	SetStaticShadowSplits();
 }
 
 void Tr2ShadowMap::Setup( uint32_t elementSize, uint32_t elementCount, bool useDenoiser )
@@ -87,8 +91,9 @@ void Tr2ShadowMap::ShouldUseDenoiser( bool val )
 
 void Tr2ShadowMap::UpdateSplitValues( float nearClip, float farClip )
 {
-	if( m_automaticShadowSplits )
+	if( m_dynamicShadowSplits )
 	{
+		m_usingStaticShadowSplits = false;
 		float logNearClip = log2f( nearClip );
 		float logFarClip = log2f( farClip );
 
@@ -96,6 +101,10 @@ void Tr2ShadowMap::UpdateSplitValues( float nearClip, float farClip )
 		{
 			m_splitValues[i] = exp2f( logNearClip + ( ( logFarClip - logNearClip ) * ( ( i + 1 ) / float( m_splitCount ) ) ) );
 		}
+	}
+	else if( !m_usingStaticShadowSplits )
+	{
+		SetStaticShadowSplits();
 	}
 }
 
@@ -345,4 +354,25 @@ uint32_t Tr2ShadowMap::GetDebugColors( int switchCase ) const
 		break;
 	}
 	return color;
+}
+
+void Tr2ShadowMap::SetStaticShadowSplits()
+{
+	m_usingStaticShadowSplits = true;
+	m_splitValues[0] = 25.f;
+	m_splitValues[1] = 75.f;
+	m_splitValues[2] = 150.f;
+	m_splitValues[3] = 300.f;
+	m_splitValues[4] = 600.f;
+	m_splitValues[5] = 1200.f;
+	m_splitValues[6] = 2400.f;
+	m_splitValues[7] = 4800.f;
+	m_splitValues[8] = 9600.f;
+	m_splitValues[9] = 19200.f;
+	m_splitValues[10] = 38400.f;
+	m_splitValues[11] = 76800.f;
+	m_splitValues[12] = 153600.f;
+	m_splitValues[13] = 307200.f;
+	m_splitValues[14] = 614400.f;
+	m_splitValues[15] = 1228800.f;
 }
