@@ -499,6 +499,7 @@ void EveChildContainer::UpdateSyncronous( const EveUpdateContext& updateContext,
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
+	newParams.localToWorldTransform = m_worldTransform;
 
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{

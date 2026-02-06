@@ -326,6 +326,7 @@ void EveChildSocket::UpdateSyncronous( const EveUpdateContext& updateContext, co
 		EveChildUpdateParams newParams = params;
 		newParams.isVisible &= m_display;
 		newParams.childParent = this;
+		newParams.localToWorldTransform = m_worldTransform;
 
 		m_plug->UpdateSyncronous( updateContext, newParams );
 	}
@@ -340,6 +341,7 @@ void EveChildSocket::UpdateAsyncronous( const EveUpdateContext& updateContext, c
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
+	newParams.localToWorldTransform = m_worldTransform;
 
 	if ( m_plug )
 	{
