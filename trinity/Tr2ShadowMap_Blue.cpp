@@ -59,7 +59,7 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 			m_shadowSplitMode,
 			"Used to select shadow splits.\n"
 			":jessica-group: Split Info",
-			Be::READWRITE | Be::PERSIST | Be::ENUM,
+			Be::READWRITE | Be::PERSIST | Be::ENUM | Be::NOTIFY,
 			ShadowSplitModeChooser )
 
 		MAP_ATTRIBUTE(

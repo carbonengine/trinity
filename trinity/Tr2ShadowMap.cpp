@@ -36,7 +36,8 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_oldZFar( 0.0 ),
 	m_useDenoiser( true ),
 	m_debugColorSplit( false ),
-	m_setShadowSplits( false ),
+	m_lastNearClip( 0.0f ),
+	m_lastFarClip( 0.0f ),
 	m_shadowSplitMode( Tr2ShadowMap::ShadowSplitMode::STATIC )
 {
 	m_shadowEffect.CreateInstance();
@@ -79,6 +80,18 @@ bool Tr2ShadowMap::OnModified( Be::Var* value )
 			m_shadowEffect->SetOption( BlueSharedString( "SHADOW_DEBUG_MODE" ), BlueSharedString( "SDM_NONE" ) );
 		}
 	}
+	if( IsMatch( value, m_shadowSplitMode ) )
+	{
+		if( m_shadowSplitMode == Tr2ShadowMap::ShadowSplitMode::STATIC )
+		{
+			SetStaticShadowSplits();
+		}
+		else if( m_shadowSplitMode == Tr2ShadowMap::ShadowSplitMode::DYNAMIC )
+		{
+			m_lastNearClip = 0.0f;
+			m_lastFarClip = 0.0f;
+		}
+	}
 	m_perSplitData.SplitInfo.x = float( m_splitCount );
 	return true;
 }
@@ -92,20 +105,18 @@ void Tr2ShadowMap::UpdateSplitValues( float nearClip, float farClip )
 {
 	if( m_shadowSplitMode == Tr2ShadowMap::DYNAMIC )
 	{
-		m_setShadowSplits = false;
-		float logNearClip = log2f( nearClip );
-		float logFarClip = log2f( farClip );
+		if( m_lastNearClip != nearClip || m_lastFarClip != farClip )
+		{
+			m_lastNearClip = nearClip;
+			m_lastFarClip = farClip;
 
-		for( uint32_t i = 0; i < m_splitCount; i++ )
-		{
-			m_splitValues[i] = exp2f( logNearClip + ( ( logFarClip - logNearClip ) * ( ( i + 1 ) / float( m_splitCount ) ) ) );
-		}
-	}
-	else if( m_shadowSplitMode == Tr2ShadowMap::STATIC )
-	{
-		if( !m_setShadowSplits )
-		{
-			SetStaticShadowSplits();
+			float logNearClip = log2f( nearClip );
+			float logFarClip = log2f( farClip );
+
+			for( uint32_t i = 0; i < m_splitCount; i++ )
+			{
+				m_splitValues[i] = exp2f( logNearClip + ( ( logFarClip - logNearClip ) * ( ( i + 1 ) / float( m_splitCount ) ) ) );
+			}
 		}
 	}
 }
@@ -360,7 +371,6 @@ uint32_t Tr2ShadowMap::GetDebugColors( int switchCase ) const
 
 void Tr2ShadowMap::SetStaticShadowSplits()
 {
-	m_setShadowSplits = true;
 	m_splitValues[0] = 25.f;
 	m_splitValues[1] = 75.f;
 	m_splitValues[2] = 150.f;

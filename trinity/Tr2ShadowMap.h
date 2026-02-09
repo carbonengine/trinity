@@ -115,8 +115,9 @@ private:
 
 	bool m_debugColorSplit;
 	bool m_disableShimmer;
-	bool m_setShadowSplits;
 
 	ShadowSplitMode m_shadowSplitMode;
+	float m_lastNearClip;
+	float m_lastFarClip;
 };
 TYPEDEF_BLUECLASS( Tr2ShadowMap );
