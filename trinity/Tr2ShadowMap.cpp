@@ -86,6 +86,25 @@ void Tr2ShadowMap::ShouldUseDenoiser( bool val )
 	m_useDenoiser = val;
 }
 
+AxisAlignedBoundingBox Tr2ShadowMap::CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3 (&corners)[8] )
+{
+	AxisAlignedBoundingBox aabb;
+	for( unsigned int i = 0; i < 8; ++i )
+	{
+		Vector3 vertex = DX_UNIT_CUBE[i];
+		// view space
+		Vector4 transformedVertex = Transform( Vector4( vertex, 1.0 ), Inverse( projection ) );
+
+		transformedVertex /= transformedVertex.w;
+
+		// world space
+		transformedVertex = Transform( transformedVertex, invViewTransform );
+		corners[i] = TransformCoord( transformedVertex.GetXYZ(), ( lightView ) );
+		// light view space
+		aabb.IncludePoint( TransformCoord( transformedVertex.GetXYZ(), ( lightView ) ) );
+	}
+	return aabb;
+}
 // --------------------------------------------------------------------------------
 // Description:
 //  Go through all i count of frustum splits. Calculate the corresponding 
@@ -123,25 +142,9 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	// Find light view
 	Matrix lightView = Inverse( OrthoNormalBasisZ( -lightDirection ) );
 
-	AxisAlignedBoundingBox aabb;
-
 	Vector3 corners[8];
 
-	// Now transform the unit cube based off matrices
-	for( unsigned int i = 0; i < 8; ++i )
-	{
-		Vector3 vertex = unitCube[i];
-		// view space
-		Vector4 transformedVertex = Transform( Vector4( vertex, 1.0 ), Inverse( projection ) );
-
-		transformedVertex /= transformedVertex.w;
-
-		// world space
-		transformedVertex = Transform( transformedVertex, invViewTransform );
-		corners[i] = TransformCoord( transformedVertex.GetXYZ(), ( lightView ) );
-		// light view space
-		aabb.IncludePoint( TransformCoord( transformedVertex.GetXYZ(), ( lightView ) ) );
-	}
+	AxisAlignedBoundingBox aabb = CalculateAABB( projection, invViewTransform, lightView, corners );
 
 	// Snap the projection in texel-sized increments to avoid crawling shadows on still objects
 	if( m_disableShimmer )
@@ -294,7 +297,7 @@ bool Tr2ShadowMap::GetDebugSplitValue() const
 
 void Tr2ShadowMap::SetSplitValues()
 {
-	m_splitValues[0] = 25.f;
+	m_splitValues[0] = MIN_SHADOW_SPLIT;
 	m_splitValues[1] = 75.f;
 	m_splitValues[2] = 150.f;
 	m_splitValues[3] = 300.f;
@@ -309,7 +312,7 @@ void Tr2ShadowMap::SetSplitValues()
 	m_splitValues[12] = 153600.f;
 	m_splitValues[13] = 307200.f;
 	m_splitValues[14] = 614400.f;
-	m_splitValues[15] = 1228800.f;
+	m_splitValues[15] = MAX_SHADOW_SPLIT;
 }
 
 uint32_t Tr2ShadowMap::GetDebugColors( int switchCase ) const

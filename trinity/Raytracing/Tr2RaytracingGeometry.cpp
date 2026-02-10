@@ -6,7 +6,7 @@
 #include "Tr2Renderer.h"
 #include "Shader/Tr2Shader.h"
 #include "Shader/Parameter/Tr2GeometryBufferParameter.h"
-#include "../Tr2BoneTransformBuffer.h"
+#include "../Tr2RingBuffer.h"
 #include "../Tr2RuntimeGpuBuffer.h"
 
 #include "Tr2MeshArea.h"
@@ -20,23 +20,6 @@ namespace
 {
 std::mutex s_geometryConstantsMutex;
 }
-
-Tr2RaytracingGeometry::Float4x3::Float4x3( const Matrix& m )
-{
-	elements[0] = m._11;
-	elements[1] = m._21;
-	elements[2] = m._31;
-	elements[3] = m._41;
-	elements[4] = m._12;
-	elements[5] = m._22;
-	elements[6] = m._32;
-	elements[7] = m._42;
-	elements[8] = m._13;
-	elements[9] = m._23;
-	elements[10] = m._33;
-	elements[11] = m._43;
-}
-
 
 //***********************************************************
 // Tr2RaytracingPipelineStateManager
@@ -176,6 +159,8 @@ Tr2RaytracingMesh::Tr2RaytracingMesh() :
 	m_meshIndex( 0 ),
 	m_boneOffset( 0 ),
 	m_skinnedVertexOffset( 0 ),
+	m_morphAnimationDataOffset( 0 ),
+	m_morphAnimationDataCount( 0 ),
 	m_isDirty( true ),
 	m_screenSize( 0.f ),
 	m_lodIndex( 0 )
@@ -239,6 +224,27 @@ bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4
 	return m_isDirty;
 }
 
+bool Tr2RaytracingMesh::SetMorphAnimations( size_t count, const Tr2MorphTargetAnimationData* morphTargets, uint32_t morphTargetAnimationDataOffset )
+{
+	auto newSize = count * sizeof( Tr2MorphTargetAnimationData );
+	if( m_morphAnimationDatas.size() != newSize )
+	{
+		m_morphAnimationDatas.resize( newSize );
+		m_isDirty = true;
+	}
+
+	if( newSize > 0 && memcmp( m_morphAnimationDatas.data(), morphTargets, newSize ) != 0 )
+	{
+		memcpy( m_morphAnimationDatas.data(), morphTargets, newSize );
+		m_isDirty = true;
+	}
+
+	m_morphAnimationDataOffset = morphTargetAnimationDataOffset;
+	m_morphAnimationDataCount = uint32_t( count );
+
+	return m_isDirty;
+}
+
 bool Tr2RaytracingMesh::IsGood() const
 {
 	return m_geometry && m_geometry->IsGood() && GetCurrentLodData();
@@ -267,6 +273,11 @@ bool Tr2RaytracingMesh::GetAndResetDirtyFlag()
 		return true;
 	}
 	return false;
+}
+
+void Tr2RaytracingMesh::MarkDirty()
+{
+	m_isDirty = true;
 }
 
 TriGeometryResLodData* Tr2RaytracingMesh::GetCurrentLodData() const
@@ -346,7 +357,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 	{
 		return m_blas;
 	}
-	if( lod->m_areas[m_areaIndex].m_isSkinned )
+	if( lod->m_areas[m_areaIndex].m_isSkinned  || lod->m_areas[m_areaIndex].m_isMorphed )
 	{
 		if( m_blas.IsValid() && !m_blasOutdated )
 		{
@@ -724,7 +735,13 @@ struct SkinningShaderCBuffer
 	uint32_t inVB;
 	uint32_t outVB;
 	uint32_t outVBOffset;
-	uint32_t _padding[3];
+	uint32_t morphAnimationDataOffset;
+	uint32_t morphAnimationDataCount;
+	uint32_t morphTargetPositionOffset;
+	uint32_t morphTargetStride;
+	uint32_t morphTargetSize;
+	uint32_t bakedMorphTargetPositionOffset;
+	uint32_t _padding;
 };
 }
 
@@ -750,12 +767,16 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 	}
 
-	std::vector<Tr2RaytracingMesh*> outdatedMeshes;
+	std::vector<GeometryData*> outdatedMeshes;
 	outdatedMeshes.reserve( m_geometryData.size() );
 
 	{
-		CCP_STATS_ZONE( "Tr2BoneTransformBuffer" );
-		Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( renderContext );
+		CCP_STATS_ZONE( "Prepare BoneTransformBuffer" );
+		Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( renderContext );
+	}
+	{
+		CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer" );
+		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 	}
 
 	uint32_t skinnedVertexCount = 0;
@@ -769,28 +790,28 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 		Tr2RaytracingMesh* mesh = it->mesh;
 		TriGeometryResLodData* lod = mesh->GetCurrentLodData();
-		if( lod && lod->m_areas[it->area->GetAreaIndex()].m_isSkinned )
+		if( lod && ( lod->m_areas[it->area->GetAreaIndex()].m_isSkinned  || lod->m_areas[it->area->GetAreaIndex()].m_isMorphed ) )
 		{
 			if( !mesh->GetAndResetDirtyFlag() )
 			{
 				continue;
 			}
 
-			outdatedMeshes.push_back( mesh );
+			outdatedMeshes.push_back( &(*it) );
 
 			skinnedVertexCount += lod->m_vertexCount;
 		}
+	}
+
+	if( outdatedMeshes.empty() )
+	{
+		return;
 	}
 
 	if( !m_skinnedVertices.IsValid() || m_skinnedVertices.GetDesc().count < 3 * skinnedVertexCount )
 	{
 		const uint32_t vertexSize = sizeof( float );
 		m_skinnedVertices.Create( Tr2BufferDescriptionAL( vertexSize, 3 * skinnedVertexCount, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ), nullptr, renderContext.GetPrimaryRenderContext() );
-	}
-
-	if( outdatedMeshes.empty() )
-	{
-		return;
 	}
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -852,7 +873,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 		for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
 		{
-			Tr2RaytracingMesh* mesh = *it;
+			Tr2RaytracingMesh* mesh = ( *it )->mesh;
 			TriGeometryResLodData* lod = mesh->GetCurrentLodData();
 			if( !lod )
 			{
@@ -874,7 +895,23 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			constData->inVB = lod->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap();
 			constData->outVB = m_skinnedVertices.GetUavIndexInHeap();
 			constData->outVBOffset = outOffset * 3;
+			constData->morphAnimationDataOffset = 0;
+			constData->morphAnimationDataCount = 0;
+			constData->morphTargetPositionOffset = 0;
+			constData->morphTargetStride = 0;
+			constData->morphTargetSize = 0;
+			constData->bakedMorphTargetPositionOffset = std::numeric_limits<uint32_t>::max();
+			if( lod->m_morphTargetAllocation.IsValid() )
+			{
+				auto morphOffsets = FindOffsets( lod->m_morphVertexDeclaration );
+				constData->morphAnimationDataOffset = mesh->m_morphAnimationDataOffset;
+				constData->morphAnimationDataCount = mesh->m_morphAnimationDataCount;
+				constData->morphTargetPositionOffset = ( lod->m_morphTargetAllocation.GetOffset() + sizeof( TriMorphTargetGeometryConstants ) + morphOffsets.positionOffset ) >> 2;
+				constData->morphTargetStride = lod->m_bytesPerMorphTargetVertex >> 2;
+				constData->morphTargetSize = ( lod->m_bytesPerMorphTargetVertex * vertexCount ) >> 2;
+				constData->bakedMorphTargetPositionOffset = ( *it )->bakedMorphOffset;
 
+			}
 			m_skinVerticesData.Unlock( renderContext );
 
 			renderContext.SetConstants( m_skinVerticesData, Tr2RenderContextEnum::COMPUTE_SHADER, perObjVSRegister );
@@ -980,7 +1017,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
     }
 }
 
-void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform )
+void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform, uint32_t bakedMorphOffset )
 {
 	if( !mesh.IsGoodForArea( area.GetAreaIndex() ) )
 	{
@@ -996,10 +1033,11 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.worldTransform = worldTransform;
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
+	obj.bakedMorphOffset = bakedMorphOffset;
 	m_threadLocalGeometryData.local().push_back( obj );
 }
 
-void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount )
+void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount, uint32_t bakedMorphOffset )
 {
 	if( !mesh.IsGoodForArea( area.GetAreaIndex() ) )
 	{
@@ -1016,6 +1054,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.instanceCount = uint32_t( instanceCount );
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
+	obj.bakedMorphOffset = bakedMorphOffset;
 	m_threadLocalGeometryData.local().push_back( obj );
 }
 

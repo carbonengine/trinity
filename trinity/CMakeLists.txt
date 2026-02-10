@@ -1411,6 +1411,7 @@ set(_SOURCES
     ITr2CurveSetOwner.h
     ITr2DynamicBindingOwner.h
     ITr2EffectValue.h
+    ITr2MeshMorph.h
     ITr2PickableScene.cpp
     ITr2PickableScene.h
     ITr2Renderable.h
@@ -1438,9 +1439,6 @@ set(_SOURCES
     Tr2BindingVector3_Blue.cpp
     Tr2Blitter.cpp
     Tr2Blitter.h
-    Tr2BoneTransformBuffer.cpp
-    Tr2BoneTransformBuffer.h
-    Tr2BoneTransformBuffer_Blue.cpp
     Tr2BoundingLineSet.cpp
     Tr2BoundingLineSet.h
     Tr2BoundingLineSet_Blue.cpp
@@ -1612,6 +1610,9 @@ set(_SOURCES
     Tr2RenderTarget_Blue.cpp
     Tr2RenderUtils.cpp
     Tr2RenderUtils.h
+    Tr2RingBuffer.cpp
+    Tr2RingBuffer.h
+    Tr2RingBuffer_Blue.cpp
     Tr2RotationTool.cpp
     Tr2RotationTool.h
     Tr2RotationTool_Blue.cpp

@@ -6,6 +6,25 @@
 #include "Resources/Tr2LoadPrepareFence.h"
 
 
+BLUE_DECLARE( Tr2SerializedMorphAnimation );
+
+BLUE_CLASS( Tr2SerializedMorphAnimation ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	Tr2SerializedMorphAnimation( IRoot* lockobj = NULL ) : m_weight( 0.f ) {};
+	~Tr2SerializedMorphAnimation() {};
+
+	std::string m_name;
+	float m_weight;
+};
+
+TYPEDEF_BLUECLASS( Tr2SerializedMorphAnimation );
+BLUE_DECLARE_VECTOR( Tr2SerializedMorphAnimation );
+
+
 BLUE_CLASS( Tr2Mesh ):
 	public Tr2MeshBase,
 	public IInitialize,
@@ -45,8 +64,20 @@ public:
 	// IBlueAsyncResNotifyTarget
 	virtual void ReleaseCachedData( BlueAsyncRes* p );
 	virtual void RebuildCachedData( BlueAsyncRes* p );
+
+	std::vector<std::string>* GetMorphTargetNames() const override;
+	bool IsBakedMorph( int index ) const override;
+	void SetMorphTargetWeight( const char* name, float weight ) override;
+	float GetMorphTargetWeight( const char* name ) override;
+	std::vector<bool>* GetAllBakedMorphTargetStates() const override;
+	void SetBakedMorphTarget( const char* name, bool isBaked ) override;
+	bool GetBakedMorphTarget( const char* name ) override;
+	const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& GetMorphAnimations() const override;
+
 private:
 	void InitializeGeometryResource();
+
+	void InitializeMorphTargets();
 
 	void PySetGeometryRes( TriGeometryRes* geometryRes );
 	int GetAreasCount() const;
@@ -59,6 +90,9 @@ private:
 	std::string m_geomResourceEx;
 
 	Tr2LoadPrepareFence m_loadFence;
+
+	std::unordered_map<std::string, Tr2MorphTargetAnimationData> m_morphAnimations;
+	PTr2SerializedMorphAnimationVector m_serializedMorphAnimations;
 
 protected:
 	bool m_deferGeometryLoad;
