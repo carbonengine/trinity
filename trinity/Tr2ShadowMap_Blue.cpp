@@ -3,6 +3,14 @@
 
 BLUE_DEFINE( Tr2ShadowMap );
 
+Be::VarChooser ShadowSplitModeChooser[] = {
+	{ "Static", BeCast( Tr2ShadowMap::ShadowSplitMode::STATIC ), "Staticly computed splits for the shadow map" },
+	{ "Dynamic", BeCast( Tr2ShadowMap::ShadowSplitMode::DYNAMIC ), "Dynamic splits that are generated based on near and far planes" },
+	{ "Manual", BeCast( Tr2ShadowMap::ShadowSplitMode::MANUAL ), "Manual mode for use in graphite for debugging" },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "ShadowSplitModeChooser", Tr2ShadowMap::ShadowSplitMode, ShadowSplitModeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
 const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2ShadowMap, "" )
@@ -45,6 +53,14 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 			m_debugColorSplit,
 			"If enabled color pixels based on splits",
 			Be::READWRITE | Be::NOTIFY )
+
+		MAP_ATTRIBUTE_WITH_CHOOSER(
+			"shadowSplitMode",
+			m_shadowSplitMode,
+			"Used to select shadow splits.\n"
+			":jessica-group: Split Info",
+			Be::READWRITE | Be::PERSIST | Be::ENUM | Be::NOTIFY,
+			ShadowSplitModeChooser )
 
 		MAP_ATTRIBUTE(
 			"SplitNr0",
