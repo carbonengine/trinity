@@ -614,6 +614,8 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 		return {};
 	}
 
+	shadowMap.UpdateSplitValues( Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
+
 	unsigned int shadowMapSize = shadowMap.GetShadowMapSize();
 	TriFrustum cameraFrustums[SHADOW_FRUSTUM_COUNT];
 	TriShadowOrthoFrustum shadowFrustums[SHADOW_FRUSTUM_COUNT];
@@ -3165,10 +3167,10 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 		data.ShadowMapValues[2] = shadowMap->m_perSplitData.ShadowMapValues[2];
 		data.ShadowMapValues[3] = shadowMap->m_perSplitData.ShadowMapValues[3];
 
-		data.ShadowMapDepthRanges[0] = shadowMap->m_perSplitData.CascadeDepthRanges[0];
-		data.ShadowMapDepthRanges[1] = shadowMap->m_perSplitData.CascadeDepthRanges[1];
-		data.ShadowMapDepthRanges[2] = shadowMap->m_perSplitData.CascadeDepthRanges[2];
-		data.ShadowMapDepthRanges[3] = shadowMap->m_perSplitData.CascadeDepthRanges[3];
+		for( int i = 0; i < 16; i++ )
+		{
+			data.CascadeRanges[i] = shadowMap->m_perSplitData.CascadeRanges[i];
+		}
 
 		for( int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 		{

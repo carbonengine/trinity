@@ -53,7 +53,6 @@ namespace ShadowMap
 		AxisAlignedBoundingBox aabb;
 	};
 }
-
 // --------------------------------------------------------------------------------
 // Description:
 //   This class holds a cascaded shadow map and takes care of splitting the frustum
@@ -88,24 +87,33 @@ public:
 
 	void ShouldUseDenoiser( bool value );
 
+	void UpdateSplitValues( float nearClip, float farClip );
+
 	struct PerSplitData
 	{
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
 
 		Matrix ShadowMatrixVal[SHADOW_FRUSTUM_COUNT];
 
-		Vector4 CascadeDepthRanges[SHADOW_FRUSTUM_COUNT];
+		Vector4 CascadeRanges[SHADOW_FRUSTUM_COUNT];
 
 		Vector4 SplitInfo; // x = split count
 	};
 
 	PerSplitData m_perSplitData;
 
+	enum ShadowSplitMode
+	{
+		STATIC,
+		DYNAMIC,
+		MANUAL
+	};
 	static AxisAlignedBoundingBox CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3 (&corners)[8] );
 
 private:
 
-	void SetSplitValues();
+private:
+	void SetStaticShadowSplits();
 
 	// width and height of shadow map
 	unsigned int m_size; // texture res
@@ -125,5 +133,9 @@ private:
 
 	bool m_debugColorSplit;
 	bool m_disableShimmer;
+
+	ShadowSplitMode m_shadowSplitMode;
+	float m_lastNearClip;
+	float m_lastFarClip;
 };
 TYPEDEF_BLUECLASS( Tr2ShadowMap );

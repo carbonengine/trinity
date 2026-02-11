@@ -286,7 +286,7 @@ public:
 		Vector4 SplitInfo;
 		Matrix ProjectionInverseMat;
 
-		Vector4 ShadowMapDepthRanges[4];
+		Vector4 CascadeRanges[16];
 
 		Tr2VolumetricsRenderer::FroxelPerFrameData FroxelFogData;
 	};
