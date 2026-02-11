@@ -54,13 +54,7 @@ const Be::ClassInfo* EveSOF::ExposeToBlue()
 			":param turretSet: turret set that will be modified\n"
 			":param faction: faction name"
 			)
-		MAP_METHOD_AND_WRAP(
-			"RegenerateLayout",
-			RegenerateLayout,
-			"Change the layout of the object. Used for editing\n"
-			":param spaceobject: the space object that will be modified\n"
-			":parm dna: the dna of the owner space object"
-			)
+
 
     EXPOSURE_END()
 }

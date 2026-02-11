@@ -270,7 +270,18 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 
 	// layout
 	EveChildInstancedMeshesPtr sharedMeshes;
-	SetupLayout( newObj, sharedMeshes, dna, centerOffset );
+	EveChildContainerPtr layoutContainer;
+	layoutContainer.CreateInstance();
+	layoutContainer->SetName( "layouts" );
+	layoutContainer->SetOrigin( IEveSpaceObjectChild::SOF );
+	layoutContainer->SetIsPlacementRoot( true );
+	layoutContainer->SetAlwaysOn( true );
+	SetupLayout( newObj, layoutContainer, sharedMeshes, dna, centerOffset );
+
+	if( layoutContainer->m_objects.size() != 0 )
+	{
+		newObj->AddToEffectChildrenList( layoutContainer );
+	}
 
 	// EveShip2-specific setups
 	EveShip2Ptr newShip;
@@ -3024,7 +3035,7 @@ void EveSOF::SetupLocatorSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, c
 	}
 }
 
-void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, uint32_t seedOverwrite )
+void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, uint32_t seedOverwrite )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -3056,18 +3067,6 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sh
 	{
 		return;
 	}
-
-	bool addLayoutContainer = false;
-	EveChildContainerPtr layoutContainer = BlueCastPtr( obj->GetEffectChildByName( "layouts" ) );
-	if( !layoutContainer )
-	{
-		layoutContainer.CreateInstance();
-		layoutContainer->SetName( "layouts" );
-		layoutContainer->SetOrigin( IEveSpaceObjectChild::SOF );
-		layoutContainer->SetIsPlacementRoot( true );
-		layoutContainer->SetAlwaysOn( true );
-		addLayoutContainer = true;
-	}
 	
 	// dna can have multiple layouts
 	for( size_t layoutIdx = 0; layoutIdx < dna->GetLayoutCount(); ++layoutIdx )
@@ -3097,11 +3096,6 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sh
 		{
 			TriSrand( oldSeed + seedOverwrite ); // restore seed if scrambled for parent proceduralness
 		}
-	}
-
-	if( layoutContainer->m_objects.size() != 0 && addLayoutContainer )
-	{
-		obj->AddToEffectChildrenList( layoutContainer );
 	}
 }
 
@@ -3747,7 +3741,7 @@ void EveSOF::CreatePlacement(
 	//SetupCustomMask( newObj, dna );
 	SetupLocatorSets( parent, extensionDna, placementOffsets );
 	// setup nested layout
-	SetupLayout( parent, sharedMeshes, extensionDna, placementOffsets );
+	SetupLayout( parent, layoutContainer, sharedMeshes, extensionDna, placementOffsets );
 
 	CCP_LOGNOTICE( "Creating %s extensions on %zu places", placement.isInstanced ? " instanced" : "", locators.size() );
 }
@@ -3873,63 +3867,3 @@ void EveSOF::SetupTurretMaterialFromDNA( EveTurretSet* turretSet, const char* dn
 	}
 }
 
-
-void EveSOF::RegenerateLayout( EveSpaceObject2* owner, const char* dnaString )
-{
-	// get parent ship's DNA
-	EveSOFDNAPtr parentDna;
-	parentDna.CreateInstance();
-	parentDna->Setup( dnaString, &m_dataMgr );
-	if( owner == nullptr)
-	{
-		CCP_LOGERR( "EveSOF: RegenerateLayout failed, owner is nullptr!" );
-		return;
-	
-	}
-	if( !parentDna->IsValid() )
-	{
-		CCP_LOGERR( "EveSOF: RegenerateLayout failed, wrong dna string %s!", dnaString );
-		return;
-	}
-
-	// gather all the layout placement names
-	std::vector<std::string> placmentNames;
-	std::stack<EveSOFDNAPtr> dnaStrings;	
-	dnaStrings.push( parentDna );
-
-	while( !dnaStrings.empty() )
-	{
-		auto dna = dnaStrings.top();
-		dnaStrings.pop();
-
-		for( uint32_t layoutIndex = 0; layoutIndex < dna->GetLayoutCount(); ++layoutIndex )
-		{
-			auto layout = dna->GetLayoutData( layoutIndex );
-
-			for( auto placement : layout->placements )
-			{
-				auto existingChild = owner->GetEffectChildByName( placement.name.c_str() );
-				if( existingChild )
-				{
-					owner->RemoveFromEffectChildrenList( existingChild );
-				}
-				EveSOFDNAPtr placementDna;
-				placementDna.CreateInstance();
-				placementDna->Setup( layout->name, placement.descriptor, dna, &m_dataMgr );
-				if( placementDna->IsValid() && placementDna->GetLayoutCount() > 0 )
-				{
-					dnaStrings.push( placementDna );	
-				}
-			}
-		}
-	}
-	
-	auto offsets = std::vector<Matrix>( 1, IdentityMatrix() );
-
-	EveChildInstancedMeshesPtr sharedMeshes = BlueCastPtr( owner->GetEffectChildByName( "SharedInstancedMeshes" ) );
-	
-	// because the layout adds locatorsets we need to recreate them
-	owner->ClearLocatorSets();
-	SetupLocatorSets( owner, parentDna, offsets );
-	SetupLayout( owner, sharedMeshes, parentDna, offsets );
-}
