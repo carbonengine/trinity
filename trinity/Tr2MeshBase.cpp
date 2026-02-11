@@ -247,25 +247,60 @@ bool Tr2MeshBase::BindToRig( const std::string* boneList, const int numBones, Tr
 	return true;
 }
 
-CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms ) const
+CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, const int32_t* meshBindingIndices, size_t boneCount, const Tr2MorphTargetAnimationData* morphTargets, size_t morphTargetsCount ) const
 {
 	if( boneTransforms )
 	{
 		if( auto geometry = GetGeometryResource() )
 		{
 			TriGeometryResMeshData* meshData = geometry->GetMeshData( m_meshIndex );
-			if( meshData && !m_jointMappingAnimRig.empty() )
+			TriGeometryResLodData* lod = geometry->GetMeshLod( m_meshIndex, 0 );
+
+			if ( !m_jointMappingAnimRig.empty() )
+			{
+				// for old character stuff
+				boneCount = m_jointMappingAnimRig.size();
+				meshBindingIndices = (const int32_t*)m_jointMappingAnimRig.data();
+			}
+
+			if( meshData && boneCount > 0 )
 			{
 				auto aabb = CcpMath::AxisAlignedBox();
-				for( size_t i = 0; i < m_jointMappingAnimRig.size(); ++i )
+				for( size_t i = 0; i < boneCount; ++i )
 				{
 					auto& joint = meshData->m_jointBindings[i];
-					auto& m = boneTransforms[m_jointMappingAnimRig[i]];
+					auto& m = boneTransforms[meshBindingIndices[i]];
+					
+					Vector3 rightMin = m.GetX() * joint.m_obbMin.x;
+					Vector3 upMin = m.GetY() * joint.m_obbMin.y;
+					Vector3 forwardMin = m.GetZ() * joint.m_obbMin.z;
+					Vector3 rightMax = m.GetX() * joint.m_obbMax.x;
+					Vector3 upMax = m.GetY() * joint.m_obbMax.y;
+					Vector3 forwardMax = m.GetZ() * joint.m_obbMax.z;
+					Vector3 translation = m.GetTranslation();
 
-					CcpMath::AxisAlignedBox( joint.m_obbMin, joint.m_obbMax ).EnumerateVertices( [&]( const Vector3& vtx ) {
-						aabb.IncludePoint( TransformCoord( vtx, m ) );
-					} );
+					Vector3 a;
+					a.x = min( rightMin.x, rightMax.x ) + min( upMin.x, upMax.x ) + min( forwardMin.x, forwardMax.x ) + translation.x;
+					a.y = min( rightMin.y, rightMax.y ) + min( upMin.y, upMax.y ) + min( forwardMin.y, forwardMax.y ) + translation.y;
+					a.z = min( rightMin.z, rightMax.z ) + min( upMin.z, upMax.z ) + min( forwardMin.z, forwardMax.z ) + translation.z;
+					aabb.IncludePoint( a );
+
+					Vector3 b;
+					b.x = max( rightMin.x, rightMax.x ) + max( upMin.x, upMax.x ) + max( forwardMin.x, forwardMax.x ) + translation.x;
+					b.y = max( rightMin.y, rightMax.y ) + max( upMin.y, upMax.y ) + max( forwardMin.y, forwardMax.y ) + translation.y;
+					b.z = max( rightMin.z, rightMax.z ) + max( upMin.z, upMax.z ) + max( forwardMin.z, forwardMax.z ) + translation.z;
+					aabb.IncludePoint( b );
 				}
+
+				float morphDeformation = 0.f;
+				for( size_t i = 0; i < morphTargetsCount; i++ )
+				{
+					auto morph = morphTargets[i];
+					CCP_ASSERT_M( morph.m_index < lod->m_morphTargetDeformationAmounts.size(), "Tr2MeshBase::GetBounds: morph.m_index is too large!" );
+					morphDeformation += lod->m_morphTargetDeformationAmounts[morph.m_index] * morph.m_weight;
+				}
+				aabb.Grow( morphDeformation );
+
 				return m_boundsAdjustment.AdjustBounds( aabb );
 			}
 		}
@@ -548,11 +583,11 @@ void Tr2MeshBase::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Mesh Bounds" );
 }
 
-void Tr2MeshBase::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer )
+void Tr2MeshBase::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms, const int32_t* meshBindingIndices, size_t boneCount, const Tr2MorphTargetAnimationData* morphTargets, size_t morphTargetsCount )
 {
 	if( renderer.HasOption( this, "Mesh Bounds" ) )
 	{
-		auto bounds = GetBounds( nullptr );
+		auto bounds = GetBounds( boneTransforms, meshBindingIndices, boneCount, morphTargets, morphTargetsCount );
 		renderer.DrawBox( this, worldTransform, bounds.m_min, bounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xffaa8800, 0x22aa8800 ) );
 	}
 }

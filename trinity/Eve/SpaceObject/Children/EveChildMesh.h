@@ -18,15 +18,44 @@
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachment.h"
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachmentOwner.h"
 #include "ITr2Renderable.h"
+#include "ITr2MeshMorph.h"
 #include "Resources/Tr2LodResource.h"
 #include "TransformModifiers/IEveChildTransformModifier.h"
 #include "Tr2DebugRenderer.h"
 #include "Raytracing/Tr2RaytracingManager.h"
+#include "../Tr2RingBuffer.h"
+#include "Tr2SuballocatedBuffer.h"
 
 class EveUpdateContext;
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2MeshBase );
 BLUE_DECLARE( EveSpaceObject2 );
+BLUE_DECLARE( Tr2GpuBufferWrapper );
+
+extern Tr2SuballocatedBuffer g_bakedMorphTargetBuffer;
+
+struct MergeMorphsConstantBuffer
+{
+	uint32_t morphTargetVertexDataOffset;
+	uint32_t morphTargetAnimationDataOffset;
+	uint32_t activeMorphTargetsCount;
+	uint32_t bakedMorphTargetVertexDataOffset;
+	uint32_t vertexDataOffset;
+	uint32_t vertexDataStride;
+	uint32_t vertexDataPositionOffset;
+	uint32_t vertexDataTangentOffset;
+	uint32_t vertexCount;
+	uint32_t padding1;
+	uint32_t padding2;
+	uint32_t padding3;
+};
+
+enum class MorphTargetAnimationFilter : uint8_t
+{
+	RUNTIME_EVALUATED,
+	BAKED,
+	ALL
+};
 
 BLUE_CLASS( EveChildMesh ) :
 	public IEveSpaceObjectChild,
@@ -41,8 +70,10 @@ BLUE_CLASS( EveChildMesh ) :
 	public IEveSpaceObjectDecalOwner,
 	public IEveSpaceObjectAttachmentOwner,
 	public ITr2LightOwner,
-	public ITr2Pickable,
-	public IEveShadowCaster
+	public IEveShadowCaster,
+	public Tr2DeviceResource,
+	public ITr2MeshMorph,
+	public ITr2Pickable
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -113,9 +144,12 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, Vector3 position, float radius, Tr2RenderReason renderReason ) const override;
 	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
 	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
+	void MarkRtDirty() override;
+	bool IsShadowCastingDirty() const override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
@@ -142,15 +176,38 @@ public:
 
 	void SetInstanceTransforms( std::vector<Matrix> instances );
 
+	std::vector<std::string> GetMorphTargetNames() const;
+	void SetMorphTargetWeight( const char* name, float weight );
+	float GetMorphTargetWeight( const char* name );
+
+	std::vector<bool> GetAllBakedMorphTargetStates() const;
+	void SetBakedMorphTarget( const char* name, bool isBaked );
+	bool GetBakedMorphTarget( const char* name );
+
+	void BakeMorphs();
+	void UnbakeMorphs();
+	bool IsMeshBaked();
+
+	bool UpdateMeshMorphs( Tr2RenderContext & renderContext ) override;
+
+	bool IsMorphsBaked() const;
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 
 protected:
+	virtual void ReleaseResources( TriStorage s );
+	virtual bool OnPrepareResources();
+
 	void InitializeAnimation();
 	bool ShouldReflect() const;
 
 	bool DisplayDecals() const;
 
+	bool PrepareMorphBuffers( Tr2RenderContext & renderContext );
+
 	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
+	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
+	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets( MorphTargetAnimationFilter filter );
+	void UpdateMorphAnimationBuffer();
 
 	// general data
 	BlueSharedString m_name;
@@ -174,7 +231,8 @@ protected:
 	float m_sortValueScale;
 
 	// per-object data
-	Tr2BoneTransformOffsets m_boneOffsets;
+	Tr2RingBufferOffsets m_boneOffsets;
+	Tr2RingBufferOffsets m_morphTargetOffsets;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataVs;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataPs;
 	EveSpaceObjectPSData m_psData;
@@ -188,6 +246,8 @@ protected:
 	bool m_instancesVisible;
 	bool m_castShadow;
 	bool m_updateAnimation;
+	bool m_bakeMorphs;
+	bool m_dirtyRtMesh;
 
 	float m_activationStrength;
 
@@ -203,9 +263,23 @@ protected:
 	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 	std::vector<Matrix> m_instanceTransforms;
-	mutable std::vector<Tr2RaytracingGeometry::Float4x3> m_instanceWorldTransforms;
+	mutable std::vector<Float4x3> m_instanceWorldTransforms;
 	unsigned int m_instanceCount;
 
+	std::vector<Tr2MorphTargetAnimationData> m_morphAnimationBuffer;
+	std::unordered_map<std::string, Tr2MorphTargetAnimationData> m_morphAnimationData;
+	Tr2SuballocatedBuffer::Allocation m_bakedMorphAllocation;
+	Tr2EffectPtr m_mergeMorphsEffect;
+	Tr2ConstantBufferAL m_mergeMorphsConstantBuffer;
+	bool m_isMorphsBaked;
+	struct
+	{
+		uint32_t m_runtimeEvaluatedOffset;
+		uint32_t m_runtimeEvaluatedCount;
+		uint32_t m_bakedOffset;
+		uint32_t m_bakedCount;
+		uint32_t m_allCount;
+	} m_morphAnimationOffsets;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );

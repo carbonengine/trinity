@@ -41,7 +41,6 @@ namespace Tr2GrannyAnimationUtils
 };
 
 
-
 static const int MAX_JOINT_COUNT = 254;
 
 Tr2GrannyAnimation::Tr2GrannyAnimation( IRoot* lockobj ) :
@@ -914,18 +913,18 @@ void Tr2GrannyAnimation::ApplyBoneOffsets(unsigned i)
 	}
 }
 
-void Tr2GrannyAnimation::PrePhysicsAnimation( Be::Time time, const Matrix &modelTransform )
+void Tr2GrannyAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& modelTransform )
 {
 	if( IsInitialized() && m_animationEnabled )
 	{
 		float animationTime = GetAnimationTime();
 
-		// TODO: Should this be done here? Seems wasteful to sample animations and build the pose
-		// for objects that are off-screen.
-		m_baseLayer.SampleAnimation( animationTime, m_localPose, m_eventListener );
+		m_morphAnimations.clear();
+
+		m_baseLayer.SampleAnimation( animationTime, m_localPose, m_eventListener, m_morphAnimations );
 		for( auto it = m_animationLayers.begin(); it != m_animationLayers.end(); it++ )
 		{
-			it->second.SampleAnimation( animationTime, m_compositePose, m_localPose, m_eventListener, m_additiveMode );
+			it->second.SampleAnimation( animationTime, m_compositePose, m_localPose, m_eventListener, m_morphAnimations, m_additiveMode );
 		}
 
 		if ( m_aimingBone )
@@ -1441,6 +1440,10 @@ void Tr2GrannyAnimation::RemoveNotifyTarget( IBlueAsyncResNotifyTarget* p )
 	m_notifyTargets.erase( remove( begin( m_notifyTargets ), end( m_notifyTargets ), p ), end( m_notifyTargets ) );
 }
 
+const std::unordered_map<std::string, float>& Tr2GrannyAnimation::GetMorphAnimations() const
+{
+	return m_morphAnimations;
+}
 
 Tr2AnimationMeshBinding::Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex ) :
 	m_animation( animationUpdater ),
@@ -1530,7 +1533,7 @@ void Tr2AnimationMeshBinding::CreateBinding()
 		{
 			return;
 		}
-		if( int( m_meshIndex ) >= fi->MeshCount )
+		if( int( m_meshIndex ) >= fi->MeshCount || int( m_meshIndex ) < 0 )
 		{
 			return;
 		}
@@ -1549,6 +1552,7 @@ void Tr2AnimationMeshBinding::CreateBinding()
 				}
 			}
 		}
+
 		m_meshBinding.reset( GrannyNewMeshBinding( fi->Meshes[m_meshIndex], meshSkeleton, m_animation->m_skeleton ) );
 		if( m_meshBinding )
 		{

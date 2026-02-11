@@ -4,6 +4,7 @@
 
 
 Tr2Mesh::Tr2Mesh( IRoot* lockobj ) :
+	PARENTLOCK( m_serializedMorphAnimations ),
 	m_deferGeometryLoad( false )
 {
 }
@@ -45,6 +46,10 @@ bool Tr2Mesh::OnModified( Be::Var* value )
 		{
 			Initialize();
 		}
+	}
+	else if ( IsMatch(value, m_meshIndex) )
+	{
+		InitializeMorphTargets();
 	}
 
 	return true;
@@ -138,11 +143,57 @@ void Tr2Mesh::InitializeGeometryResource()
 	SetGeometryRes( res );
 }
 
+void Tr2Mesh::InitializeMorphTargets()
+{
+	m_morphAnimations.clear();
+	auto names = GetMorphTargetNames();
+
+	if( names )
+	{
+		std::vector<std::string>& morphTargetNames = *names;
+
+		bool clearSerializedData = false;
+		if ( morphTargetNames.size() == m_serializedMorphAnimations.size() )
+		{
+			for( int32_t i = 0; i < morphTargetNames.size(); i++ )
+			{
+				if( morphTargetNames[i] != m_serializedMorphAnimations[i]->m_name )
+				{
+					clearSerializedData = true;
+					break;
+				}
+			}
+		}
+		else
+		{
+			clearSerializedData = true;
+		}
+		if ( clearSerializedData )
+		{
+			m_serializedMorphAnimations.Clear();
+			for( int32_t i = 0; i < morphTargetNames.size(); i++ )
+			{
+				Tr2SerializedMorphAnimationPtr serializedWeight;
+				serializedWeight.CreateInstance();
+				serializedWeight->m_name = morphTargetNames[i];
+				serializedWeight->m_weight = 0.f;
+				m_serializedMorphAnimations.Append( serializedWeight );
+			}
+		}
+		
+		for( int32_t i = 0; i < morphTargetNames.size(); i++ )
+		{
+			m_morphAnimations[morphTargetNames[i]] = Tr2MorphTargetAnimationData( i, m_serializedMorphAnimations[i]->m_weight );
+		}
+	}
+}
+
 void Tr2Mesh::RebuildCachedData( BlueAsyncRes* p )
 {
 	if( p == m_geometryResource || p == m_lowResGeometryResource )
 	{
 		CacheBounds();
+		InitializeMorphTargets();
 	}
 	if( p == m_geometryResource )
 	{
@@ -189,4 +240,136 @@ void Tr2Mesh::ReverseIndexBuffers()
 	{
 		m_lowResGeometryResource->RequestReversedIndexBuffers();
 	}
+}
+
+std::vector<std::string>* Tr2Mesh::GetMorphTargetNames() const
+{
+	if( !GetGeometryResource() )
+	{
+		return nullptr;
+	}
+
+	auto mesh = GetGeometryResource()->GetMeshLod( GetMeshIndex(), 0 );
+
+	if( !mesh )
+	{
+		return nullptr;
+	}
+
+	return &mesh->m_morphTargetNames;
+}
+
+bool Tr2Mesh::IsBakedMorph( int index ) const
+{
+	if( !GetGeometryResource() )
+	{
+		return false;
+	}
+
+	auto mesh = GetGeometryResource()->GetMeshLod( GetMeshIndex(), 0 );
+
+	if( !mesh )
+	{
+		return false;
+	}
+
+	return mesh->m_isBakedMorphTarget[index];
+}
+
+void Tr2Mesh::SetMorphTargetWeight( const char* name, float weight )
+{
+	auto anim = m_morphAnimations.find( name );
+
+	if( anim != m_morphAnimations.end() )
+	{
+		anim->second.m_weight = weight;
+		m_serializedMorphAnimations[anim->second.m_index]->m_weight = weight;
+	}
+	else
+	{
+		CCP_LOGWARN( "Tr2Mesh::SetMorphTargetWeight cannot find %s", name );
+	}
+}
+
+float Tr2Mesh::GetMorphTargetWeight( const char* name )
+{
+	auto anim = m_morphAnimations.find( name );
+
+	if( anim != m_morphAnimations.end() )
+	{
+		return anim->second.m_weight;
+	}
+	else
+	{
+		CCP_LOGWARN( "Tr2Mesh::GetMorphTargetWeight cannot find %s", name );
+	}
+	return 0.f;
+}
+
+void Tr2Mesh::SetBakedMorphTarget( const char* name, bool isBaked )
+{
+	if( !GetGeometryResource() )
+	{
+		return;
+	}
+
+	auto mesh = GetGeometryResource()->GetMeshLod( GetMeshIndex(), 0 );
+	if( !mesh )
+	{
+		return;
+	}
+
+	for( int i = 0; i < mesh->m_morphTargetNames.size(); i++ )
+	{
+		if(mesh->m_morphTargetNames[i] == name)
+		{
+			mesh->m_isBakedMorphTarget[i] = isBaked;
+			return;
+		}
+	}
+}
+
+bool Tr2Mesh::GetBakedMorphTarget( const char* name )
+{
+	if( !GetGeometryResource() )
+	{
+		return false;
+	}
+
+	auto mesh = GetGeometryResource()->GetMeshLod( GetMeshIndex(), 0 );
+	if( !mesh )
+	{
+		return false;
+	}
+
+	for( int i = 0; i < mesh->m_morphTargetNames.size(); i++ )
+	{
+		if( mesh->m_morphTargetNames[i] == name )
+		{
+			return mesh->m_isBakedMorphTarget[i];
+		}
+	}
+	return false;
+}
+
+std::vector<bool>* Tr2Mesh::GetAllBakedMorphTargetStates() const
+{
+	if( !GetGeometryResource() )
+	{
+		return nullptr;
+	}
+
+	auto mesh = GetGeometryResource()->GetMeshLod( GetMeshIndex(), 0 );
+
+	if( !mesh )
+	{
+		return nullptr;
+	}
+
+	return &mesh->m_isBakedMorphTarget;
+}
+
+const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& Tr2Mesh::GetMorphAnimations() const
+{
+	return m_morphAnimations;
 }

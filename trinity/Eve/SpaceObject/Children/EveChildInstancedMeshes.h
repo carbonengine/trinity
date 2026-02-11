@@ -119,7 +119,7 @@ private:
 			Tr2RaytracingMesh* rtMesh = nullptr;
 			std::vector<RayTracingArea> rtMeshAreas;
 
-			mutable std::vector<Tr2RaytracingGeometry::Float4x3> instanceWorldTransforms;
+			mutable std::vector<Float4x3> instanceWorldTransforms;
 			float maxScreenSize = 0.0f;
 		};
 		std::vector<RayTracingMesh> rtMeshes;

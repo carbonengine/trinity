@@ -26,6 +26,7 @@
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
 #include "PostProcess/ITr2PostProcessOwner.h"
 #include "../Tr2VolumetricsRenderer.h"
+#include "../Tr2RuntimeGpuBuffer.h"
 
 class TriProjection;
 class TriView;
@@ -389,6 +390,10 @@ public:
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;
 
+	void GetLightMatrices( const Tr2LightManager::PerLightData& lightData, Matrix& projection, Matrix& view );
+
+	void ProcessOutdatedRTAnimations( Tr2RenderContext & renderContext );
+
 protected:
 	bool m_display;
 	bool m_update;
@@ -458,6 +463,12 @@ protected:
 	Tr2Variable m_envMapTransformVar;
 	Tr2Variable m_reflectionMapTransformVar;
 	Tr2Variable m_suncVecVar;
+
+	CTr2RuntimeGpuBuffer m_sharedIndexVertexBufferWrapper;
+	Tr2Variable m_sharedIndexVertexBufferVar;
+	
+	CTr2RuntimeGpuBuffer m_bakedMorphTargetBufferWrapper;
+	Tr2Variable m_bakedMorphTargetBufferVar;
 		
 	Tr2Variable m_depthMapVar;
 

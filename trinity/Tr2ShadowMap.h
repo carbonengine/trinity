@@ -18,6 +18,21 @@
 const uint16_t SHADOW_MAP_SIZE = 2048;
 const uint8_t SHADOW_FRUSTUM_COUNT = 16;
 
+const float MIN_SHADOW_SPLIT = 25.f;
+const float MAX_SHADOW_SPLIT = 1228800.f;
+
+const Vector3 DX_UNIT_CUBE[8] = {
+	//The unit cube in DirectX is from( -1, -1, 0 ) to ( 1, 1, 1 )
+	Vector3( -1, -1, 0 ), // vertex 0
+	Vector3( -1, 1, 0 ), // vertex 1
+	Vector3( 1, 1, 0 ), // etc..
+	Vector3( 1, -1, 0 ),
+	Vector3( -1, -1, 1 ),
+	Vector3( -1, 1, 1 ),
+	Vector3( 1, 1, 1 ),
+	Vector3( 1, -1, 1 )
+};
+
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( Tr2GpuStructuredBuffer );
@@ -93,6 +108,9 @@ public:
 		DYNAMIC,
 		MANUAL
 	};
+	static AxisAlignedBoundingBox CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3 (&corners)[8] );
+
+private:
 
 private:
 	void SetStaticShadowSplits();

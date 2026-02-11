@@ -120,7 +120,7 @@ bool Tr2SuballocatedBuffer::OnPrepareResources()
 	uint32_t bufferSize = static_cast<uint32_t>(m_allocator.GetCurrentSize());
 
 	Tr2BufferAL buffer;
-	Tr2BufferDescriptionAL desc( 1, bufferSize, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
+	Tr2BufferDescriptionAL desc( 4, bufferSize / 4, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
 	buffer.Create( desc, nullptr, renderContext );
 
 	m_buffer = buffer;
@@ -184,7 +184,10 @@ ALResult Tr2SuballocatedBuffer::ReadBuffer( std::unique_ptr<uint8_t[]>& dest, ui
 	return S_OK;
 }
 
-
+const Tr2BufferAL& Tr2SuballocatedBuffer::GetBuffer() const
+{
+	return m_buffer;
+}
 
 Tr2SuballocatedBuffer::Allocation::~Allocation()
 {
@@ -227,6 +230,12 @@ bool Tr2SuballocatedBuffer::Allocation::IsValid() const
 void Tr2SuballocatedBuffer::Allocation::Update( const void* data, Tr2RenderContextAL& renderContext )
 {
 	m_parent->m_buffer.UpdateBuffer( GetOffset(), GetSize(), data, renderContext );
+}
+
+void Tr2SuballocatedBuffer::Allocation::Update( const void* data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+{
+	CCP_ASSERT_M( GetSize() - offset >= size, "Writeing data outside the allocated bounds of the suballocation buffer" );
+	m_parent->m_buffer.UpdateBuffer( GetOffset() + offset, size, data, renderContext );
 }
 
 ALResult Tr2SuballocatedBuffer::Allocation::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )

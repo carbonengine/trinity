@@ -5,6 +5,19 @@
 #include "Resources/TriGeometryRes.h"
 #include "TriConstants.h"
 
+
+
+BLUE_DEFINE( Tr2SerializedMorphAnimation );
+const Be::ClassInfo* Tr2SerializedMorphAnimation::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( Tr2SerializedMorphAnimation, "" )
+		MAP_INTERFACE( Tr2SerializedMorphAnimation )
+		MAP_ATTRIBUTE( "name", m_name, "", Be::PERSISTONLY )
+		MAP_ATTRIBUTE( "weight", m_weight, "", Be::PERSISTONLY )
+	EXPOSURE_END()
+}
+
+
 BLUE_DEFINE( Tr2Mesh );
 
 #if BLUE_WITH_PYTHON
@@ -80,6 +93,8 @@ const Be::ClassInfo* Tr2Mesh::ExposeToBlue()
 			":rtype: None | List"
 		);
 		MAP_METHOD_AND_WRAP( "GetAreasCount", GetAreasCount, "" );
+
+		MAP_ATTRIBUTE( "serializedMorphAnimations", m_serializedMorphAnimations, "", Be::PERSISTONLY )
 
     EXPOSURE_CHAINTO( Tr2MeshBase )
 }

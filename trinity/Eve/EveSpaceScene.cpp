@@ -37,7 +37,7 @@
 #include "Tr2SSAO.h"
 #include "Tr2SSSSS.h"
 #include "Lights/ITr2LightOwner.h"
-#include "../Tr2BoneTransformBuffer.h"
+#include "../Tr2RingBuffer.h"
 #include "../Tr2VolumetricsRenderer.h"
 #include "../Tr2GpuStructuredBuffer.h"
 #include <ScopedBlockTrap.h>
@@ -193,6 +193,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_envMapTransformVar( "EnvMapTransform", IdentityMatrix() ),
 	m_reflectionMapTransformVar( "ReflectionMapTransform", IdentityMatrix() ),
 	m_suncVecVar( "SunVec", Vector3( 0.0f, 0.0f, 1.0f ) ),
+	m_sharedIndexVertexBufferVar( "SharedIndexVertexBuffer", (ITr2GpuBuffer*)nullptr ),
+	m_bakedMorphTargetBufferVar( "BakedMorphTargetBuffer", (ITr2GpuBuffer*)nullptr ),
 	m_nebulaIntensity( 1.f ),
 	m_currentNebulaIntensity( 1.f ),
 	m_backgroundReflectionIntensity( 1.f ),
@@ -252,7 +254,10 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_envMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneEnvMap", (ITr2TextureProvider*)nullptr );
 	m_staticEnvMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneStaticEnvMap", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
-	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2BoneTransformBuffer::GetInstance() );
+	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2RingBuffer::GetInstance<Float4x3>() );
+	Tr2RingBuffer::GetInstance<Float4x3>().SetName( "BoneTransformsBuffer" );
+	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>() );
+	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().SetName( "MorphTargetAnimationsBuffer" );
 
 	// Picking batches
 	m_pickingBatches = CCP_NEW( "EveSpaceScene/m_pickingBatches" ) TriRenderBatchAccumulator<>( allocator );
@@ -303,6 +308,8 @@ IRoot* EveSpaceScene::GetCameraAttachments() const
 
 EveSpaceScene::~EveSpaceScene()
 {
+	ClearVariableStore();
+
 	SetShLightingManager( nullptr );
 	for( auto it = m_primaryBatches.begin(); it != m_primaryBatches.end(); ++it )
 	{
@@ -425,8 +432,9 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		auto frame = renderContext.GetRecordingFrameNumber();
-		Tr2BoneTransformBuffer::GetInstance().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
-
+		Tr2RingBuffer::GetInstance<Float4x3>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
+		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
+		
 		if( frame == m_lastUpdateFrame )
 		{
 			// already updated this frame
@@ -1533,11 +1541,12 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 	CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
 	m_rtManager->GetGeometry().BeginSceneUpdate();
 
+	ProcessOutdatedRTAnimations( renderContext );
+
 	auto& shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 	Tr2ParallelDo( begin( shadowCasters ), end( shadowCasters ), [&]( auto caster ) {
 		caster->PushRtGeometry( *m_rtManager );
 	} );
-
 
 	Tr2RtShaderTableDescriptionAL* shaderTableDescs[3];
 	Tr2RaytracingPipelineStateManager* pipelineManagers[3];
@@ -2197,6 +2206,25 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 
 	renderContext.m_esm.BeginManagedRendering();
 
+	{ // Update mesh morphs
+		auto& meshMorphs = m_componentRegistry->GetComponents<ITr2MeshMorph>();
+		if( meshMorphs.size() > 0 )
+		{
+			bool cleanUpMorphTasks = true;
+			for( auto& meshMorph : meshMorphs )
+			{
+				if( !meshMorph->UpdateMeshMorphs( renderContext ) )
+				{
+					cleanUpMorphTasks = false;
+				}
+			}
+			if( cleanUpMorphTasks )
+			{
+				m_componentRegistry->Clear<ITr2MeshMorph>();
+			}
+		}
+	}
+
 	// Render to depth map
 	{
 		renderContext.AddGpuMarker( __FUNCTION__ );
@@ -2564,22 +2592,11 @@ void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, co
 	else
 	{
 		// spotlight
-		// we flip near and far plane for reverse z
-		float zn = lightData.radius;
-		float zf = lightData.radius / 1000.f;
-		float aspect = 1.f;
-		float d = float( lightData.projectionPlaneDistance ); 
+		Matrix projection;
+		Matrix view;
 
-		Matrix projection = IdentityMatrix();
-		projection.m[0][0] = d / aspect;
-		projection.m[1][1] = d;
-		projection.m[2][2] = zf / ( zn - zf );
-		projection.m[2][3] = -1.0f;
-		projection.m[3][2] = ( zf * zn ) / ( zn - zf );
-		projection.m[3][3] = 0.0f;
+		GetLightMatrices( lightData, projection, view );
 
-		Vector3 up = abs( lightData.direction.y ) < .7f ? Vector3( 0.f, 1.f, 0.f ) : Vector3( 1.f, 0.f, 0.f );
-		Matrix view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
 		uint32_t shadowMapScale;
 		uint32_t shadowMapOffsetX;
 		uint32_t shadowMapOffsetY;
@@ -2976,10 +2993,18 @@ void EveSpaceScene::UpdateVariableStore()
 	{
 		m_volumetricsRenderer->UpdateVariableStore();
 	}
+
+	m_sharedIndexVertexBufferWrapper.SetGpuBuffer( g_sharedBuffer.GetBuffer() );
+	m_sharedIndexVertexBufferVar = &m_sharedIndexVertexBufferWrapper;
+
+	m_bakedMorphTargetBufferWrapper.SetGpuBuffer( g_bakedMorphTargetBuffer.GetBuffer() );
+	m_bakedMorphTargetBufferVar = &m_bakedMorphTargetBufferWrapper;
 }
 
 void EveSpaceScene::ClearVariableStore()
 {
+	m_sharedIndexVertexBufferVar.Clear();
+	m_bakedMorphTargetBufferVar.Clear();
 	m_envMap1Var.Clear();
 	m_envMap2Var.Clear();
 	m_reflectionMapVar.Clear();
@@ -4025,6 +4050,130 @@ void EveSpaceScene::EnableShadowsInReflections( bool enable )
 bool EveSpaceScene::IsShadowsInReflectionsEnabled() const
 {
 	return m_reflectionShadowMap != nullptr;
+}
+
+void EveSpaceScene::GetLightMatrices( const Tr2LightManager::PerLightData& lightData, Matrix& projection, Matrix& view )
+{
+	// we flip near and far plane for reverse z
+	float zn = lightData.radius;
+	float zf = lightData.radius / 1000.f;
+	float aspect = 1.f;
+	float d = float( lightData.projectionPlaneDistance );
+
+	projection = IdentityMatrix();
+	projection.m[0][0] = d / aspect;
+	projection.m[1][1] = d;
+	projection.m[2][2] = zf / ( zn - zf );
+	projection.m[2][3] = -1.0f;
+	projection.m[3][2] = ( zf * zn ) / ( zn - zf );
+	projection.m[3][3] = 0.0f;
+
+	Vector3 up = abs( lightData.direction.y ) < .7f ? Vector3( 0.f, 1.f, 0.f ) : Vector3( 1.f, 0.f, 0.f );
+	view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
+}
+
+void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext )
+{
+	TriFrustumOrtho sunShadowFrustum;
+	auto sunDir = m_sunData.DirWorld;
+
+	{ // Process Sun light
+		// Let's compute left, right, top, bottom of the frustum divided by the near clipping plane. We need this for SetupShadowSplit.
+		Matrix cameraProjection = Tr2Renderer::GetProjectionTransform();
+		float rightMinusLeft = 2.f / cameraProjection._11; //	= ( r - l ) / zn
+		float bottomMinusTop = 2.f / -cameraProjection._22; //	= ( b - t ) / zn
+		float left = ( cameraProjection._31 - 1.f ) / 2.f * rightMinusLeft; //	= l / zn
+		float top = ( -cameraProjection._32 - 1.f ) / 2.f * bottomMinusTop; //	= t / zn
+		float right = rightMinusLeft + left; //	= r / zn
+		float bottom = bottomMinusTop + top; //	= b / zn
+
+		// Make a projection matrix that fills
+		auto sunProjection = PerspectiveOffCenterMatrix( left, right, bottom, top, MIN_SHADOW_SPLIT, MAX_SHADOW_SPLIT );
+
+		// we can apply the inverse of the view and projection matrices on the corner points of the unit cube to get the frustum corners in world space
+		Matrix invViewProj = Inverse( sunProjection ) * Tr2Renderer::GetInverseViewTransform();
+
+		// Find light view
+		Matrix lightView = Inverse( OrthoNormalBasisZ( -m_sunData.DirWorld ) );
+
+		Vector3 corners[8];
+
+		AxisAlignedBoundingBox aabb = Tr2ShadowMap::CalculateAABB( sunProjection, Tr2Renderer::GetInverseViewTransform(), lightView, corners );
+
+		// create shadow frustum out from lightView, aabb.min, aabb.max
+		sunShadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
+	}
+
+	std::vector<const Tr2LightManager::PerLightData*> pointsLightDatas;
+	std::vector<TriFrustum> spotLightFrustums;
+	
+	// Process other lights
+	if( auto lightManager = Tr2LightManager::GetInstance() )
+	{
+		if( lightManager->GetShadowCastingLights().size() > 0 )
+		{
+			for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
+			{
+				const Tr2LightManager::PerLightData* lightData = &lightManager->GetLightData( lightIndex );
+
+				// Point light
+				if( lightData->innerAngle <= 0.0f )
+				{
+					pointsLightDatas.push_back( lightData );
+				}
+				else // Spot light
+				{
+					Matrix projection;
+					Matrix view;
+					GetLightMatrices( *lightData, projection, view );
+
+					TriFrustum shadowFrustum;
+					shadowFrustum.DeriveFrustum( &view, &lightData->position, &projection, renderContext.m_esm.GetViewport() );
+					spotLightFrustums.push_back( shadowFrustum );
+				}
+			}
+		}
+	}
+
+	// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
+	m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&]( IEveShadowCaster* caster ) -> void 
+	{
+		if( caster->IsShadowCastingDirty() )
+		{
+			return;
+		}
+
+		{
+			float radius;
+			if( caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowOrthoFrustum( sunShadowFrustum, SHADOW_MAP_SIZE, sunDir ), TR2RENDERREASON_NORMAL, radius ) )
+			{
+				caster->MarkRtDirty();
+				return;
+			}
+		}
+
+		
+		for( auto lightData : pointsLightDatas )
+		{
+			if( caster->IsCastingShadow( m_updateContext.GetFrustum(), lightData->position, lightData->radius, TR2RENDERREASON_NORMAL ) )
+			{
+				caster->MarkRtDirty();
+				return;
+			}
+		}
+		
+		for( const auto& shadowFrustum : spotLightFrustums )
+		{
+			float sizeInShadow = 0.0f;
+			caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowFrustum( shadowFrustum ), TR2RENDERREASON_NORMAL, sizeInShadow );
+			// special threshold check
+			if( sizeInShadow > 5.0f )
+			{
+				caster->MarkRtDirty();
+				return;
+			}
+		}
+	} );
 }
 
 void RegisterWithVariableStore( const EveSpaceScene::ShadowResources& shadowResources, Tr2GpuResourcePool& gpuResourcePool )

@@ -36,7 +36,7 @@
 #include "Lights/ITr2LightOwner.h"
 #include "Tr2GrannyAnimation.h"
 #include "Raytracing/Tr2RaytracingManager.h"
-#include "Tr2BoneTransformBuffer.h"
+#include "Tr2RingBuffer.h"
 
 
 // consts
@@ -105,6 +105,10 @@ struct EveSpaceObjectVSData
 	Matrix customMaskMatrix[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskData[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	uint32_t boneOffsets[4];
+	uint32_t morphTargetVertexDataOffset;
+	uint32_t morphTargetAnimationDataOffset;
+	uint32_t activeMorphTargetsCount;
+	uint32_t bakedMorphTargetVertexDataOffset;
 	Vector4 customData = { 0, 0, 0, 0 };
 };
 
@@ -721,7 +725,7 @@ protected:
 	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 
-	Tr2BoneTransformOffsets m_boneOffsets;
+	Tr2RingBufferOffsets m_boneOffsets;
 
 };
 

@@ -69,5 +69,23 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 			":rtype: None | (str, str, int)"
 		)
 		
+		MAP_METHOD_AND_WRAP(
+			"GetMorphTargetNames",
+			GetMorphTargetNames,
+			"GetMorphTargetNames()\n\n"
+			"Returns names of the morph targets of the mesh. Empty if no mesh has been set.\n" )
+		MAP_METHOD_AND_WRAP(
+			"SetMorphTargetWeight",
+			SetMorphTargetWeight,
+			"SetMorphTargetWeight( name, weight )\n\n"
+			"Sets the weight of the morph target. If no morph target with that name could be found, then the call is ignored.\n"
+			":param name: morph target name\n"
+			":param weight: morph target weight\n" )
+		MAP_METHOD_AND_WRAP(
+			"GetMorphTargetWeight",
+			GetMorphTargetWeight,
+			"GetMorphTargetWeight( name )\n\n"
+			"Returns the weight of the morph target. Returns 0 if no morph target with that name was found.\n"
+			":param name: morph target name\n" )
     EXPOSURE_END()
 }
