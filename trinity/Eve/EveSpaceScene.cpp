@@ -3546,6 +3546,7 @@ IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriV
 		{
 			result = gizmo.m_object;
 			areaID = gizmo.m_area;
+			return result;
 		}
 	}
 
