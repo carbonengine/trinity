@@ -190,6 +190,7 @@ EveSOFDataGeneric::EveSOFDataGeneric( IRoot* lockobj ) :
 	PARENTLOCK( m_hullCategoryData )
 {
 	std::fill( std::begin( m_decalMinScreenSizes ), std::end( m_decalMinScreenSizes ), 0.f );
+	m_turretAreaType = EveSOFDataArea::TYPE_PRIMARY;
 }
 
 

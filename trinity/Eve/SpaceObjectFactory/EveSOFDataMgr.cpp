@@ -2068,6 +2068,9 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 		gd.categoryData[std::string( categoryData->m_categoryName.c_str())] = categoryData->m_reflectionMode;
 	}
 
+	// turret area type override
+	gd.turretAreaType = srcData->m_turretAreaType;
+
 	// variants
 	gd.variants.clear();
 	for( auto vit = srcData->m_variants.begin(); vit != srcData->m_variants.end(); ++vit )
