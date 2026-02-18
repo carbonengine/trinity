@@ -965,6 +965,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 
 	static std::vector<Tr2RtInstanceAL> instances;
 	instances.clear();
+	Tr2RtBottomLevelAccelerationStructureAL invalidBlas;
 	if( instances.capacity() < m_geometryData.size() )
 	{
 		instances.reserve( m_geometryData.size() );
@@ -980,7 +981,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 		instance.flags = it->isTransparent ? Tr2RtInstanceAL::FORCE_NON_OPAQUE : Tr2RtInstanceAL::NONE;
 		instance.materialIndex = it->materialIndex;
 		instance.blas = it->area->BuildBlas( *it->mesh, renderContext ).TrinityALImpl_GetObject();
-		if( !instance.blas )
+		if( !instance.blas || instance.blas == invalidBlas.TrinityALImpl_GetObject() )
 		{
 			continue;
 		}
