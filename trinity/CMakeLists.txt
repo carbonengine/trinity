@@ -993,6 +993,9 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPFogEffect.cpp
     PostProcess/Effects/Tr2PPFogEffect.h
     PostProcess/Effects/Tr2PPFogEffect_Blue.cpp
+    PostProcess/Effects/Tr2PPGenericEffect.cpp
+    PostProcess/Effects/Tr2PPGenericEffect.h
+    PostProcess/Effects/Tr2PPGenericEffect_Blue.cpp
     PostProcess/Effects/Tr2PPGodRaysEffect.cpp
     PostProcess/Effects/Tr2PPGodRaysEffect.h
     PostProcess/Effects/Tr2PPGodRaysEffect_Blue.cpp

@@ -8,6 +8,20 @@
 #ifndef Tr2PPEffect_H
 #define Tr2PPEffect_H
 
+namespace PostProcess
+{
+	enum Quality
+	{
+		LOW,
+		MEDIUM,
+		HIGH,
+
+		COUNT
+	};
+
+	extern const Be::VarChooser PostProcessQualityChooser[];
+}
+
 
 BLUE_CLASS( Tr2PPEffect ) :
 	public INotify

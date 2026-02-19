@@ -21,7 +21,7 @@ TRI_REGISTER_SETTING( "frameGenDebugView", g_frameGenDebugView );
 bool g_newBloom = true;
 TRI_REGISTER_SETTING( "newBloom", g_newBloom );
 
-int32_t g_dynamicExposureQualityRequirement = Tr2PostProcessRenderer::PostProcessingQuality::MEDIUM;
+int32_t g_dynamicExposureQualityRequirement = PostProcess::Quality::MEDIUM;
 TRI_REGISTER_SETTING( "dynamicExposureQualityRequirement", g_dynamicExposureQualityRequirement );
 
 namespace
@@ -251,7 +251,7 @@ namespace AMDSharpening
 }
 
 Tr2PostProcessRenderer::Tr2PostProcessRenderer( IRoot* lockobj ) :
-	m_quality( HIGH ),
+	m_quality( PostProcess::HIGH ),
 	m_desaturateEnabled( false ),
 	m_fadeEnabled( false ),
 	m_lutsEnabled( 0 ),
@@ -310,14 +310,15 @@ Tr2PostProcessRenderer::Tr2PostProcessRenderer( IRoot* lockobj ) :
 
 	m_transparencyMaskEffect.CreateInstance();
 	m_transparencyMaskEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/TransparencyMask.fx" );
+
 }
 
-Tr2PostProcessRenderer::PostProcessingQuality Tr2PostProcessRenderer::GetPostProcessingQuality() const
+PostProcess::Quality Tr2PostProcessRenderer::GetPostProcessingQuality() const
 {
 	return m_quality;
 }
 
-void Tr2PostProcessRenderer::SetPostProcessingQuality( PostProcessingQuality quality )
+void Tr2PostProcessRenderer::SetPostProcessingQuality( PostProcess::Quality quality )
 {
 	if( m_quality == quality )
 	{
@@ -366,21 +367,22 @@ void Tr2PostProcessRenderer::Execute(
 	Tr2PPDepthOfFieldEffectPtr dof = nullptr;
 	Tr2PPTonemappingEffectPtr tonemapping = nullptr;
 	Tr2PPColorCorrectionEffectPtr colorCorrection = nullptr;
+	Tr2PPGenericEffectPtr genericEffect = nullptr;
 
 	if( postProcess != nullptr )
 	{
 		// filter by quality
 		switch( m_quality )
 		{
-		case HIGH:
+		case PostProcess::HIGH:
 			godrays = postProcess->GetGodRays();
 			filmGrain = postProcess->GetFilmGrain();
 			fog = postProcess->GetFog();
-		case MEDIUM:
+		case PostProcess::MEDIUM:
 			bloom = postProcess->GetBloom();
 			desaturate = postProcess->GetDesaturate();
 			vignette = postProcess->GetVignette();
-		case LOW:
+		case PostProcess::LOW:
 			tonemapping = postProcess->GetTonemapping();
 			signalLoss = postProcess->GetSignalLoss();
 			fade = postProcess->GetFade();
@@ -389,6 +391,11 @@ void Tr2PostProcessRenderer::Execute(
 			taa = postProcess->GetTaa();
 			colorCorrection = postProcess->GetColorCorrection();
 			break;
+		}
+
+		if( postProcess->GetGenericEffect() != nullptr && postProcess->GetGenericEffect()->m_quality <= m_quality)
+		{
+			genericEffect = postProcess->GetGenericEffect();
 		}
 
 		dynamicExposure = m_quality >= g_dynamicExposureQualityRequirement ? postProcess->GetDynamicExposure() : nullptr;
@@ -429,6 +436,11 @@ void Tr2PostProcessRenderer::Execute(
 	// Always copy
 	auto nonMsaaSource = gpuResourcePool.GetTempTexture( "Pre-upscaling Composite", renderSize, sourceBuffer->GetFormat(), RENDER_TARGET );
 	sourceBuffer->Resolve( nonMsaaSource, renderContext );
+
+	if( ProcessGenericEffect( genericEffect ) )
+	{
+		RenderGenericEffect( nonMsaaSource, sourceBuffer, renderContext, genericEffect );
+	}
 
 	if( ProcessFog( fog ) )
 	{
@@ -2134,6 +2146,43 @@ void Tr2PostProcessRenderer::ProcessTonemapping( Tr2PPTonemappingEffect* tonemap
 	m_tonemappingEffect->EndUpdate();
 
 	tonemapping->SetDirty( false );
+}
+
+bool Tr2PostProcessRenderer::ProcessGenericEffect( Tr2PPGenericEffectPtr genericEffect )
+{
+	if( !genericEffect )
+	{
+		return false;
+	}
+	if( !genericEffect->IsActive() || genericEffect->m_shaderPath == "" )
+	{
+		genericEffect->m_effect = nullptr;
+		return false;
+	}
+	if( genericEffect->m_effect == nullptr || genericEffect->IsDirty() )
+	{
+		// need to clear it incase its just dirty
+		genericEffect->m_effect = nullptr;
+		genericEffect->m_effect.CreateInstance();
+		genericEffect->m_effect->StartUpdate();
+		genericEffect->m_effect->SetEffectPathName( genericEffect->m_shaderPath.c_str() );
+		genericEffect->m_effect->SetParameter( BlueSharedString( "Blit" ), Tr2TextureAL{} );
+		genericEffect->m_effect->EndUpdate();
+		
+		genericEffect->SetDirty( false );
+	}
+
+	return true;
+}
+
+void Tr2PostProcessRenderer::RenderGenericEffect( const Tr2TextureAL& dest, const Tr2TextureAL& src, Tr2RenderContext& renderContext, Tr2PPGenericEffectPtr genericEffect )
+{
+	GPU_REGION( renderContext, "GenericEffect" );
+	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
+
+	TEMP_PARAM( genericEffect->m_effect, "Blit", src );
+
+	DrawInto( dest, Tr2LoadAction::DONT_CARE, genericEffect->m_effect, renderContext );
 }
 
 bool Tr2PostProcessRenderer::ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx )

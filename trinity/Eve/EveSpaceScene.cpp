@@ -395,6 +395,7 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemapping() );
 			m_combinedPostProcess->SetFog( m_sceneDefaultPostProcess->GetFog() );
 			m_combinedPostProcess->SetGodRays( m_sceneDefaultPostProcess->GetGodRays() );
+			m_combinedPostProcess->SetGenericEffect( m_sceneDefaultPostProcess->GetGenericEffect() );
 		}
 		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}

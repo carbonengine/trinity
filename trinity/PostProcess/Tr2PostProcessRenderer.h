@@ -113,14 +113,6 @@ public:
 
 	Tr2PostProcessRenderer( IRoot* lockobj = 0 );
 
-	enum PostProcessingQuality {
-		LOW,
-		MEDIUM,
-		HIGH,
-
-		COUNT
-	};
-
 	enum class BloomDebugMode
 	{
 		BLOOM_DEBUG_NONE,
@@ -144,8 +136,8 @@ public:
 		Tr2GpuResourcePool& gpuResourcePool, 
 		Tr2RenderContext& renderContext );
 
-	PostProcessingQuality GetPostProcessingQuality() const;
-	void SetPostProcessingQuality( PostProcessingQuality quality );
+	PostProcess::Quality GetPostProcessingQuality() const;
+	void SetPostProcessingQuality( PostProcess::Quality quality );
 
 private:
 
@@ -263,9 +255,12 @@ private:
 	bool m_vignetteEnabled;
 	void ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection );
 	void ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping );
+	
+	bool ProcessGenericEffect( Tr2PPGenericEffectPtr genericEffect );
+	void RenderGenericEffect( const Tr2TextureAL& dest, const Tr2TextureAL& src, Tr2RenderContext& renderContext, Tr2PPGenericEffectPtr genericEffect );
 
 	// General
-	PostProcessingQuality m_quality;
+	PostProcess::Quality m_quality;
 
 	// Reactive mask
 	Tr2EffectPtr m_reactiveMaskEffect;
