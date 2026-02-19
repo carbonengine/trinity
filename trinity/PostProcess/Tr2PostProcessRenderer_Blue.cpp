@@ -3,13 +3,6 @@
 
 BLUE_DEFINE( Tr2PostProcessRenderer );
 
-Be::VarChooser PostProcessQualityChooser[] =
-{
-	{ "Low", BeCast( Tr2PostProcessRenderer::LOW ), "Low Quality" },
-	{ "Medium", BeCast( Tr2PostProcessRenderer::MEDIUM ), "Medium Quality" },
-	{ "High", BeCast( Tr2PostProcessRenderer::HIGH ), "High Quality" },
-	{ 0 }
-};
 
 Be::VarChooser BloomDebugChooser[] = {
 	{ "None", BeCast( Tr2PostProcessRenderer::BloomDebugMode::BLOOM_DEBUG_NONE ), "No Debug" },
@@ -23,7 +16,6 @@ Be::VarChooser BloomDebugChooser[] = {
 	{ 0 }
 };
 
-BLUE_REGISTER_ENUM_EX( "PostProcessQuality", Tr2PostProcessRenderer::PostProcessingQuality, PostProcessQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 const Be::ClassInfo* Tr2PostProcessRenderer::ExposeToBlue()
 {
@@ -49,7 +41,7 @@ const Be::ClassInfo* Tr2PostProcessRenderer::ExposeToBlue()
 		MAP_ATTRIBUTE( "depthOfFieldBokehFillShader", m_depthOfFieldBokehFillShader, "The bokeh fill shader", Be::READWRITE );
 		MAP_ATTRIBUTE( "dynamicExposureToTextureShader", m_dynamicExposureToTextureShader, "exposure texture", Be::READWRITE );
 
-		MAP_ATTRIBUTE_WITH_CHOOSER( "quality", m_quality, "The quality of the post process", Be::READWRITE | Be::ENUM | Be::NOTIFY, PostProcessQualityChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "quality", m_quality, "The quality of the post process", Be::READWRITE | Be::ENUM | Be::NOTIFY, PostProcess::PostProcessQualityChooser )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "bloomDebugMode", m_bloomDebugMode, "bloom debug mode \n:jessica-group: Debug", Be::READWRITE | Be::NOTIFY | Be::ENUM, BloomDebugChooser )
 		MAP_ATTRIBUTE( "useNewBloom", m_useNewBloom, "Use the new bloom effect", Be::READWRITE | Be::NOTIFY )
 

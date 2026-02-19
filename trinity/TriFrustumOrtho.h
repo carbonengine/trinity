@@ -2,6 +2,8 @@
 #ifndef TRIFRUSTUMORTHO_H
 #define TRIFRUSTUMORTHO_H
 
+#include "TriFrustum.h"
+
 class TriFrustumOrtho
 {
 public:
@@ -13,6 +15,8 @@ public:
 	bool IsSphereVisibleIgnoreFarPlane( const Vector3& center, float radius ) const;
 	float GetPixelSize( Vector4 sphere, uint16_t textureSize ) const;
 	const Vector3& GetEyePos() const;
+
+	TriFrustumTestResult SphereTestIgnoreFarPlane( const CcpMath::Sphere& sphere ) const;
 
 private:
 	Matrix m_view;

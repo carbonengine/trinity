@@ -55,7 +55,7 @@ public:
 		ShadowQuality shadowQuality = ShadowQuality::SHADOW_HIGH;
 		AntiAliasingQuality antiAliasingQuality = AntiAliasingQuality::High;
 		AmbientOcclusionQuality aoQuality = AmbientOcclusionQuality::High;
-		Tr2PostProcessRenderer::PostProcessingQuality postProcessingQuality = Tr2PostProcessRenderer::PostProcessingQuality::HIGH;
+		PostProcess::Quality postProcessingQuality = PostProcess::Quality::HIGH;
 		Tr2VolumerticQuality volumetricQuality = Tr2VolumerticQuality::High;
 
 		Color clearColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );

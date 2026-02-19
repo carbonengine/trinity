@@ -96,6 +96,7 @@ void EveChildProceduralContainer::UpdateSyncronous( const EveUpdateContext& upda
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
+	newParams.localToWorldTransform = m_worldTransform;
 
     if ( nullptr != m_selectedObject )
     {
@@ -112,15 +113,6 @@ void EveChildProceduralContainer::UpdateAsyncronous( const EveUpdateContext& upd
 {
 	Matrix localToWorldTransform = params.localToWorldTransform;
 
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else if( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-
 	UpdateTransform( localToWorldTransform );
 
 	for( auto it = m_transformModifiers.begin(); it != m_transformModifiers.end(); it++ )
@@ -131,6 +123,7 @@ void EveChildProceduralContainer::UpdateAsyncronous( const EveUpdateContext& upd
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
+	newParams.localToWorldTransform = m_worldTransform;
 
     if ( nullptr != m_selectedObject )
     {

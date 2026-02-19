@@ -14,6 +14,7 @@
 #include "Tr2DebugRenderer.h"
 #include "Utilities/Tr2MaterialBoundsAdjustment.h"
 
+#include "Tr2RingBuffer.h"
 
 BLUE_DECLARE( TriGeometryRes );
 
@@ -48,7 +49,7 @@ public:
 
 	int GetMeshIndex() const { return m_meshIndex; };
 
-	virtual CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr ) const;
+	virtual CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) const;
 	virtual CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const;
 
 	bool GetBoundingBox( Vector3 & min, Vector3 & max ) const;
@@ -64,6 +65,15 @@ public:
 
 	virtual TriGeometryRes* GetGeometryResource() const = 0;
 
+	virtual std::vector<std::string>* GetMorphTargetNames() const = 0;
+	virtual bool IsBakedMorph( int index ) const = 0;
+	virtual void SetMorphTargetWeight( const char* name, float weight ) = 0;
+	virtual float GetMorphTargetWeight( const char* name ) = 0;
+	virtual std::vector<bool>* GetAllBakedMorphTargetStates() const = 0;
+	virtual void SetBakedMorphTarget( const char* name, bool isBaked ) = 0;
+	virtual bool GetBakedMorphTarget( const char* name ) = 0;
+	virtual const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& GetMorphAnimations() const = 0;
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +86,7 @@ public:
 		);
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
-	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer );
+	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 );
 
 	Tr2RaytracingMesh* GetOrCreateRtMesh();
 	Tr2RaytracingMesh* GetRtMesh() const;

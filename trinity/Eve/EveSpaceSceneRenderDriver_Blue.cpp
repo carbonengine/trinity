@@ -226,7 +226,7 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 			m_settings.postProcessingQuality,
 			"Quality setting for post-processing. One of trinity.PostProcessQuality enum",
 			Be::READWRITE | Be::ENUM,
-			PostProcessQualityChooser )
+			PostProcess::PostProcessQualityChooser )
 
 		MAP_ATTRIBUTE(
 			"background",

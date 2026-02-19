@@ -23,6 +23,7 @@
 #include "Effects/Tr2PPDepthOfFieldEffect.h"
 #include "Effects/Tr2PPTonemappingEffect.h"
 #include "Effects/Tr2PPColorCorrectionEffect.h"
+#include "Effects/Tr2PPGenericEffect.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2PPSignalLossEffect );
@@ -64,6 +65,7 @@ public:
 	Tr2PPDepthOfFieldEffectPtr GetDepthOfField() const { return m_depthOfField; }
 	Tr2PPTonemappingEffectPtr GetTonemapping() const { return m_tonemapping; }
 	Tr2PPColorCorrectionEffectPtr GetColorCorrection() const { return m_colorCorrection; }
+	Tr2PPGenericEffectPtr GetGenericEffect() const { return m_generic; }
 
 	void MarkAllDirty();
 
@@ -85,6 +87,7 @@ public:
 	void SetDepthOfField(Tr2PPDepthOfFieldEffectPtr effect) { m_depthOfField = effect; }
 	void SetTonemapping(Tr2PPTonemappingEffectPtr effect) { m_tonemapping = effect; }
 	void SetColorCorrection(Tr2PPColorCorrectionEffectPtr effect) { m_colorCorrection = effect; }
+	void SetGenericEffect(Tr2PPGenericEffectPtr effect) { m_generic = effect; }
 
 	// Helper method for scenes to decide on miplodbias
 	float GetMipLodBias() const;
@@ -108,6 +111,7 @@ private:
 	Tr2PPDepthOfFieldEffectPtr m_depthOfField;
 	Tr2PPTonemappingEffectPtr m_tonemapping;
 	Tr2PPColorCorrectionEffectPtr m_colorCorrection;
+	Tr2PPGenericEffectPtr m_generic;
 };
 TYPEDEF_BLUECLASS( Tr2PostProcess2 );
 

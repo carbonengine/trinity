@@ -36,7 +36,7 @@
 #include "Lights/ITr2LightOwner.h"
 #include "Tr2GrannyAnimation.h"
 #include "Raytracing/Tr2RaytracingManager.h"
-#include "Tr2BoneTransformBuffer.h"
+#include "Tr2RingBuffer.h"
 
 
 // consts
@@ -105,6 +105,10 @@ struct EveSpaceObjectVSData
 	Matrix customMaskMatrix[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskData[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	uint32_t boneOffsets[4];
+	uint32_t morphTargetVertexDataOffset;
+	uint32_t morphTargetAnimationDataOffset;
+	uint32_t activeMorphTargetsCount;
+	uint32_t bakedMorphTargetVertexDataOffset;
 	Vector4 customData = { 0, 0, 0, 0 };
 };
 
@@ -132,6 +136,36 @@ struct EveSpaceObjectPSData
 
 	Vector4 customData = { 0, 0, 0, 0 };
 };
+
+struct EveSpacePerObjectData
+{
+	Matrix worldTransform = IdentityMatrix();
+	Matrix worldTransformLast = IdentityMatrix();
+	Matrix invWorldTransform = IdentityMatrix();
+	Vector4 shipData = Vector4( 0, 0, 0, 0 );
+
+	Vector3 clipSphereCenter = Vector3( 0, 0, 0 );
+	float clipRadiusSq = 0.0f;
+
+	float clipRadius2Sq = 0.0f;
+	float impactDataOffset = 0.0f;
+	float clipSphereFactor2 = 0.0f;
+	float clipSphereFactor = 0.0f;
+
+	Vector4 ellpsoidRadii = Vector4( 0, 0, 0, 0 );
+	Vector4 ellpsoidCenter = Vector4( 0, 0, 0, 0 );
+	Matrix customMaskMatrix[EVE_SPACEOBJECT_CUSTOWMASK_MAX] = {};
+	Vector4 customMaskData[EVE_SPACEOBJECT_CUSTOWMASK_MAX] = {};
+	Vector4 customMaskMaterialIDs[EVE_SPACEOBJECT_CUSTOWMASK_MAX] = {};
+	Vector4 customMaskTargets[EVE_SPACEOBJECT_CUSTOWMASK_MAX] = {};
+	Vector4 customMaskClamps = Vector4( 0, 0, 0, 0 );
+
+	uint32_t boneOffsets[4] = { 0, 0, 0, 0 };
+	Vector4 customData = { 0, 0, 0, 0 };
+
+	Vector4 shLighting[7] = {};
+};
+
 
 // ---------------------------------------------------------------------------------------
 //  Description:
@@ -691,7 +725,7 @@ protected:
 	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 
-	Tr2BoneTransformOffsets m_boneOffsets;
+	Tr2RingBufferOffsets m_boneOffsets;
 
 };
 

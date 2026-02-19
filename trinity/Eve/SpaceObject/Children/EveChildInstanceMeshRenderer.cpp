@@ -7,7 +7,7 @@
 #include "TriMath.h"
 #include "TransformModifiers/EveChildModifierTransformCommon.h"
 #include "Eve/EveConstantBufferFormats.h"
-#include "Tr2RuntimeInstanceData.h"
+#include "Tr2DirectInstanceData.h"
 #include "Tr2InstancedMesh.h"
 
 
@@ -40,6 +40,60 @@ bool EveChildInstanceMeshRenderer::IsVisible( const EveUpdateContext& updateCont
 	}
 	return false;
 }
+
+bool EveChildInstanceMeshRenderer::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
+{
+	if( !m_display || !m_castShadow )
+	{
+		return false;
+	}
+
+	if( renderReason == TR2RENDERREASON_REFLECTION && !EntityComponents::ShouldReflect( m_reflectionMode ) )
+	{
+		return false;
+	}
+
+	if( !m_mesh )
+	{
+		return false;
+	}
+
+	Vector4 bs;
+	{
+		auto s = CcpMath::Sphere( m_boundingSphere );
+		s.Transform( m_worldTransform );
+		bs = Vector4( s.center, s.radius );
+	}
+	sizeInShadow = 0;
+
+	if( bs.w <= 0.0f )
+	{
+		return false;
+	}
+
+	if( shadowFrustum.IsVisible( cameraFrustum, bs ) )
+	{
+		if( m_instancedMesh )
+		{
+			if( auto instanceBounds = m_instancedMesh->GetInstanceBoundsClosestToPoint( TransformCoord( shadowFrustum.GetEyePos(), Inverse( m_worldTransform ) ) ) )
+			{
+				instanceBounds.Transform( m_worldTransform );
+
+				sizeInShadow = shadowFrustum.GetSizeInShadow( Vector4( instanceBounds.center, instanceBounds.radius ) );
+			}
+			else
+			{
+				sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
+			}
+		}
+		else
+		{
+			sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
+		}
+	}
+	return sizeInShadow > 5.f;
+}
+
 
 void EveChildInstanceMeshRenderer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
@@ -170,7 +224,7 @@ void EveChildInstanceMeshRenderer::UpdateGeometryResource( const PlacementDataWi
 {
 	m_totalObjectCount = uint32_t( size );
 
-	if( !m_isVisible || !m_display || m_totalObjectCount == 0 )
+	if( !m_isVisible || !m_display || m_totalObjectCount == 0 || m_currentScreenSize < m_minScreenSize )
 	{
 		return;
 	}
@@ -288,7 +342,7 @@ void EveChildInstanceMeshRenderer::ConfigureInstanceData() const
 		instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 5 ); // lastTransform2
 		instanceDef.Add( Tr2VertexDefinition::BYTE_4, Tr2VertexDefinition::TEXCOORD, 6 ); // boneindex
 
-		Tr2RuntimeInstanceDataPtr instanceData;
+		Tr2DirectInstanceDataPtr instanceData;
 		instanceData.CreateInstance();
 		instanceData->SetLayout( instanceDef );
 		mesh->SetInstanceGeometryRes( instanceData );
@@ -307,12 +361,12 @@ void EveChildInstanceMeshRenderer::UpdateInstanceData( std::vector<PerInstanceDa
 			geometryResource = mesh->GetInstanceGeometryResource();
 		}
 
-		if( Tr2RuntimeInstanceDataPtr geoRes = BlueCastPtr( geometryResource ) )
+		if( Tr2DirectInstanceDataPtr geoRes = BlueCastPtr( geometryResource ) )
 		{
 			auto dest = geoRes->GetData( unsigned( instances.size() ) );
 			memcpy( dest, &instances[0], sizeof( instances[0] ) * instances.size() );
 			geoRes->UpdateData();
-
+	
 			float maxScale = 0;
 			CcpMath::AxisAlignedBox aabb;
 			for( auto& instance : instances )

@@ -25,7 +25,9 @@ public:
 		m_visibilityThreshold(0.f),
 		m_highDetailThreshold( 0.f ),
 		m_mediumDetailThreshold( 0.f ),
-		m_lowDetailThreshold( 0.f )
+		m_lowDetailThreshold( 0.f ),
+		m_lodFactor( 1.0f ),
+		m_invLodFactor( 1.0f )
 	{
 		SetTime( time );
 	}
@@ -160,11 +162,17 @@ public:
 	void SetLodFactor( float lodFactor )
 	{
 		m_lodFactor = lodFactor;
+		m_invLodFactor = 1.0f / lodFactor;
 	}
 
 	float GetLodFactor() const
 	{
 		return m_lodFactor;
+	}
+
+	float GetInvLodFactor() const
+	{
+		return m_invLodFactor;
 	}
 
 	void SetFrustum( TriFrustum frustum )
@@ -200,6 +208,7 @@ private:
 	float m_mediumDetailThreshold;
 	float m_lowDetailThreshold;
 	float m_lodFactor;
+	float m_invLodFactor;
 	TriFrustum m_frustum; 
 };
 

@@ -160,6 +160,50 @@ static void ConvertDataToVector3( Tr2VertexDefinition::DataType elementType, con
 }
 
 
+namespace
+{
+struct MorphToBaseData
+{
+	unsigned int bytesPerVertex;
+	Tr2VertexDefinition::Item* foundPosition;
+	unsigned int positionByteOffset;
+	Tr2VertexDefinition::DataType declType;
+};
+
+MorphToBaseData InitMorphToBaseData( Tr2VertexDefinition decl )
+{
+	MorphToBaseData data{};
+	data.bytesPerVertex = decl.m_nextOffset[0];
+	data.foundPosition = decl.Find( Tr2VertexDefinition::POSITION, 0 );
+	CCP_ASSERT_M( data.foundPosition, "InitMorphToBaseData: Couldn't find Tr2VertexDefinition::POSITION." );
+	data.positionByteOffset = data.foundPosition->m_offset;
+	data.declType = data.foundPosition->m_dataType;
+	return data;
+}
+
+float SquaredDistMorphToBase( int index, bool dataIsDeltas, uint8_t* pVertices, MorphToBaseData baseData, uint8_t* pMorphSrc, MorphToBaseData morphData )
+{
+	Vector3 vertex;
+	ConvertDataToVector3( baseData.declType, pVertices + baseData.positionByteOffset + index * baseData.bytesPerVertex, &vertex );
+
+	Vector3 morphVertex;
+	ConvertDataToVector3( morphData.declType, pMorphSrc + morphData.positionByteOffset + index * morphData.bytesPerVertex, &morphVertex );
+
+	Vector3 diff;
+	if( dataIsDeltas )
+	{
+		diff = morphVertex;
+	}
+	else
+	{
+		diff = morphVertex - vertex;
+	}
+
+	return Dot( diff, diff );
+}
+}
+
+
 uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, uint32_t count )
 {
 	if( index >= lod.m_areas.size() )
@@ -308,7 +352,6 @@ TriGeometryResLodData* TriGeometryRes::GetMeshLod( unsigned int meshIx, int lodI
 
 	if( !mesh || lodIndex < 0 || lodIndex >= mesh->m_lods.size() )
 	{
-		CCP_ASSERT( mesh && lodIndex >= 0 && lodIndex < mesh->m_lods.size() ); //This should never happen, so assert it.
 		return nullptr;
 	}
 
@@ -649,11 +692,14 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* g
 
 	auto FindRootBoneIndex = [&]() -> std::optional<uint8_t> {
 		const char* rootBone = FindRootBoneName();
-		for( int32_t i = 0; i < grannyMesh->BoneBindingCount; ++i )
+		if( rootBone )
 		{
-			if( grannyMesh->BoneBindings[i].BoneName && strcmp( grannyMesh->BoneBindings[i].BoneName, rootBone ) == 0 )
+			for( int32_t i = 0; i < grannyMesh->BoneBindingCount; ++i )
 			{
-				return uint8_t( i );
+				if( grannyMesh->BoneBindings[i].BoneName && strcmp( grannyMesh->BoneBindings[i].BoneName, rootBone ) == 0 )
+				{
+					return uint8_t( i );
+				}
 			}
 		}
 		return {};
@@ -701,6 +747,59 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* g
 	return false;
 }
 
+bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	if ( myMesh->MorphTargetCount == 0 )
+	{
+		return false;
+	}
+
+	const float EPSILON = .001f;
+
+	// primary mesh vertex declaration
+	granny_data_type_definition* grannyVertexDecl = myMesh->PrimaryVertexData->VertexType;
+	Tr2VertexDefinition vertexDefinition = BuildFromGrannyVertexDecl( grannyVertexDecl );
+
+	// morph target vertex declaration
+	granny_data_type_definition* grannyMorphVertexDecl = myMesh->MorphTargets[0].VertexData->VertexType;
+	Tr2VertexDefinition vertexMorphDefinition = BuildFromGrannyVertexDecl( grannyMorphVertexDecl );
+
+	MorphToBaseData baseData = InitMorphToBaseData( vertexDefinition );
+	MorphToBaseData morphData = InitMorphToBaseData( vertexMorphDefinition );
+
+	// let's try to find at least one vertex that is being affected by at least one morph target
+	bool dataIsDeltas = myMesh->MorphTargets->DataIsDeltas;
+	auto pVertices = (uint8_t*)GrannyGetMeshVertices( myMesh );
+
+	for( int i = 0; i < myMesh->MorphTargetCount; ++i )
+	{
+		auto pMorphSrc = (uint8_t*)GrannyGetMeshMorphVertices( myMesh, i );
+
+		for( int vIx = 0; vIx < area.m_primitiveCount * 3; ++vIx )
+		{
+			int index;
+
+			if( myMesh->PrimaryTopology->Indices16 )
+			{
+				index = myMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
+			}
+			else
+			{
+				index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
+			}
+
+			float squaredDist = SquaredDistMorphToBase( index, dataIsDeltas, pVertices, baseData, pMorphSrc, morphData );
+			if( squaredDist > EPSILON )
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
 
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 {
@@ -746,7 +845,6 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 
 		TriGeometryResMeshData* mesh = NULL;
 		float maxScreenSize = std::numeric_limits<float>::infinity();
-		;
 
 		const auto mainLod = !mbi || mbi->maxScreenSize <= 0;
 
@@ -869,6 +967,7 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 			lod->m_primitiveCount += area.m_primitiveCount;
 
 			area.m_isSkinned = IsAreaSkinned( area, grannyMesh, gi, bytesPerVertex );
+			area.m_isMorphed = IsAreaMorphed( area, grannyMesh, gi );
 
 			if( mbi )
 			{
@@ -1508,7 +1607,6 @@ void TriGeometryRes::Reload()
 	BlueAsyncRes::Reload();
 }
 
-
 TriGeometryResSkeletonData::TriGeometryResSkeletonData() :
 	m_joints( "TriGeometryResSkeletonData/m_joints" )
 {
@@ -1519,7 +1617,8 @@ TriGeometryResAreaData::TriGeometryResAreaData() :
 	m_primitiveCount( 0 ),
 	m_vertexCount( 0 ),
 	m_jointBindings( "TriGeometryResAreaData/m_jointBindings" ),
-	m_isSkinned( false )
+	m_isSkinned( false ),
+	m_isMorphed( false )
 {
 }
 
@@ -1527,9 +1626,11 @@ TriGeometryResLodData::TriGeometryResLodData() :
 	m_vertexCount( 0 ),
 	m_primitiveCount( 0 ),
 	m_areas( "TriGeometryResMeshData/m_areas" ),
+	m_morphVertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_allocationsValid(false),
 	m_reversedIndicesValid(false),
-	m_uvDensities()
+	m_uvDensities(),
+	m_bytesPerMorphTargetVertex( 0 )
 {
 }
 
@@ -1642,6 +1743,64 @@ bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigne
     return true;
 }
 
+namespace
+{
+TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDefinition& vertexDefinition, uint32_t stride, uint32_t vertexCount, Tr2RenderContext& renderContext )
+{
+	TriMorphTargetGeometryConstants data = TriMorphTargetGeometryConstants{};
+	for( auto it = begin( vertexDefinition.m_items ); it != end( vertexDefinition.m_items ); ++it )
+	{
+		if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			data.positionOffset = it->m_offset;
+			data.positionType = it->m_dataType;
+
+			uint32_t type = data.positionType;
+			CCP_ASSERT_M(
+				type == Tr2VertexDefinition::DataType::FLOAT32_3,
+				"position type has to be FLOAT32_3!" 
+			);
+		}
+
+		if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
+		{
+			data.tangentOffset = it->m_offset;
+			data.tangentType = it->m_dataType;
+
+			uint32_t type = data.tangentType;
+			CCP_ASSERT_M(
+				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+				type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
+				type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
+				type == Tr2VertexDefinition::DataType::USHORT_4_NORM,
+				"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
+			);
+		}
+	}
+
+	data.vertexBufferStride = stride;
+	data.vertexCount = vertexCount;
+	return data;
+}
+}
+
+float CalculateMorphDeformationAmount( bool dataIsDeltas, int32_t vertexCount, uint8_t* pMorphSrc, Tr2VertexDefinition morphDecl, uint8_t* pVertices, Tr2VertexDefinition decl )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	MorphToBaseData baseData = InitMorphToBaseData( decl );
+	MorphToBaseData morphData = InitMorphToBaseData( morphDecl );
+
+	float maxAmount = 0.f;
+	for( int j = 0; j < vertexCount; j++ )
+	{
+		float squaredDist = SquaredDistMorphToBase( j, dataIsDeltas, pVertices, baseData, pMorphSrc, morphData );
+		maxAmount = max( maxAmount, squaredDist );
+	}
+
+	return sqrt( maxAmount );
+}
+
 bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeometryResLodData* lod, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1693,7 +1852,7 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 	// create d3d index buffer, this one is shared, either for dynamic or static geometry
 	int ibSize = indexCount * bytesPerIndex;
 
-	{
+	{ // Index Buffer
 		std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
 		GrannyCopyMeshIndices( grannyMesh, bytesPerIndex, &tempBuffer[0] );
 
@@ -1725,6 +1884,72 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 				return false;
 			}
 			lod->m_reversedIndicesValid = true;
+		}
+	}
+
+	lod->m_morphVertexDeclaration = -1;
+	{ // Morph Target
+		if( grannyMesh->MorphTargetCount > 0 )
+		{
+			// Allocate the morph target array based on the size of the first morph target
+			const granny_morph_target& firstMorphTarget = grannyMesh->MorphTargets[0];
+			Tr2VertexDefinition firstMorphTargetVertexDefinition = BuildFromGrannyVertexDecl( firstMorphTarget.VertexData->VertexType );
+			lod->m_bytesPerMorphTargetVertex = firstMorphTargetVertexDefinition.m_nextOffset[0];
+			uint32_t morphDataSize = firstMorphTarget.VertexData->VertexCount * lod->m_bytesPerMorphTargetVertex;
+			uint32_t morphTargetBufferSize = ( morphDataSize * grannyMesh->MorphTargetCount + sizeof( TriMorphTargetGeometryConstants ) );
+
+			CR_RETURN_VAL( g_sharedBuffer.Allocate( 
+				4, 
+				morphTargetBufferSize >> 2,
+				nullptr,
+				renderContext,
+				lod->m_morphTargetAllocation ),
+				false 
+			);
+
+			TriMorphTargetGeometryConstants morphTargetConstants = CreateMorphGeometryConstants( 
+				firstMorphTargetVertexDefinition, 
+				lod->m_bytesPerMorphTargetVertex, 
+				firstMorphTarget.VertexData->VertexCount, 
+				renderContext 
+			);
+
+			lod->m_morphTargetAllocation.Update( &morphTargetConstants, 0, sizeof( TriMorphTargetGeometryConstants ), renderContext );
+
+			for( int i = 0; i < grannyMesh->MorphTargetCount; ++i )
+			{
+				const granny_morph_target& morphTarget = grannyMesh->MorphTargets[i];
+				Tr2VertexDefinition morphTargetVertexDefinition = BuildFromGrannyVertexDecl( morphTarget.VertexData->VertexType );
+
+				uint32_t currentBytesPerMorphTargetVertex = morphTargetVertexDefinition.m_nextOffset[0];
+				uint32_t currentMorphDataSize = firstMorphTarget.VertexData->VertexCount * lod->m_bytesPerMorphTargetVertex;
+
+				CCP_ASSERT_M( morphTargetVertexDefinition == firstMorphTargetVertexDefinition, "Morph targets have different definitions, these need to match!" );
+				CCP_ASSERT_M( vertexCount == morphTarget.VertexData->VertexCount, "Morph targets have different vertex counts, these need to match!" );
+				CCP_ASSERT_M( morphDataSize == currentMorphDataSize, "Morph sizes need to match!" );
+
+				size_t nameLength = strlen( morphTarget.ScalarName );
+				// By convention (due to the exporter), the morph target name ends with "Shape". Assert that it does, and also that it is not an empty string!
+				CCP_ASSERT_M( nameLength > 5 && strcmp( morphTarget.ScalarName + nameLength - 5, "Shape" ) == 0, "Invalid morph target name!" );
+
+				std::string morphTargetName( morphTarget.ScalarName, nameLength - 5 );
+				lod->m_morphTargetNames.push_back( morphTargetName );
+
+				lod->m_isBakedMorphTarget.push_back( false );
+
+				void* pMorphSrc = GrannyGetMeshMorphVertices( grannyMesh, i );
+				lod->m_morphTargetAllocation.Update( 
+					pMorphSrc, 
+					morphDataSize * i + sizeof( TriMorphTargetGeometryConstants ), 
+					morphDataSize, 
+					renderContext 
+				);
+
+				float deformationAmount = CalculateMorphDeformationAmount( morphTarget.DataIsDeltas, vertexCount, (uint8_t*)pMorphSrc, morphTargetVertexDefinition, (uint8_t*)pSrc, vertexDefinition );
+				lod->m_morphTargetDeformationAmounts.push_back( deformationAmount );
+			}
+
+			lod->m_morphVertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( firstMorphTargetVertexDefinition );
 		}
 	}
 

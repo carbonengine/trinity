@@ -222,7 +222,6 @@ struct Tr2EffectLibrary
 	Tr2EffectStageInput globalInput;
 	Tr2EffectStageInput localInput;
 	Tr2ResourceSetDescriptionAL globalResourceSetDesc;
-	Tr2ResourceSetDescriptionAL localResourceSetDesc;
 };
 
 

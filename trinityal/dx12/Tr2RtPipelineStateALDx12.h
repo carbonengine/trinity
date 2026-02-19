@@ -12,6 +12,13 @@ namespace TrinityALImpl
 	class Tr2RtPipelineStateAL : public Tr2DeviceResourceAL<Tr2RtPipelineStateAL>
 	{
 	public:
+
+		struct ShaderInfo
+		{
+			const TrinityALImpl::Tr2RootSignatureAL* localSignature;
+			const void* shaderIdentifier;
+		};
+
 		Tr2RtPipelineStateAL();
 		~Tr2RtPipelineStateAL();
 
@@ -26,7 +33,7 @@ namespace TrinityALImpl
 		ID3D12StateObject* GetStateObject() const;
 		const Tr2RootSignatureAL& GetGlobalRootSignature() const;
 		const std::vector<TrinityALImpl::Tr2RootSignatureAL*>& GetLocalSignatures() const;
-		const TrinityALImpl::Tr2RootSignatureAL* GetLocalSignature( const wchar_t* name ) const;
+		const ShaderInfo* GetShaderInfo( const wchar_t* name ) const;
 	private:
 		ALResult CreateRootSignature( TrinityALImpl::Tr2RootSignatureAL& rootSignature, const Tr2ShaderSignatureAL& signature, D3D12_ROOT_SIGNATURE_FLAGS flags, Tr2PrimaryRenderContextAL& renderContext );
 
@@ -34,7 +41,7 @@ namespace TrinityALImpl
 		CComPtr<ID3D12StateObjectProperties> m_stateInfo;
 		TrinityALImpl::Tr2RootSignatureAL m_globalSignature;
 		std::vector<TrinityALImpl::Tr2RootSignatureAL*> m_localSignatures;
-		std::map<std::wstring, TrinityALImpl::Tr2RootSignatureAL*> m_signatureForName;
+		std::map<std::wstring, ShaderInfo, std::less<>> m_shaderInfoForName;
 		Tr2PrimaryRenderContextAL* m_owner;
 
 	};

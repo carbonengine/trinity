@@ -181,6 +181,11 @@ bool EveChildLink::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query
 	return true;
 }
 
+bool EveChildLink::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
+{
+	return false;
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Returns the Local to World transformation matrix

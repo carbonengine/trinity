@@ -26,6 +26,7 @@
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
 #include "PostProcess/ITr2PostProcessOwner.h"
 #include "../Tr2VolumetricsRenderer.h"
+#include "../Tr2RuntimeGpuBuffer.h"
 
 class TriProjection;
 class TriView;
@@ -89,6 +90,8 @@ BLUE_DECLARE( Tr2VolumetricsRenderer );
 BLUE_DECLARE( Tr2RaytracingManager );
 BLUE_DECLARE( Tr2PostProcessAttributes );
 BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
+
+class EveInstancedMeshManager;
 
 BLUE_CLASS( EveSpaceScene ) :
 	public ITr2Scene,
@@ -283,7 +286,7 @@ public:
 		Vector4 SplitInfo;
 		Matrix ProjectionInverseMat;
 
-		Vector4 ShadowMapDepthRanges[4];
+		Vector4 CascadeRanges[16];
 
 		Tr2VolumetricsRenderer::FroxelPerFrameData FroxelFogData;
 	};
@@ -387,6 +390,10 @@ public:
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;
 
+	void GetLightMatrices( const Tr2LightManager::PerLightData& lightData, Matrix& projection, Matrix& view );
+
+	void ProcessOutdatedRTAnimations( Tr2RenderContext & renderContext );
+
 protected:
 	bool m_display;
 	bool m_update;
@@ -461,6 +468,12 @@ protected:
 	Tr2Variable m_envMapTransformVar;
 	Tr2Variable m_reflectionMapTransformVar;
 	Tr2Variable m_suncVecVar;
+
+	CTr2RuntimeGpuBuffer m_sharedIndexVertexBufferWrapper;
+	Tr2Variable m_sharedIndexVertexBufferVar;
+	
+	CTr2RuntimeGpuBuffer m_bakedMorphTargetBufferWrapper;
+	Tr2Variable m_bakedMorphTargetBufferVar;
 		
 	Tr2Variable m_depthMapVar;
 
@@ -677,6 +690,8 @@ public:
 
 	// reprojection matrix
 	Matrix m_reprojectionMatrix;
+
+	std::unique_ptr<EveInstancedMeshManager> m_instancedMeshManager;
 
 	friend class EveSpaceSceneRenderDriver;
 };

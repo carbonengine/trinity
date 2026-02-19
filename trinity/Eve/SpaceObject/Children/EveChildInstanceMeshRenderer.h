@@ -23,7 +23,8 @@ public:
 
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query ) const override;
 	bool IsVisible( const EveUpdateContext& updateContext ) const override;
-	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateAsyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	void ConfigureInstanceData() const;

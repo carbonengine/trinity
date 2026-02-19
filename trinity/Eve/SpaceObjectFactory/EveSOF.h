@@ -26,6 +26,7 @@ BLUE_DECLARE_INTERFACE( IEveEffectChildrenOwner );
 BLUE_DECLARE_INTERFACE( ITr2LightOwner );
 BLUE_DECLARE_INTERFACE( IEveSpaceObjectAttachment );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
+BLUE_DECLARE( EveChildInstancedMeshes );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -54,9 +55,6 @@ public:
 	// change the material of a turret with SOF data
 	void SetupTurretMaterialFromDNA( EveTurretSet* turretSet, const char* dnaString );
 	void SetupTurretMaterialFromFaction( EveTurretSet* turretSet, const char* factionName );
-
-	// change the layout data of the space object
-	void RegenerateLayout(EveSpaceObject2* owner, const char* dnaString);
 
 	bool LoadData( const char* filePath );
 private:
@@ -111,14 +109,22 @@ private:
 	void SetupLocatorSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets );
 	void SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupLights( ITr2LightOwnerPtr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets ) const;
-	void SetupLayout( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, uint32_t seedOverwrite = 0 );
+	void SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr & sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, uint32_t seedOverwrite = 0 );
 
 
 	Tr2MeshPtr CreateMesh( const EveSOFDNAPtr dna ) const;
 	Tr2InstancedMeshPtr CreateInstancedMesh( std::vector<EveSOFDataMgr::HullMeshInstance> instances, std::string resPath ) const;
 	void SetupShaders( const EveSOFDNAPtr dna, Tr2MeshBase* mesh ) const;
 	
-	EveChildContainerPtr CreatePlacement( EveSpaceObject2Ptr parent, EveSOFDNAPtr extensionDna, EveSOFDataMgr::ExtensionPlacementData & placement, const std::vector<EveSOFDataMgr::LocatorDirectionData>& locators, const std::vector<Matrix>& nestedOffsets );
+	void CreatePlacement( 
+		EveSpaceObject2Ptr parent, 
+		EveChildInstancedMeshesPtr& sharedMeshes, 
+		EveSOFDNAPtr extensionDna, 
+		const EveSOFDNAPtr& parentDna, 
+		EveSOFDataMgr::ExtensionPlacementData& placement, 
+		const std::vector<EveSOFDataMgr::LocatorDirectionData>& locators, 
+		const std::vector<Matrix>& nestedOffsets, 
+		EveChildContainerPtr layoutContainer );
 
 	void SetupCustomMask( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 
@@ -129,7 +135,7 @@ private:
 
 	bool ProcessLayoutDistributionConditions(  EveSOFDataMgr::ExtensionPlacementData& placement, const EveSOFDNAPtr dna );
 	void ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacementDistribution& distributionData, const EveSOFDNAPtr dna, std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet, std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet );
-	void ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData & distributionData, EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSet, size_t& layoutIdx, size_t& placementIdx, const std::vector<Matrix>& offsets );
+	void ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData & distributionData, EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSet, size_t& layoutIdx, size_t& placementIdx, const std::vector<Matrix>& offsets, EveChildContainerPtr childContainer );
 
 	// helper functions
 	size_t FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna, size_t hullIdx, size_t meshIndexOffset ) const;

@@ -103,14 +103,14 @@ public:
 	const granny_matrix_3x4* GetMeshBoneMatrixList() const;
 
 	std::vector<std::string> GetAnimationNames() const;
-
+	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2AnimationUpdater
-	void PrePhysicsAnimation( Be::Time time, const Matrix &modelTransform );
+	void PrePhysicsAnimation( Be::Time time, const Matrix& modelTransform );
 	void PostPhysicsAnimation( Be::Time time, const Matrix &modelTransform );
 	const Matrix* GetAnimationTransforms();
 	const std::string *GetAnimationBoneList( unsigned int& numBones ) const;
@@ -127,6 +127,8 @@ public:
 
 	void AddNotifyTarget( IBlueAsyncResNotifyTarget * p );
 	void RemoveNotifyTarget( IBlueAsyncResNotifyTarget * p );
+
+	const std::unordered_map<std::string, float>& GetMorphAnimations() const;
 
 	granny_skeleton *m_skeleton;
 	granny_world_pose *m_worldPose;
@@ -150,6 +152,8 @@ private:
 	std::map<std::string, Tr2GrannyAnimationLayer> m_animationLayers;
 	std::map<std::string, float> m_animationLayerWeights;
 	Tr2GrannyAnimationLayer m_baseLayer;
+
+	std::unordered_map<std::string, float> m_morphAnimations;
 
 	typedef TrackableStdVector<std::string> BoneList_t;
 	BoneList_t m_boneList;

@@ -484,6 +484,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera.h
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTranslateWithCamera_Blue.cpp
     Eve/SpaceObject/Children/TransformModifiers/IEveChildTransformModifier.h
+    Eve/SpaceObject/Children/EveChildAudio_Blue.cpp
+    Eve/SpaceObject/Children/EveChildAudio.cpp
+    Eve/SpaceObject/Children/EveChildAudio.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
     Eve/SpaceObject/Children/EveChildBehaviorSystem.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem_Blue.cpp
@@ -523,6 +526,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildInstanceMeshRenderer.cpp
     Eve/SpaceObject/Children/EveChildInstanceMeshRenderer.h
     Eve/SpaceObject/Children/EveChildInstanceMeshRenderer_Blue.cpp
+    Eve/SpaceObject/Children/EveChildInstancedMeshes.cpp
+    Eve/SpaceObject/Children/EveChildInstancedMeshes.h
+    Eve/SpaceObject/Children/EveChildInstancedMeshes_Blue.cpp
     Eve/SpaceObject/Children/EveChildLineSet.cpp
     Eve/SpaceObject/Children/EveChildLineSet.h
     Eve/SpaceObject/Children/EveChildLineSet_Blue.cpp
@@ -750,6 +756,8 @@ set(_SOURCES
     Eve/EveEntity.cpp
     Eve/EveEntity.h
     Eve/EveEntity_Blue.cpp
+    Eve/EveInstancedMeshManager.cpp
+    Eve/EveInstancedMeshManager.h
     Eve/EveLensflare.cpp
     Eve/EveLensflare.h
     Eve/EveLensflare_Blue.cpp
@@ -985,6 +993,9 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPFogEffect.cpp
     PostProcess/Effects/Tr2PPFogEffect.h
     PostProcess/Effects/Tr2PPFogEffect_Blue.cpp
+    PostProcess/Effects/Tr2PPGenericEffect.cpp
+    PostProcess/Effects/Tr2PPGenericEffect.h
+    PostProcess/Effects/Tr2PPGenericEffect_Blue.cpp
     PostProcess/Effects/Tr2PPGodRaysEffect.cpp
     PostProcess/Effects/Tr2PPGodRaysEffect.h
     PostProcess/Effects/Tr2PPGodRaysEffect_Blue.cpp
@@ -1403,6 +1414,7 @@ set(_SOURCES
     ITr2CurveSetOwner.h
     ITr2DynamicBindingOwner.h
     ITr2EffectValue.h
+    ITr2MeshMorph.h
     ITr2PickableScene.cpp
     ITr2PickableScene.h
     ITr2Renderable.h
@@ -1430,9 +1442,6 @@ set(_SOURCES
     Tr2BindingVector3_Blue.cpp
     Tr2Blitter.cpp
     Tr2Blitter.h
-    Tr2BoneTransformBuffer.cpp
-    Tr2BoneTransformBuffer.h
-    Tr2BoneTransformBuffer_Blue.cpp
     Tr2BoundingLineSet.cpp
     Tr2BoundingLineSet.h
     Tr2BoundingLineSet_Blue.cpp
@@ -1452,6 +1461,9 @@ set(_SOURCES
     Tr2DepthStencil_Blue.cpp
     Tr2DeviceResource.cpp
     Tr2DeviceResource.h
+    Tr2DirectInstanceData.cpp
+    Tr2DirectInstanceData.h
+    Tr2DirectInstanceData_Blue.cpp
     Tr2DxtCompressor.cpp
     Tr2DxtCompressor.h
     Tr2DxtCompressor_Blue.cpp
@@ -1601,6 +1613,9 @@ set(_SOURCES
     Tr2RenderTarget_Blue.cpp
     Tr2RenderUtils.cpp
     Tr2RenderUtils.h
+    Tr2RingBuffer.cpp
+    Tr2RingBuffer.h
+    Tr2RingBuffer_Blue.cpp
     Tr2RotationTool.cpp
     Tr2RotationTool.h
     Tr2RotationTool_Blue.cpp

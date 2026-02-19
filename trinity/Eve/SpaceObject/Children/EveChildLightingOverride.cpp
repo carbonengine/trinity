@@ -109,19 +109,7 @@ void EveChildLightingOverride::UpdateSyncronous( const EveUpdateContext& updateC
 
 void EveChildLightingOverride::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	Matrix localToWorldTransform;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else if( params.spaceObjectParent )
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( localToWorldTransform );
-	}
-	else
-	{
-		localToWorldTransform = IdentityMatrix();
-	}
+	Matrix localToWorldTransform = params.localToWorldTransform;
 	UpdateTransform( localToWorldTransform );
 	RebuildBoundingSphere();
 

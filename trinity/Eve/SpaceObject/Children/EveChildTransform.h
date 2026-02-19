@@ -16,9 +16,10 @@ public:
 	EveChildTransform();
 
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
-	void SetupWithStaticRotation( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
+	void SetupWithStaticRotation( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisiblle );
+	void SetupWithStaticTransform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisiblle );
 	void RebuildLocalTransform();
-	
+
 protected:
 	Vector3 m_translation;
 	Vector3 m_scaling;

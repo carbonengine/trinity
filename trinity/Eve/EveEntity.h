@@ -5,6 +5,7 @@
 //
 #pragma once
 #include "EveComponentRegistry.h"
+#include <optional>
 
 namespace EntityComponents
 {
@@ -53,8 +54,14 @@ protected:
 	EveComponentRegistry* GetComponentRegistry() const;
 
 private:
+	std::optional<uint32_t> GetComponentIndex( uint32_t componentBit ) const;
+	void SetComponentState( uint32_t state, uint32_t index );
+	void RemoveComponentState( uint32_t state );
+
 	EveComponentRegistry* m_registry;
-	RegistrationState m_state;
+	std::vector<std::pair<uint32_t, uint32_t>> m_componentIndexLookup;
+
+	size_t m_indexInRegistry;
 	friend class EveComponentRegistry;
 };
 

@@ -8,10 +8,9 @@
 BLUE_DECLARE( EveEntity );
 BLUE_DECLARE( EveComponentRegistry );
 
-typedef int32_t RegistrationState;
-
 #include "EveEntity.h"
 #include <shared_mutex>
+#include <numeric>
 
 // Yes templated false, see comment in GetComponentName
 template <typename T>
@@ -43,13 +42,10 @@ class IEveComponentCollection
 public:
 	virtual ~IEveComponentCollection() = default;
 
-	virtual void Add( EveEntity* entity ) = 0;
-	virtual void Remove( EveEntity* entity ) = 0;
+	virtual bool Add( EveEntity* entity, uint32_t* index ) = 0;
+	virtual EveEntity* SwapWithBack( uint32_t index ) = 0;
 	virtual void Clear() = 0;
-
-	virtual bool HasState( RegistrationState state ) const = 0;
-	virtual void AddState( RegistrationState& state ) = 0;
-	virtual void RemoveState( RegistrationState& state ) = 0;
+	virtual uint32_t GetBit() const = 0;
 
 	virtual size_t Size() const = 0;
 };
@@ -61,18 +57,16 @@ public:
 	EveComponentCollection( uint32_t id, const char* name );
 	~EveComponentCollection();
 
-	void Add( EveEntity* entity ) override;
-	void Remove( EveEntity* entity ) override;
+	bool Add( EveEntity* entity, uint32_t* index ) override;
+	EveEntity* SwapWithBack( uint32_t index ) override;
 	void Clear() override;
 	size_t Size() const override;
 
-	bool HasState( RegistrationState state ) const override;
-	void AddState( RegistrationState& state ) override;
-	void RemoveState( RegistrationState& state ) override;
+	uint32_t GetBit() const override;
 
 private:
 	const char* m_name;
-	int32_t m_bitfield;
+	uint32_t m_bit;
 	std::vector<T*> m_collection;
 	friend class EveComponentRegistry;
 };
@@ -100,6 +94,9 @@ public:
 
 	void Clear();
 
+	template <typename T>
+	void Clear();
+
 	// Runs over all the components and calls the processor to process it, returns true/false if it ran the processor
 	template <typename T, typename R>
 	void ProcessComponents( R processor ) const;
@@ -114,6 +111,8 @@ public:
 	template<typename T>
 	size_t ComponentCount() const;
 
+	void Register( EveEntity* entity );
+	void UnRegister( EveEntity* entity );
 	void ReRegister( EveEntity* entity );
 
 private:
@@ -121,6 +120,7 @@ private:
 
 	void AddToCollection( IEveComponentCollection* collection, EveEntity* entity );
 	void RemoveFromCollection( IEveComponentCollection* collection, EveEntity* entity );
+	void RemoveCollectionFromEntityState( IEveComponentCollection * collection, EveEntity * entity );
 
 	template<typename T>
 	IEveComponentCollection* AddCollection( const char* componentName );
@@ -130,13 +130,15 @@ private:
 	// this m_componentCollections is a map of componentType to different EveComponentCollection<T>
 	std::vector<std::pair<const char*, std::unique_ptr<IEveComponentCollection>>> m_componentCollections;
 	mutable std::shared_mutex m_componentCollectionLoopGuard;
+
+	std::vector<EveEntity*> m_registeredEntities;
 };
 TYPEDEF_BLUECLASS( EveComponentRegistry );
 
 
 template <typename T>
 EveComponentCollection<T>::EveComponentCollection( uint32_t id, const char* name ) :
-	m_bitfield( 1 << id ),
+	m_bit( 1 << id ),
 	m_collection( std::vector<T*>() ),
 	m_name( name )
 {
@@ -148,34 +150,30 @@ EveComponentCollection<T>::~EveComponentCollection()
 }
 
 template <typename T>
-void EveComponentCollection<T>::Add( EveEntity* entity )
+bool EveComponentCollection<T>::Add( EveEntity* entity, uint32_t* index )
 {
 	if( T* component = dynamic_cast<T*>( entity ) )
 	{
+		*index = (uint32_t) m_collection.size();
 		m_collection.push_back( component );
+		return true;
 	}
-	else
-	{
-		CCP_LOGERR( "EveComponentCollection: Register entity is not %s", m_name );
-	}
-
+	CCP_ASSERT_M( false, "Entity is not of correct type" );
+	return false;
 }
 
 template <typename T>
-void EveComponentCollection<T>::Remove( EveEntity* entity )
+EveEntity* EveComponentCollection<T>::SwapWithBack( uint32_t index )
 {
-	if( T* component = dynamic_cast<T*>( entity ) )
+	EveEntity* swappedEntity = nullptr;
+	// removing the only element or the last element needs no swapping
+	if( m_collection.size() != 1 && index != m_collection.size() - 1 )
 	{
-		auto it = std::find( m_collection.begin(), m_collection.end(), component );
-		if( it != m_collection.end() )
-		{
-			m_collection.erase( it );
-		}
+		m_collection[index] = m_collection.back();
+		swappedEntity = dynamic_cast<EveEntity*>( m_collection[index] );
 	}
-	else
-	{
-		CCP_LOGERR( "EveComponentCollection: UnRegister entity is not %s", m_name );
-	}
+	m_collection.pop_back();
+	return swappedEntity;
 }
 
 template <typename T>
@@ -185,21 +183,9 @@ void EveComponentCollection<T>::Clear()
 }
 
 template <typename T>
-bool EveComponentCollection<T>::HasState( RegistrationState state ) const
+uint32_t EveComponentCollection<T>::GetBit() const
 {
-	return ( state & m_bitfield ) != 0;
-}
-
-template <typename T>
-void EveComponentCollection<T>::AddState( RegistrationState& state )
-{
-	state |= m_bitfield;
-}
-
-template <typename T>
-void EveComponentCollection<T>::RemoveState( RegistrationState& state )
-{
-	state &= ~m_bitfield;
+	return m_bit;
 }
 
 template <typename T>
@@ -222,7 +208,6 @@ void EveComponentRegistry::RegisterComponent( EveEntity* entity )
 	{
 		collection = AddCollection<T>( componentName );
 	}
-
 	AddToCollection( collection, entity );
 }
 
@@ -243,6 +228,25 @@ void EveComponentRegistry::UnRegisterComponent( EveEntity* entity )
 	}
 
 	RemoveFromCollection( collection, entity );
+}
+
+
+template <typename T>
+void EveComponentRegistry::Clear()
+{
+	const char* componentName = GetComponentName<T>();
+	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+	auto collection = GetComponentCollection( componentName );
+	if( collection == nullptr )
+	{
+		return;
+	}
+	for( auto& component : static_cast<EveComponentCollection<T>*>( collection )->m_collection )
+	{
+		EveEntity* entity = dynamic_cast<EveEntity*>( component );
+		RemoveCollectionFromEntityState( collection, entity );
+	}
+	collection->Clear();
 }
 
 template <typename T, typename R>

@@ -32,7 +32,7 @@
 #include "Eve/SpaceObject/Children/EveChildInheritProperties.h"
 #include "Shader/Tr2Shader.h"
 
-#include "../../Tr2BoneTransformBuffer.h"
+#include "../../Tr2RingBuffer.h"
 
 #include <limits>
 
@@ -43,7 +43,6 @@ static const double UNINITIALIZED_POSITION = std::numeric_limits<double>::infini
 
 CCP_STATS_DECLARE( eveLowDetailObjects, "Trinity/EveSpaceObject2/lowDetailObjects", true, CST_COUNTER_LOW, "Number of objects rendered in low detail per frame." );
 CCP_STATS_DECLARE( eveHighDetailObjects, "Trinity/EveSpaceObject2/highDetailObjects", true, CST_COUNTER_LOW, "Number of objects rendered in high detail per frame." );
-CCP_STATS_DECLARE( objectsCulledCount, "Trinity/EveSpaceObject2/objectsCulledCount", true, CST_COUNTER_LOW, "How many times are we culling out an object per frame." );
 
 float g_secondaryLightingRadiusCutoffFactor = 0.3f;
 TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLightingRadiusCutoffFactor );
@@ -1385,7 +1384,7 @@ Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator*
 	{
 		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
 		m_vsData.boneOffsets[2] = boneCount;
-		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+		m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
@@ -1528,6 +1527,9 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 	m_lodLevelWithChildren = TR2_LOD_LOW;
 	m_impostorMode = false;
 	auto& frustum = updateContext.GetFrustum();
+	auto minLodThreshold = updateContext.GetLowDetailThreshold();
+	auto mediumLodThreshold = updateContext.GetMediumDetailThreshold();
+	auto invLodFactor = updateContext.GetLodFactor();
 
 	if( m_boundingSphereRadius > 0.0f )
 	{
@@ -1575,11 +1577,11 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 
 	if( m_isVisible )
 	{
-		if( m_estimatedPixelDiameter > updateContext.GetMediumDetailThreshold() )
+		if( m_estimatedPixelDiameter > mediumLodThreshold )
 		{
 			m_lodLevel = TR2_LOD_HIGH;
 		}
-		else if( m_estimatedPixelDiameter > updateContext.GetLowDetailThreshold() )
+		else if( m_estimatedPixelDiameter > minLodThreshold )
 		{
 			m_lodLevel = TR2_LOD_MEDIUM;
 		}
@@ -1588,15 +1590,15 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 			m_lodLevel = TR2_LOD_LOW;
 		}
 
-		if( m_estimatedPixelDiameterWithChildren > updateContext.GetMediumDetailThreshold() )
+		if( m_estimatedPixelDiameterWithChildren > mediumLodThreshold )
 		{
 			m_lodLevelWithChildren = TR2_LOD_HIGH;
 		}
-		else if( m_estimatedPixelDiameterWithChildren > updateContext.GetLowDetailThreshold() )
+		else if( m_estimatedPixelDiameterWithChildren > minLodThreshold )
 		{
 			m_lodLevelWithChildren = TR2_LOD_MEDIUM;
 		}
-		else if( m_estimatedPixelDiameterWithChildren > updateContext.GetLowDetailThreshold() * 0.5f )
+		else if( m_estimatedPixelDiameterWithChildren > minLodThreshold * 0.5f )
 		{
 			m_lodLevelWithChildren = TR2_LOD_LOW;
 		}
@@ -1638,7 +1640,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 
 	if( m_mesh )
 	{
-		m_meshScreenSize = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) / updateContext.GetLodFactor();
+		m_meshScreenSize = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) * invLodFactor;
 		m_meshScreenSize = m_allowLodSelection ? m_meshScreenSize : std::numeric_limits<float>::max();
 
 		m_mesh->UseWithScreenSize( m_meshScreenSize, m_boundingSphereWorldRadius );
@@ -1716,7 +1718,7 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	}
 	
 	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
-	m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
 	auto offset = m_boneOffsets.GetCurrentFrameOffset();
 
 	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList(), offset );

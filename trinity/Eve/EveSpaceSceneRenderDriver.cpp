@@ -271,7 +271,7 @@ void EveSpaceSceneRenderDriver::PropagateSettings()
 
 	if( m_settings.visualizeMethod != EveSpaceScene::VM_NONE )
 	{
-		m_postProcess->SetPostProcessingQuality( Tr2PostProcessRenderer::LOW );
+		m_postProcess->SetPostProcessingQuality( PostProcess::LOW );
 	}
 	else
 	{

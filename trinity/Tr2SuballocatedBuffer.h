@@ -45,6 +45,8 @@ public:
 
 		void Update( const void* data, Tr2RenderContextAL& renderContext );
 
+		void Update( const void* data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext );
+
 
 
 		template <typename T>
@@ -72,6 +74,8 @@ public:
 	void Free( Allocation& allocation );
 
 	void ReleaseResources( TriStorage ) override;
+
+	const Tr2BufferAL& GetBuffer() const;
 
 protected:
 	bool OnPrepareResources();

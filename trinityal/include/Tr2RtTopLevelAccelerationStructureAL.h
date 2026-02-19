@@ -21,7 +21,7 @@ struct Tr2RtInstanceAL
 		FORCE_NON_OPAQUE = 0x8,
 	};
 
-	Tr2RtBottomLevelAccelerationStructureAL blas;
+	const TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL* blas;
 	float transform[3][4];
 	uint32_t materialIndex;
 	Flags flags;

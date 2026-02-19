@@ -167,7 +167,7 @@ Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t st
 
 bool Tr2RtPositionStreamAL::IsValid() const
 {
-	return m_vertexBuffer.IsValid() && m_vertexCount > 0 && m_vertexOffset + m_vertexCount <= m_vertexBuffer.GetDesc().count && m_positionOffset < m_stride;
+	return m_vertexBuffer.IsValid() && m_vertexCount > 0 && ( m_vertexOffset + m_vertexCount ) * m_stride <= m_vertexBuffer.GetSize() && m_positionOffset < m_stride;
 }
 
 
@@ -204,5 +204,5 @@ Tr2RtIndicesStreamAL::Tr2RtIndicesStreamAL( const Tr2BufferAL& ib, uint32_t stri
 
 bool Tr2RtIndicesStreamAL::IsValid() const
 {
-	return m_indexBuffer.IsValid() && m_indexOffset + m_indexCount <= m_indexBuffer.GetDesc().count;
+	return m_indexBuffer.IsValid() && ( m_indexOffset + m_indexCount ) * m_stride <= m_indexBuffer.GetSize();
 }

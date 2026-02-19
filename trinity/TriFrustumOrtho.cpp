@@ -90,6 +90,48 @@ bool TriFrustumOrtho::IsSphereVisibleIgnoreFarPlane( const Vector3& center, floa
 	return true;
 }
 
+TriFrustumTestResult TriFrustumOrtho::SphereTestIgnoreFarPlane( const CcpMath::Sphere& sphere ) const
+{
+	TriFrustumTestResult result;
+	auto centerInView = XMVectorSetW( XMVector3TransformCoord( sphere.center, m_view ), 0 );
+	XMVECTOR boundsMin = m_boundsMin;
+	XMVECTOR boundsMax = m_boundsMax;
+
+	auto fromMin = XMVectorSubtract( centerInView, boundsMin );
+	auto outsideMin = XMVectorMin( fromMin, XMVectorZero() );
+	auto sum = XMVectorMultiply( outsideMin, outsideMin );
+
+	auto fromMax = XMVectorSubtract( boundsMax, centerInView );
+	auto outsideMax = XMVectorMin( fromMax, XMVectorZero() );
+
+	// because we are ignoring far plane, zero out Z component
+	outsideMax = XMVectorSetZ( outsideMax, 0 );
+
+	sum = XMVectorMultiplyAdd( outsideMax, outsideMax, sum );
+
+	float d = XMVectorGetX( XMVectorSum( sum ) );
+	if( d > sphere.radius * sphere.radius )
+	{
+		result = TriFrustumTestResult::Outside;
+	}
+	else
+	{
+		auto radius = XMVectorSet( sphere.radius, sphere.radius, sphere.radius, 0 );
+		auto insideMin = XMVectorGreaterOrEqual( fromMin, radius );
+		auto insideMax = XMVectorGreaterOrEqual( XMVectorSetZ( fromMax, sphere.radius ), radius );
+		auto isInside = XMVectorAndInt( insideMin, insideMax );
+		if( XMVector3EqualInt( isInside, XMVectorTrueInt() ) )
+		{
+			result = TriFrustumTestResult::Inside;
+		}
+		else
+		{
+			result = TriFrustumTestResult::Intersect;
+		}
+	}
+	return result;
+}
+
 float TriFrustumOrtho::GetPixelSize( Vector4 sphere, uint16_t textureSize ) const
 {
 	Vector4 d = sphere;

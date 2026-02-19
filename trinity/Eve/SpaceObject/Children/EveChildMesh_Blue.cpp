@@ -16,6 +16,7 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		MAP_INTERFACE( ITr2GrannyAnimationOwner )
 		MAP_INTERFACE( IEveSpaceObjectAttachmentOwner )
 		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( ITr2Pickable )
 		MAP_INTERFACE( IEveShadowCaster )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST	)
@@ -57,6 +58,34 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "RebuildLocalTransform", RebuildLocalTransform, "Rebuilds local transform if useSRT is set." )
 		
 		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
+
+		MAP_METHOD_AND_WRAP( 
+			"GetSofSourceLocator", 
+			GetSofSourceLocator, 
+			"Returns SOF locator source information for the mesh given the picked areaID.\n"
+			"Returns a tuple (SOF hull name, locator set name, locator index) or None if no SOF source is found.\n"
+			"For the method to work the space object should have been built using SOF in the editor mode.\n\n"
+			":param areaId: The areaID returned from mouse picking method\n"
+			":rtype: None | (str, str, int)"
+		)
 		
+		MAP_METHOD_AND_WRAP(
+			"GetMorphTargetNames",
+			GetMorphTargetNames,
+			"GetMorphTargetNames()\n\n"
+			"Returns names of the morph targets of the mesh. Empty if no mesh has been set.\n" )
+		MAP_METHOD_AND_WRAP(
+			"SetMorphTargetWeight",
+			SetMorphTargetWeight,
+			"SetMorphTargetWeight( name, weight )\n\n"
+			"Sets the weight of the morph target. If no morph target with that name could be found, then the call is ignored.\n"
+			":param name: morph target name\n"
+			":param weight: morph target weight\n" )
+		MAP_METHOD_AND_WRAP(
+			"GetMorphTargetWeight",
+			GetMorphTargetWeight,
+			"GetMorphTargetWeight( name )\n\n"
+			"Returns the weight of the morph target. Returns 0 if no morph target with that name was found.\n"
+			":param name: morph target name\n" )
     EXPOSURE_END()
 }

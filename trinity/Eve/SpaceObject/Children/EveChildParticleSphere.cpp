@@ -129,15 +129,7 @@ void EveChildParticleSphere::UpdateSyncronous( const EveUpdateContext& updateCon
 // -----------------------------------------------------------------------------
 void EveChildParticleSphere::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	Matrix parent;
-	if( params.childParent )
-	{
-		params.childParent->GetLocalToWorldTransform( parent );
-	}
-	else
-	{
-		params.spaceObjectParent->GetLocalToWorldTransform( parent );
-	}
+	Matrix parent = params.localToWorldTransform;
 
 	m_worldTransform = TranslationMatrix( parent.GetTranslation() );
 

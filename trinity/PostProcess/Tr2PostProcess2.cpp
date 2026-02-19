@@ -54,6 +54,7 @@ void Tr2PostProcess2::MarkAllDirty()
 	SetDirtyIfNotNull( m_depthOfField );
 	SetDirtyIfNotNull( m_tonemapping );
 	SetDirtyIfNotNull( m_colorCorrection );
+	SetDirtyIfNotNull( m_generic );
 	for( auto& lut : m_luts )
 	{
 		SetDirtyIfNotNull( lut );

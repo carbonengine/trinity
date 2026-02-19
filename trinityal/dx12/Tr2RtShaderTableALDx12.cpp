@@ -73,19 +73,17 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDARG;
 		}
-		auto stateInfo = pipeline.TrinityALImpl_GetObject()->GetStateInfo();
 
 		// Gather info for local signature
 		// local signature contains material(s) and sampler(s)
 		size_t signatureSize = 0;
 		uint32_t srvDescriptorCount = 0;
 		uint32_t samplerDescriptorCount = 0;
-		auto& localSignatures = pipeline.TrinityALImpl_GetObject()->GetLocalSignatures();
-		for( auto it = begin( localSignatures ); it != end( localSignatures ); ++it )
+		for( auto& signature : pipeline.TrinityALImpl_GetObject()->GetLocalSignatures() )
 		{
-			signatureSize = std::max( signatureSize, GetSignatureSize( *it ) );
-			srvDescriptorCount = std::max( srvDescriptorCount, (*it)->m_srvUavParameterCount );
-			samplerDescriptorCount = std::max( samplerDescriptorCount, (*it)->m_samplerParameterCount );
+			signatureSize = std::max( signatureSize, GetSignatureSize( signature ) );
+			srvDescriptorCount = std::max( srvDescriptorCount, signature->m_srvUavParameterCount );
+			samplerDescriptorCount = std::max( samplerDescriptorCount, signature->m_samplerParameterCount );
 		}
 
 		auto& descriptorCache = *renderContext.m_descriptorCache[renderContext.GetCurrentBackBufferIndex()];
@@ -112,21 +110,21 @@ namespace TrinityALImpl
 
 		auto FillRecord = [&]( uint8_t* tableData, const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material )->ALResult
 		{
-			auto id = stateInfo->GetShaderIdentifier( name );
-			if( !id )
+			auto shaderInfo = pipeline.TrinityALImpl_GetObject()->GetShaderInfo( name );
+			if( !shaderInfo || !shaderInfo->shaderIdentifier )
 			{
 				return E_INVALIDARG;
 			}
-			memcpy( tableData, id, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES );
-			if( auto signature = pipeline.TrinityALImpl_GetObject()->GetLocalSignature( name ) )
+			memcpy( tableData, shaderInfo->shaderIdentifier, D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES );
+			if( auto signature = shaderInfo->localSignature )
 			{
 				for( auto jt = begin( signature->m_cbRegisters ); jt != end( signature->m_cbRegisters ); ++jt )
 				{
 					auto& cb = material.m_constants[jt->index];
 					D3D12_GPU_VIRTUAL_ADDRESS addr;
-					if( cb.IsValid() )
+					if( cb && cb->IsValid() )
 					{
-						addr = descriptorCache.UploadConstants( *cb.TrinityALImpl_GetObject() );
+						addr = descriptorCache.UploadConstants( *cb->TrinityALImpl_GetObject() );
 					}
 					else
 					{
@@ -136,76 +134,11 @@ namespace TrinityALImpl
 				}
 				if( signature->m_srvUavParameterCount )
 				{
-					for( auto jt = begin( signature->m_srvRegisters ); jt != end( signature->m_srvRegisters ); ++jt )
-					{
-						auto index = material.m_resourceSet.m_registerMap.srvs[Tr2RenderContextEnum::COMPUTE_SHADER][jt->index];
-						if( index >= material.m_resourceSet.m_registerMap.srvCount )
-						{
-							return E_INVALIDARG;
-						}
-						auto& input = material.m_resourceSet.m_srv[index];
-						D3D12_GPU_DESCRIPTOR_HANDLE src;
-						switch( input.type )
-						{
-						case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
-							src = input.texture.TrinityALImpl_GetObject()->m_view[input.colorSpace]->GetHandleGPU();
-							break;
-						case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
-							src = input.buffer.TrinityALImpl_GetObject()->m_srv->GetHandleGPU();
-							break;
-						default:
-							return E_INVALIDARG;
-						}
-						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + jt->parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &src, sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
-					}
-					for( auto jt = begin( signature->m_uavRegisters ); jt != end( signature->m_uavRegisters ); ++jt )
-					{
-						auto index = material.m_resourceSet.m_registerMap.uavs[Tr2RenderContextEnum::COMPUTE_SHADER][jt->index];
-						if( index >= material.m_resourceSet.m_registerMap.uavCount )
-						{
-							return E_INVALIDARG;
-						}
-						auto& input = material.m_resourceSet.m_uav[index];
-
-						D3D12_GPU_DESCRIPTOR_HANDLE src;
-						switch( input.type )
-						{
-						case Tr2ResourceSetDescriptionAL::Resource::TEXTURE:
-							src = input.texture.TrinityALImpl_GetObject()->m_uav[input.mip]->GetHandleGPU();
-							break;
-						case Tr2ResourceSetDescriptionAL::Resource::BUFFER:
-							src = input.buffer.TrinityALImpl_GetObject()->m_uav->GetHandleGPU();
-							break;
-						default:
-							return E_INVALIDARG;
-						}
-						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + jt->parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &src, sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
-					}
+					return E_FAIL;
 				}
 				if( signature->m_samplerParameterCount )
 				{
-					for( auto& sampler : signature->m_samplerRegisters )
-					{
-						auto index = material.m_resourceSet.m_registerMap.samplers[Tr2RenderContextEnum::COMPUTE_SHADER][sampler.index];
-						if( index >= material.m_resourceSet.m_registerMap.samplerCount )
-						{
-							return E_INVALIDARG;
-						}
-						auto& input = material.m_resourceSet.m_samplers[index];
-						D3D12_GPU_DESCRIPTOR_HANDLE handle;
-						switch( input.type )
-						{
-						case Tr2ResourceSetDescriptionAL::Sampler::SAMPLER:
-							handle = input.sampler.TrinityALImpl_GetObject()->m_samplerState->GetHandleGPU();
-							break;
-						case Tr2ResourceSetDescriptionAL::Sampler::HEAP_VIEW:
-							handle = renderContext.GetSamplerHeapView()->GetHandleGPU();
-							break;
-						default:
-							return E_INVALIDARG;
-						}
-						memcpy( tableData + D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + sampler.parameter * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ), &handle, sizeof( D3D12_GPU_DESCRIPTOR_HANDLE ) );
-					}
+					return E_FAIL;
 				}
 			}
 			return S_OK;
@@ -213,19 +146,19 @@ namespace TrinityALImpl
 
 		for( auto it = begin( desc.m_rayGenNames ); it != end( desc.m_rayGenNames ); ++it )
 		{
-			CR_RETURN_HR( FillRecord( tableData, it->name.c_str(), it->material ) );
+			CR_RETURN_HR( FillRecord( tableData, it->name, it->material ) );
 			tableData += entrySize;
 		}
 
 		for( auto it = begin( desc.m_missNames ); it != end( desc.m_missNames ); ++it )
 		{
-			CR_RETURN_HR( FillRecord( tableData, it->name.c_str(), it->material ) );
+			CR_RETURN_HR( FillRecord( tableData, it->name, it->material ) );
 			tableData += entrySize;
 		}
 
 		for( auto it = begin( desc.m_hitGroupNames ); it != end( desc.m_hitGroupNames ); ++it )
 		{
-			CR_RETURN_HR( FillRecord( tableData, it->name.c_str(), it->material ) );
+			CR_RETURN_HR( FillRecord( tableData, it->name, it->material ) );
 			tableData += entrySize;
 		}
 

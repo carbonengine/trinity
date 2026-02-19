@@ -605,7 +605,4 @@ void Tr2Material::ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2Rt
 		UpdateConstants( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_localInput, !pp.m_reroutedParameters.empty(), renderContext );
 		localMaterial.SetConstants( Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS, cb );
 	}
-
-	UpdateResourceSetDesc( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_localInput, pp.m_localResourceSetDesc );
-	localMaterial.SetResourceSet( pp.m_localResourceSetDesc );
 }

@@ -31,6 +31,7 @@ const Be::ClassInfo* EveChildLineSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "alwaysOn", m_isAlwaysOn, "If false this will be hidden if a spaceobjects activation strength < 0.5. If True then it is always on.", Be::READWRITE | Be::PERSIST )
+		MAP_PROPERTY_READONLY( "isUpdating", IsUpdating, "Is the EveChildLineSet updating." )
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
 

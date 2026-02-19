@@ -161,6 +161,24 @@ bool TriFrustum::IsSphereVisible( const Vector3& center, float radius, bool cull
 	return true;
 }
 
+TriFrustumTestResult TriFrustum::SphereTest( const CcpMath::Sphere& sphere ) const
+{
+	TriFrustumTestResult result = TriFrustumTestResult::Inside;
+	for( int i = 0; i < PLANE_COUNT; i++ )
+	{
+		auto d = DotCoord( m_planes[i], sphere.center );
+		if( d < -sphere.radius )
+		{
+			return TriFrustumTestResult::Outside;
+		}
+		if( d < sphere.radius )
+		{
+			result = TriFrustumTestResult::Intersect;
+		}
+	}
+	return result;
+}
+
 bool TriFrustum::IsPointVisible( const Vector3* point ) const
 {/**
 	Wrapping the sphere visible with a radius of zero.

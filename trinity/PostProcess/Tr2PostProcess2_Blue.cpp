@@ -30,6 +30,7 @@ const Be::ClassInfo* Tr2PostProcess2::ExposeToBlue()
 		MAP_ATTRIBUTE( "taa", m_taa, "Accesses the temporal antialiasing effect", Be::READWRITE )
 		MAP_ATTRIBUTE( "tonemapping", m_tonemapping, "Accesses the tonemapping effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "colorCorrection", m_colorCorrection, "Accesses the color correction effect", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "genericEffect", m_generic, "Accesses the generic effect", Be::READWRITE | Be::PERSIST )
 
     EXPOSURE_END()
 }

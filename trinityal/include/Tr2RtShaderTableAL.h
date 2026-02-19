@@ -24,11 +24,10 @@ class Tr2RtPipelineStateAL;
 class Tr2RtLocalMaterialDescriptionAL
 {
 public:
+	// Stores a raw pointer to the constant buffer, make sure that it lives as long as the shader table
 	Tr2RtLocalMaterialDescriptionAL& SetConstants( uint32_t registerIndex, const Tr2ConstantBufferAL& buffer );
-	Tr2RtLocalMaterialDescriptionAL& SetResourceSet( const Tr2ResourceSetDescriptionAL& resourceSet );
 private:
-	Tr2ResourceSetDescriptionAL m_resourceSet;
-	Tr2ConstantBufferAL m_constants[8];
+	const Tr2ConstantBufferAL* m_constants[8] = {};
 
 	friend class TrinityALImpl::Tr2RtShaderTableAL;
 };
@@ -48,7 +47,7 @@ public:
 private:
 	struct ShaderRecord
 	{
-		std::wstring name;
+		const wchar_t* name;
 		Tr2RtLocalMaterialDescriptionAL material;
 	};
 	std::vector<ShaderRecord> m_rayGenNames;

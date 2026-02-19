@@ -74,13 +74,7 @@ TrinityALImpl::Tr2RtShaderTableAL* Tr2RtShaderTableAL::TrinityALImpl_GetObject()
 
 Tr2RtLocalMaterialDescriptionAL& Tr2RtLocalMaterialDescriptionAL::SetConstants( uint32_t registerIndex, const Tr2ConstantBufferAL& buffer )
 {
-	m_constants[registerIndex] = buffer;
-	return *this;
-}
-
-Tr2RtLocalMaterialDescriptionAL& Tr2RtLocalMaterialDescriptionAL::SetResourceSet( const Tr2ResourceSetDescriptionAL& resourceSet )
-{
-	m_resourceSet = resourceSet;
+	m_constants[registerIndex] = &buffer;
 	return *this;
 }
 

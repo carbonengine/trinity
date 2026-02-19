@@ -3246,7 +3246,8 @@ namespace
             AddSystemValue( hlsl::float3_t, MetalSystemSemanticsType::direction );
             AddSystemValue( hlsl::float_t, MetalSystemSemanticsType::min_distance );
             AddSystemValue( hlsl::float_t, MetalSystemSemanticsType::distance );
-
+			AddSystemValue( TypeFromTokenType( OP_FLOAT, 3, 4 ), MetalSystemSemanticsType::object_to_world_transform );
+			AddSystemValue( TypeFromTokenType( OP_FLOAT, 3, 4 ), MetalSystemSemanticsType::world_to_object_transform );
         }
 		else if( shaderType == RtShaderType::RAY_GEN )
 		{
@@ -4775,6 +4776,8 @@ const char* MetalSystemSemanticsType::GetString( int type )
         "min_distance",
         "distance",
 		"instance_intersection_function_table_offset",
+		"object_to_world_transform",
+		"world_to_object_transform",
 		"base_vertex",
 		"base_instance",
 	};

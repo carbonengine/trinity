@@ -1528,7 +1528,7 @@ void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameE
 }
 ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination dest, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
 {
-    if( resources.m_textures.empty() )
+    if( resources.m_textures.empty() && resources.m_buffers.empty() )
     {
         return S_OK;
     }
@@ -1669,6 +1669,7 @@ void Tr2BindlessResourcesAL::Add( const Tr2BindlessResourcesAL& resources )
 void Tr2BindlessResourcesAL::Clear()
 {
 	m_textures.clear();
+	m_buffers.clear();
 }
 
 

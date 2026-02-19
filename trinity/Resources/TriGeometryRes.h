@@ -75,6 +75,19 @@ struct TriRtGeometryConstants
 	uint32_t padding;
 };
 
+struct TriMorphTargetGeometryConstants
+{
+	uint32_t vertexBufferStride;
+
+	uint32_t positionOffset;
+	uint32_t positionType;
+
+	uint32_t tangentOffset;
+	uint32_t tangentType;
+
+	uint32_t vertexCount;
+};
+
 struct TriGeometryResAreaData
 {
 	TriGeometryResAreaData();
@@ -89,6 +102,7 @@ struct TriGeometryResAreaData
 
 	Tr2RtBottomLevelAccelerationStructureAL m_staticBlas;
 	bool m_isSkinned;
+	bool m_isMorphed;
 	Tr2ConstantBufferAL m_rtGeometryConstants;
 };
 
@@ -140,6 +154,15 @@ struct TriGeometryResLodData
 	Tr2SuballocatedBuffer::Allocation m_vertexAllocation;
 	Tr2SuballocatedBuffer::Allocation m_indexAllocation;
 
+	Tr2SuballocatedBuffer::Allocation m_morphTargetAllocation;
+
+	std::vector<std::string> m_morphTargetNames;
+	std::vector<float> m_morphTargetDeformationAmounts;
+	std::vector<bool> m_isBakedMorphTarget;
+
+	unsigned int m_morphVertexDeclaration;
+	unsigned int m_bytesPerMorphTargetVertex;
+
 	// Index buffer with indexes in reversed order (used by hair/clothing)
 	bool m_reversedIndicesValid;
 	Tr2SuballocatedBuffer::Allocation m_reversedIndexAllocation;
@@ -150,7 +173,7 @@ struct TriGeometryResMeshData
 	TriGeometryResMeshData();
 
 	std::string m_name;
-
+	
 	unsigned int m_vertexDeclarationHandle;
 	unsigned int m_bytesPerVertex;
 
@@ -349,6 +372,7 @@ private:
 	void SetupSkeletons( granny_file_info* gi );
 	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* grannyMesh, int bytesPerVertex );
 	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* grannyMesh, granny_file_info* gi, int bytesPerVertex );
+	bool IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi );
 	
 	// Create D3D mesh from data in m_pGrannyFile
 	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
