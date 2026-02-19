@@ -2929,7 +2929,8 @@ void EveSpaceScene::UpdateVariableStore()
 
 	if( m_reflectionCorrectionEnabled )
 	{
-		BeResMan->GetResource( "res:/texture/reflectionskew/128x128.dds", "", m_reflectionCorrectionMap );
+		//BeResMan->GetResource( "res:/texture/reflectioncorrection/32x32.dds", "", m_reflectionCorrectionMap );
+		BeResMan->GetResource( "res:/texture/reflectioncorrection/128x128.dds", "", m_reflectionCorrectionMap );
 	}
 	else
 	{
