@@ -654,8 +654,6 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 		Tr2Renderer::RunComputeShader( m_cortaoEffect, BlueSharedString( "Pack" ), ( width + packWorkGroupSize - 1 ) / packWorkGroupSize, ( height + packWorkGroupSize - 1 ) / packWorkGroupSize, 1, renderContext );
 	}
 	{
-
-
 		GPU_REGION( renderContext, "Main pass" );
 		uint32_t mainPassWorkGroupSize = 16;
 		Tr2Renderer::RunComputeShader( m_cortaoEffect, BlueSharedString( "MainPass" ), ( width + mainPassWorkGroupSize - 1 ) / mainPassWorkGroupSize, ( height + mainPassWorkGroupSize - 1 ) / mainPassWorkGroupSize, 1, renderContext );
