@@ -56,9 +56,6 @@ public:
 	void SetupTurretMaterialFromDNA( EveTurretSet* turretSet, const char* dnaString );
 	void SetupTurretMaterialFromFaction( EveTurretSet* turretSet, const char* factionName );
 
-	// change the layout data of the space object
-	void RegenerateLayout(EveSpaceObject2* owner, const char* dnaString);
-
 	bool LoadData( const char* filePath );
 private:
 	// creation
@@ -112,7 +109,7 @@ private:
 	void SetupLocatorSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets );
 	void SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupLights( ITr2LightOwnerPtr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets ) const;
-	void SetupLayout( EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, uint32_t seedOverwrite = 0 );
+	void SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr & sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, uint32_t seedOverwrite = 0 );
 
 
 	Tr2MeshPtr CreateMesh( const EveSOFDNAPtr dna ) const;
