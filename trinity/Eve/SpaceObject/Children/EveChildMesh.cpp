@@ -777,6 +777,8 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 {
 	m_vsData.activeMorphTargetsCount = 0;
 
+	m_vsData.bakedMorphTargetVertexDataOffset = std::numeric_limits<uint32_t>::max();
+
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
 		auto meshIndex = m_mesh->GetMeshIndex();
@@ -796,10 +798,6 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 				if( m_bakedMorphAllocation.IsValid() && IsMorphsBaked() )
 				{
 					m_vsData.bakedMorphTargetVertexDataOffset = m_bakedMorphAllocation.GetOffset();
-				}
-				else
-				{
-					m_vsData.bakedMorphTargetVertexDataOffset = std::numeric_limits<uint32_t>::max();
 				}
 			}
 		}		
