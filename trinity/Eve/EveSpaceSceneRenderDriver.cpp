@@ -148,6 +148,13 @@ EveSpaceSceneRenderDriver::EveSpaceSceneRenderDriver( IRoot* lockobj ) :
 
 	m_postProcess.CreateInstance();
 	m_fpsRenderer.CreateInstance();
+
+
+	//We have a few different resolution lookup tables to choose from. Use the highest quality one for now.
+	//BeResMan->GetResource( "res:/texture/reflectioncorrection/32x32.dds", "", m_reflectionCorrectionMap );
+	BeResMan->GetResource( "res:/texture/reflectioncorrection/128x128.dds", "", m_reflectionCorrectionMap );
+
+	BeResMan->GetResource( "res:/texture/global/black.dds", "", m_blackReflectionCorrectionMap );
 }
 
 EveSpaceSceneRenderDriver::~EveSpaceSceneRenderDriver()
@@ -423,18 +430,8 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		return;
 	}
 
-	TriTextureResPtr m_reflectionCorrectionMap;
-	if( m_reflectionCorrectionEnabled )
-	{
-		//We have a few different resolution lookup tables to choose from. Use the highest quality one for now.
-		//BeResMan->GetResource( "res:/texture/reflectioncorrection/32x32.dds", "", m_reflectionCorrectionMap );
-		BeResMan->GetResource( "res:/texture/reflectioncorrection/128x128.dds", "", m_reflectionCorrectionMap );
-	}
-	else
-	{
-		BeResMan->GetResource( "res:/texture/global/black.dds", "", m_reflectionCorrectionMap );
-	}
-	GlobalStore().RegisterVariable( "EveSpaceSceneReflectionCorrectionLookupTable", m_reflectionCorrectionMap );
+
+	GlobalStore().RegisterVariable( "EveSpaceSceneReflectionCorrectionLookupTable", m_reflectionCorrectionEnabled ? m_reflectionCorrectionMap : m_blackReflectionCorrectionMap );
 
 
 	m_scene->m_viewLast = m_viewLast;

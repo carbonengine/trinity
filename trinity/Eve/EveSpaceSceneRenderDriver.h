@@ -148,6 +148,8 @@ private:
 	Matrix m_projectionLast = IdentityMatrix();
 
 	bool m_reflectionCorrectionEnabled;
+	TriTextureResPtr m_reflectionCorrectionMap;
+	TriTextureResPtr m_blackReflectionCorrectionMap;
 
 	struct
 	{
