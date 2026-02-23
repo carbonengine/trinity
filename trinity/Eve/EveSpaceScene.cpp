@@ -2994,7 +2994,7 @@ void EveSpaceScene::UpdateVariableStore()
 	{
 		m_volumetricsRenderer->UpdateVariableStore();
 	}
-	
+
 	m_sharedIndexVertexBufferWrapper.SetGpuBuffer( g_sharedBuffer.GetBuffer() );
 	m_sharedIndexVertexBufferVar = &m_sharedIndexVertexBufferWrapper;
 
