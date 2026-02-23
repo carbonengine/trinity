@@ -147,6 +147,8 @@ private:
 	Matrix m_viewLast = IdentityMatrix();
 	Matrix m_projectionLast = IdentityMatrix();
 
+	bool m_reflectionCorrectionEnabled;
+
 	struct
 	{
 		Tr2ProfileTimer update;

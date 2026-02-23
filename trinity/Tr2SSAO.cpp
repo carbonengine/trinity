@@ -96,7 +96,6 @@ Tr2GpuResourcePool::Texture Tr2SSAO::Filter( const Tr2TextureAL& depthBuffer, co
 	GPU_REGION( renderContext, "SSAO" );
 	if( m_cortaoEnabled )
 	{
-
 		//Lazily initialize CORTAO, as EVE currently doesn't use it, so it doesn't have the shaders/lookup table for it.
 		if (!m_cortaoInitialized)
 		{
@@ -120,8 +119,10 @@ Tr2GpuResourcePool::Texture Tr2SSAO::Filter( const Tr2TextureAL& depthBuffer, co
 		GPU_REGION( renderContext, "CORTAO" );
 		return ComputeCORTAO( depthBuffer, normalBuffer, gpuResourcePool, renderContext, temporal );
 
-	} else {
-		GPU_REGION( renderContext, "Detail" );
+	} 
+	else
+	{
+		GPU_REGION( renderContext, "CACAO" );
 		return PerformPass( m_detail, depthBuffer, normalBuffer, false, gpuResourcePool, renderContext );
 	}
 }

@@ -258,11 +258,17 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 			GetAllTempTextures, 
 			"Returns all temp textures used by the gpu resource pool. For debugging purposes." )
 
-		MAP_PROPERTY( 
-			"debugMode", 
-			GetDebugMode, 
-			SetDebugMode, 
+		MAP_PROPERTY(
+			"debugMode",
+			GetDebugMode,
+			SetDebugMode,
 			"Toggles debug mode on and off. In debug mode sharing is disabled for temporary GPU resources" )
+
+		MAP_ATTRIBUTE(
+			"reflectionCorrectionEnabled",
+			m_reflectionCorrectionEnabled,
+			"Enables ambient light reflection angle correction, improving the ambient light specular reflections on rough surfaces",
+			Be::READWRITE )
 
 	EXPOSURE_END()
 }

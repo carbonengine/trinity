@@ -252,9 +252,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	// global textures
 	// register variable handle to texture
 
-	m_reflectionCorrectionEnabled = true;
-	m_reflectionCorrectionMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneReflectionCorrectionLookupTable", (ITr2TextureProvider*)nullptr );
-
 	m_envMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneEnvMap", (ITr2TextureProvider*)nullptr );
 	m_staticEnvMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneStaticEnvMap", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
@@ -2998,17 +2995,6 @@ void EveSpaceScene::UpdateVariableStore()
 	{
 		m_volumetricsRenderer->UpdateVariableStore();
 	}
-
-	if( m_reflectionCorrectionEnabled )
-	{
-		//BeResMan->GetResource( "res:/texture/reflectioncorrection/32x32.dds", "", m_reflectionCorrectionMap );
-		BeResMan->GetResource( "res:/texture/reflectioncorrection/128x128.dds", "", m_reflectionCorrectionMap );
-	}
-	else
-	{
-		BeResMan->GetResource( "res:/texture/global/black.dds", "", m_reflectionCorrectionMap );
-	}
-	m_reflectionCorrectionMapHandle->SetValue( m_reflectionCorrectionMap );
 	
 	m_sharedIndexVertexBufferWrapper.SetGpuBuffer( g_sharedBuffer.GetBuffer() );
 	m_sharedIndexVertexBufferVar = &m_sharedIndexVertexBufferWrapper;

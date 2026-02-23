@@ -231,14 +231,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"",
 			Be::PERSISTONLY )
 
-
-		MAP_ATTRIBUTE(
-			"reflectionCorrectionEnabled",
-			m_reflectionCorrectionEnabled,
-			"Enables ambient light reflection angle correction, improving the ambient light specular reflections on rough surfaces\n"
-			":jessica-group: Lighting",
-			Be::READWRITE | Be::PERSIST )
-
 		MAP_ATTRIBUTE(
 			"envMapRotation",
 			m_envMapRotation,
