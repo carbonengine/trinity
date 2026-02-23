@@ -130,8 +130,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"Effect used for rendering background. Geometry rendered is a camera space full-screen quad.",
 			Be::READWRITE | Be::PERSIST )
 
-
-
 		MAP_ATTRIBUTE(
 			"starfield",
 			m_starfield,

@@ -251,7 +251,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 
 	// global textures
 	// register variable handle to texture
-
 	m_envMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneEnvMap", (ITr2TextureProvider*)nullptr );
 	m_staticEnvMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneStaticEnvMap", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
