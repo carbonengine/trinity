@@ -10,6 +10,7 @@
 #include "Eve/EveCamera.h"
 #include "../Particle/Tr2GpuParticleSystem.h"
 #include "../Tr2TextureReference.h"
+#include "Resources/TriTextureRes.h"
 
 
 CCP_STATS_DECLARE( updateDynamicLightLists, "Trinity/EveSpaceScene/updateDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
@@ -139,7 +140,8 @@ ITr2RenderNode::TempOutput* FindNamedOutput( const ITr2RenderNode::Span<ITr2Rend
 
 EveSpaceSceneRenderDriver::EveSpaceSceneRenderDriver( IRoot* lockobj ) :
 	PARENTLOCK( m_toolsScenes ),
-	m_gpuResourcePool( &GetGlobalGpuResourcePool() )
+	m_gpuResourcePool( &GetGlobalGpuResourcePool() ),
+	m_reflectionCorrectionEnabled( true )
 {
 	m_distortionEffect.CreateInstance();
 	m_distortionEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/Distortion.fx" );
@@ -420,6 +422,20 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		CCP_LOGWARN( "EveSpaceSceneRenderDriver::Execute called without a valid scene or a camera" );
 		return;
 	}
+
+	TriTextureResPtr m_reflectionCorrectionMap;
+	if( m_reflectionCorrectionEnabled )
+	{
+		//We have a few different resolution lookup tables to choose from. Use the highest quality one for now.
+		//BeResMan->GetResource( "res:/texture/reflectioncorrection/32x32.dds", "", m_reflectionCorrectionMap );
+		BeResMan->GetResource( "res:/texture/reflectioncorrection/128x128.dds", "", m_reflectionCorrectionMap );
+	}
+	else
+	{
+		BeResMan->GetResource( "res:/texture/global/black.dds", "", m_reflectionCorrectionMap );
+	}
+	GlobalStore().RegisterVariable( "EveSpaceSceneReflectionCorrectionLookupTable", m_reflectionCorrectionMap );
+
 
 	m_scene->m_viewLast = m_viewLast;
 	m_scene->m_projectionLast = m_projectionLast;

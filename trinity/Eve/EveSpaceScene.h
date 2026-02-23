@@ -20,7 +20,6 @@
 #include "Tr2LightManager.h"
 #include "PostProcess/Tr2PostProcess2.h"
 #include "Eve/EveComponentRegistry.h"
-#include "Tr2Variable.h"
 #include "TriFrustumOrtho.h"
 #include "Tr2ShadowMap.h"
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
@@ -430,11 +429,6 @@ protected:
 	ITriRenderBatchAccumulator* m_pickingBatches;
 
 	Tr2EffectPtr m_backgroundEffect;
-
-	
-	bool m_reflectionCorrectionEnabled;
-	TriTextureResPtr m_reflectionCorrectionMap;
-	TriVariable* m_reflectionCorrectionMapHandle;
 
 	Quaternion m_envMapRotation;
 
