@@ -147,6 +147,10 @@ private:
 	Matrix m_viewLast = IdentityMatrix();
 	Matrix m_projectionLast = IdentityMatrix();
 
+	bool m_reflectionCorrectionEnabled;
+	TriTextureResPtr m_reflectionCorrectionMap;
+	TriTextureResPtr m_blackReflectionCorrectionMap;
+
 	struct
 	{
 		Tr2ProfileTimer update;

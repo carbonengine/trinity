@@ -20,7 +20,6 @@
 #include "Tr2LightManager.h"
 #include "PostProcess/Tr2PostProcess2.h"
 #include "Eve/EveComponentRegistry.h"
-#include "Tr2Variable.h"
 #include "TriFrustumOrtho.h"
 #include "Tr2ShadowMap.h"
 #include "Eve/SpaceObject/Children/EveChildCloud2.h"
