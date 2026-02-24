@@ -476,10 +476,7 @@ uint32_t Tr2EffectStateManager::RegisterShaderProgramOverride( uint32_t original
 
 void Tr2EffectStateManager::Initialize()
 {
-	if( !GlobalStore().FindVariable( "ViewportSize" ) )
-	{
-		m_viewportSizeVar.Register( "ViewportSize", Vector4( 0.0f, 0.0f, 1.0f, 0.0f ) );
-	}
+	m_viewportSizeVar.Register( "ViewportSize", Vector4( 0.0f, 0.0f, 1.0f, 0.0f ) );
 
 	m_currentValues.Reset();
 	m_isManagedRendering = false;
