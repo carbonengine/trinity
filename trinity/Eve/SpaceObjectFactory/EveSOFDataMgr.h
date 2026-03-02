@@ -823,6 +823,7 @@ public:
 		EveSwarm::BehaviorProperties swarmBehavior;
 		GenericBannerShaderData bannerShader;
 		std::map<std::string, EntityComponents::ReflectionMode> categoryData;
+		EveSOFDataArea::AreaType turretAreaType;
 	};
 
 

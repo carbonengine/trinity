@@ -566,50 +566,6 @@ const Be::ClassInfo* EveSOFDataGenericHullCategory::ExposeToBlue(){
 		EXPOSURE_END()
 }
 
-BLUE_DEFINE( EveSOFDataGeneric );
-const Be::ClassInfo* EveSOFDataGeneric::ExposeToBlue()
-{
-    EXPOSURE_BEGIN( EveSOFDataGeneric, "" )
-        MAP_INTERFACE( EveSOFDataGeneric )
-
-		MAP_ATTRIBUTE( "resPathDefaultAlliance", m_resPathDefaultAlliance, "The texture for the default alliance logo\n:jessica-group: DefaultTextures\n:jessica-widget: filepath\n:jessica-file-filter: texture", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "resPathDefaultCorp", m_resPathDefaultCorp, "The texture for the default corp logo\n:jessica-group: DefaultTextures\n:jessica-widget: filepath\n:jessica-file-filter: texture", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "resPathDefaultCeo", m_resPathDefaultCeo, "The texture for the default ceo logo\n:jessica-group: DefaultTextures\n:jessica-widget: filepath\n:jessica-file-filter: texture", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "areaShaderLocation", m_areaShaderLocation, "The location of all the area shaders\n:jessica-group: ShaderInfo", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "decalShaderLocation", m_decalShaderLocation, "The location of all the decal shaders\n:jessica-group: ShaderInfo", Be::READWRITE | Be::PERSIST )
-
-#define MAP_SCREENSIZE( sc ) MAP_ATTRIBUTE( "decalMinScreenSize" # sc, m_decalMinScreenSizes[EveSOFDataHullDecalSetItem::USAGE_##sc], ":jessica-group: Decal Min Screen Size", Be::READWRITE | Be::PERSIST )
-
-		MAP_SCREENSIZE( STANDARD )
-		MAP_SCREENSIZE( KILLCOUNTER )
-		MAP_SCREENSIZE( HOLE )
-		MAP_SCREENSIZE( CYLINDRICAL )
-		MAP_SCREENSIZE( GLOWCYLINDRICAL )
-		MAP_SCREENSIZE( GLOWSTANDARD )
-		MAP_SCREENSIZE( LOGO )
-
-#undef MAP_SCREENSIZE
-
-		MAP_ATTRIBUTE( "shaderPrefix", m_shaderPrefix, "A prefix for all shaders\n:jessica-group: ShaderInfo", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "shaderPrefixAnimated", m_shaderPrefixAnimated, "A prefix for all skinned shaders\n:jessica-group: ShaderInfo", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "materialPrefixes", m_materialPrefixes, "List of all the support material prefixes", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "patternMaterialPrefixes", m_patternMaterialPrefixes, "List of all the supported pattern material prefixes", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "areaShaders", m_areaShaders, "List of all the area shaders and their generic data", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "decalShaders", m_decalShaders, "List of all the decal shaders and their generic data", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "damage", m_damage, "Global visual damage data", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "hullDamage", m_hullDamage, "Global visual hull damage data", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "swarm", m_swarm, "Global swarm behavior preset data", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "bannerShader", m_bannerShader, "Banner shader", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "genericWreckMaterial", m_genericWreckMaterial, "Global wreck area shader data", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "variants", m_variants, "All the hull  variants", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "visibilityGroups", m_visibilityGroups, "All the visibility groups", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "hullCategories", m_hullCategories, "All the hull categories", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "hullCategoriesData", m_hullCategoryData, "New hull categories that contain reflection settings", Be::READ | Be::PERSIST )
-
-		EXPOSURE_END()
-}
-
-
 
 BLUE_DEFINE( EveSOFData );
 const Be::ClassInfo* EveSOFData::ExposeToBlue()

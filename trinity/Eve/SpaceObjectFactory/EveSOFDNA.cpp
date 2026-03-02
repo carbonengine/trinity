@@ -1381,7 +1381,7 @@ const Vector4* EveSOFDNA::GetFactionTurretParameters( const BlueSharedString& pa
 		paramName.ChangeMaterialIdx( m_genericData, m_factionData->materialUsageList[paramName.GetMaterialIdx()] );
 	}
 	// now use this parameter name to get the actual value
-	return GetMeshAreaParameter( EveSOFDataArea::TYPE_PRIMARY, BlueSharedString( paramName.GetFullName() ) );
+	return GetMeshAreaParameter( m_genericData->turretAreaType, BlueSharedString( paramName.GetFullName() ) );
 }
 
 // --------------------------------------------------------------------------------

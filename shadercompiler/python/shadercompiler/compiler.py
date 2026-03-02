@@ -1,9 +1,13 @@
+import json
 import os
 import subprocess
 import sys
 from . import paths
 
-_SHADER_COMPILER_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'carbon', 'tools', 'ShaderCompiler')
+carbonjson = json.load(open(os.path.dirname(__file__) + '/../../carbon.json'))
+
+_SHADER_COMPILER_DIR = os.path.join(os.path.dirname(__file__),'..', '..', 'vendor', carbonjson['libraries']['carbon_trinity'], 'shadercompiler', 'bin')
+
 if sys.platform == 'win32':
     COMPILER_PATH = os.path.abspath(os.path.join(_SHADER_COMPILER_DIR, 'Windows', 'ShaderCompiler.exe'))
 elif sys.platform == 'darwin':

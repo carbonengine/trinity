@@ -321,6 +321,7 @@ public:
 		TYPE_MONUMENT,
 		TYPE_ORNAMENT,
 		TYPE_SIMPLEPRIMARY,
+		TYPE_TURRET,
 
 		TYPE_MAX,
 		TYPE_NO_OVERWRITE = TYPE_MAX,
@@ -2203,6 +2204,8 @@ public:
 	std::string m_shaderPrefixAnimated;
 	std::string m_areaShaderLocation;
 	std::string m_decalShaderLocation;
+
+	EveSOFDataArea::AreaType m_turretAreaType;
 
 	float m_decalMinScreenSizes[EveSOFDataHullDecalSetItem::USAGE_MAX];
 

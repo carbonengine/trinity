@@ -129,9 +129,12 @@ private:
 	bool EjectTextureHelper( Tr2AtlasTexture* tex );
 
 	void FreeArea( Tr2TextureAtlasArea * );
+	void ReleasePendingFreeAreas();
 
 	typedef TrackableStdList<Tr2TextureAtlasArea*> AreaList_t;
 	AreaList_t m_freeAreas;
+	// List of areas and frame numbers that are to be freed when GPU is done copying from them (driver bug workaround).
+	std::vector<std::pair<Tr2TextureAtlasArea*, uint64_t>> m_pendingFreeAreas;
 
 	Tr2TextureAL m_texture;
 	OnTextureChangeEvent m_onTextureChange;
