@@ -539,11 +539,11 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 
 	if( !m_cortaoConstantBuffer.IsValid() )
 	{
-		m_cortaoConstantBuffer.Create( uint32_t( sizeof( CortaoPerObjectData ) ), renderContext.GetPrimaryRenderContext() );
+		CR_RETURN_VAL( m_cortaoConstantBuffer.Create( uint32_t( sizeof( CortaoPerObjectData ) ), renderContext.GetPrimaryRenderContext() ), {} );
 	}
 
 	CortaoPerObjectData* data;
-	m_cortaoConstantBuffer.Lock( (void**)&data, renderContext );
+	CR_RETURN_VAL( m_cortaoConstantBuffer.Lock( (void**)&data, renderContext ), {} );
 	{
 		Matrix viewMatrix = Tr2Renderer::GetViewTransform();
 
@@ -615,9 +615,9 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 		data->mipCount = packedBuffer->GetMipCount();
 	}
 
-	m_cortaoConstantBuffer.Unlock( renderContext );
+	CR_RETURN_VAL( m_cortaoConstantBuffer.Unlock( renderContext ), {} );
 
-	renderContext.SetConstants( m_cortaoConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
+	CR_RETURN_VAL( renderContext.SetConstants( m_cortaoConstantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() ), {} );
 
 
 	PixelFormat outputFormat = m_cortaoBentNormal ? PixelFormat::PIXEL_FORMAT_R8G8B8A8_SNORM : PixelFormat::PIXEL_FORMAT_R8_UNORM;
