@@ -1929,10 +1929,14 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 				CCP_ASSERT_M( morphDataSize == currentMorphDataSize, "Morph sizes need to match!" );
 
 				size_t nameLength = strlen( morphTarget.ScalarName );
-				// By convention (due to the exporter), the morph target name ends with "Shape". Assert that it does, and also that it is not an empty string!
-				CCP_ASSERT_M( nameLength > 5 && strcmp( morphTarget.ScalarName + nameLength - 5, "Shape" ) == 0, "Invalid morph target name!" );
 
-				std::string morphTargetName( morphTarget.ScalarName, nameLength - 5 );
+				// By convention (due to the exporter), the morph target name ends with "Shape".
+				std::string morphTargetName( morphTarget.ScalarName );
+				if ( nameLength > 5 && strcmp( morphTarget.ScalarName + nameLength - 5, "Shape" ) == 0 )
+				{
+					morphTargetName = std::string( morphTarget.ScalarName, nameLength - 5 );
+				}
+				
 				lod->m_morphTargetNames.push_back( morphTargetName );
 
 				lod->m_isBakedMorphTarget.push_back( false );
