@@ -55,11 +55,6 @@ void Tr2TextureAtlas::ReleaseResources( TriStorage s )
 			CCP_DELETE *it;
 		}
 		m_freeAreas.clear();
-		for ( auto [freeArea, _] : m_pendingFreeAreas )
-		{
-			CCP_DELETE freeArea;
-		}
-		m_pendingFreeAreas.clear();
 		m_dirtyMipRegions.clear();
 
 		m_onTextureChange();
@@ -113,7 +108,6 @@ bool Tr2TextureAtlas::OnPrepareResources()
 	area->tex = NULL;
 
 	m_freeAreas.clear();
-	m_pendingFreeAreas.clear();
 	FreeArea( area );
 
 	m_freeTexels = m_width * m_height;
@@ -221,9 +215,6 @@ void Tr2TextureAtlas::RemoveFromAtlas( Tr2AtlasTexture* tex )
 void Tr2TextureAtlas::ConsolidateFreeAreas()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-
-	ReleasePendingFreeAreas();
-
 	if( m_freeAreas.size() < 2 )
 	{
 		return;
@@ -483,8 +474,6 @@ void Tr2TextureAtlas::CollapseFreeAreas()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	ReleasePendingFreeAreas();
-
 	if( m_freeAreas.size() < 2 )
 	{
 		return;
@@ -690,8 +679,6 @@ Tr2TextureAtlasArea* Tr2TextureAtlas::GetFreeArea( unsigned int width, unsigned 
 	{
 		return NULL;
 	}
-
-	ReleasePendingFreeAreas();
 
 	// Align to 8pixels to prevent thin slivers as free areas
 	width = (width + 7) & ~7;
@@ -1216,10 +1203,6 @@ std::list<Tr2Rect> Tr2TextureAtlas::GetFreeAreas() const
 	{
 		areas.push_back( (*i)->rect );
 	}
-	for( auto i = m_pendingFreeAreas.begin(); i != m_pendingFreeAreas.end(); ++i )
-	{
-		areas.push_back( i->first->rect );
-	}
 	return areas;
 }
 
@@ -1334,10 +1317,7 @@ bool Tr2TextureAtlas::EjectTextureHelper( Tr2AtlasTexture *tex )
 
 		tex->FinalizePrepare();
 
-		// Instead of immediately freeing the area, we put it in a pending free list with the current frame number. 
-		// This is a workaround for a driver bug where the driver may schedule a new texture upload into the same area 
-		// before the GPU has finished reading from it for copying.
-		m_pendingFreeAreas.push_back( { texArea, renderContext.GetRecordingFrameNumber() } );
+		FreeArea( texArea );
 
 		RegisterOutsider( tex );
 		return true;
@@ -1385,28 +1365,6 @@ void Tr2TextureAtlas::EjectAllTextures()
 	}
 
 }
-
-void Tr2TextureAtlas::ReleasePendingFreeAreas()
-{
-	if( !m_pendingFreeAreas.empty() )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		auto freeBegin = std::remove_if( m_pendingFreeAreas.begin(), m_pendingFreeAreas.end(), [&]( const auto& pair ) {
-			return pair.second <= renderContext.GetRenderedFrameNumber();
-		} );
-		if( freeBegin == m_pendingFreeAreas.end() )
-		{
-			return;
-		}
-		for( auto it = freeBegin; it != m_pendingFreeAreas.end(); ++it )
-		{
-			FreeArea( it->first );
-		}
-		m_pendingFreeAreas.erase( freeBegin, m_pendingFreeAreas.end() );
-		UpdateFreeMaxima();
-	}
-}
-
 void Tr2TextureAtlas::FreeArea( Tr2TextureAtlasArea *area )
 {
 	if( area == NULL || 
