@@ -206,10 +206,7 @@ function(configure_shader_compiler target)
 endfunction()
 
 add_executable(ShaderCompiler)
-set_target_properties(ShaderCompiler PROPERTIES 
-    OUTPUT_NAME "ShaderCompiler$<$<CONFIG:DEBUG>:d>"
-    RUNTIME_OUTPUT_DIRECTORY "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}/carbon/tools/ShaderCompiler/${CCP_VENDOR_PLATFORM}$<$<CONFIG:DEBUG>:>"
-)
+
 configure_shader_compiler(ShaderCompiler)
 
 
