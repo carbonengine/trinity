@@ -84,6 +84,9 @@ private:
 		Matrix normalMatrix;
 
 		uint32_t mipCount;
+		uint32_t padding0;
+		uint32_t padding1;
+		uint32_t padding2;
 	};
 
 	struct CortaoDownsamplePerObjectData
