@@ -530,7 +530,7 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 		for( ; mipLevels < 8; mipLevels++ )
 		{
 			res /= 2;
-			if( res < 32 * 32 )
+			if( res < 32 )
 			{
 				break;
 			}
