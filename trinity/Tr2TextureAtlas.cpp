@@ -1391,16 +1391,19 @@ void Tr2TextureAtlas::ReleasePendingFreeAreas()
 	if( !m_pendingFreeAreas.empty() )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
+		for( auto& pair : m_pendingFreeAreas )
+		{
+			if( pair.second <= renderContext.GetRenderedFrameNumber() )
+			{
+				FreeArea( pair.first );
+			}
+		}
 		auto freeBegin = std::remove_if( m_pendingFreeAreas.begin(), m_pendingFreeAreas.end(), [&]( const auto& pair ) {
 			return pair.second <= renderContext.GetRenderedFrameNumber();
 		} );
 		if( freeBegin == m_pendingFreeAreas.end() )
 		{
 			return;
-		}
-		for( auto it = freeBegin; it != m_pendingFreeAreas.end(); ++it )
-		{
-			FreeArea( it->first );
 		}
 		m_pendingFreeAreas.erase( freeBegin, m_pendingFreeAreas.end() );
 		UpdateFreeMaxima();
