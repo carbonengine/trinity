@@ -73,6 +73,9 @@ public:
     float GetCurveSetDuration( const std::string& name ) const override;
     float GetRangeDuration( const std::string& name, const std::string& rangeName ) const override;
 
+    const char* GetName() const;
+    void SetName( const char* name );
+
 private:
 	// general data
 	bool m_display;

@@ -2811,8 +2811,29 @@ void EveSpaceObject2::AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect
 void EveSpaceObject2::RemoveOverlayEffect( EveMeshOverlayEffectPtr overlayEffectToRemove )
 {
 	ssize_t index = m_overlayEffects.FindKey( overlayEffectToRemove->GetRawRoot() );
-	m_overlayEffects.Remove( index );
+	if( index >= 0 )
+	{
+		m_overlayEffects.Remove( index );
+	}
 }
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Remove a specific overlayEffect from the space object
+// --------------------------------------------------------------------------------
+EveMeshOverlayEffectPtr EveSpaceObject2::GetOverlayEffectByName( const char* name ) const
+{
+	for( auto it = begin( m_overlayEffects ); it != end( m_overlayEffects ); ++it )
+	{
+		auto overlay = *it;
+		if( strcmp( overlay->GetName(), name ) == 0 )
+		{
+			return overlay;
+		}
+	}
+	return nullptr;
+}
+
 
 // --------------------------------------------------------------------------------
 // Description:

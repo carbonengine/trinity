@@ -276,3 +276,13 @@ void EveMeshOverlayEffect::Update( Be::Time realTime, Be::Time simTime )
         ( *it )->Update( 0.5f );
     }
 }
+
+const char* EveMeshOverlayEffect::GetName() const
+{
+    return m_name.c_str();
+}
+
+void EveMeshOverlayEffect::SetName( const char* name )
+{
+    m_name = name;
+}
