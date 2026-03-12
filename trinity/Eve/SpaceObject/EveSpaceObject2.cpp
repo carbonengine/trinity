@@ -224,6 +224,11 @@ EveSpaceObject2::~EveSpaceObject2()
 	{
 		m_geometryResFromMesh->RemoveNotifyTarget( this );
 	}
+
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink();
+	}
 }
 
 bool EveSpaceObject2::Initialize()
@@ -270,6 +275,15 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
 			{
 				controller->Unlink();
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			for( ssize_t i = 0; i < list->GetSize(); ++i )
+			{
+				if( ITr2ControllerPtr controller = BlueCastPtr( list->GetAt( i ) ) )
+				{
+					controller->Unlink();
+				}
 			}
 			break;
 		default:

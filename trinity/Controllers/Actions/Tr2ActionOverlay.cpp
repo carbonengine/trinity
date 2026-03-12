@@ -121,6 +121,7 @@ void Tr2ActionOverlay::Stop( ITr2ActionController& controller )
 	{
 		owner->RemoveOverlayEffect( m_overlay );
 	}
+	m_overlay = nullptr;
 }
 
 void Tr2ActionOverlay::LoadOverlay( EveSpaceObject2* owner )

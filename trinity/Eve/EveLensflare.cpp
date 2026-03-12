@@ -112,6 +112,15 @@ void EveLensflare::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 				controller->Unlink();
 			}
 			break;
+		case BELIST_UNLOADSTART:
+			for( ssize_t i = 0; i < list->GetSize(); ++i )
+			{
+				if( ITr2ControllerPtr controller = BlueCastPtr( list->GetAt( i ) ) )
+				{
+					controller->Unlink();
+				}
+			}
+			break;
 		default:
 			break;
 		}
@@ -120,10 +129,14 @@ void EveLensflare::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Empty
+//   Clean up controllers by unlinking them 
 // --------------------------------------------------------------------------------
 EveLensflare::~EveLensflare()
 {
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink();
+	}
 }
 
 // --------------------------------------------------------------------------------

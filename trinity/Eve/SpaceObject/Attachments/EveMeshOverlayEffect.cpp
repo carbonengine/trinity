@@ -17,6 +17,10 @@
 // --------------------------------------------------------------------------------------
 EveMeshOverlayEffect::~EveMeshOverlayEffect()
 {
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink();
+	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -71,6 +75,15 @@ void EveMeshOverlayEffect::OnListModified( long event, ssize_t key, ssize_t key2
                 controller->Unlink();
             }
             break;
+		case BELIST_UNLOADSTART:
+			for( ssize_t i = 0; i < list->GetSize(); ++i )
+			{
+				if( ITr2ControllerPtr controller = BlueCastPtr( list->GetAt( i ) ) )
+				{
+					controller->Unlink();
+				}
+			}
+			break;
         default:
             break;
         }

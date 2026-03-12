@@ -58,6 +58,10 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 
 EveChildContainer::~EveChildContainer()
 {
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink();
+	}
 }
 
 bool EveChildContainer::Initialize()
@@ -128,6 +132,15 @@ void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, I
 			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
 			{
 				controller->Unlink();
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			for( ssize_t i = 0; i < list->GetSize(); ++i )
+			{
+				if( ITr2ControllerPtr controller = BlueCastPtr( list->GetAt( i ) ) )
+				{
+					controller->Unlink();
+				}
 			}
 			break;
 		default:

@@ -50,6 +50,7 @@ BLUE_CLASS( EveStretch3 ):
 public:
     EXPOSE_TO_BLUE();
     EveStretch3( IRoot* lockobj = NULL );
+    ~EveStretch3();
 
     void Rebind( bool onlyUpdateBindings = 0 );
     IEveSpaceObject2* GetSourceSpaceObject() const;

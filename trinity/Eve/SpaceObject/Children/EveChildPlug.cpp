@@ -24,6 +24,10 @@ EveChildPlug::EveChildPlug( IRoot* lockobj ) :
 
 EveChildPlug::~EveChildPlug()
 {
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink();
+	}
 }
 
 bool EveChildPlug::Initialize()
@@ -58,6 +62,15 @@ void EveChildPlug::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 			if ( ITr2ControllerPtr controller = BlueCastPtr( value ) )
 			{
 				controller->Unlink();
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			for( ssize_t i = 0; i < list->GetSize(); ++i )
+			{
+				if( ITr2ControllerPtr controller = BlueCastPtr( list->GetAt( i ) ) )
+				{
+					controller->Unlink();
+				}
 			}
 			break;
 		default:
