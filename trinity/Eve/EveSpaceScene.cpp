@@ -3191,7 +3191,7 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	}
 
 	// m_perFrameVS.ProjectionMat is already transposed
-	data.ProjectionInverseMat = Inverse( m_perFrameVS.ProjectionMat );
+	data.ProjectionInverseMat = Inverse( Transpose( Tr2Renderer::GetReversedDepthProjectionTransform() ) );
 	data.Debug = m_perFrameDebug;
 
 	data.VolumetricSlices[0] = 1000;
