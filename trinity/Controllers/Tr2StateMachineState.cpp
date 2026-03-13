@@ -14,9 +14,6 @@
 #include "ContinueOnMainThread.h"
 
 
-extern CcpMutex g_controllerMutex;
-
-
 Tr2StateMachineState::Tr2StateMachineState( IRoot* lockobj ) :
 	PARENTLOCK( m_actions ),
 	PARENTLOCK( m_transitions ),
@@ -219,8 +216,6 @@ Tr2StateMachineState* Tr2StateMachineState::Update( uint64_t variableDirtyMask )
 	{
 		if( ( *it )->CanActivate( variableDirtyMask ) && ( *it )->GetDestination() )
 		{
-			CcpAutoMutex lock( g_controllerMutex );
-
 			for( auto ai = begin( m_actions ); ai != end( m_actions ); ++ai )
 			{
 				if( !( *ai )->CanTransition() )
@@ -307,7 +302,7 @@ void Tr2StateMachineState::Stop()
 			ContinueOnMainThread( [action = ITr2ControllerActionPtr( *it ), self = Tr2StateMachineStatePtr( this )]() {
 				if( self->m_stateMachine && action )
 				{
-					( action )->Stop( *self->m_stateMachine->GetController() );
+					action->Stop( *self->m_stateMachine->GetController() );
 				}
 			} );
 		}

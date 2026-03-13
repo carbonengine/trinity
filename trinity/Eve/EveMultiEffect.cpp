@@ -144,12 +144,9 @@ void EveMultiEffect::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 			}
 			break;
 		case BELIST_UNLOADSTART:
-			for( ssize_t i = 0; i < list->GetSize(); ++i )
+			for( auto& controller : m_controllers )
 			{
-				if( ITr2ControllerPtr controller = BlueCastPtr( list->GetAt( i ) ) )
-				{
-					controller->Unlink();
-				}
+				controller->Unlink();
 			}
 			break;
 		default:

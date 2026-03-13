@@ -26,7 +26,7 @@ const Be::ClassInfo* Tr2ActionOverlay::ExposeToBlue()
 		MAP_ATTRIBUTE(
 			"overlayName",
 			m_overlayName,
-			"Name to assign to the loaded overlay,"
+			"Name to assign to the loaded overlay, "
 			"useful if loading and removing the same overlay from different states",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(

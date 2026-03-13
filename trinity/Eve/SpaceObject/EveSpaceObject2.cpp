@@ -278,12 +278,9 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 			}
 			break;
 		case BELIST_UNLOADSTART:
-			for( ssize_t i = 0; i < list->GetSize(); ++i )
+			for( auto& controller : m_controllers )
 			{
-				if( ITr2ControllerPtr controller = BlueCastPtr( list->GetAt( i ) ) )
-				{
-					controller->Unlink();
-				}
+				controller->Unlink();
 			}
 			break;
 		default:
@@ -2833,13 +2830,18 @@ void EveSpaceObject2::RemoveOverlayEffect( EveMeshOverlayEffectPtr overlayEffect
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Remove a specific overlayEffect from the space object
+//   Get an overlay effect by name. Returns nullptr if no effect with this name exists on this object.
 // --------------------------------------------------------------------------------
 EveMeshOverlayEffectPtr EveSpaceObject2::GetOverlayEffectByName( const char* name ) const
 {
+	if( name == nullptr )
+	{
+		return nullptr;
+	}
+
 	for( auto overlay : m_overlayEffects )
 	{
-		if( strcmp( overlay->GetName(), name ) == 0 )
+		if( strcmp( overlay->m_name.c_str(), name ) == 0 )
 		{
 			return overlay;
 		}

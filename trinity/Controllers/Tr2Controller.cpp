@@ -11,6 +11,7 @@
 #include "Tr2ControllerEventHandler.h"
 #include "Include/ITr2Updateable.h"
 #include "../Tr2ExpressionTermInfo.h"
+#include "ContinueOnMainThread.h"
 
 CCP_STATS_DECLARE( controllerUpdateTime, "Trinity/Controllers/UpdateTime", true, CST_TIME, "Cumulative per-frame time for controller update" );
 CCP_STATS_DECLARE( controllerUpdateablesTime, "Trinity/Controllers/UpdateablesTime", true, CST_TIME, "Cumulative per-frame time for controller updates tick" );
@@ -262,11 +263,11 @@ void Tr2Controller::Update( float normalizedUpdateFrequency )
 
 			auto simTime = BeOS->GetCurrentFrameTime();
 
-			CcpAutoMutex lock( g_controllerMutex );
-
-			for( auto& updatable : m_updateables )
+			for( auto& u : m_updateables )
 			{
-				updatable->Update( currentTime, simTime );
+				ContinueOnMainThread( [updatable = ITr2UpdateablePtr( u ), currentTime, simTime]() {
+					updatable->Update( currentTime, simTime );
+				} );
 			}
 		}
 	}

@@ -155,7 +155,7 @@ void Tr2ActionOverlay::LoadOverlay( EveSpaceObject2* owner )
 		{
 			if( !m_overlayName.empty() )
 			{
-				m_overlay->SetName( m_overlayName.c_str() );
+				m_overlay->m_name = m_overlayName;
 			}
 			if( m_addOnStart )
 			{
