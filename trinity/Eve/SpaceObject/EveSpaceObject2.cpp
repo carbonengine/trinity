@@ -2837,9 +2837,8 @@ void EveSpaceObject2::RemoveOverlayEffect( EveMeshOverlayEffectPtr overlayEffect
 // --------------------------------------------------------------------------------
 EveMeshOverlayEffectPtr EveSpaceObject2::GetOverlayEffectByName( const char* name ) const
 {
-	for( auto it = begin( m_overlayEffects ); it != end( m_overlayEffects ); ++it )
+	for( auto overlay : m_overlayEffects )
 	{
-		auto overlay = *it;
 		if( strcmp( overlay->GetName(), name ) == 0 )
 		{
 			return overlay;
