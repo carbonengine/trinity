@@ -198,6 +198,8 @@ void EveBaseDistributionMethod::UpdateSyncronous( const EveUpdateContext& update
 			Decompose( m_placementData[indx].initialScale, m_placementData[indx].initialRotation, m_placementData[indx].initialTranslation, m );
 		}
 
+		bool entityKilled = false;
+
 		for( auto distributionModifier : m_distributionModifiers )
 		{
 			auto lifeTimeEvent = distributionModifier->ProcessDistributionModifier( m_placementData[indx], dt, params );
@@ -206,16 +208,20 @@ void EveBaseDistributionMethod::UpdateSyncronous( const EveUpdateContext& update
 			{
 				this->HandleDistributionEntityLifetimeEvent( indx, lifeTimeEvent );
 				indx--;
+				entityKilled = true;
 				break;
 			}
 		}
 
-		if( m_resetTransformOnUpdate )
+		if( !entityKilled )
 		{
-			m_placementData[indx].translationFrameDelta -= m_placementData[indx].additionalTranslation;
-		}
+			if( m_resetTransformOnUpdate )
+			{
+				m_placementData[indx].translationFrameDelta -= m_placementData[indx].additionalTranslation;
+			}
 
-		m_placementDataCenter += m_placementData[indx].initialTranslation + m_placementData[indx].additionalTranslation;
+			m_placementDataCenter += m_placementData[indx].initialTranslation + m_placementData[indx].additionalTranslation;
+		}
 	}
 
 	m_placementDataCenter /= float(m_placementData.size());
