@@ -514,6 +514,10 @@ void Tr2PostProcessRenderer::Execute(
 		bloomTexture = RenderBloom( upscaledSource, gpuResourcePool, renderContext, bloom );
 	}
 
+
+	upscaledSource = RenderSharpening( upscaledSource, gpuResourcePool, renderContext );
+
+
 	TEMP_PARAM( m_tonemappingEffect, "BlitCurrent", bloomTexture.IsValid() ? bloomTexture : GetBlackTexture( gpuResourcePool ) );
 	TEMP_PARAM( m_tonemappingEffect, "BlitOriginal", upscaledSource );
 	TEMP_PARAM( m_tonemappingEffect, "Exposure", GetExposureBuffer( gpuResourcePool ) );
@@ -551,6 +555,7 @@ void Tr2PostProcessRenderer::Execute(
 	bool doGrain = ProcessFilmGrain( filmGrain );
 	if( !upscalingInfo.temporal || doGrain )
 	{
+		GPU_REGION( renderContext, "Tonemapping" );
 		if( upscalingContext && !upscalingInfo.temporal )
 		{
 			
@@ -572,7 +577,6 @@ void Tr2PostProcessRenderer::Execute(
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 			DrawInto( output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 		}
-		output = RenderSharpening( output, gpuResourcePool, renderContext );
 
 		renderContext.m_esm.SetRenderTarget( 0, destination );
 		if( doGrain )
@@ -633,7 +637,7 @@ void Tr2PostProcessRenderer::ProcessSharpening( bool enable, uint32_t displayWid
 		m_fidelityFxCasShader.CreateInstance();
 		m_fidelityFxCasShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/CAS.fx" );
 	}
-	float casIntensity = 10.5f;
+	float casIntensity = 1.0f;
 
 	AF1 outWidth = static_cast<AF1>( displayWidth );
 	AF1 outHeight = static_cast<AF1>( displayHeight );
