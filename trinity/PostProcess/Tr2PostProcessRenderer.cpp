@@ -592,7 +592,6 @@ void Tr2PostProcessRenderer::Execute(
 	{
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 		DrawInto( output, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
-		output = RenderSharpening( output, gpuResourcePool, renderContext );
 		Tr2Renderer::DrawTexture( renderContext, output );
 	}
 
@@ -637,7 +636,7 @@ void Tr2PostProcessRenderer::ProcessSharpening( bool enable, uint32_t displayWid
 		m_fidelityFxCasShader.CreateInstance();
 		m_fidelityFxCasShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/CAS.fx" );
 	}
-	float casIntensity = 1.0f;
+	float casIntensity = 0.5f;
 
 	AF1 outWidth = static_cast<AF1>( displayWidth );
 	AF1 outHeight = static_cast<AF1>( displayHeight );
