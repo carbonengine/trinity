@@ -45,7 +45,7 @@ EveEffectRoot2::~EveEffectRoot2()
 {
 	for( auto& controller : m_controllers )
 	{
-		controller->Unlink( );
+		controller->Unlink( UnlinkReason::DELETING );
 	}
 }
 

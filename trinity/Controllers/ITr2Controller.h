@@ -11,6 +11,12 @@
 BLUE_DECLARE( Tr2ExpressionTermInfo );
 BLUE_DECLARE_INTERFACE( ITr2Updateable );
 
+enum class UnlinkReason
+{
+	UNLINKING,
+	DELETING
+};
+
 BLUE_INTERFACE( ITr2Controller ) : public IRoot
 {
 	// Called when a controller is attached to the owning object. The owner makes sure that Link is
@@ -18,7 +24,7 @@ BLUE_INTERFACE( ITr2Controller ) : public IRoot
 	virtual void Link( IRoot& owner ) {}
 	// Called when a controller is detached from the owning object. The controller should clean up
 	// any references to the owner here.
-	virtual void Unlink() {}
+	virtual void Unlink( UnlinkReason reason = UnlinkReason::UNLINKING ) {}
 	// Returns if the controller already linked to its owner
 	virtual bool IsLinked() const = 0;
 

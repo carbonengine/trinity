@@ -28,7 +28,7 @@ EveMultiEffect::~EveMultiEffect()
 {
 	for( auto& controller : m_controllers )
 	{
-		controller->Unlink();
+		controller->Unlink( UnlinkReason::DELETING );
 	}
 }
 

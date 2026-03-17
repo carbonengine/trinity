@@ -160,7 +160,7 @@ void Tr2Controller::Link( IRoot& owner )
 	}
 }
 
-void Tr2Controller::Unlink()
+void Tr2Controller::Unlink( UnlinkReason reason )
 {
 	if( !m_owner )
 	{
@@ -168,8 +168,10 @@ void Tr2Controller::Unlink()
 	}
 
 	CCP_STATS_ZONE( __FUNCTION__ );
-
-	Stop();
+	if( reason != UnlinkReason::DELETING )
+	{
+		Stop();
+	}
 	for( auto& var : m_variables )
 	{
 		var->SetDestinationBuffer( nullptr );
@@ -177,7 +179,7 @@ void Tr2Controller::Unlink()
 	}
 	for( auto it = begin( m_stateMachines ); it != end( m_stateMachines ); ++it )
 	{
-		( *it )->Unlink();
+		( *it )->Unlink( reason );
 	}
 	for( auto it = begin( m_eventHandlers ); it != end( m_eventHandlers ); ++it )
 	{

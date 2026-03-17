@@ -93,7 +93,7 @@ void Tr2TimelineController::Link( IRoot& owner )
 	}
 }
 
-void Tr2TimelineController::Unlink()
+void Tr2TimelineController::Unlink( UnlinkReason reason )
 {
 	if( !m_owner )
 	{
@@ -102,7 +102,10 @@ void Tr2TimelineController::Unlink()
 
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	Stop();
+	if( reason != UnlinkReason::DELETING )
+	{
+		Stop();
+	}
 	for( auto& var : m_variables )
 	{
 		var->SetDestinationBuffer( nullptr );

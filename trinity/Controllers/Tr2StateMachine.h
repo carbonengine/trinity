@@ -5,6 +5,7 @@
 //
 
 #pragma once
+#include "ITr2Controller.h"
 
 BLUE_DECLARE( Tr2Controller );
 BLUE_DECLARE( Tr2StateMachineState );
@@ -30,7 +31,7 @@ public:
 	virtual void OnSimClockRebase( Be::Time oldTime, Be::Time newTime );
 
 	void Link( Tr2Controller& controller );
-	void Unlink();
+	void Unlink( UnlinkReason reason = UnlinkReason::UNLINKING );
 
 	void Start();
 	void Stop();

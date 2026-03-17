@@ -31,7 +31,7 @@ public:
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
 
 	virtual void Link( IRoot& owner );
-	virtual void Unlink();
+	virtual void Unlink( UnlinkReason reason = UnlinkReason::UNLINKING );
 	bool IsLinked() const override;
 
 	virtual void Start();

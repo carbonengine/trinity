@@ -227,7 +227,7 @@ EveSpaceObject2::~EveSpaceObject2()
 
 	for( auto& controller : m_controllers )
 	{
-		controller->Unlink();
+		controller->Unlink( UnlinkReason::DELETING );
 	}
 }
 
