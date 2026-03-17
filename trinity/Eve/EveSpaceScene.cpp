@@ -2745,6 +2745,8 @@ bool EveSpaceScene::RenderMainPass(
 		Tr2Renderer::DrawTexture( renderContext, colorMap );
 		renderContext.m_esm.PopRenderTarget();
 		renderContext.m_esm.PopDepthStencilBuffer();
+
+		GlobalStore().RegisterVariable( "EveSpaceSceneOpaqueMap", opaqueColorMap );
 	}
 
 	m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE], colorMap, opaqueColorMap, depthMap, gpuResourcePool );
