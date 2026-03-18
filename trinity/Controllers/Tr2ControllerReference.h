@@ -23,7 +23,7 @@ public:
 	virtual bool OnModified( Be::Var* value );
 
 	virtual void Link( IRoot& owner );
-	virtual void Unlink();
+	virtual void Unlink( UnlinkReason reason = UnlinkReason::UNLINKING );
 	bool IsLinked() const override;
 	virtual void Start();
 	virtual void Stop();
