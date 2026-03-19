@@ -395,11 +395,6 @@ if(WIN32)
 endif()
 
 find_package(ImageIO REQUIRED NO_CMAKE_PATH)
-find_package(ZLIB REQUIRED NO_CMAKE_PATH)
-find_package(JPEG REQUIRED NO_CMAKE_PATH)
-find_package(PNG REQUIRED NO_CMAKE_PATH)
-find_package(NanoVDB REQUIRED)
-
 
 if(WIN32)
     find_package(NvidiaAftermath REQUIRED)
