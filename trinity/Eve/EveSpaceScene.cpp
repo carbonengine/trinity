@@ -390,12 +390,12 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 		}
 		if( m_sceneDefaultPostProcess )
 		{
-			m_combinedPostProcess->SetDynamicExposure( m_sceneDefaultPostProcess->GetDynamicExposure() );
-			m_combinedPostProcess->SetTaa( m_sceneDefaultPostProcess->GetTaa() );
-			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemapping() );
-			m_combinedPostProcess->SetFog( m_sceneDefaultPostProcess->GetFog() );
-			m_combinedPostProcess->SetGodRays( m_sceneDefaultPostProcess->GetGodRays() );
-			m_combinedPostProcess->SetGenericEffect( m_sceneDefaultPostProcess->GetGenericEffect() );
+			m_combinedPostProcess->SetDynamicExposure( m_sceneDefaultPostProcess->GetDynamicExposureIfAvailable() );
+			m_combinedPostProcess->SetTaa( m_sceneDefaultPostProcess->GetTaaIfAvailable() );
+			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemappingIfAvailable() );
+			m_combinedPostProcess->SetFog( m_sceneDefaultPostProcess->GetFogIfAvailable() );
+			m_combinedPostProcess->SetGodRays( m_sceneDefaultPostProcess->GetGodRaysIfAvailable() );
+			m_combinedPostProcess->SetGenericEffect( m_sceneDefaultPostProcess->GetGenericEffectIfAvailable() );
 		}
 		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}
@@ -1260,7 +1260,7 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 		m_jitterMatrix = TranslationMatrix( Vector3( m_jitter.x, m_jitter.y, 0 ) );
 		m_jitteredProjection = m_projection * m_jitterMatrix;
 	}
-	else if( m_sceneDefaultPostProcess && m_sceneDefaultPostProcess->GetTaa() && m_sceneDefaultPostProcess->GetTaa()->IsActive() )
+	else if( m_sceneDefaultPostProcess && m_sceneDefaultPostProcess->GetTaaIfAvailable() != nullptr )
 	{
 		auto rtWidth = renderContext.m_esm.GetRenderTargetWidth();
 		auto rtHeight = renderContext.m_esm.GetRenderTargetHeight();

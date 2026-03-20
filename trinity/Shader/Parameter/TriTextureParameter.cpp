@@ -117,8 +117,11 @@ const wchar_t* TriTextureParameter::GetResourcePath() const
 
 void TriTextureParameter::SetResourcePath( const char* resourcePath )
 {
-	m_resourcePath = resourcePath;
-	OnModified( (Be::Var*)&m_resourcePath );
+	if( m_resourcePath.empty() || strcmp( m_resourcePath.c_str(), resourcePath ) != 0 )
+	{
+		m_resourcePath = resourcePath;
+		OnModified( (Be::Var*)&m_resourcePath );
+	}
 }
 
 void TriTextureParameter::EnableTextureLoding( const std::array<float, UV_SET_MAX_COUNT>& uvDensityScale )

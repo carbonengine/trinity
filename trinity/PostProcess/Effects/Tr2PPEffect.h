@@ -24,7 +24,7 @@ namespace PostProcess
 
 
 BLUE_CLASS( Tr2PPEffect ) :
-	public INotify
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -32,16 +32,10 @@ public:
 	Tr2PPEffect( IRoot* lockobj = NULL );
 	~Tr2PPEffect();
 
-	// INotify
-	virtual bool OnModified( Be::Var* value );
-
 	virtual bool IsActive();
-	virtual bool IsDirty();
-	void SetDirty( bool dirty );
 
 protected:
 	bool m_display;
-	bool m_isDirty;
 
 };
 

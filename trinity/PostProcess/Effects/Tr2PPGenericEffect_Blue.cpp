@@ -15,11 +15,12 @@ const Be::ClassInfo* Tr2PPGenericEffect::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2PPGenericEffect, "" )
 		MAP_INTERFACE( Tr2PPEffect )
+		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER(
 			"quality", m_quality,
 			"post process quality level and higher where this effect gets rendered",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM,
+			Be::READWRITE | Be::PERSIST | Be::ENUM,
 			PostProcess::PostProcessQualityChooser
 		)
 		MAP_ATTRIBUTE(

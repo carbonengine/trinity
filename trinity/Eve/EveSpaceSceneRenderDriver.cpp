@@ -218,13 +218,13 @@ void EveSpaceSceneRenderDriver::PropagateSettings()
 		}
 		else
 		{
-			if( !m_scene->m_sceneDefaultPostProcess->GetTaa() )
+			if( !m_scene->m_sceneDefaultPostProcess->GetTaaIfAvailable() )
 			{
 				Tr2PPTaaEffectPtr taa;
 				taa.CreateInstance();
 				m_scene->m_sceneDefaultPostProcess->SetTaa( taa );
 			}
-			m_scene->m_sceneDefaultPostProcess->GetTaa()->m_quality = int( m_settings.antiAliasingQuality );
+			m_scene->m_sceneDefaultPostProcess->GetTaaIfAvailable()->m_quality = (Tr2PPTaaEffect::Quality)m_settings.antiAliasingQuality;
 		}
 	}
 
@@ -366,8 +366,8 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::RenderSSAO( const Tr2Text
 		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContext ? m_upscalingContext->GetID() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
 		if( m_scene->m_sceneDefaultPostProcess )
 		{
-			auto taa = m_scene->m_sceneDefaultPostProcess->GetTaa();
-			temporal = upscalingInfo.temporal || ( taa && taa->IsActive() );
+			auto taa = m_scene->m_sceneDefaultPostProcess->GetTaaIfAvailable();
+			temporal = upscalingInfo.temporal || taa;
 		}
 		else
 		{
@@ -771,12 +771,5 @@ void EveSpaceSceneRenderDriver::SetScene( EveSpaceScene* scene )
 		return;
 	}
 	m_scene = scene;
-	if( m_scene )
-	{
-		if ( auto postProcess = m_scene->GetPostProcess() )
-		{
-			postProcess->MarkAllDirty();
-		}
-	}
 }
 

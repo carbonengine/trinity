@@ -2292,3 +2292,16 @@ void Tr2Effect::SetParameter( const BlueSharedString& name, const Tr2BufferAL& v
 		AddResource( param );
 	}
 }
+
+void Tr2Effect::SetResourceTexture2D( const BlueSharedString& name, const char* path )
+{
+	auto existing = GetResourceByName( name.c_str() );	
+	if( TriTextureParameterPtr resource = BlueCastPtr( existing ) )
+	{
+		resource->SetResourcePath( path );
+	}
+	else
+	{
+		AddResourceTexture2D( name, path );
+	}
+}

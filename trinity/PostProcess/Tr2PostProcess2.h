@@ -52,42 +52,39 @@ public:
 	Tr2PostProcess2( IRoot* lockobj = NULL );
 	~Tr2PostProcess2();
 
-	Tr2PPSignalLossEffectPtr GetSignalLoss() const { return m_signalLoss; }
-	Tr2PPGodRaysEffectPtr GetGodRays() const{ return m_godRays; }
-	Tr2PPBloomEffectPtr GetBloom() const { return m_bloom; }
-	Tr2PPDynamicExposureEffectPtr GetDynamicExposure() const { return m_dynamicExposure; }
-	Tr2PPFilmGrainEffectPtr GetFilmGrain() const { return m_filmGrain; }
-	Tr2PPDesaturateEffectPtr GetDesaturate() const { return m_desaturate; }
-	Tr2PPFadeEffectPtr GetFade() const { return m_fade; }
-	Tr2PPVignetteEffectPtr GetVignette() const { return m_vignette; }
-	Tr2PPFogEffectPtr GetFog() const { return m_fog; }
-	Tr2PPTaaEffectPtr GetTaa() const { return m_taa; }
-	Tr2PPDepthOfFieldEffectPtr GetDepthOfField() const { return m_depthOfField; }
-	Tr2PPTonemappingEffectPtr GetTonemapping() const { return m_tonemapping; }
-	Tr2PPColorCorrectionEffectPtr GetColorCorrection() const { return m_colorCorrection; }
-	Tr2PPGenericEffectPtr GetGenericEffect() const { return m_generic; }
-
-	void MarkAllDirty();
-
+	Tr2PPSignalLossEffectPtr GetSignalLossIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPGodRaysEffectPtr GetGodRaysIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPBloomEffectPtr GetBloomIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPDynamicExposureEffectPtr GetDynamicExposureIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPFilmGrainEffectPtr GetFilmGrainIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPDesaturateEffectPtr GetDesaturateIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPFadeEffectPtr GetFadeIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPVignetteEffectPtr GetVignetteIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPFogEffectPtr GetFogIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPTaaEffectPtr GetTaaIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPDepthOfFieldEffectPtr GetDepthOfFieldIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPTonemappingEffectPtr GetTonemappingIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPColorCorrectionEffectPtr GetColorCorrectionIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
+	Tr2PPGenericEffectPtr GetGenericEffectIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
 	
-	void GetLuts( std::vector<const Tr2PPLutEffect*> & container ) const;
+	void GetAvilableSortedLuts( std::vector<const Tr2PPLutEffect*> & container, PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
 	void ClearLuts();
 
-	void SetSignalLoss(Tr2PPSignalLossEffectPtr effect) { m_signalLoss = effect; }
-	void SetGodRays(Tr2PPGodRaysEffectPtr effect) { m_godRays = effect; }
-	void SetBloom(Tr2PPBloomEffectPtr effect) { m_bloom = effect; }
-	void SetDynamicExposure(Tr2PPDynamicExposureEffectPtr effect) { m_dynamicExposure = effect; }
-	void SetFilmGrain(Tr2PPFilmGrainEffectPtr effect) { m_filmGrain = effect; }
-	void SetDesaturate(Tr2PPDesaturateEffectPtr effect) { m_desaturate = effect; }
-	void SetFade(Tr2PPFadeEffectPtr effect) { m_fade = effect; }
-	void AddLut(Tr2PPLutEffectPtr effect) { m_luts.Append(effect); }
-	void SetVignette(Tr2PPVignetteEffectPtr effect) { m_vignette = effect; }
-	void SetFog(Tr2PPFogEffectPtr effect) { m_fog = effect; }
-	void SetTaa(Tr2PPTaaEffectPtr effect) { m_taa = effect; }
-	void SetDepthOfField(Tr2PPDepthOfFieldEffectPtr effect) { m_depthOfField = effect; }
-	void SetTonemapping(Tr2PPTonemappingEffectPtr effect) { m_tonemapping = effect; }
-	void SetColorCorrection(Tr2PPColorCorrectionEffectPtr effect) { m_colorCorrection = effect; }
-	void SetGenericEffect(Tr2PPGenericEffectPtr effect) { m_generic = effect; }
+	void SetSignalLoss(Tr2PPSignalLossEffectPtr effect);	
+	void SetGodRays(Tr2PPGodRaysEffectPtr effect);
+	void SetBloom(Tr2PPBloomEffectPtr effect);
+	void SetDynamicExposure(Tr2PPDynamicExposureEffectPtr effect);
+	void SetFilmGrain(Tr2PPFilmGrainEffectPtr effect);
+	void SetDesaturate(Tr2PPDesaturateEffectPtr effect);
+	void SetFade(Tr2PPFadeEffectPtr effect);
+	void AddLut(Tr2PPLutEffectPtr effect);
+	void SetVignette(Tr2PPVignetteEffectPtr effect);
+	void SetFog(Tr2PPFogEffectPtr effect);
+	void SetTaa(Tr2PPTaaEffectPtr effect);
+	void SetDepthOfField(Tr2PPDepthOfFieldEffectPtr effect);
+	void SetTonemapping(Tr2PPTonemappingEffectPtr effect);
+	void SetColorCorrection(Tr2PPColorCorrectionEffectPtr effect);
+	void SetGenericEffect(Tr2PPGenericEffectPtr effect);
 
 	// Helper method for scenes to decide on miplodbias
 	float GetMipLodBias() const;
