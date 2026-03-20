@@ -785,11 +785,8 @@ void Tr2PostProcessRenderer::Execute(
 		}
 	}
 
+	upscaledSource = RenderSharpening( sharpeningRequired, upscaledSource, gpuResourcePool, renderContext );
 
-	upscaledSource = RenderSharpening( upscaledSource, gpuResourcePool, renderContext );
-
-
-	upscaledSource = RenderSharpening( upscaledSource, gpuResourcePool, renderContext );
 	TEMP_PARAM( m_tonemappingEffect, "BlitCurrent", bloomTexture );
 	TEMP_PARAM( m_tonemappingEffect, "BlitOriginal", upscaledSource );
 	TEMP_PARAM( m_tonemappingEffect, "Exposure", GetExposureBuffer( gpuResourcePool ) );
