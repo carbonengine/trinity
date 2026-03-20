@@ -785,6 +785,11 @@ void Tr2PostProcessRenderer::Execute(
 		}
 	}
 
+
+	upscaledSource = RenderSharpening( upscaledSource, gpuResourcePool, renderContext );
+
+
+	upscaledSource = RenderSharpening( upscaledSource, gpuResourcePool, renderContext );
 	TEMP_PARAM( m_tonemappingEffect, "BlitCurrent", bloomTexture );
 	TEMP_PARAM( m_tonemappingEffect, "BlitOriginal", upscaledSource );
 	TEMP_PARAM( m_tonemappingEffect, "Exposure", GetExposureBuffer( gpuResourcePool ) );
@@ -794,6 +799,7 @@ void Tr2PostProcessRenderer::Execute(
 
 	if( !upscalingInfo.temporal || filmGrain != nullptr )
 	{
+		GPU_REGION( renderContext, "Tonemapping" );
 		if( upscalingContext && !upscalingInfo.temporal )
 		{
 			auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", renderSize, destination.GetFormat(), RENDER_TARGET );
@@ -826,8 +832,6 @@ void Tr2PostProcessRenderer::Execute(
 	else
 	{
 		RenderTonemapping( output, postProcess, renderContext );
-
-		output = RenderSharpening( sharpeningRequired, output, gpuResourcePool, renderContext );
 		Tr2Renderer::DrawTexture( renderContext, output );
 	}
 
