@@ -51,7 +51,7 @@ void Tr2PostProcess2::GetAvilableSortedLuts( std::vector<const Tr2PPLutEffect*>&
 	{
 		container.push_back( m_lut );
 	}
-	for( auto& lut : m_luts )
+	for( const auto& lut : m_luts )
 	{
 		if( lut->IsActive() )
 		{

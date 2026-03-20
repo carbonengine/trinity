@@ -70,7 +70,7 @@ public:
 	void GetAvilableSortedLuts( std::vector<const Tr2PPLutEffect*> & container, PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
 	void ClearLuts();
 
-	void SetSignalLoss(Tr2PPSignalLossEffectPtr effect);	
+	void SetSignalLoss(Tr2PPSignalLossEffectPtr effect);
 	void SetGodRays(Tr2PPGodRaysEffectPtr effect);
 	void SetBloom(Tr2PPBloomEffectPtr effect);
 	void SetDynamicExposure(Tr2PPDynamicExposureEffectPtr effect);

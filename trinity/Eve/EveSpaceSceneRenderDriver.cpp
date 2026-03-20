@@ -362,17 +362,9 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::RenderSSAO( const Tr2Text
 	{
 		renderContext.SetReadOnlyDepth( true );
 
-		bool temporal = false;
 		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContext ? m_upscalingContext->GetID() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
-		if( m_scene->m_sceneDefaultPostProcess )
-		{
-			auto taa = m_scene->m_sceneDefaultPostProcess->GetTaaIfAvailable();
-			temporal = upscalingInfo.temporal || taa;
-		}
-		else
-		{
-			temporal = upscalingInfo.temporal;
-		}
+		auto scenePostProcess = m_scene->m_sceneDefaultPostProcess;
+		bool temporal = upscalingInfo.temporal || ( scenePostProcess != nullptr && scenePostProcess->GetTaaIfAvailable() != nullptr );
 
 		ssao = m_ssao->Filter( depthMap, normalMap, m_gpuResourcePool, renderContext, temporal );
 		renderContext.SetReadOnlyDepth( false );

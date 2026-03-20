@@ -500,7 +500,7 @@ void ApplyUncharted2TonemappingMethod( const Tr2PPTonemappingEffect* tonemapping
 	tonemappingEffect->SetParameter( MEMOIZED_STRING( "WhiteScale" ), tonemapping->m_uncharted2.m_whiteScale );
 }
 
-void ApplyNoTonemappingMethod( const Tr2PPTonemappingEffect* tonemapping, Tr2Effect* tonemappingEffect )
+void ApplyNoTonemappingMethod( Tr2Effect* tonemappingEffect )
 {
 	tonemappingEffect->SetOption( MEMOIZED_STRING( "TONE_MAPPING_METHOD" ), MEMOIZED_STRING( "TONE_MAPPING_DISABLED" ) );
 }
@@ -1564,7 +1564,7 @@ void Tr2PostProcessRenderer::RenderTonemapping(
 	}
 	else
 	{
-		Tonemapping::ApplyNoTonemappingMethod( nullptr, m_tonemappingEffect );
+		Tonemapping::ApplyNoTonemappingMethod( m_tonemappingEffect );
 	}
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );

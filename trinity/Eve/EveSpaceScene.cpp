@@ -397,6 +397,15 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetGodRays( m_sceneDefaultPostProcess->GetGodRaysIfAvailable() );
 			m_combinedPostProcess->SetGenericEffect( m_sceneDefaultPostProcess->GetGenericEffectIfAvailable() );
 		}
+		else
+		{
+			m_combinedPostProcess->SetDynamicExposure( nullptr );
+			m_combinedPostProcess->SetTaa( nullptr );
+			m_combinedPostProcess->SetTonemapping( nullptr );
+			m_combinedPostProcess->SetFog( nullptr );
+			m_combinedPostProcess->SetGodRays( nullptr );
+			m_combinedPostProcess->SetGenericEffect( nullptr );
+		}
 		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}
 	else
