@@ -98,6 +98,7 @@ public:
 	void SetParameter( const BlueSharedString& name, const Matrix& matrix );
 	void SetParameter( const BlueSharedString& name, const Tr2TextureAL& texture, uint32_t uavMipLevel = 0 );
 	void SetParameter( const BlueSharedString& name, const Tr2BufferAL& value );
+	void SetResourceTexture2D( const BlueSharedString& name, const char* resPath );
 
 	void SetOption( const BlueSharedString& name, const BlueSharedString& value );
 	void ResetOption( const BlueSharedString& name );
