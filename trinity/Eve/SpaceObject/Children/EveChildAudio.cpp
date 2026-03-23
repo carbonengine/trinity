@@ -151,3 +151,19 @@ void EveChildAudio::UpdateVisibility( const EveUpdateContext& updateContext, con
 void EveChildAudio::ChangeLOD( Tr2Lod lod )
 {
 }
+
+void EveChildAudio::GetDebugOptions( Tr2DebugRendererOptions& options )
+{
+	if( ITr2DebugRenderablePtr tmp = BlueCastPtr( m_audioEmitter ) )
+	{
+		tmp->GetDebugOptions( options );
+	}
+}
+
+void EveChildAudio::RenderDebugInfo( ITr2DebugRenderer2& renderer )
+{
+	if( ITr2DebugRenderablePtr tmp = BlueCastPtr( m_audioEmitter ) )
+	{
+		tmp->RenderDebugInfo( renderer );
+	}
+}
