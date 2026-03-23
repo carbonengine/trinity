@@ -58,6 +58,10 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 
 EveChildContainer::~EveChildContainer()
 {
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink( UnlinkReason::DELETING );
+	}
 }
 
 bool EveChildContainer::Initialize()
@@ -126,6 +130,12 @@ void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, I
 			break;
 		case BELIST_REMOVED:
 			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
+			{
+				controller->Unlink();
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			for( auto& controller : m_controllers )
 			{
 				controller->Unlink();
 			}

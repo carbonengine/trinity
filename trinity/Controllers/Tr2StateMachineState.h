@@ -5,6 +5,7 @@
 //
 
 #pragma once
+#include "ITr2Controller.h"
 
 BLUE_DECLARE( Tr2StateMachine );
 BLUE_DECLARE_INTERFACE( ITr2ControllerAction );
@@ -27,7 +28,7 @@ public:
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
 
 	void Link( const Tr2StateMachine& stateMachine );
-	void Unlink();
+	void Unlink( UnlinkReason reason = UnlinkReason::UNLINKING );
 
 	void Start();
 	void Stop();

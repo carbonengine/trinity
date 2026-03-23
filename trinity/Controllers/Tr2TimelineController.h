@@ -40,7 +40,7 @@ public:
 	EXPOSE_TO_BLUE();
 
 	void Link( IRoot & owner ) override;
-	void Unlink() override;
+	void Unlink( UnlinkReason reason = UnlinkReason::UNLINKING ) override;
 	bool IsLinked() const override;
 	void Start() override;
 	void Stop() override;

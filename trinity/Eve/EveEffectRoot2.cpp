@@ -41,6 +41,14 @@ EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	m_lights.SetNotify( this );
 }
 
+EveEffectRoot2::~EveEffectRoot2()
+{
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink( UnlinkReason::DELETING );
+	}
+}
+
 bool EveEffectRoot2::Initialize()
 {
 	for( auto& controller : m_controllers )
@@ -84,6 +92,12 @@ void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 			break;
 		case BELIST_REMOVED:
 			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
+			{
+				controller->Unlink();
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			for( auto& controller : m_controllers )
 			{
 				controller->Unlink();
 			}

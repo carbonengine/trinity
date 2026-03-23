@@ -224,6 +224,11 @@ EveSpaceObject2::~EveSpaceObject2()
 	{
 		m_geometryResFromMesh->RemoveNotifyTarget( this );
 	}
+
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink( UnlinkReason::DELETING );
+	}
 }
 
 bool EveSpaceObject2::Initialize()
@@ -268,6 +273,12 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 			break;
 		case BELIST_REMOVED:
 			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
+			{
+				controller->Unlink();
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			for( auto& controller : m_controllers )
 			{
 				controller->Unlink();
 			}
@@ -2811,8 +2822,33 @@ void EveSpaceObject2::AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect
 void EveSpaceObject2::RemoveOverlayEffect( EveMeshOverlayEffectPtr overlayEffectToRemove )
 {
 	ssize_t index = m_overlayEffects.FindKey( overlayEffectToRemove->GetRawRoot() );
-	m_overlayEffects.Remove( index );
+	if( index >= 0 )
+	{
+		m_overlayEffects.Remove( index );
+	}
 }
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Get an overlay effect by name. Returns nullptr if no effect with this name exists on this object.
+// --------------------------------------------------------------------------------
+EveMeshOverlayEffectPtr EveSpaceObject2::GetOverlayEffectByName( const char* name ) const
+{
+	if( name == nullptr )
+	{
+		return nullptr;
+	}
+
+	for( auto overlay : m_overlayEffects )
+	{
+		if( strcmp( overlay->m_name.c_str(), name ) == 0 )
+		{
+			return overlay;
+		}
+	}
+	return nullptr;
+}
+
 
 // --------------------------------------------------------------------------------
 // Description:

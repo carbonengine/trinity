@@ -42,12 +42,12 @@ void Tr2ControllerReference::Link( IRoot& owner )
 	}
 }
 
-void Tr2ControllerReference::Unlink()
+void Tr2ControllerReference::Unlink( UnlinkReason reason )
 {
 	m_owner = nullptr;
 	if( m_controller )
 	{
-		m_controller->Unlink();
+		m_controller->Unlink( reason );
 	}
 }
 

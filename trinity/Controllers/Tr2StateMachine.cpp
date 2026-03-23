@@ -96,16 +96,19 @@ void Tr2StateMachine::Link( Tr2Controller& controller )
 	}
 }
 
-void Tr2StateMachine::Unlink()
+void Tr2StateMachine::Unlink( UnlinkReason reason )
 {
 	if( !m_controller )
 	{
 		return;
 	}
-	Stop();
+	if( reason != UnlinkReason::DELETING )
+	{
+		Stop();
+	}
 	for( auto it = begin( m_states ); it != end( m_states ); ++it )
 	{
-		( *it )->Unlink();
+		( *it )->Unlink( reason );
 	}
 	m_controller = nullptr;
 }

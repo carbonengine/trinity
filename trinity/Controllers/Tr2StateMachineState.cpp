@@ -11,13 +11,11 @@
 #include "Tr2StateMachineTransition.h"
 #include "Actions/ITr2ControllerAction.h"
 #include "Finalizers/ITr2StateMachineStateFinalizer.h"
+#include "ContinueOnMainThread.h"
 
 
-extern CcpMutex g_controllerMutex;
-
-
-Tr2StateMachineState::Tr2StateMachineState( IRoot* lockobj )
-	:PARENTLOCK( m_actions ),
+Tr2StateMachineState::Tr2StateMachineState( IRoot* lockobj ) :
+	PARENTLOCK( m_actions ),
 	PARENTLOCK( m_transitions ),
 	m_stateMachine( nullptr ),
 	m_transitionVariableMask( 0 ),
@@ -161,13 +159,16 @@ void Tr2StateMachineState::UpdateVariableMask() const
 	}
 }
 
-void Tr2StateMachineState::Unlink()
+void Tr2StateMachineState::Unlink( UnlinkReason reason )
 {
 	if( !m_stateMachine )
 	{
 		return;
 	}
-	Stop();
+	if( reason != UnlinkReason::DELETING )
+	{
+		Stop();
+	}
 	m_stateMachine = nullptr;
 	for( auto it = begin( m_transitions ); it != end( m_transitions ); ++it )
 	{
@@ -194,8 +195,6 @@ Tr2StateMachineState* Tr2StateMachineState::Update( uint64_t variableDirtyMask )
 	{
 		auto next = GetNextState();
 
-		CcpAutoMutex lock( g_controllerMutex );
-
 		if( !next )
 		{
 			m_isActive = false;
@@ -220,8 +219,6 @@ Tr2StateMachineState* Tr2StateMachineState::Update( uint64_t variableDirtyMask )
 	{
 		if( ( *it )->CanActivate( variableDirtyMask ) && ( *it )->GetDestination() )
 		{
-			CcpAutoMutex lock( g_controllerMutex );
-
 			for( auto ai = begin( m_actions ); ai != end( m_actions ); ++ai )
 			{
 				if( !( *ai )->CanTransition() )
@@ -280,11 +277,16 @@ void Tr2StateMachineState::Start()
 	}
 	if( m_stateMachine )
 	{
-		CcpAutoMutex lock( g_controllerMutex );
+		auto owner = m_stateMachine->GetController() != nullptr ? m_stateMachine->GetController()->GetOwner() : nullptr;
 
 		for( auto it = begin( m_actions ); it != end( m_actions ); ++it )
 		{
-			( *it )->Start( *m_stateMachine->GetController() );
+			ContinueOnMainThread( [_ = IRootPtr( owner ), action = ITr2ControllerActionPtr( *it ), self = Tr2StateMachineStatePtr( this )]() {
+				if( self->m_stateMachine && action )
+				{
+					action->Start( *self->m_stateMachine->GetController() );
+				}
+			} );
 		}
 		m_isActive = true;
 		m_isFinalizing = false;
@@ -300,9 +302,15 @@ void Tr2StateMachineState::Stop()
 	}
 	if( m_stateMachine )
 	{
+		auto owner = m_stateMachine->GetController() != nullptr ? m_stateMachine->GetController()->GetOwner() : nullptr;
 		for( auto it = begin( m_actions ); it != end( m_actions ); ++it )
 		{
-			( *it )->Stop( *m_stateMachine->GetController() );
+			ContinueOnMainThread( [_ = IRootPtr(owner), action = ITr2ControllerActionPtr( *it ), self = Tr2StateMachineStatePtr( this )]() {
+				if( self->m_stateMachine && action )
+				{
+					action->Stop( *self->m_stateMachine->GetController() );
+				}
+			} );
 		}
 		if( m_finalizer )
 		{

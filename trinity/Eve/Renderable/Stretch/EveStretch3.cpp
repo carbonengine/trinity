@@ -43,6 +43,14 @@ EveStretch3::EveStretch3( IRoot* lockobj ) :
 	m_dynamicBindings.SetNotify( this );
 }
 
+EveStretch3::~EveStretch3()
+{
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink( UnlinkReason::DELETING );
+	}
+}
+
 bool EveStretch3::Initialize()
 {
 	if( m_stretchObject )
@@ -334,6 +342,12 @@ void EveStretch3::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* 
 			break;
 		case BELIST_REMOVED:
 			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
+			{
+				controller->Unlink();
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			for( auto& controller : m_controllers )
 			{
 				controller->Unlink();
 			}

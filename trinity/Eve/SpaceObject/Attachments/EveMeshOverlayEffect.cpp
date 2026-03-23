@@ -17,6 +17,10 @@
 // --------------------------------------------------------------------------------------
 EveMeshOverlayEffect::~EveMeshOverlayEffect()
 {
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink( UnlinkReason::DELETING );
+	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -71,6 +75,12 @@ void EveMeshOverlayEffect::OnListModified( long event, ssize_t key, ssize_t key2
                 controller->Unlink();
             }
             break;
+		case BELIST_UNLOADSTART:
+			for( auto& controller : m_controllers )
+			{
+				controller->Unlink();
+			}
+			break;
         default:
             break;
         }

@@ -55,6 +55,7 @@ public:
 	using IEveSpaceObject2::Unlock;
 
 	EveEffectRoot2( IRoot* lockobj = NULL );
+	~EveEffectRoot2( );
 	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize

@@ -42,6 +42,7 @@ public:
 	EXPOSE_TO_BLUE();
 
 	EveMultiEffect( IRoot* lockobj = NULL );
+	~EveMultiEffect();
 	
 	void Rebind( bool onlyUpdateBindings = 0 );
 	bool SetParameter( BlueSharedString parameterName, IRoot* object );

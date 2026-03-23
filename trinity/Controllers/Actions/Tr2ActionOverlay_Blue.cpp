@@ -16,21 +16,27 @@ const Be::ClassInfo* Tr2ActionOverlay::ExposeToBlue()
 		MAP_INTERFACE( Tr2ActionOverlay )
 		MAP_INTERFACE( ITr2ControllerAction )
 
-		MAP_ATTRIBUTE( 
-			"path", 
-			m_path, 
+		MAP_ATTRIBUTE(
+			"path",
+			m_path,
 			"Overlay .red file path\n"
 			":jessica-widget: filepath\n"
 			":jessica-file-filter: redfile",
 			Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"targetAnotherOwner", 
+		MAP_ATTRIBUTE(
+			"overlayName",
+			m_overlayName,
+			"Name to assign to the loaded overlay, "
+			"useful if loading and removing the same overlay from different states",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"targetAnotherOwner",
 			m_targetAnotherOwner,
 			"Designate a child or a MultiEffect parameter to "
-			"target for the load (defaults to controller's owner)"
-			, Be::READWRITE | Be::PERSIST )
-        MAP_ATTRIBUTE( "addOnStart", m_addOnStart, "Add the overlay on action start", Be::READWRITE | Be::PERSIST )
-        MAP_ATTRIBUTE( "removeOnStop", m_removeOnStop, "Remove the overlay on action stop", Be::READWRITE | Be::PERSIST )
+			"target for the load (defaults to controller's owner)",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "addOnStart", m_addOnStart, "Add the overlay on action start", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "removeOnStop", m_removeOnStop, "Remove the overlay on action stop", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_END()
 }

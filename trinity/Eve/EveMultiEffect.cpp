@@ -24,6 +24,14 @@ EveMultiEffect::EveMultiEffect( IRoot* lockobj ) :
 	m_controllers.SetNotify( this );
 }
 
+EveMultiEffect::~EveMultiEffect()
+{
+	for( auto& controller : m_controllers )
+	{
+		controller->Unlink( UnlinkReason::DELETING );
+	}
+}
+
 std::unordered_map<std::string, IRoot*> EveMultiEffect::GetParameterMap() const
 {
 	std::unordered_map<std::string, IRoot*> parameterMap;
@@ -131,6 +139,12 @@ void EveMultiEffect::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 			break;
 		case BELIST_REMOVED:
 			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
+			{
+				controller->Unlink();
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			for( auto& controller : m_controllers )
 			{
 				controller->Unlink();
 			}
