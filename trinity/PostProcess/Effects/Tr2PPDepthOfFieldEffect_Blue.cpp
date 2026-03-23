@@ -27,13 +27,13 @@ const Be::ClassInfo* Tr2PPDepthOfFieldEffect::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2PPDepthOfFieldEffect, "" )
 		MAP_INTERFACE( Tr2PPEffect )
 
-		MAP_ATTRIBUTE( "focalDistance", m_focalDistance, "The distance from the camera to the focal plane. Any object that lies on the focal plane is fully in-focus", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "focalLength", m_focalLength, "How far an object can be from the focal plane before it goes completely out-of-focus", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "scale", m_scale, "A value that scales the blur kernel", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "focalDistance", m_focalDistance, "The distance from the camera to the focal plane. Any object that lies on the focal plane is fully in-focus", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "focalLength", m_focalLength, "How far an object can be from the focal plane before it goes completely out-of-focus", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "scale", m_scale, "A value that scales the blur kernel", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "cocScale", m_cocScale, "A value that scales the coc texture compared to the source", Be::READWRITE )
-		MAP_ATTRIBUTE( "foregroundBlurNeeded", m_foregroundBlurNeeded, "If foreground is always in focus, we can safely uncheck this", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "bokehShape", m_bokehShape, "What is the shape of the bokeh", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, Tr2Bokeh::BokehShapeChooser );
-		MAP_ATTRIBUTE( "useTAAFriendlyBokeh", m_useTAAFriendlyBokeh, "Enables a separate Bokeh shader when TAA is enabled that is optimized to reduce flickering", Be::READWRITE | Be::NOTIFY )
+		MAP_ATTRIBUTE( "foregroundBlurNeeded", m_foregroundBlurNeeded, "If foreground is always in focus, we can safely uncheck this", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "bokehShape", m_bokehShape, "What is the shape of the bokeh", Be::READWRITE | Be::PERSIST | Be::ENUM, Tr2Bokeh::BokehShapeChooser );
+		MAP_ATTRIBUTE( "useTAAFriendlyBokeh", m_useTAAFriendlyBokeh, "Enables a separate Bokeh shader when TAA is enabled that is optimized to reduce flickering", Be::READWRITE )
 		
 	EXPOSURE_CHAINTO( Tr2PPEffect )
 }

@@ -527,10 +527,13 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 	{
 		uint32_t mipLevels = 1;
 		uint32_t res = max( width, height );
-		while( res > 32 )
+		for( ; mipLevels < 8; mipLevels++ )
 		{
-			mipLevels++;
 			res /= 2;
+			if( res < 32 )
+			{
+				break;
+			}
 		}
 		Tr2BitmapDimensions desc( width, height, mipLevels, PixelFormat::PIXEL_FORMAT_R32_FLOAT );
 		packedBuffer = gpuResourcePool.GetTempTexture( "cortao_packed", desc, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE );

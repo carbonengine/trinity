@@ -218,13 +218,13 @@ void EveSpaceSceneRenderDriver::PropagateSettings()
 		}
 		else
 		{
-			if( !m_scene->m_sceneDefaultPostProcess->GetTaa() )
+			if( !m_scene->m_sceneDefaultPostProcess->GetTaaIfAvailable() )
 			{
 				Tr2PPTaaEffectPtr taa;
 				taa.CreateInstance();
 				m_scene->m_sceneDefaultPostProcess->SetTaa( taa );
 			}
-			m_scene->m_sceneDefaultPostProcess->GetTaa()->m_quality = int( m_settings.antiAliasingQuality );
+			m_scene->m_sceneDefaultPostProcess->GetTaaIfAvailable()->m_quality = (Tr2PPTaaEffect::Quality)m_settings.antiAliasingQuality;
 		}
 	}
 
@@ -362,17 +362,9 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::RenderSSAO( const Tr2Text
 	{
 		renderContext.SetReadOnlyDepth( true );
 
-		bool temporal = false;
 		auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( m_upscalingContext ? m_upscalingContext->GetID() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
-		if( m_scene->m_sceneDefaultPostProcess )
-		{
-			auto taa = m_scene->m_sceneDefaultPostProcess->GetTaa();
-			temporal = upscalingInfo.temporal || ( taa && taa->IsActive() );
-		}
-		else
-		{
-			temporal = upscalingInfo.temporal;
-		}
+		auto scenePostProcess = m_scene->m_sceneDefaultPostProcess;
+		bool temporal = upscalingInfo.temporal || ( scenePostProcess != nullptr && scenePostProcess->GetTaaIfAvailable() != nullptr );
 
 		ssao = m_ssao->Filter( depthMap, normalMap, m_gpuResourcePool, renderContext, temporal );
 		renderContext.SetReadOnlyDepth( false );
@@ -608,6 +600,8 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 	renderContext.m_esm.SetRenderTarget( 0, *destinations.data );
 	renderContext.m_esm.SetDepthStencilBuffer( {} );
 
+	GlobalStore().RegisterVariable( "EveSpaceSceneOpaqueMap", Tr2TextureAL{} );
+
 	{
 		TimeSection postProcessSection( m_timers.postProcess, "PostProcess", rootTimer, renderContext );
 		m_postProcess->Execute( *destinations.data, std::move( customBackBuffer ), depthBuffer, std::move( velocityMap ), std::move( opaqueBackBuffer ), m_scene, m_upscalingContext, m_gpuResourcePool, renderContext );
@@ -769,12 +763,5 @@ void EveSpaceSceneRenderDriver::SetScene( EveSpaceScene* scene )
 		return;
 	}
 	m_scene = scene;
-	if( m_scene )
-	{
-		if ( auto postProcess = m_scene->GetPostProcess() )
-		{
-			postProcess->MarkAllDirty();
-		}
-	}
 }
 

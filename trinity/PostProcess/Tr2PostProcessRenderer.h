@@ -152,19 +152,17 @@ private:
 	void SetupExposureConversion( bool enable, float middleValue );
 
 	// optional sharpening
-	void ProcessSharpening( bool enable, uint32_t displayWidth, uint32_t displayHeight, float upscalingAmount );
-	Tr2GpuResourcePool::Texture RenderSharpening( Tr2GpuResourcePool::Texture & input, Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext );
+	Tr2GpuResourcePool::Texture RenderSharpening( bool enable, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
 	// bloom
-	bool ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure );
-	Tr2GpuResourcePool::Texture RenderBloom( Tr2GpuResourcePool::Texture& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom );
+	Tr2GpuResourcePool::Texture RenderBloom( Tr2GpuResourcePool::Texture& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure );
 	Tr2GpuResourcePool::Texture RenderBloomDebug( 
 		std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& downsample,
 		std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
 		Tr2GpuResourcePool::Texture& blitCurrent,
 		Tr2GpuResourcePool& gpuResourcePool, 
 		Tr2RenderContext& renderContext );
-	;
+	
 	Tr2EffectPtr m_downSamplerLuminancePreserve;
 	Tr2EffectPtr m_downSampler;
 	Tr2EffectPtr m_upsamplerHorizontal;
@@ -178,17 +176,14 @@ private:
 
 
 	// godRays
-	bool ProcessGodRays( Tr2PPGodRaysEffect* godrays );
 	void RenderGodRays( const Tr2TextureAL& dest, const Tr2TextureAL& depth, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPGodRaysEffect* godrays );
 	Tr2EffectPtr m_godrayEffect;
 
 	// signal loss
-	bool ProcessSignalLoss( Tr2PPSignalLossEffect* signalLoss );
 	void RenderSignalLoss( const Tr2TextureAL& dest, Tr2RenderContext& renderContext, Tr2PPSignalLossEffect* signalLoss );
 	Tr2EffectPtr m_signalLossEffect;
 
 	// dynamic exposure
-	bool ProcessDynamicExposure( Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, Tr2PPBloomEffect* bloom, Tr2PostProcess2* postProcess );
 	Tr2GpuResourcePool::Buffer RenderDynamicExposure( const Tr2TextureAL& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure );
 	void RenderDynamicExposureDebug( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, const Tr2BufferAL& histogramBuffer );
 
@@ -199,7 +194,6 @@ private:
 	Tr2EffectPtr m_dynamicExposureDebugShader;
 
 	// depth of field
-	bool ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx );
 	void RenderDepthOfField( const Tr2TextureAL& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* depthOfField, bool temporal, float upscalingAmount );	
 	Tr2EffectPtr m_depthOfFieldCoCShader;
 	Tr2EffectPtr m_depthOfFieldBokehBlurShader;
@@ -208,33 +202,18 @@ private:
 	uint32_t m_bokehFrameCounter;
 	
 	// fog
-	bool ProcessFog( Tr2PPFogEffect* fog );
 	void RenderFog( const Tr2TextureAL& dest, const Tr2TextureAL& source, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPFogEffect* fog );
 	Tr2EffectPtr m_fogColorEffect;
 	Tr2EffectPtr m_fogCompositeEffect;
 
 	// TAA
-	bool ProcessTaa( Tr2PPTaaEffect* taa );
 	void RenderTaa( const Tr2TextureAL& dest, const Tr2TextureAL& velocity, const Tr2TextureAL& opaqueColor, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPTaaEffect* taa, Tr2PPDynamicExposureEffect* dynamic_exposure );
 	Tr2EffectPtr m_taaEffect, m_taaCopyEffect;
 	uint32_t m_taaFrameCounter;
 
 	// film grain
-	bool ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain );
 	void RenderFilmGrain( const Tr2TextureAL& dest, Tr2RenderContext& renderContext, Tr2PPFilmGrainEffect* filmGrain );
 	Tr2EffectPtr m_grainShader;
-
-	// desaturate
-	void ProcessDesaturate( Tr2PPDesaturateEffect* desaturate );
-
-	// fade
-	void ProcessFade( Tr2PPFadeEffect* fade );
-
-	// LUT
-	void ProcessLut( std::vector<const Tr2PPLutEffect*> luts );
-
-	// vignette
-	void ProcessVignette( Tr2PPVignetteEffect* vignette);
 
 	Tr2GpuResourcePool::Texture RenderUpscaling( 
 		const Tr2TextureAL& dest, 
@@ -249,14 +228,13 @@ private:
 
 	// tonemapping
 	Tr2EffectPtr m_tonemappingEffect;
-	bool m_desaturateEnabled;
-	bool m_fadeEnabled;
 	uint8_t m_lutsEnabled;
 	bool m_vignetteEnabled;
-	void ProcessColorCorrection( Tr2PPColorCorrectionEffect* colorCorrection );
-	void ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping );
+	void RenderTonemapping(
+		const Tr2TextureAL& dest, 
+		Tr2PostProcess2* activePostProcess,
+		Tr2RenderContext & renderContext );
 	
-	bool ProcessGenericEffect( Tr2PPGenericEffectPtr genericEffect );
 	void RenderGenericEffect( const Tr2TextureAL& dest, const Tr2TextureAL& src, Tr2RenderContext& renderContext, Tr2PPGenericEffectPtr genericEffect );
 
 	// General
@@ -277,9 +255,6 @@ private:
 
 	Tr2EffectPtr m_downsampleDepthEffect;
 	std::map<uint32_t, std::pair<Tr2EffectPtr, Tr2EffectPtr>> m_blurEffects;
-
-	Tr2EffectPtr m_blurBigVertical;
-	Tr2EffectPtr m_blurBigHorizontal;
 
 	// contrast adaptive sharpening, used if no upscaling is applied or if an upscaling does not have sharpening
 	Tr2EffectPtr m_fidelityFxCasShader;

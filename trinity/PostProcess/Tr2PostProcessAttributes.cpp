@@ -185,13 +185,13 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	if( grimeIntensity > 0 )
 	{
 		Tr2PPBloomEffectPtr bloomEffect;
-		if( postprocess.GetBloom() == nullptr )
+		if( postprocess.GetBloomIfAvailable() == nullptr )
 		{
 			bloomEffect.CreateInstance();
 		}
 		else
 		{
-			bloomEffect = postprocess.GetBloom();
+			bloomEffect = postprocess.GetBloomIfAvailable();
 		}
 		bloomEffect->m_grimeWeight = grimeIntensity;
 		bloomEffect->m_grimePath = grimePath;
@@ -376,104 +376,82 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		return;
 	}
 
-	if( auto signalLoss = postProcess->GetSignalLoss() )
+	if( auto signalLoss = postProcess->GetSignalLossIfAvailable() )
 	{
-		if( signalLoss->IsActive() )
-		{
-			signalLossIntensity = Attribute( signalLoss->m_strength, true );
-		}
+		signalLossIntensity = Attribute( signalLoss->m_strength, true );
 	}
 	
-	if( auto bloom = postProcess->GetBloom() )
+	if( auto bloom = postProcess->GetBloomIfAvailable() )
 	{
-		if( bloom->IsActive() )
-		{
-			bloomBrightness = Attribute( bloom->m_bloomBrightness, true );
-			bloomLuminanceScale = Attribute( bloom->m_luminanceScale, true );
-			bloomLuminanceThreshold = Attribute( bloom->m_luminanceThreshold, true );
-			grimeIntensity = Attribute( bloom->m_grimeWeight, true );
-			grimePath = Attribute( bloom->m_grimePath, true );
+		bloomBrightness = Attribute( bloom->m_bloomBrightness, true );
+		bloomLuminanceScale = Attribute( bloom->m_luminanceScale, true );
+		bloomLuminanceThreshold = Attribute( bloom->m_luminanceThreshold, true );
+		grimeIntensity = Attribute( bloom->m_grimeWeight, true );
+		grimePath = Attribute( bloom->m_grimePath, true );
 	
-			bloomSizeScale = Attribute( bloom->m_sizeScale, true );
-			bloomDirectionalWeight = Attribute( bloom->m_directionalWeight, true );
-			bloomStepSize1 = Attribute( bloom->m_stepSizes[0], true );
-			bloomStepSize2 = Attribute( bloom->m_stepSizes[1], true );
-			bloomStepSize3 = Attribute( bloom->m_stepSizes[2], true );
-			bloomStepSize4 = Attribute( bloom->m_stepSizes[3], true );
-			bloomStepSize5 = Attribute( bloom->m_stepSizes[4], true );
-			bloomStepSize6 = Attribute( bloom->m_stepSizes[5], true );
-			bloomStepTint1 = Attribute( bloom->m_stepTints[0], true );
-			bloomStepTint2 = Attribute( bloom->m_stepTints[1], true );
-			bloomStepTint3 = Attribute( bloom->m_stepTints[2], true );
-			bloomStepTint4 = Attribute( bloom->m_stepTints[3], true );
-			bloomStepTint5 = Attribute( bloom->m_stepTints[4], true );
-			bloomStepTint6 = Attribute( bloom->m_stepTints[5], true );
-		}
+		bloomSizeScale = Attribute( bloom->m_sizeScale, true );
+		bloomDirectionalWeight = Attribute( bloom->m_directionalWeight, true );
+		bloomStepSize1 = Attribute( bloom->m_stepSizes[0], true );
+		bloomStepSize2 = Attribute( bloom->m_stepSizes[1], true );
+		bloomStepSize3 = Attribute( bloom->m_stepSizes[2], true );
+		bloomStepSize4 = Attribute( bloom->m_stepSizes[3], true );
+		bloomStepSize5 = Attribute( bloom->m_stepSizes[4], true );
+		bloomStepSize6 = Attribute( bloom->m_stepSizes[5], true );
+		bloomStepTint1 = Attribute( bloom->m_stepTints[0], true );
+		bloomStepTint2 = Attribute( bloom->m_stepTints[1], true );
+		bloomStepTint3 = Attribute( bloom->m_stepTints[2], true );
+		bloomStepTint4 = Attribute( bloom->m_stepTints[3], true );
+		bloomStepTint5 = Attribute( bloom->m_stepTints[4], true );
+		bloomStepTint6 = Attribute( bloom->m_stepTints[5], true );
 	}
-	if( auto filmGrain = postProcess->GetFilmGrain() )
+	if( auto filmGrain = postProcess->GetFilmGrainIfAvailable() )
 	{
-		if( filmGrain->IsActive() )
-		{
-			filmGrainIntensity = Attribute( filmGrain->m_intensity, true );
-			filmGrainSize = Attribute( filmGrain->m_grainSize, true );
-			filmGrainDensity = Attribute( filmGrain->m_grainDensity, true );
-			filmGrainContrast = Attribute( filmGrain->m_grainContrast, true );
-			filmGrainBrightnessModifier = Attribute( filmGrain->m_brightnessModifier, true );
-			filmGrainColored = Attribute( filmGrain->m_colored, true );
-			filmGrainColorAmount = Attribute( filmGrain->m_colorAmount, true );
-		}
+		filmGrainIntensity = Attribute( filmGrain->m_intensity, true );
+		filmGrainSize = Attribute( filmGrain->m_grainSize, true );
+		filmGrainDensity = Attribute( filmGrain->m_grainDensity, true );
+		filmGrainContrast = Attribute( filmGrain->m_grainContrast, true );
+		filmGrainBrightnessModifier = Attribute( filmGrain->m_brightnessModifier, true );
+		filmGrainColored = Attribute( filmGrain->m_colored, true );
+		filmGrainColorAmount = Attribute( filmGrain->m_colorAmount, true );
+}
+	if( auto desaturate = postProcess->GetDesaturateIfAvailable() )
+	{
+		// negative is desaturation, positive is saturation, so move the zero point to 0.0 from 1.0
+		saturation = Attribute( desaturate->m_intensity - 1.0f, true );
 	}
-	if( auto desaturate = postProcess->GetDesaturate() )
+	if( auto fade = postProcess->GetFadeIfAvailable() )
 	{
-		if( desaturate->IsActive() )
-		{ 
-			// negative is desaturation, positive is saturation, so move the zero point to 0.0 from 1.0
-			saturation = Attribute( desaturate->m_intensity - 1.0f, true );
-		}
-	}
-	if( auto fade = postProcess->GetFade() )
-	{
-		if( fade->IsActive() )
-		{ 
-			fadeIntensity = Attribute( fade->m_intensity, true );
-			fadeColor = Attribute( fade->m_color, true );
-		}
+		fadeIntensity = Attribute( fade->m_intensity, true );
+		fadeColor = Attribute( fade->m_color, true );
 
 	}
-	if( auto vignette = postProcess->GetVignette() )
+	if( auto vignette = postProcess->GetVignetteIfAvailable() )
 	{
-		if( vignette->IsActive() )
-		{ 
-			vignetteIntensity = Attribute( vignette->m_intensity, true );
-			vignetteOpacity = Attribute( vignette->m_opacity, true );
-			vignetteColor = Attribute( vignette->m_color, true );
-			vignetteDetail1Size = Attribute( vignette->m_detail1Size, true );
-			vignetteDetail1Scroll = Attribute( vignette->m_detail1Scroll, true );
-			vignetteDetail2Size = Attribute( vignette->m_detail2Size, true );
-			vignetteDetail2Scroll = Attribute( vignette->m_detail2Scroll, true );
-			vignetteShapePath = Attribute( vignette->m_shapePath, true );
-			vignetteDetailPath = Attribute( vignette->m_detailPath, true );
-			vignetteSineFrequency = Attribute( vignette->m_sineFrequency, true );
-			vignetteMinSineFrequency = Attribute( vignette->m_sineMinimum, true );
-			vignetteMaxSineFrequency = Attribute( vignette->m_sineMaximum, true );
-		}
+		vignetteIntensity = Attribute( vignette->m_intensity, true );
+		vignetteOpacity = Attribute( vignette->m_opacity, true );
+		vignetteColor = Attribute( vignette->m_color, true );
+		vignetteDetail1Size = Attribute( vignette->m_detail1Size, true );
+		vignetteDetail1Scroll = Attribute( vignette->m_detail1Scroll, true );
+		vignetteDetail2Size = Attribute( vignette->m_detail2Size, true );
+		vignetteDetail2Scroll = Attribute( vignette->m_detail2Scroll, true );
+		vignetteShapePath = Attribute( vignette->m_shapePath, true );
+		vignetteDetailPath = Attribute( vignette->m_detailPath, true );
+		vignetteSineFrequency = Attribute( vignette->m_sineFrequency, true );
+		vignetteMinSineFrequency = Attribute( vignette->m_sineMinimum, true );
+		vignetteMaxSineFrequency = Attribute( vignette->m_sineMaximum, true );
 
 	}
-	if( auto depthOfField = postProcess->GetDepthOfField() )
+	if( auto depthOfField = postProcess->GetDepthOfFieldIfAvailable() )
 	{
-		if( depthOfField->IsActive() )
-		{ 
-			depthOfFieldScale = Attribute( depthOfField->m_scale, true );
-			depthOfFieldFocalDistance = Attribute( depthOfField->m_focalDistance, true );
-			depthOfFieldFocalLength = Attribute( depthOfField->m_focalLength, true );
-			depthOfFieldShape = Attribute( depthOfField->m_bokehShape, true );
-		}
+		depthOfFieldScale = Attribute( depthOfField->m_scale, true );
+		depthOfFieldFocalDistance = Attribute( depthOfField->m_focalDistance, true );
+		depthOfFieldFocalLength = Attribute( depthOfField->m_focalLength, true );
+		depthOfFieldShape = Attribute( depthOfField->m_bokehShape, true );
 
 	}
 
 	auto luts = std::vector<const Tr2PPLutEffect*>();
-	postProcess->GetLuts( luts );
-	std::sort( luts.begin(), luts.end(), []( const Tr2PPLutEffect* a, const Tr2PPLutEffect* b ) { return a->m_influence < b->m_influence; } );
+	postProcess->GetAvilableSortedLuts( luts );
 	for( auto lut : luts )
 	{
 		// just get the maximum lut intensity
@@ -482,17 +460,14 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		break;
 	}
 
-	if( auto colorCorrection = postProcess->GetColorCorrection() )
+	if( auto colorCorrection = postProcess->GetColorCorrectionIfAvailable() )
 	{
-		if ( colorCorrection->IsActive() )
-		{
-			whiteTemperature = Attribute( colorCorrection->m_whiteTemperature, true );
-			whiteTint = Attribute( colorCorrection->m_whiteTint, true );
-			colorSaturation = Attribute( colorCorrection->m_colorSaturation, true );
-			colorContrast = Attribute( colorCorrection->m_colorContrast, true );
-			colorGamma = Attribute( colorCorrection->m_colorGamma, true );
-			colorGain = Attribute( colorCorrection->m_colorGain, true );
-			colorOffset = Attribute( colorCorrection->m_colorOffset, true );
-		}
+		whiteTemperature = Attribute( colorCorrection->m_whiteTemperature, true );
+		whiteTint = Attribute( colorCorrection->m_whiteTint, true );
+		colorSaturation = Attribute( colorCorrection->m_colorSaturation, true );
+		colorContrast = Attribute( colorCorrection->m_colorContrast, true );
+		colorGamma = Attribute( colorCorrection->m_colorGamma, true );
+		colorGain = Attribute( colorCorrection->m_colorGain, true );
+		colorOffset = Attribute( colorCorrection->m_colorOffset, true );
 	}
 }
