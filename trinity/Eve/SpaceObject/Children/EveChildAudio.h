@@ -9,6 +9,7 @@
 
 #include "IEveSpaceObjectChild.h"
 #include "EveChildTransform.h"
+#include "Include/ITr2DebugRenderer2.h"
 #include <ITr2AudEmitter.h>
 
 // Forward declarations and smart pointer typedefs
@@ -24,7 +25,8 @@ BLUE_CLASS( EveChildAudio ) :
 	public IEveSpaceObjectChild,
 	public EveChildTransform,
 	public IInitialize,
-	public INotify
+	public INotify,
+	public ITr2DebugRenderable
 {
     public:
         EXPOSE_TO_BLUE();
@@ -78,6 +80,9 @@ BLUE_CLASS( EveChildAudio ) :
 		void ChangeLOD( Tr2Lod lod );
 		void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 
+	// ITr2DebugRenderable
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
     private:
         std::string m_name;           ///< The name identifier for this audio child.
