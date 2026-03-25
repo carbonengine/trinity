@@ -3,7 +3,7 @@
 #define EveSpaceObject2_H
 
 
-
+#include "ITr2BoundingBox.h"
 #include "include/ITriTargetable.h"
 #include "TriRenderBatch.h"
 
@@ -203,6 +203,7 @@ BLUE_CLASS( EveSpaceObject2 ):
 	public IEveShadowCaster,
 	public IBlueAsyncResNotifyTarget,
     public ITr2Pickable,
+	public ITr2BoundingBox,
 	public ITriTargetable,
 	public IWorldPosition,
 	public ITr2ShLightingReceiver,
@@ -310,6 +311,11 @@ public:
 	virtual IRoot* GetID( uint16_t );
 	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2BoundingBox
+	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const;
+	virtual bool IsBoundingBoxReady() const;
+	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriTargetable
 	unsigned int GetDamageLocatorCount() const;
