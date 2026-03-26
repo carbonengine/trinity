@@ -3557,11 +3557,8 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 
 bool EveSpaceObject2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
 {
-	// GetLocalBoundingBox updates cached AABB state, so keep using it via const_cast here.
-	if( !const_cast<EveSpaceObject2*>( this )->GetLocalBoundingBox( min, max ) )
-	{
-		return false;
-	}
+	min = m_localAabbMin;
+	max = m_localAabbMax;
 	BoundingBoxTransform( min, max, m_worldTransform );
 	return true;
 }
