@@ -142,7 +142,7 @@ public:
 
 	std::vector<ITriReroutable*> m_reroutedParameters;
 	Tr2ResourceSetDescriptionAL m_resourceSetDesc;
-	Tr2ResourceSetAL m_resourceSet;
+	//Tr2ResourceSetAL m_resourceSet;
 	std::vector<ITr2EffectValuePtr> m_usedResources;
 	Tr2BindlessResourcesAL m_usedTextures;
 	uint32_t m_resourceSetHash;
@@ -239,8 +239,9 @@ protected:
 	bool ApplyShaderInputs( Tr2EffectPassParameters& pp, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const;
 
 	void ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
-	void UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
-	bool UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2ResourceSetDescriptionAL& desc ) const;
+	void UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
+	bool UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, Tr2ResourceSetDescriptionAL & desc ) const;
+	bool SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, Tr2RenderContext & renderContext ) const;
 
 
 	Tr2ShaderPtr m_shader;

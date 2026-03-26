@@ -552,7 +552,7 @@ Tr2ResourceSetAL::Tr2ResourceSetAL()
 {
 }
 
-ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
+/*ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
 {
 	m_resourceSet = std::make_shared<TrinityALImpl::Tr2ResourceSetAL>();
 	auto result = m_resourceSet->Create( description, program, renderContext );
@@ -577,7 +577,7 @@ ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& descriptio
 	m_resourceSet = nullRS;
 	return E_FAIL;
 #endif
-}
+}*/
 
 bool Tr2ResourceSetAL::IsValid() const
 {

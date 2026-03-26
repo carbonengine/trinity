@@ -57,6 +57,16 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEffectTextureParameter
+
+	bool UseUav(
+		Tr2RenderContextEnum::ShaderType stage,
+		uint32_t registerIndex,
+		Tr2RenderContext& renderContext ) const override;
+	bool UseSRV(
+		Tr2RenderContextEnum::ShaderType stage,
+		uint32_t registerIndex,
+		ResourceFlags flags,
+		Tr2RenderContext& renderContext ) const override;
 	void CopyValueToEffect(
 		Tr2RenderContextEnum::ShaderType inputType,
 		unsigned char* destHandle,

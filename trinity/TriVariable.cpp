@@ -20,6 +20,95 @@ const Be::ClassInfo* TriVariable::ExposeToBlue()
 	EXPOSURE_END()
 }
 
+bool TriVariable::UseUav(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
+{
+	switch( m_type )
+	{
+	case TRIVARIABLE_TEXTURE_RES: {
+		Tr2TextureAL* tex = nullptr;
+		if( m_texture )
+		{
+			tex = m_texture->GetTexture();
+		}
+		if( tex )
+		{
+			return renderContext.SetUav( stage, registerIndex, *tex ) == S_OK;
+		}
+		else
+		{
+			return renderContext.SetUav( stage, registerIndex, Tr2BufferAL() ) == S_OK;
+		}
+		break;
+	}
+	case TRIVARIABLE_GPUBUFFER: {
+		Tr2BufferAL* buffer = nullptr;
+		if( m_gpuBuffer )
+		{
+			buffer = m_gpuBuffer->GetGpuBuffer( 0 );
+		}
+		if( buffer )
+		{
+			return renderContext.SetUav( stage, registerIndex, *buffer ) == S_OK;
+		}
+		else
+		{
+			return renderContext.SetUav( stage, registerIndex, Tr2BufferAL() ) == S_OK;
+		}
+		break;
+	}
+	default:
+		break;
+	}
+	return renderContext.SetUav( stage, registerIndex, Tr2BufferAL() ) == S_OK;
+}
+
+bool TriVariable::UseSRV(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
+{
+	switch( m_type )
+	{
+	case TRIVARIABLE_TEXTURE_RES: {
+		auto colorSpace = ( flags & RESOURCE_FLAG_SRGB ) != 0 ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+		Tr2TextureAL* tex = nullptr;
+		if( m_texture )
+		{
+			tex = m_texture->GetTexture();
+		}
+		if( tex )
+		{
+			return renderContext.SetSrv( stage, registerIndex, *tex, colorSpace ) == S_OK;
+		}
+		else
+		{
+			return renderContext.SetSrv( stage, registerIndex, Tr2TextureAL(), colorSpace ) == S_OK;
+		}
+	}
+	case TRIVARIABLE_GPUBUFFER: {
+		Tr2BufferAL* buffer = nullptr;
+		if( m_gpuBuffer )
+		{
+			buffer = m_gpuBuffer->GetGpuBuffer( 0 );
+		}
+		if( buffer )
+		{
+			return renderContext.SetSrv( stage, registerIndex, *buffer ) == S_OK;
+		}
+		else
+		{
+			return renderContext.SetSrv( stage, registerIndex, Tr2BufferAL() ) == S_OK;
+		}
+	}
+	default:
+		return false;
+	}
+}
+
 bool TriVariable::CopyToResourceSet(
 	Tr2ResourceSetDescriptionAL& resourceDesc,
 	Tr2RenderContextEnum::ShaderType stage,

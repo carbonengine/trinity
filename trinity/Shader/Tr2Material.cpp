@@ -10,6 +10,7 @@
 #include "Tr2Shader.h"
 #include "ITr2EffectValue.h"
 #include "Tr2VariableStore.h"
+#include "Tr2RenderContext.h"
 #include "Include/ITriEffectParameter.h"
 
 CCP_STATS_DECLARE( effectCBLocks, "Trinity/effectCBLocks", true, CST_COUNTER_LOW, "number of CB locks for effect parameters" );
@@ -223,12 +224,14 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 	{
 		if( mask & ( 1 << i ) )
 		{
+			auto& input = pp.m_stageInput[i];
 			descChanged |= ApplyShaderInputs( techniqueIndex, passIndex, Tr2RenderContextEnum::ShaderType( i ), renderContext );
+			SetResources( Tr2RenderContextEnum::ShaderType( i ), input, renderContext );
 			mask &= ~( 1 << i );
 		}
 	}
 
-	if( descChanged || !pp.m_resourceSet.IsValid() )
+	if( descChanged /*|| !pp.m_resourceSet.IsValid()*/ )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -239,7 +242,7 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 		{
 			return;
 		}
-		pp.m_resourceSet.Create( pp.m_resourceSetDesc, *sp, renderContext );
+		//pp.m_resourceSet.Create( pp.m_resourceSetDesc, *sp, renderContext );
 		pp.m_resourceSetHash = pp.m_resourceSetDesc.ComputeHash();
 		pp.m_resourceSetDirty = false;
 
@@ -253,8 +256,8 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 			}
 		}
 	}
-
-	renderContext.SetResourceSet( pp.m_resourceSet );
+	// TO DO JOHN. need to find a way of setting the SRVs dynamicly
+	//renderContext.SetResourceSet( pp.m_resourceSet );
 }
 
 void Tr2Material::ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex, unsigned int passIndex, uint32_t overrideProgram, Tr2RenderContext& renderContext ) const
@@ -278,16 +281,16 @@ void Tr2Material::ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex,
 		{
 			auto& input = pp.m_stageInput[i];
 			ApplyConstants( Tr2RenderContextEnum::ShaderType( i ), input, !pp.m_reroutedParameters.empty(), renderContext );
-			UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType( i ), input, resourceSetDesc );
+			SetResources( Tr2RenderContextEnum::ShaderType( i ), input, renderContext );
 			mask &= ~( 1 << i );
 		}
 	}
 
 	CCP_STATS_INC( effectResourceSetCreated );
 
-	Tr2ResourceSetAL resourceSet;
-	resourceSet.Create( resourceSetDesc, *sp, renderContext.GetPrimaryRenderContext() );
-	renderContext.SetResourceSet( resourceSet );
+	//Tr2ResourceSetAL resourceSet;
+	//resourceSet.Create( resourceSetDesc, *sp, renderContext.GetPrimaryRenderContext() );
+	//renderContext.SetResourceSet( resourceSet );
 
 	pp.m_resourceSetDirty = true;
 }
@@ -367,6 +370,20 @@ bool Tr2Material::UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shader
 	return descChanged;
 }
 
+bool Tr2Material::SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2RenderContext& renderContext ) const
+{
+	bool descChanged = false;
+	for( auto it = input.m_textures.cbegin(); it != input.m_textures.cend(); ++it )
+	{
+		descChanged |= it->m_sourceValue->UseSRV( shaderType, it->m_registerIndex, ITr2EffectValue::ResourceFlags( it->m_registerCount ), renderContext );
+	}
+	for( auto it = input.m_uavs.cbegin(); it != input.m_uavs.cend(); ++it )
+	{
+		descChanged |= it->m_sourceValue->UseUav( shaderType, it->m_registerIndex, renderContext );
+	}
+	return descChanged;
+}
+
 uint64_t Tr2Material::GetSortValue() const
 {
 	return m_resourceSetHash;
@@ -389,7 +406,7 @@ void Tr2Material::InvalidateResourceSets()
 		for( auto pit = begin( tit->passes ); pit != end( tit->passes ); ++pit )
 		{
 			auto params = pit->get();
-			params->m_resourceSet = Tr2ResourceSetAL();
+			//params->m_resourceSet = Tr2ResourceSetAL();
 			params->m_resourceSetDesc.ClearResources();
 			params->m_resourceSetHash = 0;
 			params->m_resourceSetDirty = true;
@@ -580,16 +597,17 @@ void Tr2Material::ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr
 	ApplyConstants( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, !pp.m_reroutedParameters.empty(), renderContext );
 
 	bool descChanged = pp.m_globalResourceSetDirty;
-	descChanged |= UpdateResourceSetDesc( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, pp.m_globalResourceSetDesc );
+	//descChanged |= UpdateResourceSetDesc( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, pp.m_globalResourceSetDesc );
+	descChanged |= SetResources( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, renderContext );
 
-	if( descChanged || !pp.m_globalResourceSet.IsValid() )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		pp.m_globalResourceSet.Create( pp.m_globalResourceSetDesc, rtPipelineState, renderContext );
-		pp.m_globalResourceSetDirty = false;
-	}
+	//if( descChanged || !pp.m_globalResourceSet.IsValid() )
+	//{
+		//USE_MAIN_THREAD_RENDER_CONTEXT();
+		//pp.m_globalResourceSet.Create( pp.m_globalResourceSetDesc, rtPipelineState, renderContext );
+		//pp.m_globalResourceSetDirty = false;
+	//}
 
-	renderContext.SetResourceSet( pp.m_globalResourceSet );
+	//renderContext.SetResourceSet( pp.m_globalResourceSet );
 }
 
 void Tr2Material::ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const

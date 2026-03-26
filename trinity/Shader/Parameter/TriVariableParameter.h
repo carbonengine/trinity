@@ -52,6 +52,16 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 	/////////////////////////////////////////////////////////////////////////////////////
+
+	virtual bool UseUav(
+		Tr2RenderContextEnum::ShaderType stage,
+		uint32_t registerIndex,
+		Tr2RenderContext& renderContext ) const;
+	virtual bool UseSRV(
+		Tr2RenderContextEnum::ShaderType stage,
+		uint32_t registerIndex,
+		ResourceFlags flags,
+		Tr2RenderContext& renderContext ) const;
 	virtual bool CopyToResourceSet(
 		Tr2ResourceSetDescriptionAL& resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,

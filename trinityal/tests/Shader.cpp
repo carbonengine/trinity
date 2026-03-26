@@ -5,7 +5,7 @@
 using namespace Tr2RenderContextEnum;
 
 struct Shader : public WithValidRenderContext {};
-
+	
 TEST_F( Shader, ShaderIsInvalidBeforeCreation )
 {
 	Tr2ShaderAL s;

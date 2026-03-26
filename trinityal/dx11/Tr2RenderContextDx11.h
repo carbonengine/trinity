@@ -94,8 +94,16 @@ public:
 	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( );
 	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw();
 
-	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
-	
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 ) throw();
+
+	ALResult SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw();
+
+	ALResult UseResourceBindings() throw();
+	ALResult ResetResourceBindings() throw();
+
 	ALResult DrawIndexedPrimitive(	
 		uint32_t numVertices, 
 		uint32_t startIndex, 

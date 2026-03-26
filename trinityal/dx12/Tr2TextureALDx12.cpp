@@ -1197,7 +1197,8 @@ namespace TrinityALImpl
 			return E_INVALIDCALL;
 		}
 
-		renderContext.SetResourceSet( ::Tr2ResourceSetAL() );
+		//renderContext.SetResourceSet( ::Tr2ResourceSetAL() );
+		renderContext.ResetResourceBindings();
 		renderContext.FlushBarriersDx12( m_textures[0] );
 
 		renderContext.m_dirtyPso = true;

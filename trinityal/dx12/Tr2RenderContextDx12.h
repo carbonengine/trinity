@@ -31,6 +31,7 @@ class Tr2SamplerStateAL;
 class Tr2BufferAL;
 class Tr2RtShaderTableAL;
 struct Tr2Viewport;
+struct Tr2RootSignatureAL;
 
 
 class Tr2BindlessResourcesAL
@@ -97,7 +98,16 @@ public:
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw( );
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
 
-	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
+	//ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
+
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 ) throw();
+
+	ALResult SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw();
+
+	ALResult ResetResourceBindings() throw();
 	
 	ALResult DrawIndexedPrimitive(
 		uint32_t numVertices,
@@ -234,7 +244,9 @@ public:
     ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
     
 	ALResult SetAllState();
+
 protected:
+	ALResult UseResourceBindings() throw();
 	ID3D12PipelineState* GetPipelineState();
 
 	/** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
@@ -261,7 +273,87 @@ protected:
 
 	std::pair<uint32_t, uint32_t> m_primitiveToVertexCount;
 
-	Tr2ResourceSetAL m_resourceSet;
+	//Tr2ResourceSetAL m_resourceSet;
+
+	// Tr2ResourceSetAL data
+	struct Resource
+	{
+		enum Type
+		{
+			NONE,
+			BUFFER,
+			TEXTURE,
+			HEAP_VIEW,
+		};
+
+		Resource();
+
+		bool operator==( const Resource& other ) const;
+		bool Is( const Tr2BufferAL& other ) const;
+		bool Is( const Tr2TextureAL& other, Tr2RenderContextEnum::ColorSpace otherColorSpace ) const;
+		bool Is( const Tr2TextureAL& other, uint32_t otherMip ) const;
+		void UpdateHash( uint32_t& hash ) const;
+
+		Tr2RenderContextEnum::ShaderType stage;
+		uint32_t registerIndex;
+		Tr2TextureAL texture;
+		Tr2BufferAL buffer;
+		Type type;
+		union
+		{
+			Tr2RenderContextEnum::ColorSpace colorSpace;
+			uint32_t mip;
+		};
+	};
+	struct Sampler
+	{
+		enum Type
+		{
+			NONE,
+			SAMPLER,
+			HEAP_VIEW,
+		};
+
+		Sampler();
+
+		bool operator==( const Sampler& other ) const;
+		bool operator==( const Tr2SamplerStateAL& other ) const;
+
+		void UpdateHash( uint32_t& hash ) const;
+
+		Tr2RenderContextEnum::ShaderType stage;
+		uint32_t registerIndex;
+		Tr2SamplerStateAL sampler;
+		Type type;
+	};
+
+	//std::unique_ptr<Resource[]> m_srv_TEMP;
+	//std::unique_ptr<Resource[]> m_uav_TEMP;
+	//std::unique_ptr<Sampler[]> m_samplers_TEMP;
+
+	
+	Resource m_srv_PRE_RENDER[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	Resource m_uav_PRE_RENDER[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	Sampler m_samplers_PRE_RENDER[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+
+	Resource m_srv_TEMP[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	Resource m_uav_TEMP[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	Sampler m_samplers_TEMP[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+
+	std::shared_ptr<ShaderResourceViewDx12> m_srv[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	std::shared_ptr<UnorderedAccessViewDx12> m_uav[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	std::shared_ptr<SamplerStateDx12> m_sampler[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	uint32_t m_samplerCount;
+	uint32_t m_resourceCount;
+	uint32_t m_srvMask;
+	uint32_t m_uavMask;
+
+	std::vector<D3D12_RESOURCE_BARRIER> m_inTransitions;
+	std::vector<D3D12_RESOURCE_BARRIER> m_outTransitions;
+	std::vector<ID3D12Resource*> m_usedResources;
+
+	bool m_renderedUsingSRVs = false;
+	// END
 
 	bool GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count );
 public:

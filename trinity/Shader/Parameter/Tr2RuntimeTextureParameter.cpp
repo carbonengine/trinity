@@ -30,6 +30,40 @@ bool Tr2RuntimeTextureParameter::OnModified( Be::Var* value )
 	return true;
 }
 
+bool Tr2RuntimeTextureParameter::UseUav(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
+{
+	if( Tr2TextureAL* tex = ( m_texture ? m_texture->GetTexture() : nullptr ) )
+	{
+		return renderContext.SetUav( stage, registerIndex, *tex, m_uavMipLevel ) == S_OK;
+	}
+	else
+	{
+		return renderContext.SetUav( stage, registerIndex, Tr2TextureAL() ) == S_OK;
+	}
+}
+
+// --------------------------------------------------------------------------------------
+bool Tr2RuntimeTextureParameter::UseSRV(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
+{
+	bool isSrgb = ( flags & RESOURCE_FLAG_SRGB ) != 0;
+	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+	if( Tr2TextureAL* tex = ( m_texture ? m_texture->GetTexture() : nullptr ) )
+	{
+		return renderContext.SetSrv( stage, registerIndex, *tex, colorSpace ) == S_OK;
+	}
+	else
+	{
+		return renderContext.SetSrv( stage, registerIndex, Tr2Renderer::GetFallbackTexture( m_resourceType, m_name.c_str() ), colorSpace ) == S_OK;
+	}
+}
+
 // --------------------------------------------------------------------------------------
 bool Tr2RuntimeTextureParameter::CopyToResourceSet(
 	Tr2ResourceSetDescriptionAL& resourceDesc,

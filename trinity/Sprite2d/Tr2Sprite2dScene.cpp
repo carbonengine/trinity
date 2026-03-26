@@ -1142,8 +1142,13 @@ void Tr2Sprite2dScene::IssueDrawCall()
                             }
                         }
                         auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-                        desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
-                    }
+                        //desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
+						
+						
+						renderContext.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
+                    
+					
+					}
                 }
 
 				m_drawCallStartIndex /= sizeof( uint32_t );
@@ -2117,9 +2122,13 @@ void Tr2Sprite2dScene::ReplayCapture( Tr2Sprite2dDisplayList* dl )
 
 			auto desc = entry.effect->GetPassDescription( 0, 0 );
 			auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[0], ( entry.texture0 && entry.texture0->GetTexture() ) ? *entry.texture0->GetTexture() : Tr2TextureAL(), colorSpace );
-			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[1], ( entry.texture1 && entry.texture1->GetTexture() ) ? *entry.texture1->GetTexture() : Tr2TextureAL(), colorSpace );
-			
+			//desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[0], ( entry.texture0 && entry.texture0->GetTexture() ) ? *entry.texture0->GetTexture() : Tr2TextureAL(), colorSpace );
+			//desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[1], ( entry.texture1 && entry.texture1->GetTexture() ) ? *entry.texture1->GetTexture() : Tr2TextureAL(), colorSpace );
+			renderContext.SetSrv( PIXEL_SHADER, m_textureRegisters[0], ( entry.texture0 && entry.texture0->GetTexture() ) ? *entry.texture0->GetTexture() : Tr2TextureAL(), colorSpace );
+			renderContext.SetSrv( PIXEL_SHADER, m_textureRegisters[1], ( entry.texture1 && entry.texture1->GetTexture() ) ? *entry.texture1->GetTexture() : Tr2TextureAL(), colorSpace );
+
+
+
 			CCP_STATS_INC( spriteSceneDrawCallCount );
 
 			entry.effect->Render( &entry, renderContext );

@@ -187,16 +187,21 @@ Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 
 	renderContext.SetShaderProgram(m_easuProgram);
 		
-	Tr2ResourceSetDescriptionAL desc( m_easuProgram );
-	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::SRV_REGISTER_INDEX, *dispatchParameters.input );
-	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::UAV_REGISTER_INDEX, *dispatchParameters.output );
-	desc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, m_sampler );
+	//Tr2ResourceSetDescriptionAL desc( m_easuProgram );
+	//desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::SRV_REGISTER_INDEX, *dispatchParameters.input );
+	//desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::UAV_REGISTER_INDEX, *dispatchParameters.output );
+	//desc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, m_sampler );
 
-	Tr2ResourceSetAL resourceSet;
-	resourceSet.Create( desc, m_easuProgram, m_params.renderContext.GetPrimaryRenderContext() );
+	renderContext.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::SRV_REGISTER_INDEX, *dispatchParameters.input );
+	renderContext.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::UAV_REGISTER_INDEX, *dispatchParameters.output );
+	renderContext.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, m_sampler );
 
-	renderContext.SetResourceSet( resourceSet );
-		
+	//Tr2ResourceSetAL resourceSet;
+	//resourceSet.Create( desc, m_easuProgram, m_params.renderContext.GetPrimaryRenderContext() );
+
+	//renderContext.SetResourceSet( resourceSet );
+	//renderContext.UseResourceBindings();
+
 	renderContext.SetConstants( m_constantBuffer, Tr2RenderContextEnum::COMPUTE_SHADER, 0 );
     
     

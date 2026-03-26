@@ -416,6 +416,25 @@ void EveCloudVolumeTextureParameter::RebuildEffectHandles( Tr2Shader* effectRes 
 	m_isUsedByEffect = true;
 }
 
+bool EveCloudVolumeTextureParameter::UseSRV(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
+{
+	TriTextureRes* resource = m_volume ? m_volume->GetTexture() : nullptr;
+	bool isSrgb = ( flags & RESOURCE_FLAG_SRGB ) != 0;
+	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+	if( Tr2TextureAL* tex = ( resource ? resource->GetTexture() : nullptr ) )
+	{
+		return renderContext.SetSrv( stage, registerIndex, *tex, colorSpace ) == S_OK;
+	}
+	else
+	{
+		return renderContext.SetSrv( stage, registerIndex, Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_3D, m_name.c_str() ), colorSpace ) == S_OK;
+	}
+}
+
 bool EveCloudVolumeTextureParameter::CopyToResourceSet(
 	Tr2ResourceSetDescriptionAL& resourceDesc,
 	Tr2RenderContextEnum::ShaderType stage,
@@ -427,7 +446,6 @@ bool EveCloudVolumeTextureParameter::CopyToResourceSet(
 	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 	if( Tr2TextureAL* tex = ( resource ? resource->GetTexture() : nullptr ) )
 	{		
-
 		return resourceDesc.SetSrv( stage, registerIndex, *tex, colorSpace );
 	}
 	else

@@ -323,7 +323,8 @@ Tr2UpscalingAL::Result Tr2XessUpscalingContext::Dispatch( Tr2UpscalingAL::Dispat
 	auto& renderContext = m_params.renderContext;
 
 	// flush all barriers before changing the state of the textures
-	renderContext.SetResourceSet( Tr2ResourceSetAL() );
+	//renderContext.SetResourceSet( Tr2ResourceSetAL() );
+	renderContext.ResetResourceBindings();
 	renderContext.FlushBarriersDx12();
 
 	// transition from common to unordered access view, since the output texture must be in that state

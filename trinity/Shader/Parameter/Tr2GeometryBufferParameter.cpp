@@ -104,6 +104,43 @@ void Tr2GeometryBufferParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 	m_isUsedByEffect = true;
 }
 
+
+bool Tr2GeometryBufferParameter::UseUav(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
+{
+	if( !m_gpuBuffer )
+	{
+		return renderContext.SetUav( stage, registerIndex, Tr2BufferAL() ) == S_OK;
+	}
+	auto buffer = m_gpuBuffer->GetGpuBuffer( m_meshIndex );
+	if( !buffer )
+	{
+		return renderContext.SetUav( stage, registerIndex, Tr2BufferAL() ) == S_OK;
+	}
+	return renderContext.SetUav( stage, registerIndex, *buffer ) == S_OK;
+}
+
+// --------------------------------------------------------------------------------------
+bool Tr2GeometryBufferParameter::UseSRV(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
+{
+	if( !m_gpuBuffer )
+	{
+		return false;
+	}
+	auto buffer = m_gpuBuffer->GetGpuBuffer( m_meshIndex );
+	if( !buffer )
+	{
+		return false;
+	}
+	return renderContext.SetSrv( stage, registerIndex, *buffer ) == S_OK;
+}
+
 // --------------------------------------------------------------------------------------
 bool Tr2GeometryBufferParameter::CopyToResourceSet(
 	Tr2ResourceSetDescriptionAL& resourceDesc,

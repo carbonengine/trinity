@@ -84,6 +84,7 @@ private:
 		bool Is( const Tr2TextureAL& other, uint32_t otherMip ) const;
 		void UpdateHash( uint32_t& hash ) const;
 
+		uint32_t registerIndex;
 		Tr2TextureAL texture;
 		Tr2BufferAL buffer;
 		Type type;
@@ -110,6 +111,7 @@ private:
 
 		void UpdateHash( uint32_t& hash ) const;
 
+		uint32_t registerIndex;
 		Tr2SamplerStateAL sampler;
 		Type type;
 	};
@@ -128,8 +130,8 @@ class Tr2ResourceSetAL
 public:
 	Tr2ResourceSetAL();
 
-	ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
-	ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+	//ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
+	//ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
 	bool IsValid() const;
 
 	Tr2ALMemoryType GetMemoryClass() const;

@@ -8,6 +8,7 @@
 #include "Tr2TextureAnimationParameter.h"
 #include "../../Tr2TextureAnimation.h"
 #include "../../Tr2Renderer.h"
+#include "../../Tr2RenderContext.h"
 #include "../Tr2Shader.h"
 #include "../Tr2Material.h"
 
@@ -27,6 +28,32 @@ bool Tr2TextureAnimationParameter::OnModified( Be::Var* value )
 		}
 	}
 	return true;
+}
+
+bool Tr2TextureAnimationParameter::UseUav(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
+{
+	return false;
+}
+
+bool Tr2TextureAnimationParameter::UseSRV(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
+{
+	bool isSrgb = ( flags & RESOURCE_FLAG_SRGB ) != 0;
+	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+	if( m_animation )
+	{
+		return renderContext.SetSrv( stage, registerIndex, m_animation->GetTexture( m_channel ), colorSpace ) == S_OK;
+	}
+	else
+	{
+		return renderContext.SetSrv( stage, registerIndex, Tr2Renderer::GetFallbackTexture( m_resourceType, m_name.c_str() ), colorSpace ) == S_OK;
+	}
 }
 
 bool Tr2TextureAnimationParameter::CopyToResourceSet(

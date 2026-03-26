@@ -948,7 +948,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 	}
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12
-	renderContext.SetResourceSet( Tr2ResourceSetAL() );
+	//renderContext.SetResourceSet( Tr2ResourceSetAL() );
+	renderContext.ResetResourceBindings( );
     inVbParam->SetGpuBuffer( static_cast<ITr2GpuBuffer*>( nullptr ) );
     outVbParam->SetGpuBuffer( static_cast<ITr2GpuBuffer*>( nullptr ) );
 #endif

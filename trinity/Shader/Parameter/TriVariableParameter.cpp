@@ -2,6 +2,7 @@
 #include "TriVariableParameter.h"
 #include "Tr2VariableStore.h"
 #include "Shader/Tr2Shader.h"
+#include "Tr2RenderContext.h"
 
 TriVariableParameter::TriVariableParameter(IRoot* lockobj):
 	m_isUsedByEffect( false ),
@@ -51,6 +52,32 @@ bool TriVariableParameter::Initialize()
 		m_variable = NULL;
     }
 	return true;
+}
+
+bool TriVariableParameter::UseUav(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
+{
+	if( m_variable )
+	{
+		return m_variable->UseUav( stage, registerIndex, renderContext );
+	}
+	return renderContext.SetUav( stage, registerIndex, Tr2TextureAL() ) == S_OK;
+}
+
+// ---------------------------------------------------------------
+bool TriVariableParameter::UseSRV(
+	Tr2RenderContextEnum::ShaderType stage,
+	uint32_t registerIndex,
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
+{
+	if( !m_variable )
+	{
+		return false;
+	}
+	return m_variable->UseSRV( stage, registerIndex, flags, renderContext );
 }
 
 // ---------------------------------------------------------------

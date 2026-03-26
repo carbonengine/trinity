@@ -109,6 +109,14 @@ public:
 		return E_FAIL;
 	}
 
+	ALResult UseResourceBindings() throw();
+	ALResult ResetResourceBindings() throw();
+
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 ) throw();
+
 	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet );
 	
 	ALResult DrawIndexedPrimitive(	

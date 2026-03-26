@@ -1738,7 +1738,7 @@ bool Tr2RenderContextAL::ApplyRasterizerState() throw()
 	return true;
 }
 
-ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw()
+/*ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw()
 {
 	if( m_currentResourceSet.m_resourceSet == resourceSet.m_resourceSet )
 	{
@@ -1898,6 +1898,48 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 			m_samplerHashes[i] = stage.samplerHash;
 		}
 	}
+
+	return S_OK;
+}*/
+
+
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw()
+{
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace ) throw()
+{
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw()
+{
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip ) throw()
+{
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::UseResourceBindings() throw()
+{
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::ResetResourceBindings() throw()
+{
 
 	return S_OK;
 }
