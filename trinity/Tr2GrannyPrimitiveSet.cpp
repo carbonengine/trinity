@@ -163,7 +163,7 @@ void Tr2GrannyPrimitiveSet::GetBatchesImpl( ITriRenderBatchAccumulator* accumula
 	{
 		batch.SetInidices( m_lineIndexBuffer, m_lineIndexBuffer.GetDesc().stride );
 		batch.SetTopology( TOP_LINES );
-		batch.SetDrawIndexedInstanced( ( m_primitiveCount - m_pickingPrimitiveCount ) * 3, 1, 0, 0, 0 );
+		batch.SetDrawIndexedInstanced( ( m_primitiveCount - m_pickingPrimitiveCount ) * 6, 1, 0, 0, 0 );
 	}
 	accumulator->Commit( batch );
 }
@@ -303,8 +303,8 @@ void Tr2GrannyPrimitiveSet::CreatePrimitive()
 		m_primitiveCount += meshTriangleCount;
 
 		m_points.reserve( m_points.size() + meshVertexCount );
-		m_triangleIndices.reserve( m_triangleIndices.size()+ meshIndexCount );
-		m_lineIndices.reserve( m_triangleIndices.size()*2 );
+		m_triangleIndices.reserve( m_triangleIndices.size() + meshIndexCount );
+		m_lineIndices.reserve( ( m_triangleIndices.size() + meshIndexCount ) * 2 );
 
 		bool isHalfPrecision = ( mesh->PrimaryVertexData->VertexType[0].Type == GrannyReal16Member );
 		void* vertices = mesh->PrimaryVertexData->Vertices;
