@@ -359,6 +359,8 @@ bool Tr2MouseCursor::Create( Tr2HostBitmap* bitmap, int hotspotX, int hotspotY, 
 			}
 		}
 		break;
+	default:
+		break;
 	}
 
 	// Special case: fully transparent cursor (all alpha values are 0)
