@@ -329,27 +329,14 @@ protected:
 		Tr2SamplerStateAL sampler;
 		Type type;
 	};
-
-	//std::unique_ptr<Resource[]> m_srv_TEMP;
-	//std::unique_ptr<Resource[]> m_uav_TEMP;
-	//std::unique_ptr<Sampler[]> m_samplers_TEMP;
-
 	
-	std::vector<Resource> m_srv_PRE_RENDER;
-	std::vector<Resource> m_uav_PRE_RENDER;
-	std::vector<Sampler> m_samplers_PRE_RENDER;
+	std::vector<Resource> m_pendingSRVs;
+	std::vector<Resource> m_pendingUAVs;
+	std::vector<Sampler> m_pendingSamplers;
 
-	Resource m_srv_TEMP[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	Resource m_uav_TEMP[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	Sampler m_samplers_TEMP[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-
-	std::shared_ptr<ShaderResourceViewDx12> m_srv[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	std::shared_ptr<UnorderedAccessViewDx12> m_uav[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	std::shared_ptr<SamplerStateDx12> m_sampler[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	uint32_t m_samplerCount;
-	uint32_t m_resourceCount;
-	uint32_t m_srvMask;
-	uint32_t m_uavMask;
+	Resource m_sortedSRVs[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	Resource m_sortedUAVs[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	Sampler m_sortedSamplers[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 
 	std::vector<D3D12_RESOURCE_BARRIER> m_inTransitions;
 	std::vector<D3D12_RESOURCE_BARRIER> m_outTransitions;
