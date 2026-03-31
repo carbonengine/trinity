@@ -19,7 +19,17 @@ Vector3* Tr2VectorFunctionModifier::Update( Vector3* in, Be::Time time )
 {
 	if( m_clientBall )
 	{
-		m_clientBall->Update( in, time );
+		if( m_useSystemCoordinates )
+		{
+			Vector3d systemPosition;
+			m_clientBall->InterpolatedPosition( &systemPosition, time );
+			// potential data loss moving from double to float
+			*in = ToVector3( systemPosition );
+		}
+		else
+		{
+			m_clientBall->Update( in, time );
+		}
 	}
 	return GetTransformedPosition( in );
 }
@@ -28,7 +38,18 @@ Vector3* Tr2VectorFunctionModifier::Update( Vector3* in, double time )
 {
 	if( m_clientBall )
 	{
-		m_clientBall->Update( in, time );
+		if( m_useSystemCoordinates )
+		{
+			Vector3d systemPosition;
+			// TODO: doesn't compile, because implicit conversion between double time and Be::time
+			m_clientBall->InterpolatedPosition( &systemPosition, time );
+			// potential data loss moving from double to float
+			*in = ToVector3( systemPosition );
+		}
+		else
+		{
+			m_clientBall->Update( in, time );
+		}
 	}
 	return GetTransformedPosition( in );
 }
@@ -37,7 +58,17 @@ Vector3* Tr2VectorFunctionModifier::GetValueAt( Vector3* in, Be::Time time )
 {
 	if( m_clientBall )
 	{
-		m_clientBall->GetValueAt( in, time );
+		if( m_useSystemCoordinates )
+		{
+			Vector3d systemPosition;
+			m_clientBall->InterpolatedPosition( &systemPosition, time );
+			// potential data loss moving from double to float
+			*in = ToVector3( systemPosition );
+		}
+		else
+		{
+			m_clientBall->GetValueAt( in, time );
+		}
 	}
 	return GetTransformedPosition( in );
 }
@@ -46,7 +77,18 @@ Vector3* Tr2VectorFunctionModifier::GetValueAt( Vector3* in, double time )
 {
 	if( m_clientBall )
 	{
-		m_clientBall->GetValueAt( in, time );
+		if( m_useSystemCoordinates )
+		{
+			Vector3d systemPosition;
+			// TODO: doesn't compile, because implicit conversion between double time and Be::time
+			m_clientBall->InterpolatedPosition( &systemPosition, time );
+			// potential data loss moving from double to float
+			*in = ToVector3( systemPosition );
+		}
+		else
+		{
+			m_clientBall->GetValueAt( in, time );
+		}
 	}
 	return GetTransformedPosition( in );
 }
@@ -115,4 +157,9 @@ Vector3 Tr2VectorFunctionModifier::GetOffsetPosition() const
 	}
 
 	return Transform( Vector4( m_offsetPosition, 0 ), Tr2Renderer::GetInverseViewTransform() ).GetXYZ();
+}
+
+Vector3 Tr2VectorFunctionModifier::ToVector3( Vector3d in )
+{
+	return Vector3( static_cast<float>( in.x ), static_cast<float>( in.y ), static_cast<float>( in.z ) );
 }

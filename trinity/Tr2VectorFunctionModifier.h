@@ -30,12 +30,15 @@ public:
 	Vector3* Update( Vector3* in, Be::Time time ) override;
 	Vector3* Update( Vector3* in, double time ) override;
 
+	// position
 	Vector3* GetValueAt( Vector3* in, Be::Time time ) override;
 	Vector3* GetValueAt( Vector3* in, double time ) override;
 
+	// velocity
 	Vector3* GetValueDotAt( Vector3* in, Be::Time time ) override;
 	Vector3* GetValueDotAt( Vector3* in, double time ) override;
 
+	// acceleration
 	Vector3* GetValueDoubleDotAt( Vector3* in, Be::Time time ) override;
 	Vector3* GetValueDoubleDotAt( Vector3* in, double time ) override;
 
@@ -44,6 +47,7 @@ public:
 protected:
 	Vector3* GetTransformedPosition( Vector3* in ) const;
 	Vector3 GetOffsetPosition() const;
+	static Vector3 ToVector3( Vector3d in );
 
 	// The base clientBall or other ITriVectorFunction objects
 	ITriVectorFunctionPtr m_clientBall;
@@ -56,6 +60,9 @@ protected:
 
 	// if true, the m_offsetPosition is transformed to view space
 	bool m_useViewSpace;
+	
+	// if true, uses system coordinates instead of ship coordinates
+	bool m_useSystemCoordinates;
 };
 
 TYPEDEF_BLUECLASS( Tr2VectorFunctionModifier );
