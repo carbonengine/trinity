@@ -3555,6 +3555,31 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 	}
 }
 
+bool EveSpaceObject2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+{
+	min = m_localAabbMin;
+	max = m_localAabbMax;
+	BoundingBoxTransform( min, max, m_worldTransform );
+	return true;
+}
+
+bool EveSpaceObject2::IsBoundingBoxReady() const
+{
+	Tr2MeshBase* mesh = m_mesh;
+
+	if( !mesh )
+	{
+		return false;
+	}
+
+	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	if( !geomRes || !geomRes->IsGood() )
+	{
+		return false;
+	}
+	return true;
+}
+
 bool EveSpaceObject2::IsImpostor() const
 {
 	return m_impostorMode;
