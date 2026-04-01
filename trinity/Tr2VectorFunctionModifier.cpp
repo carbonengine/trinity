@@ -11,7 +11,8 @@
 Tr2VectorFunctionModifier::Tr2VectorFunctionModifier( IRoot* lockobj ) :
 	m_offsetPosition( 0.0f, 0.0f, 0.0f ),
 	m_scaleModifier( 1.0f ),
-	m_useViewSpace( false )
+	m_useViewSpace( false ),
+	m_useSystemCoordinates( false )
 {
 }
 
