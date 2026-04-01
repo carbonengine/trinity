@@ -47,7 +47,9 @@ public:
 protected:
 	Vector3* GetTransformedPosition( Vector3* in ) const;
 	Vector3 GetOffsetPosition() const;
+
 	static Vector3 ToVector3( Vector3d in );
+	static float CheckedDoubleToFloat( double value );
 
 	// The base clientBall or other ITriVectorFunction objects
 	ITriVectorFunctionPtr m_clientBall;

@@ -36,22 +36,8 @@ Vector3* Tr2VectorFunctionModifier::Update( Vector3* in, Be::Time time )
 
 Vector3* Tr2VectorFunctionModifier::Update( Vector3* in, double time )
 {
-	if( m_clientBall )
-	{
-		if( m_useSystemCoordinates )
-		{
-			Vector3d systemPosition;
-			// TODO: doesn't compile, because implicit conversion between double time and Be::time
-			m_clientBall->InterpolatedPosition( &systemPosition, time );
-			// potential data loss moving from double to float
-			*in = ToVector3( systemPosition );
-		}
-		else
-		{
-			m_clientBall->Update( in, time );
-		}
-	}
-	return GetTransformedPosition( in );
+	CCP_ASSERT_M( true, "double version of GetValueDoubleDotAt is depricated." );
+	return in;
 }
 
 Vector3* Tr2VectorFunctionModifier::GetValueAt( Vector3* in, Be::Time time )
@@ -75,22 +61,8 @@ Vector3* Tr2VectorFunctionModifier::GetValueAt( Vector3* in, Be::Time time )
 
 Vector3* Tr2VectorFunctionModifier::GetValueAt( Vector3* in, double time )
 {
-	if( m_clientBall )
-	{
-		if( m_useSystemCoordinates )
-		{
-			Vector3d systemPosition;
-			// TODO: doesn't compile, because implicit conversion between double time and Be::time
-			m_clientBall->InterpolatedPosition( &systemPosition, time );
-			// potential data loss moving from double to float
-			*in = ToVector3( systemPosition );
-		}
-		else
-		{
-			m_clientBall->GetValueAt( in, time );
-		}
-	}
-	return GetTransformedPosition( in );
+	CCP_ASSERT_M( true, "double version of GetValueDoubleDotAt is depricated." );
+	return in;
 }
 
 Vector3* Tr2VectorFunctionModifier::GetValueDotAt( Vector3* in, Be::Time time )
@@ -105,11 +77,7 @@ Vector3* Tr2VectorFunctionModifier::GetValueDotAt( Vector3* in, Be::Time time )
 
 Vector3* Tr2VectorFunctionModifier::GetValueDotAt( Vector3* in, double time )
 {
-	if( m_clientBall )
-	{
-		m_clientBall->GetValueDotAt( in, time );
-		*in *= m_scaleModifier;
-	}
+	CCP_ASSERT_M( true, "double version of GetValueDoubleDotAt is depricated." );
 	return in;
 }
 
@@ -125,11 +93,7 @@ Vector3* Tr2VectorFunctionModifier::GetValueDoubleDotAt( Vector3* in, Be::Time t
 
 Vector3* Tr2VectorFunctionModifier::GetValueDoubleDotAt( Vector3* in, double time )
 {
-	if( m_clientBall )
-	{
-		m_clientBall->GetValueDoubleDotAt( in, time );
-		*in *= m_scaleModifier;
-	}
+	CCP_ASSERT_M( true, "double version of GetValueDoubleDotAt is depricated." );
 	return in;
 }
 
@@ -161,5 +125,17 @@ Vector3 Tr2VectorFunctionModifier::GetOffsetPosition() const
 
 Vector3 Tr2VectorFunctionModifier::ToVector3( Vector3d in )
 {
-	return Vector3( static_cast<float>( in.x ), static_cast<float>( in.y ), static_cast<float>( in.z ) );
+	return Vector3( 
+		CheckedDoubleToFloat( in.x ), 
+		CheckedDoubleToFloat( in.y ), 
+		CheckedDoubleToFloat( in.z )
+	);
+}
+
+float Tr2VectorFunctionModifier::CheckedDoubleToFloat( double value )
+{
+	const double maxFloat = static_cast<double>( std::numeric_limits<float>::max() );
+	CCP_ASSERT_M( std::isfinite( value ) && value < maxFloat && value > -maxFloat, "System coordinate overflow converting double to float" );
+
+	return static_cast<float>( value );
 }
