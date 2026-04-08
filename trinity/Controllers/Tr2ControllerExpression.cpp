@@ -387,43 +387,60 @@ namespace
 	}
 
 	// Helper function to reduce nesting in f: ServerTimeGreaterThan() and ServerTimeLessThan()
-	float CompareTimeFloats(float arg1, float arg2)
+	float CompareTimeFloats( float tracker, std::function<float()> getter, float userVariable )
 	{
-		if ( arg1 == -1 || arg2 == -1 )
+		if( userVariable == -1.f || tracker != 0.f )
 		{
-			return 1.f;	
+			return 0.f;	
 		}
 		
-		if( arg1 >= arg2 )
+		float serverVariable = getter();
+
+		if( serverVariable == userVariable )
+		{
+			return 0.f;
+		}
+
+		if( userVariable < serverVariable )
 		{
 			return 1.f;
 		}
-		
-		return 0.f;		
+
+		return -1.0f;
 	}
+
+	std::vector<std::function<void()>> serverTimeGetters = { GetServerYear, GetServerMonth, GetServerDay, GetServerHour, GetServerMinute, GetServerSecond };
 
 	float ServerTimeGreaterThan( float year, float month, float day, float hour, float minute, float second )
 	{
-		float isTrue = 1.f;
-		isTrue *= CompareTimeFloats( GetServerYear(), year );
-		isTrue *= CompareTimeFloats( GetServerMonth(), month );
-		isTrue *= CompareTimeFloats( GetServerDay(), day );
-		isTrue *= CompareTimeFloats( GetServerHour(), hour );
-		isTrue *= CompareTimeFloats( GetServerMinute(), minute );
-		isTrue *= CompareTimeFloats( GetServerSecond(), second );
-		return isTrue;
+		float tracker = 0.f;
+		tracker += CompareTimeFloats( tracker, GetServerYear, year );
+		tracker += CompareTimeFloats( tracker, GetServerMonth, month );
+		tracker += CompareTimeFloats( tracker, GetServerDay, day );
+		tracker += CompareTimeFloats( tracker, GetServerHour, hour );
+		tracker += CompareTimeFloats( tracker, GetServerMinute, minute );
+		tracker += CompareTimeFloats( tracker, GetServerSecond, second );
+		return tracker > 0.f;
 	}
 
 	float ServerTimeLessThanOrEqual( float year, float month, float day, float hour, float minute, float second )
 	{
-		float isTrue = 1.f;
-		isTrue *= CompareTimeFloats( year, GetServerYear() );
-		isTrue *= CompareTimeFloats( month, GetServerMonth() );
-		isTrue *= CompareTimeFloats( day, GetServerDay() );
-		isTrue *= CompareTimeFloats( hour, GetServerHour() );
-		isTrue *= CompareTimeFloats( minute, GetServerMinute() );
-		isTrue *= CompareTimeFloats( second, GetServerSecond() );
-		return isTrue;
+		return 1.f - ServerTimeGreaterThan( year, month, day, hour, minute, second );
+	}
+
+	float DaysSinceServerTime( float year, float month, float day )
+	{
+		struct std::tm a = { 0, 0, 0, int(day), int(month), int(year) -1900 };
+		struct std::tm b = { 0, 0, 0, int(GetServerDay()), int(GetServerMonth()), int(GetServerYear()) -1900 };
+		std::time_t x = std::mktime( &a );
+		std::time_t y = std::mktime( &b );
+		if( x != (std::time_t)( -1 ) && y != (std::time_t)( -1 ) )
+		{
+			double differenceInDays = std::difftime( y, x ) / ( 60 * 60 * 24 );
+			return float( differenceInDays );
+		}
+
+		return -404.f;
 	}
 
 	CcpParser::Function s_functions[] = {
@@ -450,6 +467,7 @@ namespace
 		CcpParser::Function( "ServerTimePhase", TimePhase ),
 		CcpParser::Function( "ServerTimeGreaterThan", ServerTimeGreaterThan ),
 		CcpParser::Function( "ServerTimeLessThanOrEqual", ServerTimeLessThanOrEqual ),
+		CcpParser::Function( "DaysSinceServerTime", DaysSinceServerTime ),
 		CcpParser::Function( "ShaderQuality", ShaderQuality ),
 	};
 
@@ -592,5 +610,6 @@ void Tr2ControllerExpression::GetExpressionTermInfo( std::vector<Tr2ExpressionTe
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimePhase", "period", "returns seconds phase in a server time period of the given length" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeGreaterThan", "year", "month", "day", "hour","minute", "second","args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeLessThanOrEqual", "year", "month", "day", "hour", "minute", "second", "args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
+	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "DaysSinceServerTime", "year", "month", "day", "args are: ( yyyy, mm, dd) usable before and after event. -404 = invalid date" ) );
 }
 
