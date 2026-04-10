@@ -409,8 +409,6 @@ namespace
 		return -1.0f;
 	}
 
-	std::vector<std::function<void()>> serverTimeGetters = { GetServerYear, GetServerMonth, GetServerDay, GetServerHour, GetServerMinute, GetServerSecond };
-
 	float ServerTimeGreaterThan( float year, float month, float day, float hour, float minute, float second )
 	{
 		float tracker = 0.f;
@@ -420,7 +418,8 @@ namespace
 		tracker += CompareTimeFloats( tracker, GetServerHour, hour );
 		tracker += CompareTimeFloats( tracker, GetServerMinute, minute );
 		tracker += CompareTimeFloats( tracker, GetServerSecond, second );
-		return tracker > 0.f;
+		tracker = float( tracker > 0.f );
+		return tracker;
 	}
 
 	float ServerTimeLessThanOrEqual( float year, float month, float day, float hour, float minute, float second )
