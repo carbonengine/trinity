@@ -386,51 +386,69 @@ namespace
 		return TimeAsFloat( time % p );
 	}
 
-	// Helper function to reduce nesting in f: ServerTimeGreaterThan() and ServerTimeLessThan()
-	float CompareTimeFloats( float tracker, std::function<float()> getter, float userVariable )
+	// Helper function for serverTime comparisons
+	template <typename Op, typename Op2>
+	float ServerTimeComparisonHelper( float year, float month, float day, float hour, float minute, float second, Op overQualifier, Op2 disqualifier )
 	{
-		if( userVariable == -1.f || tracker != 0.f )
+		struct TimeComp
 		{
-			return 0.f;	
-		}
-		
-		float serverVariable = getter();
+			std::function<float()> getter;
+			float userVariable;
+		} comps[] = {
+			{ GetServerYear, year },
+			{ GetServerMonth, month },
+			{ GetServerDay, day },
+			{ GetServerHour, hour },
+			{ GetServerMinute, minute },
+			{ GetServerSecond, second }
+		};
 
-		if( serverVariable == userVariable )
+		for( const auto& c : comps )
 		{
-			return 0.f;
+			if( c.userVariable == -1.f )
+			{
+				continue;
+			}
+			float serverVariable = c.getter();
+			if( overQualifier( serverVariable, c.userVariable ) )
+			{
+				return 1.f;
+			}
+			if( disqualifier( serverVariable, c.userVariable ) )
+			{
+				return 0.f;
+			}
 		}
 
-		if( userVariable < serverVariable )
-		{
-			return 1.f;
-		}
-
-		return -1.0f;
+		// never overQualified, disqualified or all were set to -1
+		return 1.f;
 	}
 
 	float ServerTimeGreaterThan( float year, float month, float day, float hour, float minute, float second )
 	{
-		float tracker = 0.f;
-		tracker += CompareTimeFloats( tracker, GetServerYear, year );
-		tracker += CompareTimeFloats( tracker, GetServerMonth, month );
-		tracker += CompareTimeFloats( tracker, GetServerDay, day );
-		tracker += CompareTimeFloats( tracker, GetServerHour, hour );
-		tracker += CompareTimeFloats( tracker, GetServerMinute, minute );
-		tracker += CompareTimeFloats( tracker, GetServerSecond, second );
-		tracker = float( tracker > 0.f );
-		return tracker;
+		return ServerTimeComparisonHelper( year, month, day, hour, minute, second, std::greater<float>(), std::less<float>() );
 	}
 
 	float ServerTimeLessThanOrEqual( float year, float month, float day, float hour, float minute, float second )
 	{
-		return 1.f - ServerTimeGreaterThan( year, month, day, hour, minute, second );
+		return ServerTimeComparisonHelper( year, month, day, hour, minute, second, std::less<float>(), std::greater<float>() );
+	}
+
+	float ServerTimeEqual( float year, float month, float day, float hour, float minute, float second )
+	{
+		return ServerTimeComparisonHelper( year, month, day, hour, minute, second, []( float f1, float f2 ) { return false; }, std::not_equal_to<float>() );
 	}
 
 	float DaysSinceServerTime( float year, float month, float day )
 	{
-		struct std::tm a = { 0, 0, 0, int(day), int(month), int(year) -1900 };
-		struct std::tm b = { 0, 0, 0, int(GetServerDay()), int(GetServerMonth()), int(GetServerYear()) -1900 };
+		int serverYear = int( GetServerYear() ) - 1900;
+		int serverMonth = int( GetServerMonth() );
+		int serverDay = int( GetServerDay() );
+		int targetYear = year == -1.f ? serverYear : int( year ) - 1900;
+		int targetMonth = month == -1.f ? serverMonth : int( month );
+		int targetDay = day == -1.f ? serverDay : int( day );
+		struct std::tm a = { 0, 0, 0, targetDay, targetMonth, targetYear };
+		struct std::tm b = { 0, 0, 0, serverDay, serverMonth, serverYear };
 		std::time_t x = std::mktime( &a );
 		std::time_t y = std::mktime( &b );
 		if( x != (std::time_t)( -1 ) && y != (std::time_t)( -1 ) )
@@ -439,7 +457,7 @@ namespace
 			return float( differenceInDays );
 		}
 
-		return -404.f;
+		return std::numeric_limits<float>::min();
 	}
 
 	CcpParser::Function s_functions[] = {
@@ -466,6 +484,7 @@ namespace
 		CcpParser::Function( "ServerTimePhase", TimePhase ),
 		CcpParser::Function( "ServerTimeGreaterThan", ServerTimeGreaterThan ),
 		CcpParser::Function( "ServerTimeLessThanOrEqual", ServerTimeLessThanOrEqual ),
+		CcpParser::Function( "ServerTimeEqual", ServerTimeEqual ),
 		CcpParser::Function( "DaysSinceServerTime", DaysSinceServerTime ),
 		CcpParser::Function( "ShaderQuality", ShaderQuality ),
 	};
@@ -609,6 +628,7 @@ void Tr2ControllerExpression::GetExpressionTermInfo( std::vector<Tr2ExpressionTe
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimePhase", "period", "returns seconds phase in a server time period of the given length" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeGreaterThan", "year", "month", "day", "hour","minute", "second","args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeLessThanOrEqual", "year", "month", "day", "hour", "minute", "second", "args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
-	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "DaysSinceServerTime", "year", "month", "day", "args are: ( yyyy, mm, dd) usable before and after event. -404 = invalid date" ) );
+	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeEqual", "year", "month", "day", "hour", "minute", "second", "args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
+	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "DaysSinceServerTime", "year", "month", "day", "(yyyy, mm, dd). usable before and after event. -bigNumb = invalid date, -1 to default to current server-Y/M/D" ) );
 }
 
