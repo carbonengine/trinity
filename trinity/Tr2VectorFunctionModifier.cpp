@@ -37,7 +37,7 @@ Vector3* Tr2VectorFunctionModifier::Update( Vector3* in, Be::Time time )
 
 Vector3* Tr2VectorFunctionModifier::Update( Vector3* in, double time )
 {
-	CCP_ASSERT_M( true, "double version of GetValueDoubleDotAt is depricated." );
+	CCP_ASSERT_M( false, "double version of Update is depricated." );
 	return in;
 }
 
@@ -62,7 +62,7 @@ Vector3* Tr2VectorFunctionModifier::GetValueAt( Vector3* in, Be::Time time )
 
 Vector3* Tr2VectorFunctionModifier::GetValueAt( Vector3* in, double time )
 {
-	CCP_ASSERT_M( true, "double version of GetValueDoubleDotAt is depricated." );
+	CCP_ASSERT_M( false, "double version of GetValueAt is depricated." );
 	return in;
 }
 
@@ -78,7 +78,7 @@ Vector3* Tr2VectorFunctionModifier::GetValueDotAt( Vector3* in, Be::Time time )
 
 Vector3* Tr2VectorFunctionModifier::GetValueDotAt( Vector3* in, double time )
 {
-	CCP_ASSERT_M( true, "double version of GetValueDoubleDotAt is depricated." );
+	CCP_ASSERT_M( false, "double version of GetValueDotAt is depricated." );
 	return in;
 }
 
@@ -94,7 +94,7 @@ Vector3* Tr2VectorFunctionModifier::GetValueDoubleDotAt( Vector3* in, Be::Time t
 
 Vector3* Tr2VectorFunctionModifier::GetValueDoubleDotAt( Vector3* in, double time )
 {
-	CCP_ASSERT_M( true, "double version of GetValueDoubleDotAt is depricated." );
+	CCP_ASSERT_M( false, "double version of GetValueDoubleDotAt is depricated." );
 	return in;
 }
 
