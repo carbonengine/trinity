@@ -386,13 +386,15 @@ namespace
 		return TimeAsFloat( time % p );
 	}
 
+	typedef float ( *TimeGetter )();
+
 	// Helper function for serverTime comparisons
 	template <typename Op, typename Op2>
 	float ServerTimeComparisonHelper( float year, float month, float day, float hour, float minute, float second, Op overQualifier, Op2 disqualifier )
 	{
 		struct TimeComp
 		{
-			std::function<float()> getter;
+			TimeGetter getter;
 			float userVariable;
 		} comps[] = {
 			{ GetServerYear, year },
