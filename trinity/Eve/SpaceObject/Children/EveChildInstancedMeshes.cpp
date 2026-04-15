@@ -84,6 +84,10 @@ Tr2PerObjectData* EveChildInstancedMeshes::GetShadowPerObjectData( ITriRenderBat
 
 void EveChildInstancedMeshes::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
+	if( !m_hasUpdated )
+	{
+		return;
+	}
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	EveSpaceObjectPSData psData = {};
 
@@ -272,6 +276,8 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 			}
 		}
 	}
+
+	m_hasUpdated = true;
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	if( !renderContext.GetCaps().SupportsRaytracing() )
@@ -465,6 +471,10 @@ void EveChildInstancedMeshes::RebuildCachedData( BlueAsyncRes* p )
 
 void EveChildInstancedMeshes::AddMeshesToManager( EveInstancedMeshManager& manager )
 {
+	if( !m_hasUpdated )
+	{
+		return;
+	}
 	if( m_perObjectDataHandle && m_perObjectDataHandle.owner != &manager )
 	{
 		UnregisterFromMeshManager();

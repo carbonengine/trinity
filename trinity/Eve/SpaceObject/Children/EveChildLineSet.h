@@ -110,6 +110,8 @@ private:
 	bool m_isAlwaysOn;
 	bool m_updateLineSet;
 	bool m_scaleSegmentsByCompleteness;
+	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
+	bool m_hasUpdated = false;
 
 	EveCurveLineSetPtr m_lineSet;
 	lineSetType m_type;

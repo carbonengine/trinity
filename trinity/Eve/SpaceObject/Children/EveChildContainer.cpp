@@ -415,7 +415,7 @@ void EveChildContainer::UpdateVisibility( const EveUpdateContext& updateContext,
 
 void EveChildContainer::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	if( !m_display )
+	if( !m_display || !m_hasUpdated )
 	{
 		return;
 	}
@@ -469,7 +469,7 @@ void EveChildContainer::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer 
 
 void EveChildContainer::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
 {
-	if( !m_display )
+	if( !m_display || !m_hasUpdated )
 	{
 		return;
 	}
@@ -641,6 +641,7 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 	{
 		attachment->UpdateLights( m_worldTransform, bones, boneCount, m_activationStrength, 0.0 );
 	}
+	m_hasUpdated = true;
 }
 
 
@@ -659,7 +660,7 @@ void EveChildContainer::ChangeLOD( Tr2Lod lod )
 
 void EveChildContainer::GetLights( Tr2LightManager& lightManager ) const
 {
-	if( !m_display )
+	if( !m_display || !m_hasUpdated )
 	{
 		return;
 	}

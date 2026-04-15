@@ -199,6 +199,8 @@ protected:
 	bool m_display;
 	bool m_updateOnDisplay;
 	bool m_mute;
+	// Has UpdateSynchronous/UpdateAsynchronous been called: until it was, the object can not be rendered
+	bool m_hasUpdated = false;
 	DisplayQualityModifier m_displayFilter;
 	bool m_isAlwaysOn;
 	bool m_isPlacementRoot;

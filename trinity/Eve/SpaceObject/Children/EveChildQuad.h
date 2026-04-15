@@ -83,6 +83,8 @@ private:
 
 	bool m_display;
 	bool m_isVisible;
+	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
+	bool m_hasUpdated = false;
 	// Continiously re-register effect (for editing in Jessica)
 	bool m_editMode;
 };

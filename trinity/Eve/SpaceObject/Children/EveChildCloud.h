@@ -99,6 +99,8 @@ private:
 	std::string m_name;
 	bool m_display;
 	bool m_isVisible;
+	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
+	bool m_hasUpdated = false;
 
 	EveCloudEditableVolumePtr m_volume;
 

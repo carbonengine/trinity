@@ -32,6 +32,9 @@ EveChildLightingOverride::EveChildLightingOverride( IRoot* lockobj ) :
 	m_overrides.value.sunIntensity = 1;
 	m_overrides.value.backgroundIntensity = 1;
 	m_overrides.value.reflectionIntensity = 1;
+
+	// The proper value is set in the UpdateAsyncronous method
+	m_overrides.intensity = 0.0f;
 }
 
 EveChildLightingOverride::OverrideInfo EveChildLightingOverride::GetOverrides() const 

@@ -369,7 +369,7 @@ float EveChildInstanceContainer::GetOwnerMaxSpeed() const
 
 void EveChildInstanceContainer::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	if( !m_display )
+	if( !m_display || !m_hasUpdated )
 	{
 		return;
 	}
@@ -441,6 +441,8 @@ void EveChildInstanceContainer::UpdateAsyncronous( const EveUpdateContext& updat
 	{
 		params.spaceObjectParent->GetWorldVelocity( m_worldVelocity );
 	}
+
+	m_hasUpdated = true;
 }
 
 void EveChildInstanceContainer::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )

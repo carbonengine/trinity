@@ -248,6 +248,8 @@ protected:
 	bool m_updateAnimation;
 	bool m_bakeMorphs;
 	bool m_dirtyRtMesh;
+	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
+	bool m_hasUpdated = false;
 
 	float m_activationStrength;
 

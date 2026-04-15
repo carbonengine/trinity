@@ -169,10 +169,18 @@ void EveChildQuad::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	m_quad.m_color[3] = Float_16( m_color.a );
 	m_quad.m_brightness[0] = Float_16( m_brightness );
 	m_quad.m_brightness[1] = Float_16( 0.f );
+
+	m_hasUpdated = true;
 }
 
 void EveChildQuad::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
+	if( !m_hasUpdated || !m_display )
+	{
+		m_isVisible = false;
+		m_currentScreenSize = -1;
+		return;
+	}
 	Vector4 sphere = Vector4( 0.f, 0.f, 0.f, std::sqrt( 2.f ) );
 	BoundingSphereTransform( m_worldTransform, sphere );
 

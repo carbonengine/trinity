@@ -103,7 +103,7 @@ void EveChildParticleSystem::Setup( const Vector3* scale, const Quaternion* rota
 void EveChildParticleSystem::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	auto& frustum = updateContext.GetFrustum();
-	m_isVisible = m_display && frustum.IsSphereVisible( &m_boundingSphere );
+	m_isVisible = m_display && m_hasUpdated && frustum.IsSphereVisible( &m_boundingSphere );
 	if( m_isVisible )
 	{
 		m_currentScreenSize = frustum.GetPixelSizeAccrossEst( &m_lodSphere );
@@ -286,6 +286,7 @@ void EveChildParticleSystem::UpdateAsyncronous( const EveUpdateContext& updateCo
 			( *it )->Update( args );
 		}
 	}
+	m_hasUpdated = true;
 }
 
 // --------------------------------------------------------------------------------

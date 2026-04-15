@@ -251,7 +251,7 @@ void EveChildCloud2::GetVolumetricBatches( const TriFrustum& frustum, ITriRender
 	{
 		return;
 	}
-	auto isVisible = m_display && frustum.IsSphereVisible( m_boundingSphere.center, m_boundingSphere.radius );
+	auto isVisible = m_display && m_hasUpdated && frustum.IsSphereVisible( m_boundingSphere.center, m_boundingSphere.radius );
 	if( !isVisible )
 	{
 		return;
@@ -322,7 +322,7 @@ bool EveChildCloud2::HasValidTransform() const
 
 bool EveChildCloud2::UpdateVolumetricLightmap( Tr2RenderContext& renderContext )
 {
-	if( m_currentQuality < m_minVisibleQuality )
+	if( m_currentQuality < m_minVisibleQuality || !m_hasUpdated )
 	{
 		return false;
 	}
@@ -708,6 +708,7 @@ void EveChildCloud2::UpdateAsyncronous( const EveUpdateContext& updateContext, c
 	}
 
 	m_adjustedMinScreenSize = m_minScreenSize * updateContext.GetLodFactor();
+	m_hasUpdated = true;
 }
 
 void EveChildCloud2::GetDebugOptions( Tr2DebugRendererOptions& options )
