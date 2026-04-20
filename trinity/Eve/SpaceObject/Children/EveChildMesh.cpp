@@ -278,7 +278,7 @@ void EveChildMesh::UnRegisterComponents()
 //   Check if the object is casting a shadow in the camera/shadow frustums
 bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
-	if( !m_display || !m_castShadow )
+	if( !m_display || !m_castShadow || !m_hasUpdated )
 	{
 		return false;
 	}
@@ -321,7 +321,7 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveS
 
 bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, Vector3 position, float radius, Tr2RenderReason renderReason ) const
 {
-	if( !m_display || !m_castShadow )
+	if( !m_display || !m_castShadow || !m_hasUpdated )
 	{
 		return false;
 	}
@@ -353,6 +353,11 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	m_currentScreenSize = -1;
 	m_instancesVisible = false;
 	m_currentInstanceScreenSize = -1.0f;
+
+	if( !m_hasUpdated )
+	{
+		return;
+	}
 	auto& frustum = updateContext.GetFrustum();
 	auto invLodFactor = updateContext.GetInvLodFactor();
 
@@ -651,7 +656,7 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 {
 	// TODO: Figure out what we want to do with shadows
 	// Fix asap <Logi 27. aug 2015>
-	if( m_display && m_mesh )
+	if( m_display && m_mesh && m_hasUpdated )
 	{
 		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize );
 	}
@@ -659,7 +664,7 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 
 void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
-	if( !m_display || !m_mesh || !m_castShadow )
+	if( !m_display || !m_mesh || !m_castShadow || !m_hasUpdated )
 	{
 		return;
 	}
@@ -956,6 +961,8 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	{
 		m_worldBoundingSphere = {};
 	}
+
+	m_hasUpdated = true;
 }
 
 void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
@@ -1165,10 +1172,10 @@ void EveChildMesh::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 	}
 }
 
-std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() const
+std::pair<const Float4x3*, size_t> EveChildMesh::GetBoneTransforms() const
 {
 	size_t boneCount = 0;
-	const granny_matrix_3x4* bones = nullptr;
+	const Float4x3* bones = nullptr;
 
 	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
 	{

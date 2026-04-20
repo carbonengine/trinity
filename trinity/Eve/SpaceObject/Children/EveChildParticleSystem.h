@@ -107,6 +107,8 @@ private:
 
 	bool m_display;
 	bool m_isVisible;
+	// Has UpdateSynchronous/UpdateAsynchronous been called: until it was, the object can not be rendered
+	bool m_hasUpdated = false;
 
 	EntityComponents::ReflectionMode m_reflectionMode;
 };

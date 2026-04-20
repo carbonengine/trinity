@@ -36,5 +36,11 @@ const Be::ClassInfo* Tr2VectorFunctionModifier::ExposeToBlue()
 			m_useViewSpace,
 			"Calcuates offset in view space",
 			Be::READWRITE )
+	
+		MAP_ATTRIBUTE( 
+			"useSystemCoordinates",	
+			m_useSystemCoordinates,
+			"Whether to use the system coordinates for the given position or the default of ship coordinates",
+			Be::READWRITE )
 	EXPOSURE_END()
 }

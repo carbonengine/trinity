@@ -198,6 +198,8 @@ private:
 	bool m_receiveShadows;
 	bool m_lightmapDirty;
 	bool m_renderedLastFrame;
+	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
+	bool m_hasUpdated = false;
 
 	float m_sortingModifier;
 	float m_minScreenSize;

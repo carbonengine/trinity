@@ -87,7 +87,7 @@ void EveChildParticleSphere::SetName( const char* name )
 // -----------------------------------------------------------------------------
 void EveChildParticleSphere::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	if( m_mesh && m_particleSystem && m_display )
+	if( m_mesh && m_particleSystem && m_display && m_hasUpdated )
 	{
 		m_particleSystem->SortParticles();
 		renderables.push_back( this );
@@ -137,6 +137,7 @@ void EveChildParticleSphere::UpdateAsyncronous( const EveUpdateContext& updateCo
 	BoundingSphereTransform( m_worldTransform, m_boundingSphere );
 
 	Update( updateContext );
+	m_hasUpdated = true;
 }
 
 // -----------------------------------------------------------------------------

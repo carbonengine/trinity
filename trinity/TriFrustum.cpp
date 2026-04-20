@@ -7,22 +7,6 @@
 bool g_frustumCullingDisabled = false;
 TRI_REGISTER_SETTING( "frustumCullingDisabled", g_frustumCullingDisabled );
 
-static void DeconstructProjectionMatrix( const Matrix& proj, float& asp, float& fov, float& frontClip, float& backClip )
-{
-	// Use the fact that:
-	// aspect = m_22 / m_11;
-	// m_33 = z_f/(z_f-z_n), m_43 = -z_n*z_f/(z_f-z_n)
-	// => front = z_n = -m_43/m_33 
-	// => back = z_f = -m_43/(1+m_43/z_n)
-	// m_22 = cotan(fov/2) = 1 / tan(fov/2)
-	// => fov = 2*tan(1/m_22) 
-	asp = (proj._11	 ?  proj._22/proj._11 : 0.0f);
-	fov = (proj._22	 ?  2.0f*atan(1.0f/proj._22) : 0.0f);
-
-	frontClip =	(proj._33	 ?  proj._43/proj._33 : 0.0f);
-	backClip =	frontClip*proj._33/(proj._33+1);
-}
-
 TriFrustum::TriFrustum()
 	:m_halfWidthProjection( 0 ),
 	m_zNear( 0 ),

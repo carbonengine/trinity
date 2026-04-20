@@ -684,7 +684,7 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 	if( !m_attachments.empty() )
 	{
 		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
+		const Float4x3* bones = nullptr;
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
 
 		for( auto& attachment : m_attachments )
@@ -913,7 +913,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if( renderer.HasOption( this, "Lights" ) )
 	{
 		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
+		const Float4x3* bones = nullptr;
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
 		for( auto it = m_lights.begin(); it != m_lights.end(); ++it )
 		{
@@ -975,13 +975,13 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 				auto rotation = locator.direction;
 
 				size_t boneCount;
-				const granny_matrix_3x4* bones;
+				const Float4x3* bones;
 
 				if( locator.boneIndex >= 0 && Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount ) )
 				{
 					if( locator.boneIndex < int( boneCount ) )
 					{
-						const granny_matrix_3x4* bones = m_animationUpdater->GetMeshBoneMatrixList();
+						const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
 						Matrix boneTF = IdentityMatrix();
 						TriMatrixCopyFrom3x4( &boneTF, &bones[locator.boneIndex] );
 						position = XMVector3TransformCoord( position, boneTF );
@@ -1009,7 +1009,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if( !m_attachments.empty() )
 	{
 		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
+		const Float4x3* bones = nullptr;
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
@@ -1554,7 +1554,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 	if( !m_attachments.empty() )
 	{
 		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
+		const Float4x3* bones = nullptr;
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
@@ -1840,7 +1840,7 @@ void EveSpaceObject2::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Quad
 		return;
 	}
 	size_t boneCount = 0;
-	const granny_matrix_3x4* bones = nullptr;
+	const Float4x3* bones = nullptr;
 	Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
 
 	for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
@@ -3162,7 +3162,7 @@ void EveSpaceObject2::GetLocatorInObjectSpace( Vector3& position, Vector3& direc
 	{
 		if( locator.boneIndex < m_animationUpdater->GetMeshBoneCount() )
 		{
-			const granny_matrix_3x4* bones = m_animationUpdater->GetMeshBoneMatrixList();
+			const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
 			Matrix boneTF = IdentityMatrix();
 			TriMatrixCopyFrom3x4( &boneTF, &bones[locator.boneIndex] );
 			position = XMVector3TransformCoord( locator.position, boneTF );
@@ -3431,7 +3431,7 @@ void EveSpaceObject2::GetLights( Tr2LightManager& lightManager ) const
 	XMMATRIX worldTransform = m_worldTransform;
 
 	size_t boneCount = 0;
-	const granny_matrix_3x4* bones = nullptr;
+	const Float4x3* bones = nullptr;
 	Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
 
 	for( auto it = std::begin( m_lights ); it != std::end( m_lights ); ++it )

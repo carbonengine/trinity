@@ -59,7 +59,7 @@ Color Tr2FactionLight::GetSelectedColor() const
 	return m_lightData.color;
 }
 
-void Tr2FactionLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const granny_matrix_3x4* bones, size_t boneCount )
+void Tr2FactionLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const Float4x3* bones, size_t boneCount )
 {
 	if( m_isSpotlight )
 	{

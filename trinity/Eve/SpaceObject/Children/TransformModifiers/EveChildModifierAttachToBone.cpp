@@ -8,7 +8,7 @@ EveChildModifierAttachToBone::EveChildModifierAttachToBone( IRoot* )
 {
 }
 
-Matrix EveChildModifierAttachToBone::ApplyTransform( const Matrix& transform, size_t boneCount, const granny_matrix_3x4* bones ) const
+Matrix EveChildModifierAttachToBone::ApplyTransform( const Matrix& transform, size_t boneCount, const Float4x3* bones ) const
 {
 	if( m_boneIndex < 0 || size_t( m_boneIndex ) >= boneCount )
 	{

@@ -204,7 +204,7 @@ protected:
 
 	bool PrepareMorphBuffers( Tr2RenderContext & renderContext );
 
-	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
+	std::pair<const Float4x3*, size_t> GetBoneTransforms() const;
 	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
 	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets( MorphTargetAnimationFilter filter );
 	void UpdateMorphAnimationBuffer();
@@ -248,6 +248,8 @@ protected:
 	bool m_updateAnimation;
 	bool m_bakeMorphs;
 	bool m_dirtyRtMesh;
+	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
+	bool m_hasUpdated = false;
 
 	float m_activationStrength;
 

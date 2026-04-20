@@ -32,7 +32,7 @@ namespace
 			size_t boneCount = size_t( animation->GetMeshBoneCount() );
 			if( boneCount )
 			{
-				const granny_matrix_3x4* bones = animation->GetMeshBoneMatrixList();
+				const Float4x3* bones = animation->GetMeshBoneMatrixList();
 				Matrix boneTF = IdentityMatrix();
 				TriMatrixCopyFrom3x4( &boneTF, &bones[boneIndex] );
 				position = XMVector3TransformCoord( position, boneTF );

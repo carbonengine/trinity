@@ -31,6 +31,8 @@ EveChildFogVolume::EveChildFogVolume( IRoot* lockobj ) :
 	m_settings.fogNoiseFrequency = 15.0f;
 	m_settings.fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
 
+	// The proper value is set in the UpdateAsyncronous method
+	m_settings.intensity = 0.0f;
 }
 
 void EveChildFogVolume::RebuildBoundingSphere()

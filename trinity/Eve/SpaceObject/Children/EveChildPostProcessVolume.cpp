@@ -12,6 +12,7 @@ EveChildPostProcessVolume::EveChildPostProcessVolume( IRoot* lockobj ) :
 	m_boundingSphere( Vector3( 0.0, 0.0, 0.0), 0.0 )
 {
 	m_postProcessAttributes.CreateInstance();
+	m_postProcessAttributes->intensity = 0.0f;
 }
 
 EveChildPostProcessVolume::~EveChildPostProcessVolume()

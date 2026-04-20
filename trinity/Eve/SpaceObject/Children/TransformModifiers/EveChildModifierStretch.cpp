@@ -26,7 +26,7 @@ void EveChildModifierStretch::SetDestPosition( Vector3 destPosition )
 	m_destPosition = destPosition;
 }
 
-Matrix EveChildModifierStretch::ApplyTransform( const Matrix& transform, size_t, const granny_matrix_3x4* ) const
+Matrix EveChildModifierStretch::ApplyTransform( const Matrix& transform, size_t, const Float4x3* ) const
 {
 	Vector3 start, diff, dir;
 	Vector3 end = m_destPosition;

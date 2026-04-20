@@ -19,7 +19,7 @@ public:
     bool OnModified( Be::Var* value ) override;
 
     void SetInheritProperties( const Color* colorSet ) override;
-    void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const granny_matrix_3x4* bones = nullptr, size_t boneCount = 0) override;
+    void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const Float4x3* bones = nullptr, size_t boneCount = 0) override;
     Color GetSelectedColor() const;
 
 private:

@@ -101,7 +101,7 @@ void Tr2Light::SetLightData( LightData& baseData )
 	m_lightData = baseData;
 }
 
-void Tr2Light::SetBoneMatrix( const granny_matrix_3x4* bones, size_t boneCount ) 
+void Tr2Light::SetBoneMatrix( const Float4x3* bones, size_t boneCount ) 
 {
 	if( m_lightData.boneIndex >= 0 && m_lightData.boneIndex < boneCount )
 	{
@@ -122,7 +122,7 @@ void Tr2Light::ChangeLightColor( Color c )
 	m_lightData.color = c;
 }
 
-void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, float scale, const granny_matrix_3x4* bones, size_t boneCount )
+void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, float scale, const Float4x3* bones, size_t boneCount )
 {
 	if( m_isDynamic )
 	{
@@ -209,7 +209,7 @@ void Tr2Light::Update()
 
 }
 
-void Tr2Light::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const granny_matrix_3x4* bones, size_t boneCount )
+void Tr2Light::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const Float4x3* bones, size_t boneCount )
 {
 
 }

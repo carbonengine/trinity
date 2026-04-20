@@ -204,7 +204,7 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 	}
 }
 
-bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms, uint32_t offset )
+bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const Float4x3* transforms, uint32_t offset )
 {
 	auto newSize = count * 3 * 4;
 	if( m_transforms.size() != newSize )
@@ -215,7 +215,7 @@ bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4
 
 	if( newSize > 0 && memcmp( m_transforms.data(), transforms, newSize * sizeof( float ) ) != 0 )
 	{
-		memcpy( m_transforms.data(), transforms, count * sizeof( granny_matrix_3x4 ) );
+		memcpy( m_transforms.data(), transforms, count * sizeof( Float4x3 ) );
 		m_isDirty = true;
 	}
 

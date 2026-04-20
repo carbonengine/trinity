@@ -208,7 +208,7 @@ bool EveHazeSet::OnPrepareResources()
 // Description:
 //   Update visibility based on if bounding box surrounding the hazes is visible or not.
 // --------------------------------------------------------------------------------------
-bool EveHazeSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveHazeSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	auto aabb = GetItemSetAabb( m_aabb, m_boundingBoxes, bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -219,7 +219,7 @@ bool EveHazeSet::UpdateVisibility( const EveUpdateContext& updateContext, const 
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveHazeSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveHazeSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights )
 	{
@@ -324,7 +324,7 @@ void EveHazeSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 }
 
 // --------------------------------------------------------------------------------
-void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	if( renderer.HasOption( GetRawRoot(), "Haze Sets" ) )
 	{

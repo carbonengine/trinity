@@ -4,14 +4,6 @@
 #include "Tr2DeviceResource.h"
 
 
-struct Float4x3
-{
-	Float4x3() = default;
-	explicit Float4x3( const Matrix& m );
-
-	float elements[12];
-};
-
 struct Tr2MorphTargetAnimationData
 {
 	Tr2MorphTargetAnimationData() = default;

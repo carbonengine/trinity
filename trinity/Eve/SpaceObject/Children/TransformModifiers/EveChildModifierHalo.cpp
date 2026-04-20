@@ -16,7 +16,7 @@ EveChildModifierHalo::~EveChildModifierHalo()
 {
 }
 
-Matrix EveChildModifierHalo::ApplyTransform( const Matrix& transform, size_t, const granny_matrix_3x4* ) const
+Matrix EveChildModifierHalo::ApplyTransform( const Matrix& transform, size_t, const Float4x3* ) const
 {
 	float parentScaleX = Length( transform.GetX() );
 	float parentScaleY = Length( transform.GetY() );

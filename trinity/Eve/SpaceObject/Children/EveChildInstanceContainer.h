@@ -148,6 +148,10 @@ protected:
 
 	bool m_disableEditMode;
 	bool m_isAlwaysOn;
+
+	// Whether one of the update methods has been called; until then, the object cannot be rendered
+	bool m_hasUpdated = false;
+
 	EveChildInheritPropertiesPtr m_inheritProperties;
 	Origin m_origin;
 	std::vector<std::pair<std::string, float>> m_controllerVariables;

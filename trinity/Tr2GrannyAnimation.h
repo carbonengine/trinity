@@ -14,7 +14,7 @@ class Tr2AnimationMeshBinding;
 
 namespace Tr2GrannyAnimationUtils
 {
-	bool GetBoneList( Tr2GrannyAnimation* animationUpdater, const granny_matrix_3x4*& bones, size_t& boneCount );
+	bool GetBoneList( Tr2GrannyAnimation* animationUpdater, const Float4x3*& bones, size_t& boneCount );
 };
 
 struct GrannyBoneBindingBounds
@@ -100,7 +100,7 @@ public:
 	void RenderBones( const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding = nullptr );
 
 	int GetMeshBoneCount() const;
-	const granny_matrix_3x4* GetMeshBoneMatrixList() const;
+	const Float4x3* GetMeshBoneMatrixList() const;
 
 	std::vector<std::string> GetAnimationNames() const;
 	
@@ -159,7 +159,7 @@ private:
 	BoneList_t m_boneList;
 
 	// bone matrix list in mesh-order
-	granny_matrix_3x4* m_meshBoneMatrixList;
+	Float4x3* m_meshBoneMatrixList;
 	int m_meshBoneCount;
 	int m_modelIndex;
 	int m_meshBindingIndex;
@@ -198,7 +198,7 @@ public:
 	Tr2AnimationMeshBinding( Tr2GrannyAnimation* animationUpdater, TriGeometryRes* geometryRes, uint32_t meshIndex );
 	virtual ~Tr2AnimationMeshBinding();
 
-	std::pair<const granny_matrix_3x4*, size_t> GetBoneTransforms() const;
+	std::pair<const Float4x3*, size_t> GetBoneTransforms() const;
 
 	TriGeometryRes* GetGeometryRes() const;
 	uint32_t GetMeshIndex() const;
@@ -213,7 +213,7 @@ private:
 	void RebuildCachedData( BlueAsyncRes* p ) override;
 
 	std::unique_ptr<granny_mesh_binding, decltype( &GrannyFreeMeshBinding )> m_meshBinding{ nullptr, &GrannyFreeMeshBinding };
-	std::unique_ptr<granny_matrix_3x4[]> m_boneTransforms;
+	std::unique_ptr<Float4x3[]> m_boneTransforms;
 	granny_skeleton* m_meshSkeleton = nullptr;
 
 	Tr2GrannyAnimationPtr m_animation;
