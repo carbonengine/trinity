@@ -88,7 +88,7 @@ public:
 	void RenderBones( const Matrix& modelTransform );
 
 	int GetMeshBoneCount() const;
-	const granny_matrix_3x4* GetMeshBoneMatrixList() const;
+	const Float4x3* GetMeshBoneMatrixList() const;
 
 	void TogglePauseAnimations( bool pause );
 	void InstantiateCharacter();
@@ -152,7 +152,7 @@ private:
 	BoneList_t m_boneList;
 
 	// bone matrix list in mesh-order
-	granny_matrix_3x4* m_meshBoneMatrixList;
+	Float4x3* m_meshBoneMatrixList;
 	int m_meshBoneCount;
 	int m_modelIndex;
 	int m_meshBindingIndex;

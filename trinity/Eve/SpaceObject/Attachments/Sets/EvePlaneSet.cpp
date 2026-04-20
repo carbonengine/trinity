@@ -173,7 +173,7 @@ void EvePlaneSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 	quadRenderer.RegisterEffect( m_effectHash, TRIBATCHTYPE_ADDITIVE, sizeof( PlaneVertex ), 1, s_spriteVertexDecl, m_effect );
 }
 
-void EvePlaneSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount )
+void EvePlaneSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const Float4x3* bones, size_t boneCount )
 {
 	if( !m_display )
 	{
@@ -237,7 +237,7 @@ void EvePlaneSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix
 // Description:
 //   Get bounding box around planes, update visibility based on if box is visible or not
 // --------------------------------------------------------------------------------------
-bool EvePlaneSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EvePlaneSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -249,7 +249,7 @@ bool EvePlaneSet::UpdateVisibility( const EveUpdateContext& updateContext, const
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EvePlaneSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EvePlaneSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
@@ -274,7 +274,7 @@ void EvePlaneSet::UpdateLights( const Matrix& parentTransform, const granny_matr
 // Description:
 //   Get bounding box surrounding planes
 // --------------------------------------------------------------------------------------
-AxisAlignedBoundingBox EvePlaneSet::GetAabb( const granny_matrix_3x4* bones, size_t boneCount ) const
+AxisAlignedBoundingBox EvePlaneSet::GetAabb( const Float4x3* bones, size_t boneCount ) const
 {
 	return GetItemSetAabb( m_aabb, m_boundingBoxes, bones, boneCount );
 }
@@ -382,7 +382,7 @@ void EvePlaneSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Plane Sets Lights" );
 }
 
-void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	if( renderer.HasOption( GetRawRoot(), "Plane Sets" ) )
 	{

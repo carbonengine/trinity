@@ -2891,7 +2891,7 @@ void EveTurretSet::UpdateRtSkeleton()
 				{
 					turret.rtMeshArea = std::make_unique<Tr2RaytracingMeshArea>( 0 );
 				}
-				if( turret.rtMesh->SetBoneTransforms( boneCount, reinterpret_cast<const granny_matrix_3x4*>( boneTransformList.data() + offset ), m_boneOffsets.GetCurrentFrameOffset() + offset ) )
+				if( turret.rtMesh->SetBoneTransforms( boneCount, reinterpret_cast<const Float4x3*>( boneTransformList.data() + offset ), m_boneOffsets.GetCurrentFrameOffset() + offset ) )
 				{
 					turret.rtMeshArea->MarkBlasOutdated();
 				}

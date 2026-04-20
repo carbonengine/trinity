@@ -472,7 +472,7 @@ void EveSpaceObjectDecal::RenderDebugInfo( ITr2DebugRenderer2& renderer, const M
 //   bonesMatrices - a pointer to the bone-matrix array of the parent
 //   bonesMatricesCount - the max numbers of bones in this array
 // --------------------------------------------------------------------------------------
-void EveSpaceObjectDecal::SetBoneMatrix( const granny_matrix_3x4* bonesMatrices, int bonesMatricesCount )
+void EveSpaceObjectDecal::SetBoneMatrix( const Float4x3* bonesMatrices, int bonesMatricesCount )
 {
 	// sanity
 	if( m_parentBoneIndex >= bonesMatricesCount )

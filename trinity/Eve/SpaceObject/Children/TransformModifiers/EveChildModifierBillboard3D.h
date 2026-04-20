@@ -18,7 +18,7 @@ public:
 	EveChildModifierBillboard3D( IRoot* lockobj = NULL );
 	~EveChildModifierBillboard3D();
 
-	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const granny_matrix_3x4* bones ) const;
+	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const Float4x3* bones ) const;
 private:
 	bool m_fixed;
 };

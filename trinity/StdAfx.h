@@ -85,6 +85,7 @@ using std::max;
 #include "Tr2RenderContext.h"
 #include "Tr2RenderUtils.h"
 #include "granny.h"
+#include "Utilities/MatrixUtils.h"
 #include "TriUtil.h"
 
 #if TBB_ENABLED

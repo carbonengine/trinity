@@ -139,7 +139,7 @@ bool EveSpriteLineSet::ReallocateResources()
 // Description:
 //   Get bounding box around sprite lines, update visibility based on if box is visible or not
 // --------------------------------------------------------------------------------------
-bool EveSpriteLineSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveSpriteLineSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -151,7 +151,7 @@ bool EveSpriteLineSet::UpdateVisibility( const EveUpdateContext& updateContext, 
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveSpriteLineSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveSpriteLineSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
@@ -176,7 +176,7 @@ void EveSpriteLineSet::UpdateLights( const Matrix& parentTransform, const granny
 // Description:
 //   Get bounding box surrounding sprite lines
 // --------------------------------------------------------------------------------------
-AxisAlignedBoundingBox EveSpriteLineSet::GetAabb( const granny_matrix_3x4* bones, size_t boneCount ) const
+AxisAlignedBoundingBox EveSpriteLineSet::GetAabb( const Float4x3* bones, size_t boneCount ) const
 {
 	return GetItemSetAabb( m_aabb, m_boundingBoxes, bones, m_skinned ? boneCount : 0 );
 }
@@ -191,7 +191,7 @@ void EveSpriteLineSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 }
 
 // --------------------------------------------------------------------------------
-void EveSpriteLineSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float, const granny_matrix_3x4* bones, size_t boneCount )
+void EveSpriteLineSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float, const Float4x3* bones, size_t boneCount )
 {
 	if( !m_display || m_spriteData.empty() )
 	{
@@ -254,7 +254,7 @@ void EveSpriteLineSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Sprite Line Sets Lights" );
 }
 
-void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	if( renderer.HasOption( GetRawRoot(), "Sprite Line Sets" ) )
 	{

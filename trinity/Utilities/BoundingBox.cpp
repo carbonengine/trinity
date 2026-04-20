@@ -810,7 +810,7 @@ Vector3 ClosestPointToBoundingBox( const Vector3& min, const Vector3& max, const
 	return Minimize( Maximize( point, min ), max );
 }
 
-CcpMath::AxisAlignedBox GetItemSetAabb( const CcpMath::AxisAlignedBox& staticBounds, const std::vector<std::pair<int, CcpMath::AxisAlignedBox>>& boneBounds, const granny_matrix_3x4* bones, size_t boneCount )
+CcpMath::AxisAlignedBox GetItemSetAabb( const CcpMath::AxisAlignedBox& staticBounds, const std::vector<std::pair<int, CcpMath::AxisAlignedBox>>& boneBounds, const Float4x3* bones, size_t boneCount )
 {
 	auto aabb = staticBounds;
 	for( auto& box : boneBounds )

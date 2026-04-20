@@ -1172,10 +1172,10 @@ void EveChildMesh::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 	}
 }
 
-std::pair<const granny_matrix_3x4*, size_t> EveChildMesh::GetBoneTransforms() const
+std::pair<const Float4x3*, size_t> EveChildMesh::GetBoneTransforms() const
 {
 	size_t boneCount = 0;
-	const granny_matrix_3x4* bones = nullptr;
+	const Float4x3* bones = nullptr;
 
 	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
 	{

@@ -400,7 +400,7 @@ void EveChildContainer::UpdateVisibility( const EveUpdateContext& updateContext,
 	if( HasRenderables() )
 	{
 		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
+		const Float4x3* bones = nullptr;
 		if( m_animationOwner && m_animationOwner->GetAnimationController() )
 		{
 			Tr2GrannyAnimationUtils::GetBoneList( m_animationOwner->GetAnimationController(), bones, boneCount );	
@@ -484,7 +484,7 @@ void EveChildContainer::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Qu
 	if( !m_attachments.empty() )
 	{
 		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
+		const Float4x3* bones = nullptr;
 
 		if( m_animationOwner && m_animationOwner->GetAnimationController() )
 		{
@@ -906,7 +906,7 @@ void EveChildContainer::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if( !m_attachments.empty() )
 	{
 		size_t boneCount = 0;
-		const granny_matrix_3x4* bones = nullptr;
+		const Float4x3* bones = nullptr;
 
 		if( m_animationOwner && m_animationOwner->GetAnimationController() )
 		{

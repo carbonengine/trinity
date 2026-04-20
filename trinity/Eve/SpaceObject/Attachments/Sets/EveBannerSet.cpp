@@ -119,7 +119,7 @@ namespace
 const std::vector<float> s_fullScreenSize = { 1 };
 }
 
-bool EveBannerSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveBannerSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -166,7 +166,7 @@ bool EveBannerSet::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	return m_isVisible;
 }
 
-void EveBannerSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveBannerSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
@@ -228,7 +228,7 @@ void EveBannerSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Banner Sets Lights" );
 }
 
-void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	if( renderer.HasOption( GetRawRoot(), "Banner Sets" ) )
 	{
@@ -395,7 +395,7 @@ bool EveBannerSet::OnPrepareResources()
 	return true;
 }
 
-AxisAlignedBoundingBox EveBannerSet::GetAabb( const granny_matrix_3x4* bones, size_t boneCount ) const
+AxisAlignedBoundingBox EveBannerSet::GetAabb( const Float4x3* bones, size_t boneCount ) const
 {
 	return GetItemSetAabb( m_aabb, m_skinnedBoxes, bones, boneCount );
 }

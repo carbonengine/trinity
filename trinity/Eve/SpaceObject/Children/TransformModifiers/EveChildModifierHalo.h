@@ -18,7 +18,7 @@ public:
 	EveChildModifierHalo( IRoot* lockobj = NULL );
 	~EveChildModifierHalo();
 
-	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const granny_matrix_3x4* bones ) const;
+	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const Float4x3* bones ) const;
 };
 
 TYPEDEF_BLUECLASS( EveChildModifierHalo );

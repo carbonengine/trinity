@@ -61,12 +61,12 @@ public:
 
 	virtual bool Initialize() override;
 
-	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
-	virtual void UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
+	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
+	virtual void UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	void AddBanner( const EveBannerItem& banner );
@@ -102,7 +102,7 @@ protected:
 private:
 	struct Vertex;
 
-	AxisAlignedBoundingBox GetAabb( const granny_matrix_3x4* bones, size_t boneCount ) const;
+	AxisAlignedBoundingBox GetAabb( const Float4x3* bones, size_t boneCount ) const;
 	void CreateBannerGeometry( std::vector<Vertex>& vertices, std::vector<uint16_t>& indices, const EveBannerItem& item ) const;
 	void CreateFlatBannerGeometry( std::vector<Vertex>& vertices, std::vector<uint16_t>& indices, const EveBannerItem& item ) const;
 	void CreateVerticalCurvedBannerGeometry( std::vector<Vertex>& vertices, std::vector<uint16_t>& indices, const EveBannerItem& item ) const;

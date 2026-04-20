@@ -16,7 +16,7 @@ EveChildModifierBooster::~EveChildModifierBooster()
 {
 }
 
-Matrix EveChildModifierBooster::ApplyTransform( const Matrix& transform, size_t, const granny_matrix_3x4* ) const
+Matrix EveChildModifierBooster::ApplyTransform( const Matrix& transform, size_t, const Float4x3* ) const
 {
 	Matrix alignMat;
 	float distCenter;

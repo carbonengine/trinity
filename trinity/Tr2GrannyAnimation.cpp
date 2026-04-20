@@ -16,7 +16,7 @@ TRI_REGISTER_SETTING( "debugBoneLabelFont", g_debugBoneLabelFont );
 
 namespace Tr2GrannyAnimationUtils
 {
-	bool GetBoneList( Tr2GrannyAnimation* animationUpdater, const granny_matrix_3x4*& bones, size_t& boneCount )
+	bool GetBoneList( Tr2GrannyAnimation* animationUpdater, const Float4x3*& bones, size_t& boneCount )
 	{
 		if( animationUpdater && animationUpdater->IsInitialized() )
 		{
@@ -397,7 +397,7 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 					{
 						m_meshBoneCount = MAX_JOINT_COUNT;
 					}
-					m_meshBoneMatrixList = (granny_matrix_3x4*)CCP_ALIGNED_MALLOC( "Tr2GrannyAnimation/m_boneMatrixList", m_meshBoneCount * sizeof( granny_matrix_3x4 ), 16 );
+					m_meshBoneMatrixList = (Float4x3*)CCP_ALIGNED_MALLOC( "Tr2GrannyAnimation/m_boneMatrixList", m_meshBoneCount * sizeof( Float4x3 ), 16 );
 				}
 			}
 		}
@@ -964,7 +964,7 @@ void Tr2GrannyAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& model
 				int const* meshToBone = GrannyGetMeshBindingToBoneIndices( m_meshBinding );
 				if( m_meshBoneMatrixList && meshToBone && m_meshBoneCount )
 				{
-					GrannyBuildIndexedCompositeBufferTransposed( m_skeleton, m_worldPose, meshToBone, m_meshBoneCount, m_meshBoneMatrixList );
+					GrannyBuildIndexedCompositeBufferTransposed( m_skeleton, m_worldPose, meshToBone, m_meshBoneCount, reinterpret_cast<granny_matrix_3x4*>( m_meshBoneMatrixList ) );
 				}
 			}
 		}
@@ -1134,7 +1134,7 @@ int Tr2GrannyAnimation::GetMeshBoneCount() const
 //   Returns a pointer to the internal list of 3x4 matrices, holding the transforms
 //   of the current animation state
 // --------------------------------------------------------------------------------------
-const granny_matrix_3x4* Tr2GrannyAnimation::GetMeshBoneMatrixList() const
+const Float4x3* Tr2GrannyAnimation::GetMeshBoneMatrixList() const
 {
 	return m_meshBoneMatrixList;
 }
@@ -1472,7 +1472,7 @@ Tr2AnimationMeshBinding::~Tr2AnimationMeshBinding()
 	}
 }
 
-std::pair<const granny_matrix_3x4*, size_t> Tr2AnimationMeshBinding::GetBoneTransforms() const
+std::pair<const Float4x3*, size_t> Tr2AnimationMeshBinding::GetBoneTransforms() const
 {
 	if( !m_meshBinding || !m_boneTransforms )
 	{
@@ -1490,14 +1490,14 @@ std::pair<const granny_matrix_3x4*, size_t> Tr2AnimationMeshBinding::GetBoneTran
 			for( int32_t i = 0; i < boneCount; ++i )
 			{
 				GrannyColumnMatrixMultiply4x3Transpose(
-					(granny_real32*)m_boneTransforms[i],
+					(granny_real32*)&m_boneTransforms[i],
 					(granny_real32*)m_meshSkeleton->Bones[meshToBone[i]].InverseWorld4x4,
 					(granny_real32*)GrannyGetWorldPose4x4( m_animation->m_worldPose, animBones[i] ) );
 			}
 		}
 		else
 		{
-			GrannyBuildIndexedCompositeBufferTransposed( m_animation->m_skeleton, m_animation->m_worldPose, meshToBone, boneCount, m_boneTransforms.get() );
+			GrannyBuildIndexedCompositeBufferTransposed( m_animation->m_skeleton, m_animation->m_worldPose, meshToBone, boneCount, reinterpret_cast<granny_matrix_3x4*>( m_boneTransforms.get() ) );
 		}
 	}
 
@@ -1559,7 +1559,7 @@ void Tr2AnimationMeshBinding::CreateBinding()
 			auto count = GrannyGetMeshBindingBoneCount( m_meshBinding.get() );
 			if( count > 0 )
 			{
-				m_boneTransforms.reset( new granny_matrix_3x4[count] );
+				m_boneTransforms.reset( new Float4x3[count] );
 				m_meshSkeleton = meshSkeleton;
 			}
 		}
