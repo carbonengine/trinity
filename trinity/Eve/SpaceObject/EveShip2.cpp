@@ -27,6 +27,8 @@ EveShip2::EveShip2( IRoot* lockobj ) :
 	m_audioParameterInfo.destinationValue = nullptr;
 	m_audioParameterInfo.classInfo = nullptr;
 	m_audioParameterInfo.entry = nullptr;
+
+	m_isAudioOccluder = false;
 }
 
 EveShip2::~EveShip2()

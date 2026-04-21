@@ -37,6 +37,9 @@
 #include "Tr2GrannyAnimation.h"
 #include "Raytracing/Tr2RaytracingManager.h"
 #include "Tr2RingBuffer.h"
+#include <ITr2AudGeometry.h>
+
+#include <atomic>
 
 
 // consts
@@ -226,6 +229,8 @@ BLUE_CLASS( EveSpaceObject2 ):
 {
 public:
 	EXPOSE_TO_BLUE();
+
+	static uint64_t NextAudioInstanceId() { return s_nextAudioInstanceId++; }
 
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
@@ -712,6 +717,24 @@ protected:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Observer position
 	virtual Matrix GetObserverTransform();
+
+	ITr2AudGeometryPtr m_audioGeometry;
+	bool m_audioGeometryRegistered = false;
+	bool m_isAudioOccluder = true;
+	uint64_t m_audioGeometrySetId = 0;
+	uint64_t m_audioInstanceId;
+
+	ITr2AudGeometryPtr GetAudioGeometry() const;
+
+public:
+	virtual bool IsAudioOccluder() const override { return m_isAudioOccluder; }
+
+protected:
+	void SetAudioGeometry( ITr2AudGeometry* audioGeometry );
+	void UnregisterAudioGeometry();
+	void RegisterAudioGeometry();
+
+	static std::atomic<uint64_t> s_nextAudioInstanceId;
 
  private:
 
