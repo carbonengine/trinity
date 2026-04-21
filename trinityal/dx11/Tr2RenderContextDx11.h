@@ -22,6 +22,7 @@ class Tr2SamplerStateAL;
 class Tr2BufferAL;
 class Tr2RtShaderTableAL;
 struct Tr2Viewport;
+struct Tr2RootSignatureAL;
 
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
@@ -104,7 +105,6 @@ public:
 
 	ALResult SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw();
 
-	ALResult UseResourceBindings() throw();
 	ALResult ResetResourceBindings() throw();
 
 	ALResult DrawIndexedPrimitive(	
@@ -233,6 +233,8 @@ public:
     ALResult UseAccelerationStructure(Tr2RtTopLevelAccelerationStructureAL tlas );
 
 private:
+	ALResult UseResourceBindings() throw();
+	ALResult UseResourceBindings( const TrinityALImpl::Tr2ShaderProgramAL& shaderProgram ) throw();
 	union
 	{
 		struct
@@ -273,6 +275,68 @@ private:
 
 	static const uint32_t CB_SLOT_COUNT = 16;
 	SharedConstantBuffer m_sharedConstantBuffers[Tr2RenderContextEnum::SHADER_TYPE_COUNT * CB_SLOT_COUNT];
+
+	struct Resource
+	{
+		enum Type
+		{
+			NONE,
+			BUFFER,
+			TEXTURE,
+			HEAP_VIEW,
+		};
+
+		Resource();
+
+		bool operator==( const Resource& other ) const;
+		bool Is( const Tr2BufferAL& other ) const;
+		bool Is( const Tr2TextureAL& other, Tr2RenderContextEnum::ColorSpace otherColorSpace ) const;
+		bool Is( const Tr2TextureAL& other, uint32_t otherMip ) const;
+		void UpdateHash( uint32_t& hash ) const;
+
+		Tr2RenderContextEnum::ShaderType stage;
+		uint32_t registerIndex;
+		Tr2TextureAL texture;
+		Tr2BufferAL buffer;
+		Type type;
+		union
+		{
+			Tr2RenderContextEnum::ColorSpace colorSpace;
+			uint32_t mip;
+		};
+	};
+	struct Sampler
+	{
+		enum Type
+		{
+			NONE,
+			SAMPLER,
+			HEAP_VIEW,
+		};
+
+		Sampler();
+
+		bool operator==( const Sampler& other ) const;
+		bool operator==( const Tr2SamplerStateAL& other ) const;
+
+		void UpdateHash( uint32_t& hash ) const;
+
+		Tr2RenderContextEnum::ShaderType stage;
+		uint32_t registerIndex;
+		Tr2SamplerStateAL sampler;
+		Type type;
+	};
+
+	std::vector<Resource> m_pendingSRVs;
+	std::vector<Resource> m_pendingUAVs;
+	std::vector<Sampler> m_pendingSamplers;
+
+	Resource m_sortedSRVs[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	Resource m_sortedUAVs[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	Sampler m_sortedSamplers[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+
+
+	bool m_renderedUsingSRVs = false;
 
 public:
 	uint32_t ComputeVertexCount( uint32_t primitiveCount ) const throw();
