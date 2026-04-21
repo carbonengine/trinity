@@ -10,7 +10,9 @@
 #include "TriFrustumOrtho.h"
 #include "Utilities/BoundingBox.h"
 #include "Resources/TriGeometryRes.h"
+#include <ITr2AudGeometry.h>
 #include "Tr2GpuStructuredBuffer.h"
+#include <ITr2AudGeometry.h>
 #include <IBlueObjectMetadata.h>
 
 namespace
@@ -44,6 +46,10 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
 	m_instanceCount( 0 ),
 	m_morphAnimationOffsets( {} ),
+	m_audioInstanceId( EveSpaceObject2::NextAudioInstanceId() ),
+	m_audioGeometrySetId(0),
+	m_audioGeometryRegistered(false),
+	m_allowAudioGeometry(true),
 	EveChildTransform(),
 	EveEntity( lockobj )
 {
@@ -63,6 +69,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 
 EveChildMesh::~EveChildMesh()
 {
+	UnregisterAudioGeometry();
 }
 
 bool EveChildMesh::Initialize()
@@ -73,6 +80,11 @@ bool EveChildMesh::Initialize()
 	}
 
 	InitializeAnimation();
+
+	if( g_eveIsAudioOcclusionGeometryEnabled && !m_audioGeometry )
+	{
+		BeClasses->CreateInstanceFromName( "AudGeometry", BlueInterfaceIID<ITr2AudGeometry>(), reinterpret_cast<void**>( &m_audioGeometry.p ) );
+	}
 
 	for( uint32_t i = 0; i < m_decals.size(); i++ )
 	{
@@ -260,6 +272,8 @@ void EveChildMesh::RegisterComponents()
 // --------------------------------------------------------------------------------
 void EveChildMesh::UnRegisterComponents()
 {
+	UnregisterAudioGeometry();
+
 	auto registry = this->GetComponentRegistry();
 	if( registry )
 	{
@@ -895,6 +909,18 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 		m_worldTransform = (*it)->ApplyTransform( m_worldTransform, params.boneCount, params.bones );
 	}
 
+	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
+
+	if( !allowAudioGeometry && m_audioGeometryRegistered )
+	{
+		UnregisterAudioGeometry();
+	}
+	m_allowAudioGeometry = allowAudioGeometry;
+	if( m_audioGeometryRegistered && m_audioGeometry )
+	{
+		m_audioGeometry->SetGeometryTransform( m_audioGeometrySetId, m_audioInstanceId, m_worldTransform );
+	}
+
 	// need to update the data we get from the parent to be relevant to us!
 	if( nullptr != params.spaceObjectParent )
 	{
@@ -965,8 +991,15 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	m_hasUpdated = true;
 }
 
-void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
+void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
+	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
+
+	if( !allowAudioGeometry && m_audioGeometryRegistered )
+	{
+		UnregisterAudioGeometry();
+	}
+	m_allowAudioGeometry = allowAudioGeometry;
 	if( m_animationUpdater )
 	{
 		if( m_mesh && m_animationUpdater->GetResPath().empty() )
@@ -999,6 +1032,8 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 	{
 		m_meshBinding = {};
 	}
+
+	RegisterAudioGeometry();
 }
 
 void EveChildMesh::GetLocalToWorldTransform( Matrix& transform ) const
@@ -1012,8 +1047,75 @@ void EveChildMesh::ChangeLOD( Tr2Lod )
 
 void EveChildMesh::SetMesh( Tr2MeshBase* mesh )
 {
+	if( mesh != m_mesh )
+	{
+		UnregisterAudioGeometry();
+	}
+
 	m_mesh = mesh;
 	m_instancedMesh = BlueCastPtr( m_mesh );
+}
+
+void EveChildMesh::RegisterAudioGeometry()
+{
+	if( !m_allowAudioGeometry )
+	{
+		return;
+	}
+	if( m_audioGeometryRegistered )
+	{
+		return;
+	}
+
+	if( g_eveIsAudioOcclusionGeometryEnabled && !m_audioGeometry && m_mesh )
+	{
+		BeClasses->CreateInstanceFromName( "AudGeometry", BlueInterfaceIID<ITr2AudGeometry>(), reinterpret_cast<void**>( &m_audioGeometry.p ) );
+	}
+
+	if( !m_audioGeometry || !m_mesh )
+	{
+		return;
+	}
+
+	auto geometryRes = m_mesh->GetGeometryResource();
+	if( !geometryRes )
+	{
+		return;
+	}
+
+	if( !geometryRes->IsGood() )
+	{
+		return;
+	}
+
+	int meshIx = m_mesh->GetMeshIndex();
+	const AudioGeometryResData* audioGeo = geometryRes->GetAudioGeometry( meshIx );
+
+	if( !audioGeo || audioGeo->m_vertices.empty() )
+	{
+		return;
+	}
+
+	Tr2AudGeometryData data;
+	data.m_vertices = audioGeo->m_vertices;
+	data.m_indices = audioGeo->m_indices;
+	data.m_maxBounds = audioGeo->m_maxBounds;
+	data.m_minBounds = audioGeo->m_minBounds;
+
+	m_audioGeometry->SetGeometry( audioGeo->m_id, m_audioInstanceId, data, m_worldTransform );
+	m_audioGeometrySetId = audioGeo->m_id;
+	m_audioGeometryRegistered = true;
+}
+
+void EveChildMesh::UnregisterAudioGeometry()
+{
+	if( m_audioGeometryRegistered && m_audioGeometry )
+	{
+		m_audioGeometry->RemoveGeometry( m_audioGeometrySetId, m_audioInstanceId );
+	}
+
+	m_audioGeometryRegistered = false;
+	m_audioGeometrySetId = 0;
 }
 
 void EveChildMesh::SetOrigin( Origin origin )

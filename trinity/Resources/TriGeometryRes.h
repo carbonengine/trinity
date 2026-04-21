@@ -130,6 +130,24 @@ struct MeshDecalData
 
 struct TriGeometryResMeshData;
 
+extern bool g_eveIsAudioOcclusionGeometryEnabled;
+
+struct AudioGeometryResData
+{
+	uint64_t m_id;
+
+	std::vector<Vector3> m_vertices;
+	std::vector<uint32_t> m_indices;
+
+	Vector3 m_minBounds;
+	Vector3 m_maxBounds;
+
+	AudioGeometryResData() : m_id( s_nextId++ ) {}
+
+private:
+	static std::atomic<uint64_t> s_nextId;
+};
+
 struct TriGeometryResLodData
 {
 	TriGeometryResLodData();
@@ -170,7 +188,7 @@ struct TriGeometryResLodData
 
 struct TriGeometryResMeshData
 {
-	TriGeometryResMeshData();
+	TriGeometryResMeshData(); 
 
 	std::string m_name;
 	
@@ -183,6 +201,7 @@ struct TriGeometryResMeshData
 
 	TrackableStdVector<TriJointBinding> m_jointBindings;
 
+	std::unique_ptr<AudioGeometryResData> m_audioGeometry;
 	std::vector<std::shared_ptr<MeshDecalData>> m_decals;
 
 	uint32_t m_lodMask; //A bit mask of which LODs have been loaded.
@@ -233,6 +252,9 @@ public:
 	TriGeometryResLodData* GetMeshLod( unsigned int meshIx, float screenSize ) const;
 	TriGeometryResLodData* GetMeshLod( unsigned int meshIx, int lodIndex ) const;
 	int GetLodIndexForScreenSize( unsigned int meshIx, float screenSize ) const;
+
+
+	const AudioGeometryResData* GetAudioGeometry( unsigned int meshIx ) const;
 
 	unsigned int GetSkeletonCount() const;
 	TriGeometryResSkeletonData* GetSkeletonData( unsigned int skelIx ) const;
@@ -377,6 +399,9 @@ private:
 	// Create D3D mesh from data in m_pGrannyFile
 	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
 	bool CreateLodFromGrannyMesh( granny_mesh* myMesh, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride = NULL );
+
+	// Extract audio geometry from lowest LOD for Wwise spatial audio
+	void ExtractAudioGeometry( TriGeometryResMeshData* mesh, granny_mesh* grannyMesh );
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN(TriGeometryRes);

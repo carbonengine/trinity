@@ -261,6 +261,15 @@ protected:
 	PIEveSpaceObjectAttachmentVector m_attachments;
 	PTr2LightVector m_lights;
 
+	bool m_allowAudioGeometry;
+	bool m_audioGeometryRegistered;
+	uint64_t m_audioGeometrySetId;
+	uint64_t m_audioInstanceId;
+	ITr2AudGeometryPtr m_audioGeometry;
+
+	void RegisterAudioGeometry();
+	void UnregisterAudioGeometry();
+
 	void UpdateRtMesh();
 	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;

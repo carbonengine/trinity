@@ -61,6 +61,8 @@ BLUE_INTERFACE( IEveSpaceObject2 ) : public IRoot
 
 	virtual bool IsPickable() const { return true; }
 
+	virtual bool IsAudioOccluder() const { return false; }
+
     virtual void SetProceduralContainerVariable( const char *name, float value ) {}
 
 	virtual void GetParentData( IEveSpaceObject2::ParentData * pd ) const {};

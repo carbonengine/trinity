@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "EveSpaceObject2.h"
+#include <ITr2AudGeometry.h>
 #include "TriConstants.h"
 #include "Tr2GrannyAnimation.h"
 #include "Utilities/MatrixUtils.h"
@@ -19,6 +20,7 @@ BLUE_DEFINE_INTERFACE( IEveSceneRegistrationObject );
 BLUE_DEFINE_INTERFACE( IEveReflectionRenderable );
 BLUE_DEFINE_INTERFACE( ITr2LightOwner );
 BLUE_DEFINE_INTERFACE( IEveSpaceObjectAttachmentOwner );
+BLUE_DEFINE_INTERFACE( ITr2AudGeometry );
 BLUE_DEFINE_ABSTRACT( EveSpaceObject2 );
 
 #if BLUE_WITH_PYTHON
@@ -316,6 +318,8 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"Observers for pushing data between modules every frame. Currently used to push locator data out to the audio2 module.",
 			Be::READ | Be::PERSIST
 		)
+
+		MAP_PROPERTY( "audioGeometry", GetAudioGeometry, SetAudioGeometry, "Audio geometry interface for Wwise Spatial Audio occlusion and diffraction processing." )
 
 		MAP_ATTRIBUTE( "impactOverlay", m_impactOverlay, "object for rendering damage/impact fx on this space object.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "decals", m_decals, "list of all decals on this space object.", Be::READ | Be::PERSIST )

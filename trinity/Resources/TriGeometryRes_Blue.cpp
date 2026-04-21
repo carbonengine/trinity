@@ -185,3 +185,28 @@ MAP_FUNCTION_AND_WRAP(
 	BoundingSphereFromPointsScript,
 	"Generates bounding sphere around a given points.\n"
 	":param points: list of 3D points in space" );
+
+#if BLUE_WITH_PYTHON
+static PyObject* PySetAudioOcclusionGeometryEnabled( PyObject* self, PyObject* args )
+{
+	bool enabled = false;
+
+	if( !PyArg_ParseTuple( args, "b", &enabled ) )
+	{
+		return NULL;
+	}
+
+	g_eveIsAudioOcclusionGeometryEnabled = enabled;
+
+	Py_RETURN_NONE;
+}
+
+MAP_FUNCTION(
+	"SetAudioOcclusionGeometryEnabled",
+	PySetAudioOcclusionGeometryEnabled,
+	"Enable or disable extraction of audio occlusion geometry.\n"
+	"Disabled by default.\n"
+	":param enabled: enable/disable audio occlusion geometry\n"
+	":type enabled: bool\n"
+	":rtype: None" );
+#endif
