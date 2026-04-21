@@ -666,7 +666,7 @@ Be::Result<std::string> TriGrannyRes::GetMeshName( unsigned int meshIx, std::str
 		return Be::Result<std::string>( "Mesh index out of range" );
 	}
 
-	name = fi->Meshes[meshIx]->Name;
+	name = fi->Meshes[meshIx]->Name ? fi->Meshes[meshIx]->Name : ""; // for reference, see CopyGrannyName
 
 	return Be::Result<std::string>();
 }
