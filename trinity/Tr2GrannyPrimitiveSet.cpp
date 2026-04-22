@@ -271,7 +271,7 @@ void Tr2GrannyPrimitiveSet::CreatePrimitive()
 		granny_int32x const meshIndexCount  = GrannyGetMeshIndexCount( mesh );
 		granny_int32x const meshTriangleCount = GrannyGetMeshTriangleCount( mesh );
 
-		if( strncmp( mesh->Name, g_pickingMeshName, strlen(g_pickingMeshName) ) == 0 )
+		if( mesh->Name && strncmp( mesh->Name, g_pickingMeshName, strlen( g_pickingMeshName ) ) == 0 )
 		{
 			m_pickingPrimitiveCount = meshTriangleCount;
 			pickingIndex = meshIx;
