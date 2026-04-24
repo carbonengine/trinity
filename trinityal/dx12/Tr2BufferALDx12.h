@@ -69,7 +69,7 @@ namespace TrinityALImpl
 		std::shared_ptr<UnorderedAccessViewDx12> m_clearUav;
 
 		friend class Tr2RenderContextAL;
-		friend class TrinityALImpl::Tr2ResourceSetAL;
+		//friend class TrinityALImpl::Tr2ResourceSetAL;
 		friend class TrinityALImpl::Tr2RtShaderTableAL;
 	};
 }

@@ -10,7 +10,7 @@ struct Tr2RegisterMapAL;
 namespace TrinityALImpl
 {
 	class Tr2ShaderProgramAL;
-	class Tr2ResourceSetAL;
+	//class Tr2ResourceSetAL;
 	class PSODescription;
 }
 
@@ -52,6 +52,6 @@ private:
 
 	friend class Tr2RenderContextAL;
 	friend class Tr2PrimaryRenderContextAL;
-	friend class TrinityALImpl::Tr2ResourceSetAL;
+	//friend class TrinityALImpl::Tr2ResourceSetAL;
 	friend class TrinityALImpl::PSODescription;
 };

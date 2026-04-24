@@ -12,7 +12,7 @@
 #include "Tr2ShaderALDx11.h"
 #include "Tr2HalHelperStructures.h"
 #include "Tr2ShaderProgramALDx11.h"
-#include "Tr2ResourceSetALDx11.h"
+//#include "Tr2ResourceSetALDx11.h"
 #include "Tr2BufferALDx11.h"
 #include "Tr2TextureALDx11.h"
 #include "Tr2ConstantBufferALDx11.h"
@@ -684,13 +684,13 @@ ALResult Tr2RenderContextAL::BeginScene() throw()
 	};
 	for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
 	{
-		ID3D11ShaderResourceView* nullSrv[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+		ID3D11ShaderResourceView* nullSrv[MAX_RESOURCES] = {};
 		if( m_resourceHashes[i] )
 		{
 			m_resourceHashes[i] = 0;
 			( m_context->*( setResources[i] ) )(
 				0,
-				TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES,
+				MAX_RESOURCES,
 				nullSrv );
 
 		}
@@ -2125,8 +2125,6 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2Shader
 		}
 	}
 
-	// Tr2ResourceSetAL::Create
-
 	struct StageInput
 	{
 		CComPtr<ID3D11ShaderResourceView> resources[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
@@ -2150,6 +2148,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2Shader
 
 	bool hasPsUavs = false;
 
+	// Loop through the stages and accumulate the various buffers and textures for the stages
 	for( uint32_t stageIndex = 0; stageIndex < SHADER_TYPE_COUNT; ++stageIndex )
 	{
 		auto& stage = stages[stageIndex];
@@ -2288,7 +2287,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2Shader
 
 	if( ( empty || !uavCount ) && m_assignedUavCount )
 	{
-		ID3D11UnorderedAccessView* nullUAVs[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+		ID3D11UnorderedAccessView* nullUAVs[MAX_RESOURCES] = {};
 		if( m_assignedPsUavs )
 		{
 			m_context->OMSetRenderTargetsAndUnorderedAccessViews(
@@ -2334,13 +2333,13 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2Shader
 	{
 		for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
 		{
-			ID3D11ShaderResourceView* nullSrv[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+			ID3D11ShaderResourceView* nullSrv[MAX_RESOURCES] = {};
 			if( m_resourceHashes[i] )
 			{
 				m_resourceHashes[i] = 0;
 				( m_context->*( setResources[i] ) )(
 					0,
-					TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES,
+					MAX_RESOURCES,
 					nullSrv );
 			}
 		}
@@ -2349,7 +2348,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2Shader
 		{
 			if( m_assignedUavCount && m_assignedPsUavs )
 			{
-				ID3D11UnorderedAccessView* nullUAVs[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+				ID3D11UnorderedAccessView* nullUAVs[MAX_RESOURCES] = {};
 				m_context->OMSetRenderTargetsAndUnorderedAccessViews(
 					D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
 					nullptr,
@@ -2384,7 +2383,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2Shader
 		{
 			if( m_assignedUavCount && !m_assignedPsUavs )
 			{
-				ID3D11UnorderedAccessView* nullUAVs[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+				ID3D11UnorderedAccessView* nullUAVs[MAX_RESOURCES] = {};
 				m_context->CSSetUnorderedAccessViews( m_assignedUavOffset, m_assignedUavCount, nullUAVs, nullptr );
 				m_assignedUavCount = 0;
 			}

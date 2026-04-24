@@ -4,7 +4,7 @@
 
 #include "../include/Tr2ResourceSetAL.h"
 
-namespace TrinityALImpl
+/*namespace TrinityALImpl
 {
 	class Tr2ResourceSetAL: public Tr2DeviceResourceAL<Tr2ResourceSetAL>
 	{
@@ -51,6 +51,6 @@ namespace TrinityALImpl
 
 		friend class Tr2RenderContextAL;
 	};
-}
+}*/
 
 #endif

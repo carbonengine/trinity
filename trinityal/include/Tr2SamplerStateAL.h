@@ -9,7 +9,7 @@ struct Tr2SamplerDescription;
 namespace TrinityALImpl
 {
 	class Tr2SamplerStateAL;
-	class Tr2ResourceSetAL;
+	//class Tr2ResourceSetAL;
 }
 
 class Tr2SamplerStateAL
@@ -33,7 +33,7 @@ public:
 private:
 	std::shared_ptr<TrinityALImpl::Tr2SamplerStateAL> m_sampler;
 	friend class Tr2RenderContextAL;
-	friend class TrinityALImpl::Tr2ResourceSetAL;
+	//friend class TrinityALImpl::Tr2ResourceSetAL;
 };
 
 namespace TrinityALImpl

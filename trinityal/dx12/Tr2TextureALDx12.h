@@ -21,7 +21,7 @@
 
 namespace TrinityALImpl
 {
-	class Tr2ResourceSetAL;
+	//class Tr2ResourceSetAL;
 	class Tr2RtShaderTableAL;
 }
 
@@ -119,7 +119,7 @@ namespace TrinityALImpl
 		struct MipMapGenerator;
 		std::unique_ptr<MipMapGenerator> m_mipMapGenerator;
 
-		friend class Tr2ResourceSetAL;
+		//friend class Tr2ResourceSetAL;
 		friend class Tr2RenderContextAL;
 		friend class Tr2RtShaderTableAL;
 	};

@@ -18,7 +18,7 @@ class Tr2VertexLayoutAL;
 class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
-class Tr2ResourceSetAL;
+//class Tr2ResourceSetAL;
 class Tr2BufferAL;
 class Tr2RtShaderTableAL;
 class Tr2RtPipelineStateAL;
@@ -122,7 +122,7 @@ public:
 
 	ALResult SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw();
 
-	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet );
+	/*ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet );*/
 	
 	ALResult DrawIndexedPrimitive(	
 		uint32_t numVertices, 

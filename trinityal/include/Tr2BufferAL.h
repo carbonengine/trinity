@@ -10,7 +10,7 @@ class Tr2RenderContextAL;
 namespace TrinityALImpl
 {
 	class Tr2BufferAL;
-	class Tr2ResourceSetAL;
+	//class Tr2ResourceSetAL;
 }
 
 
@@ -94,7 +94,7 @@ private:
 
 	friend class Tr2RenderContextAL;
 	friend class Tr2PrimaryRenderContextAL;
-	friend class TrinityALImpl::Tr2ResourceSetAL;
+	//friend class TrinityALImpl::Tr2ResourceSetAL;
 };
 
 

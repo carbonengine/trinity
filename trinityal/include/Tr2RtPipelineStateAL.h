@@ -76,5 +76,5 @@ public:
 private:
     std::shared_ptr<TrinityALImpl::Tr2RtPipelineStateAL> m_pipeline;
     
-    friend class TrinityALImpl::Tr2ResourceSetAL;
+    //friend class TrinityALImpl::Tr2ResourceSetAL;
 };

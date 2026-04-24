@@ -15,7 +15,7 @@ class Tr2Material;
 
 namespace TrinityALImpl
 {
-	class Tr2ResourceSetAL;
+	//class Tr2ResourceSetAL;
 	class Tr2RtShaderTableAL;
 }
 
@@ -122,26 +122,26 @@ private:
 	std::unique_ptr<Resource[]> m_uav;
 	std::unique_ptr<Sampler[]> m_samplers;
 
-	friend class TrinityALImpl::Tr2ResourceSetAL;
+	//friend class TrinityALImpl::Tr2ResourceSetAL;
 	friend class TrinityALImpl::Tr2RtShaderTableAL;
 	friend class Tr2Material;
 };
 
-class Tr2ResourceSetAL
-{
-public:
-	Tr2ResourceSetAL();
-
-	//ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
-	//ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
-	bool IsValid() const;
-
-	Tr2ALMemoryType GetMemoryClass() const;
-
-	ALResult SetName( const char* name );
-
-private:
-	std::shared_ptr<TrinityALImpl::Tr2ResourceSetAL> m_resourceSet;
-
-	friend class Tr2RenderContextAL;
-};
+//class Tr2ResourceSetAL
+//{
+//public:
+//	Tr2ResourceSetAL();
+//
+//	//ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
+//	//ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+//	bool IsValid() const;
+//
+//	Tr2ALMemoryType GetMemoryClass() const;
+//
+//	ALResult SetName( const char* name );
+//
+//private:
+//	std::shared_ptr<TrinityALImpl::Tr2ResourceSetAL> m_resourceSet;
+//
+//	friend class Tr2RenderContextAL;
+//};

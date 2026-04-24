@@ -40,7 +40,7 @@ namespace TrinityALImpl
 		bool m_isValid;
 
 		friend class Tr2RenderContextAL;
-		friend class Tr2ResourceSetAL;
+		//friend class Tr2ResourceSetAL;
 		friend class TrinityALImpl::Tr2RtShaderTableAL;
 	};
 

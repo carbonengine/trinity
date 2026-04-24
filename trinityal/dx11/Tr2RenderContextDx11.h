@@ -6,7 +6,6 @@
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2DrawUPHelper.h"
 #include "../include/Tr2ConstantBufferAL.h"
-//#include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2ShaderAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
@@ -233,6 +232,7 @@ public:
     ALResult UseAccelerationStructure(Tr2RtTopLevelAccelerationStructureAL tlas );
 
 private:
+	static const uint32_t MAX_RESOURCES = 32;
 	ALResult UseResourceBindings() throw();
 	ALResult UseResourceBindings( const TrinityALImpl::Tr2ShaderProgramAL& shaderProgram ) throw();
 	union

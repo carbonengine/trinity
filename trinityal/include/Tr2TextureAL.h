@@ -7,7 +7,7 @@
 namespace TrinityALImpl
 {
 	class Tr2TextureAL;
-	class Tr2ResourceSetAL;
+	//class Tr2ResourceSetAL;
 	class Tr2SwapChainAL;
 }
 
@@ -76,6 +76,6 @@ private:
 	friend class Tr2PrimaryRenderContextAL;
 	friend class Tr2RenderContextAL;
 	friend class TrinityALImpl::Tr2SwapChainAL;
-	friend class TrinityALImpl::Tr2ResourceSetAL;
+	//friend class TrinityALImpl::Tr2ResourceSetAL;
 	friend class TrinityALImpl::Tr2TextureAL;
 };

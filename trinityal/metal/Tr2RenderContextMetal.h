@@ -25,7 +25,7 @@ class Tr2ConstantBufferAL;
 class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
-class Tr2ResourceSetAL;
+//class Tr2ResourceSetAL;
 class Tr2BufferAL;
 class Tr2RtShaderTableAL;
 class Tr2RtPipelineStateAL;

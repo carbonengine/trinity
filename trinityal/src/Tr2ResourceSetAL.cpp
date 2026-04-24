@@ -543,14 +543,14 @@ void Tr2ResourceSetDescriptionAL::Sampler::UpdateHash( uint32_t& hash ) const
 
 namespace 
 {
-	std::shared_ptr<TrinityALImpl::Tr2ResourceSetAL> nullRS = std::make_shared<TrinityALImpl::Tr2ResourceSetAL>();
+	//std::shared_ptr<TrinityALImpl::Tr2ResourceSetAL> nullRS = std::make_shared<TrinityALImpl::Tr2ResourceSetAL>();
 }
 
-
-Tr2ResourceSetAL::Tr2ResourceSetAL()
-	:m_resourceSet( nullRS )
-{
-}
+//
+//Tr2ResourceSetAL::Tr2ResourceSetAL()
+//	:m_resourceSet( nullRS )
+//{
+//}
 
 /*ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
 {
@@ -579,25 +579,25 @@ ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& descriptio
 #endif
 }*/
 
-bool Tr2ResourceSetAL::IsValid() const
-{
-	return m_resourceSet->IsValid();
-}
-
-Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const
-{
-	return m_resourceSet->GetMemoryClass();
-}
-
-ALResult Tr2ResourceSetAL::SetName( const char* name )
-{
-	if( !IsValid() )
-	{
-		return E_INVALIDCALL;
-	}
-	if( !name )
-	{
-		return E_INVALIDARG;
-	}
-	return m_resourceSet->SetName( name );
-}
+//bool Tr2ResourceSetAL::IsValid() const
+//{
+//	return m_resourceSet->IsValid();
+//}
+//
+//Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const
+//{
+//	return m_resourceSet->GetMemoryClass();
+//}
+//
+//ALResult Tr2ResourceSetAL::SetName( const char* name )
+//{
+//	if( !IsValid() )
+//	{
+//		return E_INVALIDCALL;
+//	}
+//	if( !name )
+//	{
+//		return E_INVALIDARG;
+//	}
+//	return m_resourceSet->SetName( name );
+//}

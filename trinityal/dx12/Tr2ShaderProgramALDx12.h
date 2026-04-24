@@ -116,7 +116,7 @@ namespace TrinityALImpl
 		std::string m_name;
 
 		friend class ::Tr2RenderContextAL;
-		friend class Tr2ResourceSetAL;
+		//friend class Tr2ResourceSetAL;
 		friend class ::DescriptorStateCache;
 		friend class PSODescription;
 	};
