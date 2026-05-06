@@ -780,6 +780,8 @@ set(_SOURCES
     Eve/EveParticleSpringAttractor.cpp
     Eve/EveParticleSpringAttractor.h
     Eve/EveParticleSpringAttractor_Blue.cpp
+	Eve/EvePicking.cpp
+	Eve/EvePicking.h
     Eve/EvePlanet.cpp
     Eve/EvePlanet.h
     Eve/EvePlanet_Blue.cpp

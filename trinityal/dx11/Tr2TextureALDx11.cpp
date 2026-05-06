@@ -798,7 +798,7 @@ namespace TrinityALImpl
 		return m_cpuUsage;
 	}
 
-	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
 		data = nullptr;
 		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
@@ -861,8 +861,14 @@ namespace TrinityALImpl
 			renderContext.m_context->CopySubresourceRegion( m_stagingTexture, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), nullptr );
 		}
 
+		uint32_t flags = 0u;
+		if( !synchronize )
+		{
+			flags |= D3D11_MAP_FLAG_DO_NOT_WAIT;
+		}
+
 		D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
-		HRESULT hr = renderContext.m_context->Map( m_stagingTexture, 0, D3D11_MAP_READ, 0, &ms );
+		HRESULT hr = renderContext.m_context->Map( m_stagingTexture, 0, D3D11_MAP_READ, flags, &ms );
 		data = ms.pData;
 		pitch = ms.RowPitch;
 		if( !ms.pData )

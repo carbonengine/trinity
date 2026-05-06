@@ -10,6 +10,7 @@
 #include "Tr2PickBuffer.h"
 #include "Include/ITr2DebugRenderer2.h"
 #include "TriDebugTextRenderer.h"
+#include "Eve/EvePicking.h"
 
 BLUE_CLASS( Tr2DebugRenderer ) :
 	public ITr2DebugRenderer2
@@ -86,8 +87,9 @@ public:
     void BeginRender();
 	// needs to be called every frame after all Draw methods
     void EndRender( Tr2RenderContext& renderContext );
-    
-    Tr2DebugObjectReference Pick( float& depth, Tr2RenderContext& renderContext );
+
+	void Pick( PendingPickingReadback& readback, boolean synchronize, Tr2RenderContext & renderContext );
+
     
     void SetSelectedObjects( const std::vector<std::pair<IRoot*, uint32_t>>& objects );
     void SetOptions( IRoot* owner, std::vector<Tr2DebugRendererOption>& options );
@@ -116,8 +118,6 @@ private:
 		Vertex( const Vector3& position, Tr2DebugColor color, bool selected, size_t objectIndex );
 		Vertex( const Vector3& position, const Vector3& normal, Tr2DebugColor color, bool selected, size_t objectIndex );
 	};
-
-	Tr2PickBuffer m_pickBuffer;
 
 	Tr2EffectPtr m_effect;
 	Tr2EffectPtr m_pickingEffect;
