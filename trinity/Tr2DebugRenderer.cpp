@@ -727,7 +727,7 @@ void Tr2DebugRenderer::DrawText( TriDebugFont font, const Vector3& pos, const Co
 	va_end( args );
 }
 
-void Tr2DebugRenderer::Pick( PendingPickingReadback& readback, boolean synchronize, Tr2RenderContext& renderContext )
+void Tr2DebugRenderer::Pick( PendingPickingReadback& readback, bool synchronize, Tr2RenderContext& renderContext )
 {
 	auto shader = m_pickingEffect->GetShaderStateInterface();
 	if( !shader )
