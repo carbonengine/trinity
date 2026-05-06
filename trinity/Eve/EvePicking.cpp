@@ -18,14 +18,14 @@ PendingPickingReadback::PendingPickingReadback( uint32_t pickedX, uint32_t picke
 
 
 
-void PendingPickingReadback::MapDebug( boolean synchronize, Tr2RenderContext& renderContext )
+void PendingPickingReadback::MapDebug( bool synchronize, Tr2RenderContext& renderContext )
 {
 	uint32_t pitch;
 	m_debugPickBuffer.MapForReading( synchronize, m_debugPickData, pitch, renderContext );
 }
 
 
-void PendingPickingReadback::MapMain( boolean synchronize, Tr2RenderContext& renderContext )
+void PendingPickingReadback::MapMain( bool synchronize, Tr2RenderContext& renderContext )
 {
 	uint32_t pitch;
 	m_mainPickBuffer.MapForReading( synchronize, m_mainPickData, pitch, renderContext );
