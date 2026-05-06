@@ -3761,12 +3761,7 @@ void EveSpaceScene::PerformPicking( PickingContext* listener, bool immediate, in
 		}
 
 		readback.Unmap( renderContext );
-
-
 		listener->UpdateResult( readback.m_pickedX, readback.m_pickedY, object, area );
-
-		CCP_LOGERR( "PICKING RESULT: 0x%p", object );
-
 		listener->m_readbacks.erase( listener->m_readbacks.begin() );
 	}
 }
