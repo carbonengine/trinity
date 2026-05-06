@@ -139,15 +139,11 @@ Tr2DebugRenderer::Vertex::Vertex( const Vector3& position, const Vector3& normal
 
 
 Tr2DebugRenderer::Tr2DebugRenderer( IRoot* lockobj )
-	:m_pickBuffer( NULL,  Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_FLOAT, 1 )
 {
 	m_effect.CreateInstance();
 	m_effect->SetEffectPathName( "res:/Graphics/Effect/Managed/Utility/DebugPrimitive.fx" );
 	m_pickingEffect.CreateInstance();
 	m_pickingEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Utility/DebugPrimitivePicking.fx" );
-
-	m_pickBuffer.PrepareResources();
-	m_pickBuffer.SetClearColor( 0 );
 }
 
 bool Tr2DebugRenderer::HasOption( IRoot* owner, const char* option ) const
@@ -731,21 +727,25 @@ void Tr2DebugRenderer::DrawText( TriDebugFont font, const Vector3& pos, const Co
 	va_end( args );
 }
 
-Tr2DebugObjectReference Tr2DebugRenderer::Pick( float& depth, Tr2RenderContext& renderContext )
+void Tr2DebugRenderer::Pick( PendingPickingReadback& readback, boolean synchronize, Tr2RenderContext& renderContext )
 {
 	auto shader = m_pickingEffect->GetShaderStateInterface();
 	if( !shader )
 	{
-		return nullptr;
+		return;
 	}
 	if( m_objectLineOffsets.empty() && m_objectTriangleOffsets.empty() )
 	{
-		return nullptr;
+		return;
 	}
 
-	if( !m_pickBuffer.BeginRendering( 0.f, renderContext ) )
+	Tr2PickBuffer& pickBuffer = readback.m_debugPickBuffer;
+	pickBuffer.SetClearColor( 0 );
+	pickBuffer.PrepareResources();
+
+	if( !pickBuffer.BeginRendering( 0.f, renderContext ) )
 	{
-		return nullptr;
+		return;
 	}
 
 	auto handle = GetVertexDeclarationHandle( renderContext );
@@ -756,11 +756,18 @@ Tr2DebugObjectReference Tr2DebugRenderer::Pick( float& depth, Tr2RenderContext& 
 
 	if( !m_objectLineOffsets.empty() )
 	{
+
+		std::vector<Tr2DebugObjectReference>& lineObjects = readback.m_debugLineObjects;
+		lineObjects.reserve( m_objectLineOffsets.size() );
+
 		renderContext.SetTopology( Tr2RenderContextEnum::TOP_LINES );
 
 		for( size_t i = 0; i < m_objectLineOffsets.size(); ++i )
 		{
 			auto object = m_objectLineOffsets[i].first;
+
+			lineObjects.push_back( object );
+
 			if( !object )
 			{
 				continue;
@@ -773,11 +780,18 @@ Tr2DebugObjectReference Tr2DebugRenderer::Pick( float& depth, Tr2RenderContext& 
 
 	if( !m_objectTriangleOffsets.empty() )
 	{
+
+		std::vector<Tr2DebugObjectReference>& triangleObjects = readback.m_debugTriangleObjects;
+		triangleObjects.reserve( m_objectTriangleOffsets.size() );
+
 		renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
 
 		for( size_t i = 0; i < m_objectTriangleOffsets.size(); ++i )
 		{
 			auto object = m_objectTriangleOffsets[i].first;
+
+			triangleObjects.push_back( object );
+
 			if( !object )
 			{
 				continue;
@@ -788,41 +802,12 @@ Tr2DebugObjectReference Tr2DebugRenderer::Pick( float& depth, Tr2RenderContext& 
 		}
 	}
 
-	if( !m_pickBuffer.EndRendering( renderContext ) )
+	if( !pickBuffer.EndRendering( renderContext ) )
 	{
-		return nullptr;
+		return;
 	}
 
-	const void* data;
-	uint32_t pitch;
-	if( m_pickBuffer.PrepareGetResults( data, pitch, renderContext ) )
-	{
-		const float* pixels = static_cast<const float*>( data );
-		uint32_t index = uint32_t( pixels[0] + 0.5f );
-		bool isLine = pixels[1] != 0;
-		depth = pixels[2];
-
-		Tr2DebugObjectReference object = nullptr;
-
-		if( isLine )
-		{
-			if( index > 0 && index <= m_objectLineOffsets.size() )
-			{
-				object = m_objectLineOffsets[index - 1].first;
-			}
-		}
-		else
-		{
-			if( index > 0 && index <= m_objectTriangleOffsets.size() )
-			{
-				object = m_objectTriangleOffsets[index - 1].first;
-			}
-		}
-
-		m_pickBuffer.UnlockBuffer( renderContext );
-		return object;
-	}
-	return nullptr;
+	readback.MapDebug( synchronize, renderContext );
 }
 
 void Tr2DebugRenderer::BeginRender()

@@ -155,6 +155,11 @@ ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const
 	return m_texture->MapForReading( region, data, pitch, renderContext );
 }
 
+ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+{
+	return m_texture->MapForReading( region, synchronize, data, pitch, renderContext );
+}
+
 void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& renderContext )
 {
 	m_texture->UnmapForReading( renderContext );

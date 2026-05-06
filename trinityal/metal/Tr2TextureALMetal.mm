@@ -368,7 +368,7 @@ namespace TrinityALImpl
 		return m_cpuUsage;
 	}
 
-	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
 		data = nullptr;
 		MetalContext *metalContext = renderContext.GetMetalContext();
@@ -431,7 +431,7 @@ namespace TrinityALImpl
             m_memory.Grow( bufferSize );
 		}
 
-		renderContext.GetMetalWorkQueue()->CopyTextureToMTLBuffer( m_mtlTexture, m_mtlReadBackBuffer, mipPitch, bufferSize / std::max( 1u, m_desc.GetDepth() ), readOrigin, readSize, readMipLevel, true );
+		renderContext.GetMetalWorkQueue()->CopyTextureToMTLBuffer( m_mtlTexture, m_mtlReadBackBuffer, mipPitch, bufferSize / std::max( 1u, m_desc.GetDepth() ), readOrigin, readSize, readMipLevel, synchronize );
 
 		pitch = mipPitch;
 		data = m_mtlReadBackBuffer.contents;

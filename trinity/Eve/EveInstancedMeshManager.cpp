@@ -692,7 +692,7 @@ size_t EveInstancedMeshManager::GetShadowBatches( const TriFrustum& cameraFrustu
 	return GetBatches( batches );
 }
 
-void EveInstancedMeshManager::GetPickingBatches( const TriFrustum& viewFrustum, const TriFrustum& pickingFrustum, float invLodFactor, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
+void EveInstancedMeshManager::GetPickingBatches( PendingPickingReadback& readback, const TriFrustum& viewFrustum, const TriFrustum& pickingFrustum, float invLodFactor, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
 	InstanceFlags filter;
 	for( auto& pair : batches )
@@ -701,10 +701,10 @@ void EveInstancedMeshManager::GetPickingBatches( const TriFrustum& viewFrustum, 
 	}
 	PerformFrustumCulling( viewFrustum, pickingFrustum, invLodFactor, filter );
 
-	GetPickingBatches( objectIdOffset, batches );
+	GetPickingBatches( readback, objectIdOffset, batches );
 }
 
-std::pair<IRootPtr, uint32_t> EveInstancedMeshManager::GetPickedObject( uint16_t objectId, uint16_t areaId )
+std::pair<IRootPtr, uint32_t> EveInstancedMeshManager::GetPickedObject( uint32_t objectId, uint32_t areaId )
 {
 	for( auto& [mesh, meshInfo] : m_meshInstances )
 	{
@@ -759,9 +759,12 @@ void EveInstancedMeshManager::BinVisibleInstances( const std::initializer_list<s
 }
 
 
-void EveInstancedMeshManager::GetPickingBatches( uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
+void EveInstancedMeshManager::GetPickingBatches( PendingPickingReadback& readback, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
+
+	std::vector<std::pair<IRootPtr, uint32_t>>& traceback = readback.m_instancedTraceback;
 
 	for( auto& [mesh, meshInfo] : m_meshInstances )
 	{
@@ -834,6 +837,8 @@ void EveInstancedMeshManager::GetPickingBatches( uint32_t objectIdOffset, const 
 				batch.SetPerObjectData( perObjectData );
 
 				accumulator->Commit( batch );
+
+				traceback.push_back( {group.owner, group.ownerIndex} );
 			}
 			objectIdOffset += static_cast<uint32_t>( meshInfo.lodIndices.size() );
 		}
