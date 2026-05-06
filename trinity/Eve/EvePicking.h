@@ -14,8 +14,8 @@ struct PendingPickingReadback
 public:
 	PendingPickingReadback( uint32_t pickedX, uint32_t pickedY );
 
-	void MapDebug( boolean synchronize, Tr2RenderContext& renderContext );
-	void MapMain( boolean synchronize, Tr2RenderContext& renderContext );
+	void MapDebug( bool synchronize, Tr2RenderContext& renderContext );
+	void MapMain( bool synchronize, Tr2RenderContext& renderContext );
 	void Unmap( Tr2RenderContext& renderContext );
 
 	uint32_t m_pickedX, m_pickedY;
