@@ -88,7 +88,7 @@ public:
 	// needs to be called every frame after all Draw methods
     void EndRender( Tr2RenderContext& renderContext );
 
-	void Pick( PendingPickingReadback& readback, boolean synchronize, Tr2RenderContext & renderContext );
+	void Pick( PendingPickingReadback& readback, bool synchronize, Tr2RenderContext & renderContext );
 
     
     void SetSelectedObjects( const std::vector<std::pair<IRoot*, uint32_t>>& objects );
