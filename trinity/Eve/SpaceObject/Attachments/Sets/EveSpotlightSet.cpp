@@ -140,7 +140,7 @@ inline void EveSpotlightSet::RegisterQuadRendererGlow( Tr2QuadRenderer& quadRend
 // Description:
 //   Get bounding box around spot lights, update visibility based on if box is visible or not
 // --------------------------------------------------------------------------------------
-bool EveSpotlightSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveSpotlightSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	auto aabb = GetItemSetAabb( m_aabb, m_boundingBoxes, bones, m_skinned ? boneCount : 0 );
 	if( !aabb.IsInitialized() )
@@ -152,7 +152,7 @@ bool EveSpotlightSet::UpdateVisibility( const EveUpdateContext& updateContext, c
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveSpotlightSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveSpotlightSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
@@ -178,7 +178,7 @@ void EveSpotlightSet::UpdateLights( const Matrix& parentTransform, const granny_
 // Description:
 //   Get bounding box surrounding spot lights
 // --------------------------------------------------------------------------------------
-AxisAlignedBoundingBox EveSpotlightSet::GetAabb( const granny_matrix_3x4* bones, size_t boneCount ) const
+AxisAlignedBoundingBox EveSpotlightSet::GetAabb( const Float4x3* bones, size_t boneCount ) const
 {
 	return GetItemSetAabb( m_aabb, m_boundingBoxes, bones, m_skinned ? boneCount : 0 );
 }
@@ -208,7 +208,7 @@ void EveSpotlightSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 //   bones - array of bone transforms
 //   boneCount - number of bones
 // --------------------------------------------------------------------------------
-void EveSpotlightSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount )
+void EveSpotlightSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float activation, float boosterGain, const Float4x3* bones, size_t boneCount )
 {
 	if( !m_display || m_glowBuffer.empty() )
 	{
@@ -449,7 +449,7 @@ void EveSpotlightSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Spotlight Sets Lights" );
 }
 
-void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	if( renderer.HasOption( GetRawRoot(), "Spotlight Sets" ) )
 	{

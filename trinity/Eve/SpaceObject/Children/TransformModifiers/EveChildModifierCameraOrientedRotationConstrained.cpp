@@ -15,7 +15,7 @@ EveChildModifierCameraOrientedRotationConstrained::~EveChildModifierCameraOrient
 {
 }
 
-Matrix EveChildModifierCameraOrientedRotationConstrained::ApplyTransform( const Matrix& transform, size_t, const granny_matrix_3x4* ) const
+Matrix EveChildModifierCameraOrientedRotationConstrained::ApplyTransform( const Matrix& transform, size_t, const Float4x3* ) const
 {
 	Vector3 up = Vector3( 0, 1, 0 );
 

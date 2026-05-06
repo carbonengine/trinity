@@ -127,7 +127,7 @@ void EveSpriteSet::AddBoosterGlowToQuadRenderer( Tr2QuadRenderer& quadRenderer, 
 // Description:
 //   Go through list of sprites, update visibility based on if a sprite is visible or not.
 // --------------------------------------------------------------------------------------
-bool EveSpriteSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+bool EveSpriteSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
 	if( !aabb.IsInitialized() )
@@ -139,7 +139,7 @@ bool EveSpriteSet::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	return updateContext.GetFrustum().IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveSpriteSet::UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+void EveSpriteSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights )
 	{
@@ -160,7 +160,7 @@ void EveSpriteSet::UpdateLights( const Matrix& parentTransform, const granny_mat
 	m_activationStrength = activationStrength;
 }
 
-AxisAlignedBoundingBox EveSpriteSet::GetAabb( const granny_matrix_3x4* bones, size_t boneCount ) const
+AxisAlignedBoundingBox EveSpriteSet::GetAabb( const Float4x3* bones, size_t boneCount ) const
 {
 	return GetItemSetAabb( m_aabb, m_boundingBoxes, bones, m_skinned ? boneCount : 0 );
 }
@@ -171,7 +171,7 @@ void EveSpriteSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 }
 
 // --------------------------------------------------------------------------------
-void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount )
+void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const Float4x3* bones, size_t boneCount )
 {
 	if( !m_display || m_spriteData.empty() )
 	{
@@ -349,7 +349,7 @@ void EveSpriteSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Sprite Sets Lights" );
 }
 
-void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
 	if( renderer.HasOption( GetRawRoot(), "Sprite Sets" ) )
 	{

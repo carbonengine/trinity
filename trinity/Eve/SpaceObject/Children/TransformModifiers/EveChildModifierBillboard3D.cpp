@@ -17,7 +17,7 @@ EveChildModifierBillboard3D::~EveChildModifierBillboard3D()
 {
 }
 
-Matrix EveChildModifierBillboard3D::ApplyTransform( const Matrix& transform, size_t, const granny_matrix_3x4* ) const
+Matrix EveChildModifierBillboard3D::ApplyTransform( const Matrix& transform, size_t, const Float4x3* ) const
 {
 	if( m_fixed )
 	{

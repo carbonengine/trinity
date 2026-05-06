@@ -99,7 +99,7 @@ void EveChildBulletStorm::SetName( const char* name )
 // --------------------------------------------------------------------------------
 void EveChildBulletStorm::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	if( !m_display )
+	if( !m_display || !m_hasUpdated )
 	{
 		return;
 	}
@@ -309,6 +309,7 @@ void EveChildBulletStorm::UpdateAsyncronous( const EveUpdateContext& updateConte
 		m_clipSphere = std::max( -1.0f, std::min( 1.0f, m_clipSphere ) );
 		m_changingClipSphere = std::abs( m_clipSphere ) != 1;
 	}
+	m_hasUpdated = true;
 }
 
 // --------------------------------------------------------------------------------

@@ -1878,6 +1878,9 @@ function(set_shared_trinity_properties target)
 
     if(${MSVC})
         target_compile_options(${target} PRIVATE "/bigobj") # The object file generated for EveSOFData.cpp has more than 2^16 sections.
+        target_compile_options(${target} PRIVATE /w14062)   # Warns about missing enum case.
+    else()
+        target_compile_options(${target} PRIVATE -Wswitch)  # Warns about missing enum case.
     endif()
 
 endfunction()

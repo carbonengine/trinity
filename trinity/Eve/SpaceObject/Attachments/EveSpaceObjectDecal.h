@@ -139,7 +139,7 @@ public:
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix ) const;
 
 	// set things from the parent, the spaceobject
-	void SetBoneMatrix( const granny_matrix_3x4* bonesMatrices, int bonesMatricesCount );
+	void SetBoneMatrix( const Float4x3* bonesMatrices, int bonesMatricesCount );
 	void SetEffect( Tr2EffectPtr newEffect );
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );

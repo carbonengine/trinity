@@ -31,7 +31,7 @@ struct EveChildUpdateParams
 	IEveSpaceObject2* spaceObjectParent;
 	IEveSpaceObjectChild* childParent;
 	size_t boneCount;
-	const granny_matrix_3x4* bones;
+	const Float4x3* bones;
 	float ownerMaxSpeed;
 	float activationStrength;
 	float controllerUpdateFrequency;

@@ -139,6 +139,9 @@ private:
 	TriFrustum m_lastCameraFrustum;
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 	bool m_allRegistered = false;
+
+	// Has UpdateSynchronous/UpdateAsynchronous been called: until it was, the object can not be rendered
+	bool m_hasUpdated = false;
 };
 
 TYPEDEF_BLUECLASS( EveChildInstancedMeshes );

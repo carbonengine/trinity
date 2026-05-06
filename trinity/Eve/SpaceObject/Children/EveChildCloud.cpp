@@ -229,7 +229,7 @@ void EveChildCloud::UpdateVisibility( const EveUpdateContext& updateContext, con
 
 void EveChildCloud::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	if( !m_isVisible )
+	if( !m_isVisible || !m_hasUpdated )
 	{
 		return;
 	}
@@ -439,6 +439,7 @@ void EveChildCloud::UpdateSyncronous( const EveUpdateContext& updateContext, con
 	}
 	m_worldTransform = m_localTransform * parent;
 	BoundingSphereFromBox( m_boundingSphere, m_min, m_max, &m_worldTransform );
+	m_hasUpdated = true;
 }
 
 void EveChildCloud::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )

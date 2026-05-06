@@ -103,6 +103,8 @@ private:
 
 	bool m_useSpaceObjectData;
 	bool m_display;
+	// Has one of the update methods been called: until then, the object cannot be rendered
+	bool m_hasUpdated = false;
 };
 
 TYPEDEF_BLUECLASS( EveChildParticleSphere );

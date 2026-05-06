@@ -45,7 +45,7 @@ public:
 	Tr2RaytracingMesh();
 
 	void UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize );
-	bool SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms, uint32_t offset );
+	bool SetBoneTransforms( size_t count, const Float4x3* transforms, uint32_t offset );
 	bool SetMorphAnimations( size_t count, const Tr2MorphTargetAnimationData* morphTargets, uint32_t morphTargetAnimationDataOffset );
 
 	bool IsGood() const;

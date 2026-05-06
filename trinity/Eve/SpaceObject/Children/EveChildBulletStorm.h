@@ -96,6 +96,8 @@ private:
 	// general data
 	std::string m_name;
 	bool m_display;
+	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
+	bool m_hasUpdated = false;
 
 	// bullets data
 	unsigned int m_objectCount;

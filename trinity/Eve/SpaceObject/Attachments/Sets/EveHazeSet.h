@@ -66,11 +66,11 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
-	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
-	virtual void UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
+	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
+	virtual void UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
 	virtual void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL ) override;
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	void AddLightFromSOF( const EveHazeSetLight& light );

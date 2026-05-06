@@ -962,7 +962,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourceP
 
 	if( !m_useNewBloom )
 	{
-		m_bloomHighPassFilter->SetParameter( MEMOIZED_STRING( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
+		m_bloomHighPassFilter->SetParameter( MEMOIZED_STRING( "LuminanceThreshold" ), std::max( 0.0f, bloom->m_luminanceThreshold ) );
 		m_bloomHighPassFilter->SetParameter( MEMOIZED_STRING( "LuminanceScale" ), bloom->m_luminanceScale );
 		m_bloomHighPassFilter->SetParameter( MEMOIZED_STRING( "ExposureDependency" ), exposureDependant ? 1.0f : 0.0f );
 		auto rt1 = gpuResourcePool.GetTempTexture( "Bloom", TextureSize2D( dest->GetDesc() ) * 0.5f, dest->GetFormat(), RENDER_TARGET );
@@ -1537,30 +1537,40 @@ void Tr2PostProcessRenderer::RenderTonemapping(
 
 	m_tonemappingEffect->SetParameter( MEMOIZED_STRING( "OutputGamma" ), g_eveSpaceSceneGammaBrightness );
 
-	Tonemapping::ApplyColorCorrection( postprocess->GetColorCorrectionIfAvailable( m_quality ), m_tonemappingEffect );
-	Tonemapping::ApplyBloom( postprocess->GetBloomIfAvailable( m_quality ), m_tonemappingEffect, m_useNewBloom, m_bloomDebugMode );
-	Tonemapping::ApplyDynamicExposure( postprocess->GetDynamicExposureIfAvailable( m_quality ), m_tonemappingEffect, postprocess->m_exposureAdjustment );
-	Tonemapping::ApplyVignette( postprocess->GetVignetteIfAvailable( m_quality ), m_tonemappingEffect );
-	Tonemapping::ApplyDesatureate( postprocess->GetDesaturateIfAvailable( m_quality ), m_tonemappingEffect );
-	Tonemapping::ApplyFade( postprocess->GetFadeIfAvailable( m_quality ), m_tonemappingEffect );
+	Tonemapping::ApplyColorCorrection( postprocess ? postprocess->GetColorCorrectionIfAvailable( m_quality ) : nullptr, m_tonemappingEffect );
+	Tonemapping::ApplyBloom( postprocess ? postprocess->GetBloomIfAvailable( m_quality ) : nullptr, m_tonemappingEffect, m_useNewBloom, m_bloomDebugMode );
+	Tonemapping::ApplyDynamicExposure( postprocess ? postprocess->GetDynamicExposureIfAvailable( m_quality ) : nullptr, m_tonemappingEffect, postprocess ? postprocess->m_exposureAdjustment : 0.0f );
+	Tonemapping::ApplyVignette( postprocess ? postprocess->GetVignetteIfAvailable( m_quality ) : nullptr, m_tonemappingEffect );
+	Tonemapping::ApplyDesatureate( postprocess ? postprocess->GetDesaturateIfAvailable( m_quality ) : nullptr, m_tonemappingEffect );
+	Tonemapping::ApplyFade( postprocess ? postprocess->GetFadeIfAvailable( m_quality ) : nullptr, m_tonemappingEffect );
 	
 	std::vector<const Tr2PPLutEffect*> luts{};
-	postprocess->GetAvilableSortedLuts( luts );
+	if( postprocess )
+	{
+		postprocess->GetAvilableSortedLuts( luts );
+	}
 	Tonemapping::ApplyLuts( luts, m_tonemappingEffect );
 
-	if( auto tonemapping = postprocess->GetTonemappingIfAvailable() )
+	if( postprocess )
 	{
-		if( tonemapping->m_method == Tr2PPTonemappingEffect::Aces )
+		if( auto tonemapping = postprocess->GetTonemappingIfAvailable() )
 		{
-			Tonemapping::ApplyAcesTonemappingMethod( tonemapping, m_tonemappingEffect );
-		}
-		else if( tonemapping->m_method == Tr2PPTonemappingEffect::AgX )
-		{
-			Tonemapping::ApplyAgxTonemappingMethod( m_tonemappingEffect );
+			if( tonemapping->m_method == Tr2PPTonemappingEffect::Aces )
+			{
+				Tonemapping::ApplyAcesTonemappingMethod( tonemapping, m_tonemappingEffect );
+			}
+			else if( tonemapping->m_method == Tr2PPTonemappingEffect::AgX )
+			{
+				Tonemapping::ApplyAgxTonemappingMethod( m_tonemappingEffect );
+			}
+			else
+			{
+				Tonemapping::ApplyUncharted2TonemappingMethod( tonemapping, m_tonemappingEffect );
+			}
 		}
 		else
 		{
-			Tonemapping::ApplyUncharted2TonemappingMethod( tonemapping, m_tonemappingEffect );
+			Tonemapping::ApplyNoTonemappingMethod( m_tonemappingEffect );
 		}
 	}
 	else

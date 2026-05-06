@@ -614,6 +614,8 @@ void EveChildBehaviorSystem::UpdateAsyncronous( const EveUpdateContext& updateCo
 	{
 		( *it )->UpdateAsyncronous( updateContext );
 	}
+
+	m_hasUpdated = true;
 }
 
 const char* EveChildBehaviorSystem::GetName() const
@@ -628,7 +630,7 @@ void EveChildBehaviorSystem::Setup( const Vector3* scale, const Quaternion* rota
 
 void EveChildBehaviorSystem::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	if( !m_display )
+	if( !m_display || !m_hasUpdated )
 	{
 		return;
 	}

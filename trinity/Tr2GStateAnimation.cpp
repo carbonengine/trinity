@@ -349,7 +349,7 @@ void Tr2GStateAnimation::RebuildCachedData( BlueAsyncRes* p )
 					{
 						m_meshBoneCount = MAX_JOINT_COUNT;
 					}
-					m_meshBoneMatrixList = (granny_matrix_3x4*)CCP_ALIGNED_MALLOC( "Tr2GrannyAnimation/m_boneMatrixList", m_meshBoneCount * sizeof( granny_matrix_3x4 ), 16 );
+					m_meshBoneMatrixList = (Float4x3*)CCP_ALIGNED_MALLOC( "Tr2GrannyAnimation/m_boneMatrixList", m_meshBoneCount * sizeof( Float4x3 ), 16 );
 				}
 			}
 		}
@@ -1091,7 +1091,7 @@ void Tr2GStateAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& model
 			int const* meshToBone = GrannyGetMeshBindingToBoneIndices( m_meshBinding );
 			if( m_meshBoneMatrixList && meshToBone && m_meshBoneCount )
 			{
-				GrannyBuildIndexedCompositeBufferTransposed( m_skeleton, m_worldPose, meshToBone, m_meshBoneCount, m_meshBoneMatrixList );
+				GrannyBuildIndexedCompositeBufferTransposed( m_skeleton, m_worldPose, meshToBone, m_meshBoneCount, reinterpret_cast<granny_matrix_3x4*>( m_meshBoneMatrixList ) );
 			}
 		}
 
@@ -1244,7 +1244,7 @@ int Tr2GStateAnimation::GetMeshBoneCount() const
 //   Returns a pointer to the internal list of 3x4 matrices, holding the transforms
 //   of the current animation state
 // --------------------------------------------------------------------------------------
-const granny_matrix_3x4* Tr2GStateAnimation::GetMeshBoneMatrixList() const
+const Float4x3* Tr2GStateAnimation::GetMeshBoneMatrixList() const
 {
 	return m_meshBoneMatrixList;
 }

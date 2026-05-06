@@ -81,12 +81,12 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
-	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
-	virtual void UpdateLights( const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
+	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
+	virtual void UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
-	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount ) override;
+	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const Float4x3* bones, size_t boneCount ) override;
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount ) override;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	void AddLightFromSOF( const EveSpriteLight& light );
@@ -131,7 +131,7 @@ private:
 	TrackableStdVector<SpriteData> m_spriteData;
 
 	// bounding box functions
-	AxisAlignedBoundingBox GetAabb( const granny_matrix_3x4* bones, size_t boneCount ) const;
+	AxisAlignedBoundingBox GetAabb( const Float4x3* bones, size_t boneCount ) const;
 
 	// bounding boxes that are static
 	AxisAlignedBoundingBox m_aabb;
