@@ -45,7 +45,10 @@ void PendingPickingReadback::Unmap( Tr2RenderContext& renderContext )
 }
 
 PickingContext::PickingContext( IRoot* lockobj ) :
-	m_lastPickedObject( NULL )
+	m_lastPickedX( 0 ),
+	m_lastPickedY( 0 ),
+	m_lastPickedObject( NULL ),
+	m_lastPickedArea( 0 )
 {
 }
 
