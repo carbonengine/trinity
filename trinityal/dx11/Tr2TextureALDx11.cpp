@@ -861,14 +861,8 @@ namespace TrinityALImpl
 			renderContext.m_context->CopySubresourceRegion( m_stagingTexture, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), nullptr );
 		}
 
-		uint32_t flags = 0u;
-		if( !synchronize )
-		{
-			flags |= D3D11_MAP_FLAG_DO_NOT_WAIT;
-		}
-
 		D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
-		HRESULT hr = renderContext.m_context->Map( m_stagingTexture, 0, D3D11_MAP_READ, flags, &ms );
+		HRESULT hr = renderContext.m_context->Map( m_stagingTexture, 0, D3D11_MAP_READ, 0, &ms );
 		data = ms.pData;
 		pitch = ms.RowPitch;
 		if( !ms.pData )

@@ -16,6 +16,18 @@ PendingPickingReadback::PendingPickingReadback( uint32_t pickedX, uint32_t picke
 {
 }
 
+// ------------------------------------------------------------------------------------------------------
+void PendingPickingReadback::ReleaseResources( TriStorage s )
+{
+	m_debugPickData = nullptr;
+	m_mainPickData = nullptr;
+}
+
+// ------------------------------------------------------------------------------------------------------
+bool PendingPickingReadback::OnPrepareResources()
+{
+	return true;
+}
 
 
 void PendingPickingReadback::MapDebug( bool synchronize, Tr2RenderContext& renderContext )

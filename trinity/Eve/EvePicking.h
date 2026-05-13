@@ -9,7 +9,7 @@
 
 
 
-struct PendingPickingReadback
+class PendingPickingReadback : public Tr2DeviceResource
 {
 public:
 	PendingPickingReadback( uint32_t pickedX, uint32_t pickedY );
@@ -33,6 +33,14 @@ public:
 	std::vector<std::pair<IRootPtr, uint32_t>> m_instancedTraceback;
 	Tr2PickBuffer m_mainPickBuffer;
 	const void* m_mainPickData;
+
+	
+	/////////////////////////////////////////////////////////////
+	// ITriDeviceResource
+	void ReleaseResources( TriStorage s ) override;
+
+private:
+	bool OnPrepareResources() override;
 };
 
 
@@ -49,7 +57,7 @@ public:
 	IRoot* GetObject();
 	uint32_t GetArea();
 
-	std::vector<PendingPickingReadback> m_readbacks;
+	std::vector<std::unique_ptr<PendingPickingReadback>> m_readbacks;
 
 private:
 	uint32_t m_lastPickedX, m_lastPickedY;

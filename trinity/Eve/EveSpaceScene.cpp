@@ -3549,6 +3549,12 @@ IRoot* EveSpaceScene::PickAsyncObject( PickingContext* listener, int x, int y, T
 
 IRoot* EveSpaceScene::PickAsyncObjectAndArea( PickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
 {
+	if( !listener )
+	{
+		areaID = 0;
+		return nullptr;
+	}
+
 	PerformPicking( listener, false, x, y, proj, view, viewport, pickTypes, renderContext );
 
 	areaID = listener->GetArea();
@@ -3574,7 +3580,7 @@ void EveSpaceScene::PerformPicking( PickingContext* listener, bool immediate, in
 
 	ConvertProjectionCoordToWorldPickRay( fx, fy, &projTransform, &viewTransform, &startWorld, &dirWorld );
 
-	PendingPickingReadback& readback = listener->m_readbacks.emplace_back( x, y );
+	PendingPickingReadback& readback = *listener->m_readbacks.emplace_back( std::make_unique<PendingPickingReadback>( x, y ) );
 
 
 
@@ -3692,7 +3698,7 @@ void EveSpaceScene::PerformPicking( PickingContext* listener, bool immediate, in
 
 	while( !listener->m_readbacks.empty() )
 	{
-		PendingPickingReadback& readback = listener->m_readbacks[0];
+		PendingPickingReadback& readback = *listener->m_readbacks[0];
 		if( readback.m_frameIndex >= renderContext.GetRenderedFrameNumber() )
 		{
 			break;
