@@ -246,22 +246,32 @@ void EveShip2::RebuildBoosterSet()
 	static const char* kLocatorPrefix = "locator_booster";
 	const unsigned int kLocatorPrefixLength = (unsigned int)strlen( kLocatorPrefix );
 
-	unsigned int boosterIndex = 0;
+	unsigned int boosterLocatorCount = 0;
 	unsigned int n = (unsigned int)m_locators.size();
+	for( unsigned int i = 0; i < n; ++i )
+	{
+		const char* locatorName = m_locators[i]->GetName();
+		if( strncmp( locatorName, kLocatorPrefix, kLocatorPrefixLength ) == 0 )
+		{
+			++boosterLocatorCount;
+		}
+	}
+	const bool useSnapshot = ( snapshot.size() == boosterLocatorCount );
+
+	unsigned int boosterIndex = 0;
 	for( unsigned int i = 0; i < n; ++i )
 	{
 		EveLocator2Ptr locator = m_locators[i];
 		const char* locatorName = locator->GetName();
 		if( strncmp( locatorName, kLocatorPrefix, kLocatorPrefixLength ) == 0 )
 		{
-			// Restore saved data if available, otherwise use defaults
 			Vector4 functionality( 0.f, 1.f, 1.f, 1.f );
 			bool hasTrail = true;
 			uint32_t atlasIndex0 = 0;
 			uint32_t atlasIndex1 = 0;
 			float lightScale = 1.0f;
 
-			if( boosterIndex < snapshot.size() )
+			if( useSnapshot )
 			{
 				const EveBoosterItem& saved = snapshot[boosterIndex];
 				functionality = saved.functionality;

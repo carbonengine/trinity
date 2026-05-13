@@ -991,6 +991,17 @@ void EveBoosterSet2::ComputeRuntimeLightData( const EveBoosterItem& item, Runtim
 
 void EveBoosterSet2::RebuildRuntimeFromPersistedItems()
 {
+	if( m_glows )
+	{
+		m_glows->Clear();
+	}
+	if( m_trails )
+	{
+		m_trails->Clear();
+	}
+	BoundingSphereInitialize( m_boosterBoundingSphere );
+	m_maxSize = 0.f;
+
 	m_runtimeLights.clear();
 	m_runtimeLights.resize( m_boosters.GetSize() );
 	for( size_t i = 0; i < m_boosters.GetSize(); ++i )
@@ -1037,17 +1048,10 @@ std::vector<EveBoosterItem> EveBoosterSet2::SnapshotPersistedItems()
 
 void EveBoosterSet2::OnStructureListModified( Event /*event*/, const void* /*item*/, size_t /*index*/, IBlueStructureList* /*list*/ )
 {
-	// External edit to m_boosters (e.g. Jessica). Mirror runtime light data so
-	// rendering/lighting stay in sync.
-	const size_t count = m_boosters.GetSize();
-	if( m_runtimeLights.size() != count )
-	{
-		m_runtimeLights.resize( count );
-	}
-	for( size_t i = 0; i < count; ++i )
-	{
-		ComputeRuntimeLightData( m_boosters[i], m_runtimeLights[i] );
-	}
+	// External edit to m_boosters. Fully rebuild dependent state from the new list:
+	// runtime lights, glow sprites, trail entries, bounding sphere, m_maxSize and the GPU instance buffer.
+	RebuildRuntimeFromPersistedItems();
+	PrepareResources();
 }
 
 void EveBoosterSet2::CreateFlares( const EveBoosterItem& item )

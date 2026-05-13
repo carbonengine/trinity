@@ -394,5 +394,3 @@ TYPEDEF_BLUECLASS( EveBoosterSet2 );
 
 #endif // EveBoosterSet2_H
 
-
-
