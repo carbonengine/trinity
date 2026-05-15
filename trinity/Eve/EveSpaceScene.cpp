@@ -3996,19 +3996,6 @@ void EveSpaceScene::SetupPlanetsAsShadowCaster( Tr2RenderContext& renderContext 
 	m_planetPerObjBuffer->ApplyBuffer( renderContext );
 }
 
-/*
-void EveSpaceScene::GetPickingResults( Tr2PickBuffer& pickBuffer, Tr2RenderContext& renderContext, unsigned short& objId, unsigned short& areaId )
-{
-	const void* data;
-	uint32_t pitch;
-	if( pickBuffer.MapForReading( true, data, pitch, renderContext ) )
-	{
-		DecodeBufferPixel( data, objId, areaId );
-		pickBuffer.UnmapForReading( renderContext );
-	}
-}
-*/
-
 bool EveSpaceScene::IsMeshUnloadingEnabled()
 {
 	return g_eveIsSpaceObjectResourceUnloadingEnabled;
