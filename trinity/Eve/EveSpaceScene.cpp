@@ -3505,6 +3505,8 @@ void EveSpaceScene::OnListModified(
 	}
 }
 
+namespace
+{
 void DecodeMainPickPixel( const void* pBuffer, uint32_t& objId, uint32_t& areaId )
 {
 	// helpers: get each channel
@@ -3518,6 +3520,7 @@ void DecodeMainPickPixel( const void* pBuffer, uint32_t& objId, uint32_t& areaId
 	objId--;
 	areaId = ( ( b & 0xff ) << 8 ) | ( a & 0xff );
 	areaId--;
+}
 }
 
 
