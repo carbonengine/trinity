@@ -12,7 +12,6 @@
 #include "Shader/Tr2ShaderBuffer.h"
 #include "Particle/Tr2GpuParticleSystem.h"
 
-BLUE_DEFINE( PickingContext );
 BLUE_DEFINE( EveSpaceScene );
 BLUE_DEFINE_INTERFACE( IEveReferencePoint );
 BLUE_DEFINE_INTERFACE( IEveBallpark );
@@ -95,13 +94,6 @@ PyObject* PyPickObjectAndAreaID( PyObject* self, PyObject* args )
 }
 #endif
 
-
-const Be::ClassInfo* PickingContext::ExposeToBlue()
-{
-	EXPOSURE_BEGIN( PickingContext, "" )
-		MAP_INTERFACE( PickingContext )
-	EXPOSURE_END()
-}
 
 
 const Be::ClassInfo* EveSpaceScene::ExposeToBlue()

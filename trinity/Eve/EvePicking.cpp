@@ -6,7 +6,7 @@
 
 
 
-PendingPickingReadback::PendingPickingReadback( uint32_t pickedX, uint32_t pickedY ) :
+EvePendingPickingReadback::EvePendingPickingReadback( uint32_t pickedX, uint32_t pickedY ) :
 	m_pickedX( pickedX ),
 	m_pickedY( pickedY ),
 	m_debugPickBuffer( NULL, ImageIO::PIXEL_FORMAT_R32G32B32A32_FLOAT ),
@@ -17,34 +17,34 @@ PendingPickingReadback::PendingPickingReadback( uint32_t pickedX, uint32_t picke
 }
 
 // ------------------------------------------------------------------------------------------------------
-void PendingPickingReadback::ReleaseResources( TriStorage s )
+void EvePendingPickingReadback::ReleaseResources( TriStorage s )
 {
 	m_debugPickData = nullptr;
 	m_mainPickData = nullptr;
 }
 
 // ------------------------------------------------------------------------------------------------------
-bool PendingPickingReadback::OnPrepareResources()
+bool EvePendingPickingReadback::OnPrepareResources()
 {
 	return true;
 }
 
 
-void PendingPickingReadback::MapDebug( bool synchronize, Tr2RenderContext& renderContext )
+void EvePendingPickingReadback::MapDebug( bool synchronize, Tr2RenderContext& renderContext )
 {
 	uint32_t pitch;
 	m_debugPickBuffer.MapForReading( synchronize, m_debugPickData, pitch, renderContext );
 }
 
 
-void PendingPickingReadback::MapMain( bool synchronize, Tr2RenderContext& renderContext )
+void EvePendingPickingReadback::MapMain( bool synchronize, Tr2RenderContext& renderContext )
 {
 	uint32_t pitch;
 	m_mainPickBuffer.MapForReading( synchronize, m_mainPickData, pitch, renderContext );
 }
 
 
-void PendingPickingReadback::Unmap( Tr2RenderContext& renderContext )
+void EvePendingPickingReadback::Unmap( Tr2RenderContext& renderContext )
 {
 	if( m_debugPickData )
 	{
@@ -56,7 +56,7 @@ void PendingPickingReadback::Unmap( Tr2RenderContext& renderContext )
 	}
 }
 
-PickingContext::PickingContext( IRoot* lockobj ) :
+EvePickingContext::EvePickingContext( IRoot* lockobj ) :
 	m_lastPickedX( 0 ),
 	m_lastPickedY( 0 ),
 	m_lastPickedObject( NULL ),
@@ -66,7 +66,7 @@ PickingContext::PickingContext( IRoot* lockobj ) :
 
 
 
-void PickingContext::UpdateResult( uint32_t x, uint32_t y, IRootPtr object, uint32_t area )
+void EvePickingContext::UpdateResult( uint32_t x, uint32_t y, IRootPtr object, uint32_t area )
 {
 	m_lastPickedX = x;
 	m_lastPickedY = y;
@@ -74,12 +74,12 @@ void PickingContext::UpdateResult( uint32_t x, uint32_t y, IRootPtr object, uint
 	m_lastPickedArea = area;
 }
 
-IRoot* PickingContext::GetObject()
+IRoot* EvePickingContext::GetObject()
 {
 	return m_lastPickedObject;
 }
 
-uint32_t PickingContext::GetArea()
+uint32_t EvePickingContext::GetArea()
 {
 	return m_lastPickedArea;
 }

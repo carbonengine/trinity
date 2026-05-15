@@ -3531,7 +3531,7 @@ IRoot* EveSpaceScene::PickObject( int x, int y, TriProjection* proj, TriView* vi
 
 IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
 {
-	PickingContextPtr listener;
+	EvePickingContextPtr listener;
 	listener.CreateInstance();
 
 	PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
@@ -3540,14 +3540,14 @@ IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriV
 	return listener->GetObject();
 }
 
-IRoot* EveSpaceScene::PickAsyncObject( PickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+IRoot* EveSpaceScene::PickAsyncObject( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	uint32_t areaID;
 	return PickAsyncObjectAndArea( listener, x, y, proj, view, viewport, areaID, pickTypes, renderContext );
 }
 
-IRoot* EveSpaceScene::PickAsyncObjectAndArea( PickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
+IRoot* EveSpaceScene::PickAsyncObjectAndArea( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
 {
 	if( !listener )
 	{
@@ -3561,7 +3561,7 @@ IRoot* EveSpaceScene::PickAsyncObjectAndArea( PickingContext* listener, int x, i
 	return listener->GetObject();
 }
 
-void EveSpaceScene::PerformPicking( PickingContext* listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
+void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
 {
 	if( !renderContext.IsValid() )
 	{
@@ -3580,7 +3580,7 @@ void EveSpaceScene::PerformPicking( PickingContext* listener, bool immediate, in
 
 	ConvertProjectionCoordToWorldPickRay( fx, fy, &projTransform, &viewTransform, &startWorld, &dirWorld );
 
-	PendingPickingReadback& readback = *listener->m_readbacks.emplace_back( std::make_unique<PendingPickingReadback>( x, y ) );
+	EvePendingPickingReadback& readback = *listener->m_readbacks.emplace_back( std::make_unique<EvePendingPickingReadback>( x, y ) );
 
 
 
@@ -3698,7 +3698,7 @@ void EveSpaceScene::PerformPicking( PickingContext* listener, bool immediate, in
 
 	while( !listener->m_readbacks.empty() )
 	{
-		PendingPickingReadback& readback = *listener->m_readbacks[0];
+		EvePendingPickingReadback& readback = *listener->m_readbacks[0];
 		if( readback.m_frameIndex >= renderContext.GetRenderedFrameNumber() )
 		{
 			break;

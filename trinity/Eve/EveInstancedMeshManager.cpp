@@ -692,7 +692,7 @@ size_t EveInstancedMeshManager::GetShadowBatches( const TriFrustum& cameraFrustu
 	return GetBatches( batches );
 }
 
-void EveInstancedMeshManager::GetPickingBatches( PendingPickingReadback& readback, const TriFrustum& viewFrustum, const TriFrustum& pickingFrustum, float invLodFactor, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
+void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& readback, const TriFrustum& viewFrustum, const TriFrustum& pickingFrustum, float invLodFactor, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
 	InstanceFlags filter;
 	for( auto& pair : batches )
@@ -759,7 +759,7 @@ void EveInstancedMeshManager::BinVisibleInstances( const std::initializer_list<s
 }
 
 
-void EveInstancedMeshManager::GetPickingBatches( PendingPickingReadback& readback, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
+void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& readback, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
