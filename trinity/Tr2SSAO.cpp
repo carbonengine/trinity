@@ -640,11 +640,10 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 	m_cortaoEffect->SetParameter( BlueSharedString( "NormalBuffer" ), normalBuffer );
 	m_cortaoEffect->SetParameter( BlueSharedString( "DepthBuffer" ), depthBuffer );
 
-	//Set all mip levels to ensure no warnings produced by unset resources.
-	for( uint32_t i = 0; i < 8; i++ )
+	for( uint32_t i = 0; i < packedBuffer->GetMipCount(); i++ )
 	{
-		std::string parameterName = std::string("PackedOutputBuffer") + std::to_string( i );
-		m_cortaoEffect->SetParameter( BlueSharedString( parameterName.c_str() ), packedBuffer, std::min( i, packedBuffer->GetMipCount() - 1 ) );
+		std::string parameterName = "PackedOutputBuffer" + std::to_string( i );
+		m_cortaoEffect->SetParameter( BlueSharedString( parameterName.c_str() ), packedBuffer, i );
 	}
 
 
