@@ -1,0 +1,193 @@
+{
+  "dependencies": [
+    {
+      "name": "gtest",
+      "version>=": "1.16.0",
+      "host": true
+    },
+    {
+      "name": "intel-xess",
+      "version>=": "2.0.1"
+    },
+    {
+      "name": "carbon-core",
+      "version>=": "2.4.0"
+    },
+    {
+      "name": "carbon-imageio",
+      "version>=": "2.0.3"
+    },
+    {
+      "name": "libsquish",
+      "version>=": "1.15"
+    },
+    {
+      "name": "amd-fidelityfx-cas",
+      "version>=": "1.0"
+    },
+    {
+      "name": "amd-fidelityfx-cacao",
+      "version>=": "1.2"
+    },
+    {
+      "name": "tbb",
+      "version>=": "2021.5.0#1"
+    },
+    {
+      "name": "vulkan-headers"
+    },
+    {
+      "name": "vulkan-memory-allocator",
+      "version>=": "3.0.1"
+    },
+    {
+      "name": "carbon-trinityaudioapi",
+      "version>=": "2.0.2#1"
+    },
+    {
+      "name": "freetype",
+      "version>=": "2.13.3"
+    },
+    {
+      "name": "granny",
+      "version>=": "2.12.0.14"
+    },
+    {
+      "name": "carbon-pdmprotowrapper",
+      "version>=": "2.0.3"
+    },
+    {
+      "name": "carbon-blue",
+      "version>=": "4.2.0"
+    },
+    {
+      "name": "carbon-math",
+      "version>=": "1.2.0"
+    },
+    {
+      "name": "carbon-parser",
+      "version>=": "1.0.1"
+    },
+    {
+      "name": "libpng",
+      "version>=": "1.6.37"
+    },
+    {
+      "name": "libjpeg-turbo",
+      "version>=": "2.1.2"
+    },
+    {
+      "name": "zlib-ng",
+      "version>=": "2.2.5"
+    }
+  ],
+  "features": {
+    "shader-compiler": {
+      "description": "Shader compiler for carbon-trinity",
+      "supports": "(windows & x64) | osx",
+      "dependencies": [
+        {
+          "name": "re2c",
+          "version>=": "2.2",
+          "host": true
+        },
+        {
+          "name": "lemon-parser-generator",
+          "version>=": "3.39.3#1",
+          "host": true
+        },
+        {
+          "name": "directx-dxc",
+          "version>=": "2023-03-01#2",
+          "platform": "windows & x64"
+        }
+      ]
+    },
+    "dx11": {
+      "description": "Create DirectX 11 targets",
+       "supports": "windows & x64",
+      "dependencies": [
+        {
+          "name": "directx-dxc",
+          "version>=": "2023-03-01#2"
+        },
+        {
+          "name": "fxc",
+          "version>=": "10.1"
+        },
+        {
+          "name": "amd-fidelityfx-fsr",
+          "version>=": "1.0.2"
+        },
+        {
+          "name": "nvidia-aftermath",
+          "version>=": "2021.1.0"
+        },
+        {
+          "name": "nvidia-streamline",
+          "version>=": "2.8.0",
+          "features":["dlss-fg","dlss-sr","nis" ]
+        }
+      ]
+    },
+    "dx12": {
+      "description": "Create DirectX 12 targets",
+      "supports": "windows & x64",
+      "dependencies": [
+        {
+          "name": "directx-dxc",
+          "version>=": "2023-03-01#2"
+        },
+        {
+          "name": "fxc",
+          "version>=": "10.1"
+        },
+        {
+          "name": "amd-fidelityfx-fsr",
+          "version>=": "1.0.2"
+        },
+        {
+          "name": "amd-fidelityfx",
+          "version>=": "1.1.4"
+        },
+        {
+          "name": "nvidia-aftermath",
+          "version>=": "2021.1.0"
+        },
+        {
+          "name": "nvidia-streamline",
+          "version>=": "2.8.0",
+          "features":["dlss-fg","dlss-sr","nis","reflex" ]
+        }
+      ]
+    },
+    "metal": {
+      "description": "Create Metal targets",
+      "supports": "osx",
+      "dependencies": [
+      ]
+    }
+  },
+  "overrides": [
+    {
+      "name": "protobuf",
+      "version": "3.6.0.1"
+    },
+    {
+      "name": "openssl",
+      "version": "1.1.1k#8"
+    },
+    {
+      "name": "libpng",
+      "version": "1.6.47"
+    },
+    {
+      "name": "openexr",
+      "version": "3.2.4#0"
+    },
+    {
+      "name": "libsquish",
+      "version": "1.15#14"
+    }
+  ]
+}

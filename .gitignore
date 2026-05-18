@@ -2,7 +2,41 @@
 out/**
 temp*/**
 carbon/autobuild/**
-cmake-build*/
 .idea/
 .vscode/*
 .DS_Store
+
+### C++ ###
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+binaryCache/
+*.so
+*.dylib
+*.dll
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyd
+
+### CMake ###
+# User generated local cmake configuration
+CMakeUserPresets.json
+
+.cmake-build*
+cmake-build*

@@ -1,0 +1,181 @@
+name: PR Target Sync
+
+on:
+  push:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  list-prs:
+    runs-on: ubuntu-latest
+    outputs:
+      pr_list: ${{ steps.list_prs.outputs.pr_list }}
+    steps:
+      - name: List Open PRs
+        id: list_prs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PLATFORM_SYNC_COMPONENT_FORKS_TOKEN }}
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+            const prList = pullRequests.map(pr => ({
+              number: pr.number,
+              headRef: pr.head.ref,
+              baseRef: pr.base.ref,
+              headRepo: pr.head.repo.full_name,
+              baseRepo: pr.base.repo.full_name,
+            }));
+            console.log(`PR List: ${JSON.stringify(prList)}`);
+            core.setOutput('pr_list', JSON.stringify(prList));
+
+  process-prs:
+    needs: list-prs
+    runs-on: ubuntu-latest
+    outputs:
+      forks: ${{ steps.filter_prs.outputs.forks }}
+      same_repo: ${{ steps.filter_prs.outputs.same_repo }}
+    steps:
+      - name: Filter PRs Targeting the Updated Branch
+        id: filter_prs
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PLATFORM_SYNC_COMPONENT_FORKS_TOKEN }}
+          script: |
+            const branchUpdated = context.payload.ref.replace('refs/heads/', '');
+            const rawPrList = `${{ needs.list-prs.outputs.pr_list }}`;
+
+            console.log(`Raw PR List: ${rawPrList}`);
+
+            let pullRequests;
+
+            try {
+              pullRequests = JSON.parse(rawPrList);
+              console.log(`Parsed PR List: ${JSON.stringify(pullRequests)}`);
+            } catch (error) {
+              console.error('Error parsing PR list:', error);
+              pullRequests = [];
+            }
+
+            if (pullRequests.length === 0) {
+              console.log('No PRs found in the list.');
+              core.setOutput('forks', '[]');
+              core.setOutput('same_repo', '[]');
+              return;
+            }
+
+            const prsToProcess = pullRequests.filter(pr => pr.baseRef === branchUpdated);
+
+            console.log(`PRs targeting branch ${branchUpdated}: ${JSON.stringify(prsToProcess)}`);
+
+            if (prsToProcess.length === 0) {
+              console.log(`No PRs found targeting the branch: ${branchUpdated}`);
+              core.setOutput('forks', '[]');
+              core.setOutput('same_repo', '[]');
+              return;
+            }
+
+            const forks = [];
+            const sameRepo = [];
+
+            for (const pr of prsToProcess) {
+              if (pr.headRepo === `${context.repo.owner}/${context.repo.repo}`) {
+                sameRepo.push(pr);
+              } else {
+                forks.push(pr);
+              }
+            }
+
+            console.log(`Fork PRs: ${JSON.stringify(forks)}`);
+            console.log(`Same-repo PRs: ${JSON.stringify(sameRepo)}`);
+
+            core.setOutput('forks', JSON.stringify(forks));
+            core.setOutput('same_repo', JSON.stringify(sameRepo));
+
+
+  sync-forks:
+    needs: process-prs
+    if: needs.process-prs.outputs.forks != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pr: ${{ fromJson(needs.process-prs.outputs.forks || '[]') }}
+    steps:
+      - name: Checkout Fork Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ matrix.pr.headRepo }}
+          ref: ${{ matrix.pr.headRef }}
+          fetch-depth: 0
+          token: ${{ secrets.PLATFORM_SYNC_COMPONENT_FORKS_TOKEN }}
+
+      - name: Add Upstream Remote and Fetch All Branches
+        run: |
+          git remote add upstream https://x-access-token:${{ secrets.PLATFORM_SYNC_COMPONENT_FORKS_TOKEN }}@github.com/${{ matrix.pr.baseRepo }}.git
+          git fetch --all --prune
+
+      - name: Configure Committer Identity
+        run: |
+          git config --global user.email "teamcoreexternal@ccpgames.com"
+          git config --global user.name "Platform Automation"
+
+      - name: Merge Parent Branch into Fork Branch
+        run: |
+          echo "Merging base branch '${{ matrix.pr.baseRef }}' into fork branch '${{ matrix.pr.headRef }}'."
+          git checkout ${{ matrix.pr.headRef }}
+          git merge upstream/${{ matrix.pr.baseRef }} --no-edit
+          git push origin ${{ matrix.pr.headRef }}
+
+      - name: Log Merge Result
+        run: |
+          echo "Successfully merged '${{ matrix.pr.baseRef }}' from upstream into '${{ matrix.pr.headRef }}' in fork '${{ matrix.pr.headRepo }}'."
+
+
+  sync-same-repo:
+    needs: process-prs
+    if: needs.process-prs.outputs.same_repo != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pr: ${{ fromJson(needs.process-prs.outputs.same_repo || '[]') }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch All Remote Branches
+        run: |
+          git fetch --all --prune
+
+      - name: Configure Committer Identity
+        run: |
+          git config --global user.email "teamcoreexternal@ccpgames.com"
+          git config --global user.name "Platform Automation"
+
+      - name: Merge Parent Branch into Child Branch
+        run: |
+          echo "Merging parent branch '${{ matrix.pr.baseRef }}' into child branch '${{ matrix.pr.headRef }}'."
+          git checkout ${{ matrix.pr.headRef }}
+          git merge origin/${{ matrix.pr.baseRef }} --no-edit
+          git push origin ${{ matrix.pr.headRef }}
+
+      - name: Log Merge Result
+        run: |
+          echo "Successfully merged '${{ matrix.pr.baseRef }}' into '${{ matrix.pr.headRef }}'."
+
+
+
+
+
+

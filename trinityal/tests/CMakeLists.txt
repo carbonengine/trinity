@@ -117,7 +117,7 @@ set(dxc_ROOT "${BRANCH_ROOT_DIR}/vendor/dxc/v1.7.2212.1")
 
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
-find_package(GTest REQUIRED)
+find_package(GTest CONFIG REQUIRED)
 
 function(set_shared_trinityaltest_properties target)
 
@@ -130,7 +130,7 @@ function(set_shared_trinityaltest_properties target)
     target_compile_definitions(${target} PRIVATE TRINITY_AL_WITH_BLUE_EXPOSURE=0 BLUEBUILD)
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
 
-    target_link_libraries(${target} PRIVATE GTest::GTest GTest::Main)
+    target_link_libraries(${target} PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
 
     if(APPLE)
         file(GLOB_RECURSE _CPP_SOURCES "*.cpp")
@@ -148,7 +148,7 @@ function(set_shared_trinityaltest_properties target)
 
     # override the output directory to ensure that all TrinityALTest outputs end up in the same folder.
     # this is OK because we're differentiating them by OUTPUT_NAME
-    set(output_directory "${CMAKE_SOURCE_DIR}/carbon/autobuild/TrinityALTest/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/$<$<CONFIG:DEBUG>:>")
+    set(output_directory "${CMAKE_BINARY_DIR}/carbon/autobuild/TrinityALTest/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/$<$<CONFIG:DEBUG>:>")
     message(STATUS "Overriding ${target} output directory to ${output_directory}")
     set_target_properties(${target}
         PROPERTIES
@@ -160,83 +160,93 @@ function(set_shared_trinityaltest_properties target)
 endfunction()
 
 if(WIN32)
-    ccp_add_executable(TrinityALTest_dx11 ${_SOURCES})
-    target_link_libraries(TrinityALTest_dx11 PRIVATE TrinityAL_dx11)
-    target_compile_definitions(TrinityALTest_dx11 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX11)
-    set_shared_trinityaltest_properties(TrinityALTest_dx11)
+    if (BUILD_DX11)
+        ccp_add_executable(TrinityALTest_dx11 ${_SOURCES})
+        target_link_libraries(TrinityALTest_dx11 PRIVATE TrinityAL_dx11)
+        target_compile_definitions(TrinityALTest_dx11 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX11)
+        set_shared_trinityaltest_properties(TrinityALTest_dx11)
 
-    #GTest
-    set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
-    #gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
+        #GTest
+        set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
+        #gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
 
-    # Copy DLL dependencies
-    add_custom_command(
-        TARGET TrinityALTest_dx11 POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:TrinityALTest_dx11> $<TARGET_FILE_DIR:TrinityALTest_dx11>
-        COMMAND_EXPAND_LISTS
-    )
-
-    target_sources(TrinityALTest_dx11 PRIVATE ${_SHADERS_DX11})
-    source_group(Shaders FILES ${_SHADERS_DX11})
-
-    foreach(shaderSource ${_SHADERS_DX11})
-        string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
-        if(${shaderSource} MATCHES ".*psh$")
-            set(SHADER_TARGET "/Tps_5_0")
-        elseif(${shaderSource} MATCHES ".*vsh$")
-            set(SHADER_TARGET "/Tvs_5_0")
-        else()
-            set(SHADER_TARGET "/Tcs_5_0")
-        endif()
+        # Copy DLL dependencies
         add_custom_command(
-            OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.metal
-            COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/fxc/fxc.exe /nologo ${SHADER_TARGET} /Fo ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource} 
-            COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
-            MAIN_DEPENDENCY ${shaderSource}
+            TARGET TrinityALTest_dx11 POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:TrinityALTest_dx11> $<TARGET_FILE_DIR:TrinityALTest_dx11>
+            COMMAND_EXPAND_LISTS
         )
-    endforeach()
 
-    ccp_add_executable(TrinityALTest_dx12 ${_SOURCES})
-    target_link_libraries(TrinityALTest_dx12 PRIVATE TrinityAL_dx12)
-    target_compile_definitions(TrinityALTest_dx12 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX12)
-    set_shared_trinityaltest_properties(TrinityALTest_dx12)
+        target_sources(TrinityALTest_dx11 PRIVATE ${_SHADERS_DX11})
+        source_group(Shaders FILES ${_SHADERS_DX11})
 
-    # Copy DLL dependencies
-    add_custom_command(
-        TARGET TrinityALTest_dx12 POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:TrinityALTest_dx12> $<TARGET_FILE_DIR:TrinityALTest_dx12>
-        COMMAND_EXPAND_LISTS
-    )
+        find_program(FXC_TOOL fxc REQUIRED)
 
-    target_sources(TrinityALTest_dx12 PRIVATE ${_SHADERS_DX12})
-    source_group(Shaders FILES ${_SHADERS_DX12})
+        foreach(shaderSource ${_SHADERS_DX11})
+            string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
+            if(${shaderSource} MATCHES ".*psh$")
+                set(SHADER_TARGET "/Tps_5_0")
+            elseif(${shaderSource} MATCHES ".*vsh$")
+                set(SHADER_TARGET "/Tvs_5_0")
+            else()
+                set(SHADER_TARGET "/Tcs_5_0")
+            endif()
+            add_custom_command(
+                OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.metal
+                COMMAND ${FXC_TOOL} /nologo ${SHADER_TARGET} /Fo ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource} 
+                COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
+                MAIN_DEPENDENCY ${shaderSource}
+            )
+        endforeach()
+    endif()
 
-    foreach(shaderSource ${_SHADERS_DX12})
-        string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
-        set(FXC "${CMAKE_CURRENT_SOURCE_DIR}/fxc/fxc.exe")
-        if(${shaderSource} MATCHES ".*psh$")
-            set(SHADER_TARGET "/Tps_5_0")
-        elseif(${shaderSource} MATCHES ".*vsh$")
-            set(SHADER_TARGET "/Tvs_5_0")
-        elseif(${shaderSource} MATCHES ".*csh$")
-            set(SHADER_TARGET "/Tcs_5_0")
-        else()
-            set(FXC "${dxc_ROOT}/bin/${CCP_VENDOR_ARCH_PREFIX}/dxc.exe")
-            set(SHADER_TARGET "/Tlib_6_3")
-        endif()
+    if (BUILD_DX12)
+        ccp_add_executable(TrinityALTest_dx12 ${_SOURCES})
+        target_link_libraries(TrinityALTest_dx12 PRIVATE TrinityAL_dx12)
+        target_compile_definitions(TrinityALTest_dx12 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX12)
+        set_shared_trinityaltest_properties(TrinityALTest_dx12)
+
+        # Copy DLL dependencies
         add_custom_command(
-            OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.metal
-            COMMAND ${FXC} /nologo ${SHADER_TARGET} /Fo ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource} 
-            COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
-            MAIN_DEPENDENCY ${shaderSource}
+            TARGET TrinityALTest_dx12 POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:TrinityALTest_dx12> $<TARGET_FILE_DIR:TrinityALTest_dx12>
+            COMMAND_EXPAND_LISTS
         )
-    endforeach()
 
-    #GTest
-    set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
-    #gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
+        target_sources(TrinityALTest_dx12 PRIVATE ${_SHADERS_DX12})
+        source_group(Shaders FILES ${_SHADERS_DX12})
+
+        find_package(directx-dxc CONFIG REQUIRED)
+        find_program(FXC_TOOL fxc REQUIRED)
+
+        foreach(shaderSource ${_SHADERS_DX12})
+            string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
+            set(FXC "${FXC_TOOL}")
+            if(${shaderSource} MATCHES ".*psh$")
+                set(SHADER_TARGET "/Tps_5_0")
+            elseif(${shaderSource} MATCHES ".*vsh$")
+                set(SHADER_TARGET "/Tvs_5_0")
+            elseif(${shaderSource} MATCHES ".*csh$")
+                set(SHADER_TARGET "/Tcs_5_0")
+            else()
+                set(FXC "${DIRECTX_DXC_TOOL}")
+                set(SHADER_TARGET "/Tlib_6_3")
+            endif()
+            add_custom_command(
+                OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.metal
+                COMMAND ${FXC} /nologo ${SHADER_TARGET} /Fo ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource} 
+                COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
+                MAIN_DEPENDENCY ${shaderSource}
+            )
+        endforeach()
+
+        #GTest
+        set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
+        #gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
+
+    endif()
 
 endif()
 

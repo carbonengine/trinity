@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-find_package(FidelityFX_FSR REQUIRED)
-find_package(FidelityFX REQUIRED)
-find_package(IntelXeSS REQUIRED)
-
 project(TrinityAL VERSION 1.0.0)
 
 set(PUBLIC_HEADER_FILES
@@ -360,13 +356,13 @@ function(set_shared_trinityal_properties targetSuffix)
 
     target_sources(${target} PRIVATE ${_SOURCES})
 
-    find_package(CcpCore REQUIRED NO_CMAKE_PATH)
+    find_package(carbon-core CONFIG REQUIRED)
 
-    target_link_libraries(${target} PUBLIC CcpCore ImageIO)
+    target_link_libraries(${target} PUBLIC CcpCore CcpImageIO)
 
     # override the output directory to ensure that all TrinityAL outputs end up in the same folder.
     # this is OK because we're differentiating them by OUTPUT_NAME
-    set(output_directory "${CMAKE_SOURCE_DIR}/carbon/autobuild/TrinityAL/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/$<$<CONFIG:DEBUG>:>")
+    set(output_directory "${CMAKE_BINARY_DIR}/carbon/autobuild/TrinityAL/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/$<$<CONFIG:DEBUG>:>")
     message(STATUS "Overriding ${target} output directory to ${output_directory}")
     set_target_properties(${target}
         PROPERTIES
@@ -394,59 +390,77 @@ if(WIN32)
     set_shared_trinityal_properties(stub)
 endif()
 
-find_package(ImageIO REQUIRED NO_CMAKE_PATH)
+find_package(carbon-imageio CONFIG REQUIRED)
 
 if(WIN32)
-    find_package(NvidiaAftermath REQUIRED)
-    find_package(NvidiaStreamline REQUIRED)
-    find_package(NvidiaDlssPlugin REQUIRED)
-    find_package(NvidiaNisPlugin REQUIRED)
-    find_package(NvidiaReflexPlugin REQUIRED)
-    find_package(NvidiaPclPlugin REQUIRED)
 
-    ccp_add_library(TrinityAL_dx11 STATIC)
-    target_compile_definitions(TrinityAL_dx11 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX11)
-    target_link_libraries(TrinityAL_dx11 PUBLIC d3d11 
-                                                dxgi
-                                                dxguid
-                                                Nvidia::Aftermath  
-                                                NVIDIA::Streamline 
-                                                NVIDIA::dlss_sl_plugin 
-                                                NVIDIA::nis_sl_plugin 
-                                                AMD::FidelityFX_FSR
-                                                legacy_stdio_definitions)
-    set_shared_trinityal_properties(dx11)
+    if (BUILD_DX11 OR BUILD_DX12)
+        find_package(nvidia-aftermath CONFIG REQUIRED)
+        find_package(nvidia-streamline CONFIG REQUIRED)
+        find_package(nvidia-streamline-dlss-sr CONFIG REQUIRED)
+        find_package(nvidia-streamline-dlss-fg CONFIG REQUIRED)
+        find_package(amd-fidelityfx-fsr REQUIRED)
+        find_package(nvidia-streamline-nis CONFIG REQUIRED)
+    endif()
 
-    ccp_add_library(TrinityAL_dx12 STATIC)
-    target_compile_definitions(TrinityAL_dx12 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX12)
-    target_link_libraries(TrinityAL_dx12 PUBLIC d3d12 
-                                                dxgi 
-                                                dxguid 
-                                                Nvidia::Aftermath  
-                                                NVIDIA::Streamline 
-                                                NVIDIA::dlss_sl_plugin 
-                                                NVIDIA::nis_sl_plugin 
-                                                NVIDIA::reflex_sl_plugin 
-                                                NVIDIA::pcl_sl_plugin 
-                                                AMD::FidelityFX 
-                                                AMD::FidelityFX_FSR
-                                                INTEL::xess)
-    set_shared_trinityal_properties(dx12)
+    if (BUILD_DX11)
+    
+        ccp_add_library(TrinityAL_dx11 STATIC)
+        target_compile_definitions(TrinityAL_dx11 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX11)
+        target_link_libraries(TrinityAL_dx11 PUBLIC d3d11 
+                                                    dxgi
+                                                    dxguid
+                                                    NVIDIA::Aftermath  
+                                                    NVIDIA::Streamline 
+                                                    NVIDIA::Streamline::dlss-sr
+                                                    NVIDIA::Streamline::dlss-fg
+                                                    NVIDIA::Streamline::nis 
+                                                    AMD::FidelityFX::fsr
+                                                    legacy_stdio_definitions)
+        set_shared_trinityal_properties(dx11)
+    endif()
+
+    if (BUILD_DX12)
+
+        find_package(amd-fidelityfx REQUIRED)
+        find_package(intel-xess REQUIRED)
+        find_package(nvidia-streamline-reflex CONFIG REQUIRED)
+
+        ccp_add_library(TrinityAL_dx12 STATIC)
+        target_compile_definitions(TrinityAL_dx12 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX12)
+        target_link_libraries(TrinityAL_dx12 PUBLIC d3d12 
+                                                    dxgi 
+                                                    dxguid 
+                                                    NVIDIA::Aftermath  
+                                                    NVIDIA::Streamline 
+                                                    NVIDIA::Streamline::dlss-sr
+                                                    NVIDIA::Streamline::dlss-fg
+                                                    NVIDIA::Streamline::nis 
+                                                    NVIDIA::Streamline::reflex 
+                                                    AMD::FidelityFX 
+                                                    AMD::FidelityFX::fsr
+                                                    INTEL::Xess)
+        set_shared_trinityal_properties(dx12)
+    endif()
+
 elseif(APPLE)
-    enable_language(OBJCXX)
-    ccp_add_library(TrinityAL_metal STATIC)
-    target_compile_definitions(TrinityAL_metal PUBLIC TRINITY_PLATFORM=TRINITY_METAL)
-    set_shared_trinityal_properties(metal)
-    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework MetalFX" "-framework IOKit" "-framework QuartzCore" AMD::FidelityFX_FSR)
-    #[[
-        FIXME because we're mixing objective-c++ and c++ headers in our precompiled headers then we need to force
-        one specific language for macOS. This can be fixed once we revisit our usage of precompiled headers, which is
-        still very MSVC specific.
-    ]]
-    set(_CPP_SOURCES ${_SOURCES})
-    list(FILTER _CPP_SOURCES INCLUDE REGEX "\.cpp")
-    set_source_files_properties(${_CPP_SOURCES} PROPERTIES LANGUAGE OBJCXX)
-    target_compile_options(TrinityAL_metal PRIVATE "-fobjc-arc")
+    
+    if(BUILD_METAL)
+        enable_language(OBJCXX)
+        ccp_add_library(TrinityAL_metal STATIC)
+        target_compile_definitions(TrinityAL_metal PUBLIC TRINITY_PLATFORM=TRINITY_METAL)
+        set_shared_trinityal_properties(metal)
+        target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework MetalFX" "-framework IOKit" "-framework QuartzCore" AMD::FidelityFX::FSR)
+        #[[
+            FIXME because we're mixing objective-c++ and c++ headers in our precompiled headers then we need to force
+            one specific language for macOS. This can be fixed once we revisit our usage of precompiled headers, which is
+            still very MSVC specific.
+        ]]
+        set(_CPP_SOURCES ${_SOURCES})
+        list(FILTER _CPP_SOURCES INCLUDE REGEX "\.cpp")
+        set_source_files_properties(${_CPP_SOURCES} PROPERTIES LANGUAGE OBJCXX)
+        target_compile_options(TrinityAL_metal PRIVATE "-fobjc-arc")
+    endif()
 else()
     message(FATAL_ERROR "Unsupported trinity platform, only stub would be available!")
 endif()

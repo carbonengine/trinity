@@ -6,7 +6,9 @@
 #endif
 
 #ifdef _WIN32
-#define NOMINMAX //don't want that evil microsoft macro
+#ifndef NOMINMAX
+	#define NOMINMAX //don't want that evil microsoft macro
+#endif
 #include <windows.h> 
 #endif
 

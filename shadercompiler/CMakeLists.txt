@@ -87,24 +87,15 @@ option(WITH_TELEMETRY "Enable integration with Tracy profiler" ${TELEMETRY_DEFAU
 
 option(WITH_DXC "Enable DXC Compiler" ${DXC_DEFAULT})
 
-
-if (WIN32)
-    set(LemonPath ${Lemon_ROOT}/${CCP_VENDOR_BIN_PATH}lemon.bat)
-    set(Re2cPath ${re2c_ROOT}/${CCP_VENDOR_BIN_PATH}re2c.exe)
-elseif (APPLE)
-    set(LemonPath ${Lemon_ROOT}/${CCP_VENDOR_BIN_PATH}lemon.sh)
-    set(Re2cPath ${re2c_ROOT}/${CCP_VENDOR_BIN_PATH}re2c)
-endif()
-
-get_filename_component(SHADER_COMPILER_BRANCH_PREFIX $ENV{CCP_EVE_PERFORCE_BRANCH_PATH} ABSOLUTE)
+find_program(RE2C re2c REQUIRED)
+find_program(LEMON lemon REQUIRED)
+get_filename_component(LEMON_ROOT "${LEMON}" DIRECTORY)
 
 if (WIN32)
     if(WITH_DXC)
-        set(dxc_ROOT "${SHADER_COMPILER_BRANCH_PREFIX}/vendor/dxc/v1.7.2212.1")
-        find_package(dxc REQUIRED)
+        find_package(directx-dxc CONFIG REQUIRED)
     endif()
 endif()
-
 
 function(configure_shader_compiler target)
 
@@ -141,27 +132,41 @@ function(configure_shader_compiler target)
 
     set_source_files_properties(${GENERATED_SOURCES_DIR}/HLSLParser.c ${GENERATED_SOURCES_DIR}/Preprocessor.c PROPERTIES LANGUAGE CXX )
 
+    # Matching historical setup that previously used .bat and .sh files to run Lemon that would
+    # Force the return value to always be 0 and therefore pass even if Lemon returned non-zero result
+    # At time of writing, omitting this will fail the build as lemon returns an issue.
+    # It would be best if the issue was addressed so that issues are not masked by this mechanism.
+    if(WIN32)
+        set(FORCE_ZERO_RETURN_FROM_LEMON "exit /b 0")
+    elseif(APPLE)
+        set(FORCE_ZERO_RETURN_FROM_LEMON "true")
+    else()
+        message(FATAL "Unsupported Platform")
+    endif()
 
     add_custom_command(
+        COMMENT "Lemon: Generate HLSLParser.c & HLSLParser.h"
         OUTPUT ${GENERATED_SOURCES_DIR}/HLSLParser.c ${GENERATED_SOURCES_DIR}/HLSLParser.h
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}
-        COMMAND ${LemonPath} -d${GENERATED_SOURCES_DIR} -T${Lemon_ROOT}/include/lempar.c ${CMAKE_CURRENT_SOURCE_DIR}/HLSLParser.y
+        COMMAND cmd /c "${LEMON} -d${GENERATED_SOURCES_DIR} -T${LEMON_ROOT}/lempar.c ${CMAKE_CURRENT_SOURCE_DIR}/HLSLParser.y || ${FORCE_ZERO_RETURN_FROM_LEMON}"
         DEPENDS lempar.c
         MAIN_DEPENDENCY HLSLParser.y
     )
 
     add_custom_command(
+        COMMENT "Lemon: Generate Preprocessor.c & Preprocessor.h"
         OUTPUT ${GENERATED_SOURCES_DIR}/Preprocessor.c ${GENERATED_SOURCES_DIR}/Preprocessor.h
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}
-        COMMAND ${LemonPath} -d${GENERATED_SOURCES_DIR} -T${CMAKE_CURRENT_SOURCE_DIR}/preprocessorLempar.c ${CMAKE_CURRENT_SOURCE_DIR}/Preprocessor.y
+        COMMAND cmd /c "${LEMON} -d${GENERATED_SOURCES_DIR} -T${CMAKE_CURRENT_SOURCE_DIR}/preprocessorLempar.c ${CMAKE_CURRENT_SOURCE_DIR}/Preprocessor.y || ${FORCE_ZERO_RETURN_FROM_LEMON}"
         DEPENDS preprocessorLempar.c
         MAIN_DEPENDENCY Preprocessor.y
     )
 
     add_custom_command(
+        COMMENT "Re2c: Generate HLSLScanner.cpp"
         OUTPUT ${GENERATED_SOURCES_DIR}/HLSLScanner.cpp
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}
-        COMMAND ${Re2cPath} -o ${GENERATED_SOURCES_DIR}/HLSLScanner.cpp ${CMAKE_CURRENT_SOURCE_DIR}/HLSLScanner.re
+        COMMAND ${RE2C} -o ${GENERATED_SOURCES_DIR}/HLSLScanner.cpp ${CMAKE_CURRENT_SOURCE_DIR}/HLSLScanner.re
         MAIN_DEPENDENCY HLSLScanner.re
     )
 
@@ -179,7 +184,7 @@ function(configure_shader_compiler target)
             d3dcompiler.lib
             d3d11.lib
             dxguid.lib
-            dxc
+            Microsoft::DirectXShaderCompiler
         )
         target_compile_options(${target} PRIVATE /W4)
 
@@ -209,42 +214,75 @@ add_executable(ShaderCompiler)
 
 configure_shader_compiler(ShaderCompiler)
 
+# Install rules
+if (INSTALL_TO_MONOLITH)
 
-# Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
-install(
-    TARGETS ShaderCompiler
-    EXPORT ShaderCompilerTargets
-    CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
-    LIBRARY DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-    ARCHIVE DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-    RUNTIME DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-)
-if (WIN32)
-    install(FILES $<TARGET_PDB_FILE:ShaderCompiler> DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/ OPTIONAL)
+    # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
+    install(
+        TARGETS ShaderCompiler
+        EXPORT ShaderCompilerTargets
+        CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+        LIBRARY DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+        ARCHIVE DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+        RUNTIME DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+    )
+    if (WIN32)
+        install(FILES $<TARGET_PDB_FILE:ShaderCompiler> DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/ OPTIONAL)
+    endif()
+
+    install(FILES ${PUBLIC_HEADER_FILES} DESTINATION shadercompiler/include)
+
+    message(STATUS "lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/")
+
+    configure_ccp_vendor_config_file(
+        TARGET ShaderCompiler
+        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/ShaderCompilerConfig.cmake"
+        DEPENDENCIES ""
+    )
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ShaderCompilerConfig.cmake DESTINATION shadercompiler/.)
+
+    # Install python package
+    install(DIRECTORY python/ DESTINATION shadercompiler/python
+    FILES_MATCHING
+    PATTERN "*.py")
+
+    # Install python build script
+    install(DIRECTORY pythonBuildScript/ DESTINATION shadercompiler/pythonBuildScript
+    FILES_MATCHING
+    PATTERN "*.py")
+
+else() # VCPKG install mode
+
+    install(
+        TARGETS ShaderCompiler
+        EXPORT ShaderCompilerTargets
+        CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+    )
+
+    install(EXPORT ShaderCompilerTargets
+            DESTINATION share/carbon-shadercompiler
+            FILE carbon-shadercompilerConfig.cmake
+        )
+
+    if (WIN32)
+        install(FILES $<TARGET_PDB_FILE:ShaderCompiler> DESTINATION bin OPTIONAL)
+    endif()
+
+    install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
+
+    # Install python package
+    install(DIRECTORY python/ DESTINATION shadercompiler/python
+    FILES_MATCHING
+    PATTERN "*.py")
+
+    # Install python build script
+    install(DIRECTORY pythonBuildScript/ DESTINATION shadercompiler/pythonBuildScript
+    FILES_MATCHING
+    PATTERN "*.py")
+
 endif()
-
-# Install rule for available public headers
-install(FILES ${PUBLIC_HEADER_FILES} DESTINATION shadercompiler/include)
-
-message(STATUS "lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/")
-
-configure_ccp_vendor_config_file(
-    TARGET ShaderCompiler
-    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/ShaderCompilerConfig.cmake"
-    DEPENDENCIES ""
-)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ShaderCompilerConfig.cmake DESTINATION shadercompiler/.)
-
-# Install python package
-install(DIRECTORY python/ DESTINATION shadercompiler/python
- FILES_MATCHING
- PATTERN "*.py")
-
-# Install python build script
-install(DIRECTORY pythonBuildScript/ DESTINATION shadercompiler/pythonBuildScript
- FILES_MATCHING
- PATTERN "*.py")
-
  
 option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
 message(STATUS " BUILD_TESTING VALUE IS ${BUILD_TESTING}")

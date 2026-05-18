@@ -18,7 +18,9 @@
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
-#define NOMINMAX //don't want that evil microsoft macro
+#ifndef NOMINMAX
+	#define NOMINMAX //don't want that evil microsoft macro
+#endif
 #include <windows.h> 
 
 // for CComPtr support

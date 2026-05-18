@@ -1,0 +1,49 @@
+{
+  "default-registry": {
+    "kind": "git",
+    "baseline": "242ac6932a9cd2607332969129e9572516f28d65",
+    "repository": "https://github.com/microsoft/vcpkg.git"
+  },
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "git@github.com:ccpgames/carbon-vcpkg-registry.git",
+      "baseline": "bf6e077d3d724a859c85ac6cbfdec9b48e40cf6a",
+      "packages": ["carbon-pdmprotowrapper",
+                   "carbon-pdm",
+                   "carbon-blueexposure",
+                   "carbon-blue",
+                   "carbon-exefile",
+                   "carbon-exefile-interpreter",
+                   "carbon-io",
+                   "carbon-math",
+                   "carbon-trinityaudioapi",
+                   "fxc",
+                   "granny",
+                   "carbon-parser",
+                   "carbon-imageio"]
+    },
+    {
+      "kind": "git",
+      "repository": "git@github.com:carbonengine/vcpkg-registry.git",
+      "baseline": "bcc6d146b99547f6654310495730e4cbba9ca7c3",
+      "packages": ["python3", 
+                   "carbon-core", 
+                   "carbon-scheduler",
+                   "tracy",
+                   "greenlet",
+                   "ccp-debug-info",
+                   "crashpad",
+                   "zlib",
+                   "re2c",
+                   "amd-fidelityfx",
+                   "amd-fidelityfx-cacao",
+                   "amd-fidelityfx-cas",
+                   "amd-fidelityfx-fsr",
+                   "intel-xess",
+                   "nvidia-aftermath",
+                   "nvidia-streamline",
+                   "openvdb"]
+    }
+  ]
+}
