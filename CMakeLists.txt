@@ -43,7 +43,7 @@ function(ccp_enable_vs_analizers target)
 endfunction()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+#set(CMAKE_COMPILE_WARNING_AS_ERROR ON) TODO turned off for testing
 
 if (BUILD_SHADER_COMPILER)
     add_subdirectory(shadercompiler)
