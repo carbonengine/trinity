@@ -697,6 +697,12 @@ set(_SOURCES
     Eve/UI/EveLineSet.cpp
     Eve/UI/EveLineSet.h
     Eve/UI/EveLineSet_Blue.cpp
+    Eve/UI/EveEllipseDefinition.cpp
+    Eve/UI/EveEllipseDefinition.h
+    Eve/UI/EveEllipseDefinition_Blue.cpp
+    Eve/UI/EveEllipseSet.cpp
+    Eve/UI/EveEllipseSet.h
+    Eve/UI/EveEllipseSet_Blue.cpp
     Eve/UI/EveProjectBracket.cpp
     Eve/UI/EveProjectBracket.h
     Eve/UI/EveProjectBracket_Blue.cpp
