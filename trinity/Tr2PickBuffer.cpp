@@ -74,7 +74,7 @@ bool Tr2PickBuffer::EndRendering( Tr2RenderContext& renderContext )
 }
 
 // ------------------------------------------------------------------------------------------------------
-bool Tr2PickBuffer::PrepareGetResults( const void*& data, uint32_t& pitch, Tr2RenderContext& renderContext )
+bool Tr2PickBuffer::MapForReading( bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -84,12 +84,12 @@ bool Tr2PickBuffer::PrepareGetResults( const void*& data, uint32_t& pitch, Tr2Re
 		return false;
 	}
 
-	HRESULT hr = m_pickTarget.MapForReading( Tr2TextureSubresource( 0 ), data, pitch, renderContext );
+	HRESULT hr = m_pickTarget.MapForReading( Tr2TextureSubresource( 0 ), synchronize, data, pitch, renderContext );
 
 	return SUCCEEDED( hr );
 }
 
-void Tr2PickBuffer::UnlockBuffer( Tr2RenderContext& renderContext )
+void Tr2PickBuffer::UnmapForReading( Tr2RenderContext& renderContext )
 {
 	if( !m_pickTarget.IsValid() )
 	{

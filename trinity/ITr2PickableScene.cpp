@@ -115,10 +115,10 @@ void ITr2PickableScene::PickObject( Tr2RenderContext& renderContext, int x, int 
 
 				const void* data;
 				uint32_t pitch;
-				if( pickBuffer.PrepareGetResults( data, pitch, renderContext ) )
+				if( pickBuffer.MapForReading( true, data, pitch, renderContext ) )
 				{
 					DecodeBufferPixel( data, passes[i], buffer );
-					pickBuffer.UnlockBuffer( renderContext );
+					pickBuffer.UnmapForReading( renderContext );
 
 					results.components |= passes[i];
 
