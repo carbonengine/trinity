@@ -29,6 +29,12 @@ std::string TriSettings::GetSettingReprString( const TriSettings::Setting* s )
 			sprintf_s( buff, "%d", d );
 		}
 		break;
+	case Be::CSTRING:
+		{
+			const char* string = *(const char**)s->m_var;
+			sprintf_s( buff, "'%s'", string ? string : "" );
+		}
+		break;
 	default:
 		sprintf_s( buff, "NOT IMPLEMENTED YET! DO IT!" );
 		break;

@@ -179,7 +179,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_enableShadows( true ),
 	m_visualizeMethod( VM_NONE ),
 	m_perFrameDebug( 0.f ),
-	m_pickBuffer( NULL, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1 ),
 	m_envMapRotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_backgroundRenderingEnabled( false ),
 	m_updateContext( 0 ),
@@ -269,8 +268,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_ambientColor = Color( 0.25f, 0.25f, 0.25f, 1.0f );
 	m_fogColor = Color( 0.25f, 0.25f, 0.25f, 1.0f );
 	m_fogEnd = m_fogStart = m_fogMax = 0.0f;
-
-	m_pickBuffer.PrepareResources();
 
 	m_updateTime = BeOS->GetCurrentFrameTime();
 
@@ -3508,19 +3505,87 @@ void EveSpaceScene::OnListModified(
 	}
 }
 
-IRoot* EveSpaceScene::PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter )
+namespace
 {
-	unsigned int id;
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return PickObjectAndArea( x, y, proj, view, viewport, id, filter, renderContext );
+void DecodeMainPickPixel( const void* pBuffer, uint32_t& objId, uint32_t& areaId )
+{
+	// helpers: get each channel
+	uint32_t b = (uint32_t)( *( (unsigned char*)pBuffer + 0 ) );
+	uint32_t g = (uint32_t)( *( (unsigned char*)pBuffer + 1 ) );
+	uint32_t r = (uint32_t)( *( (unsigned char*)pBuffer + 2 ) );
+	uint32_t a = (uint32_t)( *( (unsigned char*)pBuffer + 3 ) );
+
+	// put it "together"
+	objId = ( ( r & 0xff ) << 8 ) | ( g & 0xff );
+	objId--;
+	areaId = ( ( b & 0xff ) << 8 ) | ( a & 0xff );
+	areaId--;
+}
 }
 
-IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, unsigned int& areaID, Tr2PickTypes pickTypes, Tr2RenderContext& renderContext )
+
+
+IRoot* EveSpaceScene::PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	uint32_t areaID;
+	return PickObjectAndArea( x, y, proj, view, viewport, areaID, pickTypes, renderContext );
+}
+
+IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
+{
+	EvePickingContextPtr listener;
+	listener.CreateInstance();
+
+	PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
+
+	areaID = listener->GetArea();
+	return listener->GetObject();
+}
+
+IRoot* EveSpaceScene::PickAsyncObject( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	uint32_t areaID;
+	return PickAsyncObjectAndArea( listener, x, y, proj, view, viewport, areaID, pickTypes, renderContext );
+}
+
+IRoot* EveSpaceScene::PickAsyncObjectAndArea( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
+{
+	if( !listener )
+	{
+		areaID = 0;
+		return nullptr;
+	}
+
+	PerformPicking( listener, false, x, y, proj, view, viewport, pickTypes, renderContext );
+
+	areaID = listener->GetArea();
+	return listener->GetObject();
+}
+
+void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
 {
 	if( !renderContext.IsValid() )
 	{
-		return nullptr;
+		return;
 	}
+
+	float fx, fy;
+	Vector3 startWorld;
+	Vector3 dirWorld;
+	gTriDev->ScreenToProjection( x, y, &fx, &fy, viewport );
+
+	// Get view and projection transforms
+	Matrix projTransform;
+	proj->GetMatrixWithoutViewAdjustment( projTransform );
+	const Matrix& viewTransform = view->GetTransform();
+
+	ConvertProjectionCoordToWorldPickRay( fx, fy, &projTransform, &viewTransform, &startWorld, &dirWorld );
+
+	EvePendingPickingReadback& readback = *listener->m_readbacks.emplace_back( std::make_unique<EvePendingPickingReadback>( x, y ) );
+
+
 
 	// Backup current state
 	Tr2Renderer::PushProjection();
@@ -3530,44 +3595,22 @@ IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriV
 	renderContext.m_esm.PushViewport();
 	ON_BLOCK_EXIT( [&] { renderContext.m_esm.PopViewport(); } );
 
-	float fx, fy;
-	Vector3 startWorld;
-	Vector3 dirWorld;
-	gTriDev->ScreenToProjection( x, y, &fx, &fy, viewport );
-	IRoot* result = NULL;
-
-	// Get view and projection transforms
-	Matrix projTransform;
-	proj->GetMatrixWithoutViewAdjustment( projTransform );
-	const Matrix& viewTransform = view->GetTransform();
-
-	ConvertProjectionCoordToWorldPickRay( fx, fy, &projTransform, &viewTransform, &startWorld, &dirWorld );
-
-	float dist = HUGE_NUMBER;
-
 	// Render for picking, limit our view to the pick ray
 	SetupTransformsForPicking( fx, fy, proj, view, viewport, renderContext );
 
 
-	Tr2DebugObjectReference gizmo = nullptr;
-	float gizmoDepth = 0;
 	if( m_debugRenderer )
 	{
-		gizmo = m_debugRenderer->Pick( gizmoDepth, renderContext );
-		if( gizmo )
-		{
-			result = gizmo.m_object;
-			areaID = gizmo.m_area;
-			return result;
-		}
+		m_debugRenderer->Pick( readback, immediate, renderContext );
 	}
 
-	// Find objects inside our 1-by-1 pick frustum
-	std::vector<std::pair<ITr2Pickable*, ITr2Renderable*>> collisionSet;
 	std::vector<ITr2Renderable*> visibleObjects;
 	GetPickingObjectsToRender( visibleObjects );
 
-	// Collect vector of objects to render
+
+	std::vector<std::pair<ITr2PickablePtr, ITr2Renderable*>>& collisionSet = readback.m_collisionSet;
+	collisionSet.reserve( visibleObjects.size() );
+
 	for( std::vector<ITr2Renderable*>::const_iterator it = visibleObjects.begin(); it != visibleObjects.end(); ++it )
 	{
 		ITr2PickablePtr pickedObj( BlueCastPtr( *it ) );
@@ -3593,9 +3636,11 @@ IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriV
 
 		if( !batches.empty() )
 		{
-			m_instancedMeshManager->GetPickingBatches( m_updateContext.GetFrustum(), CreatePickingFrustum(), m_updateContext.GetInvLodFactor(), uint32_t( collisionSet.size() ), batches );
+			m_instancedMeshManager->GetPickingBatches( readback, m_updateContext.GetFrustum(), CreatePickingFrustum(), m_updateContext.GetInvLodFactor(), uint32_t( collisionSet.size() ), batches );
 		}
 	}
+
+	Tr2PickBuffer& pickBuffer = readback.m_mainPickBuffer;
 
 	if( !collisionSet.empty() || m_pickingBatches->GetBatchCount() > 0 )
 	{
@@ -3605,22 +3650,15 @@ IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriV
 		renderContext.m_esm.BeginManagedRendering();
 		ON_BLOCK_EXIT( [&] { renderContext.m_esm.EndManagedRendering(); } );
 
-		CR_RETURN_VAL( Tr2Renderer::BeginRenderContext(), nullptr );
+		CR_RETURN( Tr2Renderer::BeginRenderContext() );
 		ON_BLOCK_EXIT( [&] { Tr2Renderer::EndRenderContext(); } );
 
-		float initialDepth = ( dist - Tr2Renderer::GetFrontClip() ) / ( Tr2Renderer::GetBackClip() - Tr2Renderer::GetFrontClip() );
-		initialDepth = std::max( 0.0f, std::min( 1.0f, initialDepth ) );
+		pickBuffer.PrepareResources();
 
-		unsigned short objId = 0xffff;
-		unsigned short aId = 0xffff;
-
-		if( m_pickBuffer.BeginRendering( std::max( gizmoDepth, 1 - initialDepth ), renderContext ) )
+		if( pickBuffer.BeginRendering( 0.0f, renderContext ) )
 		{
 			for( unsigned int i = 0; i < collisionSet.size(); i++ )
 			{
-				// We cannot rely on the object data to be up-to-date because this would assume that all
-				// objects in the picked list were rendered on the previous frame and that is tooooo much of an assumption.
-				// <halldor 2008-04-23>
 
 				ITr2Renderable* renderable = collisionSet[i].second;
 				ITr2Pickable* pickable = collisionSet[i].first;
@@ -3648,34 +3686,93 @@ IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriV
 
 			m_pickingBatches->Finalize();
 
-			if( m_pickingBatches != NULL )
-			{
-				renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
-				renderContext.RenderBatchesForPicking( m_pickingBatches, BlueSharedString( "Picking" ) );
-			}
+			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
+			renderContext.RenderBatchesForPicking( m_pickingBatches, BlueSharedString( "Picking" ) );
 
-			if( m_pickBuffer.EndRendering( renderContext ) )
-			{
-				GetPickingResults( m_pickBuffer, renderContext, objId, aId, dist );
-			}
+			pickBuffer.EndRendering( renderContext );
 
 			m_pickingBatches->Clear();
-		}
 
-		if( objId < collisionSet.size() )
-		{
-			result = collisionSet[objId].first->GetID( aId );
-			areaID = aId;
-		}
-		else
-		{
-			auto picked = m_instancedMeshManager->GetPickedObject( objId, aId );
-			result = picked.first;
-			areaID = picked.second;
+			readback.MapMain( immediate, renderContext );
 		}
 	}
 
-	return result;
+	readback.m_frameIndex = immediate ? 0u : renderContext.GetRecordingFrameNumber();
+
+	while( !listener->m_readbacks.empty() )
+	{
+		EvePendingPickingReadback& readback = *listener->m_readbacks[0];
+		if( readback.m_frameIndex >= renderContext.GetRenderedFrameNumber() )
+		{
+			break;
+		}
+
+		IRootPtr object = nullptr;
+		uint32_t area = 0;
+
+		if( readback.m_debugPickData )
+		{
+			const float* pixels = static_cast<const float*>( readback.m_debugPickData );
+			uint32_t index = uint32_t( pixels[0] + 0.5f ) - 1;
+			bool isLine = pixels[1] != 0;
+
+			if( isLine )
+			{
+				if( index < readback.m_debugLineObjects.size() )
+				{
+					Tr2DebugObjectReference debugObject = readback.m_debugLineObjects[index];
+					object = debugObject.m_object;
+					area = debugObject.m_area;
+				}
+			}
+			else
+			{
+				if( index < readback.m_debugTriangleObjects.size() )
+				{
+					Tr2DebugObjectReference debugObject = readback.m_debugTriangleObjects[index];
+					object = debugObject.m_object;
+					area = debugObject.m_area;
+				}
+			}
+		}
+		if( object == nullptr && readback.m_mainPickData )
+		{
+			uint32_t objectID;
+			uint32_t areaID;
+			DecodeMainPickPixel( readback.m_mainPickData, objectID, areaID );
+
+			if( objectID < readback.m_collisionSet.size() )
+			{
+				object = readback.m_collisionSet[objectID].first->GetID( areaID );
+				area = areaID;
+			}
+			else
+			{
+				if( immediate )
+				{
+					auto picked = m_instancedMeshManager->GetPickedObject( objectID, areaID );
+					object = picked.first;
+					area = picked.second;
+				}
+				else
+				{
+					uint32_t instanceIndex = objectID - (uint32_t)readback.m_collisionSet.size();
+					if( instanceIndex < readback.m_instancedTraceback.size() )
+					{
+						std::pair<IRootPtr, uint32_t> traceback = readback.m_instancedTraceback[instanceIndex];
+						object = traceback.first;
+						uint32_t instanceID = 0; //Not supported for async queries yet, as it is very hard to reconstruct.
+						uint32_t ownerIndex = traceback.second;
+						area = instanceID | (ownerIndex << 16);
+					}
+				}
+			}
+		}
+
+		readback.Unmap( renderContext );
+		listener->UpdateResult( readback.m_pickedX, readback.m_pickedY, object, area );
+		listener->m_readbacks.erase( listener->m_readbacks.begin() );
+	}
 }
 
 
@@ -3900,33 +3997,6 @@ void EveSpaceScene::SetupPlanetsAsShadowCaster( Tr2RenderContext& renderContext 
 	m_planetPerObjData.planetSphere[1] = Vector4( planets[1].center, planets[1].radius );
 	m_planetPerObjBuffer->SetData( (void*)&m_planetPerObjData, sizeof( m_planetPerObjData ) );
 	m_planetPerObjBuffer->ApplyBuffer( renderContext );
-}
-
-void EveSpaceScene::GetPickingResults( Tr2PickBuffer& pickBuffer, Tr2RenderContext& renderContext, unsigned short& objId, unsigned short& areaId, float& depth )
-{
-	const void* data;
-	uint32_t pitch;
-	if( pickBuffer.PrepareGetResults( data, pitch, renderContext ) )
-	{
-		DecodeBufferPixel( data, objId, areaId, depth );
-		pickBuffer.UnlockBuffer( renderContext );
-	}
-}
-
-void EveSpaceScene::DecodeBufferPixel( const void* pBuffer, unsigned short& objId, unsigned short& areaId, float& depth ) const
-{
-	// helpers: get each channel
-	unsigned int a = (unsigned int)( *( (unsigned char*)pBuffer + 3 ) );
-	unsigned int r = (unsigned int)( *( (unsigned char*)pBuffer + 2 ) );
-	unsigned int g = (unsigned int)( *( (unsigned char*)pBuffer + 1 ) );
-	unsigned int b = (unsigned int)( *( (unsigned char*)pBuffer + 0 ) );
-	// put it "together"
-	objId = (unsigned short)( ( ( r & 0xff ) << 8 ) | ( g & 0xff ) );
-	objId--;
-	areaId = (unsigned short)( ( ( b & 0xff ) << 8 ) | ( a & 0xff ) );
-	areaId--;
-	// sorry, no depth anymore
-	depth = 0.f;
 }
 
 bool EveSpaceScene::IsMeshUnloadingEnabled()
