@@ -96,7 +96,6 @@ PyObject* PyPickObjectAndAreaID( PyObject* self, PyObject* args )
 
 
 
-
 const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveSpaceScene, "" )
@@ -400,7 +399,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"PickObject",
 			PickObject,
 			1,
-			"Given mouse position and a view setup, returns the object that the mouse is over\n"
+			"Given a position and a view setup, returns the object at that point on the screen.\n"
+			"This function is slow. It can be used intermittently when up-to-date results are needed (e.g. mouse clicks), but should not be called too often.\n"
 			"returns <Object> or None if nothing pickable was hit by the ray\n"
 			":param x: integer x coordinate of the mouse over the viewport\n"
 			":param y: integer y coordinate of the mouse over the viewport\n"
@@ -412,7 +412,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		MAP_METHOD(
 			"PickObjectAndAreaID",
 			PyPickObjectAndAreaID,
-			"Given mouse position and a view setup, returns the object that the mouse is over, as well as an additional value depending on what has been clicked\n"
+			"Given a position and a view setup, returns the object at that point on the screen, as well as an additional value depending on what has been clicked.\n"
+			"This function is slow. It can be used intermittently when up-to-date results are needed (e.g. mouse clicks), but should not be called too often.\n"
 			"returns (<Object>,<AreaID>) or None if nothing pickable was hit by the ray\n"
 			":param x: integer x coordinate of the mouse over the viewport\n"
 			":type x: int\n"
@@ -425,6 +426,22 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			":param viewport: The TriViewport of the viewport to use to pick into the scene\n"
 			":type viewport: int\n"
 			":rtype: None | (IRoot, long)\n" )
+
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"PickAsyncObject",
+			PickAsyncObject,
+			1,
+			"Given a position and a view setup, returns the object at that point on the screen.\n"
+			"This function is fast, but returns information that is 1-2 calls old. It is intended to be called every tick/update/frame with the same context.\n"
+			"It is perfect for repeated polling (e.g. mouse hovering), but should not be used when accurate data is needed immediately (e.g. mouse clicks).\n"
+			"returns <Object> or None if nothing pickable was hit by the ray\n"
+			":param picking_context: the persistent context used to do the picking\n"
+			":param x: integer x coordinate of the mouse over the viewport\n"
+			":param y: integer y coordinate of the mouse over the viewport\n"
+			":param projection: The TriProjection to use to pick into the scene\n"
+			":param view: The TriView to use to pick into the scene\n"
+			":param viewport: The TriViewport of the viewport to use to pick into the scene\n"
+			":param filter: Bitfield of pickable object types" )
 
 		MAP_METHOD_AND_WRAP(
 			"UpdateScene",
