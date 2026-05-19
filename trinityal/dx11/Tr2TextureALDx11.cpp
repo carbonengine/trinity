@@ -798,8 +798,11 @@ namespace TrinityALImpl
 		return m_cpuUsage;
 	}
 
-	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
+
+		//Note: synchronize is ignored on DX11, as the current code needs significant refactoring to support asynchronous mapping.
+
 		data = nullptr;
 		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
 		{
@@ -850,7 +853,6 @@ namespace TrinityALImpl
 			}
 		}
 
-		//renderContext.m_context->CopyResource( m_staging, m_texture );
 		if( region.HasBox() )
 		{
 			D3D11_BOX box = { region.m_box.left, region.m_box.top, region.m_box.front, region.m_box.right, region.m_box.bottom, region.m_box.back };
