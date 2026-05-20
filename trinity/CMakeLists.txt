@@ -16,7 +16,6 @@ set(PUBLIC_HEADER_FILES
     Include/ITr2AnimationUpdater.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
-    Include/ITr2DebugRenderer2.h
     Include/ITr2GpuBuffer.h
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
@@ -817,7 +816,6 @@ set(_SOURCES
     Include/ITr2AnimationUpdater.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
-    Include/ITr2DebugRenderer2.h
     Include/ITr2GpuBuffer.h
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
