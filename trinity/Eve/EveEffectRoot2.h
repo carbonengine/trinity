@@ -3,7 +3,6 @@
 #ifndef EveEffectRoot2_h
 #define EveEffectRoot2_h
 
-#include "include/ITriFunction.h"
 #include "IWorldPosition.h"
 #include "EveTransform.h"
 #include "EveLODHelper.h"
@@ -19,6 +18,8 @@
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Lights/ITr2LightOwner.h"
 #include "EveEntity.h"
+
+#include <ITriFunction.h>
 
 BLUE_DECLARE( Tr2Light );
 BLUE_DECLARE_VECTOR( Tr2Light );

@@ -41,7 +41,6 @@
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "Shader/Parameter/Tr2Vector4Parameter.h"
 #include "Shader/Parameter/Tr2FloatParameter.h"
-#include "include/ITriFunction.h"
 #include "Curves/Tr2CurveQuaternion.h"
 #include "Curves/Tr2CurveScalar.h"
 #include "Curves/TriCurveSet.h"
@@ -59,6 +58,8 @@
 #include "BlueObjectMetadata.h"
 #include "ITr2TextureProvider.h"
 #include "TriSettingsRegistrar.h"
+
+#include <ITriFunction.h>
 
 bool g_alphaCutoutShadowsEnabled = false; // alpha cutout refers to TRIBATCHTYPE_DECAL
 TRI_REGISTER_SETTING( "alphaCutoutShadowsEnabled", g_alphaCutoutShadowsEnabled );

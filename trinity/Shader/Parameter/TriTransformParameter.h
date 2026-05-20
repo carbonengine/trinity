@@ -3,7 +3,8 @@
 #define TriTransformParameter_H
 
 #include "include/ITriEffectParameter.h"
-#include "include/ITriConstants.h"
+
+#include <ITriConstants.h>
 
 
 BLUE_DECLARE( TriTransformParameter );

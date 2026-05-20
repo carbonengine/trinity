@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include "Include/ITriFunction.h"
-
+#include <ITriFunction.h>
 
 BLUE_CLASS( Tr2CurveRandomAxisRotation ): public ITriQuaternionFunction, public IInitialize
 {

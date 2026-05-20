@@ -8,8 +8,9 @@
 #ifndef EveProjectBracket_h
 #define EveProjectBracket_h
 
-#include "include/ITriFunction.h"
 #include "IWorldPosition.h"
+
+#include <ITriFunction.h>
 
 BLUE_DECLARE( EveProjectBracket );
 BLUE_DECLARE( Tr2Sprite2dContainer );

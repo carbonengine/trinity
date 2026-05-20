@@ -8,11 +8,12 @@
 #ifndef AudioGameObject_h
 #define AudioGameObject_h
 
-#include "include/ITriFunction.h"
 #include "IWorldPosition.h"
 #include "EveTransform.h"
 #include "IEveSpaceObject2.h"
 #include "Include/ITr2DebugRenderer2.h"
+
+#include <ITriFunction.h>
 #include <ITr2AudEmitter.h>
 
 BLUE_DECLARE_INTERFACE( ITr2AudEmitter );

@@ -4,9 +4,10 @@
 
 #pragma once
 
-#include "Include/ITriFunction.h"
-#include "Include/ITriCurveLength.h"
 #include "Tr2CurveScalar.h"
+
+#include <ITriFunction.h>
+#include <ITriCurveLength.h>
 
 BLUE_DECLARE_INTERFACE( ITriVectorFunction );
 BLUE_DECLARE_IVECTOR( ITriVectorFunction );

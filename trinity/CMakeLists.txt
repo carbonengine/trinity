@@ -25,14 +25,10 @@ set(PUBLIC_HEADER_FILES
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h
     Include/ITriColor.h
-    Include/ITriConstants.h
-    Include/ITriCurveLength.h
     Include/ITriDevice.h
     Include/ITriDuration.h
     Include/ITriEffectParameter.h
-    Include/ITriFunction.h
     Include/ITriMatrix.h
-    Include/ITriObserverLocal.h
     Include/ITriQuaternion.h
     Include/ITriTargetable.h
     Include/ITriTextureRes.h
@@ -830,14 +826,10 @@ set(_SOURCES
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h
     Include/ITriColor.h
-    Include/ITriConstants.h
-    Include/ITriCurveLength.h
     Include/ITriDevice.h
     Include/ITriDuration.h
     Include/ITriEffectParameter.h
-    Include/ITriFunction.h
     Include/ITriMatrix.h
-    Include/ITriObserverLocal.h
     Include/ITriQuaternion.h
     Include/ITriTargetable.h
     Include/ITriTextureRes.h

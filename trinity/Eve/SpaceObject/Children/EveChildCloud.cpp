@@ -8,13 +8,14 @@
 #include "EveChildCloud.h"
 #include "TriFrustum.h"
 #include "TriRenderBatch.h"
-#include "include/ITriFunction.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
 #include "Tr2PerObjectData.h"
 #include "EveCloudEditableVolume.h"
 #include "Eve/EveUpdateContext.h"
 #include "Tr2Renderer.h"
+
+#include <ITriFunction.h>
 
 
 using namespace Tr2RenderContextEnum;

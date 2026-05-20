@@ -9,7 +9,8 @@
 
 #include "Eve/IEveSpaceObject2.h"
 #include "Tr2QuadRenderer.h"
-#include "include/ITriFunction.h"
+
+#include <ITriFunction.h>
 
 BLUE_DECLARE( Tr2Effect );
 

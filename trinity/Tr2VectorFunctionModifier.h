@@ -5,7 +5,7 @@
 //
 #pragma once
 
-#include "include/ITriFunction.h"
+#include <ITriFunction.h>
 
 BLUE_DECLARE( Tr2VectorFunctionModifier );
 

@@ -3,8 +3,9 @@
 #include "TriValueBinding.h"
 #include <ICurveSetDriver.h>
 #include "include/ITriDuration.h"
-#include "include/ITriFunction.h"
-#include "include/ITriCurveLength.h"
+
+#include <ITriFunction.h>
+#include <ITriCurveLength.h>
 
 Tr2CurveSetRange::Tr2CurveSetRange( IRoot* )
 	:m_startTime( 0 ),

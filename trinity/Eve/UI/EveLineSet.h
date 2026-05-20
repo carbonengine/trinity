@@ -6,9 +6,9 @@
 #include "ITr2Renderable.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/IEveTransform.h"
-#include "include/ITriFunction.h"
-
 #include "Tr2DeviceResource.h"
+
+#include <ITriFunction.h>
 
 BLUE_DECLARE( EveLineSet );
 BLUE_DECLARE( Tr2Effect );

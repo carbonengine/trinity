@@ -2,8 +2,9 @@
 #ifndef TRIOBSERVERLOCAL_H
 #define TRIOBSERVERLOCAL_H
 
-#include "include/ITriObserverLocal.h"
 #include "Tr2DebugRenderer.h"
+
+#include <ITriObserverLocal.h>
 
 
 struct Vector3;

@@ -4,8 +4,10 @@
 
 
 #include "TriEventKey.h"
-#include "include/ITriFunction.h"
-#include "include/ITriCurveLength.h"
+
+#include <ITriFunction.h>
+#include <ITriConstants.h>
+#include <ITriCurveLength.h>
 
 BLUE_DECLARE( TriEventCurve );
 

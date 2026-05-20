@@ -10,9 +10,10 @@
 #include "Eve/IEveSpaceObject2.h"
 #include "ITr2Renderable.h"
 #include "TriFrustum.h"
-#include "include/ITriFunction.h"
 
 #include "Eve/SpaceObject/EveShip2.h"
+
+#include <ITriFunction.h>
 
 
 BLUE_DECLARE( EveSwarm );

@@ -2,8 +2,8 @@
 #ifndef Tr2QuaternionLerpCurve_h
 #define Tr2QuaternionLerpCurve_h
 
-#include "include/ITriFunction.h"
-#include "include/ITriCurveLength.h"
+#include <ITriFunction.h>
+#include <ITriCurveLength.h>
 
 class Tr2QuaternionLerpCurve :
     public ITriQuaternionFunction,

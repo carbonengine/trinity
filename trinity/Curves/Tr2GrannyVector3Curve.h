@@ -2,9 +2,10 @@
 #ifndef Tr2GrannyVector3Curve_h
 #define Tr2GrannyVector3Curve_h
 
-#include "include/ITriFunction.h"
-#include "include/ITriCurveLength.h"
 #include "Tr2GRNMemoryPersist.h"
+
+#include <ITriFunction.h>
+#include <ITriCurveLength.h>
 
 
 BLUE_CLASS( Tr2GrannyVector3Curve ):

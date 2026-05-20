@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "Include/ITriFunction.h"
 #include "Tr2FollowCurveKey.h"
+
+#include <ITriFunction.h>
 
 BLUE_DECLARE_IVECTOR( ITr2FollowCurveKey );
 

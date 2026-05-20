@@ -7,10 +7,11 @@
 #pragma once
 
 #include "Include/ITr2Updateable.h"
-#include "Include/ITriFunction.h"
 #include "ITr2ControllerAction.h"
 #include "Controllers/Tr2BindingPoint.h"
 #include "Controllers/Tr2ControllerExpression.h"
+
+#include <ITriFunction.h>
 
 
 BLUE_DECLARE( Tr2ExpressionTermInfo );

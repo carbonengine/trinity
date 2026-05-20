@@ -12,7 +12,6 @@
 #include "ITr2Renderable.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "IWorldPosition.h"
-#include "include/ITriFunction.h"
 #include "Eve/IEveTransform.h"
 #include "Utilities/Vector3d.h"
 #include "Tr2PersistentPerObjectData.h"
@@ -39,6 +38,7 @@
 #include "Tr2RingBuffer.h"
 #include <ITr2AudGeometry.h>
 
+#include <ITriFunction.h>
 #include <atomic>
 
 

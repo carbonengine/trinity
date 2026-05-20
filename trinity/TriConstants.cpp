@@ -3,7 +3,7 @@
 
 #include "TriConstants.h"
 
-#include "include/ITriConstants.h"
+#include <ITriConstants.h>
 
 using namespace Tr2RenderContextEnum;
 

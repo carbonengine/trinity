@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "Include/ITriFunction.h"
+#include <ITriFunction.h>
 
 BLUE_CLASS( Tr2RotationAdapter ) : public ITriQuaternionFunction
 {

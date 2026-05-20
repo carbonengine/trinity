@@ -7,7 +7,6 @@
 #include "EveLensflare.h"
 
 #include "include/TriMath.h"
-#include "Include/ITriFunction.h"
 #include "TriFrustum.h"
 #include "Tr2VariableStore.h"
 #include "Tr2GpuBuffer.h"
@@ -18,6 +17,8 @@
 #include "Tr2Mesh.h"
 #include "Controllers/ITr2Controller.h"
 #include "Shader/Tr2Effect.h"
+
+#include <ITriFunction.h>
 
 
 
