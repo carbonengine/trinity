@@ -4,7 +4,7 @@
 
 #include "Tr2DeviceResource.h"
 #include "include/Rect.h"
-#include "include/ITr2DebugRenderer2.h"
+#include <ITr2DebugRenderer2.h>
 
 class TriDebugTextRenderer : public Tr2DeviceResource
 {

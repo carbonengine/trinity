@@ -7,7 +7,8 @@
 
 #include "StdAfx.h"
 #include "Tr2ParticleSpring.h"
-#include "../Include/ITr2DebugRenderer2.h"
+
+#include <ITr2DebugRenderer2.h>
 
 Tr2ParticleSpring::Tr2ParticleSpring( IRoot* lockobj ) :
 	m_springConstant( 0.0f ),

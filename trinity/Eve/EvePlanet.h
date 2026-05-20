@@ -7,7 +7,8 @@
 #include "Tr2ShLightingManager.h"
 #include "SpaceObject/Children/EveChildMesh.h"
 #include "EveEffectRoot2.h"
-#include "include/ITr2DebugRenderer2.h"
+
+#include <ITr2DebugRenderer2.h>
 
 BLUE_DECLARE( EvePlanet );
 BLUE_DECLARE_VECTOR( EvePlanet );

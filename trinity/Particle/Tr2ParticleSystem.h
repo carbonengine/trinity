@@ -11,7 +11,8 @@
 #include "include/ITr2InstanceData.h"
 #include "include/ITr2GpuBuffer.h"
 #include "ITr2GenericEmitter.h"
-#include "../Include/ITr2DebugRenderer2.h"
+
+#include <ITr2DebugRenderer2.h>
 
 BLUE_DECLARE_INTERFACE( ITr2ParticleForce );
 BLUE_DECLARE_IVECTOR( ITr2ParticleForce );

@@ -9,7 +9,8 @@
 
 #include "IEveSpaceObjectChild.h"
 #include "EveChildTransform.h"
-#include "Include/ITr2DebugRenderer2.h"
+
+#include <ITr2DebugRenderer2.h>
 #include <ITr2AudEmitter.h>
 
 // Forward declarations and smart pointer typedefs

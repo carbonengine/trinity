@@ -6,7 +6,8 @@
 
 #include "StdAfx.h"
 #include "Tr2ParticleAttractorForce.h"
-#include "../Include/ITr2DebugRenderer2.h"
+
+#include <ITr2DebugRenderer2.h>
 
 Tr2ParticleAttractorForce::Tr2ParticleAttractorForce( IRoot* lockobj ):
 	m_magnitude( 1.f ),

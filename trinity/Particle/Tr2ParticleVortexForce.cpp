@@ -6,7 +6,8 @@
 
 #include "StdAfx.h"
 #include "Tr2ParticleVortexForce.h"
-#include "../Include/ITr2DebugRenderer2.h"
+
+#include <ITr2DebugRenderer2.h>
 
 Tr2ParticleVortexForce::Tr2ParticleVortexForce( IRoot* lockobj ):
 	m_magnitude( 1.f ),

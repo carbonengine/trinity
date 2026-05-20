@@ -7,7 +7,8 @@
 
 #include "StdAfx.h"
 #include "Tr2ParticleDirectForce.h"
-#include "../Include/ITr2DebugRenderer2.h"
+
+#include <ITr2DebugRenderer2.h>
 
 Tr2ParticleDirectForce::Tr2ParticleDirectForce( IRoot* lockobj ):
 	m_force( 1.f, 1.f, 1.f )

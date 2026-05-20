@@ -8,7 +8,7 @@
 
 #include "TriDebugTextRenderer.h"
 #include "Tr2PickBuffer.h"
-#include "Include/ITr2DebugRenderer2.h"
+#include <ITr2DebugRenderer2.h>
 #include "TriDebugTextRenderer.h"
 
 BLUE_CLASS( Tr2DebugRenderer ) :

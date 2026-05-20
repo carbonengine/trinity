@@ -10,7 +10,8 @@
 #include "Tr2ParticleSystem.h"
 #include "ITr2GenericEmitter.h"
 #include "TbbStub.h"
-#include "../Include/ITr2DebugRenderer2.h"
+
+#include <ITr2DebugRenderer2.h>
 
 // --------------------------------------------------------------------------------------
 // Description:
