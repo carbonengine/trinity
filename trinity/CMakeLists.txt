@@ -1977,7 +1977,7 @@ elseif(APPLE)
         set_source_files_properties(${_CPP_SOURCES} PROPERTIES LANGUAGE OBJCXX)
         set_source_files_properties(UI/Scancodes.mm PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
-        target_compile_options(trinity_metal
+        target_compile_options(CcpTrinity_metal
             PRIVATE
                 "-fobjc-arc"
                 # disabling these warnings is temporary so that we don't drown in them
