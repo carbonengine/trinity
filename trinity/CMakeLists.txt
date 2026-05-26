@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 project(trinity VERSION 1.0.0)
 
 find_package(unofficial-libsquish CONFIG REQUIRED)
-find_package(intel-xess REQUIRED)
 find_package(amd-fidelityfx-cas CONFIG REQUIRED)
 find_package(amd-fidelityfx-cacao CONFIG REQUIRED)
 find_package(TBB CONFIG REQUIRED)
