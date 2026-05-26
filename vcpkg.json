@@ -46,7 +46,7 @@
     },
     {
       "name": "granny",
-      "version>=": "2.12.0.14"
+      "version>=": "2.12.0.14#1"
     },
     {
       "name": "carbon-pdmprotowrapper",

@@ -8,7 +8,7 @@
     {
       "kind": "git",
       "repository": "git@github.com:ccpgames/carbon-vcpkg-registry.git",
-      "baseline": "a481f79c82cdbe351c30b97770336b25cceaac23",
+      "baseline": "cb052b64b2b536e685959a8438bac22981d85c91",
       "packages": ["carbon-pdmprotowrapper",
                    "carbon-pdm",
                    "carbon-blueexposure",
