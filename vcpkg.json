@@ -165,6 +165,10 @@
       "description": "Create Metal targets",
       "supports": "osx",
       "dependencies": [
+        {
+          "name": "amd-fidelityfx-fsr",
+          "version>=": "1.0.2"
+        }
       ]
     }
   },

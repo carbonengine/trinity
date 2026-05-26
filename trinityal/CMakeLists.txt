@@ -446,6 +446,8 @@ if(WIN32)
 elseif(APPLE)
     
     if(BUILD_METAL)
+        find_package(amd-fidelityfx-fsr REQUIRED)
+
         enable_language(OBJCXX)
         ccp_add_library(TrinityAL_metal STATIC)
         target_compile_definitions(TrinityAL_metal PUBLIC TRINITY_PLATFORM=TRINITY_METAL)
