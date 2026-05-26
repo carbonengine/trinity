@@ -857,6 +857,10 @@ IRoot* EveChildMesh::GetID( uint16_t )
 
 void EveChildMesh::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData )
 {
+	if( ( pickTypes & PICK_TYPE_PICKING ) != 0 )
+	{
+		GetBatches( batches, TRIBATCHTYPE_PICKING, perObjectData );
+	}
 	if( ( pickTypes & PICK_TYPE_OPAQUE ) != 0 )
 	{
 		GetBatches( batches, TRIBATCHTYPE_OPAQUE, perObjectData );

@@ -962,7 +962,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourceP
 
 	if( !m_useNewBloom )
 	{
-		m_bloomHighPassFilter->SetParameter( MEMOIZED_STRING( "LuminanceThreshold" ), bloom->m_luminanceThreshold );
+		m_bloomHighPassFilter->SetParameter( MEMOIZED_STRING( "LuminanceThreshold" ), std::max( 0.0f, bloom->m_luminanceThreshold ) );
 		m_bloomHighPassFilter->SetParameter( MEMOIZED_STRING( "LuminanceScale" ), bloom->m_luminanceScale );
 		m_bloomHighPassFilter->SetParameter( MEMOIZED_STRING( "ExposureDependency" ), exposureDependant ? 1.0f : 0.0f );
 		auto rt1 = gpuResourcePool.GetTempTexture( "Bloom", TextureSize2D( dest->GetDesc() ) * 0.5f, dest->GetFormat(), RENDER_TARGET );

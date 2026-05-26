@@ -40,3 +40,4 @@ CMakeUserPresets.json
 
 .cmake-build*
 cmake-build*
+.claude/*

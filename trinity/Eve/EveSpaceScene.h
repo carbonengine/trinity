@@ -25,6 +25,7 @@
 #include "PostProcess/ITr2PostProcessOwner.h"
 #include "../Tr2VolumetricsRenderer.h"
 #include "../Tr2RuntimeGpuBuffer.h"
+#include "EvePicking.h"
 
 #include <ITriFunction.h>
 
@@ -93,6 +94,8 @@ BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
 
 class EveInstancedMeshManager;
 
+
+
 BLUE_CLASS( EveSpaceScene ) :
 	public ITr2Scene,
 	public IInitialize,
@@ -107,9 +110,6 @@ public:
 	~EveSpaceScene();
 
 	static bool IsMeshUnloadingEnabled();
-
-	IRoot* PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
-	IRoot* PickObjectAndArea( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, unsigned int& areaID, Tr2PickTypes pickTypes, Tr2RenderContext& renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Scene
@@ -353,9 +353,6 @@ public:
 	void SetupPlanetsAsShadowCaster( CcpMath::Sphere* planets, size_t maxPlanets );
 	void SetupPlanetsAsShadowCaster( Tr2RenderContext & renderContext );
 
-	void GetPickingResults( Tr2PickBuffer & pickBuffer, Tr2RenderContext & renderContext, unsigned short& objId, unsigned short& areaId, float& depth );
-	void DecodeBufferPixel( const void* pBuffer, unsigned short& objId, unsigned short& areaId, float& depth ) const;
-
 	// Batch gathering and preparation
 	void GetAllBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, bool includeDistortions, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	void GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
@@ -427,7 +424,6 @@ protected:
 	// Utility batches.
 	std::vector<TriPoolAllocator> m_shadowAllocators;
 	std::vector<std::unique_ptr<ITriRenderBatchAccumulator>> m_shadowBatches;
-	ITriRenderBatchAccumulator* m_pickingBatches;
 
 	Tr2EffectPtr m_backgroundEffect;
 
@@ -542,11 +538,28 @@ protected:
 	// Cascaded shadows
 	ShadowResources SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap & shadowMap, const TriFrustum& viewFrustum, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
+
 	// Picking
+
+	ITriRenderBatchAccumulator* m_pickingBatches;
+
 	void SetupTransformsForPicking( float fx, float fy, TriProjection* proj,  TriView* view, TriViewport* viewport, Tr2RenderContext& renderContext );
 	void GetPickingObjectsToRender( std::vector<ITr2Renderable*> & pickableRenderObjects );
 
-	Tr2PickBuffer m_pickBuffer;
+	
+
+public:
+	IRoot* PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
+	IRoot* PickObjectAndArea( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
+
+	IRoot* PickAsyncObject( EvePickingContext * listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
+	IRoot* PickAsyncObjectAndArea( EvePickingContext * listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
+
+	void PerformPicking( EvePickingContext * listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
+
+
+	
+protected:
 	EveStarfieldPtr m_starfield;
 
 	struct VisualizerEffect

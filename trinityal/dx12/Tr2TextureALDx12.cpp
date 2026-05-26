@@ -1486,7 +1486,7 @@ namespace TrinityALImpl
 		m_mappedScratch = m_writeScratches.end();
 	}
 
-	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
 		if( !IsValid() )
 		{
@@ -1534,12 +1534,15 @@ namespace TrinityALImpl
 		renderContext.ResourceBarrierDx12( Transition( texture, D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
 		FlushBarriersMaybe( *this, renderContext );
 
-		auto hr = renderContext.FlushAndSyncDx12();
-		if( FAILED( hr ) )
+		if( synchronize )
 		{
-			RELEASE_LATER( m_owner, scratch );
-			scratch = nullptr;
-			return hr;
+			auto hr = renderContext.FlushAndSyncDx12();
+			if( FAILED( hr ) )
+			{
+				RELEASE_LATER( m_owner, scratch );
+				scratch = nullptr;
+				return hr;
+			}
 		}
 
 		CR_RETURN_HR( scratch->Map( 0, nullptr, (void**)&data ) );

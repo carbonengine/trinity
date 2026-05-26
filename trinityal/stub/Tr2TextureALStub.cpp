@@ -135,7 +135,7 @@ namespace TrinityALImpl
 		return m_cpuUsage;
 	}
 
-	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
 		data = nullptr;
 		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
