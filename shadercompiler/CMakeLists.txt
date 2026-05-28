@@ -136,10 +136,15 @@ function(configure_shader_compiler target)
     # Force the return value to always be 0 and therefore pass even if Lemon returned non-zero result
     # At time of writing, omitting this will fail the build as lemon returns an issue.
     # It would be best if the issue was addressed so that issues are not masked by this mechanism.
+    # Once issue has been resolved then this can all be simplified
     if(WIN32)
         set(FORCE_ZERO_RETURN_FROM_LEMON "exit /b 0")
+        set(CMD "cmd")
+        set(CMD_ARG "/c")
     elseif(APPLE)
         set(FORCE_ZERO_RETURN_FROM_LEMON "true")
+        set(CMD "bash")
+        set(CMD_ARG "-c")
     else()
         message(FATAL "Unsupported Platform")
     endif()
@@ -148,7 +153,7 @@ function(configure_shader_compiler target)
         COMMENT "Lemon: Generate HLSLParser.c & HLSLParser.h"
         OUTPUT ${GENERATED_SOURCES_DIR}/HLSLParser.c ${GENERATED_SOURCES_DIR}/HLSLParser.h
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}
-        COMMAND cmd /c "${LEMON} -d${GENERATED_SOURCES_DIR} -T${LEMON_ROOT}/lempar.c ${CMAKE_CURRENT_SOURCE_DIR}/HLSLParser.y || ${FORCE_ZERO_RETURN_FROM_LEMON}"
+        COMMAND ${CMD} ${CMD_ARG} "${LEMON} -d${GENERATED_SOURCES_DIR} -T${LEMON_ROOT}/lempar.c ${CMAKE_CURRENT_SOURCE_DIR}/HLSLParser.y || ${FORCE_ZERO_RETURN_FROM_LEMON}"
         DEPENDS lempar.c
         MAIN_DEPENDENCY HLSLParser.y
     )
@@ -157,7 +162,7 @@ function(configure_shader_compiler target)
         COMMENT "Lemon: Generate Preprocessor.c & Preprocessor.h"
         OUTPUT ${GENERATED_SOURCES_DIR}/Preprocessor.c ${GENERATED_SOURCES_DIR}/Preprocessor.h
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}
-        COMMAND cmd /c "${LEMON} -d${GENERATED_SOURCES_DIR} -T${CMAKE_CURRENT_SOURCE_DIR}/preprocessorLempar.c ${CMAKE_CURRENT_SOURCE_DIR}/Preprocessor.y || ${FORCE_ZERO_RETURN_FROM_LEMON}"
+        COMMAND ${CMD} ${CMD_ARG} "${LEMON} -d${GENERATED_SOURCES_DIR} -T${CMAKE_CURRENT_SOURCE_DIR}/preprocessorLempar.c ${CMAKE_CURRENT_SOURCE_DIR}/Preprocessor.y || ${FORCE_ZERO_RETURN_FROM_LEMON}"
         DEPENDS preprocessorLempar.c
         MAIN_DEPENDENCY Preprocessor.y
     )
