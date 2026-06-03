@@ -1,13 +1,30 @@
 cmake_minimum_required(VERSION 3.16)
 project(trinity VERSION 1.0.0)
 
-find_package(unofficial-libsquish CONFIG REQUIRED)
-find_package(amd-fidelityfx-cas CONFIG REQUIRED)
-find_package(amd-fidelityfx-cacao CONFIG REQUIRED)
-find_package(TBB CONFIG REQUIRED)
-find_package(VulkanHeaders CONFIG) # Required for VulkanMemoryAllocator
-find_package(VulkanMemoryAllocator CONFIG REQUIRED)
-find_package(carbon-trinityaudioapi CONFIG REQUIRED)
+if(BUILD_FOR_PYTHON_2)
+    find_package(libSquish REQUIRED)
+    add_library(unofficial::libsquish::squish ALIAS SQUISH::SQUISH)
+    find_package(FidelityFX_CAS REQUIRED)
+    add_library(AMD::FidelityFX::CAS ALIAS AMD::FidelityFX_CAS)
+    find_package(CACAO REQUIRED)
+    add_library(AMD::FidelityFX::CACAO ALIAS AMD::CACAO)
+    find_package(IntelTBB REQUIRED)
+    add_library(TBB::tbb ALIAS Intel::TBB)
+    add_library(TBB::tbbmalloc INTERFACE IMPORTED)
+    add_library(TBB::tbbmalloc_proxy INTERFACE IMPORTED)
+    find_package(VMA REQUIRED)
+    add_library(GPUOpen::VulkanMemoryAllocator ALIAS GPUOpen::VMA)
+    find_package(CarbonTrinityAudioAPI REQUIRED)
+    add_library(CcpTrinityAudioAPI ALIAS CarbonTrinityAudioAPI)
+else()
+    find_package(unofficial-libsquish CONFIG REQUIRED)
+    find_package(amd-fidelityfx-cas CONFIG REQUIRED)
+    find_package(amd-fidelityfx-cacao CONFIG REQUIRED)
+    find_package(TBB CONFIG REQUIRED)
+    find_package(VulkanHeaders CONFIG) # Required for VulkanMemoryAllocator
+    find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+    find_package(carbon-trinityaudioapi CONFIG REQUIRED)
+endif()
 
 set(PUBLIC_HEADER_FILES
     Include/IEveBallpark.h
@@ -41,6 +58,13 @@ set(PUBLIC_HEADER_FILES
     Include/TriQuaternion.h
     Include/TriVector.h
 )
+
+if(BUILD_FOR_PYTHON_2)
+    # This is only needed for py2 as the file now belongs in blue.
+    # Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+    # The file version in the older blue versions had diverged from this one is incompatible.
+    list(APPEND PUBLIC_HEADER_FILES Include/ITr2DebugRenderer2.h)
+endif()
 
 set(_SOURCES
     Audio/Tr2AudioStretchAuto.cpp
@@ -1774,6 +1798,13 @@ set(_SOURCES
     version.h
 )
 
+if(BUILD_FOR_PYTHON_2)
+    # This is only needed for py2 as the file now belongs in blue.
+    # Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+    # The file version in the older blue versions had diverged from this one is incompatible.
+    list(APPEND _SOURCES Include/ITr2DebugRenderer2.h)
+endif()
+
 # Ensure that we have a sane file grouping for XCode and VS project files
 if(CMAKE_GENERATOR STREQUAL "Xcode" OR CMAKE_GENERATOR MATCHES "Visual Studio.*")
     source_group(
@@ -1783,15 +1814,28 @@ if(CMAKE_GENERATOR STREQUAL "Xcode" OR CMAKE_GENERATOR MATCHES "Visual Studio.*"
     )
 endif()
 
-find_package(Freetype REQUIRED)
-find_package(granny CONFIG REQUIRED)
-find_package(carbon-pdmprotowrapper CONFIG REQUIRED)
-find_package(carbon-blue CONFIG REQUIRED)
-find_package(carbon-math CONFIG REQUIRED)
-find_package(carbon-imageio CONFIG REQUIRED)
-find_package(carbon-parser CONFIG REQUIRED)
-find_package(carbon-trinityaudioapi CONFIG REQUIRED)
-find_package(PNG CONFIG REQUIRED)
+if(BUILD_FOR_PYTHON_2)
+    find_package(Freetype REQUIRED NO_CMAKE_PATH)
+    find_package(Granny REQUIRED NO_CMAKE_PATH)
+    find_package(PDM REQUIRED NO_CMAKE_PATH)
+    add_library(platform_pdm_proto_wrapper ALIAS PDM::PDM)
+    find_package(Blue REQUIRED NO_CMAKE_PATH)
+    find_package(CcpMath REQUIRED NO_CMAKE_PATH)
+    find_package(ImageIO REQUIRED NO_CMAKE_PATH)
+    add_library(CcpImageIO ALIAS ImageIO)
+    find_package(CcpParser REQUIRED NO_CMAKE_PATH)
+    #find_package(CarbonTrinityAudioAPI REQUIRED NO_CMAKE_PATH)
+else()
+    find_package(Freetype REQUIRED)
+    find_package(granny CONFIG REQUIRED)
+    find_package(carbon-pdmprotowrapper CONFIG REQUIRED)
+    find_package(carbon-blue CONFIG REQUIRED)
+    find_package(carbon-math CONFIG REQUIRED)
+    find_package(carbon-imageio CONFIG REQUIRED)
+    find_package(carbon-parser CONFIG REQUIRED)
+    #find_package(carbon-trinityaudioapi CONFIG REQUIRED)
+    find_package(PNG CONFIG REQUIRED)
+endif()
 
 # utility function that sets properties shared between all trinity targets
 function(set_shared_trinity_properties target package_name)
@@ -1839,6 +1883,13 @@ function(set_shared_trinity_properties target package_name)
             TBB_ENABLED=1
             DEPRECATED_ENABLED=1
     )
+
+    if(BUILD_FOR_PYTHON_2)
+        target_compile_definitions(${target}
+        PRIVATE
+            BLUE_USE_LOCAL_ITr2DebugRenderer2=1
+    )
+    endif()
 
     # override the output directory to ensure that all TrinityAL outputs end up in the same folder.
     # this is OK because we're differentiating them by OUTPUT_NAME

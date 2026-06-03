@@ -87,13 +87,28 @@ option(WITH_TELEMETRY "Enable integration with Tracy profiler" ${TELEMETRY_DEFAU
 
 option(WITH_DXC "Enable DXC Compiler" ${DXC_DEFAULT})
 
-find_program(RE2C re2c REQUIRED)
-find_program(LEMON lemon REQUIRED)
-get_filename_component(LEMON_ROOT "${LEMON}" DIRECTORY)
+
+
+if(BUILD_FOR_PYTHON_2)
+    find_package(re2c CONFIG REQUIRED)
+    find_package(Lemon CONFIG REQUIRED)
+    set(RE2C ${RE2C_PATH})
+    set(LEMON ${LEMON_PATH})
+    set(LEMPAR_ROOT "${Lemon_ROOT}/include/")
+else()
+    find_program(RE2C re2c REQUIRED)
+    find_program(LEMON lemon REQUIRED)
+    get_filename_component(LEMPAR_ROOT "${LEMON}" DIRECTORY)
+endif()
 
 if (WIN32)
     if(WITH_DXC)
-        find_package(directx-dxc CONFIG REQUIRED)
+        if(BUILD_FOR_PYTHON_2)
+            find_package(dxc REQUIRED)
+            add_library(Microsoft::DirectXShaderCompiler ALIAS dxc)
+        else()
+            find_package(directx-dxc CONFIG REQUIRED)
+        endif()
     endif()
 endif()
 
@@ -153,7 +168,7 @@ function(configure_shader_compiler target)
         COMMENT "Lemon: Generate HLSLParser.c & HLSLParser.h"
         OUTPUT ${GENERATED_SOURCES_DIR}/HLSLParser.c ${GENERATED_SOURCES_DIR}/HLSLParser.h
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}
-        COMMAND ${CMD} ${CMD_ARG} "${LEMON} -d${GENERATED_SOURCES_DIR} -T${LEMON_ROOT}/lempar.c ${CMAKE_CURRENT_SOURCE_DIR}/HLSLParser.y||${FORCE_ZERO_RETURN_FROM_LEMON}"
+        COMMAND ${CMD} ${CMD_ARG} "${LEMON} -d${GENERATED_SOURCES_DIR} -T${LEMPAR_ROOT}/lempar.c ${CMAKE_CURRENT_SOURCE_DIR}/HLSLParser.y||${FORCE_ZERO_RETURN_FROM_LEMON}"
         DEPENDS lempar.c
         MAIN_DEPENDENCY HLSLParser.y
     )

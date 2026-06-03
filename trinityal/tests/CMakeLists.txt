@@ -113,8 +113,6 @@ set(_SHADERS_METAL
     Shaders.metal/WriteToUav.psh
 )
 
-set(dxc_ROOT "${BRANCH_ROOT_DIR}/vendor/dxc/v1.7.2212.1")
-
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
 find_package(GTest CONFIG REQUIRED)
@@ -130,8 +128,12 @@ function(set_shared_trinityaltest_properties target)
     target_compile_definitions(${target} PRIVATE TRINITY_AL_WITH_BLUE_EXPOSURE=0 BLUEBUILD)
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
 
-    target_link_libraries(${target} PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
-
+    if(BUILD_FOR_PYTHON_2)
+        target_link_libraries(${target} PRIVATE GTest::GTest GTest::Main)
+    else()
+        target_link_libraries(${target} PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
+    endif()
+    
     if(APPLE)
         file(GLOB_RECURSE _CPP_SOURCES "*.cpp")
         set_source_files_properties(${_CPP_SOURCES} PROPERTIES LANGUAGE OBJCXX)
@@ -180,8 +182,12 @@ if(WIN32)
         target_sources(TrinityALTest_dx11 PRIVATE ${_SHADERS_DX11})
         source_group(Shaders FILES ${_SHADERS_DX11})
 
-        find_program(FXC_TOOL fxc REQUIRED)
-
+        if(BUILD_FOR_PYTHON_2)
+            find_package(fxc CONFIG REQUIRED)
+        else()
+            find_program(FXC_TOOL fxc REQUIRED)
+        endif()
+        
         foreach(shaderSource ${_SHADERS_DX11})
             string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
             if(${shaderSource} MATCHES ".*psh$")
@@ -217,9 +223,15 @@ if(WIN32)
         target_sources(TrinityALTest_dx12 PRIVATE ${_SHADERS_DX12})
         source_group(Shaders FILES ${_SHADERS_DX12})
 
-        find_package(directx-dxc CONFIG REQUIRED)
-        find_program(FXC_TOOL fxc REQUIRED)
-
+        if(BUILD_FOR_PYTHON_2)
+            find_package(dxc CONFIG REQUIRED)
+            set(DIRECTX_DXC_TOOL ${dxc_ROOT}/bin/${CCP_VENDOR_ARCH_PREFIX}/dxc.exe)
+            find_package(fxc CONFIG REQUIRED)
+        else()
+            find_package(directx-dxc CONFIG REQUIRED)
+            find_program(FXC_TOOL fxc REQUIRED)
+        endif()
+        
         foreach(shaderSource ${_SHADERS_DX12})
             string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
             set(FXC "${FXC_TOOL}")
