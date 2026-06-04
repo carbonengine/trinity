@@ -2017,7 +2017,7 @@ elseif(APPLE)
     if(BUILD_METAL)
         enable_language(OBJCXX)
 
-        set(TRINITY_DX12_TARGET_NAME CcpTrinity_metal)
+        set(TRINITY_METAL_TARGET_NAME CcpTrinity_metal)
 
         if(BUILD_FOR_PYTHON_2)
             set(TRINITY_METAL_TARGET_NAME trinity_metal)
