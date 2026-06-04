@@ -27,6 +27,7 @@ public:
 	void UpdateValue( double time );
 
 	void SetEmptyProjection();
+	void UpdateBracket();
 
 protected:
 	std::wstring m_name;
@@ -58,6 +59,14 @@ protected:
 	float m_projectedHeight;
 	float m_cameraDistance;
 	float m_screenMargin;
+
+	bool m_isProjectionValid;
+	bool m_containsCamera;
+	bool m_extendsOffscreen;
+	bool m_coversViewport;
+
+	// An optional callback to call when projectBracket is updated.
+	BlueScriptCallback m_bracketUpdateCallback;
 };
 
 TYPEDEF_BLUECLASS( Tr2ProjectBoundingBoxBracket );

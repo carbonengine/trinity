@@ -135,7 +135,7 @@ bool Tr2InteriorPlaceable::GetWorldBoundingBox( Vector3& min, Vector3& max ) con
 
 bool Tr2InteriorPlaceable::IsBoundingBoxReady( void ) const
 {
-	return( m_placeableRes && m_placeableRes->IsReady() );
+	return m_isBoundingBoxModified || ( m_placeableRes && m_placeableRes->IsReady() );
 }
 
 void Tr2InteriorPlaceable::PrePhysicsUpdate( Be::Time time )

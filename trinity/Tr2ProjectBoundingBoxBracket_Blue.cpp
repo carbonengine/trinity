@@ -12,7 +12,7 @@ BLUE_DEFINE( Tr2ProjectBoundingBoxBracket );
 
 const Be::ClassInfo* Tr2ProjectBoundingBoxBracket::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( Tr2ProjectBoundingBoxBracket, "Projects a 3D bounding box to 2D for brackets \n:jessica-deprecated: True" )
+	EXPOSURE_BEGIN( Tr2ProjectBoundingBoxBracket, "Projects a 3D bounding box to 2D for brackets" )
 		MAP_INTERFACE( ITriFunction )
 		MAP_INTERFACE( Tr2ProjectBoundingBoxBracket )
 		
@@ -136,8 +136,48 @@ const Be::ClassInfo* Tr2ProjectBoundingBoxBracket::ExposeToBlue()
 		(
 			"screenMargin",
 			m_screenMargin,
-			"Brackets are never projected outside the screen - this controls the margin from"
-			"\nthe edges of the screen.",
+			"Deprecated compatibility attribute. Bounding-box brackets are no longer"
+			"\nclamped to a screen margin.",
+			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"isProjectionValid",
+			m_isProjectionValid,
+			"True when the bounding box produced a valid projected rect.",
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"containsCamera",
+			m_containsCamera,
+			"True when the camera is inside the tracked bounding box.",
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"extendsOffscreen",
+			m_extendsOffscreen,
+			"True when the projected rect extends beyond the current viewport.",
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"coversViewport",
+			m_coversViewport,
+			"True when the projected rect covers the current viewport.",
+			Be::READ
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"bracketUpdateCallback",
+			m_bracketUpdateCallback,
+			"An optional callback that is called whenever the bracket projection is updated.",
 			Be::READWRITE
 		)
 
