@@ -30,7 +30,8 @@
       "version>=": "2021.5.0#1"
     },
     {
-      "name": "vulkan-headers"
+      "name": "vulkan-headers",
+      "version>=": "1.4.304.1#1"
     },
     {
       "name": "vulkan-memory-allocator",
