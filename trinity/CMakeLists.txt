@@ -1824,7 +1824,6 @@ if(BUILD_FOR_PYTHON_2)
     find_package(ImageIO REQUIRED NO_CMAKE_PATH)
     add_library(CcpImageIO ALIAS ImageIO)
     find_package(CcpParser REQUIRED NO_CMAKE_PATH)
-    #find_package(CarbonTrinityAudioAPI REQUIRED NO_CMAKE_PATH)
 else()
     find_package(Freetype REQUIRED)
     find_package(granny CONFIG REQUIRED)
@@ -1833,7 +1832,6 @@ else()
     find_package(carbon-math CONFIG REQUIRED)
     find_package(carbon-imageio CONFIG REQUIRED)
     find_package(carbon-parser CONFIG REQUIRED)
-    #find_package(carbon-trinityaudioapi CONFIG REQUIRED)
     find_package(PNG CONFIG REQUIRED)
 endif()
 
@@ -1960,52 +1958,79 @@ FIXME currently the _stub platform does not build on macOS due to "unknown type 
 There are probably more issues because we haven't build the stub project on macOS so far IIRC
 ]]
 if(WIN32)
-    ccp_add_library(CcpTrinity_stub SHARED)
-    target_compile_definitions(CcpTrinity_stub
+    set(TRINITY_STUB_TARGET_NAME CcpTrinity_stub)
+
+    if(BUILD_FOR_PYTHON_2)
+        set(TRINITY_STUB_TARGET_NAME trinity_stub)
+    endif()
+
+    ccp_add_library(${TRINITY_STUB_TARGET_NAME} SHARED)
+    target_compile_definitions(${TRINITY_STUB_TARGET_NAME}
     PRIVATE
         TRINITY_PLATFORM=TRINITY_STUB
         TRINITYNAME=_trinity_stub
     )
 
-    target_link_libraries(CcpTrinity_stub PRIVATE TrinityAL_stub)
-    set_shared_trinity_properties(CcpTrinity_stub carbon-trinity-stub)
+    target_link_libraries(${TRINITY_STUB_TARGET_NAME} PRIVATE TrinityAL_stub)
+    set_shared_trinity_properties(${TRINITY_STUB_TARGET_NAME} carbon-trinity-stub)
 endif()
 
 if(WIN32)
     if (BUILD_DX11)
-        ccp_add_library(CcpTrinity_dx11 SHARED)
-        target_compile_definitions(CcpTrinity_dx11
+
+        set(TRINITY_DX11_TARGET_NAME CcpTrinity_dx11)
+
+        if(BUILD_FOR_PYTHON_2)
+            set(TRINITY_DX11_TARGET_NAME trinity_dx11)
+        endif()
+
+        ccp_add_library(${TRINITY_DX11_TARGET_NAME} SHARED)
+        target_compile_definitions(${TRINITY_DX11_TARGET_NAME}
             PRIVATE
                 TRINITY_PLATFORM=TRINITY_DIRECTX11
                 TRINITYNAME=_trinity_dx11
         )
         #find_package(nvidia-aftermath CONFIG REQUIRED)#Required for dx11
-        target_link_libraries(CcpTrinity_dx11 PRIVATE TrinityAL_dx11)
-        set_shared_trinity_properties(CcpTrinity_dx11 carbon-trinity-dx11)
+        target_link_libraries(${TRINITY_DX11_TARGET_NAME} PRIVATE TrinityAL_dx11)
+        set_shared_trinity_properties(${TRINITY_DX11_TARGET_NAME} carbon-trinity-dx11)
     endif()
 
     if (BUILD_DX12)
-        ccp_add_library(CcpTrinity_dx12 SHARED)
-        target_compile_definitions(CcpTrinity_dx12
+
+        set(TRINITY_DX12_TARGET_NAME CcpTrinity_dx12)
+
+        if(BUILD_FOR_PYTHON_2)
+            set(TRINITY_DX12_TARGET_NAME trinity_dx12)
+        endif()
+
+        ccp_add_library(${TRINITY_DX12_TARGET_NAME} SHARED)
+        target_compile_definitions(${TRINITY_DX12_TARGET_NAME}
             PRIVATE
                 TRINITY_PLATFORM=TRINITY_DIRECTX12
                 TRINITYNAME=_trinity_dx12
         )
-        target_link_libraries(CcpTrinity_dx12 PRIVATE TrinityAL_dx12 )
-        set_shared_trinity_properties(CcpTrinity_dx12 carbon-trinity-dx12)
+        target_link_libraries(${TRINITY_DX12_TARGET_NAME} PRIVATE TrinityAL_dx12 )
+        set_shared_trinity_properties(${TRINITY_DX12_TARGET_NAME} carbon-trinity-dx12)
     endif()
 
 elseif(APPLE)
     if(BUILD_METAL)
         enable_language(OBJCXX)
-        ccp_add_library(CcpTrinity_metal SHARED)
-        target_compile_definitions(CcpTrinity_metal
+
+        set(TRINITY_DX12_TARGET_NAME CcpTrinity_metal)
+
+        if(BUILD_FOR_PYTHON_2)
+            set(TRINITY_METAL_TARGET_NAME trinity_metal)
+        endif()
+
+        ccp_add_library(${TRINITY_METAL_TARGET_NAME} SHARED)
+        target_compile_definitions(${TRINITY_METAL_TARGET_NAME}
             PRIVATE
                 TRINITY_PLATFORM=TRINITY_METAL
                 TRINITYNAME=_trinity_metal
         )
-        set_shared_trinity_properties(CcpTrinity_metal carbon-trinity-metal)
-        target_link_libraries(CcpTrinity_metal
+        set_shared_trinity_properties(${TRINITY_METAL_TARGET_NAME} carbon-trinity-metal)
+        target_link_libraries(${TRINITY_METAL_TARGET_NAME}
             PRIVATE
                 TrinityAL_metal
                 "-framework CoreFoundation"

@@ -2,7 +2,16 @@ cmake_minimum_required(VERSION 3.16)
 
 cmake_policy(SET CMP0111 NEW)
 
-if(NOT BUILD_FOR_PYTHON_2)
+if(BUILD_FOR_PYTHON_2)
+
+    set(INSTALL_TO_MONOLITH ON)
+    set(BUILD_DX11 ON)
+    set(BUILD_DX12 ON)
+    set(BUILD_METAL ON)
+    set(BUILD_SHADER_COMPILER ON)
+    set(INSTALL_TO_MONOLITH ON)
+
+else()
     # Feature options
     option(BUILD_SHADER_COMPILER "Build shader compiler." OFF)
     if(WIN32)
