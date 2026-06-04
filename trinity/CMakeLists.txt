@@ -2053,7 +2053,7 @@ elseif(APPLE)
         set_source_files_properties(${_CPP_SOURCES} PROPERTIES LANGUAGE OBJCXX)
         set_source_files_properties(UI/Scancodes.mm PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 
-        target_compile_options(CcpTrinity_metal
+        target_compile_options(${TRINITY_METAL_TARGET_NAME}
             PRIVATE
                 "-fobjc-arc"
                 # disabling these warnings is temporary so that we don't drown in them
@@ -2061,7 +2061,7 @@ elseif(APPLE)
                 "-Wno-inconsistent-missing-override"
         )
 
-        set_target_properties(CcpTrinity_metal
+        set_target_properties(${TRINITY_METAL_TARGET_NAME}
             PROPERTIES
                 LINKER_LANGUAGE OBJCXX
                 PREFIX ""
