@@ -486,6 +486,7 @@ elseif(APPLE)
 
         if (BUILD_FOR_PYTHON_2)
             find_package(FidelityFX_FSR REQUIRED)
+            add_library(AMD::FidelityFX::fsr ALIAS AMD::FidelityFX_FSR)
         else()
             find_package(amd-fidelityfx-fsr REQUIRED)
         endif()
