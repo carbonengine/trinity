@@ -326,12 +326,12 @@ void EveMobile::GetDebugOptions( Tr2DebugRendererOptions& options )
 // Description:
 //   TBD.
 // --------------------------------------------------------------------------------
-bool EveMobile::ValidateTurretLocatorName( const char* locatorName, unsigned int& locatorsFoundA, unsigned int& locatorsFoundB ) const
+bool EveMobile::ValidateTurretLocatorName( std::string_view locatorName, unsigned int& locatorsFoundA, unsigned int& locatorsFoundB ) const
 {
 	static const char* kLocatorPrefix = "locator_turret_";
 	const unsigned int kLocatorPrefixLength = static_cast<unsigned int>( strlen( kLocatorPrefix ) );
 
-	if( strncmp( locatorName, kLocatorPrefix, kLocatorPrefixLength ) == 0 )
+	if( locatorName.compare( 0, kLocatorPrefixLength, kLocatorPrefix ) == 0 )
 	{
 		std::string index;
 		unsigned int i = kLocatorPrefixLength;
@@ -402,13 +402,32 @@ unsigned int EveMobile::GetTurretLocatorCount()
 		ValidateTurretLocatorName( locatorName, locatorsFoundA, locatorsFoundB );
 	}
 
-	if( m_animationUpdater && m_animationUpdater->m_skeleton )
+	if( m_animationUpdater )
 	{
-		for( int boneIx = 0; boneIx < m_animationUpdater->m_skeleton->BoneCount; ++boneIx )
+		if( m_animationUpdater->IsUsingCMF() )
 		{
-			const granny_bone& bone = m_animationUpdater->m_skeleton->Bones[boneIx];
-			ValidateTurretLocatorName( bone.Name, locatorsFoundA, locatorsFoundB );
+			const cmf::Skeleton* skeleton = m_animationUpdater->GetSkeleton();
+			if( skeleton )
+			{
+				for( const auto& bone : skeleton->bones )
+				{
+					ValidateTurretLocatorName( cmf::ToStdStringView( bone ), locatorsFoundA, locatorsFoundB );
+				}
+			}
 		}
+#if WITH_GRANNY
+		else
+		{
+			if( m_animationUpdater->m_skeleton )
+			{
+				for( int boneIx = 0; boneIx < m_animationUpdater->m_skeleton->BoneCount; ++boneIx )
+				{
+					const granny_bone& bone = m_animationUpdater->m_skeleton->Bones[boneIx];
+					ValidateTurretLocatorName( bone.Name, locatorsFoundA, locatorsFoundB );
+				}
+			}
+		}
+#endif
 	}
 
 	if( ( locatorsFoundA != locatorsFoundB ) && locatorsFoundB )

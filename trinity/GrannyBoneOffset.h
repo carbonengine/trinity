@@ -50,6 +50,8 @@ public:
 	// Clear the offsets alltogether, ie forget all settings
 	void	ClearTransforms();
 
+	bool ApplyToLocal( unsigned joint, Quaternion& rotation, Vector3& position ) const;
+
 private:
 	struct TMatrix
 	{

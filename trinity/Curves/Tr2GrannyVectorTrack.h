@@ -5,6 +5,7 @@
 #include "include/ITriFunction.h"
 #include "include/ITriCurveLength.h"
 #include "Curves/Tr2GrannyTrack.h"
+
 BLUE_DECLARE( TriGrannyRes );
 
 BLUE_CLASS( Tr2GrannyVectorTrack ):

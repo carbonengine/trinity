@@ -513,8 +513,9 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 							type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
 							type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
 							type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
-							type == Tr2VertexDefinition::DataType::USHORT_4_NORM,
-							"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
+							type == Tr2VertexDefinition::DataType::USHORT_4_NORM ||
+							type == Tr2VertexDefinition::DataType::SHORT_4_NORM,
+							"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM or SHORT_4_NORM!" 
 						);
 					}
 

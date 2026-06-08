@@ -3,6 +3,9 @@
 #include "Tr2Renderer.h"
 #include "Tr2VertexDefinitionUtilities.h"
 
+#include <numeric>
+
+#if WITH_GRANNY
 void GetVertexPositionOffsetAndType(granny_mesh* grannyMesh, unsigned int &positionOffset, Tr2VertexDefinition::DataType &positionType )
 {
 	positionOffset = 0;
@@ -34,6 +37,7 @@ void GetVertexPositionOffsetAndType(granny_mesh* grannyMesh, unsigned int &posit
 
 	positionOffset = 0;
 }
+#endif
 
 void ConvertShort4ToVector3( const void *ptr, Vector3* dest )
 {
@@ -53,6 +57,8 @@ void ConvertUByte4ToVector3( const void *ptr, Vector3* dest )
 	dest->z = (float)vdata[0] / 255.0f * 2.0f - 1.0f;
 }
 
+
+#if WITH_GRANNY
 void GetMeshVertexPosition(	granny_mesh* grannyMesh, unsigned index, 
 							Vector3 & position,
 							unsigned grannyBytesPerVertex, 
@@ -84,7 +90,8 @@ void GetMeshVertexPosition(	granny_mesh* grannyMesh, unsigned index,
 		CCP_ASSERT_M( false, "Unsupported position type in GetMeshVertexPosition" );
 		break;
 	}	
-}	
+}
+#endif
 
 const char* VertexDeclTypeToString( Tr2VertexDefinition::DataType type )
 {
@@ -195,6 +202,7 @@ void DescribeVertexDecl( const Tr2VertexDefinition& vd )
 	}
 }
 
+#if WITH_GRANNY
 granny_file* ProtectedGrannyReadEntireFileFromMemory( const wchar_t* path, uint32_t dataSize, void* data )
 {
 	granny_file* result = NULL;
@@ -214,3 +222,38 @@ granny_file* ProtectedGrannyReadEntireFileFromMemory( const wchar_t* path, uint3
 
 	return result;
 }
+
+
+//////////////////////////////////////////////////////////////////////////
+//
+
+granny_data_type_definition BoundingBoxType[] = {
+	{ GrannyReal32Member, "min", 0, 3 },
+	{ GrannyReal32Member, "max", 0, 3 },
+	{ GrannyEndMember }
+};
+
+granny_data_type_definition AreaBoundsInfoType[] = {
+	{ GrannyInlineMember, "bounds", BoundingBoxType },
+	{ GrannyInt32Member, "vertexCount" },
+	{ GrannyEndMember }
+};
+
+granny_data_type_definition UvDensityInfoType[] = {
+	{ GrannyReal32Member, "density" },
+	{ GrannyEndMember }
+};
+
+granny_data_type_definition MeshBoundsInfoType[] = {
+	{ GrannyStringMember, "typeName" },
+	{ GrannyInlineMember, "bounds", BoundingBoxType },
+	{ GrannyReferenceToArrayMember, "areaInfo", AreaBoundsInfoType },
+	{ GrannyInt32Member, "sourceMeshIndex" },
+	{ GrannyInt32Member, "maxScreenSize" },
+	{ GrannyReferenceToArrayMember, "uvDensities", UvDensityInfoType },
+	{ GrannyEndMember }
+};
+
+//
+//////////////////////////////////////////////////////////////////////////
+#endif

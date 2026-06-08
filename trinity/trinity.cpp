@@ -57,6 +57,7 @@ extern "C" void _setenvp(){}
 #define BLUETHUNKREG(_Class) \
 	PyOS->RegisterThunker(_Class::Defs(), _Class::IID() );
 
+#if WITH_GRANNY
 void* Tr2GrannyAllocate( const char* file, granny_int32x line, granny_uintaddrx alignment, granny_uintaddrx size, granny_int32x intent )
 {
 	return CCPAlignedMallocWithTracking( size, alignment, "Granny", file, line );
@@ -66,6 +67,7 @@ void Tr2GrannyDeallocate( const char* file, granny_int32x line, void* memory )
 {
 	return CCPAlignedFreeWithTracking( memory );
 }
+#endif
 
 #if BLUE_WITH_PYTHON
 
@@ -262,7 +264,9 @@ void InitializeTrinity()
 		g_gdrEnabled = gdpr != L"0";
 	}
     
+#if WITH_GRANNY
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
+#endif
 
 	Tr2FontManager::Initialize();
 
@@ -384,13 +388,14 @@ static ITr2DebugRenderer* GetDebugRenderer()
 
 MAP_FUNCTION_AND_WRAP( "GetDebugRenderer", GetDebugRenderer, "Returns the debug renderer for Trinity" );
 
+#if WITH_GRANNY
 static const char* GetGrannyProductVersion()
 {
 	return GrannyProductVersion;
 }
 
 MAP_FUNCTION_AND_WRAP( "GetGrannyProductVersion", GetGrannyProductVersion, "Returns the 'GrannyProductVersion' string as defined by Granny" );
-
+#endif
 
 static BlueStdResult GetObjectWorldTransform( IRoot* object, Matrix& result )
 {

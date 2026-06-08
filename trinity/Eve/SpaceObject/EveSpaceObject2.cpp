@@ -944,15 +944,13 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 		for( auto it = m_locators.begin(); it != m_locators.end(); ++it )
 		{
-			auto transform = ( *it )->GetTransform();
-			if( m_animationUpdater && m_animationUpdater->m_worldPose && m_animationUpdater->m_skeleton )
+			Matrix transform = ( *it )->GetTransform();
+			
+			if( m_animationUpdater )
 			{
-				granny_int32x bone;
-				if( GrannyFindBoneByName( m_animationUpdater->m_skeleton, ( *it )->GetName(), &bone ) )
-				{
-					transform = *reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_animationUpdater->m_worldPose, bone ) );
-				}
+				m_animationUpdater->GetBoneWorldTransform( ( *it )->GetName(), transform );
 			}
+
 			XMVECTOR scale, rotation, translation;
 			XMMatrixDecompose( &scale, &rotation, &translation, transform );
 			transform = Matrix( XMMatrixAffineTransformation( XMVectorReplicate( m_boundingSphereRadius / 50.f ), Vector3( 0, 0, 0 ), rotation, translation ) );
@@ -1059,14 +1057,16 @@ Matrix EveSpaceObject2::GetEveLocatorTransform( const char* name ) const
 	{
 		return IdentityMatrix();
 	}
-	if( m_animationUpdater && m_animationUpdater->m_worldPose && m_animationUpdater->m_skeleton )
+
+	if( m_animationUpdater )
 	{
-		granny_int32x bone;
-		if( GrannyFindBoneByName( m_animationUpdater->m_skeleton, locator->GetName(), &bone ) )
+		Matrix result;
+		if( m_animationUpdater->GetBoneWorldTransform( locator->GetName(), result ) )
 		{
-			return *reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_animationUpdater->m_worldPose, bone ) );
+			return result;
 		}
 	}
+	
 	return locator->GetTransform();
 }
 
@@ -1296,12 +1296,40 @@ const Matrix* EveSpaceObject2::GetLocatorTransform( LocatorType lt, unsigned int
 
 	case ELT_JOINT:
 	{
-		if( !m_animationUpdater || !m_animationUpdater->m_worldPose )
+		if( !m_animationUpdater )
 		{
 			return nullptr;
 		}
 
-		return reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_animationUpdater->m_worldPose, lix ) );
+		if( m_animationUpdater->IsUsingCMF() )
+		{
+			auto& worldTransforms = m_animationUpdater->GetWorldTransforms();
+			if( !worldTransforms.size() )
+			{
+				return nullptr;
+			}
+			if( lix >= worldTransforms.size() )
+			{
+				return nullptr;
+			}
+			return &worldTransforms[lix];
+		}
+#if WITH_GRANNY
+		else
+		{
+			if( !m_animationUpdater->m_worldPose )
+			{
+				return nullptr;
+			}
+
+			return reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_animationUpdater->m_worldPose, lix ) );
+		}
+#else
+		else
+		{
+			return nullptr;
+		}
+#endif
 	}
 	break;
 
@@ -1466,7 +1494,16 @@ Vector4 EveSpaceObject2::CalculateSkinnedBoundingSphere()
 {
 	if( m_dynamicBoundingSphereEnabled )
 	{
-		return m_animationUpdater->CalculateSkinnedBoundingSphere( m_mesh->GetGeometryResource()->GetGrannyInfo() );
+		if( m_mesh->GetGeometryResource()->IsUsingCMF() )
+		{
+			return Vector4( GetBoundingSphereCenter(), GetBoundingSphereRadius() );
+		}
+#if WITH_GRANNY
+		else
+		{
+			return m_animationUpdater->CalculateSkinnedBoundingSphere( m_mesh->GetGeometryResource()->GetGrannyInfo() );
+		}
+#endif
 	}
 	return Vector4( 0, 0, 0, -1 );
 }
@@ -1477,11 +1514,35 @@ std::pair<Vector3, Vector3> EveSpaceObject2::CalculateSkinnedBoundingBoxFromTran
 	BoundingBoxInitialize( bbMin, bbMax );
 	if( m_dynamicBoundingSphereEnabled )
 	{
-		m_animationUpdater->CalculateSkinnedBoundingBoxFromTransform( transform, bbMin, bbMax, m_geometryResFromMesh->GetGrannyInfo() );
+		if( m_geometryResFromMesh->IsUsingCMF() )
+		{
+			Vector3 localMin, localMax;
+			GetLocalBoundingBox( localMin, localMax );
+			AxisAlignedBoundingBox box( localMin, localMax );
+			box.EnumerateVertices( [&transform, &bbMin, &bbMax]( const Vector3& vertex )
+			{
+				Vector4 pos = Transform( Vector4( vertex, 1.f ), transform );
+				pos /= pos.w;
+
+				bbMin.x = min( bbMin.x, pos.x );
+				bbMax.x = max( bbMax.x, pos.x );
+
+				bbMin.y = min( bbMin.y, pos.y );
+				bbMax.y = max( bbMax.y, pos.y );
+
+				bbMin.z = min( bbMin.z, pos.z );
+				bbMax.z = max( bbMax.z, pos.z );
+			} );
+		}
+#if WITH_GRANNY
+		else
+		{
+			m_animationUpdater->CalculateSkinnedBoundingBoxFromTransform( transform, bbMin, bbMax, m_geometryResFromMesh->GetGrannyInfo() );
+		}
+#endif
 	}
 	return std::pair<Vector3, Vector3>( bbMin, bbMax );
 }
-
 
 // Actually submit renderables to the list, called from GetRenderables
 void EveSpaceObject2::PushRenderables( std::vector<ITr2Renderable*>& renderables )
@@ -1952,11 +2013,29 @@ Vector3 EveSpaceObject2::GetBoundingSphereCenter() const
 // --------------------------------------------------------------------------------
 int EveSpaceObject2::GetBoneCount() const
 {
-	if( !m_animationUpdater->m_meshBinding )
+	if( m_animationUpdater->IsUsingCMF() )
+	{
+		if( !m_animationUpdater->HasMeshBinding() )
+		{
+			return 0;
+		}
+		return (int)m_animationUpdater->GetSkeletonBoneIndices().size();
+	}
+#if WITH_GRANNY
+	else
+	{
+		if( !m_animationUpdater->m_meshBinding )
+		{
+			return 0;
+		}
+		return GrannyGetMeshBindingBoneCount( m_animationUpdater->m_meshBinding );
+	}
+#else 
+	else
 	{
 		return 0;
 	}
-	return GrannyGetMeshBindingBoneCount( m_animationUpdater->m_meshBinding );
+#endif
 }
 
 bool EveSpaceObject2::RebuildBoundingSphereInformation()

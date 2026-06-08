@@ -100,4 +100,5 @@ protected:
 	TriGrannyResPtr m_grannyRes;
 };
 TYPEDEF_BLUECLASS( Tr2GrannyTrack );
+
 #endif //Tr2GrannyTrack_h

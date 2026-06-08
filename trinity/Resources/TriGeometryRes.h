@@ -28,6 +28,7 @@
 #include "include/ITr2InstanceData.h"
 #include "include/ITr2GpuBuffer.h"
 
+#include "Tr2CmfContent.h"
 #include "Tr2SuballocatedBuffer.h"
 
 constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 32u * 1024u * 1024u;
@@ -36,10 +37,18 @@ extern Tr2SuballocatedBuffer g_sharedBuffer;
 
 
 
-
-
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
+
+
+enum class GrannyDeprecationLevel
+{
+	DO_NOTHING,
+	LOG_ERROR,
+	LOG_ERROR_AND_ASSERT
+};
+
+void HandleGrannyDeprecation( const std::wstring& path );
 
 struct TriRtGeometryConstants
 {
@@ -95,7 +104,6 @@ struct TriGeometryResAreaData
 	std::string m_name;
 	int m_firstIndex;
 	int m_primitiveCount;
-	int m_vertexCount;
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;
 	TrackableStdVector<int> m_jointBindings;
@@ -210,7 +218,6 @@ struct TriGeometryResMeshData
 
 uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, uint32_t count );
 
-
 struct TriGeometryResJointData
 {
 	std::string m_name;
@@ -265,8 +272,10 @@ public:
 
 	unsigned int GetAnimationCount() const;
 
+	#if WITH_GRANNY
 	// query vertex component
 	int GetVertexComponentOffset( const granny_mesh* myMesh, const char* componentName ) const;
+	#endif
 
 	// Render multiple consecutive areas, starting at 'areaIx'
 	bool RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );
@@ -313,14 +322,6 @@ public:
 	// need to intercept it to reset data structures on reload
 	void Initialize( const wchar_t* name, const wchar_t* ext );
 
-	// Given a granny file that's already in memory, build the meshes etc directly from that data.
-	// This is equivalent to DoLoad from resman.
-	bool InitializeFromMemory( granny_file_info* gfi );
-	// After calling InitializeFromMemory, call DoPrepareFromMemory from the main thread. The data
-	// originally passed to InitializeFromMemory still needs to be alive.
-	// If successful, the geometry res is marked as Good and Prepared.
-	void DoPrepareFromMemory();
-
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2InstanceData
 	bool IsInstanceDataReady() const override;
@@ -349,9 +350,14 @@ public:
 	virtual void GetDescription( std::string& desc );
 #endif
 
+#if WITH_GRANNY
 	granny_file_info* GetGrannyInfo() const;
-	
-	static bool SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const char* filename );
+#endif
+
+#if WITH_GRANNY
+	static bool SaveMeshToGrannyFile( TriGeometryResMeshData& mesh, const char* filename );
+#endif
+	static bool SaveMeshToCMFFile( TriGeometryResMeshData& mesh, const char* filename );
 
 	//	Iterator functions for processing mesh data
 	typedef void( *PerTriangleCallback )( void* context, const Vector3& p1, const Vector3& p2, const Vector3& p3 );
@@ -368,13 +374,20 @@ public:
 
 	Be::Result<std::string> SaveMesh( const char* filename, uint32_t meshIndex ) const;
 
+	bool IsUsingCMF() const;
+	const cmf::Data* GetCMFData() const;
+
 private:
 	unsigned int m_memoryUse;
 	TrackableStdVector<std::unique_ptr<TriGeometryResMeshData>> m_meshes;
 	TrackableStdVector<std::unique_ptr<TriGeometryResSkeletonData>> m_skeletons;
 
+#if WITH_GRANNY
 	granny_file* m_pGrannyFile;
-	granny_file_info* m_inMemoryInfo;
+#endif
+
+	Tr2CmfContents m_cmfContents;
+	bool m_useCMF;
 
 	int32_t m_forcedLodIndex = -1;
 	bool m_forceLod = false;
@@ -385,9 +398,10 @@ private:
 	// The async management itself is done in TriAsyncLoadedResource.
 	virtual LoadingResult DoLoad();
 	virtual bool DoPrepare();
-
+	
+#if WITH_GRANNY
 	// Read granny file, keep data in m_pGrannyFile
-	bool ReadGrannyFile( granny_file_info* gi = NULL );
+	bool ReadGrannyFile();
 	void ClearGrannyData();
 
 	bool SetupMeshes( granny_file_info* gi );
@@ -397,11 +411,20 @@ private:
 	bool IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi );
 	
 	// Create D3D mesh from data in m_pGrannyFile
-	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
+	bool CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
 	bool CreateLodFromGrannyMesh( granny_mesh* myMesh, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride = NULL );
 
 	// Extract audio geometry from lowest LOD for Wwise spatial audio
-	void ExtractAudioGeometry( TriGeometryResMeshData* mesh, granny_mesh* grannyMesh );
+	void ExtractAudioGeometry( TriGeometryResMeshData * mesh, granny_mesh * grannyMesh );
+#endif
+
+	bool ReadCMFFile();
+	void ClearCMFData();
+
+	bool SetupMeshes( const cmf::Data& cmfData );
+	void SetupSkeletons( const cmf::Data& cmfData );
+	bool CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
+	bool CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN(TriGeometryRes);

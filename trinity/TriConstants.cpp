@@ -85,16 +85,16 @@ const Be::VarChooser TriTextureChooser[] =
 	{0}
 };
 
-const Be::VarChooser TriGR2Chooser[] =
+
+const Be::VarChooser TriGR2Chooser[] = 
 {
 	{ 
-		"SELECT_GR2MODEL",     
-		VAL(0),     
-		"Granny file(.gr2)|*.GR2" 
+		"SELECT_GR2MODEL",
+		VAL(0),
+		"Granny/CMF file(.gr2, .cmf)|*.GR2;*.CMF|All Files (*.*)|*.*" 
 	},
 	{0}
 };
-
 
 const Be::VarChooser TriExtrapolation[] =
 {

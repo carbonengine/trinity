@@ -131,11 +131,20 @@ const Be::ClassInfo* Tr2ParticleSystem::ExposeToBlue()
 		
 		MAP_METHOD_AND_WRAP( "UpdateElementDeclaration", UpdateElementDeclaration, "Updates internal particle element declaration" )
 		MAP_METHOD_AND_WRAP( "ClearParticles", ClearParticles, "Clear all of the active particles from the system." )
+
+		MAP_METHOD_AND_WRAP( 
+			"SaveToCMF", 
+			SaveToCMF, 
+			"Saves particle data into a CMF file\n"
+			":param path: res path to CMF file where to save particle data" )
+		// TODO: intern, call SaveToCMF instead of SaveToGranny in python.
+#if WITH_GRANNY
 		MAP_METHOD_AND_WRAP( 
 			"SaveToGranny", 
 			SaveToGranny, 
 			"Saves particle data into a granny file\n"
 			":param path: res path to granny file where to save particle data" )
+#endif
 		MAP_METHOD_AND_WRAP( "RebindConstraints", RebindConstraints, "Rebinds all system constraints." )
 		MAP_METHOD_AND_WRAP( 
 			"UpdateSimulation", 

@@ -528,7 +528,16 @@ const Be::ClassInfo* Tr2RuntimeInstanceData::ExposeToBlue()
 			Spawn,
 			"Spawns particles into the particle system"
 		)
-
+		
+		MAP_METHOD_AND_WRAP
+		(
+			"SaveToCMF",
+			SaveToCMF,
+			"Saves vertex data to a CMF file\n"
+			":param path: path to the CMF file"
+		)
+		// TODO: intern, call SaveToCMF instead of SaveToGranny in python.
+#if WITH_GRANNY
 		MAP_METHOD_AND_WRAP
 		(
 			"SaveToGranny",
@@ -536,6 +545,7 @@ const Be::ClassInfo* Tr2RuntimeInstanceData::ExposeToBlue()
 			"Saves vertex data to a granny file\n"
 			":param path: path to the granny file"
 		)
+#endif
 
 		MAP_ATTRIBUTE( "aabbMin", m_aabb.m_min, "Minimum of the AABB", Be::READ )
 

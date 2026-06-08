@@ -12,12 +12,18 @@
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
 
+#include <cctype>
+
+
 using namespace Tr2RenderContextEnum;
 
 std::atomic<uint64_t> AudioGeometryResData::s_nextId{ 1 };
 
 bool g_eveIsAudioOcclusionGeometryEnabled = false;
 TRI_REGISTER_SETTING( "eveIsAudioOcclusionGeometryEnabled", g_eveIsAudioOcclusionGeometryEnabled );
+
+int g_grannyDeprecationLevel = (int)GrannyDeprecationLevel::LOG_ERROR_AND_ASSERT;
+TRI_REGISTER_SETTING( "grannyDeprecationLevel", g_grannyDeprecationLevel );
 
 CCP_STATS_DECLARE( geometryResBytes, "Trinity/geometryResBytes", false, CST_MEMORY, "Size of memory occupied by geometry resources." );
 
@@ -29,83 +35,29 @@ const auto gpuUsage = Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::INDEX_BUFFER;
 
 Tr2SuballocatedBuffer g_sharedBuffer( "TriGeometryRes shared vertex/index buffer", gpuUsage, SHARED_BUFFER_BLOCK_SIZE, SHARED_BUFFER_MAX_SIZE );
 
-//////////////////////////////////////////////////////////////////////////
-//
-// Structures used for pulling bounds information out of extended data
-// in the granny file. There are data type definitions here as well so
-// we can use the future proof method of calling GrannyConvertTree to
-// pull the data out, even if we change the processing done off-line.
 
-struct BoundingBox
+void HandleGrannyDeprecation( const std::wstring& path )
 {
-	granny_real32 min[3];
-	granny_real32 max[3];
-};
-
-struct AreaBoundsInfo
-{
-	BoundingBox bounds;
-	granny_int32 vertexCount;
-};
-
-
-#ifdef _WIN32
-#pragma pack(push, 4)
-#endif
-
-struct MeshBoundsInfo
-{
-	const char* typeName;
-	BoundingBox bounds;
-	granny_int32 areaCount;
-	AreaBoundsInfo* areaInfos;
-	granny_int32 sourceMeshIndex;
-	granny_int32 maxScreenSize;
-	granny_int32 uvDensityCount;
-	granny_real32* uvDensities;
+	switch( (GrannyDeprecationLevel)g_grannyDeprecationLevel )
+	{
+	case GrannyDeprecationLevel::DO_NOTHING:
+		break;
+	case GrannyDeprecationLevel::LOG_ERROR: {
+		CCP_LOGERR( "Don't load granny! Use CMF! Tried to load: %ls", path.c_str() );
+	}
+	break;
+	case GrannyDeprecationLevel::LOG_ERROR_AND_ASSERT: {
+		CCP_LOGERR( "Don't load granny! Use CMF! Tried to load: %ls", path.c_str() );
+		CCP_ASSERT_M( false, "Use CMF!" );
+	}
+	break;
+	default: {
+		CCP_ASSERT_M( false, "Invalid GrannyDeprecationLevel" );
+	}
+	break;
+	}
 }
-#ifndef _WIN32
-// On non-windows x64 platforms areaInfos maybe 64bit aligned
-__attribute__((packed))
-#endif
-;
 
-#ifdef _WIN32
-#pragma pack(pop)
-#endif
-
-
-granny_data_type_definition BoundingBoxType[] =
-{
-	{ GrannyReal32Member, "min", 0, 3 },
-	{ GrannyReal32Member, "max", 0, 3 },
-	{ GrannyEndMember }
-};
-
-granny_data_type_definition AreaBoundsInfoType[] =
-{
-	{ GrannyInlineMember, "bounds", BoundingBoxType },
-	{ GrannyInt32Member, "vertexCount" },
-	{ GrannyEndMember }
-};
-
-granny_data_type_definition UvDensityInfoType[] = {
-	{ GrannyReal32Member, "density" },
-	{ GrannyEndMember }
-};
-
-granny_data_type_definition MeshBoundsInfoType[] = {
-	{ GrannyStringMember, "typeName" },
-	{ GrannyInlineMember, "bounds", BoundingBoxType },
-	{ GrannyReferenceToArrayMember, "areaInfo", AreaBoundsInfoType },
-	{ GrannyInt32Member, "sourceMeshIndex" },
-	{ GrannyInt32Member, "maxScreenSize" },
-	{ GrannyReferenceToArrayMember, "uvDensities", UvDensityInfoType },
-	{ GrannyEndMember }
-};
-
-//
-//////////////////////////////////////////////////////////////////////////
 
 static void CopyGrannyName( std::string& dest, const char* src )
 {
@@ -231,8 +183,10 @@ uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, ui
 	return primCount;
 }
 
+
 namespace
 {
+#if WITH_GRANNY
 ALResult ReverseIndexBuffer( TriGeometryResLodData& lod, granny_mesh& grannyMesh, Tr2RenderContext& renderContext ) 
 {
 	uint32_t bytesPerIndex = 2;
@@ -266,25 +220,59 @@ ALResult ReverseIndexBuffer( TriGeometryResLodData& lod, granny_mesh& grannyMesh
 	lod.m_reversedIndicesValid = true;
 	return S_OK;
 }
+#endif
+
+ALResult ReverseIndexBuffer( TriGeometryResLodData& lod, const void* ibData, const cmf::MeshLod& cmfMeshLod, Tr2RenderContext& renderContext )
+{
+	uint32_t bytesPerIndex = cmfMeshLod.ib.stride;
+	auto indexCount = cmf::GetStreamElementCount( cmfMeshLod.ib );
+	
+	std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
+	memcpy( tempBuffer.data(), ibData, indexCount * bytesPerIndex );
+
+	if( bytesPerIndex == 2 )
+	{
+		std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
+	}
+	else
+	{
+		std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
+	}
+
+	CR_RETURN_HR( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod.m_reversedIndexAllocation ) );
+	lod.m_reversedIndicesValid = true;
+	return S_OK;
+}
 
 }
 
 
-TriGeometryRes::TriGeometryRes(IRoot* lockobj) :
+TriGeometryRes::TriGeometryRes( IRoot* lockobj ) :
+#if WITH_GRANNY
 	m_pGrannyFile( NULL ),
+#endif
 	m_memoryUse( 0 ),
 	m_meshes( "TriGeometryRes/m_meshes" ),
 	m_skeletons( "TriGeometryRes/m_skeletons" ),
-	m_inMemoryInfo( NULL )
+	m_useCMF( true )
 {
 }
 
 TriGeometryRes::~TriGeometryRes()
 {
 	ReleaseResources( TRISTORAGE_ALL );
+#if WITH_GRANNY
 	ClearGrannyData();
+#endif
+	ClearCMFData();
 }
 
+void TriGeometryRes::ClearCMFData()
+{
+	m_cmfContents = {};
+}
+
+#if WITH_GRANNY
 void TriGeometryRes::ClearGrannyData()
 {
 	m_meshes.clear();
@@ -303,22 +291,31 @@ granny_file_info* TriGeometryRes::GetGrannyInfo() const
 	{
 		return GrannyGetFileInfo( m_pGrannyFile );
 	}
-	else if( m_inMemoryInfo )
-	{
-		return m_inMemoryInfo;
-	}
 	else
 	{
 		return nullptr;
 	}
 }
+#endif
 
 unsigned int TriGeometryRes::GetAnimationCount() const
 {
-	if( auto info = GetGrannyInfo() )
+	if( IsUsingCMF() )
 	{
-		return info->AnimationCount;
+		if( IsGood() && m_cmfContents )
+		{
+			return (int) m_cmfContents.GetData()->animations.size();
+		}
 	}
+#if WITH_GRANNY
+	else
+	{
+		if( auto info = GetGrannyInfo() )
+		{
+			return info->AnimationCount;
+		}
+	}
+#endif
 	return 0;
 }
 
@@ -404,8 +401,11 @@ const AudioGeometryResData* TriGeometryRes::GetAudioGeometry( unsigned int meshI
 	return mesh->m_audioGeometry.get();
 }
 
+#if WITH_GRANNY
 int TriGeometryRes::GetVertexComponentOffset( const granny_mesh* grannyMesh, const char* componentName ) const
 {
+	CCP_ASSERT_M( !m_useCMF, "This should never be called on a cmf codepath!" );
+
 	// now scan granny's vertex-declaration for the component's part and count the offsets
 	granny_data_type_definition* vertexFormat = grannyMesh->PrimaryVertexData->VertexType;
 	int componentIx = 0, offset = 0;
@@ -424,6 +424,7 @@ int TriGeometryRes::GetVertexComponentOffset( const granny_mesh* grannyMesh, con
 	// error: component not found in this vertex
 	return -1;
 }
+#endif
 
 bool TriGeometryRes::GetBoundingBox( unsigned int meshIx, Vector3& min, Vector3& max ) const
 {
@@ -565,26 +566,65 @@ BlueAsyncRes::LoadingResult TriGeometryRes::DoLoad()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	m_inMemoryInfo = NULL;
-
-	if( m_pGrannyFile || m_inMemoryInfo )
+	if( m_cmfContents )
+	{
+		if( !m_cmfContents.GetData() || !SetupMeshes( *m_cmfContents.GetData() ) )
+		{
+			return LR_FAILED;
+		};
+		return LR_SUCCESS;
+	}
+#if WITH_GRANNY
+	else if( m_pGrannyFile )
 	{
 		// The granny file already exists so we only have to recreate
 		// the meshes.
-		SetupMeshes( m_inMemoryInfo ? m_inMemoryInfo : GrannyGetFileInfo( m_pGrannyFile ) );
+		SetupMeshes( GrannyGetFileInfo( m_pGrannyFile ) );
 		return LR_SUCCESS;
 	}
+#endif
 
 	if( !m_dataStream )
 	{
 		return LR_FAILED;
 	}
 
-	if( ReadGrannyFile() )
+	if( m_path.size() >= 4 && m_path.compare( m_path.size() - 4, 4, L".cmf" ) == 0 )
 	{
-		return LR_SUCCESS;
-	}
+		if( ReadCMFFile() )
+		{
+			// Decompress sections we will use in Prepare
+			for( uint32_t i = 0; i < m_meshes.size(); i++ )
+			{
+				auto& mesh = m_meshes[i];
+				auto& cmfMesh = m_cmfContents.GetData()->meshes[i];
 
+				for( const auto& lod : mesh->m_lods )
+				{
+					auto& cmfLod = cmfMesh.lods[lod->m_originalLodIndex];
+					m_cmfContents.GetViewData( cmfLod.vb );
+					m_cmfContents.GetViewData( cmfLod.ib );
+					for( const auto& morph : cmfLod.morphTargets )
+					{
+						m_cmfContents.GetViewData( morph.vb );
+					}
+				}
+			}
+
+			return LR_SUCCESS;
+		}
+	}
+	else
+	{
+		HandleGrannyDeprecation( m_path );
+#if WITH_GRANNY
+		if( ReadGrannyFile() )
+		{
+			return LR_SUCCESS;
+		}
+#endif
+	}
+	
 	return LR_FAILED;
 }
 
@@ -605,9 +645,30 @@ bool TriGeometryRes::DoPrepare()
 		return false;
 	}
 
-	if( m_pGrannyFile || m_inMemoryInfo )
+	if( IsUsingCMF() )
 	{
-		granny_file_info* gi = m_inMemoryInfo ? m_inMemoryInfo : GrannyGetFileInfo( m_pGrannyFile );
+		if( m_cmfContents )
+		{
+			CreateMeshesFromCMFFile( m_cmfContents, Tr2CpuUsage::READ, renderContext );
+			const auto* cmfData = m_cmfContents.GetData();
+			if( cmfData && cmfData->animations.empty() )
+			{
+				const auto hasMeshBindings = std::any_of( cmfData->meshes.begin(), cmfData->meshes.end(), []( const cmf::Mesh& mesh ) {
+					return !mesh.boneBindings.empty();
+				} );
+				if( !hasMeshBindings )
+				{
+					m_cmfContents = {};
+				}
+			}
+		}
+	}
+#if WITH_GRANNY
+	else if( m_pGrannyFile )
+	{
+		CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::DoPrepare: intern messed up." );
+
+		granny_file_info* gi = GrannyGetFileInfo( m_pGrannyFile );
 
 		CreateMeshesFromGrannyFile( gi, Tr2CpuUsage::READ, renderContext );
 
@@ -631,17 +692,12 @@ bool TriGeometryRes::DoPrepare()
 			}
 		}
 	}
-
-	if( m_inMemoryInfo )	// we're not called through resman, so mark ourselves as good to go:
-	{
-		m_isLoading = 0;
-		m_isGood = 1;
-		m_isPrepared = 1;
-	}
+#endif
 
 	return true;
 }
 
+#if WITH_GRANNY
 void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* grannyMesh, int bytesPerVertex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -679,10 +735,10 @@ void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& ar
 
 		BoundingBoxUpdate( area.m_minBounds, area.m_maxBounds, vertexPosition );
 	}
-
-	area.m_vertexCount = (int)vertexIndicesSeen.size();
 }
+#endif
 
+#if WITH_GRANNY
 bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* grannyMesh, granny_file_info* gi, int bytesPerVertex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -770,7 +826,7 @@ bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* m
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if ( myMesh->MorphTargetCount == 0 )
+	if( myMesh->MorphTargetCount == 0 )
 	{
 		return false;
 	}
@@ -819,10 +875,111 @@ bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* m
 
 	return false;
 }
+#endif
 
+bool TriGeometryRes::SetupMeshes( const cmf::Data& cmfData )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	int minimumLOD = gTriDev->GetMinimumModelLOD();
+
+	for( const cmf::Mesh& cmfMesh : cmfData.meshes )
+	{
+		Tr2VertexDefinition vertexDefinition = BuildFromCMFVertexDecl( cmfMesh.decl );
+		const uint32_t vertexDeclarationHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( vertexDefinition );
+		unsigned int bytesPerVertex = cmfMesh.lods[0].vb.stride;
+		
+		TriGeometryResMeshData* mesh = new TriGeometryResMeshData();
+
+		mesh->m_name = cmf::ToStdString( cmfMesh.name );
+
+		mesh->m_minBounds = cmfMesh.bounds.m_min;
+		mesh->m_maxBounds = cmfMesh.bounds.m_max;
+
+		CcpMath::Sphere sphere( cmfMesh.bounds );
+		mesh->m_boundingSphere = Vector4( sphere.center, sphere.radius );
+
+		mesh->m_vertexDeclarationHandle = vertexDeclarationHandle;
+		mesh->m_bytesPerVertex = bytesPerVertex;
+
+		for( const auto& joint : cmfMesh.boneBindings )
+		{
+			TriJointBinding binding;
+			binding.m_name = cmf::ToStdString( joint.name );
+			binding.m_obbMin = joint.bounds.m_min;
+			binding.m_obbMax = joint.bounds.m_max;
+			mesh->m_jointBindings.push_back( binding );
+		}
+
+		int32_t firstLodIndex = ClampInt( minimumLOD, 0, int32_t( cmfMesh.lods.size() ) - 1 );
+
+		for( int32_t i = firstLodIndex; i < cmfMesh.lods.size(); i++ )
+		{
+			const cmf::MeshLod& cmfLod = cmfMesh.lods[i];
+
+			//Setup a new LOD, which will be added as an LOD of the mesh.
+			std::unique_ptr<TriGeometryResLodData> lod( new TriGeometryResLodData() );
+
+			lod->m_mesh = mesh;
+
+			// TODO: intern, delete field once granny has been removed.
+			lod->m_grannyMeshIndex = 0xFFFFFFFF;
+
+			lod->m_name = cmf::ToStdString( cmfMesh.name );
+
+			lod->m_maxScreenSize = float( cmfLod.threshold );
+
+			lod->m_vertexCount = cmf::GetStreamElementCount( cmfLod.vb );
+
+			lod->m_primitiveCount = cmf::GetStreamElementCount( cmfLod.ib ) / 3;
+
+			// Get the UV densities, which are used for texture streaming.
+			lod->m_uvDensities = std::vector<float>( cmfMesh.uvDensities.begin(), cmfMesh.uvDensities.end() );
+
+			lod->m_areas.resize( cmfLod.areas.size() );
+
+			for( int groupIndex = 0; groupIndex < cmfLod.areas.size(); ++groupIndex )
+			{
+				const cmf::LodMeshArea& cmfLodMeshArea = cmfLod.areas[groupIndex];
+				const cmf::MeshArea& cmfMeshArea = cmfMesh.areas[groupIndex];
+
+				TriGeometryResAreaData& area = lod->m_areas[groupIndex];
+				area.m_name = cmf::ToStdString( cmfMeshArea.name );
+
+				area.m_firstIndex = cmfLodMeshArea.firstElement * 3;
+				area.m_primitiveCount = cmfLodMeshArea.elementCount;
+
+				area.m_isSkinned = cmfMeshArea.affectedByBones;
+				area.m_isMorphed = cmfMeshArea.affectedByMorphTargets;
+
+				area.m_minBounds = cmfMeshArea.bounds.m_min;
+				area.m_maxBounds = cmfMeshArea.bounds.m_max;
+			}
+
+			lod->m_originalLodIndex = i;
+
+			mesh->m_lods.push_back( std::move( lod ) );
+		}
+
+		uint32_t lodMask = 0u;
+		for( const auto& lod : mesh->m_lods )
+		{
+			lodMask |= 1u << lod->m_originalLodIndex;
+		}
+		mesh->m_lodMask = lodMask;
+
+		m_meshes.push_back( std::unique_ptr<TriGeometryResMeshData>( mesh ) );
+	}
+
+	return true;
+}
+
+#if WITH_GRANNY
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
+	CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::SetupMeshes: intern messed up cmf loading" );
 
 	//Used by LOD meshes to find the model they belong to.
 	std::vector<TriGeometryResMeshData*> grannyMeshIndexToMeshMap;
@@ -997,7 +1154,6 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				CCP_ASSERT( groupIndex < mbi->areaCount );
 				area.m_minBounds = *reinterpret_cast<Vector3*>( &mbi->areaInfos[groupIndex].bounds.min[0] );
 				area.m_maxBounds = *reinterpret_cast<Vector3*>( &mbi->areaInfos[groupIndex].bounds.max[0] );
-				area.m_vertexCount = mbi->areaInfos[groupIndex].vertexCount;
 			}
 			else
 			{
@@ -1010,10 +1166,6 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				}
 			}
 		}
-
-
-
-
 
 		mesh->m_lods.push_back( std::move( lod ) );
 
@@ -1055,10 +1207,38 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 
 	return true;
 }
+#endif
 
+void TriGeometryRes::SetupSkeletons( const cmf::Data& cmfData )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	m_skeletons.resize( cmfData.skeletons.size() );
+	for( int skelIx = 0; skelIx < cmfData.skeletons.size(); ++skelIx )
+	{
+		const cmf::Skeleton& skel = cmfData.skeletons[skelIx];
+		std::unique_ptr<TriGeometryResSkeletonData> pSkelData( new TriGeometryResSkeletonData() );
+
+		pSkelData->m_name = cmf::ToStdString( skel.name );
+		pSkelData->m_joints.resize( skel.bones.size() );
+		for( int jointIx = 0; jointIx < skel.bones.size(); ++jointIx )
+		{
+			TriGeometryResJointData& joint = pSkelData->m_joints[jointIx];
+			joint.m_name = cmf::ToStdString( skel.bones[jointIx] );
+			joint.m_parentJoint = skel.parents[jointIx];
+			joint.m_inverseWorldTransform = *(Matrix*)&skel.invBindTransforms[jointIx];
+		}
+
+		std::swap( m_skeletons[skelIx], pSkelData );
+	}
+}
+
+#if WITH_GRANNY
 void TriGeometryRes::SetupSkeletons( granny_file_info* gi )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
+	CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::SetupSkeletons: intern messed up cmf loading" );
 
 	m_skeletons.resize( gi->SkeletonCount );
 	for( int skelIx = 0; skelIx < gi->SkeletonCount; ++skelIx )
@@ -1084,80 +1264,103 @@ void TriGeometryRes::SetupSkeletons( granny_file_info* gi )
 		std::swap( m_skeletons[skelIx], pSkelData );
 	}
 }
+#endif
 
-bool TriGeometryRes::InitializeFromMemory( granny_file_info* gfi )
-{
-	return ReadGrannyFile( gfi );
-}
-
-void TriGeometryRes::DoPrepareFromMemory()
-{
-	if( m_inMemoryInfo )
-	{
-		DoPrepare();
-		m_inMemoryInfo = NULL;
-	}
-}
-
-bool TriGeometryRes::ReadGrannyFile( granny_file_info* gi )
+bool TriGeometryRes::ReadCMFFile()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !gi )
+	m_useCMF = true;
+	m_cmfContents = Tr2CmfContents( *m_dataStream, CW2A( m_path.c_str() ) );
+	if( !m_cmfContents || !m_cmfContents.GetData() )
 	{
-		void* data;
-		if( !m_dataStream->LockData( &data, 0 ) )
-		{
-			return false;
-		}
-
-		CCP_STATS_ZONE( "TriGeometryRes::ReadGrannyFile reading Granny file" );
-
-		m_pGrannyFile = ProtectedGrannyReadEntireFileFromMemory( m_path.c_str(), uint32_t( m_dataStream->GetSize() ), data );
-
-		if( !m_pGrannyFile )
-		{
-			return false;
-		}
-
-		gi = GrannyGetFileInfo( m_pGrannyFile );
+		return false;
 	}
-	else
+	if( !SetupMeshes( *m_cmfContents.GetData() ) )
 	{
-		m_pGrannyFile = NULL;
-		m_inMemoryInfo = gi;
+		return false;
 	}
 
+	SetupSkeletons( *m_cmfContents.GetData() );
+
+	return true;
+}
+
+#if WITH_GRANNY
+bool TriGeometryRes::ReadGrannyFile()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	m_useCMF = false;
+	
+	void* data;
+	if( !m_dataStream->LockData( &data, 0 ) )
+	{
+		return false;
+	}
+	
+	m_pGrannyFile = ProtectedGrannyReadEntireFileFromMemory( m_path.c_str(), uint32_t( m_dataStream->GetSize() ), data );
+	
+	if( !m_pGrannyFile )
+	{
+		return false;
+	}
+
+	granny_file_info* gi = GrannyGetFileInfo( m_pGrannyFile );
+	
 	// BeResMan->AddGeometryDataRead( m_dataSize );
 
 	// m_pGrannyFile is freed in CreateD3DMeshFromGranny once the D3D
 	// resources have been created on the main thread.
 
 	if( !SetupMeshes( gi ) )
-    {
-        return false;
-    }
-
+	{
+		return false;
+	}
+	
 	SetupSkeletons( gi );
-
+	
 	return true;
 }
+#endif
 
 void TriGeometryRes::PrepareFromGrannyRes( TriGrannyRes* g )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	granny_file* f = g->GetGrannyFile();
-	if( !f )
+	if( g->IsUsingCMF() )
 	{
-		return;
-	}
-	granny_file_info* gi = GrannyGetFileInfo( f );
+		const cmf::Data* cmfData = g->GetCMFData();
+		
+		if( !cmfData )
+		{
+			return;
+		}
 
-	SetupMeshes( gi );
-	SetupSkeletons( gi );
-	CreateMeshesFromGrannyFile( gi, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE, renderContext );
+		m_useCMF = true;
+
+		SetupMeshes( *cmfData );
+		SetupSkeletons( *cmfData );
+		CreateMeshesFromCMFFile( g->GetCMFContents(), Tr2CpuUsage::READ | Tr2CpuUsage::WRITE, renderContext );
+	}
+#if WITH_GRANNY
+	else
+	{
+		granny_file* f = g->GetGrannyFile();
+		if( !f )
+		{
+			return;
+		}
+		granny_file_info* gi = GrannyGetFileInfo( f );
+
+		m_useCMF = false;
+		
+		SetupMeshes( gi );
+		SetupSkeletons( gi );
+		CreateMeshesFromGrannyFile( gi, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE, renderContext );
+	}
+#endif
 
 	m_sourceGranny = g;
 
@@ -1626,7 +1829,10 @@ void TriGeometryRes::Reload()
 {
 	CancelPendingLoad();
 	NotifyReleaseCachedData();
+#if WITH_GRANNY
 	ClearGrannyData();
+#endif
+	ClearCMFData();
 	BlueAsyncRes::Reload();
 }
 
@@ -1638,7 +1844,6 @@ TriGeometryResSkeletonData::TriGeometryResSkeletonData() :
 TriGeometryResAreaData::TriGeometryResAreaData() :
 	m_firstIndex( 0 ),
 	m_primitiveCount( 0 ),
-	m_vertexCount( 0 ),
 	m_jointBindings( "TriGeometryResAreaData/m_jointBindings" ),
 	m_isSkinned( false ),
 	m_isMorphed( false )
@@ -1669,6 +1874,10 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 
 void TriGeometryRes::RequestReversedIndexBuffers()
 {
+	if( !m_isGood )
+	{
+		return;
+	}
 	if ( m_reversedIndexBuffersRequested )
 	{
 		return;
@@ -1678,12 +1887,36 @@ void TriGeometryRes::RequestReversedIndexBuffers()
 	{
 		return;
 	}
-	if( m_sourceGranny )
+
+	if( IsUsingCMF() && m_sourceGranny )
 	{
-		if( !m_isGood )
+		if( !m_sourceGranny->GetCMFData() )
 		{
 			return;
 		}
+
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		CCP_ASSERT_M( m_meshes.size() == m_sourceGranny->GetCMFData()->meshes.size(), "Amount of meshes should match!" );
+		for( uint32_t i = 0; i < m_meshes.size(); i++ )
+		{
+			auto& mesh = m_meshes[i];
+			auto& cmfMesh = m_sourceGranny->GetCMFData()->meshes[i];
+
+			// this assertion assumes that gTriDev->GetMinimumModelLOD() has not changed since last call to SetupMeshes. Not sure if this holds true.
+			int minimumLOD = gTriDev->GetMinimumModelLOD() < 0 ? 0 : min( gTriDev->GetMinimumModelLOD(), (int)cmfMesh.lods.size() - 1 );
+			CCP_ASSERT_M( mesh->m_lods.size() == cmfMesh.lods.size() - minimumLOD, "Amount of mesh lods should match!" );
+
+			for( const auto& lod : mesh->m_lods )
+			{
+				auto& cmfLod = cmfMesh.lods[lod->m_originalLodIndex];
+				ReverseIndexBuffer( *lod, m_sourceGranny->GetCMFViewData( cmfLod.ib ), cmfLod, renderContext );
+			}
+		}
+	}
+#if WITH_GRANNY
+	else if( !IsUsingCMF() && m_sourceGranny )
+	{
 		granny_file* f = m_sourceGranny->GetGrannyFile();
 		if( !f )
 		{
@@ -1702,6 +1935,7 @@ void TriGeometryRes::RequestReversedIndexBuffers()
 			}
 		}
 	}
+#endif
 	else
 	{
 		Reload();
@@ -1768,45 +2002,47 @@ bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigne
 
 namespace
 {
-TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDefinition& vertexDefinition, uint32_t stride, uint32_t vertexCount, Tr2RenderContext& renderContext )
-{
-	TriMorphTargetGeometryConstants data = TriMorphTargetGeometryConstants{};
-	for( auto it = begin( vertexDefinition.m_items ); it != end( vertexDefinition.m_items ); ++it )
+	TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDefinition& vertexDefinition, uint32_t stride, uint32_t vertexCount, Tr2RenderContext& renderContext )
 	{
-		if( it->m_usage == Tr2VertexDefinition::POSITION && it->m_usageIndex == 0 && it->m_stream == 0 )
+		TriMorphTargetGeometryConstants data = TriMorphTargetGeometryConstants{};
+		for( const auto& item : vertexDefinition.m_items )
 		{
-			data.positionOffset = it->m_offset;
-			data.positionType = it->m_dataType;
+			if( item.m_usage == Tr2VertexDefinition::POSITION && item.m_usageIndex == 0 && item.m_stream == 0 )
+			{
+				data.positionOffset = item.m_offset;
+				data.positionType = item.m_dataType;
 
-			uint32_t type = data.positionType;
-			CCP_ASSERT_M(
-				type == Tr2VertexDefinition::DataType::FLOAT32_3,
-				"position type has to be FLOAT32_3!" 
-			);
+				uint32_t type = data.positionType;
+				CCP_ASSERT_M(
+					type == Tr2VertexDefinition::DataType::FLOAT32_3,
+					"position type has to be FLOAT32_3!"
+				);
+			}
+
+			if( item.m_usage == Tr2VertexDefinition::TANGENT && item.m_usageIndex == 0 && item.m_stream == 0 )
+			{
+				data.tangentOffset = item.m_offset;
+				data.tangentType = item.m_dataType;
+
+				uint32_t type = data.tangentType;
+				CCP_ASSERT_M(
+					type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
+					type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
+					type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
+					type == Tr2VertexDefinition::DataType::USHORT_4_NORM ||
+					type == Tr2VertexDefinition::DataType::SHORT_4_NORM,
+					"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM or SHORT_4_NORM!"
+				);
+			}
 		}
 
-		if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
-		{
-			data.tangentOffset = it->m_offset;
-			data.tangentType = it->m_dataType;
-
-			uint32_t type = data.tangentType;
-			CCP_ASSERT_M(
-				type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-				type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
-				type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
-				type == Tr2VertexDefinition::DataType::USHORT_4_NORM,
-				"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM!" 
-			);
-		}
+		data.vertexBufferStride = stride;
+		data.vertexCount = vertexCount;
+		return data;
 	}
-
-	data.vertexBufferStride = stride;
-	data.vertexCount = vertexCount;
-	return data;
-}
 }
 
+#if WITH_GRANNY
 float CalculateMorphDeformationAmount( bool dataIsDeltas, int32_t vertexCount, uint8_t* pMorphSrc, Tr2VertexDefinition morphDecl, uint8_t* pVertices, Tr2VertexDefinition decl )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1823,7 +2059,139 @@ float CalculateMorphDeformationAmount( bool dataIsDeltas, int32_t vertexCount, u
 
 	return sqrt( maxAmount );
 }
+#endif
 
+bool TriGeometryRes::CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* lod, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	if( !Tr2Renderer::IsResourceCreationAllowed() )
+	{
+		return false;
+	}
+
+	Tr2VertexDefinition vertexDefinition = BuildFromCMFVertexDecl( cmfMesh.decl );
+	const unsigned bytesPerVertex = cmfMeshLod.vb.stride;
+	const unsigned bytesPerIndex = cmfMeshLod.ib.stride;
+
+	int vertexCount = cmf::GetStreamElementCount( cmfMeshLod.vb );
+	int vbSize = cmfMeshLod.vb.size;
+
+	CCP_ASSERT_M( cmfContents, "TriGeometryRes::CreateLodFromCMFMesh: cmfContents must be valid!" );
+
+	const void* pSrcVB = cmfContents.GetViewData( cmfMeshLod.vb );
+
+	int indexCount = cmf::GetStreamElementCount( cmfMeshLod.ib );
+
+	CR_RETURN_VAL( g_sharedBuffer.Allocate( bytesPerVertex, vertexCount, const_cast<void*>( pSrcVB ), renderContext, lod->m_vertexAllocation ), false );
+
+	// create d3d index buffer, this one is shared, either for dynamic or static geometry
+	int ibSize = indexCount * bytesPerIndex;
+
+	const void* pSrcIB = cmfContents.GetViewData( cmfMeshLod.ib );
+
+	if( indexCount > 0 )
+	{
+		ALResult hr = g_sharedBuffer.Allocate( bytesPerIndex, indexCount, const_cast<void*>( pSrcIB ), renderContext, lod->m_indexAllocation );
+		if( FAILED( hr ) )
+		{
+			g_sharedBuffer.Free( lod->m_vertexAllocation );
+			return false;
+		}
+
+		if( m_reversedIndexBuffersRequested )
+		{
+			std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
+			memcpy( tempBuffer.data(), pSrcIB, tempBuffer.size() );
+			if( bytesPerIndex == 2 )
+			{
+				std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + cmfMeshLod.ib.size ) );
+			}
+			else
+			{
+				std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + cmfMeshLod.ib.size ) );
+			}
+
+			if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod->m_reversedIndexAllocation ) ) )
+			{
+				g_sharedBuffer.Free( lod->m_vertexAllocation );
+				g_sharedBuffer.Free( lod->m_indexAllocation );
+				return false;
+			}
+			lod->m_reversedIndicesValid = true;
+		}
+	}
+
+	lod->m_morphVertexDeclaration = -1;
+	{ // Morph Target
+		if( cmfMesh.morphTargets.targets.size() > 0 )
+		{
+			// Allocate the morph target array based on the size of the first morph target
+			Tr2VertexDefinition morphTargetVertexDefinition = BuildFromCMFVertexDecl( cmfMesh.morphTargets.decl );
+			lod->m_bytesPerMorphTargetVertex = cmfMeshLod.morphTargets[0].vb.stride;
+			uint32_t morphDataSize = vertexCount * lod->m_bytesPerMorphTargetVertex;
+			uint32_t morphTargetBufferSize = (uint32_t)( morphDataSize * cmfMesh.morphTargets.targets.size() + sizeof( TriMorphTargetGeometryConstants ) );
+
+			CR_RETURN_VAL( g_sharedBuffer.Allocate(
+				4,
+				morphTargetBufferSize >> 2,
+				nullptr,
+				renderContext,
+				lod->m_morphTargetAllocation ),
+				false 
+			);
+
+			TriMorphTargetGeometryConstants morphTargetConstants = CreateMorphGeometryConstants(
+				morphTargetVertexDefinition,
+				lod->m_bytesPerMorphTargetVertex,
+				vertexCount,
+				renderContext );
+
+			lod->m_morphTargetAllocation.Update( &morphTargetConstants, 0, sizeof( TriMorphTargetGeometryConstants ), renderContext );
+
+			for( int i = 0; i < cmfMesh.morphTargets.targets.size(); ++i )
+			{
+				const cmf::MorphTarget& morphTarget = cmfMesh.morphTargets.targets[i];
+
+				size_t nameLength = morphTarget.name.size();
+				// TODO: intern, this "Shape" suffix will likely be gone later
+				// By convention (due to the exporter), the morph target name ends with "Shape". Assert that it does, and also that it is not an empty string!
+				std::string morphTargetName = cmf::ToStdString( morphTarget.name );
+				if( nameLength > 5 && strcmp( morphTargetName.c_str() + nameLength - 5, "Shape" ) == 0 )
+				{
+					morphTargetName = std::string( morphTarget.name.data(), nameLength - 5 );
+				}
+
+				lod->m_morphTargetNames.push_back( morphTargetName );
+
+				lod->m_isBakedMorphTarget.push_back( false );
+
+				const void* pMorphSrc = cmfContents.GetViewData( cmfMeshLod.morphTargets[i].vb );
+				lod->m_morphTargetAllocation.Update(
+					const_cast<void*>( pMorphSrc ),
+					morphDataSize * i + sizeof( TriMorphTargetGeometryConstants ),
+					morphDataSize,
+					renderContext );
+
+				lod->m_morphTargetDeformationAmounts.push_back( morphTarget.maxDisplacement );
+			}
+
+			lod->m_morphVertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( morphTargetVertexDefinition );
+		}
+	}
+
+	lod->m_allocationsValid = true;
+
+	m_memoryUse += vbSize + ibSize; // Memory use is only approximate as a hint for the resource cache
+	if( m_reversedIndexBuffersRequested )
+	{
+		m_memoryUse += ibSize;
+	}
+
+	return true;
+}
+
+#if WITH_GRANNY
 bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeometryResLodData* lod, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1878,8 +2246,6 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 	{ // Index Buffer
 		std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
 		GrannyCopyMeshIndices( grannyMesh, bytesPerIndex, &tempBuffer[0] );
-
-		
 
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		ALResult hr = g_sharedBuffer.Allocate( bytesPerIndex, indexCount, &tempBuffer[0], renderContext, lod->m_indexAllocation );
@@ -1946,7 +2312,7 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 				Tr2VertexDefinition morphTargetVertexDefinition = BuildFromGrannyVertexDecl( morphTarget.VertexData->VertexType );
 
 				uint32_t currentBytesPerMorphTargetVertex = morphTargetVertexDefinition.m_nextOffset[0];
-				uint32_t currentMorphDataSize = firstMorphTarget.VertexData->VertexCount * lod->m_bytesPerMorphTargetVertex;
+				uint32_t currentMorphDataSize = morphTarget.VertexData->VertexCount * currentBytesPerMorphTargetVertex;
 
 				CCP_ASSERT_M( morphTargetVertexDefinition == firstMorphTargetVertexDefinition, "Morph targets have different definitions, these need to match!" );
 				CCP_ASSERT_M( vertexCount == morphTarget.VertexData->VertexCount, "Morph targets have different vertex counts, these need to match!" );
@@ -1991,7 +2357,47 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 	
 	return true;
 }
+#endif
 
+bool TriGeometryRes::CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	if( !cmfContents.GetData() )
+	{
+		return false;
+	}
+
+	for( int32_t i = 0; i < m_meshes.size(); i++ )
+	{
+		auto& mesh = m_meshes[i];
+
+		for( const auto& lod : mesh->m_lods )
+		{
+			CreateLodFromCMFMesh( cmfContents, cmfContents.GetData()->meshes[i], cmfContents.GetData()->meshes[i].lods[lod->m_originalLodIndex], lod.get(), cpuUsage, renderContext );
+		}
+
+		if( g_eveIsAudioOcclusionGeometryEnabled )
+		{
+			const auto& audioMesh = cmfContents.GetData()->meshes[i].audioOcclusionMesh;
+			if( !audioMesh.vertices.empty() && !audioMesh.indices.empty() )
+			{
+				auto audioGeometry = std::make_unique<AudioGeometryResData>();
+				audioGeometry->m_indices.insert( audioGeometry->m_indices.end(), audioMesh.indices.begin(), audioMesh.indices.end() );
+				audioGeometry->m_vertices.insert( audioGeometry->m_vertices.end(), audioMesh.vertices.begin(), audioMesh.vertices.end() );
+				audioGeometry->m_minBounds = audioMesh.bounds.m_min;
+				audioGeometry->m_maxBounds = audioMesh.bounds.m_max;
+
+				mesh->m_audioGeometry = std::move( audioGeometry );
+			}
+		}
+	}
+	CCP_STATS_ADD( geometryResBytes, m_memoryUse );
+
+	return true;
+}
+
+#if WITH_GRANNY
 static granny_mesh* FindOcclusionMesh( granny_file_info* gi, const std::string& meshName )
 {
 	std::string occlusionName = meshName + "_Occlusion";
@@ -2012,16 +2418,22 @@ bool TriGeometryRes::CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsa
 	for( auto& mesh : m_meshes )
 	{
 		for( auto& lod : mesh->m_lods )
+		{
 			CreateLodFromGrannyMesh( gi->Meshes[lod->m_grannyMeshIndex], lod.get(), cpuUsage, renderContext );
+		}
 
 		if( g_eveIsAudioOcclusionGeometryEnabled )
 		{
 			granny_mesh* audioMesh = FindOcclusionMesh( gi, mesh->m_name );
 			if( !audioMesh && !mesh->m_lods.empty() )
+			{
 				audioMesh = gi->Meshes[mesh->m_lods.back()->m_grannyMeshIndex];
+			}
 
 			if( audioMesh )
+			{
 				ExtractAudioGeometry( mesh.get(), audioMesh );
+			}
 		}
 	}
 
@@ -2068,6 +2480,7 @@ void TriGeometryRes::ExtractAudioGeometry( TriGeometryResMeshData* mesh, granny_
 
 	mesh->m_audioGeometry = std::move( audioGeometry );
 }
+#endif
 
 Be::Result<std::string> TriGeometryRes::SaveMesh( const char* filename, uint32_t meshIndex ) const
 {
@@ -2080,23 +2493,163 @@ Be::Result<std::string> TriGeometryRes::SaveMesh( const char* filename, uint32_t
 	{
 		return Be::Result<std::string>( "Invalid mesh index" );
 	}
-	if( !SaveMeshToGrannyFile( meshData, filename ) )
+
+	if( IsUsingCMF() )
 	{
-		return Be::Result<std::string>( "Failed to save the mesh" );
+		if( !SaveMeshToCMFFile( *meshData, filename ) )
+		{
+			return Be::Result<std::string>( "Failed to save the mesh" );
+		}
 	}
+#if WITH_GRANNY
+	else
+	{
+		if( !SaveMeshToGrannyFile( *meshData, filename ) )
+		{
+			return Be::Result<std::string>( "Failed to save the mesh" );
+		}
+	}
+#else
+	else
+	{
+		return Be::Result<std::string>( "Failed to save the mesh. Use CMF!" );
+	}
+#endif
 	return Be::Result<std::string>();
 }
 
-bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const char* filename )
+bool TriGeometryRes::SaveMeshToCMFFile( TriGeometryResMeshData& mesh, const char* filename )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( !pMesh || pMesh->m_vertexDeclarationHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	if( mesh.m_vertexDeclarationHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
 		return false;
 	}
 
-	auto& lod = pMesh->m_lods[0];
+	auto& lod = mesh.m_lods[0];
+
+	if( !lod->m_allocationsValid )
+	{
+		return false;
+	}
+
+	Tr2VertexDefinition decl;
+	if( !Tr2EffectStateManager::GetVertexDeclarationElements( mesh.m_vertexDeclarationHandle, decl ) )
+	{
+		return false;
+	}
+
+	cmf::MemoryAllocator allocator;
+	cmf::BufferManager bufferAllocator( allocator );
+	cmf::Span<cmf::VertexElement> cmfVertexDecl = allocator.AllocateSpan<cmf::VertexElement>( decl.m_items.size() );
+
+	if( !ConvertVertexDeclToCMF( decl, cmfVertexDecl, (uint32_t)cmfVertexDecl.size() ) )
+	{
+		return false;
+	}
+
+	uint32_t vertexBufferSize = lod->m_vertexAllocation.GetSize();
+	uint32_t vertexBufferStride = lod->m_vertexAllocation.GetStride();
+	const void* pVertices;
+	if( FAILED( lod->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
+	{
+		return false;
+	}
+	ON_BLOCK_EXIT( [&] { lod->m_vertexAllocation.UnmapForReading( renderContext ); } );
+
+	uint32_t indexBufferSize = lod->m_indexAllocation.GetSize();
+	uint32_t indexBufferStride = lod->m_indexAllocation.GetStride();
+	const void* pIndices;
+	if( FAILED( lod->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
+	{
+		return false;
+	}
+	ON_BLOCK_EXIT( [&] { lod->m_indexAllocation.UnmapForReading( renderContext ); } );
+
+	
+	cmf::Data cmfData;
+	cmfData.meshes = allocator.AllocateSpan<cmf::Mesh>( 1 );
+
+	cmf::Mesh& cmfMesh = cmfData.meshes[0] = {};
+	cmfMesh.name = allocator.AllocateString( mesh.m_name );
+	cmfMesh.decl = cmfVertexDecl;
+	cmfMesh.lods = allocator.AllocateSpan<cmf::MeshLod>( 1 );
+	cmfMesh.areas = allocator.AllocateSpan<cmf::MeshArea>( lod->m_areas.size() );
+	cmfMesh.boneBindings = allocator.AllocateSpan<cmf::BoneBinding>( mesh.m_jointBindings.size() );
+	cmfMesh.uvDensities = allocator.AllocateSpan<float>( lod->m_uvDensities.size() );
+	cmfMesh.bounds = AxisAlignedBoundingBox( mesh.m_minBounds, mesh.m_maxBounds );
+
+	memcpy( cmfMesh.uvDensities.data(), lod->m_uvDensities.data(), lod->m_uvDensities.size() * sizeof( float ) );
+
+	cmf::MeshLod& cmfMeshLod = cmfMesh.lods[0];
+	cmfMeshLod.vb = bufferAllocator.AddBuffer( (void*)pVertices, vertexBufferSize, vertexBufferStride );
+	cmfMeshLod.ib = bufferAllocator.AddBuffer( (void*)pIndices, indexBufferSize, indexBufferStride );
+	cmfMeshLod.areas = allocator.AllocateSpan<cmf::LodMeshArea>( lod->m_areas.size() );
+	cmfMeshLod.morphTargets = cmf::Span<cmf::LodMorphTarget>();
+	cmfMeshLod.threshold = (uint32_t)lod->m_maxScreenSize;
+
+	for( int32_t i = 0; i < cmfMesh.areas.size(); i++ )
+	{
+		cmf::MeshArea& cmfMeshArea = cmfMesh.areas[i];
+		cmfMeshArea.name = allocator.AllocateString( lod->m_areas[i].m_name );
+		cmfMeshArea.bounds = AxisAlignedBoundingBox( lod->m_areas[i].m_minBounds, lod->m_areas[i].m_maxBounds );
+		cmfMeshArea.bones = allocator.AllocateSpan<uint16_t>( lod->m_areas[i].m_jointBindings.size() );
+		cmfMeshArea.affectedByBones = lod->m_areas[i].m_isSkinned;
+		cmfMeshArea.affectedByMorphTargets = false;
+
+		for( int32_t j = 0; j < lod->m_areas[i].m_jointBindings.size(); j++ )
+		{
+			cmfMeshArea.bones[j] = (uint16_t) lod->m_areas[i].m_jointBindings[j];
+		}
+
+		cmf::LodMeshArea& lodMeshArea = cmfMeshLod.areas[i];
+		lodMeshArea.firstElement = lod->m_areas[i].m_firstIndex / 3;
+		lodMeshArea.elementCount = lod->m_areas[i].m_primitiveCount;
+	}
+
+	for( int32_t i = 0; i < cmfMesh.boneBindings.size(); i++ )
+	{
+		cmf::BoneBinding& cmfBoneBinding = cmfMesh.boneBindings[i];
+		cmfBoneBinding.name = allocator.AllocateString( mesh.m_jointBindings[i].m_name );
+		cmfBoneBinding.bounds = AxisAlignedBoundingBox( mesh.m_jointBindings[i].m_obbMin, mesh.m_jointBindings[i].m_obbMax );
+	}
+
+	auto file = cmf::BuildFile( cmfData, bufferAllocator );
+
+	std::wstring filenameW = (const wchar_t*)CA2W( filename );
+	std::wstring fullPath = BePaths->ResolvePathForWritingW( filenameW );
+
+	FILE* outFile;
+	auto err = fopen_s( &outFile, CW2A( fullPath.c_str() ), "wb" );
+
+	if( err != 0 )
+	{
+		CCP_LOGERR( "Failed to open output file: %ls\n", fullPath.c_str() );
+		return false;
+	}
+	if( fwrite( file.data(), 1, file.size(), outFile ) != file.size() )
+	{
+		CCP_LOGERR( "Failed to write output file: %ls\n", fullPath.c_str() );
+		fclose( outFile );
+		return false;
+	}
+	fclose( outFile );
+
+	return true;
+}
+
+#if WITH_GRANNY
+bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData& mesh, const char* filename )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	if( mesh.m_vertexDeclarationHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	{
+		return false;
+	}
+
+	auto& lod = mesh.m_lods[0];
 
 	if( !lod->m_allocationsValid )
 	{
@@ -2106,7 +2659,7 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 	granny_data_type_definition grannyVertexDecl[16];
 	
 	Tr2VertexDefinition decl;
-	if( !Tr2EffectStateManager::GetVertexDeclarationElements( pMesh->m_vertexDeclarationHandle, decl ) )
+	if( !Tr2EffectStateManager::GetVertexDeclarationElements( mesh.m_vertexDeclarationHandle, decl ) )
 	{
 		return false;
 	}
@@ -2221,7 +2774,7 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 	}
 	
 	// Bones
-	grannyMesh.BoneBindingCount = (granny_int32)pMesh->m_jointBindings.size();
+	grannyMesh.BoneBindingCount = (granny_int32)mesh.m_jointBindings.size();
 	grannyMesh.BoneBindings = CCP_NEW("grannyMesh.BoneBindings") granny_bone_binding[grannyMesh.BoneBindingCount];
 	if( grannyMesh.BoneBindings == nullptr )
 	{
@@ -2232,13 +2785,13 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 		memset( grannyMesh.BoneBindings, 0, sizeof( granny_bone_binding ) * grannyMesh.BoneBindingCount );
 		for( int i = 0; i < grannyMesh.BoneBindingCount; ++i )
 		{
-			grannyMesh.BoneBindings[i].BoneName = pMesh->m_jointBindings[i].m_name.c_str();
-			grannyMesh.BoneBindings[i].OBBMin[0] = pMesh->m_jointBindings[i].m_obbMin.x;
-			grannyMesh.BoneBindings[i].OBBMin[1] = pMesh->m_jointBindings[i].m_obbMin.y;
-			grannyMesh.BoneBindings[i].OBBMin[2] = pMesh->m_jointBindings[i].m_obbMin.z;
-			grannyMesh.BoneBindings[i].OBBMax[0] = pMesh->m_jointBindings[i].m_obbMax.x;
-			grannyMesh.BoneBindings[i].OBBMax[1] = pMesh->m_jointBindings[i].m_obbMax.y;
-			grannyMesh.BoneBindings[i].OBBMax[2] = pMesh->m_jointBindings[i].m_obbMax.z;
+			grannyMesh.BoneBindings[i].BoneName = mesh.m_jointBindings[i].m_name.c_str();
+			grannyMesh.BoneBindings[i].OBBMin[0] = mesh.m_jointBindings[i].m_obbMin.x;
+			grannyMesh.BoneBindings[i].OBBMin[1] = mesh.m_jointBindings[i].m_obbMin.y;
+			grannyMesh.BoneBindings[i].OBBMin[2] = mesh.m_jointBindings[i].m_obbMin.z;
+			grannyMesh.BoneBindings[i].OBBMax[0] = mesh.m_jointBindings[i].m_obbMax.x;
+			grannyMesh.BoneBindings[i].OBBMax[1] = mesh.m_jointBindings[i].m_obbMax.y;
+			grannyMesh.BoneBindings[i].OBBMax[2] = mesh.m_jointBindings[i].m_obbMax.z;
 		}
 	}
 
@@ -2263,6 +2816,7 @@ bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const 
 
 	return true;
 }
+#endif
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -2462,3 +3016,16 @@ BlueStdResult TriGeometryRes::GetMeshVertexElements( size_t meshIndex, std::vect
 	return BLUE_STD_RESULT_OK;
 }
 
+bool TriGeometryRes::IsUsingCMF() const
+{
+#if WITH_GRANNY != 1
+	CCP_ASSERT_M( m_useCMF, "TriGeometryRes: Some place was about to take the granny code path, even though it's disabled! Make sure to use CMF!" );
+	return true;
+#endif
+	return m_useCMF;
+}
+
+const cmf::Data* TriGeometryRes::GetCMFData() const
+{
+	return m_cmfContents.GetData();
+}

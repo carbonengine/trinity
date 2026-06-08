@@ -2,6 +2,7 @@
 
 #include "include/ITr2GpuBuffer.h"
 #include "Tr2DeviceResource.h"
+#include "Utilities/MatrixUtils.h"
 
 
 struct Tr2MorphTargetAnimationData

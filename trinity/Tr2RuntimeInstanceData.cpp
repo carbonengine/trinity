@@ -28,6 +28,72 @@ Tr2RuntimeInstanceData::Tr2RuntimeInstanceData( IRoot* lockobj )
 
 // --------------------------------------------------------------------------------------
 // Description:
+//   Saves current particle data into a CMF file.
+// Arguments:
+//   resPath - Resource path of the CMF file to save particle data to.
+// --------------------------------------------------------------------------------------
+void Tr2RuntimeInstanceData::SaveToCMF( const char* resPath ) const
+{
+	if( !m_data )
+	{
+		return;
+	}
+
+	std::wstring resPathW = (const wchar_t*)CA2W( resPath );
+	std::wstring filename = BePaths->ResolvePathForWritingW( resPathW );
+
+#if WITH_GRANNY
+	if( filename.size() >= 4 && filename.compare( filename.size() - 4, 4, L".gr2" ) == 0 )
+	{
+		return SaveToGranny( resPath );
+	}
+#endif
+
+	cmf::MemoryAllocator allocator;
+	cmf::BufferManager bufferAllocator( allocator );
+	cmf::Span<cmf::VertexElement> cmfVertexDecl = allocator.AllocateSpan<cmf::VertexElement>( m_layout.m_items.size() );
+
+	if( !ConvertVertexDeclToCMF( m_layout, cmfVertexDecl, (uint32_t)cmfVertexDecl.size() ) )
+	{
+		return;
+	}
+
+	uint32_t vertexBufferStride = m_stride;
+	uint32_t vertexBufferSize = vertexBufferStride * m_count;
+	
+	cmf::Data cmfData;
+	cmfData.meshes = allocator.AllocateSpan<cmf::Mesh>( 1 );
+
+	cmf::Mesh& cmfMesh = cmfData.meshes[0] = {};
+	cmfMesh.name = allocator.AllocateString( m_name );
+	cmfMesh.decl = cmfVertexDecl;
+	cmfMesh.lods = allocator.AllocateSpan<cmf::MeshLod>( 1 );
+
+	cmf::MeshLod& cmfMeshLod = cmfMesh.lods[0] = {};
+	cmfMeshLod.vb = bufferAllocator.AddBuffer( m_data.get(), vertexBufferSize, vertexBufferStride );
+
+	auto file = cmf::BuildFile( cmfData, bufferAllocator );
+
+	FILE* outFile;
+	auto err = fopen_s( &outFile, CW2A( filename.c_str() ), "wb" );
+
+	if( err != 0 )
+	{
+		CCP_LOGERR( "Failed to open output file: %ls\n", filename.c_str() );
+		return;
+	}
+	if( fwrite( file.data(), 1, file.size(), outFile ) != file.size() )
+	{
+		CCP_LOGERR( "Failed to write output file: %ls\n", filename.c_str() );
+		fclose( outFile );
+		return;
+	}
+	fclose( outFile );
+}
+
+#if WITH_GRANNY
+// --------------------------------------------------------------------------------------
+// Description:
 //   Saves current particle data into a granny file.
 // Arguments:
 //   resPath - Resource path of the granny file to save particle data to.
@@ -41,6 +107,11 @@ void Tr2RuntimeInstanceData::SaveToGranny( const char* resPath ) const
 
 	std::wstring resPathW = (const wchar_t*)CA2W( resPath );
 	std::wstring filename = BePaths->ResolvePathForWritingW( resPathW );
+
+	if( filename.size() >= 4 && filename.compare( filename.size() - 4, 4, L".cmf" ) == 0 )
+	{
+		return SaveToCMF( resPath );
+	}
 
 	granny_data_type_definition* definition = CCP_NEW( "Tr2RuntimeInstanceData::SaveToGranny" ) granny_data_type_definition[m_layout.m_items.size() + 1];
 	if( !ConvertVertexDeclToGranny( m_layout, definition, (unsigned int)( m_layout.m_items.size() ) ) )
@@ -113,6 +184,7 @@ void Tr2RuntimeInstanceData::SaveToGranny( const char* resPath ) const
 	CCP_DELETE vertexData;
 	CCP_DELETE []definition;
 }
+#endif
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -500,28 +572,28 @@ void Tr2RuntimeInstanceData::Spawn()
 		for( auto i = particleElements.begin(); i != particleElements.end(); ++i )
 		{
 			bool found = false;
-			for( size_t j = 0; j != m_layout.m_items.size(); ++j )
+			for( const auto& item : m_layout.m_items )
 			{
 				unsigned usageIndex = 0;
 				if( i->first.m_type == Tr2ParticleElementDeclarationName::CUSTOM )
 				{
 					usageIndex = i->second.m_usageIndex;
 				}
-				if( m_layout.m_items[j].m_usage == i->first.GetD3DUsage() && m_layout.m_items[j].m_usageIndex == usageIndex )
+				if( item.m_usage == i->first.GetD3DUsage() && item.m_usageIndex == usageIndex )
 				{
 					DeclarationMapping mapping;
-					mapping.inOffset = m_layout.m_items[j].m_offset;
+					mapping.inOffset = item.m_offset;
 					mapping.buffer = i->second.m_bufferType;
 					mapping.offset = i->second.m_offset;
 					mapping.length = i->second.m_dimension;
 					
-					if( m_layout.m_items[j].m_dataType >= m_layout.FLOAT32_1 + int( i->second.m_dimension ) - 1 && 
-						m_layout.m_items[j].m_dataType <= m_layout.FLOAT32_4 )
+					if( item.m_dataType >= m_layout.FLOAT32_1 + int( i->second.m_dimension ) - 1 && 
+						item.m_dataType <= m_layout.FLOAT32_4 )
 					{
 						mapping.isFloat16 = false;
 					}
-					else if( ( m_layout.m_items[j].m_dataType == m_layout.FLOAT16_2 && i->second.m_dimension <= 2 ) || 
-							 m_layout.m_items[j].m_dataType == m_layout.FLOAT16_4 )
+					else if( ( item.m_dataType == m_layout.FLOAT16_2 && i->second.m_dimension <= 2 ) || 
+							 item.m_dataType == m_layout.FLOAT16_4 )
 					{
 						CCP_LOGWARN( 
 							"Particle elements \"%s\" has FLOAT16 type in Tr2RuntimeInstanceData \"%s\", this degrades emitter performance", 

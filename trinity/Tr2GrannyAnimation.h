@@ -15,6 +15,7 @@ class Tr2AnimationMeshBinding;
 namespace Tr2GrannyAnimationUtils
 {
 	bool GetBoneList( Tr2GrannyAnimation* animationUpdater, const Float4x3*& bones, size_t& boneCount );
+	std::vector<int32_t> CreateMapping( const cmf::Skeleton& skeleton, cmf::Span<cmf::BoneBinding> boneBindings, uint32_t meshBoneCount );
 };
 
 struct GrannyBoneBindingBounds
@@ -56,8 +57,14 @@ public:
 
 	const std::string& GetModel() const;
 	void SetModel( const std::string& val);
-	granny_model* GetGrannyModel() const;
+
+	const cmf::Skeleton* GetSkeleton() const;
+	const std::vector<Matrix>& GetWorldTransforms() const;
 	
+#if WITH_GRANNY
+	granny_model* GetGrannyModel() const;
+#endif
+
 	bool IsInitialized() const;
 
 	bool	PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone=true );
@@ -94,8 +101,11 @@ public:
 
 	bool GetDynamicBounds( Vector4& boundingSphere, Vector3 &aabbMin, Vector3 &aabbMax );
 	void RenderDynamicBounds( const Matrix& modelTransform );
+
+#if WITH_GRANNY
 	Vector4 CalculateSkinnedBoundingSphere( granny_file_info* fi=nullptr );
 	bool CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform, Vector3& bbMin, Vector3& bbMax, granny_file_info* fi=nullptr );
+#endif
 
 	void RenderBones( const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding = nullptr );
 
@@ -121,7 +131,11 @@ public:
 	void	RebuildCachedData( BlueAsyncRes* p );
 
 	bool	FindBoneByName( const char* name, unsigned int& ix ) const;
-	granny_animation* FindAnimationByName( const char* name ) const;
+	const cmf::Animation* FindCMFAnimationByName( const char* name ) const;
+#if WITH_GRANNY
+	granny_animation* FindGrannyAnimationByName( const char* name ) const;
+#endif
+	float FindAnimationDurationByName( const char* name ) const;
 
 	void	Cleanup();
 
@@ -130,9 +144,21 @@ public:
 
 	const std::unordered_map<std::string, float>& GetMorphAnimations() const;
 
+#if WITH_GRANNY
 	granny_skeleton *m_skeleton;
 	granny_world_pose *m_worldPose;
 	granny_mesh_binding *m_meshBinding;
+#endif
+
+	bool IsUsingCMF() const;
+	const cmf::Data* GetCMFData() const;
+
+	const std::vector<int32_t>& GetSkeletonBoneIndices();
+
+	bool HasMeshBinding() const;
+	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
+
+	bool GetBoneWorldTransform( const char* boneName, Matrix& transform ) const;
 
 private:
 	std::string			m_name;
@@ -146,9 +172,24 @@ private:
 	std::vector<GrannyBoneBindingBounds> m_boneBounds;
 	bool InitializeBoundingInfo();
 
+#if WITH_GRANNY
+	void UpdateAimingBone();
+	void UpdateDebugRenderer( const Matrix& modelTransform );
+#endif
+	void UpdateAimingBone( const cmf::Skeleton& skeleton );
+	void UpdateDebugRenderer( const cmf::Skeleton& skeleton, const Matrix& modelTransform );
+
 	PGrannyBoneOffset m_boneOffset;
+
+#if WITH_GRANNY
 	granny_local_pose *m_localPose;
 	granny_local_pose *m_compositePose;
+#endif
+	cmf::SkeletonPose m_pose;
+	cmf::SkeletonPose m_tmpPose;
+	std::vector<int32_t> m_skeletonBoneIndices;
+	std::vector<Matrix> m_worldTransforms;
+
 	std::map<std::string, Tr2GrannyAnimationLayer> m_animationLayers;
 	std::map<std::string, float> m_animationLayerWeights;
 	Tr2GrannyAnimationLayer m_baseLayer;
@@ -162,7 +203,9 @@ private:
 	Float4x3* m_meshBoneMatrixList;
 	int m_meshBoneCount;
 	int m_modelIndex;
+#if WITH_GRANNY
 	int m_meshBindingIndex;
+#endif
 
 	bool m_debugRenderSkeleton;
 	bool m_debugRenderJointNames;
@@ -181,7 +224,10 @@ private:
 	float m_pauseTime;
 	float m_totalPauseOffset;
 
+#if WITH_GRANNY
 	granny_file_info* GetFileInfo() const;
+#endif
+
 	void LoadSecondaryResPath( const std::string& val );
 	void	ApplyBoneOffsets ( unsigned i );
 	
@@ -204,7 +250,13 @@ public:
 	uint32_t GetMeshIndex() const;
 	Tr2GrannyAnimation* GetAnimation() const;
 
+	const std::vector<int32_t>& GetAnimBoneIndices() const;
+	bool HasMeshBinding() const;
+	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
+
+#if WITH_GRANNY
 	const granny_mesh_binding* GetGrannyMeshBinding() const;
+#endif
 
 private:
 	void CreateBinding();
@@ -212,9 +264,15 @@ private:
 	void ReleaseCachedData( BlueAsyncRes* p ) override;
 	void RebuildCachedData( BlueAsyncRes* p ) override;
 
+	const cmf::Skeleton* m_cmfSkeleton;
+	std::vector<int32_t> m_bindBoneIndices;
+	std::vector<int32_t> m_animBoneIndices;
+
+#if WITH_GRANNY
 	std::unique_ptr<granny_mesh_binding, decltype( &GrannyFreeMeshBinding )> m_meshBinding{ nullptr, &GrannyFreeMeshBinding };
-	std::unique_ptr<Float4x3[]> m_boneTransforms;
 	granny_skeleton* m_meshSkeleton = nullptr;
+#endif
+	std::unique_ptr<Float4x3[]> m_boneTransforms;
 
 	Tr2GrannyAnimationPtr m_animation;
 	TriGeometryResPtr m_geometryRes;

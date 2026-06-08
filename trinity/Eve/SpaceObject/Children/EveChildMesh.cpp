@@ -1020,7 +1020,7 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 			m_animationUpdater->PrePhysicsAnimation( 0, IdentityMatrix() );
 		}
 
-		if( m_mesh && !m_animationUpdater->m_meshBinding )
+		if( m_mesh && !m_animationUpdater->HasMeshBinding() )
 		{
 			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != m_mesh->GetGeometryResource() || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
 			{
@@ -1289,7 +1289,8 @@ std::pair<const Float4x3*, size_t> EveChildMesh::GetBoneTransforms() const
 	}
 
 	auto accumulatedTransforms = m_animationUpdater->GetAnimationTransforms();
-	if( m_animationUpdater->m_meshBinding )
+
+	if( m_animationUpdater->HasMeshBinding() )
 	{
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
 		return std::make_pair( bones, boneCount );
@@ -1605,16 +1606,16 @@ const std::pair<const int32_t*, size_t> EveChildMesh::GetMeshBindingIndices() co
 		return std::make_pair( nullptr, 0 );
 	}
 
-	if( m_animationUpdater->m_meshBinding )
+	if( m_animationUpdater->HasMeshBinding() )
 	{
-		auto boneCount = GrannyGetMeshBindingBoneCount( m_animationUpdater->m_meshBinding );
-		return std::make_pair( GrannyGetMeshBindingToBoneIndices( m_animationUpdater->m_meshBinding ), boneCount );
+		return m_animationUpdater->GetMeshBindingIndices();
 	}
-	if( m_meshBinding && m_meshBinding->GetGrannyMeshBinding() )
+
+	if( m_meshBinding && m_meshBinding->HasMeshBinding() )
 	{
-		auto boneCount = GrannyGetMeshBindingBoneCount( m_meshBinding->GetGrannyMeshBinding() );
-		return std::make_pair( GrannyGetMeshBindingToBoneIndices( m_meshBinding->GetGrannyMeshBinding() ), boneCount );
+		return m_meshBinding->GetMeshBindingIndices();
 	}
+
 	return std::make_pair( nullptr, 0 );
 }
 	

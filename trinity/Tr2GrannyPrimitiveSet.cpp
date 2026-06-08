@@ -239,6 +239,133 @@ void Tr2GrannyPrimitiveSet::CreatePrimitive()
 		return;
 	}
 
+	if( m_grannyRes->IsUsingCMF() )
+	{
+		CreatePrimitiveFromCMF();
+	}
+#if WITH_GRANNY
+	else
+	{
+		CreatePrimitiveFromGranny();
+	}
+#endif
+}
+
+void Tr2GrannyPrimitiveSet::CreatePrimitiveFromCMF()
+{
+	if( !m_grannyRes )
+	{
+		return;
+	}
+
+	const cmf::Data* cmfData = m_grannyRes->GetCMFData();
+
+	if( !cmfData )
+	{
+		CCP_LOGERR( "Tr2GrannyLineSet::CreatePrimitive: '%s' not found or not a valid CMF file", m_grannyResPath.c_str() );
+		return;
+	}
+
+	uint32_t numVertices = 0;
+	uint32_t numIndices = 0;
+	std::vector<int32_t> meshIndices;
+	int32_t pickingIndex = -1;
+
+	// Sorting the meshes so the picking mesh is processed last
+	for( int32_t meshIx = 0; meshIx < cmfData->meshes.size(); meshIx++ )
+	{
+		auto mesh = cmfData->meshes[meshIx];
+		
+		uint32_t meshIndexCount = cmf::GetStreamElementCount( mesh.lods[0].ib );
+		uint32_t meshTriangleCount = meshIndexCount / 3;
+
+		if( cmf::ToStdStringView( mesh.name ) == g_pickingMeshName )
+		{
+			m_pickingPrimitiveCount = meshTriangleCount;
+			pickingIndex = meshIx;
+		}
+		else
+		{
+			meshIndices.push_back( meshIx );
+			numIndices += meshIndexCount;
+		}
+	}
+
+	if( pickingIndex > -1 )
+	{
+		m_pickingIndexOffset = numIndices;
+		meshIndices.push_back( pickingIndex );
+	}
+
+	for( int32_t meshIx = 0; meshIx < cmfData->meshes.size(); meshIx++ )
+	{
+		auto mesh = cmfData->meshes[meshIndices[meshIx]];
+
+		uint32_t meshIndexCount = cmf::GetStreamElementCount( mesh.lods[0].ib );
+		uint32_t meshVertexCount = cmf::GetStreamElementCount( mesh.lods[0].vb );
+		uint32_t meshTriangleCount = meshIndexCount / 3;
+		m_primitiveCount += meshTriangleCount;
+
+		m_points.reserve( m_points.size() + meshVertexCount );
+		m_triangleIndices.reserve( m_triangleIndices.size() + meshIndexCount );
+		m_lineIndices.reserve( ( m_triangleIndices.size() + meshIndexCount ) * 2 );
+
+		CmfVertexReader reader( mesh.decl );
+		if( !reader.posElem )
+		{
+			CCP_LOGERR( "Tr2GrannyPrimitiveSet::CreatePrimitiveFromCMF: mesh has no Position element" );
+			continue;
+		}
+		auto vb = mesh.lods[0].vb;
+		const auto* vbData = static_cast<const uint8_t*>( m_grannyRes->GetCMFViewData( vb ) );
+		std::vector<Vector3> positions( meshVertexCount, Vector3( 0.f, 0.f, 0.f ) );
+		std::vector<Vector3> normals( meshVertexCount, Vector3( 0.f, 0.f, 0.f ) );
+		ReadCmfVertexAttributes( reader, vbData, meshVertexCount, vb.stride, positions, normals, nullptr, nullptr );
+		
+		for( uint32_t i = 0; i < meshVertexCount; i++ )
+		{
+			TriangleVertex newVertex;
+			newVertex.m_position = positions[i];
+			newVertex.m_normal = normals[i];
+			newVertex.m_color = m_color;
+			m_points.push_back( newVertex );
+		}
+
+		{
+			auto ib = mesh.lods[0].ib;
+			auto ibSectionData = m_grannyRes->GetCMFContents().GetSection( ib.index );
+
+			auto indices = cmf::ConstIndexBufferStream( ibSectionData, ib );
+
+			// The index buffer changes a bit since we put all the point into a single buffer
+			for( uint32_t i = 0; i < meshIndexCount; i++ )
+			{
+				m_triangleIndices.push_back( indices[i] + numVertices );
+			}
+			// the lines just trace through each polygon, 1 - 2, 2 - 3, 3 - 1
+			for( uint32_t i = 0; i < meshIndexCount; i += 3 )
+			{
+				m_lineIndices.push_back( indices[i] + numVertices );
+				m_lineIndices.push_back( indices[i + 1] + numVertices );
+				m_lineIndices.push_back( indices[i + 1] + numVertices );
+				m_lineIndices.push_back( indices[i + 2] + numVertices );
+				m_lineIndices.push_back( indices[i + 2] + numVertices );
+				m_lineIndices.push_back( indices[i] + numVertices );
+			}
+		}
+
+		numVertices += meshVertexCount;
+	}
+}
+
+#if WITH_GRANNY
+void Tr2GrannyPrimitiveSet::CreatePrimitiveFromGranny()
+{
+	if( !m_grannyRes )
+	{
+		return;
+	}
+
 	granny_file* file = m_grannyRes->GetGrannyFile();
 
 	if( !file )
@@ -385,12 +512,13 @@ void Tr2GrannyPrimitiveSet::CreatePrimitive()
 		numVertices += meshVertexCount;
 	}
 }
+#endif
 
 void Tr2GrannyPrimitiveSet::SetCurrentColor( Color& val )
 {
-	for ( unsigned int i = 0; i < m_points.size(); i++ )
+	for( auto& point : m_points )
 	{
-		m_points[i].m_color = val;
+		point.m_color = val;
 	}
 	PrepareResources();
 }

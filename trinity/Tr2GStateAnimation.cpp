@@ -95,7 +95,7 @@ void Tr2GStateAnimation::LoadGrannyRes()
 
 	if( !m_geometryRes && !m_resPath.empty() )
 	{
-		BeResMan->GetResource( m_resPath.c_str(), "raw", BlueInterfaceIID<TriGrannyRes>(), (void**)&m_grannyRes );
+		BeResMan->GetResource( m_resPath.c_str(), "raw", BlueInterfaceIID<TriGrannyRes>(), (void**)&m_grannyRes );	
 	}
 
 	if( m_grannyRes )

@@ -84,7 +84,16 @@ using std::max;
 #include <../trinityal/include/TrinityAL.h>
 #include "Tr2RenderContext.h"
 #include "Tr2RenderUtils.h"
+#if WITH_GRANNY
 #include "granny.h"
+#endif
+#include <cmf/animation.h>
+#include <cmf/utils.h>
+#include <cmf/compression.h>
+#include <cmf/writer.h>
+#include <cmf/declutils.h>
+#include <cmf/bufferstreams.h>
+#include <cmf/tangents.h>
 #include "Utilities/MatrixUtils.h"
 #include "TriUtil.h"
 
@@ -110,8 +119,10 @@ using std::max;
 	#define EVALUATION_SDKS_ENABLED 1
 #endif
 
+#if WITH_GRANNY
 #ifndef GSTATE_ENABLED
 #define GSTATE_ENABLED 1
+#endif
 #endif
 
 #ifndef _WIN32
