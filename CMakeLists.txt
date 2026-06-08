@@ -75,10 +75,7 @@ endfunction()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-if (BUILD_FOR_PYTHON_2)
-    set(INSTALL_TO_MONOLITH ON)
-    set(CMAKE_COMPILE_WARNING_AS_ERROR ON) #TODO turned off for testing
-endif()
+set(CMAKE_COMPILE_WARNING_AS_ERROR ON) 
 
 if (BUILD_SHADER_COMPILER OR BUILD_FOR_PYTHON_2)
     add_subdirectory(shadercompiler)
