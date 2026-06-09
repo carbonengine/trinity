@@ -13,7 +13,10 @@ IBlueResource* CreateStaticGeometryResource( const wchar_t* name )
 	return p.Detach();
 }
 
+#if WITH_GRANNY
 BLUE_REGISTER_RESOURCE_EXTENSION( L"gr2", CreateStaticGeometryResource );
+#endif
+BLUE_REGISTER_RESOURCE_EXTENSION( L"cmf", CreateStaticGeometryResource );
 
 
 const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
@@ -169,10 +172,9 @@ namespace
 		{
 			std::vector<const Vector3*> pointers;
 			pointers.reserve( points.size() );
-			auto ptr = &points[0];
-			for( size_t i = 0; i < points.size(); ++i )
+			for( const auto& p : points )
 			{
-				pointers.push_back( ptr++ );
+				pointers.push_back( &p );
 			}
 			::BoundingSphereFromPoints( sphere, &pointers[0], points.size() );
 		}

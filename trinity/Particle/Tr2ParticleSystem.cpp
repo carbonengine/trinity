@@ -1372,6 +1372,115 @@ void Tr2ParticleSystem::ClearParticles()
 
 // --------------------------------------------------------------------------------------
 // Description:
+//   Saves current particle data into a CMF file.
+// Arguments:
+//   resPath - Resource path of the CMF file to save particle data to.
+// --------------------------------------------------------------------------------------
+void Tr2ParticleSystem::SaveToCMF( const char* resPath ) const
+{
+	if( !m_isValid )
+	{
+		return;
+	}
+
+	std::wstring resPathW = (const wchar_t*)CA2W( resPath );
+	std::wstring filename = BePaths->ResolvePathForWritingW( resPathW );
+
+#if WITH_GRANNY
+	if( filename.size() >= 4 && filename.compare( filename.size() - 4, 4, L".gr2" ) == 0 )
+	{
+		return SaveToGranny( resPath );
+	}
+#endif
+
+	cmf::MemoryAllocator allocator;
+	cmf::BufferManager bufferAllocator( allocator );
+	cmf::Span<cmf::VertexElement> cmfVertexDecl = allocator.AllocateSpan<cmf::VertexElement>( m_elementMap.size() );
+
+	unsigned vertexSize = 0;
+	std::map<Tr2ParticleElementDeclarationName, unsigned> offsets;
+
+	Tr2VertexDefinition vd;
+	for( auto i = m_elementMap.begin(); i != m_elementMap.end(); ++i )
+	{
+		static const unsigned dimensions[] = {
+			Tr2VertexDefinition::DT_SIZE_1,
+			Tr2VertexDefinition::DT_SIZE_2,
+			Tr2VertexDefinition::DT_SIZE_3,
+			Tr2VertexDefinition::DT_SIZE_4,
+		};
+		auto& item = vd.Add( static_cast<Tr2VertexDefinition::DataType>( vd.FLOAT32_1 | dimensions[i->second.m_dimension - 1] ), i->first.GetD3DUsage(), i->second.m_usageIndex, 0 );
+		item.m_offset = vertexSize;
+
+		offsets[i->first] = vertexSize;
+
+		vertexSize += i->second.m_dimension;
+	}
+	if( !ConvertVertexDeclToCMF( vd, cmfVertexDecl, (uint32_t)cmfVertexDecl.size() ) )
+	{
+		return;
+	}
+
+	unsigned totalSize = 0;
+	for( unsigned i = 0; i < Tr2ParticleElementData::COUNT; ++i )
+	{
+		totalSize += m_vertexSizes[i];
+	}
+	std::vector<float> vertices;
+	vertices.resize( totalSize * m_aliveCount );
+	if( m_aliveCount )
+	{
+		float* vertex = vertices.data();
+		for( unsigned i = 0; i < m_aliveCount; ++i )
+		{
+			for( auto j = m_elementMap.begin(); j != m_elementMap.end(); ++j )
+			{
+				float* element = m_buffers[j->second.m_bufferType] +
+					i * m_vertexSizes[j->second.m_bufferType] +
+					j->second.m_offset;
+				std::copy( element, element + j->second.m_dimension, vertex + offsets[j->first] );
+			}
+			vertex += vertexSize;
+		}
+	}
+
+	uint32_t vertexBufferStride = vertexSize * sizeof( float );
+	uint32_t vertexBufferSize = vertexBufferStride * m_aliveCount;
+
+	cmf::Data cmfData;
+	cmfData.meshes = allocator.AllocateSpan<cmf::Mesh>( 1 );
+
+	cmf::Mesh& cmfMesh = cmfData.meshes[0] = {};
+	cmfMesh.name = allocator.AllocateString( m_name );
+	cmfMesh.decl = cmfVertexDecl;
+	cmfMesh.lods = allocator.AllocateSpan<cmf::MeshLod>( 1 );
+	cmfMesh.topology = cmf::MeshTopology::PointList;
+
+	cmf::MeshLod& cmfMeshLod = cmfMesh.lods[0] = {};
+	cmfMeshLod.vb = bufferAllocator.AddBuffer( vertices.data(), vertexBufferSize, vertexBufferStride );
+
+	auto file = cmf::BuildFile( cmfData, bufferAllocator );
+
+	FILE* outFile;
+	auto err = fopen_s( &outFile, CW2A( filename.c_str() ), "wb" );
+
+	if( err != 0 )
+	{
+		CCP_LOGERR( "Failed to open output file: %ls\n", filename.c_str() );
+		return;
+	}
+	if( fwrite( file.data(), 1, file.size(), outFile ) != file.size() )
+	{
+		CCP_LOGERR( "Failed to write output file: %ls\n", filename.c_str() );
+		fclose( outFile );
+		return;
+	}
+	fclose( outFile );
+}
+
+#if WITH_GRANNY
+// --------------------------------------------------------------------------------------
+// Description:
 //   Saves current particle data into a granny file.
 // Arguments:
 //   resPath - Resource path of the granny file to save particle data to.
@@ -1385,6 +1494,11 @@ void Tr2ParticleSystem::SaveToGranny( const char* resPath ) const
 
 	std::wstring resPathW = (const wchar_t*)CA2W( resPath );
 	std::wstring filename = BePaths->ResolvePathForWritingW( resPathW );
+
+	if( filename.size() >= 4 && filename.compare( filename.size() - 4, 4, L".cmf" ) == 0 )
+	{
+		return SaveToCMF( resPath );
+	}
 
 	granny_data_type_definition* definition = CCP_NEW( "Tr2ParticleSystem::SaveToGranny" ) granny_data_type_definition[m_elementMap.size() + 1];
 	unsigned index = 0;
@@ -1495,6 +1609,7 @@ void Tr2ParticleSystem::SaveToGranny( const char* resPath ) const
 	CCP_DELETE vertexData;
 	CCP_DELETE []definition;
 }
+#endif
 
 // --------------------------------------------------------------------------------------
 // Description:

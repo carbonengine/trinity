@@ -804,7 +804,11 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	if( m_animationTime > ANIMATION_TIME_MAX )
 	{
 		m_animationTime -= ANIMATION_TIME_MAX;
+
+		cmf::RebaseAllAnimationPlayerClocks( -ANIMATION_TIME_MAX );
+#if WITH_GRANNY
 		GrannyRecenterAllControlClocks( -ANIMATION_TIME_MAX );
+#endif
 	}
 
 #if PY_MAJOR_VERSION == 2

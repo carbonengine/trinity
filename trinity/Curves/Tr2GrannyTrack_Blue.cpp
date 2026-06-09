@@ -19,4 +19,3 @@ const Be::ClassInfo* Tr2GrannyTrack::ExposeToBlue()
 		MAP_ATTRIBUTE( "cycle", m_cycle, "Should we cycle the animation", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
-

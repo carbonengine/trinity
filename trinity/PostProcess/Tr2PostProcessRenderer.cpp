@@ -1584,13 +1584,14 @@ void Tr2PostProcessRenderer::RenderTonemapping(
 
 void Tr2PostProcessRenderer::RenderGenericEffect( const Tr2TextureAL& dest, const Tr2TextureAL& src, Tr2RenderContext& renderContext, Tr2PPGenericEffectPtr genericEffect )
 {
-	if( genericEffect->GetEffect() != nullptr )
+	Tr2EffectPtr effect = genericEffect->GetEffect();
+	if( effect != nullptr )
 	{
 		GPU_REGION( renderContext, "GenericEffect" );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-		TEMP_PARAM( genericEffect->GetEffect(), "Blit", src );
-		DrawInto( dest, Tr2LoadAction::DONT_CARE, genericEffect->GetEffect(), renderContext );
+		TEMP_PARAM( effect, "Blit", src );
+		DrawInto( dest, Tr2LoadAction::DONT_CARE, effect, renderContext );
 	}
 }
 

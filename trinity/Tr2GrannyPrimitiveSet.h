@@ -59,6 +59,11 @@ private:
 	virtual bool OnPrepareResources();
 
 	void SetCurrentColor( Color& val );
+
+#if WITH_GRANNY
+	void CreatePrimitiveFromGranny();
+#endif
+	void CreatePrimitiveFromCMF();
 	
 	// We use indices to draw the solids and the lines, 
 	// because we want to use the same vertex buffer

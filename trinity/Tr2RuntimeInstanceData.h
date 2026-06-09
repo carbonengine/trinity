@@ -110,7 +110,11 @@ private:
 
 	bool m_explicitBoundingBox;
 
+	void SaveToCMF( const char* ) const;
+
+#if WITH_GRANNY
 	void SaveToGranny( const char* ) const;
+#endif
 };
 
 TYPEDEF_BLUECLASS( Tr2RuntimeInstanceData );

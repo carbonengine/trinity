@@ -5,7 +5,9 @@
 
 #if GSTATE_ENABLED
 
+#if WITH_GRANNY
 #include "gstate.h"
+#endif
 
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( Tr2GrannyStateRes );

@@ -6,10 +6,12 @@
 
 #include "Include/ITr2AnimationUpdater.h"
 #include "Resources/Tr2GrannyStateRes.h"
+#if WITH_GRANNY
 #include "gstate.h"
 #include "gstate_parameters.h"
 #include "gstate_tokenized.h"
 #include "gstate_state_machine.h"
+#endif
 #include "Tr2GStateParameter.h"
 
 BLUE_DECLARE( TriGrannyRes );

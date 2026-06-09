@@ -86,12 +86,7 @@ namespace
 		{
 			return 0;
 		}
-		auto animation = ac->FindAnimationByName( name );
-		if( !animation )
-		{
-			return 0;
-		}
-		return animation->Duration;
+		return ac->FindAnimationDurationByName( name );
 	}
 
 	float Random( float min, float max)

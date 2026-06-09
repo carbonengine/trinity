@@ -282,16 +282,21 @@ private:
 	void SetAmbientEffectControllerVariableOnInstance( int index, const char* name, float value );
 	bool IsAmbientVisible() const;
 
+	void InitializeAnimation();
+
 	// cleanup
 	void Cleanup();
 	// determine LOD and check for change
 	bool UpdateLOD( const EveUpdateContext& updateContext );
+
+	void UpdateSingleTurrets();
+
 	// set transform for tracking
-	void ModifySystemBoneTransform( SystemBones bone, const Vector3* target, granny_transform* transform, const Matrix* localTransform ) const;
+	void ModifySystemBoneTransform( SystemBones bone, const Vector3* target, const Matrix* localTransform, Vector3& position, Quaternion& rotation ) const;
 
 	// Calculates the pitch for a bone based on the parameters
-	void CalcTransformForPitchBone( const Vector3* target, granny_transform* transform, float minPitch, float maxPitch, unsigned int boneIndex, const Matrix* localTransform  ) const;
-	
+	void CalcTransformForPitchBone( const Vector3* target, float minPitch, float maxPitch, unsigned int boneIndex, const Matrix* localTransform, Quaternion& rotation ) const;
+
 	// Returns the correct pitch factor for a specific bone index
 	float GetBonePitchFactor(unsigned int boneIndex) const;
 	// Returns the correct pitch offset for a specific bone index
@@ -354,10 +359,15 @@ private:
 		Matrix					worldMatrix;
 
 		// animation
-		granny_skeleton*		grnSkeleton;
-		granny_model_instance*	grnModelInstance;
-		granny_local_pose*		grnLocalPose;
-		granny_world_pose*		grnWorldPose;
+#if WITH_GRANNY
+		granny_skeleton*		grnSkeleton = nullptr;
+		granny_model_instance*	grnModelInstance = nullptr;
+		granny_local_pose*		grnLocalPose = nullptr;
+		granny_world_pose*		grnWorldPose = nullptr;
+#endif
+		std::unique_ptr<cmf::AnimationSequencer>	sequencer;
+		cmf::SkeletonPose							pose;
+		std::vector<Matrix>							worldTransforms;
 
 		std::unique_ptr<Tr2RaytracingMesh> rtMesh;
 		std::unique_ptr<Tr2RaytracingMeshArea> rtMeshArea;
@@ -366,8 +376,12 @@ private:
 	std::vector<SingleTurretData> m_singleTurrets;
 	std::vector<GrannyBoneBindingBounds> m_boneBounds;
 	bool m_useDynamicBounds;
-	
-	void InitializeDynamicBounds( granny_file_info* fi, granny_skeleton* skeleton );
+
+#if WITH_GRANNY
+	void InitializeGrannyDynamicBounds( granny_file_info* fi, granny_skeleton* skeleton );
+#endif
+	void InitializeDynamicBounds( const cmf::Data* cmfData, const cmf::Skeleton* skeleton );
+
 	bool GetDynamicBounds( const SingleTurretData& turret, Vector4* boundingSphere, Vector3* aabbMin, Vector3* aabbMax ) const;
 	void RenderDynamicBounds();
 
@@ -417,8 +431,12 @@ private:
 		std::string				animNameIdle;
 	};
 	std::vector<AnimationRequest> m_animationQueue;
+#if WITH_GRANNY
 	granny_model* m_grnModel;
 	granny_mesh_binding* m_grnMeshBinding;
+#endif
+	const cmf::Skeleton* m_skeleton;
+	std::vector<int32_t> m_skeletonBoneIndices;
 
 	// firing animation specialties
 	bool m_useRandomFiringDelay;

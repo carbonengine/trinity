@@ -87,8 +87,6 @@ BLUE_DECLARE_IVECTOR( IEveSpaceObjectAttachment );
 BLUE_DECLARE_INTERFACE( IEveSpaceObjectAttachmentOwner );
 BLUE_DECLARE_INTERFACE( ITr2LightOwner );
 
-struct granny_skeleton;
-
 class TriFrustum;
 struct Locator;
 
@@ -538,7 +536,6 @@ protected:
 	void PushChildrenAndDecalRenderables( std::vector<ITr2Renderable*>& renderables );
 
 	virtual void UpdateWorldTransform( Be::Time time );
-	friend class EveShip2Builder;
 
 	std::string m_name;
 	std::string m_dna;

@@ -113,7 +113,7 @@ private:
 	std::map<std::string, TurretLocatorCountingInfo> m_turretLocatorCountingInfo;
 	void ResetTurretLocatorCounter( bool updateTotal );
 	bool GetTurretLocatorCountingInfo( const char* name, unsigned int& current, unsigned int& total ) const;
-	bool ValidateTurretLocatorName( const char* locatorName, unsigned int& locatorsFoundA, unsigned int& locatorsFoundB ) const;
+	bool ValidateTurretLocatorName( std::string_view locatorName, unsigned int& locatorsFoundA, unsigned int& locatorsFoundB ) const;
 };
 
 TYPEDEF_BLUECLASS( EveMobile );

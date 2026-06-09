@@ -116,6 +116,74 @@ inline void CarthesianToSpherical( Vector3& carth, Vector2& spherical )
 }
 
 // ------------------------------------------------------------------------------------------------------
+bool ExtractVertices( const cmf::Data& cmfData, const void* vbData, std::vector<Vector2>& sphericalVerts, std::vector<Vector3>& verts )
+{
+	auto mesh = cmfData.meshes[0].lods[0];
+	auto decl = cmfData.meshes[0].decl;
+	
+	const cmf::VertexElement* posElem = cmf::FindElement( decl, cmf::Usage::Position );
+	if( !posElem )
+	{
+		return false;
+	}
+
+	uint32_t numVerts = cmf::GetStreamElementCount( mesh.vb );
+	cmf::ConstBufferElementStream<Vector3> posStream( *posElem, vbData, numVerts, mesh.vb.stride );
+
+	sphericalVerts.resize( numVerts );
+	verts.resize( numVerts );
+	for( uint32_t i = 0; i < numVerts; i++ )
+	{
+		Vector3 p1 = posStream[i];
+		verts[i] = p1;
+		CarthesianToSpherical( p1, sphericalVerts[i] );
+	}
+
+	return true;
+}
+
+// ------------------------------------------------------------------------------------------------------
+EveSpherePinIndexTree::Face* ExtractFaceData( const cmf::Data& cmfData, const void* ibSectionData, std::vector<Vector3>& verts )
+{
+	const cmf::MeshLod& mesh = cmfData.meshes[0].lods[0];
+	uint32_t numPrim = cmf::GetStreamElementCount( mesh.ib ) / 3;
+	EveSpherePinIndexTree::Face* faces = new EveSpherePinIndexTree::Face[numPrim];
+
+	auto indices = cmf::ConstIndexBufferStream( ibSectionData, mesh.ib );
+
+	for( uint32_t i = 0; i < numPrim; i++ )
+	{
+		uint32_t index1 = indices[( i * 3 ) + 0];
+		uint32_t index2 = indices[( i * 3 ) + 1];
+		uint32_t index3 = indices[( i * 3 ) + 2];
+
+		faces[i].index1 = index1;
+		faces[i].index2 = index2;
+		faces[i].index3 = index3;
+
+		faces[i].center.x =
+			( min( min( verts[index1].x, verts[index2].x ), verts[index3].x ) +
+			  max( max( verts[index1].x, verts[index2].x ), verts[index3].x ) ) / 2.0f;
+		faces[i].center.y =
+			( min( min( verts[index1].y, verts[index2].y ), verts[index3].y ) +
+			  max( max( verts[index1].y, verts[index2].y ), verts[index3].y ) ) / 2.0f;
+		faces[i].center.z =
+			( min( min( verts[index1].z, verts[index2].z ), verts[index3].z ) +
+			  max( max( verts[index1].z, verts[index2].z ), verts[index3].z ) ) / 2.0f;
+
+		Vector3 d1( verts[index1] - faces[i].center );
+		Vector3 d2( verts[index2] - faces[i].center );
+		Vector3 d3( verts[index3] - faces[i].center );
+		faces[i].radius = Length( d1 );
+		faces[i].radius = max( faces[i].radius, Length( d2 ) );
+		faces[i].radius = max( faces[i].radius, Length( d3 ) );
+	}
+
+	return faces;
+}
+
+#if WITH_GRANNY
+// ------------------------------------------------------------------------------------------------------
 bool ExtractVertices( const granny_mesh& mesh, std::vector<Vector2>& sphericalVerts, std::vector<Vector3>& verts )
 {
 	auto grannyVertexDecl = mesh.PrimaryVertexData->VertexType;
@@ -231,6 +299,7 @@ EveSpherePinIndexTree::Face* ExtractFaceData( const granny_mesh& mesh, std::vect
 
 	return faces;
 }
+#endif
 
 // ------------------------------------------------------------------------------------------------------
 int OverlapTest( EveSpherePinIndexTree::TreeNode* n, EveSpherePinIndexTree::Face* f, std::vector<Vector2>& vertices )
@@ -350,7 +419,7 @@ EveSpherePinIndexTree::~EveSpherePinIndexTree(void)
 
 	if( m_faces )
 	{
-		delete m_faces;
+		delete[] m_faces;
 		m_faces = 0;
 	}
 }
@@ -363,44 +432,99 @@ int EveSpherePinIndexTree::Initialize()
 	{
 		return 0;
 	}
-	auto mesh = m_granny->GetGrannyMesh( 0 );
-	if( !mesh || !mesh->PrimaryTopology || !mesh->PrimaryVertexData )
+
+	if( m_granny->IsUsingCMF() )
+	{
+		const cmf::Data* cmfData = m_granny->GetCMFData();
+
+		if( !cmfData )
+		{
+			return 0;
+		}
+
+		uint32_t triangleCount = cmf::GetStreamElementCount( cmfData->meshes[0].lods[0].ib ) / 3;
+
+		if( m_tree )
+		{
+			ClearTree( m_tree );
+			m_tree = 0;
+		}
+
+		if( m_faces )
+		{
+			delete[] m_faces;
+			m_faces = 0;
+		}
+
+		m_tree = CreateTree( 0, 9 );
+
+		std::vector<Vector2> sphericalVerts;
+		std::vector<Vector3> verts;
+		if( !ExtractVertices( *cmfData, m_granny->GetCMFViewData( cmfData->meshes[0].lods[0].vb ), sphericalVerts, verts ) )
+		{
+			ClearTree( m_tree );
+			m_tree = 0;
+			return 0;
+		}
+
+		m_faces = ExtractFaceData( *cmfData, m_granny->GetCMFContents().GetSection( cmfData->meshes[0].lods[0].ib.index ), verts );
+
+		for( uint32_t i = 0; i < triangleCount; i++ )
+		{
+			AddFaceToTree( m_tree, &m_faces[i], sphericalVerts );
+		}
+
+		m_initialized = 1;
+		return 1;
+	}
+#if WITH_GRANNY
+	else
+	{
+		auto mesh = m_granny->GetGrannyMesh( 0 );
+		if( !mesh || !mesh->PrimaryTopology || !mesh->PrimaryVertexData )
+		{
+			return 0;
+		}
+		int triangleCount = mesh->PrimaryTopology->IndexCount / 3;
+		if( triangleCount == 0 )
+		{
+			triangleCount = mesh->PrimaryTopology->Index16Count / 3;
+		}
+
+		if( m_tree )
+		{
+			ClearTree( m_tree );
+			m_tree = 0;
+		}
+
+		if( m_faces )
+		{
+			delete[] m_faces;
+			m_faces = 0;
+		}
+
+		m_tree = CreateTree( 0, 9 );
+
+		std::vector<Vector2> sphericalVerts;
+		std::vector<Vector3> verts;
+		ExtractVertices( *mesh, sphericalVerts, verts );
+
+		m_faces = ExtractFaceData( *mesh, verts );
+
+		for( int i = 0; i < triangleCount; i++ )
+		{
+			AddFaceToTree( m_tree, &m_faces[i], sphericalVerts );
+		}
+
+		m_initialized = 1;
+		return 1;
+	}
+#else
+	else
 	{
 		return 0;
 	}
-	int triangleCount = mesh->PrimaryTopology->IndexCount / 3;
-	if( triangleCount == 0 )
-	{
-		triangleCount = mesh->PrimaryTopology->Index16Count / 3;
-	}
-
-	if( m_tree )
-	{
-		ClearTree( m_tree );
-		m_tree = 0;
-	}
-	
-	if( m_faces )
-	{
-		delete m_faces;
-		m_faces = 0;
-	}
-
-	m_tree = CreateTree( 0, 9 );
-
-	std::vector<Vector2> sphericalVerts;
-	std::vector<Vector3> verts;
-	ExtractVertices( *mesh, sphericalVerts, verts );
-
-	m_faces = ExtractFaceData( *mesh, verts );
-
-	for( int i = 0; i < triangleCount; i++ )
-	{
-		AddFaceToTree( m_tree, &m_faces[i], sphericalVerts );
-	}
-
-	m_initialized = 1;
-	return 1;
+#endif
 }
 
 // ------------------------------------------------------------------------------------------------------

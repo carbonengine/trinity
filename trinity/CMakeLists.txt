@@ -1,4 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
+
+set(WITH_GRANNY_DEFAULT_FLAG OFF)
+
+option(WITH_GRANNY "Compile with Granny for .gr2 file support" ${WITH_GRANNY_DEFAULT_FLAG})
+
+if(WITH_GRANNY)
+    message("Compiling with Granny for .gr2 file support")
+endif()
+
 project(trinity VERSION 1.0.0)
 
 if(BUILD_FOR_PYTHON_2)
@@ -219,21 +228,6 @@ set(_SOURCES
     Curves/Tr2FollowCurveKey.cpp
     Curves/Tr2FollowCurveKey.h
     Curves/Tr2FollowCurveKey_Blue.cpp
-    Curves/Tr2GrannyEventTrack.cpp
-    Curves/Tr2GrannyEventTrack.h
-    Curves/Tr2GrannyEventTrack_Blue.cpp
-    Curves/Tr2GrannyTrack.cpp
-    Curves/Tr2GrannyTrack.h
-    Curves/Tr2GrannyTrack_Blue.cpp
-    Curves/Tr2GrannyTransformTrack.cpp
-    Curves/Tr2GrannyTransformTrack.h
-    Curves/Tr2GrannyTransformTrack_Blue.cpp
-    Curves/Tr2GrannyVector3Curve.cpp
-    Curves/Tr2GrannyVector3Curve.h
-    Curves/Tr2GrannyVector3Curve_Blue.cpp
-    Curves/Tr2GrannyVectorTrack.cpp
-    Curves/Tr2GrannyVectorTrack.h
-    Curves/Tr2GrannyVectorTrack_Blue.cpp
     Curves/Tr2QuaternionLerpCurve.cpp
     Curves/Tr2QuaternionLerpCurve.h
     Curves/Tr2QuaternionLerpCurve_Blue.cpp
@@ -814,9 +808,6 @@ set(_SOURCES
     Eve/EveRootTransform.cpp
     Eve/EveRootTransform.h
     Eve/EveRootTransform_Blue.cpp
-    Eve/EveShip2Builder.cpp
-    Eve/EveShip2Builder.h
-    Eve/EveShip2Builder_Blue.cpp
     Eve/EveSpaceScene.cpp
     Eve/EveSpaceScene.h
     Eve/EveSpaceScene_Blue.cpp
@@ -1228,6 +1219,8 @@ set(_SOURCES
     Resources/TexturePipeline/Tr2TexturePipelineStepPack_Blue.cpp
     Resources/Tr2AsyncSave.cpp
     Resources/Tr2AsyncSave.h
+    Resources/Tr2CmfContent.cpp
+    Resources/Tr2CmfContent.h
     Resources/Tr2EffectRes.cpp
     Resources/Tr2EffectRes.h
     Resources/Tr2EffectRes_Blue.cpp
@@ -1524,8 +1517,6 @@ set(_SOURCES
     Tr2GrannyPrimitiveSet.cpp
     Tr2GrannyPrimitiveSet.h
     Tr2GrannyPrimitiveSet_Blue.cpp
-    Tr2GRNMemoryPersist.cpp
-    Tr2GRNMemoryPersist.h
     Tr2GStateAnimation.cpp
     Tr2GStateAnimation.h
     Tr2GStateAnimation_Blue.cpp
@@ -1575,9 +1566,6 @@ set(_SOURCES
     Tr2Model.cpp
     Tr2Model.h
     Tr2Model_Blue.cpp
-    Tr2NamedPipeListener.cpp
-    Tr2NamedPipeListener.h
-    Tr2NamedPipeListener_Blue.cpp
     Tr2PerObjectData.cpp
     Tr2PerObjectData.h
     Tr2PersistentPerObjectData.h
@@ -1805,6 +1793,26 @@ if(BUILD_FOR_PYTHON_2)
     list(APPEND _SOURCES Include/ITr2DebugRenderer2.h)
 endif()
 
+set(GRANNY_RELATED_SOURCES
+    Curves/Tr2GrannyEventTrack.cpp
+    Curves/Tr2GrannyEventTrack.h
+    Curves/Tr2GrannyEventTrack_Blue.cpp
+    Curves/Tr2GrannyTrack.cpp
+    Curves/Tr2GrannyTrack.h
+    Curves/Tr2GrannyTrack_Blue.cpp
+    Curves/Tr2GrannyTransformTrack.cpp
+    Curves/Tr2GrannyTransformTrack.h
+    Curves/Tr2GrannyTransformTrack_Blue.cpp
+    Curves/Tr2GrannyVectorTrack.cpp
+    Curves/Tr2GrannyVectorTrack.h
+    Curves/Tr2GrannyVectorTrack_Blue.cpp
+)
+
+if(WITH_GRANNY)
+    list(APPEND _SOURCES ${GRANNY_RELATED_SOURCES})
+endif()
+
+
 # Ensure that we have a sane file grouping for XCode and VS project files
 if(CMAKE_GENERATOR STREQUAL "Xcode" OR CMAKE_GENERATOR MATCHES "Visual Studio.*")
     source_group(
@@ -1816,7 +1824,9 @@ endif()
 
 if(BUILD_FOR_PYTHON_2)
     find_package(Freetype REQUIRED NO_CMAKE_PATH)
-    find_package(Granny REQUIRED NO_CMAKE_PATH)
+    if(WITH_GRANNY)
+        find_package(Granny REQUIRED NO_CMAKE_PATH)
+    endif()
     find_package(PDM REQUIRED NO_CMAKE_PATH)
     add_library(platform_pdm_proto_wrapper ALIAS PDM::PDM)
     find_package(Blue REQUIRED NO_CMAKE_PATH)
@@ -1824,15 +1834,19 @@ if(BUILD_FOR_PYTHON_2)
     find_package(ImageIO REQUIRED NO_CMAKE_PATH)
     add_library(CcpImageIO ALIAS ImageIO)
     find_package(CcpParser REQUIRED NO_CMAKE_PATH)
+    find_package(CarbonMesh REQUIRED NO_CMAKE_PATH)
 else()
     find_package(Freetype REQUIRED)
-    find_package(granny CONFIG REQUIRED)
+    if(WITH_GRANNY)
+        find_package(granny CONFIG REQUIRED)
+    endif()
     find_package(carbon-pdmprotowrapper CONFIG REQUIRED)
     find_package(carbon-blue CONFIG REQUIRED)
     find_package(carbon-math CONFIG REQUIRED)
     find_package(carbon-imageio CONFIG REQUIRED)
     find_package(carbon-parser CONFIG REQUIRED)
     find_package(PNG CONFIG REQUIRED)
+    find_package(CarbonMesh REQUIRED NO_CMAKE_PATH)
 endif()
 
 # utility function that sets properties shared between all trinity targets
@@ -1848,7 +1862,6 @@ function(set_shared_trinity_properties target package_name)
             unofficial::libsquish::squish
             AMD::FidelityFX::CACAO
             AMD::FidelityFX::CAS
-            RadGameTools::Granny
             TBB::tbb
             TBB::tbbmalloc
             TBB::tbbmalloc_proxy
@@ -1856,9 +1869,14 @@ function(set_shared_trinity_properties target package_name)
             platform_pdm_proto_wrapper
             CcpParser
 			GPUOpen::VulkanMemoryAllocator
+            CarbonMesh
     )
 
     target_sources(${target} PRIVATE ${_SOURCES})
+    if(WITH_GRANNY)
+        target_link_libraries(${target} PRIVATE RadGameTools::Granny)
+        target_compile_definitions(${target} PRIVATE WITH_GRANNY)
+    endif()
 
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
 
@@ -2056,6 +2074,7 @@ elseif(APPLE)
         target_compile_options(${TRINITY_METAL_TARGET_NAME}
             PRIVATE
                 "-fobjc-arc"
+                "-fdeclspec"
                 # disabling these warnings is temporary so that we don't drown in them
                 "-Wno-nonportable-include-path"
                 "-Wno-inconsistent-missing-override"

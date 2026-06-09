@@ -7,6 +7,7 @@
 #include "StdAfx.h"
 #include "Tr2VertexDefinitionUtilities.h"
 
+#if WITH_GRANNY
 // --------------------------------------------------------------------------------------
 // Description:
 //   Converts Granny data type definition to Trinity vertex type.  
@@ -262,4 +263,218 @@ bool ConvertVertexDeclToGranny( Tr2VertexDefinition vd, granny_data_type_definit
 
 	return true;
 }
+#endif
 
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Converts CMF data type definition to Trinity vertex type.
+// Arguments:
+//   src - CMF data type definition
+// Return Value:
+//   Trinity vertex type corresponding to input CMF type
+// --------------------------------------------------------------------------------------
+Tr2VertexDefinition::DataType ConvertCMFTypeToDataType( const cmf::VertexElement& src )
+{
+	unsigned type = 0;
+
+	switch( src.type )
+	{
+	case cmf::ElementType::Int8:
+		type = Tr2VertexDefinition::DT_INT8;
+		break;
+	case cmf::ElementType::UInt8:
+		type = Tr2VertexDefinition::DT_INT8 | Tr2VertexDefinition::DT_UNSIGNED_BIT;
+		break;
+	case cmf::ElementType::Int16:
+		type = Tr2VertexDefinition::DT_INT16;
+		break;
+	case cmf::ElementType::UInt16:
+		type = Tr2VertexDefinition::DT_INT16 | Tr2VertexDefinition::DT_UNSIGNED_BIT;
+		break;
+	case cmf::ElementType::Float16:
+		type = Tr2VertexDefinition::DT_FLOAT16;
+		break;
+	case cmf::ElementType::Int8Norm:
+		type = Tr2VertexDefinition::DT_INT8 | Tr2VertexDefinition::DT_NORMALIZED_BIT;
+		break;
+	case cmf::ElementType::UInt8Norm:
+		type = Tr2VertexDefinition::DT_INT8 | Tr2VertexDefinition::DT_UNSIGNED_BIT | Tr2VertexDefinition::DT_NORMALIZED_BIT;
+		break;
+	case cmf::ElementType::Int16Norm:
+		type = Tr2VertexDefinition::DT_INT16 | Tr2VertexDefinition::DT_NORMALIZED_BIT;
+		break;
+	case cmf::ElementType::UInt16Norm:
+		type = Tr2VertexDefinition::DT_INT16 | Tr2VertexDefinition::DT_UNSIGNED_BIT | Tr2VertexDefinition::DT_NORMALIZED_BIT;
+		break;
+	case cmf::ElementType::Float32:
+		type = Tr2VertexDefinition::DT_FLOAT32;
+		break;
+	default:
+		return Tr2VertexDefinition::DT_UNKNOWN_TYPE;
+	}
+
+	unsigned size = std::max( uint8_t{ 1 }, src.elementCount ) - 1;
+	type |= size << Tr2VertexDefinition::DT_SIZE_OFFSET;
+
+	return static_cast<Tr2VertexDefinition::DataType>( type );
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Converts CMF vertex definition to Trinity vertex definition.
+// Arguments:
+//   cmfVertexDecl - CMF vertex definition
+// Return Value:
+//   Trinity vertex definition corresponding to input CMF vertex definition
+// --------------------------------------------------------------------------------------
+Tr2VertexDefinition BuildFromCMFVertexDecl( const cmf::Span<cmf::VertexElement>& cmfVertexDecl )
+{
+	Tr2VertexDefinition vd;
+
+	for( const auto& src : cmfVertexDecl )
+	{
+		Tr2VertexDefinition::Item item;
+
+		item.m_stream = 0;
+		item.m_offset = vd.m_nextOffset[0];
+		item.m_dataType = ConvertCMFTypeToDataType( src );
+		item.m_usageIndex = src.usageIndex;
+
+		vd.m_nextOffset[0] += vd.GetDataTypeSizeInBytes( item.m_dataType );
+
+		switch ( src.usage )
+		{
+		case cmf::Usage::Position:
+			item.m_usage = Tr2VertexDefinition::POSITION;
+			break;
+		case cmf::Usage::Normal:
+			item.m_usage = Tr2VertexDefinition::NORMAL;
+			break;
+		case cmf::Usage::Tangent:
+			item.m_usage = Tr2VertexDefinition::TANGENT;
+			break;
+		case cmf::Usage::Binormal:
+			item.m_usage = Tr2VertexDefinition::BITANGENT;
+			break;
+		case cmf::Usage::TexCoord:
+			item.m_usage = Tr2VertexDefinition::TEXCOORD;
+			break;
+		case cmf::Usage::Color:
+			item.m_usage = Tr2VertexDefinition::COLOR;
+			break;
+		case cmf::Usage::BoneIndices:
+			item.m_usage = Tr2VertexDefinition::BLENDINDICES;
+			break;
+		case cmf::Usage::BoneWeights:
+			item.m_usage = Tr2VertexDefinition::BLENDWEIGHTS;
+			break;
+		case cmf::Usage::PackedTangent:
+			item.m_usage = Tr2VertexDefinition::TANGENT;
+			break;
+		case cmf::Usage::PackedTangentLegacy:
+			item.m_usage = Tr2VertexDefinition::TANGENT;
+			break;
+		}
+
+		vd.m_items.push_back( item );
+	}
+
+	return vd;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Convert Trinity vertex definition back to a CMF layout.
+// Arguments:
+//   vd - input definition
+//   cmfVertexDecl - pointer to at least maxSize elements
+//   maxSize - size of cmfVertexDecl array
+// Return Value:
+//   true - If successful
+//   false - On error
+// --------------------------------------------------------------------------------------
+bool ConvertVertexDeclToCMF( Tr2VertexDefinition vd, cmf::Span<cmf::VertexElement>& cmfVertexDecl, unsigned maxSize )
+{
+	// Note: This function assumes the D3D vertex layout is described in increasing offset order
+	// ... so make sure.
+	std::sort( begin( vd.m_items ), end( vd.m_items ) );
+
+	for( size_t i = 0; i != std::min( maxSize, (unsigned int)vd.m_items.size() ); ++i )
+	{
+		const auto& src = vd.m_items[i];
+
+		cmf::VertexElement& dst = cmfVertexDecl.begin()[i];
+
+		dst.elementCount = ( ( src.m_dataType & Tr2VertexDefinition::DT_SIZE_MASK ) >> Tr2VertexDefinition::DT_SIZE_OFFSET ) + 1;
+		const bool isUnsigned = ( src.m_dataType & Tr2VertexDefinition::DT_UNSIGNED_BIT ) != 0;
+		const bool isNormalized = ( src.m_dataType & Tr2VertexDefinition::DT_NORMALIZED_BIT ) != 0;
+
+		switch( src.m_dataType & Tr2VertexDefinition::DT_TYPE_MASK )
+		{
+		case Tr2VertexDefinition::DT_INT8:
+			dst.type = isUnsigned ? 
+				( isNormalized ? cmf::ElementType::UInt8Norm : cmf::ElementType::UInt8 ) : 
+				( isNormalized ? cmf::ElementType::Int8Norm : cmf::ElementType::Int8 );
+			break;
+
+		case Tr2VertexDefinition::DT_INT16:
+			dst.type = isUnsigned ? 
+				( isNormalized ? cmf::ElementType::UInt16Norm : cmf::ElementType::UInt16 ) : 
+				( isNormalized ? cmf::ElementType::Int16Norm : cmf::ElementType::Int16 );
+			break;
+
+		case Tr2VertexDefinition::DT_INT32:
+			CCP_ASSERT_M( false, "ConvertVertexDeclToCMF: INT32 is not supported by cmf" );
+			return false;
+
+		case Tr2VertexDefinition::DT_FLOAT16:
+			dst.type = cmf::ElementType::Float16;
+			break;
+
+		case Tr2VertexDefinition::DT_FLOAT32:
+			dst.type = cmf::ElementType::Float32;
+			break;
+
+		default:
+			CCP_ASSERT( false && "ConvertVertexDeclToCMF: Missing datatype support in cmf conversion" );
+			return false;
+		}
+
+		dst.offset = src.m_offset;
+		dst.usageIndex = src.m_usageIndex;
+
+		switch ( src.m_usage )
+		{
+		case Tr2VertexDefinition::POSITION:
+			dst.usage = cmf::Usage::Position;
+			break;	
+		case Tr2VertexDefinition::COLOR:
+			dst.usage = cmf::Usage::Color;
+			break;
+		case Tr2VertexDefinition::NORMAL:
+			dst.usage = cmf::Usage::Normal;
+			break;
+		case Tr2VertexDefinition::TANGENT:
+			dst.usage = cmf::Usage::Tangent;
+			break;
+		case Tr2VertexDefinition::BITANGENT:
+			dst.usage = cmf::Usage::Binormal;
+			break;
+		case Tr2VertexDefinition::TEXCOORD:
+			dst.usage = cmf::Usage::TexCoord;
+			break;
+		case Tr2VertexDefinition::BLENDINDICES:
+			dst.usage = cmf::Usage::BoneIndices;
+			break;
+		case Tr2VertexDefinition::BLENDWEIGHTS:
+			dst.usage = cmf::Usage::BoneWeights;
+			break;
+		default:
+			CCP_ASSERT( false && "ConvertVertexDeclToCMF: Missing usage support in cmf conversion" );
+			return false;
+		}
+	}
+
+	return true;
+}

@@ -104,7 +104,10 @@ public:
 	bool IsValid() const;
 	bool IsDynamic() const;
 	void ClearParticles();
+	void SaveToCMF( const char* resPath ) const;
+#if WITH_GRANNY
 	void SaveToGranny( const char* resPath ) const;
+#endif
 
 	size_t GetGpuStride() const;
 

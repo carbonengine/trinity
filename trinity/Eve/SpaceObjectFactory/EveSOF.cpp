@@ -64,6 +64,9 @@
 bool g_alphaCutoutShadowsEnabled = false; // alpha cutout refers to TRIBATCHTYPE_DECAL
 TRI_REGISTER_SETTING( "alphaCutoutShadowsEnabled", g_alphaCutoutShadowsEnabled );
 
+std::string g_volumetricTrailPath = "";
+TRI_REGISTER_SETTING( "volumetricTrailPath", g_volumetricTrailPath );
+
 namespace
 {
 const float MIN_DECAL_SCREEN_SIZE = 10.f;
@@ -2727,7 +2730,8 @@ void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 			trailEffect->AddParameterColor( BlueSharedString( "TrailColor" ), &rdata->trailColor );
 			trailEffect->EndUpdate();
 			trail->SetEffect( trailEffect );
-			trail->SetMeshResPath( "res:/dx9/model/ship/booster/volumetricTrail.gr2" );
+			trail->SetMeshResPath( g_volumetricTrailPath.c_str() );
+			
 			set->SetTrail( trail );
 		}
 

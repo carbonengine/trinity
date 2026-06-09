@@ -6,91 +6,151 @@
 
 
 Tr2GrannyAnimationLayer::Tr2GrannyAnimationLayer() :
+#if WITH_GRANNY
 	m_modelInstance( nullptr ),
 	m_trackMask( nullptr ),
+	m_basePose( nullptr ),
+#endif
 	m_trackMaskName( nullptr ),
 	m_defaultBoneWeight( 0.f ),
-	m_boneCount( 0 ),
 	m_layerWeight( 1.f ),
 	m_controlParam( 0.f ),
 	m_controlParamTarget( 0.f ),
 	m_lastControlUpdateTime( 0.f ),
 	m_controlParamEnabled( false ),
-	m_basePose( nullptr ),
 	m_skewRate( 0.f ),
 	m_pauseTime( 0.f ),
 	m_paused( false ),
-	m_totalPauseOffset( 0.f )
+	m_totalPauseOffset( 0.f ),
+	m_sequencer( nullptr ),
+	m_useCMF( true )
 {
 }
 
 Tr2GrannyAnimationLayer::Tr2GrannyAnimationLayer( float defaultBoneWeight ) :
+#if WITH_GRANNY
 	m_modelInstance( nullptr ),
 	m_trackMask( nullptr ),
+	m_basePose( nullptr ),
+#endif
 	m_trackMaskName( nullptr ),
 	m_defaultBoneWeight( defaultBoneWeight ),
-	m_boneCount( 0 ),
 	m_layerWeight( 1.f ),
 	m_controlParam( 0.f ),
 	m_controlParamTarget( 0.f ),
 	m_lastControlUpdateTime( 0.f ),
 	m_controlParamEnabled( false ),
-	m_basePose( nullptr ),
 	m_skewRate( 0.f ),
 	m_pauseTime( 0.f ),
 	m_paused( false ),
-	m_totalPauseOffset( 0.f )
+	m_totalPauseOffset( 0.f ),
+	m_sequencer( nullptr ),
+	m_useCMF( true )
 {
 }
 
 Tr2GrannyAnimationLayer::Tr2GrannyAnimationLayer( float defaultBoneWeight, float layerWeight ) :
+#if WITH_GRANNY
 	m_modelInstance( nullptr ),
 	m_trackMask( nullptr ),
+	m_basePose( nullptr ),
+#endif
 	m_trackMaskName( nullptr ),
 	m_defaultBoneWeight( defaultBoneWeight ),
-	m_boneCount( 0 ),
 	m_layerWeight( layerWeight ),
 	m_controlParam( 0.f ),
 	m_controlParamTarget( 0.f ),
 	m_lastControlUpdateTime( 0.f ),
 	m_controlParamEnabled( false ),
-	m_basePose( nullptr ),
 	m_skewRate( 0.f ),
 	m_pauseTime( 0.f ),
 	m_paused( false ),
-	m_totalPauseOffset( 0.f )
+	m_totalPauseOffset( 0.f ),
+	m_sequencer( nullptr ),
+	m_useCMF( true )
 {
+}
+
+bool Tr2GrannyAnimationLayer::IsUsingCMF() const
+{
+#if WITH_GRANNY != 1
+	CCP_ASSERT_M( m_useCMF, "Tr2GrannyAnimationLayer: Some place was about to take the granny code path, even though it's disabled! Make sure to use CMF!" );
+	return true;
+#endif
+	return m_useCMF;
 }
 
 void Tr2GrannyAnimationLayer::InitializeAnimationLayer( const Tr2GrannyAnimation* grannyAnimation )
 {
-	granny_model* model = grannyAnimation->GetGrannyModel();
-	if( !model )
-	{
-		return;
-	}
+	m_useCMF = grannyAnimation->IsUsingCMF();
 
-	m_modelInstance = GrannyInstantiateModel( model );
-	granny_skeleton* skeleton = GrannyGetSourceSkeleton( m_modelInstance );
-	m_boneCount = skeleton->BoneCount;
-	m_trackMask = GrannyNewTrackMask( m_defaultBoneWeight, skeleton->BoneCount );
-
-	if( m_trackMaskName )
+	if( grannyAnimation->IsUsingCMF() )
 	{
-		ExtractTrackMask( grannyAnimation, m_trackMaskName );
-	}
-	for( auto it = m_bones.begin(); it != m_bones.end(); it++ )
-	{
-		unsigned int boneIndex;
-		if( grannyAnimation->FindBoneByName( it->c_str(), boneIndex ) )
+		const cmf::Skeleton* skeleton = grannyAnimation->GetSkeleton();
+		if( !skeleton )
 		{
-			GrannySetTrackMaskBoneWeight( m_trackMask, boneIndex, m_defaultBoneWeight );
+			return;
+		}
+
+		m_sequencer = std::make_unique<cmf::AnimationSequencer>( *skeleton );
+
+		if( m_trackMaskName )
+		{
+			ExtractTrackMask( grannyAnimation, m_trackMaskName );
+		}
+		else
+		{
+			m_boneMask.skeleton = skeleton;
+			m_boneMask.boneWeights.resize( skeleton->bones.size() );
+			for( auto& boneWeight : m_boneMask.boneWeights )
+			{
+				boneWeight = m_defaultBoneWeight;
+			}
+		}
+		for( const auto& bone : m_bones )
+		{
+			unsigned int boneIndex;
+			if( grannyAnimation->FindBoneByName( bone.c_str(), boneIndex ) )
+			{
+				CCP_ASSERT( boneIndex < m_boneMask.boneWeights.size() );
+				m_boneMask.boneWeights[boneIndex] = m_defaultBoneWeight;
+			}
 		}
 	}
+#if WITH_GRANNY
+	else
+	{
+		granny_model* model = grannyAnimation->GetGrannyModel();
+		if( !model )
+		{
+			return;
+		}
+
+		m_modelInstance = GrannyInstantiateModel( model );
+		granny_skeleton* skeleton = GrannyGetSourceSkeleton( m_modelInstance );
+		m_boneCount = skeleton->BoneCount;
+		m_trackMask = GrannyNewTrackMask( m_defaultBoneWeight, skeleton->BoneCount );
+
+		if( m_trackMaskName )
+		{
+			ExtractTrackMask( grannyAnimation, m_trackMaskName );
+		}
+		for( auto it = m_bones.begin(); it != m_bones.end(); it++ )
+		{
+			unsigned int boneIndex;
+			if( grannyAnimation->FindBoneByName( it->c_str(), boneIndex ) )
+			{
+				GrannySetTrackMaskBoneWeight( m_trackMask, boneIndex, m_defaultBoneWeight );
+			}
+		}
+	}
+#endif
 }
 
 void Tr2GrannyAnimationLayer::ConsumeAnimationQueue( const Tr2GrannyAnimation* animationController )
 {
+	CCP_ASSERT( animationController->IsUsingCMF() == m_useCMF );
+
 	// PlayAnimation will clear the animation queue if the replace flag is set.
 	// We really should be searching backwards through the queue here to find the
 	// last entry with replace set, then go forward from there. In reality we
@@ -146,83 +206,175 @@ void Tr2GrannyAnimationLayer::TogglePauseAnimation( bool pause )
 
 bool Tr2GrannyAnimationLayer::PlayAnimation( const Tr2GrannyAnimation* grannyAnimation, const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone )
 {
-	if( !m_modelInstance )
+	if( grannyAnimation->IsUsingCMF() )
 	{
-		return false;
-	}
-
-	const granny_animation* animation = grannyAnimation->FindAnimationByName( animName );
-	if( !animation )
-	{
-		return false;
-	}
-
-	if( replace )
-	{
-		ClearAnimations();
-	}
-
-	float startTime = GetLayerAnimationTime();
-	if( !replace )
-	{
-		float maxRemaining = 0.0f;
-		for(	granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); 
-				binding != GrannyModelControlsEnd( m_modelInstance ); 
-				binding = GrannyModelControlsNext( binding ) )
+		if( !m_sequencer )
 		{
-			granny_control *control = GrannyGetControlFromBinding( binding );
-			if( !control )
-			{
-				CCP_LOGERR( "Failed to play animation %s: could not create granny control instance. Possible reason is the skeleton mismatch", animName );
-				return false;
-			}
+			return false;
+		}
 
-			// Force control to stop at the end of its current loop iteration
-			int loopCount = max(0, GrannyGetControlLoopIndex( control ));
-			int newLoopCount = loopCount + 1;
-		
-			GrannySetControlLoopCount( control, newLoopCount );
-			float remaining = GrannyGetControlDurationLeft( control );
-			GrannyCompleteControlAt( control, GetLayerAnimationTime() + remaining );
-			if( remaining > maxRemaining )
+		CCP_ASSERT( grannyAnimation->IsUsingCMF() == m_useCMF );
+
+		const cmf::Animation* animation = grannyAnimation->FindCMFAnimationByName( animName );
+		if( !animation )
+		{
+			return false;
+		}
+
+		if( replace )
+		{
+			ClearAnimations();
+		}
+
+		float startTime = GetLayerAnimationTime();
+		if( !replace )
+		{
+			float maxRemaining = 0.0f;
+			m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) 
 			{
-				maxRemaining = remaining;
+				int loopCount = max( 0, player->GetLoopIndex( GetLayerAnimationTime() ) );
+				int newLoopCount = loopCount + 1;
+
+				player->SetLoopCount( newLoopCount );
+				float remaining = player->GetDurationLeft( GetLayerAnimationTime() );
+				player->SetStopTime( GetLayerAnimationTime() + remaining );
+				if( remaining > maxRemaining )
+				{
+					maxRemaining = remaining;
+				}
+			} );
+
+			delay += maxRemaining;
+		}
+		startTime += delay;
+
+		auto player = m_sequencer->PlayAnimation( *animation );
+		player->SetStartTime( startTime );
+		player->SetLoopCount( loopCount );
+		player->SetSpeed( speed );
+
+		if( loopCount > 0 && clearWhenDone )
+		{
+			player->SetStopTime( GetLayerAnimationTime() + player->GetDurationLeft( GetLayerAnimationTime() ) + delay );
+		}
+		
+		RegisterMorphTracks( player.get(), animation );
+
+		if( m_controlParamEnabled )
+		{
+			auto duration = player->GetLoopDuration();
+
+			// TODO: intern, verify if this is correct
+			auto speed = player->GetSpeed();
+			if( speed > 0.f )
+			{
+				player->SetStartTime( GetLayerAnimationTime() - ( m_controlParam * duration ) / speed );
 			}
 		}
 
-		delay += maxRemaining;
+		return true;
 	}
-	startTime += delay;
-
-	granny_control* control = GrannyPlayControlledAnimation( startTime, animation, m_modelInstance );  
-	if( !control )
+#if WITH_GRANNY
+	else
 	{
-		CCP_LOGERR( "Failed to play animation %s: could not create granny control instance. Possible reason is the skeleton mismatch", animName );
+		if( !m_modelInstance )
+		{
+			return false;
+		}
+
+		CCP_ASSERT( grannyAnimation->IsUsingCMF() == m_useCMF );
+
+		const granny_animation* animation = grannyAnimation->FindGrannyAnimationByName( animName );
+		if( !animation )
+		{
+			return false;
+		}
+
+		if( replace )
+		{
+			ClearAnimations();
+		}
+
+		float startTime = GetLayerAnimationTime();
+		if( !replace )
+		{
+			float maxRemaining = 0.0f;
+			for( granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance );
+				 binding != GrannyModelControlsEnd( m_modelInstance );
+				 binding = GrannyModelControlsNext( binding ) )
+			{
+				granny_control* control = GrannyGetControlFromBinding( binding );
+				if( !control )
+				{
+					CCP_LOGERR( "Failed to play animation %s: could not create granny control instance. Possible reason is the skeleton mismatch", animName );
+					return false;
+				}
+
+				// Force control to stop at the end of its current loop iteration
+				int loopCount = max( 0, GrannyGetControlLoopIndex( control ) );
+				int newLoopCount = loopCount + 1;
+
+				GrannySetControlLoopCount( control, newLoopCount );
+				float remaining = GrannyGetControlDurationLeft( control );
+				GrannyCompleteControlAt( control, GetLayerAnimationTime() + remaining );
+				if( remaining > maxRemaining )
+				{
+					maxRemaining = remaining;
+				}
+			}
+
+			delay += maxRemaining;
+		}
+		startTime += delay;
+
+		granny_control* control = GrannyPlayControlledAnimation( startTime, animation, m_modelInstance );
+		if( !control )
+		{
+			CCP_LOGERR( "Failed to play animation %s: could not create granny control instance. Possible reason is the skeleton mismatch", animName );
+			return false;
+		}
+		GrannyEaseControlIn( control, 0.0f, false );
+		GrannySetControlLoopCount( control, loopCount );
+		GrannySetControlSpeed( control, speed );
+
+		if( loopCount > 0 && clearWhenDone )
+		{
+			GrannyCompleteControlAt( control, GetLayerAnimationTime() + GrannyGetControlDurationLeft( control ) + delay );
+		}
+
+		GrannySetControlClock( control, GetLayerAnimationTime() );
+		RegisterTextTracks( control, animation );
+		RegisterMorphTracks( control, animation );
+
+
+		if( m_controlParamEnabled )
+		{
+			auto duration = GrannyGetControlLocalDuration( control );
+			GrannySetControlRawLocalClock( control, m_controlParam * duration );
+		}
+
+		return true;
+	}
+#else
+	else
+	{
 		return false;
 	}
-	GrannyEaseControlIn( control, 0.0f, false );
-	GrannySetControlLoopCount( control, loopCount );
-	GrannySetControlSpeed( control, speed );
-
-	if( loopCount > 0 && clearWhenDone )
-	{
-		GrannyCompleteControlAt( control, GetLayerAnimationTime() + GrannyGetControlDurationLeft( control ) + delay );
-	}
-
-	GrannySetControlClock( control, GetLayerAnimationTime());
-	RegisterTextTracks( control, animation );
-	RegisterMorphTracks( control, animation );
-
-	
-	if (m_controlParamEnabled)
-	{
-		auto duration = GrannyGetControlLocalDuration( control );
-		GrannySetControlRawLocalClock( control, m_controlParam * duration );
-	}
-
-	return true;
+#endif
 }
 
+void Tr2GrannyAnimationLayer::RegisterMorphTracks( cmf::AnimationPlayer* player, const cmf::Animation* animation )
+{
+	for( const auto& channel : animation->channels )
+	{
+		if( channel.targetType == cmf::AnimationChannelTargetType::MorphTarget )
+		{
+			m_morphTracks[player].push_back( MorphTrack( &channel, &animation->curves[channel.curveIndex] ) );
+		}
+	}
+}
+
+#if WITH_GRANNY
 void Tr2GrannyAnimationLayer::RegisterTextTracks( granny_control* control, const granny_animation* anim )
 {
 	for( int groupIdx = 0; groupIdx < anim->TrackGroupCount; groupIdx++ )
@@ -252,28 +404,47 @@ void Tr2GrannyAnimationLayer::RegisterMorphTracks( granny_control* control, cons
 		}
 	}
 }
+#endif
 
 void Tr2GrannyAnimationLayer::EndAnimation()
 {
-	if( !m_modelInstance )
+	if( m_sequencer )
 	{
 		m_animationQueue.clear();
-		return;
+
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
+			int newLoopCount = max( 0, player->GetLoopIndex( GetLayerAnimationTime() ) ) + 1;
+			player->SetLoopCount( newLoopCount );
+		} );
 	}
 
-	for(	granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); 
-			binding != GrannyModelControlsEnd( m_modelInstance ); 
-			binding = GrannyModelControlsNext( binding ) )
+#if WITH_GRANNY
+	if( m_modelInstance )
 	{
-		granny_control *control = GrannyGetControlFromBinding( binding );
-		// Force control to stop at the end of its current loop iteration
-		int newLoopCount;
-		newLoopCount = max(0, GrannyGetControlLoopIndex( control )) + 1;
-		GrannySetControlLoopCount( control, newLoopCount );
+		m_animationQueue.clear();
+		
+		for( granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance );
+			 binding != GrannyModelControlsEnd( m_modelInstance );
+			 binding = GrannyModelControlsNext( binding ) )
+		{
+			granny_control* control = GrannyGetControlFromBinding( binding );
+			// Force control to stop at the end of its current loop iteration
+			int newLoopCount;
+			newLoopCount = max( 0, GrannyGetControlLoopIndex( control ) ) + 1;
+			GrannySetControlLoopCount( control, newLoopCount );
+		}
 	}
+#endif
+	
 	FreeCompletedControls();
 }
 
+void Tr2GrannyAnimationLayer::ClearMorphTracks( cmf::AnimationPlayer* player )
+{
+	m_morphTracks.erase( player );
+}
+
+#if WITH_GRANNY
 void Tr2GrannyAnimationLayer::ClearTextTracks( granny_control* control )
 {
 	m_controlTextTracks.erase( control );
@@ -283,26 +454,41 @@ void Tr2GrannyAnimationLayer::ClearMorphTracks( granny_control* control )
 {
 	m_controlMorphTracks.erase( control );
 }
+#endif
 
 void Tr2GrannyAnimationLayer::ClearAnimations()
 {	
 	m_animationQueue.clear();
 
-	if( !m_modelInstance )
+	if( m_sequencer )
 	{
-		return;
+		std::vector<std::shared_ptr<cmf::AnimationPlayer>> toRemove;
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
+			ClearMorphTracks( player.get() );
+			toRemove.push_back( player );
+		} );
+		for( auto& player : toRemove )
+		{
+			m_sequencer->StopAnimation( player );
+		}
 	}
 
-	for( granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); )
+#if WITH_GRANNY
+	if( m_modelInstance )
 	{
-		granny_control *control = GrannyGetControlFromBinding( binding );
-		binding = GrannyModelControlsNext( binding );
-		ClearTextTracks( control );
-		ClearMorphTracks( control );
-		GrannyFreeControl( control );
+		for( granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); )
+		{
+			granny_control* control = GrannyGetControlFromBinding( binding );
+			binding = GrannyModelControlsNext( binding );
+			ClearTextTracks( control );
+			ClearMorphTracks( control );
+			GrannyFreeControl( control );
+		}
 	}
+#endif
 }
 
+#if WITH_GRANNY
 const char* TextEventTrack::SampleTrack( float time, int loop )
 {
 	int entryIndex = -1;
@@ -315,7 +501,7 @@ const char* TextEventTrack::SampleTrack( float time, int loop )
 		entryIndex = entryIdx;
 	}
 	// Currently only the last event will be triggered
-	if( entryIndex >= 0 && ( entryIndex > m_lastIndex || loop > m_lastLoop )  )
+	if( entryIndex >= 0 && ( entryIndex > m_lastIndex || loop > m_lastLoop ) )
 	{
 		m_lastIndex = entryIndex;
 		m_lastLoop = loop;
@@ -323,17 +509,36 @@ const char* TextEventTrack::SampleTrack( float time, int loop )
 	}
 	return nullptr;
 }
+#endif
 
 float MorphTrack::SampleTrack( float time, float duration ) const
 {
-	float defaultValue = 0.f;
-	float value = 0.f;
-	GrannyEvaluateCurveAtT( 1, false, false, &m_grannyTrack->ValueCurve, false, duration, (float)time, (float*)&value, &defaultValue );
-	return value;
+	if( m_cmfCurve )
+	{
+		return cmf::SampleScalarCurve( *m_cmfCurve, time );
+	}
+#if WITH_GRANNY
+	else
+	{
+		float defaultValue = 0.f;
+		float value = 0.f;
+		GrannyEvaluateCurveAtT( 1, false, false, &m_grannyTrack->ValueCurve, false, duration, (float)time, (float*)&value, &defaultValue );
+		return value;
+	}
+#else
+	else
+	{
+		CCP_ASSERT_M( false, "MorphTrack: Tried taking the granny code path, which is disabled! Use CMF!" );
+		return 0.f;
+	}
+#endif
 }
 
+#if WITH_GRANNY
 void Tr2GrannyAnimationLayer::SampleTextTracks( IBlueEventListener* listener )
 {
+	CCP_ASSERT_M( !IsUsingCMF(), "Tr2GrannyAnimationLayer::SampleTextTracks: CMF does not have text tracks!" );
+	
 	if( !listener )
 	{
 		return;
@@ -358,9 +563,38 @@ void Tr2GrannyAnimationLayer::SampleTextTracks( IBlueEventListener* listener )
 		}
 	}
 }
+#endif
 
 void Tr2GrannyAnimationLayer::SampleMorphTracks( std::unordered_map<std::string, float>& morphAnimations, bool additive )
 {
+	for( const auto& morphTrack : m_morphTracks )
+	{
+		cmf::AnimationPlayer* player = morphTrack.first;
+		float t = player->GetLocalTime( GetLayerAnimationTime() );
+
+		auto duration = player->GetLoopDuration();
+
+		if( t < 0 || t >= duration )
+		{
+			continue;
+		}
+		
+		for( auto& track : morphTrack.second )
+		{
+			float trackValue = track.SampleTrack( t, duration ) * m_layerWeight;
+			auto entry = morphAnimations.find( track.m_cmfTargetName );
+			if( entry != morphAnimations.end() )
+			{
+				entry->second = additive ? entry->second + trackValue : trackValue;
+			}
+			else
+			{
+				morphAnimations[track.m_cmfTargetName] = trackValue;
+			}
+		}
+	}
+
+#if WITH_GRANNY
 	for( auto it = m_controlMorphTracks.begin(); it != m_controlMorphTracks.end(); it++ )
 	{
 		granny_control* control = it->first;
@@ -387,8 +621,87 @@ void Tr2GrannyAnimationLayer::SampleMorphTracks( std::unordered_map<std::string,
 			}
 		}
 	}
+#endif
 }
 
+void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, cmf::SkeletonPose* resultPose, IBlueEventListener* listener, std::unordered_map<std::string, float>& morphAnimations )
+{
+	SampleMorphTracks( morphAnimations );
+	FreeCompletedControls();
+	if( m_controlParamEnabled )
+	{
+		UpdateControlParam( animationTime );
+		
+		cmf::RestPose( *resultPose, m_sequencer->GetSkeleton() );
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player )
+		{
+			player->SampleAtLocalTime( *resultPose, m_controlParam * player->GetLoopDuration() );
+		} );
+	}
+	else
+	{
+		m_sequencer->Sample( *resultPose, animationTime );
+	}
+}
+
+void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, cmf::SkeletonPose* compositePose, cmf::SkeletonPose* resultPose, IBlueEventListener* listener, std::unordered_map<std::string, float>& morphAnimations, bool additive )
+{
+	SampleMorphTracks( morphAnimations, additive );
+	FreeCompletedControls();
+	if( m_controlParamEnabled )
+	{
+		UpdateControlParam( animationTime );
+	}
+	if( additive )
+	{
+		std::shared_ptr<cmf::AnimationPlayer> animation;
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) 
+		{
+			if( animation )
+			{
+				return;
+			}
+			if( !m_controlParamEnabled && !player->IsActive( animationTime ) )
+			{
+				return;
+			}
+			cmf::RestPose( m_cmfBasePose, m_sequencer->GetSkeleton() );
+			player->SampleAtLocalTime( m_cmfBasePose, 0.f );
+			animation = player;
+		} );
+
+		if( animation )
+		{
+			if( m_controlParamEnabled )
+			{
+				cmf::RestPose( *compositePose, m_sequencer->GetSkeleton() );
+				animation->SampleAtLocalTime( *compositePose, m_controlParam * animation->GetLoopDuration() );
+			}
+			else
+			{
+				m_sequencer->Sample( *compositePose, animationTime );
+			}
+			cmf::BlendAdditivePose( *resultPose, *resultPose, m_cmfBasePose, *compositePose, m_boneMask, m_layerWeight );
+		}
+	}
+	else
+	{
+		if( m_controlParamEnabled )
+		{
+			cmf::RestPose( *resultPose, m_sequencer->GetSkeleton() );
+			m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
+				player->SampleAtLocalTime( *resultPose, m_controlParam * player->GetLoopDuration() );
+			} );
+		}
+		else
+		{
+			m_sequencer->Sample( *compositePose, animationTime );
+		}
+		cmf::BlendPoses( *resultPose, *resultPose, *compositePose, m_boneMask, m_layerWeight );
+	}
+}
+
+#if WITH_GRANNY
 void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local_pose* resultPose, IBlueEventListener* listener, 
 	std::unordered_map<std::string, float>& morphAnimations )
 {
@@ -451,20 +764,36 @@ void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local
 		GrannyModulationCompositeLocalPose( resultPose, 0, m_layerWeight, m_trackMask, compositePose );
 	}
 }
-
+#endif
 
 void Tr2GrannyAnimationLayer::FreeCompletedControls()
 {
-	for( granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); )
+	if( m_sequencer )
 	{
-		granny_control *control = GrannyGetControlFromBinding( binding );
-		binding = GrannyModelControlsNext( binding );
-		if( GrannyFreeControlIfComplete( control ) )
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) 
 		{
-			ClearTextTracks( control );
-			ClearMorphTracks( control );
+			if( !player->IsActive( GetLayerAnimationTime() ) )
+			{
+				ClearMorphTracks( player.get() );
+			}
+		} );
+	}
+	
+#if WITH_GRANNY
+	if( m_modelInstance )
+	{
+		for( granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); )
+		{
+			granny_control *control = GrannyGetControlFromBinding( binding );
+			binding = GrannyModelControlsNext( binding );
+			if( GrannyFreeControlIfComplete( control ) )
+			{
+				ClearTextTracks( control );
+				ClearMorphTracks( control );
+			}
 		}
 	}
+#endif
 }
 
 float Tr2GrannyAnimationLayer::GetAnimationChainCompleteTime()
@@ -475,37 +804,73 @@ float Tr2GrannyAnimationLayer::GetAnimationChainCompleteTime()
 
 float Tr2GrannyAnimationLayer::GetAnimationRemainingTime()
 {
-	if( !m_modelInstance )
+	if( IsUsingCMF() )
+	{
+		if( !m_sequencer )
+		{
+			return 0.f;
+		}
+
+		float maxRemaining = 0.0f;
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player )
+		{
+			int loopCount = max( 0, player->GetLoopIndex( GetLayerAnimationTime() ) );
+			int newLoopCount = loopCount + 1;
+			int loopsTotal = player->GetLoopCount();
+
+			player->SetLoopCount( newLoopCount );
+			float remaining = player->GetDurationLeft( GetLayerAnimationTime() );
+			player->SetLoopCount( loopsTotal );
+			if( remaining > maxRemaining )
+			{
+				maxRemaining = remaining;
+			}
+		} );
+
+		return maxRemaining;
+	}
+#if WITH_GRANNY
+	else
+	{
+		if( !m_modelInstance )
+		{
+			return 0.f;
+		}
+
+		float maxRemaining = 0.0f;
+		for( granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance );
+			 binding != GrannyModelControlsEnd( m_modelInstance );
+			 binding = GrannyModelControlsNext( binding ) )
+		{
+			granny_control* control = GrannyGetControlFromBinding( binding );
+
+			// Force control to stop at the end of its current loop iteration
+			int loopCount = max( 0, GrannyGetControlLoopIndex( control ) );
+			int newLoopCount = loopCount + 1;
+			int loopsTotal = GrannyGetControlLoopCount( control );
+
+			GrannySetControlLoopCount( control, newLoopCount );
+			float remaining = GrannyGetControlDurationLeft( control );
+			GrannySetControlLoopCount( control, loopsTotal );
+			if( remaining > maxRemaining )
+			{
+				maxRemaining = remaining;
+			}
+		}
+
+		return maxRemaining;
+	}
+#else
+	else
 	{
 		return 0.f;
 	}
-
-	float maxRemaining = 0.0f;
-	for(	granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); 
-			binding != GrannyModelControlsEnd( m_modelInstance ); 
-			binding = GrannyModelControlsNext( binding ) )
-	{
-		granny_control *control = GrannyGetControlFromBinding( binding );
-
-		// Force control to stop at the end of its current loop iteration
-		int loopCount = max(0, GrannyGetControlLoopIndex( control ));
-		int newLoopCount = loopCount + 1;
-		int loopsTotal = GrannyGetControlLoopCount( control );
-		
-		GrannySetControlLoopCount( control, newLoopCount );
-		float remaining = GrannyGetControlDurationLeft( control );
-		GrannySetControlLoopCount( control, loopsTotal );
-		if( remaining > maxRemaining )
-		{
-			maxRemaining = remaining;
-		}
-	}
-
-	return maxRemaining;
+#endif
 }
 
 void Tr2GrannyAnimationLayer::Cleanup()
 {
+#if WITH_GRANNY
 	if( m_modelInstance )
 	{
 		ClearAnimations();
@@ -524,29 +889,60 @@ void Tr2GrannyAnimationLayer::Cleanup()
 		GrannyFreeLocalPose( m_basePose );
 		m_basePose = nullptr;
 	}
+#endif
+
+	m_sequencer.reset();
+	m_cmfBasePose.skeleton = nullptr;
+	m_cmfBasePose.boneTransforms.clear();
 }
 
 void Tr2GrannyAnimationLayer::AddBone( const Tr2GrannyAnimation* grannyAnimation, const char* name )
 {
-	m_bones.push_back( name );
+	CCP_ASSERT( grannyAnimation->IsUsingCMF() == m_useCMF );
 
-	if( !m_trackMask )
+	if( IsUsingCMF() )
 	{
-		return;
-	}
-	
-	unsigned int boneIndex = 0;
-	if( !grannyAnimation->FindBoneByName( name, boneIndex ) )
-	{
-		return;
-	}
+		m_bones.push_back( name );
 
-	GrannySetTrackMaskBoneWeight( m_trackMask, boneIndex, 1.0 );
+		if( !m_boneMask.skeleton )
+		{
+			return;
+		}
+
+		unsigned int boneIndex = 0;
+		if( !grannyAnimation->FindBoneByName( name, boneIndex ) )
+		{
+			return;
+		}
+
+		m_boneMask.boneWeights[boneIndex] = 1.f;
+	}
+#if WITH_GRANNY
+	else
+	{
+		m_bones.push_back( name );
+
+		if( !m_trackMask )
+		{
+			return;
+		}
+
+		unsigned int boneIndex = 0;
+		if( !grannyAnimation->FindBoneByName( name, boneIndex ) )
+		{
+			return;
+		}
+
+		GrannySetTrackMaskBoneWeight( m_trackMask, boneIndex, 1.0 );
+	}
+#endif
 }
 
 
 void Tr2GrannyAnimationLayer::AddAllBones( const Tr2GrannyAnimation* grannyAnimation )
 {
+	CCP_ASSERT( grannyAnimation->IsUsingCMF() == m_useCMF );
+
 	unsigned int bone_count;
 	const std::string *boneList = grannyAnimation->GetAnimationBoneList( bone_count );
 	for (unsigned int i=0; i < bone_count; i++)
@@ -559,43 +955,87 @@ void Tr2GrannyAnimationLayer::AddAllBones( const Tr2GrannyAnimation* grannyAnima
 
 void Tr2GrannyAnimationLayer::ExtractTrackMask( const Tr2GrannyAnimation* grannyAnimation, const char* name )
 {
-	m_trackMaskName = name;
-	if( !m_trackMask )
+	// cannot assert cmf/granny here, init is called after this function!
+
+	if( grannyAnimation->IsUsingCMF() )
 	{
+		m_trackMaskName = name;
+
+		auto skeleton = grannyAnimation->GetSkeleton();
+
+		if( !skeleton )
+		{
+			return;
+		}
+
+		m_boneMask = cmf::ExtractBoneWeights( *skeleton, m_trackMaskName );
+	}
+#if WITH_GRANNY
+	else
+	{
+		m_trackMaskName = name;
+		if( !m_trackMask )
+		{
+			return;
+		}
+
+		granny_extract_track_mask_result etmr = GrannyExtractTrackMask(
+			m_trackMask,
+			m_boneCount,
+			GrannyGetSourceSkeleton( m_modelInstance ),
+			name,
+			0.0f,
+			false );
+		if( etmr == GrannyExtractTrackMaskResult_NoDataPresent )
+		{
+			CCP_LOGNOTICE( "Tr2GrannyAnimationLayer: Track mask not found." );
+		}
+
 		return;
 	}
-	
-	granny_extract_track_mask_result etmr = GrannyExtractTrackMask(
-		m_trackMask,
-		m_boneCount,
-		GrannyGetSourceSkeleton( m_modelInstance ),
-		name,
-		0.0f,
-		false );
-	if ( etmr == GrannyExtractTrackMaskResult_NoDataPresent )
-	{
-		CCP_LOGNOTICE( "Tr2GrannyAnimationLayer: Track mask not found." );
-	}
-
-	return;
+#endif
 }
 
 void Tr2GrannyAnimationLayer::RemoveBone( const Tr2GrannyAnimation* grannyAnimation, const char* name )
 {
-	m_bones.erase( std::remove(m_bones.begin(), m_bones.end(), name), m_bones.end() );
+	CCP_ASSERT( grannyAnimation->IsUsingCMF() == m_useCMF );
 
-	if( !m_trackMask )
+	if( IsUsingCMF() )
 	{
-		return;
-	}
-	
-	unsigned int boneIndex = 0;
-	if( !grannyAnimation->FindBoneByName( name, boneIndex ) )
-	{
-		return;
-	}
+		m_bones.erase( std::remove( m_bones.begin(), m_bones.end(), name ), m_bones.end() );
 
-	GrannySetTrackMaskBoneWeight( m_trackMask, boneIndex, 0.0 );
+		if( !m_boneMask.skeleton )
+		{
+			return;
+		}
+
+		unsigned int boneIndex = 0;
+		if( !grannyAnimation->FindBoneByName( name, boneIndex ) )
+		{
+			return;
+		}
+
+		m_boneMask.boneWeights[boneIndex] = 0.f;
+	}
+#if WITH_GRANNY
+	else
+	{
+		m_bones.erase( std::remove( m_bones.begin(), m_bones.end(), name ), m_bones.end() );
+
+		if( !m_trackMask )
+		{
+			return;
+		}
+
+		unsigned int boneIndex = 0;
+		if( !grannyAnimation->FindBoneByName( name, boneIndex ) )
+		{
+			return;
+		}
+
+		GrannySetTrackMaskBoneWeight( m_trackMask, boneIndex, 0.0 );
+	}
+#endif
 }
 
 float Tr2GrannyAnimationLayer::GetLayerWeight() const
@@ -621,12 +1061,12 @@ void Tr2GrannyAnimationLayer::SetControlParamSkewRate( float skewRate )
 
 void Tr2GrannyAnimationLayer::UpdateControlParam( float animation_time )
 {
-	if ( m_controlParam == m_controlParamTarget )
+	if( m_controlParam == m_controlParamTarget )
 	{
 		return;
 	}
 
-	if (animation_time == m_lastControlUpdateTime)
+	if( animation_time == m_lastControlUpdateTime )
 	{
 		return;
 	}
@@ -634,13 +1074,13 @@ void Tr2GrannyAnimationLayer::UpdateControlParam( float animation_time )
 	float timeIncrement = animation_time - m_lastControlUpdateTime;
 	float controlIncrement = timeIncrement * m_skewRate;
 
-	if ( m_skewRate == 0.f || std::abs( m_controlParamTarget - m_controlParam ) <= controlIncrement )
+	if( m_skewRate == 0.f || std::abs( m_controlParamTarget - m_controlParam ) <= controlIncrement )
 	{
 		m_controlParam = m_controlParamTarget;
 	}
 	else
 	{
-		if ( m_controlParamTarget - m_controlParam < 0 )
+		if( m_controlParamTarget - m_controlParam < 0 )
 		{
 			m_controlParam -= controlIncrement;
 		}
@@ -649,11 +1089,17 @@ void Tr2GrannyAnimationLayer::UpdateControlParam( float animation_time )
 			m_controlParam += controlIncrement;
 		}
 	}
-	for( granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); binding = GrannyModelControlsNext( binding ) )
-	{
-		granny_control *control = GrannyGetControlFromBinding( binding );
-		auto duration = GrannyGetControlLocalDuration( control );
-		GrannySetControlRawLocalClock( control, m_controlParam * duration );
-	}
 	m_lastControlUpdateTime = animation_time;
+
+#if WITH_GRANNY
+	if( !IsUsingCMF() )
+	{
+		for( granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); binding = GrannyModelControlsNext( binding ) )
+		{
+			granny_control* control = GrannyGetControlFromBinding( binding );
+			auto duration = GrannyGetControlLocalDuration( control );
+			GrannySetControlRawLocalClock( control, m_controlParam * duration );
+		}
+	}
+#endif
 }

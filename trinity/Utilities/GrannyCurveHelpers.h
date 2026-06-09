@@ -2,6 +2,7 @@
 #ifndef GrannyCurveHelpers_h
 #define GrannyCurveHelpers_h
 
+#if WITH_GRANNY
 #include "granny.h"
 
 template<typename T>
@@ -16,5 +17,6 @@ template<typename T>
 		T* keys = reinterpret_cast<T*>( keyframedCurve->Controls );
 		value = keys[frame];
 	}
+#endif
 
 #endif

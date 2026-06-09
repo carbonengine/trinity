@@ -181,4 +181,22 @@ void GrannyBoneOffset::SetOffset( const std::string & bone, float x, float y, fl
 	ClearRigBindings();
 }
 
+bool GrannyBoneOffset::ApplyToLocal( unsigned joint, Quaternion& rotation, Vector3& position ) const
+{
+	if( const float* const t = m_riggedTransforms[joint] )
+	{
+		Matrix matrix = *reinterpret_cast<const Matrix*>( t );
+		Vector3 offsetScale;
+		Quaternion offsetRotation;
+		Vector3 offsetPosition;
+		Decompose( offsetScale, offsetRotation, offsetPosition, matrix );
+
+		rotation = offsetRotation * rotation;
+		position = position + offsetPosition;
+		return true;
+	}
+
+	return false;
+}
+
 #endif /* GAMEWORLD_64 */
