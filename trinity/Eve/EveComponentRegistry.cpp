@@ -34,6 +34,7 @@ void EveComponentRegistry::Clear()
 			// an entity may have been registered into another registry while we are clearing this one
 			entity->m_indexInRegistry = -1;
 			entity->m_registry = nullptr;
+			entity->m_componentIndexLookup.clear();
 		}
 	}
 	m_registeredEntities.clear();
