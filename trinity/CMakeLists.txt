@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(WITH_GRANNY_DEFAULT_FLAG OFF)
-
-option(WITH_GRANNY "Compile with Granny for .gr2 file support" ${WITH_GRANNY_DEFAULT_FLAG})
-
 if(WITH_GRANNY)
     message("Compiling with Granny for .gr2 file support")
 endif()
@@ -1834,7 +1830,7 @@ if(BUILD_FOR_PYTHON_2)
     find_package(ImageIO REQUIRED NO_CMAKE_PATH)
     add_library(CcpImageIO ALIAS ImageIO)
     find_package(CcpParser REQUIRED NO_CMAKE_PATH)
-    find_package(CarbonMesh REQUIRED NO_CMAKE_PATH)
+    find_package(CarbonMesh CONFIG REQUIRED)
 else()
     find_package(Freetype REQUIRED)
     if(WITH_GRANNY)
@@ -1846,7 +1842,7 @@ else()
     find_package(carbon-imageio CONFIG REQUIRED)
     find_package(carbon-parser CONFIG REQUIRED)
     find_package(PNG CONFIG REQUIRED)
-    find_package(CarbonMesh REQUIRED NO_CMAKE_PATH)
+    find_package(CarbonMesh CONFIG REQUIRED)
 endif()
 
 # utility function that sets properties shared between all trinity targets

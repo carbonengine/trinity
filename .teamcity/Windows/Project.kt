@@ -99,7 +99,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
         exec {
             name = "Configure"
             path = "cmake"
-            arguments = "--preset %env.CMAKE_PRESET% -S %teamcity.build.checkoutDir%/%github_checkout_folder% -B %env.CMAKE_BUILD_FOLDER% -DINSTALL_TO_MONOLITH=ON -DCMAKE_INSTALL_PREFIX=%env.CMAKE_INSTALL_PREFIX% -DVCPKG_INSTALL_OPTIONS=--x-buildtrees-root=%teamcity.build.checkoutDir%/%github_checkout_folder%/buildtrees -DBUILD_DX11=ON -DBUILD_DX12=ON -DBUILD_SHADER_COMPILER=ON"
+            arguments = "--preset %env.CMAKE_PRESET% -S %teamcity.build.checkoutDir%/%github_checkout_folder% -B %env.CMAKE_BUILD_FOLDER% -DINSTALL_TO_MONOLITH=ON -DCMAKE_INSTALL_PREFIX=%env.CMAKE_INSTALL_PREFIX% -DVCPKG_INSTALL_OPTIONS=--x-buildtrees-root=%teamcity.build.checkoutDir%/%github_checkout_folder%/buildtrees -DBUILD_DX11=ON -DBUILD_DX12=ON -DBUILD_SHADER_COMPILER=ON -DWITH_GRANNY=ON"
         }
         exec {
             name = "Build"

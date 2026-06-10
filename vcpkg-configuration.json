@@ -8,7 +8,7 @@
     {
       "kind": "git",
       "repository": "git@github.com:ccpgames/carbon-vcpkg-registry.git",
-      "baseline": "cb052b64b2b536e685959a8438bac22981d85c91",
+      "baseline": "57a05b5fd6add43ed9f5965d1a27417b11bd8c15",
       "packages": ["carbon-pdmprotowrapper",
                    "carbon-pdm",
                    "carbon-blueexposure",
@@ -16,12 +16,12 @@
                    "carbon-exefile",
                    "carbon-exefile-interpreter",
                    "carbon-io",
-                   "carbon-math",
                    "carbon-trinityaudioapi",
                    "fxc",
                    "granny",
                    "carbon-parser",
-                   "carbon-imageio"]
+                   "carbon-imageio",
+                   "carbon-mesh"]
     },
     {
       "kind": "git",
@@ -43,7 +43,8 @@
                    "intel-xess",
                    "nvidia-aftermath",
                    "nvidia-streamline",
-                   "openvdb"]
+                   "openvdb",
+                   "carbon-math"]
     }
   ]
 }

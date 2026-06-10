@@ -4,7 +4,6 @@ cmake_policy(SET CMP0111 NEW)
 
 if(BUILD_FOR_PYTHON_2)
 
-    set(INSTALL_TO_MONOLITH ON)
     set(BUILD_DX11 ON)
     set(BUILD_DX12 ON)
     set(BUILD_METAL ON)
@@ -35,6 +34,14 @@ else()
 
     if (BUILD_SHADER_COMPILER)
         list(APPEND VCPKG_MANIFEST_FEATURES "shader-compiler")
+    endif()
+
+    set(WITH_GRANNY_DEFAULT_FLAG OFF)
+
+    option(WITH_GRANNY "Compile with Granny for .gr2 file support" ${WITH_GRANNY_DEFAULT_FLAG})
+
+    if (WITH_GRANNY)
+        list(APPEND VCPKG_MANIFEST_FEATURES "with-granny")
     endif()
 
 endif()

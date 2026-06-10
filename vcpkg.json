@@ -46,10 +46,6 @@
       "version>=": "2.13.3"
     },
     {
-      "name": "granny",
-      "version>=": "2.12.0.14#2"
-    },
-    {
       "name": "carbon-pdmprotowrapper",
       "version>=": "2.0.3"
     },
@@ -59,7 +55,7 @@
     },
     {
       "name": "carbon-math",
-      "version>=": "1.2.0"
+      "version>=": "1.2.1"
     },
     {
       "name": "carbon-parser",
@@ -76,6 +72,10 @@
     {
       "name": "zlib-ng",
       "version>=": "2.2.5"
+    },
+    {
+      "name": "carbon-mesh",
+      "version>=": "0.0.1"
     }
   ],
   "features": {
@@ -169,6 +169,15 @@
         {
           "name": "amd-fidelityfx-fsr",
           "version>=": "1.0.2"
+        }
+      ]
+    },
+    "with-granny": {
+      "description": "Include Granny support",
+      "dependencies": [
+        {
+          "name": "granny",
+          "version>=": "2.12.0.14#2"
         }
       ]
     }
