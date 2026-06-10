@@ -1994,3 +1994,9 @@ elseif(APPLE)
 else()
     message(FATAL_ERROR "Unsupported trinity platform, only stub would be available!")
 endif()
+
+# Engine-level unit tests (no GPU/scene). Currently Windows/dx12 only. See trinity/tests/.
+option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
+if(BUILD_TESTING AND WIN32)
+    add_subdirectory(tests)
+endif()
