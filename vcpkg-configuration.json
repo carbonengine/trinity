@@ -20,13 +20,12 @@
                    "fxc",
                    "granny",
                    "carbon-parser",
-                   "carbon-imageio",
                    "carbon-mesh"]
     },
     {
       "kind": "git",
       "repository": "git@github.com:carbonengine/vcpkg-registry.git",
-      "baseline": "bcc6d146b99547f6654310495730e4cbba9ca7c3",
+      "baseline": "a578f475b76a204b85f777692adc26bde7cdf01c",
       "packages": ["python3", 
                    "carbon-core", 
                    "carbon-scheduler",
@@ -44,7 +43,8 @@
                    "nvidia-aftermath",
                    "nvidia-streamline",
                    "openvdb",
-                   "carbon-math"]
+                   "carbon-math",
+                   "carbon-imageio"]
     }
   ]
 }
