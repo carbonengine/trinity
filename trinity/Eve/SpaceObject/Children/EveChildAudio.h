@@ -9,7 +9,16 @@
 
 #include "IEveSpaceObjectChild.h"
 #include "EveChildTransform.h"
-#include "Include/ITr2DebugRenderer2.h"
+
+#ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
+    // This is only needed for py2 as the file now belongs in blue.
+    // Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+    // The file version in the older blue versions had diverged from this one is incompatible.
+    #include "Include/ITr2DebugRenderer2.h"
+#else
+    #include <ITr2DebugRenderer2.h>
+#endif
+
 #include <ITr2AudEmitter.h>
 
 // Forward declarations and smart pointer typedefs

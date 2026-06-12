@@ -1,10 +1,10 @@
 #pragma once
 
-
-#include "Include/ITriFunction.h"
-#include "Include/ITriCurveLength.h"
 #include "Tr2CurveVector3.h"
 #include "ccpparser.h"
+
+#include <ITriFunction.h>
+#include <ITriCurveLength.h>
 
 BLUE_DECLARE_IVECTOR( ITriScalarFunction );
 BLUE_DECLARE( Tr2ExpressionTermInfo );

@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Include/ITriFunction.h"
-#include "Include/ITriCurveLength.h"
+#include <ITriFunction.h>
+#include <ITriCurveLength.h>
 
 namespace Tr2CurveInterpolation
 {

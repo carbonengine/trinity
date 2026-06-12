@@ -7,9 +7,10 @@
 #ifndef _EVELOCALPOSITIONCURVE_H_
 #define _EVELOCALPOSITIONCURVE_H_
 
-#include "include/ITriFunction.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "include/ITriTargetable.h"
+
+#include <ITriFunction.h>
 
 /* This is an ITriVectorFunction compatible object that calculates a\r\n 
 point local to a model. This class has a few behaviours determined by\r\n 

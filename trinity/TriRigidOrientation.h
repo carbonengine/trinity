@@ -28,7 +28,7 @@
 #define TRIRIGIDORIENTATION_Description \
 "To be written"
 
-#include "include/ITriFunction.h"
+#include <ITriFunction.h>
 
 class TriTorque:
 	public IRoot

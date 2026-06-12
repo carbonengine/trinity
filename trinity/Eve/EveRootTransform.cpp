@@ -1,7 +1,8 @@
 #include "StdAfx.h"
 #include "EveRootTransform.h"
 #include "EveUpdateContext.h"
-#include "Include/ITriFunction.h"
+
+#include <ITriFunction.h>
 
 EveRootTransform::EveRootTransform( IRoot* lockobj ):
 	m_boundingSphereRadius( -1.0f ),

@@ -1,22 +1,35 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(WITH_GRANNY_DEFAULT_FLAG OFF)
-
-option(WITH_GRANNY "Compile with Granny for .gr2 file support" ${WITH_GRANNY_DEFAULT_FLAG})
-
 if(WITH_GRANNY)
     message("Compiling with Granny for .gr2 file support")
 endif()
 
 project(trinity VERSION 1.0.0)
 
-find_package(libSquish REQUIRED)
-find_package(IntelXeSS REQUIRED)
-find_package(FidelityFX_CAS REQUIRED)
-find_package(CACAO REQUIRED)
-find_package(IntelTBB REQUIRED)
-find_package(VMA REQUIRED)
-find_package(CarbonTrinityAudioAPI REQUIRED)
+if(BUILD_FOR_PYTHON_2)
+    find_package(libSquish REQUIRED)
+    add_library(unofficial::libsquish::squish ALIAS SQUISH::SQUISH)
+    find_package(FidelityFX_CAS REQUIRED)
+    add_library(AMD::FidelityFX::CAS ALIAS AMD::FidelityFX_CAS)
+    find_package(CACAO REQUIRED)
+    add_library(AMD::FidelityFX::CACAO ALIAS AMD::CACAO)
+    find_package(IntelTBB REQUIRED)
+    add_library(TBB::tbb ALIAS Intel::TBB)
+    add_library(TBB::tbbmalloc INTERFACE IMPORTED)
+    add_library(TBB::tbbmalloc_proxy INTERFACE IMPORTED)
+    find_package(VMA REQUIRED)
+    add_library(GPUOpen::VulkanMemoryAllocator ALIAS GPUOpen::VMA)
+    find_package(CarbonTrinityAudioAPI REQUIRED)
+    add_library(CcpTrinityAudioAPI ALIAS CarbonTrinityAudioAPI)
+else()
+    find_package(unofficial-libsquish CONFIG REQUIRED)
+    find_package(amd-fidelityfx-cas CONFIG REQUIRED)
+    find_package(amd-fidelityfx-cacao CONFIG REQUIRED)
+    find_package(TBB CONFIG REQUIRED)
+    find_package(VulkanHeaders CONFIG) # Required for VulkanMemoryAllocator
+    find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+    find_package(carbon-trinityaudioapi CONFIG REQUIRED)
+endif()
 
 set(PUBLIC_HEADER_FILES
     Include/IEveBallpark.h
@@ -24,7 +37,6 @@ set(PUBLIC_HEADER_FILES
     Include/ITr2AnimationUpdater.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
-    Include/ITr2DebugRenderer2.h
     Include/ITr2GpuBuffer.h
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
@@ -33,14 +45,10 @@ set(PUBLIC_HEADER_FILES
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h
     Include/ITriColor.h
-    Include/ITriConstants.h
-    Include/ITriCurveLength.h
     Include/ITriDevice.h
     Include/ITriDuration.h
     Include/ITriEffectParameter.h
-    Include/ITriFunction.h
     Include/ITriMatrix.h
-    Include/ITriObserverLocal.h
     Include/ITriQuaternion.h
     Include/ITriTargetable.h
     Include/ITriTextureRes.h
@@ -55,6 +63,13 @@ set(PUBLIC_HEADER_FILES
     Include/TriQuaternion.h
     Include/TriVector.h
 )
+
+if(BUILD_FOR_PYTHON_2)
+    # This is only needed for py2 as the file now belongs in blue.
+    # Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+    # The file version in the older blue versions had diverged from this one is incompatible.
+    list(APPEND PUBLIC_HEADER_FILES Include/ITr2DebugRenderer2.h)
+endif()
 
 set(_SOURCES
     Audio/Tr2AudioStretchAuto.cpp
@@ -820,7 +835,6 @@ set(_SOURCES
     Include/ITr2AnimationUpdater.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
-    Include/ITr2DebugRenderer2.h
     Include/ITr2GpuBuffer.h
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
@@ -829,14 +843,10 @@ set(_SOURCES
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h
     Include/ITriColor.h
-    Include/ITriConstants.h
-    Include/ITriCurveLength.h
     Include/ITriDevice.h
     Include/ITriDuration.h
     Include/ITriEffectParameter.h
-    Include/ITriFunction.h
     Include/ITriMatrix.h
-    Include/ITriObserverLocal.h
     Include/ITriQuaternion.h
     Include/ITriTargetable.h
     Include/ITriTextureRes.h
@@ -1772,6 +1782,13 @@ set(_SOURCES
     version.h
 )
 
+if(BUILD_FOR_PYTHON_2)
+    # This is only needed for py2 as the file now belongs in blue.
+    # Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+    # The file version in the older blue versions had diverged from this one is incompatible.
+    list(APPEND _SOURCES Include/ITr2DebugRenderer2.h)
+endif()
+
 set(GRANNY_RELATED_SOURCES
     Curves/Tr2GrannyEventTrack.cpp
     Curves/Tr2GrannyEventTrack.h
@@ -1801,38 +1818,53 @@ if(CMAKE_GENERATOR STREQUAL "Xcode" OR CMAKE_GENERATOR MATCHES "Visual Studio.*"
     )
 endif()
 
-find_package(Freetype REQUIRED NO_CMAKE_PATH)
-if(WITH_GRANNY)
-    find_package(Granny REQUIRED NO_CMAKE_PATH)
+if(BUILD_FOR_PYTHON_2)
+    find_package(Freetype REQUIRED NO_CMAKE_PATH)
+    if(WITH_GRANNY)
+        find_package(Granny REQUIRED NO_CMAKE_PATH)
+    endif()
+    find_package(PDM REQUIRED NO_CMAKE_PATH)
+    add_library(platform_pdm_proto_wrapper ALIAS PDM::PDM)
+    find_package(Blue REQUIRED NO_CMAKE_PATH)
+    find_package(CcpMath REQUIRED NO_CMAKE_PATH)
+    find_package(ImageIO REQUIRED NO_CMAKE_PATH)
+    add_library(CcpImageIO ALIAS ImageIO)
+    find_package(CcpParser REQUIRED NO_CMAKE_PATH)
+    find_package(CarbonMesh CONFIG REQUIRED)
+else()
+    find_package(Freetype REQUIRED)
+    if(WITH_GRANNY)
+        find_package(granny CONFIG REQUIRED)
+    endif()
+    find_package(carbon-pdmprotowrapper CONFIG REQUIRED)
+    find_package(carbon-blue CONFIG REQUIRED)
+    find_package(carbon-math CONFIG REQUIRED)
+    find_package(carbon-imageio CONFIG REQUIRED)
+    find_package(carbon-parser CONFIG REQUIRED)
+    find_package(PNG CONFIG REQUIRED)
+    find_package(CarbonMesh CONFIG REQUIRED)
 endif()
-find_package(PDM REQUIRED NO_CMAKE_PATH)
-find_package(Blue REQUIRED NO_CMAKE_PATH)
-find_package(CcpMath REQUIRED NO_CMAKE_PATH)
-find_package(ImageIO REQUIRED NO_CMAKE_PATH)
-find_package(CcpParser REQUIRED NO_CMAKE_PATH)
-find_package(CarbonTrinityAudioAPI REQUIRED NO_CMAKE_PATH)
-find_package(CarbonMesh REQUIRED NO_CMAKE_PATH)
 
 # utility function that sets properties shared between all trinity targets
-function(set_shared_trinity_properties target)
-    #Needs png.h but isn't linked to png
-    target_include_directories(${target} PUBLIC "$<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>")
+function(set_shared_trinity_properties target package_name)
 
     target_link_libraries(${target}
         PUBLIC
-            CarbonTrinityAudioAPI
+            CcpTrinityAudioAPI
         PRIVATE
-            ImageIO
+            CcpImageIO
             Blue
             Freetype::Freetype
-            SQUISH::SQUISH
-            AMD::CACAO
-            AMD::FidelityFX_CAS
-            Intel::TBB
+            unofficial::libsquish::squish
+            AMD::FidelityFX::CACAO
+            AMD::FidelityFX::CAS
+            TBB::tbb
+            TBB::tbbmalloc
+            TBB::tbbmalloc_proxy
             CcpMath
-            PDM::PDM
+            platform_pdm_proto_wrapper
             CcpParser
-            GPUOpen::VMA
+			GPUOpen::VulkanMemoryAllocator
             CarbonMesh
     )
 
@@ -1843,13 +1875,18 @@ function(set_shared_trinity_properties target)
     endif()
 
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
+
     target_include_directories(${target}
         PUBLIC
-            ${CMAKE_CURRENT_SOURCE_DIR}/include
+            $<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>
+            $<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/..
     )
+
     target_compile_definitions(${target}
         PRIVATE
             BLUE_OVERRIDE_VECTOR_TYPES=1
@@ -1858,6 +1895,13 @@ function(set_shared_trinity_properties target)
             TBB_ENABLED=1
             DEPRECATED_ENABLED=1
     )
+
+    if(BUILD_FOR_PYTHON_2)
+        target_compile_definitions(${target}
+        PRIVATE
+            BLUE_USE_LOCAL_ITr2DebugRenderer2=1
+    )
+    endif()
 
     # override the output directory to ensure that all TrinityAL outputs end up in the same folder.
     # this is OK because we're differentiating them by OUTPUT_NAME
@@ -1876,25 +1920,39 @@ function(set_shared_trinity_properties target)
 
     add_trinity_dev_debug_flags(${target})
 
-    # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
-    install(
-        TARGETS ${target}
-        EXPORT ${target}Targets
-        CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
-        LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-        ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-        RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-    )
-    # Install rule for available public headers
-    install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
+    if (INSTALL_TO_MONOLITH)
 
-    configure_ccp_vendor_config_file(
-        TARGET ${target}
-        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake"
-        DEPENDENCIES ""
-    )
+        # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
+        install(
+            TARGETS ${target}
+            EXPORT ${target}Targets
+            CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+            LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+            ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+            RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+        )
+        # Install rule for available public headers
+        install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
 
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake DESTINATION .)
+        configure_ccp_vendor_config_file(
+            TARGET ${target}
+            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${package_name}Config.cmake"
+            DEPENDENCIES ""
+        )
+
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}Config.cmake DESTINATION .)
+    else () # VCPKG install mode
+
+        # Install rule to ensure that our runtime and linker files are in the vcpkg structure
+        install(
+                TARGETS ${target}
+                EXPORT CcpTrinityTargets
+                CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+                LIBRARY DESTINATION lib
+                RUNTIME DESTINATION bin
+        )
+
+    endif ()
     
     ccp_enable_vs_analizers(${target})
 
@@ -1907,90 +1965,148 @@ function(set_shared_trinity_properties target)
 
 endfunction()
 
+option(INSTALL_TO_MONOLITH "Install this package to a perforce branch vendor folder - provided for backwards compatability" OFF)
+
 #[[
 FIXME currently the _stub platform does not build on macOS due to "unknown type name: 'CGKeyCode'"
 There are probably more issues because we haven't build the stub project on macOS so far IIRC
 ]]
 if(WIN32)
-    ccp_add_library(trinity_stub SHARED)
-    target_compile_definitions(trinity_stub
+    set(TRINITY_STUB_TARGET_NAME CcpTrinity_stub)
+
+    if(BUILD_FOR_PYTHON_2)
+        set(TRINITY_STUB_TARGET_NAME trinity_stub)
+    endif()
+
+    ccp_add_library(${TRINITY_STUB_TARGET_NAME} SHARED)
+    target_compile_definitions(${TRINITY_STUB_TARGET_NAME}
     PRIVATE
         TRINITY_PLATFORM=TRINITY_STUB
         TRINITYNAME=_trinity_stub
     )
 
-    target_link_libraries(trinity_stub PRIVATE TrinityAL_stub)
-    set_shared_trinity_properties(trinity_stub)
+    target_link_libraries(${TRINITY_STUB_TARGET_NAME} PRIVATE TrinityAL_stub)
+    set_shared_trinity_properties(${TRINITY_STUB_TARGET_NAME} carbon-trinity-stub)
 endif()
 
 if(WIN32)
-    ccp_add_library(trinity_dx11 SHARED)
-    target_compile_definitions(trinity_dx11
-        PRIVATE
-            TRINITY_PLATFORM=TRINITY_DIRECTX11
-            TRINITYNAME=_trinity_dx11
-    )
-    find_package(NvidiaAftermath REQUIRED)#Required for dx11
-    target_link_libraries(trinity_dx11 PRIVATE TrinityAL_dx11)
-    set_shared_trinity_properties(trinity_dx11)
+    if (BUILD_DX11)
 
-    ccp_add_library(trinity_dx12 SHARED)
-    target_compile_definitions(trinity_dx12
-        PRIVATE
-            TRINITY_PLATFORM=TRINITY_DIRECTX12
-            TRINITYNAME=_trinity_dx12
-    )
-    target_link_libraries(trinity_dx12 PRIVATE TrinityAL_dx12 )
-    set_shared_trinity_properties(trinity_dx12)
+        set(TRINITY_DX11_TARGET_NAME CcpTrinity_dx11)
+
+        if(BUILD_FOR_PYTHON_2)
+            set(TRINITY_DX11_TARGET_NAME trinity_dx11)
+        endif()
+
+        ccp_add_library(${TRINITY_DX11_TARGET_NAME} SHARED)
+        target_compile_definitions(${TRINITY_DX11_TARGET_NAME}
+            PRIVATE
+                TRINITY_PLATFORM=TRINITY_DIRECTX11
+                TRINITYNAME=_trinity_dx11
+        )
+        #find_package(nvidia-aftermath CONFIG REQUIRED)#Required for dx11
+        target_link_libraries(${TRINITY_DX11_TARGET_NAME} PRIVATE TrinityAL_dx11)
+        set_shared_trinity_properties(${TRINITY_DX11_TARGET_NAME} carbon-trinity-dx11)
+    endif()
+
+    if (BUILD_DX12)
+
+        set(TRINITY_DX12_TARGET_NAME CcpTrinity_dx12)
+
+        if(BUILD_FOR_PYTHON_2)
+            set(TRINITY_DX12_TARGET_NAME trinity_dx12)
+        endif()
+
+        ccp_add_library(${TRINITY_DX12_TARGET_NAME} SHARED)
+        target_compile_definitions(${TRINITY_DX12_TARGET_NAME}
+            PRIVATE
+                TRINITY_PLATFORM=TRINITY_DIRECTX12
+                TRINITYNAME=_trinity_dx12
+        )
+        target_link_libraries(${TRINITY_DX12_TARGET_NAME} PRIVATE TrinityAL_dx12 )
+        set_shared_trinity_properties(${TRINITY_DX12_TARGET_NAME} carbon-trinity-dx12)
+    endif()
+
 elseif(APPLE)
-    enable_language(OBJCXX)
-    ccp_add_library(trinity_metal SHARED)
-    target_compile_definitions(trinity_metal
-        PRIVATE
-            TRINITY_PLATFORM=TRINITY_METAL
-            TRINITYNAME=_trinity_metal
-    )
-    set_shared_trinity_properties(trinity_metal)
-    target_link_libraries(trinity_metal
-        PRIVATE
-            TrinityAL_metal
-            "-framework CoreFoundation"
-            "-framework Cocoa"
-            "-framework Carbon"
-            "-framework GameController"
-            "-framework Metal"
-            "-framework MetalFX"
-            "-framework IOKit"
-            "-framework QuartzCore"
-    )
+    if(BUILD_METAL)
+        enable_language(OBJCXX)
 
-    #[[
-        FIXME because we're mixing objective-c++ and c++ headers in our precompiled headers then we need to force
-        one specific language for macOS. This can be fixed once we revisit our usage of precompiled headers, which is
-        still very MSVC specific.
-    ]]
-    set(_CPP_SOURCES ${_SOURCES})
-    list(FILTER _CPP_SOURCES INCLUDE REGEX "\.cpp")
-    set_source_files_properties(${_CPP_SOURCES} PROPERTIES LANGUAGE OBJCXX)
-    set_source_files_properties(UI/Scancodes.mm PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+        set(TRINITY_METAL_TARGET_NAME CcpTrinity_metal)
 
-    target_compile_options(trinity_metal
-        PRIVATE
-            "-fobjc-arc"
-            "-fdeclspec"
-            # disabling these warnings is temporary so that we don't drown in them
-            "-Wno-nonportable-include-path"
-            "-Wno-inconsistent-missing-override"
-    )
+        if(BUILD_FOR_PYTHON_2)
+            set(TRINITY_METAL_TARGET_NAME trinity_metal)
+        endif()
 
-    set_target_properties(trinity_metal
-        PROPERTIES
-            LINKER_LANGUAGE OBJCXX
-            PREFIX ""
-            SUFFIX ".so"
-            BUILD_WITH_INSTALL_RPATH TRUE
-            INSTALL_RPATH "@executable_path/."
-    )
+        ccp_add_library(${TRINITY_METAL_TARGET_NAME} SHARED)
+        target_compile_definitions(${TRINITY_METAL_TARGET_NAME}
+            PRIVATE
+                TRINITY_PLATFORM=TRINITY_METAL
+                TRINITYNAME=_trinity_metal
+        )
+        set_shared_trinity_properties(${TRINITY_METAL_TARGET_NAME} carbon-trinity-metal)
+        target_link_libraries(${TRINITY_METAL_TARGET_NAME}
+            PRIVATE
+                TrinityAL_metal
+                "-framework CoreFoundation"
+                "-framework Cocoa"
+                "-framework Carbon"
+                "-framework GameController"
+                "-framework Metal"
+                "-framework MetalFX"
+                "-framework IOKit"
+                "-framework QuartzCore"
+        )
+
+        #[[
+            FIXME because we're mixing objective-c++ and c++ headers in our precompiled headers then we need to force
+            one specific language for macOS. This can be fixed once we revisit our usage of precompiled headers, which is
+            still very MSVC specific.
+        ]]
+        set(_CPP_SOURCES ${_SOURCES})
+        list(FILTER _CPP_SOURCES INCLUDE REGEX "\.cpp")
+        set_source_files_properties(${_CPP_SOURCES} PROPERTIES LANGUAGE OBJCXX)
+        set_source_files_properties(UI/Scancodes.mm PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+
+        target_compile_options(${TRINITY_METAL_TARGET_NAME}
+            PRIVATE
+                "-fobjc-arc"
+                "-fdeclspec"
+                # disabling these warnings is temporary so that we don't drown in them
+                "-Wno-nonportable-include-path"
+                "-Wno-inconsistent-missing-override"
+        )
+
+        set_target_properties(${TRINITY_METAL_TARGET_NAME}
+            PROPERTIES
+                LINKER_LANGUAGE OBJCXX
+                PREFIX ""
+                SUFFIX ".so"
+                BUILD_WITH_INSTALL_RPATH TRUE
+                INSTALL_RPATH "@executable_path/."
+        )
+    endif()
 else()
     message(FATAL_ERROR "Unsupported trinity platform, only stub would be available!")
+endif()
+
+
+# Targets are now handled via vcpkg features.
+if (NOT INSTALL_TO_MONOLITH)
+    # # Install rule for available public headers
+    install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
+
+    install(
+        EXPORT CcpTrinityTargets
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/share/carbon-trinity
+        FILE carbon-trinityTargets.cmake
+    )
+
+    include(CMakePackageConfigHelpers)
+
+    configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/carbon-trinityConfig.cmake.in 
+                                    ${CMAKE_CURRENT_BINARY_DIR}/carbon-trinityConfig.cmake
+                                    INSTALL_DESTINATION share/carbon-trinity)
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/carbon-trinityConfig.cmake
+            DESTINATION share/carbon-trinity)
 endif()

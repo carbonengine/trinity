@@ -8,6 +8,7 @@
 #include "FxAnalyzer.h"
 #include "HLSLParser.h"
 #include "ParserUtils.h"
+#include "ASTNode.h"
 
 
 extern StringTable g_stringTable;

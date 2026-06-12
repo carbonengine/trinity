@@ -6,7 +6,8 @@
 #pragma once
 
 #include "IEveChildTransformModifier.h"
-#include "include/ITriFunction.h"
+
+#include <ITriFunction.h>
 
 BLUE_CLASS( EveChildModifierStretch ) :
 	public IEveChildTransformModifier

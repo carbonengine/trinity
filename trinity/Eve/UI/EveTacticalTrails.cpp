@@ -9,7 +9,7 @@
 #include "../../Tr2Renderer.h"
 #include "../../TriPoolAllocator.h"
 #include "../../TriRenderBatch.h"
-#include "../../Include/ITriFunction.h"
+#include <ITriFunction.h>
 #include <numeric>
 
 namespace

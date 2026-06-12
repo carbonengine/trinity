@@ -26,9 +26,9 @@
 #ifndef _TRISEQUENCER_H_
 #define _TRISEQUENCER_H_
 
-#include "include/ITriFunction.h"
-
-#include "include/ITriCurveLength.h"
+#include <ITriFunction.h>
+#include <ITriConstants.h>
+#include <ITriCurveLength.h>
 
 BLUE_DECLARE_INTERFACE( ITriVectorFunction );
 BLUE_DECLARE_IVECTOR( ITriVectorFunction );

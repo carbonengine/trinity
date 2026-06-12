@@ -8,7 +8,7 @@
 #ifndef Tr2ProjectBoundingBoxBracket_h
 #define Tr2ProjectBoundingBoxBracket_h
 
-#include "include/ITriFunction.h"
+#include <ITriFunction.h>
 
 BLUE_DECLARE( Tr2ProjectBoundingBoxBracket );
 BLUE_DECLARE( Tr2Sprite2dContainer );

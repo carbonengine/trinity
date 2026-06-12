@@ -10,7 +10,6 @@
 #include "TriRenderBatch.h"
 #include "Tr2PickBuffer.h"
 #include "Curves/TriCurveSet.h"
-#include "include/ITriFunction.h"
 #include "EvePlanet.h"
 #include "EveStarfield.h"
 #include "include/ITr2MultiPassScene.h"
@@ -27,6 +26,8 @@
 #include "../Tr2VolumetricsRenderer.h"
 #include "../Tr2RuntimeGpuBuffer.h"
 #include "EvePicking.h"
+
+#include <ITriFunction.h>
 
 class TriProjection;
 class TriView;

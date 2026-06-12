@@ -1,3 +1,7 @@
+// This is only needed for py2 as the file now belongs in blue.
+// Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+// The file version in the older blue versions had diverged from this one is incompatible.
+
 // There is already an outdated interface for ITr2DebugRenderer that needs to be 
 // there atm for legacy reasons. Thus why this is nr.2 (okt 2019)
 #pragma once

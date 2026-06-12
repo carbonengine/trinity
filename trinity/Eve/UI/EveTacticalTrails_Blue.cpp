@@ -5,7 +5,7 @@
 //
 #include "StdAfx.h"
 #include "EveTacticalTrails.h"
-#include "../../Include/ITriFunction.h"
+#include <ITriFunction.h>
 
 
 BLUE_DEFINE( EveTacticalTrails );

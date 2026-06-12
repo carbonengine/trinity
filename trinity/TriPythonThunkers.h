@@ -25,7 +25,7 @@
 #ifndef _TRIPYTHONTHUNKERS_H_
 #define _TRIPYTHONTHUNKERS_H_
 
-#include "include/ITriFunction.h"
+#include <ITriFunction.h>
 
 //////////////////////////////////////////////////////////////////////
 // ITriScalarFunction Thunkers

@@ -5,7 +5,8 @@
 #include "EveUpdateContext.h"
 #include "Curves/TriCurveSet.h"
 #include "Curves/Tr2CurveScalar.h"
-#include "Include/ITriFunction.h"
+
+#include <ITriFunction.h>
 
 
 

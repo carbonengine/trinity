@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(carbon-trinityaudioapi CONFIG REQUIRED)
+
+include("${CMAKE_CURRENT_LIST_DIR}/carbon-trinityTargets.cmake")

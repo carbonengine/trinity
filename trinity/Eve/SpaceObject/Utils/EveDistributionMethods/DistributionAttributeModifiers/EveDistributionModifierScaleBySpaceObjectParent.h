@@ -2,7 +2,8 @@
 #include "Tr2LightManager.h"
 #include "Tr2DebugRenderer.h"
 #include "IEveDistributionModifier.h"
-#include "include/ITriFunction.h"
+
+#include <ITriFunction.h>
 
 BLUE_CLASS( EveDistributionModifierScaleBySpaceObjectParent ) :
 	public IEveDistributionModifier

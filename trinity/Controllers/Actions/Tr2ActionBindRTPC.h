@@ -6,9 +6,10 @@
 //
 
 #include "Include/ITr2Updateable.h"
-#include "Include/ITriFunction.h"
 #include "ITr2ControllerAction.h"
 #include "Controllers/Tr2ControllerExpression.h"
+
+#include <ITriFunction.h>
 #include <ITr2AudEmitter.h>
 
 

@@ -7,8 +7,9 @@
 #ifndef EveConnector_H
 #define EveConnector_H
 
-#include "include/ITriFunction.h"
 #include "Eve/EveUpdateContext.h"
+
+#include <ITriFunction.h>
 
 BLUE_DECLARE( EveCurveLineSet );
 BLUE_DECLARE( EveConnector );
