@@ -1972,11 +1972,7 @@ FIXME currently the _stub platform does not build on macOS due to "unknown type 
 There are probably more issues because we haven't build the stub project on macOS so far IIRC
 ]]
 if(WIN32)
-    set(TRINITY_STUB_TARGET_NAME CcpTrinity_stub)
-
-    if(BUILD_FOR_PYTHON_2)
-        set(TRINITY_STUB_TARGET_NAME trinity_stub)
-    endif()
+    set(TRINITY_STUB_TARGET_NAME trinity_stub)
 
     ccp_add_library(${TRINITY_STUB_TARGET_NAME} SHARED)
     target_compile_definitions(${TRINITY_STUB_TARGET_NAME}
@@ -1992,11 +1988,7 @@ endif()
 if(WIN32)
     if (BUILD_DX11)
 
-        set(TRINITY_DX11_TARGET_NAME CcpTrinity_dx11)
-
-        if(BUILD_FOR_PYTHON_2)
-            set(TRINITY_DX11_TARGET_NAME trinity_dx11)
-        endif()
+        set(TRINITY_DX11_TARGET_NAME trinity_dx11)
 
         ccp_add_library(${TRINITY_DX11_TARGET_NAME} SHARED)
         target_compile_definitions(${TRINITY_DX11_TARGET_NAME}
@@ -2011,11 +2003,7 @@ if(WIN32)
 
     if (BUILD_DX12)
 
-        set(TRINITY_DX12_TARGET_NAME CcpTrinity_dx12)
-
-        if(BUILD_FOR_PYTHON_2)
-            set(TRINITY_DX12_TARGET_NAME trinity_dx12)
-        endif()
+        set(TRINITY_DX12_TARGET_NAME trinity_dx12)
 
         ccp_add_library(${TRINITY_DX12_TARGET_NAME} SHARED)
         target_compile_definitions(${TRINITY_DX12_TARGET_NAME}
@@ -2031,11 +2019,7 @@ elseif(APPLE)
     if(BUILD_METAL)
         enable_language(OBJCXX)
 
-        set(TRINITY_METAL_TARGET_NAME CcpTrinity_metal)
-
-        if(BUILD_FOR_PYTHON_2)
-            set(TRINITY_METAL_TARGET_NAME trinity_metal)
-        endif()
+        set(TRINITY_METAL_TARGET_NAME trinity_metal)
 
         ccp_add_library(${TRINITY_METAL_TARGET_NAME} SHARED)
         target_compile_definitions(${TRINITY_METAL_TARGET_NAME}
