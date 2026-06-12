@@ -689,3 +689,17 @@ BluePy EveChildInstancedMeshes::SetMeshDisplay( uint32_t meshId, bool display )
 	}
 	return BluePy( Py_None, true );
 }
+
+void EveChildInstancedMeshes::ReleaseResources( TriStorage s )
+{
+	if( ( s & TRISTORAGE_MANAGEDMEMORY ) != 0 )
+	{
+		UnregisterFromMeshManager();
+	}
+}
+
+bool EveChildInstancedMeshes::OnPrepareResources()
+{
+	return true;
+}
+

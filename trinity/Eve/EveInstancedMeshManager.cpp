@@ -402,7 +402,7 @@ EveInstancedMeshManager::InstanceBuffer::Allocation EveInstancedMeshManager::Ins
 
 std::optional<uint32_t> EveInstancedMeshManager::InstanceBuffer::GetUnusedRegion( uint32_t count )
 {
-	if( !buffer )
+	if( !buffer || !buffer->IsValid() )
 	{
 		return {};
 	}

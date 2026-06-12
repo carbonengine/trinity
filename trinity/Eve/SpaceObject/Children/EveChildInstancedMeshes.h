@@ -13,7 +13,8 @@ BLUE_CLASS( EveChildInstancedMeshes ) :
 	public IBlueAsyncResNotifyTarget,
 	public IEveShadowCaster,
 	public IEveInstanceMeshProvider,
-	public ITr2DebugRenderable
+	public ITr2DebugRenderable,
+	public Tr2DeviceResource
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -130,6 +131,9 @@ private:
 	void ReleaseCachedData( BlueAsyncRes * p ) override;
 	void RebuildCachedData( BlueAsyncRes * p ) override;
 	void UnregisterFromMeshManager();
+
+	void ReleaseResources( TriStorage s ) override;
+	bool OnPrepareResources() override;
 
 	BlueSharedString m_name;
 	Matrix m_worldTransform = IdentityMatrix();
