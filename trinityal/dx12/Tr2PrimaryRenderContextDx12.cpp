@@ -218,14 +218,14 @@ private:
 			{
 				if( budgetMB < prevBudgetMB || usageMB > prevUsageMB )
 				{
-					CCP_LOGERR( "Video memory over the budget. Current usage is %uMB and the budget is %uMB", usageMB, usageMB );
+					CCP_LOGERR( "Video memory over the budget. Current usage is %uMB and the budget is %uMB", usageMB, budgetMB );
 				}
 			}
 			else if( info.Budget / 5 * 4 <= info.CurrentUsage )
 			{
 				if( budgetMB < prevBudgetMB || usageMB > prevUsageMB )
 				{
-					CCP_LOGWARN( "Video memory close to the budget. Current usage is %uMB and the budget is %uMB", usageMB, usageMB );
+					CCP_LOGWARN( "Video memory close to the budget. Current usage is %uMB and the budget is %uMB", usageMB, budgetMB );
 				}
 			}
 			if( m_budget != 0 && info.Budget != m_budget )
