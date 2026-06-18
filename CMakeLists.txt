@@ -82,7 +82,9 @@ endfunction()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set(CMAKE_COMPILE_WARNING_AS_ERROR ON) 
+if(BUILD_FOR_PYTHON_2)
+    set(CMAKE_COMPILE_WARNING_AS_ERROR ON) 
+endif ()
 
 if (BUILD_SHADER_COMPILER OR BUILD_FOR_PYTHON_2)
     add_subdirectory(shadercompiler)
