@@ -31,7 +31,7 @@ namespace TrinityALImpl
 		ALResult SetName( const char* name );
 
 	private:
-		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RootSignatureAL& signature, Tr2PrimaryRenderContextAL& renderContext );
+		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RootSignatureAL& signature, Tr2PrimaryRenderContextAL& renderContext, const char* shaderName );
 		std::shared_ptr<ShaderResourceViewDx12> m_srv[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 		std::shared_ptr<UnorderedAccessViewDx12> m_uav[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 		std::shared_ptr<SamplerStateDx12> m_sampler[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
