@@ -103,7 +103,7 @@ BlueSharedString GetTaaQualityShaderOptionValue( Tr2PPTaaEffect::Quality quality
 	case Tr2PPTaaEffect::Quality::TAA_HIGH:
 		return MEMOIZED_STRING( "QUALITY_HIGH" );
 	default:
-		return MEMOIZED_STRING( "QUALITY_DISABLED" );
+		return MEMOIZED_STRING( "QUALITY_LOW" );
 	}
 }
 
