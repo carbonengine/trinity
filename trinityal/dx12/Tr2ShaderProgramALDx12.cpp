@@ -300,6 +300,20 @@ namespace TrinityALImpl
 
 		m_owner = &renderContext;
 
+		if( m_name.empty() )
+		{
+			for( size_t i = 0; i < count; ++i )
+			{
+				auto& shaderName = shaders[i].m_shader->m_name;
+				if( !shaderName.empty() )
+				{
+					if( !m_name.empty() )
+						m_name += " + ";
+					m_name += shaderName;
+				}
+			}
+		}
+
 		return S_OK;
 	}
 

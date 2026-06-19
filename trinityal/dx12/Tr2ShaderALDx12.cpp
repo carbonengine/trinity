@@ -35,6 +35,7 @@ namespace TrinityALImpl
 		memcpy( m_bytecode.get(), bytecode.bytecode, bytecode.size );
 		m_signature = signature;
 		m_type = type;
+		m_name = shaderPath ? shaderPath : "";
 
 		renderContext.AddShaderBinaryToCrashTracker(bytecode, shaderPath);
 
