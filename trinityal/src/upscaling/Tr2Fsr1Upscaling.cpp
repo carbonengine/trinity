@@ -121,7 +121,7 @@ Tr2Fsr1UpscalingContext::Tr2Fsr1UpscalingContext( Tr2UpscalingAL::Setting settin
 
 	auto& renderContext = params.renderContext;
 	Tr2ShaderAL easuShader;
-	easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::SHADER_BYTECODE, signature, "FSR1_EASU", renderContext.GetPrimaryRenderContext() );
+	easuShader.Create( Tr2RenderContextEnum::COMPUTE_SHADER, FSR1::SHADER_BYTECODE, signature, "", renderContext.GetPrimaryRenderContext() );
 	m_easuProgram.Create( &easuShader, 1, renderContext.GetPrimaryRenderContext() );
 
 
