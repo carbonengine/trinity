@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2GrannyTrack_h
 #define Tr2GrannyTrack_h

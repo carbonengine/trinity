@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   October 2020
-//    Copyright: CCP 2020
-//
+// Copyright © 2020 CCP ehf.
 
 #pragma once
 

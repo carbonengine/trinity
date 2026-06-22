@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriStepRenderLineGraph_h
 #define TriStepRenderLineGraph_h

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2GpuTimerALDx11_H
 #define Tr2GpuTimerALDx11_H

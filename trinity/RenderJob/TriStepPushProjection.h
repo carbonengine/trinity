@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriStepPushProjection_h_
 #define TriStepPushProjection_h_

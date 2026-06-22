@@ -1,7 +1,4 @@
-//
-//  Created by Apple on 04/05/2020.
-//  Copyright © 2020 CCP. All rights reserved.
-//
+// Copyright © 2020 CCP ehf.
 
 #ifndef MetalUtils_h
 #define MetalUtils_h

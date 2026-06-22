@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 //Any changes made to the ray payload take effect regardless of how the intersection function returns: Rejected primitives can have side effects to memory that are
 //observed by future intersection shader threads.
 

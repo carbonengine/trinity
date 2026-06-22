@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveChildBehaviorSystem_H
 #define EveChildBehaviorSystem_H

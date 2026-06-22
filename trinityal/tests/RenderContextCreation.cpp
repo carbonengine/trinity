@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "WithRenderContextFixture.h"
 #include <ITr2RenderContextEvents.h>

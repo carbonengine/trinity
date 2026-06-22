@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   June 2015
-//    Copyright: CCP 2015
-//
+// Copyright © 2015 CCP ehf.
+
 #pragma once
 #ifndef EveChildParticleSystem_H
 #define EveChildParticleSystem_H

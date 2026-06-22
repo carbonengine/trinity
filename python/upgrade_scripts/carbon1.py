@@ -1,3 +1,5 @@
+# Copyright © 2024 CCP ehf.
+
 """
 Upgrade script for resource files for Carbon 1.0. This script will remove the fidelityFX and useSpaceObjectData
 attributes from all .red files in the given directory.

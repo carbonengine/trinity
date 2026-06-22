@@ -1,14 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Creator:		Brian Bosse
-// Created:		Jan 2012
-// Copyright:	CCP 2012
-//
-
-// Herein lies a very specifically hardcoded parser for handling our kinda-sorta-HTML-but-not-really
-// language which we use for text markup in the client.  It's really only to be used by the UI's 
-// Label.  If you think it might be useful elsewhere, you're probably wrong.
-
+// Copyright © 2012 CCP ehf.
 
 #include "StdAfx.h"
 
@@ -1037,7 +1027,7 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                 }
                 if( !matched )
                 {
-                    // Well, didn't match any of our crap, just carry on like nothing happened.
+                    // Well, didn't match any of our patterns, just carry on like nothing happened.
                     curPos++;
                 }
                 // In any case, back to gen text with us.

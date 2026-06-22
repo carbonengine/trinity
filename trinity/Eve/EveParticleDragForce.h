@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveParticleDragForce_H
 #define EveParticleDragForce_H

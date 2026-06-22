@@ -1,27 +1,4 @@
-/* 
-	*************************************************************************************
-
-	TriMatrix.h
-
-	Author:    Hilmar Veigar Pétursson
-	Created:   September 2001
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		See TRIMATRIX_Description
-
-
-	Dependencies:
-
-		DirectX 9.0, Blue
-
-	(c) CCP 2000
-
-	*************************************************************************************
-*/
-
+// Copyright Â© 2000 CCP ehf.
 
 #ifndef _TRIMATRIX_H_
 #define _TRIMATRIX_H_

@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 //
 //  Tr2RtBottomLevelAccelerationStructureALMetal.h
 //  carbon-trinity

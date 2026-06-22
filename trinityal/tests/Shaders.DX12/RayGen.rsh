@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 cbuffer cb0: register( b0 )
 {
   float4x4 ViewMat;

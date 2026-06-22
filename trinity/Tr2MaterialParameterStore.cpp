@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Creator:   Reevan McKay
-//    Created:   December 2010
-//    Copyright: CCP 2010-2011
-//
+// Copyright © 2010 CCP ehf.
 
 #include "StdAfx.h"
 

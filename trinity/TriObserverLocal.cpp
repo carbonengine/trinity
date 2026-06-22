@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include <ITr2AudEmitter.h>
 #include "TriObserverLocal.h"

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 RWBuffer<uint> output: register(u0);
 
 

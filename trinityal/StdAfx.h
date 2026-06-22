@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef TrinityAL_StdAfx_H
 #define TrinityAL_StdAfx_H
 

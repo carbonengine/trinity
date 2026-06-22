@@ -1,27 +1,4 @@
-/* 
-	*************************************************************************************
-
-	TriColor.h
-
-	Author:    Hilmar Veigar Pétursson
-	Created:   November 2000
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		See TRICOLOR_Description
-
-
-	Dependencies:
-
-		DirectX 9.0, Blue
-
-	(c) CCP 2000
-
-	*************************************************************************************
-*/
-
+// Copyright © 2000 CCP ehf.
 
 #ifndef _TRICOLOR_H_
 #define _TRICOLOR_H_

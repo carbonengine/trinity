@@ -1,26 +1,4 @@
-/* 
-	*************************************************************************************
-
-	TriRigidOrientation.h
-
-	Created:   October 2001
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		See TRIRIGIDORIENTATION_Description
-
-
-
-	Dependencies:
-
-		None
-
-	(c) CCP 2000
-
-	*************************************************************************************
-*/
+// Copyright © 2000 CCP ehf.
 
 #ifndef _TRIRIGIDORIENTATION_H_
 #define _TRIRIGIDORIENTATION_H_

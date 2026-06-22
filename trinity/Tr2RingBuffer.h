@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #pragma once
 
 #include "include/ITr2GpuBuffer.h"

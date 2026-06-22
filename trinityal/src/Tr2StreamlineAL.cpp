@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 #include "StdAfx.h"
 #include "../include/Tr2StreamlineAL.h"
 #include "Tr2AdapterStructures.h"

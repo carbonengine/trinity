@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 R"MSL(
 #include <metal_stdlib>
 using namespace metal;

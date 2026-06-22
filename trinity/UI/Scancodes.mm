@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 // Functions in this file deal with keyboard layouts on macOS. We need to be able to convert between physical
 // key codes (as sent in Cocoa keyboard messages) and "virtual" key codes as dictated by keyboard layouts, so
 // that, for example "select all" Cmd+A command on French AZERTY keyboard would use the phycial Q button.

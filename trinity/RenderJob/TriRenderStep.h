@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef _TRIRENDERSTEP_H_
 #define _TRIRENDERSTEP_H_

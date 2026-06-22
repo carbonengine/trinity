@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2VertexDefinition_h_
 #define Tr2VertexDefinition_h_

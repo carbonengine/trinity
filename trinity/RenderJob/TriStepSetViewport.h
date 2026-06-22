@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef _TRISTEPSETVIEWPORT_H_
 #define _TRISTEPSETVIEWPORT_H_

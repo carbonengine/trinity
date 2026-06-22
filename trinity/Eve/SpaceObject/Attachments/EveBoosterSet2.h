@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveBoosterSet2_H
 #define EveBoosterSet2_H

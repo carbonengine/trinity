@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef Tr2SolidSet_H
 #define Tr2SolidSet_H
 

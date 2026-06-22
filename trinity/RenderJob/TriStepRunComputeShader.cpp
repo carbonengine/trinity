@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "TriStepRunComputeShader.h"
 #include "Shader/Tr2Material.h"

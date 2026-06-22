@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2SkinnedObjectLod_h
 #define Tr2SkinnedObjectLod_h

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveSpriteSetItem_H
 #define EveSpriteSetItem_H

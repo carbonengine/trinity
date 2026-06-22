@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "stdafx.h"
 #if _WIN32
 #include "EffectCompilerDX12.h"

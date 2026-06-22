@@ -1,25 +1,5 @@
-/* 
-	*************************************************************************************
+// Copyright © 2005 CCP ehf.
 
-	TriUtil.h
-
-	Created:   March 2005
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		Utility classes for various Trinity stuff
-
-
-	Dependencies:
-
-		DirectX 9.0, Blue
-
-	(c) CCP 2005
-
-	*************************************************************************************
-*/
 #pragma once
 
 #ifndef TRIUTIL_H

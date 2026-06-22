@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "TriGrannyRes.h"
 #include "TriGeometryRes.h"

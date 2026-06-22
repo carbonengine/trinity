@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   Februaru 2016
-//    Copyright: CCP 2016
-//
+// Copyright © 2016 CCP ehf.
 
 #include "StdAfx.h"
 #include "EveLocatorSets.h"

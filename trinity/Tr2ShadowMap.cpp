@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   October 2022
-//    Copyright: CCP 2022
-//
+// Copyright © 2022 CCP ehf.
 
 #include "StdAfx.h"
 #include "Tr2ShadowMap.h"

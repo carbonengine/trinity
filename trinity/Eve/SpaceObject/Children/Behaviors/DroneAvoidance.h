@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef DroneAvoidance_H
 #define DroneAvoidance_H

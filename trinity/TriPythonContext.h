@@ -1,16 +1,4 @@
-/* 
-	*************************************************************************************
-
-	TriPythonContext.h
-
-	Created by:	Halldor Fannar
-	Created on:	October 18th, 2006
-	Project:	Trinity
-
-	(c) CCP 2006
-
-	*************************************************************************************
-*/
+// Copyright © 2006 CCP ehf.
 
 #pragma once
 #ifndef _TriPythonContext_H_

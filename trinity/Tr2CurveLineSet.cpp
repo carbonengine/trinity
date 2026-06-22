@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   August 2011
-//    Copyright: CCP 2011
-//
-//    Refactored from EveCurveLineSet.cpp
+// Copyright © 2011 CCP ehf.
 
 #include "StdAfx.h"
 #include "Tr2CurveLineSet.h"

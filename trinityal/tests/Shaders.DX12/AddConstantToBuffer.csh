@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 cbuffer Constants: register(b1)
 {
     float4 arg1;

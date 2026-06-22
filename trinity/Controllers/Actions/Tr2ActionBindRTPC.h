@@ -1,9 +1,6 @@
+// Copyright © 2019 CCP ehf.
+
 #pragma once
-////////////////////////////////////////////////////////////
-//
-//    Created:   September 2019
-//    Copyright: CCP 2019
-//
 
 #include "Include/ITr2Updateable.h"
 #include "ITr2ControllerAction.h"

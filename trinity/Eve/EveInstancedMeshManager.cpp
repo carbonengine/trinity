@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveInstancedMeshManager.h"
 #include "../Tr2GpuStructuredBuffer.h"

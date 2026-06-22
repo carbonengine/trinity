@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveSpaceObject2.h"
 #include <ITr2AudGeometry.h>

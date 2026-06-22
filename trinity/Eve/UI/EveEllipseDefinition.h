@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #pragma once
 #ifndef EveEllipseDefinition_H
 #define EveEllipseDefinition_H

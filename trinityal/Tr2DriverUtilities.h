@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2DriverUtilities_H
 #define Tr2DriverUtilities_H

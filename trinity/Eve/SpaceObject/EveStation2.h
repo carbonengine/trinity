@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef EVESTATION2_H
 #define EVESTATION2_H
 

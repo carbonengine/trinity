@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2TextureALDx11_h_
 #define Tr2TextureALDx11_h_

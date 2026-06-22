@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveSpaceScene_H
 #define EveSpaceScene_H

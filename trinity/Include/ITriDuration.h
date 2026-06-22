@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef _ITRIDURATION_H_
 #define _ITRIDURATION_H_
 

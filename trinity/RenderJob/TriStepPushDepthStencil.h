@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriStepPushDepthStencil_h_
 #define TriStepPushDepthStencil_h_

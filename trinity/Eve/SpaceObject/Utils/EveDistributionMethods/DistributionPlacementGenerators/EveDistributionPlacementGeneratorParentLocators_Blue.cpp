@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include "EveDistributionPlacementGeneratorParentLocators.h"
 
 BLUE_DEFINE( EveDistributionPlacementGeneratorParentLocators );

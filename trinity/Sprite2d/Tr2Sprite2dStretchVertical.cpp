@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2Sprite2dStretchVertical.h"
 #include "Tr2AtlasTexture.h"

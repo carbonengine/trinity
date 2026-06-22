@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveSmartLightSpotLight.h"
 #include "TriMath.h"

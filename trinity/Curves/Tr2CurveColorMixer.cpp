@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "Tr2CurveColorMixer.h"
 
 Tr2CurveColorMixer::Tr2CurveColorMixer( IRoot* lockobj )

@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Created:		April 2024
-// Copyright:	CCP 2024
-//
+// Copyright © 2024 CCP ehf.
+
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11

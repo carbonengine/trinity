@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "include/Tr2FenceAL.h"
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2FenceAL )

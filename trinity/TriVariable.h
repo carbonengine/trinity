@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TRIVARIABLE_H
 #define TRIVARIABLE_H

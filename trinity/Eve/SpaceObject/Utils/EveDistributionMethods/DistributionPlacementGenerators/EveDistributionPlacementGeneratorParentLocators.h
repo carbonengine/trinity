@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #pragma once
 #include "IEveDistributionPlacementGenerators.h"
 #include "Eve/SpaceObject/EveSpaceObject2.h"

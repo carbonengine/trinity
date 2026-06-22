@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #pragma once
 #include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 #include "../DistributionAttributeModifiers/IEveDistributionModifier.h"

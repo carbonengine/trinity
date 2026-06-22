@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TRIPOOLALLOCATOR_H
 #define TRIPOOLALLOCATOR_H

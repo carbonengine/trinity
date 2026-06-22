@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 //
 // Header containing types and enum constants shared between Metal shaders and C/ObjC source.
 //

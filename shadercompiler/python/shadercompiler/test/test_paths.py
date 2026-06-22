@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 import unittest2
 
 import shadercompiler.paths as paths

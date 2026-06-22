@@ -1,4 +1,5 @@
 # Copyright © 2025 CCP ehf.
+
 #[[
   Automatically add tests with CTest by querying the compiled test executable
   for available tests.

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef Tr2Matrix4Parameter_H
 #define Tr2Matrix4Parameter_H
 

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2Sprite2dPolygon.h"
 #include "Tr2Sprite2dTexture.h"

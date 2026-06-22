@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef ITr2PickableScene_H
 #define ITr2PickableScene_H

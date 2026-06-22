@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   August 2013
-//    Copyright: CCP 2013
-//
+// Copyright © 2013 CCP ehf.
+
 #include "StdAfx.h"
 #include "Utilities/StringUtils.h"
 #include "Include/TriMath.h"
@@ -2381,7 +2378,7 @@ void EveSOF::SetupCustomMask( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) c
 void EveSOF::SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 {
 	EveSOFDataHull::ImpactEffectType impactType = dna->GetImpactEffectType();
-	// todo - how in the hell do we create impact effects for instanced shit?
+	// todo - how do we create impact effects for instanced objects?
 
 	if( impactType != EveSOFDataHull::IMPACTEFFECT_NONE )
 	{

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef IEveBallpark_H
 #define IEveBallpark_H
 

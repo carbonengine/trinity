@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveSmartLightPointLight.h"
 #include "Resources/Tr2LightProfileRes.h"

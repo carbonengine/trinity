@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "TriDevice.h"
 #include "RenderJob/Tr2RenderJobs.h"

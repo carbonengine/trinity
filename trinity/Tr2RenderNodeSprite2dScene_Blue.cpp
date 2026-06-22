@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2RenderNodeSprite2dScene.h"
 #include "Sprite2d/Tr2Sprite2dScene.h"

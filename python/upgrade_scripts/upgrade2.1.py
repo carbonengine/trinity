@@ -1,3 +1,5 @@
+# Copyright © 2025 CCP ehf.
+
 """
 Upgrade script for resource files for Trinity 2.1. This script adds the default bloom luminance value to all .red files
 in the given directory.

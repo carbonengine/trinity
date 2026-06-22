@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 
 #ifndef TRINITY_AL_WITH_BLUE_EXPOSURE

@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   September 2010
-//    Copyright: CCP 2010
-//
-//    Refactored from EveParticleSpringAttractor.h
+// Copyright © 2010 CCP ehf.
 
 #pragma once
 #ifndef Tr2ParticleSpringAttractor_H

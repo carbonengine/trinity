@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef WithValidRenderContextFixture_H
 #define WithValidRenderContextFixture_H

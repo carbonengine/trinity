@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   January 2012
-//    Copyright: CCP 2012
-//
+// Copyright © 2012 CCP ehf.
+
 #pragma once
 #ifndef EveMissile_H
 #define EveMissile_H

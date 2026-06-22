@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Copyright © 2026 CCP ehf.
+
+#pragma once
 
 #include "PostProcess/Effects/Tr2PPEffect.h"
 

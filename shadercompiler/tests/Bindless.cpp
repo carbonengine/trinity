@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include "gtest/gtest.h"
 #include "EffectCompilerDX12.h"
 #include "EffectCompilerMetal.h"

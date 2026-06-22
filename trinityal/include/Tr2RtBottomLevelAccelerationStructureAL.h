@@ -1,9 +1,6 @@
+// Copyright © 2019 CCP ehf.
+
 #pragma once
-////////////////////////////////////////////////////////////
-//
-//    Created:   November 2019
-//    Copyright: CCP 2019
-//
 
 #include "../ALResult.h"
 #include "Tr2BufferAL.h"

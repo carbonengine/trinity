@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef ApproachGroup_H
 #define ApproachGroup_H

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef TR2EFFECT_H
 #define TR2EFFECT_H
 

@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #pragma once
 #include "Eve/SpaceObjectFactory/EveSOFData.h"
 #include "attributeModifiers/IEveSmartLightGroupAttributeModifier.h"

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef ITRIREROUTABLE_H
 #define ITRIREROUTABLE_H
 

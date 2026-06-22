@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2ManipulationTool_h
 #define Tr2ManipulationTool_h

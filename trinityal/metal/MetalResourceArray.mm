@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #if TRINITY_PLATFORM == TRINITY_METAL
 
 #include "MetalResourceArray.h"

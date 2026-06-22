@@ -1,25 +1,4 @@
-/* 
-	*************************************************************************
-
-	TriTextureRes.h
-
-	Created:   Nov. 2000
-	OS:        Win32
-	Project:   Yep
-
-	Description:   
-
-		Impl of textureres
-
-
-	Dependencies:
-
-		Blue, Trinity
-
-	(c) CCP 2000
-
-	*************************************************************************
-*/
+// Copyright © 2000 CCP ehf.
 
 #if !defined(_TriTextureRes_H_)
 #define _TriTextureRes_H_

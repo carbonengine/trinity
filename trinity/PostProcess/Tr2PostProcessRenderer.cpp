@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2PostProcessRenderer.h"
 #include "PostProcess/Tr2PostProcess2.h"

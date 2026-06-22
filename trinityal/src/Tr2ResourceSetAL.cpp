@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2TextureAL.h"

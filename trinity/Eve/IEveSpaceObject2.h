@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef IEveSpaceObject2_H
 #define IEveSpaceObject2_H
 

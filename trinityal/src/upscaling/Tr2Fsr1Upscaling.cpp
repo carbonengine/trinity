@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Created:		April 2024
-// Copyright:	CCP 2024
-//
+// Copyright © 2024 CCP ehf.
 
 #if TRINITY_PLATFORM != TRINITY_STUB
 

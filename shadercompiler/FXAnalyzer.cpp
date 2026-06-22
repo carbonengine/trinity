@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "stdafx.h"
 #include "FXAnalyzer.h"
 #include "ASTNode.h"

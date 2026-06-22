@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "TriVariableParameter.h"
 #include "Tr2VariableStore.h"

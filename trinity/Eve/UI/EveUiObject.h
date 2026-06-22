@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   January 2017
-//    Copyright: CCP 2017
-//
+// Copyright © 2017 CCP ehf.
+
 #pragma once
 
 #include "Eve/SpaceObject/EveSpaceObject2.h"

@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   May 2025
-//    Copyright: CCP 2025
-//
+// Copyright © 2025 CCP ehf.
 
 #include "StdAfx.h"
 #include "GradientTexture.h"

@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 #pragma once
 
 #include "Eve/EveComponentRegistry.h"

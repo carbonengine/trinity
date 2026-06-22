@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "MetalDefines.h"
 
 // [numthreads(1, 1, 1)]

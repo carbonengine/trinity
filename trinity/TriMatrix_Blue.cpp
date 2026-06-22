@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "include/TriMatrix.h"
 #include "Include/ITriVector.h"

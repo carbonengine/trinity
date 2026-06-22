@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 project(TrinityALTest VERSION 1.0.0)
 
 set(_SOURCES 

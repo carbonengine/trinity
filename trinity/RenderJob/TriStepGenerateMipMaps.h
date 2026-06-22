@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriStepGenerateMipMaps_h_
 #define TriStepGenerateMipMaps_h_

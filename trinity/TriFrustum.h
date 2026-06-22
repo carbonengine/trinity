@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TRIFRUSTUM_H
 #define TRIFRUSTUM_H

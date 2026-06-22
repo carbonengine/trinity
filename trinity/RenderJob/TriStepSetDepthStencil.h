@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef _TRISTEPSETDEPTHSTENCIL_H_
 #define _TRISTEPSETDEPTHSTENCIL_H_

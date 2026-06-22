@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #ifndef ITr2MeshMorph_h
 #define ITr2MeshMorph_h
 

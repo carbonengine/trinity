@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "TriStepRenderEffect.h"
 #include "Shader/Tr2Effect.h"

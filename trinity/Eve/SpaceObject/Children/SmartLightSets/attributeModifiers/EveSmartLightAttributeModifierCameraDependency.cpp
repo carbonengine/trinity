@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveSmartLightAttributeModifierCameraDependency.h"
 #include "TriMath.h"

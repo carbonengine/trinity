@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   November 2023
-//    Copyright: CCP 2023
-//
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 
 

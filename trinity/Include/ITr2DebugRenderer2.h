@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 // This is only needed for py2 as the file now belongs in blue.
 // Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
 // The file version in the older blue versions had diverged from this one is incompatible.

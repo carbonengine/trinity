@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveTrailsSet_H
 #define EveTrailsSet_H

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2PrimaryRenderContextDx11_h_
 #define Tr2PrimaryRenderContextDx11_h_

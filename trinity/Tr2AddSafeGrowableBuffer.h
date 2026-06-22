@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2AddSafeGrowableBuffer_H
 #define Tr2AddSafeGrowableBuffer_H

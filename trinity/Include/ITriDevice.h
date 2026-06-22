@@ -1,26 +1,4 @@
-/* 
-	*************************************************************************
-
-	ITriDevice.h
-
-	Author:    Hilmar Veigar Pétursson
-	Created:   November 2000
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		Yeap
-
-
-	Dependencies:
-
-		DirectX 9.0, Probably more, ytbd.
-
-	(c) CCP 2000
-
-	*************************************************************************
-*/
+// Copyright Â© 2000 CCP ehf.
 
 #ifndef _ITRIDEVICE_H_
 #define _ITRIDEVICE_H_

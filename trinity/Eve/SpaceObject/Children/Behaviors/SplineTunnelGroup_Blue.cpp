@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "SplineTunnelGroup.h"
 #include "Eve/SpaceObject/Children/EveChildContainer.h"

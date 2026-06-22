@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 // Precompiled header
 #include "StdAfx.h"
 

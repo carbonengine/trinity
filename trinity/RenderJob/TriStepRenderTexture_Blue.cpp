@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "TriStepRenderTexture.h"
 #include "Tr2AtlasTexture.h"

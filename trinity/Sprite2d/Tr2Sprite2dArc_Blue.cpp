@@ -1,8 +1,5 @@
-//////////////////////////////////////////////////////////////////////////
-//
-// Created: April 2012
-// Copyright CCP 2012
-//
+// Copyright © 2012 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2Sprite2dArc.h"
 

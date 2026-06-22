@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef ITr2ParticleForce_H
 #define ITr2ParticleForce_H

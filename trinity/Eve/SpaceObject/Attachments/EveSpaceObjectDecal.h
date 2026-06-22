@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EVESPACEOBJECTDECAL_H
 #define EVESPACEOBJECTDECAL_H

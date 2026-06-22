@@ -1,27 +1,4 @@
-/* 
-	*************************************************************************************
-
-	TriVector.h
-
-	Author:    Hilmar Veigar Pétursson
-	Created:   November 2000
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		Simple mapping of Vector3 over to Blue
-
-
-	Dependencies:
-
-		DirectX 9.0, Blue
-
-	(c) CCP 2000
-
-	*************************************************************************************
-*/
-
+// Copyright Â© 2000 CCP ehf.
 
 #ifndef _TRIVECTOR_H_
 #define _TRIVECTOR_H_

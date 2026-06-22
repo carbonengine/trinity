@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Created:   October 2024
-// Copyright: CCP 2024
-//
+// Copyright © 2024 CCP ehf.
 
 #include "Tr2SSSSS.h"
 #include "Tr2Renderer.h"

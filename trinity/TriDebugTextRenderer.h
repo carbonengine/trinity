@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriDebugTextRenderer_H
 #define TriDebugTextRenderer_H

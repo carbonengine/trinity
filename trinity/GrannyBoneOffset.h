@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef GrannyBoneOffset_h_
 #define GrannyBoneOffset_h_

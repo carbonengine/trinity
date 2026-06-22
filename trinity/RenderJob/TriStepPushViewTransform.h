@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriStepPushViewTransform_h_
 #define TriStepPushViewTransform_h_

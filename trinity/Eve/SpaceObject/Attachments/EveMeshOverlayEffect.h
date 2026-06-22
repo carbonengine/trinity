@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveMeshOverlayEffect_H
 #define EveMeshOverlayEffect_H

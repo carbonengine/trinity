@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef ITr2Interior_H
 #define ITr2Interior_H

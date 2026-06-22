@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef _TRIPROJECTION_H_
 #define _TRIPROJECTION_H_

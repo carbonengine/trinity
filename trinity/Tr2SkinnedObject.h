@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef TR2SKINNEDOBJECT_H
 #define TR2SKINNEDOBJECT_H
 

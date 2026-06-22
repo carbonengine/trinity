@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriStepSetRenderState_h
 #define TriStepSetRenderState_h

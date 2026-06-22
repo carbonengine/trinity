@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef MatrixUtils_h
 #define MatrixUtils_h

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2QuaternionLerpCurve_h
 #define Tr2QuaternionLerpCurve_h

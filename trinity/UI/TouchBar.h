@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 //
 // Created by Hrafn Jökull Geirsson on 15.12.2020.
 //

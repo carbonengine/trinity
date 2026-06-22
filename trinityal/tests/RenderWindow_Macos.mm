@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #if defined(__APPLE__) && TRINITY_PLATFORM != TRINITY_STUB
 

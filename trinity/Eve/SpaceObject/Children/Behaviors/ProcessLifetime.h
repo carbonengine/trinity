@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef ProcessLifetime_H
 #define ProcessLifetime_H

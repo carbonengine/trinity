@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveChildMesh.h"
 #include "Tr2MeshBase.h"

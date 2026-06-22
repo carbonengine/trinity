@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   November 2017
-//    Copyright: CCP 2017
-//
+// Copyright © 2017 CCP ehf.
+
 #pragma once
 #ifndef EveHazeSet_H
 #define EveHazeSet_H

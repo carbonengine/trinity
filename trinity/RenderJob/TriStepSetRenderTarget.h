@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef _TRISTEPSETRENDERTARGET_H_
 #define _TRISTEPSETRENDERTARGET_H_

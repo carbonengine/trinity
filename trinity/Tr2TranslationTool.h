@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2TranslationTool_h
 #define Tr2TranslationTool_h

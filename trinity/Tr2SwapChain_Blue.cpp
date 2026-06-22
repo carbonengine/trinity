@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2SwapChain.h"
 #include "Tr2RenderTarget.h"

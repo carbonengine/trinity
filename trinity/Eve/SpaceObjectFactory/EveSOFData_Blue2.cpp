@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 // June 2022 we had our first Blue class get too big for our compiler
 // Thus, this first introduction of _Blue2. The future is now.
 

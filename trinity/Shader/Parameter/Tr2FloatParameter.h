@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef TR2FLOATPARAMETER_H
 #define TR2FLOATPARAMETER_H
 

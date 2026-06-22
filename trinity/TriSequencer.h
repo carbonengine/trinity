@@ -1,27 +1,4 @@
-/* 
-	*************************************************************************************
-
-	TriSequencer.h
-
-	Author:    Hilmar Veigar Pétursson
-	Created:   October 2001
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		Implementations for all sequencers for all types og curves
-
-
-
-	Dependencies:
-
-		None
-
-	(c) CCP 2000
-
-	*************************************************************************************
-*/
+// Copyright Â© 2000 CCP ehf.
 
 #ifndef _TRISEQUENCER_H_
 #define _TRISEQUENCER_H_

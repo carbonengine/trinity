@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////////////////////////
-//
-// Created:		May 2024
-// Copyright:	CCP 2024
-//
+// Copyright © 2024 CCP ehf.
 
 #pragma once
 #include "PostProcess/Effects/Tr2PPEffect.h"

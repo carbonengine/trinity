@@ -1,20 +1,4 @@
-/* 
-	*************************************************************************************
-
-	ITriDeviceResource.h
-
-	Created by:	Halldor Fannar
-	Created on:	2006-10-25
-	Project:	Trinity
-
-	Note: This is a platform independent file and cannot expose any special code that is
-	not shared between D3D9 and D3D10.  If any Python methods are to be exposed for
-	this class this is the place to do it.
-
-	(c) CCP 2006
-
-	*************************************************************************************
-*/
+// Copyright © 2006 CCP ehf.
 
 #pragma once
 #ifndef _ITriDeviceResource_H_

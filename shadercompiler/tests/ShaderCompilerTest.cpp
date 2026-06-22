@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 #include "gtest/gtest.h"
 
 extern std::string g_metalToolsPath;

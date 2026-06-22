@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "stdafx.h"
 #include "TextureFunctionConversionDX11.h"
 #include "ASTNode.h"

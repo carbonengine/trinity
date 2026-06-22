@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #pragma once
 
 #include "SpaceObject/EveSpaceObject2.h"

@@ -1,4 +1,6 @@
-﻿#include "StdAfx.h"
+﻿// Copyright © 2023 CCP ehf.
+
+#include "StdAfx.h"
 #include "TriTextureRes.h"
 #include "TriSettingsRegistrar.h"
 

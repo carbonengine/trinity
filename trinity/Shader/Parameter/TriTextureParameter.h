@@ -1,28 +1,5 @@
-/* 
-	*************************************************************************
+// Copyright © 2006 CCP ehf.
 
-	TriTextureParameter.h
-
-	Created:   March 2015
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-		
-		Under DX9, this parameter acts like a cut down version of TriTexture, 
-	loading texture resources.
-
-		Under DX10, this parameter will load any form of buffer object resource,
-	primarily textures, but also eventually instance data etc.
-
-	Dependencies:
-
-		DirectX 9.0, Probably more, ytbd.
-
-	(c) CCP 2006
-
-	*************************************************************************
-*/
 #pragma once
 #if !defined( _TriTextureParameter_H_)
 #define _TriTextureParameter_H_

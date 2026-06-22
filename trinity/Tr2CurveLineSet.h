@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   August 2011
-//    Copyright: CCP 2011
-//
-//    Refactored from EveCurveLineSet.h
+// Copyright © 2011 CCP ehf.
 
 #pragma once
 #ifndef Tr2CurveLineSet_H

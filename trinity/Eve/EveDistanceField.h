@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   October 2014
-//    Copyright: CCP 2014
-//
+// Copyright © 2014 CCP ehf.
+
 #pragma once
 #ifndef EveDistanceField_H
 #define EveDistanceField_H

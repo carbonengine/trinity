@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   Januaru 2016
-//    Copyright: CCP 2016
-//
+// Copyright © 2016 CCP ehf.
+
 #pragma once
 #ifndef EveSpriteLineSetItem_H
 #define EveSpriteLineSetItem_H

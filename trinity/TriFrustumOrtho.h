@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TRIFRUSTUMORTHO_H
 #define TRIFRUSTUMORTHO_H

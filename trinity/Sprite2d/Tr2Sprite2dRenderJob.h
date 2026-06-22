@@ -1,8 +1,4 @@
-//////////////////////////////////////////////////////////////////////////////////
-//
-// Created:		January 2011
-// Copyright:	CCP 2011
-//
+// Copyright © 2011 CCP ehf.
 
 #pragma once
 #ifndef Tr2Sprite2dRenderJob_h

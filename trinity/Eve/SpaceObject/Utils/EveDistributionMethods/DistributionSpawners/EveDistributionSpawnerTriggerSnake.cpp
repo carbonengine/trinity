@@ -1,3 +1,5 @@
+// Copyright © 2025 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveDistributionSpawnerTriggerSnake.h"
 #include "include/TriMath.h"

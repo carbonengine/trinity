@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 Texture2D<float> tex: register(t0);
 SamplerState sampl: register(s0);
 RWBuffer<float4> output: register(u0);

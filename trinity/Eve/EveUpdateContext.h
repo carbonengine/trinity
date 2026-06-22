@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveUpdateContext_h
 #define EveUpdateContext_h

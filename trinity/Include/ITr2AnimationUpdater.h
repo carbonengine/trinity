@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef ITr2AnimationUpdater_H
 #define ITr2AnimationUpdater_H

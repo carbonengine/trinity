@@ -1,3 +1,5 @@
+# Copyright © 2026 CCP ehf.
+
 @PACKAGE_INIT@
 
 include(CMakeFindDependencyMacro)

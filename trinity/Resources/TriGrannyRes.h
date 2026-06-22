@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriGrannyRes_H
 #define TriGrannyRes_H

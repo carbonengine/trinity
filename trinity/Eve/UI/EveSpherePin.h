@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EVESPHEREPIN_H
 #define EVESPHEREPIN_H

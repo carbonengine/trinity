@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "TriTextureRes.h"
 #include "Tr2RenderTarget.h"

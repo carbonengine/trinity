@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 
 constexpr uint8_t ShaderCompilerVersion[4] = { @ShaderCompiler_VERSION_MAJOR@, @ShaderCompiler_VERSION_MINOR@, @ShaderCompiler_VERSION_PATCH@, @ShaderCompiler_VERSION_TWEAK@ };

@@ -1,6 +1,5 @@
 # Copyright © 2025 CCP ehf.
 
-# Use of this file is deprecated, but is being kept around for backwards compatability purposes. It will be deleted soon
 include(CMakeFindDependencyMacro)
 
 @CCP_PACKAGE_CONFIG_TARGET_DEPENDENCIES@

@@ -1,6 +1,4 @@
-//    Created:   Feb 2022
-//    Copyright: CCP 2022
-
+// Copyright © 2022 CCP ehf.
 
 #pragma once
 

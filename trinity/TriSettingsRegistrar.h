@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriSettingsRegistrar_H
 #define TriSettingsRegistrar_H

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "TriStepFilterVisibilityResults.h"
 #include "Tr2VisibilityResults.h"

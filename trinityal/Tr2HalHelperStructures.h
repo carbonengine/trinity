@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2HalHelperStructures_h_
 #define Tr2HalHelperStructures_h_

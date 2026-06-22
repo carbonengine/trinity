@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   June 2015
-//    Copyright: CCP 2015
-//
+// Copyright © 2015 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveChildParticleSystem.h"
 #include "Eve/SpaceObject/EveSpaceObject2.h"

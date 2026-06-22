@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2TranslationTool.h"
 #include "Tr2PrimitiveSet.h"

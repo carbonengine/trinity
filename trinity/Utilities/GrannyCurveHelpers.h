@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef GrannyCurveHelpers_h
 #define GrannyCurveHelpers_h

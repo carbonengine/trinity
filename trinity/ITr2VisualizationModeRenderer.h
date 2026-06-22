@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef ITr2VisualizationModeRenderer_h
 #define ITr2VisualizationModeRenderer_h

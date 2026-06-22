@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2DepthStencil_h_
 #define Tr2DepthStencil_h_

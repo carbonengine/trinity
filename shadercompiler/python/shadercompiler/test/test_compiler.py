@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 import shutil
 import tempfile
 import unittest2

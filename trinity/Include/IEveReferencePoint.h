@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef IEveReferencePoint_H
 #define IEveReferencePoint_H
 

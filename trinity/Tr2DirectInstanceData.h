@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #pragma once
 #ifndef Tr2DirectInstanceData_H
 #define Tr2DirectInstanceData_H

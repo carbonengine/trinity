@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef IEveShadowCaster_h
 #define IEveShadowCaster_h
 

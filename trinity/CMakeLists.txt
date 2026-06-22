@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 cmake_minimum_required(VERSION 3.16)
 
 if(WITH_GRANNY)

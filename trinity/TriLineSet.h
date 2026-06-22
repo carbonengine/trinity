@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef _TRILINESET_H_
 #define _TRILINESET_H_
 

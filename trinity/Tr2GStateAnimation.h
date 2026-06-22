@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2GStateAnimation_h
 #define Tr2GStateAnimation_h

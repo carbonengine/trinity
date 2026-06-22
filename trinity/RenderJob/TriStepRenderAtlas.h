@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriStepRenderAtlas_h
 #define TriStepRenderAtlas_h

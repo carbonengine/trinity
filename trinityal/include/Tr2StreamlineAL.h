@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 #pragma once
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_DIRECTX11

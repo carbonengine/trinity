@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "Tr2CurveColorMixer.h"
 
 BLUE_DEFINE( Tr2CurveColorMixer );

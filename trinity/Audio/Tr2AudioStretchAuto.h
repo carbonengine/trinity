@@ -1,14 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   April 2020
-//    Copyright: CCP 2020
-//
-//    Description:
-// 	    Provides audio functionality to long running EveStretch effects (aka lasers).
-//		This class exposes methods that EveStretch effects can use to trigger audio events.
-//      This class should only be used when the timing of triggering audio events
-//      is decided by EveStretch. The only configuration given to the sound designer is
-//      which events to fire.
+// Copyright © 2020 CCP ehf.
 
 #pragma once
 

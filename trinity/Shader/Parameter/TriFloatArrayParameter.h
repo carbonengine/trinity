@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef TRIVECTOR4ARRAYPARAMETER_H_
 #define TRIVECTOR4ARRAYPARAMETER_H_
 

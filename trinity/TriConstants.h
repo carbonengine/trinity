@@ -1,26 +1,4 @@
-/* 
-	*************************************************************************************
-
-	TriConstants.h
-
-	Author:    Hilmar Veigar Pétursson
-	Created:   November 2000
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		Constants for Trinity, mostly from D3D, mapped over to Blue
-
-
-	Dependencies:
-
-		DirectX 9.0, Blue
-
-	(c) CCP 2000
-
-	*************************************************************************************
-*/
+// Copyright Â© 2000 CCP ehf.
 
 #ifndef _TRICONSTANTS_H_
 #define _TRICONSTANTS_H_

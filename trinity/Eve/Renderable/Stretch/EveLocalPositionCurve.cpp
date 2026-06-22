@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveLocalPositionCurve.h"
 #include "Utilities/Vector3d.h"

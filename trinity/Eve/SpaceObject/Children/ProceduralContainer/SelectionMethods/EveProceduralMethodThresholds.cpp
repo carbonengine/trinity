@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   November 2021
-//    Copyright: CCP 2021
-//
+// Copyright © 2021 CCP ehf.
+
 #include "EveProceduralMethodThresholds.h"
 
 

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 // StdAfx.cpp : source file that includes just the standard includes
 //	Io.pch will be the pre-compiled header
 //	StdAfx.obj will contain the pre-compiled type information

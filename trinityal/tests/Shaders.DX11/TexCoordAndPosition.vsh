@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 struct VS_OUTPUT
 {
 	float4 Position : SV_Position;

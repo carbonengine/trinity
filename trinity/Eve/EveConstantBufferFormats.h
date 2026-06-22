@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveConstantBufferFormats_H
 #define EveConstantBufferFormats_H

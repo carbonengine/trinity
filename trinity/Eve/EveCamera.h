@@ -1,26 +1,4 @@
-/* 
-	*************************************************************************************
-
-	EveCamera.h
-
-	Author:    Hilmar Veigar Pétursson
-	Created:   November 2000
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		See EVECAMERA_Description
-
-	Dependencies:
-
-		Blue, DirectX 9.0
-
-	(c) CCP 2000
-
-	*************************************************************************************
-*/
-
+// Copyright Â© 2000 CCP ehf.
 
 #ifndef _EVECAMERA_H_
 #define _EVECAMERA_H_

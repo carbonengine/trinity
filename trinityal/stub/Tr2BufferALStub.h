@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 
 #if TRINITY_PLATFORM == TRINITY_STUB

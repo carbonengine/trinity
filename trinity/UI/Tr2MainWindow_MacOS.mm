@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   March 2020
-//    Copyright: CCP 2020
-//
+// Copyright © 2020 CCP ehf.
 
 #include "StdAfx.h"
 
@@ -1142,7 +1138,7 @@ void Tr2MainWindow::CreateOSWindow( Tr2MainWindowState::State& state )
     // need to flush events, so that the window is fully created after this call
     ProcessMessages();
 
-    // somehow Cocoa manages to fuck up drawable size after attaching the view, so we need to update it here
+    // somehow Cocoa messes up drawable size after attaching the view, so we need to update it here
     [view updateDrawableSize];
 
     m_hwnd = window;

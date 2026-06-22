@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef SpawnDrones_H
 #define SpawnDrones_H

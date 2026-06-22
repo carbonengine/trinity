@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 // This is the refactored TriViewport class - it does not expose any D3D internals and has 
 // been changed so that 
 //

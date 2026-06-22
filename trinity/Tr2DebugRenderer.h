@@ -1,8 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   December 2016
-//    Copyright: CCP 2016
-//
+// Copyright © 2016 CCP ehf.
 
 #pragma once
 

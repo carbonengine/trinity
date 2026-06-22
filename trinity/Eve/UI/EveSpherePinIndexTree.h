@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveSpherePinIndexTree_H
 #define EveSpherePinIndexTree_H

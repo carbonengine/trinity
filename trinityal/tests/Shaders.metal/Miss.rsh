@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 #include <metal_stdlib>
 #include "MetalDefines.h"
 using namespace metal;

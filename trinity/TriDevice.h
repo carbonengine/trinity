@@ -1,26 +1,5 @@
-/* 
-	*************************************************************************************
+// Copyright Â© 2000 CCP ehf.
 
-	TriDevice.h
-
-	Author:    Hilmar Veigar Pétursson
-	Created:   November 2000
-	OS:        Win32
-	Project:   Trinity
-
-	Description:   
-
-		See TRIDEVICE_Description
-
-
-	Dependencies:
-
-		Blue, DirectX 9.0
-
-	(c) CCP 2000
-
-	*************************************************************************************
-*/
 #pragma once
 
 #ifndef _TRIDEVICE_H_

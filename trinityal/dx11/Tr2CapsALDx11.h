@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2CapsALDx11_H
 #define Tr2CapsALDx11_H

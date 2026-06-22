@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2GrannyAnimationLayer.h"
 #include "Resources/TriGrannyRes.h"

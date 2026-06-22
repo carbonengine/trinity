@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef EveCurveLineSet_H
 #define EveCurveLineSet_H

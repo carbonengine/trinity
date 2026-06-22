@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2PyValueBinding_h
 #define Tr2PyValueBinding_h

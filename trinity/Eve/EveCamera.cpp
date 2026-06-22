@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "Eve/EveCamera.h"
 #include "TriDevice.h"
@@ -536,8 +538,8 @@ bool EveCamera::OnModified(
 {
 	if( IsMatch( value, m_rotationAroundParent ) )
 	{	
-		float crap;
-		TriQuaternionToYawPitchRoll(&m_yaw, &m_pitch, &crap, &m_rotationAroundParent);
+		float unused;
+		TriQuaternionToYawPitchRoll(&m_yaw, &m_pitch, &unused, &m_rotationAroundParent);
 	} 
 	else if( IsMatch( value, m_interestTranslationCurve ) )
 	{

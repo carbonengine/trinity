@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2PrimitiveSet_h
 #define Tr2PrimitiveSet_h

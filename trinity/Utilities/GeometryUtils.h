@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef GeometryUtils_h
 #define GeometryUtils_h

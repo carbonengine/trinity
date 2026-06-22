@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveChildPostProcessVolume.h"
 #include "PostProcess/ITr2PostProcessOwner.h"

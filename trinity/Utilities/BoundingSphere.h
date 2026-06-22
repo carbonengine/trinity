@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef BoundingSphere_H
 #define BoundingSphere_H

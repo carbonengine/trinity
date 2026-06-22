@@ -1,8 +1,5 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   Sept 2012
-//    Copyright: CCP 2012
-//
+// Copyright © 2012 CCP ehf.
+
 #pragma once
 #ifndef EveLODHelper_h
 #define EveLODHelper_h

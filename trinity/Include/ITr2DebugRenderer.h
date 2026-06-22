@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef ITr2DebugRenderer_H
 #define ITr2DebugRenderer_H
 

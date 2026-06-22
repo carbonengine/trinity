@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef Tr2LineSet_H
 #define Tr2LineSet_H
 

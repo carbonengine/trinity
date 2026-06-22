@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
 // Used by trinity.rc

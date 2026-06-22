@@ -1,3 +1,5 @@
+// Copyright © 2024 CCP ehf.
+
 #include "StdAfx.h"
 #include "EveChildPostProcessVolume.h"
 #include "ITr2Renderable.h"

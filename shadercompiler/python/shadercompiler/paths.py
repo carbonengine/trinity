@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 import os
 import re
 from . import Platform, ShaderModel, PLATFORM_NAMES, SHADER_MODEL_NAMES

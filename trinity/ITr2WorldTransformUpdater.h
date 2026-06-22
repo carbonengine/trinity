@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef ITr2WorldTransformUpdater_H
 #define ITr2WorldTransformUpdater_H

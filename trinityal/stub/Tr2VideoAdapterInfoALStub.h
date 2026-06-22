@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2VideoAdapterInfo_H
 #define Tr2VideoAdapterInfo_H

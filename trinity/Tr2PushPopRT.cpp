@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2PushPopRT.h"
 #include "Tr2Renderer.h"

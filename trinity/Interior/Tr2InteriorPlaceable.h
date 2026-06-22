@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2InteriorPlaceable_H
 #define Tr2InteriorPlaceable_H

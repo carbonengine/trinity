@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef Tr2HostBitmap_h_
 #define Tr2HostBitmap_h_

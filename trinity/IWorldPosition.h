@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #ifndef IWorldPosition_H
 #define IWorldPosition_H
 

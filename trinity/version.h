@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "windows.h"
 
 #include "CcpCore/include/CcpMacros.h"

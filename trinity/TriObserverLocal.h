@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TRIOBSERVERLOCAL_H
 #define TRIOBSERVERLOCAL_H

@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef tr2dxtcompressor_h
 #define tr2dxtcompressor_h

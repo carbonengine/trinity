@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef _TRISTEPRENDERSCENE_H_
 #define _TRISTEPRENDERSCENE_H_

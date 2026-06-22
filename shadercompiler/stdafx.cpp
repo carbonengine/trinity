@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 // stdafx.cpp : source file that includes just the standard includes
 // ShaderCompiler.pch will be the pre-compiled header
 // stdafx.obj will contain the pre-compiled type information

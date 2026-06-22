@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "stdafx.h"
 #include "OutputHLSL.h"
 #include "ParserUtils.h"

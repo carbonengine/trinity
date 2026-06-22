@@ -1,9 +1,4 @@
-////////////////////////////////////////////////////////////
-//
-//    Created:   September 2010
-//    Copyright: CCP 2010
-//
-//    Refactored from EveParticleDirectForce_Blue.cpp
+// Copyright © 2010 CCP ehf.
 
 #include "StdAfx.h"
 #include "Tr2ParticleVortexForce.h"

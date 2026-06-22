@@ -1,3 +1,5 @@
+# Copyright © 2023 CCP ehf.
+
 #!/usr/bin/env python3
 
 import argparse

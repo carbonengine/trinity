@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef WodPlaceableRes_H
 #define WodPlaceableRes_H

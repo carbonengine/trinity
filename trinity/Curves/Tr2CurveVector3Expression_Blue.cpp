@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #include "StdAfx.h"
 #include "Tr2CurveVector3Expression.h"
 #include "Tr2ExpressionTermInfo.h"

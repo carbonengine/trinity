@@ -1,3 +1,5 @@
+// Copyright © 2023 CCP ehf.
+
 #pragma once
 #ifndef TriTransformParameter_H
 #define TriTransformParameter_H
