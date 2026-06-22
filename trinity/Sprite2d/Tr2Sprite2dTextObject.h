@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		12 2011
+//
+
 #pragma once
 #ifndef Tr2Sprite2dTextObject_h
 #define Tr2Sprite2dTextObject_h

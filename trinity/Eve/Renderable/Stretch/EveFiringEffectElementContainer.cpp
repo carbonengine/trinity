@@ -1,5 +1,10 @@
 // Copyright © 2017 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2017
+//
+
 #include "StdAfx.h"
 #include "EveFiringEffectElementContainer.h"
 #include "Eve/IEveFiringEffectElement.h"

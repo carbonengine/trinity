@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2019
+//
+
 #pragma once
 
 #include "Tr2DeviceResource.h"

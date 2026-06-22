@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2016
+//
+
 #include "StdAfx.h"
 #include "EveTacticalOverlay.h"
 #include "Shader/Tr2Effect.h"

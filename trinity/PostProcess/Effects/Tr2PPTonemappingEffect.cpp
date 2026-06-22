@@ -1,5 +1,10 @@
 // Copyright © 2024 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		May 2024
+//
+
 #include "StdAfx.h"
 #include "Tr2PPTonemappingEffect.h"
 

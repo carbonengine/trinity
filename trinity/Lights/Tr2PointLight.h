@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2015
+//
+
 #pragma once
 #include "Tr2Light.h"
 

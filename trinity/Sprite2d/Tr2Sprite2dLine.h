@@ -1,5 +1,10 @@
 // Copyright © 2010 CCP ehf.
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Created: December 2010
+//
+
 #pragma once
 
 #ifndef Tr2Sprite2dLine_h

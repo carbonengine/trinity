@@ -1,5 +1,10 @@
 // Copyright © 2010 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2010
+//
+
 #pragma once
 #ifndef TriStepSetVariableStore_H
 #define TriStepSetVariableStore_H

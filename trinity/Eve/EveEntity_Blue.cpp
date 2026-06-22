@@ -1,5 +1,10 @@
 // Copyright © 2021 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2021
+//
+
 #include "StdAfx.h"
 #include "EveEntity.h"
 

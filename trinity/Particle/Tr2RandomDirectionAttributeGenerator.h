@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2011
+//
+
 #pragma once
 #ifndef Tr2RandomDirectionAttributeGenerator_H
 #define Tr2RandomDirectionAttributeGenerator_H

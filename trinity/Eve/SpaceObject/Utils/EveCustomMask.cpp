@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2014
+//
+
 #include "StdAfx.h"
 
 #include "EveCustomMask.h"

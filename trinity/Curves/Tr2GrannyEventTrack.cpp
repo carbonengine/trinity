@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2014
+//
+
 #include "StdAfx.h"
 #include "Tr2GrannyEventTrack.h"
 

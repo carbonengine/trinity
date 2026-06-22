@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2018
+//
+
 #pragma once
 
 #include "StdAfx.h"

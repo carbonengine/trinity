@@ -1,5 +1,10 @@
 // Copyright © 2010 CCP ehf.
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Created: December 2010
+//
+
 #include "StdAfx.h"
 #include "EveProjectBracket.h"
 #include "EveSprite2dBracket.h"

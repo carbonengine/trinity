@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2011
+//
+
 #include "StdAfx.h"
 #include "Tr2StaticEmitter.h"
 #include "Tr2ParticleSystem.h"

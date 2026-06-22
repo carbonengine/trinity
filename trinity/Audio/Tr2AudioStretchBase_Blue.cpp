@@ -1,5 +1,11 @@
 // Copyright © 2020 CCP ehf.
 
+
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2020
+//
+
 #include "StdAfx.h"
 #include "Tr2AudioStretchBase.h"
 

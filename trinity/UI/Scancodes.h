@@ -1,5 +1,27 @@
 // Copyright © 2000 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	IUILib.h
+
+	Created:   May 2001
+	OS:        Win32
+	Project:   TriUI
+
+	Description:   
+
+		DirectInput scancodes
+
+
+	Dependencies:
+
+		Blue, Trinity
+
+
+	*************************************************************************
+*/
+
 #ifndef _SCANCODES_H_
 #define _SCANCODES_H_
 

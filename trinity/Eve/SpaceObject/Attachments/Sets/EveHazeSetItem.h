@@ -1,5 +1,10 @@
 // Copyright © 2017 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2017
+//
+
 #pragma once
 #ifndef EveHazeSetItem_H
 #define EveHazeSetItem_H

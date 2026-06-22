@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2015
+//
+
 #ifndef _EVELOCALPOSITIONCURVE_H_
 #define _EVELOCALPOSITIONCURVE_H_
 

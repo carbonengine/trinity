@@ -1,5 +1,10 @@
 // Copyright © 2022 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2022
+//
+
 #pragma once
 #define TR2SHADOWMAP_H
 

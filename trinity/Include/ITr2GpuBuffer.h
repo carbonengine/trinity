@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2013
+//
+
 #pragma once
 #ifndef ITr2GpuBuffer_H
 #define ITr2GpuBuffer_H

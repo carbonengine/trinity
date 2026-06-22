@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Created: April 2012
+//
+
 #include "StdAfx.h"
 #include "Tr2Sprite2dArc.h"
 #include "Tr2Sprite2dTexture.h"

@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   July 2013
+//
+
 #pragma once
 #ifndef ITr2RenderContextEvents_H
 #define ITr2RenderContextEvents_H

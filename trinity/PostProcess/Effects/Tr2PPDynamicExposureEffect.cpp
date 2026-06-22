@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		2/5/2019
+//
+
 #include "StdAfx.h"
 #include "Tr2PPDynamicExposureEffect.h"
 #include "Tr2Renderer.h"

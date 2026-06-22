@@ -1,5 +1,26 @@
 // Copyright © 2000 CCP ehf.
 
+/* 
+	*************************************************************************************
+
+	TriGeometryRes.h
+
+	Created:   October 2006
+	OS:        Win32
+	Project:   Trinity
+
+	Description:   
+
+
+	Dependencies:
+
+		Blue, DirectX 9.0
+
+
+
+	*************************************************************************************
+*/
+
 #ifndef _TriGeometryRes_H_
 #define _TriGeometryRes_H_
 

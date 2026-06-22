@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2014
+//
+
 #pragma once
 #ifndef Tr2LightManager_H
 #define Tr2LightManager_H

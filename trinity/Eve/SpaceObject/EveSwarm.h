@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2015
+//
+
 #pragma once
 #ifndef EveSwarm_H
 #define EveSwarm_H

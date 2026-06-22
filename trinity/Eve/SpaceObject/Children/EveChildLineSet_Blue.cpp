@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2019
+//
+
 #include "StdAfx.h"
 #include "EveChildLineSet.h"
 #include "Behaviors/BehaviorGroup.h"

@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2019
+//
+
 #pragma once
 #ifndef EveChildSocket_H
 #define EveChildSocket_H

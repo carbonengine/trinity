@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2019
+//
+
 #include "StdAfx.h"
 #include "Tr2CurveVector3Lerp.h"
 #include "Tr2CurveScalar.h"

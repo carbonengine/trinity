@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2016
+//
+
 #include "StdAfx.h"
 #include "Tr2ImpostorManager.h"
 

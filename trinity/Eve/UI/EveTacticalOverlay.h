@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2016
+//
+
 #pragma once
 #ifndef EveTacticalOverlay_H
 #define EveTacticalOverlay_H

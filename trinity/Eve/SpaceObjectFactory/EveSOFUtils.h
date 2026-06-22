@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2015
+//
+
 #pragma once
 #ifndef EveSOFUtils_H
 #define EveSOFUtils_H

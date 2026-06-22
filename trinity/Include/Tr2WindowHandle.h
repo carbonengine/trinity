@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		May 2013
+//
+
 #pragma once
 #ifndef Tr2WindowHandle_h
 #define Tr2WindowHandle_h

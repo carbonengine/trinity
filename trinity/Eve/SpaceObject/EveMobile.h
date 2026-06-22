@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2013
+//
+
 #pragma once
 #ifndef EveMobile_H
 #define EveMobile_H

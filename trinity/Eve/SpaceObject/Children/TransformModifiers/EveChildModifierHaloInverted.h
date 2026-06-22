@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2018
+//
+
 #pragma once
 #ifndef EveChildModifierHaloInverted_H
 #define EveChildModifierHaloInverted_H

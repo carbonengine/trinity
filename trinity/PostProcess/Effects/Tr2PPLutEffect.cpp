@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		Febreuary 2019
+//
+
 #include "StdAfx.h"
 #include "Tr2PPLutEffect.h"
 

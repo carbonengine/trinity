@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   July 2013
+//
+
 #include "StdAfx.h"
 #include "Tr2RenderContext.h"
 #include "Tr2VariableStore.h"

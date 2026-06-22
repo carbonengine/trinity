@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2015
+//
+
 #include "StdAfx.h"
 #include "EveChildContainer.h"
 

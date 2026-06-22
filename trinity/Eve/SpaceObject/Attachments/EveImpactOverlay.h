@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2015
+//
+
 #pragma once
 #ifndef EveImpactOverlay_H
 #define EveImpactOverlay_H

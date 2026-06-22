@@ -1,5 +1,28 @@
 // Copyright Â© 2000 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	ITriQuaternion.h
+
+	Author:    Hilmar Veigar Pétursson
+	Created:   November 2000
+	OS:        Win32
+	Project:   Trinity
+
+	Description:   
+
+		Yeap
+
+
+	Dependencies:
+
+		DirectX 9.0, Probably more, ytbd.
+
+
+	*************************************************************************
+*/
+
 #ifndef _ITRIQUATERNION_H_
 #define _ITRIQUATERNION_H_
 

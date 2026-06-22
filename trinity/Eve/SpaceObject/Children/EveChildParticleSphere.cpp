@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2018
+//
+
 #include "StdAfx.h"
 #include "EveChildParticleSphere.h"
 #include "Tr2InstancedMesh.h"

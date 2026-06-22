@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		January 2019
+//
+
 #pragma once
 #ifndef Tr2PPEffect_H
 #define Tr2PPEffect_H

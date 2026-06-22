@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2013
+//
+
 #pragma once
 #ifndef Tr2PersistentPerObjectData_H
 #define Tr2PersistentPerObjectData_H

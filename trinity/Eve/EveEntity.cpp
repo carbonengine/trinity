@@ -1,5 +1,10 @@
 // Copyright © 2021 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		June 2021
+//
+
 #include "StdAfx.h"
 #include "EveEntity.h"
 #include "Tr2Renderer.h"

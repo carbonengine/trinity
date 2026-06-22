@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2019
+//
+
 #include "StdAfx.h"
 #include "Tr2FollowCurveKey.h"
 #include "IWorldPosition.h"

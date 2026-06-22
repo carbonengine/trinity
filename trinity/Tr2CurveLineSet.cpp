@@ -1,5 +1,11 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2011
+//
+//    Refactored from EveCurveLineSet.cpp
+
 #include "StdAfx.h"
 #include "Tr2CurveLineSet.h"
 #include "Utilities/BoundingBox.h"

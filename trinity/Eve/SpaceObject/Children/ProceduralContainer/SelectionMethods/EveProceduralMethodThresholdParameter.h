@@ -1,5 +1,10 @@
 // Copyright © 2021 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2021
+//
+
 #pragma once
 
 #include "Eve/SpaceObject/Children/EveChildRef.h"

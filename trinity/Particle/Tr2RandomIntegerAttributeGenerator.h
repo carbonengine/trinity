@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2012
+//
+
 #pragma once
 #ifndef Tr2RandomIntegerAttributeGenerator_H
 #define Tr2RandomIntegerAttributeGenerator_H

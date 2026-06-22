@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2011
+//
+
 #pragma once
 #ifndef ITr2GenericParticleConstraint_H
 #define ITr2GenericParticleConstraint_H

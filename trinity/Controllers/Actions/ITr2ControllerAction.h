@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2018
+//
+
 #pragma once
 
 BLUE_DECLARE_INTERFACE( ITr2ActionController );

@@ -1,5 +1,11 @@
 // Copyright © 2010 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2010
+//
+//    Refactored from EveParticleDragForce.h
+
 #pragma once
 #ifndef Tr2ParticleDragForce_H
 #define Tr2ParticleDragForce_H

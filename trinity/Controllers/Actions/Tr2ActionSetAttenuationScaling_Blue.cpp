@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2020
+//
+
 #include "StdAfx.h"
 #include "Tr2ActionSetAttenuationScaling.h"
 #include "../ITr2Controller.h"

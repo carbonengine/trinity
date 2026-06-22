@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2020
+//
+
 #include "StdAfx.h"
 #include "Tr2MainWindow.h"
 #include "Tr2MouseCursor.h"

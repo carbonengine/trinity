@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2018
+//
+
 #pragma once
 #ifndef EveChildModifierBillboard2D_H
 #define EveChildModifierBillboard2D_H

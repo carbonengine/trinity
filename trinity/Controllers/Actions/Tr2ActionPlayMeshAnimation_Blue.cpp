@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2018
+//
+
 #include "StdAfx.h"
 #include "Tr2ActionPlayMeshAnimation.h"
 

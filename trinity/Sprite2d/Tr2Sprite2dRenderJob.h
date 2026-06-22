@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+//////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		January 2011
+//
+
 #pragma once
 #ifndef Tr2Sprite2dRenderJob_h
 #define Tr2Sprite2dRenderJob_h

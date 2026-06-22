@@ -1,5 +1,11 @@
 // Copyright © 2010 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Creator:   Reevan McKay
+//    Created:   December 2010
+//
+
 #pragma once
 #ifndef Tr2MaterialParameterStore_H
 #define Tr2MaterialParameterStore_H

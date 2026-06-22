@@ -1,5 +1,16 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2020
+//
+//    Description:
+// 	    Provides audio functionality to long running EveStretch effects (aka lasers).
+//		This class exposes methods that EveStretch effects can use to trigger audio events.
+//      This class should only be used when the timing of triggering audio events
+//      is decided by EveStretch. The only configuration given to the sound designer is
+//      which events to fire.
+
 #pragma once
 
 #include "Tr2AudioStretchBase.h"

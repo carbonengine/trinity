@@ -1,5 +1,10 @@
 // Copyright © 2025 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2025
+//
+
 #pragma once
 
 namespace PyVerCompat

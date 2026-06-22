@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2019
+//
+
 #pragma once
 #ifndef IEveSocketParameter_H
 #define IEveSocketParameter_H

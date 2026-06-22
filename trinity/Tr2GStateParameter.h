@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2020
+//
+
 #pragma once
 #ifndef Tr2GStateParameter_h
 #define Tr2GStateParameter_h

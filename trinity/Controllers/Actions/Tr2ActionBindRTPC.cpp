@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2019
+//
+
 #include "StdAfx.h"
 #include "ITr2SoundEmitterOwner.h"
 #include "Tr2ActionBindRTPC.h"

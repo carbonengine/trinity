@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2018
+//
+
 #include "StdAfx.h"
 #include "EveChildModifierHaloInverted.h"
 #include "Tr2Renderer.h"

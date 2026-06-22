@@ -1,5 +1,10 @@
 // Copyright © 2010 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2010
+//
+
 #pragma once
 #ifndef Tr2VariableStore_H
 #define Tr2VariableStore_H

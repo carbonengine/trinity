@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   July 2018
+//
+
 #include "StdAfx.h"
 #include "EveBannerSet.h"
 #include "Shader/Tr2Effect.h"

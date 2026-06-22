@@ -1,5 +1,10 @@
 // Copyright © 2021 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2021
+//
+
 #pragma once
 
 #include "Tr2CurveScalar.h"

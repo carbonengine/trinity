@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2012
+//
+
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM==TRINITY_DIRECTX11

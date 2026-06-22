@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2013
+//
+
 #pragma once
 #ifndef Tr2StreamingBitmapSaver_H
 #define Tr2StreamingBitmapSaver_H

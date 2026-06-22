@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2014
+//
+
 #pragma once
 #ifndef Tr2DynamicRingBuffer_H
 #define Tr2DynamicRingBuffer_H

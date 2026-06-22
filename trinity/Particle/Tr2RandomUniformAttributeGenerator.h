@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2011
+//
+
 #pragma once
 #ifndef Tr2RandomUniformAttributeGenerator_H
 #define Tr2RandomUniformAttributeGenerator_H

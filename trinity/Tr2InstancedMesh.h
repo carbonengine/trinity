@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2011
+//
+
 #pragma once
 #ifndef Tr2InstancedMesh_H
 #define Tr2InstancedMesh_H

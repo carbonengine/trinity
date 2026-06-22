@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2018
+//
+
 #include "StdAfx.h"
 #include "Tr2ActionChildEffect.h"
 #include "Controllers/Tr2Controller.h"

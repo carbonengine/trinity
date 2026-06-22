@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2020
+//
+
 #include "StdAfx.h"
 
 #if GSTATE_ENABLED

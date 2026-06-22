@@ -1,5 +1,10 @@
 // Copyright © 2022 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2022
+//
+
 #include "StdAfx.h"
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 

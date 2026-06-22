@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		1/15/2019 
+//
+
 #include "StdAfx.h"
 #include "Tr2PPSignalLossEffect.h"
 

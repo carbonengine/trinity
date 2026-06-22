@@ -1,5 +1,26 @@
 // Copyright © 2005 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	ITriEffectParameter.h
+
+	Created:   June 2006
+	OS:        Win32
+	Project:   Trinity
+
+	Description:   
+
+		ITriEffectParameter is an interface allowing for a list of parameters like float4, float3, float and textures
+
+	Dependencies:
+
+		DirectX 9.0c, Probably more, ytbd.
+
+
+	*************************************************************************
+*/
+
 #ifndef ITr2EffectParameter_h
 #define ITr2EffectParameter_h
 

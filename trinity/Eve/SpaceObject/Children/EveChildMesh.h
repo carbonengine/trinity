@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2015
+//
+
 #pragma once
 #ifndef EveChildMesh_H
 #define EveChildMesh_H

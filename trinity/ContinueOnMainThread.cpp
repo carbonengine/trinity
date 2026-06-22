@@ -1,5 +1,10 @@
 // Copyright © 2025 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2025
+//
+
 #include "StdAfx.h"
 #include "ContinueOnMainThread.h"
 

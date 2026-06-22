@@ -1,5 +1,10 @@
 // Copyright © 2025 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2025
+//
+
 #include "StdAfx.h"
 #include "Tr2TimelineController.h"
 #include "Tr2ControllerFloatVariable.h"

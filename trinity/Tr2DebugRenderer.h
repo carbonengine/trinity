@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2016
+//
+
 #pragma once
 
 #include "TriDebugTextRenderer.h"

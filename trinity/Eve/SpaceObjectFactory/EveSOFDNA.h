@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2014
+//
+
 #pragma once
 #ifndef EveSOFDNA_H
 #define EveSOFDNA_H

@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2012
+//
+
 #pragma once
 #ifndef Tr2PlaneConstraint_H
 #define Tr2PlaneConstraint_H

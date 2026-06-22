@@ -1,5 +1,10 @@
 // Copyright © 2010 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2010
+//
+
 #include "StdAfx.h"
 #include "TriStepSetDebugRenderer.h"
 #include "include/ITr2DebugRenderer.h"

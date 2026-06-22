@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   July 2018
+//
+
 #pragma once
 
 #include "IEveSpaceObjectAttachment.h"

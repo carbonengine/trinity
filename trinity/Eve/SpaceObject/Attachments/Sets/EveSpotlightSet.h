@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   July 2012
+//
+
 #pragma once
 #ifndef EveSpotlightSet_h
 #define EveSpotlightSet_h

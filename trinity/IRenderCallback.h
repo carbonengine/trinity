@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		March 2014
+//
+
 #pragma once
 #ifndef IRenderCallback_h
 #define IRenderCallback_h

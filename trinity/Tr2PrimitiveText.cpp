@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2016
+//
+
 #include "StdAfx.h"
 #include "Tr2PrimitiveText.h"
 #include "Tr2Renderer.h"

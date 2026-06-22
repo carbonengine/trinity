@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2019
+//
+
 #include "StdAfx.h"
 #include "EveMultiEffect.h"
 #include "EveMultiEffectParameter.h"

@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2016
+//
+
 #pragma once
 #ifndef EveLocatorSets_H
 #define EveLocatorSets_H

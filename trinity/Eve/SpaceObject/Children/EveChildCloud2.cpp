@@ -1,5 +1,10 @@
 // Copyright © 2023 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2023
+//
+
 #include "StdAfx.h"
 #include "EveChildCloud2.h"
 #include "TriFrustum.h"

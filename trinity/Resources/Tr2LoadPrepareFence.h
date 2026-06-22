@@ -1,5 +1,10 @@
 // Copyright © 2021 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2021
+//
+
 #pragma once
 
 // Helper object that acts like a fence in load/prepare ResMan queues.

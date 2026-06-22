@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		August 2014
+//
+
 #pragma once
 #ifndef Tr2MeshBase_h
 #define Tr2MeshBase_h

@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2014
+//
+
 #include "StdAfx.h"
 #include "Utilities/StringUtils.h"
 #include "Utilities/BoundingSphere.h"

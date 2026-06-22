@@ -1,5 +1,10 @@
 // Copyright © 2025 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2025
+//
+
 #include "StdAfx.h"
 #include "EveTacticalTrails.h"
 #include "../../Shader/Tr2Effect.h"

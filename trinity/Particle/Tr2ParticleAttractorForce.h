@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2011
+//
+
 #pragma once
 #ifndef Tr2ParticleAttractorForce_H
 #define Tr2ParticleAttractorForce_H

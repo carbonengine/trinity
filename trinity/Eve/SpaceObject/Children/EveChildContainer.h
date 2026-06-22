@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2015
+//
+
 #pragma once
 #ifndef EveChildContainer_H
 #define EveChildContainer_H

@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2020
+//
+
 #pragma once
 
 BLUE_DECLARE( Tr2ImageRes );

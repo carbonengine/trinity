@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2019
+//
+
 #include "StdAfx.h"
 #include "EveKDdroneManagementTree.h"
 

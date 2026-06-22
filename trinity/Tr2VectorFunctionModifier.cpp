@@ -1,5 +1,10 @@
 // Copyright © 2025 CCP ehf.
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Created: April 2025
+//
+
 #include "Tr2VectorFunctionModifier.h"
 #include "Tr2Renderer.h"
 #include "Utilities/Vector3d.h"

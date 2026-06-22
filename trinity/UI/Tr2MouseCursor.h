@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2012
+//
+
 #pragma once
 #ifndef Tr2MouseCursor_H
 #define Tr2MouseCursor_H

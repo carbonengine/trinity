@@ -1,5 +1,10 @@
 // Copyright © 2010 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2010
+//
+
 #include "StdAfx.h"
 #include "TriStepFilterVisibilityResults.h"
 #include "Tr2VisibilityResults.h"

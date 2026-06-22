@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2019
+//
+
 #pragma once
 
 #include "Tr2RtBottomLevelAccelerationStructureAL.h"

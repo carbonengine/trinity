@@ -1,5 +1,9 @@
 // Copyright © 2020 CCP ehf.
 
+//
+//  Created by Apple on 11/06/2020.
+//
+
 #pragma once
 #if TRINITY_PLATFORM == TRINITY_METAL
 

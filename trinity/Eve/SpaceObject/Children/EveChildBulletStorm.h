@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2015
+//
+
 #pragma once
 #ifndef EveChildBulletStorm_H
 #define EveChildBulletStorm_H

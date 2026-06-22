@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Created: March 2011
+//
+
 #pragma once
 
 #ifndef Tr2ProjectBoundingBoxBracket_h

@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2018
+//
+
 #pragma once
 #ifndef EveChildInheritProperties_H
 #define EveChildInheritProperties_H

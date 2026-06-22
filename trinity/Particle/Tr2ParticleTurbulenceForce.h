@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2011
+//
+
 #pragma once
 #ifndef Tr2ParticleTurbulenceForce_H
 #define Tr2ParticleTurbulenceForce_H

@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2015
+//
+
 #pragma once
 #ifndef EveTurretTarget_H
 #define EveTurretTarget_H

@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2020
+//
+
 #include "StdAfx.h"
 #include "EveChildEffectPropagator.h"
 #include "Eve/EveUpdateContext.h"

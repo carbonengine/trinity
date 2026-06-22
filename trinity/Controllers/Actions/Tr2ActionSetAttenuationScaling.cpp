@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2020
+//
+
 #include "StdAfx.h"
 #include <ITr2AudEmitter.h>
 #include "Controllers/Tr2Controller.h"

@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		January 2012
+//
+
 #pragma once
 #ifndef EveSprite2dBracketRenderer_h
 #define EveSprite2dBracketRenderer_h

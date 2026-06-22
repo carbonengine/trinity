@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2012
+//
+
 #pragma once
 #ifndef Tr2BindingVector3_H
 #define Tr2BindingVector3_H

@@ -1,5 +1,27 @@
 // Copyright © 2000 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	ITriTextureRes.h
+
+	Created:   Nov. 2000
+	OS:        Win32
+	Project:   Yep
+
+	Description:   
+
+		Hemm...
+
+
+	Dependencies:
+
+		Blue, Trinity
+
+
+	*************************************************************************
+*/
+
 #ifndef _ITRITEXTURERES_H_
 #define _ITRITEXTURERES_H_
 

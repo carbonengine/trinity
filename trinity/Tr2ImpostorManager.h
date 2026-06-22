@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2016
+//
+
 #pragma once
 #ifndef Tr2ImpostorManager_H
 #define Tr2ImpostorManager_H

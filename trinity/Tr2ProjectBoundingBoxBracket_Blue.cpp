@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+//////////////////////////////////////////////////////////////////////////
+//
+// Created: March 2011
+//
+
 #include "StdAfx.h"
 
 #include "Tr2ProjectBoundingBoxBracket.h"

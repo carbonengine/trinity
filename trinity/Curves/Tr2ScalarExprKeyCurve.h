@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2011
+//
+
 #pragma once
 #ifndef Tr2ScalarExprKeyCurve_h
 #define Tr2ScalarExprKeyCurve_h

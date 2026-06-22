@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2015
+//
+
 #pragma once
 #ifndef EveCloudVolumeBall_H
 #define EveCloudVolumeBall_H

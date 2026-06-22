@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2012
+//
+
 #include "StdAfx.h"
 #include "Tr2VideoAdapters.h"
 

@@ -1,5 +1,10 @@
 // Copyright © 2022 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		June 2022
+//
+
 #include "StdAfx.h"
 #include "Tr2LightProfileRes.h"
 #include "../Tr2LightManager.h"

@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2019
+//
+
 #pragma once
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12

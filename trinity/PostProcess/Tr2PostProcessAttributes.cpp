@@ -1,5 +1,10 @@
 // Copyright © 2024 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		September 2024
+//
+
 #include "StdAfx.h"
 #include "Tr2PostProcessAttributes.h"
 #include "Tr2PostProcessEnums.h"

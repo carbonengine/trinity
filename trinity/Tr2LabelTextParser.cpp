@@ -1,5 +1,16 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Creator:		Brian Bosse
+// Created:		Jan 2012
+//
+
+// Herein lies a very specifically hardcoded parser for handling our kinda-sorta-HTML-but-not-really
+// language which we use for text markup in the client.  It's really only to be used by the UI's 
+// Label.  If you think it might be useful elsewhere, you're probably wrong.
+
+
 #include "StdAfx.h"
 
 #ifndef _MSC_VER

@@ -1,5 +1,11 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   July 2012
+//
+
+
 #include "StdAfx.h"
 #include "EveSpotlightSetItem.h"
 

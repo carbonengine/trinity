@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		May 2011
+//
+
 #include "StdAfx.h"
 #include "Tr2FontMeasurer.h"
 #include "Tr2FontManager.h"

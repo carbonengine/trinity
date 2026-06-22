@@ -1,5 +1,10 @@
 // Copyright © 2017 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2017
+//
+
 #include "StdAfx.h"
 #include "Tr2RotationAdapter.h"
 

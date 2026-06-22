@@ -1,5 +1,10 @@
 // Copyright © 2024 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2024
+//
+
 #include "EveSpaceObjectAttachmentUtils.h"
 #include "TriMath.h"
 #include <Tr2Renderer.h>

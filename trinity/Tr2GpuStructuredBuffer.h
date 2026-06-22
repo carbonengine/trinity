@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2013
+//
+
 #pragma once
 #ifndef Tr2GpuStructuredBuffer_H
 #define Tr2GpuStructuredBuffer_H

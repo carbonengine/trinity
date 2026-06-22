@@ -1,5 +1,10 @@
 // Copyright © 2022 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		February 2022
+//
+
 #include "StdAfx.h"
 #include "Tr2TextureLodManager.h"
 #include "TriSettingsRegistrar.h"

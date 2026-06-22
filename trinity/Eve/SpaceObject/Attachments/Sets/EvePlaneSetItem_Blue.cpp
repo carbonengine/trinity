@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2013
+//
+
 #include "StdAfx.h"
 #include "EvePlaneSetItem.h"
 

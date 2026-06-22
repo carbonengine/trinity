@@ -1,5 +1,10 @@
 // Copyright © 2017 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2017
+//
+
 #include "StdAfx.h"
 #include "Tr2CurveVector2.h"
 

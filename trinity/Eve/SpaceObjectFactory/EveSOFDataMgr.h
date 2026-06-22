@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2013
+//
+
 #pragma once
 #ifndef EveSOFDataMgr_H
 #define EveSOFDataMgr_H

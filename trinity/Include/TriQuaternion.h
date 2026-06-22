@@ -1,5 +1,28 @@
 // Copyright Â© 2000 CCP ehf.
 
+/* 
+	*************************************************************************************
+
+	TriQuaternion.h
+
+	Author:    Hilmar Veigar Pétursson
+	Created:   November 2000
+	OS:        Win32
+	Project:   Trinity
+
+	Description:   
+
+		See TRIQUATERNION_Description
+
+
+	Dependencies:
+
+		DirectX 9.0, Blue
+
+
+	*************************************************************************************
+*/
+
 #ifndef _TRIQUATERNION_H_
 #define _TRIQUATERNION_H_
 

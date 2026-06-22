@@ -1,5 +1,10 @@
 // Copyright © 2022 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2022
+//
+
 #pragma once
 
 BLUE_DECLARE_INTERFACE( IEveSpaceObjectAttachment );

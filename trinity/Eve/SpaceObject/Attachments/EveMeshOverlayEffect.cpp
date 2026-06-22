@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2012
+//
+
 #include "StdAfx.h"
 #include "EveMeshOverlayEffect.h"
 #include "Shader/Tr2Effect.h"

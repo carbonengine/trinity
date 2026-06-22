@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   July 2011
+//
+
 #pragma once
 #ifndef EveTurretFiringFX_H
 #define EveTurretFiringFX_H

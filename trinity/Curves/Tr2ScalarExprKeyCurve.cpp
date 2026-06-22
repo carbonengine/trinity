@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2011
+//
+
 #include "StdAfx.h"
 #include "Tr2ScalarExprKeyCurve.h"
 #include "include/TriMath.h"

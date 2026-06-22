@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2012
+//
+
 #include "StdAfx.h"
 #include "Tr2PlaneConstraint.h"
 #include "ITr2AttributeGenerator.h"

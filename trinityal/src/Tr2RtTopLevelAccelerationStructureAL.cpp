@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2019
+//
+
 #include "StdAfx.h"
 #include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 #include "../include/Tr2CapsAL.h"

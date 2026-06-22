@@ -1,5 +1,28 @@
 // Copyright Â© 2000 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	ITriMatrix.h
+
+	Author:    Hilmar Veigar Pétursson
+	Created:   September 2001
+	OS:        Win32
+	Project:   Trinity
+
+	Description:   
+
+		Interface for accessing Vectors that are used in Trinity
+
+
+	Dependencies:
+
+		Probably, ytbd.
+
+
+	*************************************************************************
+*/
+
 #ifndef _ITRIMATRIX_H_
 #define _ITRIMATRIX_H_
 

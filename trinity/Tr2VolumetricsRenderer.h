@@ -1,5 +1,10 @@
 // Copyright © 2023 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2023
+//
+
 #pragma once
 
 #include "ITr2VolumetricRenderable.h"

@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2019
+//
+
 #pragma once
 
 BLUE_CLASS( Tr2PlatformInfo ): public IRoot

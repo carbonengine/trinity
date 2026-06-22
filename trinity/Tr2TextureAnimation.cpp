@@ -1,5 +1,10 @@
 // Copyright © 2023 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2023
+//
+
 #include "StdAfx.h"
 #include "Tr2TextureAnimation.h"
 #include "Resources/Tr2TextureLodManager.h"

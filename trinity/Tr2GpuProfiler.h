@@ -1,5 +1,10 @@
 // Copyright © 2021 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2021
+//
+
 #pragma once
 
 BLUE_DECLARE( Tr2GpuProfiler );

@@ -1,5 +1,28 @@
 // Copyright Â© 2000 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	ITriVector.h
+
+	Author:    Hilmar Veigar Pétursson
+	Created:   November 2000
+	OS:        Win32
+	Project:   Trinity
+
+	Description:   
+
+		Interface for accessing Vectors that are used in Trinity
+
+
+	Dependencies:
+
+		Probably, ytbd.
+
+
+	*************************************************************************
+*/
+
 #ifndef _ITRIVECTOR_H_
 #define _ITRIVECTOR_H_
 

@@ -1,5 +1,10 @@
 // Copyright © 2023 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2023
+//
+
 #pragma once
 
 #include "include/ITriEffectParameter.h"

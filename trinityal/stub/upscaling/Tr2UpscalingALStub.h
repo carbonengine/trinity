@@ -1,5 +1,10 @@
 // Copyright © 2024 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		April 2024
+//
+
 #pragma once
 
 #if TRINITY_PLATFORM == TRINITY_STUB

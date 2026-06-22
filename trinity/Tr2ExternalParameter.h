@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2016
+//
+
 #pragma once
 #ifndef Tr2ExternalParameter_H
 #define Tr2ExternalParameter_H

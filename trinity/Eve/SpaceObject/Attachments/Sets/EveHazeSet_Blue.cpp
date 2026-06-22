@@ -1,5 +1,10 @@
 // Copyright © 2017 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2017
+//
+
 #include "StdAfx.h"
 #include "EveHazeSet.h"
 

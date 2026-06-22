@@ -1,5 +1,8 @@
 // Copyright © 2006 CCP ehf.
 
+/* 
+	*************************************************************************
+
 #pragma once
 #if !defined( _TriTextureParameter_H_)
 #define _TriTextureParameter_H_

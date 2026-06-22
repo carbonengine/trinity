@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:	January 2019
+//
+
 #pragma once
 #ifndef Tr2PostProcess2_H
 #define Tr2PostProcess2_H

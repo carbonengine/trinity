@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2015
+//
+
 #ifndef _EVEREMOTEPOSITIONCURVE_H_
 #define _EVEREMOTEPOSITIONCURVE_H_
 

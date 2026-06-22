@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2020
+//
+
 #include "StdAfx.h"
 #include "Tr2Sprite2dPickingMask.h"
 

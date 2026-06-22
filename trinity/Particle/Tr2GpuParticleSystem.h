@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2015
+//
+
 #pragma once
 #ifndef Tr2GpuParticleSystem_H
 #define Tr2GpuParticleSystem_H

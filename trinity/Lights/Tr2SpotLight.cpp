@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2019
+//
+
 #include "StdAfx.h"
 #include "Tr2SpotLight.h"
 #include "Tr2DebugRenderer.h"

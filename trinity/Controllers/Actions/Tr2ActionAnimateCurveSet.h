@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2018
+//
+
 #pragma once
 
 #include "Include/ITr2Updateable.h"

@@ -1,5 +1,10 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2020
+//
+
 #pragma once
 
 #include "Tr2GpuResourcePool.h"

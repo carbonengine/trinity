@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2016
+//
+
 #include "StdAfx.h"
 #include "Tr2DebugRenderer.h"
 #include "Shader/Tr2Effect.h"

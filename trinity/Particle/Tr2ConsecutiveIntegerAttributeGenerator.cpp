@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2012
+//
+
 #include "StdAfx.h"
 #include "Tr2ConsecutiveIntegerAttributeGenerator.h"
 

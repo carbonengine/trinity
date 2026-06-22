@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2016
+//
+
 #pragma once
 #ifndef Tr2PrimitiveText_H
 #define Tr2PrimitiveText_H

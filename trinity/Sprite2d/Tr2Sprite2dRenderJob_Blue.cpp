@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		January 2011
+//
+
 #include "StdAfx.h"
 #include "Tr2Sprite2dRenderJob.h"
 

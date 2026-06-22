@@ -1,5 +1,10 @@
 // Copyright © 2016 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   Januaru 2016
+//
+
 #include "StdAfx.h"
 
 #include "EveSpriteLineSetItem.h"

@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2013
+//
+
 #pragma once
 #ifndef ALRESULT_H
 #define ALRESULT_H

@@ -1,5 +1,10 @@
 // Copyright © 2022 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		January 2022
+//
+
 #pragma once
 
 struct Tr2MaterialBoundsAdjustment

@@ -1,5 +1,10 @@
 // Copyright © 2024 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2024
+//
+
 #include "StdAfx.h"
 #include "EveChildFogVolume.h"
 #include "Tr2Renderer.h"

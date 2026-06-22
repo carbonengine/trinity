@@ -1,5 +1,28 @@
 // Copyright Â© 2000 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	TrinityPythonThunkers.h
+
+	Author:    Hilmar Veigar Pétursson
+	Created:   Okt. 2001
+	OS:        Win32
+	Project:   Trinity
+
+	Description:   
+
+		Generic interface thunkers
+
+
+	Dependencies:
+
+		Trinity
+
+
+	*************************************************************************
+*/
+
 #ifndef _TRIPYTHONTHUNKERS_H_
 #define _TRIPYTHONTHUNKERS_H_
 

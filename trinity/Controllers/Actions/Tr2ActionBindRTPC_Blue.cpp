@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   March 2019
+//
+
 #include "StdAfx.h"
 #include "Tr2ActionBindRTPC.h"
 #include "Tr2ExpressionTermInfo.h"

@@ -1,5 +1,10 @@
 // Copyright © 2024 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		April 2024
+//
+
 #include "StdAfx.h"
 
 #if( TRINITY_PLATFORM == TRINITY_METAL )

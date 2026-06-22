@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		Sep 2011
+//
+
 #include "StdAfx.h"
 #include "Tr2FontManager.h"
 #include "Tr2SBit.h"

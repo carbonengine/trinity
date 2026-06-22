@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2014
+//
+
 #pragma once
 #ifndef EveSceneStaticParticles_H
 #define EveSceneStaticParticles_H

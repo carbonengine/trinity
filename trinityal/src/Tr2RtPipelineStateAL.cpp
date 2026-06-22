@@ -1,5 +1,10 @@
 // Copyright © 2019 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2019
+//
+
 #include "StdAfx.h"
 #include "include/Tr2RtPipelineStateAL.h"
 #include "include/Tr2CapsAL.h"

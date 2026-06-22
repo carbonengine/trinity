@@ -1,5 +1,7 @@
 // Copyright © 2021 CCP ehf.
 
+//    Created:   November 2021
+
 #pragma once
 #include "Tr2Light.h"
 #include "Include/TriMath.h"

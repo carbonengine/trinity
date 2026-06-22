@@ -1,5 +1,10 @@
 // Copyright © 2025 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2025
+//
+
 #include "StdAfx.h"
 #include "GradientTexture.h"
 #include "Base64Encoding.h"

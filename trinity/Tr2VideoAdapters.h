@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2012
+//
+
 #pragma once
 #ifndef Tr2VideoAdapters_H
 #define Tr2VideoAdapters_H

@@ -1,5 +1,28 @@
 // Copyright © 2000 CCP ehf.
 
+/* 
+	*************************************************************************************
+
+	TriRigidOrientation.h
+
+	Created:   October 2001
+	OS:        Win32
+	Project:   Trinity
+
+	Description:   
+
+		See TRIRIGIDORIENTATION_Description
+
+
+
+	Dependencies:
+
+		None
+
+
+	*************************************************************************************
+*/
+
 #ifndef _TRIRIGIDORIENTATION_H_
 #define _TRIRIGIDORIENTATION_H_
 

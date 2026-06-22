@@ -1,5 +1,10 @@
 // Copyright © 2018 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2018
+//
+
 #include "StdAfx.h"
 #include "Tr2ActionSetShaderOption.h"
 #include "Controllers/Tr2Controller.h"

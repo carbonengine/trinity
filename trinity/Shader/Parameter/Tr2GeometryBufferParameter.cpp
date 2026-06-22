@@ -1,5 +1,10 @@
 // Copyright © 2012 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2012
+//
+
 #include "StdAfx.h"
 #include "Tr2GeometryBufferParameter.h"
 #include "include/ITr2GpuBuffer.h"

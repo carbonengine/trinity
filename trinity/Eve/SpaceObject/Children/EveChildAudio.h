@@ -1,5 +1,10 @@
 // Copyright © 2026 CCP ehf.
 
+/**
+ * @author Phevos Rinis
+ * @date January 2026
+ */
+
 #ifndef EVE_CHILD_AUDIO_H
 #define EVE_CHILD_AUDIO_H
 

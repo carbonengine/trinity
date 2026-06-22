@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   May 2014
+//
+
 #pragma once
 #ifndef Tr2GrannyEventTrack_H
 #define Tr2GrannyEventTrack_H

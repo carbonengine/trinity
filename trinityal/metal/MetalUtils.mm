@@ -1,5 +1,9 @@
 // Copyright © 2020 CCP ehf.
 
+//
+//  Created by Apple on 04/05/2020.
+//
+
 #if TRINITY_PLATFORM == TRINITY_METAL
 #import <Foundation/Foundation.h>
 #include "MetalUtils.h"

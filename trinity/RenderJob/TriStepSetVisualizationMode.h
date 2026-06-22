@@ -1,5 +1,10 @@
 // Copyright © 2010 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   August 2010
+//
+
 #pragma once
 #ifndef TriStepSetVisualizationMode_h
 #define TriStepSetVisualizationMode_h

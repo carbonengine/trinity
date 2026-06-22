@@ -1,5 +1,15 @@
 // Copyright © 2020 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2020
+//
+//    Description:
+// 	    Base class to provide audio functionality to EveStretch effects
+// 	    All creating and positioning of audio emitters is handled by the class
+// 		and not the sound designer. This should be used in Jessica if a sound designer
+//      wants automatic emitter positioning but is defining audio event triggers manually (aka using a controller).
+
 #pragma once
 
 #include "Tr2DebugRenderer.h"

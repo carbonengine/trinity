@@ -1,5 +1,10 @@
 // Copyright © 2017 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   September 2017
+//
+
 #include "StdAfx.h"
 #include "Tr2ProfileTimer.h"
 

@@ -1,5 +1,27 @@
 // Copyright © 2000 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	UIChoosers.h
+
+	Created:   May 2001
+	OS:        Win32
+	Project:   TriUI
+
+	Description:   
+
+		UI stuff
+
+
+	Dependencies:
+
+		Blue, Trinity
+
+
+	*************************************************************************
+*/
+
 #ifndef _UICHOOSERS_H_
 #define _UICHOOSERS_H_
 

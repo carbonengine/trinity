@@ -1,5 +1,10 @@
 // Copyright © 2025 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2025
+//
+
 #pragma once
 
 // Allows scheduling an action to be executed on the main thread.

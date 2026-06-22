@@ -1,5 +1,10 @@
 // Copyright © 2010 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   December 2010
+//
+
 #pragma once
 #ifndef TriStepEnableWireframeMode_h
 #define TriStepEnableWireframeMode_h

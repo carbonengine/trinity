@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   January 2011
+//
+
 #pragma once
 #ifndef TriStepToggleCubemap_h
 #define TriStepToggleCubemap_h

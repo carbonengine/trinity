@@ -1,5 +1,7 @@
 // Copyright © 2022 CCP ehf.
 
+//    Created:   Feb 2022
+
 #include "StdAfx.h"
 #include "Tr2CurveCombiner.h"
 

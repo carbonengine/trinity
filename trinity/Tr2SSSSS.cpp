@@ -1,5 +1,10 @@
 // Copyright © 2024 CCP ehf.
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:   October 2024
+//
+
 #include "Tr2SSSSS.h"
 #include "Tr2Renderer.h"
 #include "Tr2TextureReference.h"

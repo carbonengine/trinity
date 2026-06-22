@@ -1,5 +1,10 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   April 2013
+//
+
 #include "StdAfx.h"
 #include "Tr2StreamingBitmapSaver.h"
 #include "Tr2RenderTarget.h"

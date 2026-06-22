@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2015
+//
+
 #include "StdAfx.h"
 #include "Tr2DataTextureManager.h"
 #include "Tr2TextureReference.h"

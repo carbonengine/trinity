@@ -1,5 +1,13 @@
 // Copyright © 2013 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   June 2013
+//
+
+// This file contains bitmaps with fonts for TriDebugTextRenderer
+// that are used to render charaters for non-Windows platforms
+
 static const int s_charOffsets[3][128] = { 
 	{
 		0,	0,	2,	4,	6,	8,	10,	12,	14,	16,

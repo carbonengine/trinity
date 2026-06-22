@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2011
+//
+
 #include "StdAfx.h"
 #include "Tr2InstancedMesh.h"
 #include "TriConstants.h"

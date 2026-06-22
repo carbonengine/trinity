@@ -1,5 +1,27 @@
 // Copyright © 2000 CCP ehf.
 
+/* 
+	*************************************************************************
+
+	IUILib.h
+
+	Created:   Jan. 2000, May 2001
+	OS:        Win32
+	Project:   TriUI
+
+	Description:   
+
+		UI stuff
+
+
+	Dependencies:
+
+		Blue, Trinity
+
+
+	*************************************************************************
+*/
+
 #pragma once
 
 #ifndef _IUILIB_H_

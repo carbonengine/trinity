@@ -1,5 +1,10 @@
 // Copyright © 2011 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   November 2011
+//
+
 #include "stdafx.h"
 #include "CachingIncludeHandler.h"
 

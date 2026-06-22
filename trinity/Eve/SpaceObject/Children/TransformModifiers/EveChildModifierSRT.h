@@ -1,5 +1,10 @@
 // Copyright © 2017 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   2017
+//
+
 #pragma once
 #ifndef EveChildModifierSRT_H
 #define EveChildModifierSRT_H

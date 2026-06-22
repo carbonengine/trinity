@@ -1,5 +1,10 @@
 // Copyright © 2015 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2015
+//
+
 #pragma once
 #ifndef EveChildCloud_H
 #define EveChildCloud_H

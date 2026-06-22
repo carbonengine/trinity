@@ -1,5 +1,10 @@
 // Copyright © 2014 CCP ehf.
 
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2014
+//
+
 #include "StdAfx.h"
 #include "Tr2LightManager.h"
 #include "Tr2Renderer.h"
