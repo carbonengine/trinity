@@ -70,7 +70,6 @@ set(_SOURCES
     Tr2RenderContextEnum.h
     Tr2VertexDefinition.cpp
     Tr2VertexDefinition.h
-    wglext.h
     dx11/Tr2BufferALDx11.cpp
     dx11/Tr2BufferALDx11.h
     dx11/Tr2CapsALDx11.cpp
