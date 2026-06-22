@@ -11,6 +11,7 @@
       "toolchainFile": "${sourceDir}/vendor/github.com/microsoft/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "binaryDir": "${sourceDir}/.cmake-build-${presetName}",
       "cacheVariables": {
+        "CMAKE_COMPILE_WARNING_AS_ERROR": "ON",
         "VCPKG_USE_HOST_TOOLS": "ON",
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/triplets"
       },
