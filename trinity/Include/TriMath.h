@@ -1,4 +1,27 @@
-// Copyright © 2000 CCP ehf.
+/*
+	*************************************************************************************
+
+	TriMath.h
+
+	Author:    Hilmar Veigar P�tursson
+	Created:   March 2001
+	OS:        Win32
+	Project:   Trinity
+
+	Description:
+
+		Usefull math functions that are "missing" from the math library. Some of
+		the TriDataTypes have member functions that are direct thunkers to these functions
+
+
+	Dependencies:
+
+		DirectX 9.0, Blue
+
+	Copyright © 2000 CCP ehf.
+
+	*************************************************************************************
+*/
 
 #pragma once
 
