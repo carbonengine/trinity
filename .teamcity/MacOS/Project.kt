@@ -50,7 +50,7 @@ object Project : Project({
 class CarbonBuildMacOS(buildName: String, configType: String, preset: String, agentArchitecture: String) : BuildType({
     id(buildName.toId())
     name = buildName
-
+    maxRunningBuilds = 4
     artifactRules = "%env.CMAKE_INSTALL_PREFIX%"
 
     params {
