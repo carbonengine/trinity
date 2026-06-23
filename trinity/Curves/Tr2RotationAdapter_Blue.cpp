@@ -33,7 +33,7 @@ const Be::ClassInfo* Tr2RotationAdapter::ExposeToBlue()
 			"RandomizeStart",
 			RandomizeStart,
 			1,
-			"Shits curve starting time by a random number in a specified range (-rng, +rng)\n"
+			"Shifts curve starting time by a random number in a specified range (-rng, +rng)\n"
 			":param rng: radius of the random range in seconds (default is 60 sec)" )
 
 		MAP_METHOD_AND_WRAP(

@@ -412,7 +412,7 @@ void TriQuaternionToYawPitchRoll (
 	// ie get qYaw*qRoll
 	Quaternion yawRoll;
 
-	//hmmm stuff gets screwed in denominator if y == +-1.0f 
+	//hmmm stuff gets messed up in denominator if y == +-1.0f 
 	// well if y == +-1.0f we can take a short cut....
 	if (fabs(fabs(y) - 1.0f) < 0.00001f)
 	{
