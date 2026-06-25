@@ -177,7 +177,7 @@
       "dependencies": [
         {
           "name": "granny",
-          "version>=": "2.12.0.14#2"
+          "version>=": "2.12.0.14"
         }
       ]
     }
