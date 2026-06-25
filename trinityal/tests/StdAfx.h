@@ -35,7 +35,9 @@ typedef uintptr_t Tr2WindowHandle;
 #error Define shader path for this TrinityAL platform
 #endif
 
-#define INCLUDE_SHADER_CODE( name ) CCP_STRINGIZE( SHADER_PATH / name.h )
+// clang-format off
+#define INCLUDE_SHADER_CODE( name ) CCP_STRINGIZE( SHADER_PATH/name.h )
+// clang-format on
 
 #include "gtest/gtest.h"
 
