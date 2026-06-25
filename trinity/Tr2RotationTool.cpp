@@ -6,8 +6,8 @@
 #include "Tr2LineSet.h"
 #include "Shader/Tr2Effect.h"
 
-Tr2RotationTool::Tr2RotationTool( IRoot* lockobj )
-	:m_precision( 1 ),
+Tr2RotationTool::Tr2RotationTool( IRoot* lockobj ) :
+	m_precision( 1 ),
 	m_rotation( IdentityQuaternion() ),
 	m_angle( 0.0f )
 {
@@ -22,7 +22,7 @@ void Tr2RotationTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYD
 	Vector3 normal;
 	Vector3 ray;
 	Vector3 startPos;
-	
+
 	pos.x = m_localTransform._41;
 	pos.y = m_localTransform._42;
 	pos.z = m_localTransform._43;
@@ -34,7 +34,7 @@ void Tr2RotationTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYD
 	normal = GetDesiredPlaneNormal( ray, viewMatrix );
 
 	// Tracking a point in 3d space based on the screen positions
-	ScreenCoordinatesToRay( mouseX-mouseXDelta, mouseY-mouseYDelta, ray, startPos, viewport, viewMatrix, projectionMatrix );
+	ScreenCoordinatesToRay( mouseX - mouseXDelta, mouseY - mouseYDelta, ray, startPos, viewport, viewMatrix, projectionMatrix );
 	Vector3 startPlanePos = RayToPlaneIntersection( startPos, ray, pos, normal );
 
 	ScreenCoordinatesToRay( mouseX, mouseY, ray, startPos, viewport, viewMatrix, projectionMatrix );
@@ -45,15 +45,15 @@ void Tr2RotationTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYD
 	end = Normalize( endPlanePos - pos );
 
 	float dot = Dot( start, end );
-	
-	if(( 1.0f - dot ) < FLT_EPSILON)
+
+	if( ( 1.0f - dot ) < FLT_EPSILON )
 	{
 		return;
 	}
 
 	float angleSign = 1.0f;
 	Vector3 dnormal = Cross( start, end );
-	
+
 	Vector3 xAxis;
 	Vector3 yAxis;
 	Vector3 zAxis;
@@ -81,11 +81,11 @@ void Tr2RotationTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYD
 	else if( m_selectedAxis == "ww" )
 	{
 		Vector3 curP = Hemisphere( mouseX, mouseY, viewport, viewMatrix, projectionMatrix );
-		Vector3 preP = Hemisphere( mouseX-mouseXDelta, mouseY-mouseYDelta, viewport, viewMatrix, projectionMatrix );
+		Vector3 preP = Hemisphere( mouseX - mouseXDelta, mouseY - mouseYDelta, viewport, viewMatrix, projectionMatrix );
 		// Get the target rotation axis
 		Vector3 norm = Cross( preP, curP );
-		// Since the hemisphere vectors are in view space we have to make sure 
-		// the translation of camera is undone     
+		// Since the hemisphere vectors are in view space we have to make sure
+		// the translation of camera is undone
 		Matrix invView = Inverse( viewMatrix );
 		norm = TransformNormal( norm, invView );
 		Matrix worldInv = Inverse( m_localTransform );
@@ -116,7 +116,7 @@ void Tr2RotationTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYD
 			tmp = zAxis;
 			m_movement = untransformedZAxis;
 		}
-		
+
 		// Reverse the axis if the cross product of the start and end vectors is pointing away from the target rotation axis
 		// dnormal is in world, so axis must be too
 		if( Dot( dnormal, tmp ) < 0.0f )
@@ -162,21 +162,21 @@ Vector3 Tr2RotationTool::GetDesiredPlaneNormal( Vector3& ray, Matrix& viewMatrix
 			axis = zAxis;
 		}
 		norm = axis;
-		if( Dot( view, norm )  > 0.0f )
+		if( Dot( view, norm ) > 0.0f )
 		{
 			norm = -norm;
 		}
-	} 
+	}
 	norm = Normalize( norm );
 	return norm;
 }
 
-std::vector<ITr2Renderable*>& Tr2RotationTool::GetPrimitivesToRender( )
+std::vector<ITr2Renderable*>& Tr2RotationTool::GetPrimitivesToRender()
 {
 	m_visibleObjects.clear();
 	for( PrimitiveIterator it = m_primitives.begin(); it != m_primitives.end(); ++it )
 	{
-		m_visibleObjects.push_back((*it));
+		m_visibleObjects.push_back( ( *it ) );
 	}
 	return m_visibleObjects;
 }
@@ -185,25 +185,25 @@ void Tr2RotationTool::ResetPrimitiveColors()
 {
 	for( PrimitiveIterator it = m_primitives.begin(); it != m_primitives.end(); ++it )
 	{
-		if((*it)->m_name == "x" )
+		if( ( *it )->m_name == "x" )
 		{
-			(*it)->SetCurrentColor((Color&)v4Red);
+			( *it )->SetCurrentColor( (Color&)v4Red );
 		}
-		else if((*it)->m_name == "y" )
+		else if( ( *it )->m_name == "y" )
 		{
-			(*it)->SetCurrentColor((Color&)v4Green);
+			( *it )->SetCurrentColor( (Color&)v4Green );
 		}
-		else if((*it)->m_name == "z" )
+		else if( ( *it )->m_name == "z" )
 		{
-			(*it)->SetCurrentColor((Color&)v4Blue);
+			( *it )->SetCurrentColor( (Color&)v4Blue );
 		}
-		else if((*it)->m_name == "w" )
+		else if( ( *it )->m_name == "w" )
 		{
-			(*it)->SetCurrentColor((Color&)v4Cyan);
+			( *it )->SetCurrentColor( (Color&)v4Cyan );
 		}
-		else if((*it)->m_name == "ww" )
+		else if( ( *it )->m_name == "ww" )
 		{
-			(*it)->SetCurrentColor((Color&)v4LightGray);
+			( *it )->SetCurrentColor( (Color&)v4LightGray );
 		}
 	}
 }
@@ -227,36 +227,36 @@ void Tr2RotationTool::GenLineSets()
 	Tr2EffectPtr pEffect;
 
 
-	if( !m_xLine	.CreateInstance()	 ||
-		!m_yLine	.CreateInstance()	 ||
-		!m_zLine	.CreateInstance()	 ||
-		!m_wLine	.CreateInstance()	 ||
-		!m_wwLine	.CreateInstance()	 ||
-		!mLineEffect.CreateInstance()	 ||
+	if( !m_xLine.CreateInstance() ||
+		!m_yLine.CreateInstance() ||
+		!m_zLine.CreateInstance() ||
+		!m_wLine.CreateInstance() ||
+		!m_wwLine.CreateInstance() ||
+		!mLineEffect.CreateInstance() ||
 		!mSPHLineEffect.CreateInstance() ||
-		!pEffect	.CreateInstance() )
+		!pEffect.CreateInstance() )
 	{
 		return;
 	}
 
-	mSPHLineEffect->SetEffectPathName("res:/Graphics/Effect/Managed/Utility/LinesRotationTool.fx");
-	mLineEffect->SetEffectPathName("res:/Graphics/Effect/Managed/Utility/LinesNoZ.fx");
-	pEffect->SetEffectPathName("res:/Graphics/Effect/Managed/Utility/PrimitivePicking.fx" );
+	mSPHLineEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Utility/LinesRotationTool.fx" );
+	mLineEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Utility/LinesNoZ.fx" );
+	pEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Utility/PrimitivePicking.fx" );
 
 	// wwLine
-	c_tris = Tr2ManipulationTool::GetCirclePoints(1.0f, 60, &numVectors);
-	for( int i = 0; i < numVectors/2; i++ )
+	c_tris = Tr2ManipulationTool::GetCirclePoints( 1.0f, 60, &numVectors );
+	for( int i = 0; i < numVectors / 2; i++ )
 	{
-		m_wwLine->AddLine( c_tris[i*2], v4LightGray, c_tris[i*2+1], v4LightGray );
+		m_wwLine->AddLine( c_tris[i * 2], v4LightGray, c_tris[i * 2 + 1], v4LightGray );
 	}
-	delete [] c_tris;
+	delete[] c_tris;
 
-	c_tris = Tr2ManipulationTool::GetCircleTriangles(1.0f, 60, &numVectors);
-	for( int i = 0; i < numVectors/3; i++ )
+	c_tris = Tr2ManipulationTool::GetCircleTriangles( 1.0f, 60, &numVectors );
+	for( int i = 0; i < numVectors / 3; i++ )
 	{
-		m_wwLine->AddPickingTriangle( c_tris[i*3], c_tris[i*3+1], c_tris[i*3+2] );
+		m_wwLine->AddPickingTriangle( c_tris[i * 3], c_tris[i * 3 + 1], c_tris[i * 3 + 2] );
 	}
-	delete [] c_tris;
+	delete[] c_tris;
 	m_wwLine->SubmitChanges();
 	m_wwLine->m_name = "ww";
 	m_wwLine->m_scaleByDistanceToView = true;
@@ -265,19 +265,19 @@ void Tr2RotationTool::GenLineSets()
 	m_wwLine->m_viewOriented = true;
 
 	// wLine
-	c_tris = Tr2ManipulationTool::GetCirclePoints(1.2f, 60, &numVectors);
-	for( int i = 0; i < numVectors/2; i++ )
+	c_tris = Tr2ManipulationTool::GetCirclePoints( 1.2f, 60, &numVectors );
+	for( int i = 0; i < numVectors / 2; i++ )
 	{
-		m_wLine->AddLine( c_tris[i*2], v4Cyan, c_tris[i*2+1], v4Cyan );
+		m_wLine->AddLine( c_tris[i * 2], v4Cyan, c_tris[i * 2 + 1], v4Cyan );
 		int numVectorsB = 0;
-		p_tris = Tr2ManipulationTool::GetTrianglesAroundLine( c_tris[i*2], c_tris[i*2+1], 0.08f, &numVectorsB);
-		for( int i = 0; i < numVectorsB/3; i++ )
+		p_tris = Tr2ManipulationTool::GetTrianglesAroundLine( c_tris[i * 2], c_tris[i * 2 + 1], 0.08f, &numVectorsB );
+		for( int i = 0; i < numVectorsB / 3; i++ )
 		{
-			m_wLine->AddPickingTriangle( p_tris[i*3], p_tris[i*3+1], p_tris[i*3+2] );
-		}		
-		delete [] p_tris;
-	}	
-	delete [] c_tris;
+			m_wLine->AddPickingTriangle( p_tris[i * 3], p_tris[i * 3 + 1], p_tris[i * 3 + 2] );
+		}
+		delete[] p_tris;
+	}
+	delete[] c_tris;
 
 
 	m_wLine->SubmitChanges();
@@ -288,22 +288,22 @@ void Tr2RotationTool::GenLineSets()
 	m_wLine->m_viewOriented = true;
 
 	// xLine
-	c_tris = Tr2ManipulationTool::GetCirclePoints(1.0f, 60, &numVectors);
+	c_tris = Tr2ManipulationTool::GetCirclePoints( 1.0f, 60, &numVectors );
 	rotateMat = RotationYMatrix( XM_PI / 2.0f );
 	TransformCoords( c_tris, numVectors, rotateMat );
 
-	for( int i = 0; i < numVectors/2; i++ )
+	for( int i = 0; i < numVectors / 2; i++ )
 	{
-		m_xLine->AddLine( c_tris[i*2], v4Red, c_tris[i*2+1], v4Red );
+		m_xLine->AddLine( c_tris[i * 2], v4Red, c_tris[i * 2 + 1], v4Red );
 		int numVectorsB = 0;
-		p_tris = Tr2ManipulationTool::GetTrianglesAroundLine( c_tris[i*2], c_tris[i*2+1], 0.08f, &numVectorsB);
-		for( int i = 0; i < numVectorsB/3; i++ )
+		p_tris = Tr2ManipulationTool::GetTrianglesAroundLine( c_tris[i * 2], c_tris[i * 2 + 1], 0.08f, &numVectorsB );
+		for( int i = 0; i < numVectorsB / 3; i++ )
 		{
-			m_xLine->AddPickingTriangle( p_tris[i*3], p_tris[i*3+1], p_tris[i*3+2] );
-		}		
-		delete [] p_tris;
-	}	
-	delete [] c_tris;
+			m_xLine->AddPickingTriangle( p_tris[i * 3], p_tris[i * 3 + 1], p_tris[i * 3 + 2] );
+		}
+		delete[] p_tris;
+	}
+	delete[] c_tris;
 
 
 	m_xLine->SubmitChanges();
@@ -313,21 +313,21 @@ void Tr2RotationTool::GenLineSets()
 	m_xLine->m_pickEffect = pEffect;
 
 	// yLine
-	c_tris = Tr2ManipulationTool::GetCirclePoints(1.0f, 60, &numVectors);
+	c_tris = Tr2ManipulationTool::GetCirclePoints( 1.0f, 60, &numVectors );
 	rotateMat = RotationXMatrix( XM_PI / 2.0f );
 	TransformCoords( c_tris, numVectors, rotateMat );
-	for( int i = 0; i < numVectors/2; i++ )
+	for( int i = 0; i < numVectors / 2; i++ )
 	{
-		m_yLine->AddLine( c_tris[i*2], v4Green, c_tris[i*2+1], v4Green );
+		m_yLine->AddLine( c_tris[i * 2], v4Green, c_tris[i * 2 + 1], v4Green );
 		int numVectorsB = 0;
-		p_tris = Tr2ManipulationTool::GetTrianglesAroundLine( c_tris[i*2], c_tris[i*2+1], 0.08f, &numVectorsB);
-		for( int i = 0; i < numVectorsB/3; i++ )
+		p_tris = Tr2ManipulationTool::GetTrianglesAroundLine( c_tris[i * 2], c_tris[i * 2 + 1], 0.08f, &numVectorsB );
+		for( int i = 0; i < numVectorsB / 3; i++ )
 		{
-			m_yLine->AddPickingTriangle( p_tris[i*3], p_tris[i*3+1], p_tris[i*3+2] );
-		}	
-		delete [] p_tris;
-	}	
-	delete [] c_tris;
+			m_yLine->AddPickingTriangle( p_tris[i * 3], p_tris[i * 3 + 1], p_tris[i * 3 + 2] );
+		}
+		delete[] p_tris;
+	}
+	delete[] c_tris;
 
 
 	m_yLine->SubmitChanges();
@@ -337,19 +337,19 @@ void Tr2RotationTool::GenLineSets()
 	m_yLine->m_pickEffect = pEffect;
 
 	// zLine
-	c_tris = Tr2ManipulationTool::GetCirclePoints(1.0f, 60, &numVectors);	
-	for( int i = 0; i < numVectors/2; i++ )
+	c_tris = Tr2ManipulationTool::GetCirclePoints( 1.0f, 60, &numVectors );
+	for( int i = 0; i < numVectors / 2; i++ )
 	{
-		m_zLine->AddLine( c_tris[i*2], v4Blue, c_tris[i*2+1], v4Blue );
+		m_zLine->AddLine( c_tris[i * 2], v4Blue, c_tris[i * 2 + 1], v4Blue );
 		int numVectorsB = 0;
-		p_tris = Tr2ManipulationTool::GetTrianglesAroundLine( c_tris[i*2], c_tris[i*2+1], 0.08f, &numVectorsB);
-		for( int i = 0; i < numVectorsB/3; i++ )
+		p_tris = Tr2ManipulationTool::GetTrianglesAroundLine( c_tris[i * 2], c_tris[i * 2 + 1], 0.08f, &numVectorsB );
+		for( int i = 0; i < numVectorsB / 3; i++ )
 		{
-			m_zLine->AddPickingTriangle( p_tris[i*3], p_tris[i*3+1], p_tris[i*3+2] );
-		}		
-		delete [] p_tris;
-	}	
-	delete [] c_tris;
+			m_zLine->AddPickingTriangle( p_tris[i * 3], p_tris[i * 3 + 1], p_tris[i * 3 + 2] );
+		}
+		delete[] p_tris;
+	}
+	delete[] c_tris;
 
 
 	m_zLine->SubmitChanges();
@@ -358,11 +358,11 @@ void Tr2RotationTool::GenLineSets()
 	m_zLine->m_effect = mSPHLineEffect;
 	m_zLine->m_pickEffect = pEffect;
 
-	m_primitives.Insert( -1, m_wwLine->GetRawRoot());
-	m_primitives.Insert( -1, m_wLine->GetRawRoot());
-	m_primitives.Insert( -1, m_xLine->GetRawRoot());
-	m_primitives.Insert( -1, m_yLine->GetRawRoot());
-	m_primitives.Insert( -1, m_zLine->GetRawRoot());
+	m_primitives.Insert( -1, m_wwLine->GetRawRoot() );
+	m_primitives.Insert( -1, m_wLine->GetRawRoot() );
+	m_primitives.Insert( -1, m_xLine->GetRawRoot() );
+	m_primitives.Insert( -1, m_yLine->GetRawRoot() );
+	m_primitives.Insert( -1, m_zLine->GetRawRoot() );
 }
 
 void Tr2RotationTool::Update()
@@ -374,7 +374,7 @@ void Tr2RotationTool::Update()
 		temp = rotation * m_localTransform;
 
 		// Check the move callback for if we should be moving or not
-		if( OnMoveCallback( m_localTransform, temp  ))
+		if( OnMoveCallback( m_localTransform, temp ) )
 		{
 			m_localTransform = temp;
 			m_rotation = RotationQuaternion( temp );
@@ -388,8 +388,8 @@ void Tr2RotationTool::Update()
 	m_worldTransform = m_localTransform * translation;
 	for( PrimitiveIterator it = m_primitives.begin(); it != m_primitives.end(); ++it )
 	{
-		(*it)->m_localTransform = m_localTransform;
-		(*it)->UpdateTransform();
+		( *it )->m_localTransform = m_localTransform;
+		( *it )->UpdateTransform();
 	}
 }
 
@@ -397,16 +397,15 @@ Vector3 Tr2RotationTool::Hemisphere( int mouseX, int mouseY, Tr2Viewport& viewpo
 {
 	Matrix viewProj = viewMatrix * projectionMatrix;
 
-	auto project = [&]( Vector3 in ) -> Vector2
-	{
+	auto project = [&]( Vector3 in ) -> Vector2 {
 		Vector4 out = Vector4( in.x, in.y, in.z, 1 ) * viewProj;
-			
-		return Vector2(		viewport.m_x + viewport.m_width  * ( 0.5f + 0.5f * out.x / out.w ),
-							viewport.m_y + viewport.m_height * ( 0.5f - 0.5f * out.y / out.w ) );
+
+		return Vector2( viewport.m_x + viewport.m_width * ( 0.5f + 0.5f * out.x / out.w ),
+						viewport.m_y + viewport.m_height * ( 0.5f - 0.5f * out.y / out.w ) );
 	};
 
 	float radius = m_wwLine->m_scale;
-	
+
 	Vector3 center, viewSide;
 	center.x = m_worldTransform._41;
 	center.y = m_worldTransform._42;
@@ -417,22 +416,22 @@ Vector3 Tr2RotationTool::Hemisphere( int mouseX, int mouseY, Tr2Viewport& viewpo
 	viewSide.z = viewMatrix._31 * radius;
 
 	Vector3 side = center - viewSide;
-	
+
 	Vector2 screenCenter = project( center );
-	Vector2 screenSide   = project( side );
-		
+	Vector2 screenSide = project( side );
+
 	Vector2 dxy = screenCenter - screenSide;
-	float radius_pixels = sqrtf( dxy.x * dxy.x + dxy.y * dxy.y ) + 16;	// add the width of the cursor
+	float radius_pixels = sqrtf( dxy.x * dxy.x + dxy.y * dxy.y ) + 16; // add the width of the cursor
 
 
-	float px = (mouseX - screenCenter.x) / radius_pixels;
-	float py = (screenCenter.y - mouseY) / radius_pixels;
-	float d = sqrt( px*px + py*py );
+	float px = ( mouseX - screenCenter.x ) / radius_pixels;
+	float py = ( screenCenter.y - mouseY ) / radius_pixels;
+	float d = sqrt( px * px + py * py );
 	float z = 0.0f;
-    if( d <= 1.0f )
+	if( d <= 1.0f )
 	{
-	    z = 1.0f - d;
-    }
+		z = 1.0f - d;
+	}
 
 	Vector3 result( px, py, z );
 

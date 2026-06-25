@@ -13,7 +13,7 @@ void TriRect::Destroy()
 	//delete this;
 }
 
-PyObject* TriRect::GetAttr( const char* name, bool* handled	)
+PyObject* TriRect::GetAttr( const char* name, bool* handled )
 {
 	return 0;
 }
@@ -27,14 +27,14 @@ PyObject* TriRect::Repr( bool* handled )
 {
 	*handled = true;
 	char buf[120];
-	sprintf_s(buf, "<Instance of 'TriRect' (left=%d top=%d right=%d bottom=%d)>", left, top, right, bottom);
-	return ToPython(buf);
+	sprintf_s( buf, "<Instance of 'TriRect' (left=%d top=%d right=%d bottom=%d)>", left, top, right, bottom );
+	return ToPython( buf );
 }
 
 
-TriRect::TriRect(IRoot* lockobj)	
+TriRect::TriRect( IRoot* lockobj )
 {
-	SetDimentions(0,0,0,0);
+	SetDimentions( 0, 0, 0, 0 );
 }
 
 TriRect::~TriRect()
@@ -45,7 +45,7 @@ void TriRect::SetDimentions( int32_t _left, int32_t _top, int32_t _right, int32_
 {
 	left = _left;
 	top = _top;
-	right = _right;	
+	right = _right;
 	bottom = _bottom;
 }
 
@@ -53,7 +53,7 @@ void TriRect::SetRect( const ::Tr2Rect* c )
 {
 	left = c->left;
 	top = c->top;
-	right = c->right;	
+	right = c->right;
 	bottom = c->bottom;
 }
 
@@ -75,7 +75,7 @@ const ::Tr2Rect* TriRect::GetRect() const
 	return this;
 }
 
-void TriRect::PySetRect( Be::Optional<int32_t> l, Be::Optional<int32_t> t, Be::Optional<int32_t> r, Be::Optional<int32_t> b ) 
+void TriRect::PySetRect( Be::Optional<int32_t> l, Be::Optional<int32_t> t, Be::Optional<int32_t> r, Be::Optional<int32_t> b )
 {
 	if( l.IsAssigned() )
 	{

@@ -9,13 +9,13 @@
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   A Blue-exposed wrapper around Tr2BufferAL class for structured buffers, i.e. 
-//   buffers containing structures as elements. The creation parameters for the class are 
+//   A Blue-exposed wrapper around Tr2BufferAL class for structured buffers, i.e.
+//   buffers containing structures as elements. The creation parameters for the class are
 //   persisted, but the contents of the buffer is not.
 // See Also:
 //   Tr2BufferAL
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2GpuStructuredBuffer ): 
+BLUE_CLASS( Tr2GpuStructuredBuffer ) :
 	public ITr2GpuBuffer,
 	public INotify,
 	public IInitialize,
@@ -30,9 +30,9 @@ public:
 	enum CreationFlag
 	{
 		// Can the buffer be locked with write-only access
-		CPU_WRITABLE	= 1,
+		CPU_WRITABLE = 1,
 		// Is the buffer used for GPU write access
-		GPU_WRITABLE	= 2,
+		GPU_WRITABLE = 2,
 	};
 
 	typedef uint32_t CreationFlags;
@@ -44,7 +44,7 @@ public:
 
 	bool Initialize();
 
-	bool OnModified( Be::Var* value );
+	bool OnModified( Be::Var * value );
 
 	Tr2BufferAL* GetGpuBuffer( unsigned index );
 
@@ -54,16 +54,23 @@ public:
 
 	void SetName( const char* name );
 
-	operator Tr2BufferAL&() { return m_buffer; }
-	operator const Tr2BufferAL&() const { return m_buffer; }
+	operator Tr2BufferAL&()
+	{
+		return m_buffer;
+	}
+	operator const Tr2BufferAL&() const
+	{
+		return m_buffer;
+	}
 
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	virtual bool OnPrepareResources();
 	ALResult CreateBuffer();
 
 	// AL buffer
-	Tr2BufferAL	m_buffer;
+	Tr2BufferAL m_buffer;
 
 	std::string m_name;
 

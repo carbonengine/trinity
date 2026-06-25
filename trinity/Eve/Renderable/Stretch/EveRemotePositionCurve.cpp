@@ -6,7 +6,7 @@
 #include "include/TriMath.h"
 
 
-EveRemotePositionCurve::EveRemotePositionCurve(IRoot* lockobj) :
+EveRemotePositionCurve::EveRemotePositionCurve( IRoot* lockobj ) :
 	m_value( 0.f, 0.f, 0.f ),
 	m_offsetDir1( 0.f, 0.f, 0.f ),
 	m_offsetDir2( 0.f, 0.f, 0.f ),
@@ -14,7 +14,7 @@ EveRemotePositionCurve::EveRemotePositionCurve(IRoot* lockobj) :
 	m_delayTime( 0.f ),
 	m_sweepTime( 1.f ),
 	m_cycle( false )
-{	
+{
 }
 
 EveRemotePositionCurve::~EveRemotePositionCurve()
@@ -139,7 +139,6 @@ Vector3* EveRemotePositionCurve::GetValueDotAt( Vector3* in, double time )
 // --------------------------------------------------------------------------------
 Vector3d* EveRemotePositionCurve::InterpolatedPosition( Vector3d* out, Be::Time time )
 {
-	*out = Vector3d( double(m_value.x), double(m_value.y), double(m_value.z) );
+	*out = Vector3d( double( m_value.x ), double( m_value.y ), double( m_value.z ) );
 	return out;
 }
-

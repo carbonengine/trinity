@@ -12,9 +12,9 @@ const Be::ClassInfo* Tr2ActionChildEffect::ExposeToBlue()
 		MAP_INTERFACE( Tr2ActionChildEffect )
 		MAP_INTERFACE( ITr2ControllerAction )
 
-		MAP_ATTRIBUTE( 
-			"path", 
-			m_path, 
+		MAP_ATTRIBUTE(
+			"path",
+			m_path,
 			"Overlay .red file path\n"
 			":jessica-widget: filepath\n"
 			":jessica-file-filter: redfile",

@@ -21,7 +21,7 @@ struct TriGeometryResLodData;
 class TriRenderBatch;
 class Tr2RaytracingMesh;
 
-BLUE_CLASS( Tr2MeshBase ):
+BLUE_CLASS( Tr2MeshBase ) :
 	public IListNotify
 {
 public:
@@ -30,20 +30,23 @@ public:
 	Tr2MeshBase( IRoot* lockobj = NULL );
 	~Tr2MeshBase();
 
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches,
-		const Tr2MeshAreaVector* areas, 
-		const Tr2PerObjectData* data,
-		float screenSize = std::numeric_limits<float>::max() ) const;
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches,
+							 const Tr2MeshAreaVector* areas,
+							 const Tr2PerObjectData* data,
+							 float screenSize = std::numeric_limits<float>::max() ) const;
 
 	Tr2MeshAreaVector* GetAreas( TriBatchType areaType );
 	const Tr2MeshAreaVector* GetAreas( TriBatchType areaType ) const;
-	void CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& areaBlockVector, TriBatchType areaType ) const;
+	void CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock> & areaBlockVector, TriBatchType areaType ) const;
 	void CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBatchAreaBlocksWithSharedMaterial> & collectors, TriBatchType areaType ) const;
 
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
 
-	int GetMeshIndex() const { return m_meshIndex; };
+	int GetMeshIndex() const
+	{
+		return m_meshIndex;
+	};
 
 	virtual CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) const;
 	virtual CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const;
@@ -54,7 +57,10 @@ public:
 
 	virtual bool IsLoading() const = 0;
 
-	const char* GetName() const { return m_name.c_str(); }
+	const char* GetName() const
+	{
+		return m_name.c_str();
+	}
 	const wchar_t* GetGeometryResPath() const;
 
 	bool GetDisplay() const;
@@ -78,8 +84,7 @@ public:
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const IList* theList
-		);
+		const IList* theList );
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
 	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 );
@@ -104,7 +109,7 @@ protected:
 protected:
 	std::string m_name;
 	bool m_display;
-	int32_t	m_meshIndex;
+	int32_t m_meshIndex;
 
 	PTr2MeshAreaVector m_opaqueAreas;
 	PTr2MeshAreaVector m_decalAreas;
@@ -121,15 +126,15 @@ protected:
 	PTr2MeshAreaVector m_flareAreas;
 	PTr2MeshAreaVector m_distortionAreas;
 
-	PTr2MeshAreaVector* m_areaLookupArray[ TRIBATCHTYPE_COUNT_OF_BATCH_TYPES ];
+	PTr2MeshAreaVector* m_areaLookupArray[TRIBATCHTYPE_COUNT_OF_BATCH_TYPES];
 
 	// skeleton/bone data
 	std::vector<unsigned int> m_jointMappingAnimRig;
-	const std::string *m_pBoneList;
+	const std::string* m_pBoneList;
 	int m_numBones;
 	TriGeometryResSkeletonData* m_renderRig;
 
-	bool	m_forcedRebind;
+	bool m_forcedRebind;
 
 	CcpMath::AxisAlignedBox m_cachedBounds;
 	Tr2MaterialBoundsAdjustment m_boundsAdjustment;

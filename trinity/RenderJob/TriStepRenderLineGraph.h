@@ -10,16 +10,15 @@
 
 BLUE_DECLARE( TriStepRenderLineGraph );
 
-class TriStepRenderLineGraph:
-	public TriRenderStep
+class TriStepRenderLineGraph : public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
 	TriStepRenderLineGraph( IRoot* lockobj = NULL );
 	~TriStepRenderLineGraph();
 
-	void py__init__( 
-		const std::vector<Tr2LineGraph*>& graphs, 
+	void py__init__(
+		const std::vector<Tr2LineGraph*>& graphs,
 		Be::Optional<float> legendScale,
 		Be::Optional<float> scale,
 		Be::Optional<bool> autoScale );

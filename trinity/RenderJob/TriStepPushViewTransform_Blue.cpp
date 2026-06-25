@@ -8,7 +8,7 @@ BLUE_DEFINE( TriStepPushViewTransform );
 
 const Be::ClassInfo* TriStepPushViewTransform::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepPushViewTransform, "" )
+	EXPOSURE_BEGIN( TriStepPushViewTransform, "" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepPushViewTransform )

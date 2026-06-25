@@ -6,7 +6,7 @@
 #if WITH_GRANNY
 // --------------------------------------------------------------------------------------
 // Description:
-//   Converts Granny data type definition to Trinity vertex type.  
+//   Converts Granny data type definition to Trinity vertex type.
 // Arguments:
 //   src - Granny data type definition
 // Return Value:
@@ -16,7 +16,7 @@ Tr2VertexDefinition::DataType ConvertGrannyTypeToDataType( const granny_data_typ
 {
 	unsigned type = 0;
 
-	switch (src.Type)
+	switch( src.Type )
 	{
 	case GrannyInt8Member:
 		type = Tr2VertexDefinition::DT_INT8;
@@ -55,12 +55,12 @@ Tr2VertexDefinition::DataType ConvertGrannyTypeToDataType( const granny_data_typ
 	unsigned size = std::max( 1, src.ArrayWidth ) - 1;
 	type |= size << Tr2VertexDefinition::DT_SIZE_OFFSET;
 
-	return static_cast<Tr2VertexDefinition::DataType>(type);
+	return static_cast<Tr2VertexDefinition::DataType>( type );
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Converts Granny vertex definition to Trinity vertex definition.  
+//   Converts Granny vertex definition to Trinity vertex definition.
 // Arguments:
 //   grannyVertexDecl - Granny vertex definition
 // Return Value:
@@ -78,29 +78,29 @@ Tr2VertexDefinition BuildFromGrannyVertexDecl( const granny_data_type_definition
 
 		item.m_stream = 0;
 		item.m_offset = vd.m_nextOffset[0];
-		item.m_dataType = ConvertGrannyTypeToDataType(src);
+		item.m_dataType = ConvertGrannyTypeToDataType( src );
 		item.m_usageIndex = 0;
 
-		vd.m_nextOffset[0] += vd.GetDataTypeSizeInBytes(item.m_dataType);
+		vd.m_nextOffset[0] += vd.GetDataTypeSizeInBytes( item.m_dataType );
 
 		if( !strncmp( src.Name, GrannyVertexPositionName, strlen( GrannyVertexPositionName ) ) )
 		{
 			item.m_usage = vd.POSITION;
-			char C = src.Name[ strlen( GrannyVertexPositionName ) ];
+			char C = src.Name[strlen( GrannyVertexPositionName )];
 			item.m_usageIndex = C ? unsigned( C - '0' ) : 0;
 		}
 		else if( !strncmp( src.Name, GrannyVertexDiffuseColorName, strlen( GrannyVertexDiffuseColorName ) ) )
 		{
 			item.m_usage = vd.COLOR;
-			char C = src.Name[ strlen( GrannyVertexDiffuseColorName ) ];
+			char C = src.Name[strlen( GrannyVertexDiffuseColorName )];
 			item.m_usageIndex = C ? unsigned( C - '0' ) : 0;
 		}
 		else if( !strncmp( src.Name, GrannyVertexNormalName, strlen( GrannyVertexNormalName ) ) )
 		{
 			item.m_usage = vd.NORMAL;
-			char C = src.Name[ strlen( GrannyVertexNormalName ) ];
+			char C = src.Name[strlen( GrannyVertexNormalName )];
 			item.m_usageIndex = C ? unsigned( C - '0' ) : 0;
-		}		
+		}
 		else if( !strncmp( src.Name, GrannyVertexTangentName, strlen( GrannyVertexTangentName ) ) )
 		{
 			item.m_usage = vd.TANGENT;
@@ -116,9 +116,9 @@ Tr2VertexDefinition BuildFromGrannyVertexDecl( const granny_data_type_definition
 		else if( !strncmp( src.Name, GrannyVertexTextureCoordinatesName, strlen( GrannyVertexTextureCoordinatesName ) ) )
 		{
 			item.m_usage = vd.TEXCOORD;
-			char C = src.Name[ strlen( GrannyVertexTextureCoordinatesName ) ];
+			char C = src.Name[strlen( GrannyVertexTextureCoordinatesName )];
 			item.m_usageIndex = C ? unsigned( C - '0' ) : 0;
-		}		
+		}
 		else if( !strcmp( src.Name, GrannyVertexBoneIndicesName ) )
 		{
 			item.m_usage = vd.BLENDINDICES;
@@ -136,7 +136,7 @@ Tr2VertexDefinition BuildFromGrannyVertexDecl( const granny_data_type_definition
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Convert Trinity vertex definition back to a granny layout.  
+//   Convert Trinity vertex definition back to a granny layout.
 // Arguments:
 //   vd - input definition
 //   grannyVertexDecl - pointer to at least maxSize elements
@@ -149,7 +149,7 @@ bool ConvertVertexDeclToGranny( Tr2VertexDefinition vd, granny_data_type_definit
 {
 	// Note: This function assumes the D3D vertex layout is described in increasing offset order
 	// ... so make sure.
-	std::sort(	begin( vd.m_items ), end( vd.m_items ) );
+	std::sort( begin( vd.m_items ), end( vd.m_items ) );
 
 	// shorten the namespace...
 	typedef Tr2VertexDefinition tvd;
@@ -157,44 +157,41 @@ bool ConvertVertexDeclToGranny( Tr2VertexDefinition vd, granny_data_type_definit
 	for( size_t i = 0; i != std::min( maxSize, (unsigned int)vd.m_items.size() ); ++i )
 	{
 		const auto& src = vd.m_items[i];
-	
+
 		granny_data_type_definition& dst = grannyVertexDecl[i];
 
-		dst.ArrayWidth				= ( ( src.m_dataType & tvd::DT_SIZE_MASK ) >> tvd::DT_SIZE_OFFSET ) + 1;
-		const bool isUnsigned		= ( src.m_dataType & tvd::DT_UNSIGNED_BIT ) != 0;
-		const bool isNormalized		= ( src.m_dataType & tvd::DT_NORMALIZED_BIT ) != 0;
+		dst.ArrayWidth = ( ( src.m_dataType & tvd::DT_SIZE_MASK ) >> tvd::DT_SIZE_OFFSET ) + 1;
+		const bool isUnsigned = ( src.m_dataType & tvd::DT_UNSIGNED_BIT ) != 0;
+		const bool isNormalized = ( src.m_dataType & tvd::DT_NORMALIZED_BIT ) != 0;
 
 		switch( src.m_dataType & tvd::DT_TYPE_MASK )
 		{
-			case tvd::DT_INT8:
-				dst.Type = isUnsigned	?	isNormalized ? GrannyNormalUInt8Member	: GrannyUInt8Member
-										:	/*isNormalized ? GrannyNormalInt8Member	:*/ GrannyInt8Member;
-				break;
+		case tvd::DT_INT8:
+			dst.Type = isUnsigned ? isNormalized ? GrannyNormalUInt8Member : GrannyUInt8Member : /*isNormalized ? GrannyNormalInt8Member	:*/ GrannyInt8Member;
+			break;
 
-			case tvd::DT_INT16:
-				dst.Type = isUnsigned	?	isNormalized ? GrannyNormalUInt16Member	: GrannyUInt16Member
-										:	/*isNormalized ? GrannyNormalInt8Member	:*/ GrannyInt16Member;
-				break;
+		case tvd::DT_INT16:
+			dst.Type = isUnsigned ? isNormalized ? GrannyNormalUInt16Member : GrannyUInt16Member : /*isNormalized ? GrannyNormalInt8Member	:*/ GrannyInt16Member;
+			break;
 
-			case tvd::DT_INT32:
-				dst.Type = isUnsigned	?	GrannyUInt32Member : GrannyInt16Member;
-				break;
-		
-			case tvd::DT_FLOAT16:
-				dst.Type = GrannyReal16Member;
-				break;
-		
-			case tvd::DT_FLOAT32:
-				dst.Type = GrannyReal32Member;
-				break;
-		
-			default:
-				CCP_ASSERT( false && "Missing datatype support in granny conversion" );
-				return false;
+		case tvd::DT_INT32:
+			dst.Type = isUnsigned ? GrannyUInt32Member : GrannyInt16Member;
+			break;
+
+		case tvd::DT_FLOAT16:
+			dst.Type = GrannyReal16Member;
+			break;
+
+		case tvd::DT_FLOAT32:
+			dst.Type = GrannyReal32Member;
+			break;
+
+		default:
+			CCP_ASSERT( false && "Missing datatype support in granny conversion" );
+			return false;
 		}
 
-		static const char * grannyTexcoordNames[8]=
-		{
+		static const char* grannyTexcoordNames[8] = {
 			GrannyVertexTextureCoordinatesName "0",
 			GrannyVertexTextureCoordinatesName "1",
 			GrannyVertexTextureCoordinatesName "2",
@@ -205,16 +202,14 @@ bool ConvertVertexDeclToGranny( Tr2VertexDefinition vd, granny_data_type_definit
 			GrannyVertexTextureCoordinatesName "7",
 		};
 
-		static const char * grannyPositionNames[4]=
-		{
+		static const char* grannyPositionNames[4] = {
 			GrannyVertexPositionName,
 			GrannyVertexPositionName "1",
 			GrannyVertexPositionName "2",
 			GrannyVertexPositionName "3",
 		};
 
-		static const char * grannyNormalNames[4]=
-		{
+		static const char* grannyNormalNames[4] = {
 			GrannyVertexNormalName,
 			GrannyVertexNormalName "1",
 			GrannyVertexNormalName "2",
@@ -225,11 +220,11 @@ bool ConvertVertexDeclToGranny( Tr2VertexDefinition vd, granny_data_type_definit
 		{
 		case tvd::POSITION:
 			CCP_ASSERT( src.m_usageIndex < 4 );
-			dst.Name = grannyPositionNames[ src.m_usageIndex ];
+			dst.Name = grannyPositionNames[src.m_usageIndex];
 			break;
 		case tvd::NORMAL:
 			CCP_ASSERT( src.m_usageIndex < 4 );
-			dst.Name = grannyNormalNames[ src.m_usageIndex ];
+			dst.Name = grannyNormalNames[src.m_usageIndex];
 			break;
 		case tvd::TANGENT:
 			dst.Name = GrannyVertexTangentName;
@@ -239,7 +234,7 @@ bool ConvertVertexDeclToGranny( Tr2VertexDefinition vd, granny_data_type_definit
 			break;
 		case tvd::TEXCOORD:
 			CCP_ASSERT( src.m_usageIndex < 8 );
-			dst.Name = grannyTexcoordNames[ src.m_usageIndex ]; //GrannyVertexTextureCoordinatesName;
+			dst.Name = grannyTexcoordNames[src.m_usageIndex]; //GrannyVertexTextureCoordinatesName;
 			break;
 		case tvd::BLENDINDICES:
 			dst.Name = GrannyVertexBoneIndicesName;
@@ -339,7 +334,7 @@ Tr2VertexDefinition BuildFromCMFVertexDecl( const cmf::Span<cmf::VertexElement>&
 
 		vd.m_nextOffset[0] += vd.GetDataTypeSizeInBytes( item.m_dataType );
 
-		switch ( src.usage )
+		switch( src.usage )
 		{
 		case cmf::Usage::Position:
 			item.m_usage = Tr2VertexDefinition::POSITION;
@@ -409,14 +404,14 @@ bool ConvertVertexDeclToCMF( Tr2VertexDefinition vd, cmf::Span<cmf::VertexElemen
 		switch( src.m_dataType & Tr2VertexDefinition::DT_TYPE_MASK )
 		{
 		case Tr2VertexDefinition::DT_INT8:
-			dst.type = isUnsigned ? 
-				( isNormalized ? cmf::ElementType::UInt8Norm : cmf::ElementType::UInt8 ) : 
+			dst.type = isUnsigned ?
+				( isNormalized ? cmf::ElementType::UInt8Norm : cmf::ElementType::UInt8 ) :
 				( isNormalized ? cmf::ElementType::Int8Norm : cmf::ElementType::Int8 );
 			break;
 
 		case Tr2VertexDefinition::DT_INT16:
-			dst.type = isUnsigned ? 
-				( isNormalized ? cmf::ElementType::UInt16Norm : cmf::ElementType::UInt16 ) : 
+			dst.type = isUnsigned ?
+				( isNormalized ? cmf::ElementType::UInt16Norm : cmf::ElementType::UInt16 ) :
 				( isNormalized ? cmf::ElementType::Int16Norm : cmf::ElementType::Int16 );
 			break;
 
@@ -440,11 +435,11 @@ bool ConvertVertexDeclToCMF( Tr2VertexDefinition vd, cmf::Span<cmf::VertexElemen
 		dst.offset = src.m_offset;
 		dst.usageIndex = src.m_usageIndex;
 
-		switch ( src.m_usage )
+		switch( src.m_usage )
 		{
 		case Tr2VertexDefinition::POSITION:
 			dst.usage = cmf::Usage::Position;
-			break;	
+			break;
 		case Tr2VertexDefinition::COLOR:
 			dst.usage = cmf::Usage::Color;
 			break;

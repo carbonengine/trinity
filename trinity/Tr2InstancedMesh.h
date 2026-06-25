@@ -19,7 +19,7 @@ BLUE_DECLARE_INTERFACE( ITr2GpuBuffer );
 // See Also:
 //   Tr2Mesh
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2InstancedMesh ):
+BLUE_CLASS( Tr2InstancedMesh ) :
 	public Tr2Mesh,
 	public Tr2DeviceResource
 {
@@ -42,16 +42,21 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
-public:	
+
+public:
 #if TRINITYDEV
-	void GetDescription( std::string& desc ) { desc = "Tr2InstancedMesh"; }
+	void GetDescription( std::string & desc )
+	{
+		desc = "Tr2InstancedMesh";
+	}
 #endif
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -59,20 +64,26 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IAsyncLoadedResNotifyTarget
-	void ReleaseCachedData( BlueAsyncRes* p );
-	void RebuildCachedData( BlueAsyncRes* p );
+	void ReleaseCachedData( BlueAsyncRes * p );
+	void RebuildCachedData( BlueAsyncRes * p );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Tr2Mesh
-	const char* GetInstanceMeshResPath() { return m_instanceGeometryResPath.c_str(); }
+	const char* GetInstanceMeshResPath()
+	{
+		return m_instanceGeometryResPath.c_str();
+	}
 	void SetInstanceMeshResPath( const char* path );
-	int GetInstanceMeshIndex() const { return m_instanceMeshIndex; };
+	int GetInstanceMeshIndex() const
+	{
+		return m_instanceMeshIndex;
+	};
 
 	ITr2InstanceData* GetInstanceGeometryResource() const;
-	void SetInstanceGeometryRes( ITr2InstanceData* res );
+	void SetInstanceGeometryRes( ITr2InstanceData * res );
 
-	void GetBatches( ITriRenderBatchAccumulator* batches,
-					 const Tr2MeshAreaVector* areas, 
+	void GetBatches( ITriRenderBatchAccumulator * batches,
+					 const Tr2MeshAreaVector* areas,
 					 const Tr2PerObjectData* data,
 					 float screenSize = std::numeric_limits<float>::max() ) const override;
 
@@ -85,13 +96,13 @@ public:
 
 	CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) const override;
 	CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const override;
-	CcpMath::AxisAlignedBox GetInstanceBounds( ) const;
+	CcpMath::AxisAlignedBox GetInstanceBounds() const;
 	CcpMath::Sphere GetInstanceBoundsClosestToPoint( const Vector3& point ) const;
 
 	void SetBoundingBox( const Vector3& min, const Vector3& max );
 	bool IsLoading() const;
 
-	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
 	void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) override;
 
 	void SetDynamicBounds( float maxInstanceSize );
@@ -100,7 +111,6 @@ public:
 	unsigned int GetVertexDeclaration() const;
 
 private:
-
 	void CreateVertexDeclaration() const;
 
 	// Path to instance geometry resource

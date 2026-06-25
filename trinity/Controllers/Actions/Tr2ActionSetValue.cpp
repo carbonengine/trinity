@@ -7,11 +7,10 @@
 #include "Controllers/Tr2ControllerFloatVariable.h"
 
 
-Tr2ActionSetValue::Tr2ActionSetValue( IRoot* )
-	:m_controller( nullptr ),
+Tr2ActionSetValue::Tr2ActionSetValue( IRoot* ) :
+	m_controller( nullptr ),
 	m_delayBinding( false )
 {
-
 }
 
 void Tr2ActionSetValue::Link( ITr2ActionController& controller )
@@ -46,7 +45,7 @@ void Tr2ActionSetValue::Start( ITr2ActionController& controller )
 	{
 		return;
 	}
-	m_destination.SetValue( value.second );	
+	m_destination.SetValue( value.second );
 }
 
 bool Tr2ActionSetValue::OnModified( Be::Var* value )

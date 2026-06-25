@@ -10,19 +10,19 @@
 
 namespace
 {
-	float StateTime( float* stateTime )
-	{
-		return *stateTime;
-	}
+float StateTime( float* stateTime )
+{
+	return *stateTime;
+}
 
-	CcpParser::Function s_extraFunctions[] = {
-		CcpParser::Function( "StateTime", StateTime, Tr2ControllerExpression::EXTRA_BUFFER_INDEX, 0 ),
-	};
-	}
+CcpParser::Function s_extraFunctions[] = {
+	CcpParser::Function( "StateTime", StateTime, Tr2ControllerExpression::EXTRA_BUFFER_INDEX, 0 ),
+};
+}
 
 
-Tr2ActionAnimateCurveSet::Tr2ActionAnimateCurveSet( IRoot* )
-	:m_controller( nullptr ),
+Tr2ActionAnimateCurveSet::Tr2ActionAnimateCurveSet( IRoot* ) :
+	m_controller( nullptr ),
 	m_value( "StateTime()" ),
 	m_startTime( 0 ),
 	m_lastSimTime( 0 )

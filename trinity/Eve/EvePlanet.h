@@ -11,17 +11,17 @@
 #include "EveEffectRoot2.h"
 
 #ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
-	// This is only needed for py2 as the file now belongs in blue.
-	// Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
-	// The file version in the older blue versions had diverged from this one is incompatible.
-	#include "Include/ITr2DebugRenderer2.h"
+// This is only needed for py2 as the file now belongs in blue.
+// Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+// The file version in the older blue versions had diverged from this one is incompatible.
+#include "Include/ITr2DebugRenderer2.h"
 #else
-	#include <ITr2DebugRenderer2.h>
+#include <ITr2DebugRenderer2.h>
 #endif
 
 BLUE_DECLARE( EvePlanet );
 BLUE_DECLARE_VECTOR( EvePlanet );
-BLUE_DECLARE( EveTransform ); 
+BLUE_DECLARE( EveTransform );
 BLUE_DECLARE( Tr2ExternalParameter );
 BLUE_DECLARE_VECTOR( Tr2ExternalParameter );
 BLUE_DECLARE( EveEffectRoot2 );
@@ -33,26 +33,26 @@ struct ViewDistanceInfo;
 class EveUpdateContext;
 
 
-BLUE_CLASS( EvePlanet ):
+BLUE_CLASS( EvePlanet ) :
 	public EveEffectRoot2
 {
 public:
-    EXPOSE_TO_BLUE();
-    EvePlanet( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	EvePlanet( IRoot* lockobj = NULL );
 	~EvePlanet();
 
-	void UpdatePlanetSyncronous( const EveUpdateContext & updateContext, float renderScale );
+	void UpdatePlanetSyncronous( const EveUpdateContext& updateContext, float renderScale );
 	void UpdatePlanetVisibility( const EveUpdateContext& updateContext, float renderScale );
 	void UpdateZOnlyVisibility( const EveUpdateContext& updateContext );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables);
-	void GetZOnlyRenderables( std::vector<ITr2Renderable*>& renderables );
-	
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
+	void GetZOnlyRenderables( std::vector<ITr2Renderable*> & renderables );
+
 	void UpdateLOD();
 	void SetRenderScale( float value );
 
 	float GetEstimatedPixelDiameter();
 	ITriVectorFunctionPtr GetTranslationCurve();
-	
+
 	static const float SCALE;
 
 	// IWorldPosition
@@ -67,19 +67,19 @@ public:
 	// ITriTargetable
 	unsigned int GetDamageLocatorCount() const;
 	int GetClosestDamageLocatorIndex( const Vector3* position );
-	bool GetDamageLocatorPosition( Vector3* out, int index, bool inWorldSpace );
-	bool GetDamageLocatorDirection( Vector3* out, int index, bool inWorldSpace );
+	bool GetDamageLocatorPosition( Vector3 * out, int index, bool inWorldSpace );
+	bool GetDamageLocatorDirection( Vector3 * out, int index, bool inWorldSpace );
 	void GetMissPosition( const Vector3* hit, const Vector3* source, Vector3* out );
 	int GetGoodDamageLocatorIndex( const Vector3& position );
 	float GetRadius() const;
 	int CreateImpact( int damageLocatorIndex, const Vector3& direction, float lifeTime, float size );
-	bool UpdateImpact( Vector3& out, const Vector3& direction, int impactIndex );
-	bool GetImpactPosition( Vector3& out, int locator, const Vector3& posPrev, const Vector3& posNow, float epsilon );
+	bool UpdateImpact( Vector3 & out, const Vector3& direction, int impactIndex );
+	bool GetImpactPosition( Vector3 & out, int locator, const Vector3& posPrev, const Vector3& posNow, float epsilon );
 	bool HasImpactConfigurationShield() const;
 
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 
 private:
 	Matrix CalculatePlanetScaleTransform( const Matrix& worldTransform, float renderScale ) const;
@@ -102,7 +102,7 @@ private:
 	Color m_albedoColor;
 	Color m_emissiveColor;
 	EveChildMeshPtr m_zOnlyModel;
-	
+
 	using EveEffectRoot2::GetRenderables; // Silence warning about this hidden function
 };
 

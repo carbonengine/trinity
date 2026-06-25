@@ -11,9 +11,8 @@
 BLUE_DECLARE( Tr2Sprite2dContainer );
 BLUE_DECLARE_IVECTOR( ITr2SpriteObject );
 
-class Tr2Sprite2dContainerBase:
-     public Tr2SpriteObjectBase,
-	 public IListNotify
+class Tr2Sprite2dContainerBase : public Tr2SpriteObjectBase,
+								 public IListNotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -27,27 +26,24 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	void OnListModified(
-		long event,		// BLUELISTEVENT values
+		long event, // BLUELISTEVENT values
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const IList* theList
-		);
+		const IList* theList );
 
 protected:
 	float m_opacity;
 
 	PITr2SpriteObjectVector m_children;
 	PITr2SpriteObjectVector m_background;
-
 };
 
-class Tr2Sprite2dContainer:
-	public Tr2Sprite2dContainerBase
+class Tr2Sprite2dContainer : public Tr2Sprite2dContainerBase
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2Sprite2dContainer( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2Sprite2dContainer( IRoot* lockobj = NULL );
 	~Tr2Sprite2dContainer();
 
 	//////////////////////////////////////////////////////////////////////////

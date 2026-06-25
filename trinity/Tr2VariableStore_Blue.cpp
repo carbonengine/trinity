@@ -14,89 +14,79 @@ static PyObject* PyWrapVariable( TriVariable* variable )
 {
 	if( variable == NULL )
 	{
-		PyErr_SetString(PyExc_KeyError, "Variable store variable is not set.");
+		PyErr_SetString( PyExc_KeyError, "Variable store variable is not set." );
 		return NULL;
 	}
 	switch( variable->GetType() )
 	{
 	case TRIVARIABLE_INVALID:
-	case TRIVARIABLE_UNKNOWN_FLOAT:
-		{
-			Py_RETURN_NONE;
-		}
-	case TRIVARIABLE_TEXTURE_RES:
-		{
-			ITr2TextureProvider* res = NULL;
-			variable->GetValue( res );
+	case TRIVARIABLE_UNKNOWN_FLOAT: {
+		Py_RETURN_NONE;
+	}
+	case TRIVARIABLE_TEXTURE_RES: {
+		ITr2TextureProvider* res = NULL;
+		variable->GetValue( res );
 
-			return PyOS->WrapBlueObject( res );
-		}
-	case TRIVARIABLE_GPUBUFFER:
-		{
-			ITr2GpuBuffer* res = NULL;
-			variable->GetValue( res );
+		return PyOS->WrapBlueObject( res );
+	}
+	case TRIVARIABLE_GPUBUFFER: {
+		ITr2GpuBuffer* res = NULL;
+		variable->GetValue( res );
 
-			return PyOS->WrapBlueObject( res );
-		}
-	case TRIVARIABLE_INT:
-		{
-			int value;
-			variable->GetValue( value );
-			return Py_BuildValue( "i", value );
-		}
-	case TRIVARIABLE_FLOAT:
-		{
-			float value;
-			variable->GetValue( value );
-			return Py_BuildValue( "f", value );
-		}
-	case TRIVARIABLE_FLOAT2:
-		{
-			Vector2 value;
-			variable->GetValue( value );
-			return Py_BuildValue( "ff", value.x, value.y );
-		}
-	case TRIVARIABLE_FLOAT3:
-		{
-			Vector3 value;
-			variable->GetValue( value );
-			return Py_BuildValue( "(fff)", value.x, value.y, value.z );
-		}
-	case TRIVARIABLE_FLOAT4:
-		{
-			Vector4 value;
-			variable->GetValue( value );
-			return Py_BuildValue( "(ffff)", value.x, value.y, value.z, value.w );
-		}
-	case TRIVARIABLE_FLOAT4X4:
-		{
-			Matrix value;
-			variable->GetValue( value );
+		return PyOS->WrapBlueObject( res );
+	}
+	case TRIVARIABLE_INT: {
+		int value;
+		variable->GetValue( value );
+		return Py_BuildValue( "i", value );
+	}
+	case TRIVARIABLE_FLOAT: {
+		float value;
+		variable->GetValue( value );
+		return Py_BuildValue( "f", value );
+	}
+	case TRIVARIABLE_FLOAT2: {
+		Vector2 value;
+		variable->GetValue( value );
+		return Py_BuildValue( "ff", value.x, value.y );
+	}
+	case TRIVARIABLE_FLOAT3: {
+		Vector3 value;
+		variable->GetValue( value );
+		return Py_BuildValue( "(fff)", value.x, value.y, value.z );
+	}
+	case TRIVARIABLE_FLOAT4: {
+		Vector4 value;
+		variable->GetValue( value );
+		return Py_BuildValue( "(ffff)", value.x, value.y, value.z, value.w );
+	}
+	case TRIVARIABLE_FLOAT4X4: {
+		Matrix value;
+		variable->GetValue( value );
 
-			PyObject* ret = PyTuple_New( 4 );
+		PyObject* ret = PyTuple_New( 4 );
 
-			// Start of floating point of array so we can iterate simply over the data
-			const float* array = &value._11;
-			for( int i = 0; i < 4; ++i )
+		// Start of floating point of array so we can iterate simply over the data
+		const float* array = &value._11;
+		for( int i = 0; i < 4; ++i )
+		{
+			PyObject* tuple = PyTuple_New( 4 );
+			// Marshall row 'i' in the array as a 4-tuple
+			for( int k = 0; k < 4; ++k )
 			{
-				PyObject* tuple = PyTuple_New( 4 );
-				// Marshall row 'i' in the array as a 4-tuple
-				for( int k = 0; k < 4; ++k )
-				{
-					PyTuple_SET_ITEM( tuple, k, PyFloat_FromDouble( array[4*i + k ] ) );
-				}
-				// Collect the tuple into a tuple of rows
-				PyTuple_SET_ITEM( ret, i, tuple );
+				PyTuple_SET_ITEM( tuple, k, PyFloat_FromDouble( array[4 * i + k] ) );
 			}
+			// Collect the tuple into a tuple of rows
+			PyTuple_SET_ITEM( ret, i, tuple );
+		}
 
-			return ret;
-		}
-	case TRIVARIABLE_COLOR:
-		{
-			Color value;
-			variable->GetValue( value );
-			return Py_BuildValue( "(ffff)", value.r, value.g, value.b, value.a );
-		}
+		return ret;
+	}
+	case TRIVARIABLE_COLOR: {
+		Color value;
+		variable->GetValue( value );
+		return Py_BuildValue( "(ffff)", value.r, value.g, value.b, value.a );
+	}
 	default:
 		return NULL;
 	}
@@ -221,7 +211,7 @@ static PyObject* PyGetLocalVariable( PyObject* self, PyObject* args )
 static PyObject* PyGetVariableStore( PyObject* self, PyObject* args )
 {
 	PyObject* ret = PyOS->WrapBlueObject( &GlobalStore() );
-	return ret; 
+	return ret;
 }
 
 MAP_FUNCTION( "GetVariableStore", PyGetVariableStore, "Gets the global variable store\n:type: Tr2VariableStore" );
@@ -229,69 +219,63 @@ MAP_FUNCTION( "GetVariableStore", PyGetVariableStore, "Gets the global variable 
 
 const Be::ClassInfo* Tr2VariableStore::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2VariableStore, "Variable map used by shaders to get parameters" )
+	EXPOSURE_BEGIN( Tr2VariableStore, "Variable map used by shaders to get parameters" )
 		MAP_INTERFACE( Tr2VariableStore )
 
 		MAP_PROPERTY( "parentStore", GetParentVariableStore, SetParentVariableStore, "Parent variable store" )
-		MAP_METHOD( 
-			"RegisterVariable", 
-			PyRegisterVariable, 
-			"Registers a new variable in this store." 
+		MAP_METHOD(
+			"RegisterVariable",
+			PyRegisterVariable,
+			"Registers a new variable in this store."
 			"\n"
 			"\n:param name: Name of the variable"
 			"\n:type name: str"
 			"\nvalue - Value for the new variable" )
-		MAP_METHOD( 
-			"FindVariable", 
-			PyFindVariable, 
-			"Returns a variable in the local store or its parents. Throws an exception if the variable is not found." 
+		MAP_METHOD(
+			"FindVariable",
+			PyFindVariable,
+			"Returns a variable in the local store or its parents. Throws an exception if the variable is not found."
 			"\n"
-			"\n:param name: Name of the variable" 
-			"\n:type name: str"
-		)
-		MAP_METHOD( 
-			"FindLocalVariable", 
-			PyFindLocalVariable, 
-			"Returns a variable in the local store. Throws an exception if the variable is not found." 
+			"\n:param name: Name of the variable"
+			"\n:type name: str" )
+		MAP_METHOD(
+			"FindLocalVariable",
+			PyFindLocalVariable,
+			"Returns a variable in the local store. Throws an exception if the variable is not found."
 			"\n"
-			"\n:param name: Name of the variable" 
-			"\n:type name: str"
-		)
-		MAP_METHOD( 
-			"GetVariable", 
-			PyGetVariable, 
+			"\n:param name: Name of the variable"
+			"\n:type name: str" )
+		MAP_METHOD(
+			"GetVariable",
+			PyGetVariable,
 			"Returns a variable in the local store or its parents. If the variable is not found the function creates"
-			" a new variable in this store." 
+			" a new variable in this store."
 			"\n"
-			"\n:param name: Name of the variable" 
-			"\n:type name: str"
-		)
-		MAP_METHOD( 
-			"GetLocalVariable", 
-			PyGetLocalVariable, 
+			"\n:param name: Name of the variable"
+			"\n:type name: str" )
+		MAP_METHOD(
+			"GetLocalVariable",
+			PyGetLocalVariable,
 			"Returns a variable in the local store. If the variable is not found the function creates"
-			" a new variable in this store." 
+			" a new variable in this store."
 			"\n"
-			"\n:param name: Name of the variable" 
-			"\n:type name: str"
-		)
-		MAP_METHOD_AND_WRAP( 
-			"UnregisterVariable", 
-			UnregisterVariable, 
-			"Unregisters an existing variable. Looks for the variable in this store and its parents." 
+			"\n:param name: Name of the variable"
+			"\n:type name: str" )
+		MAP_METHOD_AND_WRAP(
+			"UnregisterVariable",
+			UnregisterVariable,
+			"Unregisters an existing variable. Looks for the variable in this store and its parents."
 			"\n"
-			"\n:param name: Name of the variable" 
-		)
-		MAP_METHOD_AND_WRAP( 
-			"UnregisterLocalVariable", 
-			UnregisterLocalVariable, 
-			"Unregisters an existing variable. Looks for the variable only in this store." 
+			"\n:param name: Name of the variable" )
+		MAP_METHOD_AND_WRAP(
+			"UnregisterLocalVariable",
+			UnregisterLocalVariable,
+			"Unregisters an existing variable. Looks for the variable only in this store."
 			"\n"
-			"\n:param name: Name of the variable" 
-		)
-		MAP_METHOD_AND_WRAP( 
-			"GetLocalNames", 
-			GetLocalNames, 
+			"\n:param name: Name of the variable" )
+		MAP_METHOD_AND_WRAP(
+			"GetLocalNames",
+			GetLocalNames,
 			"Returns a list of names of all local variables in the store." )
 	EXPOSURE_END()
 }

@@ -58,7 +58,7 @@ bool GetDeviceRegistryKey( uint32_t deviceId, std::string& keyPath )
 	DISPLAY_DEVICE dd;
 	dd.cb = sizeof( DISPLAY_DEVICE );
 
-	for( int i = 0; EnumDisplayDevices( nullptr, i, &dd, 0 ); ++i ) 
+	for( int i = 0; EnumDisplayDevices( nullptr, i, &dd, 0 ); ++i )
 	{
 		uint32_t device;
 		if( GetHexIdFromDeviceId( dd.DeviceID, device ) && device == deviceId )
@@ -73,7 +73,7 @@ bool GetDeviceRegistryKey( uint32_t deviceId, std::string& keyPath )
 bool GetRegistryValue( HKEY key, const char* name, std::string& value )
 {
 	char buffer[256];
-    DWORD dwcb_data = sizeof( buffer );
+	DWORD dwcb_data = sizeof( buffer );
 
 	LONG result = RegQueryValueEx( key, name, nullptr, nullptr, reinterpret_cast<LPBYTE>( buffer ), &dwcb_data );
 	if( result == ERROR_SUCCESS )
@@ -141,10 +141,10 @@ ALResult DoGetDriverVersion( uint32_t deviceId, Tr2VideoDriverInfo& info )
 
 namespace Tr2DriverUtilities
 {
-#if( TRINITY_PLATFORM==TRINITY_STUB )
+#if ( TRINITY_PLATFORM == TRINITY_STUB )
 ALResult GetDriverVersion( uint32_t deviceId, Tr2VideoDriverInfo& info )
 {
-	if ( deviceId == 0xffffffff )
+	if( deviceId == 0xffffffff )
 	{
 		return E_FAIL;
 	}

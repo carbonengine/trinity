@@ -16,8 +16,7 @@ void Underline_To_RGBABuffer( void* destPtr, int dWidth, int dHeight, int dPitch
 
 BLUE_DECLARE( Tr2SBitWrapper );
 
-class Tr2SBitWrapper : 
-	public IRoot
+class Tr2SBitWrapper : public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -25,20 +24,49 @@ public:
 	Tr2SBitWrapper( IRoot* lockobj = NULL );
 	~Tr2SBitWrapper();
 
-	int GetWidth() { return sbit->width; }
-	int GetHeight() { return sbit->height; }
-	int GetXOffset() { return sbit->left; }
-	int GetYOffset() { return sbit->top; }
-	int GetXAdvance() { return sbit->xadvance; }
-	int GetYAdvance() { return sbit->yadvance; }
+	int GetWidth()
+	{
+		return sbit->width;
+	}
+	int GetHeight()
+	{
+		return sbit->height;
+	}
+	int GetXOffset()
+	{
+		return sbit->left;
+	}
+	int GetYOffset()
+	{
+		return sbit->top;
+	}
+	int GetXAdvance()
+	{
+		return sbit->xadvance;
+	}
+	int GetYAdvance()
+	{
+		return sbit->yadvance;
+	}
 
 #if BLUE_WITH_PYTHON
-	void ToBuffer( 
-		PyObject* dest, int width, int height, int pitch, 
-		int x, int y, int32_t color );
-	void ToBufferWithUnderline( 
-		PyObject* dest, int width, int height, int pitch, 
-		int x, int y, int32_t color, int extraSpace );
+	void ToBuffer(
+		PyObject* dest,
+		int width,
+		int height,
+		int pitch,
+		int x,
+		int y,
+		int32_t color );
+	void ToBufferWithUnderline(
+		PyObject* dest,
+		int width,
+		int height,
+		int pitch,
+		int x,
+		int y,
+		int32_t color,
+		int extraSpace );
 #endif
 
 

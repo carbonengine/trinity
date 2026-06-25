@@ -5,11 +5,10 @@
 #include "Resources/TriGrannyRes.h"
 
 // Curve set
-Tr2GrannyTrack::Tr2GrannyTrack( IRoot* lockobj ): 
+Tr2GrannyTrack::Tr2GrannyTrack( IRoot* lockobj ) :
 	m_duration( 0.0f ),
 	m_cycle( false )
 {
-
 }
 
 Tr2GrannyTrack::~Tr2GrannyTrack()
@@ -28,11 +27,11 @@ void Tr2GrannyTrack::UpdateValue( double time )
 		return;
 	}
 
-	if ( m_cycle )
+	if( m_cycle )
 	{
 		time = fmod( time, (double)m_duration );
 	}
-	// if you go below zero or beyond the duration of the granny curve, 
+	// if you go below zero or beyond the duration of the granny curve,
 	// granny gets Alzheimer and the result is all over the place
 	// plus she will throw some assert popups at you
 	if( time <= m_duration && time >= 0.0 )
@@ -50,11 +49,11 @@ bool Tr2GrannyTrack::Initialize()
 bool Tr2GrannyTrack::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_grannyResPath ) )
-	{		
-		SetGrannyResource( );	
+	{
+		SetGrannyResource();
 	}
-	
-	if( IsMatch( value, m_name ) || 
+
+	if( IsMatch( value, m_name ) ||
 		IsMatch( value, m_group ) )
 	{
 		ResetTracks();
@@ -78,7 +77,7 @@ void Tr2GrannyTrack::ReleaseCachedData( BlueAsyncRes* p )
 
 void Tr2GrannyTrack::RebuildCachedData( BlueAsyncRes* p )
 {
-	if ( p == m_grannyRes && p->IsGood() )
+	if( p == m_grannyRes && p->IsGood() )
 	{
 		SetCurves();
 	}
@@ -95,7 +94,7 @@ void Tr2GrannyTrack::SetGrannyResource()
 	if( !m_grannyResPath.empty() )
 	{
 		BeResMan->GetResource( m_grannyResPath.c_str(), "raw", BlueInterfaceIID<TriGrannyRes>(), (void**)&m_grannyRes );
-	}	
+	}
 	else
 	{
 		ReleaseCachedData( m_grannyRes );
@@ -122,9 +121,9 @@ void Tr2GrannyTrack::SetCurves( void )
 		return;
 	}
 
-	granny_file_info* info = GrannyGetFileInfo(file);
-	if ( !info )
-	{			
+	granny_file_info* info = GrannyGetFileInfo( file );
+	if( !info )
+	{
 		CCP_LOGERR( "Tr2GrannyTrack::SetCurves: unable to obtain a granny_file_info from the input file\n" );
 		return;
 	}
@@ -132,13 +131,13 @@ void Tr2GrannyTrack::SetCurves( void )
 	for( int animIdx = 0; animIdx < info->AnimationCount; ++animIdx )
 	{
 		granny_animation* animation = info->Animations[animIdx];
-		if ( !animation )
+		if( !animation )
 			continue;
 		// find the group we belong to
 		for( int tGIdx = 0; tGIdx < animation->TrackGroupCount; ++tGIdx )
 		{
 			granny_track_group* trackGroup = animation->TrackGroups[tGIdx];
-			if ( !trackGroup )
+			if( !trackGroup )
 				continue;
 
 			if( m_group == trackGroup->Name )
@@ -150,28 +149,28 @@ void Tr2GrannyTrack::SetCurves( void )
 	}
 }
 
-granny_curve2* CompressCurve( 
+granny_curve2* CompressCurve(
 	granny_real32 Tolerance,
-	granny_real32 dT, 
+	granny_real32 dT,
 	bool AsQuats,
-	granny_data_type_definition** CurveFormats, 
+	granny_data_type_definition** CurveFormats,
 	int NumFormats,
 	granny_data_type_definition* ShaderType,
-	granny_real32* IdentityVector, 
-	int KnotCount, 
-	int Dimension,  
-	std::vector<granny_real32> &Data)
+	granny_real32* IdentityVector,
+	int KnotCount,
+	int Dimension,
+	std::vector<granny_real32>& Data )
 {
 	granny_int32x SolverFlags =
-		(GrannyBSplineSolverExtraDOFKnotZero |
-		GrannyBSplineSolverForceEndpointAlignment |
-		(AsQuats ? GrannyBSplineSolverEvaluateAsQuaternions : 0));
+		( GrannyBSplineSolverExtraDOFKnotZero |
+		  GrannyBSplineSolverForceEndpointAlignment |
+		  ( AsQuats ? GrannyBSplineSolverEvaluateAsQuaternions : 0 ) );
 
 	granny_compress_curve_parameters Params;
 	Params.DesiredDegree = 2;
 	Params.AllowDegreeReduction = true;
 	Params.AllowReductionOnMissedTolerance = true;
-	Params.ErrorTolerance = Tolerance;     // !!!
+	Params.ErrorTolerance = Tolerance; // !!!
 	Params.C0Threshold = 0.0f;
 	Params.C1Threshold = 0.0f;
 	Params.PossibleCompressionTypes = CurveFormats;
@@ -180,20 +179,18 @@ granny_curve2* CompressCurve(
 	Params.IdentityCompressionType = GrannyCurveDataDaIdentityType;
 	Params.IdentityVector = IdentityVector;
 
-	granny_bspline_solver *Solver = GrannyAllocateBSplineSolver( 2, KnotCount, Dimension );
+	granny_bspline_solver* Solver = GrannyAllocateBSplineSolver( 2, KnotCount, Dimension );
 
 	bool AcheivedTol;
 	// convert the key framed curve to a compressed bspline
 	granny_curve2* newCurve =
-		GrannyCompressCurve( Solver, SolverFlags, &Params,
-		&Data[0], Dimension, KnotCount,
-		dT, &AcheivedTol );
+		GrannyCompressCurve( Solver, SolverFlags, &Params, &Data[0], Dimension, KnotCount, dT, &AcheivedTol );
 
-	GrannyDeallocateBSplineSolver(Solver);
+	GrannyDeallocateBSplineSolver( Solver );
 
-	if ( newCurve )
+	if( newCurve )
 	{
-		if(!AcheivedTol)
+		if( !AcheivedTol )
 		{
 			CCP_LOGWARN( "CompressCurve: Failed to achieve tolerance\n" );
 		}

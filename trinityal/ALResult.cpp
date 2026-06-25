@@ -4,7 +4,7 @@
 #include "ALResult.h"
 #include "ALLog.h"
 
-#if( TRINITYDEV == 1 )
+#if ( TRINITYDEV == 1 )
 bool g_requestDeviceDebugLayer = true;
 #else
 bool g_requestDeviceDebugLayer = false;
@@ -19,13 +19,13 @@ std::map<HRESULT, std::string> s_errorMessages;
 
 }
 
-#if defined(_DEBUG) || defined(TRINITYDEV)
+#if defined( _DEBUG ) || defined( TRINITYDEV )
 
 void ReportHresultError( const char* fileName, int lineNumber, const char* statement, HRESULT hr )
 {
 	const char* msgFormat = "%s(%d) : '%s' returned error 0x%X\n";
 	const int bufferSize = 1024;
-	char buffer[ bufferSize ] = "";
+	char buffer[bufferSize] = "";
 	_snprintf_s( buffer, _TRUNCATE, msgFormat, fileName, lineNumber, statement, hr );
 #ifdef _WIN32
 	OutputDebugString( buffer );
@@ -35,7 +35,7 @@ void ReportHresultError( const char* fileName, int lineNumber, const char* state
 }
 
 #if !defined( _WIN32 )
-static void emptySignalHandler(int)
+static void emptySignalHandler( int )
 {
 }
 #endif
@@ -43,22 +43,22 @@ static void emptySignalHandler(int)
 void BreakInDebugger()
 {
 #ifdef _WIN32
-	__try 
+	__try
 	{
 		// This breakpoint exception is used by several D3D return value checking functions
 		// If you get, here, go up the stack and see what D3D function failed
 		DebugBreak();
 	}
-	__except(GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) 
+	__except( GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH )
 	{
 	}
 #else
-    struct sigaction action, oldAction;
-    memset( &action, 0, sizeof( action ) );
-    action.sa_handler = &emptySignalHandler;
-    sigaction( SIGTRAP, &action, &oldAction );
-    raise(SIGTRAP);
-    sigaction( SIGTRAP, &oldAction, &action );
+	struct sigaction action, oldAction;
+	memset( &action, 0, sizeof( action ) );
+	action.sa_handler = &emptySignalHandler;
+	sigaction( SIGTRAP, &action, &oldAction );
+	raise( SIGTRAP );
+	sigaction( SIGTRAP, &oldAction, &action );
 #endif
 }
 
@@ -73,7 +73,8 @@ void BreakInDebugger()
 // Return value:
 //   Static string with exception message
 // --------------------------------------------------------------------------------------
-template<> const char* BeGetErrorMessage( const Be::Result<HRESULT>& result )
+template <>
+const char* BeGetErrorMessage( const Be::Result<HRESULT>& result )
 {
 	auto found = s_errorMessages.find( result );
 	if( found == s_errorMessages.end() )

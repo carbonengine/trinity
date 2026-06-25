@@ -10,13 +10,12 @@ BLUE_DECLARE( EveParticleDragForce );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Drag force for particle systems. All the code was moved to Tr2ParticleDragForce. 
+//   Drag force for particle systems. All the code was moved to Tr2ParticleDragForce.
 //   This class stays for backward compatibility.
 // See Also:
 //   Tr2ParticleDragForce
 // --------------------------------------------------------------------------------------
-class EveParticleDragForce:
-	public Tr2ParticleDragForce
+class EveParticleDragForce : public Tr2ParticleDragForce
 {
 public:
 	EXPOSE_TO_BLUE();

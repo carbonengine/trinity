@@ -11,8 +11,8 @@ struct Tr2InteriorPerObjectPSData;
 
 //---------------------------------------------------------------------------------------
 // Description:
-//   Tr2InteriorLightSet is a collection of ITr2InteriorLights accumulated during 
-//   scene traversal.  It can handle ordinary lights as well as light instances.  
+//   Tr2InteriorLightSet is a collection of ITr2InteriorLights accumulated during
+//   scene traversal.  It can handle ordinary lights as well as light instances.
 // See Also:
 //   Tr2InteriorScene, ITr2InteriorLight
 //---------------------------------------------------------------------------------------
@@ -30,7 +30,10 @@ public:
 	void Clear( void );
 
 	// How many light instances are in this set?
-	unsigned int GetNumOfActiveLights( void ) const { return (unsigned int)m_lightInstances.size(); }
+	unsigned int GetNumOfActiveLights( void ) const
+	{
+		return (unsigned int)m_lightInstances.size();
+	}
 
 	// Populate constant buffer
 	void PopulateLightData( Tr2InteriorPerObjectPSData* perObjectPSData );

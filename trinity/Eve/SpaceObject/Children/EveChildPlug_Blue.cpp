@@ -31,21 +31,18 @@ const Be::ClassInfo* EveChildPlug::ExposeToBlue()
 			SetControllerVariable,
 			"Set variable for all applicable controllers\n"
 			":param name: variable name\n"
-			":param value: new variable value\n"
-		)
+			":param value: new variable value\n" )
 
 		MAP_METHOD_AND_WRAP(
 			"HandleControllerEvent",
 			HandleControllerEvent,
 			"Pass an event to controllers\n"
-			":param name: event name"
-		)
+			":param name: event name" )
 
 		MAP_METHOD_AND_WRAP(
 			"StartControllers",
 			StartControllers,
-			"Start all controllers"
-		)
+			"Start all controllers" )
 
 	EXPOSURE_END()
 }

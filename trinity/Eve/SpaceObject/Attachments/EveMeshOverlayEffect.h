@@ -24,10 +24,10 @@ BLUE_DECLARE_IVECTOR( ITr2Controller );
 //   Tr2SpaceObject2
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveMeshOverlayEffect ) :
-        public IInitialize,
-        public IListNotify,
-        public ITr2ControllerOwner,
-        public ITr2CurveSetOwner
+	public IInitialize,
+	public IListNotify,
+	public ITr2ControllerOwner,
+	public ITr2CurveSetOwner
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -40,9 +40,9 @@ public:
 		TYPE_COUNT,
 	};
 
-	EveMeshOverlayEffect(IRoot* lockobj = NULL);
+	EveMeshOverlayEffect( IRoot* lockobj = NULL );
 	~EveMeshOverlayEffect();
-	
+
 	const PTr2EffectVector& GetEffects( TriBatchType batchType, bool& success ) const;
 	void Update( Be::Time realTime, Be::Time simTime );
 
@@ -54,26 +54,26 @@ public:
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
 
-    //////////////////////////////////////////////////////////////////////////////////////
-    // IInitialize
-    bool Initialize() override;
+	//////////////////////////////////////////////////////////////////////////////////////
+	// IInitialize
+	bool Initialize() override;
 
-    /////////////////////////////////////////////////////////////////////////////////////
-    // IListNotify
-    void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList ) override;
+	/////////////////////////////////////////////////////////////////////////////////////
+	// IListNotify
+	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList ) override;
 
-    /////////////////////////////////////////////////////////////////////////////////////
-    // ITr2ControllerOwner
-    void SetControllerVariable( const char* name, float value ) override;
-    void HandleControllerEvent( const char* name ) override;
-    void StartControllers() override;
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2ControllerOwner
+	void SetControllerVariable( const char* name, float value ) override;
+	void HandleControllerEvent( const char* name ) override;
+	void StartControllers() override;
 
-    /////////////////////////////////////////////////////////////////////////////////////
-    // ITr2CurveSetOwner
-    void PlayCurveSet( const std::string& name, const std::string& rangeName ) override;
-    void StopCurveSet( const std::string& name ) override;
-    float GetCurveSetDuration( const std::string& name ) const override;
-    float GetRangeDuration( const std::string& name, const std::string& rangeName ) const override;
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2CurveSetOwner
+	void PlayCurveSet( const std::string& name, const std::string& rangeName ) override;
+	void StopCurveSet( const std::string& name ) override;
+	float GetCurveSetDuration( const std::string& name ) const override;
+	float GetRangeDuration( const std::string& name, const std::string& rangeName ) const override;
 
 	std::string m_name;
 
@@ -89,11 +89,10 @@ private:
 	PTr2EffectVector m_additiveEffects;
 	PTr2EffectVector m_distortionEffects;
 
-    PITr2ControllerVector m_controllers;
+	PITr2ControllerVector m_controllers;
 
 	// animating this overlay effect
 	TriCurveSetPtr m_curveSet;
-
 };
 
 TYPEDEF_BLUECLASS( EveMeshOverlayEffect );

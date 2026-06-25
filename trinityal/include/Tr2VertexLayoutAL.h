@@ -12,8 +12,8 @@ class Tr2VertexDefinition;
 
 namespace TrinityALImpl
 {
-	class Tr2VertexLayoutAL;
-	class PSODescription;
+class Tr2VertexLayoutAL;
+class PSODescription;
 }
 
 class Tr2VertexLayoutAL

@@ -28,15 +28,14 @@ Matrix EveChildModifierHalo::ApplyTransform( const Matrix& transform, size_t, co
 
 	float scale = Dot(
 		Normalize( d ),
-		Normalize( *TriVectorRotatedBasisMatrix( &backward, TRITA_Z, &transform ) )
-	);
+		Normalize( *TriVectorRotatedBasisMatrix( &backward, TRITA_Z, &transform ) ) );
 
-	if (scale < 0.0f)
+	if( scale < 0.0f )
 	{
 		scale = 0.0f;
 	}
 
-	finalScale *= scale*scale;
+	finalScale *= scale * scale;
 
 	const Matrix& invView = Tr2Renderer::GetInverseViewTransform();
 

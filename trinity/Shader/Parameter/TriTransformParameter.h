@@ -12,13 +12,11 @@
 BLUE_DECLARE( TriTransformParameter );
 BLUE_CLASS_ALLOW_DELAYED_DELETE( TriTransformParameter );
 
-class TriTransformParameter:
-	public ITriEffectParameter
+class TriTransformParameter : public ITriEffectParameter
 {
 
 public:
-
-	TriTransformParameter(IRoot* lockobj = NULL);
+	TriTransformParameter( IRoot* lockobj = NULL );
 	~TriTransformParameter() {};
 
 	using ITriEffectParameter::Lock;
@@ -27,11 +25,14 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 	/////////////////////////////////////////////////////////////////////////////////////
-	virtual void CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-									unsigned char* destHandle, 
+	virtual void CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+									unsigned char* destHandle,
 									size_t size,
-									Tr2RenderContext &renderContext ) const;
-	const char* GetParameterName() const { return m_name.c_str(); }
+									Tr2RenderContext& renderContext ) const;
+	const char* GetParameterName() const
+	{
+		return m_name.c_str();
+	}
 	// The following methods are potentially used by the old scene.  This parameter will
 	// never be used there so I'm simply going to stub them out.
 	void RebuildEffectHandles( Tr2Shader* effectRes ) {};
@@ -43,7 +44,7 @@ public:
 private:
 	BlueSharedString m_name;
 
-	TRITRANSFORMBASE m_transformBase; 
+	TRITRANSFORMBASE m_transformBase;
 	Vector3 m_scaling;
 	Vector3 m_rotationCenter;
 	Quaternion m_rotation;
@@ -51,6 +52,6 @@ private:
 	Matrix m_worldTransform;
 };
 
-TYPEDEF_BLUECLASS(TriTransformParameter);
+TYPEDEF_BLUECLASS( TriTransformParameter );
 
-#endif 
+#endif

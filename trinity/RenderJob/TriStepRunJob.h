@@ -10,18 +10,19 @@
 
 BLUE_DECLARE( TriRenderJob );
 
-BLUE_CLASS( TriStepRunJob ) : public TriRenderStep
+BLUE_CLASS( TriStepRunJob ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	TriStepRunJob( IRoot* lockobj = 0 );
-	~TriStepRunJob(void);
+	~TriStepRunJob( void );
 
 	//RenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
-	void SetRenderJob( TriRenderJob* job );
+	void SetRenderJob( TriRenderJob * job );
 
 private:
 	TriRenderJobPtr m_job;

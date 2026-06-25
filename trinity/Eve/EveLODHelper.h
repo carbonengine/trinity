@@ -12,7 +12,11 @@ extern float g_eveSpaceSceneLowUpdateRate;
 extern float g_eveSpaceSceneMediumUpdateRate;
 
 
-enum BoundingSphereQuery { EVE_BOUNDS_NORMAL, EVE_BOUNDS_WITH_CHILDREN };
+enum BoundingSphereQuery
+{
+	EVE_BOUNDS_NORMAL,
+	EVE_BOUNDS_WITH_CHILDREN
+};
 
 class EveLODHelper
 {

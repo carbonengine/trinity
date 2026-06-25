@@ -45,34 +45,36 @@ public:
 	bool Initialize();
 
 	// Notify
-	bool OnModified(Be::Var* value);
-	void OnListModified(long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList);
+	bool OnModified( Be::Var * value );
+	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList );
 
 	std::string GetBehaviorName();
 	virtual size_t GetScratchMemorySize() const;
 	virtual void InitializeScratch( void* scratchMemory );
-	virtual std::vector<Vector3> CalculateBehavior(std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
-	                                               BehaviorGroup& sys, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius);
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation);
+	virtual std::vector<Vector3> CalculateBehavior( std::vector<DroneAgent> & agents, void* scratchData, const float deltaTime, BehaviorGroup& sys, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, std::vector<DroneAgent> & agents, Matrix & parentWorldLocation );
 	virtual int GetProcessPriority();
 
-	void UpdateState( bool state ) { m_exit = state; }
+	void UpdateState( bool state )
+	{
+		m_exit = state;
+	}
 
 	std::vector<Vector3> GetPotentialPoints();
 
 	std::vector<Vector3> GetEntrancePoints();
-	
+
 private:
-	void FindASpawnPoint( DroneAgent& agent, ProcessLifetimeData* data, BehaviorGroup& group );
-	bool FindInitialSpawnPoint( DroneAgent& agent, ProcessLifetimeData* data, Vector3& pos, SplineTunnelGroupVector* systemTunnels );
-	bool ProcessTunnel( DroneAgent& agent, SplineTunnel& tunnel, int& pointID, float boundingSphere );
+	void FindASpawnPoint( DroneAgent & agent, ProcessLifetimeData * data, BehaviorGroup & group );
+	bool FindInitialSpawnPoint( DroneAgent & agent, ProcessLifetimeData * data, Vector3 & pos, SplineTunnelGroupVector * systemTunnels );
+	bool ProcessTunnel( DroneAgent & agent, SplineTunnel & tunnel, int& pointID, float boundingSphere );
 	void FindAndAssignAnExitTunnel( const DroneAgent& agent, ProcessLifetimeData* data );
 	void UpdateTunnelRegistry();
-	void ReassignTunnelIDsAndAddSystemTunnels( EveChildBehaviorSystem& system );
+	void ReassignTunnelIDsAndAddSystemTunnels( EveChildBehaviorSystem & system );
 	float GetRandomOffset( float cylWidth ) const;
 
-	float m_firstAgentLifetime; // debug visualization 
+	float m_firstAgentLifetime; // debug visualization
 	PSplineTunnelGroupVector m_splineTunnels;
 	std::vector<SplineTunnel*> m_privateTunnels;
 

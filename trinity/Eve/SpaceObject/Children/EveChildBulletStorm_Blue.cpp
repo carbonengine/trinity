@@ -7,8 +7,8 @@ BLUE_DEFINE( EveChildBulletStorm );
 
 const Be::ClassInfo* EveChildBulletStorm::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveChildBulletStorm, "" )
-        MAP_INTERFACE( EveChildBulletStorm )
+	EXPOSURE_BEGIN( EveChildBulletStorm, "" )
+		MAP_INTERFACE( EveChildBulletStorm )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( INotify )

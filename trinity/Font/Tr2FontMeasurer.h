@@ -66,8 +66,7 @@ public:
 
 	// Prepares sprites based on the current contents of the measurer for later
 	// rendering with SubmitSprites.
-	void PrepareSprites( Tr2Sprite2dScene* renderer, const Vector2& translation, const Color& color, Tr2SpriteObjectEffect sfx, Tr2SpriteObjectBlendMode blendMode, Tr2SpriteTarget target, float glowBrightness, 
-		bool dropShadow, const Vector2& shadowOffset, const Color& shadowColor, Tr2SpriteObjectEffect shadowSfx );
+	void PrepareSprites( Tr2Sprite2dScene* renderer, const Vector2& translation, const Color& color, Tr2SpriteObjectEffect sfx, Tr2SpriteObjectBlendMode blendMode, Tr2SpriteTarget target, float glowBrightness, bool dropShadow, const Vector2& shadowOffset, const Color& shadowColor, Tr2SpriteObjectEffect shadowSfx );
 
 	// Submits sprites previously prepared with PrepareSprites for rendering.
 	void SubmitSprites( Tr2Sprite2dScene* renderer );
@@ -82,28 +81,28 @@ public:
 	int GetFontSize() const;
 
 	float GetFadeLeftStart() const;
-	void SetFadeLeftStart(float val);
+	void SetFadeLeftStart( float val );
 
 	float GetFadeLeftEnd() const;
-	void SetFadeLeftEnd(float val);
+	void SetFadeLeftEnd( float val );
 
 	float GetFadeRightStart() const;
-	void SetFadeRightStart(float val);
+	void SetFadeRightStart( float val );
 
 	float GetFadeRightEnd() const;
-	void SetFadeRightEnd(float val);
+	void SetFadeRightEnd( float val );
 
 	float GetFadeTopStart() const;
-	void SetFadeTopStart(float val);
+	void SetFadeTopStart( float val );
 
 	float GetFadeTopEnd() const;
-	void SetFadeTopEnd(float val);
+	void SetFadeTopEnd( float val );
 
 	float GetFadeBottomStart() const;
-	void SetFadeBottomStart(float val);
+	void SetFadeBottomStart( float val );
 
 	float GetFadeBottomEnd() const;
-	void SetFadeBottomEnd(float val);
+	void SetFadeBottomEnd( float val );
 
 	unsigned int GetVertexCount() const;
 
@@ -126,7 +125,7 @@ protected:
 	int m_cursorY;
 	int m_letterSpace;
 	int m_limit;
-	
+
 	// Ascender value for the current line (reset on CommitText)
 	int m_ascender;
 
@@ -141,7 +140,7 @@ protected:
 
 	uint32_t m_color;
 	int32_t GetColor();
-	void SetColor(int32_t color);
+	void SetColor( int32_t color );
 
 	bool m_underline;
 
@@ -149,7 +148,7 @@ protected:
 	float m_fadeLeftEnd;
 	float m_fadeRightStart;
 	float m_fadeRightEnd;
-	
+
 	float m_fadeTopStart;
 	float m_fadeTopEnd;
 	float m_fadeBottomStart;

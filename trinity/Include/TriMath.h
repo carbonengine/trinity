@@ -41,84 +41,75 @@ bool TriVectorIsIdentical( const Vector3* v1, const Vector3* v2, float epsilon =
 
 //Rotate a vector by the quaternion
 Vector3* TriVectorRotateQuaternion(
-	Vector3* out, 
+	Vector3* out,
 	const Vector3* v,
-	const Quaternion* q
-	);
+	const Quaternion* q );
 
 //Rotate a vector by the rotation part of a matrix (ignores translation)
 Vector3* TriVectorRotateMatrix(
-	Vector3* out, 
+	Vector3* out,
 	const Vector3* v,
-	const Matrix* m
-	);
+	const Matrix* m );
 
 //The next two functions are the most common application
 //of the previous two functions and can be optimized greatly
 //with our knowledge of the usage
 
-//Rotate a unit vector aligned to one of the axes 
+//Rotate a unit vector aligned to one of the axes
 //(defined by xyz) by the quaternion
 Vector3* TriVectorRotatedBasisQuaternion(
-	Vector3* out, 
+	Vector3* out,
 	const TRITRANSFORMAXIS xyz,
-	const Quaternion* q
-	);
+	const Quaternion* q );
 
-//Rotate a unit vector aligned to one of the axes 
+//Rotate a unit vector aligned to one of the axes
 //(defined by xyz) by the matrix
 Vector3* TriVectorRotatedBasisMatrix(
-	Vector3* out, 
+	Vector3* out,
 	const TRITRANSFORMAXIS xyz,
-	const Matrix* m
-	);
+	const Matrix* m );
 
 
 //
-Vector3* TriVectorSpherical( 
-	Vector3* v, 
+Vector3* TriVectorSpherical(
+	Vector3* v,
 	float phi,
 	float theta,
-	float rad
-	);
+	float rad );
 
-Vector3* TriVectorExponentialDecayInteger( 
-	Vector3* pos, 
+Vector3* TriVectorExponentialDecayInteger(
+	Vector3* pos,
 	const Vector3* pos0,
 	const Vector3* vel0,
 	const Vector3* acc0,
 	const float mass,
 	const float drag,
-	float time
-	);
+	float time );
 
-Vector3* TriVectorExponentialDecay( 
-	Vector3* vel, 
+Vector3* TriVectorExponentialDecay(
+	Vector3* vel,
 	const Vector3* vel0,
 	const Vector3* acc0,
 	const float mass,
 	const float drag,
-	float time
-	);
+	float time );
 
-Vector3* TriVectorExponentialDecayInteger( 
-	Vector3* pos, 
+Vector3* TriVectorExponentialDecayInteger(
+	Vector3* pos,
 	const Vector3* x,
 	const Vector3* v,
 	const Vector3* a,
 	const float m,
 	const float k,
 	const float t,
-	const float pow
-	);
+	const float pow );
 
-Vector3* TriVectorExponentialDecay( 
-	Vector3* vel, 
+Vector3* TriVectorExponentialDecay(
+	Vector3* vel,
 	const Vector3* v,
 	const Vector3* a,
 	const float k,
-	const float pow
-	);
+	const float pow );
 
 // Projects a point onto a plane
 Vector3 TriVectorProjectOnPlane( const Vector3& point, const Vector3& p0, const Vector3& n );
@@ -148,12 +139,11 @@ float TriFloatRandomGauss( float mu, float deviation );
 // Color extensions
 /////////////////////////////////////////////////////////////////////////////////////////
 
-// Turns a normalized vector into a color. Used to change directions into color. 
-Color* TriColorFromVector( 
+// Turns a normalized vector into a color. Used to change directions into color.
+Color* TriColorFromVector(
 	Color* c,
-	const Vector3* v, 
-	float height = 0.0f 
-	);
+	const Vector3* v,
+	float height = 0.0f );
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -171,51 +161,44 @@ Color* TriColorFromVector(
 // See TriQuaternionRotationArc for an example of use.
 Quaternion* TriQuaternionSqrt(
 	Quaternion* out,
-	const Quaternion* q
-	);
+	const Quaternion* q );
 
 // Builds a quaternion that is the rotation between two vectors about the origin
 Quaternion* TriQuaternionRotationArc(
-	Quaternion* out, 
+	Quaternion* out,
 	const Vector3* v1,
-	const Vector3* v2
-	);
+	const Vector3* v2 );
 
 Quaternion* TriQuaternionArcFromForward(
-	Quaternion* out, 
-	const Vector3* v 
-	);
+	Quaternion* out,
+	const Vector3* v );
 
 // does something nice, Eggert, please specify....
 Quaternion* TriQuaternionAxisHeading(
-	Quaternion* out, 
+	Quaternion* out,
 	const Quaternion* q,
-	const Vector3* v
-	);
+	const Vector3* v );
 
 //Takes in a vector, and returns a pure unit quaternion with the same rotation axis as the vectors heading
 Quaternion* TriQuaternionDirVector(
-	Quaternion* out, 
-	const Vector3* v
-	);
+	Quaternion* out,
+	const Vector3* v );
 
 //out = in*length
 Quaternion* TriQuaternionScale(
-	Quaternion* out, 
+	Quaternion* out,
 	const Quaternion* in,
-	float length
-	);
+	float length );
 
 
 //Pre: q is a unit quaternion
 //Post: yaw in [0;2*pi[ , pitch in [-pi/2;pi/2]; roll in  [-pi; pi]
 // if you yaw and then pitch and then roll you get the same result as using the quaternion
-void TriQuaternionToYawPitchRoll (
-    float* yaw, 
-    float* pitch, 
-    float* roll,
-	const Quaternion* q
-	);
+void TriQuaternionToYawPitchRoll(
+	float* yaw,
+	float* pitch,
+	float* roll,
+	const Quaternion* q );
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Matrix extensions
@@ -223,43 +206,41 @@ void TriQuaternionToYawPitchRoll (
 
 // advanced matrix transpose: by knowing the size it determines if to transpose a
 // 4x4 or 4x3 matrix
-Matrix* TriMatrixTranspose(Matrix* out, const Matrix* in, unsigned int sizeInBytes);
+Matrix* TriMatrixTranspose( Matrix* out, const Matrix* in, unsigned int sizeInBytes );
 
 //These functions are used instead of creating a translation matrix and multiplying by that
 //The only reason to use these is for optimization purposes
 
 //use this to translate by v and then transform by m
-//this is 20 times faster than multiplying with a translation matrix 
-Matrix* TriMatrixTranslate(Matrix* out, const Matrix* m, const Vector3* v);
+//this is 20 times faster than multiplying with a translation matrix
+Matrix* TriMatrixTranslate( Matrix* out, const Matrix* m, const Vector3* v );
 //use this to transform by m and then translate by v
-//this is four times faster than multiplying with a translation matrix 
-Matrix* TriMatrixTranslate(Matrix* out, const Vector3* v, const Matrix* m);
+//this is four times faster than multiplying with a translation matrix
+Matrix* TriMatrixTranslate( Matrix* out, const Vector3* v, const Matrix* m );
 
 
 //with these functions we can always use quaternions instead of rotation matrices
 //which helps comprehension
 
 //use this to rotate by q and then transform by m
-Matrix* TriMatrixRotate(Matrix* out, const Matrix* m, const Quaternion* q);
+Matrix* TriMatrixRotate( Matrix* out, const Matrix* m, const Quaternion* q );
 //use this to transform by m and then rotate by q
-Matrix* TriMatrixRotate(Matrix* out, const Quaternion* q, const Matrix* m);
+Matrix* TriMatrixRotate( Matrix* out, const Quaternion* q, const Matrix* m );
 
-Matrix* TriMatrixChangeBase(Matrix* out, const Vector3* fwd, const Vector3* up);
+Matrix* TriMatrixChangeBase( Matrix* out, const Vector3* fwd, const Vector3* up );
 
 Matrix* TriMatrixRemoveScaling( Matrix* out, const Matrix* in );
 Matrix* TriMatrixRemoveTranslation( Matrix* out, const Matrix* in );
 Matrix* TriMatrixOverwriteTranslation( Matrix* out, const Matrix* in, const Vector3* t );
 
 Matrix* TriMatrixRotationArc(
-	Matrix* out, 
-	const Vector3* v1, 
-	const Vector3* v2
-	);
+	Matrix* out,
+	const Vector3* v1,
+	const Vector3* v2 );
 
 Matrix* TriMatrixArcFromForward(
-	Matrix* out, 
-	const Vector3* v 
-	);
+	Matrix* out,
+	const Vector3* v );
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -289,10 +270,9 @@ float Hermite( float v1, float r, float v2, float l, float t, float dt );
 float TriLinearize( float min, float max, float v );
 
 //pre: f in [0.0 ; 1.0]
-//post: returnvalue in [0.0 ; 1.0] 
+//post: returnvalue in [0.0 ; 1.0]
 float SinSmooth(
-	float f
-	);
+	float f );
 
 
 float CubicInterpolate( float f0, float f1, float f2, float f3, float s );
@@ -312,11 +292,11 @@ int TriRandGetSeed();
 // Constants
 /////////////////////////////////////////////////////////////////////////////////////////
 
-const float TRI_PI    = 3.141592654f;
+const float TRI_PI = 3.141592654f;
 const float TRI_1BYPI = 0.318309886f;
-const float TRI_2PI   = 6.283185307f;                        
+const float TRI_2PI = 6.283185307f;
 const float TRI_PIBY2 = 1.570796327f;
-const float TRI_E     = 2.718281828f;//45904523536028747135266249775724709369996
+const float TRI_E = 2.718281828f; //45904523536028747135266249775724709369996
 const float TRI_SQRT2 = 1.414213562f;
 const float TRI_SQRT3 = 1.732050807f;
 

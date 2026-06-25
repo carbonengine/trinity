@@ -4,7 +4,7 @@
 #include "EveSmartLightAttributeModifierNoise.h"
 #include "TriMath.h"
 
-EveSmartLightAttributeModifierNoise::EveSmartLightAttributeModifierNoise( IRoot* lockobj ):
+EveSmartLightAttributeModifierNoise::EveSmartLightAttributeModifierNoise( IRoot* lockobj ) :
 	m_noiseAmplitude( 0.f ),
 	m_noiseFrequency( 1.f ),
 	m_noiseOctaves( 1 )

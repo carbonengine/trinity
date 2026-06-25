@@ -45,7 +45,7 @@ public:
 		CComPtr<IDXGIFactory4> factory4;
 		UINT createFactoryFlags = 0;
 
-#if( TRINITYDEV == 1 )
+#if ( TRINITYDEV == 1 )
 		createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 #endif
 
@@ -71,16 +71,17 @@ public:
 	}
 
 private:
-	Tr2CapsAL( ) : m_supportsDxr(false)
+	Tr2CapsAL() :
+		m_supportsDxr( false )
 	{
 	}
 
-	Tr2CapsAL(const Tr2CapsAL& other)
-		:m_supportsDxr(other.m_supportsDxr)
+	Tr2CapsAL( const Tr2CapsAL& other ) :
+		m_supportsDxr( other.m_supportsDxr )
 	{
 	}
 
-	Tr2CapsAL& operator=(const Tr2CapsAL& other)
+	Tr2CapsAL& operator=( const Tr2CapsAL& other )
 	{
 		m_supportsDxr = other.m_supportsDxr;
 		return *this;

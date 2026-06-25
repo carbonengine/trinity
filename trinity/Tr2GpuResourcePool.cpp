@@ -78,8 +78,8 @@ std::string ToString( const Tr2BitmapDimensions& desc )
 
 }
 
-Tr2GpuResourcePool::Tr2GpuResourcePool( Tr2GpuResourcePool* outer )
-	: m_outer( outer )
+Tr2GpuResourcePool::Tr2GpuResourcePool( Tr2GpuResourcePool* outer ) :
+	m_outer( outer )
 {
 	AllGpuResourcePools().push_back( this );
 }
@@ -117,7 +117,7 @@ Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetTempTexture( const char* name
 	}
 
 	auto found = find_if( begin( m_tempTextures ), end( m_tempTextures ), [&]( const auto& x ) {
-		if ( m_debugMode )
+		if( m_debugMode )
 		{
 			return x->lockCount == 0 && x->resource.GetDesc() == desc && x->resource.GetGpuUsage() == gpuUsage && x->name == name;
 		}
@@ -172,7 +172,7 @@ Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetPersistentTexture( const char
 			return Texture();
 		}
 		tex->resource.SetName( name );
-		if( auto initFunc = std::get_if < std::function<void( Tr2TextureAL & texture, Tr2RenderContextAL & renderContext )>>( &initializer ) )
+		if( auto initFunc = std::get_if<std::function<void( Tr2TextureAL & texture, Tr2RenderContextAL & renderContext )>>( &initializer ) )
 		{
 			( *initFunc )( tex->resource, renderContext );
 		}
@@ -187,7 +187,7 @@ Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetPersistentTexture( const char
 
 Tr2GpuResourcePool::Buffer Tr2GpuResourcePool::GetTempBuffer( const char* name, const Tr2BufferDescriptionAL& desc )
 {
-	if ( m_outer && !m_debugMode )
+	if( m_outer && !m_debugMode )
 	{
 		return m_outer->GetTempBuffer( name, desc );
 	}
@@ -197,7 +197,7 @@ Tr2GpuResourcePool::Buffer Tr2GpuResourcePool::GetTempBuffer( const char* name, 
 		return {};
 	}
 	auto found = find_if( begin( m_tempBuffers ), end( m_tempBuffers ), [&]( const auto& x ) {
-		if ( m_debugMode )
+		if( m_debugMode )
 		{
 			return x->lockCount == 0 && CompatibleDescriptions( x->resource.GetDesc(), desc ) && x->name == name;
 		}
@@ -244,7 +244,7 @@ Tr2GpuResourcePool::Buffer Tr2GpuResourcePool::GetPersistentBuffer( const char* 
 			return Buffer();
 		}
 		buf->resource.SetName( name );
-		if( auto initFunc = std::get_if<std::function<void( Tr2BufferAL& buffer, Tr2RenderContextAL & renderContext )>>( &initializer ) )
+		if( auto initFunc = std::get_if<std::function<void( Tr2BufferAL & buffer, Tr2RenderContextAL & renderContext )>>( &initializer ) )
 		{
 			( *initFunc )( buf->resource, renderContext );
 		}

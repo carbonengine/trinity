@@ -5,17 +5,17 @@
 #include "Tr2PPEffect.h"
 namespace Tr2Bokeh
 {
-	enum Shape
-	{
-		Disk,
-		Triangle,
-		Rectangle,
-		Pentagon,
-		Hexagon,
-		Heart
-	};
+enum Shape
+{
+	Disk,
+	Triangle,
+	Rectangle,
+	Pentagon,
+	Hexagon,
+	Heart
+};
 
-	extern const Be::VarChooser BokehShapeChooser[];
+extern const Be::VarChooser BokehShapeChooser[];
 }
 
 extern bool g_postprocessDofEnabled;
@@ -25,7 +25,7 @@ BLUE_CLASS( Tr2PPDepthOfFieldEffect ) :
 {
 public:
 	EXPOSE_TO_BLUE();
-		
+
 	Tr2PPDepthOfFieldEffect( IRoot* lockobj = NULL );
 	~Tr2PPDepthOfFieldEffect();
 

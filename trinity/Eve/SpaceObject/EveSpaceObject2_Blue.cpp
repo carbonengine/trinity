@@ -29,40 +29,40 @@ BLUE_DEFINE_ABSTRACT( EveSpaceObject2 );
 
 namespace
 {
-	void TransformLocator( Vector3& position, Quaternion& rotation, int boneIndex, Tr2GrannyAnimation* animation )
+void TransformLocator( Vector3& position, Quaternion& rotation, int boneIndex, Tr2GrannyAnimation* animation )
+{
+	if( boneIndex > 0 && animation && animation->IsInitialized() )
 	{
-		if( boneIndex > 0 && animation && animation->IsInitialized() )
+		size_t boneCount = size_t( animation->GetMeshBoneCount() );
+		if( boneCount )
 		{
-			size_t boneCount = size_t( animation->GetMeshBoneCount() );
-			if( boneCount )
-			{
-				const Float4x3* bones = animation->GetMeshBoneMatrixList();
-				Matrix boneTF = IdentityMatrix();
-				TriMatrixCopyFrom3x4( &boneTF, &bones[boneIndex] );
-				position = XMVector3TransformCoord( position, boneTF );
+			const Float4x3* bones = animation->GetMeshBoneMatrixList();
+			Matrix boneTF = IdentityMatrix();
+			TriMatrixCopyFrom3x4( &boneTF, &bones[boneIndex] );
+			position = XMVector3TransformCoord( position, boneTF );
 
-				rotation = XMQuaternionMultiply( rotation, XMQuaternionRotationMatrix( boneTF ) );
-			}
+			rotation = XMQuaternionMultiply( rotation, XMQuaternionRotationMatrix( boneTF ) );
 		}
 	}
+}
 
-	void ApplyModelTransform( Vector3& position, Quaternion& rotation, ITriVectorFunctionPtr modelTranslationCurve, ITriQuaternionFunctionPtr modelRotationCurve )
+void ApplyModelTransform( Vector3& position, Quaternion& rotation, ITriVectorFunctionPtr modelTranslationCurve, ITriQuaternionFunctionPtr modelRotationCurve )
+{
+	if( modelTranslationCurve )
 	{
-		if( modelTranslationCurve )
-		{
-			Vector3 pos( 0, 0, 0 );
-			modelTranslationCurve->GetValueAt( &pos, Be::Time() );
-			position += pos;
-		}
-
-		if( modelRotationCurve )
-		{
-			Quaternion quat( 0, 0, 0, 1 );
-			modelRotationCurve->GetValueAt( &quat, Be::Time() );
-			position = XMVector3Rotate( position, quat );
-			rotation = XMQuaternionMultiply( rotation, quat );
-		}
+		Vector3 pos( 0, 0, 0 );
+		modelTranslationCurve->GetValueAt( &pos, Be::Time() );
+		position += pos;
 	}
+
+	if( modelRotationCurve )
+	{
+		Quaternion quat( 0, 0, 0, 1 );
+		modelRotationCurve->GetValueAt( &quat, Be::Time() );
+		position = XMVector3Rotate( position, quat );
+		rotation = XMQuaternionMultiply( rotation, quat );
+	}
+}
 }
 
 PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
@@ -102,7 +102,7 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 	else if( PySequence_Check( pyLocators ) )
 	{
 		PyObject* result = PyList_New( PySequence_Size( pyLocators ) );
-		for( ssize_t i = 0; ; ++i )
+		for( ssize_t i = 0;; ++i )
 		{
 			auto item = PySequence_GetItem( pyLocators, i );
 			if( !item )
@@ -117,7 +117,7 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 				!BlueExtractVector( PyTuple_GET_ITEM( item, 1 ), &rotation.x, 4 ) || !PyLong_Check( PyTuple_GET_ITEM( item, 2 ) ) )
 			{
 				Py_DECREF( item );
-                PyErr_SetString( PyExc_TypeError, "arument must be a sequence of (position, rotation, boneIndex) tuples" );
+				PyErr_SetString( PyExc_TypeError, "arument must be a sequence of (position, rotation, boneIndex) tuples" );
 				return nullptr;
 			}
 			int boneIndex = int( PyLong_AsLong( PyTuple_GET_ITEM( item, 2 ) ) );
@@ -135,7 +135,7 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 		}
 		return result;
 	}
-    PyErr_SetString( PyExc_TypeError, "arument must be a sequence of (position, rotation, boneIndex) tuples" );
+	PyErr_SetString( PyExc_TypeError, "arument must be a sequence of (position, rotation, boneIndex) tuples" );
 	return nullptr;
 }
 #endif
@@ -170,176 +170,134 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		MAP_ATTRIBUTE( "dna", m_dna, "If created by the SOF, this is the DNA string", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "activationStrength", m_activationStrength, "Ship's activation strength", Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"display",
 			m_display,
 			"Specifies whether to render the object or not",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
-		)
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"mute",
 			m_mute,
 			"",
-			Be::READWRITE | Be::NOTIFY
-		)
+			Be::READWRITE | Be::NOTIFY )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"update",
 			m_update,
 			"Specifies whether to update the object or not",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"castShadow",
 			m_castShadow,
 			"If set, shadow is enabled",
-			Be::READWRITE | Be::NOTIFY | Be::PERSIST
-		)
+			Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"isAnimated",
 			m_isAnimated,
 			"If set, we have animations",
-			Be::READWRITE | Be::PERSIST 
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"isPickable",
 			m_isPickable,
 			"Enables/disables picking for the object",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"mesh",
 			m_mesh,
 			"Mesh for rendering space object",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"meshLod",
 			m_mesh,
 			"Mesh with levels-of-detail for rendering space object\n:jessica-hidden: True",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"locatorSets",
 			m_locatorSets,
 			"Set of Blue structure lists of locators identified by a name",
-			Be::READ | Be::PERSIST
-		)
+			Be::READ | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"translationCurve",
 			m_ballPosition,
 			"Vector function slot for attaching a destiny ball to set the position of a ship",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"rotationCurve",
 			m_ballRotation,
 			"Quaternion function slot for attaching a destiny ball to set the rotation of a ship",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"modelRotationCurve",
 			m_modelRotation,
 			"Used to add rotations to the basic rotation curve",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"modelTranslationCurve",
 			m_modelTranslation,
 			"Used to add animated translations to ships",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"worldPosition",
 			m_worldPosition,
 			"Position in world space",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"worldRotation",
 			m_worldRotation,
 			"Rotation in world space",
-			Be::READ 
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"modelScale",
 			m_modelScale,
 			"Scaling of this object (ONLY USED BY ASTEROIDS!)",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"attachments",
 			m_attachments,
 			"Item sets attached to the object",
-			Be::READ | Be::PERSIST
-		)
+			Be::READ | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"locators",
 			m_locators,
 			"Locators for things such as turrets, boosters, etc. Locators can also come from a skeleton.",
-			Be::READ | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"observers",
 			m_observers,
 			"Observers for pushing data between modules every frame. Currently used to push locator data out to the audio2 module.",
-			Be::READ | Be::PERSIST
-		)
+			Be::READ | Be::PERSIST )
 
 		MAP_PROPERTY( "audioGeometry", GetAudioGeometry, SetAudioGeometry, "Audio geometry interface for Wwise Spatial Audio occlusion and diffraction processing." )
 
 		MAP_ATTRIBUTE( "impactOverlay", m_impactOverlay, "object for rendering damage/impact fx on this space object.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "decals", m_decals, "list of all decals on this space object.", Be::READ | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"estimatedPixelDiameter",
 			m_estimatedPixelDiameter,
 			"Estimated pixel diameter given the current view/projection transforms.\n",
-			Be::READ
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READ )
+		MAP_ATTRIBUTE(
 			"estimatedPixelDiameterWithChildren",
 			m_estimatedPixelDiameterWithChildren,
 			"Estimated pixel diameter given the current view/projection transforms.\n",
-			Be::READ
-		)
+			Be::READ )
 
 		MAP_ATTRIBUTE( "clipSphereFactor", m_clipSphereFactor, "Object's clip state", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "clipSphereFactor2", m_clipSphereFactor2, "Object's clip state for the second clip sphere", Be::READWRITE | Be::NOTIFY )
@@ -358,87 +316,64 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		MAP_ATTRIBUTE( "generatedShapeEllipsoidCenter", m_generatedShapeEllipsoidCenter, "Generated or User-authored ellipsoid data for center", Be::READ )
 		MAP_ATTRIBUTE( "generatedShapeEllipsoidRadius", m_generatedShapeEllipsoidRadius, "Generated or User-authored ellipsoid data for radii", Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"effectChildren",
 			m_effectChildren,
 			"",
-			Be::READ | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"children",
 			m_children,
 			"",
-			Be::READ | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"curveSets",
 			m_curveSets,
 			"Curvesets for animating things",
-			Be::READ | Be::PERSIST
-		)
+			Be::READ | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"inheritProperties",
 			m_inheritProperties,
 			"",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
 		MAP_ATTRIBUTE( "dynamicBoundingSphereEnabled", m_dynamicBoundingSphereEnabled, "Indicate if object uses dynamic bounding spheres", Be::READ | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "GetBoneCount", GetBoneCount, "Returns the number of bones in the granny." )
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"GetBoundingSphereRadius",
 			GetBoundingSphereRadius,
-			"Returns the bounding sphere radius."
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			"Returns the bounding sphere radius." )
+		MAP_METHOD_AND_WRAP(
 			"GetBoundingSphereCenter",
 			GetBoundingSphereCenter,
-			"Returns the bounding sphere center."
-		)
+			"Returns the bounding sphere center." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"CalculateSkinnedBoundingSphere",
 			CalculateSkinnedBoundingSphere,
-			"Calculate and return skinned bounding sphere."
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			"Calculate and return skinned bounding sphere." )
+		MAP_METHOD_AND_WRAP(
 			"CalculateSkinnedBoundingBoxFromTransform",
 			CalculateSkinnedBoundingBoxFromTransform,
 			"Calculate and return bounding sphere of the object projected by the transform provided.\n"
-			":param transform: object transform matrix"
-		)
+			":param transform: object transform matrix" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"RebuildBoundingSphereInformation",
 			RebuildBoundingSphereInformation,
-			"Rebuilds the bounding data."
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			"Rebuilds the bounding data." )
+		MAP_METHOD_AND_WRAP(
 			"GetLocalBoundingBox",
 			GetLocalBoundingBoxFromScript,
-			"Returns the bounding box of the object in local coordinates."
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			"Returns the bounding box of the object in local coordinates." )
+		MAP_METHOD_AND_WRAP(
 			"PlayAnimation",
 			PlayAnimationOnce,
 			"Plays the given animation, replacing whatever animation was playing before.\n"
-			":param name: animation name"
-		)
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
-		(
+			":param name: animation name" )
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"PlayAnimationEx",
 			PlayAnimationEx,
 			1,
@@ -447,18 +382,14 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			":param loopCount: can be 0 to loop forever.\n"
 			":param delay: time (in seconds) from now before animation should start playing.\n"
 			":param speed: can be used speed up or slow down playback - use negative values to play backwards.\n"
-			":param clearWhenDone: boolean True to clear animation when done, boolean False to keep it playing. Defaults to True\n"
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			":param clearWhenDone: boolean True to clear animation when done, boolean False to keep it playing. Defaults to True\n" )
+		MAP_METHOD_AND_WRAP(
 			"ChainAnimation",
 			ChainAnimation,
 			"Plays the given animation, starting when currently playing animation finishes.\n"
 			"If it is looping then it is replaced at the end of the current loop.\n"
-			":param name: animation name"
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			":param name: animation name" )
+		MAP_METHOD_AND_WRAP(
 			"ChainAnimationEx",
 			ChainAnimationEx,
 			"Plays the given animation, starting when currently playing animation finishes.\n"
@@ -466,76 +397,57 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			":param name: animation name\n"
 			":param loopCount: can be 0 to loop forever.\n"
 			":param delay: time (in seconds) from now before animation should start playing.\n"
-			":param speed: can be used speed up or slow down playback - use negative values to play backwards.\n"
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			":param speed: can be used speed up or slow down playback - use negative values to play backwards.\n" )
+		MAP_METHOD_AND_WRAP(
 			"EndAnimation",
 			EndAnimation,
 			"EndAnimation()\n\n"
-			"Stops currently playing animation at the end of the current loop iteration."
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			"Stops currently playing animation at the end of the current loop iteration." )
+		MAP_METHOD_AND_WRAP(
 			"ClearAnimations",
 			ClearAnimations,
 			"ClearAnimations()\n\n"
-			"Abruptly ends all animations."
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			"Abruptly ends all animations." )
+		MAP_METHOD_AND_WRAP(
 			"FreezeHighDetailMesh",
 			FreezeHighDetailMesh,
-			"Freezes the high detail mesh and prevents LOD selection or resource unloading."
-		)
+			"Freezes the high detail mesh and prevents LOD selection or resource unloading." )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"overlayEffects",
 			m_overlayEffects,
 			"A list of effects that are added to the current LOD. Rendered additive.",
-			Be::READ | Be::PERSIST
-		)
+			Be::READ | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"animationUpdater",
 			m_animationUpdater,
 			"Granny animation exposure",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"positionDelta",
 			m_positionDelta,
 			"Change in global position of the object during the frame",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"albedoColor",
 			m_albedoColor,
 			"Space object overall albedo color. Used for secondary lighting. In linear RGB space.",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"secondaryLightingSphereRadius",
 			m_secondaryLightingSphereRadius,
 			"Sphere radius used to approximate space object for secondary lighting.",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"lastDamageLocatorHit",
 			m_lastDamageLocatorHit,
 			"The last damagelocator hit.",
-			Be::READ
-		)
+			Be::READ )
 
 		MAP_METHOD_AND_WRAP( "GetDamageLocatorCount", GetDamageLocatorCount, "Get number of damage locators on this ship" )
 		MAP_METHOD_AND_WRAP(
@@ -565,81 +477,72 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			":param shield: shield damage\n"
 			":param armor: armor damage\n"
 			":param hull: hull damage\n"
-			":param createArmorImpacts: True to create armor impacts\n"
-		)
+			":param createArmorImpacts: True to create armor impacts\n" )
 		MAP_METHOD_AND_WRAP(
 			"SetImpactAnimation",
 			SetImpactAnimation,
 			"Set the impact's animations.\n"
 			":param name: animation name\n"
 			":param enable: enable/disable animation\n"
-			":param duration: animation duration\n"
-		)
+			":param duration: animation duration\n" )
 		MAP_METHOD_AND_WRAP(
 			"GetGoodLocatorIndex",
 			GetCloseLocatorIndex,
 			"Get the closest locator in set to target.\n"
 			":param position: position of target\n"
-			":param locatorSetName: name of locator set \n"
-		)MAP_METHOD_AND_WRAP(
+			":param locatorSetName: name of locator set \n" )
+		MAP_METHOD_AND_WRAP(
 			"GetCloseLocatorIndex",
 			GetCloseLocatorIndex,
 			"Get the closest locator in set to target, does not mind about direction of locator.\n"
 			":param position: position of target\n"
-			":param locatorSetName: name of locator set \n"
-		)
+			":param locatorSetName: name of locator set \n" )
+			MAP_METHOD_AND_WRAP(
+				"GetLocatorPositionFromSet",
+				GetLocatorPositionFromSet,
+				"locator position from a set Specified by name\n"
+				":param index: locator index\n"
+				":param inWorldSpace: position of target\n"
+				":param locatorSetName: name of locator set \n" )
+				MAP_METHOD_AND_WRAP(
+					"GetLocatorRotationFromSet",
+					GetLocatorRotationFromSet,
+					"locator rotation in worldspace\n"
+					":param index: locator index\n"
+					":param inWorldSpace: position of target\n"
+					":param locatorSetName: name of locator set \n" )
+					MAP_METHOD_AND_WRAP( "ClearImpactDamage", ClearImpactDamage, "Clear all the impact/damage effects." )
+						MAP_METHOD_AND_WRAP(
+							"CreateImpact",
+							CreateImpact,
+							"debug only\n"
+							":param idx: damage locator index\n"
+							":param direction: incoming damage direction\n"
+							":param lifeTime: effect time\n"
+							":param size: effect size" );
 		MAP_METHOD_AND_WRAP(
-			"GetLocatorPositionFromSet",
-			GetLocatorPositionFromSet,
-			"locator position from a set Specified by name\n"
-			":param index: locator index\n"
-			":param inWorldSpace: position of target\n"
-			":param locatorSetName: name of locator set \n" 
-		)
-		MAP_METHOD_AND_WRAP(
-			"GetLocatorRotationFromSet",
-			GetLocatorRotationFromSet,
-			"locator rotation in worldspace\n"
-			":param index: locator index\n"
-			":param inWorldSpace: position of target\n"
-			":param locatorSetName: name of locator set \n" 
-		)
-		MAP_METHOD_AND_WRAP( "ClearImpactDamage", ClearImpactDamage, "Clear all the impact/damage effects." )
-		MAP_METHOD_AND_WRAP(
-			"CreateImpact",
-			CreateImpact,
-			"debug only\n"
-			":param idx: damage locator index\n"
+			"CreateImpactFromPosition",
+			CreateImpactFromPosition,
+			"Creates an impact facing a position\n"
+			":param position: damage source position\n"
 			":param direction: incoming damage direction\n"
 			":param lifeTime: effect time\n"
-			":param size: effect size"
-		);
-	MAP_METHOD_AND_WRAP(
-		"CreateImpactFromPosition",
-		CreateImpactFromPosition,
-		"Creates an impact facing a position\n"
-		":param position: damage source position\n"
-		":param direction: incoming damage direction\n"
-		":param lifeTime: effect time\n"
-		":param size: effect size"
-	);
-	MAP_METHOD_AND_WRAP( "IsImpostor", IsImpostor, "Is this object in the impostor mode?" );
+			":param size: effect size" );
+		MAP_METHOD_AND_WRAP( "IsImpostor", IsImpostor, "Is this object in the impostor mode?" );
 
-	MAP_ATTRIBUTE
-	(
-		"modelWorldPosition",
-		m_boundingSphereWorldCenter,
-		"The spaceobject's model world position",
-		Be::READ
-	)
+		MAP_ATTRIBUTE(
+			"modelWorldPosition",
+			m_boundingSphereWorldCenter,
+			"The spaceobject's model world position",
+			Be::READ )
 
-	MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
+		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
 
-	MAP_ATTRIBUTE( "customShaderData", m_psData.customData, "Custom data passed to space object shaders via per-object data", Be::READWRITE )
+		MAP_ATTRIBUTE( "customShaderData", m_psData.customData, "Custom data passed to space object shaders via per-object data", Be::READWRITE )
 
-	MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST | Be::NOTIFY );
+		MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST | Be::NOTIFY );
 
-	MAP_ATTRIBUTE( "externalParameters", m_externalParameters, "List of external parameters to bind to object elements", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "externalParameters", m_externalParameters, "List of external parameters to bind to object elements", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "controllers", m_controllers, "List of object controllers", Be::READ | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP(
@@ -647,47 +550,41 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			SetControllerVariable,
 			"Set variable for all applicable controllers\n"
 			":param name: variable name\n"
-			":param value: new variable value\n"
-		)
+			":param value: new variable value\n" )
 
 		MAP_METHOD_AND_WRAP(
 			"HandleControllerEvent",
 			HandleControllerEvent,
 			"Pass an event to controllers\n"
-			":param name: event name"
-		)
+			":param name: event name" )
 
 		MAP_METHOD_AND_WRAP(
 			"StartControllers",
 			StartControllers,
-			"Start all controllers"
-		)
+			"Start all controllers" )
 
 		MAP_METHOD_AND_WRAP(
 			"GetControllerVariables",
 			GetControllerVariables,
-			"Returns all previously set contrller variables"
-		)
+			"Returns all previously set contrller variables" )
 
 		MAP_METHOD_AND_WRAP(
 			"GetLocatorTransform",
 			GetEveLocatorTransform,
 			"Returns locator to object transform (taking bone bindings in account)\n"
-			":param locator: locator name belonging to this object"
-		)
+			":param locator: locator name belonging to this object" )
 
 		MAP_METHOD_AND_WRAP(
 			"GetLastUsedMeshLod",
 			GetLastUsedMeshLod,
 			"Returns last used mesh LOD index. For debugging purposes" )
 
-        MAP_METHOD_AND_WRAP(
-            "SetProceduralContainerVariable",
-            SetProceduralContainerVariable,
-            "Set variable for all applicable ProceduralContainer\n"
-            ":param name: variable name\n"
-            ":param value: new variable value\n"
-        )
+		MAP_METHOD_AND_WRAP(
+			"SetProceduralContainerVariable",
+			SetProceduralContainerVariable,
+			"Set variable for all applicable ProceduralContainer\n"
+			":param name: variable name\n"
+			":param value: new variable value\n" )
 
 #if BLUE_WITH_PYTHON
 		MAP_METHOD(

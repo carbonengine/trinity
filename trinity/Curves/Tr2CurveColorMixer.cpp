@@ -2,8 +2,8 @@
 
 #include "Tr2CurveColorMixer.h"
 
-Tr2CurveColorMixer::Tr2CurveColorMixer( IRoot* lockobj )
-	:m_currentValue( 0, 0, 0, 1 ),
+Tr2CurveColorMixer::Tr2CurveColorMixer( IRoot* lockobj ) :
+	m_currentValue( 0, 0, 0, 1 ),
 	m_convertedLinearValue( 0, 0, 0, 1 ),
 	m_color1( 0, 0, 0, 1 ),
 	m_color2( 0, 0, 0, 1 ),
@@ -36,7 +36,7 @@ Color Tr2CurveColorMixer::GetValue( double time ) const
 	// color intensity
 	float i = ( out.r * 0.299f ) + ( out.g * 0.587f ) + ( out.b * 0.114f );
 
-	out = Lerp( Color(i,i,i,i), out, max( 0.0f, m_saturation ) );
+	out = Lerp( Color( i, i, i, i ), out, max( 0.0f, m_saturation ) );
 
 	return out * m_brightness;
 }
@@ -70,7 +70,7 @@ void Tr2CurveColorMixer::InvertLinearColor( Color* in, Color* out )
 {
 	// converting the input color from linear to srgb
 	out->r = InvertLinearValue( in->r );
-	out->b= InvertLinearValue( in->b );
+	out->b = InvertLinearValue( in->b );
 	out->g = InvertLinearValue( in->g );
 }
 
@@ -80,6 +80,6 @@ float Tr2CurveColorMixer::InvertLinearValue( float x )
 	{
 		return x / 12.92f;
 	}
-	
-	return std::pow( (x + 0.055f) / 1.055f ,2.4f);
+
+	return std::pow( ( x + 0.055f ) / 1.055f, 2.4f );
 }

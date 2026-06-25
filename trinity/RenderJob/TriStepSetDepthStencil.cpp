@@ -11,7 +11,7 @@ TriStepSetDepthStencil::TriStepSetDepthStencil( IRoot* lockobj )
 {
 }
 
-TriStepSetDepthStencil::~TriStepSetDepthStencil(void)
+TriStepSetDepthStencil::~TriStepSetDepthStencil( void )
 {
 }
 

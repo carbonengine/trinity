@@ -55,10 +55,10 @@ const Be::ClassInfo* Tr2RenderNodeEffect::ExposeToBlue()
 			":param source: The input node to add.\n"
 			":param outputName: Optional name of the output for the node (DepthMap, etc.). Pass an empty string for the default output." )
 
-		MAP_ATTRIBUTE( 
-			"inputNodes", 
-			m_inputNodes, 
-			"Input nodes added as sources to this effect. Do not modify this attribute directly; use AddSource() instead.", 
+		MAP_ATTRIBUTE(
+			"inputNodes",
+			m_inputNodes,
+			"Input nodes added as sources to this effect. Do not modify this attribute directly; use AddSource() instead.",
 			Be::READ | Be::PERSIST )
 	EXPOSURE_END()
 }

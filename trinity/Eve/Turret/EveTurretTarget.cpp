@@ -119,7 +119,7 @@ void EveTurretTarget::StartFireAtLocator( int l, float delay, float length, cons
 		if( m_object )
 		{
 			m_impactLength = std::max( length, 0.f );
-			m_impactDelay = delay;		
+			m_impactDelay = delay;
 
 			// If we have a laser that has no buildup, we need to create an impact straigt away
 			// Otherwise we have the chance of the laser ending on the hull, intead of the shield where it should be
@@ -134,7 +134,7 @@ void EveTurretTarget::StartFireAtLocator( int l, float delay, float length, cons
 					m_impactID = m_object->CreateImpact( m_locator, dirToSource, m_impactLength, m_impactSize );
 					m_impactDelay = -1.f;
 				}
-			}			
+			}
 		}
 	}
 }
@@ -156,7 +156,7 @@ void EveTurretTarget::StopFireAtLocator()
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Gets the impact position based on some parameters 
+//   Gets the impact position based on some parameters
 // --------------------------------------------------------------------------------
 
 void EveTurretTarget::GetImpactPosition( Vector3& out, const Vector3* source )
@@ -167,7 +167,7 @@ void EveTurretTarget::GetImpactPosition( Vector3& out, const Vector3* source )
 		{
 			m_object->GetDamageLocatorPosition( &out, m_locator, true );
 
-			if( LengthSq(out) > 22379561604000000000000.f ) // AU squared
+			if( LengthSq( out ) > 22379561604000000000000.f ) // AU squared
 			{
 				out = m_objectPos->GetWorldPosition();
 			}
@@ -215,7 +215,7 @@ void EveTurretTarget::Update( float deltaT, const Vector3* source )
 		{
 			float dist = Length( direction );
 			direction /= dist;
-			m_positionMiss += direction * ( dist + 5000.f) * ( 1.f + 0.5f * m_randomMissDistanceOffset );
+			m_positionMiss += direction * ( dist + 5000.f ) * ( 1.f + 0.5f * m_randomMissDistanceOffset );
 		}
 
 		if( m_impactBehaviour == ImpactBehaviour::DAMAGE_LOCATOR )
@@ -238,7 +238,7 @@ void EveTurretTarget::Update( float deltaT, const Vector3* source )
 			}
 		}
 	}
-	
+
 	m_trackingPosition = m_targetPosition;
 	// are we still fading from an old position?
 	if( m_positionOldInfluence > 0.f )
@@ -328,7 +328,7 @@ int EveTurretTarget::FindRandomValidLocator( const Vector3& source, Vector3& pos
 // Description:
 //   Set the internal behaviour of the hit/miss functionality
 // --------------------------------------------------------------------------------
-void EveTurretTarget::SetBehaviour( bool laserMiss, bool projectileMiss, float impactSize, ImpactBehaviour::Type impactBehaviour)
+void EveTurretTarget::SetBehaviour( bool laserMiss, bool projectileMiss, float impactSize, ImpactBehaviour::Type impactBehaviour )
 {
 	m_laserMissBehaviour = laserMiss;
 	m_projectileMissBehaviour = projectileMiss;
@@ -340,12 +340,12 @@ void EveTurretTarget::SetBehaviour( bool laserMiss, bool projectileMiss, float i
 // Description:
 //   Method to pop from the miss queue.
 // --------------------------------------------------------------------------------
-bool EveTurretTarget::PopShotMissed() 
-{ 
+bool EveTurretTarget::PopShotMissed()
+{
 	m_lastShotIsMiss = m_missQueue.empty() ? false : m_missQueue.front();
 	if( !m_missQueue.empty() )
 	{
-		m_missQueue.pop_front(); 
+		m_missQueue.pop_front();
 	}
 	return m_lastShotIsMiss;
 }
@@ -355,7 +355,7 @@ bool EveTurretTarget::PopShotMissed()
 //   Get the hit/miss status of the last shot info.
 // --------------------------------------------------------------------------------
 bool EveTurretTarget::GetShotMissed() const
-{ 
+{
 	return m_lastShotIsMiss;
 }
 
@@ -364,7 +364,7 @@ bool EveTurretTarget::GetShotMissed() const
 //   Add a hit/miss to the shot queue.
 // --------------------------------------------------------------------------------
 void EveTurretTarget::SetShotMissed( bool missed )
-{ 
+{
 	m_missQueue.push_back( missed );
 	m_lastShotTime = TimeAsDouble( BeOS->GetActualTime() );
 	// in case we get way behind, start dropping miss events, rather than infinitely accumulating.
@@ -408,7 +408,7 @@ float EveTurretTarget::GetRadius() const
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Pass through the GetImpactConfiguration call to the target object 
+//   Pass through the GetImpactConfiguration call to the target object
 // --------------------------------------------------------------------------------
 ITriTargetable::ImpactConfiguration EveTurretTarget::GetImpactConfiguration() const
 {

@@ -54,7 +54,7 @@ std::pair<Tr2SharedConstantBuffers::Key, Tr2ConstantBufferAL> Tr2SharedConstantB
 			return std::make_pair( Key(), Tr2ConstantBufferAL() );
 		}
 	}
-	
+
 	value.refCount = 1;
 
 	auto copy = new uint8_t[size];
@@ -96,8 +96,8 @@ Tr2MaterialStageInput::~Tr2MaterialStageInput()
 	g_sharedConstantBuffers.ReleaseBuffer( m_sharedBufferKey );
 }
 
-Tr2EffectLibraryParameters::Tr2EffectLibraryParameters()
-	:m_globalResourceSetDirty( true )
+Tr2EffectLibraryParameters::Tr2EffectLibraryParameters() :
+	m_globalResourceSetDirty( true )
 {
 }
 
@@ -117,8 +117,8 @@ void Tr2EffectLibraryParameters::AddReroutable( ITriReroutable* reroutable )
 }
 
 
-Tr2EffectPassParameters::Tr2EffectPassParameters()
-	:m_resourceSetDirty( true ),
+Tr2EffectPassParameters::Tr2EffectPassParameters() :
+	m_resourceSetDirty( true ),
 	m_compatibleWithGdr( true ),
 	m_resourceSetHash( 0 )
 {
@@ -303,7 +303,7 @@ bool Tr2Material::ApplyShaderInputs( Tr2EffectPassParameters& pp, Tr2RenderConte
 	return UpdateResourceSetDesc( shaderType, input, pp.m_resourceSetDesc );
 }
 
-void Tr2Material::ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext) const
+void Tr2Material::ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const
 {
 	auto& cb = input.m_constantBuffer;
 	if( cb.GetSize() )
@@ -349,7 +349,7 @@ void Tr2Material::UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, 
 	}
 }
 
-bool Tr2Material::UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2ResourceSetDescriptionAL & desc ) const
+bool Tr2Material::UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2ResourceSetDescriptionAL& desc ) const
 {
 	bool descChanged = false;
 	for( auto it = input.m_textures.cbegin(); it != input.m_textures.cend(); ++it )
@@ -434,7 +434,7 @@ void Tr2Material::MarkConstantBuffersDirty()
 				}
 			}
 		}
-		for ( auto& library : technique.libraries )
+		for( auto& library : technique.libraries )
 		{
 			if( !library->m_globalInput.m_shaderParametersWithNotification.empty() )
 			{

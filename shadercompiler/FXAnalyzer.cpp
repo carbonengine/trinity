@@ -147,8 +147,8 @@ enum D3DRENDERSTATETYPE
 
 #define DEFINE_VALUE( prefix, value ) { #value, prefix##_##value }
 #define DEFINE_VALUE1( value, name ) \
-	{                                 \
-#name, value      \
+	{                                \
+		#name, value                 \
 	}
 
 static StateValue s_addressValues[] = {
@@ -157,14 +157,14 @@ static StateValue s_addressValues[] = {
 	DEFINE_VALUE( D3D11_TEXTURE_ADDRESS, CLAMP ),
 	DEFINE_VALUE( D3D11_TEXTURE_ADDRESS, BORDER ),
 	DEFINE_VALUE1( D3D11_TEXTURE_ADDRESS_MIRROR_ONCE, MIRRORONCE ),
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 static StateValue s_filterValues[] = {
 	DEFINE_VALUE( D3DTEXF, NONE ),
 	DEFINE_VALUE( D3DTEXF, POINT ),
 	DEFINE_VALUE( D3DTEXF, LINEAR ),
 	DEFINE_VALUE( D3DTEXF, ANISOTROPIC ),
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 static StateValue s_filter11Values[] = {
 	DEFINE_VALUE( D3D11_FILTER, MIN_MAG_MIP_POINT ),
@@ -185,7 +185,7 @@ static StateValue s_filter11Values[] = {
 	DEFINE_VALUE( D3D11_FILTER, COMPARISON_MIN_MAG_LINEAR_MIP_POINT ),
 	DEFINE_VALUE( D3D11_FILTER, COMPARISON_MIN_MAG_MIP_LINEAR ),
 	DEFINE_VALUE( D3D11_FILTER, COMPARISON_ANISOTROPIC ),
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 static StateValue s_comparisonValues[] = {
 	DEFINE_VALUE( D3D11_COMPARISON, NEVER ),
@@ -193,14 +193,14 @@ static StateValue s_comparisonValues[] = {
 	DEFINE_VALUE( D3D11_COMPARISON, EQUAL ),
 	DEFINE_VALUE( D3D11_COMPARISON, LESS_EQUAL ),
 	DEFINE_VALUE( D3D11_COMPARISON, GREATER ),
-	DEFINE_VALUE( D3D11_COMPARISON, NOT_EQUAL  ),
+	DEFINE_VALUE( D3D11_COMPARISON, NOT_EQUAL ),
 	DEFINE_VALUE( D3D11_COMPARISON, GREATER_EQUAL ),
 	DEFINE_VALUE( D3D11_COMPARISON, ALWAYS ),
 
 	DEFINE_VALUE1( D3D11_COMPARISON_LESS_EQUAL, LESSEQUAL ),
 	DEFINE_VALUE1( D3D11_COMPARISON_NOT_EQUAL, NOTEQUAL ),
 	DEFINE_VALUE1( D3D11_COMPARISON_GREATER_EQUAL, GREATEREQUAL ),
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 static StateValue s_blendValues[] = {
 	DEFINE_VALUE1( D3D11_BLEND_ZERO, ZERO ),
@@ -219,7 +219,7 @@ static StateValue s_blendValues[] = {
 	DEFINE_VALUE1( D3D11_BLEND_INV_BLEND_FACTOR, INVBLENDFACTOR ),
 	DEFINE_VALUE1( D3D11_BLEND_SRC1_COLOR, SRCCOLOR2 ),
 	DEFINE_VALUE1( D3D11_BLEND_INV_SRC1_COLOR, INVSRCCOLOR2 ),
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 static StateValue s_blendOpValues[] = {
 	DEFINE_VALUE1( D3D11_BLEND_OP_ADD, ADD ),
@@ -227,19 +227,19 @@ static StateValue s_blendOpValues[] = {
 	DEFINE_VALUE1( D3D11_BLEND_OP_REV_SUBTRACT, REVSUBTRACT ),
 	DEFINE_VALUE1( D3D11_BLEND_OP_MIN, MIN ),
 	DEFINE_VALUE1( D3D11_BLEND_OP_MAX, MAX ),
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 static StateValue s_fillModeValues[] = {
 	DEFINE_VALUE( D3D11_FILL, WIREFRAME ),
 	DEFINE_VALUE( D3D11_FILL, SOLID ),
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 // This was an elegant way to convert effects from LH to RH
 static StateValue s_cullModeValues[] = {
 	DEFINE_VALUE( D3DCULL, NONE ),
 	{ "CW", D3DCULL_CCW },
 	{ "CCW", D3DCULL_CW },
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 static StateValue s_colorWriteValues[] = {
 	DEFINE_VALUE( D3DCOLORWRITEENABLE, RED ),
@@ -248,18 +248,18 @@ static StateValue s_colorWriteValues[] = {
 	DEFINE_VALUE( D3DCOLORWRITEENABLE, ALPHA ),
 	{ "false", 0 },
 	{ "true", 0xf },
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 
 static StateValue s_boolValues[] = {
-	{ "true",			1 },
-	{ "false",			0 },
-	{ nullptr,			0 },
+	{ "true", 1 },
+	{ "false", 0 },
+	{ nullptr, 0 },
 };
 
 static StateValue s_shaderValues[] = {
-	{ "NULL",			0 },
-	{ nullptr,			0 },
+	{ "NULL", 0 },
+	{ nullptr, 0 },
 };
 
 StateValue g_renderStateNames[] = {
@@ -292,66 +292,65 @@ StateValue g_renderStateNames[] = {
 	{ "geometryshader", 0xffffffff - 4 },
 	{ "hullshader", 0xffffffff - 5 },
 	{ "domainshader", 0xffffffff - 6 },
-	{ nullptr,			0 },
+	{ nullptr, 0 },
 };
 
 StateDescription g_samplerStates[] = {
-	{ "AddressU",		SVT_BYTE,	s_addressValues,	offsetof( Sampler, addressU ) },
-	{ "AddressV",		SVT_BYTE,	s_addressValues,	offsetof( Sampler, addressV ) },
-	{ "AddressW",		SVT_BYTE,	s_addressValues,	offsetof( Sampler, addressW ) },
-	{ "BorderColor",	SVT_COLOR,	nullptr,			offsetof( Sampler, borderColor ) },
-	{ "MagFilter",		SVT_BYTE,	s_filterValues,		offsetof( Sampler, magFilter ) },
-	{ "MinFilter",		SVT_BYTE,	s_filterValues,		offsetof( Sampler, minFilter ) },
-	{ "MipFilter",		SVT_BYTE,	s_filterValues,		offsetof( Sampler, mipFilter ) },
-	{ "Filter",			SVT_BYTE,	s_filter11Values,	offsetof( Sampler, filter ) },
-	{ "MaxAnisotropy",	SVT_BYTE,	nullptr,			offsetof( Sampler, maxAnisotropy ) },
-	{ "MaxMipLevel",	SVT_FLOAT,	nullptr,			offsetof( Sampler, minLOD ) },
-	{ "MinLOD",			SVT_FLOAT,	nullptr,			offsetof( Sampler, minLOD ) },
-	{ "MaxLOD",			SVT_FLOAT,	nullptr,			offsetof( Sampler, maxLOD ) },
-	{ "MipMapLodBias",	SVT_FLOAT,	nullptr,			offsetof( Sampler, mipLODBias ) },
-	{ "ComparisonFunc",	SVT_BYTE,	s_comparisonValues,	offsetof( Sampler, comparisonFunc ) },
-	{ "SRGBTexture",	SVT_BOOL,	s_boolValues,		offsetof( Sampler, srgbTexture ) },
-	{ "IsDynamic",      SVT_BOOL,   s_boolValues,       offsetof( Sampler, isDynamic ) },
-	{ nullptr,			SVT_BOOL,	nullptr,			0 },
+	{ "AddressU", SVT_BYTE, s_addressValues, offsetof( Sampler, addressU ) },
+	{ "AddressV", SVT_BYTE, s_addressValues, offsetof( Sampler, addressV ) },
+	{ "AddressW", SVT_BYTE, s_addressValues, offsetof( Sampler, addressW ) },
+	{ "BorderColor", SVT_COLOR, nullptr, offsetof( Sampler, borderColor ) },
+	{ "MagFilter", SVT_BYTE, s_filterValues, offsetof( Sampler, magFilter ) },
+	{ "MinFilter", SVT_BYTE, s_filterValues, offsetof( Sampler, minFilter ) },
+	{ "MipFilter", SVT_BYTE, s_filterValues, offsetof( Sampler, mipFilter ) },
+	{ "Filter", SVT_BYTE, s_filter11Values, offsetof( Sampler, filter ) },
+	{ "MaxAnisotropy", SVT_BYTE, nullptr, offsetof( Sampler, maxAnisotropy ) },
+	{ "MaxMipLevel", SVT_FLOAT, nullptr, offsetof( Sampler, minLOD ) },
+	{ "MinLOD", SVT_FLOAT, nullptr, offsetof( Sampler, minLOD ) },
+	{ "MaxLOD", SVT_FLOAT, nullptr, offsetof( Sampler, maxLOD ) },
+	{ "MipMapLodBias", SVT_FLOAT, nullptr, offsetof( Sampler, mipLODBias ) },
+	{ "ComparisonFunc", SVT_BYTE, s_comparisonValues, offsetof( Sampler, comparisonFunc ) },
+	{ "SRGBTexture", SVT_BOOL, s_boolValues, offsetof( Sampler, srgbTexture ) },
+	{ "IsDynamic", SVT_BOOL, s_boolValues, offsetof( Sampler, isDynamic ) },
+	{ nullptr, SVT_BOOL, nullptr, 0 },
 };
 
 StateDescription g_renderStates[] = {
-	{ "AlphaTestEnable",			SVT_BOOL,	s_boolValues,	0 },
-	{ "SrcBlend",					SVT_DWORD,	s_blendValues,	0 },
-	{ "DestBlend",					SVT_DWORD,	s_blendValues,	0 },
-	{ "AlphaRef",					SVT_DWORD,	nullptr,	0 },
-	{ "AlphaFunc",					SVT_DWORD,	s_comparisonValues,	0 },
-	{ "AlphaBlendEnable",			SVT_BOOL,	s_boolValues,	0 },
-	{ "BlendOp",					SVT_DWORD,	s_blendOpValues,	0 },
-	{ "ZEnable",					SVT_BOOL,	s_boolValues,	0 },
-	{ "ZWriteEnable",				SVT_BOOL,	s_boolValues,	0 },
-	{ "ZFunc",						SVT_DWORD,	s_comparisonValues,	0 },
-	{ "FillMode",					SVT_DWORD,	s_fillModeValues,	0 },
-	{ "ColorWriteEnable",			SVT_DWORD,	s_colorWriteValues,	0 },
-	{ "DepthBias",					SVT_FLOAT,	nullptr,	0 },
-	{ "SlopeScaleDepthBias",		SVT_FLOAT,	nullptr,	0 },
-	{ "SRGBWriteEnable",			SVT_BOOL,	s_boolValues,	0 },
-	{ "SeparateAlphaBlendEnable",	SVT_BOOL,	s_boolValues,	0 },
-	{ "BlendOpAlpha",				SVT_DWORD,	s_blendOpValues,	0 },
-	{ "SrcBlendAlpha",				SVT_DWORD,	s_blendValues,	0 },
-	{ "DestBlendAlpha",				SVT_DWORD,	s_blendValues,	0 },
-	{ "ColorWriteEnable1",			SVT_BOOL,	s_boolValues,	0 },
-	{ "ColorWriteEnable2",			SVT_BOOL,	s_boolValues,	0 },
-	{ "ColorWriteEnable3",			SVT_BOOL,	s_boolValues,	0 },
-	{ "CullMode",					SVT_DWORD,	s_cullModeValues,	0 },
-	{ "LocalViewer",				SVT_BOOL,	s_boolValues,	0 },
+	{ "AlphaTestEnable", SVT_BOOL, s_boolValues, 0 },
+	{ "SrcBlend", SVT_DWORD, s_blendValues, 0 },
+	{ "DestBlend", SVT_DWORD, s_blendValues, 0 },
+	{ "AlphaRef", SVT_DWORD, nullptr, 0 },
+	{ "AlphaFunc", SVT_DWORD, s_comparisonValues, 0 },
+	{ "AlphaBlendEnable", SVT_BOOL, s_boolValues, 0 },
+	{ "BlendOp", SVT_DWORD, s_blendOpValues, 0 },
+	{ "ZEnable", SVT_BOOL, s_boolValues, 0 },
+	{ "ZWriteEnable", SVT_BOOL, s_boolValues, 0 },
+	{ "ZFunc", SVT_DWORD, s_comparisonValues, 0 },
+	{ "FillMode", SVT_DWORD, s_fillModeValues, 0 },
+	{ "ColorWriteEnable", SVT_DWORD, s_colorWriteValues, 0 },
+	{ "DepthBias", SVT_FLOAT, nullptr, 0 },
+	{ "SlopeScaleDepthBias", SVT_FLOAT, nullptr, 0 },
+	{ "SRGBWriteEnable", SVT_BOOL, s_boolValues, 0 },
+	{ "SeparateAlphaBlendEnable", SVT_BOOL, s_boolValues, 0 },
+	{ "BlendOpAlpha", SVT_DWORD, s_blendOpValues, 0 },
+	{ "SrcBlendAlpha", SVT_DWORD, s_blendValues, 0 },
+	{ "DestBlendAlpha", SVT_DWORD, s_blendValues, 0 },
+	{ "ColorWriteEnable1", SVT_BOOL, s_boolValues, 0 },
+	{ "ColorWriteEnable2", SVT_BOOL, s_boolValues, 0 },
+	{ "ColorWriteEnable3", SVT_BOOL, s_boolValues, 0 },
+	{ "CullMode", SVT_DWORD, s_cullModeValues, 0 },
+	{ "LocalViewer", SVT_BOOL, s_boolValues, 0 },
 
-	{ "vertexshader",				SVT_DWORD,	s_shaderValues,	0 },
-	{ "pixelshader",				SVT_DWORD,	s_shaderValues,	0 },
-	{ "computeshader",				SVT_DWORD,	s_shaderValues,	0 },
-	{ "geometryshader",				SVT_DWORD,	s_shaderValues,	0 },
-	{ "hullshader",					SVT_DWORD,	s_shaderValues,	0 },
-	{ "domainshader",				SVT_DWORD,	s_shaderValues,	0 },
+	{ "vertexshader", SVT_DWORD, s_shaderValues, 0 },
+	{ "pixelshader", SVT_DWORD, s_shaderValues, 0 },
+	{ "computeshader", SVT_DWORD, s_shaderValues, 0 },
+	{ "geometryshader", SVT_DWORD, s_shaderValues, 0 },
+	{ "hullshader", SVT_DWORD, s_shaderValues, 0 },
+	{ "domainshader", SVT_DWORD, s_shaderValues, 0 },
 
 
-	{ nullptr,						SVT_BOOL,	nullptr,			0 },
+	{ nullptr, SVT_BOOL, nullptr, 0 },
 };
-
 
 
 
@@ -566,14 +565,13 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 			value.push_back( element );
 		}
 			return true;
-		case OP_STRING_CONST:
-		{
+		case OP_STRING_CONST: {
 			type.FromTokenType( OP_STRING );
 			ExpressionValueElement element;
 			element.stringValue = ParseString( node->GetToken()->stringValue );
 			value.push_back( element );
 		}
-		return true;
+			return true;
 		}
 		return false;
 	case NT_VAR_IDENTIFIER: {
@@ -614,8 +612,7 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 			state.ShowMessage( node->GetToken()->fileLocation, EC_INVALID_STATE_VALUE, ToString( node->GetToken()->stringValue ).c_str() );
 		}
 		return false;
-	case NT_EXPRESSION: 
-	{
+	case NT_EXPRESSION: {
 		if( node->GetToken()->type == 0 )
 		{
 			if( !EvaluateExpression( state, node->GetChild( 0 ), type, value, stateValues ) )
@@ -1460,73 +1457,65 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 			state.ShowMessage( node->GetToken()->fileLocation, EC_FUNCTIONS_NOT_SUPPORTED, ToString( node->GetSymbol()->name ).c_str() );
 			return false;
 		}
-			memset( &type, 0, sizeof( type ) );
-			type.FromToken( *node->GetToken() );
-			switch( type.builtInType )
-			{
-			case OP_BOOL:
-			case OP_INT:
-			case OP_UINT:
-				type.builtInType = OP_INT;
-				break;
-			case OP_HALF:
-			case OP_FLOAT:
-			case OP_DOUBLE:
-				type.builtInType = OP_FLOAT;
-				break;
-			default:
-				state.ShowMessage( node->GetToken()->fileLocation, EC_UNSUPPORTED_TYPE, ToString( node->GetToken()->stringValue ).c_str() );
-				return false;
-			}
-		
-			int elements = type.width * type.height;
+		memset( &type, 0, sizeof( type ) );
+		type.FromToken( *node->GetToken() );
+		switch( type.builtInType )
+		{
+		case OP_BOOL:
+		case OP_INT:
+		case OP_UINT:
+			type.builtInType = OP_INT;
+			break;
+		case OP_HALF:
+		case OP_FLOAT:
+		case OP_DOUBLE:
+			type.builtInType = OP_FLOAT;
+			break;
+		default:
+			state.ShowMessage( node->GetToken()->fileLocation, EC_UNSUPPORTED_TYPE, ToString( node->GetToken()->stringValue ).c_str() );
+			return false;
+		}
 
-			for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
+		int elements = type.width * type.height;
+
+		for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
+		{
+			Type childType;
+			ExpressionValue childValue;
+			if( !EvaluateExpression( state, node->GetChild( i ), childType, childValue, stateValues ) )
 			{
-				Type childType;
-				ExpressionValue childValue;
-				if( !EvaluateExpression( state, node->GetChild( i ), childType, childValue, stateValues ) )
-				{
-					return false;
-				}
-				Type newChildType = childType;
-				newChildType.builtInType = type.builtInType;
-				if( !CastExpressionValue( childValue, childType, newChildType ) )
-				{
-					state.ShowMessage( node->GetToken()->fileLocation, EC_INVALID_IMPLICIT_CAST );
-					return false;
-				}
-				for( int j = 0; j < childType.width * childType.height; ++j )
-				{
-					value.push_back( childValue[j] );
-					if( elements == 0 )
-					{
-						state.ShowMessage( node->GetToken()->fileLocation, EC_INCORRECT_NUMBER_OF_ARGS );
-						return false;
-					}
-					elements--;
-				}
-			}
-			if( elements > 0 )
-			{
-				state.ShowMessage( node->GetToken()->fileLocation, EC_INCORRECT_NUMBER_OF_ARGS );
 				return false;
+			}
+			Type newChildType = childType;
+			newChildType.builtInType = type.builtInType;
+			if( !CastExpressionValue( childValue, childType, newChildType ) )
+			{
+				state.ShowMessage( node->GetToken()->fileLocation, EC_INVALID_IMPLICIT_CAST );
+				return false;
+			}
+			for( int j = 0; j < childType.width * childType.height; ++j )
+			{
+				value.push_back( childValue[j] );
+				if( elements == 0 )
+				{
+					state.ShowMessage( node->GetToken()->fileLocation, EC_INCORRECT_NUMBER_OF_ARGS );
+					return false;
+				}
+				elements--;
 			}
 		}
+		if( elements > 0 )
+		{
+			state.ShowMessage( node->GetToken()->fileLocation, EC_INCORRECT_NUMBER_OF_ARGS );
+			return false;
+		}
+	}
 		return true;
 	default:
 		state.ShowMessage( node->GetLocation(), EC_OPERATOR_NOT_SUPPORTED );
 		return false;
 	}
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -1611,13 +1600,12 @@ bool GetStateValue( ParserState& state, ASTNode* value, const StateDescription& 
 	case SVT_BOOL:
 		*reinterpret_cast<BYTE*>( blob + desc.offset ) = BYTE( exprValue[0].intValue ? 1 : 0 );
 		return true;
-	case SVT_COLOR:
-		{
-			reinterpret_cast<Vector4*>( blob + desc.offset )->x = float( exprValue[0].floatValue );
-			reinterpret_cast<Vector4*>( blob + desc.offset )->y = float( exprValue[1].floatValue );
-			reinterpret_cast<Vector4*>( blob + desc.offset )->z = float( exprValue[2].floatValue );
-			reinterpret_cast<Vector4*>( blob + desc.offset )->w = float( exprValue[3].floatValue );
-		}
+	case SVT_COLOR: {
+		reinterpret_cast<Vector4*>( blob + desc.offset )->x = float( exprValue[0].floatValue );
+		reinterpret_cast<Vector4*>( blob + desc.offset )->y = float( exprValue[1].floatValue );
+		reinterpret_cast<Vector4*>( blob + desc.offset )->z = float( exprValue[2].floatValue );
+		reinterpret_cast<Vector4*>( blob + desc.offset )->w = float( exprValue[3].floatValue );
+	}
 		return true;
 	}
 	return false;
@@ -1725,10 +1713,10 @@ bool GetSamplerState( ParserState& parserState, ASTNode* node, Sampler& sampler 
 			//}
 			//else
 			//{
-			//	sampler.filter = D3D11_ENCODE_BASIC_FILTER( 
-			//		sampler.minFilter == D3DTEXF_LINEAR ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT, 
-			//		sampler.magFilter == D3DTEXF_LINEAR ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT, 
-			//		sampler.mipFilter == D3DTEXF_LINEAR ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT, 
+			//	sampler.filter = D3D11_ENCODE_BASIC_FILTER(
+			//		sampler.minFilter == D3DTEXF_LINEAR ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT,
+			//		sampler.magFilter == D3DTEXF_LINEAR ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT,
+			//		sampler.mipFilter == D3DTEXF_LINEAR ? D3D11_FILTER_TYPE_LINEAR : D3D11_FILTER_TYPE_POINT,
 			//		FALSE );
 			//}
 		}
@@ -1802,28 +1790,28 @@ int EvaluateIntegerExpression( ParserState& state, ASTNode* node, int defaultVal
 
 std::optional<RtShaderType> ParseRtShaderName( const InlineString& name )
 {
-    if( EqualsCaseInsensitive( name, "raygenshader" ) )
-    {
-        return RtShaderType::RAY_GEN;
-    }
-    else if( EqualsCaseInsensitive( name, "missshader" ) )
-    {
-        return RtShaderType::MISS;
-    }
-    else if( EqualsCaseInsensitive( name, "closesthitshader" ) )
-    {
-        return RtShaderType::CLOSEST_HIT;
-    }
-    else if( EqualsCaseInsensitive( name, "anyhitshader" ) )
-    {
-        return RtShaderType::ANY_HIT;
-    }
-    else if( EqualsCaseInsensitive( name, "intersectionshader" ) )
-    {
-        return RtShaderType::INTERSECTION;
-    }
-    else
-    {
-        return {};
-    }
+	if( EqualsCaseInsensitive( name, "raygenshader" ) )
+	{
+		return RtShaderType::RAY_GEN;
+	}
+	else if( EqualsCaseInsensitive( name, "missshader" ) )
+	{
+		return RtShaderType::MISS;
+	}
+	else if( EqualsCaseInsensitive( name, "closesthitshader" ) )
+	{
+		return RtShaderType::CLOSEST_HIT;
+	}
+	else if( EqualsCaseInsensitive( name, "anyhitshader" ) )
+	{
+		return RtShaderType::ANY_HIT;
+	}
+	else if( EqualsCaseInsensitive( name, "intersectionshader" ) )
+	{
+		return RtShaderType::INTERSECTION;
+	}
+	else
+	{
+		return {};
+	}
 }

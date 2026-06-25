@@ -5,7 +5,7 @@
 #include "Tr2MaterialParameterStore.h"
 
 // --------------------------------------------------------------------------------------
-Tr2MaterialParameterStore::Tr2MaterialParameterStore( IRoot* lockobj ):
+Tr2MaterialParameterStore::Tr2MaterialParameterStore( IRoot* lockobj ) :
 	PARENTLOCK( m_parameters )
 {
 }
@@ -41,12 +41,11 @@ void Tr2MaterialParameterStore::LoadParentResource()
 		m_parentStore.Unlock();
 
 	m_parentStore = NULL;
-	
-	if (m_parentPath.size() > 0)
+
+	if( m_parentPath.size() > 0 )
 	{
 		m_parentStore = BeResMan->LoadObject<Tr2MaterialParameterStore>( m_parentPath.c_str() );
 	}
-
 }
 
 // --------------------------------------------------------------------------------------
@@ -55,7 +54,7 @@ void Tr2MaterialParameterStore::LoadParentResource()
 // --------------------------------------------------------------------------------------
 ITriEffectParameter* Tr2MaterialParameterStore::FindParameter( const char* name )
 {
-	Tr2MaterialParameterStore *currentStore = this;
+	Tr2MaterialParameterStore* currentStore = this;
 
 	while( currentStore != NULL )
 	{

@@ -15,7 +15,7 @@ bool BoundingSphereIsInside( const Vector4& sphere, const Vector3& pos )
 {
 	const float radiusEpsilon = 1e-4f;
 
-	Vector3 delta = pos - ( const Vector3& )sphere;
+	Vector3 delta = pos - (const Vector3&)sphere;
 	return ( LengthSq( delta ) <= sphere.w * sphere.w + radiusEpsilon );
 }
 
@@ -26,7 +26,7 @@ bool BoundingSphereIsSphereInside( const Vector4& parentSphere, const Vector4& t
 	{
 		return false;
 	}
-	Vector3 delta = ( const Vector3& )testSphere - ( const Vector3& )parentSphere;
+	Vector3 delta = (const Vector3&)testSphere - (const Vector3&)parentSphere;
 	return ( LengthSq( delta ) <= ( parentSphere.w - testSphere.w ) * ( parentSphere.w - testSphere.w ) );
 }
 
@@ -39,10 +39,10 @@ void BoundingSphereUpdate( const Vector3& pos, Vector4& sphere )
 	}
 
 	// extend sphere
-	Vector3 delta = pos - ( Vector3& )sphere;
+	Vector3 delta = pos - (Vector3&)sphere;
 	float deltaLen = Length( delta );
 
-	( Vector3& )sphere += 0.5f * ( 1.f - sphere.w / deltaLen ) * delta;
+	(Vector3&)sphere += 0.5f * ( 1.f - sphere.w / deltaLen ) * delta;
 	sphere.w = 0.5f * ( sphere.w + deltaLen );
 }
 
@@ -60,10 +60,10 @@ void BoundingSphereUpdate( const Vector4& addSphere, Vector4& resultSphere )
 	}
 
 	// extend sphere
-	Vector3 delta = ( Vector3& )addSphere - ( Vector3& )resultSphere;
+	Vector3 delta = (Vector3&)addSphere - (Vector3&)resultSphere;
 	float deltaLen = Length( delta );
 
-	( Vector3& )resultSphere += 0.5f * ( 1.f + ( addSphere.w - resultSphere.w ) / deltaLen ) * delta;
+	(Vector3&)resultSphere += 0.5f * ( 1.f + ( addSphere.w - resultSphere.w ) / deltaLen ) * delta;
 	resultSphere.w = 0.5f * ( resultSphere.w + addSphere.w + deltaLen );
 }
 
@@ -163,7 +163,7 @@ bool IntersectEllipsoidRayClosest( Vector3& out, const Vector3& ellipsoidCenter,
 	pq = sqrt( pq );
 	float t1 = -pq - ( v_s / v_v );
 	float t2 = pq - ( v_s / v_v );
-	
+
 	float minT = abs( t1 ) < abs( t2 ) ? t1 : t2;
 	out = minT * rayDir + rayOrigin;
 	return true;
@@ -296,66 +296,59 @@ void BoundingSphereFromPoints( Vector4d& sphere, Vector3 const** points, size_t 
 		// init bounding sphere
 		sphere = Vector4d( 0.0, 0.0, 0.0, 0.0 );
 		break;
-	case 1:
-		{
-			sphere = Vector4d( *points[0], (float)radiusEpsilon );
-		}
-		break;
-	case 2:
-		{
-			// simple sphere srounf 2 points
-			Vector3d a = 0.5 * ( Vector3d( *points[1] ) - Vector3d( *points[0] ) );
-			sphere = Vector4d( a + Vector3d( *points[0] ), Length( a ) + radiusEpsilon );
-		}
-		break;
-	case 3:
-		{
-			Vector3d a = Vector3d( *points[1] ) - Vector3d( *points[0] );
-			Vector3d b = Vector3d( *points[2] ) - Vector3d( *points[0] );
-			Vector3d axb, axbxa, bxaxb;
-			axb = Cross( a, b );
-			axbxa = Cross( axb, a );
-			bxaxb = Cross( b, axb );
-			double denom = 2.0 * Dot( axb, axb );
-			if( denom == 0.0 )
-			{
-				// fail, must try with two points
-				CCP_LOGWARN("BoundingSphereFromPoints: failed because denominator is zero! Using fallback...");
-				return BoundingSphereFromPoints( sphere, points, 2 );
-			}
-			double a2 = Dot( a, a );
-			double b2 = Dot( b, b );
-			Vector3d o = ( b2 * axbxa + a2 * bxaxb ) / denom;
-			sphere = Vector4d( o + Vector3d( *points[0] ), Length( o ) + radiusEpsilon );
-		}
-		break;
-	case 4:
-		{
-			Vector3d a = Vector3d( *points[1] ) - Vector3d( *points[0] );
-			Vector3d b = Vector3d( *points[2] ) - Vector3d( *points[0] );
-			Vector3d c = Vector3d( *points[3] ) - Vector3d( *points[0] );
-			double denom = 2.0 * ( a.x * (b.y * c.z - c.y * b.z) - b.x * (a.y * c.z - c.y * a.z) + c.x * (a.y * b.z - b.y * a.z) );
-			if( denom == 0.0 )
-			{
-				// fail, must try with three points
-				CCP_LOGWARN("BoundingSphereFromPoints: failed because denominator is zero! Using fallback...");
-				return BoundingSphereFromPoints( sphere, points, 3 );
-			}
-			double a2 = Dot( a, a );
-			double b2 = Dot( b, b );
-			double c2 = Dot( c, c );
-			Vector3d axb = Cross( a, b );
-			Vector3d cxa = Cross( c, a );
-			Vector3d bxc = Cross( b, c );
-			Vector3d o = ( c2 * axb + b2 * cxa + a2 * bxc ) / denom;
-			sphere = Vector4d( o + Vector3d( *points[0] ), Length( o ) + radiusEpsilon );
+	case 1: {
+		sphere = Vector4d( *points[0], (float)radiusEpsilon );
 	}
-		break;
+	break;
+	case 2: {
+		// simple sphere srounf 2 points
+		Vector3d a = 0.5 * ( Vector3d( *points[1] ) - Vector3d( *points[0] ) );
+		sphere = Vector4d( a + Vector3d( *points[0] ), Length( a ) + radiusEpsilon );
+	}
+	break;
+	case 3: {
+		Vector3d a = Vector3d( *points[1] ) - Vector3d( *points[0] );
+		Vector3d b = Vector3d( *points[2] ) - Vector3d( *points[0] );
+		Vector3d axb, axbxa, bxaxb;
+		axb = Cross( a, b );
+		axbxa = Cross( axb, a );
+		bxaxb = Cross( b, axb );
+		double denom = 2.0 * Dot( axb, axb );
+		if( denom == 0.0 )
+		{
+			// fail, must try with two points
+			CCP_LOGWARN( "BoundingSphereFromPoints: failed because denominator is zero! Using fallback..." );
+			return BoundingSphereFromPoints( sphere, points, 2 );
+		}
+		double a2 = Dot( a, a );
+		double b2 = Dot( b, b );
+		Vector3d o = ( b2 * axbxa + a2 * bxaxb ) / denom;
+		sphere = Vector4d( o + Vector3d( *points[0] ), Length( o ) + radiusEpsilon );
+	}
+	break;
+	case 4: {
+		Vector3d a = Vector3d( *points[1] ) - Vector3d( *points[0] );
+		Vector3d b = Vector3d( *points[2] ) - Vector3d( *points[0] );
+		Vector3d c = Vector3d( *points[3] ) - Vector3d( *points[0] );
+		double denom = 2.0 * ( a.x * ( b.y * c.z - c.y * b.z ) - b.x * ( a.y * c.z - c.y * a.z ) + c.x * ( a.y * b.z - b.y * a.z ) );
+		if( denom == 0.0 )
+		{
+			// fail, must try with three points
+			CCP_LOGWARN( "BoundingSphereFromPoints: failed because denominator is zero! Using fallback..." );
+			return BoundingSphereFromPoints( sphere, points, 3 );
+		}
+		double a2 = Dot( a, a );
+		double b2 = Dot( b, b );
+		double c2 = Dot( c, c );
+		Vector3d axb = Cross( a, b );
+		Vector3d cxa = Cross( c, a );
+		Vector3d bxc = Cross( b, c );
+		Vector3d o = ( c2 * axb + b2 * cxa + a2 * bxc ) / denom;
+		sphere = Vector4d( o + Vector3d( *points[0] ), Length( o ) + radiusEpsilon );
+	}
+	break;
 	default:
 		sphere = recurBoundingSphereCreate( points, pointsCount, 0 );
 		break;
 	}
 }
-
-
-

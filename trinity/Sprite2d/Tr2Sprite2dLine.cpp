@@ -5,8 +5,13 @@
 #include "Tr2Sprite2dTexture.h"
 #include "Tr2Sprite2dScene.h"
 
-static unsigned short s_spriteIndices[6] = { 
-	0,  1,  3,  3,  1,  2
+static unsigned short s_spriteIndices[6] = {
+	0,
+	1,
+	3,
+	3,
+	1,
+	2
 };
 
 Tr2Sprite2dLine::Tr2Sprite2dLine( IRoot* lockobj /*= NULL */ ) :
@@ -14,11 +19,11 @@ Tr2Sprite2dLine::Tr2Sprite2dLine( IRoot* lockobj /*= NULL */ ) :
 	m_translationTo( 0.0f, 0.0f ),
 	m_widthFrom( 0.0f ),
 	m_widthTo( 0.0f ),
-	m_colorFrom( 1.0f, 1.0f, 1.0f, 1.0f),
-	m_colorTo( 1.0f, 1.0f, 1.0f, 1.0f),
-	m_textureWidth(1.0),
-	m_textureOffsetBase(0.0),
-	m_textureOffset(0.0)
+	m_colorFrom( 1.0f, 1.0f, 1.0f, 1.0f ),
+	m_colorTo( 1.0f, 1.0f, 1.0f, 1.0f ),
+	m_textureWidth( 1.0 ),
+	m_textureOffsetBase( 0.0 ),
+	m_textureOffset( 0.0 )
 {
 	std::fill( std::begin( m_vertices ), std::end( m_vertices ), Tr2Sprite2dD3DVertex() );
 }
@@ -27,7 +32,7 @@ void Tr2Sprite2dLine::GatherSprites( Tr2Sprite2dScene* renderer )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_display || (m_spriteEffect == TR2_SFX_NONE) )
+	if( !m_display || ( m_spriteEffect == TR2_SFX_NONE ) )
 	{
 		return;
 	}
@@ -40,7 +45,7 @@ void Tr2Sprite2dLine::GatherSprites( Tr2Sprite2dScene* renderer )
 		}
 
 		renderer->SetSpriteEffect( m_spriteEffect );
-		renderer->SetTileMode( S2D_TS_TILE_X | S2D_TS_TILE_Y);
+		renderer->SetTileMode( S2D_TS_TILE_X | S2D_TS_TILE_Y );
 
 		SetRegularRenderState( renderer );
 
@@ -56,10 +61,10 @@ void Tr2Sprite2dLine::GatherSprites( Tr2Sprite2dScene* renderer )
 		normal.x = d.y;
 		normal.y = -d.x;
 
-		float halfWidthFrom = 0.5f*m_widthFrom;
-		float halfWidthTo = 0.5f*m_widthTo;
+		float halfWidthFrom = 0.5f * m_widthFrom;
+		float halfWidthTo = 0.5f * m_widthTo;
 
-		// Anti-aliased lines are rendered with a quad that is larger. This is then 
+		// Anti-aliased lines are rendered with a quad that is larger. This is then
 		// compensated for in the pixel shader, using the extra pixels to fill in
 		// alpha values to do the anti-aliasing
 
@@ -71,18 +76,18 @@ void Tr2Sprite2dLine::GatherSprites( Tr2Sprite2dScene* renderer )
 			halfWidthFrom += 2.0f;
 			halfWidthTo += 2.0f;
 
-			pixelWidthFromInTexels = 1.0f / (m_widthFrom + 4.0f);
-			pixelWidthToInTexels = 1.0f / (m_widthTo + 4.0f);
+			pixelWidthFromInTexels = 1.0f / ( m_widthFrom + 4.0f );
+			pixelWidthToInTexels = 1.0f / ( m_widthTo + 4.0f );
 		}
-		
+
 		float texOffset1 = m_textureOffsetBase - m_textureOffset;
 		float texOffset2 = m_textureOffsetBase + segmentLength / m_textureWidth - m_textureOffset;
 
 		Tr2Sprite2dVertexBase verts[4];
 
 		Tr2Sprite2dVertexBase& v0 = verts[0];
-		v0.position.x = from.x - normal.x*halfWidthFrom;
-		v0.position.y = from.y - normal.y*halfWidthFrom;
+		v0.position.x = from.x - normal.x * halfWidthFrom;
+		v0.position.y = from.y - normal.y * halfWidthFrom;
 		v0.position.z = m_depth;
 		v0.color = m_colorFrom;
 		v0.texCoord[0] = Vector2( texOffset1, 0.0f );
@@ -97,8 +102,8 @@ void Tr2Sprite2dLine::GatherSprites( Tr2Sprite2dScene* renderer )
 		}
 
 		Tr2Sprite2dVertexBase& v1 = verts[1];
-		v1.position.x = from.x + normal.x*halfWidthFrom;
-		v1.position.y = from.y + normal.y*halfWidthFrom;
+		v1.position.x = from.x + normal.x * halfWidthFrom;
+		v1.position.y = from.y + normal.y * halfWidthFrom;
 		v1.position.z = m_depth;
 		v1.color = m_colorFrom;
 		v1.texCoord[0] = Vector2( texOffset1, 1.0f );
@@ -112,8 +117,8 @@ void Tr2Sprite2dLine::GatherSprites( Tr2Sprite2dScene* renderer )
 		}
 
 		Tr2Sprite2dVertexBase& v2 = verts[2];
-		v2.position.x = to.x + normal.x*halfWidthTo;
-		v2.position.y = to.y + normal.y*halfWidthTo;
+		v2.position.x = to.x + normal.x * halfWidthTo;
+		v2.position.y = to.y + normal.y * halfWidthTo;
 		v2.position.z = m_depth;
 		v2.color = m_colorTo;
 		v2.texCoord[0] = Vector2( texOffset2, 1.0f );
@@ -127,8 +132,8 @@ void Tr2Sprite2dLine::GatherSprites( Tr2Sprite2dScene* renderer )
 		}
 
 		Tr2Sprite2dVertexBase& v3 = verts[3];
-		v3.position.x = to.x - normal.x*halfWidthTo;
-		v3.position.y = to.y - normal.y*halfWidthTo;
+		v3.position.x = to.x - normal.x * halfWidthTo;
+		v3.position.y = to.y - normal.y * halfWidthTo;
 		v3.position.z = m_depth;
 		v3.color = m_colorTo;
 		v3.texCoord[0] = Vector2( texOffset2, 0.0f );

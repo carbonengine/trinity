@@ -19,13 +19,13 @@ const Be::ClassInfo* Tr2ActionSetValue::ExposeToBlue()
 		MAP_ATTRIBUTE( "attribute", m_destination.m_attribute, "Destination attribute name", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "value", m_value, "Attribute value expression\n:jessica-widget: expression", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
-		MAP_ATTRIBUTE( 
-			"delayBinding", 
+		MAP_ATTRIBUTE(
+			"delayBinding",
 			m_delayBinding,
 			"If binding of the destination path needs to be delayed until the action is executed, rather than \n"
 			"binding when the parent controller is linked with the owner. This attribute needs to be turned off most\n"
 			"of the time for performance. Valid usages of this are for changing dynamically created\n"
-			"subobjects of the parent.", 
+			"subobjects of the parent.",
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_PROPERTY_READONLY( "isExpressionValid", IsExpressionValid, "Is \"value\" expression valid" )

@@ -25,8 +25,8 @@ Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
 	PARENTLOCK( m_distortionAreas ),
 	m_display( true ),
 	m_meshIndex( 0 ),
-    m_pBoneList(NULL),
-    m_numBones(0)
+	m_pBoneList( NULL ),
+	m_numBones( 0 )
 {
 	m_opaqueAreas.SetNotify( this );
 	m_decalAreas.SetNotify( this );
@@ -35,30 +35,30 @@ Tr2MeshBase::Tr2MeshBase( IRoot* lockobj ) :
 	m_additiveAreas.SetNotify( this );
 	m_pickableAreas.SetNotify( this );
 	m_mirrorAreas.SetNotify( this );
-    m_depthNormalAreas.SetNotify( this );
-    m_opaquePrepassAreas.SetNotify( this );
-    m_decalPrepassAreas.SetNotify( this );
-    m_geometryEraserAreas.SetNotify( this );
-    m_distortionAreas.SetNotify( this );
+	m_depthNormalAreas.SetNotify( this );
+	m_opaquePrepassAreas.SetNotify( this );
+	m_decalPrepassAreas.SetNotify( this );
+	m_geometryEraserAreas.SetNotify( this );
+	m_distortionAreas.SetNotify( this );
 	for( int i = 0; i < TRIBATCHTYPE_COUNT_OF_BATCH_TYPES; ++i )
 	{
-		m_areaLookupArray[ i ] = NULL;
+		m_areaLookupArray[i] = NULL;
 	}
 
-	m_areaLookupArray[ TRIBATCHTYPE_OPAQUE ] = &m_opaqueAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_DECAL ] = &m_decalAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_TRANSPARENT ] = &m_transparentAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_DEPTH ] = &m_depthAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_ADDITIVE ] = &m_additiveAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_PICKING ] = &m_pickableAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_MIRROR ] = &m_mirrorAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_DECALNORMAL ] = &m_decalNormalAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_DEPTHNORMAL ] = &m_depthNormalAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_OPAQUE_PREPASS ] = &m_opaquePrepassAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_DECAL_PREPASS ] = &m_decalPrepassAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_GEOMETRY_ERASER ] = &m_geometryEraserAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_FLARE ] = &m_flareAreas;
-	m_areaLookupArray[ TRIBATCHTYPE_DISTORTION ] = &m_distortionAreas;
+	m_areaLookupArray[TRIBATCHTYPE_OPAQUE] = &m_opaqueAreas;
+	m_areaLookupArray[TRIBATCHTYPE_DECAL] = &m_decalAreas;
+	m_areaLookupArray[TRIBATCHTYPE_TRANSPARENT] = &m_transparentAreas;
+	m_areaLookupArray[TRIBATCHTYPE_DEPTH] = &m_depthAreas;
+	m_areaLookupArray[TRIBATCHTYPE_ADDITIVE] = &m_additiveAreas;
+	m_areaLookupArray[TRIBATCHTYPE_PICKING] = &m_pickableAreas;
+	m_areaLookupArray[TRIBATCHTYPE_MIRROR] = &m_mirrorAreas;
+	m_areaLookupArray[TRIBATCHTYPE_DECALNORMAL] = &m_decalNormalAreas;
+	m_areaLookupArray[TRIBATCHTYPE_DEPTHNORMAL] = &m_depthNormalAreas;
+	m_areaLookupArray[TRIBATCHTYPE_OPAQUE_PREPASS] = &m_opaquePrepassAreas;
+	m_areaLookupArray[TRIBATCHTYPE_DECAL_PREPASS] = &m_decalPrepassAreas;
+	m_areaLookupArray[TRIBATCHTYPE_GEOMETRY_ERASER] = &m_geometryEraserAreas;
+	m_areaLookupArray[TRIBATCHTYPE_FLARE] = &m_flareAreas;
+	m_areaLookupArray[TRIBATCHTYPE_DISTORTION] = &m_distortionAreas;
 }
 
 
@@ -78,8 +78,7 @@ void Tr2MeshBase::OnListModified(
 	ssize_t key,
 	ssize_t key2,
 	IRoot* value,
-	const IList* list
-	)
+	const IList* list )
 {
 	switch( event & BELIST_EVENTMASK )
 	{
@@ -87,7 +86,7 @@ void Tr2MeshBase::OnListModified(
 		if( Tr2MeshAreaPtr area = BlueCastPtr( value ) )
 		{
 			area->AddOwnerMesh( this );
-			if ( area->IsReversed() )
+			if( area->IsReversed() )
 			{
 				ReverseIndexBuffers();
 			}
@@ -173,12 +172,12 @@ bool Tr2MeshBase::BindToRig( const std::string* boneList, const int numBones, Tr
 	forceRebind |= m_forcedRebind;
 	m_forcedRebind = false;
 
-	if( !GetGeometryResource() || !GetGeometryResource()->IsPrepared() ) 
+	if( !GetGeometryResource() || !GetGeometryResource()->IsPrepared() )
 	{
 		return false;
 	}
 
-	if( (m_pBoneList == boneList) && (m_renderRig == renderRig) && (m_numBones == numBones) && !forceRebind )
+	if( ( m_pBoneList == boneList ) && ( m_renderRig == renderRig ) && ( m_numBones == numBones ) && !forceRebind )
 	{
 		return true;
 	}
@@ -201,10 +200,10 @@ bool Tr2MeshBase::BindToRig( const std::string* boneList, const int numBones, Tr
 
 		m_jointMappingAnimRig[j] = FindJoint( boneList, numBones, name );
 
-		while (m_jointMappingAnimRig[j] == 0xffffffff)
+		while( m_jointMappingAnimRig[j] == 0xffffffff )
 		{
-			unsigned int renderIndex = renderRig->FindJoint(name);
-			if( renderIndex != 0xffffffff)
+			unsigned int renderIndex = renderRig->FindJoint( name );
+			if( renderIndex != 0xffffffff )
 			{
 				unsigned int parentIndex = renderRig->m_joints[renderIndex].m_parentJoint;
 				if( parentIndex != 0xffffffff )
@@ -212,11 +211,15 @@ bool Tr2MeshBase::BindToRig( const std::string* boneList, const int numBones, Tr
 					const char* parentName = renderRig->m_joints[parentIndex].m_name.c_str();
 					m_jointMappingAnimRig[j] = FindJoint( boneList, numBones, parentName );
 					name = parentName;
-				} else {
+				}
+				else
+				{
 					CCP_LOGWARN( "Resource %s - attempted to bind a joint that was not found on the render rig: %s", meshData->m_name.c_str(), name );
 					break;
 				}
-			} else {
+			}
+			else
+			{
 				CCP_LOGWARN( "Resource %s - attempted to bind a joint that was not found on the render rig: %s", meshData->m_name.c_str(), name );
 				break;
 			}
@@ -225,12 +228,12 @@ bool Tr2MeshBase::BindToRig( const std::string* boneList, const int numBones, Tr
 
 	for( int i = 0; i < TRIBATCHTYPE_COUNT_OF_BATCH_TYPES; ++i )
 	{
-		if( m_areaLookupArray[ i ] )
+		if( m_areaLookupArray[i] )
 		{
-			for( PTr2MeshAreaVector::iterator it = m_areaLookupArray[ i ]->begin(); it != m_areaLookupArray[ i ]->end(); ++it )
+			for( PTr2MeshAreaVector::iterator it = m_areaLookupArray[i]->begin(); it != m_areaLookupArray[i]->end(); ++it )
 			{
-				(*it)->SetJointMappingAnimRig( &m_jointMappingAnimRig[0] );
-				(*it)->SetJointCount( n );
+				( *it )->SetJointMappingAnimRig( &m_jointMappingAnimRig[0] );
+				( *it )->SetJointCount( n );
 			}
 		}
 	}
@@ -252,7 +255,7 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, co
 			TriGeometryResMeshData* meshData = geometry->GetMeshData( m_meshIndex );
 			TriGeometryResLodData* lod = geometry->GetMeshLod( m_meshIndex, 0 );
 
-			if ( !m_jointMappingAnimRig.empty() )
+			if( !m_jointMappingAnimRig.empty() )
 			{
 				// for old character stuff
 				boneCount = m_jointMappingAnimRig.size();
@@ -266,7 +269,7 @@ CcpMath::AxisAlignedBox Tr2MeshBase::GetBounds( const Matrix* boneTransforms, co
 				{
 					auto& joint = meshData->m_jointBindings[i];
 					auto& m = boneTransforms[meshBindingIndices[i]];
-					
+
 					Vector3 rightMin = m.GetX() * joint.m_obbMin.x;
 					Vector3 upMin = m.GetY() * joint.m_obbMin.y;
 					Vector3 forwardMin = m.GetZ() * joint.m_obbMin.z;
@@ -422,10 +425,10 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* are
 
 
 
-void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches, 
-	const Tr2MeshAreaVector* areas, 
-	const Tr2PerObjectData* data,
-	float screenSize ) const
+void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches,
+							  const Tr2MeshAreaVector* areas,
+							  const Tr2PerObjectData* data,
+							  float screenSize ) const
 {
 	if( !GetDisplay() )
 	{
@@ -471,26 +474,26 @@ const wchar_t* Tr2MeshBase::GetGeometryResPath() const
 
 // -------------------------------------------------------------
 // Description:
-//   Gets the mesh area vector, depending on the batch type 
+//   Gets the mesh area vector, depending on the batch type
 //	 requested. Defaults to NULL if there is no vector for the given batch type.
 // Arguments:
 //	 areaType - the TriBatchType as enumerated in ITr2Renderable
 // -------------------------------------------------------------
 Tr2MeshAreaVector* Tr2MeshBase::GetAreas( TriBatchType areaType )
 {
-	return m_areaLookupArray[ areaType ];
+	return m_areaLookupArray[areaType];
 }
 
 // -------------------------------------------------------------
 // Description:
-//   Gets the mesh area vector, depending on the batch type 
+//   Gets the mesh area vector, depending on the batch type
 //	 requested. Defaults to NULL if there is no vector for the given batch type.
 // Arguments:
 //	 areaType - the TriBatchType as enumerated in ITr2Renderable
 // -------------------------------------------------------------
 const Tr2MeshAreaVector* Tr2MeshBase::GetAreas( TriBatchType areaType ) const
 {
-	return m_areaLookupArray[ areaType ];
+	return m_areaLookupArray[areaType];
 }
 
 // -------------------------------------------------------------
@@ -512,7 +515,7 @@ void Tr2MeshBase::CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& colle
 			// (for example scaffolding + build effect)
 			continue;
 		}
-		TriRenderBatchAreaBlock ab( std::max( 0, (*a)->GetIndex() ), std::max( 0, (*a)->GetCount() ) );
+		TriRenderBatchAreaBlock ab( std::max( 0, ( *a )->GetIndex() ), std::max( 0, ( *a )->GetCount() ) );
 		collector.push_back( ab );
 	}
 }
@@ -534,16 +537,16 @@ void Tr2MeshBase::CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBat
 		{
 			continue;
 		}
-		
+
 		uint32_t i = 0;
-		for ( ; i < collectors.size(); i++ )
+		for( ; i < collectors.size(); i++ )
 		{
 			if( collectors[i].m_shaderMaterial->GetHashValue() == ( *a )->GetMaterialInterface()->GetHashValue() )
 			{
 				break;
 			}
 		}
-		if ( i == collectors.size() )
+		if( i == collectors.size() )
 		{
 			auto entry = TriRenderBatchAreaBlocksWithSharedMaterial();
 			entry.m_shaderMaterial = ( *a )->GetMaterialInterface();
@@ -558,15 +561,15 @@ void Tr2MeshBase::CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBat
 void Tr2MeshBase::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
 	const auto length = TRIBATCHTYPE_COUNT_OF_BATCH_TYPES;
-	for ( auto i = 0; i < length; ++i )
+	for( auto i = 0; i < length; ++i )
 	{
 		const auto tribatchType = static_cast<TriBatchType>( i );
 		const auto area = GetAreas( tribatchType );
-		for ( auto itInner = area->begin(); itInner != area->end(); ++itInner )
+		for( auto itInner = area->begin(); itInner != area->end(); ++itInner )
 		{
-			const Tr2MeshArea *area = *itInner;
+			const Tr2MeshArea* area = *itInner;
 			const auto material = area->GetMaterialInterface();
-			if ( nullptr != material )
+			if( nullptr != material )
 			{
 				material->SetOption( name, value );
 			}
@@ -614,7 +617,7 @@ void Tr2MeshBase::SetMaterialBoundsAdjustment( const Tr2MaterialBoundsAdjustment
 
 void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 {
-	if (auto geometry = GetGeometryResource() )
+	if( auto geometry = GetGeometryResource() )
 	{
 		if( auto lod = geometry->GetMeshLod( m_meshIndex, screenSize ) )
 		{

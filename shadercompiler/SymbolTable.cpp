@@ -13,9 +13,11 @@ bool PackOffset::Create( ParserState& state, const ScannerToken& subComponentTok
 	component.start = component.end = nullptr;
 
 	char registerType;
-	if( !ParseRegisterID( subComponentToken.stringValue.start, 
-						  subComponentToken.stringValue.end, 
-						  registerType, subComponent ) || registerType != 'c' )
+	if( !ParseRegisterID( subComponentToken.stringValue.start,
+						  subComponentToken.stringValue.end,
+						  registerType,
+						  subComponent ) ||
+		registerType != 'c' )
 	{
 		state.ShowMessage( subComponentToken.fileLocation, EC_INVALID_PACK_OFFSET );
 		return false;
@@ -29,16 +31,16 @@ bool PackOffset::Create( ParserState& state, const ScannerToken& subComponentTok
 
 RegisterSpecifier RegisterSpecifier::Register( char type, int index )
 {
-    RegisterSpecifier reg;
-    reg.shaderProfile.start = nullptr;
-    reg.shaderProfile.end = nullptr;
-    reg.registerType = type;
-    reg.registerNumber = index;
-    reg.subComponent = -1;
-    reg.space = -1;
-    reg.explicitRegister = true;
-    reg.explicitSpace = false;
-    return reg;
+	RegisterSpecifier reg;
+	reg.shaderProfile.start = nullptr;
+	reg.shaderProfile.end = nullptr;
+	reg.registerType = type;
+	reg.registerNumber = index;
+	reg.subComponent = -1;
+	reg.space = -1;
+	reg.explicitRegister = true;
+	reg.explicitSpace = false;
+	return reg;
 }
 
 
@@ -66,8 +68,8 @@ bool CompareSymbols::operator()( const Symbol* symbol0, const Symbol* symbol1 ) 
 	return false;
 }
 
-Symbol::Symbol()
-	:isTypeName( false ),
+Symbol::Symbol() :
+	isTypeName( false ),
 	isFunction( false ),
 	interpolationModifier( 0 ),
 	annotations( nullptr ),
@@ -87,8 +89,8 @@ Symbol::Symbol()
 	type.FromTokenType( 0 );
 }
 
-ScopeSymbolTable::ScopeSymbolTable( ScopeSymbolTable* parent )
-	:m_parent( parent )
+ScopeSymbolTable::ScopeSymbolTable( ScopeSymbolTable* parent ) :
+	m_parent( parent )
 {
 }
 
@@ -141,7 +143,7 @@ static bool MatchParameter( ASTNode* parameter, ASTNode* argument, int& casts )
 	else if( parameter->GetToken() && parameter->GetToken()->type == OP_INOUT )
 	{
 		int tmp;
-		return parameter->GetType().CanImplicitCast( argumentType, casts ) && 
+		return parameter->GetType().CanImplicitCast( argumentType, casts ) &&
 			parameter->GetType().CanImplicitCast( parameter->GetType(), tmp );
 	}
 	else
@@ -158,7 +160,7 @@ Symbol* ScopeSymbolTable::LookupFunctionDeclaration( const InlineString& name, A
 	{
 		for( auto it = scope->m_symbols.begin(); it != scope->m_symbols.end(); ++it )
 		{
-			if( (*it)->name == name && (*it)->definition && (*it)->definition->GetNodeType() == NT_FUNCTION_HEADER )
+			if( ( *it )->name == name && ( *it )->definition && ( *it )->definition->GetNodeType() == NT_FUNCTION_HEADER )
 			{
 				overrides.push_back( std::make_pair( *it, 100000 ) );
 			}
@@ -211,7 +213,7 @@ Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* cal
 	{
 		for( auto it = scope->m_symbols.begin(); it != scope->m_symbols.end(); ++it )
 		{
-			if( (*it)->name == name )
+			if( ( *it )->name == name )
 			{
 				overrides.push_back( std::make_pair( *it, 100000 ) );
 			}

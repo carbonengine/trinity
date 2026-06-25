@@ -22,8 +22,7 @@ CmfVertexReader::CmfVertexReader( cmf::Span<cmf::VertexElement> decl )
 	pkdLegElem = cmf::FindElement( decl, cmf::Usage::PackedTangentLegacy );
 }
 
-void ReadCmfVertexAttributes( const CmfVertexReader& reader, const uint8_t* data, uint32_t vertexCount, uint32_t stride, 
-	std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<Vector3>* tangents, std::vector<Vector3>* binormals ) 
+void ReadCmfVertexAttributes( const CmfVertexReader& reader, const uint8_t* data, uint32_t vertexCount, uint32_t stride, std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<Vector3>* tangents, std::vector<Vector3>* binormals )
 {
 	std::optional<cmf::ConstBufferElementStream<Vector3>> posStream;
 	std::optional<cmf::ConstBufferElementStream<Vector3>> normStream;
@@ -128,8 +127,8 @@ Tr2GrannyIntersectionResult::Tr2GrannyIntersectionResult( IRoot* )
 {
 }
 
-Tr2GrannyIntersectionResult::Result::Result()
-	:position( 0, 0, 0 ),
+Tr2GrannyIntersectionResult::Result::Result() :
+	position( 0, 0, 0 ),
 	normal( 0, 0, 0 ),
 	uv( 0, 0 ),
 	meshIndex( -1 ),
@@ -158,10 +157,10 @@ TriGrannyRes::TriGrannyRes( IRoot* lockobj ) :
 TriGrannyRes::~TriGrannyRes()
 {
 #if WITH_GRANNY
-    if( m_grannyFile )
-    {
-        GrannyFreeFile( m_grannyFile );
-    }
+	if( m_grannyFile )
+	{
+		GrannyFreeFile( m_grannyFile );
+	}
 
 	if( m_grannyArena )
 	{
@@ -271,7 +270,7 @@ BlueAsyncRes::LoadingResult TriGrannyRes::DoLoad()
 
 bool TriGrannyRes::DoPrepare()
 {
-    return true;
+	return true;
 }
 
 #if WITH_GRANNY
@@ -310,7 +309,7 @@ granny_data_type_definition* TriGrannyRes::GetGrannyVertexType( int meshIx ) con
 		CCP_LOGERR( "TriGrannyRes::GetGrannyVertexType: Invalid mesh index" );
 		return NULL;
 	}
-	
+
 	return mesh->PrimaryVertexData->VertexType;
 }
 #endif
@@ -383,7 +382,7 @@ granny_skeleton* TriGrannyRes::GetGrannySkeleton( int skeletonIx ) const
 int TriGrannyRes::GetVertexComponentOffset( int meshIx, const char* componentName ) const
 {
 	CCP_ASSERT_M( !m_useCMF, "This should never be called on a cmf codepath!" );
-		
+
 	const granny_mesh* mesh = GetGrannyMesh( meshIx );
 	if( !mesh )
 	{
@@ -429,7 +428,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 	{
 		CCP_ASSERT_M( !nameToWeight, "TriGrannyRes::BakeBlendshape: intern messed up and thought nameToWeight was not being used anymore." );
 		CCP_ASSERT_M( !deltaOnly, "TriGrannyRes::BakeBlendshape: intern messed up and thought deltaOnly was not being used anymore." );
-		
+
 		if( meshIx >= m_cmfContents.GetData()->meshes.size() )
 		{
 			CCP_LOGERR( "TriGrannyRes::BakeBlendshape: Invalid mesh index" );
@@ -562,7 +561,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 
 			pVertexData.Update( result.data(), renderContext );
 		}
-		
+
 		return true;
 	}
 #if WITH_GRANNY
@@ -633,13 +632,13 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 		{
 			blendVertexFormat = mesh->MorphTargets[0].VertexData->VertexType;
 		}
-	
+
 		// Copy base data from original vertex buffer. Deltas will be applied on top of this (if any are found)
 		void* pSrc = GrannyGetMeshVertices( mesh );
 
 		if( !blendVertexFormat )
 		{
-			pVertexData.Update( pSrc, renderContext);
+			pVertexData.Update( pSrc, renderContext );
 			CCP_LOG( "BakeBlendshape called on %S but it has no blendshapes", GetPath() );
 			return true;
 		}
@@ -653,7 +652,10 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 
 		struct DatatypeInfo
 		{
-			DatatypeInfo() : offset( 0xffffffff ), isHalfPrecision( false ) {}
+			DatatypeInfo() :
+				offset( 0xffffffff ), isHalfPrecision( false )
+			{
+			}
 
 			unsigned int offset;
 			bool isHalfPrecision;
@@ -661,7 +663,9 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 
 		enum DatatypesOfInterest
 		{
-			DOI_POS, DOI_NORMAL, DOI_COUNT
+			DOI_POS,
+			DOI_NORMAL,
+			DOI_COUNT
 		};
 
 		DatatypeInfo typeInfos[DOI_COUNT];
@@ -720,7 +724,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 		for( unsigned int j = 0; j < numBlends; ++j )
 		{
 			float weight_ = 0.0f;
-		
+
 			if( !nameToWeight )
 			{
 				weight_ = weights[j];
@@ -732,18 +736,18 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 				{
 					continue;
 				}
-				int scan = (int)name.size()-1;
+				int scan = (int)name.size() - 1;
 				while( scan > 0 && isdigit( name[scan] ) )
 				{
 					--scan;
 				}
-				name.erase( scan+1, name.size()-scan-1 );
+				name.erase( scan + 1, name.size() - scan - 1 );
 				std::transform( name.begin(), name.end(), name.begin(), tolower );
 				NameToWeightMap::const_iterator it = nameToWeight->find( name );
 				if( it != nameToWeight->end() )
 				{
 					weight_ = it->second;
-				}			
+				}
 			}
 
 
@@ -765,13 +769,13 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 
 				const uint8_t* const pMorphVerts = mesh->PrimaryVertexData->VertexAnnotationSets[j].VertexAnnotations;
 				const granny_int32* const blendIndices = mesh->PrimaryVertexData->VertexAnnotationSets[j].VertexAnnotationIndices;
-			
+
 				if( deltaOnly )
 				{
-					const uint8_t* __restrict pDelta = pMorphVerts + blendTypeInfos[ DOI_POS ].offset;
-					const int * __restrict vertexIx = blendIndices;
+					const uint8_t* __restrict pDelta = pMorphVerts + blendTypeInfos[DOI_POS].offset;
+					const int* __restrict vertexIx = blendIndices;
 
-					if( blendTypeInfos[ DOI_POS ].isHalfPrecision )
+					if( blendTypeInfos[DOI_POS].isHalfPrecision )
 					{
 						for( int i = 0; i < blendIndexCount; ++i, ++vertexIx, pDelta += blendBytesPerVertex )
 						{
@@ -805,15 +809,15 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 					}
 
 					const uint8_t* __restrict pDelta = pMorphVerts + blendTypeInfos[componentIx].offset;
-					const int * __restrict vertexIx = blendIndices;
+					const int* __restrict vertexIx = blendIndices;
 
 					uint8_t* const __restrict pComponentBase = reinterpret_cast<uint8_t*>( &localVertexData[0] ) + typeInfos[componentIx].offset;
 
-					if( typeInfos[ componentIx ].isHalfPrecision && blendTypeInfos[ componentIx ].isHalfPrecision )
+					if( typeInfos[componentIx].isHalfPrecision && blendTypeInfos[componentIx].isHalfPrecision )
 					{
 						for( int i = 0; i < blendIndexCount; ++i, ++vertexIx, pDelta += blendBytesPerVertex )
 						{
-							uint8_t* const __restrict pBase = pComponentBase + *vertexIx * bytesPerVertex;					
+							uint8_t* const __restrict pBase = pComponentBase + *vertexIx * bytesPerVertex;
 
 							Vector3 base = *reinterpret_cast<const Vector3_16*>( pBase );
 							Vector3 delta = *reinterpret_cast<const Vector3_16*>( pDelta );
@@ -823,27 +827,25 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 							*reinterpret_cast<Vector3_16*>( pBase ) = Vector3_16( base );
 						}
 					}
-					else
-					if( typeInfos[ componentIx ].isHalfPrecision )
+					else if( typeInfos[componentIx].isHalfPrecision )
 					{
 						for( int i = 0; i < blendIndexCount; ++i, ++vertexIx, pDelta += blendBytesPerVertex )
 						{
-							uint8_t* const __restrict pBase = pComponentBase + *vertexIx * bytesPerVertex;					
+							uint8_t* const __restrict pBase = pComponentBase + *vertexIx * bytesPerVertex;
 
 							Vector3 base = *reinterpret_cast<const Vector3_16*>( pBase );
-							const Vector3 &delta = *reinterpret_cast<const Vector3*>( pDelta );
-						
+							const Vector3& delta = *reinterpret_cast<const Vector3*>( pDelta );
+
 							base += weight * delta;
 
 							*reinterpret_cast<Vector3_16*>( pBase ) = Vector3_16( base );
 						}
 					}
-					else
-					if( blendTypeInfos[ componentIx ].isHalfPrecision )
+					else if( blendTypeInfos[componentIx].isHalfPrecision )
 					{
 						for( int i = 0; i < blendIndexCount; ++i, ++vertexIx, pDelta += blendBytesPerVertex )
 						{
-							uint8_t* const __restrict pBase = pComponentBase + *vertexIx * bytesPerVertex;					
+							uint8_t* const __restrict pBase = pComponentBase + *vertexIx * bytesPerVertex;
 
 							Vector3& base = *reinterpret_cast<Vector3*>( pBase );
 
@@ -884,9 +886,9 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 
 					for( int i = 0; i < vertexCount; ++i )
 					{
-						uint8_t* pDelta = pMV + blendTypeInfos[ DOI_POS ].offset;
+						uint8_t* pDelta = pMV + blendTypeInfos[DOI_POS].offset;
 
-						if( blendTypeInfos[ DOI_POS ].isHalfPrecision )
+						if( blendTypeInfos[DOI_POS].isHalfPrecision )
 						{
 							Vector3 delta = *reinterpret_cast<const Vector3_16*>( pDelta );
 
@@ -1054,7 +1056,7 @@ Be::Result<std::string> TriGrannyRes::GetMeshAreaCount( unsigned int meshIx, int
 		}
 	}
 #endif
-	
+
 	return Be::Result<std::string>();
 }
 
@@ -1087,7 +1089,7 @@ Be::Result<std::string> TriGrannyRes::GetMeshName( unsigned int meshIx, std::str
 		name = fi->Meshes[meshIx]->Name ? fi->Meshes[meshIx]->Name : ""; // for reference, see CopyGrannyName
 	}
 #endif
-	
+
 	return Be::Result<std::string>();
 }
 
@@ -1251,7 +1253,7 @@ Be::Result<std::string> TriGrannyRes::GetMeshMorphCount( unsigned int meshIx, in
 		}
 	}
 #endif
-	
+
 	return Be::Result<std::string>();
 }
 
@@ -1310,7 +1312,7 @@ Be::Result<std::string> TriGrannyRes::GetMeshMorphName( unsigned int meshIx, uns
 		}
 	}
 #endif
-	
+
 	return Be::Result<std::string>();
 }
 
@@ -1499,7 +1501,7 @@ std::string TriGrannyRes::GetEventTrackName( int groupIdx, int trackIdx )
 	}
 }
 
-int TriGrannyRes::GetTrackGroupCount( )
+int TriGrannyRes::GetTrackGroupCount()
 {
 	if( IsUsingCMF() )
 	{
@@ -1651,7 +1653,7 @@ granny_file_info* TriGrannyRes::ValidateAnimationIx( int ix )
 		return 0;
 	}
 
-	if( (ix < 0) || (ix >= fi->AnimationCount) )
+	if( ( ix < 0 ) || ( ix >= fi->AnimationCount ) )
 	{
 		CCP_LOGERR( "Animation index out of bounds" );
 		return NULL;
@@ -1792,7 +1794,7 @@ Be::Result<std::string> TriGrannyRes::BakeBlendshapeFromScript( unsigned int mes
 
 	bool success = BakeBlendshape( meshIx, weights, lod->m_vertexAllocation, renderContext, lod->m_vertexCount * lod->m_mesh->m_bytesPerVertex );
 
-	return success ? Be::Result<std::string>() : Be::Result<std::string>( " TriGrannyRes::BakeBlendshape encountered problems. ");
+	return success ? Be::Result<std::string>() : Be::Result<std::string>( " TriGrannyRes::BakeBlendshape encountered problems. " );
 }
 
 bool TriGrannyRes::IsUsingCMF() const
@@ -2232,7 +2234,7 @@ Tr2GrannyIntersectionResultPtr TriGrannyRes::RayIntersection( const Vector3& pos
 			for( uint32_t areaIdx = 0; areaIdx < areaCount; areaIdx++ )
 			{
 				auto area = mesh.lods[0].areas[areaIdx + areaOffset];
-				
+
 				for( uint32_t elementIdx = area.firstElement; elementIdx < area.firstElement + area.elementCount; elementIdx++ )
 				{
 					uint32_t triangleIndices[3];

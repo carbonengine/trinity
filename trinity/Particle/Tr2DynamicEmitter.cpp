@@ -9,8 +9,8 @@
 // Description:
 //   Tr2DynamicEmitter default constructor
 // --------------------------------------------------------------------------------------
-Tr2DynamicEmitter::Tr2DynamicEmitter( IRoot* lockobj )
-	:PARENTLOCK( m_generators ),
+Tr2DynamicEmitter::Tr2DynamicEmitter( IRoot* lockobj ) :
+	PARENTLOCK( m_generators ),
 	m_isValid( false ),
 	m_isThreadSafe( false ),
 	m_declarationHash( 0 ),
@@ -53,8 +53,8 @@ bool Tr2DynamicEmitter::Initialize()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements INotify interface.  Allows the emitter to respond to parameter changes 
-//   generated in Python.  If the particle system changes, the emitter re-binds to it.  
+//   Implements INotify interface.  Allows the emitter to respond to parameter changes
+//   generated in Python.  If the particle system changes, the emitter re-binds to it.
 // Arguments:
 //   value - The Blue-exposed parameter that changed
 // Return Value:
@@ -89,7 +89,7 @@ void Tr2DynamicEmitter::SetThreadSafeFlag()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Returns if the emitter is sucessfully bound to the particle system.  
+//   Returns if the emitter is sucessfully bound to the particle system.
 // Return Value:
 //   true If the emitter is sucessfully bound to the particle system
 //   false Otherwise
@@ -102,7 +102,7 @@ bool Tr2DynamicEmitter::IsValid() const
 // --------------------------------------------------------------------------------------
 // Description:
 //   Implements ITr2GenericEmitter interface. Spawns particles every frame at a constant
-//   rate.  
+//   rate.
 // Arguments:
 //   arguments - Update arguments
 // --------------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ void Tr2DynamicEmitter::Update( const UpdateArguments& arguments )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Spawns particles for a  frame of given length.  
+//   Spawns particles for a  frame of given length.
 // Arguments:
 //   dt - frame duraction (in seconds)
 // --------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ void Tr2DynamicEmitter::UpdateSimulation( float dt )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements ITr2GenericEmitter interface. Spawns particles.  
+//   Implements ITr2GenericEmitter interface. Spawns particles.
 // Arguments:
 //   arguments - Update arguments
 //   position - Position of the "parent" particle (if the emitter owning this generator
@@ -148,8 +148,8 @@ void Tr2DynamicEmitter::UpdateSimulation( float dt )
 //		defined rate value.
 // --------------------------------------------------------------------------------------
 void Tr2DynamicEmitter::SpawnParticles( const UpdateArguments& arguments,
-									    const Vector3* position, 
-										const Vector3* velocity, 
+										const Vector3* position,
+										const Vector3* velocity,
 										float rateModifier )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -169,12 +169,12 @@ void Tr2DynamicEmitter::SpawnParticles( const UpdateArguments& arguments,
 	{
 		return;
 	}
-	m_accumulatedRate += m_rate*rateModifier;
+	m_accumulatedRate += m_rate * rateModifier;
 	int32_t count = int32_t( m_accumulatedRate );
 	m_accumulatedRate -= floor( m_accumulatedRate );
 	if( m_maxParticles >= 0 && int32_t( m_emittedParticles ) + count > m_maxParticles )
 	{
-		count = std::max( m_maxParticles - int32_t( m_emittedParticles ),  0 );
+		count = std::max( m_maxParticles - int32_t( m_emittedParticles ), 0 );
 	}
 	m_emittedParticles += count;
 
@@ -211,17 +211,19 @@ void Tr2DynamicEmitter::SpawnParticles( const UpdateArguments& arguments,
 
 
 void Tr2DynamicEmitter::SpawnParticles( const UpdateArguments& arguments,
-						const Vector3 *positionStart, const Vector3 *positionEnd,
-						const Vector3 *velocityStart, const Vector3 *velocityEnd,
-						float deltaTime )
+										const Vector3* positionStart,
+										const Vector3* positionEnd,
+										const Vector3* velocityStart,
+										const Vector3* velocityEnd,
+										float deltaTime )
 {
 	SpawnParticles( arguments, positionEnd, velocityEnd, deltaTime );
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Re-binds the emitter to its particle system. Tries to bind each generator to the 
-//   corresponding element. IsValid can be checked after Rebind to see if the binding 
+//   Re-binds the emitter to its particle system. Tries to bind each generator to the
+//   corresponding element. IsValid can be checked after Rebind to see if the binding
 //   succeeded.
 // --------------------------------------------------------------------------------------
 void Tr2DynamicEmitter::Rebind()

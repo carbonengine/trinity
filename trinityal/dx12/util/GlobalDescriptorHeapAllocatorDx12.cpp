@@ -13,15 +13,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 /** */
-GlobalDescriptorHeapAllocator::GlobalDescriptorHeapAllocator(CComPtr<ID3D12Device> device, uint32_t maxPages, uint32_t pageEntryCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType) :
-	m_mutex("GlobalDescriptorHeapAllocator", "m_mutex"),
-	m_device(device),
-	m_heapType(heapType),
-	m_pageEntryCount(pageEntryCount),
-	m_descriptorsInUse(0),
+GlobalDescriptorHeapAllocator::GlobalDescriptorHeapAllocator( CComPtr<ID3D12Device> device, uint32_t maxPages, uint32_t pageEntryCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType ) :
+	m_mutex( "GlobalDescriptorHeapAllocator", "m_mutex" ),
+	m_device( device ),
+	m_heapType( heapType ),
+	m_pageEntryCount( pageEntryCount ),
+	m_descriptorsInUse( 0 ),
 	m_pages( maxPages, maxPages )
 {
-	m_heapIncrement = m_device->GetDescriptorHandleIncrementSize(m_heapType);
+	m_heapIncrement = m_device->GetDescriptorHandleIncrementSize( m_heapType );
 }
 
 /** */
@@ -30,24 +30,24 @@ GlobalDescriptorHeapAllocator::~GlobalDescriptorHeapAllocator()
 	// If this isn't 0, then some views haven't been freed yet
 	// If necessary, we could add a debug string to DescriptorEntry and dump those
 	// if we want better object tracking
-	CCP_ASSERT(m_descriptorsInUse == 0);
+	CCP_ASSERT( m_descriptorsInUse == 0 );
 }
 
 /** Allocate an entry */
 GlobalDescriptorHeapPage::DescriptorEntry* GlobalDescriptorHeapAllocator::Allocate()
 {
-	CcpAutoMutex lock(m_mutex);
+	CcpAutoMutex lock( m_mutex );
 
 	HeapPageEntry* page = m_pages.GetFirstFree();
-	if (page == nullptr)
+	if( page == nullptr )
 	{
 		// FATAL: Totally out of memory,, is there a better way of handling this?
-		CCP_ASSERT(page != nullptr);
+		CCP_ASSERT( page != nullptr );
 		return nullptr;
 	}
 
 	// Pages start off uninitialized... we might want to change this behavior in the future
-	if (page->m_page == nullptr)
+	if( page->m_page == nullptr )
 	{
 		CComPtr<ID3D12DescriptorHeap> descriptorHeap = nullptr;
 
@@ -56,29 +56,29 @@ GlobalDescriptorHeapPage::DescriptorEntry* GlobalDescriptorHeapAllocator::Alloca
 		heapDesc.NumDescriptors = m_pageEntryCount;
 		heapDesc.Type = m_heapType;
 
-		HRESULT hr = m_device->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&descriptorHeap));
-		if (hr != S_OK)
+		HRESULT hr = m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &descriptorHeap ) );
+		if( hr != S_OK )
 		{
 			// FATAL: Can't back an allocation with a heap
-			CCP_ASSERT(hr == S_OK);
+			CCP_ASSERT( hr == S_OK );
 			return nullptr;
 		}
 
-		page->m_page = std::make_unique<GlobalDescriptorHeapPage>(descriptorHeap, m_pageEntryCount, m_heapIncrement);
+		page->m_page = std::make_unique<GlobalDescriptorHeapPage>( descriptorHeap, m_pageEntryCount, m_heapIncrement );
 	}
 
 	// m_page->getFirstFree() should never return a full page!
-	CCP_ASSERT(!page->m_page->IsFull());
+	CCP_ASSERT( !page->m_page->IsFull() );
 
 	// Allocate entry
 	GlobalDescriptorHeapPage::DescriptorEntry* entry = page->m_page->Allocate();
-	CCP_ASSERT(entry != nullptr);
+	CCP_ASSERT( entry != nullptr );
 
 	// Assign a tag, so we can quickly free this entry later
 	entry->m_pageTag = page;
 
 	// If the page is now full, mark it as such
-	if (page->m_page->IsFull())
+	if( page->m_page->IsFull() )
 	{
 		// Note: Nothing is allocated, the free list will just move the first entry
 		// over into the 'in use' list
@@ -91,32 +91,32 @@ GlobalDescriptorHeapPage::DescriptorEntry* GlobalDescriptorHeapAllocator::Alloca
 }
 
 /** Free an entry */
-void GlobalDescriptorHeapAllocator::Free(GlobalDescriptorHeapPage::DescriptorEntry* entry)
+void GlobalDescriptorHeapAllocator::Free( GlobalDescriptorHeapPage::DescriptorEntry* entry )
 {
-	CcpAutoMutex lock(m_mutex);
+	CcpAutoMutex lock( m_mutex );
 
-	CCP_ASSERT(entry->m_pageTag != nullptr);
-	CCP_ASSERT(entry->m_owner != nullptr);
+	CCP_ASSERT( entry->m_pageTag != nullptr );
+	CCP_ASSERT( entry->m_owner != nullptr );
 
 	// Recover page handle
-	HeapPageEntry* page = reinterpret_cast<HeapPageEntry*>(entry->m_pageTag);
-	CCP_ASSERT(page->m_page != nullptr);
-	m_pages.ValidateEntry(page);
+	HeapPageEntry* page = reinterpret_cast<HeapPageEntry*>( entry->m_pageTag );
+	CCP_ASSERT( page->m_page != nullptr );
+	m_pages.ValidateEntry( page );
 
 	// If the page is currently full, then it'll be marked as InUse
 	// it'll definitely not be full after this operation, so we can move it over
-	if (page->m_page->IsFull())
+	if( page->m_page->IsFull() )
 	{
-		m_pages.Free(page);
+		m_pages.Free( page );
 	}
 
 	// Free entry
-	page->m_page->Free(entry);
+	page->m_page->Free( entry );
 
-	CCP_ASSERT(m_descriptorsInUse > 0);
+	CCP_ASSERT( m_descriptorsInUse > 0 );
 	m_descriptorsInUse--;
 
-	CCP_ASSERT(!page->m_page->IsFull());
+	CCP_ASSERT( !page->m_page->IsFull() );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,23 +124,23 @@ void GlobalDescriptorHeapAllocator::Free(GlobalDescriptorHeapPage::DescriptorEnt
 //////////////////////////////////////////////////////////////////////////
 
 /** */
-GlobalDescriptorHeapPage::DescriptorEntry::DescriptorEntry(uint32_t entryIdx, const GlobalDescriptorHeapPage::DescriptorInitArgs& initArgs) :
-	m_owner(nullptr),
-	m_pageTag(nullptr)
+GlobalDescriptorHeapPage::DescriptorEntry::DescriptorEntry( uint32_t entryIdx, const GlobalDescriptorHeapPage::DescriptorInitArgs& initArgs ) :
+	m_owner( nullptr ),
+	m_pageTag( nullptr )
 {
 	m_offsetCPU.ptr = initArgs.m_baseOffsetCPU.ptr + entryIdx * initArgs.m_entrySize;
 	m_offsetGPU.ptr = initArgs.m_baseOffsetGPU.ptr + entryIdx * initArgs.m_entrySize;
 }
 
 /** */
-GlobalDescriptorHeapPage::GlobalDescriptorHeapPage(CComPtr<ID3D12DescriptorHeap> descriptorHeap, UINT entryCount, UINT entrySize) :
-	m_descriptorHeap(descriptorHeap)
+GlobalDescriptorHeapPage::GlobalDescriptorHeapPage( CComPtr<ID3D12DescriptorHeap> descriptorHeap, UINT entryCount, UINT entrySize ) :
+	m_descriptorHeap( descriptorHeap )
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE baseOffsetCPU = m_descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	D3D12_GPU_DESCRIPTOR_HANDLE baseOffsetGPU = { 0 };
 
-	DescriptorInitArgs init(baseOffsetCPU, baseOffsetGPU, entrySize);
-	m_freeList = std::make_shared<DescriptorList>(entryCount, init);
+	DescriptorInitArgs init( baseOffsetCPU, baseOffsetGPU, entrySize );
+	m_freeList = std::make_shared<DescriptorList>( entryCount, init );
 }
 
 /** Allocate an entry */
@@ -153,11 +153,11 @@ GlobalDescriptorHeapPage::DescriptorEntry* GlobalDescriptorHeapPage::Allocate()
 }
 
 /** Free an entry */
-void GlobalDescriptorHeapPage::Free(GlobalDescriptorHeapPage::DescriptorEntry* entry)
+void GlobalDescriptorHeapPage::Free( GlobalDescriptorHeapPage::DescriptorEntry* entry )
 {
-	CCP_ASSERT(entry->m_owner == this);
+	CCP_ASSERT( entry->m_owner == this );
 
-	m_freeList->Free(entry);
+	m_freeList->Free( entry );
 }
 
 

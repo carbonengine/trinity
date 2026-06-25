@@ -15,15 +15,24 @@ Tr2RenderContextEnum::PixelFormat Tr2RenderContextEnum::ConvertD3DBackBufferForm
 {
 	switch( fmt )
 	{
-		case 116 /*D3DFMT_A32B32G32R32F*/: return PIXEL_FORMAT_R32G32B32A32_FLOAT;
-        case 113 /*D3DFMT_A16B16G16R16F*/: return PIXEL_FORMAT_R16G16B16A16_FLOAT;
-		case  36 /*D3DFMT_A16B16G16R16 */: return PIXEL_FORMAT_R16G16B16A16_UNORM;
-		case  35 /*D3DFMT_A2R10G10B10  */: return PIXEL_FORMAT_R10G10B10A2_UNORM;
-		case  32 /*D3DFMT_A8B8G8R8     */: return PIXEL_FORMAT_R8G8B8A8_UNORM;
-		case  23 /*D3DFMT_R5G6B5       */: return PIXEL_FORMAT_B5G6R5_UNORM;
-		case  25 /*D3DFMT_A1R5G5B5     */: return PIXEL_FORMAT_B5G5R5A1_UNORM;
-		case  21 /*D3DFMT_A8R8G8B8     */: return PIXEL_FORMAT_B8G8R8A8_UNORM;
-		case  22 /*D3DFMT_X8R8G8B8     */: return PIXEL_FORMAT_B8G8R8X8_UNORM;
+	case 116 /*D3DFMT_A32B32G32R32F*/:
+		return PIXEL_FORMAT_R32G32B32A32_FLOAT;
+	case 113 /*D3DFMT_A16B16G16R16F*/:
+		return PIXEL_FORMAT_R16G16B16A16_FLOAT;
+	case 36 /*D3DFMT_A16B16G16R16 */:
+		return PIXEL_FORMAT_R16G16B16A16_UNORM;
+	case 35 /*D3DFMT_A2R10G10B10  */:
+		return PIXEL_FORMAT_R10G10B10A2_UNORM;
+	case 32 /*D3DFMT_A8B8G8R8     */:
+		return PIXEL_FORMAT_R8G8B8A8_UNORM;
+	case 23 /*D3DFMT_R5G6B5       */:
+		return PIXEL_FORMAT_B5G6R5_UNORM;
+	case 25 /*D3DFMT_A1R5G5B5     */:
+		return PIXEL_FORMAT_B5G5R5A1_UNORM;
+	case 21 /*D3DFMT_A8R8G8B8     */:
+		return PIXEL_FORMAT_B8G8R8A8_UNORM;
+	case 22 /*D3DFMT_X8R8G8B8     */:
+		return PIXEL_FORMAT_B8G8R8X8_UNORM;
 	}
 	return PIXEL_FORMAT_UNKNOWN;
 }
@@ -157,7 +166,6 @@ Tr2RenderContextEnum::PixelFormat Tr2RenderContextEnum::MakeSrgb( Tr2RenderConte
 	default:
 		return format;
 	}
-
 }
 
 Tr2RenderContextEnum::PixelFormat Tr2RenderContextEnum::ConvertDepthStencilFormat( DepthStencilFormat format )

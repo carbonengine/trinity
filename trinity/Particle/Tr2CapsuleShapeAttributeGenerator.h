@@ -9,12 +9,13 @@
 // --------------------------------------------------------------------------------------
 // Description:
 //   Particle element generator that generates particle positions and/or velocities as if
-//   particles are spawned in a moving sphere sector (with velocities pointing from the 
+//   particles are spawned in a moving sphere sector (with velocities pointing from the
 //   sphere center).
 // See Also:
 //   ITr2AttributeGenerator, Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2CapsuleShapeAttributeGenerator ): public ITr2AttributeGenerator
+BLUE_CLASS( Tr2CapsuleShapeAttributeGenerator ) :
+	public ITr2AttributeGenerator
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -23,14 +24,15 @@ public:
 	~Tr2CapsuleShapeAttributeGenerator();
 
 	void Generate( const Vector3* position, const Vector3* velocity, float** particle );
-	bool Bind( const Tr2ParticleElementDataMap& declaration, 
-			   std::set<Tr2ParticleElementDeclarationName> &boundElements );
+	bool Bind( const Tr2ParticleElementDataMap& declaration,
+			   std::set<Tr2ParticleElementDeclarationName>& boundElements );
 	std::string GetName() const;
 
-	void SetPositions( const Vector3& startPosition, 
+	void SetPositions( const Vector3& startPosition,
 					   const Quaternion& startRotation,
-					   const Vector3& endPosition, 
+					   const Vector3& endPosition,
 					   const Quaternion& endRotation );
+
 private:
 	// Generator positions
 	Vector3 m_positionStart;

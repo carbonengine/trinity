@@ -48,13 +48,12 @@ public:
 
 TYPEDEF_BLUECLASS( Tr2Sprite2dTriangle );
 
-class Tr2Sprite2dPolygon:
-     public Tr2TexturedSpriteObject,
-	 public IListNotify
+class Tr2Sprite2dPolygon : public Tr2TexturedSpriteObject,
+						   public IListNotify
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2Sprite2dPolygon( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2Sprite2dPolygon( IRoot* lockobj = NULL );
 	~Tr2Sprite2dPolygon();
 
 	Color GetColor() const;
@@ -69,12 +68,11 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	void OnListModified(
-		long event,		// BLUELISTEVENT values
+		long event, // BLUELISTEVENT values
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const IList* theList
-		);
+		const IList* theList );
 
 private:
 #if BLUE_WITH_PYTHON

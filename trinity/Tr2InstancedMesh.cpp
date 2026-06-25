@@ -14,10 +14,10 @@ CCP_STATS_DECLARED_ELSEWHERE( sceneDrawcallCount );
 CCP_STATS_DECLARE( instancesRendered, "Trinity/instancesRendered", true, CST_COUNTER_HIGH, "Number of instances rendered with Tr2InstancedMesh" );
 
 #if CCP_STATS_ENABLED
-#	define CCP_STATS_INC_PTR( name ) g_ccpStatistics_##name->Inc()
+#define CCP_STATS_INC_PTR( name ) g_ccpStatistics_##name->Inc()
 // Allow external code (such as shadow cubemap) to change the counter used for counting draw calls,
 // so we get more refined results than just one scene-wide "you had this many drawcalls in the _entire_ frame".
-extern CcpStaticStatisticsEntry * g_ccpStatistics_drawcallCount;
+extern CcpStaticStatisticsEntry* g_ccpStatistics_drawcallCount;
 #else
 #define CCP_STATS_INC_PTR( name )
 #endif
@@ -28,8 +28,8 @@ extern bool g_brokenMacOSNvidiaDrivers;
 // Description:
 //   Tr2InstancedMesh default constructor
 // --------------------------------------------------------------------------------------
-Tr2InstancedMesh::Tr2InstancedMesh( IRoot* lockobj )
-	:Tr2Mesh( lockobj ),
+Tr2InstancedMesh::Tr2InstancedMesh( IRoot* lockobj ) :
+	Tr2Mesh( lockobj ),
 	m_instanceMeshIndex( 0 ),
 	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_instanceDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
@@ -51,7 +51,7 @@ Tr2InstancedMesh::~Tr2InstancedMesh()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements IInitialize interface. Starts loading instance geometry resource if 
+//   Implements IInitialize interface. Starts loading instance geometry resource if
 //   mesh has non-empty path and loading is not deferred. Also initializes Tr2Mesh.
 // Return Value:
 //   true If initialization is successfull
@@ -94,9 +94,9 @@ bool Tr2InstancedMesh::OnPrepareResources()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements INotify interface.  Allows the mesh to respond to parameter 
+//   Implements INotify interface.  Allows the mesh to respond to parameter
 //   changes generated in Python.  Loads instance geometry resource when geometry path
-//   is modified or when deferred flag is reset. Passes control to Tr2Mesh.  
+//   is modified or when deferred flag is reset. Passes control to Tr2Mesh.
 // Arguments:
 //   value - The Blue-exposed parameter that changed
 // Return Value:
@@ -137,7 +137,7 @@ bool Tr2InstancedMesh::OnModified( Be::Var* value )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements IAsyncLoadedResNotifyTarget interface. Resets combined vertex 
+//   Implements IAsyncLoadedResNotifyTarget interface. Resets combined vertex
 //   declarations.
 // Arguments:
 //   p - Resource that being unloaded
@@ -150,7 +150,7 @@ void Tr2InstancedMesh::ReleaseCachedData( BlueAsyncRes* p )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements IAsyncLoadedResNotifyTarget interface. Creates combined vertex 
+//   Implements IAsyncLoadedResNotifyTarget interface. Creates combined vertex
 //   declarations when geometry is loaded.
 // Arguments:
 //   p - Resource that being loaded
@@ -172,13 +172,13 @@ ITr2InstanceData* Tr2InstancedMesh::GetInstanceGeometryResource() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Set a new instance geometry path from the outside. This will trigger an initialize 
+//   Set a new instance geometry path from the outside. This will trigger an initialize
 //   of the new geometry resource!
 // Arguments:
 //   path - gr2 res path
 // --------------------------------------------------------------------------------------
 void Tr2InstancedMesh::SetInstanceMeshResPath( const char* path )
-{ 
+{
 	m_instanceGeometryResPath = path;
 
 	// trigger change, this will automatically be triggered when set through python
@@ -222,7 +222,7 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 								   const Tr2MeshAreaVector* areas,
 								   const Tr2PerObjectData* data,
-								   float screenSize, 
+								   float screenSize,
 								   bool reverseAreas ) const
 {
 	if( !GetDisplay() || g_brokenMacOSNvidiaDrivers )
@@ -268,7 +268,7 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 	{
 		Tr2MeshArea* area = *it;
 
-		if( !area->GetDisplay())
+		if( !area->GetDisplay() )
 		{
 			continue;
 		}
@@ -344,7 +344,7 @@ CcpMath::AxisAlignedBox Tr2InstancedMesh::GetBounds( const Matrix* boneTransform
 		{
 			return aabb;
 		}
-	
+
 		auto instanceSize = m_maxInstanceSize;
 		if( m_boundsMethod == DYNAMIC_SCALED )
 		{
@@ -382,21 +382,20 @@ CcpMath::Sphere Tr2InstancedMesh::GetInstanceBoundsClosestToPoint( const Vector3
 	{
 	case Tr2InstancedMesh::DYNAMIC:
 		break;
-	case Tr2InstancedMesh::DYNAMIC_SCALED: 
-		{
-			float radius = 0;
-			GetInstanceBounds().EnumerateVertices( [&radius]( const Vector3& vtx ) {
-				radius = std::max( radius, LengthSq( vtx ) );
-			} );
-			instanceSize *= sqrt( radius );
-			break;
-		}
+	case Tr2InstancedMesh::DYNAMIC_SCALED: {
+		float radius = 0;
+		GetInstanceBounds().EnumerateVertices( [&radius]( const Vector3& vtx ) {
+			radius = std::max( radius, LengthSq( vtx ) );
+		} );
+		instanceSize *= sqrt( radius );
+		break;
+	}
 	default:
 		return {};
 	}
 	auto outerBounds = GetBounds();
 	outerBounds.Grow( -instanceSize );
-	
+
 	Vector3 closestPoint = ClosestPointToBoundingBox( outerBounds.m_min, outerBounds.m_max, point );
 
 	return CcpMath::Sphere( closestPoint, instanceSize );
@@ -462,16 +461,16 @@ static bool GetMeshVertexDeclaration( TriGeometryRes* geometryRes, int meshIndex
 // --------------------------------------------------------------------------------------
 // Description:
 //   Combines two vertex declarations into a single multi-stream declaration. Usage indexes
-//   for instanced declaration are shifted by 8, so shader would expect POSITION8, etc. 
+//   for instanced declaration are shifted by 8, so shader would expect POSITION8, etc.
 //   for instance data.
 // Arguments:
-//   meshVD - Vertex definition of the base mesh 
-//   instanceVD - Vertex definition of the instance data 
+//   meshVD - Vertex definition of the base mesh
+//   instanceVD - Vertex definition of the instance data
 // Return value:
 //   Handle for combined vertex definition (renderContext version) or Tr2EffectStateManager::
 //   UNINITIALIZED_DECLARATION on failure
 // --------------------------------------------------------------------------------------
-static unsigned int MergeVertexDeclarations( const Tr2VertexDefinition& meshVD, 
+static unsigned int MergeVertexDeclarations( const Tr2VertexDefinition& meshVD,
 											 const Tr2VertexDefinition& instanceVD )
 {
 	const unsigned usageOffset = 8;
@@ -497,7 +496,7 @@ static unsigned int MergeVertexDeclarations( const Tr2VertexDefinition& meshVD,
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Creates a combined vertex declaration for base mesh and instance data. 
+//   Creates a combined vertex declaration for base mesh and instance data.
 // --------------------------------------------------------------------------------------
 void Tr2InstancedMesh::CreateVertexDeclaration() const
 {
@@ -508,7 +507,7 @@ void Tr2InstancedMesh::CreateVertexDeclaration() const
 	{
 		return;
 	}
-	
+
 	if( !GetInstanceGeometryResource() || !GetInstanceGeometryResource()->IsInstanceDataReady() )
 	{
 		return;
@@ -553,7 +552,7 @@ void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugR
 		}
 		else
 		{
-			auto parentBounds = GetBounds(); 
+			auto parentBounds = GetBounds();
 			if( parentBounds )
 			{
 				if( m_instanceGeometryResource )
@@ -567,7 +566,6 @@ void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugR
 				}
 				renderer.DrawBox( this, worldTransform, parentBounds.m_min, parentBounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff888888, 0x22888888 ) );
 			}
-			
 		}
 	}
 }

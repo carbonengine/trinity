@@ -17,7 +17,7 @@ const Be::ClassInfo* EveSmartLightMesh::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IEveShadowCaster )
-		
+
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
 
@@ -39,8 +39,8 @@ const Be::ClassInfo* EveSmartLightMesh::ExposeToBlue()
 		MAP_ATTRIBUTE( "currentScreenSize", m_currentScreenSize, "", Be::READ )
 
 		MAP_ATTRIBUTE( "attributeModifiers", m_attributeModifiers, "list of attribute modifiers", Be::READ | Be::PERSIST | Be::NOTIFY )
-		
+
 		MAP_METHOD_AND_WRAP( "RefreshStaticGeometry", RefreshStaticGeometry, "if static geo parameters were changed during authoring: refresh here\n:jessica-placement: TOOLBAR" )
-				
+
 	EXPOSURE_END()
 }

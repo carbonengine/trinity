@@ -9,20 +9,32 @@
 
 // All frames can use the same indices - the layout of the sprite is always the same.
 static unsigned short s_frameIndices[] = {
-	0, 4, 5,
-	0, 5, 1,
-	2, 6, 7,
-	2, 7, 3,
+	0,
+	4,
+	5,
+	0,
+	5,
+	1,
+	2,
+	6,
+	7,
+	2,
+	7,
+	3,
 
 	// The two triangles in the center are kept last - then we can skip the
 	// center by sending fewer triangles.
-	1, 5, 6,
-	1, 6, 2,
+	1,
+	5,
+	6,
+	1,
+	6,
+	2,
 };
 
 static const Color WHITE( 1.0f, 1.0f, 1.0f, 1.0f );
 
-Tr2Sprite2dStretch::Tr2Sprite2dStretch( IRoot* lockobj ) : 
+Tr2Sprite2dStretch::Tr2Sprite2dStretch( IRoot* lockobj ) :
 	m_leftEdgeSize( 0 ),
 	m_rightEdgeSize( 0 ),
 	m_edgeScale( 1.f ),

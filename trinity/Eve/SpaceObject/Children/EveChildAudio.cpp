@@ -4,12 +4,11 @@
 #include "EveChildAudio.h"
 
 
-EveChildAudio::EveChildAudio(	IRoot* lockobj	): 
-m_name( "EveChildAudio" ),
-m_mute( false ),
-m_worldTransform( IdentityMatrix() )
+EveChildAudio::EveChildAudio( IRoot* lockobj ) :
+	m_name( "EveChildAudio" ),
+	m_mute( false ),
+	m_worldTransform( IdentityMatrix() )
 {
-
 }
 
 bool EveChildAudio::Initialize()
@@ -33,7 +32,7 @@ bool EveChildAudio::Initialize()
 		{
 			emitterName = m_name;
 		}
-		m_audioEmitter->Initialize( emitterName, L"", position);
+		m_audioEmitter->Initialize( emitterName, L"", position );
 
 		return true;
 	}
@@ -92,12 +91,10 @@ void EveChildAudio::GetLocalToWorldTransform( Matrix& transform ) const
 
 void EveChildAudio::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
 {
-
 }
 
 void EveChildAudio::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-
 }
 
 bool EveChildAudio::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
@@ -122,12 +119,12 @@ void EveChildAudio::UpdateSyncronous( const EveUpdateContext& updateContext, con
 	}
 	UpdateTransform( localToWorldTransform );
 
-	if( m_audioEmitter && !m_mute)
+	if( m_audioEmitter && !m_mute )
 	{
 		Vector3 position = m_worldTransform.GetTranslation();
 		Quaternion rotation = RotationQuaternion( m_worldTransform );
 		Matrix rotationMatrix = RotationMatrix( rotation );
-		Vector3 front = TransformNormal( Vector3( 0, 1, 0 ), rotationMatrix);
+		Vector3 front = TransformNormal( Vector3( 0, 1, 0 ), rotationMatrix );
 		Vector3 top = TransformNormal( Vector3( 0, 0, 1 ), rotationMatrix );
 		m_audioEmitter->SetPosition( front, top, position );
 	}
@@ -147,7 +144,6 @@ void EveChildAudio::SetEmitterName( const std::string& name )
 
 void EveChildAudio::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
-
 }
 
 void EveChildAudio::ChangeLOD( Tr2Lod lod )

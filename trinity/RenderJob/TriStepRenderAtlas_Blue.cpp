@@ -10,7 +10,7 @@ BLUE_DEFINE( TriStepRenderAtlas );
 
 const Be::ClassInfo* TriStepRenderAtlas::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepRenderAtlas, "" )
+	EXPOSURE_BEGIN( TriStepRenderAtlas, "" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepRenderAtlas )
@@ -25,16 +25,13 @@ const Be::ClassInfo* TriStepRenderAtlas::ExposeToBlue()
 		MAP_ATTRIBUTE( "focusColour", m_focusColour, "border colour for areas in use and selected (NYI)", Be::READWRITE )
 		MAP_ATTRIBUTE( "freeColour", m_freeColour, "border colour for free areas", Be::READWRITE )
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
-		(
-			"__init__", 
-			py__init__, 
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"__init__",
+			py__init__,
 			2,
-			"Creates a render step that renders an atlas\n" 
+			"Creates a render step that renders an atlas\n"
 			":param atlas: an atlas (default None)\n"
-			":param texture: texture in the atlas\n"
-		)
+			":param texture: texture in the atlas\n" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }
-

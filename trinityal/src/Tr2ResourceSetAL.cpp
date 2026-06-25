@@ -473,8 +473,8 @@ uint32_t Tr2ResourceSetDescriptionAL::ComputeHash() const
 }
 
 
-Tr2ResourceSetDescriptionAL::Resource::Resource()
-	:type( NONE ),
+Tr2ResourceSetDescriptionAL::Resource::Resource() :
+	type( NONE ),
 	colorSpace( Tr2RenderContextEnum::COLOR_SPACE_LINEAR )
 {
 }
@@ -515,8 +515,8 @@ void Tr2ResourceSetDescriptionAL::Resource::UpdateHash( uint32_t& hash ) const
 	}
 }
 
-Tr2ResourceSetDescriptionAL::Sampler::Sampler()
-	:type( NONE )
+Tr2ResourceSetDescriptionAL::Sampler::Sampler() :
+	type( NONE )
 {
 }
 
@@ -543,14 +543,14 @@ void Tr2ResourceSetDescriptionAL::Sampler::UpdateHash( uint32_t& hash ) const
 }
 
 
-namespace 
+namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2ResourceSetAL> nullRS = std::make_shared<TrinityALImpl::Tr2ResourceSetAL>();
+std::shared_ptr<TrinityALImpl::Tr2ResourceSetAL> nullRS = std::make_shared<TrinityALImpl::Tr2ResourceSetAL>();
 }
 
 
-Tr2ResourceSetAL::Tr2ResourceSetAL()
-	:m_resourceSet( nullRS )
+Tr2ResourceSetAL::Tr2ResourceSetAL() :
+	m_resourceSet( nullRS )
 {
 }
 

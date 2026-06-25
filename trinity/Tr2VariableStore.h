@@ -18,7 +18,8 @@ BLUE_DECLARE_INTERFACE( ITr2GpuBuffer );
 // SeeAlso:
 //   TriVariable
 // -------------------------------------------------------------
-BLUE_CLASS( Tr2VariableStore ) : public IRoot
+BLUE_CLASS( Tr2VariableStore ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -27,30 +28,31 @@ public:
 	~Tr2VariableStore();
 
 	Tr2VariableStore* GetParentVariableStore() const;
-	void SetParentVariableStore(Tr2VariableStore* variableStore);
+	void SetParentVariableStore( Tr2VariableStore * variableStore );
 
-    TriVariable* RegisterVariable( const char* name, float value );
+	TriVariable* RegisterVariable( const char* name, float value );
 	TriVariable* RegisterVariable( const char* name, int value );
 	TriVariable* RegisterVariable( const char* name, const Vector2& value );
 	TriVariable* RegisterVariable( const char* name, const Vector3& value );
-    TriVariable* RegisterVariable( const char* name, const Vector4& value );
-    TriVariable* RegisterVariable( const char* name, const Matrix& value );
-    TriVariable* RegisterVariable( const char* name, const Color& value );
+	TriVariable* RegisterVariable( const char* name, const Vector4& value );
+	TriVariable* RegisterVariable( const char* name, const Matrix& value );
+	TriVariable* RegisterVariable( const char* name, const Color& value );
 	TriVariable* RegisterVariable( const char* name );
 
 	TriVariable* RegisterVariable( const char* name, ITr2TextureProvider* value );
 	TriVariable* RegisterVariable( const char* name, ITr2GpuBuffer* value );
 	TriVariable* RegisterVariable( const char* name, const Tr2TextureAL& value );
 
-    void UnregisterVariable( const char* name );
+	void UnregisterVariable( const char* name );
 	bool UnregisterLocalVariable( const char* name );
-    TriVariable* FindVariable( const char* name ) const;
-    TriVariable* FindLocalVariable( const char* name ) const;
+	TriVariable* FindVariable( const char* name ) const;
+	TriVariable* FindLocalVariable( const char* name ) const;
 	TriVariable* GetVariable( const char* name );
 	TriVariable* GetLocalVariable( const char* name );
 
 protected:
-	Tr2VariableStore( IRoot* lockobj, int );
+	Tr2VariableStore( IRoot * lockobj, int );
+
 private:
 	std::vector<std::string> GetLocalNames() const;
 
@@ -64,17 +66,17 @@ private:
 	//   name - Name of the new variable
 	//   value - Value for the new variable
 	// -------------------------------------------------------------
-    template< typename U >
-    TriVariable* RegisterVariableInternal( const char* name, const U& value )
-    {
-        TriVariableContentType type = GetVariableType( value );
+	template <typename U>
+	TriVariable* RegisterVariableInternal( const char* name, const U& value )
+	{
+		TriVariableContentType type = GetVariableType( value );
 		TriVariable* var = RegisterVariableType( name, type );
 		if( var )
 		{
 			var->SetValue( value );
 		}
 		return var;
-    }
+	}
 
 	// Pointer to the parent variable store
 	// used to resolve variables

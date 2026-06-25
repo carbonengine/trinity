@@ -8,7 +8,8 @@
 #include "Tr2Event.h"
 
 
-BLUE_INTERFACE( ITr2TextureProvider ) : public IRoot
+BLUE_INTERFACE( ITr2TextureProvider ) :
+	public IRoot
 {
 	using OnTextureChangeEvent = Tr2Event<>;
 	virtual Tr2TextureAL* GetTexture() = 0;

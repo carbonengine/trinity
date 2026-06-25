@@ -24,8 +24,8 @@ const Tr2VertexDefinition& EveSpotlightSet::GlowPoolVertex::GetDefinition()
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 0, 1, 1 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 1, 1, 1 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 2, 1, 1 );
-		vd.Add( vd.FLOAT16_4 , vd.COLOR, 0, 1, 1 );
-		vd.Add( vd.FLOAT16_4 , vd.COLOR, 1, 1, 1 );
+		vd.Add( vd.FLOAT16_4, vd.COLOR, 0, 1, 1 );
+		vd.Add( vd.FLOAT16_4, vd.COLOR, 1, 1, 1 );
 		vd.Add( vd.FLOAT16_4, vd.TEXCOORD, 3, 1, 1 );
 	}
 	return s_definition;
@@ -42,7 +42,7 @@ const Tr2VertexDefinition& EveSpotlightSet::ConePoolVertex::GetDefinition()
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 0, 1, 1 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 1, 1, 1 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 2, 1, 1 );
-		vd.Add( vd.FLOAT16_4 , vd.COLOR, 0, 1, 1 );
+		vd.Add( vd.FLOAT16_4, vd.COLOR, 0, 1, 1 );
 		vd.Add( vd.FLOAT16_2, vd.TEXCOORD, 3, 1, 1 );
 	}
 	return s_definition;
@@ -59,10 +59,9 @@ const int SPRITE_QUAD_COUNT = 2;
 EveSpotlightLight::EveSpotlightLight() :
 	lightData( LightData() ),
 	index( 0 ),
-	boneMatrix( IdentityMatrix() ), 
+	boneMatrix( IdentityMatrix() ),
 	boosterGainInfluence( false )
 {
-
 }
 
 EveSpotlightLight::EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring& profilePath, bool boosterGainInfluence ) :
@@ -150,7 +149,7 @@ bool EveSpotlightSet::UpdateVisibility( const EveUpdateContext& updateContext, c
 
 void EveSpotlightSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
-	for( auto& light : m_lights ) 
+	for( auto& light : m_lights )
 	{
 		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
 		{
@@ -181,7 +180,7 @@ AxisAlignedBoundingBox EveSpotlightSet::GetAabb( const Float4x3* bones, size_t b
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Registers set effects with quad renderer if quad rendering was enabled with 
+//   Registers set effects with quad renderer if quad rendering was enabled with
 //   UseQuadRenderer call.
 // Arguments:
 //   quadRenderer - quad renderer
@@ -194,7 +193,7 @@ void EveSpotlightSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Adds sprites to render with quad renderer if quad rendering was enabled with 
+//   Adds sprites to render with quad renderer if quad rendering was enabled with
 //   UseQuadRenderer call.
 // Arguments:
 //   quadRenderer - quad renderer
@@ -516,7 +515,6 @@ void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 				10,
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
-
 		}
 	}
 }
@@ -542,7 +540,8 @@ void EveSpotlightSet::GetLights( Tr2LightManager& lightManager ) const
 	for( auto& light : m_lights )
 	{
 		features.parentBrightness = m_activationStrength;
-		if( light.boosterGainInfluence ) {
+		if( light.boosterGainInfluence )
+		{
 			features.parentBrightness *= m_boosterGain;
 		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();

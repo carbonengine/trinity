@@ -60,14 +60,14 @@ static PyObject* py__init__( PyObject* self, PyObject* args )
 
 const Be::ClassInfo* TriStepRenderTexture::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepRenderTexture, "" )
+	EXPOSURE_BEGIN( TriStepRenderTexture, "" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepRenderTexture )
 
-		MAP_ATTRIBUTE( "texture", m_texture,"TriTextureRes that will be rendered", Be::READWRITE )
-		MAP_ATTRIBUTE( "renderTarget", m_texture,"Tr2RenderTarget that will be rendered", Be::READWRITE )
-		MAP_ATTRIBUTE( "depthStencil", m_texture,"Tr2DepthStencil that will be rendered", Be::READWRITE )
+		MAP_ATTRIBUTE( "texture", m_texture, "TriTextureRes that will be rendered", Be::READWRITE )
+		MAP_ATTRIBUTE( "renderTarget", m_texture, "Tr2RenderTarget that will be rendered", Be::READWRITE )
+		MAP_ATTRIBUTE( "depthStencil", m_texture, "Tr2DepthStencil that will be rendered", Be::READWRITE )
 		MAP_ATTRIBUTE( "tlTexCoord", m_tlTexCoord, "top left texture coordinate", Be::READWRITE )
 		MAP_ATTRIBUTE( "brTexCoord", m_brTexCoord, "bottom right texture coordinate", Be::READWRITE )
 
@@ -75,14 +75,12 @@ const Be::ClassInfo* TriStepRenderTexture::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "failClearColor", m_failClearColor, "color to use when clearing due to a failed blit", Be::READWRITE )
 
-		MAP_METHOD
-		(
-			"__init__", 
-			py__init__, 
-			"Creates a render step that renders a texture\n" 
+		MAP_METHOD(
+			"__init__",
+			py__init__,
+			"Creates a render step that renders a texture\n"
 			":param texture: texture to render\n"
-			":type texture: Optional[ITr2TextureProvider | Tr2AtlasTexture]"
-		)
+			":type texture: Optional[ITr2TextureProvider | Tr2AtlasTexture]" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

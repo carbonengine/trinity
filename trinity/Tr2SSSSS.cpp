@@ -18,27 +18,27 @@ using namespace Tr2RenderContextEnum;
 
 namespace
 {
-	Vector3 gaussian( float variance, float r )
-	{
-		/**
+Vector3 gaussian( float variance, float r )
+{
+	/**
 			 * We use a falloff to modulate the shape of the profile. Big falloffs
 			 * spreads the shape making it wider, while small falloffs make it
 			 * narrower.
 			 */
-		Vector3 falloff = Vector3( 1.0f, 0.37f, 0.3f );
+	Vector3 falloff = Vector3( 1.0f, 0.37f, 0.3f );
 
-		Vector3 g;
-		for( int i = 0; i < 3; i++ )
-		{
-			float rr = r / ( 0.001f + falloff[i] );
-			g[i] = exp( ( -( rr * rr ) ) / ( 2.0f * variance ) ) / ( 2.0f * 3.14f * variance );
-		}
-		return g;
-	}
-
-	Vector3 profile( float r )
+	Vector3 g;
+	for( int i = 0; i < 3; i++ )
 	{
-		/**
+		float rr = r / ( 0.001f + falloff[i] );
+		g[i] = exp( ( -( rr * rr ) ) / ( 2.0f * variance ) ) / ( 2.0f * 3.14f * variance );
+	}
+	return g;
+}
+
+Vector3 profile( float r )
+{
+	/**
 			 * We used the red channel of the original skin profile defined in
 			 * [d'Eon07] for all three channels. We noticed it can be used for green
 			 * and blue channels (scaled using the falloff parameter) without
@@ -46,22 +46,21 @@ namespace
 			 * the profile. For example, it allows to create blue SSS gradients, which
 			 * could be useful in case of rendering blue creatures.
 			 */
-		return // 0.233f * gaussian(0.0064f, r) + /* We consider this one to be directly bounced light, accounted by the strength parameter (see @STRENGTH) */
-			gaussian( 0.0484f, r ) * 0.100f +
-			gaussian( 0.187f, r ) * 0.118f +
-			gaussian( 0.567f, r ) * 0.113f +
-			gaussian( 1.99f, r ) * 0.358f +
-			gaussian( 7.41f, r ) * 0.078f;
-	}
+	return // 0.233f * gaussian(0.0064f, r) + /* We consider this one to be directly bounced light, accounted by the strength parameter (see @STRENGTH) */
+		gaussian( 0.0484f, r ) * 0.100f +
+		gaussian( 0.187f, r ) * 0.118f +
+		gaussian( 0.567f, r ) * 0.113f +
+		gaussian( 1.99f, r ) * 0.358f +
+		gaussian( 7.41f, r ) * 0.078f;
+}
 }
 
-Tr2SSSSS::Tr2SSSSS( IRoot* lockobj ) : 
+Tr2SSSSS::Tr2SSSSS( IRoot* lockobj ) :
 	m_enabled( true ),
 	m_hasSSSSSInScene( true ),
 	m_subSurfaceScatteringWidth( 0.1277f ),
 	m_subSurfaceFrontScatterColor( Color( 1, 1, 1, 1 ) )
 {
-
 }
 
 void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderContext, ITriRenderBatchAccumulator* batches, const Tr2TextureAL& colorMap, const Tr2TextureAL& opaqueColorMap, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool )
@@ -231,7 +230,7 @@ void Tr2SSSSS::UpdateSubSurfaceFrontScatterData( Tr2RenderContext& renderContext
 
 		// Calculate the sum of the weights, we will need to normalize them below
 		Vector3 sum = Vector3( 0.0f, 0.0f, 0.0f );
-		for (int i = 0; i < nSamples; i++)
+		for( int i = 0; i < nSamples; i++ )
 		{
 			sum += Vector3( kernel[i].x, kernel[i].y, kernel[i].z );
 		}

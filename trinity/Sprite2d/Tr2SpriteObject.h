@@ -20,9 +20,8 @@ extern Be::VarChooser Tr2SpriteObjectEffectChooser[];
 extern Be::VarChooser Tr2SpriteObjectBlendModeChooser[];
 extern Be::VarChooser Tr2SpriteTargetChooser[];
 
-class Tr2SpriteObjectBase :
-	public ITr2SpriteObject,
-	public INotify
+class Tr2SpriteObjectBase : public ITr2SpriteObject,
+							public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -31,7 +30,7 @@ public:
 	~Tr2SpriteObjectBase();
 
 	bool GetDisplay() const;
-	void SetDisplay ( bool val );
+	void SetDisplay( bool val );
 
 	float GetDisplayX() const;
 	void SetDisplayX( float val );
@@ -81,11 +80,9 @@ protected:
 #if BLUE_WITH_PYTHON
 	PyObject* m_associatedObject;
 #endif
-
 };
 
-class Tr2SpriteObject :
-	public Tr2SpriteObjectBase
+class Tr2SpriteObject : public Tr2SpriteObjectBase
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -120,9 +117,8 @@ protected:
 
 TYPEDEF_BLUECLASS( Tr2SpriteObject );
 
-class Tr2TexturedSpriteObject :
-	public Tr2SpriteObject,
-	public ITr2Sprite2dTextureNotifyTarget
+class Tr2TexturedSpriteObject : public Tr2SpriteObject,
+								public ITr2Sprite2dTextureNotifyTarget
 {
 public:
 	EXPOSE_TO_BLUE();

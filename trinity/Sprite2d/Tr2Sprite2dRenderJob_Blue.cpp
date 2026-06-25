@@ -11,12 +11,10 @@ const Be::ClassInfo* Tr2Sprite2dRenderJob::ExposeToBlue()
 		MAP_INTERFACE( ITr2SpriteObject )
 		MAP_INTERFACE( Tr2Sprite2dRenderJob )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"renderJob",
 			m_renderJob,
 			"The render job to be executed",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 	EXPOSURE_CHAINTO( Tr2SpriteObjectBase )
 }

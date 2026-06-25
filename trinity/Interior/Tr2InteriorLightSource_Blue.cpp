@@ -10,9 +10,9 @@ BLUE_DEFINE( Tr2InteriorLightSource );
 
 const Be::ClassInfo* Tr2InteriorLightSource::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2InteriorLightSource, "" )
-        MAP_INTERFACE( Tr2InteriorLightSource )
-        MAP_INTERFACE( IInitialize )
+	EXPOSURE_BEGIN( Tr2InteriorLightSource, "" )
+		MAP_INTERFACE( Tr2InteriorLightSource )
+		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( ITr2InteriorLight )
 
@@ -31,8 +31,7 @@ const Be::ClassInfo* Tr2InteriorLightSource::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets to animate light attributes", Be::READ | Be::PERSIST )
 
-		MAP_METHOD_AND_WRAP( "IsSpotLight", IsSpotLight, "Returns true if the light is a spot light (cone angle < 90 degrees) ")
+		MAP_METHOD_AND_WRAP( "IsSpotLight", IsSpotLight, "Returns true if the light is a spot light (cone angle < 90 degrees) " )
 
 	EXPOSURE_END()
 }
-

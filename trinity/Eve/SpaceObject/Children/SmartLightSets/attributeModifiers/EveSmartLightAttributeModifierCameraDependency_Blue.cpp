@@ -22,16 +22,16 @@ const Be::ClassInfo* EveSmartLightAttributeModifierCameraDependency::ExposeToBlu
 		MAP_ATTRIBUTE( "inverseDistanceFormula", m_inverseDistanceFormula, "if you want to increase the strength on moving further away instead\n:jessica-group: CameraDistance", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "minimumDistance", m_minimumDistance, "at what distance to start changing intensity\n:jessica-group: CameraDistance", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "maximumDistance", m_maximumDistance, "at what distance to stop changing intensity\n:jessica-group: CameraDistance", Be::READWRITE | Be::PERSIST );
-		
+
 		MAP_ATTRIBUTE( "useCameraLookAt", m_useCameraLookAt, "if you want to change intencity based on if you are looking at the object\n:jessica-group: CameraLookAt", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "inverselookAtFormula", m_inverselookAtFormula, "if want intencity to be at full strength when NOT looking at your object\n:jessica-group: CameraLookAt", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "lookAtIntensity", m_lookAtIntencity, "to have the falloff be non-linear over range (fast or slow from center)\n:jessica-group: CameraLookAt\n:jessica-numeric-range: (0.1,10.0)", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "lookAtVisionCone", m_lookAtVisionCone, "degree range at which we modify attributeStrength \n:jessica-group: CameraLookAt\n:jessica-numeric-range: (0.1,10.0)", Be::READWRITE | Be::PERSIST );
-		
+
 		MAP_ATTRIBUTE( "useCameraPlacement", m_useCameraPlacement, "increase activation strength when you are in front of the object\n:jessica-group: cameraPlacement", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "inversePlacementFormula", m_inversePlacementFormula, "increase activation strength when you are NOT in front of the object\n:jessica-group: cameraPlacement", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "placementIntensity", m_placementIntencity, "to have the falloff be non-linear\n:jessica-group: cameraPlacement\n:jessica-numeric-range: (0.1,10.0)", Be::READWRITE | Be::PERSIST );
-		
+
 		MAP_ATTRIBUTE( "attributeMultiplier", m_activationStrength, "scale modifier effect\n:jessica-group: AttributeModifierBlending", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "finalAttributeMultiplier", m_finalActivationStrength, "to visualize/debug compound activationStrength\n:jessica-group: AttributeModifierBlending", Be::READ )
 

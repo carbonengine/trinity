@@ -12,13 +12,13 @@ RenderWindow* s_wnd = nullptr;
 
 }
 
-void WithWindow::SetUpTestCase() 
+void WithWindow::SetUpTestCase()
 {
 	CCP_DELETE s_wnd;
 	s_wnd = CCP_NEW( "WithWindowFixture/s_wnd" ) RenderWindow( 640, 480 );
 }
 
-void WithWindow::TearDownTestCase() 
+void WithWindow::TearDownTestCase()
 {
 	CCP_DELETE s_wnd;
 	s_wnd = nullptr;

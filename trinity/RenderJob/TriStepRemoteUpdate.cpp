@@ -14,7 +14,7 @@ static std::string appendIdToString( const char* str, int id )
 	return std::string( str ).append( std::string( buffer ) );
 }
 
-TriStepRemoteUpdate::TriStepRemoteUpdate( IRoot* lockobj ):
+TriStepRemoteUpdate::TriStepRemoteUpdate( IRoot* lockobj ) :
 	m_sharedMemory( NULL ),
 	m_sharedMemoryHandle( NULL ),
 	m_needsHndl( NULL ),
@@ -22,18 +22,16 @@ TriStepRemoteUpdate::TriStepRemoteUpdate( IRoot* lockobj ):
 	m_writingHndl( NULL ),
 	m_id( -1 )
 {
-
-
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
-void TriStepRemoteUpdate::py__init__( 
-	TriView* view, 
-	TriProjection* projection, 
-	TriViewport* viewport, 
+void TriStepRemoteUpdate::py__init__(
+	TriView* view,
+	TriProjection* projection,
+	TriViewport* viewport,
 	Be::OptionalWithDefaultValue<int, -1> id )
 {
 	SetData( view, projection, viewport, id );
@@ -42,7 +40,7 @@ void TriStepRemoteUpdate::py__init__(
 bool TriStepRemoteUpdate::OpenSharedMemoryAndEvents()
 {
 	// we will store two 4x4 matrices and the dimensions of the viewport
-	// 16*4+16*4+6*4 
+	// 16*4+16*4+6*4
 	int size = 152;
 
 	std::string sharedMemoryName;
@@ -76,12 +74,12 @@ bool TriStepRemoteUpdate::OpenSharedMemoryAndEvents()
 	m_sharedMemory = (const char*)MapViewOfFile(
 		m_sharedMemoryHandle,
 		FILE_MAP_ALL_ACCESS,
-		0, 0,
-		size
-		);
+		0,
+		0,
+		size );
 
 	if( m_sharedMemory == NULL )
-	{ 
+	{
 		CloseHandle( m_sharedMemoryHandle );
 
 		return false;
@@ -94,7 +92,7 @@ bool TriStepRemoteUpdate::OpenSharedMemoryAndEvents()
 	return true;
 }
 
-void TriStepRemoteUpdate::SetData( TriView* view, TriProjection *proj, TriViewport* viewport, int id )
+void TriStepRemoteUpdate::SetData( TriView* view, TriProjection* proj, TriViewport* viewport, int id )
 {
 	m_view = view;
 	m_projection = proj;
@@ -102,20 +100,20 @@ void TriStepRemoteUpdate::SetData( TriView* view, TriProjection *proj, TriViewpo
 	m_id = id;
 }
 
-TriStepRemoteUpdate::~TriStepRemoteUpdate(void)
+TriStepRemoteUpdate::~TriStepRemoteUpdate( void )
 {
 	// Release shared handles
 	// shared memory
-	
+
 	if( m_sharedMemory )
 	{
-		UnmapViewOfFile (m_sharedMemory );
+		UnmapViewOfFile( m_sharedMemory );
 	}
 	if( m_sharedMemoryHandle )
 	{
 		CloseHandle( m_sharedMemoryHandle );
 	}
-	
+
 	// Events
 	if( m_needsHndl )
 	{
@@ -134,15 +132,15 @@ TriStepRemoteUpdate::~TriStepRemoteUpdate(void)
 
 namespace
 {
-	struct Dx9Viewport
-	{
-		uint32_t X;
-		uint32_t Y;
-		uint32_t Width;
-		uint32_t Height;
-		float MinZ;
-		float MaxZ;
-	};
+struct Dx9Viewport
+{
+	uint32_t X;
+	uint32_t Y;
+	uint32_t Width;
+	uint32_t Height;
+	float MinZ;
+	float MaxZ;
+};
 }
 
 TriStepResult TriStepRemoteUpdate::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )
@@ -156,17 +154,17 @@ TriStepResult TriStepRemoteUpdate::Execute( Be::Time realTime, Be::Time simTime,
 			{
 				ResetEvent( m_readingHndl );
 
-				// Read data	
+				// Read data
 				Matrix projMat;
 				Matrix viewMat;
 				Dx9Viewport viewport;
 				int offset = 0;
 
-				memcpy((void*)&projMat, m_sharedMemory, 64);
+				memcpy( (void*)&projMat, m_sharedMemory, 64 );
 				offset += 64;
-				memcpy((void*)&viewMat, m_sharedMemory+offset, 64);
+				memcpy( (void*)&viewMat, m_sharedMemory + offset, 64 );
 				offset += 64;
-				memcpy((void*)&viewport, m_sharedMemory+offset, 24);				
+				memcpy( (void*)&viewport, m_sharedMemory + offset, 24 );
 				m_projection->CustomProjection( projMat );
 				m_view->SetTransform( viewMat );
 				m_viewport->width = viewport.Width;
@@ -179,10 +177,10 @@ TriStepResult TriStepRemoteUpdate::Execute( Be::Time realTime, Be::Time simTime,
 	}
 	else
 	{
-		if( !OpenSharedMemoryAndEvents())
+		if( !OpenSharedMemoryAndEvents() )
 		{
-			CCP_LOGERR("There is no shared memory to read from");
-		}		
+			CCP_LOGERR( "There is no shared memory to read from" );
+		}
 	}
 
 	return RS_OK;

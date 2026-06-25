@@ -42,15 +42,15 @@ bool TriFrustumOrtho::IsSphereVisibleAndInsideNearPlane( const Vector3& center, 
 		if( pCenter[i] < pMin[i] )
 		{
 			float a = pCenter[i] - pMin[i];
-			d += a*a;
+			d += a * a;
 		}
 		else if( pCenter[i] > pMax[i] )
 		{
 			float a = pCenter[i] - pMax[i];
-			d += a*a;
+			d += a * a;
 		}
 	}
-	
+
 	float r2 = radius * radius;
 	if( d > r2 )
 	{

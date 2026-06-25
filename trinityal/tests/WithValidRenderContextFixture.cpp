@@ -4,14 +4,14 @@
 #include "WithValidRenderContextFixture.h"
 #include <map>
 
-#if defined(__ANDROID__)
+#if defined( __ANDROID__ )
 #include <android/log.h>
 
 extern volatile bool g_windowResized;
 #endif
 
-WithValidRenderContext::WithValidRenderContext()
-	:m_madeScreenshot( false )
+WithValidRenderContext::WithValidRenderContext() :
+	m_madeScreenshot( false )
 {
 }
 
@@ -34,14 +34,14 @@ void WithValidRenderContext::SetUpTestCase()
 	presentParameters.software = false;
 	presentParameters.presentInterval = Tr2RenderContextEnum::PRESENT_INTERVAL_ONE;
 
-    
+
 	CR( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
-    
-#if defined(__ANDROID__)
-    __android_log_print( ANDROID_LOG_INFO, "TrinityALTest", "OpenGL extensions: %s", glGetString( GL_EXTENSIONS ) );
-    while( !g_windowResized )
-    {
-    }
+
+#if defined( __ANDROID__ )
+	__android_log_print( ANDROID_LOG_INFO, "TrinityALTest", "OpenGL extensions: %s", glGetString( GL_EXTENSIONS ) );
+	while( !g_windowResized )
+	{
+	}
 #endif
 }
 
@@ -59,47 +59,47 @@ namespace
 
 struct DDS_PIXELFORMAT
 {
-	uint32_t dwSize;			// 4
+	uint32_t dwSize; // 4
 	uint32_t dwFlags;
 	uint32_t dwFourCC;
-	uint32_t dwRGBBitCount;	// 16
+	uint32_t dwRGBBitCount; // 16
 	uint32_t dwRBitMask;
 	uint32_t dwGBitMask;
 	uint32_t dwBBitMask;
-	uint32_t dwABitMask;		// 32
+	uint32_t dwABitMask; // 32
 };
 
 struct DDS_HEADER
 {
-	uint32_t dwFourCC;				// 4
+	uint32_t dwFourCC; // 4
 	uint32_t dwSize;
 	uint32_t dwHeaderFlags;
-	uint32_t dwHeight;				// 16
+	uint32_t dwHeight; // 16
 	uint32_t dwWidth;
 	uint32_t dwPitchOrLinearSize;
-	uint32_t dwDepth;				// only if DDS_HEADER_FLAGS_VOLUME is set in dwHeaderFlags
-	uint32_t dwMipMapCount;		// 32
-	uint32_t dwReserved1[11];		// 76
-	DDS_PIXELFORMAT ddspf;		// 108
+	uint32_t dwDepth; // only if DDS_HEADER_FLAGS_VOLUME is set in dwHeaderFlags
+	uint32_t dwMipMapCount; // 32
+	uint32_t dwReserved1[11]; // 76
+	DDS_PIXELFORMAT ddspf; // 108
 	uint32_t dwSurfaceFlags;
-	uint32_t dwCubemapFlags;		// 116
-	uint32_t dwReserved2[3];		// 128
+	uint32_t dwCubemapFlags; // 116
+	uint32_t dwReserved2[3]; // 128
 };
 
 
 #ifndef MAKEFOURCC
-    #define MAKEFOURCC(ch0, ch1, ch2, ch3)                              \
-                ((uint32_t)(uint8_t)(ch0) | ((uint32_t)(uint8_t)(ch1) << 8) |       \
-                ((uint32_t)(uint8_t)(ch2) << 16) | ((uint32_t)(uint8_t)(ch3) << 24 ))
+#define MAKEFOURCC( ch0, ch1, ch2, ch3 )                                 \
+	( (uint32_t)(uint8_t)( ch0 ) | ( (uint32_t)(uint8_t)( ch1 ) << 8 ) | \
+	  ( (uint32_t)(uint8_t)( ch2 ) << 16 ) | ( (uint32_t)(uint8_t)( ch3 ) << 24 ) )
 #endif
 
 
-#define DDS_HEADER_FLAGS_TEXTURE    0x00001007  // DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT 
-#define DDS_HEADER_FLAGS_MIPMAP     0x00020000  // DDSD_MIPMAPCOUNT
-#define DDS_HEADER_FLAGS_VOLUME     0x00800000  // DDSD_DEPTH
-#define DDS_HEADER_FLAGS_PITCH      0x00000008  // DDSD_PITCH
-#define DDS_HEADER_FLAGS_LINEARSIZE 0x00080000  // DDSD_LINEARSIZE
-#define DDS_RGB     0x00000040 // DDPF_RGB
+#define DDS_HEADER_FLAGS_TEXTURE 0x00001007 // DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT
+#define DDS_HEADER_FLAGS_MIPMAP 0x00020000 // DDSD_MIPMAPCOUNT
+#define DDS_HEADER_FLAGS_VOLUME 0x00800000 // DDSD_DEPTH
+#define DDS_HEADER_FLAGS_PITCH 0x00000008 // DDSD_PITCH
+#define DDS_HEADER_FLAGS_LINEARSIZE 0x00080000 // DDSD_LINEARSIZE
+#define DDS_RGB 0x00000040 // DDPF_RGB
 #define DDS_SURFACE_FLAGS_TEXTURE 0x00001000 // DDSCAPS_TEXTURE
 
 void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2RenderContextAL& renderContext )
@@ -128,8 +128,8 @@ void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2Ren
 	header.ddspf.dwBBitMask = 0xFF;
 
 	header.dwSurfaceFlags = DDS_SURFACE_FLAGS_TEXTURE;
-	header.dwPitchOrLinearSize = (header.ddspf.dwRGBBitCount * header.dwWidth * header.dwHeight) / 8;
-	
+	header.dwPitchOrLinearSize = ( header.ddspf.dwRGBBitCount * header.dwWidth * header.dwHeight ) / 8;
+
 	auto sz = pitch * rt.GetHeight();
 	std::unique_ptr<uint8_t[]> rgbx( new uint8_t[sz] );
 	memcpy( rgbx.get(), data, sz );
@@ -258,11 +258,11 @@ size_t FindSlash( const std::string& path, size_t offset )
 
 #ifdef _MSC_VER
 #define mkdir( path ) _mkdir( path )
-#elif defined(__ANDROID__)
+#elif defined( __ANDROID__ )
 #include <sys/stat.h>
 #define mkdir( path ) mkdir( path, 0777 );
 #else
-#define mkdir( path ) mkdir( path, S_IRWXU|S_IRGRP|S_IXGRP )
+#define mkdir( path ) mkdir( path, S_IRWXU | S_IRGRP | S_IXGRP )
 #endif
 
 void MkDirs( const std::string& path )
@@ -285,7 +285,7 @@ void MkDirs( const std::string& path )
 bool WithValidRenderContext::MachineHasGfxAdapter()
 {
 	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
+	Tr2VideoAdapterInfo::GetAdapterCount( count );
 	return count > 0;
 }
 
@@ -299,7 +299,7 @@ void WithValidRenderContext::MakeScreenShot( const char* outFilePath )
 
 void WithValidRenderContext::MakeTestScreenShot()
 {
-#if TRINITY_PLATFORM == TRINITY_STUB 
+#if TRINITY_PLATFORM == TRINITY_STUB
 	return;
 #endif
 
@@ -314,7 +314,7 @@ void WithValidRenderContext::MakeTestScreenShot()
 	m_madeScreenshot = true;
 
 	const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-	
+
 	std::string path = g_screenshotFolder;
 	path += std::string( "/" ) + test_info->test_case_name();
 	MkDirs( path.c_str() );

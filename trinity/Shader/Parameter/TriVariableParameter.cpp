@@ -5,7 +5,7 @@
 #include "Tr2VariableStore.h"
 #include "Shader/Tr2Shader.h"
 
-TriVariableParameter::TriVariableParameter(IRoot* lockobj):
+TriVariableParameter::TriVariableParameter( IRoot* lockobj ) :
 	m_isUsedByEffect( false ),
 	m_variable( NULL )
 {
@@ -46,12 +46,12 @@ bool TriVariableParameter::Initialize()
 {
 	if( !m_variableName.empty() )
 	{
-        m_variable = GlobalStore().GetVariable( m_variableName.c_str() );
+		m_variable = GlobalStore().GetVariable( m_variableName.c_str() );
 	}
-    else
-    {
+	else
+	{
 		m_variable = NULL;
-    }
+	}
 	return true;
 }
 
@@ -82,10 +82,10 @@ bool TriVariableParameter::ApplyUav(
 	return resourceDesc.SetUav( stage, registerIndex, Tr2TextureAL() );
 }
 
-void TriVariableParameter::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-												unsigned char* destHandle, 
-												size_t size,
-												Tr2RenderContext &renderContext ) const
+void TriVariableParameter::CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+											  unsigned char* destHandle,
+											  size_t size,
+											  Tr2RenderContext& renderContext ) const
 {
 	if( m_variable )
 	{
@@ -94,8 +94,8 @@ void TriVariableParameter::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType i
 }
 
 int TriVariableParameter::GetVariableType() const
-{ 
-	return m_variable ? m_variable->GetType() : TRIVARIABLE_INVALID; 
+{
+	return m_variable ? m_variable->GetType() : TRIVARIABLE_INVALID;
 }
 
 void TriVariableParameter::RebuildEffectHandles( Tr2Shader* effectRes )
@@ -104,14 +104,14 @@ void TriVariableParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 
 	m_isUsedByEffect = false;
 
-	if ( m_name.empty() || !effectRes )
+	if( m_name.empty() || !effectRes )
 	{
 		return;
 	}
 
 	if( m_variable )
 	{
-		if( m_variable->GetType() == TRIVARIABLE_TEXTURE_RES  )
+		if( m_variable->GetType() == TRIVARIABLE_TEXTURE_RES )
 		{
 			if( !effectRes->GetResource( m_name.c_str() ) )
 			{

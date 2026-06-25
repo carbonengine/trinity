@@ -4,8 +4,8 @@
 #ifndef Tr2PresentParameters_h
 #define Tr2PresentParameters_h
 
-BLUE_CLASS( Tr2PresentParameters ) : 
-	public IRoot, 
+BLUE_CLASS( Tr2PresentParameters ) :
+	public IRoot,
 	public Tr2PresentParametersAL
 {
 public:

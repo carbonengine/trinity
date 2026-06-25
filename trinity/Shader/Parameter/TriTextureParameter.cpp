@@ -9,7 +9,7 @@
 #include "Resources/TriTextureRes.h"
 
 
-TriTextureParameter::TriTextureParameter(IRoot* lockobj):
+TriTextureParameter::TriTextureParameter( IRoot* lockobj ) :
 	m_resourceType( Tr2EffectResource::TEXTURE_TYPELESS ),
 	m_uavMipLevel( 0 ),
 	m_isUsedByEffect( false ),
@@ -137,7 +137,7 @@ void TriTextureParameter::DisableTextureLoding()
 	m_textureLodEnabled = false;
 }
 
-bool TriTextureParameter::OnModified(	Be::Var* val )
+bool TriTextureParameter::OnModified( Be::Var* val )
 {
 	if( m_resource )
 	{
@@ -162,7 +162,7 @@ void TriTextureParameter::CopyValueToEffect(
 	Tr2RenderContextEnum::ShaderType inputType,
 	unsigned char* destHandle,
 	size_t size,
-	Tr2RenderContext& renderContext) const
+	Tr2RenderContext& renderContext ) const
 {
 	uint32_t value = m_cachedSrvIndex[m_bindlessColorSpace];
 	memcpy( destHandle, &value, std::min( size, sizeof( value ) ) );
@@ -292,8 +292,8 @@ ITr2TextureProvider* TriTextureParameter::GetResource() const
 //  Description:
 //    Copies any resource that was dynamically assigned to the parameter to the new copy
 // --------------------------------------------------------------------------------------
-bool TriTextureParameter::AssignTo( ICopierCustomAssignment* other, 
-											  ICopier* copier )
+bool TriTextureParameter::AssignTo( ICopierCustomAssignment* other,
+									ICopier* copier )
 {
 	if( m_resourcePath.empty() && m_resource )
 	{
@@ -319,7 +319,7 @@ void TriTextureParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 	m_cachedEffect = effectRes;
 
 	m_isUsedByEffect = false;
-	if ( m_name.empty() || !effectRes )
+	if( m_name.empty() || !effectRes )
 	{
 		return;
 	}

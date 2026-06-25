@@ -88,9 +88,18 @@ public:
 	Tr2RaytracingMeshArea( uint32_t index );
 	const Tr2RtBottomLevelAccelerationStructureAL& BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
 	const Tr2ConstantBufferAL* GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const;
-	uint32_t GetAreaIndex(){ return m_areaIndex; }
-	void MarkBlasOutdated() { m_blasOutdated = true; }
-	bool IsBlasOutdated() const { return m_blasOutdated || !m_blas.IsValid(); }
+	uint32_t GetAreaIndex()
+	{
+		return m_areaIndex;
+	}
+	void MarkBlasOutdated()
+	{
+		m_blasOutdated = true;
+	}
+	bool IsBlasOutdated() const
+	{
+		return m_blasOutdated || !m_blas.IsValid();
+	}
 
 private:
 	uint32_t m_areaIndex;
@@ -99,7 +108,8 @@ private:
 	bool m_blasOutdated;
 };
 
-BLUE_CLASS( Tr2RaytracingGeometry ) : public ITr2GpuBuffer
+BLUE_CLASS( Tr2RaytracingGeometry ) :
+	public ITr2GpuBuffer
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -115,11 +125,12 @@ public:
 	bool HasGeometry() const;
 
 	void ReleaseResources( TriStorage s );
-    
-    Tr2RtTopLevelAccelerationStructureAL GetTLAS() const;
+
+	Tr2RtTopLevelAccelerationStructureAL GetTLAS() const;
 	const Tr2BindlessResourcesAL& GetBindlessResources() const;
 
 	const BlueSharedString m_rtShadowTechniqueName = BlueSharedString( "RtShadow" );
+
 private:
 	struct VtxOffsets
 	{
@@ -142,17 +153,17 @@ private:
 		bool isTransparent;
 		uint32_t bakedMorphOffset;
 	};
-	
+
 	const BlueSharedString m_inVertexBufferTechniqueName = BlueSharedString( "InVB" );
 	const BlueSharedString m_outVertexBufferTechniqueName = BlueSharedString( "OutVB" );
 	static const uint32_t INVALID_MATERIAL = 0xffffffff;
 
-	void PrepareShaderTableDescription( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL * *shaderTableDescs, Tr2RaytracingPipelineStateManager * *pipelineManagers );
-	void TransformMeshes( Tr2RenderContext& renderContext );
-	void BuildAccelerationStructures(Tr2RenderContext& renderContext);
+	void PrepareShaderTableDescription( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
+	void TransformMeshes( Tr2RenderContext & renderContext );
+	void BuildAccelerationStructures( Tr2RenderContext & renderContext );
 
 	VtxOffsets FindOffsets( unsigned declHandle );
-	
+
 	std::vector<GeometryData> m_geometryData;
 	Tr2EnumerableThreadSpecific<std::vector<GeometryData>> m_threadLocalGeometryData;
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;

@@ -50,14 +50,12 @@ const Be::ClassInfo* Tr2CurveQuaternion::ExposeToBlue()
 			"GetValueAt",
 			GetValue,
 			"Returns curve value at specified time\n"
-			":param time: input time"
-		)
+			":param time: input time" )
 
 		MAP_METHOD_AND_WRAP(
 			"OnKeysChanged",
 			OnKeysChanged,
-			"Method to call whenever keys change"
-		)
+			"Method to call whenever keys change" )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"AddKey",
@@ -66,15 +64,13 @@ const Be::ClassInfo* Tr2CurveQuaternion::ExposeToBlue()
 			"Adds a new key to the curve\n"
 			":param time: key time\n"
 			":param value: key value\n"
-			":param interpolation: optional interpolation type for the segment following this key, defaults to trinity.Tr2CurveInterpolation.LINEAR\n"
-		)
+			":param interpolation: optional interpolation type for the segment following this key, defaults to trinity.Tr2CurveInterpolation.LINEAR\n" )
 
 		MAP_METHOD_AND_WRAP(
 			"SetExtrapolation",
 			SetExtrapolation,
 			"Assigns both extrapolationBefore and extrapolationAfter\n"
-			":param extrapolation: new extrapolation (trinity.Tr2CurveExtrapolation enum)"
-		)
+			":param extrapolation: new extrapolation (trinity.Tr2CurveExtrapolation enum)" )
 
-		EXPOSURE_END()
+	EXPOSURE_END()
 }

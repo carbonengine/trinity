@@ -7,7 +7,7 @@
 
 namespace TrinityALImpl
 {
-	class Tr2GpuTimerAL;
+class Tr2GpuTimerAL;
 }
 
 class Tr2PrimaryRenderContextAL;

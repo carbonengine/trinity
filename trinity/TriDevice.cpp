@@ -11,7 +11,7 @@
 #include "Curves/TriCurveSet.h"
 #include "Include/TriMath.h"
 #include "Tr2SyncToGpu.h"
-#include "TriSettingsRegistrar.h" 
+#include "TriSettingsRegistrar.h"
 #include "Tr2GpuResourcePool.h"
 #include <IBlueCallbackMan.h>
 #include "ContinueOnMainThread.h"
@@ -22,24 +22,24 @@
 
 
 #if TBB_ENABLED
-	#include <oneapi/tbb.h>
+#include <oneapi/tbb.h>
 
-	size_t g_currentThreadCount = tbb::info::default_concurrency();
-	tbb::global_control* g_threadCountControl = new tbb::global_control( tbb::global_control::max_allowed_parallelism, g_currentThreadCount );
+size_t g_currentThreadCount = tbb::info::default_concurrency();
+tbb::global_control* g_threadCountControl = new tbb::global_control( tbb::global_control::max_allowed_parallelism, g_currentThreadCount );
 
 
-	void SetThreadCount( size_t newThreadCount )
+void SetThreadCount( size_t newThreadCount )
+{
+	if( g_currentThreadCount != newThreadCount )
 	{
-		if( g_currentThreadCount != newThreadCount )
-		{
-			CCP_LOGNOTICE( "Thread count changed from %zu to %zu.", g_currentThreadCount, newThreadCount );
-			g_currentThreadCount = newThreadCount;
-			delete g_threadCountControl;
-			g_threadCountControl = new tbb::global_control( tbb::global_control::max_allowed_parallelism, newThreadCount );
-		}
+		CCP_LOGNOTICE( "Thread count changed from %zu to %zu.", g_currentThreadCount, newThreadCount );
+		g_currentThreadCount = newThreadCount;
+		delete g_threadCountControl;
+		g_threadCountControl = new tbb::global_control( tbb::global_control::max_allowed_parallelism, newThreadCount );
 	}
+}
 
-#endif 
+#endif
 
 using namespace Tr2RenderContextEnum;
 
@@ -47,62 +47,62 @@ using namespace Tr2RenderContextEnum;
 extern std::vector<HANDLE> g_D3DCreatedHeaps;
 #endif
 
-#if defined(__ANDROID__)
+#if defined( __ANDROID__ )
 extern int g_windowResized;
 #endif
 
 namespace
 {
 
-	HRESULT CreateDeviceInt(
-		uint32_t Adapter,
-		Tr2WindowHandle hFocusWindow,
-		const Tr2PresentParametersAL& pPresentationParameters )
+HRESULT CreateDeviceInt(
+	uint32_t Adapter,
+	Tr2WindowHandle hFocusWindow,
+	const Tr2PresentParametersAL& pPresentationParameters )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+#ifdef _WIN32
+	HANDLE heapsBefore[256];
+	const uint32_t countBefore = ::GetProcessHeaps( 256, heapsBefore );
+#endif
+
+	const HRESULT hr = renderContext.CreateDevice( Adapter, hFocusWindow, pPresentationParameters );
+
+#if defined( __ANDROID__ )
+	while( !g_windowResized )
 	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		
-#ifdef _WIN32
-		HANDLE heapsBefore[256];
-		const uint32_t countBefore = ::GetProcessHeaps( 256, heapsBefore );	
-#endif
-	
-		const HRESULT hr = renderContext.CreateDevice( Adapter, hFocusWindow, pPresentationParameters );
-
-#if defined(__ANDROID__)
-        while( !g_windowResized )
-        {
-        }
-#endif
-        
-#ifdef _WIN32
-		HANDLE heapsAfter[256];
-		const uint32_t countAfter = ::GetProcessHeaps( 256, heapsAfter );
-
-		if( countAfter > countBefore )
-		{
-			const int count = countAfter - countBefore;
-			CCP_LOG( "Direct3D::CreateDevice created %d heaps", count );
-
-			for( uint32_t i = countBefore; i != countAfter; ++i )
-			{
-				g_D3DCreatedHeaps.push_back( heapsAfter[i] );
-			}
-		}
-#endif
-
-		Tr2Renderer::InitializeSystemShaderOptions();
-
-		return hr;
 	}
+#endif
 
-	BlueStructureDefinition Tr2UpscalingTechniqueInfoDefinition[] = {
-		{ "technique", Be::UINT32_1, 0, Tr2UpsclaingAL_UpscalingTechnique_Chooser },
-		{ "supportedSettings", Be::UINT32_1, 4, Tr2UpsclaingAL_UpscalingSetting_Chooser },
-		{ "framegeneration", Be::BOOL8_1, 8 },
-		{ 0 }
-	};
+#ifdef _WIN32
+	HANDLE heapsAfter[256];
+	const uint32_t countAfter = ::GetProcessHeaps( 256, heapsAfter );
 
-	const Tr2UpscalingTechniqueInfo s_defaultUpscalingTechniqueInfo = { Tr2UpscalingAL::Technique::NONE, 0, false };
+	if( countAfter > countBefore )
+	{
+		const int count = countAfter - countBefore;
+		CCP_LOG( "Direct3D::CreateDevice created %d heaps", count );
+
+		for( uint32_t i = countBefore; i != countAfter; ++i )
+		{
+			g_D3DCreatedHeaps.push_back( heapsAfter[i] );
+		}
+	}
+#endif
+
+	Tr2Renderer::InitializeSystemShaderOptions();
+
+	return hr;
+}
+
+BlueStructureDefinition Tr2UpscalingTechniqueInfoDefinition[] = {
+	{ "technique", Be::UINT32_1, 0, Tr2UpsclaingAL_UpscalingTechnique_Chooser },
+	{ "supportedSettings", Be::UINT32_1, 4, Tr2UpsclaingAL_UpscalingSetting_Chooser },
+	{ "framegeneration", Be::BOOL8_1, 8 },
+	{ 0 }
+};
+
+const Tr2UpscalingTechniqueInfo s_defaultUpscalingTechniqueInfo = { Tr2UpscalingAL::Technique::NONE, 0, false };
 
 }
 
@@ -110,16 +110,16 @@ namespace
 CCP_STATS_DECLARE( deviceOnTick, "Trinity/device/OnTick", true, CST_TIME, "Time spent in TriDevice::OnTick" );
 
 CCP_STATS_DECLARE( fpsRaw, "FPSRaw", false, CST_COUNTER_LOW, "Raw frames per second" );
-CCP_STATS_DECLARE( fps, "FPS", false, CST_COUNTER_LOW, "Frames per second");
-CCP_STATS_DECLARE( smoothedFrameTime, "Trinity/SmoothedFrameTime", false, CST_TIME, "Frame time smoothed over a number of frames");
+CCP_STATS_DECLARE( fps, "FPS", false, CST_COUNTER_LOW, "Frames per second" );
+CCP_STATS_DECLARE( smoothedFrameTime, "Trinity/SmoothedFrameTime", false, CST_TIME, "Frame time smoothed over a number of frames" );
 CCP_STATS_DECLARE( frameTime, "Trinity/FrameTime", false, CST_TIME, "Frame time" );
 CCP_STATS_DECLARE( frameTimeMin, "Trinity/FrameTime/Min", false, CST_TIME, "Frame time (min)" );
 CCP_STATS_DECLARE( frameTimeMax, "Trinity/FrameTime/Max", false, CST_TIME, "Frame time (max)" );
-CCP_STATS_DECLARE( frameTimeAbove100ms, "Trinity/FrameTimeAbove100ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 100ms (but below 200)");
-CCP_STATS_DECLARE( frameTimeAbove200ms, "Trinity/FrameTimeAbove200ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 200ms (but below 300)");
-CCP_STATS_DECLARE( frameTimeAbove300ms, "Trinity/FrameTimeAbove300ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 300ms (but below 400)");
-CCP_STATS_DECLARE( frameTimeAbove400ms, "Trinity/FrameTimeAbove400ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 400ms (but below 500)");
-CCP_STATS_DECLARE( frameTimeAbove500ms, "Trinity/FrameTimeAbove500ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 500ms");
+CCP_STATS_DECLARE( frameTimeAbove100ms, "Trinity/FrameTimeAbove100ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 100ms (but below 200)" );
+CCP_STATS_DECLARE( frameTimeAbove200ms, "Trinity/FrameTimeAbove200ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 200ms (but below 300)" );
+CCP_STATS_DECLARE( frameTimeAbove300ms, "Trinity/FrameTimeAbove300ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 300ms (but below 400)" );
+CCP_STATS_DECLARE( frameTimeAbove400ms, "Trinity/FrameTimeAbove400ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 400ms (but below 500)" );
+CCP_STATS_DECLARE( frameTimeAbove500ms, "Trinity/FrameTimeAbove500ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 500ms" );
 CCP_STATS_DECLARE( presentTime, "Trinity/PresentTime", true, CST_TIME, "Time spent in Present call" );
 CCP_STATS_DECLARE( activeFrameTime, "Trinity/ActiveFrameTime", true, CST_TIME, "Frame time not counting persent or throttle time" );
 CCP_STATS_DECLARE( throttleTime, "Trinity/ThrottleTime", true, CST_TIME, "Time spent throttling" );
@@ -131,18 +131,18 @@ bool g_newUpscalersEnabled = true;
 TRI_REGISTER_SETTING( "newUpscalersEnabled", g_newUpscalersEnabled );
 
 extern uint32_t g_streamlineAppID;
-TRI_REGISTER_SETTING( "streamlineAppID", g_streamlineAppID );	
+TRI_REGISTER_SETTING( "streamlineAppID", g_streamlineAppID );
 
 bool g_raytracingEnabled = true;
 TRI_REGISTER_SETTING( "raytracingEnabled", g_raytracingEnabled );
 
-	// NOTE: This is a global pointer to a ROT object, initialized by it
+// NOTE: This is a global pointer to a ROT object, initialized by it
 // We never want this rot object to die, so we hold a reference here.
 BlueBasicPtr<TriDevice> gTriDev;
 
 unsigned long long g_currentFrameCounter = 0;
 
-TriDevice::ResourceSet	TriDevice::s_resourcesToBeRemoved;
+TriDevice::ResourceSet TriDevice::s_resourcesToBeRemoved;
 bool TriDevice::s_iteratingForRelease = false;
 
 const char* TRINITY = "Trinity"; //cookie for the tick
@@ -174,21 +174,21 @@ TriDevice::TriDevice( IRoot* lockobj ) :
 	m_upscalingWithFrameGeneration( false ),
 
 	m_minimumModelLOD( 0 )
-{	
-	
+{
+
 	m_supportedUpscalingTechniques.SetStructureDefinition( Tr2UpscalingTechniqueInfoDefinition );
 	m_supportedUpscalingTechniques.SetDefaultValue( &s_defaultUpscalingTechniqueInfo );
 
-	Tr2DisplayModeInfo empty = {0};
+	Tr2DisplayModeInfo empty = { 0 };
 	mDisplayMode = empty;
-	// At this point, in the constructor, we are just setting defaults.  We really 
+	// At this point, in the constructor, we are just setting defaults.  We really
 	// don't know if the device will require an adapter or not (in the case of
 	// software rendering an adapter is not necessary).
-	ALResult ignoreThisResult = 
+	ALResult ignoreThisResult =
 		Tr2VideoAdapterInfo::GetAdapterDisplayMode( mAdapter, mDisplayMode );
-	// In the case where an adapter wouldn't be required (we don't know yet) it 
+	// In the case where an adapter wouldn't be required (we don't know yet) it
 	// is fine for the method above to fail so we must explicitly ignore the result
-	// of calling the method (otherwise the results checking, when enabled, would 
+	// of calling the method (otherwise the results checking, when enabled, would
 	// complain).
 	ignoreThisResult.GetResult();
 
@@ -200,14 +200,14 @@ TriDevice::TriDevice( IRoot* lockobj ) :
 	mPresentParam.mode.format = PIXEL_FORMAT_UNKNOWN;
 	mPresentParam.mode.scaling = DISPLAY_SCALING_UNSPECIFIED;
 	mPresentParam.mode.scanlineOrdering = SCANLINE_ORDER_UNSPECIFIED;
-	mPresentParam.backBufferCount  = mBackBufferCount;
+	mPresentParam.backBufferCount = mBackBufferCount;
 
-	mPresentParam.msaaType = 0;		
-	mPresentParam.msaaQuality = 0;		
+	mPresentParam.msaaType = 0;
+	mPresentParam.msaaQuality = 0;
 
-	mPresentParam.swapEffect       = mSwapEffect;
-	mPresentParam.outputWindow	   = 0;
-	mPresentParam.windowed		   = true;
+	mPresentParam.swapEffect = mSwapEffect;
+	mPresentParam.outputWindow = 0;
+	mPresentParam.windowed = true;
 
 	mPresentParam.presentInterval = PRESENT_INTERVAL_ONE;
 
@@ -217,13 +217,13 @@ TriDevice::TriDevice( IRoot* lockobj ) :
 	SetProcessDPIAware();
 #endif
 
-	BeClasses->CreateInstanceFromName("BlueCallbackMan", BlueInterfaceIID<IBlueCallbackMan>(), (void**)&m_postUpdateCallbacks );
+	BeClasses->CreateInstanceFromName( "BlueCallbackMan", BlueInterfaceIID<IBlueCallbackMan>(), (void**)&m_postUpdateCallbacks );
 }
 
 
 TriDevice::~TriDevice()
 {
-    m_scene = (ITr2Scene*)NULL;
+	m_scene = (ITr2Scene*)NULL;
 	BeOS->UnregisterForSimTimeRebase( this );
 }
 
@@ -231,7 +231,7 @@ bool TriDevice::CreateSimpleDevice(
 	Tr2WindowHandle hwnd,
 	unsigned int width,
 	unsigned int height,
-	DeviceScreenType type, 
+	DeviceScreenType type,
 	Tr2RenderContextEnum::PresentInterval presentInterval,
 	unsigned int adapter )
 {
@@ -240,12 +240,12 @@ bool TriDevice::CreateSimpleDevice(
 
 	// Build a windowd device:
 	Tr2PresentParametersAL pp = mPresentParam;
-	
+
 	//Create the device, using those creation parameters present in the device.
-	pp.mode.width  = width;
+	pp.mode.width = width;
 	pp.mode.height = height;
 	pp.outputWindow = hwnd;
-	pp.software = (m_deviceType == TriDevice::DEVICE_TYPE_SOFTWARE);
+	pp.software = ( m_deviceType == TriDevice::DEVICE_TYPE_SOFTWARE );
 
 	pp.windowed = false;
 	if( type == FULLSCREEN )
@@ -307,7 +307,7 @@ bool TriDevice::CreateSimpleDevice(
 	}
 	PrepareDeviceResources();
 
-	BeOS->RegisterForTicks(this, (void*)TRINITY);
+	BeOS->RegisterForTicks( this, (void*)TRINITY );
 
 	return true;
 }
@@ -321,37 +321,33 @@ bool TriDevice::InitD3DDevice()
 		return false;
 	}
 
-	if( ( mPresentParam.outputWindow || !mPresentParam.software )
-		&& FAILED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( 
-						Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
-						mDisplayMode ) ) 
-		)
+	if( ( mPresentParam.outputWindow || !mPresentParam.software ) && FAILED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mDisplayMode ) ) )
 	{
 		return false;
 	}
 
-	
-	mViewport.x			= 0;
-	mViewport.y			= 0;
-	mViewport.width		= int( mWidth );
-	mViewport.height	= int( mHeight );
-	mViewport.minZ		= 0;
-	mViewport.maxZ		= 1.0f;
+
+	mViewport.x = 0;
+	mViewport.y = 0;
+	mViewport.width = int( mWidth );
+	mViewport.height = int( mHeight );
+	mViewport.minZ = 0;
+	mViewport.maxZ = 1.0f;
 
 	mDeviceLost = false;
 	return true;
 }
 
 bool TriDevice::ChangeDevice(
-		uint32_t adapter,
-		Tr2WindowHandle hWnd,
-		const Tr2PresentParametersAL* pp )
+	uint32_t adapter,
+	Tr2WindowHandle hWnd,
+	const Tr2PresentParametersAL* pp )
 {
 	bool resetOnly = true;
 	bool adaptersChanged = Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter );
-	if( !DeviceExists()	||  hWnd != mHwnd || adaptersChanged )
+	if( !DeviceExists() || hWnd != mHwnd || adaptersChanged )
 	{
-		resetOnly = false;	// reset is not enough, we need to recreate the device.
+		resetOnly = false; // reset is not enough, we need to recreate the device.
 	}
 
 	if( !pp )
@@ -361,7 +357,7 @@ bool TriDevice::ChangeDevice(
 
 	if( resetOnly && ResetDevice( adapter, pp ) )
 	{
-		return true;  // reset was enough.
+		return true; // reset was enough.
 	}
 
 	// Okay, we are creating a new device.
@@ -370,7 +366,7 @@ bool TriDevice::ChangeDevice(
 	if( DeviceExists() )
 	{
 		ReleaseDeviceResources( TRISTORAGE_ALL );
-		Tr2RenderContext::DestroyMainThreadRenderContext();	
+		Tr2RenderContext::DestroyMainThreadRenderContext();
 	}
 
 	Tr2SyncToGpu::GetInstance().Flush();
@@ -395,7 +391,7 @@ bool TriDevice::ChangeDevice(
 	{
 		return false;
 	}
-	
+
 	if( !SetPresentParameters( mAdapter, mPresentParam ) )
 	{
 		return false;
@@ -411,14 +407,38 @@ bool TriDevice::ChangeDevice(
 	return true;
 }
 
-void TriDevice::SetGeometryLoadDisabled( bool value )	{ Tr2Renderer::m_disableGeometryLoad	= value; }
-void TriDevice::SetTextureLoadDisabled( bool value )	{ Tr2Renderer::m_disableTextureLoad		= value; }
-void TriDevice::SetEffectLoadDisabled( bool value )		{ Tr2Renderer::m_disableEffectLoad		= value; }
-void TriDevice::SetAsyncLoadDisabled( bool value )		{ Tr2Renderer::m_disableAsyncLoad		= value; }
-bool TriDevice::GetGeometryLoadDisabled()				{ return  Tr2Renderer::m_disableGeometryLoad; }
-bool TriDevice::GetTextureLoadDisabled()				{ return  Tr2Renderer::m_disableTextureLoad; }
-bool TriDevice::GetEffectLoadDisabled()					{ return  Tr2Renderer::m_disableEffectLoad; }
-bool TriDevice::GetAsyncLoadDisabled()					{ return  Tr2Renderer::m_disableAsyncLoad; }
+void TriDevice::SetGeometryLoadDisabled( bool value )
+{
+	Tr2Renderer::m_disableGeometryLoad = value;
+}
+void TriDevice::SetTextureLoadDisabled( bool value )
+{
+	Tr2Renderer::m_disableTextureLoad = value;
+}
+void TriDevice::SetEffectLoadDisabled( bool value )
+{
+	Tr2Renderer::m_disableEffectLoad = value;
+}
+void TriDevice::SetAsyncLoadDisabled( bool value )
+{
+	Tr2Renderer::m_disableAsyncLoad = value;
+}
+bool TriDevice::GetGeometryLoadDisabled()
+{
+	return Tr2Renderer::m_disableGeometryLoad;
+}
+bool TriDevice::GetTextureLoadDisabled()
+{
+	return Tr2Renderer::m_disableTextureLoad;
+}
+bool TriDevice::GetEffectLoadDisabled()
+{
+	return Tr2Renderer::m_disableEffectLoad;
+}
+bool TriDevice::GetAsyncLoadDisabled()
+{
+	return Tr2Renderer::m_disableAsyncLoad;
+}
 
 
 void TriDevice::Update( Be::Time realTime, Be::Time simTime )
@@ -434,13 +454,13 @@ void TriDevice::Update( Be::Time realTime, Be::Time simTime )
 	CTriCurveSetVector curveSets;
 	for( auto it = m_curveSets.cbegin(); it != m_curveSets.cend(); ++it )
 	{
-		curveSets.Insert( -1, (*it)->GetRawRoot() );
+		curveSets.Insert( -1, ( *it )->GetRawRoot() );
 	}
 	for( auto it = curveSets.cbegin(); it != curveSets.cend(); ++it )
 	{
-		(*it)->Update( realTime, simTime );
+		( *it )->Update( realTime, simTime );
 	}
-	curveSets.Remove(-1);
+	curveSets.Remove( -1 );
 
 	// Remember, m_curveSets is a BlueList, must use Remove to get ref-count right.
 	for( ssize_t i = 0; i < m_curveSets.GetSize(); )
@@ -461,8 +481,8 @@ void TriDevice::DestroyRenderContext()
 {
 	if( DeviceExists() )
 	{
-		ReleaseDeviceResources( TRISTORAGE_ALL );  //we are about to release device.
-		Tr2RenderContext::DestroyMainThreadRenderContext();	
+		ReleaseDeviceResources( TRISTORAGE_ALL ); //we are about to release device.
+		Tr2RenderContext::DestroyMainThreadRenderContext();
 	}
 }
 
@@ -479,12 +499,11 @@ void TriDevice::ReleaseDeviceResources( TriStorage s )
 	s_iteratingForRelease = true;
 	for( auto it = rs.begin(); it != rs.end(); ++it )
 	{
-		if( !*it  )
+		if( !*it )
 		{
 			CCP_LOGWARN( "NULL TriDeviceResource found in resource set during TriDevice::ReleaseDeviceResources!" );
 		}
-		else
-		if( s_resourcesToBeRemoved.find( *it ) != s_resourcesToBeRemoved.end() )
+		else if( s_resourcesToBeRemoved.find( *it ) != s_resourcesToBeRemoved.end() )
 		{
 			// ignore, was Unregistered while iterating. We could erase() right here and now,
 			// but then we could leave an object dangling until the next reset: happens if we already
@@ -493,8 +512,8 @@ void TriDevice::ReleaseDeviceResources( TriStorage s )
 		}
 		else
 		{
-			(*it)->ReleaseResources( s );
-		}		
+			( *it )->ReleaseResources( s );
+		}
 	}
 	s_iteratingForRelease = false;
 	for( auto it = s_resourcesToBeRemoved.cbegin(); it != s_resourcesToBeRemoved.cend(); ++it )
@@ -548,7 +567,7 @@ void TriDevice::ReleaseDeviceResources( TriStorage s )
 		}
 		if( !PyIter_Check( keys.o ) )
 		{
-			CCP_LOGERR("Could not iterate through resource set keys in \"ReleaseDeviceResources\"");
+			CCP_LOGERR( "Could not iterate through resource set keys in \"ReleaseDeviceResources\"" );
 			return;
 		}
 
@@ -560,7 +579,7 @@ void TriDevice::ReleaseDeviceResources( TriStorage s )
 				// OnInvalidate method is optional, often not needed
 				continue;
 			}
-			BluePy result( PyOS->CallMethodWithTrap( item, "OnInvalidate", "OnInvalidate", "(i)", (int)s) );
+			BluePy result( PyOS->CallMethodWithTrap( item, "OnInvalidate", "OnInvalidate", "(i)", (int)s ) );
 			if( !result )
 			{
 				PyOS->PyError();
@@ -607,13 +626,13 @@ void TriDevice::RebuildDeviceResourcesInPython()
 
 		if( !keys )
 		{
-			CCP_LOGERR("keys() method failed on resource set in \"RebuildDeviceResourcesInPython\".");
+			CCP_LOGERR( "keys() method failed on resource set in \"RebuildDeviceResourcesInPython\"." );
 			PyOS->PyError();
 			return;
 		}
 		if( !PyIter_Check( keys.o ) )
 		{
-			CCP_LOGERR("Could not iterate through resource set keys in \"RebuildDeviceResourcesInPython\".");
+			CCP_LOGERR( "Could not iterate through resource set keys in \"RebuildDeviceResourcesInPython\"." );
 			return;
 		}
 
@@ -636,10 +655,10 @@ float TriDevice::AspectRatio()
 {
 	if( mViewport.height == 0 )
 	{
-		CCP_ASSERT(0); // should never get here, programmer or usage error it ir happens
+		CCP_ASSERT( 0 ); // should never get here, programmer or usage error it ir happens
 		return 0.0f;
 	}
-	
+
 	return (float)mViewport.width / (float)mViewport.height;
 }
 
@@ -656,9 +675,9 @@ bool TriDevice::SetPresentation( int adapter, const Tr2PresentParametersAL* d3dp
 		mHwnd = d3dpp->outputWindow;
 		mWidth = d3dpp->mode.width;
 		mHeight = d3dpp->mode.height;
-		BeOS->RegisterForTicks(this, (void*)TRINITY);
-	} 
-	else 
+		BeOS->RegisterForTicks( this, (void*)TRINITY );
+	}
+	else
 	{
 		InvalidateAndUnregisterForTicks();
 	}
@@ -668,7 +687,7 @@ bool TriDevice::SetPresentation( int adapter, const Tr2PresentParametersAL* d3dp
 void TriDevice::InvalidateAndUnregisterForTicks()
 {
 	DestroyRenderContext();
-	BeOS->UnregisterForTicks(this, (void*)TRINITY);
+	BeOS->UnregisterForTicks( this, (void*)TRINITY );
 	mHwnd = 0;
 	mWidth = mHeight = 0;
 }
@@ -682,7 +701,7 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	// Start with statistics on frame time
 	static BeTimer s_frameTimer;
 	static const int s_fpsValuesCount = 64;
-	static double s_frameTimeValues[s_fpsValuesCount] = {0.0};
+	static double s_frameTimeValues[s_fpsValuesCount] = { 0.0 };
 	static double s_generatedFrames[s_fpsValuesCount] = { 0 };
 
 	static double s_frameTimeSum = 0.0;
@@ -759,7 +778,7 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 		s_generatedFrames[s_currentFpsValue] = 0;
 		s_generatedFpsSum = 0;
 	}
-	
+
 	s_frameTimeSum -= s_frameTimeValues[s_currentFpsValue];
 	s_frameTimeValues[s_currentFpsValue] = frameTime;
 	s_frameTimeSum += frameTime;
@@ -796,13 +815,13 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	{
 		delta = 0L;
 	}
-	float fDelta = (float)((double)delta / 10000000.0);
+	float fDelta = (float)( (double)delta / 10000000.0 );
 	if( fDelta > 1.0f )
 	{
 		fDelta = 1.0f;
 	}
 	m_animationTime += fDelta * m_animationTimeScale;
-	
+
 	if( m_animationTime > ANIMATION_TIME_MAX )
 	{
 		m_animationTime -= ANIMATION_TIME_MAX;
@@ -818,7 +837,7 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 #endif
 	m_simTime = simTime;
 	m_realTime = realTime;
-   
+
 	Update( realTime, simTime );
 	HandleRenderTick( realTime, simTime );
 
@@ -874,7 +893,7 @@ bool TriDevice::ResetDevice( unsigned adapter, const Tr2PresentParametersAL* pp 
 		return false;
 	}
 
-	if (!pp)
+	if( !pp )
 	{
 		pp = &mPresentParam;
 	}
@@ -884,14 +903,13 @@ bool TriDevice::ResetDevice( unsigned adapter, const Tr2PresentParametersAL* pp 
 		return false;
 	}
 
-	// success! 
+	// success!
 	mWidth = pp->mode.width;
 	mHeight = pp->mode.height;
 	mPresentParam = *pp;
-	
+
 	// We may have changed display modes
-	if( ( mPresentParam.outputWindow || !mPresentParam.software )
-		&& FAILED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( mAdapter, mDisplayMode ) ) )
+	if( ( mPresentParam.outputWindow || !mPresentParam.software ) && FAILED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( mAdapter, mDisplayMode ) ) )
 	{
 		CCP_LOGNOTICE( "Device Reset: Adapter Display Mode Changed" );
 		Tr2Renderer::SetResourceCreationAllowed( true );
@@ -931,43 +949,43 @@ PyObject* TriDevice::PythonCreateDeviceHelper( PyObject* args, DeviceScreenType 
 		return nullptr;
 	}
 
-	width  = std::max( 0, width );
+	width = std::max( 0, width );
 	height = std::max( 0, height );
 
 #if __APPLE__
 	void* hwndAsPtr = (void*)hwnd;
-	bool OK = CreateSimpleDevice( (__bridge Tr2WindowHandle)( hwndAsPtr ), width, height, screenType, Tr2RenderContextEnum::PresentInterval( presentInterval ), adapter );
+	bool OK = CreateSimpleDevice( ( __bridge Tr2WindowHandle )( hwndAsPtr ), width, height, screenType, Tr2RenderContextEnum::PresentInterval( presentInterval ), adapter );
 #else
 	bool OK = CreateSimpleDevice( reinterpret_cast<Tr2WindowHandle>( hwnd ), width, height, screenType, Tr2RenderContextEnum::PresentInterval( presentInterval ), adapter );
 #endif
-		
+
 	if( !OK )
 	{
 		return nullptr;
 	}
 
-	Py_RETURN_NONE; 
+	Py_RETURN_NONE;
 }
 
 PyObject* TriDevice::PyCreateWindowedDevice( PyObject* args )
 {
-	return PythonCreateDeviceHelper( args, WINDOWED );	
+	return PythonCreateDeviceHelper( args, WINDOWED );
 }
 
 PyObject* TriDevice::PyCreateFullScreenDevice( PyObject* args )
 {
-	return PythonCreateDeviceHelper( args, FULLSCREEN );	
+	return PythonCreateDeviceHelper( args, FULLSCREEN );
 }
 
 PyObject* TriDevice::PyCreateWindowlessDevice( PyObject* args )
 {
-	return PythonCreateDeviceHelper( args, NO_ADAPTER );	
+	return PythonCreateDeviceHelper( args, NO_ADAPTER );
 }
 
-PyObject *TriDevice::PyRegisterResource( PyObject *args )
+PyObject* TriDevice::PyRegisterResource( PyObject* args )
 {
-	PyObject *obj;
-	if (!PyArg_ParseTuple(args, "O:RegisterResource", &obj))
+	PyObject* obj;
+	if( !PyArg_ParseTuple( args, "O:RegisterResource", &obj ) )
 	{
 		return nullptr;
 	}
@@ -980,9 +998,9 @@ PyObject *TriDevice::PyRegisterResource( PyObject *args )
 		{
 			return nullptr;
 		}
-		m_pyResourceSet = BluePy( PyObject_CallMethod( module, const_cast<char*>("WeakKeyDictionary"), 0 ) );
+		m_pyResourceSet = BluePy( PyObject_CallMethod( module, const_cast<char*>( "WeakKeyDictionary" ), 0 ) );
 		if( !m_pyResourceSet )
-		{ 
+		{
 			return nullptr;
 		}
 	}
@@ -994,7 +1012,7 @@ PyObject *TriDevice::PyRegisterResource( PyObject *args )
 	}
 
 	//Add the object as a key in the dictionary
-	return PyObject_CallMethod( m_pyResourceSet, const_cast<char*>("__setitem__"), const_cast<char*>("OO"), obj, Py_None );
+	return PyObject_CallMethod( m_pyResourceSet, const_cast<char*>( "__setitem__" ), const_cast<char*>( "OO" ), obj, Py_None );
 }
 #endif
 
@@ -1011,7 +1029,7 @@ bool TriDevice::SetPresentParameters( unsigned adapter, const Tr2PresentParamete
 	if( FAILED( hr ) )
 	{
 		LogAllLiveResources( TRISTORAGE_VIDEOMEMORY );
-		CCP_LOGERR( "Device Reset failed: 0x%X", unsigned( hr.GetResult() )  );
+		CCP_LOGERR( "Device Reset failed: 0x%X", unsigned( hr.GetResult() ) );
 		return false;
 	}
 	return true;
@@ -1021,7 +1039,7 @@ void TriDevice::PrepareDeviceResources()
 {
 	// Rebuild C++ device resources
 	const ResourceSet& rs = GetResourcesRegistered();
-	for( auto i = rs.cbegin(); i!= rs.cend(); ++i )
+	for( auto i = rs.cbegin(); i != rs.cend(); ++i )
 	{
 		Tr2DeviceResource* resource = *i;
 		if( resource )
@@ -1035,7 +1053,7 @@ void TriDevice::PrepareDeviceResources()
 	}
 
 	Tr2Renderer::PrepareDeviceResources();
-	
+
 	// Rebuild Python device resources
 	RebuildDeviceResourcesInPython();
 }
@@ -1048,9 +1066,9 @@ TriDevice::ResourceSet& TriDevice::GetResourcesRegistered()
 
 #if BLUE_WITH_PYTHON
 void TriDevice::PyRender()
-{	
+{
 	TriPythonContext pythonCtx;
-	Render();	
+	Render();
 }
 #endif
 
@@ -1083,7 +1101,7 @@ void TriDevice::UnregisterResource( Tr2DeviceResource* resource )
 	}
 	else
 	{
-		s_resourcesToBeRemoved.insert( resource) ;
+		s_resourcesToBeRemoved.insert( resource );
 	}
 }
 
@@ -1108,18 +1126,15 @@ void TriDevice::GetPickRayFromViewport( int x, int y, TriViewport* viewport, con
 	float xp, yp;
 	ScreenToProjection( x, y, &xp, &yp, viewport );
 
-	ConvertProjectionCoordToWorldPickRay( xp, yp, &proj, &view, &startWorld, &rayWorld ); 
+	ConvertProjectionCoordToWorldPickRay( xp, yp, &proj, &view, &startWorld, &rayWorld );
 }
 
-void TriDevice::ScreenToProjection(		int x,		int y,
-										float* fx,	float* fy )
+void TriDevice::ScreenToProjection( int x, int y, float* fx, float* fy )
 {
 	ScreenToProjection( x, y, fx, fy, &mViewport );
 }
 
-void TriDevice::ScreenToProjection(		int x,		int y,
-										float* fx,	float* fy,
-										const TriViewport* viewport )
+void TriDevice::ScreenToProjection( int x, int y, float* fx, float* fy, const TriViewport* viewport )
 {
 	x = x - viewport->x;
 	y = y - viewport->y;
@@ -1128,14 +1143,14 @@ void TriDevice::ScreenToProjection(		int x,		int y,
 
 	//DX maps viewport pixel _centres_ to the view space.  So, for four pixels, pixel no 3 maps to 1 and no 0 to -1
 	//(some other implementations map pixel _edges_ to the screen, this would give different results.
-	*fx =   (float)(2*x)/(w-1) - 1.0f;
-	*fy =   (float)(2*y)/(h-1) - 1.0f;
+	*fx = (float)( 2 * x ) / ( w - 1 ) - 1.0f;
+	*fy = (float)( 2 * y ) / ( h - 1 ) - 1.0f;
 	*fy = -*fy;
 }
 
 bool TriDevice::Render()
 {
-	D3DPERF_EVENT(L"TriDevice::Render");
+	D3DPERF_EVENT( L"TriDevice::Render" );
 
 	// We need to throttle the client right after Present call, so that GPU can have a break
 	Throttle();
@@ -1152,20 +1167,20 @@ bool TriDevice::Render()
 	renderContext.SetViewport( vp );
 
 	Tr2GpuProfiler::GetProfiler().BeginFrame( Tr2Renderer::GetCurrentFrameCounter() );
-	
+
 	// start rendering
 	Tr2Renderer::BeginFrame();
 
 	Tr2Renderer::BeginRenderContext();
-	
+
 	Tr2Renderer::ReserveQuadListIndexBuffer( 0 );
 
 	if( m_renderJobs )
-	{		
+	{
 		m_renderJobs->Run( m_realTime, m_simTime );
 	}
 
-    Tr2GpuProfiler::GetProfiler().EndFrame();
+	Tr2GpuProfiler::GetProfiler().EndFrame();
 	Tr2Renderer::EndRenderContext();
 	Tr2Renderer::EndFrame();
 
@@ -1179,19 +1194,19 @@ void TriDevice::AddPostUpdateCallback( IBlueCallbackMan::CallbackFunc cb, void* 
 
 namespace
 {
-	void LogObject( Tr2ALMemoryType memoryType, const Tr2DeviceResourceDescriptionAL& description )
+void LogObject( Tr2ALMemoryType memoryType, const Tr2DeviceResourceDescriptionAL& description )
+{
+	std::string message;
+	for( auto it = description.begin(); it != description.end(); ++it )
 	{
-		std::string message;
-		for( auto it = description.begin(); it != description.end(); ++it )
-		{
-			message += it->first;
-			message += ": ";
-			message += it->second;
-			message += ", ";
-		}
+		message += it->first;
+		message += ": ";
+		message += it->second;
+		message += ", ";
+	}
 
-		CCP_LOGERR( "%s", message.c_str() );
-	};
+	CCP_LOGERR( "%s", message.c_str() );
+};
 }
 
 void TriDevice::LogAllLiveResources( Tr2ALMemoryTypes flags )
@@ -1291,7 +1306,7 @@ void TriDevice::UpdateAvailableUpscalingTechniques()
 	g_force_fsr1_availability = !g_newUpscalersEnabled;
 	if( !g_newUpscalersEnabled )
 	{
-		// only allow FSR1 
+		// only allow FSR1
 		Tr2UpscalingTechniqueInfo technique = {
 			Tr2UpscalingAL::FSR1,
 			Tr2UpscalingAL::Setting::PERFORMANCE | Tr2UpscalingAL::Setting::BALANCED | Tr2UpscalingAL::Setting::QUALITY | Tr2UpscalingAL::Setting::ULTRA_QUALITY,
@@ -1300,8 +1315,8 @@ void TriDevice::UpdateAvailableUpscalingTechniques()
 		m_supportedUpscalingTechniques.Append( &technique );
 		return;
 	}
-	
-	// this method needs to be called after a device has been called 
+
+	// this method needs to be called after a device has been called
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	for( auto& techInfo : renderContext.GetSupportedUpscalingTechniques( mAdapter ) )
@@ -1338,11 +1353,11 @@ void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingA
 
 uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, bool allowFramegen, Be::Optional<uint32_t> existingContext )
 {
-    CCP_STATS_ZONE( __FUNCTION__ );
-	
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	Tr2UpscalingAL::UpscalingContextParams params = Tr2UpscalingAL::UpscalingContextParams(renderContext);
+	Tr2UpscalingAL::UpscalingContextParams params = Tr2UpscalingAL::UpscalingContextParams( renderContext );
 	params.allowFramegen = allowFramegen;
 	params.displayWidth = displayWidth;
 	params.displayHeight = displayHeight;
@@ -1403,11 +1418,11 @@ PyObject* TriDevice::PyGetUpscalingInfo( PyObject* args )
 	bool temporal;
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	renderContext.GetUpscalingSetup(technique, setting, frameGeneration, temporal);
+	renderContext.GetUpscalingSetup( technique, setting, frameGeneration, temporal );
 
 	auto result = PyDict_New();
 
-	auto value = ToPython( Tr2UpscalingAL::GetTechniqueName(technique) );
+	auto value = ToPython( Tr2UpscalingAL::GetTechniqueName( technique ) );
 	PyDict_SetItemString( result, "techniqueName", value );
 	Py_DecRef( value );
 
@@ -1435,7 +1450,7 @@ PyObject* TriDevice::PyGetUpscalingInfo( PyObject* args )
 	{
 		auto info = renderContext.GetUpscalingInfo( contextId );
 		auto contextInfo = PyDict_New();
-		
+
 		value = PyLong_FromSize_t( contextId );
 		PyDict_SetItemString( contextInfo, "id", value );
 		Py_DecRef( value );
@@ -1455,7 +1470,7 @@ PyObject* TriDevice::PyGetUpscalingInfo( PyObject* args )
 		value = PyLong_FromSize_t( info.renderHeight );
 		PyDict_SetItemString( contextInfo, "renderHeight", value );
 		Py_DecRef( value );
-		
+
 		value = PyBool_FromLong( info.hasSharpening );
 		PyDict_SetItemString( contextInfo, "hasSharpening", value );
 		Py_DecRef( value );
@@ -1498,9 +1513,9 @@ void TriDevice::SetMinimumModelLOD( int minimumModelLOD )
 	m_minimumModelLOD = minimumModelLOD;
 
 	CcpAutoMutex guard( GetResourcesRegisteredMutex() );
-	
+
 	auto& rs = GetResourcesRegistered();
-	for (auto it = rs.begin(); it != rs.end(); ++it)
+	for( auto it = rs.begin(); it != rs.end(); ++it )
 	{
 		TriGeometryRes* geometry = dynamic_cast<TriGeometryRes*>( *it );
 		if( !geometry )

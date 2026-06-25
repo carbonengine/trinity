@@ -29,13 +29,13 @@ BLUE_INTERFACE( ITr2ImpostorSource )
 	};
 
 	// Returns local to world transform
-	virtual void GetLocalToWorldTransform( Matrix &transform ) const = 0;
+	virtual void GetLocalToWorldTransform( Matrix & transform ) const = 0;
 	// Returns render batches to render the object into billboard
 	virtual void GetImpostorBatches( const TriFrustum& frustum, std::map<TriBatchType, ITriRenderBatchAccumulator*>& batches ) = 0;
 	// Evaluates rendering priority based on current and old hashes
 	virtual float GetRenderPriority( const ImpostorHash& oldHash, const ImpostorHash& newHash ) const = 0;
 	// Returns object bounding sphere
-	virtual bool GetImpostorBoundingSphere( Vector4& sphere ) const = 0;
+	virtual bool GetImpostorBoundingSphere( Vector4 & sphere ) const = 0;
 	// Returns object last frame bounding sphere
 	virtual void GetLastImpostorBoundingSphere( Vector4 & sphere ) const = 0;
 };
@@ -43,7 +43,7 @@ BLUE_INTERFACE( ITr2ImpostorSource )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Tr2ImpostorManager class manages impostor billboards for objects. It uses quad 
+//   Tr2ImpostorManager class manages impostor billboards for objects. It uses quad
 //   renderer to render billboards. Its usage is roughly the following:
 //   BeginUpdate()
 //     Add() ... Add() ...
@@ -57,7 +57,8 @@ BLUE_INTERFACE( ITr2ImpostorSource )
 // See Also:
 //   Tr2QuadRenderer
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2ImpostorManager ): public IInitialize, public INotify, public Tr2DeviceResource
+BLUE_CLASS( Tr2ImpostorManager ) :
+	public IInitialize, public INotify, public Tr2DeviceResource
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -66,19 +67,19 @@ public:
 
 	virtual bool Initialize();
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	virtual void ReleaseResources( TriStorage s );
 
-	void Create( 
-		Be::OptionalWithDefaultValue<uint32_t, 1024> width, 
-		Be::OptionalWithDefaultValue<uint32_t, 1024> height, 
-		Be::OptionalWithDefaultValue<uint32_t, 16> itemWidth, 
+	void Create(
+		Be::OptionalWithDefaultValue<uint32_t, 1024> width,
+		Be::OptionalWithDefaultValue<uint32_t, 1024> height,
+		Be::OptionalWithDefaultValue<uint32_t, 16> itemWidth,
 		Be::OptionalWithDefaultValue<uint32_t, 16> itemHeigh );
 
 	void SetItemSize( uint32_t width, uint32_t height );
 
-	bool Add( ITr2ImpostorSource* object, const ITr2ImpostorSource::ImpostorHash& hash );
+	bool Add( ITr2ImpostorSource * object, const ITr2ImpostorSource::ImpostorHash& hash );
 
 	void BeginUpdate();
 	void EndUpdate();
@@ -87,8 +88,8 @@ public:
 
 	void Render() const;
 
-	void BeginUpdateAtlas( Tr2RenderContext& renderContext );
-	void EndUpdateAtlas( Tr2RenderContext& renderContext );
+	void BeginUpdateAtlas( Tr2RenderContext & renderContext );
+	void EndUpdateAtlas( Tr2RenderContext & renderContext );
 
 	ITr2ImpostorSource* BeginImpostorUpdate( size_t index, Tr2RenderContext& renderContext );
 	void EndImpostorUpdate( size_t index, Tr2RenderContext& renderContext );
@@ -98,7 +99,7 @@ public:
 	Tr2DepthStencil* GetItemDepthStencil() const;
 
 	size_t GetImpostorCount() const;
-	
+
 private:
 	// Per-impostor data
 	struct Impostor
@@ -125,6 +126,7 @@ private:
 		void Resize( uint32_t width, uint32_t height, uint32_t itemWidth, uint32_t itemHeight );
 		bool Reserve( Vector2_16& coord );
 		void Drop( Vector2_16 coord );
+
 	private:
 		// Free (unoccupied) texcoords
 		TrackableStdVector<Vector2_16> m_free;
@@ -163,7 +165,7 @@ private:
 	std::unordered_map<ITr2ImpostorSource*, Impostor> m_objects;
 	// Queue of objects to re-render in current frame
 	std::vector<ITr2ImpostorSource*> m_renderQueue;
-	
+
 	bool m_atlasDirty;
 };
 

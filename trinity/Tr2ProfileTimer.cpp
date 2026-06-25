@@ -5,30 +5,29 @@
 
 namespace
 {
-	CcpStaticStatisticsEntry* GetOrCreateStatisticsEntry( const std::string& name )
+CcpStaticStatisticsEntry* GetOrCreateStatisticsEntry( const std::string& name )
+{
+	auto& entries = CcpStatistics::GetEntryArray();
+	for( auto it = entries.begin(); it != entries.end(); ++it )
 	{
-		auto& entries = CcpStatistics::GetEntryArray();
-		for( auto it = entries.begin(); it != entries.end(); ++it )
+		if( ( *it )->GetName() == name )
 		{
-			if( ( *it )->GetName() == name )
-			{
-				return *it;
-			}
+			return *it;
 		}
-		return BlueStatistics::CreateDynamicEntry( name.c_str(), false, CST_TIME, "" );
 	}
+	return BlueStatistics::CreateDynamicEntry( name.c_str(), false, CST_TIME, "" );
+}
 }
 
 // -------------------------------------------------------------
-Tr2ProfileTimer::Tr2ProfileTimer()
-	:m_captureGpuTime( false ),
+Tr2ProfileTimer::Tr2ProfileTimer() :
+	m_captureGpuTime( false ),
 	m_captureCpuTime( false ),
 	m_beginTime( 0 ),
 	m_cpuTime( -1.f ),
 	m_statEntryCpu( nullptr ),
 	m_statEntryGpu( nullptr )
 {
-
 }
 
 // -------------------------------------------------------------

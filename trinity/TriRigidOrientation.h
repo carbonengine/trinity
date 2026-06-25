@@ -4,36 +4,34 @@
 #define _TRIRIGIDORIENTATION_H_
 
 #define TRIRIGIDORIENTATION_Description \
-"To be written"
+	"To be written"
 
 #include <ITriFunction.h>
 
-class TriTorque:
-	public IRoot
+class TriTorque : public IRoot
 {
-public:	
+public:
 	EXPOSE_TO_BLUE();
 
 	float mTime;
 	Quaternion mRot0;
 	Vector3 mOmega0;
-	Vector3 mTorque;		
-	
-	TriTorque(IRoot* lockobj = NULL);
+	Vector3 mTorque;
+
+	TriTorque( IRoot* lockobj = NULL );
 
 public:
 };
-TYPEDEF_BLUECLASS(TriTorque);
+TYPEDEF_BLUECLASS( TriTorque );
 
 BLUE_DECLARE_VECTOR( TriTorque );
 
-class TriRigidOrientation:
-	public ITriQuaternionFunction
+class TriRigidOrientation : public ITriQuaternionFunction
 {
-public:					
+public:
 	EXPOSE_TO_BLUE();
 
-	std::wstring  mName;
+	std::wstring mName;
 	Be::Time mStart;
 	float mI;
 	float mDrag;
@@ -41,82 +39,75 @@ public:
 
 	PTriTorqueVector mStates;
 	int mCurrKey;
-		
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriFunction
 	/////////////////////////////////////////////////////////////////////////////////////
-	void UpdateValue( double time ) { Quaternion q; Update( &q, time ); }
+	void UpdateValue( double time )
+	{
+		Quaternion q;
+		Update( &q, time );
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriVectorFunction
 	/////////////////////////////////////////////////////////////////////////////////////
-		
-	Quaternion* Update(
-		Quaternion* in,
-		Be::Time time
-		);
 
 	Quaternion* Update(
 		Quaternion* in,
-		double time
-		);
-	
-	Quaternion* GetValueAt(
+		Be::Time time );
+
+	Quaternion* Update(
 		Quaternion* in,
-		Be::Time time
-		);
+		double time );
 
 	Quaternion* GetValueAt(
 		Quaternion* in,
-		double time
-		);
+		Be::Time time );
+
+	Quaternion* GetValueAt(
+		Quaternion* in,
+		double time );
 
 	Quaternion* GetValueDotAt(
 		Quaternion* in,
-		Be::Time time
-		);
+		Be::Time time );
 
 	Quaternion* GetValueDotAt(
 		Quaternion* in,
-		double time
-		);
+		double time );
 
 	Quaternion* GetValueDoubleDotAt(
 		Quaternion* in,
-		Be::Time time
-		);
+		Be::Time time );
 
 	Quaternion* GetValueDoubleDotAt(
 		Quaternion* in,
-		double time
-		);
+		double time );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Other :-)
 	/////////////////////////////////////////////////////////////////////////////////////
-		
-	Vector3* GetValueDotAt(
-		Vector3* in,
-		Be::Time time
-		);
 
 	Vector3* GetValueDotAt(
 		Vector3* in,
-		double time
-		);
+		Be::Time time );
 
-	void Sort(
-		);
+	Vector3* GetValueDotAt(
+		Vector3* in,
+		double time );
 
-	TriRigidOrientation(IRoot* lockobj = NULL);
+	void Sort();
+
+	TriRigidOrientation( IRoot* lockobj = NULL );
 	~TriRigidOrientation();
+
 private:
 	Vector3 mTauVector;
 	Quaternion mTauConverter;
 	void Seek(
-		double t
-		);	
+		double t );
 };
-TYPEDEF_BLUECLASS(TriRigidOrientation);
+TYPEDEF_BLUECLASS( TriRigidOrientation );
 
 #endif

@@ -13,7 +13,6 @@
 class GlobalDescriptorHeapPage
 {
 public:
-
 	/** Init args for DescriptorEntry */
 	struct DescriptorInitArgs
 	{
@@ -21,10 +20,10 @@ public:
 		D3D12_GPU_DESCRIPTOR_HANDLE m_baseOffsetGPU;
 		UINT m_entrySize;
 
-		DescriptorInitArgs(D3D12_CPU_DESCRIPTOR_HANDLE baseOffsetCPU, D3D12_GPU_DESCRIPTOR_HANDLE baseOffsetGPU, UINT entrySize) :
-			m_baseOffsetCPU(baseOffsetCPU),
-			m_baseOffsetGPU(baseOffsetGPU),
-			m_entrySize(entrySize)
+		DescriptorInitArgs( D3D12_CPU_DESCRIPTOR_HANDLE baseOffsetCPU, D3D12_GPU_DESCRIPTOR_HANDLE baseOffsetGPU, UINT entrySize ) :
+			m_baseOffsetCPU( baseOffsetCPU ),
+			m_baseOffsetGPU( baseOffsetGPU ),
+			m_entrySize( entrySize )
 		{
 		}
 	};
@@ -43,23 +42,25 @@ public:
 		D3D12_GPU_DESCRIPTOR_HANDLE m_offsetGPU;
 
 		/** */
-		DescriptorEntry(uint32_t entryIdx, const struct DescriptorInitArgs& initArgs);
+		DescriptorEntry( uint32_t entryIdx, const struct DescriptorInitArgs& initArgs );
 	};
 
 	/** */
-	GlobalDescriptorHeapPage(CComPtr<ID3D12DescriptorHeap> descriptorHeap, UINT entryCount, UINT entrySize);
+	GlobalDescriptorHeapPage( CComPtr<ID3D12DescriptorHeap> descriptorHeap, UINT entryCount, UINT entrySize );
 
 	/** Allocate an entry */
 	DescriptorEntry* Allocate();
 
 	/** Free an entry */
-	void Free(DescriptorEntry* entry);
+	void Free( DescriptorEntry* entry );
 
 	/** Get whether this page is full */
-	bool IsFull() const { return m_freeList->IsFull(); }
+	bool IsFull() const
+	{
+		return m_freeList->IsFull();
+	}
 
 private:
-
 	typedef FreeList<DescriptorEntry, DescriptorInitArgs> DescriptorList;
 	std::shared_ptr<DescriptorList> m_freeList;
 
@@ -70,7 +71,6 @@ private:
 class GlobalDescriptorHeapAllocator
 {
 public:
-
 	/** Heap stats container */
 	struct HeapStats
 	{
@@ -91,7 +91,7 @@ public:
 	};
 
 	/** */
-	GlobalDescriptorHeapAllocator(CComPtr<ID3D12Device> device, uint32_t maxPages, uint32_t pageEntryCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType);
+	GlobalDescriptorHeapAllocator( CComPtr<ID3D12Device> device, uint32_t maxPages, uint32_t pageEntryCount, D3D12_DESCRIPTOR_HEAP_TYPE heapType );
 
 	/** */
 	~GlobalDescriptorHeapAllocator();
@@ -100,17 +100,16 @@ public:
 	GlobalDescriptorHeapPage::DescriptorEntry* Allocate();
 
 	/** Free an entry */
-	void Free(GlobalDescriptorHeapPage::DescriptorEntry* entry);
+	void Free( GlobalDescriptorHeapPage::DescriptorEntry* entry );
 
 private:
-
 	/** A freelist page entry */
 	struct HeapPageEntry
 	{
 		std::unique_ptr<GlobalDescriptorHeapPage> m_page;
 
-		HeapPageEntry(uint32_t, const uint32_t&)
-			: m_page(nullptr)
+		HeapPageEntry( uint32_t, const uint32_t& ) :
+			m_page( nullptr )
 		{
 		}
 	};
@@ -132,7 +131,6 @@ private:
 class GpuVisibleDescriptorAllocator
 {
 public:
-
 	GpuVisibleDescriptorAllocator( ID3D12Device* device, D3D12_DESCRIPTOR_HEAP_TYPE type, uint32_t initialSize );
 	~GpuVisibleDescriptorAllocator();
 

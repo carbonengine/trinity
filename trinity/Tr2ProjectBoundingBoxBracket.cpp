@@ -58,7 +58,7 @@ void Tr2ProjectBoundingBoxBracket::UpdateValue( double time )
 		return;
 	}
 
-	Vector3 center = (bbMax + bbMin) * 0.5f;
+	Vector3 center = ( bbMax + bbMin ) * 0.5f;
 	Vector3 projectedCenter;
 	Matrix viewProj;
 	projectedCenter = TransformCoord( center, Tr2Renderer::GetViewTransform() );
@@ -73,13 +73,12 @@ void Tr2ProjectBoundingBoxBracket::UpdateValue( double time )
 	Vector3 d = Tr2Renderer::GetViewPosition() - center;
 	m_cameraDistance = Length( d );
 
-	BoundingBoxProject( 
-		bbMin, 
-		bbMax, 
+	BoundingBoxProject(
+		bbMin,
+		bbMax,
 		Tr2Renderer::GetViewTransform(),
-		Tr2Renderer::GetProjectionTransform(), 
-		Tr2Renderer::GetViewport()
-		);
+		Tr2Renderer::GetProjectionTransform(),
+		Tr2Renderer::GetViewport() );
 
 	if( bbMin.z <= 0.0f || bbMax.z >= 1.0f )
 	{
@@ -87,13 +86,13 @@ void Tr2ProjectBoundingBoxBracket::UpdateValue( double time )
 		return;
 	}
 
-	m_projectedZ = std::min(bbMin.z, bbMax.z);
+	m_projectedZ = std::min( bbMin.z, bbMax.z );
 
 	unsigned int screenWidth;
 	unsigned int screenHeight;
 	Tr2Renderer::GetBackBufferDimensions( screenWidth, screenHeight );
 
-	if( (bbMin.x > screenWidth) || (bbMax.x < 0.0f) || (bbMin.y > screenHeight) || (bbMax.y < 0.0f) )
+	if( ( bbMin.x > screenWidth ) || ( bbMax.x < 0.0f ) || ( bbMin.y > screenHeight ) || ( bbMax.y < 0.0f ) )
 	{
 		SetEmptyProjection();
 		return;
@@ -155,8 +154,8 @@ void Tr2ProjectBoundingBoxBracket::UpdateValue( double time )
 	else
 	{
 		// Unbounded brackets are centered around the center of the projected bounding box
-		centerX = (bbMin.x + bbMax.x) * 0.5f;
-		centerY = (bbMin.y + bbMax.y) * 0.5f;
+		centerX = ( bbMin.x + bbMax.x ) * 0.5f;
+		centerY = ( bbMin.y + bbMax.y ) * 0.5f;
 	}
 	m_projectedX = centerX - m_projectedWidth * 0.5f;
 	m_projectedY = centerY - m_projectedHeight * 0.5f;

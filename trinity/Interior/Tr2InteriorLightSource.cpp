@@ -64,10 +64,10 @@ bool Tr2InteriorLightSource::Initialize()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Inherited from INotify interface.  Allows the light source to respond to parameter 
-//   changes generated in Python.  If the light position changes, the regions of influence 
-//   are updated with the new transform matrix & the light is flagged as 'dirty', forcing 
-//   a new round of light-cell intersection tests on the next scene Update. The light is 
+//   Inherited from INotify interface.  Allows the light source to respond to parameter
+//   changes generated in Python.  If the light position changes, the regions of influence
+//   are updated with the new transform matrix & the light is flagged as 'dirty', forcing
+//   a new round of light-cell intersection tests on the next scene Update. The light is
 //   flagged as dirty.
 // Arguments:
 //   value - The Blue-exposed parameter that changed
@@ -81,7 +81,7 @@ bool Tr2InteriorLightSource::OnModified( Be::Var* value )
 	{
 		m_worldBoundingBox = AxisAlignedBoundingBox( m_position - Vector3( m_radius, m_radius, m_radius ), m_position + Vector3( m_radius, m_radius, m_radius ) );
 	}
-	else if( IsMatch( value, m_radius )			||
+	else if( IsMatch( value, m_radius ) ||
 			 IsMatch( value, m_coneAlphaOuter ) ||
 			 IsMatch( value, m_coneDirection ) )
 	{
@@ -118,7 +118,7 @@ void Tr2InteriorLightSource::PopulateLightData( Tr2InteriorPerObjectLightData* l
 	lightData->shadow0Influence = 0.f;
 	lightData->shadow1Influence = 0.f;
 
-	// Spot light values (always populate them, they are basicly pointlights with 
+	// Spot light values (always populate them, they are basicly pointlights with
 	// some non-default values...).  First apply some limits
 	float innerAngle = m_coneAlphaInner;
 	float outerAngle = m_coneAlphaOuter;
@@ -161,25 +161,25 @@ bool Tr2InteriorLightSource::IsInFrustum( const TriFrustum& frustum, Matrix& obj
 	return frustum.IsBoxVisible( m_worldBoundingBox.m_min, m_worldBoundingBox.m_max );
 }
 
-void Tr2InteriorLightSource::GetDebugOptions(Tr2DebugRendererOptions & options)
+void Tr2InteriorLightSource::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	options.insert("Lights");
+	options.insert( "Lights" );
 }
 
-void Tr2InteriorLightSource::RenderDebugInfo( ITr2DebugRenderer2& renderer)
+void Tr2InteriorLightSource::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-	if (renderer.HasOption(GetRawRoot(), "Lights"))
+	if( renderer.HasOption( GetRawRoot(), "Lights" ) )
 	{
-		renderer.DrawSphere(this, m_position, 0.05f, 10, Tr2DebugRenderer::Wireframe, 0xff333333);
-		if (IsSpotLight())
+		renderer.DrawSphere( this, m_position, 0.05f, 10, Tr2DebugRenderer::Wireframe, 0xff333333 );
+		if( IsSpotLight() )
 		{
-			float coneRadius = m_radius * tanf(XMConvertToRadians(m_coneAlphaOuter));
-			Vector3 focal = m_position + Normalize(m_coneDirection) * m_radius;
-			renderer.DrawCone(this, focal, m_position, coneRadius, 8, Tr2DebugRenderer::Wireframe, 0xff444444);
+			float coneRadius = m_radius * tanf( XMConvertToRadians( m_coneAlphaOuter ) );
+			Vector3 focal = m_position + Normalize( m_coneDirection ) * m_radius;
+			renderer.DrawCone( this, focal, m_position, coneRadius, 8, Tr2DebugRenderer::Wireframe, 0xff444444 );
 		}
 		else
 		{
-			renderer.DrawSphere(this, m_position, m_radius, 12, Tr2DebugRenderer::Wireframe, 0xff444444);
+			renderer.DrawSphere( this, m_position, m_radius, 12, Tr2DebugRenderer::Wireframe, 0xff444444 );
 		}
 	}
 }

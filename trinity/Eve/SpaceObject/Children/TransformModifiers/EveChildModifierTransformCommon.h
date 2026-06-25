@@ -8,7 +8,7 @@
 #include "include/TriMath.h"
 #include "Tr2Renderer.h"
 
-inline void DistanceBase( const Matrix &transform, Matrix& alignMat, float& distCenter, Vector3& d )
+inline void DistanceBase( const Matrix& transform, Matrix& alignMat, float& distCenter, Vector3& d )
 {
 	const Vector3& myPos = transform.GetTranslation();
 	const Vector3& camPos = Tr2Renderer::GetViewPosition();
@@ -19,7 +19,7 @@ inline void DistanceBase( const Matrix &transform, Matrix& alignMat, float& dist
 	TriVectorRotateMatrix( &camFwd, &camFwd, &parentT );
 
 	float lengthSq = LengthSq( transform.GetX() );
-	if ( lengthSq != 0 )
+	if( lengthSq != 0 )
 	{
 		camFwd.x /= lengthSq;
 	}
@@ -29,7 +29,7 @@ inline void DistanceBase( const Matrix &transform, Matrix& alignMat, float& dist
 	}
 
 	lengthSq = LengthSq( transform.GetY() );
-	if ( lengthSq != 0 )
+	if( lengthSq != 0 )
 	{
 		camFwd.y /= lengthSq;
 	}
@@ -39,7 +39,7 @@ inline void DistanceBase( const Matrix &transform, Matrix& alignMat, float& dist
 	}
 
 	lengthSq = LengthSq( transform.GetZ() );
-	if ( lengthSq != 0 )
+	if( lengthSq != 0 )
 	{
 		camFwd.z /= lengthSq;
 	}
@@ -60,7 +60,7 @@ inline void DistanceBase( const Matrix &transform, Matrix& alignMat, float& dist
 	TriMatrixChangeBase( &alignMat, &camFwd, &up );
 }
 
-inline Matrix Billboard2D( const Matrix &transform )
+inline Matrix Billboard2D( const Matrix& transform )
 {
 	float parentScaleX = Length( transform.GetX() );
 	float parentScaleY = Length( transform.GetY() );
@@ -86,20 +86,17 @@ inline Matrix Billboard2D( const Matrix &transform )
 inline Matrix Billboard3D( const Vector3& position )
 {
 	const Vector3& camPos = Tr2Renderer::GetViewPosition();
-	
+
 	Vector3 toObject = Normalize( camPos - position );
 	Vector3 right = Normalize( Cross( Vector3( 0, 1, 0 ), toObject ) );
-	if( LengthSq(right) == 0.0 )
+	if( LengthSq( right ) == 0.0 )
 	{
 		right = Vector3( 1, 0, 0 );
 	}
 	Vector3 up = Normalize( Cross( toObject, right ) );
-	
+
 	return Matrix(
-		right.x, right.y, right.z, 0, 
-		up.x, up.y, up.z, 0, 
-		toObject.x, toObject.y, toObject.z, 0,
-		0, 0, 0, 1 );
+		right.x, right.y, right.z, 0, up.x, up.y, up.z, 0, toObject.x, toObject.y, toObject.z, 0, 0, 0, 0, 1 );
 }
 
 

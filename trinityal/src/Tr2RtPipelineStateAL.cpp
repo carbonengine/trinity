@@ -11,16 +11,16 @@
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2RtPipelineStateAL> NullRtPipeline()
-	{
-		static std::shared_ptr<TrinityALImpl::Tr2RtPipelineStateAL> nullPipeline = std::make_shared<TrinityALImpl::Tr2RtPipelineStateAL>();
-		return nullPipeline;
-	}
+std::shared_ptr<TrinityALImpl::Tr2RtPipelineStateAL> NullRtPipeline()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2RtPipelineStateAL> nullPipeline = std::make_shared<TrinityALImpl::Tr2RtPipelineStateAL>();
+	return nullPipeline;
+}
 }
 
 
-Tr2RtPipelineStateAL::Tr2RtPipelineStateAL()
-	:m_pipeline( NullRtPipeline() )
+Tr2RtPipelineStateAL::Tr2RtPipelineStateAL() :
+	m_pipeline( NullRtPipeline() )
 {
 }
 

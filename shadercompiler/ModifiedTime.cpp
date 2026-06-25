@@ -12,126 +12,126 @@
 
 namespace
 {
-	CachingIncludeHandler s_includeHandler;
+CachingIncludeHandler s_includeHandler;
 
-	char* GetNextWord( char* string )
+char* GetNextWord( char* string )
+{
+
+	char* end = string;
+	while( *end && *end != ' ' && *end != '\n' )
 	{
-
-		char* end = string;
-		while( *end && *end != ' ' && *end != '\n' )
-		{
-			++end;
-		}
-		switch (*end)
-		{
-		case 0:
-			return end;
-		case '\n':
-			*end = 0;
-			return end;
-		default:
-			*end = 0;
-			return end + 1;
-		}
+		++end;
 	}
-
-
-	struct HashCheckArguments
+	switch( *end )
 	{
-		std::string sourcePath;
-		std::string outputPath;
-		std::vector<Macro> defines;
-	};
+	case 0:
+		return end;
+	case '\n':
+		*end = 0;
+		return end;
+	default:
+		*end = 0;
+		return end + 1;
+	}
+}
 
 
-	std::mutex s_modifiedOutputsCS;
-	std::set<std::string> s_modifiedOutputs;
+struct HashCheckArguments
+{
+	std::string sourcePath;
+	std::string outputPath;
+	std::vector<Macro> defines;
+};
 
-	const std::regex s_include( "#[[:space:]]*include[[:space:]]*[<\"]([^>\"]*)" );
 
-	bool IsOutputUpToDate(const char* path, const std::string& sourceHash )
+std::mutex s_modifiedOutputsCS;
+std::set<std::string> s_modifiedOutputs;
+
+const std::regex s_include( "#[[:space:]]*include[[:space:]]*[<\"]([^>\"]*)" );
+
+bool IsOutputUpToDate( const char* path, const std::string& sourceHash )
+{
+	FILE* file = nullptr;
+	fopen_s( &file, path, "rb" );
+	if( !file )
 	{
-		FILE* file = nullptr;
-		fopen_s( &file, path, "rb" );
-		if( !file )
-		{
-			return false;
-		}
-		uint32_t fileVersion;
-		if( fread( &fileVersion, sizeof( fileVersion ), 1, file ) != 1 )
-		{
-			fclose( file );
-			return false;
-		}
-		if( fileVersion != DATA_VERSION )
-		{
-			fclose( file );
-			return false;
-		}
-		uint8_t compilerVersion[4];
-		if( fread( compilerVersion, sizeof( compilerVersion ), 1, file ) != 1 )
-		{
-			fclose( file );
-			return false;
-		}
-		if( compilerVersion[0] != ShaderCompilerVersion[0] || compilerVersion[1] != ShaderCompilerVersion[1] || compilerVersion[2] != ShaderCompilerVersion[2] )
-		{
-			fclose( file );
-			return false;
-		}
-
-		char buffer[MD5::HashBytes * 2];
-		if( fread( buffer, sizeof( buffer ), 1, file ) != 1 )
-		{
-			fclose( file );
-			return false;
-		}
+		return false;
+	}
+	uint32_t fileVersion;
+	if( fread( &fileVersion, sizeof( fileVersion ), 1, file ) != 1 )
+	{
 		fclose( file );
-
-		return sourceHash == std::string( buffer, buffer + sizeof( buffer ) );
+		return false;
 	}
-
-	bool CheckHash( const HashCheckArguments& query )
+	if( fileVersion != DATA_VERSION )
 	{
-		{
-			std::lock_guard scope( s_modifiedOutputsCS );
-			if( s_modifiedOutputs.find( query.outputPath ) != s_modifiedOutputs.end() )
-			{
-				return true;
-			}
-		}
-
-		auto in = ::GetSourceHash( query.sourcePath.c_str(), query.defines );
-
-		if( !IsOutputUpToDate( query.outputPath.c_str(), in ) )
-		{
-			std::lock_guard scope( s_modifiedOutputsCS );
-			s_modifiedOutputs.insert( query.outputPath );
-		}
-
-		return true;
+		fclose( file );
+		return false;
 	}
-
-	void GetSourceHash( const char* sourcePath, const char* parentData, const char* rootPath, std::set<std::string>& visited, MD5& md5 )
+	uint8_t compilerVersion[4];
+	if( fread( compilerVersion, sizeof( compilerVersion ), 1, file ) != 1 )
 	{
-		if( visited.find( sourcePath ) != end( visited ) )
-		{
-			return;
-		}
-		visited.insert( sourcePath );
-		if( auto opened = s_includeHandler.Open( sourcePath, parentData, rootPath ) )
-		{
-			md5.add( opened->data, opened->size );
+		fclose( file );
+		return false;
+	}
+	if( compilerVersion[0] != ShaderCompilerVersion[0] || compilerVersion[1] != ShaderCompilerVersion[1] || compilerVersion[2] != ShaderCompilerVersion[2] )
+	{
+		fclose( file );
+		return false;
+	}
 
-			std::cmatch match;
-			auto begin = opened->data;
-			while( std::regex_search( begin, opened->data + opened->size, match, s_include ) )
-			{
-				GetSourceHash( match[1].str().c_str(), opened->data, rootPath, visited, md5 );
-				begin += match.position() + match.length();
-			}
+	char buffer[MD5::HashBytes * 2];
+	if( fread( buffer, sizeof( buffer ), 1, file ) != 1 )
+	{
+		fclose( file );
+		return false;
+	}
+	fclose( file );
+
+	return sourceHash == std::string( buffer, buffer + sizeof( buffer ) );
+}
+
+bool CheckHash( const HashCheckArguments& query )
+{
+	{
+		std::lock_guard scope( s_modifiedOutputsCS );
+		if( s_modifiedOutputs.find( query.outputPath ) != s_modifiedOutputs.end() )
+		{
+			return true;
 		}
 	}
+
+	auto in = ::GetSourceHash( query.sourcePath.c_str(), query.defines );
+
+	if( !IsOutputUpToDate( query.outputPath.c_str(), in ) )
+	{
+		std::lock_guard scope( s_modifiedOutputsCS );
+		s_modifiedOutputs.insert( query.outputPath );
+	}
+
+	return true;
+}
+
+void GetSourceHash( const char* sourcePath, const char* parentData, const char* rootPath, std::set<std::string>& visited, MD5& md5 )
+{
+	if( visited.find( sourcePath ) != end( visited ) )
+	{
+		return;
+	}
+	visited.insert( sourcePath );
+	if( auto opened = s_includeHandler.Open( sourcePath, parentData, rootPath ) )
+	{
+		md5.add( opened->data, opened->size );
+
+		std::cmatch match;
+		auto begin = opened->data;
+		while( std::regex_search( begin, opened->data + opened->size, match, s_include ) )
+		{
+			GetSourceHash( match[1].str().c_str(), opened->data, rootPath, visited, md5 );
+			begin += match.position() + match.length();
+		}
+	}
+}
 
 }
 
@@ -152,13 +152,13 @@ std::string GetSourceHash( const char* sourcePath, const std::vector<Macro>& def
 		md5.add( each.name.c_str(), each.name.length() );
 		md5.add( each.value.c_str(), each.value.length() );
 	}
-	
+
 	// safety mechanism so that teamcity overwrites submitted shaders that have been built with undesirable settings
 	md5.add( &g_optimizationLevel, sizeof( g_optimizationLevel ) );
 	md5.add( &g_avoidFlowControl, sizeof( g_avoidFlowControl ) );
 	md5.add( &g_generatePDB, sizeof( g_generatePDB ) );
 	md5.add( &g_skipOptimization, sizeof( g_skipOptimization ) );
-	
+
 	GetSourceHash( sourcePath, nullptr, sourcePath, visited, md5 );
 	return md5.getHash();
 }
@@ -170,7 +170,7 @@ void PrintOutOfDateFiles( size_t workerCount )
 	char buffer[4096];
 	while( !feof( stdin ) )
 	{
-		if( !fgets( buffer, sizeof(buffer), stdin ) )
+		if( !fgets( buffer, sizeof( buffer ), stdin ) )
 		{
 			break;
 		}

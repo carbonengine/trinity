@@ -23,9 +23,9 @@ struct Triangle
 	Vector3 m_position3;
 };
 
-BLUE_CLASS( Tr2LineSet ): 
+BLUE_CLASS( Tr2LineSet ) :
 	public IInitialize,
-	public Tr2PrimitiveSet,	
+	public Tr2PrimitiveSet,
 	public Tr2DeviceResource
 {
 public:
@@ -37,12 +37,15 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
 #if TRINITYDEV
-	virtual void GetDescription( std::string& desc ) { desc = "<Tr2LineSet>"; }
+	virtual void GetDescription( std::string & desc )
+	{
+		desc = "<Tr2LineSet>";
+	}
 #endif
 
 protected:
@@ -51,24 +54,26 @@ protected:
 	std::vector<LineData> m_lines;
 	unsigned int m_maxCurrentLineCount;
 	unsigned int m_currentSubmittedLineCount;
-	
+
 	// Picking geometry
 	unsigned int m_pickingVertexDeclHandle;
 	Tr2BufferAL m_pickingVertexBuffer;
 	std::vector<Triangle> m_triangles;
 	unsigned int m_maxCurrentTriangleCount;
 	unsigned int m_currentSubmittedTriangleCount;
+
 public:
 	void AddPickingTriangle( const Vector3& position1, const Vector3& position2, const Vector3& position3 );
 	void AddLine( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2 );
-	void SetCurrentColor( Color& val );
+	void SetCurrentColor( Color & val );
 	void ClearLines();
 	void ClearPickingTriangles();
 	bool SubmitChanges();
+
 private:
 	virtual bool OnPrepareResources();
 };
 
-TYPEDEF_BLUECLASS(Tr2LineSet);
+TYPEDEF_BLUECLASS( Tr2LineSet );
 
 #endif

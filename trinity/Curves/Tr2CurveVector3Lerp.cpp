@@ -5,7 +5,7 @@
 #include "Tr2CurveScalar.h"
 
 
-Tr2CurveVector3Lerp::Tr2CurveVector3Lerp( IRoot* lockobj ):
+Tr2CurveVector3Lerp::Tr2CurveVector3Lerp( IRoot* lockobj ) :
 	m_curveStartTime( 1.0 ),
 	m_initialValue( 0, 0, 0 ),
 	m_startInterpolation( Tr2CurveVector3LerpKeyInterpolation::HERMITE )
@@ -37,7 +37,7 @@ Vector3 Tr2CurveVector3Lerp::GetValue( double time ) const
 		v = LerpToFirstKey( time );
 	}
 	else
-	{ 
+	{
 		m_curve->GetValueAt( &v, time - m_curveStartTime );
 	}
 	return v;
@@ -66,8 +66,8 @@ Vector3 Tr2CurveVector3Lerp::LerpToFirstKey( double time ) const
 		float c2 = -2.0f * s * s * s + 3.0f * s * s;
 		float c1 = 1.0f - c2;
 
-                // Hermite with 0 tangents
-		return prev * c1 + next * c2 ;
+		// Hermite with 0 tangents
+		return prev * c1 + next * c2;
 	}
 
 	return Vector3( 0, 0, 0 );

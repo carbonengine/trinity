@@ -9,7 +9,7 @@ const Be::ClassInfo* Tr2RenderTarget::ExposeToBlue()
 {
 	/////////////////////////////////////////
 	// Blue class info
-    EXPOSURE_BEGIN( Tr2RenderTarget, "" )
+	EXPOSURE_BEGIN( Tr2RenderTarget, "" )
 
 		MAP_INTERFACE( IRoot )
 		MAP_INTERFACE( Tr2RenderTarget )
@@ -28,12 +28,10 @@ const Be::ClassInfo* Tr2RenderTarget::ExposeToBlue()
 			":param msaaType: number of samples\n"
 			":param msaaQuality: MSAA quality\n"
 			":param flags: trinity.EX_FLAG\n"
-			":param type: texture type (2D or CUBE)"
-		)
+			":param type: texture type (2D or CUBE)" )
 
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
-		(
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"Create",
 			Create,
 			4,
@@ -46,8 +44,7 @@ const Be::ClassInfo* Tr2RenderTarget::ExposeToBlue()
 			":param msaaType: number of samples\n"
 			":param msaaQuality: MSAA quality\n"
 			":param flags: trinity.EX_FLAG\n"
-			":param type: texture type (2D or CUBE)"
-		)
+			":param type: texture type (2D or CUBE)" )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"CreateArray",
@@ -62,53 +59,46 @@ const Be::ClassInfo* Tr2RenderTarget::ExposeToBlue()
 			":param flags: trinity.EX_FLAG\n"
 			":param type: texture type (2D or CUBE)" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"GenerateMipMaps",
 			GenerateMipMaps,
-			"Generate mipmaps, if any"
-		)
-				
-		MAP_METHOD_AND_WRAP
-		(
+			"Generate mipmaps, if any" )
+
+		MAP_METHOD_AND_WRAP(
 			"Resolve",
 			Resolve,
 			"Resolve a renderTarget (typically MSAA ) into another RT (typically non-MSAA).\n"
 			"May also work for just copying non-MSAA to non-MSAA, I'm not sure :P\n"
-			":param destination: Tr2RenderTarget"
-		)
+			":param destination: Tr2RenderTarget" )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::PERSISTONLY );
 		MAP_PROPERTY( "name", GetName, SetName, "" )
 
 		MAP_PROPERTY_READONLY( "width", GetWidth, "" );
-		MAP_PROPERTY_READONLY( "height", GetHeight, "" );		
+		MAP_PROPERTY_READONLY( "height", GetHeight, "" );
 		MAP_PROPERTY_READONLY( "mipCount", GetMipCount, "" );
 		MAP_PROPERTY_READONLY( "multiSampleType", GetMsaaType, "" );
 		MAP_PROPERTY_READONLY( "multiSampleQuality", GetMsaaQuality, "" );
 		MAP_PROPERTY_READONLY( "arraySize", GetArraySize, "" );
 
-		MAP_PROPERTY_READONLY( "format", GetFormat,	"" );
+		MAP_PROPERTY_READONLY( "format", GetFormat, "" );
 		MAP_PROPERTY_READONLY( "type", GetType, "" );
 
 		MAP_PROPERTY_READONLY( "isValid", IsValid, "is the graphics object successfully creaed" );
 		MAP_PROPERTY_READONLY( "isReadable", IsReadable, "can the RT be used as a texture" );
 
-		MAP_METHOD_AND_WRAP( 
-			"sharedHandle",	
-			GetSharedHandle, 
-			"sharedHandle" 
-			);
+		MAP_METHOD_AND_WRAP(
+			"sharedHandle",
+			GetSharedHandle,
+			"sharedHandle" );
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"HasALObject",
 			HasALObject,
 			"Returns True iff Tr2RenderTarget contains a reference to passed AL object ID.\n"
 			"Used for debugging along with trinity.GetLiveALResources.\n"
 			":param alType: AL object type (trinity.AL_OBJECT_TYPE)\n"
-			":param alObject: AL object ID"
-		)
+			":param alObject: AL object ID" )
 
 	EXPOSURE_END()
 }

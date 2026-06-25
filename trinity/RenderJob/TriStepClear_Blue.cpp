@@ -17,7 +17,7 @@ PyObject* TriStepClear::py__init__( PyObject* self, PyObject* args )
 	PyObject* depth = NULL;
 	PyObject* stencil = NULL;
 
-	if( !PyArg_ParseTuple( args, "|OOO", &color, &depth, &stencil) )
+	if( !PyArg_ParseTuple( args, "|OOO", &color, &depth, &stencil ) )
 	{
 		return NULL;
 	}
@@ -65,7 +65,7 @@ PyObject* TriStepClear::py__init__( PyObject* self, PyObject* args )
 
 const Be::ClassInfo* TriStepClear::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepClear, "" )
+	EXPOSURE_BEGIN( TriStepClear, "" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepClear )
@@ -78,7 +78,7 @@ const Be::ClassInfo* TriStepClear::ExposeToBlue()
 		MAP_ATTRIBUTE( "isStencilCleared", m_isStencilCleared, "na", Be::READWRITE | Be::PERSIST )
 
 		MAP_METHOD(
-			"__init__", 
+			"__init__",
 			py__init__,
 			"Creates a render step that performs a Clear() on the currently set"
 			"\nRT back-buffer / depth-stencil. When optional arguments are not set"
@@ -88,8 +88,7 @@ const Be::ClassInfo* TriStepClear::ExposeToBlue()
 			"\n:param depth: float or None (default None)"
 			"\n:type depth: Optional[float | None]"
 			"\n:param stencil: uint or None (default None)"
-			"\n:type stencil: Optional[int | None]"
-			)
+			"\n:type stencil: Optional[int | None]" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

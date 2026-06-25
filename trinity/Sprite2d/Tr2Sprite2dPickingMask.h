@@ -6,7 +6,7 @@ BLUE_DECLARE( Tr2ImageRes );
 
 BLUE_CLASS_IMPL( Tr2Sprite2dPickingMask );
 
-class Tr2Sprite2dPickingMask: public IRoot
+class Tr2Sprite2dPickingMask : public IRoot
 {
 public:
 	explicit Tr2Sprite2dPickingMask( IRoot* lockobj = nullptr );
@@ -17,6 +17,7 @@ public:
 	void SetMaskPath( const wchar_t* path );
 
 	bool SampleMask( const Vector2& point, const Vector2& topLeft, float width, float height ) const;
+
 private:
 	std::wstring m_maskPath;
 	Tr2ImageResPtr m_mask;

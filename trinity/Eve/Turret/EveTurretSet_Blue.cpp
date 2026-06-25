@@ -8,55 +8,39 @@
 
 BLUE_DEFINE( EveTurretSet );
 
-Be::VarChooser LODChooser[] =
-{
-	{
-		"LOD_INVALID",
-			BeCast( EveTurretSet::LOD_INVALID ),
-			""
-	},
-	{
-		"LOD_EMPTY",
-			BeCast( EveTurretSet::LOD_EMPTY ),
-			""
-	},
-	{
-		"LOD_HIGHEST",
-			BeCast( EveTurretSet::LOD_HIGHEST ),
-			""
-	},
-	{
-		"LOD_DISABLED",
-			BeCast( EveTurretSet::LOD_DISABLED ),
-			""
-	},
+Be::VarChooser LODChooser[] = {
+	{ "LOD_INVALID",
+	  BeCast( EveTurretSet::LOD_INVALID ),
+	  "" },
+	{ "LOD_EMPTY",
+	  BeCast( EveTurretSet::LOD_EMPTY ),
+	  "" },
+	{ "LOD_HIGHEST",
+	  BeCast( EveTurretSet::LOD_HIGHEST ),
+	  "" },
+	{ "LOD_DISABLED",
+	  BeCast( EveTurretSet::LOD_DISABLED ),
+	  "" },
 	{ 0 }
 };
 
-BLUE_REGISTER_ENUM_EX( 
-	"EveTurretSetLOD", 
-	EveTurretSet::LOD, 
-	LODChooser, 
+BLUE_REGISTER_ENUM_EX(
+	"EveTurretSetLOD",
+	EveTurretSet::LOD,
+	LODChooser,
 	ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
-Be::VarChooser ImpactBehaviourChooser[] =
-{
-	{
-		"DAMAGE_LOCATOR",
-		BeCast( ImpactBehaviour::DAMAGE_LOCATOR ),
-		""
-	},
-	{
-		"SHIELD_ELLIPSOID",
-		BeCast( ImpactBehaviour::SHIELD_ELLIPSOID ),
-		""
-	},
-	{
-		"CENTER",
-		BeCast( ImpactBehaviour::CENTER ),
-		""
-	},
+Be::VarChooser ImpactBehaviourChooser[] = {
+	{ "DAMAGE_LOCATOR",
+	  BeCast( ImpactBehaviour::DAMAGE_LOCATOR ),
+	  "" },
+	{ "SHIELD_ELLIPSOID",
+	  BeCast( ImpactBehaviour::SHIELD_ELLIPSOID ),
+	  "" },
+	{ "CENTER",
+	  BeCast( ImpactBehaviour::CENTER ),
+	  "" },
 	{ 0 }
 };
 
@@ -64,12 +48,12 @@ Be::VarChooser ImpactBehaviourChooser[] =
 const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveTurretSet, "" )
-        MAP_INTERFACE( EveTurretSet )
-	MAP_INTERFACE( EveEntity )
-        MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( EveTurretSet )
 		MAP_INTERFACE( EveEntity )
-        MAP_INTERFACE( INotify )
-        MAP_INTERFACE( ITr2Renderable )
+		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( EveEntity )
+		MAP_INTERFACE( INotify )
+		MAP_INTERFACE( ITr2Renderable )
 
 		MAP_ATTRIBUTE( "name", m_name, "A name for this turret pair", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "Toggle rendering", Be::READWRITE )
@@ -90,8 +74,8 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "locatorName", m_locatorName, "locator name for all turrets of this pair (A, B, C is auto-attached!)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "slotNumber", m_slotNumber, "the slot number of the turret", Be::READWRITE )
 		MAP_ATTRIBUTE( "swarmID", m_swarmID, "id of the swarmer using this turret set(fighters) used for deriving turret transforms", Be::READWRITE )
-		 
-		MAP_PROPERTY( "targetObject", GetTargetObject, SetTargetObject, "object this set of turrets will track"	)
+
+		MAP_PROPERTY( "targetObject", GetTargetObject, SetTargetObject, "object this set of turrets will track" )
 		MAP_ATTRIBUTE( "target", m_target, "Info on the target", Be::READ )
 
 		MAP_ATTRIBUTE( "turretEffect", m_turretEffect, "The effect to use to draw the turret pair", Be::READWRITE | Be::PERSIST )
@@ -127,7 +111,7 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "laserMissBehaviour", m_laserMissBehaviour, "Whether or not to use laser-like properties when this turret misses", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "projectileMissBehaviour", m_projectileMissBehaviour, "Whether or not to use projectile properties when this turret misses", Be::READWRITE | Be::PERSIST )
-		
+
 		MAP_ATTRIBUTE( "impactSize", m_impactSize, "Size of impacts. No impact if size is 0 or less", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "impactBehaviour", m_impactBehaviour, "What do we want to hit? ", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, ImpactBehaviourChooser )
 
@@ -187,15 +171,14 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_METHOD_AND_WRAP(
 			"ForceStateTargeting",
 			ForceStateTargeting,
-			"Force into state targeting: no anim, no transition, just flip.")
+			"Force into state targeting: no anim, no transition, just flip." )
 
 		MAP_METHOD_AND_WRAP(
 			"SetShotMissed",
 			SetShotMissed,
 			"Set whether the last turret shot missed.\n"
-			":param missed: was the last shot a miss"
-			)
-		
+			":param missed: was the last shot a miss" )
+
 		MAP_METHOD_AND_WRAP(
 			"GetLastShotTime",
 			GetLastShotTime,
@@ -204,40 +187,37 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_METHOD_AND_WRAP(
 			"GetShotTimeVariance",
 			GetShotTimeVariance,
-			"Get maximum time variance between turrets in a set.")
+			"Get maximum time variance between turrets in a set." )
 
 		MAP_METHOD_AND_WRAP(
 			"MissQueueSize",
 			MissQueueSize,
-			"Get the size of the active miss/hit queue.")
+			"Get the size of the active miss/hit queue." )
 
 		MAP_METHOD_AND_WRAP(
 			"GetFiringBoneWorldTransform",
 			GetFiringBoneWorldTransform,
 			"Returns the world transform matrix of the specfified firing bone in the currently firing turret."
 			"\n:param idx: index of the firing bone in the current model."
-			"\n:returns: The world transform matrix.")
+			"\n:returns: The world transform matrix." )
 
 		MAP_METHOD_AND_WRAP(
 			"SetControllerVariable",
 			SetControllerVariable,
 			"Set variable for all applicable controllers\n"
 			":param name: variable name\n"
-			":param value: new variable value\n"
-		)
+			":param value: new variable value\n" )
 
 		MAP_METHOD_AND_WRAP(
 			"HandleControllerEvent",
 			HandleControllerEvent,
 			"Pass an event to controllers\n"
-			":param name: event name"
-		)
+			":param name: event name" )
 
 		MAP_METHOD_AND_WRAP(
 			"StartControllers",
 			StartControllers,
-			"Start all controllers"
-		)
+			"Start all controllers" )
 
 	EXPOSURE_END()
 }

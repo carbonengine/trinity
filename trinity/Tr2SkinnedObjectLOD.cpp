@@ -12,7 +12,7 @@ float g_skinnedMediumDetailThreshold = 500.0f;
 float g_unloadLODMaxFrametime = 0.1f;
 
 float g_skinnedHighMediumMargin = 0.0f;
-float g_skinnedMediumLowMargin  = 0.0f;
+float g_skinnedMediumLowMargin = 0.0f;
 
 bool g_debugLODShader = false;
 TRI_REGISTER_SETTING( "debugLODShader", g_debugLODShader );
@@ -20,19 +20,19 @@ TRI_REGISTER_SETTING( "debugLODShader", g_debugLODShader );
 // lod resource unloading
 static const double AVATAR_RESOURCE_UNLOADING_TIME_THRESHOLD = 10.0;
 
-TRI_REGISTER_SETTING( "skinnedLowDetailThreshold",		g_skinnedLowDetailThreshold );
-TRI_REGISTER_SETTING( "skinnedMediumDetailThreshold",	g_skinnedMediumDetailThreshold );
-TRI_REGISTER_SETTING( "skinnedHighMediumMargin",		g_skinnedHighMediumMargin );
-TRI_REGISTER_SETTING( "skinnedMediumLowMargin",			g_skinnedMediumLowMargin  );
-TRI_REGISTER_SETTING( "unloadLODMaxFrametime",			g_unloadLODMaxFrametime );
+TRI_REGISTER_SETTING( "skinnedLowDetailThreshold", g_skinnedLowDetailThreshold );
+TRI_REGISTER_SETTING( "skinnedMediumDetailThreshold", g_skinnedMediumDetailThreshold );
+TRI_REGISTER_SETTING( "skinnedHighMediumMargin", g_skinnedHighMediumMargin );
+TRI_REGISTER_SETTING( "skinnedMediumLowMargin", g_skinnedMediumLowMargin );
+TRI_REGISTER_SETTING( "unloadLODMaxFrametime", g_unloadLODMaxFrametime );
 
-CCP_STATS_DECLARE( countSkinnedLowLOD,			"Trinity/SkinnedObject/LowLOD", true, CST_COUNTER_LOW, "Skinned object count in Low LOD.");
-CCP_STATS_DECLARE( countSkinnedMediumLOD,		"Trinity/SkinnedObject/MediumLOD", true, CST_COUNTER_LOW, "Skinned object count in Medium LOD.");
-CCP_STATS_DECLARE( countSkinnedHighLOD,			"Trinity/SkinnedObject/HighLOD", true, CST_COUNTER_LOW, "Skinned object count in High LOD.");
-CCP_STATS_DECLARE( countUnderConstructionLOD,	"Trinity/SkinnedObject/UnderConstructionLOD", true, CST_COUNTER_LOW, "Skinned object whose LOD is under construction.");
+CCP_STATS_DECLARE( countSkinnedLowLOD, "Trinity/SkinnedObject/LowLOD", true, CST_COUNTER_LOW, "Skinned object count in Low LOD." );
+CCP_STATS_DECLARE( countSkinnedMediumLOD, "Trinity/SkinnedObject/MediumLOD", true, CST_COUNTER_LOW, "Skinned object count in Medium LOD." );
+CCP_STATS_DECLARE( countSkinnedHighLOD, "Trinity/SkinnedObject/HighLOD", true, CST_COUNTER_LOW, "Skinned object count in High LOD." );
+CCP_STATS_DECLARE( countUnderConstructionLOD, "Trinity/SkinnedObject/UnderConstructionLOD", true, CST_COUNTER_LOW, "Skinned object whose LOD is under construction." );
 
 
-Tr2SkinnedObjectLod::Tr2SkinnedObjectLod(/*IRoot* lockobj*/) :
+Tr2SkinnedObjectLod::Tr2SkinnedObjectLod( /*IRoot* lockobj*/ ) :
 	m_allowLodSelection( false ),
 	m_currentLod( -1 )
 {
@@ -55,7 +55,7 @@ bool Tr2SkinnedObjectLod::OnModified( Be::Var* value )
 void Tr2SkinnedObjectLod::PopulateLods()
 {
 	// More clear and explicit to have some LODs available, some not, and then
-	// be smart about where visualModel can point at	
+	// be smart about where visualModel can point at
 	if( m_highDetailProxy || m_mediumDetailProxy || m_lowDetailProxy )
 	{
 		m_allowLodSelection = true;
@@ -63,7 +63,7 @@ void Tr2SkinnedObjectLod::PopulateLods()
 	}
 	else
 	{
-		m_allowLodSelection = false;	
+		m_allowLodSelection = false;
 	}
 }
 
@@ -82,15 +82,15 @@ bool Tr2SkinnedObjectLod::UnloadLodIfNeeded( const Be::Time time, const Be::Time
 	// Never unload the currently used proxy
 	if( m_highDetailProxy )
 	{
-		m_highDetailProxy->Update( time, (m_currentLod == 0) ? 0 : timeout );
+		m_highDetailProxy->Update( time, ( m_currentLod == 0 ) ? 0 : timeout );
 	}
 	if( m_mediumDetailProxy )
 	{
-		m_mediumDetailProxy->Update( time, (m_currentLod == 1) ? 0 : timeout );
+		m_mediumDetailProxy->Update( time, ( m_currentLod == 1 ) ? 0 : timeout );
 	}
 	if( m_lowDetailProxy )
 	{
-		m_lowDetailProxy->Update( time, (m_currentLod == 2) ? 0 : timeout );
+		m_lowDetailProxy->Update( time, ( m_currentLod == 2 ) ? 0 : timeout );
 	}
 
 	return false;
@@ -98,17 +98,17 @@ bool Tr2SkinnedObjectLod::UnloadLodIfNeeded( const Be::Time time, const Be::Time
 
 Tr2SkinnedModel* Tr2SkinnedObjectLod::GetHighDetailModel()
 {
-	return m_highDetailProxy ? dynamic_cast<Tr2SkinnedModel*>( m_highDetailProxy->GetObject( ) ) : 0;
+	return m_highDetailProxy ? dynamic_cast<Tr2SkinnedModel*>( m_highDetailProxy->GetObject() ) : 0;
 }
 
 Tr2SkinnedModel* Tr2SkinnedObjectLod::GetMediumDetailModel()
 {
-	return m_mediumDetailProxy ? dynamic_cast<Tr2SkinnedModel*>( m_mediumDetailProxy->GetObject( ) ) : 0;
+	return m_mediumDetailProxy ? dynamic_cast<Tr2SkinnedModel*>( m_mediumDetailProxy->GetObject() ) : 0;
 }
 
 Tr2SkinnedModel* Tr2SkinnedObjectLod::GetLowDetailModel()
 {
-	return m_lowDetailProxy ? dynamic_cast<Tr2SkinnedModel*>( m_lowDetailProxy->GetObject( ) ) : 0;
+	return m_lowDetailProxy ? dynamic_cast<Tr2SkinnedModel*>( m_lowDetailProxy->GetObject() ) : 0;
 }
 
 void Tr2SkinnedObjectLod::OnModelChanged( Tr2SkinnedModel* model )
@@ -177,7 +177,7 @@ void Tr2SkinnedObjectLod::SetMediumDetailModel( Tr2SkinnedModel* model )
 	}
 }
 
-void Tr2SkinnedObjectLod::SetLowDetailModel( Tr2SkinnedModel * model )
+void Tr2SkinnedObjectLod::SetLowDetailModel( Tr2SkinnedModel* model )
 {
 	if( !m_lowDetailProxy )
 	{
@@ -217,26 +217,25 @@ Tr2SkinnedModel* Tr2SkinnedObjectLod::SetLOD( const TriFrustum* frustum, float e
 		}
 	}
 
-    const int high   = 0;
-    const int medium = 1;
-    const int low    = 2;
+	const int high = 0;
+	const int medium = 1;
+	const int low = 2;
 
-	int choice[3] = { high, medium, low };	// order of preferred LOD. set up for high lod by default
+	int choice[3] = { high, medium, low }; // order of preferred LOD. set up for high lod by default
 
-	if( stickyLod == 2 || 
+	if( stickyLod == 2 ||
 		// small enough for low lod?
-		( m_currentLod >= 2 && estimatedPixelDiameter <= g_skinnedLowDetailThreshold + g_skinnedMediumLowMargin ) ||	// before going up, add some margin
-		( m_currentLod <  2 && estimatedPixelDiameter <= g_skinnedLowDetailThreshold - g_skinnedMediumLowMargin ) )
+		( m_currentLod >= 2 && estimatedPixelDiameter <= g_skinnedLowDetailThreshold + g_skinnedMediumLowMargin ) || // before going up, add some margin
+		( m_currentLod < 2 && estimatedPixelDiameter <= g_skinnedLowDetailThreshold - g_skinnedMediumLowMargin ) )
 	{
 		choice[0] = low;
 		choice[1] = medium;
 		choice[2] = high;
 	}
-	else
-	if( stickyLod == 1 || 
-		// medium lod?
-		( m_currentLod >= 1 && estimatedPixelDiameter <= g_skinnedMediumDetailThreshold + g_skinnedHighMediumMargin ) ||	// before going up, add some margin
-		( m_currentLod <  1 && estimatedPixelDiameter <= g_skinnedMediumDetailThreshold - g_skinnedHighMediumMargin ) )
+	else if( stickyLod == 1 ||
+			 // medium lod?
+			 ( m_currentLod >= 1 && estimatedPixelDiameter <= g_skinnedMediumDetailThreshold + g_skinnedHighMediumMargin ) || // before going up, add some margin
+			 ( m_currentLod < 1 && estimatedPixelDiameter <= g_skinnedMediumDetailThreshold - g_skinnedHighMediumMargin ) )
 	{
 		choice[0] = medium;
 		choice[1] = low;
@@ -252,14 +251,14 @@ Tr2SkinnedModel* Tr2SkinnedObjectLod::SetLOD( const TriFrustum* frustum, float e
 	Tr2SkinnedModel* model = NULL;
 	bool modelIsTemporary = true;
 
-	for (unsigned i = 0; i != 3; ++i)
+	for( unsigned i = 0; i != 3; ++i )
 	{
 		const int lod = choice[i];
 		if( proxy[lod] )
-			if ( !model || 
+			if( !model ||
 				( modelIsTemporary && proxy[lod]->IsResident() ) )
 			{
-				model = dynamic_cast<Tr2SkinnedModel*>( proxy[lod]->GetObject( ) );
+				model = dynamic_cast<Tr2SkinnedModel*>( proxy[lod]->GetObject() );
 				selectedLod = lod;
 				modelIsTemporary = proxy[lod]->IsTemporary();
 			}
@@ -274,18 +273,18 @@ Tr2SkinnedModel* Tr2SkinnedObjectLod::SetLOD( const TriFrustum* frustum, float e
 #if CCP_STATS_ENABLED
 	switch( m_currentLod )
 	{
-		case high:
-			CCP_STATS_INC( countSkinnedHighLOD );
-			break;
-		case medium:
-			CCP_STATS_INC( countSkinnedMediumLOD );
-			break;
-		case low:
-			CCP_STATS_INC( countSkinnedLowLOD );
-			break;
+	case high:
+		CCP_STATS_INC( countSkinnedHighLOD );
+		break;
+	case medium:
+		CCP_STATS_INC( countSkinnedMediumLOD );
+		break;
+	case low:
+		CCP_STATS_INC( countSkinnedLowLOD );
+		break;
 
-		default:
-			CCP_STATS_INC( countSkinnedHighLOD );
+	default:
+		CCP_STATS_INC( countSkinnedHighLOD );
 	}
 #endif
 

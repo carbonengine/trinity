@@ -7,10 +7,25 @@
 #include "Tr2Sprite2dPickingMask.h"
 
 
-static unsigned short s_spriteIndices[18] = { 
-	0,  1,  3,  3,  1,  2, 
-	4,  5,  7,  7,  5,  6,
-	8,  9, 11, 11,  9, 10
+static unsigned short s_spriteIndices[18] = {
+	0,
+	1,
+	3,
+	3,
+	1,
+	2,
+	4,
+	5,
+	7,
+	7,
+	5,
+	6,
+	8,
+	9,
+	11,
+	11,
+	9,
+	10
 };
 
 Tr2Sprite2d::Tr2Sprite2d( IRoot* lockobj ) :
@@ -38,7 +53,7 @@ Tr2Sprite2d::~Tr2Sprite2d()
 
 void Tr2Sprite2d::GatherSprites( Tr2Sprite2dScene* renderer )
 {
-	if( !m_display || (m_spriteEffect == TR2_SFX_NONE) )
+	if( !m_display || ( m_spriteEffect == TR2_SFX_NONE ) )
 	{
 		return;
 	}
@@ -91,7 +106,7 @@ void Tr2Sprite2d::GatherSprites( Tr2Sprite2dScene* renderer )
 
 		renderer->PrepareSpriteVerts( &m_vertices[4], m_translation, displayWidth, displayHeight, m_spriteEffect );
 
-		if( m_spriteEffect < TR2_SFX_TWO_TEXTURES && (m_spriteEffect != TR2_SFX_BLUR) && (m_spriteEffect != TR2_SFX_GLOW) && (m_spriteEffect != TR2_SFX_OUTLINE) )
+		if( m_spriteEffect < TR2_SFX_TWO_TEXTURES && ( m_spriteEffect != TR2_SFX_BLUR ) && ( m_spriteEffect != TR2_SFX_GLOW ) && ( m_spriteEffect != TR2_SFX_OUTLINE ) )
 		{
 			for( int i = 4; i < 8; ++i )
 			{
@@ -100,7 +115,7 @@ void Tr2Sprite2d::GatherSprites( Tr2Sprite2dScene* renderer )
 			}
 		}
 
-		if( (m_glowFactor != 0.0f) || (m_glowExpand != 0.0f) )
+		if( ( m_glowFactor != 0.0f ) || ( m_glowExpand != 0.0f ) )
 		{
 			m_vertexCount += 4;
 			SetGlowRenderState( renderer );
@@ -122,7 +137,7 @@ void Tr2Sprite2d::GatherSprites( Tr2Sprite2dScene* renderer )
 
 	SetValidatedTextures( renderer );
 
-	int indexCount = (m_vertexCount / 4) * 6;
+	int indexCount = ( m_vertexCount / 4 ) * 6;
 	renderer->RenderTriangleVerts( &m_vertices[m_firstVertex], m_vertexCount, s_spriteIndices, indexCount );
 }
 
@@ -143,7 +158,7 @@ ITr2SpriteObject* Tr2Sprite2d::PickPoint( float x, float y, Tr2Sprite2dScene* re
 			}
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -161,7 +176,7 @@ unsigned int Tr2Sprite2d::GetVertexCount()
 		{
 			vertexCount += 4;
 		}
-		if( (m_glowFactor != 0.0f) || (m_glowExpand != 0.0f) )
+		if( ( m_glowFactor != 0.0f ) || ( m_glowExpand != 0.0f ) )
 		{
 			vertexCount += 4;
 		}
@@ -173,4 +188,3 @@ unsigned int Tr2Sprite2d::GetVertexCount()
 		return m_vertexCount;
 	}
 }
-

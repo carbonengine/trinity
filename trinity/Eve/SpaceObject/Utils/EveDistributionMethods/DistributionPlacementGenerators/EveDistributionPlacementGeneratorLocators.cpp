@@ -11,7 +11,7 @@ static BlueStructureDefinition LocatorStructureWithScaleDef[] = {
 	{ 0 }
 };
 
-const Locator s_LocatorWithScaleDefaultKey = Locator { Vector3( 0.0, 0.0, 0.0 ), Quaternion( 0.0, 0.0, 0.0, 1.0 ), Vector3( 1.0, 1.0, 1.0 ), -1 };
+const Locator s_LocatorWithScaleDefaultKey = Locator{ Vector3( 0.0, 0.0, 0.0 ), Quaternion( 0.0, 0.0, 0.0, 1.0 ), Vector3( 1.0, 1.0, 1.0 ), -1 };
 
 EveDistributionPlacementGeneratorLocators::EveDistributionPlacementGeneratorLocators( IRoot* lockobj ) :
 	PARENTLOCK( m_locators ),

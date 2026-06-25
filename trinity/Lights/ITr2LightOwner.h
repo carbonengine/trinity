@@ -10,8 +10,8 @@ BLUE_DECLARE( Tr2Light );
 BLUE_INTERFACE( ITr2LightOwner ) :
 	public IRoot
 {
-	virtual void GetLights( Tr2LightManager& lightManager ) const = 0;
-	virtual void AddLight( Tr2Light* light ) {};
+	virtual void GetLights( Tr2LightManager & lightManager ) const = 0;
+	virtual void AddLight( Tr2Light * light ){};
 	virtual void ClearLights() {};
 };
 

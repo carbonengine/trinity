@@ -13,7 +13,6 @@ public:
 
 private:
 	bool m_enable;
-
 };
 
 TYPEDEF_BLUECLASS( Tr2FidelityFXDenoiser );

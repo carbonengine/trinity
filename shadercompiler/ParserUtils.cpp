@@ -112,12 +112,11 @@ std::string ParseString( const InlineString& string )
 			case '4':
 			case '5':
 			case '6':
-			case '7':
-				{
-					long code = ParseNumber( c, string.end, 8 );
-					result.append( 1, static_cast<unsigned char>( code ) );
-				}
-				break;
+			case '7': {
+				long code = ParseNumber( c, string.end, 8 );
+				result.append( 1, static_cast<unsigned char>( code ) );
+			}
+			break;
 			case 'x':
 			case 'X':
 				if( isxdigit( c[2] ) )
@@ -187,7 +186,7 @@ void MarkUsedSymbols( ASTNode* entryPoint, SymbolTable& symbols )
 	}
 	// "Globals" struct is a special case and we don't want to mark all of it's members
 	// as "used" automatically.
-	if( !(entryPoint->GetNodeType() == NT_STRUCT && entryPoint->GetSymbol()->name == globalsStructName ) && entryPoint->GetNodeType() != NT_SAMPLER_STATE_LIST )
+	if( !( entryPoint->GetNodeType() == NT_STRUCT && entryPoint->GetSymbol()->name == globalsStructName ) && entryPoint->GetNodeType() != NT_SAMPLER_STATE_LIST )
 	{
 		for( size_t i = 0; i < entryPoint->GetChildrenCount(); ++i )
 		{
@@ -204,10 +203,10 @@ void MarkUsedSymbols( ASTNode* entryPoint, SymbolTable& symbols )
 	}
 	if( entryPoint->GetSymbol() )
 	{
-        if( entryPoint->GetSymbol()->definition )
-        {
-            MarkUsedSymbols( entryPoint->GetSymbol()->definition, symbols );
-        }
+		if( entryPoint->GetSymbol()->definition )
+		{
+			MarkUsedSymbols( entryPoint->GetSymbol()->definition, symbols );
+		}
 		if( entryPoint->GetSymbol()->type.symbol && entryPoint->GetSymbol()->type.symbol->definition )
 		{
 			MarkUsedSymbols( entryPoint->GetSymbol()->type.symbol->definition, symbols );
@@ -440,9 +439,9 @@ bool ComputeMemberType( const Type& leftType, const InlineString& member, Type& 
 			int swizzleSet = 0;
 			for( const char* c = member.start; c != member.end; ++c )
 			{
-				const char *set1 = "xyzw";
-				const char *set2 = "rgba";
-				if( const char *pos = strchr( set1, *c ) )
+				const char* set1 = "xyzw";
+				const char* set2 = "rgba";
+				if( const char* pos = strchr( set1, *c ) )
 				{
 					if( swizzleSet == 2 )
 					{
@@ -454,7 +453,7 @@ bool ComputeMemberType( const Type& leftType, const InlineString& member, Type& 
 					}
 					swizzleSet = 1;
 				}
-				else if( const char *pos2 = strchr( set2, *c ) )
+				else if( const char* pos2 = strchr( set2, *c ) )
 				{
 					if( swizzleSet == 1 )
 					{
@@ -479,7 +478,7 @@ bool ComputeMemberType( const Type& leftType, const InlineString& member, Type& 
 }
 
 
-static ASTNode* AddCBuffer( ParserState& state, ASTNode* node, int cbufferIndex, ASTNode*&shadowStruct )
+static ASTNode* AddCBuffer( ParserState& state, ASTNode* node, int cbufferIndex, ASTNode*& shadowStruct )
 {
 	shadowStruct = nullptr;
 
@@ -561,7 +560,7 @@ int GetCBufferIndex( const Symbol* symbol )
 	return GetCBufferIndex( symbol->name );
 }
 
-static void PatchCBuffers( ParserState& state, ASTNode* parent, unsigned &index )
+static void PatchCBuffers( ParserState& state, ASTNode* parent, unsigned& index )
 {
 	ASTNode* node = parent->GetChild( index );
 	if( node == nullptr )
@@ -616,132 +615,171 @@ bool IsUniformInputArgument( ASTNode* argument )
 
 namespace
 {
-	struct Registers
-	{
-		std::set<int> b;
-		std::set<int> t;
-		std::set<int> s;
-		std::set<int> u;
-		std::set<int> spaces;
-	};
+struct Registers
+{
+	std::set<int> b;
+	std::set<int> t;
+	std::set<int> s;
+	std::set<int> u;
+	std::set<int> spaces;
+};
 
-	std::set<int>* GetRegisterSet( Registers& registers, char specifier )
+std::set<int>* GetRegisterSet( Registers& registers, char specifier )
+{
+	switch( specifier )
 	{
-		switch( specifier )
+	case 'b':
+		return &registers.b;
+	case 't':
+		return &registers.t;
+	case 's':
+		return &registers.s;
+	case 'u':
+		return &registers.u;
+	default:
+		return nullptr;
+	}
+}
+
+bool DoesProfileMatchStage( const InlineString& profile, InputStageType stage )
+{
+	if( profile == MakeInlineString( "" ) )
+	{
+		return true;
+	}
+	switch( stage )
+	{
+	case VERTEX_STAGE:
+		return profile == MakeInlineString( "vs" );
+	case PIXEL_STAGE:
+		return profile == MakeInlineString( "ps" );
+	case COMPUTE_STAGE:
+		return profile == MakeInlineString( "cs" );
+	case GEOMETRY_STAGE:
+		return profile == MakeInlineString( "gs" );
+	case HULL_STAGE:
+		return profile == MakeInlineString( "hs" );
+	case DOMAIN_STAGE:
+		return profile == MakeInlineString( "ds" );
+	default:
+		return false;
+	}
+}
+
+int AllocateRegister( std::set<int>& set )
+{
+	for( int i = 0;; ++i )
+	{
+		auto inserted = set.insert( i );
+		if( inserted.second )
 		{
-		case 'b':
-			return &registers.b;
-		case 't':
-			return &registers.t;
-		case 's':
-			return &registers.s;
-		case 'u':
-			return &registers.u;
-		default:
-			return nullptr;
+			return i;
 		}
 	}
+}
 
-	bool DoesProfileMatchStage( const InlineString& profile, InputStageType stage )
+char GetRegisterType( const Type& type )
+{
+	if( type.symbol )
 	{
-		if( profile == MakeInlineString( "" ) )
-		{
-			return true;
-		}
-		switch( stage )
-		{
-		case VERTEX_STAGE:
-			return profile == MakeInlineString( "vs" );
-		case PIXEL_STAGE:
-			return profile == MakeInlineString( "ps" );
-		case COMPUTE_STAGE:
-			return profile == MakeInlineString( "cs" );
-		case GEOMETRY_STAGE:
-			return profile == MakeInlineString( "gs" );
-		case HULL_STAGE:
-			return profile == MakeInlineString( "hs" );
-		case DOMAIN_STAGE:
-			return profile == MakeInlineString( "ds" );
-		default:
-			return false;
-		}
+		return 0;
 	}
-
-	int AllocateRegister( std::set<int>& set )
+	switch( type.builtInType )
 	{
-		for( int i = 0; ; ++i )
+	case OP_SAMPLER2D:
+	case OP_SAMPLER3D:
+	case OP_SAMPLERCUBE:
+	case OP_SAMPLER:
+	case OP_SAMPLERCOMPARISON:
+		return 's';
+	case OP_TEXTURE1D:
+	case OP_TEXTURE2D:
+	case OP_TEXTURE3D:
+	case OP_TEXTURECUBE:
+	case OP_TEXTURE1DARRAY:
+	case OP_TEXTURE2DARRAY:
+	case OP_TEXTURE3DARRAY:
+	case OP_TEXTURECUBEARRAY:
+	case OP_TEXTURE2DMS:
+	case OP_TEXTURE2DMSARRAY:
+	case OP_TEXTURE:
+	case OP_BUFFER:
+	case OP_STRUCTUREDBUFFER:
+	case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+	case OP_BYTEADDRESSBUFFER:
+		return 't';
+	case OP_APPENDSTRUCTUREDBUFFER:
+	case OP_CONSUMESTRUCTUREDBUFFER:
+	case OP_RWBUFFER:
+	case OP_RWBYTEADDRESSBUFFER:
+	case OP_RWSTRUCTUREDBUFFER:
+	case OP_RWTEXTURE1D:
+	case OP_RWTEXTURE1DARRAY:
+	case OP_RWTEXTURE2D:
+	case OP_RWTEXTURE2DARRAY:
+	case OP_RWTEXTURE3D:
+	case OP_RWTEXTURE3DARRAY:
+		return 'u';
+	default:
+		return 0;
+	}
+}
+
+bool SymbolMatchesGlobalInput( const Symbol& symbol, const GlobalInputElement& element )
+{
+	return symbol.name == element.name && symbol.type == element.type;
+}
+
+void AssignRegisters( ASTNode* root, InputStageType stage, Registers& registers, const std::vector<GlobalInputElement>& globalInput, std::vector<RegisterSpecifier>& globalInputRegisters )
+{
+	if( !root )
+	{
+		return;
+	}
+	switch( root->GetNodeType() )
+	{
+	case NT_CBUFFER:
+		if( root->GetSymbol()->used )
 		{
-			auto inserted = set.insert( i );
-			if( inserted.second )
+			bool assigned = false;
+			for( auto& r : root->GetSymbol()->registerSpecifier )
 			{
-				return i;
+				if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
+				{
+					assigned = true;
+					break;
+				}
+			}
+			if( !assigned )
+			{
+				RegisterSpecifier r;
+				r.shaderProfile = MakeInlineString( "" );
+				r.registerType = 'b';
+				r.registerNumber = AllocateRegister( registers.b );
+				r.subComponent = -1;
+				r.space = 0;
+				r.explicitRegister = false;
+				r.explicitSpace = false;
+				root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
 			}
 		}
-	}
-
-	char GetRegisterType( const Type& type )
-	{
-		if( type.symbol )
-		{
-			return 0;
-		}
-		switch( type.builtInType )
-		{
-		case OP_SAMPLER2D:
-		case OP_SAMPLER3D:
-		case OP_SAMPLERCUBE:
-		case OP_SAMPLER:
-		case OP_SAMPLERCOMPARISON:
-			return 's';
-		case OP_TEXTURE1D:
-		case OP_TEXTURE2D:
-		case OP_TEXTURE3D:
-		case OP_TEXTURECUBE:
-		case OP_TEXTURE1DARRAY:
-		case OP_TEXTURE2DARRAY:
-		case OP_TEXTURE3DARRAY:
-		case OP_TEXTURECUBEARRAY:
-		case OP_TEXTURE2DMS:
-		case OP_TEXTURE2DMSARRAY:
-		case OP_TEXTURE:
-		case OP_BUFFER:
-		case OP_STRUCTUREDBUFFER:
-		case OP_RAYTRACING_ACCELERATION_STRUCTURE:
-		case OP_BYTEADDRESSBUFFER:
-			return 't';
-		case OP_APPENDSTRUCTUREDBUFFER:
-		case OP_CONSUMESTRUCTUREDBUFFER:
-		case OP_RWBUFFER:
-		case OP_RWBYTEADDRESSBUFFER:
-		case OP_RWSTRUCTUREDBUFFER:
-		case OP_RWTEXTURE1D:
-		case OP_RWTEXTURE1DARRAY:
-		case OP_RWTEXTURE2D:
-		case OP_RWTEXTURE2DARRAY:
-		case OP_RWTEXTURE3D:
-		case OP_RWTEXTURE3DARRAY:
-			return 'u';
-		default:
-			return 0;
-		}
-	}
-
-	bool SymbolMatchesGlobalInput( const Symbol& symbol, const GlobalInputElement& element )
-	{
-		return symbol.name == element.name && symbol.type == element.type;
-	}
-
-	void AssignRegisters( ASTNode* root, InputStageType stage, Registers& registers, const std::vector<GlobalInputElement>& globalInput, std::vector<RegisterSpecifier>& globalInputRegisters )
-	{
-		if( !root )
+		break;
+	case NT_NAME_DECLARATION:
+		if( !root->GetSymbol()->used )
 		{
 			return;
 		}
-		switch( root->GetNodeType() )
+		if( auto registerType = GetRegisterType( root->GetSymbol()->type ) )
 		{
-		case NT_CBUFFER:
-			if( root->GetSymbol()->used )
+			auto globalElement = std::find_if( begin( globalInput ), end( globalInput ), [symbol = root->GetSymbol()]( const auto& element ) { return SymbolMatchesGlobalInput( *symbol, element ); } );
+			if( globalElement != end( globalInput ) )
 			{
+				auto& r = globalInputRegisters[globalElement - begin( globalInput )];
+				root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
+			}
+			else
+			{
+
 				bool assigned = false;
 				for( auto& r : root->GetSymbol()->registerSpecifier )
 				{
@@ -753,83 +791,44 @@ namespace
 				}
 				if( !assigned )
 				{
+					bool isArray = root->GetChildOrNull( 0 ) && root->GetChildOrNull( 0 )->GetNodeType() == NT_BRACKET_LIST;
+
 					RegisterSpecifier r;
 					r.shaderProfile = MakeInlineString( "" );
-					r.registerType = 'b';
-					r.registerNumber = AllocateRegister( registers.b );
+					r.registerType = registerType;
+					r.registerNumber = AllocateRegister( *GetRegisterSet( registers, registerType ) );
+					if( isArray )
+					{
+						r.space = AllocateRegister( registers.spaces );
+					}
+					else
+					{
+						r.space = 0;
+					}
 					r.subComponent = -1;
-					r.space = 0;
 					r.explicitRegister = false;
 					r.explicitSpace = false;
 					root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
 				}
 			}
-			break;
-		case NT_NAME_DECLARATION:
-			if( !root->GetSymbol()->used )
-			{
-				return;
-			}
-			if( auto registerType = GetRegisterType( root->GetSymbol()->type ) )
-			{
-				auto globalElement = std::find_if( begin( globalInput ), end( globalInput ), [symbol = root->GetSymbol()]( const auto& element ) { return SymbolMatchesGlobalInput( *symbol, element ); } );
-				if ( globalElement != end( globalInput ) )
-				{
-					auto& r = globalInputRegisters[globalElement - begin( globalInput )];
-					root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
-				}
-				else
-				{
-
-					bool assigned = false;
-					for( auto& r : root->GetSymbol()->registerSpecifier )
-					{
-						if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
-						{
-							assigned = true;
-							break;
-						}
-					}
-					if( !assigned )
-					{
-						bool isArray = root->GetChildOrNull( 0 ) && root->GetChildOrNull( 0 )->GetNodeType() == NT_BRACKET_LIST;
-
-						RegisterSpecifier r;
-						r.shaderProfile = MakeInlineString( "" );
-						r.registerType = registerType;
-						r.registerNumber = AllocateRegister( *GetRegisterSet( registers, registerType ) );
-						if( isArray )
-						{
-							r.space = AllocateRegister( registers.spaces );
-						}
-						else
-						{
-							r.space = 0;
-						}
-						r.subComponent = -1;
-						r.explicitRegister = false;
-						r.explicitSpace = false;
-						root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
-					}
-				}
-			}
-			break;
-		case NT_PROGRAM:
-		case NT_VAR_DECLARATION_LIST:
-			for( size_t i = 0; i < root->GetChildrenCount(); ++i )
-			{
-				AssignRegisters( root->GetChild( i ), stage, registers, globalInput, globalInputRegisters );
-			}
-			break;
-		default:
-			break;
 		}
+		break;
+	case NT_PROGRAM:
+	case NT_VAR_DECLARATION_LIST:
+		for( size_t i = 0; i < root->GetChildrenCount(); ++i )
+		{
+			AssignRegisters( root->GetChild( i ), stage, registers, globalInput, globalInputRegisters );
+		}
+		break;
+	default:
+		break;
 	}
+}
 }
 
 void AssignGlobalInputRegisters( const std::vector<GlobalInputElement>& globalInput, Registers& registers, std::vector<RegisterSpecifier>& globalInputRegisters )
 {
-	for ( auto& input : globalInput )
+	for( auto& input : globalInput )
 	{
 		if( auto registerType = GetRegisterType( input.type ) )
 		{
@@ -852,7 +851,7 @@ void AssignGlobalInputRegisters( const std::vector<GlobalInputElement>& globalIn
 			r.explicitSpace = false;
 			globalInputRegisters.push_back( r );
 		}
-		else if ( input.declaration && input.declaration->GetNodeType() == NT_CBUFFER )
+		else if( input.declaration && input.declaration->GetNodeType() == NT_CBUFFER )
 		{
 			bool assigned = false;
 			for( auto& r : input.declaration->GetSymbol()->registerSpecifier )
@@ -944,12 +943,11 @@ void SortProgramNodes( ASTNode* root )
 	std::stable_sort(
 		root->GetChildren().begin(),
 		root->GetChildren().end(),
-		[]( ASTNode* a, ASTNode* b ) -> bool
-	{
-		auto pA = GetNodeOrder( a );
-		auto pB = GetNodeOrder( b );
-		return pA < pB;
-	} );
+		[]( ASTNode* a, ASTNode* b ) -> bool {
+			auto pA = GetNodeOrder( a );
+			auto pB = GetNodeOrder( b );
+			return pA < pB;
+		} );
 }
 
 void CreateGlobalsCB( ParserState& state )
@@ -1064,24 +1062,24 @@ ASTNode* NewVarIdentifier( ParserState& state, Symbol* var )
 ASTNode* NewLiteralConst( ParserState& state, float value )
 {
 	ScannerToken token = { OP_FLOAT, 0, state.AllocateName( std::to_string( value ).c_str() ), {} };
-	auto result = state.NewNode(NT_CONSTANT, token );
+	auto result = state.NewNode( NT_CONSTANT, token );
 	result->SetType( TypeFromTokenType( OP_FLOAT ) );
 	return result;
 }
 
 ASTNode* NewLiteralConst( ParserState& state, uint32_t value )
 {
-    ScannerToken token = { OP_UINT, 0, state.AllocateName( std::to_string( value ).c_str() ), {} };
-    auto result = state.NewNode( NT_CONSTANT, token );
-    result->SetType( TypeFromTokenType( OP_UINT ) );
-    return result;
+	ScannerToken token = { OP_UINT, 0, state.AllocateName( std::to_string( value ).c_str() ), {} };
+	auto result = state.NewNode( NT_CONSTANT, token );
+	result->SetType( TypeFromTokenType( OP_UINT ) );
+	return result;
 }
 
 ASTNode* NewLiteralConst( ParserState& state, bool value )
 {
-    auto result = state.NewNode( NT_CONSTANT, { OP_BOOL_CONST, 1, MakeInlineString( value ? "true" : "false" ), {} } );
-    result->SetType( hlsl::bool_t );
-    return result;
+	auto result = state.NewNode( NT_CONSTANT, { OP_BOOL_CONST, 1, MakeInlineString( value ? "true" : "false" ), {} } );
+	result->SetType( hlsl::bool_t );
+	return result;
 }
 
 ASTNode* NewDot( ParserState& state, ASTNode* expr, Symbol* field )
@@ -1158,41 +1156,41 @@ ASTNode* NewVarDeclaration( ParserState& state, const Type& type, const InlineSt
 
 ASTNode* NewVarDeclaration( ParserState& state, Symbol* symbol, ASTNode* initializer )
 {
-    auto nameDecl = state.NewNode( NT_NAME_DECLARATION );
-    nameDecl->SetSymbol( symbol );
-    nameDecl->SetType( symbol->type );
+	auto nameDecl = state.NewNode( NT_NAME_DECLARATION );
+	nameDecl->SetSymbol( symbol );
+	nameDecl->SetType( symbol->type );
 
-    auto declList = state.NewNode( NT_VAR_DECLARATION_LIST );
-    declList->AddChild( nameDecl );
-    declList->SetType( symbol->type );
-    
-    if( initializer )
-    {
-        nameDecl->AddChild( nullptr );
-        nameDecl->AddChild( initializer );
-    }
-    return declList;
+	auto declList = state.NewNode( NT_VAR_DECLARATION_LIST );
+	declList->AddChild( nameDecl );
+	declList->SetType( symbol->type );
+
+	if( initializer )
+	{
+		nameDecl->AddChild( nullptr );
+		nameDecl->AddChild( initializer );
+	}
+	return declList;
 }
 
 ASTNode* NewFunctionCall( ParserState& state, const Type& type, const char* name, const std::vector<ASTNode*>& args )
 {
-    ScannerToken token = ScannerToken::ID( MakeInlineString( name ) );
-    auto ctr = state.NewNode( NT_FUNCTION_CALL );
-    ctr->SetToken( &token );
-    ctr->SetType( type );
-    for( auto arg : args )
-    {
-        ctr->AddChild( arg );
-    }
-    return ctr;
+	ScannerToken token = ScannerToken::ID( MakeInlineString( name ) );
+	auto ctr = state.NewNode( NT_FUNCTION_CALL );
+	ctr->SetToken( &token );
+	ctr->SetType( type );
+	for( auto arg : args )
+	{
+		ctr->AddChild( arg );
+	}
+	return ctr;
 }
 
 ASTNode* NewCastExpression( ParserState& state, const Type& type, ASTNode* child )
 {
-    auto cast = state.NewNode( NT_CAST_EXPRESSION );
-    cast->SetType( type );
-    cast->AddChild( child );
-    return cast;
+	auto cast = state.NewNode( NT_CAST_EXPRESSION );
+	cast->SetType( type );
+	cast->AddChild( child );
+	return cast;
 }
 
 ASTNode* NewExpressionStatement( ParserState& state, ASTNode* expr )
@@ -1220,7 +1218,7 @@ ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const Inlin
 	symbol->definition = param;
 	param->SetType( symbol->type );
 	param->SetSymbol( symbol );
-	if (type.arrayDimensions)
+	if( type.arrayDimensions )
 	{
 		auto brackets = state.NewNode( NT_BRACKET_LIST );
 		brackets->AddChild( nullptr );
@@ -1236,14 +1234,14 @@ ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const Inlin
 
 ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char* name )
 {
-    return NewFunctionParameter( state, type, state.AllocateName( name ) );
+	return NewFunctionParameter( state, type, state.AllocateName( name ) );
 }
 
 ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char* name, const RegisterSpecifier& reg )
 {
-    auto arg = NewFunctionParameter( state, type, state.AllocateName( name ) );
-    arg->GetSymbol()->registerSpecifier[MakeInlineString( "" )] = reg;
-    return arg;
+	auto arg = NewFunctionParameter( state, type, state.AllocateName( name ) );
+	arg->GetSymbol()->registerSpecifier[MakeInlineString( "" )] = reg;
+	return arg;
 }
 
 std::optional<std::string> PreprocessString( const InlineString& input );
@@ -1253,13 +1251,13 @@ std::optional<std::vector<InlineString>> TokenizeGlobalInput( const InlineString
 std::optional<std::vector<GlobalInputElement>> ParseGlobalInput( ParserState& state, const ScannerToken& input )
 {
 	auto processed = PreprocessString( input.stringValue );
-	if ( !processed )
+	if( !processed )
 	{
 		return {};
 	}
 
 	auto tokens = TokenizeGlobalInput( { processed->c_str(), processed->c_str() + processed->size() } );
-	if ( !tokens )
+	if( !tokens )
 	{
 		state.ShowMessage( input.fileLocation, EC_CUSTOM_ERROR, "Malformed globalinput string" );
 		return {};
@@ -1270,8 +1268,8 @@ std::optional<std::vector<GlobalInputElement>> ParseGlobalInput( ParserState& st
 	{
 		auto symbol = state.GetSymbolTable().LookupGlobal( ToString( name ).c_str() );
 		bool isCBuffer = false;
-		bool useCBuffers = false; 
-		if ( useCBuffers )
+		bool useCBuffers = false;
+		if( useCBuffers )
 		{
 			if( symbol && symbol->type.IsStruct() )
 			{
@@ -1282,7 +1280,6 @@ std::optional<std::vector<GlobalInputElement>> ParseGlobalInput( ParserState& st
 				symbol = state.GetSymbolTable().LookupBuffer( name );
 				isCBuffer = true;
 			}
-
 		}
 		else
 		{
@@ -1296,7 +1293,7 @@ std::optional<std::vector<GlobalInputElement>> ParseGlobalInput( ParserState& st
 				isCBuffer = true;
 			}
 		}
-		if ( !symbol )
+		if( !symbol )
 		{
 			state.ShowMessage( input.fileLocation, EC_UNDECLARED_IDENTIFIER, ToString( name ).c_str() );
 			return {};

@@ -56,7 +56,7 @@ void EveChildTransform::SetupWithStaticTransform( const Vector3* scale, const Qu
 	Setup( scale, rotation, translation, lowestLodVisible );
 }
 
-void EveChildTransform::UpdateTransform( const Matrix& parentTransform ) 
+void EveChildTransform::UpdateTransform( const Matrix& parentTransform )
 {
 	if( m_staticTransform || !m_useSRT )
 	{

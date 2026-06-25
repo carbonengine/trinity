@@ -12,12 +12,12 @@ void DescribeVertexDecl( unsigned int decl );
 void DescribeVertexDecl( const Tr2VertexDefinition& vd );
 
 #if WITH_GRANNY
-void GetVertexPositionOffsetAndType(granny_mesh* grannyMesh, unsigned int &positionOffset, Tr2VertexDefinition::DataType &positionType);
-void GetMeshVertexPosition(granny_mesh* grannyMesh, unsigned int index, Vector3 &p, unsigned int bytesPerVertex, unsigned int positionOffset, Tr2VertexDefinition::DataType positionType);
+void GetVertexPositionOffsetAndType( granny_mesh* grannyMesh, unsigned int& positionOffset, Tr2VertexDefinition::DataType& positionType );
+void GetMeshVertexPosition( granny_mesh* grannyMesh, unsigned int index, Vector3& p, unsigned int bytesPerVertex, unsigned int positionOffset, Tr2VertexDefinition::DataType positionType );
 #endif
 
-void ConvertShort4ToVector3( const void * src, Vector3* dest );
-void ConvertUByte4ToVector3( const void * src, Vector3* dest );
+void ConvertShort4ToVector3( const void* src, Vector3* dest );
+void ConvertUByte4ToVector3( const void* src, Vector3* dest );
 
 #if WITH_GRANNY
 // Read a Granny file inside a structured exception handler.

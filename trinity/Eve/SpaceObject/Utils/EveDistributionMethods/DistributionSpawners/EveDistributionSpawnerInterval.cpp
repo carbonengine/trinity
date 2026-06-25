@@ -4,11 +4,11 @@
 #include "EveDistributionSpawnerInterval.h"
 #include "include/TriMath.h"
 
-EveDistributionSpawnerInterval::EveDistributionSpawnerInterval( IRoot* lockobj ):
+EveDistributionSpawnerInterval::EveDistributionSpawnerInterval( IRoot* lockobj ) :
 	m_localTimer( 0.f ),
 	m_delayBeforeInitialSpawn( 0.f ),
 	m_numTriggered( 0 ),
-	m_numberOfTriggers( 0 ), 
+	m_numberOfTriggers( 0 ),
 	m_delayBetweenRepeats( 1.f ),
 	m_useRandomStartOffset( true ),
 	m_currentRandomizedIntervalDelta( 0.f ),

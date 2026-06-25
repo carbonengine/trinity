@@ -9,14 +9,15 @@ BLUE_DECLARE( Tr2StateMachineState );
 BLUE_DECLARE( Tr2ExpressionTermInfo );
 
 
-BLUE_CLASS( Tr2StateMachineTransition ) : public INotify
+BLUE_CLASS( Tr2StateMachineTransition ) :
+	public INotify
 {
 public:
 	Tr2StateMachineTransition( IRoot* lockobj = nullptr );
 
 	EXPOSE_TO_BLUE();
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	void Link( const Tr2StateMachineState& state );
 	void Unlink();
@@ -31,6 +32,7 @@ public:
 
 	std::vector<Tr2ExpressionTermInfoPtr> GetExpressionTermInfo() const;
 	BlueStdResult EvaluateExpression( const char* expression, float& value ) const;
+
 private:
 	void UpdateDestination();
 	bool IsExpressionValid( const char* attributeName ) const;

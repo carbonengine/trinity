@@ -10,13 +10,12 @@ BLUE_DECLARE( Tr2ParticleVortexForce );
 
 // -------------------------------------------------------------
 // Description:
-//   A force to apply to particles in a particle system. 
+//   A force to apply to particles in a particle system.
 //   Models a "vortex" tangent force.
 // SeeAlso:
 //   Tr2SpriteParticleSystem
 // -------------------------------------------------------------
-class Tr2ParticleVortexForce:
-	public ITr2ParticleForce
+class Tr2ParticleVortexForce : public ITr2ParticleForce
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -25,7 +24,9 @@ public:
 	~Tr2ParticleVortexForce();
 
 	XMVECTOR FASTCALL GetForce( FXMVECTOR position, FXMVECTOR velocity, float dt, float mass );
-	void Update( float dt ) {}
+	void Update( float dt )
+	{
+	}
 
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const override;
 

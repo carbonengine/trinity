@@ -40,7 +40,7 @@ void EvePlanet::UnregisterSecondaryLightSource( Tr2ShLightingManager& manager )
 	manager.UnregisterSecondaryLightSource( &m_worldTransform.GetTranslation() );
 }
 
-void EvePlanet::UpdateEffectChildren( const EveUpdateContext& updateContext, Matrix &worldTransform, float renderScale )
+void EvePlanet::UpdateEffectChildren( const EveUpdateContext& updateContext, Matrix& worldTransform, float renderScale )
 {
 	EveChildUpdateParams params;
 	params.spaceObjectParent = nullptr;
@@ -87,16 +87,16 @@ void EvePlanet::UpdatePlanetSyncronous( const EveUpdateContext& updateContext, f
 		m_ballRotation->Update( &rotation, time );
 	}
 
-	// Add Ball & EffectRoot Translation & Rotation 
+	// Add Ball & EffectRoot Translation & Rotation
 	translation += m_translation;
-	rotation = Normalize( rotation * m_rotation);
+	rotation = Normalize( rotation * m_rotation );
 
 	m_worldTransform = TransformationMatrix( m_scaling, rotation, translation );
-	UpdateEffectChildren( updateContext, m_worldTransform, renderScale);
+	UpdateEffectChildren( updateContext, m_worldTransform, renderScale );
 
-	for (auto it = m_curveSets.begin(); it != m_curveSets.end(); ++it)
+	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 	{
-		(*it)->Update( time, time );
+		( *it )->Update( time, time );
 	}
 
 	// Update the controllers
@@ -106,9 +106,8 @@ void EvePlanet::UpdatePlanetSyncronous( const EveUpdateContext& updateContext, f
 	TriObserverLocalVector::iterator observersEnd = m_observers.end();
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != observersEnd; ++it )
 	{
-		(*it)->Update( m_worldTransform );
+		( *it )->Update( m_worldTransform );
 	}
-	
 }
 
 Matrix EvePlanet::CalculatePlanetScaleTransform( const Matrix& worldTransform, float renderScale ) const
@@ -122,10 +121,10 @@ void EvePlanet::UpdatePlanetVisibility( const EveUpdateContext& updateContext, f
 	const auto scaledTransform = CalculatePlanetScaleTransform( m_worldTransform, renderScale );
 
 	// pixel diameters, also for the max possible
-	m_estimatedPixelDiameter = EstimatePixelDiameterPos( reinterpret_cast<const Vector3*>(&scaledTransform._41), 1.f / Tr2Renderer::GetProjectionTransform()._11, renderScale );
-	m_estimatedMaxPixelDiameter = EstimatePixelDiameterPos( reinterpret_cast<const Vector3*>(&scaledTransform._41), tanf( FOV_MIN / 2.f ), renderScale );
+	m_estimatedPixelDiameter = EstimatePixelDiameterPos( reinterpret_cast<const Vector3*>( &scaledTransform._41 ), 1.f / Tr2Renderer::GetProjectionTransform()._11, renderScale );
+	m_estimatedMaxPixelDiameter = EstimatePixelDiameterPos( reinterpret_cast<const Vector3*>( &scaledTransform._41 ), tanf( FOV_MIN / 2.f ), renderScale );
 
-	for ( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
+	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
 	{
 		( *it )->UpdateVisibility( updateContext, scaledTransform, m_lodLevel );
 	}
@@ -182,18 +181,18 @@ float EvePlanet::EstimatePixelDiameterDist( float scaledDistance, float tanFOV, 
 {
 	const auto halfWidthProjection = Tr2Renderer::GetViewport().width * 0.5f / tanFOV;
 
-	// get radius od 
+	// get radius od
 	const auto radius = m_radius / scale;
 
 	// clamp values close to zero and below
 	const float epsilon = 1e-5f;
 	if( scaledDistance < epsilon )
 	{
-		scaledDistance = epsilon; 
+		scaledDistance = epsilon;
 	}
 
 	if( radius < epsilon )
-	{ 
+	{
 		return 0.0f;
 	}
 
@@ -208,7 +207,7 @@ void EvePlanet::GetZOnlyRenderables( std::vector<ITr2Renderable*>& renderables )
 		return;
 	}
 
-	if ( m_lodLevel != TR2_LOD_HIGH )
+	if( m_lodLevel != TR2_LOD_HIGH )
 	{
 		return;
 	}
@@ -219,23 +218,23 @@ void EvePlanet::GetZOnlyRenderables( std::vector<ITr2Renderable*>& renderables )
 	}
 }
 
-void EvePlanet::GetRenderables( std::vector<ITr2Renderable*>& renderables)
+void EvePlanet::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	if( !m_display )
 	{
 		return;
 	}
-	if( m_lodLevel != TR2_LOD_HIGH)
+	if( m_lodLevel != TR2_LOD_HIGH )
 	{
 		return;
 	}
-	
+
 	// visible at all?
 	if( m_estimatedPixelDiameter > m_minScreenSize )
 	{
-		for ( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
+		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
-			(*ecIt)->GetRenderables( renderables );
+			( *ecIt )->GetRenderables( renderables );
 		}
 	}
 }
@@ -252,13 +251,13 @@ ITriVectorFunctionPtr EvePlanet::GetTranslationCurve()
 
 void EvePlanet::UpdateLOD()
 {
-	if ( !m_display )
+	if( !m_display )
 	{
 		return;
 	}
 
 	// visible at all?
-	if ( m_estimatedPixelDiameter > m_minScreenSize )
+	if( m_estimatedPixelDiameter > m_minScreenSize )
 	{
 		SetLod( TR2_LOD_HIGH );
 	}
@@ -275,7 +274,7 @@ void EvePlanet::SetLod( Tr2Lod lod )
 
 	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
 	{
-		(*it)->ChangeLOD( m_lodLevel );
+		( *it )->ChangeLOD( m_lodLevel );
 	}
 	if( nullptr != m_zOnlyModel )
 	{
@@ -359,14 +358,14 @@ bool EvePlanet::HasImpactConfigurationShield() const
 
 void EvePlanet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	for( auto it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
 		( *it )->GetDebugOptions( options );
 	}
 
-	for ( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+	for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
 	{
-		if ( auto renderable = dynamic_cast< ITr2DebugRenderable* >( *it ) )
+		if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( *it ) )
 		{
 			renderable->GetDebugOptions( options );
 		}
@@ -375,14 +374,14 @@ void EvePlanet::GetDebugOptions( Tr2DebugRendererOptions& options )
 
 void EvePlanet::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	for( auto it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
 		( *it )->RenderDebugInfo( renderer );
 	}
 
-	for ( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+	for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
 	{
-		if ( auto renderable = dynamic_cast< ITr2DebugRenderable* >( *it ) )
+		if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( *it ) )
 		{
 			renderable->RenderDebugInfo( renderer );
 		}

@@ -5,8 +5,8 @@
 #include "Utilities/MatrixUtils.h"
 
 
-EveChildModifierAttachToBone::EveChildModifierAttachToBone( IRoot* )
-	:m_boneIndex( -1 )
+EveChildModifierAttachToBone::EveChildModifierAttachToBone( IRoot* ) :
+	m_boneIndex( -1 )
 {
 }
 

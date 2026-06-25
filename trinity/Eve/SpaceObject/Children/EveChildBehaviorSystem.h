@@ -38,7 +38,8 @@ public:
 	EveChildBehaviorSystem( IRoot* lockobj = nullptr );
 	~EveChildBehaviorSystem();
 
-	enum RenderType {
+	enum RenderType
+	{
 		RENDER_SHIP,
 		RENDER_BOOSTER,
 
@@ -49,42 +50,43 @@ public:
 	// EveChildMesh
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	// IInitialize
 	bool Initialize();
 
-	bool OnModified( Be::Var* value ) override;
+	bool OnModified( Be::Var * value ) override;
 
 	void OnListModified(
-		long event,		// BLUELISTEVENT values
+		long event, // BLUELISTEVENT values
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const struct IList* theList
-	);
+		const struct IList* theList );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Tr2DeviceResource
-	void ReleaseResources( TriStorage s ) {}
+	void ReleaseResources( TriStorage s )
+	{
+	}
 
 	const char* GetName() const;
 	void SetName( const char* name );
 
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void GetLocalToWorldTransform( Matrix& transform ) const;
+	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void ChangeLOD( Tr2Lod lod );
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
 
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
 
 	Matrix GetWorldTransform();
@@ -102,12 +104,11 @@ public:
 	bool GetInstanceBufferBoundingBox( unsigned int bufferIndex, Vector3& minBounds, Vector3& maxBounds ) const;
 	bool HasTransparentBatches();
 	float GetSortValue();
-	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
+	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
 
 	std::vector<std::pair<int, int>> GetVertexElementAddedThroughCode() const;
 
 private:
-
 	bool OnPrepareResources();
 	void PassInVertexesToBehaviorGroups();
 	void PassInTunnelFunctionsToBehaviorGroups();
@@ -117,20 +118,17 @@ private:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
-	
+	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
+
 	void UpdateTunnelRegistry();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveChildBehaviorSystem
 	void UpdateAgents( const float deltaTime );
-	void UpdateBuffer( Tr2RenderContext& renderContext );
-	void GetGroupBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType,
-						 const Tr2PerObjectData* perObjectData,
-						 Tr2MeshPtr mesh, BehaviorGroup* group );
-	void GetGroupBoosterBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType,
-								 const Tr2PerObjectData* perObjectData, BehaviorGroup* group );
+	void UpdateBuffer( Tr2RenderContext & renderContext );
+	void GetGroupBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2MeshPtr mesh, BehaviorGroup* group );
+	void GetGroupBoosterBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, BehaviorGroup* group );
 
 
 	EveSpaceObjectPSData m_psData;

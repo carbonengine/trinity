@@ -13,8 +13,8 @@ using namespace Tr2RenderContextEnum;
 //-----------------------------------------------------------------------------
 // Buffer copy helpers
 //-----------------------------------------------------------------------------
-void SBit_To_RGBABuffer(void* destPtr, int dWidth, int dHeight, int dPitch, FTC_SBit sbit, int left, int top, int col);
-void Underline_To_RGBABuffer(void* destPtr, int dWidth, int dHeight, int dPitch, int left, int top, int width, int thickness, int col);
+void SBit_To_RGBABuffer( void* destPtr, int dWidth, int dHeight, int dPitch, FTC_SBit sbit, int left, int top, int col );
+void Underline_To_RGBABuffer( void* destPtr, int dWidth, int dHeight, int dPitch, int left, int top, int width, int thickness, int col );
 static inline int GetBit( uint8_t* line, int bit );
 struct RGBA;
 
@@ -43,21 +43,23 @@ template <class T>
 struct delete_disposer
 {
 	void operator()( T* delete_this )
-	{  delete delete_this;  }
+	{
+		delete delete_this;
+	}
 };
 
 // Tr2FontRenderData holds the data from one AddText call
 struct Tr2FontRenderData
 {
 	// cppcheck-suppress uninitMemberVar
-	Tr2FontRenderData()
-		:tail( nullptr ), 
-		bitmapCount( 0 ) 
-	{ 
+	Tr2FontRenderData() :
+		tail( nullptr ),
+		bitmapCount( 0 )
+	{
 	}
 
 	USE_CACHED_ALLOCATOR( Tr2FontRenderData )
-	
+
 	// cursorX value that was in effect before this text segment was added.
 	// This is used to reset the cursor when canceling text.
 	int prevCursorX;
@@ -133,7 +135,7 @@ void Tr2FontMeasurer::Reset()
 	m_ascender = 0;
 	m_descender = 0;
 	m_currentFace = 0;
-	
+
 	for( auto it = m_renderData.begin(); it != m_renderData.end(); ++it )
 	{
 		Tr2FontRenderData* rd = *it;
@@ -145,17 +147,17 @@ void Tr2FontMeasurer::Reset()
 	{
 		Tr2FontRenderData* rd = *it;
 		delete rd;
-	} 
+	}
 
 	m_committedRenderData.clear();
 
 	if( m_vertices )
 	{
-		CCP_DELETE [] m_vertices;
+		CCP_DELETE[] m_vertices;
 		m_vertices = nullptr;
 		m_vertexCount = 0;
 
-		CCP_DELETE [] m_indices;
+		CCP_DELETE[] m_indices;
 		m_indices = nullptr;
 		m_indexCount = 0;
 	}
@@ -234,7 +236,7 @@ unsigned int Tr2FontMeasurer::AddText( const std::wstring& text )
 
 	// Store cursor position for possible cancellation of text
 	renderData->prevCursorX = m_cursorX;
-	
+
 	if( m_underline )
 	{
 		renderData->underline = true;
@@ -298,7 +300,7 @@ unsigned int Tr2FontMeasurer::AddText( const std::wstring& text )
 				}
 
 				m_fallbackCmapIndex = FT_Get_Charmap_Index( m_ftFallbackFace->charmap );
-				
+
 				m_imgTypeFallback.face_id = (FTC_FaceID)m_fallbackFace;
 				m_imgTypeFallback.flags = g_fontManager->GetLoadFlag();
 				m_imgTypeFallback.width = m_fontSize;
@@ -446,7 +448,7 @@ int Tr2FontMeasurer::GetIndexAtPos( int x )
 		{
 			CharacterBitmap& cbit = *sbIter;
 
-			if( (x >= cbit.x) && (x <= cbit.x + cbit.sbit->xadvance) )
+			if( ( x >= cbit.x ) && ( x <= cbit.x + cbit.sbit->xadvance ) )
 			{
 				return ix;
 			}
@@ -530,12 +532,12 @@ void Tr2FontMeasurer::DrawToTexture( TriTextureRes* texture )
 	void* pBits;
 	uint32_t Pitch;
 	CR_RETURN( tex->MapForWriting( Tr2TextureSubresource( 0 ), pBits, Pitch, renderContext ) );
-	ON_BLOCK_EXIT( [&]{ tex->UnmapForWriting( renderContext ); } );
+	ON_BLOCK_EXIT( [&] { tex->UnmapForWriting( renderContext ); } );
 
-	DrawToBuffer(	texture->GetWidth(), 
-					texture->GetHeight(), 
-					pBits, 
-					Pitch );
+	DrawToBuffer( texture->GetWidth(),
+				  texture->GetHeight(),
+				  pBits,
+				  Pitch );
 }
 
 void Tr2FontMeasurer::DrawToHostBitmap( Tr2HostBitmap* hostBitmap )
@@ -547,10 +549,10 @@ void Tr2FontMeasurer::DrawToHostBitmap( Tr2HostBitmap* hostBitmap )
 		return;
 	}
 
-	DrawToBuffer(	hostBitmap->GetWidth(),
-					hostBitmap->GetHeight(),
-					hostBitmap->GetRawData(),
-					hostBitmap->GetPitch() );
+	DrawToBuffer( hostBitmap->GetWidth(),
+				  hostBitmap->GetHeight(),
+				  hostBitmap->GetRawData(),
+				  hostBitmap->GetPitch() );
 }
 
 bool Tr2FontMeasurer::HasCommittedText()
@@ -566,22 +568,22 @@ bool Tr2FontMeasurer::HasUncommittedText()
 //A function to get the bit value from a b/w bitmap
 inline int GetBit( uint8_t* line, int bit )
 {
-	const int c = (int)line[bit>>3];
+	const int c = (int)line[bit >> 3];
 	const int mask = 128 >> ( bit & 7 );
 	return c & mask;
 }
 
 
-void Tr2FontMeasurer::DrawToBuffer(		uint32_t destWidth, 
-										uint32_t destHeight, 
-										void* pData, 
-										uint32_t pitch )
+void Tr2FontMeasurer::DrawToBuffer( uint32_t destWidth,
+									uint32_t destHeight,
+									void* pData,
+									uint32_t pitch )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	for( uint32_t i = 0; i < destHeight; ++i )
 	{
-		memset( (uint8_t*)pData + i*pitch, 0, destWidth*4 );
+		memset( (uint8_t*)pData + i * pitch, 0, destWidth * 4 );
 	}
 
 	for( auto it = m_committedRenderData.begin(); it != m_committedRenderData.end(); ++it )
@@ -629,7 +631,7 @@ void Tr2FontMeasurer::DrawToBuffer(		uint32_t destWidth,
 			if( sbit->format == 1 )
 			{
 				// Top as 1 being the bottom line!
-				for( int l = sbitTop; l < sbitBottom; ++l ) 
+				for( int l = sbitTop; l < sbitBottom; ++l )
 				{
 					int destLine = top + l;
 					uint32_t* pDestLine = (uint32_t*)( (char*)pData + destLine * pitch );
@@ -655,7 +657,7 @@ void Tr2FontMeasurer::DrawToBuffer(		uint32_t destWidth,
 			else
 			{
 				// Top as 1 being the bottom line!
-				for( int l = sbitTop; l < sbitBottom; ++l ) 
+				for( int l = sbitTop; l < sbitBottom; ++l )
 				{
 					int destLine = top + l;
 					uint32_t* pDestLine = (uint32_t*)( (char*)pData + destLine * pitch );
@@ -673,7 +675,7 @@ void Tr2FontMeasurer::DrawToBuffer(		uint32_t destWidth,
 						int destColumn = left + c;
 
 						uint32_t destColor = rd->color & 0x00ffffff;
-						uint8_t a = (gray * (alphaFromColor + 1)) >> 8;
+						uint8_t a = ( gray * ( alphaFromColor + 1 ) ) >> 8;
 						destColor |= a << 24;
 
 						uint32_t* dp = pDestLine + destColumn;
@@ -691,8 +693,8 @@ void Tr2FontMeasurer::DrawToBuffer(		uint32_t destWidth,
 
 				Underline_To_RGBABuffer(
 					pData,
-					destWidth, 
-					destHeight, 
+					destWidth,
+					destHeight,
 					pitch,
 					cbit.x,
 					destHeight - cbit.y + rd->underlinePosition,
@@ -738,18 +740,17 @@ int Tr2FontMeasurer::GetFontSize() const
 	return m_fontSize;
 }
 
-void Tr2FontMeasurer::PrepareSprites( Tr2Sprite2dScene* renderer, const Vector2& translation, const Color& color, Tr2SpriteObjectEffect sfx, Tr2SpriteObjectBlendMode blendMode, Tr2SpriteTarget target, 
-	float glowBrightness, bool dropShadow, const Vector2& shadowOffset, const Color& shadowColor, Tr2SpriteObjectEffect shadowSfx )
+void Tr2FontMeasurer::PrepareSprites( Tr2Sprite2dScene* renderer, const Vector2& translation, const Color& color, Tr2SpriteObjectEffect sfx, Tr2SpriteObjectBlendMode blendMode, Tr2SpriteTarget target, float glowBrightness, bool dropShadow, const Vector2& shadowOffset, const Color& shadowColor, Tr2SpriteObjectEffect shadowSfx )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	if( m_vertices )
 	{
-		CCP_DELETE [] m_vertices;
+		CCP_DELETE[] m_vertices;
 		m_vertices = nullptr;
 		m_vertexCount = 0;
 
-		CCP_DELETE [] m_indices;
+		CCP_DELETE[] m_indices;
 		m_indices = nullptr;
 		m_indexCount = 0;
 	}
@@ -1116,7 +1117,7 @@ void Tr2FontMeasurer::SubmitSprites( Tr2Sprite2dScene* renderer )
 
 		if( adjustedIndices )
 		{
-			CCP_DELETE [] adjustedIndices;
+			CCP_DELETE[] adjustedIndices;
 		}
 	}
 }
@@ -1125,11 +1126,11 @@ void Tr2FontMeasurer::ClearSprites()
 {
 	if( m_vertices )
 	{
-		CCP_DELETE [] m_vertices;
+		CCP_DELETE[] m_vertices;
 		m_vertices = nullptr;
 		m_vertexCount = 0;
 
-		CCP_DELETE [] m_indices;
+		CCP_DELETE[] m_indices;
 		m_indices = nullptr;
 		m_indexCount = 0;
 	}
@@ -1186,13 +1187,13 @@ void Tr2FontMeasurer::NotifyListenersOfChange()
 {
 	for( auto it = m_changeListeners.begin(); it != m_changeListeners.end(); ++it )
 	{
-		(*it)->FontMeasurerChanged( this );
+		( *it )->FontMeasurerChanged( this );
 	}
 }
 
 float Tr2FontMeasurer::CalcAlphaForHorizontal( float x )
 {
-	if( (m_fadeLeftStart > 0.0f) && (x < m_fadeLeftStart) )
+	if( ( m_fadeLeftStart > 0.0f ) && ( x < m_fadeLeftStart ) )
 	{
 		return 0.0f;
 	}
@@ -1202,19 +1203,19 @@ float Tr2FontMeasurer::CalcAlphaForHorizontal( float x )
 		return 0.0f;
 	}
 
-	if( (x >= m_fadeLeftEnd) && (x <= m_fadeRightStart) )
+	if( ( x >= m_fadeLeftEnd ) && ( x <= m_fadeRightStart ) )
 	{
 		return 1.0f;
 	}
 
-	if( (x >= m_fadeLeftStart) && (x <= m_fadeLeftEnd) )
+	if( ( x >= m_fadeLeftStart ) && ( x <= m_fadeLeftEnd ) )
 	{
-		return (x - m_fadeLeftStart) / (m_fadeLeftEnd - m_fadeLeftStart);
+		return ( x - m_fadeLeftStart ) / ( m_fadeLeftEnd - m_fadeLeftStart );
 	}
 
-	if( (x >= m_fadeRightStart) && (x <= m_fadeRightEnd) )
+	if( ( x >= m_fadeRightStart ) && ( x <= m_fadeRightEnd ) )
 	{
-		return 1.0f - (x - m_fadeRightStart) / (m_fadeRightEnd - m_fadeRightStart);
+		return 1.0f - ( x - m_fadeRightStart ) / ( m_fadeRightEnd - m_fadeRightStart );
 	}
 
 	return 1.0f;
@@ -1232,19 +1233,19 @@ float Tr2FontMeasurer::CalcAlphaForVertical( float y )
 		return 0.0f;
 	}
 
-	if( (y >= m_fadeTopEnd) && (y <= m_fadeBottomStart) )
+	if( ( y >= m_fadeTopEnd ) && ( y <= m_fadeBottomStart ) )
 	{
 		return 1.0f;
 	}
 
-	if( (y >= m_fadeTopStart) && (y <= m_fadeTopEnd) )
+	if( ( y >= m_fadeTopStart ) && ( y <= m_fadeTopEnd ) )
 	{
-		return (y - m_fadeTopStart) / (m_fadeTopEnd - m_fadeTopStart);
+		return ( y - m_fadeTopStart ) / ( m_fadeTopEnd - m_fadeTopStart );
 	}
 
-	if( (y >= m_fadeBottomStart) && (y <= m_fadeBottomEnd) )
+	if( ( y >= m_fadeBottomStart ) && ( y <= m_fadeBottomEnd ) )
 	{
-		return 1.0f - (y - m_fadeBottomStart) / (m_fadeBottomEnd - m_fadeBottomStart);
+		return 1.0f - ( y - m_fadeBottomStart ) / ( m_fadeBottomEnd - m_fadeBottomStart );
 	}
 
 	return 1.0f;
@@ -1360,21 +1361,22 @@ unsigned short* Tr2FontMeasurer::AdjustIndicesIfNeeded( unsigned int startSprite
 
 int32_t Tr2FontMeasurer::GetColor()
 {
-	return static_cast<int32_t>(m_color);
+	return static_cast<int32_t>( m_color );
 }
 
 void Tr2FontMeasurer::SetColor( int32_t color )
 {
-	m_color = static_cast<uint32_t>(color);
+	m_color = static_cast<uint32_t>( color );
 }
 
 //-----------------------------------------------------------------------------
 // Implementation of buffer copy helpers.
 //-----------------------------------------------------------------------------
 
-struct RGBA {
+struct RGBA
+{
 
-	static unsigned char Max(unsigned char l, unsigned char r)
+	static unsigned char Max( unsigned char l, unsigned char r )
 	{
 		return l > r ? l : r;
 	}
@@ -1420,7 +1422,7 @@ struct RGBA {
 	//this is scaled by 255, we have to divide by 255, but  k*a/255 is the same as (k*(a+1))>>8 due to precision
 	static inline int BlendAlpha( int a1, int a2 )
 	{
-		return a1 + a2 - ( ( a1 * ( a2 + 1 ) ) >> 8) ;
+		return a1 + a2 - ( ( a1 * ( a2 + 1 ) ) >> 8 );
 	}
 
 	void BlendOverAlpha( const RGBA& other )
@@ -1440,11 +1442,11 @@ struct RGBA {
 		}
 	}
 
-	union 
+	union
 	{
 		unsigned int col;
 		unsigned char c[4];
-		struct 
+		struct
 		{
 			unsigned char r;
 			unsigned char g;
@@ -1455,14 +1457,14 @@ struct RGBA {
 };
 
 void SBit_To_RGBABuffer(
-	void *destPtr, 
-	int dWidth, 
-	int dHeight, 
-	int dPitch, 
-	FTC_SBit sbit, 
-	int left, 
-	int top, 
-	int col)
+	void* destPtr,
+	int dWidth,
+	int dHeight,
+	int dPitch,
+	FTC_SBit sbit,
+	int left,
+	int top,
+	int col )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1480,9 +1482,9 @@ void SBit_To_RGBABuffer(
 	if( sbit->format == 1 )
 	{
 		// Black and white
-		
+
 		// Top as 1 being the bottom line!
-		for( int l = 0; l < sbit->height; l++ ) 
+		for( int l = 0; l < sbit->height; l++ )
 		{
 			int dLine = top + l;
 			if( dLine < 0 || dLine >= dHeight )
@@ -1500,7 +1502,7 @@ void SBit_To_RGBABuffer(
 				}
 
 				int dCol = left + c;
-				if( dCol<0 || dCol >= dWidth )
+				if( dCol < 0 || dCol >= dWidth )
 				{
 					continue;
 				}
@@ -1540,7 +1542,7 @@ void SBit_To_RGBABuffer(
 		}
 
 		// Top as 1 being the bottom line!
-		for( int l = sbitTop; l < sbitBottom; ++l ) 
+		for( int l = sbitTop; l < sbitBottom; ++l )
 		{
 			int dLine = top + l;
 			RGBA* dl = (RGBA*)( (char*)destPtr + dLine * dPitch );
@@ -1564,7 +1566,7 @@ void SBit_To_RGBABuffer(
 	}
 }
 
-void Underline_To_RGBABuffer(void* destPtr, int dWidth, int dHeight, int dPitch, int left, int top, int width, int thickness, int col)
+void Underline_To_RGBABuffer( void* destPtr, int dWidth, int dHeight, int dPitch, int left, int top, int width, int thickness, int col )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1575,7 +1577,7 @@ void Underline_To_RGBABuffer(void* destPtr, int dWidth, int dHeight, int dPitch,
 	//specify top top-down
 	top = dHeight - top; //Note the absence of the -1 here.  FreeType insists on this strange transform, it numbers
 	//top as 1 being the bottom line!
-	for( int l = 0; l < thickness; l++ ) 
+	for( int l = 0; l < thickness; l++ )
 	{
 		int dLine = top + l;
 		if( dLine < 0 || dLine >= dHeight )
@@ -1586,7 +1588,7 @@ void Underline_To_RGBABuffer(void* destPtr, int dWidth, int dHeight, int dPitch,
 		for( int pixel = 0; pixel < width; ++pixel )
 		{
 			int dCol = left + pixel;
-			if( dCol<0 || dCol >= dWidth )
+			if( dCol < 0 || dCol >= dWidth )
 			{
 				continue;
 			}

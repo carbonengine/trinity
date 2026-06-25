@@ -8,8 +8,8 @@ namespace
 const float MAXIMUM_FRAME_TIME = 1.f / 15.f;
 }
 
-Tr2GpuSharedEmitter::Tr2GpuSharedEmitter( IRoot* lockObj )
-	:m_rate( 0 ),
+Tr2GpuSharedEmitter::Tr2GpuSharedEmitter( IRoot* lockObj ) :
+	m_rate( 0 ),
 	m_id( 0 ),
 	m_paramsHash( 0 ),
 	m_previousTime( -1 ),
@@ -162,10 +162,12 @@ void Tr2GpuSharedEmitter::SpawnParticles( const UpdateArguments& arguments, cons
 	SpawnParticles( emitter, arguments, pos, pos, vel, vel, 0.f, rateModifier );
 }
 
-void Tr2GpuSharedEmitter::SpawnParticles( 
+void Tr2GpuSharedEmitter::SpawnParticles(
 	const UpdateArguments& arguments,
-	const Vector3 *positionStart, const Vector3 *positionEnd,
-	const Vector3 *velocityStart, const Vector3 *velocityEnd,
+	const Vector3* positionStart,
+	const Vector3* positionEnd,
+	const Vector3* velocityStart,
+	const Vector3* velocityEnd,
 	float deltaTime )
 {
 	if( !arguments.system || !m_enabled )
@@ -188,11 +190,13 @@ void Tr2GpuSharedEmitter::SpawnParticles(
 	m_carryOver = SpawnParticles( emitter, arguments, posStart, posEnd, velStart, velEnd, m_carryOver, std::min( deltaTime, MAXIMUM_FRAME_TIME ) );
 }
 
-float Tr2GpuSharedEmitter::SpawnParticles( 
+float Tr2GpuSharedEmitter::SpawnParticles(
 	Tr2GpuParticleSystem::Emitter& emitter,
 	const UpdateArguments& arguments,
-	const Vector3& positionStart, const Vector3& positionEnd,
-	const Vector3& velocityStart, const Vector3& velocityEnd,
+	const Vector3& positionStart,
+	const Vector3& positionEnd,
+	const Vector3& velocityStart,
+	const Vector3& velocityEnd,
 	float carryOverCount,
 	float deltaTime )
 {
@@ -229,7 +233,7 @@ float Tr2GpuSharedEmitter::SpawnParticles(
 	return carryOverCount;
 }
 
-void Tr2GpuSharedEmitter::SpawnOnce( const UpdateArguments& arguments, const Vector3& velocity, float scale, float rateModifier)
+void Tr2GpuSharedEmitter::SpawnOnce( const UpdateArguments& arguments, const Vector3& velocity, float scale, float rateModifier )
 {
 	if( !arguments.system || !m_enabled )
 	{

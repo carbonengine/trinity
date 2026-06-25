@@ -10,7 +10,7 @@
 using namespace PriorityBlend;
 
 Tr2PostProcessAttributes::Tr2PostProcessAttributes( IRoot* lockobj ) :
-	intensity(0.0f),
+	intensity( 0.0f ),
 	priority( PostProcessEnums::Priority::MEDIUM_PRIORITY ),
 	signalLossIntensity( Attribute( 0.0f ) ),
 	bloomBrightness( Attribute( 0.0f ) ),
@@ -38,7 +38,7 @@ Tr2PostProcessAttributes::Tr2PostProcessAttributes( IRoot* lockobj ) :
 	vignetteDetail1Size( Attribute( Vector2( 16.0, 16.0 ) ) ),
 	vignetteDetail1Scroll( Attribute( Vector2( 0, 0 ) ) ),
 	vignetteDetail2Size( Attribute( Vector2( 16.0, 16.0 ) ) ),
-	vignetteDetail2Scroll( Attribute(Vector2( 0, 0 ) ) ),
+	vignetteDetail2Scroll( Attribute( Vector2( 0, 0 ) ) ),
 	vignetteShapePath( Attribute( BlueSharedString( "" ) ) ),
 	vignetteDetailPath( Attribute( BlueSharedString( "" ) ) ),
 	vignetteSineFrequency( Attribute( 0.0f ) ),
@@ -76,7 +76,7 @@ const char* GetAttributeName( T Tr2PostProcessAttributes::* attribute )
 
 
 template <typename T, typename Accumulator = typename DefaultAccumulator<T>::Type>
-typename Accumulator::ResultType Accumulate( PriorityBlend::Attribute<T> Tr2PostProcessAttributes::*attr, const std::vector<Tr2PostProcessAttributes*>& sources, AttributesDebugObserver<Tr2PostProcessAttributes>* observer, Accumulator accumulator = {} )
+typename Accumulator::ResultType Accumulate( PriorityBlend::Attribute<T> Tr2PostProcessAttributes::* attr, const std::vector<Tr2PostProcessAttributes*>& sources, AttributesDebugObserver<Tr2PostProcessAttributes>* observer, Accumulator accumulator = {} )
 {
 	return PriorityBlend::Accumulate( attr, sources, observer, GetAttributeName( attr ), accumulator );
 }
@@ -348,7 +348,7 @@ void Tr2PostProcessAttributes::Reset()
 	depthOfFieldFocalLength = Attribute( 0.0f );
 	depthOfFieldShape = Attribute( Tr2Bokeh::Disk );
 
-	// We enable all color correction options because otherwise it would interpolate from zero to whatever the 
+	// We enable all color correction options because otherwise it would interpolate from zero to whatever the
 	// postprocess volume has set, giving us weird results when entering the volume.
 	whiteTemperature = Attribute( 6500.0f, true );
 	whiteTint = Attribute( 0.0f, true );
@@ -376,7 +376,7 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 	{
 		signalLossIntensity = Attribute( signalLoss->m_strength, true );
 	}
-	
+
 	if( auto bloom = postProcess->GetBloomIfAvailable() )
 	{
 		bloomBrightness = Attribute( bloom->m_bloomBrightness, true );
@@ -384,7 +384,7 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		bloomLuminanceThreshold = Attribute( bloom->m_luminanceThreshold, true );
 		grimeIntensity = Attribute( bloom->m_grimeWeight, true );
 		grimePath = Attribute( bloom->m_grimePath, true );
-	
+
 		bloomSizeScale = Attribute( bloom->m_sizeScale, true );
 		bloomDirectionalWeight = Attribute( bloom->m_directionalWeight, true );
 		bloomStepSize1 = Attribute( bloom->m_stepSizes[0], true );
@@ -409,7 +409,7 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		filmGrainBrightnessModifier = Attribute( filmGrain->m_brightnessModifier, true );
 		filmGrainColored = Attribute( filmGrain->m_colored, true );
 		filmGrainColorAmount = Attribute( filmGrain->m_colorAmount, true );
-}
+	}
 	if( auto desaturate = postProcess->GetDesaturateIfAvailable() )
 	{
 		// negative is desaturation, positive is saturation, so move the zero point to 0.0 from 1.0
@@ -419,7 +419,6 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 	{
 		fadeIntensity = Attribute( fade->m_intensity, true );
 		fadeColor = Attribute( fade->m_color, true );
-
 	}
 	if( auto vignette = postProcess->GetVignetteIfAvailable() )
 	{
@@ -435,7 +434,6 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		vignetteSineFrequency = Attribute( vignette->m_sineFrequency, true );
 		vignetteMinSineFrequency = Attribute( vignette->m_sineMinimum, true );
 		vignetteMaxSineFrequency = Attribute( vignette->m_sineMaximum, true );
-
 	}
 	if( auto depthOfField = postProcess->GetDepthOfFieldIfAvailable() )
 	{
@@ -443,7 +441,6 @@ void Tr2PostProcessAttributes::FromPostProcess( Tr2PostProcess2* postProcess, Po
 		depthOfFieldFocalDistance = Attribute( depthOfField->m_focalDistance, true );
 		depthOfFieldFocalLength = Attribute( depthOfField->m_focalLength, true );
 		depthOfFieldShape = Attribute( depthOfField->m_bokehShape, true );
-
 	}
 
 	auto luts = std::vector<const Tr2PPLutEffect*>();

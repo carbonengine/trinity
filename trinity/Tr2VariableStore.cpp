@@ -5,8 +5,8 @@
 #include "Tr2TextureReference.h"
 
 
-Tr2VariableStore::Tr2VariableStore( IRoot* lockobj )
-	:m_variableMap( "Tr2VariableStore::m_variableMap" )
+Tr2VariableStore::Tr2VariableStore( IRoot* lockobj ) :
+	m_variableMap( "Tr2VariableStore::m_variableMap" )
 {
 	SetParentVariableStore( &GlobalStore() );
 }
@@ -18,8 +18,8 @@ Tr2VariableStore::Tr2VariableStore( IRoot* lockobj )
 // See also:
 //   Tr2GlobalVariableStore
 // -------------------------------------------------------------
-Tr2VariableStore::Tr2VariableStore( IRoot* lockobj, int )
-	:m_variableMap( "Tr2VariableStore::m_variableMap" )
+Tr2VariableStore::Tr2VariableStore( IRoot* lockobj, int ) :
+	m_variableMap( "Tr2VariableStore::m_variableMap" )
 {
 }
 
@@ -29,7 +29,7 @@ Tr2VariableStore::~Tr2VariableStore()
 
 // -------------------------------------------------------------
 // Description:
-//   Returns the parent variable store used during variable 
+//   Returns the parent variable store used during variable
 //   search. GlobalStore() is the default parent of new
 //   variable store objects.
 // Return Value:
@@ -42,11 +42,11 @@ Tr2VariableStore* Tr2VariableStore::GetParentVariableStore() const
 
 // -------------------------------------------------------------
 // Description:
-//   Assigns a parent to the variable store. 
+//   Assigns a parent to the variable store.
 // Arguments:
 //   variableStore - New parent of the variable store
 // -------------------------------------------------------------
-void Tr2VariableStore::SetParentVariableStore(Tr2VariableStore* variableStore)
+void Tr2VariableStore::SetParentVariableStore( Tr2VariableStore* variableStore )
 {
 	if( this == &GlobalStore() )
 	{
@@ -55,7 +55,7 @@ void Tr2VariableStore::SetParentVariableStore(Tr2VariableStore* variableStore)
 
 #if TRINITYDEV
 	// Check if we don't assign a child as a parent
-	Tr2VariableStore *store = variableStore;
+	Tr2VariableStore* store = variableStore;
 	while( store )
 	{
 		CCP_ASSERT( store != this );
@@ -194,7 +194,7 @@ TriVariable* Tr2VariableStore::RegisterVariable( const char* name, const Color& 
 
 // -------------------------------------------------------------
 // Description:
-//   Registers a placeholder for a variable. 
+//   Registers a placeholder for a variable.
 // Arguments:
 //   name - Name of the new variable
 //   value - Value for the new variable
@@ -272,12 +272,12 @@ bool Tr2VariableStore::UnregisterLocalVariable( const char* name )
 		return false;
 	}
 	auto it = m_variableMap.find( name );
-    if( it != m_variableMap.end() )
-    {
+	if( it != m_variableMap.end() )
+	{
 		it->second->Invalidate();
-        m_variableMap.erase( it );
+		m_variableMap.erase( it );
 		return true;
-    }
+	}
 	return false;
 }
 
@@ -320,7 +320,7 @@ TriVariable* Tr2VariableStore::FindLocalVariable( const char* name ) const
 	{
 		return nullptr;
 	}
-    auto it = m_variableMap.find( name );
+	auto it = m_variableMap.find( name );
 
 	return it != m_variableMap.end() ? it->second : nullptr;
 }
@@ -357,7 +357,7 @@ TriVariable* Tr2VariableStore::GetVariable( const char* name )
 
 // -------------------------------------------------------------
 // Description:
-//   Searches for a variable the given name in this store. If the 
+//   Searches for a variable the given name in this store. If the
 //   variable is not found the function registers
 //   it in this store (with type TRIVARIABLE_INVALID).
 // Arguments:
@@ -371,12 +371,12 @@ TriVariable* Tr2VariableStore::GetLocalVariable( const char* name )
 	{
 		return nullptr;
 	}
-    auto it = m_variableMap.find( name );
-    if( it != m_variableMap.end() )
-    {
+	auto it = m_variableMap.find( name );
+	if( it != m_variableMap.end() )
+	{
 		return it->second;
 	}
-	
+
 	TriVariablePtr var;
 	var.CreateInstance();
 	var->m_type = TRIVARIABLE_INVALID;
@@ -408,7 +408,7 @@ TriVariable* Tr2VariableStore::RegisterVariableType( const char* name, TriVariab
 		TriVariableContentType existingType = var->GetType();
 		if( existingType == TRIVARIABLE_INVALID )
 		{
-			// Variable was just reserved, switch it to this type, 
+			// Variable was just reserved, switch it to this type,
 			// it has enough allocated space
 			var->m_type = type;
 		}
@@ -419,8 +419,7 @@ TriVariable* Tr2VariableStore::RegisterVariableType( const char* name, TriVariab
 		else if( type != existingType )
 		{
 			// Variable exists under a different type
-			CCP_LOGERR( "Attempting to register variable '%s' as '%s', already registered as '%s'", name, 
-				TriVariable::GetTypeName( type ), TriVariable::GetTypeName( existingType ) );
+			CCP_LOGERR( "Attempting to register variable '%s' as '%s', already registered as '%s'", name, TriVariable::GetTypeName( type ), TriVariable::GetTypeName( existingType ) );
 			CCP_ASSERT( false );
 			var = NULL;
 		}
@@ -448,13 +447,12 @@ std::vector<std::string> Tr2VariableStore::GetLocalNames() const
 	return result;
 }
 
-class Tr2GlobalVariableStore: public Tr2VariableStore
+class Tr2GlobalVariableStore : public Tr2VariableStore
 {
 public:
-	Tr2GlobalVariableStore( IRoot* lockobj = nullptr )
-		:Tr2VariableStore( lockobj, 0 )
+	Tr2GlobalVariableStore( IRoot* lockobj = nullptr ) :
+		Tr2VariableStore( lockobj, 0 )
 	{
-
 	}
 };
 

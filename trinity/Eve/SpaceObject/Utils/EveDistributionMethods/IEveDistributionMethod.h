@@ -13,7 +13,7 @@ BLUE_INTERFACE( IEveDistributionMethod ) :
 	virtual const Vector3 GetPlacementDataCenter() const = 0;
 	virtual const bool GetHasDynamicMovement() const = 0;
 
-	virtual void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params ){};
-	virtual void UpdateAsyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params ){};
+	virtual void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) {};
+	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) {};
 	virtual void SetControllerVariable( const char* name, float value ) {};
 };

@@ -7,9 +7,10 @@
 
 struct Vector3;
 
-BLUE_INTERFACE( ITr2BoundingBox ) : IRoot
+BLUE_INTERFACE( ITr2BoundingBox ) :
+	IRoot
 {
-	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const = 0;
+	virtual bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const = 0;
 	virtual bool IsBoundingBoxReady( void ) const = 0;
 };
 

@@ -23,7 +23,7 @@ EveProjectBracket::EveProjectBracket( IRoot* lockobj /*= NULL */ ) :
 	m_marginTop( 0.0f ),
 	m_marginBottom( 0.0f ),
 	m_minDispRange( 0.0f ),
-	m_maxDispRange( FLT_MAX),
+	m_maxDispRange( FLT_MAX ),
 	m_cameraDistance( 0.0f ),
 	m_offsetX( 0 ),
 	m_offsetY( 0 ),
@@ -41,12 +41,12 @@ static Vector3 BicylindricProjection( const Vector3& pos, const TriViewport& vie
 	//horizontal rotation to center.  We use vector arithmetic for speed, by just projecting
 	//the vector on the vertical view plane, and then correcting the z coordinate to get the
 	//correct vector length.
-	float zSq = pos.z*pos.z;
+	float zSq = pos.z * pos.z;
 	Vector3 v[2] = {
 		//rotate onto vertical plane about the vertical axis
-		Vector3(0.0f, -pos.y, sqrtf(pos.x*pos.x + zSq)),
+		Vector3( 0.0f, -pos.y, sqrtf( pos.x * pos.x + zSq ) ),
 		//Same for horizontal
-		Vector3(pos.x, 0.0f, sqrtf(pos.y*pos.y + zSq))
+		Vector3( pos.x, 0.0f, sqrtf( pos.y * pos.y + zSq ) )
 	};
 
 	//now, project both vectors  (view already done)
@@ -59,7 +59,7 @@ static Vector3 BicylindricProjection( const Vector3& pos, const TriViewport& vie
 	Vector3 res;
 	res.x = v[1].x;
 	res.y = v[0].y;
-	res.z = (behind? -0.5f : 0.5f)*(v[0].z + v[1].z);
+	res.z = ( behind ? -0.5f : 0.5f ) * ( v[0].z + v[1].z );
 	return res;
 }
 
@@ -84,7 +84,7 @@ void EveProjectBracket::UpdateValue( double time )
 
 	pos = TransformCoord( pos, Tr2Renderer::GetViewTransform() );
 
-	bool isInFront = (pos.z <= 0.0f);
+	bool isInFront = ( pos.z <= 0.0f );
 	m_isInFront = isInFront;
 
 	m_cameraDistance = Length( pos );
@@ -97,19 +97,19 @@ void EveProjectBracket::UpdateValue( double time )
 
 	float x = projectedPosition.x;
 	float y = projectedPosition.y;
-	
+
 	m_rawProjectedPosition.x = x;
 	m_rawProjectedPosition.y = y;
 
 	// Brackets behind the camera with the 'dock' flag cleared are hidden
-	if( (!isInFront && !m_dock) )
+	if( ( !isInFront && !m_dock ) )
 	{
 		SetBracketDisplayState( false );
 		return;
 	}
 
 	// Brackets outside the display range are hidden
-	if( (m_cameraDistance < m_minDispRange) || (m_cameraDistance > m_maxDispRange) )
+	if( ( m_cameraDistance < m_minDispRange ) || ( m_cameraDistance > m_maxDispRange ) )
 	{
 		SetBracketDisplayState( false );
 		return;
@@ -154,11 +154,11 @@ void EveProjectBracket::UpdateValue( double time )
 			float halfViewportHeight = (float)( vp.height ) * 0.5f;
 			if( y >= halfViewportHeight )
 			{
-				y = (y - halfViewportHeight)*1.5f + halfViewportHeight;
+				y = ( y - halfViewportHeight ) * 1.5f + halfViewportHeight;
 			}
 			else
 			{
-				y = halfViewportHeight - (halfViewportHeight - y)*1.5f;
+				y = halfViewportHeight - ( halfViewportHeight - y ) * 1.5f;
 			}
 
 			if( isInFront )
@@ -184,7 +184,7 @@ void EveProjectBracket::UpdateValue( double time )
 		}
 		else
 		{
-			if( x > ( (float)vp.width )*0.5f )
+			if( x > ( (float)vp.width ) * 0.5f )
 			{
 				x = left;
 			}
@@ -209,8 +209,8 @@ void EveProjectBracket::UpdateValue( double time )
 
 	if( m_integerCoordinates )
 	{
-		x = floor( x + 0.5f);
-		y = floor( y + 0.5f);
+		x = floor( x + 0.5f );
+		y = floor( y + 0.5f );
 	}
 
 	if( g_debugRenderer )
@@ -240,7 +240,7 @@ void EveProjectBracket::UpdateValue( double time )
 
 void EveProjectBracket::SetBracketDisplayState( bool state )
 {
-	if( (state == m_isVisible) && m_isVisibleStateSet )
+	if( ( state == m_isVisible ) && m_isVisibleStateSet )
 	{
 		return;
 	}
@@ -262,4 +262,3 @@ void EveProjectBracket::SetBracketDisplayState( bool state )
 		m_displayChangeCallback.CallVoid( this, state );
 	}
 }
-

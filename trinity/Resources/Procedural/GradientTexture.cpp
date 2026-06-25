@@ -195,9 +195,9 @@ bool IsGradientTexturePath( const wchar_t* path )
 }
 
 
-MAP_FUNCTION_AND_WRAP( 
-	"GradientPathToCurve", 
-	GradientPathToCurve, 
+MAP_FUNCTION_AND_WRAP(
+	"GradientPathToCurve",
+	GradientPathToCurve,
 	"Constructs a Tr2CurveColor object with curves set up to represent the given dynamic:/gradient_1d/... res path.\n"
 	"Returns either a tuple with Tr2CurveColor object and texture width or (None, 0) if the path is malformed.\n\n"
 	":param path: dynamic:/gradient_1d/... res path\n" );

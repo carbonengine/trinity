@@ -10,15 +10,14 @@ BLUE_DECLARE( Tr2ParticleFluidDragForce );
 
 // -------------------------------------------------------------
 // Description:
-//   A force to apply to particles in a particle system. 
-//   Represents a drag force in fluids; similar to 
-//   Tr2ParticleDragForce, but depends on a square of particle 
+//   A force to apply to particles in a particle system.
+//   Represents a drag force in fluids; similar to
+//   Tr2ParticleDragForce, but depends on a square of particle
 //   speed.
 // SeeAlso:
 //   Tr2SpriteParticleSystem
 // -------------------------------------------------------------
-class Tr2ParticleFluidDragForce:
-	public ITr2ParticleForce
+class Tr2ParticleFluidDragForce : public ITr2ParticleForce
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -27,7 +26,9 @@ public:
 	~Tr2ParticleFluidDragForce();
 
 	XMVECTOR FASTCALL GetForce( FXMVECTOR position, FXMVECTOR velocity, float dt, float mass );
-	void Update( float dt ) {}
+	void Update( float dt )
+	{
+	}
 
 private:
 	// Drag coefficient

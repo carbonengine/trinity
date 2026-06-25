@@ -11,7 +11,7 @@ class Tr2RenderContextAL;
 class Tr2TextureAL;
 namespace TrinityALImpl
 {
-	class Tr2SwapChainAL;
+class Tr2SwapChainAL;
 }
 
 
@@ -20,7 +20,7 @@ class Tr2SwapChainAL
 public:
 	Tr2SwapChainAL();
 
-	ALResult Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderContextAL &renderContext );
+	ALResult Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderContextAL& renderContext );
 
 	ALResult Present( Tr2RenderContextAL& renderContext );
 

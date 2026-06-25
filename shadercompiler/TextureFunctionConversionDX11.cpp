@@ -70,8 +70,8 @@ static ASTNode* GetSamplerArg( ASTNode* arg )
 		{
 			return GetSamplerArg( arg->GetChildOrNull( 0 ) );
 		}
-    default:
-        break;
+	default:
+		break;
 	}
 	return nullptr;
 }
@@ -207,10 +207,10 @@ static Symbol* FindTextureToSampler( ParserState& state, ASTNode* sampler, std::
 	return nullptr;
 }
 
-static ASTNode* FindDX9TexSampleCalls( ParserState& state, 
-	ASTNode* node, 
-	const std::set<Symbol*>& dx9TextureFunctions, 
-	std::map<Symbol*, SamplerToTexture>& samplers )
+static ASTNode* FindDX9TexSampleCalls( ParserState& state,
+									   ASTNode* node,
+									   const std::set<Symbol*>& dx9TextureFunctions,
+									   std::map<Symbol*, SamplerToTexture>& samplers )
 {
 	if( node == nullptr )
 	{
@@ -240,7 +240,7 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 					token.fileLocation.fileName.start = token.fileLocation.fileName.end = nullptr;
 					token.fileLocation.lineNumber = 0;
 					token.type = OP_DOT;
-					ASTNode *var = new ASTNode( NT_VAR_IDENTIFIER, node->GetLocation(), node->GetScope(), nullptr );
+					ASTNode* var = new ASTNode( NT_VAR_IDENTIFIER, node->GetLocation(), node->GetScope(), nullptr );
 					var->SetSymbol( texture );
 					var->SetType( texture->type );
 					result = new ASTNode( NT_POSTFIX_EXPRESSION, node->GetLocation(), node->GetScope(), &token );
@@ -470,9 +470,9 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 	return result;
 }
 
-static void PatchFunctionHeaders( ASTNode* node, 
-	std::map<Symbol*, SamplerToTexture>& samplers, 
-	std::map<Symbol*, std::vector<ParameterInfo>>& functions )
+static void PatchFunctionHeaders( ASTNode* node,
+								  std::map<Symbol*, SamplerToTexture>& samplers,
+								  std::map<Symbol*, std::vector<ParameterInfo>>& functions )
 {
 	if( node == nullptr )
 	{
@@ -519,10 +519,10 @@ static void PatchFunctionHeaders( ASTNode* node,
 	}
 }
 
-static void PatchCalls( ParserState& state, 
-	ASTNode* node, 
-	std::map<Symbol*, SamplerToTexture>& samplers, 
-	const std::map<Symbol*, std::vector<ParameterInfo>>& functions )
+static void PatchCalls( ParserState& state,
+						ASTNode* node,
+						std::map<Symbol*, SamplerToTexture>& samplers,
+						const std::map<Symbol*, std::vector<ParameterInfo>>& functions )
 {
 	if( node == nullptr )
 	{
@@ -576,8 +576,7 @@ static void PatchCalls( ParserState& state,
 				}
 				if( texture == nullptr )
 				{
-					if( samplerArg->definition && samplerArg->definition->GetNodeType() == NT_FUNCTION_PARAMETER
-						&& node->GetSymbol() && node->GetSymbol()->definition )
+					if( samplerArg->definition && samplerArg->definition->GetNodeType() == NT_FUNCTION_PARAMETER && node->GetSymbol() && node->GetSymbol()->definition )
 					{
 						ASTNode* header = node->GetSymbol()->definition;
 						if( header->GetNodeType() == NT_FUNCTION_DEFINITION )
@@ -770,7 +769,7 @@ void PatchMetalBufferCalls( ParserState& state, ASTNode* node )
 		if( functionToken.stringValue == "Load" )
 		{
 			// b.Load(index) -> b[index]
-			if ( call->GetChildrenCount() == 2 )
+			if( call->GetChildrenCount() == 2 )
 			{
 				state.ShowMessage( call->GetLocation(), EC_CUSTOM_ERROR, "Metal does not support Load with status argument" );
 			}
@@ -783,7 +782,7 @@ void PatchMetalBufferCalls( ParserState& state, ASTNode* node )
 				node->RemoveChild( 1 );
 			}
 		}
-		else if ( functionToken.stringValue == "GetDimensions" )
+		else if( functionToken.stringValue == "GetDimensions" )
 		{
 			state.ShowMessage( call->GetLocation(), EC_CUSTOM_ERROR, "Metal does not support GetDimensions method for buffers" );
 		}
@@ -798,9 +797,8 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 {
 	auto textureType = node->GetChild( 0 )->GetType();
 	ASTNode* call = node->GetChild( 1 );
-	
-	auto WrapInOption = [=]( const std::vector<size_t>& childIndexes, const char* option )
-	{
+
+	auto WrapInOption = [=]( const std::vector<size_t>& childIndexes, const char* option ) {
 		ScannerToken token = ScannerToken::ID( MakeInlineString( option ) );
 		token.fileLocation = call->GetLocation();
 		ASTNode* options = new ASTNode( NT_FUNCTION_CALL, call->GetLocation(), call->GetScope(), &token );
@@ -839,7 +837,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 		// t.SampleGrad(sampler, coord, dx, dy) -> t.sample(sampler, coord, gradient#(dx, dy))
 		// TODO: support offset?
 		functionToken.stringValue = MakeInlineString( "sample" );
-		switch ( textureType.builtInType )
+		switch( textureType.builtInType )
 		{
 		case OP_TEXTURE3D:
 			WrapInOption( { 2, 3 }, "gradient3d" );
@@ -864,7 +862,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 	{
 		isGatherCall = true;
 		functionToken.stringValue = MakeInlineString( "gather" );
-		
+
 		// Add x component enumeration to the function
 		//auto x = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
 		//x.stringValue = MakeInlineString("component::x");
@@ -873,31 +871,31 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 
 		SplitCoordVec( call, textureType );
 	}
-	else if (functionToken.stringValue == "GatherGreen")
+	else if( functionToken.stringValue == "GatherGreen" )
 	{
 		isGatherCall = true;
-		functionToken.stringValue = MakeInlineString("gather");
-		
+		functionToken.stringValue = MakeInlineString( "gather" );
+
 		// Add y component enumeration to the function
-		auto y = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
-		y.stringValue = MakeInlineString("component::y");
-		ASTNode* component = new ASTNode(NT_CONSTANT, call->GetLocation(), call->GetScope(), &y);
-		call->AddChild(component);
+		auto y = ScannerToken::FromTokenType( OP_INT_CONST, call->GetLocation() );
+		y.stringValue = MakeInlineString( "component::y" );
+		ASTNode* component = new ASTNode( NT_CONSTANT, call->GetLocation(), call->GetScope(), &y );
+		call->AddChild( component );
 
-		SplitCoordVec(call, textureType);
+		SplitCoordVec( call, textureType );
 	}
-	else if (functionToken.stringValue == "GatherBlue")
+	else if( functionToken.stringValue == "GatherBlue" )
 	{
 		isGatherCall = true;
-		functionToken.stringValue = MakeInlineString("gather");
-		
-		// Add z component enumeration to the function
-		auto z = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
-		z.stringValue = MakeInlineString("component::z");
-		ASTNode* component = new ASTNode(NT_CONSTANT, call->GetLocation(), call->GetScope(), &z);
-		call->AddChild(component);
+		functionToken.stringValue = MakeInlineString( "gather" );
 
-		SplitCoordVec(call, textureType);
+		// Add z component enumeration to the function
+		auto z = ScannerToken::FromTokenType( OP_INT_CONST, call->GetLocation() );
+		z.stringValue = MakeInlineString( "component::z" );
+		ASTNode* component = new ASTNode( NT_CONSTANT, call->GetLocation(), call->GetScope(), &z );
+		call->AddChild( component );
+
+		SplitCoordVec( call, textureType );
 	}
 	else if( functionToken.stringValue == "Load" )
 	{
@@ -909,11 +907,11 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 
 		if( node->GetChild( 0 )->GetSymbol() &&
 			( textureType.builtInType == OP_RWTEXTURE1D ||
-			textureType.builtInType == OP_RWTEXTURE1DARRAY ||
-			textureType.builtInType == OP_RWTEXTURE2D ||
-			textureType.builtInType == OP_RWTEXTURE2DARRAY ||
-			textureType.builtInType == OP_RWTEXTURE3D ||
-			textureType.builtInType == OP_RWTEXTURE3DARRAY ) )
+			  textureType.builtInType == OP_RWTEXTURE1DARRAY ||
+			  textureType.builtInType == OP_RWTEXTURE2D ||
+			  textureType.builtInType == OP_RWTEXTURE2DARRAY ||
+			  textureType.builtInType == OP_RWTEXTURE3D ||
+			  textureType.builtInType == OP_RWTEXTURE3DARRAY ) )
 		{
 			node->GetChild( 0 )->GetSymbol()->type.metalTextureAccess = 1;
 		}
@@ -944,7 +942,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 			swizzle = ScannerToken::ID( MakeInlineString( xyzw + coord->GetType().width - 1, xyzw + coord->GetType().width ) );
 			dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
 			dot->AddChild( coord->Copy() );
-			call->InsertChild( 1 , dot );
+			call->InsertChild( 1, dot );
 		}
 		else if( coord->GetType().builtInType != OP_UINT )
 		{
@@ -959,7 +957,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 		}
 		SplitCoordVec( call, textureType, 0 );
 	}
-	else if (functionToken.stringValue == "SampleCmp")
+	else if( functionToken.stringValue == "SampleCmp" )
 	{
 		// t.SampleCmp(sampler, coord, cmp [,offset]) -> t.sample_compare(sampler, coord, cmp, [offset])
 		functionToken.stringValue = MakeInlineString( "sample_compare" );
@@ -987,7 +985,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 	{
 		return node;
 	}
-	
+
 	call->SetToken( &functionToken );
 
 	if( !textureType.isDepthTexture && !isGatherCall && textureType.templateParameter && textureType.templateParameter->width != 4 )
@@ -1000,9 +998,9 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 		Type callType = *textureType.templateParameter;
 		callType.width = 4;
 		node->SetType( callType );
-		
+
 		dot->SetType( *textureType.templateParameter );
-		
+
 		return dot;
 	}
 	return node;
@@ -1025,11 +1023,11 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 		return node;
 	}
 	if( node->GetNodeType() == NT_POSTFIX_EXPRESSION &&
-	   node->GetToken() &&
-	   node->GetToken()->type == OP_DOT &&
-	   node->GetChildrenCount() == 2 &&
-	   node->GetChild( 0 )->GetType().IsTexture() &&
-	   node->GetChild( 1 )->GetNodeType() == NT_FUNCTION_CALL )
+		node->GetToken() &&
+		node->GetToken()->type == OP_DOT &&
+		node->GetChildrenCount() == 2 &&
+		node->GetChild( 0 )->GetType().IsTexture() &&
+		node->GetChild( 1 )->GetNodeType() == NT_FUNCTION_CALL )
 	{
 		node = PatchMetalTextureCall( node );
 	}
@@ -1082,7 +1080,7 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 				dot = NewDot( state, arg->Copy(), MakeInlineString( xyzw + dimension, xyzw + dimension + 1 ) );
 				call->InsertChild( 1, dot );
 			};
-			switch (textureType.builtInType)
+			switch( textureType.builtInType )
 			{
 			case OP_TEXTURE1DARRAY:
 			case OP_RWTEXTURE1DARRAY:
@@ -1122,7 +1120,7 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 			state.ShowMessage( node->GetLocation(), EC_CUSTOM_ERROR, "cannot rewite texture assignment for Metal" );
 		}
 	}
-	bool isAssignment = false; 
+	bool isAssignment = false;
 	if( node->GetNodeType() == NT_EXPRESSION )
 	{
 		switch( node->GetToken()->type )

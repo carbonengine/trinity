@@ -11,21 +11,17 @@ const Be::ClassInfo* EveSprite2dBracketRenderer::ExposeToBlue()
 	EXPOSURE_BEGIN( EveSprite2dBracketRenderer, "" )
 		MAP_INTERFACE( EveSprite2dBracketRenderer )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"brackets",
 			m_brackets,
 			"The list of individual brackets",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"iconAtlas",
 			m_iconAtlas,
 			"A reference to a texture in the atlas that all icons are assumed to live in.",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
 	EXPOSURE_CHAINTO( Tr2SpriteObject )
 }

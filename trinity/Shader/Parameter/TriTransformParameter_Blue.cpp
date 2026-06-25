@@ -16,14 +16,11 @@ const Be::ClassInfo* TriTransformParameter::ExposeToBlue()
 		MAP_ATTRIBUTE( "rotationCenter", m_rotationCenter, "Center of rotation in transform", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "Rotation in transform", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "translation", m_translation, "Translation in transform", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "worldTransform", m_worldTransform,	
-			"World transform. This needs to be filled in from the outside,\n"
-			"for example with a TriValueBinding from the worldTransform of the\n"
-			"object holding the effect this is used in.", 
-			Be::READWRITE | Be::PERSIST
-		)
+		MAP_ATTRIBUTE( "worldTransform", m_worldTransform, "World transform. This needs to be filled in from the outside,\n"
+														   "for example with a TriValueBinding from the worldTransform of the\n"
+														   "object holding the effect this is used in.",
+					   Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "transformBase", m_transformBase, "Funky transform base from old Trinity", Be::READWRITE | Be::PERSIST | Be::ENUM, TriTransformBase )
 	EXPOSURE_END()
 }
-

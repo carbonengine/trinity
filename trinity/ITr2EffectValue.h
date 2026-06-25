@@ -4,7 +4,8 @@
 #ifndef ITR2EFFECTVALUE_H
 #define ITR2EFFECTVALUE_H
 
-BLUE_INTERFACE( ITr2EffectValue ) : public IRoot
+BLUE_INTERFACE( ITr2EffectValue ) :
+	public IRoot
 {
 	// ----------------------------------------------------------------------------------
 	// Description:
@@ -12,9 +13,9 @@ BLUE_INTERFACE( ITr2EffectValue ) : public IRoot
 	// ----------------------------------------------------------------------------------
 	enum ResourceFlags
 	{
-		RESOURCE_FLAG_NONE  = 0,
+		RESOURCE_FLAG_NONE = 0,
 		// Resource needs to be applied as sRGB texture
-		RESOURCE_FLAG_SRGB	= 1,
+		RESOURCE_FLAG_SRGB = 1,
 	};
 
 	// Copy the value to the effect using 'destHandle'.  For basic types 'destHandle'
@@ -24,16 +25,16 @@ BLUE_INTERFACE( ITr2EffectValue ) : public IRoot
 	// might use only a 2x2 portion of it. The fxc compiler is clever enough to only
 	// give 2 constants to the variable in that case.
 	// The size is in bytes.
-	virtual void CopyValueToEffect( 
+	virtual void CopyValueToEffect(
 		Tr2RenderContextEnum::ShaderType inputType,
 		unsigned char* destHandle,
 		size_t size,
-		Tr2RenderContext &renderContext ) const
+		Tr2RenderContext& renderContext ) const
 	{
 	}
 
 	virtual bool CopyToResourceSet(
-		Tr2ResourceSetDescriptionAL& resourceDesc,
+		Tr2ResourceSetDescriptionAL & resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		ResourceFlags flags ) const
@@ -42,17 +43,16 @@ BLUE_INTERFACE( ITr2EffectValue ) : public IRoot
 	}
 
 	virtual bool ApplyUav(
-		Tr2ResourceSetDescriptionAL& resourceDesc,
+		Tr2ResourceSetDescriptionAL & resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex ) const
 	{
 		return false;
 	}
 
-	virtual void AddUsedTexture( Tr2BindlessResourcesAL& usedTextures ) const
+	virtual void AddUsedTexture( Tr2BindlessResourcesAL & usedTextures ) const
 	{
 	}
-
 };
 
 TYPEDEF_BLUECLASS( ITr2EffectValue );

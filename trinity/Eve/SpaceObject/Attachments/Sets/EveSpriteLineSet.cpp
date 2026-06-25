@@ -107,7 +107,8 @@ bool EveSpriteLineSet::ReallocateResources()
 		EveSpriteSet::SpriteData* spr = &m_spriteData[totalBufferidx];
 
 		float index = 0.0f;
-		for( auto& pos : positions ) {
+		for( auto& pos : positions )
+		{
 			// fill static pool data
 			vtx->position = pos;
 			vtx->warpColor = vtx->color = ( ( spriteLine->m_color & 0xff0000 ) >> 16 ) | ( spriteLine->m_color & 0xff00ff00 ) | ( ( spriteLine->m_color & 0xff ) << 16 );
@@ -150,7 +151,7 @@ bool EveSpriteLineSet::UpdateVisibility( const EveUpdateContext& updateContext, 
 
 void EveSpriteLineSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
-	for( auto& light : m_lights ) 
+	for( auto& light : m_lights )
 	{
 		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
 		{
@@ -257,7 +258,8 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 	{
 		Matrix transform = parentTransform;
 
-		for( auto& spriteLine : m_spriteLines ) {
+		for( auto& spriteLine : m_spriteLines )
+		{
 			auto boneIndex = spriteLine->m_boneIndex;
 
 			Tr2DebugColor color( Color( 0.0f, 0.7f, 0.9f, 0.5f ), Color( 0.0f, 0.7f, 0.9f, 0.1f ) );
@@ -277,8 +279,10 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 
 			unsigned index = 0;
 			Vector3 lastPos( 0.0, 0.0, 0.0 );
-			for( auto& position : spriteLine->GetPositions() ) {
-				if( index != 0 ) {
+			for( auto& position : spriteLine->GetPositions() )
+			{
+				if( index != 0 )
+				{
 					renderer.DrawCylinder(
 						spriteLine,
 						transform,
@@ -287,8 +291,7 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 						spriteLine->m_minScale / 2.0f,
 						8,
 						Tr2DebugRenderer::Lit,
-						color
-					);
+						color );
 				}
 				index += 1;
 				lastPos = position;
@@ -301,7 +304,6 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 					6,
 					Tr2DebugRenderer::Lit,
 					color );
-
 			}
 		}
 	}
@@ -314,7 +316,7 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 
 			Color c = l.lightData.color;
 			float blinkScale = EveSpaceObjectAttachmentUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
-			
+
 			c.a = 0.5;
 
 			auto spriteLine = l.index > m_spriteLines.size() ? nullptr : m_spriteLines[l.index];
@@ -335,7 +337,6 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 				10,
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
-
 		}
 	}
 }

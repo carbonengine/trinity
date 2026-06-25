@@ -594,7 +594,6 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 	}
 
 	RegisterAudioGeometry();
-
 }
 
 void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
@@ -947,7 +946,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		for( auto it = m_locators.begin(); it != m_locators.end(); ++it )
 		{
 			Matrix transform = ( *it )->GetTransform();
-			
+
 			if( m_animationUpdater )
 			{
 				m_animationUpdater->GetBoneWorldTransform( ( *it )->GetName(), transform );
@@ -1068,7 +1067,7 @@ Matrix EveSpaceObject2::GetEveLocatorTransform( const char* name ) const
 			return result;
 		}
 	}
-	
+
 	return locator->GetTransform();
 }
 
@@ -1147,7 +1146,7 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 	{
 		return;
 	}
-	
+
 	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
@@ -1289,15 +1288,13 @@ const Matrix* EveSpaceObject2::GetLocatorTransform( LocatorType lt, unsigned int
 {
 	switch( lt )
 	{
-	case ELT_TRANSFORM:
-	{
+	case ELT_TRANSFORM: {
 		EveLocator2* t = m_locators[lix];
 		return &t->GetTransform();
 	}
 	break;
 
-	case ELT_JOINT:
-	{
+	case ELT_JOINT: {
 		if( !m_animationUpdater )
 		{
 			return nullptr;
@@ -1521,8 +1518,7 @@ std::pair<Vector3, Vector3> EveSpaceObject2::CalculateSkinnedBoundingBoxFromTran
 			Vector3 localMin, localMax;
 			GetLocalBoundingBox( localMin, localMax );
 			AxisAlignedBoundingBox box( localMin, localMax );
-			box.EnumerateVertices( [&transform, &bbMin, &bbMax]( const Vector3& vertex )
-			{
+			box.EnumerateVertices( [&transform, &bbMin, &bbMax]( const Vector3& vertex ) {
 				Vector4 pos = Transform( Vector4( vertex, 1.f ), transform );
 				pos /= pos.w;
 
@@ -1737,7 +1733,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 
 		if( updateContext.m_raytracingEnabled )
 		{
-			UpdateRtMesh(updateContext);
+			UpdateRtMesh( updateContext );
 			UpdateRtSkeleton();
 		}
 	}
@@ -1769,28 +1765,28 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	{
 		return;
 	}
-    
+
 	auto rtMesh = m_mesh->GetRtMesh();
 	if( !rtMesh )
 	{
 		return;
 	}
-    
+
 	auto geo = m_mesh->GetGeometryResource();
 	if( !geo || !geo->IsGood() )
 	{
 		return;
 	}
-	
+
 	auto meshIndex = m_mesh->GetMeshIndex();
 	auto lod = geo->GetMeshLod( meshIndex, m_meshScreenSize );
 	if( !lod )
 	{
 		return;
 	}
-    
+
 	bool hasSkinned = false;
-    
+
 	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 	for( auto& area : *areas )
 	{
@@ -1806,7 +1802,7 @@ void EveSpaceObject2::UpdateRtSkeleton()
 	{
 		return; //no skinned areas
 	}
-	
+
 	auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
 	m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
 	auto offset = m_boneOffsets.GetCurrentFrameOffset();
@@ -2032,7 +2028,7 @@ int EveSpaceObject2::GetBoneCount() const
 		}
 		return GrannyGetMeshBindingBoneCount( m_animationUpdater->m_meshBinding );
 	}
-#else 
+#else
 	else
 	{
 		return 0;
@@ -3579,7 +3575,7 @@ void EveSpaceObject2::RegisterComponents()
 
 	if( registry && m_display )
 	{
-		if ( !m_lights.empty() )
+		if( !m_lights.empty() )
 		{
 			registry->RegisterComponent<ITr2LightOwner>( this );
 		}
@@ -4012,12 +4008,12 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	}
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	
+
 	const Tr2MeshAreaVector* opaqueAreas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
 	UpdateRtPerObjectData( m_psData, nullptr, renderContext, m_rtPerObjectData );
-	
-	#pragma region geometry
+
+#pragma region geometry
 	uint32_t vertexBufferDataIndex = 0;
 	for( Tr2MeshAreaVector::const_iterator it = opaqueAreas->begin(); it != opaqueAreas->end(); ++it, ++vertexBufferDataIndex )
 	{

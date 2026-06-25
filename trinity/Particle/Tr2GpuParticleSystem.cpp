@@ -26,7 +26,7 @@ const size_t TEXTURE_METHOD_EMITS_PER_DP = 8;
 // --------------------------------------------------------------------------------------
 // Description:
 //   Finds minim width and height of a rectangle such that width and height are power of
-//   two values and rectangle area is not less than the given area.  
+//   two values and rectangle area is not less than the given area.
 // --------------------------------------------------------------------------------------
 void GetMinPow2Rectange( uint32_t area, uint32_t& width, uint32_t& height )
 {
@@ -46,7 +46,7 @@ void GetMinPow2Rectange( uint32_t area, uint32_t& width, uint32_t& height )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Checks if the effect is usable.  
+//   Checks if the effect is usable.
 // --------------------------------------------------------------------------------------
 bool CheckEffect( Tr2Effect* effect )
 {
@@ -56,8 +56,8 @@ bool CheckEffect( Tr2Effect* effect )
 }
 
 
-Tr2GpuParticleSystem::EmitterParamsGpu::EmitterParamsGpu( const EmitterParams& params )
-	:minLifeTime( params.minLifeTime ),
+Tr2GpuParticleSystem::EmitterParamsGpu::EmitterParamsGpu( const EmitterParams& params ) :
+	minLifeTime( params.minLifeTime ),
 	maxLifeTime( params.maxLifeTime ),
 	sizeVariance( params.sizeVariance ),
 	textureIndex( float( params.textureIndex ) + std::max( 0.001f, std::min( 0.99f, 1.f - params.colorMidpoint - std::floor( params.colorMidpoint ) ) ) ),
@@ -76,8 +76,8 @@ Tr2GpuParticleSystem::EmitterParamsGpu::EmitterParamsGpu( const EmitterParams& p
 	colors[3] = params.colors[3];
 }
 
-Tr2GpuParticleSystem::Tr2GpuParticleSystem( IRoot* )
-	:m_clearRequested( true ),
+Tr2GpuParticleSystem::Tr2GpuParticleSystem( IRoot* ) :
+	m_clearRequested( true ),
 	m_maxParticles( DEFAULT_MAX_PARTICLES ),
 	m_emitRequests( 64, "Tr2GpuParticleSystem::m_emitRequests" ),
 	m_previousTime( -1 ),
@@ -120,7 +120,7 @@ Tr2GpuParticleSystem::~Tr2GpuParticleSystem()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Creates GPU buffer variables.  
+//   Creates GPU buffer variables.
 // --------------------------------------------------------------------------------------
 void Tr2GpuParticleSystem::InitializeBuffers()
 {
@@ -300,7 +300,7 @@ void Tr2GpuParticleSystem::SetVariableStore( Tr2Effect* effect )
 // --------------------------------------------------------------------------------------
 // Description:
 //   Public method to remove all particles. The actual clear though happens during next
-//   Update call.  
+//   Update call.
 // --------------------------------------------------------------------------------------
 void Tr2GpuParticleSystem::Clear()
 {
@@ -358,7 +358,7 @@ void Tr2GpuParticleSystem::Update( Be::Time time, const Vector3& originShift, Tr
 		// no particles left alive
 		return;
 	}
-	
+
 	RunSimulation( dt, originShift, renderContext );
 
 	m_liveTime -= dt;
@@ -376,7 +376,7 @@ void Tr2GpuParticleSystem::Update( Be::Time time, const Vector3& originShift, Tr
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Updates number of live/visible particles for debugging. 
+//   Updates number of live/visible particles for debugging.
 // --------------------------------------------------------------------------------------
 void Tr2GpuParticleSystem::UpdateLiveCount( Tr2RenderContext& renderContext )
 {
@@ -585,12 +585,12 @@ void Tr2GpuParticleSystem::EmitParticles( Tr2RenderContext& renderContext )
 		{
 			cb.emitters[j] = m_emitRequests[i + j].emitter;
 		}
-		FillAndSetConstants( 
-			m_emitCB, 
-			&cb, 
-			sizeof( EmitterCBPrefix ) + cb.prefix.count * sizeof( EmitterGpu ), 
-			Tr2RenderContextEnum::COMPUTE_SHADER, 
-			Tr2Renderer::GetPerObjectVSStartRegister(), 
+		FillAndSetConstants(
+			m_emitCB,
+			&cb,
+			sizeof( EmitterCBPrefix ) + cb.prefix.count * sizeof( EmitterGpu ),
+			Tr2RenderContextEnum::COMPUTE_SHADER,
+			Tr2Renderer::GetPerObjectVSStartRegister(),
 			renderContext );
 
 		Tr2Renderer::RunComputeShader( m_emit, cb.prefix.count, 1, 1, renderContext );
@@ -637,20 +637,20 @@ bool Tr2GpuParticleSystem::SortIncremental( uint32_t presorted, Tr2RenderContext
 {
 	const uint32_t maxSize = m_maxParticles;
 	bool done = maxSize <= presorted * 2;
-	uint32_t numThreadGroups=0;
-	
+	uint32_t numThreadGroups = 0;
+
 	if( maxSize > presorted )
-	{	
-		uint32_t pow2 = presorted; 
-		while( pow2 < maxSize ) 
+	{
+		uint32_t pow2 = presorted;
+		while( pow2 < maxSize )
 		{
 			pow2 *= 2;
 		}
 		numThreadGroups = pow2 >> 9;
-	}	
+	}
 
 	uint32_t mergeSize = presorted * 2;
-	for( uint32_t mergeSubSize = mergeSize >> 1; mergeSubSize > 256; mergeSubSize = mergeSubSize >> 1 ) 
+	for( uint32_t mergeSubSize = mergeSize >> 1; mergeSubSize > 256; mergeSubSize = mergeSubSize >> 1 )
 	{
 		struct SortConstants
 		{

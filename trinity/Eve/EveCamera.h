@@ -4,7 +4,7 @@
 #define _EVECAMERA_H_
 
 #define EVECAMERA_Description \
-"EveCamera defines a target camera, what is position and interest. There have \r\n\
+	"EveCamera defines a target camera, what is position and interest. There have \r\n\
 been some requests for a free camera, position and orientation but that kind of \r\n\
 camera behaviour will probably be handled by a separate object. EveCamera \r\n\
 exposes m_pos m_intr m_viewVec which are updated every Render. This is done \r\n\
@@ -19,8 +19,7 @@ BLUE_DECLARE( TriView );
 BLUE_DECLARE_INTERFACE( ITriVectorFunction );
 BLUE_DECLARE_INTERFACE( ITriScalarFunction );
 
-class EveCamera:
-	public INotify
+class EveCamera : public INotify
 {
 public:
 	static void CalculateProjectionMatrix( Matrix* mat, float aspectRatio, float fov, float offsetX, float offsetY, float front, float back, TriProjection* triProjection );
@@ -33,8 +32,8 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	EveCamera(IRoot* lockobj = NULL);
-	~EveCamera();	
+	EveCamera( IRoot* lockobj = NULL );
+	~EveCamera();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	void OrbitParent( float horizontal, float vertical );
@@ -63,10 +62,10 @@ private:
 	ITriVectorFunctionPtr m_parentTranslationCurve;
 	ITriVectorFunctionPtr m_interestTranslationCurve;
 	IBluePlacementObserverPtr m_audio2Listener;
-	
+
 	Vector3 m_translationFromParent;
 	Quaternion m_rotationAroundParent;
-	Quaternion  m_rotationOfInterest;
+	Quaternion m_rotationOfInterest;
 
 	Vector3 m_alignment;
 	Vector3 m_extraParentTranslation;
@@ -140,7 +139,6 @@ private:
 	IBlueEventListenerPtr m_errorListener;
 	bool m_failedLastFrame;
 };
-TYPEDEF_BLUECLASS(EveCamera);
+TYPEDEF_BLUECLASS( EveCamera );
 
 #endif
-

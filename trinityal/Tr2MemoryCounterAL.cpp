@@ -9,14 +9,14 @@ CCP_STATS_DECLARE( gpuMemoryTextureEst, "Trinity/AL/gpuMemoryEst/textures", fals
 CCP_STATS_DECLARE( gpuMemoryOtherEst, "Trinity/AL/gpuMemoryEst/other", false, CST_MEMORY, "Total estimated GPU memory (neither buffer nor textures)" );
 
 
-Tr2MemoryCounterAL::Tr2MemoryCounterAL()
-	:m_memoryType( SYSTEM_MEMORY ),
+Tr2MemoryCounterAL::Tr2MemoryCounterAL() :
+	m_memoryType( SYSTEM_MEMORY ),
 	m_size( 0 )
 {
 }
 
-Tr2MemoryCounterAL::Tr2MemoryCounterAL( Tr2MemoryCounterAL&& other )
-	:m_memoryType( other.m_memoryType ),
+Tr2MemoryCounterAL::Tr2MemoryCounterAL( Tr2MemoryCounterAL&& other ) :
+	m_memoryType( other.m_memoryType ),
 	m_size( other.m_size )
 {
 	other.m_size = 0;
@@ -56,16 +56,16 @@ void Tr2MemoryCounterAL::Set( MemoryType memoryType, size_t size )
 
 void Tr2MemoryCounterAL::Grow( size_t size )
 {
-    m_size += size;
-    UpdateCounters( int32_t( size ) );
+	m_size += size;
+	UpdateCounters( int32_t( size ) );
 }
 
 void Tr2MemoryCounterAL::Shrink( size_t size )
 {
-    CCP_ASSERT( size <= m_size );
-    
-    m_size -= size;
-    UpdateCounters( -int32_t( size ) );
+	CCP_ASSERT( size <= m_size );
+
+	m_size -= size;
+	UpdateCounters( -int32_t( size ) );
 }
 
 void Tr2MemoryCounterAL::Set( MemoryType memoryType, const Tr2BitmapDimensions& bitmap, const Tr2MsaaDesc& msaa )

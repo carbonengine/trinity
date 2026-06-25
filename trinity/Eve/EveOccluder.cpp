@@ -108,7 +108,7 @@ void Tr2OcclusionBuffer::ResizeBuffer()
 		old = *buffer;
 	}
 	m_buffer->Create( m_size, Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, Tr2GpuBuffer::GPU_WRITABLE );
-	
+
 	if( old.IsValid() )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();

@@ -25,34 +25,34 @@
 #define ENABLE_RELEASE_LATER_TAG 0
 #define DUMP_RELEASE_LATER_TAGS 1
 #if ENABLE_RELEASE_LATER_TAG
-	#define _RT_STRINGIFY__(s) #s
-	#define RT_STRINGIFY(s) _RT_STRINGIFY__(s)
+#define _RT_STRINGIFY__( s ) #s
+#define RT_STRINGIFY( s ) _RT_STRINGIFY__( s )
 //	#define RELEASE_LATER(ownerDevice, comObject) (ownerDevice)->ReleaseLater(comObject, __FILE__ ":" RT_STRINGIFY(__LINE__) " " #comObject);
-	#define RELEASE_LATER(ownerDevice, comObject) \
-		{ \
-			char __dbo[256]; \
-			sprintf_s(__dbo, __FILE__ ":" RT_STRINGIFY(__LINE__) " " #comObject " Frame(%i)", (ownerDevice)->GetCurrentBackBufferIndex()); \
-			(ownerDevice)->ReleaseLater(comObject, __dbo); \
-		}
+#define RELEASE_LATER( ownerDevice, comObject )                                                                                              \
+	{                                                                                                                                        \
+		char __dbo[256];                                                                                                                     \
+		sprintf_s( __dbo, __FILE__ ":" RT_STRINGIFY( __LINE__ ) " " #comObject " Frame(%i)", ( ownerDevice )->GetCurrentBackBufferIndex() ); \
+		( ownerDevice )->ReleaseLater( comObject, __dbo );                                                                                   \
+	}
 #else
-	#define RELEASE_LATER(ownerDevice, comObject) (ownerDevice)->ReleaseLater(comObject);
+#define RELEASE_LATER( ownerDevice, comObject ) ( ownerDevice )->ReleaseLater( comObject );
 #endif
 
 
 struct Tr2PresentParametersAL;
 namespace TrinityALImpl
 {
-	class GenerateMipsResources;
+class GenerateMipsResources;
 }
 
 
-class Tr2PrimaryRenderContextAL: public Tr2RenderContextAL
+class Tr2PrimaryRenderContextAL : public Tr2RenderContextAL
 {
 public:
 	Tr2PrimaryRenderContextAL();
 	~Tr2PrimaryRenderContextAL();
 
-	ALResult CreateDevice( uint32_t adapter, Tr2WindowHandle  focusWindow, const Tr2PresentParametersAL& presentationParameters );
+	ALResult CreateDevice( uint32_t adapter, Tr2WindowHandle focusWindow, const Tr2PresentParametersAL& presentationParameters );
 
 	void Destroy();
 	bool IsValid() const;
@@ -60,13 +60,13 @@ public:
 	ALResult SetPresentParameters( uint32_t adapter, const Tr2PresentParametersAL& presentationParameters );
 
 	const Tr2CapsAL& GetCaps() const;
-		
+
 	ALResult Present();
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
 
-	void AddShaderBinaryToCrashTracker(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath);
-	void UnRegisterFromCrashTracker(ID3D12GraphicsCommandList2* commandList);
+	void AddShaderBinaryToCrashTracker( const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath );
+	void UnRegisterFromCrashTracker( ID3D12GraphicsCommandList2* commandList );
 
 	bool SupportsBindlessTextures() const;
 
@@ -79,10 +79,11 @@ public:
 	ITr2RenderContextEvents* m_events;
 
 	TrinityALImpl::GenerateMipsResources* m_genMipsResources;
+
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 
-	Tr2TextureAL&			GetDefaultBackBuffer()
+	Tr2TextureAL& GetDefaultBackBuffer()
 	{
 		return m_defaultBackBuffer;
 	}
@@ -97,9 +98,9 @@ public:
 		uint32_t& mips ) const;
 
 #if ENABLE_RELEASE_LATER_TAG
-	void ReleaseLater(IUnknown* resource, const std::string& name);
+	void ReleaseLater( IUnknown* resource, const std::string& name );
 #else
-	void ReleaseLater(IUnknown* resource);
+	void ReleaseLater( IUnknown* resource );
 #endif
 	void FlushPendingRelease();
 
@@ -110,7 +111,7 @@ public:
 	ALResult SignalDx12( uint64_t& fenceValue );
 	uint64_t SignalDx12();
 	ALResult WaitForFenceDx12( uint64_t value );
-	const TrinityALImpl::GpuMarkerBuffer &GetMarkerBuffer() const;
+	const TrinityALImpl::GpuMarkerBuffer& GetMarkerBuffer() const;
 	TrinityALImpl::GpuCrashTracker* GetGpuCrashTracker() const;
 
 	void ScheduleSwapchainPresentDx12( IDXGISwapChain3* swapChain, const Tr2TextureAL& backbuffer, uint32_t presentInterval );
@@ -123,22 +124,25 @@ public:
 	std::shared_ptr<SamplerStateDx12> GetSamplerHeapView() const;
 
 	/** Create a ShaderResourceView */
-	HRESULT CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<ShaderResourceViewDx12>& srvView);
+	HRESULT CreateShaderResourceView( ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<ShaderResourceViewDx12>& srvView );
 
 	/** Create an UnorderedAccessView */
-	HRESULT CreateUnorderedAccessView(ID3D12Resource* resource, ID3D12Resource* counterResource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc, std::shared_ptr<UnorderedAccessViewDx12>& uavView);
+	HRESULT CreateUnorderedAccessView( ID3D12Resource* resource, ID3D12Resource* counterResource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc, std::shared_ptr<UnorderedAccessViewDx12>& uavView );
 
 	/** Create a SamplerState */
-	HRESULT CreateSamplerState(const D3D12_SAMPLER_DESC& desc, std::shared_ptr<SamplerStateDx12>& samplerState);
+	HRESULT CreateSamplerState( const D3D12_SAMPLER_DESC& desc, std::shared_ptr<SamplerStateDx12>& samplerState );
 
 	/** Create a RenderTargetView */
-	HRESULT CreateRenderTargetView(ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc, std::shared_ptr<RenderTargetViewDx12>& rtvView);
+	HRESULT CreateRenderTargetView( ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc, std::shared_ptr<RenderTargetViewDx12>& rtvView );
 
 	/** Create a DepthStencilView */
-	HRESULT CreateDepthStencilView(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC& desc, std::shared_ptr<DepthStencilViewDx12>& dsvView);
+	HRESULT CreateDepthStencilView( ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC& desc, std::shared_ptr<DepthStencilViewDx12>& dsvView );
 
 	/** Get the current buffer index */
-	uint32_t GetCurrentBackBufferIndex() const { return m_currentBackBufferIndex; }
+	uint32_t GetCurrentBackBufferIndex() const
+	{
+		return m_currentBackBufferIndex;
+	}
 	uint32_t GetBackBufferCount() const
 	{
 		return uint32_t( m_frameFenceValues.size() );
@@ -148,17 +152,17 @@ public:
 	std::shared_ptr<ShaderResourceViewDx12> GetNullSrvDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
 	std::shared_ptr<UnorderedAccessViewDx12> GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
 	std::shared_ptr<SamplerStateDx12> GetNullSamplerDx12() const;
-	
+
 	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
 	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID ) const;
-	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params , uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
+	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
 	void DeleteUpscalingContext( uint32_t contextID );
 	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID ) const;
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
 	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const;
 
 	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
-	
+
 	HRESULT CreateSwapChainForHwnd(
 		CComPtr<IDXGIFactory4>& factory4,
 		ID3D12CommandQueue* commandQueue,
@@ -172,7 +176,6 @@ public:
 	HRESULT CreateFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) const;
 
 private:
-
 	void ResetRenderTargets();
 
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;
@@ -180,7 +183,7 @@ private:
 
 	void PopPendingRelease( size_t backBufferIndex );
 
-	std::vector < CComPtr<ID3D12CommandAllocator>> m_commandAllocators;
+	std::vector<CComPtr<ID3D12CommandAllocator>> m_commandAllocators;
 	uint32_t m_commandAllocatorIndex;
 
 
@@ -207,7 +210,7 @@ private:
 	uint64_t m_fenceValue;
 	uint64_t m_completedFrameIndex;
 	std::vector<uint64_t> m_frameFenceValues;
-	
+
 
 	uint32_t m_syncInterval;
 
@@ -226,8 +229,7 @@ private:
 
 		operator size_t() const
 		{
-			return
-				std::hash<uint32_t>()( uint32_t( format ) ) ^
+			return std::hash<uint32_t>()( uint32_t( format ) ) ^
 				( std::hash<uint32_t>()( width ) << 1 ) ^
 				( std::hash<uint32_t>()( height ) << 2 ) ^
 				( std::hash<uint32_t>()( msaa.samples ) << 3 );
@@ -267,7 +269,7 @@ private:
 	};
 	std::vector<PendingPresent> m_pendingPresents;
 
-	
+
 	/** Descriptor heap specific content */
 	enum
 	{

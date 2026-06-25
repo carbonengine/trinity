@@ -7,20 +7,20 @@
 #include "ITr2GenericEmitter.h"
 
 #ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
-	// This is only needed for py2 as the file now belongs in blue.
-	// Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
-	// The file version in the older blue versions had diverged from this one is incompatible.
-	#include "Include/ITr2DebugRenderer2.h"
+// This is only needed for py2 as the file now belongs in blue.
+// Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+// The file version in the older blue versions had diverged from this one is incompatible.
+#include "Include/ITr2DebugRenderer2.h"
 #else
-	#include <ITr2DebugRenderer2.h>
+#include <ITr2DebugRenderer2.h>
 #endif
 
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2PlaneConstraint default constructor
 // --------------------------------------------------------------------------------------
-Tr2PlaneConstraint::Tr2PlaneConstraint( IRoot* lockobj )
-:	m_plane( 0.f, 1.f, 0.f, 0.f ),
+Tr2PlaneConstraint::Tr2PlaneConstraint( IRoot* lockobj ) :
+	m_plane( 0.f, 1.f, 0.f, 0.f ),
 	m_normalizedPlane( 0.f, 1.f, 0.f, 0.f ),
 	m_friction( 1.f ),
 	m_elasticity( 1.f ),
@@ -85,10 +85,9 @@ void Tr2PlaneConstraint::OnListModified(
 	ssize_t,
 	ssize_t,
 	IRoot* value,
-	const IList* theList
-	)
+	const IList* theList )
 {
-	if( (event & BELIST_LOADING) == 0 && ( event & BELIST_EVENTMASK ) == BELIST_INSERTED && theList == &m_onCollisionEmitters && value )
+	if( ( event & BELIST_LOADING ) == 0 && ( event & BELIST_EVENTMASK ) == BELIST_INSERTED && theList == &m_onCollisionEmitters && value )
 	{
 		ITr2GenericEmitterPtr emitter( BlueCastPtr( value ) );
 		if( emitter )
@@ -100,14 +99,14 @@ void Tr2PlaneConstraint::OnListModified(
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements ITr2GenericParticleConstraint interface. Checks for collision between a 
+//   Implements ITr2GenericParticleConstraint interface. Checks for collision between a
 //   particle and a half-space defined by m_plane. If collision is detected optionally
 //   apply physical response to particle position and/or velocity and run generators
 //   to re-generate particle data components. This method can be called asyncronously.
 // Arguments:
 //   arguments - Child emitter update arguments
-//   particles - Particle data: Tr2ParticleElementData::COUNT of float arrays. The 
-//		constraint can modify any data element of a particle. 
+//   particles - Particle data: Tr2ParticleElementData::COUNT of float arrays. The
+//		constraint can modify any data element of a particle.
 //   strides - Sizes of particle data in each of "particles" arrays (in floats).
 //   count - Number of particles.
 //   dt - (unused) Frame time.
@@ -154,9 +153,9 @@ void Tr2PlaneConstraint::ApplyConstraint( const ITr2GenericEmitter::UpdateArgume
 				*velocity = bounce + slide;
 				if( m_reflectionNoise > 0 )
 				{
-					Vector3 reflectionNoise( 
-						Tr2ParticleSystem::RandFloat() * 2 - 1, 
-						Tr2ParticleSystem::RandFloat() * 2 - 1, 
+					Vector3 reflectionNoise(
+						Tr2ParticleSystem::RandFloat() * 2 - 1,
+						Tr2ParticleSystem::RandFloat() * 2 - 1,
 						Tr2ParticleSystem::RandFloat() * 2 - 1 );
 					reflectionNoise *= m_reflectionNoise;
 					reflectionNoise -= planeNormal * Dot( reflectionNoise, planeNormal );
@@ -174,15 +173,14 @@ void Tr2PlaneConstraint::ApplyConstraint( const ITr2GenericEmitter::UpdateArgume
 				}
 				for( auto it = m_generators.begin(); it != m_generators.end(); ++it )
 				{
-					( *it )->Generate( position, 
-									   m_velocityElement.m_offset != -1 ? static_cast<Vector3*>( velocity ) : nullptr, 
+					( *it )->Generate( position,
+									   m_velocityElement.m_offset != -1 ? static_cast<Vector3*>( velocity ) : nullptr,
 									   particle );
 				}
 			}
 			for( auto it = m_onCollisionEmitters.begin(); it != m_onCollisionEmitters.end(); ++it )
 			{
-				( *it )->SpawnParticles( arguments, position, 
-										 m_velocityElement.m_offset != -1 ? static_cast<Vector3*>( velocity ) : nullptr );
+				( *it )->SpawnParticles( arguments, position, m_velocityElement.m_offset != -1 ? static_cast<Vector3*>( velocity ) : nullptr );
 			}
 		}
 	}
@@ -190,8 +188,8 @@ void Tr2PlaneConstraint::ApplyConstraint( const ITr2GenericEmitter::UpdateArgume
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements ITr2GenericParticleConstraint interface. A chance for constraint to bind 
-//   itself to a particle system. Called when constaint is added to the particle system 
+//   Implements ITr2GenericParticleConstraint interface. A chance for constraint to bind
+//   itself to a particle system. Called when constaint is added to the particle system
 //   or when system is re-binded.
 // Arguments:
 //   system - Particle system the constaint is attached to.
@@ -199,7 +197,7 @@ void Tr2PlaneConstraint::ApplyConstraint( const ITr2GenericEmitter::UpdateArgume
 void Tr2PlaneConstraint::Bind( Tr2ParticleSystem* system )
 {
 	m_isValid = false;
-	const Tr2ParticleElementDataMap &declaration = system->GetElementDeclaration();
+	const Tr2ParticleElementDataMap& declaration = system->GetElementDeclaration();
 
 	Tr2ParticleElementDeclarationName position( Tr2ParticleElementDeclarationName::POSITION );
 	auto i = declaration.find( position );
@@ -269,7 +267,7 @@ void Tr2PlaneConstraint::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Ma
 	float radius = std::max( 10.f, Length( aabb.Size() ) * 0.25f );
 	float step = radius * 0.2f;
 	for( int i = -5; i <= 5; ++i )
-	{ 
+	{
 		Vector3 p0( float( i ) * step, -radius, 0 );
 		Vector3 p1( float( i ) * step, radius, 0 );
 		renderer.DrawLine( this, TransformCoord( p0 + center, world ), TransformCoord( p1 + center, world ), 0xffff4444 );

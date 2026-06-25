@@ -130,7 +130,7 @@ Tr2RingBuffer& Tr2RingBuffer::GetInstance()
 void Tr2RingBuffer::SetName( const std::string& name )
 {
 	this->m_name = name;
-	if ( m_buffer.IsValid() )
+	if( m_buffer.IsValid() )
 	{
 		m_buffer.SetName( m_name.c_str() );
 	}

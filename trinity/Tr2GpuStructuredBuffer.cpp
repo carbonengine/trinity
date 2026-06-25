@@ -9,8 +9,8 @@ using namespace Tr2RenderContextEnum;
 // Description:
 //   Tr2GpuStructuredBuffer default constructor
 // --------------------------------------------------------------------------------------
-Tr2GpuStructuredBuffer::Tr2GpuStructuredBuffer( IRoot* )
-	:m_count( 0 ),
+Tr2GpuStructuredBuffer::Tr2GpuStructuredBuffer( IRoot* ) :
+	m_count( 0 ),
 	m_stride( 0 ),
 	m_creationFlags( 0 )
 {
@@ -26,7 +26,7 @@ Tr2GpuStructuredBuffer::~Tr2GpuStructuredBuffer()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 ALResult Tr2GpuStructuredBuffer::py__init__( uint32_t count, uint32_t stride, CreationFlags creationFlags )
 {
@@ -132,14 +132,14 @@ ALResult Tr2GpuStructuredBuffer::CreateBuffer()
 	{
 		cpuUsage = Tr2CpuUsage::WRITE_OFTEN;
 	}
-	
+
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	auto hr = m_buffer.Create( 
+	auto hr = m_buffer.Create(
 		m_stride,
 		m_count,
 		gpuUsage,
 		cpuUsage,
-		nullptr, 
+		nullptr,
 		renderContext );
 	if( !m_name.empty() && SUCCEEDED( hr ) )
 	{

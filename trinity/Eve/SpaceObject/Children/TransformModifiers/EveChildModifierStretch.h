@@ -16,7 +16,7 @@ public:
 	~EveChildModifierStretch();
 
 	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const Float4x3* bones ) const;
-	void SetDest( ITriVectorFunction* dest );
+	void SetDest( ITriVectorFunction * dest );
 	void SetDestPosition( Vector3 destPosition );
 
 private:

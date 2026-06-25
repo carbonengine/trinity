@@ -9,7 +9,7 @@
 BLUE_DECLARE( TriCurveSet );
 
 
-BLUE_CLASS( Tr2ActionAnimateCurveSet ) : 
+BLUE_CLASS( Tr2ActionAnimateCurveSet ) :
 	public ITr2ControllerAction,
 	public ITr2Updateable,
 	public INotify
@@ -19,22 +19,23 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	void Link( ITr2ActionController& controller ) override;
+	void Link( ITr2ActionController & controller ) override;
 	void Unlink() override;
-	void Start( ITr2ActionController& controller ) override;
-	void Stop( ITr2ActionController& controller ) override;
+	void Start( ITr2ActionController & controller ) override;
+	void Stop( ITr2ActionController & controller ) override;
 	void RebaseSimTime( Be::Time diff ) override;
 
 
 	virtual void Update( Be::Time realTime, Be::Time simTime );
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	bool IsExpressionValid() const;
 
 	std::vector<Tr2ExpressionTermInfoPtr> GetExpressionTermInfo() const;
 
 	BlueStdResult EvaluateExpression( const char* expression, float& value ) const;
+
 private:
 	bool IsAttrExpressionValid( const char* attributeName ) const;
 

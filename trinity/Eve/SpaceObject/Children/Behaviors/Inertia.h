@@ -36,7 +36,7 @@ public:
 private:
 	bool m_enabled;
 	float m_maxAcceleration;
-	float m_minInertiaWeight;	// We always want some inertia when the agent is at full speed
+	float m_minInertiaWeight; // We always want some inertia when the agent is at full speed
 	float m_maxRotationSpeed;
 	int32_t m_priority;
 };

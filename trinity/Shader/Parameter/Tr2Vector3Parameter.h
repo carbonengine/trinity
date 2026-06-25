@@ -12,10 +12,9 @@
 BLUE_DECLARE( Tr2Vector3Parameter );
 BLUE_CLASS_ALLOW_DELAYED_DELETE( Tr2Vector3Parameter );
 
-class Tr2Vector3Parameter :
-	public ITriEffectParameter,
-	public ITriReroutable,
-	public IInitialize
+class Tr2Vector3Parameter : public ITriEffectParameter,
+							public ITriReroutable,
+							public IInitialize
 {
 
 public:
@@ -39,10 +38,10 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 
-	void CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-							unsigned char* destHandle, 
+	void CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+							unsigned char* destHandle,
 							size_t size,
-							Tr2RenderContext &renderContext ) const;
+							Tr2RenderContext& renderContext ) const;
 	const char* GetParameterName() const;
 	void RebuildEffectHandles( Tr2Shader* effectRes );
 	unsigned GetHashValue( unsigned startingHash ) const;
@@ -80,4 +79,4 @@ private:
 
 TYPEDEF_BLUECLASS( Tr2Vector3Parameter );
 
-#endif 
+#endif

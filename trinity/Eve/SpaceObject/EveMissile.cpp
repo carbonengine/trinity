@@ -10,7 +10,7 @@
 #include "include/IEveReferencePoint.h"
 
 // keep track of missiles
-CCP_STATS_DECLARE( eveMissileObjects, "Trinity/Missiles/missileObjects", true, CST_COUNTER_LOW, "Number of missiles (MIRVs) in this frame.");
+CCP_STATS_DECLARE( eveMissileObjects, "Trinity/Missiles/missileObjects", true, CST_COUNTER_LOW, "Number of missiles (MIRVs) in this frame." );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -51,7 +51,7 @@ bool EveMissile::Initialize()
 	// make 100% sure perticle emitting on all the warheads is disabled
 	for( PEveMissileWarheadVector::const_iterator it = m_warheads.begin(); it != m_warheads.end(); ++it )
 	{
-		(*it)->EnableParticleEmitting( false );
+		( *it )->EnableParticleEmitting( false );
 	}
 
 	return true;
@@ -149,14 +149,14 @@ void EveMissile::UpdateSyncronous( const EveUpdateContext& updateContext )
 		if( speed > 0.f )
 		{
 			// update the total alive time based on time already passed and distance / speed of missile ball to target
-			Vector3 dir(myPosition - targetPositionWS);
+			Vector3 dir( myPosition - targetPositionWS );
 			m_estimatedTotalAliveTime = m_time + ( Length( dir ) - m_targetRadius ) / speed;
 			m_lastValidSpeed = speed;
 		}
 		else if( m_lastValidSpeed > 0.f )
 		{
 			// This means the ball has hit the target, but the warhead may still on the way to the target
-			Vector3 dir(myPosition - targetPositionWS);
+			Vector3 dir( myPosition - targetPositionWS );
 			myVelocity = Normalize( dir );
 			myVelocity *= m_lastValidSpeed;
 		}
@@ -169,11 +169,11 @@ void EveMissile::UpdateSyncronous( const EveUpdateContext& updateContext )
 	{
 		EveMissileWarhead* wh = *it;
 		// Handle the warhead state
-		const EveMissileWarhead::StateChangeEvent evt = wh->UpdateState( deltaT, m_estimatedTotalAliveTime, m_target ) ;
+		const EveMissileWarhead::StateChangeEvent evt = wh->UpdateState( deltaT, m_estimatedTotalAliveTime, m_target );
 
 		if( wh->GetState() != EveMissileWarhead::STATE_DEAD )
 		{
-			Vector3 locatorPositionWS(worldPos);
+			Vector3 locatorPositionWS( worldPos );
 			Matrix locatorMatrix;
 
 			if( m_target )
@@ -196,12 +196,12 @@ void EveMissile::UpdateSyncronous( const EveUpdateContext& updateContext )
 			wh->Update( updateContext );
 		}
 
-		const EveMissileWarhead::StateChangeEvent evt2 = wh->CheckImpact( deltaT, m_estimatedTotalAliveTime, m_target ) ;
+		const EveMissileWarhead::StateChangeEvent evt2 = wh->CheckImpact( deltaT, m_estimatedTotalAliveTime, m_target );
 		if( evt2 == EveMissileWarhead::EVT_EXPLODE )
 		{
 			if( m_callback )
 			{
-				D3DPERF_EVENT(L"EveMissile explosion callback");
+				D3DPERF_EVENT( L"EveMissile explosion callback" );
 				m_callback.CallVoid( wh->GetWarheadID() );
 			}
 		}
@@ -218,8 +218,8 @@ void EveMissile::UpdateVisibility( const EveUpdateContext& updateContext, const 
 	// collect the renderables from every warhead this MIRV has
 	for( EveMissileWarheadVector::const_iterator it = m_warheads.begin(); it != m_warheads.end(); ++it )
 	{
-		EveMissileWarhead* warhead = (*it);
-		 
+		EveMissileWarhead* warhead = ( *it );
+
 		// apply the offset transform to the transform of this spaceobject
 		Matrix subMissileTransform = warhead->GetCurrentOffsetTransform() * m_worldTransform;
 
@@ -250,7 +250,7 @@ void EveMissile::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2I
 	// collect the renderables from every warhead this MIRV has
 	for( EveMissileWarheadVector::const_iterator it = m_warheads.begin(); it != m_warheads.end(); ++it )
 	{
-		(*it)->GetRenderables( renderables, impostors );
+		( *it )->GetRenderables( renderables, impostors );
 	}
 }
 
@@ -287,7 +287,7 @@ void EveMissile::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	{
 		for( EveMissileWarheadVector::const_iterator it = m_warheads.begin(); it != m_warheads.end(); ++it )
 		{
-			(*it)->RenderDebugInfo( renderer );
+			( *it )->RenderDebugInfo( renderer );
 		}
 	}
 }
@@ -346,7 +346,7 @@ void EveMissile::Start( const Vector3& shipVelocity, float estimatedFlyingTime )
 	// disable particle emitting here, it will get enabled in a later state of each warhead
 	for( PEveMissileWarheadVector::const_iterator it = m_warheads.begin(); it != m_warheads.end(); ++it )
 	{
-		(*it)->EnableParticleEmitting( false );
+		( *it )->EnableParticleEmitting( false );
 	}
 
 	// start!
@@ -369,7 +369,7 @@ bool EveMissile::RebuildMissileBoundingSphere()
 	for( PEveMissileWarheadVector::const_iterator it = m_warheads.begin(); it != m_warheads.end(); ++it )
 	{
 		Vector4 localBoundingSphere;
-		if( (*it)->GetLocalBoundingSphere( localBoundingSphere ) )
+		if( ( *it )->GetLocalBoundingSphere( localBoundingSphere ) )
 		{
 			// add the local bounding sphere of each warhead to the b-sphere of this missileMIRV
 			BoundingSphereUpdate( localBoundingSphere, sphere );

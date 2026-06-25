@@ -20,5 +20,5 @@ const Be::ClassInfo* ApproachGroup::ExposeToBlue()
 		MAP_ATTRIBUTE( "visionRange", m_visionRange, "How far the drone looks for it's buddies", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "framesBetweenUpdates", m_framesBetweenUpdates, "updateFrequency to lessen the load", Be::READWRITE | Be::PERSIST )
 
-		EXPOSURE_END()
+	EXPOSURE_END()
 }

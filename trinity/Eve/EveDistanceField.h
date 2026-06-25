@@ -18,7 +18,7 @@ BLUE_DECLARE( Tr2CurveScalar );
 //   Keeps track of a number of objects, max camera distance from them and estimates
 //   a simple volume the covers the objects.
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( EveDistanceField ):
+BLUE_CLASS( EveDistanceField ) :
 	public IListNotify,
 	public INotify,
 	public ITr2DebugRenderable
@@ -31,22 +31,23 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList );
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* value );
+	bool OnModified( Be::Var * value );
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-    void GetDebugOptions( Tr2DebugRendererOptions& options );
-    void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 
 	void Update( const EveUpdateContext& updateContext );
-	
+
 	void SetupStaticDistanceField( Vector3 dimensions, Vector3 position, float distanceThreshold, float timeAdjustmentSecondsOut, float timeAdjustemntSecondsIn );
 	void SetupDynamicDistanceField( float distanceThreshold, float timeAdjustmentSecondsOut, float timeAdjustemntSecondsIn );
 	void SetMaxDistance( float maxDistnace );
+
 private:
 	void CreateCurveSet();
 	void UpdateDistanceCurveSize();
@@ -92,11 +93,11 @@ private:
 	void SetNeutralValues();
 	float CalculateFieldCoverageAndDistance( Be::Time t, const Vector3& posRef, const Vector3& originShift );
 
-    // members for debug purposes
+	// members for debug purposes
 	bool m_debug;
 	std::vector<Vector3> m_debugPositions;
 };
-	
+
 TYPEDEF_BLUECLASS( EveDistanceField );
 
 #endif

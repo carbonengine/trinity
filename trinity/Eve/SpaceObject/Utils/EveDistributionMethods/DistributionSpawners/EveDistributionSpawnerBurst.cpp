@@ -4,7 +4,7 @@
 #include "EveDistributionSpawnerBurst.h"
 #include "include/TriMath.h"
 
-EveDistributionSpawnerBurst::EveDistributionSpawnerBurst( IRoot* lockobj ):
+EveDistributionSpawnerBurst::EveDistributionSpawnerBurst( IRoot* lockobj ) :
 	m_delayBeforeInitialBurst( 0.f ),
 	m_completeness( 1.f ),
 	m_additionalTriggersPerBurst( 0 ),
@@ -31,7 +31,7 @@ void EveDistributionSpawnerBurst::UpdateSyncronous( const EveUpdateContext& upda
 	else if( m_localTimer < m_delayBeforeInitialBurst )
 	{
 		m_localTimer += updateContext.GetDeltaT();
-	}		
+	}
 	else
 	{
 		uint32_t availableTriggers = owner.GetFreePlacementCount();

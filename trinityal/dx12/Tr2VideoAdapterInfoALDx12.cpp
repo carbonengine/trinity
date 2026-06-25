@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if TRINITY_PLATFORM==TRINITY_DIRECTX12
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 #include "Tr2VideoAdapterInfoALDx12.h"
 #include "Tr2AdapterStructures.h"
@@ -40,12 +40,12 @@ struct DeviceInfo
 std::vector<AdapterInfo> s_adapters;
 std::vector<DeviceInfo> s_deviceInfo;
 
-HRESULT GetFallbackMode( DXGI_MODE_DESC &desc )
+HRESULT GetFallbackMode( DXGI_MODE_DESC& desc )
 {
 	DEVMODE devMode;
-	memset(&devMode, 0, sizeof(devMode));
-	devMode.dmSize = sizeof(devMode);
-	if (!EnumDisplaySettings(0, ENUM_CURRENT_SETTINGS, &devMode))
+	memset( &devMode, 0, sizeof( devMode ) );
+	devMode.dmSize = sizeof( devMode );
+	if( !EnumDisplaySettings( 0, ENUM_CURRENT_SETTINGS, &devMode ) )
 	{
 		return E_FAIL;
 	}
@@ -70,7 +70,7 @@ ALResult PopulateDisplayModes( AdapterInfo& output, DXGI_FORMAT backBufferFormat
 	}
 
 	uint32_t count = 0;
-	HRESULT hr = output.m_output->GetDisplayModeList( 
+	HRESULT hr = output.m_output->GetDisplayModeList(
 		backBufferFormat,
 		0,
 		&count,
@@ -81,12 +81,12 @@ ALResult PopulateDisplayModes( AdapterInfo& output, DXGI_FORMAT backBufferFormat
 		displayModes.resize( 1 );
 		return GetFallbackMode( displayModes[0] );
 	}
-	if ( hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE && backBufferFormat == DXGI_FORMAT_B8G8R8A8_UNORM )
+	if( hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE && backBufferFormat == DXGI_FORMAT_B8G8R8A8_UNORM )
 	{
 		CCP_LOGWARN( "Tr2VideoAdapterInfo: failed to enumerate display modes (running in remote desktop?)" );
 		count = 1;
 	}
-	else if ( FAILED( hr ) || (count == 0) )
+	else if( FAILED( hr ) || ( count == 0 ) )
 	{
 		return hr;
 	}
@@ -95,14 +95,14 @@ ALResult PopulateDisplayModes( AdapterInfo& output, DXGI_FORMAT backBufferFormat
 
 	displayModes.resize( count );
 	hr = output.m_output->GetDisplayModeList( static_cast<DXGI_FORMAT>( backBufferFormat ),
-		0,
-		&count,
-		&displayModes[0] );
-	if ( hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE && backBufferFormat == DXGI_FORMAT_B8G8R8A8_UNORM && !displayModes.empty() )
+											  0,
+											  &count,
+											  &displayModes[0] );
+	if( hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE && backBufferFormat == DXGI_FORMAT_B8G8R8A8_UNORM && !displayModes.empty() )
 	{
 		return GetFallbackMode( displayModes[0] );
 	}
-	else if ( FAILED( hr ) )
+	else if( FAILED( hr ) )
 	{
 		return hr;
 	}
@@ -117,10 +117,10 @@ ALResult InitializeDirect3D()
 	s_factory = nullptr;
 
 	CR_RETURN_HR( CreateDXGIFactory1(
-							__uuidof( IDXGIFactory1 ),
-							(void**)( &s_factory ) ) );
+		__uuidof( IDXGIFactory1 ),
+		(void**)( &s_factory ) ) );
 
-	if ( !s_factory )
+	if( !s_factory )
 	{
 		return E_FAIL;
 	}
@@ -128,7 +128,7 @@ ALResult InitializeDirect3D()
 	CComPtr<IDXGIAdapter1> adapterPtr;
 
 	uint32_t adapterIndex = 0;
-	while ( SUCCEEDED( s_factory->EnumAdapters1( adapterIndex++, &adapterPtr ) ) )
+	while( SUCCEEDED( s_factory->EnumAdapters1( adapterIndex++, &adapterPtr ) ) )
 	{
 		CComPtr<ID3D12Device> device;
 		if( FAILED( D3D12CreateDevice( adapterPtr, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) ) ) )
@@ -143,7 +143,7 @@ ALResult InitializeDirect3D()
 
 		DeviceInfo deviceInfo;
 		memset( deviceInfo.m_formatSupport, 0, sizeof( deviceInfo.m_formatSupport ) );
-		for ( unsigned i = 0; i < DeviceInfo::FORMAT_COUNT; ++i )
+		for( unsigned i = 0; i < DeviceInfo::FORMAT_COUNT; ++i )
 		{
 			D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport = { static_cast<DXGI_FORMAT>( i ), D3D12_FORMAT_SUPPORT1_NONE, D3D12_FORMAT_SUPPORT2_NONE };
 			device->CheckFeatureSupport( D3D12_FEATURE_FORMAT_SUPPORT, &formatSupport, sizeof( formatSupport ) );
@@ -153,7 +153,7 @@ ALResult InitializeDirect3D()
 		CComPtr<IDXGIOutput> outputPtr;
 		uint32_t outputIndex = 0;
 		bool hasValidOutputs = false;
-		while ( SUCCEEDED( adapterPtr->EnumOutputs( outputIndex++, &outputPtr ) ) )
+		while( SUCCEEDED( adapterPtr->EnumOutputs( outputIndex++, &outputPtr ) ) )
 		{
 			AdapterInfo adapter;
 			adapter.m_adapter = adapterPtr;
@@ -173,7 +173,7 @@ ALResult InitializeDirect3D()
 			}
 			outputPtr.Release();
 		}
-		if ( hasValidOutputs )
+		if( hasValidOutputs )
 		{
 			s_deviceInfo.push_back( deviceInfo );
 		}
@@ -186,28 +186,28 @@ ALResult InitializeDirect3D()
 
 }
 
-#define	CHECK_INIT	\
-	if( !s_factory )							\
-	{											\
-		CR_RETURN_HR( InitializeDirect3D() );	\
+#define CHECK_INIT                            \
+	if( !s_factory )                          \
+	{                                         \
+		CR_RETURN_HR( InitializeDirect3D() ); \
 	}
 
-#define CHECK_VALID_ADAPTER	\
-	if( adapterIndex >= s_adapters.size() )		\
-	{											\
-		return E_INVALIDARG;					\
+#define CHECK_VALID_ADAPTER                 \
+	if( adapterIndex >= s_adapters.size() ) \
+	{                                       \
+		return E_INVALIDARG;                \
 	}
 
-#define	CHECK_INIT_BOOL	\
-	if( !s_factory && !SUCCEEDED( InitializeDirect3D() ) )	\
-	{														\
-		return false;										\
+#define CHECK_INIT_BOOL                                    \
+	if( !s_factory && !SUCCEEDED( InitializeDirect3D() ) ) \
+	{                                                      \
+		return false;                                      \
 	}
 
-#define CHECK_VALID_ADAPTER_BOOL	\
-	if( adapterIndex >= s_adapters.size() )		\
-	{											\
-		return false;							\
+#define CHECK_VALID_ADAPTER_BOOL            \
+	if( adapterIndex >= s_adapters.size() ) \
+	{                                       \
+		return false;                       \
 	}
 
 ALResult Tr2VideoAdapterInfo::GetAdapterCount( uint32_t& count )
@@ -235,7 +235,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterInfo( unsigned adapterIndex,
 	info.deviceID = desc.DeviceId;
 	info.subSystemID = desc.SubSysId;
 	info.revision = desc.Revision;
-	memcpy( info.luid, &desc.AdapterLuid, sizeof(LUID) );
+	memcpy( info.luid, &desc.AdapterLuid, sizeof( LUID ) );
 	memset( &info.deviceIdentifier, 0, sizeof( info.deviceIdentifier ) );
 
 	return S_OK;
@@ -264,7 +264,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterDisplayMode( unsigned adapterIndex,
 		return E_FAIL;
 	}
 
-	const auto & mm = s_adapters[adapterIndex].m_displayModes[DXGI_FORMAT_B8G8R8A8_UNORM][0];
+	const auto& mm = s_adapters[adapterIndex].m_displayModes[DXGI_FORMAT_B8G8R8A8_UNORM][0];
 	mode.format = static_cast<PixelFormat>( mm.Format );
 	mode.refreshRateDenominator = mm.RefreshRate.Denominator;
 	mode.refreshRateNumerator = mm.RefreshRate.Numerator;
@@ -274,7 +274,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterDisplayMode( unsigned adapterIndex,
 	DEVMODE devMode;
 	memset( &devMode, 0, sizeof( devMode ) );
 	devMode.dmSize = sizeof( devMode );
-	if ( !EnumDisplaySettings( monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, &devMode ) )
+	if( !EnumDisplaySettings( monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, &devMode ) )
 	{
 		return E_FAIL;
 	}
@@ -293,7 +293,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterModeCount( unsigned adapterIndex,
 
 	count = 0;
 
-	auto & output = s_adapters[adapterIndex];
+	auto& output = s_adapters[adapterIndex];
 	CR_RETURN_HR( PopulateDisplayModes( output, static_cast<DXGI_FORMAT>( backBufferFormat ) ) );
 
 	count = unsigned( output.m_displayModes[static_cast<DXGI_FORMAT>( backBufferFormat )].size() );
@@ -308,16 +308,16 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned adapterIndex,
 	CHECK_INIT;
 	CHECK_VALID_ADAPTER;
 
-	auto & output = s_adapters[adapterIndex];
+	auto& output = s_adapters[adapterIndex];
 	CR_RETURN_HR( PopulateDisplayModes( output, static_cast<DXGI_FORMAT>( backBufferFormat ) ) );
 	auto& displayModes = output.m_displayModes[static_cast<DXGI_FORMAT>( backBufferFormat )];
 
-	if ( modeIndex >= displayModes.size() )
+	if( modeIndex >= displayModes.size() )
 	{
 		return E_INVALIDARG;
 	}
 
-	auto & mm = displayModes[modeIndex];
+	auto& mm = displayModes[modeIndex];
 
 	mode.format = static_cast<PixelFormat>( mm.Format );
 	mode.height = mm.Height;
@@ -329,7 +329,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned adapterIndex,
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned/*adapterIndex*/,
+ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned /*adapterIndex*/,
 														 unsigned& maxWidth )
 {
 	maxWidth = D3D12_REQ_TEXTURE2D_U_OR_V_DIMENSION;
@@ -342,14 +342,14 @@ bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned adapterIndex,
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;
 
-	if ( backBufferFormat >= (unsigned)DeviceInfo::FORMAT_COUNT )
+	if( backBufferFormat >= (unsigned)DeviceInfo::FORMAT_COUNT )
 	{
 		return false;
 	}
 
 	uint32_t flags = s_deviceInfo[s_adapters[adapterIndex].m_deviceInfoIndex].m_formatSupport[backBufferFormat];
 
-	if ( ( flags & D3D12_FORMAT_SUPPORT1_RENDER_TARGET ) == 0 )
+	if( ( flags & D3D12_FORMAT_SUPPORT1_RENDER_TARGET ) == 0 )
 	{
 		return false;
 	}
@@ -362,14 +362,14 @@ bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex, Tr2
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;
 
-	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT )
+	if( format >= (unsigned)DeviceInfo::FORMAT_COUNT )
 	{
 		return false;
 	}
 
 	uint32_t flags = s_deviceInfo[s_adapters[adapterIndex].m_deviceInfoIndex].m_formatSupport[format];
 
-	if ( ( flags & D3D12_FORMAT_SUPPORT1_RENDER_TARGET ) == 0 )
+	if( ( flags & D3D12_FORMAT_SUPPORT1_RENDER_TARGET ) == 0 )
 	{
 		return false;
 	}
@@ -380,7 +380,7 @@ bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex, Tr2
 unsigned log2( unsigned int x )
 {
 	unsigned ans = 0;
-	while ( x >>= 1 )
+	while( x >>= 1 )
 	{
 		ans++;
 	}
@@ -396,11 +396,11 @@ ALResult Tr2VideoAdapterInfo::RefreshData()
 bool Tr2VideoAdapterInfo::AreAdaptersDifferent( unsigned adapter1,
 												unsigned adapter2 )
 {
-	if ( adapter1 == adapter2 )
+	if( adapter1 == adapter2 )
 	{
 		return false;
 	}
-	if ( adapter1 >= s_adapters.size() || adapter2 >= s_adapters.size() )
+	if( adapter1 >= s_adapters.size() || adapter2 >= s_adapters.size() )
 	{
 		return true;
 	}
@@ -410,30 +410,30 @@ bool Tr2VideoAdapterInfo::AreAdaptersDifferent( unsigned adapter1,
 
 namespace TrinityALImpl
 {
-	ALResult GetVideoAdapter( unsigned adapterIndex, IDXGIAdapter1** adapter, IDXGIOutput** output )
+ALResult GetVideoAdapter( unsigned adapterIndex, IDXGIAdapter1** adapter, IDXGIOutput** output )
+{
+	if( !s_factory )
 	{
-		if( !s_factory )
-		{
-			CR_RETURN_HR( InitializeDirect3D() );
-		}
-		if( adapterIndex >= s_adapters.size() )
-		{
-			return E_INVALIDARG;
-		}
-		*adapter = s_adapters[adapterIndex].m_adapter;
-		( *adapter )->AddRef();
-		*output = s_adapters[adapterIndex].m_output;
-		( *output )->AddRef();
-		return S_OK;
+		CR_RETURN_HR( InitializeDirect3D() );
 	}
+	if( adapterIndex >= s_adapters.size() )
+	{
+		return E_INVALIDARG;
+	}
+	*adapter = s_adapters[adapterIndex].m_adapter;
+	( *adapter )->AddRef();
+	*output = s_adapters[adapterIndex].m_output;
+	( *output )->AddRef();
+	return S_OK;
+}
 
-	ALResult Destroy()
-	{
-		s_adapters.resize( 0 );
-		s_deviceInfo.resize( 0 );
-		s_factory = nullptr;
-		return S_OK;
-	}
+ALResult Destroy()
+{
+	s_adapters.resize( 0 );
+	s_deviceInfo.resize( 0 );
+	s_factory = nullptr;
+	return S_OK;
+}
 }
 
 #endif

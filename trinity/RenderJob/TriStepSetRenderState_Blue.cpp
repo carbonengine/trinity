@@ -22,7 +22,7 @@ static PyObject* py__init__( PyObject* self, PyObject* args )
 	if( pyState && pyStateValue )
 	{
 		unsigned int state = 0;
-		if( !BlueExtractArgument( pyState, state, 0 ))
+		if( !BlueExtractArgument( pyState, state, 0 ) )
 		{
 			return NULL;
 		}
@@ -51,25 +51,22 @@ static PyObject* py__init__( PyObject* self, PyObject* args )
 
 const Be::ClassInfo* TriStepSetRenderState::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( TriStepSetRenderState, "" )
-        MAP_INTERFACE( TriStepSetRenderState )
+	EXPOSURE_BEGIN( TriStepSetRenderState, "" )
+		MAP_INTERFACE( TriStepSetRenderState )
 		MAP_INTERFACE( TriRenderStep )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "state", m_state, "", Be::READWRITE | Be::PERSIST | Be::ENUM, TriD3DRenderState )
 		MAP_ATTRIBUTE( "value", m_value, "", Be::READWRITE | Be::PERSIST )
 
-		MAP_METHOD
-		(
-			"__init__", 
-			py__init__, 
+		MAP_METHOD(
+			"__init__",
+			py__init__,
 			"Creates a render step to set a specific D3D state"
 			"\nIf one of the optional arguments is set, then both must be"
 			"\n:param state: A TriD3DRenderState value (unsigned int)"
 			"\n:type state: int"
 			"\n:param stateValue: A valid value to set (unsigned int)"
-			"\n:type stateValue: int"
-		)
+			"\n:type stateValue: int" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
-
 }

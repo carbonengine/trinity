@@ -7,15 +7,16 @@
 BLUE_DECLARE_INTERFACE( IEveSpaceObjectChild );
 
 
-BLUE_CLASS( Tr2ActionChildEffect ) : public ITr2ControllerAction
+BLUE_CLASS( Tr2ActionChildEffect ) :
+	public ITr2ControllerAction
 {
 public:
 	Tr2ActionChildEffect( IRoot* lockobj = nullptr );
 	EXPOSE_TO_BLUE();
 
-	void Start( ITr2ActionController& controller ) override;
-	void Stop( ITr2ActionController& controller ) override;
-	void Link( ITr2ActionController& controller ) override;
+	void Start( ITr2ActionController & controller ) override;
+	void Stop( ITr2ActionController & controller ) override;
+	void Link( ITr2ActionController & controller ) override;
 
 private:
 	std::string m_path;

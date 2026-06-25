@@ -6,18 +6,18 @@
 #include "ITr2VisualizationModeRenderer.h"
 #include "Interior/Tr2InteriorScene.h"
 
-TriStepToggleCubemap::TriStepToggleCubemap( IRoot* lockobj )
-:	m_showCubemap( true ), m_scene( NULL )
+TriStepToggleCubemap::TriStepToggleCubemap( IRoot* lockobj ) :
+	m_showCubemap( true ), m_scene( NULL )
 {
 }
 
-TriStepToggleCubemap::~TriStepToggleCubemap(void)
+TriStepToggleCubemap::~TriStepToggleCubemap( void )
 {
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 void TriStepToggleCubemap::py__init__( Be::OptionalWithDefaultValue<bool, true> showCubemap, Tr2InteriorScene* scene )
 {
@@ -37,10 +37,9 @@ void TriStepToggleCubemap::py__init__( Be::OptionalWithDefaultValue<bool, true> 
 TriStepResult TriStepToggleCubemap::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )
 {
 	if( this->m_scene )
-	{		
+	{
 		this->m_scene->SetRenderBackgroundCubeMap( m_showCubemap );
 	}
-	
+
 	return RS_OK;
 }
-

@@ -10,7 +10,7 @@ BLUE_DECLARE( EveStation2 );
 BLUE_DECLARE( EveSpriteSet );
 BLUE_DECLARE_VECTOR( EveSpriteSet );
 
-BLUE_CLASS( EveStation2 ):
+BLUE_CLASS( EveStation2 ) :
 	public EveSpaceObject2
 {
 public:
@@ -21,7 +21,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Overrides of EveSpaceObject2 implementations
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	void PrepareShaderData( const EveUpdateContext& updateContext ) override;
 };
 

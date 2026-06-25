@@ -7,47 +7,47 @@
 
 namespace Tr2CurveInterpolation
 {
-	enum Type
-	{
-		// Constant (L0) interpolation
-		CONSTANT = 0,
-		// Linear (L1) interpolation
-		LINEAR = 1,
-		// Hermite/cubic (L2) interpolation
-		HERMITE = 2,
-	};
+enum Type
+{
+	// Constant (L0) interpolation
+	CONSTANT = 0,
+	// Linear (L1) interpolation
+	LINEAR = 1,
+	// Hermite/cubic (L2) interpolation
+	HERMITE = 2,
+};
 }
 
 
 namespace Tr2CurveTangentType
 {
-	enum Type
-	{
-		// Auto-adjusted tangents (without overshoots)
-		AUTO_CLAMP = 0,
-		// Auto-adjusted tangents
-		AUTO = 1,
-		// Joined hand-edited tangents
-		FREE_JOINED = 2,
-		// Split hand-edited tangents
-		FREE_SPLIT = 3,
-	};
+enum Type
+{
+	// Auto-adjusted tangents (without overshoots)
+	AUTO_CLAMP = 0,
+	// Auto-adjusted tangents
+	AUTO = 1,
+	// Joined hand-edited tangents
+	FREE_JOINED = 2,
+	// Split hand-edited tangents
+	FREE_SPLIT = 3,
+};
 }
 
 
 namespace Tr2CurveExtrapolation
 {
-	enum Type
-	{
-		// Use first/last values when outside curve time range
-		CLAMP = 0,
-		// Cycle the curve
-		CYCLE = 1,
-		// Cycle the curve with mirroring
-		MIRROR = 2,
-		// Linear exprapolation based on first/last key tangent
-		LINEAR = 3,
-	};
+enum Type
+{
+	// Use first/last values when outside curve time range
+	CLAMP = 0,
+	// Cycle the curve
+	CYCLE = 1,
+	// Cycle the curve with mirroring
+	MIRROR = 2,
+	// Linear exprapolation based on first/last key tangent
+	LINEAR = 3,
+};
 }
 
 
@@ -83,13 +83,14 @@ struct Tr2CurveScalarDefinition
 
 struct Tr2CurveRasterizeDestination
 {
-	uint32_t width;  // destination texture width in pixels
+	uint32_t width; // destination texture width in pixels
 	uint32_t stride; // destination texture stride in float16 elements
 	Float_16* data;
 };
 
 
-BLUE_CLASS( Tr2CurveScalar ): public ITriScalarFunction, public ITriCurveLength
+BLUE_CLASS( Tr2CurveScalar ) :
+	public ITriScalarFunction, public ITriCurveLength
 {
 public:
 	Tr2CurveScalar( IRoot* lockobj = nullptr );

@@ -9,8 +9,8 @@ using namespace Tr2RenderContextEnum;
 // Description:
 //   Tr2GpuBuffer default constructor
 // --------------------------------------------------------------------------------------
-Tr2GpuBuffer::Tr2GpuBuffer( IRoot* )
-	:m_count( 0 ),
+Tr2GpuBuffer::Tr2GpuBuffer( IRoot* ) :
+	m_count( 0 ),
 	m_format( PIXEL_FORMAT_UNKNOWN ),
 	m_creationFlags( 0 )
 {
@@ -53,7 +53,7 @@ bool Tr2GpuBuffer::OnModified( Be::Var* value )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Script-exposed initializer function. Assigns new values to buffer parameters and 
+//   Script-exposed initializer function. Assigns new values to buffer parameters and
 //   constructs AL buffer. Can be called with either 0, 2, 3 or 4 arguments.
 // Arguments:
 //   count - Number of elements in the buffer
@@ -65,9 +65,9 @@ bool Tr2GpuBuffer::OnModified( Be::Var* value )
 //   true If AL buffer is successfully created
 //   false Otherwise
 // --------------------------------------------------------------------------------------
-ALResult Tr2GpuBuffer::__init__( 
-	Be::Optional<uint32_t> count, 
-	Be::Optional<Tr2RenderContextEnum::PixelFormat> format, 
+ALResult Tr2GpuBuffer::__init__(
+	Be::Optional<uint32_t> count,
+	Be::Optional<Tr2RenderContextEnum::PixelFormat> format,
 	CreationFlags creationFlags )
 {
 	if( count.IsAssigned() && !format.IsAssigned() )
@@ -97,9 +97,9 @@ ALResult Tr2GpuBuffer::__init__(
 //   true If AL buffer is successfully created
 //   false Otherwise
 // --------------------------------------------------------------------------------------
-ALResult Tr2GpuBuffer::Create( uint32_t count, 
-						   Tr2RenderContextEnum::PixelFormat format, 
-						   CreationFlags creationFlags )
+ALResult Tr2GpuBuffer::Create( uint32_t count,
+							   Tr2RenderContextEnum::PixelFormat format,
+							   CreationFlags creationFlags )
 {
 	m_count = count;
 	m_format = format;
@@ -160,11 +160,11 @@ ALResult Tr2GpuBuffer::CreateBuffer()
 	{
 		gpuUsage = gpuUsage | Tr2GpuUsage::DRAW_INDIRECT_ARGS;
 	}
-	
+
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	auto hr = m_buffer.Create( 
-		static_cast<PixelFormat>( m_format ), 
-		m_count, 
+	auto hr = m_buffer.Create(
+		static_cast<PixelFormat>( m_format ),
+		m_count,
 		gpuUsage,
 		cpuUsage,
 		nullptr,

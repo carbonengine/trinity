@@ -7,46 +7,46 @@
 #include "Include/TriMath.h"
 #include "TriViewport.h"
 
-void GetNearestPointOnAABB(Vector3 &out, const Vector3 &p, const Vector3 &min, const Vector3 &max)
+void GetNearestPointOnAABB( Vector3& out, const Vector3& p, const Vector3& min, const Vector3& max )
 {
-    if(p.x < min.x)
-    {
-        out.x = min.x;
-    }
-    else if(p.x > max.x)
-    {
-        out.x = max.x;
-    }
-    else
-    {
-        out.x = p.x;
-    }
+	if( p.x < min.x )
+	{
+		out.x = min.x;
+	}
+	else if( p.x > max.x )
+	{
+		out.x = max.x;
+	}
+	else
+	{
+		out.x = p.x;
+	}
 
-    if(p.y < min.y)
-    {
-        out.y = min.y;
-    }
-    else if(p.y > max.y)
-    {
-        out.y = max.y;
-    }
-    else
-    {
-        out.y = p.y;
-    }
+	if( p.y < min.y )
+	{
+		out.y = min.y;
+	}
+	else if( p.y > max.y )
+	{
+		out.y = max.y;
+	}
+	else
+	{
+		out.y = p.y;
+	}
 
-    if(p.z < min.z)
-    {
-        out.z = min.z;
-    }
-    else if(p.z > max.z)
-    {
-        out.z = max.z;
-    }
-    else
-    {
-        out.z = p.z;
-    }
+	if( p.z < min.z )
+	{
+		out.z = min.z;
+	}
+	else if( p.z > max.z )
+	{
+		out.z = max.z;
+	}
+	else
+	{
+		out.z = p.z;
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -60,33 +60,30 @@ void TriVector::Destroy()
 }
 
 
-PyObject* TriVector::GetAttr( 
-	const char* name, 
-	bool* handled
-	)
+PyObject* TriVector::GetAttr(
+	const char* name,
+	bool* handled )
 {
 	return 0;
 }
 
 
 bool TriVector::SetAttr(
-	const char* name, 
-	PyObject* v, 
-	bool* handled 
-	)
+	const char* name,
+	PyObject* v,
+	bool* handled )
 {
 	return true;
 }
 
 
 PyObject* TriVector::Repr(
-	bool* handled
-	)
+	bool* handled )
 {
 	*handled = true;
 	char buf[120];
-	sprintf_s(buf, "(%.3f, %.3f, %.3f)", x, y, z);
-	return ToPython(buf);
+	sprintf_s( buf, "(%.3f, %.3f, %.3f)", x, y, z );
+	return ToPython( buf );
 }
 
 
@@ -97,8 +94,7 @@ PyObject* TriVector::Repr(
 bool TriVector::BinaryOp(
 	PYNUMERIC_OPS op,
 	IRoot* other,
-	PyObject** retval
-	)
+	PyObject** retval )
 {
 	// The return value
 	TriVectorPtr retvec;
@@ -114,7 +110,7 @@ bool TriVector::BinaryOp(
 	// is converted to TriVector, vec2 from 'other' can be
 	// an instance from such conversion.
 
-	switch(op)
+	switch( op )
 	{
 	case PYOP_ADD:
 		*retvec += *vec2;
@@ -136,49 +132,45 @@ bool TriVector::BinaryOp(
 		return false;
 	}
 
-	*retval = PyOS->WrapBlueObject(retvec->GetRawRoot());
+	*retval = PyOS->WrapBlueObject( retvec->GetRawRoot() );
 	return true;
 }
 
 
 bool TriVector::UnaryOp(
 	PYNUMERIC_OPS op,
-	PyObject** retval
-	)
+	PyObject** retval )
 {
 	// The return value
 	ITriVectorPtr retvec;
-	retvec.Attach(new OTriVector);	
+	retvec.Attach( new OTriVector );
 
-	switch (op)
+	switch( op )
 	{
-	case PYOP_NEG:
-		{
-			Vector3 tmp = -(*this);
-			retvec->SetVector( &tmp );
-		}
-		break;
+	case PYOP_NEG: {
+		Vector3 tmp = -( *this );
+		retvec->SetVector( &tmp );
+	}
+	break;
 
-	case PYOP_POS:
-		{
-			Vector3 tmp = +(*this);
-			retvec->SetVector( &tmp );
-		}
-		break;
+	case PYOP_POS: {
+		Vector3 tmp = +( *this );
+		retvec->SetVector( &tmp );
+	}
+	break;
 
 	default:
 		// free the 'retvec'
 		return false;
 	}
-	*retval = PyOS->WrapBlueObject(retvec);
+	*retval = PyOS->WrapBlueObject( retvec );
 	return true;
 }
 
 
 void TriVector::Coercion(
 	PyObject* from,
-	PyObject** to
-	)
+	PyObject** to )
 {
 	// check for None first - never coerce this type! <halldor 2006.07.13>
 	if( from == Py_None )
@@ -187,19 +179,19 @@ void TriVector::Coercion(
 	}
 
 	// convert from any standard numeric value
-	PyObject* pyfloat = PyNumber_Float(from);
+	PyObject* pyfloat = PyNumber_Float( from );
 
-	if (!pyfloat)
+	if( !pyfloat )
 		return;
 
-	float f = (float)PyFloat_AS_DOUBLE(pyfloat);
-	Py_DECREF(pyfloat);
+	float f = (float)PyFloat_AS_DOUBLE( pyfloat );
+	Py_DECREF( pyfloat );
 
 	// the return value
 	ITriVectorPtr vec;
-	vec.Attach(new OTriVector);	
-	vec->SetXYZ(f, f, f);
-	*to = PyOS->WrapBlueObject(vec);
+	vec.Attach( new OTriVector );
+	vec->SetXYZ( f, f, f );
+	*to = PyOS->WrapBlueObject( vec );
 }
 #endif
 
@@ -208,8 +200,8 @@ void TriVector::Coercion(
 // TriVector
 /////////////////////////////////////////////////////////////////////////////////////////
 
-TriVector::TriVector(IRoot* lockobj) :
-	Vector3(0.0f, 0.0f,0.0f)
+TriVector::TriVector( IRoot* lockobj ) :
+	Vector3( 0.0f, 0.0f, 0.0f )
 {
 }
 
@@ -224,10 +216,9 @@ TriVector::~TriVector()
 /////////////////////////////////////////////////////////////////////////////////////////
 
 void TriVector::SetXYZ(
-	float _x, 
-	float _y, 
-	float _z
-	)
+	float _x,
+	float _y,
+	float _z )
 {
 	x = _x;
 	y = _y;
@@ -236,8 +227,7 @@ void TriVector::SetXYZ(
 
 
 void TriVector::SetVector(
-	const Vector3* ar
-	)
+	const Vector3* ar )
 {
 	x = ar->x;
 	y = ar->y;
@@ -245,80 +235,70 @@ void TriVector::SetVector(
 }
 
 
-const Vector3* TriVector::GetVector(
-	) const
+const Vector3* TriVector::GetVector() const
 {
-	return this;    
+	return this;
 }
 
 Vector3* TriVector::CopyVector(
-	Vector3* in
-	) const
+	Vector3* in ) const
 {
 	// would this work?
 	//return &(*in = *this);
-	
+
 	*in = *this;
 	return in;
 }
 
 
-Vector3* TriVector::Vector(
-	)
+Vector3* TriVector::Vector()
 {
 	return this;
 }
 
 
 void TriVector::SetCrossProduct(
-	const Vector3* v1, 
-	const Vector3* v2
-	)
+	const Vector3* v1,
+	const Vector3* v2 )
 {
 	*static_cast<Vector3*>( this ) = Cross( *v1, *v2 );
 }
 
 
-float TriVector::Length(
-	) const
+float TriVector::Length() const
 {
 	return ::Length( *this );
 }
 
 
-float TriVector::LengthSq(
-	) const
+float TriVector::LengthSq() const
 {
 	return ::LengthSq( *this );
 }
 
 
 void TriVector::Scale(
-	float s
-	)
+	float s )
 {
 	*static_cast<Vector3*>( this ) *= s;
 }
 
 
-void TriVector::Normalize(
-	)
+void TriVector::Normalize()
 {
 	*static_cast<Vector3*>( this ) = ::Normalize( *this );
 }
 
 
 void TriVector::TransformQuaternion(
-	const Quaternion* in
-	)
+	const Quaternion* in )
 {
-	TriVectorRotateQuaternion(this, this, in);
+	TriVectorRotateQuaternion( this, this, in );
 }
 
 
 float TriVector::DotProduct(
-	const Vector3* v2
-	)
+	const Vector3* v2 )
 {
 	return Dot( *this, *v2 );
 }
@@ -372,12 +352,12 @@ void TriVector::PySubtract( ITriVector* other )
 
 void TriVector::PyTransformCoord( ITriMatrix* transform )
 {
-	*static_cast<Vector3*>( this ) = TransformCoord( *this, *transform->GetMatrix() );	
+	*static_cast<Vector3*>( this ) = TransformCoord( *this, *transform->GetMatrix() );
 }
 
 void TriVector::PyTransformNormal( ITriMatrix* transform )
 {
-	*static_cast<Vector3*>( this ) = TransformNormal( *this, *transform->GetMatrix() );	
+	*static_cast<Vector3*>( this ) = TransformNormal( *this, *transform->GetMatrix() );
 }
 
 void TriVector::PyUnproject(
@@ -386,14 +366,14 @@ void TriVector::PyUnproject(
 	ITriMatrix* view,
 	ITriMatrix* world )
 {
-    Vector3 preViewport;
-    x = 2.0f * ( x - vp->x ) / vp->width - 1.0f;
-    y = 1.0f - 2.0f * ( y - vp->y ) / vp->height;
-    z = ( z - vp->minZ ) / ( vp->maxZ - vp->minZ );
-    
-    Matrix worldViewProjInv = Inverse( *world->GetMatrix() * *view->GetMatrix() * *project->GetMatrix() );
-    
-    *static_cast<Vector3*>( this ) = TransformCoord( *this, worldViewProjInv );
+	Vector3 preViewport;
+	x = 2.0f * ( x - vp->x ) / vp->width - 1.0f;
+	y = 1.0f - 2.0f * ( y - vp->y ) / vp->height;
+	z = ( z - vp->minZ ) / ( vp->maxZ - vp->minZ );
+
+	Matrix worldViewProjInv = Inverse( *world->GetMatrix() * *view->GetMatrix() * *project->GetMatrix() );
+
+	*static_cast<Vector3*>( this ) = TransformCoord( *this, worldViewProjInv );
 }
 
 void TriVector::PyTransformQuaternion( ITriQuaternion* rotation )

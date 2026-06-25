@@ -26,30 +26,30 @@ public:
 // still being associated with a texture atlas. This can happen if the atlas was
 // full at the time of creation - the texture may be pulled into the atlas at a later
 // point.
-BLUE_CLASS( Tr2AtlasTexture ):
+BLUE_CLASS( Tr2AtlasTexture ) :
 	public BlueAsyncRes,
 	public ICacheable,
 	public Tr2DeviceResource
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 	using BlueAsyncRes::Lock;
 	using BlueAsyncRes::Unlock;
 
-    Tr2AtlasTexture( IRoot* lockobj = NULL );
+	Tr2AtlasTexture( IRoot* lockobj = NULL );
 	~Tr2AtlasTexture();
 
 	// Get the D3D texture behind the atlas texture. Use GetTextureWindow
 	// to get the uv-offsets to apply when rendering.
 	Tr2TextureAL* GetTexture();
 	Tr2TextureAL* GetRenderTarget();
-	void SetRenderTarget( Tr2TextureAL* rt );
+	void SetRenderTarget( Tr2TextureAL * rt );
 
 	// Get texture window for rendering this texture out of the atlas
-	void GetTextureWindow( Vector4& tw );
+	void GetTextureWindow( Vector4 & tw );
 
 	// Calculate the texture coordinates for a region within this atlas texture.
-	void CalcSubTextureWindow( Vector4& tw, float rectX, float rectY, float rectWidth, float rectHeight );
+	void CalcSubTextureWindow( Vector4 & tw, float rectX, float rectY, float rectWidth, float rectHeight );
 
 	unsigned int GetX() const;
 	unsigned int GetY() const;
@@ -62,13 +62,13 @@ public:
 
 	// Lock the rectangle in the D3D texture that corresponds to this atlas texture.
 	bool LockBuffer( void*& pData, unsigned int& pitch );
-	bool LockBufferAndMargin( void *&data, unsigned &pitch, unsigned &margin );
+	bool LockBufferAndMargin( void*& data, unsigned& pitch, unsigned& margin );
 
 	// Unlock a rectangle previously locked with LockBuffer.
 	void UnlockBuffer();
 
-	void RegisterForChangeNotification( ITr2AtlasTextureNotifyTarget* p );
-	void UnregisterForChangeNotification( ITr2AtlasTextureNotifyTarget* p );
+	void RegisterForChangeNotification( ITr2AtlasTextureNotifyTarget * p );
+	void UnregisterForChangeNotification( ITr2AtlasTextureNotifyTarget * p );
 
 	// A stand-alone atlas texture is really not an atlas texture - it's a permanent outsider.
 	// This is to support textures that need texture transformations - clamping and repeat
@@ -88,9 +88,10 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
-	
+
 	// For general use, we want to be able to load directly to a target atlas
-	void SetTargetAtlasBeforeLoad( Tr2TextureAtlas *atlas );
+	void SetTargetAtlasBeforeLoad( Tr2TextureAtlas * atlas );
+
 private:
 	bool OnPrepareResources();
 
@@ -112,7 +113,7 @@ private:
 	// Calculate reciprocals for width/height
 	void CalcReciprocals();
 
-	void SetTextureRes( TriTextureRes* p );
+	void SetTextureRes( TriTextureRes * p );
 	TriTextureRes* GetTextureRes();
 
 private:
@@ -137,7 +138,7 @@ private:
 
 	// It is ok to have raw pointer to Tr2AtlasTexture::m_renderTarget since
 	// since T2AtlasTexture lifetime is bound to it.
-	Tr2TextureAL *m_renderTarget;
+	Tr2TextureAL* m_renderTarget;
 
 	// Bounds of this texture within the D3D texture
 	unsigned int m_x;
@@ -159,7 +160,7 @@ private:
 
 	Tr2TextureAtlasPtr m_textureAtlas;
 	struct Tr2TextureAtlasArea* m_atlasArea;
-	
+
 	unsigned int m_memoryUsage;
 
 	bool m_isStandAlone;

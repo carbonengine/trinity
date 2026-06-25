@@ -160,7 +160,6 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 
 
 
-
 		MAP_ATTRIBUTE(
 			"mieEnvironmentMap",
 			m_mieEnvironmentMap,

@@ -10,7 +10,7 @@ struct Tr2AdapterInfo;
 struct Tr2DisplayModeInfo;
 
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 
 class Tr2VideoAdapterInfo
 {

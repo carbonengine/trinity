@@ -6,273 +6,272 @@
 
 namespace
 {
-	std::pair<const Be::VarEntry*, Be::Var*> FindEntry( IRoot* object, const char* name )
+std::pair<const Be::VarEntry*, Be::Var*> FindEntry( IRoot* object, const char* name )
+{
+	if( !object )
 	{
-		if( !object )
-		{
-			return std::make_pair( nullptr, nullptr );
-		}
-		auto type = object->ClassType();
-		ssize_t offs = 0;
-		// Loop over all entries - this double loop covers chaining
-		for( ; type; offs += type->mOffsetToParent, type = type->mParentClassInfo )
-		{
-			for( const Be::VarEntry* entry = type->mMemberTable; entry->mName; entry++ )
-			{
-				if( !entry->mGetProperty && strcmp( entry->mName, name ) == 0 )
-				{
-					return std::make_pair( entry, BLUEMAPMEMBEROFFSET( object, entry, type, offs ) );
-				}
-			}
-		}
 		return std::make_pair( nullptr, nullptr );
 	}
-
-	IRoot* GetIRootAttribute( IRoot* object, const std::string& name )
+	auto type = object->ClassType();
+	ssize_t offs = 0;
+	// Loop over all entries - this double loop covers chaining
+	for( ; type; offs += type->mOffsetToParent, type = type->mParentClassInfo )
 	{
-		auto entry = FindEntry( object, name.c_str() );
-		if( !entry.second )
+		for( const Be::VarEntry* entry = type->mMemberTable; entry->mName; entry++ )
 		{
-			return nullptr;
-		}
-		if( entry.first->mSize && ( entry.first->mType == Be::IROOT || entry.first->mType == Be::IROOTPTR ) )
-		{
-			if( entry.first->mType == Be::IROOTPTR )
+			if( !entry->mGetProperty && strcmp( entry->mName, name ) == 0 )
 			{
-				return entry.second->mIRootPtr;
+				return std::make_pair( entry, BLUEMAPMEMBEROFFSET( object, entry, type, offs ) );
+			}
+		}
+	}
+	return std::make_pair( nullptr, nullptr );
+}
+
+IRoot* GetIRootAttribute( IRoot* object, const std::string& name )
+{
+	auto entry = FindEntry( object, name.c_str() );
+	if( !entry.second )
+	{
+		return nullptr;
+	}
+	if( entry.first->mSize && ( entry.first->mType == Be::IROOT || entry.first->mType == Be::IROOTPTR ) )
+	{
+		if( entry.first->mType == Be::IROOTPTR )
+		{
+			return entry.second->mIRootPtr;
+		}
+		else
+		{
+			return reinterpret_cast<IRoot*>( entry.second );
+		}
+	}
+	return nullptr;
+}
+
+bool GetStringAttribute( IRoot* object, const std::string& name, std::string& value )
+{
+	auto entry = FindEntry( object, name.c_str() );
+	if( !entry.second )
+	{
+		return false;
+	}
+	switch( entry.first->mType )
+	{
+	case Be::CHARARRAY:
+		value = reinterpret_cast<const char*>( entry.second );
+		return true;
+	case Be::CSTRING:
+		value = reinterpret_cast<const char*>( entry.second->mCharPtr );
+		return true;
+	case Be::STDSTRING:
+		value = *reinterpret_cast<const std::string*>( entry.second );
+		return true;
+	case Be::SHAREDSTRING:
+		value = reinterpret_cast<BlueSharedString*>( entry.second )->c_str();
+		return true;
+	default:
+		return false;
+	}
+}
+
+IRoot* GetListElement( IRoot* object, ssize_t index )
+{
+	if( IListPtr list = BlueCastPtr( object ) )
+	{
+		if( index < 0 )
+		{
+			index += int( list->GetSize() );
+		}
+		if( index >= 0 && index < list->GetSize() )
+		{
+			return list->GetAt( index );
+		}
+	}
+	return nullptr;
+}
+
+IRoot* GetListElement( IRoot* object, const std::string& name )
+{
+	if( IListPtr list = BlueCastPtr( object ) )
+	{
+		auto size = list->GetSize();
+		for( ssize_t i = 0; i < size; ++i )
+		{
+			auto element = list->GetAt( i );
+			std::string elementName;
+			if( GetStringAttribute( element, "name", elementName ) && elementName == name )
+			{
+				return element;
+			}
+		}
+	}
+	return nullptr;
+}
+
+bool IsAlpha( char ch )
+{
+	return ( ch >= 'a' && ch <= 'z' ) || ( ch >= 'A' && ch <= 'Z' );
+}
+
+bool IsNum( char ch )
+{
+	return ch >= '0' && ch <= '9';
+}
+
+const char* MatchRoot( const char* path )
+{
+	if( !IsAlpha( *path ) && *path != '_' )
+	{
+		return path;
+	}
+	++path;
+	while( true )
+	{
+		if( !IsAlpha( *path ) && !IsNum( *path ) && *path != '_' )
+		{
+			return path;
+		}
+		++path;
+	}
+}
+
+const char* MatchProperty( const char* path )
+{
+	if( *path != '.' )
+	{
+		return path;
+	}
+	++path;
+	return MatchRoot( path );
+}
+
+const char* MatchNumericIndex( const char* path )
+{
+	auto start = path;
+	if( *path != '[' )
+	{
+		return path;
+	}
+	++path;
+	if( *path == '-' )
+	{
+		++path;
+	}
+	while( true )
+	{
+		if( !IsNum( *path ) )
+		{
+			if( *path == ']' )
+			{
+				++path;
+				return path;
 			}
 			else
 			{
-				return reinterpret_cast<IRoot*>( entry.second );
+				return start;
 			}
-		}
-		return nullptr;
-	}
-
-	bool GetStringAttribute( IRoot* object, const std::string& name, std::string& value )
-	{
-		auto entry = FindEntry( object, name.c_str() );
-		if( !entry.second )
-		{
-			return false;
-		}
-		switch( entry.first->mType )
-		{
-		case Be::CHARARRAY:
-			value = reinterpret_cast<const char*>( entry.second );
-			return true;
-		case Be::CSTRING:
-			value = reinterpret_cast<const char*>( entry.second->mCharPtr );
-			return true;
-		case Be::STDSTRING:
-			value = *reinterpret_cast<const std::string*>( entry.second );
-			return true;
-		case Be::SHAREDSTRING:
-			value = reinterpret_cast<BlueSharedString*>( entry.second )->c_str();
-			return true;
-		default:
-			return false;
-		}
-	}
-
-	IRoot* GetListElement( IRoot* object, ssize_t index )
-	{
-		if( IListPtr list = BlueCastPtr( object ) )
-		{
-			if( index < 0 )
-			{
-				index += int( list->GetSize() );
-			}
-			if( index >= 0 && index < list->GetSize() )
-			{
-				return list->GetAt( index );
-			}
-		}
-		return nullptr;
-	}
-
-	IRoot* GetListElement( IRoot* object, const std::string& name )
-	{
-		if( IListPtr list = BlueCastPtr( object ) )
-		{
-			auto size = list->GetSize();
-			for( ssize_t i = 0; i < size; ++i )
-			{
-				auto element = list->GetAt( i );
-				std::string elementName;
-				if( GetStringAttribute( element, "name", elementName ) && elementName == name )
-				{
-					return element;
-				}
-			}
-
-		}
-		return nullptr;
-	}
-
-	bool IsAlpha( char ch )
-	{
-		return ( ch >= 'a' && ch <= 'z' ) || ( ch >= 'A' && ch <= 'Z' );
-	}
-
-	bool IsNum( char ch )
-	{
-		return ch >= '0' && ch <= '9';
-	}
-
-	const char* MatchRoot( const char* path )
-	{
-		if( !IsAlpha( *path ) && *path != '_' )
-		{
-			return path;
 		}
 		++path;
-		while( true )
-		{
-			if( !IsAlpha( *path ) && !IsNum( *path ) && *path != '_' )
-			{
-				return path;
-			}
-			++path;
-		}
 	}
+}
 
-	const char* MatchProperty( const char* path )
+const char* MatchNameIndex( const char* path )
+{
+	auto start = path;
+	if( *path != '[' )
 	{
-		if( *path != '.' )
-		{
-			return path;
-		}
-		++path;
-		return MatchRoot( path );
+		return path;
 	}
-
-	const char* MatchNumericIndex( const char* path )
+	++path;
+	if( *path != '\"' )
 	{
-		auto start = path;
-		if( *path != '[' )
-		{
-			return path;
-		}
-		++path;
-		if( *path == '-' )
-		{
-			++path;
-		}
-		while( true )
-		{
-			if( !IsNum( *path ) )
-			{
-				if( *path == ']' )
-				{
-					++path;
-					return path;
-				}
-				else
-				{
-					return start;
-				}
-			}
-			++path;
-		}
+		return start;
 	}
-
-	const char* MatchNameIndex( const char* path )
+	++path;
+	while( true )
 	{
-		auto start = path;
-		if( *path != '[' )
-		{
-			return path;
-		}
-		++path;
-		if( *path != '\"' )
+		if( *path == 0 )
 		{
 			return start;
 		}
-		++path;
-		while( true )
+		if( *path == '\"' )
 		{
-			if( *path == 0 )
+			if( path[1] == ']' )
+			{
+				return path + 2;
+			}
+			else
 			{
 				return start;
 			}
-			if( *path == '\"' )
-			{
-				if( path[1] == ']' )
-				{
-					return path + 2;
-				}
-				else
-				{
-					return start;
-				}
-			}
-			++path;
 		}
+		++path;
 	}
+}
 
-	IRoot* ResolveReference( const std::string& reference, const std::vector<std::pair<std::string, IRoot*>>& roots )
+IRoot* ResolveReference( const std::string& reference, const std::vector<std::pair<std::string, IRoot*>>& roots )
+{
+	if( reference.empty() )
 	{
-		if( reference.empty() )
-		{
-			return nullptr;
-		}
-
-		auto rootEnd = MatchRoot( reference.c_str() );
-		if( rootEnd == reference.c_str() )
-		{
-			return nullptr;
-		}
-		auto rootLength = rootEnd - reference.c_str();
-
-		auto found = std::find_if( begin( roots ), end( roots ), [&]( const auto& x ) {
-			return x.first.length() == rootLength && strncmp( x.first.c_str(), reference.c_str(), rootLength ) == 0;
-		} );
-		if( found == roots.end() )
-		{
-			return nullptr;
-		}
-		auto object = found->second;
-
-		const char* start = rootEnd;
-		while( *start )
-		{
-			const char* end;
-			end = MatchProperty( start );
-			if( end != start )
-			{
-				auto attrName = std::string( start + 1, end );
-				object = GetIRootAttribute( object, attrName );
-				start = end;
-				continue;
-			}
-			end = MatchNumericIndex( start );
-			if( end != start )
-			{
-				auto index = std::atoi( start + 1 );
-				object = GetListElement( object, ssize_t( index ) );
-				start = end;
-				continue;
-			}
-			end = MatchNameIndex( start );
-			if( end != start )
-			{
-				auto name = std::string( start + 2, end - 2 );
-				object = GetListElement( object, name );
-				start = end;
-				continue;
-			}
-			return nullptr;
-		}
-		return object;
+		return nullptr;
 	}
+
+	auto rootEnd = MatchRoot( reference.c_str() );
+	if( rootEnd == reference.c_str() )
+	{
+		return nullptr;
+	}
+	auto rootLength = rootEnd - reference.c_str();
+
+	auto found = std::find_if( begin( roots ), end( roots ), [&]( const auto& x ) {
+		return x.first.length() == rootLength && strncmp( x.first.c_str(), reference.c_str(), rootLength ) == 0;
+	} );
+	if( found == roots.end() )
+	{
+		return nullptr;
+	}
+	auto object = found->second;
+
+	const char* start = rootEnd;
+	while( *start )
+	{
+		const char* end;
+		end = MatchProperty( start );
+		if( end != start )
+		{
+			auto attrName = std::string( start + 1, end );
+			object = GetIRootAttribute( object, attrName );
+			start = end;
+			continue;
+		}
+		end = MatchNumericIndex( start );
+		if( end != start )
+		{
+			auto index = std::atoi( start + 1 );
+			object = GetListElement( object, ssize_t( index ) );
+			start = end;
+			continue;
+		}
+		end = MatchNameIndex( start );
+		if( end != start )
+		{
+			auto name = std::string( start + 2, end - 2 );
+			object = GetListElement( object, name );
+			start = end;
+			continue;
+		}
+		return nullptr;
+	}
+	return object;
+}
 }
 
 
 
 
-Tr2BindingPoint::Tr2BindingPoint()
-	:m_entry( nullptr ),
+Tr2BindingPoint::Tr2BindingPoint() :
+	m_entry( nullptr ),
 	m_destination( nullptr ),
 	m_entryOffset( -1 ),
 	m_arraySize( 0 )
@@ -499,10 +498,9 @@ IRootPtr ResolveObjectPath( const std::string& reference, const std::map<std::st
 	return ResolveReference( reference, unorderedRoots );
 }
 
-MAP_FUNCTION_AND_WRAP( 
-	"ResolveObjectPath", 
-	ResolveObjectPath, 
+MAP_FUNCTION_AND_WRAP(
+	"ResolveObjectPath",
+	ResolveObjectPath,
 	"Resolve path to an objects (for controller actions, etc.).\n"
 	":param path: path from one of the roots to an object\n"
-	":param roots: named \"root\" objects - starting points for a path"
-);
+	":param roots: named \"root\" objects - starting points for a path" );

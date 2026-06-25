@@ -26,9 +26,9 @@ public:
 	~Tr2DlssUpscalingTechnique();
 
 	// Tr2UpscalingTechniqueAL overrides
-	virtual bool IsAvailable( ) const override;
+	virtual bool IsAvailable() const override;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
-	virtual bool SupportsFrameGeneration( ) const override;
+	virtual bool SupportsFrameGeneration() const override;
 	virtual bool IsTemporal() const override;
 
 	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
@@ -46,7 +46,7 @@ private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 
 	uint32_t m_adapter;
-	
+
 	bool m_isAvailable;
 	bool m_supportsFrameGeneration;
 
@@ -54,17 +54,16 @@ private:
 
 	uint32_t m_contextIndex;
 	sl::FrameToken* m_frameToken;
-
 };
 
 class Tr2DlssUpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2DlssUpscalingContext( 
-		Tr2UpscalingAL::Setting setting, 
-		bool frameGeneration, 
+	Tr2DlssUpscalingContext(
+		Tr2UpscalingAL::Setting setting,
+		bool frameGeneration,
 		Tr2UpscalingAL::UpscalingContextParams params,
-		uint32_t contextNumber, 
+		uint32_t contextNumber,
 		sl::FrameToken* frameToken );
 	~Tr2DlssUpscalingContext();
 

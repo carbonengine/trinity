@@ -32,26 +32,23 @@ void BoundingBoxTransform( Vector3& min, Vector3& max, const Matrix& tf );
 // and projection matrices, along with a viewport.
 void BoundingBoxProject( Vector3& min, Vector3& max, const Matrix& proj, const Matrix& view, const TriViewport& vp );
 
-bool IntersectAxisAlignedBoxAxisAlignedBox( const Vector3& minBoundsA, const Vector3& maxBoundsA,
-										    const Vector3& minBoundsB, const Vector3& maxBoundsB );
-bool IntersectOrientedBoxAxisAlignedBox( const Vector3& centerA, const Vector3& extentsA, const Quaternion& orientationA, 
-										 const Vector3& minBounds, const Vector3& maxBounds );
-bool IntersectOrientedBoxOrientedBox( const Vector3& centerA, const Vector3& extentsA, const Quaternion& orientationA,
-									  const Vector3& centerB, const Vector3& extentsB, const Quaternion& orientationB );
+bool IntersectAxisAlignedBoxAxisAlignedBox( const Vector3& minBoundsA, const Vector3& maxBoundsA, const Vector3& minBoundsB, const Vector3& maxBoundsB );
+bool IntersectOrientedBoxAxisAlignedBox( const Vector3& centerA, const Vector3& extentsA, const Quaternion& orientationA, const Vector3& minBounds, const Vector3& maxBounds );
+bool IntersectOrientedBoxOrientedBox( const Vector3& centerA, const Vector3& extentsA, const Quaternion& orientationA, const Vector3& centerB, const Vector3& extentsB, const Quaternion& orientationB );
 
 bool IntersectAxisAlignedBoxRay( const Vector3& minBounds, const Vector3& maxBounds, const Vector3& rayOrigin, const Vector3& rayDir, Vector3& intersection );
 
-bool IntersectTriangleOrientedBox(const Vector3* triangleVertices, const Matrix& invOrientedBox );
+bool IntersectTriangleOrientedBox( const Vector3* triangleVertices, const Matrix& invOrientedBox );
 
-bool IntersectTriangleOrientedBox( const Vector3* v0, 
-								   const Vector3* v1, 
-								   const Vector3* v2, 
+bool IntersectTriangleOrientedBox( const Vector3* v0,
+								   const Vector3* v1,
+								   const Vector3* v2,
 								   const Matrix& invOrientedBox );
 
-bool IntersectTriangleAABB( const Vector3* v0, 
-							const Vector3* v1, 
-							const Vector3* v2, 
-							const Vector3& min, 
+bool IntersectTriangleAABB( const Vector3* v0,
+							const Vector3* v1,
+							const Vector3* v2,
+							const Vector3& min,
 							const Vector3& max );
 
 bool IsBoundingBoxEmpty( const Vector3& min, const Vector3& max );

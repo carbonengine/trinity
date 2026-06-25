@@ -7,9 +7,11 @@ using namespace Tr2RenderContextEnum;
 namespace
 {
 
-struct BitmapDimensionsTest: public Tr2BitmapDimensions
+struct BitmapDimensionsTest : public Tr2BitmapDimensions
 {
-	BitmapDimensionsTest() {}
+	BitmapDimensionsTest()
+	{
+	}
 	void SetType( TextureType type )
 	{
 		m_type = type;
@@ -100,7 +102,7 @@ TEST( BitmapDimensions, CalculatesTrueMipCountAndMipSizes )
 	dim.SetMipCount( 0 );
 
 	uint32_t level = 0;
-	while( depth > 1  )
+	while( depth > 1 )
 	{
 		EXPECT_EQ( width, dim.GetMipWidth( level ) );
 		EXPECT_EQ( height, dim.GetMipHeight( level ) );
@@ -171,11 +173,13 @@ TEST( BitmapDimensions, CalculatesCorrectMipSize )
 	Tr2RenderContextEnum::PixelFormat formats[] = {
 		Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM,
 		Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT,
-		Tr2RenderContextEnum::PIXEL_FORMAT_BC1_UNORM, };
+		Tr2RenderContextEnum::PIXEL_FORMAT_BC1_UNORM,
+	};
 	uint32_t bpp[] = {
 		32,
 		64,
-		4, };
+		4,
+	};
 	for( uint32_t i = 0; i < sizeof( formats ) / sizeof( formats[0] ); ++i )
 	{
 		dim.SetFormat( formats[i] );

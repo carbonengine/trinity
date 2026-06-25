@@ -182,7 +182,7 @@ void Tr2GrannyAnimationLayer::QueueAnimation( const char* animName, bool replace
 
 float Tr2GrannyAnimationLayer::GetLayerAnimationTime()
 {
-	if ( m_paused )
+	if( m_paused )
 	{
 		return m_pauseTime;
 	}
@@ -192,13 +192,13 @@ float Tr2GrannyAnimationLayer::GetLayerAnimationTime()
 
 void Tr2GrannyAnimationLayer::TogglePauseAnimation( bool pause )
 {
-	if ( m_paused && !pause )
+	if( m_paused && !pause )
 	{
 		m_paused = false;
 		m_totalPauseOffset = Tr2Renderer::GetAnimationTime() - m_pauseTime;
 		m_pauseTime = 0.0;
 	}
-	else if ( !m_paused && pause )
+	else if( !m_paused && pause )
 	{
 		m_paused = true;
 		m_pauseTime = Tr2Renderer::GetAnimationTime() - m_totalPauseOffset;
@@ -232,8 +232,7 @@ bool Tr2GrannyAnimationLayer::PlayAnimation( const Tr2GrannyAnimation* grannyAni
 		if( !replace )
 		{
 			float maxRemaining = 0.0f;
-			m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) 
-			{
+			m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
 				int loopCount = max( 0, player->GetLoopIndex( GetLayerAnimationTime() ) );
 				int newLoopCount = loopCount + 1;
 
@@ -259,7 +258,7 @@ bool Tr2GrannyAnimationLayer::PlayAnimation( const Tr2GrannyAnimation* grannyAni
 		{
 			player->SetStopTime( GetLayerAnimationTime() + player->GetDurationLeft( GetLayerAnimationTime() ) + delay );
 		}
-		
+
 		RegisterMorphTracks( player.get(), animation );
 
 		if( m_controlParamEnabled )
@@ -397,7 +396,7 @@ void Tr2GrannyAnimationLayer::RegisterMorphTracks( granny_control* control, cons
 		{
 			for( int trackIdx = 0; trackIdx < trackGroup->VectorTrackCount; trackIdx++ )
 			{
-				if ( trackGroup->VectorTracks[trackIdx].Dimension == 1 )
+				if( trackGroup->VectorTracks[trackIdx].Dimension == 1 )
 				{
 					m_controlMorphTracks[control].push_back( MorphTrack( &trackGroup->VectorTracks[trackIdx] ) );
 				}
@@ -424,7 +423,7 @@ void Tr2GrannyAnimationLayer::EndAnimation()
 	if( m_modelInstance )
 	{
 		m_animationQueue.clear();
-		
+
 		for( granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance );
 			 binding != GrannyModelControlsEnd( m_modelInstance );
 			 binding = GrannyModelControlsNext( binding ) )
@@ -437,7 +436,7 @@ void Tr2GrannyAnimationLayer::EndAnimation()
 		}
 	}
 #endif
-	
+
 	FreeCompletedControls();
 }
 
@@ -459,7 +458,7 @@ void Tr2GrannyAnimationLayer::ClearMorphTracks( granny_control* control )
 #endif
 
 void Tr2GrannyAnimationLayer::ClearAnimations()
-{	
+{
 	m_animationQueue.clear();
 
 	if( m_sequencer )
@@ -540,7 +539,7 @@ float MorphTrack::SampleTrack( float time, float duration ) const
 void Tr2GrannyAnimationLayer::SampleTextTracks( IBlueEventListener* listener )
 {
 	CCP_ASSERT_M( !IsUsingCMF(), "Tr2GrannyAnimationLayer::SampleTextTracks: CMF does not have text tracks!" );
-	
+
 	if( !listener )
 	{
 		return;
@@ -580,7 +579,7 @@ void Tr2GrannyAnimationLayer::SampleMorphTracks( std::unordered_map<std::string,
 		{
 			continue;
 		}
-		
+
 		for( auto& track : morphTrack.second )
 		{
 			float trackValue = track.SampleTrack( t, duration ) * m_layerWeight;
@@ -613,7 +612,7 @@ void Tr2GrannyAnimationLayer::SampleMorphTracks( std::unordered_map<std::string,
 		{
 			float trackValue = trackIt->SampleTrack( t, duration ) * m_layerWeight;
 			auto entry = morphAnimations.find( trackIt->m_grannyTrack->Name );
-			if ( entry != morphAnimations.end() )
+			if( entry != morphAnimations.end() )
 			{
 				entry->second = additive ? entry->second + trackValue : trackValue;
 			}
@@ -633,10 +632,9 @@ void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, cmf::Skeleto
 	if( m_controlParamEnabled )
 	{
 		UpdateControlParam( animationTime );
-		
+
 		cmf::RestPose( *resultPose, m_sequencer->GetSkeleton() );
-		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player )
-		{
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
 			player->SampleAtLocalTime( *resultPose, m_controlParam * player->GetLoopDuration() );
 		} );
 	}
@@ -657,8 +655,7 @@ void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, cmf::Skeleto
 	if( additive )
 	{
 		std::shared_ptr<cmf::AnimationPlayer> animation;
-		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) 
-		{
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
 			if( animation )
 			{
 				return;
@@ -704,50 +701,48 @@ void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, cmf::Skeleto
 }
 
 #if WITH_GRANNY
-void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local_pose* resultPose, IBlueEventListener* listener, 
-	std::unordered_map<std::string, float>& morphAnimations )
+void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local_pose* resultPose, IBlueEventListener* listener, std::unordered_map<std::string, float>& morphAnimations )
 {
 	GrannySetModelClock( m_modelInstance, animationTime );
 	SampleTextTracks( listener );
 	SampleMorphTracks( morphAnimations );
 	FreeCompletedControls();
-	if ( m_controlParamEnabled )
+	if( m_controlParamEnabled )
 	{
 		UpdateControlParam( animationTime );
 	}
 	GrannySampleModelAnimations( m_modelInstance, 0, m_boneCount, resultPose );
 }
 
-void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local_pose* compositePose, granny_local_pose* resultPose, 
-	IBlueEventListener* listener, std::unordered_map<std::string, float>& morphAnimations, bool additive )
+void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local_pose* compositePose, granny_local_pose* resultPose, IBlueEventListener* listener, std::unordered_map<std::string, float>& morphAnimations, bool additive )
 {
 	GrannySetModelClock( m_modelInstance, animationTime );
 	SampleTextTracks( listener );
 	SampleMorphTracks( morphAnimations, additive );
 	FreeCompletedControls();
-	if ( m_controlParamEnabled )
+	if( m_controlParamEnabled )
 	{
 		UpdateControlParam( animationTime );
 	}
-	if ( additive )
+	if( additive )
 	{
-		if ( !m_basePose )
+		if( !m_basePose )
 		{
 			m_basePose = GrannyNewLocalPose( m_boneCount );
 		}
 
-		granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance );
+		granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance );
 
-		if ( binding == GrannyModelControlsEnd( m_modelInstance ) )
+		if( binding == GrannyModelControlsEnd( m_modelInstance ) )
 		{
 			// no bindings
 			return;
 		}
-		
+
 		// Construct the m_basePose from raw local clock 0 for the first control.
-		granny_control *control = GrannyGetControlFromBinding( binding );
-		
-		if ( !control )
+		granny_control* control = GrannyGetControlFromBinding( binding );
+
+		if( !control )
 		{
 			return;
 		}
@@ -772,21 +767,20 @@ void Tr2GrannyAnimationLayer::FreeCompletedControls()
 {
 	if( m_sequencer )
 	{
-		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) 
-		{
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
 			if( !player->IsActive( GetLayerAnimationTime() ) )
 			{
 				ClearMorphTracks( player.get() );
 			}
 		} );
 	}
-	
+
 #if WITH_GRANNY
 	if( m_modelInstance )
 	{
-		for( granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); )
+		for( granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); )
 		{
-			granny_control *control = GrannyGetControlFromBinding( binding );
+			granny_control* control = GrannyGetControlFromBinding( binding );
 			binding = GrannyModelControlsNext( binding );
 			if( GrannyFreeControlIfComplete( control ) )
 			{
@@ -814,8 +808,7 @@ float Tr2GrannyAnimationLayer::GetAnimationRemainingTime()
 		}
 
 		float maxRemaining = 0.0f;
-		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player )
-		{
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
 			int loopCount = max( 0, player->GetLoopIndex( GetLayerAnimationTime() ) );
 			int newLoopCount = loopCount + 1;
 			int loopsTotal = player->GetLoopCount();
@@ -886,7 +879,7 @@ void Tr2GrannyAnimationLayer::Cleanup()
 		m_trackMask = nullptr;
 	}
 
-	if ( m_basePose )
+	if( m_basePose )
 	{
 		GrannyFreeLocalPose( m_basePose );
 		m_basePose = nullptr;
@@ -946,8 +939,8 @@ void Tr2GrannyAnimationLayer::AddAllBones( const Tr2GrannyAnimation* grannyAnima
 	CCP_ASSERT( grannyAnimation->IsUsingCMF() == m_useCMF );
 
 	unsigned int bone_count;
-	const std::string *boneList = grannyAnimation->GetAnimationBoneList( bone_count );
-	for (unsigned int i=0; i < bone_count; i++)
+	const std::string* boneList = grannyAnimation->GetAnimationBoneList( bone_count );
+	for( unsigned int i = 0; i < bone_count; i++ )
 	{
 		AddBone( grannyAnimation, boneList[i].c_str() );
 	}

@@ -49,7 +49,7 @@ bool Tr2Mesh::OnModified( Be::Var* value )
 			Initialize();
 		}
 	}
-	else if ( IsMatch(value, m_meshIndex) )
+	else if( IsMatch( value, m_meshIndex ) )
 	{
 		InitializeMorphTargets();
 	}
@@ -155,7 +155,7 @@ void Tr2Mesh::InitializeMorphTargets()
 		std::vector<std::string>& morphTargetNames = *names;
 
 		bool clearSerializedData = false;
-		if ( morphTargetNames.size() == m_serializedMorphAnimations.size() )
+		if( morphTargetNames.size() == m_serializedMorphAnimations.size() )
 		{
 			for( int32_t i = 0; i < morphTargetNames.size(); i++ )
 			{
@@ -170,7 +170,7 @@ void Tr2Mesh::InitializeMorphTargets()
 		{
 			clearSerializedData = true;
 		}
-		if ( clearSerializedData )
+		if( clearSerializedData )
 		{
 			m_serializedMorphAnimations.Clear();
 			for( int32_t i = 0; i < morphTargetNames.size(); i++ )
@@ -182,7 +182,7 @@ void Tr2Mesh::InitializeMorphTargets()
 				m_serializedMorphAnimations.Append( serializedWeight );
 			}
 		}
-		
+
 		for( int32_t i = 0; i < morphTargetNames.size(); i++ )
 		{
 			m_morphAnimations[morphTargetNames[i]] = Tr2MorphTargetAnimationData( i, m_serializedMorphAnimations[i]->m_weight );
@@ -323,7 +323,7 @@ void Tr2Mesh::SetBakedMorphTarget( const char* name, bool isBaked )
 
 	for( int i = 0; i < mesh->m_morphTargetNames.size(); i++ )
 	{
-		if(mesh->m_morphTargetNames[i] == name)
+		if( mesh->m_morphTargetNames[i] == name )
 		{
 			mesh->m_isBakedMorphTarget[i] = isBaked;
 			return;

@@ -5,8 +5,8 @@
 #include "Particle/Tr2DynamicEmitter.h"
 
 
-Tr2ActionSpawnParticles::Tr2ActionSpawnParticles( IRoot* )
-	:m_rate( 1.f )
+Tr2ActionSpawnParticles::Tr2ActionSpawnParticles( IRoot* ) :
+	m_rate( 1.f )
 {
 }
 

@@ -20,7 +20,7 @@
 #include "Eve/Turret/EveTurretSet.h"
 
 EveSwarmRenderable::EveSwarmRenderable( IRoot* lockobj ) :
-PARENTLOCK( m_decals )
+	PARENTLOCK( m_decals )
 {
 	memset( &m_psData, 0, sizeof( EveSpaceObjectPSData ) );
 	memset( &m_vsData, 0, sizeof( EveSpaceObjectVSData ) );
@@ -38,7 +38,7 @@ void EveSwarmRenderable::GetBatches( ITriRenderBatchAccumulator* batches, TriBat
 	{
 		return;
 	}
-	
+
 	Tr2MeshAreaVector* areas = m_mesh->GetAreas( batchType );
 	// transparent needs sorted meshareas
 	if( batchType != TRIBATCHTYPE_TRANSPARENT )
@@ -100,7 +100,7 @@ bool EveSwarmRenderable::HasTransparentBatches()
 {
 	if( m_mesh )
 	{
-		return !(m_mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT )->empty());
+		return !( m_mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT )->empty() );
 	}
 
 	return false;
@@ -122,7 +122,7 @@ void EveSwarmRenderable::SetWorldTransform( const Matrix& transform )
 	m_psData.worldTransform = m_vsData.worldTransform;
 	m_psData.worldTransformLast = m_vsData.worldTransformLast;
 	m_psData.invWorldTransform = m_vsData.invWorldTransform;
-	
+
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
 }
@@ -151,14 +151,14 @@ void EveSwarmRenderable::SetShaderData( const EveSpaceObjectVSData& vsData, cons
 	m_psData.shipData.w = psData.shipData.w;
 }
 
-void EveSwarmRenderable::InitDecals( const PEveSpaceObjectDecalVector &decals )
+void EveSwarmRenderable::InitDecals( const PEveSpaceObjectDecalVector& decals )
 {
-	for (EveSpaceObjectDecalVector::const_iterator it = decals.begin(); it != decals.end(); ++it)
+	for( EveSpaceObjectDecalVector::const_iterator it = decals.begin(); it != decals.end(); ++it )
 	{
 		EveSpaceObjectDecalPtr decal;
 		decal.CreateInstance();
 		decal->CopyFrom( *it );
-		
+
 		m_decals.Append( decal->GetRawRoot() );
 	}
 }
@@ -171,7 +171,7 @@ void EveSwarmRenderable::PushDecals( std::vector<ITr2Renderable*>& renderables, 
 	{
 		DecalMeshCache meshCache;
 		// run over every decal and update it
-		for (EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it)
+		for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 		{
 			// now prep to get the renderables
 			( *it )->GetRenderables( renderables, meshCache, geometryRes, screensize );
@@ -285,17 +285,16 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 		return;
 	}
 
-	Tr2MeshAreaVector* areas = m_mesh->GetAreas(TRIBATCHTYPE_OPAQUE);
-	for (auto& area : *areas)
+	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	for( auto& area : *areas )
 	{
 		if( !area->GetDisplay() )
 		{
 			continue;
 		}
 		Tr2RenderBatch batch = CreateGeometryBatch( lod, area, perObjectData );
-		batches->Commit(batch);
+		batches->Commit( batch );
 	}
-
 }
 
 Tr2PerObjectData* EveSwarmRenderable::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
@@ -374,7 +373,7 @@ void EveSwarm::RebuildCachedData( BlueAsyncRes* p )
 	EveShip2::RebuildCachedData( p );
 	for( auto it = m_renderables.begin(); it != m_renderables.end(); ++it )
 	{
-		(*it)->InitializeRenderable( this, m_mesh );
+		( *it )->InitializeRenderable( this, m_mesh );
 	}
 }
 
@@ -432,7 +431,7 @@ void EveSwarm::UpdateTurretsAsyncronous( const EveUpdateContext& updateContext )
 		IEveSpaceObject2::ParentData pd;
 		memset( &pd, 0, sizeof( ParentData ) );
 
-		pd.transform = *GetTurretTransform( (*it)->GetSwarmID() );
+		pd.transform = *GetTurretTransform( ( *it )->GetSwarmID() );
 		pd.shipData = m_spaceObjectShipData;
 		pd.clipSphereCenter = m_psData.clipSphereCenter;
 		pd.clipRadiusSq = m_psData.clipRadiusSq;
@@ -471,17 +470,17 @@ void EveSwarm::UpdateAsyncronous( const EveUpdateContext& context )
 		for( unsigned i = 0; i < m_vehicles.size() && rit != m_renderables.end(); i++, rit++ )
 		{
 			Matrix world = RotationMatrix( m_vehicles[i].rotation ) * TranslationMatrix( m_vehicles[i].position );
-			(*rit)->SetWorldTransform( world );
-		
+			( *rit )->SetWorldTransform( world );
+
 			if( m_boosters )
 			{
 				Be::Time time = context.GetTime();
 				float deltaT = context.GetDeltaT();
 				float speed = Length( m_vehicles[i].velocity );
 				m_boosters->Update( deltaT, time, world, speed, m_vehicles[i].acceleration, m_vehicles[i].rotation, i );
-				(*rit)->SetBoosterIntensity( m_boosters->GetBoosterIntensity() );
+				( *rit )->SetBoosterIntensity( m_boosters->GetBoosterIntensity() );
 			}
-			(*rit)->SetShaderData( m_vsData, m_psData );
+			( *rit )->SetShaderData( m_vsData, m_psData );
 		}
 		if( m_boosters )
 		{
@@ -506,7 +505,7 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 	{
 		m_timeLast = t;
 	}
-	
+
 	Vector3 worldTransformLast = m_worldPosition;
 	UpdateWorldTransform( t );
 
@@ -518,17 +517,17 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 			m_vehicles[i].position = m_worldPosition;
 		}
 	}
-	
+
 	float timeDelta = TimeAsFloat( t - m_timeLast );
 	float timeSeconds = TimeAsFloat( t - m_timeLast ) * m_behavior.m_timeMultiplier;
 	if( timeSeconds > m_behavior.m_maxTime )
 	{
 		timeSeconds = m_behavior.m_maxTime;
 	}
-	
+
 	m_timeSinceUpdate += timeDelta;
 	m_timeLast = t;
-	
+
 	bool updateNow = m_isVisible || m_timeSinceUpdate >= m_lodUpdateTime;
 	if( !updateNow )
 	{
@@ -573,7 +572,7 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 	{
 		m_started = true;
 	}
-	
+
 	Vector3 center( 0, 0, 0 );
 	Vector3 alignment( 0, 0, 0 );
 	if( updateNow )
@@ -625,7 +624,7 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 	}
 
 	// Never let the center of the squadron get more than m_maxDistance from the world position(client hangs for while f.x.)
-	center = 0.5f * (m_squadBoundsMin + m_squadBoundsMax);
+	center = 0.5f * ( m_squadBoundsMin + m_squadBoundsMax );
 	Vector3 d = m_worldPosition - center;
 	float distance = Length( d );
 	float maxDistance = Lerp( m_behavior.m_maxDistance0, m_behavior.m_maxDistance1, TriLinearize( m_behavior.m_speed0, m_behavior.m_speed1, Length( m_worldVelocity ) ) );
@@ -644,7 +643,7 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 }
 // --------------------------------------------------------------------------------
 // Description:
-//   Registers space object attachments (sprite and spotlight sets) with quad 
+//   Registers space object attachments (sprite and spotlight sets) with quad
 //   renderer.
 // Arguments:
 //   quadRenderer - quad renderer
@@ -653,7 +652,7 @@ void EveSwarm::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
 	for( auto it = m_attachments.begin(); it != m_attachments.end(); ++it )
 	{
-		(*it)->RegisterWithQuadRenderer( quadRenderer );
+		( *it )->RegisterWithQuadRenderer( quadRenderer );
 	}
 	if( m_boosters )
 	{
@@ -678,7 +677,7 @@ void EveSwarm::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRendere
 	{
 		for( auto it = m_attachments.begin(); it != m_attachments.end(); ++it )
 		{
-			(*it)->AddToQuadRenderer( quadRenderer, *(*rit)->GetWorldTransform(), 1, 1, nullptr, 0 );
+			( *it )->AddToQuadRenderer( quadRenderer, *( *rit )->GetWorldTransform(), 1, 1, nullptr, 0 );
 		}
 	}
 	if( DisplayBoosters() )
@@ -712,7 +711,7 @@ void EveSwarm::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			renderer.DrawLine( this, pos, pos + m_vehicles[i].velocity, 0xffff00ff );
 			renderer.DrawLine( this, pos, pos + m_vehicles[i].acceleration, 0xff0000ff );
 		}
-		
+
 		if( renderer.HasOption( this, "Forces" ) && m_debugInfo.size() > i )
 		{
 			renderer.DrawLine( this, pos, pos + m_debugInfo[i].alignment, 0xff7f7f00 );
@@ -744,7 +743,7 @@ void EveSwarm::PushRenderables( std::vector<ITr2Renderable*>& renderables )
 	// are decals visible?
 	if( m_mesh && m_isMeshVisible )
 	{
-		for (auto it = m_renderables.begin(); it != m_renderables.end(); it++)
+		for( auto it = m_renderables.begin(); it != m_renderables.end(); it++ )
 		{
 			renderables.push_back( *it );
 			( *it )->PushDecals( renderables, m_meshScreenSize );
@@ -755,7 +754,7 @@ void EveSwarm::PushRenderables( std::vector<ITr2Renderable*>& renderables )
 void EveSwarm::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
 	EveShip2::UpdateVisibility( updateContext, parentTransform );
-	
+
 	// are decals visible?
 	if( m_mesh && m_isMeshVisible )
 	{
@@ -799,7 +798,7 @@ void EveSwarm::UpdateWorldBounds()
 // Description:
 //    GetBoundingSphere. See EveSpaceObject2
 // --------------------------------------------------------------------------------
-bool EveSwarm::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const 
+bool EveSwarm::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
 	Vector4 s;
 	EveShip2::GetBoundingSphere( s, query );
@@ -814,7 +813,7 @@ bool EveSwarm::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) c
 //     how to do this on demand.
 // Original description: This version of the function should perform an update on the model / ball position
 // --------------------------------------------------------------------------------
-void EveSwarm::UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t )
+void EveSwarm::UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
 {
 	if( m_swarmingEnabled )
 	{
@@ -831,7 +830,7 @@ void EveSwarm::UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t )
 // Description:
 //   From EveShip2
 // --------------------------------------------------------------------------------
-void EveSwarm::GetModelCenterWorldPosition( Vector3 &position ) const
+void EveSwarm::GetModelCenterWorldPosition( Vector3& position ) const
 {
 	if( m_swarmingEnabled )
 	{
@@ -847,7 +846,7 @@ void EveSwarm::GetModelCenterWorldPosition( Vector3 &position ) const
 // Description:
 //   From EveShip2
 // --------------------------------------------------------------------------------
-bool EveSwarm::GetLocalBoundingBox( Vector3 &min, Vector3 &max )
+bool EveSwarm::GetLocalBoundingBox( Vector3& min, Vector3& max )
 {
 	if( m_mesh && m_mesh->GetBoundingBox( min, max ) )
 	{
@@ -933,7 +932,7 @@ void EveSwarm::AddSwarmer()
 		m_debugInfo.push_back( SwarmVehicleDebug() );
 	}
 	m_count++;
-	
+
 	if( m_boosters )
 	{
 		m_boosters->SetCount( m_count );
@@ -948,7 +947,7 @@ Vector3 EveSwarm::RemoveSwarmer()
 {
 	if( m_vehicles.empty() )
 	{
-		return Vector3(0, 0, 0);
+		return Vector3( 0, 0, 0 );
 	}
 
 	auto componentRegistry = GetComponentRegistry();
@@ -969,7 +968,7 @@ Vector3 EveSwarm::RemoveSwarmer()
 		m_debugInfo.pop_back();
 	}
 	m_count--;
-	
+
 	if( m_boosters )
 	{
 		m_boosters->SetCount( m_count );
@@ -1147,7 +1146,7 @@ Vector3 EveSwarm::CalculateForces( int i0, std::vector<SwarmVehicle>& swarmers, 
 	auto wander = m_behavior.m_weightWander * Calculate_Wander( swarmers[i0], m_behavior.m_wanderDistance, m_behavior.m_wanderRadius, m_behavior.m_wanderFluctuation, timeSeconds );
 	auto cohesion = m_behavior.m_weightCohesion * Calculate_Cohesion( swarmers[i0].position, centerOfMass );
 	auto anchor = Calculate_Cohesion( swarmers[i0].position, followPosition );
-	auto anchorDistance = Length( anchor ); 
+	auto anchorDistance = Length( anchor );
 	anchorDistance = TriLinearize( m_behavior.m_anchorRadius0, m_behavior.m_anchorRadius1, anchorDistance );
 	anchor = anchorDistance * m_behavior.m_weightAnchor * anchor;
 	auto align = m_behavior.m_weightAlign * alignment;
@@ -1175,7 +1174,7 @@ Vector3 EveSwarm::CalculateForces( int i0, std::vector<SwarmVehicle>& swarmers, 
 		formationPosition = formationPosition - formationDirection * m_behavior.m_formationDistance * rankMultiplier - formationSide * m_behavior.m_formationDistance * rankMultiplier * 0.5f;
 	}
 	auto formation = m_behavior.m_weightFormation * Calculate_Cohesion( swarmers[i0].position, formationPosition );
-	
+
 	// Debug info
 	if( m_debugShowForces && m_debugInfo.size() > static_cast<unsigned>( i0 ) )
 	{
@@ -1209,7 +1208,7 @@ inline Vector3 EveSwarm::Calculate_Separation( Vector3 p0, Vector3 p1 )
 	float length = Length( d );
 	if( length == 0.f )
 	{
-		return Vector3(TriRand() - 0.5f, TriRand() - 0.5f, TriRand() - 0.5f);
+		return Vector3( TriRand() - 0.5f, TriRand() - 0.5f, TriRand() - 0.5f );
 	}
 	return Normalize( d ) * m_behavior.m_separationDistance / length;
 }
@@ -1222,7 +1221,7 @@ Vector3 EveSwarm::Calculate_Wander( SwarmVehicle& s, float wanderDistance, float
 {
 	// Evolve the target point on the 'sphere' around a point wanderDistance in front of our swarmer
 	Vector3 target = s.wanderTarget;
-	Vector3 newOffset = Normalize( Vector3( 2*TriRand() - 1.f, 2*TriRand() - 1.f, 2*TriRand() - 1.f ) );
+	Vector3 newOffset = Normalize( Vector3( 2 * TriRand() - 1.f, 2 * TriRand() - 1.f, 2 * TriRand() - 1.f ) );
 	newOffset *= fluctuation * radius * t;
 	target += newOffset;
 	target = Normalize( target );

@@ -510,7 +510,7 @@ void Tr2TimelineController::AddAction( ITr2ControllerAction* action, float start
 
 	m_actions.Append( action );
 
-	if ( m_owner )
+	if( m_owner )
 	{
 		action->Link( *this );
 	}
@@ -594,7 +594,7 @@ void Tr2TimelineController::EnableTrack( uint32_t trackID, bool enable )
 		{
 			auto action = m_actions[i];
 			auto& entry = m_entries[i];
-			if ( InRange( m_time, entry ) && entry.trackID == trackID )
+			if( InRange( m_time, entry ) && entry.trackID == trackID )
 			{
 				if( enable )
 				{

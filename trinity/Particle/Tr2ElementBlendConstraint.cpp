@@ -8,8 +8,8 @@
 // Description:
 //   Tr2ElementBlendConstraint default constructor
 // --------------------------------------------------------------------------------------
-Tr2ElementBlendConstraint::Tr2ElementBlendConstraint( IRoot* lockobj )
-	:m_isValid( false ),
+Tr2ElementBlendConstraint::Tr2ElementBlendConstraint( IRoot* lockobj ) :
+	m_isValid( false ),
 	m_name( Tr2ParticleElementDeclarationName::CUSTOM ),
 	m_value( 0.f, 0.f, 0.f, 0.f ),
 	m_originalFactor( 1.f ),
@@ -51,24 +51,24 @@ void Tr2ElementBlendConstraint::ApplyConstraint( const ITr2GenericEmitter::Updat
 		case 2:
 			for( unsigned i = 0; i < count; ++i, ++data )
 			{
-				XMStoreFloat2( 
-					(XMFLOAT2*)data.Get(), 
+				XMStoreFloat2(
+					(XMFLOAT2*)data.Get(),
 					XMVectorMultiplyAdd( XMLoadFloat2( (XMFLOAT2*)data.Get() ), originalFactor, value ) );
 			}
 			break;
 		case 3:
 			for( unsigned i = 0; i < count; ++i, ++data )
 			{
-				XMStoreFloat3( 
-					(XMFLOAT3*)data.Get(), 
+				XMStoreFloat3(
+					(XMFLOAT3*)data.Get(),
 					XMVectorMultiplyAdd( XMLoadFloat3( (XMFLOAT3*)data.Get() ), originalFactor, value ) );
 			}
 			break;
 		case 4:
 			for( unsigned i = 0; i < count; ++i, ++data )
 			{
-				XMStoreFloat4( 
-					(XMFLOAT4*)data.Get(), 
+				XMStoreFloat4(
+					(XMFLOAT4*)data.Get(),
 					XMVectorMultiplyAdd( XMLoadFloat4( (XMFLOAT4*)data.Get() ), originalFactor, value ) );
 			}
 			break;
@@ -81,24 +81,24 @@ void Tr2ElementBlendConstraint::ApplyConstraint( const ITr2GenericEmitter::Updat
 		case 2:
 			for( unsigned i = 0; i < count; ++i, ++data )
 			{
-				XMStoreFloat2( 
-					(XMFLOAT2*)data.Get(), 
+				XMStoreFloat2(
+					(XMFLOAT2*)data.Get(),
 					XMVectorMultiplyAdd( XMLoadFloat2( (XMFLOAT2*)data.Get() ), originalFactor, value ) );
 			}
 			break;
 		case 3:
 			for( unsigned i = 0; i < count; ++i, ++data )
 			{
-				XMStoreFloat3( 
-					(XMFLOAT3*)data.Get(), 
+				XMStoreFloat3(
+					(XMFLOAT3*)data.Get(),
 					XMVectorMultiplyAdd( XMLoadFloat3( (XMFLOAT3*)data.Get() ), originalFactor, value ) );
 			}
 			break;
 		case 4:
 			for( unsigned i = 0; i < count; ++i, ++data )
 			{
-				XMStoreFloat4( 
-					(XMFLOAT4*)data.Get(), 
+				XMStoreFloat4(
+					(XMFLOAT4*)data.Get(),
 					XMVectorMultiplyAdd( XMLoadFloat4( (XMFLOAT4*)data.Get() ), originalFactor, value ) );
 			}
 			break;
@@ -118,7 +118,7 @@ void Tr2ElementBlendConstraint::Bind( Tr2ParticleSystem* system )
 {
 	m_isValid = false;
 
-	const Tr2ParticleElementDataMap &declaration = system->GetElementDeclaration();
+	const Tr2ParticleElementDataMap& declaration = system->GetElementDeclaration();
 	auto i = declaration.find( m_name );
 	if( i == declaration.end() )
 	{

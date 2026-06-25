@@ -14,7 +14,7 @@
 // See Also:
 //   Tr2BufferAL
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2GpuBuffer ): 
+BLUE_CLASS( Tr2GpuBuffer ) :
 	public ITr2GpuBuffer,
 	public INotify,
 	public IInitialize,
@@ -29,21 +29,21 @@ public:
 	enum CreationFlag
 	{
 		// Can the buffer be locked with write-only access
-		CPU_WRITABLE	= 1,
+		CPU_WRITABLE = 1,
 		// Is the buffer used for GPU write access
-		GPU_WRITABLE	= 2,
+		GPU_WRITABLE = 2,
 		// Is the buffer used for indirect draw calls
-		DRAW_INDIRECT	= 4,
+		DRAW_INDIRECT = 4,
 	};
 
 	typedef uint32_t CreationFlags;
 
-    Tr2GpuBuffer( IRoot* = 0 );
+	Tr2GpuBuffer( IRoot* = 0 );
 	~Tr2GpuBuffer();
 
 	bool Initialize();
 
-	bool OnModified( Be::Var* value );
+	bool OnModified( Be::Var * value );
 
 	Tr2BufferAL* GetGpuBuffer( unsigned index );
 
@@ -53,12 +53,22 @@ public:
 
 	void SetName( const char* name );
 
-	Tr2RenderContextEnum::PixelFormat GetFormat() const { return m_format; }
+	Tr2RenderContextEnum::PixelFormat GetFormat() const
+	{
+		return m_format;
+	}
 
-	operator Tr2BufferAL&() { return m_buffer; }
-	operator const Tr2BufferAL&() const { return m_buffer; }
+	operator Tr2BufferAL&()
+	{
+		return m_buffer;
+	}
+	operator const Tr2BufferAL&() const
+	{
+		return m_buffer;
+	}
 
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	virtual bool OnPrepareResources();
 	ALResult __init__( Be::Optional<uint32_t> count, Be::Optional<Tr2RenderContextEnum::PixelFormat> format, CreationFlags m_creationFlags );
@@ -66,7 +76,7 @@ private:
 	ALResult CreateBuffer();
 
 	// AL buffer
-	Tr2BufferAL	m_buffer;
+	Tr2BufferAL m_buffer;
 
 	// Number of elements in the buffer
 	uint32_t m_count;

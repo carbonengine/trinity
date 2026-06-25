@@ -1,6 +1,6 @@
 // Copyright © 2000 CCP ehf.
 
-#if !defined(_TriTextureRes_H_)
+#if !defined( _TriTextureRes_H_ )
 #define _TriTextureRes_H_
 
 #include "include/ITriTextureRes.h"
@@ -43,55 +43,73 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriTextureRes
 	Tr2TextureAL* GetTexture();
-	unsigned GetWidth()				const { return Tr2BitmapDimensions::GetWidth();    }
-	unsigned GetHeight()			const { return Tr2BitmapDimensions::GetHeight();   }
-	unsigned GetMipLevelCount()		const { return Tr2BitmapDimensions::GetMipCount(); }
+	unsigned GetWidth() const
+	{
+		return Tr2BitmapDimensions::GetWidth();
+	}
+	unsigned GetHeight() const
+	{
+		return Tr2BitmapDimensions::GetHeight();
+	}
+	unsigned GetMipLevelCount() const
+	{
+		return Tr2BitmapDimensions::GetMipCount();
+	}
 	uint32_t GetMsaaType() const;
 	uint32_t GetMsaaQuality() const;
 
-	Color GetAverageColor()			const{ return m_averageColor; }
-	bool IsValid() const { return IsGood(); }
-	Tr2RenderContextEnum::TextureType GetType() const { return Tr2BitmapDimensions::GetType(); }
+	Color GetAverageColor() const
+	{
+		return m_averageColor;
+	}
+	bool IsValid() const
+	{
+		return IsGood();
+	}
+	Tr2RenderContextEnum::TextureType GetType() const
+	{
+		return Tr2BitmapDimensions::GetType();
+	}
 	long UpdateSubresource( unsigned left, unsigned top, unsigned right, unsigned bottom, const void* source, unsigned sourcePitch );
 	void SetAverageColor( float red, float green, float blue, float alpha ) override;
 
 	const Tr2TextureAL* GetTexture() const;
 	OnTextureChangeEvent& OnTextureChange() override;
-	
-	bool SetTextureFromRT( Tr2RenderTarget* renderTarget );
-	
+
+	bool SetTextureFromRT( Tr2RenderTarget * renderTarget );
+
 	// Make a TriTextureRes that takes a copy of the renderTarget contents and sticks with it (not a live view).
 	bool CreateAndCopyFromRenderTarget( Tr2RenderTarget * renderTarget );
 
 
 	// Make an immutable TriTextureRes that takes a copy of the hostBitmap contents and sticks with it (not a live view).
-	bool CreateFromHostBitmap( Tr2HostBitmap* bitmap );
+	bool CreateFromHostBitmap( Tr2HostBitmap * bitmap );
 	bool CreateEmptyTexture( uint32_t width, uint32_t height, uint32_t mipCount, Tr2RenderContextEnum::PixelFormat format );
-	BlueStdResult CreateFromTexture( TriTextureRes* texture );
+	BlueStdResult CreateFromTexture( TriTextureRes * texture );
 
 	// Create a new TriTextureRes with undefined contents.  It's implied that the usage is dynamic.
-	bool Create(	uint32_t width, 
-					uint32_t height, 
-					uint32_t mipCount, 
-					Tr2RenderContextEnum::PixelFormat format, 
-					Tr2RenderContextEnum::BufferUsageFlags usage,
-					Tr2PrimaryRenderContext& renderContext );
+	bool Create( uint32_t width,
+				 uint32_t height,
+				 uint32_t mipCount,
+				 Tr2RenderContextEnum::PixelFormat format,
+				 Tr2RenderContextEnum::BufferUsageFlags usage,
+				 Tr2PrimaryRenderContext& renderContext );
 
 	ALResult OpenShared( uintptr_t handle );
 
 	bool SaveAsync( const wchar_t* filename );
-	bool Save( const wchar_t* filename );	// synchronous
+	bool Save( const wchar_t* filename ); // synchronous
 
 
 	Tr2TexturePipeline* GetPipeline() const;
 
 	void RequestResolution( const uint32_t requestedLod );
-	void UpdateLodRequest( Tr2TextureLodUpdateRequest& request, Tr2TextureLodManager & manager );
+	void UpdateLodRequest( Tr2TextureLodUpdateRequest & request, Tr2TextureLodManager & manager );
 	void ProcessLodRequest( const Tr2TextureLodUpdateRequest& request, Tr2TextureLodManager& manager );
 	uint32_t GetOriginalResolution() const;
 	float GetOriginalResolutionAsFloat() const;
 
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueResource
 	//
@@ -104,11 +122,12 @@ public:
 	// ITriDeviceResource
 private:
 	bool OnPrepareResources();
-public:				
+
+public:
 	void ReleaseResources( TriStorage s );
 
 #if TRINITYDEV
-	virtual void GetDescription( std::string& desc );
+	virtual void GetDescription( std::string & desc );
 #endif
 
 	//////////////////////////////////////////////////////////////////////////
@@ -135,9 +154,9 @@ private:
 	void OnWrappedRenderTargetChanged();
 	void RasterizeProceduralTexture( const wchar_t* data, void ( *Rastrization )( const std::string_view&, ImageIO::HostBitmap& ) );
 
-	Tr2TextureAL *m_texture;
+	Tr2TextureAL* m_texture;
 	Tr2TextureAL m_ownTexture;
-	Tr2RenderTargetPtr	m_wrappedRenderTarget;
+	Tr2RenderTargetPtr m_wrappedRenderTarget;
 	OnTextureChangeEvent m_onTextureChange;
 
 	unsigned ComputeMipSkipCount();
@@ -145,18 +164,18 @@ private:
 	unsigned int m_memoryUse;
 	size_t m_originalMemoryUse; // Memory usage for non-LODed version (for stats)
 
-	float	m_cutoutX;
-	float	m_cutoutY;
-	float	m_cutoutWidth;
-	float	m_cutoutHeight;
+	float m_cutoutX;
+	float m_cutoutY;
+	float m_cutoutWidth;
+	float m_cutoutHeight;
 
 	ImageIO::Metadata m_metadata;
 
 	std::unique_ptr<ImageIO::HostBitmap> m_loadedBitmap;
 
-    unsigned	m_mipLevelMaxCount;
-	bool m_isTextureLoadDisabled		: 1;
-	bool m_isTextureResizable			: 1;	// do we listen to the global mipskip setting?
+	unsigned m_mipLevelMaxCount;
+	bool m_isTextureLoadDisabled : 1;
+	bool m_isTextureResizable : 1; // do we listen to the global mipskip setting?
 
 	std::atomic<bool> m_hadLodRequests;
 	bool m_lodEnabled;
@@ -168,10 +187,10 @@ private:
 	uint32_t m_gpuMip;
 	uint32_t m_requestedLoadMip;
 
-	Color m_averageColor; 
-	
+	Color m_averageColor;
+
 private:
-	bool SetTexture( Tr2TextureAL& texture );
+	bool SetTexture( Tr2TextureAL & texture );
 	bool HasALObject( int type, size_t object );
 
 	void TrimLods( uint32_t startLod, Tr2TextureLodManager& manager );
@@ -199,7 +218,7 @@ private:
 
 	void ResourcePrepFinished();
 
-	Tr2HostBitmapPtr	m_asyncSaveBitmap;
+	Tr2HostBitmapPtr m_asyncSaveBitmap;
 	std::shared_ptr<Tr2ImageHandler> m_asyncSaveImage;
 
 	Tr2LoadPrepareFence m_pipelineFence;
@@ -212,9 +231,8 @@ public:
 	/////////////////////////////////////////
 	// Python thunkers
 	typedef TriTextureRes _Class;
-
 };
 
-TYPEDEF_BLUECLASS_WR_SHUTDOWN(TriTextureRes);
+TYPEDEF_BLUECLASS_WR_SHUTDOWN( TriTextureRes );
 
 #endif

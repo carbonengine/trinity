@@ -9,8 +9,8 @@ BLUE_DEFINE( EveChildCloud2 );
 
 const Be::ClassInfo* EveChildCloud2::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveChildCloud2, "Cloud space object child" )
-        MAP_INTERFACE( EveChildCloud2 )
+	EXPOSURE_BEGIN( EveChildCloud2, "Cloud space object child" )
+		MAP_INTERFACE( EveChildCloud2 )
 		MAP_INTERFACE( ITr2VolumetricRenderable )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
@@ -51,10 +51,10 @@ const Be::ClassInfo* EveChildCloud2::ExposeToBlue()
 			m_shadowMapDS,
 			"Depth stencil used for shadows.",
 			Be::READWRITE | Be::NOTIFY )
-		MAP_ATTRIBUTE( 
-			"minScreenSize", 
-			m_minScreenSize, 
-			"Minimal size of object on screen, objects smaller than this size are not rendered.\n:jessica-group: LOD", 
+		MAP_ATTRIBUTE(
+			"minScreenSize",
+			m_minScreenSize,
+			"Minimal size of object on screen, objects smaller than this size are not rendered.\n:jessica-group: LOD",
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "textureTiling", m_mapTiling[0], "Tiling for the main density/temerature texture. Used for camera-attached clouds.\n:jessica-group: Tiling", Be::READWRITE | Be::PERSIST )

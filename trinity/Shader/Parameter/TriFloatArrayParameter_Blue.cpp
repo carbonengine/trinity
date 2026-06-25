@@ -5,13 +5,12 @@
 
 BLUE_DEFINE( TriVector4 );
 
-const Be::ClassInfo* TriVector4::ExposeToBlue()
-{
+const Be::ClassInfo* TriVector4::ExposeToBlue(){
 	EXPOSURE_BEGIN( TriVector4, "" )
-        MAP_INTERFACE( TriVector4 )
+		MAP_INTERFACE( TriVector4 )
 
-		MAP_ATTRIBUTE( "data", m_data, "na", Be::READWRITE | Be::PERSIST )
-	EXPOSURE_END()
+			MAP_ATTRIBUTE( "data", m_data, "na", Be::READWRITE | Be::PERSIST )
+				EXPOSURE_END()
 }
 
 

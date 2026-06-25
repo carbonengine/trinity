@@ -3,8 +3,8 @@
 #include "StdAfx.h"
 #include "Tr2TexturePipelineStepLimitSize.h"
 
-Tr2TexturePipelineStepLimitSize::Tr2TexturePipelineStepLimitSize( IRoot* )
-	:m_maxWidth( 0 ),
+Tr2TexturePipelineStepLimitSize::Tr2TexturePipelineStepLimitSize( IRoot* ) :
+	m_maxWidth( 0 ),
 	m_maxHeight( 0 )
 {
 }

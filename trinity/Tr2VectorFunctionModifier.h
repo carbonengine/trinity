@@ -56,7 +56,7 @@ protected:
 
 	// if true, the m_offsetPosition is transformed to view space
 	bool m_useViewSpace;
-	
+
 	// if true, uses system coordinates instead of ship coordinates
 	bool m_useSystemCoordinates;
 };

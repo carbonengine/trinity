@@ -15,35 +15,35 @@ const Be::ClassInfo* Tr2TimelineController::ExposeToBlue()
 		MAP_INTERFACE( ITr2ActionController )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"variables", 
-			m_variables, 
-			"List of controller variables", 
+		MAP_ATTRIBUTE(
+			"variables",
+			m_variables,
+			"List of controller variables",
 			Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"eventHandlers", 
-			m_eventHandlers, 
-			"List of event handlers that are fired when HandleEvent is called", 
+		MAP_ATTRIBUTE(
+			"eventHandlers",
+			m_eventHandlers,
+			"List of event handlers that are fired when HandleEvent is called",
 			Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"isPlaying", 
-			m_isActive, 
-			"True if the timeline is playing or paused (i.e. Start has been called)", 
+		MAP_ATTRIBUTE(
+			"isPlaying",
+			m_isActive,
+			"True if the timeline is playing or paused (i.e. Start has been called)",
 			Be::READ )
-		MAP_ATTRIBUTE( 
-			"isPaused", 
-			m_isPaused, 
-			"When it is True the timeline does not avance time while playing", 
+		MAP_ATTRIBUTE(
+			"isPaused",
+			m_isPaused,
+			"When it is True the timeline does not avance time while playing",
 			Be::READ )
-		MAP_PROPERTY( 
-			"time", 
-			GetTime, 
-			SetTime, 
+		MAP_PROPERTY(
+			"time",
+			GetTime,
+			SetTime,
 			"Current play time from the start of the timeline in seconds" )
-		MAP_ATTRIBUTE( 
-			"timeScale", 
-			m_timeScale, 
-			"Scale for time when playing to speed up or slow down the playback", 
+		MAP_ATTRIBUTE(
+			"timeScale",
+			m_timeScale,
+			"Scale for time when playing to speed up or slow down the playback",
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "actions", m_actions, "", Be::PERSISTONLY )

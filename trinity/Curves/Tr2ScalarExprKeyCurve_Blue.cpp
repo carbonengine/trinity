@@ -6,33 +6,26 @@
 BLUE_DEFINE( Tr2ScalarExprKeyCurve );
 BLUE_DEFINE( Tr2ScalarExprKey );
 
-Be::VarChooser ScalarInterpolationChooser[] =
-{
-	{
-		"CONSTANT",
-		BeCast( CONSTANT ),
-		"Performs a constant interpolation"
-	},
-	{
-		"LINEAR",
-		BeCast( LINEAR ),
-		"Performs a linear interpolation"
-	},
-	{
-		"HERMITE",
-		BeCast( HERMITE ),
-		"Performs a Hermite spline interpolation"
-	},
+Be::VarChooser ScalarInterpolationChooser[] = {
+	{ "CONSTANT",
+	  BeCast( CONSTANT ),
+	  "Performs a constant interpolation" },
+	{ "LINEAR",
+	  BeCast( LINEAR ),
+	  "Performs a linear interpolation" },
+	{ "HERMITE",
+	  BeCast( HERMITE ),
+	  "Performs a Hermite spline interpolation" },
 	{ 0 }
 };
 
 const Be::ClassInfo* Tr2ScalarExprKey::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2ScalarExprKey, "" )
-        MAP_INTERFACE( Tr2ScalarExprKey )
-        MAP_INTERFACE( IInitialize )
-        MAP_INTERFACE( INotify )
-			
+	EXPOSURE_BEGIN( Tr2ScalarExprKey, "" )
+		MAP_INTERFACE( Tr2ScalarExprKey )
+		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( INotify )
+
 		MAP_ATTRIBUTE( "time", m_time, "Key time", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 		MAP_ATTRIBUTE( "value", m_value, "Key value", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 		MAP_ATTRIBUTE( "left", m_leftTangent, "Left tangent value", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
@@ -56,15 +49,15 @@ const Be::ClassInfo* Tr2ScalarExprKey::ExposeToBlue()
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "interpolation", m_interpolation, "Curve interpolation at key", Be::READWRITE | Be::PERSIST | Be::ENUM, ScalarInterpolationChooser )
 
-		MAP_METHOD_AND_WRAP( "RegenRandomConstant", RegenRandomConstant, "Regenerate the randomConstant variable for expressions")
+		MAP_METHOD_AND_WRAP( "RegenRandomConstant", RegenRandomConstant, "Regenerate the randomConstant variable for expressions" )
 	EXPOSURE_END()
 }
 
 const Be::ClassInfo* Tr2ScalarExprKeyCurve::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2ScalarExprKeyCurve, ":jessica-deprecated:" )
+	EXPOSURE_BEGIN( Tr2ScalarExprKeyCurve, ":jessica-deprecated:" )
 		MAP_INTERFACE( ITriFunction )
-        MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( ITriCurveLength )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
@@ -78,84 +71,83 @@ const Be::ClassInfo* Tr2ScalarExprKeyCurve::ExposeToBlue()
 		MAP_ATTRIBUTE_WITH_CHOOSER( "interpolation", m_interpolation, "", Be::READWRITE | Be::PERSIST | Be::ENUM, ScalarInterpolationChooser )
 		MAP_ATTRIBUTE( "keys", m_keys, "These are the keys of the curve", Be::READ | Be::PERSIST )
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
-			"AddKey", 
-			AddKey, 
-			3, 
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"AddKey",
+			AddKey,
+			3,
 			"Adds a new key to the curve\n"
 			":param time: key time\n"
 			":param value: key value\n"
 			":param leftTangent: key left tangent value\n"
 			":param rightTangent: key right tangent value\n"
 			":param interpolation: key interpolation type" );
-		MAP_METHOD_AND_WRAP( 
-			"RemoveKey", 
-			RemoveKey, 
+		MAP_METHOD_AND_WRAP(
+			"RemoveKey",
+			RemoveKey,
 			"Removes a key\n"
 			":param idx: key index" );
 		MAP_METHOD_AND_WRAP( "GetKeyCount", GetKeyCount, "Returns number of keys" );
-		MAP_METHOD_AND_WRAP( 
-			"GetValueAt", 
-			GetValueAt, 
+		MAP_METHOD_AND_WRAP(
+			"GetValueAt",
+			GetValueAt,
 			"Returns curve value at a given time\n"
 			":param time: input time" );
-		MAP_METHOD_AND_WRAP( 
-			"GetKeyValue", 
-			GetKeyValue, 
+		MAP_METHOD_AND_WRAP(
+			"GetKeyValue",
+			GetKeyValue,
 			"Returns key value\n"
 			":param idx: key index" );
-		MAP_METHOD_AND_WRAP( 
-			"GetKeyTime", 
-			GetKeyTime, 
+		MAP_METHOD_AND_WRAP(
+			"GetKeyTime",
+			GetKeyTime,
 			"Returns key time\n"
 			":param idx: key index" );
-		MAP_METHOD_AND_WRAP( 
-			"GetKeyLeftTangent", 
-			GetKeyLeftTangent, 
+		MAP_METHOD_AND_WRAP(
+			"GetKeyLeftTangent",
+			GetKeyLeftTangent,
 			"Returns key left tangent value\n"
 			":param idx: key index" );
-		MAP_METHOD_AND_WRAP( 
-			"GetKeyRightTangent", 
-			GetKeyRightTangent, 
+		MAP_METHOD_AND_WRAP(
+			"GetKeyRightTangent",
+			GetKeyRightTangent,
 			"Returns key left tangent value\n"
 			":param idx: key index" );
-		MAP_METHOD_AND_WRAP( 
-			"GetKeyInterpolation", 
-			GetKeyInterpolation, 
+		MAP_METHOD_AND_WRAP(
+			"GetKeyInterpolation",
+			GetKeyInterpolation,
 			"Returns interpolation type for the key\n"
 			":param idx: key index" );
-		MAP_METHOD_AND_WRAP( 
-			"SetKeyValue", 
-			SetKeyValue, 
+		MAP_METHOD_AND_WRAP(
+			"SetKeyValue",
+			SetKeyValue,
 			"Changes key value\n"
 			":param idx: key index\n"
 			":param value: new key value" );
-		MAP_METHOD_AND_WRAP( 
-			"SetKeyTime", 
-			SetKeyTime, 
+		MAP_METHOD_AND_WRAP(
+			"SetKeyTime",
+			SetKeyTime,
 			"Changes key time.\n"
 			"You need to call Sort() afterwards, to make sure the keys are in the correct order.\n"
 			":param idx: key index\n"
 			":param time: new key time" );
-		MAP_METHOD_AND_WRAP( 
-			"SetKeyLeftTangent", 
-			SetKeyLeftTangent, 
+		MAP_METHOD_AND_WRAP(
+			"SetKeyLeftTangent",
+			SetKeyLeftTangent,
 			"Changes key left tangent value"
 			":param idx: key index\n"
 			":param value: new key left tangent value" );
-		MAP_METHOD_AND_WRAP( 
-			"SetKeyRightTangent", 
-			SetKeyRightTangent, 
+		MAP_METHOD_AND_WRAP(
+			"SetKeyRightTangent",
+			SetKeyRightTangent,
 			"Changes key right tangent value"
 			":param idx: key index\n"
 			":param value: new key left tangent value" );
-		MAP_METHOD_AND_WRAP( 
-			"SetKeyInterpolation", 
-			SetKeyInterpolation, 
+		MAP_METHOD_AND_WRAP(
+			"SetKeyInterpolation",
+			SetKeyInterpolation,
 			"Changes key interpolation type\n"
 			":param idx: key index\n"
 			":param interpolation: new interpolation type" );
 		MAP_METHOD_AND_WRAP( "Sort", Sort, "Re-evaluate key expressions" );
-    EXPOSURE_END()
+	EXPOSURE_END()
 }
-

@@ -25,12 +25,12 @@ static bool GetBuf( void** buffer, Py_ssize_t* bufLen, PyObject* arrayO )
 }
 #endif
 
-PyObject* PyClearBuffer(PyObject *self, PyObject *args)
+PyObject* PyClearBuffer( PyObject* self, PyObject* args )
 {
-	PyObject *arrayO;
+	PyObject* arrayO;
 	int width, height, pitch;
 	int col = 0;
-	if (!PyArg_ParseTuple(args,"Oiii|i", &arrayO, &width, &height, &pitch, &col))
+	if( !PyArg_ParseTuple( args, "Oiii|i", &arrayO, &width, &height, &pitch, &col ) )
 		return 0;
 
 	void* destPtr = nullptr;
@@ -41,36 +41,36 @@ PyObject* PyClearBuffer(PyObject *self, PyObject *args)
 		return nullptr;
 	}
 #else
-    Py_buffer buf;
-    if(PyObject_GetBuffer(arrayO, &buf, PyBUF_SIMPLE) == -1)
+	Py_buffer buf;
+	if( PyObject_GetBuffer( arrayO, &buf, PyBUF_SIMPLE ) == -1 )
 	{
 		return nullptr;
 	}
 	ON_BLOCK_EXIT( [&] { PyBuffer_Release( &buf ); } );
-    destPtr = buf.buf;
-    destLen = buf.len;
+	destPtr = buf.buf;
+	destLen = buf.len;
 #endif
-	if( width*4 > pitch )
+	if( width * 4 > pitch )
 	{
-		PyErr_SetString(PyExc_RuntimeError, "width larger than pitch!");
+		PyErr_SetString( PyExc_RuntimeError, "width larger than pitch!" );
 		return nullptr;
 	}
 
 	if( height * pitch > destLen )
 	{
-		PyErr_SetString(PyExc_RuntimeError, "destination too short!");
+		PyErr_SetString( PyExc_RuntimeError, "destination too short!" );
 		return nullptr;
 	}
 
-	for( int i = 0; i<height; i++ )
+	for( int i = 0; i < height; i++ )
 	{
-		for( int j = 0; j<width; j++ )
+		for( int j = 0; j < width; j++ )
 		{
-			((int*)((char*)destPtr+i*pitch))[j] = col;
+			( (int*)( (char*)destPtr + i * pitch ) )[j] = col;
 		}
 	}
 
-	Py_INCREF(Py_None);
+	Py_INCREF( Py_None );
 	return Py_None;
 }
 #endif
@@ -79,30 +79,25 @@ PyObject* PyClearBuffer(PyObject *self, PyObject *args)
 const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2FontManager, "Tr2FontManager is used for font management" )
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"loadFlag",
 			m_loadflag,
 			"FreeType loadflag to control loading/rendering.",
-			Be::READWRITE
-		)
-		
-		MAP_METHOD_AND_WRAP
-		( 
-			"LookupGlyphIndex", 
-			LookupFaceIDAndGlyphIndex, 
+			Be::READWRITE )
+
+		MAP_METHOD_AND_WRAP(
+			"LookupGlyphIndex",
+			LookupFaceIDAndGlyphIndex,
 			"fgi = LookupGlyphIndex(font, charCode)"
 			"\nLooks up a glyph index from the given font."
 			"\n:param font: res path for the font"
 			"\n:param charCode:"
 			"\n\n:returns:"
 			"\n  A tuple, (faceID, glyphIndex)"
-			"\n  These values are used by LookupKerningXP and LookupSBit"
-		)
+			"\n  These values are used by LookupKerningXP and LookupSBit" )
 
-		MAP_METHOD_AND_WRAP
-		( 
-			"LookupKerningXP", 
+		MAP_METHOD_AND_WRAP(
+			"LookupKerningXP",
 			PyLookupKerningXP,
 			"kern = LookupKerningXP(faceID, glyphIndex1, glyphIndex2)"
 			"\nLooks up kerning values for the given face ID and char code pair."
@@ -110,12 +105,10 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			"\n:param glyphIndex1: as returned from LookupGlyphIndex"
 			"\n:param glyphIndex2: as returned from LookupGlyphIndex"
 			"\n\n:returns:"
-			"\n  Kerning value in pixels as an integer."
-		)
+			"\n  Kerning value in pixels as an integer." )
 
-		MAP_METHOD_AND_WRAP
-		( 
-			"LookupSBit", 
+		MAP_METHOD_AND_WRAP(
+			"LookupSBit",
 			LookupSBit,
 			"sbit = LookupSBit(faceID, width, height, glyphIndex)"
 			"\nLook up an SBit (small bitmap) for the given faceID, dimensions and glyph index."
@@ -124,24 +117,20 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			"\n:param height: "
 			"\n:param glyphIndex: as returned from LookupGlyphIndex"
 			"\n\n:returns:"
-			"\n  An SBit structure that can be used to render the font"
-		)
+			"\n  An SBit structure that can be used to render the font" )
 
-		MAP_METHOD_AND_WRAP
-		(
-			"LookupMetrics", 
+		MAP_METHOD_AND_WRAP(
+			"LookupMetrics",
 			LookupMetricsFromScript,
-			"metrics = LookupMetrics(faceID, width, height)" 
+			"metrics = LookupMetrics(faceID, width, height)"
 			"\nLooks up metrics for the given faceID and dimensions."
 			"\n:param faceID: as returned from LookupGlyphIndex"
 			"\n:param width: "
 			"\n:param height: "
 			"\n\n:returns:"
-			"\n  A tuple, (ascender, descender)"
-		)
+			"\n  A tuple, (ascender, descender)" )
 
-		MAP_METHOD
-		(
+		MAP_METHOD(
 			"ClearBuffer",
 			PyClearBuffer,
 			"ClearBuffer(buffer, width, height, pitch)"
@@ -154,54 +143,41 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			"\n:type height: int"
 			"\n:param pitch:"
 			"\n:type pitch: Optional[int]"
-			"\n:rtype: None"
-		)
+			"\n:rtype: None" )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"glyphCacheBudget",
 			m_glyphCacheBudget,
 			"Allowed budget for glyph cache, in bytes.",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_PROPERTY_READONLY
-		(
+		MAP_PROPERTY_READONLY(
 			"numGlyphsInUse",
 			GetNumGlyphsInUse,
-			"Returns the number of glyphs currently in use."
-		)
+			"Returns the number of glyphs currently in use." )
 
-		MAP_PROPERTY_READONLY
-		(
+		MAP_PROPERTY_READONLY(
 			"numGlyphsCached",
 			GetNumGlyphsCached,
-			"Returns the number of glyphs cached by the font manager."
-		)
+			"Returns the number of glyphs cached by the font manager." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"ClearCachedGlyphs",
 			ClearCachedGlyphs,
-			"Clears any cached glyphs."
-		)
+			"Clears any cached glyphs." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"TrimGlyphCache",
 			TrimGlyphCache,
 			"TrimGlyphCache(size)"
 			"\nTrims the glyph cache to size. Discards cached glyphs in LRU order."
-			"\n:param size: the desired cache size"
-		)
+			"\n:param size: the desired cache size" )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"totalGlyphsCachedSize",
 			m_totalGlyphsCachedSize,
 			"Total size of all cached glyphs, in bytes.",
-			Be::READ
-		)
+			Be::READ )
 
 	EXPOSURE_END()
 }

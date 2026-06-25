@@ -33,7 +33,7 @@ std::vector<Vector3> DroneAvoidance::CalculateBehavior( std::vector<DroneAgent>&
 	{
 		return returnForces;
 	}
-	
+
 	int c = 0;
 	if( m_frameCounter == 0 )
 	{
@@ -74,7 +74,7 @@ std::vector<Vector3> DroneAvoidance::CalculateBehavior( std::vector<DroneAgent>&
 
 				avoidanceDirection += agent->position - ( *a )->position;
 			}
-			
+
 			if( avoidanceDirection == Vector3( 0, 0, 0 ) )
 			{
 				m_lastPullForces.push_back( Vector3( 0, 0, 0 ) );

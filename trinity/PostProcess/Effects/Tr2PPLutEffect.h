@@ -15,7 +15,7 @@ public:
 
 	Tr2PPLutEffect( IRoot* lockobj = NULL );
 	~Tr2PPLutEffect();
-	
+
 	// Tr2PPEffect
 	bool IsActive() override;
 

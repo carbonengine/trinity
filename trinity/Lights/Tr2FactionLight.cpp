@@ -4,9 +4,9 @@
 #include "Tr2FactionLight.h"
 
 
-Tr2FactionLight::Tr2FactionLight( IRoot* lockobj ):
+Tr2FactionLight::Tr2FactionLight( IRoot* lockobj ) :
 	Tr2Light( lockobj ),
-    m_selectedColor( -1 ),
+	m_selectedColor( -1 ),
 	m_isSpotlight( false ),
 	m_parentColorSet( nullptr ),
 	m_saturation( 1.0f )
@@ -18,7 +18,7 @@ bool Tr2FactionLight::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_isSpotlight ) )
 	{
-		m_isSpotlight? m_type = SPOT_LIGHT: m_type = POINT_LIGHT;
+		m_isSpotlight ? m_type = SPOT_LIGHT : m_type = POINT_LIGHT;
 	}
 
 	if( IsMatch( value, m_selectedColor ) )
@@ -49,11 +49,11 @@ void Tr2FactionLight::SetLightColorFromFactionColor()
 
 void Tr2FactionLight::SetInheritProperties( const Color* colorSet )
 {
-    if ( colorSet )
-    {
+	if( colorSet )
+	{
 		m_parentColorSet = colorSet;
 		SetLightColorFromFactionColor();
-    }
+	}
 }
 
 Color Tr2FactionLight::GetSelectedColor() const
@@ -82,7 +82,6 @@ void Tr2FactionLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 
 		renderer.DrawCone( this, lightMatrix, m_lightData.radius, outerAngle, 15, 15, Tr2DebugRenderer::Solid, Tr2DebugColor( baseColor + colorMod * 2.0f, baseColor ) );
 		renderer.DrawCone( this, lightMatrix, m_lightData.innerRadius, innerAngle, 15, 15, Tr2DebugRenderer::Solid, Tr2DebugColor( baseColor + colorMod * 3.0f, baseColor + colorMod ) );
-
 	}
 	else
 	{
@@ -91,13 +90,13 @@ void Tr2FactionLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 		auto selectedColor = baseColor + Color( 0.0, 0.0, 0.0, 0.2 );
 
 		Matrix lightMatrix = m_boneTransform;
-		if( m_lightData.boneIndex >= 0 && m_lightData.boneIndex < boneCount ) {
+		if( m_lightData.boneIndex >= 0 && m_lightData.boneIndex < boneCount )
+		{
 			TriMatrixCopyFrom3x4( &lightMatrix, &bones[m_lightData.boneIndex] );
 		}
 		lightMatrix *= worldMatrix;
 
 		renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
-		renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.innerRadius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor) );
+		renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.innerRadius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
 	}
 }
-

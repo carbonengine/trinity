@@ -9,15 +9,21 @@ TEST( VideoAdapterInfo, HasAtLeastOneAdapter )
 {
 	unsigned count = 0;
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterCount( count ) );
-	if (!count) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !count )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 	EXPECT_GT( count, 0u );
 }
 
 TEST( VideoAdapterInfo, CanGetDefaultAdapterInfo )
 {
 	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
-	if (!count) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	Tr2VideoAdapterInfo::GetAdapterCount( count );
+	if( !count )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 
 	Tr2AdapterInfo info;
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterInfo( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, info ) );
@@ -26,8 +32,11 @@ TEST( VideoAdapterInfo, CanGetDefaultAdapterInfo )
 TEST( VideoAdapterInfo, CanGetDefaultAdapterMonitor )
 {
 	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
-	if (!count) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	Tr2VideoAdapterInfo::GetAdapterCount( count );
+	if( !count )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 
 	void* monitor;
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterMonitor( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, monitor ) );
@@ -36,8 +45,11 @@ TEST( VideoAdapterInfo, CanGetDefaultAdapterMonitor )
 TEST( VideoAdapterInfo, CanGetDefaultAdapterDisplayMode )
 {
 	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
-	if (!count) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	Tr2VideoAdapterInfo::GetAdapterCount( count );
+	if( !count )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 
 	Tr2DisplayModeInfo mode;
 	memset( &mode, 0, sizeof( mode ) );
@@ -50,13 +62,16 @@ TEST( VideoAdapterInfo, CanGetDefaultAdapterDisplayMode )
 TEST( VideoAdapterInfo, CanEnumerateModesForDefaultAdapter )
 {
 	unsigned adapter_count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(adapter_count);
-	if (!adapter_count) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	Tr2VideoAdapterInfo::GetAdapterCount( adapter_count );
+	if( !adapter_count )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 
 	Tr2DisplayModeInfo mode;
 	memset( &mode, 0, sizeof( mode ) );
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode ) );
-	
+
 	PixelFormat backBufferFormat = mode.format;
 	unsigned count = 0;
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterModeCount( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, backBufferFormat, count ) );
@@ -76,13 +91,16 @@ TEST( VideoAdapterInfo, CanEnumerateModesForDefaultAdapter )
 TEST( VideoAdapterInfo, DefaultAdapterSupportsItsCurrentBackBufferFormat )
 {
 	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
-	if (!count) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	Tr2VideoAdapterInfo::GetAdapterCount( count );
+	if( !count )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 
 	Tr2DisplayModeInfo mode;
 	memset( &mode, 0, sizeof( mode ) );
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode ) );
-	
+
 	EXPECT_TRUE( Tr2VideoAdapterInfo::SupportsBackBufferFormat( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode.format ) );
 }
 
@@ -93,8 +111,8 @@ TEST( VideoAdapterInfo, SameAdaptersAreNotDifferent )
 
 TEST( VideoAdapterInfo, DefaultAdapterSupports32bppRenderTarget )
 {
-	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::SupportsRenderTargetFormat( 
-		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
+	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::SupportsRenderTargetFormat(
+		Tr2VideoAdapterInfo::DEFAULT_ADAPTER,
 		PIXEL_FORMAT_B8G8R8A8_UNORM ) );
 }
 
@@ -102,8 +120,11 @@ TEST( VideoAdapterInfo, DefaultAdapterSupports32bppRenderTarget )
 TEST( VideoAdapterInfo, CanGetDriverInfo )
 {
 	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
-	if (!count) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	Tr2VideoAdapterInfo::GetAdapterCount( count );
+	if( !count )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 
 	Tr2AdapterInfo info;
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterInfo( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, info ) );

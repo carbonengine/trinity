@@ -32,9 +32,9 @@ class TriShadowOrthoFrustum : public IEveShadowFrustum
 	Vector3 m_sunDir;
 
 public:
-	TriShadowOrthoFrustum():
+	TriShadowOrthoFrustum() :
 		m_shadow( {} ),
-		m_shadowMapSize(0),
+		m_shadowMapSize( 0 ),
 		m_sunDir( {} )
 	{
 	}
@@ -142,13 +142,23 @@ BLUE_INTERFACE( IEveShadowCaster ) :
 {
 	// Used for cascaded shadow map
 	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const = 0;
-	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, Vector3 position, float radius, Tr2RenderReason renderReason ) const  { return false; }
+	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, Vector3 position, float radius, Tr2RenderReason renderReason ) const
+	{
+		return false;
+	}
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) = 0;
 	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;
 	// raytraced shadows
-	virtual void PushRtGeometry( Tr2RaytracingManager& ) const{ }
-	virtual void MarkRtDirty() { }
-	virtual bool IsShadowCastingDirty() const { return false; }
+	virtual void PushRtGeometry( Tr2RaytracingManager& ) const
+	{
+	}
+	virtual void MarkRtDirty()
+	{
+	}
+	virtual bool IsShadowCastingDirty() const
+	{
+		return false;
+	}
 };
 
 REGISTER_COMPONENT_TYPE( "ShadowCaster", IEveShadowCaster );

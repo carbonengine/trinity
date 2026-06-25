@@ -359,7 +359,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 	{
 		return m_blas;
 	}
-	if( lod->m_areas[m_areaIndex].m_isSkinned  || lod->m_areas[m_areaIndex].m_isMorphed )
+	if( lod->m_areas[m_areaIndex].m_isSkinned || lod->m_areas[m_areaIndex].m_isMorphed )
 	{
 		if( m_blas.IsValid() && !m_blasOutdated )
 		{
@@ -384,8 +384,8 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 		}
 
 		Tr2RtGeometryAL geometry;
-		geometry.positions = Tr2RtPositionStreamAL( 
-			*skinnedVB, 
+		geometry.positions = Tr2RtPositionStreamAL(
+			*skinnedVB,
 			3 * sizeof( float ),
 			lod->m_vertexCount,
 			mesh.GetSkinnedVertexOffset(),
@@ -405,7 +405,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 
 		if( rebuild )
 		{
-            CCP_STATS_ZONE( "BLAS rebuild" );
+			CCP_STATS_ZONE( "BLAS rebuild" );
 
 			auto capacity = geometry;
 			auto highestLod = mesh.GetHighestLodData();
@@ -467,7 +467,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 	}
 	std::scoped_lock lock( s_geometryConstantsMutex );
 
-	if ( !lod->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
+	if( !lod->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
 	{
 		if( SUCCEEDED( lod->m_areas[m_areaIndex].m_rtGeometryConstants.Create( sizeof( TriRtGeometryConstants ), renderContext.GetPrimaryRenderContext() ) ) )
 		{
@@ -488,8 +488,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 						uint32_t type = data->positionType;
 						CCP_ASSERT_M(
 							type == Tr2VertexDefinition::DataType::FLOAT32_3,
-							"position type has to be FLOAT32_3!" 
-						);
+							"position type has to be FLOAT32_3!" );
 					}
 
 					if( it->m_usage == Tr2VertexDefinition::NORMAL && it->m_usageIndex == 0 && it->m_stream == 0 )
@@ -500,9 +499,8 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 						uint32_t type = data->normalType;
 						CCP_ASSERT_M(
 							type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-							type == Tr2VertexDefinition::DataType::FLOAT32_3,
-							"normal type has to be FLOAT16_3 or FLOAT32_3!" 
-						);
+								type == Tr2VertexDefinition::DataType::FLOAT32_3,
+							"normal type has to be FLOAT16_3 or FLOAT32_3!" );
 					}
 
 					if( it->m_usage == Tr2VertexDefinition::TANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
@@ -513,12 +511,11 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 						uint32_t type = data->tangentType;
 						CCP_ASSERT_M(
 							type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-							type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
-							type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
-							type == Tr2VertexDefinition::DataType::USHORT_4_NORM ||
-							type == Tr2VertexDefinition::DataType::SHORT_4_NORM,
-							"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM or SHORT_4_NORM!" 
-						);
+								type == Tr2VertexDefinition::DataType::FLOAT32_3 ||
+								type == Tr2VertexDefinition::DataType::UBYTE_4_NORM ||
+								type == Tr2VertexDefinition::DataType::USHORT_4_NORM ||
+								type == Tr2VertexDefinition::DataType::SHORT_4_NORM,
+							"tangent type has to be FLOAT16_3 or FLOAT32_3 or UBYTE_4_NORM or USHORT_4_NORM or SHORT_4_NORM!" );
 					}
 
 					if( it->m_usage == Tr2VertexDefinition::BITANGENT && it->m_usageIndex == 0 && it->m_stream == 0 )
@@ -529,9 +526,8 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 						uint32_t type = data->bitangentType;
 						CCP_ASSERT_M(
 							type == Tr2VertexDefinition::DataType::FLOAT16_3 ||
-							type == Tr2VertexDefinition::DataType::FLOAT32_3,
-							"bitangent type has to be FLOAT16_3 or FLOAT32_3!" 
-						);
+								type == Tr2VertexDefinition::DataType::FLOAT32_3,
+							"bitangent type has to be FLOAT16_3 or FLOAT32_3!" );
 					}
 
 					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 0 && it->m_stream == 0 )
@@ -542,9 +538,8 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 						uint32_t type = data->texCoord0Type;
 						CCP_ASSERT_M(
 							type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
-							type == Tr2VertexDefinition::DataType::FLOAT32_2,
-							"texCoord0 type has to be FLOAT16_2 or FLOAT32_2!" 
-						);
+								type == Tr2VertexDefinition::DataType::FLOAT32_2,
+							"texCoord0 type has to be FLOAT16_2 or FLOAT32_2!" );
 					}
 
 					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 1 && it->m_stream == 0 )
@@ -555,9 +550,8 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 						uint32_t type = data->texCoord1Type;
 						CCP_ASSERT_M(
 							type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
-							type == Tr2VertexDefinition::DataType::FLOAT32_2,
-							"texCoord1 type has to be FLOAT16_2 or FLOAT32_2!" 
-						);
+								type == Tr2VertexDefinition::DataType::FLOAT32_2,
+							"texCoord1 type has to be FLOAT16_2 or FLOAT32_2!" );
 					}
 
 					if( it->m_usage == Tr2VertexDefinition::TEXCOORD && it->m_usageIndex == 2 && it->m_stream == 0 )
@@ -568,9 +562,8 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 						uint32_t type = data->texCoord2Type;
 						CCP_ASSERT_M(
 							type == Tr2VertexDefinition::DataType::FLOAT16_2 ||
-							type == Tr2VertexDefinition::DataType::FLOAT32_2,
-							"texCoord2 type has to be FLOAT16_2 or FLOAT32_2!" 
-						);
+								type == Tr2VertexDefinition::DataType::FLOAT32_2,
+							"texCoord2 type has to be FLOAT16_2 or FLOAT32_2!" );
 					}
 
 					// skipping blending data because we get gpu skinned meshes as input (see SkinVertices.fx), so it shouldn't be required for raytracing shaders
@@ -607,8 +600,8 @@ Tr2RaytracingGeometry::Tr2RaytracingGeometry()
 {
 	m_skinVerticesEffect.CreateInstance();
 	m_skinVerticesEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/skinvertices.fx" );
-    m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
-    m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
+	m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
+	m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
 }
 
 Tr2BufferAL* Tr2RaytracingGeometry::GetGpuBuffer( unsigned )
@@ -793,14 +786,14 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 		Tr2RaytracingMesh* mesh = it->mesh;
 		TriGeometryResLodData* lod = mesh->GetCurrentLodData();
-		if( lod && ( lod->m_areas[it->area->GetAreaIndex()].m_isSkinned  || lod->m_areas[it->area->GetAreaIndex()].m_isMorphed ) )
+		if( lod && ( lod->m_areas[it->area->GetAreaIndex()].m_isSkinned || lod->m_areas[it->area->GetAreaIndex()].m_isMorphed ) )
 		{
 			if( !mesh->GetAndResetDirtyFlag() )
 			{
 				continue;
 			}
 
-			outdatedMeshes.push_back( &(*it) );
+			outdatedMeshes.push_back( &( *it ) );
 
 			skinnedVertexCount += lod->m_vertexCount;
 		}
@@ -831,14 +824,14 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 	std::swap( barrier.Transition.StateBefore, barrier.Transition.StateAfter );
 
-	ON_BLOCK_EXIT( [&]{ renderContext.ResourceBarrierDx12( barrier ); } );
+	ON_BLOCK_EXIT( [&] { renderContext.ResourceBarrierDx12( barrier ); } );
 #endif
 
-    CTr2RuntimeGpuBuffer inVB;
-    CTr2RuntimeGpuBuffer outVB;
-    
-    Tr2GeometryBufferParameterPtr inVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( m_inVertexBufferTechniqueName.c_str() ) );
-    Tr2GeometryBufferParameterPtr outVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( m_outVertexBufferTechniqueName.c_str() ) );
+	CTr2RuntimeGpuBuffer inVB;
+	CTr2RuntimeGpuBuffer outVB;
+
+	Tr2GeometryBufferParameterPtr inVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( m_inVertexBufferTechniqueName.c_str() ) );
+	Tr2GeometryBufferParameterPtr outVbParam = BlueCastPtr( m_skinVerticesEffect->GetResourceByName( m_outVertexBufferTechniqueName.c_str() ) );
 
 	if( !outdatedMeshes.empty() )
 	{
@@ -869,7 +862,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12
 		outVB.m_buffer = m_skinnedVertices;
-        outVbParam->SetGpuBuffer( &outVB );
+		outVbParam->SetGpuBuffer( &outVB );
 #endif
 		uint32_t outOffset = 0;
 
@@ -913,7 +906,6 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 				constData->morphTargetStride = lod->m_bytesPerMorphTargetVertex >> 2;
 				constData->morphTargetSize = ( lod->m_bytesPerMorphTargetVertex * vertexCount ) >> 2;
 				constData->bakedMorphTargetPositionOffset = ( *it )->bakedMorphOffset;
-
 			}
 			m_skinVerticesData.Unlock( renderContext );
 
@@ -921,7 +913,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12
 			inVB.m_buffer = lod->m_vertexAllocation.GetBuffer();
-            inVbParam->SetGpuBuffer( &inVB );
+			inVbParam->SetGpuBuffer( &inVB );
 #endif
 			// cheat a bit instead of calling RunComputeShader() to make things more performant
 			if( firstIteration )
@@ -952,8 +944,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	}
 #if TRINITY_PLATFORM != TRINITY_DIRECTX12
 	renderContext.SetResourceSet( Tr2ResourceSetAL() );
-    inVbParam->SetGpuBuffer( static_cast<ITr2GpuBuffer*>( nullptr ) );
-    outVbParam->SetGpuBuffer( static_cast<ITr2GpuBuffer*>( nullptr ) );
+	inVbParam->SetGpuBuffer( static_cast<ITr2GpuBuffer*>( nullptr ) );
+	outVbParam->SetGpuBuffer( static_cast<ITr2GpuBuffer*>( nullptr ) );
 #endif
 }
 
@@ -979,7 +971,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 		{
 			continue;
 		}
-		
+
 		Tr2RtInstanceAL instance;
 		instance.flags = it->isTransparent ? Tr2RtInstanceAL::FORCE_NON_OPAQUE : Tr2RtInstanceAL::NONE;
 		instance.materialIndex = it->materialIndex;
@@ -989,9 +981,9 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 			continue;
 		}
 
-		if ( it->worldTransforms )
+		if( it->worldTransforms )
 		{
-			for ( uint32_t i = 0; i < it->instanceCount; ++i )
+			for( uint32_t i = 0; i < it->instanceCount; ++i )
 			{
 				memcpy( instance.transform, it->worldTransforms + i, sizeof( Float4x3 ) );
 				instances.push_back( instance );
@@ -1007,18 +999,18 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 		}
 	}
 
-    {
-        CCP_STATS_ZONE( "TLAS update" );
-        if( instances.empty() )
-        {
-            m_tlas = Tr2RtTopLevelAccelerationStructureAL();
-        }
-        else if( FAILED( m_tlas.Update( instances.size(), instances.data(), renderContext ) ) )
-        {
-            CCP_STATS_ZONE( "TLAS create" );
-            m_tlas.Create( instances.size(), instances.data(), Tr2RtBuildFlags::PREFER_FAST_TRACE, renderContext.GetPrimaryRenderContext() );
-        }
-    }
+	{
+		CCP_STATS_ZONE( "TLAS update" );
+		if( instances.empty() )
+		{
+			m_tlas = Tr2RtTopLevelAccelerationStructureAL();
+		}
+		else if( FAILED( m_tlas.Update( instances.size(), instances.data(), renderContext ) ) )
+		{
+			CCP_STATS_ZONE( "TLAS create" );
+			m_tlas.Create( instances.size(), instances.data(), Tr2RtBuildFlags::PREFER_FAST_TRACE, renderContext.GetPrimaryRenderContext() );
+		}
+	}
 }
 
 void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Matrix& worldTransform, uint32_t bakedMorphOffset )
@@ -1069,7 +1061,7 @@ bool Tr2RaytracingGeometry::HasGeometry() const
 
 Tr2RtTopLevelAccelerationStructureAL Tr2RaytracingGeometry::GetTLAS() const
 {
-    return m_tlas;
+	return m_tlas;
 }
 
 const Tr2BindlessResourcesAL& Tr2RaytracingGeometry::GetBindlessResources() const
@@ -1130,9 +1122,8 @@ Tr2RaytracingGeometry::VtxOffsets Tr2RaytracingGeometry::FindOffsets( unsigned d
 
 void Tr2RaytracingGeometry::ReleaseResources( TriStorage s )
 {
-	if( (s & TRISTORAGE_ALL) == TRISTORAGE_ALL )
+	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
 		m_skinVerticesData = Tr2ConstantBufferAL();
 	}
 }
-	

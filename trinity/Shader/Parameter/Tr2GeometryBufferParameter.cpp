@@ -9,8 +9,8 @@
 // Description:
 //   Tr2GeometryBufferParameter default constructor
 // --------------------------------------------------------------------------------------
-Tr2GeometryBufferParameter::Tr2GeometryBufferParameter( IRoot* lockobj )
-	:m_meshIndex( 0 ),
+Tr2GeometryBufferParameter::Tr2GeometryBufferParameter( IRoot* lockobj ) :
+	m_meshIndex( 0 ),
 	m_isUsedByEffect( false )
 {
 }
@@ -41,8 +41,8 @@ bool Tr2GeometryBufferParameter::Initialize()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements INotify interface. Allows the object to respond to parameter changes 
-//   generated in Python. Reloads geometry if geometry path has changed.  
+//   Implements INotify interface. Allows the object to respond to parameter changes
+//   generated in Python. Reloads geometry if geometry path has changed.
 // Arguments:
 //   value - The Blue-exposed parameter that changed
 // Return Value:
@@ -91,7 +91,7 @@ void Tr2GeometryBufferParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 {
 	m_cachedEffect = effectRes;
 
-	if ( m_name.empty() || !effectRes || !effectRes->GetResource( m_name.c_str() ) )
+	if( m_name.empty() || !effectRes || !effectRes->GetResource( m_name.c_str() ) )
 	{
 		m_isUsedByEffect = false;
 		return;

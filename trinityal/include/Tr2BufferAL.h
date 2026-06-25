@@ -11,8 +11,8 @@ class Tr2RenderContextAL;
 
 namespace TrinityALImpl
 {
-	class Tr2BufferAL;
-	class Tr2ResourceSetAL;
+class Tr2BufferAL;
+class Tr2ResourceSetAL;
 }
 
 
@@ -73,12 +73,14 @@ public:
 
 	bool operator==( const Tr2BufferAL& other ) const;
 
-	template <typename T> ALResult MapForReading( const T*& data, Tr2RenderContextAL& renderContext ) const;
+	template <typename T>
+	ALResult MapForReading( const T*& data, Tr2RenderContextAL& renderContext ) const;
 	ALResult MapForReading( const void*& data, Tr2RenderContextAL& renderContext ) const;
 	ALResult MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext ) const;
 	void UnmapForReading( Tr2RenderContextAL& renderContext ) const;
 
-	template <typename T> ALResult MapForWriting( T*& data, Tr2RenderContextAL& renderContext );
+	template <typename T>
+	ALResult MapForWriting( T*& data, Tr2RenderContextAL& renderContext );
 	ALResult MapForWriting( void*& data, Tr2RenderContextAL& renderContext );
 	void UnmapForWriting( Tr2RenderContextAL& renderContext );
 

@@ -11,13 +11,13 @@ BLUE_DEFINE( TriStepRemoteUpdate );
 
 const Be::ClassInfo* TriStepRemoteUpdate::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepRemoteUpdate, "" )
+	EXPOSURE_BEGIN( TriStepRemoteUpdate, "" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepRemoteUpdate )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
-			"__init__", 
+			"__init__",
 			py__init__,
 			1,
 			"Creates a render step that performs a View/Projection/Viewport update from shared memory\n"
@@ -25,7 +25,7 @@ const Be::ClassInfo* TriStepRemoteUpdate::ExposeToBlue()
 			"\n:param view: TriView"
 			"\n:param projection: TriProjection"
 			"\n:param viewport: TriViewport"
-			"\n:param id: unique identifier")
+			"\n:param id: unique identifier" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

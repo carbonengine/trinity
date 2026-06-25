@@ -15,20 +15,20 @@
 
 extern CompileMessageQueue g_messages;
 
-void *ParseAlloc( void *(*mallocProc)(size_t) );
-void ParseFree( void *p, void (*freeProc)(void*) );
-void Parse( void *yyp, int yymajor, ScannerToken token, ParserState* state );
-void ParseTrace(FILE *TraceFILE, char *zTracePrompt);
+void* ParseAlloc( void* ( *mallocProc )(size_t));
+void ParseFree( void* p, void ( *freeProc )( void* ) );
+void Parse( void* yyp, int yymajor, ScannerToken token, ParserState* state );
+void ParseTrace( FILE* TraceFILE, char* zTracePrompt );
 
-void *PreprocessorParseAlloc( void *(*mallocProc)(size_t) );
-void PreprocessorParseFree( void *p, void (*freeProc)(void*) );
-void PreprocessorParse( void *yyp, int yymajor, ScannerToken token, ParserState* state );
-void PreprocessorParseTrace(FILE *TraceFILE, char *zTracePrompt);
+void* PreprocessorParseAlloc( void* ( *mallocProc )(size_t));
+void PreprocessorParseFree( void* p, void ( *freeProc )( void* ) );
+void PreprocessorParse( void* yyp, int yymajor, ScannerToken token, ParserState* state );
+void PreprocessorParseTrace( FILE* TraceFILE, char* zTracePrompt );
 
 
 ScannerToken ScannerToken::ID( const InlineString& value, const FileLocation& location )
 {
-    return { OP_ID, 0, value, location };
+	return { OP_ID, 0, value, location };
 }
 
 ScannerToken ScannerToken::FromTokenType( int type, const FileLocation& location )
@@ -188,16 +188,24 @@ void ParserState::AddIntrinsics()
 		table,
 		"TraceRay",
 		&FunctionDescription8<
-		TypeIs<OP_VOID>, DimIs<1, 1>,
-		TypeIs<OP_RAYTRACING_ACCELERATION_STRUCTURE>, DimIs<1, 1>,
-		TypeIs<OP_UINT>, DimIs<1, 1>,
-		TypeIs<OP_UINT>, DimIs<1, 1>,
-		TypeIs<OP_UINT>, DimIs<1, 1>,
-		TypeIs<OP_UINT>, DimIs<1, 1>,
-		TypeIs<OP_UINT>, DimIs<1, 1>,
-		TypeIs<OP_RAY_DESC>, DimIs<1, 1>,
-		TypeIs<OP_VOID>, DimIs<1, 1>
-		> );
+			TypeIs<OP_VOID>,
+			DimIs<1, 1>,
+			TypeIs<OP_RAYTRACING_ACCELERATION_STRUCTURE>,
+			DimIs<1, 1>,
+			TypeIs<OP_UINT>,
+			DimIs<1, 1>,
+			TypeIs<OP_UINT>,
+			DimIs<1, 1>,
+			TypeIs<OP_UINT>,
+			DimIs<1, 1>,
+			TypeIs<OP_UINT>,
+			DimIs<1, 1>,
+			TypeIs<OP_UINT>,
+			DimIs<1, 1>,
+			TypeIs<OP_RAY_DESC>,
+			DimIs<1, 1>,
+			TypeIs<OP_VOID>,
+			DimIs<1, 1>> );
 
 	m_dx9TextureFunctions.insert( AddFunction( table, "tex1D", &FunctionDescription4<TypeIs<OP_FLOAT>, DimIs<4, 1>, TypeIs<OP_SAMPLER>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<1, 1>> ) );
 	m_dx9TextureFunctions.insert( AddFunction( table, "tex1Dbias", &FunctionDescription2<TypeIs<OP_FLOAT>, DimIs<4, 1>, TypeIs<OP_SAMPLER>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimIs<4, 1>> ) );
@@ -237,8 +245,8 @@ void ParserState::AddIntrinsics()
 }
 
 
-ParserState::ParserState( const InlineString& code )
-	:m_newLine( true ),
+ParserState::ParserState( const InlineString& code ) :
+	m_newLine( true ),
 	m_mode( HLSL ),
 	m_expandMacros( true ),
 	m_symbols( nullptr ),
@@ -278,8 +286,8 @@ ParserState::~ParserState()
 	}
 }
 
-extern PreprocessorScanResult GetPreprocessorToken( ParserState &state, PreprocessorToken& token );
-extern bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken, ScannerToken& token );
+extern PreprocessorScanResult GetPreprocessorToken( ParserState& state, PreprocessorToken& token );
+extern bool ConvertToScannerToken( ParserState& state, const PreprocessorToken& ppToken, ScannerToken& token );
 
 bool ParserState::ParseMacroArguments( std::vector<InlineString>& arguments )
 {
@@ -490,8 +498,7 @@ PreprocessorScanResult ParserState::GetPreprocessorToken( PreprocessorToken& tok
 					return code;
 				}
 				concatToken.append( nextToken.string.start, nextToken.string.end );
-			}
-			while( FindConcatOperator( depth ) );
+			} while( FindConcatOperator( depth ) );
 			char* string = AllocateString( concatToken.length() + 1 );
 			memcpy( string, concatToken.c_str(), concatToken.length() );
 			string[concatToken.length()] = 0;
@@ -514,17 +521,16 @@ bool IsPermutationPragma( const std::string& pragma )
 bool GetPermutationInfo( const std::string& pragma, Permutation& permutation )
 {
 	const std::regex permutationExpr( "permutation[[:space:]]*\\([[:space:]]*"
-		"([[:alpha:]_][[:alnum:]_]*)[[:space:]]*,[[:space:]]*"
-		"(?:values[[:space:]]*=[[:space:]]*)?"
-		"\\([[:space:]]*"
-		"([[:alpha:]_][[:alnum:]_]*[[:space:]]*(?:=[[:space:]]*[[:digit:]]+[[:space:]]*)?"
-		"(?:,[[:space:]]*[[:alpha:]_][[:alnum:]_]*[[:space:]]*(?:=[[:space:]]*[[:digit:]]+[[:space:]]*)?)+)"
-		"[[:space:]]*\\)"
-		"(?:[[:space:]]*,[[:space:]]*(?:default[[:space:]]*=[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*))?"
-		"(?:[[:space:]]*,[[:space:]]*(?:description[[:space:]]*=[[:space:]]*)?\"([^\"]*)\")?"
-		"(?:[[:space:]]*,[[:space:]]*(?:type[[:space:]]*=[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*))?"
-		"[[:space:]]*\\)[[:space:]]*"
-		);
+									  "([[:alpha:]_][[:alnum:]_]*)[[:space:]]*,[[:space:]]*"
+									  "(?:values[[:space:]]*=[[:space:]]*)?"
+									  "\\([[:space:]]*"
+									  "([[:alpha:]_][[:alnum:]_]*[[:space:]]*(?:=[[:space:]]*[[:digit:]]+[[:space:]]*)?"
+									  "(?:,[[:space:]]*[[:alpha:]_][[:alnum:]_]*[[:space:]]*(?:=[[:space:]]*[[:digit:]]+[[:space:]]*)?)+)"
+									  "[[:space:]]*\\)"
+									  "(?:[[:space:]]*,[[:space:]]*(?:default[[:space:]]*=[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*))?"
+									  "(?:[[:space:]]*,[[:space:]]*(?:description[[:space:]]*=[[:space:]]*)?\"([^\"]*)\")?"
+									  "(?:[[:space:]]*,[[:space:]]*(?:type[[:space:]]*=[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*))?"
+									  "[[:space:]]*\\)[[:space:]]*" );
 	const std::regex valueExpr( "[[:space:]]*(?:,[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*)(?:[[:space:]]*=[[:space:]]*([[:digit:]]+))?" );
 
 	std::smatch match;
@@ -637,19 +643,18 @@ bool ParserState::DiscoverPermutations( Permutations& permutations )
 		{
 		case PPSR_ERROR:
 			break;
-		case PPSR_EOF:
+		case PPSR_EOF: {
+			if( m_fileStack.size() > 1 )
 			{
-				if( m_fileStack.size() > 1 )
-				{
-					m_fileStack.pop_back();
-				}
-				else
-				{
-					done = true;
-					break;
-				}
+				m_fileStack.pop_back();
 			}
-			break;
+			else
+			{
+				done = true;
+				break;
+			}
+		}
+		break;
 		case PPSR_OK:
 			ConvertToScannerToken( *this, ppToken, token );
 			break;
@@ -684,7 +689,7 @@ bool ParserState::Parse()
 	void* parser = ParseAlloc( malloc );
 
 	m_symbols->EnterScope();
-	
+
 	ScannerToken token;
 
 	bool done = false;
@@ -697,19 +702,18 @@ bool ParserState::Parse()
 		case PPSR_ERROR:
 			ParseFree( parser, free );
 			return false;
-		case PPSR_EOF:
+		case PPSR_EOF: {
+			if( m_fileStack.size() > 1 )
 			{
-				if( m_fileStack.size() > 1 )
-				{
-					m_fileStack.pop_back();
-				}
-				else
-				{
-					done = true;
-					break;
-				}
+				m_fileStack.pop_back();
 			}
-			break;
+			else
+			{
+				done = true;
+				break;
+			}
+		}
+		break;
 		case PPSR_OK:
 			if( !ConvertToScannerToken( *this, ppToken, token ) )
 			{
@@ -800,16 +804,15 @@ PreprocessorScanResult ParserState::EvaluatePreprocessorCondition( const InlineS
 		{
 		case PPSR_ERROR:
 			return PPSR_ERROR;
-		case PPSR_EOF:
+		case PPSR_EOF: {
+			m_fileStack.pop_back();
+			if( m_fileStack.size() == depth )
 			{
-				m_fileStack.pop_back();
-				if( m_fileStack.size() == depth )
-				{
-					done = true;
-					break;
-				}
+				done = true;
+				break;
 			}
-			break;
+		}
+		break;
 		case PPSR_OK:
 			if( !ConvertToScannerToken( *this, ppToken, token ) )
 			{
@@ -858,7 +861,7 @@ FileLocation& ParserState::GetCurrentLocation()
 
 InlineString ParserState::AllocateName()
 {
-	const char *format = "_new_symbol_%04i";
+	const char* format = "_new_symbol_%04i";
 	size_t len = strlen( format ) + 1;
 	char* newName = new char[len];
 #if _WIN32
@@ -893,7 +896,7 @@ InlineString ParserState::AllocateName( const InlineString& name )
 #else
 	std::strncpy( newName, name.start, len - 1 );
 #endif
-	newName[ len - 1 ] = '\0';
+	newName[len - 1] = '\0';
 
 	m_strings.push_back( newName );
 	return MakeInlineString( newName, newName + len - 1 );
@@ -901,7 +904,7 @@ InlineString ParserState::AllocateName( const InlineString& name )
 
 InlineString ParserState::AllocateNameWithPrefix( const char* prefix )
 {
-	const char *format = "__%s_%04i";
+	const char* format = "__%s_%04i";
 	size_t len = strlen( format ) - 2 + strlen( prefix ) + 1;
 	char* newName = new char[len];
 #if _WIN32
@@ -915,7 +918,7 @@ InlineString ParserState::AllocateNameWithPrefix( const char* prefix )
 
 InlineString ParserState::AllocateNameWithPrefix( const InlineString& prefix )
 {
-	const char *format = "__%s_%04i";
+	const char* format = "__%s_%04i";
 	size_t len = strlen( format ) - 2 + ( prefix.end - prefix.start ) + 1;
 	char* newName = new char[len];
 #if _WIN32
@@ -1147,12 +1150,11 @@ void ParserState::ShowMessageImpl( const FileLocation& location, int32_t errorCo
 
 	char buffer1[2048], buffer2[2048];
 	std::string fileName( location.fileName.start, location.fileName.end );
-	if( errorCode == EC_REGISTER_ASSIGNMENT_DEPRECATED || 
-		errorCode == EC_MISMATCHED_TEXTURE_TYPE || 
+	if( errorCode == EC_REGISTER_ASSIGNMENT_DEPRECATED ||
+		errorCode == EC_MISMATCHED_TEXTURE_TYPE ||
 		errorCode == EC_STATE_DEPRECATED ||
 		errorCode == EC_SAMPLER_WITHOUT_TEXTURE ||
-		errorCode == EC_CUSTOM_WARNING
-		)
+		errorCode == EC_CUSTOM_WARNING )
 	{
 #if _WIN32
 		sprintf_s( buffer1, "%s(%i): warning t%i: ", fileName.c_str(), location.lineNumber, errorCode + 1000 );
@@ -1169,16 +1171,16 @@ void ParserState::ShowMessageImpl( const FileLocation& location, int32_t errorCo
 #endif
 		m_hasErrors = true;
 	}
-    
-    const char* format;
+
+	const char* format;
 	if( errorCode == EC_CUSTOM_ERROR || errorCode == EC_CUSTOM_WARNING )
-    {
-        format = va_arg( args, const char* );
-    }
-    else
-    {
-        format = errorMessages[errorCode];
-    }
+	{
+		format = va_arg( args, const char* );
+	}
+	else
+	{
+		format = errorMessages[errorCode];
+	}
 #if _WIN32
 	vsprintf_s( buffer2, format, args );
 #else
@@ -1192,12 +1194,12 @@ void ParserState::ShowMessageImpl( const FileLocation& location, int32_t errorCo
 
 ASTNode* ParserState::NewNode( int nodeType )
 {
-    return new ASTNode( ASTNodeType( nodeType ), GetCurrentLocation(), GetSymbolTable().GetCurrentScope(), nullptr );
+	return new ASTNode( ASTNodeType( nodeType ), GetCurrentLocation(), GetSymbolTable().GetCurrentScope(), nullptr );
 }
 
 ASTNode* ParserState::NewNode( int nodeType, const ScannerToken& token )
 {
-    return new ASTNode( ASTNodeType( nodeType ), GetCurrentLocation(), GetSymbolTable().GetCurrentScope(), &token );
+	return new ASTNode( ASTNodeType( nodeType ), GetCurrentLocation(), GetSymbolTable().GetCurrentScope(), &token );
 }
 
 void ParserState::AddBindlessSampler( const Symbol* name, ASTNode* definition )

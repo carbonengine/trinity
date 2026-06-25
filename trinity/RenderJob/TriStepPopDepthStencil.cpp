@@ -9,7 +9,7 @@ TriStepPopDepthStencil::TriStepPopDepthStencil( IRoot* lockobj )
 {
 }
 
-TriStepPopDepthStencil::~TriStepPopDepthStencil(void)
+TriStepPopDepthStencil::~TriStepPopDepthStencil( void )
 {
 }
 

@@ -7,8 +7,8 @@
 #include "Utilities/GrannyCurveHelpers.h"
 
 // Curve set
-Tr2GrannyTransformTrack::Tr2GrannyTransformTrack( IRoot* lockobj ): 
-	Tr2GrannyTrack( lockobj ),	
+Tr2GrannyTransformTrack::Tr2GrannyTransformTrack( IRoot* lockobj ) :
+	Tr2GrannyTrack( lockobj ),
 	m_positionCurve( NULL ),
 	m_orientationCurve( NULL ),
 	m_scaleCurve( NULL ),
@@ -21,7 +21,7 @@ Tr2GrannyTransformTrack::Tr2GrannyTransformTrack( IRoot* lockobj ):
 
 bool Tr2GrannyTransformTrack::TracksReady( void )
 {
-	return ( m_positionCurve != NULL && m_orientationCurve != NULL && m_scaleCurve != NULL);
+	return ( m_positionCurve != NULL && m_orientationCurve != NULL && m_scaleCurve != NULL );
 }
 
 void Tr2GrannyTransformTrack::UpdateValueImpl( double time )
@@ -33,7 +33,7 @@ void Tr2GrannyTransformTrack::UpdateValueImpl( double time )
 	}
 	else
 	{
-		GrannyEvaluateCurveAtT( 3, false, false, m_positionCurve, false, m_duration, (float)time,(float*)&m_translation, GrannyCurveIdentityPosition );
+		GrannyEvaluateCurveAtT( 3, false, false, m_positionCurve, false, m_duration, (float)time, (float*)&m_translation, GrannyCurveIdentityPosition );
 	}
 
 	if( GrannyCurveIsKeyframed( m_orientationCurve ) )
@@ -42,13 +42,13 @@ void Tr2GrannyTransformTrack::UpdateValueImpl( double time )
 	}
 	else
 	{
-		GrannyEvaluateCurveAtT( 4, false, false, m_orientationCurve, false, m_duration, (float)time,(float*)&m_rotation, GrannyCurveIdentityOrientation );
+		GrannyEvaluateCurveAtT( 4, false, false, m_orientationCurve, false, m_duration, (float)time, (float*)&m_rotation, GrannyCurveIdentityOrientation );
 	}
 
 	GrannyEvaluateCurveAtT( 9, false, false, m_scaleCurve, false, m_duration, (float)time, scaleShear, GrannyCurveIdentityScaleShear );
-	m_scale.x = XMVectorGetX(XMVector3Length( *(Vector3*)&scaleShear[0] ));
-	m_scale.y = XMVectorGetX(XMVector3Length( *(Vector3*)&scaleShear[3] ));
-	m_scale.z = XMVectorGetX(XMVector3Length( *(Vector3*)&scaleShear[6] ));
+	m_scale.x = XMVectorGetX( XMVector3Length( *(Vector3*)&scaleShear[0] ) );
+	m_scale.y = XMVectorGetX( XMVector3Length( *(Vector3*)&scaleShear[3] ) );
+	m_scale.z = XMVectorGetX( XMVector3Length( *(Vector3*)&scaleShear[6] ) );
 }
 
 void Tr2GrannyTransformTrack::ResetTracks( void )
@@ -62,7 +62,7 @@ void Tr2GrannyTransformTrack::ApplyTracks( granny_track_group* group, float dura
 {
 	for( int tTIdx = 0; tTIdx < group->TransformTrackCount; ++tTIdx )
 	{
-		granny_transform_track& track = group->TransformTracks[tTIdx];					
+		granny_transform_track& track = group->TransformTracks[tTIdx];
 
 		if( m_name == track.Name )
 		{
@@ -80,18 +80,17 @@ void Tr2GrannyTransformTrack::ApplyTracks( granny_track_group* group, float dura
 				GrannyCurveExtractKnotValues( &track.PositionCurve, 0, KnotCount, 0, &Data[0], GrannyCurveIdentityPosition );
 
 				m_positionCurve = CompressCurve(
-					PositionTolerance, // error tolerance					
+					PositionTolerance, // error tolerance
 					timeStep, // the time step between frames
-					false,				 // solve as quaternions
+					false, // solve as quaternions
 					PositionCurveFormats, // possible compression formats
-					ArrayLength(PositionCurveFormats),// number of compression formats
+					ArrayLength( PositionCurveFormats ), // number of compression formats
 					GrannyCurveDataD3Constant32fType, // constant compression type
 					GrannyCurveIdentityPosition,
 					KnotCount,
 					Dimension,
-					Data
-					);   //
-			}			 
+					Data ); //
+			}
 			else
 			{
 				m_positionCurve = &track.PositionCurve;
@@ -106,23 +105,22 @@ void Tr2GrannyTransformTrack::ApplyTracks( granny_track_group* group, float dura
 				GrannyCurveExtractKnotValues( &track.OrientationCurve, 0, KnotCount, 0, &Data[0], GrannyCurveIdentityOrientation );
 				m_orientationCurve = CompressCurve(
 					OrientationTolerance,
-					timeStep, 
+					timeStep,
 					true,
-					OrientationCurveFormats, 
-					ArrayLength(OrientationCurveFormats),
+					OrientationCurveFormats,
+					ArrayLength( OrientationCurveFormats ),
 					GrannyCurveDataD4Constant32fType,
 					GrannyCurveIdentityOrientation,
 					KnotCount,
 					Dimension,
-					Data
-					);
+					Data );
 			}
 			else
 			{
 				m_orientationCurve = &track.OrientationCurve;
 			}
 
-			
+
 			if( GrannyCurveIsKeyframed( &track.ScaleShearCurve ) )
 			{
 				int KnotCount = GrannyCurveGetKnotCount( &track.ScaleShearCurve );
@@ -131,24 +129,23 @@ void Tr2GrannyTransformTrack::ApplyTracks( granny_track_group* group, float dura
 				std::vector<granny_real32> Data( KnotCount * Dimension );
 				GrannyCurveExtractKnotValues( &track.ScaleShearCurve, 0, KnotCount, 0, &Data[0], GrannyCurveIdentityScaleShear );
 				m_scaleCurve = CompressCurve(
-					ScaleShearTolerance,					
-					timeStep, 
+					ScaleShearTolerance,
+					timeStep,
 					false,
-					ScaleShearCurveFormats, 
-					ArrayLength(ScaleShearCurveFormats),
+					ScaleShearCurveFormats,
+					ArrayLength( ScaleShearCurveFormats ),
 					GrannyCurveDataDaConstant32fType,
 					GrannyCurveIdentityScaleShear,
 					KnotCount,
 					Dimension,
-					Data
-					);
+					Data );
 			}
 			else
 			{
 				m_scaleCurve = &track.ScaleShearCurve;
 			}
-			UpdateValue( 0.0 );// set the default values to start values of the curve
+			UpdateValue( 0.0 ); // set the default values to start values of the curve
 			return;
-		}								
+		}
 	}
 }

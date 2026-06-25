@@ -7,23 +7,23 @@
 #if BLUE_WITH_PYTHON
 namespace
 {
-	void EventKeyCallback( void* context )
+void EventKeyCallback( void* context )
+{
+	TriEventKey* key = reinterpret_cast<TriEventKey*>( context );
+
+	PyObject* result = PyObject_CallObject( key->m_callable, key->m_callableArgs );
+	if( result )
 	{
-		TriEventKey* key = reinterpret_cast<TriEventKey*>( context );
-
-		PyObject* result = PyObject_CallObject( key->m_callable, key->m_callableArgs );
-		if( result )
-		{
-			Py_DECREF( result );
-		}
-		else
-		{
-			; //TODO: Handle error
-		}
-
-		// A reference was added when the callback was set up - release it here.
-		key->Unlock();
+		Py_DECREF( result );
 	}
+	else
+	{
+		; //TODO: Handle error
+	}
+
+	// A reference was added when the callback was set up - release it here.
+	key->Unlock();
+}
 }
 #endif
 
@@ -56,33 +56,32 @@ void TriEventCurve::UpdateValue( double time )
 		// and do nothing. <halldor 2009-03-02>
 		return;
 	}
-	
+
 	switch( m_extrapolation )
 	{
-		case TRIEXT_CYCLE:
-			{
-				float localNow = (float)fmod( m_time, (double)m_length );
-				if( localNow < m_localTime )
-				{
-					// We've wrapped around
-					m_currentKeyIt = m_keys.begin();
-				}
-				m_localTime = localNow;
-			}
-			break;
-
-		default:
-			m_localTime = (float)m_time;
-			break;
+	case TRIEXT_CYCLE: {
+		float localNow = (float)fmod( m_time, (double)m_length );
+		if( localNow < m_localTime )
+		{
+			// We've wrapped around
+			m_currentKeyIt = m_keys.begin();
+		}
+		m_localTime = localNow;
 	}
-	
-	while( (m_currentKeyIt != m_keys.end()) && (m_localTime >= (*m_currentKeyIt)->m_time) )
+	break;
+
+	default:
+		m_localTime = (float)m_time;
+		break;
+	}
+
+	while( ( m_currentKeyIt != m_keys.end() ) && ( m_localTime >= ( *m_currentKeyIt )->m_time ) )
 	{
 		// Found a key that has a time value of less than or equal to now
 		TriEventKey* currentKey = *m_currentKeyIt;
 
 		m_value = currentKey->m_value;
-		
+
 		// Fire off event
 #if BLUE_WITH_PYTHON
 		if( currentKey->m_callable )
@@ -99,14 +98,14 @@ void TriEventCurve::UpdateValue( double time )
 		}
 		else
 #endif
-		if( m_eventListener )
+			if( m_eventListener )
 		{
 			if( !currentKey->m_value.empty() )
 			{
 				m_eventListener->HandleEvent( currentKey->m_value.c_str() );
 			}
 		}
-		
+
 
 		++m_currentKeyIt;
 	}
@@ -128,7 +127,7 @@ void TriEventCurve::AddKey( float time, const std::wstring& evtName )
 
 	key->m_time = time;
 	key->m_value = evtName.c_str();
-	InsertKey(key);
+	InsertKey( key );
 }
 
 #if BLUE_WITH_PYTHON
@@ -159,7 +158,7 @@ void TriEventCurve::AddCallableKey( float time, PyObject* callable, PyObject* ar
 	}
 	key->m_callableArgs = argsAsTuple;
 
-	InsertKey(key);
+	InsertKey( key );
 }
 #endif
 
@@ -194,7 +193,7 @@ bool TriEventCurve::Initialize()
 
 float TriEventCurve::GetKeyTime( int ix )
 {
-	if( (ix < m_keys.GetSize()) && (ix >= 0) )
+	if( ( ix < m_keys.GetSize() ) && ( ix >= 0 ) )
 	{
 		return m_keys[ix]->m_time;
 	}
@@ -203,7 +202,7 @@ float TriEventCurve::GetKeyTime( int ix )
 
 std::wstring TriEventCurve::GetKeyValue( int ix )
 {
-	if( (ix < m_keys.GetSize()) && (ix >= 0) )
+	if( ( ix < m_keys.GetSize() ) && ( ix >= 0 ) )
 	{
 		return m_keys[ix]->m_value;
 	}
@@ -212,7 +211,7 @@ std::wstring TriEventCurve::GetKeyValue( int ix )
 
 void TriEventCurve::SetKeyTime( int ix, float time )
 {
-	if( (ix < m_keys.GetSize()) && (ix >= 0) )
+	if( ( ix < m_keys.GetSize() ) && ( ix >= 0 ) )
 	{
 		m_keys[ix]->m_time = time;
 		m_keys.Sort( (IList::CompareFn)CompareKeys, NULL );
@@ -222,7 +221,7 @@ void TriEventCurve::SetKeyTime( int ix, float time )
 
 void TriEventCurve::SetKeyValue( int ix, std::wstring value )
 {
-	if( (ix < m_keys.GetSize()) && (ix >= 0) )
+	if( ( ix < m_keys.GetSize() ) && ( ix >= 0 ) )
 	{
 		m_keys[ix]->m_value = value;
 	}
@@ -231,22 +230,22 @@ void TriEventCurve::SetKeyValue( int ix, std::wstring value )
 #if BLUE_WITH_PYTHON
 PyObject* TriEventCurve::GetCallableKeyValue( int ix )
 {
-    if( (ix < m_keys.GetSize()) && (ix >= 0) )
-    {
-        Py_XINCREF( m_keys[ix]->m_callable );
-        return m_keys[ix]->m_callable;
-    }
-    Py_RETURN_NONE;
+	if( ( ix < m_keys.GetSize() ) && ( ix >= 0 ) )
+	{
+		Py_XINCREF( m_keys[ix]->m_callable );
+		return m_keys[ix]->m_callable;
+	}
+	Py_RETURN_NONE;
 }
 
 PyObject* TriEventCurve::GetCallableKeyArgs( int ix )
 {
-    if( (ix < m_keys.GetSize()) && (ix >= 0) )
-    {
-        Py_XINCREF( m_keys[ix]->m_callableArgs );
-        return m_keys[ix]->m_callableArgs;
-    }
-    Py_RETURN_NONE;
+	if( ( ix < m_keys.GetSize() ) && ( ix >= 0 ) )
+	{
+		Py_XINCREF( m_keys[ix]->m_callableArgs );
+		return m_keys[ix]->m_callableArgs;
+	}
+	Py_RETURN_NONE;
 }
 #endif
 

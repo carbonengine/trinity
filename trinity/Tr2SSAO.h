@@ -41,7 +41,7 @@ private:
 		SSAOQuality quality;
 		bool downsampled;
 		float zoomLevel;
-	
+
 		FFX_CACAO_Settings settings;
 		Tr2EffectPtr effect;
 	};
@@ -95,7 +95,7 @@ private:
 
 	bool m_cortaoEnabled;
 	bool m_cortaoBentNormal;
-	
+
 	bool m_cortaoInitialized;
 	Tr2EffectPtr m_cortaoEffect;
 	Tr2EffectPtr m_cortaoBlurEffect;
@@ -112,10 +112,9 @@ private:
 
 	uint32_t m_cortaoRandSeeds[4];
 
-	uint32_t Hash(uint32_t n);
+	uint32_t Hash( uint32_t n );
 
 	Tr2GpuResourcePool::Texture ComputeCORTAO( const Tr2TextureAL& depthBuffer, const Tr2TextureAL& normalBuffer, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, bool temporal );
-
 };
 
 TYPEDEF_BLUECLASS( Tr2SSAO );

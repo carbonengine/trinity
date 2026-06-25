@@ -9,28 +9,28 @@
 
 namespace TrinityALImpl
 {
-	class Tr2ShaderProgramAL : public Tr2DeviceResourceAL<Tr2ShaderProgramAL>
-	{
-	public:
-		Tr2ShaderProgramAL();
+class Tr2ShaderProgramAL : public Tr2DeviceResourceAL<Tr2ShaderProgramAL>
+{
+public:
+	Tr2ShaderProgramAL();
 
-		ALResult Create( ::Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
-		void Destroy();
+	ALResult Create( ::Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
+	void Destroy();
 
-		bool IsValid() const;
-		const Tr2RegisterMapAL& GetRegisterMap() const;
+	bool IsValid() const;
+	const Tr2RegisterMapAL& GetRegisterMap() const;
 
-		Tr2ALMemoryType GetMemoryClass() const;
+	Tr2ALMemoryType GetMemoryClass() const;
 
-		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
-		ALResult SetName( const char* name );
+	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	ALResult SetName( const char* name );
 
-	private:
-		Tr2RegisterMapAL m_registerMap;
-		bool m_isValid;
+private:
+	Tr2RegisterMapAL m_registerMap;
+	bool m_isValid;
 
-		friend class Tr2RenderContextAL;
-	};
+	friend class Tr2RenderContextAL;
+};
 }
 
 #endif

@@ -20,7 +20,7 @@ public:
 	void AddMessages( IDxcBlobEncoding* buffer ); // windows only? or is it also for mac
 #endif
 	void AddMessage( const char* format, ... );
-	
+
 	void Flush();
 	void SetEntryFileName( const char* fileName );
 

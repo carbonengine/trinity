@@ -20,14 +20,15 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	void Link( ITr2ActionController& controller ) override;
+	void Link( ITr2ActionController & controller ) override;
 	void Unlink() override;
-	void Start( ITr2ActionController& controller ) override;
+	void Start( ITr2ActionController & controller ) override;
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	bool IsDestinationValid() const;
 	bool IsVariableValid() const;
+
 private:
 	void LinkToDestinationOwner();
 

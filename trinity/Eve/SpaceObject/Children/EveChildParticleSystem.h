@@ -38,36 +38,39 @@ public:
 
 	EveChildParticleSystem( IRoot* lockobj = NULL );
 	~EveChildParticleSystem();
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
 	const char* GetName() const;
 	void SetName( const char* name );
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void GetLocalToWorldTransform( Matrix& transform ) const;
+	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void ChangeLOD( Tr2Lod lod );
 	void PlayCurveSet( const std::string& name, const std::string& rangeName ) {};
 	void StopCurveSet( const std::string& name ) {};
-	float GetCurveSetDuration( const std::string& name ) const { return 0; } 
+	float GetCurveSetDuration( const std::string& name ) const
+	{
+		return 0;
+	}
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
-	void AddTransformModifier( IEveChildTransformModifier* modifier ) override;
-	
+	void AddTransformModifier( IEveChildTransformModifier * modifier ) override;
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	bool HasTransparentBatches();
-	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	float GetSortValue();
-	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
+	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
 	bool IsVisible( const EveUpdateContext& updateContext ) const override;
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	virtual bool Initialize();
-		
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents();
@@ -75,11 +78,12 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var * value );
-	
-	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+
+	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
 
 	PITr2GenericEmitterVector m_particleEmitters;
+
 private:
 	BlueSharedString m_name;
 

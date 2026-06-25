@@ -14,7 +14,7 @@
 
 using namespace Tr2RenderContextEnum;
 
-EveLineSet::EveLineSet( IRoot* lockobj /*= NULL*/ ):
+EveLineSet::EveLineSet( IRoot* lockobj /*= NULL*/ ) :
 	m_display( true ),
 	m_boundingSphere( 0.f, 0.f, 0.f, 0.f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
@@ -65,7 +65,7 @@ bool EveLineSet::OnPrepareResources()
 			return false;
 		}
 	}
-	
+
 	if( !m_vertexBuffer.IsValid() )
 	{
 		CR_RETURN_VAL(
@@ -75,8 +75,8 @@ bool EveLineSet::OnPrepareResources()
 				Tr2GpuUsage::VERTEX_BUFFER,
 				Tr2CpuUsage::WRITE_OFTEN,
 				nullptr,
-				renderContext )
-			, false );
+				renderContext ),
+			false );
 	}
 
 	void* vertexBuffer;
@@ -163,14 +163,14 @@ bool EveLineSet::HasTransparentBatches()
 	return true;
 }
 
-void EveLineSet::GetBatches( ITriRenderBatchAccumulator* accumulator, 
-						     TriBatchType batchType,
-						     const Tr2PerObjectData* perObjectData,
-						     Tr2RenderReason reason )
+void EveLineSet::GetBatches( ITriRenderBatchAccumulator* accumulator,
+							 TriBatchType batchType,
+							 const Tr2PerObjectData* perObjectData,
+							 Tr2RenderReason reason )
 {
 	// Is only rendered as transparent or additive.
-	if( !(batchType == TRIBATCHTYPE_TRANSPARENT && m_isRenderedAsTransparent) &&
-		!(batchType == TRIBATCHTYPE_ADDITIVE && !m_isRenderedAsTransparent))
+	if( !( batchType == TRIBATCHTYPE_TRANSPARENT && m_isRenderedAsTransparent ) &&
+		!( batchType == TRIBATCHTYPE_ADDITIVE && !m_isRenderedAsTransparent ) )
 	{
 		return;
 	}
@@ -249,7 +249,7 @@ bool EveLineSet::SubmitChanges()
 
 	if( m_lines.size() > m_maxCurrentLineCount )
 	{
-		// increase the size of the buffer 
+		// increase the size of the buffer
 		m_maxCurrentLineCount = (unsigned int)m_lines.capacity();
 		ReleaseResources( TRISTORAGE_ALL );
 	}
@@ -268,7 +268,7 @@ bool EveLineSet::SubmitChanges()
 	memcpy( vertexBuffer, &m_lines[0], sizeof( EveLineData ) * m_lines.size() );
 
 	m_vertexBuffer.UnmapForWriting( renderContext );
-	
+
 	m_currentSubmittedLineCount = (unsigned int)m_lines.size();
 
 	// also update the bounding sphere here
@@ -284,7 +284,7 @@ bool EveLineSet::SubmitChanges()
 
 void EveLineSet::RemoveLine( unsigned int id )
 {
-	if( id < m_lines.size()  )
+	if( id < m_lines.size() )
 	{
 		m_lines.erase( m_lines.begin() + id );
 	}

@@ -36,17 +36,16 @@ BLUE_DECLARE( Tr2Mesh );
 // SeeAlso:
 //   EveSpaceScene, EveOccluder, Tr2TransformModifier
 // --------------------------------------------------------------------------------
-class EveLensflare :
-	public ITr2Renderable,
-	public ITr2CurveSetOwner,
-	public ITr2ControllerOwner,
-	public IInitialize,
-	public IListNotify
+class EveLensflare : public ITr2Renderable,
+					 public ITr2CurveSetOwner,
+					 public ITr2ControllerOwner,
+					 public IInitialize,
+					 public IListNotify
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	EveLensflare(IRoot* lockobj = NULL);
+	EveLensflare( IRoot* lockobj = NULL );
 	~EveLensflare();
 
 	// timing
@@ -67,10 +66,10 @@ public:
 
 	bool Initialize();
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
-	
+
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-    virtual bool HasTransparentBatches();
-    virtual float GetSortValue(); 
+	virtual bool HasTransparentBatches();
+	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -80,13 +79,13 @@ public:
 	virtual void UpdateCurveSet( const std::string& name, Be::Time time );
 	virtual float GetCurveSetDuration( const std::string& name ) const;
 	virtual float GetRangeDuration( const std::string& name, const std::string& rangeName ) const;
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ControllerOwner
 	void SetControllerVariable( const char* name, float value );
 	void HandleControllerEvent( const char* name ) override;
 	void StartControllers();
-	
+
 
 private:
 	// name

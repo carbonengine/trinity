@@ -14,7 +14,7 @@ BLUE_DECLARE( Tr2ControllerEventHandler );
 BLUE_DECLARE_VECTOR( Tr2ControllerEventHandler );
 BLUE_DECLARE_INTERFACE( ITr2Updateable );
 
-BLUE_CLASS( Tr2Controller ):
+BLUE_CLASS( Tr2Controller ) :
 	public ITr2ActionController,
 	public IListNotify,
 	public EveThrottleable
@@ -26,7 +26,7 @@ public:
 
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
 
-	virtual void Link( IRoot& owner );
+	virtual void Link( IRoot & owner );
 	virtual void Unlink( UnlinkReason reason = UnlinkReason::UNLINKING );
 	bool IsLinked() const override;
 
@@ -50,25 +50,28 @@ public:
 	void* GetTempArena() const;
 	const std::vector<std::pair<std::string, IRoot*>>& GetBindingPathRoots() const;
 
-	void RegisterUpdateable( ITr2Updateable& updateable );
-	void UnRegisterUpdateable( ITr2Updateable& updateable );
+	void RegisterUpdateable( ITr2Updateable & updateable );
+	void UnRegisterUpdateable( ITr2Updateable & updateable );
 
-	void Callback( BlueSharedString callbackName);
+	void Callback( BlueSharedString callbackName );
 	void RegisterCallback( BlueSharedString callbackName, BlueScriptCallback callback );
 	void ClearCallbacks();
 
 	void ReLink();
 
 private:
-	size_t GetCallbackCount() { return m_callbacks.size(); };
+	size_t GetCallbackCount()
+	{
+		return m_callbacks.size();
+	};
 
 	std::string m_name;
 	PTr2StateMachineVector m_stateMachines;
 	PTr2ControllerFloatVariableVector m_variables;
 	PTr2ControllerEventHandlerVector m_eventHandlers;
-	
+
 	TrackableStdSet<ITr2UpdateablePtr> m_updateables;
-	std::vector<std::pair<BlueSharedString, BlueScriptCallback>>  m_callbacks;
+	std::vector<std::pair<BlueSharedString, BlueScriptCallback>> m_callbacks;
 	std::vector<CcpParser::Variable> m_variableView;
 	CcpMallocBuffer m_variableData;
 	mutable CcpMallocBuffer m_tempArena;

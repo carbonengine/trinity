@@ -131,9 +131,9 @@ public:
 		float centerBias;
 		int32_t cap;
 		Quaternion randomRotationStepSizeYPR;
-		Vector3 randomRotationMaxSteps; 
-		Vector3 randomScaleMin; 
-		Vector3 randomScaleMax; 
+		Vector3 randomRotationMaxSteps;
+		Vector3 randomScaleMin;
+		Vector3 randomScaleMax;
 		bool uniformScaling;
 		bool occupyLocators;
 	};
@@ -209,7 +209,8 @@ public:
 		std::vector<HullBoosterItemData> items;
 	};
 
-	struct PointLightAttachment {
+	struct PointLightAttachment
+	{
 		explicit PointLightAttachment( const EveSOFDataPointLightAttachment& light );
 		LightData AsLightData( Color& color, float scale ) const;
 		Vector3 translation;
@@ -224,7 +225,8 @@ public:
 		std::wstring lightProfilePath;
 	};
 
-	struct SpotLightAttachment {
+	struct SpotLightAttachment
+	{
 		explicit SpotLightAttachment( const EveSOFDataSpotLightAttachment& light );
 		LightData AsLightData( Color& color, float scale, float innerAngle, float outerAngle ) const;
 		Vector3 translation;
@@ -378,7 +380,7 @@ public:
 	struct HullBannerSetItemData
 	{
 		EveBannerItem item;
-		// storing this as a shared pointer because it "needs" to be copyable 
+		// storing this as a shared pointer because it "needs" to be copyable
 		// for the map that stores HullBannerSetItemData
 		std::shared_ptr<PointLightAttachment> light;
 	};
@@ -525,8 +527,8 @@ public:
 	{
 		HullData() = default;
 		HullData( const HullData& ) = delete;
-		HullData(  HullData&& ) = default;
-		HullData& operator = ( HullData&& ) = default;
+		HullData( HullData&& ) = default;
+		HullData& operator=( HullData&& ) = default;
 
 		EveSOFDataHull::BuildClass buildClass;
 		std::string geometryResFilePath;
@@ -543,7 +545,7 @@ public:
 		std::vector<HullPlaneSetData> planeSets;
 		std::vector<HullSpriteLineSetData> spriteLineSets;
 		std::vector<HullHazeSetData> hazeSets;
-		std::vector<HullBannerData> banners; 
+		std::vector<HullBannerData> banners;
 		std::vector<HullBannerSetData> bannerSets; // new banners
 		std::vector<HullDecalSetData> hullDecalSets;
 		std::vector<HullLightSetData> hullLightSets;
@@ -829,13 +831,13 @@ public:
 
 	// loading all the data
 	bool LoadData( const char* filePath );
-	bool SetData( EveSOFData* dbData );
+	bool SetData( EveSOFData * dbData );
 
 	// update individual parts
 	bool UpdateHull( const char* hullName, EveSOFDataHull* hullData );
 	bool UpdateFaction( const char* factionName, EveSOFDataFaction* factionData );
 	bool UpdateRace( const char* raceName, EveSOFDataRace* raceData );
-	bool UpdateGeneric( EveSOFDataGeneric* genericData );
+	bool UpdateGeneric( EveSOFDataGeneric * genericData );
 	bool UpdateMaterial( const char* materialName, EveSOFDataMaterial* materialData );
 	bool UpdatePattern( const char* patternName, EveSOFDataPattern* patternData );
 	bool UpdateLayout( const char* layoutName, EveSOFDataLayout* layoutData );
@@ -860,7 +862,7 @@ public:
 	// access to layout data
 	bool HasLayoutData( const char* layoutName ) const;
 	const LayoutData* GetLayoutData( const char* layoutName ) const;
-	const std::vector<const LayoutData*> GetLayoutData( std::vector<std::string>& layouts) const;
+	const std::vector<const LayoutData*> GetLayoutData( std::vector<std::string> & layouts ) const;
 
 private:
 	// load indiviual parts of data
@@ -874,22 +876,22 @@ private:
 	HullAreas LoadHullAreaData( const EveSOFDataHullAreaPtr hullArea ) const;
 
 	// helper functions to pass data from trinity object to stl containers
-	void GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) const;
-	void GenerateFactionData( FactionData& fd, EveSOFDataFactionPtr srcData ) const;
-	void GenerateRaceData( RaceData& rd, EveSOFDataRacePtr srcData ) const;
-	void GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr srcData ) const;
-	void GenerateMaterialData( MaterialData& rd, EveSOFDataMaterialPtr srcData ) const;
-	void GeneratePatternData( PatternData& rd, EveSOFDataPatternPtr srcData ) const;
-	void GenerateLayoutData( LayoutData& ld, EveSOFDataLayoutPtr srcData ) const;
-	void LoadLocatorData( HullData & hd, EveSOFDataHullPtr srcData, IEveSOFDataHullLocatorSetPtr locatorSetOrGroup, uint32_t & uniqueID ) const;
+	void GenerateHullData( HullData & hd, EveSOFDataHullPtr srcData ) const;
+	void GenerateFactionData( FactionData & fd, EveSOFDataFactionPtr srcData ) const;
+	void GenerateRaceData( RaceData & rd, EveSOFDataRacePtr srcData ) const;
+	void GenerateGenericData( GenericData & gd, EveSOFDataGenericPtr srcData ) const;
+	void GenerateMaterialData( MaterialData & rd, EveSOFDataMaterialPtr srcData ) const;
+	void GeneratePatternData( PatternData & rd, EveSOFDataPatternPtr srcData ) const;
+	void GenerateLayoutData( LayoutData & ld, EveSOFDataLayoutPtr srcData ) const;
+	void LoadLocatorData( HullData & hd, EveSOFDataHullPtr srcData, IEveSOFDataHullLocatorSetPtr locatorSetOrGroup, uint32_t& uniqueID ) const;
 
-	
+
 	ExtensionPlacementData UnpackPlacementData( IEveSOFDataHullExtensionPlacementPtr placement ) const;
 
 	// helper function to deal with layout Distributions
 	ExtensionPlacementDistribution generateDistributionData( EveSOFDataHullExtensionPlacementDistributionPlacementPtr distributionObj ) const;
 	ExtensionPlacementDistributionCondition generateDistributionConditionData( IEveSOFDataHullExtensionPlacementDistributionPtr distributionObj ) const;
-		// keep all hull data in a map
+	// keep all hull data in a map
 	std::map<std::string, HullData> m_hullData;
 	// keep all faction data in a map
 	std::map<std::string, FactionData> m_factionData;

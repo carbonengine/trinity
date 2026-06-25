@@ -55,13 +55,13 @@ const float TRACKING_FADE_TIME = 1.f;
 
 namespace
 {
-	bool IsUsingCMF( TriGeometryRes* geometryResource )
-	{
-		// The only reason the null pointer check is here, is to be able to call IsUsingCMF.
-		// Do not rely on this function to test for geometryResource's existance in other places!
-		// This function will be removed in the future, alongside all granny code.
-		return !geometryResource || !geometryResource->IsGood() || geometryResource->IsUsingCMF();
-	}
+bool IsUsingCMF( TriGeometryRes* geometryResource )
+{
+	// The only reason the null pointer check is here, is to be able to call IsUsingCMF.
+	// Do not rely on this function to test for geometryResource's existance in other places!
+	// This function will be removed in the future, alongside all granny code.
+	return !geometryResource || !geometryResource->IsGood() || geometryResource->IsUsingCMF();
+}
 }
 
 
@@ -196,7 +196,8 @@ bool EveTurretSet::Initialize()
 // --------------------------------------------------------------------------------
 bool EveTurretSet::OnModified( Be::Var* value )
 {
-	if( IsMatch( value, m_display ) ) {
+	if( IsMatch( value, m_display ) )
+	{
 		ReRegister();
 	}
 	else if( IsMatch( value, m_geomResPath ) )
@@ -506,7 +507,7 @@ void EveTurretSet::Cleanup()
 		turret.pose.skeleton = nullptr;
 		turret.worldTransforms.clear();
 	}
-	
+
 #if WITH_GRANNY
 	// granny invalid
 	m_grnModel = NULL;
@@ -1081,7 +1082,7 @@ void EveTurretSet::RebuildCachedData( BlueAsyncRes* p )
 		}
 
 		InitializeAnimation();
-		
+
 		// animation already requested in a queue?
 		if( !m_animationQueue.empty() )
 		{
@@ -1481,7 +1482,7 @@ void EveTurretSet::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	}
 
 	UpdateSingleTurrets();
-	
+
 	// setup and update attached firing effect
 	if( m_firingEffect )
 	{
@@ -1733,63 +1734,58 @@ void EveTurretSet::ModifySystemBoneTransform( SystemBones bone, const Vector3* t
 		break;
 	case SYSBONE_ROTATION:
 	case SYSBONE_ROTATION01:
-	case SYSBONE_ROTATION02:
-		{
-			// rotation of turret 360 degress, alpha is between -pi and pi
-			float alpha = atan2( target->x, target->z );
-			// never forget do apply influence!
-			alpha *= m_trackingInfluence;
-			// 1st: make quaternion
-			Quaternion quat = RotationQuaternion( alpha, 0.f, 0.f );
-			// 2nd: apply this quat after the original one
-			quat = rotation * quat;
-			// 3rd: make granny_transform from quat
-			rotation = quat;
-		}
-		break;
-	case SYSBONE_COUNTER_ROTATION:
-		{
-			// inverse(!!) rotation of turret 360 degress, alpha is between -pi and pi
-			float alpha = -1.f * atan2( target->x, target->z );
-			// never forget do apply influence!
-			alpha *= m_trackingInfluence;
-			// 1st: make quaternion
-			Quaternion quat = RotationQuaternion( alpha, 0.f, 0.f );
-			// 2nd: apply this quat after the original one
-			quat = rotation * quat;
-			// 3rd: make granny_transform from quat
-			rotation = quat;
-		}
-		break;
+	case SYSBONE_ROTATION02: {
+		// rotation of turret 360 degress, alpha is between -pi and pi
+		float alpha = atan2( target->x, target->z );
+		// never forget do apply influence!
+		alpha *= m_trackingInfluence;
+		// 1st: make quaternion
+		Quaternion quat = RotationQuaternion( alpha, 0.f, 0.f );
+		// 2nd: apply this quat after the original one
+		quat = rotation * quat;
+		// 3rd: make granny_transform from quat
+		rotation = quat;
+	}
+	break;
+	case SYSBONE_COUNTER_ROTATION: {
+		// inverse(!!) rotation of turret 360 degress, alpha is between -pi and pi
+		float alpha = -1.f * atan2( target->x, target->z );
+		// never forget do apply influence!
+		alpha *= m_trackingInfluence;
+		// 1st: make quaternion
+		Quaternion quat = RotationQuaternion( alpha, 0.f, 0.f );
+		// 2nd: apply this quat after the original one
+		quat = rotation * quat;
+		// 3rd: make granny_transform from quat
+		rotation = quat;
+	}
+	break;
 	case SYSBONE_PITCH:
 	case SYSBONE_PITCH1:
-	case SYSBONE_PITCH2:
-		{
-			CalcTransformForPitchBone( target, XMConvertToRadians( m_sysBonePitchMin ), XMConvertToRadians( m_sysBonePitchMax ), bone, localTransform, rotation );
-		}
-		break;
-	case SYSBONE_SCALED_HEIGHT:
-		{
-			// pitch of barrel 90 degrees
-			Vector3 dirNrm = Normalize( *target );
-			float height = TriClamp( dirNrm.y, 0.f, 1.f );
-			// never forget do apply influence!
-			height *= m_trackingInfluence;
-			// it's a pos extension with a scale
-			Vector3 pos = Vector3( 0.f, height * m_sysBoneHeight, 0.f ) + position;
-			position = pos;
-		}
-		break;
+	case SYSBONE_PITCH2: {
+		CalcTransformForPitchBone( target, XMConvertToRadians( m_sysBonePitchMin ), XMConvertToRadians( m_sysBonePitchMax ), bone, localTransform, rotation );
+	}
+	break;
+	case SYSBONE_SCALED_HEIGHT: {
+		// pitch of barrel 90 degrees
+		Vector3 dirNrm = Normalize( *target );
+		float height = TriClamp( dirNrm.y, 0.f, 1.f );
+		// never forget do apply influence!
+		height *= m_trackingInfluence;
+		// it's a pos extension with a scale
+		Vector3 pos = Vector3( 0.f, height * m_sysBoneHeight, 0.f ) + position;
+		position = pos;
+	}
+	break;
 	case SYSBONE_SCALED_PITCH01:
 	case SYSBONE_SCALED_PITCH02:
 	case SYSBONE_SCALED_PITCH03:
 	case SYSBONE_SCALED_PITCH04:
 	case SYSBONE_SCALED_PITCH05:
-	case SYSBONE_SCALED_PITCH06:
-		{
-			CalcTransformForPitchBone( target, 0.f, XMConvertToRadians( m_sysBonePitchMax ), bone, nullptr, rotation );
-		}
-		break;
+	case SYSBONE_SCALED_PITCH06: {
+		CalcTransformForPitchBone( target, 0.f, XMConvertToRadians( m_sysBonePitchMax ), bone, nullptr, rotation );
+	}
+	break;
 	default:
 		break;
 	}
@@ -2025,7 +2021,7 @@ int EveTurretSet::GetState() const
 // --------------------------------------------------------------------------------
 bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const
 {
-	if( !m_display || !m_geometryResource)
+	if( !m_display || !m_geometryResource )
 	{
 		return false;
 	}
@@ -2205,11 +2201,11 @@ void EveTurretSet::GetBatches( ITriRenderBatchAccumulator* batches,
 	batch.SetMaterial( m_turretEffect );
 	batch.SetGeometry( m_vertexDeclHandle, lod->m_vertexAllocation, m_instanceBuffer, lod->m_indexAllocation );
 	batch.SetPerObjectData( perObjectData );
-	batch.SetDrawIndexedInstanced( 
-		lod->m_primitiveCount * 3, 
-		m_visibleCount, 
-		lod->m_indexAllocation.GetStartIndex(), 
-		lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(), 
+	batch.SetDrawIndexedInstanced(
+		lod->m_primitiveCount * 3,
+		m_visibleCount,
+		lod->m_indexAllocation.GetStartIndex(),
+		lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 		m_instanceBuffer.GetOffset() / m_instanceBuffer.GetStride() );
 
 	if( batch )
@@ -2535,7 +2531,7 @@ void EveTurretSet::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	
+
 	for( auto it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
 	{
 		if( it->visible && it->valid && it->rtMesh && it->rtMesh->IsGood() && it->rtMeshArea )
@@ -2614,7 +2610,7 @@ float EveTurretSet::PlayAnimation( unsigned int turretIndex, const std::string& 
 			size_t animIx = cmfData->animations.size();
 			if( !animName.empty() )
 			{
-				auto animation = std::find_if( cmfData->animations.begin(), cmfData->animations.end(), [&animName]( const cmf::Animation& anim ) { 
+				auto animation = std::find_if( cmfData->animations.begin(), cmfData->animations.end(), [&animName]( const cmf::Animation& anim ) {
 					return cmf::ToStdStringView( anim.name ) == animName;
 				} );
 				if( animation == cmfData->animations.end() )
@@ -2784,8 +2780,7 @@ void EveTurretSet::StopAnimation( unsigned int turretIndex, float delay )
 		{
 			if( m_singleTurrets[turretIndex].sequencer )
 			{
-				m_singleTurrets[turretIndex].sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player )
-				{
+				m_singleTurrets[turretIndex].sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
 					player->SetStopTime( delay + Tr2Renderer::GetAnimationTime() );
 				} );
 

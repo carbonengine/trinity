@@ -18,6 +18,3 @@ bool Tr2PPSignalLossEffect::IsActive()
 {
 	return m_display && m_strength > 0.0f;
 }
-
-
-

@@ -18,13 +18,13 @@ BLUE_DECLARE( Tr2RenderTarget );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   GPU-managed particle system. 
+//   GPU-managed particle system.
 // See Also:
 //   Tr2GpuSharedEmitter, Tr2GpuUniqueEmitter
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2GpuParticleSystem ): 
-	public IInitialize, 
-	public INotify, 
+BLUE_CLASS( Tr2GpuParticleSystem ) :
+	public IInitialize,
+	public INotify,
 	public IRenderCallback,
 	public Tr2DeviceResource
 {
@@ -64,7 +64,7 @@ public:
 
 	// ----------------------------------------------------------------------------------
 	// Description:
-	//   CPU-side (public) emitter. This structure describes initial values for 
+	//   CPU-side (public) emitter. This structure describes initial values for
 	//   particle attributes.
 	// See Also:
 	//   Tr2GpuParticleSystem::EmitterGpu
@@ -95,34 +95,35 @@ public:
 
 	virtual bool Initialize();
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	void Update( Be::Time time, const Vector3& originShift, Tr2RenderContext& renderContext );
-	void Render( Tr2RenderContext& renderContext );
+	void Render( Tr2RenderContext & renderContext );
 	void Clear();
 	void Emit( const Emitter& emitter, uintptr_t id, uintptr_t hash, const EmitterParams& params );
 	bool HasParticles() const;
 
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
+	virtual void SubmitGeometry( Tr2RenderContext & renderContext );
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	virtual bool OnPrepareResources();
 
 	void InitializeBuffers();
 	void RegisterVariables();
-	void SetVariableStore( Tr2Effect* effect );
-	bool DoClear( Tr2RenderContext& renderContext );
+	void SetVariableStore( Tr2Effect * effect );
+	bool DoClear( Tr2RenderContext & renderContext );
 	void RunSimulation( float dt, const Vector3& originShift, Tr2RenderContext& renderContext );
-	void UpdateGpuEmitterParams( Tr2RenderContext& renderContext );
+	void UpdateGpuEmitterParams( Tr2RenderContext & renderContext );
 
-	void Sort( Tr2RenderContext& renderContext );
+	void Sort( Tr2RenderContext & renderContext );
 	bool SortIncremental( uint32_t presorted, Tr2RenderContext& renderContext );
 
 	void SetMaxParticles( uint32_t maxParticles );
 	void ExpireEmitterParams( float dt );
-	void UpdateEmitterParams( Tr2RenderContext& renderContext );
-	void EmitParticles( Tr2RenderContext& renderContext );
-	void UpdateLiveCount( Tr2RenderContext& renderContext );
+	void UpdateEmitterParams( Tr2RenderContext & renderContext );
+	void EmitParticles( Tr2RenderContext & renderContext );
+	void UpdateLiveCount( Tr2RenderContext & renderContext );
 
 	float GetEmitTime();
 	float GetUpdateTime();
@@ -177,7 +178,9 @@ private:
 	typedef Emitter EmitterGpu;
 	struct EmitterParamsGpu
 	{
-		EmitterParamsGpu() {}
+		EmitterParamsGpu()
+		{
+		}
 		explicit EmitterParamsGpu( const EmitterParams& params );
 
 		float minLifeTime;

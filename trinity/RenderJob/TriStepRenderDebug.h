@@ -15,16 +15,15 @@ BLUE_DECLARE( TriLineSet );
 
 class TriDebugTextRenderer;
 
-class TriStepRenderDebug: 
-	public TriRenderStep,
-	public ITr2DebugRenderer,
-	public IRenderCallback
+class TriStepRenderDebug : public TriRenderStep,
+						   public ITr2DebugRenderer,
+						   public IRenderCallback
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	TriStepRenderDebug( IRoot* lockobj = 0 );
-	~TriStepRenderDebug(void);
+	~TriStepRenderDebug( void );
 
 	//////////////////////////////////////////////////////////////////////////
 	// Helper functions for easier Python exposure
@@ -55,7 +54,10 @@ public:
 	void Printf( const Vector3& pos, uint32_t color, const char* msg, ... );
 
 	// Need to expose a single draw line for python
-	void PyDrawLine( const Vector3& from, uint32_t fromColor, const Vector3& to, uint32_t toColor ) { DrawLine( from, fromColor, to, toColor ); };
+	void PyDrawLine( const Vector3& from, uint32_t fromColor, const Vector3& to, uint32_t toColor )
+	{
+		DrawLine( from, fromColor, to, toColor );
+	};
 
 	//////////////////////////////////////////////////////////////////////////
 	// Tr2Effect::IRenderCallback

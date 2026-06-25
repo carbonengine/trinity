@@ -4,7 +4,9 @@
 #include "WithRenderContextFixture.h"
 #include <ITr2RenderContextEvents.h>
 
-struct RenderContextCreation: public WithRenderContext {};
+struct RenderContextCreation : public WithRenderContext
+{
+};
 
 namespace
 {
@@ -23,7 +25,7 @@ void SetUpPresentParameters( Tr2PresentParametersAL& presentParameters )
 	presentParameters.presentInterval = Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE;
 }
 
-struct RenderContextEvents: public ITr2RenderContextEvents
+struct RenderContextEvents : public ITr2RenderContextEvents
 {
 	RenderContextEvents()
 	{
@@ -59,62 +61,80 @@ TEST_F( RenderContextCreation, RenderContextStartsAsInvalid )
 
 TEST_F( RenderContextCreation, CanCreateRenderContext )
 {
-	if( !MachineHasGfxAdapter() ) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !MachineHasGfxAdapter() )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) ); 
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
 }
 
 TEST_F( RenderContextCreation, RenderContextIsValidAfterCreation )
 {
-	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !MachineHasGfxAdapter() )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) ); 
-	EXPECT_TRUE( renderContext->IsValid() ); 
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
+	EXPECT_TRUE( renderContext->IsValid() );
 }
 
 TEST_F( RenderContextCreation, RenderContextIsInvalidAfterDestroy )
 {
-	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !MachineHasGfxAdapter() )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) ); 
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
 	renderContext->Destroy();
-	EXPECT_FALSE( renderContext->IsValid() ); 
+	EXPECT_FALSE( renderContext->IsValid() );
 }
 
 TEST_F( RenderContextCreation, CanChangeRenderContextPresentParameters )
 {
-	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !MachineHasGfxAdapter() )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) ); 
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetPresentParameters( 0, presentParameters ) );
 }
 
 TEST_F( RenderContextCreation, CreateDeviceCallsEventsOnContextCreated )
 {
-	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !MachineHasGfxAdapter() )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
 	RenderContextEvents events;
 
 	renderContext->m_events = &events;
-	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) ); 
-	EXPECT_EQ( 1, events.m_timesOnContextCreatedCalled ); 
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
+	EXPECT_EQ( 1, events.m_timesOnContextCreatedCalled );
 	renderContext->m_events = nullptr;
 }
 
 TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfterCreation )
 {
-	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !MachineHasGfxAdapter() )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
@@ -126,7 +146,10 @@ TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfter
 
 TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfterReset )
 {
-	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !MachineHasGfxAdapter() )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
@@ -141,7 +164,10 @@ TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfter
 
 TEST_F( RenderContextCreation, RenderContextCanRecreateTheDevice )
 {
-	if( !MachineHasGfxAdapter() ) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+	if( !MachineHasGfxAdapter() )
+	{
+		GTEST_SKIP() << "Test Skipped as no adapters present on machine.";
+	}
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 

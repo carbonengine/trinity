@@ -15,7 +15,7 @@ enum BlitPresentVertexInputIndex
 
 enum BlitPresentFragmentInputIndex
 {
-	BlitPresentFragmentInputIndexTexture  = 0,
+	BlitPresentFragmentInputIndexTexture = 0,
 };
 
 

@@ -10,9 +10,11 @@
 // --------------------------------------------------------------------------------------
 Tr2MouseCursor::Tr2MouseCursor( IRoot* lockobj )
 #ifdef _WIN32
-:    m_cursor( nullptr )
+	:
+	m_cursor( nullptr )
 #elif __APPLE__
-:   m_cursor( 0 )
+	:
+	m_cursor( 0 )
 #endif
 {
 }
@@ -33,7 +35,7 @@ Tr2MouseCursor::~Tr2MouseCursor()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 void Tr2MouseCursor::py__init__( Tr2HostBitmap* bitmap, unsigned hotspotX, unsigned hotspotY, const std::vector<Tr2HostBitmap*>& representations )
 {
@@ -55,15 +57,15 @@ bool Tr2MouseCursor::IsValid() const
 #ifdef _WIN32
 	return m_cursor != nullptr;
 #elif __APPLE__
-    return m_cursor != 0;
+	return m_cursor != 0;
 #else
-    return false;
+	return false;
 #endif
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Helper function to convert color/alpha values in B5G6R5 + A8 format to B8G8R8A8 
+//   Helper function to convert color/alpha values in B5G6R5 + A8 format to B8G8R8A8
 //   format.
 // Arguments:
 //   color - Color value in B5G6R5 format.
@@ -71,11 +73,11 @@ bool Tr2MouseCursor::IsValid() const
 // Return Value:
 //   Color/alpha value in B8G8R8A8 format
 // --------------------------------------------------------------------------------------
-inline unsigned ConvertBGR565A8ToBGRA8( unsigned color, unsigned alpha ) 
+inline unsigned ConvertBGR565A8ToBGRA8( unsigned color, unsigned alpha )
 {
-	return unsigned( color & 0x1f ) * 255 / 31 | 
-		( unsigned( ( color >> 5 ) & 0x3f ) * 255 / 63 ) << 8 | 
-		( unsigned( ( color >> 11 ) & 0x1f ) * 255 / 31 ) << 16 | 
+	return unsigned( color & 0x1f ) * 255 / 31 |
+		( unsigned( ( color >> 5 ) & 0x3f ) * 255 / 63 ) << 8 |
+		( unsigned( ( color >> 11 ) & 0x1f ) * 255 / 31 ) << 16 |
 		( alpha << 24 );
 }
 
@@ -83,7 +85,7 @@ inline unsigned ConvertBGR565A8ToBGRA8( unsigned color, unsigned alpha )
 // Description:
 //   Helper function to decompress BC1 format image into B8G8R8A8 format. Used by mouse
 //   cursors, which are small and are cached, so the function doesn't have to be super-
-//   optimal. Also flips image vertically for DX11 and GL since DX and WINAPI use 
+//   optimal. Also flips image vertically for DX11 and GL since DX and WINAPI use
 //   different origin.
 // Arguments:
 //   dest - Destination buffer
@@ -120,10 +122,10 @@ static void DecompressBC1( char* dest, const char* source, unsigned width, unsig
 							*destPixel = ConvertBGR565A8ToBGRA8( color1, 255 );
 							break;
 						case 2:
-							*destPixel = ConvertBGR565A8ToBGRA8( (2*color0+color1)/3, 255 );
+							*destPixel = ConvertBGR565A8ToBGRA8( ( 2 * color0 + color1 ) / 3, 255 );
 							break;
 						case 3:
-							*destPixel = ConvertBGR565A8ToBGRA8( (color0+2*color1)/3, 255 );
+							*destPixel = ConvertBGR565A8ToBGRA8( ( color0 + 2 * color1 ) / 3, 255 );
 							break;
 						}
 					}
@@ -139,7 +141,7 @@ static void DecompressBC1( char* dest, const char* source, unsigned width, unsig
 						destY = height - 1 - destY;
 
 						uint32_t* destPixel = reinterpret_cast<uint32_t*>( dest + destY * pitch + ( x + i ) * sizeof( uint32_t ) );
-						switch( ( bits >> 2*(4*y+x) ) & 3 )
+						switch( ( bits >> 2 * ( 4 * y + x ) ) & 3 )
 						{
 						case 0:
 							*destPixel = ConvertBGR565A8ToBGRA8( color0, 255 );
@@ -148,10 +150,10 @@ static void DecompressBC1( char* dest, const char* source, unsigned width, unsig
 							*destPixel = ConvertBGR565A8ToBGRA8( color1, 255 );
 							break;
 						case 2:
-							*destPixel = ConvertBGR565A8ToBGRA8( (color0+color1)/2, 255 );
+							*destPixel = ConvertBGR565A8ToBGRA8( ( color0 + color1 ) / 2, 255 );
 							break;
 						case 3:
-							*destPixel = ConvertBGR565A8ToBGRA8( (color0+2*color1)/3, 0 );
+							*destPixel = ConvertBGR565A8ToBGRA8( ( color0 + 2 * color1 ) / 3, 0 );
 							break;
 						}
 					}
@@ -166,7 +168,7 @@ static void DecompressBC1( char* dest, const char* source, unsigned width, unsig
 // Description:
 //   Helper function to decompress BC2 format image into B8G8R8A8 format. Used by mouse
 //   cursors, which are small and are cached, so the function doesn't have to be super-
-//   optimal. Also flips image vertically for DX11 and GL since DX and WINAPI use 
+//   optimal. Also flips image vertically for DX11 and GL since DX and WINAPI use
 //   different origin.
 // Arguments:
 //   dest - Destination buffer
@@ -203,10 +205,10 @@ static void DecompressBC2( char* dest, const char* source, unsigned width, unsig
 						*destPixel = ConvertBGR565A8ToBGRA8( color1, alphaValue );
 						break;
 					case 2:
-						*destPixel = ConvertBGR565A8ToBGRA8( (2*color0+color1)/3, alphaValue );
+						*destPixel = ConvertBGR565A8ToBGRA8( ( 2 * color0 + color1 ) / 3, alphaValue );
 						break;
 					case 3:
-						*destPixel = ConvertBGR565A8ToBGRA8( (color0+2*color1)/3, alphaValue );
+						*destPixel = ConvertBGR565A8ToBGRA8( ( color0 + 2 * color1 ) / 3, alphaValue );
 						break;
 					}
 				}
@@ -234,16 +236,15 @@ std::unique_ptr<char[]> GetUncompressedBitmap( const Tr2HostBitmap* bitmap )
 		break;
 	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_TYPELESS:
 	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM:
-	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM_SRGB:
+	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM_SRGB: {
+		const char* row = bitmap->GetRawData();
+		for( uint32_t j = 0; j < bitmap->GetHeight(); ++j )
 		{
-			const char* row = bitmap->GetRawData();
-			for( uint32_t j = 0; j < bitmap->GetHeight(); ++j )
-			{
-				memcpy( bits.get() + j * bitmap->GetWidth() * 4, row, bitmap->GetWidth() * 4 );
-				row += bitmap->GetPitch();
-			}
+			memcpy( bits.get() + j * bitmap->GetWidth() * 4, row, bitmap->GetWidth() * 4 );
+			row += bitmap->GetPitch();
 		}
-		break;
+	}
+	break;
 	default:
 		return nullptr;
 	}
@@ -299,28 +300,28 @@ bool Tr2MouseCursor::Create( Tr2HostBitmap* bitmap, int hotspotX, int hotspotY, 
 		return false;
 	}
 
-#if defined(_WIN32)
-    BITMAPV5HEADER bi;
-    ZeroMemory( &bi, sizeof( BITMAPV5HEADER ) );
-    bi.bV5Size = sizeof( BITMAPV5HEADER );
+#if defined( _WIN32 )
+	BITMAPV5HEADER bi;
+	ZeroMemory( &bi, sizeof( BITMAPV5HEADER ) );
+	bi.bV5Size = sizeof( BITMAPV5HEADER );
 	bi.bV5Width = bitmap->GetWidth();
 	bi.bV5Height = bitmap->GetHeight();
-    bi.bV5Planes = 1;
-    bi.bV5BitCount = 32;
-    bi.bV5Compression = BI_BITFIELDS;
-    bi.bV5RedMask   =  0x00FF0000;
-    bi.bV5GreenMask =  0x0000FF00;
-    bi.bV5BlueMask  =  0x000000FF;
-    bi.bV5AlphaMask =  0xFF000000; 
+	bi.bV5Planes = 1;
+	bi.bV5BitCount = 32;
+	bi.bV5Compression = BI_BITFIELDS;
+	bi.bV5RedMask = 0x00FF0000;
+	bi.bV5GreenMask = 0x0000FF00;
+	bi.bV5BlueMask = 0x000000FF;
+	bi.bV5AlphaMask = 0xFF000000;
 	bi.bV5CSType = LCS_WINDOWS_COLOR_SPACE;
 
-    HDC hdc;
-    hdc = GetDC( nullptr );
+	HDC hdc;
+	hdc = GetDC( nullptr );
 
-    void *bits;
-    HBITMAP bmp = CreateDIBSection( hdc, (BITMAPINFO*)&bi, DIB_RGB_COLORS, &bits, NULL, 0 );
+	void* bits;
+	HBITMAP bmp = CreateDIBSection( hdc, (BITMAPINFO*)&bi, DIB_RGB_COLORS, &bits, NULL, 0 );
 
-    ReleaseDC( nullptr, hdc );
+	ReleaseDC( nullptr, hdc );
 
 	if( bmp == nullptr )
 	{
@@ -329,7 +330,7 @@ bool Tr2MouseCursor::Create( Tr2HostBitmap* bitmap, int hotspotX, int hotspotY, 
 	}
 	ON_BLOCK_EXIT( [&] { DeleteObject( bmp ); } );
 
-	
+
 	switch( bitmap->GetFormat() )
 	{
 	case Tr2RenderContextEnum::PIXEL_FORMAT_BC1_TYPELESS:
@@ -345,16 +346,15 @@ bool Tr2MouseCursor::Create( Tr2HostBitmap* bitmap, int hotspotX, int hotspotY, 
 		break;
 	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_TYPELESS:
 	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM:
-	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM_SRGB:
+	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM_SRGB: {
+		const char* row = bitmap->GetRawData();
+		for( unsigned j = 0; j < bitmap->GetHeight(); ++j )
 		{
-			const char* row = bitmap->GetRawData();
-			for( unsigned j = 0; j < bitmap->GetHeight(); ++j )
-			{
-				memcpy( reinterpret_cast<uint32_t*>( bits ) + ( bitmap->GetHeight() - 1 - j ) * bitmap->GetWidth(), row, bitmap->GetWidth() * 4 );
-				row += bitmap->GetPitch();
-			}
+			memcpy( reinterpret_cast<uint32_t*>( bits ) + ( bitmap->GetHeight() - 1 - j ) * bitmap->GetWidth(), row, bitmap->GetWidth() * 4 );
+			row += bitmap->GetPitch();
 		}
-		break;
+	}
+	break;
 	default:
 		break;
 	}
@@ -384,8 +384,8 @@ bool Tr2MouseCursor::Create( Tr2HostBitmap* bitmap, int hotspotX, int hotspotY, 
 		return m_cursor != nullptr;
 	}
 
-    // Create an empty mask bitmap.
-    HBITMAP monoBitmap = CreateBitmap( bitmap->GetWidth(), bitmap->GetHeight(), 1, 1, nullptr );
+	// Create an empty mask bitmap.
+	HBITMAP monoBitmap = CreateBitmap( bitmap->GetWidth(), bitmap->GetHeight(), 1, 1, nullptr );
 	if( monoBitmap == nullptr )
 	{
 		CCP_LOGERR( "Tr2MouseCursor.Create: could not create alpha bitmap" );
@@ -393,26 +393,26 @@ bool Tr2MouseCursor::Create( Tr2HostBitmap* bitmap, int hotspotX, int hotspotY, 
 	}
 	ON_BLOCK_EXIT( [&] { DeleteObject( monoBitmap ); } );
 
-    ICONINFO ii;
-    ii.fIcon = FALSE;
-    ii.xHotspot = hotspotX;
-    ii.yHotspot = hotspotY;
-    ii.hbmMask = monoBitmap;
-    ii.hbmColor = bmp;
+	ICONINFO ii;
+	ii.fIcon = FALSE;
+	ii.xHotspot = hotspotX;
+	ii.yHotspot = hotspotY;
+	ii.hbmMask = monoBitmap;
+	ii.hbmColor = bmp;
 
-    // Create the alpha cursor with the alpha DIB section.
-    m_cursor = (HCURSOR)CreateIconIndirect( &ii );
+	// Create the alpha cursor with the alpha DIB section.
+	m_cursor = (HCURSOR)CreateIconIndirect( &ii );
 
 	return m_cursor != nullptr;
 #elif __APPLE__
 	std::vector<Representation> reprData;
-    std::unique_ptr<char[]> bits( GetUncompressedBitmap( bitmap ) );
+	std::unique_ptr<char[]> bits( GetUncompressedBitmap( bitmap ) );
 	if( !bits )
 	{
 		return false;
 	}
 	reprData.emplace_back( Representation{ bitmap->GetWidth(), bitmap->GetHeight(), std::move( bits ) } );
-	for (auto bmp : representations )
+	for( auto bmp : representations )
 	{
 		if( bmp )
 		{
@@ -424,10 +424,10 @@ bool Tr2MouseCursor::Create( Tr2HostBitmap* bitmap, int hotspotX, int hotspotY, 
 			reprData.emplace_back( Representation{ bmp->GetWidth(), bmp->GetHeight(), std::move( reprBits ) } );
 		}
 	}
-	
-    return Create_MacOS( reprData, bitmap->GetWidth(), bitmap->GetHeight(), hotspotX, hotspotY );
+
+	return Create_MacOS( reprData, bitmap->GetWidth(), bitmap->GetHeight(), hotspotX, hotspotY );
 #else
-    return false;
+	return false;
 #endif
 }
 
@@ -441,9 +441,9 @@ void Tr2MouseCursor::Apply()
 	{
 		return;
 	}
-#if defined(_WIN32)
+#if defined( _WIN32 )
 	SetCursor( m_cursor );
 #elif __APPLE__
-    Apply_MacOS();
+	Apply_MacOS();
 #endif
 }

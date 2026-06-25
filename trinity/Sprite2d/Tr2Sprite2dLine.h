@@ -10,8 +10,7 @@
 BLUE_DECLARE( Tr2Sprite2dLine );
 BLUE_DECLARE_INTERFACE( ITr2Sprite2dTexture );
 
-class Tr2Sprite2dLine :
-	public Tr2TexturedSpriteObject
+class Tr2Sprite2dLine : public Tr2TexturedSpriteObject
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -24,7 +23,6 @@ public:
 	ITr2SpriteObject* PickPoint( float x, float y, Tr2Sprite2dScene* renderer );
 
 private:
-
 	Tr2Sprite2dD3DVertex m_vertices[4];
 
 	Vector2 m_translationFrom;

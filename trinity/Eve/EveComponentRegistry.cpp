@@ -80,7 +80,7 @@ void EveComponentRegistry::UnRegister( EveEntity* entity )
 	m_registeredEntities.pop_back();
 
 	entity->m_registry = nullptr;
-	entity->m_indexInRegistry = - 1;
+	entity->m_indexInRegistry = -1;
 }
 
 // UnRegisters all components for a specific entity
@@ -161,4 +161,3 @@ std::vector<std::pair<const char*, size_t>> EveComponentRegistry::GetComponentIn
 
 	return info;
 }
-

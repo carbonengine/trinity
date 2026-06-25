@@ -16,6 +16,7 @@ public:
 	~EveChildModifierTranslateWithCamera();
 
 	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const Float4x3* bones ) const;
+
 private:
 	bool m_attachedToCamera;
 };

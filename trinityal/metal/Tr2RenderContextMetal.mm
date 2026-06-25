@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#if ( TRINITY_PLATFORM == TRINITY_METAL )
 
 #include "Tr2RenderContextMetal.h"
 #include "ITr2RenderContextEvents.h"
@@ -23,72 +23,85 @@
 
 #include "MetalContext.h"
 
-CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
-CCP_STATS_DECLARE( vertexCount			, "Trinity/AL/vertexCount"			, true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
-CCP_STATS_DECLARE( sceneDrawcallCount	, "Trinity/AL/sceneDrawcallCount"	, true, CST_COUNTER_LOW,  "Number of DrawPrimitive calls." );
+CCP_STATS_DECLARE( primitiveCount,
+				   "Trinity/AL/primitiveCount",
+				   true,
+				   CST_COUNTER_HIGH,
+				   "Primitive count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( vertexCount,
+				   "Trinity/AL/vertexCount",
+				   true,
+				   CST_COUNTER_HIGH,
+				   "Vertex count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( sceneDrawcallCount,
+				   "Trinity/AL/sceneDrawcallCount",
+				   true,
+				   CST_COUNTER_LOW,
+				   "Number of DrawPrimitive calls." );
 
 
 using namespace Tr2RenderContextEnum;
-#pragma warning( disable: 4189 )	// Scopeguard
+#pragma warning( disable : 4189 ) // Scopeguard
 
 bool g_gatherPipelineStatistics = false;
 bool g_enableMetalCounters = false;
 
 namespace
 {
-	Tr2PrimaryRenderContextAL*& GetPrimaryRenderContextPointer()
-	{
-		static Tr2PrimaryRenderContextAL* primaryRenderContext = nullptr;
-		return primaryRenderContext;
-	}
-	
-	MTLClearColor MakeClearColor( uint32_t color )
-	{
-		MTLClearColor clearColor;
-		clearColor.alpha = float( ( color >> 24 ) & 0xff ) / 255.f;
-		clearColor.red   = float( ( color >> 16 ) & 0xff ) / 255.f;
-		clearColor.green = float( ( color >> 8  ) & 0xff ) / 255.f;
-		clearColor.blue  = float( ( color >> 0  ) & 0xff ) / 255.f;
-		return clearColor;
-	}
+Tr2PrimaryRenderContextAL*& GetPrimaryRenderContextPointer()
+{
+	static Tr2PrimaryRenderContextAL* primaryRenderContext = nullptr;
+	return primaryRenderContext;
 }
 
-Tr2RenderContextAL::Tr2RenderContextAL()
-	: m_isValid(false)
-	, m_events( nullptr )
-	, m_metalContext( nil )
-	, m_workQueue( nil )
-	, m_depthWriteEnabled( true )
-	, m_depthCompareEnabled( false )
-	, m_readOnlyDepth( false )
-	, m_alphaBlendEnable( false )
-	, m_separateAlphaBlendEnabled( false )
-	, m_srgbWriteEnable( false )
-    , m_isPrimary( false )
-    , m_caps()
-    , m_upscalingTechnique( nullptr )
+MTLClearColor MakeClearColor( uint32_t color )
+{
+	MTLClearColor clearColor;
+	clearColor.alpha = float( ( color >> 24 ) & 0xff ) / 255.f;
+	clearColor.red = float( ( color >> 16 ) & 0xff ) / 255.f;
+	clearColor.green = float( ( color >> 8 ) & 0xff ) / 255.f;
+	clearColor.blue = float( ( color >> 0 ) & 0xff ) / 255.f;
+	return clearColor;
+}
+}
+
+Tr2RenderContextAL::Tr2RenderContextAL() :
+	m_isValid( false ),
+	m_events( nullptr ),
+	m_metalContext( nil ),
+	m_workQueue( nil ),
+	m_depthWriteEnabled( true ),
+	m_depthCompareEnabled( false ),
+	m_readOnlyDepth( false ),
+	m_alphaBlendEnable( false ),
+	m_separateAlphaBlendEnabled( false ),
+	m_srgbWriteEnable( false ),
+	m_isPrimary( false ),
+	m_caps(),
+	m_upscalingTechnique( nullptr )
 {
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
 {
-    
-    if( m_upscalingTechnique ){
-        m_upscalingTechnique->ReleaseResources();
-        delete m_upscalingTechnique;
-        m_upscalingTechnique = nullptr;
-    }
-    
+
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->ReleaseResources();
+		delete m_upscalingTechnique;
+		m_upscalingTechnique = nullptr;
+	}
+
 	m_vertexLayout = Tr2VertexLayoutAL();
 	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
-    
-    std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), BoundRT{} );
-    std::fill( std::begin( m_stackRT ), std::end( m_stackRT ), TrackableStdStack<BoundRT>{} );
-    m_stackDS = TrackableStdStack<Tr2TextureAL>();
-    m_boundDepthStencil = {};
-    m_defaultBackBuffer = {};
-    m_swapChain = Tr2SwapChainAL();
+
+	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), BoundRT{} );
+	std::fill( std::begin( m_stackRT ), std::end( m_stackRT ), TrackableStdStack<BoundRT>{} );
+	m_stackDS = TrackableStdStack<Tr2TextureAL>();
+	m_boundDepthStencil = {};
+	m_defaultBackBuffer = {};
+	m_swapChain = Tr2SwapChainAL();
 
 	if( m_isPrimary )
 	{
@@ -105,11 +118,11 @@ void Tr2RenderContextAL::SetAsPrimary()
 	m_depthCompareFunction = MTLCompareFunctionAlways;
 
 	m_metalIndexBuffer = nil;
-	m_caMetalLayer     = nil;
+	m_caMetalLayer = nil;
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 	m_boundDepthStencil.m_texture = nullptr;
 	m_needsDrawResourceCheck = true;
-	
+
 	m_swapChain.m_swapChain = std::make_shared<TrinityALImpl::Tr2SwapChainAL>();
 }
 
@@ -143,10 +156,10 @@ void Tr2RenderContextAL::Destroy()
 	m_isValid = false;
 }
 
-ALResult Tr2RenderContextAL::SetStreamSource(uint32_t stream,
-                                             const Tr2BufferAL & buffer,
-                                             uint32_t offset,
-                                             uint32_t stride ) throw( )
+ALResult Tr2RenderContextAL::SetStreamSource( uint32_t stream,
+											  const Tr2BufferAL& buffer,
+											  uint32_t offset,
+											  uint32_t stride ) throw()
 {
 	if( !IsValid() )
 	{
@@ -172,19 +185,19 @@ ALResult Tr2RenderContextAL::SetStreamSource(uint32_t stream,
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer) throw( )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer ) throw()
 {
 	return SetIndices( buffer, buffer.GetDesc().stride );
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, int stride) throw( )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, int stride ) throw()
 {
 	if( !buffer.IsValid() )
 	{
 		m_metalIndexBuffer = nil;
 		return S_OK;
 	}
-	
+
 	if( stride == 2 )
 	{
 		m_metalIndexType = MTLIndexTypeUInt16;
@@ -221,75 +234,76 @@ void Tr2RenderContextAL::BufferRewritten( id<MTLBuffer> from, id<MTLBuffer> to )
 	}
 }
 
-ALResult Tr2RenderContextAL::ClearUav( const Tr2BufferAL& buffer, const float values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( const Tr2BufferAL& buffer, const float values[4] ) throw()
 {
-    if( !buffer.IsValid() )
-    {
-        return E_INVALIDARG;
-    }
+	if( !buffer.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
 	m_workQueue->ClearBuffer( buffer.m_buffer->GetMetalBuffer(), values );
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( const Tr2BufferAL& buffer, const uint32_t values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( const Tr2BufferAL& buffer, const uint32_t values[4] ) throw()
 {
-    if( !buffer.IsValid() )
-    {
-        return E_INVALIDARG;
-    }
+	if( !buffer.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
 	m_workQueue->ClearBuffer( buffer.m_buffer->GetMetalBuffer(), values );
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( const Tr2TextureAL& texture, uint32_t mipLevel, const float values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( const Tr2TextureAL& texture, uint32_t mipLevel, const float values[4] ) throw()
 {
-    if( !texture.IsValid() )
-    {
-        return E_INVALIDARG;
-    }
+	if( !texture.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
 	m_workQueue->ClearTexture( texture.m_texture->GetMetalTexture(), mipLevel, values );
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( const Tr2TextureAL& texture, uint32_t mipLevel, const uint32_t values[4] ) throw( )
+ALResult
+	Tr2RenderContextAL::ClearUav( const Tr2TextureAL& texture, uint32_t mipLevel, const uint32_t values[4] ) throw()
 {
-    if( !texture.IsValid() )
-    {
-        return E_INVALIDARG;
-    }
+	if( !texture.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
 	m_workQueue->ClearTexture( texture.m_texture->GetMetalTexture(), mipLevel, values );
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src, uint32_t srcOffset, uint32_t length )
+ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL& dest,
+											uint32_t destOffset,
+											Tr2BufferAL& src,
+											uint32_t srcOffset,
+											uint32_t length )
 {
-    if( !dest.IsValid() || !src.IsValid() )
-    {
-        return E_INVALIDARG;
-    }
-    m_workQueue->CopyBufferToBuffer( dest.m_buffer->GetMetalBuffer(), destOffset, src.m_buffer->GetMetalBuffer(), srcOffset, length );
+	if( !dest.IsValid() || !src.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+	m_workQueue->CopyBufferToBuffer(
+		dest.m_buffer->GetMetalBuffer(), destOffset, src.m_buffer->GetMetalBuffer(), srcOffset, length );
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::Clear(
-	uint32_t clearFlags,
-	uint32_t color,
-	float depth,
-	uint32_t stencil,
-	uint32_t slot )
+ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float depth, uint32_t stencil, uint32_t slot )
 {
 	if( !IsValid() )
 	{
 		return E_FAIL;
 	}
 
-	MTLClearColor *clearColor   = nullptr;
-	float    *clearDepth        = nullptr;
-	uint32_t *clearStencil      = nullptr;
+	MTLClearColor* clearColor = nullptr;
+	float* clearDepth = nullptr;
+	uint32_t* clearStencil = nullptr;
 	MTLClearColor metalClearColor;
 
 	if( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_TARGET )
@@ -343,20 +357,20 @@ ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topolog
 	{
 		return E_INVALIDARG;
 	}
-	if (topology == TOP_TRIANGLE_FAN)
+	if( topology == TOP_TRIANGLE_FAN )
 	{
 		CCP_AL_LOGERR( "Fan topology is not supported in Metal." );
 		return E_FAIL;
 	}
 
-	static const MetalPrimitiveInfo topologyMapping[ TOP_MAX_TOPOLOGY ] = {
-		{MTLPrimitiveTypeTriangle,      3, 0, false}, // TOP_INVALID
-		{MTLPrimitiveTypeTriangle,      3, 0, true},  // TOP_TRIANGLES,
-		{MTLPrimitiveTypeTriangleStrip, 1, 2, true},  // TOP_TRIANGLE_STRIP
-		{MTLPrimitiveTypeTriangle,      3, 0, false}, // TOP_TRIANGLE_FAN - NOT SUPPORTED!
-		{MTLPrimitiveTypeLine,          2, 0, true},  // TOP_LINES
-		{MTLPrimitiveTypeLineStrip,     1, 1, true},  // TOP_LINE_STRIP
-		{MTLPrimitiveTypePoint,         1, 0, false}  // TOP_POINTS
+	static const MetalPrimitiveInfo topologyMapping[TOP_MAX_TOPOLOGY] = {
+		{ MTLPrimitiveTypeTriangle, 3, 0, false }, // TOP_INVALID
+		{ MTLPrimitiveTypeTriangle, 3, 0, true }, // TOP_TRIANGLES,
+		{ MTLPrimitiveTypeTriangleStrip, 1, 2, true }, // TOP_TRIANGLE_STRIP
+		{ MTLPrimitiveTypeTriangle, 3, 0, false }, // TOP_TRIANGLE_FAN - NOT SUPPORTED!
+		{ MTLPrimitiveTypeLine, 2, 0, true }, // TOP_LINES
+		{ MTLPrimitiveTypeLineStrip, 1, 1, true }, // TOP_LINE_STRIP
+		{ MTLPrimitiveTypePoint, 1, 0, false } // TOP_POINTS
 	};
 
 	m_metalPrimitiveInfo = topologyMapping[topology];
@@ -369,20 +383,20 @@ uint32_t Tr2RenderContextAL::ComputeVertexCount( uint32_t primitiveCount )
 {
 	CCP_ASSERT( m_metalPrimitiveInfo.validType );
 
-	return (m_metalPrimitiveInfo.primitiveToIndexMultiplier * primitiveCount) + m_metalPrimitiveInfo.primtiveToIndexAddition;
+	return ( m_metalPrimitiveInfo.primitiveToIndexMultiplier * primitiveCount ) +
+		m_metalPrimitiveInfo.primtiveToIndexAddition;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
-	uint32_t numVertices,
-	uint32_t startIndex,
-	uint32_t primitiveCount,
-	uint32_t minimumIndex )
+ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t numVertices,
+												   uint32_t startIndex,
+												   uint32_t primitiveCount,
+												   uint32_t minimumIndex )
 {
-    if( m_metalIndexBuffer == nil )
-    {
-        return E_INVALIDARG; 
-    }
-    
+	if( m_metalIndexBuffer == nil )
+	{
+		return E_INVALIDARG;
+	}
+
 	auto vc = ComputeVertexCount( primitiveCount );
 
 	CCP_STATS_ADD( primitiveCount, primitiveCount );
@@ -391,22 +405,22 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 
 	CheckDrawResources();
 
-	m_workQueue->DrawIndexedPrimitives(m_metalPrimitiveInfo.metalPrimitiveType, vc, m_metalIndexType, m_metalIndexBuffer, startIndex, 1);
+	m_workQueue->DrawIndexedPrimitives(
+		m_metalPrimitiveInfo.metalPrimitiveType, vc, m_metalIndexType, m_metalIndexBuffer, startIndex, 1 );
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedInstanced(
-	uint32_t numVertices,
-	uint32_t startIndex,
-	uint32_t primitiveCount,
-	uint32_t numInstances )
+ALResult Tr2RenderContextAL::DrawIndexedInstanced( uint32_t numVertices,
+												   uint32_t startIndex,
+												   uint32_t primitiveCount,
+												   uint32_t numInstances )
 {
-    if( m_metalIndexBuffer == nil )
-    {
-        return E_INVALIDARG;
-    }
-    
+	if( m_metalIndexBuffer == nil )
+	{
+		return E_INVALIDARG;
+	}
+
 	auto vc = ComputeVertexCount( primitiveCount );
 
 	CCP_STATS_ADD( primitiveCount, primitiveCount * numInstances );
@@ -415,39 +429,45 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 
 	CheckDrawResources();
 
-	m_workQueue->DrawIndexedPrimitives(m_metalPrimitiveInfo.metalPrimitiveType, vc, m_metalIndexType, m_metalIndexBuffer, startIndex, numInstances);
+	m_workQueue->DrawIndexedPrimitives(
+		m_metalPrimitiveInfo.metalPrimitiveType, vc, m_metalIndexType, m_metalIndexBuffer, startIndex, numInstances );
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedInstanced(
-	uint32_t indexCountPerInstance,
-	uint32_t instanceCount,
-	uint32_t startIndexLocation,
-	int32_t baseVertexLocation,
-	uint32_t startInstanceLocation )
+ALResult Tr2RenderContextAL::DrawIndexedInstanced( uint32_t indexCountPerInstance,
+												   uint32_t instanceCount,
+												   uint32_t startIndexLocation,
+												   int32_t baseVertexLocation,
+												   uint32_t startInstanceLocation )
 {
-    if( m_metalIndexBuffer == nil )
-    {
-        return E_INVALIDARG;
-    }
-    
+	if( m_metalIndexBuffer == nil )
+	{
+		return E_INVALIDARG;
+	}
+
 	CCP_STATS_ADD( primitiveCount, indexCountPerInstance * instanceCount / 3 );
 	CCP_STATS_ADD( vertexCount, indexCountPerInstance * instanceCount );
 	CCP_STATS_INC( sceneDrawcallCount );
 
 	CheckDrawResources();
 
-	m_workQueue->DrawIndexedPrimitives( m_metalPrimitiveInfo.metalPrimitiveType, indexCountPerInstance, m_metalIndexType, m_metalIndexBuffer, startIndexLocation, instanceCount, baseVertexLocation, startInstanceLocation );
+	m_workQueue->DrawIndexedPrimitives( m_metalPrimitiveInfo.metalPrimitiveType,
+										indexCountPerInstance,
+										m_metalIndexType,
+										m_metalIndexBuffer,
+										startIndexLocation,
+										instanceCount,
+										baseVertexLocation,
+										startInstanceLocation );
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawInstanced(
-	uint32_t vertexCountPerInstance,
-	uint32_t instanceCount,
-	uint32_t startVertexLocation,
-	uint32_t startInstanceLocation )
+ALResult Tr2RenderContextAL::DrawInstanced( uint32_t vertexCountPerInstance,
+											uint32_t instanceCount,
+											uint32_t startVertexLocation,
+											uint32_t startInstanceLocation )
 {
 	CCP_STATS_ADD( primitiveCount, vertexCountPerInstance * instanceCount / 3 );
 	CCP_STATS_ADD( vertexCount, vertexCountPerInstance * instanceCount );
@@ -455,7 +475,11 @@ ALResult Tr2RenderContextAL::DrawInstanced(
 
 	CheckDrawResources();
 
-	m_workQueue->DrawPrimitives( m_metalPrimitiveInfo.metalPrimitiveType, vertexCountPerInstance, startVertexLocation, instanceCount, startInstanceLocation );
+	m_workQueue->DrawPrimitives( m_metalPrimitiveInfo.metalPrimitiveType,
+								 vertexCountPerInstance,
+								 startVertexLocation,
+								 instanceCount,
+								 startInstanceLocation );
 
 	return S_OK;
 }
@@ -471,7 +495,12 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, 
 
 	CheckDrawResources();
 
-	m_workQueue->DrawIndexedPrimitives( m_metalPrimitiveInfo.metalPrimitiveType, m_metalIndexType, m_metalIndexBuffer, 0, params.m_buffer->GetMetalBuffer(), offset );
+	m_workQueue->DrawIndexedPrimitives( m_metalPrimitiveInfo.metalPrimitiveType,
+										m_metalIndexType,
+										m_metalIndexBuffer,
+										0,
+										params.m_buffer->GetMetalBuffer(),
+										offset );
 
 	return S_OK;
 }
@@ -496,10 +525,10 @@ void Tr2RenderContextAL::CheckDrawResources()
 {
 	// Only need to check resources if we don't have a resource set and the shader has changed since the last draw.
 	if( m_needsDrawResourceCheck && !m_resourceSet.IsValid() )
-    {
-        m_shaderProgram.m_program->SetDummyResources( *m_workQueue );
-        m_needsDrawResourceCheck = false;
-    }
+	{
+		m_shaderProgram.m_program->SetDummyResources( *m_workQueue );
+		m_needsDrawResourceCheck = false;
+	}
 
 	if( m_vertexLayout.IsValid() )
 	{
@@ -521,15 +550,14 @@ ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primi
 
 	CheckDrawResources();
 
-	m_workQueue->DrawPrimitives(m_metalPrimitiveInfo.metalPrimitiveType, vc, startVertex, 1);
+	m_workQueue->DrawPrimitives( m_metalPrimitiveInfo.metalPrimitiveType, vc, startVertex, 1 );
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawPrimitiveUP(
-	uint32_t primitiveCount,
-	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride )
+ALResult Tr2RenderContextAL::DrawPrimitiveUP( uint32_t primitiveCount,
+											  const void* vertexStreamZeroData,
+											  uint32_t vertexStreamZeroStride )
 {
 	auto vc = ComputeVertexCount( primitiveCount );
 
@@ -537,33 +565,17 @@ ALResult Tr2RenderContextAL::DrawPrimitiveUP(
 	CCP_STATS_ADD( vertexCount, vc );
 	CCP_STATS_INC( sceneDrawcallCount );
 
-    CheckDrawResources();
+	CheckDrawResources();
 
-	return m_drawUPHelper.DrawPrimitiveUP( m_topology, primitiveCount, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
+	return m_drawUPHelper.DrawPrimitiveUP(
+		m_topology, primitiveCount, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
-	uint32_t numVertices,
-	uint32_t primitiveCount,
-	const uint32_t* indexData,
-	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride )
-{
-	CCP_STATS_ADD( primitiveCount, primitiveCount );
-	CCP_STATS_ADD( vertexCount, numVertices );
-	CCP_STATS_INC( sceneDrawcallCount );
-
-    CheckDrawResources();
-
-    return m_drawUPHelper.DrawIndexedPrimitiveUP( m_topology, numVertices, primitiveCount, indexData, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
-}
-
-ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
-	uint32_t numVertices,
-	uint32_t primitiveCount,
-	const uint16_t* indexData,
-	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride )
+ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP( uint32_t numVertices,
+													 uint32_t primitiveCount,
+													 const uint32_t* indexData,
+													 const void* vertexStreamZeroData,
+													 uint32_t vertexStreamZeroStride )
 {
 	CCP_STATS_ADD( primitiveCount, primitiveCount );
 	CCP_STATS_ADD( vertexCount, numVertices );
@@ -571,7 +583,36 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 
 	CheckDrawResources();
 
-    return m_drawUPHelper.DrawIndexedPrimitiveUP( m_topology, numVertices, primitiveCount, indexData, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
+	return m_drawUPHelper.DrawIndexedPrimitiveUP( m_topology,
+												  numVertices,
+												  primitiveCount,
+												  indexData,
+												  vertexStreamZeroData,
+												  vertexStreamZeroStride,
+												  *this,
+												  GetPrimaryRenderContext() );
+}
+
+ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP( uint32_t numVertices,
+													 uint32_t primitiveCount,
+													 const uint16_t* indexData,
+													 const void* vertexStreamZeroData,
+													 uint32_t vertexStreamZeroStride )
+{
+	CCP_STATS_ADD( primitiveCount, primitiveCount );
+	CCP_STATS_ADD( vertexCount, numVertices );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	CheckDrawResources();
+
+	return m_drawUPHelper.DrawIndexedPrimitiveUP( m_topology,
+												  numVertices,
+												  primitiveCount,
+												  indexData,
+												  vertexStreamZeroData,
+												  vertexStreamZeroStride,
+												  *this,
+												  GetPrimaryRenderContext() );
 }
 
 ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ )
@@ -593,31 +634,37 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline,
+										   Tr2RtShaderTableAL& shaderTable,
+										   const wchar_t* rayGenShader,
+										   uint32_t width,
+										   uint32_t height,
+										   uint32_t depth )
 {
-    if( !pipeline.IsValid() )
-    {
-        return E_FAIL;
-    }
-    auto rayGen = pipeline.TrinityALImpl_GetObject()->GetRayGenIndex( rayGenShader );
-    if( !rayGen )
-    {
-        return E_INVALIDARG;
-    }
-    if (@available(macOS 11.0, *)) {
-        // pass on shaderTable to bind it to the RayGen shader
-        SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram( *rayGen ) );
-        m_workQueue->DispatchRays( pipeline.TrinityALImpl_GetObject(), shaderTable.TrinityALImpl_GetObject(), *rayGen, width, height, depth );
-    }
-    
-    return S_OK;
+	if( !pipeline.IsValid() )
+	{
+		return E_FAIL;
+	}
+	auto rayGen = pipeline.TrinityALImpl_GetObject()->GetRayGenIndex( rayGenShader );
+	if( !rayGen )
+	{
+		return E_INVALIDARG;
+	}
+	if( @available( macOS 11.0, * ) )
+	{
+		// pass on shaderTable to bind it to the RayGen shader
+		SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram( *rayGen ) );
+		m_workQueue->DispatchRays(
+			pipeline.TrinityALImpl_GetObject(), shaderTable.TrinityALImpl_GetObject(), *rayGen, width, height, depth );
+	}
+
+	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetConstants(
-	const Tr2ConstantBufferAL& buffer,
-	ShaderType shaderType,
-	uint32_t registerIndex,
-	uint32_t maxRegisterCount )
+ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer,
+										   ShaderType shaderType,
+										   uint32_t registerIndex,
+										   uint32_t maxRegisterCount )
 {
 	if( registerIndex >= METAL_CONST_BUFFER_COUNT )
 	{
@@ -631,21 +678,22 @@ ALResult Tr2RenderContextAL::SetConstants(
 
 uint64_t Tr2RenderContextAL::UploadConstants( const void* data, size_t size )
 {
-    TrinityALImpl::ConstantBufferToken token;
-    token.frame = 0;
-    token.offset = 0;
-    GetMetalWorkQueue()->UploadConstants( data, uint32_t( size ), token );
-    return token.offset;
+	TrinityALImpl::ConstantBufferToken token;
+	token.frame = 0;
+	token.offset = 0;
+	GetMetalWorkQueue()->UploadConstants( data, uint32_t( size ), token );
+	return token.offset;
 }
 
 uint64_t Tr2RenderContextAL::UploadConstants( const Tr2ConstantBufferAL& buffer )
 {
-    if( buffer.m_buffer->m_buffer )
-    {
-        GetMetalWorkQueue()->UploadConstants( buffer.m_buffer->m_buffer, buffer.m_buffer->m_size, buffer.m_buffer->m_token );
-        return buffer.m_buffer->m_token.offset;
-    }
-    return 0;
+	if( buffer.m_buffer->m_buffer )
+	{
+		GetMetalWorkQueue()->UploadConstants(
+			buffer.m_buffer->m_buffer, buffer.m_buffer->m_size, buffer.m_buffer->m_token );
+		return buffer.m_buffer->m_token.offset;
+	}
+	return 0;
 }
 
 void Tr2RenderContextAL::SetReadOnlyDepth( bool enable )
@@ -663,12 +711,12 @@ void Tr2RenderContextAL::SetReadOnlyDepth( bool enable )
 		// We don't need to do anything special for READ -> WRITE transition
 		return;
 	}
-	
+
 	if( !m_boundDepthStencil.IsValid() )
 	{
 		return;
 	}
-	
+
 	// JM - Blunt approach for now - barrier on render targets. Added proper resource tracking later (maybe).
 	m_workQueue->RenderTargetBarrier();
 }
@@ -694,7 +742,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 
 	m_boundDepthStencil = depthStencil;
 
-	m_workQueue->SetDepthStencilAttachment(depthStencilTexture);
+	m_workQueue->SetDepthStencilAttachment( depthStencilTexture );
 	return S_OK;
 }
 
@@ -703,9 +751,8 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 	id<MTLTexture> renderTargetTexture = nil;
 	if( renderTarget.m_texture->IsValid() )
 	{
-		renderTargetTexture = !m_srgbWriteEnable ?
-			renderTarget.m_texture->GetMetalTexture() :
-			renderTarget.m_texture->GetSRGBViewMetalTexture();
+		renderTargetTexture = !m_srgbWriteEnable ? renderTarget.m_texture->GetMetalTexture() :
+												   renderTarget.m_texture->GetSRGBViewMetalTexture();
 	}
 
 	m_workQueue->SetRenderAttachments( renderTargetTexture, slot, slice );
@@ -714,48 +761,48 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 
 	if( m_boundRenderTargets[0].texture.IsValid() )
 	{
-		SetViewport( Tr2Viewport( m_boundRenderTargets[0].texture.GetWidth(), m_boundRenderTargets[0].texture.GetHeight() ) );
+		SetViewport(
+			Tr2Viewport( m_boundRenderTargets[0].texture.GetWidth(), m_boundRenderTargets[0].texture.GetHeight() ) );
 	}
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::CreateDevice(
-	uint32_t Adapter,
-	Tr2WindowHandle  hFocusWindow,
-	const Tr2PresentParametersAL& presentationParameters )
+ALResult Tr2RenderContextAL::CreateDevice( uint32_t Adapter,
+										   Tr2WindowHandle hFocusWindow,
+										   const Tr2PresentParametersAL& presentationParameters )
 {
 	m_isValid = true;
 	m_workQueue = m_metalContext->GetPrimaryWorkQueue();
 #if 0
 	NSView *view = (NSView *)hFocusWindow;
 #else
-	NSView *view = (NSView *)presentationParameters.outputWindow;
+	NSView* view = (NSView*)presentationParameters.outputWindow;
 #endif
-	m_caMetalLayer = (CAMetalLayer *)view.layer;
-	METAL_LOG(@"Creating device");
+	m_caMetalLayer = (CAMetalLayer*)view.layer;
+	METAL_LOG( @"Creating device" );
 	SetPresentParameters( Adapter, presentationParameters );
 
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
 	}
-    
-    if( @available( macOS 11.0, * ) )
-    {
-        auto device = m_metalContext->GetDevice();
+
+	if( @available( macOS 11.0, * ) )
+	{
+		auto device = m_metalContext->GetDevice();
 		bool isAppleSilicon = [device supportsFamily:MTLGPUFamilyMac2] && [device supportsFamily:MTLGPUFamilyApple7];
-        bool raytracingAvailable = device.supportsRaytracing && isAppleSilicon;
-        m_caps.m_supportsRaytracing = raytracingAvailable;
-        if( m_caps.m_supportsRaytracing )
-        {
-            CCP_LOGNOTICE( "Device supports raytracing" );
-        }
-        else
-        {
-            CCP_LOGNOTICE( "Device does not support raytracing" );
-        }
-    }
+		bool raytracingAvailable = device.supportsRaytracing && isAppleSilicon;
+		m_caps.m_supportsRaytracing = raytracingAvailable;
+		if( m_caps.m_supportsRaytracing )
+		{
+			CCP_LOGNOTICE( "Device supports raytracing" );
+		}
+		else
+		{
+			CCP_LOGNOTICE( "Device does not support raytracing" );
+		}
+	}
 	return S_OK;
 }
 
@@ -764,9 +811,10 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 	return m_defaultBackBuffer.GetFormat();
 }
 
-ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& presentationParameters )
+ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter,
+												   const Tr2PresentParametersAL& presentationParameters )
 {
-	TrinityALImpl::MetalContext *metalContext = GetMetalContext();
+	TrinityALImpl::MetalContext* metalContext = GetMetalContext();
 #if 0
 	m_caMetalLayer.device               = metalContext->GetDevice();
 	m_caMetalLayer.pixelFormat          = metalContext->m_utils->GetMTLPixelFormat(PIXEL_FORMAT_B8G8R8A8_UNORM);
@@ -785,25 +833,20 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2Pr
 		m_presentParameters.mode.format = PIXEL_FORMAT_B8G8R8A8_UNORM;
 	}
 	m_swapChain.m_swapChain->Create( presentationParameters.outputWindow, *this );
-	
+
 	NSView* view = (NSView*)presentationParameters.outputWindow;
 	if( view.layer && [view.layer isKindOfClass:CAMetalLayer.class] )
 	{
-		((CAMetalLayer*)view.layer).displaySyncEnabled = presentationParameters.presentInterval == Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE ? NO : YES;
+		( (CAMetalLayer*)view.layer ).displaySyncEnabled =
+			presentationParameters.presentInterval == Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE ? NO : YES;
 	}
 	m_defaultBackBuffer = m_swapChain.GetBackBuffer();
 
-	// Set a default viewport based around this 
-	m_workQueue->SetViewport(
-		0.0,
-		0.0,
-		m_defaultBackBuffer.GetWidth(),
-		m_defaultBackBuffer.GetHeight(),
-		0.0,
-		1.0);
+	// Set a default viewport based around this
+	m_workQueue->SetViewport( 0.0, 0.0, m_defaultBackBuffer.GetWidth(), m_defaultBackBuffer.GetHeight(), 0.0, 1.0 );
 
 	ResetRenderTargets();
-	SetRenderTarget( m_defaultBackBuffer ); 
+	SetRenderTarget( m_defaultBackBuffer );
 	Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0, 0 );
 
 	return S_OK;
@@ -859,20 +902,19 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderP
 {
 	if( m_shaderProgram == shaderProgram )
 	{
-        return S_OK;
-    }
+		return S_OK;
+	}
 
 	m_shaderProgram = shaderProgram;
 
 	// Move this into shaderProgram itself to remove need for getters.
-	m_workQueue->SetShaders(
-		shaderProgram.m_program->GetVertexShader(),
-		shaderProgram.m_program->GetFragmentShader(),
-		shaderProgram.m_program->GetComputeKernel(),
-		shaderProgram.m_program->GetThreadGroupSize(),
-		shaderProgram.m_program->GetResourceMasks() );
+	m_workQueue->SetShaders( shaderProgram.m_program->GetVertexShader(),
+							 shaderProgram.m_program->GetFragmentShader(),
+							 shaderProgram.m_program->GetComputeKernel(),
+							 shaderProgram.m_program->GetThreadGroupSize(),
+							 shaderProgram.m_program->GetResourceMasks() );
 
-    m_needsDrawResourceCheck = true;
+	m_needsDrawResourceCheck = true;
 
 	return S_OK;
 }
@@ -885,12 +927,11 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderP
 //
 ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 {
-	TrinityALImpl::MetalContext *metalContext = GetMetalContext();
+	TrinityALImpl::MetalContext* metalContext = GetMetalContext();
 
 	switch( state )
 	{
-	case RS_ZENABLE:
-	{
+	case RS_ZENABLE: {
 		// You don't enable/disable depth test explicitly in Metal you just set the compare mode.
 		if( !value )
 		{
@@ -904,14 +945,12 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 		}
 		return S_OK;
 	}
-	case RS_ZWRITEENABLE:
-	{
+	case RS_ZWRITEENABLE: {
 		m_depthWriteEnabled = value ? true : false;
 		m_workQueue->SetDepthState( m_depthWriteEnabled && !m_readOnlyDepth );
 		return S_OK;
 	}
-	case RS_ZFUNC:
-	{
+	case RS_ZFUNC: {
 		// Need to store this as depth test can be enabled/disabled (which Metal has no analog for - you just set the compare mode).
 		m_depthCompareFunction = metalContext->m_utils->GetMTLCompareFunction( value );
 		if( !m_depthCompareEnabled )
@@ -928,132 +967,116 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 	case RS_ALPHATESTENABLE:
 	case RS_ALPHAREF:
 	case RS_ALPHAFUNC:
-        return S_OK;
+		return S_OK;
 	case RS_CLIPPING:
 	case RS_CLIPPLANEENABLE:
 		return S_OK;
-	case RS_SRCBLEND:
-	{
+	case RS_SRCBLEND: {
 		MTLBlendFactor srcBlend = metalContext->m_utils->GetMTLBlendFactor( value );
 		m_workQueue->SetSrcBlend( 0, srcBlend );
 		return S_OK;
 	}
-	case RS_DESTBLEND:
-	{
+	case RS_DESTBLEND: {
 		MTLBlendFactor destBlend = metalContext->m_utils->GetMTLBlendFactor( value );
 		m_workQueue->SetDestBlend( 0, destBlend );
 		return S_OK;
 	}
-	case RS_SRCBLENDALPHA:
-	{
+	case RS_SRCBLENDALPHA: {
 		MTLBlendFactor srcBlend = metalContext->m_utils->GetMTLBlendFactor( value );
 		m_workQueue->SetSrcBlendAlpha( 0, srcBlend );
 		return S_OK;
 	}
-	case RS_DESTBLENDALPHA:
-	{
+	case RS_DESTBLENDALPHA: {
 		MTLBlendFactor destBlend = metalContext->m_utils->GetMTLBlendFactor( value );
 		m_workQueue->SetDestBlendAlpha( 0, destBlend );
 		return S_OK;
 	}
-	case RS_BLENDOP:
-	{
+	case RS_BLENDOP: {
 		MTLBlendOperation blendOp = metalContext->m_utils->GetMTLBlendOperation( value );
 		m_workQueue->SetBlendOp( 0, blendOp );
 		return S_OK;
 	}
-	case RS_BLENDOPALPHA:
-	{
+	case RS_BLENDOPALPHA: {
 		MTLBlendOperation blendOp = metalContext->m_utils->GetMTLBlendOperation( value );
 		m_workQueue->SetBlendOpAlpha( 0, blendOp );
 		return S_OK;
 	}
-	case RS_CULLMODE:
-	{
+	case RS_CULLMODE: {
 		MTLCullMode cullMode = metalContext->m_utils->GetMTLCullMode( (Tr2RenderContextEnum::CullMode)value );
 		m_workQueue->SetCullMode( cullMode );
 		return S_OK;
 	}
-	case RS_ALPHABLENDENABLE:
-	{
-		TrinityALImpl::MetalBlendType blendType = value ? ( m_separateAlphaBlendEnabled ? TrinityALImpl::METAL_BLENDING_ENABLED_SEPARATE_ALPHA : TrinityALImpl::METAL_BLENDING_ENABLED ) : TrinityALImpl::METAL_BLENDING_DISABLED;
+	case RS_ALPHABLENDENABLE: {
+		TrinityALImpl::MetalBlendType blendType = value ?
+			( m_separateAlphaBlendEnabled ? TrinityALImpl::METAL_BLENDING_ENABLED_SEPARATE_ALPHA :
+											TrinityALImpl::METAL_BLENDING_ENABLED ) :
+			TrinityALImpl::METAL_BLENDING_DISABLED;
 		m_alphaBlendEnable = value != 0;
 		m_workQueue->SetBlendType( 0, blendType );
 		return S_OK;
 	}
-	case RS_STENCILENABLE:
-	{
+	case RS_STENCILENABLE: {
 		bool stencilEnable = value ? true : false;
 		m_workQueue->SetStencilState( stencilEnable );
 		return S_OK;
 	}
-	case RS_STENCILFAIL:
-	{
+	case RS_STENCILFAIL: {
 		MTLStencilOperation stencilOp = metalContext->m_utils->GetMTLStencilOperation( value );
 		m_workQueue->SetStencilFailOp( stencilOp );
 		return S_OK;
 	}
-	case RS_STENCILZFAIL:
-	{
+	case RS_STENCILZFAIL: {
 		MTLStencilOperation stencilOp = metalContext->m_utils->GetMTLStencilOperation( value );
 		m_workQueue->SetStencilDepthFailOp( stencilOp );
 		return S_OK;
 	}
-	case RS_STENCILPASS:
-	{
+	case RS_STENCILPASS: {
 		MTLStencilOperation stencilOp = metalContext->m_utils->GetMTLStencilOperation( value );
 		m_workQueue->SetStencilPassOp( stencilOp );
 		return S_OK;
 	}
-	case RS_STENCILFUNC:
-	{
+	case RS_STENCILFUNC: {
 		MTLCompareFunction stencilCompareFn = metalContext->m_utils->GetMTLCompareFunction( value );
 		m_workQueue->SetStencilCompareFn( stencilCompareFn );
 		return S_OK;
 	}
-	case RS_STENCILREF:
-	{
+	case RS_STENCILREF: {
 		m_workQueue->SetStencilRefValue( value );
 		return S_OK;
 	}
-	case RS_STENCILMASK:
-	{
+	case RS_STENCILMASK: {
 		m_workQueue->SetStencilMask( value );
 		return S_OK;
 	}
-	case RS_COLORWRITEENABLE:
-	{
+	case RS_COLORWRITEENABLE: {
 		MTLColorWriteMask writeMask = metalContext->m_utils->GetMTLColorWriteMask( (ColorWriteEnable)value );
 		m_workQueue->SetColorWriteMask( 0, writeMask );
 		return S_OK;
 	}
-	case RS_SLOPESCALEDEPTHBIAS:
-	{
-		float slopeScale = *(float *)&value;
+	case RS_SLOPESCALEDEPTHBIAS: {
+		float slopeScale = *(float*)&value;
 		m_workQueue->SetDepthBias( nil, &slopeScale, nil );
 		return S_OK;
 	}
-	case RS_BLENDFACTOR:
-	{
+	case RS_BLENDFACTOR: {
 		m_workQueue->SetBlendColor( 0, value );
 		return S_OK;
 	}
 	case RS_DEPTHBIAS:
-	case RS_ZBIAS:
-	{
-		float depthBias = *(float *)&value;
+	case RS_ZBIAS: {
+		float depthBias = *(float*)&value;
 		m_workQueue->SetDepthBias( &depthBias, nil, nil );
 		return S_OK;
 	}
-	case RS_DEPTH_CLIP_ENABLE:
-	{
+	case RS_DEPTH_CLIP_ENABLE: {
 		m_workQueue->SetDepthClipEnable( value != 0 );
 		return S_OK;
 	}
-	case RS_SEPARATEALPHABLENDENABLE:
-	{
+	case RS_SEPARATEALPHABLENDENABLE: {
 		m_separateAlphaBlendEnabled = value != 0;
-		TrinityALImpl::MetalBlendType blendType = m_alphaBlendEnable ? ( value ? TrinityALImpl::METAL_BLENDING_ENABLED_SEPARATE_ALPHA : TrinityALImpl::METAL_BLENDING_ENABLED ) : TrinityALImpl::METAL_BLENDING_DISABLED;
+		TrinityALImpl::MetalBlendType blendType = m_alphaBlendEnable ?
+			( value ? TrinityALImpl::METAL_BLENDING_ENABLED_SEPARATE_ALPHA : TrinityALImpl::METAL_BLENDING_ENABLED ) :
+			TrinityALImpl::METAL_BLENDING_DISABLED;
 		m_workQueue->SetBlendType( 0, blendType );
 		return S_OK;
 	}
@@ -1066,7 +1089,8 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 			{
 				if( m_boundRenderTargets[i].texture.IsValid() )
 				{
-					id<MTLTexture> renderTargetTexture = m_boundRenderTargets[i].texture.m_texture->GetSRGBViewMetalTexture();
+					id<MTLTexture> renderTargetTexture =
+						m_boundRenderTargets[i].texture.m_texture->GetSRGBViewMetalTexture();
 					m_workQueue->SetRenderAttachments( renderTargetTexture, i, m_boundRenderTargets[i].slice );
 				}
 			}
@@ -1083,18 +1107,18 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 			}
 		}
 		return S_OK;
-    case RS_FILLMODE:
-        switch( value )
-        {
-        case FM_SOLID:
-            m_workQueue->SetFillMode( MTLTriangleFillModeFill );
-            return S_OK;
-        case FM_WIREFRAME:
-            m_workQueue->SetFillMode( MTLTriangleFillModeLines );
-            return S_OK;
-        default:
-            return E_INVALIDARG;
-        }
+	case RS_FILLMODE:
+		switch( value )
+		{
+		case FM_SOLID:
+			m_workQueue->SetFillMode( MTLTriangleFillModeFill );
+			return S_OK;
+		case FM_WIREFRAME:
+			m_workQueue->SetFillMode( MTLTriangleFillModeLines );
+			return S_OK;
+		default:
+			return E_INVALIDARG;
+		}
 	default:
 		return E_INVALIDARG;
 	}
@@ -1103,9 +1127,7 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 
 ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, uint32_t count )
 {
-	for( uint32_t i = 0;
-		 ( count != 0 && i != count ) || ( count == 0 && *stateValuePairs );
-		 ++i, stateValuePairs += 2 )
+	for( uint32_t i = 0; ( count != 0 && i != count ) || ( count == 0 && *stateValuePairs ); ++i, stateValuePairs += 2 )
 	{
 		SetRenderState( static_cast<RenderState>( stateValuePairs[0] ), stateValuePairs[1] );
 	}
@@ -1131,7 +1153,11 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		const ShaderType stages[] = { VERTEX_SHADER, PIXEL_SHADER, COMPUTE_SHADER };
 		for( auto stage : stages )
 		{
-			m_workQueue->SetBuffers( stage, rs.m_buffers[stage], rs.m_buffersMask[stage], GetMetalContext()->GetHeapViewBuffer(), rs.m_heapViewMask[stage] );
+			m_workQueue->SetBuffers( stage,
+									 rs.m_buffers[stage],
+									 rs.m_buffersMask[stage],
+									 GetMetalContext()->GetHeapViewBuffer(),
+									 rs.m_heapViewMask[stage] );
 			m_workQueue->SetTextures( stage, rs.m_textures[stage], rs.m_texturesRange[stage] );
 			m_workQueue->SetSamplers( stage, rs.m_samplers[stage], rs.m_samplersRange[stage] );
 		}
@@ -1147,7 +1173,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		}
 	}
 
-    m_needsDrawResourceCheck = true;
+	m_needsDrawResourceCheck = true;
 	return S_OK;
 }
 
@@ -1155,7 +1181,8 @@ ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport )
 {
 	m_viewport = viewport;
 	TrinityALImpl::MetalContext* metalContext = GetMetalContext();
-	m_workQueue->SetViewport( viewport.m_x, viewport.m_y, viewport.m_width, viewport.m_height, viewport.m_minZ, viewport.m_maxZ );
+	m_workQueue->SetViewport(
+		viewport.m_x, viewport.m_y, viewport.m_width, viewport.m_height, viewport.m_minZ, viewport.m_maxZ );
 	return S_OK;
 }
 
@@ -1235,7 +1262,7 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 	}
 	else
 	{
-		width  = m_boundRenderTargets[slot].texture.GetWidth();
+		width = m_boundRenderTargets[slot].texture.GetWidth();
 		height = m_boundRenderTargets[slot].texture.GetHeight();
 	}
 	return S_OK;
@@ -1285,13 +1312,12 @@ ALResult Tr2RenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderCont
 	return E_FAIL;
 }
 
-ALResult Tr2RenderContextAL::GetGpuPageFaultResource(
-	Tr2RenderContextEnum::PixelFormat&,
-	uint64_t&,
-	uint32_t&,
-	uint32_t&,
-	uint32_t&,
-	uint32_t& ) const
+ALResult Tr2RenderContextAL::GetGpuPageFaultResource( Tr2RenderContextEnum::PixelFormat&,
+													  uint64_t&,
+													  uint32_t&,
+													  uint32_t&,
+													  uint32_t&,
+													  uint32_t& ) const
 {
 	return E_FAIL;
 }
@@ -1308,7 +1334,9 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment& rt0, const Tr
 	m_workQueue->RenderPassHint( hint );
 }
 
-void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2ColorAttachment& rt1, const Tr2DepthAttachment& depth )
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment& rt0,
+										 const Tr2ColorAttachment& rt1,
+										 const Tr2DepthAttachment& depth )
 {
 	TrinityALImpl::MetalRenderPassHint hint;
 	hint.depth = { MTLLoadAction( depth.load ), MTLStoreAction( depth.store ), depth.clearValue };
@@ -1319,12 +1347,11 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment& rt0, const Tr
 		hint.color[i] = { MTLLoadActionDontCare, MTLStoreActionDontCare };
 	}
 	m_workQueue->RenderPassHint( hint );
-
 }
 
 void Tr2RenderContextAL::EndRenderPassHint()
 {
-    m_workQueue->EndRenderPassHint();
+	m_workQueue->EndRenderPassHint();
 }
 
 uint32_t Tr2RenderContextAL::BeginParallelEncoding( uint32_t requestedEncodersCount )
@@ -1353,7 +1380,7 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 	{
 		return E_INVALIDCALL;
 	}
-	
+
 	context->m_isValid = m_isValid;
 	context->m_isPrimary = false;
 
@@ -1366,11 +1393,11 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 	context->m_srgbWriteEnable = m_srgbWriteEnable;
 	context->m_alphaBlendEnable = m_alphaBlendEnable;
 	context->m_separateAlphaBlendEnabled = m_separateAlphaBlendEnabled;
-	
+
 	context->m_metalPrimitiveInfo = m_metalPrimitiveInfo;
 	context->m_metalIndexType = m_metalIndexType;
 	context->m_depthCompareFunction = m_depthCompareFunction;
-	
+
 	context->m_vertexLayout = Tr2VertexLayoutAL();
 	context->m_resourceSet = Tr2ResourceSetAL();
 	context->m_shaderProgram = Tr2ShaderProgramAL();
@@ -1379,21 +1406,26 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 	return S_OK;
 }
 
-Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
+Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech,
+															Tr2UpscalingAL::Setting setting,
+															bool frameGeneration,
+															uint32_t adapter )
 {
-    if( m_upscalingTechnique )
-    {
-        delete m_upscalingTechnique;
-        m_upscalingTechnique = nullptr;
-    }
-	
-    if( tech == Tr2UpscalingAL::Technique::NONE )
+	if( m_upscalingTechnique )
+	{
+		delete m_upscalingTechnique;
+		m_upscalingTechnique = nullptr;
+	}
+
+	if( tech == Tr2UpscalingAL::Technique::NONE )
 	{
 		return Tr2UpscalingAL::Result::OK;
 	}
 
 	// find the technique
-	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
+	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(),
+										 TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(),
+										 tech );
 	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
@@ -1404,7 +1436,7 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-	
+
 	return Tr2UpscalingAL::Result::OK;
 }
 
@@ -1418,7 +1450,8 @@ Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscali
 	return m_upscalingTechnique->GetContext( upscalingContextID );
 }
 
-Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext )
+Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params,
+																   uint32_t existingContext )
 {
 	if( m_upscalingTechnique == nullptr )
 	{
@@ -1438,7 +1471,8 @@ void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
 	return m_upscalingTechnique->DeleteContext( contextID );
 }
 
-std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
+std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>>
+	Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
 {
 	Tr2UpscalingAL::Technique activeTechnique = Tr2UpscalingAL::Technique::NONE;
 	if( m_upscalingTechnique )
@@ -1448,11 +1482,11 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderCont
 		m_upscalingTechnique->GetState( activeTechnique, setting, framegeneration );
 	}
 
-    std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
-    for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
-    {
-		if( technique == activeTechnique && m_upscalingTechnique)
-		{ 
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
+	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
+	{
+		if( technique == activeTechnique && m_upscalingTechnique )
+		{
 			uint32_t allSettings = 0;
 
 			for( auto& setting : m_upscalingTechnique->GetAvailableSettings() )
@@ -1460,30 +1494,32 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderCont
 				allSettings |= setting;
 			}
 
-			supportedTechniques.push_back( { technique, allSettings, m_upscalingTechnique->SupportsFrameGeneration() } );
+			supportedTechniques.push_back(
+				{ technique, allSettings, m_upscalingTechnique->SupportsFrameGeneration() } );
 			continue;
 		}
 
-        auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
-        if( tech )
-        {
-            uint32_t allSettings = 0;
+		auto tech = TrinityALImpl::CreateUpscalingTechnique(
+			*this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
+		if( tech )
+		{
+			uint32_t allSettings = 0;
 
-            for( auto& setting : tech->GetAvailableSettings() )
-            {
-                allSettings |= setting;
-            }
+			for( auto& setting : tech->GetAvailableSettings() )
+			{
+				allSettings |= setting;
+			}
 
-            supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
-            tech = nullptr;
-        }
-		
+			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
+			tech = nullptr;
+		}
+
 		if( tech )
 		{
 			tech = nullptr;
 		}
-    }
-    return supportedTechniques;
+	}
+	return supportedTechniques;
 }
 
 Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID ) const
@@ -1505,17 +1541,20 @@ Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t ups
 	return info;
 }
 
-void Tr2RenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const
+void Tr2RenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique,
+											Tr2UpscalingAL::Setting& setting,
+											bool& framegeneration,
+											bool& temporal ) const
 {
-    if( m_upscalingTechnique )
-    {
-        m_upscalingTechnique->GetState( technique, setting, framegeneration );
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->GetState( technique, setting, framegeneration );
 		temporal = m_upscalingTechnique->IsTemporal();
-        return;
-    }
-    technique = Tr2UpscalingAL::Technique::NONE;
-    setting = Tr2UpscalingAL::Setting::NATIVE;
-    framegeneration = false;
+		return;
+	}
+	technique = Tr2UpscalingAL::Technique::NONE;
+	setting = Tr2UpscalingAL::Setting::NATIVE;
+	framegeneration = false;
 	temporal = false;
 }
 
@@ -1528,113 +1567,120 @@ void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameE
 
 	return m_upscalingTechnique->MarkFrameEvent( frameEvent );
 }
-ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination dest, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
+ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination dest,
+										   Tr2GpuUsage::Type usage,
+										   const Tr2BindlessResourcesAL& resources )
 {
-    if( resources.m_textures.empty() && resources.m_buffers.empty() )
-    {
-        return S_OK;
-    }
-    if( @available( macOS 13.0, * ) )
-    {
+	if( resources.m_textures.empty() && resources.m_buffers.empty() )
+	{
+		return S_OK;
+	}
+	if( @available( macOS 13.0, * ) )
+	{
 
-        std::vector<__unsafe_unretained id<MTLResource>> mtlResources;
-        mtlResources.reserve( resources.m_textures.size() * 2 + resources.m_buffers.size() );
+		std::vector<__unsafe_unretained id<MTLResource>> mtlResources;
+		mtlResources.reserve( resources.m_textures.size() * 2 + resources.m_buffers.size() );
 
-        auto CopyMtlResources = [&mtlResources, &resources]( uint64_t encoderIndex ) {
-            for( auto& tex : resources.m_textures )
-            {
-                if( tex->IsValid() && tex->m_usedInEncoder != encoderIndex )
-                {
-                    tex->m_usedInEncoder = encoderIndex;
-                    __unsafe_unretained auto t0 = tex->m_mtlTexture;
-                    if( t0 )
-                    {
-                        mtlResources.push_back( t0 );
-                    }
-                    __unsafe_unretained auto t1 = tex->m_mtlTextureSRGBView;
-                    if( t1 && t1 != t0 )
-                    {
-                        mtlResources.push_back( t1 );
-                    }
-                }
-            }
-            for( auto& buffer : resources.m_buffers )
-            {
-                if( buffer->IsValid() && buffer->m_usedInEncoder != encoderIndex )
-                {
-                    buffer->m_usedInEncoder = encoderIndex;
-                    __unsafe_unretained auto t0 = buffer->m_mtlBuffer;
-                    if( t0 )
-                    {
-                        mtlResources.push_back( t0 );
-                    }
-                }
-            }
-        };
-        if( dest == Tr2UseResourceDestination::RENDER )
-        {
-            auto encoder = m_workQueue->GetRenderEncoder();
-            CopyMtlResources( m_workQueue->GetCurrentEncoderIndex() );
-            [encoder useResources:mtlResources.data()
-                            count:NSUInteger( mtlResources.size())
-                            usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
-        }
-        else
-        {
-            auto encoder = m_workQueue->GetComputeEncoder();
-            CopyMtlResources( m_workQueue->GetCurrentEncoderIndex() );
-            [encoder useResources:mtlResources.data()
-                            count:NSUInteger( mtlResources.size())
-                            usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
-        }
-        m_workQueue->ReleaseEncoder( false );
-    }
+		auto CopyMtlResources = [&mtlResources, &resources]( uint64_t encoderIndex ) {
+			for( auto& tex : resources.m_textures )
+			{
+				if( tex->IsValid() && tex->m_usedInEncoder != encoderIndex )
+				{
+					tex->m_usedInEncoder = encoderIndex;
+					__unsafe_unretained auto t0 = tex->m_mtlTexture;
+					if( t0 )
+					{
+						mtlResources.push_back( t0 );
+					}
+					__unsafe_unretained auto t1 = tex->m_mtlTextureSRGBView;
+					if( t1 && t1 != t0 )
+					{
+						mtlResources.push_back( t1 );
+					}
+				}
+			}
+			for( auto& buffer : resources.m_buffers )
+			{
+				if( buffer->IsValid() && buffer->m_usedInEncoder != encoderIndex )
+				{
+					buffer->m_usedInEncoder = encoderIndex;
+					__unsafe_unretained auto t0 = buffer->m_mtlBuffer;
+					if( t0 )
+					{
+						mtlResources.push_back( t0 );
+					}
+				}
+			}
+		};
+		if( dest == Tr2UseResourceDestination::RENDER )
+		{
+			auto encoder = m_workQueue->GetRenderEncoder();
+			CopyMtlResources( m_workQueue->GetCurrentEncoderIndex() );
+			[encoder
+				useResources:mtlResources.data()
+					   count:NSUInteger( mtlResources.size() )
+					   usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite :
+																	  MTLResourceUsageRead];
+		}
+		else
+		{
+			auto encoder = m_workQueue->GetComputeEncoder();
+			CopyMtlResources( m_workQueue->GetCurrentEncoderIndex() );
+			[encoder
+				useResources:mtlResources.data()
+					   count:NSUInteger( mtlResources.size() )
+					   usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite :
+																	  MTLResourceUsageRead];
+		}
+		m_workQueue->ReleaseEncoder( false );
+	}
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas  )
+ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
 {
-    if( @available( macOS 11.0, * ) )
-    {
-        id<MTLAccelerationStructure> accelerationStructure =  tlas.TrinityALImpl_GetObject()->GetInstanceAccelerationStructure();
-        
-        auto computeEncoder = m_workQueue->GetComputeEncoder();
-        
-        [computeEncoder useResource:accelerationStructure usage:MTLResourceUsageRead];
-        
-        m_workQueue->ReleaseEncoder( false );
-        
-        return S_OK;
-    }
-    return E_FAIL;
+	if( @available( macOS 11.0, * ) )
+	{
+		id<MTLAccelerationStructure> accelerationStructure =
+			tlas.TrinityALImpl_GetObject()->GetInstanceAccelerationStructure();
+
+		auto computeEncoder = m_workQueue->GetComputeEncoder();
+
+		[computeEncoder useResource:accelerationStructure usage:MTLResourceUsageRead];
+
+		m_workQueue->ReleaseEncoder( false );
+
+		return S_OK;
+	}
+	return E_FAIL;
 }
 
 ALResult Tr2RenderContextAL::UseConstantBuffer( id<MTLBuffer> constantBuffer )
 {
-    if( @available( macOS 11.0, * ) )
-    {
-        auto computeEncoder = m_workQueue->GetComputeEncoder();
-        
-        [computeEncoder useResource:constantBuffer usage:MTLResourceUsageRead];
-        
-        m_workQueue->ReleaseEncoder( false );
-        
-        return S_OK;
-    }
-    return E_FAIL;
+	if( @available( macOS 11.0, * ) )
+	{
+		auto computeEncoder = m_workQueue->GetComputeEncoder();
+
+		[computeEncoder useResource:constantBuffer usage:MTLResourceUsageRead];
+
+		m_workQueue->ReleaseEncoder( false );
+
+		return S_OK;
+	}
+	return E_FAIL;
 }
 
 bool Tr2RenderContextAL::SupportsBindlessTextures() const
 {
-    if( @available( macOS 13.0, * ) )
-    {
-        if( !m_metalContext || !m_metalContext->GetDevice() )
-        {
-            return false;
-        }
-        return m_metalContext->GetDevice().argumentBuffersSupport == MTLArgumentBuffersTier2;
-    }
-    return false;
+	if( @available( macOS 13.0, * ) )
+	{
+		if( !m_metalContext || !m_metalContext->GetDevice() )
+		{
+			return false;
+		}
+		return m_metalContext->GetDevice().argumentBuffersSupport == MTLArgumentBuffersTier2;
+	}
+	return false;
 }
 
 uint64_t Tr2RenderContextAL::GetRecordingFrameNumber() const
@@ -1649,7 +1695,7 @@ uint64_t Tr2RenderContextAL::GetRenderedFrameNumber() const
 
 void Tr2RenderContextAL::ReleaseLater( id<NSObject> obj )
 {
-    m_metalContext->ReleaseLater( obj );
+	m_metalContext->ReleaseLater( obj );
 }
 
 void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )

@@ -65,7 +65,7 @@ bool Tr2DataTextureManager::OnPrepareResources()
 
 	// create the data texture here, prefill it with zeros
 	std::vector<Vector4> t( m_textureWidth * m_textureHeight, Vector4( 0.f, 0.f, 0.f, 0.f ) );
-	Tr2SubresourceData init = { &t[0], m_textureWidth * uint32_t(sizeof(Vector4)), m_textureWidth * m_textureHeight * uint32_t(sizeof(Vector4)) };
+	Tr2SubresourceData init = { &t[0], m_textureWidth * uint32_t( sizeof( Vector4 ) ), m_textureWidth * m_textureHeight * uint32_t( sizeof( Vector4 ) ) };
 	if( FAILED( m_dataTexture->GetTexture()->Create( Tr2BitmapDimensions( m_textureWidth, m_textureHeight, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_FLOAT ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE, &init, renderContext ) ) )
 	{
 		m_dataTexture->OnTextureChange().Broadcast();
@@ -128,12 +128,12 @@ void Tr2DataTextureManager::Update( EveUpdateContext& updateContext )
 				}
 
 				// save pixeloffset
-				m_dataTextureOffsets[ blockID ] = pixelOffset;
+				m_dataTextureOffsets[blockID] = pixelOffset;
 
 				// header
 				for( uint32_t y = 0; y < m_textureHeight; ++y )
 				{
-					memcpy( &mem[ y * pitch ], &block->header[ y ], sizeof( Vector4 ) );
+					memcpy( &mem[y * pitch], &block->header[y], sizeof( Vector4 ) );
 				}
 
 				// data
@@ -142,7 +142,7 @@ void Tr2DataTextureManager::Update( EveUpdateContext& updateContext )
 				{
 					for( uint32_t x = 0; x < block->blockLength; ++x )
 					{
-						memcpy( &mem[ y * pitch + x * sizeof( Vector4 )], &block->data[ x * m_textureHeight + y ], sizeof( Vector4 ) );
+						memcpy( &mem[y * pitch + x * sizeof( Vector4 )], &block->data[x * m_textureHeight + y], sizeof( Vector4 ) );
 					}
 				}
 
@@ -194,10 +194,10 @@ int32_t Tr2DataTextureManager::RequestBlockData( const Vector4* headerData, uint
 	}
 
 	// insert it into the map
-	m_blockData[ m_blockDataNextIdx ] = bd;
+	m_blockData[m_blockDataNextIdx] = bd;
 
 	// and insert it into the priority map, keeps it sorted!
-	m_blockPriority[ priority ] = m_blockDataNextIdx;
+	m_blockPriority[priority] = m_blockDataNextIdx;
 
 	return m_blockDataNextIdx++;
 }
@@ -218,11 +218,3 @@ int32_t Tr2DataTextureManager::GetTextureOffset( int32_t blockID ) const
 	}
 	return finder->second;
 }
-
-
-
-
-
-
-
-

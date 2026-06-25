@@ -9,11 +9,11 @@ bool g_gpuTimersEnabled = true;
 
 namespace
 {
-	auto nullGpuTimer = std::make_shared<TrinityALImpl::Tr2GpuTimerAL>();
+auto nullGpuTimer = std::make_shared<TrinityALImpl::Tr2GpuTimerAL>();
 }
 
-Tr2GpuTimerAL::Tr2GpuTimerAL()
-	:m_gpu_timer(nullGpuTimer)
+Tr2GpuTimerAL::Tr2GpuTimerAL() :
+	m_gpu_timer( nullGpuTimer )
 {
 }
 
@@ -24,10 +24,10 @@ ALResult Tr2GpuTimerAL::Create( Tr2PrimaryRenderContextAL& renderContext )
 		m_gpu_timer = nullGpuTimer;
 		return E_FAIL;
 	}
-	
+
 	m_gpu_timer = std::make_shared<TrinityALImpl::Tr2GpuTimerAL>();
-	auto hr = m_gpu_timer->Create(renderContext);
-	if( FAILED( hr))
+	auto hr = m_gpu_timer->Create( renderContext );
+	if( FAILED( hr ) )
 	{
 		m_gpu_timer = nullGpuTimer;
 	}
@@ -37,17 +37,17 @@ ALResult Tr2GpuTimerAL::Create( Tr2PrimaryRenderContextAL& renderContext )
 
 bool Tr2GpuTimerAL::Begin( Tr2RenderContextAL& renderContext ) const
 {
-	return m_gpu_timer->Begin(renderContext);
+	return m_gpu_timer->Begin( renderContext );
 }
 
 void Tr2GpuTimerAL::End( Tr2RenderContextAL& renderContext ) const
 {
-	m_gpu_timer->End(renderContext);
+	m_gpu_timer->End( renderContext );
 }
 
 float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& renderContext ) const
 {
-	return m_gpu_timer->GetTime(renderContext);
+	return m_gpu_timer->GetTime( renderContext );
 }
 
 bool Tr2GpuTimerAL::IsValid() const

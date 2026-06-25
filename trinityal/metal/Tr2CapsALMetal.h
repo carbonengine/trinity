@@ -2,7 +2,7 @@
 
 #pragma once
 
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#if ( TRINITY_PLATFORM == TRINITY_METAL )
 
 #define TRINITY_PLATFORM_SUPPORTS_BUFFER_SHADER_RESOURCES 1
 #define TRINITY_PLATFORM_SUPPORTS_BUFFER_COUNTERS 0
@@ -27,12 +27,12 @@ public:
 	bool SupportsVariableRefreshRate() const;
 	bool SupportsRaytracing() const;
 
-    bool m_supportsRaytracing;
-    
-    Tr2CapsAL();
-    Tr2CapsAL(const Tr2CapsAL& other);
-    
-    Tr2CapsAL& operator=(const Tr2CapsAL& other);
+	bool m_supportsRaytracing;
+
+	Tr2CapsAL();
+	Tr2CapsAL( const Tr2CapsAL& other );
+
+	Tr2CapsAL& operator=( const Tr2CapsAL& other );
 };
 
 #endif

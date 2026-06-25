@@ -81,8 +81,7 @@ const Be::ClassInfo* Tr2EffectRes::ExposeToBlue()
 			"GetPermutationDescription",
 			GetPermutationDescription,
 			"Returns a description of effect permutations as a tuple of dictionaries.\n"
-			"Each dictionary contains a tuple \"options\" of permutation options, \"default\" value index and \"description\"."
-			)
+			"Each dictionary contains a tuple \"options\" of permutation options, \"default\" value index and \"description\"." )
 #endif
 
 	EXPOSURE_CHAINTO( BlueAsyncRes )

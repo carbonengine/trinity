@@ -18,14 +18,13 @@ Tr2PPVignetteEffect::Tr2PPVignetteEffect( IRoot* lockobj ) :
 	m_sineMinimum( 0.0f ),
 	m_sineMaximum( 1.0f )
 {
-
 }
 
 Tr2PPVignetteEffect::~Tr2PPVignetteEffect()
 {
-
 }
 
-bool Tr2PPVignetteEffect::IsActive() {
+bool Tr2PPVignetteEffect::IsActive()
+{
 	return m_display && m_intensity > 0.0f && m_opacity > 0.0f;
 }

@@ -20,9 +20,8 @@ extern const Be::VarChooser UICursorChooser[];
 
 
 #if BLUE_WITH_PYTHON
-void AddUIChoosersToDict(PyObject* dict);
+void AddUIChoosersToDict( PyObject* dict );
 #endif
 
 
 #endif
-

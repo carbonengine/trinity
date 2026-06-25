@@ -28,7 +28,7 @@ void EveSocketParameterBindingBase::ClearBindings()
 
 bool EveSocketParameterBindingBase::BindToExternalParameter( Tr2ExternalParameter& externalParameter )
 {
-	if ( !externalParameter.IsValid() || externalParameter.GetName() != m_name )
+	if( !externalParameter.IsValid() || externalParameter.GetName() != m_name )
 	{
 		return false;
 	}
@@ -37,12 +37,12 @@ bool EveSocketParameterBindingBase::BindToExternalParameter( Tr2ExternalParamete
 	// the value attribute of any derived class should be exposed in blue as "value" to make this work...
 	binding->SetSource( "value", this );
 	binding->Initialize();
-	if ( !binding->IsValid() )
+	if( !binding->IsValid() )
 	{
 		return false;
 	}
-	
-	if ( !ExtractDefault( externalParameter ) )
+
+	if( !ExtractDefault( externalParameter ) )
 	{
 		return false;
 	}
@@ -58,7 +58,7 @@ bool EveSocketParameterBindingBase::Used() const
 
 void EveSocketParameterBindingBase::Propagate()
 {
-	for ( auto it = begin( m_bindings ); it != end( m_bindings ); ++it )
+	for( auto it = begin( m_bindings ); it != end( m_bindings ); ++it )
 	{
 		( *it )->CopyValue();
 	}
@@ -194,7 +194,7 @@ bool GetExternalParameterValue( Vector2& value, const Tr2ExternalParameter& exte
 		}
 		switch( entry->mType )
 		{
-		case Be::FLOATARRAY: 
+		case Be::FLOATARRAY:
 			if( entry->GetFloatArraySize() == 2 )
 			{
 				auto v = reinterpret_cast<const float*>( src );
@@ -351,54 +351,54 @@ bool GetExternalParameterValue( Color& value, const Tr2ExternalParameter& extern
 
 }
 
-#define SOCKET_PARAMETER_DEFINE( _className, _valueType, _defaultValue )\
-	_className::_className( IRoot* lockobj ) :\
-		EveSocketParameterBindingBase( lockobj ),\
-		m_defaults( ),\
-		m_value( _defaultValue )\
-	{\
-	}\
-	_className::~_className()\
-	{\
-	}\
-	void _className::ClearBindings()\
-	{\
-		m_defaults.clear();\
-		EveSocketParameterBindingBase::ClearBindings();\
-	}\
-	void _className::Reset()\
-	{\
-		for ( size_t i = 0; i < m_bindings.size(); ++i )\
-		{\
-			m_value = m_defaults[i];\
-			m_bindings[i]->CopyValue();\
-		}\
-		ClearBindings();\
-	}\
-	bool _className::ExtractDefault( const Tr2ExternalParameter& externalParameter )\
-	{\
-		_valueType value;\
-		if( GetExternalParameterValue( value, externalParameter ) )\
-		{\
-			m_defaults.push_back( value );\
-		}\
-		else\
-		{\
-			m_defaults.push_back( _defaultValue );\
-		}\
-		return true;\
-	}\
-	void _className::SetValueToDefault()\
-	{\
-		if (!m_defaults.empty())\
-		{\
-			m_value = m_defaults[0];\
-		}\
-		else\
-		{\
-			m_value = _defaultValue;\
-		}\
-	}\
+#define SOCKET_PARAMETER_DEFINE( _className, _valueType, _defaultValue )             \
+	_className::_className( IRoot* lockobj ) :                                       \
+		EveSocketParameterBindingBase( lockobj ),                                    \
+		m_defaults(),                                                                \
+		m_value( _defaultValue )                                                     \
+	{                                                                                \
+	}                                                                                \
+	_className::~_className()                                                        \
+	{                                                                                \
+	}                                                                                \
+	void _className::ClearBindings()                                                 \
+	{                                                                                \
+		m_defaults.clear();                                                          \
+		EveSocketParameterBindingBase::ClearBindings();                              \
+	}                                                                                \
+	void _className::Reset()                                                         \
+	{                                                                                \
+		for( size_t i = 0; i < m_bindings.size(); ++i )                              \
+		{                                                                            \
+			m_value = m_defaults[i];                                                 \
+			m_bindings[i]->CopyValue();                                              \
+		}                                                                            \
+		ClearBindings();                                                             \
+	}                                                                                \
+	bool _className::ExtractDefault( const Tr2ExternalParameter& externalParameter ) \
+	{                                                                                \
+		_valueType value;                                                            \
+		if( GetExternalParameterValue( value, externalParameter ) )                  \
+		{                                                                            \
+			m_defaults.push_back( value );                                           \
+		}                                                                            \
+		else                                                                         \
+		{                                                                            \
+			m_defaults.push_back( _defaultValue );                                   \
+		}                                                                            \
+		return true;                                                                 \
+	}                                                                                \
+	void _className::SetValueToDefault()                                             \
+	{                                                                                \
+		if( !m_defaults.empty() )                                                    \
+		{                                                                            \
+			m_value = m_defaults[0];                                                 \
+		}                                                                            \
+		else                                                                         \
+		{                                                                            \
+			m_value = _defaultValue;                                                 \
+		}                                                                            \
+	}
 
 SOCKET_PARAMETER_DEFINE( EveSocketParameterBool, bool, false );
 SOCKET_PARAMETER_DEFINE( EveSocketParameterInt, int, 0 );
@@ -410,8 +410,8 @@ SOCKET_PARAMETER_DEFINE( EveSocketParameterColor, Color, Color( 0, 0, 0, 0 ) );
 
 EveSocketParameterString::EveSocketParameterString( IRoot* lockobj ) :
 	PARENTLOCK( m_externalParameters ),
-	m_name(""),
-	m_value(""),
+	m_name( "" ),
+	m_value( "" ),
 	m_valueExposure(),
 	m_defaults()
 {
@@ -423,7 +423,7 @@ EveSocketParameterString::~EveSocketParameterString()
 
 bool EveSocketParameterString::Initialize()
 {
-	if ( !m_valueExposure )
+	if( !m_valueExposure )
 	{
 		m_valueExposure.CreateInstance();
 		m_valueExposure->SetName( "valueExposure" );
@@ -442,12 +442,12 @@ void EveSocketParameterString::ClearBindings()
 bool EveSocketParameterString::BindToExternalParameter( Tr2ExternalParameter& externalParameter )
 {
 	Initialize();
-	if ( !externalParameter.IsValid() || externalParameter.GetName() != m_name )
+	if( !externalParameter.IsValid() || externalParameter.GetName() != m_name )
 	{
 		return false;
 	}
 
-	if ( !ExtractDefault( externalParameter ) )
+	if( !ExtractDefault( externalParameter ) )
 	{
 		return false;
 	}
@@ -458,23 +458,23 @@ bool EveSocketParameterString::BindToExternalParameter( Tr2ExternalParameter& ex
 
 bool EveSocketParameterString::ExtractDefault( const Tr2ExternalParameter& externalParameter )
 {
-	std::string value; 
-	BlueScriptValue blueValue; 
-	externalParameter.GetValue( blueValue ); 
-	if ( BlueExtractArgument( blueValue, value, 0 ) )
+	std::string value;
+	BlueScriptValue blueValue;
+	externalParameter.GetValue( blueValue );
+	if( BlueExtractArgument( blueValue, value, 0 ) )
 	{
-		m_defaults.push_back( value ); 
+		m_defaults.push_back( value );
 	}
 	else
 	{
-		m_defaults.push_back( "" ); 
+		m_defaults.push_back( "" );
 	}
-	return true; 
+	return true;
 }
 
 void EveSocketParameterString::SetValueToDefault()
 {
-	if (!m_defaults.empty())
+	if( !m_defaults.empty() )
 	{
 		m_value = m_defaults[0];
 	}
@@ -487,11 +487,11 @@ bool EveSocketParameterString::Used() const
 
 void EveSocketParameterString::Propagate()
 {
-	if ( m_valueExposure && m_valueExposure->IsValid() )
+	if( m_valueExposure && m_valueExposure->IsValid() )
 	{
 		BlueScriptValue v;
 		m_valueExposure->GetValue( v );
-		for ( auto it = begin( m_externalParameters ); it != end( m_externalParameters ); ++it )
+		for( auto it = begin( m_externalParameters ); it != end( m_externalParameters ); ++it )
 		{
 			( *it )->SetValue( v );
 		}

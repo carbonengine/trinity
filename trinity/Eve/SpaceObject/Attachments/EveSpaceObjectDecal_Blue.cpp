@@ -8,10 +8,10 @@ BLUE_DEFINE( EveSpaceObjectDecal );
 const Be::ClassInfo* EveSpaceObjectDecal::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveSpaceObjectDecal, "" )
-        MAP_INTERFACE( EveSpaceObjectDecal )
+		MAP_INTERFACE( EveSpaceObjectDecal )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IInitialize )
-        MAP_INTERFACE( ITr2Renderable )
+		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( ITr2Pickable )
 
 		MAP_ATTRIBUTE( "name", m_name, "A name for this decal", Be::READWRITE | Be::PERSIST )

@@ -8,7 +8,7 @@ TriStepSetProjection::TriStepSetProjection( IRoot* lockobj )
 {
 }
 
-TriStepSetProjection::~TriStepSetProjection(void)
+TriStepSetProjection::~TriStepSetProjection( void )
 {
 }
 

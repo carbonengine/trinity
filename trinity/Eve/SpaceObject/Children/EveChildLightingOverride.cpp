@@ -14,7 +14,7 @@ IEveLightingOverride::Overrides IEveLightingOverride::Overrides::operator*( floa
 	return result;
 }
 
-IEveLightingOverride::Overrides IEveLightingOverride::Overrides::operator + ( const Overrides& rhs ) const
+IEveLightingOverride::Overrides IEveLightingOverride::Overrides::operator+( const Overrides& rhs ) const
 {
 	Overrides result = *this;
 	result.sunColor += rhs.sunColor;
@@ -39,7 +39,7 @@ EveChildLightingOverride::EveChildLightingOverride( IRoot* lockobj ) :
 	m_overrides.intensity = 0.0f;
 }
 
-EveChildLightingOverride::OverrideInfo EveChildLightingOverride::GetOverrides() const 
+EveChildLightingOverride::OverrideInfo EveChildLightingOverride::GetOverrides() const
 {
 	return m_overrides;
 }

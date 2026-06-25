@@ -7,7 +7,7 @@ BLUE_DEFINE( Tr2ParticleVortexForce );
 
 const Be::ClassInfo* Tr2ParticleVortexForce::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(Tr2ParticleVortexForce, "" )
+	EXPOSURE_BEGIN( Tr2ParticleVortexForce, "" )
 		MAP_INTERFACE( ITr2ParticleForce )
 		MAP_INTERFACE( Tr2ParticleVortexForce )
 

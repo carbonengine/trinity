@@ -6,7 +6,9 @@
 
 using namespace Tr2RenderContextEnum;
 
-struct Shader : public WithValidRenderContext {};
+struct Shader : public WithValidRenderContext
+{
+};
 
 TEST_F( Shader, ShaderIsInvalidBeforeCreation )
 {
@@ -24,7 +26,7 @@ TEST_F( Shader, CanCreateShader )
 	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
+	ASSERT_HRESULT_SUCCEEDED( vs.Create(
 		Tr2RenderContextEnum::VERTEX_SHADER,
 		vsBytecode,
 		vsInput,
@@ -50,7 +52,7 @@ TEST_F( Shader, ShaderEqualsItself )
 	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
+	ASSERT_HRESULT_SUCCEEDED( vs.Create(
 		Tr2RenderContextEnum::VERTEX_SHADER,
 		vsBytecode,
 		vsInput,
@@ -70,7 +72,7 @@ TEST_F( Shader, DifferentShadersAreNotEqual )
 	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	Tr2ShaderAL vs1;
-	ASSERT_HRESULT_SUCCEEDED( vs1.Create( 
+	ASSERT_HRESULT_SUCCEEDED( vs1.Create(
 		Tr2RenderContextEnum::VERTEX_SHADER,
 		vsBytecode1,
 		vsInput,
@@ -83,17 +85,17 @@ TEST_F( Shader, DifferentShadersAreNotEqual )
 
 	auto vsInput2 = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 ).Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
 	Tr2ShaderAL vs2;
-	ASSERT_HRESULT_SUCCEEDED( vs2.Create( 
+	ASSERT_HRESULT_SUCCEEDED( vs2.Create(
 		Tr2RenderContextEnum::VERTEX_SHADER,
 		vsBytecode2,
 		vsInput2,
-		"", 
+		"",
 		*renderContext ) );
 
 	EXPECT_FALSE( vs1 == vs2 );
 }
 
-#if( TRINITYPLATFORM == TRINITY_STUB )
+#if ( TRINITYPLATFORM == TRINITY_STUB )
 TEST_F( Shader, ShaderStoresType )
 {
 	uint8_t vsBytecode[] = {
@@ -103,7 +105,7 @@ TEST_F( Shader, ShaderStoresType )
 	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0 );
 
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
+	ASSERT_HRESULT_SUCCEEDED( vs.Create(
 		Tr2RenderContextEnum::HULL_SHADER,
 		vsBytecode,
 		vsInput,
@@ -111,6 +113,6 @@ TEST_F( Shader, ShaderStoresType )
 
 	Tr2RenderContextEnum::ShaderType expected = Tr2RenderContextEnum::HULL_SHADER;
 	int actual = vs.GetType();
-	EXPECT_EQ( expected, actual  );
+	EXPECT_EQ( expected, actual );
 }
 #endif

@@ -11,7 +11,7 @@ const Be::ClassInfo* Tr2SphereShapeAttributeGenerator::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2SphereShapeAttributeGenerator, "" )
 		MAP_INTERFACE( Tr2SphereShapeAttributeGenerator )
 		MAP_INTERFACE( ITr2AttributeGenerator )
-		
+
 		MAP_PROPERTY_READONLY( "name", GetName, "Element name (composed of type and customName)" )
 		MAP_ATTRIBUTE( "position", m_position, "Generator position", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "Generator orientation", Be::READWRITE | Be::PERSIST )
@@ -23,21 +23,21 @@ const Be::ClassInfo* Tr2SphereShapeAttributeGenerator::ExposeToBlue()
 		MAP_ATTRIBUTE( "maxTheta", m_maxTheta, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "distributionExponent", m_distributionExponent, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
-			"controlPosition", 
-			m_controlPosition, 
-			"Does the generator affect particle position", 
+			"controlPosition",
+			m_controlPosition,
+			"Does the generator affect particle position",
 			Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"controlVelocity", 
-			m_controlVelocity, 
-			"Does the generator affect particle velocity", 
+		MAP_ATTRIBUTE(
+			"controlVelocity",
+			m_controlVelocity,
+			"Does the generator affect particle velocity",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "minSpeed", m_minSpeed, "Minimal particle speed", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maxSpeed", m_maxSpeed, "Maximal particle speed", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"parentVelocityFactor", 
-			m_parentVelocityFactor, 
-			"How much parent particle velocity affects new particle velocity (for emit during lifetime and on deth emitters)", 
+		MAP_ATTRIBUTE(
+			"parentVelocityFactor",
+			m_parentVelocityFactor,
+			"How much parent particle velocity affects new particle velocity (for emit during lifetime and on deth emitters)",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "valid", m_valid, "Was the generator successfully bound to particle system", Be::READ )
 

@@ -10,7 +10,8 @@ struct FormationData
 {
 	FormationData() :
 		assignedSlot( -1 )
-	{}
+	{
+	}
 
 	int assignedSlot;
 };
@@ -22,16 +23,15 @@ public:
 	EXPOSE_TO_BLUE();
 	Formation( IRoot* lockobj = nullptr );
 	~Formation();
-	
+
 	virtual size_t GetScratchMemorySize() const;
 	virtual void InitializeScratch( void* scratchMemory );
 
 	int GetProcessPriority();
-	virtual std::vector<Vector3> CalculateBehavior(std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
-	                                               BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius);
-	
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation );
+	virtual std::vector<Vector3> CalculateBehavior( std::vector<DroneAgent> & agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius );
+
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, std::vector<DroneAgent> & agents, Matrix & parentWorldLocation );
 	std::string GetBehaviorName();
 	bool InFormation();
 	void Reset();
@@ -39,14 +39,14 @@ public:
 private:
 	bool m_enabled;
 
-	void InitializeFormation(std::vector<DroneAgent>& agents, void* scratchData, float radius);
-	void CreateFormationGrid(std::vector<DroneAgent>& agents, Vector3& targetDir, float radius);
-	void AssignSlots(std::vector<DroneAgent>& agents, void* scratchData);
+	void InitializeFormation( std::vector<DroneAgent> & agents, void* scratchData, float radius );
+	void CreateFormationGrid( std::vector<DroneAgent> & agents, Vector3 & targetDir, float radius );
+	void AssignSlots( std::vector<DroneAgent> & agents, void* scratchData );
 	void BreakFormation();
-	void UpdateFormation(const float deltaTime, BehaviorGroup& group);
-	void calculateFormationInertia(Vector3& acceleration, const float deltaTime);
-	void UpdateAgents(std::vector<DroneAgent>& agents, void* scratchData, float radius);
-	bool CheckIfFormalizing(std::vector<DroneAgent>& agents, void* scratchData);
+	void UpdateFormation( const float deltaTime, BehaviorGroup& group );
+	void calculateFormationInertia( Vector3 & acceleration, const float deltaTime );
+	void UpdateAgents( std::vector<DroneAgent> & agents, void* scratchData, float radius );
+	bool CheckIfFormalizing( std::vector<DroneAgent> & agents, void* scratchData );
 
 	std::vector<Vector3> m_formationGrid;
 	std::vector<bool> m_formationGridReserver;
@@ -54,7 +54,7 @@ private:
 	bool m_isFormalizing;
 	Vector3 m_formationPosition;
 	float m_maxFormationVelocityScaler;
-	
+
 	int32_t m_framesBetweenUpdates;
 	int32_t m_frameCounter;
 	int32_t m_stubbornness;

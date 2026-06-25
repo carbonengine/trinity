@@ -85,8 +85,7 @@ void BehaviorGroup::OnListModified(
 	{
 		switch( event & BELIST_EVENTMASK )
 		{
-		case BELIST_INSERTED:
-		{
+		case BELIST_INSERTED: {
 			m_scratchData.insert( m_scratchData.begin() + key, CcpMallocBuffer() );
 			if( !m_agents.empty() )
 			{
@@ -420,7 +419,7 @@ void BehaviorGroup::RemoveAgent()
 		return;
 	}
 	// Removes a random agent
-	int rand = TriRandInt( int(m_agents.size()) );
+	int rand = TriRandInt( int( m_agents.size() ) );
 	RemoveSpecificAgent( rand );
 
 	OnAgentCountChanged();
@@ -569,7 +568,7 @@ void BehaviorGroup::UpdateAgents( const float dt, EveChildBehaviorSystem& system
 
 	auto bs = m_boundingSphereRadius * m_scale;
 
-	const std::vector<std::vector<std::vector<DroneAgent*>>>* dronesInRange	= m_tree->FindDronesInRange( m_agents, ranges, bs );
+	const std::vector<std::vector<std::vector<DroneAgent*>>>* dronesInRange = m_tree->FindDronesInRange( m_agents, ranges, bs );
 
 	//Calculate the behaviors
 	if( m_collectForces )
@@ -699,7 +698,7 @@ void BehaviorGroup::GetShipInfoForBuffer( uint8_t* data, const Matrix& parentWor
 
 	if( m_currentScreenSize == 0.0 )
 	{
-		memset( data, 0, m_agents.size()  * (24 * sizeof( float )) );
+		memset( data, 0, m_agents.size() * ( 24 * sizeof( float ) ) );
 		return;
 	}
 
@@ -988,7 +987,7 @@ void BehaviorGroup::SetPlayFXBehavior()
 	}
 }
 
-void BehaviorGroup::GetLights(Tr2LightManager& lightManager) const
+void BehaviorGroup::GetLights( Tr2LightManager& lightManager ) const
 {
 	if( m_booster && m_booster->GetDisplay() )
 	{

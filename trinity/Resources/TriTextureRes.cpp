@@ -33,7 +33,8 @@ static uint32_t s_diskLatencySimulation = 0;
 TRI_REGISTER_SETTING( "textureLodSimulateDiskLatency", s_diskLatencySimulation );
 
 
-namespace {
+namespace
+{
 
 IBlueResource* CreateTextureResource( const wchar_t* name )
 {
@@ -127,7 +128,7 @@ void AtomicMinUpdate( std::atomic<uint32_t>& a, uint32_t b )
 
 
 
-TriTextureRes::TriTextureRes(): 
+TriTextureRes::TriTextureRes() :
 	m_isTextureLoadDisabled( false ),
 	m_texture( nullptr ),
 	m_memoryUse( 0 ),
@@ -172,7 +173,7 @@ unsigned TriTextureRes::ComputeMipSkipCount()
 	if( m_isTextureResizable && gTriDev )
 	{
 		return gTriDev->GetMipLevelSkipCount();
-	}	
+	}
 
 	return 0;
 }
@@ -214,7 +215,7 @@ void TriTextureRes::Initialize( const wchar_t* name, const wchar_t* ext )
 {
 	m_pipelineFence.Cancel();
 	CancelPendingLoad();
-	CleanupAsyncSave(false);
+	CleanupAsyncSave( false );
 
 	m_pipeline = nullptr;
 	m_pipelineInputs.clear();
@@ -294,7 +295,7 @@ void TriTextureRes::Initialize( const wchar_t* name, const wchar_t* ext )
 
 void TriTextureRes::ResourcePrepFinished()
 {
-	if( m_pipeline != nullptr)
+	if( m_pipeline != nullptr )
 	{
 		m_isLoading = false;
 		m_isPrepared = true;
@@ -324,10 +325,7 @@ void TriTextureRes::ResourcePrepFinished()
 			Tr2TextureAL face;
 			USE_MAIN_THREAD_RENDER_CONTEXT();
 			uint32_t memoryUse;
-			if( !Tr2ImageIOHelpers::CreateTexture( result, m_ownTexture,
-				memoryUse,
-				renderContext,
-				USAGE_IMMUTABLE ) )
+			if( !Tr2ImageIOHelpers::CreateTexture( result, m_ownTexture, memoryUse, renderContext, USAGE_IMMUTABLE ) )
 			{
 				CCP_LOGWARN( "Tr2ImageHandler failed to create texture '%S'", GetPath() );
 				return;
@@ -371,14 +369,14 @@ void TriTextureRes::ReleaseResources( TriStorage s )
 		return;
 	}
 
-	if( (s & TRISTORAGE_MANAGEDMEMORY) || ((s & TRISTORAGE_VIDEOMEMORY) && m_texture->GetMemoryClass() == AL_MEMORY_VIDEO ) )
+	if( ( s & TRISTORAGE_MANAGEDMEMORY ) || ( ( s & TRISTORAGE_VIDEOMEMORY ) && m_texture->GetMemoryClass() == AL_MEMORY_VIDEO ) )
 	{
 		CCP_STATS_ADD( textureResBytes, -(int)m_memoryUse );
 		m_memoryUse = 0;
 		m_originalMemoryUse = 0;
 
 		CancelPendingLoad();
-		CleanupAsyncSave(false);
+		CleanupAsyncSave( false );
 
 		m_ownTexture = Tr2TextureAL();
 		m_texture = nullptr;
@@ -397,7 +395,7 @@ Tr2TextureAL* TriTextureRes::GetTexture()
 {
 	if( m_wrappedRenderTarget )
 	{
-		if( (!m_texture || !m_texture->IsValid()) && m_wrappedRenderTarget->GetRenderTarget().IsValid() )
+		if( ( !m_texture || !m_texture->IsValid() ) && m_wrappedRenderTarget->GetRenderTarget().IsValid() )
 		{
 			SetTexture( m_wrappedRenderTarget->GetRenderTarget() );
 		}
@@ -444,10 +442,10 @@ void TriTextureRes::CleanupLoadData()
 {
 	if( m_loadedBitmap )
 	{
-		m_cutoutX		= m_metadata.cutout.x;
-		m_cutoutY		= m_metadata.cutout.y;
-		m_cutoutWidth	= m_metadata.cutout.width;
-		m_cutoutHeight	= m_metadata.cutout.height;
+		m_cutoutX = m_metadata.cutout.x;
+		m_cutoutY = m_metadata.cutout.y;
+		m_cutoutWidth = m_metadata.cutout.width;
+		m_cutoutHeight = m_metadata.cutout.height;
 	}
 }
 
@@ -479,17 +477,17 @@ bool TriTextureRes::Save( const wchar_t* filename )
 		CCP_LOGERR( "Texture save failed - only 2d and cubemap textures can be saved" );
 		return false;
 	}
-	
+
 	if( !ImageIO::IsSaveSupported( filename, *this ) )
 	{
 		CCP_LOGERR( "Unsupported format for saving (%S)", filename );
 		return false;
 	}
-	
+
 	Tr2HostBitmapPtr saveBitmap;
 
 	if( !saveBitmap.CreateInstance() ||
-		!saveBitmap->CreateFromBitmapDimensions( *this )	||
+		!saveBitmap->CreateFromBitmapDimensions( *this ) ||
 		!saveBitmap->CopyFromTextureRes( *this, renderContext ) )
 	{
 		return false;
@@ -511,7 +509,7 @@ bool TriTextureRes::SaveAsync( const wchar_t* filename )
 		CCP_LOGERR( "Texture save failed - only 2d and cubemap textures can be saved" );
 		return false;
 	}
-	
+
 	return StartAsyncSave( filename );
 }
 
@@ -519,7 +517,7 @@ bool TriTextureRes::DoPrepareAsyncSave( void )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( !m_asyncSaveImage)
+	if( !m_asyncSaveImage )
 	{
 		CCP_LOGERR( "Unsupported extension for saving (%S)", m_saveFilename.c_str() );
 		return false;
@@ -529,9 +527,9 @@ bool TriTextureRes::DoPrepareAsyncSave( void )
 		CCP_LOGERR( "Unsupported format for saving (%S)", m_saveFilename.c_str() );
 		return false;
 	}
-	
-	if( !m_asyncSaveBitmap.CreateInstance()																||
-		!m_asyncSaveBitmap->CreateFromBitmapDimensions( *this )	||
+
+	if( !m_asyncSaveBitmap.CreateInstance() ||
+		!m_asyncSaveBitmap->CreateFromBitmapDimensions( *this ) ||
 		!m_asyncSaveBitmap->CopyFromTextureRes( *this, renderContext ) )
 	{
 		CCP_LOGERR( "Failed to save (%S)", m_saveFilename.c_str() );
@@ -585,11 +583,11 @@ BlueAsyncRes::LoadingResult TriTextureRes::DoLoad()
 	}
 
 	// check if this is a cube map texture or not
-	if( m_path.find( L"_cube") != m_path.npos )
+	if( m_path.find( L"_cube" ) != m_path.npos )
 	{
 		m_type = TEX_TYPE_CUBE;
 	}
-	else if( m_path.find( L"_volume") != m_path.npos )
+	else if( m_path.find( L"_volume" ) != m_path.npos )
 	{
 		m_type = TEX_TYPE_3D;
 	}
@@ -690,10 +688,7 @@ bool TriTextureRes::DoPrepare()
 		Tr2TextureAL face;
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		uint32_t memoryUse;
-		if( !Tr2ImageIOHelpers::CreateTexture( *m_loadedBitmap, m_ownTexture, 
-												memoryUse, 
-												renderContext, 
-												USAGE_IMMUTABLE ) )
+		if( !Tr2ImageIOHelpers::CreateTexture( *m_loadedBitmap, m_ownTexture, memoryUse, renderContext, USAGE_IMMUTABLE ) )
 		{
 			CCP_LOGWARN( "Tr2ImageHandler failed to create texture '%S'", GetPath() );
 			return false;
@@ -705,7 +700,7 @@ bool TriTextureRes::DoPrepare()
 		}
 
 		m_ownTexture.SetName( CW2A( GetPath() ) );
-		
+
 		isOK = true;
 		SetTexture( m_ownTexture );
 	}
@@ -721,7 +716,7 @@ void TriTextureRes::RequestResolution( const uint32_t requestedLod )
 		return;
 	}
 	m_hadLodRequests = true;
-	
+
 	AtomicMinUpdate( m_requestedMip, requestedLod );
 }
 
@@ -890,7 +885,7 @@ bool TriTextureRes::SetTextureFromRT( Tr2RenderTarget* renderTarget )
 	if( renderTarget && renderTarget->IsValid() )
 	{
 		m_isTextureResizable = false;
-		SetTexture( renderTarget->GetRenderTarget() );		
+		SetTexture( renderTarget->GetRenderTarget() );
 	}
 
 	return true;
@@ -913,19 +908,20 @@ bool TriTextureRes::CreateAndCopyFromRenderTarget( Tr2RenderTarget* renderTarget
 
 	auto width = rt.GetWidth();
 	auto height = rt.GetHeight();
-	
+
 	// With mipmaps there may be staging resources involved, so just defer the problem to Tr2TextureAL::CopySubresourcRegion
 	if( rt.GetMipCount() != 1 )
-	{		
-		Tr2BitmapDimensions bd( width, height, 0, rt.GetFormat() );	// use this to compute true mipcount of new texture
+	{
+		Tr2BitmapDimensions bd( width, height, 0, rt.GetFormat() ); // use this to compute true mipcount of new texture
 
 		{
 			USE_MAIN_THREAD_RENDER_CONTEXT();
-			CR_RETURN_VAL( m_ownTexture.Create( 
-				Tr2BitmapDimensions( width, height, bd.GetTrueMipCount(), rt.GetFormat() ), 
-				Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::COPY_DESTINATION,
-				Tr2CpuUsage::READ | Tr2CpuUsage::WRITE,
-				renderContext ), false );
+			CR_RETURN_VAL( m_ownTexture.Create(
+							   Tr2BitmapDimensions( width, height, bd.GetTrueMipCount(), rt.GetFormat() ),
+							   Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::COPY_DESTINATION,
+							   Tr2CpuUsage::READ | Tr2CpuUsage::WRITE,
+							   renderContext ),
+						   false );
 		}
 
 		Tr2TextureSubresource dst;
@@ -945,19 +941,20 @@ bool TriTextureRes::CreateAndCopyFromRenderTarget( Tr2RenderTarget* renderTarget
 			return false;
 		}
 		ON_BLOCK_EXIT( [&] { rt.UnmapForReading( renderContext ); } );
-	
+
 		srd.m_sysMemSlicePitch = rt.GetHeight() * srd.m_sysMemPitch;
 
-		CR_RETURN_VAL( m_ownTexture.Create( 
-			Tr2BitmapDimensions( width, height, 1, rt.GetFormat() ), 
-			Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::COPY_DESTINATION,
-			Tr2CpuUsage::READ, 
-			&srd, 
-			renderContext ), false );	
+		CR_RETURN_VAL( m_ownTexture.Create(
+						   Tr2BitmapDimensions( width, height, 1, rt.GetFormat() ),
+						   Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::COPY_DESTINATION,
+						   Tr2CpuUsage::READ,
+						   &srd,
+						   renderContext ),
+					   false );
 	}
 
 	m_isTextureResizable = false;
-	return true;	
+	return true;
 }
 
 bool TriTextureRes::CreateFromHostBitmap( Tr2HostBitmap* bitmap )
@@ -978,7 +975,7 @@ bool TriTextureRes::CreateFromHostBitmap( Tr2HostBitmap* bitmap )
 	}
 	m_isTextureResizable = false;
 	SetTexture( m_ownTexture );
-	return true;	
+	return true;
 }
 
 bool TriTextureRes::CreateEmptyTexture( uint32_t width, uint32_t height, uint32_t mipCount, Tr2RenderContextEnum::PixelFormat format )
@@ -1053,27 +1050,27 @@ BlueStdResult TriTextureRes::CreateFromTexture( TriTextureRes* texture )
 	auto height = other.GetHeight();
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	
+
 	Tr2BitmapDimensions bd( other.GetDesc() );
 
-	CR_RETURN_VAL( m_ownTexture.Create( 
-		Tr2BitmapDimensions( width, height, other.GetTrueMipCount(), other.GetFormat() ), 
-			Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::COPY_DESTINATION,
-			Tr2CpuUsage::READ, 
-			renderContext ),
-		BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "could not create a texture" ) );
+	CR_RETURN_VAL( m_ownTexture.Create(
+					   Tr2BitmapDimensions( width, height, other.GetTrueMipCount(), other.GetFormat() ),
+					   Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::COPY_DESTINATION,
+					   Tr2CpuUsage::READ,
+					   renderContext ),
+				   BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "could not create a texture" ) );
 
-	CR_RETURN_VAL( 
+	CR_RETURN_VAL(
 		m_ownTexture.CopySubresourceRegion( Tr2TextureSubresource(), other, Tr2TextureSubresource(), renderContext ),
 		BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "could not copy a texture" ) );
 	m_isTextureResizable = false;
 	return BLUE_STD_RESULT_OK;
 }
 
-bool TriTextureRes::Create(	uint32_t width, 
-							uint32_t height, 
-							uint32_t mipCount, 
-							PixelFormat format, 
+bool TriTextureRes::Create( uint32_t width,
+							uint32_t height,
+							uint32_t mipCount,
+							PixelFormat format,
 							BufferUsageFlags usage,
 							Tr2PrimaryRenderContext& renderContext )
 {
@@ -1107,11 +1104,12 @@ bool TriTextureRes::Create(	uint32_t width,
 		gpuUsage = gpuUsage | Tr2GpuUsage::SHARED;
 	}
 
-	CR_RETURN_VAL( m_ownTexture.Create(		
-		Tr2BitmapDimensions( width, height, mipCount, format ), 
-		gpuUsage,
-		cpuUsage,
-		renderContext ), false );
+	CR_RETURN_VAL( m_ownTexture.Create(
+					   Tr2BitmapDimensions( width, height, mipCount, format ),
+					   gpuUsage,
+					   cpuUsage,
+					   renderContext ),
+				   false );
 
 	*static_cast<Tr2BitmapDimensions*>( this ) = m_ownTexture.GetDesc();
 
@@ -1166,7 +1164,7 @@ bool TriTextureRes::SetTexture( Tr2TextureAL& texture )
 		m_memoryUse = 0;
 	}
 
-	if( !texture.IsValid()  )
+	if( !texture.IsValid() )
 	{
 		m_texture = nullptr;
 		SetPrepared( false );
@@ -1180,7 +1178,7 @@ bool TriTextureRes::SetTexture( Tr2TextureAL& texture )
 
 	*static_cast<Tr2BitmapDimensions*>( this ) = texture.GetDesc();
 	m_texture = &texture;
-		
+
 	// Estimate memory use for the resource cache.
 	m_memoryUse = 0;
 	auto mipCount = GetTrueMipCount();

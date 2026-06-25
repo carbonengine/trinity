@@ -36,14 +36,14 @@ sl::Resource GenerateTextureResource( const Tr2TextureAL* texture )
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter ),
 	m_adapter( adapter ),
-	m_frameToken( 0 ), 
+	m_frameToken( 0 ),
 	m_supportsFrameGeneration( false ),
 	m_contextIndex( 0 )
 {
 	m_isAvailable = false;
 	m_streamlineSetup = false;
 
-	
+
 	//We need to create a dummy device to figure out if DLSS and frame generation actually is supported.
 	{
 		if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( g_streamlineAppID ) ) )
@@ -90,7 +90,7 @@ Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 	Tr2StreamlineAL::ReleaseStreamline(); //this should be enough, no need to shut down plugins manually.
 }
 
-bool Tr2DlssUpscalingTechnique::IsAvailable( ) const 
+bool Tr2DlssUpscalingTechnique::IsAvailable() const
 {
 	return m_streamlineSetup && m_isAvailable;
 }
@@ -110,7 +110,7 @@ bool Tr2DlssUpscalingTechnique::IsTemporal() const
 	return true;
 }
 
-bool Tr2DlssUpscalingTechnique::SupportsFrameGeneration( ) const
+bool Tr2DlssUpscalingTechnique::SupportsFrameGeneration() const
 {
 	return m_supportsFrameGeneration;
 }
@@ -157,7 +157,7 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 			CCP_LOGERR( "Reflex failed to set options (%d)", result );
 		}
 	}
-	
+
 	return proxy;
 }
 
@@ -204,7 +204,7 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 		}
 	}
 
-	if (m_frameGeneration)
+	if( m_frameGeneration )
 	{
 		Tr2StreamlineAL::SetPCLMarker( frameEvent, m_frameToken );
 	}
@@ -215,15 +215,15 @@ Tr2UpscalingContextAL* Tr2DlssUpscalingTechnique::CreateContextInstance( Tr2Upsc
 	return new Tr2DlssUpscalingContext( m_setting, m_frameGeneration, params, ++m_contextIndex, m_frameToken );
 }
 
-Tr2DlssUpscalingContext::Tr2DlssUpscalingContext( 
-	Tr2UpscalingAL::Setting setting, 
+Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
+	Tr2UpscalingAL::Setting setting,
 	bool frameGeneration,
 	Tr2UpscalingAL::UpscalingContextParams params,
-	uint32_t contextNumber, 
+	uint32_t contextNumber,
 	sl::FrameToken* frameToken ) :
 	Tr2UpscalingContextAL( setting, frameGeneration, params ),
 	m_dlssMode( sl::DLSSMode::eOff ),
-	m_viewHandle( sl::ViewportHandle( contextNumber ) ), 
+	m_viewHandle( sl::ViewportHandle( contextNumber ) ),
 	m_frameToken( frameToken ),
 	m_setup( false ),
 	m_vramUsage( 0 ),
@@ -398,8 +398,8 @@ sl::Result Tr2DlssUpscalingContext::EvaluateDLSS( Tr2UpscalingAL::DispatchParame
 	auto inputResource = DlssUtils::GenerateTextureResource( dispatchParameters.input );
 	auto outputResource = DlssUtils::GenerateTextureResource( dispatchParameters.output );
 	auto depthResource = DlssUtils::GenerateTextureResource( dispatchParameters.depth );
-	auto velocityResource = DlssUtils::GenerateTextureResource( dispatchParameters.velocity ); 
-	auto exposureResource = DlssUtils::GenerateTextureResource( dispatchParameters.exposure ); 
+	auto velocityResource = DlssUtils::GenerateTextureResource( dispatchParameters.velocity );
+	auto exposureResource = DlssUtils::GenerateTextureResource( dispatchParameters.exposure );
 	auto opaqueOnlyResource = DlssUtils::GenerateTextureResource( dispatchParameters.opaqueOnly );
 
 	sl::ResourceTag opaqueColorInTag = sl::ResourceTag{ &opaqueOnlyResource, sl::kBufferTypeOpaqueColor, sl::ResourceLifecycle::eValidUntilEvaluate };
@@ -408,7 +408,7 @@ sl::Result Tr2DlssUpscalingContext::EvaluateDLSS( Tr2UpscalingAL::DispatchParame
 	sl::ResourceTag depthTag = sl::ResourceTag{ &depthResource, sl::kBufferTypeDepth, sl::ResourceLifecycle::eValidUntilEvaluate };
 	sl::ResourceTag mvecTag = sl::ResourceTag{ &velocityResource, sl::kBufferTypeMotionVectors, sl::ResourceLifecycle::eValidUntilEvaluate };
 	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilEvaluate };
-	
+
 	const sl::BaseStructure* resources[] = { &m_viewHandle, &colorInTag, &opaqueColorInTag, &colorOutTag, &depthTag, &mvecTag, &exposureTag };
 
 	return Tr2StreamlineAL::EvaluateFeature( renderContext, sl::kFeatureDLSS, *m_frameToken, resources, _countof( resources ) );

@@ -7,7 +7,7 @@ TriStepUpdate::TriStepUpdate( IRoot* lockobj )
 {
 }
 
-TriStepUpdate::~TriStepUpdate(void)
+TriStepUpdate::~TriStepUpdate( void )
 {
 }
 

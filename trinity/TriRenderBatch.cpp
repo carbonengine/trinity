@@ -18,7 +18,7 @@
 void TriRenderBatchAreaBlock::Optimize( std::vector<TriRenderBatchAreaBlock>& areaBlockVector )
 {
 	// turn area block list into a std::set, so we get sorting and remove duplicates
-	std::set< unsigned int > overlayHullAreas;
+	std::set<unsigned int> overlayHullAreas;
 	for( auto it = areaBlockVector.begin(); it != areaBlockVector.end(); ++it )
 	{
 		for( unsigned n = 0; n < it->m_count; ++n )
@@ -216,7 +216,7 @@ bool CanBeBinned( Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 )
 
 bool Compare( const Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 )
 {
-	if ( batch1.m_priority != batch2.m_priority )
+	if( batch1.m_priority != batch2.m_priority )
 	{
 		return batch1.m_priority < batch2.m_priority;
 	}

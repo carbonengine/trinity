@@ -30,33 +30,33 @@ public:
 	virtual void UpdateSyncronous( const EveUpdateContext& updateContext ) override;
 	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext ) override;
 	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
-	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) override;
-	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
+	virtual void GetRenderables( std::vector<ITr2Renderable*> & renderables, Tr2ImpostorManager * impostors ) override;
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) override;
 	virtual void GetParentData( EveSpaceObject2::ParentData * pd ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable - overriding EveSpaceObject2 implementations
-	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IBlueAsyncResNotifyTarget - overriding EveSpaceObject2 implementations
-	virtual void RebuildCachedData( BlueAsyncRes* p );
+	virtual void RebuildCachedData( BlueAsyncRes * p );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-    virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-    virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
 
 	EveBoosterSet2* GetBoosters();
-	void SetBoosters( EveBoosterSet2* boosters );
+	void SetBoosters( EveBoosterSet2 * boosters );
 	// re-positions all attached boosters to the corresponding locators
 	void RebuildBoosterSet();
 
-    float GetKillCounterValue() const;
+	float GetKillCounterValue() const;
 	float GetMaxSpeed() const;
 	float GetBoosterIntensity() const;
 
@@ -70,8 +70,8 @@ protected:
 	virtual bool DisplayBoosters() const;
 
 	virtual void UpdateBoosters( const EveUpdateContext& updateContext );
-private:
 
+private:
 	// For Audio
 	IRootPtr m_audioSpeedParameter;
 	INotifyPtr m_audioSpeedNotify;
@@ -88,7 +88,7 @@ private:
 	void UpdateShipSpeedForAudio();
 
 	// Property accessors
-	void SetAudioParameter( IRoot* aud );
+	void SetAudioParameter( IRoot * aud );
 	IRoot* GetAudioParameter() const;
 
 	// on ship info displays

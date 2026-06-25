@@ -97,7 +97,7 @@ void Tr2GStateAnimation::LoadGrannyRes()
 
 	if( !m_geometryRes && !m_resPath.empty() )
 	{
-		BeResMan->GetResource( m_resPath.c_str(), "raw", BlueInterfaceIID<TriGrannyRes>(), (void**)&m_grannyRes );	
+		BeResMan->GetResource( m_resPath.c_str(), "raw", BlueInterfaceIID<TriGrannyRes>(), (void**)&m_grannyRes );
 	}
 
 	if( m_grannyRes )
@@ -1297,7 +1297,7 @@ void Tr2GStateAnimation::ClearScrub()
 
 void Tr2GStateAnimation::PlayFromScrub()
 {
-	if ( !m_scrubbing )
+	if( !m_scrubbing )
 	{
 		return;
 	}
@@ -1316,7 +1316,7 @@ void Tr2GStateAnimation::StopPlayFromScrub()
 
 	if( !m_scrub_playing )
 	{
-		return;	
+		return;
 	}
 
 	m_scrub_offset = GetAnimationTime() - m_scrub_time;
@@ -1325,7 +1325,7 @@ void Tr2GStateAnimation::StopPlayFromScrub()
 }
 
 
-void Tr2GStateAnimation::SetScrubOffset(float scrub_offset)
+void Tr2GStateAnimation::SetScrubOffset( float scrub_offset )
 {
 	if( !m_scrubbing )
 	{

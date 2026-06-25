@@ -5,8 +5,8 @@
 #include "Tr2DepthStencil.h"
 #include "Tr2RenderTarget.h"
 
-Tr2SwapChain::Tr2SwapChain( IRoot* lockobj )
-	:m_windowHandle( 0 )
+Tr2SwapChain::Tr2SwapChain( IRoot* lockobj ) :
+	m_windowHandle( 0 )
 {
 }
 

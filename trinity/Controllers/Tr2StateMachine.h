@@ -22,11 +22,11 @@ public:
 
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	virtual void OnSimClockRebase( Be::Time oldTime, Be::Time newTime );
 
-	void Link( Tr2Controller& controller );
+	void Link( Tr2Controller & controller );
 	void Unlink( UnlinkReason reason = UnlinkReason::UNLINKING );
 
 	void Start();
@@ -38,6 +38,7 @@ public:
 
 	float GetMachineRunTime() const;
 	float GetStateRunTime() const;
+
 private:
 	void FollowTransitions( uint64_t variableDirtyMask );
 	std::string m_name;

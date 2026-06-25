@@ -26,7 +26,7 @@ BLUE_DECLARE_VECTOR( Tr2PrimitiveText );
 // SeeAlso:
 //   Tr2PrimitiveSet, TriLineSet
 // -------------------------------------------------------------
-BLUE_CLASS( Tr2PrimitiveScene ) : 
+BLUE_CLASS( Tr2PrimitiveScene ) :
 	public ITr2Scene,
 	public ITr2PickableScene,
 	public Tr2DeviceResource
@@ -37,15 +37,17 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	void Render( Tr2RenderContext& renderContext );
-	void RenderDebugInfo( Tr2RenderContext& renderContext );
+	void Render( Tr2RenderContext & renderContext );
+	void RenderDebugInfo( Tr2RenderContext & renderContext );
 	void Update( Be::Time realTime, Be::Time simTime );
-	
+
 	virtual void ReleaseResources( TriStorage s );
+
 protected:
 	virtual bool OnPrepareResources();
+
 private:
-    ITriRenderBatchAccumulator* m_opaqueBatches;
+	ITriRenderBatchAccumulator* m_opaqueBatches;
 	ITriRenderBatchAccumulator* m_pickingBatches;
 	TriPoolAllocator* m_allocator;
 
@@ -59,9 +61,9 @@ private:
 		return results.object;
 	}
 	void SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport );
-	void SetupPerFrameData( Tr2RenderContext& renderContext );
+	void SetupPerFrameData( Tr2RenderContext & renderContext );
 
-	void SetPerFrameDataForPicking( Tr2RenderContext& renderContext );
+	void SetPerFrameDataForPicking( Tr2RenderContext & renderContext );
 	const std::vector<ITr2Renderable*>& GetPickingObjectsToRender( const Vector3& dirWorld );
 	const std::vector<ITr2Renderable*>& GetPickingObjectsToRender( const Vector3& dirWorld, float fov, float aspect );
 
@@ -71,16 +73,20 @@ private:
 	// If you need special behaviour for picking, these batches are rendered without a picking override
 	ITriRenderBatchAccumulator* GetPickingBatchAccumulator( void );
 
-	bool RenderPickingAreasForComponents( PickComponents pass ) const { return true; }
-	unsigned int GetRequiredPasses( PickComponents requestedComponents, PickComponents* passes );
+	bool RenderPickingAreasForComponents( PickComponents pass ) const
+	{
+		return true;
+	}
+	unsigned int GetRequiredPasses( PickComponents requestedComponents, PickComponents * passes );
 
 	void DecodeBufferPixel( const void* pBuffer, PickComponents pass, BufferResults& results ) const;
 
 	Tr2PickBuffer& GetPickBuffer( void );
 
-	virtual bool RenderPicking( ITriRenderBatchAccumulator* pOpaquePickingBatches,
-						ITriRenderBatchAccumulator* pPickingBatches,
-						PickComponents pass );
+	virtual bool RenderPicking( ITriRenderBatchAccumulator * pOpaquePickingBatches,
+								ITriRenderBatchAccumulator * pPickingBatches,
+								PickComponents pass );
+
 private:
 	// typedef to shorten the iterator declaration
 	typedef Tr2PrimitiveSetVector::const_iterator PrimitiveIterator;
@@ -95,7 +101,7 @@ private:
 	// Pick buffer
 	Tr2PickBuffer m_pickBuffer;
 
-	Tr2ConstantBufferAL	m_vertexConstants;
+	Tr2ConstantBufferAL m_vertexConstants;
 };
 
 TYPEDEF_BLUECLASS( Tr2PrimitiveScene );

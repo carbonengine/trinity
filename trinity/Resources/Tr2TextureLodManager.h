@@ -15,7 +15,7 @@ struct Tr2TextureLodUpdateRequest
 
 
 BLUE_CLASS( Tr2TextureLodManager ) :
-	public IRoot, 
+	public IRoot,
 	public IBlueEvents
 {
 public:

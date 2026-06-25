@@ -16,16 +16,15 @@ BLUE_DECLARE( Tr2Material );
 //   Derived classes need to implement their own and
 //   GetPerObjectData methods.
 // -------------------------------------------------------------
-class Tr2CurveLineSet : 
-	public ITr2Renderable,
-	public Tr2DeviceResource,
-	public ITr2Pickable,
-	public INotify
+class Tr2CurveLineSet : public ITr2Renderable,
+						public Tr2DeviceResource,
+						public ITr2Pickable,
+						public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	Tr2CurveLineSet(IRoot* lockobj = NULL);
+	Tr2CurveLineSet( IRoot* lockobj = NULL );
 	~Tr2CurveLineSet();
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -35,13 +34,17 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
-public:
 
+public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
-	virtual IRoot* GetID( uint16_t ) { return this->GetRawRoot(); }
+	virtual IRoot* GetID( uint16_t )
+	{
+		return this->GetRawRoot();
+	}
 	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -102,19 +105,19 @@ protected:
 	// base incoming line data
 	struct LineData
 	{
-		LineType type;					// straight, curved, etc.
-		Vector3 position1;				// start position
-		Color color1;					// color at start
-		Vector3 position2;				// end position
-		Color color2;					// color at end
-		Vector3 intermediatePosition;	// special position for cruved lines: gives "curve"
-		float width;					// width of lin in screen pixels
-		Color multiColor;				// "override" color
-		float multiColorBorder;			// "override" color until here
-		Color overlayColor;				// color of the overlay animation layer
-		float animationSpeed;			// speed of animation crawling along line
-		float animationScale;			// scale of texture along line
-		unsigned int numOfSegments;		// number of straight lines forming a curved line
+		LineType type; // straight, curved, etc.
+		Vector3 position1; // start position
+		Color color1; // color at start
+		Vector3 position2; // end position
+		Color color2; // color at end
+		Vector3 intermediatePosition; // special position for cruved lines: gives "curve"
+		float width; // width of lin in screen pixels
+		Color multiColor; // "override" color
+		float multiColorBorder; // "override" color until here
+		Color overlayColor; // color of the overlay animation layer
+		float animationSpeed; // speed of animation crawling along line
+		float animationScale; // scale of texture along line
+		unsigned int numOfSegments; // number of straight lines forming a curved line
 	};
 
 	// line draw shader
@@ -127,7 +130,7 @@ protected:
 	Vector3 m_scaling;
 	Quaternion m_rotation;
 	Vector3 m_translation;
-	
+
 	// name
 	std::string m_name;
 
@@ -145,21 +148,21 @@ protected:
 
 	// indicates if line bounds have changed
 	bool m_boundsDirty;
-	
-	unsigned int m_currentSubmittedLineCount;
-private:
 
+	unsigned int m_currentSubmittedLineCount;
+
+private:
 	// vertex
 	struct LineVertex
 	{
-		Vector3 position;				// position in 3D
-		Vector4 lineDir;				// [xyz] = offset to next/previous line segment, [w] = width (incl. -1.f to indicate direction)
-		Vector4 beginEnd;				// [x] = 0 or 1 for begin/end, [y] = uniform scalar from 0 to 1 across length of line segment, [z] = override color border, [w] = length of vert in uniform scalar
-		Vector3 animationData;			// [x] = animation speed, [y] = animation scale, [z] = lineID
-		Vector3 nextLineDir;			// one after next/previous line segment position
-		unsigned int color;				// [xyzw] = main color
-		unsigned int overrideColor;		// [xyzw] = override color
-		unsigned int overlayColor;		// [xyzw] = overlay color
+		Vector3 position; // position in 3D
+		Vector4 lineDir; // [xyz] = offset to next/previous line segment, [w] = width (incl. -1.f to indicate direction)
+		Vector4 beginEnd; // [x] = 0 or 1 for begin/end, [y] = uniform scalar from 0 to 1 across length of line segment, [z] = override color border, [w] = length of vert in uniform scalar
+		Vector3 animationData; // [x] = animation speed, [y] = animation scale, [z] = lineID
+		Vector3 nextLineDir; // one after next/previous line segment position
+		unsigned int color; // [xyzw] = main color
+		unsigned int overrideColor; // [xyzw] = override color
+		unsigned int overlayColor; // [xyzw] = overlay color
 	};
 
 	// Helper function to allocate batches and set the correct effect
@@ -174,16 +177,16 @@ private:
 	// fill vertex buffer
 	bool FillVertexBuffer();
 	// helper
-	void WriteLineVerticesToBuffer( 
-		const Vector3& pos1, 
-		const Color& col1, 
-		float length1, 
-		const Vector3& pos2, 
-		const Color& col2, 
-		float length2, 
-		const Vector3& posPrev, 
-		const Vector3& posNext, 
-		unsigned int lineID, 
+	void WriteLineVerticesToBuffer(
+		const Vector3& pos1,
+		const Color& col1,
+		float length1,
+		const Vector3& pos2,
+		const Color& col2,
+		float length2,
+		const Vector3& posPrev,
+		const Vector3& posNext,
+		unsigned int lineID,
 		LineVertex* buffer );
 	void WriteParticleVerticesToBuffer( const Vector3& pos1, const Color& col1, float length1, const Vector3& pos2, const Color& col2, float length2, unsigned int lineID, LineVertex* buffer );
 

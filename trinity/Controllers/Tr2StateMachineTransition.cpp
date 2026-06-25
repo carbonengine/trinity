@@ -9,8 +9,8 @@
 #include "Tr2ControllerFloatVariable.h"
 
 
-Tr2StateMachineTransition::Tr2StateMachineTransition( IRoot* lockobj )
-	:m_source( nullptr )
+Tr2StateMachineTransition::Tr2StateMachineTransition( IRoot* lockobj ) :
+	m_source( nullptr )
 {
 }
 

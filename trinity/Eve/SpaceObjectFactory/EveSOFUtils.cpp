@@ -9,14 +9,15 @@
 // Description:
 //   Initialize data members and do all initial analyzing
 // --------------------------------------------------------------------------------
-EveSOFUtilsParameterName::EveSOFUtilsParameterName( const std::vector<std::string>& prefixes, const char* parameterName ) : m_fullname( parameterName ), m_materialIdx( -1 )
+EveSOFUtilsParameterName::EveSOFUtilsParameterName( const std::vector<std::string>& prefixes, const char* parameterName ) :
+	m_fullname( parameterName ), m_materialIdx( -1 )
 {
 	// try to find the material prefix and with that indentify the index
 	for( size_t i = 0; i < prefixes.size(); ++i )
 	{
 		if( StringStartsWithI( m_fullname.c_str(), prefixes[i].c_str() ) )
 		{
-			m_materialIdx = int32_t(i);
+			m_materialIdx = int32_t( i );
 			m_shortname = parameterName + prefixes[i].length();
 			return;
 		}
@@ -99,7 +100,7 @@ void EveSOFUtils::GeneratePatternProjectionData( EveSOFDataMgr::PatternProjectio
 // Description:
 //   Fill structs from other structs
 // --------------------------------------------------------------------------------
-void EveSOFUtils::GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld, const EveSOFDataPatternLayer* patternLayer, const EveSOFDataPatternLayerProperties* patternProperties  )
+void EveSOFUtils::GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld, const EveSOFDataPatternLayer* patternLayer, const EveSOFDataPatternLayerProperties* patternProperties )
 {
 	if( patternLayer )
 	{
@@ -110,12 +111,12 @@ void EveSOFUtils::GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld
 		if( patternProperties )
 		{
 			// projection types, translate to AL enums right here
-			pld->projectionAddressModeU = GetTextureAddressMode( (EveSOFDataPatternLayer::ProjectionType) patternProperties->m_projectionTypeU );
-			pld->projectionAddressModeV = GetTextureAddressMode( (EveSOFDataPatternLayer::ProjectionType) patternProperties->m_projectionTypeV );
-		
+			pld->projectionAddressModeU = GetTextureAddressMode( (EveSOFDataPatternLayer::ProjectionType)patternProperties->m_projectionTypeU );
+			pld->projectionAddressModeV = GetTextureAddressMode( (EveSOFDataPatternLayer::ProjectionType)patternProperties->m_projectionTypeV );
+
 			// material targets are bools, but need to be stored as floats (for shader)
 			pld->materialTargets = CreateMaterialApplicationVector( patternProperties->m_isTargetMtl1, patternProperties->m_isTargetMtl2, patternProperties->m_isTargetMtl3, patternProperties->m_isTargetMtl4 );
-		
+
 			for( int i = 0; i < EveSOFDataArea::AreaType::TYPE_MAX; i++ )
 			{
 				pld->applicableAreas[(EveSOFDataArea::AreaType)i] = patternProperties->m_applicableAreas[i];
@@ -128,11 +129,9 @@ void EveSOFUtils::GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld
 			pld->projectionAddressModeV = GetTextureAddressMode( patternLayer->m_projectionTypeV );
 			// material targets are bools, but need to be stored as floats (for shader)
 			pld->materialTargets = CreateMaterialApplicationVector( patternLayer->m_isTargetMtl1, patternLayer->m_isTargetMtl2, patternLayer->m_isTargetMtl3, patternLayer->m_isTargetMtl4 );
-		
 		}
 		// material source id can be directly transltaed from enum
 		pld->materialSourceID = (uint8_t)patternLayer->m_materialSource;
-		
 	}
 	else
 	{
@@ -204,7 +203,7 @@ const Vector4* EveSOFUtils::SearchForParameterData( const EveSOFDataMgr* dataMgr
 		auto finder = areaMaterialData->glowColor.find( k );
 		if( finder != areaMaterialData->glowColor.end() )
 		{
-            SOFDataFactionColorChooser::ColorType glowColorType = finder->second;
+			SOFDataFactionColorChooser::ColorType glowColorType = finder->second;
 			return (const Vector4*)&colorSet[glowColorType];
 		}
 	}
@@ -217,5 +216,3 @@ const Vector4* EveSOFUtils::SearchForParameterData( const EveSOFDataMgr* dataMgr
 
 	return nullptr;
 }
-
-

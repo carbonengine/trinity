@@ -13,8 +13,8 @@
 #include "Include/ITr2AnimationUpdater.h"
 #include "ITr2WorldTransformUpdater.h"
 
-Tr2SkinnedObject::Tr2SkinnedObject(IRoot* lockobj) :
-    PARENTLOCK( m_transform ),
+Tr2SkinnedObject::Tr2SkinnedObject( IRoot* lockobj ) :
+	PARENTLOCK( m_transform ),
 	PARENTLOCK( m_curveSets ),
 	m_skinningMatrixFrameDelay( 0 ),
 	m_skinningMatrixQueueIndex( 0 ),
@@ -22,7 +22,7 @@ Tr2SkinnedObject::Tr2SkinnedObject(IRoot* lockobj) :
 	m_skinningMatrixCount( 0 ),
 	m_skinningMatrixQueue( "Tr2SkinnedObject/m_skinningMatrixQueue" ),
 	m_worldTransformsQueue( "Tr2SkinnedObject/m_worldTransformsQueue" ),
-	m_accumulatedTransformsQueue( "Tr2SkinnedObject/m_accumulatedTransformQueue"),
+	m_accumulatedTransformsQueue( "Tr2SkinnedObject/m_accumulatedTransformQueue" ),
 	m_skinningMatrixQueueNeedsPriming( true ),
 	m_display( true ),
 	m_animRigToRenderRigMapping( NULL ),
@@ -48,11 +48,12 @@ Tr2SkinnedObject::Tr2SkinnedObject(IRoot* lockobj) :
 
 Tr2SkinnedObject::~Tr2SkinnedObject()
 {
-	CCP_DELETE [] m_animRigToRenderRigMapping;;
-	CCP_DELETE [] m_renderRigToAnimRigMapping;
+	CCP_DELETE[] m_animRigToRenderRigMapping;
+	;
+	CCP_DELETE[] m_renderRigToAnimRigMapping;
 	m_animRigToRenderRigMapping = NULL;
 	m_renderRigToAnimRigMapping = NULL;
-	
+
 	FreeSkinningMatrices();
 }
 
@@ -60,22 +61,22 @@ void Tr2SkinnedObject::PrePhysicsUpdate( Be::Time time )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	const Be::Time deltaTime = time - m_lastUpdateTime;	
+	const Be::Time deltaTime = time - m_lastUpdateTime;
 	if( TimeAsFloat( deltaTime ) < m_updatePeriod )
 	{
 		return;
 	}
 
 	if( m_visualModel == NULL || m_visualModel->GetSkeleton() == NULL )
-    {
-        return;
-    }
+	{
+		return;
+	}
 
-    if( m_animationUpdater != NULL )
-    {
+	if( m_animationUpdater != NULL )
+	{
 		m_animationUpdater->PrePhysicsAnimation( time, m_transform );
 	}
-	
+
 	return;
 }
 
@@ -83,7 +84,7 @@ void Tr2SkinnedObject::PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	const Be::Time deltaTime = time - m_lastUpdateTime;	
+	const Be::Time deltaTime = time - m_lastUpdateTime;
 	if( TimeAsFloat( deltaTime ) < m_updatePeriod )
 	{
 		return;
@@ -93,21 +94,21 @@ void Tr2SkinnedObject::PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene
 
 	for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 	{
-		(*it)->Update( TimeAsDouble( time ) );
+		( *it )->Update( TimeAsDouble( time ) );
 	}
 
-    if( m_visualModel == NULL || m_visualModel->GetSkeleton() == NULL )
-    {
-        return;
-    }
+	if( m_visualModel == NULL || m_visualModel->GetSkeleton() == NULL )
+	{
+		return;
+	}
 
 	if( m_animationUpdater != NULL )
-    {
+	{
 		m_animationUpdater->PostPhysicsAnimation( time, m_transform );
 	}
 
 	UpdateBones( time, apexScene );
-	
+
 
 	// Update the translation if we have a worldtranslation updater
 	if( m_worldTransformUpdater != NULL )
@@ -116,7 +117,7 @@ void Tr2SkinnedObject::PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene
 	}
 
 	// Check LOD
-	
+
 
 	if( m_lod.UnloadLodIfNeeded( time, deltaTime ) )
 	{
@@ -132,30 +133,30 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 
 	m_hasDynamicBounds = false;
 
-    if( m_visualModel == NULL || m_visualModel->GetSkeleton() == NULL )
-    {
-        return;
-    }
+	if( m_visualModel == NULL || m_visualModel->GetSkeleton() == NULL )
+	{
+		return;
+	}
 
 	unsigned numBones = 0;
 	bool isAnimRig = false;
 	const std::string* boneList = NULL;
-    bool rebuildMapping = false;
-    TriGeometryResSkeletonData* skel = m_visualModel->GetSkeleton();
+	bool rebuildMapping = false;
+	TriGeometryResSkeletonData* skel = m_visualModel->GetSkeleton();
 
 	if( m_animationUpdater != NULL )
-    {
-        boneList = m_animationUpdater->GetAnimationBoneList( numBones );
+	{
+		boneList = m_animationUpdater->GetAnimationBoneList( numBones );
 
 		if( boneList )
-        {
-            rebuildMapping = ( numBones != m_skinningMatrixCount );
+		{
+			rebuildMapping = ( numBones != m_skinningMatrixCount );
 			isAnimRig = numBones > 0;
-        }
-    }
+		}
+	}
 
-    if( boneList == NULL && skel != NULL )
-    {
+	if( boneList == NULL && skel != NULL )
+	{
 		CCP_STATS_ZONE( "UpdateBones_BuildRenderRigBoneList" );
 
 		// Either the animationUpdater is NULL or it hasn't been set up fully yet,
@@ -163,46 +164,44 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 		// of a skinned model without an animation playing - it'll be static in
 		// the bind pose.
 		unsigned int numRenderRigBones = (unsigned int)skel->m_joints.size();
-        if( m_numRenderRigBones != numRenderRigBones )
-        {
+		if( m_numRenderRigBones != numRenderRigBones )
+		{
 			// Recreate mapping if the number of renderRigBones has changed, this is definitely hacky
-            m_numRenderRigBones = numRenderRigBones;
-            m_renderRigBoneList.resize(numRenderRigBones);
-            for(unsigned int i = 0; i < numRenderRigBones; ++i)
-            {
-                m_renderRigBoneList[i] = skel->m_joints[i].m_name;
-            }
-            rebuildMapping = true;
-        }
+			m_numRenderRigBones = numRenderRigBones;
+			m_renderRigBoneList.resize( numRenderRigBones );
+			for( unsigned int i = 0; i < numRenderRigBones; ++i )
+			{
+				m_renderRigBoneList[i] = skel->m_joints[i].m_name;
+			}
+			rebuildMapping = true;
+		}
 
 		if( m_numRenderRigBones == 0 )
 		{
 			// Guard against an empty skeleton - shouldn't happen but can
 			// if assets are bad.
-			CCP_LOGERR
-			( 
+			CCP_LOGERR(
 				"Tr2SkinnedObject '%s' has an empty skeleton in visual model from '%s'",
 				m_name.c_str(),
-				m_visualModel->GetGeometryResPath()
-			);
+				m_visualModel->GetGeometryResPath() );
 			m_renderRigBoneList.push_back( "Render_rig_missing" );
 			m_numRenderRigBones = 1;
 		}
 
-        boneList = &m_renderRigBoneList[0];
-        numBones = m_numRenderRigBones;
-    }
+		boneList = &m_renderRigBoneList[0];
+		numBones = m_numRenderRigBones;
+	}
 
 	if( boneList != m_boneList )
 	{
 		rebuildMapping = true;
-	} 
+	}
 
 	// Cache the bone list pointer so we can determine when to rebuild mappings.
 	m_boneList = boneList;
 
 	m_visualModel->BindToRig( boneList, numBones, rebuildMapping );
-	
+
 	if( rebuildMapping && skel != NULL )
 	{
 		CCP_STATS_ZONE( "UpdateBones_RebuildMapping" );
@@ -213,8 +212,8 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 		AllocateSkinningMatrices( numBones );
 		m_visualModel->ResetBindings();
 
-		CCP_DELETE [] m_animRigToRenderRigMapping;
-		CCP_DELETE [] m_renderRigToAnimRigMapping;
+		CCP_DELETE[] m_animRigToRenderRigMapping;
+		CCP_DELETE[] m_renderRigToAnimRigMapping;
 		m_animRigToRenderRigMapping = CCP_NEW( "Tr2SkinnedObject/m_animRigToRenderRigMapping" ) unsigned int[numBones];
 		m_renderRigToAnimRigMapping = CCP_NEW( "Tr2SkinnedObject/m_renderRigToAnimRigMapping" ) unsigned int[skel->m_joints.size()];
 
@@ -241,7 +240,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 		++m_skinningMatrixQueueIndex;
 		m_skinningMatrixQueueIndex %= m_skinningMatrixQueue.size();
 
-		const Matrix *accumulatedTransforms = NULL;
+		const Matrix* accumulatedTransforms = NULL;
 
 		if( m_animationUpdater != NULL )
 		{
@@ -282,7 +281,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 				// refer to that joint.
 
 				Matrix final;
-				if(accumulatedTransforms)
+				if( accumulatedTransforms )
 				{
 					const Matrix& invBind = skel->m_joints[renderRigIx].m_inverseWorldTransform;
 
@@ -293,7 +292,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 					final = IdentityMatrix();
 				}
 
-				float* p = &dst[transformIx * 3*4];
+				float* p = &dst[transformIx * 3 * 4];
 				*p++ = final._11;
 				*p++ = final._21;
 				*p++ = final._31;
@@ -321,9 +320,9 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 			unsigned int n = (unsigned int)m_skinningMatrixQueue.size() - 1;
 			for( unsigned int ix = 0; ix < n; ++ix )
 			{
-				unsigned int queueIx = (m_skinningMatrixQueueIndex + ix) % m_skinningMatrixQueue.size();
+				unsigned int queueIx = ( m_skinningMatrixQueueIndex + ix ) % m_skinningMatrixQueue.size();
 				float* copyDst = m_skinningMatrixQueue[queueIx];
-				memcpy( copyDst, dst, m_skinningMatrixCount * sizeof(float)*3*4 );
+				memcpy( copyDst, dst, m_skinningMatrixCount * sizeof( float ) * 3 * 4 );
 
 				m_worldTransformsQueue[queueIx] = m_transform;
 			}
@@ -333,7 +332,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 	}
 }
 
-unsigned Tr2SkinnedObject::GetBoneIndex( const std::string & boneName ) const
+unsigned Tr2SkinnedObject::GetBoneIndex( const std::string& boneName ) const
 {
 	if( !m_animationUpdater )
 	{
@@ -381,7 +380,7 @@ void Tr2SkinnedObject::PrintAllBones()
 	if( skel && !skel->m_joints.empty() )
 	{
 		CCP_LOG( "RenderRig bones:" );
-		for(unsigned int i = 0; i < skel->m_joints.size(); ++i)
+		for( unsigned int i = 0; i < skel->m_joints.size(); ++i )
 		{
 			CCP_LOG( "%d - %s", i, skel->m_joints[i].m_name.c_str() );
 		}
@@ -393,13 +392,13 @@ unsigned Tr2SkinnedObject::GetSkeletonTag() const
 	return m_skeletonTag;
 }
 
-const Matrix * Tr2SkinnedObject::GetBoneTransform( unsigned joint ) const
+const Matrix* Tr2SkinnedObject::GetBoneTransform( unsigned joint ) const
 {
 	if( joint >= m_skinningMatrixCount )
 	{
 		return NULL;
 	}
-    
+
 	return &m_accumulatedTransformsQueue[m_skinningMatrixQueueIndex][joint];
 }
 
@@ -415,14 +414,14 @@ Vector3 Tr2SkinnedObject::GetBonePosition( unsigned joint ) const
 		return Vector3( 0, 0, 0 );
 	}
 
-	if( const Matrix* m = GetBoneTransform( joint ))
+	if( const Matrix* m = GetBoneTransform( joint ) )
 	{
 		return Vector3( m->_41, m->_42, m->_43 );
 	}
 	return Vector3( 0, 0, 0 );
 }
 
-void Tr2SkinnedObject::SetPosition(const Vector3 &pos)
+void Tr2SkinnedObject::SetPosition( const Vector3& pos )
 {
 	m_transform._41 = pos.x;
 	m_transform._42 = pos.y;
@@ -431,9 +430,9 @@ void Tr2SkinnedObject::SetPosition(const Vector3 &pos)
 
 const Quaternion Tr2SkinnedObject::GetRotation() const
 {
-	Vector3		tmpScale;		
-	Quaternion	tmpRotation;	
-	Vector3		tmpTranslation;	
+	Vector3 tmpScale;
+	Quaternion tmpRotation;
+	Vector3 tmpTranslation;
 
 	Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 
@@ -442,10 +441,10 @@ const Quaternion Tr2SkinnedObject::GetRotation() const
 
 void Tr2SkinnedObject::SetRotation( const Quaternion& rotQuat )
 {
-	Vector3		tmpScale;		
-	Quaternion	tmpRotation;	
-	Vector3		tmpTranslation;	
-	
+	Vector3 tmpScale;
+	Quaternion tmpRotation;
+	Vector3 tmpTranslation;
+
 	Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 	static_cast<Matrix&>( m_transform ) = TransformationMatrix( tmpScale, rotQuat, tmpTranslation );
 
@@ -454,10 +453,10 @@ void Tr2SkinnedObject::SetRotation( const Quaternion& rotQuat )
 
 const Vector3 Tr2SkinnedObject::GetScaling() const
 {
-	Vector3		tmpScale;		
-	Quaternion	tmpRotation;	
-	Vector3		tmpTranslation;	
-	
+	Vector3 tmpScale;
+	Quaternion tmpRotation;
+	Vector3 tmpTranslation;
+
 	Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 
 	return tmpScale;
@@ -465,9 +464,9 @@ const Vector3 Tr2SkinnedObject::GetScaling() const
 
 void Tr2SkinnedObject::SetScaling( const Vector3& scaleVec )
 {
-	Vector3		tmpScale;		
-	Quaternion	tmpRotation;	
-	Vector3		tmpTranslation;	
+	Vector3 tmpScale;
+	Quaternion tmpRotation;
+	Vector3 tmpTranslation;
 
 	Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 	static_cast<Matrix&>( m_transform ) = TransformationMatrix( scaleVec, tmpRotation, tmpTranslation );
@@ -588,7 +587,6 @@ void Tr2SkinnedObject::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			}
 		}
 	}
-
 }
 
 void Tr2SkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
@@ -631,7 +629,7 @@ bool Tr2SkinnedObject::GetLocalBoundingBox( Vector3& min, Vector3& max ) const
 		return true;
 	}
 
-	// pass down to 
+	// pass down to
 	if( m_visualModel )
 	{
 		return m_visualModel->GetBoundingBox( min, max );
@@ -684,7 +682,7 @@ void Tr2SkinnedObject::AllocateSkinningMatrices( unsigned int numBones )
 
 	unsigned int numToAllocate = m_skinningMatrixFrameDelay + 1;
 
-	float* p = CCP_NEW( "Tr2SkinnedObject/m_skinningMatrices" ) float[numBones * 3*4];
+	float* p = CCP_NEW( "Tr2SkinnedObject/m_skinningMatrices" ) float[numBones * 3 * 4];
 	m_skinningMatrixQueue.push_back( p );
 	m_worldTransformsQueue.push_back( IdentityMatrix() );
 
@@ -699,14 +697,14 @@ void Tr2SkinnedObject::FreeSkinningMatrices()
 {
 	for( SkinningMatrixQueue_t::iterator it = m_skinningMatrixQueue.begin(); it != m_skinningMatrixQueue.end(); ++it )
 	{
-		CCP_DELETE [] *it;
+		CCP_DELETE[] * it;
 	}
 	m_skinningMatrixQueue.clear();
 	m_worldTransformsQueue.clear();
 
 	for( AccumulatedTransforms_t::iterator it = m_accumulatedTransformsQueue.begin(); it != m_accumulatedTransformsQueue.end(); ++it )
 	{
-		CCP_DELETE [] *it;
+		CCP_DELETE[] * it;
 	}
 	m_accumulatedTransformsQueue.clear();
 	m_skinningMatrixQueueIndex = 0;
@@ -727,7 +725,7 @@ float* Tr2SkinnedObject::GetSkinningMatrices()
 		return NULL;
 	}
 
-	unsigned int ix = (m_skinningMatrixQueueIndex - m_skinningMatrixFrameDelay + (unsigned int)m_skinningMatrixQueue.size()) % m_skinningMatrixQueue.size();
+	unsigned int ix = ( m_skinningMatrixQueueIndex - m_skinningMatrixFrameDelay + (unsigned int)m_skinningMatrixQueue.size() ) % m_skinningMatrixQueue.size();
 	return m_skinningMatrixQueue[ix];
 }
 
@@ -738,7 +736,7 @@ const Matrix& Tr2SkinnedObject::GetSkinningTransform() const
 		return m_transform;
 	}
 
-	unsigned int ix = (m_skinningMatrixQueueIndex - m_skinningMatrixFrameDelay + (unsigned int)m_worldTransformsQueue.size()) % m_worldTransformsQueue.size();
+	unsigned int ix = ( m_skinningMatrixQueueIndex - m_skinningMatrixFrameDelay + (unsigned int)m_worldTransformsQueue.size() ) % m_worldTransformsQueue.size();
 	return m_worldTransformsQueue[ix];
 }
 
@@ -761,7 +759,7 @@ bool Tr2SkinnedObject::OnModified( Be::Var* value )
 
 void Tr2SkinnedObject::SetHighDetailModel( Tr2SkinnedModel* model )
 {
-	m_lod.SetHighDetailModel( model );	
+	m_lod.SetHighDetailModel( model );
 }
 
 void Tr2SkinnedObject::SetMediumDetailModel( Tr2SkinnedModel* model )
@@ -769,7 +767,7 @@ void Tr2SkinnedObject::SetMediumDetailModel( Tr2SkinnedModel* model )
 	m_lod.SetMediumDetailModel( model );
 }
 
-void Tr2SkinnedObject::SetLowDetailModel( Tr2SkinnedModel * model )
+void Tr2SkinnedObject::SetLowDetailModel( Tr2SkinnedModel* model )
 {
 	m_lod.SetLowDetailModel( model );
 }
@@ -782,11 +780,10 @@ void Tr2SkinnedObject::SetLOD( const TriFrustum* frustum )
 	}
 
 	Vector4 boundingSphere;
-	if( GetBoundingSphere( boundingSphere ) 
-		&& frustum->IsSphereVisible( &boundingSphere, true ) )
+	if( GetBoundingSphere( boundingSphere ) && frustum->IsSphereVisible( &boundingSphere, true ) )
 	{
 		const float estimate = frustum->GetPixelSizeAccross( &boundingSphere );
-		if( estimate >= 0.0f && estimate < 1000000.0f )	// block off any remaining silliness
+		if( estimate >= 0.0f && estimate < 1000000.0f ) // block off any remaining silliness
 		{
 			m_estimatedPixelDiameter = estimate;
 		}
@@ -795,10 +792,10 @@ void Tr2SkinnedObject::SetLOD( const TriFrustum* frustum )
 	Tr2SkinnedModel* model = m_lod.SetLOD( frustum, m_estimatedPixelDiameter );
 
 	// lod change?
-	if( model && model != m_visualModel )	// don't just compare lod numbers, actual model of a given lod might change as well (dynamic builders)
+	if( model && model != m_visualModel ) // don't just compare lod numbers, actual model of a given lod might change as well (dynamic builders)
 	{
 		m_visualModel = model;
-			
+
 		// this invalidates the rig-bindings, cause we switched to a new skeleton and therefore have to rebuild
 		m_skinningMatrixCount = 0;
 

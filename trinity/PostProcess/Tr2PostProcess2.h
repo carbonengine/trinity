@@ -62,25 +62,25 @@ public:
 	Tr2PPTonemappingEffectPtr GetTonemappingIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
 	Tr2PPColorCorrectionEffectPtr GetColorCorrectionIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
 	Tr2PPGenericEffectPtr GetGenericEffectIfAvailable( PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
-	
+
 	void GetAvilableSortedLuts( std::vector<const Tr2PPLutEffect*> & container, PostProcess::Quality qualitySetting = PostProcess::Quality::HIGH ) const;
 	void ClearLuts();
 
-	void SetSignalLoss(Tr2PPSignalLossEffectPtr effect);
-	void SetGodRays(Tr2PPGodRaysEffectPtr effect);
-	void SetBloom(Tr2PPBloomEffectPtr effect);
-	void SetDynamicExposure(Tr2PPDynamicExposureEffectPtr effect);
-	void SetFilmGrain(Tr2PPFilmGrainEffectPtr effect);
-	void SetDesaturate(Tr2PPDesaturateEffectPtr effect);
-	void SetFade(Tr2PPFadeEffectPtr effect);
-	void AddLut(Tr2PPLutEffectPtr effect);
-	void SetVignette(Tr2PPVignetteEffectPtr effect);
-	void SetFog(Tr2PPFogEffectPtr effect);
-	void SetTaa(Tr2PPTaaEffectPtr effect);
-	void SetDepthOfField(Tr2PPDepthOfFieldEffectPtr effect);
-	void SetTonemapping(Tr2PPTonemappingEffectPtr effect);
-	void SetColorCorrection(Tr2PPColorCorrectionEffectPtr effect);
-	void SetGenericEffect(Tr2PPGenericEffectPtr effect);
+	void SetSignalLoss( Tr2PPSignalLossEffectPtr effect );
+	void SetGodRays( Tr2PPGodRaysEffectPtr effect );
+	void SetBloom( Tr2PPBloomEffectPtr effect );
+	void SetDynamicExposure( Tr2PPDynamicExposureEffectPtr effect );
+	void SetFilmGrain( Tr2PPFilmGrainEffectPtr effect );
+	void SetDesaturate( Tr2PPDesaturateEffectPtr effect );
+	void SetFade( Tr2PPFadeEffectPtr effect );
+	void AddLut( Tr2PPLutEffectPtr effect );
+	void SetVignette( Tr2PPVignetteEffectPtr effect );
+	void SetFog( Tr2PPFogEffectPtr effect );
+	void SetTaa( Tr2PPTaaEffectPtr effect );
+	void SetDepthOfField( Tr2PPDepthOfFieldEffectPtr effect );
+	void SetTonemapping( Tr2PPTonemappingEffectPtr effect );
+	void SetColorCorrection( Tr2PPColorCorrectionEffectPtr effect );
+	void SetGenericEffect( Tr2PPGenericEffectPtr effect );
 
 	// Helper method for scenes to decide on miplodbias
 	float GetMipLodBias() const;
@@ -109,8 +109,3 @@ private:
 TYPEDEF_BLUECLASS( Tr2PostProcess2 );
 
 #endif // Tr2PostProcess_H
-
-
-
-
-

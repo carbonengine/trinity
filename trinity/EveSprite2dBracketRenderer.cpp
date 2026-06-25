@@ -10,7 +10,6 @@ EveSprite2dBracketRenderer::EveSprite2dBracketRenderer( IRoot* lockobj /*= nullp
 	PARENTLOCK( m_brackets ),
 	m_bracketCountInBuffers( 0 )
 {
-
 }
 
 unsigned int EveSprite2dBracketRenderer::GetVertexCount()
@@ -66,7 +65,7 @@ void EveSprite2dBracketRenderer::GatherSprites( Tr2Sprite2dScene* renderer )
 		{
 			CCP_LOGERR( "%s failed to lock vertex buffer (%d)", __FUNCTION__, hr );
 			return;
-		}		
+		}
 
 		// Fill the index buffer now - it only changes when the count changes.
 		unsigned short* indices;
@@ -76,7 +75,7 @@ void EveSprite2dBracketRenderer::GatherSprites( Tr2Sprite2dScene* renderer )
 			CCP_LOGERR( "%s failed to lock index buffer (%d)", __FUNCTION__, hr );
 			return;
 		}
-		ON_BLOCK_EXIT( [&]{ m_indexBuffer.UnmapForWriting( renderContext ); } );
+		ON_BLOCK_EXIT( [&] { m_indexBuffer.UnmapForWriting( renderContext ); } );
 
 		unsigned short* curIndex = indices;
 		unsigned int spriteIx = 0;
@@ -85,7 +84,7 @@ void EveSprite2dBracketRenderer::GatherSprites( Tr2Sprite2dScene* renderer )
 		{
 			for( unsigned int i = 0; i < 4; ++i )
 			{
-				Tr2Sprite2dD3DVertex& v = vertices[spriteIx*4 + i];
+				Tr2Sprite2dD3DVertex& v = vertices[spriteIx * 4 + i];
 
 				v.glowBrightness = 1;
 				v.blendMode = PackBlendMode( TR2_SBM_BLEND, Tr2SpriteTarget::COLOR );
@@ -172,7 +171,7 @@ void EveSprite2dBracketRenderer::GatherSprites( Tr2Sprite2dScene* renderer )
 		tl.position.y = translation.y;
 		tl.texCoord[0] = Vector2( xZero, yZero );
 		tl.color = color;
-		
+
 		Tr2Sprite2dD3DVertex& tr = curVertex[1];
 		tr.position.x = translation.x + width;
 		tr.position.y = translation.y;

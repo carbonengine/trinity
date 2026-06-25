@@ -9,8 +9,8 @@
 // Description:
 //   Tr2StreamingBitmapSaver default constructor
 // --------------------------------------------------------------------------------------
-Tr2StreamingBitmapSaver::Tr2StreamingBitmapSaver( IRoot* /* lockobj */ )
-	:m_width( 0 ),
+Tr2StreamingBitmapSaver::Tr2StreamingBitmapSaver( IRoot* /* lockobj */ ) :
+	m_width( 0 ),
 	m_height( 0 ),
 	m_format( Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN ),
 	m_bytesPerPixel( 0 ),
@@ -33,7 +33,7 @@ Tr2StreamingBitmapSaver::~Tr2StreamingBitmapSaver()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Starts saving TGA image. Opens a file and writes out a header.  
+//   Starts saving TGA image. Opens a file and writes out a header.
 // Arguments:
 //   path - Res or physical path to output TGA image
 //   width - Width of the image
@@ -42,10 +42,10 @@ Tr2StreamingBitmapSaver::~Tr2StreamingBitmapSaver()
 // Return Value:
 //   AL result of operation
 // --------------------------------------------------------------------------------------
-ALResult Tr2StreamingBitmapSaver::StartSaving( 
-	const wchar_t* path, 
-	uint32_t width, 
-	uint32_t height, 
+ALResult Tr2StreamingBitmapSaver::StartSaving(
+	const wchar_t* path,
+	uint32_t width,
+	uint32_t height,
 	Tr2RenderContextEnum::PixelFormat pixelFormat )
 {
 	if( IsSaving() )
@@ -55,17 +55,17 @@ ALResult Tr2StreamingBitmapSaver::StartSaving(
 
 	if( !ImageIO::Tga::IsSaveSupported( m_format ) )
 	{
-		CCP_LOGWARN( 
-			"Tr2StreamingBitmapSaver::StartSaving unsupported image format (%i)", 
+		CCP_LOGWARN(
+			"Tr2StreamingBitmapSaver::StartSaving unsupported image format (%i)",
 			pixelFormat );
 		return E_INVALIDARG;
 	}
 
 	if( !width || !height )
 	{
-		CCP_LOGWARN( 
-			"Tr2StreamingBitmapSaver::StartSaving invalid image dimensions (%u x %u)", 
-			width, 
+		CCP_LOGWARN(
+			"Tr2StreamingBitmapSaver::StartSaving invalid image dimensions (%u x %u)",
+			width,
 			height );
 		return E_INVALIDARG;
 	}
@@ -74,16 +74,16 @@ ALResult Tr2StreamingBitmapSaver::StartSaving(
 	IResFilePtr stream( resFileClsid );
 	if( !( stream->FileExistsW( path ) ? stream->OpenW( path, false ) : stream->CreateW( path ) ) )
 	{
-		CCP_LOGWARN( 
-			"Tr2StreamingBitmapSaver::StartSaving failed to open Blue stream (%ls)", 
+		CCP_LOGWARN(
+			"Tr2StreamingBitmapSaver::StartSaving failed to open Blue stream (%ls)",
 			path );
 		return E_FAIL;
 	}
 
 	if( !ImageIO::Tga::SaveHeader( width, height, pixelFormat, *stream ) )
 	{
-		CCP_LOGWARN( 
-			"Tr2StreamingBitmapSaver::StartSaving failed to write TGA header (%ls)", 
+		CCP_LOGWARN(
+			"Tr2StreamingBitmapSaver::StartSaving failed to write TGA header (%ls)",
 			path );
 		return E_FAIL;
 	}
@@ -101,7 +101,7 @@ ALResult Tr2StreamingBitmapSaver::StartSaving(
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Starts next batch (slice) of an image. Batch is a region of image spanning the 
+//   Starts next batch (slice) of an image. Batch is a region of image spanning the
 //   entire image width with a set height. The Tr2StreamingBitmapSaver object allocates
 //   data to store contents of the slice in memory. This operation shifts saving window
 //   inside the image upwards.
@@ -154,13 +154,13 @@ ALResult Tr2StreamingBitmapSaver::StartBatch( uint32_t rowsPerBatch )
 // Return Value:
 //   AL result of operation
 // --------------------------------------------------------------------------------------
-ALResult Tr2StreamingBitmapSaver::CopyFromRenderTargetRegion( 
-	Tr2RenderTarget* rt, 
-	int left, 
-	int top, 
-	int right, 
-	int bottom, 
-	int offsetX, 
+ALResult Tr2StreamingBitmapSaver::CopyFromRenderTargetRegion(
+	Tr2RenderTarget* rt,
+	int left,
+	int top,
+	int right,
+	int bottom,
+	int offsetX,
 	int offsetY )
 {
 	if( !rt || !rt->IsValid() || !m_output || !m_rowsPerBatch )
@@ -191,17 +191,16 @@ ALResult Tr2StreamingBitmapSaver::CopyFromRenderTargetRegion(
 	offsetY += top;
 	offsetY -= m_currentOffset;
 
-	if( left >= right || 
+	if( left >= right ||
 		top >= bottom ||
 		int( m_width ) < offsetX ||
-		int( m_rowsPerBatch ) < offsetY
-		)
+		int( m_rowsPerBatch ) < offsetY )
 	{
 		// source rectangle is empty
 		return S_OK;
 	}
 
-	unsigned width  = min( unsigned( right - left ), m_width - offsetX );
+	unsigned width = min( unsigned( right - left ), m_width - offsetX );
 	unsigned height = min( unsigned( bottom - top ), m_rowsPerBatch - offsetY );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -222,7 +221,7 @@ ALResult Tr2StreamingBitmapSaver::CopyFromRenderTargetRegion(
 
 	dst += m_bytesPerPixel * offsetX + dstPitch * offsetY;
 	src += m_bytesPerPixel * left + srcPitch * top;
-		  
+
 	const unsigned pitch = width * m_bytesPerPixel;
 	for( unsigned j = 0; j != height; ++j, src += srcPitch, dst += dstPitch )
 	{
@@ -296,4 +295,3 @@ bool Tr2StreamingBitmapSaver::HasStartedBatch() const
 {
 	return m_rowsPerBatch != 0;
 }
-

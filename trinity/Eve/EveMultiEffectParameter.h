@@ -24,23 +24,22 @@ public:
 	EXPOSE_TO_BLUE();
 	EveMultiEffectParameter( IRoot* lockobj = NULL );
 
-	void SetParameterObject( IRoot* object );
+	void SetParameterObject( IRoot * object );
 	bool IsValid();
-	void SetOwner( EveMultiEffect* owner );
+	void SetOwner( EveMultiEffect * owner );
 
 	IRoot* GetParameterObject();
 	BlueSharedString GetName();
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 private:
 	BlueSharedString m_name;
 	IRootPtr m_object;
 	EveMultiEffect* m_owner;
 	ParameterType m_type;
-
 };
 TYPEDEF_BLUECLASS( EveMultiEffectParameter );
 

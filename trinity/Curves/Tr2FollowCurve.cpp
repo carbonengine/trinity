@@ -10,7 +10,7 @@ Tr2FollowCurve::Tr2FollowCurve( IRoot* lockobj ) :
 	m_keys.SetNotify( this );
 }
 
-Tr2FollowCurve::~Tr2FollowCurve( )
+Tr2FollowCurve::~Tr2FollowCurve()
 {
 	m_keys.Clear();
 }
@@ -37,7 +37,6 @@ void Tr2FollowCurve::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 			break;
 		}
 	}
-	
 }
 
 Vector3 Tr2FollowCurve::GetValue( double time ) const
@@ -48,16 +47,16 @@ Vector3 Tr2FollowCurve::GetValue( double time ) const
 	for( auto key = begin( m_keys ); key != end( m_keys ); ++key )
 	{
 		auto k = *key;
-		
+
 		if( time < k->GetTime() )
 		{
 			nextKey = k;
 			break;
 		}
-		currentKey = k;		
+		currentKey = k;
 	}
 
-	if( nextKey && currentKey ) 
+	if( nextKey && currentKey )
 	{
 		value = GetSegmentValue( float( time ), *currentKey, *nextKey );
 	}
@@ -83,8 +82,7 @@ Vector3 Tr2FollowCurve::GetSegmentValue( float time, ITr2FollowCurveKey& k0, ITr
 			return k1.GetValue();
 		}
 		return k0.GetValue() + ( k1.GetValue() - k0.GetValue() ) * ( time - k0.GetTime() ) / ( k1.GetTime() - k0.GetTime() );
-	case Tr2FollowCurveKeyInterpolation::HERMITE:
-	{
+	case Tr2FollowCurveKeyInterpolation::HERMITE: {
 		float length = k1.GetTime() - k0.GetTime();
 		if( length == 0 )
 		{
@@ -105,7 +103,7 @@ Vector3 Tr2FollowCurve::GetSegmentValue( float time, ITr2FollowCurveKey& k0, ITr
 		return k0.GetValue() * c1 + k1.GetValue() * c2 + inTangent * c3 + outTangent * c4;
 	}
 	default:
-		return Vector3(0, 0, 0);
+		return Vector3( 0, 0, 0 );
 	}
 }
 
@@ -158,4 +156,3 @@ Vector3d* Tr2FollowCurve::InterpolatedPosition( Vector3d* out, Be::Time time )
 {
 	return out;
 }
-

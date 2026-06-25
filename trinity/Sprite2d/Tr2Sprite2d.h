@@ -13,12 +13,11 @@ BLUE_DECLARE( Tr2Sprite2d );
 BLUE_DECLARE( Tr2Sprite2dTexture );
 BLUE_DECLARE_INTERFACE( ITr2Sprite2dTexture );
 
-class Tr2Sprite2d:
-     public Tr2TexturedSpriteObject
+class Tr2Sprite2d : public Tr2TexturedSpriteObject
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2Sprite2d( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2Sprite2d( IRoot* lockobj = NULL );
 	~Tr2Sprite2d();
 
 	//////////////////////////////////////////////////////////////////////////

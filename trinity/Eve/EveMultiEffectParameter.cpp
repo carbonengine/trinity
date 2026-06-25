@@ -12,7 +12,6 @@ EveMultiEffectParameter::EveMultiEffectParameter( IRoot* lockobj ) :
 	m_owner( nullptr ),
 	m_type( TYPE_UNDEFINED )
 {
-
 }
 
 void EveMultiEffectParameter::SetOwner( EveMultiEffect* owner )
@@ -22,7 +21,7 @@ void EveMultiEffectParameter::SetOwner( EveMultiEffect* owner )
 
 bool EveMultiEffectParameter::OnModified( Be::Var* value )
 {
-	if( IsMatch( value, m_object ) && this->m_owner != nullptr)
+	if( IsMatch( value, m_object ) && this->m_owner != nullptr )
 	{
 		this->m_owner->Rebind();
 	}
@@ -39,7 +38,7 @@ IRoot* EveMultiEffectParameter::GetParameterObject()
 	return m_object;
 }
 
-bool EveMultiEffectParameter::IsValid( )
+bool EveMultiEffectParameter::IsValid()
 {
 	if( m_object == nullptr )
 	{

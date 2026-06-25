@@ -25,7 +25,7 @@ using namespace Tr2RenderContextEnum;
 std::map<TriGrannyResPtr, EveSpherePinIndexTree*>* s_treeMap = new std::map<TriGrannyResPtr, EveSpherePinIndexTree*>();
 
 // ------------------------------------------------------------------------------------------------------
-EveSpherePin::EveSpherePin( IRoot* lockobj /*= NULL*/ ):
+EveSpherePin::EveSpherePin( IRoot* lockobj /*= NULL*/ ) :
 	PARENTLOCK( m_curveSets ),
 	m_scaling( 1.f, 1.f, 1.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
@@ -88,14 +88,13 @@ bool EveSpherePin::OnModified( Be::Var* value )
 	{
 		m_pinEffect->SetEffectPathName( m_pinEffectResPath.c_str() );
 	}
-	else 
-	if( IsMatch( value, m_centerNormal ) ||
-		IsMatch( value, m_pinRadius ) ||
-		IsMatch( value, m_pinMaxRadius ) ||
-		IsMatch( value, m_pinRotation ) ||
-		IsMatch( value, m_pinColor ) ||
-		IsMatch( value, m_pinAlphaThreshold ) ||
-		IsMatch( value, m_uvAtlasScaleOffset ) )
+	else if( IsMatch( value, m_centerNormal ) ||
+			 IsMatch( value, m_pinRadius ) ||
+			 IsMatch( value, m_pinMaxRadius ) ||
+			 IsMatch( value, m_pinRotation ) ||
+			 IsMatch( value, m_pinColor ) ||
+			 IsMatch( value, m_pinAlphaThreshold ) ||
+			 IsMatch( value, m_uvAtlasScaleOffset ) )
 	{
 		BuildBoundingSphere();
 		if( IsMatch( value, m_centerNormal ) || IsMatch( value, m_pinMaxRadius ) )
@@ -126,7 +125,7 @@ void EveSpherePin::CreateIndexBuffer()
 {
 	std::vector<unsigned short> indices;
 	int success = m_tree->GetIndices( m_centerNormal, m_pinMaxRadius, m_primitiveCount, indices );
-	
+
 	if( !success )
 	{
 		return;
@@ -141,12 +140,12 @@ void EveSpherePin::CreateIndexBuffer()
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	CR_RETURN( m_indexBuffer.Create( 
-		2, 
-		m_primitiveCount * 3, 
+	CR_RETURN( m_indexBuffer.Create(
+		2,
+		m_primitiveCount * 3,
 		Tr2GpuUsage::INDEX_BUFFER,
 		Tr2CpuUsage::NONE,
-		&indices[0], 
+		&indices[0],
 		renderContext ) );
 
 	m_rebuildIndices = 0;
@@ -194,7 +193,7 @@ void EveSpherePin::UpdateSyncronous( const EveUpdateContext& updateContext )
 		{
 			TriGrannyResPtr granny;
 			BeResMan->GetResource( m_geomResPath, "raw", granny );
-			if ( granny )
+			if( granny )
 			{
 				if( !( *s_treeMap )[granny] )
 				{
@@ -219,7 +218,6 @@ void EveSpherePin::UpdateSyncronous( const EveUpdateContext& updateContext )
 			CreateIndexBuffer();
 		}
 	}
-
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -230,7 +228,7 @@ void EveSpherePin::UpdateAsyncronous( const EveUpdateContext& updateContext )
 	{
 		for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 		{
-			(*it)->Update( TimeAsDouble( updateContext.GetTime() ) );
+			( *it )->Update( TimeAsDouble( updateContext.GetTime() ) );
 		}
 	}
 }
@@ -278,7 +276,7 @@ void EveSpherePin::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr
 		return;
 	}
 	// cull!
-//	if( frustum.IsSphereVisible( &boundingSphere ) )
+	//	if( frustum.IsSphereVisible( &boundingSphere ) )
 	{
 		renderables.push_back( this );
 	}
@@ -305,8 +303,8 @@ bool EveSpherePin::HasTransparentBatches()
 }
 
 // -----------------------------------------------------------------------------
-void EveSpherePin::GetBatches( ITriRenderBatchAccumulator* accumulator, 
-							   TriBatchType batchType, 
+void EveSpherePin::GetBatches( ITriRenderBatchAccumulator* accumulator,
+							   TriBatchType batchType,
 							   const Tr2PerObjectData* perObjectData,
 							   Tr2RenderReason reason )
 {
@@ -349,7 +347,7 @@ Tr2PerObjectData* EveSpherePin::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	perObjectData->m_worldMatrix = Transpose( m_worldTransform );
 	// set all other pin data
 	perObjectData->m_pinPosition = Vector4( m_centerNormal, m_pinRadius );
-	perObjectData->m_pinRotation =  Vector4( m_pinRotation, 0.f, 0.f, 0.f );
+	perObjectData->m_pinRotation = Vector4( m_pinRotation, 0.f, 0.f, 0.f );
 	perObjectData->m_pinColor = Vector4( m_pinColor.r, m_pinColor.g, m_pinColor.b, m_pinColor.a );
 	perObjectData->m_pinThreshold = Vector4( m_pinAlphaThreshold, 0.f, 0.f, 0.f );
 	perObjectData->m_pinRadiusPrecalc = Vector4( sinf( m_pinRadius ), cosf( m_pinRadius ), sinf( m_pinRotation ), cosf( m_pinRotation ) );

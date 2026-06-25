@@ -93,11 +93,11 @@ struct Tr2ParticleElementData
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2ParticleStreamIterator is a helper class to manage a stream of typed data. Used
-//   internally be particle system components. 
+//   internally be particle system components.
 // See Also:
 //   Tr2ParticleElementDeclaration, Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 class Tr2ParticleStreamIterator
 {
 public:
@@ -105,13 +105,13 @@ public:
 	// Description:
 	//   Constructs an iterator.
 	// Arguments:
-	//   particle - Array of pointers to particle data; number of elements in array is 
+	//   particle - Array of pointers to particle data; number of elements in array is
 	//		Tr2ParticleElementData::COUNT.
 	//   strides - Array of strides (number of floats) per particle in particle arrays.
 	//   element - Particle element of interest.
 	// ----------------------------------------------------------------------------------
-	Tr2ParticleStreamIterator( float** particle, unsigned* strides, const Tr2ParticleElementData& element )
-		:m_data( particle[element.m_bufferType] + element.m_offset ),
+	Tr2ParticleStreamIterator( float** particle, unsigned* strides, const Tr2ParticleElementData& element ) :
+		m_data( particle[element.m_bufferType] + element.m_offset ),
 		m_stride( strides[element.m_bufferType] )
 	{
 	}
@@ -175,6 +175,7 @@ public:
 	{
 		return ( uintptr_t( m_data ) & 15 ) == 0;
 	}
+
 private:
 	// Pointer to the current particle element data
 	float* m_data;
@@ -188,8 +189,8 @@ private:
 // See Also:
 //   Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-typedef std::map<Tr2ParticleElementDeclarationName, Tr2ParticleElementData> 
-		Tr2ParticleElementDataMap;
+typedef std::map<Tr2ParticleElementDeclarationName, Tr2ParticleElementData>
+	Tr2ParticleElementDataMap;
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -199,7 +200,7 @@ typedef std::map<Tr2ParticleElementDeclarationName, Tr2ParticleElementData>
 // See Also:
 //   Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-class Tr2ParticleElementDeclaration: public IRoot
+class Tr2ParticleElementDeclaration : public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();

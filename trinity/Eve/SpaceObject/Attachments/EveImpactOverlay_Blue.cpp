@@ -7,10 +7,10 @@ BLUE_DEFINE( EveImpactOverlay );
 
 const Be::ClassInfo* EveImpactOverlay::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveImpactOverlay, "" )
-        MAP_INTERFACE( EveImpactOverlay )
+	EXPOSURE_BEGIN( EveImpactOverlay, "" )
+		MAP_INTERFACE( EveImpactOverlay )
 
-		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST	)
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "seed", m_seed, "", Be::READ )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE )
 		MAP_ATTRIBUTE( "configuration", m_configuration, "Impact goes into what?", Be::READ )
@@ -38,20 +38,19 @@ const Be::ClassInfo* EveImpactOverlay::ExposeToBlue()
 		MAP_ATTRIBUTE( "armorHardening", m_armorHardening, "", Be::READWRITE )
 
 		MAP_ATTRIBUTE( "hullRepairing", m_hullRepairing, "", Be::READWRITE )
-		
+
 		MAP_ATTRIBUTE( "hullDamageFlickerCurve", m_hullDamageFlickerCurve, "This is the flickering for hull damage", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "hullDamageFactor", m_hullDamageFactor, "How much hull damage to show?", Be::READWRITE )
 		MAP_ATTRIBUTE( "hullImpactEmitter", m_hullImpactEmitter, "The hull impact emitter", Be::READWRITE | Be::PERSIST )
-		
+
 		MAP_METHOD_AND_WRAP(
 			"GetArmorImpactLifeTime",
 			GetArmorImpactLifeTime,
-			"Value for how long the overlay effect plays.\n"
-		)
+			"Value for how long the overlay effect plays.\n" )
 		MAP_METHOD_AND_WRAP(
 			"GetLastDamageState",
 			GetLastDamageState,
 			"Last configured damage state (shield, armor, hull).\n" )
 
-    EXPOSURE_END()
+	EXPOSURE_END()
 }

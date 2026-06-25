@@ -22,7 +22,7 @@ EveCircle::EveCircle( IRoot* lockobj ) :
 	m_meshSize( 0.f ),
 	m_scaleSegmentsByCompleteness( false ),
 	m_regeneratePoints( true ),
-	m_billboardObjects( false),
+	m_billboardObjects( false ),
 	m_scaleEndpoints( true ),
 	m_isVisible( true ),
 	m_display( true )
@@ -54,7 +54,7 @@ bool EveCircle::OnModified( Be::Var* value )
 
 	if( IsMatch( value, m_startPoint ) )
 	{
-		m_startPoint = fmod(m_startPoint, 1.f);
+		m_startPoint = fmod( m_startPoint, 1.f );
 	}
 
 
@@ -90,7 +90,7 @@ void EveCircle::GetPointCount( unsigned& count )
 void EveCircle::GeneratePoints( const Matrix& parentTransform )
 {
 	const int seg = m_scaleSegmentsByCompleteness ? int( ( m_segments + 0.5f ) * ( 1.f - abs( m_completeness - 1.f ) ) ) : int( m_segments + 0.5f );
-	
+
 	if( seg <= 1 )
 	{
 		return;
@@ -106,7 +106,7 @@ void EveCircle::GeneratePoints( const Matrix& parentTransform )
 		UpdateTransform( m_parentTransform );
 	}
 
-	
+
 	const float totalArc = ( 1.f - abs( m_completeness - 1.f ) ) * XM_2PI;
 	const float startOffset = m_startPoint * XM_2PI + max( m_completeness - 1.f, 0.f ) * XM_2PI + totalArc / ( 2 * seg );
 
@@ -128,7 +128,7 @@ void EveCircle::GeneratePoints( const Matrix& parentTransform )
 		float Z = sin( locOnCircle ) * m_circleRadius;
 		m_points.emplace_back( Vector3( X, Y, Z ) );
 	}
-	
+
 	m_regeneratePoints = false;
 }
 
@@ -142,8 +142,8 @@ void EveCircle::CalculateBoundingSphere( float meshSize, bool reCalculateChildre
 	{
 		meshSize = m_meshSize;
 	}
-	
-	m_boundingSphere = Vector4( Vector3(0.f, 0.f,0.f ), m_circleRadius + m_lineWidth + meshSize );
+
+	m_boundingSphere = Vector4( Vector3( 0.f, 0.f, 0.f ), m_circleRadius + m_lineWidth + meshSize );
 }
 
 void EveCircle::GetBoundingSphere( Vector4& sphere )
@@ -185,18 +185,18 @@ void EveCircle::AddLinesToSet( EveCurveLineSet& lineSet, const Vector4& color, c
 
 	int seg = m_scaleSegmentsByCompleteness ? int( ( m_segments + 0.5f ) * ( 1.f - abs( m_completeness - 1.f ) ) ) : int( m_segments + 0.5f );
 	seg = min( seg, (int)m_points.size() );
-	
+
 	for( int i = 0; i < seg; i++ )
 	{
 		int nextPoint = ( i + 1 ) % seg;
 		unsigned id;
 
-		if(m_completeness != 1.f && nextPoint == 0)
+		if( m_completeness != 1.f && nextPoint == 0 )
 		{
 			continue;
 		}
-		
-		
+
+
 		id = lineSet.AddStraightLine( TransformCoord( m_points[i], m_localTransform ), color, TransformCoord( m_points[nextPoint], m_localTransform ), color, m_lineWidth );
 
 		if( scrollSpeed != 0 )
@@ -218,7 +218,7 @@ void EveCircle::UpdateBuffer( Tr2RenderContext& renderContext, uint8_t*& data, c
 		}
 		return;
 	}
-	
+
 	Vector3 scale, translation;
 	Quaternion objRot, worldRot;
 
@@ -226,7 +226,7 @@ void EveCircle::UpdateBuffer( Tr2RenderContext& renderContext, uint8_t*& data, c
 	for( auto point = m_points.begin(); point != m_points.end(); ++point )
 	{
 		float sizeMod = 1.f;
-		
+
 		if( m_scaleEndpoints && m_completeness != 1.f )
 		{
 			sizeMod = ( count + 2 >= unsigned( m_points.size() ) ) ? 1.0f - m_animValue : sizeMod;
@@ -237,16 +237,16 @@ void EveCircle::UpdateBuffer( Tr2RenderContext& renderContext, uint8_t*& data, c
 		Vector3 dirToNextPoint( 0.f, 1.f, 0.f );
 		const unsigned nextPoint = ( count + 1 >= unsigned( m_points.size() ) ) ? 0 : count + 1;
 		translation = Lerp( m_points[count], m_points[nextPoint], m_animValue );
-		
+
 		if( m_billboardObjects )
 		{
 			Vector3 tmpScale, tmpTranslation;
 			Quaternion tmpRotation;
-			Decompose( tmpScale, tmpRotation, tmpTranslation, m_localTransform*systemLocation );
+			Decompose( tmpScale, tmpRotation, tmpTranslation, m_localTransform * systemLocation );
 			Matrix rotMat = RotationMatrix( tmpRotation );
 
 			const Vector3 angleToCamera = Tr2Renderer::GetViewPosition() - TransformCoord( translation, m_localTransform * systemLocation );
-			dirToNextPoint = TransformCoord( angleToCamera, Inverse(rotMat) );
+			dirToNextPoint = TransformCoord( angleToCamera, Inverse( rotMat ) );
 		}
 		else
 		{
@@ -255,7 +255,7 @@ void EveCircle::UpdateBuffer( Tr2RenderContext& renderContext, uint8_t*& data, c
 		}
 
 		TriQuaternionArcFromForward( &objRot, &dirToNextPoint );
-		
+
 		Matrix matrix = TransformationMatrix( sizeMod * m_objectScale, objRot, translation ) * m_localTransform;
 
 		Matrix m = Transpose( matrix );

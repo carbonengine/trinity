@@ -9,8 +9,8 @@
 bool g_frustumCullingDisabled = false;
 TRI_REGISTER_SETTING( "frustumCullingDisabled", g_frustumCullingDisabled );
 
-TriFrustum::TriFrustum()
-	:m_halfWidthProjection( 0 ),
+TriFrustum::TriFrustum() :
+	m_halfWidthProjection( 0 ),
 	m_zNear( 0 ),
 	m_zFar( 0 ),
 	m_aspectRatio( 1.0f ),
@@ -36,12 +36,12 @@ void TriFrustum::DeriveFrustum( const Matrix* view, const Vector3* campos, const
 }
 
 void TriFrustum::ExtractFrustum( const Matrix* proj )
-{/**
+{ /**
 	proj	-	The projection matrix to extract a frustum from.
  */
 #ifdef TRINITYDEV
-	if ( m_frustumTestCounter != 0 )
-		m_frustumCullingRatio = (float)m_frustumRejectionCounter/(float)m_frustumTestCounter;
+	if( m_frustumTestCounter != 0 )
+		m_frustumCullingRatio = (float)m_frustumRejectionCounter / (float)m_frustumTestCounter;
 	m_frustumRejectionCounter = 0;
 	m_frustumTestCounter = 0;
 #endif
@@ -52,18 +52,18 @@ void TriFrustum::ExtractFrustum( const Matrix* proj )
 	// X->( (1/tan(fov/2))/aspectratio, 0, 0 ). You need to scale all the input values by the 1/tan, because when the 'fov' changes you want to see more.
 	//											We also want to make sure that the values are not stretched when the screen is not a perfect square. That is why
 	//											we like to scale the x values by the 1/aspectRatio.
-	// Y->( 0 1/tan(fov/2), 0 )					The Y values need scaling to, but they do not have to be changed by the aspect ratio because the aspect ratio is a scale relating the 
+	// Y->( 0 1/tan(fov/2), 0 )					The Y values need scaling to, but they do not have to be changed by the aspect ratio because the aspect ratio is a scale relating the
 	//											size of 'Y' to x values. x/Y.
 	//
 	// Z->( 0, 0, dRatio, -near*dRatio )		The depth values get mapped to the z-buffer between the ranges of 0.0 - 1.0. To ensure that no values get divided by zero
-	//											we use the near plane and store the actual z value in the w member of the output vector. No value get projected to 2D space before 
+	//											we use the near plane and store the actual z value in the w member of the output vector. No value get projected to 2D space before
 	//											the z-buffer test, so the projection matrix does not project anything. It basically just scales the values so they can be projected
 	//											in a simple homogeneous fashion, x/w, y/w, z/w by a frustum with a 90 degree fov.
-	//											To map the depth values correctly to the z-buffer and make sure we don't divide by zero we subtract the near plane from the z-value, so 
-	//											if the z-value was behind the near plane the sign of the value would switch. Then we need to scale it back to where it was to get the 
+	//											To map the depth values correctly to the z-buffer and make sure we don't divide by zero we subtract the near plane from the z-value, so
+	//											if the z-value was behind the near plane the sign of the value would switch. Then we need to scale it back to where it was to get the
 	//											correct z-buffer value. We want all our values to be mapped correctly between 0.0 - 1.0 where 0.0 is our near plane and 1.0 is our far plane.
 	//											So we can't just subtract the nearplane then divide that by the distance between the near and far plane, because than the depth values that
-	//											would lie on or behind the farplane(by distance equal to the nearplane) would get drawn. So the value we need to scale the value back into place 
+	//											would lie on or behind the farplane(by distance equal to the nearplane) would get drawn. So the value we need to scale the value back into place
 	//											after we have subtracted the nearplane is the ratio between the distance to the farplane and the distance between the near and far plane.
 	//											*)dRatio = farplane/ (farplane - nearplane )
 	//											*)zbuffer = z - nearplane*dRatio
@@ -73,8 +73,8 @@ void TriFrustum::ExtractFrustum( const Matrix* proj )
 	//
 	// W->( 0, 0, 1.0, 0 )						All this does is copy the depth value to the w member of the output vector.
 	//
-	// So to extract the frustums we only need to add and subtract column vectors to get the normals. 
-	
+	// So to extract the frustums we only need to add and subtract column vectors to get the normals.
+
 	// front
 	// The normal of the near plane is the same as the w-component in the projection matrix
 	m_planes[PLANE_FRONT].a = ( proj->_13 );
@@ -91,7 +91,7 @@ void TriFrustum::ExtractFrustum( const Matrix* proj )
 	m_planes[PLANE_TOP].b = ( proj->_24 - proj->_22 );
 	m_planes[PLANE_TOP].c = ( proj->_34 - proj->_32 );
 	m_planes[PLANE_TOP].d = ( proj->_44 - proj->_42 );
-	//right 
+	//right
 	m_planes[PLANE_RIGHT].a = ( proj->_14 - proj->_11 );
 	m_planes[PLANE_RIGHT].b = ( proj->_24 - proj->_21 );
 	m_planes[PLANE_RIGHT].c = ( proj->_34 - proj->_31 );
@@ -111,8 +111,8 @@ void TriFrustum::ExtractFrustum( const Matrix* proj )
 	// The m33 component is the value that will scale the 'z' value back to correct place between 0 - farplane, after the distance to the nearplane has been subtracted from it.
 	// The m33 tells us how much larger the distance of the farplane to the origin is compared to the distance from the farplane to the frontplane.
 	m_planes[PLANE_BACK].d = ( proj->_44 - proj->_43 );
-	
-	for (int i = 0; i < PLANE_COUNT; i++)
+
+	for( int i = 0; i < PLANE_COUNT; i++ )
 	{
 		m_planes[i] = Normalize( m_planes[i] );
 	}
@@ -134,9 +134,9 @@ bool TriFrustum::IsSphereVisible( const Vector3& center, float radius, bool cull
 	m_frustumTestCounter++;
 #endif
 	// For some reason the old code ignored the back plane. I don't know why!!
-	for( int i = 0; i < (PLANE_COUNT - 1) + cullBackPlane; i++ )
+	for( int i = 0; i < ( PLANE_COUNT - 1 ) + cullBackPlane; i++ )
 	{
-		if( DotCoord( m_planes[i], center )  < -radius )
+		if( DotCoord( m_planes[i], center ) < -radius )
 		{
 #ifdef TRINITYDEV
 			m_frustumRejectionCounter++;
@@ -166,7 +166,7 @@ TriFrustumTestResult TriFrustum::SphereTest( const CcpMath::Sphere& sphere ) con
 }
 
 bool TriFrustum::IsPointVisible( const Vector3* point ) const
-{/**
+{ /**
 	Wrapping the sphere visible with a radius of zero.
  */
 	Vector4 boundingSphere( *point, 0.f );
@@ -175,50 +175,50 @@ bool TriFrustum::IsPointVisible( const Vector3* point ) const
 
 // -------------------------------------------------------------
 // Description:
-//   Tests for frustum-AABB intersection. May return false 
+//   Tests for frustum-AABB intersection. May return false
 //   positive answers.
 // Arguments:
 //   boundsMin - Min bounds of AABB
 //   boundsMax - Max bounds of AABB
 // Return Value:
-//   true If AABB intersects / is inside frustum 
+//   true If AABB intersects / is inside frustum
 //   false If AABB is outside frustum
 // -------------------------------------------------------------
 bool TriFrustum::IsBoxVisible( const Vector3& boundsMin, const Vector3& boundsMax ) const
 {
-	Vector3 vmax; 
+	Vector3 vmax;
 
-	for( int i = 0; i < 6; ++i ) 
-	{ 
-		if( m_planes[i].a > 0 ) 
-		{ 
-			vmax.x = boundsMax.x; 
+	for( int i = 0; i < 6; ++i )
+	{
+		if( m_planes[i].a > 0 )
+		{
+			vmax.x = boundsMax.x;
 		}
-		else 
-		{ 
-			vmax.x = boundsMin.x; 
-		} 
-		if( m_planes[i].b > 0 ) 
-		{ 
-			vmax.y = boundsMax.y; 
+		else
+		{
+			vmax.x = boundsMin.x;
 		}
-		else 
-		{ 
-			vmax.y = boundsMin.y; 
-		} 
-		if( m_planes[i].c > 0 ) 
-		{ 
-			vmax.z = boundsMax.z; 
-		} 
-		else 
-		{ 
-			vmax.z = boundsMin.z; 
-		} 
+		if( m_planes[i].b > 0 )
+		{
+			vmax.y = boundsMax.y;
+		}
+		else
+		{
+			vmax.y = boundsMin.y;
+		}
+		if( m_planes[i].c > 0 )
+		{
+			vmax.z = boundsMax.z;
+		}
+		else
+		{
+			vmax.z = boundsMin.z;
+		}
 		if( DotCoord( m_planes[i], vmax ) < 0 )
 		{
-			return false; 
+			return false;
 		}
-	} 
+	}
 	return true;
 }
 
@@ -253,15 +253,15 @@ float TriFrustum::GetPixelSizeAccross( const Vector3& center, float radius ) con
 		return std::numeric_limits<float>::max();
 	}
 
-	float depth = m_viewDir.x*d.x + m_viewDir.y*d.y + m_viewDir.z*d.z;
+	float depth = m_viewDir.x * d.x + m_viewDir.y * d.y + m_viewDir.z * d.z;
 	// clamp values close to zero and below
 	const float epsilon = 1e-5f;
-	if ( depth < epsilon )
+	if( depth < epsilon )
 	{
 		depth = epsilon;
 	}
 
-	if ( radius < epsilon )
+	if( radius < epsilon )
 	{
 		return 0.0f;
 	}
@@ -288,7 +288,7 @@ float TriFrustum::GetPixelSizeAccrossEst( const Vector3& center, float radius ) 
 	}
 
 	//adjusted distance based on the visible part of the sphere, that properly goes to infinity as you enter the sphere.
-	float distance = sqrt( lengthSqrd - radiusSqrd ); 
+	float distance = sqrt( lengthSqrd - radiusSqrd );
 	return ( radius / distance * m_halfWidthProjection * 2.0f );
 }
 

@@ -21,9 +21,9 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 #ifndef NOMINMAX
-	#define NOMINMAX //don't want that evil microsoft macro
+#define NOMINMAX //don't want that evil microsoft macro
 #endif
-#include <windows.h> 
+#include <windows.h>
 
 // for CComPtr support
 #include <atlbase.h>
@@ -66,7 +66,7 @@ using std::max;
 
 // here we define the directInput version we are going to use
 // If this is not defined here manually there is a build warning
-// which is very weird the dinput.h file should really define 
+// which is very weird the dinput.h file should really define
 // this, as is done in D3D but I guess we'll just have to do it
 #define DIRECTINPUT_VERSION 0x0800
 
@@ -112,7 +112,7 @@ using std::max;
 
 #endif
 
-#if (_MSC_VER >= 1400 || _DLL)
+#if ( _MSC_VER >= 1400 || _DLL )
 #ifdef _HAS_EXCEPTIONS
 #undef _HAS_EXCEPTIONS
 #endif
@@ -120,7 +120,7 @@ using std::max;
 #endif
 
 #ifndef EVALUATION_SDKS_ENABLED
-	#define EVALUATION_SDKS_ENABLED 1
+#define EVALUATION_SDKS_ENABLED 1
 #endif
 
 #if WITH_GRANNY
@@ -130,12 +130,12 @@ using std::max;
 #endif
 
 #ifndef _WIN32
-	#ifndef TRUE
-		#define TRUE 1
-	#endif
-	#ifndef FALSE
-		#define FALSE 0
-	#endif
+#ifndef TRUE
+#define TRUE 1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
 
 #endif
 

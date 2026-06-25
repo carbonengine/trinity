@@ -19,43 +19,35 @@ BLUE_REGISTER_RESOURCE_EXTENSION( L"tgaraw", CreateTr2ImageRes );
 
 const Be::ClassInfo* Tr2ImageRes::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2ImageRes, "" )
+	EXPOSURE_BEGIN( Tr2ImageRes, "" )
 
 		MAP_INTERFACE( Tr2ImageRes )
 		MAP_INTERFACE( IBlueResource )
 		MAP_INTERFACE( ICacheable )
 		MAP_ICACHEABLE_METHODS()
 
-		MAP_PROPERTY_READONLY
-		(
+		MAP_PROPERTY_READONLY(
 			"width",
 			GetWidth,
-			"Width of the image (in pixels)"
-		)
+			"Width of the image (in pixels)" )
 
-		MAP_PROPERTY_READONLY
-		(
+		MAP_PROPERTY_READONLY(
 			"height",
 			GetHeight,
-			"Height of the image (in pixels)"
-		)
+			"Height of the image (in pixels)" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"IsPixelOpaque",
 			IsPixelOpaque,
 			"Returns true if the alpha value for the given pixel is > 0.5."
 			"\n:param x: x-coordinate of pixel"
-			"\n:param y: y-coordinate of pixel"
-		)
+			"\n:param y: y-coordinate of pixel" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"GetPixelColor",
 			GetPixelColor,
 			"Returns the color value of the given pixel."
 			"\n:param x: x-coordinate of pixel"
-			"\n:param y: y-coordinate of pixel"
-		)
-    EXPOSURE_CHAINTO( BlueAsyncRes )
+			"\n:param y: y-coordinate of pixel" )
+	EXPOSURE_CHAINTO( BlueAsyncRes )
 }

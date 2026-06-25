@@ -33,7 +33,8 @@ enum Tr2StandardIlluminant
 // Converts kelvin color temperature to RGB
 Vector3d TriColorFromKelvin( float temperature, float tint, Tr2StandardIlluminant whiteBalance );
 
-BLUE_CLASS( Tr2KelvinColor ) : public IInitialize
+BLUE_CLASS( Tr2KelvinColor ) :
+	public IInitialize
 {
 public:
 	Tr2KelvinColor( IRoot* lockobj = NULL );
@@ -49,17 +50,26 @@ public:
 	virtual bool Initialize();
 
 	// Gets the current Kelvin color temperature
-	float GetTemperature( void ) const { return m_temperature; }
+	float GetTemperature( void ) const
+	{
+		return m_temperature;
+	}
 	// Gets the current tint value
-	float GetTint( void ) const { return m_tint; }
+	float GetTint( void ) const
+	{
+		return m_tint;
+	}
 	// Gets the current white balance reference
-	Tr2StandardIlluminant GetWhiteBalance( void ) const { return m_whiteBalance; }
+	Tr2StandardIlluminant GetWhiteBalance( void ) const
+	{
+		return m_whiteBalance;
+	}
 
 	// Converts the color temperature to RGB
-	Color AsRGB( void ) const 
-	{ 
+	Color AsRGB( void ) const
+	{
 		Vector3d col = TriColorFromKelvin( m_temperature, m_tint, m_whiteBalance );
-		return Color( 
+		return Color(
 			static_cast<float>( col.x ),
 			static_cast<float>( col.y ),
 			static_cast<float>( col.z ),

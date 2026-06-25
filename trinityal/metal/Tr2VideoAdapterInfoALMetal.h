@@ -2,7 +2,7 @@
 
 #pragma once
 
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#if ( TRINITY_PLATFORM == TRINITY_METAL )
 
 #include "../ALResult.h"
 #include "../Tr2RenderContextEnum.h"

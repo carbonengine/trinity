@@ -4,7 +4,7 @@
 
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 
-BLUE_CLASS( EveUiObject ):
+BLUE_CLASS( EveUiObject ) :
 	public EveSpaceObject2
 {
 public:
@@ -28,4 +28,3 @@ private:
 };
 
 TYPEDEF_BLUECLASS( EveUiObject );
-

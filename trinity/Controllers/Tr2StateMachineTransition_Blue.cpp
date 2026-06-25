@@ -21,12 +21,12 @@ const Be::ClassInfo* Tr2StateMachineTransition::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP( "GetState", GetSource, "" )
 
-		MAP_METHOD_AND_WRAP( 
-			"GetExpressionTermInfo", 
-			GetExpressionTermInfo, 
+		MAP_METHOD_AND_WRAP(
+			"GetExpressionTermInfo",
+			GetExpressionTermInfo,
 			"Returns information on addional functions and variables available to the expression" )
-		MAP_METHOD_AND_WRAP( 
-			"IsExpressionValid", 
+		MAP_METHOD_AND_WRAP(
+			"IsExpressionValid",
 			IsExpressionValid,
 			"Checks if the expression is valid\n"
 			":param attrName: name of the attribute containing the expression" )

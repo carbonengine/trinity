@@ -5,9 +5,9 @@
 #define Tr2VideoAdapters_H
 
 
-BLUE_DECLARE ( Tr2VideoAdapter );
-BLUE_DECLARE ( Tr2DisplayMode );
-BLUE_DECLARE ( Tr2VideoDriver );
+BLUE_DECLARE( Tr2VideoAdapter );
+BLUE_DECLARE( Tr2DisplayMode );
+BLUE_DECLARE( Tr2VideoDriver );
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -15,7 +15,8 @@ BLUE_DECLARE ( Tr2VideoDriver );
 // See Also:
 //   Tr2VideoAdapterInfo
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2VideoAdapters ): public IRoot
+BLUE_CLASS( Tr2VideoAdapters ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -46,7 +47,7 @@ public:
 	const unsigned DEFAULT_ADAPTER;
 };
 
-TYPEDEF_BLUECLASS ( Tr2VideoAdapters );
+TYPEDEF_BLUECLASS( Tr2VideoAdapters );
 
 
 // --------------------------------------------------------------------------------------
@@ -56,7 +57,8 @@ TYPEDEF_BLUECLASS ( Tr2VideoAdapters );
 // See Also:
 //   Tr2AdapterInfo
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2VideoAdapter ): public IRoot
+BLUE_CLASS( Tr2VideoAdapter ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -67,10 +69,10 @@ public:
 
 	std::string GetDeviceIdentifierString() const;
 
-	ALResult GetDriverInfo( Tr2VideoDriver** info );
+	ALResult GetDriverInfo( Tr2VideoDriver * *info );
 };
 
-TYPEDEF_BLUECLASS ( Tr2VideoAdapter );
+TYPEDEF_BLUECLASS( Tr2VideoAdapter );
 
 
 // --------------------------------------------------------------------------------------
@@ -80,7 +82,8 @@ TYPEDEF_BLUECLASS ( Tr2VideoAdapter );
 // See Also:
 //   Tr2DisplayModeInfo
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2DisplayMode ): public IRoot
+BLUE_CLASS( Tr2DisplayMode ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -88,7 +91,7 @@ public:
 	Tr2DisplayModeInfo m_mode;
 };
 
-TYPEDEF_BLUECLASS ( Tr2DisplayMode );
+TYPEDEF_BLUECLASS( Tr2DisplayMode );
 
 
 // --------------------------------------------------------------------------------------
@@ -98,7 +101,8 @@ TYPEDEF_BLUECLASS ( Tr2DisplayMode );
 // See Also:
 //   Tr2VideoDriverInfo
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2VideoDriver ): public IRoot
+BLUE_CLASS( Tr2VideoDriver ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -106,6 +110,6 @@ public:
 	Tr2VideoDriverInfo m_info;
 };
 
-TYPEDEF_BLUECLASS ( Tr2VideoDriver );
+TYPEDEF_BLUECLASS( Tr2VideoDriver );
 
 #endif // Tr2VideoAdapters_H

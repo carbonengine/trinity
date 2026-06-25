@@ -10,17 +10,17 @@ class Tr2RenderContextAL;
 
 namespace TrinityALImpl
 {
-	class Tr2ConstantBufferAL;
+class Tr2ConstantBufferAL;
 }
 
 namespace Tr2ConstantUsageAL
 {
-	enum Type
-	{
-		IMMUTABLE,
-		ONE_SHOT,
-		REUSABLE,
-	};
+enum Type
+{
+	IMMUTABLE,
+	ONE_SHOT,
+	REUSABLE,
+};
 }
 
 class Tr2ConstantBufferAL
@@ -29,11 +29,11 @@ public:
 	Tr2ConstantBufferAL();
 
 
-	ALResult Create( uint32_t size, Tr2PrimaryRenderContextAL & renderContext );
-	ALResult Create( uint32_t size, Tr2ConstantUsageAL::Type usage, const void* initialData, Tr2PrimaryRenderContextAL & renderContext );
+	ALResult Create( uint32_t size, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Create( uint32_t size, Tr2ConstantUsageAL::Type usage, const void* initialData, Tr2PrimaryRenderContextAL& renderContext );
 
-	ALResult Lock( void** data, Tr2RenderContextAL & renderContext );
-	ALResult Unlock( Tr2RenderContextAL & renderContext );
+	ALResult Lock( void** data, Tr2RenderContextAL& renderContext );
+	ALResult Unlock( Tr2RenderContextAL& renderContext );
 
 	bool IsValid() const;
 	uint32_t GetSize() const;

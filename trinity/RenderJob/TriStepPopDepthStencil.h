@@ -7,16 +7,17 @@
 
 #include "TriRenderStep.h"
 
-BLUE_CLASS( TriStepPopDepthStencil ) : public TriRenderStep
+BLUE_CLASS( TriStepPopDepthStencil ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
-	TriStepPopDepthStencil( IRoot* lockobj = 0);
-	~TriStepPopDepthStencil(void);
+
+	TriStepPopDepthStencil( IRoot* lockobj = 0 );
+	~TriStepPopDepthStencil( void );
 
 	//IRenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 };
 
 TYPEDEF_BLUECLASS( TriStepPopDepthStencil );

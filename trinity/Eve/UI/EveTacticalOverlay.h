@@ -11,21 +11,38 @@
 
 BLUE_DECLARE( Tr2Effect );
 
-BLUE_CLASS( EveTacticalOverlayTrackObject ):
+BLUE_CLASS( EveTacticalOverlayTrackObject ) :
 	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
 
 	EveTacticalOverlayTrackObject( IRoot* lockobj = NULL );
-	~EveTacticalOverlayTrackObject() {}
+	~EveTacticalOverlayTrackObject()
+	{
+	}
 
 	void UpdatePosition( const EveUpdateContext& updateContext );
-	inline Vector3 GetVelocity() const { return m_velocity; }
-	inline Vector3 GetPosition() const { return m_position; }
-	inline float GetRadius() const { return m_radius; }
-	inline bool IsAggressive() const { return m_aggressive; }
-	inline bool ShowVelocity() const { return m_showVelocity; }
+	inline Vector3 GetVelocity() const
+	{
+		return m_velocity;
+	}
+	inline Vector3 GetPosition() const
+	{
+		return m_position;
+	}
+	inline float GetRadius() const
+	{
+		return m_radius;
+	}
+	inline bool IsAggressive() const
+	{
+		return m_aggressive;
+	}
+	inline bool ShowVelocity() const
+	{
+		return m_showVelocity;
+	}
 
 private:
 	ITriVectorFunctionPtr m_positionCurve;
@@ -61,36 +78,53 @@ public:
 		Vector4 instanceData;
 		static const Tr2VertexDefinition& GetDefinition();
 	};
-	
+
 	struct VelocityConnectorVertex
 	{
 		Vector4 instanceData;
 		Vector4 instanceData2;
 		static const Tr2VertexDefinition& GetDefinition();
 	};
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* value );
+	bool OnModified( Be::Var * value );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
 	void UpdateSyncronous( const EveUpdateContext& updateContext );
-	void UpdateAsyncronous( const EveUpdateContext& updateContext ) {}
+	void UpdateAsyncronous( const EveUpdateContext& updateContext )
+	{
+	}
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ){};
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const { return false; }
-	void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t ) { position = Vector3( 0.f, 0.f, 0.f ); }
-	void GetModelCenterWorldPosition( Vector3 &position ) const { position = Vector3( 0.f, 0.f, 0.f ); }
-	bool GetLocalBoundingBox( Vector3 &min, Vector3 &max ) { return false; }
-	void GetLocalToWorldTransform( Matrix &transform ) const { transform = IdentityMatrix(); }
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables, Tr2ImpostorManager * impostors ){};
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const
+	{
+		return false;
+	}
+	void UpdateModelCenterWorldPosition( Vector3 & position, Be::Time t )
+	{
+		position = Vector3( 0.f, 0.f, 0.f );
+	}
+	void GetModelCenterWorldPosition( Vector3 & position ) const
+	{
+		position = Vector3( 0.f, 0.f, 0.f );
+	}
+	bool GetLocalBoundingBox( Vector3 & min, Vector3 & max )
+	{
+		return false;
+	}
+	void GetLocalToWorldTransform( Matrix & transform ) const
+	{
+		transform = IdentityMatrix();
+	}
 
 	// Registers an object and its attachments with the quad renderer
-	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	// Adds quads from space object and its attachments to the quad renderer. ATTENTION: this function is called in-parallel
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
 
@@ -117,7 +151,7 @@ private:
 
 	float m_interestRange;
 	float m_outsideInterestIntensity;
-	
+
 	// minimum radius of an object for us to bother drawing a radius line for it
 	float m_minRadiusForRange;
 	// x - active range; y - fadeout length; z - multiplier for range and fadeout; w - source radius
@@ -128,11 +162,11 @@ private:
 	ITriVectorFunctionPtr m_positionCurve;
 	Vector3 m_rootPosition;
 	Vector3 m_rootVelocity;
-	
+
 	// local variable store for passing parameters to effects
 	Tr2VariableStorePtr m_variableStore;
 	void RegisterVariables();
-	void SetVariableStore( Tr2Effect* effect );
+	void SetVariableStore( Tr2Effect * effect );
 };
 TYPEDEF_BLUECLASS( EveTacticalOverlay );
 

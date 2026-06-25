@@ -10,7 +10,7 @@
 EveChildRef::EveChildRef( IRoot* lockobj ) :
 	EveChildTransform(),
 	m_display( true ),
-    m_loadChildAutomatically( true )
+	m_loadChildAutomatically( true )
 {
 }
 
@@ -25,47 +25,47 @@ const char* EveChildRef::GetResPath() const
 
 void EveChildRef::SetResPath( const char* resPath )
 {
-	if ( m_resPath != resPath )
+	if( m_resPath != resPath )
 	{
 		m_resPath = resPath;
-        if( m_loadChildAutomatically )
-        {
-            LoadChild();
-        }
+		if( m_loadChildAutomatically )
+		{
+			LoadChild();
+		}
 	}
 }
 
 void EveChildRef::Reload( bool bypassAutoLoadBlocker )
 {
-    if( m_loadChildAutomatically || bypassAutoLoadBlocker )
-    {
-        LoadChild();
-    }
+	if( m_loadChildAutomatically || bypassAutoLoadBlocker )
+	{
+		LoadChild();
+	}
 }
 
 void EveChildRef::SetAutoLoadBlocker( bool shouldBlockAutoLoad )
 {
-    m_loadChildAutomatically = !shouldBlockAutoLoad;
+	m_loadChildAutomatically = !shouldBlockAutoLoad;
 }
 
 bool EveChildRef::Initialize()
 {
-    if( m_loadChildAutomatically )
-    {
-        LoadChild();
-    }
+	if( m_loadChildAutomatically )
+	{
+		LoadChild();
+	}
 
 	return true;
 }
 
 bool EveChildRef::OnModified( Be::Var* value )
 {
-	if ( IsMatch( value, m_resPath ) )
+	if( IsMatch( value, m_resPath ) )
 	{
-        if( m_loadChildAutomatically )
-        {
-            LoadChild();
-        }
+		if( m_loadChildAutomatically )
+		{
+			LoadChild();
+		}
 	}
 	if( IsMatch( value, m_display ) )
 	{
@@ -108,7 +108,7 @@ void EveChildRef::UnRegisterComponents()
 
 IEveSpaceObjectChildPtr EveChildRef::GetEffectChildByName( const char* name ) const
 {
-	if ( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
+	if( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
 	{
 		return ref->GetEffectChildByName( name );
 	}
@@ -117,7 +117,7 @@ IEveSpaceObjectChildPtr EveChildRef::GetEffectChildByName( const char* name ) co
 
 void EveChildRef::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 {
-	if ( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
+	if( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
 	{
 		ref->AddToEffectChildrenList( child );
 	}
@@ -125,27 +125,27 @@ void EveChildRef::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 
 void EveChildRef::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
 {
-	if ( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
+	if( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
 	{
 		ref->RemoveFromEffectChildrenList( child );
 	}
 }
 
-void EveChildRef::SetProceduralContainerVariable(const char *name, float value)
+void EveChildRef::SetProceduralContainerVariable( const char* name, float value )
 {
-    if ( m_child )
-    {
-        m_child->SetProceduralContainerVariable( name, value );
-    }
+	if( m_child )
+	{
+		m_child->SetProceduralContainerVariable( name, value );
+	}
 }
 
 void EveChildRef::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
-	if ( !m_display )
+	if( !m_display )
 	{
 		return;
 	}
-	if ( m_child )
+	if( m_child )
 	{
 		m_child->UpdateVisibility( updateContext, parentTransform, parentLod );
 	}
@@ -153,7 +153,7 @@ void EveChildRef::UpdateVisibility( const EveUpdateContext& updateContext, const
 
 void EveChildRef::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	if ( m_display && m_child )
+	if( m_display && m_child )
 	{
 		m_child->GetRenderables( renderables );
 	}
@@ -163,7 +163,7 @@ bool EveChildRef::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query 
 {
 	bool success = false;
 	Vector4 bSphere( 0.f, 0.f, 0.f, -1.f );
-	if ( m_child && m_child->GetBoundingSphere( bSphere ) )
+	if( m_child && m_child->GetBoundingSphere( bSphere ) )
 	{
 		BoundingSphereSetOrUpdate( bSphere, sphere, success );
 		success = true;
@@ -173,7 +173,7 @@ bool EveChildRef::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query 
 
 void EveChildRef::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
-	if ( m_child )
+	if( m_child )
 	{
 		m_child->RegisterWithQuadRenderer( quadRenderer );
 	}
@@ -181,7 +181,7 @@ void EveChildRef::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 
 void EveChildRef::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
 {
-	if ( m_display && m_child )
+	if( m_display && m_child )
 	{
 		m_child->AddQuadsToQuadRenderer( frustum, quadRenderer );
 	}
@@ -189,7 +189,7 @@ void EveChildRef::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRend
 
 void EveChildRef::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	if ( m_child )
+	if( m_child )
 	{
 		EveChildUpdateParams newParams = params;
 		newParams.isVisible &= m_display;
@@ -211,7 +211,7 @@ void EveChildRef::UpdateAsyncronous( const EveUpdateContext& updateContext, cons
 	newParams.childParent = this;
 	newParams.localToWorldTransform = m_worldTransform;
 
-	if ( m_child )
+	if( m_child )
 	{
 		m_child->UpdateAsyncronous( updateContext, newParams );
 	}
@@ -224,7 +224,7 @@ void EveChildRef::GetLocalToWorldTransform( Matrix& transform ) const
 
 void EveChildRef::PlayCurveSet( const std::string& name, const std::string& rangeName )
 {
-	if ( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
 	{
 		owner->PlayCurveSet( name, rangeName );
 	}
@@ -232,7 +232,7 @@ void EveChildRef::PlayCurveSet( const std::string& name, const std::string& rang
 
 void EveChildRef::StopCurveSet( const std::string& name )
 {
-	if ( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
 	{
 		owner->StopCurveSet( name );
 	}
@@ -240,7 +240,7 @@ void EveChildRef::StopCurveSet( const std::string& name )
 
 void EveChildRef::UpdateCurveSet( const std::string& name, Be::Time time )
 {
-	if ( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
 	{
 		owner->UpdateCurveSet( name, time );
 	}
@@ -248,7 +248,7 @@ void EveChildRef::UpdateCurveSet( const std::string& name, Be::Time time )
 
 float EveChildRef::GetCurveSetDuration( const std::string& name ) const
 {
-	if ( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
 	{
 		owner->GetCurveSetDuration( name );
 	}
@@ -257,7 +257,7 @@ float EveChildRef::GetCurveSetDuration( const std::string& name ) const
 
 float EveChildRef::GetRangeDuration( const std::string& name, const std::string& rangeName ) const
 {
-	if ( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
 	{
 		owner->GetRangeDuration( name, rangeName );
 	}
@@ -266,15 +266,15 @@ float EveChildRef::GetRangeDuration( const std::string& name, const std::string&
 
 void EveChildRef::PlayAllCurveSets()
 {
-    if ( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
-    {
-        owner->PlayAllCurveSets();
-    }
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( m_child.p ) )
+	{
+		owner->PlayAllCurveSets();
+	}
 }
 
 void EveChildRef::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
-	if ( m_child )
+	if( m_child )
 	{
 		return m_child->SetShaderOption( name, value );
 	}
@@ -287,7 +287,7 @@ void EveChildRef::Setup( const Vector3* scale, const Quaternion* rotation, const
 
 void EveChildRef::ChangeLOD( Tr2Lod lod )
 {
-	if ( m_child )
+	if( m_child )
 	{
 		m_child->ChangeLOD( lod );
 	}
@@ -295,7 +295,7 @@ void EveChildRef::ChangeLOD( Tr2Lod lod )
 
 void EveChildRef::SetControllerVariable( const char* name, float value )
 {
-	if ( m_child )
+	if( m_child )
 	{
 		m_child->SetControllerVariable( name, value );
 	}
@@ -303,7 +303,7 @@ void EveChildRef::SetControllerVariable( const char* name, float value )
 
 void EveChildRef::HandleControllerEvent( const char* name )
 {
-	if ( m_child )
+	if( m_child )
 	{
 		m_child->HandleControllerEvent( name );
 	}
@@ -311,7 +311,7 @@ void EveChildRef::HandleControllerEvent( const char* name )
 
 void EveChildRef::SetInheritProperties( const Color* colorSet )
 {
-	if ( m_child )
+	if( m_child )
 	{
 		if( IEveInheritPropertiesOwnerPtr child = BlueCastPtr( m_child ) )
 		{
@@ -322,7 +322,7 @@ void EveChildRef::SetInheritProperties( const Color* colorSet )
 
 void EveChildRef::StartControllers()
 {
-	if ( m_child )
+	if( m_child )
 	{
 		m_child->StartControllers();
 	}
@@ -330,7 +330,7 @@ void EveChildRef::StartControllers()
 
 void EveChildRef::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	if ( auto renderable = dynamic_cast<ITr2DebugRenderable*>( m_child.p ) )
+	if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( m_child.p ) )
 	{
 		renderable->GetDebugOptions( options );
 	}
@@ -338,11 +338,11 @@ void EveChildRef::GetDebugOptions( Tr2DebugRendererOptions& options )
 
 void EveChildRef::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-	if ( !m_display )
+	if( !m_display )
 	{
 		return;
 	}
-	if ( auto renderable = dynamic_cast<ITr2DebugRenderable*>( m_child.p ) )
+	if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( m_child.p ) )
 	{
 		renderable->RenderDebugInfo( renderer );
 	}
@@ -352,10 +352,10 @@ bool EveChildRef::LoadChild()
 {
 	// unregister the old child
 	UnRegisterComponents();
-	
+
 	CCP_LOG( "Loading child red file %s", m_resPath.c_str() );
 	m_child = BeResMan->LoadObject<IEveSpaceObjectChild>( m_resPath.c_str() );
-	if ( !m_child )
+	if( !m_child )
 	{
 		CCP_LOGERR( "Red file %s is invalid or not an Eve Child type.", m_resPath.c_str() );
 		return false;
@@ -368,7 +368,7 @@ bool EveChildRef::LoadChild()
 
 ITr2AudEmitterPtr EveChildRef::FindSoundEmitter( const char* name )
 {
-	if ( auto owner = dynamic_cast<ITr2SoundEmitterOwner*>( m_child.p ) )
+	if( auto owner = dynamic_cast<ITr2SoundEmitterOwner*>( m_child.p ) )
 	{
 		return owner->FindSoundEmitter( name );
 	}

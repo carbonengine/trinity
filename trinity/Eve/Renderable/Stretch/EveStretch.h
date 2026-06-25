@@ -17,18 +17,17 @@
 BLUE_DECLARE( EveStretch );
 BLUE_DECLARE( TriFloat );
 
-class EveStretch:
-	public IEveFiringEffectElement,
-	public INotify,
-	public IEveTransform,
-	public IEveSpaceObject2,
-	public ITr2DebugRenderable,
-	public ITr2LightOwner,
-	public EveEntity
+class EveStretch : public IEveFiringEffectElement,
+				   public INotify,
+				   public IEveTransform,
+				   public IEveSpaceObject2,
+				   public ITr2DebugRenderable,
+				   public ITr2LightOwner,
+				   public EveEntity
 {
 public:
-    EXPOSE_TO_BLUE();
-    EveStretch( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	EveStretch( IRoot* lockobj = NULL );
 
 	void SetSourcePosition( Vector3 val );
 	void SetDestinationPosition( Vector3 val );
@@ -46,11 +45,17 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
-	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	virtual void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t ) {};
-	virtual void GetModelCenterWorldPosition( Vector3 &position ) const {};
-	virtual bool GetLocalBoundingBox( Vector3 &min, Vector3 &max ) { return false; }
-	virtual void GetLocalToWorldTransform( Matrix &transform ) const { transform = IdentityMatrix(); }
+	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	virtual void UpdateModelCenterWorldPosition( Vector3& position, Be::Time t ) {};
+	virtual void GetModelCenterWorldPosition( Vector3& position ) const {};
+	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max )
+	{
+		return false;
+	}
+	virtual void GetLocalToWorldTransform( Matrix& transform ) const
+	{
+		transform = IdentityMatrix();
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
@@ -68,21 +73,39 @@ public:
 	// IEveTranfrom
 	virtual void Update( const EveUpdateContext& updateContext );
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform ) {};
-	virtual Tr2Lod GetLODLevel() const { return m_lodLevel; }
+	virtual Tr2Lod GetLODLevel() const
+	{
+		return m_lodLevel;
+	}
 
-	unsigned int GetCurveSetCount() const { return (unsigned int)m_curveSets.size(); }
-	TriCurveSetPtr GetCurveSet( unsigned int n ) { return m_curveSets[n]; }
+	unsigned int GetCurveSetCount() const
+	{
+		return (unsigned int)m_curveSets.size();
+	}
+	TriCurveSetPtr GetCurveSet( unsigned int n )
+	{
+		return m_curveSets[n];
+	}
 
 	// toggle display of source and dest objects of the stretcher
-	void SetDisplayDestObject( bool display ) { m_displayDestObject = display; }
-	void SetDisplaySourceObject( bool display ) { m_displaySourceObject = display; }
+	void SetDisplayDestObject( bool display )
+	{
+		m_displayDestObject = display;
+	}
+	void SetDisplaySourceObject( bool display )
+	{
+		m_displaySourceObject = display;
+	}
 
 	void UpdateCurves( const EveUpdateContext& updateContext );
 	void Start();
 
 	virtual void SetDisplay( bool display );
 
-	virtual void SetDestObjectScale( float scale ) { m_destObjectScale = scale; };
+	virtual void SetDestObjectScale( float scale )
+	{
+		m_destObjectScale = scale;
+	};
 	virtual void StartMoving();
 	virtual float GetCurveDuration();
 	virtual void StartFiring( float delay );
@@ -94,11 +117,15 @@ public:
 	virtual void SetFiringTransform( const Vector3& source, const Vector3& dest );
 	virtual void DisplayEndPoints( bool displaySource, bool displayDest );
 
-	void SetSourceObjectScale( float scale ) { m_sourceObjectScale = scale; };
+	void SetSourceObjectScale( float scale )
+	{
+		m_sourceObjectScale = scale;
+	};
 
 	// debug
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+
 private:
 	Tr2Lod m_lodLevel;
 	Be::Time m_lastCurveUpdateTime;
@@ -127,12 +154,12 @@ private:
 	Matrix m_sourceTransform;
 	Matrix m_destinationTransform;
 
-	Vector3 m_sourcePosition; 
+	Vector3 m_sourcePosition;
 	Vector3 m_destinationPosition;
 
 	ITriVectorFunctionPtr m_source;
 	ITriVectorFunctionPtr m_dest;
-	
+
 	EveTransformPtr m_sourceObject;
 	EveTransformPtr m_destObject;
 	EveTransformPtr m_stretchObject;

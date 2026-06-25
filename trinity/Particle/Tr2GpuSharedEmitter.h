@@ -10,14 +10,14 @@
 // --------------------------------------------------------------------------------------
 // Description:
 //   Emitter class for GPU particle system. Shared emitters can share persistent particle
-//   parameters between instances. It is preferable to use shared emitters (as opposed to 
-//   unique emitters) to conserve memory whenever possible. Since shared emitter 
+//   parameters between instances. It is preferable to use shared emitters (as opposed to
+//   unique emitters) to conserve memory whenever possible. Since shared emitter
 //   persistent parameters are shared they should not be animated. Also shared emitters
 //   lack certain particle features (like attract forces).
 // See Also:
 //   Tr2GpuParticleSystem, Tr2GpuUniqueEmitter
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2GpuSharedEmitter ): 
+BLUE_CLASS( Tr2GpuSharedEmitter ) :
 	public IInitialize,
 	public INotify,
 	public ITr2GenericEmitter
@@ -29,21 +29,25 @@ public:
 
 	virtual bool Initialize();
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	void Enable( bool enable );
 
 	virtual void Update( const UpdateArguments& arguments );
 	virtual void SpawnParticles( const UpdateArguments& arguments,
-								 const Vector3* position = nullptr, 
-								 const Vector3* velocity = nullptr, 
+								 const Vector3* position = nullptr,
+								 const Vector3* velocity = nullptr,
 								 float rateModifier = 1.0f );
 	virtual void SpawnParticles( const UpdateArguments& arguments,
-								 const Vector3 *positionStart, const Vector3 *positionEnd,
-								 const Vector3 *velocityStart, const Vector3 *velocityEnd,
+								 const Vector3* positionStart,
+								 const Vector3* positionEnd,
+								 const Vector3* velocityStart,
+								 const Vector3* velocityEnd,
 								 float deltaTime );
 	void SpawnOnce( const UpdateArguments& arguments, const Vector3& velocity, float scale = 1.f, float rateModifier = 1.f );
-	virtual void SetThreadSafeFlag() {}
+	virtual void SetThreadSafeFlag()
+	{
+	}
 
 	// access
 	void Setup( float rate, const Tr2GpuParticleSystem::Emitter* emitterData, const Tr2GpuParticleSystem::EmitterParams* paramsData );
@@ -57,11 +61,13 @@ protected:
 	void UpdateHash();
 	uintptr_t GetHash( const Tr2GpuParticleSystem::EmitterParams& params ) const;
 
-	float SpawnParticles( 
-		Tr2GpuParticleSystem::Emitter& emitter,
+	float SpawnParticles(
+		Tr2GpuParticleSystem::Emitter & emitter,
 		const UpdateArguments& arguments,
-		const Vector3& positionStart, const Vector3& positionEnd,
-		const Vector3& velocityStart, const Vector3& velocityEnd,
+		const Vector3& positionStart,
+		const Vector3& positionEnd,
+		const Vector3& velocityStart,
+		const Vector3& velocityEnd,
 		float carryOverCount,
 		float deltaTime );
 

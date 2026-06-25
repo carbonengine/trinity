@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if( TRINITY_PLATFORM==TRINITY_STUB )
+#if ( TRINITY_PLATFORM == TRINITY_STUB )
 
 #include "Tr2RenderContextStub.h"
 #include "ITr2RenderContextEvents.h"
@@ -14,7 +14,7 @@ CCP_STATS_DECLARE( vertexCount, "Trinity/AL/vertexCount", true, CST_COUNTER_HIGH
 
 
 using namespace Tr2RenderContextEnum;
-#pragma warning( disable: 4189 )	// Scopeguard
+#pragma warning( disable : 4189 ) // Scopeguard
 
 bool g_gatherPipelineStatistics = false;
 
@@ -31,8 +31,8 @@ Tr2PrimaryRenderContextAL*& GetPrimaryRenderContextPointer()
 
 
 
-Tr2RenderContextAL::Tr2RenderContextAL()
-	: m_isValid(false),
+Tr2RenderContextAL::Tr2RenderContextAL() :
+	m_isValid( false ),
 	m_events( nullptr ),
 	m_frameNumber( 0 )
 {
@@ -70,7 +70,7 @@ void Tr2RenderContextAL::Destroy()
 
 
 
-ALResult Tr2RenderContextAL::SetStreamSource( uint32_t, const Tr2BufferAL&, uint32_t, uint32_t ) throw( )
+ALResult Tr2RenderContextAL::SetStreamSource( uint32_t, const Tr2BufferAL&, uint32_t, uint32_t ) throw()
 {
 	return S_OK;
 }
@@ -100,10 +100,10 @@ ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&
 	return E_FAIL;
 }
 
-ALResult Tr2RenderContextAL::Clear(	
-	uint32_t, 
-	uint32_t, 
-	float, 
+ALResult Tr2RenderContextAL::Clear(
+	uint32_t,
+	uint32_t,
+	float,
 	uint32_t,
 	uint32_t )
 {
@@ -120,19 +120,19 @@ ALResult Tr2RenderContextAL::SetTopology( long topology )
 }
 
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitive(	
-	uint32_t, 
-	uint32_t, 
-	uint32_t, 
+ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
+	uint32_t,
+	uint32_t,
+	uint32_t,
 	uint32_t )
 {
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedInstanced(	
-	uint32_t, 
-	uint32_t, 
-	uint32_t, 
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t,
+	uint32_t,
+	uint32_t,
 	uint32_t )
 {
 	return S_OK;
@@ -163,19 +163,19 @@ ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t, uint32_t )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawPrimitiveUP( 
-	uint32_t, 
-	const void*, 
+ALResult Tr2RenderContextAL::DrawPrimitiveUP(
+	uint32_t,
+	const void*,
 	uint32_t )
 {
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
-	uint32_t, 
-	uint32_t, 
-	const uint32_t* indexData, 
-	const void* vertexStreamZeroData, 
+ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
+	uint32_t,
+	uint32_t,
+	const uint32_t* indexData,
+	const void* vertexStreamZeroData,
 	uint32_t )
 {
 	if( !indexData || !vertexStreamZeroData )
@@ -185,11 +185,11 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
-	uint32_t, 
-	uint32_t, 
-	const uint16_t* indexData, 
-	const void* vertexStreamZeroData, 
+ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
+	uint32_t,
+	uint32_t,
+	const uint16_t* indexData,
+	const void* vertexStreamZeroData,
 	uint32_t )
 {
 	if( !indexData || !vertexStreamZeroData )
@@ -201,14 +201,14 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 
 ALResult Tr2RenderContextAL::SetConstants(
 	const Tr2ConstantBufferAL&,
-	ShaderType, 
-	uint32_t, 
+	ShaderType,
+	uint32_t,
 	uint32_t )
 {
 	return S_OK;
 }
 
-void Tr2RenderContextAL::SetReadOnlyDepth( bool /*enable*/ ) 
+void Tr2RenderContextAL::SetReadOnlyDepth( bool /*enable*/ )
 {
 }
 
@@ -227,9 +227,9 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::CreateDevice(	
-	uint32_t Adapter, 
-	Tr2WindowHandle, 
+ALResult Tr2RenderContextAL::CreateDevice(
+	uint32_t Adapter,
+	Tr2WindowHandle,
 	const Tr2PresentParametersAL& presentationParameters )
 {
 	m_isValid = true;
@@ -238,7 +238,7 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	{
 		m_events->OnContextCreated( *this );
 	}
-	
+
 	return S_OK;
 }
 
@@ -249,7 +249,7 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 
 ALResult Tr2RenderContextAL::SetPresentParameters( unsigned, const Tr2PresentParametersAL& presentationParameters )
 {
-	CR_RETURN_HR( m_defaultBackBuffer.Create(	
+	CR_RETURN_HR( m_defaultBackBuffer.Create(
 		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ),
 		Tr2GpuUsage::RENDER_TARGET,
 		*this ) );
@@ -334,7 +334,7 @@ ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )
 	{
 		return E_INVALIDARG;
 	}
-	
+
 	m_stackRT[slot].push( m_boundRenderTarget[slot] );
 	return S_OK;
 }
@@ -356,7 +356,7 @@ ALResult Tr2RenderContextAL::PopRenderTarget( uint32_t slot )
 	m_stackRT[slot].pop();
 	return S_OK;
 }
-	
+
 ALResult Tr2RenderContextAL::PushDepthStencil()
 {
 	return S_OK;
@@ -391,7 +391,7 @@ void Tr2RenderContextAL::ReleaseDeviceResources()
 	{
 		m_boundRenderTarget[i] = Tr2TextureAL();
 	}
-	
+
 
 	m_defaultBackBuffer = Tr2TextureAL();
 }
@@ -442,7 +442,7 @@ ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination, Tr2GpuUsag
 
 ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
 {
-    return S_OK;
+	return S_OK;
 }
 
 bool Tr2RenderContextAL::SupportsBindlessTextures() const
@@ -450,10 +450,10 @@ bool Tr2RenderContextAL::SupportsBindlessTextures() const
 	return false;
 }
 
-uint64_t Tr2RenderContextAL::GetRecordingFrameNumber() const 
+uint64_t Tr2RenderContextAL::GetRecordingFrameNumber() const
 {
 	return m_frameNumber + 1;
-} 
+}
 
 
 Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
@@ -472,7 +472,8 @@ Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( Tr2UpscalingA
 }
 
 void Tr2RenderContextAL::DeleteUpscalingContext( uint32_t contextID )
-{}
+{
+}
 
 Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
 {

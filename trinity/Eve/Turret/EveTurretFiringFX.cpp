@@ -18,7 +18,7 @@ const std::wstring AUDIO_IMPACT_SWITCH_HULL = L"Hull";
 
 namespace
 {
-	const float LOD_ANGLE_FACTOR = 0.002f;
+const float LOD_ANGLE_FACTOR = 0.002f;
 }
 
 // --------------------------------------------------------------------------------
@@ -70,8 +70,8 @@ EveTurretFiringFX::~EveTurretFiringFX()
 void EveTurretFiringFX::CleanUp()
 {
 	// shut down the firing effect and send the stop_play
-	StopFiring();		
-	// Kick the curves so any sound change will trigger (playing -> stop) 
+	StopFiring();
+	// Kick the curves so any sound change will trigger (playing -> stop)
 	EveUpdateContext ctx( BeOS->GetCurrentFrameTime() );
 	UpdateAsynchronous( ctx );
 	UpdateSynchronous( ctx );
@@ -82,8 +82,8 @@ void EveTurretFiringFX::CleanUp()
 //   If loading from a .red file, everything is read now
 // --------------------------------------------------------------------------------
 bool EveTurretFiringFX::Initialize()
-{	
-	if( m_firingDurationOverride >= 0.0f ) 
+{
+	if( m_firingDurationOverride >= 0.0f )
 	{
 		m_firingDuration = m_firingDurationOverride;
 	}
@@ -119,7 +119,7 @@ void EveTurretFiringFX::SetMuzzleBoneID( int muzzleID, unsigned int boneID )
 	// sanity check
 	if( muzzleID >= 0 && muzzleID < MUZZLECOUNT_MAX )
 	{
-		m_perMuzzleData[ muzzleID ].muzzlePositionBoneID = boneID;
+		m_perMuzzleData[muzzleID].muzzlePositionBoneID = boneID;
 	}
 }
 
@@ -135,7 +135,7 @@ void EveTurretFiringFX::SetMuzzleTransform( int muzzleID, const Matrix* transfor
 	// sanity check
 	if( muzzleID >= 0 && muzzleID < MUZZLECOUNT_MAX )
 	{
-		m_perMuzzleData[ muzzleID ].muzzleTransform = *transform;
+		m_perMuzzleData[muzzleID].muzzleTransform = *transform;
 	}
 }
 
@@ -159,23 +159,23 @@ void EveTurretFiringFX::SetEndPosition( const Vector3* endPos )
 // --------------------------------------------------------------------------------
 void EveTurretFiringFX::SetScaleByRadius( float radius )
 {
-	if ( !m_scaleEffectTarget )
+	if( !m_scaleEffectTarget )
 	{
 		return;
 	}
 
 	// The scale is a linear scale from min scale to max scale when radius is within min and max radius. Other values get clamped.
 	float scale = ( radius - m_minRadius ) * ( m_maxScale - m_minScale ) / ( m_maxRadius - m_minRadius ) + m_minScale;
-	scale = max( m_minScale, min( m_maxScale, scale) );
+	scale = max( m_minScale, min( m_maxScale, scale ) );
 
-	for ( auto it = m_stretch.begin(); it != m_stretch.end(); it++ )
+	for( auto it = m_stretch.begin(); it != m_stretch.end(); it++ )
 	{
-		(*it)->SetDestObjectScale( scale );
+		( *it )->SetDestObjectScale( scale );
 	}
 
-	if ( m_destinationObserver != nullptr )
+	if( m_destinationObserver != nullptr )
 	{
-		if ( ITr2AudEmitterPtr emitter = BlueCastPtr( m_destinationObserver->GetObserver() ) )
+		if( ITr2AudEmitterPtr emitter = BlueCastPtr( m_destinationObserver->GetObserver() ) )
 		{
 			emitter->SetAttenuationScalingFactor( radius );
 		}
@@ -294,7 +294,7 @@ void EveTurretFiringFX::PrepareFiring( float delay, unsigned int muzzleID, unsig
 
 	if( prevFiring != m_isFiring )
 	{
-		ReRegister();	
+		ReRegister();
 	}
 }
 
@@ -308,7 +308,7 @@ float EveTurretFiringFX::GetCurveDuration()
 	// check all stretch effects and see if we have to start them
 	for( unsigned int i = 0; i < m_stretch.size(); ++i )
 	{
-		auto stretchEffect = m_stretch[ i ];
+		auto stretchEffect = m_stretch[i];
 		maxDuration = std::max( maxDuration, stretchEffect->GetCurveDuration() );
 	}
 	return maxDuration;
@@ -331,9 +331,9 @@ bool EveTurretFiringFX::GetStartPosition( Vector3& pos ) const
 	uint32_t cntr = 0;
 	for( size_t i = 0; i < m_stretch.size(); ++i )
 	{
-		if( m_perMuzzleData[ i ].started )
+		if( m_perMuzzleData[i].started )
 		{
-			p += m_perMuzzleData[ i ].muzzleTransform.GetTranslation();
+			p += m_perMuzzleData[i].muzzleTransform.GetTranslation();
 			++cntr;
 		}
 	}
@@ -386,7 +386,7 @@ const char* EveTurretFiringFX::GetFiringBoneName() const
 void EveTurretFiringFX::StartMuzzleEffect( int muzzleID )
 {
 	// fire!
-	auto stretchEffect = m_stretch[ muzzleID ];
+	auto stretchEffect = m_stretch[muzzleID];
 	auto delay = m_perMuzzleData[muzzleID].currentStartDelay;
 	stretchEffect->StartFiring( delay );
 	if( m_startCurveSet )
@@ -399,8 +399,8 @@ void EveTurretFiringFX::StartMuzzleEffect( int muzzleID )
 	}
 
 	// set this effect to started
-	m_perMuzzleData[ muzzleID ].started = true;
-	m_perMuzzleData[ muzzleID ].readyToStart = false;
+	m_perMuzzleData[muzzleID].started = true;
+	m_perMuzzleData[muzzleID].readyToStart = false;
 }
 
 // --------------------------------------------------------------------------------
@@ -418,15 +418,14 @@ void EveTurretFiringFX::StopFiring()
 	for( unsigned int m = 0; m < m_stretch.size(); ++m )
 	{
 		// get the running effect
-		auto stretchEffect = m_stretch[ m ];
+		auto stretchEffect = m_stretch[m];
 		stretchEffect->StopFiring();
 
 		// set this effect to ended
-		m_perMuzzleData[ m ].started = false;
-		m_perMuzzleData[ m ].readyToStart = false;
-		m_perMuzzleData[ m ].currentStartDelay = 0.f;
-		m_perMuzzleData[ m ].elapsedTime = 0.f;
-		
+		m_perMuzzleData[m].started = false;
+		m_perMuzzleData[m].readyToStart = false;
+		m_perMuzzleData[m].currentStartDelay = 0.f;
+		m_perMuzzleData[m].elapsedTime = 0.f;
 	}
 
 	if( m_startCurveSet )
@@ -452,7 +451,7 @@ bool EveTurretFiringFX::ReadyToFire() const
 	{
 		if( m_perMuzzleData[i].elapsedTime < m_firingDuration || m_isLoopFiring )
 		{
-			if( !m_perMuzzleData[i].started && m_perMuzzleData[i].readyToStart)
+			if( !m_perMuzzleData[i].started && m_perMuzzleData[i].readyToStart )
 			{
 				return true;
 			}
@@ -479,7 +478,7 @@ bool EveTurretFiringFX::UpdateAsynchronous( const EveUpdateContext& updateContex
 {
 	float deltaT = updateContext.GetDeltaT();
 	bool retVal = false;
-	
+
 	// check all stretch effects and see if we have to start them
 	for( unsigned int i = 0; i < m_stretch.size(); ++i )
 	{
@@ -498,7 +497,7 @@ bool EveTurretFiringFX::UpdateAsynchronous( const EveUpdateContext& updateContex
 				// cannot start firing effect directly when entering FIRE state, cause they might have a delay...
 				if( !m_perMuzzleData[i].started )
 				{
-				
+
 					if( m_perMuzzleData[i].readyToStart )
 					{
 						// play two parts of the firing effect
@@ -569,14 +568,14 @@ bool EveTurretFiringFX::UpdateAsynchronous( const EveUpdateContext& updateContex
 	return retVal;
 }
 
-bool EveTurretFiringFX::UpdateSynchronous( const EveUpdateContext &updateContext )
+bool EveTurretFiringFX::UpdateSynchronous( const EveUpdateContext& updateContext )
 {
 	// check all stretch effects and see if we have to start or stop them
 	for( unsigned int i = 0; i < m_stretch.size(); ++i )
-	{		
+	{
 		if( m_perMuzzleData[i].elapsedTime < m_firingDuration || m_isLoopFiring )
 		{
-			auto stretchEffect = m_stretch[i];			
+			auto stretchEffect = m_stretch[i];
 			stretchEffect->UpdateEffectSync( updateContext );
 		}
 	}
@@ -597,7 +596,7 @@ void EveTurretFiringFX::UpdateVisibility( const EveUpdateContext& updateContext 
 	{
 		if( m_perMuzzleData[i].started )
 		{
-			if ( m_firingDuration >= m_perMuzzleData[i].elapsedTime || m_isLoopFiring )
+			if( m_firingDuration >= m_perMuzzleData[i].elapsedTime || m_isLoopFiring )
 			{
 				m_stretch[i]->UpdateVisibility( updateContext, m );
 			}
@@ -689,7 +688,7 @@ void EveTurretFiringFX::GetRenderables( std::vector<ITr2Renderable*>& renderable
 	{
 		if( m_perMuzzleData[i].started )
 		{
-			if ( m_firingDuration >= m_perMuzzleData[i].elapsedTime || m_isLoopFiring )
+			if( m_firingDuration >= m_perMuzzleData[i].elapsedTime || m_isLoopFiring )
 			{
 				m_stretch[i]->GetRenderables( renderables );
 			}
@@ -719,7 +718,7 @@ unsigned int EveTurretFiringFX::GetPerMuzzleBoneID( int muzzleID ) const
 	// sanity check
 	if( muzzleID >= 0 && muzzleID < MUZZLECOUNT_MAX )
 	{
-		return m_perMuzzleData[ muzzleID ].muzzlePositionBoneID;
+		return m_perMuzzleData[muzzleID].muzzlePositionBoneID;
 	}
 	// error
 	return INVALID_TURRET_INDEX;
@@ -796,12 +795,11 @@ void EveTurretFiringFX::SetControllerVariable( const char* name, float value )
 	for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
 	{
 		ITr2ControllerOwnerPtr co;
-		if( ( *it )->QueryInterface( BlueInterfaceIID<ITr2ControllerOwner>(), ( void** )&co, BEQI_SILENT ) )
+		if( ( *it )->QueryInterface( BlueInterfaceIID<ITr2ControllerOwner>(), (void**)&co, BEQI_SILENT ) )
 		{
 			co->SetControllerVariable( name, value );
 		}
 	}
-
 }
 
 void EveTurretFiringFX::HandleControllerEvent( const char* name )
@@ -809,7 +807,7 @@ void EveTurretFiringFX::HandleControllerEvent( const char* name )
 	for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
 	{
 		ITr2ControllerOwnerPtr co;
-		if( ( *it )->QueryInterface( BlueInterfaceIID<ITr2ControllerOwner>(), ( void** )&co, BEQI_SILENT ) )
+		if( ( *it )->QueryInterface( BlueInterfaceIID<ITr2ControllerOwner>(), (void**)&co, BEQI_SILENT ) )
 		{
 			co->HandleControllerEvent( name );
 		}
@@ -821,7 +819,7 @@ void EveTurretFiringFX::HandleControllerEvent( const char* name )
 //   Set the impact configuration of the target's impact overlay effect and handle setting values on the target's
 //   audio emitter based off of the given impact configuration.
 // Arguments:
-//   impactConfiguration - The impact configuration state of the current target. 
+//   impactConfiguration - The impact configuration state of the current target.
 // --------------------------------------------------------------------------------
 void EveTurretFiringFX::SetImpactConfiguration( ITriTargetable::ImpactConfiguration impactConfiguration )
 {
@@ -831,7 +829,7 @@ void EveTurretFiringFX::SetImpactConfiguration( ITriTargetable::ImpactConfigurat
 		{
 			if( auto destAudioEmitter = dynamic_cast<ITr2AudEmitter*>( m_destinationObserver->GetObserver() ) )
 			{
-				switch ( impactConfiguration )
+				switch( impactConfiguration )
 				{
 				case ITriTargetable::ImpactConfiguration::IMPACT_ARMOR:
 					destAudioEmitter->SetSwitch( AUDIO_IMPACT_SWITCH_GROUP, AUDIO_IMPACT_SWITCH_ARMOR );
@@ -854,14 +852,14 @@ void EveTurretFiringFX::StartControllers()
 	for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
 	{
 		ITr2ControllerOwnerPtr co;
-		if( ( *it )->QueryInterface( BlueInterfaceIID<ITr2ControllerOwner>(), ( void** )&co, BEQI_SILENT ) )
+		if( ( *it )->QueryInterface( BlueInterfaceIID<ITr2ControllerOwner>(), (void**)&co, BEQI_SILENT ) )
 		{
 			co->StartControllers();
 		}
 	}
 }
 
-void EveTurretFiringFX::GetDebugOptions( Tr2DebugRendererOptions& options ) 
+void EveTurretFiringFX::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	for( auto stretch : m_stretch )
 	{
@@ -882,7 +880,7 @@ void EveTurretFiringFX::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveTurretFiringFX::RenderDebugInfo( ITr2DebugRenderer2& renderer ) 
+void EveTurretFiringFX::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	for( auto stretch : m_stretch )
 	{

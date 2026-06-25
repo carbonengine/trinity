@@ -9,8 +9,8 @@
 // Arguments:
 //   type - Element type to initialize new name with
 // --------------------------------------------------------------------------------------
-Tr2ParticleElementDeclarationName::Tr2ParticleElementDeclarationName( Type type )
-	:m_type( type )
+Tr2ParticleElementDeclarationName::Tr2ParticleElementDeclarationName( Type type ) :
+	m_type( type )
 {
 }
 
@@ -21,8 +21,8 @@ Tr2ParticleElementDeclarationName::Tr2ParticleElementDeclarationName( Type type 
 //   type - Element type to initialize new name with
 //   name - Nameto initialize new name with (in case type is CUSTOM)
 // --------------------------------------------------------------------------------------
-Tr2ParticleElementDeclarationName::Tr2ParticleElementDeclarationName( Type type, std::string name )
-	:m_type( type ),
+Tr2ParticleElementDeclarationName::Tr2ParticleElementDeclarationName( Type type, std::string name ) :
+	m_type( type ),
 	m_name( name )
 {
 }
@@ -100,8 +100,8 @@ Tr2VertexDefinition::UsageCode Tr2ParticleElementDeclarationName::GetD3DUsage() 
 // Description:
 //   Tr2ParticleElementDeclaration default constructor
 // --------------------------------------------------------------------------------------
-Tr2ParticleElementDeclaration::Tr2ParticleElementDeclaration( IRoot* lockobj )
-	:m_name( Tr2ParticleElementDeclarationName::CUSTOM ),
+Tr2ParticleElementDeclaration::Tr2ParticleElementDeclaration( IRoot* lockobj ) :
+	m_name( Tr2ParticleElementDeclarationName::CUSTOM ),
 	m_dimension( 1 ),
 	m_usageIndex( 0 ),
 	m_usedByGPU( true )

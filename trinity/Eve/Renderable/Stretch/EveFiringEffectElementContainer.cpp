@@ -5,8 +5,8 @@
 #include "Eve/IEveFiringEffectElement.h"
 
 
-EveFiringEffectElementContainer::EveFiringEffectElementContainer( IRoot* lockObj )
-	:m_source( XMMatrixIdentity() ),
+EveFiringEffectElementContainer::EveFiringEffectElementContainer( IRoot* lockObj ) :
+	m_source( XMMatrixIdentity() ),
 	m_destination( 0, 0, 0 ),
 	m_destinationScale( 1.f ),
 	m_display( true ),
@@ -62,20 +62,20 @@ bool EveFiringEffectElementContainer::GetBoundingSphere( Vector4& sphere, Boundi
 	return false;
 }
 
-void EveFiringEffectElementContainer::UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t )
+void EveFiringEffectElementContainer::UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
 {
 }
 
-void EveFiringEffectElementContainer::GetModelCenterWorldPosition( Vector3 &position ) const
+void EveFiringEffectElementContainer::GetModelCenterWorldPosition( Vector3& position ) const
 {
 }
 
-bool EveFiringEffectElementContainer::GetLocalBoundingBox( Vector3 &min, Vector3 &max )
+bool EveFiringEffectElementContainer::GetLocalBoundingBox( Vector3& min, Vector3& max )
 {
 	return false;
 }
 
-void EveFiringEffectElementContainer::GetLocalToWorldTransform( Matrix &transform ) const
+void EveFiringEffectElementContainer::GetLocalToWorldTransform( Matrix& transform ) const
 {
 	transform = XMMatrixIdentity();
 }

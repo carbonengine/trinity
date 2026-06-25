@@ -18,11 +18,11 @@ public:
 
 	Tr2PostProcessAttributes( IRoot* lockobj = NULL );
 	~Tr2PostProcessAttributes();
-	
+
 	void Reset();
 
-	void FromPostProcess( Tr2PostProcess2* postprocess, PostProcessEnums::Priority priority, float intensity );
-	
+	void FromPostProcess( Tr2PostProcess2 * postprocess, PostProcessEnums::Priority priority, float intensity );
+
 	static void MergeInto( Tr2PostProcess2 & postprocess, std::vector<Tr2PostProcessAttributes*> & attributes, PriorityBlend::AttributesDebugObserver<Tr2PostProcessAttributes>* debugObserver = nullptr );
 
 	// public attributes, so we can access them from the outside
@@ -72,7 +72,7 @@ public:
 
 	PriorityBlend::Attribute<float> lutIntensity;
 	PriorityBlend::Attribute<BlueSharedString> lutPath;
-	
+
 	// a container for the accumulation of luts
 	std::set<std::pair<float, BlueSharedString>> prioritizedLuts;
 

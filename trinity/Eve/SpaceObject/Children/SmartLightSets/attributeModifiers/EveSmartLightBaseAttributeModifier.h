@@ -38,7 +38,7 @@ public:
 protected:
 	float GetActivationStrength( const PlacementDataWithIdentifier& placement );
 	void MapActivationValue();
-	virtual void ResetChildren( bool parentActive ){};
+	virtual void ResetChildren( bool parentActive ) {};
 
 	std::string m_name;
 	Tr2CurveScalarPtr m_activationOverLifetime;
@@ -52,7 +52,7 @@ protected:
 	float m_finalActivationStrength;
 	float m_activationStrength;
 	float m_crossFadeDuration;
-	float m_crossFadeIntensity; 
+	float m_crossFadeIntensity;
 	float m_activationValue;
 	float m_activationValuePreMapped;
 	float m_playTime;

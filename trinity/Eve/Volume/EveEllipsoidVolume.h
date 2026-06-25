@@ -28,7 +28,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	//////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -55,7 +55,6 @@ private:
 
 	std::map<int, std::function<void()>> m_onChangeCallbacks;
 	uint32_t m_nextCallbackID;
-
 };
 
 TYPEDEF_BLUECLASS( EveEllipsoidVolume );

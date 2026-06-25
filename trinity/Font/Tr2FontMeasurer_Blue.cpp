@@ -12,176 +12,143 @@ const Be::ClassInfo* Tr2FontMeasurer::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2FontMeasurer, "Tr2FontMeasurer is used for measuring and rendering fonts." )
 		MAP_INTERFACE( Tr2FontMeasurer )
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"cursorX",
 			m_cursorX,
 			"Current x-position of cursor.",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"cursorY",
 			m_cursorY,
 			"Current y-position of cursor.",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"letterSpace",
 			m_letterSpace,
 			"Letter spacing, in pixels",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"ascender",
 			m_ascender,
 			"Ascender value, in pixels",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"asc",
 			m_ascender,
 			"Same as ascender (for backwards compatibility)",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"descender",
 			m_descender,
 			"Descender value, in pixels",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"des",
 			m_descender,
 			"Same as descender (for backwards compatibility)",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"limit",
 			m_limit,
 			"Maximum width allowed when adding text",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"color",
 			GetColor,
 			SetColor,
 			"Color of the text when drawn to a texture. Can be set explicitly\n"
-			"or passed in via params to AddText"
-		)
+			"or passed in via params to AddText" )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"underline",
 			m_underline,
 			"Should text be underlined when drawn to a texture? Can be set explicitly\n"
 			"or passed in via params to AddText",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"font",
-			GetFont, SetFont,
-			"Name of font file to use"
-		)
+			GetFont,
+			SetFont,
+			"Name of font file to use" )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fontSize",
-			GetFontSize, SetFontSize,
-			"Size of font, in pixels"
-		)
+			GetFontSize,
+			SetFontSize,
+			"Size of font, in pixels" )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"letterSpace",
 			m_letterSpace,
 			"Spacing between letters, in pixels",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fadeLeftStart",
-			GetFadeLeftStart, SetFadeLeftStart,
+			GetFadeLeftStart,
+			SetFadeLeftStart,
 			"Distance (in pixels) from the left edge where letters begin to fade in."
-			"\nAny text to the left of this value will be invisible."
-		)
+			"\nAny text to the left of this value will be invisible." )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fadeLeftEnd",
-			GetFadeLeftEnd, SetFadeLeftEnd,
+			GetFadeLeftEnd,
+			SetFadeLeftEnd,
 			"Distance (in pixels) from the left edge where letters finish fading in."
 			"\nAny text to the right of this value will be fully opaque, until fadeRightStart"
-			"\nis reached."
-		)
+			"\nis reached." )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fadeRightStart",
-			GetFadeRightStart, SetFadeRightStart,
-			"Distance (in pixels) from the left edge where letters begin to fade out."
-		)
+			GetFadeRightStart,
+			SetFadeRightStart,
+			"Distance (in pixels) from the left edge where letters begin to fade out." )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fadeRightEnd",
-			GetFadeRightEnd, SetFadeRightEnd,
+			GetFadeRightEnd,
+			SetFadeRightEnd,
 			"Distance (in pixels) from the left edge where letters finish fading out."
-			"\nAny text to the right of this value will be invisible."
-		)
+			"\nAny text to the right of this value will be invisible." )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fadeTopStart",
-			GetFadeTopStart, SetFadeTopStart,
+			GetFadeTopStart,
+			SetFadeTopStart,
 			"Distance (in pixels) from the top edge where letters begin to fade in."
-			"\nAny text above this value will be invisible."
-		)
+			"\nAny text above this value will be invisible." )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fadeTopEnd",
-			GetFadeTopEnd, SetFadeTopEnd,
+			GetFadeTopEnd,
+			SetFadeTopEnd,
 			"Distance (in pixels) from the top edge where letters finish fading in."
 			"\nAny text below this value will be fully opaque, until fadeBottomStart"
-			"\nis reached."
-		)
+			"\nis reached." )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fadeBottomStart",
-			GetFadeBottomStart, SetFadeBottomStart,
-			"Distance (in pixels) from the top edge where letters begin to fade out."
-		)
+			GetFadeBottomStart,
+			SetFadeBottomStart,
+			"Distance (in pixels) from the top edge where letters begin to fade out." )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"fadeBottomEnd",
-			GetFadeBottomEnd, SetFadeBottomEnd,
+			GetFadeBottomEnd,
+			SetFadeBottomEnd,
 			"Distance (in pixels) from the top edge where letters finish fading out."
-			"\nAny text below this value will be invisible."
-		)
+			"\nAny text below this value will be invisible." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"AddText",
 			AddText,
 			"n = AddText(text)"
@@ -191,11 +158,9 @@ const Be::ClassInfo* Tr2FontMeasurer::ExposeToBlue()
 			"\n:param text: unicode string to be added"
 			"\n\n:returns:"
 			"\n  the number of characters added. May be less the length of the given"
-			"\n  text if a limit is set on the measurer."
-		)
+			"\n  text if a limit is set on the measurer." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"CommitText",
 			CommitText,
 			"CommitText(shiftX, shiftY)"
@@ -203,71 +168,55 @@ const Be::ClassInfo* Tr2FontMeasurer::ExposeToBlue()
 			"\ngiven x,y coordinates."
 			"\nText can also be canceled with CancelLastText."
 			"\n:param shiftX: amount in pixels that text to commit is shifted by horizontally"
-			"\n:param shiftY: amount in pixels that text to commit is shifted by vertically"
-		)
+			"\n:param shiftY: amount in pixels that text to commit is shifted by vertically" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"CancelLastText",
 			CancelLastText,
 			"CancelLastText()"
 			"\nCancels the last added text. Can be called repeatedly to undo"
-			"\nmultiple AddText calls. Text that has been committed cannot be canceled."
-		)
+			"\nmultiple AddText calls. Text that has been committed cannot be canceled." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"HasCommittedText",
 			HasCommittedText,
 			"HasCommittedText()"
-			"\nReturns true if text has been added and committed."
-		)
+			"\nReturns true if text has been added and committed." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"HasUncommittedText",
 			HasUncommittedText,
 			"HasUncommittedText()"
-			"\nReturns true if text has been added and not yet committed."
-		)
+			"\nReturns true if text has been added and not yet committed." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"Reset",
 			Reset,
 			"Reset()"
-			"\nClears any text added and resets the cursor."
-		)
+			"\nClears any text added and resets the cursor." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"DrawToAtlasTexture",
 			DrawToAtlasTexture,
 			"DrawToAtlasTexture(atlasTexture)"
 			"\nDraws all committed text to the atlas texture."
-			"\n:param atlasTexture: a Tr2AtlasTexture object"
-		)
+			"\n:param atlasTexture: a Tr2AtlasTexture object" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"DrawToTexture",
 			DrawToTexture,
 			"DrawToTexture(texture)"
 			"\nDraws all committed text to the texture."
-			"\n:param texture: a TriTextureRes object"
-		)
+			"\n:param texture: a TriTextureRes object" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"DrawToHostBitmap",
 			DrawToHostBitmap,
 			"DrawToHostBitmap(hostBitmap)"
 			"\nDraws all committed text to the hostBitmap."
-			"\n:param hostBitmap: a Tr2HostBitmap object"
-		)
+			"\n:param hostBitmap: a Tr2HostBitmap object" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"GetIndexAtPos",
 			GetIndexAtPos,
 			"ix = GetIndexAtPos(x)"
@@ -275,17 +224,14 @@ const Be::ClassInfo* Tr2FontMeasurer::ExposeToBlue()
 			"\nfor single line text."
 			"\n:param x: position being queried"
 			"\n\n:returns:"
-			"\n  index into the string that corresponds to the x position."
-		)
+			"\n  index into the string that corresponds to the x position." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"GetWidthAtIndex",
 			GetWidthAtIndex,
 			"x = GetWidthAtIndex(ix)"
 			"\nReturns the width of the string at the given index."
 			"\n:param ix: index into the string"
-			"\n\n:returns: the width of the string at the given index."
-		)
+			"\n\n:returns: the width of the string at the given index." )
 	EXPOSURE_END()
 }

@@ -99,7 +99,7 @@ void EveSceneStaticParticles::Update( const EveUpdateContext& updateContext )
 	// calc float offset from egopos to center of particles
 	Vector3d offset = m_centerOfClusters - updateContext.GetOrigin();
 	// build a transform matrix
-	m_worldMatrix = TranslationMatrix( float(offset.x), float(offset.y), float(offset.z) );
+	m_worldMatrix = TranslationMatrix( float( offset.x ), float( offset.y ), float( offset.z ) );
 
 	m_center = TransformCoord( m_boundingSphere.GetXYZ(), m_worldMatrix );
 }
@@ -118,7 +118,7 @@ void EveSceneStaticParticles::UpdateVisibility( const EveUpdateContext& updateCo
 
 	bool estimatedSizeWithinBounds = m_estimatedSize > PARTICLE_CLUSTER_MIN_SIZE * updateContext.GetLodFactor();
 	bool inBoundingSphere = LengthSq( m_center - frustum.m_viewPos ) <= m_boundingSphere.w * m_boundingSphere.w;
-	
+
 	m_visible = inBoundingSphere || ( IsVisible( updateContext ) && estimatedSizeWithinBounds );
 }
 
@@ -238,16 +238,16 @@ void EveSceneStaticParticles::Rebuild()
 
 	// setup particle system
 	Tr2VertexDefinition particleBufferVtxDef;
-	particleBufferVtxDef.Add(Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION);
-	particleBufferVtxDef.Add(Tr2VertexDefinition::FLOAT32_1, Tr2VertexDefinition::TEXCOORD, 0);
-	particleBufferVtxDef.Add(Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 1);
+	particleBufferVtxDef.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+	particleBufferVtxDef.Add( Tr2VertexDefinition::FLOAT32_1, Tr2VertexDefinition::TEXCOORD, 0 );
+	particleBufferVtxDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 1 );
 	instanceData->SetLayout( particleBufferVtxDef );
 
 	// need total radius and a center for all clusters
 	m_centerOfClusters = Vector3d( 0.0, 0.0, 0.0 );
 	for( auto it = m_clusters.begin(); it != m_clusters.end(); ++it )
 	{
-		const ClusterData* clusterData = &(*it);
+		const ClusterData* clusterData = &( *it );
 		m_centerOfClusters += Vector3d( (double)clusterData->position.x, (double)clusterData->position.y, (double)clusterData->position.z );
 	}
 	m_centerOfClusters /= (double)m_clusters.size();
@@ -256,7 +256,7 @@ void EveSceneStaticParticles::Rebuild()
 	size_t particleBufferSize = 0;
 	for( auto it = m_clusters.begin(); it != m_clusters.end(); ++it )
 	{
-		const ClusterData* clusterData = &(*it);
+		const ClusterData* clusterData = &( *it );
 		particleBufferSize += size_t( m_clusterParticleDensity * clusterData->radius );
 	}
 
@@ -271,17 +271,17 @@ void EveSceneStaticParticles::Rebuild()
 	particleBufferSize = 0;
 	for( auto it = m_clusters.begin(); it != m_clusters.end(); ++it )
 	{
-		const ClusterData* clusterData = &(*it);
+		const ClusterData* clusterData = &( *it );
 		particleBufferSize += size_t( m_clusterParticleDensityAdjust * m_clusterParticleDensity * clusterData->radius );
 	}
-		
+
 	// alloc big buffer in the particle system
 	ParticleBufferItem* currentParticleBufferItem = static_cast<ParticleBufferItem*>( instanceData->GetData( (unsigned int)particleBufferSize ) );
 
 	// run over all the clusters and build
 	for( auto it = m_clusters.begin(); it != m_clusters.end(); ++it )
 	{
-		const ClusterData* clusterData = &(*it);
+		const ClusterData* clusterData = &( *it );
 
 		int particlesPerCluster = int( m_clusterParticleDensityAdjust * m_clusterParticleDensity * clusterData->radius );
 
@@ -306,15 +306,14 @@ void EveSceneStaticParticles::Rebuild()
 
 			// color (the alpha of the color is the seed)
 			currentParticleBufferItem->color = Lerp( clusterData->color1, clusterData->color2, TriFloatRandom01() );
-			currentParticleBufferItem->color.a = float(i) / float(particlesPerCluster);
-				
+			currentParticleBufferItem->color.a = float( i ) / float( particlesPerCluster );
+
 			// size
 			currentParticleBufferItem->size = TriFloatRandom01() * std::min( clusterData->radius / 10.f, m_maxSize ) + m_minSize;
 
 			// next item in buffer
 			++currentParticleBufferItem;
 		}
-
 	}
 
 	// finish up the instance buffer
@@ -326,9 +325,4 @@ void EveSceneStaticParticles::Rebuild()
 
 	// calculate a rough bounding sphere
 	BoundingSphereFromBox( m_boundingSphere, bbmin, bbmax );
-
 }
-
-
-
-

@@ -12,27 +12,27 @@ const Be::ClassInfo* Tr2StaticEmitter::ExposeToBlue()
 		MAP_INTERFACE( ITr2GenericEmitter )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IInitialize )
-		
-		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST  )
-		MAP_ATTRIBUTE( 
-			"geometryResourcePath", 
-			m_geometryResourcePath, 
-			"Path to geometry resource with particle data", 
+
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"geometryResourcePath",
+			m_geometryResourcePath,
+			"Path to geometry resource with particle data",
 			Be::READWRITE | Be::NOTIFY | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"geometryResource", 
-			m_geometryResource, 
-			"Geometry resource with particle data", 
+		MAP_ATTRIBUTE(
+			"geometryResource",
+			m_geometryResource,
+			"Geometry resource with particle data",
 			Be::READ )
-		MAP_ATTRIBUTE( 
-			"particleSystem", 
-			m_particleSystem, 
-			"Particle system to emit particles to", 
+		MAP_ATTRIBUTE(
+			"particleSystem",
+			m_particleSystem,
+			"Particle system to emit particles to",
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( 
-			"meshIndex", 
-			m_meshIndex, 
-			"Mesh index in a geometry resource with particle data", 
+		MAP_ATTRIBUTE(
+			"meshIndex",
+			m_meshIndex,
+			"Mesh index in a geometry resource with particle data",
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "Spawn", Spawn, "(Re)spawns particles during next update" )

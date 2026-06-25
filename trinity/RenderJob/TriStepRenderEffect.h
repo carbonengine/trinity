@@ -10,19 +10,20 @@
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2ShaderBuffer );
 
-BLUE_CLASS( TriStepRenderEffect ) : public TriRenderStep
+BLUE_CLASS( TriStepRenderEffect ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	TriStepRenderEffect( IRoot* lockobj = 0 );
-	~TriStepRenderEffect(void);
+	~TriStepRenderEffect( void );
 
 	//RenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
 	// Python __init__ constructor
-	void py__init__( Tr2Effect* effect, Tr2ShaderBuffer* shaderBuffer );
+	void py__init__( Tr2Effect * effect, Tr2ShaderBuffer * shaderBuffer );
 
 private:
 	Tr2EffectPtr m_effect;

@@ -17,93 +17,69 @@ const Be::ClassInfo* EveStretch2::ExposeToBlue()
 		MAP_INTERFACE( ITr2LightOwner )
 		MAP_INTERFACE( EveEntity )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"name",
 			m_name,
 			"",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"effect",
 			m_effect,
 			"Effect to use for the stretch",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"quadCount",
 			m_quadCount,
 			"Number of quads to render for the effect",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
-		)
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"start",
 			m_start,
 			"Curve set to play when firing effect starts",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"loop",
 			m_loop,
 			"Curve set that is played when the effect is active",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"end",
 			m_end,
 			"Curve set to play when the effect stops",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"sourceLight",
 			m_sourceLight,
 			"Point light at the effect source",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"destinationLight",
 			m_destinationLight,
 			"Point light at the effect destination",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"sourceEmitter",
 			m_sourceEmitter,
 			"GPU particle emitter at the source",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"destinationEmitter",
 			m_destinationEmitter,
 			"GPU particle emitter at the destination",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"sourceObserver",
 			m_sourceObserver,
 			"Observer at the source position",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"destinationObserver",
 			m_destinationObserver,
 			"Observer at the destination position",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"boundingRadius",
 			m_boundingRadius,

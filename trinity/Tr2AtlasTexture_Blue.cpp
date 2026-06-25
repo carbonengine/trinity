@@ -31,9 +31,10 @@ static PyObject* PyLockBuffer( PyObject* self, PyObject* args )
 	if( pThis->LockBuffer( pData, pitch ) )
 	{
 		PyObject* buffer = PyVerCompat::MemoryViewRW( pData, pThis->GetHeight() * pitch );
-		PyObject *result = PyTuple_New(4);
-		if (!result) {
-			Py_DECREF(buffer);
+		PyObject* result = PyTuple_New( 4 );
+		if( !result )
+		{
+			Py_DECREF( buffer );
 			return nullptr;
 		}
 		PyTuple_SET_ITEM( result, 0, buffer );
@@ -61,9 +62,10 @@ static PyObject* PyLockBufferAndMargin( PyObject* self, PyObject* args )
 		const int width = pThis->GetWidth() + margin * 2;
 
 		PyObject* buffer = PyVerCompat::MemoryViewRW( data, height * pitch );
-		PyObject *result = PyTuple_New(5);
-		if (!result) {
-			Py_DECREF(buffer);
+		PyObject* result = PyTuple_New( 5 );
+		if( !result )
+		{
+			Py_DECREF( buffer );
 			return nullptr;
 		}
 		PyTuple_SET_ITEM( result, 0, buffer );
@@ -81,125 +83,99 @@ static PyObject* PyLockBufferAndMargin( PyObject* self, PyObject* args )
 
 const Be::ClassInfo* Tr2AtlasTexture::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2AtlasTexture, "" )
-        MAP_INTERFACE( Tr2AtlasTexture )
+	EXPOSURE_BEGIN( Tr2AtlasTexture, "" )
+		MAP_INTERFACE( Tr2AtlasTexture )
 		MAP_INTERFACE( IBlueResource )
 		MAP_INTERFACE( ICacheable )
 		MAP_ICACHEABLE_METHODS()
 
 
-		MAP_METHOD
-		(
+		MAP_METHOD(
 			"LockBuffer",
 			PyLockBuffer,
 			"Locks the surface behind the atlas texture.\n"
 			"Returns a tuple with (address, width, height, pitch)\n"
-			":rtype: (buffer, int, int, int)"
-		)
-		
-		MAP_METHOD
-		(
+			":rtype: (buffer, int, int, int)" )
+
+		MAP_METHOD(
 			"LockBufferAndMargin",
 			PyLockBufferAndMargin,
 			"Locks the surface behind the atlas texture, including margin.\n"
 			"Returns a tuple with (address, width, height, pitch, margin)\n"
-			":rtype: (buffer, int, int, int, int)"
-		)
+			":rtype: (buffer, int, int, int, int)" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"UnlockBuffer",
 			UnlockBuffer,
-			"Unlocks the surface previously locked with LockBuffer"
-		)
+			"Unlocks the surface previously locked with LockBuffer" )
 
-		MAP_ATTRIBUTE
-		(
-			"name", 
-			m_name, 
-			"Name of this texture atlas entry", 
-			Be::READWRITE | Be::PERSIST
-		)
+		MAP_ATTRIBUTE(
+			"name",
+			m_name,
+			"Name of this texture atlas entry",
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
-			"resPath", 
-			m_resPath, 
-			"Resource path behind this texture atlas entry.", 
-			Be::READ
-		)
+		MAP_ATTRIBUTE(
+			"resPath",
+			m_resPath,
+			"Resource path behind this texture atlas entry.",
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"width",
 			m_width,
 			"Width of this texture.",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"height",
 			m_height,
 			"Height of this texture.",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"atlasWidth",
 			m_textureWidth,
-				"Width of the entire atlas this texture is a part of.",
-			Be::READ
-		)
+			"Width of the entire atlas this texture is a part of.",
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"atlasHeight",
 			m_textureHeight,
 			"Height of the entire atlas this texture is a part of.",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"x",
 			m_x,
 			"x coordinate offset into the atlas.",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"y",
 			m_y,
 			"y coordinate offset into the atlas.",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"atlas",
 			m_textureAtlas,
 			"Texture atlas containing this texture",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"isStandAlone",
-			IsStandAlone, SetStandAlone,
+			IsStandAlone,
+			SetStandAlone,
 			"A stand-alone atlas texture is really not an atlas texture - it's a permanent outsider.\n"
 			"This is to support textures that need texture transformations - clamping and repeat\n"
-			"is currently too expensive to support for atlas textures."
-		)
+			"is currently too expensive to support for atlas textures." )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"textureRes",
-			GetTextureRes, SetTextureRes,
-			"Sets a texture res directly - use for dynamic textures"
-		)
+			GetTextureRes,
+			SetTextureRes,
+			"Sets a texture res directly - use for dynamic textures" )
 
-    EXPOSURE_CHAINTO( BlueAsyncRes )
+	EXPOSURE_CHAINTO( BlueAsyncRes )
 }

@@ -20,15 +20,15 @@ public:
 
 	EveChildLink( IRoot* lockobj = NULL );
 	~EveChildLink();
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetLocalToWorldTransform( Matrix& transform ) const;
+	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void ChangeLOD( Tr2Lod lod ) {};
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const;
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query ) const;
 
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
 

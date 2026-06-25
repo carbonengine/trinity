@@ -7,26 +7,27 @@
 
 #include "TriRenderStep.h"
 
-BLUE_CLASS( TriStepPythonCB ) : public TriRenderStep
+BLUE_CLASS( TriStepPythonCB ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	TriStepPythonCB( IRoot* lockobj = 0 );
-	~TriStepPythonCB( );
+	~TriStepPythonCB();
 
 	//RenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
 private:
 	BlueScriptCallback m_callback;
 
 	void SetCallback( const BlueScriptCallback& callback );
 
-	TriStepPythonCB( const TriStepPythonCB &);
-	TriStepPythonCB& operator=( const TriStepPythonCB &);
+	TriStepPythonCB( const TriStepPythonCB& );
+	TriStepPythonCB& operator=( const TriStepPythonCB& );
 };
 
 TYPEDEF_BLUECLASS( TriStepPythonCB );
 
-#endif	// TriStepPythonCB_H
+#endif // TriStepPythonCB_H

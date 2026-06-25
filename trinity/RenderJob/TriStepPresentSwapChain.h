@@ -9,12 +9,11 @@
 
 BLUE_DECLARE( TriStepPresentSwapChain );
 
-class TriStepPresentSwapChain:
-     public TriRenderStep
+class TriStepPresentSwapChain : public TriRenderStep
 {
 public:
-    EXPOSE_TO_BLUE();
-    TriStepPresentSwapChain( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	TriStepPresentSwapChain( IRoot* lockobj = NULL );
 
 	//IRenderStep
 	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );

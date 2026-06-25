@@ -3,8 +3,8 @@
 #include "StdAfx.h"
 #include "Tr2LockGuard.h"
 
-Tr2LockGuard::Tr2LockGuard()
-	:m_memory( nullptr ),
+Tr2LockGuard::Tr2LockGuard() :
+	m_memory( nullptr ),
 	m_originalMemory( nullptr ),
 	m_size( 0 )
 {
@@ -39,7 +39,7 @@ void Tr2LockGuard::Lock( size_t size, void* originalMemory )
 	m_memory = CCPMallocWithGuard( size );
 	if( !m_memory )
 	{
-		CCP_LOGERR(" TrinityAL: guarded lock out of memory (size: %zu)", size );
+		CCP_LOGERR( " TrinityAL: guarded lock out of memory (size: %zu)", size );
 	}
 	else
 	{

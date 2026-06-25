@@ -15,46 +15,49 @@ class Tr2Variable
 {
 private:
 	//Tr2VariableStore	*m_store;
-	TriVariable			*m_variable;
+	TriVariable* m_variable;
 
 	Tr2Variable( const Tr2Variable& );
 	Tr2Variable& operator=( const Tr2Variable& );
 
 public:
-	Tr2Variable()
-	: /*m_store( nullptr )
-	, */m_variable( nullptr )
-	{}
+	Tr2Variable() :
+		/*m_store( nullptr )
+	, */
+		m_variable( nullptr )
+	{
+	}
 
-	explicit Tr2Variable( TriVariable* variable )
-	: m_variable( variable )
-	{}
+	explicit Tr2Variable( TriVariable* variable ) :
+		m_variable( variable )
+	{
+	}
 
-	template<typename TYPE>
-	Tr2Variable( const char *name, TYPE value )
+	template <typename TYPE>
+	Tr2Variable( const char* name, TYPE value )
 	{
 		Register( name, value, GlobalStore() );
 	}
 
-	template<typename TYPE>
-	Tr2Variable( const char *name, TYPE value, Tr2VariableStore &store )
+	template <typename TYPE>
+	Tr2Variable( const char* name, TYPE value, Tr2VariableStore& store )
 	{
 		Register( name, value, store );
 	}
 
-	template<typename TYPE>
-	void Register( const char *name, TYPE value )
+	template <typename TYPE>
+	void Register( const char* name, TYPE value )
 	{
 		Register( name, value, GlobalStore() );
 	}
 
-	template<typename TYPE>
-	void Register( const char *name, TYPE value, Tr2VariableStore &store )
+	template <typename TYPE>
+	void Register( const char* name, TYPE value, Tr2VariableStore& store )
 	{
 		m_variable = store.RegisterVariable( name, value );
 	}
-	
-	template<typename TYPE>
+
+	template <typename TYPE>
 	void GetValue( TYPE& value )
 	{
 		if( m_variable )
@@ -63,7 +66,7 @@ public:
 		}
 	}
 
-	template<typename TYPE>
+	template <typename TYPE>
 	void operator=( const TYPE& value )
 	{
 		if( m_variable )
@@ -72,8 +75,11 @@ public:
 		}
 	}
 
-	TriVariable* GetVariable() const { return m_variable; }
-		
+	TriVariable* GetVariable() const
+	{
+		return m_variable;
+	}
+
 	TriVariableContentType GetType() const
 	{
 		return m_variable ? m_variable->GetType() : TRIVARIABLE_INVALID;

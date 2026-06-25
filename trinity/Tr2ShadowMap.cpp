@@ -117,7 +117,7 @@ void Tr2ShadowMap::UpdateSplitValues( float nearClip, float farClip )
 	}
 }
 
-AxisAlignedBoundingBox Tr2ShadowMap::CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3 (&corners)[8] )
+AxisAlignedBoundingBox Tr2ShadowMap::CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3 ( &corners )[8] )
 {
 	AxisAlignedBoundingBox aabb;
 	for( unsigned int i = 0; i < 8; ++i )
@@ -138,17 +138,16 @@ AxisAlignedBoundingBox Tr2ShadowMap::CalculateAABB( Matrix projection, Matrix in
 }
 // --------------------------------------------------------------------------------
 // Description:
-//  Go through all i count of frustum splits. Calculate the corresponding 
+//  Go through all i count of frustum splits. Calculate the corresponding
 //	bounding box based on zNear and zFar values.
 // --------------------------------------------------------------------------------
-ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, 
-	float zNear, float leftDivNear, float rightDivNear, float topDivNear, float bottomDivNear )
+ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear, float leftDivNear, float rightDivNear, float topDivNear, float bottomDivNear )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	ShadowMap::SplitSetup splitSetup;
 
-	if(splitIndex == 0 )
+	if( splitIndex == 0 )
 	{
 		// reset this value
 		m_oldZFar = zNear;
@@ -198,7 +197,7 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 		Vector3 shipPos = Vector3( 0.0, 0.0, 0.0 );
 		Vector3 center = aabb.Center();
 		// rounding up
-		float texelSize = (radius * 2.0f) / m_size;
+		float texelSize = ( radius * 2.0f ) / m_size;
 		center.x = std::floor( center.x / texelSize + 0.5f ) * texelSize;
 		center.y = std::floor( center.y / texelSize + 0.5f ) * texelSize;
 
@@ -208,19 +207,19 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 	// pull the aabb towards the sun
 	//aabb.m_max.z += 250000.f;
 	splitSetup.aabb = aabb;
-	
+
 	splitSetup.lightViewProjection = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
 
 	m_perSplitData.CascadeRanges[splitIndex] = Vector4( aabb.m_max.x - aabb.m_min.x, aabb.m_max.y - aabb.m_min.y, aabb.m_max.z - aabb.m_min.z, 0 );
 
 	// 4th element of shadowMatrix is always the same
 	m_perSplitData.ShadowMatrixVal[splitIndex] = Transpose( splitSetup.lightViewProjection );
-	
+
 	// create shadow frustum out from lightView, aabb.min, aabb.max
 	TriFrustumOrtho shadowFrustum;
 	shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
 	splitSetup.shadowFrustum = shadowFrustum;
-	
+
 	return splitSetup;
 }
 

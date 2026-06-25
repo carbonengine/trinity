@@ -8,8 +8,8 @@ BLUE_DEFINE( EveChildCloud );
 
 const Be::ClassInfo* EveChildCloud::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveChildCloud, "Cloud space object child" )
-        MAP_INTERFACE( EveChildCloud )
+	EXPOSURE_BEGIN( EveChildCloud, "Cloud space object child" )
+		MAP_INTERFACE( EveChildCloud )
 		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
@@ -28,10 +28,10 @@ const Be::ClassInfo* EveChildCloud::ExposeToBlue()
 		MAP_ATTRIBUTE( "boundingSphere", m_boundingSphere, "Used for culling", Be::READ )
 		MAP_ATTRIBUTE( "preTesselationLevel", m_preTesselationLevel, "Number of triangles per width/heigth", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "volume", m_volume, "Shape volume texture editor", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"minScreenSize", 
-			m_minScreenSize, 
-			"Minimal size of object on screen, objects smaller than this size are not rendered.\n:jessica-group: LOD", 
+		MAP_ATTRIBUTE(
+			"minScreenSize",
+			m_minScreenSize,
+			"Minimal size of object on screen, objects smaller than this size are not rendered.\n:jessica-group: LOD",
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "cellScreenSize", m_cellScreenSize, "Target size of a single cell in a grid on the screen (in pixels)", Be::READWRITE | Be::PERSIST )

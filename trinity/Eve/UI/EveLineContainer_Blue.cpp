@@ -7,8 +7,8 @@ BLUE_DEFINE( EveLineContainer );
 
 const Be::ClassInfo* EveLineContainer::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveLineContainer, "" )
-        MAP_INTERFACE( EveLineContainer )
+	EXPOSURE_BEGIN( EveLineContainer, "" )
+		MAP_INTERFACE( EveLineContainer )
 		MAP_INTERFACE( IEveSpaceObject2 )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST );
@@ -16,5 +16,5 @@ const Be::ClassInfo* EveLineContainer::ExposeToBlue()
 		MAP_ATTRIBUTE( "connectors", m_connectors, "", Be::READ | Be::PERSIST );
 		MAP_ATTRIBUTE( "lineSet", m_lineSet, "", Be::READWRITE | Be::PERSIST );
 
-    EXPOSURE_END()
+	EXPOSURE_END()
 }

@@ -20,8 +20,7 @@ BLUE_DECLARE( Tr2Effect );
 class Tr2OcclusionBuffer : public Tr2DeviceResource
 {
 public:
-
-	using Offset = std::shared_ptr<uint32_t>; 
+	using Offset = std::shared_ptr<uint32_t>;
 
 	Tr2OcclusionBuffer();
 
@@ -60,13 +59,12 @@ private:
 // SeeAlso:
 //   EveLensflare
 // --------------------------------------------------------------------------------
-class EveOccluder :
-	public IRoot
+class EveOccluder : public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	EveOccluder(IRoot* lockobj = NULL);
+	EveOccluder( IRoot* lockobj = NULL );
 
 	// do the occlusion rendering/querying
 	void RunQuery( Tr2RenderContext& renderContext, const EveUpdateContext& updateContext, const Matrix& transform, uint32_t bufferOffset, float fogWeight );

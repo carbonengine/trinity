@@ -41,7 +41,7 @@ BLUE_CLASS( EveChildCloud2 ) :
 public:
 	EXPOSE_TO_BLUE();
 
-	EveChildCloud2(IRoot* lockobj = NULL);
+	EveChildCloud2( IRoot* lockobj = NULL );
 	~EveChildCloud2();
 
 	//////////////////////////////////////////////////////////////////////////
@@ -50,8 +50,8 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* value );
-	
+	virtual bool OnModified( Be::Var * value );
+
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList ) override;
@@ -62,18 +62,20 @@ public:
 	virtual void SetName( const char* name ) override;
 	virtual void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-	virtual void GetLocalToWorldTransform( Matrix& transform ) const override;
+	virtual void GetLocalToWorldTransform( Matrix & transform ) const override;
 	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
-	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
-	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
+	virtual void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
+	virtual bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override
 	{
 	}
-	virtual void ChangeLOD( Tr2Lod lod ) override {}
-	
+	virtual void ChangeLOD( Tr2Lod lod ) override
+	{
+	}
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	void GetLights( Tr2LightManager& lightManager ) const override;
+	void GetLights( Tr2LightManager & lightManager ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2VolumetricRenderable
@@ -81,7 +83,7 @@ public:
 	void GetVolumetricBatches( const TriFrustum& frustum, ITriRenderBatchAccumulator* batches ) override;
 	bool UpdateVolumetricLightmap( Tr2RenderContext & renderContext ) override;
 	void SetSceneInformation( const SceneInformation& sceneInformation ) override;
-	void GetVolumetricShadowBatches( ITriRenderBatchAccumulator* batches ) override;
+	void GetVolumetricShadowBatches( ITriRenderBatchAccumulator * batches ) override;
 	void GetVolumetricShadowInfo( ShadowInfo & shadowInfo, Vector3 sunDir ) override;
 	bool PrepareCloudShadowMap( Tr2RenderContext & renderContext ) override;
 	void SetCloudShadowMapHandle() override;
@@ -100,15 +102,15 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 
 	void ClearVariableStore();
 
 	void RegisterComponents() override;
 
 	void SetupShadowFrustum( ShadowInfo & shadowInfo, Vector3 sunDir );
-	
+
 	bool IsLightmapDirty() const;
 	void MarkLightmapDirty( bool );
 
@@ -143,10 +145,9 @@ public:
 	};
 
 private:
-
 	bool OnPrepareResources();
-	void PopulatePerObjectData( PerObjectData& data, float screenSize ) const;
-	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator, float screenSize );
+	void PopulatePerObjectData( PerObjectData & data, float screenSize ) const;
+	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator, float screenSize );
 	void CreateEmptyLightMap();
 	bool HasValidTransform() const;
 
@@ -214,15 +215,15 @@ private:
 	Vector3 m_mapOffsets[3];
 
 	const Vector3 m_unitCube[8] = {
-	//The unit cube in DirectX is from( -1, -1, 0 ) to ( 1, 1, 1 )
-	Vector3( -1, -1, 0 ), // vertex 0
-	Vector3( -1, 1, 0 ), // vertex 1
-	Vector3( 1, 1, 0 ), // etc..
-	Vector3( 1, -1, 0 ),
-	Vector3( -1, -1, 1 ),
-	Vector3( -1, 1, 1 ),
-	Vector3( 1, 1, 1 ),
-	Vector3( 1, -1, 1 )
+		//The unit cube in DirectX is from( -1, -1, 0 ) to ( 1, 1, 1 )
+		Vector3( -1, -1, 0 ), // vertex 0
+		Vector3( -1, 1, 0 ), // vertex 1
+		Vector3( 1, 1, 0 ), // etc..
+		Vector3( 1, -1, 0 ),
+		Vector3( -1, -1, 1 ),
+		Vector3( -1, 1, 1 ),
+		Vector3( 1, 1, 1 ),
+		Vector3( 1, -1, 1 )
 	};
 
 	Matrix m_lightViewProj;

@@ -4,23 +4,23 @@
 #include "TriStepFilterVisibilityResults.h"
 #include "Tr2VisibilityResults.h"
 
-TriStepFilterVisibilityResults::TriStepFilterVisibilityResults( IRoot* lockobj )
-:	m_eventFilter( -1 ),
+TriStepFilterVisibilityResults::TriStepFilterVisibilityResults( IRoot* lockobj ) :
+	m_eventFilter( -1 ),
 	m_filterType( EXCLUDE_OBJECTS_IN_LIST ),
 	PARENTLOCK( m_objects )
 {
 }
 
-TriStepFilterVisibilityResults::~TriStepFilterVisibilityResults(void)
+TriStepFilterVisibilityResults::~TriStepFilterVisibilityResults( void )
 {
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
-void TriStepFilterVisibilityResults::py__init__( 
-	Tr2VisibilityResults* input, 
+void TriStepFilterVisibilityResults::py__init__(
+	Tr2VisibilityResults* input,
 	Tr2VisibilityResults* output,
 	Be::Optional<unsigned> eventFilter,
 	Be::Optional<unsigned> filter )
@@ -40,7 +40,7 @@ void TriStepFilterVisibilityResults::py__init__(
 // -------------------------------------------------------------
 // Description:
 //   Implements TriRenderStep method. Processes input
-//   visibility result list to produce a new one filtering 
+//   visibility result list to produce a new one filtering
 //   visibility events. Removes events not present on m_eventFilter
 //   bitfield filter. For events that specifies object instances
 //   does filtering according to filter type and objects list.
@@ -88,7 +88,7 @@ TriStepResult TriStepFilterVisibilityResults::Execute( Be::Time realTime, Be::Ti
 
 // -------------------------------------------------------------
 // Description:
-//   Sets visibility event type filter. 
+//   Sets visibility event type filter.
 // Arguments:
 //   eventFilter - Visibility event type filter composed of
 //                 Tr2VisibilityEvent::EventType bits. Events that

@@ -30,7 +30,6 @@ public:
 	float m_sineFrequency;
 	float m_sineMinimum;
 	float m_sineMaximum;
-
 };
 
 TYPEDEF_BLUECLASS( Tr2PPVignetteEffect );

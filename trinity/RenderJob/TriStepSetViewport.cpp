@@ -9,7 +9,7 @@ TriStepSetViewport::TriStepSetViewport( IRoot* lockobj )
 {
 }
 
-TriStepSetViewport::~TriStepSetViewport(void)
+TriStepSetViewport::~TriStepSetViewport( void )
 {
 }
 

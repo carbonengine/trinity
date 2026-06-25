@@ -23,21 +23,26 @@ public:
 	~EveLineContainer();
 
 	void Update( const EveUpdateContext& context );
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
-	void UpdateSyncronous( const EveUpdateContext& updateContext ) { Update( updateContext ); }
-	void UpdateAsyncronous( const EveUpdateContext& updateContext ) {}
+	void UpdateSyncronous( const EveUpdateContext& updateContext )
+	{
+		Update( updateContext );
+	}
+	void UpdateAsyncronous( const EveUpdateContext& updateContext )
+	{
+	}
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
-	void GetModelCenterWorldPosition( Vector3 &position ) const;
-	bool GetLocalBoundingBox( Vector3 &min, Vector3 &max );
-	void GetLocalToWorldTransform( Matrix &transform ) const;
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables, Tr2ImpostorManager * impostors );
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	void UpdateModelCenterWorldPosition( Vector3 & position, Be::Time t );
+	void GetModelCenterWorldPosition( Vector3 & position ) const;
+	bool GetLocalBoundingBox( Vector3 & min, Vector3 & max );
+	void GetLocalToWorldTransform( Matrix & transform ) const;
 
 private:
-	BlueSharedString m_name; 
+	BlueSharedString m_name;
 	PEveConnectorVector m_connectors;
 	EveCurveLineSetPtr m_lineSet;
 

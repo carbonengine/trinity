@@ -14,18 +14,18 @@ class MetalWorkQueue;
 class Tr2PipelineStatsDataAL
 {
 public:
-    // This should be MTLCounterResultStatistic, but we are still compiling for 10.14...
-    struct Stats
-    {
-        uint64_t tessellationInputPatches;
-        uint64_t vertexInvocations;
-        uint64_t postTessellationVertexInvocations;
-        uint64_t clipperInvocations;
-        uint64_t clipperPrimitivesOut;
-        uint64_t fragmentInvocations;
-        uint64_t fragmentsPassed;
-        uint64_t computeKernelInvocations;
-    } data = {};
+	// This should be MTLCounterResultStatistic, but we are still compiling for 10.14...
+	struct Stats
+	{
+		uint64_t tessellationInputPatches;
+		uint64_t vertexInvocations;
+		uint64_t postTessellationVertexInvocations;
+		uint64_t clipperInvocations;
+		uint64_t clipperPrimitivesOut;
+		uint64_t fragmentInvocations;
+		uint64_t fragmentsPassed;
+		uint64_t computeKernelInvocations;
+	} data = {};
 };
 
 
@@ -33,7 +33,7 @@ class Tr2PipelineStatsQueryAL : public Tr2DeviceResourceAL<Tr2PipelineStatsQuery
 {
 public:
 	Tr2PipelineStatsQueryAL();
-    ~Tr2PipelineStatsQueryAL();
+	~Tr2PipelineStatsQueryAL();
 
 	ALResult Create( Tr2PrimaryRenderContextAL& renderContext );
 	bool IsValid() const;
@@ -56,22 +56,23 @@ public:
 	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	ALResult SetName( const char* name );
 
-    void EncoderStarted( MetalWorkQueue* queue );
-    void EncoderEnding( MetalWorkQueue* queue );
+	void EncoderStarted( MetalWorkQueue* queue );
+	void EncoderEnding( MetalWorkQueue* queue );
+
 private:
 	Tr2PipelineStatsQueryAL( const Tr2PipelineStatsQueryAL& ) = delete;
 	Tr2PipelineStatsQueryAL& operator=( const Tr2PipelineStatsQueryAL& ) = delete;
 
-    id m_buffer;
-    uint32_t m_nextIndex;
-    uint64_t m_zeroSamples[2];
+	id m_buffer;
+	uint32_t m_nextIndex;
+	uint64_t m_zeroSamples[2];
 	std::string m_name;
 	enum
-    {
-        READY,
-        BEGIN_ISSUED,
-        END_ISSUED,
-    } m_state;
+	{
+		READY,
+		BEGIN_ISSUED,
+		END_ISSUED,
+	} m_state;
 };
 
 }

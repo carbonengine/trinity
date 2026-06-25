@@ -189,7 +189,7 @@ std::vector<Vector3> BackAndForth::CalculateBehavior( std::vector<DroneAgent>& a
 		}
 		agent->acceleration += desiredVelocity - agent->velocity;
 	}
-	
+
 	return todo;
 }
 

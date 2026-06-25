@@ -30,7 +30,7 @@ protected:
 
 private:
 	bool ParseIes();
-	static bool ParseIes( const std::string& contents, ImageIO::HostBitmap & bitmap );
+	static bool ParseIes( const std::string& contents, ImageIO::HostBitmap& bitmap );
 
 	ImageIO::HostBitmap m_bitmap;
 	Tr2TextureArrayElement m_element;

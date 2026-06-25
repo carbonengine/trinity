@@ -38,7 +38,6 @@ public:
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
-
 	xess_context_handle_t m_context;
 	_xess_quality_settings_t m_xessSetting;
 	Tr2UpscalingAL::JitterSequence m_jitterSequence;

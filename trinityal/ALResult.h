@@ -14,86 +14,104 @@
 
 #ifndef _WIN32
 typedef int32_t HRESULT;
-#define SUCCEEDED(hr)   (((HRESULT)(hr)) >= 0)
-#define FAILED(hr)      (((HRESULT)(hr)) < 0)
+#define SUCCEEDED( hr ) ( ( (HRESULT)( hr ) ) >= 0 )
+#define FAILED( hr ) ( ( (HRESULT)( hr ) ) < 0 )
 
-#define S_OK ((HRESULT)0L)
-#define S_FALSE	((HRESULT)1L)
-#define E_FAIL HRESULT(0x80004005L)
-#define E_INVALIDARG HRESULT(0x80070057L)
-#define E_INVALIDCALL HRESULT(0x8876086C)
-#define E_OUTOFMEMORY HRESULT(0x8007000E)
-#define E_DEVICELOST HRESULT(0x88760868)
-#elif (TRINITYPLATFORM != TRINITYSTUB)
+#define S_OK ( (HRESULT)0L )
+#define S_FALSE ( (HRESULT)1L )
+#define E_FAIL HRESULT( 0x80004005L )
+#define E_INVALIDARG HRESULT( 0x80070057L )
+#define E_INVALIDCALL HRESULT( 0x8876086C )
+#define E_OUTOFMEMORY HRESULT( 0x8007000E )
+#define E_DEVICELOST HRESULT( 0x88760868 )
+#elif ( TRINITYPLATFORM != TRINITYSTUB )
 #define E_INVALIDCALL D3DERR_INVALIDCALL
 #define E_DEVICELOST D3DERR_DEVICELOST
 #else
-#define E_INVALIDCALL HRESULT(0x8876086C)
-#define E_DEVICELOST HRESULT(0x88760868)
+#define E_INVALIDCALL HRESULT( 0x8876086C )
+#define E_DEVICELOST HRESULT( 0x88760868 )
 #endif
 
 
-#if defined(_DEBUG) || defined(TRINITYDEV)
-	void ReportHresultError( const char* fileName, int lineNumber, const char* statement, HRESULT hr );
-	void BreakInDebugger();
+#if defined( _DEBUG ) || defined( TRINITYDEV )
+void ReportHresultError( const char* fileName, int lineNumber, const char* statement, HRESULT hr );
+void BreakInDebugger();
 
-	#define CR( x ) \
-    { \
-		HRESULT _hr = x; \
-		if( FAILED(_hr) ) \
-		{ \
+#define CR( x )                                                \
+	{                                                          \
+		HRESULT _hr = x;                                       \
+		if( FAILED( _hr ) )                                    \
+		{                                                      \
 			ReportHresultError( __FILE__, __LINE__, #x, _hr ); \
-			BreakInDebugger(); \
-		} \
+			BreakInDebugger();                                 \
+		}                                                      \
 	}
 
-	#define CR_RETURN( x ) \
-	{ \
-		HRESULT _hr = x; \
-		if( FAILED(_hr) ) \
-		{ \
+#define CR_RETURN( x )                                         \
+	{                                                          \
+		HRESULT _hr = x;                                       \
+		if( FAILED( _hr ) )                                    \
+		{                                                      \
 			ReportHresultError( __FILE__, __LINE__, #x, _hr ); \
-			BreakInDebugger(); \
-			return; \
-		} \
+			BreakInDebugger();                                 \
+			return;                                            \
+		}                                                      \
 	}
 
-	#define CR_RETURN_HR( x ) \
-	{ \
-		HRESULT _hr = x; \
-		if( FAILED(_hr) ) \
-		{ \
+#define CR_RETURN_HR( x )                                      \
+	{                                                          \
+		HRESULT _hr = x;                                       \
+		if( FAILED( _hr ) )                                    \
+		{                                                      \
 			ReportHresultError( __FILE__, __LINE__, #x, _hr ); \
-			BreakInDebugger(); \
-			return _hr; \
-		} \
+			BreakInDebugger();                                 \
+			return _hr;                                        \
+		}                                                      \
 	}
 
-	#define FORWARD_HR( x ) \
-	{ \
-		HRESULT _hr = x; \
+#define FORWARD_HR( x )     \
+	{                       \
+		HRESULT _hr = x;    \
 		if( FAILED( _hr ) ) \
-		{ \
-			return _hr; \
-		} \
+		{                   \
+			return _hr;     \
+		}                   \
 	}
 
-	#define CR_RETURN_VAL( x, failValue ) \
-	{ \
-		HRESULT _hr = x; \
-		if( FAILED(_hr) ) \
-		{ \
+#define CR_RETURN_VAL( x, failValue )                          \
+	{                                                          \
+		HRESULT _hr = x;                                       \
+		if( FAILED( _hr ) )                                    \
+		{                                                      \
 			ReportHresultError( __FILE__, __LINE__, #x, _hr ); \
-			BreakInDebugger(); \
-			return failValue; \
-		} \
+			BreakInDebugger();                                 \
+			return failValue;                                  \
+		}                                                      \
 	}
 #else
-	#define CR( x ) x
-	#define CR_RETURN( x ) { if( FAILED( x ) ) return; }
-	#define CR_RETURN_HR( x ) { HRESULT _hr = x; if( FAILED( _hr ) ) return _hr; }
-	#define CR_RETURN_VAL( x, failValue ) { if( FAILED( x ) ) return failValue; }
-	#define FORWARD_HR( x ) { HRESULT _hr = x; if( FAILED( _hr ) ) return _hr; }
+#define CR( x ) x
+#define CR_RETURN( x )    \
+	{                     \
+		if( FAILED( x ) ) \
+			return;       \
+	}
+#define CR_RETURN_HR( x )   \
+	{                       \
+		HRESULT _hr = x;    \
+		if( FAILED( _hr ) ) \
+			return _hr;     \
+	}
+#define CR_RETURN_VAL( x, failValue ) \
+	{                                 \
+		if( FAILED( x ) )             \
+			return failValue;         \
+	}
+#define FORWARD_HR( x )     \
+	{                       \
+		HRESULT _hr = x;    \
+		if( FAILED( _hr ) ) \
+			return _hr;     \
+	}
 #endif
 
 
@@ -106,12 +124,22 @@ namespace Be
 {
 
 template <typename T>
-struct Result {};
+struct Result
+{
+};
 
 }
 
-template<typename T> inline bool BeIsSuccess( const Be::Result<T>& ) { return false; }
-template<typename T> const char* BeGetErrorMessage( const Be::Result<T>& result ) { return ""; }
+template <typename T>
+inline bool BeIsSuccess( const Be::Result<T>& )
+{
+	return false;
+}
+template <typename T>
+const char* BeGetErrorMessage( const Be::Result<T>& result )
+{
+	return "";
+}
 
 #endif
 
@@ -120,7 +148,7 @@ template<typename T> const char* BeGetErrorMessage( const Be::Result<T>& result 
 //   A specialization of Be::Result for HRESULT type. Most AL operations return this
 //   object as a method result. You can use usual macros (SUCCEEDED, FAIL, CR, etc.) with
 //   this object.
-//   When TRACK_ALRESULT macro is defined to 1 this object also tracks if its result 
+//   When TRACK_ALRESULT macro is defined to 1 this object also tracks if its result
 //   was checked and if it wasn't, the object will check the result in its destructor
 //	 using CR macro.
 // --------------------------------------------------------------------------------------
@@ -146,36 +174,33 @@ public:
 	};
 
 #if TRACK_ALRESULT == 0
-	Result<HRESULT>()
-		:m_result( S_OK )
+	Result<HRESULT>() :
+		m_result( S_OK )
 	{
 	}
 
-	Result<HRESULT>( HRESULT result )
-		:m_result( result )
+	Result<HRESULT>( HRESULT result ) :
+		m_result( result )
 	{
 	}
-	
+
 	HRESULT GetResult() const
 	{
 		return m_result;
 	}
 #else
-	Result<HRESULT>()
-		:m_result( S_OK )
-		, m_isChecked( false )
+	Result<HRESULT>() :
+		m_result( S_OK ), m_isChecked( false )
 	{
 	}
 
-	Result<HRESULT>( HRESULT result )
-		:m_result( result )
-		, m_isChecked( false )
+	Result<HRESULT>( HRESULT result ) :
+		m_result( result ), m_isChecked( false )
 	{
 	}
-	
-	Result<HRESULT>( const Result<HRESULT>& result )
-		:m_result( result.m_result )
-		, m_isChecked( false )
+
+	Result<HRESULT>( const Result<HRESULT>& result ) :
+		m_result( result.m_result ), m_isChecked( false )
 	{
 		result.m_isChecked = true;
 	}
@@ -206,10 +231,10 @@ public:
 		return m_result;
 	}
 #endif
-	
-	operator HRESULT() const 
-	{ 
-		return GetResult(); 
+
+	operator HRESULT() const
+	{
+		return GetResult();
 	}
 
 	Category GetCategory() const;
@@ -218,6 +243,7 @@ public:
 	{
 		return m_result == hr;
 	}
+
 private:
 	Result<HRESULT>( bool );
 	operator bool() const;
@@ -228,12 +254,14 @@ private:
 #endif
 };
 
-template<> inline bool BeIsSuccess( const Be::Result<HRESULT>& result )
+template <>
+inline bool BeIsSuccess( const Be::Result<HRESULT>& result )
 {
 	return SUCCEEDED( result );
 }
 
-template<> const char* BeGetErrorMessage( const Be::Result<HRESULT>& result );
+template <>
+const char* BeGetErrorMessage( const Be::Result<HRESULT>& result );
 
 
 #if TRINITY_AL_WITH_BLUE_EXPOSURE && BLUE_WITH_PYTHON
@@ -242,7 +270,8 @@ template<> const char* BeGetErrorMessage( const Be::Result<HRESULT>& result );
 // GetException function for ALResult. We declare it here so that it's picked up
 // by BlueExposure whenever ALResult is used. Its body needs to be defined outside
 // TrinityAL.
-template<> PyObject* BeGetException( const Be::Result<HRESULT>& result );
+template <>
+PyObject* BeGetException( const Be::Result<HRESULT>& result );
 
 #endif
 

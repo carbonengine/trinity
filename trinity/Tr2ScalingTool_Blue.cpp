@@ -12,13 +12,9 @@ const Be::ClassInfo* Tr2ScalingTool::ExposeToBlue()
 		MAP_INTERFACE( Tr2ScalingTool )
 		MAP_INTERFACE( Tr2ManipulationTool )
 
-		MAP_METHOD_AND_WRAP( "ResetPrimitives", ResetPrimitives, 
-		"Resets the primitives of the Scaling tool")
+		MAP_METHOD_AND_WRAP( "ResetPrimitives", ResetPrimitives, "Resets the primitives of the Scaling tool" )
 
-		MAP_ATTRIBUTE( "scale", m_scale, 
-		"The output scale value", 
-		Be::READ
-		)
+		MAP_ATTRIBUTE( "scale", m_scale, "The output scale value", Be::READ )
 
-		EXPOSURE_CHAINTO( Tr2ManipulationTool )
+	EXPOSURE_CHAINTO( Tr2ManipulationTool )
 }

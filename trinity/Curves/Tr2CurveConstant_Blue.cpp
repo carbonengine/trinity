@@ -15,7 +15,7 @@ const Be::ClassInfo* Tr2CurveConstant::ExposeToBlue()
 		MAP_INTERFACE( ITriColorFunction )
 		{
 			Be::InterfaceEntry entry = { &GetITriFunctionIID(), BLUE_INTERFACEOFFSET( ITriScalarFunction ) };
-			s_interfaces.push_back( entry ); 
+			s_interfaces.push_back( entry );
 		}
 
 		MAP_ATTRIBUTE(

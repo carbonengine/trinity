@@ -5,8 +5,8 @@
 #include "Resources/Tr2LightProfileRes.h"
 #include "TriMath.h"
 
-EveSmartLightPointLight::EveSmartLightPointLight( IRoot* lockobj ):
-	m_staticOffsetTranslation( 0.f, 0.f, 0.f),
+EveSmartLightPointLight::EveSmartLightPointLight( IRoot* lockobj ) :
+	m_staticOffsetTranslation( 0.f, 0.f, 0.f ),
 	m_staticOffsetRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_activationStrength( 1.f ),
 	m_display( true )
@@ -56,7 +56,7 @@ void EveSmartLightPointLight::UpdateSyncronous( const EveUpdateContext& updateCo
 void EveSmartLightPointLight::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry )	
+	if( registry )
 	{
 		registry->RegisterComponent<ITr2LightOwner>( this );
 	}
@@ -73,8 +73,9 @@ void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 	size_t size = m_distribution->GetNumberOfPlacements();
 
 	float scaling = XMVectorGetX( XMVectorAdd( XMVector3LengthEst( m_worldTransform.GetX() ),
-											   XMVectorAdd( XMVector3LengthEst( m_worldTransform.GetY() ), 
-											   XMVector3LengthEst( m_worldTransform.GetZ() ) ) ) ) / 3.f;
+											   XMVectorAdd( XMVector3LengthEst( m_worldTransform.GetY() ),
+															XMVector3LengthEst( m_worldTransform.GetZ() ) ) ) ) /
+		3.f;
 	int16_t profileIndex = m_lightProfile ? m_lightProfile->GetTextureIndex() + 1 : 0;
 	Vector4 groupColor = this->GetGroupColor();
 
@@ -84,8 +85,8 @@ void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 		Vector3 lightPosition( 0.f, 0.f, 0.f );
 		Vector3 lightRotation( 0.f, 1.f, 0.f );
 		Tr2LightManager::PerLightData pointLightData;
-			
-		float perLightScaling = std::max( { placements[index].initialScale.x, placements[index].initialScale.y , placements[index].initialScale.z } );
+
+		float perLightScaling = std::max( { placements[index].initialScale.x, placements[index].initialScale.y, placements[index].initialScale.z } );
 		perLightScaling *= std::max( { placements[index].additionalScale.x, placements[index].additionalScale.y, placements[index].additionalScale.z } );
 
 		pointLightData.radius = m_lightGroupData.radius * scaling * perLightScaling;
@@ -102,7 +103,7 @@ void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 		lightPosition += placements[index].initialTranslation + placements[index].additionalTranslation;
 		lightPosition = Vector3( XMVector3TransformCoord( lightPosition, lightTransform ) );
 		pointLightData.position = lightPosition;
-		
+
 		rotation *= m_staticOffsetRotation;
 		TriVectorRotateQuaternion( &lightRotation, &lightRotation, &rotation );
 		lightRotation *= -1.f;
@@ -124,7 +125,7 @@ void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 			pointLightData.outerAngle = Float_16( cos( TRI_2PI * m_lightGroupData.outerAngle / 360.0f ) );
 			pointLightData.innerAngle = Float_16( cos( TRI_2PI * m_lightGroupData.innerAngle / 360.0f ) );
 		}
-		
+
 		lightManager.AddLight( pointLightData );
 	}
 }

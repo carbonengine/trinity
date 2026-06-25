@@ -28,8 +28,8 @@ void EveLineContainer::Update( const EveUpdateContext& context )
 	m_lineSet->ClearLines();
 	for( auto it = m_connectors.begin(); it != m_connectors.end(); it++ )
 	{
-		(*it)->Update( context );
-		(*it)->AddLine( m_lineSet );
+		( *it )->Update( context );
+		( *it )->AddLine( m_lineSet );
 	}
 	m_lineSet->SubmitChanges();
 }
@@ -70,7 +70,7 @@ bool EveLineContainer::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery q
 }
 
 // This version of the function should perform an update on the model / ball position
-void EveLineContainer::UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t )
+void EveLineContainer::UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
 {
 	if( m_lineSet )
 	{
@@ -79,7 +79,7 @@ void EveLineContainer::UpdateModelCenterWorldPosition( Vector3 &position, Be::Ti
 }
 
 // This version of the function should not update the object
-void EveLineContainer::GetModelCenterWorldPosition( Vector3 &position ) const
+void EveLineContainer::GetModelCenterWorldPosition( Vector3& position ) const
 {
 	if( m_lineSet )
 	{
@@ -88,7 +88,7 @@ void EveLineContainer::GetModelCenterWorldPosition( Vector3 &position ) const
 }
 
 // If possible, return an AABB in local coordinates
-bool EveLineContainer::GetLocalBoundingBox( Vector3 &min, Vector3 &max )
+bool EveLineContainer::GetLocalBoundingBox( Vector3& min, Vector3& max )
 {
 	if( m_lineSet )
 	{
@@ -98,7 +98,7 @@ bool EveLineContainer::GetLocalBoundingBox( Vector3 &min, Vector3 &max )
 }
 
 // Get the local to world transform
-void EveLineContainer::GetLocalToWorldTransform( Matrix &transform ) const
+void EveLineContainer::GetLocalToWorldTransform( Matrix& transform ) const
 {
 	if( m_lineSet )
 	{

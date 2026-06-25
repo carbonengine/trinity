@@ -8,10 +8,10 @@
 
 struct AdapterGuid
 {
-    uint32_t data1;
-    uint16_t data2;
-    uint16_t data3;
-    uint8_t data4[8];
+	uint32_t data1;
+	uint16_t data2;
+	uint16_t data3;
+	uint8_t data4[8];
 };
 
 struct Tr2DisplayModeInfo
@@ -21,8 +21,8 @@ struct Tr2DisplayModeInfo
 	uint32_t refreshRateNumerator;
 	uint32_t refreshRateDenominator;
 	Tr2RenderContextEnum::PixelFormat format;
-    Tr2RenderContextEnum::ScanlineOrdering scanlineOrdering;
-    Tr2RenderContextEnum::DisplayScaling scaling;
+	Tr2RenderContextEnum::ScanlineOrdering scanlineOrdering;
+	Tr2RenderContextEnum::DisplayScaling scaling;
 };
 
 struct Tr2VideoDriverInfo

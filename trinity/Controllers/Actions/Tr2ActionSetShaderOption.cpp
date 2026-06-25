@@ -8,7 +8,7 @@
 void Tr2ActionSetShaderOption::Start( ITr2ActionController& controller )
 {
 	IShaderConfigurerPtr owner = BlueCastPtr( controller.GetOwner() );
-	if ( nullptr == owner )
+	if( nullptr == owner )
 	{
 		return;
 	}

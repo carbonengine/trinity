@@ -30,7 +30,7 @@ BLUE_CLASS( EveChildCloud ) :
 public:
 	EXPOSE_TO_BLUE();
 
-	EveChildCloud(IRoot* lockobj = NULL);
+	EveChildCloud( IRoot* lockobj = NULL );
 	~EveChildCloud();
 
 	//////////////////////////////////////////////////////////////////////////
@@ -39,7 +39,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
@@ -47,19 +47,21 @@ public:
 	virtual void SetName( const char* name );
 	virtual void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	virtual void GetLocalToWorldTransform( Matrix &transform ) const;
+	virtual void GetLocalToWorldTransform( Matrix & transform ) const;
 	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) {}
+	virtual void GetRenderables( std::vector<ITr2Renderable*> & renderables );
+	virtual bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
+	{
+	}
 	virtual void ChangeLOD( Tr2Lod lod ) {};
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual bool HasTransparentBatches();
 	virtual float GetSortValue();
-	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
@@ -67,8 +69,8 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 
 private:
 	bool OnPrepareResources();

@@ -8,10 +8,10 @@
 #include "ITr2TextureProvider.h"
 #include "Tr2Renderer.h"
 
-Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
+Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ) :
 	m_display( true ),
 	m_index( 0 ),
-    m_count( 1 ),
+	m_count( 1 ),
 	m_reversed( false ),
 	m_useSHLighting( false ),
 	m_generateDepthArea( false ),

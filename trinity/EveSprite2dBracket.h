@@ -19,7 +19,7 @@ public:
 
 	Tr2AtlasTexture* GetIcon() const;
 	const Color& GetColor() const;
-	
+
 	void SetDisplay( bool b );
 	bool IsDisplay() const;
 

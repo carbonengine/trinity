@@ -11,252 +11,403 @@
 
 using namespace Tr2RenderContextEnum;
 
-namespace {
+namespace
+{
 
-	// These are shared across managers.
+// These are shared across managers.
 
-	typedef std::vector<std::pair<Tr2VertexDefinition, Tr2VertexLayoutAL*>>	VertexLayoutMap_t;
-	VertexLayoutMap_t	s_vertexLayoutMap;
-	std::mutex s_vertexLayoutMutex;
+typedef std::vector<std::pair<Tr2VertexDefinition, Tr2VertexLayoutAL*>> VertexLayoutMap_t;
+VertexLayoutMap_t s_vertexLayoutMap;
+std::mutex s_vertexLayoutMutex;
 
-	std::vector<Tr2ShaderAL*> s_shaders;
-	std::vector<Tr2ShaderBytecodeAL*> s_shaderLibraries;
-	std::vector<std::pair<Tr2ShaderProgramAL*, std::vector<uint32_t>>> s_shaderPrograms;
+std::vector<Tr2ShaderAL*> s_shaders;
+std::vector<Tr2ShaderBytecodeAL*> s_shaderLibraries;
+std::vector<std::pair<Tr2ShaderProgramAL*, std::vector<uint32_t>>> s_shaderPrograms;
 
-	typedef std::vector<uint32_t>		TRenderStateKeyValues;
+typedef std::vector<uint32_t> TRenderStateKeyValues;
 
-	static uint32_t opaquePairs[] = 
+static uint32_t opaquePairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	FALSE,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	TRUE,
+	RS_ZFUNC,
+	CMP_LESSEQUAL,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+static uint32_t decalPairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	FALSE,
+	RS_ALPHATESTENABLE,
+	TRUE,
+	RS_ALPHAFUNC,
+	CMP_GREATER,
+	RS_ALPHAREF,
+	127,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	TRUE,
+	RS_ZFUNC,
+	CMP_LESSEQUAL,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+
+static uint32_t decalNoDepthPairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	FALSE,
+	RS_ALPHATESTENABLE,
+	TRUE,
+	RS_ALPHAFUNC,
+	CMP_GREATER,
+	RS_ALPHAREF,
+	127,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	FALSE,
+	RS_ZFUNC,
+	CMP_LESSEQUAL,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+static uint32_t alphaPairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	TRUE,
+	RS_SRCBLEND,
+	BM_SRCALPHA,
+	RS_DESTBLEND,
+	BM_INVSRCALPHA,
+	RS_BLENDOP,
+	BO_ADD,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	FALSE,
+	RS_ZFUNC,
+	CMP_LESSEQUAL,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+static uint32_t alphaAdditivePairs[] = {
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_CULLMODE,
+	CULLMODE_NONE,
+	RS_ALPHABLENDENABLE,
+	TRUE,
+	RS_SRCBLEND,
+	BM_ONE,
+	RS_DESTBLEND,
+	BM_ONE,
+	RS_BLENDOP,
+	BO_ADD,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	FALSE,
+	RS_ZFUNC,
+	CMP_LESSEQUAL,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_COLORWRITEENABLE,
+	0x7,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+static uint32_t depthOnlyPairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	FALSE,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	TRUE,
+	RS_ZFUNC,
+	CMP_LESSEQUAL,
+	RS_COLORWRITEENABLE,
+	0,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+static uint32_t pickingPairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_ALPHABLENDENABLE,
+	FALSE,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	TRUE,
+	RS_ZFUNC,
+	CMP_LESSEQUAL,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+static uint32_t fullscreenPairs[] = {
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	FALSE,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_CULLMODE,
+	CULLMODE_NONE,
+	RS_ZENABLE,
+	FALSE,
+	RS_ZWRITEENABLE,
+	FALSE,
+	RS_ZFUNC,
+	CMP_ALWAYS,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+};
+
+static uint32_t sprite2dPairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	TRUE,
+	RS_SRCBLEND,
+	BM_ONE,
+	RS_DESTBLEND,
+	BM_INVSRCALPHA,
+	RS_BLENDOP,
+	BO_ADD,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_CULLMODE,
+	CULLMODE_NONE,
+	RS_ZENABLE,
+	FALSE,
+	RS_ZWRITEENABLE,
+	FALSE,
+	RS_ZFUNC,
+	CMP_ALWAYS,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+static uint32_t cullPairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+};
+
+static uint32_t lightPairs[] = {
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_CULLMODE,
+	CULLMODE_NONE,
+	RS_ALPHABLENDENABLE,
+	TRUE,
+	RS_SRCBLEND,
+	BM_ONE,
+	RS_DESTBLEND,
+	BM_ONE,
+	RS_BLENDOP,
+	BO_ADD,
+	RS_ZWRITEENABLE,
+	FALSE,
+	RS_ZFUNC,
+	CMP_LESSEQUAL,
+	RS_ZENABLE,
+	TRUE,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	TRUE,
+	RS_BLENDOPALPHA,
+	BO_ADD,
+	RS_SRCBLENDALPHA,
+	BM_ONE,
+	RS_DESTBLENDALPHA,
+	BM_ONE,
+};
+
+static uint32_t erasePairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	FALSE,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	TRUE,
+	RS_ZFUNC,
+	CMP_ALWAYS,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+};
+
+static uint32_t prepassColorPairs[] = {
+	RS_CULLMODE,
+	CULLMODE_CW,
+	RS_FILLMODE,
+	FM_SOLID,
+	RS_ALPHABLENDENABLE,
+	FALSE,
+	RS_ALPHATESTENABLE,
+	FALSE,
+	RS_ZENABLE,
+	TRUE,
+	RS_ZWRITEENABLE,
+	FALSE,
+	RS_ZFUNC,
+	CMP_EQUAL,
+	RS_COLORWRITEENABLE,
+	0x0f,
+	RS_DEPTHBIAS,
+	0,
+	RS_SLOPESCALEDEPTHBIAS,
+	0,
+	RS_SEPARATEALPHABLENDENABLE,
+	FALSE,
+};
+
+struct ModeList
+{
+	uint32_t* list;
+	uint32_t count;
+};
+
+static ModeList const modePairs[Tr2EffectStateManager::RM_COUNT] = {
+	{ nullptr, 0 },
+	{ opaquePairs, sizeof( opaquePairs ) / sizeof( uint32_t ) },
+	{ decalPairs, sizeof( decalPairs ) / sizeof( uint32_t ) },
+	{ decalNoDepthPairs, sizeof( decalNoDepthPairs ) / sizeof( uint32_t ) },
+	{ alphaPairs, sizeof( alphaPairs ) / sizeof( uint32_t ) },
+	{ alphaAdditivePairs, sizeof( alphaAdditivePairs ) / sizeof( uint32_t ) },
+	{ depthOnlyPairs, sizeof( depthOnlyPairs ) / sizeof( uint32_t ) },
+	{ pickingPairs, sizeof( pickingPairs ) / sizeof( uint32_t ) },
+	{ fullscreenPairs, sizeof( fullscreenPairs ) / sizeof( uint32_t ) },
+	{ sprite2dPairs, sizeof( sprite2dPairs ) / sizeof( uint32_t ) },
+	{ cullPairs, sizeof( cullPairs ) / sizeof( uint32_t ) },
+	{ lightPairs, sizeof( lightPairs ) / sizeof( uint32_t ) },
+	{ erasePairs, sizeof( erasePairs ) / sizeof( uint32_t ) },
+	{ prepassColorPairs, sizeof( prepassColorPairs ) / sizeof( uint32_t ) },
+};
+
+
+struct RenderStateSetups : public std::vector<TRenderStateKeyValues>
+{
+public:
+	RenderStateSetups()
 	{
-		RS_CULLMODE, CULLMODE_CW,
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, TRUE,
-		RS_ZFUNC, CMP_LESSEQUAL,
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	static uint32_t decalPairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, TRUE,
-		RS_ALPHAFUNC, CMP_GREATER, 
-		RS_ALPHAREF, 127,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, TRUE,
-		RS_ZFUNC, CMP_LESSEQUAL,		
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	
-	static uint32_t decalNoDepthPairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, TRUE,
-		RS_ALPHAFUNC, CMP_GREATER, 
-		RS_ALPHAREF, 127,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, FALSE,
-		RS_ZFUNC, CMP_LESSEQUAL,		
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	static uint32_t alphaPairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, TRUE,
-		RS_SRCBLEND, BM_SRCALPHA,
-		RS_DESTBLEND, BM_INVSRCALPHA,
-		RS_BLENDOP, BO_ADD,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, FALSE,
-		RS_ZFUNC, CMP_LESSEQUAL,
-		RS_ALPHATESTENABLE, FALSE,		
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	static uint32_t alphaAdditivePairs[] = {
-		RS_FILLMODE, FM_SOLID,
-		RS_CULLMODE, CULLMODE_NONE,
-		RS_ALPHABLENDENABLE, TRUE,
-		RS_SRCBLEND, BM_ONE,
-		RS_DESTBLEND, BM_ONE,
-		RS_BLENDOP, BO_ADD,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, FALSE,
-		RS_ZFUNC, CMP_LESSEQUAL,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_COLORWRITEENABLE, 0x7,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	static uint32_t depthOnlyPairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, TRUE,
-		RS_ZFUNC, CMP_LESSEQUAL,		
-		RS_COLORWRITEENABLE, 0,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	static uint32_t pickingPairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, TRUE,
-		RS_ZFUNC, CMP_LESSEQUAL,
-		RS_FILLMODE, FM_SOLID,
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	static uint32_t fullscreenPairs[] = {
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_CULLMODE, CULLMODE_NONE,
-		RS_ZENABLE, FALSE,
-		RS_ZWRITEENABLE, FALSE,
-		RS_ZFUNC, CMP_ALWAYS,
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-	};
-
-	static uint32_t sprite2dPairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, TRUE,
-		RS_SRCBLEND, BM_ONE,
-		RS_DESTBLEND, BM_INVSRCALPHA,
-		RS_BLENDOP, BO_ADD,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_CULLMODE, CULLMODE_NONE,
-		RS_ZENABLE, FALSE,
-		RS_ZWRITEENABLE, FALSE,
-		RS_ZFUNC, CMP_ALWAYS,		
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	static uint32_t cullPairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-	};
-
-	static uint32_t lightPairs[] = {
-		RS_FILLMODE, FM_SOLID,
-		RS_CULLMODE, CULLMODE_NONE,
-		RS_ALPHABLENDENABLE, TRUE,
-		RS_SRCBLEND, BM_ONE,
-		RS_DESTBLEND, BM_ONE,
-		RS_BLENDOP, BO_ADD,
-		RS_ZWRITEENABLE, FALSE,
-		RS_ZFUNC, CMP_LESSEQUAL,
-		RS_ZENABLE, TRUE,
-		RS_ALPHATESTENABLE, FALSE,		
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, TRUE,
-		RS_BLENDOPALPHA, BO_ADD,
-		RS_SRCBLENDALPHA, BM_ONE,
-		RS_DESTBLENDALPHA, BM_ONE,
-	};
-
-	static uint32_t erasePairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, TRUE,
-		RS_ZFUNC, CMP_ALWAYS,		
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-	};
-
-	static uint32_t prepassColorPairs[] = {
-		RS_CULLMODE, CULLMODE_CW,
-		RS_FILLMODE, FM_SOLID,
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, FALSE,
-		RS_ZFUNC, CMP_EQUAL,		
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE,
-	};
-
-	struct ModeList
-	{
-		uint32_t* list;
-		uint32_t count;
-	};
-
-	static ModeList const modePairs[Tr2EffectStateManager::RM_COUNT] = 
-	{
-		{ nullptr, 0 },
-		{ opaquePairs, sizeof( opaquePairs ) / sizeof( uint32_t ) },
-		{ decalPairs, sizeof( decalPairs ) / sizeof( uint32_t ) },
-		{ decalNoDepthPairs, sizeof( decalNoDepthPairs ) / sizeof( uint32_t ) },
-		{ alphaPairs, sizeof( alphaPairs ) / sizeof( uint32_t ) },
-		{ alphaAdditivePairs, sizeof( alphaAdditivePairs ) / sizeof( uint32_t ) },
-		{ depthOnlyPairs, sizeof( depthOnlyPairs ) / sizeof( uint32_t ) },
-		{ pickingPairs, sizeof( pickingPairs ) / sizeof( uint32_t ) },
-		{ fullscreenPairs, sizeof( fullscreenPairs ) / sizeof( uint32_t ) },
-		{ sprite2dPairs, sizeof( sprite2dPairs ) / sizeof( uint32_t ) },
-		{ cullPairs, sizeof( cullPairs ) / sizeof( uint32_t ) },
-		{ lightPairs, sizeof( lightPairs ) / sizeof( uint32_t ) },
-		{ erasePairs, sizeof( erasePairs ) / sizeof( uint32_t ) },
-		{ prepassColorPairs, sizeof( prepassColorPairs ) / sizeof( uint32_t ) },
-	};
-
-
-	struct RenderStateSetups: public std::vector<TRenderStateKeyValues>
-	{
-	public:
-		RenderStateSetups()
+		resize( Tr2EffectStateManager::RM_COUNT );
+		for( int i = 0; i < Tr2EffectStateManager::RM_COUNT; ++i )
 		{
-			resize( Tr2EffectStateManager::RM_COUNT );
-			for( int i = 0; i < Tr2EffectStateManager::RM_COUNT; ++i )
-			{
-				at( i ).assign( modePairs[i].list, modePairs[i].list + modePairs[i].count );
-			}
+			at( i ).assign( modePairs[i].list, modePairs[i].list + modePairs[i].count );
 		}
-	};
+	}
+};
 
-	RenderStateSetups s_renderStateSetups;
+RenderStateSetups s_renderStateSetups;
 
 
 }
@@ -279,8 +430,8 @@ void Tr2EffectStateManager::CurrentValues::Reset()
 	}
 }
 
-Tr2EffectStateManager::Tr2EffectStateManager( Tr2RenderContext &renderContext )
-	: m_renderContext( renderContext ),
+Tr2EffectStateManager::Tr2EffectStateManager( Tr2RenderContext& renderContext ) :
+	m_renderContext( renderContext ),
 	m_isManagedRendering( false ),
 	m_renderTargetWidth( 0 ),
 	m_renderTargetHeight( 0 )
@@ -297,7 +448,7 @@ uint32_t Tr2EffectStateManager::RegisterRenderStateSetup( const Tr2RenderStateSe
 		kv.push_back( it->first );
 		kv.push_back( it->second );
 	}
-	
+
 	for( uint32_t i = 0; i != s_renderStateSetups.size(); ++i )
 	{
 		if( kv == s_renderStateSetups[i] )
@@ -309,14 +460,14 @@ uint32_t Tr2EffectStateManager::RegisterRenderStateSetup( const Tr2RenderStateSe
 
 	// New setup, add it
 	s_renderStateSetups.push_back( kv );
-	return (uint32_t)s_renderStateSetups.size()-1;
+	return (uint32_t)s_renderStateSetups.size() - 1;
 }
 
-uint32_t Tr2EffectStateManager::RegisterShader( 
-	ShaderType type, 
+uint32_t Tr2EffectStateManager::RegisterShader(
+	ShaderType type,
 	const Tr2ShaderBytecodeAL& bytecode,
 	const Tr2ShaderSignatureAL& signature,
-	const char* shaderPath)
+	const char* shaderPath )
 {
 	for( size_t i = 0; i != s_shaders.size(); ++i )
 	{
@@ -348,13 +499,13 @@ uint32_t Tr2EffectStateManager::RegisterShader(
 	// New shader, add it; created using the primary rendercontext.
 	std::unique_ptr<Tr2ShaderAL> shader( new Tr2ShaderAL );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	CR_RETURN_VAL(	shader->Create(  
-								type, 
-								bytecode, 
-								signature,
-					   			shaderPath,
-								renderContext )
-				, UNKNOWN );
+	CR_RETURN_VAL( shader->Create(
+					   type,
+					   bytecode,
+					   signature,
+					   shaderPath,
+					   renderContext ),
+				   UNKNOWN );
 
 	s_shaders.push_back( shader.release() );
 
@@ -509,14 +660,14 @@ void Tr2EffectStateManager::Shutdown()
 	for( auto it = s_shaderLibraries.begin(); it != s_shaderLibraries.end(); ++it )
 	{
 		//delete[]( *it )->bytecode;
-		delete* it;
+		delete *it;
 	}
 	s_shaderLibraries.clear();
 }
 
 void Tr2EffectStateManager::BeginManagedRendering( Tr2RenderContextEnum::CullMode cullmode )
 {
-	D3DPERF_EVENT(L"Tr2EffectStateManager::BeginManagedRendering");
+	D3DPERF_EVENT( L"Tr2EffectStateManager::BeginManagedRendering" );
 
 	m_currentValues.Reset();
 
@@ -544,7 +695,7 @@ void Tr2EffectStateManager::BeginManagedRendering( Tr2RenderContextEnum::CullMod
 
 void Tr2EffectStateManager::EndManagedRendering()
 {
-	D3DPERF_EVENT(L"Tr2EffectStateManager::EndManagedRendering");
+	D3DPERF_EVENT( L"Tr2EffectStateManager::EndManagedRendering" );
 
 	m_isManagedRendering = false;
 }
@@ -682,8 +833,8 @@ bool Tr2EffectStateManager::IsCullModeInverted( void )
 
 void Tr2EffectStateManager::SetInvertedDepthTest( bool b )
 {
-	static const uint32_t overrides[] = { 
-		0, 
+	static const uint32_t overrides[] = {
+		0,
 		CMP_NEVER,
 		CMP_GREATER,
 		CMP_EQUAL,
@@ -691,7 +842,8 @@ void Tr2EffectStateManager::SetInvertedDepthTest( bool b )
 		CMP_LESS,
 		CMP_NOTEQUAL,
 		CMP_LESSEQUAL,
-		CMP_ALWAYS };
+		CMP_ALWAYS
+	};
 
 	if( b )
 	{
@@ -731,7 +883,7 @@ void Tr2EffectStateManager::ApplyVertexDeclaration( uint32_t declaration )
 		return;
 	}
 
-	
+
 	CCP_ASSERT( declaration != UNINITIALIZED_DECLARATION );
 
 	if( declaration == NULL_DECLARATION )
@@ -749,7 +901,7 @@ void Tr2EffectStateManager::ApplyVertexDeclaration( uint32_t declaration )
 			{
 				USE_MAIN_THREAD_RENDER_CONTEXT();
 
-				hvl.Create( s_vertexLayoutMap[declaration].first, renderContext );	
+				hvl.Create( s_vertexLayoutMap[declaration].first, renderContext );
 			}
 			m_renderContext.SetVertexLayout( hvl );
 		}
@@ -764,7 +916,7 @@ bool Tr2EffectStateManager::GetVertexDeclarationElements( uint32_t declaration, 
 	CCP_ASSERT( declaration < s_vertexLayoutMap.size() || declaration == UNINITIALIZED_DECLARATION );
 	if( declaration < s_vertexLayoutMap.size() )
 	{
-		definition = s_vertexLayoutMap[ declaration ].first;
+		definition = s_vertexLayoutMap[declaration].first;
 		return true;
 	}
 	return false;
@@ -777,12 +929,12 @@ void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2Suballo
 
 void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2BufferAL& buffer, uint32_t offset, uint32_t stride )
 {
-	
+
 	if( m_isManagedRendering )
 	{
-		if( buffer == m_currentValues.m_streams[stream].m_vertexBuffer	&& 
-			offset  == m_currentValues.m_streams[stream].m_offset		&& 
-			stride  == m_currentValues.m_streams[stream].m_stride )
+		if( buffer == m_currentValues.m_streams[stream].m_vertexBuffer &&
+			offset == m_currentValues.m_streams[stream].m_offset &&
+			stride == m_currentValues.m_streams[stream].m_stride )
 		{
 			return;
 		}
@@ -812,7 +964,7 @@ void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2BufferAL& indices, const 
 	{
 		CCP_LOGWARN( "Oh no! This is a big bug!" );
 	}
-	
+
 	if( m_isManagedRendering )
 	{
 		if( indices == m_currentValues.m_indexBuffer && stride == m_currentValues.m_indexStride )
@@ -831,7 +983,7 @@ void Tr2EffectStateManager::ReleaseDeviceResources( TriStorage s )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( (s & TRISTORAGE_ALL) == TRISTORAGE_ALL )
+	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
 		if( renderContext.IsValid() )
 		{
@@ -856,7 +1008,7 @@ void Tr2EffectStateManager::ReleaseDeviceResources( TriStorage s )
 		for( auto it = s_shaderLibraries.begin(); it != s_shaderLibraries.end(); ++it )
 		{
 			//delete[]( *it )->bytecode;
-			delete* it;
+			delete *it;
 		}
 		s_shaderLibraries.clear();
 
@@ -1013,7 +1165,7 @@ bool Tr2EffectStateManager::SetDepthStencilBuffer( const Tr2TextureAL& ds )
 void Tr2EffectStateManager::SetupContextResources()
 {
 	// Create all HW vertex layouts here to avoid creating those during multithreaded rendering
-	for( auto& it: s_vertexLayoutMap )
+	for( auto& it : s_vertexLayoutMap )
 	{
 		Tr2VertexLayoutAL& hvl = *it.second;
 		if( !hvl.IsValid() )
@@ -1031,10 +1183,10 @@ void Tr2EffectStateManager::AssignFrom( const Tr2EffectStateManager& other )
 	{
 		EndManagedRendering();
 	}
-	
+
 	m_renderStates = other.m_renderStates;
 	std::copy( std::begin( other.m_renderStateOverrides ), std::end( other.m_renderStateOverrides ), m_renderStateOverrides );
-	
+
 	ApplyStandardStates( other.m_currentValues.m_renderingMode );
 }
 
@@ -1079,7 +1231,7 @@ void Tr2EffectStateManager::SetupViewport()
 	m_viewportOnDevice.m_x = std::max( (float)x0, 0.0f );
 	m_viewportOnDevice.m_y = std::max( (float)y0, 0.0f );
 
-	// Viewport width and height must be greater than zero. Using zero edge 
+	// Viewport width and height must be greater than zero. Using zero edge
 	// length causes dx error.
 	m_viewportOnDevice.m_width = (float)std::max( std::min( x1, m_renderTargetWidth ) - int( m_viewportOnDevice.m_x ), 1 );
 	m_viewportOnDevice.m_height = (float)std::max( std::min( y1, m_renderTargetHeight ) - int( m_viewportOnDevice.m_y ), 1 );

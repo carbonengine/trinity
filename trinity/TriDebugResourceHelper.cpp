@@ -9,8 +9,8 @@ static const char* DEBUG_LINE_EFFECT_PATH = "res:/Graphics/Effect/Managed/Utilit
 
 TriDebugResourceHelper g_debugResourceHelper;
 
-TriDebugResourceHelper::TriDebugResourceHelper()
-	:m_vertexPosColorDecl( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
+TriDebugResourceHelper::TriDebugResourceHelper() :
+	m_vertexPosColorDecl( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_vertexPosDecl( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 {
 }
@@ -31,14 +31,14 @@ bool TriDebugResourceHelper::OnPrepareResources()
 	{
 		Tr2VertexDefinition vd;
 		vd.Add( vd.FLOAT32_3, vd.POSITION );
-		vd.Add( vd.UBYTE_4_NORM , vd.COLOR    );
+		vd.Add( vd.UBYTE_4_NORM, vd.COLOR );
 		m_vertexPosColorDecl = Tr2EffectStateManager::GetVertexDeclarationHandle( vd );
 	}
 
 	return true;
 }
 
-void TriDebugResourceHelper::ReleaseResources(TriStorage s)
+void TriDebugResourceHelper::ReleaseResources( TriStorage s )
 {
 	m_vertexPosDecl = 0;
 	m_vertexPosColorDecl = 0;

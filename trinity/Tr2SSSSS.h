@@ -33,7 +33,6 @@ public:
 	void UpdateSubSurfaceFrontScatterData( Tr2RenderContext & renderContext );
 
 private:
-
 	bool m_enabled;
 	bool m_hasSSSSSInScene;
 

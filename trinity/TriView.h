@@ -11,11 +11,12 @@
 // See Also:
 //   TriProjection
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( TriView ) : public IRoot
+BLUE_CLASS( TriView ) :
+	public IRoot
 {
 public:
 	// Constructor
-	TriView(void);
+	TriView( void );
 
 	EXPOSE_TO_BLUE();
 

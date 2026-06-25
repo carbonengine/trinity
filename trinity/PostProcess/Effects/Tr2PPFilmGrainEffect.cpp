@@ -18,7 +18,6 @@ Tr2PPFilmGrainEffect::Tr2PPFilmGrainEffect( IRoot* lockobj ) :
 
 Tr2PPFilmGrainEffect::~Tr2PPFilmGrainEffect()
 {
-
 }
 
 bool Tr2PPFilmGrainEffect::IsActive()

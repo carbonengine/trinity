@@ -8,7 +8,7 @@ TriStepRenderScene::TriStepRenderScene( IRoot* lockobj )
 {
 }
 
-TriStepRenderScene::~TriStepRenderScene(void)
+TriStepRenderScene::~TriStepRenderScene( void )
 {
 }
 

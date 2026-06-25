@@ -13,13 +13,13 @@ BLUE_DECLARE( Tr2ImageRes );
 // GetResource call to get a Tr2ImageRes rather than a TriTextureRes instance.
 // Tr2ImageRes does not create any D3D resources - it is meant to be used when
 // the raw image data is needed on the CPU.
-BLUE_CLASS( Tr2ImageRes ):
-     public BlueAsyncRes,
-	 public ICacheable
+BLUE_CLASS( Tr2ImageRes ) :
+	public BlueAsyncRes,
+	public ICacheable
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2ImageRes( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2ImageRes( IRoot* lockobj = NULL );
 	~Tr2ImageRes();
 
 	//////////////////////////////////////////////////////////////////////////

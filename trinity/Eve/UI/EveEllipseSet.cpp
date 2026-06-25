@@ -67,8 +67,8 @@ void BuildOrbitEllipseAxes( const EveEllipseDefinition& spec, Vector3& outU, Vec
 std::string g_ellipseRibbonEffectPath = "";
 TRI_REGISTER_SETTING( "ellipseRibbonEffectPath", g_ellipseRibbonEffectPath );
 
-EveEllipseSet::EveEllipseSet( IRoot* lockobj )
-	: PARENTLOCK( m_ellipses )
+EveEllipseSet::EveEllipseSet( IRoot* lockobj ) :
+	PARENTLOCK( m_ellipses )
 {
 	m_ellipses.SetNotify( this );
 	BoundingSphereInitialize( m_boundingSphere );
@@ -101,7 +101,7 @@ bool EveEllipseSet::OnPrepareResources()
 
 void EveEllipseSet::ClearEllipses()
 {
-	for ( auto& spec : m_ellipses )
+	for( auto& spec : m_ellipses )
 	{
 		spec->SetDirtyFlag( nullptr );
 	}
@@ -134,7 +134,7 @@ const char* EveEllipseSet::GetName() const
 
 void EveEllipseSet::SetName( const char* name )
 {
-	m_name = BlueSharedString(name);
+	m_name = BlueSharedString( name );
 }
 
 EveEllipseSet::~EveEllipseSet()
@@ -301,14 +301,14 @@ void EveEllipseSet::RebuildGeometry( const EveUpdateContext& updateContext )
 			tangent = tangent * ( 1.f / tangentLength );
 
 			// Left edge: sideSign = -1
-			vertices[ vWrite ].centerPos = point;
-			vertices[ vWrite ].tangentSide = Vector4( tangent.x, tangent.y, tangent.z, -1.f );
+			vertices[vWrite].centerPos = point;
+			vertices[vWrite].tangentSide = Vector4( tangent.x, tangent.y, tangent.z, -1.f );
 			BoundingSphereUpdate( point, m_boundingSphere );
 			vWrite++;
 
 			// Right edge: sideSign = +1
-			vertices[ vWrite ].centerPos = point;
-			vertices[ vWrite ].tangentSide = Vector4( tangent.x, tangent.y, tangent.z, 1.f );
+			vertices[vWrite].centerPos = point;
+			vertices[vWrite].tangentSide = Vector4( tangent.x, tangent.y, tangent.z, 1.f );
 			BoundingSphereUpdate( point, m_boundingSphere );
 			vWrite++;
 		}
@@ -320,12 +320,12 @@ void EveEllipseSet::RebuildGeometry( const EveUpdateContext& updateContext )
 			const uint32_t curRight = baseVertexIndex + 2u * i + 1u;
 			const uint32_t nextLeft = baseVertexIndex + 2u * next;
 			const uint32_t nextRight = baseVertexIndex + 2u * next + 1u;
-			indices[ iWrite++ ] = curLeft;
-			indices[ iWrite++ ] = nextLeft;
-			indices[ iWrite++ ] = curRight;
-			indices[ iWrite++ ] = curRight;
-			indices[ iWrite++ ] = nextLeft;
-			indices[ iWrite++ ] = nextRight;
+			indices[iWrite++] = curLeft;
+			indices[iWrite++] = nextLeft;
+			indices[iWrite++] = curRight;
+			indices[iWrite++] = curRight;
+			indices[iWrite++] = nextLeft;
+			indices[iWrite++] = nextRight;
 		}
 	}
 
@@ -440,8 +440,7 @@ void EveEllipseSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatc
 	{
 		PrepareResources();
 	}
-	if( !m_effect || !m_vertexBuffer.IsValid() || !m_indexBuffer.IsValid() || m_indexCount == 0
-		|| m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	if( !m_effect || !m_vertexBuffer.IsValid() || !m_indexBuffer.IsValid() || m_indexCount == 0 || m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
 		return;
 	}

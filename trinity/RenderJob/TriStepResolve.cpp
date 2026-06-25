@@ -5,8 +5,8 @@
 
 #include "Tr2RenderTarget.h"
 
-TriStepResolve::TriStepResolve( IRoot* lockobj )
-: m_generateMipmap( false )
+TriStepResolve::TriStepResolve( IRoot* lockobj ) :
+	m_generateMipmap( false )
 {
 }
 

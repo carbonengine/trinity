@@ -34,14 +34,14 @@ BLUE_CLASS( EveMultiEffect ) :
 	public ITr2ControllerOwner,
 	public ITr2CurveSetOwner
 {
-public: 
+public:
 	EXPOSE_TO_BLUE();
 
 	EveMultiEffect( IRoot* lockobj = NULL );
 	~EveMultiEffect();
-	
+
 	void Rebind( bool onlyUpdateBindings = 0 );
-	bool SetParameter( BlueSharedString parameterName, IRoot* object );
+	bool SetParameter( BlueSharedString parameterName, IRoot * object );
 	EveMultiEffectParameter* GetParameterByName( BlueSharedString parameterName );
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ public:
 	void SetControllerVariable( const char* name, float value );
 	void HandleControllerEvent( const char* name );
 	void StartControllers();
-	void GetBindingRoots( std::unordered_map<std::string, IRoot*>& variables );
+	void GetBindingRoots( std::unordered_map<std::string, IRoot*> & variables );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DynamicBindingOwner
@@ -62,7 +62,7 @@ public:
 	virtual void UpdateCurveSet( const std::string& name, Be::Time time );
 	virtual float GetCurveSetDuration( const std::string& name ) const;
 	virtual float GetRangeDuration( const std::string& name, const std::string& rangeName ) const;
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
@@ -76,14 +76,14 @@ public:
 	void UpdateSyncronous( const EveUpdateContext& updateContext );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext );
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpaceObjectPSData& psData ) const;
-	void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
-	void GetModelCenterWorldPosition( Vector3 &position ) const;
-	bool GetLocalBoundingBox( Vector3 &min, Vector3 &max );
-	void GetLocalToWorldTransform( Matrix &transform ) const;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables, Tr2ImpostorManager * impostors );
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	void GetPerObjectStructs( EveSpaceObjectVSData & vsData, EveSpaceObjectPSData & psData ) const;
+	void UpdateModelCenterWorldPosition( Vector3 & position, Be::Time t );
+	void GetModelCenterWorldPosition( Vector3 & position ) const;
+	bool GetLocalBoundingBox( Vector3 & min, Vector3 & max );
+	void GetLocalToWorldTransform( Matrix & transform ) const;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
 
 private:

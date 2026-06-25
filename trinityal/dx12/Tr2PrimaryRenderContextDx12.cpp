@@ -36,75 +36,73 @@ CCP_STATS_DECLARE( dx12GpuMemoryBudgetLocal, "Trinity/AL/gpuMemory/budgetLocal",
 
 namespace
 {
-	bool EnableDebugLayer()
+bool EnableDebugLayer()
+{
+	CComPtr<ID3D12DeviceRemovedExtendedDataSettings1> pDredSettings;
+	if( SUCCEEDED( D3D12GetDebugInterface( IID_PPV_ARGS( &pDredSettings ) ) ) )
 	{
-		CComPtr<ID3D12DeviceRemovedExtendedDataSettings1> pDredSettings;
-		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&pDredSettings))))
-		{
-			// Turn on auto-breadcrumbs and page fault reporting.
-			pDredSettings->SetAutoBreadcrumbsEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
-			pDredSettings->SetPageFaultEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
-		}
-
-
-		CComPtr<ID3D12Debug> debugInterface;
-		CComPtr<ID3D12Debug1> debugInterface1;
-		if( SUCCEEDED( D3D12GetDebugInterface( IID_PPV_ARGS( &debugInterface ) ) ) )
-		{
-			debugInterface->EnableDebugLayer();
-			if( SUCCEEDED( debugInterface->QueryInterface( IID_PPV_ARGS( &debugInterface1 ) ) ) )
-			{
-				debugInterface1->SetEnableGPUBasedValidation( true );
-			}
-			return true;
-		}
-		else
-		{
-			CCP_AL_LOGWARN( "DX12: No debug interface available, no error logging will be available" );
-			return false;
-		}
+		// Turn on auto-breadcrumbs and page fault reporting.
+		pDredSettings->SetAutoBreadcrumbsEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
+		pDredSettings->SetPageFaultEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
 	}
 
-	void SetupInfoQueue( ID3D12Device* device )
+
+	CComPtr<ID3D12Debug> debugInterface;
+	CComPtr<ID3D12Debug1> debugInterface1;
+	if( SUCCEEDED( D3D12GetDebugInterface( IID_PPV_ARGS( &debugInterface ) ) ) )
 	{
-		CComQIPtr<ID3D12InfoQueue> queue( device );
-		if( queue )
+		debugInterface->EnableDebugLayer();
+		if( SUCCEEDED( debugInterface->QueryInterface( IID_PPV_ARGS( &debugInterface1 ) ) ) )
 		{
-			D3D12_MESSAGE_SEVERITY severity[] =
-			{
-				D3D12_MESSAGE_SEVERITY_CORRUPTION,
-				D3D12_MESSAGE_SEVERITY_ERROR,
-			};
-
-			// JB: Added some message filters
-			D3D12_MESSAGE_ID blocked[] =
-			{
-				// JB: Removed this because it pops up due to a bug
-				D3D12_MESSAGE_ID_COPY_DESCRIPTORS_INVALID_RANGES,
-
-				// JB: This spam a lot and should be suppressed.
-				// *HOWEVER* it would be a good idea to uncomment them and try to use the feature!
-				D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
-				D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE
-			};
-
-			D3D12_INFO_QUEUE_FILTER filter;
-			memset( &filter, 0, sizeof( filter ) );
-			filter.AllowList.NumSeverities = 2;
-			filter.AllowList.pSeverityList = severity;
-			filter.DenyList.pIDList = blocked;
-			filter.DenyList.NumIDs = sizeof(blocked) / sizeof(blocked[0]);
-			CR( queue->PushRetrievalFilter( &filter ) );
-			CR( queue->PushStorageFilter(&filter) );
+			debugInterface1->SetEnableGPUBasedValidation( true );
 		}
+		return true;
 	}
-
-	size_t RegisterTypeIndex( Tr2ShaderRegisterAL::RegisterType type )
+	else
 	{
-		return size_t( type ) & 31;
+		CCP_AL_LOGWARN( "DX12: No debug interface available, no error logging will be available" );
+		return false;
 	}
-	
-	size_t s_perFrameMinReleaseCount = 100;
+}
+
+void SetupInfoQueue( ID3D12Device* device )
+{
+	CComQIPtr<ID3D12InfoQueue> queue( device );
+	if( queue )
+	{
+		D3D12_MESSAGE_SEVERITY severity[] = {
+			D3D12_MESSAGE_SEVERITY_CORRUPTION,
+			D3D12_MESSAGE_SEVERITY_ERROR,
+		};
+
+		// JB: Added some message filters
+		D3D12_MESSAGE_ID blocked[] = {
+			// JB: Removed this because it pops up due to a bug
+			D3D12_MESSAGE_ID_COPY_DESCRIPTORS_INVALID_RANGES,
+
+			// JB: This spam a lot and should be suppressed.
+			// *HOWEVER* it would be a good idea to uncomment them and try to use the feature!
+			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
+			D3D12_MESSAGE_ID_CLEARDEPTHSTENCILVIEW_MISMATCHINGCLEARVALUE
+		};
+
+		D3D12_INFO_QUEUE_FILTER filter;
+		memset( &filter, 0, sizeof( filter ) );
+		filter.AllowList.NumSeverities = 2;
+		filter.AllowList.pSeverityList = severity;
+		filter.DenyList.pIDList = blocked;
+		filter.DenyList.NumIDs = sizeof( blocked ) / sizeof( blocked[0] );
+		CR( queue->PushRetrievalFilter( &filter ) );
+		CR( queue->PushStorageFilter( &filter ) );
+	}
+}
+
+size_t RegisterTypeIndex( Tr2ShaderRegisterAL::RegisterType type )
+{
+	return size_t( type ) & 31;
+}
+
+size_t s_perFrameMinReleaseCount = 100;
 }
 
 
@@ -163,7 +161,7 @@ public:
 
 	~MemoryWatchdog()
 	{
-		if ( m_watchdogThread.joinable() )
+		if( m_watchdogThread.joinable() )
 		{
 			SetEvent( m_stopEvent );
 			m_watchdogThread.join();
@@ -176,14 +174,13 @@ public:
 		{
 			CloseHandle( m_stopEvent );
 		}
-		if ( m_bugdetChangeEvent )
+		if( m_bugdetChangeEvent )
 		{
 			CloseHandle( m_bugdetChangeEvent );
 		}
 	}
 
 private:
-
 	void Watcher()
 	{
 		while( true )
@@ -290,7 +287,7 @@ Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 
 ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	uint32_t adapter,
-	Tr2WindowHandle  focusWindow,
+	Tr2WindowHandle focusWindow,
 	const Tr2PresentParametersAL& pp )
 {
 	Destroy();
@@ -315,13 +312,13 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		m_gpuCrashTracker = new TrinityALImpl::GpuCrashTracker();
 	}
 	CR_RETURN_HR( TrinityALImpl::GetVideoAdapter( adapter, &dxgiAdapter, &output ) );
-	
+
 	bool dxrAvailable = false;
 	// Create directX 12.1 device for raytracing, if it fails fall back to 12.0
 	if( SUCCEEDED( CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_1, device ) ) )
-	{	
+	{
 		D3D12_FEATURE_DATA_D3D12_OPTIONS5 caps = {};
-		if( FAILED( device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &caps, sizeof( caps ) ) ) || caps.RaytracingTier < D3D12_RAYTRACING_TIER_1_1 )
+		if( FAILED( device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS5, &caps, sizeof( caps ) ) ) || caps.RaytracingTier < D3D12_RAYTRACING_TIER_1_1 )
 		{
 			CCP_LOGNOTICE( "DirectX device or driver does not support raytracing" );
 		}
@@ -334,7 +331,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	else
 	{
 		CCP_LOGNOTICE( "Failed to create DirectX 12.1 device, now creating DirectX 12.0 device instead" );
-		CR_RETURN_HR(CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, device ) );
+		CR_RETURN_HR( CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, device ) );
 	}
 
 	if( !m_gpuCrashTracker->IsValid() )
@@ -357,20 +354,19 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		D3D12_DESCRIPTOR_HEAP_TYPE m_type;
 		uint32_t m_pageSize;
 		uint32_t m_numPages;
-	} heapLayout[] =
-	{
+	} heapLayout[] = {
 		{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, CRVSRVUAV_PAGE_SIZE, CRVSRVUAV_NUM_PAGES },
 		{ D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, SAMPLER_PAGE_SIZE, SAMPLER_NUM_PAGES },
 		{ D3D12_DESCRIPTOR_HEAP_TYPE_RTV, RTV_PAGE_SIZE, RTV_NUM_PAGES },
 		{ D3D12_DESCRIPTOR_HEAP_TYPE_DSV, DSV_PAGE_SIZE, DSV_NUM_PAGES }
 	};
 
-	for (int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++idx)
+	for( int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++idx )
 	{
-		CCP_ASSERT(heapLayout[idx].m_type == D3D12_DESCRIPTOR_HEAP_TYPE(idx));
+		CCP_ASSERT( heapLayout[idx].m_type == D3D12_DESCRIPTOR_HEAP_TYPE( idx ) );
 
 		m_allocators[idx] = std::make_shared<GlobalDescriptorHeapAllocator>( device, heapLayout[idx].m_numPages, heapLayout[idx].m_pageSize, heapLayout[idx].m_type );
-		CCP_ASSERT(m_allocators[idx].get() != nullptr);
+		CCP_ASSERT( m_allocators[idx].get() != nullptr );
 	}
 
 	m_srvUavAllocator = std::make_shared<GpuVisibleDescriptorAllocator>( device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 16 * 1024 );
@@ -405,10 +401,10 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	if( !isWindowless )
 	{
 		backBufferCount = Tr2SwapChainUtils::BACK_BUFFER_COUNT;
-		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapchain, focusWindow, presentationParameters, commandQueue, output, *this) );
+		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapchain, focusWindow, presentationParameters, commandQueue, output, *this ) );
 	}
 
-	
+
 	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 	std::vector<CComPtr<ID3D12Resource>> backBuffers;
 
@@ -418,10 +414,10 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		HRESULT hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, swapchain );
 		m_device = nullptr;
 
-		FORWARD_HR(hr);
+		FORWARD_HR( hr );
 	}
 
-	std::vector < CComPtr<ID3D12CommandAllocator>> commandAllocators;
+	std::vector<CComPtr<ID3D12CommandAllocator>> commandAllocators;
 	for( uint32_t i = 0; i < backBufferCount; ++i )
 	{
 		CComPtr<ID3D12CommandAllocator> commandAllocator;
@@ -576,7 +572,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		CCP_AL_LOGNOTICE( "Created dx12 device for adapter %S", info.description.c_str() );
 	}
 
-    m_options = {};
+	m_options = {};
 	m_device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS, &m_options, sizeof( m_options ) );
 
 
@@ -717,7 +713,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_srvUavAllocator = nullptr;
 	m_samplerHeapStart = nullptr;
 	m_samplerAllocator = nullptr;
-	for (int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++idx)
+	for( int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++idx )
 	{
 		m_allocators[idx] = nullptr;
 	}
@@ -816,7 +812,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	m_frameFenceValues.resize( Tr2SwapChainUtils::BACK_BUFFER_COUNT, value + 1 );
 
 	UINT resizeFlags = 0;
-	
+
 	if( m_supportsVariableRefreshRate )
 	{
 		resizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
@@ -824,10 +820,10 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	// Dx12 is never in proper fullscreen
 	CR( m_swapchain->ResizeBuffers( Tr2SwapChainUtils::BACK_BUFFER_COUNT,
-		presentationParameters.mode.width,
-		presentationParameters.mode.height,
-		fmt,
-		resizeFlags ) );
+									presentationParameters.mode.width,
+									presentationParameters.mode.height,
+									fmt,
+									resizeFlags ) );
 
 	m_syncInterval = presentationParameters.presentInterval;
 
@@ -868,7 +864,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 {
 	// some swap chains scheduled for presenting might have already been destroyed
 	m_pendingPresents.erase(
-		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
+		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p ) -> bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );
 
 	SetResourceSet( Tr2ResourceSetAL() );
@@ -940,7 +936,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
 	m_frameFenceValues[m_currentBackBufferIndex] = SignalDx12();
 
-	auto presentFlag = (m_syncInterval == Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE && m_supportsVariableRefreshRate) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+	auto presentFlag = ( m_syncInterval == Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE && m_supportsVariableRefreshRate ) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
 	CR( m_swapchain->Present( m_syncInterval, presentFlag ) );
 	FORWARD_HR( m_device->GetDeviceRemovedReason(); )
@@ -1006,8 +1002,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 				&bufferDesc,
 				D3D12_RESOURCE_STATE_COPY_DEST,
 				nullptr,
-				IID_PPV_ARGS( &m_statsResult )
-			) );
+				IID_PPV_ARGS( &m_statsResult ) ) );
 			if( m_statsResult )
 			{
 				m_statsStatus = STAT_READY;
@@ -1080,7 +1075,7 @@ uint64_t Tr2PrimaryRenderContextAL::SignalDx12()
 ALResult Tr2PrimaryRenderContextAL::WaitForFenceDx12( uint64_t value )
 {
 	CR_RETURN_HR( m_presentFence->SetEventOnCompletion( value, m_presentFenceEvent ) );
-	for( uint32_t count = 0; ; ++count )
+	for( uint32_t count = 0;; ++count )
 	{
 		if( WaitForSingleObject( m_presentFenceEvent, 1000 ) == WAIT_OBJECT_0 )
 		{
@@ -1101,15 +1096,15 @@ ALResult Tr2PrimaryRenderContextAL::WaitForFenceDx12( uint64_t value )
 }
 
 #if ENABLE_RELEASE_LATER_TAG
-void Tr2PrimaryRenderContextAL::ReleaseLater( IUnknown* resource, const std::string& name)
+void Tr2PrimaryRenderContextAL::ReleaseLater( IUnknown* resource, const std::string& name )
 {
 	ReleasePair pair = { resource, name };
-	m_pendingRelease[m_currentBackBufferIndex].push_back(pair);
+	m_pendingRelease[m_currentBackBufferIndex].push_back( pair );
 }
 #else
-void Tr2PrimaryRenderContextAL::ReleaseLater(IUnknown* resource)
+void Tr2PrimaryRenderContextAL::ReleaseLater( IUnknown* resource )
 {
-	m_pendingRelease[m_currentBackBufferIndex].push_back(resource);
+	m_pendingRelease[m_currentBackBufferIndex].push_back( resource );
 }
 #endif
 
@@ -1183,14 +1178,14 @@ ALResult Tr2PrimaryRenderContextAL::FlushAndSyncDx12( Tr2RenderContextAL& render
 	FORWARD_HR( WaitForFenceDx12( SignalDx12() ) );
 
 	m_pendingPresents.erase(
-		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
+		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p ) -> bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );
 	m_srvUavAllocator->SetFrameIndices( GetRecordingFrameNumber(), GetRenderedFrameNumber() );
 
-	// Reduce the pending releases 
+	// Reduce the pending releases
 	for( auto index = 0; index < m_pendingRelease.size(); ++index )
 	{
-		PopPendingRelease(index);
+		PopPendingRelease( index );
 	}
 
 	auto commandAllocator = m_commandAllocators[m_commandAllocatorIndex++ % m_commandAllocators.size()];
@@ -1242,19 +1237,19 @@ TrinityALImpl::GpuCrashTracker* Tr2PrimaryRenderContextAL::GetGpuCrashTracker() 
 	return m_gpuCrashTracker;
 }
 
-void Tr2PrimaryRenderContextAL::UnRegisterFromCrashTracker(ID3D12GraphicsCommandList2* commandList)
+void Tr2PrimaryRenderContextAL::UnRegisterFromCrashTracker( ID3D12GraphicsCommandList2* commandList )
 {
-	if(m_gpuCrashTracker)
+	if( m_gpuCrashTracker )
 	{
-		m_gpuCrashTracker->UnRegisterCommandList(commandList);
+		m_gpuCrashTracker->UnRegisterCommandList( commandList );
 	}
 }
 
-void Tr2PrimaryRenderContextAL::AddShaderBinaryToCrashTracker(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath)
+void Tr2PrimaryRenderContextAL::AddShaderBinaryToCrashTracker( const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath )
 {
-	if(m_gpuCrashTracker)
+	if( m_gpuCrashTracker )
 	{
-		m_gpuCrashTracker->RegisterShaderBinary(bytecode, shaderPath);
+		m_gpuCrashTracker->RegisterShaderBinary( bytecode, shaderPath );
 	}
 }
 
@@ -1327,7 +1322,7 @@ std::shared_ptr<SamplerStateDx12> Tr2PrimaryRenderContextAL::GetSamplerHeapView(
 }
 
 /** Create a ShaderResourceView */
-HRESULT Tr2PrimaryRenderContextAL::CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<class ShaderResourceViewDx12>& srvView)
+HRESULT Tr2PrimaryRenderContextAL::CreateShaderResourceView( ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<class ShaderResourceViewDx12>& srvView )
 {
 	auto entry = m_srvUavAllocator->Allocate();
 	if( entry == nullptr )
@@ -1335,14 +1330,14 @@ HRESULT Tr2PrimaryRenderContextAL::CreateShaderResourceView(ID3D12Resource* reso
 		return E_OUTOFMEMORY;
 	}
 	// CHECK
-	m_device->CreateShaderResourceView( desc.ViewDimension == D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE ? nullptr : resource , &desc, entry->m_offsetCPU );
+	m_device->CreateShaderResourceView( desc.ViewDimension == D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE ? nullptr : resource, &desc, entry->m_offsetCPU );
 	m_device->CreateShaderResourceView( desc.ViewDimension == D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE ? nullptr : resource, &desc, m_srvUavAllocator->GetDescriptorInCpuHeap( entry ) );
 	srvView = std::make_shared<ShaderResourceViewDx12>( m_srvUavAllocator.get(), entry );
 	return S_OK;
 }
 
 /** Create an UnorderedAccessView */
-HRESULT Tr2PrimaryRenderContextAL::CreateUnorderedAccessView(ID3D12Resource* resource, ID3D12Resource* counterResource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc, std::shared_ptr<class UnorderedAccessViewDx12>& uavView)
+HRESULT Tr2PrimaryRenderContextAL::CreateUnorderedAccessView( ID3D12Resource* resource, ID3D12Resource* counterResource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc, std::shared_ptr<class UnorderedAccessViewDx12>& uavView )
 {
 	auto entry = m_srvUavAllocator->Allocate();
 	if( entry == nullptr )
@@ -1356,43 +1351,43 @@ HRESULT Tr2PrimaryRenderContextAL::CreateUnorderedAccessView(ID3D12Resource* res
 }
 
 /** Create a SamplerState */
-HRESULT Tr2PrimaryRenderContextAL::CreateSamplerState(const D3D12_SAMPLER_DESC& desc, std::shared_ptr<SamplerStateDx12>& samplerState)
+HRESULT Tr2PrimaryRenderContextAL::CreateSamplerState( const D3D12_SAMPLER_DESC& desc, std::shared_ptr<SamplerStateDx12>& samplerState )
 {
 	GlobalDescriptorHeapPage::DescriptorEntry* entry = m_samplerAllocator->Allocate();
 	if( entry == nullptr )
 	{
 		return E_OUTOFMEMORY;
 	}
-	m_device->CreateSampler(&desc, entry->m_offsetCPU);
+	m_device->CreateSampler( &desc, entry->m_offsetCPU );
 	samplerState = std::make_shared<SamplerStateDx12>( m_samplerAllocator.get(), entry );
 	return S_OK;
 }
 
 /** Create a RenderTargetView */
-HRESULT Tr2PrimaryRenderContextAL::CreateRenderTargetView(ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc, std::shared_ptr<RenderTargetViewDx12>& rtvView)
+HRESULT Tr2PrimaryRenderContextAL::CreateRenderTargetView( ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc, std::shared_ptr<RenderTargetViewDx12>& rtvView )
 {
 	const std::shared_ptr<GlobalDescriptorHeapAllocator>& allocator = m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_RTV];
 	GlobalDescriptorHeapPage::DescriptorEntry* entry = allocator->Allocate();
-	if (entry == nullptr)
+	if( entry == nullptr )
 		return E_OUTOFMEMORY;
 
-	m_device->CreateRenderTargetView(resource, desc, entry->m_offsetCPU);
+	m_device->CreateRenderTargetView( resource, desc, entry->m_offsetCPU );
 
-	rtvView = std::make_shared<RenderTargetViewDx12>(allocator.get(), entry);
+	rtvView = std::make_shared<RenderTargetViewDx12>( allocator.get(), entry );
 	return S_OK;
 }
 
 /** Create a DepthStencilView */
-HRESULT Tr2PrimaryRenderContextAL::CreateDepthStencilView(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC& desc, std::shared_ptr<DepthStencilViewDx12>& dsvView)
+HRESULT Tr2PrimaryRenderContextAL::CreateDepthStencilView( ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC& desc, std::shared_ptr<DepthStencilViewDx12>& dsvView )
 {
 	const std::shared_ptr<GlobalDescriptorHeapAllocator>& allocator = m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_DSV];
 	GlobalDescriptorHeapPage::DescriptorEntry* entry = allocator->Allocate();
-	if (entry == nullptr)
+	if( entry == nullptr )
 		return E_OUTOFMEMORY;
 
-	m_device->CreateDepthStencilView(resource, &desc, entry->m_offsetCPU);
+	m_device->CreateDepthStencilView( resource, &desc, entry->m_offsetCPU );
 
-	dsvView = std::make_shared<DepthStencilViewDx12>(allocator.get(), entry);
+	dsvView = std::make_shared<DepthStencilViewDx12>( allocator.get(), entry );
 	return S_OK;
 }
 
@@ -1432,7 +1427,7 @@ bool Tr2PrimaryRenderContextAL::FormatIsUAVCompatibleDx12( DXGI_FORMAT format ) 
 	case DXGI_FORMAT_R8_UINT:
 	case DXGI_FORMAT_R8_SINT:
 		return m_options.TypedUAVLoadAdditionalFormats != 0;
-	case DXGI_FORMAT_R11G11B10_FLOAT: 
+	case DXGI_FORMAT_R11G11B10_FLOAT:
 		if( m_device && m_options.TypedUAVLoadAdditionalFormats != 0 )
 		{
 			D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport = { format, D3D12_FORMAT_SUPPORT1_NONE, D3D12_FORMAT_SUPPORT2_NONE };
@@ -1477,7 +1472,7 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	}
 
 	// find the technique
-	auto supportedTechnique = std::find( std::begin( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES), std::end(TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES), tech );
+	auto supportedTechnique = std::find( std::begin( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES ), std::end( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES ), tech );
 	if( supportedTechnique == std::end( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES ) )
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
@@ -1555,8 +1550,8 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
 	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
 	{
-		if( technique == activeTechnique && m_upscalingTechnique)
-		{ 
+		if( technique == activeTechnique && m_upscalingTechnique )
+		{
 			uint32_t allSettings = 0;
 
 			for( auto& setting : m_upscalingTechnique->GetAvailableSettings() )
@@ -1638,7 +1633,7 @@ HRESULT Tr2PrimaryRenderContextAL::CreateSwapChainForHwnd(
 	return S_OK;
 }
 
-HRESULT Tr2PrimaryRenderContextAL::CreateDevice(IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device) const
+HRESULT Tr2PrimaryRenderContextAL::CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device ) const
 {
 	CR_RETURN_HR( D3D12CreateDevice( adapter, featureLevel, IID_PPV_ARGS( &device ) ) );
 

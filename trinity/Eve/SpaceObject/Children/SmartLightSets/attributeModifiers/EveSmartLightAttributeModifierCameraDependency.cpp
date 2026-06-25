@@ -12,7 +12,7 @@ EveSmartLightAttributeModifierCameraDependency::EveSmartLightAttributeModifierCa
 	m_useCameraDistance( false ),
 	m_inverseDistanceFormula( false ),
 	m_minimumDistance( 1000.f ),
-	m_maximumDistance( 10000.f),
+	m_maximumDistance( 10000.f ),
 	m_useCameraLookAt( false ),
 	m_inverselookAtFormula( false ),
 	m_lookAtIntencity( 1.f ),
@@ -20,7 +20,7 @@ EveSmartLightAttributeModifierCameraDependency::EveSmartLightAttributeModifierCa
 	m_useCameraPlacement( false ),
 	m_inversePlacementFormula( false ),
 	m_placementIntencity( 1.f ),
-	m_overwritePosition( false ), 
+	m_overwritePosition( false ),
 	m_overwriteDirection( false ),
 	m_positionOverwrite( 0.f, 0.f, 0.f ),
 	m_angleOverwrite( 0.f, 0.f, 0.f )
@@ -75,7 +75,7 @@ const float EveSmartLightAttributeModifierCameraDependency::GetPlacementAmplitud
 {
 	if( m_useCameraPlacement )
 	{
-		Vector3 eDir = m_overwriteDirection ? Normalize(m_angleOverwrite) : entityDirection;
+		Vector3 eDir = m_overwriteDirection ? Normalize( m_angleOverwrite ) : entityDirection;
 		float placementAmplitude = max( 0.f, -Dot( Normalize( vec2obj ), eDir ) );
 
 		if( m_placementIntencity != 1.f )

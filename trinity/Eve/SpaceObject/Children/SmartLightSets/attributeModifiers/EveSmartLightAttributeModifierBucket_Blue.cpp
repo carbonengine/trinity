@@ -23,7 +23,8 @@ const Be::ClassInfo* EveSmartLightAttributeModifierBucket::ExposeToBlue()
 		MAP_ATTRIBUTE( "startsActive", m_startsActive, "should it be active on load (if false but active=true, then it will animate into active state)\n:jessica-group: AttributeModifierBlending", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "crossFadeDuration", m_crossFadeDuration, "how many sec does the blending animation take\n:jessica-group: AttributeModifierBlending\n:jessica-numeric-range: (0.0,20.0)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "crossFadeIntensity", m_crossFadeIntensity, "is the animation linear or frontEnd/backend focused. (1=linear, closer to 0 comes in fast, above 1 -> ease in slowly)"
-																   "\n:jessica-group: AttributeModifierBlending\n:jessica-numeric-range: (0.1,10.0)", Be::READWRITE | Be::PERSIST )
+																   "\n:jessica-group: AttributeModifierBlending\n:jessica-numeric-range: (0.1,10.0)",
+					   Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "activationValue", m_activationValue, "[0:1] to visualize/debug the crossfade\n:jessica-group: AttributeModifierBlending", Be::READ )
 		MAP_ATTRIBUTE( "finalAttributeMultiplier", m_finalActivationStrength, "to visualize/debug compound activationStrength\n:jessica-group: AttributeModifierBlending", Be::READ )
 

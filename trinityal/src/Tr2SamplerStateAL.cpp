@@ -7,7 +7,7 @@
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2SamplerStateAL> nullSampler = std::make_shared<TrinityALImpl::Tr2SamplerStateAL>();
+std::shared_ptr<TrinityALImpl::Tr2SamplerStateAL> nullSampler = std::make_shared<TrinityALImpl::Tr2SamplerStateAL>();
 }
 
 // Force anisotropic filtering switch:
@@ -17,12 +17,12 @@ namespace
 uint32_t g_forceAnisotropy = 0;
 
 
-Tr2SamplerStateAL::Tr2SamplerStateAL()
-	:m_sampler( nullSampler )
+Tr2SamplerStateAL::Tr2SamplerStateAL() :
+	m_sampler( nullSampler )
 {
 }
 
-ALResult Tr2SamplerStateAL::Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL &renderContext )
+ALResult Tr2SamplerStateAL::Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL& renderContext )
 {
 	return renderContext.m_samplerStateFactory.Get( m_sampler, description, renderContext );
 }

@@ -15,10 +15,10 @@ EveVirtualCameraTransitionBase::EveVirtualCameraTransitionBase( IRoot* lockobj )
 EveVirtualCameraTransitionBase::~EveVirtualCameraTransitionBase()
 {
 }
-	
+
 EveVirtualCameraPtr EveVirtualCameraTransitionBase::GetCamera()
 {
-	if(IsComplete())
+	if( IsComplete() )
 	{
 		return m_targetCamera;
 	}
@@ -55,7 +55,7 @@ void EveVirtualCameraTransitionBase::Play()
 
 void EveVirtualCameraTransitionBase::Stop()
 {
-	if(m_targetCamera)
+	if( m_targetCamera )
 	{
 		m_targetCamera->Play();
 	}
@@ -63,7 +63,7 @@ void EveVirtualCameraTransitionBase::Stop()
 	{
 		m_sourceCamera->Pause();
 	}
-	if(m_transitionCamera)
+	if( m_transitionCamera )
 	{
 		m_transitionCamera->Pause();
 	}
@@ -100,9 +100,9 @@ void EveVirtualCameraTransitionCut::Update( float deltaTime )
 	EveVirtualCameraTransitionBase::Update( deltaTime );
 }
 
-EveVirtualCameraTransitionLerp::EveVirtualCameraTransitionLerp( IRoot* lockobj ):
+EveVirtualCameraTransitionLerp::EveVirtualCameraTransitionLerp( IRoot* lockobj ) :
 	EveVirtualCameraTransitionBase( lockobj ),
-	m_transitionTime(1.0f),
+	m_transitionTime( 1.0f ),
 	m_localTime(),
 	m_transitionCurve()
 {
@@ -134,7 +134,7 @@ void EveVirtualCameraTransitionLerp::Play()
 void EveVirtualCameraTransitionLerp::Update( float deltaTime )
 {
 	m_localTime += deltaTime;
-	if( m_transitionCamera && m_sourceCamera && m_targetCamera)
+	if( m_transitionCamera && m_sourceCamera && m_targetCamera )
 	{
 		auto lerpAmount = 1.0f;
 		if( m_transitionTime > 0.0f )
@@ -152,8 +152,7 @@ void EveVirtualCameraTransitionLerp::Update( float deltaTime )
 			Lerp( m_sourceCamera->GetPosition(), m_targetCamera->GetPosition(), lerpAmount ),
 			Lerp( m_sourceCamera->GetPointOfInterest(), m_targetCamera->GetPointOfInterest(), lerpAmount ),
 			m_sourceCamera->GetFov() + ( m_targetCamera->GetFov() - m_sourceCamera->GetFov() ) * lerpAmount,
-			m_sourceCamera->GetRoll() + ( m_targetCamera->GetRoll() - m_sourceCamera->GetRoll() ) * lerpAmount
-		);
+			m_sourceCamera->GetRoll() + ( m_targetCamera->GetRoll() - m_sourceCamera->GetRoll() ) * lerpAmount );
 	}
 	EveVirtualCameraTransitionBase::Update( deltaTime );
 }

@@ -13,7 +13,7 @@ public:
 
 	EveVirtualCameraTransitionBase( IRoot* lockobj = NULL );
 	~EveVirtualCameraTransitionBase();
-	
+
 	virtual bool IsComplete() const = 0;
 	virtual EveVirtualCameraPtr GetCamera();
 	virtual void SetSource( const EveVirtualCameraPtr& camera );
@@ -21,7 +21,7 @@ public:
 	virtual void Play();
 	virtual void Stop();
 	virtual void Update( float deltaTime );
-	
+
 protected:
 	EveVirtualCameraPtr m_sourceCamera;
 	EveVirtualCameraPtr m_targetCamera;
@@ -36,7 +36,7 @@ public:
 
 	EveVirtualCameraTransitionCut( IRoot* lockobj = NULL );
 	~EveVirtualCameraTransitionCut();
-	
+
 	virtual bool IsComplete() const override;
 	virtual void Update( float deltaTime ) override;
 };
@@ -51,7 +51,7 @@ public:
 
 	EveVirtualCameraTransitionLerp( IRoot* lockobj = NULL );
 	~EveVirtualCameraTransitionLerp();
-	
+
 	virtual bool IsComplete() const override;
 	virtual void Play() override;
 	virtual void Update( float deltaTime ) override;

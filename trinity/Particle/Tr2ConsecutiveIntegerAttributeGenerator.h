@@ -8,12 +8,12 @@
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Particle element generator that creates consecutive integer element values in a 
+//   Particle element generator that creates consecutive integer element values in a
 //   specified range.
 // See Also:
 //   ITr2AttributeGenerator, Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2ConsecutiveIntegerAttributeGenerator ): 
+BLUE_CLASS( Tr2ConsecutiveIntegerAttributeGenerator ) :
 	public ITr2AttributeGenerator
 {
 public:
@@ -23,9 +23,10 @@ public:
 	~Tr2ConsecutiveIntegerAttributeGenerator();
 
 	void Generate( const Vector3* position, const Vector3* velocity, float** particle );
-	bool Bind( const Tr2ParticleElementDataMap& declaration, std::set<Tr2ParticleElementDeclarationName> &boundElements );
+	bool Bind( const Tr2ParticleElementDataMap& declaration, std::set<Tr2ParticleElementDeclarationName>& boundElements );
 	std::string GetName() const;
 	unsigned GetDimension() const;
+
 private:
 	// Particle element type/name
 	Tr2ParticleElementDeclarationName m_name;

@@ -8,7 +8,7 @@
 #include "include/Tr2StreamlineAL.h"
 
 #include "../Tr2AdapterStructures.h"
-#include "../Tr2VideoAdapterInfoALDx11.h" 
+#include "../Tr2VideoAdapterInfoALDx11.h"
 #include "../Tr2RenderContextDx11.h"
 #include "../Tr2TextureALDx11.h"
 
@@ -17,15 +17,15 @@ extern uint32_t g_streamlineAppID;
 
 namespace DlssUtils
 {
-	sl::Resource GenerateTextureResource( const Tr2TextureAL* texture )
+sl::Resource GenerateTextureResource( const Tr2TextureAL* texture )
+{
+	if( texture && texture->IsValid() )
 	{
-		if( texture && texture->IsValid() )
-		{
-			return { sl::ResourceType::eTex2d, texture->TrinityALImpl_GetObject()->GetResourceDx11(), nullptr, nullptr, 0 };
-		}
-
-		return { sl::ResourceType::eTex2d, nullptr, nullptr, nullptr, 0 };
+		return { sl::ResourceType::eTex2d, texture->TrinityALImpl_GetObject()->GetResourceDx11(), nullptr, nullptr, 0 };
 	}
+
+	return { sl::ResourceType::eTex2d, nullptr, nullptr, nullptr, 0 };
+}
 }
 
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
@@ -39,7 +39,7 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 
 	m_streamlineSetup = false;
 
-	
+
 	//We need to create a dummy device to figure out if DLSS and frame generation actually is supported.
 
 	{
@@ -49,21 +49,21 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 			return;
 		}
 
-		
+
 		CComPtr<IDXGIAdapter1> dxgiAdapter;
 		CComPtr<IDXGIOutput> output;
 		Tr2VideoAdapterInfo::GetVideoAdapterDX11( adapter, &dxgiAdapter, &output );
 
 
 		const D3D_FEATURE_LEVEL levelWanted = D3D_FEATURE_LEVEL_11_0;
-		
+
 		D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_UNKNOWN;
 
 		CComPtr<ID3D11Device> device;
 		D3D_FEATURE_LEVEL levelSupported;
 		CComPtr<ID3D11DeviceContext> m_context;
-		
-		
+
+
 		if( SUCCEEDED( D3D11CreateDevice( dxgiAdapter, driverType, 0, 0, &levelWanted, 1, D3D11_SDK_VERSION, &device, &levelSupported, &m_context ) ) )
 		{
 			if( Tr2StreamlineAL::SetDevice( device, adapter ) == sl::Result::eOk )
@@ -74,7 +74,7 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 
 		Tr2StreamlineAL::ReleaseStreamline();
 	}
-	
+
 	//We're done gathering info, initialize Streamline again and await the actual device!
 	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( g_streamlineAppID ) ) )
 	{
@@ -90,10 +90,10 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
-	Tr2StreamlineAL::ReleaseStreamline( );
+	Tr2StreamlineAL::ReleaseStreamline();
 }
 
-bool Tr2DlssUpscalingTechnique::IsAvailable( ) const
+bool Tr2DlssUpscalingTechnique::IsAvailable() const
 {
 	return m_isAvailable;
 }
@@ -101,14 +101,14 @@ bool Tr2DlssUpscalingTechnique::IsAvailable( ) const
 std::vector<Tr2UpscalingAL::Setting> Tr2DlssUpscalingTechnique::GetAvailableSettings() const
 {
 	return {
-		Tr2UpscalingAL::QUALITY, 
-		Tr2UpscalingAL::BALANCED, 
+		Tr2UpscalingAL::QUALITY,
+		Tr2UpscalingAL::BALANCED,
 		Tr2UpscalingAL::PERFORMANCE,
 		Tr2UpscalingAL::ULTRA_PERFORMANCE
 	};
 }
 
-bool Tr2DlssUpscalingTechnique::IsTemporal() const 
+bool Tr2DlssUpscalingTechnique::IsTemporal() const
 {
 	return true;
 }
@@ -130,7 +130,7 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 	}
 }
 
-void Tr2DlssUpscalingTechnique::AttachToDevice(CComPtr<ID3D11Device>& device) 
+void Tr2DlssUpscalingTechnique::AttachToDevice( CComPtr<ID3D11Device>& device )
 {
 
 	if( SL_FAILED( res, Tr2StreamlineAL::SetDevice( device, m_adapter ) ) )
@@ -146,11 +146,11 @@ Tr2UpscalingContextAL* Tr2DlssUpscalingTechnique::CreateContextInstance( Tr2Upsc
 	return new Tr2DlssUpscalingContext( m_setting, false, params, m_contextIndex++, m_frameToken );
 }
 
-Tr2DlssUpscalingContext::Tr2DlssUpscalingContext( 
-	Tr2UpscalingAL::Setting setting, 
-	bool frameGeneration, 
+Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
+	Tr2UpscalingAL::Setting setting,
+	bool frameGeneration,
 	Tr2UpscalingAL::UpscalingContextParams params,
-	uint32_t contextNumber, 
+	uint32_t contextNumber,
 	sl::FrameToken* frameToken ) :
 	Tr2UpscalingContextAL( setting, frameGeneration, params ),
 	m_viewHandle( sl::ViewportHandle( contextNumber ) ),
@@ -283,7 +283,7 @@ sl::Result Tr2DlssUpscalingContext::ReadyDLSSResources( Tr2UpscalingAL::Dispatch
 	sl::ResourceTag exposureTag = sl::ResourceTag{ &exposureResource, sl::kBufferTypeExposure, sl::ResourceLifecycle::eValidUntilPresent, &exposureExtent };
 
 	sl::ResourceTag resources[] = { colorInTag, opaqueColorInTag, colorOutTag, depthTag, mvecTag, exposureTag };
-	
+
 	if( SL_FAILED( res, Tr2StreamlineAL::SetTagsForFrame( m_params.renderContext, *m_frameToken, m_viewHandle, resources, 6 ) ) )
 	{
 		CCP_LOGERR( "DLSS Failed to tag resources (%d)", res );

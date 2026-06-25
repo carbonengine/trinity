@@ -43,4 +43,4 @@ private:
 	Tr2PushPopDS& operator=( Tr2PushPopDS& );
 };
 
-#endif 
+#endif

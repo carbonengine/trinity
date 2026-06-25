@@ -7,7 +7,7 @@ BLUE_DEFINE( Tr2ParticleAttractorForce );
 
 const Be::ClassInfo* Tr2ParticleAttractorForce::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(Tr2ParticleAttractorForce, "" )
+	EXPOSURE_BEGIN( Tr2ParticleAttractorForce, "" )
 		MAP_INTERFACE( ITr2ParticleForce )
 		MAP_INTERFACE( Tr2ParticleAttractorForce )
 

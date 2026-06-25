@@ -4,7 +4,8 @@
 
 #include <ITriFunction.h>
 
-BLUE_CLASS( Tr2CurveRandomAxisRotation ): public ITriQuaternionFunction, public IInitialize
+BLUE_CLASS( Tr2CurveRandomAxisRotation ) :
+	public ITriQuaternionFunction, public IInitialize
 {
 public:
 	Tr2CurveRandomAxisRotation( IRoot* lockobj = nullptr );
@@ -13,14 +14,14 @@ public:
 
 	virtual void UpdateValue( double time );
 
-	virtual Quaternion* Update( Quaternion* in, Be::Time time );
-	virtual Quaternion* Update( Quaternion* in, double time );
-	virtual Quaternion* GetValueAt( Quaternion* in, Be::Time time );
-	virtual Quaternion* GetValueAt( Quaternion* in, double time );
-	virtual Quaternion* GetValueDotAt( Quaternion* in, Be::Time time );
-	virtual Quaternion* GetValueDotAt( Quaternion* in, double time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, Be::Time time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, double time );
+	virtual Quaternion* Update( Quaternion * in, Be::Time time );
+	virtual Quaternion* Update( Quaternion * in, double time );
+	virtual Quaternion* GetValueAt( Quaternion * in, Be::Time time );
+	virtual Quaternion* GetValueAt( Quaternion * in, double time );
+	virtual Quaternion* GetValueDotAt( Quaternion * in, Be::Time time );
+	virtual Quaternion* GetValueDotAt( Quaternion * in, double time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, Be::Time time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, double time );
 
 	virtual bool Initialize();
 
@@ -28,6 +29,7 @@ public:
 
 	uint32_t GetSeed() const;
 	void SetSeed( uint32_t seed );
+
 public:
 	void SeedChanged();
 

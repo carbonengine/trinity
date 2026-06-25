@@ -9,12 +9,10 @@
 #include "Shader/Tr2Effect.h"
 #include "Tr2VariableStore.h"
 
-TriStepRenderAtlas::TriStepRenderAtlas( IRoot *lockobj ) 
-	: m_atlas(NULL), m_focus(NULL), m_tlTexCoord(0.f, 0.f), m_brTexCoord(1.f, 1.f), 
-	m_showFree(false), m_showUsed(true),
-	m_borderColour(1,1,0,1), m_focusColour(1,0,1,1), m_freeColour(0,0.5f,0,1)
+TriStepRenderAtlas::TriStepRenderAtlas( IRoot* lockobj ) :
+	m_atlas( NULL ), m_focus( NULL ), m_tlTexCoord( 0.f, 0.f ), m_brTexCoord( 1.f, 1.f ), m_showFree( false ), m_showUsed( true ), m_borderColour( 1, 1, 0, 1 ), m_focusColour( 1, 0, 1, 1 ), m_freeColour( 0, 0.5f, 0, 1 )
 {
-	m_simpleOutColourHandle = GlobalStore().RegisterVariable( "simpleOutColour", Vector4(0,0,0,0) );
+	m_simpleOutColourHandle = GlobalStore().RegisterVariable( "simpleOutColour", Vector4( 0, 0, 0, 0 ) );
 	BeClasses->CreateInstance( GetTr2EffectClsid(), BlueInterfaceIID<Tr2Effect>(), (void**)&m_areaEffect );
 	m_areaEffect->SetEffectPathName( "res:/Graphics/Effect/UI/Simple.fx" );
 }
@@ -26,7 +24,7 @@ TriStepRenderAtlas::~TriStepRenderAtlas()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 void TriStepRenderAtlas::py__init__( Tr2TextureAtlas* atlas, Tr2AtlasTexture* texture )
 {
@@ -38,16 +36,16 @@ TriStepResult TriStepRenderAtlas::Execute( Be::Time realTime, Be::Time simTime, 
 {
 	if( m_atlas )
 	{
-		const Vector2 scale  = m_brTexCoord - m_tlTexCoord;
+		const Vector2 scale = m_brTexCoord - m_tlTexCoord;
 		const Vector2 offset = Vector2( m_tlTexCoord.x / scale.x, m_tlTexCoord.y / scale.y );
 
-		const float rw = 1.f / float(m_atlas->GetWidth() * scale.x);
-		const float rh = 1.f / float(m_atlas->GetHeight() * scale.y);
+		const float rw = 1.f / float( m_atlas->GetWidth() * scale.x );
+		const float rh = 1.f / float( m_atlas->GetHeight() * scale.y );
 
 
-		const int margin = std::max( int(m_atlas->GetMargin()), 1 );
+		const int margin = std::max( int( m_atlas->GetMargin() ), 1 );
 
-		if( m_showFree ) 
+		if( m_showFree )
 		{
 			const auto freeAreas = m_atlas->GetFreeAreas();
 			const static float borderScale = 0.6f;
@@ -60,14 +58,10 @@ TriStepResult TriStepRenderAtlas::Execute( Be::Time realTime, Be::Time simTime, 
 			{
 				auto& rect = *i;
 				m_simpleOutColourHandle->SetValue( freeBorderColour );
-				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, 
-					Vector2( rect.left * rw, rect.top * rh ) - offset,
-					Vector2( rect.right * rw, rect.bottom * rh ) - offset );
+				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, Vector2( rect.left * rw, rect.top * rh ) - offset, Vector2( rect.right * rw, rect.bottom * rh ) - offset );
 
 				m_simpleOutColourHandle->SetValue( m_freeColour );
-				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, 
-					Vector2( (rect.left  + margin) * rw, (rect.top    + margin) * rh ) - offset,
-					Vector2( (rect.right - margin) * rw, (rect.bottom - margin) * rh ) - offset );
+				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, Vector2( ( rect.left + margin ) * rw, ( rect.top + margin ) * rh ) - offset, Vector2( ( rect.right - margin ) * rw, ( rect.bottom - margin ) * rh ) - offset );
 			}
 		}
 
@@ -92,36 +86,27 @@ TriStepResult TriStepRenderAtlas::Execute( Be::Time realTime, Be::Time simTime, 
 					}
 					else
 					{
-						m_simpleOutColourHandle->SetValue( m_borderColour  );
+						m_simpleOutColourHandle->SetValue( m_borderColour );
 					}
 				}
 
-				
-				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, 
-					Vector2( rect.left * rw, rect.top * rh ) - offset,
-					Vector2( (rect.left + margin) * rw, (rect.bottom - margin) * rh ) - offset );
-				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, 
-					Vector2( rect.left * rw, (rect.bottom - margin) * rh ) - offset,
-					Vector2( (rect.right - margin) * rw, rect.bottom * rh ) - offset );
-				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, 
-					Vector2( (rect.right - margin) * rw, (rect.top + margin) * rh ) - offset,
-					Vector2( rect.right * rw, rect.bottom * rh ) - offset );
-				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, 
-					Vector2( (rect.left + margin) * rw, rect.top * rh ) - offset,
-					Vector2( rect.right * rw, (rect.top + margin) * rh ) - offset );
+
+				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, Vector2( rect.left * rw, rect.top * rh ) - offset, Vector2( ( rect.left + margin ) * rw, ( rect.bottom - margin ) * rh ) - offset );
+				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, Vector2( rect.left * rw, ( rect.bottom - margin ) * rh ) - offset, Vector2( ( rect.right - margin ) * rw, rect.bottom * rh ) - offset );
+				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, Vector2( ( rect.right - margin ) * rw, ( rect.top + margin ) * rh ) - offset, Vector2( rect.right * rw, rect.bottom * rh ) - offset );
+				Tr2Renderer::DrawScreenQuad( renderContext, m_areaEffect, Vector2( ( rect.left + margin ) * rw, rect.top * rh ) - offset, Vector2( rect.right * rw, ( rect.top + margin ) * rh ) - offset );
 			}
 		}
 	}
 	return RS_OK;
 }
 
-void TriStepRenderAtlas::SetAtlas( Tr2TextureAtlas *atlas )
+void TriStepRenderAtlas::SetAtlas( Tr2TextureAtlas* atlas )
 {
 	m_atlas = atlas;
 }
 
-void TriStepRenderAtlas::SetFocus( Tr2AtlasTexture *texture )
+void TriStepRenderAtlas::SetFocus( Tr2AtlasTexture* texture )
 {
 	m_focus = texture;
 }
-

@@ -14,7 +14,9 @@ public:
 	EXPOSE_TO_BLUE();
 
 	TriLineSet( IRoot* lockobj = 0 );
-	~TriLineSet(){}
+	~TriLineSet()
+	{
+	}
 
 	void AddDefaultColor( const Vector3& from, const Vector3& to );
 	void Add( const Vector3& from, uint32_t fromColor, const Vector3& to, uint32_t toColor );
@@ -33,25 +35,30 @@ public:
 
 	void Clear();
 
-	void Render( Tr2RenderContext& renderContext );
+	void Render( Tr2RenderContext & renderContext );
 	void RenderFromScript();
 
-	void SubmitGeometry( Tr2RenderContext& renderContext );
-	void SetDefaultColor( uint32_t val ) { m_defaultColor = val; }
+	void SubmitGeometry( Tr2RenderContext & renderContext );
+	void SetDefaultColor( uint32_t val )
+	{
+		m_defaultColor = val;
+	}
 	void SetCurrentColor( uint32_t val );
 
-	Matrix GetWorldTransform( void ) const { return m_transform; }
+	Matrix GetWorldTransform( void ) const
+	{
+		return m_transform;
+	}
 
 private:
 	Matrix m_transform;
 	uint32_t m_defaultColor;
-	bool	m_zEnable;
+	bool m_zEnable;
 	std::vector<TriDebugResourceHelper::VertexPosColor> m_vertices;
 #if BLUE_WITH_PYTHON
-	PyObject* PyRender( PyObject* args );
+	PyObject* PyRender( PyObject * args );
 #endif
 };
-TYPEDEF_BLUECLASS(TriLineSet);
-BLUE_DECLARE_VECTOR(TriLineSet);
+TYPEDEF_BLUECLASS( TriLineSet );
+BLUE_DECLARE_VECTOR( TriLineSet );
 #endif
-

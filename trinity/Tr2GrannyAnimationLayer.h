@@ -20,7 +20,10 @@ class Tr2GrannyAnimation;
 #if WITH_GRANNY
 struct TextEventTrack
 {
-	TextEventTrack( granny_text_track* grannyTrack ) : m_grannyTrack( grannyTrack ), m_lastIndex(-1), m_lastLoop(-1) {}
+	TextEventTrack( granny_text_track* grannyTrack ) :
+		m_grannyTrack( grannyTrack ), m_lastIndex( -1 ), m_lastLoop( -1 )
+	{
+	}
 
 	const char* SampleTrack( float time, int loop );
 
@@ -35,11 +38,14 @@ private:
 struct MorphTrack
 {
 #if WITH_GRANNY
-	MorphTrack( granny_vector_track* grannyTrack ) : m_grannyTrack( grannyTrack ) {}
+	MorphTrack( granny_vector_track* grannyTrack ) :
+		m_grannyTrack( grannyTrack )
+	{
+	}
 #endif
 	MorphTrack( const cmf::AnimationChannel* cmfChannel, const cmf::AnimationCurve* cmfCurve ) :
-		m_cmfChannel( cmfChannel ), 
-		m_cmfCurve( cmfCurve ), 
+		m_cmfChannel( cmfChannel ),
+		m_cmfCurve( cmfCurve ),
 		m_cmfTargetName( cmf::ToStdString( cmfChannel->target ) )
 	{
 	}
@@ -88,7 +94,7 @@ public:
 	void SetControlParamSkewRate( float skewRate );
 
 	void TogglePauseAnimation( bool pause );
-	
+
 	std::string m_name;
 
 #if WITH_GRANNY
@@ -145,7 +151,7 @@ private:
 	bool m_controlParamEnabled;
 	float m_lastControlUpdateTime;
 #if WITH_GRANNY
-	granny_local_pose *m_basePose;
+	granny_local_pose* m_basePose;
 #endif
 	cmf::SkeletonPose m_cmfBasePose;
 	float m_skewRate;

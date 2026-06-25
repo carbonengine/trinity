@@ -13,7 +13,7 @@ struct Tr2AdapterInfo;
 struct Tr2DisplayModeInfo;
 
 
-#if( TRINITY_PLATFORM==TRINITY_STUB )
+#if ( TRINITY_PLATFORM == TRINITY_STUB )
 
 class Tr2VideoAdapterInfo
 {
@@ -44,7 +44,6 @@ public:
 									  unsigned adapter2 );
 
 	static ALResult RefreshData();
-
 };
 
 #endif

@@ -102,7 +102,7 @@ bool Tr2XessUpscalingTechnique::IsTemporal() const
 	return true;
 }
 
-bool Tr2XessUpscalingTechnique::IsAvailable( ) const
+bool Tr2XessUpscalingTechnique::IsAvailable() const
 {
 	return true;
 }
@@ -170,17 +170,17 @@ void Tr2XessUpscalingContext::UpdateJitter()
 	}
 }
 
-void Tr2XessUpscalingContext::Destroy( )
+void Tr2XessUpscalingContext::Destroy()
 {
 	if( m_context )
 	{
-		m_params.renderContext.FlushAndSyncDx12( );
+		m_params.renderContext.FlushAndSyncDx12();
 		xessDestroyContext( m_context );
 		m_context = nullptr;
 	}
 }
 
-void Tr2XessUpscalingContext::Setup( )
+void Tr2XessUpscalingContext::Setup()
 {
 	m_setup = false;
 
@@ -194,7 +194,7 @@ void Tr2XessUpscalingContext::Setup( )
 		params.initFlags |= XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE;
 	}
 
-	auto& renderContext = m_params.renderContext;	
+	auto& renderContext = m_params.renderContext;
 	renderContext.FlushAndSyncDx12();
 	renderContext.DirtyDescriptorCache();
 
@@ -205,7 +205,7 @@ void Tr2XessUpscalingContext::Setup( )
 		CCP_LOGNOTICE( "XeSS: XeSS is not supported on this device. Result - %s.", Tr2XessUpscalingUtils::ResultToString( status ) );
 		return;
 	}
-	
+
 	if( XESS_RESULT_WARNING_OLD_DRIVER == xessIsOptimalDriver( m_context ) )
 	{
 		CCP_LOGNOTICE( "XeSS: Please install the latest graphics driver from your vendor for optimal Intel(R) XeSS performance and visual quality" );

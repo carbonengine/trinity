@@ -18,74 +18,74 @@
 
 extern bool g_requestDebugMarkers;
 
-CCP_STATS_DECLARE( primitiveCount			, "Trinity/AL/primitiveCount"			, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
-CCP_STATS_DECLARE( vertexCount				, "Trinity/AL/vertexCount"				, true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
-CCP_STATS_DECLARE( sceneDrawcallCount		, "Trinity/AL/sceneDrawcallCount"		, true, CST_COUNTER_LOW,  "Number of DrawPrimitive calls." );
+CCP_STATS_DECLARE( primitiveCount, "Trinity/AL/primitiveCount", true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( vertexCount, "Trinity/AL/vertexCount", true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( sceneDrawcallCount, "Trinity/AL/sceneDrawcallCount", true, CST_COUNTER_LOW, "Number of DrawPrimitive calls." );
 
 namespace
 {
-	enum
-	{
-		/*
+enum
+{
+	/*
 		* NOTE: Cache heaps store descriptors for batches in flight, so they typically consume less total memory
 		*		but can benefit from having a larger page size to reduce the chance of having to hit the allocator
 		*		mid frame
 		*/
 
-		DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE = 1024,
+	DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE = 1024,
 
-	};
+};
 
 
-	D3D12_PRIMITIVE_TOPOLOGY s_topologies[] = {
-		D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,
-		D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-		D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
-		D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,
-		D3D_PRIMITIVE_TOPOLOGY_LINELIST,
-		D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,
-		D3D_PRIMITIVE_TOPOLOGY_POINTLIST,
-	};
+D3D12_PRIMITIVE_TOPOLOGY s_topologies[] = {
+	D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,
+	D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+	D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
+	D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,
+	D3D_PRIMITIVE_TOPOLOGY_LINELIST,
+	D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,
+	D3D_PRIMITIVE_TOPOLOGY_POINTLIST,
+};
 
-	D3D12_PRIMITIVE_TOPOLOGY_TYPE s_topologyTypes[] = {
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED,
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE,
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE,
-		D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT
-	};
+D3D12_PRIMITIVE_TOPOLOGY_TYPE s_topologyTypes[] = {
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED,
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE,
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE_LINE,
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE_POINT
+};
 
-	std::pair<uint32_t, uint32_t> s_primitiveToVertexCount[] = {
-		std::make_pair( 0, 0 ),
-		std::make_pair( 3, 0 ),
-		std::make_pair( 1, 2 ),
-		std::make_pair( 0, 0 ),
-		std::make_pair( 2, 0 ),
-		std::make_pair( 1, 1 ),
-		std::make_pair( 1, 0 ),
-	};
+std::pair<uint32_t, uint32_t> s_primitiveToVertexCount[] = {
+	std::make_pair( 0, 0 ),
+	std::make_pair( 3, 0 ),
+	std::make_pair( 1, 2 ),
+	std::make_pair( 0, 0 ),
+	std::make_pair( 2, 0 ),
+	std::make_pair( 1, 1 ),
+	std::make_pair( 1, 0 ),
+};
 
-	D3D12_RESOURCE_STATES GetDepthBufferState( const Tr2TextureAL& depthBuffer, bool readOnly )
+D3D12_RESOURCE_STATES GetDepthBufferState( const Tr2TextureAL& depthBuffer, bool readOnly )
+{
+	if( readOnly )
 	{
-		if( readOnly )
+		auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
+		if( HasFlag( depthBuffer.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
-			auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
-			if( HasFlag( depthBuffer.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
-			{
-				readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-			}
-			return readState;
+			readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 		}
-		return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		return readState;
 	}
+	return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+}
 
 }
 
 
-Tr2RenderContextAL::Tr2RenderContextAL() throw( )
-	:m_primitiveToVertexCount( 0, 0 ),
+Tr2RenderContextAL::Tr2RenderContextAL() throw() :
+	m_primitiveToVertexCount( 0, 0 ),
 	m_ownerDevice( nullptr ),
 	m_dirtyPso( true ),
 	m_readOnlyDepth( false ),
@@ -95,17 +95,17 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw( )
 	m_separateAlphaBlendEnabled( false ),
 	m_srgbWriteEnable( false ),
 	m_topology( Tr2RenderContextEnum::TOP_TRIANGLES ),
-	m_uavBarriersDisabledCounter(0)
+	m_uavBarriersDisabledCounter( 0 )
 {
 	std::fill( std::begin( m_vertexBuffers ), std::end( m_vertexBuffers ), VB() );
 }
 
-Tr2RenderContextAL::~Tr2RenderContextAL() throw( )
+Tr2RenderContextAL::~Tr2RenderContextAL() throw()
 {
 	Destroy();
 }
 
-void Tr2RenderContextAL::Destroy() throw( )
+void Tr2RenderContextAL::Destroy() throw()
 {
 	if( m_ownerDevice )
 	{
@@ -126,18 +126,18 @@ void Tr2RenderContextAL::Destroy() throw( )
 	m_commandList4 = nullptr;
 }
 
-bool Tr2RenderContextAL::IsValid() const throw( )
+bool Tr2RenderContextAL::IsValid() const throw()
 {
 	return m_commandList != nullptr;
 }
 
 ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocator, Tr2PrimaryRenderContextAL& renderContext )
 {
-	CR_RETURN_HR( renderContext.m_device->CreateCommandList( 
-		0, 
-		D3D12_COMMAND_LIST_TYPE_DIRECT, 
+	CR_RETURN_HR( renderContext.m_device->CreateCommandList(
+		0,
+		D3D12_COMMAND_LIST_TYPE_DIRECT,
 		commandAllocator,
-		nullptr, 
+		nullptr,
 		IID_PPV_ARGS( &m_commandList ) ) );
 	CR_RETURN_HR( m_commandList->Close() );
 	m_commandList.QueryInterface( &m_commandList2 );
@@ -149,8 +149,8 @@ ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocato
 
 	for( uint32_t bufferIdx = 0; bufferIdx < renderContext.GetBackBufferCount(); ++bufferIdx )
 	{
-		m_descriptorCache.push_back( std::make_shared<DescriptorStateCache>( 
-			renderContext.m_device, 
+		m_descriptorCache.push_back( std::make_shared<DescriptorStateCache>(
+			renderContext.m_device,
 			&renderContext ) );
 	}
 	m_ownerDevice = &renderContext;
@@ -167,7 +167,7 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 	return m_ownerDevice;
 }
 
-ALResult Tr2RenderContextAL::BeginScene() throw( )
+ALResult Tr2RenderContextAL::BeginScene() throw()
 {
 	return S_OK;
 }
@@ -178,7 +178,7 @@ ALResult Tr2RenderContextAL::EndScene()
 }
 
 
-ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float depth, uint32_t stencil, uint32_t slot ) throw( )
+ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float depth, uint32_t stencil, uint32_t slot ) throw()
 {
 	bool rtClear = false;
 	bool dsClear = false;
@@ -249,9 +249,9 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 
 ALResult Tr2RenderContextAL::SetStreamSource(
 	uint32_t index,
-	const Tr2BufferAL & buffer,
+	const Tr2BufferAL& buffer,
 	uint32_t offset,
-	uint32_t stride ) throw( )
+	uint32_t stride ) throw()
 {
 	if( index > 3 )
 	{
@@ -293,7 +293,7 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer ) throw()
 	return SetIndices( buffer, buffer.GetDesc().stride );
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, int stride ) throw( )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, int stride ) throw()
 {
 	m_indexBuffer = buffer;
 
@@ -310,7 +310,7 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, int stride )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw( )
+ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw()
 {
 	if( !( m_psoDescription.m_vertexLayout == layout ) )
 	{
@@ -321,7 +321,7 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( )
+ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw()
 {
 	if( !( m_psoDescription.m_shaderProgram == shader ) )
 	{
@@ -331,7 +331,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topology ) throw( )
+ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topology ) throw()
 {
 	auto dxTopology = s_topologies[topology];
 	m_commandList->IASetPrimitiveTopology( dxTopology );
@@ -346,46 +346,46 @@ ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topolog
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( )
+ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw()
 {
-#define HANDLE_STATE( rs, dest )								\
-	case rs:													\
-		if( dest != static_cast<decltype( dest )>( value ) )	\
-		{														\
-			dest = static_cast<decltype( dest )>( value );		\
-			m_dirtyPso = true;									\
-		}														\
+#define HANDLE_STATE( rs, dest )                             \
+	case rs:                                                 \
+		if( dest != static_cast<decltype( dest )>( value ) ) \
+		{                                                    \
+			dest = static_cast<decltype( dest )>( value );   \
+			m_dirtyPso = true;                               \
+		}                                                    \
 		break;
 
-#define HANDLE_STATE_FLT( rs, dest )							\
-	case rs:													\
-		if( dest != static_cast<decltype( dest )>( *reinterpret_cast<float*>( &value ) ) )	\
-		{														\
-			dest = static_cast<decltype( dest )>( *reinterpret_cast<float*>( &value ) );	\
-			m_dirtyPso = true;									\
-		}														\
+#define HANDLE_STATE_FLT( rs, dest )                                                       \
+	case rs:                                                                               \
+		if( dest != static_cast<decltype( dest )>( *reinterpret_cast<float*>( &value ) ) ) \
+		{                                                                                  \
+			dest = static_cast<decltype( dest )>( *reinterpret_cast<float*>( &value ) );   \
+			m_dirtyPso = true;                                                             \
+		}                                                                                  \
 		break;
 
-#define HANDLE_STATE_DBL( rs, dest1, dest2 )					\
-	case rs:													\
+#define HANDLE_STATE_DBL( rs, dest1, dest2 )                    \
+	case rs:                                                    \
 		if( dest1 != static_cast<decltype( dest1 )>( value ) || \
-			dest2 != static_cast<decltype( dest2 )>( value ) )	\
-		{														\
-			dest1 = static_cast<decltype( dest1 )>( value );	\
-			dest2 = static_cast<decltype( dest2 )>( value );	\
-			m_dirtyPso = true;									\
-		}														\
+			dest2 != static_cast<decltype( dest2 )>( value ) )  \
+		{                                                       \
+			dest1 = static_cast<decltype( dest1 )>( value );    \
+			dest2 = static_cast<decltype( dest2 )>( value );    \
+			m_dirtyPso = true;                                  \
+		}                                                       \
 		break;
 
 	switch( state )
 	{
-	HANDLE_STATE( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, m_psoDescription.m_blendDesc.RenderTarget[0].BlendEnable );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_SRCBLEND, m_psoDescription.m_blendDesc.RenderTarget[0].SrcBlend );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_DESTBLEND, m_psoDescription.m_blendDesc.RenderTarget[0].DestBlend );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_BLENDOP, m_psoDescription.m_blendDesc.RenderTarget[0].BlendOp );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_SRCBLENDALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].SrcBlendAlpha );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_DESTBLENDALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].DestBlendAlpha );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_BLENDOPALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].BlendOpAlpha );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, m_psoDescription.m_blendDesc.RenderTarget[0].BlendEnable );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_SRCBLEND, m_psoDescription.m_blendDesc.RenderTarget[0].SrcBlend );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_DESTBLEND, m_psoDescription.m_blendDesc.RenderTarget[0].DestBlend );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_BLENDOP, m_psoDescription.m_blendDesc.RenderTarget[0].BlendOp );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_SRCBLENDALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].SrcBlendAlpha );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_DESTBLENDALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].DestBlendAlpha );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_BLENDOPALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].BlendOpAlpha );
 	case Tr2RenderContextEnum::RS_COLORWRITEENABLE:
 		if( m_psoDescription.m_blendDesc.RenderTarget[0].RenderTargetWriteMask != ( value & 0xf ) )
 		{
@@ -394,23 +394,22 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 		}
 		break;
 
-	HANDLE_STATE( Tr2RenderContextEnum::RS_CULLMODE, m_psoDescription.m_rasterizerDesc.CullMode );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_FILLMODE, m_psoDescription.m_rasterizerDesc.FillMode );
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_DEPTHBIAS, m_psoDescription.m_rasterizerDesc.DepthBias ); // cppcheck-suppress invalidPointerCast
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_ZBIAS, m_psoDescription.m_rasterizerDesc.DepthBias ); // cppcheck-suppress invalidPointerCast
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_SLOPESCALEDEPTHBIAS, m_psoDescription.m_rasterizerDesc.SlopeScaledDepthBias ); // cppcheck-suppress invalidPointerCast
+		HANDLE_STATE( Tr2RenderContextEnum::RS_CULLMODE, m_psoDescription.m_rasterizerDesc.CullMode );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_FILLMODE, m_psoDescription.m_rasterizerDesc.FillMode );
+		HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_DEPTHBIAS, m_psoDescription.m_rasterizerDesc.DepthBias ); // cppcheck-suppress invalidPointerCast
+		HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_ZBIAS, m_psoDescription.m_rasterizerDesc.DepthBias ); // cppcheck-suppress invalidPointerCast
+		HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_SLOPESCALEDEPTHBIAS, m_psoDescription.m_rasterizerDesc.SlopeScaledDepthBias ); // cppcheck-suppress invalidPointerCast
 
-	HANDLE_STATE( Tr2RenderContextEnum::RS_ZENABLE, m_psoDescription.m_depthStencilDesc.DepthEnable );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_ZFUNC, m_psoDescription.m_depthStencilDesc.DepthFunc );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_STENCILENABLE, m_psoDescription.m_depthStencilDesc.StencilEnable );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILMASK, m_psoDescription.m_depthStencilDesc.StencilReadMask, m_psoDescription.m_depthStencilDesc.StencilWriteMask );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFAIL, m_psoDescription.m_depthStencilDesc.FrontFace.StencilFailOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilFailOp );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILZFAIL, m_psoDescription.m_depthStencilDesc.FrontFace.StencilDepthFailOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilDepthFailOp );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILPASS, m_psoDescription.m_depthStencilDesc.FrontFace.StencilPassOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilPassOp );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFUNC, m_psoDescription.m_depthStencilDesc.FrontFace.StencilFunc, m_psoDescription.m_depthStencilDesc.BackFace.StencilFunc );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_ZENABLE, m_psoDescription.m_depthStencilDesc.DepthEnable );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_ZFUNC, m_psoDescription.m_depthStencilDesc.DepthFunc );
+		HANDLE_STATE( Tr2RenderContextEnum::RS_STENCILENABLE, m_psoDescription.m_depthStencilDesc.StencilEnable );
+		HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILMASK, m_psoDescription.m_depthStencilDesc.StencilReadMask, m_psoDescription.m_depthStencilDesc.StencilWriteMask );
+		HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFAIL, m_psoDescription.m_depthStencilDesc.FrontFace.StencilFailOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilFailOp );
+		HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILZFAIL, m_psoDescription.m_depthStencilDesc.FrontFace.StencilDepthFailOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilDepthFailOp );
+		HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILPASS, m_psoDescription.m_depthStencilDesc.FrontFace.StencilPassOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilPassOp );
+		HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFUNC, m_psoDescription.m_depthStencilDesc.FrontFace.StencilFunc, m_psoDescription.m_depthStencilDesc.BackFace.StencilFunc );
 
-	case Tr2RenderContextEnum::RS_ZWRITEENABLE:
-	{
+	case Tr2RenderContextEnum::RS_ZWRITEENABLE: {
 		auto mask = ( value != 0 && !m_readOnlyDepth ) ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
 		if( m_psoDescription.m_depthStencilDesc.DepthWriteMask != mask )
 		{
@@ -434,7 +433,7 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 		if( m_srgbWriteEnable != ( value != 0 ) )
 		{
 			m_srgbWriteEnable = value != 0;
-			
+
 			D3D12_CPU_DESCRIPTOR_HANDLE handles[RENDER_TARGET_COUNT];
 			uint32_t count = 0;
 			if( GetRenderTargetHandles( handles, count ) )
@@ -479,7 +478,7 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 #undef SET_STATE
 }
 
-ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw( )
+ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw()
 {
 	while( count-- )
 	{
@@ -490,7 +489,7 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( )
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw()
 {
 	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_outTransitions.empty() )
 	{
@@ -527,10 +526,10 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr2RenderContextEnum::ShaderType constantType, uint32_t registerIndex, uint32_t ) throw( )
+ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr2RenderContextEnum::ShaderType constantType, uint32_t registerIndex, uint32_t ) throw()
 {
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetConstantBuffers(constantType, registerIndex, *buffer.m_buffer);
+	m_descriptorCache[bufferIndex]->SetConstantBuffers( constantType, registerIndex, *buffer.m_buffer );
 	return S_OK;
 }
 
@@ -548,7 +547,7 @@ uint64_t Tr2RenderContextAL::UploadConstants( const Tr2ConstantBufferAL& buffer 
 
 
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t, uint32_t startIndex, uint32_t primitiveCount, uint32_t minimumIndex ) throw( )
+ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t, uint32_t startIndex, uint32_t primitiveCount, uint32_t minimumIndex ) throw()
 {
 	CR_RETURN_HR( SetAllState() );
 	FlushGraphicsBarriersDx12();
@@ -563,7 +562,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t, uint32_t startIndex
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw( )
+ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw()
 {
 	CR_RETURN_HR( SetAllState() );
 	FlushGraphicsBarriersDx12();
@@ -583,7 +582,7 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	uint32_t,
 	uint32_t startIndex,
 	uint32_t primitiveCount,
-	uint32_t numInstances ) throw( )
+	uint32_t numInstances ) throw()
 {
 	CR_RETURN_HR( SetAllState() );
 	FlushGraphicsBarriersDx12();
@@ -622,7 +621,7 @@ ALResult Tr2RenderContextAL::DrawInstanced(
 	uint32_t vertexCountPerInstance,
 	uint32_t instanceCount,
 	uint32_t startVertexLocation,
-	uint32_t startInstanceLocation ) throw( )
+	uint32_t startInstanceLocation ) throw()
 {
 	CR_RETURN_HR( SetAllState() );
 	FlushGraphicsBarriersDx12();
@@ -637,14 +636,14 @@ ALResult Tr2RenderContextAL::DrawInstanced(
 }
 
 
-ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
+ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw()
 {
 	auto buffer = params.m_buffer->GetGpuResource();
 	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) );
 	}
-	
+
 	CR_RETURN_HR( SetAllState() );
 	FlushGraphicsBarriersDx12( buffer );
 
@@ -663,7 +662,7 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
+ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw()
 {
 	auto buffer = params.m_buffer->GetGpuResource();
 	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
@@ -686,7 +685,7 @@ ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw( )
+ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw()
 {
 	CR_RETURN_HR( SetAllState() );
 	FlushComputeBarriersDx12();
@@ -695,7 +694,7 @@ ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned grou
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& params, unsigned offset ) throw( )
+ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& params, unsigned offset ) throw()
 {
 	auto buffer = params.m_buffer->GetGpuResource();
 	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
@@ -828,7 +827,7 @@ ALResult Tr2RenderContextAL::SetAllState()
 		}
 		m_commandList->IASetVertexBuffers( 0, 4, vb );
 	}
-	
+
 	if( m_dynamicIB )
 	{
 		D3D12_INDEX_BUFFER_VIEW ib = { 0, 0, DXGI_FORMAT_UNKNOWN };
@@ -886,8 +885,8 @@ void Tr2RenderContextAL::FlushGraphicsBarriersDx12( ID3D12Resource* resource )
 	}
 	size_t count = 0;
 	// resource + m_boundRenderTargets + m_boundDepthStencil + m_vertexBuffers + m_indexBuffer + m_resourceSet
-	ID3D12Resource* resources[1 + RENDER_TARGET_COUNT + 1 + 4 + 1 + Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE]; 
-	
+	ID3D12Resource* resources[1 + RENDER_TARGET_COUNT + 1 + 4 + 1 + Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+
 	if( resource )
 	{
 		resources[count++] = resource;
@@ -977,7 +976,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 	{
 		return S_OK;
 	}
-	if( renderTarget.IsValid() && renderTarget.m_texture->GetRtvDescriptorHandleDx12(m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR) == nullptr )
+	if( renderTarget.IsValid() && renderTarget.m_texture->GetRtvDescriptorHandleDx12( m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) == nullptr )
 	{
 		return E_INVALIDARG;
 	}
@@ -1070,12 +1069,12 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 }
 
 
-ALResult Tr2RenderContextAL::PushDepthStencil() throw( )
+ALResult Tr2RenderContextAL::PushDepthStencil() throw()
 {
 	m_dsStack.push_back( m_boundDepthStencil );
 	return S_OK;
 }
-ALResult Tr2RenderContextAL::PopDepthStencil() throw( )
+ALResult Tr2RenderContextAL::PopDepthStencil() throw()
 {
 	if( m_dsStack.empty() )
 	{
@@ -1086,7 +1085,7 @@ ALResult Tr2RenderContextAL::PopDepthStencil() throw( )
 	return SetDepthStencil( ds );
 }
 
-ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil ) throw( )
+ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil ) throw()
 {
 	if( depthStencil == m_boundDepthStencil )
 	{
@@ -1156,7 +1155,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	return S_OK;
 }
 
-void Tr2RenderContextAL::SetReadOnlyDepth( bool enable ) throw( )
+void Tr2RenderContextAL::SetReadOnlyDepth( bool enable ) throw()
 {
 	if( m_readOnlyDepth == enable )
 	{
@@ -1182,7 +1181,7 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 	return m_readOnlyDepth;
 }
 
-ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot ) throw( )
+ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot ) throw()
 {
 	if( m_boundRenderTargets[slot].texture.IsValid() )
 	{
@@ -1200,7 +1199,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 	uint32_t primitiveCount,
 	const uint32_t* indexData,
 	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride ) throw( )
+	uint32_t vertexStreamZeroStride ) throw()
 {
 	return m_drawUPHelper.DrawIndexedPrimitiveUP( m_topology, numVertices, primitiveCount, indexData, vertexStreamZeroData, vertexStreamZeroStride, *this, *m_ownerDevice );
 }
@@ -1210,7 +1209,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 	uint32_t primitiveCount,
 	const uint16_t* indexData,
 	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride ) throw( )
+	uint32_t vertexStreamZeroStride ) throw()
 {
 	return m_drawUPHelper.DrawIndexedPrimitiveUP( m_topology, numVertices, primitiveCount, indexData, vertexStreamZeroData, vertexStreamZeroStride, *this, *m_ownerDevice );
 }
@@ -1218,12 +1217,12 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 ALResult Tr2RenderContextAL::DrawPrimitiveUP(
 	uint32_t primitiveCount,
 	const void* vertexStreamZeroData,
-	uint32_t VertexStreamZeroStride ) throw( )
+	uint32_t VertexStreamZeroStride ) throw()
 {
 	return m_drawUPHelper.DrawPrimitiveUP( m_topology, primitiveCount, vertexStreamZeroData, VertexStreamZeroStride, *this, *m_ownerDevice );
 }
 
-ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport ) throw( )
+ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport ) throw()
 {
 	m_viewport = viewport;
 	D3D12_VIEWPORT vp = { viewport.m_x, viewport.m_y, viewport.m_width, viewport.m_height, viewport.m_minZ, viewport.m_maxZ };
@@ -1231,7 +1230,7 @@ ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport ) throw( )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport ) throw( )
+ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport ) throw()
 {
 	viewport = m_viewport;
 	return S_OK;
@@ -1487,10 +1486,10 @@ bool Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* ha
 	{
 		if( m_boundRenderTargets[i].texture.IsValid() )
 		{
-			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[i].texture.m_texture->GetRtvDescriptorHandleDx12( 
-				m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR, 
+			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[i].texture.m_texture->GetRtvDescriptorHandleDx12(
+				m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR,
 				m_boundRenderTargets[i].slice );
-			CCP_ASSERT(rtv != nullptr);
+			CCP_ASSERT( rtv != nullptr );
 			handles[i] = rtv->GetHandleCPU();
 			count = i + 1;
 			hasNullRtsInside = hasNullRts;
@@ -1602,13 +1601,12 @@ void Tr2RenderContextAL::PopGpuMarker()
 	{
 		m_commandList->EndEvent();
 	}
-	
 }
 
 /** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
 void Tr2RenderContextAL::ResetDescriptorCaches()
 {
-	for (size_t idx = 0; idx < m_descriptorCache.size(); ++idx)
+	for( size_t idx = 0; idx < m_descriptorCache.size(); ++idx )
 	{
 		m_descriptorCache[idx]->Reset();
 	}
@@ -1864,7 +1862,7 @@ ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination, Tr2GpuUsag
 
 ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
 {
-    return S_OK;
+	return S_OK;
 }
 
 void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )

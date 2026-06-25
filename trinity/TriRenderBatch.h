@@ -23,8 +23,13 @@ class Tr2PerObjectData;
 class TriRenderBatchAreaBlock
 {
 public:
-	TriRenderBatchAreaBlock() {}
-	TriRenderBatchAreaBlock( unsigned int startIndex, unsigned int count ) : m_startIndex( startIndex ), m_count( count ) {}
+	TriRenderBatchAreaBlock()
+	{
+	}
+	TriRenderBatchAreaBlock( unsigned int startIndex, unsigned int count ) :
+		m_startIndex( startIndex ), m_count( count )
+	{
+	}
 
 	// optimizing lists
 	static void Optimize( std::vector<TriRenderBatchAreaBlock>& areaBlockVector );
@@ -42,7 +47,6 @@ public:
 
 	Tr2EffectPtr m_shaderMaterial;
 	std::vector<TriRenderBatchAreaBlock> m_areaBlockVector;
-
 };
 // --------------------------------------------------------------------------------------
 // Description
@@ -50,9 +54,9 @@ public:
 // --------------------------------------------------------------------------------------
 enum RenderBatchSortType
 {
-	RENDERBATCHSORTTYPE_NONE,			// Don't sort
-	RENDERBATCHSORTTYPE_SORT,			// Use std::sort
-	RENDERBATCHSORTTYPE_STABLE_SORT		// Use std::stable_sort
+	RENDERBATCHSORTTYPE_NONE, // Don't sort
+	RENDERBATCHSORTTYPE_SORT, // Use std::sort
+	RENDERBATCHSORTTYPE_STABLE_SORT // Use std::stable_sort
 };
 
 
@@ -229,7 +233,9 @@ public:
 	}
 
 	// Destructor
-	virtual ~ITriRenderBatchAccumulator() {}
+	virtual ~ITriRenderBatchAccumulator()
+	{
+	}
 
 	// Allocate memory block of the given size
 	void* Allocate( size_t size )
@@ -256,7 +262,7 @@ public:
 	virtual void Finalize( void ) = 0;
 
 	// Get the number of batches
-    virtual size_t GetBatchCount( void ) const = 0;
+	virtual size_t GetBatchCount( void ) const = 0;
 
 	// Are batches sorted by effect?
 	virtual bool IsChainedByEffect( void ) const = 0;
@@ -264,13 +270,22 @@ public:
 	virtual void TransferFrom( ITriRenderBatchAccumulator* source ) = 0;
 
 	// Set userdata
-	void SetUserData( int64_t userData ) { m_userData = userData; }
+	void SetUserData( int64_t userData )
+	{
+		m_userData = userData;
+	}
 
 	// Set rendering mode
-	void SetRenderingMode( Tr2EffectStateManager::RenderingMode mode ) { m_renderingMode = mode; }
+	void SetRenderingMode( Tr2EffectStateManager::RenderingMode mode )
+	{
+		m_renderingMode = mode;
+	}
 
 	// Get rendering mode
-	Tr2EffectStateManager::RenderingMode GetRenderingMode() const { return m_renderingMode; }
+	Tr2EffectStateManager::RenderingMode GetRenderingMode() const
+	{
+		return m_renderingMode;
+	}
 
 protected:
 	int64_t m_userData;
@@ -293,20 +308,20 @@ template <class KeyGenerator = DefaultKeyGenerator>
 class TriRenderBatchAccumulator : public ITriRenderBatchAccumulator
 {
 public:
-    // Construct an accumulator, associating it with the given allocator.
-    TriRenderBatchAccumulator( TriPoolAllocator* allocator ) :
+	// Construct an accumulator, associating it with the given allocator.
+	TriRenderBatchAccumulator( TriPoolAllocator* allocator ) :
 		ITriRenderBatchAccumulator( allocator ),
 		m_keyGen()
 	{
 	}
 
-    virtual ~TriRenderBatchAccumulator()
+	virtual ~TriRenderBatchAccumulator()
 	{
 	}
 
-    // Clears the accumulator, resetting to initial state. Note that the
+	// Clears the accumulator, resetting to initial state. Note that the
 	// allocator must be cleared separately as it may be shared with other things.
-    virtual void Clear( void )
+	virtual void Clear( void )
 	{
 		m_userData = 0x0;
 		m_renderingMode = Tr2EffectStateManager::RM_ANY;
@@ -364,8 +379,8 @@ public:
 		return m_batches;
 	}
 
-    // Call this after committing the last batch.
-    virtual void Finalize( void )
+	// Call this after committing the last batch.
+	virtual void Finalize( void )
 	{
 		if constexpr( KeyGenerator::GetSortType() == RENDERBATCHSORTTYPE_SORT )
 		{
@@ -394,10 +409,16 @@ public:
 	}
 
 	// Get the batch count
-    virtual size_t GetBatchCount() const { return m_gdprBatches.size() + m_batches.size(); }
+	virtual size_t GetBatchCount() const
+	{
+		return m_gdprBatches.size() + m_batches.size();
+	}
 
 	// Are the batches sorted by effect?
-	virtual bool IsChainedByEffect() const { return m_keyGen.GetSortType() != RENDERBATCHSORTTYPE_NONE; }
+	virtual bool IsChainedByEffect() const
+	{
+		return m_keyGen.GetSortType() != RENDERBATCHSORTTYPE_NONE;
+	}
 
 private:
 	KeyGenerator m_keyGen;

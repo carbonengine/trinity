@@ -26,9 +26,9 @@ const Be::ClassInfo* EveChildInstancedMeshes::ExposeToBlue()
 			":param areaId: The areaID returned from mouse picking method\n"
 			":rtype: None | (str, str, int)" )
 
-		MAP_METHOD_AND_WRAP( 
-			"GetMeshCount", 
-			GetMeshCount, 
+		MAP_METHOD_AND_WRAP(
+			"GetMeshCount",
+			GetMeshCount,
 			"Returns the number of instanced meshes in this object." )
 		MAP_METHOD_AND_WRAP(
 			"GetMeshInfo",

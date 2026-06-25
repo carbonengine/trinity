@@ -33,8 +33,8 @@ bool EveCloudVolumeBall::OnModified( Be::Var* value )
 }
 
 
-EveCloudEditableVolume::EveCloudEditableVolume( IRoot* lockobj )
-	:PARENTLOCK( m_balls ),
+EveCloudEditableVolume::EveCloudEditableVolume( IRoot* lockobj ) :
+	PARENTLOCK( m_balls ),
 	m_width( 64 ),
 	m_height( 64 ),
 	m_depth( 64 ),
@@ -141,7 +141,7 @@ void EveCloudEditableVolume::OnListModified(
 		}
 		break;
 	case BELIST_REMOVED:
-		if(event & BELIST_UNLOADING)
+		if( event & BELIST_UNLOADING )
 		{
 			return;
 		}
@@ -245,7 +245,7 @@ void EveCloudEditableVolume::RasterizeBalls( RasterizeParams& params )
 	for( auto it = params.balls[0].begin(); it != params.balls[0].end(); ++it )
 	{
 		RasterizeBall( *it, params, pixels.get() );
-		if( params.status != Working)
+		if( params.status != Working )
 		{
 			params.status = Aborted;
 			return;
@@ -269,7 +269,7 @@ void EveCloudEditableVolume::RasterizeBallsAnimated( RasterizeParams& params )
 		for( auto it = params.balls[f].begin(); it != params.balls[f].end(); ++it )
 		{
 			RasterizeBall( *it, params, pixels.get() );
-			if( params.status != Working)
+			if( params.status != Working )
 			{
 				params.status = Aborted;
 				return;
@@ -317,7 +317,7 @@ void EveCloudEditableVolume::RasterizeBall( const EveCloudVolumeBall::BallData& 
 				float dx = x - ball.m_position.x;
 				dx *= dx;
 
-				float distance = std::min( 1.f,  sqrtf( dx + dy + dz ) / ball.m_radius );
+				float distance = std::min( 1.f, sqrtf( dx + dy + dz ) / ball.m_radius );
 				float alpha = pow( 1.f - distance, ball.m_falloff );
 
 				int offset = ( i + j * params.width + k * params.width * params.height ) * 4;
@@ -347,10 +347,10 @@ void EveCloudEditableVolume::RenderDebugInfo( const Matrix& world, Tr2RenderCont
 	for( auto it = m_balls.begin(); it != m_balls.end(); ++it )
 	{
 		Vector3 position = TransformCoord( ( *it )->m_ballData.m_position, world );
-		Tr2Renderer::DrawSphere( position, 
-			( *it )->m_ballData.m_radius * world._11, 
-			10, 
-			( uint32_t( ( *it )->m_ballData.m_opacity * 255 ) << 24 ) | ( *it )->m_ballData.m_selfIllumination );
+		Tr2Renderer::DrawSphere( position,
+								 ( *it )->m_ballData.m_radius * world._11,
+								 10,
+								 ( uint32_t( ( *it )->m_ballData.m_opacity * 255 ) << 24 ) | ( *it )->m_ballData.m_selfIllumination );
 	}
 }
 
@@ -382,8 +382,8 @@ void EveCloudEditableVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, cons
 
 
 
-EveCloudVolumeTextureParameter::EveCloudVolumeTextureParameter( IRoot* lockobj )
-	:m_isUsedByEffect( false )
+EveCloudVolumeTextureParameter::EveCloudVolumeTextureParameter( IRoot* lockobj ) :
+	m_isUsedByEffect( false )
 {
 }
 
@@ -399,7 +399,7 @@ const char* EveCloudVolumeTextureParameter::GetParameterName() const
 void EveCloudVolumeTextureParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 {
 	m_isUsedByEffect = false;
-	if ( m_name.empty() || !effectRes )
+	if( m_name.empty() || !effectRes )
 	{
 		return;
 	}
@@ -422,7 +422,7 @@ bool EveCloudVolumeTextureParameter::CopyToResourceSet(
 	bool isSrgb = ( flags & RESOURCE_FLAG_SRGB ) != 0;
 	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 	if( Tr2TextureAL* tex = ( resource ? resource->GetTexture() : nullptr ) )
-	{		
+	{
 
 		return resourceDesc.SetSrv( stage, registerIndex, *tex, colorSpace );
 	}

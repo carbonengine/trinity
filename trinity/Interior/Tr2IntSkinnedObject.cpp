@@ -60,7 +60,7 @@ bool Tr2IntSkinnedObject::OnModified( Be::Var* value )
 	{
 		return true;
 	}
-	
+
 	m_lod.OnModified( value );
 	return true;
 }
@@ -83,7 +83,7 @@ void Tr2IntSkinnedObject::PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexSc
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Adds per-cell reflection map to an array of current reflection maps. 
+//   Adds per-cell reflection map to an array of current reflection maps.
 // Arguments:
 //   texture - Per-cell reflection map
 // --------------------------------------------------------------------------------------
@@ -117,7 +117,7 @@ void Tr2IntSkinnedObject::AddReflectionMap( TriTextureRes* texture )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Removes per-cell reflection map from an array of current reflection maps. 
+//   Removes per-cell reflection map from an array of current reflection maps.
 // Arguments:
 //   texture - Per-cell reflection map
 // --------------------------------------------------------------------------------------
@@ -182,9 +182,9 @@ Tr2PerObjectData* Tr2IntSkinnedObject::GetPerObjectData( ITriRenderBatchAccumula
 extern int g_maxClothLod;
 
 void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
-								   TriBatchType batchType,
-								   const Tr2PerObjectData* perObjectData, 
-								   Tr2RenderReason reason)
+									  TriBatchType batchType,
+									  const Tr2PerObjectData* perObjectData,
+									  Tr2RenderReason reason )
 {
 	if( !DoDisplay() )
 	{
@@ -203,7 +203,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 		center -= Tr2Renderer::GetViewPosition();
 		float z = std::min( std::max( ( Length( center ) + m_depthOffset ) / maxDepth, 0.f ), 1.f );
 
-		depth = ( unsigned int )( ( float )0xFFFFFFF * ( 1.0f - z ) );
+		depth = (unsigned int)( (float)0xFFFFFFF * ( 1.0f - z ) );
 	}
 	Matrix* pm = batches->Allocate<Matrix>();
 
@@ -303,7 +303,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Utility function for populating per-object data with a skinning matrix palette for 
+//   Utility function for populating per-object data with a skinning matrix palette for
 //   GPU-skinning.  This uses instanced lighting.
 // Arguments:
 //   accumulator		 - The accumulator used to allocate the per-object data
@@ -312,7 +312,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 // Return Value:
 //   The allocated per-object data, or NULL if the allocation failed.
 // --------------------------------------------------------------------------------------
-Tr2PerObjectData* Tr2IntSkinnedObject::GetPerObjectDataGpuSkinning( 
+Tr2PerObjectData* Tr2IntSkinnedObject::GetPerObjectDataGpuSkinning(
 	ITriRenderBatchAccumulator* accumulator,
 	Tr2InteriorLightSet* lightSet,
 	const Matrix& objectToWorldMatrix )
@@ -324,7 +324,7 @@ Tr2PerObjectData* Tr2IntSkinnedObject::GetPerObjectDataGpuSkinning(
 	if( !data )
 	{
 		CCP_ASSERT( !"Not enough memory for skinning!" );
-		return NULL;	// should not happen (allocator out of memory??) but if it does, let's not crash.
+		return NULL; // should not happen (allocator out of memory??) but if it does, let's not crash.
 	}
 
 	data->SetSkinningMatrices( m_skinningMatrixCount, GetSkinningMatrices() );
@@ -372,19 +372,19 @@ void Tr2IntSkinnedObject::RemoveFromScene( void )
 
 // --------------------------------------------------------------------------------------
 //  Description:
-//    Gets per-object data for the skinned object using a per-instance light-set override 
-//    and an arbitrary object-to-world matrix.  
+//    Gets per-object data for the skinned object using a per-instance light-set override
+//    and an arbitrary object-to-world matrix.
 //  See Also:
 //    GetPerObjectData, GetPerObjectDataGpuSkinning
 //  Arguments:
 //    accumulator -         The batch accumulator used to allocate memory for per-object data
 //    lightSet -            The set of lights illuminating this object
-//    objectToWorldMatrix - The transformation matrix used to position this object 
+//    objectToWorldMatrix - The transformation matrix used to position this object
 //                          in world coordinates
 //  Return Value:
 //    The allocated per-object data, or NULL if the memory allocation failed.
 // --------------------------------------------------------------------------------------
-Tr2PerObjectData* Tr2IntSkinnedObject::GetPerObjectDataWithPerInstanceLighting( 
+Tr2PerObjectData* Tr2IntSkinnedObject::GetPerObjectDataWithPerInstanceLighting(
 	ITriRenderBatchAccumulator* accumulator,
 	Tr2InteriorLightSet* lightSet,
 	const Matrix& objectToWorldMatrix )
@@ -397,7 +397,7 @@ Tr2PerObjectData* Tr2IntSkinnedObject::GetPerObjectDataWithPerInstanceLighting(
 }
 
 // ------------------------------------------------------------------------------------------------------
-void Tr2IntSkinnedObject::SetPosition( const Vector3 &pos )
+void Tr2IntSkinnedObject::SetPosition( const Vector3& pos )
 {
 	if( ( m_currentPosition != pos ) || !m_positionSet )
 	{
@@ -418,9 +418,9 @@ void Tr2IntSkinnedObject::SetRotation( const Quaternion& rotQuat )
 		m_currentRotation = rotQuat;
 		m_rotationSet = true;
 
-		Vector3		tmpScale;		
-		Quaternion	tmpRotation;	
-		Vector3		tmpTranslation;	
+		Vector3 tmpScale;
+		Quaternion tmpRotation;
+		Vector3 tmpTranslation;
 
 		Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 		static_cast<Matrix&>( m_transform ) = TransformationMatrix( tmpScale, rotQuat, tmpTranslation );
@@ -435,9 +435,9 @@ void Tr2IntSkinnedObject::SetScaling( const Vector3& scaleVec )
 		m_currentScaling = scaleVec;
 		m_scalingSet = true;
 
-		Vector3		tmpScale;		
-		Quaternion	tmpRotation;	
-		Vector3		tmpTranslation;	
+		Vector3 tmpScale;
+		Quaternion tmpRotation;
+		Vector3 tmpTranslation;
 
 		Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 		static_cast<Matrix&>( m_transform ) = TransformationMatrix( scaleVec, tmpRotation, tmpTranslation );
@@ -455,22 +455,22 @@ void Tr2IntSkinnedObject::SetLOD( const TriFrustum* frustum )
 // -----------------------------------------------------------------------------------------------------
 void Tr2IntSkinnedObject::UpdatePlacement( const Vector3& front, const Vector3& top, const Vector3& pos )
 {
-	// Terrible workaround since the UpdatePlacement takes in a position and a front vector. 
+	// Terrible workaround since the UpdatePlacement takes in a position and a front vector.
 	// We have to work out way back to a quaternion
-	Vector3 temp = Vector3(front);
-	if (temp.z >= 1.0f)
+	Vector3 temp = Vector3( front );
+	if( temp.z >= 1.0f )
 	{
 		temp.z = 1.0f;
 	}
-	else if (temp.z <= -1.0f)
+	else if( temp.z <= -1.0f )
 	{
 		temp.z = -1.0f;
 	}
 
-	float yaw = acosf(temp.z);
-	// This is actually two answers, we need to determine which side of the axis we're on. 
+	float yaw = acosf( temp.z );
+	// This is actually two answers, we need to determine which side of the axis we're on.
 	// Correct for the other half of the circle
-	if (temp.x < 0.0f)
+	if( temp.x < 0.0f )
 	{
 		yaw = ( 2 * 3.14159265f ) - yaw;
 	}
@@ -479,11 +479,11 @@ void Tr2IntSkinnedObject::UpdatePlacement( const Vector3& front, const Vector3& 
 	yaw += 3.14159265f;
 
 	Quaternion q;
-	Vector3 up = Vector3(0, 1, 0);
+	Vector3 up = Vector3( 0, 1, 0 );
 	q = RotationQuaternion( yaw, 0, 0 );
 
-	SetRotation(q);
-	SetPosition(pos);
+	SetRotation( q );
+	SetPosition( pos );
 }
 
 #include "TriFrustum.h"

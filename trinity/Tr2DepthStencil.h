@@ -16,14 +16,14 @@ BLUE_DECLARE( Tr2DepthStencil );
 //   This class replaces TriSurface for those use-cases where the
 //   surface was just a depth stencil surface.
 // -------------------------------------------------------------
-BLUE_CLASS( Tr2DepthStencil ) : 
+BLUE_CLASS( Tr2DepthStencil ) :
 	public ITr2TextureProvider,
 	public Tr2DeviceResource
 {
 public:
 	EXPOSE_TO_BLUE();
 
-    Tr2DepthStencil( IRoot* = 0 );
+	Tr2DepthStencil( IRoot* = 0 );
 	~Tr2DepthStencil();
 
 	virtual Tr2TextureAL* GetTexture();
@@ -37,12 +37,12 @@ public:
 		Be::OptionalWithDefaultValue<unsigned, 0> msaaQuality,
 		Be::OptionalWithDefaultValue<Tr2RenderContextEnum::ExFlag, Tr2RenderContextEnum::EX_NONE> flags );
 
-	long Create( 
-		unsigned width, 
-		unsigned height, 
-		Tr2RenderContextEnum::DepthStencilFormat format, 
-		unsigned msaaType, 
-		unsigned msaaQuality, 
+	long Create(
+		unsigned width,
+		unsigned height,
+		Tr2RenderContextEnum::DepthStencilFormat format,
+		unsigned msaaType,
+		unsigned msaaQuality,
 		Tr2RenderContextEnum::ExFlag flags = Tr2RenderContextEnum::EX_NONE );
 
 	bool IsValid() const;
@@ -60,15 +60,22 @@ public:
 
 	Tr2TextureAL m_depthStencil;
 
-	operator Tr2TextureAL&() { return m_depthStencil; }	// avoid m_depthStencil->m_depthStencil all over the place
-	operator const Tr2TextureAL&() const { return m_depthStencil; }
+	operator Tr2TextureAL&()
+	{
+		return m_depthStencil;
+	} // avoid m_depthStencil->m_depthStencil all over the place
+	operator const Tr2TextureAL&() const
+	{
+		return m_depthStencil;
+	}
 
 	void SetName( const char* name );
 	std::string GetName() const;
-	
+
 protected:
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
+
 private:
 	bool HasALObject( int type, size_t object );
 

@@ -9,7 +9,7 @@
 #include "include/TriMath.h"
 
 
-EveLocalPositionCurve::EveLocalPositionCurve(IRoot* lockobj) :
+EveLocalPositionCurve::EveLocalPositionCurve( IRoot* lockobj ) :
 	m_value( 0.f, 0.f, 0.f ),
 	m_boundingBoxSize( 0.f, 0.f, 0.f ),
 	m_positionOffset( 0.f, 0.f, 0.f ),
@@ -17,10 +17,10 @@ EveLocalPositionCurve::EveLocalPositionCurve(IRoot* lockobj) :
 	m_locatorIndex( -1 ),
 	m_impactEffectIndex( -1 ),
 	m_impactSize( 1.f ),
-	m_behavior ( POS_NONE ),
+	m_behavior( POS_NONE ),
 	m_offset( 0.f ),
 	m_muzzleIndex( 0 )
-{	
+{
 }
 
 EveLocalPositionCurve::~EveLocalPositionCurve()
@@ -74,9 +74,9 @@ Vector3* EveLocalPositionCurve::CalculateOffsetPosition( Vector3* in, Be::Time t
 
 Vector3* EveLocalPositionCurve::CalculateNearestBoundingPoint( Vector3* in, Be::Time t )
 {
-	if (m_parentPositionCurve && m_alignPositionCurve && m_parentRotationCurve)
+	if( m_parentPositionCurve && m_alignPositionCurve && m_parentRotationCurve )
 	{
-		
+
 		Vector3 pt;
 		Vector3 at;
 		Quaternion parentRotation;
@@ -94,11 +94,11 @@ Vector3* EveLocalPositionCurve::CalculateNearestBoundingPoint( Vector3* in, Be::
 		*	system of the parent transform, then solve the question of how much it needs to be scaled by to reach
 		*	the bounding sphere, then perform this on the un-transformed vector. (which, like the object itself, is pre-transformed)
 		*	-------------------------------------------------------------------------------------------------- */
-	
+
 		Matrix matInv;
 		parentRotation = Inverse( Normalize( parentRotation ) );
 		matInv = RotationMatrix( parentRotation );
-		
+
 		Vector3 transformedDir = TransformCoord( dir, matInv );
 
 		// Dir is now transformed into the direction in relation to the rotation of the ship
@@ -108,30 +108,28 @@ Vector3* EveLocalPositionCurve::CalculateNearestBoundingPoint( Vector3* in, Be::
 
 		// if the object is really small (or the bounding size is erroring), just use the center of it, rather than
 		// giving a NaN result in this formula
-		if ((m_boundingBoxSize.x > 10.0)&&(m_boundingBoxSize.y > 10.0)&&(m_boundingBoxSize.z > 10.0))
+		if( ( m_boundingBoxSize.x > 10.0 ) && ( m_boundingBoxSize.y > 10.0 ) && ( m_boundingBoxSize.z > 10.0 ) )
 		{
 			// Forumula for an ellipsiod is
 			// 1 = (x^2 / a^2) + (y^2 / b^2) + (z^2 / c^2)
-			// now we need to solve the question, how much do we need to scale the vector 
+			// now we need to solve the question, how much do we need to scale the vector
 			// (all three axes equally) for the vector to satisfy the ellipsiod equation
 			// solution to 1 = (x*theta)^2/a^2 + ....
 			// (always want the positive answer)
 			scalingValue += fabs(
-								(m_boundingBoxSize.x * m_boundingBoxSize.y * m_boundingBoxSize.z) /
-								sqrt(
-									(transformedDir.x * transformedDir.x) * (m_boundingBoxSize.y * m_boundingBoxSize.y) * (m_boundingBoxSize.z * m_boundingBoxSize.z) + 
-									(transformedDir.y * transformedDir.y) * (m_boundingBoxSize.x * m_boundingBoxSize.x) * (m_boundingBoxSize.z * m_boundingBoxSize.z) + 
-									(transformedDir.z * transformedDir.z) * (m_boundingBoxSize.x * m_boundingBoxSize.x) * (m_boundingBoxSize.y * m_boundingBoxSize.y)
-								) 
-								);
+				( m_boundingBoxSize.x * m_boundingBoxSize.y * m_boundingBoxSize.z ) /
+				sqrt(
+					( transformedDir.x * transformedDir.x ) * ( m_boundingBoxSize.y * m_boundingBoxSize.y ) * ( m_boundingBoxSize.z * m_boundingBoxSize.z ) +
+					( transformedDir.y * transformedDir.y ) * ( m_boundingBoxSize.x * m_boundingBoxSize.x ) * ( m_boundingBoxSize.z * m_boundingBoxSize.z ) +
+					( transformedDir.z * transformedDir.z ) * ( m_boundingBoxSize.x * m_boundingBoxSize.x ) * ( m_boundingBoxSize.y * m_boundingBoxSize.y ) ) );
 		}
 
 		// Apply the scaling to the original direction vector
-		in->x = pt.x + (dir.x * scalingValue);
-		in->y = pt.y + (dir.y * scalingValue);
-		in->z = pt.z + (dir.z * scalingValue);
+		in->x = pt.x + ( dir.x * scalingValue );
+		in->y = pt.y + ( dir.y * scalingValue );
+		in->z = pt.z + ( dir.z * scalingValue );
 	}
-	else if (m_parentPositionCurve)
+	else if( m_parentPositionCurve )
 	{
 		Vector3 pt;
 		m_parentPositionCurve->GetValueAt( &pt, t );
@@ -144,7 +142,7 @@ Vector3* EveLocalPositionCurve::CalculateNearestBoundingPoint( Vector3* in, Be::
 }
 
 Vector3* EveLocalPositionCurve::GetCenterBoundingSphere( Vector3* in, Be::Time t )
-{	
+{
 	if( m_parentObject )
 	{
 		Vector3 tr;
@@ -158,17 +156,17 @@ Vector3* EveLocalPositionCurve::GetCenterBoundingSphere( Vector3* in, Be::Time t
 }
 
 Vector3* EveLocalPositionCurve::GetDamageLocator( Vector3* in, Be::Time t )
-{	
+{
 	if( m_alignPositionCurve && m_parentObject )
 	{
-		ITriTargetable* target = dynamic_cast< ITriTargetable* >( m_parentObject.p );
+		ITriTargetable* target = dynamic_cast<ITriTargetable*>( m_parentObject.p );
 		if( !target )
 		{
 			CCP_LOGERR( "Parent object is not targetable. Unable to get valid damage locators." );
 			return in;
 		}
 
-		if ( m_damageLocatorIndex == -1 )
+		if( m_damageLocatorIndex == -1 )
 		{
 			Vector3 parentPos;
 			m_alignPositionCurve->GetValueAt( &parentPos, t );
@@ -187,13 +185,13 @@ Vector3* EveLocalPositionCurve::GetDamageLocator( Vector3* in, Be::Time t )
 
 Vector3* EveLocalPositionCurve::GetNearestFiringLocator( Vector3* in, Be::Time t )
 {
-	if( m_parentObject && m_locatorIndex != -1 && !m_locatorSetName.empty())
+	if( m_parentObject && m_locatorIndex != -1 && !m_locatorSetName.empty() )
 	{
-		if( EveSpaceObject2* target = dynamic_cast< EveSpaceObject2* >( m_parentObject.p ) )
+		if( EveSpaceObject2* target = dynamic_cast<EveSpaceObject2*>( m_parentObject.p ) )
 		{
 			Vector3 locatorPos( 0, 0, 0 );
 			target->GetLocatorPosition( &locatorPos, m_locatorIndex, true, m_locatorSetName );
-	
+
 			in->x = locatorPos.x;
 			in->y = locatorPos.y;
 			in->y = locatorPos.y;
@@ -208,10 +206,10 @@ Vector3* EveLocalPositionCurve::GetNearestFiringLocator( Vector3* in, Be::Time t
 //   Calculate impact position onto the target aiming for a damage locator
 // --------------------------------------------------------------------------------
 Vector3* EveLocalPositionCurve::GetDamageLocatorImpact( Vector3* in, Be::Time t )
-{	
+{
 	if( m_alignPositionCurve && m_parentObject )
 	{
-		ITriTargetable* target = dynamic_cast< ITriTargetable* >( m_parentObject.p );
+		ITriTargetable* target = dynamic_cast<ITriTargetable*>( m_parentObject.p );
 
 		if( !target )
 		{
@@ -252,7 +250,7 @@ Vector3* EveLocalPositionCurve::GetDamageLocatorImpact( Vector3* in, Be::Time t 
 
 Vector3* EveLocalPositionCurve::GetFiringTurretPosition( Vector3* in, Be::Time t )
 {
-	if( m_turretSetObject)
+	if( m_turretSetObject )
 	{
 		auto turretWorld = m_turretSetObject->GetFiringBoneWorldTransform( m_muzzleIndex ).GetTranslation();
 
@@ -270,8 +268,7 @@ Vector3* EveLocalPositionCurve::GetFiringTurretPosition( Vector3* in, Be::Time t
 
 Vector3* EveLocalPositionCurve::Update(
 	Vector3* in,
-	Be::Time t
-	)
+	Be::Time t )
 {
 	switch( m_behavior )
 	{
@@ -314,7 +311,6 @@ Vector3* EveLocalPositionCurve::GetValueAt( Vector3* in, Be::Time time )
 	in->z = m_value.z;
 	Update( in, time );
 	return in;
-
 }
 
 Vector3* EveLocalPositionCurve::GetValueAt( Vector3* in, double time )
@@ -346,24 +342,16 @@ Vector3* EveLocalPositionCurve::GetValueDotAt( Vector3* in, double time )
 	return in;
 }
 
-Vector3d*  EveLocalPositionCurve::InterpolatedPosition( Vector3d* out, Be::Time time )
+Vector3d* EveLocalPositionCurve::InterpolatedPosition( Vector3d* out, Be::Time time )
 {
 	out->x = m_value.x;
 	out->y = m_value.y;
 	out->z = m_value.z;
 
 	return out;
-
 }
 
 void EveLocalPositionCurve::SetBehavior( LocalPositionBehavior behavior )
 {
 	m_behavior = behavior;
 }
-
-
-
-
-
-
-

@@ -19,7 +19,7 @@ enum TriRenderJobStatus
 	RJ_FAILED
 };
 
-BLUE_CLASS( TriRenderJob ):
+BLUE_CLASS( TriRenderJob ) :
 	public IRoot,
 	public Tr2DeviceResource
 {
@@ -27,15 +27,19 @@ public:
 	EXPOSE_TO_BLUE();
 
 	TriRenderJob( IRoot* lockobj = 0 );
-	~TriRenderJob(void);
+	~TriRenderJob( void );
 
-	TriRenderJobStatus Run( Be::Time realTime, Be::Time simTime, Tr2RenderContext *renderContext = nullptr );
+	TriRenderJobStatus Run( Be::Time realTime, Be::Time simTime, Tr2RenderContext* renderContext = nullptr );
 
-	TriRenderStepVector& Steps() { return m_renderSteps; }
+	TriRenderStepVector& Steps()
+	{
+		return m_renderSteps;
+	}
 
 	// ITriDeviceResource is needed, for cases when people decorate the renderjob class
 	// as a manager for the surfaces and resource that are needed for it
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	virtual bool OnPrepareResources();
 
@@ -47,7 +51,7 @@ private:
 	// keep an index instead of an iterator, in case we yield during execution and
 	// modify the list at the same time.  What that is supposed to do is debatable,
 	// but at least we don't want to crash pointing at bad memory.
-	size_t	m_currentStep;
+	size_t m_currentStep;
 
 	// Check for RT/DS stack depth before and after RJ is run and
 	// assert/repair stack when needed.

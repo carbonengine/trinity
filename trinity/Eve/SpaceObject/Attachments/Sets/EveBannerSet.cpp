@@ -17,25 +17,24 @@
 
 namespace
 {
-	const int32_t PICK_ID_OFFSET = 101;
+const int32_t PICK_ID_OFFSET = 101;
 
-	BlueStructureDefinition s_bannerStructureDef[] =
-	{
-		{ "bone", Be::INT32_1, 0 },
-		{ "position", Be::FLOAT32_3, 4 },
-		{ "rotation", Be::FLOAT32_4, 16 },
-		{ "scaling", Be::FLOAT32_3, 32 },
-		{ "angleX", Be::FLOAT32_1, 44 },
-		{ "angleY", Be::FLOAT32_1, 48 },
-		{ 0 }
-	};
+BlueStructureDefinition s_bannerStructureDef[] = {
+	{ "bone", Be::INT32_1, 0 },
+	{ "position", Be::FLOAT32_3, 4 },
+	{ "rotation", Be::FLOAT32_4, 16 },
+	{ "scaling", Be::FLOAT32_3, 32 },
+	{ "angleX", Be::FLOAT32_1, 44 },
+	{ "angleY", Be::FLOAT32_1, 48 },
+	{ 0 }
+};
 
-	EveBannerItem s_defaultBannerItem;
+EveBannerItem s_defaultBannerItem;
 }
 
 
-EveBannerItem::EveBannerItem()
-	:bone( -1 ),
+EveBannerItem::EveBannerItem() :
+	bone( -1 ),
 	position( 0, 0, 0 ),
 	rotation( 0, 0, 0, 1 ),
 	scaling( 1, 1, 1 ),
@@ -76,8 +75,8 @@ struct EveBannerSet::Vertex
 	{
 	}
 
-	Vertex( const Vector3& pos, const Vector3& norm, const Vector2& tc, int32_t bone )
-		:position( pos ),
+	Vertex( const Vector3& pos, const Vector3& norm, const Vector2& tc, int32_t bone ) :
+		position( pos ),
 		normal( Vector4( norm, 0 ) ),
 		texCoord( tc )
 	{
@@ -87,8 +86,8 @@ struct EveBannerSet::Vertex
 };
 
 
-EveBannerSet::EveBannerSet( IRoot* lockobj )
-	:PARENTLOCK( m_banners ),
+EveBannerSet::EveBannerSet( IRoot* lockobj ) :
+	PARENTLOCK( m_banners ),
 	m_key( 0 ),
 	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_maxBannerRadius( 0 ),
@@ -164,7 +163,7 @@ bool EveBannerSet::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 void EveBannerSet::UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
-	for( auto& light : m_lights ) 
+	for( auto& light : m_lights )
 	{
 		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
 		{
@@ -279,19 +278,19 @@ void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 	{
 		for( auto& l : m_lights )
 		{
-			Quaternion q = Quaternion(0, 0, 0, 1);
+			Quaternion q = Quaternion( 0, 0, 0, 1 );
 			Vector3 scale = Vector3( 1, 1, 1 );
 			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix;
 
-			Color c = Saturate(l.lightData.color, l.saturation);
+			Color c = Saturate( l.lightData.color, l.saturation );
 
-			if( nullptr != m_primaryTextureParameter ) 
+			if( nullptr != m_primaryTextureParameter )
 			{
 				c = GetAverageColor();
 			}
 
 			c.a = 0.5;
-			
+
 			renderer.DrawSphere(
 				Tr2DebugObjectReference( m_banners.GetRawRoot(), l.index ),
 				t,
@@ -308,7 +307,6 @@ void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 				10,
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
-
 		}
 	}
 }
@@ -338,7 +336,7 @@ void EveBannerSet::SetKey( int32_t key )
 
 void EveBannerSet::AddLightFromSOF( const EveBannerLight& light )
 {
-	m_lights.push_back(light);
+	m_lights.push_back( light );
 }
 
 void EveBannerSet::SetPrimaryTextureParameter( TriTextureParameterPtr primaryTextureParameter )
@@ -481,13 +479,13 @@ void EveBannerSet::GetLights( Tr2LightManager& lightManager ) const
 	auto lightFeatures = LightFeatures();
 	lightFeatures.parentBrightness = m_activationStrength;
 
-	for( auto light: m_lights )
+	for( auto light : m_lights )
 	{
-		light.lightData.color = Saturate(averageColor, light.saturation);
+		light.lightData.color = Saturate( averageColor, light.saturation );
 		lightFeatures.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
 		auto data = light.lightData.AsPerPointLightData( light.boneMatrix, lightFeatures, lightManager.GetCurrentSpaceSceneShadowQuality() );
-		
+
 		lightManager.AddLight( data );
 	}
 }
@@ -696,128 +694,128 @@ void EveBannerSet::CreateCurvedBannerGeometry( std::vector<Vertex>& vertexBuffer
 
 namespace
 {
-	float GetVerticalCurvedBannerApectRatio( const EveBannerItem& banner )
+float GetVerticalCurvedBannerApectRatio( const EveBannerItem& banner )
+{
+	auto transform = TransformationMatrix( banner.scaling, banner.rotation, banner.position );
+	auto normalTransform = Inverse( Transpose( transform ) );
+
+	float clamppedAngleY = std::max( 0.f, std::min( banner.angleY, 180.f ) );
+
+	uint32_t segmentsY = 1 + uint32_t( clamppedAngleY / 5 );
+
+	auto halfAngleY = clamppedAngleY / 180.f * XM_PI / 2;
+
+	float scaleY = 0.5f / sin( halfAngleY );
+
+	Vector3 prevPos;
+	float uLength = banner.scaling.x;
+	float vLength = 0;
+
+	for( uint32_t j = 0; j <= segmentsY; ++j )
 	{
-		auto transform = TransformationMatrix( banner.scaling, banner.rotation, banner.position );
-		auto normalTransform = Inverse( Transpose( transform ) );
+		float y = float( j ) / ( segmentsY );
+		float angleY = -halfAngleY + y * 2 * halfAngleY;
+		float sinAngleY = sin( angleY + XM_PIDIV2 );
+		float cosAngleY = cos( angleY + XM_PIDIV2 );
 
-		float clamppedAngleY = std::max( 0.f, std::min( banner.angleY, 180.f ) );
-
-		uint32_t segmentsY = 1 + uint32_t( clamppedAngleY / 5 );
-
-		auto halfAngleY = clamppedAngleY / 180.f * XM_PI / 2;
-
-		float scaleY = 0.5f / sin( halfAngleY );
-
-		Vector3 prevPos;
-		float uLength = banner.scaling.x;
-		float vLength = 0;
-
-		for( uint32_t j = 0; j <= segmentsY; ++j )
+		Vector3 pos = TransformCoord( Vector3( 0, cosAngleY * scaleY, ( sinAngleY - 1 ) * scaleY ), transform );
+		if( j )
 		{
-			float y = float( j ) / ( segmentsY );
-			float angleY = -halfAngleY + y * 2 * halfAngleY;
-			float sinAngleY = sin( angleY + XM_PIDIV2 );
-			float cosAngleY = cos( angleY + XM_PIDIV2 );
-
-			Vector3 pos = TransformCoord( Vector3( 0, cosAngleY * scaleY, ( sinAngleY - 1 ) * scaleY ), transform );
-			if( j )
-			{
-				vLength += Length( pos - prevPos );
-			}
-			prevPos = pos;
+			vLength += Length( pos - prevPos );
 		}
-
-		return uLength / vLength;
+		prevPos = pos;
 	}
 
-	float GetHorizontalCurvedBannerApectRatio( const EveBannerItem& banner )
+	return uLength / vLength;
+}
+
+float GetHorizontalCurvedBannerApectRatio( const EveBannerItem& banner )
+{
+	auto transform = TransformationMatrix( banner.scaling, banner.rotation, banner.position );
+	auto normalTransform = Inverse( Transpose( transform ) );
+
+	float clamppedAngleX = std::max( 0.f, std::min( banner.angleX, 180.f ) );
+
+	uint32_t segmentsX = 1 + uint32_t( clamppedAngleX / 5 );
+
+	auto halfAngleX = clamppedAngleX / 180.f * XM_PI / 2;
+
+	float scaleX = 0.5f / sin( halfAngleX );
+
+	Vector3 prevPos;
+	float uLength = 0;
+	float vLength = banner.scaling.y;
+
+	for( uint32_t i = 0; i <= segmentsX; ++i )
 	{
-		auto transform = TransformationMatrix( banner.scaling, banner.rotation, banner.position );
-		auto normalTransform = Inverse( Transpose( transform ) );
+		float x = float( i ) / ( segmentsX );
+		float angleX = -halfAngleX + x * 2 * halfAngleX;
+		float sinAngleX = sin( angleX );
+		float cosAngleX = cos( angleX );
 
-		float clamppedAngleX = std::max( 0.f, std::min( banner.angleX, 180.f ) );
-
-		uint32_t segmentsX = 1 + uint32_t( clamppedAngleX / 5 );
-
-		auto halfAngleX = clamppedAngleX / 180.f * XM_PI / 2;
-
-		float scaleX = 0.5f / sin( halfAngleX );
-
-		Vector3 prevPos;
-		float uLength = 0;
-		float vLength = banner.scaling.y;
-
-		for( uint32_t i = 0; i <= segmentsX; ++i )
+		Vector3 pos = TransformCoord( Vector3( sinAngleX * scaleX, 0, ( cosAngleX - 1 ) * scaleX ), transform );
+		if( i )
 		{
-			float x = float( i ) / ( segmentsX );
-			float angleX = -halfAngleX + x * 2 * halfAngleX;
-			float sinAngleX = sin( angleX );
-			float cosAngleX = cos( angleX );
-
-			Vector3 pos = TransformCoord( Vector3( sinAngleX * scaleX, 0, ( cosAngleX - 1 ) * scaleX ), transform );
-			if( i )
-			{
-				uLength += Length( pos - prevPos );
-			}
-			prevPos = pos;
+			uLength += Length( pos - prevPos );
 		}
-		return uLength / vLength;
+		prevPos = pos;
+	}
+	return uLength / vLength;
+}
+
+float GetCurvedBannerApectRatio( const EveBannerItem& banner )
+{
+	auto transform = TransformationMatrix( banner.scaling, banner.rotation, banner.position );
+	auto normalTransform = Inverse( Transpose( transform ) );
+
+	float clamppedAngleX = std::max( 0.f, std::min( banner.angleX, 180.f ) );
+	float clamppedAngleY = std::max( 0.f, std::min( banner.angleY, 180.f ) );
+
+	uint32_t segmentsX = 1 + uint32_t( clamppedAngleX / 5 );
+	uint32_t segmentsY = 1 + uint32_t( clamppedAngleY / 5 );
+
+	auto halfAngleX = clamppedAngleX / 180.f * XM_PI / 2;
+	auto halfAngleY = clamppedAngleY / 180.f * XM_PI / 2;
+
+	float scaleX = 0.5f / sin( halfAngleX );
+	float scaleY = 0.5f / sin( halfAngleY );
+	float scaleZ = std::min( scaleX, scaleY );
+
+	Vector3 prevPos;
+	float uLength = 0;
+	float vLength = 0;
+
+	for( uint32_t i = 0; i <= segmentsX; ++i )
+	{
+		float x = float( i ) / ( segmentsX );
+		float angleX = -halfAngleX + x * 2 * halfAngleX;
+		float sinAngleX = sin( angleX );
+		float cosAngleX = cos( angleX );
+
+		Vector3 pos = TransformCoord( Vector3( sinAngleX * scaleX, 0, ( cosAngleX - 1 ) * scaleZ ), transform );
+		if( i )
+		{
+			uLength += Length( prevPos - pos );
+		}
+		prevPos = pos;
 	}
 
-	float GetCurvedBannerApectRatio( const EveBannerItem& banner )
+	for( uint32_t j = 0; j <= segmentsY; ++j )
 	{
-		auto transform = TransformationMatrix( banner.scaling, banner.rotation, banner.position );
-		auto normalTransform = Inverse( Transpose( transform ) );
+		float y = float( j ) / ( segmentsY );
+		float angleY = -halfAngleY + y * 2 * halfAngleY;
+		float sinAngleY = sin( angleY + XM_PIDIV2 );
+		float cosAngleY = cos( angleY + XM_PIDIV2 );
 
-		float clamppedAngleX = std::max( 0.f, std::min( banner.angleX, 180.f ) );
-		float clamppedAngleY = std::max( 0.f, std::min( banner.angleY, 180.f ) );
-
-		uint32_t segmentsX = 1 + uint32_t( clamppedAngleX / 5 );
-		uint32_t segmentsY = 1 + uint32_t( clamppedAngleY / 5 );
-
-		auto halfAngleX = clamppedAngleX / 180.f * XM_PI / 2;
-		auto halfAngleY = clamppedAngleY / 180.f * XM_PI / 2;
-
-		float scaleX = 0.5f / sin( halfAngleX );
-		float scaleY = 0.5f / sin( halfAngleY );
-		float scaleZ = std::min( scaleX, scaleY );
-
-		Vector3 prevPos;
-		float uLength = 0;
-		float vLength = 0;
-
-		for( uint32_t i = 0; i <= segmentsX; ++i )
+		Vector3 pos = TransformCoord( Vector3( 0, cosAngleY * scaleY, ( sinAngleY - 1 ) * scaleZ ), transform );
+		if( j )
 		{
-			float x = float( i ) / ( segmentsX );
-			float angleX = -halfAngleX + x * 2 * halfAngleX;
-			float sinAngleX = sin( angleX );
-			float cosAngleX = cos( angleX );
-
-			Vector3 pos = TransformCoord( Vector3( sinAngleX * scaleX, 0, ( cosAngleX - 1 ) * scaleZ ), transform );
-			if( i )
-			{
-				uLength += Length( prevPos - pos );
-			}
-			prevPos = pos;
+			vLength += Length( prevPos - pos );
 		}
-
-		for( uint32_t j = 0; j <= segmentsY; ++j )
-		{
-			float y = float( j ) / ( segmentsY );
-			float angleY = -halfAngleY + y * 2 * halfAngleY;
-			float sinAngleY = sin( angleY + XM_PIDIV2 );
-			float cosAngleY = cos( angleY + XM_PIDIV2 );
-
-			Vector3 pos = TransformCoord( Vector3( 0, cosAngleY * scaleY, ( sinAngleY - 1 ) * scaleZ ), transform );
-			if( j )
-			{
-				vLength += Length( prevPos - pos );
-			}
-			prevPos = pos;
-		}
-		return uLength / vLength;
+		prevPos = pos;
 	}
+	return uLength / vLength;
+}
 }
 
 float EveBannerSet::GetBannerAspectRatio( const EveBannerItem& banner )

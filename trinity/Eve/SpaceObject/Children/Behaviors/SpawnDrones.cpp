@@ -14,7 +14,7 @@ SpawnDrones::SpawnDrones( IRoot* lockobj ) :
 	m_count( 1 ),
 	m_spawnPosition( 0, 0, 0 ),
 	m_gridInfo( 1, 1, 1, 10 ),
-	m_gridSpacing( 0, 0, 0),
+	m_gridSpacing( 0, 0, 0 ),
 	m_gridFullnessFactor( 1.f )
 {
 }
@@ -23,14 +23,14 @@ SpawnDrones::~SpawnDrones()
 {
 }
 
-void SpawnDrones::UpdateGrid(BehaviorGroup& group)
+void SpawnDrones::UpdateGrid( BehaviorGroup& group )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	// for behaviors to work we always have to add one decoy drone, delete that one so he doesn't mess up the cube
 	for( unsigned int i = 0; i < group.GetCount(); i++ )
 	{
-		group.SetCount( 0 );	
+		group.SetCount( 0 );
 	}
 
 	Vector3 startPos = group.m_spawnPosition;
@@ -84,8 +84,7 @@ void SpawnDrones::UpdateGrid(BehaviorGroup& group)
 	group.m_spawnPosition = Vector3( 0, 0, 0 );
 }
 
-std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
-	BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
+std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -122,7 +121,7 @@ std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& ag
 		auto behavior = group.GetBehaviorByName( "ProcessLifetime" );
 		if( behavior != nullptr )
 		{
-			auto processLifetime = dynamic_cast<ProcessLifetime*> ( behavior );
+			auto processLifetime = dynamic_cast<ProcessLifetime*>( behavior );
 			if( processLifetime )
 			{
 				std::vector<Vector3> spawnPoints = processLifetime->GetEntrancePoints();

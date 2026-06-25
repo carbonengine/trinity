@@ -21,14 +21,14 @@ Tr2Sprite2dContainerBase::~Tr2Sprite2dContainerBase()
 	{
 		if( *it )
 		{
-			(*it)->SetParent( nullptr );
+			( *it )->SetParent( nullptr );
 		}
 	}
 	for( auto it = m_children.begin(); it != m_children.end(); ++it )
 	{
 		if( *it )
 		{
-			(*it)->SetParent( nullptr );
+			( *it )->SetParent( nullptr );
 		}
 	}
 }
@@ -45,41 +45,38 @@ void Tr2Sprite2dContainerBase::OnListModified( long event, /* BLUELISTEVENT valu
 {
 	switch( event )
 	{
-	case BELIST_INSERTED:
+	case BELIST_INSERTED: {
+		ITr2SpriteObjectPtr spriteObj( BlueCastPtr( value ) );
+		if( spriteObj )
 		{
-			ITr2SpriteObjectPtr spriteObj( BlueCastPtr( value ) );
-			if( spriteObj )
-			{
-				spriteObj->SetParent( this );
-				SetChildDirty( spriteObj );
-			}
+			spriteObj->SetParent( this );
+			SetChildDirty( spriteObj );
 		}
-		break;
+	}
+	break;
 
-	case BELIST_REMOVED:
+	case BELIST_REMOVED: {
+		ITr2SpriteObjectPtr spriteObj( BlueCastPtr( value ) );
+		if( spriteObj )
 		{
-			ITr2SpriteObjectPtr spriteObj( BlueCastPtr( value ) );
-			if( spriteObj )
-			{
-				spriteObj->SetParent( nullptr );
-				SetChildDirty( spriteObj );
-			}
+			spriteObj->SetParent( nullptr );
+			SetChildDirty( spriteObj );
 		}
-		break;
+	}
+	break;
 
-	case BELIST_UNLOADSTART:
+	case BELIST_UNLOADSTART: {
+		ssize_t size = theList->GetSize();
+		for( ssize_t i = 0; i < size; ++i )
 		{
-			ssize_t size = theList->GetSize();
-			for( ssize_t i = 0; i < size; ++i )
+			ITr2SpriteObjectPtr child = BlueCastPtr( theList->GetAt( i ) );
+			if( child )
 			{
-				ITr2SpriteObjectPtr child = BlueCastPtr( theList->GetAt( i ) );
-				if( child )
-				{
-					child->SetParent( nullptr );
-				}
+				child->SetParent( nullptr );
 			}
 		}
-		break;
+	}
+	break;
 	}
 }
 
@@ -110,7 +107,7 @@ Tr2Sprite2dContainer::~Tr2Sprite2dContainer()
 
 void Tr2Sprite2dContainer::GatherSprites( Tr2Sprite2dScene* renderer )
 {
-	if( !m_display || (m_children.empty() && m_background.empty()) )
+	if( !m_display || ( m_children.empty() && m_background.empty() ) )
 	{
 		return;
 	}
@@ -201,7 +198,7 @@ void Tr2Sprite2dContainer::GatherSprites( Tr2Sprite2dScene* renderer )
 	}
 	else
 	{
-		GatherSpritesHelper(renderer);
+		GatherSpritesHelper( renderer );
 		m_isDirty = false;
 	}
 }
@@ -311,11 +308,11 @@ void Tr2Sprite2dContainer::GatherSpritesHelper( Tr2Sprite2dScene* renderer )
 
 	for( ITr2SpriteObjectVector::reverse_iterator it = m_background.rbegin(); it != m_background.rend(); ++it )
 	{
-		(*it)->GatherSprites( renderer );
+		( *it )->GatherSprites( renderer );
 	}
 	for( ITr2SpriteObjectVector::reverse_iterator it = m_children.rbegin(); it != m_children.rend(); ++it )
 	{
-		(*it)->GatherSprites( renderer );
+		( *it )->GatherSprites( renderer );
 	}
 
 	if( m_clip )
@@ -332,4 +329,3 @@ void Tr2Sprite2dContainer::GatherSpritesHelper( Tr2Sprite2dScene* renderer )
 		renderer->PopTransformAbsolute();
 	}
 }
-

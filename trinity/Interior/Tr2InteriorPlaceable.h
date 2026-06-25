@@ -36,88 +36,95 @@ BLUE_DECLARE( Tr2VariableStore );
 //   but inhabit one or more Tr2InteriorCells, as determined by a
 //   bounding box intersection test.
 // See Also
-//   Tr2InteriorStatic, Tr2IntSkinnedObject, Tr2InteriorScene     
+//   Tr2InteriorStatic, Tr2IntSkinnedObject, Tr2InteriorScene
 // -----------------------------------------------------------------------------------------------------
-class Tr2InteriorPlaceable : 
-    public INotify,
-    public IInitialize,
-    public ITr2Renderable,
-	public ITr2Pickable,
-	public ITr2InteriorDynamic,
-	public ITr2BoundingBox
+class Tr2InteriorPlaceable : public INotify,
+							 public IInitialize,
+							 public ITr2Renderable,
+							 public ITr2Pickable,
+							 public ITr2InteriorDynamic,
+							 public ITr2BoundingBox
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
 
 	// Constructor/destructor
 	Tr2InteriorPlaceable( IRoot* lockobj = NULL );
-    ~Tr2InteriorPlaceable();
+	~Tr2InteriorPlaceable();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-    virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var* value );
 
 	/////////////////////////////////////////////////////////////////////////////////////
-    // IInitialize
-    bool Initialize( void );
+	// IInitialize
+	bool Initialize( void );
 
-    //////////////////////////////////////////////////////////////////////////
-    // ITr2InteriorCullable
+	//////////////////////////////////////////////////////////////////////////
+	// ITr2InteriorCullable
 	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2InteriorDynamic
-	virtual bool AddToScene( Tr2ApexScene *apexScene );
+	virtual bool AddToScene( Tr2ApexScene* apexScene );
 	virtual void RemoveFromScene( void );
 	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool IsBoundingBoxReady( void ) const;
 	virtual void PrePhysicsUpdate( Be::Time time );
-	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene *apexScene );
+	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene );
 
 	virtual void SetLOD( const TriFrustum* frustum );
 
-	void BoundingBoxReset(); 
+	void BoundingBoxReset();
 	void BoundingBoxOverride( Vector3& min, Vector3& max );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, 
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches,
 							 TriBatchType batchType,
 							 const Tr2PerObjectData* data,
-							 Tr2RenderReason reason = TR2RENDERREASON_NORMAL ); 
+							 Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	virtual bool HasTransparentBatches( void );
-    virtual float GetSortValue( void );
+	virtual float GetSortValue( void );
 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 
 	// Per-object data with instanced lighting
-	virtual Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting( 
+	virtual Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting(
 		ITriRenderBatchAccumulator* accumulator,
 		Tr2InteriorLightSet* lightSet,
-		const Matrix& objectToWorldMatrix
-	);
+		const Matrix& objectToWorldMatrix );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
-	virtual IRoot* GetID( uint16_t ) { return this->GetRawRoot(); }
+	virtual IRoot* GetID( uint16_t )
+	{
+		return this->GetRawRoot();
+	}
 	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 
 	std::string GetPlaceableResPath( void ) const;
-    void SetPlaceableResPath( const std::string& val );
+	void SetPlaceableResPath( const std::string& val );
 	// Set the placeableRes from the placeableResPath by loading it from disk
 	void LoadPlaceableRes();
 
-    const Matrix& GetTransform( void ) const { return m_transform; }
+	const Matrix& GetTransform( void ) const
+	{
+		return m_transform;
+	}
 
 	// Position getter & setter
-	const Vector3& GetPosition( void ) const { return *(reinterpret_cast<const Vector3*>(&m_transform._41)); }
+	const Vector3& GetPosition( void ) const
+	{
+		return *( reinterpret_cast<const Vector3*>( &m_transform._41 ) );
+	}
 	void SetPosition( const Vector3& pos );
 
 	// Rotation getter & setter
@@ -130,7 +137,8 @@ public:
 
 protected:
 	Tr2PerObjectData* GetPerObjectDataWithLightSet( ITriRenderBatchAccumulator* accumulator,
-		Tr2InteriorLightSet* lightSet, const Matrix& objectToWorldMatrix );
+													Tr2InteriorLightSet* lightSet,
+													const Matrix& objectToWorldMatrix );
 
 private:
 	float CalculateCameraDistance( void );
@@ -143,6 +151,7 @@ private:
 
 	void AddReflectionMap( TriTextureRes* texture );
 	void RemoveReflectionMap( TriTextureRes* texture );
+
 private:
 	AxisAlignedBoundingBox GetBoundingBoxInLocalSpace() const;
 	AxisAlignedBoundingBox GetBoundingBoxInWorldSpace() const;
@@ -152,7 +161,7 @@ private:
 	bool m_display;
 
 	// When false, the placeableRes loaded is a shared instance
-	// When true, the placeableRes is a unique copy that can be modified without 
+	// When true, the placeableRes is a unique copy that can be modified without
 	// effects on other placables loaded from the same path
 	bool m_isUniqueInstance;
 

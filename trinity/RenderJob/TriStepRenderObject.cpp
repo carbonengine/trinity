@@ -5,22 +5,21 @@
 
 using namespace Tr2RenderContextEnum;
 
-namespace {
-	const TriBatchType s_allTypes[] = 
-	{
-			TRIBATCHTYPE_OPAQUE,
-			TRIBATCHTYPE_DECAL, 
-			TRIBATCHTYPE_TRANSPARENT,
-			TRIBATCHTYPE_ADDITIVE
-	};
+namespace
+{
+const TriBatchType s_allTypes[] = {
+	TRIBATCHTYPE_OPAQUE,
+	TRIBATCHTYPE_DECAL,
+	TRIBATCHTYPE_TRANSPARENT,
+	TRIBATCHTYPE_ADDITIVE
+};
 
-	static const Tr2EffectStateManager::RenderingMode s_renderingModes[] = 
-	{
-			Tr2EffectStateManager::RM_OPAQUE,
-			Tr2EffectStateManager::RM_DECAL, 
-			Tr2EffectStateManager::RM_ALPHA,
-			Tr2EffectStateManager::RM_ALPHA_ADDITIVE
-	};
+static const Tr2EffectStateManager::RenderingMode s_renderingModes[] = {
+	Tr2EffectStateManager::RM_OPAQUE,
+	Tr2EffectStateManager::RM_DECAL,
+	Tr2EffectStateManager::RM_ALPHA,
+	Tr2EffectStateManager::RM_ALPHA_ADDITIVE
+};
 }
 
 TriStepRenderObject::TriStepRenderObject( IRoot* lockobj )
@@ -28,9 +27,9 @@ TriStepRenderObject::TriStepRenderObject( IRoot* lockobj )
 	auto allocator = Tr2Renderer::GetPoolAllocator();
 	for( unsigned i = 0; i != 4; ++i )
 	{
-		m_batches[s_allTypes[i]] = CCP_NEW( "TriStepRenderObject/batch" )	TriRenderBatchAccumulator<>( allocator );
+		m_batches[s_allTypes[i]] = CCP_NEW( "TriStepRenderObject/batch" ) TriRenderBatchAccumulator<>( allocator );
 		m_typeEnabled[i] = true;
-	}	
+	}
 }
 
 TriStepRenderObject::~TriStepRenderObject()
@@ -48,7 +47,7 @@ TriStepResult TriStepRenderObject::Execute( Be::Time realTime, Be::Time simTime,
 		return RS_OK;
 	}
 
-	::GetBatchesFromRenderables( &m_renderable, 1, nullptr, m_batches, s_allTypes, 4 );	
+	::GetBatchesFromRenderables( &m_renderable, 1, nullptr, m_batches, s_allTypes, 4 );
 
 	for( auto it = m_batches.begin(); it != m_batches.end(); ++it )
 	{

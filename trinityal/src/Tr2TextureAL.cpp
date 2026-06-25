@@ -16,7 +16,7 @@ std::shared_ptr<TrinityALImpl::Tr2TextureAL>& NullTexture()
 	static std::shared_ptr<TrinityALImpl::Tr2TextureAL> nullTexture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 	return nullTexture;
 }
-	
+
 }
 
 
@@ -189,19 +189,19 @@ ALResult Tr2TextureAL::CopySubresourceRegion( const Tr2TextureSubresource& destS
 
 namespace
 {
-	bool FormatIsBGR( Tr2RenderContextEnum::PixelFormat format )
+bool FormatIsBGR( Tr2RenderContextEnum::PixelFormat format )
+{
+	switch( format )
 	{
-		switch( format )
-		{
-		case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM:
-		case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM:
-		case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM_SRGB:
-		case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM_SRGB:
-			return true;
-		default:
-			return false;
-		}
+	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM:
+	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM:
+	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM_SRGB:
+	case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM_SRGB:
+		return true;
+	default:
+		return false;
 	}
+}
 }
 
 ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext ) const
@@ -273,34 +273,34 @@ TrinityALImpl::Tr2TextureAL* Tr2TextureAL::TrinityALImpl_GetObject() const
 
 namespace
 {
-	void ConvertUsage( Tr2RenderContextEnum::BufferUsage usage, Tr2GpuUsage::Type& gpuUsage, Tr2CpuUsage::Type& cpuUsage )
-	{
-		gpuUsage = Tr2GpuUsage::SHADER_RESOURCE;
-		cpuUsage = Tr2CpuUsage::NONE;
+void ConvertUsage( Tr2RenderContextEnum::BufferUsage usage, Tr2GpuUsage::Type& gpuUsage, Tr2CpuUsage::Type& cpuUsage )
+{
+	gpuUsage = Tr2GpuUsage::SHADER_RESOURCE;
+	cpuUsage = Tr2CpuUsage::NONE;
 
-		if( ( usage & Tr2RenderContextEnum::USAGE_IMMUTABLE ) != 0 )
-		{
-			cpuUsage = cpuUsage | Tr2CpuUsage::READ;
-		}
-		else if( ( usage & Tr2RenderContextEnum::USAGE_LOCK_FREQUENTLY ) != 0 )
-		{
-			cpuUsage = cpuUsage | Tr2CpuUsage::WRITE_OFTEN;
-		}
-		else
-		{
-			cpuUsage = cpuUsage | Tr2CpuUsage::WRITE;
-		}
-		if( ( usage & Tr2RenderContextEnum::USAGE_CPU_READ ) != 0 )
-		{
-			cpuUsage = cpuUsage | Tr2CpuUsage::READ;
-		}
-		if( ( usage & Tr2RenderContextEnum::USAGE_UNORDERED_ACCESS ) != 0 )
-		{
-			gpuUsage = gpuUsage | Tr2GpuUsage::UNORDERED_ACCESS;
-		}
-		if( ( usage & Tr2RenderContextEnum::USAGE_SHADER_RESOURCE ) != 0 )
-		{
-			gpuUsage = gpuUsage | Tr2GpuUsage::SHARED;
-		}
+	if( ( usage & Tr2RenderContextEnum::USAGE_IMMUTABLE ) != 0 )
+	{
+		cpuUsage = cpuUsage | Tr2CpuUsage::READ;
 	}
+	else if( ( usage & Tr2RenderContextEnum::USAGE_LOCK_FREQUENTLY ) != 0 )
+	{
+		cpuUsage = cpuUsage | Tr2CpuUsage::WRITE_OFTEN;
+	}
+	else
+	{
+		cpuUsage = cpuUsage | Tr2CpuUsage::WRITE;
+	}
+	if( ( usage & Tr2RenderContextEnum::USAGE_CPU_READ ) != 0 )
+	{
+		cpuUsage = cpuUsage | Tr2CpuUsage::READ;
+	}
+	if( ( usage & Tr2RenderContextEnum::USAGE_UNORDERED_ACCESS ) != 0 )
+	{
+		gpuUsage = gpuUsage | Tr2GpuUsage::UNORDERED_ACCESS;
+	}
+	if( ( usage & Tr2RenderContextEnum::USAGE_SHADER_RESOURCE ) != 0 )
+	{
+		gpuUsage = gpuUsage | Tr2GpuUsage::SHARED;
+	}
+}
 }

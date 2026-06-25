@@ -17,7 +17,8 @@ BLUE_DECLARE_IVECTOR( ITr2ValueBinding );
 BLUE_DECLARE_INTERFACE( ICurveSetDriver );
 
 
-BLUE_CLASS( Tr2CurveSetRange ): public IRoot
+BLUE_CLASS( Tr2CurveSetRange ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -36,14 +37,14 @@ TYPEDEF_BLUECLASS( Tr2CurveSetRange );
 BLUE_DECLARE_VECTOR( Tr2CurveSetRange );
 
 
-BLUE_CLASS( TriCurveSet ):
-     public IInitialize,
-	 public ITr2Updateable,
-	 public ISimTimeRebaseNotify
+BLUE_CLASS( TriCurveSet ) :
+	public IInitialize,
+	public ITr2Updateable,
+	public ISimTimeRebaseNotify
 {
 public:
-    EXPOSE_TO_BLUE();
-    TriCurveSet( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	TriCurveSet( IRoot* lockobj = NULL );
 	~TriCurveSet();
 
 	void Update( double time );
@@ -64,17 +65,32 @@ public:
 	void ApplyTime( double time );
 
 	// access the name
-	const std::string& GetName() const					{	return m_name;				}
+	const std::string& GetName() const
+	{
+		return m_name;
+	}
 	void SetName( const std::string& name );
 
 	// access the curves
-	size_t GetCurvesCount() const						{	return m_curves.size();		}
-	ITriFunctionPtr GetCurve( unsigned int _id )		{	return m_curves[ _id ];		}
+	size_t GetCurvesCount() const
+	{
+		return m_curves.size();
+	}
+	ITriFunctionPtr GetCurve( unsigned int _id )
+	{
+		return m_curves[_id];
+	}
 	void AddCurve( ITriFunctionPtr curve );
 
 	// access the bindings
-	size_t GetBindingsCount() const						{	return m_bindings.size();	}
-	ITr2ValueBindingPtr GetBinding( unsigned int _id )	{	return m_bindings[ _id ];	}
+	size_t GetBindingsCount() const
+	{
+		return m_bindings.size();
+	}
+	ITr2ValueBindingPtr GetBinding( unsigned int _id )
+	{
+		return m_bindings[_id];
+	}
 	void AddBinding( ITr2ValueBindingPtr binding );
 
 	// Gets the duration of the longest non-cycling curve in the curve set
@@ -86,7 +102,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// ISimTimeRebaseNotify
 	void OnSimClockRebase( Be::Time oldTime, Be::Time newTime );
@@ -95,6 +111,7 @@ public:
 	void ResetTimeRange();
 	bool HasTimeRange() const;
 	std::pair<double, double> GetTimeRange() const;
+
 private:
 	void UpdateWithCurrentTime();
 

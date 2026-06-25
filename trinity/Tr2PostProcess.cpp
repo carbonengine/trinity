@@ -17,5 +17,5 @@ Tr2PostProcess::~Tr2PostProcess()
 
 bool Tr2PostProcess::Initialize()
 {
-    return true;
+	return true;
 }

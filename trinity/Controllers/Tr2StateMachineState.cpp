@@ -301,7 +301,7 @@ void Tr2StateMachineState::Stop()
 		auto owner = m_stateMachine->GetController() != nullptr ? m_stateMachine->GetController()->GetOwner() : nullptr;
 		for( auto it = begin( m_actions ); it != end( m_actions ); ++it )
 		{
-			ContinueOnMainThread( [_ = IRootPtr(owner), action = ITr2ControllerActionPtr( *it ), self = Tr2StateMachineStatePtr( this )]() {
+			ContinueOnMainThread( [_ = IRootPtr( owner ), action = ITr2ControllerActionPtr( *it ), self = Tr2StateMachineStatePtr( this )]() {
 				if( self->m_stateMachine && action )
 				{
 					action->Stop( *self->m_stateMachine->GetController() );

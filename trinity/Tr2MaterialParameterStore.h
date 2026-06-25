@@ -15,9 +15,8 @@ BLUE_DECLARE( Tr2MaterialParameterStore );
 //		a parent's selection of material parameters
 // --------------------------------------------------------------------------------------
 
-class Tr2MaterialParameterStore: 
-	public IInitialize,
-	public INotify
+class Tr2MaterialParameterStore : public IInitialize,
+								  public INotify
 {
 public:
 	Tr2MaterialParameterStore( IRoot* lockobj = NULL );
@@ -25,11 +24,11 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	ITriEffectParameter*	FindParameter( const char* name );
-	
+	ITriEffectParameter* FindParameter( const char* name );
 
-    using IInitialize::Lock;
-    using IInitialize::Unlock;
+
+	using IInitialize::Lock;
+	using IInitialize::Unlock;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -44,20 +43,19 @@ private:
 
 protected:
 	//	The name of this material
-	std::string	m_name;
+	std::string m_name;
 
 	//	Optionally the path to a parent material we derive from
-	std::string	m_parentPath;
+	std::string m_parentPath;
 
 	//	The pointer to the parent material, if loaded
-	Tr2MaterialParameterStorePtr			m_parentStore;
+	Tr2MaterialParameterStorePtr m_parentStore;
 
 	//	Our local overrides
-	PITriEffectParameterDict	m_parameters;
+	PITriEffectParameterDict m_parameters;
 };
 
 TYPEDEF_BLUECLASS( Tr2MaterialParameterStore );
 BLUE_DECLARE_VECTOR( Tr2MaterialParameterStore );
 
 #endif
-

@@ -7,16 +7,16 @@ BLUE_DEFINE( Tr2PPDepthOfFieldEffect );
 
 namespace Tr2Bokeh
 {
-	const Be::VarChooser BokehShapeChooser[] = {
-		{ "Disk", BeCast( Tr2Bokeh::Disk ), "A perfectly circular aperture" },
-		{ "Triangle", BeCast( Tr2Bokeh::Triangle ), "An aperture with 3 sides" },
-		{ "Rectangle", BeCast( Tr2Bokeh::Rectangle ), "An aperture with 4 sides" },
-		{ "Pentagon", BeCast( Tr2Bokeh::Pentagon ), "An aperture with 5 sides" },
-		{ "Hexagon", BeCast( Tr2Bokeh::Hexagon ), "An aperture with 6 sides" },
-		{ "Heart", BeCast( Tr2Bokeh::Heart ), "A heart-shaped aperture <3" },
-		{ 0 }
-	};
-	BLUE_REGISTER_ENUM_EX( "BokehShapeType", Shape, BokehShapeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+const Be::VarChooser BokehShapeChooser[] = {
+	{ "Disk", BeCast( Tr2Bokeh::Disk ), "A perfectly circular aperture" },
+	{ "Triangle", BeCast( Tr2Bokeh::Triangle ), "An aperture with 3 sides" },
+	{ "Rectangle", BeCast( Tr2Bokeh::Rectangle ), "An aperture with 4 sides" },
+	{ "Pentagon", BeCast( Tr2Bokeh::Pentagon ), "An aperture with 5 sides" },
+	{ "Hexagon", BeCast( Tr2Bokeh::Hexagon ), "An aperture with 6 sides" },
+	{ "Heart", BeCast( Tr2Bokeh::Heart ), "A heart-shaped aperture <3" },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "BokehShapeType", Shape, BokehShapeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 }
 const Be::ClassInfo* Tr2PPDepthOfFieldEffect::ExposeToBlue()
 {
@@ -30,6 +30,6 @@ const Be::ClassInfo* Tr2PPDepthOfFieldEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "foregroundBlurNeeded", m_foregroundBlurNeeded, "If foreground is always in focus, we can safely uncheck this", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "bokehShape", m_bokehShape, "What is the shape of the bokeh", Be::READWRITE | Be::PERSIST | Be::ENUM, Tr2Bokeh::BokehShapeChooser );
 		MAP_ATTRIBUTE( "useTAAFriendlyBokeh", m_useTAAFriendlyBokeh, "Enables a separate Bokeh shader when TAA is enabled that is optimized to reduce flickering", Be::READWRITE )
-		
+
 	EXPOSURE_CHAINTO( Tr2PPEffect )
 }

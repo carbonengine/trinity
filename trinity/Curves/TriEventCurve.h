@@ -14,14 +14,13 @@
 BLUE_DECLARE( TriEventCurve );
 
 
-class TriEventCurve:
-     public ITriFunction,
-	 public IInitialize,
-	 public ITriCurveLength
+class TriEventCurve : public ITriFunction,
+					  public IInitialize,
+					  public ITriCurveLength
 {
 public:
-    EXPOSE_TO_BLUE();
-    TriEventCurve( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	TriEventCurve( IRoot* lockobj = NULL );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriFunction
@@ -33,7 +32,10 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEventCurve
-	float Length() { return m_length; }
+	float Length()
+	{
+		return m_length;
+	}
 
 	void Sort();
 
@@ -50,8 +52,8 @@ public:
 	void SetKeyValue( int ix, std::wstring value );
 
 #if BLUE_WITH_PYTHON
-    PyObject* GetCallableKeyValue( int ix );
-    PyObject* GetCallableKeyArgs( int ix );
+	PyObject* GetCallableKeyValue( int ix );
+	PyObject* GetCallableKeyArgs( int ix );
 #endif
 	int GetKeyCount();
 

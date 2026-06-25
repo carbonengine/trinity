@@ -8,13 +8,13 @@
 
 
 Tr2Sprite2dLineTraceVertex::Tr2Sprite2dLineTraceVertex( IRoot* lockobj /*= NULL */ ) :
-m_position( 0.0f, 0.0f ),
+	m_position( 0.0f, 0.0f ),
 	m_color( 1.0f, 1.0f, 1.0f, 1.0f )
 {
 }
 
 Tr2Sprite2dLineTrace::Tr2Sprite2dLineTrace( IRoot* lockobj /*= NULL */ ) :
-PARENTLOCK( m_vertices ),
+	PARENTLOCK( m_vertices ),
 	m_lineWidth( 1.0f ),
 	m_length( 0.0f ),
 	m_start( 0.0f ),
@@ -23,7 +23,7 @@ PARENTLOCK( m_vertices ),
 	m_renderIndices( "Tr2Sprite2dLineTrace/m_renderIndices" ),
 	m_renderVertices( "Tr2Sprite2dLineTrace/m_renderVertices" ),
 	m_drawCalls( "Tr2Sprite2dLineTrace/m_drawCalls" ),
-	m_textureWidth( 1.0f),
+	m_textureWidth( 1.0f ),
 	m_textureOffset( 0.0f ),
 	m_textureOffsetAccum( 0.0f ),
 	m_cornerType( CORNERTYPE_MITER )
@@ -40,7 +40,7 @@ void Tr2Sprite2dLineTrace::GatherSprites( Tr2Sprite2dScene* renderer )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_display || m_vertices.empty() || (m_end <= m_start) || (m_spriteEffect == TR2_SFX_NONE) )
+	if( !m_display || m_vertices.empty() || ( m_end <= m_start ) || ( m_spriteEffect == TR2_SFX_NONE ) )
 	{
 		if( !m_renderVertices.empty() )
 		{
@@ -64,7 +64,7 @@ void Tr2Sprite2dLineTrace::GatherSprites( Tr2Sprite2dScene* renderer )
 		}
 
 		renderer->SetSpriteEffect( m_spriteEffect );
-		renderer->SetTileMode( S2D_TS_TILE_X | S2D_TS_TILE_Y);
+		renderer->SetTileMode( S2D_TS_TILE_X | S2D_TS_TILE_Y );
 
 		SetRegularRenderState( renderer );
 
@@ -81,7 +81,7 @@ void Tr2Sprite2dLineTrace::GatherSprites( Tr2Sprite2dScene* renderer )
 		float lastRelativeLength = 0.0f;
 		float length = 0.0f;
 
-		bool hasReachedStart = (m_start == 0.0f);
+		bool hasReachedStart = ( m_start == 0.0f );
 		bool hasReachedEnd = false;
 
 		Vector2 fromPos = m_vertices[0]->m_position;
@@ -99,8 +99,8 @@ void Tr2Sprite2dLineTrace::GatherSprites( Tr2Sprite2dScene* renderer )
 		auto it = m_vertices.begin() + 1;
 		while( !hasReachedEnd )
 		{
-			const Vector2& toPos = (*it)->m_position;
-			const Color& toColor = (*it)->m_color;
+			const Vector2& toPos = ( *it )->m_position;
+			const Color& toColor = ( *it )->m_color;
 
 			Vector2 d = toPos - fromPos;
 			float curLength = Length( d );
@@ -110,13 +110,13 @@ void Tr2Sprite2dLineTrace::GatherSprites( Tr2Sprite2dScene* renderer )
 			Vector2 adjustedFromPos;
 			Color adjustedFromColor;
 
-			if( !hasReachedStart && (relativeLength > m_start) )
+			if( !hasReachedStart && ( relativeLength > m_start ) )
 			{
 				// Line is starting - adjust fromPos
 				float linePortionOfTotal = curLength / m_length;
-				float portionOfLineToRender = (m_start - lastRelativeLength) / linePortionOfTotal;
-				adjustedFromPos = toPos*portionOfLineToRender + fromPos*(1.0f - portionOfLineToRender);
-				adjustedFromColor = toColor*portionOfLineToRender + fromColor*(1.0f - portionOfLineToRender);
+				float portionOfLineToRender = ( m_start - lastRelativeLength ) / linePortionOfTotal;
+				adjustedFromPos = toPos * portionOfLineToRender + fromPos * ( 1.0f - portionOfLineToRender );
+				adjustedFromColor = toColor * portionOfLineToRender + fromColor * ( 1.0f - portionOfLineToRender );
 				hasReachedStart = true;
 			}
 			else
@@ -131,10 +131,10 @@ void Tr2Sprite2dLineTrace::GatherSprites( Tr2Sprite2dScene* renderer )
 				{
 					// Line is ending - adjust toPos
 					float linePortionOfTotal = curLength / m_length;
-					float portionOfLineToRender = (m_end - lastRelativeLength) / linePortionOfTotal;
-					Vector2 adjustedToPos = toPos*portionOfLineToRender + fromPos*(1.0f - portionOfLineToRender);
-					Color adjustedToColor = toColor*portionOfLineToRender + fromColor*(1.0f - portionOfLineToRender);
-					AddSegment( renderer, adjustedFromPos, adjustedFromColor, prevCapAngle, adjustedToPos, adjustedToColor, 0.0f);
+					float portionOfLineToRender = ( m_end - lastRelativeLength ) / linePortionOfTotal;
+					Vector2 adjustedToPos = toPos * portionOfLineToRender + fromPos * ( 1.0f - portionOfLineToRender );
+					Color adjustedToColor = toColor * portionOfLineToRender + fromColor * ( 1.0f - portionOfLineToRender );
+					AddSegment( renderer, adjustedFromPos, adjustedFromColor, prevCapAngle, adjustedToPos, adjustedToColor, 0.0f );
 					hasReachedEnd = true;
 				}
 				else
@@ -150,13 +150,13 @@ void Tr2Sprite2dLineTrace::GatherSprites( Tr2Sprite2dScene* renderer )
 
 						if( nextIt != m_vertices.end() )
 						{
-							const Vector2& toPos2 = (*nextIt)->m_position;
+							const Vector2& toPos2 = ( *nextIt )->m_position;
 							Vector2 d2 = toPos2 - toPos;
 
 							d = Normalize( d );
 							d2 = Normalize( d2 );
 
-							capAngleTo = atan2(d2.y,d2.x) - atan2(d.y,d.x);
+							capAngleTo = atan2( d2.y, d2.x ) - atan2( d.y, d.x );
 						}
 					}
 					AddSegment( renderer, adjustedFromPos, adjustedFromColor, prevCapAngle, toPos, toColor, capAngleTo );
@@ -256,7 +256,7 @@ float Tr2Sprite2dLineTrace::CalcLength()
 
 	for( auto it = m_vertices.begin() + 1; it != m_vertices.end(); ++it )
 	{
-		const Vector2& toPos = (*it)->m_position;
+		const Vector2& toPos = ( *it )->m_position;
 
 		Vector2 d = toPos - fromPos;
 		length += Length( d );
@@ -285,13 +285,13 @@ unsigned int Tr2Sprite2dLineTrace::GetEstimatedVertexCount()
 	return vertsNeeded;
 }
 
-void Tr2Sprite2dLineTrace::AddSegment( 
-	Tr2Sprite2dScene* renderer, 
-	const Vector2& from, 
-	const Color& fromColor, 
+void Tr2Sprite2dLineTrace::AddSegment(
+	Tr2Sprite2dScene* renderer,
+	const Vector2& from,
+	const Color& fromColor,
 	float capAngleFrom,
-	const Vector2& to, 
-	const Color& toColor, 
+	const Vector2& to,
+	const Color& toColor,
 	float capAngleTo )
 {
 	Vector2 d = to - from;
@@ -303,7 +303,7 @@ void Tr2Sprite2dLineTrace::AddSegment(
 	m_textureOffsetAccum += segmentLength;
 	float texOffset2 = m_textureOffsetAccum / m_textureWidth - m_textureOffset;
 
-	// Anti-aliased lines are rendered with a quad that is larger. This is then 
+	// Anti-aliased lines are rendered with a quad that is larger. This is then
 	// compensated for in the pixel shader, using the extra pixels to fill in
 	// alpha values to do the anti-aliasing
 
@@ -315,15 +315,15 @@ void Tr2Sprite2dLineTrace::AddSegment(
 	if( isAA )
 	{
 		halfWidth += 2.0f;
-		pixelWidthInTexels = 1.0f / (m_lineWidth + 4.0f);
+		pixelWidthInTexels = 1.0f / ( m_lineWidth + 4.0f );
 	}
 
-	capAngleFrom = ClampAngle(capAngleFrom);
-	capAngleTo = ClampAngle(capAngleTo);
+	capAngleFrom = ClampAngle( capAngleFrom );
+	capAngleTo = ClampAngle( capAngleTo );
 
 	// Shorten lines to account for corners
 	Vector2 adjustedFrom, adjustedTo;
-	if ( m_cornerType != CORNERTYPE_NONE )
+	if( m_cornerType != CORNERTYPE_NONE )
 	{
 		float shorteningForCap = halfWidth * tan( std::abs( capAngleTo ) * 0.5f );
 		adjustedTo = to - shorteningForCap * d;
@@ -338,15 +338,15 @@ void Tr2Sprite2dLineTrace::AddSegment(
 	}
 
 	// Rotate 90 degrees
-	Vector2 normal(d.y, -d.x);
+	Vector2 normal( d.y, -d.x );
 
 	uint32_t totalVertexCount = uint32_t( m_renderVertices.size() ) - m_drawCalls.back().vertexOffset;
 	uint32_t totalIndexCount = uint32_t( m_renderIndices.size() ) - m_drawCalls.back().indexOffset;
 	uint32_t segmentVertices = 4;
 	uint32_t segmentIndices = 6;
-	if( capAngleTo != 0.0f)
+	if( capAngleTo != 0.0f )
 	{
-		if ( m_cornerType == CORNERTYPE_MITER )
+		if( m_cornerType == CORNERTYPE_MITER )
 		{
 			segmentVertices += 1 + 2;
 			segmentIndices += 6;
@@ -368,7 +368,7 @@ void Tr2Sprite2dLineTrace::AddSegment(
 			if( numSteps < 2 )
 				numSteps = 2;
 			++numSteps;
-	
+
 			if( numSteps > jointWidth )
 			{
 				numSteps = (unsigned int)m_lineWidth;
@@ -435,18 +435,18 @@ void Tr2Sprite2dLineTrace::AddSegment(
 
 	// v0 - top left
 	Tr2Sprite2dVertexBase& v0 = verts[0];
-	v0.position.x = adjustedFrom.x - normal.x*halfWidth;
-	v0.position.y = adjustedFrom.y - normal.y*halfWidth;
+	v0.position.x = adjustedFrom.x - normal.x * halfWidth;
+	v0.position.y = adjustedFrom.y - normal.y * halfWidth;
 	v0.position.z = m_depth;
 	v0.color = fromColor;
 	v0.texCoord[0] = Vector2( texOffset1, 0.0f );
-	if(	isAA )
+	if( isAA )
 		v0.texCoord[1] = Vector2( -pixelWidthInTexels, m_lineWidth );
 
 	// v1 - bottom left
 	Tr2Sprite2dVertexBase& v1 = verts[1];
-	v1.position.x = adjustedFrom.x + normal.x*halfWidth;
-	v1.position.y = adjustedFrom.y + normal.y*halfWidth;
+	v1.position.x = adjustedFrom.x + normal.x * halfWidth;
+	v1.position.y = adjustedFrom.y + normal.y * halfWidth;
 	v1.position.z = m_depth;
 	v1.color = fromColor;
 	v1.texCoord[0] = Vector2( texOffset1, 1.0f );
@@ -455,8 +455,8 @@ void Tr2Sprite2dLineTrace::AddSegment(
 
 	// v2 - bottom right
 	Tr2Sprite2dVertexBase& v2 = verts[2];
-	v2.position.x = adjustedTo.x + normal.x*halfWidth;
-	v2.position.y = adjustedTo.y + normal.y*halfWidth;
+	v2.position.x = adjustedTo.x + normal.x * halfWidth;
+	v2.position.y = adjustedTo.y + normal.y * halfWidth;
 	v2.position.z = m_depth;
 	v2.color = toColor;
 	v2.texCoord[0] = Vector2( texOffset2, 1.0f );
@@ -465,8 +465,8 @@ void Tr2Sprite2dLineTrace::AddSegment(
 
 	// v3 - top right
 	Tr2Sprite2dVertexBase& v3 = verts[3];
-	v3.position.x = adjustedTo.x - normal.x*halfWidth;
-	v3.position.y = adjustedTo.y - normal.y*halfWidth;
+	v3.position.x = adjustedTo.x - normal.x * halfWidth;
+	v3.position.y = adjustedTo.y - normal.y * halfWidth;
 	v3.position.z = m_depth;
 	v3.color = toColor;
 	v3.texCoord[0] = Vector2( texOffset2, 0.0f );
@@ -477,10 +477,10 @@ void Tr2Sprite2dLineTrace::AddSegment(
 	uint32_t oldSize = (uint32_t)m_renderVertices.size();
 	m_renderVertices.resize( oldSize + 4 );
 
-	renderer->PrepareTriangleVerts( 
-		&m_renderVertices[oldSize], 
-		verts, 
-		sizeof( Tr2Sprite2dVertexBase ), 
+	renderer->PrepareTriangleVerts(
+		&m_renderVertices[oldSize],
+		verts,
+		sizeof( Tr2Sprite2dVertexBase ),
 		4 );
 
 	// Update index buffer
@@ -493,9 +493,9 @@ void Tr2Sprite2dLineTrace::AddSegment(
 	m_renderIndices.push_back( uint16_t( 2 + oldSize - indexOffset ) );
 
 	// Construct joint
-	if( capAngleTo != 0.0f)
+	if( capAngleTo != 0.0f )
 	{
-		if ( m_cornerType == CORNERTYPE_MITER )
+		if( m_cornerType == CORNERTYPE_MITER )
 		{
 			AddMiterJoint(
 				renderer,
@@ -503,13 +503,12 @@ void Tr2Sprite2dLineTrace::AddSegment(
 				v2,
 				v3,
 				normal,
-				toColor,	
+				toColor,
 				isAA,
 				pixelWidthInTexels,
-				halfWidth
-			);
+				halfWidth );
 		}
-		else if (m_cornerType == CORNERTYPE_ROUND)
+		else if( m_cornerType == CORNERTYPE_ROUND )
 		{
 			AddRoundJoint(
 				renderer,
@@ -520,22 +519,21 @@ void Tr2Sprite2dLineTrace::AddSegment(
 				toColor,
 				isAA,
 				pixelWidthInTexels,
-				halfWidth
-				);
+				halfWidth );
 		}
 	}
 }
 
 void Tr2Sprite2dLineTrace::AddRoundJoint(
 	Tr2Sprite2dScene* renderer,
-	float capAngleTo, 
-	Tr2Sprite2dVertexBase v2, 
-	Tr2Sprite2dVertexBase v3, 
-	Vector2 normal, 
-	Color color, 
-	bool isAA, 
+	float capAngleTo,
+	Tr2Sprite2dVertexBase v2,
+	Tr2Sprite2dVertexBase v3,
+	Vector2 normal,
+	Color color,
+	bool isAA,
 	float pixelWidthInTexels,
-	float halfWidth)
+	float halfWidth )
 {
 	uint16_t fanBase;
 	Vector2 fanBaseTranslation( 0, 0 );
@@ -569,23 +567,23 @@ void Tr2Sprite2dLineTrace::AddRoundJoint(
 		numSteps = 2;
 	float stepSize = angleDiff / (float)numSteps;
 	++numSteps;
-	
+
 	if( numSteps > jointWidth )
 	{
 		numSteps = (unsigned int)m_lineWidth;
-		stepSize = angleDiff / (float)(numSteps - 1);
+		stepSize = angleDiff / (float)( numSteps - 1 );
 	}
 
 	// Create verticies
-	Tr2Sprite2dVertexBase* fanVerts = static_cast<Tr2Sprite2dVertexBase*>( CCP_MALLOC( 
-		"Tr2Sprite2dLineTrace/fanVerts", 
+	Tr2Sprite2dVertexBase* fanVerts = static_cast<Tr2Sprite2dVertexBase*>( CCP_MALLOC(
+		"Tr2Sprite2dLineTrace/fanVerts",
 		numSteps * sizeof( Tr2Sprite2dVertexBase ) ) );
 	Tr2Sprite2dVertexBase* currentVertex = fanVerts;
 
 	// Construct outer joint vertexes
 	float a = startAngle;
 	uint16_t vertexCount = (uint16_t)m_renderVertices.size();
-	
+
 	auto indexOffset = m_drawCalls.back().vertexOffset;
 	for( unsigned int i = 0; i < numSteps; ++i )
 	{
@@ -606,7 +604,7 @@ void Tr2Sprite2dLineTrace::AddRoundJoint(
 		}
 		else
 		{
-			m_textureOffsetAccum += std::abs(arcLength) / float(numSteps);
+			m_textureOffsetAccum += std::abs( arcLength ) / float( numSteps );
 			float texOffset = m_textureOffsetAccum / m_textureWidth - m_textureOffset;
 			if( sign > 0.0f )
 				v.texCoord[0] = Vector2( texOffset, 1.0f );
@@ -618,7 +616,7 @@ void Tr2Sprite2dLineTrace::AddRoundJoint(
 		if( i > 0 )
 		{
 			m_renderIndices.push_back( -1 + vertexCount - indexOffset );
-			m_renderIndices.push_back(  0 + vertexCount - indexOffset );
+			m_renderIndices.push_back( 0 + vertexCount - indexOffset );
 			m_renderIndices.push_back( fanBase - indexOffset );
 		}
 
@@ -627,10 +625,10 @@ void Tr2Sprite2dLineTrace::AddRoundJoint(
 	}
 
 	m_renderVertices.resize( vertexCount );
-	renderer->PrepareTriangleVerts( 
-		&m_renderVertices[fanVertexBase], 
-		fanVerts, 
-		sizeof( Tr2Sprite2dVertexBase ), 
+	renderer->PrepareTriangleVerts(
+		&m_renderVertices[fanVertexBase],
+		fanVerts,
+		sizeof( Tr2Sprite2dVertexBase ),
 		numSteps );
 
 	CCP_FREE( fanVerts );
@@ -638,14 +636,14 @@ void Tr2Sprite2dLineTrace::AddRoundJoint(
 
 void Tr2Sprite2dLineTrace::AddMiterJoint(
 	Tr2Sprite2dScene* renderer,
-	float capAngleTo, 
-	Tr2Sprite2dVertexBase v2, 
-	Tr2Sprite2dVertexBase v3, 
-	Vector2 normal, 
-	Color color, 
-	bool isAA, 
+	float capAngleTo,
+	Tr2Sprite2dVertexBase v2,
+	Tr2Sprite2dVertexBase v3,
+	Vector2 normal,
+	Color color,
+	bool isAA,
 	float pixelWidthInTexels,
-	float halfWidth)
+	float halfWidth )
 {
 	uint16_t fanBase;
 	Vector2 basePoint, topPoint;
@@ -672,17 +670,17 @@ void Tr2Sprite2dLineTrace::AddMiterJoint(
 	float endAngle = startAngle + capAngleTo;
 
 	// Create vertexes
-	Tr2Sprite2dVertexBase* fanVerts = static_cast<Tr2Sprite2dVertexBase*>( CCP_MALLOC( 
-		"Tr2Sprite2dLineTrace/fanVerts", 
+	Tr2Sprite2dVertexBase* fanVerts = static_cast<Tr2Sprite2dVertexBase*>( CCP_MALLOC(
+		"Tr2Sprite2dLineTrace/fanVerts",
 		sizeof( Tr2Sprite2dVertexBase ) ) );
 	Tr2Sprite2dVertexBase* currentVertex = fanVerts;
-	
+
 	// Construct outer joint vertexes
 	uint16_t vertexCount = (uint16_t)m_renderVertices.size();
-	
+
 	// Create vertex
 	Tr2Sprite2dVertexBase& v = *currentVertex++;
-	Vector2 p = GetMiterPoint(halfWidth, basePoint, startAngle, endAngle, sign);
+	Vector2 p = GetMiterPoint( halfWidth, basePoint, startAngle, endAngle, sign );
 	v.position.x = p.x;
 	v.position.y = p.y;
 	v.position.z = m_depth;
@@ -697,10 +695,10 @@ void Tr2Sprite2dLineTrace::AddMiterJoint(
 			v.texCoord[1] = Vector2( -pixelWidthInTexels, m_lineWidth );
 	}
 	else
-	{	
+	{
 		float arcLength;
-		XMStoreFloat(&arcLength, XMVector2Length(p - topPoint));
-		m_textureOffsetAccum += std::abs(arcLength);
+		XMStoreFloat( &arcLength, XMVector2Length( p - topPoint ) );
+		m_textureOffsetAccum += std::abs( arcLength );
 		float texOffset = m_textureOffsetAccum / m_textureWidth - m_textureOffset;
 		if( sign > 0.0f )
 			v.texCoord[0] = Vector2( texOffset, 1.0f );
@@ -710,21 +708,21 @@ void Tr2Sprite2dLineTrace::AddMiterJoint(
 
 	// Update render index
 	auto indexOffset = m_drawCalls.back().vertexOffset;
-	if (sign == 1.0)
+	if( sign == 1.0 )
 	{
 		m_renderIndices.push_back( -2 + vertexCount - indexOffset );
 		m_renderIndices.push_back( fanBase - indexOffset );
-		m_renderIndices.push_back(  0 + vertexCount - indexOffset );
+		m_renderIndices.push_back( 0 + vertexCount - indexOffset );
 
 		m_renderIndices.push_back( 2 + vertexCount - indexOffset );
 		m_renderIndices.push_back( fanBase - indexOffset );
-		m_renderIndices.push_back(  0 + vertexCount - indexOffset );
+		m_renderIndices.push_back( 0 + vertexCount - indexOffset );
 	}
 	else
 	{
 		m_renderIndices.push_back( -1 + vertexCount - indexOffset );
 		m_renderIndices.push_back( fanBase - indexOffset );
-		m_renderIndices.push_back(  0 + vertexCount - indexOffset );
+		m_renderIndices.push_back( 0 + vertexCount - indexOffset );
 
 		m_renderIndices.push_back( 1 + vertexCount - indexOffset );
 		m_renderIndices.push_back( fanBase - indexOffset );
@@ -732,35 +730,35 @@ void Tr2Sprite2dLineTrace::AddMiterJoint(
 	}
 
 	m_renderVertices.resize( vertexCount + 1 );
-	renderer->PrepareTriangleVerts( 
-		&m_renderVertices[fanVertexBase], 
+	renderer->PrepareTriangleVerts(
+		&m_renderVertices[fanVertexBase],
 		fanVerts,
-		sizeof( Tr2Sprite2dVertexBase ), 
+		sizeof( Tr2Sprite2dVertexBase ),
 		1 );
 
 	CCP_FREE( fanVerts );
 }
 
-Vector2 Tr2Sprite2dLineTrace::GetMiterPoint(float halfWidth, Vector2 basePoint, float startAngle, float endAngle, float sign)
+Vector2 Tr2Sprite2dLineTrace::GetMiterPoint( float halfWidth, Vector2 basePoint, float startAngle, float endAngle, float sign )
 {
 	// Returns the outer intersection point of the two line segments for a miter joint
 	Vector2 ret, p1, p2, v1, v2;
 	float k = halfWidth * 2.0f * sign;
-	v1 = Vector2(cos(startAngle) * k, sin(startAngle) * k);
+	v1 = Vector2( cos( startAngle ) * k, sin( startAngle ) * k );
 	p1 = basePoint + v1;
-	v2 = Vector2(cos(endAngle) * k, sin(endAngle) * k);
+	v2 = Vector2( cos( endAngle ) * k, sin( endAngle ) * k );
 	p2 = basePoint + v2;
-	ret = XMVector2IntersectLine(p1, p1 - Vector2(-v1.y, v1.x), p2, p2 - Vector2(-v2.y, v2.x));
+	ret = XMVector2IntersectLine( p1, p1 - Vector2( -v1.y, v1.x ), p2, p2 - Vector2( -v2.y, v2.x ) );
 	return ret;
 }
 
-float Tr2Sprite2dLineTrace::ClampAngle(float angle)
+float Tr2Sprite2dLineTrace::ClampAngle( float angle )
 {
-	if (angle < -XM_PI)
+	if( angle < -XM_PI )
 	{
 		return angle + 2 * XM_PI;
 	}
-	else if (angle > XM_PI)
+	else if( angle > XM_PI )
 	{
 		return angle - 2 * XM_PI;
 	}
@@ -781,7 +779,7 @@ void Tr2Sprite2dLineTrace::ClearVertices()
 void Tr2Sprite2dLineTrace::OnListModified( long event, /* BLUELISTEVENT values */ ssize_t key, ssize_t key2, IRoot* value, const IList* theList )
 {
 	switch( event )
-	{ 
+	{
 	case BELIST_INSERTED:
 	case BELIST_REMOVED:
 	case BELIST_UNLOADSTART:

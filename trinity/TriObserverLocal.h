@@ -12,7 +12,8 @@
 struct Vector3;
 struct Matrix;
 
-BLUE_CLASS( TriObserverLocal ) : public ITriObserverLocal
+BLUE_CLASS( TriObserverLocal ) :
+	public ITriObserverLocal
 {
 public:
 	TriObserverLocal( IRoot* lockobj = NULL );
@@ -24,7 +25,7 @@ public:
 
 	// ITriObserverLocal
 	IBluePlacementObserver* GetObserver();
-	void SetObserver( IBluePlacementObserver* obs );
+	void SetObserver( IBluePlacementObserver * obs );
 	void SetPosition( Vector3 pos );
 	void SetFront( const Vector3& front );
 
@@ -33,13 +34,14 @@ public:
 
 	// INotify
 	virtual bool OnModified( Be::Var * val );
-	 
+
 	// debug
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 
 
 	std::string m_name;
+
 private:
 	bool m_mute;
 	Vector3 m_front;

@@ -13,7 +13,7 @@
 #include "Particle/Tr2GpuSharedEmitter.h"
 
 // keep track of missiles
-CCP_STATS_DECLARE( eveVisibleWarheadObjects, "Trinity/Missiles/visibleWarheadObjects", true, CST_COUNTER_LOW, "Number of individual warheads visible in this frame.");
+CCP_STATS_DECLARE( eveVisibleWarheadObjects, "Trinity/Missiles/visibleWarheadObjects", true, CST_COUNTER_LOW, "Number of individual warheads visible in this frame." );
 
 
 // --------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ void EveMissileWarhead::UpdateVisibility( const EveUpdateContext& updateContext,
 	auto& frustum = updateContext.GetFrustum();
 	m_isVisible = true;
 	UpdateViewDependentData( frustum, parentTransform );
-	
+
 	if( m_mesh )
 	{
 		Vector4 boundingSphere;
@@ -134,7 +134,7 @@ void EveMissileWarhead::UpdateVisibility( const EveUpdateContext& updateContext,
 		{
 			// check visibility with camera or, if threshold set to negative, no culling
 			if( frustum.IsSphereVisible( &boundingSphere ) )
-	 		{
+			{
 				float estimatedSize = frustum.GetPixelSizeAccross( &boundingSphere );
 				if( estimatedSize >= updateContext.GetMediumDetailThreshold() )
 				{
@@ -183,7 +183,7 @@ void EveMissileWarhead::GetRenderables( std::vector<ITr2Renderable*>& renderable
 	{
 		return;
 	}
-	
+
 	if( m_mesh )
 	{
 		renderables.push_back( this );
@@ -232,7 +232,7 @@ void EveMissileWarhead::EnableParticleEmitting( bool enable )
 	for( PIEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
 	{
 		EveTransformPtr child;
-		if( (*it)->QueryInterface( BlueInterfaceIID<EveTransform>(), (void**)&child, BEQI_SILENT ) )
+		if( ( *it )->QueryInterface( BlueInterfaceIID<EveTransform>(), (void**)&child, BEQI_SILENT ) )
 		{
 			// do we have an attached GPU emitter?
 			for( auto emIt = child->m_particleEmitters.begin(); emIt != child->m_particleEmitters.end(); ++emIt )
@@ -359,7 +359,7 @@ EveMissileWarhead::StateChangeEvent EveMissileWarhead::UpdateState( float deltaT
 
 	StateChangeEvent evt = EVT_NONE;
 	Vector3 position;
-	const float estimatedTotalFlyingTime = (estimatedTotalAliveTime + 0.1f) * m_speedModifier;
+	const float estimatedTotalFlyingTime = ( estimatedTotalAliveTime + 0.1f ) * m_speedModifier;
 
 	// calc a value from 0 to 1 across the whole (estimated) flying time, (excluding eject-phase time and delay time)
 	const float flight01 = TriClamp( m_flyingTime / estimatedTotalFlyingTime, 0.f, 1.f );
@@ -426,7 +426,7 @@ EveMissileWarhead::StateChangeEvent EveMissileWarhead::CheckImpact( float deltaT
 	{
 		return evt;
 	}
-	const float estimatedTotalFlyingTime = (estimatedTotalAliveTime + 0.1f) * m_speedModifier;
+	const float estimatedTotalFlyingTime = ( estimatedTotalAliveTime + 0.1f ) * m_speedModifier;
 	// calc a value from 0 to 1 across the whole (estimated) flying time, (excluding eject-phase time and delay time)
 	const float flight01 = TriClamp( ( m_flyingTime - deltaT ) / estimatedTotalFlyingTime, 0.f, 1.f );
 
@@ -512,7 +512,7 @@ void EveMissileWarhead::UpdateWarhead( float deltaT, float estimatedTotalAliveTi
 	}
 
 	// from the total alive time caclulate the total flying time
-	const float estimatedTotalFlyingTime = (estimatedTotalAliveTime + 0.1f) * m_speedModifier;
+	const float estimatedTotalFlyingTime = ( estimatedTotalAliveTime + 0.1f ) * m_speedModifier;
 
 
 	// calc a value from 0 to 1 across the whole (estimated) flying time, (excluding eject-phase time and delay time)
@@ -549,7 +549,7 @@ void EveMissileWarhead::UpdateWarhead( float deltaT, float estimatedTotalAliveTi
 
 	// apply the animated offset, but be carefull: scale it down in beginning and end!
 	m_currentOffset += powf( sinf( XM_PI * flight01 ), 2.f ) * m_pathOffset;
-	
+
 	// override some behaviour for bombs
 	if( m_bombFlightpath )
 	{
@@ -622,9 +622,8 @@ uint32_t EveMissileWarhead::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderTy
 	}
 	else
 	{
-		return
-			64 +				// m_vsWorldMatrix
-			16; 				// m_missileSize
+		return 64 + // m_vsWorldMatrix
+			16; // m_missileSize
 	}
 }
 
@@ -634,7 +633,7 @@ void EveMissileWarhead::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType 
 	{
 		uint8_t* perObjectVS = static_cast<uint8_t*>( data );
 		*reinterpret_cast<Matrix*>( perObjectVS ) = Transpose( m_worldTransform );
-		perObjectVS += sizeof(Matrix);
+		perObjectVS += sizeof( Matrix );
 
 		*reinterpret_cast<Vector4*>( perObjectVS ) = Vector4( m_warheadRadius, m_warheadLength, 0, 0 );
 	}
@@ -643,7 +642,7 @@ void EveMissileWarhead::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType 
 
 void EveMissileWarhead::RenderDebugInfoFromParent( ITr2DebugRenderer2& renderer, Matrix transform )
 {
-	srand( static_cast<unsigned int>( reinterpret_cast<size_t>( this )));
+	srand( static_cast<unsigned int>( reinterpret_cast<size_t>( this ) ) );
 	uint32_t color = 0xff000000 + rand() % 0x00ffffff;
 	renderer.DrawLine( this, transform.GetTranslation(), this->GetWorldPosition(), color );
 	renderer.DrawLine( this, this->GetWorldPosition(), TransformCoord( m_currentEndOffset, transform ), 0xff999999 );
@@ -689,4 +688,3 @@ void EveMissileWarheadPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBuffer
 {
 	Tr2PerObjectDataWithPersistentBuffers<EveMissileWarhead>::SetPerObjectDataToDevice( buffers, constantTypeMask, renderContext );
 }
-

@@ -6,18 +6,18 @@
 
 #include "Tr2DepthStencil.h"
 
-TriStepPushDepthStencil::TriStepPushDepthStencil( IRoot* lockobj )
-	: m_pushCurrent( false )	// need this flag to know the difference between pushing nothing, and pushing None to disable depthStencil
+TriStepPushDepthStencil::TriStepPushDepthStencil( IRoot* lockobj ) :
+	m_pushCurrent( false ) // need this flag to know the difference between pushing nothing, and pushing None to disable depthStencil
 {
 }
 
-TriStepPushDepthStencil::~TriStepPushDepthStencil(void)
+TriStepPushDepthStencil::~TriStepPushDepthStencil( void )
 {
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // Arguments:
 //   depthStencil - Initial value of depth stencil step attribute
 // --------------------------------------------------------------------------------------

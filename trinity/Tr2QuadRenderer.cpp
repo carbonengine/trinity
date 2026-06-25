@@ -23,8 +23,8 @@ uint32_t Align( uint32_t offset, uint32_t alignment )
 
 }
 
-Tr2QuadRenderer::Tr2QuadRenderer( IRoot* )
-	:m_vertexBufferOffset( -1 ),
+Tr2QuadRenderer::Tr2QuadRenderer( IRoot* ) :
+	m_vertexBufferOffset( -1 ),
 	m_buffer( "Tr2QuadRenderer::m_buffer", 1024, 128 ),
 	m_effects( "Tr2QuadRenderer::m_effects" ),
 	m_bufferSize( 0 ),
@@ -58,12 +58,12 @@ Tr2QuadRenderer* Tr2QuadRenderer::Instance()
 //   definition - vertex definition for instance data
 //   effect - effect to use for rendering
 // --------------------------------------------------------------------------------------
-void Tr2QuadRenderer::RegisterEffect( 
-	EffectKey key, 
+void Tr2QuadRenderer::RegisterEffect(
+	EffectKey key,
 	TriBatchType batchType,
-	uint32_t instanceSize, 
-	uint32_t quadCount, 
-	const Tr2VertexDefinition& definition, 
+	uint32_t instanceSize,
+	uint32_t quadCount,
+	const Tr2VertexDefinition& definition,
 	Tr2Material* effect )
 {
 	auto found = m_effects.find( key );
@@ -85,7 +85,7 @@ void Tr2QuadRenderer::RegisterEffect(
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Needs to be called after all renderer batches were submitted and before new 
+//   Needs to be called after all renderer batches were submitted and before new
 //   instances are added.
 // --------------------------------------------------------------------------------------
 void Tr2QuadRenderer::DoneRendering( Tr2RenderContext& renderContext )
@@ -114,8 +114,8 @@ void Tr2QuadRenderer::AddQuads( EffectKey effectKey, const void* sprites, size_t
 	auto size = count * record->instanceSize;
 	if( tls.buffer.size() < tls.addedSize + size )
 	{
-		tls.buffer.resize( 
-			"Tr2InstancePool::buffer", 
+		tls.buffer.resize(
+			"Tr2InstancePool::buffer",
 			std::max( tls.buffer.size() * 2, tls.buffer.size() + std::max( count, size_t( 512 ) ) * record->instanceSize ) );
 	}
 	memcpy( tls.buffer.get() + tls.addedSize, sprites, size );
@@ -236,7 +236,7 @@ void Tr2QuadRenderer::RecreateQuadBuffers( uint32_t quadCount )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Needs to be called after all instance data was added to the renderer, but before 
+//   Needs to be called after all instance data was added to the renderer, but before
 //   GetBatches call.
 // Arguments:
 //   renderContext - current render context
@@ -270,7 +270,7 @@ void Tr2QuadRenderer::ReleaseResources( TriStorage s )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements Tr2DeviceResource method. Re-creates vertex declarations for registered 
+//   Implements Tr2DeviceResource method. Re-creates vertex declarations for registered
 //   effects.
 // Return value:
 //   true always

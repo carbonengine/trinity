@@ -5,7 +5,7 @@
 BLUE_DECLARE( Tr2GpuProfiler );
 BLUE_CLASS_IMPL( Tr2GpuProfiler );
 
-class Tr2GpuProfiler: public IRoot
+class Tr2GpuProfiler : public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -31,6 +31,7 @@ public:
 	bool IsDataReady();
 	BlueScriptValue GetFrameReport();
 	void ClearData();
+
 private:
 	struct Zone
 	{
@@ -49,7 +50,7 @@ private:
 
 	std::vector<Zone> m_zones;
 	std::vector<size_t> m_stack;
-	
+
 	Tr2FenceAL m_frameFence;
 	bool m_pendingCapture;
 	bool m_capturing;
@@ -63,6 +64,7 @@ public:
 	Tr2GpuProfilerZone( const Tr2GpuProfilerZone& ) = delete;
 	Tr2GpuProfilerZone& operator=( const Tr2GpuProfilerZone& ) = delete;
 	~Tr2GpuProfilerZone();
+
 private:
 	Tr2RenderContextAL& context;
 };

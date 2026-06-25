@@ -16,8 +16,9 @@ BLUE_CLASS( Tr2SerializedMorphAnimation ) :
 public:
 	EXPOSE_TO_BLUE();
 
-	Tr2SerializedMorphAnimation( IRoot* lockobj = NULL ) : m_weight( 0.f ) {};
-	~Tr2SerializedMorphAnimation() {};
+	Tr2SerializedMorphAnimation( IRoot* lockobj = NULL ) :
+		m_weight( 0.f ){};
+	~Tr2SerializedMorphAnimation(){};
 
 	std::string m_name;
 	float m_weight;
@@ -27,7 +28,7 @@ TYPEDEF_BLUECLASS( Tr2SerializedMorphAnimation );
 BLUE_DECLARE_VECTOR( Tr2SerializedMorphAnimation );
 
 
-BLUE_CLASS( Tr2Mesh ):
+BLUE_CLASS( Tr2Mesh ) :
 	public Tr2MeshBase,
 	public IInitialize,
 	public INotify,
@@ -41,22 +42,25 @@ public:
 
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
-	
-	const char* GetMeshResPath() const { return m_meshResPath.c_str(); }
+
+	const char* GetMeshResPath() const
+	{
+		return m_meshResPath.c_str();
+	}
 	void SetMeshResPath( const char* path );
 
 	const char* GetLowResMeshResPath() const;
 	void SetLowResMeshResPath( const char* path );
 
 	TriGeometryRes* GetGeometryResource() const override;
-	void SetGeometryRes( TriGeometryRes* res );
+	void SetGeometryRes( TriGeometryRes * res );
 
 	bool IsLoading() const override;
 	void ReverseIndexBuffers() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -64,8 +68,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IBlueAsyncResNotifyTarget
-	virtual void ReleaseCachedData( BlueAsyncRes* p );
-	virtual void RebuildCachedData( BlueAsyncRes* p );
+	virtual void ReleaseCachedData( BlueAsyncRes * p );
+	virtual void RebuildCachedData( BlueAsyncRes * p );
 
 	std::vector<std::string>* GetMorphTargetNames() const override;
 	bool IsBakedMorph( int index ) const override;
@@ -81,7 +85,7 @@ private:
 
 	void InitializeMorphTargets();
 
-	void PySetGeometryRes( TriGeometryRes* geometryRes );
+	void PySetGeometryRes( TriGeometryRes * geometryRes );
 	int GetAreasCount() const;
 	void SetLowResGeometryRes( TriGeometryRes * res );
 

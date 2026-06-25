@@ -5,12 +5,10 @@
 
 
 Tr2PPDesaturateEffect::Tr2PPDesaturateEffect( IRoot* lockobj ) :
-	m_intensity( 1.0f  )
+	m_intensity( 1.0f )
 {
-
 }
 
 Tr2PPDesaturateEffect::~Tr2PPDesaturateEffect()
 {
-
 }

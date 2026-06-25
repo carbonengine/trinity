@@ -7,13 +7,12 @@ BLUE_DEFINE( BackAndForth );
 
 extern Be::VarChooser BehaviorPriorityChooser[];
 
-Be::VarChooser LocatorChooser[] =
-	{
-		{ "localLocators", BeCast( BackAndForth::LOCAL_LOCATORS ), "Place locators manually, this is for back and forth locators." },
-		{ "parentLocatorSet", BeCast( BackAndForth::PARENT_LOCATORS ), "use the parent's locatorSet for drones to seek. Remember to set the locatorSetName" },
-		{ "targetLocatorSet", BeCast( BackAndForth::TARGET_LOCATORS ), "use the target's locatorSet for drones to seek. Remember to set the locatorSetName" },
-		{ 0 }
-	};
+Be::VarChooser LocatorChooser[] = {
+	{ "localLocators", BeCast( BackAndForth::LOCAL_LOCATORS ), "Place locators manually, this is for back and forth locators." },
+	{ "parentLocatorSet", BeCast( BackAndForth::PARENT_LOCATORS ), "use the parent's locatorSet for drones to seek. Remember to set the locatorSetName" },
+	{ "targetLocatorSet", BeCast( BackAndForth::TARGET_LOCATORS ), "use the target's locatorSet for drones to seek. Remember to set the locatorSetName" },
+	{ 0 }
+};
 BLUE_REGISTER_ENUM_EX( "LocatorType", BackAndForth::LocatorType, LocatorChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 const Be::ClassInfo* BackAndForth::ExposeToBlue()

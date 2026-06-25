@@ -7,11 +7,11 @@ using namespace Tr2RenderContextEnum;
 
 namespace
 {
-inline unsigned ConvertBGR565A8ToBGRA8( uint32_t color, uint32_t alpha ) 
+inline unsigned ConvertBGR565A8ToBGRA8( uint32_t color, uint32_t alpha )
 {
-	return uint32_t( color & 0x1f ) * 255 / 31 | 
-		( uint32_t( ( color >> 5 ) & 0x3f ) * 255 / 63 ) << 8 | 
-		( uint32_t( ( color >> 11 ) & 0x1f ) * 255 / 31 ) << 16 | 
+	return uint32_t( color & 0x1f ) * 255 / 31 |
+		( uint32_t( ( color >> 5 ) & 0x3f ) * 255 / 63 ) << 8 |
+		( uint32_t( ( color >> 11 ) & 0x1f ) * 255 / 31 ) << 16 |
 		( alpha << 24 );
 }
 
@@ -85,7 +85,7 @@ void DecompressBc1( uint32_t width, uint32_t height, uint32_t depth, const Tr2Su
 						{
 							uint32_t destY = j + y;
 							uint32_t* destPixel = reinterpret_cast<uint32_t*>( decompressed + k * slice + destY * pitch + ( x + i ) * sizeof( uint32_t ) );
-							switch( ( bits >> 2*(4*y+x) ) & 3 )
+							switch( ( bits >> 2 * ( 4 * y + x ) ) & 3 )
 							{
 							case 0:
 								*destPixel = color0 | 0xff000000;
@@ -172,24 +172,24 @@ void DecompressBc3( uint32_t width, uint32_t height, uint32_t depth, const Tr2Su
 				alpha[0] = *reinterpret_cast<const uint8_t*>( source );
 				alpha[1] = *reinterpret_cast<const uint8_t*>( source + 1 );
 				auto alphaMask = source + 2;
-				uint32_t alphaMask0 = (alphaMask[0]) | (alphaMask[1] << 8) | (alphaMask[2] << 16);
-				uint32_t alphaMask1 = (alphaMask[3]) | (alphaMask[4] << 8) | (alphaMask[5] << 16);
-				if( alpha[0] > alpha[1] ) 
-				{    
-					alpha[2] = (6 * alpha[0] + 1 * alpha[1] + 3) / 7;
-					alpha[3] = (5 * alpha[0] + 2 * alpha[1] + 3) / 7;
-					alpha[4] = (4 * alpha[0] + 3 * alpha[1] + 3) / 7;
-					alpha[5] = (3 * alpha[0] + 4 * alpha[1] + 3) / 7;
-					alpha[6] = (2 * alpha[0] + 5 * alpha[1] + 3) / 7;
-					alpha[7] = (1 * alpha[0] + 6 * alpha[1] + 3) / 7;  
-				}    
-				else 
-				{  
-					alpha[2] = (4 * alpha[0] + 1 * alpha[1] + 2) / 5;
-					alpha[3] = (3 * alpha[0] + 2 * alpha[1] + 2) / 5;
-					alpha[4] = (2 * alpha[0] + 3 * alpha[1] + 2) / 5;
-					alpha[5] = (1 * alpha[0] + 4 * alpha[1] + 2) / 5;
-					alpha[6] = 0;  
+				uint32_t alphaMask0 = ( alphaMask[0] ) | ( alphaMask[1] << 8 ) | ( alphaMask[2] << 16 );
+				uint32_t alphaMask1 = ( alphaMask[3] ) | ( alphaMask[4] << 8 ) | ( alphaMask[5] << 16 );
+				if( alpha[0] > alpha[1] )
+				{
+					alpha[2] = ( 6 * alpha[0] + 1 * alpha[1] + 3 ) / 7;
+					alpha[3] = ( 5 * alpha[0] + 2 * alpha[1] + 3 ) / 7;
+					alpha[4] = ( 4 * alpha[0] + 3 * alpha[1] + 3 ) / 7;
+					alpha[5] = ( 3 * alpha[0] + 4 * alpha[1] + 3 ) / 7;
+					alpha[6] = ( 2 * alpha[0] + 5 * alpha[1] + 3 ) / 7;
+					alpha[7] = ( 1 * alpha[0] + 6 * alpha[1] + 3 ) / 7;
+				}
+				else
+				{
+					alpha[2] = ( 4 * alpha[0] + 1 * alpha[1] + 2 ) / 5;
+					alpha[3] = ( 3 * alpha[0] + 2 * alpha[1] + 2 ) / 5;
+					alpha[4] = ( 2 * alpha[0] + 3 * alpha[1] + 2 ) / 5;
+					alpha[5] = ( 1 * alpha[0] + 4 * alpha[1] + 2 ) / 5;
+					alpha[6] = 0;
 					alpha[7] = 255;
 				}
 
@@ -251,13 +251,13 @@ bool BcDecompress( uint32_t width, uint32_t height, uint32_t depth, PixelFormat 
 	case PIXEL_FORMAT_BC1_UNORM_SRGB:
 		DecompressBc1( width, height, depth, src, decompressed.get() );
 		return true;
-			
+
 	case PIXEL_FORMAT_BC2_TYPELESS:
 	case PIXEL_FORMAT_BC2_UNORM:
 	case PIXEL_FORMAT_BC2_UNORM_SRGB:
 		DecompressBc2( width, height, depth, src, decompressed.get() );
 		return true;
-			
+
 	case PIXEL_FORMAT_BC3_TYPELESS:
 	case PIXEL_FORMAT_BC3_UNORM:
 	case PIXEL_FORMAT_BC3_UNORM_SRGB:

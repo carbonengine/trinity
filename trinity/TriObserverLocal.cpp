@@ -68,7 +68,7 @@ bool TriObserverLocal::GetMute()
 
 void TriObserverLocal::SetMute( bool isMute )
 {
-	if ( m_mute == isMute )
+	if( m_mute == isMute )
 	{
 		return;
 	}

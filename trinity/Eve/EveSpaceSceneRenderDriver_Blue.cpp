@@ -242,22 +242,22 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 			"Render node to render after (or instead of) the main color pass of the scene",
 			Be::READWRITE )
 
-		MAP_ATTRIBUTE_WITH_CHOOSER( 
-			"customStencilFormat", 
-			m_customStencilFormat, 
-			"Pixel format for custom stencil buffer generated in depth pass. Set to Unknown to disable.", 
-			Be::READWRITE | Be::ENUM, 
+		MAP_ATTRIBUTE_WITH_CHOOSER(
+			"customStencilFormat",
+			m_customStencilFormat,
+			"Pixel format for custom stencil buffer generated in depth pass. Set to Unknown to disable.",
+			Be::READWRITE | Be::ENUM,
 			Tr2RenderContextEnum_PixelFormat_Chooser )
 
-		MAP_ATTRIBUTE( 
-			"depthPassTechnique", 
-			m_depthPassTechnique, 
-			"Name of the shader technique used during the depth pass", 
+		MAP_ATTRIBUTE(
+			"depthPassTechnique",
+			m_depthPassTechnique,
+			"Name of the shader technique used during the depth pass",
 			Be::READWRITE )
 
 		MAP_METHOD_AND_WRAP(
-			"GetAllTempTextures", 
-			GetAllTempTextures, 
+			"GetAllTempTextures",
+			GetAllTempTextures,
 			"Returns all temp textures used by the gpu resource pool. For debugging purposes." )
 
 		MAP_PROPERTY(

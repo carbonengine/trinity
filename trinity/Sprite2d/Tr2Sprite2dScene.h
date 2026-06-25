@@ -26,15 +26,14 @@ BLUE_DECLARE( Tr2Effect );
 class TriProjection;
 class TriView;
 
-class Tr2Sprite2dScene:
-     public ITr2Scene,
-	 public INotify,
-	 public IRenderCallback,
-	 public Tr2DeviceResource
+class Tr2Sprite2dScene : public ITr2Scene,
+						 public INotify,
+						 public IRenderCallback,
+						 public Tr2DeviceResource
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2Sprite2dScene( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2Sprite2dScene( IRoot* lockobj = NULL );
 	Tr2Sprite2dScene( const Tr2Sprite2dScene& ) = delete;
 	Tr2Sprite2dScene& operator=( const Tr2Sprite2dScene& ) = delete;
 	~Tr2Sprite2dScene();
@@ -97,36 +96,34 @@ public:
 
 	Vector2 InverseTransformPoint( const Vector2& point ) const;
 
-	bool PrepareSpriteVerts( 
+	bool PrepareSpriteVerts(
 		Tr2Sprite2dD3DVertex* destVerts,
 		const Vector2& pos,
 		float width,
 		float height,
-		Tr2SpriteObjectEffect sfx
-		);
+		Tr2SpriteObjectEffect sfx );
 
 	void SetSpriteVerticesUVs( Vector2 uv[2][4], float width, float height );
 
 	bool PrepareTriangleVerts(
 		Tr2Sprite2dD3DVertex* destVerts,
-		Tr2Sprite2dVertexBase* verts, 
-		unsigned int stride, 
-		unsigned int vertexCount
-		);
+		Tr2Sprite2dVertexBase* verts,
+		unsigned int stride,
+		unsigned int vertexCount );
 
-	void RenderTriangleVerts( 
-		Tr2Sprite2dD3DVertex* verticesSrc, 
+	void RenderTriangleVerts(
+		Tr2Sprite2dD3DVertex* verticesSrc,
 		unsigned int vertexCount,
-		unsigned short* indices, 
+		unsigned short* indices,
 		unsigned short indexCount );
 
-	void RenderTriangleVerts( 
-		Tr2BufferAL& verticesSrc, 
+	void RenderTriangleVerts(
+		Tr2BufferAL& verticesSrc,
 		unsigned int vertexCount,
-		Tr2BufferAL& indices, 
+		Tr2BufferAL& indices,
 		unsigned short indexCount );
 
-	bool EnsureBufferSpace( unsigned int vertexCount, unsigned short indexCount, int &vertexOffset );
+	bool EnsureBufferSpace( unsigned int vertexCount, unsigned short indexCount, int& vertexOffset );
 
 	bool IsCapturing() const;
 	bool StartCapture( ITr2SpriteObject* owner );
@@ -147,6 +144,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
 	bool SelectEffect();
@@ -167,8 +165,8 @@ private:
 	void DetermineWorldTransform();
 	void DetermineViewportSize();
 	void SetViewportSizeToVariableStore( float displayWidth, float displayHeight );
-	void PrepareRenderContextAfterRendering( Tr2RenderContext &renderContext );
-	void PrepareRenderContextForRendering( Tr2RenderContext &renderContext );
+	void PrepareRenderContextAfterRendering( Tr2RenderContext& renderContext );
+	void PrepareRenderContextForRendering( Tr2RenderContext& renderContext );
 	void CleanUpStacksAfterRender();
 	void PrepareStacksBeforeRender();
 	void GrowCaptureIndexBuffer( unsigned short indexCount );
@@ -225,9 +223,9 @@ private:
 	struct TransformStackEntry
 	{
 		bool isTranslationOnly;
-		
+
 		// Keep track of whether the action that set this was translation only
-		bool isTranslationOnlySet; 
+		bool isTranslationOnlySet;
 
 		Vector2 translation;
 		Matrix transform;
@@ -255,7 +253,7 @@ private:
 
 	// If set, fill mode is set to wire frame while rendering.
 	bool m_drawWireFrame;
-	
+
 	// Is the scene fullscreen? If so, m_displayWidth/m_displayHeight
 	// are set every frame to match the fullscreen viewport. Note
 	// that this is normally done by uilib when used for ui rendering.
@@ -321,12 +319,12 @@ private:
 	const static unsigned s_textureMax = 2;
 	Tr2AtlasTexturePtr m_texture[s_textureMax];
 	Tr2Variable m_texelSizeVar[s_textureMax];
-	
+
 	struct TextureSetting
 	{
 		// Cached texture window, set when texture (or explicit texture window) is set
 		Vector4 textureWindow;
-		
+
 		bool useTransform;
 		Matrix transform;
 
@@ -334,7 +332,8 @@ private:
 		bool tileY;
 
 		//repetition
-		enum TextureRepeat {
+		enum TextureRepeat
+		{
 			TR_Tile = 0x0,
 			TR_Mirror = 0x1,
 			TR_Clamp = 0x2
@@ -344,7 +343,7 @@ private:
 
 	TextureSetting m_textureSettings[s_textureMax];
 
-	Matrix m_transformArray[ TR2_SS_MAX_TRANSFORM_COUNT ];
+	Matrix m_transformArray[TR2_SS_MAX_TRANSFORM_COUNT];
 	unsigned m_transformCurrent;
 
 	Tr2Sprite2dDisplayList* m_captureDisplayList;
@@ -353,7 +352,7 @@ private:
 	Tr2Sprite2dD3DVertex* m_preCaptureVertexData;
 	unsigned int m_captureVertexDataSize;
 	unsigned int m_captureVertexDataCapacity;
-	
+
 	unsigned int* m_preCaptureIndexData;
 	CcpAlignedMallocBuffer m_captureIndexData;
 	unsigned int m_captureIndexDataSize;
@@ -365,7 +364,7 @@ private:
 	unsigned int m_drawCallsRendered;
 	unsigned int m_maxDrawCallsToRender;
 
-	Tr2ConstantBufferAL	m_uiTransformsCb;
+	Tr2ConstantBufferAL m_uiTransformsCb;
 
 	unsigned int m_maxSpriteCount;
 };

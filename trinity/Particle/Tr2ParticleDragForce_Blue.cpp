@@ -7,11 +7,11 @@ BLUE_DEFINE( Tr2ParticleDragForce );
 
 const Be::ClassInfo* Tr2ParticleDragForce::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(Tr2ParticleDragForce, "" )
+	EXPOSURE_BEGIN( Tr2ParticleDragForce, "" )
 		MAP_INTERFACE( ITr2ParticleForce )
 		MAP_INTERFACE( Tr2ParticleDragForce )
 
-		MAP_ATTRIBUTE( "drag",  m_dragConstant,  "Applies a drag force: -bV where V is the velocity of a particle", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "drag", m_dragConstant, "Applies a drag force: -bV where V is the velocity of a particle", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_END()
 }

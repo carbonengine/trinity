@@ -21,20 +21,20 @@ struct StarfieldSpriteVertex
 	uint8_t padding[2];
 };
 
-void GenerateStar(float minDist, float maxDist, float minFlashRate, float maxFlashRate, float minIntensity, StarfieldSpriteVertex* star)
+void GenerateStar( float minDist, float maxDist, float minFlashRate, float maxFlashRate, float minIntensity, StarfieldSpriteVertex* star )
 {
-	float t = TriRand()*2.0f*3.1415926535897932384626433832795f;
-    float u = (TriRand()-0.5f)*2.0f;
+	float t = TriRand() * 2.0f * 3.1415926535897932384626433832795f;
+	float u = ( TriRand() - 0.5f ) * 2.0f;
 	float dist = TriRand();
-	float radius = Lerp(minDist, maxDist, dist * dist);
-	float sq = sqrtf(1.0f-u*u);
+	float radius = Lerp( minDist, maxDist, dist * dist );
+	float sq = sqrtf( 1.0f - u * u );
 
-	star->position = Vector3(radius*sq*cosf(t), radius*sq*sinf(t), radius*u);
+	star->position = Vector3( radius * sq * cosf( t ), radius * sq * sinf( t ), radius * u );
 	star->colorIndex = TriRand();
-	star->flashIntensity = TriRand() * (1 - minIntensity) + minIntensity;
+	star->flashIntensity = TriRand() * ( 1 - minIntensity ) + minIntensity;
 	star->flashPhase = TriRand();
-	star->flashRate = TriRand() * (maxFlashRate - minFlashRate) + minFlashRate;
-	star->textureIndex = TriRandInt(4);
+	star->flashRate = TriRand() * ( maxFlashRate - minFlashRate ) + minFlashRate;
+	star->textureIndex = TriRandInt( 4 );
 }
 
 EveStarfield::EveStarfield( IRoot* lockobj ) :
@@ -42,11 +42,11 @@ EveStarfield::EveStarfield( IRoot* lockobj ) :
 	m_vertexCount( 0 ),
 	m_starCount( 500 ),
 	m_seed( 0 ),
-	m_maxDistance(300),
-	m_minDistance(100),
-	m_maxFlashRate(1),
-	m_minFlashRate(0.5),
-	m_minFlashIntensity(0),
+	m_maxDistance( 300 ),
+	m_minDistance( 100 ),
+	m_maxFlashRate( 1 ),
+	m_minFlashRate( 0.5 ),
+	m_minFlashIntensity( 0 ),
 	m_display( true ),
 	m_dirty( false ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
@@ -124,10 +124,10 @@ bool EveStarfield::OnPrepareResources()
 		vd.Add( vd.FLOAT32_1, vd.TEXCOORD, 1 );
 		vd.Add( vd.FLOAT32_1, vd.TEXCOORD, 2 );
 		vd.Add( vd.FLOAT32_1, vd.TEXCOORD, 3 );
-		vd.Add( vd.UBYTE_4  , vd.TEXCOORD, 4 );
+		vd.Add( vd.UBYTE_4, vd.TEXCOORD, 4 );
 	}
 
-	m_vertexDeclHandle= Tr2EffectStateManager::GetVertexDeclarationHandle( s_spriteVertexDecl );
+	m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_spriteVertexDecl );
 	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
 		return false;
@@ -139,12 +139,12 @@ bool EveStarfield::OnPrepareResources()
 
 	std::vector<StarfieldSpriteVertex> verts( m_vertexCount );
 
-	TriSrand(Be::Time(this->m_seed));
-	
+	TriSrand( Be::Time( this->m_seed ) );
+
 	StarfieldSpriteVertex star;
 	for( int i = 0; i < m_starCount; ++i )
 	{
-		GenerateStar(m_minDistance, m_maxDistance, m_minFlashRate, m_maxFlashRate, m_minFlashIntensity, &star);
+		GenerateStar( m_minDistance, m_maxDistance, m_minFlashRate, m_maxFlashRate, m_minFlashIntensity, &star );
 		for( int j = 0; j < 4; ++j )
 		{
 			StarfieldSpriteVertex& vertex = verts[i * 4 + j];
@@ -159,13 +159,14 @@ bool EveStarfield::OnPrepareResources()
 	}
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	CR_RETURN_VAL( m_vertexBuffer.Create(	
-		m_bytesPerVertex,
-		m_vertexCount, 
-		Tr2GpuUsage::VERTEX_BUFFER,
-		Tr2CpuUsage::NONE,
-		&verts[0], 
-		renderContext ), false );
+	CR_RETURN_VAL( m_vertexBuffer.Create(
+					   m_bytesPerVertex,
+					   m_vertexCount,
+					   Tr2GpuUsage::VERTEX_BUFFER,
+					   Tr2CpuUsage::NONE,
+					   &verts[0],
+					   renderContext ),
+				   false );
 
 	Tr2Renderer::ReserveQuadListIndexBuffer( m_starCount );
 

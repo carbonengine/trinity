@@ -16,63 +16,63 @@
 
 namespace
 {
-	ALResult GetBoxVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
+ALResult GetBoxVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
+{
+	const uint32_t vertexCount = 4 * 6;
+	BehaviorGroupBooster::BoosterVertex vertices[vertexCount];
+	auto p = &vertices[0];
+	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
+
+	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
+
+	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
+
+	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
+
+	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
+
+	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
+
+	return g_sharedBuffer.Allocate( sizeof( BehaviorGroupBooster::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
+}
+
+Tr2VertexDefinition& GetQuadDefinition()
+{
+	static Tr2VertexDefinition def;
+	if( def.empty() )
 	{
-		const uint32_t vertexCount = 4 * 6;
-		BehaviorGroupBooster::BoosterVertex vertices[vertexCount];
-		auto p = &vertices[0];
-		( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
+		def.Add( def.FLOAT32_1, def.TEXCOORD, 5 );
 
-		( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
+		def.Add( def.FLOAT32_4, def.POSITION, 0, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 1, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 2, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 3, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 4, 1, 1 );
+		def.Add( def.FLOAT32_4, def.POSITION, 5, 1, 1 );
 
-		( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-
-		( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-
-		( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-
-		( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-
-		return g_sharedBuffer.Allocate( sizeof( BehaviorGroupBooster::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
+		def.Add( def.FLOAT16_4, def.TEXCOORD, 0, 1, 1 );
+		def.Add( def.FLOAT16_2, def.TEXCOORD, 1, 1, 1 );
 	}
-	
-	Tr2VertexDefinition& GetQuadDefinition()
-	{
-		static Tr2VertexDefinition def;
-		if( def.empty() )
-		{
-			def.Add( def.FLOAT32_1, def.TEXCOORD, 5 );
-
-			def.Add( def.FLOAT32_4, def.POSITION, 0, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 1, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 2, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 3, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 4, 1, 1 );
-			def.Add( def.FLOAT32_4, def.POSITION, 5, 1, 1 );
-
-			def.Add( def.FLOAT16_4, def.TEXCOORD, 0, 1, 1 );
-			def.Add( def.FLOAT16_2, def.TEXCOORD, 1, 1, 1 );
-		}
-		return def;
-	}
+	return def;
+}
 
 }
 
@@ -159,7 +159,7 @@ void BehaviorGroupBooster::InitializeEffects()
 	}
 	if( m_haloFlareEffect == nullptr )
 	{
-		m_haloFlareEffect = CreateFlareEffect();		
+		m_haloFlareEffect = CreateFlareEffect();
 		InitializeHaloFlare();
 	}
 	SetupQuads();
@@ -186,7 +186,7 @@ bool BehaviorGroupBooster::OnModified( Be::Var* value )
 			InitializeHaloFlare();
 			SetupQuads();
 		}
-		else 
+		else
 		{
 			m_haloFlares.clear();
 		}
@@ -198,7 +198,7 @@ bool BehaviorGroupBooster::OnModified( Be::Var* value )
 			InitializeAmbientFlare();
 			SetupQuads();
 		}
-		else 
+		else
 		{
 			m_ambientFlares.clear();
 		}
@@ -228,7 +228,7 @@ void BehaviorGroupBooster::SetupQuads()
 
 	// turn the halo correctly so it works with the halo modifier
 	m_haloMatrix = RotationMatrix( Quaternion( 0, 1, 0, 0 ) );
-	
+
 	AdjustFlareLists();
 }
 
@@ -242,7 +242,7 @@ void BehaviorGroupBooster::AdjustFlareLists()
 		return;
 	}
 
-	if( m_flareCount == 0)
+	if( m_flareCount == 0 )
 	{
 		return;
 	}
@@ -270,11 +270,13 @@ Vector3 BehaviorGroupBooster::GetOffset() const
 	return m_boosterOffset;
 }
 
-unsigned int BehaviorGroupBooster::GetAtlasIndex0() const {
+unsigned int BehaviorGroupBooster::GetAtlasIndex0() const
+{
 	return m_atlasIndex0;
 }
 
-unsigned int BehaviorGroupBooster::GetAtlasIndex1() const {
+unsigned int BehaviorGroupBooster::GetAtlasIndex1() const
+{
 	return m_atlasIndex1;
 }
 
@@ -310,7 +312,7 @@ void BehaviorGroupBooster::SetupBoosterEffect( Tr2EffectPtr effect )
 	Vector4 shapeAtlasSize( float( shapeAtlasHeight ), float( shapeAtlasCount ), 0, 0 );
 	effect->AddParameterVector4( BlueSharedString( "ShapeAtlasSize" ), &shapeAtlasSize );
 	effect->AddParameterVector4( BlueSharedString( "BoosterScale" ), &boosterScale );
-	
+
 	effect->AddResourceTexture2D( BlueSharedString( "ShapeMap" ), "res:/dx9/model/booster/shape01.dds" );
 	effect->AddResourceTexture2D( BlueSharedString( "GradientMap0" ), "res:/dx9/model/booster/gradient01.dds" );
 	effect->AddResourceTexture2D( BlueSharedString( "GradientMap1" ), "res:/dx9/model/booster/gradient02.dds" );
@@ -325,9 +327,9 @@ Tr2EffectPtr BehaviorGroupBooster::CreateBoosterEffect( const BlueSharedString& 
 
 	effect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/Booster/DroneBoosterVolumetric.fx" );
 	effect->SetOption( BlueSharedString( "BOOSTER_LOD" ), lodOption );
-	
+
 	SetupBoosterEffect( effect );
-		
+
 	// finish effect and set it
 	effect->EndUpdate();
 	return effect;
@@ -346,7 +348,7 @@ Tr2EffectPtr BehaviorGroupBooster::CreateFlareEffect()
 	return effect;
 }
 
-void BehaviorGroupBooster::CreateBuffer() 
+void BehaviorGroupBooster::CreateBuffer()
 {
 	if( Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI )
 	{
@@ -398,7 +400,7 @@ Tr2RenderBatch BehaviorGroupBooster::GetBatch( Tr2BufferAL* instanceBuffer, unsi
 }
 
 void BehaviorGroupBooster::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
-{	
+{
 	if( m_ambientFlareEffect != nullptr )
 	{
 		m_ambientFlareHash = m_ambientFlareEffect->GetHashValue();
@@ -418,7 +420,7 @@ void BehaviorGroupBooster::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr
 	{
 		return;
 	}
-	
+
 	if( !m_haloFlares.empty() && m_haloFlareEffect && m_displayHazeFlare )
 	{
 		quadRenderer.AddQuads( m_haloFlareHash, &m_haloFlares[0], m_flareCount );
@@ -444,13 +446,13 @@ void BehaviorGroupBooster::AddLight( Tr2LightManager& lightManager, Vector3 posi
 
 void BehaviorGroupBooster::AddFlare( const Matrix& agentTransform, float lod, float intensity, unsigned int agentIndex, float shipBoundingSphereRadius, float groupScale )
 {
-    // This is unlikely, but can happen during editing (importing a booster before it has been told how many flares there are)	
-    if( m_flareCount == 0 )
+	// This is unlikely, but can happen during editing (importing a booster before it has been told how many flares there are)
+	if( m_flareCount == 0 )
 	{
 		return;
 	}
 
-	Matrix groupScaleMatrix = ScalingMatrix(groupScale, groupScale, groupScale);
+	Matrix groupScaleMatrix = ScalingMatrix( groupScale, groupScale, groupScale );
 
 	if( m_haloFlareEffect && m_haloFlares.size() == m_flareCount )
 	{
@@ -458,12 +460,12 @@ void BehaviorGroupBooster::AddFlare( const Matrix& agentTransform, float lod, fl
 		float haloModification = ( 1.0f + lod ) * ( 1.0f + lod ) * ( lod - 1.0f ) * ( lod - 1.0f );
 		haloModification = max( 0.0f, haloModification );
 		float scaledBrightness = 0.1f + 0.9f * intensity * m_haloFlareBrightness * haloModification;
-		
+
 		// offset the halo towards the center of the ship when we lod out
 		Vector3 modOffset = haloModification * m_haloFlareOffset;
 		auto offset = TranslationMatrix( modOffset ) * groupScaleMatrix; // scale the offset with the group so it moves further out with increasing groupScale
 
-		auto haloMatrix = m_haloModifier->ApplyTransform( m_haloMatrix * offset * agentTransform, 0, nullptr );		
+		auto haloMatrix = m_haloModifier->ApplyTransform( m_haloMatrix * offset * agentTransform, 0, nullptr );
 
 		if( m_haloFlareNoiseAmplitude != 0.f )
 		{
@@ -485,9 +487,9 @@ void BehaviorGroupBooster::AddFlare( const Matrix& agentTransform, float lod, fl
 		float scaledBrightness = ( 0.25f + 0.25f * intensity + 0.5f * mod * intensity ) * m_ambientFlareBrightness;
 		Vector3 nearScale = mod * m_ambientFlareScale * groupScale;
 		float farScale = ( 1.0f - mod ) * shipBoundingSphereRadius * groupScale * 2.0f;
-		
+
 		// the further away from the camera, the closer the flare is to the center of the agent
-		Vector3 modOffset = mod * m_ambientFlareOffset * groupScale; 
+		Vector3 modOffset = mod * m_ambientFlareOffset * groupScale;
 
 		if( m_ambientFlareNoiseAmplitude != 0.f )
 		{
@@ -495,7 +497,7 @@ void BehaviorGroupBooster::AddFlare( const Matrix& agentTransform, float lod, fl
 			scaledBrightness *= ( ( noise + 1.0f ) / 2.0f ) * m_ambientFlareNoiseAmplitude;
 		}
 
-		q.m_brightness[0] = Float_16( scaledBrightness  );
+		q.m_brightness[0] = Float_16( scaledBrightness );
 		q.m_parentTransform0 = Vector4( agentTransform._11, agentTransform._21, agentTransform._31, agentTransform._41 );
 		q.m_parentTransform1 = Vector4( agentTransform._12, agentTransform._22, agentTransform._32, agentTransform._42 );
 		q.m_parentTransform2 = Vector4( agentTransform._13, agentTransform._23, agentTransform._33, agentTransform._43 );
@@ -514,8 +516,8 @@ void BehaviorGroupBooster::AddFlare( const Matrix& agentTransform, float lod, fl
 
 void BehaviorGroupBooster::RenderBoosterDebug( ITr2DebugRenderer2& renderer, Tr2DebugObjectReference owner, const Matrix& agentTransform )
 {
-	auto boosterTransform = TranslationMatrix( m_boosterOffset );	
-	
+	auto boosterTransform = TranslationMatrix( m_boosterOffset );
+
 	renderer.DrawCylinder(
 		owner,
 		boosterTransform * agentTransform,

@@ -22,19 +22,19 @@ struct InitializeNoise
 {
 	InitializeNoise()
 	{
-		for( int i = 0; i < NOISE_CELL_COUNT; i++ ) 
+		for( int i = 0; i < NOISE_CELL_COUNT; i++ )
 		{
 			s_noiseLookup[i] = XMFLOAT4A( s_rand(), s_rand(), s_rand(), s_rand() );
 			s_permutations[i] = i;
 		}
 
 		int i = NOISE_CELL_COUNT;
-		while( --i ) 
+		while( --i )
 		{
 			std::swap( s_permutations[i], s_permutations[rand() % NOISE_CELL_COUNT] );
 		}
 
-		for( int i = 0 ; i < NOISE_CELL_COUNT; i++) 
+		for( int i = 0; i < NOISE_CELL_COUNT; i++ )
 		{
 			s_permutations[NOISE_CELL_COUNT + i] = s_permutations[i];
 			s_noiseLookup[NOISE_CELL_COUNT + i] = s_noiseLookup[i];
@@ -46,10 +46,10 @@ struct InitializeNoise
 
 InitializeNoise s_initializeNoise;
 
-#if defined(__GNUC__)
-#define ALIGN_16 __attribute__((aligned(16)))
+#if defined( __GNUC__ )
+#define ALIGN_16 __attribute__( ( aligned( 16 ) ) )
 #else
-#define ALIGN_16 __declspec(align(16))
+#define ALIGN_16 __declspec( align( 16 ) )
 #endif
 
 XMVECTOR Noise4D( FXMVECTOR position )
@@ -64,7 +64,7 @@ XMVECTOR Noise4D( FXMVECTOR position )
 	ALIGN_16 unsigned a[4], b[4];
 	XMStoreInt4A( a, ipos );
 	XMStoreInt4A( b, ipos1 );
-	
+
 	int i = s_permutations[a[0]];
 	int j = s_permutations[b[0]];
 
@@ -75,46 +75,46 @@ XMVECTOR Noise4D( FXMVECTOR position )
 
 	// Don't see a reason why we'd want force to have continous derivative, so
 	// we simply use linear interpolation
-	//t = XMVectorMultiply( t, 
-	//	XMVectorMultiply( t, 
+	//t = XMVectorMultiply( t,
+	//	XMVectorMultiply( t,
 	//		XMVectorSubtract( XMVectorReplicate( 3.f ), XMVectorMultiply( XMVectorReplicate( 2.f ), t ) ) ) );
 
 	XMVECTOR x = XMVectorSplatX( t );
-	XMVECTOR c00 = XMVectorLerpV( 
-		XMLoadFloat4A( &s_noiseLookup[b00 + a[2] + a[3]] ), 
-		XMLoadFloat4A( &s_noiseLookup[b10 + a[2] + a[3]] ), 
+	XMVECTOR c00 = XMVectorLerpV(
+		XMLoadFloat4A( &s_noiseLookup[b00 + a[2] + a[3]] ),
+		XMLoadFloat4A( &s_noiseLookup[b10 + a[2] + a[3]] ),
 		x );
-	XMVECTOR c10 = XMVectorLerpV( 
-		XMLoadFloat4A( &s_noiseLookup[b01 + a[2] + a[3]] ), 
-		XMLoadFloat4A( &s_noiseLookup[b11 + a[2] + a[3]] ), 
+	XMVECTOR c10 = XMVectorLerpV(
+		XMLoadFloat4A( &s_noiseLookup[b01 + a[2] + a[3]] ),
+		XMLoadFloat4A( &s_noiseLookup[b11 + a[2] + a[3]] ),
 		x );
-	XMVECTOR c01 = XMVectorLerpV( 
-		XMLoadFloat4A( &s_noiseLookup[b00 + b[2] + a[3]] ), 
-		XMLoadFloat4A( &s_noiseLookup[b10 + b[2] + a[3]] ), 
+	XMVECTOR c01 = XMVectorLerpV(
+		XMLoadFloat4A( &s_noiseLookup[b00 + b[2] + a[3]] ),
+		XMLoadFloat4A( &s_noiseLookup[b10 + b[2] + a[3]] ),
 		x );
-	XMVECTOR c11 = XMVectorLerpV( 
-		XMLoadFloat4A( &s_noiseLookup[b01 + b[2] + a[3]] ), 
-		XMLoadFloat4A( &s_noiseLookup[b11 + b[2] + a[3]] ), 
+	XMVECTOR c11 = XMVectorLerpV(
+		XMLoadFloat4A( &s_noiseLookup[b01 + b[2] + a[3]] ),
+		XMLoadFloat4A( &s_noiseLookup[b11 + b[2] + a[3]] ),
 		x );
 	XMVECTOR c0 = XMVectorLerpV( c00, c10, XMVectorSplatY( t ) );
 	XMVECTOR c1 = XMVectorLerpV( c01, c11, XMVectorSplatY( t ) );
 	XMVECTOR c = XMVectorLerpV( c0, c1, XMVectorSplatZ( t ) );
 
-	c00 = XMVectorLerpV( 
-		XMLoadFloat4A( &s_noiseLookup[b00 + a[2] + b[3]] ), 
-		XMLoadFloat4A( &s_noiseLookup[b10 + a[2] + b[3]] ), 
+	c00 = XMVectorLerpV(
+		XMLoadFloat4A( &s_noiseLookup[b00 + a[2] + b[3]] ),
+		XMLoadFloat4A( &s_noiseLookup[b10 + a[2] + b[3]] ),
 		x );
-	c10 = XMVectorLerpV( 
-		XMLoadFloat4A( &s_noiseLookup[b01 + a[2] + b[3]] ), 
-		XMLoadFloat4A( &s_noiseLookup[b11 + a[2] + b[3]] ), 
+	c10 = XMVectorLerpV(
+		XMLoadFloat4A( &s_noiseLookup[b01 + a[2] + b[3]] ),
+		XMLoadFloat4A( &s_noiseLookup[b11 + a[2] + b[3]] ),
 		x );
-	c01 = XMVectorLerpV( 
-		XMLoadFloat4A( &s_noiseLookup[b00 + b[2] + b[3]] ), 
-		XMLoadFloat4A( &s_noiseLookup[b10 + b[2] + b[3]] ), 
+	c01 = XMVectorLerpV(
+		XMLoadFloat4A( &s_noiseLookup[b00 + b[2] + b[3]] ),
+		XMLoadFloat4A( &s_noiseLookup[b10 + b[2] + b[3]] ),
 		x );
-	c11 = XMVectorLerpV( 
-		XMLoadFloat4A( &s_noiseLookup[b01 + b[2] + b[3]] ), 
-		XMLoadFloat4A( &s_noiseLookup[b11 + b[2] + b[3]] ), 
+	c11 = XMVectorLerpV(
+		XMLoadFloat4A( &s_noiseLookup[b01 + b[2] + b[3]] ),
+		XMLoadFloat4A( &s_noiseLookup[b11 + b[2] + b[3]] ),
 		x );
 	c0 = XMVectorLerpV( c00, c10, XMVectorSplatY( t ) );
 	c1 = XMVectorLerpV( c01, c11, XMVectorSplatY( t ) );
@@ -124,8 +124,8 @@ XMVECTOR Noise4D( FXMVECTOR position )
 
 }
 
-Tr2ParticleTurbulenceForce::Tr2ParticleTurbulenceForce( IRoot* lockobj )
-:	m_amplitude( 1.f, 1.f, 1.f ),
+Tr2ParticleTurbulenceForce::Tr2ParticleTurbulenceForce( IRoot* lockobj ) :
+	m_amplitude( 1.f, 1.f, 1.f ),
 	m_frequency( 1.f, 1.f, 1.f, 1.f ),
 	m_noiseLevel( 3 ),
 	m_noiseRatio( 0.5f ),
@@ -188,4 +188,3 @@ void Tr2ParticleTurbulenceForce::Update( float dt )
 {
 	m_time += dt;
 }
-

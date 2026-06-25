@@ -7,7 +7,7 @@
 BLUE_DEFINE( TriDevice );
 
 #define TRIDEVICE_Description \
-"TriDevice has been a bit of a trash can through the development of Trinity. Now \r\n\
+	"TriDevice has been a bit of a trash can through the development of Trinity. Now \r\n\
 it only handles the assosiation of scenes and the actual D3D Device. Methods \r\n\
 such as picking into the scene etc. will probably be added here."
 
@@ -22,17 +22,17 @@ void TriDevice::RefreshDeviceResources()
 PyObject* BuildTuple( const Vector3& v )
 {
 	PyObject* tuple = PyTuple_New( 3 );
-	PyTuple_SET_ITEM(tuple, 0, PyFloat_FromDouble( v.x ) );
-	PyTuple_SET_ITEM(tuple, 1, PyFloat_FromDouble( v.y ) );
-	PyTuple_SET_ITEM(tuple, 2, PyFloat_FromDouble( v.z ) );
+	PyTuple_SET_ITEM( tuple, 0, PyFloat_FromDouble( v.x ) );
+	PyTuple_SET_ITEM( tuple, 1, PyFloat_FromDouble( v.y ) );
+	PyTuple_SET_ITEM( tuple, 2, PyFloat_FromDouble( v.z ) );
 
 	return tuple;
 }
 
 PyObject* TriDevice::PyGetPickRayFromViewport( PyObject* args )
-{	
+{
 	// Check the arguments
-	int x,y;
+	int x, y;
 	PyObject* viewportObj;
 	PyObject* viewObj;
 	PyObject* projObj;
@@ -62,14 +62,14 @@ PyObject* TriDevice::PyGetPickRayFromViewport( PyObject* args )
 	// Call the C++ counterpart
 	Vector3 pRay;
 	Vector3 pStart;
-	GetPickRayFromViewport( x, y, viewport, view, proj, pRay, pStart);
+	GetPickRayFromViewport( x, y, viewport, view, proj, pRay, pStart );
 
 	// Wrap the results a tuple
 
 
-	PyObject *r = PyTuple_New(2);
-	PyTuple_SET_ITEM(r, 0, BuildTuple( pRay ) );
-	PyTuple_SET_ITEM(r, 1, BuildTuple( pStart ) );
+	PyObject* r = PyTuple_New( 2 );
+	PyTuple_SET_ITEM( r, 0, BuildTuple( pRay ) );
+	PyTuple_SET_ITEM( r, 1, BuildTuple( pStart ) );
 
 	return r;
 }
@@ -161,9 +161,10 @@ const Be::VarChooser TriDeviceThrottlingReasonChooser[] = {
 	{ 0 }
 };
 
-BLUE_REGISTER_ENUM_EX( "TriDeviceType", 
-					   TriDevice::DeviceType, 
-					   TriDeviceTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+BLUE_REGISTER_ENUM_EX( "TriDeviceType",
+					   TriDevice::DeviceType,
+					   TriDeviceTypeChooser,
+					   ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
 Be::VarChooser Tr2UpsclaingAL_UpscalingTechnique_Chooser[] = {
@@ -204,63 +205,55 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 {
 	/////////////////////////////////////////
 	// Blue class info
-    EXPOSURE_BEGIN( TriDevice, "" )
+	EXPOSURE_BEGIN( TriDevice, "" )
 
-		MAP_INTERFACE(ITriDevice)
+		MAP_INTERFACE( ITriDevice )
 
-		MAP_ATTRIBUTE_WITH_CHOOSER( "swapEffect", mSwapEffect, "na", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2RenderContextEnum_SwapEffect_Chooser )	
-		MAP_ATTRIBUTE( "multiSampleType", mPresentParam.msaaType, "na", Be::READWRITE | Be::NOTIFY | Be::PERSIST )	
-		MAP_ATTRIBUTE_WITH_CHOOSER( "presentationInterval", mPresentParam.presentInterval, "na", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2RenderContextEnum_PresentInterval_Chooser )	
+		MAP_ATTRIBUTE_WITH_CHOOSER( "swapEffect", mSwapEffect, "na", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2RenderContextEnum_SwapEffect_Chooser )
+		MAP_ATTRIBUTE( "multiSampleType", mPresentParam.msaaType, "na", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "presentationInterval", mPresentParam.presentInterval, "na", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2RenderContextEnum_PresentInterval_Chooser )
 
-		MAP_ATTRIBUTE( "adapterWidth", mDisplayMode.width, "na", Be::READ ) 
+		MAP_ATTRIBUTE( "adapterWidth", mDisplayMode.width, "na", Be::READ )
 		MAP_ATTRIBUTE( "adapterHeight", mDisplayMode.height, "na", Be::READ )
 		MAP_ATTRIBUTE( "adapterRefreshRate", mDisplayMode.refreshRateDenominator, "na", Be::READ )
-		MAP_ATTRIBUTE( "adapter", mAdapter, "na", Be::READ )	
-		
+		MAP_ATTRIBUTE( "adapter", mAdapter, "na", Be::READ )
+
 		MAP_ATTRIBUTE( "multiSampleQuality", mPresentParam.msaaQuality, "na", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 
-        MAP_ATTRIBUTE ( "scene", m_scene, "na", Be::READWRITE | Be::NOTIFY )	
+		MAP_ATTRIBUTE( "scene", m_scene, "na", Be::READWRITE | Be::NOTIFY )
 
-		//MAP_ATTRIBUTE( "ui", mUi, "na", Be::READ )			
+		//MAP_ATTRIBUTE( "ui", mUi, "na", Be::READ )
 		MAP_ATTRIBUTE( "width", mWidth, "na", Be::READ )
 		MAP_ATTRIBUTE( "height", mHeight, "na", Be::READ )
 		MAP_ATTRIBUTE( "viewport", mViewport, "na", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "deviceType", m_deviceType, "Hardware/Software device", Be::READWRITE| Be::ENUM, TriDeviceTypeChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "deviceType", m_deviceType, "Hardware/Software device", Be::READWRITE | Be::ENUM, TriDeviceTypeChooser )
 
-		MAP_ATTRIBUTE( "backBufferCount", mBackBufferCount, "na", Be::READWRITE | Be::NOTIFY )	
+		MAP_ATTRIBUTE( "backBufferCount", mBackBufferCount, "na", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "tickInterval", mTickInterval, "na", Be::READWRITE )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "throttlingState", m_throttlingState, "", Be::READ, TriDeviceThrottlingReasonChooser )
 		MAP_ATTRIBUTE( "allowThrottling", m_allowThrottling, "", Be::READWRITE )
 
-		MAP_PROPERTY
-		(
+		MAP_PROPERTY(
 			"disableGeometryLoad",
 			GetGeometryLoadDisabled,
 			SetGeometryLoadDisabled,
-			"Set to true to disable loading of external geometry - useful for batch processing of blue files"
-		)
-		MAP_PROPERTY
-		(
+			"Set to true to disable loading of external geometry - useful for batch processing of blue files" )
+		MAP_PROPERTY(
 			"disableTextureLoad",
 			GetTextureLoadDisabled,
 			SetTextureLoadDisabled,
-			"Set to true to disable loading of external textures - useful for batch processing of blue files"
-		)
-		MAP_PROPERTY
-		(
+			"Set to true to disable loading of external textures - useful for batch processing of blue files" )
+		MAP_PROPERTY(
 			"disableAsyncLoad",
 			GetAsyncLoadDisabled,
 			SetAsyncLoadDisabled,
-			"Set to true to make resource loads synchronous"
-		)
-		MAP_ATTRIBUTE
-		( 
-			"mipLevelSkipCount", 
-			m_mipLevelSkipCount, 
+			"Set to true to make resource loads synchronous" )
+		MAP_ATTRIBUTE(
+			"mipLevelSkipCount",
+			m_mipLevelSkipCount,
 			"Number of high detail mip levels we skip, i.e. chop of the front of the mip chain.",
-			Be::READWRITE 
-		)
+			Be::READWRITE )
 
 		MAP_ATTRIBUTE(
 			"upscalingTechnique",
@@ -297,13 +290,13 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 
 
 
-		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets that are update each frame. Finished curve sets are removed automatically.", Be::READ | Be::PERSIST ) 
-		
-		MAP_ATTRIBUTE( "animationTime", m_animationTime, "Time (in seconds) used for animations", Be::READWRITE ) 
-		MAP_ATTRIBUTE ( "animationTimeScale", m_animationTimeScale, "Scale on animation time. Set to 0 to freeze all animations", Be::READWRITE )
+		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets that are update each frame. Finished curve sets are removed automatically.", Be::READ | Be::PERSIST )
 
-		MAP_ATTRIBUTE( 
-			"onDeviceRemoved", 
+		MAP_ATTRIBUTE( "animationTime", m_animationTime, "Time (in seconds) used for animations", Be::READWRITE )
+		MAP_ATTRIBUTE( "animationTimeScale", m_animationTimeScale, "Scale on animation time. Set to 0 to freeze all animations", Be::READWRITE )
+
+		MAP_ATTRIBUTE(
+			"onDeviceRemoved",
 			m_onDeviceRemoved,
 			"Callback function that is called when a GPU device is removed (driver crash, etc.).\n"
 			"The function is called with arguments (hr, hrMessage, removedCount, marker) where:\n"
@@ -311,14 +304,12 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"hrMessage - HRESULT message string\n"
 			"lostCount - number of device removed events since the process started\n"
 			"maker - GPU marker name last seen before device removal (may not always be available)",
-			Be::READWRITE
-		)
+			Be::READWRITE )
 
-		MAP_METHOD_AS_METHOD
-		( 
+		MAP_METHOD_AS_METHOD(
 			"CreateWindowedDevice",
-			PyCreateWindowedDevice, 
-			"Create a simple windowed device.\n" 
+			PyCreateWindowedDevice,
+			"Create a simple windowed device.\n"
 			":param hwnd: A window handle\n"
 			":type hwnd: int\n"
 			":param width: window area width\n"
@@ -331,13 +322,11 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			":type presentInterval: Optional[int]\n"
 			":param adapter: video adapter index\n"
 			":type adapter: Optional[int]\n"
-			":rtype: None"
-		)
-		MAP_METHOD_AS_METHOD
-		( 
+			":rtype: None" )
+		MAP_METHOD_AS_METHOD(
 			"CreateFullScreenDevice",
-			PyCreateFullScreenDevice, 
-			"Create a simple full screen device.\n" 
+			PyCreateFullScreenDevice,
+			"Create a simple full screen device.\n"
 			":param hwnd: A window handle\n"
 			":type hwnd: int\n"
 			":param width: window area width\n"
@@ -348,25 +337,19 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			":type height: Optional[int]\n"
 			":param presentInterval: presentation interval"
 			":type presentInterval: Optional[int]\n"
-			":rtype: None"
-		)
-		MAP_METHOD_AS_METHOD
-		( 
+			":rtype: None" )
+		MAP_METHOD_AS_METHOD(
 			"CreateWindowlessDevice",
-			PyCreateWindowlessDevice, 
-			"Create a simple device with no swap chain.\n" 
-			":rtype: None"
-		)
+			PyCreateWindowlessDevice,
+			"Create a simple device with no swap chain.\n"
+			":rtype: None" )
 #if BLUE_WITH_PYTHON
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Render",
 			PyRender,
-			"Renders the device." 
-		)		
+			"Renders the device." )
 
-		MAP_METHOD_AS_METHOD
-		(
+		MAP_METHOD_AS_METHOD(
 			"RegisterResource",
 			PyRegisterResource,
 			"Register a Python device resource which will get"
@@ -377,10 +360,8 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"\nno unregister call because the object will automatically unregister"
 			"\nitself when it is destroyed in Python.\n"
 			":param resource: resource object\n"
-			":rtype: None"
-		)
-		MAP_METHOD_AS_METHOD
-		(
+			":rtype: None" )
+		MAP_METHOD_AS_METHOD(
 			"GetPickRayFromViewport",
 			PyGetPickRayFromViewport,
 			"Get a ray for picking in world coordinates from screen space, using the given viewport\n"
@@ -395,106 +376,90 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			":type view: tuple[tuple[float]]\n"
 			":param proj: projection transform\n"
 			":type proj: tuple[tuple[float]]\n"
-			":rtype: ((float, float, float), (float, float, float))"
-		)
+			":rtype: ((float, float, float), (float, float, float))" )
 #endif
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"DoesD3DDeviceExist",
 			DeviceExists,
-			"Returns true if TriDevice currently has a valid D3D Device."
-		)
+			"Returns true if TriDevice currently has a valid D3D Device." )
 #if BLUE_WITH_PYTHON
-		MAP_METHOD_AND_WRAP( 
-			"RefreshDeviceResources", 
+		MAP_METHOD_AND_WRAP(
+			"RefreshDeviceResources",
 			RefreshDeviceResources,
-			"Releases all D3D resources from memory and recreates them from source."
-		)
+			"Releases all D3D resources from memory and recreates them from source." )
 #endif
 
 		MAP_METHOD_AND_WRAP( "GetRenderContext", GetRenderContext, "TODO DEBUG" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"GetRenderingPlatformID",
 			GetRenderingPlatformID,
-			"Returns an ID identifying the current rendering backend."
-		)
+			"Returns an ID identifying the current rendering backend." )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"SetRenderJobs",
 			SetRenderJobs,
 			"Set the Tr2RenderJobs objects on the device -- debug helper until we sort this out.\n"
-			":param renderJobs: render jobs object"
-		)
+			":param renderJobs: render jobs object" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"SupportsRenderTargetFormat",
 			SupportsRenderTargetFormat,
 			"Returns True if the device support render targets with the given pixel format\n"
-			":param format: render target pixel format"
-		)
+			":param format: render target pixel format" )
 
 		MAP_METHOD_AND_WRAP(
 			"IsVariableRefreshRateSupported",
 			IsVariableRefreshRateSupported,
-			"Returns True if the device support variable refresh rate (gsync, freesync)"
-		)
+			"Returns True if the device support variable refresh rate (gsync, freesync)" )
 		MAP_METHOD_AND_WRAP(
 			"SetUpscaling",
 			SetUpscaling,
 			"Sets an upscaling technique on the device with the requested setting and framegeneration\n"
-			":param technique: the technique to use (type Tr2UpscalingAL::Technique)\n" 
-			":param setting: the setting to use (type Tr2UpscalingAL::Setting)\n" 
-			":param frameGeneration: framegeneration on/off (type bool)" 
-		)
+			":param technique: the technique to use (type Tr2UpscalingAL::Technique)\n"
+			":param setting: the setting to use (type Tr2UpscalingAL::Setting)\n"
+			":param frameGeneration: framegeneration on/off (type bool)" )
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"CreateUpscalingContext",
 			CreateUpscalingContext,
-            1,
+			1,
 			"Creates an upscaling context for the display resolution, if there is upscaling enabled\n"
 			":param displayWidth: the width of the display\n"
-			":param displayHeight: the height of the display\n" 
-            ":param pixelFormat: pixel format for the render target\n"
-            ":param depthFormat: pixel format for the depth buffer\n"
-            ":param existingContext: ID of the existing context to try to reuse for the new one. If it is not possible to\n"
-            "  reuse the existing context it will be deleted before the new context is created\n"
-		)
+			":param displayHeight: the height of the display\n"
+			":param pixelFormat: pixel format for the render target\n"
+			":param depthFormat: pixel format for the depth buffer\n"
+			":param existingContext: ID of the existing context to try to reuse for the new one. If it is not possible to\n"
+			"  reuse the existing context it will be deleted before the new context is created\n" )
 		MAP_METHOD_AND_WRAP(
 			"DeleteUpscalingContext",
 			DeleteUpscalingContext,
 			"Deletes an upscaling context \n"
-			":param upscalingContextID: the id of the context to delete\n")
+			":param upscalingContextID: the id of the context to delete\n" )
 
 		MAP_METHOD_AND_WRAP(
 			"UpdateAvailableUpscalingTechniques",
 			UpdateAvailableUpscalingTechniques,
-			"Updates the available upscaling techniques")
+			"Updates the available upscaling techniques" )
 
 #if BLUE_WITH_PYTHON
 		MAP_METHOD_AS_METHOD(
 			"GetUpscalingInfo",
 			PyGetUpscalingInfo,
 			"Gets the upscaling context info for an upscaling id\n"
-			":param upscalingContextID: the id of the context"
-		)
+			":param upscalingContextID: the id of the context" )
 #endif
 
 		MAP_METHOD_AND_WRAP(
 			"GetRenderResolution",
 			GetRenderResolution,
 			"Gets the render resolution for the provided display resolution\n"
-			":param displayWidth: the width of the display\n" 
-			":param displayHeight: the height of the display\n" 
-		)
+			":param displayWidth: the width of the display\n"
+			":param displayHeight: the height of the display\n" )
 		MAP_METHOD_AND_WRAP(
 			"SupportsRaytracing",
 			SupportsRaytracing,
-			"Returns True if the device supports raytracing"
-		)
+			"Returns True if the device supports raytracing" )
 
-    EXPOSURE_END()
+	EXPOSURE_END()
 }

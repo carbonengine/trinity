@@ -23,9 +23,9 @@ const Be::ClassInfo* SpawnDrones::ExposeToBlue()
 		MAP_ATTRIBUTE( "gridInfo", m_gridInfo, "x = count of drones in x row, y = count of drones in y row, z = count of drones in z row, w = distance between models \n:jessica-group: Grid", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "gridSpacing", m_gridSpacing, "(x,y,z) spacing in between models \n:jessica-group: Grid", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "gridFullnessFactor", m_gridFullnessFactor, "[0-1] how full should the grid be, 0 being no drones and 1 being fully populated, -1 will randomize the percentage factor \n:jessica-group: Grid", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		
+
 
 		MAP_METHOD_AND_WRAP( "gridToggleReset", GridToggleReset, "toggle to 'reset' grid spawning \n:jessica-placement: TOOLBAR\n:jessica-icon: far-bomb\n" )
-	
-		EXPOSURE_END()
+
+	EXPOSURE_END()
 }

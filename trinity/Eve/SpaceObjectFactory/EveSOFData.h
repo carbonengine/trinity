@@ -19,7 +19,9 @@ BLUE_CLASS( EveSOFDataParameter ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataParameter( IRoot* lockobj = NULL );
-	~EveSOFDataParameter() {}
+	~EveSOFDataParameter()
+	{
+	}
 
 	// simple shader parameter
 	BlueSharedString m_name;
@@ -34,7 +36,9 @@ BLUE_CLASS( EveSOFDataGenericString ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataGenericString( IRoot* lockobj = NULL );
-	~EveSOFDataGenericString() {}
+	~EveSOFDataGenericString()
+	{
+	}
 
 	std::string m_str;
 };
@@ -63,7 +67,9 @@ BLUE_CLASS( EveSOFDataTexture ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataTexture( IRoot* lockobj = NULL );
-	~EveSOFDataTexture() {}
+	~EveSOFDataTexture()
+	{
+	}
 
 	// data
 	std::string m_resFilePath;
@@ -90,12 +96,14 @@ BLUE_CLASS( EveSOFDataInstancedMesh ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataInstancedMesh( IRoot* lockobj = NULL );
-	~EveSOFDataInstancedMesh() {}
+	~EveSOFDataInstancedMesh()
+	{
+	}
 
 	// data
 	BlueSharedString m_name;
 	Tr2Lod m_lowestLodVisible;
-	
+
 	enum DisplayQualityModifier
 	{
 		SHADER_ALL = 5,
@@ -121,7 +129,9 @@ BLUE_CLASS( EveSOFDataTransform ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataTransform( IRoot* lockobj = NULL );
-	~EveSOFDataTransform() {}
+	~EveSOFDataTransform()
+	{
+	}
 
 	// data
 	Vector3 m_position;
@@ -134,56 +144,56 @@ BLUE_DECLARE_VECTOR( EveSOFDataTransform );
 
 namespace SOFDataFactionColorChooser
 {
-    enum ColorType
-    {
-        TYPE_PRIMARY = 0,
-        TYPE_SECONDARY,
-        TYPE_TERTIARY,
-        TYPE_BLACK,
-        TYPE_WHITE,
-        TYPE_YELLOW,
-        TYPE_ORANGE,
-        TYPE_RED,
-        TYPE_BLUE,
-        TYPE_GREEN,
-        TYPE_CYAN,
-        TYPE_FIRE,
-        TYPE_HULL,
-        TYPE_GLASS,
-        TYPE_REACTOR,
-        TYPE_DARKHULL,
-        TYPE_BOOSTER,
-        TYPE_KILLMARK,
-        TYPE_PRIMARY_LIGHT,
-        TYPE_SECONDARY_LIGHT,
-        TYPE_TERTIARY_LIGHT,
-        TYPE_WHITE_LIGHT,
-        TYPE_PRIMARY_HOLOGRAM,
-        TYPE_SECONDARY_HOLOGRAM,
-        TYPE_TERTIARY_HOLOGRAM,
-        TYPE_STATE_0,
-        TYPE_STATE_1,
-        TYPE_STATE_2,
-        TYPE_STATE_3,
-        TYPE_STATE_VULNERABLE,
-        TYPE_STATE_INVULNERABLE,
-        TYPE_PRIMARY_FORCEFIELD,
-        TYPE_SECONDARY_FORCEFIELD,
-        TYPE_PRIMARY_BANNER, 
-        TYPE_PRIMARY_FX,
-        TYPE_SECONDARY_FX,
-        TYPE_PRIMARY_SPOTLIGHT,
-        TYPE_SECONDARY_SPOTLIGHT,
-        TYPE_TERTIARY_SPOTLIGHT,
-        TYPE_PRIMARY_BILLBOARD,
-        TYPE_PRIMARY_WARP_FX,
-        TYPE_PRIMARY_ATTACK_FX,
-        TYPE_PRIMARY_SIEGE_FX,
-        TYPE_PRIMARY_DOCKED_FX,
-        TYPE_MAX,
-    };
+enum ColorType
+{
+	TYPE_PRIMARY = 0,
+	TYPE_SECONDARY,
+	TYPE_TERTIARY,
+	TYPE_BLACK,
+	TYPE_WHITE,
+	TYPE_YELLOW,
+	TYPE_ORANGE,
+	TYPE_RED,
+	TYPE_BLUE,
+	TYPE_GREEN,
+	TYPE_CYAN,
+	TYPE_FIRE,
+	TYPE_HULL,
+	TYPE_GLASS,
+	TYPE_REACTOR,
+	TYPE_DARKHULL,
+	TYPE_BOOSTER,
+	TYPE_KILLMARK,
+	TYPE_PRIMARY_LIGHT,
+	TYPE_SECONDARY_LIGHT,
+	TYPE_TERTIARY_LIGHT,
+	TYPE_WHITE_LIGHT,
+	TYPE_PRIMARY_HOLOGRAM,
+	TYPE_SECONDARY_HOLOGRAM,
+	TYPE_TERTIARY_HOLOGRAM,
+	TYPE_STATE_0,
+	TYPE_STATE_1,
+	TYPE_STATE_2,
+	TYPE_STATE_3,
+	TYPE_STATE_VULNERABLE,
+	TYPE_STATE_INVULNERABLE,
+	TYPE_PRIMARY_FORCEFIELD,
+	TYPE_SECONDARY_FORCEFIELD,
+	TYPE_PRIMARY_BANNER,
+	TYPE_PRIMARY_FX,
+	TYPE_SECONDARY_FX,
+	TYPE_PRIMARY_SPOTLIGHT,
+	TYPE_SECONDARY_SPOTLIGHT,
+	TYPE_TERTIARY_SPOTLIGHT,
+	TYPE_PRIMARY_BILLBOARD,
+	TYPE_PRIMARY_WARP_FX,
+	TYPE_PRIMARY_ATTACK_FX,
+	TYPE_PRIMARY_SIEGE_FX,
+	TYPE_PRIMARY_DOCKED_FX,
+	TYPE_MAX,
+};
 
-    extern const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[];
+extern const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[];
 }
 
 BLUE_CLASS( EveSOFDataFactionColorSet ) :
@@ -192,7 +202,9 @@ BLUE_CLASS( EveSOFDataFactionColorSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataFactionColorSet( IRoot* lockobj = NULL );
-	~EveSOFDataFactionColorSet() {}
+	~EveSOFDataFactionColorSet()
+	{
+	}
 
 
 	// color data
@@ -206,7 +218,9 @@ BLUE_CLASS( EveSOFDataLogo ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataLogo( IRoot* lockobj = NULL );
-	~EveSOFDataLogo() {}
+	~EveSOFDataLogo()
+	{
+	}
 
 	PEveSOFDataTextureVector m_textures;
 };
@@ -219,7 +233,9 @@ BLUE_CLASS( EveSOFDataLogoSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataLogoSet( IRoot* lockobj = NULL );
-	~EveSOFDataLogoSet() {}
+	~EveSOFDataLogoSet()
+	{
+	}
 
 	// color type
 	enum LogoType
@@ -245,7 +261,9 @@ BLUE_CLASS( EveSOFDataBlink ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataBlink( IRoot* lockobj = NULL );
-	~EveSOFDataBlink() {}
+	~EveSOFDataBlink()
+	{
+	}
 };
 TYPEDEF_BLUECLASS( EveSOFDataBlink );
 
@@ -256,7 +274,9 @@ BLUE_CLASS( EveSOFDataBlinkType ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataBlinkType( IRoot* lockobj = NULL );
-	~EveSOFDataBlinkType() {}
+	~EveSOFDataBlinkType()
+	{
+	}
 
 	// color type
 	enum BlinkType
@@ -279,7 +299,9 @@ BLUE_CLASS( EveSOFDataAreaMaterial ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataAreaMaterial( IRoot* lockobj = NULL );
-	~EveSOFDataAreaMaterial() {}
+	~EveSOFDataAreaMaterial()
+	{
+	}
 
 	// materials
 	enum MaterialType
@@ -293,7 +315,7 @@ public:
 
 	// data
 	std::string m_material[MATERIAL_MAX];
-    SOFDataFactionColorChooser::ColorType m_glowColorType;
+	SOFDataFactionColorChooser::ColorType m_glowColorType;
 };
 TYPEDEF_BLUECLASS( EveSOFDataAreaMaterial );
 
@@ -303,7 +325,9 @@ BLUE_CLASS( EveSOFDataArea ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataArea( IRoot* lockobj = NULL );
-	~EveSOFDataArea() {}
+	~EveSOFDataArea()
+	{
+	}
 
 	// area type
 	enum AreaType
@@ -338,7 +362,9 @@ BLUE_CLASS( EveSOFDataPatternTransform ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataPatternTransform( IRoot* lockobj = NULL );
-	~EveSOFDataPatternTransform() {}
+	~EveSOFDataPatternTransform()
+	{
+	}
 
 	// per-hull positional data
 	Vector3 m_position;
@@ -354,7 +380,7 @@ TYPEDEF_BLUECLASS( EveSOFDataPatternTransform );
 BLUE_CLASS( EveSOFDataPatternMaterialOverride ) :
 	public IRoot
 {
-public: 
+public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataPatternMaterialOverride( IRoot* lockobj = NULL );
 	~EveSOFDataPatternMaterialOverride()
@@ -372,7 +398,9 @@ BLUE_CLASS( EveSOFDataPatternPerHull ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataPatternPerHull( IRoot* lockobj = NULL );
-	~EveSOFDataPatternPerHull() {}
+	~EveSOFDataPatternPerHull()
+	{
+	}
 
 	// exact hull name
 	BlueSharedString m_name;
@@ -391,7 +419,9 @@ BLUE_CLASS( EveSOFDataPatternLayer ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataPatternLayer( IRoot* lockobj = NULL );
-	~EveSOFDataPatternLayer() {}
+	~EveSOFDataPatternLayer()
+	{
+	}
 
 	// texture projection type
 	enum ProjectionType
@@ -448,7 +478,7 @@ public:
 	ProjectionType m_projectionTypeU, m_projectionTypeV;
 	// what is the pattern's material target?
 	bool m_isTargetMtl1, m_isTargetMtl2, m_isTargetMtl3, m_isTargetMtl4;
-	
+
 	// applicable area types
 	bool m_applicableAreas[EveSOFDataArea::AreaType::TYPE_MAX];
 };
@@ -484,7 +514,9 @@ BLUE_CLASS( EveSOFDataPattern ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataPattern( IRoot* lockobj = NULL );
-	~EveSOFDataPattern() {}
+	~EveSOFDataPattern()
+	{
+	}
 
 	// pattern name
 	std::string m_name;
@@ -512,7 +544,9 @@ BLUE_CLASS( EveSOFDataPointLightAttachment ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataPointLightAttachment( IRoot* lockobj = NULL );
-	~EveSOFDataPointLightAttachment() {}
+	~EveSOFDataPointLightAttachment()
+	{
+	}
 
 	float m_saturation;
 	float m_intensity;
@@ -525,7 +559,7 @@ public:
 	int32_t m_noiseOctaves;
 	std::wstring m_lightProfilePath;
 };
-TYPEDEF_BLUECLASS( EveSOFDataPointLightAttachment ); 
+TYPEDEF_BLUECLASS( EveSOFDataPointLightAttachment );
 BLUE_DECLARE_VECTOR( EveSOFDataPointLightAttachment );
 
 
@@ -535,7 +569,9 @@ BLUE_CLASS( EveSOFDataSpotLightAttachment ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataSpotLightAttachment( IRoot* lockobj = NULL );
-	~EveSOFDataSpotLightAttachment() {}
+	~EveSOFDataSpotLightAttachment()
+	{
+	}
 
 	float m_saturation;
 	float m_intensity;
@@ -559,7 +595,9 @@ BLUE_CLASS( EveSOFDataHullSpotlightSetItem ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullSpotlightSetItem( IRoot* lockobj = NULL );
-	~EveSOFDataHullSpotlightSetItem() {}
+	~EveSOFDataHullSpotlightSetItem()
+	{
+	}
 
 	// per-hull data of a spotlightset
 	Matrix m_transform;
@@ -580,7 +618,9 @@ BLUE_CLASS( EveSOFDataHullSpotlightSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullSpotlightSet( IRoot* lockobj = NULL );
-	~EveSOFDataHullSpotlightSet() {}
+	~EveSOFDataHullSpotlightSet()
+	{
+	}
 
 	// data
 	std::string m_name;
@@ -602,7 +642,9 @@ BLUE_CLASS( EveSOFDataHullPlaneSetItem ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullPlaneSetItem( IRoot* lockobj = NULL );
-	~EveSOFDataHullPlaneSetItem() {}
+	~EveSOFDataHullPlaneSetItem()
+	{
+	}
 
 	// per-hull data of a planeset
 	Vector3 m_position;
@@ -614,9 +656,9 @@ public:
 	float m_saturation;
 	Vector4 m_layer1Transform, m_layer2Transform, m_layer1Scroll, m_layer2Scroll;
 	int32_t m_boneIndex, m_groupIndex, m_maskMapAtlasIndex;
-	
+
 	// Blink data parameters
-	float m_rate, m_phase, m_dutyCycle; 
+	float m_rate, m_phase, m_dutyCycle;
 	int32_t m_blinkMode;
 
 	PEveSOFDataPointLightAttachmentVector m_lights;
@@ -631,7 +673,9 @@ BLUE_CLASS( EveSOFDataHullPlaneSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullPlaneSet( IRoot* lockobj = NULL );
-	~EveSOFDataHullPlaneSet() {}
+	~EveSOFDataHullPlaneSet()
+	{
+	}
 
 	// decal type
 	enum Usage
@@ -664,13 +708,15 @@ BLUE_CLASS( EveSOFDataHullSpriteSetItem ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullSpriteSetItem( IRoot* lockobj = NULL );
-	~EveSOFDataHullSpriteSetItem() {}
+	~EveSOFDataHullSpriteSetItem()
+	{
+	}
 
 	// per-hull data of a spriteset
 	Vector3 m_position;
 	float m_blinkRate, m_blinkPhase, m_minScale, m_maxScale, m_falloff, m_intensity, m_saturation;
 	int32_t m_boneIndex;
-    SOFDataFactionColorChooser::ColorType m_colorType;
+	SOFDataFactionColorChooser::ColorType m_colorType;
 
 	EveSOFDataPointLightAttachmentPtr m_light;
 };
@@ -684,7 +730,9 @@ BLUE_CLASS( EveSOFDataHullSpriteSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullSpriteSet( IRoot* lockobj = NULL );
-	~EveSOFDataHullSpriteSet() {}
+	~EveSOFDataHullSpriteSet()
+	{
+	}
 
 	std::string m_name;
 	// visibility group name
@@ -693,7 +741,6 @@ public:
 	bool m_skinned;
 	// items
 	PEveSOFDataHullSpriteSetItemVector m_items;
-
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpriteSet );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSpriteSet );
@@ -705,7 +752,9 @@ BLUE_CLASS( EveSOFDataHullSpriteLineSetItem ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullSpriteLineSetItem( IRoot* lockobj = NULL );
-	~EveSOFDataHullSpriteLineSetItem() {}
+	~EveSOFDataHullSpriteLineSetItem()
+	{
+	}
 
 	// per-hull data of a sprite line set
 	Vector3 m_position, m_scaling;
@@ -713,7 +762,7 @@ public:
 	float m_spacing, m_blinkRate, m_blinkPhase, m_blinkPhaseShift, m_minScale, m_maxScale, m_falloff, m_intensity, m_saturation;
 	int32_t m_boneIndex;
 	bool m_isCircle;
-    SOFDataFactionColorChooser::ColorType m_colorType;
+	SOFDataFactionColorChooser::ColorType m_colorType;
 	EveSOFDataPointLightAttachmentPtr m_light;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpriteLineSetItem );
@@ -726,7 +775,9 @@ BLUE_CLASS( EveSOFDataHullSpriteLineSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullSpriteLineSet( IRoot* lockobj = NULL );
-	~EveSOFDataHullSpriteLineSet() {}
+	~EveSOFDataHullSpriteLineSet()
+	{
+	}
 
 	// animated?
 	std::string m_name;
@@ -747,14 +798,16 @@ BLUE_CLASS( EveSOFDataHullHazeSetItem ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullHazeSetItem( IRoot* lockobj = NULL );
-	~EveSOFDataHullHazeSetItem() {}
+	~EveSOFDataHullHazeSetItem()
+	{
+	}
 
 	// per-hull data of a haze set
 	Vector3 m_position, m_scaling;
 	int32_t m_boneIndex;
 
 	Quaternion m_rotation;
-    SOFDataFactionColorChooser::ColorType m_colorType;
+	SOFDataFactionColorChooser::ColorType m_colorType;
 	float m_hazeBrightness, m_hazeFalloff, m_sourceSize, m_sourceBrightness, m_saturation;
 	bool m_boosterGainInfluence;
 
@@ -770,7 +823,9 @@ BLUE_CLASS( EveSOFDataHullHazeSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullHazeSet( IRoot* lockobj = NULL );
-	~EveSOFDataHullHazeSet() {}
+	~EveSOFDataHullHazeSet()
+	{
+	}
 
 	// haze type
 	enum HazeType
@@ -973,7 +1028,9 @@ BLUE_CLASS( EveSOFDataHullBoosterItem ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullBoosterItem( IRoot* lockobj = NULL );
-	~EveSOFDataHullBoosterItem() {}
+	~EveSOFDataHullBoosterItem()
+	{
+	}
 
 	// per-hull data of a booster
 	Matrix m_transform;
@@ -993,7 +1050,9 @@ BLUE_CLASS( EveSOFDataHullBooster ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullBooster( IRoot* lockobj = NULL );
-	~EveSOFDataHullBooster() {}
+	~EveSOFDataHullBooster()
+	{
+	}
 
 	// per-hull data of a booster
 	bool m_alwaysOn, m_hasTrails;
@@ -1009,7 +1068,9 @@ BLUE_CLASS( EveSOFDataHullArea ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullArea( IRoot* lockobj = NULL );
-	~EveSOFDataHullArea() {}
+	~EveSOFDataHullArea()
+	{
+	}
 
 	// data
 	uint32_t m_index;
@@ -1031,7 +1092,9 @@ BLUE_CLASS( EveSOFDataHullLocator ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullLocator( IRoot* lockobj = NULL );
-	~EveSOFDataHullLocator() {}
+	~EveSOFDataHullLocator()
+	{
+	}
 
 	// data
 	BlueSharedString m_name;
@@ -1054,7 +1117,9 @@ BLUE_CLASS( EveSOFDataHullLocatorSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullLocatorSet( IRoot* lockobj = NULL );
-	~EveSOFDataHullLocatorSet() {}
+	~EveSOFDataHullLocatorSet()
+	{
+	}
 
 	// data
 	BlueSharedString m_name;
@@ -1141,7 +1206,9 @@ BLUE_CLASS( EveSOFDataHullChild ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullChild( IRoot* lockobj = NULL );
-	~EveSOFDataHullChild() {}
+	~EveSOFDataHullChild()
+	{
+	}
 
 	std::string GetName();
 
@@ -1166,7 +1233,9 @@ BLUE_CLASS( EveSOFDataHullAnimation ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullAnimation( IRoot* lockobj = NULL );
-	~EveSOFDataHullAnimation() {}
+	~EveSOFDataHullAnimation()
+	{
+	}
 
 	std::string m_name;
 
@@ -1175,13 +1244,13 @@ public:
 	Vector4 m_endRotationValue;
 	float m_startRotationTime;
 	float m_endRotationTime;
-	
+
 	// modelTranslationCurve control
 	Vector3 m_startTranslationValue;
 	Vector3 m_endTranslationValue;
 	float m_startTranslationTime;
 	float m_endTranslationTime;
-	
+
 	// The id of the children whose partice systems are controlled by the animation
 	int32_t m_id;
 	// The particle system spawn rates
@@ -1239,7 +1308,9 @@ BLUE_CLASS( EveSOFDataHullDecalSetItem ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullDecalSetItem( IRoot* lockobj = NULL );
-	~EveSOFDataHullDecalSetItem() {}
+	~EveSOFDataHullDecalSetItem()
+	{
+	}
 
 	// decal type
 	enum Usage
@@ -1262,7 +1333,7 @@ public:
 	Vector3 m_position, m_scaling;
 	Quaternion m_rotation;
 	int32_t m_boneIndex, m_meshIndex;
-    SOFDataFactionColorChooser::ColorType m_glowColorType;
+	SOFDataFactionColorChooser::ColorType m_glowColorType;
 	PEveSOFDataTextureVector m_textures;
 	PEveSOFDataParameterVector m_parameters;
 	PEveSOFDataDecalIndexBufferVector m_indexBuffers;
@@ -1278,7 +1349,9 @@ BLUE_CLASS( EveSOFDataHullDecalSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullDecalSet( IRoot* lockobj = NULL );
-	~EveSOFDataHullDecalSet() {}
+	~EveSOFDataHullDecalSet()
+	{
+	}
 
 	// general
 	std::string m_name;
@@ -1298,9 +1371,11 @@ BLUE_CLASS( EveSOFDataHullLightSetItem ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullLightSetItem( IRoot* lockobj = NULL );
-	~EveSOFDataHullLightSetItem() {}
-	
-	enum LIGHT_TYPE 
+	~EveSOFDataHullLightSetItem()
+	{
+	}
+
+	enum LIGHT_TYPE
 	{
 		POINT_LIGHT,
 		TEXTURED_POINT_LIGHT,
@@ -1317,7 +1392,7 @@ public:
 		float noiseAmplitude;
 		float noiseFrequency;
 		int noiseOctaves;
-        SOFDataFactionColorChooser::ColorType lightColor;
+		SOFDataFactionColorChooser::ColorType lightColor;
 		std::wstring texturePath;
 		float innerAngle;
 		float outerAngle;
@@ -1327,7 +1402,6 @@ public:
 	} m_data;
 
 	std::string m_name;
-
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullLightSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullLightSetItem );
@@ -1339,7 +1413,7 @@ BLUE_CLASS( EveSOFDataHullLightSetTexturedPointLight ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullLightSetTexturedPointLight( IRoot* lockobj = NULL );
-	~EveSOFDataHullLightSetTexturedPointLight() {};
+	~EveSOFDataHullLightSetTexturedPointLight(){};
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullLightSetTexturedPointLight );
 BLUE_DECLARE_VECTOR( EveSOFDataHullLightSetTexturedPointLight );
@@ -1351,8 +1425,7 @@ BLUE_CLASS( EveSOFDataHullLightSetSpotLight ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullLightSetSpotLight( IRoot* lockobj = NULL );
-	~EveSOFDataHullLightSetSpotLight() {};
-
+	~EveSOFDataHullLightSetSpotLight(){};
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullLightSetSpotLight );
 BLUE_DECLARE_VECTOR( EveSOFDataHullLightSetSpotLight );
@@ -1364,7 +1437,9 @@ BLUE_CLASS( EveSOFDataHullLightSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullLightSet( IRoot* lockobj = NULL );
-	~EveSOFDataHullLightSet() {}
+	~EveSOFDataHullLightSet()
+	{
+	}
 
 	// general
 	std::string m_name;
@@ -1393,12 +1468,15 @@ TYPEDEF_BLUECLASS( EveSOFDataHullController );
 BLUE_DECLARE_VECTOR( EveSOFDataHullController );
 
 
-BLUE_CLASS( EveSOFDataHullSoundEmitter ): public IRoot
+BLUE_CLASS( EveSOFDataHullSoundEmitter ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullSoundEmitter( IRoot* lockobj = NULL );
-	~EveSOFDataHullSoundEmitter() {}
+	~EveSOFDataHullSoundEmitter()
+	{
+	}
 
 	float m_attenuationScalingFactor;
 	std::string m_name;
@@ -1416,7 +1494,9 @@ BLUE_CLASS( EveSOFDataHull ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHull( IRoot* lockobj = NULL );
-	~EveSOFDataHull() {}
+	~EveSOFDataHull()
+	{
+	}
 
 	// trinity output class
 	enum BuildClass
@@ -1443,7 +1523,7 @@ public:
 
 	// description
 	std::string m_description;
-	
+
 	// hull category used for validation
 	BlueSharedString m_category;
 
@@ -1459,7 +1539,7 @@ public:
 	bool m_enableDynamicBoundingSphere;
 	bool m_castShadow;
 	bool m_sof6;
-	
+
 	// materials
 	PEveSOFDataHullAreaVector m_opaqueAreas;
 	PEveSOFDataHullAreaVector m_decalAreas;
@@ -1477,7 +1557,7 @@ public:
 	PEveSOFDataHullSpriteLineSetVector m_spriteLineSets;
 	PEveSOFDataHullHazeSetVector m_hazeSets;
 	PEveSOFDataHullBannerVector m_banners;
-	PEveSOFDataHullBannerSetVector m_bannerSets; 
+	PEveSOFDataHullBannerSetVector m_bannerSets;
 	PEveSOFDataHullDecalSetVector m_decalSets;
 	PEveSOFDataHullLightSetVector m_lightSets;
 	ImpactEffectType m_impactEffectType;
@@ -1526,7 +1606,9 @@ BLUE_CLASS( EveSOFDataFactionVisibilityGroupSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataFactionVisibilityGroupSet( IRoot* lockobj = NULL );
-	~EveSOFDataFactionVisibilityGroupSet() {}
+	~EveSOFDataFactionVisibilityGroupSet()
+	{
+	}
 
 	// visibility groups
 	PEveSOFDataGenericStringVector m_visibilityGroups;
@@ -1541,7 +1623,9 @@ BLUE_CLASS( EveSOFDataFactionSpotlightSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataFactionSpotlightSet( IRoot* lockobj = NULL );
-	~EveSOFDataFactionSpotlightSet() {}
+	~EveSOFDataFactionSpotlightSet()
+	{
+	}
 
 	// per-faction data of a spotlight
 	int32_t m_groupIndex;
@@ -1558,7 +1642,9 @@ BLUE_CLASS( EveSOFDataFactionPlaneSet ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataFactionPlaneSet( IRoot* lockobj = NULL );
-	~EveSOFDataFactionPlaneSet() {}
+	~EveSOFDataFactionPlaneSet()
+	{
+	}
 
 	// per-faction data of a planeset
 	int32_t m_groupIndex;
@@ -1575,7 +1661,9 @@ BLUE_CLASS( EveSOFDataFactionChild ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataFactionChild( IRoot* lockobj = NULL );
-	~EveSOFDataFactionChild() {}
+	~EveSOFDataFactionChild()
+	{
+	}
 
 	// group
 	int32_t m_groupIndex;
@@ -1592,7 +1680,9 @@ BLUE_CLASS( EveSOFDataFactionHullArea ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataFactionHullArea( IRoot* lockobj = NULL );
-	~EveSOFDataFactionHullArea() {}
+	~EveSOFDataFactionHullArea()
+	{
+	}
 
 	// designation
 	BlueSharedString m_name;
@@ -1609,7 +1699,9 @@ BLUE_CLASS( EveSOFDataFaction ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataFaction( IRoot* lockobj = NULL );
-	~EveSOFDataFaction() {}
+	~EveSOFDataFaction()
+	{
+	}
 
 	// description
 	std::string m_description;
@@ -1643,7 +1735,6 @@ public:
 	std::string m_defaultPatternLayer1MaterialName;
 	std::string m_defaultPatternLayer2MaterialName;
 	std::string m_defaultPatternName;
-
 };
 TYPEDEF_BLUECLASS( EveSOFDataFaction );
 BLUE_DECLARE_VECTOR( EveSOFDataFaction );
@@ -1678,7 +1769,9 @@ BLUE_CLASS( EveSOFDataBooster ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataBooster( IRoot* lockobj = NULL );
-	~EveSOFDataBooster() {}
+	~EveSOFDataBooster()
+	{
+	}
 
 	// data
 	float m_glowScale, m_symHaloScale, m_haloScaleX, m_haloScaleY;
@@ -1712,7 +1805,9 @@ BLUE_CLASS( EveSOFDataRaceDamage ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataRaceDamage( IRoot* lockobj = NULL );
-	~EveSOFDataRaceDamage() {}
+	~EveSOFDataRaceDamage()
+	{
+	}
 
 	// armor damage
 	PEveSOFDataParameterVector m_armorImpactParameters;
@@ -1732,7 +1827,9 @@ BLUE_CLASS( EveSOFDataRace ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataRace( IRoot* lockobj = NULL );
-	~EveSOFDataRace() {}
+	~EveSOFDataRace()
+	{
+	}
 
 	// race name
 	std::string m_name;
@@ -1740,15 +1837,13 @@ public:
 	// data
 	EveSOFDataBoosterPtr m_booster;
 	// colors
-    SOFDataFactionColorChooser::ColorType m_hullPrimaryHeatColorType;
-    SOFDataFactionColorChooser::ColorType m_hullReactorHeatColorType;
+	SOFDataFactionColorChooser::ColorType m_hullPrimaryHeatColorType;
+	SOFDataFactionColorChooser::ColorType m_hullReactorHeatColorType;
 	// impact effect
 	EveSOFDataRaceDamagePtr m_damage;
 };
 TYPEDEF_BLUECLASS( EveSOFDataRace );
 BLUE_DECLARE_VECTOR( EveSOFDataRace );
-
-
 
 
 
@@ -1763,7 +1858,9 @@ BLUE_CLASS( EveSOFDataMaterial ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataMaterial( IRoot* lockobj = NULL );
-	~EveSOFDataMaterial() {}
+	~EveSOFDataMaterial()
+	{
+	}
 
 	// material name
 	std::string m_name;
@@ -1812,9 +1909,7 @@ BLUE_DECLARE_INTERFACE( IEveSOFDataHullExtensionPlacementDistribution );
 BLUE_DECLARE_IVECTOR( IEveSOFDataHullExtensionPlacementDistribution );
 
 BLUE_INTERFACE( IEveSOFDataHullExtensionPlacement ) :
-	public IRoot
-{
-};
+	public IRoot{};
 
 BLUE_DECLARE_INTERFACE( IEveSOFDataHullExtensionPlacement );
 BLUE_DECLARE_IVECTOR( IEveSOFDataHullExtensionPlacement );
@@ -1855,7 +1950,9 @@ BLUE_CLASS( EveSOFDataHullExtensionPlacementDistributionDepletionCounter ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataHullExtensionPlacementDistributionDepletionCounter( IRoot* lockobj = NULL );
-	~EveSOFDataHullExtensionPlacementDistributionDepletionCounter(){}
+	~EveSOFDataHullExtensionPlacementDistributionDepletionCounter()
+	{
+	}
 	PEveSOFDataDistributionDepletionCounterVector m_depletionCounters;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullExtensionPlacementDistributionDepletionCounter );
@@ -1893,7 +1990,7 @@ public:
 		SHADER_MED = 2,
 		SHADER_LOW = 0,
 	};
-	
+
 	DisplayQualityModifier m_displayFilter;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullExtensionPlacementDistributionMapGraphicSettings );
@@ -2016,7 +2113,9 @@ BLUE_CLASS( EveSOFDataGenericDamage ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataGenericDamage( IRoot* lockobj = NULL );
-	~EveSOFDataGenericDamage() {}
+	~EveSOFDataGenericDamage()
+	{
+	}
 
 	// hull damage flicker
 	float m_flickerPerlinSpeed;
@@ -2057,8 +2156,10 @@ BLUE_CLASS( EveSOFDataGenericHullDamage ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataGenericHullDamage( IRoot* lockobj = NULL );
-	~EveSOFDataGenericHullDamage() {}
-	
+	~EveSOFDataGenericHullDamage()
+	{
+	}
+
 	// hull debris particles
 	float m_hullParticleRate;
 	float m_hullParticleInnerAngle;
@@ -2086,7 +2187,9 @@ BLUE_CLASS( EveSOFDataGenericShader ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataGenericShader( IRoot* lockobj = NULL );
-	~EveSOFDataGenericShader() {}
+	~EveSOFDataGenericShader()
+	{
+	}
 
 	BlueSharedString m_shader;
 
@@ -2110,7 +2213,9 @@ BLUE_CLASS( EveSOFDataGenericDecalShader ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataGenericDecalShader( IRoot* lockobj = NULL );
-	~EveSOFDataGenericDecalShader() {}
+	~EveSOFDataGenericDecalShader()
+	{
+	}
 
 	BlueSharedString m_shader;
 
@@ -2134,8 +2239,12 @@ BLUE_CLASS( EveSOFDataGenericSwarm ) :
 {
 public:
 	EXPOSE_TO_BLUE();
-	EveSOFDataGenericSwarm( IRoot* lockobj = NULL ) {}
-	~EveSOFDataGenericSwarm() {}
+	EveSOFDataGenericSwarm( IRoot* lockobj = NULL )
+	{
+	}
+	~EveSOFDataGenericSwarm()
+	{
+	}
 
 	EveSwarm::BehaviorProperties m_behavior;
 };
@@ -2149,7 +2258,9 @@ BLUE_CLASS( EveSOFDataGenericVariant ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataGenericVariant( IRoot* lockobj = NULL );
-	~EveSOFDataGenericVariant() {}
+	~EveSOFDataGenericVariant()
+	{
+	}
 
 	// name id
 	BlueSharedString m_name;
@@ -2189,7 +2300,9 @@ BLUE_CLASS( EveSOFDataGeneric ) :
 public:
 	EXPOSE_TO_BLUE();
 	EveSOFDataGeneric( IRoot* lockobj = NULL );
-	~EveSOFDataGeneric() {}
+	~EveSOFDataGeneric()
+	{
+	}
 
 	// default textures
 	std::string m_resPathDefaultAlliance;
@@ -2217,7 +2330,7 @@ public:
 	// damage data
 	EveSOFDataGenericDamagePtr m_damage;
 	EveSOFDataGenericHullDamagePtr m_hullDamage;
-	
+
 	// swarm data
 	EveSOFDataGenericSwarmPtr m_swarm;
 

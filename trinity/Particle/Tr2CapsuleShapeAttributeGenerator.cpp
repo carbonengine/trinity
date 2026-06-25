@@ -22,8 +22,8 @@ inline float frand( float a, float b )
 // Description:
 //   Tr2CapsuleShapeAttributeGenerator default constructor
 // --------------------------------------------------------------------------------------
-Tr2CapsuleShapeAttributeGenerator::Tr2CapsuleShapeAttributeGenerator()
-	:m_positionStart( 0.0f, 0.0f, 0.0f ),
+Tr2CapsuleShapeAttributeGenerator::Tr2CapsuleShapeAttributeGenerator() :
+	m_positionStart( 0.0f, 0.0f, 0.0f ),
 	m_positionEnd( 0.0f, 0.0f, 0.0f ),
 	m_rotationStart( 0.f, 0.f, 0.f, 1.f ),
 	m_rotationEnd( 0.f, 0.f, 0.f, 1.f ),
@@ -53,35 +53,35 @@ Tr2CapsuleShapeAttributeGenerator::~Tr2CapsuleShapeAttributeGenerator()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements ITr2AttributeGenerator interface. Generates random values for new 
+//   Implements ITr2AttributeGenerator interface. Generates random values for new
 //   particle component (element).
 // Arguments:
 //   position - Position of the "parent" particle.
 //   velocity - Velocity of the "parent" particle.
-//   paticle - (out) New particle data: Tr2ParticleElementData::COUNT of float arrays. 
+//   paticle - (out) New particle data: Tr2ParticleElementData::COUNT of float arrays.
 //		The generator fills position and/or velocity of the new particle.
 // --------------------------------------------------------------------------------------
-void Tr2CapsuleShapeAttributeGenerator::Generate( const Vector3* position, 
-												 const Vector3* velocity, 
-												 float** particle )
+void Tr2CapsuleShapeAttributeGenerator::Generate( const Vector3* position,
+												  const Vector3* velocity,
+												  float** particle )
 {
 	if( !m_valid )
 	{
 		return;
 	}
-	
+
 	float phi = XMConvertToRadians( frand( m_minPhi, m_maxPhi ) );
 	float theta = XMConvertToRadians( frand( m_minTheta, m_maxTheta ) );
 
 	// This is not exactly uniform, but it doesn't matter
-	XMVECTOR randomVector = XMVectorSet( sin( phi ) * cos( theta ), 
-										 -cos( phi ), 
-										 sin( phi ) * sin( theta ), 
+	XMVECTOR randomVector = XMVectorSet( sin( phi ) * cos( theta ),
+										 -cos( phi ),
+										 sin( phi ) * sin( theta ),
 										 0.f );
 	float t = frand( 0.f, 1.f );
 	XMVECTOR rotation = XMQuaternionSlerp( m_rotationStart, m_rotationEnd, t );
-	randomVector = XMQuaternionMultiply( 
-		XMQuaternionMultiply( XMQuaternionConjugate( rotation ), randomVector ), 
+	randomVector = XMQuaternionMultiply(
+		XMQuaternionMultiply( XMQuaternionConjugate( rotation ), randomVector ),
 		rotation );
 
 	if( m_controlVelocity && m_velocityElement.m_offset != -1 )
@@ -90,12 +90,12 @@ void Tr2CapsuleShapeAttributeGenerator::Generate( const Vector3* position,
 		XMVECTOR particleVelocity = XMVectorScale( randomVector, speed );
 		if( velocity )
 		{
-			particleVelocity = XMVectorAdd( 
-				particleVelocity, 
+			particleVelocity = XMVectorAdd(
+				particleVelocity,
 				XMVectorScale( XMLoadFloat4A( reinterpret_cast<const XMFLOAT4A*>( velocity ) ), m_parentVelocityFactor ) );
 		}
-		XMStoreFloat4A( 
-			reinterpret_cast<XMFLOAT4A*>( particle[m_velocityElement.m_bufferType] + m_velocityElement.m_offset ), 
+		XMStoreFloat4A(
+			reinterpret_cast<XMFLOAT4A*>( particle[m_velocityElement.m_bufferType] + m_velocityElement.m_offset ),
 			particleVelocity );
 	}
 	if( m_positionElement.m_offset != -1 )
@@ -103,20 +103,18 @@ void Tr2CapsuleShapeAttributeGenerator::Generate( const Vector3* position,
 		randomVector = XMVectorScale( randomVector, frand( m_minRadius, m_maxRadius ) );
 		if( position )
 		{
-			randomVector = XMVectorAdd( 
-				randomVector, 
+			randomVector = XMVectorAdd(
+				randomVector,
 				XMLoadFloat4A( reinterpret_cast<const XMFLOAT4A*>( position ) ) );
 		}
-		randomVector = XMVectorAdd( 
-			randomVector, 
+		randomVector = XMVectorAdd(
+			randomVector,
 			XMVectorLerp(
 				XMLoadFloat4( reinterpret_cast<const XMFLOAT4*>( &m_positionStart ) ),
 				XMLoadFloat4( reinterpret_cast<const XMFLOAT4*>( &m_positionEnd ) ),
-				t
-				)
-			);
-		XMStoreFloat4A( 
-			reinterpret_cast<XMFLOAT4A*>( particle[m_positionElement.m_bufferType] + m_positionElement.m_offset ), 
+				t ) );
+		XMStoreFloat4A(
+			reinterpret_cast<XMFLOAT4A*>( particle[m_positionElement.m_bufferType] + m_positionElement.m_offset ),
 			randomVector );
 	}
 }
@@ -128,17 +126,17 @@ void Tr2CapsuleShapeAttributeGenerator::Generate( const Vector3* position,
 // Arguments:
 //   declaration - Particle element data coming from particle system.
 //   boundElements - (in/out) The generator is expected to mark particle elements it will
-//		be filling by adding their declaration names to this set. Emitter uses this set 
+//		be filling by adding their declaration names to this set. Emitter uses this set
 //      to check if all particle elements were bound to some generator. The generator
-//		is responsible for checking if its elements are overwritten by some other 
+//		is responsible for checking if its elements are overwritten by some other
 //		generator using this set.
 // Return Value:
 //   true If the generator successfully binds to the particle system
 //   false Otherwise
 // --------------------------------------------------------------------------------------
-bool Tr2CapsuleShapeAttributeGenerator::Bind( 
-	const Tr2ParticleElementDataMap& declaration, 
-	std::set<Tr2ParticleElementDeclarationName> &boundElements )
+bool Tr2CapsuleShapeAttributeGenerator::Bind(
+	const Tr2ParticleElementDataMap& declaration,
+	std::set<Tr2ParticleElementDeclarationName>& boundElements )
 {
 	m_valid = false;
 	m_positionElement.m_offset = -1;
@@ -184,7 +182,7 @@ bool Tr2CapsuleShapeAttributeGenerator::Bind(
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Returns human-readable name for generator's declaration element. Used for Python 
+//   Returns human-readable name for generator's declaration element. Used for Python
 //   exposure.
 // Return Value:
 //   Human-readable name of particle declaration element.
@@ -207,11 +205,11 @@ std::string Tr2CapsuleShapeAttributeGenerator::GetName() const
 //   endPosition - Ending emitter position.
 //   endRotation - Ending emitter orientation.
 // --------------------------------------------------------------------------------------
-void Tr2CapsuleShapeAttributeGenerator::SetPositions( 
-					const Vector3& startPosition, 
-					const Quaternion& startRotation,
-					const Vector3& endPosition, 
-					const Quaternion& endRotation )
+void Tr2CapsuleShapeAttributeGenerator::SetPositions(
+	const Vector3& startPosition,
+	const Quaternion& startRotation,
+	const Vector3& endPosition,
+	const Quaternion& endRotation )
 {
 	m_positionStart = startPosition;
 	m_rotationStart = startRotation;

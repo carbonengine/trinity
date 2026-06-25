@@ -7,7 +7,7 @@ BLUE_DEFINE( Tr2FactionLight );
 
 const Be::ClassInfo* Tr2FactionLight::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2FactionLight, "" )
+	EXPOSURE_BEGIN( Tr2FactionLight, "" )
 		MAP_INTERFACE( Tr2FactionLight )
 		MAP_INTERFACE( IEveInheritPropertiesOwner )
 		MAP_INTERFACE( Tr2Light )
@@ -24,9 +24,9 @@ const Be::ClassInfo* Tr2FactionLight::ExposeToBlue()
 		MAP_ATTRIBUTE( "innerRadius", m_lightData.innerRadius, "Inner light radius (to mimick a glowing sphere)", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "brightness", m_lightData.brightness, "Light brightness (modulates color) for easier animation\n:jessica-group: color", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "saturation", m_saturation,"[0:inf] 0=grayscale 1=normal (output capped so feel free to over-saturate)\n:jessica-group: color", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE_WITH_CHOOSER("factionColor", m_selectedColor, "Light color\n:jessica-group: color", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
-        MAP_PROPERTY_READONLY( "selectedColor", GetSelectedColor, "Light color helper\n:jessica-group: color" )
+		MAP_ATTRIBUTE( "saturation", m_saturation, "[0:inf] 0=grayscale 1=normal (output capped so feel free to over-saturate)\n:jessica-group: color", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "factionColor", m_selectedColor, "Light color\n:jessica-group: color", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
+		MAP_PROPERTY_READONLY( "selectedColor", GetSelectedColor, "Light color helper\n:jessica-group: color" )
 
 		MAP_ATTRIBUTE( "isSpotlight", m_isSpotlight, "if the light behaves as a spotLight or a pointLight\n:jessica-group: SpotlightOptions", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "rotation", m_lightData.rotation, "Light rotation\n:jessica-group: SpotlightOptions", Be::READWRITE | Be::PERSIST )

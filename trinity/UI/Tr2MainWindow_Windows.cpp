@@ -19,25 +19,25 @@ CCP_STATS_DECLARED_ELSEWHERE( frameTime );
 
 namespace
 {
-	struct MonitorRects
+struct MonitorRects
+{
+	std::vector<RECT> rcMonitors;
+	RECT rcCombined;
+
+	static BOOL CALLBACK MonitorEnum( HMONITOR hMon, HDC hdc, LPRECT lprcMonitor, LPARAM pData )
 	{
-		std::vector<RECT>   rcMonitors;
-		RECT                rcCombined;
+		MonitorRects* pThis = reinterpret_cast<MonitorRects*>( pData );
+		pThis->rcMonitors.push_back( *lprcMonitor );
+		UnionRect( &pThis->rcCombined, &pThis->rcCombined, lprcMonitor );
+		return TRUE;
+	}
 
-		static BOOL CALLBACK MonitorEnum( HMONITOR hMon, HDC hdc, LPRECT lprcMonitor, LPARAM pData )
-		{
-			MonitorRects* pThis = reinterpret_cast<MonitorRects*>( pData );
-			pThis->rcMonitors.push_back( *lprcMonitor );
-			UnionRect( &pThis->rcCombined, &pThis->rcCombined, lprcMonitor );
-			return TRUE;
-		}
-
-		MonitorRects()
-		{
-			SetRectEmpty( &rcCombined );
-			EnumDisplayMonitors( 0, 0, MonitorEnum, (LPARAM)this );
-		}
-	};
+	MonitorRects()
+	{
+		SetRectEmpty( &rcCombined );
+		EnumDisplayMonitors( 0, 0, MonitorEnum, (LPARAM)this );
+	}
+};
 }
 
 
@@ -100,8 +100,10 @@ void Tr2MainWindow::CreateOSWindow( Tr2MainWindowState::State& state )
 		(LPWSTR)wndClass,
 		m_title.c_str(),
 		style,
-		state.left, state.top,
-		( rect.right - rect.left ), ( rect.bottom - rect.top ),
+		state.left,
+		state.top,
+		( rect.right - rect.left ),
+		( rect.bottom - rect.top ),
 		0L,
 		NULL,
 		wclass.hInstance,
@@ -213,7 +215,7 @@ Tr2MainWindow::Size Tr2MainWindow::GetClientSize( const Size& windowSize, Tr2Win
 	RECT rc;
 	SetRectEmpty( &rc );
 	::AdjustWindowRect( &rc, GetWindowStyle( mode ), FALSE );
-	
+
 	Size size;
 	size.width = int32_t( windowSize.width - rc.right + rc.left );
 	size.height = int32_t( windowSize.height - rc.bottom + rc.top );
@@ -235,7 +237,7 @@ void Tr2MainWindow::ClipCursor( int32_t left, int32_t top, int32_t right, int32_
 	RECT rect;
 	::GetClientRect( m_hwnd, &rect );
 
-	RECT rc = { 
+	RECT rc = {
 		LONG( double( left ) / m_state.width * ( rect.right - rect.left ) + 0.5 ),
 		LONG( double( top ) / m_state.height * ( rect.bottom - rect.top ) + 0.5 ),
 		LONG( double( right ) / m_state.width * ( rect.right - rect.left ) + 0.5 ),
@@ -266,10 +268,9 @@ void Tr2MainWindow::SetCursorPos( int32_t x, int32_t y )
 
 	POINT offs = { 0, 0 };
 	ClientToScreen( m_hwnd, &offs );
-	::SetCursorPos( 
+	::SetCursorPos(
 		LONG( double( x ) / m_state.width * ( rect.right - rect.left ) + 0.5 ) + offs.x,
-		LONG( double( y ) / m_state.height * ( rect.bottom - rect.top ) + 0.5 ) + offs.y
-		);
+		LONG( double( y ) / m_state.height * ( rect.bottom - rect.top ) + 0.5 ) + offs.y );
 }
 
 std::pair<int32_t, int32_t> Tr2MainWindow::GetCursorPos() const
@@ -284,9 +285,10 @@ std::pair<int32_t, int32_t> Tr2MainWindow::GetCursorPos() const
 
 	RECT rect;
 	::GetClientRect( m_hwnd, &rect );
-	return { 
-		int32_t( double( pt.x ) / ( rect.right - rect.left ) * m_state.width + 0.5 ), 
-		int32_t( double( pt.y ) / ( rect.bottom - rect.top ) * m_state.height + 0.5 ) };
+	return {
+		int32_t( double( pt.x ) / ( rect.right - rect.left ) * m_state.width + 0.5 ),
+		int32_t( double( pt.y ) / ( rect.bottom - rect.top ) * m_state.height + 0.5 )
+	};
 }
 
 bool Tr2MainWindow::IsKeyToggled( uint32_t keyCode ) const
@@ -317,8 +319,7 @@ std::string Tr2MainWindow::GetKeyName( uint32_t keyCode ) const
 	case VK_INSERT:
 	case VK_DELETE:
 	case VK_DIVIDE:
-	case VK_NUMLOCK:
-	{
+	case VK_NUMLOCK: {
 		scanCode |= ( 1 << 24 );
 	}
 	}
@@ -387,8 +388,7 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	int32_t mouseX, mouseY;
 
-	auto mouseCoords = [&]()
-	{
+	auto mouseCoords = [&]() {
 		RECT rect;
 		::GetClientRect( m_hwnd, &rect );
 		mouseX = int32_t( double( int32_t( lParam & 0xffff ) ) / ( rect.right - rect.left ) * m_state.width + 0.5 );
@@ -476,8 +476,7 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		returnValue = std::make_pair( 0, m_onChar.IsValid() );
 		break;
 
-	case WM_GETMINMAXINFO:
-	{
+	case WM_GETMINMAXINFO: {
 		auto size = GetWindowSize( m_minimumSize, m_state.windowMode );
 		( (MINMAXINFO*)lParam )->ptMinTrackSize.x = size.width;
 		( (MINMAXINFO*)lParam )->ptMinTrackSize.y = size.height;
@@ -533,7 +532,7 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 			auto prevHeight = m_state.height;
 			auto newMode = m_state;
 #if USE_BORDERLESS_WINDOW
-			if( newMode.windowMode != Tr2WindowMode::FULL_SCREEN)
+			if( newMode.windowMode != Tr2WindowMode::FULL_SCREEN )
 #endif
 			{
 				newMode.width = uint32_t( rect.right - rect.left );
@@ -557,7 +556,7 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 				gTriDev->SetThrottling( TriDevice::WINDOW_HIDDEN, false );
 			}
 
-			if ( !g_renderContextIsBeingDestroyed )
+			if( !g_renderContextIsBeingDestroyed )
 			{
 				SetState( false, newMode );
 			}
@@ -567,8 +566,7 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 			return 1;
 		}
 		break;
-	case WM_SETCURSOR:
-	{
+	case WM_SETCURSOR: {
 		bool useWindowsCursor = false;
 		if( m_state.windowMode == Tr2WindowMode::WINDOWED )
 		{
@@ -636,11 +634,10 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_SYSCOMMAND:
 		if( wParam == SC_KEYMENU )
 		{
-			return 0;	//catch all Alt-something combination messages.  Specifically alt enter.
+			return 0; //catch all Alt-something combination messages.  Specifically alt enter.
 		}
 		break;
-	case WM_CLOSE:
-	{
+	case WM_CLOSE: {
 		bool canClose = true;
 		m_onClose.Call( canClose );
 		returnValue = std::make_pair( canClose ? 0 : 1, m_onClose.IsValid() );
@@ -690,69 +687,68 @@ void Tr2MainWindow::SetWindowsMessageFilter( bool enabled, const std::vector<UIN
 
 void Tr2MainWindow::OnTick( Be::Time, Be::Time, void* )
 {
-    
 }
 
 void Tr2MainWindow::SanitizeWindowedResolution( Tr2MainWindowState::State& state ) const
 {
-    if( state.width == 0 && state.height == 0 )
-    {
-        // use window size that spans default display, adjust for window frame
-        Tr2DisplayModeInfo mi;
-        Tr2VideoAdapterInfo::GetAdapterDisplayMode( state.adapter, mi );
+	if( state.width == 0 && state.height == 0 )
+	{
+		// use window size that spans default display, adjust for window frame
+		Tr2DisplayModeInfo mi;
+		Tr2VideoAdapterInfo::GetAdapterDisplayMode( state.adapter, mi );
 
-        Size size = { mi.width, mi.height };
-        size = GetClientSize( size, state.windowMode );
+		Size size = { mi.width, mi.height };
+		size = GetClientSize( size, state.windowMode );
 
-        state.width = size.width;
-        state.height = size.height;
-    }
-    else
-    {
-        // clamp size between window min size and desktop size, adjusted by window frame
-        state.width = std::max( m_minimumSize.width, state.width );
-        state.height = std::max( m_minimumSize.height, state.height );
+		state.width = size.width;
+		state.height = size.height;
+	}
+	else
+	{
+		// clamp size between window min size and desktop size, adjusted by window frame
+		state.width = std::max( m_minimumSize.width, state.width );
+		state.height = std::max( m_minimumSize.height, state.height );
 
-        auto desktop = GetDesktopRect();
-        Size desktopSize;
-        desktopSize.width = uint32_t( desktop.right - desktop.left );
-        desktopSize.height = uint32_t( desktop.bottom - desktop.top );
+		auto desktop = GetDesktopRect();
+		Size desktopSize;
+		desktopSize.width = uint32_t( desktop.right - desktop.left );
+		desktopSize.height = uint32_t( desktop.bottom - desktop.top );
 
-        state.width = std::min( desktopSize.width, state.width );
-        state.height = std::min( desktopSize.height, state.height );
-    }
+		state.width = std::min( desktopSize.width, state.width );
+		state.height = std::min( desktopSize.height, state.height );
+	}
 }
 
 void Tr2MainWindow::SanitizeWindowPosition( Tr2MainWindowState::State& state ) const
 {
-    if( state.windowMode == Tr2WindowMode::FIXED_WINDOW )
-    {
-        // fixed windows are always at the top left corner of the display
-        auto rect = GetMonitorRect( state.adapter );
-        state.left = rect.left;
-        state.top = rect.top;
-    }
-    else
-    {
-        // window should intersect desktop with some margin
-        Size size = { state.width, state.height };
-        size = GetWindowSize( size, state.windowMode );
+	if( state.windowMode == Tr2WindowMode::FIXED_WINDOW )
+	{
+		// fixed windows are always at the top left corner of the display
+		auto rect = GetMonitorRect( state.adapter );
+		state.left = rect.left;
+		state.top = rect.top;
+	}
+	else
+	{
+		// window should intersect desktop with some margin
+		Size size = { state.width, state.height };
+		size = GetWindowSize( size, state.windowMode );
 
-        auto margin = int32_t( std::max( std::min( size.width / 2, size.height / 2 ), 50u ) );
+		auto margin = int32_t( std::max( std::min( size.width / 2, size.height / 2 ), 50u ) );
 
-        auto desktop = GetDesktopRect();
+		auto desktop = GetDesktopRect();
 
-        state.left = std::max( state.left, int32_t( desktop.left - size.width + margin ) );
-        state.top = std::max( state.top, int32_t( desktop.top - size.height + margin ) );
-        state.left = std::min( state.left, int32_t( desktop.right - margin ) );
-        state.top = std::min( state.top, int32_t( desktop.bottom - margin ) );
-    }
+		state.left = std::max( state.left, int32_t( desktop.left - size.width + margin ) );
+		state.top = std::max( state.top, int32_t( desktop.top - size.height + margin ) );
+		state.left = std::min( state.left, int32_t( desktop.right - margin ) );
+		state.top = std::min( state.top, int32_t( desktop.bottom - margin ) );
+	}
 }
 
 Tr2MainWindow::Size Tr2MainWindow::GetLargestWindowSize( uint32_t adapter, Tr2WindowMode::Type mode ) const
 {
-    auto desktopRect = GetDesktopRect();
-    return { uint32_t( desktopRect.right - desktopRect.left ), uint32_t( desktopRect.bottom - desktopRect.top ) };
+	auto desktopRect = GetDesktopRect();
+	return { uint32_t( desktopRect.right - desktopRect.left ), uint32_t( desktopRect.bottom - desktopRect.top ) };
 }
 
 Tr2WindowHandle Tr2MainWindow::GetOutputWindow() const

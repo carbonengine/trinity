@@ -72,10 +72,10 @@ float EveBoxVolume::GetIntensity( Vector3 position )
 	{
 		return 1.0f;
 	}
-	 
+
 	Vector3 rayDir = Normalize( -axisAlignedPosition );
 
-	// we are somewhere in between 
+	// we are somewhere in between
 	IntersectAxisAlignedBoxRay( MIN_AABB, MAX_AABB, axisAlignedPosition, rayDir, m_outerIntersection );
 	IntersectAxisAlignedBoxRay( MIN_AABB, MAX_AABB, axisAlignedInnerPosition, rayDir, m_innerIntersection );
 
@@ -99,7 +99,7 @@ void EveBoxVolume::UnregisterForChanges( uint32_t callbackID )
 void EveBoxVolume::Setup()
 {
 	m_scaling = XMVectorMax( m_scaling, Vector3( 0, 0, 0 ) );
-	m_innerScaling = XMVectorMin( XMVectorMax(m_innerScaling, Vector3( 0, 0, 0 ) ), m_scaling );
+	m_innerScaling = XMVectorMin( XMVectorMax( m_innerScaling, Vector3( 0, 0, 0 ) ), m_scaling );
 
 	m_boxTransform = TransformationMatrix( m_scaling, m_rotation, m_position );
 	m_innerBoxTransform = TransformationMatrix( m_innerScaling, m_rotation, m_position );
@@ -119,12 +119,12 @@ void EveBoxVolume::GeneratePointsInVolume( std::vector<Vector3>& points, size_t 
 		// volume is not properly defined
 		return;
 	}
-	
+
 	float leftRightSideSize = ( m_scaling.x - m_innerScaling.x ) * m_scaling.y * m_scaling.z;
 	float topBottomSize = m_innerScaling.x * ( m_scaling.y - m_innerScaling.y ) * m_scaling.z;
 	float frontBackLidSize = m_innerScaling.x * m_innerScaling.y * ( m_scaling.z - m_innerScaling.z );
 
-	float outerSidesSize = 2.f * (leftRightSideSize + topBottomSize + frontBackLidSize);
+	float outerSidesSize = 2.f * ( leftRightSideSize + topBottomSize + frontBackLidSize );
 	float innerToOuterSizeRatio = 0.f;
 
 	if( !excludeInnerVolume )
@@ -136,7 +136,7 @@ void EveBoxVolume::GeneratePointsInVolume( std::vector<Vector3>& points, size_t 
 		// as the outer volume is only half filled by default so we use the difference multiplied by 0.5
 		float adjustedOuterCubeSize = ( m_innerScaling.x + 0.5f * rangeX ) * ( m_innerScaling.y + 0.5f * rangeY ) * ( m_innerScaling.z + 0.5f * rangeZ );
 		innerToOuterSizeRatio = ( m_innerScaling.x * m_innerScaling.y * m_innerScaling.z ) / adjustedOuterCubeSize;
-		innerToOuterSizeRatio = 1.f - pow( 1.f - innerToOuterSizeRatio, 0.8f + 0.2f * fallOffFactor ); // absorb more points into inner shape for steep falloffs 
+		innerToOuterSizeRatio = 1.f - pow( 1.f - innerToOuterSizeRatio, 0.8f + 0.2f * fallOffFactor ); // absorb more points into inner shape for steep falloffs
 	}
 
 	points.reserve( points.size() + howManyToAdd );
@@ -168,7 +168,7 @@ void EveBoxVolume::GeneratePointsInVolume( std::vector<Vector3>& points, size_t 
 			float Z = TriRand() * m_scaling.z - 0.5f * m_scaling.z;
 			position = Vector3( X, Y, Z );
 		}
-		else if( zonePicker < 2.f * (leftRightSideSize + topBottomSize) )
+		else if( zonePicker < 2.f * ( leftRightSideSize + topBottomSize ) )
 		{
 			float rand = 0.5f * m_innerScaling.y + pow( TriRand(), fallOffFactor ) * ( m_scaling.y - m_innerScaling.y ) * 0.5f;
 			float X = TriRand() * m_innerScaling.x - 0.5f * m_innerScaling.x;
@@ -178,7 +178,7 @@ void EveBoxVolume::GeneratePointsInVolume( std::vector<Vector3>& points, size_t 
 		}
 		else
 		{
-			float rand = 0.5f * m_innerScaling.y + pow(TriRand(), fallOffFactor) * ( m_scaling.y - m_innerScaling.y ) * 0.5f;
+			float rand = 0.5f * m_innerScaling.y + pow( TriRand(), fallOffFactor ) * ( m_scaling.y - m_innerScaling.y ) * 0.5f;
 			float X = TriRand() * m_innerScaling.x - 0.5f * m_innerScaling.x;
 			float Y = TriRand() * m_innerScaling.y - 0.5f * m_innerScaling.y;
 			float Z = zonePicker < outerSidesSize - frontBackLidSize ? rand : -rand;
@@ -202,7 +202,7 @@ bool EveBoxVolume::OnModified( Be::Var* val )
 	{
 		Setup();
 	}
-	
+
 	for( auto callBack : m_onChangeCallbacks )
 	{
 		if( callBack.second != nullptr )

@@ -7,13 +7,12 @@
 BLUE_DEFINE( Tr2ActionResetClipSphereCenter );
 namespace
 {
-	Be::VarChooser ResetBehaviorChooser[] =
-	{
-		{ "Object Center", BeCast( Tr2ActionResetClipSphereCenter::OBJECT_CENTER ), "Sets the clipsphere to the center of the object" },
-		{ "Last Hit Damage Locator", BeCast( Tr2ActionResetClipSphereCenter::LAST_DAMAGELOCATOR_HIT ), "Sets the clipsphere to the last damage locator hit. If there has no damage locator been hit, then a random one is selected" },
-		{ "Custom", BeCast( Tr2ActionResetClipSphereCenter::CUSTOM ), "Sets the clipsphere to the locator defined in 'locatorSetName' and 'locatorIndex'" },
-		{ 0 }
-	};
+Be::VarChooser ResetBehaviorChooser[] = {
+	{ "Object Center", BeCast( Tr2ActionResetClipSphereCenter::OBJECT_CENTER ), "Sets the clipsphere to the center of the object" },
+	{ "Last Hit Damage Locator", BeCast( Tr2ActionResetClipSphereCenter::LAST_DAMAGELOCATOR_HIT ), "Sets the clipsphere to the last damage locator hit. If there has no damage locator been hit, then a random one is selected" },
+	{ "Custom", BeCast( Tr2ActionResetClipSphereCenter::CUSTOM ), "Sets the clipsphere to the locator defined in 'locatorSetName' and 'locatorIndex'" },
+	{ 0 }
+};
 }
 
 const Be::ClassInfo* Tr2ActionResetClipSphereCenter::ExposeToBlue()

@@ -9,7 +9,7 @@ BLUE_DEFINE( TriStepRenderEffect );
 
 const Be::ClassInfo* TriStepRenderEffect::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepRenderEffect, "" )
+	EXPOSURE_BEGIN( TriStepRenderEffect, "" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepRenderEffect )
@@ -19,15 +19,13 @@ const Be::ClassInfo* TriStepRenderEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "tlTexCoord", m_tlTexCoord, "top left texture coordinate", Be::READWRITE )
 		MAP_ATTRIBUTE( "brTexCoord", m_brTexCoord, "bottom right texture coordinate", Be::READWRITE )
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
-		( 
-			"__init__", 
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"__init__",
 			py__init__,
 			2,
 			"Create a render step that draws a fullscreen quad using a specified effect\n"
 			":param effect: A Tr2Effect (default None)\n"
-			":param shaderBuffer: A Tr2ShaderBuffer (default None)"
-		)
+			":param shaderBuffer: A Tr2ShaderBuffer (default None)" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

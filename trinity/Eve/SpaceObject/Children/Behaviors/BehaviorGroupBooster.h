@@ -16,7 +16,7 @@ struct Tr2RenderBatch;
 // --------------------------------------------------------------------------------------
 // Description:
 //   A class that describes look of behavior group boosters
-//   This is very hardcoded, since we don't support multiple booster types 
+//   This is very hardcoded, since we don't support multiple booster types
 // --------------------------------------------------------------------------------------
 BLUE_CLASS( BehaviorGroupBooster ) :
 	public IInitialize,
@@ -32,18 +32,20 @@ public:
 
 	struct Quad
 	{
-		Quad() {}
+		Quad()
+		{
+		}
 
-		Quad( const Matrix& parentTransform, const Matrix& localTransform, const Color& color, float brightness )			
+		Quad( const Matrix& parentTransform, const Matrix& localTransform, const Color& color, float brightness )
 		{
 			m_parentTransform0 = Vector4( parentTransform._11, parentTransform._21, parentTransform._31, parentTransform._41 );
 			m_parentTransform1 = Vector4( parentTransform._12, parentTransform._22, parentTransform._32, parentTransform._42 );
 			m_parentTransform2 = Vector4( parentTransform._13, parentTransform._23, parentTransform._33, parentTransform._43 );
-			
+
 			m_localTransform0 = Vector4( localTransform._11, localTransform._21, localTransform._31, localTransform._41 );
 			m_localTransform1 = Vector4( localTransform._12, localTransform._22, localTransform._32, localTransform._42 );
 			m_localTransform2 = Vector4( localTransform._13, localTransform._23, localTransform._33, localTransform._43 );
-						
+
 			m_color[0] = Float_16( color.r );
 			m_color[1] = Float_16( color.g );
 			m_color[2] = Float_16( color.b );
@@ -73,23 +75,23 @@ public:
 	void InitializeEffects();
 
 	// INotify
-	bool OnModified( Be::Var* value ) override;
+	bool OnModified( Be::Var * value ) override;
 
 	void CreateBuffer();
 	Tr2EffectPtr GetEffect();
 	unsigned int GetVertexDeclaration() const;
 	void RebuildFlareBuffer( unsigned int count );
-	
+
 	Tr2RenderBatch GetBatch( Tr2BufferAL * instanceBuffer, unsigned int startInstance, unsigned int instanceDataStride, unsigned int count ) const;
 
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
 
 	void AddLight( Tr2LightManager & lightManager, Vector3 position, float radiusModifier, int agentIndex, const Matrix& parentTransform );
 	void AddFlare( const Matrix& agentTransform, float lod, float intensity, unsigned int agentIndex, float shipBoundingSphereRadius, float groupScale );
 
-	void RenderBoosterDebug( ITr2DebugRenderer2& renderer, Tr2DebugObjectReference owner, const Matrix& transform );
-	void RenderLightDebug( ITr2DebugRenderer2& renderer, Tr2DebugObjectReference owner, const Matrix& transform );
+	void RenderBoosterDebug( ITr2DebugRenderer2 & renderer, Tr2DebugObjectReference owner, const Matrix& transform );
+	void RenderLightDebug( ITr2DebugRenderer2 & renderer, Tr2DebugObjectReference owner, const Matrix& transform );
 
 	bool GetDisplay() const;
 	float GetLightSize() const;
@@ -108,7 +110,7 @@ private:
 	void SetupBoosterEffect( Tr2EffectPtr effect );
 	void SetupQuads();
 	void AdjustFlareLists();
-		
+
 	Vector3 m_boosterOffset;
 	float m_lightRadius;
 	Color m_lightColor;
@@ -121,7 +123,7 @@ private:
 
 	Tr2EffectPtr m_haloFlareEffect;
 	unsigned int m_haloFlareHash;
-	
+
 	Vector3 m_haloFlareOffset;
 	Vector3 m_haloFlareScale;
 	float m_haloFlareBrightness;
@@ -131,7 +133,7 @@ private:
 	uint32_t m_haloFlareNoiseOctaves;
 	EveChildModifierHaloPtr m_haloModifier;
 	Matrix m_haloMatrix;
-	
+
 	Tr2EffectPtr m_ambientFlareEffect;
 	unsigned int m_ambientFlareHash;
 	Vector3 m_ambientFlareOffset;

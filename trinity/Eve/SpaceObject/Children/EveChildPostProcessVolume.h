@@ -38,14 +38,14 @@ public:
 	void SetName( const char* name );
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables ){};
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void GetLocalToWorldTransform( Matrix& transform ) const;
+	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void ChangeLOD( Tr2Lod lod ) {};
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override;
 	bool IsAlwaysOn() const;
-	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) {} ;
+	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) {};
 
 	virtual void RegisterComponents();
 	virtual void UnRegisterComponents();
@@ -56,8 +56,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2PostProcessOwner
@@ -68,7 +68,7 @@ private:
 
 	BlueSharedString m_name;
 	PIEveVolumeVector m_volumes;
-	PIEveVolumeVector m_exclusionVolumes; 
+	PIEveVolumeVector m_exclusionVolumes;
 
 	CcpMath::Sphere m_boundingSphere;
 

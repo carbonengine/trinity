@@ -17,5 +17,5 @@ const Be::ClassInfo* EveSphereVolume::ExposeToBlue()
 		MAP_ATTRIBUTE( "radius", m_outerSphere.radius, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "innerRadius", m_innerSphere.radius, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
-		EXPOSURE_END()
+	EXPOSURE_END()
 }

@@ -5,18 +5,16 @@
 
 BLUE_DEFINE_ABSTRACT( EveVirtualCameraTransitionBase );
 
-const Be::ClassInfo* EveVirtualCameraTransitionBase::ExposeToBlue()
-{
+const Be::ClassInfo* EveVirtualCameraTransitionBase::ExposeToBlue(){
 	EXPOSURE_BEGIN( EveVirtualCameraTransitionBase, "" )
-	EXPOSURE_END()
+		EXPOSURE_END()
 }
 
 BLUE_DEFINE( EveVirtualCameraTransitionCut );
 
-const Be::ClassInfo* EveVirtualCameraTransitionCut::ExposeToBlue()
-{
+const Be::ClassInfo* EveVirtualCameraTransitionCut::ExposeToBlue(){
 	EXPOSURE_BEGIN( EveVirtualCameraTransitionCut, "A transition that cuts quickly to a target camera." )
-	EXPOSURE_CHAINTO( EveVirtualCameraTransitionBase )
+		EXPOSURE_CHAINTO( EveVirtualCameraTransitionBase )
 }
 
 BLUE_DEFINE( EveVirtualCameraTransitionLerp );

@@ -15,9 +15,10 @@ enum class ShadingLanguage
 class CodeStream : public std::stringstream
 {
 public:
-	explicit CodeStream( const ShadingLanguage lang )
-		: shadingLanguage( lang )
-	{}
+	explicit CodeStream( const ShadingLanguage lang ) :
+		shadingLanguage( lang )
+	{
+	}
 
 	virtual void Endl() = 0;
 	virtual void ChangeLocation( const FileLocation& location ) = 0;
@@ -36,6 +37,7 @@ public:
 	void ChangeLocation( const FileLocation& location ) override;
 	void Indent() override;
 	void Unindent() override;
+
 private:
 	ParserState& m_state;
 	FileLocation m_location;
@@ -54,9 +56,15 @@ inline CodeStream& operator<<( CodeStream& os, const FileLocation& location )
 	return os;
 }
 
-struct Indent {};
-struct Unindent {};
-struct Endl {};
+struct Indent
+{
+};
+struct Unindent
+{
+};
+struct Endl
+{
+};
 
 inline CodeStream& operator<<( CodeStream& os, const Indent& )
 {

@@ -21,11 +21,17 @@ public:
 	EveSocketParameterBindingBase( IRoot* lockobj = nullptr );
 	~EveSocketParameterBindingBase();
 
-	virtual const char* GetName() const { return m_name.c_str(); }
-	virtual void SetName( const char* name ) { m_name = name; }
+	virtual const char* GetName() const
+	{
+		return m_name.c_str();
+	}
+	virtual void SetName( const char* name )
+	{
+		m_name = name;
+	}
 
 	virtual void ClearBindings();
-	virtual bool BindToExternalParameter( Tr2ExternalParameter& externalParameter );
+	virtual bool BindToExternalParameter( Tr2ExternalParameter & externalParameter );
 	bool Used() const;
 
 	virtual void Propagate();
@@ -40,23 +46,25 @@ protected:
 TYPEDEF_BLUECLASS( EveSocketParameterBindingBase );
 
 
-#define SOCKET_PARAM_DECLARE( _className, _valueType )\
-	BLUE_CLASS( _className ) :\
-		public EveSocketParameterBindingBase\
-	{\
-	public:\
-		EXPOSE_TO_BLUE();\
-		_className( IRoot* lockobj = nullptr );\
-		~_className();\
-		virtual void ClearBindings();\
-		virtual void Reset();\
-		virtual void SetValueToDefault();\
-	protected:\
-		virtual bool ExtractDefault( const Tr2ExternalParameter& externalParameter );\
-	private:\
-		_valueType m_value;\
-		std::vector<_valueType> m_defaults;\
-	};\
+#define SOCKET_PARAM_DECLARE( _className, _valueType )                                \
+	BLUE_CLASS( _className ) :                                                        \
+		public EveSocketParameterBindingBase                                          \
+	{                                                                                 \
+	public:                                                                           \
+		EXPOSE_TO_BLUE();                                                             \
+		_className( IRoot* lockobj = nullptr );                                       \
+		~_className();                                                                \
+		virtual void ClearBindings();                                                 \
+		virtual void Reset();                                                         \
+		virtual void SetValueToDefault();                                             \
+                                                                                      \
+	protected:                                                                        \
+		virtual bool ExtractDefault( const Tr2ExternalParameter& externalParameter ); \
+                                                                                      \
+	private:                                                                          \
+		_valueType m_value;                                                           \
+		std::vector<_valueType> m_defaults;                                           \
+	};                                                                                \
 	TYPEDEF_BLUECLASS( _className );
 
 SOCKET_PARAM_DECLARE( EveSocketParameterBool, bool );
@@ -79,11 +87,17 @@ public:
 
 	bool Initialize();
 
-	const char* GetName() const { return m_name.c_str(); }
-	void SetName( const char* name ) { m_name = name; }
+	const char* GetName() const
+	{
+		return m_name.c_str();
+	}
+	void SetName( const char* name )
+	{
+		m_name = name;
+	}
 
 	void ClearBindings();
-	bool BindToExternalParameter( Tr2ExternalParameter& externalParameter );
+	bool BindToExternalParameter( Tr2ExternalParameter & externalParameter );
 	void SetValueToDefault();
 	bool Used() const;
 

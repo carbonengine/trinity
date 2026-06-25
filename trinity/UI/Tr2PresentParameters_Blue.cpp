@@ -9,34 +9,26 @@ BLUE_DEFINE( Tr2PresentParameters );
 const Be::ClassInfo* Tr2PresentParameters::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2PresentParameters, "Structure used to pass values to functions creating the device" )
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"backBufferWidth",
 			mode.width,
 			"",
-			Be::READWRITE
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE )
+		MAP_ATTRIBUTE(
 			"backBufferHeight",
 			mode.height,
 			"",
-			Be::READWRITE
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE )
+		MAP_ATTRIBUTE(
 			"windowed",
 			windowed,
 			"",
-			Be::READWRITE
-		)
-		MAP_ATTRIBUTE_WITH_CHOOSER
-		(
+			Be::READWRITE )
+		MAP_ATTRIBUTE_WITH_CHOOSER(
 			"software",
 			software,
 			"",
 			Be::READWRITE | Be::ENUM,
-			TriDeviceTypeChooser
-		)
+			TriDeviceTypeChooser )
 	EXPOSURE_END()
 }

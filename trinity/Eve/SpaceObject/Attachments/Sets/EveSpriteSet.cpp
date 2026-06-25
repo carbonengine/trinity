@@ -26,8 +26,8 @@ const Tr2VertexDefinition& EveSpriteSet::PoolVertex::GetDefinition()
 		vd.Add( vd.FLOAT32_3, vd.POSITION, 0, 1, 1 );
 		vd.Add( vd.FLOAT16_4, vd.TEXCOORD, 0, 1, 1 );
 		vd.Add( vd.FLOAT16_2, vd.TEXCOORD, 1, 1, 1 );
-		vd.Add( vd.UBYTE_4_NORM , vd.COLOR, 0, 1, 1 );
-		vd.Add( vd.UBYTE_4_NORM , vd.COLOR, 1, 1, 1 );
+		vd.Add( vd.UBYTE_4_NORM, vd.COLOR, 0, 1, 1 );
+		vd.Add( vd.UBYTE_4_NORM, vd.COLOR, 1, 1, 1 );
 	}
 	return s_spriteVertexDecl;
 }
@@ -41,7 +41,6 @@ EveSpriteLight::EveSpriteLight() :
 	maxScale( 0 ),
 	boneMatrix( IdentityMatrix() )
 {
-
 }
 
 EveSpriteLight::EveSpriteLight( const LightData& lightData, float blinkPhase, float blinkRate, float minScale, float maxScale, uint32_t index, const std::wstring& profilePath ) :
@@ -83,7 +82,7 @@ bool EveSpriteSet::Initialize()
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Adds sprites to render as booster glow with quad renderer if quad rendering 
+//   Adds sprites to render as booster glow with quad renderer if quad rendering
 //   was enabled with UseQuadRenderer call.
 // Arguments:
 //   quadRenderer - quad renderer
@@ -99,13 +98,12 @@ void EveSpriteSet::AddBoosterGlowToQuadRenderer( Tr2QuadRenderer& quadRenderer, 
 	Matrix m = IdentityMatrix();
 	auto n = m_spriteData.size();
 
-	XMVector3TransformCoordStream( reinterpret_cast
-		<XMFLOAT3*>( &m_buffer[0].position ), 
-		sizeof( PoolVertex ), 
-		reinterpret_cast<XMFLOAT3*>( &m_spriteData[0].position ), 
-		sizeof( SpriteData ), 
-		uint32_t( n ), 
-		world );
+	XMVector3TransformCoordStream( reinterpret_cast<XMFLOAT3*>( &m_buffer[0].position ),
+								   sizeof( PoolVertex ),
+								   reinterpret_cast<XMFLOAT3*>( &m_spriteData[0].position ),
+								   sizeof( SpriteData ),
+								   uint32_t( n ),
+								   world );
 
 	Float_16 zDirX( XMConvertFloatToHalf( world.GetZ().x ) );
 	Float_16 zDirY( XMConvertFloatToHalf( world.GetZ().y ) );
@@ -183,12 +181,12 @@ void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matri
 	auto n = m_spriteData.size();
 	if( !m_skinned )
 	{
-		XMVector3TransformCoordStream( 
-			reinterpret_cast<XMFLOAT3*>( &m_buffer[0].position ), 
-			sizeof( PoolVertex ), 
-			reinterpret_cast<XMFLOAT3*>( &m_spriteData[0] ), 
-			sizeof( SpriteData ), 
-			uint32_t( n ), 
+		XMVector3TransformCoordStream(
+			reinterpret_cast<XMFLOAT3*>( &m_buffer[0].position ),
+			sizeof( PoolVertex ),
+			reinterpret_cast<XMFLOAT3*>( &m_spriteData[0] ),
+			sizeof( SpriteData ),
+			uint32_t( n ),
 			parentTransform );
 	}
 	else
@@ -200,14 +198,14 @@ void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matri
 			{
 				TriMatrixCopyFrom3x4( &m, &bones[boneIndex] );
 				XMVECTOR position = XMVector3TransformCoord( XMLoadFloat3( reinterpret_cast<XMFLOAT3*>( &m_spriteData[i] ) ), m );
-				XMStoreFloat3( 
-					reinterpret_cast<XMFLOAT3*>( &m_buffer[i].position ), 
+				XMStoreFloat3(
+					reinterpret_cast<XMFLOAT3*>( &m_buffer[i].position ),
 					XMVector3TransformCoord( position, parentTransform ) );
 			}
 			else
 			{
-				XMStoreFloat3( 
-					reinterpret_cast<XMFLOAT3*>( &m_buffer[i].position ), 
+				XMStoreFloat3(
+					reinterpret_cast<XMFLOAT3*>( &m_buffer[i].position ),
 					XMVector3TransformCoord( XMLoadFloat3( reinterpret_cast<XMFLOAT3*>( &m_spriteData[i] ) ), parentTransform ) );
 			}
 		}
@@ -222,17 +220,17 @@ void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matri
 
 void EveSpriteSet::Clear()
 {
-	m_sprites.Remove(-1);
+	m_sprites.Remove( -1 );
 }
 
-void EveSpriteSet::Add( 
-	const Vector3& pos, 
-	float blinkRate, 
-	float blinkPhase, 
-	float minScale, 
-	float maxScale, 
-	float falloff, 
-	const Color& color, 
+void EveSpriteSet::Add(
+	const Vector3& pos,
+	float blinkRate,
+	float blinkPhase,
+	float minScale,
+	float maxScale,
+	float falloff,
+	const Color& color,
 	const Color& warpColor )
 {
 	EveSpriteSetItemPtr item;
@@ -318,12 +316,12 @@ void EveSpriteSet::Rebuild()
 		auto& vertex = m_buffer[i];
 		vertex.position = sprite->m_position;
 		uint32_t color = sprite->m_color;
-		vertex.color = 
+		vertex.color =
 			( ( color & 0xff0000 ) >> 16 ) |
 			( color & 0xff00ff00 ) |
 			( ( color & 0xff ) << 16 );
 		color = sprite->m_warpColor;
-		vertex.warpColor = 
+		vertex.warpColor =
 			( ( color & 0xff0000 ) >> 16 ) |
 			( color & 0xff00ff00 ) |
 			( ( color & 0xff ) << 16 );
@@ -425,7 +423,6 @@ void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 				10,
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
-
 		}
 	}
 }
@@ -436,7 +433,7 @@ void EveSpriteSet::SetShaderOption( const BlueSharedString& name, const BlueShar
 	{
 		m_effect->SetOption( name, value );
 		m_effectHash = m_effect->GetHashValue();
-		RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );		
+		RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 	}
 }
 
@@ -467,6 +464,6 @@ void EveSpriteSet::GetLights( Tr2LightManager& lightManager ) const
 		float blinkScale = EveSpaceObjectAttachmentUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
 		data.radius *= blinkScale;
 		data.innerRadius = Float_16( float( data.innerRadius ) * blinkScale );
-		lightManager.AddLight(data);
+		lightManager.AddLight( data );
 	}
 }

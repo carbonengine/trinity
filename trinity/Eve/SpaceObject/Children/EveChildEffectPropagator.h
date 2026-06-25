@@ -29,20 +29,20 @@ public:
 	void Stop();
 
 	bool Initialize() override;
-	bool OnModified( Be::Var* value ) override;
+	bool OnModified( Be::Var * value ) override;
 
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
 	void SetControllerVariable( const char* name, float value ) override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
 
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
@@ -79,11 +79,11 @@ private:
 		}
 	};
 
-	void ProcessLocators( IEveSpaceObject2* parent );
+	void ProcessLocators( IEveSpaceObject2 * parent );
 	void ProcessRandomSpreadLocators();
 	void RecalculateLocatorSizes();
 	void ProcessLocalLocators();
-	void ProcessRefLocators( IEveSpaceObject2* parent );
+	void ProcessRefLocators( IEveSpaceObject2 * parent );
 
 	void UpdateTriggerCurve( const EveUpdateContext& updateContext );
 	void UpdateTriggerInterval( const EveUpdateContext& updateContext );
@@ -93,12 +93,12 @@ private:
 	int GetSmartRandomLocatorIndex();
 
 	EveChildInstanceContainer* GetEffect() const;
-	void SetEffect( EveChildInstanceContainer* effect );
+	void SetEffect( EveChildInstanceContainer * effect );
 
 	float m_playTime;
 
-	EveChildInstanceContainerPtr m_effect;			// Child containing trigger effect
-	IEveSpaceObjectChildPtr m_effectShared;			// Child containing shared parts of the effect (particle systems etc.)
+	EveChildInstanceContainerPtr m_effect; // Child containing trigger effect
+	IEveSpaceObjectChildPtr m_effectShared; // Child containing shared parts of the effect (particle systems etc.)
 
 	Vector3 m_effectScaling;
 	float m_randScaleMin;
@@ -118,12 +118,12 @@ private:
 	float m_delayTimer;
 	bool m_replayAfterDelay;
 
-	// Locator By Referance 
+	// Locator By Referance
 	BlueSharedString m_locatorSetName;
 	float m_completeness;
 
 	// RANDOM_SPREAD
-	int64_t  m_numTriggers;
+	int64_t m_numTriggers;
 	float m_rndRange;
 	float m_rndClosenessPreference;
 	float m_rndMinRangeThreshold;

@@ -10,14 +10,15 @@ BLUE_DECLARE_INTERFACE( ITr2InstanceData );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   ITr2InstanceData is an interface for instance data provider that is intended to 
+//   ITr2InstanceData is an interface for instance data provider that is intended to
 //   work with Tr2InstancedMesh class. Classes implementing ITr2InstanceData interface
 //   are able to provide vertex buffers and declarations to be used as instance stream
 //   for instanced rendering.
 // See Also:
 //   Tr2InstancedMesh, TriGeometryRes, Tr2SpriteParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_INTERFACE( ITr2InstanceData ) : public IRoot
+BLUE_INTERFACE( ITr2InstanceData ) :
+	public IRoot
 {
 	// --------------------------------------------------------------------------------------
 	// Description:

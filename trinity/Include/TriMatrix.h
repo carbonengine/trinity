@@ -4,122 +4,114 @@
 #define _TRIMATRIX_H_
 
 #define TRIMATRIX_Description \
-"Simple mapping of Matrix over to Blue so that it can be used in Python"
+	"Simple mapping of Matrix over to Blue so that it can be used in Python"
 
 #include "ITriMatrix.h"
 
-#pragma warning (disable: 4275) // non dll-interface struct 'Matrix'
+#pragma warning( disable : 4275 ) // non dll-interface struct 'Matrix'
 
 BLUE_INTERFACE( ITriVector );
 BLUE_INTERFACE( ITriQuaternion );
 
-class TriMatrix :
-	public ITriMatrix,
+class TriMatrix : public ITriMatrix,
 #if BLUE_WITH_PYTHON
-	public IPythonMethods,
+				  public IPythonMethods,
 #endif
-	public Matrix
+				  public Matrix
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	TriMatrix(IRoot* lockobj = NULL);
+	TriMatrix( IRoot* lockobj = NULL );
 	~TriMatrix();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriMatrix
 	/////////////////////////////////////////////////////////////////////////////////////
 	void SetPivots(
-		float _11, float _12, float _13, float _14,
-		float _21, float _22, float _23, float _24,
-		float _31, float _32, float _33, float _34,
-		float _41, float _42, float _43, float _44
-		);
+		float _11,
+		float _12,
+		float _13,
+		float _14,
+		float _21,
+		float _22,
+		float _23,
+		float _24,
+		float _31,
+		float _32,
+		float _33,
+		float _34,
+		float _41,
+		float _42,
+		float _43,
+		float _44 );
 
 	void SetMatrix(
-		const Matrix* m
-		);
+		const Matrix* m );
 
-	const Matrix* GetMatrix(
-		) const;
+	const Matrix* GetMatrix() const;
 
 	Matrix* CopyMatrix(
-		Matrix* in
-		) const;
+		Matrix* in ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IMatrix
 	/////////////////////////////////////////////////////////////////////////////////////
 
-	float Determinant(	  
-		); 
+	float Determinant();
 
-	void Identity(
-		); 
+	void Identity();
 
-	float Inverse(
-		); 
+	float Inverse();
 
-	void LookAtRH(	  
+	void LookAtRH(
 		const Vector3* pEye,
 		const Vector3* pAt,
-		const Vector3* pUp
-		); 
+		const Vector3* pUp );
 
-	void Multiply(		  
-	  const Matrix* pM2
-	); 
+	void Multiply(
+		const Matrix* pM2 );
 
-	void RotationAxis(	  
+	void RotationAxis(
 		const Vector3* pV,
-		float Angle
-		); 
+		float Angle );
 
-	void RotationQuaternion(	
-		const Quaternion* pQ
-		); 
+	void RotationQuaternion(
+		const Quaternion* pQ );
 
-	void RotationX(	  
-		float Angle
-		); 
+	void RotationX(
+		float Angle );
 
 	void RotationY(
-		float Angle
-		); 
-	
+		float Angle );
+
 	void RotationYawPitchRoll(
 		float Yaw,
 		float Pitch,
-		float Roll
-		); 
+		float Roll );
 
 	void RotationZ(
-		float Angle
-		); 
+		float Angle );
 
-	void Scaling(	  
+	void Scaling(
 		float sx,
 		float sy,
-		float sz
-		); 
+		float sz );
 
-	void Transformation(	  
+	void Transformation(
 		const Vector3* pScalingCenter,
 		const Quaternion* pScalingRotation,
 		const Vector3* pScaling,
 		const Vector3* pRotationCenter,
 		const Quaternion* pRotation,
-		const Vector3* pTranslation
-		); 
+		const Vector3* pTranslation );
 
-	void Translation(	  
+	void Translation(
 		float x,
 		float y,
-		float z
-		); 
+		float z );
 
-	void Transpose(	  	  
-		); 
+	void Transpose();
 
 
 
@@ -127,23 +119,19 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IPythonMethods
 	/////////////////////////////////////////////////////////////////////////////////////
-	void Destroy(
-		);
+	void Destroy();
 
-	PyObject* GetAttr( 
-		const char* name, 
-		bool* handled
-		);
+	PyObject* GetAttr(
+		const char* name,
+		bool* handled );
 
 	bool SetAttr(
 		const char* name,
 		PyObject* v,
-		bool* handled
-		);
+		bool* handled );
 
 	PyObject* Repr(
-		bool* handled
-		);
+		bool* handled );
 #endif
 
 public:
@@ -154,7 +142,7 @@ public:
 	void PyMultiply( ITriMatrix* other );
 	void PyRotationAxis( ITriVector* axis, float angle );
 	void PyRotationQuaternion( ITriQuaternion* quaternion );
-	void PyTransformation( 
+	void PyTransformation(
 		ITriVector* scalingCenter,
 		ITriQuaternion* scalingRotation,
 		ITriVector* scaling,
@@ -162,7 +150,6 @@ public:
 		ITriQuaternion* rotation,
 		ITriVector* translation );
 };
-TYPEDEF_BLUECLASS(TriMatrix);
+TYPEDEF_BLUECLASS( TriMatrix );
 
 #endif
-

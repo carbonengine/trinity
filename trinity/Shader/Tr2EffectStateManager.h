@@ -51,14 +51,14 @@ public:
 	enum
 	{
 		// 16 textures/samplers per shader
-		SAMPLER_MAX_COUNT		= 16,
+		SAMPLER_MAX_COUNT = 16,
 		VERTEX_STREAM_MAX_COUNT = 4,
-		UNKNOWN					= 0XFFFFFFFFu
+		UNKNOWN = 0XFFFFFFFFu
 	};
 
 	enum RenderingMode
 	{
-		RM_ANY,	// Don't care about the render state
+		RM_ANY, // Don't care about the render state
 		RM_OPAQUE,
 		RM_DECAL,
 		RM_DECAL_NO_DEPTH,
@@ -70,14 +70,14 @@ public:
 		RM_SPRITE2D,
 		RM_CULL,
 		RM_LIGHT,
-        RM_ERASE,
-        RM_PREPASS_COLOR,
+		RM_ERASE,
+		RM_PREPASS_COLOR,
 
 		RM_COUNT
 	};
 
-	enum 
-	{ 
+	enum
+	{
 		UNINITIALIZED_DECLARATION = ~0u,
 		NULL_DECLARATION = ~0u - 1
 	};
@@ -91,7 +91,7 @@ public:
 
 	void ApplyStreamSource( uint32_t stream, const Tr2SuballocatedBuffer::Allocation& vertices );
 
-	void ApplyStreamSource( uint32_t stream, const Tr2BufferAL & buffer, uint32_t offset, uint32_t stride );
+	void ApplyStreamSource( uint32_t stream, const Tr2BufferAL& buffer, uint32_t offset, uint32_t stride );
 	void ApplyIndexBuffer( const Tr2BufferAL& indices );
 
 	void ApplyIndexBuffer( const Tr2SuballocatedBuffer::Allocation& indices );
@@ -104,8 +104,8 @@ public:
 	typedef std::map<Tr2RenderContextEnum::RenderState, uint32_t> Tr2RenderStateSetup;
 
 
-	static uint32_t RegisterShader( 
-		Tr2RenderContextEnum::ShaderType type, 
+	static uint32_t RegisterShader(
+		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
 		const Tr2ShaderSignatureAL& signature,
 		const char* shaderPath );
@@ -115,7 +115,7 @@ public:
 	static uint32_t RegisterShaderLibrary( const Tr2ShaderBytecodeAL& bytecode );
 	static const Tr2ShaderBytecodeAL* GetShaderLibraryCode( uint32_t handle );
 
-	static uint32_t RegisterRenderStateSetup( 
+	static uint32_t RegisterRenderStateSetup(
 		const Tr2RenderStateSetup& rss );
 
 	void SetWireframeRendering( bool b );
@@ -141,20 +141,21 @@ public:
 	unsigned int GetRenderTargetWidth();
 	unsigned int GetRenderTargetHeight();
 
-	void PushRenderTarget( unsigned slot = 0 );	// does not set any RT, just stores the current one so it can be safely changed later
+	void PushRenderTarget( unsigned slot = 0 ); // does not set any RT, just stores the current one so it can be safely changed later
 	void PushRenderTarget( const Tr2TextureAL& rt, unsigned slot = 0 );
 	void PopRenderTarget( unsigned slot = 0 );
 	bool SetRenderTarget( unsigned int index, const Tr2TextureAL& rt, bool updateViewport = true, uint32_t slice = 0 );
 
-	bool PushDepthStencilBuffer();	// does not set a DS, just stores it so it can be safely changed later
+	bool PushDepthStencilBuffer(); // does not set a DS, just stores it so it can be safely changed later
 	bool PushDepthStencilBuffer( const Tr2TextureAL& ds );
 	void PopDepthStencilBuffer();
 	bool SetDepthStencilBuffer( const Tr2TextureAL& ds );
-	
+
 	void SetupContextResources();
 	void AssignFrom( const Tr2EffectStateManager& other );
 
 	void UpdateRenderTargetViewport( unsigned width, unsigned height );
+
 private:
 	friend class Tr2EffectRes;
 	friend class Tr2LowLevelShader;
@@ -162,15 +163,15 @@ private:
 	void SetRenderStateOverride( Tr2RenderContextEnum::RenderState state, const uint32_t* overrides );
 	void DoApplyRenderStates( uint32_t ix );
 
-	Tr2RenderContext&	m_renderContext;
+	Tr2RenderContext& m_renderContext;
 
 	// used by SetPerObjectDataToDevice
-	Tr2ConstantBufferAL		m_perObjectConstantBuffers[ Tr2RenderContextEnum::CBUFFER_COUNT ];
-	
+	Tr2ConstantBufferAL m_perObjectConstantBuffers[Tr2RenderContextEnum::CBUFFER_COUNT];
+
 	struct CurrentValues
 	{
 		void Reset();
-		
+
 		uint32_t m_shaderProgram;
 
 		uint32_t m_vertexDeclaration;
@@ -195,8 +196,8 @@ private:
 
 	struct RenderStates
 	{
-		RenderStates()
-			:dirty( true )
+		RenderStates() :
+			dirty( true )
 		{
 		}
 
@@ -222,8 +223,8 @@ private:
 	void SetupViewport();
 
 
-	Tr2EffectStateManager( const Tr2EffectStateManager & );
-	Tr2EffectStateManager& operator=( const Tr2EffectStateManager & );
+	Tr2EffectStateManager( const Tr2EffectStateManager& );
+	Tr2EffectStateManager& operator=( const Tr2EffectStateManager& );
 };
 
 #endif //Tr2EffectStateManager_h

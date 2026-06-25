@@ -17,9 +17,9 @@ BLUE_DECLARE_IVECTOR( ITr2AttributeGenerator );
 // See Also:
 //   ITr2GenericEmitter, Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2DynamicEmitter ): 
+BLUE_CLASS( Tr2DynamicEmitter ) :
 	public ITr2GenericEmitter,
-	public INotify, 
+	public INotify,
 	public IInitialize
 {
 public:
@@ -37,18 +37,18 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2GenericEmitter
 	void Update( const UpdateArguments& arguments );
 	void SpawnParticles( const UpdateArguments& arguments, const Vector3* position = nullptr, const Vector3* velocity = nullptr, float rateModifier = 1.0f );
-	void SpawnParticles( 
-		const UpdateArguments& arguments, 
-		const Vector3 *positionStart, 
-		const Vector3 *positionEnd,
-		const Vector3 *velocityStart, 
-		const Vector3 *velocityEnd,
+	void SpawnParticles(
+		const UpdateArguments& arguments,
+		const Vector3* positionStart,
+		const Vector3* positionEnd,
+		const Vector3* velocityStart,
+		const Vector3* velocityEnd,
 		float deltaTime );
 	void SetThreadSafeFlag();
 
@@ -57,6 +57,7 @@ public:
 
 	void ResetEmittedParticleCount();
 	uint32_t GetEmittedParticleCount() const;
+
 private:
 	void UpdateSimulation( float dt );
 	// Just a name

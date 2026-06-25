@@ -32,16 +32,18 @@ public:
 	/////////////////////////////////////////////////////////////
 	// Tr2DeviceResource
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
+
 public:
 #if TRINITYDEV
-	void GetDescription( std::string& desc );
+	void GetDescription( std::string & desc );
 #endif
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Update
-	void Update( EveUpdateContext& updateContext );
+	void Update( EveUpdateContext & updateContext );
 
 	// access block IDs
 	int32_t RequestBlockData( const Vector4* headerData, uint32_t blockLength, const Vector4* blockData, float priority );
@@ -51,7 +53,7 @@ public:
 
 	// set variables to the variable store
 	void SetVariables();
-	
+
 private:
 	// general data
 	BlueSharedString m_name;

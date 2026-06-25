@@ -19,17 +19,16 @@ class ITriRenderBatchAccumulator;
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Tr2InteriorLightSource represents an interior light, which can behave as either a 
-//   point or spot light, depending on parameters.  Lights are managed at the 
+//   Tr2InteriorLightSource represents an interior light, which can behave as either a
+//   point or spot light, depending on parameters.  Lights are managed at the
 //   Tr2InteriorScene level.
 // See Also:
 //   Tr2InteriorScene, Tr2InteriorLightSet
 // --------------------------------------------------------------------------------------
-class Tr2InteriorLightSource :
-	public INotify,
-	public IInitialize,
-	public ITr2InteriorLight,
-	public ITr2DebugRenderable
+class Tr2InteriorLightSource : public INotify,
+							   public IInitialize,
+							   public ITr2InteriorLight,
+							   public ITr2DebugRenderable
 {
 public:
 	// Constructor
@@ -39,17 +38,17 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-    using IInitialize::Lock;
-    using IInitialize::Unlock;
+	using IInitialize::Lock;
+	using IInitialize::Unlock;
 
 	// Initialization callback
-    bool Initialize();
+	bool Initialize();
 
 	// Value-modified callback
 	bool OnModified( Be::Var* val );
 
-    //////////////////////////////////////////////////////////////////////////
-    // ITr2InteriorCullable
+	//////////////////////////////////////////////////////////////////////////
+	// ITr2InteriorCullable
 	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const;
 
 	/////////////////////////////////////////////////////////////
@@ -67,10 +66,10 @@ public:
 
 	// Light position
 	Vector3 m_position;
-	
+
 	// Spotlight direction
 	Vector3 m_coneDirection;
-	
+
 	// Outer spotlight angle
 	float m_coneAlphaOuter;
 
@@ -85,9 +84,12 @@ public:
 
 protected:
 	// Is this a spotlight?
-	bool IsSpotLight()					const { return ( m_coneAlphaOuter < 89.f ); }
-protected:
+	bool IsSpotLight() const
+	{
+		return ( m_coneAlphaOuter < 89.f );
+	}
 
+protected:
 	// Light names
 	std::string m_name;
 

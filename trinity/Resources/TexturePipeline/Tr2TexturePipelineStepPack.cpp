@@ -7,37 +7,34 @@ using namespace Tr2RenderContextEnum;
 
 namespace
 {
-	uint32_t SwapRedBlue( uint8_t channel )
+uint32_t SwapRedBlue( uint8_t channel )
+{
+	switch( channel )
 	{
-		switch( channel )
-		{
-		case 0:
-			return 2;
-		case 2:
-			return 0;
-		default:
-			return channel;
-		}
+	case 0:
+		return 2;
+	case 2:
+		return 0;
+	default:
+		return channel;
 	}
 }
-
-
-Tr2TexturePackChannel::Tr2TexturePackChannel( IRoot* )
-	:m_channel( 0 ),
-	m_fill( 0 )
-{
-
 }
 
-Tr2TexturePipelineStepPack::Tr2TexturePipelineStepPack( IRoot* lockobj ):
+
+Tr2TexturePackChannel::Tr2TexturePackChannel( IRoot* ) :
+	m_channel( 0 ),
+	m_fill( 0 )
+{
+}
+
+Tr2TexturePipelineStepPack::Tr2TexturePipelineStepPack( IRoot* lockobj ) :
 	m_format( PIXEL_FORMAT_B8G8R8A8_UNORM ),
 	PARENTLOCK( m_r ),
 	PARENTLOCK( m_g ),
 	PARENTLOCK( m_b ),
 	PARENTLOCK( m_a )
 {
-
-
 }
 
 void Tr2TexturePipelineStepPack::GetResourceDependencies( std::set<std::wstring>& resources ) const

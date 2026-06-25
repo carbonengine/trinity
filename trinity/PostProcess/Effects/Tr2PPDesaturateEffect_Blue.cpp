@@ -13,8 +13,5 @@ const Be::ClassInfo* Tr2PPDesaturateEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "intensity", m_intensity, "The intensity of the saturation", Be::READWRITE | Be::PERSIST )
 
 
-		EXPOSURE_CHAINTO( Tr2PPEffect )
-
-
+	EXPOSURE_CHAINTO( Tr2PPEffect )
 }
-

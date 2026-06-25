@@ -14,7 +14,8 @@
 // See Also:
 //   ITr2AttributeGenerator, Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2SphereShapeAttributeGenerator ): public ITr2AttributeGenerator
+BLUE_CLASS( Tr2SphereShapeAttributeGenerator ) :
+	public ITr2AttributeGenerator
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -23,12 +24,13 @@ public:
 	~Tr2SphereShapeAttributeGenerator();
 
 	void Generate( const Vector3* position, const Vector3* velocity, float** particle );
-	bool Bind( const Tr2ParticleElementDataMap& declaration, 
-			   std::set<Tr2ParticleElementDeclarationName> &boundElements );
+	bool Bind( const Tr2ParticleElementDataMap& declaration,
+			   std::set<Tr2ParticleElementDeclarationName>& boundElements );
 	std::string GetName() const;
 
-	void GetTransform( Vector3& position, Quaternion& rotation );
+	void GetTransform( Vector3 & position, Quaternion & rotation );
 	void SetTransform( const Vector3& position, const Quaternion& rotation );
+
 private:
 	// Generator position
 	Vector3 m_position;

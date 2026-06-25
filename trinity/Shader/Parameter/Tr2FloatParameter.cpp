@@ -5,7 +5,7 @@
 #include "TriValueBinding.h"
 #include "Shader/Tr2Shader.h"
 
-Tr2FloatParameter::Tr2FloatParameter(IRoot* lockobj):
+Tr2FloatParameter::Tr2FloatParameter( IRoot* lockobj ) :
 	m_value( 1.0f ),
 	m_name(),
 	m_isUsedByEffect( false ),
@@ -29,19 +29,19 @@ unsigned Tr2FloatParameter::GetHashValue( unsigned startingHash ) const
 	return CcpHashFNV1( &name, sizeof( name ), CcpHashFNV1( &m_value, sizeof( m_value ), startingHash ) );
 }
 
-void Tr2FloatParameter::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-											unsigned char* destHandle, 
-											size_t size,
-											Tr2RenderContext &renderContext ) const
+void Tr2FloatParameter::CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+										   unsigned char* destHandle,
+										   size_t size,
+										   Tr2RenderContext& renderContext ) const
 {
 	// We need this to work even when the effect we're copying this to isn't the one that we're bound to
 	if( m_reroutedValue )
 	{
-		memcpy( destHandle, m_reroutedValue, size < sizeof(m_value) ? size : sizeof(m_value) );
+		memcpy( destHandle, m_reroutedValue, size < sizeof( m_value ) ? size : sizeof( m_value ) );
 	}
 	else
 	{
-		memcpy( destHandle, &m_value, size < sizeof(m_value) ? size : sizeof( m_value ) );
+		memcpy( destHandle, &m_value, size < sizeof( m_value ) ? size : sizeof( m_value ) );
 	}
 }
 

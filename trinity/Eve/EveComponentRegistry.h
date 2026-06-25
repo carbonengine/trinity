@@ -26,12 +26,12 @@ inline const char* GetComponentName()
 	static_assert( workAroundForCppStandard<T>::value, "Type being used as a component which hasn't been registered via REGISTER_COMPONENT_TYPE" );
 }
 
-#define REGISTER_COMPONENT_TYPE( name, componentType )	\
-					                                  \
-	template <>       \
-	inline const char* GetComponentName<componentType>()         \
-	{                         \
-	     return name;                   \
+#define REGISTER_COMPONENT_TYPE( name, componentType )   \
+                                                         \
+	template <>                                          \
+	inline const char* GetComponentName<componentType>() \
+	{                                                    \
+		return name;                                     \
 	};
 
 class IEveComponentCollection
@@ -80,14 +80,14 @@ public:
 
 	// Registers a specific components for a specific entity, creates a component collection if it doesn´t exist
 	template <typename T>
-	void RegisterComponent( EveEntity* entity );
+	void RegisterComponent( EveEntity * entity );
 
 	// UnRegisters a single component for a specific entity
 	template <typename T>
-	void UnRegisterComponent( EveEntity* entity );
+	void UnRegisterComponent( EveEntity * entity );
 
 	// UnRegisters all components for a specific entity
-	void UnRegisterAllComponents( EveEntity* entity );
+	void UnRegisterAllComponents( EveEntity * entity );
 
 	void Clear();
 
@@ -102,24 +102,24 @@ public:
 	template <typename T, typename R>
 	void ProcessComponentsUntil( R processor ) const;
 
-	template<typename T>
-	const std::vector<T*>& GetComponents(); 
+	template <typename T>
+	const std::vector<T*>& GetComponents();
 
-	template<typename T>
+	template <typename T>
 	size_t ComponentCount() const;
 
-	void Register( EveEntity* entity );
-	void UnRegister( EveEntity* entity );
-	void ReRegister( EveEntity* entity );
+	void Register( EveEntity * entity );
+	void UnRegister( EveEntity * entity );
+	void ReRegister( EveEntity * entity );
 
 private:
 	IEveComponentCollection* GetComponentCollection( const char* componentName ) const;
 
-	void AddToCollection( IEveComponentCollection* collection, EveEntity* entity );
-	void RemoveFromCollection( IEveComponentCollection* collection, EveEntity* entity );
+	void AddToCollection( IEveComponentCollection * collection, EveEntity * entity );
+	void RemoveFromCollection( IEveComponentCollection * collection, EveEntity * entity );
 	void RemoveCollectionFromEntityState( IEveComponentCollection * collection, EveEntity * entity );
 
-	template<typename T>
+	template <typename T>
 	IEveComponentCollection* AddCollection( const char* componentName );
 
 	std::vector<std::pair<const char*, size_t>> GetComponentInfo() const;
@@ -151,7 +151,7 @@ bool EveComponentCollection<T>::Add( EveEntity* entity, uint32_t* index )
 {
 	if( T* component = dynamic_cast<T*>( entity ) )
 	{
-		*index = (uint32_t) m_collection.size();
+		*index = (uint32_t)m_collection.size();
 		m_collection.push_back( component );
 		return true;
 	}
@@ -323,7 +323,7 @@ size_t EveComponentRegistry::ComponentCount() const
 template <typename T>
 IEveComponentCollection* EveComponentRegistry::AddCollection( const char* componentName )
 {
-	int32_t componentCollectionIndex = (int32_t) m_componentCollections.size();
+	int32_t componentCollectionIndex = (int32_t)m_componentCollections.size();
 	// no more than 32 EveComponentCollections can exist, since we use a bitwise comparison in the entity m_state
 	CCP_ASSERT( componentCollectionIndex < 32 );
 

@@ -4,8 +4,8 @@
 #include "CompileMessageQueue.h"
 
 
-CompileMessageQueue::CompileMessageQueue()
-	:m_stop( false )
+CompileMessageQueue::CompileMessageQueue() :
+	m_stop( false )
 {
 	m_thread = std::thread( [this] { this->Run(); } );
 }
@@ -33,7 +33,7 @@ void CompileMessageQueue::AddMessages( IDxcBlobEncoding* blob )
 	if( size > 0 )
 	{
 		m_messagesMutex.lock();
-		m_messages.push( reinterpret_cast<char*>(blob->GetBufferPointer()) );
+		m_messages.push( reinterpret_cast<char*>( blob->GetBufferPointer() ) );
 		m_messagesMutex.unlock();
 		m_queueEvent.notify_one();
 	}
@@ -49,7 +49,7 @@ void CompileMessageQueue::AddMessage( const char* format, ... )
 	va_end( args );
 
 	std::string message;
-	message.resize(count);
+	message.resize( count );
 
 	va_start( args, format );
 	count = vsnprintf( &message[0], message.size(), format, args );
@@ -140,12 +140,12 @@ void CompileMessageQueue::OutputMessages( const char* messages, size_t length )
 	const char* end = messages + 1;
 	while( *start && start - messages < ptrdiff_t( length ) )
 	{
-		if( *end == 0 || end - messages >= ptrdiff_t( length ) || (end[0] == '\n' && (end - messages + 1 >= ptrdiff_t( length ) || !isspace( end[1] ))) )
+		if( *end == 0 || end - messages >= ptrdiff_t( length ) || ( end[0] == '\n' && ( end - messages + 1 >= ptrdiff_t( length ) || !isspace( end[1] ) ) ) )
 		{
 			std::string message( start, end );
 			if( m_printedMessages.insert( message ).second )
 			{
-				const char* memoryRefs[] = { "\\memory(", "/memory(", "/memory:", "memory:"};
+				const char* memoryRefs[] = { "\\memory(", "/memory(", "/memory:", "memory:" };
 				for( auto memoryRef : memoryRefs )
 				{
 					auto pos = message.find( memoryRef );

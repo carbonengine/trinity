@@ -15,8 +15,7 @@ BLUE_DECLARE( TriRenderJob );
 BLUE_DECLARE( Tr2AtlasTexture );
 BLUE_DECLARE( Tr2Effect );
 
-struct Tr2Sprite2dDisplayList:
-	public Tr2DeviceResource
+struct Tr2Sprite2dDisplayList : public Tr2DeviceResource
 {
 	Tr2BufferAL vertexBuffer;
 	Tr2BufferAL indexBuffer;
@@ -35,7 +34,7 @@ struct Tr2Sprite2dDisplayList:
 		Tr2AtlasTexturePtr texture1;
 		Tr2EffectPtr effect;
 		//hardcoded due to need for CB slot//Tr2EffectConstant transformsHandle;
-		Matrix transformArray[ TR2_SS_MAX_TRANSFORM_COUNT ];
+		Matrix transformArray[TR2_SS_MAX_TRANSFORM_COUNT];
 		Tr2ConstantBufferAL* m_uiTransformsCb;
 
 		//////////////////////////////////////////////////////////////////////////
@@ -51,6 +50,7 @@ struct Tr2Sprite2dDisplayList:
 	//////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s ) override;
+
 private:
 	bool OnPrepareResources();
 

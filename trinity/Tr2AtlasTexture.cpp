@@ -11,7 +11,7 @@
 
 using namespace Tr2RenderContextEnum;
 
-Tr2AtlasTexture::Tr2AtlasTexture( IRoot* lockobj ) : 
+Tr2AtlasTexture::Tr2AtlasTexture( IRoot* lockobj ) :
 	m_x( 0 ),
 	m_y( 0 ),
 	m_width( 0 ),
@@ -28,7 +28,7 @@ Tr2AtlasTexture::Tr2AtlasTexture( IRoot* lockobj ) :
 	m_renderTarget( nullptr ),
 	m_memoryUsage( 0 ),
 	m_isLocked( false ),
-    m_isStandAlone( false ),
+	m_isStandAlone( false ),
 	m_changeListeners( "Tr2AtlasTexture/m_changeListeners" )
 {
 }
@@ -129,9 +129,9 @@ void Tr2AtlasTexture::CalcSubTextureWindow( Vector4& tw, float rectX, float rect
 	{
 		rectHeight = (float)m_height;
 	}
-	
-	tw.x = (float)(m_x + rectX) * m_textureWidthReciprocal;
-	tw.y = (float)(m_y + rectY) * m_textureHeightReciprocal;
+
+	tw.x = (float)( m_x + rectX ) * m_textureWidthReciprocal;
+	tw.y = (float)( m_y + rectY ) * m_textureHeightReciprocal;
 	tw.z = (float)rectWidth * m_textureWidthReciprocal;
 	tw.w = (float)rectHeight * m_textureHeightReciprocal;
 }
@@ -171,7 +171,7 @@ void Tr2AtlasTexture::ReleaseResources( TriStorage s )
 	if( texture && texture->GetMemoryClass() & s )
 	{
 		// When managed memory is freed, both standalone textures and the
-		// ones resident in an atlas are purged.		
+		// ones resident in an atlas are purged.
 		CancelPendingLoad();
 
 		m_texture = Tr2TextureAL();
@@ -328,15 +328,16 @@ bool Tr2AtlasTexture::LockBuffer( void*& pData, unsigned int& pitch )
 
 	if( m_isLocked )
 	{
-		CCP_LOGERR( "Tr2AtlasTexture::LockBuffer failed - texture is already locked");
+		CCP_LOGERR( "Tr2AtlasTexture::LockBuffer failed - texture is already locked" );
 		return false;
 	}
 
-	long hr = texture->MapForWriting( 
-		Tr2TextureSubresource( 0 ).SetRect( uint32_t( m_x ), uint32_t( m_y ), uint32_t( m_x + m_width ), uint32_t( m_y + m_height ) ), 
-		pData, 
-		pitch, 
-		renderContext ).GetResult();
+	long hr = texture->MapForWriting(
+						 Tr2TextureSubresource( 0 ).SetRect( uint32_t( m_x ), uint32_t( m_y ), uint32_t( m_x + m_width ), uint32_t( m_y + m_height ) ),
+						 pData,
+						 pitch,
+						 renderContext )
+				  .GetResult();
 
 	if( FAILED( hr ) )
 	{
@@ -349,7 +350,7 @@ bool Tr2AtlasTexture::LockBuffer( void*& pData, unsigned int& pitch )
 	return true;
 }
 
-bool Tr2AtlasTexture::LockBufferAndMargin( void *&data, unsigned &pitch, unsigned &margin )
+bool Tr2AtlasTexture::LockBufferAndMargin( void*& data, unsigned& pitch, unsigned& margin )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -370,11 +371,12 @@ bool Tr2AtlasTexture::LockBufferAndMargin( void *&data, unsigned &pitch, unsigne
 	}
 
 	margin = m_textureAtlas->GetMargin();
-	long hr = texture->MapForWriting( 
-		Tr2TextureSubresource( 0 ).SetRect( uint32_t( m_x - margin ), uint32_t( m_y - margin ), uint32_t( m_x + m_width + margin ), uint32_t( m_y + m_height + margin ) ), 
-		data, 
-		pitch, 
-		renderContext ).GetResult();
+	long hr = texture->MapForWriting(
+						 Tr2TextureSubresource( 0 ).SetRect( uint32_t( m_x - margin ), uint32_t( m_y - margin ), uint32_t( m_x + m_width + margin ), uint32_t( m_y + m_height + margin ) ),
+						 data,
+						 pitch,
+						 renderContext )
+				  .GetResult();
 
 	if( FAILED( hr ) )
 	{
@@ -391,7 +393,7 @@ void Tr2AtlasTexture::UnlockBuffer()
 {
 	if( !m_isLocked )
 	{
-		CCP_LOGWARN( "Tr2AtlasTexture::UnlockBuffer failed - texture is not locked");
+		CCP_LOGWARN( "Tr2AtlasTexture::UnlockBuffer failed - texture is not locked" );
 		return;
 	}
 
@@ -490,11 +492,11 @@ void Tr2AtlasTexture::NotifyListenersOfChange()
 {
 	for( auto it = m_changeListeners.begin(); it != m_changeListeners.end(); ++it )
 	{
-		(*it)->AtlasTextureChanged( this );
+		( *it )->AtlasTextureChanged( this );
 	}
 }
 
-void Tr2AtlasTexture::SetTargetAtlasBeforeLoad( Tr2TextureAtlas *atlas ) 
+void Tr2AtlasTexture::SetTargetAtlasBeforeLoad( Tr2TextureAtlas* atlas )
 {
 	if( m_textureAtlas )
 	{

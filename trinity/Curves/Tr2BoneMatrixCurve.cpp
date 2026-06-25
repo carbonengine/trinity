@@ -85,10 +85,10 @@ void Tr2BoneMatrixCurve::Sort( void )
 	{
 		if( m_keys.size() > 1 )
 		{
-			m_keys.Sort( ( IList::CompareFn )CompareKeys, NULL );
+			m_keys.Sort( (IList::CompareFn)CompareKeys, NULL );
 		}
 		// We might have added a key passed the length of the curve
-		if ( m_keys.back()->m_time > m_length )
+		if( m_keys.back()->m_time > m_length )
 		{
 			Tr2MatrixKey* back = m_keys.back();
 			float preLength = m_length;
@@ -96,8 +96,8 @@ void Tr2BoneMatrixCurve::Sort( void )
 
 			m_length = back->m_time;
 			m_endValue = back->m_value;
-			if ( preLength > 0.0f )
-			{	
+			if( preLength > 0.0f )
+			{
 				back->m_time = preLength;
 				back->m_value = endValue;
 			}
@@ -120,12 +120,11 @@ void Tr2BoneMatrixCurve::Sort( void )
 // Return Value:
 //   The matrix result of the 'interpolation'
 // --------------------------------------------------------------------------------------
-Matrix* Tr2BoneMatrixCurve::Interpolate( Matrix* out, Tr2MatrixKey* /*startKey*/, 
-										 Tr2MatrixKey* /*endKey*/ )
+Matrix* Tr2BoneMatrixCurve::Interpolate( Matrix* out, Tr2MatrixKey* /*startKey*/, Tr2MatrixKey* /*endKey*/ )
 {
 	if( !m_skinnedObject || m_bone.empty() )
 	{
-        *out = XMMatrixIdentity();
+		*out = XMMatrixIdentity();
 		return out;
 	}
 
@@ -138,7 +137,7 @@ Matrix* Tr2BoneMatrixCurve::Interpolate( Matrix* out, Tr2MatrixKey* /*startKey*/
 		}
 	}
 
-	const Matrix * m = m_skinnedObject->GetBoneTransform( m_cachedJoint );
+	const Matrix* m = m_skinnedObject->GetBoneTransform( m_cachedJoint );
 	if( m )
 	{
 		// We've got the bone in local space, now we need to multiply it
@@ -147,7 +146,7 @@ Matrix* Tr2BoneMatrixCurve::Interpolate( Matrix* out, Tr2MatrixKey* /*startKey*/
 	}
 	else
 	{
-        *out = XMMatrixIdentity();
+		*out = XMMatrixIdentity();
 	}
 	return out;
 }

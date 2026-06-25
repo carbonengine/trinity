@@ -28,7 +28,7 @@ void Tr2ActionPlaySound::Start( ITr2ActionController& controller )
 			{
 				owner = BlueCastPtr( mep->GetParameterObject() );
 			}
-		} 
+		}
 		else if( IEveEffectChildrenOwnerPtr childEffectOwner = BlueCastPtr( controller.GetOwner() ) )
 		{
 			owner = BlueCastPtr( childEffectOwner->GetEffectChildByName( m_target.c_str() ) );

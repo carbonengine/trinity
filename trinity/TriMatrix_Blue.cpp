@@ -9,10 +9,10 @@ BLUE_DEFINE( TriMatrix );
 
 const Be::ClassInfo* TriMatrix::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriMatrix, TRIMATRIX_Description)
-		MAP_INTERFACE(ITriMatrix)
+	EXPOSURE_BEGIN( TriMatrix, TRIMATRIX_Description )
+		MAP_INTERFACE( ITriMatrix )
 #if BLUE_WITH_PYTHON
-		MAP_INTERFACE(IPythonMethods)
+		MAP_INTERFACE( IPythonMethods )
 #endif
 
 		MAP_ATTRIBUTE( "_11", _11, "", Be::READWRITE | Be::PERSIST )
@@ -34,147 +34,114 @@ const Be::ClassInfo* TriMatrix::ExposeToBlue()
 
 		////////////////////////////////////////////////////////////////////////////
 		//               __init__
-		MAP_METHOD_AS_METHOD
-		( 
+		MAP_METHOD_AS_METHOD(
 			"__init__",
-			Py__init__, 
-			"Constructor arguments" 
-		)
+			Py__init__,
+			"Constructor arguments" )
 
 		////////////////////////////////////////////////////////////////////////////
 		//               Determinant
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Determinant",
-			Determinant, 
-			"" 
-		)
+			Determinant,
+			"" )
 		////////////////////////////////////////////////////////////////////////////
 		//               Identity
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Identity",
-			Identity, 
-			"" 
-		)
+			Identity,
+			"" )
 		////////////////////////////////////////////////////////////////////////////
 		//               Inverse
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Inverse",
-			Inverse, 
-			"" 
-		)
+			Inverse,
+			"" )
 		////////////////////////////////////////////////////////////////////////////
 		//               LookAtRH
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"LookAtRH",
-			PyLookAtRH, 
+			PyLookAtRH,
 			":param eye: \n"
 			":param at: \n"
-			":param up: \n"
-		)
+			":param up: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               Multiply
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Multiply",
-			PyMultiply, 
-			":param other: \n"
-		)
+			PyMultiply,
+			":param other: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               RotationAxis
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"RotationAxis",
-			PyRotationAxis, 
+			PyRotationAxis,
 			":param axis: \n"
-			":param angle: \n"
-		)////////////////////////////////////////////////////////////////////////////
+			":param angle: \n" ) ////////////////////////////////////////////////////////////////////////////
 		//               RotationQuaternion
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"RotationQuaternion",
-			PyRotationQuaternion, 
-			":param quaternion: \n"
-		)
+			PyRotationQuaternion,
+			":param quaternion: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               RotationX
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"RotationX",
-			RotationX, 
-			":param angle: \n"
-		)
+			RotationX,
+			":param angle: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               RotationY
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"RotationY",
-			RotationY, 
-			":param angle: \n"
-		)
+			RotationY,
+			":param angle: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               RotationYawPitchRoll
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"RotationYawPitchRoll",
-			RotationYawPitchRoll, 
+			RotationYawPitchRoll,
 			":param yaw: \n"
 			":param pitch: \n"
-			":param roll: \n"
-		)
+			":param roll: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               RotationZ
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"RotationZ",
-			RotationZ, 
-			":param angle: \n"
-		)
+			RotationZ,
+			":param angle: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               Scaling
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Scaling",
-			Scaling, 
+			Scaling,
 			":param sx: \n"
 			":param sy: \n"
-			":param sz: \n"
-		)
+			":param sz: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               Transformation
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Transformation",
-			PyTransformation, 
+			PyTransformation,
 			":param scalingCenter: \n"
 			":param scalingRotation: \n"
 			":param scaling: \n"
 			":param rotationCenter: \n"
 			":param rotation: \n"
-			":param translation: \n"
-		)
+			":param translation: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               Translation
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Translation",
-			Translation, 
+			Translation,
 			":param x: \n"
 			":param y: \n"
-			":param z: \n"
-		)
+			":param z: \n" )
 		////////////////////////////////////////////////////////////////////////////
 		//               Transpose
-		MAP_METHOD_AND_WRAP
-		( 
+		MAP_METHOD_AND_WRAP(
 			"Transpose",
-			Transpose, 
-			"" 
-		)			
+			Transpose,
+			"" )
 
 	EXPOSURE_END()
-
 }

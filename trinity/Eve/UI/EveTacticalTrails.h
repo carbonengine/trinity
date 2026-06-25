@@ -18,8 +18,8 @@ public:
 
 	EveTacticalTrails( IRoot* lockobj = nullptr );
 
-	void RegisterObject( ITriVectorFunction* object );
-	void UnregisterObject( ITriVectorFunction* object );
+	void RegisterObject( ITriVectorFunction * object );
+	void UnregisterObject( ITriVectorFunction * object );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2

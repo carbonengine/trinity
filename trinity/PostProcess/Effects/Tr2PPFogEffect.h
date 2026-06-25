@@ -46,9 +46,6 @@ public:
 	Vector3 m_areaSize;
 	Vector2 m_areaScale;
 	Vector3 m_areaCenter;
-
-
-
 };
 
 TYPEDEF_BLUECLASS( Tr2PPFogEffect );

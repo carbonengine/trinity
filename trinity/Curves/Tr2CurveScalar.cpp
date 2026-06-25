@@ -9,8 +9,7 @@ extern Be::VarChooser Tr2CurveTangentTypeChooser[];
 namespace
 {
 
-BlueStructureDefinition Tr2CurveScalarKeyDef[] =
-{
+BlueStructureDefinition Tr2CurveScalarKeyDef[] = {
 	{ "time", Be::FLOAT32_1, 0 },
 	{ "value", Be::FLOAT32_1, 4 },
 	{ "leftTangent", Be::FLOAT32_1, 8 },
@@ -69,8 +68,8 @@ float GetAutoClamppedTangent( float prevTime, float prevValue, float time, float
 }
 
 // --------------------------------------------------------------------------------
-Tr2CurveScalar::Tr2CurveScalar( IRoot* lockobj )
-	:PARENTLOCK( m_keys ),
+Tr2CurveScalar::Tr2CurveScalar( IRoot* lockobj ) :
+	PARENTLOCK( m_keys ),
 	m_timeOffset( 0.f ),
 	m_timeScale( 1.f ),
 	m_currentValue( 0.f ),
@@ -228,50 +227,50 @@ float Tr2CurveScalar::GetValue( double time ) const
 // --------------------------------------------------------------------------------
 float Tr2CurveScalar::GetTangent( double time ) const
 {
-	if ( m_keys.empty() )
+	if( m_keys.empty() )
 	{
 		return 0;
 	}
 
 	auto count = m_keys.size();
 
-	if ( m_extrapolationBefore == Tr2CurveExtrapolation::LINEAR || m_extrapolationAfter == Tr2CurveExtrapolation::LINEAR )
+	if( m_extrapolationBefore == Tr2CurveExtrapolation::LINEAR || m_extrapolationAfter == Tr2CurveExtrapolation::LINEAR )
 	{
 		float t = float( time / (double)m_timeScale - (double)m_timeOffset );
 
-		if ( m_extrapolationBefore == Tr2CurveExtrapolation::LINEAR && t < m_keys[0].m_time )
+		if( m_extrapolationBefore == Tr2CurveExtrapolation::LINEAR && t < m_keys[0].m_time )
 		{
 			return m_keys[0].m_leftTangent;
 		}
-		else if ( m_extrapolationAfter == Tr2CurveExtrapolation::LINEAR && t > m_keys[count - 1].m_time )
+		else if( m_extrapolationAfter == Tr2CurveExtrapolation::LINEAR && t > m_keys[count - 1].m_time )
 		{
 			return m_keys[count - 1].m_rightTangent;
 		}
 	}
 
-	if ( count == 1 )
+	if( count == 1 )
 	{
 		return m_keys[0].m_rightTangent;
 	}
 
-	if ( m_extrapolationBefore == Tr2CurveExtrapolation::CLAMP && float( time / (double)m_timeScale - (double)m_timeOffset ) <= m_keys[0].m_time )
+	if( m_extrapolationBefore == Tr2CurveExtrapolation::CLAMP && float( time / (double)m_timeScale - (double)m_timeOffset ) <= m_keys[0].m_time )
 	{
 		return 0;
 	}
 
-	if ( m_extrapolationAfter == Tr2CurveExtrapolation::CLAMP && float( time / (double)m_timeScale - (double)m_timeOffset ) >= m_keys[m_keys.size() - 1].m_time )
+	if( m_extrapolationAfter == Tr2CurveExtrapolation::CLAMP && float( time / (double)m_timeScale - (double)m_timeOffset ) >= m_keys[m_keys.size() - 1].m_time )
 	{
 		return 0;
 	}
 
 	float t = GetLocalTime( time );
 
-	for ( size_t i = 0; i + 1 < count; ++i )
+	for( size_t i = 0; i + 1 < count; ++i )
 	{
 		auto& k0 = m_keys[i];
 		auto& k1 = m_keys[i + 1];
 
-		if ( t >= k0.m_time && t < k1.m_time )
+		if( t >= k0.m_time && t < k1.m_time )
 		{
 			return GetSegmentTangent( t, k0, k1 );
 		}
@@ -282,9 +281,9 @@ float Tr2CurveScalar::GetTangent( double time ) const
 // --------------------------------------------------------------------------------
 void Tr2CurveScalar::OnKeysChanged()
 {
-	std::stable_sort( 
-		m_keys.begin(), 
-		m_keys.end(), 
+	std::stable_sort(
+		m_keys.begin(),
+		m_keys.end(),
 		[]( const Tr2CurveScalarKey& k0, const Tr2CurveScalarKey& k1 ) { return k0.m_time < k1.m_time; } );
 
 	for( size_t i = 0; i < m_keys.size(); ++i )
@@ -303,12 +302,14 @@ void Tr2CurveScalar::OnKeysChanged()
 			}
 			else
 			{
-				float tangent = GetAutoClamppedTangent( 
-					m_keys[i - 1].m_time, 
-					m_keys[i - 1].m_value, 
-					k.m_time, 
-					k.m_value, m_keys
-					[i + 1].m_time, 
+				float tangent = GetAutoClamppedTangent(
+					m_keys[i - 1].m_time,
+					m_keys[i - 1].m_value,
+					k.m_time,
+					k.m_value,
+					m_keys
+						[i + 1]
+							.m_time,
 					m_keys[i + 1].m_value );
 
 				k.m_leftTangent = tangent;
@@ -326,11 +327,12 @@ void Tr2CurveScalar::OnKeysChanged()
 			}
 			else
 			{
-				float tangent = GetAutoTangent( 
-					m_keys[i - 1].m_time, 
-					m_keys[i - 1].m_value, 
-					k.m_time, k.m_value, 
-					m_keys[i + 1].m_time, 
+				float tangent = GetAutoTangent(
+					m_keys[i - 1].m_time,
+					m_keys[i - 1].m_value,
+					k.m_time,
+					k.m_value,
+					m_keys[i + 1].m_time,
 					m_keys[i + 1].m_value );
 
 				k.m_leftTangent = tangent;
@@ -416,8 +418,7 @@ float Tr2CurveScalar::GetSegmentValue( float time, const Tr2CurveScalarKey& k0, 
 			return k1.m_value;
 		}
 		return k0.m_value + ( k1.m_value - k0.m_value ) * ( time - k0.m_time ) / ( k1.m_time - k0.m_time );
-	case Tr2CurveInterpolation::HERMITE:
-	{
+	case Tr2CurveInterpolation::HERMITE: {
 		float length = k1.m_time - k0.m_time;
 		if( length == 0 )
 		{
@@ -445,16 +446,15 @@ float Tr2CurveScalar::GetSegmentValue( float time, const Tr2CurveScalarKey& k0, 
 // --------------------------------------------------------------------------------
 float Tr2CurveScalar::GetSegmentTangent( float time, const Tr2CurveScalarKey& k0, const Tr2CurveScalarKey& k1 ) const
 {
-	switch ( k0.m_interpolation )
+	switch( k0.m_interpolation )
 	{
 	case Tr2CurveInterpolation::CONSTANT:
 		return 0;
 	case Tr2CurveInterpolation::LINEAR:
 		return ( k1.m_value - k0.m_value ) / ( k1.m_time - k0.m_time );
-	case Tr2CurveInterpolation::HERMITE:
-	{
+	case Tr2CurveInterpolation::HERMITE: {
 		float length = k1.m_time - k0.m_time;
-		if ( length == 0 )
+		if( length == 0 )
 		{
 			return k1.m_rightTangent;
 		}

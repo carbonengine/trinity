@@ -16,7 +16,7 @@ BLUE_DECLARE( Tr2Material );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   ITr2PickableScene is an interface for scenes that support GPU mouse picking. The 
+//   ITr2PickableScene is an interface for scenes that support GPU mouse picking. The
 //   interface has a few defined function helpers to do the actual work associated with
 //   picking. ITr2PickableScene descendants only need to implement a few abstract
 //   scene-dependant functions.
@@ -33,13 +33,13 @@ public:
 	enum PickComponent
 	{
 		// Object pointer (IRoot)
-		PICK_OBJECT		= 1,
+		PICK_OBJECT = 1,
 		// Mesh and area indexes
-		PICK_AREA		= 2,
+		PICK_AREA = 2,
 		// World position
-		PICK_POSITION	= 4,
+		PICK_POSITION = 4,
 		// Object UV coordinates
-		PICK_UV			= 8,
+		PICK_UV = 8,
 	};
 	// Union of PickComponent
 	typedef unsigned int PickComponents;
@@ -65,6 +65,7 @@ public:
 	};
 
 	void PickObject( Tr2RenderContext& renderContext, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, PickResults& results );
+
 protected:
 	// -------------------------------------------------------------
 	// Description:
@@ -84,11 +85,11 @@ protected:
 
 	// Maximum number of picking passes
 	static const unsigned int MAX_PICK_PASSES = 4;
-	
-    typedef std::vector<ITr2Renderable*> ITr2RenderableArray;
-    typedef unsigned short ObjectIdType;
 
-    virtual void SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport );
+	typedef std::vector<ITr2Renderable*> ITr2RenderableArray;
+	typedef unsigned short ObjectIdType;
+
+	virtual void SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport );
 
 	// -------------------------------------------------------------
 	// Description:
@@ -128,7 +129,7 @@ protected:
 	//   Opaque render batch accumulator
 	// -------------------------------------------------------------
 	virtual ITriRenderBatchAccumulator* GetOpaquePickingBatchAccumulator( void ) = 0;
-	
+
 	// -------------------------------------------------------------
 	// Description:
 	//   Returns a render batch accumulator to use for picking object
@@ -141,7 +142,7 @@ protected:
 	// -------------------------------------------------------------
 	// Description:
 	//   Returns an array of passes that need to be rendered in order
-	//   to get all picking components. 
+	//   to get all picking components.
 	// Arguments:
 	//   requestedComponents  - Components requested for picking operation
 	//                          (union of PickComponent).
@@ -157,7 +158,7 @@ protected:
 	// -------------------------------------------------------------
 	// Description:
 	//   Checks if the picking areas need to be rendered during the
-	//   given pass. 
+	//   given pass.
 	// Arguments:
 	//   pass  - union of PickComponent that are to be queried during
 	//		this pass.
@@ -170,12 +171,12 @@ protected:
 
 	// -------------------------------------------------------------
 	// Description:
-	//   Decodes results in the picking buffer after the given pass. 
+	//   Decodes results in the picking buffer after the given pass.
 	// Arguments:
 	//   pBuffer - contents of the picking buffer.
 	//   pass  - union of PickComponent that are to be queried during
 	//		this pass.
-	//   results  - (out) results decoded from the buffer (the 
+	//   results  - (out) results decoded from the buffer (the
 	//		function only needs to set fields turned on in the pass
 	//		argument).
 	// -------------------------------------------------------------
@@ -184,22 +185,20 @@ protected:
 
 	// -------------------------------------------------------------
 	// Description:
-	//   Returns picking buffer to use for picking. 
+	//   Returns picking buffer to use for picking.
 	// Return Value:
 	//   Picking buffer to use for picking
 	// -------------------------------------------------------------
 	virtual Tr2PickBuffer& GetPickBuffer( void ) = 0;
 
 	virtual bool RenderPicking( ITriRenderBatchAccumulator* pOpaquePickingBatches,
-						ITriRenderBatchAccumulator* pPickingBatches,
-						PickComponents pass );
+								ITriRenderBatchAccumulator* pPickingBatches,
+								PickComponents pass );
+
 private:
-    // Do-all combo method. If pickedUV is not none, this switches to UV 
-    // picking and pickedObject and area are no longer filled in.
-    void PickObject( int x, int y, TriProjection* proj, TriView* view, 
-                     TriViewport* viewport, IRoot** pickedObject, 
-                     Vector3* outWorldPosition, unsigned int* outArea, 
-                     Vector2* pickedUV );
+	// Do-all combo method. If pickedUV is not none, this switches to UV
+	// picking and pickedObject and area are no longer filled in.
+	void PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, IRoot** pickedObject, Vector3* outWorldPosition, unsigned int* outArea, Vector2* pickedUV );
 
 	void GetBatches( std::vector<ITr2Renderable*> const& pickableObjects,
 					 ITriRenderBatchAccumulator*& pOpaquePickingBatches,

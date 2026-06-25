@@ -7,12 +7,21 @@
 class Tr2AsyncSave
 {
 public:
-	Tr2AsyncSave();	
+	Tr2AsyncSave();
 
-	bool IsSaving()			const { return m_isSavePrepared || m_saveCbId || m_prepareSaveCbId; }
-	bool IsSaveCompleted()	const { return !m_isSaving; }
-	bool IsSaveSucceeded()	const { return m_saveSucceeded != 0; }
-	void WaitForSave()		const;
+	bool IsSaving() const
+	{
+		return m_isSavePrepared || m_saveCbId || m_prepareSaveCbId;
+	}
+	bool IsSaveCompleted() const
+	{
+		return !m_isSaving;
+	}
+	bool IsSaveSucceeded() const
+	{
+		return m_saveSucceeded != 0;
+	}
+	void WaitForSave() const;
 
 protected:
 	// Main entry point for classes that inherit from Tr2AsyncSave: call this to start the whole
@@ -22,7 +31,7 @@ protected:
 	void CleanupAsyncSave( bool failed, bool fromDestructor = false );
 
 	std::wstring m_saveFilename;
-	
+
 private:
 	// Do preparation work on the main thread
 	virtual bool DoPrepareAsyncSave() = 0;
@@ -43,9 +52,9 @@ private:
 	CcpAtomic<uint32_t> m_isSaving;
 	CcpAtomic<uint32_t> m_isSavePrepared;
 	CcpAtomic<uint32_t> m_saveSucceeded;
-	
-	CcpAtomic<uint32_t> m_saveCbId;			/// When set, save has been scheduled on the background thread
-	CcpAtomic<uint32_t> m_prepareSaveCbId;		/// When set, D3D texture lock/unlock has been scheduled on the main thread
+
+	CcpAtomic<uint32_t> m_saveCbId; /// When set, save has been scheduled on the background thread
+	CcpAtomic<uint32_t> m_prepareSaveCbId; /// When set, D3D texture lock/unlock has been scheduled on the main thread
 
 protected:
 	~Tr2AsyncSave();

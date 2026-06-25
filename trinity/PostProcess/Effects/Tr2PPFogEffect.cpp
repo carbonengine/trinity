@@ -33,15 +33,13 @@ Tr2PPFogEffect::Tr2PPFogEffect( IRoot* lockobj ) :
 	m_areaScale( 30.0, 20.0 ),
 	m_areaCenter( -27042.2988281, -633.4446411, 11896.0957031 )
 {
-
 }
 
 Tr2PPFogEffect::~Tr2PPFogEffect()
 {
-
 }
 
-bool Tr2PPFogEffect::IsActive() 
+bool Tr2PPFogEffect::IsActive()
 {
 	return m_display && m_intensity > 0.0f;
 }

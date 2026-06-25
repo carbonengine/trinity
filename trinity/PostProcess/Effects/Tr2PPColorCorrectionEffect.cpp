@@ -12,10 +12,8 @@ Tr2PPColorCorrectionEffect::Tr2PPColorCorrectionEffect( IRoot* lockobj ) :
 	m_colorGain( Vector3( 1.0f, 1.0f, 1.0f ) ),
 	m_colorOffset( Vector3( 0.0f, 0.0f, 0.0f ) )
 {
-
 }
 
 Tr2PPColorCorrectionEffect::~Tr2PPColorCorrectionEffect()
 {
-
 }

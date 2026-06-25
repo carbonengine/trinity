@@ -32,7 +32,7 @@ void EveConnector::Update( const EveUpdateContext& context )
 	{
 		m_sourceObject->GetValueAt( &m_sourcePosition, context.GetTime() );
 	}
-	
+
 	if( m_destObject )
 	{
 		m_destObject->GetValueAt( &m_destPosition, context.GetTime() );
@@ -119,11 +119,11 @@ inline void EveConnector::AnimateSegment( EveCurveLineSet* lineSet, int lineID )
 			{
 				speed = m_animationSpeed / m_lineLength;
 			}
-			lineSet->ChangeLineAnimation( lineID, ( Vector4 )m_animationColor, speed, m_lineLength * m_animationScale );
+			lineSet->ChangeLineAnimation( lineID, (Vector4)m_animationColor, speed, m_lineLength * m_animationScale );
 		}
 		else
 		{
-			lineSet->ChangeLineAnimation( lineID, ( Vector4 )m_animationColor, m_animationSpeed, m_animationScale );
+			lineSet->ChangeLineAnimation( lineID, (Vector4)m_animationColor, m_animationSpeed, m_animationScale );
 		}
 	}
 }
@@ -174,19 +174,18 @@ inline void EveConnector::AddOrbit( EveCurveLineSet* lineSet, const Vector3& cen
 
 inline void EveConnector::AddStraightLine( EveCurveLineSet* lineSet, const Vector3& source, const Vector3& destination, bool fadeEnd )
 {
-	Vector4 endColor = ( Vector4 )m_color;
+	Vector4 endColor = (Vector4)m_color;
 	if( fadeEnd )
 	{
 		endColor *= 0;
 	}
-	int id = lineSet->AddStraightLine( source, ( Vector4 )m_color, destination, endColor, m_width );
+	int id = lineSet->AddStraightLine( source, (Vector4)m_color, destination, endColor, m_width );
 	AnimateSegment( lineSet, id );
-
 }
 
 inline void EveConnector::AddSpheredSegment( EveCurveLineSet* lineSet, const Vector3& p0, const Vector3& p1, const Vector3& center )
 {
-	int id = lineSet->AddSpheredLineCrt( p0, ( Vector4 )m_color, p1, ( Vector4 )m_color, center, m_width );
+	int id = lineSet->AddSpheredLineCrt( p0, (Vector4)m_color, p1, (Vector4)m_color, center, m_width );
 	AnimateSegment( lineSet, id );
 }
 
@@ -194,11 +193,11 @@ inline void EveConnector::AddEllipse( EveCurveLineSet* lineSet, const Vector3& c
 {
 	Vector3 side, front;
 	CalculateSideAndFront( normal, side, front );
-	
+
 	float rotationRad = rotation * TRI_PI / 180.0f;
 	float cosRot = cos( rotationRad );
 	float sinRot = sin( rotationRad );
-	
+
 	Vector3 rotatedSide = side * cosRot + front * sinRot;
 	Vector3 rotatedFront = -side * sinRot + front * cosRot;
 
@@ -226,7 +225,7 @@ inline void EveConnector::AddEllipse( EveCurveLineSet* lineSet, const Vector3& c
 inline void EveConnector::AddCurvedLine( EveCurveLineSet* lineSet, const Vector3& point1, const Vector3& point2, const Vector3& middle, int segments )
 {
 
-	int lineId = lineSet->AddCurvedLineCrt( point1, ( Vector4 )m_color, point2, ( Vector4 )m_color, middle, m_width, segments );
+	int lineId = lineSet->AddCurvedLineCrt( point1, (Vector4)m_color, point2, (Vector4)m_color, middle, m_width, segments );
 
 	AnimateSegment( lineSet, lineId );
 }

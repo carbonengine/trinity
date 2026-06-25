@@ -141,14 +141,14 @@ void EveChildInstancedMeshes::PushRtGeometry( Tr2RaytracingManager& rtManager ) 
 			}
 
 			XMMATRIX m = *reinterpret_cast<const Matrix*>( instanceTransform.worldTransform );
-			m.r[3] = XMVectorSet( 0, 0, 0, 1 ); 
+			m.r[3] = XMVectorSet( 0, 0, 0, 1 );
 			m = XMMatrixMultiply( XMMatrixTranspose( m ), m_worldTransform );
 			mesh.rtMeshes[lodIndex].instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
 		}
 
 		for( auto& lod : mesh.rtMeshes )
 		{
-			if ( lod.instanceWorldTransforms.empty() )
+			if( lod.instanceWorldTransforms.empty() )
 			{
 				continue;
 			}
@@ -187,7 +187,6 @@ void EveChildInstancedMeshes::UpdateVisibility( const EveUpdateContext& updateCo
 
 void EveChildInstancedMeshes::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-
 }
 
 bool EveChildInstancedMeshes::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
@@ -272,7 +271,7 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 
 		if( !mesh.instanceSpheres.empty() )
 		{
-			if ( mesh.sphereHandle )
+			if( mesh.sphereHandle )
 			{
 				mesh.sphereHandle.owner->SetSphereGroupBounds( mesh.sphereHandle, mesh.worldBoundingSphere, mesh.flags );
 			}
@@ -316,7 +315,7 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 			lod.rtMesh->UpdateRtMesh( mesh.geometry, mesh.meshIndex, lod.maxScreenSize );
 			for( auto& area : mesh.areas )
 			{
-				if ( area.batchType != TRIBATCHTYPE_OPAQUE )
+				if( area.batchType != TRIBATCHTYPE_OPAQUE )
 				{
 					continue;
 				}
@@ -339,12 +338,11 @@ void EveChildInstancedMeshes::Setup( const Vector3* scale, const Quaternion* rot
 
 void EveChildInstancedMeshes::ChangeLOD( Tr2Lod lod )
 {
-
 }
 
 void EveChildInstancedMeshes::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
-	for( auto& mesh: m_meshes )
+	for( auto& mesh : m_meshes )
 	{
 		for( auto& area : mesh.areas )
 		{
@@ -361,7 +359,7 @@ void EveChildInstancedMeshes::SetShaderOption( const BlueSharedString& name, con
 }
 
 
-void EveChildInstancedMeshes::AddMesh( 
+void EveChildInstancedMeshes::AddMesh(
 	const char* geometryPath,
 	bool castsShadow,
 	EntityComponents::ReflectionMode reflectionMode,
@@ -392,7 +390,7 @@ void EveChildInstancedMeshes::AddMesh(
 		a.effectHash = a.effect ? a.effect->GetHashValue() : 0;
 	}
 	mesh.instances.reserve( count );
-	for ( size_t i = 0; i < count; ++i )
+	for( size_t i = 0; i < count; ++i )
 	{
 		EveInstancedMeshManager::StaticPerInstanceData instanceData;
 		auto& mat = instanceTransforms[i];
@@ -442,7 +440,7 @@ void EveChildInstancedMeshes::RebuildCachedData( BlueAsyncRes* p )
 		{
 			mesh.combinedVertexDeclaration = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
 
-			if ( auto data = mesh.geometry->GetMeshData( mesh.meshIndex ) )
+			if( auto data = mesh.geometry->GetMeshData( mesh.meshIndex ) )
 			{
 				Tr2VertexDefinition elements;
 				if( Tr2EffectStateManager::GetVertexDeclarationElements( data->m_vertexDeclarationHandle, elements ) )
@@ -570,7 +568,7 @@ void EveChildInstancedMeshes::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 				continue;
 			}
 			renderer.DrawSphere( this, mesh.worldBoundingSphere.center, mesh.worldBoundingSphere.radius, 20, ITr2DebugRenderer2::Wireframe, Tr2DebugColor( 0xffaa8800, 0x22aa8800 ) );
-			for ( auto& sphere : mesh.instanceSpheres )
+			for( auto& sphere : mesh.instanceSpheres )
 			{
 				renderer.DrawSphere( this, sphere.center, sphere.radius, 10, ITr2DebugRenderer2::Wireframe, Tr2DebugColor( 0xff008800, 0x22008800 ) );
 			}
@@ -652,7 +650,7 @@ BluePy EveChildInstancedMeshes::GetMeshDisplay( uint32_t meshId ) const
 		return {};
 	}
 	auto& mesh = m_meshes[meshId];
-	if ( mesh.display )
+	if( mesh.display )
 	{
 		return BluePy( Py_True, true );
 	}
@@ -670,7 +668,7 @@ BluePy EveChildInstancedMeshes::SetMeshDisplay( uint32_t meshId, bool display )
 		return {};
 	}
 	auto& mesh = m_meshes[meshId];
-	if ( mesh.display != display )
+	if( mesh.display != display )
 	{
 		mesh.display = display;
 		m_allRegistered = false;
@@ -704,4 +702,3 @@ bool EveChildInstancedMeshes::OnPrepareResources()
 {
 	return true;
 }
-

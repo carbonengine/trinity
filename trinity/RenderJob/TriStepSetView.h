@@ -10,19 +10,20 @@
 // forwards
 BLUE_DECLARE( EveCamera );
 
-BLUE_CLASS( TriStepSetView ) : public TriRenderStep
+BLUE_CLASS( TriStepSetView ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
-	TriStepSetView( IRoot* lockobj = 0);
-	~TriStepSetView(void);
+
+	TriStepSetView( IRoot* lockobj = 0 );
+	~TriStepSetView( void );
 
 	//IRenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
 	// Python __init__ constructor
-	void SetViewCameraParent( TriView* view, EveCamera* camera );
+	void SetViewCameraParent( TriView * view, EveCamera * camera );
 
 private:
 	TriViewPtr m_view;

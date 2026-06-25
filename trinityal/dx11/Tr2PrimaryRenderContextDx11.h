@@ -17,24 +17,24 @@
 struct Tr2PresentParametersAL;
 
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 
 class Tr2PrimaryRenderContextAL : public Tr2RenderContextAL
 {
 public:
 	Tr2PrimaryRenderContextAL();
 	~Tr2PrimaryRenderContextAL();
-	void	Destroy();
+	void Destroy();
 
-	ALResult CreateDevice(	
-		uint32_t Adapter, 
-		Tr2WindowHandle  hFocusWindow, 
+	ALResult CreateDevice(
+		uint32_t Adapter,
+		Tr2WindowHandle hFocusWindow,
 		const Tr2PresentParametersAL& pPresentationParameters );
 
 	ALResult SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& pPresentationParameters );
 
 	const Tr2CapsAL& GetCaps() const;
-		
+
 	ALResult Present();
 
 	bool IsValid();
@@ -48,7 +48,7 @@ public:
 
 	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
 	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID ) const;
-	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params , uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID);
+	Tr2UpscalingContextAL* CreateUpscalingContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext = Tr2UpscalingAL::INVALID_CONTEXT_ID );
 	void DeleteUpscalingContext( uint32_t contextID );
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
 	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration, bool& temporal ) const;
@@ -59,21 +59,21 @@ public:
 public:
 	bool m_usingEXDevice;
 
-	CComPtr<ID3D11Device>			m_d3dDevice11;
+	CComPtr<ID3D11Device> m_d3dDevice11;
 
-	CComPtr<IDXGISwapChain>			m_swapChain;
-	CComPtr<IDXGIFactory>			m_dxgiFactory;
-	CComPtr<IDXGIOutput>			m_dxgiOutput;
-		
+	CComPtr<IDXGISwapChain> m_swapChain;
+	CComPtr<IDXGIFactory> m_dxgiFactory;
+	CComPtr<IDXGIOutput> m_dxgiOutput;
+
 	Tr2TextureAL m_defaultBackBuffer;
-		
+
 private:
 	ALResult CreateBackBuffers( const Tr2PresentParametersAL& presentationParameters );
 
 	uint64_t m_recodingFrame;
 	uint64_t m_renderedFrame;
 
-	uint32_t			m_vsyncInterval;
+	uint32_t m_vsyncInterval;
 
 	// Device statistics
 	//CComPtr<ID3D11Query> m_deviceStatistics;

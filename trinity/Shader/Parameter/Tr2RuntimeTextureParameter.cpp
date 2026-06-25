@@ -8,8 +8,8 @@
 #include "Tr2Renderer.h"
 
 // --------------------------------------------------------------------------------------
-Tr2RuntimeTextureParameter::Tr2RuntimeTextureParameter( IRoot* lockobj )
-	:m_resourceType( Tr2EffectResource::TEXTURE_TYPELESS ),
+Tr2RuntimeTextureParameter::Tr2RuntimeTextureParameter( IRoot* lockobj ) :
+	m_resourceType( Tr2EffectResource::TEXTURE_TYPELESS ),
 	m_uavMipLevel( 0 )
 {
 }

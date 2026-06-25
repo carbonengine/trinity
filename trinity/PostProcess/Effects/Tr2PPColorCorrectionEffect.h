@@ -12,7 +12,7 @@ public:
 
 	Tr2PPColorCorrectionEffect( IRoot* lockobj = NULL );
 	~Tr2PPColorCorrectionEffect();
-	
+
 	float m_whiteTemperature;
 	float m_whiteTint;
 	float m_colorSaturation;

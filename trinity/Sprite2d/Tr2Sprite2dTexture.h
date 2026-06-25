@@ -14,11 +14,10 @@ BLUE_DECLARE( Tr2AtlasTexture );
 // The Tr2Sprite2dTexture wraps an atlas texture resource. It holds
 // the resource path name and settings such as rectangle to use from
 // the texture, filter and dot product flags.
-class Tr2Sprite2dTexture:
-	public ITr2Sprite2dTexture,
-	public IInitialize,
-	public INotify,
-	public ITr2AtlasTextureNotifyTarget
+class Tr2Sprite2dTexture : public ITr2Sprite2dTexture,
+						   public IInitialize,
+						   public INotify,
+						   public ITr2AtlasTextureNotifyTarget
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -59,7 +58,7 @@ public:
 	void SetSrcHeight( float srcHeight );
 
 	Matrix* GetTransform();
-	
+
 	int GetTextureRepeatMode() const;
 	void SetTextureRepeatMode( int repeatMode );
 

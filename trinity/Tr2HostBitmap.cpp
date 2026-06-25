@@ -9,12 +9,13 @@
 #include "Tr2DxtCompressor.h"
 
 #pragma warning( push, 4 )
-#pragma warning( disable: 4189 )	// Scopeguard
+#pragma warning( disable : 4189 ) // Scopeguard
 
 using namespace Tr2RenderContextEnum;
 
 Tr2HostBitmap::Tr2HostBitmap( IRoot* )
-{}
+{
+}
 
 Tr2HostBitmap::~Tr2HostBitmap()
 {
@@ -75,7 +76,7 @@ bool Tr2HostBitmap::SharedCopyFaceFromRenderTarget( Tr2RenderContextEnum::Cubema
 	int top = 0;
 	int right = rtAL.GetWidth();
 	int bottom = rtAL.GetHeight();
-	
+
 	if( srcRect )
 	{
 		left = max( left, srcRect[0] );
@@ -84,7 +85,7 @@ bool Tr2HostBitmap::SharedCopyFaceFromRenderTarget( Tr2RenderContextEnum::Cubema
 		bottom = min( bottom, srcRect[3] );
 	}
 	if( offsetX < 0 )
-	{ 
+	{
 		left = max( left, -offsetX );
 		right = min( right, int( rtAL.GetWidth() ) + offsetX );
 	}
@@ -96,16 +97,15 @@ bool Tr2HostBitmap::SharedCopyFaceFromRenderTarget( Tr2RenderContextEnum::Cubema
 	offsetX += left;
 	offsetY += top;
 
-	if( left >= right || 
+	if( left >= right ||
 		top >= bottom ||
 		int( m_width ) < offsetX ||
-		int( m_height ) < offsetY
-		)
+		int( m_height ) < offsetY )
 	{
 		return true;
 	}
 
-	unsigned width  = min( unsigned( right - left ), m_width - offsetX );
+	unsigned width = min( unsigned( right - left ), m_width - offsetX );
 	unsigned height = min( unsigned( bottom - top ), m_height - offsetY );
 
 	const unsigned mipCount = std::min( GetTrueMipCount(), rtAL.GetTrueMipCount() );
@@ -120,20 +120,20 @@ bool Tr2HostBitmap::SharedCopyFaceFromRenderTarget( Tr2RenderContextEnum::Cubema
 			return false;
 		}
 
-			  uint8_t* dst = (uint8_t*)GetMipRawData( mipLevel, face );
+		uint8_t* dst = (uint8_t*)GetMipRawData( mipLevel, face );
 		const uint8_t* src = (uint8_t*)data;
 
-		const unsigned dstPitch  = GetMipPitch( mipLevel );
+		const unsigned dstPitch = GetMipPitch( mipLevel );
 
 		dst += GetBytesPerPixel( m_format ) * offsetX + dstPitch * offsetY;
 		src += GetBytesPerPixel( m_format ) * left + srcPitch * top;
-		  
+
 		if( alphaConvert )
 		{
 			for( unsigned j = 0; j != height; ++j, src += srcPitch, dst += dstPitch )
 			{
-				const uint8_t* in  = src;
-					  uint8_t* out = dst;
+				const uint8_t* in = src;
+				uint8_t* out = dst;
 				for( unsigned i = 0; i != width; ++i )
 				{
 					*out++ = *in++;
@@ -157,9 +157,9 @@ bool Tr2HostBitmap::SharedCopyFaceFromRenderTarget( Tr2RenderContextEnum::Cubema
 		height = max( height / 2, 1u );
 		offsetX /= 2;
 		offsetY /= 2;
-		left    /= 2;
-		top     /= 2;
-	
+		left /= 2;
+		top /= 2;
+
 		rtAL.UnmapForReading( renderContext );
 	}
 	return true;
@@ -265,7 +265,7 @@ bool Tr2HostBitmap::CopyFromTexture( Tr2TextureAL& texture, Tr2RenderContext& re
 	return true;
 }
 
-bool Tr2HostBitmap::CopyFromTextureRes ( TriTextureRes& res, Tr2RenderContext& renderContext )
+bool Tr2HostBitmap::CopyFromTextureRes( TriTextureRes& res, Tr2RenderContext& renderContext )
 {
 	if( !res.GetTexture() )
 	{
@@ -294,7 +294,7 @@ bool Tr2HostBitmap::CopyFromTextureRes ( TriTextureRes& res, Tr2RenderContext& r
 		}
 	}
 
-	const uint32_t mipCount  = std::min( GetTrueMipCount(), res.GetTrueMipCount() );
+	const uint32_t mipCount = std::min( GetTrueMipCount(), res.GetTrueMipCount() );
 	const uint32_t faceCount = GetArraySize();
 
 
@@ -302,7 +302,7 @@ bool Tr2HostBitmap::CopyFromTextureRes ( TriTextureRes& res, Tr2RenderContext& r
 	{
 		for( uint32_t mipLevel = 0; mipLevel != mipCount; ++mipLevel )
 		{
-			const void* srcData = nullptr; 
+			const void* srcData = nullptr;
 			uint32_t srcPitch = 0;
 
 			HRESULT hr = E_FAIL;
@@ -325,15 +325,15 @@ bool Tr2HostBitmap::CopyFromTextureRes ( TriTextureRes& res, Tr2RenderContext& r
 			uint8_t* dst = (uint8_t*)GetMipRawData( mipLevel, face );
 			const uint8_t* src = (uint8_t*)srcData;
 
-			const uint32_t dstPitch  = GetMipPitch( mipLevel );
+			const uint32_t dstPitch = GetMipPitch( mipLevel );
 
 			if( alphaConvert )
 			{
-				const uint32_t width  = GetMipWidth ( mipLevel );
+				const uint32_t width = GetMipWidth( mipLevel );
 				const uint32_t height = GetMipHeight( mipLevel );
 				for( uint32_t j = 0; j != height; ++j, src += srcPitch, dst += dstPitch )
 				{
-					const uint8_t* in  = src;
+					const uint8_t* in = src;
 					uint8_t* out = dst;
 					for( uint32_t i = 0; i != width; ++i )
 					{
@@ -391,13 +391,13 @@ bool Tr2HostBitmap::PopulateMargin( unsigned margin )
 		return false;
 	}
 
-	const unsigned bytesPerPixel  = GetBytesPerPixel( GetFormat() );
+	const unsigned bytesPerPixel = GetBytesPerPixel( GetFormat() );
 	const unsigned bytesPerMargin = bytesPerPixel * margin;
 
 
-	const unsigned width  = GetWidth()  - 2 * margin;
+	const unsigned width = GetWidth() - 2 * margin;
 	const unsigned height = GetHeight() - 2 * margin;
-	
+
 	//top margin
 	const char* src = GetRawData( margin, margin );
 	for( unsigned i = 0; i != margin; ++i )
@@ -408,18 +408,18 @@ bool Tr2HostBitmap::PopulateMargin( unsigned margin )
 
 	//bottom margin
 	src = GetRawData( margin, height + margin - 1 );
-	for( unsigned i = 0; i != margin; ++i ) 
+	for( unsigned i = 0; i != margin; ++i )
 	{
 		char* dst = GetRawData( margin, height + margin + i );
 		memcpy( dst, src, bytesPerPixel * width );
 	}
-		
+
 	for( unsigned y = 0; y != height; ++y )
 	{
 		//left margin
 		src = GetRawData( margin, y + margin );
 		char* dst = GetRawData( 0, y + margin );
-		for( unsigned i = 0; i != margin; ++i ) 
+		for( unsigned i = 0; i != margin; ++i )
 		{
 			for( unsigned j = 0; j != bytesPerPixel; ++j )
 			{
@@ -430,7 +430,7 @@ bool Tr2HostBitmap::PopulateMargin( unsigned margin )
 		//right margin
 		src += ( width - 1 ) * bytesPerPixel;
 		dst += width * bytesPerPixel + bytesPerMargin;
-		for( unsigned i = 0; i != margin; ++i ) 
+		for( unsigned i = 0; i != margin; ++i )
 		{
 			for( unsigned j = 0; j != bytesPerPixel; ++j )
 			{
@@ -438,7 +438,7 @@ bool Tr2HostBitmap::PopulateMargin( unsigned margin )
 			}
 		}
 	}
-	
+
 	return true;
 }
 
@@ -459,7 +459,7 @@ bool Tr2HostBitmap::Save( const wchar_t* path )
 		CCP_LOGWARN( "Tr2HostBitmap::Save failed to open Blue stream (%S)", path );
 		return false;
 	}
-	ON_BLOCK_EXIT( [&]{ stream->Close(); } );
+	ON_BLOCK_EXIT( [&] { stream->Close(); } );
 
 	return ImageIO::SaveImage( path, *this, *stream );
 }
@@ -516,35 +516,34 @@ bool Tr2HostBitmap::Compress( unsigned compressionFormat, unsigned qualityLevel,
 		return false;
 	}
 
-	static const PixelFormat format[ TR2DXT_COMPRESS_COUNT ] = 
-	{
-		PIXEL_FORMAT_BC1_UNORM,		// TR2DXT_COMPRESS_RT_DXT1			= 0,
-		PIXEL_FORMAT_BC3_UNORM,		// TR2DXT_COMPRESS_RT_DXT5			= 1,
-		PIXEL_FORMAT_BC3_UNORM,		// TR2DXT_COMPRESS_RT_DXT5N			= 2,
-		PIXEL_FORMAT_BC3_UNORM,		// TR2DXT_COMPRESS_RT_YCOCGDXT5		= 3,
-		PIXEL_FORMAT_BC3_UNORM,		// TR2DXT_COMPRESS_RT_3DC			= 4,
-		PIXEL_FORMAT_BC1_UNORM,		// TR2DXT_COMPRESS_SQUISH_DXT1		= 5,
-		PIXEL_FORMAT_BC1_UNORM,		// TR2DXT_COMPRESS_SQUISH_DXT3		= 6,
-		PIXEL_FORMAT_BC3_UNORM,		// TR2DXT_COMPRESS_SQUISH_DXT5		= 7,
-		PIXEL_FORMAT_BC4_UNORM,		// TR2DXT_COMPRESS_SQUISH_KBC4		= 8,
-		PIXEL_FORMAT_BC5_UNORM,		// TR2DXT_COMPRESS_SQUISH_KBC5		= 9,
+	static const PixelFormat format[TR2DXT_COMPRESS_COUNT] = {
+		PIXEL_FORMAT_BC1_UNORM, // TR2DXT_COMPRESS_RT_DXT1			= 0,
+		PIXEL_FORMAT_BC3_UNORM, // TR2DXT_COMPRESS_RT_DXT5			= 1,
+		PIXEL_FORMAT_BC3_UNORM, // TR2DXT_COMPRESS_RT_DXT5N			= 2,
+		PIXEL_FORMAT_BC3_UNORM, // TR2DXT_COMPRESS_RT_YCOCGDXT5		= 3,
+		PIXEL_FORMAT_BC3_UNORM, // TR2DXT_COMPRESS_RT_3DC			= 4,
+		PIXEL_FORMAT_BC1_UNORM, // TR2DXT_COMPRESS_SQUISH_DXT1		= 5,
+		PIXEL_FORMAT_BC1_UNORM, // TR2DXT_COMPRESS_SQUISH_DXT3		= 6,
+		PIXEL_FORMAT_BC3_UNORM, // TR2DXT_COMPRESS_SQUISH_DXT5		= 7,
+		PIXEL_FORMAT_BC4_UNORM, // TR2DXT_COMPRESS_SQUISH_KBC4		= 8,
+		PIXEL_FORMAT_BC5_UNORM, // TR2DXT_COMPRESS_SQUISH_KBC5		= 9,
 	};
 
 	{
-		unsigned pitch = ( m_width + 3 ) / 4 * Tr2RenderContextEnum::GetBlockByteSize( format[ compressionFormat ] );
+		unsigned pitch = ( m_width + 3 ) / 4 * Tr2RenderContextEnum::GetBlockByteSize( format[compressionFormat] );
 		CcpMallocBuffer destination( "Tr2HostBitmap::Compress", pitch * ( m_height + 3 ) / 4 );
 
 		Tr2DxtCompressControl* control = CCP_NEW( "TriDevice::CompressSurface/control" ) Tr2DxtCompressControl;
-		ON_BLOCK_EXIT( [&]{ CCP_DELETE( control ); } );
+		ON_BLOCK_EXIT( [&] { CCP_DELETE( control ); } );
 
-		if( !Tr2DxtCompressSurfaceAsync(	(Tr2DxtCompressionFormat)compressionFormat, 
-											(uint8_t*)GetRawData(), 											
-											m_width, 
-											m_height,
-											(uint8_t*)destination.get(),
-											pitch,
-											control, 
-											qualityLevel ) )
+		if( !Tr2DxtCompressSurfaceAsync( (Tr2DxtCompressionFormat)compressionFormat,
+										 (uint8_t*)GetRawData(),
+										 m_width,
+										 m_height,
+										 (uint8_t*)destination.get(),
+										 pitch,
+										 control,
+										 qualityLevel ) )
 		{
 			return false;
 		}
@@ -576,7 +575,7 @@ uint32_t Tr2HostBitmap::CountPixelsOfValue( const std::string& channels, uint32_
 {
 	// Count the number of pixels for which all rgba channels listed in "channels" param match value.
 
-	if( !IsValid() || GetBytesPerPixel(m_format) != 4 || IsCompressed() )
+	if( !IsValid() || GetBytesPerPixel( m_format ) != 4 || IsCompressed() )
 	{
 		return 0;
 	}
@@ -595,17 +594,17 @@ uint32_t Tr2HostBitmap::CountPixelsOfValue( const std::string& channels, uint32_
 				{
 					matches &= check_chan_value( 0xFF000000, 24, pixval, value );
 				}
-				
+
 				if( chan_selected( channels, 'r' ) )
 				{
 					matches &= check_chan_value( 0x00FF0000, 16, pixval, value );
 				}
-				
-				if( chan_selected( channels, 'g') )
+
+				if( chan_selected( channels, 'g' ) )
 				{
 					matches &= check_chan_value( 0x0000FF00, 8, pixval, value );
 				}
-				
+
 				if( chan_selected( channels, 'b' ) )
 				{
 					matches &= check_chan_value( 0x000000FF, 0, pixval, value );
@@ -650,7 +649,7 @@ bool Tr2HostBitmap::IsMonochrome() const
 	return true;
 }
 
-bool Tr2HostBitmap::SetPixel( int x, int y, const void *data )
+bool Tr2HostBitmap::SetPixel( int x, int y, const void* data )
 {
 	if( !IsValid() || GetBytesPerPixel( m_format ) != 4 || IsCompressed() )
 	{
@@ -661,13 +660,13 @@ bool Tr2HostBitmap::SetPixel( int x, int y, const void *data )
 	{
 		return false;
 	}
-	
-	char *dest = m_data.get() + y * m_width * 4 + x * 4;
+
+	char* dest = m_data.get() + y * m_width * 4 + x * 4;
 	memcpy( dest, data, 4 );
 	return true;
 }
 
-bool Tr2HostBitmap::GetPixel( int x, int y, void *data ) const
+bool Tr2HostBitmap::GetPixel( int x, int y, void* data ) const
 {
 	if( !IsValid() || GetBytesPerPixel( m_format ) != 4 || IsCompressed() )
 	{
@@ -679,27 +678,27 @@ bool Tr2HostBitmap::GetPixel( int x, int y, void *data ) const
 		return false;
 	}
 
-	char *src = m_data.get() +  y * m_width * 4 + x * 4;
+	char* src = m_data.get() + y * m_width * 4 + x * 4;
 	memcpy( data, src, 4 );
 	return true;
 }
 
 #if BLUE_WITH_PYTHON
-bool Tr2HostBitmap::SetPixelPy( PyObject *tuple )
+bool Tr2HostBitmap::SetPixelPy( PyObject* tuple )
 {
 	static_assert( sizeof( int ) == 4, "Assuming that RGBA8 fits in int" );
 	int x, y, val;
-	if(!PyArg_ParseTuple( tuple, "iii", &x, &y, &val ) )
+	if( !PyArg_ParseTuple( tuple, "iii", &x, &y, &val ) )
 	{
 		return false;
 	}
-	
+
 	return SetPixel( x, y, &val );
 }
 
-PyObject * Tr2HostBitmap::GetPixelPy( PyObject *tuple )
+PyObject* Tr2HostBitmap::GetPixelPy( PyObject* tuple )
 {
-	int x, y, val=0;
+	int x, y, val = 0;
 	if( !PyArg_ParseTuple( tuple, "ii", &x, &y ) ||
 		!GetPixel( x, y, &val ) )
 	{
@@ -713,14 +712,14 @@ PyObject* Tr2HostBitmap::PySetPixel( PyObject* args )
 	if( PyTuple_Size( args ) != 1 )
 	{
 		SetPixelPy( args );
-	} 
-	else 
+	}
+	else
 	{
-		PyObject *list;
+		PyObject* list;
 		PyArg_ParseTuple( args, "O", &list );
 		if( !PySequence_Check( list ) )
 		{
-			PyErr_SetString(PyExc_TypeError, "Expected sequence of tuples");
+			PyErr_SetString( PyExc_TypeError, "Expected sequence of tuples" );
 			return nullptr;
 		}
 		Py_ssize_t len = PySequence_Size( list );
@@ -740,20 +739,20 @@ PyObject* Tr2HostBitmap::PyGetPixel( PyObject* args )
 {
 	if( PyTuple_Size( args ) != 1 )
 	{
-		return GetPixelPy(args);
-	} 
-	else 
+		return GetPixelPy( args );
+	}
+	else
 	{
-		PyObject *list;
+		PyObject* list;
 		PyArg_ParseTuple( args, "O", &list );
 		if( !PySequence_Check( list ) )
 		{
-			PyErr_SetString(PyExc_TypeError, "Expected sequence of tuples");
+			PyErr_SetString( PyExc_TypeError, "Expected sequence of tuples" );
 			return nullptr;
 		}
 		Py_ssize_t len = PySequence_Size( list );
 		BluePyTuple res( len );
-		for( Py_ssize_t i = 0; i< len; i++ )
+		for( Py_ssize_t i = 0; i < len; i++ )
 		{
 			BluePy tuple( PySequence_GetItem( list, i ) );
 			if( !tuple )
@@ -771,7 +770,7 @@ PyObject* Tr2HostBitmap::PyGetPixel( PyObject* args )
 	}
 }
 
-PyObject *Tr2HostBitmap::PySetPixels( PyObject *args )
+PyObject* Tr2HostBitmap::PySetPixels( PyObject* args )
 {
 	// legacy method for cramming some pixels into a simple RGBA8 blob from python
 	if( !IsValid() || GetBytesPerPixel( GetFormat() ) != 4 || GetType() != TEX_TYPE_2D || GetTrueMipCount() != 1 )
@@ -779,18 +778,18 @@ PyObject *Tr2HostBitmap::PySetPixels( PyObject *args )
 		Py_RETURN_NONE;
 	}
 
-    int background    = 0;
-    PyObject *pixelsO = 0;
-	PyObject *discard = 0;
-    if( !PyArg_ParseTuple( args, "i|OO:SetPixels", &background, &pixelsO, &discard ) )
+	int background = 0;
+	PyObject* pixelsO = 0;
+	PyObject* discard = 0;
+	if( !PyArg_ParseTuple( args, "i|OO:SetPixels", &background, &pixelsO, &discard ) )
 	{
-        return 0;
+		return 0;
 	}
 
-    BluePy fast( PySequence_Fast( pixelsO, "Expected sequence of tuples" ) );
-    if( pixelsO && !fast )
+	BluePy fast( PySequence_Fast( pixelsO, "Expected sequence of tuples" ) );
+	if( pixelsO && !fast )
 	{
-        return 0;
+		return 0;
 	}
 
 	for( unsigned y = 0; y != m_height; ++y )
@@ -800,25 +799,25 @@ PyObject *Tr2HostBitmap::PySetPixels( PyObject *args )
 			*(int*)GetRawData( x, y ) = background;
 		}
 	}
-    
-    Py_ssize_t size = PySequence_Fast_GET_SIZE( ( PyObject* )fast );
-    for( Py_ssize_t i = 0; i < size; i++ ) 
+
+	Py_ssize_t size = PySequence_Fast_GET_SIZE( (PyObject*)fast );
+	for( Py_ssize_t i = 0; i < size; i++ )
 	{
-        PyObject *tuple = PySequence_Fast_GET_ITEM( ( PyObject* )fast, i );
+		PyObject* tuple = PySequence_Fast_GET_ITEM( (PyObject*)fast, i );
 		int x = 0, y = 0;
 		unsigned val;
-        if( !PyArg_ParseTuple( tuple, "iiI:SetPixel", &x, &y, &val ) )
+		if( !PyArg_ParseTuple( tuple, "iiI:SetPixel", &x, &y, &val ) )
 		{
 			return 0;
 		}
-        if( x >= 0 && (unsigned)x < m_width && 
+		if( x >= 0 && (unsigned)x < m_width &&
 			y >= 0 && (unsigned)y < m_height )
 		{
 			*(unsigned*)GetRawData( x, y ) = val;
-        }
-    }
+		}
+	}
 
-    Py_RETURN_NONE;
+	Py_RETURN_NONE;
 }
 
 // --------------------------------------------------------------------------------------
@@ -836,14 +835,14 @@ PyObject *Tr2HostBitmap::PySetPixels( PyObject *args )
 // --------------------------------------------------------------------------------------
 bool Tr2HostBitmap::CreateFromHeightData( const std::vector<float>& data, int32_t width, int32_t height )
 {
-	float scaleX = float( width - 1) / float( m_width );
-	float scaleY = float( height - 1) / float( m_height );
+	float scaleX = float( width - 1 ) / float( m_width );
+	float scaleY = float( height - 1 ) / float( m_height );
 
 	int32_t yIndex[4];
 	float yValues[4];
 
 	int components = GetBytesPerPixel( m_format );
-	if( !IsValid() || !( components == 4 || components == 1 )  || IsCompressed() )
+	if( !IsValid() || !( components == 4 || components == 1 ) || IsCompressed() )
 	{
 		return false;
 	}
@@ -870,15 +869,15 @@ bool Tr2HostBitmap::CreateFromHeightData( const std::vector<float>& data, int32_
 			{
 				int32_t index = dataX + i - 1;
 				// Wrap the x axis
-				int32_t xIdx = index < 0 ? width - ((-index) % width): index % width;
+				int32_t xIdx = index < 0 ? width - ( ( -index ) % width ) : index % width;
 				yValues[i] = CubicInterpolate( data[yIndex[0] + xIdx], data[yIndex[1] + xIdx], data[yIndex[2] + xIdx], data[yIndex[3] + xIdx], sy );
 			}
 			uint8_t value = uint8_t( TriClamp( CubicInterpolate( yValues[0], yValues[1], yValues[2], yValues[3], sx ), 0.f, 1.f ) * 255 );
 
 			if( components == 4 )
 			{
-				uint32_t d = (value << 24) + (value << 16) + (value << 8) + value;
-				char *dest = m_data.get() + y * m_width * 4 + x * 4;
+				uint32_t d = ( value << 24 ) + ( value << 16 ) + ( value << 8 ) + value;
+				char* dest = m_data.get() + y * m_width * 4 + x * 4;
 				memcpy( dest, &d, 4 );
 			}
 			else

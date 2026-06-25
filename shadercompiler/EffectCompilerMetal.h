@@ -51,14 +51,14 @@ struct MetalSystemSemanticsType
 		thread_index_in_threadgroup,
 		threadgroup_position_in_grid,
 		sample_id,
-        threads_per_grid,
-        
-        payload,
-        barycentric_coord,
-        origin,
-        direction,
-        min_distance,
-        distance,
+		threads_per_grid,
+
+		payload,
+		barycentric_coord,
+		origin,
+		direction,
+		min_distance,
+		distance,
 		instance_intersection_function_table_offset,
 		object_to_world_transform,
 		world_to_object_transform,
@@ -72,7 +72,7 @@ struct MetalSystemSemanticsType
 	static const char* GetString( int type );
 };
 
-class EffectCompilerMetal: public EffectCompilerBase
+class EffectCompilerMetal : public EffectCompilerBase
 {
 public:
 	bool Create() override;

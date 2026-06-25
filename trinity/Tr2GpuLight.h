@@ -6,26 +6,26 @@
 
 struct Tr2GpuLight
 {
-	Vector4		xyzr;
-	Vector4		dirxyzL;
-	Vector4		rgbX;
+	Vector4 xyzr;
+	Vector4 dirxyzL;
+	Vector4 rgbX;
 };
 
-inline void MakePointLight(	const Vector3 xyz, 
+inline void MakePointLight( const Vector3 xyz,
 							const float radius,
 							const Vector3 rgb,
 							Tr2GpuLight& out )
 {
 	out.xyzr = Vector4( xyz.x, xyz.y, xyz.z, radius );
-	out.dirxyzL = Vector4( 0,0,0,0 );
+	out.dirxyzL = Vector4( 0, 0, 0, 0 );
 	out.rgbX = Vector4( rgb.x, rgb.y, rgb.z, 0 );
 }
 
-inline void MakeLineSegment(const Vector3 from, 
-							const Vector3 to,
-							const float radius,
-							const Vector3 rgb,
-							Tr2GpuLight& out )
+inline void MakeLineSegment( const Vector3 from,
+							 const Vector3 to,
+							 const float radius,
+							 const Vector3 rgb,
+							 Tr2GpuLight& out )
 {
 	out.xyzr = Vector4( from.x, from.y, from.z, radius );
 	Vector3 dir = to - from;
@@ -37,7 +37,7 @@ inline void MakeLineSegment(const Vector3 from,
 	}
 	else
 	{
-		out.dirxyzL = Vector4( 0,0,0,0 );
+		out.dirxyzL = Vector4( 0, 0, 0, 0 );
 	}
 	out.rgbX = Vector4( rgb.x, rgb.y, rgb.z, 0 );
 }

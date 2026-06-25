@@ -3,8 +3,7 @@
 #include "StdAfx.h"
 #include "ProcessLifetime.h"
 
-Be::VarChooser ProcessLifetimeTunnelGroupTypeChooser[] =
-{
+Be::VarChooser ProcessLifetimeTunnelGroupTypeChooser[] = {
 	{ "Exit_Tunnels", BeCast( SplineTunnelGroup::EXIT_TUNNELS ), "Tunnels Drones flock to when set to exit the scene" },
 	{ "Entrance_Tunnels", BeCast( SplineTunnelGroup::ENTRANCE_TUNNELS ), "Tunnels Drones flock to when entering the scene" },
 	{ "Other_Tunnels", BeCast( SplineTunnelGroup::OTHER_TUNNELS ), "pathways in the scene (hallways etc)" },
@@ -25,8 +24,7 @@ const Be::ClassInfo* ProcessLifetime::ExposeToBlue()
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IInitialize )
 
-		MAP_ATTRIBUTE_WITH_CHOOSER( "behaviorPriority", m_priority, "control what priority this behavior should have", 
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, BehaviorPriorityChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "behaviorPriority", m_priority, "control what priority this behavior should have", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, BehaviorPriorityChooser )
 
 		MAP_ATTRIBUTE( "exit", m_exit, "Trigger to have drones search for an exit tunnel", Be::READWRITE )
 		MAP_ATTRIBUTE( "firstAgentLifetime", m_firstAgentLifetime, "Current lifetime for first agent in the group", Be::READ )
@@ -36,7 +34,7 @@ const Be::ClassInfo* ProcessLifetime::ExposeToBlue()
 		MAP_ATTRIBUTE( "respawnAgentsOnDeath", m_respawnAgentsOnDeath, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "splineTunnels", m_splineTunnels, "", Be::READ | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "firstSpawnAtRandomPlaces", m_firstSpawnAtRandomPlaces, "If true, on load drones will spawn around the tunnel", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		
+
 
 	EXPOSURE_END()
 }

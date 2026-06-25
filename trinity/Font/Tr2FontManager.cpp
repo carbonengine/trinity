@@ -14,7 +14,7 @@
 
 using namespace Tr2RenderContextEnum;
 
-CCP_STATS_DECLARE( fontMem, "Trinity/FontMemory", false, CST_MEMORY, "Memory used by the font system");
+CCP_STATS_DECLARE( fontMem, "Trinity/FontMemory", false, CST_MEMORY, "Memory used by the font system" );
 
 Tr2FontManager* g_fontManager = NULL;
 
@@ -53,7 +53,7 @@ void* Tr2FreeTypeRealloc( FT_Memory memory, long curSize, long newSize, void* bl
 
 static struct FT_MemoryRec_ s_ft_memory = { NULL, Tr2FreeTypeAlloc, Tr2FreeTypeFree, Tr2FreeTypeRealloc };
 
-static unsigned long FileRead( FT_Stream stream, unsigned long offset, unsigned char *buffer, unsigned long count );
+static unsigned long FileRead( FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count );
 static void FileClose( FT_Stream stream );
 
 static const char* s_cookie = "fontMan";
@@ -83,7 +83,7 @@ void Tr2FontManager::Shutdown()
 	g_fontManager = NULL;
 }
 
-Tr2FontManager::Tr2FontManager( IRoot* lockobj ) :    
+Tr2FontManager::Tr2FontManager( IRoot* lockobj ) :
 	m_manager( NULL ),
 	m_cmCache( NULL ),
 	m_sbitCache( NULL ),
@@ -96,9 +96,9 @@ Tr2FontManager::Tr2FontManager( IRoot* lockobj ) :
 	m_reverseFaceMap( "Tr2FontManager/m_reverseFaceMap" ),
 	m_sbitToTextureMap( "Tr2FontManager/m_sbitToTextureMap" ),
 	m_sbitToCachedTextureMap( "Tr2FontManager/m_sbitToCachedTextureMap" ),
-	m_textureToSbitMap( "Tr2FontManager/m_textureToSbitMap"),
+	m_textureToSbitMap( "Tr2FontManager/m_textureToSbitMap" ),
 	m_totalGlyphsCachedSize( 0 ),
-	m_glyphCacheBudget( 512*1024 )
+	m_glyphCacheBudget( 512 * 1024 )
 {
 	FT_Error err = FT_New_Library( &s_ft_memory, &m_ftLib );
 	if( err )
@@ -209,7 +209,7 @@ FT_Size_Metrics Tr2FontManager::LookupMetrics( const FaceID& faceID, unsigned in
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	FTC_ScalerRec scaler = {(FTC_FaceID)faceID, width, height, 1, 0, 0 }; // 1 indicates to use pixel sizes
+	FTC_ScalerRec scaler = { (FTC_FaceID)faceID, width, height, 1, 0, 0 }; // 1 indicates to use pixel sizes
 	FT_Size size;
 	FT_Error err = FTC_Manager_LookupSize( m_manager, &scaler, &size );
 	if( err )
@@ -239,7 +239,7 @@ std::pair<int, int> Tr2FontManager::LookupMetricsFromScript( const FaceID& faceI
 // Returns:
 //   Horizontal (x) kerning value, in pixels, for the given glyph pair.
 //////////////////////////////////////////////////////////////////////////
-FT_Pos Tr2FontManager::LookupKerningXP(const FaceID& faceID, int leftIndex, int rightIndex )
+FT_Pos Tr2FontManager::LookupKerningXP( const FaceID& faceID, int leftIndex, int rightIndex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -298,7 +298,7 @@ int Tr2FontManager::LookupGlyphIndex( const FaceID& faceID, int charCode )
 //   height     - the height of the font, in pixels
 //   glyphIndex  - glyph index as returned by LookupGlyphIndex
 //////////////////////////////////////////////////////////////////////////
- Be::Result<std::string> Tr2FontManager::LookupSBit( const FaceID& faceID, int width, int height, int glyphIndex, Tr2SBitWrapper** result )
+Be::Result<std::string> Tr2FontManager::LookupSBit( const FaceID& faceID, int width, int height, int glyphIndex, Tr2SBitWrapper** result )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -326,7 +326,7 @@ int Tr2FontManager::LookupGlyphIndex( const FaceID& faceID, int charCode )
 
 inline FT_Fixed Fix( float f )
 {
-	return (FT_Fixed) floor(f * float(1<<16) + 0.5f);
+	return (FT_Fixed)floor( f * float( 1 << 16 ) + 0.5f );
 }
 
 //-----------------------------------------------------------------------------
@@ -370,14 +370,14 @@ FT_Face Tr2FontManager::LoadFromDisk( FTC_FaceID id )
 	// to the stream when it is done, making it safe for
 	// us to delete it there.
 	FT_Stream stream = CCP_NEW( "Tr2FontManager/LoadFromDisk/stream" ) FT_StreamRec;
-	if( !stream ) 
+	if( !stream )
 	{
 		return NULL;
 	}
 	memset( stream, 0, sizeof( *stream ) );
 
 	stream->descriptor.pointer = (void*)fp.p;
-	
+
 	stream->read = &FileRead;
 	stream->close = &FileClose;
 	stream->size = (unsigned int)fileLength;
@@ -386,7 +386,7 @@ FT_Face Tr2FontManager::LoadFromDisk( FTC_FaceID id )
 	openargs.flags = FT_OPEN_STREAM;
 	openargs.stream = stream;
 	FT_Face face;
-	FT_Error e = FT_Open_Face(m_ftLib, &openargs, 0, &face);
+	FT_Error e = FT_Open_Face( m_ftLib, &openargs, 0, &face );
 	if( e )
 	{
 		CCP_LOGERR( "Tr2FontManager::LoadFromDisk: FT_Open_Face failed for '%s'", fontPath );
@@ -408,7 +408,7 @@ FT_Face Tr2FontManager::LoadFromDisk( FTC_FaceID id )
 FT_Error Tr2FontManager::FaceRequester( FTC_FaceID face_id, FT_Library library, FT_Pointer request_data, FT_Face* aface )
 {
 	Tr2FontManager* fm = reinterpret_cast<Tr2FontManager*>( request_data );
-	
+
 	*aface = fm->LoadFromDisk( face_id );
 	if( *aface == NULL )
 	{
@@ -422,7 +422,7 @@ FT_Error Tr2FontManager::FaceRequester( FTC_FaceID face_id, FT_Library library, 
 //A function to get the bit value from a b/w bitmap
 inline int GetBit( uint8_t* line, int bit )
 {
-	const int c = (int)line[bit>>3];
+	const int c = (int)line[bit >> 3];
 	const int mask = 128 >> ( bit & 7 );
 	return c & mask;
 }
@@ -494,7 +494,7 @@ bool Tr2FontManager::GetAtlasTextureForSbit( FTC_SBit sbit, Tr2AtlasTexture** at
 
 	if( sbit->format == 1 )
 	{
-		for( int l = 0; l < sbit->height; ++l ) 
+		for( int l = 0; l < sbit->height; ++l )
 		{
 			uint32_t* pDestLine = (uint32_t*)( (char*)pDest + l * pitch );
 			uint8_t* pSrcLine = (uint8_t*)sbit->buffer + l * sbit->pitch;
@@ -518,7 +518,7 @@ bool Tr2FontManager::GetAtlasTextureForSbit( FTC_SBit sbit, Tr2AtlasTexture** at
 	}
 	else
 	{
-		for( int l = 0; l < sbit->height; ++l ) 
+		for( int l = 0; l < sbit->height; ++l )
 		{
 			uint32_t* pDestLine = (uint32_t*)( (uint8_t*)pDest + l * pitch );
 			uint8_t* pSrcLine = (uint8_t*)sbit->buffer + l * sbit->pitch;
@@ -540,7 +540,7 @@ bool Tr2FontManager::GetAtlasTextureForSbit( FTC_SBit sbit, Tr2AtlasTexture** at
 	uint32_t* pLastLine = (uint32_t*)( (uint8_t*)pDest + sbit->height * pitch );
 	CCP_ASSERT( pitch >= sbit->width * 4u );
 	memset( pLastLine, 0, sbit->width * 4 );
-	
+
 	tex->UnlockBuffer();
 
 	BluePtr<IWeakObject> weakObj( BlueCastPtr( tex->GetRawRoot() ) );
@@ -561,7 +561,7 @@ void Tr2FontManager::WeakRefNotify( IWeakObject* p )
 {
 	// Object is about to die - we resurrect it, but move it to a different map.
 	FTC_SBit sbit = m_textureToSbitMap[p];
-	
+
 	// Remove the object from the main map
 	m_sbitToTextureMap.erase( sbit );
 	m_textureToSbitMap.erase( p );
@@ -576,7 +576,7 @@ void Tr2FontManager::WeakRefNotify( IWeakObject* p )
 	entry.glyphObject = p;
 	entry.lastFrameUsed = unsigned( Tr2Renderer::GetCurrentFrameCounter() );
 	entry.memoryUsage = memoryUsage;
-	m_sbitToCachedTextureMap[ sbit ] = entry;
+	m_sbitToCachedTextureMap[sbit] = entry;
 	p->Lock();
 
 	m_totalGlyphsCachedSize += memoryUsage;
@@ -733,7 +733,7 @@ std::pair<int, int> Tr2FontManager::LookupFaceIDAndGlyphIndex( const std::string
 static unsigned long FileRead( FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count )
 {
 	IResFile* fp = (IResFile*)stream->descriptor.pointer;
-	
+
 	if( count == 0 )
 	{
 		ssize_t ret = fp->Seek( offset, ICcpStream::SO_BEGIN );
@@ -755,7 +755,7 @@ static unsigned long FileRead( FT_Stream stream, unsigned long offset, unsigned 
 	while( (unsigned long)bytesRead < count )
 	{
 		bytesRead += fp->Read( (void*)tmpData, count - bytesRead );
-	
+
 		memcpy( buffer, tmpData, bytesRead );
 		buffer += bytesRead;
 	}
@@ -766,8 +766,8 @@ static unsigned long FileRead( FT_Stream stream, unsigned long offset, unsigned 
 
 static void FileClose( FT_Stream stream )
 {
-	IResFile* fp = ((IResFile*)stream->descriptor.pointer);
-	
+	IResFile* fp = ( (IResFile*)stream->descriptor.pointer );
+
 	// Close the file handle and remove the last reference
 	// to that ResFile instance, effectively deleting it.
 	fp->Close();
@@ -777,4 +777,3 @@ static void FileClose( FT_Stream stream )
 	// Delete the stream we created in LoadFromDisk
 	delete stream;
 }
-

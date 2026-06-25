@@ -11,7 +11,7 @@ BLUE_CLASS( Tr2PPGenericEffect ) :
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	Tr2PPGenericEffect( IRoot* lockobj = NULL );
 
 	Tr2EffectPtr GetEffect() const;

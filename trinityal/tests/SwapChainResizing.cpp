@@ -5,7 +5,7 @@
 #include "WithValidRenderContextFixture.h"
 
 
-struct SwapChainResizing : public WithValidRenderContext 
+struct SwapChainResizing : public WithValidRenderContext
 {
 	static ALResult ResizeWindow( uint32_t width, uint32_t height, bool windowed = true )
 	{
@@ -23,25 +23,25 @@ using namespace Tr2RenderContextEnum;
 namespace
 {
 
-	ALResult CreatePositionOnlyVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
-	{
-		uint8_t bytecode[] = {
-	#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-		};
+ALResult CreatePositionOnlyVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint8_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( PositionOnly.vs )
+	};
 
-		auto input = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
+	auto input = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
-		return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
-	}
+	return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
+}
 
-	ALResult CreateConstantColorPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
-	{
-		uint8_t bytecode[] = {
-	#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-		};
+ALResult CreateConstantColorPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint8_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( ConstantColor.ps )
+	};
 
-		return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), "", renderContext );
-	}
+	return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), "", renderContext );
+}
 
 }
 
@@ -59,9 +59,15 @@ TEST_F( SwapChainResizing, CanResizeSwapChainWhileRendering )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -124,9 +130,15 @@ TEST_F( SwapChainResizing, CanSwitchToFullScreen )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -187,9 +199,15 @@ TEST_F( SwapChainResizing, CanChangeFullscreenResolution )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;

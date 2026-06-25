@@ -19,7 +19,6 @@
 class DescriptorStateCache
 {
 public:
-
 	/** */
 	DescriptorStateCache( CComPtr<ID3D12Device> device, class Tr2PrimaryRenderContextAL* context );
 
@@ -33,25 +32,24 @@ public:
 	void Commit( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, ID3D12DescriptorHeap* globalSamplerHeap, const TrinityALImpl::Tr2RootSignatureAL* rootSignature );
 
 	/** Set an array of ShaderResourceViews */
-	void SetShaderResources(uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews);
+	void SetShaderResources( uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews );
 
 	/** Set an array of SamplerStates */
-	void SetSamplers(uint32_t startSlot, uint32_t numViews, std::shared_ptr<SamplerStateDx12>* samplers);
+	void SetSamplers( uint32_t startSlot, uint32_t numViews, std::shared_ptr<SamplerStateDx12>* samplers );
 
 	/** Set a constantbuffer */
-	void SetConstantBuffers(Tr2RenderContextEnum::ShaderType shaderStage, uint32_t slot, const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer);
+	void SetConstantBuffers( Tr2RenderContextEnum::ShaderType shaderStage, uint32_t slot, const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer );
 	D3D12_GPU_VIRTUAL_ADDRESS UploadConstants( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer );
 	D3D12_GPU_VIRTUAL_ADDRESS UploadConstants( const void* data, uint32_t size );
 
 	/** Set an array or UnorderedAccessViews */
-	void SetUnorderedAccessViews(uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews);
+	void SetUnorderedAccessViews( uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews );
 
 	void SetHeaps( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, ID3D12DescriptorHeap* globalSamplerHeap );
 
 private:
-
 	/** Instance of a root parameter set slot */
-	struct RootParameterSlot 
+	struct RootParameterSlot
 	{
 		enum ERootParameterType
 		{
@@ -61,7 +59,10 @@ private:
 			RPT_Sampler = 3
 		};
 
-		RootParameterSlot() { SetNone(); }
+		RootParameterSlot()
+		{
+			SetNone();
+		}
 
 		/** Empty slot */
 		void SetNone()
@@ -71,50 +72,50 @@ private:
 		}
 
 		/** Mark as SRV */
-		void SetSRV(D3D12_GPU_DESCRIPTOR_HANDLE address)
+		void SetSRV( D3D12_GPU_DESCRIPTOR_HANDLE address )
 		{
 			m_addressDescriptor = address;
 			m_type = RPT_SRV;
 		}
 
 		/** Mark as Sampler */
-		void SetSampler(D3D12_GPU_DESCRIPTOR_HANDLE address)
+		void SetSampler( D3D12_GPU_DESCRIPTOR_HANDLE address )
 		{
 			m_addressDescriptor = address;
 			m_type = RPT_Sampler;
 		}
 
 		/** Mark as CBV */
-		void SetCBV(D3D12_GPU_VIRTUAL_ADDRESS address)
+		void SetCBV( D3D12_GPU_VIRTUAL_ADDRESS address )
 		{
 			m_addressVirtual = address;
 			m_type = RPT_CBV;
 		}
 
 		/** Does the slot contain an SRV at the given address? */
-		bool IsValidSRV(D3D12_GPU_DESCRIPTOR_HANDLE address)
+		bool IsValidSRV( D3D12_GPU_DESCRIPTOR_HANDLE address )
 		{
 			return m_type == RPT_SRV && m_addressDescriptor.ptr == address.ptr;
 		}
 
 		/** Does the slot contain sampler at the given address? */
-		bool IsValidSampler(D3D12_GPU_DESCRIPTOR_HANDLE address)
+		bool IsValidSampler( D3D12_GPU_DESCRIPTOR_HANDLE address )
 		{
 			return m_type == RPT_Sampler && m_addressDescriptor.ptr == address.ptr;
 		}
 
 		/** Does the slot contain a CBVat the given address/stage/index */
-		bool IsValidCBV(D3D12_GPU_VIRTUAL_ADDRESS address)
+		bool IsValidCBV( D3D12_GPU_VIRTUAL_ADDRESS address )
 		{
 			return m_type == RPT_CBV && m_addressVirtual == address;
 		}
-		
-		union 
+
+		union
 		{
 			D3D12_GPU_DESCRIPTOR_HANDLE m_addressDescriptor;
 			D3D12_GPU_VIRTUAL_ADDRESS m_addressVirtual;
 		};
-		
+
 		ERootParameterType m_type;
 	};
 

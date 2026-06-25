@@ -37,12 +37,11 @@ enum Tr2TransformModifier
 
 class ITriRenderBatchAccumulator;
 
-class Tr2Transform:
-     public ITr2Renderable
+class Tr2Transform : public ITr2Renderable
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2Transform( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2Transform( IRoot* lockobj = NULL );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
@@ -51,9 +50,18 @@ public:
 	virtual bool HasTransparentBatches();
 	virtual float GetSortValue();
 
-	void SetScaling( Vector3 scaling ) { m_scaling = scaling; };
-	void SetRotation( Quaternion rotation ) { m_rotation = rotation; };
-	void SetTranslation( Vector3 translation ) { m_translation = translation; };
+	void SetScaling( Vector3 scaling )
+	{
+		m_scaling = scaling;
+	};
+	void SetRotation( Quaternion rotation )
+	{
+		m_rotation = rotation;
+	};
+	void SetTranslation( Vector3 translation )
+	{
+		m_translation = translation;
+	};
 
 	Tr2MeshBasePtr GetMesh() const;
 
@@ -67,7 +75,7 @@ protected:
 	// Update everything that's camera dependent, such as billboards.  Is called for every render, to support
 	// multiple camera's looking at the same scene.
 	// For now, this is called from any code that has a Tr2Transform, from inside GetRenderables; this way things
-	// such as a view dependent m_worldTransform are set up properly for GetSortValue and GetPerObjectData to work right.	
+	// such as a view dependent m_worldTransform are set up properly for GetSortValue and GetPerObjectData to work right.
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform );
 
 protected:

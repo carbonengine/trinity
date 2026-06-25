@@ -7,8 +7,8 @@ BLUE_DEFINE( EvePlaneSetItem );
 
 const Be::ClassInfo* EvePlaneSetItem::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EvePlaneSetItem, "" )
-        MAP_INTERFACE( EvePlaneSetItem )
+	EXPOSURE_BEGIN( EvePlaneSetItem, "" )
+		MAP_INTERFACE( EvePlaneSetItem )
 		MAP_ATTRIBUTE( "name", m_name, "Standard name", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "position", m_position, "Translation", Be::READWRITE | Be::PERSIST )
@@ -21,5 +21,5 @@ const Be::ClassInfo* EvePlaneSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "layer2Scroll", m_layer2Scroll, "Color", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, "the bone index this plane is tight to\n:jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maskAtlasID", m_maskAtlasID, "the atlas ID for the mask map", Be::READWRITE | Be::PERSIST )
-		EXPOSURE_END()
+	EXPOSURE_END()
 }

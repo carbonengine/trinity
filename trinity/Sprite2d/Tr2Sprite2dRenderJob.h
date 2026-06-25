@@ -10,8 +10,7 @@
 BLUE_DECLARE( TriRenderJob );
 BLUE_DECLARE( Tr2Sprite2dRenderJob );
 
-class Tr2Sprite2dRenderJob :
-	public Tr2SpriteObjectBase
+class Tr2Sprite2dRenderJob : public Tr2SpriteObjectBase
 {
 public:
 	EXPOSE_TO_BLUE();

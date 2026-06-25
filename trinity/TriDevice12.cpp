@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if TRINITY_PLATFORM==TRINITY_DIRECTX12
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 #include "TriDevice.h"
 #include "RenderJob/Tr2RenderJobs.h"
@@ -371,9 +371,9 @@ bool TriDevice::DeviceExists()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   A chance for device to respond to application window being activated/deactivated. 
+//   A chance for device to respond to application window being activated/deactivated.
 //   For DX11 platform we minimize fullscreen window when user alt-tabs from application
-//   and restore it back when he returns. This makes DX11 window behavior being 
+//   and restore it back when he returns. This makes DX11 window behavior being
 //   consistent with DX9.
 // Arguments:
 //   activated - true if application was activated; false otherwise

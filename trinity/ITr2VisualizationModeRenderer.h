@@ -6,19 +6,20 @@
 
 // -------------------------------------------------------------
 // Description:
-//   Objects implementing ITr2VisualizationModeRenderer are 
-//	 supposed to have an ability to render using different 
+//   Objects implementing ITr2VisualizationModeRenderer are
+//	 supposed to have an ability to render using different
 //   debug visualization modes.
 // SeeAlso:
 //   TriStepSetVisualizationMode
 // -------------------------------------------------------------
-BLUE_INTERFACE( ITr2VisualizationModeRenderer ) : public IRoot
+BLUE_INTERFACE( ITr2VisualizationModeRenderer ) :
+	public IRoot
 {
 	// -------------------------------------------------------------
 	// Description:
 	//   Sets the new visualization mode for the object.
 	// Arguments:
-	//   visualizationMode - new visualization mode (semantics of 
+	//   visualizationMode - new visualization mode (semantics of
 	//                       modes is implementation-specific).
 	// -------------------------------------------------------------
 	virtual void SetVisualizationMode( int visualizationMode ) = 0;

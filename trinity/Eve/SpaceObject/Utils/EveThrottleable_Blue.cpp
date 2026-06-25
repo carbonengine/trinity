@@ -15,5 +15,5 @@ const Be::ClassInfo* EveThrottleable::ExposeToBlue()
 		MAP_ATTRIBUTE( "maxUpdateFrequency", m_maxUpdateFrequency, "how often we process states when the object is very close\n:jessica-group: updateFrequency", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "currentUpdateFrequency", m_currentUpdateFrequency, "approximately how many times per sec the controllers updates when throttling is enabled \n:jessica-group: updateFrequency", Be::READ )
 
-    EXPOSURE_END()
+	EXPOSURE_END()
 }

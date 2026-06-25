@@ -14,8 +14,8 @@ uint32_t Align( uint32_t offset, uint32_t alignment )
 }
 }
 
-Tr2DynamicRingBuffer::Tr2DynamicRingBuffer()
-	:m_regions( "Tr2DynamicRingBuffer::m_regions" ),
+Tr2DynamicRingBuffer::Tr2DynamicRingBuffer() :
+	m_regions( "Tr2DynamicRingBuffer::m_regions" ),
 	m_sizeIncrement( 0 ),
 	m_lastPutSucceeded( false ),
 	m_bufferSize( 0 ),
@@ -31,7 +31,7 @@ Tr2DynamicRingBuffer::~Tr2DynamicRingBuffer()
 // --------------------------------------------------------------------------------------
 // Description:
 //   Puts new data into the buffer. If the data size is larget than the buffer size, the
-//   buffer is resized.  
+//   buffer is resized.
 // Arguments:
 //   data - Pointer to data
 //   size - Size of data in bytes
@@ -44,16 +44,16 @@ ALResult Tr2DynamicRingBuffer::PutData(
 	const void* data,
 	uint32_t size,
 	uint32_t& offset,
-	Tr2RenderContext& renderContext)
+	Tr2RenderContext& renderContext )
 {
 	return PutData( data, size, 4, offset, renderContext );
 }
 
-ALResult Tr2DynamicRingBuffer::PutData( 
-	const void* data, 
-	uint32_t size, 
+ALResult Tr2DynamicRingBuffer::PutData(
+	const void* data,
+	uint32_t size,
 	uint32_t alignment,
-	uint32_t& bufferOffset, 
+	uint32_t& bufferOffset,
 	Tr2RenderContext& renderContext )
 {
 	m_lastPutSucceeded = false;
@@ -123,7 +123,7 @@ ALResult Tr2DynamicRingBuffer::PutData(
 // --------------------------------------------------------------------------------------
 // Description:
 //   Notifies the object that the data updated with the previous call to PutData is no
-//   longer needed.  
+//   longer needed.
 // Arguments:
 //   renderContext - current render context
 // --------------------------------------------------------------------------------------
@@ -142,7 +142,7 @@ void Tr2DynamicRingBuffer::DoneUsingData( Tr2RenderContext& renderContext )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Checks if the given region is still used by GPU.  
+//   Checks if the given region is still used by GPU.
 // Arguments:
 //   region - Buffer region
 //   renderContext - current render context
@@ -158,12 +158,12 @@ bool Tr2DynamicRingBuffer::IsRegionUsedByGpu( BufferRegion& region, Tr2RenderCon
 	}
 
 	bool isReached = false;
-	return FAILED( region.fence->IsReached( isReached, renderContext) ) || !isReached;
+	return FAILED( region.fence->IsReached( isReached, renderContext ) ) || !isReached;
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Removes regions no longer used by GPU from m_regions vector.  
+//   Removes regions no longer used by GPU from m_regions vector.
 // Arguments:
 //   renderContext - current render context
 // --------------------------------------------------------------------------------------
@@ -369,10 +369,10 @@ Tr2BufferAL& Tr2DynamicRingBuffer::GetBuffer()
 // Return Value:
 //   AL result code
 // --------------------------------------------------------------------------------------
-ALResult Tr2DynamicRingBuffer::UpdateBuffer( 
-	const void* data, 
-	uint32_t offset, 
-	uint32_t size, 
+ALResult Tr2DynamicRingBuffer::UpdateBuffer(
+	const void* data,
+	uint32_t offset,
+	uint32_t size,
 	Tr2RenderContext& renderContext )
 {
 	uint8_t* bufferData = nullptr;
@@ -414,18 +414,18 @@ bool Tr2RingVertexBuffer::Create( uint32_t bufferSize )
 ALResult Tr2RingVertexBuffer::CreateBuffer( uint32_t size )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return m_buffer.Create( 
-		1, 
-		size, 
-		Tr2GpuUsage::VERTEX_BUFFER, 
-		Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, 
-		nullptr, 
+	return m_buffer.Create(
+		1,
+		size,
+		Tr2GpuUsage::VERTEX_BUFFER,
+		Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE,
+		nullptr,
 		renderContext );
 }
 
 
-Tr2RingIndexBuffer::Tr2RingIndexBuffer()
-	:m_indexSize( 4 )
+Tr2RingIndexBuffer::Tr2RingIndexBuffer() :
+	m_indexSize( 4 )
 {
 }
 
@@ -459,11 +459,11 @@ bool Tr2RingIndexBuffer::Create( uint32_t numberOfIndices, uint32_t indexSize )
 ALResult Tr2RingIndexBuffer::CreateBuffer( uint32_t size )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return m_buffer.Create( 
+	return m_buffer.Create(
 		m_indexSize,
 		size / m_indexSize,
-		Tr2GpuUsage::INDEX_BUFFER, 
-		Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, 
-		nullptr, 
+		Tr2GpuUsage::INDEX_BUFFER,
+		Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE,
+		nullptr,
 		renderContext );
 }

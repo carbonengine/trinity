@@ -14,39 +14,40 @@ BLUE_DECLARE_INTERFACE( IEveVolume );
 
 BLUE_CLASS( EveProceduralMethodCycling ) :
 	public IEveProceduralSelectionMethod,
-    public IListNotify,
-    public INotify
+	public IListNotify,
+	public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
 
-    EveProceduralMethodCycling( IRoot* lockobj = NULL );
+	EveProceduralMethodCycling( IRoot* lockobj = NULL );
 	~EveProceduralMethodCycling();
 
-    void SelectParameter();
+	void SelectParameter();
 
-    //  IEveProceduralSelectionMethod
-    void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-    bool IsSelectedChildModified() const override;
-    EveChildRefPtr GetSelectedChild() override;
-    IEveVolumeVector* GetDebugVolumes() override;
+	//  IEveProceduralSelectionMethod
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	bool IsSelectedChildModified() const override;
+	EveChildRefPtr GetSelectedChild() override;
+	IEveVolumeVector* GetDebugVolumes() override;
 
-    //  IListNotify
-    void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList ) override;
+	//  IListNotify
+	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList ) override;
 
-    //  INotify
-    bool OnModified( Be::Var* value ) override;
+	//  INotify
+	bool OnModified( Be::Var * value ) override;
 
 protected:
-    BlueSharedString m_name;
-    int m_selectedChildIndex;
-    PEveProceduralMethodCyclingParameterVector m_parameters;
+	BlueSharedString m_name;
+	int m_selectedChildIndex;
+	PEveProceduralMethodCyclingParameterVector m_parameters;
+
 private:
-    bool m_selectedChildModified;
+	bool m_selectedChildModified;
 	bool m_randomizeOrder;
-    PIEveVolumeVector m_debugVolumes;
-    Be::Time m_startTime;
-    float m_startTimeOffset;
+	PIEveVolumeVector m_debugVolumes;
+	Be::Time m_startTime;
+	float m_startTimeOffset;
 };
 
 TYPEDEF_BLUECLASS( EveProceduralMethodCycling );

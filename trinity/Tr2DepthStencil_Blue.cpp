@@ -7,7 +7,7 @@ BLUE_DEFINE( Tr2DepthStencil );
 
 const Be::ClassInfo* Tr2DepthStencil::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2DepthStencil, "" )
+	EXPOSURE_BEGIN( Tr2DepthStencil, "" )
 
 		MAP_INTERFACE( IRoot )
 		MAP_INTERFACE( Tr2DepthStencil )
@@ -23,11 +23,9 @@ const Be::ClassInfo* Tr2DepthStencil::ExposeToBlue()
 			":param format: buffer format (trinity.DEPTH_STENCIL_FORMAT)\n"
 			":param msaaType: sample count\n"
 			":param msaaQuality: MSAA quality\n"
-			":param flags: combination of trinity.EX_FLAG"
-		);
+			":param flags: combination of trinity.EX_FLAG" );
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
-		(
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"Create",
 			Create,
 			1,
@@ -37,8 +35,7 @@ const Be::ClassInfo* Tr2DepthStencil::ExposeToBlue()
 			":param format: buffer format (trinity.DEPTH_STENCIL_FORMAT)\n"
 			":param msaaType: sample count\n"
 			":param msaaQuality: MSAA quality"
-			":param flags: trinity.EX_FLAG"
-		)
+			":param flags: trinity.EX_FLAG" )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::PERSISTONLY );
 		MAP_PROPERTY( "name", GetName, SetName, "" )
@@ -55,21 +52,18 @@ const Be::ClassInfo* Tr2DepthStencil::ExposeToBlue()
 		MAP_PROPERTY_READONLY( "isValid", IsValid, "is the graphics object successfully creaed" );
 		MAP_PROPERTY_READONLY( "isReadable", IsReadable, "can the DS be used as a texture" );
 
-		MAP_METHOD_AND_WRAP( 
-			"sharedHandle",	
-			GetSharedHandle, 
-			"sharedHandle" 
-			);
+		MAP_METHOD_AND_WRAP(
+			"sharedHandle",
+			GetSharedHandle,
+			"sharedHandle" );
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"HasALObject",
 			HasALObject,
 			"Returns True iff Tr2DepthStencil contains a reference to passed AL object ID.\n"
 			"Used for debugging along with trinity.GetLiveALResources.\n"
 			":param alType: AL object type (trinity.AL_OBJECT_TYPE)\n"
-			":param alObject: AL object ID"
-		)
+			":param alObject: AL object ID" )
 
 	EXPOSURE_END()
 }

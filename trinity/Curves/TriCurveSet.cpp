@@ -9,8 +9,8 @@
 #include <ITriFunction.h>
 #include <ITriCurveLength.h>
 
-Tr2CurveSetRange::Tr2CurveSetRange( IRoot* )
-	:m_startTime( 0 ),
+Tr2CurveSetRange::Tr2CurveSetRange( IRoot* ) :
+	m_startTime( 0 ),
 	m_endTime( 1 ),
 	m_looped( false )
 {
@@ -48,7 +48,7 @@ TriCurveSet::~TriCurveSet()
 	}
 }
 
-void TriCurveSet::Update(  Be::Time realTime, Be::Time simTime  )
+void TriCurveSet::Update( Be::Time realTime, Be::Time simTime )
 {
 	double time;
 	if( m_useRealTime )
@@ -79,7 +79,7 @@ void TriCurveSet::Update( double time )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if ( m_driver != nullptr )
+	if( m_driver != nullptr )
 	{
 		time = m_driver->GetCurveSetTime( time );
 	}
@@ -95,7 +95,7 @@ void TriCurveSet::Update( double time )
 	{
 		if( m_startTime < 0.0 )
 		{
-			if ( m_driver != nullptr ) 
+			if( m_driver != nullptr )
 			{
 				m_startTime = 0;
 			}
@@ -130,7 +130,7 @@ void TriCurveSet::Update( double time )
 			}
 		}
 
-		if( (m_endTime > 0.0) && ((m_startTime + m_scaledTime) >= m_endTime) )
+		if( ( m_endTime > 0.0 ) && ( ( m_startTime + m_scaledTime ) >= m_endTime ) )
 		{
 			m_scaledTime = m_endTime - m_startTime - 0.001f;
 			m_stopOnNextFrame = true;
@@ -204,8 +204,8 @@ void TriCurveSet::PlayTimeRange( const char* name )
 			return;
 		}
 	}
-	
-	if ( rangeFound )
+
+	if( rangeFound )
 	{
 		Stop();
 	}
@@ -222,7 +222,7 @@ void TriCurveSet::PlayFrom( double time )
 	// some curves need to know about a play start (event curves)
 	for( ITriFunctionVector::const_iterator it = m_curves.begin(); it != m_curves.end(); ++it )
 	{
-		(*it)->Reset();
+		( *it )->Reset();
 	}
 
 	m_callback.Destroy();
@@ -319,7 +319,7 @@ bool TriCurveSet::IsPlaying() const
 
 void TriCurveSet::UpdateWithCurrentTime()
 {
-	Update( double(BeOS->GetCurrentFrameTime()) );
+	Update( double( BeOS->GetCurrentFrameTime() ) );
 }
 
 void TriCurveSet::SetTimeRange( double timeMin, double timeMax, Be::OptionalWithDefaultValue<bool, true> looped )

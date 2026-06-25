@@ -12,139 +12,141 @@ bool g_force_fsr1_availability = false;
 
 namespace Tr2UpscalingAL
 {
-	void LogResult( Result result )
+void LogResult( Result result )
+{
+	switch( result )
 	{
-		switch( result )
-		{
-		case OK:
-			CCP_LOGWARN( "Tr2Upscaling: OK" );
-			break;
+	case OK:
+		CCP_LOGWARN( "Tr2Upscaling: OK" );
+		break;
 
-		case TECHNIQUE_NOT_SUPPORTED:
-			CCP_LOGWARN( "Tr2Upscaling: Platform is not supported for the selected upscaling technique" );
-			break;
+	case TECHNIQUE_NOT_SUPPORTED:
+		CCP_LOGWARN( "Tr2Upscaling: Platform is not supported for the selected upscaling technique" );
+		break;
 
-		case HARDWARE_NOT_SUPPORTED:
-			CCP_LOGWARN( "Tr2Upscaling: Hardware is not supported" );
-			break;
-        case CONTEXT_SETUP_FAILED:
-            CCP_LOGWARN( "Tr2Upscaling: Context setup failed" );
-            break;
-        case INCORRECT_INPUT:
-            CCP_LOGWARN( "Tr2Upscaling: Incorrect input" );
-            break;
-		}
+	case HARDWARE_NOT_SUPPORTED:
+		CCP_LOGWARN( "Tr2Upscaling: Hardware is not supported" );
+		break;
+	case CONTEXT_SETUP_FAILED:
+		CCP_LOGWARN( "Tr2Upscaling: Context setup failed" );
+		break;
+	case INCORRECT_INPUT:
+		CCP_LOGWARN( "Tr2Upscaling: Incorrect input" );
+		break;
+	}
+}
+
+JitterSequence GenerateHaltonSequence( uint32_t totalPhases, uint32_t xBase, uint32_t yBase )
+{
+	auto result = JitterSequence();
+	result.reserve( totalPhases );
+
+	for( uint32_t i = 0; i < totalPhases; ++i )
+	{
+		result.push_back( { Halton( i, xBase ), Halton( i, yBase ) } );
 	}
 
-	JitterSequence GenerateHaltonSequence( uint32_t totalPhases, uint32_t xBase, uint32_t yBase )
+	return result;
+}
+
+float Halton( uint32_t index, uint32_t base )
+{
+	float result = 0.0;
+	float fractional = 1.0;
+	while( index > 0 )
 	{
-		auto result = JitterSequence();
-		result.reserve( totalPhases );
-
-		for( uint32_t i = 0; i < totalPhases; ++i )
-		{
-			result.push_back( { Halton( i, xBase ), Halton( i, yBase ) } );
-		}
-
-		return result;
+		fractional /= float( base );
+		result += fractional * float( index % base );
+		index /= base;
 	}
+	return result - 0.5f;
+}
 
-	float Halton( uint32_t index, uint32_t base )
+uint32_t ConvertDisplaySizeToRenderSize( uint32_t displaySize, float upscaling )
+{
+	uint32_t renderSize = uint32_t( (float)displaySize / (float)upscaling );
+	uint32_t addition = displaySize % 2 != renderSize % 2;
+	return renderSize + addition;
+}
+
+UpscalingInfo::UpscalingInfo() :
+	displayWidth( 0 ),
+	displayHeight( 0 ),
+	renderWidth( 0 ),
+	renderHeight( 0 ),
+	technique( Tr2UpscalingAL::Technique::NONE ),
+	setting( Tr2UpscalingAL::Setting::NATIVE ),
+	frameGeneration( false ),
+	temporal( false ),
+	hasSharpening( false ),
+	upscalingAmount( 1.0f ),
+	jitterX( 0.0f ),
+	jitterY( 0.0f ),
+	mipLevelBias( 0.0f )
+{
+}
+
+UpscalingContextParams::UpscalingContextParams( Tr2RenderContextAL& renderContext ) :
+	displayWidth( 0 ),
+	displayHeight( 0 ),
+	sourceFormat( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_UNKNOWN ),
+	depthFormat( Tr2RenderContextEnum::DepthStencilFormat::DSFMT_UNKNOWN ),
+	allowFramegen( false ),
+	renderContext( renderContext )
+{
+}
+
+//implement the equal operator
+bool UpscalingContextParams::operator==( const UpscalingContextParams& other ) const
+{
+	return displayWidth == other.displayWidth &&
+		displayHeight == other.displayHeight &&
+		sourceFormat == other.sourceFormat &&
+		depthFormat == other.depthFormat &&
+		allowFramegen == other.allowFramegen;
+}
+
+const char* GetTechniqueName( Technique technique )
+{
+	switch( technique )
 	{
-		float result = 0.0;
-		float fractional = 1.0;
-		while( index > 0 )
-		{
-			fractional /= float( base );
-			result += fractional * float( index % base );
-			index /= base;
-		}
-		return result - 0.5f;
+	case NONE:
+		return "None";
+	case FSR1:
+		return "FSR1";
+	case FSR2:
+		return "FSR2";
+	case FSR3:
+		return "FSR3";
+	case DLSS:
+		return "DLSS";
+	case METALFX:
+		return "MetalFx";
+	case XESS:
+		return "XeSS";
 	}
+	return "Unknown";
+}
 
-	uint32_t ConvertDisplaySizeToRenderSize( uint32_t displaySize, float upscaling )
+const char* GetSettingName( Setting setting )
+{
+	switch( setting )
 	{
-		uint32_t renderSize = uint32_t( (float)displaySize / (float)upscaling );
-		uint32_t addition = displaySize % 2 != renderSize % 2;
-		return renderSize + addition;
+	case NATIVE:
+		return "Native";
+	case ULTRA_QUALITY:
+		return "Ultra Quality";
+	case QUALITY:
+		return "Quality";
+	case BALANCED:
+		return "Balanced";
+	case PERFORMANCE:
+		return "Performance";
+	case ULTRA_PERFORMANCE:
+		return "Ultra Performance";
 	}
-
-	UpscalingInfo::UpscalingInfo():
-		displayWidth( 0 ),
-		displayHeight( 0 ),
-		renderWidth( 0 ),
-		renderHeight( 0 ),
-		technique( Tr2UpscalingAL::Technique::NONE ),
-		setting( Tr2UpscalingAL::Setting::NATIVE ),
-		frameGeneration( false ),
-		temporal(false),
-		hasSharpening(false),
-		upscalingAmount( 1.0f ),
-		jitterX( 0.0f ),
-		jitterY( 0.0f ),
-		mipLevelBias( 0.0f )
-	{}
-
-	UpscalingContextParams::UpscalingContextParams( Tr2RenderContextAL& renderContext ) :
-		displayWidth( 0 ),
-		displayHeight( 0 ),
-		sourceFormat( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_UNKNOWN ),
-		depthFormat( Tr2RenderContextEnum::DepthStencilFormat::DSFMT_UNKNOWN ),
-		allowFramegen( false ),
-		renderContext( renderContext )
-	{} 
-
-	//implement the equal operator
-	bool UpscalingContextParams::operator==( const UpscalingContextParams& other ) const
-	{
-		return displayWidth == other.displayWidth &&
-			displayHeight == other.displayHeight &&
-			sourceFormat == other.sourceFormat &&
-			depthFormat == other.depthFormat &&
-			allowFramegen == other.allowFramegen;
-	}
-
-	const char* GetTechniqueName( Technique technique )
-	{
-		switch( technique )
-		{
-		case NONE:
-			return "None";
-		case FSR1:
-			return "FSR1";
-		case FSR2:
-			return "FSR2";
-		case FSR3:
-			return "FSR3";
-		case DLSS:
-			return "DLSS";
-		case METALFX:
-			return "MetalFx";
-		case XESS:
-			return "XeSS";
-		}
-		return "Unknown";
-	}
-	
-	const char* GetSettingName( Setting setting )
-	{
-		switch( setting )
-		{
-		case NATIVE:
-			return "Native";
-		case ULTRA_QUALITY:
-			return "Ultra Quality";
-		case QUALITY:
-			return "Quality";
-		case BALANCED:
-			return "Balanced";
-		case PERFORMANCE:
-			return "Performance";
-		case ULTRA_PERFORMANCE:
-			return "Ultra Performance";
-		}
-		return "Unknown";
-	}
+	return "Unknown";
+}
 
 }
 
@@ -152,7 +154,7 @@ namespace Tr2UpscalingAL
 Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	m_frameGeneration( frameGeneration ),
 	m_setting( setting ),
-	m_technique( technique ), 
+	m_technique( technique ),
 	m_renderContext( renderContext )
 {
 	m_contexts = std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>>();
@@ -174,7 +176,7 @@ void Tr2UpscalingTechniqueAL::SanitizeState()
 		uint32_t leastDistance = std::numeric_limits<uint32_t>().max();
 		for( auto& availableSetting : availableSettings )
 		{
-			uint32_t currentDistance = abs(int(m_setting) - int(availableSetting));
+			uint32_t currentDistance = abs( int( m_setting ) - int( availableSetting ) );
 			if( leastDistance > currentDistance )
 			{
 				bestCandidate = availableSetting;
@@ -222,30 +224,30 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( uint32_t upscalingCo
 
 Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2UpscalingAL::UpscalingContextParams params, uint32_t existingContext )
 {
-    if( existingContext != Tr2UpscalingAL::INVALID_CONTEXT_ID )
-    {
-        auto context = m_contexts.find( existingContext );
-        if( context != m_contexts.end() )
-        {
-            if( context->second->Reuse( params) )
-            {
+	if( existingContext != Tr2UpscalingAL::INVALID_CONTEXT_ID )
+	{
+		auto context = m_contexts.find( existingContext );
+		if( context != m_contexts.end() )
+		{
+			if( context->second->Reuse( params ) )
+			{
 				context->second->SetupForReuse();
-                return context->second.get();
-            }
-        }
-        DeleteContext( existingContext );
-    }
-    // safety harness, displayWidth and displayHeight need to be bigger than 1 since it is hard to render into something
-    // that is smaller than a pixel...
-    if( params.displayWidth < 2 || params.displayHeight < 2 )
-    {
-        CCP_LOGWARN( "Cannot create an upscaler for output that is less than 2x2 pixels. Ignoring context creation" );
-        return nullptr;
-    }
-    auto context = CreateContextInstance( params );
-    m_contexts[context->GetID()].reset( context );
+				return context->second.get();
+			}
+		}
+		DeleteContext( existingContext );
+	}
+	// safety harness, displayWidth and displayHeight need to be bigger than 1 since it is hard to render into something
+	// that is smaller than a pixel...
+	if( params.displayWidth < 2 || params.displayHeight < 2 )
+	{
+		CCP_LOGWARN( "Cannot create an upscaler for output that is less than 2x2 pixels. Ignoring context creation" );
+		return nullptr;
+	}
+	auto context = CreateContextInstance( params );
+	m_contexts[context->GetID()].reset( context );
 
-    return context;
+	return context;
 }
 
 void Tr2UpscalingTechniqueAL::DeleteContext( uint32_t contextID )
@@ -260,18 +262,18 @@ void Tr2UpscalingTechniqueAL::DeleteContext( uint32_t contextID )
 	m_contexts.erase( context );
 }
 
-bool Tr2UpscalingTechniqueAL::IsAvailable( ) const
+bool Tr2UpscalingTechniqueAL::IsAvailable() const
 {
 	return true;
 }
 
-bool Tr2UpscalingTechniqueAL::SupportsFrameGeneration( ) const
+bool Tr2UpscalingTechniqueAL::SupportsFrameGeneration() const
 {
 	return false;
 }
 
 Tr2UpscalingContextAL::Tr2UpscalingContextAL( Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2UpscalingAL::UpscalingContextParams params ) :
-	m_setting(setting),
+	m_setting( setting ),
 	m_displayWidth( params.displayWidth ),
 	m_displayHeight( params.displayHeight ),
 	m_renderWidth( 0 ),
@@ -281,10 +283,10 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( Tr2UpscalingAL::Setting setting, b
 	m_jitterX( 0.0f ),
 	m_jitterY( 0.0f ),
 	m_jitterXScale( 2.0f ),
-	m_jitterYScale( -2.0f ), 
+	m_jitterYScale( -2.0f ),
 	m_params( params )
 {
-	static uint32_t CONTEXT_ID = 0; 
+	static uint32_t CONTEXT_ID = 0;
 	m_id = CONTEXT_ID++;
 
 	if( m_id == Tr2UpscalingAL::INVALID_CONTEXT_ID )
@@ -308,7 +310,6 @@ bool Tr2UpscalingContextAL::Reuse( Tr2UpscalingAL::UpscalingContextParams params
 
 void Tr2UpscalingContextAL::SetupForReuse()
 {
-
 }
 
 

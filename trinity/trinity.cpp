@@ -47,17 +47,21 @@ const char* g_moduleName = "trinity";
 #ifdef _WIN32
 extern "C"
 {
-__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
-__declspec(dllexport) uint32_t NvOptimusEnablement = 1;
+	__declspec( dllexport ) int AmdPowerXpressRequestHighPerformance = 1;
+	__declspec( dllexport ) uint32_t NvOptimusEnablement = 1;
 }
 #endif
 
 // reduce CRT link
-extern "C" void _setargv(){}
-extern "C" void _setenvp(){}
+extern "C" void _setargv()
+{
+}
+extern "C" void _setenvp()
+{
+}
 
-#define BLUETHUNKREG(_Class) \
-	PyOS->RegisterThunker(_Class::Defs(), _Class::IID() );
+#define BLUETHUNKREG( _Class ) \
+	PyOS->RegisterThunker( _Class::Defs(), _Class::IID() );
 
 #if WITH_GRANNY
 void* Tr2GrannyAllocate( const char* file, granny_int32x line, granny_uintaddrx alignment, granny_uintaddrx size, granny_int32x intent )
@@ -110,62 +114,57 @@ const char* InitializeForPython()
 #else
 PyObject* InitializeForPython()
 {
-	static PyMethodDef dummyMethods[] = {0};
+	static PyMethodDef dummyMethods[] = { 0 };
 
 	// put myself into python as a module
-    static struct PyModuleDef trinityDef = {
-        PyModuleDef_HEAD_INIT,
-        CCP_STRINGIZE( CCP_CONCATENATE( TRINITYNAME, CCP_BUILD_FLAVOR ) ),
-        "",
-        -1,
-        dummyMethods
-    };
-	PyObject* module = PyModule_Create(&trinityDef);
-    if ( module ) {
-        PyObject* dict = PyModule_GetDict(module);
+	static struct PyModuleDef trinityDef = {
+		PyModuleDef_HEAD_INIT,
+		CCP_STRINGIZE( CCP_CONCATENATE( TRINITYNAME, CCP_BUILD_FLAVOR ) ),
+		"",
+		-1,
+		dummyMethods
+	};
+	PyObject* module = PyModule_Create( &trinityDef );
+	if( module )
+	{
+		PyObject* dict = PyModule_GetDict( module );
 
-        // constants
-        AddTriConstants(dict);
+		// constants
+		AddTriConstants( dict );
 
-        // put UI into python as a separate module
-        static struct PyModuleDef triuiDef = {
-            PyModuleDef_HEAD_INIT,
-            "triui",
-            "",
-            -1,
-            dummyMethods
-        };
-        PyObject* uiModule = PyModule_Create(&triuiDef);
-        PyObject* uiDict = PyModule_GetDict(uiModule);
+		// put UI into python as a separate module
+		static struct PyModuleDef triuiDef = {
+			PyModuleDef_HEAD_INIT,
+			"triui",
+			"",
+			-1,
+			dummyMethods
+		};
+		PyObject* uiModule = PyModule_Create( &triuiDef );
+		PyObject* uiDict = PyModule_GetDict( uiModule );
 
-        AddScancodesToDict(uiDict);
-        AddUIChoosersToDict(uiDict);
+		AddScancodesToDict( uiDict );
+		AddUIChoosersToDict( uiDict );
 
-        PyObject* sys_modules = PyImport_GetModuleDict();
-        if( PyDict_SetItemString( sys_modules, triuiDef.m_name, uiModule ) != 0 )
-        {
-            return nullptr;
-        }
+		PyObject* sys_modules = PyImport_GetModuleDict();
+		if( PyDict_SetItemString( sys_modules, triuiDef.m_name, uiModule ) != 0 )
+		{
+			return nullptr;
+		}
 
-        BLUE_REGISTER_THUNKER(ITriScalarFunction_Thunk::Defs(), ITriScalarFunction_Thunk::IID());
-        BLUE_REGISTER_THUNKER(ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID());
-        BLUE_REGISTER_THUNKER(ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID());
-        BLUE_REGISTER_THUNKER(ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID());
+		BLUE_REGISTER_THUNKER( ITriScalarFunction_Thunk::Defs(), ITriScalarFunction_Thunk::IID() );
+		BLUE_REGISTER_THUNKER( ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID() );
+		BLUE_REGISTER_THUNKER( ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID() );
+		BLUE_REGISTER_THUNKER( ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID() );
 
-        BlueRegisterToModule( module, BlueRegistration::GetClassRegs(),
-                              BlueRegistration::GetFuncRegs(),
-                              BlueRegistration::GetEnumRegs(),
-                              BlueRegistration::GetTestRegs(),
-                              BlueRegistration::GetThunkerRegs(),
-                              BlueRegistration::GetFuncSignatures() );
+		BlueRegisterToModule( module, BlueRegistration::GetClassRegs(), BlueRegistration::GetFuncRegs(), BlueRegistration::GetEnumRegs(), BlueRegistration::GetTestRegs(), BlueRegistration::GetThunkerRegs(), BlueRegistration::GetFuncSignatures() );
 
-        BlueRegisterObjectsToModule( module, BlueRegistration::GetObjectRegs() );
-        BlueRegisterExceptionsToModule( module, BlueRegistration::GetExceptionRegs() );
+		BlueRegisterObjectsToModule( module, BlueRegistration::GetObjectRegs() );
+		BlueRegisterExceptionsToModule( module, BlueRegistration::GetExceptionRegs() );
 
-        PyModule_AddObject( module, "settings", BlueWrapObjectForPython(&Tr2Renderer::GetSettings()) );
-        PyModule_AddObject( module, "fontMan", BlueWrapObjectForPython( g_fontManager ) );
-
-    }
+		PyModule_AddObject( module, "settings", BlueWrapObjectForPython( &Tr2Renderer::GetSettings() ) );
+		PyModule_AddObject( module, "fontMan", BlueWrapObjectForPython( g_fontManager ) );
+	}
 
 	return module;
 }
@@ -235,7 +234,7 @@ void InitializeTrinity()
 	{
 		g_upscalingDebug = upsclingDebugArg == L"1";
 	}
-	
+
 	auto debugArg = BeOS->GetStartupArgValue( L"deviceDebug" );
 	if( !debugArg.empty() )
 	{
@@ -265,7 +264,7 @@ void InitializeTrinity()
 	{
 		g_gdrEnabled = gdpr != L"0";
 	}
-    
+
 #if WITH_GRANNY
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
 #endif
@@ -281,7 +280,7 @@ void InitializeTrinity()
 static void StartDLL()
 {
 	CCP_LOG( "Trinity (%s) module starting", CCP_STRINGIZE( TRINITYNAME ) );
-    BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
+	BeClasses->RegisterClasses( BlueRegistration::GetClassRegs() );
 
 	InitializeTrinity();
 }
@@ -298,15 +297,15 @@ extern "C" void
 #else
 	__attribute__( ( visibility( "default" ) ) )
 #endif
-		CCP_CONCATENATE( CCP_CONCATENATE( init, TRINITYNAME ), CCP_BUILD_FLAVOR )()
+	CCP_CONCATENATE( CCP_CONCATENATE( init, TRINITYNAME ), CCP_BUILD_FLAVOR )()
 {
 	StartDLL();
 	InitializeForPython();
 }
 
-#else 
+#else
 PyMODINIT_FUNC
-CCP_CONCATENATE( CCP_CONCATENATE( PyInit_, TRINITYNAME ), CCP_BUILD_FLAVOR )()
+	CCP_CONCATENATE( CCP_CONCATENATE( PyInit_, TRINITYNAME ), CCP_BUILD_FLAVOR )()
 {
 	StartDLL();
 	return InitializeForPython();
@@ -316,7 +315,7 @@ CCP_CONCATENATE( CCP_CONCATENATE( PyInit_, TRINITYNAME ), CCP_BUILD_FLAVOR )()
 
 
 #ifndef _WIN32
-static void emptySignalHandler(int)
+static void emptySignalHandler( int )
 {
 }
 #endif
@@ -342,7 +341,7 @@ static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
 {
 #ifdef _WIN32
 
-	if( PyTuple_GET_SIZE(args) == 1 )
+	if( PyTuple_GET_SIZE( args ) == 1 )
 	{
 		PyObject* o = PyTuple_GetItem( args, 0 );
 		if( PyVerCompat::IsPyString( o ) )
@@ -352,22 +351,22 @@ static PyObject* PyBreakInDebugger( PyObject* module, PyObject* args )
 			OutputDebugString( context.c_str() );
 			OutputDebugString( "\n" );
 		}
-	}	
+	}
 	DoDebugBreak();
 #else
-    struct sigaction action, oldAction;
-    memset( &action, 0, sizeof( action ) );
-    action.sa_handler = &emptySignalHandler;
-    sigaction( SIGTRAP, &action, &oldAction );
-    raise(SIGTRAP);
-    sigaction( SIGTRAP, &oldAction, &action );
+	struct sigaction action, oldAction;
+	memset( &action, 0, sizeof( action ) );
+	action.sa_handler = &emptySignalHandler;
+	sigaction( SIGTRAP, &action, &oldAction );
+	raise( SIGTRAP );
+	sigaction( SIGTRAP, &oldAction, &action );
 #endif
 
 	Py_RETURN_NONE;
 }
-MAP_FUNCTION( 
-	"BreakInDebugger", 
-	PyBreakInDebugger, 
+MAP_FUNCTION(
+	"BreakInDebugger",
+	PyBreakInDebugger,
 	"BreakInDebugger( [contextString] )\nBreaks in the debugger, if one is attached, allowing you to look at the program state at a point determined from Python.\n"
 	":param contextString: string that is dumped into the debugger output\n"
 	":type contextString: str\n"
@@ -411,18 +410,17 @@ static BlueStdResult GetObjectWorldTransform( IRoot* object, Matrix& result )
 		spaceObject->GetLocalToWorldTransform( result );
 		return BlueStdResult( BLUE_STD_RESULT_OK );
 	}
-	
+
 	return BlueStdResult( BLUE_STD_RESULT_TYPE_ERROR );
 }
 
-MAP_FUNCTION_AND_WRAP( 
-	"GetObjectWorldTransform", 
+MAP_FUNCTION_AND_WRAP(
+	"GetObjectWorldTransform",
 	GetObjectWorldTransform,
-	"Returns world transform for some supported object interfaces. Currently only\n" 
+	"Returns world transform for some supported object interfaces. Currently only\n"
 	"IEveSpaceObject2 and IEveSpaceObjectChild interfaces are supported.\n"
 	":param obj: blue object to get world transform from\n"
-	":raies TypeError: if the function does not support the object type"
-);
+	":raies TypeError: if the function does not support the object type" );
 
 // Interface definitions
 BLUE_DEFINE_INTERFACE( IWorldPosition );

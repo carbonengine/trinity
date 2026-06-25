@@ -40,7 +40,7 @@ const Be::ClassInfo* Tr2CurveLineSet::ExposeToBlue()
 			AddCurvedLineCrt,
 			1,
 			"Adds a curved line (based on splines) to the line set using cartesian coordinates, but does not submit it"
-			"\n" 
+			"\n"
 			"\n:param startPosition: The start position of the line in 3d cartesian space"
 			"\n:param startColor: The color of the line at start position"
 			"\n:param endPosition: The end position of the line in 3d cartesian space"

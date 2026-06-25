@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 
 #include "Tr2RenderContextDx11.h"
 #include "ITr2RenderContextEvents.h"
@@ -20,17 +20,18 @@
 #include "Tr2ConstantBufferALDx11.h"
 
 
-CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
-CCP_STATS_DECLARE( vertexCount			, "Trinity/AL/vertexCount"			, true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
-CCP_STATS_DECLARE( sceneDrawcallCount	, "Trinity/AL/sceneDrawcallCount"	, true, CST_COUNTER_LOW,  "Number of DrawPrimitive calls." );
+CCP_STATS_DECLARE( primitiveCount, "Trinity/AL/primitiveCount", true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( vertexCount, "Trinity/AL/vertexCount", true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( sceneDrawcallCount, "Trinity/AL/sceneDrawcallCount", true, CST_COUNTER_LOW, "Number of DrawPrimitive calls." );
 
-CCP_STATS_DECLARE( cbCacheHit	, "Trinity/AL/cbCacheHit"	, true, CST_COUNTER_HIGH, "Number of cache hits for dynamic constant buffers." );
-CCP_STATS_DECLARE( cbCacheMiss	, "Trinity/AL/cbCacheMiss"	, true, CST_COUNTER_HIGH, "Number of cache misses for dynamic constant buffers." );
+CCP_STATS_DECLARE( cbCacheHit, "Trinity/AL/cbCacheHit", true, CST_COUNTER_HIGH, "Number of cache hits for dynamic constant buffers." );
+CCP_STATS_DECLARE( cbCacheMiss, "Trinity/AL/cbCacheMiss", true, CST_COUNTER_HIGH, "Number of cache misses for dynamic constant buffers." );
 
 
 using namespace Tr2RenderContextEnum;
 
-namespace {
+namespace
+{
 
 Tr2PrimaryRenderContextAL*& GetPrimaryRenderContextPointer()
 {
@@ -38,513 +39,737 @@ Tr2PrimaryRenderContextAL*& GetPrimaryRenderContextPointer()
 	return primaryRenderContext;
 }
 
-	const D3D11_RENDER_TARGET_BLEND_DESC defaultBlend = 
-	{	
-		FALSE, 
-		D3D11_BLEND_ONE, D3D11_BLEND_ZERO, D3D11_BLEND_OP_ADD,
-		D3D11_BLEND_ONE, D3D11_BLEND_ZERO, D3D11_BLEND_OP_ADD, 
-		D3D11_COLOR_WRITE_ENABLE_ALL 
-	};
+const D3D11_RENDER_TARGET_BLEND_DESC defaultBlend = {
+	FALSE,
+	D3D11_BLEND_ONE,
+	D3D11_BLEND_ZERO,
+	D3D11_BLEND_OP_ADD,
+	D3D11_BLEND_ONE,
+	D3D11_BLEND_ZERO,
+	D3D11_BLEND_OP_ADD,
+	D3D11_COLOR_WRITE_ENABLE_ALL
+};
 
-	const D3D11_DEPTH_STENCILOP_DESC defaultStencilOp = 
-	{
-		D3D11_STENCIL_OP_KEEP,
-		D3D11_STENCIL_OP_KEEP,
-		D3D11_STENCIL_OP_KEEP,
-		D3D11_COMPARISON_ALWAYS
-	};
+const D3D11_DEPTH_STENCILOP_DESC defaultStencilOp = {
+	D3D11_STENCIL_OP_KEEP,
+	D3D11_STENCIL_OP_KEEP,
+	D3D11_STENCIL_OP_KEEP,
+	D3D11_COMPARISON_ALWAYS
+};
 
-	const D3D11_DEPTH_STENCIL_DESC defaultDepthStencil =
-	{
-		true,
-		D3D11_DEPTH_WRITE_MASK_ALL,
-		D3D11_COMPARISON_LESS,
-		false,
-		D3D11_DEFAULT_STENCIL_READ_MASK,
-		D3D11_DEFAULT_STENCIL_WRITE_MASK,
-		defaultStencilOp,
-		defaultStencilOp
-	};
+const D3D11_DEPTH_STENCIL_DESC defaultDepthStencil = {
+	true,
+	D3D11_DEPTH_WRITE_MASK_ALL,
+	D3D11_COMPARISON_LESS,
+	false,
+	D3D11_DEFAULT_STENCIL_READ_MASK,
+	D3D11_DEFAULT_STENCIL_WRITE_MASK,
+	defaultStencilOp,
+	defaultStencilOp
+};
 
-	const D3D11_RASTERIZER_DESC defaultRasterizer =
-	{
-		D3D11_FILL_SOLID,
-		D3D11_CULL_BACK,
-		false,
-		0,
-		0,
-		0,
-		true,
-		false,
-		false,
-		false
-	};
+const D3D11_RASTERIZER_DESC defaultRasterizer = {
+	D3D11_FILL_SOLID,
+	D3D11_CULL_BACK,
+	false,
+	0,
+	0,
+	0,
+	true,
+	false,
+	false,
+	false
+};
 }
 
-namespace Tr2RenderContextImpl {
+namespace Tr2RenderContextImpl
+{
 
-#pragma warning( disable: 4100 )
-	struct NullContext : ID3D11DeviceContext
+#pragma warning( disable : 4100 )
+struct NullContext : ID3D11DeviceContext
+{
+	virtual HRESULT STDMETHODCALLTYPE QueryInterface(
+		REFIID riid,
+		__RPC__deref_out void __RPC_FAR* __RPC_FAR* ppvObject )
 	{
-		virtual HRESULT STDMETHODCALLTYPE QueryInterface( 
-			REFIID riid,
-			 __RPC__deref_out void __RPC_FAR *__RPC_FAR *ppvObject) { return E_FAIL; }
-		virtual ULONG STDMETHODCALLTYPE AddRef( void)  { return S_OK; }
-		virtual ULONG STDMETHODCALLTYPE Release( void) { return S_OK; }
-		virtual void STDMETHODCALLTYPE GetDevice( ID3D11Device **ppDevice) {}
+		return E_FAIL;
+	}
+	virtual ULONG STDMETHODCALLTYPE AddRef( void )
+	{
+		return S_OK;
+	}
+	virtual ULONG STDMETHODCALLTYPE Release( void )
+	{
+		return S_OK;
+	}
+	virtual void STDMETHODCALLTYPE GetDevice( ID3D11Device** ppDevice )
+	{
+	}
 
-		virtual HRESULT STDMETHODCALLTYPE GetPrivateData( 
-			REFGUID guid,
-			uint32_t *pDataSize,
-			__out_bcount_opt( *pDataSize )  void *pData) 
-		{ return S_OK; }
+	virtual HRESULT STDMETHODCALLTYPE GetPrivateData(
+		REFGUID guid,
+		uint32_t* pDataSize,
+		__out_bcount_opt( *pDataSize ) void* pData )
+	{
+		return S_OK;
+	}
 
-		virtual HRESULT STDMETHODCALLTYPE SetPrivateData( 
-			REFGUID guid,
-			uint32_t DataSize,
-			const void *pData) 
-		{ return S_OK; }
+	virtual HRESULT STDMETHODCALLTYPE SetPrivateData(
+		REFGUID guid,
+		uint32_t DataSize,
+		const void* pData )
+	{
+		return S_OK;
+	}
 
-		virtual HRESULT STDMETHODCALLTYPE SetPrivateDataInterface( 
-			/* [annotation] */ 
-			REFGUID guid,
-			/* [annotation] */ 
-			__in_opt  const IUnknown *pData) 
-		{ return S_OK; }
-		virtual void STDMETHODCALLTYPE VSSetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer *const *ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE PSSetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView *const *ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE PSSetShader( 
-			__in_opt  ID3D11PixelShader *pPixelShader,
-			ID3D11ClassInstance *const *ppClassInstances,
-			uint32_t NumClassInstances) {}
-		virtual void STDMETHODCALLTYPE PSSetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState *const *ppSamplers) {}
-		virtual void STDMETHODCALLTYPE VSSetShader( 
-			__in_opt  ID3D11VertexShader *pVertexShader,
-			ID3D11ClassInstance *const *ppClassInstances,
-			uint32_t NumClassInstances) {}
-		virtual void STDMETHODCALLTYPE DrawIndexed( 
-			uint32_t IndexCount,
-			uint32_t StartIndexLocation,
-			INT BaseVertexLocation) {}
-		virtual void STDMETHODCALLTYPE Draw( 
-			uint32_t VertexCount,
-			uint32_t StartVertexLocation) {}
-		virtual HRESULT STDMETHODCALLTYPE Map( 
-			ID3D11Resource *pResource,
-			uint32_t Subresource,
-			D3D11_MAP MapType,
-			uint32_t MapFlags,
-			D3D11_MAPPED_SUBRESOURCE *pMappedResource){ return E_FAIL; }
-		virtual void STDMETHODCALLTYPE Unmap( 
-			ID3D11Resource *pResource,
-			uint32_t Subresource) {}
-		virtual void STDMETHODCALLTYPE PSSetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer *const *ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE IASetInputLayout( 
-			__in_opt  ID3D11InputLayout *pInputLayout) {}
-		virtual void STDMETHODCALLTYPE IASetVertexBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer *const *ppVertexBuffers,
-			const uint32_t *pStrides,
-			const uint32_t *pOffsets) {}
-		virtual void STDMETHODCALLTYPE IASetIndexBuffer( 
-			__in_opt  ID3D11Buffer *pIndexBuffer,
-			DXGI_FORMAT Format,
-			uint32_t Offset) {}
-		virtual void STDMETHODCALLTYPE DrawIndexedInstanced( 
-			uint32_t IndexCountPerInstance,
-			uint32_t InstanceCount,
-			uint32_t StartIndexLocation,
-			INT BaseVertexLocation,
-			uint32_t StartInstanceLocation) {}
-		virtual void STDMETHODCALLTYPE DrawInstanced( 
-			uint32_t VertexCountPerInstance,
-			uint32_t InstanceCount,
-			uint32_t StartVertexLocation,
-			uint32_t StartInstanceLocation) {}
-		virtual void STDMETHODCALLTYPE GSSetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer *const *ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE GSSetShader( 
-			__in_opt  ID3D11GeometryShader *pShader,
-			ID3D11ClassInstance *const *ppClassInstances,
-			uint32_t NumClassInstances) {}
-		virtual void STDMETHODCALLTYPE IASetPrimitiveTopology( 
-			D3D11_PRIMITIVE_TOPOLOGY Topology) {}
-		virtual void STDMETHODCALLTYPE VSSetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView *const *ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE VSSetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState *const *ppSamplers) {}
-		virtual void STDMETHODCALLTYPE Begin( 
-			ID3D11Asynchronous *pAsync) {}
-		virtual void STDMETHODCALLTYPE End( 
-			ID3D11Asynchronous *pAsync) {}
-		virtual HRESULT STDMETHODCALLTYPE GetData( 
-			ID3D11Asynchronous *pAsync,
-			__out_bcount_opt( DataSize )  void *pData,
-			uint32_t DataSize,
-			uint32_t GetDataFlags){return E_FAIL; }
-		virtual void STDMETHODCALLTYPE SetPredication( 
-			__in_opt  ID3D11Predicate *pPredicate,
-			BOOL PredicateValue) {}
-		virtual void STDMETHODCALLTYPE GSSetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView *const *ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE GSSetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState *const *ppSamplers) {}
-		virtual void STDMETHODCALLTYPE OMSetRenderTargets( 
-			uint32_t NumViews,
-			ID3D11RenderTargetView *const *ppRenderTargetViews,
-			__in_opt  ID3D11DepthStencilView *pDepthStencilView) {}
-		virtual void STDMETHODCALLTYPE OMSetRenderTargetsAndUnorderedAccessViews( 
-			uint32_t NumRTVs,
-			ID3D11RenderTargetView *const *ppRenderTargetViews,
-			__in_opt  ID3D11DepthStencilView *pDepthStencilView,
-			uint32_t UAVStartSlot,
-			uint32_t NumUAVs,
-			ID3D11UnorderedAccessView *const *ppUnorderedAccessViews,
-			const uint32_t *pUAVInitialCounts) {}
-		virtual void STDMETHODCALLTYPE OMSetBlendState( 
-			__in_opt  ID3D11BlendState *pBlendState,
-			__in_opt  const FLOAT BlendFactor[ 4 ],
-			uint32_t SampleMask) {}
-		virtual void STDMETHODCALLTYPE OMSetDepthStencilState( 
-			__in_opt  ID3D11DepthStencilState *pDepthStencilState,
-			uint32_t StencilRef) {}
-		virtual void STDMETHODCALLTYPE SOSetTargets( 
-			uint32_t NumBuffers,
-			ID3D11Buffer *const *ppSOTargets,
-			const uint32_t *pOffsets) {}
-		virtual void STDMETHODCALLTYPE DrawAuto( void) {}
-		virtual void STDMETHODCALLTYPE DrawIndexedInstancedIndirect( 
-			ID3D11Buffer *pBufferForArgs,
-			uint32_t AlignedByteOffsetForArgs) {}
-		virtual void STDMETHODCALLTYPE DrawInstancedIndirect( 
-			ID3D11Buffer *pBufferForArgs,
-			uint32_t AlignedByteOffsetForArgs) {}
-		virtual void STDMETHODCALLTYPE Dispatch( 
-			uint32_t ThreadGroupCountX,
-			uint32_t ThreadGroupCountY,
-			uint32_t ThreadGroupCountZ) {}
-		virtual void STDMETHODCALLTYPE DispatchIndirect( 
-			ID3D11Buffer *pBufferForArgs,
-			uint32_t AlignedByteOffsetForArgs) {}
-		virtual void STDMETHODCALLTYPE RSSetState( 
-			__in_opt  ID3D11RasterizerState *pRasterizerState) {}
-		virtual void STDMETHODCALLTYPE RSSetViewports( 
-			uint32_t NumViewports,
-			const D3D11_VIEWPORT *pViewports) {}
-		virtual void STDMETHODCALLTYPE RSSetScissorRects( 
-			uint32_t NumRects,
-			const D3D11_RECT *pRects) {}
-		virtual void STDMETHODCALLTYPE CopySubresourceRegion( 
-			ID3D11Resource *pDstResource,
-			uint32_t DstSubresource,
-			uint32_t DstX,
-			uint32_t DstY,
-			uint32_t DstZ,
-			ID3D11Resource *pSrcResource,
-			uint32_t SrcSubresource,
-			__in_opt  const D3D11_BOX *pSrcBox) {}
-		virtual void STDMETHODCALLTYPE CopyResource( 
-			ID3D11Resource *pDstResource,
-			ID3D11Resource *pSrcResource) {}
-		virtual void STDMETHODCALLTYPE UpdateSubresource( 
-			ID3D11Resource *pDstResource,
-			uint32_t DstSubresource,
-			__in_opt  const D3D11_BOX *pDstBox,
-			const void *pSrcData,
-			uint32_t SrcRowPitch,
-			uint32_t SrcDepthPitch) {}
-		virtual void STDMETHODCALLTYPE CopyStructureCount( 
-			ID3D11Buffer *pDstBuffer,
-			uint32_t DstAlignedByteOffset,
-			ID3D11UnorderedAccessView *pSrcView) {}
-		virtual void STDMETHODCALLTYPE ClearRenderTargetView( 
-			ID3D11RenderTargetView *pRenderTargetView,
-			const FLOAT ColorRGBA[ 4 ]) {}
-		virtual void STDMETHODCALLTYPE ClearUnorderedAccessViewUint( 
-			ID3D11UnorderedAccessView *pUnorderedAccessView,
-			const uint32_t Values[ 4 ]) {}
-		virtual void STDMETHODCALLTYPE ClearUnorderedAccessViewFloat( 
-			ID3D11UnorderedAccessView *pUnorderedAccessView,
-			const FLOAT Values[ 4 ]) {}
-		virtual void STDMETHODCALLTYPE ClearDepthStencilView( 
-			ID3D11DepthStencilView *pDepthStencilView,
-			uint32_t ClearFlags,
-			FLOAT Depth,
-			UINT8 Stencil) {}
-		virtual void STDMETHODCALLTYPE GenerateMips( 
-			ID3D11ShaderResourceView *pShaderResourceView) {}
-		virtual void STDMETHODCALLTYPE SetResourceMinLOD( 
-			ID3D11Resource *pResource,
-			FLOAT MinLOD) {}
-		virtual FLOAT STDMETHODCALLTYPE GetResourceMinLOD( 
-			ID3D11Resource *pResource){return 0; }
-		virtual void STDMETHODCALLTYPE ResolveSubresource( 
-			ID3D11Resource *pDstResource,
-			uint32_t DstSubresource,
-			ID3D11Resource *pSrcResource,
-			uint32_t SrcSubresource,
-			DXGI_FORMAT Format) {}
-		virtual void STDMETHODCALLTYPE ExecuteCommandList( 
-			ID3D11CommandList *pCommandList,
-			BOOL RestoreContextState) {}
-		virtual void STDMETHODCALLTYPE HSSetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView *const *ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE HSSetShader( 
-			__in_opt  ID3D11HullShader *pHullShader,
-			ID3D11ClassInstance *const *ppClassInstances,
-			uint32_t NumClassInstances) {}
-		virtual void STDMETHODCALLTYPE HSSetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState *const *ppSamplers) {}
-		virtual void STDMETHODCALLTYPE HSSetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer *const *ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE DSSetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView *const *ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE DSSetShader( 
-			__in_opt  ID3D11DomainShader *pDomainShader,
-			ID3D11ClassInstance *const *ppClassInstances,
-			uint32_t NumClassInstances) {}
-		virtual void STDMETHODCALLTYPE DSSetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState *const *ppSamplers) {}
-		virtual void STDMETHODCALLTYPE DSSetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer *const *ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE CSSetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView *const *ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE CSSetUnorderedAccessViews( 
-			uint32_t StartSlot,
-			uint32_t NumUAVs,
-			ID3D11UnorderedAccessView *const *ppUnorderedAccessViews,
-			const uint32_t *pUAVInitialCounts) {}
-		virtual void STDMETHODCALLTYPE CSSetShader( 
-			__in_opt  ID3D11ComputeShader *pComputeShader,
-			ID3D11ClassInstance *const *ppClassInstances,
-			uint32_t NumClassInstances) {}
-		virtual void STDMETHODCALLTYPE CSSetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState *const *ppSamplers) {}
-		virtual void STDMETHODCALLTYPE CSSetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer *const *ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE VSGetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer **ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE PSGetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView **ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE PSGetShader( 
-			ID3D11PixelShader **ppPixelShader,
-			ID3D11ClassInstance **ppClassInstances,
-			uint32_t *pNumClassInstances) {}
-		virtual void STDMETHODCALLTYPE PSGetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState **ppSamplers) {}
-		virtual void STDMETHODCALLTYPE VSGetShader( 
-			ID3D11VertexShader **ppVertexShader,
-			ID3D11ClassInstance **ppClassInstances,
-			uint32_t *pNumClassInstances) {}
-		virtual void STDMETHODCALLTYPE PSGetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer **ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE IAGetInputLayout( 
-			ID3D11InputLayout **ppInputLayout) {}
-		virtual void STDMETHODCALLTYPE IAGetVertexBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer **ppVertexBuffers,
-			uint32_t *pStrides,
-			uint32_t *pOffsets) {}
-		virtual void STDMETHODCALLTYPE IAGetIndexBuffer( 
-			ID3D11Buffer **pIndexBuffer,
-			DXGI_FORMAT *Format,
-			uint32_t *Offset) {}
-		virtual void STDMETHODCALLTYPE GSGetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer **ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE GSGetShader( 
-			ID3D11GeometryShader **ppGeometryShader,
-			ID3D11ClassInstance **ppClassInstances,
-			uint32_t *pNumClassInstances) {}
-		virtual void STDMETHODCALLTYPE IAGetPrimitiveTopology( 
-			D3D11_PRIMITIVE_TOPOLOGY *pTopology) {}
-		virtual void STDMETHODCALLTYPE VSGetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView **ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE VSGetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState **ppSamplers) {}
-		virtual void STDMETHODCALLTYPE GetPredication( 
-			ID3D11Predicate **ppPredicate,
-			BOOL *pPredicateValue) {}
-		virtual void STDMETHODCALLTYPE GSGetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView **ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE GSGetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState **ppSamplers) {}
-		virtual void STDMETHODCALLTYPE OMGetRenderTargets( 
-			uint32_t NumViews,
-			ID3D11RenderTargetView **ppRenderTargetViews,
-			ID3D11DepthStencilView **ppDepthStencilView) {}
-		virtual void STDMETHODCALLTYPE OMGetRenderTargetsAndUnorderedAccessViews( 
-			uint32_t NumRTVs,
-			ID3D11RenderTargetView **ppRenderTargetViews,
-			ID3D11DepthStencilView **ppDepthStencilView,
-			uint32_t UAVStartSlot,
-			uint32_t NumUAVs,
-			ID3D11UnorderedAccessView **ppUnorderedAccessViews) {}
-		virtual void STDMETHODCALLTYPE OMGetBlendState( 
-			ID3D11BlendState **ppBlendState,
-			FLOAT BlendFactor[ 4 ],
-			uint32_t *pSampleMask) {}
-		virtual void STDMETHODCALLTYPE OMGetDepthStencilState( 
-			ID3D11DepthStencilState **ppDepthStencilState,
-			uint32_t *pStencilRef) {}
-		virtual void STDMETHODCALLTYPE SOGetTargets( 
-			uint32_t NumBuffers,
-			ID3D11Buffer **ppSOTargets) {}
-		virtual void STDMETHODCALLTYPE RSGetState( 
-			ID3D11RasterizerState **ppRasterizerState) {}
-		virtual void STDMETHODCALLTYPE RSGetViewports( 
-			uint32_t *pNumViewports,
-			D3D11_VIEWPORT *pViewports) {}
-		virtual void STDMETHODCALLTYPE RSGetScissorRects( 
-			uint32_t *pNumRects,
-			D3D11_RECT *pRects) {}
-		virtual void STDMETHODCALLTYPE HSGetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView **ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE HSGetShader( 
-			ID3D11HullShader **ppHullShader,
-			ID3D11ClassInstance **ppClassInstances,
-			uint32_t *pNumClassInstances) {}
-		virtual void STDMETHODCALLTYPE HSGetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState **ppSamplers) {}
-		virtual void STDMETHODCALLTYPE HSGetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer **ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE DSGetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView **ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE DSGetShader( 
-			ID3D11DomainShader **ppDomainShader,
-			ID3D11ClassInstance **ppClassInstances,
-			uint32_t *pNumClassInstances) {}
-		virtual void STDMETHODCALLTYPE DSGetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState **ppSamplers) {}
-		virtual void STDMETHODCALLTYPE DSGetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer **ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE CSGetShaderResources( 
-			uint32_t StartSlot,
-			uint32_t NumViews,
-			ID3D11ShaderResourceView **ppShaderResourceViews) {}
-		virtual void STDMETHODCALLTYPE CSGetUnorderedAccessViews( 
-			uint32_t StartSlot,
-			uint32_t NumUAVs,
-			ID3D11UnorderedAccessView **ppUnorderedAccessViews) {}
-		virtual void STDMETHODCALLTYPE CSGetShader( 
-			ID3D11ComputeShader **ppComputeShader,
-			ID3D11ClassInstance **ppClassInstances,
-			uint32_t *pNumClassInstances) {}
-		virtual void STDMETHODCALLTYPE CSGetSamplers( 
-			uint32_t StartSlot,
-			uint32_t NumSamplers,
-			ID3D11SamplerState **ppSamplers) {}
-		virtual void STDMETHODCALLTYPE CSGetConstantBuffers( 
-			uint32_t StartSlot,
-			uint32_t NumBuffers,
-			ID3D11Buffer **ppConstantBuffers) {}
-		virtual void STDMETHODCALLTYPE ClearState( void) {}
-		virtual void STDMETHODCALLTYPE Flush( void) {}
-		virtual D3D11_DEVICE_CONTEXT_TYPE STDMETHODCALLTYPE GetType( void)
-		{return D3D11_DEVICE_CONTEXT_IMMEDIATE; }
-		virtual uint32_t STDMETHODCALLTYPE GetContextFlags( void)
-		{ return 0; }
-		virtual HRESULT STDMETHODCALLTYPE FinishCommandList( 
-			BOOL RestoreDeferredContextState,
-			ID3D11CommandList **ppCommandList)
-		{ return E_FAIL; }
-	} s_nullContext;
+	virtual HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
+		/* [annotation] */
+		REFGUID guid,
+		/* [annotation] */
+		__in_opt const IUnknown* pData )
+	{
+		return S_OK;
+	}
+	virtual void STDMETHODCALLTYPE VSSetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer* const* ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE PSSetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView* const* ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE PSSetShader(
+		__in_opt ID3D11PixelShader* pPixelShader,
+		ID3D11ClassInstance* const* ppClassInstances,
+		uint32_t NumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE PSSetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState* const* ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE VSSetShader(
+		__in_opt ID3D11VertexShader* pVertexShader,
+		ID3D11ClassInstance* const* ppClassInstances,
+		uint32_t NumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DrawIndexed(
+		uint32_t IndexCount,
+		uint32_t StartIndexLocation,
+		INT BaseVertexLocation )
+	{
+	}
+	virtual void STDMETHODCALLTYPE Draw(
+		uint32_t VertexCount,
+		uint32_t StartVertexLocation )
+	{
+	}
+	virtual HRESULT STDMETHODCALLTYPE Map(
+		ID3D11Resource* pResource,
+		uint32_t Subresource,
+		D3D11_MAP MapType,
+		uint32_t MapFlags,
+		D3D11_MAPPED_SUBRESOURCE* pMappedResource )
+	{
+		return E_FAIL;
+	}
+	virtual void STDMETHODCALLTYPE Unmap(
+		ID3D11Resource* pResource,
+		uint32_t Subresource )
+	{
+	}
+	virtual void STDMETHODCALLTYPE PSSetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer* const* ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE IASetInputLayout(
+		__in_opt ID3D11InputLayout* pInputLayout )
+	{
+	}
+	virtual void STDMETHODCALLTYPE IASetVertexBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer* const* ppVertexBuffers,
+		const uint32_t* pStrides,
+		const uint32_t* pOffsets )
+	{
+	}
+	virtual void STDMETHODCALLTYPE IASetIndexBuffer(
+		__in_opt ID3D11Buffer* pIndexBuffer,
+		DXGI_FORMAT Format,
+		uint32_t Offset )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DrawIndexedInstanced(
+		uint32_t IndexCountPerInstance,
+		uint32_t InstanceCount,
+		uint32_t StartIndexLocation,
+		INT BaseVertexLocation,
+		uint32_t StartInstanceLocation )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DrawInstanced(
+		uint32_t VertexCountPerInstance,
+		uint32_t InstanceCount,
+		uint32_t StartVertexLocation,
+		uint32_t StartInstanceLocation )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GSSetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer* const* ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GSSetShader(
+		__in_opt ID3D11GeometryShader* pShader,
+		ID3D11ClassInstance* const* ppClassInstances,
+		uint32_t NumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE IASetPrimitiveTopology(
+		D3D11_PRIMITIVE_TOPOLOGY Topology )
+	{
+	}
+	virtual void STDMETHODCALLTYPE VSSetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView* const* ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE VSSetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState* const* ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE Begin(
+		ID3D11Asynchronous* pAsync )
+	{
+	}
+	virtual void STDMETHODCALLTYPE End(
+		ID3D11Asynchronous* pAsync )
+	{
+	}
+	virtual HRESULT STDMETHODCALLTYPE GetData(
+		ID3D11Asynchronous* pAsync,
+		__out_bcount_opt( DataSize ) void* pData,
+		uint32_t DataSize,
+		uint32_t GetDataFlags )
+	{
+		return E_FAIL;
+	}
+	virtual void STDMETHODCALLTYPE SetPredication(
+		__in_opt ID3D11Predicate* pPredicate,
+		BOOL PredicateValue )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GSSetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView* const* ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GSSetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState* const* ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE OMSetRenderTargets(
+		uint32_t NumViews,
+		ID3D11RenderTargetView* const* ppRenderTargetViews,
+		__in_opt ID3D11DepthStencilView* pDepthStencilView )
+	{
+	}
+	virtual void STDMETHODCALLTYPE OMSetRenderTargetsAndUnorderedAccessViews(
+		uint32_t NumRTVs,
+		ID3D11RenderTargetView* const* ppRenderTargetViews,
+		__in_opt ID3D11DepthStencilView* pDepthStencilView,
+		uint32_t UAVStartSlot,
+		uint32_t NumUAVs,
+		ID3D11UnorderedAccessView* const* ppUnorderedAccessViews,
+		const uint32_t* pUAVInitialCounts )
+	{
+	}
+	virtual void STDMETHODCALLTYPE OMSetBlendState(
+		__in_opt ID3D11BlendState* pBlendState,
+		__in_opt const FLOAT BlendFactor[4],
+		uint32_t SampleMask )
+	{
+	}
+	virtual void STDMETHODCALLTYPE OMSetDepthStencilState(
+		__in_opt ID3D11DepthStencilState* pDepthStencilState,
+		uint32_t StencilRef )
+	{
+	}
+	virtual void STDMETHODCALLTYPE SOSetTargets(
+		uint32_t NumBuffers,
+		ID3D11Buffer* const* ppSOTargets,
+		const uint32_t* pOffsets )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DrawAuto( void )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DrawIndexedInstancedIndirect(
+		ID3D11Buffer* pBufferForArgs,
+		uint32_t AlignedByteOffsetForArgs )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DrawInstancedIndirect(
+		ID3D11Buffer* pBufferForArgs,
+		uint32_t AlignedByteOffsetForArgs )
+	{
+	}
+	virtual void STDMETHODCALLTYPE Dispatch(
+		uint32_t ThreadGroupCountX,
+		uint32_t ThreadGroupCountY,
+		uint32_t ThreadGroupCountZ )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DispatchIndirect(
+		ID3D11Buffer* pBufferForArgs,
+		uint32_t AlignedByteOffsetForArgs )
+	{
+	}
+	virtual void STDMETHODCALLTYPE RSSetState(
+		__in_opt ID3D11RasterizerState* pRasterizerState )
+	{
+	}
+	virtual void STDMETHODCALLTYPE RSSetViewports(
+		uint32_t NumViewports,
+		const D3D11_VIEWPORT* pViewports )
+	{
+	}
+	virtual void STDMETHODCALLTYPE RSSetScissorRects(
+		uint32_t NumRects,
+		const D3D11_RECT* pRects )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CopySubresourceRegion(
+		ID3D11Resource* pDstResource,
+		uint32_t DstSubresource,
+		uint32_t DstX,
+		uint32_t DstY,
+		uint32_t DstZ,
+		ID3D11Resource* pSrcResource,
+		uint32_t SrcSubresource,
+		__in_opt const D3D11_BOX* pSrcBox )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CopyResource(
+		ID3D11Resource* pDstResource,
+		ID3D11Resource* pSrcResource )
+	{
+	}
+	virtual void STDMETHODCALLTYPE UpdateSubresource(
+		ID3D11Resource* pDstResource,
+		uint32_t DstSubresource,
+		__in_opt const D3D11_BOX* pDstBox,
+		const void* pSrcData,
+		uint32_t SrcRowPitch,
+		uint32_t SrcDepthPitch )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CopyStructureCount(
+		ID3D11Buffer* pDstBuffer,
+		uint32_t DstAlignedByteOffset,
+		ID3D11UnorderedAccessView* pSrcView )
+	{
+	}
+	virtual void STDMETHODCALLTYPE ClearRenderTargetView(
+		ID3D11RenderTargetView* pRenderTargetView,
+		const FLOAT ColorRGBA[4] )
+	{
+	}
+	virtual void STDMETHODCALLTYPE ClearUnorderedAccessViewUint(
+		ID3D11UnorderedAccessView* pUnorderedAccessView,
+		const uint32_t Values[4] )
+	{
+	}
+	virtual void STDMETHODCALLTYPE ClearUnorderedAccessViewFloat(
+		ID3D11UnorderedAccessView* pUnorderedAccessView,
+		const FLOAT Values[4] )
+	{
+	}
+	virtual void STDMETHODCALLTYPE ClearDepthStencilView(
+		ID3D11DepthStencilView* pDepthStencilView,
+		uint32_t ClearFlags,
+		FLOAT Depth,
+		UINT8 Stencil )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GenerateMips(
+		ID3D11ShaderResourceView* pShaderResourceView )
+	{
+	}
+	virtual void STDMETHODCALLTYPE SetResourceMinLOD(
+		ID3D11Resource* pResource,
+		FLOAT MinLOD )
+	{
+	}
+	virtual FLOAT STDMETHODCALLTYPE GetResourceMinLOD(
+		ID3D11Resource* pResource )
+	{
+		return 0;
+	}
+	virtual void STDMETHODCALLTYPE ResolveSubresource(
+		ID3D11Resource* pDstResource,
+		uint32_t DstSubresource,
+		ID3D11Resource* pSrcResource,
+		uint32_t SrcSubresource,
+		DXGI_FORMAT Format )
+	{
+	}
+	virtual void STDMETHODCALLTYPE ExecuteCommandList(
+		ID3D11CommandList* pCommandList,
+		BOOL RestoreContextState )
+	{
+	}
+	virtual void STDMETHODCALLTYPE HSSetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView* const* ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE HSSetShader(
+		__in_opt ID3D11HullShader* pHullShader,
+		ID3D11ClassInstance* const* ppClassInstances,
+		uint32_t NumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE HSSetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState* const* ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE HSSetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer* const* ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DSSetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView* const* ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DSSetShader(
+		__in_opt ID3D11DomainShader* pDomainShader,
+		ID3D11ClassInstance* const* ppClassInstances,
+		uint32_t NumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DSSetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState* const* ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DSSetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer* const* ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSSetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView* const* ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSSetUnorderedAccessViews(
+		uint32_t StartSlot,
+		uint32_t NumUAVs,
+		ID3D11UnorderedAccessView* const* ppUnorderedAccessViews,
+		const uint32_t* pUAVInitialCounts )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSSetShader(
+		__in_opt ID3D11ComputeShader* pComputeShader,
+		ID3D11ClassInstance* const* ppClassInstances,
+		uint32_t NumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSSetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState* const* ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSSetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer* const* ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE VSGetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer** ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE PSGetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView** ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE PSGetShader(
+		ID3D11PixelShader** ppPixelShader,
+		ID3D11ClassInstance** ppClassInstances,
+		uint32_t* pNumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE PSGetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState** ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE VSGetShader(
+		ID3D11VertexShader** ppVertexShader,
+		ID3D11ClassInstance** ppClassInstances,
+		uint32_t* pNumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE PSGetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer** ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE IAGetInputLayout(
+		ID3D11InputLayout** ppInputLayout )
+	{
+	}
+	virtual void STDMETHODCALLTYPE IAGetVertexBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer** ppVertexBuffers,
+		uint32_t* pStrides,
+		uint32_t* pOffsets )
+	{
+	}
+	virtual void STDMETHODCALLTYPE IAGetIndexBuffer(
+		ID3D11Buffer** pIndexBuffer,
+		DXGI_FORMAT* Format,
+		uint32_t* Offset )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GSGetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer** ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GSGetShader(
+		ID3D11GeometryShader** ppGeometryShader,
+		ID3D11ClassInstance** ppClassInstances,
+		uint32_t* pNumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE IAGetPrimitiveTopology(
+		D3D11_PRIMITIVE_TOPOLOGY* pTopology )
+	{
+	}
+	virtual void STDMETHODCALLTYPE VSGetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView** ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE VSGetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState** ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GetPredication(
+		ID3D11Predicate** ppPredicate,
+		BOOL* pPredicateValue )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GSGetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView** ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE GSGetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState** ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE OMGetRenderTargets(
+		uint32_t NumViews,
+		ID3D11RenderTargetView** ppRenderTargetViews,
+		ID3D11DepthStencilView** ppDepthStencilView )
+	{
+	}
+	virtual void STDMETHODCALLTYPE OMGetRenderTargetsAndUnorderedAccessViews(
+		uint32_t NumRTVs,
+		ID3D11RenderTargetView** ppRenderTargetViews,
+		ID3D11DepthStencilView** ppDepthStencilView,
+		uint32_t UAVStartSlot,
+		uint32_t NumUAVs,
+		ID3D11UnorderedAccessView** ppUnorderedAccessViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE OMGetBlendState(
+		ID3D11BlendState** ppBlendState,
+		FLOAT BlendFactor[4],
+		uint32_t* pSampleMask )
+	{
+	}
+	virtual void STDMETHODCALLTYPE OMGetDepthStencilState(
+		ID3D11DepthStencilState** ppDepthStencilState,
+		uint32_t* pStencilRef )
+	{
+	}
+	virtual void STDMETHODCALLTYPE SOGetTargets(
+		uint32_t NumBuffers,
+		ID3D11Buffer** ppSOTargets )
+	{
+	}
+	virtual void STDMETHODCALLTYPE RSGetState(
+		ID3D11RasterizerState** ppRasterizerState )
+	{
+	}
+	virtual void STDMETHODCALLTYPE RSGetViewports(
+		uint32_t* pNumViewports,
+		D3D11_VIEWPORT* pViewports )
+	{
+	}
+	virtual void STDMETHODCALLTYPE RSGetScissorRects(
+		uint32_t* pNumRects,
+		D3D11_RECT* pRects )
+	{
+	}
+	virtual void STDMETHODCALLTYPE HSGetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView** ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE HSGetShader(
+		ID3D11HullShader** ppHullShader,
+		ID3D11ClassInstance** ppClassInstances,
+		uint32_t* pNumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE HSGetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState** ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE HSGetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer** ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DSGetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView** ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DSGetShader(
+		ID3D11DomainShader** ppDomainShader,
+		ID3D11ClassInstance** ppClassInstances,
+		uint32_t* pNumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DSGetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState** ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE DSGetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer** ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSGetShaderResources(
+		uint32_t StartSlot,
+		uint32_t NumViews,
+		ID3D11ShaderResourceView** ppShaderResourceViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSGetUnorderedAccessViews(
+		uint32_t StartSlot,
+		uint32_t NumUAVs,
+		ID3D11UnorderedAccessView** ppUnorderedAccessViews )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSGetShader(
+		ID3D11ComputeShader** ppComputeShader,
+		ID3D11ClassInstance** ppClassInstances,
+		uint32_t* pNumClassInstances )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSGetSamplers(
+		uint32_t StartSlot,
+		uint32_t NumSamplers,
+		ID3D11SamplerState** ppSamplers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE CSGetConstantBuffers(
+		uint32_t StartSlot,
+		uint32_t NumBuffers,
+		ID3D11Buffer** ppConstantBuffers )
+	{
+	}
+	virtual void STDMETHODCALLTYPE ClearState( void )
+	{
+	}
+	virtual void STDMETHODCALLTYPE Flush( void )
+	{
+	}
+	virtual D3D11_DEVICE_CONTEXT_TYPE STDMETHODCALLTYPE GetType( void )
+	{
+		return D3D11_DEVICE_CONTEXT_IMMEDIATE;
+	}
+	virtual uint32_t STDMETHODCALLTYPE GetContextFlags( void )
+	{
+		return 0;
+	}
+	virtual HRESULT STDMETHODCALLTYPE FinishCommandList(
+		BOOL RestoreDeferredContextState,
+		ID3D11CommandList** ppCommandList )
+	{
+		return E_FAIL;
+	}
+} s_nullContext;
 
 }
-#pragma warning( default: 4100 )
+#pragma warning( default : 4100 )
 
-Tr2RenderContextAL::Tr2RenderContextAL() throw()
-	: m_topology( TOP_INVALID )
-	, m_lastSetTopology( TOP_INVALID )	
-	, m_renderTargetHighWaterMark( 1 )
-	, m_lastSetVertexLayoutVSHash( 0 )
-	, m_stackDS( "Tr2RenderContextAL::m_stackDS" )
-	, m_useReadOnlyDepthView( false )
-	, m_isDepthReadOnly( false )
-	, m_isSrgbRenderTarget( false )
-	, m_previouslyHadHullShader( false )
-	, m_events( nullptr )
-	, m_aftermathContext( nullptr ),
-	m_assignedUavCount( 0 ),
-	m_assignedUavOffset( 0 ),
-	m_assignedPsUavs( false )
-{	
+Tr2RenderContextAL::Tr2RenderContextAL() throw() :
+	m_topology( TOP_INVALID ), m_lastSetTopology( TOP_INVALID ), m_renderTargetHighWaterMark( 1 ), m_lastSetVertexLayoutVSHash( 0 ), m_stackDS( "Tr2RenderContextAL::m_stackDS" ), m_useReadOnlyDepthView( false ), m_isDepthReadOnly( false ), m_isSrgbRenderTarget( false ), m_previouslyHadHullShader( false ), m_events( nullptr ), m_aftermathContext( nullptr ), m_assignedUavCount( 0 ), m_assignedUavOffset( 0 ), m_assignedPsUavs( false )
+{
 	m_dirtyFlag.mask = 0;
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
 
-	static_assert(	D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT >= MAX_RENDER_TARGET, 
-					"Bad define" );
+	static_assert( D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT >= MAX_RENDER_TARGET,
+				   "Bad define" );
 
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
@@ -556,8 +781,7 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw()
 		m_sharedConstantBuffers[i].size = 0;
 	}
 
-	memset( &m_renderStateEmulation.m_currentBlend, 0, 
-			sizeof( m_renderStateEmulation.m_currentBlend ) );
+	memset( &m_renderStateEmulation.m_currentBlend, 0, sizeof( m_renderStateEmulation.m_currentBlend ) );
 	m_renderStateEmulation.m_currentBlend.RenderTarget[0] = defaultBlend;
 
 	m_renderStateEmulation.m_currentDepthStencil = defaultDepthStencil;
@@ -605,23 +829,22 @@ void Tr2RenderContextAL::Destroy() throw()
 	m_assignedUavOffset = 0;
 	m_assignedPsUavs = false;
 
-	m_secondaryDefaultBackBuffer = Tr2TextureAL();	
+	m_secondaryDefaultBackBuffer = Tr2TextureAL();
 	if( m_aftermathContext )
 	{
 		GFSDK_Aftermath_ReleaseContextHandle( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ) );
 		m_aftermathContext = nullptr;
 	}
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
-		
-	m_boundDepthStencil	= Tr2TextureAL();
+
+	m_boundDepthStencil = Tr2TextureAL();
 
 	m_topology = TOP_INVALID;
 	m_lastSetTopology = TOP_INVALID;
 
 	std::fill_n( m_boundRenderTarget, MAX_RENDER_TARGET, BoundRT{} );
 
-	memset( &m_renderStateEmulation.m_currentBlend, 0, 
-			sizeof( m_renderStateEmulation.m_currentBlend ) );
+	memset( &m_renderStateEmulation.m_currentBlend, 0, sizeof( m_renderStateEmulation.m_currentBlend ) );
 	m_renderStateEmulation.m_currentBlend.RenderTarget[0] = defaultBlend;
 
 	m_renderStateEmulation.m_currentDepthStencil = defaultDepthStencil;
@@ -635,7 +858,7 @@ void Tr2RenderContextAL::Destroy() throw()
 	m_renderStateEmulation.s_rasterizerCache.clear();
 
 	m_dirtyFlag.mask = 0;
-	
+
 	m_fragmentOpBuffer = Tr2ConstantBufferAL();
 
 	//raw pointers only//m_vertexShader.Destroy();
@@ -644,7 +867,7 @@ void Tr2RenderContextAL::Destroy() throw()
 	m_lastSetVertexLayoutVSHash = 0;
 
 	m_drawUP.Destroy();
-	
+
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
 		TrackableStdStack<BoundRT> stack;
@@ -668,11 +891,11 @@ void Tr2RenderContextAL::Destroy() throw()
 PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const throw()
 {
 	auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-	return renderContext.GetBackBufferFormat();	
+	return renderContext.GetBackBufferFormat();
 }
 
 ALResult Tr2RenderContextAL::BeginScene() throw()
-{ 
+{
 	m_shaderProgram = Tr2ShaderProgramAL();
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
 
@@ -694,13 +917,12 @@ ALResult Tr2RenderContextAL::BeginScene() throw()
 				0,
 				TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES,
 				nullSrv );
-
 		}
 	}
 	m_currentResourceSet = Tr2ResourceSetAL();
 
 
-	return S_OK; 
+	return S_OK;
 }
 
 bool Tr2RenderContextAL::IsValid() const throw()
@@ -727,8 +949,8 @@ __forceinline uint32_t Tr2RenderContextAL::ComputeVertexCount( uint32_t primitiv
 	case TOP_POINTS:
 	case TOP_TRIANGLE_FAN:
 		return primitiveCount;
-			
-	
+
+
 	default:
 		CCP_ASSERT_M( false, "Unsupported topology" );
 		return 0;
@@ -746,14 +968,14 @@ void Tr2RenderContextAL::ApplyReadOnlyDepth() throw()
 	}
 };
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitive(	
+ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 	uint32_t,
-	uint32_t startIndex, 
-	uint32_t primitiveCount, 
+	uint32_t startIndex,
+	uint32_t primitiveCount,
 	uint32_t baseVertexLocation ) throw()
 {
 	auto vc = ComputeVertexCount( primitiveCount );
-	
+
 	CCP_STATS_ADD( primitiveCount, primitiveCount );
 	CCP_STATS_ADD( vertexCount, vc );
 	CCP_STATS_INC( sceneDrawcallCount );
@@ -765,14 +987,14 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 
 	ApplyReadOnlyDepth();
 	m_context->DrawIndexed( vc, startIndex, baseVertexLocation );
-	
+
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedInstanced(	
-	uint32_t, 
-	uint32_t startIndex,	
-	uint32_t primitiveCount, 
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t,
+	uint32_t startIndex,
+	uint32_t primitiveCount,
 	uint32_t numInstances ) throw()
 {
 	auto vc = ComputeVertexCount( primitiveCount );
@@ -788,7 +1010,7 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 
 	ApplyReadOnlyDepth();
 	m_context->DrawIndexedInstanced( vc, numInstances, startIndex, 0, 0 );
-	
+
 	return S_OK;
 }
 
@@ -818,7 +1040,7 @@ ALResult Tr2RenderContextAL::DrawInstanced(
 	uint32_t vertexCountPerInstance,
 	uint32_t instanceCount,
 	uint32_t startVertexLocation,
-	uint32_t startInstanceLocation ) throw( )
+	uint32_t startInstanceLocation ) throw()
 {
 	CCP_STATS_ADD( primitiveCount, vertexCountPerInstance * instanceCount / 3 );
 	CCP_STATS_ADD( vertexCount, vertexCountPerInstance * instanceCount );
@@ -885,34 +1107,34 @@ ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primi
 
 	ApplyReadOnlyDepth();
 	m_context->Draw( vc, startVertex );
-	
+
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawPrimitiveUP(	
-	uint32_t primitiveCount, 
-	const void* vertexStreamZeroData, 
+ALResult Tr2RenderContextAL::DrawPrimitiveUP(
+	uint32_t primitiveCount,
+	const void* vertexStreamZeroData,
 	uint32_t vertexStreamZeroStride ) throw()
 {
 	return m_drawUP.DrawPrimitiveUP( m_topology, primitiveCount, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
-	uint32_t numVertices, 
-	uint32_t primitiveCount, 
-	const uint32_t* indexData, 
+ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
+	uint32_t numVertices,
+	uint32_t primitiveCount,
+	const uint32_t* indexData,
 	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride) throw()
+	uint32_t vertexStreamZeroStride ) throw()
 {
 	return m_drawUP.DrawIndexedPrimitiveUP( m_topology, numVertices, primitiveCount, indexData, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
-	uint32_t numVertices, 
-	uint32_t primitiveCount, 
-	const uint16_t* indexData, 
+ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
+	uint32_t numVertices,
+	uint32_t primitiveCount,
+	const uint16_t* indexData,
 	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride) throw()
+	uint32_t vertexStreamZeroStride ) throw()
 {
 	return m_drawUP.DrawIndexedPrimitiveUP( m_topology, numVertices, primitiveCount, indexData, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
 }
@@ -935,7 +1157,7 @@ ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned grou
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( )
+ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw()
 {
 	if( !indirectParams.IsValid() )
 	{
@@ -947,10 +1169,10 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 }
 
 ALResult Tr2RenderContextAL::SetConstants(
-									const Tr2ConstantBufferAL& buffer, 
-									Tr2RenderContextEnum::ShaderType constantType, 
-									uint32_t registerIndex, 
-									uint32_t ) throw()
+	const Tr2ConstantBufferAL& buffer,
+	Tr2RenderContextEnum::ShaderType constantType,
+	uint32_t registerIndex,
+	uint32_t ) throw()
 {
 	using namespace Tr2RenderContextEnum;
 
@@ -1014,12 +1236,12 @@ ALResult Tr2RenderContextAL::SetConstants(
 			cb.size = 0;
 		}
 	}
-	
+
 	switch( constantType )
 	{
 	case VERTEX_SHADER:
 		m_context->VSSetConstantBuffers( registerIndex, 1, bufArray );
-		break;	
+		break;
 
 	case PIXEL_SHADER:
 		m_context->PSSetConstantBuffers( registerIndex, 1, bufArray );
@@ -1048,19 +1270,18 @@ ALResult Tr2RenderContextAL::SetConstants(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::Clear(	
+ALResult Tr2RenderContextAL::Clear(
 	uint32_t clearFlags,
-	uint32_t color, 
-	float depth, 
+	uint32_t color,
+	float depth,
 	uint32_t stencil,
 	uint32_t slot ) throw()
 {
 	if( clearFlags & CLEARFLAGS_TARGET )
 	{
-		ID3D11RenderTargetView*	rtView = 
-			m_boundRenderTarget[slot].texture.IsValid() ? m_boundRenderTarget[slot].texture.m_texture->m_renderTarget[COLOR_SPACE_LINEAR + m_boundRenderTarget[slot].slice * 2]
-										:	slot == 0	? ( m_secondaryDefaultBackBuffer.m_texture->m_renderTarget.empty() ? nullptr : m_secondaryDefaultBackBuffer.m_texture->m_renderTarget[COLOR_SPACE_LINEAR] )
-														: nullptr;
+		ID3D11RenderTargetView* rtView =
+			m_boundRenderTarget[slot].texture.IsValid() ? m_boundRenderTarget[slot].texture.m_texture->m_renderTarget[COLOR_SPACE_LINEAR + m_boundRenderTarget[slot].slice * 2] : slot == 0 ? ( m_secondaryDefaultBackBuffer.m_texture->m_renderTarget.empty() ? nullptr : m_secondaryDefaultBackBuffer.m_texture->m_renderTarget[COLOR_SPACE_LINEAR] ) :
+																																															  nullptr;
 
 		if( rtView )
 		{
@@ -1090,8 +1311,9 @@ ALResult Tr2RenderContextAL::Clear(
 	if( d3dFlags && m_boundDepthStencil.IsValid() )
 	{
 		m_context->ClearDepthStencilView( m_boundDepthStencil.m_texture->m_depthStencil[TrinityALImpl::Tr2TextureAL::DepthOption::READ_WRITE],
-											d3dFlags, depth, 
-											static_cast<UINT8>(stencil) );
+										  d3dFlags,
+										  depth,
+										  static_cast<UINT8>( stencil ) );
 	}
 
 	return S_OK;
@@ -1118,7 +1340,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 		( m_context->*( setResources[i] ) )( 0, 16, nullViews );
 	}
 
-	ID3D11RenderTargetView*	rtViews[MAX_RENDER_TARGET];
+	ID3D11RenderTargetView* rtViews[MAX_RENDER_TARGET];
 	// Follow the DX9 behavior: null means 'default backbuffer' for slot 0, and 'nothing' for everything else.
 	for( uint32_t i = 0; i != m_renderTargetHighWaterMark; ++i )
 	{
@@ -1142,13 +1364,13 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 	// dont't even bother setting it when the dimensions don't match, it's not gonna work.
 	// This happens when we set/push/pop an RT and DS in two separate calls -- there's a point between
 	// those two where it's in a bad state.  Silently "works" in DX9, complains in DX11. Fix the spam:
-	if(		!m_boundDepthStencil.IsValid()				|| 
-			!m_boundRenderTarget[0].texture.IsValid() ||
-		( m_boundDepthStencil.GetDesc().GetWidth()		== bb.GetDesc().GetWidth()		&&
-		  m_boundDepthStencil.GetDesc().GetHeight()		== bb.GetDesc().GetHeight()		&&
-		  m_boundDepthStencil.GetMsaaDesc().quality == bb.GetMsaaDesc().quality	&&
-			dsMsaaType									== bbMsaaType ) )
-	{		
+	if( !m_boundDepthStencil.IsValid() ||
+		!m_boundRenderTarget[0].texture.IsValid() ||
+		( m_boundDepthStencil.GetDesc().GetWidth() == bb.GetDesc().GetWidth() &&
+		  m_boundDepthStencil.GetDesc().GetHeight() == bb.GetDesc().GetHeight() &&
+		  m_boundDepthStencil.GetMsaaDesc().quality == bb.GetMsaaDesc().quality &&
+		  dsMsaaType == bbMsaaType ) )
+	{
 		ID3D11DepthStencilView* dsView = nullptr;
 		if( m_boundDepthStencil.IsValid() )
 		{
@@ -1161,13 +1383,13 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 				dsView = m_boundDepthStencil.m_texture->m_depthStencil[TrinityALImpl::Tr2TextureAL::DepthOption::READ_WRITE];
 			}
 		}
-		m_context->OMSetRenderTargetsAndUnorderedAccessViews(	
-			m_renderTargetHighWaterMark, 
+		m_context->OMSetRenderTargetsAndUnorderedAccessViews(
+			m_renderTargetHighWaterMark,
 			rtViews,
 			dsView,
-			0, 
-			D3D11_KEEP_UNORDERED_ACCESS_VIEWS, 
-			nullptr, 
+			0,
+			D3D11_KEEP_UNORDERED_ACCESS_VIEWS,
+			nullptr,
 			nullptr );
 	}
 
@@ -1186,9 +1408,9 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 		if( m_boundRenderTarget[0].texture.IsValid() )
 		{
 			SetViewport( Tr2Viewport( bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() ) );
-		D3D11_RECT rect = { 0, 0, LONG( bb.GetDesc().GetWidth() ), LONG( bb.GetDesc().GetHeight() ) };
-		m_context->RSSetScissorRects( 1, &rect );
-	}
+			D3D11_RECT rect = { 0, 0, LONG( bb.GetDesc().GetWidth() ), LONG( bb.GetDesc().GetHeight() ) };
+			m_context->RSSetScissorRects( 1, &rect );
+		}
 		else if( m_boundDepthStencil.IsValid() )
 		{
 			SetViewport( Tr2Viewport( m_boundDepthStencil.GetDesc().GetWidth(), m_boundDepthStencil.GetDesc().GetHeight() ) );
@@ -1234,7 +1456,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	{
 		m_boundDepthStencil = Tr2TextureAL();
 	}
-	
+
 	SetRtDsToDevice( MAX_RENDER_TARGET );
 	return S_OK;
 }
@@ -1270,7 +1492,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 
 ALResult Tr2RenderContextAL::SetStreamSource(
 	uint32_t stream,
-	const Tr2BufferAL & buffer,
+	const Tr2BufferAL& buffer,
 	uint32_t offset,
 	uint32_t stride ) throw()
 {
@@ -1283,13 +1505,13 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw()
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer ) throw()
 {
 	return SetIndices( buffer, buffer.GetDesc().stride );
 }
 
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, uint32_t stride) throw()
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, uint32_t stride ) throw()
 {
 	m_context->IASetIndexBuffer( buffer.m_buffer->m_buffer, stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 0 );
 	return S_OK;
@@ -1318,15 +1540,22 @@ ALResult Tr2RenderContextAL::CopySubBuffer(
 	{
 		return E_FAIL;
 	}
-	D3D11_BOX srcBox = { offset, 0, 0, offset + length, 1, 1, };
+	D3D11_BOX srcBox = {
+		offset,
+		0,
+		0,
+		offset + length,
+		1,
+		1,
+	};
 	m_context->CopySubresourceRegion( dest.m_buffer->m_buffer,
-		0,
-		destOffset,
-		0,
-		0,
-		src.m_buffer->m_buffer,
-		0,
-		&srcBox );
+									  0,
+									  destOffset,
+									  0,
+									  0,
+									  src.m_buffer->m_buffer,
+									  0,
+									  &srcBox );
 	return S_OK;
 }
 
@@ -1382,7 +1611,7 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 	return SetRenderStatesImpl( sv, 1 );
 }
 
-ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t *stateValuePairs, uint32_t count ) throw()
+ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw()
 {
 	if( !stateValuePairs )
 	{
@@ -1392,40 +1621,40 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t *stateValuePairs, u
 	return SetRenderStatesImpl( stateValuePairs, count );
 }
 
-ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePairs, uint32_t count ) throw()
+ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t* stateValuePairs, uint32_t count ) throw()
 {
 	auto& rt0 = m_renderStateEmulation.m_currentBlend.RenderTarget[0];
-	auto& ds  = m_renderStateEmulation.m_currentDepthStencil;
-	auto& rs  = m_renderStateEmulation.m_currentRasterizer;
+	auto& ds = m_renderStateEmulation.m_currentDepthStencil;
+	auto& rs = m_renderStateEmulation.m_currentRasterizer;
 
-#define checkBlend(blends,value)							\
-	{														\
-		if( blends != static_cast<D3D11_BLEND>( value ) )	\
-		{													\
-			blends = static_cast<D3D11_BLEND>( value );		\
-			m_dirtyFlag.flags.blend = true;					\
-		}													\
+#define checkBlend( blends, value )                       \
+	{                                                     \
+		if( blends != static_cast<D3D11_BLEND>( value ) ) \
+		{                                                 \
+			blends = static_cast<D3D11_BLEND>( value );   \
+			m_dirtyFlag.flags.blend = true;               \
+		}                                                 \
 	}
 
-#define checkBlendOp(op, value )							\
-	{														\
-		if( op != static_cast<D3D11_BLEND_OP>( value ) )	\
-		{													\
-			op = static_cast<D3D11_BLEND_OP>( value );		\
-			m_dirtyFlag.flags.blend = true;					\
-		}													\
+#define checkBlendOp( op, value )                        \
+	{                                                    \
+		if( op != static_cast<D3D11_BLEND_OP>( value ) ) \
+		{                                                \
+			op = static_cast<D3D11_BLEND_OP>( value );   \
+			m_dirtyFlag.flags.blend = true;              \
+		}                                                \
 	}
 
-	for(	uint32_t i = 0; 
-			( count == 0 && *stateValuePairs ) || ( count != 0 && i != count ); 
-			++i )
+	for( uint32_t i = 0;
+		 ( count == 0 && *stateValuePairs ) || ( count != 0 && i != count );
+		 ++i )
 	{
-		static_assert(	sizeof( RenderState ) == sizeof( uint32_t ), 
-						"RenderState and value differ in size" );
+		static_assert( sizeof( RenderState ) == sizeof( uint32_t ),
+					   "RenderState and value differ in size" );
 		const RenderState state = static_cast<RenderState>( *stateValuePairs++ );
-		const uint32_t value    = *stateValuePairs++;
+		const uint32_t value = *stateValuePairs++;
 
-		if( (uint32_t)state >= RS_MAX_STATE || m_allRenderStates[ state ] == value )
+		if( (uint32_t)state >= RS_MAX_STATE || m_allRenderStates[state] == value )
 		{
 			continue;
 		}
@@ -1433,7 +1662,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 #if 1
 		if( state < RS_MAX_STATE )
 		{
-			m_allRenderStates[ state ] = value;
+			m_allRenderStates[state] = value;
 		}
 #endif
 
@@ -1446,24 +1675,36 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				rt0.BlendEnable = value ? 1 : 0;
 				m_dirtyFlag.flags.blend = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
-		case RS_SRCBLEND:		/*return*/ checkBlend( rt0.SrcBlend, value );		continue;
-		case RS_DESTBLEND:		/*return*/ checkBlend( rt0.DestBlend, value );		continue;
-		case RS_SRCBLENDALPHA:	/*return*/ checkBlend( rt0.SrcBlendAlpha, value );	continue;
-		case RS_DESTBLENDALPHA:	/*return*/ checkBlend( rt0.DestBlendAlpha, value );	continue;
+		case RS_SRCBLEND: /*return*/
+			checkBlend( rt0.SrcBlend, value );
+			continue;
+		case RS_DESTBLEND: /*return*/
+			checkBlend( rt0.DestBlend, value );
+			continue;
+		case RS_SRCBLENDALPHA: /*return*/
+			checkBlend( rt0.SrcBlendAlpha, value );
+			continue;
+		case RS_DESTBLENDALPHA: /*return*/
+			checkBlend( rt0.DestBlendAlpha, value );
+			continue;
 
-		case RS_BLENDOP:		/*return*/ checkBlendOp( rt0.BlendOp, value );		continue;
-		case RS_BLENDOPALPHA:	/*return*/ checkBlendOp( rt0.BlendOpAlpha, value );	continue;
-		
+		case RS_BLENDOP: /*return*/
+			checkBlendOp( rt0.BlendOp, value );
+			continue;
+		case RS_BLENDOPALPHA: /*return*/
+			checkBlendOp( rt0.BlendOpAlpha, value );
+			continue;
+
 		case RS_COLORWRITEENABLE:
 			if( rt0.RenderTargetWriteMask != value )
 			{
 				rt0.RenderTargetWriteMask = static_cast<UINT8>( value ) & 0xf;
-				m_dirtyFlag.flags.blend = true;			
+				m_dirtyFlag.flags.blend = true;
 			}
 			//m_queryableRenderState.m_colorWriteEnable = value;
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_SEPARATEALPHABLENDENABLE:
 			if( m_renderStateEmulation.m_separateAlphaBlendEnabled != ( value != 0 ) )
@@ -1471,7 +1712,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				m_renderStateEmulation.m_separateAlphaBlendEnabled = value != 0;
 				m_dirtyFlag.flags.blend = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 			// ------------------------------ Depth Stencil state
 		case RS_ZENABLE:
@@ -1481,26 +1722,24 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				m_dirtyFlag.flags.depthStencil = true;
 			}
 			//m_queryableRenderState.m_zEnable = value;
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_ZWRITEENABLE:
-			if( ds.DepthWriteMask != ( value	? D3D11_DEPTH_WRITE_MASK_ALL 
-												: D3D11_DEPTH_WRITE_MASK_ZERO ) )
+			if( ds.DepthWriteMask != ( value ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO ) )
 			{
-				ds.DepthWriteMask = value	? D3D11_DEPTH_WRITE_MASK_ALL 
-											: D3D11_DEPTH_WRITE_MASK_ZERO;
+				ds.DepthWriteMask = value ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
 				m_dirtyFlag.flags.depthStencil = true;
 			}
 			//m_queryableRenderState.m_zWriteEnable = value;
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_ZFUNC:
 			if( ds.DepthFunc != static_cast<D3D11_COMPARISON_FUNC>( value ) )
 			{
-				ds.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>( value );	// same -- TODO Halify the enum values
+				ds.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>( value ); // same -- TODO Halify the enum values
 				m_dirtyFlag.flags.depthStencil = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_STENCILENABLE:
 			if( ( ds.StencilEnable == 0 ) != ( value == 0 ) )
@@ -1508,7 +1747,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				ds.StencilEnable = value ? 1 : 0;
 				m_dirtyFlag.flags.depthStencil = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_STENCILMASK:
 			if( ds.StencilReadMask != value || ds.StencilWriteMask != value )
@@ -1516,7 +1755,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				ds.StencilReadMask = ds.StencilWriteMask = static_cast<UINT8>( value );
 				m_dirtyFlag.flags.depthStencil = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_STENCILREF:
 			if( m_renderStateEmulation.m_currentStencilRef != value )
@@ -1524,83 +1763,80 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				m_renderStateEmulation.m_currentStencilRef = value;
 				m_dirtyFlag.flags.depthStencil = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_STENCILFAIL:
 			if( ds.FrontFace.StencilFailOp != static_cast<D3D11_STENCIL_OP>( value ) ||
-				ds.BackFace .StencilFailOp != static_cast<D3D11_STENCIL_OP>( value ) )
+				ds.BackFace.StencilFailOp != static_cast<D3D11_STENCIL_OP>( value ) )
 			{
-				ds.FrontFace.StencilFailOp = 
-					ds.BackFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
+				ds.FrontFace.StencilFailOp =
+					ds.BackFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>( value ); // same -- TODO halify
 				m_dirtyFlag.flags.depthStencil = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_STENCILZFAIL:
 			if( ds.FrontFace.StencilDepthFailOp != static_cast<D3D11_STENCIL_OP>( value ) ||
-				ds.BackFace .StencilDepthFailOp != static_cast<D3D11_STENCIL_OP>( value ) )
+				ds.BackFace.StencilDepthFailOp != static_cast<D3D11_STENCIL_OP>( value ) )
 			{
-				ds.FrontFace.StencilDepthFailOp = 
-					ds.BackFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
+				ds.FrontFace.StencilDepthFailOp =
+					ds.BackFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>( value ); // same -- TODO halify
 				m_dirtyFlag.flags.depthStencil = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_STENCILPASS:
 			if( ds.FrontFace.StencilPassOp != static_cast<D3D11_STENCIL_OP>( value ) ||
-				ds.BackFace .StencilPassOp != static_cast<D3D11_STENCIL_OP>( value ) )
+				ds.BackFace.StencilPassOp != static_cast<D3D11_STENCIL_OP>( value ) )
 			{
-				ds.FrontFace.StencilPassOp = 
-					ds.BackFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
+				ds.FrontFace.StencilPassOp =
+					ds.BackFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>( value ); // same -- TODO halify
 				m_dirtyFlag.flags.depthStencil = true;
 			}
-			continue;	//return S_OK;
-		
+			continue; //return S_OK;
+
 		case RS_STENCILFUNC:
 			if( ds.FrontFace.StencilFunc != static_cast<D3D11_COMPARISON_FUNC>( value ) ||
-				ds.BackFace .StencilFunc != static_cast<D3D11_COMPARISON_FUNC>( value ) )
+				ds.BackFace.StencilFunc != static_cast<D3D11_COMPARISON_FUNC>( value ) )
 			{
-				ds.FrontFace.StencilFunc = 
-					ds.BackFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>( value );	// same -- TODO halify
+				ds.FrontFace.StencilFunc =
+					ds.BackFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>( value ); // same -- TODO halify
 				m_dirtyFlag.flags.depthStencil = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 
 			// ------------------------------ Rasterizer state
 		case RS_FILLMODE:
 			if( rs.FillMode != static_cast<D3D11_FILL_MODE>( value ) )
 			{
-				rs.FillMode = static_cast<D3D11_FILL_MODE>( value );	// same -- Halify
+				rs.FillMode = static_cast<D3D11_FILL_MODE>( value ); // same -- Halify
 				m_dirtyFlag.flags.rasterizer = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
-		case RS_CULLMODE:
+		case RS_CULLMODE: {
+			auto newValue = value == 1 /* D3DCULL_NONE */ ? D3D11_CULL_NONE : ( value == 3 /* D3DCULL_CCW */ ? D3D11_CULL_BACK : D3D11_CULL_FRONT );
+			if( rs.CullMode != newValue )
 			{
-				auto newValue = value == 1 /* D3DCULL_NONE */	? D3D11_CULL_NONE 
-														: ( value == 3 /* D3DCULL_CCW */	? D3D11_CULL_BACK 
-																					: D3D11_CULL_FRONT );
-				if( rs.CullMode != newValue )
-				{
-					rs.CullMode = newValue;
-					rs.FrontCounterClockwise = FALSE;
-					m_dirtyFlag.flags.rasterizer = true;
-				}
-				//m_queryableRenderState.m_cullMode = value;
+				rs.CullMode = newValue;
+				rs.FrontCounterClockwise = FALSE;
+				m_dirtyFlag.flags.rasterizer = true;
 			}
-			continue;	//return S_OK;
+			//m_queryableRenderState.m_cullMode = value;
+		}
+			continue; //return S_OK;
 
-	
+
 		case RS_DEPTHBIAS:
-		case RS_ZBIAS:	// same thing from Dx8?
-			if( rs.DepthBias != static_cast<INT>(value) )
+		case RS_ZBIAS: // same thing from Dx8?
+			if( rs.DepthBias != static_cast<INT>( value ) )
 			{
 				//rs.DepthBias = static_cast<INT>(value);
 				rs.DepthBias = static_cast<INT>( *(float*)&value ); // cppcheck-suppress invalidPointerCast
 				m_dirtyFlag.flags.rasterizer = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 
 		case RS_SLOPESCALEDEPTHBIAS:
 			if( rs.SlopeScaledDepthBias != *( (float*)&value ) ) // cppcheck-suppress invalidPointerCast
@@ -1608,7 +1844,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				rs.SlopeScaledDepthBias = *( (float*)&value ); // cppcheck-suppress invalidPointerCast
 				m_dirtyFlag.flags.rasterizer = true;
 			}
-			continue;	//return S_OK;
+			continue; //return S_OK;
 		case RS_SRGBWRITEENABLE:
 			if( ( value != 0 ) != m_isSrgbRenderTarget )
 			{
@@ -1645,11 +1881,10 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 		{
 			return false;
 		}
-		if( !( m_vertexLayout == m_lastSetVertexLayout ) || 
+		if( !( m_vertexLayout == m_lastSetVertexLayout ) ||
 			m_shaderProgram.m_program->m_vertexShader.m_shader->m_pipelineInputHash != m_lastSetVertexLayoutVSHash )
 		{
-			CR_RETURN_VAL(	m_vertexLayout.m_layout->SetLayout( m_shaderProgram.m_program->m_vertexShader.m_shader.get(), *this )
-						, false );
+			CR_RETURN_VAL( m_vertexLayout.m_layout->SetLayout( m_shaderProgram.m_program->m_vertexShader.m_shader.get(), *this ), false );
 
 			m_lastSetVertexLayout = m_vertexLayout;
 			m_lastSetVertexLayoutVSHash = m_shaderProgram.m_program->m_vertexShader.m_shader->m_pipelineInputHash;
@@ -1668,7 +1903,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 		m_dirtyFlag.mask = 0;
 	}
 
-	auto hasHullShader =m_shaderProgram.m_program->m_shaders.hullShader != nullptr;
+	auto hasHullShader = m_shaderProgram.m_program->m_shaders.hullShader != nullptr;
 
 	if( m_topology == TOP_TRIANGLES && ( m_topology != m_lastSetTopology || m_previouslyHadHullShader != hasHullShader ) )
 	{
@@ -1683,20 +1918,19 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 		m_previouslyHadHullShader = hasHullShader;
 		m_lastSetTopology = m_topology;
 	}
-	
+
 	return OK;
 }
 
 bool Tr2RenderContextAL::ApplyBlendState() throw()
-{	
+{
 	if( !m_dirtyFlag.flags.blend )
 	{
 		return true;
 	}
 
 	CComPtr<ID3D11BlendState> blendState;
-	CR_RETURN_VAL( m_renderStateEmulation.GetBlendState( blendState, m_secondaryDevice11 )
-				, false );
+	CR_RETURN_VAL( m_renderStateEmulation.GetBlendState( blendState, m_secondaryDevice11 ), false );
 
 	static const float blendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 	m_context->OMSetBlendState( blendState, blendFactor, 0xFFffFFff );
@@ -1704,37 +1938,37 @@ bool Tr2RenderContextAL::ApplyBlendState() throw()
 }
 
 bool Tr2RenderContextAL::ApplyDepthStencilState() throw()
-{	
+{
 	if( !m_dirtyFlag.flags.depthStencil )
 	{
 		return true;
 	}
-	
+
 	CComPtr<ID3D11DepthStencilState> depthStencilState;
-	CR_RETURN_VAL( 
+	CR_RETURN_VAL(
 		m_renderStateEmulation.GetDepthStencilState( depthStencilState,
-													 m_secondaryDevice11 )
-		, false );
+													 m_secondaryDevice11 ),
+		false );
 
 	m_context->OMSetDepthStencilState( depthStencilState, m_renderStateEmulation.m_currentStencilRef );
 	return true;
 }
 
 bool Tr2RenderContextAL::ApplyRasterizerState() throw()
-{	
+{
 	if( !m_dirtyFlag.flags.rasterizer )
 	{
 		return true;
 	}
 
-	m_renderStateEmulation.m_currentRasterizer.MultisampleEnable = true;	// has nothing to do with MSAAness of current RT, but has something to do with lines.
-																			// "Recommended to always True" -- http://msdn.microsoft.com/en-us/library/windows/desktop/ff476198%28v=vs.85%29.aspx
+	m_renderStateEmulation.m_currentRasterizer.MultisampleEnable = true; // has nothing to do with MSAAness of current RT, but has something to do with lines.
+	// "Recommended to always True" -- http://msdn.microsoft.com/en-us/library/windows/desktop/ff476198%28v=vs.85%29.aspx
 
 	CComPtr<ID3D11RasterizerState> rasterizerState;
 	CR_RETURN_VAL(
-		m_renderStateEmulation.GetRasterizerState(	rasterizerState,
-													m_secondaryDevice11 )
-		, false );
+		m_renderStateEmulation.GetRasterizerState( rasterizerState,
+												   m_secondaryDevice11 ),
+		false );
 
 	m_context->RSSetState( rasterizerState );
 	return true;
@@ -1744,7 +1978,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 {
 	if( m_currentResourceSet.m_resourceSet == resourceSet.m_resourceSet )
 	{
-		return S_OK; 
+		return S_OK;
 	}
 
 	m_currentResourceSet = resourceSet;
@@ -1807,7 +2041,6 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 					0,
 					TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES,
 					nullSrv );
-
 			}
 		}
 
@@ -1837,10 +2070,10 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 				begin = rs.m_uavOffset;
 				end = rs.m_uavOffset + rs.m_uavCount;
 			}
-			m_context->CSSetUnorderedAccessViews( 
+			m_context->CSSetUnorderedAccessViews(
 				begin,
-				end - begin, 
-				reinterpret_cast<ID3D11UnorderedAccessView**>( rs.m_uavs + begin ), 
+				end - begin,
+				reinterpret_cast<ID3D11UnorderedAccessView**>( rs.m_uavs + begin ),
 				nullptr );
 			m_assignedUavCount = rs.m_uavCount;
 			m_assignedUavOffset = rs.m_uavOffset;
@@ -1931,14 +2164,14 @@ ALResult Tr2RenderContextAL::ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel
 ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport ) throw()
 {
 	static_assert( sizeof( viewport ) == sizeof( D3D11_VIEWPORT ), "viewport size mismatch" );
-	m_context->RSSetViewports( 1, reinterpret_cast<const D3D11_VIEWPORT*>(&viewport) );
+	m_context->RSSetViewports( 1, reinterpret_cast<const D3D11_VIEWPORT*>( &viewport ) );
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport ) throw()
 {
 	uint32_t count = 1;
-	m_context->RSGetViewports( &count, reinterpret_cast<D3D11_VIEWPORT*>(&viewport) );
+	m_context->RSGetViewports( &count, reinterpret_cast<D3D11_VIEWPORT*>( &viewport ) );
 	return S_OK;
 }
 
@@ -2005,9 +2238,9 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 		height = m_boundRenderTarget[slot].texture.GetDesc().GetHeight();
 		return S_OK;
 	}
-	
+
 	if( slot == 0 && m_secondarySwapChain )
-	{		
+	{
 		DXGI_SWAP_CHAIN_DESC desc;
 		m_secondarySwapChain->GetDesc( &desc );
 		width = desc.BufferDesc.Width;
@@ -2020,7 +2253,7 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 
 bool Tr2RenderContextAL::IsBackBuffer( const Tr2TextureAL& rt ) const throw()
 {
-	return	m_secondaryDefaultBackBuffer == rt;
+	return m_secondaryDefaultBackBuffer == rt;
 }
 
 Tr2TextureAL& Tr2RenderContextAL::GetDefaultBackBuffer()
@@ -2040,8 +2273,7 @@ void Tr2RenderContextAL::ResetCapturePlayback()
 
 	memset( m_allRenderStates, 0xff, sizeof( m_allRenderStates ) );
 
-	memset( &m_renderStateEmulation.m_currentBlend, 0, 
-			sizeof( m_renderStateEmulation.m_currentBlend ) );
+	memset( &m_renderStateEmulation.m_currentBlend, 0, sizeof( m_renderStateEmulation.m_currentBlend ) );
 	m_renderStateEmulation.m_currentBlend.RenderTarget[0] = defaultBlend;
 
 	m_renderStateEmulation.m_currentDepthStencil = defaultDepthStencil;
@@ -2054,9 +2286,8 @@ void Tr2RenderContextAL::ResetCapturePlayback()
 ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topology ) throw()
 {
 	using namespace Tr2RenderContextEnum;
-	static D3D11_PRIMITIVE_TOPOLOGY lookup[TOP_MAX_TOPOLOGY] = 
-	{
-		D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED,			// invalid
+	static D3D11_PRIMITIVE_TOPOLOGY lookup[TOP_MAX_TOPOLOGY] = {
+		D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED, // invalid
 
 		D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
 		D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
@@ -2065,7 +2296,7 @@ ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topolog
 		D3D11_PRIMITIVE_TOPOLOGY_LINELIST,
 		D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP,
 
-		D3D11_PRIMITIVE_TOPOLOGY_POINTLIST		
+		D3D11_PRIMITIVE_TOPOLOGY_POINTLIST
 	};
 
 	if( topology == TOP_TRIANGLE_FAN )
@@ -2084,7 +2315,7 @@ ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topolog
 	{
 		if( m_topology != TOP_TRIANGLES && m_topology != m_lastSetTopology )
 		{
-			m_context->IASetPrimitiveTopology( lookup[ topology ] );
+			m_context->IASetPrimitiveTopology( lookup[topology] );
 			m_lastSetTopology = m_topology;
 		}
 		return S_OK;
@@ -2101,7 +2332,7 @@ void Tr2RenderContextAL::AddGpuMarker( const char* marker )
 	}
 
 	size_t length = strlen( marker ) + 1;
-	if( length % 4 == 0)
+	if( length % 4 == 0 )
 	{
 		GFSDK_Aftermath_SetEventMarker( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ), marker, unsigned( length ) );
 		return;
@@ -2195,7 +2426,7 @@ ALResult Tr2RenderContextAL::UseResources( Tr2UseResourceDestination, Tr2GpuUsag
 
 ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
 {
-    return S_OK;
+	return S_OK;
 }
 
 void TrinityALImpl::SetDebugName( ID3D11DeviceChild* resource, const char* name )
@@ -2211,4 +2442,4 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 	return E_FAIL;
 }
 
-#endif	//DX11?
+#endif //DX11?

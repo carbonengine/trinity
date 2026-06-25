@@ -7,8 +7,8 @@ BLUE_DEFINE( EveMissile );
 
 const Be::ClassInfo* EveMissile::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveMissile, "" )
-        MAP_INTERFACE( EveMissile )
+	EXPOSURE_BEGIN( EveMissile, "" )
+		MAP_INTERFACE( EveMissile )
 		MAP_INTERFACE( IEveSpaceObject2 )
 		MAP_INTERFACE( ITr2Renderable )
 
@@ -35,5 +35,5 @@ const Be::ClassInfo* EveMissile::ExposeToBlue()
 			RebuildMissileBoundingSphere,
 			"Rebuild the missile object's bounding sphere based on the internal position of all attached warheads.\n" )
 
-    EXPOSURE_CHAINTO( EveSpaceObject2 )
+	EXPOSURE_CHAINTO( EveSpaceObject2 )
 }

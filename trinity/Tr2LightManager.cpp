@@ -60,7 +60,7 @@ struct PerFrameData
 	uint32_t tilesY;
 	uint32_t lightCount;
 	uint32_t indexBufferSize;
-	// cppcheck-suppress unusedStructMember 
+	// cppcheck-suppress unusedStructMember
 	uint32_t _padding[2];
 };
 
@@ -223,7 +223,7 @@ void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 	m_indexBufferVariable = m_indexBuffer;
 	ClearLightIndices( renderContext );
 
-	for ( auto& data : m_tlsLightData )
+	for( auto& data : m_tlsLightData )
 	{
 		data.clear();
 	}
@@ -231,7 +231,7 @@ void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 	m_shadowCastingLights.clear();
 	m_volumetricLights.clear();
 
-	m_ShadowMap.m_atlasNodes.resize(1);
+	m_ShadowMap.m_atlasNodes.resize( 1 );
 	m_ShadowMap.m_atlasNodes[0].x = 0;
 	m_ShadowMap.m_atlasNodes[0].y = 0;
 	m_ShadowMap.m_atlasNodes[0].width = m_ShadowMap.m_atlasSettings.size;
@@ -254,16 +254,16 @@ void Tr2LightManager::AdjustLightCutoff( float lodFactor )
 // This entire thing is annoyingly complex for what should be a simple thing...
 // The reason why it's such a mess is because we have multiple eve space scenes with different
 // shadow qualities, but want to share resources across them. But we also don't have a way
-// of getting all eve space scenes, so we have to collect the qualities during a frame 
+// of getting all eve space scenes, so we have to collect the qualities during a frame
 // and based on that decide which resources are needed for the next frame.
-// In addition we have different ways of rendering shadows: Shadowmapped with different 
+// In addition we have different ways of rendering shadows: Shadowmapped with different
 // atlas resolutions and raytraced shadows.
 // On top of that we don't want to use any resources when the feature flag is false.
 void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter )
 {
 	m_currentSpaceSceneShadowQuality = shadowQuality;
 
-	if ( m_currentFrameCounter != frameCounter )
+	if( m_currentFrameCounter != frameCounter )
 	{
 		if( !g_useDynamicLightsShadows )
 		{
@@ -271,7 +271,7 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 		}
 
 		// there must be a more elegant way of doing this...
-		if ( nextFrameShadowQuality & ( 1 << ( uint32_t)ShadowQuality::SHADOW_HIGH ) )
+		if( nextFrameShadowQuality & ( 1 << (uint32_t)ShadowQuality::SHADOW_HIGH ) )
 		{
 			m_ShadowMap.m_qualityUsedByAtlas = ShadowQuality::SHADOW_HIGH;
 		}
@@ -357,7 +357,7 @@ void Tr2LightManager::AddLight( PerLightData& data )
 		data.color.z *= data.radius * dimming;
 
 		bool usingShadowMap = m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_LOW || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_HIGH;
-		if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED || 
+		if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED ||
 			( usingShadowMap && m_ShadowMap.m_qualityUsedByAtlas == ShadowQuality::SHADOW_DISABLED ) ||
 			!g_useDynamicLightsShadows )
 		{
@@ -647,7 +647,7 @@ void Tr2LightManager::ReleaseResources( TriStorage s )
 
 	// light manager does not release all sorts of buffers/effects. raytracing manager on the other hand does.
 	// probably because raytracing manager expects to get destroyed, unlike light manager, which is a singleton...?
-	
+
 	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
 		m_Raytracing.m_perFrameData = Tr2ConstantBufferAL();
@@ -728,7 +728,7 @@ uint32_t Tr2LightManager::InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, u
 		return InsertAtlasNode( atlasNodes, atlasNodes[nodeId].children[1], lightIndex, width, height );
 	}
 	else
-    {
+	{
 		if( atlasNodes[nodeId].lightIndex != -1 )
 		{
 			return -1;
@@ -742,19 +742,19 @@ uint32_t Tr2LightManager::InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, u
 			atlasNodes[nodeId].lightIndex = lightIndex;
 			return nodeId;
 		}
-		
-        atlasNodes.insert( atlasNodes.end(), 2, AtlasNode() );
+
+		atlasNodes.insert( atlasNodes.end(), 2, AtlasNode() );
 
 		atlasNodes[nodeId].children[0] = uint32_t( atlasNodes.size() - 2 );
 		atlasNodes[nodeId].children[1] = uint32_t( atlasNodes.size() - 1 );
 
 		AtlasNode& child0 = atlasNodes[atlasNodes[nodeId].children[0]];
 		AtlasNode& child1 = atlasNodes[atlasNodes[nodeId].children[1]];
-        
-        int32_t deltaWidth = atlasNodes[nodeId].width - width;
+
+		int32_t deltaWidth = atlasNodes[nodeId].width - width;
 		int32_t deltaHeight = atlasNodes[nodeId].height - height;
-        
-        if (deltaWidth > deltaHeight)
+
+		if( deltaWidth > deltaHeight )
 		{
 			child0.x = atlasNodes[nodeId].x;
 			child0.y = atlasNodes[nodeId].y;
@@ -765,7 +765,7 @@ uint32_t Tr2LightManager::InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, u
 			child1.width = atlasNodes[nodeId].width - width;
 			child1.height = atlasNodes[nodeId].height;
 		}
-        else
+		else
 		{
 			child0.x = atlasNodes[nodeId].x;
 			child0.y = atlasNodes[nodeId].y;
@@ -814,13 +814,13 @@ void Tr2LightManager::GetUnpackedShadowMapData( const PerLightData& lightData, u
 	shadowMapOffsetY = lightData.ShadowMapping.shadowMapOffsetY << m_ShadowMap.m_atlasSettings.entryMinSizeLog2;
 }
 
-Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows( 
-	Tr2RaytracingGeometry* geometry, 
-	const Tr2TextureAL& depth, 
-	const Tr2TextureAL& normal, 
-	const CcpMath::Sphere* planets, 
-	size_t planetCount, 
-	Tr2GpuResourcePool& gpuResourcePool, 
+Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
+	Tr2RaytracingGeometry* geometry,
+	const Tr2TextureAL& depth,
+	const Tr2TextureAL& normal,
+	const CcpMath::Sphere* planets,
+	size_t planetCount,
+	Tr2GpuResourcePool& gpuResourcePool,
 	Tr2RenderContext& renderContext )
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );

@@ -34,12 +34,11 @@ const Be::ClassInfo* Tr2MeshBase::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "GetAllAreas", GetAllAreas, "Returns a list of all areas (from all area type lists)" )
 
 		MAP_METHOD_AND_WRAP( "GetMaterialBoundsAdjustment", GetMaterialBoundsAdjustment, "Returns material bounds adjustment parameters" )
-		MAP_METHOD_AND_WRAP( 
-			"SetMaterialBoundsAdjustment", 
-			SetMaterialBoundsAdjustment, 
+		MAP_METHOD_AND_WRAP(
+			"SetMaterialBoundsAdjustment",
+			SetMaterialBoundsAdjustment,
 			"Assigns material bounds adjustment parameters. Normally set by the publisher\n"
-			":param adjustment: adjustment values extracted from shaders"
-		)
-		
-    EXPOSURE_END()
+			":param adjustment: adjustment values extracted from shaders" )
+
+	EXPOSURE_END()
 }

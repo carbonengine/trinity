@@ -24,10 +24,10 @@ const Be::ClassInfo* Tr2CurveScalarExpression::ExposeToBlue()
 			m_expression,
 			"Curve expression\n:jessica-widget: expression",
 			Be::PERSISTONLY )
-		MAP_PROPERTY( 
-			"expression", 
-			GetExpression, 
-			SetExpression, 
+		MAP_PROPERTY(
+			"expression",
+			GetExpression,
+			SetExpression,
 			"Curve expression\n:jessica-widget: expression" )
 		MAP_ATTRIBUTE(
 			"currentValue",
@@ -65,28 +65,24 @@ const Be::ClassInfo* Tr2CurveScalarExpression::ExposeToBlue()
 			"GetValueAt",
 			GetValue,
 			"Returns curve value at specified time\n"
-			":param time: input time"
-		)
+			":param time: input time" )
 
 		MAP_METHOD_AND_WRAP(
 			"ResetRandomConstant",
 			ResetRandomConstant,
 			"Resets curve random constant to a new random value\n"
 			":jessica-favorite:\n"
-			":jessica-icon: timeline/refreshrandom.png"
-		)
+			":jessica-icon: timeline/refreshrandom.png" )
 
 		MAP_METHOD_AND_WRAP(
 			"GetExpressionTermInfo",
 			GetExpressionTermInfo,
-			"Returns information on addional functions and variables available to the expression" 
-		)
+			"Returns information on addional functions and variables available to the expression" )
 		MAP_METHOD_AND_WRAP(
 			"EvaluateExpression",
 			EvaluateExpression,
 			"Evaluates an expression against this object\n"
-			":param expression: expression to evaluate"
-		)
+			":param expression: expression to evaluate" )
 
 	EXPOSURE_END()
 }

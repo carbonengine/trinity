@@ -48,7 +48,7 @@ void EveDistributionSpawnerTriggerSnake::UpdateSyncronous( const EveUpdateContex
 	}
 
 	m_currentTravelTime += updateContext.GetDeltaT();
-	
+
 	if( m_travelDurationToNextPoint > 0.f )
 	{
 		m_travelProgress = m_currentTravelTime / m_travelDurationToNextPoint;
@@ -60,7 +60,7 @@ void EveDistributionSpawnerTriggerSnake::UpdateSyncronous( const EveUpdateContex
 
 	if( m_travelProgress >= 1.f )
 	{
-		
+
 		owner.TriggerEntityByID( m_activeTargetUniqueID );
 
 		m_currentTravelTime = 0.f;

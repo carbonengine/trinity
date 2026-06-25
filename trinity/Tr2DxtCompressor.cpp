@@ -5,16 +5,16 @@
 #include "Tr2DxtCompressor.h"
 #include <squish.h>
 
-typedef unsigned short  word;
-typedef unsigned int    dword;
+typedef unsigned short word;
+typedef unsigned int dword;
 
-#define INSET_COLOR_SHIFT       4       // inset color bounding box
-#define INSET_ALPHA_SHIFT       5       // inset alpha bounding box
+#define INSET_COLOR_SHIFT 4 // inset color bounding box
+#define INSET_ALPHA_SHIFT 5 // inset alpha bounding box
 
-#define C565_5_MASK             0xF8    // 0xFF minus last three bits
-#define C565_6_MASK             0xFC    // 0xFF minus last two bits
+#define C565_5_MASK 0xF8 // 0xFF minus last three bits
+#define C565_6_MASK 0xFC // 0xFF minus last two bits
 
-#define NVIDIA_G7X_HARDWARE_BUG_FIX     // keep the colors sorted as: max, min
+#define NVIDIA_G7X_HARDWARE_BUG_FIX // keep the colors sorted as: max, min
 
 /* 
 RGB <-> YCoCg
@@ -29,54 +29,81 @@ B  = [   1   -1   -1] [Cg]
 
 */
 
-#define RGB_TO_YCOCG_Y( r, g, b )   ( ( (    r +   (g<<1) +  b     ) + 2 ) >> 2 )
-#define RGB_TO_YCOCG_CO( r, g, b )  ( ( (   (r<<1)        - (b<<1) ) + 2 ) >> 2 )
-#define RGB_TO_YCOCG_CG( r, g, b )  ( ( ( -  r +   (g<<1) -  b     ) + 2 ) >> 2 )
+#define RGB_TO_YCOCG_Y( r, g, b ) ( ( ( r + ( g << 1 ) + b ) + 2 ) >> 2 )
+#define RGB_TO_YCOCG_CO( r, g, b ) ( ( ( ( r << 1 ) - ( b << 1 ) ) + 2 ) >> 2 )
+#define RGB_TO_YCOCG_CG( r, g, b ) ( ( ( -r + ( g << 1 ) - b ) + 2 ) >> 2 )
 
-#define COCG_TO_R( co, cg )         ( co - cg )
-#define COCG_TO_G( co, cg )         ( cg )
-#define COCG_TO_B( co, cg )         ( - co - cg )
+#define COCG_TO_R( co, cg ) ( co - cg )
+#define COCG_TO_G( co, cg ) ( cg )
+#define COCG_TO_B( co, cg ) ( -co - cg )
 
-uint8_t CLAMP_BYTE( int x ) { return ( (x) < 0 ? (0) : ( (x) > 255 ? 255 : (x) ) ); }
+uint8_t CLAMP_BYTE( int x )
+{
+	return ( ( x ) < 0 ? ( 0 ) : ( ( x ) > 255 ? 255 : ( x ) ) );
+}
 
-void ConvertRGBToCoCg_Y( uint8_t *image, int width, int height ) {
-	for ( int i = 0; i < width * height; i++ ) {
-		int r = image[i*4+0];
-		int g = image[i*4+1];
-		int b = image[i*4+2];
-		int a = image[i*4+3];
-		image[i*4+0] = CLAMP_BYTE( RGB_TO_YCOCG_CO( r, g, b ) + 128 );
-		image[i*4+1] = CLAMP_BYTE( RGB_TO_YCOCG_CG( r, g, b ) + 128 );
-		image[i*4+2] = a;
-		image[i*4+3] = CLAMP_BYTE( RGB_TO_YCOCG_Y( r, g, b ) );
+void ConvertRGBToCoCg_Y( uint8_t* image, int width, int height )
+{
+	for( int i = 0; i < width * height; i++ )
+	{
+		int r = image[i * 4 + 0];
+		int g = image[i * 4 + 1];
+		int b = image[i * 4 + 2];
+		int a = image[i * 4 + 3];
+		image[i * 4 + 0] = CLAMP_BYTE( RGB_TO_YCOCG_CO( r, g, b ) + 128 );
+		image[i * 4 + 1] = CLAMP_BYTE( RGB_TO_YCOCG_CG( r, g, b ) + 128 );
+		image[i * 4 + 2] = a;
+		image[i * 4 + 3] = CLAMP_BYTE( RGB_TO_YCOCG_Y( r, g, b ) );
 	}
 }
 
-void ConvertCoCg_YToRGB( uint8_t *image, int width, int height ) {
-	for ( int i = 0; i < width * height; i++ ) {
-		int y  = image[i*4+3];
-		int co = image[i*4+0] - 128;
-		int cg = image[i*4+1] - 128;
-		int a  = image[i*4+2];
-		image[i*4+0] = CLAMP_BYTE( y + COCG_TO_R( co, cg ) );
-		image[i*4+1] = CLAMP_BYTE( y + COCG_TO_G( co, cg ) );
-		image[i*4+2] = CLAMP_BYTE( y + COCG_TO_B( co, cg ) );
-		image[i*4+3] = a;
+void ConvertCoCg_YToRGB( uint8_t* image, int width, int height )
+{
+	for( int i = 0; i < width * height; i++ )
+	{
+		int y = image[i * 4 + 3];
+		int co = image[i * 4 + 0] - 128;
+		int cg = image[i * 4 + 1] - 128;
+		int a = image[i * 4 + 2];
+		image[i * 4 + 0] = CLAMP_BYTE( y + COCG_TO_R( co, cg ) );
+		image[i * 4 + 1] = CLAMP_BYTE( y + COCG_TO_G( co, cg ) );
+		image[i * 4 + 2] = CLAMP_BYTE( y + COCG_TO_B( co, cg ) );
+		image[i * 4 + 3] = a;
 	}
 }
 
-void GetMinMaxColors( const uint8_t *colorBlock, uint8_t *minColor, uint8_t *maxColor ) {
+void GetMinMaxColors( const uint8_t* colorBlock, uint8_t* minColor, uint8_t* maxColor )
+{
 	int i;
 	uint8_t inset[3];
 	minColor[0] = minColor[1] = minColor[2] = 255;
 	maxColor[0] = maxColor[1] = maxColor[2] = 0;
-	for ( i = 0; i < 16; i++ ) {
-		if ( colorBlock[i*4+0] < minColor[0] ) { minColor[0] = colorBlock[i*4+0]; }
-		if ( colorBlock[i*4+1] < minColor[1] ) { minColor[1] = colorBlock[i*4+1]; }
-		if ( colorBlock[i*4+2] < minColor[2] ) { minColor[2] = colorBlock[i*4+2]; }
-		if ( colorBlock[i*4+0] > maxColor[0] ) { maxColor[0] = colorBlock[i*4+0]; }
-		if ( colorBlock[i*4+1] > maxColor[1] ) { maxColor[1] = colorBlock[i*4+1]; }
-		if ( colorBlock[i*4+2] > maxColor[2] ) { maxColor[2] = colorBlock[i*4+2]; }
+	for( i = 0; i < 16; i++ )
+	{
+		if( colorBlock[i * 4 + 0] < minColor[0] )
+		{
+			minColor[0] = colorBlock[i * 4 + 0];
+		}
+		if( colorBlock[i * 4 + 1] < minColor[1] )
+		{
+			minColor[1] = colorBlock[i * 4 + 1];
+		}
+		if( colorBlock[i * 4 + 2] < minColor[2] )
+		{
+			minColor[2] = colorBlock[i * 4 + 2];
+		}
+		if( colorBlock[i * 4 + 0] > maxColor[0] )
+		{
+			maxColor[0] = colorBlock[i * 4 + 0];
+		}
+		if( colorBlock[i * 4 + 1] > maxColor[1] )
+		{
+			maxColor[1] = colorBlock[i * 4 + 1];
+		}
+		if( colorBlock[i * 4 + 2] > maxColor[2] )
+		{
+			maxColor[2] = colorBlock[i * 4 + 2];
+		}
 	}
 	inset[0] = ( maxColor[0] - minColor[0] ) >> INSET_COLOR_SHIFT;
 	inset[1] = ( maxColor[1] - minColor[1] ) >> INSET_COLOR_SHIFT;
@@ -89,20 +116,46 @@ void GetMinMaxColors( const uint8_t *colorBlock, uint8_t *minColor, uint8_t *max
 	maxColor[2] = ( maxColor[2] >= inset[2] ) ? maxColor[2] - inset[2] : 0;
 }
 
-void GetMinMaxColorsWithAlpha( const uint8_t *colorBlock, uint8_t *minColor, uint8_t *maxColor ) {
+void GetMinMaxColorsWithAlpha( const uint8_t* colorBlock, uint8_t* minColor, uint8_t* maxColor )
+{
 	int i;
 	uint8_t inset[4];
 	minColor[0] = minColor[1] = minColor[2] = minColor[3] = 255;
 	maxColor[0] = maxColor[1] = maxColor[2] = maxColor[3] = 0;
-	for ( i = 0; i < 16; i++ ) {
-		if ( colorBlock[i*4+0] < minColor[0] ) { minColor[0] = colorBlock[i*4+0]; }
-		if ( colorBlock[i*4+1] < minColor[1] ) { minColor[1] = colorBlock[i*4+1]; }
-		if ( colorBlock[i*4+2] < minColor[2] ) { minColor[2] = colorBlock[i*4+2]; }
-		if ( colorBlock[i*4+3] < minColor[3] ) { minColor[3] = colorBlock[i*4+3]; }
-		if ( colorBlock[i*4+0] > maxColor[0] ) { maxColor[0] = colorBlock[i*4+0]; }
-		if ( colorBlock[i*4+1] > maxColor[1] ) { maxColor[1] = colorBlock[i*4+1]; }
-		if ( colorBlock[i*4+2] > maxColor[2] ) { maxColor[2] = colorBlock[i*4+2]; }
-		if ( colorBlock[i*4+3] > maxColor[3] ) { maxColor[3] = colorBlock[i*4+3]; }
+	for( i = 0; i < 16; i++ )
+	{
+		if( colorBlock[i * 4 + 0] < minColor[0] )
+		{
+			minColor[0] = colorBlock[i * 4 + 0];
+		}
+		if( colorBlock[i * 4 + 1] < minColor[1] )
+		{
+			minColor[1] = colorBlock[i * 4 + 1];
+		}
+		if( colorBlock[i * 4 + 2] < minColor[2] )
+		{
+			minColor[2] = colorBlock[i * 4 + 2];
+		}
+		if( colorBlock[i * 4 + 3] < minColor[3] )
+		{
+			minColor[3] = colorBlock[i * 4 + 3];
+		}
+		if( colorBlock[i * 4 + 0] > maxColor[0] )
+		{
+			maxColor[0] = colorBlock[i * 4 + 0];
+		}
+		if( colorBlock[i * 4 + 1] > maxColor[1] )
+		{
+			maxColor[1] = colorBlock[i * 4 + 1];
+		}
+		if( colorBlock[i * 4 + 2] > maxColor[2] )
+		{
+			maxColor[2] = colorBlock[i * 4 + 2];
+		}
+		if( colorBlock[i * 4 + 3] > maxColor[3] )
+		{
+			maxColor[3] = colorBlock[i * 4 + 3];
+		}
 	}
 	inset[0] = ( maxColor[0] - minColor[0] ) >> INSET_COLOR_SHIFT;
 	inset[1] = ( maxColor[1] - minColor[1] ) >> INSET_COLOR_SHIFT;
@@ -118,44 +171,51 @@ void GetMinMaxColorsWithAlpha( const uint8_t *colorBlock, uint8_t *minColor, uin
 	maxColor[3] = ( maxColor[3] >= inset[3] ) ? maxColor[3] - inset[3] : 0;
 }
 
-word ColorTo565( const uint8_t *color ) {
+word ColorTo565( const uint8_t* color )
+{
 	// BGR
-	return ( ( color[ 2 ] >> 3 ) << 11 ) | ( ( color[ 1 ] >> 2 ) << 5 ) | ( color[ 0 ] >> 3 );
+	return ( ( color[2] >> 3 ) << 11 ) | ( ( color[1] >> 2 ) << 5 ) | ( color[0] >> 3 );
 }
 
-word NormalYTo565( uint8_t y ) {
+word NormalYTo565( uint8_t y )
+{
 	return ( ( y >> 2 ) << 5 );
 }
 
-void EmitByte( uint8_t b, uint8_t** outBuff ) {
+void EmitByte( uint8_t b, uint8_t** outBuff )
+{
 	**outBuff = b;
 	*outBuff += 1;
 }
 
-void EmitWord( word s, uint8_t** outBuff ) {
-	**outBuff = ( s >>  0 ) & 255;
-	*(*outBuff+1) = ( s >>  8 ) & 255;
+void EmitWord( word s, uint8_t** outBuff )
+{
+	**outBuff = ( s >> 0 ) & 255;
+	*( *outBuff + 1 ) = ( s >> 8 ) & 255;
 	*outBuff += 2;
 }
 
-void EmitDoubleWord( dword i, uint8_t** outBuff ) {
-	**outBuff = ( i >>  0 ) & 255;
-	*(*outBuff+1) = ( i >>  8 ) & 255;
-	*(*outBuff+2) = ( i >> 16 ) & 255;
-	*(*outBuff+3) = ( i >> 24 ) & 255;
+void EmitDoubleWord( dword i, uint8_t** outBuff )
+{
+	**outBuff = ( i >> 0 ) & 255;
+	*( *outBuff + 1 ) = ( i >> 8 ) & 255;
+	*( *outBuff + 2 ) = ( i >> 16 ) & 255;
+	*( *outBuff + 3 ) = ( i >> 24 ) & 255;
 	*outBuff += 4;
 }
 
-void ExtractBlock( const uint8_t *inPtr, const int width, uint8_t *colorBlock ) {
-	for ( int j = 0; j < 4; j++ ) {
-		memcpy( &colorBlock[j*4*4], inPtr, 4*4 );
+void ExtractBlock( const uint8_t* inPtr, const int width, uint8_t* colorBlock )
+{
+	for( int j = 0; j < 4; j++ )
+	{
+		memcpy( &colorBlock[j * 4 * 4], inPtr, 4 * 4 );
 		inPtr += width * 4;
 	}
 }
 
 // Extract a block, but blank out blue, and swap red and alpha, on the fly.
-void ExtractBlockDXT5N( const uint8_t *inPtr, const int width, uint8_t *colorBlock ) 
-{	
+void ExtractBlockDXT5N( const uint8_t* inPtr, const int width, uint8_t* colorBlock )
+{
 	for( int j = 0; j != 4; ++j )
 	{
 		const uint8_t* src = inPtr;
@@ -166,52 +226,66 @@ void ExtractBlockDXT5N( const uint8_t *inPtr, const int width, uint8_t *colorBlo
 			*colorBlock++ = src[3];
 			*colorBlock++ = src[2];
 		}
-		
+
 		inPtr += width * 4;
 	}
 }
 
-void GetMinMaxYCoCg( uint8_t *colorBlock, uint8_t *minColor, uint8_t *maxColor ) {
+void GetMinMaxYCoCg( uint8_t* colorBlock, uint8_t* minColor, uint8_t* maxColor )
+{
 	minColor[0] = minColor[1] = minColor[2] = minColor[3] = 255;
 	maxColor[0] = maxColor[1] = maxColor[2] = maxColor[3] = 0;
 
-	for ( int i = 0; i < 16; i++ ) {
-		if ( colorBlock[i*4+0] < minColor[0] ) {
-			minColor[0] = colorBlock[i*4+0];
+	for( int i = 0; i < 16; i++ )
+	{
+		if( colorBlock[i * 4 + 0] < minColor[0] )
+		{
+			minColor[0] = colorBlock[i * 4 + 0];
 		}
-		if ( colorBlock[i*4+1] < minColor[1] ) {
-			minColor[1] = colorBlock[i*4+1];
+		if( colorBlock[i * 4 + 1] < minColor[1] )
+		{
+			minColor[1] = colorBlock[i * 4 + 1];
 		}
-		if ( colorBlock[i*4+2] < minColor[2] ) {
-			minColor[2] = colorBlock[i*4+2];
+		if( colorBlock[i * 4 + 2] < minColor[2] )
+		{
+			minColor[2] = colorBlock[i * 4 + 2];
 		}
-		if ( colorBlock[i*4+3] < minColor[3] ) {
-			minColor[3] = colorBlock[i*4+3];
+		if( colorBlock[i * 4 + 3] < minColor[3] )
+		{
+			minColor[3] = colorBlock[i * 4 + 3];
 		}
-		if ( colorBlock[i*4+0] > maxColor[0] ) {
-			maxColor[0] = colorBlock[i*4+0];
+		if( colorBlock[i * 4 + 0] > maxColor[0] )
+		{
+			maxColor[0] = colorBlock[i * 4 + 0];
 		}
-		if ( colorBlock[i*4+1] > maxColor[1] ) {
-			maxColor[1] = colorBlock[i*4+1];
+		if( colorBlock[i * 4 + 1] > maxColor[1] )
+		{
+			maxColor[1] = colorBlock[i * 4 + 1];
 		}
-		if ( colorBlock[i*4+2] > maxColor[2] ) {
-			maxColor[2] = colorBlock[i*4+2];
+		if( colorBlock[i * 4 + 2] > maxColor[2] )
+		{
+			maxColor[2] = colorBlock[i * 4 + 2];
 		}
-		if ( colorBlock[i*4+3] > maxColor[3] ) {
-			maxColor[3] = colorBlock[i*4+3];
+		if( colorBlock[i * 4 + 3] > maxColor[3] )
+		{
+			maxColor[3] = colorBlock[i * 4 + 3];
 		}
 	}
 }
 
-void ScaleYCoCg( uint8_t *colorBlock, uint8_t *minColor, uint8_t *maxColor ) {
+void ScaleYCoCg( uint8_t* colorBlock, uint8_t* minColor, uint8_t* maxColor )
+{
 	int m0 = abs( minColor[0] - 128 );
 	int m1 = abs( minColor[1] - 128 );
 	int m2 = abs( maxColor[0] - 128 );
 	int m3 = abs( maxColor[1] - 128 );
 
-	if ( m1 > m0 ) m0 = m1;
-	if ( m3 > m2 ) m2 = m3;
-	if ( m2 > m0 ) m0 = m2;
+	if( m1 > m0 )
+		m0 = m1;
+	if( m3 > m2 )
+		m2 = m3;
+	if( m2 > m0 )
+		m0 = m2;
 
 	const int s0 = 128 / 2 - 1;
 	const int s1 = 128 / 4 - 1;
@@ -228,20 +302,22 @@ void ScaleYCoCg( uint8_t *colorBlock, uint8_t *minColor, uint8_t *maxColor ) {
 	maxColor[1] = ( maxColor[1] - 128 ) * scale + 128;
 	maxColor[2] = ( scale - 1 ) << 3;
 
-	for ( int i = 0; i < 16; i++ ) {
-		colorBlock[i*4+0] = ( colorBlock[i*4+0] - 128 ) * scale + 128;
-		colorBlock[i*4+1] = ( colorBlock[i*4+1] - 128 ) * scale + 128;
+	for( int i = 0; i < 16; i++ )
+	{
+		colorBlock[i * 4 + 0] = ( colorBlock[i * 4 + 0] - 128 ) * scale + 128;
+		colorBlock[i * 4 + 1] = ( colorBlock[i * 4 + 1] - 128 ) * scale + 128;
 	}
 }
 
-void InsetYCoCgBBox( uint8_t *minColor, uint8_t *maxColor ) {
+void InsetYCoCgBBox( uint8_t* minColor, uint8_t* maxColor )
+{
 	int inset[4];
 	int mini[4];
 	int maxi[4];
 
-	inset[0] = ( maxColor[0] - minColor[0] ) - ((1<<(INSET_COLOR_SHIFT-1))-1);
-	inset[1] = ( maxColor[1] - minColor[1] ) - ((1<<(INSET_COLOR_SHIFT-1))-1);
-	inset[3] = ( maxColor[3] - minColor[3] ) - ((1<<(INSET_ALPHA_SHIFT-1))-1);
+	inset[0] = ( maxColor[0] - minColor[0] ) - ( ( 1 << ( INSET_COLOR_SHIFT - 1 ) ) - 1 );
+	inset[1] = ( maxColor[1] - minColor[1] ) - ( ( 1 << ( INSET_COLOR_SHIFT - 1 ) ) - 1 );
+	inset[3] = ( maxColor[3] - minColor[3] ) - ( ( 1 << ( INSET_ALPHA_SHIFT - 1 ) ) - 1 );
 
 	mini[0] = ( ( minColor[0] << INSET_COLOR_SHIFT ) + inset[0] ) >> INSET_COLOR_SHIFT;
 	mini[1] = ( ( minColor[1] << INSET_COLOR_SHIFT ) + inset[1] ) >> INSET_COLOR_SHIFT;
@@ -268,14 +344,16 @@ void InsetYCoCgBBox( uint8_t *minColor, uint8_t *maxColor ) {
 	maxColor[3] = maxi[3];
 }
 
-void SelectYCoCgDiagonal( const uint8_t *colorBlock, uint8_t *minColor, uint8_t *maxColor ) {
-	uint8_t mid0 = ( (int) minColor[0] + maxColor[0] + 1 ) >> 1;
-	uint8_t mid1 = ( (int) minColor[1] + maxColor[1] + 1 ) >> 1;
+void SelectYCoCgDiagonal( const uint8_t* colorBlock, uint8_t* minColor, uint8_t* maxColor )
+{
+	uint8_t mid0 = ( (int)minColor[0] + maxColor[0] + 1 ) >> 1;
+	uint8_t mid1 = ( (int)minColor[1] + maxColor[1] + 1 ) >> 1;
 
 	uint8_t side = 0;
-	for ( int i = 0; i < 16; i++ ) {
-		uint8_t b0 = colorBlock[i*4+0] >= mid0;
-		uint8_t b1 = colorBlock[i*4+1] >= mid1;
+	for( int i = 0; i < 16; i++ )
+	{
+		uint8_t b0 = colorBlock[i * 4 + 0] >= mid0;
+		uint8_t b1 = colorBlock[i * 4 + 1] >= mid1;
 		side += ( b0 ^ b1 );
 	}
 
@@ -287,7 +365,7 @@ void SelectYCoCgDiagonal( const uint8_t *colorBlock, uint8_t *minColor, uint8_t 
 
 	uint8_t c0 = minColor[1];
 	uint8_t c1 = maxColor[1];
-	
+
 	c0 ^= c1;
 	mask &= c0;
 	c1 ^= mask;
@@ -297,7 +375,8 @@ void SelectYCoCgDiagonal( const uint8_t *colorBlock, uint8_t *minColor, uint8_t 
 	maxColor[1] = c1;
 }
 
-void EmitAlphaIndices( const uint8_t *colorBlock, const uint8_t minAlpha, const uint8_t maxAlpha, uint8_t** outBuff ) {
+void EmitAlphaIndices( const uint8_t* colorBlock, const uint8_t minAlpha, const uint8_t maxAlpha, uint8_t** outBuff )
+{
 
 	CCP_ASSERT( maxAlpha >= minAlpha );
 
@@ -316,8 +395,9 @@ void EmitAlphaIndices( const uint8_t *colorBlock, const uint8_t minAlpha, const 
 	ab6 = ( 2 * maxAlpha + 5 * minAlpha ) / ALPHA_RANGE + mid;
 	ab7 = ( 1 * maxAlpha + 6 * minAlpha ) / ALPHA_RANGE + mid;
 
-	for ( int i = 0; i < 16; i++ ) {
-		uint8_t a = colorBlock[i*4+3];
+	for( int i = 0; i < 16; i++ )
+	{
+		uint8_t a = colorBlock[i * 4 + 3];
 		int b1 = ( a <= ab1 );
 		int b2 = ( a <= ab2 );
 		int b3 = ( a <= ab3 );
@@ -329,16 +409,17 @@ void EmitAlphaIndices( const uint8_t *colorBlock, const uint8_t minAlpha, const 
 		indexes[i] = index ^ ( 2 > index );
 	}
 
-	EmitByte( (indexes[ 0] >> 0) | (indexes[ 1] << 3) | (indexes[ 2] << 6), outBuff );
-	EmitByte( (indexes[ 2] >> 2) | (indexes[ 3] << 1) | (indexes[ 4] << 4) | (indexes[ 5] << 7), outBuff );
-	EmitByte( (indexes[ 5] >> 1) | (indexes[ 6] << 2) | (indexes[ 7] << 5), outBuff );
+	EmitByte( ( indexes[0] >> 0 ) | ( indexes[1] << 3 ) | ( indexes[2] << 6 ), outBuff );
+	EmitByte( ( indexes[2] >> 2 ) | ( indexes[3] << 1 ) | ( indexes[4] << 4 ) | ( indexes[5] << 7 ), outBuff );
+	EmitByte( ( indexes[5] >> 1 ) | ( indexes[6] << 2 ) | ( indexes[7] << 5 ), outBuff );
 
-	EmitByte( (indexes[ 8] >> 0) | (indexes[ 9] << 3) | (indexes[10] << 6), outBuff );
-	EmitByte( (indexes[10] >> 2) | (indexes[11] << 1) | (indexes[12] << 4) | (indexes[13] << 7), outBuff );
-	EmitByte( (indexes[13] >> 1) | (indexes[14] << 2) | (indexes[15] << 5), outBuff );
+	EmitByte( ( indexes[8] >> 0 ) | ( indexes[9] << 3 ) | ( indexes[10] << 6 ), outBuff );
+	EmitByte( ( indexes[10] >> 2 ) | ( indexes[11] << 1 ) | ( indexes[12] << 4 ) | ( indexes[13] << 7 ), outBuff );
+	EmitByte( ( indexes[13] >> 1 ) | ( indexes[14] << 2 ) | ( indexes[15] << 5 ), outBuff );
 }
 
-void EmitColorIndices( const uint8_t *colorBlock, const uint8_t *minColor, const uint8_t *maxColor, uint8_t** outBuff ) {
+void EmitColorIndices( const uint8_t* colorBlock, const uint8_t* minColor, const uint8_t* maxColor, uint8_t** outBuff )
+{
 	word colors[4][4];
 	dword result = 0;
 	colors[0][0] = ( maxColor[0] & C565_5_MASK ) | ( maxColor[0] >> 5 );
@@ -353,10 +434,11 @@ void EmitColorIndices( const uint8_t *colorBlock, const uint8_t *minColor, const
 	colors[3][0] = ( 1 * colors[0][0] + 2 * colors[1][0] ) / 3;
 	colors[3][1] = ( 1 * colors[0][1] + 2 * colors[1][1] ) / 3;
 	colors[3][2] = ( 1 * colors[0][2] + 2 * colors[1][2] ) / 3;
-	for ( int i = 15; i >= 0; i-- ) {
-		int c0 = colorBlock[i*4+0];
-		int c1 = colorBlock[i*4+1];
-		int c2 = colorBlock[i*4+2];
+	for( int i = 15; i >= 0; i-- )
+	{
+		int c0 = colorBlock[i * 4 + 0];
+		int c1 = colorBlock[i * 4 + 1];
+		int c2 = colorBlock[i * 4 + 2];
 		int d0 = abs( colors[0][0] - c0 ) + abs( colors[0][1] - c1 ) + abs( colors[0][2] - c2 );
 		int d1 = abs( colors[1][0] - c0 ) + abs( colors[1][1] - c1 ) + abs( colors[1][2] - c2 );
 		int d2 = abs( colors[2][0] - c0 ) + abs( colors[2][1] - c1 ) + abs( colors[2][2] - c2 );
@@ -373,34 +455,41 @@ void EmitColorIndices( const uint8_t *colorBlock, const uint8_t *minColor, const
 	}
 	EmitDoubleWord( result, outBuff );
 }
-void GetMinMaxNormalsBBox( const uint8_t *block, uint8_t *minNormal, uint8_t *maxNormal ) {
+void GetMinMaxNormalsBBox( const uint8_t* block, uint8_t* minNormal, uint8_t* maxNormal )
+{
 
 	minNormal[0] = minNormal[1] = 255;
 	maxNormal[0] = maxNormal[1] = 0;
 
-	for ( int i = 0; i < 16; i++ ) {
-		if ( block[i*4+2] < minNormal[0] ) {
-			minNormal[0] = block[i*4+2];
+	for( int i = 0; i < 16; i++ )
+	{
+		if( block[i * 4 + 2] < minNormal[0] )
+		{
+			minNormal[0] = block[i * 4 + 2];
 		}
-		if ( block[i*4+1] < minNormal[1] ) {
-			minNormal[1] = block[i*4+1];
+		if( block[i * 4 + 1] < minNormal[1] )
+		{
+			minNormal[1] = block[i * 4 + 1];
 		}
-		if ( block[i*4+2] > maxNormal[0] ) {
-			maxNormal[0] = block[i*4+2];
+		if( block[i * 4 + 2] > maxNormal[0] )
+		{
+			maxNormal[0] = block[i * 4 + 2];
 		}
-		if ( block[i*4+1] > maxNormal[1] ) {
-			maxNormal[1] = block[i*4+1];
+		if( block[i * 4 + 1] > maxNormal[1] )
+		{
+			maxNormal[1] = block[i * 4 + 1];
 		}
 	}
 }
 
-void InsetNormalsBBoxDXT5( uint8_t *minNormal, uint8_t *maxNormal ) {
+void InsetNormalsBBoxDXT5( uint8_t* minNormal, uint8_t* maxNormal )
+{
 	int inset[4];
 	int mini[4];
 	int maxi[4];
 
-	inset[0] = ( maxNormal[0] - minNormal[0] ) - ((1<<(INSET_ALPHA_SHIFT-1))-1);
-	inset[1] = ( maxNormal[1] - minNormal[1] ) - ((1<<(INSET_COLOR_SHIFT-1))-1);
+	inset[0] = ( maxNormal[0] - minNormal[0] ) - ( ( 1 << ( INSET_ALPHA_SHIFT - 1 ) ) - 1 );
+	inset[1] = ( maxNormal[1] - minNormal[1] ) - ( ( 1 << ( INSET_COLOR_SHIFT - 1 ) ) - 1 );
 
 	mini[0] = ( ( minNormal[0] << INSET_ALPHA_SHIFT ) + inset[0] ) >> INSET_ALPHA_SHIFT;
 	mini[1] = ( ( minNormal[1] << INSET_COLOR_SHIFT ) + inset[1] ) >> INSET_COLOR_SHIFT;
@@ -421,13 +510,14 @@ void InsetNormalsBBoxDXT5( uint8_t *minNormal, uint8_t *maxNormal ) {
 	maxNormal[1] = ( maxi[1] & C565_6_MASK ) | ( maxi[1] >> 6 );
 }
 
-void InsetNormalsBBox3Dc( uint8_t *minNormal, uint8_t *maxNormal ) {
+void InsetNormalsBBox3Dc( uint8_t* minNormal, uint8_t* maxNormal )
+{
 	int inset[4];
 	int mini[4];
 	int maxi[4];
 
-	inset[0] = ( maxNormal[0] - minNormal[0] ) - ((1<<(INSET_ALPHA_SHIFT-1))-1);
-	inset[1] = ( maxNormal[1] - minNormal[1] ) - ((1<<(INSET_ALPHA_SHIFT-1))-1);
+	inset[0] = ( maxNormal[0] - minNormal[0] ) - ( ( 1 << ( INSET_ALPHA_SHIFT - 1 ) ) - 1 );
+	inset[1] = ( maxNormal[1] - minNormal[1] ) - ( ( 1 << ( INSET_ALPHA_SHIFT - 1 ) ) - 1 );
 
 	mini[0] = ( ( minNormal[0] << INSET_ALPHA_SHIFT ) + inset[0] ) >> INSET_ALPHA_SHIFT;
 	mini[1] = ( ( minNormal[1] << INSET_ALPHA_SHIFT ) + inset[1] ) >> INSET_ALPHA_SHIFT;
@@ -448,7 +538,8 @@ void InsetNormalsBBox3Dc( uint8_t *minNormal, uint8_t *maxNormal ) {
 	maxNormal[1] = maxi[1];
 }
 
-void EmitAlphaIndicesForNormals( const uint8_t *block, const int offset, const uint8_t minAlpha, const uint8_t maxAlpha, uint8_t** outBuff ) {
+void EmitAlphaIndicesForNormals( const uint8_t* block, const int offset, const uint8_t minAlpha, const uint8_t maxAlpha, uint8_t** outBuff )
+{
 	uint8_t mid = ( maxAlpha - minAlpha ) / ( 2 * 7 );
 
 	uint8_t ab1 = maxAlpha - mid;
@@ -462,8 +553,9 @@ void EmitAlphaIndicesForNormals( const uint8_t *block, const int offset, const u
 	block += offset;
 
 	uint8_t indices[16];
-	for ( int i = 0; i < 16; i++ ) {
-		uint8_t a = block[i*4];
+	for( int i = 0; i < 16; i++ )
+	{
+		uint8_t a = block[i * 4];
 		int b1 = ( a >= ab1 );
 		int b2 = ( a >= ab2 );
 		int b3 = ( a >= ab3 );
@@ -475,16 +567,17 @@ void EmitAlphaIndicesForNormals( const uint8_t *block, const int offset, const u
 		indices[i] = index ^ ( 2 > index );
 	}
 
-	EmitByte( (indices[ 0] >> 0) | (indices[ 1] << 3) | (indices[ 2] << 6), outBuff );
-	EmitByte( (indices[ 2] >> 2) | (indices[ 3] << 1) | (indices[ 4] << 4) | (indices[ 5] << 7), outBuff );
-	EmitByte( (indices[ 5] >> 1) | (indices[ 6] << 2) | (indices[ 7] << 5), outBuff );
+	EmitByte( ( indices[0] >> 0 ) | ( indices[1] << 3 ) | ( indices[2] << 6 ), outBuff );
+	EmitByte( ( indices[2] >> 2 ) | ( indices[3] << 1 ) | ( indices[4] << 4 ) | ( indices[5] << 7 ), outBuff );
+	EmitByte( ( indices[5] >> 1 ) | ( indices[6] << 2 ) | ( indices[7] << 5 ), outBuff );
 
-	EmitByte( (indices[ 8] >> 0) | (indices[ 9] << 3) | (indices[10] << 6), outBuff );
-	EmitByte( (indices[10] >> 2) | (indices[11] << 1) | (indices[12] << 4) | (indices[13] << 7), outBuff );
-	EmitByte( (indices[13] >> 1) | (indices[14] << 2) | (indices[15] << 5), outBuff );
+	EmitByte( ( indices[8] >> 0 ) | ( indices[9] << 3 ) | ( indices[10] << 6 ), outBuff );
+	EmitByte( ( indices[10] >> 2 ) | ( indices[11] << 1 ) | ( indices[12] << 4 ) | ( indices[13] << 7 ), outBuff );
+	EmitByte( ( indices[13] >> 1 ) | ( indices[14] << 2 ) | ( indices[15] << 5 ), outBuff );
 }
 
-void EmitGreenIndices( const uint8_t *block, const int offset, const uint8_t minGreen, const uint8_t maxGreen, uint8_t** outBuff ) {
+void EmitGreenIndices( const uint8_t* block, const int offset, const uint8_t minGreen, const uint8_t maxGreen, uint8_t** outBuff )
+{
 	uint8_t mid = ( maxGreen - minGreen ) / ( 2 * 3 );
 
 	uint8_t gb1 = maxGreen - mid;
@@ -494,9 +587,10 @@ void EmitGreenIndices( const uint8_t *block, const int offset, const uint8_t min
 	block += offset;
 
 	unsigned int result = 0;
-	for ( int i = 15; i >= 0; i-- ) {
+	for( int i = 15; i >= 0; i-- )
+	{
 		result <<= 2;
-		uint8_t g = block[i*4];
+		uint8_t g = block[i * 4];
 		int b1 = ( g >= gb1 );
 		int b2 = ( g >= gb2 );
 		int b3 = ( g >= gb3 );
@@ -508,19 +602,22 @@ void EmitGreenIndices( const uint8_t *block, const int offset, const uint8_t min
 	EmitDoubleWord( result, outBuff );
 }
 
-void CompressYCoCgDXT5( const uint8_t *inBuf, uint8_t *outBuf, int width, int height, ptrdiff_t &outputBytes, volatile const bool& cancel ) {
+void CompressYCoCgDXT5( const uint8_t* inBuf, uint8_t* outBuf, int width, int height, ptrdiff_t& outputBytes, volatile const bool& cancel )
+{
 	uint8_t block[64];
 	uint8_t minColor[4];
 	uint8_t maxColor[4];
 
 	uint8_t** outData = &outBuf;
 
-	for ( int j = 0; j < height; j += 4, inBuf += width * 4*4 ) {
+	for( int j = 0; j < height; j += 4, inBuf += width * 4 * 4 )
+	{
 		if( cancel )
 		{
 			return;
 		}
-		for ( int i = 0; i < width; i += 4 ) {
+		for( int i = 0; i < width; i += 4 )
+		{
 
 			ExtractBlock( inBuf + i * 4, width, block );
 
@@ -544,17 +641,17 @@ void CompressYCoCgDXT5( const uint8_t *inBuf, uint8_t *outBuf, int width, int he
 	outputBytes = *outData - outBuf;
 }
 
-void CompressImageSquish(	const uint8_t*			inBuf, 							
-							unsigned				width, 
-							unsigned				height, 
-							uint8_t*				outBuf, 
-							size_t					outputPitch,
-							int						squish_flags, 
-							volatile const bool&	cancel ) 
+void CompressImageSquish( const uint8_t* inBuf,
+						  unsigned width,
+						  unsigned height,
+						  uint8_t* outBuf,
+						  size_t outputPitch,
+						  int squish_flags,
+						  volatile const bool& cancel )
 {
-	uint8_t block[64];	
-	const unsigned outDx = ( squish_flags & squish::kDxt1 )  ? 8 : 16;
-	for( unsigned j = 0; j < height; j += 4, inBuf += width * 4 * 4 ) 
+	uint8_t block[64];
+	const unsigned outDx = ( squish_flags & squish::kDxt1 ) ? 8 : 16;
+	for( unsigned j = 0; j < height; j += 4, inBuf += width * 4 * 4 )
 	{
 		uint8_t* outData = outBuf + ( j / 4 ) * outputPitch;
 
@@ -563,14 +660,14 @@ void CompressImageSquish(	const uint8_t*			inBuf,
 			return;
 		}
 
-		for( unsigned i = 0; i < width; i += 4 ) 
+		for( unsigned i = 0; i < width; i += 4 )
 		{
 			ExtractBlock( inBuf + i * 4, width, block );
 			// Swap the R and B
 			// Squish wants RGB but our format is BGR
-			for ( int k = 0; k < 16; ++k )
+			for( int k = 0; k < 16; ++k )
 			{
-				std::swap( block[k*4], block[k*4 + 2] );
+				std::swap( block[k * 4], block[k * 4 + 2] );
 			}
 			squish::Compress( block, outData, squish_flags );
 			outData += outDx;
@@ -578,17 +675,20 @@ void CompressImageSquish(	const uint8_t*			inBuf,
 	}
 }
 
-void CompressImageDXT5( const uint8_t *inBuf, uint8_t *outBuf, int width, int height, ptrdiff_t &outputBytes, volatile const bool& cancel ) {
+void CompressImageDXT5( const uint8_t* inBuf, uint8_t* outBuf, int width, int height, ptrdiff_t& outputBytes, volatile const bool& cancel )
+{
 	uint8_t block[64];
 	uint8_t minColor[4];
 	uint8_t maxColor[4];
 	uint8_t** outData = &outBuf;
-	for ( int j = 0; j < height; j += 4, inBuf += width * 4*4 ) {
+	for( int j = 0; j < height; j += 4, inBuf += width * 4 * 4 )
+	{
 		if( cancel )
 		{
 			return;
 		}
-		for ( int i = 0; i < width; i += 4 ) {
+		for( int i = 0; i < width; i += 4 )
+		{
 			ExtractBlock( inBuf + i * 4, width, block );
 			GetMinMaxColorsWithAlpha( block, minColor, maxColor );
 			EmitByte( maxColor[3], outData );
@@ -602,18 +702,20 @@ void CompressImageDXT5( const uint8_t *inBuf, uint8_t *outBuf, int width, int he
 	outputBytes = *outData - outBuf;
 }
 
-void CompressNormalMapDXT5( const uint8_t *inBuf, uint8_t *outBuf, int width, int height, ptrdiff_t &outputBytes, volatile const bool& cancel ) 
+void CompressNormalMapDXT5( const uint8_t* inBuf, uint8_t* outBuf, int width, int height, ptrdiff_t& outputBytes, volatile const bool& cancel )
 {
 	uint8_t block[64];
 	uint8_t minColor[4];
 	uint8_t maxColor[4];
 	uint8_t** outData = &outBuf;
-	for ( int j = 0; j < height; j += 4, inBuf += width * 4*4 ) {
+	for( int j = 0; j < height; j += 4, inBuf += width * 4 * 4 )
+	{
 		if( cancel )
 		{
 			return;
 		}
-		for ( int i = 0; i < width; i += 4 ) {
+		for( int i = 0; i < width; i += 4 )
+		{
 			ExtractBlockDXT5N( inBuf + i * 4, width, block );
 			GetMinMaxColorsWithAlpha( block, minColor, maxColor );
 			EmitByte( maxColor[3], outData );
@@ -627,17 +729,20 @@ void CompressNormalMapDXT5( const uint8_t *inBuf, uint8_t *outBuf, int width, in
 	outputBytes = *outData - outBuf;
 }
 
-void CompressImageDXT1( const uint8_t *inBuf, uint8_t *outBuf, int width, int height, ptrdiff_t &outputBytes, volatile const bool& cancel ) {
+void CompressImageDXT1( const uint8_t* inBuf, uint8_t* outBuf, int width, int height, ptrdiff_t& outputBytes, volatile const bool& cancel )
+{
 	uint8_t block[64];
 	uint8_t minColor[4];
 	uint8_t maxColor[4];
 	uint8_t** outData = &outBuf;
-	for ( int j = 0; j < height; j += 4, inBuf += width * 4*4 ) {
+	for( int j = 0; j < height; j += 4, inBuf += width * 4 * 4 )
+	{
 		if( cancel )
 		{
 			return;
 		}
-		for ( int i = 0; i < width; i += 4 ) {
+		for( int i = 0; i < width; i += 4 )
+		{
 			ExtractBlock( inBuf + i * 4, width, block );
 			GetMinMaxColors( block, minColor, maxColor );
 			EmitWord( ColorTo565( maxColor ), outData );
@@ -649,19 +754,22 @@ void CompressImageDXT1( const uint8_t *inBuf, uint8_t *outBuf, int width, int he
 }
 
 // below works fine, but doesn't support a material id in the alpha channel
-void CompressNormalMapDXT5NoAlpha( const uint8_t *inBuf, uint8_t *outBuf, int width, int height, ptrdiff_t &outputBytes, volatile const bool& cancel ) {
+void CompressNormalMapDXT5NoAlpha( const uint8_t* inBuf, uint8_t* outBuf, int width, int height, ptrdiff_t& outputBytes, volatile const bool& cancel )
+{
 	uint8_t block[64];
 	uint8_t normalMin[4];
 	uint8_t normalMax[4];
 
 	uint8_t** outData = &outBuf;
 
-	for ( int j = 0; j < height; j += 4, inBuf += width * 4*4 ) {
+	for( int j = 0; j < height; j += 4, inBuf += width * 4 * 4 )
+	{
 		if( cancel )
 		{
 			return;
 		}
-		for ( int i = 0; i < width; i += 4 ) {
+		for( int i = 0; i < width; i += 4 )
+		{
 
 			ExtractBlock( inBuf + i * 4, width, block );
 
@@ -684,19 +792,22 @@ void CompressNormalMapDXT5NoAlpha( const uint8_t *inBuf, uint8_t *outBuf, int wi
 	outputBytes = *outData - outBuf;
 }
 
-void CompressNormalMap3Dc( const uint8_t *inBuf, uint8_t *outBuf, int width, int height, ptrdiff_t &outputBytes, volatile const bool& cancel ) {
+void CompressNormalMap3Dc( const uint8_t* inBuf, uint8_t* outBuf, int width, int height, ptrdiff_t& outputBytes, volatile const bool& cancel )
+{
 	uint8_t block[64];
 	uint8_t normalMin[4];
 	uint8_t normalMax[4];
 
-	uint8_t **outData = &outBuf;
+	uint8_t** outData = &outBuf;
 
-	for ( int j = 0; j < height; j += 4, inBuf += width * 4*4 ) {
+	for( int j = 0; j < height; j += 4, inBuf += width * 4 * 4 )
+	{
 		if( cancel )
 		{
 			return;
 		}
-		for ( int i = 0; i < width; i += 4 ) {
+		for( int i = 0; i < width; i += 4 )
+		{
 
 			ExtractBlock( inBuf + i * 4, width, block );
 
@@ -718,11 +829,11 @@ void CompressNormalMap3Dc( const uint8_t *inBuf, uint8_t *outBuf, int width, int
 	outputBytes = *outData - outBuf;
 }
 
-bool Tr2DxtCompressSurface(	Tr2DxtCompressionFormat eCompressFmt,
+bool Tr2DxtCompressSurface( Tr2DxtCompressionFormat eCompressFmt,
 							const uint8_t* inBuf,
 							unsigned width,
 							unsigned height,
-							uint8_t* outBuf, 
+							uint8_t* outBuf,
 							size_t outputPitch,
 							volatile const bool& cancel,
 							Tr2DxtCompressionSquishQuality squishQualityEnum )
@@ -746,64 +857,64 @@ bool Tr2DxtCompressSurface(	Tr2DxtCompressionFormat eCompressFmt,
 	case TR2DXT_COMPRESS_SQ_RANGE_FIT:
 		squishQuality = squish::kColourRangeFit;
 		break;
-    default:
-        break;
+	default:
+		break;
 	}
 
 	switch( eCompressFmt )
 	{
 	case TR2DXT_COMPRESS_RT_DXT1:
-			CompressImageDXT1(	(const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
-			break;
+		CompressImageDXT1( (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
+		break;
 
 	case TR2DXT_COMPRESS_RT_DXT5:
-			CompressImageDXT5( (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
-			break;
+		CompressImageDXT5( (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
+		break;
 
 	case TR2DXT_COMPRESS_RT_DXT5N:
-			CompressNormalMapDXT5( (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
-			break;
+		CompressNormalMapDXT5( (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
+		break;
 
 	case TR2DXT_COMPRESS_RT_YCOCGDXT5:
-			ConvertRGBToCoCg_Y( (uint8_t*)inBuf, width, height );
-			CompressYCoCgDXT5(  (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
-			break;
+		ConvertRGBToCoCg_Y( (uint8_t*)inBuf, width, height );
+		CompressYCoCgDXT5( (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
+		break;
 
 	case TR2DXT_COMPRESS_RT_3DC:
-			CompressNormalMap3Dc( (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
-			break;
+		CompressNormalMap3Dc( (const uint8_t*)inBuf, (uint8_t*)outBuf, width, height, outputBytes, cancel );
+		break;
 
 	case TR2DXT_COMPRESS_SQUISH_DXT1:
-			CompressImageSquish(	(const uint8_t*)inBuf, 
-									width,
-									height,
-									(uint8_t*)outBuf, 
-									outputPitch, 
-									squish::kDxt1 | squishQuality, 
-									cancel );
-			return true;
+		CompressImageSquish( (const uint8_t*)inBuf,
+							 width,
+							 height,
+							 (uint8_t*)outBuf,
+							 outputPitch,
+							 squish::kDxt1 | squishQuality,
+							 cancel );
+		return true;
 
 	case TR2DXT_COMPRESS_SQUISH_DXT3:
-			CompressImageSquish(	(const uint8_t*)inBuf, 
-									width,
-									height,
-									(uint8_t*)outBuf, 
-									outputPitch, 
-									squish::kDxt3 | squishQuality, 
-									cancel );
-			return true;
+		CompressImageSquish( (const uint8_t*)inBuf,
+							 width,
+							 height,
+							 (uint8_t*)outBuf,
+							 outputPitch,
+							 squish::kDxt3 | squishQuality,
+							 cancel );
+		return true;
 
 	case TR2DXT_COMPRESS_SQUISH_DXT5:
-			CompressImageSquish(	(const uint8_t*)inBuf, 
-									width,
-									height,
-									(uint8_t*)outBuf, 
-									outputPitch, 
-									squish::kDxt5 | squishQuality, 
-									cancel );
-			return true;
+		CompressImageSquish( (const uint8_t*)inBuf,
+							 width,
+							 height,
+							 (uint8_t*)outBuf,
+							 outputPitch,
+							 squish::kDxt5 | squishQuality,
+							 cancel );
+		return true;
 
-	default:		
+	default:
 		return false;
 	}
 	return true;
@@ -812,10 +923,8 @@ bool Tr2DxtCompressSurface(	Tr2DxtCompressionFormat eCompressFmt,
 BLUE_DECLARE( BlueCallbackMan );
 IBlueCallbackManPtr s_wodBackgroundCompressor;
 
-Tr2DxtCompressControl::Tr2DxtCompressControl()
-	: m_cancel( false )
-	, m_isDone( false )
-	, m_id( -1 )
+Tr2DxtCompressControl::Tr2DxtCompressControl() :
+	m_cancel( false ), m_isDone( false ), m_id( -1 )
 {
 }
 
@@ -835,7 +944,7 @@ void Tr2DxtCompressControl::Cancel()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Query if the compression is finished.  
+//   Query if the compression is finished.
 // Return Value:
 //   true if compression is finished
 //   false otherwise
@@ -847,7 +956,7 @@ bool Tr2DxtCompressControl::IsDone() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Query if the compression is requested to be canceled.  
+//   Query if the compression is requested to be canceled.
 // Return Value:
 //   true if compression is requested to be canceled
 //   false otherwise
@@ -869,42 +978,42 @@ void Tr2DxtCompressControl::Done()
 
 struct Tr2DxtCompressSurfaceAsyncData
 {
-	Tr2DxtCompressControl*	control;
-	bool					succeeded;
+	Tr2DxtCompressControl* control;
+	bool succeeded;
 	Tr2DxtCompressionFormat eCompressFmt;
 
-	const uint8_t*			inBuf;
-	unsigned				width;
-	unsigned				height;
+	const uint8_t* inBuf;
+	unsigned width;
+	unsigned height;
 
-	uint8_t*				outBuf;
-	
-	size_t					outputPitch;
-	int						squishQuality;
+	uint8_t* outBuf;
+
+	size_t outputPitch;
+	int squishQuality;
 };
 
 static void Tr2DxtCompressSurfaceAsyncHelper( void* context )
 {
 	Tr2DxtCompressSurfaceAsyncData* data = static_cast<Tr2DxtCompressSurfaceAsyncData*>( context );
-	data->succeeded = Tr2DxtCompressSurface(	data->eCompressFmt, 
-												data->inBuf, 
-												data->width, 
-												data->height, 
-												data->outBuf, 
-												data->outputPitch,
-												data->control->IsCanceling(), 
-												static_cast<Tr2DxtCompressionSquishQuality>( data->squishQuality ) );
+	data->succeeded = Tr2DxtCompressSurface( data->eCompressFmt,
+											 data->inBuf,
+											 data->width,
+											 data->height,
+											 data->outBuf,
+											 data->outputPitch,
+											 data->control->IsCanceling(),
+											 static_cast<Tr2DxtCompressionSquishQuality>( data->squishQuality ) );
 	data->control->Done();
 }
 
-bool Tr2DxtCompressSurfaceAsync(	Tr2DxtCompressionFormat eCompressFmt,
-									const unsigned char *inBuf,
-									unsigned width,
-									unsigned height,
-									unsigned char *outBuf, 
-									size_t outputPitch,
-									Tr2DxtCompressControl *control,
-									int squishQuality )
+bool Tr2DxtCompressSurfaceAsync( Tr2DxtCompressionFormat eCompressFmt,
+								 const unsigned char* inBuf,
+								 unsigned width,
+								 unsigned height,
+								 unsigned char* outBuf,
+								 size_t outputPitch,
+								 Tr2DxtCompressControl* control,
+								 int squishQuality )
 {
 #if BLUE_WITH_PYTHON
 	if( !PyOS->CanYield() )
@@ -951,8 +1060,8 @@ bool Tr2DxtCompressSurfaceAsync(	Tr2DxtCompressionFormat eCompressFmt,
 	}
 
 	const bool result = data->succeeded;
-	
+
 	CCP_DELETE data;
-	
+
 	return result;
 }

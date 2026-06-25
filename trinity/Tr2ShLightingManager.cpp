@@ -13,7 +13,7 @@ namespace
 // Imeratively chosen threshold for distance/radius*intensity value to decide if the light affects a sample
 static const float s_cutoffRadiusRatio = 0.045f * 7.f;
 
-template<int Order>
+template <int Order>
 class ShSolver
 {
 };
@@ -22,7 +22,7 @@ class ShSolver
 // Description:
 //   ShSolver<L1> class evaluates L1 SH coefficients for spherical light sources.
 // --------------------------------------------------------------------------------------
-template<>
+template <>
 class ShSolver<Tr2ShLightingManager::L1>
 {
 public:
@@ -30,7 +30,7 @@ public:
 		FXMVECTOR direction,
 		float distance,
 		float radius,
-		float *result )
+		float* result )
 	{
 		float o0, o1;
 		if( distance <= radius )
@@ -73,6 +73,7 @@ public:
 	}
 
 	static const size_t ORDER = 2;
+
 private:
 	static const float s_packCoefficient0;
 	static const float s_packCoefficient1;
@@ -93,15 +94,15 @@ const float ShSolver<Tr2ShLightingManager::L1>::s_normalizationCoefficients[4] =
 // Description:
 //   ShSolver<L2> class evaluates L2 SH coefficients for spherical light sources.
 // --------------------------------------------------------------------------------------
-template<>
+template <>
 class ShSolver<Tr2ShLightingManager::L2>
 {
 public:
-	inline static void SHEvalSphericalLight( 
+	inline static void SHEvalSphericalLight(
 		FXMVECTOR direction,
 		float distance,
 		float radius,
-		float *result )
+		float* result )
 	{
 		float sinAngle, cosAngle;
 		if( distance <= radius )
@@ -146,17 +147,17 @@ public:
 
 	inline static void PackCoefficients( XMVECTOR* coefficients, Vector4* packedCoefficients )
 	{
-		for( int i = 0; i < 3; i++ ) 
-		{ 
-			packedCoefficients[i].x = -s_packCoefficient1 * XMVectorGetByIndex( coefficients[3], i ); 
-			packedCoefficients[i].y = -s_packCoefficient1 * XMVectorGetByIndex( coefficients[1], i ); 
-			packedCoefficients[i].z = s_packCoefficient1 * XMVectorGetByIndex( coefficients[2], i ); 
-			packedCoefficients[i].w = s_packCoefficient0 * XMVectorGetByIndex( coefficients[0], i ) - 
-				s_packCoefficient3 * XMVectorGetByIndex( coefficients[6], i );  
-		} 
- 
-		for( int i = 0; i < 3; i++ ) 
-		{ 
+		for( int i = 0; i < 3; i++ )
+		{
+			packedCoefficients[i].x = -s_packCoefficient1 * XMVectorGetByIndex( coefficients[3], i );
+			packedCoefficients[i].y = -s_packCoefficient1 * XMVectorGetByIndex( coefficients[1], i );
+			packedCoefficients[i].z = s_packCoefficient1 * XMVectorGetByIndex( coefficients[2], i );
+			packedCoefficients[i].w = s_packCoefficient0 * XMVectorGetByIndex( coefficients[0], i ) -
+				s_packCoefficient3 * XMVectorGetByIndex( coefficients[6], i );
+		}
+
+		for( int i = 0; i < 3; i++ )
+		{
 			packedCoefficients[i + 3].x = s_packCoefficient2 * XMVectorGetByIndex( coefficients[4], i );
 			packedCoefficients[i + 3].y = -s_packCoefficient2 * XMVectorGetByIndex( coefficients[5], i );
 			packedCoefficients[i + 3].z = 3.0f * s_packCoefficient3 * XMVectorGetByIndex( coefficients[6], i );
@@ -168,6 +169,7 @@ public:
 	}
 
 	static const size_t ORDER = 3;
+
 private:
 	inline static void ComputeCapInt( float sinAngle, float cosAngle, float angularCoefficients[3] )
 	{
@@ -219,8 +221,8 @@ const float ShSolver<Tr2ShLightingManager::L2>::s_normalizationCoefficients[9] =
 }
 
 
-Tr2ShLightingManager::Tr2ShLightingManager( IRoot* lockobj )
-	:m_sources( "Tr2ShLightingManager.m_sources" ),
+Tr2ShLightingManager::Tr2ShLightingManager( IRoot* lockobj ) :
+	m_sources( "Tr2ShLightingManager.m_sources" ),
 	m_sourceData( "Tr2ShLightingManager.m_sourceData", sizeof( SourceData ) * 8, 16 ),
 	m_sourceCount( 0 ),
 	m_primaryIntensity( 1.f ),
@@ -258,7 +260,7 @@ void Tr2ShLightingManager::RegisterSecondaryLightSource( const Vector3* position
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Unregisters a secondary light source previously registered with 
+//   Unregisters a secondary light source previously registered with
 //   RegisterSecondaryLightSource call.
 // Arguments:
 //   position - Pointer to source position vector
@@ -294,14 +296,14 @@ void Tr2ShLightingManager::UpdateWithDirectionalLight( const Vector3& direction,
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Helper function that calculates SH lighting coefficient for the given sample 
+//   Helper function that calculates SH lighting coefficient for the given sample
 //   position using specified SH order (template parameter).
 // Arguments:
 //   position - Sample position
 //   intensity - Lighting intensity factor
 //   lightingCoefficients - (out) SH lighting coefficients (8 for L2 and 4 for L1)
 // --------------------------------------------------------------------------------------
-template <int Order> 
+template <int Order>
 void Tr2ShLightingManager::CalculateSecondaryLighting( const Vector3& position, float intensity, float cutoffRadius, Vector4* lightingCoefficients )
 {
 	XMVECTOR lightDirection = m_sunDirection;
@@ -327,12 +329,12 @@ void Tr2ShLightingManager::CalculateSecondaryLighting( const Vector3& position, 
 		XMVECTOR distance = XMVector3LengthEst( toSource );
 		XMVECTOR oneOverDistance = XMVectorReciprocalEst( distance );
 		XMVECTOR dir = XMVectorMultiply( toSource, oneOverDistance );
-		
-		XMVECTOR condition = XMVectorOrInt( XMVectorOrInt( 
-			XMVectorIsInfinite( distance ), 
-			XMVectorLess( XMVectorMultiply( XMVectorMultiply( sourcePos, oneOverDistance ), XMLoadFloat4A( reinterpret_cast<const XMFLOAT4A*>( &source->emissive ) ) ), 
-				XMVectorReplicate( s_cutoffRadiusRatio ) ) ),
-			XMVectorLess( distance, g_XMOne ) );
+
+		XMVECTOR condition = XMVectorOrInt( XMVectorOrInt(
+												XMVectorIsInfinite( distance ),
+												XMVectorLess( XMVectorMultiply( XMVectorMultiply( sourcePos, oneOverDistance ), XMLoadFloat4A( reinterpret_cast<const XMFLOAT4A*>( &source->emissive ) ) ),
+															  XMVectorReplicate( s_cutoffRadiusRatio ) ) ),
+											XMVectorLess( distance, g_XMOne ) );
 		if( XMVectorGetIntW( condition ) )
 		{
 			continue;

@@ -3,7 +3,7 @@
 #include "StdAfx.h"
 #include "Tr2ParticleFluidDragForce.h"
 
-Tr2ParticleFluidDragForce::Tr2ParticleFluidDragForce( IRoot* lockobj ):
+Tr2ParticleFluidDragForce::Tr2ParticleFluidDragForce( IRoot* lockobj ) :
 	m_dragConstant( 1.f )
 {
 }

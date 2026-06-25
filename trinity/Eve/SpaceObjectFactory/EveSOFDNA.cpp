@@ -21,28 +21,28 @@ static char s_dnaSeperatorList = ';';
 
 // dna commands
 static std::string s_dnaCommands[] = {
-	"invalid",				// CMD_INVALID
-	"material",				// CMD_MATERIAL
-	"mesh",					// CMD_MESH
-	"respathinsert",		// CMD_RESPATHINSERT
-	"variant",				// CMD_VARIANT
-	"class",				// CMD_CLASS
-	"pattern",				// CMD_PATTERN
-	"layout",				// CMD_LAYOUT
-	"experimental",			// CMD_EXPERIMENTAL
+	"invalid", // CMD_INVALID
+	"material", // CMD_MATERIAL
+	"mesh", // CMD_MESH
+	"respathinsert", // CMD_RESPATHINSERT
+	"variant", // CMD_VARIANT
+	"class", // CMD_CLASS
+	"pattern", // CMD_PATTERN
+	"layout", // CMD_LAYOUT
+	"experimental", // CMD_EXPERIMENTAL
 };
 
 // build classes
 static std::string s_dnaClasses[] = {
-	"ship",					// BUILDCLASS_SHIP
-	"mobile",				// BUILDCLASS_MOBILE
-	"stationary",			// BUILDCLASS_STATIONARY
-	"swarm",				// BUILDCLASS_SWARM
-	"extension",			// BUILDCLASS_EXTENSION
+	"ship", // BUILDCLASS_SHIP
+	"mobile", // BUILDCLASS_MOBILE
+	"stationary", // BUILDCLASS_STATIONARY
+	"swarm", // BUILDCLASS_SWARM
+	"extension", // BUILDCLASS_EXTENSION
 };
 
-static_assert( sizeof( s_dnaClasses ) / sizeof( s_dnaClasses[0] ) == EveSOFDataHull::BUILDCLASS_COUNT, 
-			  "number of items in s_dnaClasses array does not match the number of items in EveSOFDataHull::BuildClass" );
+static_assert( sizeof( s_dnaClasses ) / sizeof( s_dnaClasses[0] ) == EveSOFDataHull::BUILDCLASS_COUNT,
+			   "number of items in s_dnaClasses array does not match the number of items in EveSOFDataHull::BuildClass" );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -190,7 +190,7 @@ bool EveSOFDNA::ValidateContent()
 			break;
 		case CMD_LAYOUT:
 			// Has at least 1 layout
-			if( cit->second.size() == 0)
+			if( cit->second.size() == 0 )
 			{
 				return false;
 			}
@@ -240,7 +240,7 @@ void EveSOFDNA::Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr )
 	for( size_t dnaSubpart = 3; dnaSubpart < dnaParts.size(); ++dnaSubpart )
 	{
 		// split into command and args
-		StringSplit( commandArgs, dnaParts[ dnaSubpart ].c_str(), s_dnaSeperatorArg );
+		StringSplit( commandArgs, dnaParts[dnaSubpart].c_str(), s_dnaSeperatorArg );
 		if( commandArgs.size() != 2 )
 		{
 			CCP_LOGERR( "Invalid SOF DNA, incorrect command and args: %s", dnaString );
@@ -325,7 +325,7 @@ void EveSOFDNA::Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr )
 	}
 
 	// store the parent bounding sphere here as a copy of the hull bounding sphere...
-	m_parentBoundingSphere = GetHullBoundingSphere(); 
+	m_parentBoundingSphere = GetHullBoundingSphere();
 	m_parentHullShapeEllipsoid = GetHullShapeEllipsoid();
 
 	m_isSkinned = m_hullDatas[0]->isSkinned;
@@ -345,7 +345,7 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 	// The descriptor needs to have a hull!!!
 	m_hullDatas.clear();
 	StringSplit( m_hullNames, descriptor.hull.c_str(), s_dnaSeperatorList );
-	for( auto hullName: m_hullNames)
+	for( auto hullName : m_hullNames )
 	{
 		const EveSOFDataMgr::HullData* h = m_dataMgr->GetHullData( hullName.c_str() );
 		if( h == nullptr )
@@ -353,15 +353,15 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 			CCP_LOGERR( "Couldn't find the requested hull: %s for layout: %s", hullName.c_str(), layoutName.c_str() );
 			return;
 		}
-		m_hullDatas.push_back( h );		
+		m_hullDatas.push_back( h );
 	}
-	
+
 	if( m_hullDatas.empty() )
 	{
 		CCP_LOGERR( "Couldn't find at least one hull name for layout: %s", layoutName.c_str() );
 		return;
 	}
- 
+
 	m_factionName = descriptor.faction.empty() ? parent->m_factionName : descriptor.faction.c_str();
 	m_raceName = descriptor.race.empty() ? parent->m_raceName : descriptor.race.c_str();
 
@@ -381,7 +381,7 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 	}
 
 	// Process Materials
-	std::vector<std::string> materialArgs(4, "None");
+	std::vector<std::string> materialArgs( 4, "None" );
 	bool gotMaterials = parent->GetDnaCommandArgs( CMD_MATERIAL, materialArgs );
 	// Small question about how this should function, if the parent has 2 materials
 	// and the descriptor has 1 material, what should we do then? Override? Merge? TBD!
@@ -417,7 +417,7 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 	{
 		m_commands[s_dnaCommands[CMD_RESPATHINSERT]] = respathInsert;
 	}
-	
+
 	// Process respath insert
 	std::vector<std::string> variant;
 	if( parent->GetDnaCommandArgs( CMD_VARIANT, variant ) )
@@ -451,21 +451,21 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 
 	// contruct the dna string
 	m_dna = std::string( descriptor.hull.c_str() ) + s_dnaSeperatorCmd + std::string( m_factionName ) + s_dnaSeperatorCmd + std::string( m_raceName );
-	for( auto commands: m_commands )
+	for( auto commands : m_commands )
 	{
 		auto commandType = commands.first;
 		auto commandArgs = commands.second;
 
 		m_dna += s_dnaSeperatorCmd + commandType + s_dnaSeperatorArg;
 
-		for( auto arg: commandArgs )
+		for( auto arg : commandArgs )
 		{
 			m_dna += arg + s_dnaSeperatorList;
 		}
 		m_dna.pop_back();
 	}
 
-        // This allows us to get the top parent hulls information
+	// This allows us to get the top parent hulls information
 	m_parentBoundingSphere = parent->GetParentBoundingSphere();
 	m_parentHullShapeEllipsoid = parent->GetParentHullShapeEllipsoid();
 
@@ -857,9 +857,10 @@ const std::vector<EveSOFDataMgr::LocatorDirectionData>* EveSOFDNA::GetHullLocato
 unsigned int EveSOFDNA::GetLocatorCount( const char* setName ) const
 {
 	size_t count = 0;
-	for( const auto& hull : m_hullDatas ) {
+	for( const auto& hull : m_hullDatas )
+	{
 		auto locatorSet = hull->locatorSets.find( BlueSharedString( setName ) );
-		
+
 		if( locatorSet != hull->locatorSets.end() )
 		{
 			count += locatorSet->second.size();
@@ -947,7 +948,7 @@ void EveSOFDNA::ModifyTextureResPath( std::string& resPath, std::unordered_map<s
 	const char* pathInsert = nullptr;
 
 	// ...from faction?
-	if( !m_factionData->resPathInsert.empty())
+	if( !m_factionData->resPathInsert.empty() )
 	{
 		pathInsert = m_factionData->resPathInsert.c_str();
 	}
@@ -960,7 +961,7 @@ void EveSOFDNA::ModifyTextureResPath( std::string& resPath, std::unordered_map<s
 		if( commandArgs.size() == 1 )
 		{
 			// check for "none", which will null-ify the respathinsert
-			if(commandArgs[0] == "none")
+			if( commandArgs[0] == "none" )
 			{
 				pathInsert = nullptr;
 			}
@@ -977,7 +978,7 @@ void EveSOFDNA::ModifyTextureResPath( std::string& resPath, std::unordered_map<s
 		std::string resPathCopy = resPath;
 
 		// insert sub folder
-		size_t index = resPath.rfind("/");
+		size_t index = resPath.rfind( "/" );
 		if( index != std::string::npos )
 		{
 			resPathCopy.insert( index + 1, std::string( pathInsert ) + "/" );
@@ -1000,7 +1001,7 @@ void EveSOFDNA::ModifyTextureResPath( std::string& resPath, std::unordered_map<s
 				else
 				{
 					auto exists = FileExists( resPathCopy );
-					(*existingFilesCache)[resPathCopy] = exists;
+					( *existingFilesCache )[resPathCopy] = exists;
 					if( exists )
 					{
 						resPath = resPathCopy;
@@ -1022,7 +1023,7 @@ void EveSOFDNA::ModifyTextureResPath( std::string& resPath, std::unordered_map<s
 std::string EveSOFDNA::GetHullGeometryResPath() const
 {
 	// multi-hull geometry is different and needs some string mangeling
-	if( m_hullDatas.size() == 1)
+	if( m_hullDatas.size() == 1 )
 	{
 		return m_hullDatas[0]->geometryResFilePath;
 	}
@@ -1150,7 +1151,7 @@ CcpMath::Sphere EveSOFDNA::GetParentBoundingSphere() const
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Returns the shape ellipsoid, needed for layouts to recalculate the 
+//   Returns the shape ellipsoid, needed for layouts to recalculate the
 //	 ellipsoid data
 // --------------------------------------------------------------------------------
 CcpMath::AxisAlignedEllipsoid& EveSOFDNA::GetParentHullShapeEllipsoid()
@@ -1296,7 +1297,7 @@ const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaTyp
 		EveSOFUtilsParameterName param( m_genericData->patternMaterialPrefixes, parameterName.c_str() );
 		if( param.IsMaterialIdxValid() )
 		{
-			if( param.GetMaterialIdx() == 0)
+			if( param.GetMaterialIdx() == 0 )
 			{
 				// get the material from the lib using the racial name
 				const Vector4* res = EveSOFUtils::SearchForParameterData( m_dataMgr, m_factionData->defaultPatternLayer1MaterialName.c_str(), &param );
@@ -1356,7 +1357,6 @@ const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaTyp
 		{
 			return &it->second;
 		}
-
 	}
 
 	// nope, nothing found
@@ -1497,9 +1497,9 @@ size_t EveSOFDNA::GetPatternLayerCount() const
 	if( UsingSof6() )
 	{
 		auto applicationData = GetFactionalPatternApplicationData();
-		if( nullptr != applicationData)
+		if( nullptr != applicationData )
 		{
-			return applicationData->layerAndProjection.size();	
+			return applicationData->layerAndProjection.size();
 		}
 		// could not find the hull in the pattern or couldn't find the pattern, so just fall out of this function
 	}
@@ -1558,7 +1558,7 @@ const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetHullPatternApplicatio
 			return &finder->second;
 		}
 	}
-	
+
 	return nullptr;
 }
 
@@ -1568,21 +1568,22 @@ const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetHullPatternApplicatio
 // --------------------------------------------------------------------------------
 const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetPatternApplicationData( bool& theCallerNeedsToDeleteTheResultBecauseIAmBroken ) const
 {
-    theCallerNeedsToDeleteTheResultBecauseIAmBroken = false;
+	theCallerNeedsToDeleteTheResultBecauseIAmBroken = false;
 	if( !HasDnaCommand( CMD_PATTERN ) )
 	{
 		if( UsingSof6() )
 		{
 			return GetFactionalPatternApplicationData();
 		}
-		else {
+		else
+		{
 			// ok no DNA command for a pattern, so we use the default from the hull
 			auto patternTransform = &m_hullDatas[0]->defaultPattern;
 			auto patternLayer = &m_factionData->defaultPatternInfo;
 
 			EveSOFDataMgr::PatternApplicationData* application = new EveSOFDataMgr::PatternApplicationData();
 			application->layerAndProjection.push_back( std::make_pair( *patternLayer, *patternTransform ) );
-            theCallerNeedsToDeleteTheResultBecauseIAmBroken = true;
+			theCallerNeedsToDeleteTheResultBecauseIAmBroken = true;
 			return application;
 		}
 	}
@@ -1623,7 +1624,7 @@ const EveSOFDataMgr::PatternProjectionData* EveSOFDNA::GetPatternProjectionData(
 // Description:
 //   Return pattern layer data, but needs to exist for provided hull!
 // --------------------------------------------------------------------------------
-const EveSOFDataMgr::PatternLayerData* EveSOFDNA::GetPatternLayerData( const EveSOFDataMgr::PatternApplicationData* patternApplicationData, size_t layer ) const 
+const EveSOFDataMgr::PatternLayerData* EveSOFDNA::GetPatternLayerData( const EveSOFDataMgr::PatternApplicationData* patternApplicationData, size_t layer ) const
 {
 	if( nullptr == patternApplicationData )
 	{
@@ -1653,7 +1654,7 @@ const EveSOFDataMgr::PatternLayerData* EveSOFDNA::GetPatternLayerData( const Eve
 // --------------------------------------------------------------------------------
 const Vector4 EveSOFDNA::GetMaterialTargets( const EveSOFDataMgr::PatternLayerData* layerData ) const
 {
-	return layerData->materialTargets;	
+	return layerData->materialTargets;
 }
 
 // --------------------------------------------------------------------------------
@@ -1661,7 +1662,7 @@ const Vector4 EveSOFDNA::GetMaterialTargets( const EveSOFDataMgr::PatternLayerDa
 //   Return pattern data
 // --------------------------------------------------------------------------------
 bool EveSOFDNA::IsPatternLayerApplicableToArea( const EveSOFDataMgr::PatternLayerData* layerData, EveSOFDataArea::AreaType areaType ) const
-{			
+{
 	if( nullptr == layerData )
 	{
 		return false;
@@ -1697,7 +1698,7 @@ const std::vector<EveSOFDataMgr::LocatorDirectionData>* EveSOFDNA::GetPlacementL
 {
 	auto hull = m_hullDatas[hullIndex];
 	auto locators = hull->locatorSets.find( locatorSetName );
-	if( locators == hull->locatorSets.end())
+	if( locators == hull->locatorSets.end() )
 	{
 		return nullptr;
 	}
@@ -1741,7 +1742,7 @@ bool EveSOFDNA::HasDnaCommand( DnaCommand cmd ) const
 bool EveSOFDNA::GetDnaCommandArgs( DnaCommand cmd, std::vector<std::string>& args ) const
 {
 	// try to find it!
-	auto commandIt = m_commands.find( s_dnaCommands[ cmd ] );
+	auto commandIt = m_commands.find( s_dnaCommands[cmd] );
 	if( commandIt == m_commands.end() )
 	{
 		return false;
@@ -1765,12 +1766,12 @@ bool EveSOFDNA::UsingSof6() const
 
 BlueSharedString EveSOFDNA::GetFactionName() const
 {
-	return BlueSharedString(m_factionName);
+	return BlueSharedString( m_factionName );
 }
 
 BlueSharedString EveSOFDNA::GetRaceName() const
 {
-	return BlueSharedString(m_raceName);
+	return BlueSharedString( m_raceName );
 }
 
 EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const

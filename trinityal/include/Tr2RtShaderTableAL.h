@@ -10,7 +10,7 @@
 
 namespace TrinityALImpl
 {
-	class Tr2RtShaderTableAL;
+class Tr2RtShaderTableAL;
 }
 
 class Tr2PrimaryRenderContextAL;
@@ -22,6 +22,7 @@ class Tr2RtLocalMaterialDescriptionAL
 public:
 	// Stores a raw pointer to the constant buffer, make sure that it lives as long as the shader table
 	Tr2RtLocalMaterialDescriptionAL& SetConstants( uint32_t registerIndex, const Tr2ConstantBufferAL& buffer );
+
 private:
 	const Tr2ConstantBufferAL* m_constants[8] = {};
 
@@ -40,6 +41,7 @@ public:
 	void AddHitGroup( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
 
 	void Reserve( size_t hitGroupCount );
+
 private:
 	struct ShaderRecord
 	{
@@ -63,6 +65,7 @@ public:
 	bool IsValid() const;
 
 	TrinityALImpl::Tr2RtShaderTableAL* TrinityALImpl_GetObject() const;
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2RtShaderTableAL> m_shaderTable;
 };

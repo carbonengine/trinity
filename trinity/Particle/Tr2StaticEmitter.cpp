@@ -11,8 +11,8 @@
 // Description:
 //   Tr2StaticEmitter default constructor
 // --------------------------------------------------------------------------------------
-Tr2StaticEmitter::Tr2StaticEmitter( IRoot* lockobj )
-	:m_hasSpawnedParticles( false ),
+Tr2StaticEmitter::Tr2StaticEmitter( IRoot* lockobj ) :
+	m_hasSpawnedParticles( false ),
 	m_meshIndex( 0 ),
 	m_isThreadSafe( false )
 {
@@ -36,8 +36,8 @@ bool Tr2StaticEmitter::Initialize()
 {
 	if( !m_geometryResourcePath.empty() )
 	{
-		BeResMan->GetResource( m_geometryResourcePath, 
-							   "raw", 
+		BeResMan->GetResource( m_geometryResourcePath,
+							   "raw",
 							   m_geometryResource );
 	}
 	if( m_particleSystem && m_isThreadSafe )
@@ -49,9 +49,9 @@ bool Tr2StaticEmitter::Initialize()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements INotify interface.  Allows the emitter o respond to parameter changes 
-//   generated in Python.  If the particle geometry resource path changes, the emitter 
-//   starts loading new particle data.  
+//   Implements INotify interface.  Allows the emitter o respond to parameter changes
+//   generated in Python.  If the particle geometry resource path changes, the emitter
+//   starts loading new particle data.
 // Arguments:
 //   value - The Blue-exposed parameter that changed
 // Return Value:
@@ -61,8 +61,8 @@ bool Tr2StaticEmitter::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_geometryResourcePath ) )
 	{
-		BeResMan->GetResource( m_geometryResourcePath, 
-							   "raw", 
+		BeResMan->GetResource( m_geometryResourcePath,
+							   "raw",
 							   m_geometryResource );
 	}
 	else if( IsMatch( value, m_particleSystem ) )
@@ -91,15 +91,13 @@ void Tr2StaticEmitter::SetThreadSafeFlag()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Spawns particles from geometry resource if resource is loaded.  
+//   Spawns particles from geometry resource if resource is loaded.
 // --------------------------------------------------------------------------------------
 void Tr2StaticEmitter::DoSpawn()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	auto createDeclarationMap = []( const Tr2VertexDefinition& elements, const Tr2ParticleElementDataMap& particleElements, 
-		const std::string& geometryResourcePath, std::vector<DeclarationMapping>& geometryDeclarationMap ) -> bool
-	{
+	auto createDeclarationMap = []( const Tr2VertexDefinition& elements, const Tr2ParticleElementDataMap& particleElements, const std::string& geometryResourcePath, std::vector<DeclarationMapping>& geometryDeclarationMap ) -> bool {
 		geometryDeclarationMap.clear();
 		for( auto i = particleElements.begin(); i != particleElements.end(); ++i )
 		{
@@ -158,9 +156,7 @@ void Tr2StaticEmitter::DoSpawn()
 		return true;
 	};
 
-	auto spawnParticles = []( Tr2ParticleSystemPtr particleSystem, const std::vector<DeclarationMapping>& geometryDeclarationMap, 
-		uint32_t vertexCount, uint32_t stride, const uint8_t* data )
-	{
+	auto spawnParticles = []( Tr2ParticleSystemPtr particleSystem, const std::vector<DeclarationMapping>& geometryDeclarationMap, uint32_t vertexCount, uint32_t stride, const uint8_t* data ) {
 		for( uint32_t i = 0; i < vertexCount; ++i )
 		{
 			float* particle[Tr2ParticleElementData::COUNT];
@@ -193,7 +189,7 @@ void Tr2StaticEmitter::DoSpawn()
 		}
 	};
 
-	if( m_particleSystem && m_particleSystem->IsValid() && 
+	if( m_particleSystem && m_particleSystem->IsValid() &&
 		m_geometryResource && m_geometryResource->IsGood() && Tr2Renderer::IsResourceCreationAllowed() )
 	{
 		if( m_geometryResource->IsUsingCMF() )
@@ -208,7 +204,7 @@ void Tr2StaticEmitter::DoSpawn()
 			}
 
 			const cmf::Mesh& meshData = m_geometryResource->GetCMFData()->meshes[m_meshIndex];
-			
+
 			// Validate geometry vertex declaration against particle system element declaration
 			Tr2VertexDefinition elements = BuildFromCMFVertexDecl( meshData.decl );
 			const Tr2ParticleElementDataMap& particleElements = m_particleSystem->GetElementDeclaration();
@@ -271,7 +267,7 @@ void Tr2StaticEmitter::DoSpawn()
 // --------------------------------------------------------------------------------------
 // Description:
 //   Implements ITr2GenericEmitter interface. Spawns particles from geometry resource
-//   if resource is loaded and particles were not alread spawned.  
+//   if resource is loaded and particles were not alread spawned.
 // Arguments:
 //   arguments - Update arguments
 // --------------------------------------------------------------------------------------
@@ -285,7 +281,7 @@ void Tr2StaticEmitter::Update( const ITr2GenericEmitter::UpdateArguments& argume
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements ITr2GenericEmitter interface. Does nothing since this emitter only spawns 
+//   Implements ITr2GenericEmitter interface. Does nothing since this emitter only spawns
 //   particles once during Update method.
 // Arguments:
 //   arguments - Update arguments
@@ -294,17 +290,19 @@ void Tr2StaticEmitter::Update( const ITr2GenericEmitter::UpdateArguments& argume
 //   rateModifier - Modifies the number of particles spawned as opposed to emitter's
 //		defined rate value (unused).
 // --------------------------------------------------------------------------------------
-void Tr2StaticEmitter::SpawnParticles( const ITr2GenericEmitter::UpdateArguments& arguments, 
-									   const Vector3* position, 
-									   const Vector3* velocity, 
+void Tr2StaticEmitter::SpawnParticles( const ITr2GenericEmitter::UpdateArguments& arguments,
+									   const Vector3* position,
+									   const Vector3* velocity,
 									   float rateModifier )
 {
 }
 
-void Tr2StaticEmitter::SpawnParticles( const ITr2GenericEmitter::UpdateArguments& arguments, 
-						const Vector3 *positionStart, const Vector3 *positionEnd,
-						const Vector3 *velocityStart, const Vector3 *velocityEnd,
-						float deltaTime )
+void Tr2StaticEmitter::SpawnParticles( const ITr2GenericEmitter::UpdateArguments& arguments,
+									   const Vector3* positionStart,
+									   const Vector3* positionEnd,
+									   const Vector3* velocityStart,
+									   const Vector3* velocityEnd,
+									   float deltaTime )
 {
 	SpawnParticles( arguments, positionEnd, velocityEnd, deltaTime );
 }

@@ -8,9 +8,9 @@
 
 namespace TrinityALImpl
 {
-	class Tr2TextureAL;
-	class Tr2ResourceSetAL;
-	class Tr2SwapChainAL;
+class Tr2TextureAL;
+class Tr2ResourceSetAL;
+class Tr2SwapChainAL;
 }
 
 

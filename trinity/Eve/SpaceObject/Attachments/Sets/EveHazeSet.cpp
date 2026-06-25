@@ -39,7 +39,6 @@ EveHazeSetLight::EveHazeSetLight() :
 	boneMatrix( IdentityMatrix() ),
 	boosterGainInfluence( false )
 {
-
 }
 
 EveHazeSetLight::EveHazeSetLight( const LightData& lightData, uint32_t index, const std::wstring& profilePath, bool boosterGainInfluence ) :
@@ -157,12 +156,13 @@ bool EveHazeSet::OnPrepareResources()
 
 	// some index helpers to create a box
 	static uint8_t s_boxInds[6][4] = {
-		{  0,  1,  2,  3 },
-		{  7,  6,  5,  4 },
-		{  0,  4,  5,  1 },
-		{  3,  2,  6,  7 },
-		{  1,  5,  6,  2 },
-		{  4,  0,  3,  7 } };
+		{ 0, 1, 2, 3 },
+		{ 7, 6, 5, 4 },
+		{ 0, 4, 5, 1 },
+		{ 3, 2, 6, 7 },
+		{ 1, 5, 6, 2 },
+		{ 4, 0, 3, 7 }
+	};
 
 	// fill it
 	unsigned int n = (unsigned int)m_hazes.GetSize();
@@ -253,10 +253,10 @@ void EveHazeSet::CreateBoundingBox()
 // --------------------------------------------------------------------------------
 void EveHazeSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	if( batchType != TRIBATCHTYPE_ADDITIVE || !m_vertexBuffer.IsValid() || reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION)
+	if( batchType != TRIBATCHTYPE_ADDITIVE || !m_vertexBuffer.IsValid() || reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION )
 	{
 		return;
-	} 
+	}
 
 	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
@@ -331,7 +331,7 @@ void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& pa
 			int32_t boneIndex = haze->m_boneIndex;
 			Quaternion rotation( haze->m_rotation );
 			Vector3 position( haze->m_position );
-			
+
 			if( boneIndex > -1 && boneIndex < int( boneCount ) )
 			{
 				Matrix boneTF = IdentityMatrix();
@@ -350,7 +350,7 @@ void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& pa
 	{
 		for( auto& l : m_lights )
 		{
-			Matrix t =  TranslationMatrix( l.lightData.position ) * l.boneMatrix;
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix;
 
 			Color c = l.lightData.color;
 
@@ -374,7 +374,6 @@ void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& pa
 				10,
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
-
 		}
 	}
 }
@@ -404,11 +403,12 @@ void EveHazeSet::RegisterComponents()
 void EveHazeSet::GetLights( Tr2LightManager& lightManager ) const
 {
 	LightFeatures features = LightFeatures();
-	
+
 	for( auto& light : m_lights )
 	{
 		features.parentBrightness = m_activationStrength;
-		if( light.boosterGainInfluence ) {
+		if( light.boosterGainInfluence )
+		{
 			features.parentBrightness *= m_boosterGain;
 		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();

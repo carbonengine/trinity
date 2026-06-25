@@ -31,15 +31,15 @@ const Be::ClassInfo* BehaviorGroup::ExposeToBlue()
 		MAP_ATTRIBUTE( "blendScreenSizeMin", m_blendScreenSizeMin, "Agent will be drawn as a sprite if screen-size is less than this value.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "blendScreenSizeMax", m_blendScreenSizeMax, "Agent will be drawn as a mesh if screeen-size is greater than this value.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boundingSphereRadius", m_boundingSphereRadius, "The radius of the bounding sphere, applied to each agent.", Be::READWRITE | Be::PERSIST )
-		
+
 		MAP_METHOD_AND_WRAP( "AddAgent", AddAgent, "Adds a drone to the swarm \n:jessica-placement: TOOLBAR\n:jessica-icon: far-drone-alt\n" )
 		MAP_METHOD_AND_WRAP( "RemoveAgent", RemoveAgent, "removes a random drone from the swarm \n:jessica-placement: TOOLBAR\n:jessica-icon: far-dumpster\n" )
 		MAP_METHOD_AND_WRAP( "SetCount", SetCount, "Specify a desired number of agents for the system \n:param count: number of agents\n:jessica-placement: TOOLBAR\n:jessica-icon: far-ball-pile\n" )
 		MAP_METHOD_AND_WRAP( "CreateAgentTree", CreateAgentTree, "a temp DEV toggle \n:jessica-placement: TOOLBAR\n:jessica-icon: fab-dev\n" )
-		
+
 		MAP_ATTRIBUTE( "debugMode", m_debugMode, "Toggle for debugging intensity/lod \njessica-group: Debug", Be::READWRITE )
 		MAP_ATTRIBUTE( "debugLodLevel", m_debugLodLevel, "LOD level override (0 - 1) \njessica-group: Debug", Be::READWRITE )
 		MAP_ATTRIBUTE( "debugIntensity", m_debugIntensity, "Intensity override (0 - 1) \njessica-group: Debug", Be::READWRITE )
-		
+
 	EXPOSURE_END()
 }

@@ -8,7 +8,7 @@
 #include "Eve/EveUpdateContext.h"
 #include "Curves/TriCurveSet.h"
 
-EveMultiEffect::EveMultiEffect( IRoot* lockobj ) : 
+EveMultiEffect::EveMultiEffect( IRoot* lockobj ) :
 	PARENTLOCK( m_parameters ),
 	PARENTLOCK( m_bindings ),
 	PARENTLOCK( m_externalParameters ),
@@ -52,7 +52,7 @@ void EveMultiEffect::Rebind( bool onlyUpdateBindings )
 	{
 		( *binding )->Link();
 		const Be::Time time = 0;
-		( *binding )->Update( time );  
+		( *binding )->Update( time );
 	}
 
 	if( onlyUpdateBindings )
@@ -157,10 +157,10 @@ bool EveMultiEffect::SetParameter( BlueSharedString parameterName, IRoot* object
 {
 	for( auto param = m_parameters.begin(); param != m_parameters.end(); ++param )
 	{
-		if( ( *param )->GetName() == parameterName ) 
+		if( ( *param )->GetName() == parameterName )
 		{
 			( *param )->SetParameterObject( object );
-			
+
 			Rebind();
 			return true;
 		}
@@ -172,7 +172,7 @@ EveMultiEffectParameter* EveMultiEffect::GetParameterByName( BlueSharedString pa
 {
 	for( auto param = m_parameters.begin(); param != m_parameters.end(); ++param )
 	{
-		if( (*param)->GetName() == parameterName )
+		if( ( *param )->GetName() == parameterName )
 		{
 			return *param;
 		}
@@ -212,7 +212,7 @@ void EveMultiEffect::GetBindingRoots( std::unordered_map<std::string, IRoot*>& v
 	ITr2ControllerOwner::GetBindingRoots( variables );
 	for( auto param = begin( m_parameters ); param != end( m_parameters ); ++param )
 	{
-		variables[ ( *param )->GetName().c_str() ] = ( *param )->GetParameterObject();
+		variables[( *param )->GetName().c_str()] = ( *param )->GetParameterObject();
 	}
 }
 
@@ -292,7 +292,7 @@ float EveMultiEffect::GetRangeDuration( const std::string& name, const std::stri
 
 /////////////////////////////////////////////////////////////////////////////////////
 // IEveSpaceObject2
-void EveMultiEffect::UpdateSyncronous( const EveUpdateContext& updateContext ) 
+void EveMultiEffect::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	Be::Time time = updateContext.GetTime();
 
@@ -314,14 +314,38 @@ void EveMultiEffect::UpdateSyncronous( const EveUpdateContext& updateContext )
 }
 
 
-void EveMultiEffect::UpdateAsyncronous( const EveUpdateContext& updateContext ) {}
-void EveMultiEffect::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) {}
-void EveMultiEffect::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) {}
-bool EveMultiEffect::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const { return false; }
-void EveMultiEffect::GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpaceObjectPSData& psData ) const {}
-void EveMultiEffect::UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t ) {}
-void EveMultiEffect::GetModelCenterWorldPosition( Vector3 &position ) const {}
-bool EveMultiEffect::GetLocalBoundingBox( Vector3 &min, Vector3 &max ) { return false; }
-void EveMultiEffect::GetLocalToWorldTransform( Matrix &transform ) const {}
-void EveMultiEffect::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) {}
-void EveMultiEffect::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) {}
+void EveMultiEffect::UpdateAsyncronous( const EveUpdateContext& updateContext )
+{
+}
+void EveMultiEffect::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
+{
+}
+void EveMultiEffect::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors )
+{
+}
+bool EveMultiEffect::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
+{
+	return false;
+}
+void EveMultiEffect::GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpaceObjectPSData& psData ) const
+{
+}
+void EveMultiEffect::UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
+{
+}
+void EveMultiEffect::GetModelCenterWorldPosition( Vector3& position ) const
+{
+}
+bool EveMultiEffect::GetLocalBoundingBox( Vector3& min, Vector3& max )
+{
+	return false;
+}
+void EveMultiEffect::GetLocalToWorldTransform( Matrix& transform ) const
+{
+}
+void EveMultiEffect::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
+{
+}
+void EveMultiEffect::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer )
+{
+}

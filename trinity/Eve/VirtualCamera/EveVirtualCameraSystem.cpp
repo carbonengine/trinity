@@ -75,7 +75,7 @@ EveVirtualCameraPtr EveVirtualCameraSystem::GetCameraByName( const std::string& 
 	{
 		for( auto it = m_cameras.begin(); it != m_cameras.end(); ++it )
 		{
-			if( (*it)->GetName() == name )
+			if( ( *it )->GetName() == name )
 			{
 				return *it;
 			}
@@ -95,7 +95,7 @@ void EveVirtualCameraSystem::SetMainCamera( const EveVirtualCameraPtr& camera, c
 {
 	auto current = GetMainCamera();
 	SetMainCamera( camera );
-	if(transition)
+	if( transition )
 	{
 		transition->SetSource( current );
 		transition->SetTarget( GetMainCamera() );
@@ -104,7 +104,7 @@ void EveVirtualCameraSystem::SetMainCamera( const EveVirtualCameraPtr& camera, c
 	m_transition = transition;
 }
 
-void EveVirtualCameraSystem::CutToCamera( EveVirtualCamera * camera )
+void EveVirtualCameraSystem::CutToCamera( EveVirtualCamera* camera )
 {
 	if( camera && camera != GetMainCamera() )
 	{
@@ -114,7 +114,7 @@ void EveVirtualCameraSystem::CutToCamera( EveVirtualCamera * camera )
 	}
 }
 
-void EveVirtualCameraSystem::LerpToCamera( EveVirtualCamera * camera, float transitionTime )
+void EveVirtualCameraSystem::LerpToCamera( EveVirtualCamera* camera, float transitionTime )
 {
 	if( camera && camera != GetMainCamera() )
 	{
@@ -136,7 +136,7 @@ void EveVirtualCameraSystem::Update( Be::Time simTime )
 	{
 		m_lastUpdate = simTime;
 	}
-	float deltaTime = TimeAsFloat(simTime - m_lastUpdate);
+	float deltaTime = TimeAsFloat( simTime - m_lastUpdate );
 	m_lastUpdate = simTime;
 
 	for( auto it = m_cameras.begin(); it != m_cameras.end(); ++it )
@@ -148,7 +148,7 @@ void EveVirtualCameraSystem::Update( Be::Time simTime )
 		m_externalCamera->Update( deltaTime );
 	}
 
-    if( m_transition )
+	if( m_transition )
 	{
 		m_transition->Update( deltaTime );
 		if( m_transition->IsComplete() )
@@ -160,7 +160,7 @@ void EveVirtualCameraSystem::Update( Be::Time simTime )
 
 void EveVirtualCameraSystem::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	for ( auto it = m_cameras.begin(); it != m_cameras.end(); ++it )
+	for( auto it = m_cameras.begin(); it != m_cameras.end(); ++it )
 	{
 		( *it )->GetDebugOptions( options );
 	}

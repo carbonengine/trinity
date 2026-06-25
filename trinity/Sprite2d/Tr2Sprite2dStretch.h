@@ -19,14 +19,13 @@ enum Tr2StretchScaleBehavior
 };
 
 //////////////////////////////////////////////////////////////////////////
-// Tr2Sprite2dFrame implements the ITr2SpriteObject interface and is used with the 
+// Tr2Sprite2dFrame implements the ITr2SpriteObject interface and is used with the
 // Tr2Sprite2dScene to render 2D scenes.
 //
-// It renders a sprite by cutting a texture into three pieces and stretching the 
+// It renders a sprite by cutting a texture into three pieces and stretching the
 // center piece appropriately according to the dimensions of the sprite.
 //////////////////////////////////////////////////////////////////////////
-class Tr2Sprite2dStretch:
-	public Tr2TexturedSpriteObject
+class Tr2Sprite2dStretch : public Tr2TexturedSpriteObject
 {
 public:
 	EXPOSE_TO_BLUE();

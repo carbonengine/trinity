@@ -7,7 +7,7 @@
 #define VMA_STATIC_VULKAN_FUNCTIONS 0
 #define VMA_DYNAMIC_VULKAN_FUNCTIONS 0
 #define VMA_VULKAN_VERSION 1000000
-#define VMA_STATS_STRING_ENABLED 0 
+#define VMA_STATS_STRING_ENABLED 0
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
@@ -50,7 +50,7 @@ Tr2VirtualAllocator::Tr2VirtualAllocator( size_t blockSize, size_t maxSize, size
 	std::reverse( m_reservedBlocks.begin(), m_reservedBlocks.end() );
 
 	//Free reserved blocks until we reach the required initial size.
-	while (m_currentSize < initialSize)
+	while( m_currentSize < initialSize )
 	{
 		Expand();
 	}
@@ -72,7 +72,7 @@ bool Tr2VirtualAllocator::Expand()
 
 	//Free the lowest offset reserved block to grow the allocatable range
 	m_currentSize += m_blockSize;
-	Free(m_reservedBlocks.back());
+	Free( m_reservedBlocks.back() );
 	m_reservedBlocks.pop_back();
 
 	return true;
@@ -117,7 +117,6 @@ void Tr2VirtualAllocator::Free( VirtualAllocation allocation )
 
 	m_allocatedMemory -= allocation.size;
 	CCP_LOG( "Freed %zu bytes at offset %zu from %p. Memory usage: %f / %zu MBs", allocation.size, allocation.offset, block, (float)GetAllocatedMemory() / float( 1024 * 1024 ), m_currentSize / size_t( 1024 * 1024 ) );
-
 }
 
 size_t Tr2VirtualAllocator::GetBlockSize() const

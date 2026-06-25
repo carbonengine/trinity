@@ -17,7 +17,7 @@ BLUE_CLASS_ALLOW_DELAYED_DELETE( Tr2Matrix4Parameter );
 // SeeAlso:
 //   Tr2Effect
 // -----------------------------------------------------------------------------------
-BLUE_CLASS( Tr2Matrix4Parameter ):
+BLUE_CLASS( Tr2Matrix4Parameter ) :
 	public ITriEffectParameter,
 	public ITriReroutable
 {
@@ -25,13 +25,13 @@ BLUE_CLASS( Tr2Matrix4Parameter ):
 public:
 	EXPOSE_TO_BLUE();
 
-	Tr2Matrix4Parameter(IRoot* lockobj = NULL);
+	Tr2Matrix4Parameter( IRoot* lockobj = NULL );
 
 	using ITriEffectParameter::Lock;
 	using ITriEffectParameter::Unlock;
 
 	// 4x4 matrix mapping hlsl float4x4
-	Matrix  m_value;
+	Matrix m_value;
 
 	// hlsl attribute name
 	BlueSharedString m_name;
@@ -42,24 +42,24 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 
-	void CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-							unsigned char* destHandle, 
+	void CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+							unsigned char* destHandle,
 							size_t size,
-							Tr2RenderContext &renderContext ) const;
+							Tr2RenderContext& renderContext ) const;
 	const char* GetParameterName() const;
-	void RebuildEffectHandles( Tr2Shader* effectRes );
+	void RebuildEffectHandles( Tr2Shader * effectRes );
 	unsigned GetHashValue( unsigned startingHash ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriReroutable
 	void SetDestination( void* dest, size_t size );
 	void GetDestination( void*& dest, size_t& size );
-	void RegisterBinding( TriValueBinding* vb );
-	void UnregisterBinding( TriValueBinding* vb );
+	void RegisterBinding( TriValueBinding * vb );
+	void UnregisterBinding( TriValueBinding * vb );
 	bool IsRerouted() const;
 
-	Matrix	GetValue();
-	void	SetValue( const Matrix & );
+	Matrix GetValue();
+	void SetValue( const Matrix& );
 
 private:
 	// If this parameter is bound to a curve we have to inform the binding of the
@@ -68,10 +68,8 @@ private:
 	typedef TrackableStdVector<TriValueBinding*> BindingVector_t;
 	BindingVector_t m_bindings;
 	float* m_reroutedValue;
-
 };
 
 TYPEDEF_BLUECLASS( Tr2Matrix4Parameter );
 
-#endif	// Tr2Matrix4Parameter_H_
-
+#endif // Tr2Matrix4Parameter_H_

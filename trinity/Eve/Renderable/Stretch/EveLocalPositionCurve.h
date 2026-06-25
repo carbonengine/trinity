@@ -14,8 +14,7 @@ the LocalPositionBehavior enum.\r\n */
 
 BLUE_DECLARE( EveTurretSet );
 
-class EveLocalPositionCurve:
-	public ITriVectorFunction
+class EveLocalPositionCurve : public ITriVectorFunction
 {
 
 public:
@@ -41,7 +40,11 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriVectorFunction
-	void UpdateValue( double time ) { Vector3 v; Update( &v, time ); }
+	void UpdateValue( double time )
+	{
+		Vector3 v;
+		Update( &v, time );
+	}
 
 	Vector3* Update( Vector3* in, Be::Time time );
 	Vector3* Update( Vector3* in, double time );
@@ -83,7 +86,7 @@ private:
 
 	// turret data
 	int m_muzzleIndex;
-	
+
 	Vector3* CalculateOffsetPlaneRotation( Vector3* in, Be::Time t );
 	Vector3* CalculateOffsetPosition( Vector3* in, Be::Time t );
 	Vector3* CalculateNearestBoundingPoint( Vector3* in, Be::Time t );
@@ -94,6 +97,6 @@ private:
 	Vector3* GetFiringTurretPosition( Vector3* in, Be::Time t );
 };
 
-TYPEDEF_BLUECLASS(EveLocalPositionCurve);
+TYPEDEF_BLUECLASS( EveLocalPositionCurve );
 
-#endif 
+#endif

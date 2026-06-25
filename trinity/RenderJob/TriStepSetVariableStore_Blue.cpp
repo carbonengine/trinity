@@ -11,7 +11,7 @@ BLUE_DEFINE( TriStepSetVariableStore );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 #if BLUE_WITH_PYTHON
 void TriStepSetVariableStore::py__init__( Be::Optional<std::string> name, PyObject* value )
@@ -117,21 +117,19 @@ void TriStepSetVariableStore::SetValue( PyObject* valueArg )
 
 const Be::ClassInfo* TriStepSetVariableStore::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepSetVariableStore, "Render step for setting a variable in variable store" )
+	EXPOSURE_BEGIN( TriStepSetVariableStore, "Render step for setting a variable in variable store" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepSetVariableStore )
 
 #if BLUE_WITH_PYTHON
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
-		( 
-			"__init__", 
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"__init__",
 			py__init__,
 			2,
 			"Create a render step that sets a variable value to the variable store"
 			"\n:param name: string name of the variable"
-			"\n:param value: a valid python object to set"
-		)
+			"\n:param value: a valid python object to set" )
 #endif
 		MAP_ATTRIBUTE( "variableName", m_variableName, "The name of the Tr2VariableStore variable to set", Be::READWRITE | Be::PERSIST )
 #if BLUE_WITH_PYTHON

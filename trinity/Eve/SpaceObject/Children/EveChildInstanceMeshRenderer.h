@@ -15,7 +15,7 @@
 
 BLUE_DECLARE_INTERFACE( IEveDistributionMethod );
 
-BLUE_CLASS( EveChildInstanceMeshRenderer ):
+BLUE_CLASS( EveChildInstanceMeshRenderer ) :
 	public EveChildMesh
 {
 public:
@@ -27,7 +27,7 @@ public:
 	bool IsVisible( const EveUpdateContext& updateContext ) const override;
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-	void UpdateAsyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	void ConfigureInstanceData() const;
 	virtual uint32_t GetNumberOfEntities() const;

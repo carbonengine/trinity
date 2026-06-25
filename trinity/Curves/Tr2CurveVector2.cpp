@@ -6,8 +6,8 @@
 
 
 // --------------------------------------------------------------------------------
-Tr2CurveVector2::Tr2CurveVector2( IRoot* lockobj )
-	:PARENTLOCK( m_x ),
+Tr2CurveVector2::Tr2CurveVector2( IRoot* lockobj ) :
+	PARENTLOCK( m_x ),
 	PARENTLOCK( m_y ),
 	m_currentValue( 0, 0 )
 {

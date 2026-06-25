@@ -15,15 +15,14 @@ BLUE_DECLARE_VECTOR( Tr2MeshArea );
 
 namespace MR
 {
-	class Rig;
+class Rig;
 }
 
-class Tr2SkinnedModel:
-	public Tr2Model,
-	public IInitialize,
-	public INotify,
-	public IListNotify,
-	public IBlueAsyncResNotifyTarget
+class Tr2SkinnedModel : public Tr2Model,
+						public IInitialize,
+						public INotify,
+						public IListNotify,
+						public IBlueAsyncResNotifyTarget
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -38,14 +37,14 @@ public:
 
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches,
 							 TriBatchType batchType,
-							 const Matrix& m, 
+							 const Matrix& m,
 							 const Tr2PerObjectData* data );
-	
+
 	virtual bool HasTransparency() const;
 	virtual bool GetBoundingBox( Vector3& min, Vector3& max );
 
 	void ResetBindings();
-	void BindToRig(  const std::string* boneList, const int numBones, bool forceRebind );
+	void BindToRig( const std::string* boneList, const int numBones, bool forceRebind );
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueAsyncResNotifyTarget
@@ -59,27 +58,35 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	virtual void OnListModified(
-		long event,		// BLUELISTEVENT values
+		long event, // BLUELISTEVENT values
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const IList* theList
-		);
+		const IList* theList );
 
 	//////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
 
 	// set
-	void SetGeometryResPath( const char* path ) { m_geometryResPath = path; }
-	const char* GetGeometryResPath() { return m_geometryResPath.c_str(); }
-	void SetSkeletonName( const char* name ) { m_skeletonName = name; }
+	void SetGeometryResPath( const char* path )
+	{
+		m_geometryResPath = path;
+	}
+	const char* GetGeometryResPath()
+	{
+		return m_geometryResPath.c_str();
+	}
+	void SetSkeletonName( const char* name )
+	{
+		m_skeletonName = name;
+	}
 
 	bool GetDynamicBoundingBox( const Matrix* boneTransforms, Vector3& minBounds, Vector3& maxBounds ) const;
 
 protected:
-    const std::string *m_pBoneList;
-    int m_numBones;
+	const std::string* m_pBoneList;
+	int m_numBones;
 	//MR::Rig* m_boundRig;
 	bool m_areAllMeshesBound;
 

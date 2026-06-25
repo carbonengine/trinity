@@ -8,53 +8,54 @@
 
 namespace
 {
-	static const Vector3 UP = Vector3( 0, 1, 0 );
-	static const Vector3 FORWARD = Vector3( 0, 0, 1 );
+static const Vector3 UP = Vector3( 0, 1, 0 );
+static const Vector3 FORWARD = Vector3( 0, 0, 1 );
 
-	Vector3 RotateVectorWithAnchor( Vector3 value, Vector3 anchorForwardDirection )
-	{
+Vector3 RotateVectorWithAnchor( Vector3 value, Vector3 anchorForwardDirection )
+{
 
-		Vector3 horizontalDirection = Normalize( Vector3( anchorForwardDirection.x, 0, anchorForwardDirection.z ) );
-		auto rot = RotationQuaternion( Cross( FORWARD, horizontalDirection ), AngleFromNormalized( horizontalDirection, FORWARD ) );
-		return XMVector3TransformCoord( Normalize( value ), XMMatrixRotationQuaternion( rot ) ) * Length( value );
-	}
+	Vector3 horizontalDirection = Normalize( Vector3( anchorForwardDirection.x, 0, anchorForwardDirection.z ) );
+	auto rot = RotationQuaternion( Cross( FORWARD, horizontalDirection ), AngleFromNormalized( horizontalDirection, FORWARD ) );
+	return XMVector3TransformCoord( Normalize( value ), XMMatrixRotationQuaternion( rot ) ) * Length( value );
+}
 
-	void InitializeCurveAsEaseInOut( Tr2CurveScalarPtr& curve )
-	{
-		curve.CreateInstance();
-		curve->SetExtrapolation( Tr2CurveExtrapolation::LINEAR );
-		curve->AddKey( 0.0f, 0.0f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
-		curve->AddKey( 1.0f, 1.0f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
-	}
+void InitializeCurveAsEaseInOut( Tr2CurveScalarPtr& curve )
+{
+	curve.CreateInstance();
+	curve->SetExtrapolation( Tr2CurveExtrapolation::LINEAR );
+	curve->AddKey( 0.0f, 0.0f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
+	curve->AddKey( 1.0f, 1.0f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
+}
 
-	void InitializeCurveAsConstant( Tr2CurveScalarPtr& curve, float value )
-	{
-		curve.CreateInstance();
-		curve->SetExtrapolation( Tr2CurveExtrapolation::LINEAR );
-		curve->AddKey( 0.0f, value, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
-		curve->AddKey( 1.0f, value, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
-	}
+void InitializeCurveAsConstant( Tr2CurveScalarPtr& curve, float value )
+{
+	curve.CreateInstance();
+	curve->SetExtrapolation( Tr2CurveExtrapolation::LINEAR );
+	curve->AddKey( 0.0f, value, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
+	curve->AddKey( 1.0f, value, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
+}
 
-	// Get perlin noise in the range -1 to 1.
-	float ClampedNoise(double offset, float frequency, int octaves)
-	{
-		return float( PerlinNoise1D( offset * frequency, 2.0, 2.0, octaves ) );
-	}
+// Get perlin noise in the range -1 to 1.
+float ClampedNoise( double offset, float frequency, int octaves )
+{
+	return float( PerlinNoise1D( offset * frequency, 2.0, 2.0, octaves ) );
+}
 }
 
 // =============================================================================
 // Float Behaviour Interface / Base
 // =============================================================================
 
-EveVirtualCameraBehaviourFloatBase::EveVirtualCameraBehaviourFloatBase( const char* name ):
+EveVirtualCameraBehaviourFloatBase::EveVirtualCameraBehaviourFloatBase( const char* name ) :
 	m_name( name ),
 	m_active( true )
-{}
+{
+}
 
 EveVirtualCameraBehaviourFloatBase::~EveVirtualCameraBehaviourFloatBase()
 {
 }
-	
+
 const std::string& EveVirtualCameraBehaviourFloatBase::GetName() const
 {
 	return m_name;
@@ -65,9 +66,9 @@ void EveVirtualCameraBehaviourFloatBase::SetName( const std::string& name )
 	m_name = name;
 }
 
-bool EveVirtualCameraBehaviourFloatBase::OnModified( Be::Var * value )
+bool EveVirtualCameraBehaviourFloatBase::OnModified( Be::Var* value )
 {
-	if ( IsMatch( value, m_name ) )
+	if( IsMatch( value, m_name ) )
 	{
 		SetName( m_name );
 	}
@@ -150,7 +151,7 @@ EveVirtualCameraBehaviourFloatNoise::EveVirtualCameraBehaviourFloatNoise( IRoot*
 	m_magnitudeCurve->AddKey( 0.001f, 0.8f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
 	m_magnitudeCurve->AddKey( 0.1f, 1.0f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
 	m_magnitudeCurve->AddKey( 1.0f, 0.0f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
-	
+
 	SetName( m_name );
 
 	TriSrand( BeOS->GetCurrentFrameTime() );
@@ -205,7 +206,7 @@ float EveVirtualCameraBehaviourFloatDamping::Update( const EveVirtualCamera& cam
 	else
 	{
 		m_lastValue = m_lastValue + ( current - m_lastValue ) * m_dampingRatio;
-		return 	m_lastValue - current;
+		return m_lastValue - current;
 	}
 }
 
@@ -216,12 +217,13 @@ float EveVirtualCameraBehaviourFloatDamping::Update( const EveVirtualCamera& cam
 EveVirtualCameraBehaviourVector3Base::EveVirtualCameraBehaviourVector3Base( const char* name ) :
 	m_name( name ),
 	m_active( true )
-{}
+{
+}
 
 EveVirtualCameraBehaviourVector3Base::~EveVirtualCameraBehaviourVector3Base()
 {
 }
-	
+
 const std::string& EveVirtualCameraBehaviourVector3Base::GetName() const
 {
 	return m_name;
@@ -232,9 +234,9 @@ void EveVirtualCameraBehaviourVector3Base::SetName( const std::string& name )
 	m_name = name;
 }
 
-bool EveVirtualCameraBehaviourVector3Base::OnModified( Be::Var * value )
+bool EveVirtualCameraBehaviourVector3Base::OnModified( Be::Var* value )
 {
-	if ( IsMatch( value, m_name ) )
+	if( IsMatch( value, m_name ) )
 	{
 		SetName( m_name );
 	}
@@ -252,11 +254,11 @@ bool EveVirtualCameraBehaviourVector3Base::IsActive()
 
 EveVirtualCameraBehaviourVector3MoveBetween::EveVirtualCameraBehaviourVector3MoveBetween( IRoot* lockobj ) :
 	EveVirtualCameraBehaviourVector3Base( "Move Between" ),
-	m_start(0, 0, 0),
-	m_end(0, 0, 0),
+	m_start( 0, 0, 0 ),
+	m_end( 0, 0, 0 ),
 	m_interpolationCurve(),
-	m_proportional(false),
-	m_world(true)
+	m_proportional( false ),
+	m_world( true )
 {
 	InitializeCurveAsEaseInOut( m_interpolationCurve );
 	SetName( m_name );
@@ -281,7 +283,7 @@ Vector3 EveVirtualCameraBehaviourVector3MoveBetween::Update( const EveVirtualCam
 		start *= anchorRadius;
 		end *= anchorRadius;
 	}
-	if(!m_world)
+	if( !m_world )
 	{
 		start = RotateVectorWithAnchor( start, anchorForwardDirection );
 		end = RotateVectorWithAnchor( end, anchorForwardDirection );
@@ -309,9 +311,9 @@ Vector3 EveVirtualCameraBehaviourVector3MoveBetween::Update( const EveVirtualCam
 
 EveVirtualCameraBehaviourVector3Offset::EveVirtualCameraBehaviourVector3Offset( IRoot* lockobj ) :
 	EveVirtualCameraBehaviourVector3Base( "Offset" ),
-	m_offset(0, 0, 0),
-	m_proportional(true),
-	m_world(false)
+	m_offset( 0, 0, 0 ),
+	m_proportional( true ),
+	m_world( false )
 {
 }
 
@@ -342,9 +344,9 @@ Vector3 EveVirtualCameraBehaviourVector3Offset::Update( const EveVirtualCamera& 
 
 EveVirtualCameraBehaviourVector3Orbit::EveVirtualCameraBehaviourVector3Orbit( IRoot* lockobj ) :
 	EveVirtualCameraBehaviourVector3Base( "Orbit" ),
-	m_start(0.0f),
-	m_end(180.0f),
-	m_distance(1.0f),
+	m_start( 0.0f ),
+	m_end( 180.0f ),
+	m_distance( 1.0f ),
 	m_distanceScalarCurve(),
 	m_orbitCurve(),
 	m_proportional( true ),
@@ -386,7 +388,7 @@ Vector3 EveVirtualCameraBehaviourVector3Orbit::Update( const EveVirtualCamera& c
 		angle = m_start + ( m_end - m_start ) * localElapsedTime / camera.GetAnimationTimelineLength();
 	}
 	auto rotation = RotationQuaternion( UP, XMConvertToRadians( angle ) );
-	
+
 	TriVectorRotateQuaternion( &orbitDir, &orbitDir, &rotation );
 
 	float range = m_distance;
@@ -491,7 +493,7 @@ EveVirtualCameraBehaviourVector3Shake::EveVirtualCameraBehaviourVector3Shake( IR
 	m_magnitudeCurve->AddKey( 0.001f, 0.8f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
 	m_magnitudeCurve->AddKey( 0.1f, 1.0f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
 	m_magnitudeCurve->AddKey( 1.0f, 0.0f, Tr2CurveInterpolation::HERMITE, 0, 0, Tr2CurveTangentType::AUTO_CLAMP );
-	
+
 	SetName( m_name );
 }
 
@@ -517,12 +519,12 @@ Vector3 EveVirtualCameraBehaviourVector3Shake::Update( const EveVirtualCamera& c
 	{
 		offset *= m_magnitudeCurve->GetValue( localElapsedTime / camera.GetAnimationTimelineLength() );
 	}
-	
-	if(m_scaleByView)
+
+	if( m_scaleByView )
 	{
-		offset.x = atan(offset.x) * Length( camera.GetPointOfInterest() - camera.GetPosition() );
-		offset.y = atan(offset.y) * Length( camera.GetPointOfInterest() - camera.GetPosition() );
-		offset.z = atan(offset.z) * Length( camera.GetPointOfInterest() - camera.GetPosition() );
+		offset.x = atan( offset.x ) * Length( camera.GetPointOfInterest() - camera.GetPosition() );
+		offset.y = atan( offset.y ) * Length( camera.GetPointOfInterest() - camera.GetPosition() );
+		offset.z = atan( offset.z ) * Length( camera.GetPointOfInterest() - camera.GetPosition() );
 	}
 
 	return camera.GetRightDirection() * offset.x + camera.GetUpDirection() * offset.y + camera.GetForwardDirection() * offset.z;
@@ -553,9 +555,9 @@ Vector3 EveVirtualCameraBehaviourVector3Damping::Update( const EveVirtualCamera&
 	else
 	{
 		m_lastPosition = m_lastPosition + ( current - m_lastPosition ) * m_dampingRatio;
-		return 	m_lastPosition - current;
+		return m_lastPosition - current;
 	}
-} 
+}
 
 
 // =============================================================================
@@ -587,6 +589,6 @@ Vector3 EveVirtualCameraBehaviourVector3Inertia::Update( const EveVirtualCamera&
 		auto velocity = m_lastVelocity + ( ( current - m_lastPosition ) - m_lastVelocity ) * ( 1.0f / m_inertiaFactor );
 		m_lastPosition = m_lastPosition + velocity;
 		m_lastVelocity = velocity * deltaTime;
-		return 	m_lastPosition - current;
+		return m_lastPosition - current;
 	}
-} 
+}

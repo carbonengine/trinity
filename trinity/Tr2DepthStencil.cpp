@@ -5,12 +5,12 @@
 
 using namespace Tr2RenderContextEnum;
 
-Tr2DepthStencil::Tr2DepthStencil( IRoot* )
-	:m_width( 0 ),
+Tr2DepthStencil::Tr2DepthStencil( IRoot* ) :
+	m_width( 0 ),
 	m_height( 0 ),
 	m_format( Tr2RenderContextEnum::DSFMT_AUTO ),
 	m_flags( Tr2RenderContextEnum::EX_NONE )
-{	
+{
 }
 
 Tr2DepthStencil::~Tr2DepthStencil()
@@ -30,20 +30,20 @@ std::string Tr2DepthStencil::GetName() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 void Tr2DepthStencil::py__init__(
-		Be::OptionalWithDefaultValue<unsigned, 0> width,
-		Be::OptionalWithDefaultValue<unsigned, 0> height,
-		Be::OptionalWithDefaultValue<Tr2RenderContextEnum::DepthStencilFormat, Tr2RenderContextEnum::DSFMT_UNKNOWN> format,
-		Be::OptionalWithDefaultValue<unsigned, 1> msaaType,
-		Be::OptionalWithDefaultValue<unsigned, 0> msaaQuality,
-		Be::OptionalWithDefaultValue<Tr2RenderContextEnum::ExFlag, Tr2RenderContextEnum::EX_NONE> flags )
+	Be::OptionalWithDefaultValue<unsigned, 0> width,
+	Be::OptionalWithDefaultValue<unsigned, 0> height,
+	Be::OptionalWithDefaultValue<Tr2RenderContextEnum::DepthStencilFormat, Tr2RenderContextEnum::DSFMT_UNKNOWN> format,
+	Be::OptionalWithDefaultValue<unsigned, 1> msaaType,
+	Be::OptionalWithDefaultValue<unsigned, 0> msaaQuality,
+	Be::OptionalWithDefaultValue<Tr2RenderContextEnum::ExFlag, Tr2RenderContextEnum::EX_NONE> flags )
 {
 	if( width && height && format )
 	{
-		Create( width, height, format, msaaType, msaaQuality, flags );		
-	}		
+		Create( width, height, format, msaaType, msaaQuality, flags );
+	}
 }
 
 long Tr2DepthStencil::Create( unsigned width, unsigned height, DepthStencilFormat dsFormat, unsigned msaaType, unsigned msaaQuality, Tr2RenderContextEnum::ExFlag flags )
@@ -77,7 +77,7 @@ Tr2TextureAL* Tr2DepthStencil::GetTexture()
 {
 	if( m_depthStencil.IsValid() && Tr2GpuUsage::HasFlag( m_depthStencil.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
 	{
-		return  &m_depthStencil;
+		return &m_depthStencil;
 	}
 	return nullptr;
 }
@@ -95,7 +95,7 @@ bool Tr2DepthStencil::IsReadable() const
 bool Tr2DepthStencil::IsValid() const
 {
 	return m_depthStencil.IsValid();
-}	
+}
 
 void Tr2DepthStencil::Destroy()
 {
@@ -161,9 +161,9 @@ uint32_t Tr2DepthStencil::GetMsaaQuality() const
 	return m_depthStencil.GetMsaaDesc().quality;
 }
 
-uint32_t Tr2DepthStencil::GetMipCount() const 
-{ 
-	return 1; 
+uint32_t Tr2DepthStencil::GetMipCount() const
+{
+	return 1;
 }
 
 // --------------------------------------------------------------------------------------

@@ -48,7 +48,7 @@ FFX_CACAO_Settings GetSettings( bool useDownsampledSSAO, bool generateNormals, S
 {
 	unsigned settingsIndex = static_cast<int>( quality ) + useDownsampledSSAO * ( static_cast<int>( SSAOQuality::LOWEST ) + 1 );
 	FFX_CACAO_Settings settings = FFX_CACAO_PRESETS[settingsIndex].settings;
-	
+
 	settings.generateNormals = generateNormals;
 
 	// Set fade out to something large to disable it
@@ -93,7 +93,7 @@ Tr2GpuResourcePool::Texture Tr2SSAO::Filter( const Tr2TextureAL& depthBuffer, co
 	if( m_cortaoEnabled )
 	{
 		//Lazily initialize CORTAO, as EVE currently doesn't use it, so it doesn't have the shaders/lookup table for it.
-		if (!m_cortaoInitialized)
+		if( !m_cortaoInitialized )
 		{
 			m_cortaoEffect.CreateInstance();
 			m_cortaoEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/CORTAO/CORTAO.fx" );
@@ -114,8 +114,7 @@ Tr2GpuResourcePool::Texture Tr2SSAO::Filter( const Tr2TextureAL& depthBuffer, co
 
 		GPU_REGION( renderContext, "CORTAO" );
 		return ComputeCORTAO( depthBuffer, normalBuffer, gpuResourcePool, renderContext, temporal );
-
-	} 
+	}
 	else
 	{
 		GPU_REGION( renderContext, "CACAO" );
@@ -148,17 +147,41 @@ Tr2GpuResourcePool::Texture Tr2SSAO::PerformPass( const Layer& layer, const Tr2T
 	{
 		XMFLOAT4X4 p;
 		XMMATRIX xProj = Tr2Renderer::GetReversedDepthProjectionTransform();
-		XMStoreFloat4x4(&p, xProj);
-		proj.elements[0][0] = p._11; proj.elements[0][1] = p._12; proj.elements[0][2] = p._13; proj.elements[0][3] = p._14;
-		proj.elements[1][0] = p._21; proj.elements[1][1] = p._22; proj.elements[1][2] = p._23; proj.elements[1][3] = p._24;
-		proj.elements[2][0] = p._31; proj.elements[2][1] = p._32; proj.elements[2][2] = p._33; proj.elements[2][3] = p._34;
-		proj.elements[3][0] = p._41; proj.elements[3][1] = p._42; proj.elements[3][2] = p._43; proj.elements[3][3] = p._44;
-		XMMATRIX xNormalsWorldToView = XMMATRIX(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1) * Tr2Renderer::GetInverseViewTransform(); // should be transpose(inverse(view)), but XMM is row-major and HLSL is column-major
-		XMStoreFloat4x4(&p, xNormalsWorldToView);
-		normalsWorldToView.elements[0][0] = p._11; normalsWorldToView.elements[0][1] = p._12; normalsWorldToView.elements[0][2] = p._13; normalsWorldToView.elements[0][3] = p._14;
-		normalsWorldToView.elements[1][0] = p._21; normalsWorldToView.elements[1][1] = p._22; normalsWorldToView.elements[1][2] = p._23; normalsWorldToView.elements[1][3] = p._24;
-		normalsWorldToView.elements[2][0] = p._31; normalsWorldToView.elements[2][1] = p._32; normalsWorldToView.elements[2][2] = p._33; normalsWorldToView.elements[2][3] = p._34;
-		normalsWorldToView.elements[3][0] = p._41; normalsWorldToView.elements[3][1] = p._42; normalsWorldToView.elements[3][2] = p._43; normalsWorldToView.elements[3][3] = p._44;
+		XMStoreFloat4x4( &p, xProj );
+		proj.elements[0][0] = p._11;
+		proj.elements[0][1] = p._12;
+		proj.elements[0][2] = p._13;
+		proj.elements[0][3] = p._14;
+		proj.elements[1][0] = p._21;
+		proj.elements[1][1] = p._22;
+		proj.elements[1][2] = p._23;
+		proj.elements[1][3] = p._24;
+		proj.elements[2][0] = p._31;
+		proj.elements[2][1] = p._32;
+		proj.elements[2][2] = p._33;
+		proj.elements[2][3] = p._34;
+		proj.elements[3][0] = p._41;
+		proj.elements[3][1] = p._42;
+		proj.elements[3][2] = p._43;
+		proj.elements[3][3] = p._44;
+		XMMATRIX xNormalsWorldToView = XMMATRIX( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, 1 ) * Tr2Renderer::GetInverseViewTransform(); // should be transpose(inverse(view)), but XMM is row-major and HLSL is column-major
+		XMStoreFloat4x4( &p, xNormalsWorldToView );
+		normalsWorldToView.elements[0][0] = p._11;
+		normalsWorldToView.elements[0][1] = p._12;
+		normalsWorldToView.elements[0][2] = p._13;
+		normalsWorldToView.elements[0][3] = p._14;
+		normalsWorldToView.elements[1][0] = p._21;
+		normalsWorldToView.elements[1][1] = p._22;
+		normalsWorldToView.elements[1][2] = p._23;
+		normalsWorldToView.elements[1][3] = p._24;
+		normalsWorldToView.elements[2][0] = p._31;
+		normalsWorldToView.elements[2][1] = p._32;
+		normalsWorldToView.elements[2][2] = p._33;
+		normalsWorldToView.elements[2][3] = p._34;
+		normalsWorldToView.elements[3][0] = p._41;
+		normalsWorldToView.elements[3][1] = p._42;
+		normalsWorldToView.elements[3][2] = p._43;
+		normalsWorldToView.elements[3][3] = p._44;
 	}
 
 	proj.elements[3][2] /= layer.zoomLevel;
@@ -175,25 +198,25 @@ Tr2GpuResourcePool::Texture Tr2SSAO::PerformPass( const Layer& layer, const Tr2T
 	settings.sharpness = layer.settings.sharpness;
 	settings.detailShadowStrength = layer.settings.detailShadowStrength;
 
-    auto GetTempTexture = [&gpuResourcePool]( auto name, auto dim, auto usage ) {
+	auto GetTempTexture = [&gpuResourcePool]( auto name, auto dim, auto usage ) {
 #if __APPLE__
-        return gpuResourcePool.GetPersistentTexture( name, dim, usage, []( auto& tex, auto& rc ) {} );
+		return gpuResourcePool.GetPersistentTexture( name, dim, usage, []( auto& tex, auto& rc ) {} );
 #else
-        return gpuResourcePool.GetTempTexture( name, dim, usage );
+		return gpuResourcePool.GetTempTexture( name, dim, usage );
 #endif
-    };
+	};
 
 	auto deinterleavedDepthTarget = GetTempTexture(
-		"ssao_deinterleaved_depth", 
-		Tr2BitmapDimensions( TEX_TYPE_2D, PIXEL_FORMAT_R32_FLOAT, size.deinterleavedDepthBufferWidth, size.deinterleavedDepthBufferHeight, 1, settings.qualityLevel >= FFX_CACAO_QUALITY_MEDIUM ? 4 : 1, SSAO_PASS_COUNT ), 
+		"ssao_deinterleaved_depth",
+		Tr2BitmapDimensions( TEX_TYPE_2D, PIXEL_FORMAT_R32_FLOAT, size.deinterleavedDepthBufferWidth, size.deinterleavedDepthBufferHeight, 1, settings.qualityLevel >= FFX_CACAO_QUALITY_MEDIUM ? 4 : 1, SSAO_PASS_COUNT ),
 		Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE );
 	auto deinterleavedNormalTarget = GetTempTexture(
-		"ssao_deinterleaved_normal", 
-		Tr2BitmapDimensions( TEX_TYPE_2D, PIXEL_FORMAT_R8G8B8A8_SNORM, size.deinterleavedDepthBufferWidth, size.deinterleavedDepthBufferHeight, 1, 1, SSAO_PASS_COUNT ), 
+		"ssao_deinterleaved_normal",
+		Tr2BitmapDimensions( TEX_TYPE_2D, PIXEL_FORMAT_R8G8B8A8_SNORM, size.deinterleavedDepthBufferWidth, size.deinterleavedDepthBufferHeight, 1, 1, SSAO_PASS_COUNT ),
 		Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE );
 	auto ssaoWorkerTargetA = GetTempTexture(
 		"ssao_worker_a",
-		Tr2BitmapDimensions( TEX_TYPE_2D, PIXEL_FORMAT_R8G8_UNORM, size.ssaoBufferWidth, size.ssaoBufferHeight, 1, 1, SSAO_PASS_COUNT ), 
+		Tr2BitmapDimensions( TEX_TYPE_2D, PIXEL_FORMAT_R8G8_UNORM, size.ssaoBufferWidth, size.ssaoBufferHeight, 1, 1, SSAO_PASS_COUNT ),
 		Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE );
 	auto ssaoWorkerTargetB = GetTempTexture(
 		"ssao_worker_b",
@@ -221,9 +244,9 @@ Tr2GpuResourcePool::Texture Tr2SSAO::PerformPass( const Layer& layer, const Tr2T
 	Tr2GpuResourcePool::Buffer loadCounterBuffer;
 	if( m_detail.quality == SSAOQuality::HIGHEST )
 	{
-		loadCounterBuffer = gpuResourcePool.GetTempBuffer( 
-			"ssao_load_counter", 
-			Tr2BufferDescriptionAL(PIXEL_FORMAT_R32_UINT, 1, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE ) );
+		loadCounterBuffer = gpuResourcePool.GetTempBuffer(
+			"ssao_load_counter",
+			Tr2BufferDescriptionAL( PIXEL_FORMAT_R32_UINT, 1, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE ) );
 	}
 
 	layer.effect->SetParameter( BlueSharedString( "g_DepthIn" ), depthBuffer );
@@ -297,7 +320,7 @@ Tr2GpuResourcePool::Texture Tr2SSAO::PerformPass( const Layer& layer, const Tr2T
 
 		CR_RETURN_VAL( ApplyConstBuffer( SSAO_PASS_COUNT, renderContext ), {} );
 
-		if( settings.qualityLevel == FFX_CACAO_QUALITY_LOWEST)
+		if( settings.qualityLevel == FFX_CACAO_QUALITY_LOWEST )
 		{
 			std::string shader = layer.downsampled ? "PrepareDownsampledDepthsHalf" : "PrepareNativeDepthsHalf";
 
@@ -403,8 +426,8 @@ Tr2GpuResourcePool::Texture Tr2SSAO::PerformPass( const Layer& layer, const Tr2T
 	if( settings.blurPassCount )
 	{
 		GPU_REGION( renderContext, "Edge sensitive blur" );
-		
-		unsigned dimX = DispatchSize( 4 * FFX_CACAO_BLUR_WIDTH  - 2 * settings.blurPassCount, size.ssaoBufferWidth );
+
+		unsigned dimX = DispatchSize( 4 * FFX_CACAO_BLUR_WIDTH - 2 * settings.blurPassCount, size.ssaoBufferWidth );
 		unsigned dimY = DispatchSize( 3 * FFX_CACAO_BLUR_HEIGHT - 2 * settings.blurPassCount, size.ssaoBufferHeight );
 
 		for( unsigned i = 0; i < SSAO_PASS_COUNT; i++ )
@@ -518,7 +541,7 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 {
 	uint32_t width = depthBuffer.GetWidth();
 	uint32_t height = depthBuffer.GetHeight();
-	
+
 	Tr2GpuResourcePool::Texture packedBuffer;
 	{
 		uint32_t mipLevels = 1;
@@ -547,38 +570,36 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 		Matrix viewMatrix = Tr2Renderer::GetViewTransform();
 
 		Matrix projectionMatrix = Tr2Renderer::GetProjectionTransform();
-		Matrix inverseProjectionMatrix = Inverse( projectionMatrix ); 
+		Matrix inverseProjectionMatrix = Inverse( projectionMatrix );
 
 		float nearPlane = Tr2Renderer::GetBackClip();
 		float farPlane = Tr2Renderer::GetFrontClip();
 
 		data->resolution = Vector4( (float)width, (float)height, 1.0f / (float)width, 1.0f / (float)height );
-		
+
 		data->projectionParams = Vector4(
 			+0.5f * projectionMatrix._11,
 			-0.5f * projectionMatrix._22,
 			-0.5f + projectionMatrix._31 * +0.5f,
-			-0.5f + projectionMatrix._32 * -0.5f
-		);
+			-0.5f + projectionMatrix._32 * -0.5f );
 
 		data->unprojectParams = Vector4(
 			+2.0f * inverseProjectionMatrix._11,
 			-2.0f * inverseProjectionMatrix._22,
 			-inverseProjectionMatrix._11 + inverseProjectionMatrix._41,
-			+inverseProjectionMatrix._22 - inverseProjectionMatrix._42
-		);
-		
+			+inverseProjectionMatrix._22 - inverseProjectionMatrix._42 );
+
 		data->depthParams = Vector2( ( nearPlane - farPlane ) / ( nearPlane * farPlane ), 1.0f / nearPlane );
-		
+
 		data->radius = m_cortaoRadius;
 
 		data->normalBias = inverseProjectionMatrix._11 * sqrtf( 2.0f ) / width;
 
 
-		float maxApparentCircleRadius = m_cortaoMaxBlockerSearchRadius * 2.0f * fminf( inverseProjectionMatrix._11, inverseProjectionMatrix._22 ); 
+		float maxApparentCircleRadius = m_cortaoMaxBlockerSearchRadius * 2.0f * fminf( inverseProjectionMatrix._11, inverseProjectionMatrix._22 );
 		data->maxApparentCircleRadiusCoefficient = maxApparentCircleRadius / sqrtf( maxApparentCircleRadius * maxApparentCircleRadius + 1.0f );
 
-		float circleBias = log2f( projectionMatrix._11 * width * 0.5f );	
+		float circleBias = log2f( projectionMatrix._11 * width * 0.5f );
 		data->mipBias = m_cortaoMipBias + circleBias;
 		data->radiusMultiplier = m_cortaoStrength;
 		data->lookupOccluderRadiusScale = 1.0f;
@@ -607,7 +628,7 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 		normalMatrix._43 = 0.0f;
 
 		//bias matrix to convert from [0, 1] to [-1, +1]
-		Matrix biasMatrix = ScalingMatrix( 2.0f, 2.0f, 2.0f ) * TranslationMatrix( -1.0f, -1.0f, -1.0f ); 
+		Matrix biasMatrix = ScalingMatrix( 2.0f, 2.0f, 2.0f ) * TranslationMatrix( -1.0f, -1.0f, -1.0f );
 
 		data->normalMatrix = Transpose( biasMatrix * normalMatrix );
 
@@ -622,7 +643,7 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 	PixelFormat outputFormat = m_cortaoBentNormal ? PixelFormat::PIXEL_FORMAT_R8G8B8A8_SNORM : PixelFormat::PIXEL_FORMAT_R8_UNORM;
 	auto outputTarget = gpuResourcePool.GetTempTexture( "cortao_output", width, height, outputFormat, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE );
 
-	
+
 	const char* const SAMPLE_COUNTS[] = {
 		"SAMPLE_COUNT_16",
 		"SAMPLE_COUNT_12",
@@ -632,14 +653,14 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 	};
 	m_cortaoEffect->SetOption( BlueSharedString( "SAMPLE_COUNT" ), BlueSharedString( SAMPLE_COUNTS[static_cast<int>( m_detail.quality )] ) );
 	m_cortaoEffect->SetOption( BlueSharedString( "BENT_NORMAL" ), BlueSharedString( m_cortaoBentNormal ? "BENT_NORMAL_ENABLED" : "BENT_NORMAL_DISABLED" ) );
-	
+
 	m_cortaoEffect->SetParameter( BlueSharedString( "NormalBuffer" ), normalBuffer );
 	m_cortaoEffect->SetParameter( BlueSharedString( "DepthBuffer" ), depthBuffer );
 
 	//Set all mip levels to ensure no warnings produced by unset resources.
 	for( uint32_t i = 0; i < 8; i++ )
 	{
-		std::string parameterName = std::string("PackedOutputBuffer") + std::to_string( i );
+		std::string parameterName = std::string( "PackedOutputBuffer" ) + std::to_string( i );
 		m_cortaoEffect->SetParameter( BlueSharedString( parameterName.c_str() ), packedBuffer, std::min( i, packedBuffer->GetMipCount() - 1 ) );
 	}
 
@@ -688,8 +709,6 @@ Tr2GpuResourcePool::Texture Tr2SSAO::ComputeCORTAO( const Tr2TextureAL& depthBuf
 				Tr2Renderer::RunComputeShader( m_cortaoBlurEffect, BlueSharedString( "Blur" ), ( width + blurWorkGroupSize - 1 ) / blurWorkGroupSize, ( height + blurWorkGroupSize - 1 ) / blurWorkGroupSize, 1, renderContext );
 			}
 		}
-
-	
 	}
 	return outputTarget;
 }

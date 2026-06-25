@@ -8,11 +8,11 @@
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Helper class to store a growable array of objects. A super-limited version of 
+//   Helper class to store a growable array of objects. A super-limited version of
 //   std::vector, but it allows appending new objects in parallel. All other operations
 //   are not thread safe.
 // --------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 class Tr2AddSafeGrowableBuffer
 {
 public:
@@ -29,6 +29,7 @@ public:
 	T* begin();
 	const T* end() const;
 	T* end();
+
 private:
 	CcpMallocBuffer m_data;
 	Tr2SpinMutex m_mutex;
@@ -63,22 +64,21 @@ T* end( Tr2AddSafeGrowableBuffer<T>& buffer )
 
 
 
-
-template<typename T>
-Tr2AddSafeGrowableBuffer<T>::Tr2AddSafeGrowableBuffer( uint32_t initialCount, const char* allocationName )
-	:m_capacity( initialCount ),
+template <typename T>
+Tr2AddSafeGrowableBuffer<T>::Tr2AddSafeGrowableBuffer( uint32_t initialCount, const char* allocationName ) :
+	m_capacity( initialCount ),
 	m_count( 0 )
 {
 	m_data.resize( allocationName, m_capacity * sizeof( T ) );
 }
 
-template<typename T>
+template <typename T>
 void Tr2AddSafeGrowableBuffer<T>::Clear()
 {
 	m_count = 0;
 }
 
-template<typename T>
+template <typename T>
 bool Tr2AddSafeGrowableBuffer<T>::Add( const T& element, const char* allocationName )
 {
 	Tr2SpinMutex::scoped_lock lock( m_mutex );
@@ -98,56 +98,56 @@ bool Tr2AddSafeGrowableBuffer<T>::Add( const T& element, const char* allocationN
 	return true;
 }
 
-template<typename T>
+template <typename T>
 uint32_t Tr2AddSafeGrowableBuffer<T>::GetCount() const
 {
 	return m_count;
 }
 
-template<typename T>
+template <typename T>
 const T* Tr2AddSafeGrowableBuffer<T>::GetData() const
 {
 	return reinterpret_cast<const T*>( m_data.get() );
 }
 
-template<typename T>
+template <typename T>
 T* Tr2AddSafeGrowableBuffer<T>::GetData()
 {
 	return reinterpret_cast<T*>( m_data.get() );
 }
 
-template<typename T>
+template <typename T>
 const T& Tr2AddSafeGrowableBuffer<T>::operator[]( size_t index ) const
 {
 	return this->GetData()[index];
 }
 
-template<typename T>
+template <typename T>
 T& Tr2AddSafeGrowableBuffer<T>::operator[]( size_t index )
 {
 	return this->GetData()[index];
 }
 
-template<typename T>
+template <typename T>
 const T* Tr2AddSafeGrowableBuffer<T>::begin() const
 {
 	return this->GetData();
 }
 
-template<typename T>
+template <typename T>
 T* Tr2AddSafeGrowableBuffer<T>::begin()
 {
 	return this->GetData();
 }
 
-template<typename T>
+template <typename T>
 const T* Tr2AddSafeGrowableBuffer<T>::end() const
 {
 	// cppcheck-suppress arithOperationsOnVoidPointer
 	return this->GetData() + this->GetCount();
 }
 
-template<typename T>
+template <typename T>
 T* Tr2AddSafeGrowableBuffer<T>::end()
 {
 	// cppcheck-suppress arithOperationsOnVoidPointer

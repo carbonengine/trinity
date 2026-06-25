@@ -7,9 +7,9 @@
 
 using namespace Tr2RenderContextEnum;
 
-CCP_STATS_DECLARE( displayListCount, "Trinity/SpriteScene/displayListCount", false, CST_COUNTER_LOW, "Number of cached display lists.");
-CCP_STATS_DECLARE( displayListVertexBufferSize, "Trinity/SpriteScene/displayListVertexBufferSize", false, CST_COUNTER_HIGH, "Total size of vertex buffers used by cached display lists.");
-CCP_STATS_DECLARE( displayListIndexBufferSize, "Trinity/SpriteScene/displayListIndexBufferSize", false, CST_COUNTER_HIGH, "Total size of index buffers used by cached display lists.");
+CCP_STATS_DECLARE( displayListCount, "Trinity/SpriteScene/displayListCount", false, CST_COUNTER_LOW, "Number of cached display lists." );
+CCP_STATS_DECLARE( displayListVertexBufferSize, "Trinity/SpriteScene/displayListVertexBufferSize", false, CST_COUNTER_HIGH, "Total size of vertex buffers used by cached display lists." );
+CCP_STATS_DECLARE( displayListIndexBufferSize, "Trinity/SpriteScene/displayListIndexBufferSize", false, CST_COUNTER_HIGH, "Total size of index buffers used by cached display lists." );
 
 Tr2Sprite2dDisplayList::Tr2Sprite2dDisplayList( ITr2SpriteObject* owner ) :
 	m_owner( owner )
@@ -66,9 +66,9 @@ void Tr2Sprite2dDisplayList::Entry::SubmitGeometry( Tr2RenderContext& renderCont
 	}
 
 	FillAndSetConstants(
-		*m_uiTransformsCb, 
+		*m_uiTransformsCb,
 		transposedMatrixes,
-		sizeof( transposedMatrixes[0] ) * TR2_SS_MAX_TRANSFORM_COUNT, 
+		sizeof( transposedMatrixes[0] ) * TR2_SS_MAX_TRANSFORM_COUNT,
 		VERTEX_SHADER,
 		Tr2Renderer::GetPerObjectVSGUIStartRegister(),
 		renderContext );

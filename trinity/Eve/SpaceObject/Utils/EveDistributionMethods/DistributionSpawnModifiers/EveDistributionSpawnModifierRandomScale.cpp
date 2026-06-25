@@ -5,7 +5,7 @@
 #include "TriMath.h"
 #include "random"
 
-EveDistributionSpawnModifierRandomScale::EveDistributionSpawnModifierRandomScale( IRoot* lockobj ):
+EveDistributionSpawnModifierRandomScale::EveDistributionSpawnModifierRandomScale( IRoot* lockobj ) :
 	m_consistentRandom( false ),
 	m_uniformScale( false ),
 	m_overrideScale( false ),
@@ -34,7 +34,7 @@ void EveDistributionSpawnModifierRandomScale::ProcessSpawnModifier( PlacementDat
 
 	generator.seed( randSeed );
 
-	Vector3 randomScale( 1.f, 1.f, 1.f);
+	Vector3 randomScale( 1.f, 1.f, 1.f );
 
 	if( m_uniformScale )
 	{

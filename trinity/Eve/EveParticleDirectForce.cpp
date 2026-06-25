@@ -3,7 +3,7 @@
 #include "StdAfx.h"
 #include "EveParticleDirectForce.h"
 
-EveParticleDirectForce::EveParticleDirectForce( IRoot* lockobj ):
+EveParticleDirectForce::EveParticleDirectForce( IRoot* lockobj ) :
 	Tr2ParticleDirectForce( lockobj )
 {
 }

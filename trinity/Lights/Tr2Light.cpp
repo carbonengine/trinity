@@ -30,7 +30,7 @@ LightData::LightData() :
 LightFeatures::LightFeatures() :
 	parentBrightness( 1.0f ),
 	parentScale( 1.0f ),
-	profileIndex( 0 ) 
+	profileIndex( 0 )
 {
 }
 
@@ -59,14 +59,12 @@ Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transfor
 	data.innerAngle = Float_16( 0.0f );
 	data.projectionPlaneDistance = Float_16( 1.f / tan( TRI_2PI * 45.f / 360.0f ) );
 
-	if ( castsShadows == PerLightShadowSetting::ALWAYS_ENABLED
-		|| (castsShadows == PerLightShadowSetting::ENABLED_ONLY_ON_HIGH_QUALITY && shadowQuality == ShadowQuality::SHADOW_HIGH)
-		|| (castsShadows == PerLightShadowSetting::ENABLED_ONLY_ON_HIGH_QUALITY && shadowQuality == ShadowQuality::SHADOW_RAYTRACED) )
+	if( castsShadows == PerLightShadowSetting::ALWAYS_ENABLED || ( castsShadows == PerLightShadowSetting::ENABLED_ONLY_ON_HIGH_QUALITY && shadowQuality == ShadowQuality::SHADOW_HIGH ) || ( castsShadows == PerLightShadowSetting::ENABLED_ONLY_ON_HIGH_QUALITY && shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) )
 	{
 		data.flags |= Tr2LightManager::FLAG_CASTS_SHADOWS;
 	}
 	data.flags |= isVolumetric ? Tr2LightManager::FLAG_IS_VOLUMETRIC : 0;
-	
+
 	return data;
 }
 
@@ -97,7 +95,7 @@ void Tr2Light::SetLightData( LightData& baseData )
 	m_lightData = baseData;
 }
 
-void Tr2Light::SetBoneMatrix( const Float4x3* bones, size_t boneCount ) 
+void Tr2Light::SetBoneMatrix( const Float4x3* bones, size_t boneCount )
 {
 	if( m_lightData.boneIndex >= 0 && m_lightData.boneIndex < boneCount )
 	{
@@ -149,7 +147,7 @@ void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, flo
 		lightManager.AddLight( data );
 	}
 }
-	
+
 
 void Tr2Light::GetLight( Vector3& position, float& radius, Color& color )
 {
@@ -202,10 +200,8 @@ float Tr2Light::GetBrightnessMultiplier() const
 
 void Tr2Light::Update()
 {
-
 }
 
 void Tr2Light::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const Float4x3* bones, size_t boneCount )
 {
-
 }

@@ -39,9 +39,9 @@ public:
 	void UpdateAsyncronous( const EveUpdateContext& updateContext ) override;
 	void PrepareShaderData( const EveUpdateContext& updateContext ) override;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors ) override;
-	bool GetLocalBoundingBox( Vector3 &min, Vector3 &max ) override;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables, Tr2ImpostorManager * impostors ) override;
+	bool GetLocalBoundingBox( Vector3 & min, Vector3 & max ) override;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) override;
 	void SetControllerVariable( const char* name, float value ) override;
 	void HandleControllerEvent( const char* name ) override;
@@ -53,8 +53,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
-	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
+	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
 
 	// re-positions all attached turrets to the corresponding locators
 	void RebuildTurretPositions();
@@ -63,7 +63,7 @@ public:
 	// Asynch update for turret sets
 	virtual void UpdateTurretsAsyncronous( const EveUpdateContext& updateContext );
 
-	void SetShaderOption(const BlueSharedString& name, const BlueSharedString& value) override;
+	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	// Active turret info
 	int GetActiveTurretCount() const;
@@ -82,11 +82,12 @@ protected:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// activation
 	//float m_activationStrength;
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// turrets
 	PEveTurretSetVector m_turretSets;
 	virtual const Matrix* GetTurretTransform( unsigned int turretSetIndex ) const;
+
 private:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// turrets

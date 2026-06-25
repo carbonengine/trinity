@@ -1,7 +1,7 @@
 // Copyright © 2006 CCP ehf.
 
 #pragma once
-#if !defined( _TriTextureParameter_H_)
+#if !defined( _TriTextureParameter_H_ )
 #define _TriTextureParameter_H_
 
 #include "include/ITriEffectParameter.h"
@@ -14,7 +14,7 @@ BLUE_CLASS_ALLOW_DELAYED_DELETE( TriTextureParameter );
 BLUE_DECLARE( TriTextureRes );
 
 
-BLUE_CLASS( TriTextureParameter ):
+BLUE_CLASS( TriTextureParameter ) :
 	public ITriEffectTextureParameter,
 	public IInitialize,
 	public INotify,
@@ -22,7 +22,7 @@ BLUE_CLASS( TriTextureParameter ):
 {
 
 public:
-	TriTextureParameter(IRoot* lockobj = NULL);
+	TriTextureParameter( IRoot* lockobj = NULL );
 	~TriTextureParameter();
 
 	EXPOSE_TO_BLUE();
@@ -30,7 +30,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 	const char* GetParameterName() const;
-	void RebuildEffectHandles( Tr2Shader* effectRes );
+	void RebuildEffectHandles( Tr2Shader * effectRes );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEffectTextureParameter
@@ -40,15 +40,15 @@ public:
 		size_t size,
 		Tr2RenderContext& renderContext ) const override;
 	virtual bool CopyToResourceSet(
-		Tr2ResourceSetDescriptionAL& resourceDesc,
+		Tr2ResourceSetDescriptionAL & resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		ResourceFlags flags ) const;
 	virtual bool ApplyUav(
-		Tr2ResourceSetDescriptionAL& resourceDesc,
+		Tr2ResourceSetDescriptionAL & resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex ) const;
-	void AddUsedTexture( Tr2BindlessResourcesAL& usedTextures ) const override;
+	void AddUsedTexture( Tr2BindlessResourcesAL & usedTextures ) const override;
 	unsigned GetHashValue( unsigned startingHash ) const;
 	bool SupportsDirtyNotification() const override;
 
@@ -56,12 +56,12 @@ public:
 	void EnableTextureLoding( const std::array<float, UV_SET_MAX_COUNT>& uvDensityScale ) override;
 	void DisableTextureLoding() override;
 
-	void OnAddedToMaterial( Tr2Material* material ) override;
-	void OnRemovedFromMaterial( Tr2Material* material ) override;
+	void OnAddedToMaterial( Tr2Material * material ) override;
+	void OnRemovedFromMaterial( Tr2Material * material ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -72,15 +72,14 @@ public:
 	// ICopierCustomAssignment
 	/////////////////////////////////////////////////////////////////////////////////////
 	virtual bool AssignTo(
-		ICopierCustomAssignment* other,
-		ICopier* copier
-		);
+		ICopierCustomAssignment * other,
+		ICopier * copier );
 
 	// access resource
-	void SetResource( ITr2TextureProvider* newRes );
-	
+	void SetResource( ITr2TextureProvider * newRes );
+
 	virtual ITr2TextureProvider* GetResource() const;
-	
+
 	// access strings
 	void SetParameterName( const BlueSharedString& name );
 	const wchar_t* GetResourcePath() const;
@@ -115,5 +114,5 @@ protected:
 	std::string m_resourcePath;
 };
 
-TYPEDEF_BLUECLASS(TriTextureParameter);
-#endif 
+TYPEDEF_BLUECLASS( TriTextureParameter );
+#endif

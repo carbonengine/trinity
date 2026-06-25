@@ -7,8 +7,8 @@ BLUE_DEFINE( EveSpriteLineSet );
 
 const Be::ClassInfo* EveSpriteLineSet::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveSpriteLineSet, "" )
-        MAP_INTERFACE( EveSpriteLineSet )
+	EXPOSURE_BEGIN( EveSpriteLineSet, "" )
+		MAP_INTERFACE( EveSpriteLineSet )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( IEveSpaceObjectAttachment )
 		MAP_INTERFACE( ITr2LightOwner )

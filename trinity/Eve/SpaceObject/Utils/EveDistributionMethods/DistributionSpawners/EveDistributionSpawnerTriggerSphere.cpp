@@ -5,7 +5,7 @@
 #include "include/TriMath.h"
 
 EveDistributionSpawnerTriggerSphere::EveDistributionSpawnerTriggerSphere( IRoot* lockobj ) :
-	m_sphereOffset( 0.f, 0.f, 0.f),
+	m_sphereOffset( 0.f, 0.f, 0.f ),
 	m_delayBeforeActivation( 0.f ),
 	m_playDuration( 1.f ),
 	m_currentPlayTime( 0.f ),
@@ -34,8 +34,8 @@ void EveDistributionSpawnerTriggerSphere::Reset( const std::vector<InitialPlacem
 
 	std::sort( m_distSortedIndexes.begin(), m_distSortedIndexes.end(), []( auto& a, auto& b ) { return a.first < b.first; } );
 
-	float minDist = m_startSequenceAtFirstTrigger? m_distSortedIndexes.front().first : 0.f;
-	float maxDist = max( 1.f, m_distSortedIndexes.back().first - minDist ); 
+	float minDist = m_startSequenceAtFirstTrigger ? m_distSortedIndexes.front().first : 0.f;
+	float maxDist = max( 1.f, m_distSortedIndexes.back().first - minDist );
 
 	for( auto& trigger : m_distSortedIndexes )
 	{
@@ -91,7 +91,7 @@ void EveDistributionSpawnerTriggerSphere::UpdateSyncronous( const EveUpdateConte
 			{
 				owner.TriggerEntityByID( m_distSortedIndexes[m_currentTrigger].second );
 			}
-			
+
 			if( m_currentTrigger == 0 )
 			{
 				m_currentPlayTime = m_playDuration + m_delayBeforeActivation;

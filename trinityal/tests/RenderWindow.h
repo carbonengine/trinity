@@ -10,7 +10,7 @@ public:
 	RenderWindow( uint32_t width = 128, uint32_t height = 64 );
 	~RenderWindow();
 
-#if !defined(__APPLE__)
+#if !defined( __APPLE__ )
 	Tr2WindowHandle GetHandle() const
 	{
 		return m_handle;
@@ -18,8 +18,8 @@ public:
 #else
 	Tr2WindowHandle GetHandle() const;
 #endif
-	
-	operator Tr2WindowHandle () const
+
+	operator Tr2WindowHandle() const
 	{
 		return GetHandle();
 	}
@@ -28,6 +28,7 @@ public:
 	uint32_t GetClientHeight() const;
 
 	bool Resize( uint32_t width, uint32_t height );
+
 private:
 	Tr2WindowHandle m_handle;
 };

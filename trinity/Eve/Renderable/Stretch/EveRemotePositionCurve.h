@@ -18,16 +18,20 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriVectorFunction
-	void UpdateValue( double time ) { Vector3 v; Update( &v, time ); }
-	Vector3* Update( Vector3* in, Be::Time time );
-	Vector3* Update( Vector3* in, double time );
-	Vector3* GetValueAt( Vector3* in, Be::Time time );
-	Vector3* GetValueAt( Vector3* in, double time );
-	Vector3* GetValueDotAt( Vector3* in, Be::Time time );
-	Vector3* GetValueDotAt( Vector3* in, double time );
-	Vector3* GetValueDoubleDotAt( Vector3* in, Be::Time time );
-	Vector3* GetValueDoubleDotAt( Vector3* in, double time );
-	Vector3d* InterpolatedPosition( Vector3d* out, Be::Time time );
+	void UpdateValue( double time )
+	{
+		Vector3 v;
+		Update( &v, time );
+	}
+	Vector3* Update( Vector3 * in, Be::Time time );
+	Vector3* Update( Vector3 * in, double time );
+	Vector3* GetValueAt( Vector3 * in, Be::Time time );
+	Vector3* GetValueAt( Vector3 * in, double time );
+	Vector3* GetValueDotAt( Vector3 * in, Be::Time time );
+	Vector3* GetValueDotAt( Vector3 * in, double time );
+	Vector3* GetValueDoubleDotAt( Vector3 * in, Be::Time time );
+	Vector3* GetValueDoubleDotAt( Vector3 * in, double time );
+	Vector3d* InterpolatedPosition( Vector3d * out, Be::Time time );
 
 private:
 	// the start point curve
@@ -51,4 +55,4 @@ private:
 
 TYPEDEF_BLUECLASS( EveRemotePositionCurve );
 
-#endif 
+#endif

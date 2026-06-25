@@ -4,7 +4,7 @@
 
 
 EveProceduralMethodAttributeMapParameter::EveProceduralMethodAttributeMapParameter( IRoot* lockobj ) :
-    m_modified( false )
+	m_modified( false )
 {
 }
 
@@ -14,50 +14,50 @@ EveProceduralMethodAttributeMapParameter::~EveProceduralMethodAttributeMapParame
 
 bool EveProceduralMethodAttributeMapParameter::Initialize()
 {
-    if( m_child == nullptr )
-    {
-        m_child.CreateInstance();
-    }
-    return true;
+	if( m_child == nullptr )
+	{
+		m_child.CreateInstance();
+	}
+	return true;
 }
 
 bool EveProceduralMethodAttributeMapParameter::OnModified( Be::Var* value )
 {
-    if( IsMatch( value, m_child ) )
-    {
-        if( m_child != nullptr )
-        {
-            m_child->SetAutoLoadBlocker(true);
-        }
-    }
+	if( IsMatch( value, m_child ) )
+	{
+		if( m_child != nullptr )
+		{
+			m_child->SetAutoLoadBlocker( true );
+		}
+	}
 
-    return true;
+	return true;
 }
 
 void EveProceduralMethodAttributeMapParameter::SetModified( bool isModified )
 {
-    m_modified = isModified;
+	m_modified = isModified;
 }
 
 bool EveProceduralMethodAttributeMapParameter::IsModified() const
 {
-    return m_modified;
+	return m_modified;
 }
 
 const char* EveProceduralMethodAttributeMapParameter::GetName() const
 {
-    return m_name.c_str();
+	return m_name.c_str();
 }
 
 EveChildRefPtr EveProceduralMethodAttributeMapParameter::GetChild()
 {
-    return m_child;
+	return m_child;
 }
 
 void EveProceduralMethodAttributeMapParameter::Load()
 {
-    if( m_child != nullptr )
-    {
-        m_child->Reload(true);
-    }
+	if( m_child != nullptr )
+	{
+		m_child->Reload( true );
+	}
 }

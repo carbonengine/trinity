@@ -11,7 +11,7 @@ BLUE_DEFINE_INTERFACE( ITr2InteriorDynamic );
 
 const Be::ClassInfo* Tr2InteriorPlaceable::ExposeToBlue()
 {
-    EXPOSURE_BEGIN(Tr2InteriorPlaceable, "")
+	EXPOSURE_BEGIN( Tr2InteriorPlaceable, "" )
 		MAP_INTERFACE( Tr2InteriorPlaceable )
 		MAP_INTERFACE( ITr2Interior )
 		MAP_INTERFACE( ITr2InteriorDynamic )
@@ -21,14 +21,12 @@ const Be::ClassInfo* Tr2InteriorPlaceable::ExposeToBlue()
 		MAP_INTERFACE( ITr2Pickable )
 		MAP_INTERFACE( ITr2BoundingBox )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"name",
 			m_name,
 			"Name of this placeable",
-			Be::READWRITE | Be::PERSIST
-		)
-		
+			Be::READWRITE | Be::PERSIST )
+
 		MAP_ATTRIBUTE_WITH_CHOOSER( "placeableResPath", m_placeableResPath, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY, NULL )
 		MAP_ATTRIBUTE( "isUnique", m_isUniqueInstance, "When true, the placeable res is a copy, rather than a shared instance", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
@@ -52,13 +50,12 @@ const Be::ClassInfo* Tr2InteriorPlaceable::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "GetBoundingBoxInLocalSpace", GetBoundingBoxInLocalSpace, "Gets the bounding box in local space" )
 		MAP_METHOD_AND_WRAP( "GetBoundingBoxInWorldSpace", GetBoundingBoxInWorldSpace, "Gets the bounding box in world space" )
 		MAP_METHOD_AND_WRAP( "BoundingBoxReset", BoundingBoxReset, "Resets the bounding box, removing any overrides" )
-		MAP_METHOD_AND_WRAP( 
-			"BoundingBoxOverride", 
-			BoundingBoxOverride, 
+		MAP_METHOD_AND_WRAP(
+			"BoundingBoxOverride",
+			BoundingBoxOverride,
 			"Override the object's bounding box with the one provided\n"
 			":param boundsMin: min bounding box corner\n"
-			":param boundsMax: max bounding box corner\n"
-			)
+			":param boundsMax: max bounding box corner\n" )
 
 		MAP_ATTRIBUTE( "variableStore", m_variableStore, "Local variable store for this object", Be::READ )
 		MAP_ATTRIBUTE( "probeOffset", m_probeOffset, "Offset for Enlighten SH probe position (in world space)", Be::READWRITE | Be::PERSIST )
@@ -66,4 +63,3 @@ const Be::ClassInfo* Tr2InteriorPlaceable::ExposeToBlue()
 
 	EXPOSURE_END()
 }
-

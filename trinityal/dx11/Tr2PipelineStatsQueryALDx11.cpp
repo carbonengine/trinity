@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#if TRINITY_PLATFORM==TRINITY_DIRECTX11
+#if TRINITY_PLATFORM == TRINITY_DIRECTX11
 #include "Tr2PipelineStatsQueryALDx11.h"
 #include "Tr2PrimaryRenderContextDx11.h"
 
@@ -38,7 +38,6 @@ namespace TrinityALImpl
 
 Tr2PipelineStatsQueryAL::Tr2PipelineStatsQueryAL()
 {
-
 }
 
 ALResult Tr2PipelineStatsQueryAL::Create( Tr2PrimaryRenderContextAL& renderContext )

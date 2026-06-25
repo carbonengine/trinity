@@ -20,7 +20,7 @@ BLUE_DECLARE( Tr2ParticleSystem );
 // See Also:
 //   Tr2InstancedMesh
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2RuntimeInstanceData ): 
+BLUE_CLASS( Tr2RuntimeInstanceData ) :
 	public ITr2InstanceData,
 	public ITr2GenericEmitter,
 	public Tr2DeviceResource,
@@ -35,10 +35,11 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
-public:
 
+public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2InstanceData
 	bool IsInstanceDataReady() const override;
@@ -53,17 +54,17 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2GenericEmitter
 	void Update( const UpdateArguments& arguments );
-	void SpawnParticles( 
+	void SpawnParticles(
 		const UpdateArguments& arguments,
-		const Vector3* position = nullptr, 
-		const Vector3* velocity = nullptr, 
+		const Vector3* position = nullptr,
+		const Vector3* velocity = nullptr,
 		float rateModifier = 1.0f );
-	void SpawnParticles( 
+	void SpawnParticles(
 		const UpdateArguments& arguments,
-		const Vector3 *positionStart, 
-		const Vector3 *positionEnd,
-		const Vector3 *velocityStart, 
-		const Vector3 *velocityEnd,
+		const Vector3* positionStart,
+		const Vector3* positionEnd,
+		const Vector3* velocityStart,
+		const Vector3* velocityEnd,
 		float deltaTime );
 	void SetThreadSafeFlag();
 
@@ -74,11 +75,12 @@ public:
 	void* GetData( unsigned count );
 	void UpdateData();
 	void UpdateBoundingBox();
-	bool GetBoundingBox( Vector3& minAabb, Vector3& maxAabb ) const;
+	bool GetBoundingBox( Vector3 & minAabb, Vector3 & maxAabb ) const;
 	void SetBoundingBox( const CcpMath::AxisAlignedBox& aabb );
 	void DestroyData();
 	unsigned GetStride() const;
 	void Spawn();
+
 private:
 	void CreateDeclaration();
 

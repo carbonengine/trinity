@@ -10,8 +10,8 @@
 
 /** */
 DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context ) :
-	m_primaryContext(context),
-	m_device(device)
+	m_primaryContext( context ),
+	m_device( device )
 {
 	m_allocatorUpload.Initialize( device );
 
@@ -20,12 +20,12 @@ DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2Pri
 	nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	nullSrvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 	nullSrvDesc.Texture2D.MipLevels = 1;
-	context->CreateShaderResourceView(nullptr, nullSrvDesc, m_nullSrv);
+	context->CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv );
 
 	D3D12_UNORDERED_ACCESS_VIEW_DESC nullUavDesc = {};
 	nullUavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
 	nullUavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	context->CreateUnorderedAccessView(nullptr, nullptr, nullUavDesc, m_nullUav);
+	context->CreateUnorderedAccessView( nullptr, nullptr, nullUavDesc, m_nullUav );
 
 	D3D12_SAMPLER_DESC nullSamplerDesc = { D3D12_FILTER_MIN_MAG_MIP_POINT, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_TEXTURE_ADDRESS_MODE_WRAP, D3D12_TEXTURE_ADDRESS_MODE_WRAP, 0, 0, D3D12_COMPARISON_FUNC_ALWAYS };
 	nullSamplerDesc.Filter = D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT;
@@ -33,7 +33,7 @@ DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2Pri
 	nullSamplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	nullSamplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	nullSamplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-	context->CreateSamplerState(nullSamplerDesc, m_nullSampler);
+	context->CreateSamplerState( nullSamplerDesc, m_nullSampler );
 
 	Reset();
 }
@@ -41,14 +41,14 @@ DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2Pri
 /** Dirty all states and reset internal allocators */
 void DescriptorStateCache::Reset()
 {
-	for (uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot)
+	for( uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot )
 	{
 		m_srvUav[slot] = m_nullSrv;
 		m_sampler[slot] = m_nullSampler;
 
 		m_parameterSlots[slot].SetNone();
 	}
-	memset(m_cbv, 0, sizeof(m_cbv));
+	memset( m_cbv, 0, sizeof( m_cbv ) );
 
 	m_heapsDirty = true;
 	m_srvUavDirty = true;
@@ -72,7 +72,7 @@ void DescriptorStateCache::Dirty()
 	m_samplerDirty = true;
 
 	// Pretend that nothing is currently bound forcing the next Commit() to re-assign every parameter
-	for (uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot)
+	for( uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot )
 	{
 		m_parameterSlots[slot].SetNone();
 		m_parameterSlots[slot].SetNone();
@@ -80,9 +80,9 @@ void DescriptorStateCache::Dirty()
 }
 
 /** Set an array of ShaderResourceViews */
-void DescriptorStateCache::SetShaderResources(uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews)
+void DescriptorStateCache::SetShaderResources( uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews )
 {
-	for (uint32_t slot = 0; slot < numViews; ++slot)
+	for( uint32_t slot = 0; slot < numViews; ++slot )
 	{
 		uint32_t writeSlot = startSlot + slot;
 		auto& srv = shaderResourceViews[slot] != nullptr ? shaderResourceViews[slot] : m_nullSrv;
@@ -95,9 +95,9 @@ void DescriptorStateCache::SetShaderResources(uint32_t startSlot, uint32_t numVi
 }
 
 /** Set an array or UnorderedAccessViews */
-void DescriptorStateCache::SetUnorderedAccessViews(uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews)
+void DescriptorStateCache::SetUnorderedAccessViews( uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews )
 {
-	for (uint32_t slot = 0; slot < numViews; ++slot)
+	for( uint32_t slot = 0; slot < numViews; ++slot )
 	{
 		uint32_t writeSlot = startSlot + slot;
 
@@ -111,9 +111,9 @@ void DescriptorStateCache::SetUnorderedAccessViews(uint32_t startSlot, uint32_t 
 }
 
 /** Set an array of SamplerStates */
-void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, std::shared_ptr<SamplerStateDx12>* samplers)
+void DescriptorStateCache::SetSamplers( uint32_t startSlot, uint32_t numViews, std::shared_ptr<SamplerStateDx12>* samplers )
 {
-	for (uint32_t slot = 0; slot < numViews; ++slot)
+	for( uint32_t slot = 0; slot < numViews; ++slot )
 	{
 		uint32_t writeSlot = startSlot + slot;
 		auto& sampler = samplers[slot] != nullptr ? samplers[slot] : m_nullSampler;

@@ -10,13 +10,13 @@ BLUE_DEFINE( EveTurretFiringFX );
 const Be::ClassInfo* EveTurretFiringFX::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveTurretFiringFX, "" )
-        MAP_INTERFACE( EveTurretFiringFX )
-        MAP_INTERFACE( IInitialize )
-        MAP_INTERFACE( INotify )
-        MAP_INTERFACE( IListNotify )
-        MAP_INTERFACE( ITr2ControllerOwner )
-        MAP_INTERFACE( EveEntity )
-		
+		MAP_INTERFACE( EveTurretFiringFX )
+		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( INotify )
+		MAP_INTERFACE( IListNotify )
+		MAP_INTERFACE( ITr2ControllerOwner )
+		MAP_INTERFACE( EveEntity )
+
 		MAP_ATTRIBUTE( "name", m_name, "A name for this firing effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "Toggle rendering", Be::READWRITE | Be::NOTIFY )
 
@@ -46,7 +46,7 @@ const Be::ClassInfo* EveTurretFiringFX::ExposeToBlue()
 		MAP_ATTRIBUTE( "stretch", m_stretch, "A list of stretch effects for this firing effect", Be::READ | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "endPosition", m_endPosition, "Destination or end position", Be::READWRITE )
-		
+
 		MAP_ATTRIBUTE( "scaleEffectTarget", m_scaleEffectTarget, "Toggle whether the firing effect target object is scaled by the target object", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "minRadius", m_minRadius, "Used for scaling the firing effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maxRadius", m_maxRadius, "Used for scaling the firing effect", Be::READWRITE | Be::PERSIST )
@@ -55,20 +55,16 @@ const Be::ClassInfo* EveTurretFiringFX::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "startCurveSet", m_startCurveSet, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "stopCurveSet", m_stopCurveSet, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"sourceObserver",
 			m_sourceObserver,
 			"Observer at the source position",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"destinationObserver",
 			m_destinationObserver,
 			"Observer at the destination position",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP(
 			"GetPerMuzzleEffectCount",
@@ -77,6 +73,3 @@ const Be::ClassInfo* EveTurretFiringFX::ExposeToBlue()
 
 	EXPOSURE_END()
 }
-
-
-

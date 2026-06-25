@@ -38,7 +38,7 @@ public:
 		CMD_PATTERN,
 		CMD_LAYOUT,
 		CMD_MAX
-	}; 
+	};
 
 	// initialize this dna
 	void Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr );
@@ -112,7 +112,7 @@ public:
 	bool GetHullTextureWithMeshIndex( std::string & resPath, const BlueSharedString& textureName, int32_t meshIndex, size_t n, std::unordered_map<std::string, bool>* existingFilesCache ) const;
 
 	// get faction data
-	void ModifyTextureResPath( std::string& resPath, std::unordered_map<std::string, bool>* existingFilesCache ) const;
+	void ModifyTextureResPath( std::string & resPath, std::unordered_map<std::string, bool> * existingFilesCache ) const;
 	const Vector4* GetFactionTurretParameters( const BlueSharedString& parameterName ) const;
 	const EveSOFDataMgr::FactionPlaneSetColorData* GetFactionPlaneSetData( int groupIndex ) const;
 	const EveSOFDataMgr::FactionSpotlightSetColorData* GetFactionSpotlightSetData( int groupIndex ) const;
@@ -162,7 +162,7 @@ private:
 	// special cusomt data setup
 	void SetupCustomData();
 	// search for a dna
-	bool GetDnaCommandArgs( DnaCommand cmd, std::vector<std::string>& args ) const;
+	bool GetDnaCommandArgs( DnaCommand cmd, std::vector<std::string> & args ) const;
 	bool HasDnaCommand( DnaCommand cmd ) const;
 
 	// the factional pattern application data

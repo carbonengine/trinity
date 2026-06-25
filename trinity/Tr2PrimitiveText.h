@@ -16,6 +16,7 @@ public:
 	~Tr2PrimitiveText();
 
 	void Render();
+
 private:
 	std::string m_text;
 	Color m_color;

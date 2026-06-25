@@ -18,31 +18,30 @@ BLUE_DEFINE( EveSpaceScene );
 BLUE_DEFINE_INTERFACE( IEveReferencePoint );
 BLUE_DEFINE_INTERFACE( IEveBallpark );
 
-Be::VarChooser EveVisualizerChooser[] =
-	{
-		{ "None",
-		  BeCast( EveSpaceScene::VM_NONE ),
-		  "No visualizer - use normal rendering" },
-		{ "TexCoord0",
-		  BeCast( EveSpaceScene::VM_TEXCOORD0 ),
-		  "" },
-		{ "TexCoord1",
-		BeCast( EveSpaceScene::VM_TEXCOORD1 ),
-		  "" },
-		{ "White",
-		BeCast( EveSpaceScene::VM_WHITE ),
-		  "" },
-		{ "Overdraw",
-		BeCast( EveSpaceScene::VM_OVERDRAW ),
-		  "" },
-		{ "Wireframe",
-		BeCast( EveSpaceScene::VW_WIREFRAME ),
-		  "" },
-		{ "LightCount",
-		BeCast( EveSpaceScene::VW_LIGHT_COUNT ),
-		  "" },
+Be::VarChooser EveVisualizerChooser[] = {
+	{ "None",
+	  BeCast( EveSpaceScene::VM_NONE ),
+	  "No visualizer - use normal rendering" },
+	{ "TexCoord0",
+	  BeCast( EveSpaceScene::VM_TEXCOORD0 ),
+	  "" },
+	{ "TexCoord1",
+	  BeCast( EveSpaceScene::VM_TEXCOORD1 ),
+	  "" },
+	{ "White",
+	  BeCast( EveSpaceScene::VM_WHITE ),
+	  "" },
+	{ "Overdraw",
+	  BeCast( EveSpaceScene::VM_OVERDRAW ),
+	  "" },
+	{ "Wireframe",
+	  BeCast( EveSpaceScene::VW_WIREFRAME ),
+	  "" },
+	{ "LightCount",
+	  BeCast( EveSpaceScene::VW_LIGHT_COUNT ),
+	  "" },
 	{ 0 }
-	};
+};
 BLUE_REGISTER_ENUM_EX( "EveVisualizeMethod", EveSpaceScene::EveVisualizeMethod, EveVisualizerChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 #if BLUE_WITH_PYTHON
@@ -313,7 +312,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"Set quality for shadows \n"
 			"jessica-hidden: True",
 			Be::READWRITE | Be::NOTIFY )
-		MAP_ATTRIBUTE( 
+		MAP_ATTRIBUTE(
 			"raytracingManager",
 			m_rtManager,
 			"Raytracing manager\n"
@@ -382,7 +381,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"In the end this will control which environment map mip will be used (1 will use the lowest mip, 0 will use the highest mip)\n"
 			":jessica-group: Lighting",
 			Be::READWRITE | Be::PERSIST )
-		
+
 		MAP_ATTRIBUTE( "fogColor", m_fogColor, ":jessica-group: Fog\n:jessica-tuple-type: linearcolor", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogStart", m_fogStart, "Depth at which fogging starts.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogEnd", m_fogEnd, "Depth at which the fog does not get thicker.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
@@ -465,7 +464,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_updateTime,
 			"Time of the last call to Update, for this scene",
 			Be::READ )
-			
+
 		MAP_PROPERTY_READONLY(
 			"quadRenderer",
 			GetQuadRenderer,
@@ -550,13 +549,12 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			ReregisterEntities,
 			"Re registers all entities" )
 
-		MAP_PROPERTY( 
-			"shadowsInReflections", 
-			IsShadowsInReflectionsEnabled, 
+		MAP_PROPERTY(
+			"shadowsInReflections",
+			IsShadowsInReflectionsEnabled,
 			EnableShadowsInReflections,
 			"Enables/disables shadows in the reflection cubemap (only if shadows are enabled)\n\n"
-			":jessica-group: Shadows"
-		)
+			":jessica-group: Shadows" )
 
 	EXPOSURE_END()
 }

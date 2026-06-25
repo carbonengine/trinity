@@ -3,7 +3,7 @@
 #include "StdAfx.h"
 #include "Tr2BoundingLineSet.h"
 
-Tr2BoundingLineSet::Tr2BoundingLineSet( IRoot* lockobj ):
+Tr2BoundingLineSet::Tr2BoundingLineSet( IRoot* lockobj ) :
 	Tr2LineSet( lockobj ),
 	m_minBounds( 0.0f, 0.0f, 0.0f ),
 	m_maxBounds( 0.0f, 0.0f, 0.0f )
@@ -12,7 +12,7 @@ Tr2BoundingLineSet::Tr2BoundingLineSet( IRoot* lockobj ):
 
 /////////////////////////////////////////////////////////////////////////////
 // INotify
-bool Tr2BoundingLineSet::OnModified( Be::Var * value )
+bool Tr2BoundingLineSet::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_minBounds ) || IsMatch( value, m_maxBounds ) )
 	{
@@ -23,7 +23,7 @@ bool Tr2BoundingLineSet::OnModified( Be::Var * value )
 		SubmitChanges();
 	}
 
-    return Tr2PrimitiveSet::OnModified( value );
+	return Tr2PrimitiveSet::OnModified( value );
 }
 
 void Tr2BoundingLineSet::UpdateBounds( const Vector3& min, const Vector3& max )
@@ -40,12 +40,12 @@ void Tr2BoundingLineSet::UpdateBounds( const Vector3& min, const Vector3& max )
 
 void Tr2BoundingLineSet::AddBox( const Vector3& min, const Vector3& max, const Vector4& color )
 {
-	Vector3 minA(max.x, min.y, min.z);
-	Vector3 minB(min.x, max.y, min.z); 
-	Vector3	minC(max.x, max.y, min.z); 
-	Vector3	maxA(max.x, min.y, max.z); 
-	Vector3	maxB(min.x, max.y, max.z); 
-	Vector3	maxC(min.x, min.y, max.z);
+	Vector3 minA( max.x, min.y, min.z );
+	Vector3 minB( min.x, max.y, min.z );
+	Vector3 minC( max.x, max.y, min.z );
+	Vector3 maxA( max.x, min.y, max.z );
+	Vector3 maxB( min.x, max.y, max.z );
+	Vector3 maxC( min.x, min.y, max.z );
 
 	AddLine( min, color, minA, color );
 	AddLine( min, color, minB, color );
@@ -65,19 +65,19 @@ void Tr2BoundingLineSet::AddBox( const Vector3& min, const Vector3& max, const V
 
 void Tr2BoundingLineSet::AddPickingBox( const Vector3& min, const Vector3& max )
 {
-	Vector3 minA(max.x, min.y, min.z);
-	Vector3 minB(min.x, max.y, min.z); 
-	Vector3	minC(max.x, max.y, min.z); 
-	Vector3	maxA(max.x, min.y, max.z); 
-	Vector3	maxB(min.x, max.y, max.z); 
-	Vector3	maxC(min.x, min.y, max.z);
+	Vector3 minA( max.x, min.y, min.z );
+	Vector3 minB( min.x, max.y, min.z );
+	Vector3 minC( max.x, max.y, min.z );
+	Vector3 maxA( max.x, min.y, max.z );
+	Vector3 maxB( min.x, max.y, max.z );
+	Vector3 maxC( min.x, min.y, max.z );
 
 	AddPickingTriangle( maxA, max, maxB );
-	AddPickingTriangle( maxA, maxB, maxC);
+	AddPickingTriangle( maxA, maxB, maxC );
 	AddPickingTriangle( maxC, maxB, min );
 	AddPickingTriangle( min, maxB, minB );
 	AddPickingTriangle( min, minB, minA );
-	AddPickingTriangle( minA, minB, minC);
+	AddPickingTriangle( minA, minB, minC );
 	AddPickingTriangle( minA, minC, max );
 	AddPickingTriangle( minA, max, maxA );
 	AddPickingTriangle( maxA, min, minA );

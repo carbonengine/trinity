@@ -9,7 +9,7 @@ using namespace Tr2RenderContextEnum;
 // Description:
 //   Tr2DirectInstanceData default constructor
 // --------------------------------------------------------------------------------------
-Tr2DirectInstanceData::Tr2DirectInstanceData(IRoot* lockobj) :
+Tr2DirectInstanceData::Tr2DirectInstanceData( IRoot* lockobj ) :
 	m_count( 0 ),
 	m_stride( 0 ),
 	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
@@ -19,7 +19,7 @@ Tr2DirectInstanceData::Tr2DirectInstanceData(IRoot* lockobj) :
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Inherited from ITriDeviceResource interface. Invalidates vertex declaration, and 
+//   Inherited from ITriDeviceResource interface. Invalidates vertex declaration, and
 // resets buffer to an invalid state.
 // --------------------------------------------------------------------------------------
 void Tr2DirectInstanceData::ReleaseResources( TriStorage s )
@@ -123,9 +123,9 @@ unsigned Tr2DirectInstanceData::GetCount() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Invalidates vertex buffer, prepares instance data for a new vertex format, 
-//   ensures vertex declaration matches the layout provided, and that all attributes 
-//   come from stream 0. 
+//   Invalidates vertex buffer, prepares instance data for a new vertex format,
+//   ensures vertex declaration matches the layout provided, and that all attributes
+//   come from stream 0.
 // --------------------------------------------------------------------------------------
 void Tr2DirectInstanceData::SetLayout( const Tr2VertexDefinition& layout )
 {
@@ -205,7 +205,7 @@ void* Tr2DirectInstanceData::GetData( unsigned count )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Unmaps the vertex buffer that was mapped for writing, making data available to the GPU, 
+//   Unmaps the vertex buffer that was mapped for writing, making data available to the GPU,
 //   with an early exit if buffer is invalid. Should be called after data is modified.
 // --------------------------------------------------------------------------------------
 void Tr2DirectInstanceData::UpdateData()

@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 #include "Tr2CapsALDx11.h"
 
 Tr2CapsAL::Tr2CapsAL()

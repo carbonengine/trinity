@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if( TRINITY_PLATFORM==TRINITY_METAL )
+#if ( TRINITY_PLATFORM == TRINITY_METAL )
 
 #include "TriDevice.h"
 
@@ -28,41 +28,41 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 		return;
 	}
 
-    if( m_upscalingChanged )
-    {
-        CCP_LOGNOTICE( "Resetting device - Upscaler changed" );
-        CreateUpscalingTechnique(mAdapter);
-        ResetDevice();
-        return;
-    }
-    
+	if( m_upscalingChanged )
+	{
+		CCP_LOGNOTICE( "Resetting device - Upscaler changed" );
+		CreateUpscalingTechnique( mAdapter );
+		ResetDevice();
+		return;
+	}
+
 	if( mDeviceLost )
 	{
 		return;
-	}	
-    Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_UPDATE_STARTED );
+	}
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_UPDATE_STARTED );
 
 	if( m_renderJobs )
 	{
 		m_renderJobs->RunUpdate( realTime, simTime );
 	}
-    Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_UPDATE_FINISHED );
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_UPDATE_FINISHED );
 
 	m_postUpdateCallbacks->Update();
 
 	{
-        Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED );
+		Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED );
 		CCP_STATS_SCOPED_TIME( presentTime );
 		CR_RETURN( renderContext.Present() );
-        Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_FINISHED );
+		Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_FINISHED );
 	}
 
-    renderContext.MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED );
-    if( !Render() )
-    {
-        CCP_LOGERR( "Failed to render a frame" );
-    }
-    renderContext.MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_RENDERING_FINISHED );
+	renderContext.MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED );
+	if( !Render() )
+	{
+		CCP_LOGERR( "Failed to render a frame" );
+	}
+	renderContext.MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_RENDERING_FINISHED );
 }
 
 // -- Smaller helpers to enable big methods like TriDevice::Render to be mostly API neutral.
@@ -87,4 +87,3 @@ void TriDevice::ApplicationActivated( ApplicationActivation )
 }
 
 #endif
-

@@ -11,8 +11,8 @@ BLUE_DECLARE_VECTOR( Tr2SphereShapeAttributeGenerator );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   EveChildExplosion is a specialized EveSpaceObject2 child class that creates an 
-//   explosion animation. The explosion contains multiple "local" explosions and a single 
+//   EveChildExplosion is a specialized EveSpaceObject2 child class that creates an
+//   explosion animation. The explosion contains multiple "local" explosions and a single
 //   "global" explosion.
 // --------------------------------------------------------------------------------------
 BLUE_CLASS( EveChildExplosion ) :
@@ -30,9 +30,9 @@ public:
 	void SetGlobalExplosionOffset( const Vector3& offset );
 
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
@@ -44,12 +44,12 @@ private:
 		Quaternion rotation;
 		Vector3 position;
 	};
-	
-	void CalculateExplosionTimes(uint32_t localExplosionCount);
+
+	void CalculateExplosionTimes( uint32_t localExplosionCount );
 	void FindSharedObjects();
 	void SpawnLocalExplosion( const Matrix& transform );
-	static ICopier::OverrideResult CopyElement( IRoot* source, IRoot** dest, ICopier* copier, void* context );
-	static void UpdateEmitter( IRoot* source, IRoot** dest, ICopier* copier, void* context );
+	static ICopier::OverrideResult CopyElement( IRoot * source, IRoot * *dest, ICopier * copier, void* context );
+	static void UpdateEmitter( IRoot * source, IRoot * *dest, ICopier * copier, void* context );
 
 	// Delay from explosion start to the first "local" explosion in seconds
 	float m_localExplosionDelay;
@@ -71,7 +71,7 @@ private:
 	float m_globalDuration;
 	float m_totalDuration;
 
-	
+
 
 	// Child containing local explosion effect
 	IEveSpaceObjectChildPtr m_localExplosion;
@@ -104,7 +104,7 @@ private:
 
 	// Local explosion scaling
 	Vector3 m_localExplosionScaling;
-	
+
 	// Is the effect playing
 	bool m_isPlaying;
 };

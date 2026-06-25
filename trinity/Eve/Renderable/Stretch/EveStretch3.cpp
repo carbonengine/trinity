@@ -73,7 +73,7 @@ bool EveStretch3::Initialize()
 
 IEveSpaceObject2* EveStretch3::GetSourceSpaceObject() const
 {
-	return m_sourceSpaceObject;		
+	return m_sourceSpaceObject;
 }
 
 void EveStretch3::SetSourceSpaceObject( IEveSpaceObject2* spaceObject )
@@ -723,15 +723,13 @@ void EveStretch3::RegisterComponents()
 	auto registry = this->GetComponentRegistry();
 	if( registry && m_display )
 	{
-		RunOnComponents( 
-			[this]( IEveSpaceObjectChild* c ) 
-			{ 
+		RunOnComponents(
+			[this]( IEveSpaceObjectChild* c ) {
 				if( EveEntityPtr entity = BlueCastPtr( c ) )
 				{
 					entity->Register( GetComponentRegistry() );
 				}
-			} 
-		);
+			} );
 	}
 }
 
@@ -740,15 +738,13 @@ void EveStretch3::UnRegisterComponents()
 	auto registry = this->GetComponentRegistry();
 	if( registry )
 	{
-		RunOnComponents( 
-			[this]( IEveSpaceObjectChild* c ) 
-			{ 
+		RunOnComponents(
+			[this]( IEveSpaceObjectChild* c ) {
 				if( EveEntityPtr entity = BlueCastPtr( c ) )
 				{
 					entity->UnRegister( GetComponentRegistry() );
 				}
-			} 
-		);
+			} );
 	}
 }
 
@@ -849,12 +845,12 @@ void EveStretch3::GetDebugOptions( Tr2DebugRendererOptions& options )
 		}
 	} );
 
-	if(auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audio.p ) )
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audio.p ) )
 	{
 		tmp->GetDebugOptions( options );
 	}
 
-	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_stretchAudio.p ) )
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_stretchAudio.p ) )
 	{
 		tmp->GetDebugOptions( options );
 	}
@@ -874,12 +870,12 @@ void EveStretch3::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		}
 	} );
 
-	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_audio.p ) )
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audio.p ) )
 	{
 		tmp->RenderDebugInfo( renderer );
 	}
 
-	if( auto tmp = dynamic_cast< ITr2DebugRenderable* >( m_stretchAudio.p ) )
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_stretchAudio.p ) )
 	{
 		tmp->RenderDebugInfo( renderer );
 	}

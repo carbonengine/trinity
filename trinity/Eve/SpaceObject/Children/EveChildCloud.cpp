@@ -24,15 +24,16 @@ class EveChildCloudPerObjectData : public Tr2PerObjectData
 public:
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 	{
-		static const unsigned mask = 
-			( 1 << VERTEX_SHADER )					|
-			SHADER_TYPE_EXISTS( COMPUTE_SHADER )	|
-			SHADER_TYPE_EXISTS( GEOMETRY_SHADER )	|
-			SHADER_TYPE_EXISTS( HULL_SHADER )		|
-			SHADER_TYPE_EXISTS( DOMAIN_SHADER)		;
-		FillAndSetConstants(	
+		static const unsigned mask =
+			( 1 << VERTEX_SHADER ) |
+			SHADER_TYPE_EXISTS( COMPUTE_SHADER ) |
+			SHADER_TYPE_EXISTS( GEOMETRY_SHADER ) |
+			SHADER_TYPE_EXISTS( HULL_SHADER ) |
+			SHADER_TYPE_EXISTS( DOMAIN_SHADER );
+		FillAndSetConstants(
 			*buffers[Tr2RenderContextEnum::VERTEX_SHADER],
-			&m_data, sizeof( m_data ),
+			&m_data,
+			sizeof( m_data ),
 			mask,
 			Tr2Renderer::GetPerObjectVSStartRegister(),
 			renderContext );
@@ -60,12 +61,12 @@ public:
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Calculates axis aligned bounding box of a given box in projection space. The 
+//   Calculates axis aligned bounding box of a given box in projection space. The
 //   function projects all the vertices, discards vertices outside frusum (ignoring far
-//   plane), clips edges with near plane and computes AABB clipped to [-1, 1] range. 
+//   plane), clips edges with near plane and computes AABB clipped to [-1, 1] range.
 //   Function assumes non-orthographic projection.
 // --------------------------------------------------------------------------------------
-void GetProjectedCubeBounds(  AxisAlignedBoundingBox& box, const Matrix& worldView, const Matrix& proj, float nearPlane, const Vector3& min, const Vector3& max )
+void GetProjectedCubeBounds( AxisAlignedBoundingBox& box, const Matrix& worldView, const Matrix& proj, float nearPlane, const Vector3& min, const Vector3& max )
 {
 	Vector3 sides[6][4] = {
 		{
@@ -162,8 +163,8 @@ void GetProjectedCubeBounds(  AxisAlignedBoundingBox& box, const Matrix& worldVi
 
 
 
-EveChildCloud::EveChildCloud( IRoot* lockobj )
-	:m_localTransform( IdentityMatrix() ),
+EveChildCloud::EveChildCloud( IRoot* lockobj ) :
+	m_localTransform( IdentityMatrix() ),
 	m_worldTransform( IdentityMatrix() ),
 	m_scaling( 1.0f, 1.0f, 1.0f ),
 	m_translation( 0.f, 0.f, 0.f ),
@@ -179,7 +180,7 @@ EveChildCloud::EveChildCloud( IRoot* lockobj )
 	m_minScreenSize( 0.0f ),
 	m_cellScreenSize( 0.3f ),
 	m_currentIB( 0 ),
-	m_lastLodFactor(1.0f)
+	m_lastLodFactor( 1.0f )
 {
 	PrepareResources();
 }
@@ -243,8 +244,8 @@ bool EveChildCloud::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery quer
 	return true;
 }
 
-void EveChildCloud::GetLocalToWorldTransform( Matrix &transform ) const 
-{ 
+void EveChildCloud::GetLocalToWorldTransform( Matrix& transform ) const
+{
 	transform = m_worldTransform;
 }
 

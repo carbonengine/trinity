@@ -6,13 +6,15 @@
 
 #include "Include/ITriTargetable.h"
 
-namespace ImpactBehaviour {
-	
-	enum Type {
-		DAMAGE_LOCATOR,
-		SHIELD_ELLIPSOID,
-		CENTER
-	};
+namespace ImpactBehaviour
+{
+
+enum Type
+{
+	DAMAGE_LOCATOR,
+	SHIELD_ELLIPSOID,
+	CENTER
+};
 
 }
 
@@ -30,7 +32,7 @@ public:
 
 	// access target object
 	ITriTargetablePtr GetTargetable() const;
-	bool SetTargetable( IRoot* object );
+	bool SetTargetable( IRoot * object );
 
 	// access locator
 	int GetLocator() const;
@@ -58,7 +60,7 @@ public:
 	bool ShowDestObject() const;
 
 private:
-	void GetImpactPosition( Vector3& out, const Vector3* source );
+	void GetImpactPosition( Vector3 & out, const Vector3* source );
 
 	// data
 	ITriTargetablePtr m_object;

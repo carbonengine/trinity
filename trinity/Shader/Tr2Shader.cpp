@@ -11,10 +11,10 @@ using namespace Tr2RenderContextEnum;
 // Description:
 //   Constructor.  Initializes members to default values.
 // --------------------------------------------------------------------------------------
-Tr2Shader::Tr2Shader( IRoot* lockobj )
-	:m_sortValue( 0 ),
+Tr2Shader::Tr2Shader( IRoot* lockobj ) :
+	m_sortValue( 0 ),
 	m_hasVertexBufferAccessInRtShadow( false )
-{	
+{
 }
 
 // --------------------------------------------------------------------------------------
@@ -139,7 +139,7 @@ const Tr2EffectResource* Tr2Shader::GetResource( const char* name ) const
 // --------------------------------------------------------------------------------------
 // Description:
 //   Returns map of effect annotations for a given parameter or nullptr if the parameter
-//   is not found or it doesn't contain any annotations.  
+//   is not found or it doesn't contain any annotations.
 // Arguments:
 //   parameterName - Name of the effect parameter
 // Return Value:
@@ -158,7 +158,7 @@ const Tr2EffectDescription& Tr2Shader::GetEffectDescription() const
 }
 
 // --------------------------------------------------------------------------------------
-void Tr2Shader::ApplyAllStateForPass( uint32_t techniqueIndex, uint32_t passIndex, Tr2RenderContext &renderContext ) const
+void Tr2Shader::ApplyAllStateForPass( uint32_t techniqueIndex, uint32_t passIndex, Tr2RenderContext& renderContext ) const
 {
 	auto& technique = m_effect.techniques[techniqueIndex];
 
@@ -181,7 +181,7 @@ uint32_t Tr2Shader::ApplyShaderOverride( uint32_t techniqueIndex, uint32_t passI
 }
 
 // --------------------------------------------------------------------------------------
-void Tr2Shader::ApplyRenderStates( uint32_t techniqueIndex, uint32_t passIndex, Tr2RenderContext &renderContext ) const
+void Tr2Shader::ApplyRenderStates( uint32_t techniqueIndex, uint32_t passIndex, Tr2RenderContext& renderContext ) const
 {
 	auto& technique = m_effect.techniques[techniqueIndex];
 	auto& pass = technique.passes[passIndex];
@@ -237,7 +237,7 @@ void Tr2Shader::ProcessEffect()
 		unsigned int states = technique.passes[0].renderStates & 0x3ff;
 		unsigned int numPasses = technique.passes.size() & 0x3;
 
-		m_sortValue = (numPasses << 30) | (ps << 20) | (vs << 10) | states;
+		m_sortValue = ( numPasses << 30 ) | ( ps << 20 ) | ( vs << 10 ) | states;
 	}
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
@@ -258,7 +258,7 @@ void Tr2Shader::ProcessEffect()
 	const BlueSharedString techniqueName = BlueSharedString( "RtShadow" );
 	auto effect = GetEffect();
 	uint32_t techniqueIndex;
-	if ( GetTechniqueIndex( techniqueName, techniqueIndex ) )
+	if( GetTechniqueIndex( techniqueName, techniqueIndex ) )
 	{
 		for( const auto& library : effect.techniques[techniqueIndex].libraries )
 		{

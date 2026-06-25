@@ -8,20 +8,21 @@
 #include "TriRenderStep.h"
 #include "Tr2RenderTarget.h"
 
-BLUE_CLASS( TriStepSetRenderTarget ) : public TriRenderStep
+BLUE_CLASS( TriStepSetRenderTarget ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
-	TriStepSetRenderTarget( IRoot* lockobj = 0);
-	~TriStepSetRenderTarget(void);
 
-	void py__init__( Tr2RenderTarget* renderTarget );
+	TriStepSetRenderTarget( IRoot* lockobj = 0 );
+	~TriStepSetRenderTarget( void );
+
+	void py__init__( Tr2RenderTarget * renderTarget );
 
 	//IRenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
-	Tr2RenderTargetPtr	m_renderTarget;
+	Tr2RenderTargetPtr m_renderTarget;
 };
 
 TYPEDEF_BLUECLASS( TriStepSetRenderTarget );

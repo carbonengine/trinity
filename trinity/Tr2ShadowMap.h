@@ -39,22 +39,23 @@ BLUE_DECLARE_INTERFACE( ITriTextureRes );
 
 namespace ShadowMap
 {
-	/////////////////////////////////////////////////////////////
-	// Shadow functions
-	struct SplitSetup
-	{
-		TriFrustumOrtho shadowFrustum;
-		Matrix lightViewProjection;
-		Matrix invViewProj;
-		AxisAlignedBoundingBox aabb;
-	};
+/////////////////////////////////////////////////////////////
+// Shadow functions
+struct SplitSetup
+{
+	TriFrustumOrtho shadowFrustum;
+	Matrix lightViewProjection;
+	Matrix invViewProj;
+	AxisAlignedBoundingBox aabb;
+};
 }
 // --------------------------------------------------------------------------------
 // Description:
 //   This class holds a cascaded shadow map and takes care of splitting the frustum
 //
 // --------------------------------------------------------------------------------
-BLUE_CLASS( Tr2ShadowMap ) : public INotify
+BLUE_CLASS( Tr2ShadowMap ) :
+	public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -65,14 +66,14 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	ShadowMap::SplitSetup SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear, float leftDivNear, float rightDivNear, float topDivNear, float bottomDivNear );
 
-	Tr2GpuResourcePool::Texture PrepareShadowRendering( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
-	void BeginShadowRendering( Tr2RenderContext& renderContext, int splitIndex );
-	void EndShadowRendering( Tr2RenderContext& renderContext );
-	Tr2GpuResourcePool::Texture DrawToShadowMapResult( Tr2RenderContext& renderContext, Tr2GpuResourcePool& gpuResourcePool, const Tr2TextureAL& depthMap, const Tr2TextureAL& cascadedShadowDepth, float upscaling );
+	Tr2GpuResourcePool::Texture PrepareShadowRendering( Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext );
+	void BeginShadowRendering( Tr2RenderContext & renderContext, int splitIndex );
+	void EndShadowRendering( Tr2RenderContext & renderContext );
+	Tr2GpuResourcePool::Texture DrawToShadowMapResult( Tr2RenderContext & renderContext, Tr2GpuResourcePool & gpuResourcePool, const Tr2TextureAL& depthMap, const Tr2TextureAL& cascadedShadowDepth, float upscaling );
 
 	const unsigned int GetShadowSplitCount() const;
 	const unsigned int GetShadowMapSize() const;
@@ -104,16 +105,15 @@ public:
 		DYNAMIC,
 		MANUAL
 	};
-	static AxisAlignedBoundingBox CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3 (&corners)[8] );
+	static AxisAlignedBoundingBox CalculateAABB( Matrix projection, Matrix invViewTransform, Matrix lightView, Vector3( &corners )[8] );
 
 private:
-
 private:
 	void SetStaticShadowSplits();
 
 	// width and height of shadow map
 	unsigned int m_size; // texture res
-	unsigned int m_width; // splits on x axis 
+	unsigned int m_width; // splits on x axis
 	unsigned int m_height; // splits on y axis
 	unsigned int m_splitCount;
 	float m_oldZFar;

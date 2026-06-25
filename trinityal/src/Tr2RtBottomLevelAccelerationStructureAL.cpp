@@ -10,15 +10,15 @@
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL> NullBlas()
-	{
-		static std::shared_ptr<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL> nullBlas = std::make_shared<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL>();
-		return nullBlas;
-	}
+std::shared_ptr<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL> NullBlas()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL> nullBlas = std::make_shared<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL>();
+	return nullBlas;
+}
 }
 
-Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL()
-	:m_blas( NullBlas() )
+Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL() :
+	m_blas( NullBlas() )
 {
 }
 
@@ -112,16 +112,16 @@ TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL* Tr2RtBottomLevelAccelera
 #endif
 
 
-Tr2RtPositionStreamAL::Tr2RtPositionStreamAL()
-	:m_vertexCount( 0 ),
+Tr2RtPositionStreamAL::Tr2RtPositionStreamAL() :
+	m_vertexCount( 0 ),
 	m_vertexOffset( 0 ),
 	m_positionOffset( 0 ),
 	m_stride( 0 )
 {
 }
 
-Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t positionOffset, Tr2RenderContextEnum::PixelFormat positionFormat )
-	:m_vertexBuffer( vb ),
+Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t positionOffset, Tr2RenderContextEnum::PixelFormat positionFormat ) :
+	m_vertexBuffer( vb ),
 	m_positionOffset( positionOffset ),
 	m_vertexOffset( 0 ),
 	m_positionFormat( positionFormat ),
@@ -130,8 +130,8 @@ Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t po
 {
 }
 
-Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t vertexCount, uint32_t vertexOffset, uint32_t positionOffset, Tr2RenderContextEnum::PixelFormat positionFormat )
-	:m_vertexBuffer( vb ),
+Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t vertexCount, uint32_t vertexOffset, uint32_t positionOffset, Tr2RenderContextEnum::PixelFormat positionFormat ) :
+	m_vertexBuffer( vb ),
 	m_positionOffset( positionOffset ),
 	m_vertexOffset( vertexOffset ),
 	m_positionFormat( positionFormat ),
@@ -140,8 +140,8 @@ Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t ve
 {
 }
 
-Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t stride, uint32_t positionOffset, Tr2RenderContextEnum::PixelFormat positionFormat )
-	:m_vertexBuffer( vb ),
+Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t stride, uint32_t positionOffset, Tr2RenderContextEnum::PixelFormat positionFormat ) :
+	m_vertexBuffer( vb ),
 	m_positionOffset( positionOffset ),
 	m_vertexOffset( 0 ),
 	m_positionFormat( positionFormat ),
@@ -150,8 +150,8 @@ Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t st
 {
 }
 
-Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t stride, uint32_t vertexCount, uint32_t vertexOffset, uint32_t positionOffset, Tr2RenderContextEnum::PixelFormat positionFormat )
-	:m_vertexBuffer( vb ),
+Tr2RtPositionStreamAL::Tr2RtPositionStreamAL( const Tr2BufferAL& vb, uint32_t stride, uint32_t vertexCount, uint32_t vertexOffset, uint32_t positionOffset, Tr2RenderContextEnum::PixelFormat positionFormat ) :
+	m_vertexBuffer( vb ),
 	m_positionOffset( positionOffset ),
 	m_vertexOffset( vertexOffset ),
 	m_positionFormat( positionFormat ),
@@ -167,23 +167,23 @@ bool Tr2RtPositionStreamAL::IsValid() const
 }
 
 
-Tr2RtIndicesStreamAL::Tr2RtIndicesStreamAL()
-	:m_indexCount( 0 ),
+Tr2RtIndicesStreamAL::Tr2RtIndicesStreamAL() :
+	m_indexCount( 0 ),
 	m_indexOffset( 0 ),
 	m_stride( 0 )
 {
 }
 
-Tr2RtIndicesStreamAL::Tr2RtIndicesStreamAL( const Tr2BufferAL& ib )
-	:m_indexBuffer( ib ),
+Tr2RtIndicesStreamAL::Tr2RtIndicesStreamAL( const Tr2BufferAL& ib ) :
+	m_indexBuffer( ib ),
 	m_indexCount( ib.GetDesc().count ),
 	m_indexOffset( 0 ),
 	m_stride( ib.GetDesc().stride )
 {
 }
 
-Tr2RtIndicesStreamAL::Tr2RtIndicesStreamAL( const Tr2BufferAL& ib, uint32_t offset, uint32_t count )
-	:m_indexBuffer( ib ),
+Tr2RtIndicesStreamAL::Tr2RtIndicesStreamAL( const Tr2BufferAL& ib, uint32_t offset, uint32_t count ) :
+	m_indexBuffer( ib ),
 	m_indexCount( count ),
 	m_indexOffset( offset ),
 	m_stride( ib.GetDesc().stride )

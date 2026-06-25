@@ -23,15 +23,14 @@ const Be::ClassInfo* Tr2ImpostorManager::ExposeToBlue()
 		MAP_ATTRIBUTE( "effect", m_effect, "Effect used to render impostors", Be::READ );
 		MAP_PROPERTY_READONLY( "count", GetImpostorCount, "Current number of impostors" );
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
-			"__init__", 
-			Create, 
-			4, 
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"__init__",
+			Create,
+			4,
 			"Creates the manager.\n"
 			":param width: optional atlas width\n"
 			":param height: optional atlas height\n"
 			":param itemWidth: optional billboard width\n"
-			":param itemHeight: optional billboard width"
-			);
+			":param itemHeight: optional billboard width" );
 	EXPOSURE_END()
 }

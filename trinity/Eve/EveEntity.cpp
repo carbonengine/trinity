@@ -10,34 +10,35 @@ extern int g_eveReflectionMode;
 namespace EntityComponents
 {
 
-	bool ShouldReflect( ReflectionMode mode )
+bool ShouldReflect( ReflectionMode mode )
+{
+	if( g_eveReflectionMode == ReflectionSetting::REFLECTION_SETTING_OFF )
 	{
-		if( g_eveReflectionMode == ReflectionSetting::REFLECTION_SETTING_OFF )
-		{
-			return false;
-		}
-
-		switch( mode )
-		{
-		case REFLECT_NEVER:
-			return false;
-		case REFLECT_LOW_MEDIUM_HIGH:
-			return true;
-		case REFLECT_MEDIUM_AND_HIGH:
-			return g_eveReflectionMode != ReflectionSetting::REFLECTION_SETTING_LOW; // we have either medium, high or highest settings
-		case REFLECT_HIGH:
-			return g_eveReflectionMode == ReflectionSetting::REFLECTION_SETTING_HIGH || g_eveReflectionMode == REFLECTION_SETTING_ULTRA;
-		default:
-			return false;
-		}
+		return false;
 	}
+
+	switch( mode )
+	{
+	case REFLECT_NEVER:
+		return false;
+	case REFLECT_LOW_MEDIUM_HIGH:
+		return true;
+	case REFLECT_MEDIUM_AND_HIGH:
+		return g_eveReflectionMode != ReflectionSetting::REFLECTION_SETTING_LOW; // we have either medium, high or highest settings
+	case REFLECT_HIGH:
+		return g_eveReflectionMode == ReflectionSetting::REFLECTION_SETTING_HIGH || g_eveReflectionMode == REFLECTION_SETTING_ULTRA;
+	default:
+		return false;
+	}
+}
 }
 
 EveEntity::EveEntity( IRoot* root ) :
 	m_registry( nullptr ),
 	m_componentIndexLookup( {} ),
 	m_indexInRegistry( -1 )
-{}
+{
+}
 
 EveEntity::~EveEntity()
 {
@@ -108,21 +109,17 @@ EveComponentRegistry* EveEntity::GetComponentRegistry() const
 
 std::optional<uint32_t> EveEntity::GetComponentIndex( uint32_t componentBit ) const
 {
-	auto index = std::find_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(),
-		[componentBit]( const auto& pair )
-		{
-			return pair.first == componentBit;
+	auto index = std::find_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(), [componentBit]( const auto& pair ) {
+		return pair.first == componentBit;
 	} );
 
-	return index == m_componentIndexLookup.end() ? std::nullopt : std::make_optional(index->second);
+	return index == m_componentIndexLookup.end() ? std::nullopt : std::make_optional( index->second );
 }
 
 void EveEntity::SetComponentState( uint32_t componentBit, uint32_t index )
 {
-	auto componentIndex = std::find_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(), 
-		[componentBit]( const auto& pair ) 
-		{
-			return pair.first == componentBit;
+	auto componentIndex = std::find_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(), [componentBit]( const auto& pair ) {
+		return pair.first == componentBit;
 	} );
 
 	if( componentIndex == m_componentIndexLookup.end() )
@@ -137,10 +134,8 @@ void EveEntity::SetComponentState( uint32_t componentBit, uint32_t index )
 
 void EveEntity::RemoveComponentState( uint32_t componentBit )
 {
-	auto removed = std::remove_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(),
-		[componentBit]( const auto& pair )
-		{
-			return pair.first == componentBit;
+	auto removed = std::remove_if( m_componentIndexLookup.begin(), m_componentIndexLookup.end(), [componentBit]( const auto& pair ) {
+		return pair.first == componentBit;
 	} );
 
 	m_componentIndexLookup.erase( removed, m_componentIndexLookup.end() );

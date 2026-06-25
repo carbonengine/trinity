@@ -32,5 +32,4 @@ Tr2TextureLodManagerPtr GetTextureLodManager()
 MAP_FUNCTION_AND_WRAP(
 	"GetTextureLodManager",
 	GetTextureLodManager,
-	"Returns a global instance of the texture LOD manager" 
-);
+	"Returns a global instance of the texture LOD manager" );

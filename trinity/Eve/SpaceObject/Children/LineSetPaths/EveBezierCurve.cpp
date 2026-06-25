@@ -92,7 +92,7 @@ void EveBezierCurve::GetPointCount( unsigned& count )
 void EveBezierCurve::GeneratePoints( const Matrix& parentTransform )
 {
 	const int seg = m_scaleSegmentsByCompleteness ? int( ( m_segments + 0.5f ) * ( 1.f - abs( m_completeness - 1.f ) ) ) : int( m_segments + 0.5f );
-	
+
 	if( seg <= 1 )
 	{
 		return;
@@ -113,7 +113,7 @@ void EveBezierCurve::GeneratePoints( const Matrix& parentTransform )
 
 	for( int i = 0; i < seg; i++ )
 	{
-		float LoC = ( float( i ) / float( seg ) ) + m_segmentOffset / float( seg );  // LoC = Location on Curve
+		float LoC = ( float( i ) / float( seg ) ) + m_segmentOffset / float( seg ); // LoC = Location on Curve
 		LoC = ( ( LoC * ( min( m_completeness, 1.f ) - max( 0.f, m_completeness - 1.0f ) ) ) + max( 0.f, m_completeness - 1.0f ) );
 		float X = ( 1 - LoC ) * ( 1 - LoC ) * m_point1.x + 2 * ( 1 - LoC ) * LoC * m_bezierPoint.x + LoC * LoC * m_point2.x;
 		float Y = ( 1 - LoC ) * ( 1 - LoC ) * m_point1.y + 2 * ( 1 - LoC ) * LoC * m_bezierPoint.y + LoC * LoC * m_point2.y;
@@ -135,7 +135,7 @@ void EveBezierCurve::CalculateBoundingSphere( float meshSize, bool reCalculateCh
 	{
 		meshSize = m_meshSize;
 	}
-	
+
 	const Vector3 center = ( m_point1 + m_point2 + m_bezierPoint ) / 3.f;
 	const float rad = max( max( LengthSq( m_bezierPoint - center ), LengthSq( m_point2 - center ) ), LengthSq( m_point1 - center ) );
 	m_boundingSphere = Vector4( center, sqrt( rad ) + meshSize );
@@ -157,7 +157,7 @@ void EveBezierCurve::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentL
 	m_isVisible = false;
 
 	Vector4 sphere = m_boundingSphere;
-	
+
 	BoundingSphereTransform( m_localTransform * systemLocation, sphere );
 
 	m_isVisible = frustum.IsSphereVisible( &( sphere ) );
@@ -169,7 +169,7 @@ void EveBezierCurve::AddLinesToSet( EveCurveLineSet& lineSet, const Vector4& col
 	{
 		return;
 	}
-	
+
 	if( m_regeneratePoints )
 	{
 		GeneratePoints();
@@ -177,8 +177,8 @@ void EveBezierCurve::AddLinesToSet( EveCurveLineSet& lineSet, const Vector4& col
 	}
 
 	int seg = m_scaleSegmentsByCompleteness ? int( ( m_segments + 0.5f ) * ( 1.f - abs( m_completeness - 1.f ) ) ) : int( m_segments + 0.5f );
-	seg = min( seg, (int) m_points.size() );
-	
+	seg = min( seg, (int)m_points.size() );
+
 	for( int i = 0; i < seg; i++ )
 	{
 		int nextPoint = ( i + 1 ) % seg;
@@ -193,7 +193,7 @@ void EveBezierCurve::AddLinesToSet( EveCurveLineSet& lineSet, const Vector4& col
 			{
 				continue;
 			}
-			
+
 			id = lineSet.AddStraightLine( TransformCoord( m_points[i], m_localTransform ), color, TransformCoord( m_point2, m_localTransform ), color, m_lineWidth );
 		}
 
@@ -216,10 +216,10 @@ void EveBezierCurve::UpdateBuffer( Tr2RenderContext& renderContext, uint8_t*& da
 		}
 		return;
 	}
-	
+
 	Vector3 scale, translation;
 	Quaternion objRot, worldRot;
-	
+
 	Vector3 targetPoint = m_point2;
 	Vector3 dirToNextPoint( 0.f, 1.f, 0.f );
 	unsigned count = 0;
@@ -237,17 +237,17 @@ void EveBezierCurve::UpdateBuffer( Tr2RenderContext& renderContext, uint8_t*& da
 
 		const unsigned nextPoint = ( count + 1 >= unsigned( m_points.size() ) ) ? 0 : count + 1;
 
-		
+
 		if( nextPoint == 0 )
 		{
 			if( m_completeness < 1.f )
 			{
-				Matrix m = ScalingMatrix( Vector3(0.f,0.f,0.f) );
+				Matrix m = ScalingMatrix( Vector3( 0.f, 0.f, 0.f ) );
 				memcpy( data, &m, stride );
 				data += stride;
 				continue;
 			}
-			
+
 			translation = Lerp( *point, TransformCoord( m_point2, m_worldTransform ), m_animValue );
 			dirToNextPoint = TransformCoord( m_point2, m_worldTransform ) - translation;
 		}
@@ -277,11 +277,11 @@ void EveBezierCurve::UpdateBuffer( Tr2RenderContext& renderContext, uint8_t*& da
 			const Vector3 angleToCamera = Tr2Renderer::GetViewPosition() - TransformCoord( translation, m_localTransform * systemLocation );
 			dirToNextPoint = TransformCoord( angleToCamera, Inverse( rotMat ) );
 		}
-		
+
 		TriQuaternionArcFromForward( &objRot, &dirToNextPoint );
-		
+
 		Matrix matrix = TransformationMatrix( sizeMod * m_objectScale, objRot, translation ) * m_localTransform;
-		
+
 		Matrix m = Transpose( matrix );
 		memcpy( data, &m, stride );
 		data += stride;

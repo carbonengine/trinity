@@ -83,7 +83,7 @@ void EveUiObject::SetVisibilityForArea( const char* areaName, bool enable )
 	// find all areas with the provided name and toggle visibility
 	for( uint32_t i = 0; i < TRIBATCHTYPE_COUNT_OF_BATCH_TYPES; ++i )
 	{
-		const Tr2MeshAreaVector* areas = mesh->GetAreas( ( TriBatchType)i );
+		const Tr2MeshAreaVector* areas = mesh->GetAreas( (TriBatchType)i );
 		if( areas )
 		{
 			for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )

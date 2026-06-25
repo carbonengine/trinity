@@ -8,7 +8,7 @@
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 using namespace Tr2RenderContextEnum;
 
-Tr2SolidSet::Tr2SolidSet( IRoot* lockobj /*= NULL*/ ):
+Tr2SolidSet::Tr2SolidSet( IRoot* lockobj /*= NULL*/ ) :
 	Tr2PrimitiveSet( lockobj ),
 	m_currentSubmittedTriangleCount( 0 ),
 	m_maxCurrentTriangleCount( 0 )
@@ -58,7 +58,7 @@ bool Tr2SolidSet::OnPrepareResources()
 
 	if( m_triangles.size() )
 	{
-		if( !m_vertexBuffer.IsValid() || (m_currentSubmittedTriangleCount < m_triangles.size()) )
+		if( !m_vertexBuffer.IsValid() || ( m_currentSubmittedTriangleCount < m_triangles.size() ) )
 		{
 			USE_MAIN_THREAD_RENDER_CONTEXT();
 			CR_RETURN_VAL(
@@ -68,34 +68,34 @@ bool Tr2SolidSet::OnPrepareResources()
 					Tr2GpuUsage::VERTEX_BUFFER,
 					Tr2CpuUsage::WRITE_OFTEN,
 					nullptr,
-					renderContext )
-				, false );
+					renderContext ),
+				false );
 			m_currentSubmittedTriangleCount = (unsigned int)m_triangles.size();
 		}
 
 		std::vector<TriangleVertex> vertexBuffer( m_triangles.size() * 3 );
-		
+
 		// Copy our user data to the buffer
 		unsigned int j = 0;
-		for( unsigned int i = 0; i < m_triangles.size(); i++,j+=3 )
-		{	
+		for( unsigned int i = 0; i < m_triangles.size(); i++, j += 3 )
+		{
 			vertexBuffer[j].m_color = m_triangles[i].m_color1;
 			vertexBuffer[j].m_position = m_triangles[i].m_position1;
 			vertexBuffer[j].m_normal = m_triangles[i].m_normal;
 
-			vertexBuffer[j+1].m_color = m_triangles[i].m_color2;
-			vertexBuffer[j+1].m_position = m_triangles[i].m_position2;
-			vertexBuffer[j+1].m_normal = m_triangles[i].m_normal;
+			vertexBuffer[j + 1].m_color = m_triangles[i].m_color2;
+			vertexBuffer[j + 1].m_position = m_triangles[i].m_position2;
+			vertexBuffer[j + 1].m_normal = m_triangles[i].m_normal;
 
-			vertexBuffer[j+2].m_color = m_triangles[i].m_color3;
-			vertexBuffer[j+2].m_position = m_triangles[i].m_position3;
-			vertexBuffer[j+2].m_normal = m_triangles[i].m_normal;
+			vertexBuffer[j + 2].m_color = m_triangles[i].m_color3;
+			vertexBuffer[j + 2].m_position = m_triangles[i].m_position3;
+			vertexBuffer[j + 2].m_normal = m_triangles[i].m_normal;
 		}
-		
+
 		// Create a bounding sphere
 		Vector3 center( 0.0f, 0.0f, 0.0f );
 		float radius = 0.0f;
-		ComputeBoundingSphere( &vertexBuffer[0].m_position, (unsigned int)m_triangles.size()*3, sizeof(TriangleVertex), center, radius );
+		ComputeBoundingSphere( &vertexBuffer[0].m_position, (unsigned int)m_triangles.size() * 3, sizeof( TriangleVertex ), center, radius );
 
 		TriangleVertex* data;
 		CR_RETURN_VAL( m_vertexBuffer.MapForWriting( data, renderContext ), false );
@@ -113,7 +113,7 @@ bool Tr2SolidSet::OnPrepareResources()
 Vector3 Tr2SolidSet::GetCenterOfMass( void )
 {
 	Vector3 result = Vector3( 0.0f, 0.0f, 0.0f );
-	for( unsigned int i = 0; i < m_triangles.size(); i ++ )
+	for( unsigned int i = 0; i < m_triangles.size(); i++ )
 	{
 		result.x += m_triangles[i].m_position1.x;
 		result.x += m_triangles[i].m_position2.x;
@@ -126,9 +126,9 @@ Vector3 Tr2SolidSet::GetCenterOfMass( void )
 		result.z += m_triangles[i].m_position3.z;
 	}
 
-	result.x /= (m_triangles.size()*3);
-	result.y /= (m_triangles.size()*3);
-	result.z /= (m_triangles.size()*3);
+	result.x /= ( m_triangles.size() * 3 );
+	result.y /= ( m_triangles.size() * 3 );
+	result.z /= ( m_triangles.size() * 3 );
 	result = TransformCoord( result, m_worldTransform );
 	return result;
 }
@@ -155,7 +155,7 @@ void Tr2SolidSet::GetBatchesImpl( ITriRenderBatchAccumulator* accumulator, const
 	accumulator->Commit( batch );
 }
 
-void Tr2SolidSet::AddTriangle( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2,  const Vector3& position3, const Vector4& color3 )
+void Tr2SolidSet::AddTriangle( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& position3, const Vector4& color3 )
 {
 	TriangleData newTriangle;
 
@@ -166,8 +166,8 @@ void Tr2SolidSet::AddTriangle( const Vector3& position1, const Vector4& color1, 
 	newTriangle.m_position3 = position3;
 	newTriangle.m_color3 = color3;
 
-	Vector3 dir13(position1 - position3);
-	Vector3 dir21(position2 - position1);
+	Vector3 dir13( position1 - position3 );
+	Vector3 dir21( position2 - position1 );
 
 	newTriangle.m_normal = Cross( dir13, dir21 );
 
@@ -179,7 +179,7 @@ bool Tr2SolidSet::SubmitChanges()
 {
 	if( m_triangles.size() > m_maxCurrentTriangleCount )
 	{
-		// increase the size of the buffer 
+		// increase the size of the buffer
 		m_maxCurrentTriangleCount = (unsigned int)m_triangles.capacity();
 		ReleaseResources( TRISTORAGE_ALL );
 	}
@@ -193,7 +193,7 @@ bool Tr2SolidSet::SubmitChanges()
 
 void Tr2SolidSet::SetCurrentColor( Color& val )
 {
-	for ( unsigned int i = 0; i < m_triangles.size(); i++ )
+	for( unsigned int i = 0; i < m_triangles.size(); i++ )
 	{
 		m_triangles[i].m_color1 = val;
 		m_triangles[i].m_color2 = val;

@@ -34,10 +34,9 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 private:
-
 	void Setup();
 	BlueSharedString m_name;
 

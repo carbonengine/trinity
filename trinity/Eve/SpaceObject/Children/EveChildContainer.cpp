@@ -40,9 +40,9 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 	m_activationStrength( 1.0f )
 {
 	m_controllers.SetNotify( this );
-    m_objects.SetNotify( this );
-    m_attachments.SetNotify( this );
-    m_lights.SetNotify( this );
+	m_objects.SetNotify( this );
+	m_attachments.SetNotify( this );
+	m_lights.SetNotify( this );
 
 	memset( &m_vsData, 0, sizeof( EveSpaceObjectVSData ) );
 	memset( &m_psData, 0, sizeof( EveSpaceObjectPSData ) );
@@ -94,7 +94,6 @@ void EveChildContainer::SetMute( bool isMute )
 		m_mute = isMute;
 		MuteChildren();
 	}
-	
 }
 
 void EveChildContainer::MuteChildren()
@@ -172,7 +171,7 @@ void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, I
 				break;
 			}
 		}
-    }
+	}
 
 	if( list == &m_attachments && ( event & BELIST_LOADING ) == 0 )
 	{
@@ -207,26 +206,26 @@ void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, I
 		}
 	}
 
-    if( list == &m_objects && (event & BELIST_EVENTMASK) == BELIST_INSERTED )
-    {
-        if( m_inheritProperties )
-        {
-			if( IEveInheritPropertiesOwnerPtr obj = BlueCastPtr( value) )
+	if( list == &m_objects && ( event & BELIST_EVENTMASK ) == BELIST_INSERTED )
+	{
+		if( m_inheritProperties )
+		{
+			if( IEveInheritPropertiesOwnerPtr obj = BlueCastPtr( value ) )
 			{
 				obj->SetInheritProperties( m_inheritProperties->GetProperties() );
 			}
-        }
-    }
+		}
+	}
 
-    if( list == &m_lights && (event & BELIST_EVENTMASK) == BELIST_INSERTED  )
-    {
-        if( m_inheritProperties )
-        {
-			if( IEveInheritPropertiesOwnerPtr light = BlueCastPtr( value) )
+	if( list == &m_lights && ( event & BELIST_EVENTMASK ) == BELIST_INSERTED )
+	{
+		if( m_inheritProperties )
+		{
+			if( IEveInheritPropertiesOwnerPtr light = BlueCastPtr( value ) )
 			{
 				light->SetInheritProperties( m_inheritProperties->GetProperties() );
 			}
-        }		
+		}
 	}
 
 	if( list == &m_lights )
@@ -261,7 +260,7 @@ void EveChildContainer::RegisterComponents()
 	auto registry = this->GetComponentRegistry();
 	if( registry && m_display && IsUpdating() )
 	{
-		if ( !m_lights.empty() )
+		if( !m_lights.empty() )
 		{
 			registry->RegisterComponent<ITr2LightOwner>( this );
 		}
@@ -270,7 +269,7 @@ void EveChildContainer::RegisterComponents()
 		{
 			if( EveEntityPtr entity = BlueCastPtr( *it ) )
 			{
-				entity->Register( registry );			
+				entity->Register( registry );
 			}
 		}
 
@@ -319,7 +318,7 @@ void EveChildContainer::SetShaderOption( const BlueSharedString& name, const Blu
 		child->SetShaderOption( name, value );
 	}
 
-	for( auto& attachment: m_attachments )
+	for( auto& attachment : m_attachments )
 	{
 		attachment->SetShaderOption( name, value );
 	}
@@ -400,12 +399,12 @@ void EveChildContainer::UpdateVisibility( const EveUpdateContext& updateContext,
 		const Float4x3* bones = nullptr;
 		if( m_animationOwner && m_animationOwner->GetAnimationController() )
 		{
-			Tr2GrannyAnimationUtils::GetBoneList( m_animationOwner->GetAnimationController(), bones, boneCount );	
+			Tr2GrannyAnimationUtils::GetBoneList( m_animationOwner->GetAnimationController(), bones, boneCount );
 		}
 
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
-			( *it )->UpdateVisibility( updateContext, m_worldTransform, bones, boneCount);
+			( *it )->UpdateVisibility( updateContext, m_worldTransform, bones, boneCount );
 		}
 	}
 }
@@ -458,7 +457,7 @@ void EveChildContainer::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer 
 	{
 		( *it )->RegisterWithQuadRenderer( quadRenderer );
 	}
-	for( auto& it: m_attachments )
+	for( auto& it : m_attachments )
 	{
 		it->RegisterWithQuadRenderer( quadRenderer );
 	}
@@ -491,7 +490,7 @@ void EveChildContainer::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Qu
 		{
 			it->AddToQuadRenderer( quadRenderer, m_worldTransform, 1.0, 0.0, bones, boneCount );
 		}
-	}	
+	}
 }
 
 void EveChildContainer::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
@@ -589,7 +588,7 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 		m_psData.worldTransformLast = m_vsData.worldTransformLast;
 		m_psData.invWorldTransform = m_vsData.invWorldTransform;
 	}
-	
+
 	EveChildUpdateParams newParams = params;
 	newParams.isVisible &= m_display;
 	newParams.childParent = this;
@@ -629,7 +628,7 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 		( *it )->UpdateAsyncronous( updateContext, newParams );
 	}
 
-	for( auto it = m_lights.begin(); it != m_lights.end(); ++it)
+	for( auto it = m_lights.begin(); it != m_lights.end(); ++it )
 	{
 		( *it )->SetBoneMatrix( bones, boneCount );
 	}
@@ -866,7 +865,7 @@ void EveChildContainer::GetDebugOptions( Tr2DebugRendererOptions& options )
 		( *it )->GetDebugOptions( options );
 	}
 
-	for( auto& it: m_attachments)
+	for( auto& it : m_attachments )
 	{
 		it->GetDebugOptions( options );
 	}
@@ -909,7 +908,7 @@ void EveChildContainer::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		{
 			Tr2GrannyAnimationUtils::GetBoneList( m_animationOwner->GetAnimationController(), bones, boneCount );
 		}
-		for( auto& it: m_attachments )
+		for( auto& it : m_attachments )
 		{
 			it->RenderDebugInfo( renderer, m_worldTransform, bones, boneCount );
 		}
@@ -924,7 +923,7 @@ void EveChildContainer::AddController( ITr2Controller* controller )
 void EveChildContainer::SetControllerVariable( const char* name, float value )
 {
 	auto found = find_if( begin( m_controllerVariables ), end( m_controllerVariables ), [name]( auto& x ) { return x.first == name; } );
-	if ( found == end( m_controllerVariables ) )
+	if( found == end( m_controllerVariables ) )
 	{
 		m_controllerVariables.push_back( { name, value } );
 	}
@@ -1023,21 +1022,21 @@ void EveChildContainer::SetInheritProperties( const Color* colorSet )
 	}
 	m_inheritProperties->SetProperties( colorSet );
 
-    for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
-    {
-		if( IEveInheritPropertiesOwnerPtr cast = BlueCastPtr(*it) )
+	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
+	{
+		if( IEveInheritPropertiesOwnerPtr cast = BlueCastPtr( *it ) )
 		{
 			cast->SetInheritProperties( colorSet );
 		}
-    }
+	}
 
-    for( auto it = m_lights.begin(); it != m_lights.end(); it++ )
-    {
+	for( auto it = m_lights.begin(); it != m_lights.end(); it++ )
+	{
 		if( IEveInheritPropertiesOwnerPtr light = BlueCastPtr( *it ) )
 		{
 			light->SetInheritProperties( colorSet );
 		}
-    }
+	}
 }
 
 ITr2AudEmitterPtr EveChildContainer::FindSoundEmitter( const char* name )
@@ -1066,7 +1065,7 @@ ITr2AudEmitterPtr EveChildContainer::FindSoundEmitter( const char* name )
 	return nullptr;
 }
 
-void EveChildContainer::AddObserver( TriObserverLocalPtr observer ) 
+void EveChildContainer::AddObserver( TriObserverLocalPtr observer )
 {
 	m_observers.Append( observer );
 }
@@ -1103,13 +1102,13 @@ void EveChildContainer::AddTransformModifier( IEveChildTransformModifier* modifi
 	m_transformModifiers.Append( modifier );
 }
 
-void EveChildContainer::SetProceduralContainerVariable( const char *name, float value )
+void EveChildContainer::SetProceduralContainerVariable( const char* name, float value )
 {
-    for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
-    {
-        auto child = *it;
-        child->SetProceduralContainerVariable( name, value );
-    }
+	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
+	{
+		auto child = *it;
+		child->SetProceduralContainerVariable( name, value );
+	}
 }
 
 void EveChildContainer::SetAnimationOwner( ITr2GrannyAnimationOwner* animationOwner )
@@ -1136,7 +1135,7 @@ void EveChildContainer::GetBatches( ITriRenderBatchAccumulator* batches, TriBatc
 {
 	if( m_display && reason == TR2RENDERREASON_NORMAL && m_activationStrength != 0.0 )
 	{
-		for( auto& it : m_attachments)
+		for( auto& it : m_attachments )
 		{
 			it->GetBatches( batches, batchType, perObjectData, reason );
 		}
@@ -1159,9 +1158,9 @@ uint32_t EveChildContainer::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderTy
 	{
 		return sizeof( m_vsData );
 	}
-	else if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER)
+	else if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
 	{
-		return sizeof( m_psData );	
+		return sizeof( m_psData );
 	}
 	return 0;
 }
@@ -1192,7 +1191,7 @@ Tr2PerObjectData* EveChildContainer::GetPerObjectData( ITriRenderBatchAccumulato
 	}
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
-	
+
 	Tr2PerObjectDataWithPersistentBuffers<EveChildContainer>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildContainer>>();
 	if( !perObjectData )
 	{

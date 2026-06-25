@@ -12,8 +12,8 @@ const Be::ClassInfo* Tr2DynamicEmitter::ExposeToBlue()
 		MAP_INTERFACE( ITr2GenericEmitter )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IInitialize )
-		
-		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST  )
+
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "generators", m_generators, "List of generators for each particle element", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "isValid", m_isValid, "If the emitter successfully bound to the particle system", Be::READ )
 		MAP_ATTRIBUTE( "particleSystem", m_particleSystem, "Particle system to emit particles to", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
@@ -22,10 +22,10 @@ const Be::ClassInfo* Tr2DynamicEmitter::ExposeToBlue()
 		MAP_PROPERTY_READONLY( "emittedParticles", GetEmittedParticleCount, "Number of particles emitted" )
 
 		MAP_METHOD_AND_WRAP( "Rebind", Rebind, "Re-binds emitter to the particle system" )
-		MAP_METHOD_AND_WRAP( 
-			"UpdateSimulation", 
-			UpdateSimulation, 
-			"Updates emitter manually.\n" 
+		MAP_METHOD_AND_WRAP(
+			"UpdateSimulation",
+			UpdateSimulation,
+			"Updates emitter manually.\n"
 			":param dt: time inteval (in seconds)" )
 
 	EXPOSURE_END()

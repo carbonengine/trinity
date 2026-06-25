@@ -37,7 +37,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* value ) override;
+	bool OnModified( Be::Var * value ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
@@ -53,7 +53,7 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override {};
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override {};
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override{};
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Tr2DeviceResource
@@ -76,24 +76,31 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Debug
-	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
 
-	void GetWorldVelocity( Vector3& velocity ) const;
+	void GetWorldVelocity( Vector3 & velocity ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveChildLineSet
 	Tr2MeshPtr GetMesh() const;
 	float GetOwnerMaxSpeed() const;
 	void CreateSpriteVertexDeclaration();
-	float GetSortValue() { return 0.f; };
-	void UpdateBuffer( Tr2RenderContext& renderContext );
+	float GetSortValue()
+	{
+		return 0.f;
+	};
+	void UpdateBuffer( Tr2RenderContext & renderContext );
 	std::vector<std::pair<int, int>> GetVertexElementAddedThroughCode() const;
 
-	enum lineSetType { OBJECT_RENDER, LINE_RENDER, BOTH };
+	enum lineSetType
+	{
+		OBJECT_RENDER,
+		LINE_RENDER,
+		BOTH
+	};
 
 private:
-
 	void InitializeLineSet();
 	void GenerateManagedPoints();
 	void UpdateBoundingSphere( bool reCalculateChildren = true );
@@ -101,7 +108,7 @@ private:
 	BlueSharedString m_name;
 	Vector3 m_worldVelocity;
 	float m_ownerMaxSpeed;
-	
+
 	bool m_display;
 	bool m_isAlwaysOn;
 	bool m_updateLineSet;
@@ -132,7 +139,7 @@ private:
 
 	//animate - lineRender
 	float m_scrollSpeed;
-	
+
 	// visibility culls
 	Vector4 m_boundingSphere;
 	float m_currentScreenSize;

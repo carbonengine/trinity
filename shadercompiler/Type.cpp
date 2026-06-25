@@ -13,9 +13,9 @@ bool Type::operator==( const Type& type ) const
 	{
 		return symbol == type.symbol;
 	}
-	return builtInType == type.builtInType && 
-		width == type.width && 
-		height == type.height && 
+	return builtInType == type.builtInType &&
+		width == type.width &&
+		height == type.height &&
 		( ( templateParameter == nullptr && type.templateParameter == nullptr ) ||
 		  ( templateParameter != nullptr && type.templateParameter != nullptr && *templateParameter == *type.templateParameter && templateSamples == type.templateSamples ) ) &&
 		( !IsTexture() || isDepthTexture == type.isDepthTexture );
@@ -107,39 +107,39 @@ bool Type::IsBindlessHandle() const
 
 bool Type::IsScalarOrVector() const
 {
-	return symbol == nullptr && 
+	return symbol == nullptr &&
 		( builtInType == OP_INT ||
-		builtInType == OP_UINT ||
-		builtInType == OP_BOOL ||
-		builtInType == OP_HALF ||
-		builtInType == OP_FLOAT ||
-		builtInType == OP_DOUBLE ||
-		builtInType == OP_BINDLESSHANDLETEXTURE2D ||
-	    builtInType == OP_BINDLESSHANDLETEXTURE3D ||
-	    builtInType == OP_BINDLESSHANDLETEXTURECUBE ||
-		builtInType == OP_BINDLESSHANDLESAMPLER );
+		  builtInType == OP_UINT ||
+		  builtInType == OP_BOOL ||
+		  builtInType == OP_HALF ||
+		  builtInType == OP_FLOAT ||
+		  builtInType == OP_DOUBLE ||
+		  builtInType == OP_BINDLESSHANDLETEXTURE2D ||
+		  builtInType == OP_BINDLESSHANDLETEXTURE3D ||
+		  builtInType == OP_BINDLESSHANDLETEXTURECUBE ||
+		  builtInType == OP_BINDLESSHANDLESAMPLER );
 }
 
 bool Type::IsTexture() const
 {
-	return symbol == nullptr && 
+	return symbol == nullptr &&
 		( builtInType == OP_TEXTURE ||
-		builtInType == OP_TEXTURE1D ||
-		builtInType == OP_TEXTURE2D ||
-		builtInType == OP_TEXTURE3D ||
-		builtInType == OP_TEXTURECUBE ||
-		builtInType == OP_TEXTURE1DARRAY ||
-		builtInType == OP_TEXTURE2DARRAY ||
-		builtInType == OP_TEXTURE3DARRAY ||
-		builtInType == OP_TEXTURECUBEARRAY ||
-		builtInType == OP_TEXTURE2DMS ||
-		builtInType == OP_TEXTURE2DMSARRAY ||
-		builtInType == OP_RWTEXTURE1D ||
-		builtInType == OP_RWTEXTURE2D ||
-		builtInType == OP_RWTEXTURE3D ||
-		builtInType == OP_RWTEXTURE1DARRAY ||
-		builtInType == OP_RWTEXTURE2DARRAY ||
-		builtInType == OP_RWTEXTURE3DARRAY );
+		  builtInType == OP_TEXTURE1D ||
+		  builtInType == OP_TEXTURE2D ||
+		  builtInType == OP_TEXTURE3D ||
+		  builtInType == OP_TEXTURECUBE ||
+		  builtInType == OP_TEXTURE1DARRAY ||
+		  builtInType == OP_TEXTURE2DARRAY ||
+		  builtInType == OP_TEXTURE3DARRAY ||
+		  builtInType == OP_TEXTURECUBEARRAY ||
+		  builtInType == OP_TEXTURE2DMS ||
+		  builtInType == OP_TEXTURE2DMSARRAY ||
+		  builtInType == OP_RWTEXTURE1D ||
+		  builtInType == OP_RWTEXTURE2D ||
+		  builtInType == OP_RWTEXTURE3D ||
+		  builtInType == OP_RWTEXTURE1DARRAY ||
+		  builtInType == OP_RWTEXTURE2DARRAY ||
+		  builtInType == OP_RWTEXTURE3DARRAY );
 }
 
 bool Type::IsTextureArray() const
@@ -158,13 +158,13 @@ bool Type::IsTextureArray() const
 
 bool Type::IsSampler() const
 {
-	return symbol == nullptr && 
+	return symbol == nullptr &&
 		( builtInType == OP_SAMPLER ||
-		builtInType == OP_SAMPLER1D ||
-		builtInType == OP_SAMPLER2D ||
-		builtInType == OP_SAMPLER3D ||
-		builtInType == OP_SAMPLERCUBE ||
-		builtInType == OP_SAMPLERCOMPARISON );
+		  builtInType == OP_SAMPLER1D ||
+		  builtInType == OP_SAMPLER2D ||
+		  builtInType == OP_SAMPLER3D ||
+		  builtInType == OP_SAMPLERCUBE ||
+		  builtInType == OP_SAMPLERCOMPARISON );
 }
 
 bool Type::IsBuffer() const
@@ -246,9 +246,9 @@ bool Type::GetMethodType( ASTNode* methodCall, Type& returnType ) const
 			return true;
 		}
 		if( method == MakeInlineString( "Load" ) ||
-			method == MakeInlineString( "Sample" ) || 
-			method == MakeInlineString( "SampleBias" ) || 
-			method == MakeInlineString( "SampleGrad" ) || 
+			method == MakeInlineString( "Sample" ) ||
+			method == MakeInlineString( "SampleBias" ) ||
+			method == MakeInlineString( "SampleGrad" ) ||
 			method == MakeInlineString( "SampleLevel" ) )
 		{
 			if( templateParameter )
@@ -393,15 +393,15 @@ bool Type::GetMethodType( ASTNode* methodCall, Type& returnType ) const
 		return false;
 	case OP_RWBYTEADDRESSBUFFER:
 		if( method == MakeInlineString( "GetDimensions" ) ||
-			method == MakeInlineString( "InterlockedAdd" ) || 
-			method == MakeInlineString( "InterlockedAnd" ) || 
+			method == MakeInlineString( "InterlockedAdd" ) ||
+			method == MakeInlineString( "InterlockedAnd" ) ||
 
-			method == MakeInlineString( "InterlockedCompareExchange" ) || 
-			method == MakeInlineString( "InterlockedCompareStore" ) || 
-			method == MakeInlineString( "InterlockedExchange" ) || 
-			method == MakeInlineString( "InterlockedMax" ) || 
-			method == MakeInlineString( "InterlockedMin" ) || 
-			method == MakeInlineString( "InterlockedOr" ) || 
+			method == MakeInlineString( "InterlockedCompareExchange" ) ||
+			method == MakeInlineString( "InterlockedCompareStore" ) ||
+			method == MakeInlineString( "InterlockedExchange" ) ||
+			method == MakeInlineString( "InterlockedMax" ) ||
+			method == MakeInlineString( "InterlockedMin" ) ||
+			method == MakeInlineString( "InterlockedOr" ) ||
 			method == MakeInlineString( "InterlockedXor" ) ||
 			method == MakeInlineString( "Store" ) ||
 			method == MakeInlineString( "Store2" ) ||
@@ -438,7 +438,7 @@ bool Type::GetMethodType( ASTNode* methodCall, Type& returnType ) const
 	case OP_POINTSTREAM:
 	case OP_LINESTREAM:
 	case OP_TRIANGLESTREAM:
-		if( method == MakeInlineString( "Append" ) || 
+		if( method == MakeInlineString( "Append" ) ||
 			method == MakeInlineString( "RestartStrip" ) )
 		{
 			returnType.FromTokenType( OP_VOID );
@@ -643,7 +643,7 @@ bool Type::GetIndexedType( Type& type ) const
 		else
 		{
 			type.FromTokenType( OP_FLOAT );
-			if (isDepthTexture)
+			if( isDepthTexture )
 			{
 				type.width = 1;
 			}
@@ -687,18 +687,18 @@ bool Type::GetIndexedType( Type& type ) const
 
 Type TypeFromSymbol( const Symbol* symbol )
 {
-    Type t;
-    t.FromSymbol( symbol );
-    return t;
+	Type t;
+	t.FromSymbol( symbol );
+	return t;
 }
 
 Type TypeFromTokenType( int type, int width, int height )
 {
-    Type t;
-    t.FromTokenType( type );
-    t.width = width;
-    t.height = height;
-    return t;
+	Type t;
+	t.FromTokenType( type );
+	t.width = width;
+	t.height = height;
+	return t;
 }
 
 bool GetCommonType( const Type& type0, const Type& type1, Type& type )
@@ -773,7 +773,8 @@ int GetNumericTypePrecedence( int type )
 
 
 
-namespace hlsl {
+namespace hlsl
+{
 
 const Type void_t = TypeFromTokenType( OP_VOID );
 

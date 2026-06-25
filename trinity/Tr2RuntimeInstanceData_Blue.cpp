@@ -13,7 +13,7 @@ static PyObject* PySetElementLayout( PyObject* self, PyObject* args )
 	Tr2RuntimeInstanceData* pThis = BluePythonCast<Tr2RuntimeInstanceData*>( self );
 
 	PyObject* pyDecl;
-	if ( !PyArg_ParseTuple( args, "O!", &PyList_Type, &pyDecl ) )
+	if( !PyArg_ParseTuple( args, "O!", &PyList_Type, &pyDecl ) )
 	{
 		return nullptr;
 	}
@@ -63,8 +63,8 @@ static PyObject* PySetElementLayout( PyObject* self, PyObject* args )
 			PyErr_SetString( PyExc_TypeError, "Invalid element type" );
 			return nullptr;
 		}
-		
-		def.Add( 
+
+		def.Add(
 			Tr2VertexDefinition::DataType( Tr2VertexDefinition::DT_FLOAT32 | ( ( type - 1 ) << Tr2VertexDefinition::DT_SIZE_OFFSET ) ),
 			Tr2ParticleElementDeclarationName( Tr2ParticleElementDeclarationName::Type( usage ) ).GetD3DUsage(),
 			usageIndex );
@@ -79,7 +79,7 @@ static PyObject* PySetData( PyObject* self, PyObject* args )
 	Tr2RuntimeInstanceData* pThis = BluePythonCast<Tr2RuntimeInstanceData*>( self );
 
 	PyObject* pyData;
-	if ( !PyArg_ParseTuple( args, "O!", &PyList_Type, &pyData ) )
+	if( !PyArg_ParseTuple( args, "O!", &PyList_Type, &pyData ) )
 	{
 		return nullptr;
 	}
@@ -153,7 +153,7 @@ static PyObject* PyGetItem( PyObject* self, PyObject* args )
 	Tr2RuntimeInstanceData* pThis = BluePythonCast<Tr2RuntimeInstanceData*>( self );
 
 	unsigned index;
-	if ( !PyArg_ParseTuple( args, "I", &index ) )
+	if( !PyArg_ParseTuple( args, "I", &index ) )
 	{
 		return nullptr;
 	}
@@ -201,7 +201,7 @@ static PyObject* PySetItem( PyObject* self, PyObject* args )
 
 	unsigned index;
 	PyObject* item;
-	if ( !PyArg_ParseTuple( args, "IO!", &index, &PyTuple_Type, &item ) )
+	if( !PyArg_ParseTuple( args, "IO!", &index, &PyTuple_Type, &item ) )
 	{
 		return nullptr;
 	}
@@ -279,7 +279,7 @@ static PyObject* PyGetItemElement( PyObject* self, PyObject* args )
 	Tr2RuntimeInstanceData* pThis = BluePythonCast<Tr2RuntimeInstanceData*>( self );
 
 	unsigned index, elementIndex;
-	if ( !PyArg_ParseTuple( args, "II", &index, &elementIndex ) )
+	if( !PyArg_ParseTuple( args, "II", &index, &elementIndex ) )
 	{
 		return nullptr;
 	}
@@ -328,7 +328,7 @@ static PyObject* PySetItemElement( PyObject* self, PyObject* args )
 	unsigned index;
 	unsigned elementIndex;
 	PyObject* element;
-	if ( !PyArg_ParseTuple( args, "IIO", &index, &elementIndex, &element ) )
+	if( !PyArg_ParseTuple( args, "IIO", &index, &elementIndex, &element ) )
 	{
 		return nullptr;
 	}
@@ -398,69 +398,56 @@ static PyObject* PySetItemElement( PyObject* self, PyObject* args )
 
 const Be::ClassInfo* Tr2RuntimeInstanceData::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2RuntimeInstanceData, "" )
+	EXPOSURE_BEGIN( Tr2RuntimeInstanceData, "" )
 		MAP_INTERFACE( Tr2RuntimeInstanceData )
 		MAP_INTERFACE( ITr2InstanceData )
 		MAP_INTERFACE( ITr2GenericEmitter )
 		MAP_INTERFACE( ITr2GpuBuffer )
 
-		MAP_ATTRIBUTE
-		( 
-			"name", 
-			m_name, 
-			"", 
-			Be::READWRITE | Be::PERSIST 
-		)
+		MAP_ATTRIBUTE(
+			"name",
+			m_name,
+			"",
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		( 
-			"particleSystem", 
-			m_particleSystem, 
-			"", 
-			Be::READWRITE | Be::PERSIST 
-		)
+		MAP_ATTRIBUTE(
+			"particleSystem",
+			m_particleSystem,
+			"",
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_PROPERTY_READONLY
-		(
+		MAP_PROPERTY_READONLY(
 			"count",
-			GetCount, 
-			"Number of instances"
-		)
+			GetCount,
+			"Number of instances" )
 
-		MAP_METHOD
-		(
+		MAP_METHOD(
 			"SetElementLayout",
 			PySetElementLayout,
 			"Assign instance element data layout. Invalidates data for the object.\n"
 			":param layout: list of 3-tuples (usage - trinity.PARTICLE_ELEMENT_TYPE, usageIndex, elementCount)\n"
 			"         describing each data element\n"
 			":type layout: list[(int, int, int)]\n"
-			":rtype: None"
-		)
+			":rtype: None" )
 
-		MAP_METHOD
-		(
+		MAP_METHOD(
 			"SetData",
 			PySetData,
 			"Assign instance data.\n"
 			":param data: list of tuples; each list element describes one instance; each tuple element describes\n"
 			"       one element according to SetElementLayout and is either a float an n-tuple of floats\n"
 			":type data: list\n"
-			":rtype: None"
-		)
+			":rtype: None" )
 
-		MAP_METHOD
-		(
+		MAP_METHOD(
 			"GetItem",
 			PyGetItem,
 			"Returns instance data for given instance index.\n"
 			":param idx: instance index\n"
 			":type idx: int\n"
-			":rtype: tuple"
-		)
+			":rtype: tuple" )
 
-		MAP_METHOD
-		(
+		MAP_METHOD(
 			"SetItem",
 			PySetItem,
 			"Set instance data for given instance index.\n"
@@ -468,11 +455,9 @@ const Be::ClassInfo* Tr2RuntimeInstanceData::ExposeToBlue()
 			":type idx: int\n"
 			":param data: a tuple that describes one instance; each tuple element describes\n"
 			"       one element according to SetElementLayout and is either a float an n-tuple of floats\n"
-			":rtype: None"
-		)
+			":rtype: None" )
 
-		MAP_METHOD
-		(
+		MAP_METHOD(
 			"GetItemElement",
 			PyGetItemElement,
 			"Returns one element of instance data for given instance index.\n"
@@ -480,11 +465,9 @@ const Be::ClassInfo* Tr2RuntimeInstanceData::ExposeToBlue()
 			":type idx: int\n"
 			":param elementIndex: data element index\n"
 			":type elementIndex: int\n"
-			":rtype: float | tuple"
-		)
+			":rtype: float | tuple" )
 
-		MAP_METHOD
-		(
+		MAP_METHOD(
 			"SetItemElement",
 			PySetItemElement,
 			"Set one element of instance data for given instance index.\n"
@@ -494,53 +477,41 @@ const Be::ClassInfo* Tr2RuntimeInstanceData::ExposeToBlue()
 			":type elementIndex: int\n"
 			":param data: a tuple or float that describes one element of instance data\n"
 			":type data: float | tuple\n"
-			":rtype: None"
-		)
+			":rtype: None" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"UpdateData",
 			UpdateData,
-			"Uploads modified data to GPU"
-		)
+			"Uploads modified data to GPU" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"UpdateBoundingBox",
 			UpdateBoundingBox,
-			"Updates bounding box after instance data was modified"
-		)
+			"Updates bounding box after instance data was modified" )
 
 		MAP_METHOD_AND_WRAP(
 			"SetBoundingBox",
 			SetBoundingBox,
 			"Assign a bounding box explicitely (in case instance data contains no positions, for example)\n"
-			":param box: axis aligned bounding box for instance data"
-		)
+			":param box: axis aligned bounding box for instance data" )
 
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"Spawn",
 			Spawn,
-			"Spawns particles into the particle system"
-		)
-		
-		MAP_METHOD_AND_WRAP
-		(
+			"Spawns particles into the particle system" )
+
+		MAP_METHOD_AND_WRAP(
 			"SaveToCMF",
 			SaveToCMF,
 			"Saves vertex data to a CMF file\n"
-			":param path: path to the CMF file"
-		)
+			":param path: path to the CMF file" )
 		// TODO: intern, call SaveToCMF instead of SaveToGranny in python.
 #if WITH_GRANNY
-		MAP_METHOD_AND_WRAP
-		(
+		MAP_METHOD_AND_WRAP(
 			"SaveToGranny",
 			SaveToGranny,
 			"Saves vertex data to a granny file\n"
-			":param path: path to the granny file"
-		)
+			":param path: path to the granny file" )
 #endif
 
 		MAP_ATTRIBUTE( "aabbMin", m_aabb.m_min, "Minimum of the AABB", Be::READ )

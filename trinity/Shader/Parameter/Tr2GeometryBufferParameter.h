@@ -14,36 +14,36 @@ BLUE_DECLARE( Tr2Shader );
 // See Also:
 //   ITriEffectResourceParameter
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2GeometryBufferParameter ):
+BLUE_CLASS( Tr2GeometryBufferParameter ) :
 	public ITriEffectResourceParameter,
 	public IInitialize,
 	public INotify
 {
 public:
-	Tr2GeometryBufferParameter(IRoot* lockobj = NULL);
+	Tr2GeometryBufferParameter( IRoot* lockobj = NULL );
 	~Tr2GeometryBufferParameter();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 	const char* GetParameterName() const;
-	void RebuildEffectHandles( Tr2Shader* effectRes );
+	void RebuildEffectHandles( Tr2Shader * effectRes );
 	unsigned GetHashValue( unsigned startingHash ) const;
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEffectResourceParameter
 	virtual bool CopyToResourceSet(
-		Tr2ResourceSetDescriptionAL& resourceDesc,
+		Tr2ResourceSetDescriptionAL & resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		ResourceFlags flags ) const;
 	virtual bool ApplyUav(
-		Tr2ResourceSetDescriptionAL& resourceDesc,
+		Tr2ResourceSetDescriptionAL & resourceDesc,
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -52,10 +52,11 @@ public:
 
 	bool IsValid() const;
 
-	void SetGpuBuffer( ITr2GpuBuffer* buffer );
+	void SetGpuBuffer( ITr2GpuBuffer * buffer );
 	ITr2GpuBufferPtr GetGpuBuffer() const;
 
 	BlueSharedString m_name;
+
 protected:
 	// Path to geometry resource
 	std::wstring m_resourcePath;
@@ -70,6 +71,7 @@ protected:
 
 	// Owner effect
 	Tr2ShaderPtr m_cachedEffect;
+
 public:
 	EXPOSE_TO_BLUE();
 };

@@ -22,8 +22,8 @@ CcpStaticStatisticsEntry* GetOrCreateStatisticsEntry( const std::string& name )
 }
 }
 
-TriRenderStep::TriRenderStep( IRoot* lockobj )
-:	m_enabled( true )
+TriRenderStep::TriRenderStep( IRoot* lockobj ) :
+	m_enabled( true )
 {
 }
 

@@ -13,12 +13,11 @@ BLUE_DECLARE( Tr2DepthStencil );
 
 BLUE_DECLARE( Tr2SwapChain );
 
-class Tr2SwapChain:
-     public IRoot,
-     public Tr2DeviceResource
+class Tr2SwapChain : public IRoot,
+					 public Tr2DeviceResource
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
 	Tr2SwapChain( IRoot* lockobj = NULL );
 
@@ -28,9 +27,10 @@ public:
 	int GetWidth() const;
 	int GetHeight() const;
 
-    /////////////////////////////////////////////////////////////////////////////
-    // ITriDeviceResource
-    void ReleaseResources( TriStorage s );
+	/////////////////////////////////////////////////////////////////////////////
+	// ITriDeviceResource
+	void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
 

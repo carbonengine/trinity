@@ -15,8 +15,9 @@ public:
 	EveChildInheritProperties( IRoot* lockobj = NULL );
 	~EveChildInheritProperties();
 
-	void SetProperties( const Color *colorSet );
-    const Color* GetProperties();
+	void SetProperties( const Color* colorSet );
+	const Color* GetProperties();
+
 protected:
 	Color m_colorSet[SOFDataFactionColorChooser::TYPE_MAX];
 };

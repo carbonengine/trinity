@@ -103,8 +103,8 @@ std::string Tr2TextureReference::GetName() const
 	return name ? name : "";
 }
 
-Tr2TransientTextureReference::Tr2TransientTextureReference( IRoot* )
-	:m_texture( nullptr )
+Tr2TransientTextureReference::Tr2TransientTextureReference( IRoot* ) :
+	m_texture( nullptr )
 {
 }
 

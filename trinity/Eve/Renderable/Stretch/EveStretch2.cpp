@@ -17,64 +17,64 @@
 namespace
 {
 
-	class StretchPerObjectData : public Tr2PerObjectData
+class StretchPerObjectData : public Tr2PerObjectData
+{
+public:
+	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 	{
-	public:
-		virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
-		{
-			FillAndSetConstants(
-				*buffers[Tr2RenderContextEnum::VERTEX_SHADER],
-				m_data,
-				m_size,
-				Tr2RenderContextEnum::VERTEX_SHADER,
-				Tr2Renderer::GetPerObjectVSStartRegister(),
-				renderContext );
-			FillAndSetConstants(
-				*buffers[Tr2RenderContextEnum::PIXEL_SHADER],
-				m_data,
-				m_size,
-				Tr2RenderContextEnum::PIXEL_SHADER,
-				Tr2Renderer::GetPerObjectPSStartRegister(),
-				renderContext );
-		}
-
-		void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
-		{
-			writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, m_data, m_size );
-			writer.SetPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER, m_data, m_size );
-		}
-
-		void* m_data;
-		size_t m_size;
-	};
-
-	struct Vertex
-	{
-		float quadIndex;
-		float cornerIndex;
-	};
-
-	const uint32_t MAX_QUAD_COUNT = 128;
-
-	ALResult GetEveStretch2Quads( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
-	{
-		std::vector<Vertex> data( MAX_QUAD_COUNT * 4 );
-		for( uint32_t i = 0; i < MAX_QUAD_COUNT; ++i )
-		{
-			for( uint32_t j = 0; j < 4; ++j )
-			{
-				data[i * 4 + j].quadIndex = float( i );
-				data[i * 4 + j].cornerIndex = float( j );
-			}
-		}
-
-		return g_sharedBuffer.Allocate( sizeof( Vertex ), MAX_QUAD_COUNT * 4, data.data(), renderContext, vb );
+		FillAndSetConstants(
+			*buffers[Tr2RenderContextEnum::VERTEX_SHADER],
+			m_data,
+			m_size,
+			Tr2RenderContextEnum::VERTEX_SHADER,
+			Tr2Renderer::GetPerObjectVSStartRegister(),
+			renderContext );
+		FillAndSetConstants(
+			*buffers[Tr2RenderContextEnum::PIXEL_SHADER],
+			m_data,
+			m_size,
+			Tr2RenderContextEnum::PIXEL_SHADER,
+			Tr2Renderer::GetPerObjectPSStartRegister(),
+			renderContext );
 	}
+
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
+	{
+		writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, m_data, m_size );
+		writer.SetPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER, m_data, m_size );
+	}
+
+	void* m_data;
+	size_t m_size;
+};
+
+struct Vertex
+{
+	float quadIndex;
+	float cornerIndex;
+};
+
+const uint32_t MAX_QUAD_COUNT = 128;
+
+ALResult GetEveStretch2Quads( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
+{
+	std::vector<Vertex> data( MAX_QUAD_COUNT * 4 );
+	for( uint32_t i = 0; i < MAX_QUAD_COUNT; ++i )
+	{
+		for( uint32_t j = 0; j < 4; ++j )
+		{
+			data[i * 4 + j].quadIndex = float( i );
+			data[i * 4 + j].cornerIndex = float( j );
+		}
+	}
+
+	return g_sharedBuffer.Allocate( sizeof( Vertex ), MAX_QUAD_COUNT * 4, data.data(), renderContext, vb );
+}
 
 }
 
-EveStretch2::EveStretch2( IRoot* lockObj )
-	:m_source( 0.f, 0.f, 0.f ),
+EveStretch2::EveStretch2( IRoot* lockObj ) :
+	m_source( 0.f, 0.f, 0.f ),
 	m_destination( 0.f, 0.f, 0.f ),
 	m_currentDestinationScale( 1.f ),
 	m_destinationScale( 1.f ),
@@ -190,7 +190,7 @@ void EveStretch2::SetDisplay( bool display )
 	m_visible = display;
 	if( m_visible != prev )
 	{
-		ReRegister();	
+		ReRegister();
 	}
 }
 
@@ -199,7 +199,7 @@ void EveStretch2::SetIntensity( float intensity )
 	float prev = m_intensity;
 	m_intensity = intensity;
 
-	if( ( prev == 0 && intensity > 0 ) || (prev > 0 && intensity == 0 ) )
+	if( ( prev == 0 && intensity > 0 ) || ( prev > 0 && intensity == 0 ) )
 	{
 		ReRegister();
 	}
@@ -399,7 +399,7 @@ void EveStretch2::RegisterComponents()
 
 void EveStretch2::GetLights( Tr2LightManager& lightManager ) const
 {
-	if( !m_visible || m_intensity == 0)
+	if( !m_visible || m_intensity == 0 )
 	{
 		return;
 	}
@@ -417,12 +417,12 @@ void EveStretch2::GetLights( Tr2LightManager& lightManager ) const
 	}
 }
 
-void EveStretch2::GetDebugOptions( Tr2DebugRendererOptions& options ) 
+void EveStretch2::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Stretch bounds" );
 }
 
-void EveStretch2::RenderDebugInfo( ITr2DebugRenderer2& renderer ) 
+void EveStretch2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( renderer.HasOption( this, "Stretch bounds" ) )
 	{

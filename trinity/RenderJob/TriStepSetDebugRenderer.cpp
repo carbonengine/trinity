@@ -8,7 +8,7 @@ TriStepSetDebugRenderer::TriStepSetDebugRenderer( IRoot* lockobj )
 {
 }
 
-TriStepSetDebugRenderer::~TriStepSetDebugRenderer(void)
+TriStepSetDebugRenderer::~TriStepSetDebugRenderer( void )
 {
 }
 

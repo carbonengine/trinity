@@ -6,9 +6,9 @@
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   A base class for index/vertex ring buffers. Ring buffers are used in case when 
-//   dynamic data needs to be passed multiple times per frame for rendering and is 
-//   discared right after rendering. With a ring buffer we can avoid excessive discard 
+//   A base class for index/vertex ring buffers. Ring buffers are used in case when
+//   dynamic data needs to be passed multiple times per frame for rendering and is
+//   discared right after rendering. With a ring buffer we can avoid excessive discard
 //   locks one would need for use. The basic patter of using this class is:
 //   1. collect data for the buffer>\
 //   2. call ringBuffer.PutData to put data into the buffer
@@ -19,16 +19,16 @@
 // See Also:
 //   Tr2Sprite2dScene, Tr2StreamVertexBuffer, Tr2StreamIndexBuffer
 // --------------------------------------------------------------------------------------
-class Tr2DynamicRingBuffer: public Tr2DeviceResource
+class Tr2DynamicRingBuffer : public Tr2DeviceResource
 {
 public:
 	Tr2DynamicRingBuffer();
 	~Tr2DynamicRingBuffer();
-	
-	ALResult PutData( 
-		const void* data, 
-		uint32_t size, 
-		uint32_t& offset, 
+
+	ALResult PutData(
+		const void* data,
+		uint32_t size,
+		uint32_t& offset,
 		Tr2RenderContext& renderContext );
 	ALResult PutData(
 		const void* data,
@@ -50,6 +50,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
+
 protected:
 	virtual ALResult CreateBuffer( uint32_t size ) = 0;
 	ALResult UpdateBuffer( const void* data, uint32_t offset, uint32_t size, Tr2RenderContext& renderContext );
@@ -57,6 +58,7 @@ protected:
 
 	// Size of buffer in bytes
 	uint32_t m_bufferSize;
+
 private:
 	// Represents a continuous region in buffer used by GPU
 	struct BufferRegion
@@ -99,10 +101,11 @@ protected:
 // See Also:
 //   Tr2DynamicRingBuffer
 // --------------------------------------------------------------------------------------
-class Tr2RingVertexBuffer: public Tr2DynamicRingBuffer
+class Tr2RingVertexBuffer : public Tr2DynamicRingBuffer
 {
 public:
 	bool Create( uint32_t bufferSize );
+
 protected:
 	virtual ALResult CreateBuffer( uint32_t size );
 };
@@ -113,14 +116,16 @@ protected:
 // See Also:
 //   Tr2DynamicRingBuffer
 // --------------------------------------------------------------------------------------
-class Tr2RingIndexBuffer: public Tr2DynamicRingBuffer
+class Tr2RingIndexBuffer : public Tr2DynamicRingBuffer
 {
 public:
 	Tr2RingIndexBuffer();
 
 	bool Create( uint32_t numberOfIndices, uint32_t indexSize );
+
 protected:
 	virtual ALResult CreateBuffer( uint32_t size );
+
 private:
 	uint32_t m_indexSize;
 };

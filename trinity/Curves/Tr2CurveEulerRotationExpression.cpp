@@ -11,79 +11,79 @@ extern bool g_expressionCurveFakeRandom;
 
 namespace
 {
-	// --------------------------------------------------------------------------------
-	float Fractal( const Tr2CurveEulerRotationExpression* curve, float x, float alpha, float beta, float n )
-	{
-		return float( ( PerlinNoise1D( x + curve->GetRandomConstant(), alpha, beta, int( n + 0.5f ) ) + 1.0 ) / 2.0 );
-	}
-
-	// --------------------------------------------------------------------------------
-	float Noise( const Tr2CurveEulerRotationExpression* curve, float x )
-	{
-		return float( ( PerlinNoise1D( x + curve->GetRandomConstant(), 1.0, 1.0, 1 ) + 1.0 ) / 2.0 );
-	}
-
-	// --------------------------------------------------------------------------------
-	float RandomConstant( const Tr2CurveEulerRotationExpression* curve, float a, float b )
-	{
-		return ( ( b - a ) * curve->GetRandomConstant() ) + a;
-	}
-
-	float RandomHash( const Tr2CurveEulerRotationExpression* curve, float a, float b, float x )
-	{
-		std::seed_seq::result_type seeds[] = {
-			*reinterpret_cast<std::seed_seq::result_type*>( &x ),
-			std::seed_seq::result_type( reinterpret_cast<uint64_t>( curve ) )
-		};
-		std::seed_seq seq( std::begin( seeds ), std::end( seeds ) );
-		std::minstd_rand0 e1( seq );
-		std::uniform_real_distribution<float> d( a, b );
-		return d( e1 );
-	}
-
-	// --------------------------------------------------------------------------------
-	float Random( float a, float b )
-	{
-		if( g_expressionCurveFakeRandom )
-		{
-			return ( ( b - a ) * 0.41f ) + a;
-		}
-		return ( ( b - a ) * ( (float)rand() / RAND_MAX ) ) + a;
-	}
-
-	// --------------------------------------------------------------------------------
-	float Input( const Tr2CurveEulerRotationExpression* curve, float index )
-	{
-		return curve->GetInputValue( int32_t( index + 0.5f ) );
-	}
-
-	// --------------------------------------------------------------------------------
-	float InputAt( const Tr2CurveEulerRotationExpression* curve, float index, float time )
-	{
-		return curve->GetInputValue( int32_t( index + 0.5f ), time );
-	}
-
-	CcpParser::Function s_functions[] = {
-		CcpParser::Function( "fractal", &Fractal, 1, 0 ),
-		CcpParser::Function( "noise", &Noise, 1, 0 ),
-		CcpParser::Function( "randomConstant", &RandomConstant, 1, 0 ),
-		CcpParser::Function( "randconst", &RandomConstant, 1, 0 ),
-		CcpParser::Function( "random", &Random ),
-		CcpParser::Function( "randhash", &RandomHash, 1, 0 ),
-		CcpParser::Function( "input", &Input, 1, 0 ),
-		CcpParser::Function( "inputAt", &InputAt, 1, 0 ),
-		CcpParser::Function( "clamp", &TriClamp, CcpParser::FunctionFlags::PURE_FUNC ),
-		CcpParser::Function( "radians", &XMConvertToRadians, CcpParser::FunctionFlags::PURE_FUNC ),
-	};
-	CcpParser::Constant s_constants[] = {
-		{ "pi", 3.1415926f },
-		{ "pi2", 2.0f * 3.1415926f },
-	};
+// --------------------------------------------------------------------------------
+float Fractal( const Tr2CurveEulerRotationExpression* curve, float x, float alpha, float beta, float n )
+{
+	return float( ( PerlinNoise1D( x + curve->GetRandomConstant(), alpha, beta, int( n + 0.5f ) ) + 1.0 ) / 2.0 );
 }
 
 // --------------------------------------------------------------------------------
-Tr2CurveEulerRotationExpression::Tr2CurveEulerRotationExpression( IRoot* lockobj )
-	:PARENTLOCK( m_inputs ),
+float Noise( const Tr2CurveEulerRotationExpression* curve, float x )
+{
+	return float( ( PerlinNoise1D( x + curve->GetRandomConstant(), 1.0, 1.0, 1 ) + 1.0 ) / 2.0 );
+}
+
+// --------------------------------------------------------------------------------
+float RandomConstant( const Tr2CurveEulerRotationExpression* curve, float a, float b )
+{
+	return ( ( b - a ) * curve->GetRandomConstant() ) + a;
+}
+
+float RandomHash( const Tr2CurveEulerRotationExpression* curve, float a, float b, float x )
+{
+	std::seed_seq::result_type seeds[] = {
+		*reinterpret_cast<std::seed_seq::result_type*>( &x ),
+		std::seed_seq::result_type( reinterpret_cast<uint64_t>( curve ) )
+	};
+	std::seed_seq seq( std::begin( seeds ), std::end( seeds ) );
+	std::minstd_rand0 e1( seq );
+	std::uniform_real_distribution<float> d( a, b );
+	return d( e1 );
+}
+
+// --------------------------------------------------------------------------------
+float Random( float a, float b )
+{
+	if( g_expressionCurveFakeRandom )
+	{
+		return ( ( b - a ) * 0.41f ) + a;
+	}
+	return ( ( b - a ) * ( (float)rand() / RAND_MAX ) ) + a;
+}
+
+// --------------------------------------------------------------------------------
+float Input( const Tr2CurveEulerRotationExpression* curve, float index )
+{
+	return curve->GetInputValue( int32_t( index + 0.5f ) );
+}
+
+// --------------------------------------------------------------------------------
+float InputAt( const Tr2CurveEulerRotationExpression* curve, float index, float time )
+{
+	return curve->GetInputValue( int32_t( index + 0.5f ), time );
+}
+
+CcpParser::Function s_functions[] = {
+	CcpParser::Function( "fractal", &Fractal, 1, 0 ),
+	CcpParser::Function( "noise", &Noise, 1, 0 ),
+	CcpParser::Function( "randomConstant", &RandomConstant, 1, 0 ),
+	CcpParser::Function( "randconst", &RandomConstant, 1, 0 ),
+	CcpParser::Function( "random", &Random ),
+	CcpParser::Function( "randhash", &RandomHash, 1, 0 ),
+	CcpParser::Function( "input", &Input, 1, 0 ),
+	CcpParser::Function( "inputAt", &InputAt, 1, 0 ),
+	CcpParser::Function( "clamp", &TriClamp, CcpParser::FunctionFlags::PURE_FUNC ),
+	CcpParser::Function( "radians", &XMConvertToRadians, CcpParser::FunctionFlags::PURE_FUNC ),
+};
+CcpParser::Constant s_constants[] = {
+	{ "pi", 3.1415926f },
+	{ "pi2", 2.0f * 3.1415926f },
+};
+}
+
+// --------------------------------------------------------------------------------
+Tr2CurveEulerRotationExpression::Tr2CurveEulerRotationExpression( IRoot* lockobj ) :
+	PARENTLOCK( m_inputs ),
 	m_currentValue( 0, 0, 0, 1 ),
 	m_timeScale( 1 ),
 	m_randomConstant( float( rand() ) / RAND_MAX )
@@ -103,7 +103,6 @@ bool Tr2CurveEulerRotationExpression::Initialize()
 		}
 	}
 	return true;
-
 }
 
 // --------------------------------------------------------------------------------
@@ -130,7 +129,7 @@ Quaternion Tr2CurveEulerRotationExpression::GetValue( double time ) const
 		}
 		components[i] = m_programs[i].Eval( buffers, m_tempArena.get() );
 	}
-    return RotationQuaternion( result.x, result.y, result.z );
+	return RotationQuaternion( result.x, result.y, result.z );
 }
 
 // --------------------------------------------------------------------------------

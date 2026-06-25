@@ -16,7 +16,8 @@ enum TriStepResult
 
 class Tr2RenderContext;
 
-BLUE_CLASS( TriRenderStep ) : public IRoot
+BLUE_CLASS( TriRenderStep ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -25,10 +26,11 @@ public:
 	virtual ~TriRenderStep();
 
 	bool IsEnabled() const;
-	virtual TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext ) = 0;
+	virtual TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext ) = 0;
 
-	void BeginExecute( Tr2RenderContext& renderContext );
-	void EndExecute( Tr2RenderContext& renderContext );
+	void BeginExecute( Tr2RenderContext & renderContext );
+	void EndExecute( Tr2RenderContext & renderContext );
+
 protected:
 	bool GetCaptureGpuTime() const;
 	void SetCaptureGpuTime( bool capture );

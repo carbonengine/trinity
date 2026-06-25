@@ -10,14 +10,13 @@
 
 namespace
 {
-BlueStructureDefinition s_eveChildInstanceTransformStructureDef[] =
-	{
-		{ "scale", Be::FLOAT32_3, 0 },
-		{ "rotation", Be::FLOAT32_4, 12 },
-		{ "translation", Be::FLOAT32_3, 28 },
-		{ "boneIndex", Be::INT32_1, 40 },
-		{ 0 }
-	};
+BlueStructureDefinition s_eveChildInstanceTransformStructureDef[] = {
+	{ "scale", Be::FLOAT32_3, 0 },
+	{ "rotation", Be::FLOAT32_4, 12 },
+	{ "translation", Be::FLOAT32_3, 28 },
+	{ "boneIndex", Be::INT32_1, 40 },
+	{ 0 }
+};
 
 EveChildInstanceTransform s_defaultEveChildInstanceTransform;
 }

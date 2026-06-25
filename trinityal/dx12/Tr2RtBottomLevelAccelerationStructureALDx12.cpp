@@ -76,180 +76,180 @@ void BuildRaytracingAccelerationStructure( const D3D12_BUILD_RAYTRACING_ACCELERA
 
 namespace TrinityALImpl
 {
-	Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL()
-		:m_bufferAddress{},
-		m_geometryDesc{},
-		m_geometryFlags{},
-		m_buildFlags{},
-		m_owner( nullptr )
+Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL() :
+	m_bufferAddress{},
+	m_geometryDesc{},
+	m_geometryFlags{},
+	m_buildFlags{},
+	m_owner( nullptr )
+{
+}
+
+Tr2RtBottomLevelAccelerationStructureAL::~Tr2RtBottomLevelAccelerationStructureAL()
+{
+	Destroy();
+}
+
+ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtGeometryAL& geometry, const Tr2RtGeometryAL& capacity, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
+{
+	if( !renderContext.IsValid() || !renderContext.GetCaps().SupportsRaytracing() )
 	{
+		return E_INVALIDCALL;
+	}
+	if( !geometry.positions.IsValid() || !HasFlag( geometry.positions.m_vertexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+	{
+		return E_INVALIDARG;
+	}
+	if( !geometry.indices.IsValid() || !HasFlag( geometry.indices.m_indexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+	{
+		return E_INVALIDARG;
+	}
+	if( !renderContext.m_commandList4 )
+	{
+		return E_INVALIDCALL;
 	}
 
-	Tr2RtBottomLevelAccelerationStructureAL::~Tr2RtBottomLevelAccelerationStructureAL()
+	// gather geometry info for buffer
+	D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = CreateGeometryDesc( capacity, geometryFlags );
+
+	// size requirements for scratch and acceleration structure buffers
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS prebuildDesc = CreateInputsDesc( &geometryDesc, buildFlags );
+
+	D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo = {};
+	// do some bvh optimization and return an estimate on how big the structure will be - runs on cpu
+	renderContext.m_device5->GetRaytracingAccelerationStructurePrebuildInfo( &prebuildDesc, &preBuildInfo );
+
+	if( preBuildInfo.ResultDataMaxSizeInBytes <= 0 )
 	{
-		Destroy();
+		return E_INVALIDCALL;
 	}
 
-	ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtGeometryAL& geometry, const Tr2RtGeometryAL& capacity, Tr2RtBlasGeometryFlags::Type geometryFlags, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
+	// Create two buffers
+	// 1.	Scratch buffer which is required for intermediate computation.
+	// 2.	The result buffer which will hold the acceleration data.
+	CComPtr<ID3D12Resource> scratch;
+	CComPtr<ID3D12Resource> buffer;
+
+	auto heap = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
+
+	// Buffer sizes need to be 256-byte-aligned
+	auto scratchDesc = TrinityALImpl::BufferDesc( Align( preBuildInfo.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT ), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS );
+	CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
+		&heap,
+		D3D12_HEAP_FLAG_NONE,
+		&scratchDesc,
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+		nullptr,
+		IID_PPV_ARGS( &scratch ) ) );
+
+	// for no compaction we use ResultDataMaxSizeInBytes
+	auto bufferDesc = TrinityALImpl::BufferDesc( Align( preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT ), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS );
+	CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
+		&heap,
+		D3D12_HEAP_FLAG_NONE,
+		&bufferDesc,
+		D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
+		nullptr,
+		IID_PPV_ARGS( &buffer ) ) );
+
+	geometryDesc = CreateGeometryDesc( geometry, geometryFlags );
+
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
+	desc.Inputs = prebuildDesc;
+	desc.ScratchAccelerationStructureData = scratch->GetGPUVirtualAddress();
+	desc.DestAccelerationStructureData = buffer->GetGPUVirtualAddress();
+
+	BuildRaytracingAccelerationStructure( desc, geometry, renderContext );
+
+	m_buffer = buffer;
+	m_owner = &renderContext;
+	m_geometryDesc = geometryDesc;
+	m_geometryFlags = geometryFlags;
+	m_buildFlags = buildFlags;
+	if( ( buildFlags & Tr2RtBuildFlags::ALLOW_UPDATE ) != 0 )
 	{
-		if( !renderContext.IsValid() || !renderContext.GetCaps().SupportsRaytracing() )
-		{
-			return E_INVALIDCALL;
-		}
-		if( !geometry.positions.IsValid() || !HasFlag( geometry.positions.m_vertexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
-		{
-			return E_INVALIDARG;
-		}
-		if( !geometry.indices.IsValid() || !HasFlag( geometry.indices.m_indexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
-		{
-			return E_INVALIDARG;
-		}
-		if( !renderContext.m_commandList4 )
-		{
-			return E_INVALIDCALL;
-		}
-		
-		// gather geometry info for buffer
-		D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = CreateGeometryDesc( capacity, geometryFlags );
-		
-		// size requirements for scratch and acceleration structure buffers
-		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS prebuildDesc = CreateInputsDesc( &geometryDesc, buildFlags );
+		m_scratch = scratch;
+	}
+	else
+	{
+		renderContext.ReleaseLater( scratch );
+	}
+	m_bufferAddress = m_buffer->GetGPUVirtualAddress();
+
+	return S_OK;
+}
+
+ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext )
+{
+	if( !m_scratch || !m_buffer )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !renderContext.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+	if( !renderContext.m_commandList4 )
+	{
+		return E_INVALIDCALL;
+	}
+
+	bool rebuild = false;
+
+	D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = CreateGeometryDesc( geometry, m_geometryFlags );
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = CreateInputsDesc( &geometryDesc, m_buildFlags );
+
+	if( m_geometryDesc.Triangles.VertexBuffer.StrideInBytes != geometryDesc.Triangles.VertexBuffer.StrideInBytes ||
+		m_geometryDesc.Triangles.VertexCount != geometryDesc.Triangles.VertexCount ||
+		m_geometryDesc.Triangles.VertexFormat != geometryDesc.Triangles.VertexFormat ||
+		m_geometryDesc.Triangles.IndexFormat != geometryDesc.Triangles.IndexFormat ||
+		m_geometryDesc.Triangles.IndexCount != geometryDesc.Triangles.IndexCount )
+	{
 
 		D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo = {};
-		// do some bvh optimization and return an estimate on how big the structure will be - runs on cpu
-		renderContext.m_device5->GetRaytracingAccelerationStructurePrebuildInfo( &prebuildDesc, &preBuildInfo );
+		renderContext.GetPrimaryRenderContext().m_device5->GetRaytracingAccelerationStructurePrebuildInfo( &inputs, &preBuildInfo );
 
-		if( preBuildInfo.ResultDataMaxSizeInBytes <= 0 )
-		{
-			return E_INVALIDCALL;
-		}
-
-		// Create two buffers 
-		// 1.	Scratch buffer which is required for intermediate computation.
-		// 2.	The result buffer which will hold the acceleration data.
-		CComPtr<ID3D12Resource> scratch;
-		CComPtr<ID3D12Resource> buffer;
-		
-		auto heap = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
-
-		// Buffer sizes need to be 256-byte-aligned
-		auto scratchDesc = TrinityALImpl::BufferDesc( Align( preBuildInfo.ScratchDataSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT ), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS );
-		CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
-			&heap,
-			D3D12_HEAP_FLAG_NONE,
-			&scratchDesc,
-			D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-			nullptr,
-			IID_PPV_ARGS( &scratch ) ) );
-
-		// for no compaction we use ResultDataMaxSizeInBytes
-		auto bufferDesc = TrinityALImpl::BufferDesc( Align( preBuildInfo.ResultDataMaxSizeInBytes, D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BYTE_ALIGNMENT ), D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS );
-		CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
-			&heap,
-			D3D12_HEAP_FLAG_NONE,
-			&bufferDesc,
-			D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE,
-			nullptr,
-			IID_PPV_ARGS( &buffer ) ) );
-
-		geometryDesc = CreateGeometryDesc( geometry, geometryFlags );
-
-		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
-		desc.Inputs = prebuildDesc;
-		desc.ScratchAccelerationStructureData = scratch->GetGPUVirtualAddress();
-		desc.DestAccelerationStructureData = buffer->GetGPUVirtualAddress();
-
-		BuildRaytracingAccelerationStructure( desc, geometry, renderContext );
-
-		m_buffer = buffer;
-		m_owner = &renderContext;
-		m_geometryDesc = geometryDesc;
-		m_geometryFlags = geometryFlags;
-		m_buildFlags = buildFlags;
-		if( (buildFlags & Tr2RtBuildFlags::ALLOW_UPDATE) != 0 )
-		{
-			m_scratch = scratch;
-		}
-		else
-		{
-			renderContext.ReleaseLater( scratch );
-		}
-		m_bufferAddress = m_buffer->GetGPUVirtualAddress();
-
-		return S_OK;
-	}
-
-	ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtGeometryAL& geometry, Tr2RenderContextAL& renderContext )
-	{
-		if( !m_scratch || !m_buffer )
-		{
-			return E_INVALIDCALL;
-		}
-		if( !renderContext.IsValid() )
+		if( preBuildInfo.ResultDataMaxSizeInBytes <= 0 || preBuildInfo.ScratchDataSizeInBytes > m_scratch->GetDesc().Width || preBuildInfo.ResultDataMaxSizeInBytes > m_buffer->GetDesc().Width )
 		{
 			return E_INVALIDARG;
 		}
-		if( !renderContext.m_commandList4 )
-		{
-			return E_INVALIDCALL;
-		}
+		rebuild = true;
+	}
+	m_geometryDesc = geometryDesc;
 
-		bool rebuild = false;
-
-		D3D12_RAYTRACING_GEOMETRY_DESC geometryDesc = CreateGeometryDesc( geometry, m_geometryFlags );
-		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS inputs = CreateInputsDesc( &geometryDesc, m_buildFlags );
-
-		if( m_geometryDesc.Triangles.VertexBuffer.StrideInBytes != geometryDesc.Triangles.VertexBuffer.StrideInBytes ||
-			m_geometryDesc.Triangles.VertexCount != geometryDesc.Triangles.VertexCount ||
-			m_geometryDesc.Triangles.VertexFormat != geometryDesc.Triangles.VertexFormat ||
-			m_geometryDesc.Triangles.IndexFormat != geometryDesc.Triangles.IndexFormat ||
-			m_geometryDesc.Triangles.IndexCount != geometryDesc.Triangles.IndexCount )
-		{
-
-			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO preBuildInfo = {};
-			renderContext.GetPrimaryRenderContext().m_device5->GetRaytracingAccelerationStructurePrebuildInfo( &inputs, &preBuildInfo );
-			
-			if( preBuildInfo.ResultDataMaxSizeInBytes <= 0 || preBuildInfo.ScratchDataSizeInBytes > m_scratch->GetDesc().Width || preBuildInfo.ResultDataMaxSizeInBytes > m_buffer->GetDesc().Width )
-			{
-				return E_INVALIDARG;
-			}
-			rebuild = true;
-		}
-		m_geometryDesc = geometryDesc;
-
-		if( !rebuild )
-		{
-			inputs.Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
-		}
-
-		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
-		desc.Inputs = inputs;
-		desc.SourceAccelerationStructureData = rebuild ? 0 : m_buffer->GetGPUVirtualAddress(); //  If this address is the same as DestAccelerationStructureData, the update is to be performed in-place.
-		desc.ScratchAccelerationStructureData = m_scratch->GetGPUVirtualAddress();
-		desc.DestAccelerationStructureData = m_buffer->GetGPUVirtualAddress();
-
-		BuildRaytracingAccelerationStructure( desc, geometry, renderContext );
-
-		return S_OK;
+	if( !rebuild )
+	{
+		inputs.Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
 	}
 
-	ALResult Tr2RtBottomLevelAccelerationStructureAL::CompactBlas( Tr2PrimaryRenderContextAL& renderContext )
-	{
-		/**************** COMPACTION ****************/
+	D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
+	desc.Inputs = inputs;
+	desc.SourceAccelerationStructureData = rebuild ? 0 : m_buffer->GetGPUVirtualAddress(); //  If this address is the same as DestAccelerationStructureData, the update is to be performed in-place.
+	desc.ScratchAccelerationStructureData = m_scratch->GetGPUVirtualAddress();
+	desc.DestAccelerationStructureData = m_buffer->GetGPUVirtualAddress();
 
-		// full compaction:
-		// for each acceleration structure
-		// 
-		//	    BuildRaytracingAccelerationStructure to (tempBuffer + tempOffset )
-		//      tempOffset += _PREBUILD_INFO.ResultDataMaxSizeInBytes
-		//  wait for builds to finish executing
-		//  maybe even do some rendering
-		// 
-		// For each acceleration structure
-		//       CopyRayTracingAccelerationStructure(buffer + bufferOffset, 
-		//											tempBufferLocation, _ACCELERATION_STRUCTURE_COPY_MODE_COMPACT);
-		//	    bufferOffset += _POSTBUILD_INFO_COMPACTED_SIZE
-		/*
+	BuildRaytracingAccelerationStructure( desc, geometry, renderContext );
+
+	return S_OK;
+}
+
+ALResult Tr2RtBottomLevelAccelerationStructureAL::CompactBlas( Tr2PrimaryRenderContextAL& renderContext )
+{
+	/**************** COMPACTION ****************/
+
+	// full compaction:
+	// for each acceleration structure
+	//
+	//	    BuildRaytracingAccelerationStructure to (tempBuffer + tempOffset )
+	//      tempOffset += _PREBUILD_INFO.ResultDataMaxSizeInBytes
+	//  wait for builds to finish executing
+	//  maybe even do some rendering
+	//
+	// For each acceleration structure
+	//       CopyRayTracingAccelerationStructure(buffer + bufferOffset,
+	//											tempBufferLocation, _ACCELERATION_STRUCTURE_COPY_MODE_COMPACT);
+	//	    bufferOffset += _POSTBUILD_INFO_COMPACTED_SIZE
+	/*
 		D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_DESC postBuildDesc = {};
 		postBuildDesc.InfoType = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_POSTBUILD_INFO_COMPACTED_SIZE;
 
@@ -278,50 +278,49 @@ namespace TrinityALImpl
 
 		m_buffer = finalBuffer;*/
 
-		return S_OK;
-		
-	}
+	return S_OK;
+}
 
-	void Tr2RtBottomLevelAccelerationStructureAL::Destroy()
+void Tr2RtBottomLevelAccelerationStructureAL::Destroy()
+{
+	if( m_owner )
 	{
-		if( m_owner )
+		RELEASE_LATER( m_owner, m_buffer );
+		if( m_scratch )
 		{
-			RELEASE_LATER( m_owner, m_buffer );
-			if( m_scratch )
-			{
-				RELEASE_LATER( m_owner, m_scratch );
-			}
-			m_scratch = nullptr;
-			m_buffer = nullptr;
-			m_bufferAddress = {};
-			m_geometryDesc = {};
-			m_owner = nullptr;
+			RELEASE_LATER( m_owner, m_scratch );
 		}
+		m_scratch = nullptr;
+		m_buffer = nullptr;
+		m_bufferAddress = {};
+		m_geometryDesc = {};
+		m_owner = nullptr;
 	}
+}
 
-	bool Tr2RtBottomLevelAccelerationStructureAL::IsValid() const
-	{
-		return m_buffer != nullptr;
-	}
+bool Tr2RtBottomLevelAccelerationStructureAL::IsValid() const
+{
+	return m_buffer != nullptr;
+}
 
-	ID3D12Resource* Tr2RtBottomLevelAccelerationStructureAL::GetBuffer() const
-	{
-		return m_buffer;
-	}
+ID3D12Resource* Tr2RtBottomLevelAccelerationStructureAL::GetBuffer() const
+{
+	return m_buffer;
+}
 
-	D3D12_GPU_VIRTUAL_ADDRESS Tr2RtBottomLevelAccelerationStructureAL::GetGPUVirtualAddress() const
-	{
-		return m_bufferAddress;
-	}
+D3D12_GPU_VIRTUAL_ADDRESS Tr2RtBottomLevelAccelerationStructureAL::GetGPUVirtualAddress() const
+{
+	return m_bufferAddress;
+}
 
-	Tr2ALMemoryType Tr2RtBottomLevelAccelerationStructureAL::GetMemoryClass() const
-	{
-		return AL_MEMORY_MANAGED;
-	}
+Tr2ALMemoryType Tr2RtBottomLevelAccelerationStructureAL::GetMemoryClass() const
+{
+	return AL_MEMORY_MANAGED;
+}
 
-	void Tr2RtBottomLevelAccelerationStructureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
-	{
-		description["type"] = "Tr2RtBottomLevelAccelerationStructureAL";
-	}
+void Tr2RtBottomLevelAccelerationStructureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+{
+	description["type"] = "Tr2RtBottomLevelAccelerationStructureAL";
+}
 }
 #endif

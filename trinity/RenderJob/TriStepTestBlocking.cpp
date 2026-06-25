@@ -6,10 +6,9 @@
 TriStepTestBlocking::TriStepTestBlocking( IRoot* lockobj ) :
 	m_inProgress( true )
 {
-
 }
 
-TriStepTestBlocking::~TriStepTestBlocking(void)
+TriStepTestBlocking::~TriStepTestBlocking( void )
 {
 }
 

@@ -5,7 +5,7 @@
 #include "Tr2Renderer.h"
 #include "EveChildModifierTransformCommon.h"
 
-EveChildModifierBillboard3D::EveChildModifierBillboard3D( IRoot* lockobj ):
+EveChildModifierBillboard3D::EveChildModifierBillboard3D( IRoot* lockobj ) :
 	m_fixed( false )
 {
 }

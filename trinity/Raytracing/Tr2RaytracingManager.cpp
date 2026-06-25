@@ -10,25 +10,25 @@
 
 namespace
 {
-	// for shadow scene
-	struct ShadowPerFrameData
-	{
-		Matrix projectionInverse;
-		Matrix viewInverse;
+// for shadow scene
+struct ShadowPerFrameData
+{
+	Matrix projectionInverse;
+	Matrix viewInverse;
 
-		Vector3 sunDirection;
-		float sunAngle;
+	Vector3 sunDirection;
+	float sunAngle;
 
-		CcpMath::Sphere planets[2];
+	CcpMath::Sphere planets[2];
 
-		Vector2 resolution;
-		uint32_t frameIndex;
-	};
+	Vector2 resolution;
+	uint32_t frameIndex;
+};
 
-	const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
-	const BlueSharedString RtShadowMapTechniqueName = BlueSharedString( "RtShadowShadowDest" );
-	const BlueSharedString NormalBufferTechniqueName = BlueSharedString( "RtShadowNormalBuffer" );
-	const BlueSharedString RtSceneTechniqueName = BlueSharedString( "RtShadowScene" );
+const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
+const BlueSharedString RtShadowMapTechniqueName = BlueSharedString( "RtShadowShadowDest" );
+const BlueSharedString NormalBufferTechniqueName = BlueSharedString( "RtShadowNormalBuffer" );
+const BlueSharedString RtSceneTechniqueName = BlueSharedString( "RtShadowScene" );
 }
 
 //***********************************************************
@@ -77,13 +77,13 @@ void Tr2RaytracingManager::ReleaseResources( TriStorage s )
 	}
 }
 
-Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows( 
-	const Tr2TextureAL& depth, 
-	const Tr2TextureAL& normal, 
-	const Vector3& sunDirection, 
-	const CcpMath::Sphere* planets, 
-	size_t planetCount, 
-	float upscaling, 
+Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows(
+	const Tr2TextureAL& depth,
+	const Tr2TextureAL& normal,
+	const Vector3& sunDirection,
+	const CcpMath::Sphere* planets,
+	size_t planetCount,
+	float upscaling,
 	Tr2GpuResourcePool& gpuResourcePool,
 	Tr2RenderContext& renderContext )
 {
@@ -141,7 +141,7 @@ Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows(
 
 	{
 		ShadowPerFrameData* data;
-		m_shadowPerFrameData.Lock( reinterpret_cast<void**>(&data), renderContext );
+		m_shadowPerFrameData.Lock( reinterpret_cast<void**>( &data ), renderContext );
 		data->projectionInverse = Transpose( Inverse( Tr2Renderer::GetReversedDepthProjectionTransform() ) );
 		data->viewInverse = Transpose( Tr2Renderer::GetInverseViewTransform() );
 
@@ -176,7 +176,7 @@ Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows(
 			renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, m_geometry->GetBindlessResources() );
 		}
 
-        renderContext.UseAccelerationStructure( m_geometry->GetTLAS() );
+		renderContext.UseAccelerationStructure( m_geometry->GetTLAS() );
 		renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destination->GetWidth(), destination->GetHeight(), 1 );
 	}
 	if( m_denoiser && m_applyDenoiser )

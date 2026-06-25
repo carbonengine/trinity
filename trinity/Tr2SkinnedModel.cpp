@@ -10,13 +10,13 @@
 
 static const unsigned int NO_SKELETON = 0xffffffff;
 
-Tr2SkinnedModel::Tr2SkinnedModel( IRoot* lockobj ) : 
+Tr2SkinnedModel::Tr2SkinnedModel( IRoot* lockobj ) :
 	Tr2Model( lockobj ),
 	m_areAllMeshesBound( false ),
 	m_skeletonIx( NO_SKELETON ),
 	m_skinScale( 1.f, 1.f, 1.f ),
-    m_pBoneList( NULL ),
-    m_numBones( 0 )
+	m_pBoneList( NULL ),
+	m_numBones( 0 )
 {
 }
 
@@ -103,9 +103,9 @@ void Tr2SkinnedModel::GetBatchesForArea( Tr2MeshAreaVector* areas, Tr2Mesh* mesh
 	}
 }
 
-void Tr2SkinnedModel::GetBatches( ITriRenderBatchAccumulator* batches, 
-								  TriBatchType batchType, 
-								  const Matrix& m, 
+void Tr2SkinnedModel::GetBatches( ITriRenderBatchAccumulator* batches,
+								  TriBatchType batchType,
+								  const Matrix& m,
 								  const Tr2PerObjectData* data )
 {
 	Matrix* pm = batches->Allocate<Matrix>();
@@ -131,7 +131,6 @@ void Tr2SkinnedModel::GetBatches( ITriRenderBatchAccumulator* batches,
 			}
 		}
 	}
-
 }
 
 bool Tr2SkinnedModel::HasTransparency() const
@@ -161,7 +160,7 @@ bool Tr2SkinnedModel::GetBoundingBox( Vector3& min, Vector3& max )
 	return Tr2Model::GetBoundingBox( min, max );
 }
 
-void Tr2SkinnedModel::BindToRig(  const std::string* boneList, const int numBones, bool forceRebind )
+void Tr2SkinnedModel::BindToRig( const std::string* boneList, const int numBones, bool forceRebind )
 {
 	if( !forceRebind && ( boneList == m_pBoneList ) && m_areAllMeshesBound )
 	{
@@ -182,12 +181,12 @@ void Tr2SkinnedModel::BindToRig(  const std::string* boneList, const int numBone
 
 	TriGeometryResSkeletonData* skel = m_geometryRes->GetSkeletonData( m_skeletonIx );
 
-	forceRebind |= !m_areAllMeshesBound;	// if a reset was requested, make sure every mesh honors that
+	forceRebind |= !m_areAllMeshesBound; // if a reset was requested, make sure every mesh honors that
 	m_areAllMeshesBound = true;
 	for( PTr2MeshVector::const_iterator meshIt = m_meshes.begin(); meshIt != m_meshes.end(); ++meshIt )
 	{
 		Tr2Mesh* mesh = *meshIt;
-		if( !mesh->BindToRig(  boneList, numBones, skel, forceRebind ) )
+		if( !mesh->BindToRig( boneList, numBones, skel, forceRebind ) )
 		{
 			m_areAllMeshesBound = false;
 		}

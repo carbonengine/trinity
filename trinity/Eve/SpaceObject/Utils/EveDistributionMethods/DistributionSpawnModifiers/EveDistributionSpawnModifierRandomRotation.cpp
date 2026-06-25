@@ -8,7 +8,7 @@
 
 static const Vector3 Y_AXIS( 0.0f, 1.0f, 0.0f );
 
-EveDistributionSpawnModifierRandomRotation::EveDistributionSpawnModifierRandomRotation( IRoot* lockobj ):
+EveDistributionSpawnModifierRandomRotation::EveDistributionSpawnModifierRandomRotation( IRoot* lockobj ) :
 	m_consistentRandom( false ),
 	m_overrideRotation( false ),
 	m_minRotation( 0.f, 0.f, 0.f ),
@@ -53,4 +53,3 @@ void EveDistributionSpawnModifierRandomRotation::ProcessSpawnModifier( Placement
 		placement.initialRotation = rotation * placement.initialRotation;
 	}
 }
-

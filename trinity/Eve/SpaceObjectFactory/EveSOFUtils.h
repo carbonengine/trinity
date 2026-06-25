@@ -26,7 +26,7 @@ public:
 
 	// substitute
 	void ChangeMaterialIdx( const EveSOFDataMgr::GenericData* genericData, int32_t idx );
-	
+
 private:
 	// direct copy of the original name
 	std::string m_fullname;

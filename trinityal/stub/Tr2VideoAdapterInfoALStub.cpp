@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if( TRINITY_PLATFORM==TRINITY_STUB )
+#if ( TRINITY_PLATFORM == TRINITY_STUB )
 
 #include "Tr2VideoAdapterInfoALStub.h"
 #include "Tr2AdapterStructures.h"
@@ -17,29 +17,29 @@ ALResult Tr2VideoAdapterInfo::GetAdapterCount( unsigned& count )
 
 bool GetDeviceId( uint32_t& deviceId )
 {
-    deviceId = 0;
-    return true;
+	deviceId = 0;
+	return true;
 }
 
 ALResult Tr2VideoAdapterInfo::GetAdapterInfo( unsigned,
 											  Tr2AdapterInfo& info )
 {
-	
-	
-	
+
+
+
 	info.driver = "stub";
 	info.description = L"Not an actual adapter.";
 	info.deviceName = "stub";
 	info.driverVersion = 2533352100662421;
 	info.vendorID = 0;
-	GetDeviceId(info.deviceID);
+	GetDeviceId( info.deviceID );
 	info.subSystemID = 0;
 	info.revision = 163;
 	AdapterGuid id;
 	id.data1 = 0;
 	id.data2 = 0;
 	id.data3 = 0;
-	for( int i = 0; i < 8; i++)
+	for( int i = 0; i < 8; i++ )
 	{
 		id.data4[i] = 0;
 	}
@@ -86,7 +86,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned,
 	mode.scaling = DISPLAY_SCALING_UNSPECIFIED;
 	mode.scanlineOrdering = SCANLINE_ORDER_UNSPECIFIED;
 	mode.width = 1920;
-	
+
 	return S_OK;
 }
 

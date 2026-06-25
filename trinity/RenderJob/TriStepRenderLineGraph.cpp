@@ -6,12 +6,12 @@
 #include "Tr2Renderer.h"
 
 TriStepRenderLineGraph::TriStepRenderLineGraph( IRoot* lockobj ) :
-PARENTLOCK( m_lineGraphs ),
-m_autoScale( true ),
-m_showLegend( true ),
-m_maxLegend( 1e12f ),
-m_scale( 1.0f ),
-m_legendScale( 1.0f )
+	PARENTLOCK( m_lineGraphs ),
+	m_autoScale( true ),
+	m_showLegend( true ),
+	m_maxLegend( 1e12f ),
+	m_scale( 1.0f ),
+	m_legendScale( 1.0f )
 {
 }
 
@@ -21,10 +21,10 @@ TriStepRenderLineGraph::~TriStepRenderLineGraph()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
-void TriStepRenderLineGraph::py__init__( 
-	const std::vector<Tr2LineGraph*>& graphs, 
+void TriStepRenderLineGraph::py__init__(
+	const std::vector<Tr2LineGraph*>& graphs,
 	Be::Optional<float> legendScale,
 	Be::Optional<float> scale,
 	Be::Optional<bool> autoScale )
@@ -127,13 +127,13 @@ TriStepResult TriStepRenderLineGraph::Execute( Be::Time realTime, Be::Time simTi
 
 		Tr2Viewport viewport;
 		renderContext.GetViewport( viewport );
-		
+
 		const int kNumLabels = 5;
 		x = (unsigned)viewport.m_width - 20;
-		int step = ((unsigned)viewport.m_height - 10) / (kNumLabels - 1);
+		int step = ( (unsigned)viewport.m_height - 10 ) / ( kNumLabels - 1 );
 		y = (unsigned)viewport.m_height - 10;
 		float label = 0.0f;
-		float labelStep = 1.0f / (float)(kNumLabels - 1);
+		float labelStep = 1.0f / (float)( kNumLabels - 1 );
 		for( int i = 0; i < kNumLabels; ++i )
 		{
 			float labelValue = label / m_scale * m_legendScale + 0.5f;
@@ -141,9 +141,8 @@ TriStepResult TriStepRenderLineGraph::Execute( Be::Time realTime, Be::Time simTi
 			Tr2Renderer::PrintfImmediate( renderContext, x, y, 0xffffffff, TRI_DFS_RIGHT, "%d", intLabelValue );
 			label += labelStep;
 			y -= step;
-		}	
+		}
 	}
 
 	return RS_OK;
 }
-

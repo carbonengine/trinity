@@ -35,8 +35,7 @@ const Be::ClassInfo* Tr2CurveCombiner::ExposeToBlue()
 			"GetValueAt",
 			GetValue,
 			"Returns curve value at specified time\n"
-			":param time: input time"
-		)
+			":param time: input time" )
 
 	EXPOSURE_END()
 }

@@ -8,8 +8,8 @@
 // Description:
 //   TriStepClearUav default constructor
 // --------------------------------------------------------------------------------------
-TriStepClearUav::TriStepClearUav( IRoot* lockobj )
-	:m_clearWithFloat( false ),
+TriStepClearUav::TriStepClearUav( IRoot* lockobj ) :
+	m_clearWithFloat( false ),
 	m_floatValue( 0.f, 0.f, 0.f, 0.f )
 {
 	std::fill( std::begin( m_uintValue ), std::end( m_uintValue ), 0 );
@@ -17,7 +17,7 @@ TriStepClearUav::TriStepClearUav( IRoot* lockobj )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements TriRenderStep. Clears writeable buffer with a set value.  
+//   Implements TriRenderStep. Clears writeable buffer with a set value.
 // Arguments:
 //   time - Current time
 //   renderContext - Current render context

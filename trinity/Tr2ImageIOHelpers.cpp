@@ -9,9 +9,7 @@ using namespace Tr2RenderContextEnum;
 namespace
 {
 
-bool CreateCubeTexture(	ImageIO::HostBitmap& bitmap, Tr2TextureAL &out, 
-											uint32_t &memoryUse, 
-											Tr2PrimaryRenderContext& renderContext )
+bool CreateCubeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t& memoryUse, Tr2PrimaryRenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -21,17 +19,17 @@ bool CreateCubeTexture(	ImageIO::HostBitmap& bitmap, Tr2TextureAL &out,
 	}
 
 	const unsigned trueMipLevelCount = bitmap.GetTrueMipCount();
-	
+
 	std::vector<Tr2SubresourceData> initData;
 
-	for( unsigned face = 0; face != 6 ; ++face )
-	{		
+	for( unsigned face = 0; face != 6; ++face )
+	{
 		for( unsigned i = 0; i != trueMipLevelCount; ++i )
 		{
 			Tr2SubresourceData srd;
-			srd.m_sysMem			= const_cast<char*>( bitmap.GetMipRawData( i, CubemapFace( face ) ) );
-			srd.m_sysMemSlicePitch	= bitmap.GetMipSize( i );
-			srd.m_sysMemPitch		= bitmap.GetMipPitch( i );	
+			srd.m_sysMem = const_cast<char*>( bitmap.GetMipRawData( i, CubemapFace( face ) ) );
+			srd.m_sysMemSlicePitch = bitmap.GetMipSize( i );
+			srd.m_sysMemPitch = bitmap.GetMipPitch( i );
 
 			if( !srd.m_sysMem )
 			{
@@ -44,13 +42,10 @@ bool CreateCubeTexture(	ImageIO::HostBitmap& bitmap, Tr2TextureAL &out,
 		}
 	}
 
-	return !FAILED( out.Create( bitmap, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, &initData[0], renderContext )
-	);
+	return !FAILED( out.Create( bitmap, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, &initData[0], renderContext ) );
 }
 
-bool CreateVolumeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL &out, 
-											uint32_t &memoryUse, 
-											Tr2PrimaryRenderContext &renderContext )
+bool CreateVolumeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t& memoryUse, Tr2PrimaryRenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -72,9 +67,9 @@ bool CreateVolumeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL &out,
 	{
 		Tr2SubresourceData srd;
 
-		srd.m_sysMem			= const_cast<char*>( bitmap.GetMipRawData( i ) );
-		srd.m_sysMemSlicePitch	= bitmap.GetMipSize( i ) / std::max( bitmap.GetMipDepth( i ), 1u );
-		srd.m_sysMemPitch		= bitmap.GetMipPitch( i );	
+		srd.m_sysMem = const_cast<char*>( bitmap.GetMipRawData( i ) );
+		srd.m_sysMemSlicePitch = bitmap.GetMipSize( i ) / std::max( bitmap.GetMipDepth( i ), 1u );
+		srd.m_sysMemPitch = bitmap.GetMipPitch( i );
 
 		if( !srd.m_sysMem )
 		{
@@ -96,10 +91,7 @@ bool CreateVolumeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL &out,
 
 namespace Tr2ImageIOHelpers
 {
-bool Create2DTexture(	ImageIO::HostBitmap& bitmap, Tr2TextureAL &out, 
-										uint32_t &memoryUse, 
-										Tr2PrimaryRenderContext &renderContext, 
-										Tr2RenderContextEnum::BufferUsage usage ) 
+bool Create2DTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t& memoryUse, Tr2PrimaryRenderContext& renderContext, Tr2RenderContextEnum::BufferUsage usage )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -120,9 +112,9 @@ bool Create2DTexture(	ImageIO::HostBitmap& bitmap, Tr2TextureAL &out,
 		{
 			Tr2SubresourceData& srd = initData[i + j * trueMipLevelCount];
 
-			srd.m_sysMem			= const_cast<char*>( bitmap.GetMipRawData( i, j ) );
-			srd.m_sysMemSlicePitch	= bitmap.GetMipSize( i );
-			srd.m_sysMemPitch		= bitmap.GetMipPitch( i );	
+			srd.m_sysMem = const_cast<char*>( bitmap.GetMipRawData( i, j ) );
+			srd.m_sysMemSlicePitch = bitmap.GetMipSize( i );
+			srd.m_sysMemPitch = bitmap.GetMipPitch( i );
 
 			if( !srd.m_sysMem )
 			{
@@ -133,14 +125,10 @@ bool Create2DTexture(	ImageIO::HostBitmap& bitmap, Tr2TextureAL &out,
 		}
 	}
 
-	return !FAILED( out.Create( bitmap, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, &initData[0], renderContext )
-	);
+	return !FAILED( out.Create( bitmap, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, &initData[0], renderContext ) );
 }
 
-bool CreateTexture(	ImageIO::HostBitmap& bitmap, Tr2TextureAL &out, 
-										uint32_t &memoryUse, 
-										Tr2PrimaryRenderContext &renderContext, 
-										Tr2RenderContextEnum::BufferUsage usage )
+bool CreateTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t& memoryUse, Tr2PrimaryRenderContext& renderContext, Tr2RenderContextEnum::BufferUsage usage )
 {
 	if( !bitmap.IsValid() )
 	{
@@ -191,7 +179,7 @@ bool CopyToTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& texture, unsigned
 		{
 			CCP_LOGERR( "Tr2ImageHandler::CopyToTexture - UpdateSubresource failed [no margin]: %08x", result.GetResult() );
 		}
-		return SUCCEEDED(result);
+		return SUCCEEDED( result );
 	}
 
 	// Can't expect the Hal to support updating a subresource with automatic replication of border pixels, so do this ourselves in a chunk
@@ -206,16 +194,17 @@ bool CopyToTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& texture, unsigned
 	{
 		CCP_LOGERR( "Tr2ImageHandler::CopyToTexture - UpdateSubresource failed [margin]: %08x", result.GetResult() );
 	}
-	return SUCCEEDED(result);
+	return SUCCEEDED( result );
 }
 
 
-void AddMargin(	const Tr2RenderContextEnum::PixelFormat format,
+void AddMargin( const Tr2RenderContextEnum::PixelFormat format,
 				const unsigned char* source,
-				const unsigned width, const unsigned height,
+				const unsigned width,
+				const unsigned height,
 				const unsigned margin,
-				std::vector<unsigned char> &output, 
-				unsigned &outputPitch )
+				std::vector<unsigned char>& output,
+				unsigned& outputPitch )
 {
 	const unsigned char* src = source;
 
@@ -224,16 +213,16 @@ void AddMargin(	const Tr2RenderContextEnum::PixelFormat format,
 		const unsigned blockByteSize = Tr2RenderContextEnum::GetBlockByteSize( format );
 		const unsigned blockPixelSize = 4;
 		CCP_ASSERT( blockByteSize != 0 && margin % blockPixelSize == 0 );
-		const unsigned blockMargin	= margin	/ blockPixelSize;
-		const unsigned blocksX		= width		/ blockPixelSize;
-		const unsigned blocksY		= height	/ blockPixelSize;
+		const unsigned blockMargin = margin / blockPixelSize;
+		const unsigned blocksX = width / blockPixelSize;
+		const unsigned blocksY = height / blockPixelSize;
 
 		//technically the block contents need to be mirrored in the margin to get nice filtering,
 		// but that's somewhat fiddly.
 		//textures which are intended to be used in a tiled fashion could also use the block from
 		// the opposite edge.
 		//maybe we need a usage hint here to inform this decision.
-		
+
 		outputPitch = ( blocksX + 2 * blockMargin ) * blockByteSize;
 		output.resize( ( blockMargin + blocksY + blockMargin ) * outputPitch );
 		unsigned char* dst = &output[0];
@@ -246,24 +235,24 @@ void AddMargin(	const Tr2RenderContextEnum::PixelFormat format,
 		}
 
 		// Have to copy one line at a time since the target area is not linearly laid out.
-		
+
 		for( unsigned line = 0; line < height; line += blockPixelSize )
 		{
 			//left margin
-			for( unsigned i = 0; i != blockMargin; ++i ) 
+			for( unsigned i = 0; i != blockMargin; ++i )
 			{
 				memcpy( dst + i * blockByteSize, src, blockByteSize );
 			}
-			
+
 			memcpy( dst + blockMargin * blockByteSize, src, blocksX * blockByteSize );
-			
+
 			//right margin
-			for( unsigned i = 0; i != blockMargin; ++i ) 
+			for( unsigned i = 0; i != blockMargin; ++i )
 			{
-				memcpy( dst + (blocksX+blockMargin+i) * blockByteSize, src + (blocksX-1) * blockByteSize, blockByteSize );
+				memcpy( dst + ( blocksX + blockMargin + i ) * blockByteSize, src + ( blocksX - 1 ) * blockByteSize, blockByteSize );
 			}
 
-			if( line < height-1 )
+			if( line < height - 1 )
 			{
 				src += blocksX * blockByteSize;
 			}
@@ -284,7 +273,7 @@ void AddMargin(	const Tr2RenderContextEnum::PixelFormat format,
 		const unsigned byteCount = GetBytesPerPixel( format );
 
 		// Align srcPitch to 4 bytes.
-		unsigned int srcPitch = 4 * ((width * byteCount + 3) / 4);
+		unsigned int srcPitch = 4 * ( ( width * byteCount + 3 ) / 4 );
 
 		outputPitch = ( width + 2 * margin ) * byteCount;
 
@@ -304,20 +293,20 @@ void AddMargin(	const Tr2RenderContextEnum::PixelFormat format,
 		for( unsigned line = 0; line != height; ++line )
 		{
 			//left margin
-			for( unsigned i = 0; i != margin; ++i ) 
+			for( unsigned i = 0; i != margin; ++i )
 			{
 				memcpy( dst + i * byteCount, src, byteCount );
 			}
 
 			memcpy( dst + margin * byteCount, src, width * byteCount );
-			
+
 			//right margin
-			for( unsigned i = 0; i != margin; ++i ) 
+			for( unsigned i = 0; i != margin; ++i )
 			{
-				memcpy( dst + ( width + margin + i ) * byteCount, src + ( width-1 ) * byteCount, byteCount );
+				memcpy( dst + ( width + margin + i ) * byteCount, src + ( width - 1 ) * byteCount, byteCount );
 			}
 
-			if( line < height-1 )
+			if( line < height - 1 )
 			{
 				src += srcPitch;
 			}

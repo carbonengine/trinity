@@ -15,6 +15,4 @@ const Be::ClassInfo* Tr2PPGodRaysEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "noiseTexturePath", m_noiseTexturePath, "The noise texture to use", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_CHAINTO( Tr2PPEffect )
-
 }
-

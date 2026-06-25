@@ -27,11 +27,11 @@ void PrintAdapterInfo( unsigned index )
 		return;
 	}
 
-	printf( 
-		"Device name: %s\nDescription: %ls\nVendor ID: %u\nDevice ID: %u\n", 
-		info.deviceName.c_str(), 
-		info.description.c_str(), 
-		info.vendorID, 
+	printf(
+		"Device name: %s\nDescription: %ls\nVendor ID: %u\nDevice ID: %u\n",
+		info.deviceName.c_str(),
+		info.description.c_str(),
+		info.vendorID,
 		info.deviceID );
 
 	Tr2VideoDriverInfo driverInfo;
@@ -63,7 +63,7 @@ void PrintAllAdapterInfo()
 	}
 }
 
-int main( int argc, char **argv ) 
+int main( int argc, char** argv )
 {
 	CCP::SetLogMainThreadId();
 
@@ -113,7 +113,7 @@ int main( int argc, char **argv )
 	return result;
 }
 
-#if defined(__ANDROID__)
+#if defined( __ANDROID__ )
 
 #include <android/native_activity.h>
 
@@ -123,33 +123,31 @@ bool g_windowResized = false;
 
 uint32_t mainThread( void* )
 {
-    char* args[] = {
-        strdup( "TrinityALTest" ),
-        strdup( "--interactive" ),
-    };
-    main( 2, args );
-    ANativeActivity_finish( g_androidActivity );
-    return 0;
+	char* args[] = {
+		strdup( "TrinityALTest" ),
+		strdup( "--interactive" ),
+	};
+	main( 2, args );
+	ANativeActivity_finish( g_androidActivity );
+	return 0;
 }
 
 static void onNativeWindowCreated( ANativeActivity*, ANativeWindow* window )
 {
-    g_androidWindow = window;
-    CcpCreateThread( &mainThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
-    
+	g_androidWindow = window;
+	CcpCreateThread( &mainThread, nullptr, CCP_THREAD_PRIORITY_NORMAL );
 }
 
 static void onNativeWindowResized( ANativeActivity*, ANativeWindow* window )
 {
-    g_windowResized = true;
+	g_windowResized = true;
 }
 
 void ANativeActivity_onCreate( ANativeActivity* activity, void*, size_t )
 {
-    g_androidActivity = activity;
-    activity->callbacks->onNativeWindowCreated = onNativeWindowCreated;
-    activity->callbacks->onNativeWindowResized = onNativeWindowResized;
-    
+	g_androidActivity = activity;
+	activity->callbacks->onNativeWindowCreated = onNativeWindowCreated;
+	activity->callbacks->onNativeWindowResized = onNativeWindowResized;
 }
 
 #endif

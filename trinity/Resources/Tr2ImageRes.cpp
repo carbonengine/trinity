@@ -98,7 +98,7 @@ Color Tr2ImageRes::GetPixelColor( int x, int y ) const
 
 	// TODO: Support different formats
 	Tr2RenderContextEnum::PixelFormat format = m_bitmap.GetFormat();
-	if( format != Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM && 
+	if( format != Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM &&
 		format != Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM )
 	{
 		CCP_LOGERR( "Tr2ImageRes::GetPixelColor currently only supports PIXEL_FORMAT_B8G8R8A8_UNORM or PIXEL_FORMAT_B8G8R8X8_UNORM" );

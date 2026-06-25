@@ -61,7 +61,7 @@ public:
 	static unsigned int GetPerObjectVSGUIStartRegister();
 
 
-	template<Tr2RenderContextEnum::ShaderType shaderType>
+	template <Tr2RenderContextEnum::ShaderType shaderType>
 	static unsigned int GetPerObjectStartRegister()
 	{
 		if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
@@ -80,11 +80,26 @@ public:
 		return GetPerObjectVSStartRegister();
 	}
 
-	static void DisableResourceLoad( bool flag )	{ m_disableGeometryLoad = m_disableTextureLoad = m_disableEffectLoad = flag; }
-	static bool IsGeometryLoadDisabled()			{ return m_disableGeometryLoad; }
-	static bool IsTextureLoadDisabled()				{ return m_disableTextureLoad; }
-	static bool IsEffectLoadDisabled()				{ return m_disableEffectLoad; }
-	static bool IsAsyncLoadDisabled()				{ return m_disableAsyncLoad; }
+	static void DisableResourceLoad( bool flag )
+	{
+		m_disableGeometryLoad = m_disableTextureLoad = m_disableEffectLoad = flag;
+	}
+	static bool IsGeometryLoadDisabled()
+	{
+		return m_disableGeometryLoad;
+	}
+	static bool IsTextureLoadDisabled()
+	{
+		return m_disableTextureLoad;
+	}
+	static bool IsEffectLoadDisabled()
+	{
+		return m_disableEffectLoad;
+	}
+	static bool IsAsyncLoadDisabled()
+	{
+		return m_disableAsyncLoad;
+	}
 
 	static bool m_disableGeometryLoad;
 	static bool m_disableTextureLoad;
@@ -117,8 +132,8 @@ public:
 	static HRESULT BeginRenderContext();
 	static HRESULT EndRenderContext();
 
-    static void GetBackBufferDimensions( unsigned int& w, unsigned int& h );
-    
+	static void GetBackBufferDimensions( unsigned int& w, unsigned int& h );
+
 	// Sets up a perspective projection transform based on the field of view, front/back plane and aspect ratio
 	static void SetPerspectiveProjection( float fov, float front, float back, float asp, const Matrix& viewportAdjustment = IdentityMatrix() );
 
@@ -140,34 +155,34 @@ public:
 	// extracted from this - use only for special purpose projection, such as in picking.
 	static void SetProjectionTransform( const Matrix& proj, const Matrix& viewportAdjustment = IdentityMatrix() );
 
-    static const Matrix& GetProjectionTransform();
+	static const Matrix& GetProjectionTransform();
 	static Matrix GetReversedDepthProjectionTransform();
 	static const Matrix& GetProjectionRawTransform();
-    static const Matrix& GetInverseProjectionTransform();
+	static const Matrix& GetInverseProjectionTransform();
 	static const PROJECTION_TYPE GetCurrentProjectionType();
 
 	static Vector3 ProjectWorldToScreen( const Vector3& worldPos, const Tr2Viewport& vp );
 
 	static const TriViewport& GetViewport();
-		
-    static float GetFrontClip();
-    static float GetBackClip();
+
+	static float GetFrontClip();
+	static float GetBackClip();
 	static float GetFrustumRadius();
 	static void GetFrustumPlane( size_t index, Vector4& plane );
-    static float GetFieldOfView();
-    static float GetAspectRatio();
+	static float GetFieldOfView();
+	static float GetAspectRatio();
 	static float GetOrthoWidth();
 	static float GetOrthoHeight();
-	
-    static void SetWorldTransform( const Matrix& m );
-    static const Matrix& GetWorldTransform();
 
-    static void SetViewTransform( const Matrix& m );
-    static const Matrix& GetViewTransform();
-    static const Matrix& GetInverseViewTransform();
-    
-    static const Vector3& GetViewPosition();
-    static Vector3 GetViewLookAt();
+	static void SetWorldTransform( const Matrix& m );
+	static const Matrix& GetWorldTransform();
+
+	static void SetViewTransform( const Matrix& m );
+	static const Matrix& GetViewTransform();
+	static const Matrix& GetInverseViewTransform();
+
+	static const Vector3& GetViewPosition();
+	static Vector3 GetViewLookAt();
 
 	static float GetAnimationTime();
 	static float GetAnimationTimeElapsed( float startTime );
@@ -180,8 +195,8 @@ public:
 	// This allows calls to Printf outside the rendering phase.
 	static void Printf( int x, int y, uint32_t color, const char* msg, ... );
 	static void Printf( TriDebugFont font, const Tr2Rect& rect, uint32_t format, uint32_t color, const char* msg, ... );
-    static void Printf( TriDebugFont font, const Vector3& pos, uint32_t color, const char* msg, ... );
-    static void Printf( TriDebugFont font, int fontStyle, const Vector3& pos, Vector4 color, const char* msg, ... );
+	static void Printf( TriDebugFont font, const Vector3& pos, uint32_t color, const char* msg, ... );
+	static void Printf( TriDebugFont font, int fontStyle, const Vector3& pos, Vector4 color, const char* msg, ... );
 
 	// Text output for debugging purposes.
 	// Text is rendered immediately so these functions can only be called within
@@ -209,9 +224,9 @@ public:
 	static bool DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord );
 
 	static void DrawScreenQuad( Tr2RenderContext& renderContext, Tr2Material* effect );
-	static void DrawScreenQuad( Tr2RenderContext& renderContext, Tr2Effect* effect, const Vector2 &topLeft, const Vector2 &bottomRight );
+	static void DrawScreenQuad( Tr2RenderContext& renderContext, Tr2Effect* effect, const Vector2& topLeft, const Vector2& bottomRight );
 	static void DrawCameraSpaceScreenQuad( Tr2RenderContext& renderContext, Tr2Shader* shader, Tr2Material* material );
-	static bool DrawFullScreenWithShader( Tr2RenderContext& renderContext, Tr2Material * material );
+	static bool DrawFullScreenWithShader( Tr2RenderContext& renderContext, Tr2Material* material );
 
 	static bool RunComputeShader( Tr2Material* effect, unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ, Tr2RenderContext& renderContext );
 	static bool RunComputeShader( Tr2Material* effect, const BlueSharedString& technique, unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ, Tr2RenderContext& renderContext );
@@ -233,12 +248,11 @@ public:
 	static void InitializeSystemShaderOptions();
 
 	static bool GetGeometryShaderSupport();
-private:
 
+private:
 	static void SetResourceCreationAllowed( bool isAllowed );
 
 	friend class TriDevice;
-
 };
 
 #endif // Tr2Renderer_H

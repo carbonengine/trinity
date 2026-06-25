@@ -10,14 +10,15 @@ BLUE_DECLARE( EveEllipseDefinition );
  * A single closed elliptical orbit. Held in lists by EveEllipseSet.
  * Parent registers a dirty flag pointer so editor edits can trigger geometry rebuilds.
  */
-BLUE_CLASS( EveEllipseDefinition ) : public INotify
+BLUE_CLASS( EveEllipseDefinition ) :
+	public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
 
 	EveEllipseDefinition( IRoot* lockobj = nullptr );
 
-	bool OnModified( Be::Var* val ) override;
+	bool OnModified( Be::Var * val ) override;
 
 	void SetDirtyFlag( bool* dirtyFlag );
 

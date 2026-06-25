@@ -24,9 +24,9 @@ Vector3d XYZToRGB( const Vector3d& xyz )
 {
 	// Using CIE 1931 (2-deg Standard Observer)
 	return Vector3d(
-		 0.41866 * xyz.x - 0.15866 * xyz.y - 0.08283 * xyz.z,
+		0.41866 * xyz.x - 0.15866 * xyz.y - 0.08283 * xyz.z,
 		-0.09117 * xyz.x + 0.25243 * xyz.y + 0.01571 * xyz.z,
-		 0.00092 * xyz.x - 0.00255 * xyz.y + 0.17860 * xyz.z );
+		0.00092 * xyz.x - 0.00255 * xyz.y + 0.17860 * xyz.z );
 }
 
 Vector2 Tr2StandardIlluminantToCCT( Tr2StandardIlluminant illuminant )
@@ -106,55 +106,55 @@ Vector3d TriColorFromKelvin( float temperature, float tint, Tr2StandardIlluminan
 		return Vector3d( 0.0, 0.0, 0.0 );
 	}
 
-	
+
 	if( T >= 1000.0f && T <= 4000.0f )
 	{
 		xc = -0.2661239 * ( 1000000000.0 / ( T * T * T ) ) -
-			  0.2343580 * ( 1000000.0 / ( T * T ) ) +
-			  0.8776956 * ( 1000.0 / T ) +
-			  0.179910;
+			0.2343580 * ( 1000000.0 / ( T * T ) ) +
+			0.8776956 * ( 1000.0 / T ) +
+			0.179910;
 	}
 	else
 	{
 		xc = -3.0258469 * ( 1000000000.0 / ( T * T * T ) ) +
-			  2.1070379 * ( 1000000.0 / ( T * T ) ) +
-			  0.2226347 * ( 1000.0 / T ) +
-			  0.24039;
+			2.1070379 * ( 1000000.0 / ( T * T ) ) +
+			0.2226347 * ( 1000.0 / T ) +
+			0.24039;
 	}
 
 	if( T >= 1000.0f && T <= 2222.0f )
 	{
 		yc = -1.1063814 * ( xc * xc * xc ) -
-			  1.3481102 * ( xc * xc ) +
-			  2.1855583 * xc -
-			  0.20219683;
+			1.3481102 * ( xc * xc ) +
+			2.1855583 * xc -
+			0.20219683;
 	}
 	else if( T > 2222.0f && T <= 4000.0 )
 	{
 		yc = -0.9549476 * ( xc * xc * xc ) -
-			  1.3741859 * ( xc * xc ) +
-			  2.09137015 * xc -
-			  0.16748867;
+			1.3741859 * ( xc * xc ) +
+			2.09137015 * xc -
+			0.16748867;
 	}
 	else
 	{
 		yc = 3.081758 * ( xc * xc * xc ) -
-			 5.8733867 * ( xc * xc ) +
-			 3.75112997 * xc -
-			 0.37001483;
+			5.8733867 * ( xc * xc ) +
+			3.75112997 * xc -
+			0.37001483;
 	}
 
 	// Compute base correlated color temperature
 	const double X = ( Y / yc ) * xc;
 	const double Z = ( Y / yc ) * ( 1.0 - xc - yc );
 	const Vector3d cctXYZ( X, Y, Z );
-	
+
 	// Compute white balance
 	const double wbY = 0.54;
 	Vector2 wbCoeff = Tr2StandardIlluminantToCCT( whitePoint );
 	const double wbX = ( wbY / (double)wbCoeff.y ) * (double)wbCoeff.x;
-	const double wbZ = ( wbY / (double)wbCoeff.y ) * 
-		(1.0 - (double)wbCoeff.x - (double)wbCoeff.y );
+	const double wbZ = ( wbY / (double)wbCoeff.y ) *
+		( 1.0 - (double)wbCoeff.x - (double)wbCoeff.y );
 	const Vector3d wbXYZ( wbX, wbY, wbZ );
 
 	// Convert to RGB
@@ -169,13 +169,13 @@ Vector3d TriColorFromKelvin( float temperature, float tint, Tr2StandardIlluminan
 
 	// Apply tint
 	const Vector3d tintedRGB(
-		(1.0 - tint) * balancedRGB.x,
+		( 1.0 - tint ) * balancedRGB.x,
 		tint * balancedRGB.y,
-		(1.0 - tint) * balancedRGB.z );
+		( 1.0 - tint ) * balancedRGB.z );
 
 	// Scale to (0.0,1.0) range
 	const double componentMax = std::max( tintedRGB.x,
-		std::max( tintedRGB.y, tintedRGB.z ) );
+										  std::max( tintedRGB.y, tintedRGB.z ) );
 
 	// Final color
 	const Vector3d finalColor(

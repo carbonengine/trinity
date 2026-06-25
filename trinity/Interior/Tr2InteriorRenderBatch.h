@@ -16,11 +16,11 @@
 // --------------------------------------------------------------------------------------
 enum Tr2InteriorBatchGroup
 {
-	WODINTBATCHGROUP_BEGIN,		// Batches that must preceed normal geometry batches
-	WODINTBATCHGROUP_OPAQUE,	// Opaque batches (sorted by effect)
-	WODINTBATCHGROUP_DECAL,		// Decal batches (unsorted, artist-specified order)
-	WODINTBATCHGROUP_BLEND,		// Blended batches (sorted by depth)
-	WODINTBATCHGROUP_END		// Batches that must follow the normal geometry batches
+	WODINTBATCHGROUP_BEGIN, // Batches that must preceed normal geometry batches
+	WODINTBATCHGROUP_OPAQUE, // Opaque batches (sorted by effect)
+	WODINTBATCHGROUP_DECAL, // Decal batches (unsorted, artist-specified order)
+	WODINTBATCHGROUP_BLEND, // Blended batches (sorted by depth)
+	WODINTBATCHGROUP_END // Batches that must follow the normal geometry batches
 };
 
 // --------------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ enum Tr2InteriorBatchGroup
 //   Render batch sort key generator for interior render batches.  The batches are sorted
 //   using a 64-bit key.  The high 16-bits encode the object group (corresponding to a
 //   cell).  The next highest 16-bits encode the batch group within the current object
-//   group, using the Tr2InteriorBatchGroup enum.  The low 32-bits encode either the 
+//   group, using the Tr2InteriorBatchGroup enum.  The low 32-bits encode either the
 //   effect sort key (for opaque batches) or the depth (for blended batches).
 // See Also
 //   TriRenderBatchAccumulator, DefaultKeyGenerator, EffectKeyGenerator
@@ -58,9 +58,9 @@ struct Tr2IntKeyGenerator
 	}
 
 	// Get the sort type - need stable_sort so decals stay in artist-specified order
-	constexpr static RenderBatchSortType GetSortType() 
-	{ 
-		return RENDERBATCHSORTTYPE_STABLE_SORT; 
+	constexpr static RenderBatchSortType GetSortType()
+	{
+		return RENDERBATCHSORTTYPE_STABLE_SORT;
 	}
 
 	static constexpr bool ALLOW_GDPR = false;

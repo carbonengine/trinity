@@ -5,10 +5,10 @@
 #include "TriValueBinding.h"
 #include "Shader/Tr2Shader.h"
 
-Tr2Vector4Parameter::Tr2Vector4Parameter(IRoot* lockobj):
+Tr2Vector4Parameter::Tr2Vector4Parameter( IRoot* lockobj ) :
 	m_isUsedByEffect( false ),
 	m_isSrgb( false ),
-	m_value(1.0f, 1.0f, 1.0f, 1.0f),
+	m_value( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_linearValue( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_reroutedValue( NULL ),
 	m_bindings( "Tr2Vector4Parameter/m_bindings" )
@@ -26,23 +26,23 @@ unsigned Tr2Vector4Parameter::GetHashValue( unsigned startingHash ) const
 	return CcpHashFNV1( &name, sizeof( name ), CcpHashFNV1( &m_value, sizeof( m_value ), startingHash ) );
 }
 
-void Tr2Vector4Parameter::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-												unsigned char* destHandle, 
-												size_t size,
-												Tr2RenderContext &renderContext ) const
+void Tr2Vector4Parameter::CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+											 unsigned char* destHandle,
+											 size_t size,
+											 Tr2RenderContext& renderContext ) const
 {
 	// We need this to work even when the effect we're copying this to isn't the one that we're bound to
 	if( m_reroutedValue )
 	{
-		memcpy( destHandle, m_reroutedValue, size < sizeof(m_value) ? size : sizeof(m_value) );
+		memcpy( destHandle, m_reroutedValue, size < sizeof( m_value ) ? size : sizeof( m_value ) );
 	}
 	else if( m_isSrgb )
 	{
-		memcpy( destHandle, &m_linearValue, size < sizeof(m_value) ? size : sizeof( m_value ) );
+		memcpy( destHandle, &m_linearValue, size < sizeof( m_value ) ? size : sizeof( m_value ) );
 	}
 	else
 	{
-		memcpy( destHandle, &m_value, size < sizeof(m_value) ? size : sizeof( m_value ) );
+		memcpy( destHandle, &m_value, size < sizeof( m_value ) ? size : sizeof( m_value ) );
 	}
 }
 
@@ -270,7 +270,7 @@ void Tr2Vector4Parameter::SetDestination( void* dest, size_t size )
 
 		for( BindingVector_t::iterator it = m_bindings.begin(); it != m_bindings.end(); ++it )
 		{
-			(*it)->RerouteDestination( m_reroutedValue );
+			( *it )->RerouteDestination( m_reroutedValue );
 		}
 	}
 	else
@@ -284,7 +284,7 @@ void Tr2Vector4Parameter::SetDestination( void* dest, size_t size )
 
 		for( BindingVector_t::iterator it = m_bindings.begin(); it != m_bindings.end(); ++it )
 		{
-			(*it)->RerouteDestination( &m_value );
+			( *it )->RerouteDestination( &m_value );
 		}
 	}
 }
@@ -306,7 +306,7 @@ void Tr2Vector4Parameter::RegisterBinding( TriValueBinding* vb )
 {
 	CCP_ASSERT( vb );
 
-	// Note that this is a weak reference - adding a reference here would 
+	// Note that this is a weak reference - adding a reference here would
 	// create a circular reference.
 	m_bindings.push_back( vb );
 }
@@ -335,7 +335,7 @@ void Tr2Vector4Parameter::RebuildEffectHandles( Tr2Shader* effectRes )
 		SetDestination( NULL, 0 );
 	}
 
-	if ( m_name.empty() || !effectRes )
+	if( m_name.empty() || !effectRes )
 	{
 		m_isUsedByEffect = false;
 		return;
@@ -343,7 +343,7 @@ void Tr2Vector4Parameter::RebuildEffectHandles( Tr2Shader* effectRes )
 
 	const Tr2EffectConstant* constant = effectRes->GetConstant( m_name.c_str() );
 
-	if ( !constant )
+	if( !constant )
 	{
 		m_isUsedByEffect = false;
 		return;

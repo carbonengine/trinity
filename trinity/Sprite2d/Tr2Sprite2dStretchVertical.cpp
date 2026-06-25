@@ -9,20 +9,32 @@
 
 // All frames can use the same indices - the layout of the sprite is always the same.
 static unsigned short s_frameIndices[] = {
-	0, 2, 3,
-	0, 3, 1,
-	4, 6, 7,
-	4, 7, 5,
+	0,
+	2,
+	3,
+	0,
+	3,
+	1,
+	4,
+	6,
+	7,
+	4,
+	7,
+	5,
 
 	// The two triangles in the center are kept last - then we can skip the
 	// center by sending fewer triangles.
-	2, 4, 5,
-	2, 5, 3,
+	2,
+	4,
+	5,
+	2,
+	5,
+	3,
 };
 
 static const Color WHITE( 1.0f, 1.0f, 1.0f, 1.0f );
 
-Tr2Sprite2dStretchVertical::Tr2Sprite2dStretchVertical( IRoot* lockobj ) : 
+Tr2Sprite2dStretchVertical::Tr2Sprite2dStretchVertical( IRoot* lockobj ) :
 	m_topEdgeSize( 0 ),
 	m_bottomEdgeSize( 0 ),
 	m_edgeScale( 1.f ),
@@ -100,7 +112,7 @@ void Tr2Sprite2dStretchVertical::GatherSprites( Tr2Sprite2dScene* renderer )
 	SetValidatedTextures( renderer );
 
 	renderer->PushTranslation( m_translation );
-	
+
 	unsigned int triangleCount = m_fillCenter ? 6 : 4;
 	unsigned int indexCount = triangleCount * 3;
 	if( m_shadowOffset.x != 0.0f || m_shadowOffset.y != 0.0f )
@@ -236,7 +248,7 @@ void Tr2Sprite2dStretchVertical::PrepareVertices( Tr2Sprite2dVertexBase* v, floa
 
 	//
 	// Fourth line
-	// 
+	//
 	// Vertex 6
 	v->position.x = 0.0f + vertOffset.x;
 	v->position.y = scaledHeight + vertOffset.y;

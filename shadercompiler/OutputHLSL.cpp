@@ -12,427 +12,427 @@
 namespace
 {
 
-	// XSL = X Shading Language. Can be either HLSL or MSL.
-	template< typename XSL >
-	struct Children
+// XSL = X Shading Language. Can be either HLSL or MSL.
+template <typename XSL>
+struct Children
+{
+	Children( XSL parent_, const char* glue_, size_t offset_ = 0 ) :
+		parent( parent_ ),
+		glue( glue_ ),
+		offset( offset_ )
 	{
-		Children( XSL parent_, const char* glue_, size_t offset_ = 0 )
-			:parent( parent_ ),
-			glue( glue_ ),
-			offset( offset_ )
-		{
-		}
-
-		XSL parent;
-		const char* glue;
-		size_t offset;
-	};
-
-	template< typename XSL >
-	XSL XSLChild( const XSL& parent, size_t childIndex )
-	{
-		return XSL{ parent.node->GetChild( childIndex ), parent.symbolTable };
 	}
 
-	template< typename XSL >
-	CodeStream& operator<<( CodeStream& os, const Children<XSL>& children )
-	{
-		for( size_t i = children.offset; i < children.parent.node->GetChildrenCount(); ++i )
-		{
-			if( i )
-			{
-				os << children.glue;
-			}
-			os << XSLChild( children.parent, i );
-		}
-		return os;
-	}
+	XSL parent;
+	const char* glue;
+	size_t offset;
+};
 
-	bool HasUsedDeclarations( ASTNode* node )
+template <typename XSL>
+XSL XSLChild( const XSL& parent, size_t childIndex )
+{
+	return XSL{ parent.node->GetChild( childIndex ), parent.symbolTable };
+}
+
+template <typename XSL>
+CodeStream& operator<<( CodeStream& os, const Children<XSL>& children )
+{
+	for( size_t i = children.offset; i < children.parent.node->GetChildrenCount(); ++i )
 	{
-		for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
+		if( i )
 		{
-			if( node->GetChild( i ) )
+			os << children.glue;
+		}
+		os << XSLChild( children.parent, i );
+	}
+	return os;
+}
+
+bool HasUsedDeclarations( ASTNode* node )
+{
+	for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
+	{
+		if( node->GetChild( i ) )
+		{
+			if( node->GetChild( i )->GetNodeType() == NT_VAR_DECLARATION_LIST )
 			{
-				if( node->GetChild( i )->GetNodeType() == NT_VAR_DECLARATION_LIST )
+				if( HasUsedDeclarations( node->GetChild( i ) ) )
 				{
-					if( HasUsedDeclarations( node->GetChild( i ) ) )
-					{
-						return true;
-					}
-				}
-				else if( node->GetChild( i )->GetNodeType() == NT_NAME_DECLARATION )
-				{
-					if( node->GetChild( i )->GetSymbol() && node->GetChild( i )->GetSymbol()->used )
-					{
-						return true;
-					}
+					return true;
 				}
 			}
-		}
-		return false;
-	}
-
-	std::map<int, std::string> s_operators = {
-		{ OP_MUL_ASSIGN, "*=" },
-		{ OP_DIV_ASSIGN, "/=" },
-		{ OP_MOD_ASSIGN, "%=" },
-		{ OP_ADD_ASSIGN, "+=" },
-		{ OP_SUB_ASSIGN, "-=" },
-		{ OP_LEFT_ASSIGN, "<<=" },
-		{ OP_RIGHT_ASSIGN, ">>=" },
-		{ OP_AND_ASSIGN, "&=" },
-		{ OP_XOR_ASSIGN, "^=" },
-		{ OP_OR_ASSIGN, "|=" },
-		{ OP_INC_OP, "++" },
-		{ OP_DEC_OP, "--" },
-		{ OP_LEFT_OP, "<<" },
-		{ OP_RIGHT_OP, ">>" },
-		{ OP_LE_OP, "<=" },
-		{ OP_GE_OP, ">=" },
-		{ OP_EQ_OP, "==" },
-		{ OP_NE_OP, "!=" },
-		{ OP_AND_OP, "&&" },
-		{ OP_OR_OP, "||" },
-		{ OP_PLUS, "+" },
-		{ OP_DASH, "-" },
-		{ OP_BANG, "!" },
-		{ OP_TILDE, "~" },
-		{ OP_STAR, "*" },
-		{ OP_SLASH, "/" },
-		{ OP_PERCENT, "%" },
-		{ OP_COMA, "," },
-		{ OP_LESS, "<" },
-		{ OP_MORE, ">" },
-		{ OP_AMPERSAND, "&" },
-		{ OP_CARET, "^" },
-		{ OP_VERTICAL_BAR, "|" },
-		{ OP_EQUAL, "=" }
-	};
-
-	static const char* GetOperatorSymbol( int operatorID )
-	{
-		auto it = s_operators.find( operatorID );
-		if( it == s_operators.end() )
-		{
-			return "";
-		}
-		return it->second.c_str();
-	}
-
-	void PrintTypeHLSL11( CodeStream& os, Type type )
-	{
-		switch( type.storageClass )
-		{
-		case OP_EXTERN:
-			os << "extern ";
-			break;
-		case OP_NOINTERPOLATION:
-			os << "nointerpolation ";
-			break;
-		case OP_PRECISE:
-			os << "precise ";
-			break;
-		case OP_SHARED:
-			os << "shared ";
-			break;
-		case OP_GROUPSHARED:
-			os << "groupshared ";
-			break;
-		case OP_STATIC:
-			os << "static ";
-			break;
-		case OP_UNIFORM:
-			os << "uniform ";
-			break;
-		case OP_VOLATILE:
-			os << "volatile ";
-			break;
-		}
-		switch( type.modifier )
-		{
-		case OP_CONST:
-			os << "const ";
-			break;
-		case OP_ROW_MAJOR:
-			os << "row_major ";
-			break;
-		case OP_COLUMN_MAJOR:
-			os << "column_major ";
-			break;
-		}
-		if( type.symbol )
-		{
-			os << type.symbol->name;
-		}
-		else
-		{
-			switch( type.builtInType )
+			else if( node->GetChild( i )->GetNodeType() == NT_NAME_DECLARATION )
 			{
-			case OP_FLOAT:
-				os << "float";
-				break;
-			case OP_INT:
-				os << "int";
-				break;
-			case OP_UINT:
-				os << "uint";
-				break;
-			case OP_HALF:
-				os << "min16float";
-				break;
-			case OP_DOUBLE:
-				os << "double";
-				break;
-			case OP_BOOL:
-				os << "bool";
-				break;
-			case OP_STRING:
-				os << "string";
-				break;
-			case OP_VOID:
-				os << "void";
-				return;
-			case OP_SAMPLER2D:
-			case OP_SAMPLER3D:
-			case OP_SAMPLERCUBE:
-			case OP_SAMPLER:
-				os << "sampler";
-				return;
-			case OP_SAMPLERCOMPARISON:
-				os << "SamplerComparisonState";
-				return;
-			case OP_TEXTURE1D:
-				os << "Texture1D";
-				if( type.templateParameter )
+				if( node->GetChild( i )->GetSymbol() && node->GetChild( i )->GetSymbol()->used )
 				{
-					os << '<' << *type.templateParameter << '>';
-				}
-				return;
-			case OP_TEXTURE2D:
-				os << "Texture2D";
-				if( type.templateParameter )
-				{
-					os << '<' << *type.templateParameter << '>';
-				}
-				return;
-			case OP_TEXTURE3D:
-				os << "Texture3D";
-				if( type.templateParameter )
-				{
-					os << '<' << *type.templateParameter << '>';
-				}
-				return;
-			case OP_TEXTURECUBE:
-				os << "TextureCube";
-				if( type.templateParameter )
-				{
-					os << '<' << *type.templateParameter << '>';
-				}
-				return;
-			case OP_TEXTURE1DARRAY:
-				os << "Texture1DArray";
-				if( type.templateParameter )
-				{
-					os << '<' << *type.templateParameter << '>';
-				}
-				return;
-			case OP_TEXTURE2DARRAY:
-				os << "Texture2DArray";
-				if( type.templateParameter )
-				{
-					os << '<' << *type.templateParameter << '>';
-				}
-				return;
-			case OP_TEXTURE3DARRAY:
-				os << "Texture3DArray";
-				if( type.templateParameter )
-				{
-					os << '<' << *type.templateParameter << '>';
-				}
-				return;
-			case OP_TEXTURECUBEARRAY:
-				os << "TextureCubeArray";
-				if( type.templateParameter )
-				{
-					os << '<' << *type.templateParameter << '>';
-				}
-				return;
-			case OP_TEXTURE2DMS:
-				os << "Texture2DMS";
-				os << '<' << *type.templateParameter;
-				if( type.templateSamples > 0 )
-				{
-					os << ", " << type.templateSamples;
-				}
-				os << '>';
-				return;
-			case OP_TEXTURE2DMSARRAY:
-				os << "Texture2DMSArray";
-				os << '<' << *type.templateParameter;
-				if( type.templateSamples > 0 )
-				{
-					os << ", " << type.templateSamples;
-				}
-				os << '>';
-				return;
-			case OP_TEXTURE:
-				os << "Texture2D";
-				return;
-			case OP_BUFFER:
-				os << "Buffer" << '<' << *type.templateParameter << '>';
-				return;
-			case OP_APPENDSTRUCTUREDBUFFER:
-				os << "AppendStructuredBuffer" << '<' << *type.templateParameter << '>';
-				return;
-			case OP_BYTEADDRESSBUFFER:
-				os << "ByteAddressBuffer";
-				return;
-			case OP_CONSUMESTRUCTUREDBUFFER:
-				os << "ConsumeStructuredBuffer" << '<' << *type.templateParameter << '>';
-				return;
-			case OP_INPUTPATCH:
-				os << "InputPatch";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << ", " << type.templateSamples << '>';
-				return;
-			case OP_OUTPUTPATCH:
-				os << "OutputPatch";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << ", " << type.templateSamples << '>';
-				return;
-			case OP_RWBUFFER:
-				os << "RWBuffer";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_RWBYTEADDRESSBUFFER:
-				os << "RWByteAddressBuffer";
-				return;
-			case OP_RWSTRUCTUREDBUFFER:
-				os << "RWStructuredBuffer";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_RWTEXTURE1D:
-				os << "RWTexture1D";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_RWTEXTURE1DARRAY:
-				os << "RWTexture1DArray";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_RWTEXTURE2D:
-				os << "RWTexture2D";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_RWTEXTURE2DARRAY:
-				os << "RWTexture2DArray";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_RWTEXTURE3D:
-				os << "RWTexture3D";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_RWTEXTURE3DARRAY:
-				os << "RWTexture3DArray";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_STRUCTUREDBUFFER:
-				os << "StructuredBuffer";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_POINTSTREAM:
-				os << "PointStream";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_LINESTREAM:
-				os << "LineStream";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_TRIANGLESTREAM:
-				os << "TriangleStream";
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-				return;
-			case OP_BINDLESSHANDLETEXTURE2D:
-			case OP_BINDLESSHANDLETEXTURE3D:
-			case OP_BINDLESSHANDLETEXTURECUBE:
-			case OP_BINDLESSHANDLESAMPLER:
-				os << "uint";
-				return;
-			case OP_RAYTRACING_ACCELERATION_STRUCTURE:
-				os << "RaytracingAccelerationStructure";
-				return;
-			case OP_RAY_DESC:
-				os << "RayDesc";
-				return;
-			default:
-				os << "!!error_type!!";
-				return;
-			}
-			if( type.width > 1 || type.height > 1 )
-			{
-				os << type.width;
-				if( type.height > 1 )
-				{
-					os << 'x' << type.height;
+					return true;
 				}
 			}
 		}
 	}
+	return false;
+}
 
-	Type ScalarType( const Type& type )
+std::map<int, std::string> s_operators = {
+	{ OP_MUL_ASSIGN, "*=" },
+	{ OP_DIV_ASSIGN, "/=" },
+	{ OP_MOD_ASSIGN, "%=" },
+	{ OP_ADD_ASSIGN, "+=" },
+	{ OP_SUB_ASSIGN, "-=" },
+	{ OP_LEFT_ASSIGN, "<<=" },
+	{ OP_RIGHT_ASSIGN, ">>=" },
+	{ OP_AND_ASSIGN, "&=" },
+	{ OP_XOR_ASSIGN, "^=" },
+	{ OP_OR_ASSIGN, "|=" },
+	{ OP_INC_OP, "++" },
+	{ OP_DEC_OP, "--" },
+	{ OP_LEFT_OP, "<<" },
+	{ OP_RIGHT_OP, ">>" },
+	{ OP_LE_OP, "<=" },
+	{ OP_GE_OP, ">=" },
+	{ OP_EQ_OP, "==" },
+	{ OP_NE_OP, "!=" },
+	{ OP_AND_OP, "&&" },
+	{ OP_OR_OP, "||" },
+	{ OP_PLUS, "+" },
+	{ OP_DASH, "-" },
+	{ OP_BANG, "!" },
+	{ OP_TILDE, "~" },
+	{ OP_STAR, "*" },
+	{ OP_SLASH, "/" },
+	{ OP_PERCENT, "%" },
+	{ OP_COMA, "," },
+	{ OP_LESS, "<" },
+	{ OP_MORE, ">" },
+	{ OP_AMPERSAND, "&" },
+	{ OP_CARET, "^" },
+	{ OP_VERTICAL_BAR, "|" },
+	{ OP_EQUAL, "=" }
+};
+
+static const char* GetOperatorSymbol( int operatorID )
+{
+	auto it = s_operators.find( operatorID );
+	if( it == s_operators.end() )
 	{
-		Type scalarType = type;
-		scalarType.width = scalarType.height = 1;
-		return scalarType;
+		return "";
 	}
+	return it->second.c_str();
+}
 
-	Type MslTextureTemplateType( const Type& textureType )
+void PrintTypeHLSL11( CodeStream& os, Type type )
+{
+	switch( type.storageClass )
 	{
-		if( textureType.templateParameter )
-		{
-			// Metal expects type of only one texture component here.
-			return ScalarType( *textureType.templateParameter );
-		}
-		else
-		{
-			return TypeFromTokenType( OP_FLOAT );
-		}
+	case OP_EXTERN:
+		os << "extern ";
+		break;
+	case OP_NOINTERPOLATION:
+		os << "nointerpolation ";
+		break;
+	case OP_PRECISE:
+		os << "precise ";
+		break;
+	case OP_SHARED:
+		os << "shared ";
+		break;
+	case OP_GROUPSHARED:
+		os << "groupshared ";
+		break;
+	case OP_STATIC:
+		os << "static ";
+		break;
+	case OP_UNIFORM:
+		os << "uniform ";
+		break;
+	case OP_VOLATILE:
+		os << "volatile ";
+		break;
 	}
-
-	void PrintTypeMSL( CodeStream& os, Type type )
+	switch( type.modifier )
 	{
-		switch( type.storageClass )
+	case OP_CONST:
+		os << "const ";
+		break;
+	case OP_ROW_MAJOR:
+		os << "row_major ";
+		break;
+	case OP_COLUMN_MAJOR:
+		os << "column_major ";
+		break;
+	}
+	if( type.symbol )
+	{
+		os << type.symbol->name;
+	}
+	else
+	{
+		switch( type.builtInType )
 		{
-		case OP_EXTERN:
-			os << "extern ";
+		case OP_FLOAT:
+			os << "float";
 			break;
-	//TODO
+		case OP_INT:
+			os << "int";
+			break;
+		case OP_UINT:
+			os << "uint";
+			break;
+		case OP_HALF:
+			os << "min16float";
+			break;
+		case OP_DOUBLE:
+			os << "double";
+			break;
+		case OP_BOOL:
+			os << "bool";
+			break;
+		case OP_STRING:
+			os << "string";
+			break;
+		case OP_VOID:
+			os << "void";
+			return;
+		case OP_SAMPLER2D:
+		case OP_SAMPLER3D:
+		case OP_SAMPLERCUBE:
+		case OP_SAMPLER:
+			os << "sampler";
+			return;
+		case OP_SAMPLERCOMPARISON:
+			os << "SamplerComparisonState";
+			return;
+		case OP_TEXTURE1D:
+			os << "Texture1D";
+			if( type.templateParameter )
+			{
+				os << '<' << *type.templateParameter << '>';
+			}
+			return;
+		case OP_TEXTURE2D:
+			os << "Texture2D";
+			if( type.templateParameter )
+			{
+				os << '<' << *type.templateParameter << '>';
+			}
+			return;
+		case OP_TEXTURE3D:
+			os << "Texture3D";
+			if( type.templateParameter )
+			{
+				os << '<' << *type.templateParameter << '>';
+			}
+			return;
+		case OP_TEXTURECUBE:
+			os << "TextureCube";
+			if( type.templateParameter )
+			{
+				os << '<' << *type.templateParameter << '>';
+			}
+			return;
+		case OP_TEXTURE1DARRAY:
+			os << "Texture1DArray";
+			if( type.templateParameter )
+			{
+				os << '<' << *type.templateParameter << '>';
+			}
+			return;
+		case OP_TEXTURE2DARRAY:
+			os << "Texture2DArray";
+			if( type.templateParameter )
+			{
+				os << '<' << *type.templateParameter << '>';
+			}
+			return;
+		case OP_TEXTURE3DARRAY:
+			os << "Texture3DArray";
+			if( type.templateParameter )
+			{
+				os << '<' << *type.templateParameter << '>';
+			}
+			return;
+		case OP_TEXTURECUBEARRAY:
+			os << "TextureCubeArray";
+			if( type.templateParameter )
+			{
+				os << '<' << *type.templateParameter << '>';
+			}
+			return;
+		case OP_TEXTURE2DMS:
+			os << "Texture2DMS";
+			os << '<' << *type.templateParameter;
+			if( type.templateSamples > 0 )
+			{
+				os << ", " << type.templateSamples;
+			}
+			os << '>';
+			return;
+		case OP_TEXTURE2DMSARRAY:
+			os << "Texture2DMSArray";
+			os << '<' << *type.templateParameter;
+			if( type.templateSamples > 0 )
+			{
+				os << ", " << type.templateSamples;
+			}
+			os << '>';
+			return;
+		case OP_TEXTURE:
+			os << "Texture2D";
+			return;
+		case OP_BUFFER:
+			os << "Buffer" << '<' << *type.templateParameter << '>';
+			return;
+		case OP_APPENDSTRUCTUREDBUFFER:
+			os << "AppendStructuredBuffer" << '<' << *type.templateParameter << '>';
+			return;
+		case OP_BYTEADDRESSBUFFER:
+			os << "ByteAddressBuffer";
+			return;
+		case OP_CONSUMESTRUCTUREDBUFFER:
+			os << "ConsumeStructuredBuffer" << '<' << *type.templateParameter << '>';
+			return;
+		case OP_INPUTPATCH:
+			os << "InputPatch";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << ", " << type.templateSamples << '>';
+			return;
+		case OP_OUTPUTPATCH:
+			os << "OutputPatch";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << ", " << type.templateSamples << '>';
+			return;
+		case OP_RWBUFFER:
+			os << "RWBuffer";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_RWBYTEADDRESSBUFFER:
+			os << "RWByteAddressBuffer";
+			return;
+		case OP_RWSTRUCTUREDBUFFER:
+			os << "RWStructuredBuffer";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_RWTEXTURE1D:
+			os << "RWTexture1D";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_RWTEXTURE1DARRAY:
+			os << "RWTexture1DArray";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_RWTEXTURE2D:
+			os << "RWTexture2D";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_RWTEXTURE2DARRAY:
+			os << "RWTexture2DArray";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_RWTEXTURE3D:
+			os << "RWTexture3D";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_RWTEXTURE3DARRAY:
+			os << "RWTexture3DArray";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_STRUCTUREDBUFFER:
+			os << "StructuredBuffer";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_POINTSTREAM:
+			os << "PointStream";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_LINESTREAM:
+			os << "LineStream";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_TRIANGLESTREAM:
+			os << "TriangleStream";
+			os << '<';
+			PrintTypeHLSL11( os, *type.templateParameter );
+			os << '>';
+			return;
+		case OP_BINDLESSHANDLETEXTURE2D:
+		case OP_BINDLESSHANDLETEXTURE3D:
+		case OP_BINDLESSHANDLETEXTURECUBE:
+		case OP_BINDLESSHANDLESAMPLER:
+			os << "uint";
+			return;
+		case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+			os << "RaytracingAccelerationStructure";
+			return;
+		case OP_RAY_DESC:
+			os << "RayDesc";
+			return;
+		default:
+			os << "!!error_type!!";
+			return;
+		}
+		if( type.width > 1 || type.height > 1 )
+		{
+			os << type.width;
+			if( type.height > 1 )
+			{
+				os << 'x' << type.height;
+			}
+		}
+	}
+}
+
+Type ScalarType( const Type& type )
+{
+	Type scalarType = type;
+	scalarType.width = scalarType.height = 1;
+	return scalarType;
+}
+
+Type MslTextureTemplateType( const Type& textureType )
+{
+	if( textureType.templateParameter )
+	{
+		// Metal expects type of only one texture component here.
+		return ScalarType( *textureType.templateParameter );
+	}
+	else
+	{
+		return TypeFromTokenType( OP_FLOAT );
+	}
+}
+
+void PrintTypeMSL( CodeStream& os, Type type )
+{
+	switch( type.storageClass )
+	{
+	case OP_EXTERN:
+		os << "extern ";
+		break;
+		//TODO
 #if 0
 		case OP_NOINTERPOLATION:
 			os << "nointerpolation ";
@@ -444,173 +444,173 @@ namespace
 			os << "shared ";
 			break;
 #endif
-		case OP_GROUPSHARED:
-			// Already processed and mapped to AddressSpace::Threadgroup.
-			break;
-		case OP_STATIC:
-			os << "static ";
-			break;
-	//TODO
+	case OP_GROUPSHARED:
+		// Already processed and mapped to AddressSpace::Threadgroup.
+		break;
+	case OP_STATIC:
+		os << "static ";
+		break;
+		//TODO
 #if 0
 		case OP_UNIFORM:
 			os << "uniform ";
 			break;
 #endif
-		case OP_VOLATILE:
-			os << "volatile ";
+	case OP_VOLATILE:
+		os << "volatile ";
+		break;
+	}
+	if( type.modifier == OP_CONST )
+	{
+		os << "const ";
+	}
+	else if( type.modifier == OP_PACKOFFSET )
+	{
+		os << "packed_";
+	}
+	if( type.symbol )
+	{
+		os << type.symbol->name;
+	}
+	else
+	{
+		switch( type.builtInType )
+		{
+		case OP_BOOL:
+			os << "bool";
 			break;
-		}
-		if( type.modifier == OP_CONST )
-		{
-			os << "const ";
-		}
-		else if( type.modifier == OP_PACKOFFSET )
-		{
-			os << "packed_";
-		}
-		if( type.symbol )
-		{
-			os << type.symbol->name;
-		}
-		else
-		{
-			switch( type.builtInType )
-			{
-			case OP_BOOL:
-				os << "bool";
-				break;
-			case OP_INT:
-				os << "int";
-				break;
-			case OP_UINT:
-				os << "uint";
-				break;
-			case OP_HALF:
-				os << "half";
-				break;
-			case OP_FLOAT:
-				os << "float";
-				break;
+		case OP_INT:
+			os << "int";
+			break;
+		case OP_UINT:
+			os << "uint";
+			break;
+		case OP_HALF:
+			os << "half";
+			break;
+		case OP_FLOAT:
+			os << "float";
+			break;
 #if 0
 			case OP_DOUBLE:
 				os << "double";
 				break;
 #endif
-			case OP_VOID:
-				os << "void";
-				return;
-			case OP_STRING:
-				os << "string";
-				break;
-			case OP_SAMPLER2D:
-			case OP_SAMPLER3D:
-			case OP_SAMPLERCUBE:
-			case OP_SAMPLER:
-			case OP_SAMPLERCOMPARISON:
-				os << "sampler";
-				return;
+		case OP_VOID:
+			os << "void";
+			return;
+		case OP_STRING:
+			os << "string";
+			break;
+		case OP_SAMPLER2D:
+		case OP_SAMPLER3D:
+		case OP_SAMPLERCUBE:
+		case OP_SAMPLER:
+		case OP_SAMPLERCOMPARISON:
+			os << "sampler";
+			return;
 			// TODO
 #if 0
 			case OP_SAMPLERCOMPARISON:
 				os << "SamplerComparisonState";
 				return;
 #endif
-			case OP_TEXTURE1D:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				os << "texture1d<" << MslTextureTemplateType( type ) << '>';
-				return;
-			case OP_TEXTURE1DARRAY:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				os << "texture1d_array<" << MslTextureTemplateType( type ) << '>';
-				return;
-			case OP_TEXTURE:
-			case OP_TEXTURE2D:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				if( type.isDepthTexture )
-				{
-					os << "depth2d";
-				}
-				else
-				{
-					os << "texture2d";
-				}
-				os << "<" << MslTextureTemplateType( type ) << '>';
-				return;
-			case OP_TEXTURE2DARRAY:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				if( type.isDepthTexture )
-				{
-					os << "depth2d_array";
-				}
-				else
-				{
-					os << "texture2d_array";
-				}
-				os << "<" << MslTextureTemplateType( type ) << '>';
-				return;
-			case OP_TEXTURE3D:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				os << "texture3d<" << MslTextureTemplateType( type ) << '>';
-				return;
+		case OP_TEXTURE1D:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			os << "texture1d<" << MslTextureTemplateType( type ) << '>';
+			return;
+		case OP_TEXTURE1DARRAY:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			os << "texture1d_array<" << MslTextureTemplateType( type ) << '>';
+			return;
+		case OP_TEXTURE:
+		case OP_TEXTURE2D:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			if( type.isDepthTexture )
+			{
+				os << "depth2d";
+			}
+			else
+			{
+				os << "texture2d";
+			}
+			os << "<" << MslTextureTemplateType( type ) << '>';
+			return;
+		case OP_TEXTURE2DARRAY:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			if( type.isDepthTexture )
+			{
+				os << "depth2d_array";
+			}
+			else
+			{
+				os << "texture2d_array";
+			}
+			os << "<" << MslTextureTemplateType( type ) << '>';
+			return;
+		case OP_TEXTURE3D:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			os << "texture3d<" << MslTextureTemplateType( type ) << '>';
+			return;
 #if 0
 			// There is no "texture3d_array" in MSL.
 			case OP_TEXTURE3DARRAY:
 				os << "texture3d_array<" << MslTextureTemplateType( type ) << '>';
 				return;
 #endif
-			case OP_TEXTURECUBE:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				os << "texturecube<" << MslTextureTemplateType( type ) << '>';
-				return;
-			case OP_TEXTURECUBEARRAY:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				os << "texturecube_array<" << MslTextureTemplateType( type ) << '>';
-				return;
-			case OP_TEXTURE2DMS:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				os << "texture2d_ms<" << MslTextureTemplateType( type ) << '>';
-				return;
-			// Supported since Metal 2.0 (macOS) and Metal 1.0 (iOS).
-			case OP_TEXTURE2DMSARRAY:
-				if( type.arrayDimensions > 0 )
-				{
-					os << "const ";
-				}
-				os << "texture2d_ms_array<" << MslTextureTemplateType( type ) << '>';
-				return;
-			case OP_BUFFER:
-			case OP_STRUCTUREDBUFFER:
-				os << "const " << *type.templateParameter << '*';
-				return;
-			case OP_RWBUFFER:
-			case OP_RWSTRUCTUREDBUFFER:
-				os << *type.templateParameter << '*';
-				return;
-	//TODO
+		case OP_TEXTURECUBE:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			os << "texturecube<" << MslTextureTemplateType( type ) << '>';
+			return;
+		case OP_TEXTURECUBEARRAY:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			os << "texturecube_array<" << MslTextureTemplateType( type ) << '>';
+			return;
+		case OP_TEXTURE2DMS:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			os << "texture2d_ms<" << MslTextureTemplateType( type ) << '>';
+			return;
+		// Supported since Metal 2.0 (macOS) and Metal 1.0 (iOS).
+		case OP_TEXTURE2DMSARRAY:
+			if( type.arrayDimensions > 0 )
+			{
+				os << "const ";
+			}
+			os << "texture2d_ms_array<" << MslTextureTemplateType( type ) << '>';
+			return;
+		case OP_BUFFER:
+		case OP_STRUCTUREDBUFFER:
+			os << "const " << *type.templateParameter << '*';
+			return;
+		case OP_RWBUFFER:
+		case OP_RWSTRUCTUREDBUFFER:
+			os << *type.templateParameter << '*';
+			return;
+			//TODO
 #if 0
 			case OP_APPENDSTRUCTUREDBUFFER:
 				os << "AppendStructuredBuffer" << '<' << *type.templateParameter << '>';
@@ -633,33 +633,33 @@ namespace
 				os << "RWByteAddressBuffer";
 				return;
 #endif
-			case OP_RWTEXTURE1D:
-				os << "texture1d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_": "" ) << "write>";
-				return;
-			case OP_RWTEXTURE1DARRAY:
-				os << "texture1d_array<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
-				return;
-			case OP_RWTEXTURE2D:
-				os << "texture2d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
-				return;
-			case OP_RWTEXTURE2DARRAY:
-				os << "texture2d_array<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
-				return;
-			case OP_RWTEXTURE3D:
-				os << "texture3d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
-				return;
-			case OP_BINDLESSHANDLETEXTURE2D:
-			case OP_BINDLESSHANDLETEXTURE3D:
-			case OP_BINDLESSHANDLETEXTURECUBE:
-			case OP_BINDLESSHANDLESAMPLER:
-				os << "uint";
-				return;
-            case OP_RAYTRACING_ACCELERATION_STRUCTURE:
-                os << "RaytracingAccelerationStructure";
-                return;
-            case OP_RAY_DESC:
-                os << "RayDesc";
-                return;
+		case OP_RWTEXTURE1D:
+			os << "texture1d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
+			return;
+		case OP_RWTEXTURE1DARRAY:
+			os << "texture1d_array<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
+			return;
+		case OP_RWTEXTURE2D:
+			os << "texture2d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
+			return;
+		case OP_RWTEXTURE2DARRAY:
+			os << "texture2d_array<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
+			return;
+		case OP_RWTEXTURE3D:
+			os << "texture3d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
+			return;
+		case OP_BINDLESSHANDLETEXTURE2D:
+		case OP_BINDLESSHANDLETEXTURE3D:
+		case OP_BINDLESSHANDLETEXTURECUBE:
+		case OP_BINDLESSHANDLESAMPLER:
+			os << "uint";
+			return;
+		case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+			os << "RaytracingAccelerationStructure";
+			return;
+		case OP_RAY_DESC:
+			os << "RayDesc";
+			return;
 #if 0
 			// There is no "texture3d_array" in MSL.
 			case OP_RWTEXTURE3DARRAY:
@@ -679,29 +679,28 @@ namespace
 				os << '<' << *type.templateParameter << '>';
 				return;
 #endif
-			default:
-				os << "!!unsupported type: " << type.ToString() << "!!";
-				return;
-			}
-			if( type.width > 1 || type.height > 1 )
+		default:
+			os << "!!unsupported type: " << type.ToString() << "!!";
+			return;
+		}
+		if( type.width > 1 || type.height > 1 )
+		{
+			if( type.height > 1 )
 			{
-				if( type.height > 1 )
-				{
-					os << type.height << 'x' << type.width;
-				}
-				else
-				{
-					os << type.width;
-				}
+				os << type.height << 'x' << type.width;
+			}
+			else
+			{
+				os << type.width;
 			}
 		}
 	}
+}
 
 }
 
-CompilerInputStream::CompilerInputStream( ParserState& state, const ShadingLanguage lang )
-	:CodeStream( lang )
-	,m_state( state )
+CompilerInputStream::CompilerInputStream( ParserState& state, const ShadingLanguage lang ) :
+	CodeStream( lang ), m_state( state )
 {
 	m_location.fileName = MakeInlineString( "" );
 	m_location.lineNumber = unsigned( -1 );
@@ -813,7 +812,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		break;
 	case NT_EXPRESSION:
 		os << "( " << Child( 0 ) << " )";
-		if( node->GetToken()->type  != OP_LEFT_PAREN )
+		if( node->GetToken()->type != OP_LEFT_PAREN )
 		{
 			os << " " << GetOperatorSymbol( node->GetToken()->type ) << " ( " << Child( 1 ) << " )";
 		}
@@ -842,7 +841,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		{
 			os << node->GetSymbol()->name;
 		}
-		os << "( " << Indent() << Children<HLSL>( hlsl , ", " ) << Unindent() << " )";
+		os << "( " << Indent() << Children<HLSL>( hlsl, ", " ) << Unindent() << " )";
 		break;
 	case NT_FUNCTION_HEADER:
 		if( !node->GetSymbol()->used )
@@ -913,8 +912,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 			os << " = " << Child( 1 );
 		}
 		break;
-	case NT_NAME_DECLARATION:
-	{
+	case NT_NAME_DECLARATION: {
 		if( !node->GetSymbol()->used )
 		{
 			break;
@@ -1147,8 +1145,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		}
 		os << ";" << Endl();
 		break;
-	case NT_CBUFFER:
-	{
+	case NT_CBUFFER: {
 		if( !HasUsedDeclarations( node ) )
 		{
 			break;
@@ -1350,21 +1347,20 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		os << "( " << Child( 0 ) << " )";
 		switch( node->GetToken()->type )
 		{
-		case OP_LEFT_BRACKET:
+		case OP_LEFT_BRACKET: {
+			auto indexType = node->GetChild( 1 )->GetType();
+
+			if( indexType.IsScalarOrVector() && indexType.builtInType != OP_INT && indexType.builtInType != OP_UINT )
 			{
-				auto indexType = node->GetChild( 1 )->GetType();
-				
-				if( indexType.IsScalarOrVector() && indexType.builtInType != OP_INT && indexType.builtInType != OP_UINT )
-				{
-					indexType.builtInType = OP_INT;
-					os << "[(" << indexType << ")(" << Child( 1 ) << ")]";
-				}
-				else
-				{
-					os << "[" << Child( 1 ) << "]";
-				}
+				indexType.builtInType = OP_INT;
+				os << "[(" << indexType << ")(" << Child( 1 ) << ")]";
 			}
-			break;
+			else
+			{
+				os << "[" << Child( 1 ) << "]";
+			}
+		}
+		break;
 		case OP_DOT:
 			os << "." << Child( 1 );
 			break;
@@ -1378,7 +1374,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		break;
 	case NT_EXPRESSION:
 		os << "( " << Child( 0 ) << " )";
-		if( node->GetToken()->type  != OP_LEFT_PAREN )
+		if( node->GetToken()->type != OP_LEFT_PAREN )
 		{
 			os << " " << GetOperatorSymbol( node->GetToken()->type ) << " ( " << Child( 1 ) << " )";
 		}
@@ -1394,7 +1390,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		else if( node->GetType().IsMatrix() &&
 				 ( node->GetChild( 0 )->GetType().IsMatrix() ||
 				   ( node->GetChild( 0 )->GetNodeType() == NT_POSTFIX_EXPRESSION &&
-				     node->GetChild( 0 )->GetChild( 1 )->GetType().IsMatrix() ) ) )
+					 node->GetChild( 0 )->GetChild( 1 )->GetType().IsMatrix() ) ) )
 		{
 			os << "to_" << node->GetType() << "( " << Child( 0 ) << " )";
 		}
@@ -1405,25 +1401,25 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			switch( symbol->addressSpace )
 			{
 			case AddressSpace::Constant:
-					os << "constant ";
-					break;
+				os << "constant ";
+				break;
 			case AddressSpace::Device:
-					os << "device ";
-					break;
+				os << "device ";
+				break;
 			case AddressSpace::Thread:
-					os << "thread ";
-					break;
+				os << "thread ";
+				break;
 			case AddressSpace::Threadgroup:
-					os << "threadgroup ";
-					break;
+				os << "threadgroup ";
+				break;
 			default:
-					break;
+				break;
 			}
 
 			os << node->GetType();
 			for( int i = 0; i < node->GetType().arrayDimensions; ++i )
 			{
-				if ( node->GetType().IsBuffer() )
+				if( node->GetType().IsBuffer() )
 				{
 					switch( symbol->addressSpace )
 					{
@@ -1451,7 +1447,6 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			}
 
 			os << ")( " << Child( 0 ) << " )";
-
 		}
 		else
 		{
@@ -1534,8 +1529,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		os << " " << node->GetSymbol()->name << "( " << Indent() << Children<MSL>( msl, ", " ) << Unindent() << " )";
 		os.Endl();
 		break;
-	case NT_FUNCTION_PARAMETER:
-	{
+	case NT_FUNCTION_PARAMETER: {
 		// TODO
 #if 0
 		if( node->GetSymbol() )
@@ -1567,36 +1561,36 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			// Treat "out" and "inout" parameters as references.
 			switch( node->GetToken()->type )
 			{
-				case OP_OUT:
-				case OP_INOUT:
-					// References need an address space. The default will be "thread".
-					if( symbol->addressSpace == AddressSpace::None )
-					{
-						symbol->addressSpace = AddressSpace::Thread;
-					}
-					isReference = true;
-					break;
+			case OP_OUT:
+			case OP_INOUT:
+				// References need an address space. The default will be "thread".
+				if( symbol->addressSpace == AddressSpace::None )
+				{
+					symbol->addressSpace = AddressSpace::Thread;
+				}
+				isReference = true;
+				break;
 			}
 		}
 		switch( symbol->addressSpace )
 		{
-			case AddressSpace::Constant:
-				os << "constant ";
-				break;
-			case AddressSpace::Device:
-				os << "device ";
-				break;
-			case AddressSpace::Thread:
-				os << "thread ";
-				break;
-			case AddressSpace::Threadgroup:
-				os << "threadgroup ";
-				break;
-            case AddressSpace::RayData:
-                os << "ray_data ";
-                break;
-			default:
-				break;
+		case AddressSpace::Constant:
+			os << "constant ";
+			break;
+		case AddressSpace::Device:
+			os << "device ";
+			break;
+		case AddressSpace::Thread:
+			os << "thread ";
+			break;
+		case AddressSpace::Threadgroup:
+			os << "threadgroup ";
+			break;
+		case AddressSpace::RayData:
+			os << "ray_data ";
+			break;
+		default:
+			break;
 		}
 		// TODO: Do we need this? Child[2] is a primitive type for (unsupported) geometry shaders.
 #if 0
@@ -1669,7 +1663,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		if( isReference )
 		{
 			// Don't need to add & for arrays.
-			if( node->GetType().arrayDimensions == 0)
+			if( node->GetType().arrayDimensions == 0 )
 			{
 				os << '&';
 			}
@@ -1743,8 +1737,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		}
 	}
 	break;
-	case NT_NAME_DECLARATION:
-	{
+	case NT_NAME_DECLARATION: {
 		Symbol* symbol = node->GetSymbol();
 		if( !symbol->used )
 		{
@@ -2031,32 +2024,31 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			os << Child( 1 ) << Endl();
 		}
 		break;
-	case NT_SAMPLER_STATE_LIST:
+	case NT_SAMPLER_STATE_LIST: {
+		if( node->m_extraData )
 		{
-			if( node->m_extraData )
+			StaticSampler* sampler = static_cast<StaticSampler*>( node->m_extraData );
+			os << '(';
+			os << "s_address::" << MSLAddressMode( sampler->addressU );
+			os << ", " << "t_address::" << MSLAddressMode( sampler->addressV );
+			os << ", " << "r_address::" << MSLAddressMode( sampler->addressW );
+			os << ", " << "border_color::" << MSLBorderColor( sampler->borderColor );
+			os << ", " << "mag_filter::" << MSLFilterMode( sampler->magFilter );
+			os << ", " << "min_filter::" << MSLFilterMode( sampler->minFilter );
+			os << ", " << "mip_filter::" << MSLMipFilterMode( sampler->mipFilter );
+			os << ", " << "compare_func::" << MSLCompareFunc( sampler->comparisonFunc );
+			if( sampler->minFilter == 3 || sampler->magFilter == 3 || sampler->mipFilter == 3 )
 			{
-				StaticSampler* sampler = static_cast<StaticSampler*>( node->m_extraData );
-				os << '(';
-				os << "s_address::" << MSLAddressMode( sampler->addressU );
-				os << ", " << "t_address::" << MSLAddressMode( sampler->addressV );
-				os << ", " << "r_address::" << MSLAddressMode( sampler->addressW );
-				os << ", " << "border_color::" << MSLBorderColor( sampler->borderColor );
-				os << ", " << "mag_filter::" << MSLFilterMode( sampler->magFilter );
-				os << ", " << "min_filter::" << MSLFilterMode( sampler->minFilter );
-				os << ", " << "mip_filter::" << MSLMipFilterMode( sampler->mipFilter );
-				os << ", " << "compare_func::" << MSLCompareFunc( sampler->comparisonFunc );
-				if( sampler->minFilter == 3 || sampler->magFilter == 3 || sampler->mipFilter == 3 )
-				{
-					os << ", " << "max_anisotropy(" << int( sampler->maxAnisotropy ) << ")";
-				}
-				if( sampler->minLOD != -std::numeric_limits<float>::max() || sampler->maxLOD != std::numeric_limits<float>::max() )
-				{
-					os << ", " << "lod_clamp(" << sampler->minLOD << ", " << sampler->maxLOD << ")";
-				}
-				os << ')';
+				os << ", " << "max_anisotropy(" << int( sampler->maxAnisotropy ) << ")";
 			}
+			if( sampler->minLOD != -std::numeric_limits<float>::max() || sampler->maxLOD != std::numeric_limits<float>::max() )
+			{
+				os << ", " << "lod_clamp(" << sampler->minLOD << ", " << sampler->maxLOD << ")";
+			}
+			os << ')';
 		}
-		break;
+	}
+	break;
 	case NT_STATE_ASSIGNMENT:
 		os << node->GetToken()->stringValue << " = ";
 		if( node->GetSymbol() )
@@ -2080,15 +2072,14 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 	case NT_FUNCTION_ATTRIBUTE_LIST:
 		os << Children<MSL>( msl, "" );
 		break;
-	case NT_FUNCTION_ATTRIBUTE:
+	case NT_FUNCTION_ATTRIBUTE: {
+		auto attrib = ToString( node->GetToken()->stringValue );
+		if( attrib == "vertex" || attrib == "fragment" || attrib == "kernel" || ( attrib.length() > 4 && attrib.substr( 0, 2 ) == "[[" ) )
 		{
-			auto attrib = ToString( node->GetToken()->stringValue );
-			if( attrib == "vertex" || attrib == "fragment" || attrib == "kernel" || ( attrib.length() > 4 && attrib.substr( 0, 2 ) == "[[") )
-			{
-				os << ' ' << attrib << ' ';
-			}
+			os << ' ' << attrib << ' ';
 		}
-		break;
+	}
+	break;
 	case NT_FUNCTION_ATTRIBUTE_VALUE:
 	case NT_PRIMITIVE_TYPE:
 		os << node->GetToken()->stringValue;

@@ -48,23 +48,23 @@ BLUE_INTERFACE( ITr2Renderable ) :
 	{
 		return true;
 	}
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) = 0;
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) = 0;
 
 	virtual bool HasTransparentBatches() = 0;
-	virtual float GetSortValue() = 0; 
+	virtual float GetSortValue() = 0;
 
-	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) = 0;
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;
 };
 REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
 
 struct ITr2RenderableEntry
 {
-    ITr2Renderable* m_object;
-    float m_distance;
-    bool operator<( const ITr2RenderableEntry& other ) const
-    {
-        return m_distance < other.m_distance;
-    }
+	ITr2Renderable* m_object;
+	float m_distance;
+	bool operator<( const ITr2RenderableEntry& other ) const
+	{
+		return m_distance < other.m_distance;
+	}
 	bool operator<=( const ITr2RenderableEntry& other ) const
 	{
 		return m_distance <= other.m_distance;
@@ -85,10 +85,11 @@ enum Tr2PickType
 
 typedef uint32_t Tr2PickTypes;
 
-BLUE_INTERFACE( ITr2Pickable ) : public IRoot
+BLUE_INTERFACE( ITr2Pickable ) :
+	public IRoot
 {
-    virtual IRoot* GetID( uint16_t areaId ) = 0;
-	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) = 0;
+	virtual IRoot* GetID( uint16_t areaId ) = 0;
+	virtual void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) = 0;
 };
 
 BLUE_DECLARE_INTERFACE( ITr2Pickable );

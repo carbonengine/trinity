@@ -3,7 +3,8 @@
 #pragma once
 
 
-BLUE_CLASS( Tr2ExpressionTermInfo ) : public IRoot
+BLUE_CLASS( Tr2ExpressionTermInfo ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();

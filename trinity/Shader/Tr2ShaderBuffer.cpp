@@ -5,7 +5,7 @@
 #include "Tr2Renderer.h"
 #include "Tr2RenderContext.h"
 
-Tr2ShaderBuffer::Tr2ShaderBuffer( IRoot* lockobj ):
+Tr2ShaderBuffer::Tr2ShaderBuffer( IRoot* lockobj ) :
 	m_data( nullptr ),
 	m_size( 0 ),
 	m_shaderType( Tr2RenderContextEnum::PIXEL_SHADER )

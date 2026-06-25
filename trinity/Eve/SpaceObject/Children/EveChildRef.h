@@ -36,8 +36,8 @@ public:
 	const char* GetResPath() const;
 	void SetResPath( const char* resPath );
 
-	void Reload( bool bypassAutoLoadBlocker = false);
-    void SetAutoLoadBlocker( bool shouldBlockAutoLoad );
+	void Reload( bool bypassAutoLoadBlocker = false );
+	void SetAutoLoadBlocker( bool shouldBlockAutoLoad );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -45,7 +45,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -60,20 +60,20 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
 	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild* child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild* child );
-    void SetProceduralContainerVariable( const char *name, float value ) override;
+	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
+	void SetProceduralContainerVariable( const char* name, float value ) override;
 
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
 
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 
-	void GetLocalToWorldTransform( Matrix& transform ) const;
+	void GetLocalToWorldTransform( Matrix & transform ) const;
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
@@ -84,7 +84,7 @@ public:
 	void UpdateCurveSet( const std::string& name, Be::Time time );
 	float GetCurveSetDuration( const std::string& name ) const;
 	float GetRangeDuration( const std::string& name, const std::string& rangeName ) const;
-    void PlayAllCurveSets() override;
+	void PlayAllCurveSets() override;
 	void ChangeLOD( Tr2Lod lod );
 
 	void SetControllerVariable( const char* name, float value );
@@ -94,11 +94,11 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
-	
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
+
 	/////////////////////////////////////////////////////////////////////////////////////
-	// ITr2SoundEmitterOwner 
+	// ITr2SoundEmitterOwner
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
 
 protected:
@@ -108,7 +108,7 @@ protected:
 	BlueSharedString m_name;
 	std::string m_resPath;
 
-    bool m_loadChildAutomatically;
+	bool m_loadChildAutomatically;
 	bool m_display;
 };
 

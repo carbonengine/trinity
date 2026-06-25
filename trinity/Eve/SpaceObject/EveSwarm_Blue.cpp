@@ -5,21 +5,20 @@
 
 
 BLUE_DEFINE( EveSwarmRenderable );
-const Be::ClassInfo* EveSwarmRenderable::ExposeToBlue()
-{
-    EXPOSURE_BEGIN( EveSwarmRenderable, "" )
+const Be::ClassInfo* EveSwarmRenderable::ExposeToBlue(){
+	EXPOSURE_BEGIN( EveSwarmRenderable, "" )
 		MAP_INTERFACE( ITr2Pickable )
-		MAP_INTERFACE( EveEntity )
-		MAP_INTERFACE( IEveShadowCaster )
-    EXPOSURE_END()
+			MAP_INTERFACE( EveEntity )
+				MAP_INTERFACE( IEveShadowCaster )
+					EXPOSURE_END()
 }
 
 
 BLUE_DEFINE( EveSwarm );
 const Be::ClassInfo* EveSwarm::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveSwarm, "" )
-        MAP_INTERFACE( EveSwarm )
+	EXPOSURE_BEGIN( EveSwarm, "" )
+		MAP_INTERFACE( EveSwarm )
 		MAP_INTERFACE( IEveSpaceObject2 )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
@@ -49,30 +48,29 @@ const Be::ClassInfo* EveSwarm::ExposeToBlue()
 		MAP_ATTRIBUTE( "anchorRadius1", m_behavior.m_anchorRadius1, ":jessica-group: Behavior", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "weightDeceleration", m_behavior.m_weightDecelerate, ":jessica-group: Behavior", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maxDeceleration", m_behavior.m_maxDeceleration, ":jessica-group: Behavior", Be::READWRITE | Be::PERSIST )
-		
+
 		MAP_ATTRIBUTE( "separationDistance", m_behavior.m_separationDistance, ":jessica-group: Behavior", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "formationDistance", m_behavior.m_formationDistance, ":jessica-group: Behavior", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "wanderFluctuation", m_behavior.m_wanderFluctuation, ":jessica-group: Behavior", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "wanderDistance", m_behavior.m_wanderDistance, ":jessica-group: Behavior", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "wanderRadius", m_behavior.m_wanderRadius, ":jessica-group: Behavior", Be::READWRITE | Be::PERSIST )
-		
+
 		MAP_ATTRIBUTE( "debugShowForces", m_debugShowForces, ":jessica-group: Debug", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_METHOD_AND_WRAP( "AddSwarmer", AddSwarmer, "" )
 		MAP_METHOD_AND_WRAP( "RemoveSwarmer", RemoveSwarmer, "" )
-		MAP_METHOD_AND_WRAP( 
-			"SetCount", 
-			SetCount, 
+		MAP_METHOD_AND_WRAP(
+			"SetCount",
+			SetCount,
 			"Set number of things in the swarm\n"
-			":param count: number of things in the swarm"
-			)
-		MAP_METHOD_AND_WRAP( 
-			"EnableSwarming", 
-			EnableSwarming, 
+			":param count: number of things in the swarm" )
+		MAP_METHOD_AND_WRAP(
+			"EnableSwarming",
+			EnableSwarming,
 			"Enable/disable swarming\n"
 			":param enable: enable/disable swarming" )
 		MAP_METHOD_AND_WRAP( "PickFiringOrigin", PickFiringOrigin, "" )
-		
-    EXPOSURE_CHAINTO( EveShip2 )
+
+	EXPOSURE_CHAINTO( EveShip2 )
 }

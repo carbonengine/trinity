@@ -53,7 +53,8 @@ Type TypeFromTokenType( int type, int width = 1, int height = 1 );
 bool GetCommonType( const Type& type0, const Type& type1, Type& type );
 int GetNumericTypePrecedence( int type );
 
-namespace hlsl {
+namespace hlsl
+{
 
 extern const Type void_t;
 

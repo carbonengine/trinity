@@ -30,7 +30,7 @@ BLUE_DECLARE( Tr2DynamicBinding );
 BLUE_DECLARE_VECTOR( Tr2DynamicBinding );
 
 
-BLUE_CLASS( EveStretch3 ):
+BLUE_CLASS( EveStretch3 ) :
 	public IEveFiringEffectElement,
 	public ITr2DebugRenderable,
 	public ITr2DynamicBindingOwner,
@@ -44,13 +44,13 @@ BLUE_CLASS( EveStretch3 ):
 	public EveEntity
 {
 public:
-    EXPOSE_TO_BLUE();
-    EveStretch3( IRoot* lockobj = NULL );
-    ~EveStretch3();
+	EXPOSE_TO_BLUE();
+	EveStretch3( IRoot* lockobj = NULL );
+	~EveStretch3();
 
-    void Rebind( bool onlyUpdateBindings = 0 );
-    IEveSpaceObject2* GetSourceSpaceObject() const;
-    IEveSpaceObject2* GetDestSpaceObject() const;
+	void Rebind( bool onlyUpdateBindings = 0 );
+	IEveSpaceObject2* GetSourceSpaceObject() const;
+	IEveSpaceObject2* GetDestSpaceObject() const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -61,14 +61,14 @@ public:
 	virtual void UpdateSyncronous( const EveUpdateContext& updateContext );
 	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
-	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
-	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	virtual void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
-	virtual void GetModelCenterWorldPosition( Vector3 &position ) const;
-	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max );
-	virtual void GetLocalToWorldTransform( Matrix& transform ) const;
-	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	virtual void GetRenderables( std::vector<ITr2Renderable*> & renderables );
+	virtual void GetRenderables( std::vector<ITr2Renderable*> & renderables, Tr2ImpostorManager * impostors );
+	virtual bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	virtual void UpdateModelCenterWorldPosition( Vector3 & position, Be::Time t );
+	virtual void GetModelCenterWorldPosition( Vector3 & position ) const;
+	virtual bool GetLocalBoundingBox( Vector3 & min, Vector3 & max );
+	virtual void GetLocalToWorldTransform( Matrix & transform ) const;
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -81,11 +81,11 @@ public:
 	virtual void SetControllerVariable( const char* name, float value );
 	virtual void HandleControllerEvent( const char* name );
 	virtual void StartControllers();
-	virtual void GetBindingRoots( std::unordered_map<std::string, IRoot*>& variables );
+	virtual void GetBindingRoots( std::unordered_map<std::string, IRoot*> & variables );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* value ) override;
+	bool OnModified( Be::Var * value ) override;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
@@ -93,8 +93,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2CurveSetOwner
@@ -127,17 +127,17 @@ public:
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
 
 	IEveSpaceObjectChild* GetSourceObject();
-	void SetSourceObject( IEveSpaceObjectChild* sourceObject );
+	void SetSourceObject( IEveSpaceObjectChild * sourceObject );
 	IEveSpaceObjectChild* GetDestObject();
-	void SetDestObject( IEveSpaceObjectChild* destObject );
+	void SetDestObject( IEveSpaceObjectChild * destObject );
 	IEveSpaceObjectChild* GetStretchObject();
-	void SetStretchObject( IEveSpaceObjectChild* stretchObject );
+	void SetStretchObject( IEveSpaceObjectChild * stretchObject );
 	IEveSpaceObjectChild* GetMoveObject();
-	void SetMoveObject( IEveSpaceObjectChild* moveObject );
+	void SetMoveObject( IEveSpaceObjectChild * moveObject );
 
 private:
-
-	enum StretchState {
+	enum StretchState
+	{
 		STRETCH_STATE_UNDEFINED,
 		STRETCH_STATE_STARTING,
 		STRETCH_STATE_STARTED,
@@ -195,4 +195,3 @@ private:
 };
 
 TYPEDEF_BLUECLASS( EveStretch3 );
-

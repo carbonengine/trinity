@@ -26,7 +26,7 @@ class Tr2RtShaderTableAL;
 struct Tr2Viewport;
 
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 
 #include "Tr2RenderStateEmulationDx11.h"
 #include "Tr2ShaderProgramALDx11.h"
@@ -65,8 +65,11 @@ public:
 	static Tr2PrimaryRenderContextAL* GetPrimaryRenderContextPointer();
 
 	ALResult BeginScene() throw();
-	ALResult EndScene()   { return S_OK; }
-	
+	ALResult EndScene()
+	{
+		return S_OK;
+	}
+
 	bool IsValid() const throw();
 
 	void ReleaseDeviceResources() throw();
@@ -74,10 +77,10 @@ public:
 
 	ALResult SetStreamSource(
 		uint32_t stream,
-		const Tr2BufferAL & buffer,
+		const Tr2BufferAL& buffer,
 		uint32_t offset,
-		uint32_t stride ) throw( );
-	ALResult SetIndices( const Tr2BufferAL& buffer ) throw( );
+		uint32_t stride ) throw();
+	ALResult SetIndices( const Tr2BufferAL& buffer ) throw();
 	ALResult SetIndices( const Tr2BufferAL& buffer, uint32_t stride ) throw();
 	ALResult ClearUav( const Tr2BufferAL& buffer, const float values[4] ) throw();
 	ALResult ClearUav( const Tr2BufferAL& buffer, const uint32_t values[4] ) throw();
@@ -91,25 +94,25 @@ public:
 
 	ALResult SetTopology( Tr2RenderContextEnum::Topology topology ) throw();
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw();
-	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
+	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw();
 
-	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( );
+	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw();
 	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw();
 
-	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
-	
-	ALResult DrawIndexedPrimitive(	
-		uint32_t numVertices, 
-		uint32_t startIndex, 
-		uint32_t primitiveCount, 
+	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw();
+
+	ALResult DrawIndexedPrimitive(
+		uint32_t numVertices,
+		uint32_t startIndex,
+		uint32_t primitiveCount,
 		uint32_t minimumIndex = 0 ) throw();
 
-	ALResult DrawPrimitive(uint32_t startVertex, uint32_t primitiveCount ) throw();
+	ALResult DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw();
 
-	ALResult DrawIndexedInstanced(	
-		uint32_t numVertices, 
-		uint32_t startIndex, 
-		uint32_t primitiveCount, 
+	ALResult DrawIndexedInstanced(
+		uint32_t numVertices,
+		uint32_t startIndex,
+		uint32_t primitiveCount,
 		uint32_t numInstances ) throw();
 	ALResult DrawIndexedInstanced(
 		uint32_t indexCountPerInstance,
@@ -122,31 +125,31 @@ public:
 		uint32_t instanceCount,
 		uint32_t startVertexLocation,
 		uint32_t startInstanceLocation ) throw();
-	
-	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( );
-	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( );
+
+	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw();
+	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw();
 
 	ALResult DrawIndexedPrimitiveUP(
-		uint32_t numVertices, 
-		uint32_t primitiveCount, 
-		const uint32_t* indexData, 
-		const void* vertexStreamZeroData, 
+		uint32_t numVertices,
+		uint32_t primitiveCount,
+		const uint32_t* indexData,
+		const void* vertexStreamZeroData,
 		uint32_t vertexStreamZeroStride ) throw();
 
-	ALResult DrawIndexedPrimitiveUP( 
-		uint32_t numVertices, 
-		uint32_t primitiveCount, 
-		const uint16_t* indexData, 
-		const void* vertexStreamZeroData, 
-		uint32_t vertexStreamZeroStride) throw();
+	ALResult DrawIndexedPrimitiveUP(
+		uint32_t numVertices,
+		uint32_t primitiveCount,
+		const uint16_t* indexData,
+		const void* vertexStreamZeroData,
+		uint32_t vertexStreamZeroStride ) throw();
 
-	ALResult DrawPrimitiveUP(		
-		uint32_t primitiveCount, 
-		const void* vertexStreamZeroData, 
+	ALResult DrawPrimitiveUP(
+		uint32_t primitiveCount,
+		const void* vertexStreamZeroData,
 		uint32_t VertexStreamZeroStride ) throw();
 
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw();
-	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( );
+	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw();
 
 	ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth );
 
@@ -154,10 +157,10 @@ public:
 
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw();
 
-	ALResult SetConstants(			
-		const Tr2ConstantBufferAL& buffer, 
-		Tr2RenderContextEnum::ShaderType constantType, 
-		uint32_t registerIndex, 
+	ALResult SetConstants(
+		const Tr2ConstantBufferAL& buffer,
+		Tr2RenderContextEnum::ShaderType constantType,
+		uint32_t registerIndex,
 		uint32_t unusedArgument = 0 ) throw();
 
 	// Set a depth stencil.  Ideally you'd set renderTarget and depthStencil at the same time.
@@ -172,10 +175,10 @@ public:
 	static void DestroyMainThreadRenderContext();
 
 	// Helper function to clear the current primary backbuffer, depth and/or stencil.
-	ALResult Clear(						
-		uint32_t clearFlags, 
-		uint32_t color, 
-		float depth, 
+	ALResult Clear(
+		uint32_t clearFlags,
+		uint32_t color,
+		float depth,
 		uint32_t stencil = 0,
 		uint32_t slot = 0 ) throw();
 
@@ -189,8 +192,8 @@ public:
 	ALResult GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot = 0 ) throw();
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const throw();
-	
-	static const uint32_t SHADER_TYPE_MASK = 
+
+	static const uint32_t SHADER_TYPE_MASK =
 		( 1 << Tr2RenderContextEnum::VERTEX_SHADER ) |
 		( 1 << Tr2RenderContextEnum::PIXEL_SHADER ) |
 		( 1 << Tr2RenderContextEnum::COMPUTE_SHADER ) |
@@ -199,10 +202,16 @@ public:
 		( 1 << Tr2RenderContextEnum::DOMAIN_SHADER );
 
 	// Debug helpers
-	size_t GetStackSizeRT( uint32_t RT = 0 )	const { return m_stackRT[RT].size(); }
-	size_t GetStackSizeDS()						const { return m_stackDS    .size(); }
+	size_t GetStackSizeRT( uint32_t RT = 0 ) const
+	{
+		return m_stackRT[RT].size();
+	}
+	size_t GetStackSizeDS() const
+	{
+		return m_stackDS.size();
+	}
 
-	void	ResetCapturePlayback();
+	void ResetCapturePlayback();
 
 	// Set of variables that are the first thing we need in ApplyShadowState, keep them
 	// close for the cache -- don't put renderstates, renderStateEmulation or m_esm
@@ -212,16 +221,16 @@ public:
 	void PushGpuMarker( const char* marker );
 	void PopGpuMarker();
 	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
-	ALResult GetGpuPageFaultResource( 
-		Tr2RenderContextEnum::PixelFormat& format, 
-		uint64_t& size, 
-		uint32_t& width, 
-		uint32_t& height, 
-		uint32_t& depth, 
+	ALResult GetGpuPageFaultResource(
+		Tr2RenderContextEnum::PixelFormat& format,
+		uint64_t& size,
+		uint32_t& width,
+		uint32_t& height,
+		uint32_t& depth,
 		uint32_t& mips ) const;
 
 	ALResult UseResources( Tr2UseResourceDestination dest, Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
-    ALResult UseAccelerationStructure(Tr2RtTopLevelAccelerationStructureAL tlas );
+	ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
 
 private:
 	union
@@ -234,8 +243,10 @@ private:
 		} flags;
 		uint32_t mask;
 	} m_dirtyFlag;
+
 public:
-	CComPtr<ID3D11DeviceContext>	m_context;
+	CComPtr<ID3D11DeviceContext> m_context;
+
 private:
 	// Current vertex layout (for creating vertex layout)
 	Tr2VertexLayoutAL m_vertexLayout;
@@ -245,8 +256,8 @@ private:
 	// Current shaders
 	Tr2ShaderProgramAL m_shaderProgram;
 
-	Tr2RenderContextEnum::Topology	m_topology;
-	Tr2RenderContextEnum::Topology	m_lastSetTopology;
+	Tr2RenderContextEnum::Topology m_topology;
+	Tr2RenderContextEnum::Topology m_lastSetTopology;
 	// If readonly depth buffer was requested
 	bool m_useReadOnlyDepthView;
 	// If readonly depth buffer needs to be set (i.e. if m_useReadOnlyDepthView and we are not writing to depth)
@@ -268,44 +279,47 @@ private:
 public:
 	uint32_t ComputeVertexCount( uint32_t primitiveCount ) const throw();
 
-	CComPtr<ID3D11Device>			m_secondaryDevice11;
-	CComPtr<IDXGISwapChain>			m_secondarySwapChain;
-	
-	Tr2TextureAL m_secondaryDefaultBackBuffer;		
+	CComPtr<ID3D11Device> m_secondaryDevice11;
+	CComPtr<IDXGISwapChain> m_secondarySwapChain;
 
-	bool						IsBackBuffer( const Tr2TextureAL& rt ) const throw();
+	Tr2TextureAL m_secondaryDefaultBackBuffer;
+
+	bool IsBackBuffer( const Tr2TextureAL& rt ) const throw();
 
 	// If you need this, you're probably doing something wrong :P
-	Tr2TextureAL&			GetDefaultBackBuffer();
+	Tr2TextureAL& GetDefaultBackBuffer();
 
-private:	
+private:
 	// We can only set renderTarget and depthStencil together, so remember what's set in case code asks
 	// to update only one.
-	enum { MAX_RENDER_TARGET = 8 };
+	enum
+	{
+		MAX_RENDER_TARGET = 8
+	};
 	struct BoundRT
 	{
 		Tr2TextureAL texture;
 		uint32_t slice;
 	};
 	BoundRT m_boundRenderTarget[MAX_RENDER_TARGET];
-	uint32_t					m_renderTargetHighWaterMark;
+	uint32_t m_renderTargetHighWaterMark;
 
 	Tr2TextureAL m_boundDepthStencil;
 
-	Tr2RenderStateEmulation		m_renderStateEmulation;
-		
-	bool	ApplyShadowRenderStates() throw();
-	bool	ApplyBlendState() throw();
-	bool	ApplyDepthStencilState() throw();
-	bool	ApplyRasterizerState() throw();
+	Tr2RenderStateEmulation m_renderStateEmulation;
+
+	bool ApplyShadowRenderStates() throw();
+	bool ApplyBlendState() throw();
+	bool ApplyDepthStencilState() throw();
+	bool ApplyRasterizerState() throw();
 	void ApplyReadOnlyDepth() throw();
 
-	Tr2ConstantBufferAL	m_fragmentOpBuffer;
+	Tr2ConstantBufferAL m_fragmentOpBuffer;
 
-	uint32_t m_allRenderStates[ Tr2RenderContextEnum::RS_MAX_STATE ];
-	
+	uint32_t m_allRenderStates[Tr2RenderContextEnum::RS_MAX_STATE];
+
 	// Has active hull shader (requires changing topology)
-	bool m_previouslyHadHullShader;	
+	bool m_previouslyHadHullShader;
 
 	TrinityALImpl::Tr2DrawUPHelper m_drawUP;
 
@@ -319,7 +333,7 @@ private:
 	Tr2ResourceSetAL m_currentResourceSet;
 
 	friend class Tr2PrimaryRenderContextAL;
-	typedef	TrackableStdStack<Tr2TextureAL>	TextureStack;
+	typedef TrackableStdStack<Tr2TextureAL> TextureStack;
 	TrackableStdStack<BoundRT> m_stackRT[MAX_RENDER_TARGET];
 	TextureStack m_stackDS;
 

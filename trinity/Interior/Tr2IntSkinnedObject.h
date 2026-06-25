@@ -22,45 +22,43 @@ BLUE_DECLARE( Tr2IntSkinnedObject );
 BLUE_DECLARE_VECTOR( Tr2IntSkinnedObject );
 BLUE_DECLARE( Tr2ApexScene );
 
-class Tr2IntSkinnedObject : 
-	public ITr2InteriorDynamic,
-	public IInitialize,
-	public Tr2SkinnedObject,
-	public ITr2Pickable, 
-	public IBluePlacementObserver,
-	public ITr2BoundingBox
+class Tr2IntSkinnedObject : public ITr2InteriorDynamic,
+							public IInitialize,
+							public Tr2SkinnedObject,
+							public ITr2Pickable,
+							public IBluePlacementObserver,
+							public ITr2BoundingBox
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
 
-    Tr2IntSkinnedObject(IRoot* lockobj = NULL);
-    ~Tr2IntSkinnedObject();
+	Tr2IntSkinnedObject( IRoot* lockobj = NULL );
+	~Tr2IntSkinnedObject();
 
 	// Update functions for Tr2SkinnedObject (implements the ITr2InteriorDynamic interface)
 	//
 	virtual void PrePhysicsUpdate( Be::Time time );
 	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene );
 
-    //////////////////////////////////////////////////////////////////////////
-    // ITr2InteriorCullable
+	//////////////////////////////////////////////////////////////////////////
+	// ITr2InteriorCullable
 	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const;
 
-    //////////////////////////////////////////////////////////////////////////
-    // ITr2InteriorDynamic
+	//////////////////////////////////////////////////////////////////////////
+	// ITr2InteriorDynamic
 	virtual bool AddToScene( Tr2ApexScene* apexScene );
 	virtual void RemoveFromScene( void );
 
 	// Per-object data with instanced lighting
-	virtual Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting( 
+	virtual Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting(
 		ITriRenderBatchAccumulator* accumulator,
 		Tr2InteriorLightSet* lightSet,
-		const Matrix& objectToWorldMatrix 
-		);
+		const Matrix& objectToWorldMatrix );
 
-	virtual void SetPosition(const Vector3 &pos);
+	virtual void SetPosition( const Vector3& pos );
 	virtual void SetRotation( const Quaternion& rotQuat );
 	virtual void SetScaling( const Vector3& scaleVec );
 
@@ -75,22 +73,25 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ); 
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
-	virtual IRoot* GetID( uint16_t ) { return this->GetRawRoot(); }
+	virtual IRoot* GetID( uint16_t )
+	{
+		return this->GetRawRoot();
+	}
 	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2InteriorDynamic
-	
+
 	virtual void SetLOD( const TriFrustum* frustum );
 
 	// sizes
 	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool IsBoundingBoxReady( void ) const;
-	
+
 	// Apex
 	void AddToApexScene( Tr2ApexScene* apexScene );
 	void RemoveFromApexScene( void );
@@ -102,6 +103,7 @@ public:
 protected:
 	void AddReflectionMap( TriTextureRes* texture );
 	void RemoveReflectionMap( TriTextureRes* texture );
+
 protected:
 	friend class WodAvatar2Builder;
 
@@ -121,9 +123,9 @@ protected:
 	// Apex
 	bool m_isInApexScene;
 
-	Tr2PerObjectData* GetPerObjectDataGpuSkinning( 
+	Tr2PerObjectData* GetPerObjectDataGpuSkinning(
 		ITriRenderBatchAccumulator* accumulator,
-		Tr2InteriorLightSet* lightSet, 
+		Tr2InteriorLightSet* lightSet,
 		const Matrix& objectToWorldMatrix );
 
 	// Per-cell reflection maps

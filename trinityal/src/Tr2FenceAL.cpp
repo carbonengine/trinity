@@ -7,15 +7,15 @@
 namespace
 {
 
-	std::shared_ptr<TrinityALImpl::Tr2FenceAL> NullFence()
-	{
-		static std::shared_ptr<TrinityALImpl::Tr2FenceAL> nullFence = std::make_shared<TrinityALImpl::Tr2FenceAL>();
-		return nullFence;
-	}
+std::shared_ptr<TrinityALImpl::Tr2FenceAL> NullFence()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2FenceAL> nullFence = std::make_shared<TrinityALImpl::Tr2FenceAL>();
+	return nullFence;
+}
 }
 
-Tr2FenceAL::Tr2FenceAL()
-	:m_fence( NullFence() )
+Tr2FenceAL::Tr2FenceAL() :
+	m_fence( NullFence() )
 {
 }
 

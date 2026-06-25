@@ -45,7 +45,7 @@ struct Tr2PerObjectPSData
 	float farFadeDistance;
 	float nearFadeDistance;
 	Vector2 padding;
-	Vector4 highlightColor;	
+	Vector4 highlightColor;
 
 	Tr2PerObjectPerPixelPointLightData pointLights[8];
 };
@@ -87,7 +87,7 @@ struct Tr2PerFramePSData
 	float shadowCount;
 	float invShadowSize;
 	float radius;
-	Vector4 viewPort;	// xy - viewport width/height, zw - viewport offset
+	Vector4 viewPort; // xy - viewport width/height, zw - viewport offset
 	Matrix ViewProjInverse;
 };
 

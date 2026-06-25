@@ -11,7 +11,8 @@
 //   Tr2GrannyEventTrack is a curve used to playback Granny text tracks. For each text
 //   key the class executes provided IBlueEventListener.
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2GrannyEventTrack ): public Tr2GrannyTrack
+BLUE_CLASS( Tr2GrannyEventTrack ) :
+	public Tr2GrannyTrack
 {
 public:
 	Tr2GrannyEventTrack( IRoot* lockobj = NULL );
@@ -20,8 +21,9 @@ public:
 
 	void UpdateValueImpl( double time );
 	void ResetTracks( void );
-	void ApplyTracks( granny_track_group* group, float duration, float timeStep );
+	void ApplyTracks( granny_track_group * group, float duration, float timeStep );
 	bool TracksReady( void );
+
 protected:
 	granny_text_track* m_track;
 	double m_previousTime;

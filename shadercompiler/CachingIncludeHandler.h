@@ -4,9 +4,9 @@
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   CachingIncludeHandler is an include handler for D3D effect compiler. It caches 
-//   contents of included files, so the next time they are requested it returns cached 
-//   contents. This object can be accessed from different threads. 
+//   CachingIncludeHandler is an include handler for D3D effect compiler. It caches
+//   contents of included files, so the next time they are requested it returns cached
+//   contents. This object can be accessed from different threads.
 // --------------------------------------------------------------------------------------
 class CachingIncludeHandler
 {
@@ -27,6 +27,7 @@ public:
 	void SetRootPath( const char* shaderPath );
 
 	std::optional<IncludedFile> AddPrefix( const char* fileName, const char* prefix );
+
 private:
 	typedef std::map<const void*, std::string> PathFromFile;
 	typedef std::map<std::string, IncludedFile> FileFromPath;

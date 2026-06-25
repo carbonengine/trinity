@@ -10,21 +10,27 @@
 class DescriptorHeapViewDx12
 {
 public:
-
 	/** */
-	DescriptorHeapViewDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry);
+	DescriptorHeapViewDx12( GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
 
 	/** */
 	virtual ~DescriptorHeapViewDx12();
 
 	/** Get the underlying CPU descriptor handle */
-	D3D12_CPU_DESCRIPTOR_HANDLE GetHandleCPU() const { CCP_ASSERT(m_entry != nullptr); return m_entry->m_offsetCPU; };
+	D3D12_CPU_DESCRIPTOR_HANDLE GetHandleCPU() const
+	{
+		CCP_ASSERT( m_entry != nullptr );
+		return m_entry->m_offsetCPU;
+	};
 
 	/** Get the underlying GPU descriptor handle */
-	D3D12_GPU_DESCRIPTOR_HANDLE GetHandleGPU() const { CCP_ASSERT(m_entry != nullptr); return m_entry->m_offsetGPU; };
+	D3D12_GPU_DESCRIPTOR_HANDLE GetHandleGPU() const
+	{
+		CCP_ASSERT( m_entry != nullptr );
+		return m_entry->m_offsetGPU;
+	};
 
 protected:
-
 	GlobalDescriptorHeapPage::DescriptorEntry* m_entry;
 	GlobalDescriptorHeapAllocator* m_allocator;
 };
@@ -33,7 +39,6 @@ protected:
 class ShaderResourceViewDx12
 {
 public:
-
 	ShaderResourceViewDx12( GpuVisibleDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
 	virtual ~ShaderResourceViewDx12();
 
@@ -81,7 +86,6 @@ public:
 class SamplerStateDx12 : public ShaderResourceViewDx12
 {
 public:
-
 	SamplerStateDx12( GpuVisibleDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
 	virtual ~SamplerStateDx12();
 };
@@ -90,8 +94,7 @@ public:
 class RenderTargetViewDx12 : public DescriptorHeapViewDx12
 {
 public:
-
-	RenderTargetViewDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry);
+	RenderTargetViewDx12( GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
 	virtual ~RenderTargetViewDx12();
 };
 
@@ -99,8 +102,7 @@ public:
 class DepthStencilViewDx12 : public DescriptorHeapViewDx12
 {
 public:
-
-	DepthStencilViewDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry);
+	DepthStencilViewDx12( GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
 	virtual ~DepthStencilViewDx12();
 };
 

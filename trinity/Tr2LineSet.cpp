@@ -8,7 +8,7 @@
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 using namespace Tr2RenderContextEnum;
 
-Tr2LineSet::Tr2LineSet( IRoot* lockobj /*= NULL*/ ):
+Tr2LineSet::Tr2LineSet( IRoot* lockobj /*= NULL*/ ) :
 	Tr2PrimitiveSet( lockobj ),
 	m_pickingVertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_maxCurrentTriangleCount( 0 ),
@@ -90,8 +90,8 @@ bool Tr2LineSet::OnPrepareResources()
 					Tr2GpuUsage::VERTEX_BUFFER,
 					Tr2CpuUsage::WRITE_OFTEN,
 					nullptr,
-					renderContext )
-				, false );
+					renderContext ),
+				false );
 			m_currentSubmittedLineCount = (unsigned int)m_lines.size();
 		}
 
@@ -102,7 +102,7 @@ bool Tr2LineSet::OnPrepareResources()
 
 		void* vertexBuffer;
 		CR_RETURN_VAL( m_vertexBuffer.MapForWriting( vertexBuffer, renderContext ), false );
-		memcpy( vertexBuffer, &m_lines[0], sizeof( LineData ) * m_lines.size() );	
+		memcpy( vertexBuffer, &m_lines[0], sizeof( LineData ) * m_lines.size() );
 		m_vertexBuffer.UnmapForWriting( renderContext );
 
 		m_boundingSphere.x = center.x;
@@ -111,10 +111,10 @@ bool Tr2LineSet::OnPrepareResources()
 		m_boundingSphere.w = radius;
 	}
 
-	
+
 	if( m_triangles.size() )
 	{
-		if( !m_pickingVertexBuffer.IsValid() || (m_currentSubmittedTriangleCount < m_triangles.size()) )
+		if( !m_pickingVertexBuffer.IsValid() || ( m_currentSubmittedTriangleCount < m_triangles.size() ) )
 		{
 			USE_MAIN_THREAD_RENDER_CONTEXT();
 			CR_RETURN_VAL(
@@ -124,13 +124,13 @@ bool Tr2LineSet::OnPrepareResources()
 					Tr2GpuUsage::VERTEX_BUFFER,
 					Tr2CpuUsage::WRITE_OFTEN,
 					nullptr,
-					renderContext )
-				, false );
+					renderContext ),
+				false );
 			m_currentSubmittedTriangleCount = (unsigned int)m_triangles.size();
 		}
 		void* vertexBuffer;
 		CR_RETURN_VAL( m_pickingVertexBuffer.MapForWriting( vertexBuffer, renderContext ), false );
-		memcpy( vertexBuffer, &m_triangles[0], sizeof( Triangle )*m_triangles.size() );
+		memcpy( vertexBuffer, &m_triangles[0], sizeof( Triangle ) * m_triangles.size() );
 		m_pickingVertexBuffer.UnmapForWriting( renderContext );
 	}
 
@@ -205,7 +205,7 @@ bool Tr2LineSet::SubmitChanges()
 {
 	if( m_lines.size() > m_maxCurrentLineCount )
 	{
-		// increase the size of the buffer 
+		// increase the size of the buffer
 		m_maxCurrentLineCount = (unsigned int)m_lines.capacity();
 		if( m_triangles.size() > m_maxCurrentTriangleCount )
 		{
@@ -221,7 +221,7 @@ bool Tr2LineSet::SubmitChanges()
 
 void Tr2LineSet::SetCurrentColor( Color& val )
 {
-	for ( unsigned int i = 0; i < m_lines.size(); i++ )
+	for( unsigned int i = 0; i < m_lines.size(); i++ )
 	{
 		m_lines[i].m_color1 = val;
 		m_lines[i].m_color2 = val;

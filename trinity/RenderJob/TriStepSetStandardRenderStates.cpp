@@ -17,7 +17,7 @@ TriStepResult TriStepSetStdRndStates::Execute( Be::Time realTime, Be::Time simTi
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 void TriStepSetStdRndStates::py__init__( Be::Optional<unsigned> state )
 {

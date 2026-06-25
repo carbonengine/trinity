@@ -8,8 +8,7 @@ extern Be::VarChooser Tr2CurveInterpolationChooser[];
 namespace
 {
 
-BlueStructureDefinition Tr2CurveQuaternionKeyDef[] =
-{
+BlueStructureDefinition Tr2CurveQuaternionKeyDef[] = {
 	{ "time", Be::FLOAT32_1, 0 },
 	{ "value", Be::FLOAT32_4, 4 },
 	{ "id", Be::USHORT_1, 20 },
@@ -22,8 +21,8 @@ const Tr2CurveQuaternionKey s_defaultKey = { 0.f, Quaternion( 0.f, 0.f, 0.f, 1.f
 
 
 // --------------------------------------------------------------------------------
-Tr2CurveQuaternion::Tr2CurveQuaternion( IRoot* lockobj )
-	:PARENTLOCK( m_keys ),
+Tr2CurveQuaternion::Tr2CurveQuaternion( IRoot* lockobj ) :
+	PARENTLOCK( m_keys ),
 	m_currentValue( 0.f, 0.f, 0.f, 1.f ),
 	m_lastSegment( 0 ),
 	m_extrapolationBefore( Tr2CurveExtrapolation::CLAMP ),

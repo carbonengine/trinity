@@ -6,12 +6,14 @@
 
 BLUE_DECLARE( Tr2TexturePipelineStepPack );
 
-BLUE_CLASS( Tr2TexturePackChannel ): public IRoot
+BLUE_CLASS( Tr2TexturePackChannel ) :
+	public IRoot
 {
 public:
 	Tr2TexturePackChannel( IRoot* lockobj = nullptr );
 
 	EXPOSE_TO_BLUE();
+
 private:
 	std::wstring m_path;
 	uint8_t m_channel;
@@ -23,15 +25,17 @@ private:
 TYPEDEF_BLUECLASS( Tr2TexturePackChannel );
 
 
-BLUE_CLASS( Tr2TexturePipelineStepPack ): public ITr2TexturePipelineStep
+BLUE_CLASS( Tr2TexturePipelineStepPack ) :
+	public ITr2TexturePipelineStep
 {
 public:
 	Tr2TexturePipelineStepPack( IRoot* lockobj = nullptr );
 
 	EXPOSE_TO_BLUE();
 
-	virtual void GetResourceDependencies( std::set<std::wstring>& resources ) const;
-	virtual bool Execute( ImageIO::HostBitmap& bitmap, const std::unordered_map<std::wstring, const ImageIO::HostBitmap*>& inputs, const Tr2TexturePipelineParams& params ) const;
+	virtual void GetResourceDependencies( std::set<std::wstring> & resources ) const;
+	virtual bool Execute( ImageIO::HostBitmap & bitmap, const std::unordered_map<std::wstring, const ImageIO::HostBitmap*>& inputs, const Tr2TexturePipelineParams& params ) const;
+
 private:
 	struct BitmapSource
 	{
@@ -40,7 +44,7 @@ private:
 		uint32_t rowStride;
 	};
 
-	static void Pack( ImageIO::HostBitmap& bitmap, BitmapSource* channels, uint32_t channelCount, uint32_t mip );
+	static void Pack( ImageIO::HostBitmap & bitmap, BitmapSource * channels, uint32_t channelCount, uint32_t mip );
 
 	Tr2RenderContextEnum::PixelFormat m_format;
 	PTr2TexturePackChannel m_r;

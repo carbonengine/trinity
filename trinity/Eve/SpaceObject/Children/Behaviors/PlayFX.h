@@ -39,12 +39,11 @@ public:
 	// PlayFX
 	virtual size_t GetScratchMemorySize() const;
 	virtual void InitializeScratch( void* scratchMemory );
-	virtual std::vector<Vector3> CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
-		BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius );
+	virtual std::vector<Vector3> CalculateBehavior( std::vector<DroneAgent> & agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius );
 	std::string GetBehaviorName();
 	int GetProcessPriority();
 
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -53,7 +52,10 @@ public:
 
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	void UpdateSyncronous( const EveUpdateContext& updateContext );
-	void UpdateState( bool state ) { m_stop = state; }
+	void UpdateState( bool state )
+	{
+		m_stop = state;
+	}
 	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
 

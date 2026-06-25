@@ -25,7 +25,7 @@ public:
 	uint64_t m_frameIndex;
 
 
-	
+
 	std::vector<Tr2DebugObjectReference> m_debugLineObjects;
 	std::vector<Tr2DebugObjectReference> m_debugTriangleObjects;
 	Tr2PickBuffer m_debugPickBuffer;
@@ -37,7 +37,7 @@ public:
 	Tr2PickBuffer m_mainPickBuffer;
 	const void* m_mainPickData;
 
-	
+
 	/////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s ) override;

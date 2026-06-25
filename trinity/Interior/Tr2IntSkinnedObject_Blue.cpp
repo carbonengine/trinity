@@ -8,8 +8,8 @@ BLUE_DEFINE( Tr2IntSkinnedObject );
 
 const Be::ClassInfo* Tr2IntSkinnedObject::ExposeToBlue()
 {
-    EXPOSURE_BEGIN(Tr2IntSkinnedObject, "" )
-        MAP_INTERFACE( Tr2IntSkinnedObject )
+	EXPOSURE_BEGIN( Tr2IntSkinnedObject, "" )
+		MAP_INTERFACE( Tr2IntSkinnedObject )
 		MAP_INTERFACE( ITr2InteriorDynamic )
 		MAP_INTERFACE( ITr2Interior )
 		MAP_INTERFACE( IInitialize )
@@ -30,4 +30,3 @@ const Be::ClassInfo* Tr2IntSkinnedObject::ExposeToBlue()
 		MAP_ATTRIBUTE( "depthOffset", m_depthOffset, "Depth offset for transparency sorting", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_CHAINTO( Tr2SkinnedObject )
 }
-

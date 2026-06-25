@@ -49,7 +49,7 @@ void Range::SetMaxRangePoint( const float var )
 {
 	m_maxRange = max( var, m_centerPoint );
 
-	if ( m_isUniform )
+	if( m_isUniform )
 	{
 		m_minRange = m_centerPoint - ( m_maxRange - m_centerPoint );
 	}
@@ -73,7 +73,7 @@ float Range::GetMaxRangePoint() const
 void Range::ToggleIsUniform()
 {
 	m_isUniform = !m_isUniform;
-	if (m_isUniform)
+	if( m_isUniform )
 	{
 		FixUniformity();
 	}
@@ -82,7 +82,7 @@ void Range::ToggleIsUniform()
 void Range::SetIsUniform( const bool var )
 {
 	m_isUniform = var;
-	if (m_isUniform)
+	if( m_isUniform )
 	{
 		FixUniformity();
 	}

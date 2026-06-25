@@ -6,8 +6,8 @@
 #include "Tr2HostBitmap.h"
 
 
-Tr2TexturePipeline::Tr2TexturePipeline( IRoot* lockobj )
-	:PARENTLOCK( m_steps ),
+Tr2TexturePipeline::Tr2TexturePipeline( IRoot* lockobj ) :
+	PARENTLOCK( m_steps ),
 	m_inputs( "Tr2TexturePipeline::m_inputs" )
 {
 }

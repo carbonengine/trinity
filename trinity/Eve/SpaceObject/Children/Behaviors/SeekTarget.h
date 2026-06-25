@@ -112,19 +112,6 @@ TYPEDEF_BLUECLASS( SeekTarget );
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 /*
 void EveChildEffectPropagator::ProcessRefLocators( IEveSpaceObject2* parent )
 {

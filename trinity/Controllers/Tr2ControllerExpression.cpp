@@ -28,497 +28,497 @@ TRI_REGISTER_SETTING( "controllerServerTime", g_controllerServerTime );
 
 namespace
 {
-	float StateTime( const Tr2StateMachine* stateMachine )
+float StateTime( const Tr2StateMachine* stateMachine )
+{
+	return stateMachine ? stateMachine->GetStateRunTime() : 0;
+}
+
+float CurveSetTime( IRoot* owner, const char* name )
+{
+	ITr2CurveSetOwnerPtr csOwner = BlueCastPtr( owner );
+	if( !csOwner )
 	{
-		return stateMachine ? stateMachine->GetStateRunTime() : 0;
+		return 0;
 	}
-
-	float CurveSetTime( IRoot* owner, const char* name )
+	if( auto slash = strchr( name, '/' ) )
 	{
-		ITr2CurveSetOwnerPtr csOwner = BlueCastPtr( owner );
-		if( !csOwner )
-		{
-			return 0;
-		}
-		if( auto slash = strchr( name, '/' ) )
-		{
-			std::string csName = name;
-			std::string rangeName = csName.substr( slash - name + 1 );
-			csName = csName.substr( 0, slash - name );
-			return csOwner->GetRangeDuration( csName, rangeName );
-		}
-		else
-		{
-			return csOwner->GetCurveSetDuration( name );
-		}
+		std::string csName = name;
+		std::string rangeName = csName.substr( slash - name + 1 );
+		csName = csName.substr( 0, slash - name );
+		return csOwner->GetRangeDuration( csName, rangeName );
 	}
-
-	float GetExternalControllerVariable( IRoot* ctx, const char* name, float defaultVal )
+	else
 	{
-		ITr2ControllerOwnerPtr owner = BlueCastPtr( ctx );
-		if( !owner )
-		{
-			return defaultVal;
-		}
+		return csOwner->GetCurveSetDuration( name );
+	}
+}
 
-		float value = 0.0;
-		if( owner->GetControllerValueByName( name, value ) )
-		{
-			return value;
-		}
-
+float GetExternalControllerVariable( IRoot* ctx, const char* name, float defaultVal )
+{
+	ITr2ControllerOwnerPtr owner = BlueCastPtr( ctx );
+	if( !owner )
+	{
 		return defaultVal;
 	}
 
-	float AnimationTime( IRoot* ctx, const char* name )
+	float value = 0.0;
+	if( owner->GetControllerValueByName( name, value ) )
 	{
-		EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx );
-		if( !spaceObject )
-		{
-			return 0;
-		}
-		auto ac = spaceObject->GetAnimationController();
-		if( !ac )
-		{
-			return 0;
-		}
-		return ac->FindAnimationDurationByName( name );
+		return value;
 	}
 
-	float Random( float min, float max)
-	{
-		float result = min + rand() % int( max - min );
-		return result;
-	}
+	return defaultVal;
+}
 
-	float Mod( float number, float mod )
+float AnimationTime( IRoot* ctx, const char* name )
+{
+	EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx );
+	if( !spaceObject )
 	{
-		if( mod == 0 )
-		{
-			return 0;
-		}
-		return fmod( number, mod );
-	}
-
-	float IsAnimationPlaying( IRoot* ctx, const char* layerName )
-	{
-		EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx );
-		if( !spaceObject )
-		{
-			return 0;
-		}
-		auto ac = spaceObject->GetAnimationController();
-		if( !ac )
-		{
-			return 0;
-		}
-		auto layer = ac->GetAnimationLayer( layerName && !*layerName ? nullptr : layerName );
-		if( !layer )
-		{
-			return 0;
-		}
-		auto remaining = layer->GetAnimationRemainingTime();
-		return remaining > 0;
-	}
-
-	float KillCount( IRoot* ctx )
-	{
-		if( EveShip2Ptr ship = BlueCastPtr( ctx ) )
-		{
-			return ship->GetKillCounterValue();
-		}
-		return 0.0f;
-	}
-
-	float BoundingSphereRadius( IRoot* ctx )
-	{
-		if( EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx ) )
-		{
-			return spaceObject->GetRadius();
-		}
-		return 0.0f;
-	}
-
-	float ShipSpeed( IRoot* ctx )
-	{
-		if( g_controllerFunctionOverrideEnabled )
-		{
-			return g_controllerShipSpeed;
-		}
-		if( IEveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx ) )
-		{
-			Vector3 velocity;
-			spaceObject->GetWorldVelocity( velocity );
-			return Length( velocity );
-		}
-		else if( EveChildContainerPtr child = BlueCastPtr( ctx ) )
-		{
-			Vector3 velocity;
-			child->GetWorldVelocity( velocity );
-			return Length( velocity );
-		}
 		return 0;
 	}
-
-	float ShaderQuality()
+	auto ac = spaceObject->GetAnimationController();
+	if( !ac )
 	{
-		TR2SHADERMODEL settings = Tr2Renderer::GetShaderModel();
-
-		switch( settings )
-		{
-		case TR2SM_3_0_LO:
-			return 0.f;
-		case TR2SM_3_0_HI:
-			return 1.f;
-		case TR2SM_3_0_DEPTH:
-			return 2.f;
-		default:
-			return 0.f;
-		}
+		return 0;
 	}
+	return ac->FindAnimationDurationByName( name );
+}
 
-	float ShipMaxSpeed( IRoot* ctx )
+float Random( float min, float max )
+{
+	float result = min + rand() % int( max - min );
+	return result;
+}
+
+float Mod( float number, float mod )
+{
+	if( mod == 0 )
 	{
-		if( g_controllerFunctionOverrideEnabled )
-		{
-			return g_controllerShipMaxSpeed;
-		}
-		if( EveShip2Ptr ship = BlueCastPtr( ctx ) )
-		{
-			auto speed = ship->GetMaxSpeed();
-			return speed > 0 ? speed : 1;
-		}
-		else if( EveChildContainerPtr child = BlueCastPtr( ctx ) )
-		{
-			auto speed = child->GetOwnerMaxSpeed();
-			return speed > 0 ? speed : 1;
-		}
-		else if( EveChildInstanceContainerPtr child = BlueCastPtr( ctx ) )
-		{
-			auto speed = child->GetOwnerMaxSpeed();
-			return speed > 0 ? speed : 1;
-		}
-		return 1;
+		return 0;
 	}
+	return fmod( number, mod );
+}
 
-	float BoosterIntensity( void* ctx )
+float IsAnimationPlaying( IRoot* ctx, const char* layerName )
+{
+	EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx );
+	if( !spaceObject )
 	{
-		if( EveShip2Ptr ship = BlueCastPtr( static_cast<IRoot*>( ctx ) ) )
-		{
-			auto intensity = ship->GetBoosterIntensity();
-			return intensity > 0 ? intensity: 0;
-		}
-		return 0.0f;
+		return 0;
 	}
-
-	bool IsValidVariableName( const char* name )
+	auto ac = spaceObject->GetAnimationController();
+	if( !ac )
 	{
-		auto isLetter = []( char x ) {
-			return ( x >= 'a' && x <= 'z' ) || ( x >= 'A' && x <= 'Z' ) || ( x == '_' );
-		};
-		auto isDigit = []( char x ) {
-			return x >= '0' && x <= '9';
-		};
-		if( !isLetter( *name ) )
+		return 0;
+	}
+	auto layer = ac->GetAnimationLayer( layerName && !*layerName ? nullptr : layerName );
+	if( !layer )
+	{
+		return 0;
+	}
+	auto remaining = layer->GetAnimationRemainingTime();
+	return remaining > 0;
+}
+
+float KillCount( IRoot* ctx )
+{
+	if( EveShip2Ptr ship = BlueCastPtr( ctx ) )
+	{
+		return ship->GetKillCounterValue();
+	}
+	return 0.0f;
+}
+
+float BoundingSphereRadius( IRoot* ctx )
+{
+	if( EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx ) )
+	{
+		return spaceObject->GetRadius();
+	}
+	return 0.0f;
+}
+
+float ShipSpeed( IRoot* ctx )
+{
+	if( g_controllerFunctionOverrideEnabled )
+	{
+		return g_controllerShipSpeed;
+	}
+	if( IEveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx ) )
+	{
+		Vector3 velocity;
+		spaceObject->GetWorldVelocity( velocity );
+		return Length( velocity );
+	}
+	else if( EveChildContainerPtr child = BlueCastPtr( ctx ) )
+	{
+		Vector3 velocity;
+		child->GetWorldVelocity( velocity );
+		return Length( velocity );
+	}
+	return 0;
+}
+
+float ShaderQuality()
+{
+	TR2SHADERMODEL settings = Tr2Renderer::GetShaderModel();
+
+	switch( settings )
+	{
+	case TR2SM_3_0_LO:
+		return 0.f;
+	case TR2SM_3_0_HI:
+		return 1.f;
+	case TR2SM_3_0_DEPTH:
+		return 2.f;
+	default:
+		return 0.f;
+	}
+}
+
+float ShipMaxSpeed( IRoot* ctx )
+{
+	if( g_controllerFunctionOverrideEnabled )
+	{
+		return g_controllerShipMaxSpeed;
+	}
+	if( EveShip2Ptr ship = BlueCastPtr( ctx ) )
+	{
+		auto speed = ship->GetMaxSpeed();
+		return speed > 0 ? speed : 1;
+	}
+	else if( EveChildContainerPtr child = BlueCastPtr( ctx ) )
+	{
+		auto speed = child->GetOwnerMaxSpeed();
+		return speed > 0 ? speed : 1;
+	}
+	else if( EveChildInstanceContainerPtr child = BlueCastPtr( ctx ) )
+	{
+		auto speed = child->GetOwnerMaxSpeed();
+		return speed > 0 ? speed : 1;
+	}
+	return 1;
+}
+
+float BoosterIntensity( void* ctx )
+{
+	if( EveShip2Ptr ship = BlueCastPtr( static_cast<IRoot*>( ctx ) ) )
+	{
+		auto intensity = ship->GetBoosterIntensity();
+		return intensity > 0 ? intensity : 0;
+	}
+	return 0.0f;
+}
+
+bool IsValidVariableName( const char* name )
+{
+	auto isLetter = []( char x ) {
+		return ( x >= 'a' && x <= 'z' ) || ( x >= 'A' && x <= 'Z' ) || ( x == '_' );
+	};
+	auto isDigit = []( char x ) {
+		return x >= '0' && x <= '9';
+	};
+	if( !isLetter( *name ) )
+	{
+		return false;
+	}
+	++name;
+	while( *name )
+	{
+		if( !isLetter( *name ) && !isDigit( *name ) )
 		{
 			return false;
 		}
 		++name;
-		while( *name )
-		{
-			if( !isLetter( *name ) && !isDigit( *name) )
-			{
-				return false;
-			}
-			++name;
-		}
-		return true;
 	}
+	return true;
+}
 
 #ifdef _WIN32
-	// We really need something like FileTimeToSystemTime in blue and platform-independent
+// We really need something like FileTimeToSystemTime in blue and platform-independent
 
-	SYSTEMTIME GetServerTimeParts()
+SYSTEMTIME GetServerTimeParts()
+{
+	Be::Time time;
+	if( g_controllerFunctionOverrideEnabled )
 	{
-		Be::Time time;
-		if( g_controllerFunctionOverrideEnabled )
-		{
-			time = g_controllerServerTime;
-		}
-		else
-		{
-			time = BeOS->GetCurrentFrameTime();
-		}
-
-		SYSTEMTIME st = {};
-		FileTimeToSystemTime( (FILETIME*)&time, &st );
-		return st;
+		time = g_controllerServerTime;
+	}
+	else
+	{
+		time = BeOS->GetCurrentFrameTime();
 	}
 
-	float GetServerYear()
-	{
-		return float( GetServerTimeParts().wYear );
-	}
+	SYSTEMTIME st = {};
+	FileTimeToSystemTime( (FILETIME*)&time, &st );
+	return st;
+}
 
-	float GetServerMonth()
-	{
-		return float( GetServerTimeParts().wMonth );
-	}
+float GetServerYear()
+{
+	return float( GetServerTimeParts().wYear );
+}
 
-	float GetServerDay()
-	{
-		return float( GetServerTimeParts().wDay );
-	}
+float GetServerMonth()
+{
+	return float( GetServerTimeParts().wMonth );
+}
 
-	float GetServerDayOfWeek()
-	{
-		return float( GetServerTimeParts().wDayOfWeek );
-	}
+float GetServerDay()
+{
+	return float( GetServerTimeParts().wDay );
+}
 
-	float GetServerHour()
-	{
-		return float( GetServerTimeParts().wHour );
-	}
+float GetServerDayOfWeek()
+{
+	return float( GetServerTimeParts().wDayOfWeek );
+}
 
-	float GetServerMinute()
-	{
-		return float( GetServerTimeParts().wMinute );
-	}
+float GetServerHour()
+{
+	return float( GetServerTimeParts().wHour );
+}
 
-	float GetServerSecond()
-	{
-		return float( GetServerTimeParts().wSecond );
-	}
+float GetServerMinute()
+{
+	return float( GetServerTimeParts().wMinute );
+}
+
+float GetServerSecond()
+{
+	return float( GetServerTimeParts().wSecond );
+}
 
 #else
-    struct tm GetServerTimeParts()
-    {
-        Be::Time time;
-        if( g_controllerFunctionOverrideEnabled )
-        {
-            time = g_controllerServerTime;
-        }
-        else
-        {
-            time = BeOS->GetCurrentFrameTime();
-        }
+struct tm GetServerTimeParts()
+{
+	Be::Time time;
+	if( g_controllerFunctionOverrideEnabled )
+	{
+		time = g_controllerServerTime;
+	}
+	else
+	{
+		time = BeOS->GetCurrentFrameTime();
+	}
 
-        time_t t = time_t( time / 10000000 );
-        return *localtime( &t );
-    }
-    float GetServerYear()
-    {
-        return float( 1900 + GetServerTimeParts().tm_year );
-    }
+	time_t t = time_t( time / 10000000 );
+	return *localtime( &t );
+}
+float GetServerYear()
+{
+	return float( 1900 + GetServerTimeParts().tm_year );
+}
 
-    float GetServerMonth()
-    {
-        return float( GetServerTimeParts().tm_mon + 1 );
-    }
+float GetServerMonth()
+{
+	return float( GetServerTimeParts().tm_mon + 1 );
+}
 
-    float GetServerDay()
-    {
-        return float( GetServerTimeParts().tm_mday );
-    }
+float GetServerDay()
+{
+	return float( GetServerTimeParts().tm_mday );
+}
 
-    float GetServerDayOfWeek()
-    {
-        return float( GetServerTimeParts().tm_wday );
-    }
+float GetServerDayOfWeek()
+{
+	return float( GetServerTimeParts().tm_wday );
+}
 
-    float GetServerHour()
-    {
-        return float( GetServerTimeParts().tm_hour );
-    }
+float GetServerHour()
+{
+	return float( GetServerTimeParts().tm_hour );
+}
 
-    float GetServerMinute()
-    {
-        return float( GetServerTimeParts().tm_min );
-    }
+float GetServerMinute()
+{
+	return float( GetServerTimeParts().tm_min );
+}
 
-    float GetServerSecond()
-    {
-        return float( GetServerTimeParts().tm_sec );
-    }
+float GetServerSecond()
+{
+	return float( GetServerTimeParts().tm_sec );
+}
 #endif
 
-	float IsWeekend()
+float IsWeekend()
+{
+	if( int( GetServerDayOfWeek() ) % 6 == 0 )
 	{
-		if( int( GetServerDayOfWeek() ) % 6 == 0 )
+		return 1.f;
+	}
+	else
+	{
+		return 0.f;
+	}
+}
+
+float TimePhase( float period )
+{
+	auto p = TimeFromDouble( period );
+	if( !p )
+	{
+		return 0;
+	}
+	if( p < 0 )
+	{
+		p = -p;
+	}
+	Be::Time time;
+	if( g_controllerFunctionOverrideEnabled )
+	{
+		time = g_controllerServerTime;
+	}
+	else
+	{
+		time = BeOS->GetCurrentFrameTime();
+	}
+	return TimeAsFloat( time % p );
+}
+
+typedef float ( *TimeGetter )();
+
+// Helper function for serverTime comparisons
+template <typename Op, typename Op2>
+float ServerTimeComparisonHelper( float year, float month, float day, float hour, float minute, float second, Op overQualifier, Op2 disqualifier )
+{
+	struct TimeComp
+	{
+		TimeGetter getter;
+		float userVariable;
+	} comps[] = {
+		{ GetServerYear, year },
+		{ GetServerMonth, month },
+		{ GetServerDay, day },
+		{ GetServerHour, hour },
+		{ GetServerMinute, minute },
+		{ GetServerSecond, second }
+	};
+
+	for( const auto& c : comps )
+	{
+		if( c.userVariable == -1.f )
+		{
+			continue;
+		}
+		float serverVariable = c.getter();
+		if( overQualifier( serverVariable, c.userVariable ) )
 		{
 			return 1.f;
 		}
-		else
+		if( disqualifier( serverVariable, c.userVariable ) )
 		{
 			return 0.f;
 		}
 	}
 
-	float TimePhase( float period )
+	// never overQualified, disqualified or all were set to -1
+	return 1.f;
+}
+
+float ServerTimeGreaterThan( float year, float month, float day, float hour, float minute, float second )
+{
+	return ServerTimeComparisonHelper( year, month, day, hour, minute, second, std::greater<float>(), std::less<float>() );
+}
+
+float ServerTimeLessThanOrEqual( float year, float month, float day, float hour, float minute, float second )
+{
+	return ServerTimeComparisonHelper( year, month, day, hour, minute, second, std::less<float>(), std::greater<float>() );
+}
+
+float ServerTimeEqual( float year, float month, float day, float hour, float minute, float second )
+{
+	return ServerTimeComparisonHelper( year, month, day, hour, minute, second, []( float f1, float f2 ) { return false; }, std::not_equal_to<float>() );
+}
+
+float DaysSinceServerTime( float year, float month, float day )
+{
+	int serverYear = int( GetServerYear() ) - 1900;
+	int serverMonth = int( GetServerMonth() );
+	int serverDay = int( GetServerDay() );
+	int targetYear = year == -1.f ? serverYear : int( year ) - 1900;
+	int targetMonth = month == -1.f ? serverMonth : int( month );
+	int targetDay = day == -1.f ? serverDay : int( day );
+	struct std::tm a = { 0, 0, 0, targetDay, targetMonth, targetYear };
+	struct std::tm b = { 0, 0, 0, serverDay, serverMonth, serverYear };
+	std::time_t x = std::mktime( &a );
+	std::time_t y = std::mktime( &b );
+	if( x != (std::time_t)( -1 ) && y != (std::time_t)( -1 ) )
 	{
-		auto p = TimeFromDouble( period );
-		if( !p )
-		{
-			return 0;
-		}
-		if( p < 0 )
-		{
-			p = -p;
-		}
-		Be::Time time;
-		if( g_controllerFunctionOverrideEnabled )
-		{
-			time = g_controllerServerTime;
-		}
-		else
-		{
-			time = BeOS->GetCurrentFrameTime();
-		}
-		return TimeAsFloat( time % p );
+		double differenceInDays = std::difftime( y, x ) / ( 60 * 60 * 24 );
+		return float( differenceInDays );
 	}
 
-	typedef float ( *TimeGetter )();
+	return std::numeric_limits<float>::min();
+}
 
-	// Helper function for serverTime comparisons
-	template <typename Op, typename Op2>
-	float ServerTimeComparisonHelper( float year, float month, float day, float hour, float minute, float second, Op overQualifier, Op2 disqualifier )
+CcpParser::Function s_functions[] = {
+	CcpParser::Function( "StateTime", StateTime, Tr2ControllerExpression::STATE_MACHINE_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "AnimationTime", AnimationTime, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "IsAnimationPlaying", IsAnimationPlaying, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "CurveSetTime", CurveSetTime, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "GetExternalControllerVariable", GetExternalControllerVariable, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "ShipSpeed", ShipSpeed, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "ShipMaxSpeed", ShipMaxSpeed, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "Random", Random ),
+	CcpParser::Function( "ShipBoosterIntensity", BoosterIntensity, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "KillCount", KillCount, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+	CcpParser::Function( "BoundingSphereRadius", BoundingSphereRadius, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+
+	CcpParser::Function( "IsWeekend", IsWeekend ),
+	CcpParser::Function( "ServerYear", GetServerYear ),
+	CcpParser::Function( "ServerMonth", GetServerMonth ),
+	CcpParser::Function( "ServerDay", GetServerDay ),
+	CcpParser::Function( "ServerDayOfWeek", GetServerDayOfWeek ),
+	CcpParser::Function( "ServerHour", GetServerHour ),
+	CcpParser::Function( "ServerMinute", GetServerMinute ),
+	CcpParser::Function( "ServerSecond", GetServerSecond ),
+	CcpParser::Function( "ServerTimePhase", TimePhase ),
+	CcpParser::Function( "ServerTimeGreaterThan", ServerTimeGreaterThan ),
+	CcpParser::Function( "ServerTimeLessThanOrEqual", ServerTimeLessThanOrEqual ),
+	CcpParser::Function( "ServerTimeEqual", ServerTimeEqual ),
+	CcpParser::Function( "DaysSinceServerTime", DaysSinceServerTime ),
+	CcpParser::Function( "ShaderQuality", ShaderQuality ),
+};
+
+
+struct ParserObserver : public CcpParser::Observer
+{
+	CcpParser::VariableView m_variables = {};
+	uint64_t m_mask = 0;
+	bool m_maskOverflow = false;
+	bool m_hasNonPureFunctions = false;
+
+	void OnVariable( const CcpParser::Variable* variable ) override
 	{
-		struct TimeComp
+		auto offset = variable - m_variables.data;
+		if( offset >= 0 && offset < ptrdiff_t( m_variables.count ) )
 		{
-			TimeGetter getter;
-			float userVariable;
-		} comps[] = {
-			{ GetServerYear, year },
-			{ GetServerMonth, month },
-			{ GetServerDay, day },
-			{ GetServerHour, hour },
-			{ GetServerMinute, minute },
-			{ GetServerSecond, second }
-		};
-
-		for( const auto& c : comps )
-		{
-			if( c.userVariable == -1.f )
+			if( offset >= 64 )
 			{
-				continue;
+				m_maskOverflow = true;
 			}
-			float serverVariable = c.getter();
-			if( overQualifier( serverVariable, c.userVariable ) )
+			else
 			{
-				return 1.f;
-			}
-			if( disqualifier( serverVariable, c.userVariable ) )
-			{
-				return 0.f;
-			}
-		}
-
-		// never overQualified, disqualified or all were set to -1
-		return 1.f;
-	}
-
-	float ServerTimeGreaterThan( float year, float month, float day, float hour, float minute, float second )
-	{
-		return ServerTimeComparisonHelper( year, month, day, hour, minute, second, std::greater<float>(), std::less<float>() );
-	}
-
-	float ServerTimeLessThanOrEqual( float year, float month, float day, float hour, float minute, float second )
-	{
-		return ServerTimeComparisonHelper( year, month, day, hour, minute, second, std::less<float>(), std::greater<float>() );
-	}
-
-	float ServerTimeEqual( float year, float month, float day, float hour, float minute, float second )
-	{
-		return ServerTimeComparisonHelper( year, month, day, hour, minute, second, []( float f1, float f2 ) { return false; }, std::not_equal_to<float>() );
-	}
-
-	float DaysSinceServerTime( float year, float month, float day )
-	{
-		int serverYear = int( GetServerYear() ) - 1900;
-		int serverMonth = int( GetServerMonth() );
-		int serverDay = int( GetServerDay() );
-		int targetYear = year == -1.f ? serverYear : int( year ) - 1900;
-		int targetMonth = month == -1.f ? serverMonth : int( month );
-		int targetDay = day == -1.f ? serverDay : int( day );
-		struct std::tm a = { 0, 0, 0, targetDay, targetMonth, targetYear };
-		struct std::tm b = { 0, 0, 0, serverDay, serverMonth, serverYear };
-		std::time_t x = std::mktime( &a );
-		std::time_t y = std::mktime( &b );
-		if( x != (std::time_t)( -1 ) && y != (std::time_t)( -1 ) )
-		{
-			double differenceInDays = std::difftime( y, x ) / ( 60 * 60 * 24 );
-			return float( differenceInDays );
-		}
-
-		return std::numeric_limits<float>::min();
-	}
-
-	CcpParser::Function s_functions[] = {
-		CcpParser::Function( "StateTime", StateTime, Tr2ControllerExpression::STATE_MACHINE_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "AnimationTime", AnimationTime, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "IsAnimationPlaying", IsAnimationPlaying, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "CurveSetTime", CurveSetTime, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "GetExternalControllerVariable", GetExternalControllerVariable, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "ShipSpeed", ShipSpeed, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "ShipMaxSpeed", ShipMaxSpeed, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "Random", Random ),
-		CcpParser::Function( "ShipBoosterIntensity", BoosterIntensity, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "KillCount", KillCount, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-		CcpParser::Function( "BoundingSphereRadius", BoundingSphereRadius, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
-
-		CcpParser::Function( "IsWeekend", IsWeekend ),
-		CcpParser::Function( "ServerYear", GetServerYear ),
-		CcpParser::Function( "ServerMonth", GetServerMonth ),
-		CcpParser::Function( "ServerDay", GetServerDay ),
-		CcpParser::Function( "ServerDayOfWeek", GetServerDayOfWeek ),
-		CcpParser::Function( "ServerHour", GetServerHour ),
-		CcpParser::Function( "ServerMinute", GetServerMinute ),
-		CcpParser::Function( "ServerSecond", GetServerSecond ),
-		CcpParser::Function( "ServerTimePhase", TimePhase ),
-		CcpParser::Function( "ServerTimeGreaterThan", ServerTimeGreaterThan ),
-		CcpParser::Function( "ServerTimeLessThanOrEqual", ServerTimeLessThanOrEqual ),
-		CcpParser::Function( "ServerTimeEqual", ServerTimeEqual ),
-		CcpParser::Function( "DaysSinceServerTime", DaysSinceServerTime ),
-		CcpParser::Function( "ShaderQuality", ShaderQuality ),
-	};
-
-
-	struct ParserObserver: public CcpParser::Observer
-	{
-		CcpParser::VariableView m_variables = {};
-		uint64_t m_mask = 0;
-		bool m_maskOverflow = false;
-		bool m_hasNonPureFunctions = false;
-
-		void OnVariable( const CcpParser::Variable* variable ) override
-		{
-			auto offset = variable - m_variables.data;
-			if( offset >= 0 && offset < ptrdiff_t( m_variables.count ) )
-			{
-				if( offset >= 64 )
-				{
-					m_maskOverflow = true;
-				}
-				else
-				{
-					m_mask |= 1ull << offset;
-				}
+				m_mask |= 1ull << offset;
 			}
 		}
-		
-		void OnFunction( const CcpParser::Function* func ) override
+	}
+
+	void OnFunction( const CcpParser::Function* func ) override
+	{
+		if( !HasFlag( func->flags, CcpParser::FunctionFlags::PURE_FUNC ) )
 		{
-			if( !HasFlag( func->flags, CcpParser::FunctionFlags::PURE_FUNC ) )
-			{
-				m_hasNonPureFunctions = true;
-			}
+			m_hasNonPureFunctions = true;
 		}
-	};
+	}
+};
 }
 
 
-Tr2ControllerExpression::Tr2ControllerExpression()
-	:m_stateMachine( nullptr ),
+Tr2ControllerExpression::Tr2ControllerExpression() :
+	m_stateMachine( nullptr ),
 	m_controller( nullptr ),
 	m_variableMask( 0 )
 {
@@ -619,9 +619,8 @@ void Tr2ControllerExpression::GetExpressionTermInfo( std::vector<Tr2ExpressionTe
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerMinute", "returns a minute (0-60) for current server time" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerSecond", "returns a second (0-60) for current server time" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimePhase", "period", "returns seconds phase in a server time period of the given length" ) );
-	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeGreaterThan", "year", "month", "day", "hour","minute", "second","args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
+	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeGreaterThan", "year", "month", "day", "hour", "minute", "second", "args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeLessThanOrEqual", "year", "month", "day", "hour", "minute", "second", "args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeEqual", "year", "month", "day", "hour", "minute", "second", "args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "DaysSinceServerTime", "year", "month", "day", "(yyyy, mm, dd). usable before and after event. -bigNumb = invalid date, -1 to default to current server-Y/M/D" ) );
 }
-

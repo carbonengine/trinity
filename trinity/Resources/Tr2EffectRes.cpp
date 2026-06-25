@@ -41,7 +41,7 @@ Tr2EffectRes::Tr2EffectRes( IRoot* lockobj ) :
 	m_offsets( nullptr ),
 	m_permutations( "Tr2EffectRes::m_permutations" ),
 	m_shaders( "Tr2EffectRes::m_shaders" )
-{	
+{
 }
 
 Tr2EffectRes::~Tr2EffectRes()
@@ -175,33 +175,33 @@ BlueAsyncRes::LoadingResult Tr2EffectRes::DoLoad()
 	const uint8_t* buffer = reinterpret_cast<const uint8_t*>( m_data.get() );
 	const uint8_t* bufferEnd = buffer + dataSize;
 
-#define SKIP( storeType )																	\
-	if( buffer + sizeof( storeType ) > bufferEnd )											\
-	{																						\
-		CCP_LOGERR( "Unexpected end of file while reading effect \"%S\"", GetPath() );		\
-		return LR_FAILED;																	\
-	}																						\
+#define SKIP( storeType )                                                              \
+	if( buffer + sizeof( storeType ) > bufferEnd )                                     \
+	{                                                                                  \
+		CCP_LOGERR( "Unexpected end of file while reading effect \"%S\"", GetPath() ); \
+		return LR_FAILED;                                                              \
+	}                                                                                  \
 	buffer += sizeof( storeType );
 
-#define READ( storeType, valueType, value )													\
-	if( buffer + sizeof( storeType ) > bufferEnd )											\
-	{																						\
-		CCP_LOGERR( "Unexpected end of file while reading effect \"%S\"", GetPath() );		\
-		return LR_FAILED;																	\
-	}																						\
-	value = valueType( *reinterpret_cast<const storeType*>( buffer ) );						\
+#define READ( storeType, valueType, value )                                            \
+	if( buffer + sizeof( storeType ) > bufferEnd )                                     \
+	{                                                                                  \
+		CCP_LOGERR( "Unexpected end of file while reading effect \"%S\"", GetPath() ); \
+		return LR_FAILED;                                                              \
+	}                                                                                  \
+	value = valueType( *reinterpret_cast<const storeType*>( buffer ) );                \
 	buffer += sizeof( storeType );
 
-#define READ_STRING( value )																\
-	{																						\
-		uint32_t offset;																	\
-		READ( uint32_t, uint32_t, offset );													\
-		if( offset >= m_stringTableSize )													\
-		{																					\
-			CCP_LOGERR( "Invalid string offset in effect \"%S\"", GetPath() );				\
-			return LR_FAILED;																\
-		}																					\
-		value = m_stringTable + offset;														\
+#define READ_STRING( value )                                                   \
+	{                                                                          \
+		uint32_t offset;                                                       \
+		READ( uint32_t, uint32_t, offset );                                    \
+		if( offset >= m_stringTableSize )                                      \
+		{                                                                      \
+			CCP_LOGERR( "Invalid string offset in effect \"%S\"", GetPath() ); \
+			return LR_FAILED;                                                  \
+		}                                                                      \
+		value = m_stringTable + offset;                                        \
 	}
 
 	READ( uint32_t, uint32_t, m_version );
@@ -282,7 +282,7 @@ BlueAsyncRes::LoadingResult Tr2EffectRes::DoLoad()
 
 			uint32_t count;
 			READ( uint8_t, uint32_t, count );
-			for( uint32_t j = 0; j < count;++ j )
+			for( uint32_t j = 0; j < count; ++j )
 			{
 				std::string name;
 				READ_STRING( name );
@@ -327,7 +327,7 @@ bool Tr2EffectRes::DoPrepare()
 
 void Tr2EffectRes::ReleaseResources( TriStorage s )
 {
-	if( (s & TRISTORAGE_ALL) == TRISTORAGE_ALL )
+	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
 		SetGood( false );
 		SetPrepared( false );
@@ -347,7 +347,7 @@ bool Tr2EffectRes::OnPrepareResources()
 	}
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	if ( !renderContext.IsValid() )
+	if( !renderContext.IsValid() )
 	{
 		// It's possible to get a PrepareResources when there's no valid render context
 		return false;

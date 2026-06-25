@@ -10,14 +10,14 @@
 BLUE_DECLARE( TriValueBinding );
 BLUE_DECLARE_VECTOR( TriValueBinding );
 
-BLUE_CLASS( TriValueBinding ):
-	 public INotify,
-	 public ITr2ValueBinding
+BLUE_CLASS( TriValueBinding ) :
+	public INotify,
+	public ITr2ValueBinding
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
-    TriValueBinding( IRoot* lockobj = NULL );
+	TriValueBinding( IRoot* lockobj = NULL );
 	~TriValueBinding();
 
 	virtual void Initialize();
@@ -26,7 +26,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* val );
+	virtual bool OnModified( Be::Var * val );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2ValueBinding
@@ -43,7 +43,7 @@ public:
 	void SetDestination( const std::string& destAttribute, IRootPtr destination );
 	void SetScale( float scale );
 
-	void CreateWeakBinding( IRoot* source, const char* sourceAttr, IRoot* dest, const char* destAttr, float scale = 1.0f, const Vector4& offset = Vector4( 0.0f, 0.0f, 0.0f, 0.0f ) );
+	void CreateWeakBinding( IRoot * source, const char* sourceAttr, IRoot* dest, const char* destAttr, float scale = 1.0f, const Vector4& offset = Vector4( 0.0f, 0.0f, 0.0f, 0.0f ) );
 
 	bool IsValid() const;
 
@@ -52,10 +52,10 @@ protected:
 	IRoot* GetCurrentDestinationObject() const;
 
 	IRootPtr GetSourceObject() const;
-	void SetSourceObject( IRoot* sourceObject );
+	void SetSourceObject( IRoot * sourceObject );
 
 	IRootPtr GetDestinationObject() const;
-	void SetDestinationObject( IRoot* destinationObject );
+	void SetDestinationObject( IRoot * destinationObject );
 
 	std::string m_name;
 	IRootPtr m_sourceObject;
@@ -82,12 +82,12 @@ protected:
 	Vector4 m_offset;
 	INotify* m_notifyPtr;
 
-	typedef bool (*CopyFunc)( void* srcVar, void* dstVar, float scale, const Vector4& offset );
+	typedef bool ( *CopyFunc )( void* srcVar, void* dstVar, float scale, const Vector4& offset );
 	CopyFunc m_copyFunc;
 
 	BlueScriptCallback m_copyValueCallable;
 
-	virtual	size_t DetermineCopyFunc( const Be::VarEntry* srcEntry, const Be::VarEntry* dstEntry, size_t dataSize, bool sourceFloatArrayAsFloat, bool destFloatArrayAsFloat );
+	virtual size_t DetermineCopyFunc( const Be::VarEntry* srcEntry, const Be::VarEntry* dstEntry, size_t dataSize, bool sourceFloatArrayAsFloat, bool destFloatArrayAsFloat );
 };
 
 TYPEDEF_BLUECLASS( TriValueBinding );

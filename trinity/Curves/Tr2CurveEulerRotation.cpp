@@ -5,8 +5,8 @@
 #include "Tr2CurveScalar.h"
 
 
-Tr2CurveEulerRotation::Tr2CurveEulerRotation( IRoot* lockobj )
-	:PARENTLOCK( m_yaw ),
+Tr2CurveEulerRotation::Tr2CurveEulerRotation( IRoot* lockobj ) :
+	PARENTLOCK( m_yaw ),
 	PARENTLOCK( m_pitch ),
 	PARENTLOCK( m_roll ),
 	m_currentValue( 0, 0, 0, 1 )
@@ -18,7 +18,7 @@ void Tr2CurveEulerRotation::UpdateValue( double time )
 	float yaw = m_yaw.Update( time );
 	float pitch = m_pitch.Update( time );
 	float roll = m_roll.Update( time );
-    m_currentValue = RotationQuaternion( yaw, pitch, roll );
+	m_currentValue = RotationQuaternion( yaw, pitch, roll );
 }
 
 float Tr2CurveEulerRotation::Length()
@@ -31,7 +31,7 @@ Quaternion Tr2CurveEulerRotation::GetValue( double time ) const
 	float yaw = m_yaw.GetValue( time );
 	float pitch = m_pitch.GetValue( time );
 	float roll = m_roll.GetValue( time );
-    return RotationQuaternion( yaw, pitch, roll );
+	return RotationQuaternion( yaw, pitch, roll );
 }
 
 // --------------------------------------------------------------------------------

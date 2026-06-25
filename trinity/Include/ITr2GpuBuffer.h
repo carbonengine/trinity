@@ -10,7 +10,8 @@
 // See Also:
 //   Tr2GpuBuffer, TriGeometryRes, Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_INTERFACE( ITr2GpuBuffer ): public IRoot
+BLUE_INTERFACE( ITr2GpuBuffer ) :
+	public IRoot
 {
 	// ----------------------------------------------------------------------------------
 	// Description:

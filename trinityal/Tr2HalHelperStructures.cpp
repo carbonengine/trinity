@@ -17,16 +17,16 @@ using namespace Tr2RenderContextEnum;
 //   the entire resource.
 // --------------------------------------------------------------------------------------
 Tr2TextureSubresource::Tr2TextureSubresource() :
-	m_startFace( 0 ), 
-	m_endFace( std::numeric_limits<uint32_t>::max() ), 
-	m_startMipLevel( 0 ), 
-	m_endMipLevel( 0xffffffff ), 
+	m_startFace( 0 ),
+	m_endFace( std::numeric_limits<uint32_t>::max() ),
+	m_startMipLevel( 0 ),
+	m_endMipLevel( 0xffffffff ),
 	m_box{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff }
 {
 }
 
-Tr2TextureSubresource::Tr2TextureSubresource( uint32_t mipLevel )
-	:m_startFace( 0 ),
+Tr2TextureSubresource::Tr2TextureSubresource( uint32_t mipLevel ) :
+	m_startFace( 0 ),
 	m_endFace( 1 ),
 	m_startMipLevel( mipLevel ),
 	m_endMipLevel( mipLevel + 1 ),
@@ -39,8 +39,8 @@ Tr2TextureSubresource::Tr2TextureSubresource( uint32_t mipLevel )
 //   Tr2TextureSubresource default constructor: construct a subresource range containing
 //   the a single mip level for a single cubemap face / array slice.
 // --------------------------------------------------------------------------------------
-Tr2TextureSubresource::Tr2TextureSubresource( uint32_t face, uint32_t mipLevel )
-	:m_startFace( face ),
+Tr2TextureSubresource::Tr2TextureSubresource( uint32_t face, uint32_t mipLevel ) :
+	m_startFace( face ),
 	m_endFace( face + 1 ),
 	m_startMipLevel( mipLevel ),
 	m_endMipLevel( mipLevel + 1 ),
@@ -50,7 +50,7 @@ Tr2TextureSubresource::Tr2TextureSubresource( uint32_t face, uint32_t mipLevel )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Clamps subresource values to a specific texture dimensions.  
+//   Clamps subresource values to a specific texture dimensions.
 // Arguments:
 //   texture - Texture which dimensions are used to clamp subresource data
 // --------------------------------------------------------------------------------------
@@ -63,9 +63,9 @@ void Tr2TextureSubresource::ClampToTexture( const Tr2BitmapDimensions& texture )
 	m_startMipLevel = std::min( m_startMipLevel, texture.GetTrueMipCount() - 1 );
 	m_endMipLevel = std::min( m_endMipLevel, texture.GetTrueMipCount() );
 
-	uint32_t mipWidth  = texture.GetMipWidth( m_startMipLevel );
+	uint32_t mipWidth = texture.GetMipWidth( m_startMipLevel );
 	uint32_t mipHeight = texture.GetMipHeight( m_startMipLevel );
-	uint32_t mipDepth  = std::max( texture.GetDepth() >> m_startMipLevel, 1u );
+	uint32_t mipDepth = std::max( texture.GetDepth() >> m_startMipLevel, 1u );
 
 	if( HasBox() )
 	{
@@ -92,7 +92,7 @@ void Tr2TextureSubresource::ClampToTexture( const Tr2BitmapDimensions& texture )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Check if subresource covers the entire textures (all slices and all mip levels).  
+//   Check if subresource covers the entire textures (all slices and all mip levels).
 // Arguments:
 //   texture - Texture to check against
 // Return Value:
@@ -201,11 +201,11 @@ Tr2TextureSubresource& Tr2TextureSubresource::SetRect( uint32_t left, uint32_t t
 
 bool Tr2TextureSubresource::operator==( const Tr2TextureSubresource& other ) const
 {
-	return	m_startFace		== other.m_startFace		&&
-			m_endFace		== other.m_endFace			&&
-			m_startMipLevel	== other.m_startMipLevel	&&
-			m_endMipLevel	== other.m_endMipLevel		&&
-			m_box			== other.m_box;
+	return m_startFace == other.m_startFace &&
+		m_endFace == other.m_endFace &&
+		m_startMipLevel == other.m_startMipLevel &&
+		m_endMipLevel == other.m_endMipLevel &&
+		m_box == other.m_box;
 }
 
 bool Tr2TextureSubresource::IsValid() const
@@ -217,18 +217,18 @@ bool Tr2TextureSubresource::IsValid() const
 			return false;
 		}
 	}
-	return	m_startFace < m_endFace && m_startMipLevel < m_endMipLevel;
+	return m_startFace < m_endFace && m_startMipLevel < m_endMipLevel;
 }
 
 // Crop both subresources to the given bitmaps as well as each others dimensions;
 // and run some basic checks on them (IsValid, formats matching, ...).
 // Returns true if all that passed and a copy would make sense.
-bool Crop(	Tr2TextureSubresource& sourceSR,
-			const Tr2BitmapDimensions& sourceBD, 
-			Tr2TextureSubresource& destSR,
-			const Tr2BitmapDimensions& destBD )
+bool Crop( Tr2TextureSubresource& sourceSR,
+		   const Tr2BitmapDimensions& sourceBD,
+		   Tr2TextureSubresource& destSR,
+		   const Tr2BitmapDimensions& destBD )
 {
-	if( destSR.GetFaceCount()	!= sourceSR.GetFaceCount() )
+	if( destSR.GetFaceCount() != sourceSR.GetFaceCount() )
 	{
 		return false;
 	}
@@ -239,7 +239,7 @@ bool Crop(	Tr2TextureSubresource& sourceSR,
 	}
 
 	sourceSR.ClampToTexture( sourceBD );
-	destSR  .ClampToTexture( destBD   );
+	destSR.ClampToTexture( destBD );
 
 	if( sourceSR.GetWidth() < destSR.GetWidth() )
 	{
@@ -260,7 +260,7 @@ bool Crop(	Tr2TextureSubresource& sourceSR,
 	}
 
 	sourceSR.ClampToTexture( sourceBD );
-	destSR  .ClampToTexture( destBD   );
+	destSR.ClampToTexture( destBD );
 
 	if( !sourceSR.IsValid() || !destSR.IsValid() )
 	{

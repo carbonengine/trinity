@@ -15,7 +15,7 @@ static const char* CURVE_PICK_EFFECT_PATH = "res:/Graphics/Effect/Managed/Space/
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
-Tr2CurveLineSet::Tr2CurveLineSet( IRoot* lockobj ):
+Tr2CurveLineSet::Tr2CurveLineSet( IRoot* lockobj ) :
 	m_scaling( 1.f, 1.f, 1.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_translation( 0.f, 0.f, 0.f ),
@@ -41,8 +41,8 @@ Tr2CurveLineSet::~Tr2CurveLineSet()
 
 // -------------------------------------------------------------
 // Description:
-//   Implements INotify method. Is called when exposed member 
-//   variable is modified. If line width factor is modified - 
+//   Implements INotify method. Is called when exposed member
+//   variable is modified. If line width factor is modified -
 //   recreate the line set.
 // Arguments:
 //   val - Value being modified
@@ -94,7 +94,7 @@ bool Tr2CurveLineSet::OnPrepareResources()
 
 			tvd.Add( tvd.UBYTE_4_NORM, tvd.COLOR, 0 );
 			tvd.Add( tvd.UBYTE_4_NORM, tvd.COLOR, 1 );
-			tvd.Add( tvd.UBYTE_4_NORM, tvd.COLOR, 2 );	
+			tvd.Add( tvd.UBYTE_4_NORM, tvd.COLOR, 2 );
 		}
 
 		m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_curveLineDataVertexDecl );
@@ -103,7 +103,7 @@ bool Tr2CurveLineSet::OnPrepareResources()
 			return false;
 		}
 	}
-	
+
 	// always fill it (this will also create a vertexbuffer)
 	return FillVertexBuffer();
 }
@@ -161,7 +161,7 @@ bool Tr2CurveLineSet::isValidLineID( unsigned int id ) const
 // ------------------------------------------------------------------------------------------------------
 inline unsigned SwizzleColor( unsigned color )
 {
-	return 	( ( color & 0xff0000 ) >> 16 ) | ( color & 0xff00ff00 ) | ( ( color & 0xff ) << 16 );
+	return ( ( color & 0xff0000 ) >> 16 ) | ( color & 0xff00ff00 ) | ( ( color & 0xff ) << 16 );
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -179,16 +179,16 @@ inline unsigned SwizzleColor( unsigned color )
 //   posNext - end position of the next segment
 //   buffer - the vertex buffer
 // ------------------------------------------------------------------------------------------------------
-void Tr2CurveLineSet::WriteLineVerticesToBuffer( 
-	const Vector3& pos1, 
-	const Color& col1, 
-	float length1, 
-	const Vector3& pos2, 
-	const Color& col2, 
-	float length2, 
-	const Vector3& posPrev, 
-	const Vector3& posNext, 
-	unsigned int lineID, 
+void Tr2CurveLineSet::WriteLineVerticesToBuffer(
+	const Vector3& pos1,
+	const Color& col1,
+	float length1,
+	const Vector3& pos2,
+	const Color& col2,
+	float length2,
+	const Vector3& posPrev,
+	const Vector3& posNext,
+	unsigned int lineID,
 	LineVertex* buffer )
 {
 	// line info
@@ -279,14 +279,14 @@ void Tr2CurveLineSet::WriteLineVerticesToBuffer(
 //   lineID - the line's id
 //   buffer - the vertex buffer
 // ------------------------------------------------------------------------------------------------------
-void Tr2CurveLineSet::WriteParticleVerticesToBuffer( 
-	const Vector3& pos1, 
-	const Color& col1, 
-	float length1, 
-	const Vector3& pos2, 
-	const Color& col2, 
-	float length2, 
-	unsigned int lineID, 
+void Tr2CurveLineSet::WriteParticleVerticesToBuffer(
+	const Vector3& pos1,
+	const Color& col1,
+	float length1,
+	const Vector3& pos2,
+	const Color& col2,
+	float length2,
+	unsigned int lineID,
 	LineVertex* buffer )
 {
 	// line info
@@ -379,7 +379,7 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 			USE_MAIN_THREAD_RENDER_CONTEXT();
 
 			Tr2CpuUsage::Type cpuUsage = m_dynamic ? Tr2CpuUsage::WRITE_OFTEN : Tr2CpuUsage::WRITE;
-			
+
 			CR_RETURN_VAL(
 				m_vertexBuffer.Create(
 					sizeof( LineVertex ),
@@ -387,8 +387,8 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 					Tr2GpuUsage::VERTEX_BUFFER,
 					cpuUsage,
 					nullptr,
-					renderContext )
-				, false );
+					renderContext ),
+				false );
 			m_vertexBufferSize = currentNumOfLines;
 		}
 
@@ -404,186 +404,183 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 			case LINETYPE_INVALID:
 				break;
 
-			case LINETYPE_STRAIGHT:
+			case LINETYPE_STRAIGHT: {
+				// put some verts into buffer
+				WriteLineVerticesToBuffer(
+					m_lines[i].position1,
+					m_lines[i].color1,
+					0.f,
+					m_lines[i].position2,
+					m_lines[i].color2,
+					1.f,
+					m_lines[i].position1 - ( m_lines[i].position2 - m_lines[i].position1 ),
+					m_lines[i].position2 + ( m_lines[i].position2 - m_lines[i].position1 ),
+					i,
+					vertexBuffer );
+				vertexBuffer += 6;
+
+				// add to bounding sphere
+				BoundingSphereUpdate( m_lines[i].position1, m_boundingSphere );
+				BoundingSphereUpdate( m_lines[i].position2, m_boundingSphere );
+				// add to bounding box
+				BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].position1 );
+				BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].position2 );
+
+				// one straight line more
+				m_currentSubmittedLineCount++;
+			}
+			break;
+
+			case LINETYPE_SPHERED: {
+				// create rotation matrix to rotate each segment further to target vector
+				Vector3 rotationAxis, startDirNrm, endDirNrm;
+				// directional vectors
+				Vector3 startDir = m_lines[i].position1 - m_lines[i].intermediatePosition;
+				Vector3 endDir = m_lines[i].position2 - m_lines[i].intermediatePosition;
+				startDirNrm = Normalize( startDir );
+				endDirNrm = Normalize( endDir );
+				// matrix
+				Matrix rotationMatrix;
+				rotationAxis = Cross( startDir, endDir );
+				float fullAngle = acosf( Dot( startDirNrm, endDirNrm ) );
+				float segmentAngle = fullAngle / (float)m_lines[i].numOfSegments;
+
+				// run through all segmens and create lines
+				rotationMatrix = RotationMatrix( rotationAxis, -segmentAngle );
+
+				Vector3 dir0 = TransformNormal( startDir, rotationMatrix );
+
+				rotationMatrix = RotationMatrix( rotationAxis, segmentAngle );
+
+				Vector3 dir1 = startDir;
+				Vector3 dir2 = TransformNormal( dir1, rotationMatrix );
+				;
+				Vector3 dir3 = startDir;
+				// also interpolate color across all the segments
+				Color col1 = m_lines[i].color1;
+				Color col2 = m_lines[i].color2;
+				for( unsigned int s = 0; s < m_lines[i].numOfSegments; ++s )
 				{
+					float segmentFactor = (float)( s + 1 ) / (float)m_lines[i].numOfSegments;
+
+					// rotate end dir of this segment
+					dir3 = TransformNormal( dir2, rotationMatrix );
+
+					// interpolate color
+					col2 = Lerp( m_lines[i].color1, m_lines[i].color2, segmentFactor );
+
 					// put some verts into buffer
-					WriteLineVerticesToBuffer( 
-						m_lines[i].position1, 
-						m_lines[i].color1, 
-						0.f, 
-						m_lines[i].position2, 
-						m_lines[i].color2, 
-						1.f, 
-						m_lines[i].position1 - ( m_lines[i].position2 - m_lines[i].position1 ),
-						m_lines[i].position2 + ( m_lines[i].position2 - m_lines[i].position1 ),
-						i, 
+					WriteLineVerticesToBuffer(
+						dir1 + m_lines[i].intermediatePosition,
+						col1,
+						(float)s / (float)m_lines[i].numOfSegments,
+						dir2 + m_lines[i].intermediatePosition,
+						col2,
+						segmentFactor,
+						dir0 + m_lines[i].intermediatePosition,
+						dir3 + m_lines[i].intermediatePosition,
+						i,
+						vertexBuffer );
+
+					vertexBuffer += 6;
+
+					// add to bounding sphere
+					BoundingSphereUpdate( dir1 + m_lines[i].intermediatePosition, m_boundingSphere );
+					BoundingSphereUpdate( dir2 + m_lines[i].intermediatePosition, m_boundingSphere );
+					// add to bounding box
+					BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].intermediatePosition );
+					BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].intermediatePosition );
+
+					// next segment
+					dir0 = dir1;
+					dir1 = dir2;
+					dir2 = dir3;
+					col1 = col2;
+				}
+
+				// several straight lines more
+				m_currentSubmittedLineCount += m_lines[i].numOfSegments;
+			}
+			break;
+
+			case LINETYPE_CURVED: {
+				// use intermediate point to generate tangents for hermite spline
+				Vector3 tangent1 = m_lines[i].intermediatePosition - m_lines[i].position1;
+				Vector3 tangent2 = m_lines[i].intermediatePosition - m_lines[i].position2;
+				tangent2 *= -1.f;
+				// run through all segmens and create lines
+				Vector3 pos0 = Hermite( m_lines[i].position1, tangent1, m_lines[i].position2, tangent2, -1.0f / m_lines[i].numOfSegments );
+				Vector3 pos1 = m_lines[i].position1;
+				Vector3 pos2 = Hermite( m_lines[i].position1, tangent1, m_lines[i].position2, tangent2, 1.0f / m_lines[i].numOfSegments );
+				Vector3 pos3 = m_lines[i].position1;
+				// also interpolate color across all the segments
+				Color col1 = m_lines[i].color1;
+				Color col2 = m_lines[i].color2;
+				for( unsigned int s = 0; s < m_lines[i].numOfSegments; ++s )
+				{
+					float segmentFactor = (float)( s + 1 ) / (float)m_lines[i].numOfSegments;
+					float segmentFactor2 = (float)( s + 2 ) / (float)m_lines[i].numOfSegments;
+					pos3 = Hermite( m_lines[i].position1, tangent1, m_lines[i].position2, tangent2, segmentFactor2 );
+
+					// interpolate color
+					col2 = Lerp( m_lines[i].color1, m_lines[i].color2, segmentFactor );
+
+					// put some verts into buffer
+					WriteLineVerticesToBuffer(
+						pos1,
+						col1,
+						(float)s / (float)m_lines[i].numOfSegments,
+						pos2,
+						col2,
+						segmentFactor,
+						pos0,
+						pos3,
+						i,
 						vertexBuffer );
 					vertexBuffer += 6;
 
 					// add to bounding sphere
-					BoundingSphereUpdate( m_lines[i].position1, m_boundingSphere );
-					BoundingSphereUpdate( m_lines[i].position2, m_boundingSphere );
+					BoundingSphereUpdate( pos1, m_boundingSphere );
+					BoundingSphereUpdate( pos2, m_boundingSphere );
 					// add to bounding box
-					BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].position1 );
-					BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].position2 );
+					BoundingBoxUpdate( m_minBounds, m_maxBounds, pos1 );
+					BoundingBoxUpdate( m_minBounds, m_maxBounds, pos2 );
 
-					// one straight line more
-					m_currentSubmittedLineCount++;
+					// next segment
+					pos0 = pos1;
+					pos1 = pos2;
+					pos2 = pos3;
+					col1 = col2;
 				}
-				break;
 
-			case LINETYPE_SPHERED:
+				// several straight lines more
+				m_currentSubmittedLineCount += m_lines[i].numOfSegments;
+			}
+			break;
+
+			case LINETYPE_PARTICLE: {
+				// just add segements as particles
+				for( unsigned int s = 0; s < m_lines[i].numOfSegments; ++s )
 				{
-					// create rotation matrix to rotate each segment further to target vector
-					Vector3 rotationAxis, startDirNrm, endDirNrm;
-					// directional vectors
-					Vector3 startDir = m_lines[i].position1 - m_lines[i].intermediatePosition;
-					Vector3 endDir = m_lines[i].position2 - m_lines[i].intermediatePosition;
-					startDirNrm = Normalize( startDir );
-					endDirNrm = Normalize( endDir );
-					// matrix
-					Matrix rotationMatrix;
-					rotationAxis = Cross( startDir, endDir );
-					float fullAngle = acosf( Dot( startDirNrm, endDirNrm ) );
-					float segmentAngle = fullAngle / (float)m_lines[i].numOfSegments;
+					// length
+					float segmentFactor = (float)s / (float)m_lines[i].numOfSegments;
 
-					// run through all segmens and create lines
-					rotationMatrix = RotationMatrix( rotationAxis, -segmentAngle );
-
-					Vector3 dir0 = TransformNormal( startDir, rotationMatrix );
-
-					rotationMatrix = RotationMatrix( rotationAxis, segmentAngle );
-
-					Vector3 dir1 = startDir;
-					Vector3 dir2 = TransformNormal( dir1, rotationMatrix );;
-					Vector3 dir3 = startDir;
-					// also interpolate color across all the segments
-					Color col1 = m_lines[i].color1;
-					Color col2 = m_lines[i].color2;
-					for( unsigned int s = 0; s < m_lines[i].numOfSegments; ++s )
-					{
-						float segmentFactor = (float)( s + 1 ) / (float)m_lines[i].numOfSegments;
-
-						// rotate end dir of this segment
-						dir3 = TransformNormal( dir2, rotationMatrix );
-
-						// interpolate color
-						col2 = Lerp( m_lines[i].color1, m_lines[i].color2, segmentFactor );
-
-						// put some verts into buffer
-						WriteLineVerticesToBuffer(
-							dir1 + m_lines[i].intermediatePosition,
-							col1,
-							(float)s / (float)m_lines[i].numOfSegments,
-							dir2 + m_lines[i].intermediatePosition,
-							col2,
-							segmentFactor,
-							dir0 + m_lines[i].intermediatePosition,
-							dir3 + m_lines[i].intermediatePosition,
-							i,
-							vertexBuffer );
-
-						vertexBuffer += 6;
-
-						// add to bounding sphere
-						BoundingSphereUpdate( dir1 + m_lines[i].intermediatePosition, m_boundingSphere );
-						BoundingSphereUpdate( dir2 + m_lines[i].intermediatePosition, m_boundingSphere );
-						// add to bounding box
-						BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].intermediatePosition );
-						BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].intermediatePosition );
-
-						// next segment
-						dir0 = dir1;
-						dir1 = dir2;
-						dir2 = dir3;
-						col1 = col2;
-					}
-
-					// several straight lines more
-					m_currentSubmittedLineCount += m_lines[i].numOfSegments;
+					// put some verts into buffer
+					WriteParticleVerticesToBuffer( m_lines[i].position1, m_lines[i].color1, segmentFactor, m_lines[i].position2, m_lines[i].color2, segmentFactor, i, vertexBuffer );
+					vertexBuffer += 6;
 				}
-				break;
 
-			case LINETYPE_CURVED:
-				{
-					// use intermediate point to generate tangents for hermite spline
-					Vector3 tangent1 = m_lines[i].intermediatePosition - m_lines[i].position1;
-					Vector3 tangent2 = m_lines[i].intermediatePosition - m_lines[i].position2;
-					tangent2 *= -1.f;
-					// run through all segmens and create lines
-					Vector3 pos0 = Hermite( m_lines[i].position1, tangent1, m_lines[i].position2, tangent2, -1.0f / m_lines[i].numOfSegments );
-					Vector3 pos1 = m_lines[i].position1;
-					Vector3 pos2 = Hermite( m_lines[i].position1, tangent1, m_lines[i].position2, tangent2, 1.0f / m_lines[i].numOfSegments );
-					Vector3 pos3 = m_lines[i].position1;
-					// also interpolate color across all the segments
-					Color col1 = m_lines[i].color1;
-					Color col2 = m_lines[i].color2;
-					for( unsigned int s = 0; s < m_lines[i].numOfSegments; ++s )
-					{
-						float segmentFactor = (float)( s + 1 ) / (float)m_lines[i].numOfSegments;
-						float segmentFactor2 = (float)( s + 2 ) / (float)m_lines[i].numOfSegments;
-						pos3 = Hermite( m_lines[i].position1, tangent1, m_lines[i].position2, tangent2, segmentFactor2 );
+				// add to bounding sphere
+				BoundingSphereUpdate( m_lines[i].position1, m_boundingSphere );
+				BoundingSphereUpdate( m_lines[i].position2, m_boundingSphere );
+				// add to bounding box
+				BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].position1 );
+				BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].position2 );
 
-						// interpolate color
-						col2 = Lerp( m_lines[i].color1, m_lines[i].color2, segmentFactor );
-
-						// put some verts into buffer
-						WriteLineVerticesToBuffer( 
-							pos1, 
-							col1, 
-							(float)s / (float)m_lines[i].numOfSegments, 
-							pos2, 
-							col2, 
-							segmentFactor, 
-							pos0,
-							pos3,
-							i, 
-							vertexBuffer );
-						vertexBuffer += 6;
-
-						// add to bounding sphere
-						BoundingSphereUpdate( pos1, m_boundingSphere );
-						BoundingSphereUpdate( pos2, m_boundingSphere );
-						// add to bounding box
-						BoundingBoxUpdate( m_minBounds, m_maxBounds, pos1 );
-						BoundingBoxUpdate( m_minBounds, m_maxBounds, pos2 );
-
-						// next segment
-						pos0 = pos1;
-						pos1 = pos2;
-						pos2 = pos3;
-						col1 = col2;
-					}
-
-					// several straight lines more
-					m_currentSubmittedLineCount += m_lines[i].numOfSegments;
-				}
-				break;
-
-			case LINETYPE_PARTICLE:
-				{
-					// just add segements as particles
-					for( unsigned int s = 0; s < m_lines[i].numOfSegments; ++s )
-					{
-						// length
-						float segmentFactor = (float)s / (float)m_lines[i].numOfSegments;
-
-						// put some verts into buffer
-						WriteParticleVerticesToBuffer( m_lines[i].position1, m_lines[i].color1, segmentFactor, m_lines[i].position2, m_lines[i].color2, segmentFactor, i, vertexBuffer );
-						vertexBuffer += 6;
-					}
-
-					// add to bounding sphere
-					BoundingSphereUpdate( m_lines[i].position1, m_boundingSphere );
-					BoundingSphereUpdate( m_lines[i].position2, m_boundingSphere );
-					// add to bounding box
-					BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].position1 );
-					BoundingBoxUpdate( m_minBounds, m_maxBounds, m_lines[i].position2 );
-
-					// several straight lines more
-					m_currentSubmittedLineCount += m_lines[i].numOfSegments;
-				}
-				break;
+				// several straight lines more
+				m_currentSubmittedLineCount += m_lines[i].numOfSegments;
+			}
+			break;
 			}
 		}
 
@@ -617,8 +614,8 @@ bool Tr2CurveLineSet::HasTransparentBatches()
 //   batchType - Type of batches to gather
 //   data - Per-object data
 // -------------------------------------------------------------
-void Tr2CurveLineSet::GetBatches( ITriRenderBatchAccumulator* accumulator, 
-								  TriBatchType batchType, 
+void Tr2CurveLineSet::GetBatches( ITriRenderBatchAccumulator* accumulator,
+								  TriBatchType batchType,
 								  const Tr2PerObjectData* perObjectData,
 								  Tr2RenderReason reason )
 {
@@ -661,7 +658,7 @@ float Tr2CurveLineSet::GetSortValue()
 
 // -------------------------------------------------------------
 // Description:
-//   Implements ITr2Renderable method. Does nothing. Derived 
+//   Implements ITr2Renderable method. Does nothing. Derived
 //   classes need to supply their own per-object data.
 // Arguments:
 //   accumulator - Render batch accumulator
@@ -956,7 +953,7 @@ void Tr2CurveLineSet::ChangeLinePositionSph( unsigned int id, const Vector3& pos
 //   id - The line ID returned by a previous call to AddXXX()
 //   intermediatePosition - The new intermediate position of the line on the surface of the sphere in 3d cartesian space
 // -------------------------------------------------------------
-void Tr2CurveLineSet::ChangeLineIntermediateCrt(unsigned int id, const Vector3& intermediatePosition )
+void Tr2CurveLineSet::ChangeLineIntermediateCrt( unsigned int id, const Vector3& intermediatePosition )
 {
 	if( isValidLineID( id ) )
 	{
@@ -973,7 +970,7 @@ void Tr2CurveLineSet::ChangeLineIntermediateCrt(unsigned int id, const Vector3& 
 //   intermediatePosition - The new intermediate position of the line on the surface of the sphere in 3d spherical coordinates (phi, theta, radius)"
 //   center - The center of the sphere the spherical coordinates are based on in 3d cartesian spac
 // -------------------------------------------------------------
-void Tr2CurveLineSet::ChangeLineIntermediateSph(unsigned int id, const Vector3& intermediatePosition, const Vector3& center )
+void Tr2CurveLineSet::ChangeLineIntermediateSph( unsigned int id, const Vector3& intermediatePosition, const Vector3& center )
 {
 	// sphericals stored in vec3
 	float phi = intermediatePosition.x;
@@ -989,13 +986,13 @@ void Tr2CurveLineSet::ChangeLineIntermediateSph(unsigned int id, const Vector3& 
 
 // -------------------------------------------------------------
 // Description:
-//   Changes only the intermediate position of a line, no matter what type of line. 
+//   Changes only the intermediate position of a line, no matter what type of line.
 //   Requires a call to SubmitChanges before being updated on the video card.eing updated on the video card.
 // Arguments:
 //   id - The line ID returned by a previous call to AddXXX()
 //   width - The new width of the line
 // -------------------------------------------------------------
-void Tr2CurveLineSet::ChangeLineWidth(unsigned int id, float width )
+void Tr2CurveLineSet::ChangeLineWidth( unsigned int id, float width )
 {
 	if( isValidLineID( id ) )
 	{
@@ -1006,7 +1003,7 @@ void Tr2CurveLineSet::ChangeLineWidth(unsigned int id, float width )
 
 // -------------------------------------------------------------
 // Description:
-//   Changes the multicolor settings of a line, so it will have a seperate color until a border. 
+//   Changes the multicolor settings of a line, so it will have a seperate color until a border.
 //   Requires a call to SubmitChanges before being updated on the video card.
 // Arguments:
 //   id - The line ID returned by a previous call to AddXXX()
@@ -1025,7 +1022,7 @@ void Tr2CurveLineSet::ChangeLineMultiColor( unsigned int id, const Vector4& colo
 
 // -------------------------------------------------------------
 // Description:
-//   Changes the animation settings of a line. 
+//   Changes the animation settings of a line.
 //   Requires a call to SubmitChanges before being updated on the video card.
 // Arguments:
 //   id - The line ID returned by a previous call to AddXXX()
@@ -1046,8 +1043,8 @@ void Tr2CurveLineSet::ChangeLineAnimation( unsigned int id, const Vector4& color
 
 // -------------------------------------------------------------
 // Description:
-//   Changes the number of segments a curved line is made of. 
-//   Does not work with straight lines! 
+//   Changes the number of segments a curved line is made of.
+//   Does not work with straight lines!
 //   Requires a call to SubmitChanges before being updated on the video card.
 // Arguments:
 //   id - The line ID returned by a previous call to AddXXX()
@@ -1068,7 +1065,7 @@ void Tr2CurveLineSet::ChangeLineSegmentation( unsigned int id, unsigned int numO
 
 // -------------------------------------------------------------
 // Description:
-//   Clears all lines. 
+//   Clears all lines.
 //   Requires a call to SubmitChanges before being updated on the video card.
 // -------------------------------------------------------------
 void Tr2CurveLineSet::ClearLines()

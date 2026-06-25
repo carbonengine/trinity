@@ -173,7 +173,7 @@ inline Symbol* AddConstant( SymbolTable& table, const char* name, int opType )
 	return symbol;
 }
 
-template<int Arg>
+template <int Arg>
 int TypeSameAsArg( ASTNode* call )
 {
 	ASTNode* arg0 = call->GetChildOrNull( Arg );
@@ -185,7 +185,7 @@ int TypeSameAsArg( ASTNode* call )
 }
 
 
-template<int type>
+template <int type>
 int TypeIs( ASTNode* )
 {
 	return type;
@@ -210,7 +210,7 @@ inline int CommonArgType( ASTNode* call )
 	return type;
 }
 
-template<int Arg>
+template <int Arg>
 void DimSameAsArg( ASTNode* call, int& width, int& height )
 {
 	ASTNode* arg0 = call->GetChildOrNull( Arg );
@@ -226,7 +226,7 @@ void DimSameAsArg( ASTNode* call, int& width, int& height )
 	}
 }
 
-template<int Width, int Height>
+template <int Width, int Height>
 void DimIs( ASTNode*, int& width, int& height )
 {
 	width = Width;
@@ -250,7 +250,7 @@ inline void CommonArgDim( ASTNode* call, int& width, int& height )
 typedef int ( *TypeComponent )( ASTNode* call );
 typedef void ( *DimComponent )( ASTNode* call, int& width, int& height );
 
-template<TypeComponent ResultType, DimComponent ResultDim>
+template <TypeComponent ResultType, DimComponent ResultDim>
 Type FunctionDescription0( ASTNode* call, int argIndex )
 {
 	Type type;
@@ -264,10 +264,11 @@ Type FunctionDescription0( ASTNode* call, int argIndex )
 	return type;
 }
 
-template<
-	TypeComponent ResultType, DimComponent ResultDim,
-	TypeComponent Arg0Type, DimComponent Arg0Dim
->
+template <
+	TypeComponent ResultType,
+	DimComponent ResultDim,
+	TypeComponent Arg0Type,
+	DimComponent Arg0Dim>
 Type FunctionDescription1( ASTNode* call, int argIndex )
 {
 	Type type;
@@ -286,11 +287,13 @@ Type FunctionDescription1( ASTNode* call, int argIndex )
 	return type;
 }
 
-template<
-	TypeComponent ResultType, DimComponent ResultDim,
-	TypeComponent Arg0Type, DimComponent Arg0Dim,
-	TypeComponent Arg1Type, DimComponent Arg1Dim
->
+template <
+	TypeComponent ResultType,
+	DimComponent ResultDim,
+	TypeComponent Arg0Type,
+	DimComponent Arg0Dim,
+	TypeComponent Arg1Type,
+	DimComponent Arg1Dim>
 Type FunctionDescription2( ASTNode* call, int argIndex )
 {
 	Type type;
@@ -313,11 +316,15 @@ Type FunctionDescription2( ASTNode* call, int argIndex )
 	return type;
 }
 
-template<
-	TypeComponent ResultType, DimComponent ResultDim,
-	TypeComponent Arg0Type, DimComponent Arg0Dim, int Arg0Modifier,
-	TypeComponent Arg1Type, DimComponent Arg1Dim, int Arg1Modifier
->
+template <
+	TypeComponent ResultType,
+	DimComponent ResultDim,
+	TypeComponent Arg0Type,
+	DimComponent Arg0Dim,
+	int Arg0Modifier,
+	TypeComponent Arg1Type,
+	DimComponent Arg1Dim,
+	int Arg1Modifier>
 Type FunctionDescription2Ex( ASTNode* call, int argIndex )
 {
 	Type type;
@@ -342,12 +349,15 @@ Type FunctionDescription2Ex( ASTNode* call, int argIndex )
 	return type;
 }
 
-template<
-	TypeComponent ResultType, DimComponent ResultDim,
-	TypeComponent Arg0Type, DimComponent Arg0Dim,
-	TypeComponent Arg1Type, DimComponent Arg1Dim,
-	TypeComponent Arg2Type, DimComponent Arg2Dim
->
+template <
+	TypeComponent ResultType,
+	DimComponent ResultDim,
+	TypeComponent Arg0Type,
+	DimComponent Arg0Dim,
+	TypeComponent Arg1Type,
+	DimComponent Arg1Dim,
+	TypeComponent Arg2Type,
+	DimComponent Arg2Dim>
 Type FunctionDescription3( ASTNode* call, int argIndex )
 {
 	Type type;
@@ -374,13 +384,17 @@ Type FunctionDescription3( ASTNode* call, int argIndex )
 	return type;
 }
 
-template<
-	TypeComponent ResultType, DimComponent ResultDim,
-	TypeComponent Arg0Type, DimComponent Arg0Dim,
-	TypeComponent Arg1Type, DimComponent Arg1Dim,
-	TypeComponent Arg2Type, DimComponent Arg2Dim,
-	TypeComponent Arg3Type, DimComponent Arg3Dim
->
+template <
+	TypeComponent ResultType,
+	DimComponent ResultDim,
+	TypeComponent Arg0Type,
+	DimComponent Arg0Dim,
+	TypeComponent Arg1Type,
+	DimComponent Arg1Dim,
+	TypeComponent Arg2Type,
+	DimComponent Arg2Dim,
+	TypeComponent Arg3Type,
+	DimComponent Arg3Dim>
 Type FunctionDescription4( ASTNode* call, int argIndex )
 {
 	Type type;
@@ -411,17 +425,25 @@ Type FunctionDescription4( ASTNode* call, int argIndex )
 	return type;
 }
 
-template<
-	TypeComponent ResultType, DimComponent ResultDim,
-	TypeComponent Arg0Type, DimComponent Arg0Dim,
-	TypeComponent Arg1Type, DimComponent Arg1Dim,
-	TypeComponent Arg2Type, DimComponent Arg2Dim,
-	TypeComponent Arg3Type, DimComponent Arg3Dim,
-	TypeComponent Arg4Type, DimComponent Arg4Dim,
-	TypeComponent Arg5Type, DimComponent Arg5Dim,
-	TypeComponent Arg6Type, DimComponent Arg6Dim,
-	TypeComponent Arg7Type, DimComponent Arg7Dim
->
+template <
+	TypeComponent ResultType,
+	DimComponent ResultDim,
+	TypeComponent Arg0Type,
+	DimComponent Arg0Dim,
+	TypeComponent Arg1Type,
+	DimComponent Arg1Dim,
+	TypeComponent Arg2Type,
+	DimComponent Arg2Dim,
+	TypeComponent Arg3Type,
+	DimComponent Arg3Dim,
+	TypeComponent Arg4Type,
+	DimComponent Arg4Dim,
+	TypeComponent Arg5Type,
+	DimComponent Arg5Dim,
+	TypeComponent Arg6Type,
+	DimComponent Arg6Dim,
+	TypeComponent Arg7Type,
+	DimComponent Arg7Dim>
 Type FunctionDescription8( ASTNode* call, int argIndex )
 {
 	Type type;

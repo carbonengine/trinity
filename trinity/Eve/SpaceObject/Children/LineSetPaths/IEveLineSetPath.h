@@ -10,16 +10,16 @@ public:
 	virtual void UpdateBuffer( Tr2RenderContext & renderContext, uint8_t*& data, const Matrix& systemLocation, const unsigned stride ) = 0;
 
 	virtual void GeneratePoints( const Matrix& parentTransform = IdentityMatrix() ) = 0;
-	virtual void GetPointCount( unsigned& count) = 0;
+	virtual void GetPointCount( unsigned& count ) = 0;
 	virtual void AddLinesToSet( EveCurveLineSet & lineSet, const Vector4& color, const Vector4& animColor, float scrollSpeed ) = 0;
 
 	virtual void CalculateBoundingSphere( float meshSize = 0.0, bool reCalculateChildren = true ) = 0;
-	virtual void GetBoundingSphere( Vector4& sphere ) = 0;
+	virtual void GetBoundingSphere( Vector4 & sphere ) = 0;
 	virtual void UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod, const Matrix& systemLocation ) = 0;
 
 	// Debug render
-    virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) = 0;
-    virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& systemLocation ) = 0;
+	virtual void GetDebugOptions( Tr2DebugRendererOptions & options ) = 0;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& systemLocation ) = 0;
 };
 
 BLUE_DECLARE_INTERFACE( IEveLineSetPath );
@@ -51,7 +51,7 @@ inline void CalculateBoundingSphereForLineSetPaths( Vector4& boundingSphere, PIE
 
 	for( auto it = begin( lines ); it != end( lines ); ++it )
 	{
-		(*it)->GetBoundingSphere( sphere );
+		( *it )->GetBoundingSphere( sphere );
 		sum += sphere.GetXYZ();
 		biggestRad = max( biggestRad, sphere.w );
 	}
@@ -60,7 +60,7 @@ inline void CalculateBoundingSphereForLineSetPaths( Vector4& boundingSphere, PIE
 
 	for( auto it = begin( lines ); it != end( lines ); ++it )
 	{
-		(*it)->GetBoundingSphere( sphere );
+		( *it )->GetBoundingSphere( sphere );
 		distSq = max( distSq, LengthSq( sphere.GetXYZ() - sum ) );
 	}
 

@@ -13,10 +13,10 @@
 
 using namespace Tr2RenderContextEnum;
 
-bool Tr2Renderer::m_disableGeometryLoad		= false;
-bool Tr2Renderer::m_disableTextureLoad		= false;
-bool Tr2Renderer::m_disableEffectLoad		= false;
-bool Tr2Renderer::m_disableAsyncLoad		= false;
+bool Tr2Renderer::m_disableGeometryLoad = false;
+bool Tr2Renderer::m_disableTextureLoad = false;
+bool Tr2Renderer::m_disableEffectLoad = false;
+bool Tr2Renderer::m_disableAsyncLoad = false;
 
 extern unsigned long long g_currentFrameCounter;
 
@@ -28,305 +28,307 @@ Tr2Variable s_renderTimeVar;
 
 namespace
 {
-	// This flag is used to prevent code from inadvertently creating device resources in the middle of a device reset/invalidate attempt
-	bool s_isResourceCreationAllowed = true;
+// This flag is used to prevent code from inadvertently creating device resources in the middle of a device reset/invalidate attempt
+bool s_isResourceCreationAllowed = true;
 
-	TR2SHADERMODEL s_shaderModel = TR2SM_3_0_HI;
-	TR2SHADERMODEL s_prevShaderModel = TR2SM_3_0_HI;
+TR2SHADERMODEL s_shaderModel = TR2SM_3_0_HI;
+TR2SHADERMODEL s_prevShaderModel = TR2SM_3_0_HI;
 
-	// these are actually constant buffer indices
-	unsigned int s_perFrameVSStartRegister  = 1;
-	unsigned int s_perFramePSStartRegister  = 2;
-	unsigned int s_perObjectVSStartRegister = 3;
-	unsigned int s_perObjectPSStartRegister = 4;
-	unsigned int s_perObjectRTVertexBufferDataRegister = 5;
-	unsigned int s_perObjectVSGUIStartRegister = 6;
+// these are actually constant buffer indices
+unsigned int s_perFrameVSStartRegister = 1;
+unsigned int s_perFramePSStartRegister = 2;
+unsigned int s_perObjectVSStartRegister = 3;
+unsigned int s_perObjectPSStartRegister = 4;
+unsigned int s_perObjectRTVertexBufferDataRegister = 5;
+unsigned int s_perObjectVSGUIStartRegister = 6;
 
-	uint32_t s_upscalingContextID = Tr2UpscalingAL::INVALID_CONTEXT_ID;
+uint32_t s_upscalingContextID = Tr2UpscalingAL::INVALID_CONTEXT_ID;
 
-	TriPoolAllocator* s_poolAllocator = NULL;
-	// keep an array of directories which are to exclude from texture-sizing
-	std::vector<std::string> s_dirsToExclude;
+TriPoolAllocator* s_poolAllocator = NULL;
+// keep an array of directories which are to exclude from texture-sizing
+std::vector<std::string> s_dirsToExclude;
 
-	PROJECTION_TYPE s_currentProjectionType = PT_PERSPECTIVE;
+PROJECTION_TYPE s_currentProjectionType = PT_PERSPECTIVE;
 
-	Matrix s_projectionTransform;
-	Matrix s_projectionRawTransform;
-	Matrix s_inverseProjectionTransform;
-	Matrix s_viewport2projectionAdjustment;
+Matrix s_projectionTransform;
+Matrix s_projectionRawTransform;
+Matrix s_inverseProjectionTransform;
+Matrix s_viewport2projectionAdjustment;
 
-	Matrix s_viewTransform;
-	Matrix s_inverseViewTransform;
+Matrix s_viewTransform;
+Matrix s_inverseViewTransform;
 
-	Matrix s_viewProjectionTransform;
+Matrix s_viewProjectionTransform;
 
-	float s_frontClip = 0.0f;
-	float s_backClip = 0.0f;
-	float s_frustumRadius = 0.0f;
-	float s_aspectRatio = 0.0f;
-	float s_fieldOfView = 0.0f;
-	float s_orthoWidth = 0.0f;
-	float s_orthoHeight = 0.0f;
+float s_frontClip = 0.0f;
+float s_backClip = 0.0f;
+float s_frustumRadius = 0.0f;
+float s_aspectRatio = 0.0f;
+float s_fieldOfView = 0.0f;
+float s_orthoWidth = 0.0f;
+float s_orthoHeight = 0.0f;
 
-	void UpdateProjectionParameters( const Matrix& proj )
+void UpdateProjectionParameters( const Matrix& proj )
+{
+	// Use the fact that:
+	// aspect = m_22 / m_11;
+	// m_33 = z_f/(z_f-z_n), m_43 = -z_n*z_f/(z_f-z_n)
+	// => front = z_n = -m_43/m_33
+	// => back = z_f = -m_43/(1+m_43/z_n)
+	// m_22 = cotan(fov/2) = 1 / tan(fov/2)
+	// => fov = 2*tan(1/m_22)
+	s_aspectRatio = ( proj._11 ? proj._22 / proj._11 : 0.0f );
+	s_fieldOfView = ( proj._22 ? 2.0f * atan( 1.0f / proj._22 ) : 0.0f );
+	s_frontClip = ( proj._33 ? proj._43 / proj._33 : 0.0f );
+	s_backClip = proj._43 / ( 1.0f + proj._33 );
+}
+
+Matrix s_worldTransform;
+Matrix s_inverseWorldTransform;
+
+
+float s_pickingOffsetX = 0.0f;
+float s_pickingOffsetY = 0.0f;
+float s_pickingWidth = 0.0f;
+float s_pickingHeight = 0.0f;
+
+
+TriDebugTextRenderer* s_debugTextRenderer = NULL;
+
+TriLineSet* s_debugLineSet = NULL;
+
+// shared vertex/index buffers
+Tr2BufferAL s_quadVertexBuffer;
+Tr2SuballocatedBuffer::Allocation s_quadListIndexBuffer;
+uint32_t s_quadListSize = 0;
+
+Tr2TextureAL s_fallbackTextures[2][3];
+bool s_debugFallbackTexture = false;
+
+std::list<std::pair<Matrix, Matrix>> s_projectionStack;
+std::list<Matrix> s_viewTransformStack;
+
+Tr2Variable s_projectionMatrixVar;
+Tr2Variable s_viewMatrixVar;
+Tr2Variable s_projectionMatrixInvVar;
+Tr2Variable s_viewMatrixInvVar;
+Tr2Variable s_viewProjectionMatrixVar;
+Tr2Variable s_worldMatrixVar;
+Tr2Variable s_frustumPlanes[6];
+
+
+typedef std::set<Tr2Effect*> EffectSet;
+EffectSet& GetEffectSet()
+{
+	static NeverEndingSingleton<EffectSet> effectSet;
+	return effectSet.GetInstance();
+}
+
+void ReloadShaders()
+{
+	typedef std::set<Tr2EffectRes*> EffectResSet;
+	EffectResSet effectResources;
+
+	EffectSet& l = GetEffectSet();
+	for( EffectSet::iterator i = l.begin(), end = l.end(); i != end; ++i )
 	{
-		// Use the fact that:
-		// aspect = m_22 / m_11;
-		// m_33 = z_f/(z_f-z_n), m_43 = -z_n*z_f/(z_f-z_n)
-		// => front = z_n = -m_43/m_33 
-		// => back = z_f = -m_43/(1+m_43/z_n)
-		// m_22 = cotan(fov/2) = 1 / tan(fov/2)
-		// => fov = 2*tan(1/m_22) 
-		s_aspectRatio = ( proj._11 ? proj._22 / proj._11 : 0.0f );
-		s_fieldOfView = ( proj._22 ? 2.0f*atan( 1.0f / proj._22 ) : 0.0f );
-		s_frontClip = ( proj._33 ? proj._43 / proj._33 : 0.0f );
-		s_backClip = proj._43 / ( 1.0f + proj._33 );
-	}
+		Tr2Effect* effect( *i );
+		Tr2EffectRes* effectResource = effect->GetEffectRes();
 
-    Matrix s_worldTransform;
-    Matrix s_inverseWorldTransform;
-
-
-	float s_pickingOffsetX = 0.0f;
-	float s_pickingOffsetY = 0.0f;
-	float s_pickingWidth = 0.0f;
-	float s_pickingHeight = 0.0f;
-
-
-    TriDebugTextRenderer* s_debugTextRenderer = NULL;	
-
-	TriLineSet* s_debugLineSet = NULL;
-
-	// shared vertex/index buffers
-	Tr2BufferAL s_quadVertexBuffer;
-	Tr2SuballocatedBuffer::Allocation s_quadListIndexBuffer;
-	uint32_t s_quadListSize = 0;
-
-	Tr2TextureAL s_fallbackTextures[2][3];
-	bool s_debugFallbackTexture = false;
-
-	std::list<std::pair<Matrix, Matrix>> s_projectionStack;
-	std::list<Matrix> s_viewTransformStack;
-
-	Tr2Variable s_projectionMatrixVar;
-	Tr2Variable s_viewMatrixVar;
-	Tr2Variable s_projectionMatrixInvVar;
-	Tr2Variable s_viewMatrixInvVar;
-	Tr2Variable s_viewProjectionMatrixVar;
-	Tr2Variable s_worldMatrixVar;
-	Tr2Variable s_frustumPlanes[6];
-
-
-	typedef std::set<Tr2Effect *> EffectSet;
-	EffectSet& GetEffectSet()
-	{
-		static NeverEndingSingleton<EffectSet> effectSet;
-		return effectSet.GetInstance();
-	}
-
-	void ReloadShaders()
-	{
-        typedef std::set<Tr2EffectRes*> EffectResSet;
-        EffectResSet effectResources;
-
-		EffectSet& l = GetEffectSet();
-		for( EffectSet::iterator i = l.begin(), end = l.end(); i != end; ++i )
+		if( effectResource &&
+			effectResources.find( effectResource ) == effectResources.end() )
 		{
-            Tr2Effect* effect( *i );
-            Tr2EffectRes* effectResource = effect->GetEffectRes();
-
-            if( effectResource && 
-                effectResources.find( effectResource ) == effectResources.end() )
-            {
-                effectResources.insert( effectResource );
-            }
-		}
-
-    	for( EffectResSet::iterator i = effectResources.begin(), 
-            end = effectResources.end(); i != end; ++i )
-		{
-            Tr2EffectRes* effectResource( *i );
-            effectResource->Reload();
-        }
-    }
-
-	void UpdateViewProjectionTransform()
-	{
-		s_viewProjectionTransform = s_viewTransform * s_projectionTransform;
-		s_viewProjectionMatrixVar = s_viewProjectionTransform;
-
-		s_frustumPlanes[0] = Vector4( s_viewProjectionTransform._13,
-			s_viewProjectionTransform._23,
-			s_viewProjectionTransform._33,
-			s_viewProjectionTransform._43 );
-		s_frustumPlanes[1] = Vector4( s_viewProjectionTransform._14 + s_viewProjectionTransform._11,
-			s_viewProjectionTransform._24 + s_viewProjectionTransform._21,
-			s_viewProjectionTransform._34 + s_viewProjectionTransform._31,
-			s_viewProjectionTransform._44 + s_viewProjectionTransform._41 );
-		s_frustumPlanes[2] = Vector4( s_viewProjectionTransform._14 - s_viewProjectionTransform._12,
-			s_viewProjectionTransform._24 - s_viewProjectionTransform._22,
-			s_viewProjectionTransform._34 - s_viewProjectionTransform._32,
-			s_viewProjectionTransform._44 - s_viewProjectionTransform._42 );
-		s_frustumPlanes[3] = Vector4( s_viewProjectionTransform._14 - s_viewProjectionTransform._11,
-			s_viewProjectionTransform._24 - s_viewProjectionTransform._21,
-			s_viewProjectionTransform._34 - s_viewProjectionTransform._31,
-			s_viewProjectionTransform._44 - s_viewProjectionTransform._41 );
-		s_frustumPlanes[4] = Vector4( s_viewProjectionTransform._14 + s_viewProjectionTransform._12,
-			s_viewProjectionTransform._24 + s_viewProjectionTransform._22,
-			s_viewProjectionTransform._34 + s_viewProjectionTransform._32,
-			s_viewProjectionTransform._44 + s_viewProjectionTransform._42 );
-		s_frustumPlanes[5] = Vector4( s_viewProjectionTransform._14 + s_viewProjectionTransform._13,
-			s_viewProjectionTransform._24 + s_viewProjectionTransform._23,
-			s_viewProjectionTransform._34 + s_viewProjectionTransform._33,
-			s_viewProjectionTransform._44 + s_viewProjectionTransform._43 );
-	}
-
-	void SetProjectionDerivedValues()
-	{
-		s_projectionRawTransform = s_projectionTransform;
-
-		// Apply scaling and offset to projection matrix. If the viewport extends
-		// the render target we need to clip the viewport and thus scale+offset the
-		// projection.
-		s_projectionTransform = s_projectionTransform * s_viewport2projectionAdjustment;
-
-		// Cache inverse projection matrix
-		s_inverseProjectionTransform = Inverse( s_projectionTransform );
-
-		Vector4 corner( 1.f, 1.f, 1.f, 1.f );
-		corner = Transform( corner, s_inverseProjectionTransform );
-		Vector3 viewCorner( corner.x / corner.w, corner.y / corner.w, corner.z / corner.w );
-		s_frustumRadius = Length( viewCorner );
-
-		// Ensure TriVariable store is aware of the projection transform. Used by some debugging shaders.
-		s_projectionMatrixVar = s_projectionTransform;
-		s_projectionMatrixInvVar = s_inverseProjectionTransform;
-		UpdateViewProjectionTransform();
-	}
-
-
-	void CreateFallbackTexturesWithColor( uint32_t color, Tr2TextureAL* outputTextures, Tr2PrimaryRenderContext& renderContext )
-	{
-		bool tex0Valid = outputTextures[0].IsValid();
-		bool tex1Valid = outputTextures[1].IsValid();
-		bool tex2Valid = outputTextures[2].IsValid();
-
-		// only rebuild the textures if they are not valid
-		if( tex0Valid && tex1Valid && tex2Valid )
-		{
-			return;
-		}
-
-		Tr2SubresourceData initialData[CUBEMAP_FACE_COUNT];
-		for( int i = 0; i < CUBEMAP_FACE_COUNT; ++i )
-		{
-			initialData[i].m_sysMemPitch = 4;
-			initialData[i].m_sysMemSlicePitch = 4;
-			initialData[i].m_sysMem = &color;
-		}
-		if( !tex0Valid )
-		{
-			outputTextures[0].Create( Tr2BitmapDimensions( 1, 1, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, initialData, renderContext );
-		}
-		if( !tex1Valid )
-		{
-			outputTextures[1].Create( Tr2BitmapDimensions( TEX_TYPE_3D, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, initialData, renderContext );
-		}
-		if( !tex2Valid )
-		{
-			outputTextures[2].Create( Tr2BitmapDimensions( TEX_TYPE_CUBE, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, initialData, renderContext );
+			effectResources.insert( effectResource );
 		}
 	}
 
-	void DestroyFallbackTextures( Tr2TextureAL* fallbackTextures )
+	for( EffectResSet::iterator i = effectResources.begin(),
+								end = effectResources.end();
+		 i != end;
+		 ++i )
 	{
-		// this may cause a device hung since the texture index may be used in a constant buffer somewhere and therefore may be in use
-		fallbackTextures[0] = Tr2TextureAL();
-		fallbackTextures[1] = Tr2TextureAL();
-		fallbackTextures[2] = Tr2TextureAL();
+		Tr2EffectRes* effectResource( *i );
+		effectResource->Reload();
+	}
+}
+
+void UpdateViewProjectionTransform()
+{
+	s_viewProjectionTransform = s_viewTransform * s_projectionTransform;
+	s_viewProjectionMatrixVar = s_viewProjectionTransform;
+
+	s_frustumPlanes[0] = Vector4( s_viewProjectionTransform._13,
+								  s_viewProjectionTransform._23,
+								  s_viewProjectionTransform._33,
+								  s_viewProjectionTransform._43 );
+	s_frustumPlanes[1] = Vector4( s_viewProjectionTransform._14 + s_viewProjectionTransform._11,
+								  s_viewProjectionTransform._24 + s_viewProjectionTransform._21,
+								  s_viewProjectionTransform._34 + s_viewProjectionTransform._31,
+								  s_viewProjectionTransform._44 + s_viewProjectionTransform._41 );
+	s_frustumPlanes[2] = Vector4( s_viewProjectionTransform._14 - s_viewProjectionTransform._12,
+								  s_viewProjectionTransform._24 - s_viewProjectionTransform._22,
+								  s_viewProjectionTransform._34 - s_viewProjectionTransform._32,
+								  s_viewProjectionTransform._44 - s_viewProjectionTransform._42 );
+	s_frustumPlanes[3] = Vector4( s_viewProjectionTransform._14 - s_viewProjectionTransform._11,
+								  s_viewProjectionTransform._24 - s_viewProjectionTransform._21,
+								  s_viewProjectionTransform._34 - s_viewProjectionTransform._31,
+								  s_viewProjectionTransform._44 - s_viewProjectionTransform._41 );
+	s_frustumPlanes[4] = Vector4( s_viewProjectionTransform._14 + s_viewProjectionTransform._12,
+								  s_viewProjectionTransform._24 + s_viewProjectionTransform._22,
+								  s_viewProjectionTransform._34 + s_viewProjectionTransform._32,
+								  s_viewProjectionTransform._44 + s_viewProjectionTransform._42 );
+	s_frustumPlanes[5] = Vector4( s_viewProjectionTransform._14 + s_viewProjectionTransform._13,
+								  s_viewProjectionTransform._24 + s_viewProjectionTransform._23,
+								  s_viewProjectionTransform._34 + s_viewProjectionTransform._33,
+								  s_viewProjectionTransform._44 + s_viewProjectionTransform._43 );
+}
+
+void SetProjectionDerivedValues()
+{
+	s_projectionRawTransform = s_projectionTransform;
+
+	// Apply scaling and offset to projection matrix. If the viewport extends
+	// the render target we need to clip the viewport and thus scale+offset the
+	// projection.
+	s_projectionTransform = s_projectionTransform * s_viewport2projectionAdjustment;
+
+	// Cache inverse projection matrix
+	s_inverseProjectionTransform = Inverse( s_projectionTransform );
+
+	Vector4 corner( 1.f, 1.f, 1.f, 1.f );
+	corner = Transform( corner, s_inverseProjectionTransform );
+	Vector3 viewCorner( corner.x / corner.w, corner.y / corner.w, corner.z / corner.w );
+	s_frustumRadius = Length( viewCorner );
+
+	// Ensure TriVariable store is aware of the projection transform. Used by some debugging shaders.
+	s_projectionMatrixVar = s_projectionTransform;
+	s_projectionMatrixInvVar = s_inverseProjectionTransform;
+	UpdateViewProjectionTransform();
+}
+
+
+void CreateFallbackTexturesWithColor( uint32_t color, Tr2TextureAL* outputTextures, Tr2PrimaryRenderContext& renderContext )
+{
+	bool tex0Valid = outputTextures[0].IsValid();
+	bool tex1Valid = outputTextures[1].IsValid();
+	bool tex2Valid = outputTextures[2].IsValid();
+
+	// only rebuild the textures if they are not valid
+	if( tex0Valid && tex1Valid && tex2Valid )
+	{
+		return;
 	}
 
-	void CreateFallbackTextures( Tr2PrimaryRenderContext& renderContext )
+	Tr2SubresourceData initialData[CUBEMAP_FACE_COUNT];
+	for( int i = 0; i < CUBEMAP_FACE_COUNT; ++i )
 	{
-		if( s_debugFallbackTexture )
-		{
-			CreateFallbackTexturesWithColor( 0xffff00ff, s_fallbackTextures[0], renderContext );
-			CreateFallbackTexturesWithColor( 0x8800ff00, s_fallbackTextures[1], renderContext );
-		}
-		else
-		{
-			CreateFallbackTexturesWithColor( 0, s_fallbackTextures[0], renderContext );
-			DestroyFallbackTextures( s_fallbackTextures[1] );
-		}
+		initialData[i].m_sysMemPitch = 4;
+		initialData[i].m_sysMemSlicePitch = 4;
+		initialData[i].m_sysMem = &color;
 	}
-
-	// To deal with the adjusted viewport that D3D9 forces us to create when viewport
-	// extends beyond the screen
-	void AdjustTextureCoordsToViewport( Tr2RenderContext& renderContext, Vector2& topLeft, Vector2& bottomRight )
+	if( !tex0Valid )
 	{
-		Vector2 tlTexCoordAdjusted = topLeft;
-
-		auto& viewportOnDevice = renderContext.m_esm.GetDeviceViewport();
-		auto& viewport = renderContext.m_esm.GetViewport();
-
-		int deltaX = (int)viewportOnDevice.m_x - viewport.x;
-		int deltaY = (int)viewportOnDevice.m_y - viewport.y;
-
-		float xOffset = float( deltaX ) / viewport.width;
-		float yOffset = float( deltaY ) / viewport.height;
-
-		tlTexCoordAdjusted.x += xOffset * bottomRight.x;
-		tlTexCoordAdjusted.y += yOffset * bottomRight.y;
-
-		Vector2 brTexCoordAdjusted;
-		brTexCoordAdjusted = bottomRight;
-		brTexCoordAdjusted.x *= float( viewportOnDevice.m_width + deltaX ) / viewport.width;
-		brTexCoordAdjusted.y *= float( viewportOnDevice.m_height + deltaY ) / viewport.height;
-
-		topLeft = tlTexCoordAdjusted;
-		bottomRight = brTexCoordAdjusted;
+		outputTextures[0].Create( Tr2BitmapDimensions( 1, 1, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, initialData, renderContext );
 	}
-
-	
-	template <typename T>
-	bool CreateIndexBuffer( T count, Tr2SuballocatedBuffer::Allocation& buffer )
+	if( !tex1Valid )
 	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		// Re-create the index buffer with the correct type
-
-		std::vector<T> indices( count * 6 );
-		T* pInds = indices.data();
-		for( T i = 0; i < count; ++i )
-		{
-			pInds[0] = 0 + 4 * i;
-			pInds[1] = 2 + 4 * i;
-			pInds[2] = 1 + 4 * i;
-			pInds[3] = 0 + 4 * i;
-			pInds[4] = 3 + 4 * i;
-			pInds[5] = 2 + 4 * i;
-			pInds += 6;
-		}
-		if( buffer.IsValid() )
-		{
-			g_sharedBuffer.Free( buffer );
-		}
-		auto hr = g_sharedBuffer.Allocate( sizeof( T ), count * 6, indices.data(), renderContext, buffer );
-
-		if( FAILED( hr ) )
-		{
-			CCP_LOGERR( "CreateIndexBuffer failed to create an index buffer for %d quads with HRESULT=0x(%X)", count, hr.GetResult() );
-			return false;
-		}
-		return true;
+		outputTextures[1].Create( Tr2BitmapDimensions( TEX_TYPE_3D, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, initialData, renderContext );
 	}
+	if( !tex2Valid )
+	{
+		outputTextures[2].Create( Tr2BitmapDimensions( TEX_TYPE_CUBE, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, initialData, renderContext );
+	}
+}
+
+void DestroyFallbackTextures( Tr2TextureAL* fallbackTextures )
+{
+	// this may cause a device hung since the texture index may be used in a constant buffer somewhere and therefore may be in use
+	fallbackTextures[0] = Tr2TextureAL();
+	fallbackTextures[1] = Tr2TextureAL();
+	fallbackTextures[2] = Tr2TextureAL();
+}
+
+void CreateFallbackTextures( Tr2PrimaryRenderContext& renderContext )
+{
+	if( s_debugFallbackTexture )
+	{
+		CreateFallbackTexturesWithColor( 0xffff00ff, s_fallbackTextures[0], renderContext );
+		CreateFallbackTexturesWithColor( 0x8800ff00, s_fallbackTextures[1], renderContext );
+	}
+	else
+	{
+		CreateFallbackTexturesWithColor( 0, s_fallbackTextures[0], renderContext );
+		DestroyFallbackTextures( s_fallbackTextures[1] );
+	}
+}
+
+// To deal with the adjusted viewport that D3D9 forces us to create when viewport
+// extends beyond the screen
+void AdjustTextureCoordsToViewport( Tr2RenderContext& renderContext, Vector2& topLeft, Vector2& bottomRight )
+{
+	Vector2 tlTexCoordAdjusted = topLeft;
+
+	auto& viewportOnDevice = renderContext.m_esm.GetDeviceViewport();
+	auto& viewport = renderContext.m_esm.GetViewport();
+
+	int deltaX = (int)viewportOnDevice.m_x - viewport.x;
+	int deltaY = (int)viewportOnDevice.m_y - viewport.y;
+
+	float xOffset = float( deltaX ) / viewport.width;
+	float yOffset = float( deltaY ) / viewport.height;
+
+	tlTexCoordAdjusted.x += xOffset * bottomRight.x;
+	tlTexCoordAdjusted.y += yOffset * bottomRight.y;
+
+	Vector2 brTexCoordAdjusted;
+	brTexCoordAdjusted = bottomRight;
+	brTexCoordAdjusted.x *= float( viewportOnDevice.m_width + deltaX ) / viewport.width;
+	brTexCoordAdjusted.y *= float( viewportOnDevice.m_height + deltaY ) / viewport.height;
+
+	topLeft = tlTexCoordAdjusted;
+	bottomRight = brTexCoordAdjusted;
+}
+
+
+template <typename T>
+bool CreateIndexBuffer( T count, Tr2SuballocatedBuffer::Allocation& buffer )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	// Re-create the index buffer with the correct type
+
+	std::vector<T> indices( count * 6 );
+	T* pInds = indices.data();
+	for( T i = 0; i < count; ++i )
+	{
+		pInds[0] = 0 + 4 * i;
+		pInds[1] = 2 + 4 * i;
+		pInds[2] = 1 + 4 * i;
+		pInds[3] = 0 + 4 * i;
+		pInds[4] = 3 + 4 * i;
+		pInds[5] = 2 + 4 * i;
+		pInds += 6;
+	}
+	if( buffer.IsValid() )
+	{
+		g_sharedBuffer.Free( buffer );
+	}
+	auto hr = g_sharedBuffer.Allocate( sizeof( T ), count * 6, indices.data(), renderContext, buffer );
+
+	if( FAILED( hr ) )
+	{
+		CCP_LOGERR( "CreateIndexBuffer failed to create an index buffer for %d quads with HRESULT=0x(%X)", count, hr.GetResult() );
+		return false;
+	}
+	return true;
+}
 
 }
 
 bool Tr2Renderer::Initialize()
 {
 	s_debugTextRenderer = CCP_NEW( "Tr2Renderer/s_debugTextRenderer" ) TriDebugTextRenderer;
-	s_renderTimeVar			 .Register(  "Time",				Vector4(0.0f, 0.0f, 0.0f, 0.0f) );
-	s_worldMatrixVar		 .Register(  "WorldMat",			s_worldTransform );
+	s_renderTimeVar.Register( "Time", Vector4( 0.0f, 0.0f, 0.0f, 0.0f ) );
+	s_worldMatrixVar.Register( "WorldMat", s_worldTransform );
 	s_viewMatrixVar.Register( "ViewMat", s_viewTransform );
 	s_viewMatrixInvVar.Register( "ViewInvMat", s_viewTransform );
 	s_projectionMatrixVar.Register( "ProjectionMat", s_projectionTransform );
@@ -342,7 +344,7 @@ bool Tr2Renderer::Initialize()
 
 	s_poolAllocator = CCP_NEW( "Tr2Renderer/s_poolAllocator" ) TriPoolAllocator();
 
-	USE_MAIN_THREAD_RENDER_CONTEXT();	//TODO!
+	USE_MAIN_THREAD_RENDER_CONTEXT(); //TODO!
 	renderContext.m_esm.Initialize();
 
 	s_viewport2projectionAdjustment = IdentityMatrix();
@@ -353,7 +355,7 @@ bool Tr2Renderer::Initialize()
 void Tr2Renderer::Shutdown()
 {
 	GlobalStore().UnregisterVariable( "Time" );
-	USE_MAIN_THREAD_RENDER_CONTEXT();	//TODO!
+	USE_MAIN_THREAD_RENDER_CONTEXT(); //TODO!
 	renderContext.m_esm.Shutdown();
 
 	CCP_DELETE s_blitter;
@@ -369,18 +371,18 @@ void Tr2Renderer::Shutdown()
 
 void Tr2Renderer::GetBackBufferDimensions( unsigned int& w, unsigned int& h )
 {
-    w = unsigned( gTriDev->mWidth );
-    h = unsigned( gTriDev->mHeight );
+	w = unsigned( gTriDev->mWidth );
+	h = unsigned( gTriDev->mHeight );
 }
 
-MAP_FUNCTION_AND_WRAP( "ReloadShaders", ReloadShaders, "Forces Trinity to reload all shaders.");
+MAP_FUNCTION_AND_WRAP( "ReloadShaders", ReloadShaders, "Forces Trinity to reload all shaders." );
 
 static bool IsRightHanded()
 {
 	return true;
 }
 
-MAP_FUNCTION_AND_WRAP( "IsRightHanded", IsRightHanded, "Returns true if Trinity rendering uses a right-handed coordinate system.");
+MAP_FUNCTION_AND_WRAP( "IsRightHanded", IsRightHanded, "Returns true if Trinity rendering uses a right-handed coordinate system." );
 
 void Tr2Renderer::AdjustProjection( const Vector2& scaling, const Vector2& translation )
 {
@@ -388,8 +390,8 @@ void Tr2Renderer::AdjustProjection( const Vector2& scaling, const Vector2& trans
 	Matrix& proj = s_projectionTransform;
 	proj._11 *= scaling.x;
 	proj._22 *= scaling.y;
-	proj._31 = scaling.x*proj._31 + proj._34*translation.x;
-	proj._32 = scaling.y*proj._32 + proj._34*translation.y;
+	proj._31 = scaling.x * proj._31 + proj._34 * translation.x;
+	proj._32 = scaling.y * proj._32 + proj._34 * translation.y;
 
 	SetProjectionDerivedValues();
 }
@@ -496,8 +498,8 @@ Vector3 Tr2Renderer::ProjectWorldToScreen( const Vector3& worldPos, const Tr2Vie
 	}
 
 	return Vector3( vp.m_x + vp.m_width * ( 0.5f + 0.5f * p.x ),
-		vp.m_y + vp.m_height* ( 0.5f - 0.5f * p.y ),
-		vp.m_minZ + p.z * vp.m_maxZ );
+					vp.m_y + vp.m_height * ( 0.5f - 0.5f * p.y ),
+					vp.m_minZ + p.z * vp.m_maxZ );
 }
 
 const Matrix& Tr2Renderer::GetInverseProjectionTransform()
@@ -547,7 +549,7 @@ float Tr2Renderer::GetOrthoHeight()
 
 void Tr2Renderer::SetWorldTransform( const Matrix& m )
 {
-    s_worldTransform = m;
+	s_worldTransform = m;
 
 	// Ensure variable store is aware of the change
 	s_worldMatrixVar = s_worldTransform;
@@ -608,8 +610,8 @@ void Tr2Renderer::SetUpscalingContextID( uint32_t upscalingContextID )
 Vector4 ColorToVec4( uint32_t color )
 {
 	uint8_t r = ( color >> 16 ) & 0xffu;
-	uint8_t g = ( color >>  8 ) & 0xffu;
-	uint8_t b = ( color >>  0 ) & 0xffu;
+	uint8_t g = ( color >> 8 ) & 0xffu;
+	uint8_t b = ( color >> 0 ) & 0xffu;
 	uint8_t a = ( color >> 24 ) & 0xffu;
 	return Vector4( r, g, b, a ) / 255.0f;
 }
@@ -644,7 +646,7 @@ void Tr2Renderer::PrintfImmediate( Tr2RenderContext& renderContext, int x, int y
 
 	Tr2Viewport viewport;
 	renderContext.GetViewport( viewport );
-	
+
 	Tr2Rect rect;
 	if( format & TRI_DFS_RIGHT )
 	{
@@ -670,9 +672,9 @@ void Tr2Renderer::Printf( TriDebugFont font, const Tr2Rect& rect, uint32_t forma
 		return;
 	}
 
-    va_list args;
-    va_start( args, msg );
-    s_debugTextRenderer->Vprintf( font, rect, format, ColorToVec4( color ), msg, args );
+	va_list args;
+	va_start( args, msg );
+	s_debugTextRenderer->Vprintf( font, rect, format, ColorToVec4( color ), msg, args );
 }
 
 void Tr2Renderer::PrintfImmediate( Tr2RenderContext& renderContext, TriDebugFont font, const Tr2Rect& rect, uint32_t format, uint32_t color, const char* msg, ... )
@@ -695,7 +697,7 @@ void Tr2Renderer::Printf( TriDebugFont font, const Vector3& pos, uint32_t color,
 	}
 
 	va_list args;
-    va_start( args, msg );
+	va_start( args, msg );
 
 	Tr2Rect rect;
 	USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -704,7 +706,7 @@ void Tr2Renderer::Printf( TriDebugFont font, const Vector3& pos, uint32_t color,
 
 	Vector3 screenPos = ProjectWorldToScreen( pos, vp );
 
-	if( (screenPos.z > 0.0f) && (screenPos.z < 1.0f) )
+	if( ( screenPos.z > 0.0f ) && ( screenPos.z < 1.0f ) )
 	{
 		rect.top = (int32_t)screenPos.y;
 		rect.left = (int32_t)screenPos.x;
@@ -723,7 +725,7 @@ void Tr2Renderer::Printf( TriDebugFont font, int fontStyle, const Vector3& pos, 
 	}
 
 	va_list args;
-    va_start( args, msg );
+	va_start( args, msg );
 
 	Tr2Rect rect;
 	USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -732,7 +734,7 @@ void Tr2Renderer::Printf( TriDebugFont font, int fontStyle, const Vector3& pos, 
 
 	Vector3 screenPos = ProjectWorldToScreen( pos, vp );
 
-	if( !( (screenPos.z > 0.0f) && (screenPos.z < 1.0f) ) )
+	if( !( ( screenPos.z > 0.0f ) && ( screenPos.z < 1.0f ) ) )
 	{
 		return;
 	}
@@ -756,14 +758,14 @@ bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* eff
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   draws a unit quad with the given shader 
+//   draws a unit quad with the given shader
 // Arguments:
 //   shader - the ShaderMaterial to use.
 // Return Value:
 //   true if success, false if no blitter available.
 // --------------------------------------------------------------------------------------
 
-bool Tr2Renderer::DrawFullScreenWithShader( Tr2RenderContext& renderContext, Tr2Material * shader )
+bool Tr2Renderer::DrawFullScreenWithShader( Tr2RenderContext& renderContext, Tr2Material* shader )
 {
 	if( s_blitter )
 	{
@@ -811,29 +813,24 @@ bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* eff
 	return false;
 }
 
-bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture,
-                               const Vector2& tlTexCoord, const Vector2& brTexCoord,
-                               const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
+bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* effect, const Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
 {
-    if( s_blitter )
-    {
-        Vector2 tlTexCoordAdjusted = tlTexCoord;
-        Vector2 brTexCoordAdjusted = brTexCoord;
-        AdjustTextureCoordsToViewport( renderContext, tlTexCoordAdjusted, brTexCoordAdjusted );
+	if( s_blitter )
+	{
+		Vector2 tlTexCoordAdjusted = tlTexCoord;
+		Vector2 brTexCoordAdjusted = brTexCoord;
+		AdjustTextureCoordsToViewport( renderContext, tlTexCoordAdjusted, brTexCoordAdjusted );
 
-        if( effect )
-        {
-            return s_blitter->Draw( renderContext, effect, texture,
-                                    tlTexCoordAdjusted, brTexCoordAdjusted, 
-                                    tlVertexCoord, brVertexCoord );
-        }
-        else
-        {
-            return s_blitter->Draw( renderContext, texture, tlTexCoordAdjusted, brTexCoordAdjusted,
-                                    tlVertexCoord, brVertexCoord );
-        }
-    }
-    return false;
+		if( effect )
+		{
+			return s_blitter->Draw( renderContext, effect, texture, tlTexCoordAdjusted, brTexCoordAdjusted, tlVertexCoord, brVertexCoord );
+		}
+		else
+		{
+			return s_blitter->Draw( renderContext, texture, tlTexCoordAdjusted, brTexCoordAdjusted, tlVertexCoord, brVertexCoord );
+		}
+	}
+	return false;
 }
 
 // --------------------------------------------------------------------------------------
@@ -849,9 +846,9 @@ bool Tr2Renderer::DrawTexture( Tr2RenderContext& renderContext, Tr2Material* eff
 //   false On failure
 // --------------------------------------------------------------------------------------
 bool Tr2Renderer::RunComputeShader( Tr2Material* effect,
-									unsigned groupDimX, 
-									unsigned groupDimY, 
-									unsigned groupDimZ, 
+									unsigned groupDimX,
+									unsigned groupDimY,
+									unsigned groupDimZ,
 									Tr2RenderContext& renderContext )
 {
 	if( !effect )
@@ -885,7 +882,7 @@ bool Tr2Renderer::RunComputeShader( Tr2Material* effect,
 }
 
 // --------------------------------------------------------------------------------------
-bool Tr2Renderer::RunComputeShader( 
+bool Tr2Renderer::RunComputeShader(
 	Tr2Material* effect,
 	const BlueSharedString& techniqueName,
 	unsigned groupDimX,
@@ -931,7 +928,7 @@ bool Tr2Renderer::RunComputeShader(
 // --------------------------------------------------------------------------------------
 // Description:
 //   Execute compute shaders in all passes of the specified effect. Group drid dimensions
-//   are taken from indirectParams GPU buffer. The function will unset bound UAVs after 
+//   are taken from indirectParams GPU buffer. The function will unset bound UAVs after
 //   each pass.
 // Arguments:
 //   effect - Effect containing compute shaders
@@ -1014,11 +1011,11 @@ void Tr2Renderer::DrawScreenQuad( Tr2RenderContext& renderContext, Tr2Material* 
 	}
 }
 
-void Tr2Renderer::DrawScreenQuad( Tr2RenderContext& renderContext, Tr2Effect* effect, const Vector2 &topLeft, const Vector2 &bottomRight )
+void Tr2Renderer::DrawScreenQuad( Tr2RenderContext& renderContext, Tr2Effect* effect, const Vector2& topLeft, const Vector2& bottomRight )
 {
 	if( s_blitter )
 	{
-		s_blitter->Draw( renderContext, effect, Vector2(0,0), Vector2(1,1), topLeft, bottomRight );
+		s_blitter->Draw( renderContext, effect, Vector2( 0, 0 ), Vector2( 1, 1 ), topLeft, bottomRight );
 	}
 }
 
@@ -1047,8 +1044,8 @@ void Tr2Renderer::BeginFrame()
 
 	Vector4 timeData;
 	timeData.x = GetAnimationTime();
-	timeData.y = timeData.x - floorf(timeData.x);
-	timeData.z = static_cast<float>(GetCurrentFrameCounter());
+	timeData.y = timeData.x - floorf( timeData.x );
+	timeData.z = static_cast<float>( GetCurrentFrameCounter() );
 	timeData.w = timeDataOld.x;
 	s_renderTimeVar = timeData;
 }
@@ -1064,7 +1061,6 @@ void Tr2Renderer::EndFrame()
 	{
 		s_debugLineSet->Clear();
 	}
-
 }
 
 HRESULT Tr2Renderer::BeginRenderContext()
@@ -1115,7 +1111,7 @@ void Tr2Renderer::ReinitializeRegisteredEffects()
 	EffectSet& l = GetEffectSet();
 	for( EffectSet::iterator it = l.begin(); it != l.end(); ++it )
 	{
-		(*it)->Initialize();
+		( *it )->Initialize();
 	}
 }
 
@@ -1155,8 +1151,7 @@ TR2SHADERMODEL Tr2Renderer::GetShaderModel()
 
 const char* Tr2Renderer::GetShaderModelString( TR2SHADERMODEL sm )
 {
-	static const char* smStrings[] =
-	{
+	static const char* smStrings[] = {
 		"SM_1_1",
 		"SM_2_0_LO",
 		"SM_2_0_HI",
@@ -1170,32 +1165,32 @@ const char* Tr2Renderer::GetShaderModelString( TR2SHADERMODEL sm )
 	return smStrings[sm];
 }
 
-void Tr2Renderer::AddMipLevelSkipExclusionDirectory(const char* path)
+void Tr2Renderer::AddMipLevelSkipExclusionDirectory( const char* path )
 {
 	// make it upper-case, so all future comparing can be done with upper-case
 	std::string checkDir( path );
-	std::transform(checkDir.begin(), checkDir.end(), checkDir.begin(), toupper);
+	std::transform( checkDir.begin(), checkDir.end(), checkDir.begin(), toupper );
 	// add to array
-	s_dirsToExclude.push_back(checkDir);
+	s_dirsToExclude.push_back( checkDir );
 }
 
-bool Tr2Renderer::IsTextureToResize(const char* filename)
+bool Tr2Renderer::IsTextureToResize( const char* filename )
 {
 	// convert to upper case
 	std::string checkFilename( filename );
-	std::transform(checkFilename.begin(), checkFilename.end(), checkFilename.begin(), toupper);
+	std::transform( checkFilename.begin(), checkFilename.end(), checkFilename.begin(), toupper );
 	// check it with all dirs in the array
-	for(std::vector<std::string>::const_iterator it = s_dirsToExclude.begin(); it != s_dirsToExclude.end(); it++)
+	for( std::vector<std::string>::const_iterator it = s_dirsToExclude.begin(); it != s_dirsToExclude.end(); it++ )
 	{
 		// compare first part of filename against dir-array
-		if(strncmp(it->c_str(), checkFilename.c_str(), it->length()) == 0)
+		if( strncmp( it->c_str(), checkFilename.c_str(), it->length() ) == 0 )
 			return false;
 	}
 	// not found, so can do a resize!
 	return true;
 }
 
-bool Tr2Renderer::IsLowQuality(void)
+bool Tr2Renderer::IsLowQuality( void )
 {
 	// is this low quality rendering? Decide here
 	return ( GetShaderModel() <= TR2SM_3_0_LO );
@@ -1444,7 +1439,7 @@ const Tr2TextureAL& Tr2Renderer::GetFallbackTexture( Tr2EffectResource::Type tex
 	uint32_t textureSet = 0;
 	if( s_debugFallbackTexture )
 	{
-		textureSet = uint32_t( GetAnimationTime() * 20 ) % 2;	
+		textureSet = uint32_t( GetAnimationTime() * 20 ) % 2;
 
 		if( strlen( debugContext ) > 0 )
 		{
@@ -1501,66 +1496,8 @@ bool Tr2Renderer::GetGeometryShaderSupport()
 	FXC.exe /T gs_5_0 /E main /Fh gs.h /Qstrip_reflect /Qstrip_debug /Qstrip_priv
 	*/
 
-	const BYTE bytecode[] =
-	{
-		 68,  88,  66,  67, 131,  74,
-		180, 213, 103,  95, 109,  18,
-		214, 138, 181,  45, 155, 163,
-		 12, 252,   1,   0,   0,   0,
-		 92,   1,   0,   0,   3,   0,
-		  0,   0,  44,   0,   0,   0,
-		 96,   0,   0,   0, 152,   0,
-		  0,   0,  73,  83,  71,  78,
-		 44,   0,   0,   0,   1,   0,
-		  0,   0,   8,   0,   0,   0,
-		 32,   0,   0,   0,   0,   0,
-		  0,   0,   1,   0,   0,   0,
-		  3,   0,   0,   0,   0,   0,
-		  0,   0,  15,  15,   0,   0,
-		 83,  86,  95,  80, 111, 115,
-		105, 116, 105, 111, 110,   0,
-		 79,  83,  71,  53,  48,   0,
-		  0,   0,   1,   0,   0,   0,
-		  8,   0,   0,   0,   0,   0,
-		  0,   0,  36,   0,   0,   0,
-		  0,   0,   0,   0,   1,   0,
-		  0,   0,   3,   0,   0,   0,
-		  0,   0,   0,   0,  15,   0,
-		  0,   0,  83,  86,  95,  80,
-		111, 115, 105, 116, 105, 111,
-		110,   0,  83,  72,  69,  88,
-		188,   0,   0,   0,  80,   0,
-		  2,   0,  47,   0,   0,   0,
-		106,   8,   0,   1,  97,   0,
-		  0,   5, 242,  16,  32,   0,
-		  3,   0,   0,   0,   0,   0,
-		  0,   0,   1,   0,   0,   0,
-		 93,  24,   0,   1, 143,   0,
-		  0,   3,   0,   0,  17,   0,
-		  0,   0,   0,   0,  92,  40,
-		  0,   1, 103,   0,   0,   4,
-		242,  32,  16,   0,   0,   0,
-		  0,   0,   1,   0,   0,   0,
-		 94,   0,   0,   2,   3,   0,
-		  0,   0,  54,   0,   0,   6,
-		242,  32,  16,   0,   0,   0,
-		  0,   0,  70,  30,  32,   0,
-		  0,   0,   0,   0,   0,   0,
-		  0,   0, 117,   0,   0,   3,
-		  0,   0,  17,   0,   0,   0,
-		  0,   0,  54,   0,   0,   6,
-		242,  32,  16,   0,   0,   0,
-		  0,   0,  70,  30,  32,   0,
-		  1,   0,   0,   0,   0,   0,
-		  0,   0, 117,   0,   0,   3,
-		  0,   0,  17,   0,   0,   0,
-		  0,   0,  54,   0,   0,   6,
-		242,  32,  16,   0,   0,   0,
-		  0,   0,  70,  30,  32,   0,
-		  2,   0,   0,   0,   0,   0,
-		  0,   0, 117,   0,   0,   3,
-		  0,   0,  17,   0,   0,   0,
-		  0,   0,  62,   0,   0,   1
+	const BYTE bytecode[] = {
+		68, 88, 66, 67, 131, 74, 180, 213, 103, 95, 109, 18, 214, 138, 181, 45, 155, 163, 12, 252, 1, 0, 0, 0, 92, 1, 0, 0, 3, 0, 0, 0, 44, 0, 0, 0, 96, 0, 0, 0, 152, 0, 0, 0, 73, 83, 71, 78, 44, 0, 0, 0, 1, 0, 0, 0, 8, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 15, 0, 0, 83, 86, 95, 80, 111, 115, 105, 116, 105, 111, 110, 0, 79, 83, 71, 53, 48, 0, 0, 0, 1, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 83, 86, 95, 80, 111, 115, 105, 116, 105, 111, 110, 0, 83, 72, 69, 88, 188, 0, 0, 0, 80, 0, 2, 0, 47, 0, 0, 0, 106, 8, 0, 1, 97, 0, 0, 5, 242, 16, 32, 0, 3, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 93, 24, 0, 1, 143, 0, 0, 3, 0, 0, 17, 0, 0, 0, 0, 0, 92, 40, 0, 1, 103, 0, 0, 4, 242, 32, 16, 0, 0, 0, 0, 0, 1, 0, 0, 0, 94, 0, 0, 2, 3, 0, 0, 0, 54, 0, 0, 6, 242, 32, 16, 0, 0, 0, 0, 0, 70, 30, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 117, 0, 0, 3, 0, 0, 17, 0, 0, 0, 0, 0, 54, 0, 0, 6, 242, 32, 16, 0, 0, 0, 0, 0, 70, 30, 32, 0, 1, 0, 0, 0, 0, 0, 0, 0, 117, 0, 0, 3, 0, 0, 17, 0, 0, 0, 0, 0, 54, 0, 0, 6, 242, 32, 16, 0, 0, 0, 0, 0, 70, 30, 32, 0, 2, 0, 0, 0, 0, 0, 0, 0, 117, 0, 0, 3, 0, 0, 17, 0, 0, 0, 0, 0, 62, 0, 0, 1
 	};
 
 	Tr2ShaderAL shader;

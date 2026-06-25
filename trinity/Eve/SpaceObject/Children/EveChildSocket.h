@@ -40,7 +40,7 @@ public:
 	void SetPlugResPath( const char* resPath );
 
 	void Reload();
-	bool AddParameterForExternal( Tr2ExternalParameter& externalParam );
+	bool AddParameterForExternal( Tr2ExternalParameter & externalParam );
 	void BindParameters();
 	void Propogate();
 
@@ -50,7 +50,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
@@ -60,8 +60,8 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
 	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild* child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild* child );
+	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -69,14 +69,14 @@ public:
 	void UnRegisterComponents() override;
 
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
 
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void GetLocalToWorldTransform( Matrix& transform ) const;
+	void GetLocalToWorldTransform( Matrix & transform ) const;
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
@@ -99,8 +99,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
 
@@ -113,7 +113,7 @@ protected:
 	std::string m_plugResPath;
 
 	bool m_display;
-	
+
 	PIEveSocketParameterVector m_parameters;
 };
 

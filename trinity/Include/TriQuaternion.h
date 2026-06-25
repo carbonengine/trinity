@@ -4,103 +4,87 @@
 #define _TRIQUATERNION_H_
 
 #define TRIQUATERNION_Description \
-"Simple mapping of Quaternion over to Blue."
+	"Simple mapping of Quaternion over to Blue."
 
 #include "ITriQuaternion.h"
 
-#pragma warning (disable: 4275)
+#pragma warning( disable : 4275 )
 
 BLUE_DECLARE( TriQuaternion );
 BLUE_DECLARE_INTERFACE( ITriVector );
 BLUE_DECLARE_INTERFACE( ITriMatrix );
 
 #if BLUE_WITH_PYTHON
-class TriQuaternion :
-	public ITriQuaternion,
-	public IPythonMethods,
-	public Quaternion
+class TriQuaternion : public ITriQuaternion,
+					  public IPythonMethods,
+					  public Quaternion
 {
-public:	
+public:
 	EXPOSE_TO_BLUE();
-	
-	TriQuaternion(IRoot* lockobj = NULL);
+
+	TriQuaternion( IRoot* lockobj = NULL );
 	~TriQuaternion();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriQuaternion
 	/////////////////////////////////////////////////////////////////////////////////////
 	void SetXYZW(
-		float x, 
-		float y, 
+		float x,
+		float y,
 		float z,
-		float w
-		);
+		float w );
 
 	void SetQuaternion(
-		const ::Quaternion* ar
-		);
+		const ::Quaternion* ar );
 
-	const ::Quaternion* GetQuaternion(
-		) const;
+	const ::Quaternion* GetQuaternion() const;
 
 	::Quaternion* CopyQuaternion(
-		::Quaternion* in
-		) const;
+		::Quaternion* in ) const;
 
-	::Quaternion* Quaternion(
-		);
+	::Quaternion* Quaternion();
 
-	void SetIdentity(
-		);
+	void SetIdentity();
 
 	void SetRotationAxis(
-		const Vector3* axis, 
-		float angle
-		);
+		const Vector3* axis,
+		float angle );
 
 	void GetRotationAxis(
-		Vector3* axis, 
-		float* angle
-		) const;
-	
+		Vector3* axis,
+		float* angle ) const;
+
 	void SetYawPitchRoll(
-		float yaw, 
-		float pitch, 
-		float roll
-		);
+		float yaw,
+		float pitch,
+		float roll );
 
 	void GetYawPitchRoll(
-		float* yaw, 
-		float* pitch, 
-		float* roll
-		) const;
+		float* yaw,
+		float* pitch,
+		float* roll ) const;
 
 	void IncreaseYawPitchRoll(
-		float yaw, 
-		float pitch, 
-		float roll
-		);
+		float yaw,
+		float pitch,
+		float roll );
 
 	void IncreaseLocalYawPitchRoll(
-		float yaw, 
-		float pitch, 
-		float roll
-		);
+		float yaw,
+		float pitch,
+		float roll );
 
 	void SetRotationArc(
 		const Vector3* v0,
-		const Vector3* v1
-		);
+		const Vector3* v1 );
 
 	void MultiplyQuaternion(
-		const ::Quaternion* in
-		);
+		const ::Quaternion* in );
 
 	void SetSLERP(
 		const ::Quaternion* q1,
 		const ::Quaternion* q2,
-		const float t
-		);
+		const float t );
 
 	void Normalize();
 
@@ -109,23 +93,19 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IPythonMethods
 	/////////////////////////////////////////////////////////////////////////////////////
-	void Destroy(
-		);
+	void Destroy();
 
-	PyObject* GetAttr( 
-		const char* name, 
-		bool* handled
-		);
+	PyObject* GetAttr(
+		const char* name,
+		bool* handled );
 
 	bool SetAttr(
 		const char* name,
 		PyObject* v,
-		bool* handled
-		);
+		bool* handled );
 
 	PyObject* Repr(
-		bool* handled
-		);
+		bool* handled );
 
 
 public:
@@ -138,10 +118,10 @@ public:
 	void PyRotationAxis( ITriVector* axis, float angle );
 
 	void PySetRotationAxis( ITriVector* axis, float angle );
-	Vector3 PyGetYawPitchRoll();		
+	Vector3 PyGetYawPitchRoll();
 	void PyScale( float factor );
 };
-TYPEDEF_BLUECLASS(TriQuaternion);
+TYPEDEF_BLUECLASS( TriQuaternion );
 
 #endif
 #endif

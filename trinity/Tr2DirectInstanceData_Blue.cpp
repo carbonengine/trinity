@@ -15,14 +15,12 @@ const Be::ClassInfo* Tr2DirectInstanceData::ExposeToBlue()
 		MAP_PROPERTY_READONLY(
 			"count",
 			GetCount,
-			"Number of instances" 
-		)
+			"Number of instances" )
 
 		MAP_METHOD_AND_WRAP(
 			"SetBoundingBox",
 			SetBoundingBox,
-			"Assign a bounding box explicitly"
-		)
+			"Assign a bounding box explicitly" )
 
 		MAP_ATTRIBUTE( "aabbMin", m_aabb.m_min, "Minimum of the AABB", Be::READ )
 

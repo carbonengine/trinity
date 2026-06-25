@@ -10,62 +10,62 @@ class Tr2PrimaryRenderContextAL;
 
 namespace TrinityALImpl
 {
-	class Tr2RtBottomLevelAccelerationStructureAL;
+class Tr2RtBottomLevelAccelerationStructureAL;
 }
 
 namespace Tr2RtBlasGeometryFlags
 {
-	enum Type
-	{
-		NONE,
-		OPAQUE_GEOMETRY,
-	};
+enum Type
+{
+	NONE,
+	OPAQUE_GEOMETRY,
+};
 
-	inline Type operator|( Type a, Type b )
-	{
-		return Type( int( a ) | int( b ) );
-	}
+inline Type operator|( Type a, Type b )
+{
+	return Type( int( a ) | int( b ) );
+}
 
-	inline Type& operator|=( Type& a, Type b )
-	{
-		a = Type( a | b );
-		return a;
-	}
+inline Type& operator|=( Type& a, Type b )
+{
+	a = Type( a | b );
+	return a;
+}
 
-	inline bool HasFlag( Type value, Type flag )
-	{
-		return (value & flag) == flag;
-	}
+inline bool HasFlag( Type value, Type flag )
+{
+	return ( value & flag ) == flag;
+}
 }
 
 namespace Tr2RtBuildFlags
 {
-	enum Type
-	{
-		NONE = 0,
-		ALLOW_UPDATE = 0x1,
-		ALLOW_COMPACTION = 0x2,
-		PREFER_FAST_TRACE = 0x4,
-		PREFER_FAST_BUILD = 0x8,
-		MINIMIZE_MEMORY = 0x10,
-		PERFORM_UPDATE = 0x20
-	};
+enum Type
+{
+	NONE = 0,
+	ALLOW_UPDATE = 0x1,
+	ALLOW_COMPACTION = 0x2,
+	PREFER_FAST_TRACE = 0x4,
+	PREFER_FAST_BUILD = 0x8,
+	MINIMIZE_MEMORY = 0x10,
+	PERFORM_UPDATE = 0x20
+};
 
-	inline Type operator|( Type a, Type b )
-	{
-		return Type( int( a ) | int( b ) );
-	}
+inline Type operator|( Type a, Type b )
+{
+	return Type( int( a ) | int( b ) );
+}
 
-	inline Type& operator|=( Type& a, Type b )
-	{
-		a = Type( a | b );
-		return a;
-	}
+inline Type& operator|=( Type& a, Type b )
+{
+	a = Type( a | b );
+	return a;
+}
 
-	inline bool HasFlag( Type value, Type flag )
-	{
-		return (value & flag) == flag;
-	}
+inline bool HasFlag( Type value, Type flag )
+{
+	return ( value & flag ) == flag;
+}
 }
 
 struct Tr2RtPositionStreamAL
@@ -119,6 +119,7 @@ public:
 	ALResult CompactBlas( Tr2PrimaryRenderContextAL& renderContext );
 
 	TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL* TrinityALImpl_GetObject() const;
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL> m_blas;
 };

@@ -31,23 +31,23 @@ void EveChildSpherePin::UpdateAsyncronous( const EveUpdateContext& updateContext
 {
 	EveChildMesh::UpdateAsyncronous( updateContext, params );
 	const auto time = updateContext.GetTime();
-	for (auto it = m_curveSets.begin(); it != m_curveSets.end(); ++it)
+	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 	{
-		(*it)->Update( time, time );
+		( *it )->Update( time, time );
 	}
 }
 
 Tr2PerObjectData* EveChildSpherePin::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
-	
+
 	// allocate only once
 	auto perObjectData = accumulator->Allocate<EveChildSpherePinPerObjectData>();
-	
-	if ( nullptr == perObjectData )
+
+	if( nullptr == perObjectData )
 	{
 		return nullptr;
 	}
-	
+
 	// set world matrix
 	perObjectData->m_worldMatrix = Transpose( m_worldTransform );
 	// set all other pin data
@@ -56,7 +56,7 @@ Tr2PerObjectData* EveChildSpherePin::GetPerObjectData( ITriRenderBatchAccumulato
 	perObjectData->m_pinColor = Vector4( m_pinColor.r, m_pinColor.g, m_pinColor.b, m_pinColor.a );
 	perObjectData->m_pinThreshold = Vector4( m_pinAlphaThreshold, 0.f, 0.f, 0.f );
 	perObjectData->m_pinRadiusPrecalc = Vector4( sinf( m_pinRadius ), cosf( m_pinRadius ), sinf( m_pinRotation ), cosf( m_pinRotation ) );
-	perObjectData->m_pinUV = Vector4(1.f, 1.f, .0f, .0f);
+	perObjectData->m_pinUV = Vector4( 1.f, 1.f, .0f, .0f );
 
 	return perObjectData;
 }

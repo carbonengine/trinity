@@ -14,33 +14,34 @@ BLUE_DECLARE_INTERFACE( IEveVolume );
 
 BLUE_CLASS( EveProceduralMethodAttributeMap ) :
 	public IEveProceduralSelectionMethod,
-    public INotify
+	public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
 
-    EveProceduralMethodAttributeMap( IRoot* lockobj = NULL );
+	EveProceduralMethodAttributeMap( IRoot* lockobj = NULL );
 	~EveProceduralMethodAttributeMap();
 
-    void SelectParameter();
+	void SelectParameter();
 
-    //  IEveProceduralSelectionMethod
-    void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-    bool IsSelectedChildModified() const override;
-    EveChildRefPtr GetSelectedChild() override;
-    IEveVolumeVector* GetDebugVolumes() override;
+	//  IEveProceduralSelectionMethod
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	bool IsSelectedChildModified() const override;
+	EveChildRefPtr GetSelectedChild() override;
+	IEveVolumeVector* GetDebugVolumes() override;
 
-    //  INotify
-    bool OnModified( Be::Var* value ) override;
+	//  INotify
+	bool OnModified( Be::Var * value ) override;
 
 protected:
-    BlueSharedString m_mappedAttribute;
-    BlueSharedString m_seed;
-    int m_selectedChildIndex;
-    PEveProceduralMethodAttributeMapParameterVector m_parameters;
+	BlueSharedString m_mappedAttribute;
+	BlueSharedString m_seed;
+	int m_selectedChildIndex;
+	PEveProceduralMethodAttributeMapParameterVector m_parameters;
+
 private:
-    bool m_selectedChildModified;
-    PIEveVolumeVector m_debugVolumes;
+	bool m_selectedChildModified;
+	PIEveVolumeVector m_debugVolumes;
 };
 
 TYPEDEF_BLUECLASS( EveProceduralMethodAttributeMap );

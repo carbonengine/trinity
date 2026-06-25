@@ -16,7 +16,7 @@ Vector3 TransformPoint( const Vector3& localCenter, Tr2SolidSet* solid, Matrix& 
 {
 	XMVECTOR det;
 	Matrix viewInv( XMMatrixInverse( &det, viewMatrix ) );
-	
+
 	Vector3 viewPos = viewInv.GetTranslation();
 	Vector3 lineSetPos = Vector3( solid->m_localTransform._41, solid->m_localTransform._42, solid->m_localTransform._43 );
 	Vector3 normal = Vector3( viewMatrix._13, viewMatrix._23, viewMatrix._33 );
@@ -32,16 +32,15 @@ Vector3 TransformPoint( const Vector3& localCenter, Tr2SolidSet* solid, Matrix& 
 
 }
 
-Tr2ScalingTool::Tr2ScalingTool( IRoot* lockobj )
-	:m_initialLength( 1.0f ),
+Tr2ScalingTool::Tr2ScalingTool( IRoot* lockobj ) :
+	m_initialLength( 1.0f ),
 	m_scale( 1.0f, 1.0f, 1.0f ),
 	m_initialScale( 1.0f, 1.0f, 1.0f )
 {
 	GenLineSets();
-	SelectAxis("w");
+	SelectAxis( "w" );
 
-	Init(m_localTransform);
-
+	Init( m_localTransform );
 }
 
 void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDelta, Tr2Viewport& viewport, Matrix& viewMatrix, Matrix& projectionMatrix )
@@ -55,12 +54,12 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 	pos.y = m_localTransform._42;
 	pos.z = m_localTransform._43;
 
-	
+
 	if( m_initialLength < 0.0 )
 	{
-        Vector3 vecResult;
-        Vector3 vecCenterOfMass = TransformPoint( Vector3( 1, 0, 0 ), m_xBox, viewMatrix );
-        float tmpInitialLength = Length( pos - vecCenterOfMass );
+		Vector3 vecResult;
+		Vector3 vecCenterOfMass = TransformPoint( Vector3( 1, 0, 0 ), m_xBox, viewMatrix );
+		float tmpInitialLength = Length( pos - vecCenterOfMass );
 		// the initiallength could not have been set up...
 		m_initialLength = tmpInitialLength;
 	}
@@ -73,15 +72,15 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 	GetBaseVectors( xAxis, yAxis, zAxis );
 
 	// Get the location of the tool on screen
-	PointToScreenCoordinates(pos, screenPos, viewport, viewMatrix, projectionMatrix );
+	PointToScreenCoordinates( pos, screenPos, viewport, viewMatrix, projectionMatrix );
 	int curMouseX = int( screenPos.x );
 	int curMouseY = int( screenPos.y );
 	// Get the pick ray from the tools screen location
-	ScreenCoordinatesToRay(curMouseX, curMouseY, ray, startPos, viewport, viewMatrix, projectionMatrix );
+	ScreenCoordinatesToRay( curMouseX, curMouseY, ray, startPos, viewport, viewMatrix, projectionMatrix );
 
 	// Get the normal for the best plane to use
 	normal = GetDesiredPlaneNormal( ray, viewMatrix );
-	Vector3 delta = MovePointOnPlane(curMouseX, curMouseY, curMouseX+mouseXDelta, curMouseY+mouseYDelta, pos, normal, viewport, viewMatrix, projectionMatrix );
+	Vector3 delta = MovePointOnPlane( curMouseX, curMouseY, curMouseX + mouseXDelta, curMouseY + mouseYDelta, pos, normal, viewport, viewMatrix, projectionMatrix );
 
 	Vector3 translate;
 	if( m_selectedAxis == "w" )
@@ -168,9 +167,9 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 
 			Vector3 nextScale = m_scale;
 
-			nextScale.x = ( m_initialScale.x*scale );
-			nextScale.y = ( m_initialScale.y*scale );
-			nextScale.z = ( m_initialScale.z*scale );
+			nextScale.x = ( m_initialScale.x * scale );
+			nextScale.y = ( m_initialScale.y * scale );
+			nextScale.z = ( m_initialScale.z * scale );
 
 			scaleB = ScalingMatrix( nextScale.x, nextScale.y, nextScale.z );
 			// Check the move callback for if we should be moving or not
@@ -229,15 +228,15 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 			Vector3 nextScale = m_scale;
 			if( m_selectedAxis == "x" )
 			{
-				nextScale.x = ( m_initialScale.x*scale );
+				nextScale.x = ( m_initialScale.x * scale );
 			}
 			else if( m_selectedAxis == "y" )
 			{
-				nextScale.y = ( m_initialScale.y*scale );
+				nextScale.y = ( m_initialScale.y * scale );
 			}
 			else if( m_selectedAxis == "z" )
 			{
-				nextScale.z = ( m_initialScale.z*scale );
+				nextScale.z = ( m_initialScale.z * scale );
 			}
 			scaleB = ScalingMatrix( nextScale.x, nextScale.y, nextScale.z );
 
@@ -255,7 +254,7 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 	}
 }
 
-std::vector<ITr2Renderable*>& Tr2ScalingTool::GetPrimitivesToRender( )
+std::vector<ITr2Renderable*>& Tr2ScalingTool::GetPrimitivesToRender()
 {
 	// Depending on the mode of the tool. We want to control which parts of it will
 	// be rendered
@@ -264,7 +263,7 @@ std::vector<ITr2Renderable*>& Tr2ScalingTool::GetPrimitivesToRender( )
 	{
 		for( PrimitiveIterator it = m_primitives.begin(); it != m_primitives.end(); ++it )
 		{
-			m_visibleObjects.push_back((*it));	
+			m_visibleObjects.push_back( ( *it ) );
 		}
 	}
 	else
@@ -273,12 +272,11 @@ std::vector<ITr2Renderable*>& Tr2ScalingTool::GetPrimitivesToRender( )
 		// ring
 		for( PrimitiveIterator it = m_primitives.begin(); it != m_primitives.end(); ++it )
 		{
-			if((*it)->m_name == "w" || (*it)->m_name == m_selectedAxis
-				|| (*it)->m_name == "_"+m_selectedAxis )
+			if( ( *it )->m_name == "w" || ( *it )->m_name == m_selectedAxis || ( *it )->m_name == "_" + m_selectedAxis )
 			{
-				m_visibleObjects.push_back((*it));	
-			}			
-		}		
+				m_visibleObjects.push_back( ( *it ) );
+			}
+		}
 	}
 	return m_visibleObjects;
 }
@@ -287,21 +285,21 @@ void Tr2ScalingTool::ResetPrimitiveColors()
 {
 	for( PrimitiveIterator it = m_primitives.begin(); it != m_primitives.end(); ++it )
 	{
-		if((*it)->m_name == "x" )
+		if( ( *it )->m_name == "x" )
 		{
-			(*it)->SetCurrentColor((Color&)v4Red);
+			( *it )->SetCurrentColor( (Color&)v4Red );
 		}
-		else if((*it)->m_name == "y" )
+		else if( ( *it )->m_name == "y" )
 		{
-			(*it)->SetCurrentColor((Color&)v4Green);
+			( *it )->SetCurrentColor( (Color&)v4Green );
 		}
-		else if((*it)->m_name == "z" )
+		else if( ( *it )->m_name == "z" )
 		{
-			(*it)->SetCurrentColor((Color&)v4Blue);
+			( *it )->SetCurrentColor( (Color&)v4Blue );
 		}
-		else if((*it)->m_name == "w" )
+		else if( ( *it )->m_name == "w" )
 		{
-			(*it)->SetCurrentColor((Color&)v4Cyan);
+			( *it )->SetCurrentColor( (Color&)v4Cyan );
 		}
 	}
 }
@@ -316,33 +314,33 @@ void Tr2ScalingTool::GenLineSets()
 	Tr2EffectPtr mLineEffect;
 	Tr2EffectPtr pEffect;
 
-	if( !m_xLine	.CreateInstance()	 ||
-		!m_yLine	.CreateInstance()	 ||
-		!m_zLine	.CreateInstance()	 ||
-		!m_xBox		.CreateInstance()	 ||
-		!m_yBox		.CreateInstance()	 ||
-		!m_zBox		.CreateInstance()	 ||
-		!m_wBox		.CreateInstance()	 ||
-		!mLineEffect.CreateInstance()	 ||
-		!mSolidEffect.CreateInstance()	 ||
-		!pEffect	.CreateInstance() )
+	if( !m_xLine.CreateInstance() ||
+		!m_yLine.CreateInstance() ||
+		!m_zLine.CreateInstance() ||
+		!m_xBox.CreateInstance() ||
+		!m_yBox.CreateInstance() ||
+		!m_zBox.CreateInstance() ||
+		!m_wBox.CreateInstance() ||
+		!mLineEffect.CreateInstance() ||
+		!mSolidEffect.CreateInstance() ||
+		!pEffect.CreateInstance() )
 	{
 		return;
 	}
-		
-	mLineEffect->SetEffectPathName("res:/Graphics/Effect/Managed/Utility/LinesNoZ.fx");
-	mSolidEffect->SetEffectPathName("res:/Graphics/Effect/Managed/Utility/SolidsNoZ.fx");
-	pEffect->SetEffectPathName("res:/Graphics/Effect/Managed/Utility/PrimitivePicking.fx" );
 
-	m_xLine->AddLine( v3Zero, v4LightGray,  v3X, v4LightGray );
+	mLineEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Utility/LinesNoZ.fx" );
+	mSolidEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Utility/SolidsNoZ.fx" );
+	pEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Utility/PrimitivePicking.fx" );
+
+	m_xLine->AddLine( v3Zero, v4LightGray, v3X, v4LightGray );
 	m_xLine->SubmitChanges();
 	m_xLine->m_name = "_x";
 
-	m_yLine->AddLine( v3Zero, v4LightGray,  v3Y, v4LightGray );	
+	m_yLine->AddLine( v3Zero, v4LightGray, v3Y, v4LightGray );
 	m_yLine->SubmitChanges();
 	m_yLine->m_name = "_y";
 
-	m_zLine->AddLine( v3Zero, v4LightGray,  v3Z, v4LightGray );	
+	m_zLine->AddLine( v3Zero, v4LightGray, v3Z, v4LightGray );
 	m_zLine->SubmitChanges();
 	m_zLine->m_name = "_z";
 
@@ -351,15 +349,15 @@ void Tr2ScalingTool::GenLineSets()
 	m_xLine->m_pickEffect = m_yLine->m_pickEffect = m_zLine->m_pickEffect = pEffect;
 
 	//xBox
-	c_tris = Tr2ManipulationTool::GetBoxTriangles( Vector3( -0.075f, -0.075f, -0.075f ),Vector3( 0.075f, 0.075f, 0.075f ), &numVectors );
+	c_tris = Tr2ManipulationTool::GetBoxTriangles( Vector3( -0.075f, -0.075f, -0.075f ), Vector3( 0.075f, 0.075f, 0.075f ), &numVectors );
 	translationMat = TranslationMatrix( 1.0f, 0.0f, 0.0f );
 	TransformCoords( c_tris, numVectors, translationMat );
 
-	for( int i = 0; i < numVectors/3; i++ )
+	for( int i = 0; i < numVectors / 3; i++ )
 	{
-		m_xBox->AddTriangle(c_tris[i*3], v4Red, c_tris[i*3+1], v4Red, c_tris[i*3+2], v4Red );
-	}        
-	delete [] c_tris;
+		m_xBox->AddTriangle( c_tris[i * 3], v4Red, c_tris[i * 3 + 1], v4Red, c_tris[i * 3 + 2], v4Red );
+	}
+	delete[] c_tris;
 
 	m_xBox->SubmitChanges();
 	m_xBox->m_name = "x";
@@ -368,15 +366,15 @@ void Tr2ScalingTool::GenLineSets()
 	m_xBox->m_pickEffect = pEffect;
 
 	//yBox
-	c_tris = Tr2ManipulationTool::GetBoxTriangles( Vector3( -0.075f, -0.075f, -0.075f ),Vector3( 0.075f, 0.075f, 0.075f ), &numVectors );
+	c_tris = Tr2ManipulationTool::GetBoxTriangles( Vector3( -0.075f, -0.075f, -0.075f ), Vector3( 0.075f, 0.075f, 0.075f ), &numVectors );
 	translationMat = TranslationMatrix( 0.0f, 1.0f, 0.0f );
 	TransformCoords( c_tris, numVectors, translationMat );
 
-	for( int i = 0; i < numVectors/3; i++ )
+	for( int i = 0; i < numVectors / 3; i++ )
 	{
-		m_yBox->AddTriangle(c_tris[i*3], v4Green, c_tris[i*3+1], v4Green, c_tris[i*3+2], v4Green );
-	}        
-	delete [] c_tris;
+		m_yBox->AddTriangle( c_tris[i * 3], v4Green, c_tris[i * 3 + 1], v4Green, c_tris[i * 3 + 2], v4Green );
+	}
+	delete[] c_tris;
 
 	m_yBox->SubmitChanges();
 	m_yBox->m_name = "y";
@@ -385,15 +383,15 @@ void Tr2ScalingTool::GenLineSets()
 	m_yBox->m_pickEffect = pEffect;
 
 	//yBox
-	c_tris = Tr2ManipulationTool::GetBoxTriangles( Vector3( -0.075f, -0.075f, -0.075f ),Vector3( 0.075f, 0.075f, 0.075f ), &numVectors );
+	c_tris = Tr2ManipulationTool::GetBoxTriangles( Vector3( -0.075f, -0.075f, -0.075f ), Vector3( 0.075f, 0.075f, 0.075f ), &numVectors );
 	translationMat = TranslationMatrix( 0.0f, 0.0f, 1.0f );
 	TransformCoords( c_tris, numVectors, translationMat );
 
-	for( int i = 0; i < numVectors/3; i++ )
+	for( int i = 0; i < numVectors / 3; i++ )
 	{
-		m_zBox->AddTriangle(c_tris[i*3], v4Blue, c_tris[i*3+1], v4Blue, c_tris[i*3+2], v4Blue );
-	}        
-	delete [] c_tris;
+		m_zBox->AddTriangle( c_tris[i * 3], v4Blue, c_tris[i * 3 + 1], v4Blue, c_tris[i * 3 + 2], v4Blue );
+	}
+	delete[] c_tris;
 
 	m_zBox->SubmitChanges();
 	m_zBox->m_name = "z";
@@ -402,12 +400,12 @@ void Tr2ScalingTool::GenLineSets()
 	m_zBox->m_pickEffect = pEffect;
 
 	//wBox
-	c_tris = Tr2ManipulationTool::GetBoxTriangles( Vector3( -0.075f, -0.075f, -0.075f ),Vector3( 0.075f, 0.075f, 0.075f ), &numVectors );
-	for( int i = 0; i < numVectors/3; i++ )
+	c_tris = Tr2ManipulationTool::GetBoxTriangles( Vector3( -0.075f, -0.075f, -0.075f ), Vector3( 0.075f, 0.075f, 0.075f ), &numVectors );
+	for( int i = 0; i < numVectors / 3; i++ )
 	{
-		m_wBox->AddTriangle(c_tris[i*3], v4Cyan, c_tris[i*3+1], v4Cyan, c_tris[i*3+2], v4Cyan );
-	}        
-	delete [] c_tris;
+		m_wBox->AddTriangle( c_tris[i * 3], v4Cyan, c_tris[i * 3 + 1], v4Cyan, c_tris[i * 3 + 2], v4Cyan );
+	}
+	delete[] c_tris;
 
 	m_wBox->SubmitChanges();
 	m_wBox->m_name = "w";
@@ -415,14 +413,14 @@ void Tr2ScalingTool::GenLineSets()
 	m_wBox->m_effect = mSolidEffect;
 	m_wBox->m_pickEffect = pEffect;
 
-	m_primitives.Insert( -1, m_xLine->GetRawRoot());
-	m_primitives.Insert( -1, m_yLine->GetRawRoot());
-	m_primitives.Insert( -1, m_zLine->GetRawRoot());
+	m_primitives.Insert( -1, m_xLine->GetRawRoot() );
+	m_primitives.Insert( -1, m_yLine->GetRawRoot() );
+	m_primitives.Insert( -1, m_zLine->GetRawRoot() );
 
-	m_primitives.Insert( -1, m_xBox->GetRawRoot());
-	m_primitives.Insert( -1, m_yBox->GetRawRoot());
-	m_primitives.Insert( -1, m_zBox->GetRawRoot());
-	m_primitives.Insert( -1, m_wBox->GetRawRoot());
+	m_primitives.Insert( -1, m_xBox->GetRawRoot() );
+	m_primitives.Insert( -1, m_yBox->GetRawRoot() );
+	m_primitives.Insert( -1, m_zBox->GetRawRoot() );
+	m_primitives.Insert( -1, m_wBox->GetRawRoot() );
 }
 
 void Tr2ScalingTool::Update()
@@ -431,7 +429,7 @@ void Tr2ScalingTool::Update()
 	m_worldTransform = m_localTransform * translation;
 	for( PrimitiveIterator it = m_primitives.begin(); it != m_primitives.end(); ++it )
 	{
-		(*it)->UpdateTransform();
+		( *it )->UpdateTransform();
 	}
 
 	UpdateLines();
@@ -442,34 +440,35 @@ void Tr2ScalingTool::UpdateLines()
 	Vector3 wCenter = m_wBox->GetCenterOfMass();
 	// x
 	m_xLine->ClearLines();
-	m_xLine->AddLine(	wCenter, 
-		v4LightGray,  
-		m_xBox->GetCenterOfMass(), 
-		v4LightGray );
+	m_xLine->AddLine( wCenter,
+					  v4LightGray,
+					  m_xBox->GetCenterOfMass(),
+					  v4LightGray );
 	m_xLine->SubmitChanges();
 
 	// y
 	m_yLine->ClearLines();
-	m_yLine->AddLine(	wCenter, 
-		v4LightGray,  
-		m_yBox->GetCenterOfMass(), 
-		v4LightGray );
+	m_yLine->AddLine( wCenter,
+					  v4LightGray,
+					  m_yBox->GetCenterOfMass(),
+					  v4LightGray );
 	m_yLine->SubmitChanges();
 
 	// z
 	m_zLine->ClearLines();
-	m_zLine->AddLine(	wCenter, 
-		v4LightGray,  
-		m_zBox->GetCenterOfMass(), 
-		v4LightGray );
+	m_zLine->AddLine( wCenter,
+					  v4LightGray,
+					  m_zBox->GetCenterOfMass(),
+					  v4LightGray );
 	m_zLine->SubmitChanges();
 }
 
-void Tr2ScalingTool::ResetPrimitives(){
+void Tr2ScalingTool::ResetPrimitives()
+{
 	for( PrimitiveIterator it = m_primitives.begin(); it != m_primitives.end(); ++it )
 	{
-		(*it)->m_localTransform = m_localTransform;
-		(*it)->UpdateTransform();
+		( *it )->m_localTransform = m_localTransform;
+		( *it )->UpdateTransform();
 	}
 	m_xLine->m_localTransform = IdentityMatrix();
 	m_yLine->m_localTransform = IdentityMatrix();
@@ -483,7 +482,7 @@ void Tr2ScalingTool::Init( Matrix& initialTransform )
 {
 	// Extract the scaling and translation
 	Vector3 scaling;
-	Vector3 pos;	
+	Vector3 pos;
 	Quaternion rotation;
 	Matrix rotationMatrix;
 	Decompose( scaling, rotation, pos, initialTransform );
@@ -497,7 +496,7 @@ void Tr2ScalingTool::Init( Matrix& initialTransform )
 	ResetPrimitives();
 	// Compute initial length when captured
 	Vector3 vecA, vecB, vecC;
-	vecA.x = m_worldTransform._41; 
+	vecA.x = m_worldTransform._41;
 	vecA.y = m_worldTransform._42;
 	vecA.z = m_worldTransform._43;
 	vecB = m_xBox->GetCenterOfMass();
@@ -505,5 +504,4 @@ void Tr2ScalingTool::Init( Matrix& initialTransform )
 	m_initialLength = -1;
 	m_scale = scaling;
 	m_initialScale = scaling;
-	 
 }

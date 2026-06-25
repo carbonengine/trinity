@@ -7,16 +7,16 @@
 namespace
 {
 
-	std::shared_ptr<TrinityALImpl::Tr2OcclusionQueryAL> NullQuery()
-	{
-		static std::shared_ptr<TrinityALImpl::Tr2OcclusionQueryAL> nullQuery = std::make_shared<TrinityALImpl::Tr2OcclusionQueryAL>();
-		return nullQuery;
-	}
+std::shared_ptr<TrinityALImpl::Tr2OcclusionQueryAL> NullQuery()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2OcclusionQueryAL> nullQuery = std::make_shared<TrinityALImpl::Tr2OcclusionQueryAL>();
+	return nullQuery;
+}
 }
 
 
-Tr2OcclusionQueryAL::Tr2OcclusionQueryAL()
-	:m_query( NullQuery() )
+Tr2OcclusionQueryAL::Tr2OcclusionQueryAL() :
+	m_query( NullQuery() )
 {
 }
 

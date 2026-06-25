@@ -12,7 +12,6 @@ Tr2Sprite2dRenderJob::Tr2Sprite2dRenderJob( IRoot* lockobj /*= NULL */ )
 
 Tr2Sprite2dRenderJob::~Tr2Sprite2dRenderJob()
 {
-
 }
 
 void Tr2Sprite2dRenderJob::GatherSprites( Tr2Sprite2dScene* renderer )

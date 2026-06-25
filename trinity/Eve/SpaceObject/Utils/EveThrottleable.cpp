@@ -28,7 +28,7 @@ bool EveThrottleable::ShouldSkipUpdate( float normalizedUpdateFrequency )
 		return true;
 	}
 
-	float updateFrequency = normalizedUpdateFrequency * float( m_maxUpdateFrequency - m_minUpdateFrequency ) + float(m_minUpdateFrequency);
+	float updateFrequency = normalizedUpdateFrequency * float( m_maxUpdateFrequency - m_minUpdateFrequency ) + float( m_minUpdateFrequency );
 	m_currentUpdateFrequency = max( updateFrequency, 0.1f ); // floor: update every 10 sec at the least
 	m_nextUpdateTS = currentTime + TimeFromDouble( 1.0 / m_currentUpdateFrequency );
 	return false;

@@ -11,19 +11,15 @@ const Be::ClassInfo* Tr2QuadRenderer::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2QuadRenderer, "" )
 		MAP_INTERFACE( Tr2QuadRenderer )
 
-		MAP_PROPERTY_READONLY
-		(
+		MAP_PROPERTY_READONLY(
 			"instanceBufferSize",
 			GetInstanceBufferSize,
-			"Current size of the instance buffer"
-		)
+			"Current size of the instance buffer" )
 
-		MAP_PROPERTY_READONLY
-		(
+		MAP_PROPERTY_READONLY(
 			"instanceDataSize",
 			GetInstanceDataSize,
-			"Size of the instance data last frame"
-		)
+			"Size of the instance data last frame" )
 
 	EXPOSURE_END()
 }

@@ -24,8 +24,8 @@ public:
 	~EveCustomMask();
 
 	// access
-	void GetDebugDrawMatrix( Matrix* matrix, float objectRadius ) const;
-	void FillPerObjectData( size_t n,  EveSpaceObjectVSData* vsData, EveSpaceObjectPSData* psData ) const;
+	void GetDebugDrawMatrix( Matrix * matrix, float objectRadius ) const;
+	void FillPerObjectData( size_t n, EveSpaceObjectVSData* vsData, EveSpaceObjectPSData* psData ) const;
 	void Setup( const Vector3& position, const Vector3& scaling, const Quaternion& rotation, bool isMirrored, bool clampU, bool clampV, uint8_t srcID, const Vector4& targets );
 	static void ZeroPerObjectData( size_t n, EveSpaceObjectVSData* vsData, EveSpaceObjectPSData* psData );
 
@@ -46,7 +46,6 @@ private:
 	bool m_isMirrored;
 	bool m_clampU;
 	bool m_clampV;
-
 };
 
 TYPEDEF_BLUECLASS( EveCustomMask );

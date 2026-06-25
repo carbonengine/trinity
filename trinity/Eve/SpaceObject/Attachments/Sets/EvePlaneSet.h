@@ -24,7 +24,7 @@ struct ViewDistanceInfo;
 
 class Tr2PerObjectData;
 
-struct EvePlaneLight 
+struct EvePlaneLight
 {
 
 	EvePlaneLight();
@@ -50,7 +50,7 @@ struct EvePlaneLight
 // SeeAlso:
 //   EveBoosterSet2
 // --------------------------------------------------------------------------------
-BLUE_CLASS( EvePlaneSet ):
+BLUE_CLASS( EvePlaneSet ) :
 	public IEveSpaceObjectAttachment,
 	public IInitialize,
 	public INotify,
@@ -69,10 +69,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
@@ -81,8 +81,8 @@ public:
 	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
 	void AddToQuadRenderer( Tr2QuadRenderer & quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const Float4x3* bones, size_t boneCount ) override;
 	virtual void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL );
-	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount );
+	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount );
 
 	void AddLightFromSOF( const EvePlaneLight& light );
 
@@ -92,7 +92,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	void GetLights( Tr2LightManager& lightManager ) const override;
+	void GetLights( Tr2LightManager & lightManager ) const override;
 
 	void SetImageMapParameter( TriTextureParameterPtr imageMapParameter );
 	void SetLayerMap1Parameter( TriTextureParameterPtr layerMap1Parameter );
@@ -116,8 +116,9 @@ public:
 	void Rebuild();
 
 	EvePlaneSetItemVector* GetPlanes();
+
 private:
-	Color GetAverageColor(  ) const;
+	Color GetAverageColor() const;
 	Color GetAverageColor( const TriTextureParameterPtr& ) const;
 
 	struct PlaneVertex

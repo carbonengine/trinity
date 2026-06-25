@@ -9,161 +9,161 @@
 
 namespace
 {
-	template <typename T>
-	bool HasFlag( T value, T flag )
-	{
-		return ( value & flag ) == flag;
-	}
+template <typename T>
+bool HasFlag( T value, T flag )
+{
+	return ( value & flag ) == flag;
+}
 
 }
 
 namespace TrinityALImpl
 {
-	ALResult Tr2BufferAL::Create(
-		const Tr2BufferDescriptionAL& desc,
-		const void* initialData,
-		Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2BufferAL::Create(
+	const Tr2BufferDescriptionAL& desc,
+	const void* initialData,
+	Tr2PrimaryRenderContextAL& renderContext )
+{
+	Destroy();
+
+	if( desc.count == 0 )
 	{
-		Destroy();
-
-		if( desc.count == 0 )
-		{
-			return E_INVALIDARG;
-		}
-
-		if( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE ) && !initialData )
-		{
-			return E_INVALIDARG;
-		}
-
-		if( !renderContext.IsValid() )
-		{
-			return E_INVALIDCALL;
-		}
-
-		m_desc = desc;
-		m_buffer.resize( "Tr2BufferAL", m_desc.count * m_desc.stride );
-		return S_OK;
+		return E_INVALIDARG;
 	}
 
-	void Tr2BufferAL::Destroy()
+	if( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE ) && !initialData )
 	{
-		m_desc.count = 0;
-		m_buffer.clear();
+		return E_INVALIDARG;
 	}
 
-	bool Tr2BufferAL::IsValid() const
+	if( !renderContext.IsValid() )
 	{
-		return m_buffer.size() > 0;
+		return E_INVALIDCALL;
 	}
 
-	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass() const
-	{
-		return AL_MEMORY_MANAGED;
-	}
+	m_desc = desc;
+	m_buffer.resize( "Tr2BufferAL", m_desc.count * m_desc.stride );
+	return S_OK;
+}
 
-	const Tr2BufferDescriptionAL& Tr2BufferAL::GetDesc() const
-	{
-		return m_desc;
-	}
+void Tr2BufferAL::Destroy()
+{
+	m_desc.count = 0;
+	m_buffer.clear();
+}
 
-	ALResult Tr2BufferAL::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )
-	{
-		if( !renderContext.IsValid() || !IsValid() )
-		{
-			data = nullptr;
-			return E_INVALIDCALL;
-		}
-		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ ) )
-		{
-			return E_INVALIDCALL;
-		}
-		data = m_buffer.get();
-		return S_OK;
-	}
+bool Tr2BufferAL::IsValid() const
+{
+	return m_buffer.size() > 0;
+}
 
-	ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
-	{
-		if( !renderContext.IsValid() || !IsValid() )
-		{
-			data = nullptr;
-			return E_INVALIDCALL;
-		}
-		if( size == 0 || offset + size > m_desc.stride * m_desc.count )
-		{
-			data = nullptr;
-			return E_INVALIDARG;
-		}
-		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ ) )
-		{
-			return E_INVALIDCALL;
-		}
-		data = m_buffer.get();
-		return S_OK;
-	}
+Tr2ALMemoryType Tr2BufferAL::GetMemoryClass() const
+{
+	return AL_MEMORY_MANAGED;
+}
 
-	void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& )
-	{
-	}
+const Tr2BufferDescriptionAL& Tr2BufferAL::GetDesc() const
+{
+	return m_desc;
+}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
+ALResult Tr2BufferAL::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
 	{
-		if( !renderContext.IsValid() || !IsValid() )
-		{
-			data = nullptr;
-			return E_INVALIDCALL;
-		}
-		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE ) )
-		{
-			return E_INVALIDCALL;
-		}
-		data = m_buffer.get();
-		return S_OK;
+		data = nullptr;
+		return E_INVALIDCALL;
 	}
-
-	void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& )
+	if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ ) )
 	{
+		return E_INVALIDCALL;
 	}
+	data = m_buffer.get();
+	return S_OK;
+}
 
-	ALResult Tr2BufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void*, Tr2RenderContextAL & renderContext )
+ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
 	{
-		if( !renderContext.IsValid() || !IsValid() )
-		{
-			return E_INVALIDCALL;
-		}
-		if( offset + size > m_desc.count * m_desc.stride )
-		{
-			return E_INVALIDARG;
-		}
-		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE ) || HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
-		{
-			return E_INVALIDCALL;
-		}
-		if( size == 0 )
-		{
-			return S_OK;
-		}
-		return S_OK;
+		data = nullptr;
+		return E_INVALIDCALL;
 	}
-
-	uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+	if( size == 0 || offset + size > m_desc.stride * m_desc.count )
 	{
-		return 0xffffffff;
+		data = nullptr;
+		return E_INVALIDARG;
 	}
-
-	uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+	if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ ) )
 	{
-		return 0xffffffff;
+		return E_INVALIDCALL;
 	}
+	data = m_buffer.get();
+	return S_OK;
+}
 
-	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
+void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& )
+{
+}
+
+ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
 	{
+		data = nullptr;
+		return E_INVALIDCALL;
 	}
+	if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE ) )
+	{
+		return E_INVALIDCALL;
+	}
+	data = m_buffer.get();
+	return S_OK;
+}
 
-	ALResult Tr2BufferAL::SetName( const char* )
+void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& )
+{
+}
+
+ALResult Tr2BufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void*, Tr2RenderContextAL& renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( offset + size > m_desc.count * m_desc.stride )
+	{
+		return E_INVALIDARG;
+	}
+	if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE ) || HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+	{
+		return E_INVALIDCALL;
+	}
+	if( size == 0 )
 	{
 		return S_OK;
 	}
+	return S_OK;
+}
+
+uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+{
+	return 0xffffffff;
+}
+
+uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+{
+	return 0xffffffff;
+}
+
+void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
+{
+}
+
+ALResult Tr2BufferAL::SetName( const char* )
+{
+	return S_OK;
+}
 
 }
 

@@ -1,6 +1,6 @@
 // Copyright © 2023 CCP ehf.
 
-#include "StdAfx.h" 
+#include "StdAfx.h"
 
 #include "Tr2SuballocatedBuffer.h"
 
@@ -8,10 +8,6 @@
 
 CCP_STATS_DECLARE( suballocatedBufferAllocated, "Trinity/SuballocatedBuffer/Allocated", false, CST_COUNTER_HIGH, "The currently number of bytes currently in use in the buffer." );
 CCP_STATS_DECLARE( suballocatedBufferCapacity, "Trinity/SuballocatedBuffer/Capacity", false, CST_COUNTER_HIGH, "The buffer's current capacity." );
-
-
-
-
 
 
 
@@ -40,10 +36,10 @@ ALResult Tr2SuballocatedBuffer::Allocate( uint32_t stride, uint32_t count, void*
 	Tr2VirtualAllocator::VirtualAllocation allocation = {};
 	if( m_allocator.Allocate( size, stride, allocation ) )
 	{
-		result.m_offset = static_cast<uint32_t>(allocation.offset);
-		result.m_size = static_cast<uint32_t>(size);
+		result.m_offset = static_cast<uint32_t>( allocation.offset );
+		result.m_size = static_cast<uint32_t>( size );
 
-		result.m_stride = static_cast<uint32_t>(stride);
+		result.m_stride = static_cast<uint32_t>( stride );
 
 		result.m_allocation = allocation;
 		result.m_parent = this;
@@ -113,7 +109,7 @@ bool Tr2SuballocatedBuffer::OnPrepareResources()
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	uint32_t bufferSize = static_cast<uint32_t>(m_allocator.GetCurrentSize());
+	uint32_t bufferSize = static_cast<uint32_t>( m_allocator.GetCurrentSize() );
 
 	Tr2BufferAL buffer;
 	Tr2BufferDescriptionAL desc( 4, bufferSize / 4, m_gpuUsage, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE );
@@ -129,7 +125,7 @@ ALResult Tr2SuballocatedBuffer::Expand()
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	//We have reached the allocator's max size. This probably means we're leaking a lot of memory.
-	if (m_allocator.GetCurrentSize() == m_allocator.GetMaxSize())
+	if( m_allocator.GetCurrentSize() == m_allocator.GetMaxSize() )
 	{
 		CCP_LOGERR( "Max size reached for buffer '%s'. This probably means we're leaking a lot of memory.", m_name.c_str() );
 		return E_OUTOFMEMORY;
@@ -170,7 +166,7 @@ ALResult Tr2SuballocatedBuffer::ReadBuffer( std::unique_ptr<uint8_t[]>& dest, ui
 {
 	const void* data = nullptr;
 	CR_RETURN_HR( m_buffer.MapForReading( data, offset, size, renderContext ) );
-	if ( data == nullptr )
+	if( data == nullptr )
 	{
 		return E_FAIL;
 	}

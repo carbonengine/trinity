@@ -15,9 +15,9 @@ public:
 	EveDistributionPlacementGeneratorParentLocators( IRoot* lockobj = nullptr );
 	~EveDistributionPlacementGeneratorParentLocators();
 
-	void GetInitialPlacements( std::vector<InitialPlacement> & placements, uint32_t & trackingID ) override;
+	void GetInitialPlacements( std::vector<InitialPlacement> & placements, uint32_t& trackingID ) override;
 	bool IsRequestingRegeneration() override;
-	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params, IEveDistributionRulesParent& owner ) override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, IEveDistributionRulesParent& owner ) override;
 
 	// INotify
 	bool OnModified( Be::Var * value ) override;

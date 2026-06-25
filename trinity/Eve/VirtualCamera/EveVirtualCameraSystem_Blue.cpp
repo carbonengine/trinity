@@ -17,31 +17,28 @@ const Be::ClassInfo* EveVirtualCameraSystem::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "GetCurrentCamera", GetCurrentCamera, "Get the current camera, taking into account any temporary, transition cameras." )
 		MAP_METHOD_AND_WRAP( "GetMainCamera", GetMainCamera, "Get whichever camera is either the main one or is marked to become it after a transition completes." )
 
-		MAP_METHOD_AND_WRAP( 
+		MAP_METHOD_AND_WRAP(
 			"CutToCamera",
-			CutToCamera, 
+			CutToCamera,
 			"Cut to the target camera.\n"
 			":param camera: A camera to cut to, cannot be None.\n"
-			":type camera: trinity.EveVirtualCamera\n"
-		)
-		MAP_METHOD_AND_WRAP( 
+			":type camera: trinity.EveVirtualCamera\n" )
+		MAP_METHOD_AND_WRAP(
 			"LerpToCamera",
-			LerpToCamera, 
-			"Lerp to the target camera.\n" 
+			LerpToCamera,
+			"Lerp to the target camera.\n"
 			":param camera: A camera to cut to, cannot be None.\n"
 			":type camera: trinity.EveVirtualCamera\n"
 			":param lerpTime: the time to perform the lerp transition over.\n"
-			":type lerpTime: float\n"
-		)
+			":type lerpTime: float\n" )
 
 		MAP_METHOD_AND_WRAP( "IsExternallyControlled", IsExternallyControlled, "True if the current camera in use is the \"externalCamera\", thus the system is expected to be getting driven by an external system via this camera." )
 
-		MAP_METHOD_AND_WRAP( 
+		MAP_METHOD_AND_WRAP(
 			"GetCameraByName",
-			GetCameraByName, 
+			GetCameraByName,
 			"Get the first camera found matching the given name.\n"
 			":param cameraName: The name of the camera to find.\n"
-			":type cameraName: str\n"
-		)
+			":type cameraName: str\n" )
 	EXPOSURE_END()
 }

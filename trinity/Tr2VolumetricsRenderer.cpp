@@ -74,7 +74,7 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 
 	m_gameBackClip = 1E6f; //must match what the actual game uses; not what Graphite is currently set to, as the user can change the back clip.
 
-	
+
 	int noiseResolution = 64;
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -153,7 +153,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderVolumetrics(
 	const EveComponentRegistry& registry,
 	const TriFrustum& frustum,
 	const Tr2TextureAL& sceneDepth,
-    const Tr2TextureAL& froxelFog,
+	const Tr2TextureAL& froxelFog,
 	const Vector3& sunDirection,
 	const float depthSlices[4],
 	bool raytracingEnabled,
@@ -175,8 +175,8 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderVolumetrics(
 		if( width == m_lastRequestedWidth && height == m_lastRequestedHeight )
 		{
 			// Keep the real volume slice texture alive in case we need it again soon.
-			(void)gpuResourcePool.GetTempTexture( 
-				"VolumetricSlices", 
+			(void)gpuResourcePool.GetTempTexture(
+				"VolumetricSlices",
 				Tr2BitmapDimensions(
 					Tr2RenderContextEnum::TEX_TYPE_2D,
 					Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT,
@@ -195,9 +195,9 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderVolumetrics(
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Volumetrics" );
-    
-    GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
-    ON_BLOCK_EXIT( []{ GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", Tr2TextureAL{} ); } );
+
+	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
+	ON_BLOCK_EXIT( [] { GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", Tr2TextureAL{} ); } );
 
 
 	ITr2VolumetricRenderable::SceneInformation sceneInfo;
@@ -210,15 +210,15 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderVolumetrics(
 	sceneInfo.castShadows = m_castShadows;
 	sceneInfo.raytracedShadows = raytracingEnabled;
 
-	registry.ProcessComponents<ITr2VolumetricRenderable>( [&sceneInfo] ( ITr2VolumetricRenderable* volumetric ) -> void {
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&sceneInfo]( ITr2VolumetricRenderable* volumetric ) -> void {
 		volumetric->SetSceneInformation( sceneInfo );
-		} );
+	} );
 
 	{
 		GPU_REGION( renderContext, "Lightmaps" );
-		registry.ProcessComponentsUntil<ITr2VolumetricRenderable>( [&renderContext] ( ITr2VolumetricRenderable* volumetric ) -> bool {
+		registry.ProcessComponentsUntil<ITr2VolumetricRenderable>( [&renderContext]( ITr2VolumetricRenderable* volumetric ) -> bool {
 			return volumetric->UpdateVolumetricLightmap( renderContext );
-			} );
+		} );
 	}
 
 	auto volumeSlices = gpuResourcePool.GetTempTexture(
@@ -275,9 +275,9 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderVolumetrics(
 
 	std::vector<std::pair<ITr2VolumetricRenderable*, float>> renderables;
 	renderables.reserve( volumetricsCount );
-	registry.ProcessComponents<ITr2VolumetricRenderable>( [&renderables, &frustum] ( ITr2VolumetricRenderable* renderable ) -> void {
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&renderables, &frustum]( ITr2VolumetricRenderable* renderable ) -> void {
 		renderables.push_back( { renderable, renderable->GetSortValue( frustum ) } );
-		} );
+	} );
 
 	std::stable_sort( begin( renderables ), end( renderables ), []( auto x, auto y ) { return x.second > y.second; } );
 
@@ -345,7 +345,6 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 	double logBlendingSmoothness = m_logBlendingSmoothness;
 
 	registry.ProcessComponents<ITr2FroxelFogSettings>( [&overrides, logBlendingSmoothness]( ITr2FroxelFogSettings* component ) -> void {
-
 		ITr2FroxelFogSettings::FroxelFogSettings* fogSettings = component->GetFroxelFogSettings();
 
 		//Compute log(1 + thickness * m_logBlendingSmoothness) for each fog
@@ -382,7 +381,7 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 	FROXEL_ACCUMULATE( fogNoiseFrequency );
 	FROXEL_ACCUMULATE( fogNoiseMovementSpeed );
 
-	if (m_logBlending)
+	if( m_logBlending )
 	{
 		//Replace the thickness with a logarithmically interpolated one, making the transition from 0 thickness more graceful.
 		FROXEL_ACCUMULATE( logThickness );
@@ -391,13 +390,11 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 
 	float delta = updateContext.GetDeltaT();
 
-	m_godRayNoiseAnimation += m_froxelFogSettings.godRayNoiseAnimationSpeed.value * (delta / m_froxel3DNoise->GetDepth());
+	m_godRayNoiseAnimation += m_froxelFogSettings.godRayNoiseAnimationSpeed.value * ( delta / m_froxel3DNoise->GetDepth() );
 	m_godRayNoiseAnimation -= floor( m_godRayNoiseAnimation );
 
 	float fogFrequency = exp2f( -m_froxelFogSettings.fogNoiseFrequency.value );
 	m_fogNoiseMovement += m_froxelFogSettings.fogNoiseMovementSpeed.value * delta;
-
-
 }
 
 bool Tr2VolumetricsRenderer::HasFog() const
@@ -473,7 +470,7 @@ void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderCo
 		m_environmentRandom += g;
 		m_environmentRandom = m_environmentRandom - floor( m_environmentRandom );
 
-		
+
 		float lightG = -std::clamp( m_froxelFogSettings.lightDirectionality.value, 0.001f, 0.999f );
 		float environmentG = -std::clamp( m_froxelFogSettings.environmentDirectionality.value, 0.001f, 0.999f );
 
@@ -563,7 +560,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 	uint32_t originalHeight,
 	Tr2ShadowMap* cascadedShadowMap,
 	Tr2RaytracingGeometryPtr raytracingGeometry,
-	ShadowQuality shadowQuality, 
+	ShadowQuality shadowQuality,
 	const Vector3& sunDirection,
 	const Color& sunColor,
 	const Vector3d origin,
@@ -577,7 +574,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 	// Figure out the resolution we need.
 	uint32_t width = 1;
 	uint32_t height = 1;
-	uint32_t depth = 1; 
+	uint32_t depth = 1;
 
 	bool froxelsEnabled = m_froxelFogSettings.thickness.value > 0.0f;
 	if( froxelsEnabled )
@@ -586,7 +583,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 		float scale;
 		uint32_t numLayers;
 
-		switch (m_quality)
+		switch( m_quality )
 		{
 		case Tr2VolumerticQuality::Ultra:
 			scale = 1 / 6.0;
@@ -619,12 +616,12 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 	auto temporalFog = resources.useTemporalFroxels;
 
 
-	if (!froxelsEnabled)
+	if( !froxelsEnabled )
 	{
 		return {};
 	}
 
-	
+
 	GPU_REGION( renderContext, "Froxel Fog" );
 
 
@@ -663,7 +660,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 		resources.froxelJitter.z -= floor( resources.froxelJitter.z );
 	}
 
-	
+
 	if( !m_fogConstantBuffer.IsValid() )
 	{
 		m_fogConstantBuffer.Create( uint32_t( sizeof( FogPerObjectData ) ), renderContext.GetPrimaryRenderContext() );
@@ -746,7 +743,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 			else
 			{
 				//Otherwise, just use a plain compute shader.
-				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( shadowType == SHADOWS_CASCADED  ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
+				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( shadowType == SHADOWS_CASCADED ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
 				resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
 				resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 
@@ -761,9 +758,9 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 		{
 			GPU_REGION( renderContext, "Temporal filter" );
 
-			auto temporalFroxels0 = gpuResourcePool.GetPersistentTexture( 
-				"TemporalFroxelFog0", 
-				dimensions, 
+			auto temporalFroxels0 = gpuResourcePool.GetPersistentTexture(
+				"TemporalFroxelFog0",
+				dimensions,
 				Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE,
 				[]( auto& texture, auto& renderCtx ) {
 					const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -790,7 +787,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 
 			resources.raymarchFroxels->SetParameter( BlueSharedString( "InputTexture" ), temporalOutput );
 		}
-		
+
 		{
 			GPU_REGION( renderContext, "Raymarch" );
 			resources.raymarchFroxels->SetParameter( BlueSharedString( "OutputTexture" ), fogFroxels );
@@ -1127,8 +1124,7 @@ void Tr2VolumetricsRenderer::RenderShadows(
 	}
 	auto accumulator = m_batches.get();
 
-	registry.ProcessComponents<ITr2VolumetricRenderable>( [&accumulator] ( ITr2VolumetricRenderable* volumetric ) { 
-		volumetric->GetVolumetricShadowBatches( accumulator ); } );
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&accumulator]( ITr2VolumetricRenderable* volumetric ) { volumetric->GetVolumetricShadowBatches( accumulator ); } );
 
 	if( m_batches->GetBatchCount() )
 	{

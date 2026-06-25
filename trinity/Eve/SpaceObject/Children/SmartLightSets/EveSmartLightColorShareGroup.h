@@ -22,8 +22,8 @@ public:
 
 	void AddQuadsToQuadRenderer( const PlacementDataWithIdentifierStructureList& placements, size_t size, const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
-	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params, IEveDistributionMethod* distribution ) override;
-	void UpdateAsyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params, IEveDistributionMethod* distribution ) override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, IEveDistributionMethod* distribution ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, IEveDistributionMethod* distribution ) override;
 	void SetControllerVariable( const char* name, float value ) override;
 	void SetInheritProperties( const Color* colorSet ) override;
 	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
@@ -34,7 +34,7 @@ public:
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
 	// INotify
-	bool OnModified( Be::Var* value ) override;
+	bool OnModified( Be::Var * value ) override;
 	// IListNotify
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList ) override;
 

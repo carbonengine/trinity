@@ -15,30 +15,38 @@ class Tr2PerObjectData;
 
 class Tr2MeshArea;
 
-class Tr2Model:
-	public IRoot
+class Tr2Model : public IRoot
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
 	Tr2Model( IRoot* lockobj = NULL );
 	~Tr2Model();
 
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches,
 							 TriBatchType batchType,
-							 const Matrix& m, 
-							 const Tr2PerObjectData* data );	
+							 const Matrix& m,
+							 const Tr2PerObjectData* data );
 
 
 	virtual bool HasTransparency() const;
 	virtual bool GetBoundingBox( Vector3& min, Vector3& max );
 
-	unsigned int GetNumOfMeshes()				{	return (unsigned int)m_meshes.size();			}
-	Tr2MeshPtr GetMesh( unsigned int ix )		{	return m_meshes[ix];			}
-	const PTr2MeshVector& GetMeshes( void ) const { return m_meshes; }
+	unsigned int GetNumOfMeshes()
+	{
+		return (unsigned int)m_meshes.size();
+	}
+	Tr2MeshPtr GetMesh( unsigned int ix )
+	{
+		return m_meshes[ix];
+	}
+	const PTr2MeshVector& GetMeshes( void ) const
+	{
+		return m_meshes;
+	}
 
-    // Allows model to be constructed by hand from C++ code.
-    void AddMesh( Tr2Mesh* mesh );
+	// Allows model to be constructed by hand from C++ code.
+	void AddMesh( Tr2Mesh* mesh );
 
 	bool IsLoading() const;
 
@@ -47,15 +55,15 @@ public:
 protected:
 	friend class Tr2SkinnedModelBuilder;
 
-    std::string m_name;
+	std::string m_name;
 	PTr2MeshVector m_meshes;
 
 private:
 	// This is a helper function for GetBatches to separate it from the mesh sorting required for transparent areas
-	void GetBatchesFromMesh( Tr2Mesh* mesh, 
-							 TriBatchType batchType, 
-							 ITriRenderBatchAccumulator* batches, 
-							 Matrix* pm, 
+	void GetBatchesFromMesh( Tr2Mesh* mesh,
+							 TriBatchType batchType,
+							 ITriRenderBatchAccumulator* batches,
+							 Matrix* pm,
 							 const Tr2PerObjectData* data );
 };
 

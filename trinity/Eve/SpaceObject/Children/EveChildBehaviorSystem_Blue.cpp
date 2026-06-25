@@ -25,11 +25,10 @@ const Be::ClassInfo* EveChildBehaviorSystem::ExposeToBlue()
 		MAP_ATTRIBUTE( "behaviorGroups", m_behaviorGroups, "", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "splineTunnels", m_splineTunnels, "", Be::READ | Be::PERSIST | Be::NOTIFY )
 
-		MAP_METHOD_AND_WRAP( 
-			"GetVertexElementAddedThroughCode", 
-			GetVertexElementAddedThroughCode, 
-			"for validation and objects requiring vertex elements added to the shader through code\n:jessica-hidden: True" 
-		)
-		
+		MAP_METHOD_AND_WRAP(
+			"GetVertexElementAddedThroughCode",
+			GetVertexElementAddedThroughCode,
+			"for validation and objects requiring vertex elements added to the shader through code\n:jessica-hidden: True" )
+
 	EXPOSURE_END()
 }

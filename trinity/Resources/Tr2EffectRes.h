@@ -24,7 +24,7 @@ struct Tr2ShaderPermutation
 	uint8_t type;
 };
 
-BLUE_CLASS( Tr2EffectRes ): 
+BLUE_CLASS( Tr2EffectRes ) :
 	public BlueAsyncRes,
 	public ICacheable,
 	public Tr2DeviceResource
@@ -47,7 +47,7 @@ public:
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
 #if TRINITYDEV
-	virtual void GetDescription( std::string& desc );
+	virtual void GetDescription( std::string & desc );
 #endif
 private:
 	bool OnPrepareResources();
@@ -66,7 +66,7 @@ protected:
 	struct FileRecord
 	{
 		uint32_t index;
-		// Compiled code offset into the file 
+		// Compiled code offset into the file
 		uint32_t offset;
 		// Compiled code size
 		uint32_t size;

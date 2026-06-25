@@ -30,13 +30,12 @@ class Tr2LightManager;
 // SeeAlso:
 //   EveStretch
 // --------------------------------------------------------------------------------
-class EveTurretFiringFX :
-	public IInitialize,
-	public INotify,
-	public IListNotify,
-	public ITr2ControllerOwner,
-	public ITr2DebugRenderable,
-	public EveEntity
+class EveTurretFiringFX : public IInitialize,
+						  public INotify,
+						  public IListNotify,
+						  public ITr2ControllerOwner,
+						  public ITr2DebugRenderable,
+						  public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -44,20 +43,20 @@ public:
 	using IInitialize::Unlock;
 	using IInitialize::Lock;
 
-	EveTurretFiringFX(IRoot* lockobj = NULL);
+	EveTurretFiringFX( IRoot* lockobj = NULL );
 	~EveTurretFiringFX();
-	
+
 	void CleanUp();
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* val );
 
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
@@ -117,10 +116,22 @@ public:
 	void StopFiring();
 
 	// toggle display of source and dest objects of the stretcher
-	void SetDisplayDestObject( bool display ) { m_displayDestObject = display; }
-	bool GetDisplayDestObject() const { return m_displayDestObject; }
-	void SetDisplaySourceObject( bool display ) { m_displaySourceObject = display; }
-	bool GetDisplaySourceObject() const { return m_displaySourceObject; }
+	void SetDisplayDestObject( bool display )
+	{
+		m_displayDestObject = display;
+	}
+	bool GetDisplayDestObject() const
+	{
+		return m_displayDestObject;
+	}
+	void SetDisplaySourceObject( bool display )
+	{
+		m_displaySourceObject = display;
+	}
+	bool GetDisplaySourceObject() const
+	{
+		return m_displaySourceObject;
+	}
 
 	virtual void RegisterComponents() override;
 	virtual void UnRegisterComponents() override;
@@ -170,7 +181,7 @@ private:
 	// to-be-attached to bone name
 	BlueSharedString m_boneName;
 
-    // firing effect data (is of fixed length, so there is a max muzzle count per turret!)
+	// firing effect data (is of fixed length, so there is a max muzzle count per turret!)
 	struct PerMuzzleData
 	{
 		// state of the effect

@@ -9,13 +9,13 @@ TriStepSetRenderTarget::TriStepSetRenderTarget( IRoot* lockobj )
 {
 }
 
-TriStepSetRenderTarget::~TriStepSetRenderTarget(void)
+TriStepSetRenderTarget::~TriStepSetRenderTarget( void )
 {
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 void TriStepSetRenderTarget::py__init__( Tr2RenderTarget* renderTarget )
 {

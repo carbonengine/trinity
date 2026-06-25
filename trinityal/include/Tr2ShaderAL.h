@@ -13,15 +13,15 @@ struct Tr2ShaderBytecodeAL
 {
 	Tr2ShaderBytecodeAL();
 	Tr2ShaderBytecodeAL( const void* bytecode, size_t size );
-    
+
 	template <typename T, size_t Size>
-	Tr2ShaderBytecodeAL( const T( &bytecode_ )[Size] )
-		:bytecode( bytecode_ ),
+	Tr2ShaderBytecodeAL( const T ( &bytecode_ )[Size] ) :
+		bytecode( bytecode_ ),
 		size( Size * sizeof( T ) )
 	{
 	}
-    
-    ~Tr2ShaderBytecodeAL();
+
+	~Tr2ShaderBytecodeAL();
 
 	const void* bytecode;
 	size_t size;
@@ -116,8 +116,14 @@ struct Tr2StaticSamplerAL
 
 struct Tr2ShaderThreadGroupSizeAL
 {
-	Tr2ShaderThreadGroupSizeAL() : x( 1 ), y( 1 ), z( 1 ) {}
-	Tr2ShaderThreadGroupSizeAL( uint32_t x, uint32_t y, uint32_t z ) : x( x ), y( y ), z( z ) {}
+	Tr2ShaderThreadGroupSizeAL() :
+		x( 1 ), y( 1 ), z( 1 )
+	{
+	}
+	Tr2ShaderThreadGroupSizeAL( uint32_t x, uint32_t y, uint32_t z ) :
+		x( x ), y( y ), z( z )
+	{
+	}
 
 	uint32_t x;
 	uint32_t y;
@@ -148,8 +154,8 @@ class Tr2ShaderAL;
 
 namespace TrinityALImpl
 {
-	class Tr2ShaderAL;
-	class Tr2ShaderProgramAL;
+class Tr2ShaderAL;
+class Tr2ShaderProgramAL;
 }
 
 class Tr2PrimaryRenderContextAL;
@@ -164,8 +170,7 @@ public:
 		const Tr2ShaderBytecodeAL& bytecode,
 		const Tr2ShaderSignatureAL& signature,
 		const char* shaderPath,
-		Tr2PrimaryRenderContextAL &renderContext
-	);
+		Tr2PrimaryRenderContextAL& renderContext );
 
 	bool IsValid() const;
 
@@ -178,7 +183,7 @@ public:
 
 	ALResult SetName( const char* name );
 
-    TrinityALImpl::Tr2ShaderAL* TrinityALImpl_GetObject() const;
+	TrinityALImpl::Tr2ShaderAL* TrinityALImpl_GetObject() const;
 
 private:
 	Tr2ShaderAL( std::shared_ptr<TrinityALImpl::Tr2ShaderAL> shader );

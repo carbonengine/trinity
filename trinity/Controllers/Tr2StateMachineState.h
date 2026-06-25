@@ -20,7 +20,7 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
 
 	void Link( const Tr2StateMachine& stateMachine );
@@ -35,6 +35,7 @@ public:
 	const std::string& GetName() const;
 	const Tr2StateMachine* GetStateMachine() const;
 	void UpdateVariableMask() const;
+
 private:
 	Tr2StateMachineState* GetNextState() const;
 	IRoot* GetStateMachinePtr() const;

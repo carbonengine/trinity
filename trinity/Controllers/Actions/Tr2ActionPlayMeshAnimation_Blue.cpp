@@ -8,26 +8,24 @@ BLUE_DEFINE( Tr2ActionPlayMeshAnimation );
 
 namespace
 {
-	Be::VarChooser PlayActionChooser[] =
-	{
-		{ "Play", BeCast( Tr2ActionPlayMeshAnimation::PLAY ), "Play animation immediately" },
-		{ "Enqueue Play", BeCast( Tr2ActionPlayMeshAnimation::ENQUEUE_PLAY ), "Play animation after all other animations complete" },
-		{ 0 }
-	};
-	Be::VarChooser StopActionChooser[] =
-	{
-		{ "Stop", BeCast( Tr2ActionPlayMeshAnimation::STOP ), "Stop animation immediately" },
-		{ "Enqueue Stop", BeCast( Tr2ActionPlayMeshAnimation::ENQUEUE_STOP ), "Stop animation after loop finishes" },
-		{ "None", BeCast( Tr2ActionPlayMeshAnimation::NONE ), "Do not stop animation" },
-		{ 0 }
-	};
-	Be::VarChooser DestinationTypeChooser[] = {
-		{ "Owner", BeCast( Tr2ActionPlayMeshAnimation::DestinationType::OWNER ), "Action affects the owner" },
-		{ "Child", BeCast( Tr2ActionPlayMeshAnimation::DestinationType::CHILD ), "Action affect a child object" },
-		{ 0 }
-	};
+Be::VarChooser PlayActionChooser[] = {
+	{ "Play", BeCast( Tr2ActionPlayMeshAnimation::PLAY ), "Play animation immediately" },
+	{ "Enqueue Play", BeCast( Tr2ActionPlayMeshAnimation::ENQUEUE_PLAY ), "Play animation after all other animations complete" },
+	{ 0 }
+};
+Be::VarChooser StopActionChooser[] = {
+	{ "Stop", BeCast( Tr2ActionPlayMeshAnimation::STOP ), "Stop animation immediately" },
+	{ "Enqueue Stop", BeCast( Tr2ActionPlayMeshAnimation::ENQUEUE_STOP ), "Stop animation after loop finishes" },
+	{ "None", BeCast( Tr2ActionPlayMeshAnimation::NONE ), "Do not stop animation" },
+	{ 0 }
+};
+Be::VarChooser DestinationTypeChooser[] = {
+	{ "Owner", BeCast( Tr2ActionPlayMeshAnimation::DestinationType::OWNER ), "Action affects the owner" },
+	{ "Child", BeCast( Tr2ActionPlayMeshAnimation::DestinationType::CHILD ), "Action affect a child object" },
+	{ 0 }
+};
 
-	}
+}
 
 const Be::ClassInfo* Tr2ActionPlayMeshAnimation::ExposeToBlue()
 {

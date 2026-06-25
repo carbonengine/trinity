@@ -78,7 +78,7 @@ void EveChildSmartLightSet::UpdateSyncronous( const EveUpdateContext& updateCont
 	{
 		m_distribution->UpdateSyncronous( updateContext, params );
 	}
-	
+
 	for( auto it : m_lightGroups )
 	{
 		it->UpdateSyncronous( updateContext, params, m_distribution );

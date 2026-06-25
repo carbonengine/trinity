@@ -6,7 +6,7 @@
 
 const PlacementDataWithIdentifier s_PlacementDataWithIdentifierDefaultKey;
 
-EveSmartLightColorShareGroup::EveSmartLightColorShareGroup( IRoot* lockobj ) : 
+EveSmartLightColorShareGroup::EveSmartLightColorShareGroup( IRoot* lockobj ) :
 	PARENTLOCK( m_lightGroups ),
 	m_display( true )
 {

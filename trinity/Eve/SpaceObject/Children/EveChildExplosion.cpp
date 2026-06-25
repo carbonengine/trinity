@@ -5,8 +5,8 @@
 #include "Eve/EveUpdateContext.h"
 #include "Particle/Tr2SphereShapeAttributeGenerator.h"
 
-EveChildExplosion::EveChildExplosion( IRoot* lockobj )
-	:EveChildContainer( lockobj ),
+EveChildExplosion::EveChildExplosion( IRoot* lockobj ) :
+	EveChildContainer( lockobj ),
 	PARENTLOCK( m_localExplosions ),
 	PARENTLOCK( m_globalExplosions ),
 	PARENTLOCK( m_globalExplosionInstances ),
@@ -83,9 +83,9 @@ void EveChildExplosion::Play()
 	CalculateExplosionTimes( uint32_t( m_localExplosionTransforms.size() ) );
 	m_playTime = 0;
 	m_countdownToGlobalExplosionStart = m_globalExplosionTime;
-	
+
 	RebuildLocalTransform();
-	m_isPlaying = true;	
+	m_isPlaying = true;
 }
 
 // --------------------------------------------------------------------------------------
@@ -116,24 +116,24 @@ void EveChildExplosion::CalculateExplosionTimes( uint32_t localExplosionCount )
 	float timeUntilLastLocalExplosion = 0.f;
 	m_globalExplosionTime = 0.f;
 	m_totalDuration = 0.f;
-	
-	if( localExplosionCount != 0)
+
+	if( localExplosionCount != 0 )
 	{
 		timeUntilLastLocalExplosion += m_localExplosionDelay;
 		m_globalExplosionTime += m_globalExplosionDelay;
 	}
 
-	for(uint32_t i = 0; i < localExplosionCount; i++)
+	for( uint32_t i = 0; i < localExplosionCount; i++ )
 	{
-		auto explosionTime = std::pow( m_localExplosionIntervalFactor, float( i ) ) *  
-			m_localExplosionInterval * float( rand() ) / float( RAND_MAX );	
-		
-		m_localExplosionTimes.push_back(explosionTime);
+		auto explosionTime = std::pow( m_localExplosionIntervalFactor, float( i ) ) *
+			m_localExplosionInterval * float( rand() ) / float( RAND_MAX );
+
+		m_localExplosionTimes.push_back( explosionTime );
 		timeUntilLastLocalExplosion += explosionTime;
 	}
 	float totalLocalDuration = m_localDuration + timeUntilLastLocalExplosion;
 	m_globalExplosionTime += timeUntilLastLocalExplosion;
-	
+
 	// max this because we might have explosions that do not have a global explosion
 	m_totalDuration = max( totalLocalDuration, m_globalExplosionTime + m_globalDuration );
 
@@ -148,18 +148,18 @@ void EveChildExplosion::CalculateExplosionTimes( uint32_t localExplosionCount )
 // --------------------------------------------------------------------------------------
 void EveChildExplosion::SetLocalExplosionTransforms( const std::vector<Matrix>& transforms )
 {
-	
+
 	m_localExplosionTransforms.clear();
-	m_localExplosionTransforms.insert( 
-		m_localExplosionTransforms.begin(), 
-		transforms.begin(), 
+	m_localExplosionTransforms.insert(
+		m_localExplosionTransforms.begin(),
+		transforms.begin(),
 		transforms.end() );
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
 //   Assigns a offset to use as an offset for the global explosion
-//   This offset will be scaled by the inverse of the parent scale, so it is positioned 
+//   This offset will be scaled by the inverse of the parent scale, so it is positioned
 //	 correctly
 // Arguments:
 //   offset - The offset to use
@@ -170,7 +170,6 @@ void EveChildExplosion::SetGlobalExplosionOffset( const Vector3& offset )
 	m_globalExplosionOffset.x /= this->m_scaling.x;
 	m_globalExplosionOffset.y /= this->m_scaling.y;
 	m_globalExplosionOffset.z /= this->m_scaling.z;
-
 }
 
 // --------------------------------------------------------------------------------------
@@ -187,7 +186,7 @@ void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext,
 		if( m_localExplosion || !m_localExplosions.empty() )
 		{
 			// we only want to remove the small explosions if there is a big explosion
-			if( m_wreckSwitchTime > 0 && m_playTime > m_wreckSwitchTime && m_globalDuration > 0)
+			if( m_wreckSwitchTime > 0 && m_playTime > m_wreckSwitchTime && m_globalDuration > 0 )
 			{
 				m_nextLocalExplosion = m_localExplosionTransforms.size();
 				for( size_t i = 0; i < m_objects.size(); )
@@ -202,7 +201,7 @@ void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext,
 					}
 				}
 			}
-			
+
 			while( m_nextLocalExplosionTime < dt && m_nextLocalExplosion < m_localExplosionTransforms.size() )
 			{
 				XMVECTOR det;
@@ -227,14 +226,14 @@ void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext,
 				{
 					IEveSpaceObjectChildPtr instance;
 					if( BeClasses->CopyTo( m_globalExplosion, (IRoot**)&instance.p ) )
-					{	
-						Quaternion rotation = Quaternion( 0.0, 0.0 ,0.0, 1.0 );
-						
+					{
+						Quaternion rotation = Quaternion( 0.0, 0.0, 0.0, 1.0 );
+
 						m_globalExplosionContainer.CreateInstance();
-						m_globalExplosionContainer->SetupWithStaticRotation(&m_globalExplosionScaling, &rotation, &m_globalExplosionOffset, TR2_LOD_LOW );
+						m_globalExplosionContainer->SetupWithStaticRotation( &m_globalExplosionScaling, &rotation, &m_globalExplosionOffset, TR2_LOD_LOW );
 
 						m_globalExplosionContainer->m_objects.Append( instance );
-						
+
 						m_objects.Append( m_globalExplosionContainer->GetRawRoot() );
 						m_globalExplosionInstances.Append( instance );
 					}
@@ -263,13 +262,13 @@ void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext,
 					{
 						auto globalExplosion = ( *it );
 						IEveSpaceObjectChildPtr instance;
-						if( BeClasses->CopyTo( globalExplosion, ( IRoot** )&instance.p ) )
+						if( BeClasses->CopyTo( globalExplosion, (IRoot**)&instance.p ) )
 						{
 							m_globalExplosionContainer->m_objects.Append( instance );
 							m_globalExplosionInstances.Append( instance );
 						}
-					}			
-					
+					}
+
 					// manually register the container, since it has now been created
 					if( this->IsInRegistry() && !m_globalExplosionContainer->IsInRegistry() )
 					{
@@ -283,7 +282,7 @@ void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext,
 				}
 			}
 		}
-		
+
 		if( m_playTime > m_totalDuration )
 		{
 			Stop();
@@ -338,23 +337,23 @@ void EveChildExplosion::FindSharedObjects()
 		{
 			continue;
 		}
-		
+
 		const Be::ClassInfo* type = obj->ClassType();
 		for( ssize_t xtraoffs = 0; type; xtraoffs += type->mOffsetToParent, type = type->mParentClassInfo )
 		{
-			for( const Be::VarEntry *entry = type->mMemberTable; entry->mName; entry++ )
+			for( const Be::VarEntry* entry = type->mMemberTable; entry->mName; entry++ )
 			{
 				if( ( entry->mEditFlags & Be::PERSIST ) && ( entry->mType == Be::IROOT || entry->mType == Be::IROOTPTR ) )
 				{
 					Be::Var* value = BLUEMAPMEMBEROFFSET( obj, entry, type, xtraoffs );
-					if( entry->mType == Be::IROOTPTR ) 
+					if( entry->mType == Be::IROOTPTR )
 					{
 						if( value->mIRootPtr )
 						{
 							stack.push_back( value->mIRootPtr );
 						}
-					} 
-					else 
+					}
+					else
 					{
 						stack.push_back( reinterpret_cast<IRoot*>( value ) );
 					}
@@ -366,9 +365,9 @@ void EveChildExplosion::FindSharedObjects()
 		{
 			ListInfo info;
 			list->GetInfo( &info );
-			for( ssize_t i = 0; i < list->GetSize(); i++ ) 
+			for( ssize_t i = 0; i < list->GetSize(); i++ )
 			{
-				if( IRoot *item = list->GetAt(i) )
+				if( IRoot* item = list->GetAt( i ) )
 				{
 					stack.push_back( item );
 				}
@@ -391,7 +390,7 @@ void EveChildExplosion::FindSharedObjects()
 // --------------------------------------------------------------------------------------
 // Description:
 //   Callback for BeClasses->CopyTo. When a local explosion instance is copied we need to
-//   retain all references to the shared part of the local explosion. This function 
+//   retain all references to the shared part of the local explosion. This function
 //   provides a custom copy for such references.
 // Arguments:
 //   source - Source object to copy
@@ -442,8 +441,8 @@ void EveChildExplosion::UpdateEmitter( IRoot* source, IRoot** dest, ICopier* cop
 		Vector3 position;
 		Quaternion rotation;
 		generator->GetTransform( position, rotation );
-		position = XMQuaternionMultiply( transform.rotation, 
-			XMQuaternionMultiply( position, XMQuaternionConjugate( transform.rotation ) ) );
+		position = XMQuaternionMultiply( transform.rotation,
+										 XMQuaternionMultiply( position, XMQuaternionConjugate( transform.rotation ) ) );
 		rotation = XMQuaternionMultiply( transform.rotation, rotation );
 		generator->SetTransform( position + transform.position, rotation );
 	}

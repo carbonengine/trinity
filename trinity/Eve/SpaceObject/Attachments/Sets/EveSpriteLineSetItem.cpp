@@ -49,26 +49,27 @@ int32_t EveSpriteLineSetItem::GetBoneIndex() const
 }
 
 
-const std::vector<Vector3> EveSpriteLineSetItem::GetPositions() const {
+const std::vector<Vector3> EveSpriteLineSetItem::GetPositions() const
+{
 	std::vector<Vector3> positions = std::vector<Vector3>();
-	Matrix m = RotationMatrix(m_rotation);
+	Matrix m = RotationMatrix( m_rotation );
 
 	if( m_isCircle )
 	{
 		// how many sprites on this line?
-		size_t numOfSprites = size_t(m_spacing);
+		size_t numOfSprites = size_t( m_spacing );
 
-		positions.reserve(numOfSprites);
+		positions.reserve( numOfSprites );
 
 		float alpha = 0.f;
-		for (size_t i = 0; i < numOfSprites; ++i)
+		for( size_t i = 0; i < numOfSprites; ++i )
 		{
 			// position on an ellipsoid in x,z-plane
-			Vector3 pos(m_scaling.x * sinf(alpha), 0.f, m_scaling.y * cosf(alpha));
-			pos = TransformCoord(pos, m);
+			Vector3 pos( m_scaling.x * sinf( alpha ), 0.f, m_scaling.y * cosf( alpha ) );
+			pos = TransformCoord( pos, m );
 			pos += m_position;
-			positions.push_back(pos);
-			
+			positions.push_back( pos );
+
 			// next
 			alpha += TRI_2PI / m_spacing;
 		}
@@ -76,17 +77,17 @@ const std::vector<Vector3> EveSpriteLineSetItem::GetPositions() const {
 	else
 	{
 		// how many sprites on this line?
-		size_t numOfSprites = size_t(m_scaling.x);
+		size_t numOfSprites = size_t( m_scaling.x );
 
-		positions.reserve(numOfSprites);
+		positions.reserve( numOfSprites );
 
 		// start populating the sprites from this line
-		Vector3 pos(m_position);
-		Vector3 dir = TransformNormal(Vector3(1.f, 0.f, 0.f), m);
+		Vector3 pos( m_position );
+		Vector3 dir = TransformNormal( Vector3( 1.f, 0.f, 0.f ), m );
 
-		for (size_t i = 0; i < numOfSprites; ++i)
+		for( size_t i = 0; i < numOfSprites; ++i )
 		{
-			positions.push_back(pos);
+			positions.push_back( pos );
 
 			// next
 			pos += m_spacing * dir;

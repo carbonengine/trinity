@@ -31,8 +31,8 @@ CcpAtomic<uint32_t> s_updatedParticleCount( 0 );
 // Description:
 //   Tr2ParticleSystem default constructor
 // --------------------------------------------------------------------------------------
-Tr2ParticleSystem::Tr2ParticleSystem( IRoot* lockobj )
-	:PARENTLOCK( m_elements ),
+Tr2ParticleSystem::Tr2ParticleSystem( IRoot* lockobj ) :
+	PARENTLOCK( m_elements ),
 	PARENTLOCK( m_forces ),
 	PARENTLOCK( m_constraints ),
 	m_declaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
@@ -51,7 +51,7 @@ Tr2ParticleSystem::Tr2ParticleSystem( IRoot* lockobj )
 	m_sortingAllowed( true ),
 	m_isGlobal( false ),
 	m_isValid( false ),
-	m_AabbMin( 0.0f, 0.0f, 0.0f ), 
+	m_AabbMin( 0.0f, 0.0f, 0.0f ),
 	m_AabbMax( 0.0f, 0.0f, 0.0f ),
 	m_updatePeriod( 1 ),
 	m_updatePeriodClock( 0 ),
@@ -72,9 +72,9 @@ Tr2ParticleSystem::Tr2ParticleSystem( IRoot* lockobj )
 		m_semanticElements[i].m_offset = -1;
 	}
 
-	m_sortingReferencePoint = (XMVECTOR*)CCP_ALIGNED_MALLOC( 
-		"Tr2ParticleSystem::m_sortingReferencePoint", 
-		sizeof( XMVECTOR ), 
+	m_sortingReferencePoint = (XMVECTOR*)CCP_ALIGNED_MALLOC(
+		"Tr2ParticleSystem::m_sortingReferencePoint",
+		sizeof( XMVECTOR ),
 		16 );
 
 	GetAllSystems().insert( this );
@@ -130,9 +130,9 @@ bool Tr2ParticleSystem::Initialize()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements INotify interface.  Allows the system to respond to parameter changes 
-//   generated in Python. Monitors changes to maximum nuber of particles (to resize 
-//   buffers), requiresSorting flag and useSimTimeRebase flag.  
+//   Implements INotify interface.  Allows the system to respond to parameter changes
+//   generated in Python. Monitors changes to maximum nuber of particles (to resize
+//   buffers), requiresSorting flag and useSimTimeRebase flag.
 // Arguments:
 //   value - The Blue-exposed parameter that changed
 // Return Value:
@@ -142,7 +142,7 @@ bool Tr2ParticleSystem::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_requiresSorting ) )
 	{
-		CCP_DELETE []m_indexes;
+		CCP_DELETE[] m_indexes;
 		if( m_requiresSorting && m_maxParticleCount )
 		{
 			m_indexes = CCP_NEW( "Tr2ParticleSystem::m_indexes" ) unsigned[m_maxParticleCount];
@@ -178,8 +178,8 @@ bool Tr2ParticleSystem::OnModified( Be::Var* value )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Utility function for setting maxParticleCount of the particle system. This is used 
-//   to setup a Blue property. If there are live particles the particle system buffer 
+//   Utility function for setting maxParticleCount of the particle system. This is used
+//   to setup a Blue property. If there are live particles the particle system buffer
 //   will be rebuilt and all particles cleared.
 // Arguments:
 //   maxParticleCount - The new maxParticleCount value
@@ -194,7 +194,7 @@ void Tr2ParticleSystem::SetMaxParticleCount( unsigned maxParticleCount )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Utility function for getting the particle system's maxParticleCount. This is used 
+//   Utility function for getting the particle system's maxParticleCount. This is used
 //   to setup a Blue property.
 // Return Value:
 //   The particle system's maxParticleCount.
@@ -207,7 +207,7 @@ unsigned Tr2ParticleSystem::GetMaxParticleCount() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements IListNotify interface. Binds added particle constraints to the system.  
+//   Implements IListNotify interface. Binds added particle constraints to the system.
 // Arguments:
 //   event - List event type
 //   key - First element index (unused)
@@ -222,8 +222,7 @@ void Tr2ParticleSystem::OnListModified(
 	ssize_t key,
 	ssize_t key2,
 	IRoot* value,
-	const IList* theList
-	)
+	const IList* theList )
 {
 	if( theList == &m_constraints )
 	{
@@ -233,7 +232,7 @@ void Tr2ParticleSystem::OnListModified(
 			if( value )
 			{
 				ITr2GenericParticleConstraint* constraint = NULL;
-				if( value->QueryInterface( BlueInterfaceIID<ITr2GenericParticleConstraint>(), ( void** )&constraint ) )
+				if( value->QueryInterface( BlueInterfaceIID<ITr2GenericParticleConstraint>(), (void**)&constraint ) )
 				{
 					constraint->Bind( this );
 					constraint->Unlock();
@@ -245,7 +244,7 @@ void Tr2ParticleSystem::OnListModified(
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements Tr2DeviceResource method. Releases vertex buffer and declaration.  
+//   Implements Tr2DeviceResource method. Releases vertex buffer and declaration.
 // Arguments:
 //   s - Type of video memory to release
 // --------------------------------------------------------------------------------------
@@ -258,7 +257,7 @@ void Tr2ParticleSystem::ReleaseResources( TriStorage s )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements Tr2DeviceResource method. Recreates vertex buffer and declaration.  
+//   Implements Tr2DeviceResource method. Recreates vertex buffer and declaration.
 // --------------------------------------------------------------------------------------
 bool Tr2ParticleSystem::OnPrepareResources()
 {
@@ -269,7 +268,7 @@ bool Tr2ParticleSystem::OnPrepareResources()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Create a vertex buffer for particle data if needed.  
+//   Create a vertex buffer for particle data if needed.
 // Return value:
 //   true If the buffer was created or is not needed
 //   false On error
@@ -280,12 +279,13 @@ bool Tr2ParticleSystem::CreateVertexBuffer()
 	if( m_maxParticleCount > 0 && m_vertexSizes[Tr2ParticleElementData::GPU] > 0 )
 	{
 		CR_RETURN_VAL( m_vertexBuffer.Create(
-			m_vertexSizes[Tr2ParticleElementData::GPU] * sizeof( float ),
-			m_maxParticleCount,
-			Tr2GpuUsage::VERTEX_BUFFER,
-			Tr2CpuUsage::WRITE_OFTEN,
-			nullptr,
-			renderContext ), false );
+						   m_vertexSizes[Tr2ParticleElementData::GPU] * sizeof( float ),
+						   m_maxParticleCount,
+						   Tr2GpuUsage::VERTEX_BUFFER,
+						   Tr2CpuUsage::WRITE_OFTEN,
+						   nullptr,
+						   renderContext ),
+					   false );
 		m_bufferDirty = true;
 	}
 	return true;
@@ -356,7 +356,7 @@ void Tr2ParticleSystem::DestroyBuffers()
 
 	if( m_indexes )
 	{
-		CCP_DELETE []m_indexes;
+		CCP_DELETE[] m_indexes;
 		m_indexes = nullptr;
 	}
 
@@ -368,7 +368,7 @@ void Tr2ParticleSystem::DestroyBuffers()
 			m_buffers[i] = nullptr;
 		}
 	}
-	
+
 	m_vertexBuffer = Tr2BufferAL();
 
 	m_aliveCount = 0;
@@ -388,7 +388,7 @@ void Tr2ParticleSystem::BuildBuffers()
 	{
 		return;
 	}
-	
+
 	if( !m_isValid )
 	{
 		return;
@@ -413,9 +413,9 @@ void Tr2ParticleSystem::BuildBuffers()
 
 	for( unsigned i = 0; i < Tr2ParticleElementData::COUNT; ++i )
 	{
-		m_buffers[i] = ( float* )CCP_ALIGNED_MALLOC( 
+		m_buffers[i] = (float*)CCP_ALIGNED_MALLOC(
 			"Tr2ParticleSystem::m_buffers",
-			sizeof( float ) * m_maxParticleCount * m_vertexSizes[i], 
+			sizeof( float ) * m_maxParticleCount * m_vertexSizes[i],
 			16 );
 	}
 	if( m_vertexSizes[Tr2ParticleElementData::GPU] > 0 && Tr2Renderer::IsResourceCreationAllowed() )
@@ -500,11 +500,10 @@ void Tr2ParticleSystem::Update( const ITr2GenericEmitter::UpdateArguments& globa
 		{
 			//Save the current data so we have the previous frame's data for motion vectors
 			//This kinda has to be done regardless of if we tick or not, to make sure it's always up to date for rendering...
-			std::copy( 
+			std::copy(
 				gpuBuffer + i * gpuDataSize,
 				gpuBuffer + i * gpuDataSize + gpuDataHalfSize,
-				gpuBuffer + i * gpuDataSize + gpuDataHalfSize 
-			);
+				gpuBuffer + i * gpuDataSize + gpuDataHalfSize );
 		}
 
 		m_previousDataOutdated = false;
@@ -529,7 +528,7 @@ void Tr2ParticleSystem::Update( const ITr2GenericEmitter::UpdateArguments& globa
 	m_lastUpdate = arguments.time;
 
 	//include considerable hysteresis in toggling sorting.
-	//Things to consider: 
+	//Things to consider:
 	// frametime breakpoints as global constant/setting/per-system?
 	// re-enable a limited number of systems per frame?
 	if( dt > 0.035f && m_sortingAllowed )
@@ -546,8 +545,8 @@ void Tr2ParticleSystem::Update( const ITr2GenericEmitter::UpdateArguments& globa
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Updates per-particle data (age, positions, etc.), removes dead particles, emits new 
-//   particles with "emit during lifetime" and  "emit on death" emitters. This function 
+//   Updates per-particle data (age, positions, etc.), removes dead particles, emits new
+//   particles with "emit during lifetime" and  "emit on death" emitters. This function
 //   can be called asyncronously.
 // Arguments:
 //   arguments - Child emitter update arguments
@@ -582,18 +581,18 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 			{
 				if( m_emissionOnDeathEmitter )
 				{
-					m_emissionOnDeathEmitter->SpawnParticles( arguments, 
-															  reinterpret_cast<Vector3*>( position ), 
+					m_emissionOnDeathEmitter->SpawnParticles( arguments,
+															  reinterpret_cast<Vector3*>( position ),
 															  reinterpret_cast<Vector3*>( velocity ) );
-				}				
+				}
 
 				m_aliveCount -= 1;
 				if( i < m_aliveCount )
 				{
 					for( unsigned j = 0; j < Tr2ParticleElementData::COUNT; ++j )
 					{
-						std::copy( m_buffers[j] + m_aliveCount * m_vertexSizes[j], 
-								   m_buffers[j] + ( m_aliveCount + 1 ) * m_vertexSizes[j], 
+						std::copy( m_buffers[j] + m_aliveCount * m_vertexSizes[j],
+								   m_buffers[j] + ( m_aliveCount + 1 ) * m_vertexSizes[j],
 								   m_buffers[j] + i * m_vertexSizes[j] );
 					}
 				}
@@ -622,12 +621,12 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 
 		m_previousDataOutdated = true;
 	}
-	
+
 	s_aliveParticleCount += m_aliveCount;
 
 	// Calculate forces and update position
-	if( m_updateSimulation && 
-		HasElement( Tr2ParticleElementDeclarationName::POSITION ) && 
+	if( m_updateSimulation &&
+		HasElement( Tr2ParticleElementDeclarationName::POSITION ) &&
 		HasElement( Tr2ParticleElementDeclarationName::VELOCITY ) )
 	{
 		bool hasForces = m_applyForce && !m_forces.empty();
@@ -648,11 +647,10 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 		float* massStart = nullptr;
 		unsigned massStride;
 		GetElementStream( Tr2ParticleElementDeclarationName::MASS, massStart, massStride );
-		
-		Tr2ParallelFor( 
-			Tr2BlockedRange<size_t>( 0, m_aliveCount, 100 ), 
-			[=]( const Tr2BlockedRange<size_t>& range ) -> void
-			{
+
+		Tr2ParallelFor(
+			Tr2BlockedRange<size_t>( 0, m_aliveCount, 100 ),
+			[=]( const Tr2BlockedRange<size_t>& range ) -> void {
 				float* position = positionStart + range.begin() * positionStride;
 				float* velocity = velocityStart + range.begin() * velocityStride;
 				float* mass = nullptr;
@@ -685,23 +683,23 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 						{
 							force = XMVectorScale( force, 1.f / particleMass );
 						}
-						XMStoreFloat4A( reinterpret_cast<XMFLOAT4A*>( velocity ), 
+						XMStoreFloat4A( reinterpret_cast<XMFLOAT4A*>( velocity ),
 										XMVectorAdd( particleVelocity, XMVectorScale( force, dt ) ) );
 					}
 
-					XMStoreFloat4A( 
-						reinterpret_cast<XMFLOAT4A*>( position ), 
-						XMVectorAdd( 
-							XMLoadFloat4A( reinterpret_cast<XMFLOAT4A*>( position ) ), 
+					XMStoreFloat4A(
+						reinterpret_cast<XMFLOAT4A*>( position ),
+						XMVectorAdd(
+							XMLoadFloat4A( reinterpret_cast<XMFLOAT4A*>( position ) ),
 							XMVectorScale( XMLoadFloat4A( reinterpret_cast<XMFLOAT4A*>( velocity ) ), dt ) ) );
 
-					
+
 					if( m_emissionWhileAliveEmitter != nullptr )
 					{
-						m_emissionWhileAliveEmitter->SpawnParticles( 
+						m_emissionWhileAliveEmitter->SpawnParticles(
 							arguments,
 							reinterpret_cast<Vector3*>( &particlePosition ),
-							reinterpret_cast<Vector3*>( position ), 
+							reinterpret_cast<Vector3*>( position ),
 							reinterpret_cast<Vector3*>( &particleVelocity ),
 							reinterpret_cast<Vector3*>( velocity ),
 							dt );
@@ -731,7 +729,7 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 	// Update bounding box
 	if( m_bufferDirty )
 	{
-		if( m_aliveCount > 0 && HasElement( Tr2ParticleElementDeclarationName::POSITION ) ) 
+		if( m_aliveCount > 0 && HasElement( Tr2ParticleElementDeclarationName::POSITION ) )
 		{
 			float* position = nullptr;
 			unsigned positionStride;
@@ -760,9 +758,9 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 	// If the particles have both position and velocity streams, this will occur during update
 	// and provide additional information to the m_emissionWhileAliveEmitter object
 	// (but only if m_updateSimulation is true)
-	const bool positionAndVelocity = HasElement( Tr2ParticleElementDeclarationName::POSITION ) && 
-									 HasElement( Tr2ParticleElementDeclarationName::VELOCITY );
-	if( m_emissionWhileAliveEmitter && !(positionAndVelocity && m_updateSimulation) )
+	const bool positionAndVelocity = HasElement( Tr2ParticleElementDeclarationName::POSITION ) &&
+		HasElement( Tr2ParticleElementDeclarationName::VELOCITY );
+	if( m_emissionWhileAliveEmitter && !( positionAndVelocity && m_updateSimulation ) )
 	{
 		float* positionStart = nullptr;
 		unsigned positionStride;
@@ -772,10 +770,9 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 		unsigned velocityStride;
 		GetElementStream( Tr2ParticleElementDeclarationName::VELOCITY, velocityStart, velocityStride );
 
-		Tr2ParallelFor( 
-			Tr2BlockedRange<size_t>( 0, m_aliveCount, 100 ), 
-			[=]( const Tr2BlockedRange<size_t>& range ) -> void
-			{
+		Tr2ParallelFor(
+			Tr2BlockedRange<size_t>( 0, m_aliveCount, 100 ),
+			[=]( const Tr2BlockedRange<size_t>& range ) -> void {
 				float* position = nullptr;
 				if( positionStart )
 				{
@@ -790,9 +787,9 @@ void Tr2ParticleSystem::UpdateSimulation( const ITr2GenericEmitter::UpdateArgume
 				{
 					if( m_emissionWhileAliveEmitter != nullptr )
 					{
-						m_emissionWhileAliveEmitter->SpawnParticles( 
+						m_emissionWhileAliveEmitter->SpawnParticles(
 							arguments,
-							reinterpret_cast<Vector3*>( position ), 
+							reinterpret_cast<Vector3*>( position ),
 							reinterpret_cast<Vector3*>( velocity ),
 							dt );
 					}
@@ -839,7 +836,7 @@ bool Tr2ParticleSystem::CompareParticles( unsigned particle1, unsigned particle2
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Per-frame update method for all created Tr2ParticleSystem objects. Calls Update 
+//   Per-frame update method for all created Tr2ParticleSystem objects. Calls Update
 //   method of each system asyncronously.
 // Arguments:
 //   arguments - Child emitter update arguments
@@ -860,8 +857,8 @@ void Tr2ParticleSystem::UpdateAllSystems( const ITr2GenericEmitter::UpdateArgume
 
 	std::set<Tr2ParticleSystem*>& allSystems = GetAllSystems();
 
-	Tr2ParallelDo( allSystems.begin(), 
-				   allSystems.end(), 
+	Tr2ParallelDo( allSystems.begin(),
+				   allSystems.end(),
 				   [=]( Tr2ParticleSystem* system ) { system->Update( arguments ); } );
 
 	CCP_STATS_SET( statAliveParticleCount, s_aliveParticleCount );
@@ -887,7 +884,7 @@ std::set<Tr2ParticleSystem*>& Tr2ParticleSystem::GetAllSystems()
 void Tr2ParticleSystem::RebuildDeclaration()
 {
 	Tr2VertexDefinition vd;
-	
+
 	for( auto it = m_elementMap.begin(); it != m_elementMap.end(); ++it )
 	{
 		//Skip things we don't want to upload to the GPU
@@ -901,7 +898,7 @@ void Tr2ParticleSystem::RebuildDeclaration()
 		item.m_offset = it->second.m_offset * sizeof( float );
 		item.m_dataType = static_cast<Tr2VertexDefinition::DataType>( vd.DT_FLOAT32 + ( ( it->second.m_dimension - 1 ) << vd.DT_SIZE_OFFSET ) );
 		item.m_usage = it->first.GetD3DUsage();
-		
+
 		item.m_usageIndex = it->first.m_type == Tr2ParticleElementDeclarationName::CUSTOM ? it->second.m_usageIndex : 0;
 
 		vd.m_items.push_back( item );
@@ -926,7 +923,7 @@ void Tr2ParticleSystem::RebuildDeclaration()
 			vd.m_nextOffset[0] = std::max( vd.m_nextOffset[0], item.m_offset + vd.GetDataTypeSizeInBytes( item.m_dataType ) );
 		}
 	}
-	
+
 	m_declaration = Tr2EffectStateManager::GetVertexDeclarationHandle( vd );
 }
 
@@ -938,20 +935,20 @@ void Tr2ParticleSystem::RebuildDeclaration()
 void Tr2ParticleSystem::EnsureAligned()
 {
 	// Move POSITION and VELOCITY elements into the beginning of their buffers. If they
-	// are in the same buffer, make the following arrangement: 
+	// are in the same buffer, make the following arrangement:
 	// POSITION pad VELOCITY all_other_stuff
 	// Here pad is 4-byte padding to align VELOCITY.
 	Tr2ParticleElementDeclarationName::Type position = Tr2ParticleElementDeclarationName::POSITION;
 	Tr2ParticleElementDeclarationName::Type velocity = Tr2ParticleElementDeclarationName::VELOCITY;
 	if( m_semanticElements[position].m_offset != -1 )
 	{
-		ShiftOffsets( 
-			m_semanticElements[position].m_bufferType, 
-			m_semanticElements[position].m_offset, 
+		ShiftOffsets(
+			m_semanticElements[position].m_bufferType,
+			m_semanticElements[position].m_offset,
 			-int( m_semanticElements[position].m_dimension ) );
-		ShiftOffsets( 
-			m_semanticElements[position].m_bufferType, 
-			0, 
+		ShiftOffsets(
+			m_semanticElements[position].m_bufferType,
+			0,
 			4 );
 		m_semanticElements[position].m_offset = 0;
 		m_elementMap[position].m_offset = 0;
@@ -960,25 +957,25 @@ void Tr2ParticleSystem::EnsureAligned()
 	}
 	if( m_semanticElements[velocity].m_offset != -1 )
 	{
-		ShiftOffsets( 
-			m_semanticElements[velocity].m_bufferType, 
-			m_semanticElements[velocity].m_offset, 
+		ShiftOffsets(
+			m_semanticElements[velocity].m_bufferType,
+			m_semanticElements[velocity].m_offset,
 			-int( m_semanticElements[velocity].m_dimension ) );
-		if( m_semanticElements[position].m_offset != -1 && 
+		if( m_semanticElements[position].m_offset != -1 &&
 			m_semanticElements[velocity].m_bufferType == m_semanticElements[position].m_bufferType )
 		{
-			ShiftOffsets( 
-				m_semanticElements[velocity].m_bufferType, 
-				4, 
+			ShiftOffsets(
+				m_semanticElements[velocity].m_bufferType,
+				4,
 				4 );
 			m_semanticElements[velocity].m_offset = 4;
 			m_elementMap[velocity].m_offset = 4;
 		}
 		else
 		{
-			ShiftOffsets( 
-				m_semanticElements[velocity].m_bufferType, 
-				0, 
+			ShiftOffsets(
+				m_semanticElements[velocity].m_bufferType,
+				0,
 				4 );
 			m_semanticElements[velocity].m_offset = 0;
 			m_elementMap[velocity].m_offset = 0;
@@ -997,14 +994,14 @@ void Tr2ParticleSystem::EnsureAligned()
 //   start - Offset start
 //   shift - Offset shift
 // --------------------------------------------------------------------------------------
-void Tr2ParticleSystem::ShiftOffsets( Tr2ParticleElementData::BufferType bufferType, 
-									  unsigned start, 
+void Tr2ParticleSystem::ShiftOffsets( Tr2ParticleElementData::BufferType bufferType,
+									  unsigned start,
 									  int shift )
 {
 	for( auto it = m_elementMap.begin(); it != m_elementMap.end(); ++it )
 	{
-		if( it->second.m_bufferType == bufferType && 
-			it->second.m_offset != -1 && 
+		if( it->second.m_bufferType == bufferType &&
+			it->second.m_offset != -1 &&
 			it->second.m_offset >= start )
 		{
 			it->second.m_offset += shift;
@@ -1038,7 +1035,7 @@ void Tr2ParticleSystem::UpdateViewDependentData( const TriFrustum* frustum, cons
 	{
 		return;
 	}
-	
+
 	m_shouldSortVisible = true;
 	m_updatePeriod = 1;
 	if( frustum )
@@ -1079,7 +1076,7 @@ void Tr2ParticleSystem::SortParticles()
 	{
 		return;
 	}
-	
+
 	XMMATRIX invWorldTransform = m_worldTransform;
 	XMVECTOR determinant;
 	invWorldTransform = XMMatrixInverse( &determinant, invWorldTransform );
@@ -1102,22 +1099,21 @@ void Tr2ParticleSystem::SortParticles()
 				m_indexes[i] = i;
 			}
 
-			Tr2ParallelSort( 
-				m_indexes, 
-				m_indexes + m_aliveCount, 
-				[=]( unsigned particle1, unsigned particle2 ) -> bool 
-				{ 
-					return CompareParticles( particle1, particle2 ); 
-				}  );
+			Tr2ParallelSort(
+				m_indexes,
+				m_indexes + m_aliveCount,
+				[=]( unsigned particle1, unsigned particle2 ) -> bool {
+					return CompareParticles( particle1, particle2 );
+				} );
 
 			if( m_vertexBuffer.IsValid() )
 			{
 				float* data;
 				CR_RETURN( m_vertexBuffer.MapForWriting( data, renderContext ) );
-				ON_BLOCK_EXIT( [&]{ m_vertexBuffer.UnmapForWriting( renderContext ); } );
+				ON_BLOCK_EXIT( [&] { m_vertexBuffer.UnmapForWriting( renderContext ); } );
 				for( unsigned i = 0; i < m_aliveCount; ++i )
 				{
-					std::copy( 
+					std::copy(
 						m_buffers[Tr2ParticleElementData::GPU] + m_indexes[i] * m_vertexSizes[Tr2ParticleElementData::GPU],
 						m_buffers[Tr2ParticleElementData::GPU] + ( m_indexes[i] + 1 ) * m_vertexSizes[Tr2ParticleElementData::GPU],
 						data + i * m_vertexSizes[Tr2ParticleElementData::GPU] );
@@ -1128,10 +1124,10 @@ void Tr2ParticleSystem::SortParticles()
 		{
 			float* data;
 			CR_RETURN( m_vertexBuffer.MapForWriting( data, renderContext ) );
-			ON_BLOCK_EXIT( [&]{ m_vertexBuffer.UnmapForWriting( renderContext ); } );
-			std::copy( 
-				m_buffers[Tr2ParticleElementData::GPU], 
-				m_buffers[Tr2ParticleElementData::GPU] + m_aliveCount * m_vertexSizes[Tr2ParticleElementData::GPU], 
+			ON_BLOCK_EXIT( [&] { m_vertexBuffer.UnmapForWriting( renderContext ); } );
+			std::copy(
+				m_buffers[Tr2ParticleElementData::GPU],
+				m_buffers[Tr2ParticleElementData::GPU] + m_aliveCount * m_vertexSizes[Tr2ParticleElementData::GPU],
 				data );
 		}
 	}
@@ -1193,10 +1189,10 @@ void Tr2ParticleSystem::UpdateElementDeclaration()
 		{
 			if( ( *it )->m_usageIndex >= USAGE_INDEX_COUNT )
 			{
-				CCP_LOGERR( 
-					"Particle declaration element %s usage index %u is out of range (needs to be less than %u)", 
-					( *it )->GetName().c_str(), 
-					( *it )->m_usageIndex, 
+				CCP_LOGERR(
+					"Particle declaration element %s usage index %u is out of range (needs to be less than %u)",
+					( *it )->GetName().c_str(),
+					( *it )->m_usageIndex,
 					USAGE_INDEX_COUNT );
 				return;
 			}
@@ -1261,7 +1257,7 @@ void Tr2ParticleSystem::UpdateElementDeclaration()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Returns internal built particle element declaration. Can be used by emitters and 
+//   Returns internal built particle element declaration. Can be used by emitters and
 //   constraints to bind to individual particle elements.
 // Return Value:
 //   Internal built particle element declaration
@@ -1526,7 +1522,7 @@ void Tr2ParticleSystem::SaveToGranny( const char* resPath ) const
 	granny_vertex_data* vertexData = CCP_NEW( "Tr2ParticleSystem::SaveToGranny" ) granny_vertex_data;
 	memset( vertexData, 0, sizeof( granny_vertex_data ) );
 	vertexData->VertexType = definition;
-	vertexData->VertexComponentNames = CCP_NEW( "Tr2ParticleSystem::SaveToGranny" ) const char*[m_elementMap.size()];
+	vertexData->VertexComponentNames = CCP_NEW( "Tr2ParticleSystem::SaveToGranny" ) const char * [m_elementMap.size()];
 	for( unsigned i = 0; i < m_elementMap.size(); ++i )
 	{
 		vertexData->VertexComponentNames[i] = definition[i].Name;
@@ -1546,8 +1542,8 @@ void Tr2ParticleSystem::SaveToGranny( const char* resPath ) const
 		{
 			for( auto j = m_elementMap.begin(); j != m_elementMap.end(); ++j )
 			{
-				float* element = m_buffers[j->second.m_bufferType] + 
-					i * m_vertexSizes[j->second.m_bufferType] + 
+				float* element = m_buffers[j->second.m_bufferType] +
+					i * m_vertexSizes[j->second.m_bufferType] +
 					j->second.m_offset;
 				std::copy( element, element + j->second.m_dimension, vertex + offsets[j->first] );
 			}
@@ -1568,42 +1564,42 @@ void Tr2ParticleSystem::SaveToGranny( const char* resPath ) const
 	topology->Indices16[1] = 0;
 	topology->Indices16[2] = 0;
 
-    granny_mesh* mesh = CCP_NEW( "Tr2ParticleSystem::SaveToGranny" ) granny_mesh;
+	granny_mesh* mesh = CCP_NEW( "Tr2ParticleSystem::SaveToGranny" ) granny_mesh;
 	memset( mesh, 0, sizeof( granny_mesh ) );
 	mesh->Name = m_name.c_str();
-    mesh->PrimaryVertexData = vertexData;
-    mesh->PrimaryTopology = topology;
+	mesh->PrimaryVertexData = vertexData;
+	mesh->PrimaryTopology = topology;
 
-    granny_file_info info;
+	granny_file_info info;
 	memset( &info, 0, sizeof( granny_file_info ) );
 
-    info.MeshCount = 1;
-    info.Meshes = &mesh;
-    info.VertexDataCount = 1;
-    info.VertexDatas = &vertexData;
-    info.TriTopologyCount = 1;
-    info.TriTopologies = &topology;
+	info.MeshCount = 1;
+	info.Meshes = &mesh;
+	info.VertexDataCount = 1;
+	info.VertexDatas = &vertexData;
+	info.TriTopologyCount = 1;
+	info.TriTopologies = &topology;
 
 	granny_file_builder* builder = GrannyBeginFile(
-        1, 
-        GrannyCurrentGRNStandardTag, 
-        GrannyGRNFileMV_ThisPlatform, 
-        GrannyGetTemporaryDirectory(), 
-        "prefix2" );
-    granny_file_data_tree_writer* writer = GrannyBeginFileDataTreeWriting( GrannyFileInfoType, &info, 0, 0 );
+		1,
+		GrannyCurrentGRNStandardTag,
+		GrannyGRNFileMV_ThisPlatform,
+		GrannyGetTemporaryDirectory(),
+		"prefix2" );
+	granny_file_data_tree_writer* writer = GrannyBeginFileDataTreeWriting( GrannyFileInfoType, &info, 0, 0 );
 
-    GrannyWriteDataTreeToFileBuilder( writer, builder );
-    GrannyEndFileDataTreeWriting( writer );
- 
-    GrannyEndFile( builder, CW2A( filename.c_str() ) );
+	GrannyWriteDataTreeToFileBuilder( writer, builder );
+	GrannyEndFileDataTreeWriting( writer );
+
+	GrannyEndFile( builder, CW2A( filename.c_str() ) );
 
 	CCP_DELETE mesh;
-	CCP_DELETE []topology->Indices16;
+	CCP_DELETE[] topology->Indices16;
 	CCP_DELETE topology;
-	CCP_DELETE []vertexData->Vertices;
-	CCP_DELETE []vertexData->VertexComponentNames;
+	CCP_DELETE[] vertexData->Vertices;
+	CCP_DELETE[] vertexData->VertexComponentNames;
 	CCP_DELETE vertexData;
-	CCP_DELETE []definition;
+	CCP_DELETE[] definition;
 }
 #endif
 
@@ -1617,7 +1613,7 @@ void Tr2ParticleSystem::SaveToGranny( const char* resPath ) const
 //   true If the system has valid bounding box
 //   false Otherwise
 // --------------------------------------------------------------------------------------
-bool Tr2ParticleSystem::GetBoundingBox( Vector3 &minBounds, Vector3 &maxBounds ) const
+bool Tr2ParticleSystem::GetBoundingBox( Vector3& minBounds, Vector3& maxBounds ) const
 {
 	if( m_aliveCount > 0 )
 	{
@@ -1653,7 +1649,7 @@ size_t Tr2ParticleSystem::GetGpuStride() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Notifies particle system that it needs additional syncronization when inserting 
+//   Notifies particle system that it needs additional syncronization when inserting
 //   particles. Normally called by emitters that are identified to be emitting particles
 //   during particle system updates.
 // --------------------------------------------------------------------------------------
@@ -1672,7 +1668,7 @@ void Tr2ParticleSystem::GetDebugOptions( Tr2DebugRendererOptions& options ) cons
 
 void Tr2ParticleSystem::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform ) const
 {
-	if ( !renderer.HasOption( this, "Particle Systems" ) )
+	if( !renderer.HasOption( this, "Particle Systems" ) )
 	{
 		return;
 	}

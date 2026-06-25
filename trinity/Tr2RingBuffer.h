@@ -21,16 +21,16 @@ BLUE_CLASS( Tr2RingBuffer ) :
 	public Tr2DeviceResource
 {
 public:
-	EXPOSE_TO_BLUE();	
+	EXPOSE_TO_BLUE();
 
 	template <typename T>
 	uint32_t UploadTransforms( const T* data, uint32_t matrixCount );
-	void PrepareBuffer( Tr2RenderContext& renderContext );
+	void PrepareBuffer( Tr2RenderContext & renderContext );
 	void SetFrameNumbers( uint64_t recordingFrame, uint64_t completedFrame );
 
 	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
 
-	template<typename T>
+	template <typename T>
 	static Tr2RingBuffer& GetInstance();
 
 	void SetName( const std::string& name );
@@ -83,8 +83,8 @@ public:
 	void AdvanceFrame();
 
 	static const uint32_t INVALID_OFFSET = 0xffffffff;
-private:
 
+private:
 	uint32_t m_currentFrameOffset = INVALID_OFFSET;
 	uint32_t m_previousFrameOffset = INVALID_OFFSET;
 };

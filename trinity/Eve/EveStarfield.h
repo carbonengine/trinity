@@ -13,10 +13,9 @@ BLUE_DECLARE( Tr2Effect );
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 
-class EveStarfield :
-	public INotify,
-	public IInitialize,
-	public Tr2DeviceResource
+class EveStarfield : public INotify,
+					 public IInitialize,
+					 public Tr2DeviceResource
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -41,15 +40,16 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
+
 public:
-	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* val );
 
-private:	
+private:
 	bool m_display;
 	int32_t m_starCount;
 	int32_t m_seed;

@@ -34,7 +34,8 @@ void Tr2TexturedPointLight::SetTexturePath( std::wstring path )
 	BeResMan->GetResource( path, L"", m_texture );
 }
 
-void Tr2TexturedPointLight::SetSaturation( float saturation ) {
+void Tr2TexturedPointLight::SetSaturation( float saturation )
+{
 	m_saturation = saturation;
 }
 
@@ -44,7 +45,7 @@ bool Tr2TexturedPointLight::OnModified( Be::Var* value )
 	{
 		SetTexturePath( m_lightData.texturePath );
 	}
-	return Tr2PointLight::OnModified(value);
+	return Tr2PointLight::OnModified( value );
 }
 
 void Tr2TexturedPointLight::Update()

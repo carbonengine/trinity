@@ -9,32 +9,68 @@
 
 // All frames can use the same indices - the layout of the frame is always the same.
 static unsigned short s_frameIndices[] = {
-	0, 4, 5,
-	0, 5, 1,
-	1, 5, 6,
-	1, 6, 2,
-	2, 6, 7,
-	2, 7, 3,
-	4, 8, 9,
-	4, 9, 5,
-	6, 10, 11,
-	6, 11, 7,
-	8, 12, 13,
-	8, 13, 9,
-	9, 13, 14,
-	9, 14, 10,
-	10, 14, 15,
-	10, 15, 11,
+	0,
+	4,
+	5,
+	0,
+	5,
+	1,
+	1,
+	5,
+	6,
+	1,
+	6,
+	2,
+	2,
+	6,
+	7,
+	2,
+	7,
+	3,
+	4,
+	8,
+	9,
+	4,
+	9,
+	5,
+	6,
+	10,
+	11,
+	6,
+	11,
+	7,
+	8,
+	12,
+	13,
+	8,
+	13,
+	9,
+	9,
+	13,
+	14,
+	9,
+	14,
+	10,
+	10,
+	14,
+	15,
+	10,
+	15,
+	11,
 
 	// The two triangles in the center are kept last - then we can skip the
 	// center by sending fewer triangles.
-	5, 9, 10,
-	5, 10, 6,
+	5,
+	9,
+	10,
+	5,
+	10,
+	6,
 };
 
 static const Color WHITE( 1.0f, 1.0f, 1.0f, 1.0f );
 
-Tr2Sprite2dFrame::Tr2Sprite2dFrame( IRoot* lockobj ) : 
+Tr2Sprite2dFrame::Tr2Sprite2dFrame( IRoot* lockobj ) :
 	m_cornerSize( 0 ),
 	m_cornerScale( 1.f ),
 	m_offset( 0 ),
@@ -130,7 +166,7 @@ void Tr2Sprite2dFrame::GatherSprites( Tr2Sprite2dScene* renderer )
 
 	unsigned int triangleCount = m_fillCenter ? 18 : 16;
 	unsigned int indexCount = triangleCount * 3;
-	
+
 	if( m_shadowOffset.x != 0.0f || m_shadowOffset.y != 0.0f )
 	{
 		renderer->RenderTriangleVerts( &m_vertices[0], 16, &s_frameIndices[0], indexCount );

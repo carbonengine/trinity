@@ -4,9 +4,10 @@
 #ifndef ITr2WorldTransformUpdater_H
 #define ITr2WorldTransformUpdater_H
 
-BLUE_INTERFACE( ITr2WorldTransformUpdater ) : public IRoot
+BLUE_INTERFACE( ITr2WorldTransformUpdater ) :
+	public IRoot
 {
-	virtual void UpdateTransform( Be::Time time, Matrix* transform ) = 0;
+	virtual void UpdateTransform( Be::Time time, Matrix * transform ) = 0;
 };
 
 

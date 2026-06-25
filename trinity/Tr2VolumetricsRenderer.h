@@ -13,7 +13,7 @@
 
 struct Vector3d;
 
-	BLUE_DECLARE( Tr2Effect );
+BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
 BLUE_DECLARE( Tr2DepthStencil );
 BLUE_DECLARE( EveComponentRegistry );
@@ -50,7 +50,6 @@ public:
 		PriorityBlend::Attribute<Vector3> fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
 
 		PriorityBlend::Attribute<double> logThickness = 0.0;
-
 	};
 	virtual FroxelFogSettings* GetFroxelFogSettings() = 0;
 };
@@ -68,7 +67,7 @@ public:
 		const EveComponentRegistry& registry,
 		const TriFrustum& frustum,
 		const Tr2TextureAL& sceneDepth,
-        const Tr2TextureAL& froxelFog,
+		const Tr2TextureAL& froxelFog,
 		const Vector3& sunDirection,
 		const float depthSlices[4],
 		bool raytracingEnabled,
@@ -79,31 +78,31 @@ public:
 	void UpdateFogSettings( const EveComponentRegistry& registry, const EveUpdateContext& updateContext );
 	bool HasFog() const;
 
-	Tr2GpuResourcePool::Texture RenderFog( 
-		Tr2RenderContext & renderContext, 
+	Tr2GpuResourcePool::Texture RenderFog(
+		Tr2RenderContext & renderContext,
 		Tr2GpuResourcePool & gpuResourcePool,
-		uint32_t width, 
-		uint32_t height, 
-		Tr2ShadowMap* cascadedShadowMap, 
+		uint32_t width,
+		uint32_t height,
+		Tr2ShadowMap* cascadedShadowMap,
 		Tr2RaytracingGeometryPtr raytracingGeometry,
 		ShadowQuality shadowQuality,
-		const Vector3& sunDirection, 
-		const Color& sunColor, 
+		const Vector3& sunDirection,
+		const Color& sunColor,
 		const Vector3d origin,
 		const Vector3d originShift,
-		const Matrix& view, 
-		const Matrix& projection, 
-		const Matrix& viewLast, 
+		const Matrix& view,
+		const Matrix& projection,
+		const Matrix& viewLast,
 		const Matrix& projectionLast );
-	Tr2GpuResourcePool::Texture RenderFogIntoReflectionMap( 
-		Tr2RenderContext& renderContext, 
+	Tr2GpuResourcePool::Texture RenderFogIntoReflectionMap(
+		Tr2RenderContext & renderContext,
 		Tr2GpuResourcePool & gpuResourcePool,
-		uint32_t width, 
-		uint32_t height, 
-		const Vector3& sunDirection, 
-		const Color& sunColor, 
+		uint32_t width,
+		uint32_t height,
+		const Vector3& sunDirection,
+		const Color& sunColor,
 		const Vector3d origin,
-		const Matrix& view, 
+		const Matrix& view,
 		const Matrix& projection );
 	static Tr2GpuResourcePool::Texture GetEmptyFogTexture( Tr2GpuResourcePool & gpuResourcePool );
 	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
@@ -135,7 +134,7 @@ public:
 		CcpMath::Sphere planets[2];
 	};
 
-	void PopulatePerFrameData( FroxelPerFrameData& data );
+	void PopulatePerFrameData( FroxelPerFrameData & data );
 
 	void SetQuality( Tr2VolumerticQuality quality );
 
@@ -160,24 +159,24 @@ private:
 		bool useTemporalFroxels;
 		bool currentTemporalFroxels;
 	};
-	
 
-	Tr2GpuResourcePool::Texture RenderFog( 
-		FogViewDependentResources& resources, 
-		Tr2RenderContext& renderContext, 
+
+	Tr2GpuResourcePool::Texture RenderFog(
+		FogViewDependentResources & resources,
+		Tr2RenderContext & renderContext,
 		Tr2GpuResourcePool & gpuResourcePool,
-		uint32_t originalWidth, 
-		uint32_t originalHeight, 
-		Tr2ShadowMap* cascadedShadowMap, 
+		uint32_t originalWidth,
+		uint32_t originalHeight,
+		Tr2ShadowMap* cascadedShadowMap,
 		Tr2RaytracingGeometryPtr raytracingGeometry,
 		ShadowQuality shadowQuality,
-		const Vector3& sunDirection, 
-		const Color& sunColor, 
+		const Vector3& sunDirection,
+		const Color& sunColor,
 		const Vector3d origin,
 		const Vector3d originShift,
-		const Matrix& view, 
-		const Matrix& projection, 
-		const Matrix& viewLast, 
+		const Matrix& view,
+		const Matrix& projection,
+		const Matrix& viewLast,
 		const Matrix& projectionLast );
 
 	Tr2EffectPtr m_volumeBlit;
@@ -187,10 +186,9 @@ private:
 
 	uint32_t m_lastRequestedWidth = 0;
 	uint32_t m_lastRequestedHeight = 0;
-	
-	
 
-	
+
+
 
 	Tr2TextureReferencePtr m_mieEnvironmentMap;
 	float m_environmentRandom;
@@ -273,19 +271,19 @@ private:
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
 		Matrix ShadowMatrix[16]; // Matrix that takes a coordinate from view space all the way to the packed cascades
 		Vector4 SplitInfo; // x = NrOfSplits, y = <unused>, z = <unused>, w = <unused>
-		
+
 		Tr2LightManager::PerLightData DynamicLights[16];
-		
+
 		CcpMath::Sphere planets[2];
 	};
 
-	void UpdatePerObjectData( FogPerObjectData* data, const Matrix& view, const Matrix& projection, const Matrix& viewLast, const Matrix& projectionLast, const Vector3d& origin, const Vector3d& originShift, const Vector3& sunDirection, const Color& sunColor, uint32_t width, uint32_t height, uint32_t depth, const Vector3& jitter, const Tr2ShadowMap* cascadedShadowMap );
+	void UpdatePerObjectData( FogPerObjectData * data, const Matrix& view, const Matrix& projection, const Matrix& viewLast, const Matrix& projectionLast, const Vector3d& origin, const Vector3d& originShift, const Vector3& sunDirection, const Color& sunColor, uint32_t width, uint32_t height, uint32_t depth, const Vector3& jitter, const Tr2ShadowMap* cascadedShadowMap );
 
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
-	
+
 	std::unique_ptr<ITriRenderBatchAccumulator> m_batches;
-	
+
 	Tr2ConstantBufferAL m_shadowPerFrameVSBuffer;
 	Tr2VolumerticQuality m_quality;
 	float m_scaleFactor;

@@ -9,13 +9,13 @@
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Tr2ElementBlendConstraint is a constraint that blends particle element value with 
-//   the provided constant value. Can be used to symulate "global" particle systems by 
+//   Tr2ElementBlendConstraint is a constraint that blends particle element value with
+//   the provided constant value. Can be used to symulate "global" particle systems by
 //   shifting particle positions.
 // See Also:
 //   Tr2ParticleSystem, ITr2GenericParticleConstraint
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2ElementBlendConstraint ):
+BLUE_CLASS( Tr2ElementBlendConstraint ) :
 	public ITr2GenericParticleConstraint
 {
 public:
@@ -26,7 +26,8 @@ public:
 	/////////////////////////////////////////////////////////////
 	// ITr2ParticleConstraint
 	virtual void ApplyConstraint( const ITr2GenericEmitter::UpdateArguments& arguments, float** particle, unsigned* strides, unsigned count, float dt );
-	virtual void Bind( Tr2ParticleSystem* system );
+	virtual void Bind( Tr2ParticleSystem * system );
+
 private:
 	// Is valid flag (for debugging)
 	bool m_isValid;

@@ -7,7 +7,7 @@
 #include "include/TriMath.h"
 
 EveSphereVolume::EveSphereVolume( IRoot* lockobj ) :
-	m_innerSphere( Vector3(0.0f, 0.0f, 0.0f), 1.0f ),
+	m_innerSphere( Vector3( 0.0f, 0.0f, 0.0f ), 1.0f ),
 	m_outerSphere( Vector3( 0.0f, 0.0f, 0.0f ), 1.0f ),
 	m_nextCallbackID( 1 )
 {
@@ -30,10 +30,10 @@ const CcpMath::Sphere EveSphereVolume::GetBoundingSphere() const
 
 float EveSphereVolume::GetIntensity( Vector3 position )
 {
-	if( m_outerSphere.IsPointInside(position) )
+	if( m_outerSphere.IsPointInside( position ) )
 	{
 		// since the innersphere is offset from the outer sphere, we need to construct a new one that is centered in the owners object space
-		CcpMath::Sphere innerModified(m_innerSphere);
+		CcpMath::Sphere innerModified( m_innerSphere );
 		innerModified.center += m_outerSphere.center;
 		if( innerModified.IsPointInside( position ) )
 		{
@@ -43,7 +43,7 @@ float EveSphereVolume::GetIntensity( Vector3 position )
 		// will need a more complex solution for that
 		float distFromInnnerCenter = LengthSq( position - m_outerSphere.center );
 		float distFromInnerSurface = distFromInnnerCenter - pow( innerModified.radius, 2.0f );
-		
+
 		float interpolationDistance = pow( m_outerSphere.radius, 2.0f ) - pow( innerModified.radius, 2.0f );
 		return 1.0f - distFromInnerSurface / interpolationDistance;
 	}
@@ -80,7 +80,7 @@ void EveSphereVolume::GeneratePointsInVolume( std::vector<Vector3>& points, size
 
 		for( size_t i = 0; i < howManyToAdd; i++ )
 		{
-			if( (float) rand() / RAND_MAX < sizeDifference )
+			if( (float)rand() / RAND_MAX < sizeDifference )
 			{
 				// inner volume
 				dist = m_innerSphere.radius * pow( (float)rand() / RAND_MAX, 1.f / 3.f );
@@ -100,7 +100,6 @@ void EveSphereVolume::GeneratePointsInVolume( std::vector<Vector3>& points, size
 			points.push_back( position );
 		}
 	}
-	
 }
 
 uint32_t EveSphereVolume::RegisterForChanges( const std::function<void()>& callBack )
@@ -118,7 +117,7 @@ void EveSphereVolume::UnregisterForChanges( uint32_t callbackID )
 // INotify
 bool EveSphereVolume::OnModified( Be::Var* val )
 {
-	
+
 	if( IsMatch( val, m_innerSphere.radius ) )
 	{
 		if( m_innerSphere.radius > m_outerSphere.radius )
@@ -133,7 +132,7 @@ bool EveSphereVolume::OnModified( Be::Var* val )
 
 		if( m_innerSphere.radius > m_outerSphere.radius )
 		{
-			m_innerSphere.radius = m_outerSphere.radius; 
+			m_innerSphere.radius = m_outerSphere.radius;
 		}
 	}
 

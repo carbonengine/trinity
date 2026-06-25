@@ -8,23 +8,23 @@
 #include <numeric>
 
 #if WITH_GRANNY
-void GetVertexPositionOffsetAndType(granny_mesh* grannyMesh, unsigned int &positionOffset, Tr2VertexDefinition::DataType &positionType )
+void GetVertexPositionOffsetAndType( granny_mesh* grannyMesh, unsigned int& positionOffset, Tr2VertexDefinition::DataType& positionType )
 {
 	positionOffset = 0;
 	positionType = Tr2VertexDefinition::DT_UNKNOWN_TYPE;
 
-	if ( !grannyMesh )
-	{		
+	if( !grannyMesh )
+	{
 		return;
 	}
 
 	granny_data_type_definition* grannyVertexDecl = grannyMesh->PrimaryVertexData->VertexType;
 
-	if ( !grannyVertexDecl )
+	if( !grannyVertexDecl )
 	{
 		return;
 	}
-		
+
 	while( grannyVertexDecl->Type != GrannyEndMember )
 	{
 		if( !strcmp( grannyVertexDecl->Name, GrannyVertexPositionName ) )
@@ -41,19 +41,19 @@ void GetVertexPositionOffsetAndType(granny_mesh* grannyMesh, unsigned int &posit
 }
 #endif
 
-void ConvertShort4ToVector3( const void *ptr, Vector3* dest )
+void ConvertShort4ToVector3( const void* ptr, Vector3* dest )
 {
-	short *vdata = (short*)(ptr);
+	short* vdata = (short*)( ptr );
 	float rcp = 1.0f / (float)vdata[3];
 	dest->x = (float)vdata[0] * rcp;
 	dest->y = (float)vdata[1] * rcp;
 	dest->z = (float)vdata[2] * rcp;
 }
 
-void ConvertUByte4ToVector3( const void *ptr, Vector3* dest )
+void ConvertUByte4ToVector3( const void* ptr, Vector3* dest )
 {
-	unsigned char * vdata = (unsigned char *)(ptr);
-	
+	unsigned char* vdata = (unsigned char*)( ptr );
+
 	dest->x = (float)vdata[2] / 255.0f * 2.0f - 1.0f;
 	dest->y = (float)vdata[1] / 255.0f * 2.0f - 1.0f;
 	dest->z = (float)vdata[0] / 255.0f * 2.0f - 1.0f;
@@ -61,18 +61,14 @@ void ConvertUByte4ToVector3( const void *ptr, Vector3* dest )
 
 
 #if WITH_GRANNY
-void GetMeshVertexPosition(	granny_mesh* grannyMesh, unsigned index, 
-							Vector3 & position,
-							unsigned grannyBytesPerVertex, 
-							unsigned positionOffset, 
-							Tr2VertexDefinition::DataType positionType )
-{	
+void GetMeshVertexPosition( granny_mesh* grannyMesh, unsigned index, Vector3& position, unsigned grannyBytesPerVertex, unsigned positionOffset, Tr2VertexDefinition::DataType positionType )
+{
 	if( !grannyBytesPerVertex )
 	{
 		return;
 	}
 
-	granny_uint8 *positionPtr = grannyMesh->PrimaryVertexData->Vertices + index * grannyBytesPerVertex + positionOffset;
+	granny_uint8* positionPtr = grannyMesh->PrimaryVertexData->Vertices + index * grannyBytesPerVertex + positionOffset;
 
 	switch( positionType )
 	{
@@ -86,18 +82,22 @@ void GetMeshVertexPosition(	granny_mesh* grannyMesh, unsigned index,
 
 	case Tr2VertexDefinition::SHORT_4:
 		ConvertShort4ToVector3( positionPtr, &position );
-		break; 
+		break;
 
 	default:
 		CCP_ASSERT_M( false, "Unsupported position type in GetMeshVertexPosition" );
 		break;
-	}	
+	}
 }
 #endif
 
 const char* VertexDeclTypeToString( Tr2VertexDefinition::DataType type )
 {
-#define VD_CASE(x)	case Tr2VertexDefinition:: x : { static const char* text = #x ; return text; }
+#define VD_CASE( x )                  \
+	case Tr2VertexDefinition::x: {    \
+		static const char* text = #x; \
+		return text;                  \
+	}
 
 	switch( type )
 	{
@@ -130,7 +130,7 @@ const char* VertexDeclTypeToString( Tr2VertexDefinition::DataType type )
 		VD_CASE( UINT32_2 );
 		VD_CASE( UINT32_3 );
 		VD_CASE( UINT32_4 );
-		
+
 		VD_CASE( FLOAT16_1 );
 		VD_CASE( FLOAT16_2 );
 		VD_CASE( FLOAT16_3 );
@@ -140,7 +140,7 @@ const char* VertexDeclTypeToString( Tr2VertexDefinition::DataType type )
 		VD_CASE( UFLOAT16_2 );
 		VD_CASE( UFLOAT16_3 );
 		VD_CASE( UFLOAT16_4 );
-		
+
 		VD_CASE( FLOAT32_1 );
 		VD_CASE( FLOAT32_2 );
 		VD_CASE( FLOAT32_3 );
@@ -157,11 +157,10 @@ const char* VertexDeclTypeToString( Tr2VertexDefinition::DataType type )
 		VD_CASE( SHORT_4_NORM );
 		VD_CASE( USHORT_4_NORM );
 
-		default:
-			static const char* text = "Unknown";
-			return text;
+	default:
+		static const char* text = "Unknown";
+		return text;
 	}
-
 }
 
 const char* VertexDeclUsageToString( Tr2VertexDefinition::UsageCode usage )
@@ -177,7 +176,7 @@ const char* VertexDeclUsageToString( Tr2VertexDefinition::UsageCode usage )
 		"BLENDWEIGHTS"
 	};
 
-	return map[ usage ];
+	return map[usage];
 }
 
 void DescribeVertexDecl( unsigned int decl )
@@ -187,7 +186,7 @@ void DescribeVertexDecl( unsigned int decl )
 
 	if( !result )
 	{
-		CCP_LOG( "Invalid vertex declaration");
+		CCP_LOG( "Invalid vertex declaration" );
 		return;
 	}
 
@@ -216,7 +215,7 @@ granny_file* ProtectedGrannyReadEntireFileFromMemory( const wchar_t* path, uint3
 	}
 #ifdef _MSC_VER
 	__except( EXCEPTION_EXECUTE_HANDLER )
-	{ 
+	{
 		CCP_LOGERR( "Exception caught while reading Granny file %S", path );
 		CCP_LOGERR( "Files might be corrupt - try running the repair tool" );
 	}

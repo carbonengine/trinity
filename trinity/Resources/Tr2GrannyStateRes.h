@@ -17,7 +17,7 @@ BLUE_DECLARE( Tr2GrannyStateRes );
 struct GStateBindingCallbackData
 {
 	std::string gsf_path;
-	std::map<std::string, TriGrannyResPtr> *anim_map_pointer;
+	std::map<std::string, TriGrannyResPtr>* anim_map_pointer;
 	GStateBindingCallbackData() :
 		gsf_path( "" ),
 		anim_map_pointer( nullptr )
@@ -25,16 +25,16 @@ struct GStateBindingCallbackData
 	}
 };
 
-std::string GetFullAnimPath(std::string SourceFilenameString, std::string dir_path);
+std::string GetFullAnimPath( std::string SourceFilenameString, std::string dir_path );
 
-BLUE_CLASS( Tr2GrannyStateRes ):
+BLUE_CLASS( Tr2GrannyStateRes ) :
 	public BlueAsyncRes,
 	public ICacheable,
 	public IBlueAsyncResNotifyTarget
 {
 public:
 	EXPOSE_TO_BLUE();
-	Tr2GrannyStateRes(IRoot* lockobj = NULL);
+	Tr2GrannyStateRes( IRoot* lockobj = NULL );
 	~Tr2GrannyStateRes();
 
 	//////////////////////////////////////////////////////////////////////////
@@ -45,17 +45,20 @@ public:
 	//
 	//////////////////////////////////////////////////////////////////////////
 
-	granny_file* GetCharacterFile() const { return m_characterFile; }
-	gstate_character_info *GetCharacterInfo() const;
+	granny_file* GetCharacterFile() const
+	{
+		return m_characterFile;
+	}
+	gstate_character_info* GetCharacterInfo() const;
 	const std::vector<std::string> GetGStateAnimFileRefPaths() const;
 
 	bool IsFullyLoaded() const;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IAsyncLoadedResNotifyTarget
-	void	ReleaseCachedData( BlueAsyncRes* p );
-	void	RebuildCachedData( BlueAsyncRes* p );
-	void	Cleanup();
+	void ReleaseCachedData( BlueAsyncRes * p );
+	void RebuildCachedData( BlueAsyncRes * p );
+	void Cleanup();
 
 protected:
 	virtual LoadingResult DoLoad();
@@ -67,8 +70,8 @@ private:
 	void* m_data;
 	bool m_anim_bound;
 	GStateBindingCallbackData m_callbackData;
-	granny_file *m_characterFile;
-	std::map<std::string, TriGrannyResPtr>	m_gStateAnimFiles;
+	granny_file* m_characterFile;
+	std::map<std::string, TriGrannyResPtr> m_gStateAnimFiles;
 	void LoadAnimResPath( const std::string& val );
 	void LoadAnimResources();
 	bool IsAllAnimGood();

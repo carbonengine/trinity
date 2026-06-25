@@ -17,6 +17,7 @@ public:
 	{
 		return reference < other.reference;
 	}
+
 private:
 	uint32_t reference;
 	friend class StringTable;
@@ -39,12 +40,12 @@ public:
 	size_t GetSize() const;
 
 	static StringReference GetInvalidReference();
-private:
 
+private:
 	struct Blob
 	{
-		Blob( const void* data, size_t size )
-			:m_data(nullptr),
+		Blob( const void* data, size_t size ) :
+			m_data( nullptr ),
 			m_size( size )
 		{
 			if( size )
@@ -54,8 +55,8 @@ private:
 			}
 		}
 
-		Blob( const Blob& other )
-			:m_size( other.m_size )
+		Blob( const Blob& other ) :
+			m_size( other.m_size )
 		{
 			if( other.m_data )
 			{
@@ -68,8 +69,8 @@ private:
 			}
 		}
 
-		Blob( Blob&& other )
-			:m_data( other.m_data ),
+		Blob( Blob&& other ) :
+			m_data( other.m_data ),
 			m_size( other.m_size )
 		{
 			other.m_data = nullptr;
@@ -138,7 +139,7 @@ private:
 
 	struct BlobPtrHash
 	{
-		size_t operator ()( const Blob* ptr ) const
+		size_t operator()( const Blob* ptr ) const
 		{
 			return size_t( *ptr );
 		}

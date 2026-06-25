@@ -50,7 +50,7 @@ void EveChildLink::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 		// source is from parent
 		Vector3 srcPos;
 
-		if ( params.spaceObjectParent )
+		if( params.spaceObjectParent )
 		{
 			params.spaceObjectParent->GetModelCenterWorldPosition( srcPos );
 		}
@@ -76,12 +76,12 @@ void EveChildLink::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	// update the special link curves
 	for( ITriFunctionVector::const_iterator it = m_linkStrengthCurves.begin(); it != m_linkStrengthCurves.end(); ++it )
 	{
-		(*it)->UpdateValue( m_linkStrength );
+		( *it )->UpdateValue( m_linkStrength );
 	}
 
 	for( ITr2ValueBindingVector::const_iterator it = m_linkStrengthBindings.begin(); it != m_linkStrengthBindings.end(); ++it )
 	{
-		(*it)->CopyValue();
+		( *it )->CopyValue();
 	}
 
 	// get parent worldmatrix and parent's shield ellipsoid offset
@@ -100,7 +100,7 @@ void EveChildLink::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 			p->GetShapeEllipsoid( shieldEllipsoidCenter, t );
 		}
 	}
-	else 
+	else
 	{
 		return;
 	}
@@ -117,11 +117,11 @@ void EveChildLink::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	}
 	else
 	{
-		// link strength comes from distance vs. barrier 
-		float div = abs(m_linkBarrier - m_targetRadius ) ;
+		// link strength comes from distance vs. barrier
+		float div = abs( m_linkBarrier - m_targetRadius );
 		m_linkStrength = TriClamp( 1.0f - ( m_currentDistance - m_targetRadius ) / div, 0.f, 1.f );
 	}
-	
+
 	// need inverse rotation-only from worldmatrix
 	Matrix invRotationWorldMat;
 	TriMatrixRemoveTranslation( &invRotationWorldMat, &m_worldTransform );
@@ -142,7 +142,7 @@ void EveChildLink::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	// update perobject data buffers
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
-	
+
 	if( params.spaceObjectParent )
 	{
 		params.spaceObjectParent->GetPerObjectStructs( m_vsData, m_psData );

@@ -8,19 +8,20 @@
 #include "TriRenderStep.h"
 #include "TriProjection.h"
 
-BLUE_CLASS( TriStepSetProjection ) : public TriRenderStep
+BLUE_CLASS( TriStepSetProjection ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
-	TriStepSetProjection( IRoot* lockobj = 0);
-	~TriStepSetProjection(void);
+
+	TriStepSetProjection( IRoot* lockobj = 0 );
+	~TriStepSetProjection( void );
 
 	//IRenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
 	// Python __init__ constructor
-	void SetProjection( TriProjection* projection );
+	void SetProjection( TriProjection * projection );
 
 private:
 	TriProjectionPtr m_projection;

@@ -5,7 +5,9 @@
 
 using namespace Tr2RenderContextEnum;
 
-struct Rendering: public WithValidRenderContext {};
+struct Rendering : public WithValidRenderContext
+{
+};
 
 namespace
 {
@@ -45,8 +47,8 @@ ALResult CreateTexCoordAndPositionVS( Tr2ShaderAL& shader, Tr2PrimaryRenderConte
 	};
 
 	auto input = Tr2ShaderSignatureAL()
-		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 2 )
-		.Add( Tr2VertexDefinition::POSITION, 0, 1, Tr2ShaderPipelineInputAL::FLOAT, 3 );
+					 .Add( Tr2VertexDefinition::TEXCOORD, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 2 )
+					 .Add( Tr2VertexDefinition::POSITION, 0, 1, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
 }
@@ -58,8 +60,8 @@ ALResult CreateSampleTextureFromTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRende
 	};
 
 	auto input = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
-		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
+					 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
+					 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
 	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
@@ -71,8 +73,8 @@ ALResult CreatePositionOnlyWithPerObjectDataVS( Tr2ShaderAL& shader, Tr2PrimaryR
 	};
 
 	auto input = Tr2ShaderSignatureAL()
-		.Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 )
-		.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
+					 .Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 )
+					 .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
 
 	return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
 }
@@ -84,8 +86,8 @@ ALResult CreateInstancedRenderingVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContex
 	};
 
 	auto input = Tr2ShaderSignatureAL()
-		.Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 )
-		.Add( Tr2VertexDefinition::POSITION, 8, 1, Tr2ShaderPipelineInputAL::FLOAT, 2 );
+					 .Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 )
+					 .Add( Tr2VertexDefinition::POSITION, 8, 1, Tr2ShaderPipelineInputAL::FLOAT, 2 );
 
 	return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
 }
@@ -106,9 +108,9 @@ ALResult CreateSampleTextureMipFromTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRe
 	};
 
 	auto input = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
-		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
-		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
+					 .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
+					 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
+					 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
 	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
@@ -120,9 +122,9 @@ ALResult CreateSampleVolumeTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderConte
 	};
 
 	auto input = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
-		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE3D, 0 )
-		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
+					 .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 )
+					 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE3D, 0 )
+					 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
 	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
@@ -136,7 +138,7 @@ ALResult CreateWriteToUavPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& ren
 	};
 
 	auto input = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 1 );
+					 .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 1 );
 
 	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
@@ -152,7 +154,7 @@ ALResult CreateLoadMsaaTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL
 	};
 
 	auto input = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2DMS, 0 );
+					 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2DMS, 0 );
 
 	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
@@ -190,9 +192,15 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -242,10 +250,18 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -295,10 +311,18 @@ TEST_F( Rendering, CanRenderIndexedTriangles )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -353,11 +377,11 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 	};
 
 	auto vsInput = Tr2ShaderSignatureAL()
-		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 2 )
-		.Add( Tr2VertexDefinition::POSITION, 0, 1, Tr2ShaderPipelineInputAL::FLOAT, 3 );
+					   .Add( Tr2VertexDefinition::TEXCOORD, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 2 )
+					   .Add( Tr2VertexDefinition::POSITION, 0, 1, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( VERTEX_SHADER, vsBytecode, vsInput, "",  *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( vs.Create( VERTEX_SHADER, vsBytecode, vsInput, "", *renderContext ) );
 
 	Tr2ShaderAL ps;
 	ASSERT_HRESULT_SUCCEEDED( CreateOutputTexCoordPS( ps, *renderContext ) );
@@ -367,9 +391,21 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -420,9 +456,21 @@ TEST_F( Rendering, CanSampleTexture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -436,10 +484,22 @@ TEST_F( Rendering, CanSampleTexture )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	uint32_t texturePixels0[] = {
-		0xff00ff00, 0xff0000ff, 0xff00ff00, 0xff0000ff,
-		0xffff0000, 0x00ffffff, 0xffff0000, 0x00ffffff,
-		0xff00ff00, 0xff0000ff, 0xff00ff00, 0xff0000ff,
-		0xffff0000, 0x00ffffff, 0xffff0000, 0x00ffffff,
+		0xff00ff00,
+		0xff0000ff,
+		0xff00ff00,
+		0xff0000ff,
+		0xffff0000,
+		0x00ffffff,
+		0xffff0000,
+		0x00ffffff,
+		0xff00ff00,
+		0xff0000ff,
+		0xff00ff00,
+		0xff0000ff,
+		0xffff0000,
+		0x00ffffff,
+		0xffff0000,
+		0x00ffffff,
 	};
 	Tr2SubresourceData textureData[1];
 	textureData[0].m_sysMem = texturePixels0;
@@ -450,8 +510,8 @@ TEST_F( Rendering, CanSampleTexture )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -507,9 +567,21 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -523,14 +595,28 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	uint32_t texturePixels0[] = {
-		0xff00ff00, 0xff0000ff, 0xff00ff00, 0xff0000ff,
-		0xffff0000, 0x00ffffff, 0xffff0000, 0x00ffffff,
-		0xff00ff00, 0xff0000ff, 0xff00ff00, 0xff0000ff,
-		0xffff0000, 0x00ffffff, 0xffff0000, 0x00ffffff,
+		0xff00ff00,
+		0xff0000ff,
+		0xff00ff00,
+		0xff0000ff,
+		0xffff0000,
+		0x00ffffff,
+		0xffff0000,
+		0x00ffffff,
+		0xff00ff00,
+		0xff0000ff,
+		0xff00ff00,
+		0xff0000ff,
+		0xffff0000,
+		0x00ffffff,
+		0xffff0000,
+		0x00ffffff,
 	};
 	uint32_t texturePixels1[] = {
-		0xff00ff00, 0xff0000ff,
-		0xffff0000, 0x00ffffff,
+		0xff00ff00,
+		0xff0000ff,
+		0xffff0000,
+		0x00ffffff,
 	};
 	uint32_t texturePixels2[] = {
 		0xff00ff00,
@@ -552,10 +638,9 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 	uint32_t g = 127;
 
 	auto frame = [&] {
-
 		Tr2SamplerStateAL sampl;
-		ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-			Tr2SamplerDescription( 
+		ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+			Tr2SamplerDescription(
 				Tr2RenderContextEnum::TF_LINEAR,
 				Tr2RenderContextEnum::TA_WRAP,
 				1,
@@ -608,9 +693,15 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -672,10 +763,18 @@ TEST_F( Rendering, CanDoInstancedRendering )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.25f, -0.25f, 0.0f,
-		-0.25f, 0.25f, 0.0f,
-		0.25f, -0.25f, 0.0f,
-		0.25f, 0.25f, 0.0f,
+		-0.25f,
+		-0.25f,
+		0.0f,
+		-0.25f,
+		0.25f,
+		0.0f,
+		0.25f,
+		-0.25f,
+		0.0f,
+		0.25f,
+		0.25f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -686,8 +785,10 @@ TEST_F( Rendering, CanDoInstancedRendering )
 	ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( indices ) / sizeof( indices[0] ), Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::NONE, indices, *renderContext ) );
 
 	float instances[] = {
-		-0.5f, 0.2f,
-		0.5f, -0.2f,
+		-0.5f,
+		0.2f,
+		0.5f,
+		-0.2f,
 	};
 	const uint32_t instanceVbStride = 2 * sizeof( float );
 	Tr2BufferAL instanceVb;
@@ -741,13 +842,37 @@ TEST_F( Rendering, CanClearRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -761,8 +886,8 @@ TEST_F( Rendering, CanClearRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -784,7 +909,6 @@ TEST_F( Rendering, CanClearRenderTarget )
 	uint32_t g = 127;
 
 	auto frame = [&] {
-
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
@@ -837,13 +961,37 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -857,8 +1005,8 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -880,7 +1028,6 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	uint32_t g = 127;
 
 	auto frame = [&] {
-
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
@@ -943,13 +1090,37 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -963,8 +1134,8 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -989,7 +1160,6 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	uint32_t g = 127;
 
 	auto frame = [&] {
-
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
@@ -1048,9 +1218,15 @@ TEST_F( Rendering, CanClearDepthBuffer )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 1.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		1.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -1110,13 +1286,37 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-		0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 
-		0.5f, -0.5f, 0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 1.0f, 1.0f,
+		0.5f,
+		-0.5f,
+		0.5f,
+		1.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.5f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		-0.5f,
+		0.5f,
+		1.0f,
+		1.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -1184,26 +1384,74 @@ TEST_F( Rendering, CanSampleDepthBuffer )
 	ASSERT_HRESULT_SUCCEEDED( sp2.Create( shaders2, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-		0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 
-		0.5f, -0.5f, 0.5f, 1.0f, 1.0f,
-		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-		-0.5f, -0.5f, 0.5f, 1.0f, 1.0f,
+		0.5f,
+		-0.5f,
+		0.5f,
+		1.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.5f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		-0.5f,
+		0.5f,
+		1.0f,
+		1.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	float quad[] = {
-		0, 0, 0, 0, 1,
-		0, 1, 0, 0, 0,
-		1, 0, 0, 1, 1,
+		0,
+		0,
+		0,
+		0,
+		1,
+		0,
+		1,
+		0,
+		0,
+		0,
+		1,
+		0,
+		0,
+		1,
+		1,
 
-		1, 0, 0, 1, 1,
-		0, 1, 0, 0, 0,
-		1, 1, 0, 1, 0,
+		1,
+		0,
+		0,
+		1,
+		1,
+		0,
+		1,
+		0,
+		0,
+		0,
+		1,
+		1,
+		0,
+		1,
+		0,
 	};
 	Tr2BufferAL quadVb;
 	ASSERT_HRESULT_SUCCEEDED( quadVb.Create( vbStride, sizeof( quad ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, quad, *renderContext ) );
@@ -1228,9 +1476,9 @@ TEST_F( Rendering, CanSampleDepthBuffer )
 	auto backBuffer = renderContext->GetDefaultBackBuffer();
 
 	Tr2TextureAL depthBuffer;
-	ASSERT_HRESULT_SUCCEEDED( depthBuffer.Create( 
-		Tr2BitmapDimensions( backBuffer.GetWidth(), backBuffer.GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_D24_UNORM_S8_UINT ), 
-		Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, 
+	ASSERT_HRESULT_SUCCEEDED( depthBuffer.Create(
+		Tr2BitmapDimensions( backBuffer.GetWidth(), backBuffer.GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_D24_UNORM_S8_UINT ),
+		Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE,
 		*renderContext ) );
 
 	Tr2ResourceSetDescriptionAL resourceSetDescription( sp2 );
@@ -1299,9 +1547,15 @@ TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 
 	Tr2VertexDefinition definition;
@@ -1347,10 +1601,18 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
 	};
 	uint16_t indices[] = { 0, 1, 2, 1, 2, 3 };
 
@@ -1398,10 +1660,18 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-		0.5f, 0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
 	};
 	uint32_t indices[] = { 0, 1, 2, 1, 2, 3 };
 
@@ -1449,14 +1719,26 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	float verticesBg[] = {
-		-0.5f, -0.5f, 0.5f,
-		-0.5f, 0.5f, 0.5f,
-		0.5f, -0.5f, 0.5f,
+		-0.5f,
+		-0.5f,
+		0.5f,
+		-0.5f,
+		0.5f,
+		0.5f,
+		0.5f,
+		-0.5f,
+		0.5f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 
@@ -1519,7 +1801,7 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 		ASSERT_HRESULT_SUCCEEDED( cb.Unlock( *renderContext ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vbBg, 0, vbStride ) );
-		
+
 		if( issueQueries )
 		{
 			ASSERT_HRESULT_SUCCEEDED( queryOccluded.Begin( *renderContext ) );
@@ -1579,9 +1861,15 @@ TEST_F( Rendering, CanUseViewport )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 
 	Tr2VertexDefinition definition;
@@ -1595,8 +1883,10 @@ TEST_F( Rendering, CanUseViewport )
 	Tr2Viewport viewport( 250, 250 );
 
 	uint32_t renderStates[] = {
-		Tr2RenderContextEnum::RS_ZENABLE, 0,
-		Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE,
+		Tr2RenderContextEnum::RS_ZENABLE,
+		0,
+		Tr2RenderContextEnum::RS_CULLMODE,
+		Tr2RenderContextEnum::CULLMODE_NONE,
 	};
 
 	Tr2Viewport bkViewport;
@@ -1638,10 +1928,26 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -1679,8 +1985,8 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 
 	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_LINEAR,
 			Tr2RenderContextEnum::TF_LINEAR,
 			Tr2RenderContextEnum::TF_POINT,
@@ -1757,13 +2063,37 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -1771,10 +2101,27 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 
 	Tr2BufferAL quads[8];
 	float quadVertices[] = {
-		-0.85f, -0.1f, 0.0f, 0.0f, 1.0f, 
-		-0.85f, 0.1f, 0.0f, 0.0f, 0.0f, 
-		-0.65f, -0.1f, 0.0f, 1.0f, 1.0f, 
-		-0.65f, 0.1f, 0.0f, 1.0f, 0.0f, };
+		-0.85f,
+		-0.1f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.85f,
+		0.1f,
+		0.0f,
+		0.0f,
+		0.0f,
+		-0.65f,
+		-0.1f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.65f,
+		0.1f,
+		0.0f,
+		1.0f,
+		0.0f,
+	};
 
 	for( uint32_t i = 0; i < 8; ++i )
 	{
@@ -1797,7 +2144,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 
 	float border[4] = { 0 };
 	Tr2SamplerStateAL sampler;
-	Tr2SamplerDescription samplerDesc( 
+	Tr2SamplerDescription samplerDesc(
 		Tr2RenderContextEnum::TF_POINT,
 		Tr2RenderContextEnum::TF_POINT,
 		Tr2RenderContextEnum::TF_POINT,
@@ -1824,7 +2171,6 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	uint32_t g = 127;
 
 	auto frame = [&] {
-
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
@@ -1899,13 +2245,37 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -1919,8 +2289,8 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -1945,7 +2315,6 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	uint32_t g = 127;
 
 	auto frame = [&] {
-
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 16 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
@@ -2011,10 +2380,26 @@ TEST_F( Rendering, CanSampleBc1Texture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2042,8 +2427,8 @@ TEST_F( Rendering, CanSampleBc1Texture )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC1_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -2101,9 +2486,15 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2165,10 +2556,26 @@ TEST_F( Rendering, CanSampleBc2Texture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2196,8 +2603,8 @@ TEST_F( Rendering, CanSampleBc2Texture )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC2_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -2256,10 +2663,26 @@ TEST_F( Rendering, CanSampleBc3Texture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2287,8 +2710,8 @@ TEST_F( Rendering, CanSampleBc3Texture )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -2347,10 +2770,26 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2379,8 +2818,8 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM, width, height, depth, 1 ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_LINEAR,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -2450,10 +2889,26 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2482,8 +2937,8 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM, width, height, depth, 1 ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_LINEAR,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -2552,10 +3007,26 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2609,10 +3080,26 @@ TEST_F( Rendering, CanLockTextureTwice )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices1[] = {
-		-0.75f, -0.25f, 0.0f, 1.0f, 1.0f, 
-		-0.75f, 0.25f, 0.0f, 1.0f, 0.0f, 
-		-0.25f, -0.25f, 0.0f, 0.0f, 1.0f, 
-		-0.25f, 0.25f, 0.0f, 0.0f, 0.0f, 
+		-0.75f,
+		-0.25f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.75f,
+		0.25f,
+		0.0f,
+		1.0f,
+		0.0f,
+		-0.25f,
+		-0.25f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.25f,
+		0.25f,
+		0.0f,
+		0.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb1;
@@ -2620,10 +3107,26 @@ TEST_F( Rendering, CanLockTextureTwice )
 
 
 	float vertices2[] = {
-		0.25f, -0.25f, 0.0f, 1.0f, 1.0f, 
-		0.25f, 0.25f, 0.0f, 1.0f, 0.0f, 
-		0.75f, -0.25f, 0.0f, 0.0f, 1.0f, 
-		0.75f, 0.25f, 0.0f, 0.0f, 0.0f, 
+		0.25f,
+		-0.25f,
+		0.0f,
+		1.0f,
+		1.0f,
+		0.25f,
+		0.25f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.75f,
+		-0.25f,
+		0.0f,
+		0.0f,
+		1.0f,
+		0.75f,
+		0.25f,
+		0.0f,
+		0.0f,
+		0.0f,
 	};
 	Tr2BufferAL vb2;
 	ASSERT_HRESULT_SUCCEEDED( vb2.Create( vbStride, sizeof( vertices2 ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices2, *renderContext ) );
@@ -2638,7 +3141,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	uint32_t texturePixels0[] = {
-		0xff00ff00, 
+		0xff00ff00,
 	};
 	Tr2SubresourceData textureData[1];
 	textureData[0].m_sysMem = texturePixels0;
@@ -2649,8 +3152,8 @@ TEST_F( Rendering, CanLockTextureTwice )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 1, 1, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -2723,10 +3226,26 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2740,10 +3259,22 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	uint32_t texturePixels0[] = {
-		0xffffffff, 0xff7f7f7f, 0xff7f7f7f, 0xffffffff,
-		0xff000000, 0xff7f7f7f, 0xff7f7f7f, 0xff000000,
-		0xffffffff, 0xff7f7f7f, 0xff7f7f7f, 0xffffffff,
-		0xff000000, 0xff7f7f7f, 0xff7f7f7f, 0xff000000,
+		0xffffffff,
+		0xff7f7f7f,
+		0xff7f7f7f,
+		0xffffffff,
+		0xff000000,
+		0xff7f7f7f,
+		0xff7f7f7f,
+		0xff000000,
+		0xffffffff,
+		0xff7f7f7f,
+		0xff7f7f7f,
+		0xffffffff,
+		0xff000000,
+		0xff7f7f7f,
+		0xff7f7f7f,
+		0xff000000,
 	};
 	Tr2SubresourceData textureData[1];
 	textureData[0].m_sysMem = texturePixels0;
@@ -2754,8 +3285,8 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -2811,10 +3342,26 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
-		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2828,10 +3375,22 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	uint32_t texturePixels0[] = {
-		0xffffffff, 0xff7f7f7f, 0xff7f7f7f, 0xffffffff,
-		0xff000000, 0xff7f7f7f, 0xff7f7f7f, 0xff000000,
-		0xffffffff, 0xff7f7f7f, 0xff7f7f7f, 0xffffffff,
-		0xff000000, 0xff7f7f7f, 0xff7f7f7f, 0xff000000,
+		0xffffffff,
+		0xff7f7f7f,
+		0xff7f7f7f,
+		0xffffffff,
+		0xff000000,
+		0xff7f7f7f,
+		0xff7f7f7f,
+		0xff000000,
+		0xffffffff,
+		0xff7f7f7f,
+		0xff7f7f7f,
+		0xffffffff,
+		0xff000000,
+		0xff7f7f7f,
+		0xff7f7f7f,
+		0xff000000,
 	};
 	Tr2SubresourceData textureData[1];
 	textureData[0].m_sysMem = texturePixels0;
@@ -2842,8 +3401,8 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_POINT,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -2904,9 +3463,21 @@ TEST_F( Rendering, CanUsePsUavs )
 
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
-		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
-		0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -2931,13 +3502,37 @@ TEST_F( Rendering, CanUsePsUavs )
 
 
 	float quad[] = {
-		0, 0, 0, 0, 1,
-		0, 1, 0, 0, 0,
-		1, 0, 0, 1, 1,
+		0,
+		0,
+		0,
+		0,
+		1,
+		0,
+		1,
+		0,
+		0,
+		0,
+		1,
+		0,
+		0,
+		1,
+		1,
 
-		1, 0, 0, 1, 1,
-		0, 1, 0, 0, 0,
-		1, 1, 0, 1, 0,
+		1,
+		0,
+		0,
+		1,
+		1,
+		0,
+		1,
+		0,
+		0,
+		0,
+		1,
+		1,
+		0,
+		1,
+		0,
 	};
 	Tr2BufferAL quadVb;
 	ASSERT_HRESULT_SUCCEEDED( quadVb.Create( vbStride, sizeof( quad ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, quad, *renderContext ) );
@@ -3002,7 +3597,6 @@ TEST_F( Rendering, CanUsePsUavs )
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
-
 }
 
 
@@ -3020,9 +3614,15 @@ TEST_F( Rendering, CanDrawIndirect )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -3034,7 +3634,7 @@ TEST_F( Rendering, CanDrawIndirect )
 	Tr2VertexLayoutAL vertexLayout;
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
-	struct 
+	struct
 	{
 		uint32_t vertexCountPerInstance;
 		uint32_t instanceCount;
@@ -3086,9 +3686,15 @@ TEST_F( Rendering, CanWriteToVB )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -3145,9 +3751,15 @@ TEST_F( Rendering, CanWriteToDynamicVB )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -3204,9 +3816,15 @@ TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 
 	const uint32_t vbStride = 3 * sizeof( float );
@@ -3276,9 +3894,15 @@ TEST_F( Rendering, CanHaveMissingIAElements )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 	Tr2BufferAL vb;
@@ -3337,13 +3961,37 @@ TEST_F( Rendering, CanLoadMsaaRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f,
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f,
+		-0.5f,
+		0.0f,
+		0.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
 
-		0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
-		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f,
-		0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+		0.5f,
+		-0.5f,
+		0.0f,
+		1.0f,
+		1.0f,
+		-0.5f,
+		0.5f,
+		0.0f,
+		0.0f,
+		0.0f,
+		0.5f,
+		0.5f,
+		0.0f,
+		1.0f,
+		0.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
 	Tr2BufferAL vb;
@@ -3379,7 +4027,6 @@ TEST_F( Rendering, CanLoadMsaaRenderTarget )
 	uint32_t g = 127;
 
 	auto frame = [&] {
-
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );

@@ -29,9 +29,8 @@ private:
 
 TYPEDEF_BLUECLASS( Tr2Sprite2dLineTraceVertex );
 
-class Tr2Sprite2dLineTrace :
-	public Tr2TexturedSpriteObject,
-	public IListNotify
+class Tr2Sprite2dLineTrace : public Tr2TexturedSpriteObject,
+							 public IListNotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -48,50 +47,55 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	void OnListModified(
-		long event,		// BLUELISTEVENT values
+		long event, // BLUELISTEVENT values
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const IList* theList
-		);
-	
-	enum CornerType { CORNERTYPE_MITER, CORNERTYPE_ROUND, CORNERTYPE_NONE };
+		const IList* theList );
+
+	enum CornerType
+	{
+		CORNERTYPE_MITER,
+		CORNERTYPE_ROUND,
+		CORNERTYPE_NONE
+	};
 
 private:
 	void ClearVertices();
 	float CalcLength();
-	void AddSegment( 
-		Tr2Sprite2dScene* renderer, 
-		const Vector2& from, 
-		const Color& fromColor, 
+	void AddSegment(
+		Tr2Sprite2dScene* renderer,
+		const Vector2& from,
+		const Color& fromColor,
 		float capAngleFrom,
-		const Vector2& to, 
-		const Color& toColor, 
-		float capAngleTo);
-	void AddVertex(Tr2Sprite2dVertexBase& v, float xOffset, float yOffset, float halfWidth, bool isAA, float texOffset1, Color color);
+		const Vector2& to,
+		const Color& toColor,
+		float capAngleTo );
+	void AddVertex( Tr2Sprite2dVertexBase& v, float xOffset, float yOffset, float halfWidth, bool isAA, float texOffset1, Color color );
 	void AddRoundJoint(
 		Tr2Sprite2dScene* renderer,
-		float capAngleTo, 
-		Tr2Sprite2dVertexBase v2, 
-		Tr2Sprite2dVertexBase v3, 
-		Vector2 normal, 
-		Color modulatedToColor, 
-		bool isAA, 
+		float capAngleTo,
+		Tr2Sprite2dVertexBase v2,
+		Tr2Sprite2dVertexBase v3,
+		Vector2 normal,
+		Color modulatedToColor,
+		bool isAA,
 		float pixelWidthInTexels,
-		float halfWidth);
-	float ClampAngle(float angle);
+		float halfWidth );
+	float ClampAngle( float angle );
 	unsigned int GetEstimatedVertexCount();
-	void AddMiterJoint( 
-		Tr2Sprite2dScene* renderer, 
-		float capAngleTo, 
-		Tr2Sprite2dVertexBase v2, 
-		Tr2Sprite2dVertexBase v3, 
-		Vector2 normal, 
-		Color modulatedToColor, 
-		bool isAA, 
-		float pixelWidthInTexels, 
-		float halfWidth);
-	Vector2 GetMiterPoint(float halfWidth, Vector2 basePoint, float startAngle, float endAngle, float sign);
+	void AddMiterJoint(
+		Tr2Sprite2dScene* renderer,
+		float capAngleTo,
+		Tr2Sprite2dVertexBase v2,
+		Tr2Sprite2dVertexBase v3,
+		Vector2 normal,
+		Color modulatedToColor,
+		bool isAA,
+		float pixelWidthInTexels,
+		float halfWidth );
+	Vector2 GetMiterPoint( float halfWidth, Vector2 basePoint, float startAngle, float endAngle, float sign );
+
 private:
 #if BLUE_WITH_PYTHON
 	static PyObject* PyAppendVertices( PyObject* self, PyObject* args );

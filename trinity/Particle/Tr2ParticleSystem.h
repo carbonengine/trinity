@@ -9,12 +9,12 @@
 #include "ITr2GenericEmitter.h"
 
 #ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
-	// This is only needed for py2 as the file now belongs in blue.
-	// Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
-	// The file version in the older blue versions had diverged from this one is incompatible.
-	#include "Include/ITr2DebugRenderer2.h"
+// This is only needed for py2 as the file now belongs in blue.
+// Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
+// The file version in the older blue versions had diverged from this one is incompatible.
+#include "Include/ITr2DebugRenderer2.h"
 #else
-	#include <ITr2DebugRenderer2.h>
+#include <ITr2DebugRenderer2.h>
 #endif
 
 BLUE_DECLARE_INTERFACE( ITr2ParticleForce );
@@ -30,7 +30,7 @@ class TriFrustum;
 // See Also:
 //   Tr2SpriteParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2ParticleSystem ):
+BLUE_CLASS( Tr2ParticleSystem ) :
 	public IInitialize,
 	public INotify,
 	public IListNotify,
@@ -54,7 +54,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify
@@ -63,8 +63,7 @@ public:
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const IList* theList
-		);
+		const IList* theList );
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
@@ -73,8 +72,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////////
 	// ISimTimeRebaseNotify
 	void OnSimClockRebase( Be::Time oldTime, Be::Time newTime );
+
 private:
 	bool OnPrepareResources();
+
 public:
 	//////////////////////////////////////////////////////////////////////////
 
@@ -107,7 +108,7 @@ public:
 
 	size_t GetGpuStride() const;
 
-	bool GetBoundingBox( Vector3 &minBounds, Vector3 &maxBounds ) const;
+	bool GetBoundingBox( Vector3 & minBounds, Vector3 & maxBounds ) const;
 
 	void RebindConstraints();
 
@@ -115,7 +116,10 @@ public:
 	void SortParticles();
 
 	void SetMaxParticleCount( unsigned maxParticleCount );
-	unsigned GetOriginalMaxParticles() { return m_originalMaxParticles; };
+	unsigned GetOriginalMaxParticles()
+	{
+		return m_originalMaxParticles;
+	};
 
 	static void UpdateAllSystems( const ITr2GenericEmitter::UpdateArguments& arguments );
 	void Update( const ITr2GenericEmitter::UpdateArguments& arguments );
@@ -127,14 +131,14 @@ public:
 		m_bufferDirty = true;
 	}
 
-	void GetDebugOptions( Tr2DebugRendererOptions& options ) const;
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform ) const;
+	void GetDebugOptions( Tr2DebugRendererOptions & options ) const;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& worldTransform ) const;
 
 
 	// ----------------------------------------------------------------------------------
 	// Description:
-	//   A cheap thread-safe lock-free pseudo random number generator based on 
-	//   http://www.firstpr.com.au/dsp/rand31/ 
+	//   A cheap thread-safe lock-free pseudo random number generator based on
+	//   http://www.firstpr.com.au/dsp/rand31/
 	// Return Value:
 	//   Random integer between 0 and 2^31.
 	// ----------------------------------------------------------------------------------
@@ -149,14 +153,14 @@ public:
 		hi = 16807 * ( seed >> 16 );
 		lo += ( hi & 0x7fff ) << 16;
 		lo += hi >> 15;
-		lo = (lo & 0x7FFFFFFF) + (lo >> 31);
+		lo = ( lo & 0x7FFFFFFF ) + ( lo >> 31 );
 		globalSeed = static_cast<uint32_t>( lo );
 		return lo;
 	}
 
 	// ----------------------------------------------------------------------------------
 	// Description:
-	//   A cheap thread-safe lock-free pseudo random number generator that produces 
+	//   A cheap thread-safe lock-free pseudo random number generator that produces
 	//   random floats in [0, 1] range. Based on Tr2ParticleSystem::RandCheap.
 	// Return Value:
 	//   Random float between 0 and 1.
@@ -168,9 +172,13 @@ public:
 		uint32_t r = RandCheap() & 0x7FFFFFFF;
 		return float( r ) / float( 0x7FFFFFFF );
 	}
+
 private:
 	void UpdateSimulation( const ITr2GenericEmitter::UpdateArguments& arguments, float dt );
-	void UpdateSimulationScript( float dt ) { UpdateSimulation( ITr2GenericEmitter::UpdateArguments(), dt ); }
+	void UpdateSimulationScript( float dt )
+	{
+		UpdateSimulation( ITr2GenericEmitter::UpdateArguments(), dt );
+	}
 	void BuildBuffers();
 	void DestroyBuffers();
 	void RebuildDeclaration();

@@ -24,7 +24,6 @@ BLUE_DECLARE( Tr2Sprite2dScene );
 
 
 
-
 BLUE_CLASS( EveSpaceSceneRenderDriver ) :
 	public ITr2RenderNode,
 	public Tr2DeviceResource
@@ -83,14 +82,14 @@ public:
 	{
 		m_settings = settings;
 	}
-	
+
 	void SetDebugMode( bool enable );
 	bool GetDebugMode() const;
 
 	std::vector<Tr2TextureReferencePtr> GetAllTempTextures() const;
 
 	EveSpaceScene* GetScene() const;
-	void SetScene( EveSpaceScene* scene );
+	void SetScene( EveSpaceScene * scene );
 
 	EXPOSE_TO_BLUE();
 
@@ -106,7 +105,7 @@ private:
 	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
 	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
 
-	void UpdateGpuParticleSystem( Tr2RenderContext& renderContext );
+	void UpdateGpuParticleSystem( Tr2RenderContext & renderContext );
 
 	Tr2GpuResourcePool::Texture RenderSSAO( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2RenderContext& renderContext );
 
@@ -170,6 +169,3 @@ private:
 };
 
 TYPEDEF_BLUECLASS( EveSpaceSceneRenderDriver );
-
-
-

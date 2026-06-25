@@ -21,7 +21,8 @@ struct Tr2CurveQuaternionKey
 BLUE_DECLARE_STRUCTURE_LIST( Tr2CurveQuaternionKey );
 
 
-BLUE_CLASS( Tr2CurveQuaternion ) : public ITriQuaternionFunction, public ITriCurveLength
+BLUE_CLASS( Tr2CurveQuaternion ) :
+	public ITriQuaternionFunction, public ITriCurveLength
 {
 public:
 	Tr2CurveQuaternion( IRoot* lockobj = nullptr );
@@ -30,14 +31,14 @@ public:
 
 	virtual void UpdateValue( double time );
 
-	virtual Quaternion* Update( Quaternion* in, Be::Time time );
-	virtual Quaternion* Update( Quaternion* in, double time );
-	virtual Quaternion* GetValueAt( Quaternion* in, Be::Time time );
-	virtual Quaternion* GetValueAt( Quaternion* in, double time );
-	virtual Quaternion* GetValueDotAt( Quaternion* in, Be::Time time );
-	virtual Quaternion* GetValueDotAt( Quaternion* in, double time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, Be::Time time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, double time );
+	virtual Quaternion* Update( Quaternion * in, Be::Time time );
+	virtual Quaternion* Update( Quaternion * in, double time );
+	virtual Quaternion* GetValueAt( Quaternion * in, Be::Time time );
+	virtual Quaternion* GetValueAt( Quaternion * in, double time );
+	virtual Quaternion* GetValueDotAt( Quaternion * in, Be::Time time );
+	virtual Quaternion* GetValueDotAt( Quaternion * in, double time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, Be::Time time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, double time );
 
 	virtual float Length();
 
@@ -52,6 +53,7 @@ public:
 		Be::OptionalWithDefaultValue<Tr2CurveInterpolation::Type, Tr2CurveInterpolation::LINEAR> interpolation );
 
 	void SetExtrapolation( Tr2CurveExtrapolation::Type extrapolation );
+
 private:
 	float GetLocalTime( double time ) const;
 	Quaternion GetSegmentValue( float time, const Tr2CurveQuaternionKey& k0, const Tr2CurveQuaternionKey& k1 ) const;

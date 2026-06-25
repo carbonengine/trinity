@@ -9,7 +9,7 @@ class Tr2TextureAL;
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   A set of callbacks from Tr2RenderContextAL. 
+//   A set of callbacks from Tr2RenderContextAL.
 // --------------------------------------------------------------------------------------
 struct ITr2RenderContextEvents
 {

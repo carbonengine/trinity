@@ -5,14 +5,16 @@
 #include "Tr2Renderer.h"
 
 Tr2AudioStretchAuto::Tr2AudioStretchAuto( IRoot* lockobj )
-{}
+{
+}
 
 Tr2AudioStretchAuto::~Tr2AudioStretchAuto()
-{}
+{
+}
 
 unsigned int Tr2AudioStretchAuto::TriggerOutburstEvent()
 {
-	if ( nullptr != m_sourceEmitter )
+	if( nullptr != m_sourceEmitter )
 	{
 		return m_sourceEmitter.p->SendEvent( m_outburstEvent );
 	}
@@ -21,7 +23,7 @@ unsigned int Tr2AudioStretchAuto::TriggerOutburstEvent()
 
 unsigned int Tr2AudioStretchAuto::TriggerImpactEvent()
 {
-	if ( nullptr != m_destEmitter)
+	if( nullptr != m_destEmitter )
 	{
 		return m_destEmitter.p->SendEvent( m_impactEvent );
 	}
@@ -30,7 +32,7 @@ unsigned int Tr2AudioStretchAuto::TriggerImpactEvent()
 
 unsigned int Tr2AudioStretchAuto::TriggerStretchEvent()
 {
-	if ( nullptr != m_stretchEmitter)
+	if( nullptr != m_stretchEmitter )
 	{
 		return m_stretchEmitter.p->SendEvent( m_stretchEvent );
 	}

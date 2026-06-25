@@ -18,4 +18,3 @@ const Be::ClassInfo* EveDistributionSpawnerInterval::ExposeToBlue()
 
 	EXPOSURE_END()
 }
- 

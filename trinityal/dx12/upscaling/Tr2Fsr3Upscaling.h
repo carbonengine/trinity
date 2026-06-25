@@ -13,9 +13,9 @@
 
 namespace Fsr3Utils
 {
-	void LogFsr3Message( uint32_t type, const wchar_t* message );
-	FfxApiResource ConvertTextureToFfxResource( const Tr2TextureAL* texture, const wchar_t* textureName );
-	FfxApiSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format );
+void LogFsr3Message( uint32_t type, const wchar_t* message );
+FfxApiResource ConvertTextureToFfxResource( const Tr2TextureAL* texture, const wchar_t* textureName );
+FfxApiSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format );
 }
 
 class Tr2Fsr3UpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
@@ -36,7 +36,6 @@ public:
 	virtual void ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swapchain, Tr2WindowHandle hwnd, ID3D12CommandQueue* commandQueue ) override;
 
 private:
-
 	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 	bool m_supportsFrameGeneration;
 
@@ -59,7 +58,6 @@ public:
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
-
 	Tr2UpscalingAL::Result SetupFrameGen();
 	void TearDownFrameGen();
 	Tr2UpscalingAL::Result SetupUpscaling();

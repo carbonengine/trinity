@@ -13,10 +13,9 @@ BLUE_DECLARE( Tr2Sprite2dLayer );
 BLUE_DECLARE_IVECTOR( ITr2SpriteObject );
 BLUE_DECLARE( Tr2Effect );
 
-class Tr2Sprite2dLayer:
-	public Tr2Sprite2dContainer,
-	public Tr2DeviceResource,
-	public ITr2Sprite2dTextureNotifyTarget
+class Tr2Sprite2dLayer : public Tr2Sprite2dContainer,
+						 public Tr2DeviceResource,
+						 public ITr2Sprite2dTextureNotifyTarget
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -36,6 +35,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
 
@@ -47,7 +47,7 @@ private:
 
 private:
 	Tr2TextureAL m_renderTarget;
-	
+
 	// If m_clearBackground is set, background is cleared to this color
 	Color m_backgroundColor;
 

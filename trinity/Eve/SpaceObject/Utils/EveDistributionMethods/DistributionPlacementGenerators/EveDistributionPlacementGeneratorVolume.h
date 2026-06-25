@@ -21,7 +21,7 @@ public:
 	bool IsRequestingRegeneration() override;
 	void RequestRegeneration();
 
-	
+
 
 	// IInitializ
 	bool Initialize() override;

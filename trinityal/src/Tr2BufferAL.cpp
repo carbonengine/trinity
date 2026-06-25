@@ -8,8 +8,8 @@
 
 using namespace Tr2RenderContextEnum;
 
-Tr2BufferDescriptionAL::Tr2BufferDescriptionAL()
-	:format( PIXEL_FORMAT_UNKNOWN ),
+Tr2BufferDescriptionAL::Tr2BufferDescriptionAL() :
+	format( PIXEL_FORMAT_UNKNOWN ),
 	stride( 0 ),
 	count( 0 ),
 	gpuUsage( Tr2GpuUsage::NONE ),
@@ -21,8 +21,8 @@ Tr2BufferDescriptionAL::Tr2BufferDescriptionAL(
 	Tr2RenderContextEnum::PixelFormat format_,
 	uint32_t count_,
 	Tr2GpuUsage::Type gpuUsage_,
-	Tr2CpuUsage::Type cpuUsage_ )
-	:format( format_ ),
+	Tr2CpuUsage::Type cpuUsage_ ) :
+	format( format_ ),
 	stride( GetBytesPerPixel( format_ ) ),
 	count( count_ ),
 	gpuUsage( gpuUsage_ ),
@@ -34,8 +34,8 @@ Tr2BufferDescriptionAL::Tr2BufferDescriptionAL(
 	uint32_t stride_,
 	uint32_t count_,
 	Tr2GpuUsage::Type gpuUsage_,
-	Tr2CpuUsage::Type cpuUsage_ )
-	:format( PIXEL_FORMAT_UNKNOWN ),
+	Tr2CpuUsage::Type cpuUsage_ ) :
+	format( PIXEL_FORMAT_UNKNOWN ),
 	stride( stride_ ),
 	count( count_ ),
 	gpuUsage( gpuUsage_ ),
@@ -46,11 +46,11 @@ Tr2BufferDescriptionAL::Tr2BufferDescriptionAL(
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2BufferAL> nullBuffer = std::make_shared<TrinityALImpl::Tr2BufferAL>();
+std::shared_ptr<TrinityALImpl::Tr2BufferAL> nullBuffer = std::make_shared<TrinityALImpl::Tr2BufferAL>();
 }
 
-Tr2BufferAL::Tr2BufferAL()
-	:m_buffer( nullBuffer )
+Tr2BufferAL::Tr2BufferAL() :
+	m_buffer( nullBuffer )
 {
 	if( m_buffer == nullptr )
 	{

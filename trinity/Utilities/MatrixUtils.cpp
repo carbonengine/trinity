@@ -22,10 +22,7 @@ Float4x3::Float4x3( const Matrix& m )
 Float4x3::operator Matrix() const
 {
 	return Matrix(
-		elements[0], elements[4], elements[8],  0.0f,
-		elements[1], elements[5], elements[9],  0.0f,
-		elements[2], elements[6], elements[10], 0.0f, 
-		elements[3], elements[7], elements[11], 1.0f );
+		elements[0], elements[4], elements[8], 0.0f, elements[1], elements[5], elements[9], 0.0f, elements[2], elements[6], elements[10], 0.0f, elements[3], elements[7], elements[11], 1.0f );
 }
 
 void DeconstructProjectionMatrix( const Matrix& proj, float& asp, float& fov, float& frontClip, float& backClip )
@@ -33,15 +30,15 @@ void DeconstructProjectionMatrix( const Matrix& proj, float& asp, float& fov, fl
 	// Use the fact that:
 	// aspect = m_22 / m_11;
 	// m_33 = z_f/(z_f-z_n), m_43 = -z_n*z_f/(z_f-z_n)
-	// => front = z_n = -m_43/m_33 
+	// => front = z_n = -m_43/m_33
 	// => back = z_f = -m_43/(1+m_43/z_n)
 	// m_22 = cotan(fov/2) = 1 / tan(fov/2)
-	// => fov = 2*tan(1/m_22) 
-	asp = (proj._11	 ?  proj._22/proj._11 : 0.0f);
-	fov = (proj._22	 ?  2.0f*atan(1.0f/proj._22) : 0.0f);
+	// => fov = 2*tan(1/m_22)
+	asp = ( proj._11 ? proj._22 / proj._11 : 0.0f );
+	fov = ( proj._22 ? 2.0f * atan( 1.0f / proj._22 ) : 0.0f );
 
-	frontClip =	(proj._33	 ?  proj._43/proj._33 : 0.0f);
-	backClip =	frontClip*proj._33/(proj._33+1);
+	frontClip = ( proj._33 ? proj._43 / proj._33 : 0.0f );
+	backClip = frontClip * proj._33 / ( proj._33 + 1 );
 }
 
 #if WITH_GRANNY

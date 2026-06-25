@@ -30,8 +30,7 @@ bool TriVariable::CopyToResourceSet(
 {
 	switch( m_type )
 	{
-	case TRIVARIABLE_TEXTURE_RES:
-	{
+	case TRIVARIABLE_TEXTURE_RES: {
 		auto colorSpace = ( flags & RESOURCE_FLAG_SRGB ) != 0 ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 		Tr2TextureAL* tex = nullptr;
 		if( m_texture )
@@ -47,8 +46,7 @@ bool TriVariable::CopyToResourceSet(
 			return resourceDesc.SetSrv( stage, registerIndex, Tr2TextureAL(), colorSpace );
 		}
 	}
-	case TRIVARIABLE_GPUBUFFER:
-	{
+	case TRIVARIABLE_GPUBUFFER: {
 		Tr2BufferAL* buffer = nullptr;
 		if( m_gpuBuffer )
 		{
@@ -75,8 +73,7 @@ bool TriVariable::ApplyUav(
 {
 	switch( m_type )
 	{
-	case TRIVARIABLE_TEXTURE_RES:
-	{
+	case TRIVARIABLE_TEXTURE_RES: {
 		Tr2TextureAL* tex = nullptr;
 		if( m_texture )
 		{
@@ -92,8 +89,7 @@ bool TriVariable::ApplyUav(
 		}
 		break;
 	}
-	case TRIVARIABLE_GPUBUFFER:
-	{
+	case TRIVARIABLE_GPUBUFFER: {
 		Tr2BufferAL* buffer = nullptr;
 		if( m_gpuBuffer )
 		{
@@ -115,10 +111,10 @@ bool TriVariable::ApplyUav(
 	return resourceDesc.SetUav( stage, registerIndex, Tr2BufferAL() );
 }
 
-void TriVariable::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-										unsigned char* destHandle, 
-										size_t size,
-										Tr2RenderContext &renderContext ) const
+void TriVariable::CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+									 unsigned char* destHandle,
+									 size_t size,
+									 Tr2RenderContext& renderContext ) const
 {
 	switch( m_type )
 	{
@@ -128,21 +124,19 @@ void TriVariable::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType,
 	case TRIVARIABLE_GPUBUFFER:
 		// Do Nothing
 		break;
-	case TRIVARIABLE_FLOAT4X4:
-		{
-			size_t ts = GetTypeSize();
-			// column_major for shaders, pay attention to size of registers
-			TriMatrixTranspose( 
-				reinterpret_cast<Matrix*>( destHandle ), 
-				reinterpret_cast<const Matrix*>( m_value ), 
-				(unsigned int)(size < ts ? size : ts) );
-			break;
-		}
-	default:
-		{
-			size_t ts = GetTypeSize();
-			memcpy( destHandle, m_value, size < ts ? size : ts );
-		}
+	case TRIVARIABLE_FLOAT4X4: {
+		size_t ts = GetTypeSize();
+		// column_major for shaders, pay attention to size of registers
+		TriMatrixTranspose(
+			reinterpret_cast<Matrix*>( destHandle ),
+			reinterpret_cast<const Matrix*>( m_value ),
+			(unsigned int)( size < ts ? size : ts ) );
+		break;
+	}
+	default: {
+		size_t ts = GetTypeSize();
+		memcpy( destHandle, m_value, size < ts ? size : ts );
+	}
 	}
 }
 
@@ -154,7 +148,7 @@ void TriVariable::Invalidate()
 
 void TriVariable::Clear()
 {
-	m_texture		= nullptr;	
+	m_texture = nullptr;
 	m_gpuBuffer = nullptr;
 
 	memset( m_value, 0, GetTypeSize() );

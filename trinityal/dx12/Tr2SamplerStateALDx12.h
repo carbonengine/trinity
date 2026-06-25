@@ -10,35 +10,35 @@
 
 namespace TrinityALImpl
 {
-	class Tr2RtShaderTableAL;
+class Tr2RtShaderTableAL;
 
-	class Tr2SamplerStateAL : public Tr2DeviceResourceAL<Tr2SamplerStateAL>
-	{
-	public:
-		Tr2SamplerStateAL();
+class Tr2SamplerStateAL : public Tr2DeviceResourceAL<Tr2SamplerStateAL>
+{
+public:
+	Tr2SamplerStateAL();
 
-		ALResult Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL &renderContext );
+	ALResult Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL& renderContext );
 
-		uint32_t GetIndexInHeap() const;
+	uint32_t GetIndexInHeap() const;
 
-		void Destroy();
+	void Destroy();
 
-		bool IsValid() const;
-		Tr2ALMemoryType GetMemoryClass() const;
-		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
-		ALResult SetName( const char* name );
+	bool IsValid() const;
+	Tr2ALMemoryType GetMemoryClass() const;
+	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	ALResult SetName( const char* name );
 
-	private:
-		std::shared_ptr<SamplerStateDx12> m_samplerState;
-		uint32_t m_indexInHeap;
-		D3D12_SAMPLER_DESC m_sampler;
-		std::string m_name;
-		bool m_isValid;
+private:
+	std::shared_ptr<SamplerStateDx12> m_samplerState;
+	uint32_t m_indexInHeap;
+	D3D12_SAMPLER_DESC m_sampler;
+	std::string m_name;
+	bool m_isValid;
 
-		friend class Tr2RenderContextAL;
-		friend class Tr2ResourceSetAL;
-		friend class TrinityALImpl::Tr2RtShaderTableAL;
-	};
+	friend class Tr2RenderContextAL;
+	friend class Tr2ResourceSetAL;
+	friend class TrinityALImpl::Tr2RtShaderTableAL;
+};
 
 }
 

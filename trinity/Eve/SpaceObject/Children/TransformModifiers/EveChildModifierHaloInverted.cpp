@@ -27,7 +27,7 @@ Matrix EveChildModifierHaloInverted::ApplyTransform( const Matrix& transform, si
 	Vector3 backward = -forward;
 
 	float scale = Dot( Normalize( d ), backward );
-	if (scale < 0.0f)
+	if( scale < 0.0f )
 	{
 		scale = 0.0f;
 	}

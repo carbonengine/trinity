@@ -23,22 +23,23 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-	void Link( ITr2ActionController& controller ) override;
+	void Link( ITr2ActionController & controller ) override;
 	void Unlink() override;
-	void Start( ITr2ActionController& controller ) override;
-	void StartWithController( ITr2ActionController* controller );
-	void Stop( ITr2ActionController& controller ) override;
-	void StopWithController( ITr2ActionController* controller );
+	void Start( ITr2ActionController & controller ) override;
+	void StartWithController( ITr2ActionController * controller );
+	void Stop( ITr2ActionController & controller ) override;
+	void StopWithController( ITr2ActionController * controller );
 
 	virtual void Update( Be::Time realTime, Be::Time simTime );
 
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	bool IsExpressionValid() const;
 
 	std::vector<Tr2ExpressionTermInfoPtr> GetExpressionTermInfo() const;
 	BlueStdResult EvaluateExpression( const char* expression, float& value ) const;
 	float GetCurveValue( float time ) const;
+
 private:
 	bool IsAttrExpressionValid( const char* attributeName ) const;
 

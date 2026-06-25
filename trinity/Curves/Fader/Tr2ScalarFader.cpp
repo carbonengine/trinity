@@ -113,6 +113,3 @@ bool Tr2ScalarFader::IsKickInZero() const
 {
 	return ( m_fadeTime <= 0.f );
 }
-
-
-

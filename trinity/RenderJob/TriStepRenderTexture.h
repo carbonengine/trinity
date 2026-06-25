@@ -11,21 +11,22 @@
 BLUE_DECLARE( Tr2AtlasTexture );
 BLUE_DECLARE( Tr2RenderTarget );
 BLUE_DECLARE( Tr2DepthStencil );
-BLUE_DECLARE( TriTextureRes   );
+BLUE_DECLARE( TriTextureRes );
 
-BLUE_CLASS( TriStepRenderTexture ) : public TriRenderStep
+BLUE_CLASS( TriStepRenderTexture ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	TriStepRenderTexture( IRoot* lockobj = 0 );
-	~TriStepRenderTexture(void);
+	~TriStepRenderTexture( void );
 
 	//RenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
-	void SetTexture( ITr2TextureProvider* tex );
-	void SetTexture( Tr2AtlasTexture* tex );
+	void SetTexture( ITr2TextureProvider * tex );
+	void SetTexture( Tr2AtlasTexture * tex );
 
 private:
 	void BlankOut();
@@ -36,7 +37,6 @@ private:
 	Vector2 m_brTexCoord;
 	Vector2 m_textureSize;
 	unsigned m_failClearColor;
-
 };
 
 TYPEDEF_BLUECLASS( TriStepRenderTexture );

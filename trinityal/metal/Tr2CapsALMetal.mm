@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#if ( TRINITY_PLATFORM == TRINITY_METAL )
 
 #include "Tr2CapsALMetal.h"
 
@@ -35,18 +35,18 @@ bool Tr2CapsAL::SupportsRaytracing() const
 	return m_supportsRaytracing;
 }
 
-Tr2CapsAL::Tr2CapsAL() : m_supportsRaytracing(false)
-{}
-
-Tr2CapsAL::Tr2CapsAL(const Tr2CapsAL& other)
-    :m_supportsRaytracing(other.m_supportsRaytracing)
+Tr2CapsAL::Tr2CapsAL() : m_supportsRaytracing( false )
 {
 }
 
-Tr2CapsAL& Tr2CapsAL::operator=(const Tr2CapsAL& other)
+Tr2CapsAL::Tr2CapsAL( const Tr2CapsAL& other ) : m_supportsRaytracing( other.m_supportsRaytracing )
 {
-    m_supportsRaytracing = other.m_supportsRaytracing;
-    return *this;
+}
+
+Tr2CapsAL& Tr2CapsAL::operator=( const Tr2CapsAL& other )
+{
+	m_supportsRaytracing = other.m_supportsRaytracing;
+	return *this;
 }
 
 #endif

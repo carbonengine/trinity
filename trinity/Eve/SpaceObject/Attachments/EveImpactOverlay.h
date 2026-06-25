@@ -74,14 +74,14 @@ public:
 	// Updates
 	void UpdateSyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent );
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Rendering
-	void GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, float screenSize );
+	void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, float screenSize );
 	Tr2Effect* GetArmorDamageShader( TriBatchType batchType ) const;
 
 	// setup
-	void Set( TriPerlinCurvePtr hullDamageFlickerCurve, Tr2GpuUniqueEmitterPtr armorDamageEmitter, Tr2GpuUniqueEmitterPtr hullImpactEmitter, Tr2EffectPtr armorDamageShader, Tr2MeshBase* shieldImpactMesh, bool shieldIsEllipsoid );
+	void Set( TriPerlinCurvePtr hullDamageFlickerCurve, Tr2GpuUniqueEmitterPtr armorDamageEmitter, Tr2GpuUniqueEmitterPtr hullImpactEmitter, Tr2EffectPtr armorDamageShader, Tr2MeshBase * shieldImpactMesh, bool shieldIsEllipsoid );
 
 	// getters
 	int32_t GetDataTextureOffset() const;
@@ -104,7 +104,7 @@ public:
 
 	// control impacts
 	int CreateImpact( int damageLocatorIndex, const Vector3& direction, float lifeTime, float size, float intensity, Tr2Lod lod, EveSpaceObject2* parent );
-	bool UpdateImpact( Vector3& out, const Vector3& direction, int impactIndex );
+	bool UpdateImpact( Vector3 & out, const Vector3& direction, int impactIndex );
 
 	// helper for checking activity
 	bool HasGeneralActivity() const;

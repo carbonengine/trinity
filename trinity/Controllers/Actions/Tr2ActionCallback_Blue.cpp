@@ -17,5 +17,5 @@ const Be::ClassInfo* Tr2ActionCallback::ExposeToBlue()
 			m_callbackName,
 			"The name of the callback that is registered on the controller",
 			Be::READWRITE | Be::PERSIST )
-		EXPOSURE_END()
+	EXPOSURE_END()
 }

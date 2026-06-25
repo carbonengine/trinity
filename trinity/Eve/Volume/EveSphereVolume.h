@@ -18,7 +18,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveVolume
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& parentTransform, const Color& baseColor ) override;
 	float GetIntensity( Vector3 position ) override;
 	uint32_t RegisterForChanges( const std::function<void()>& callBack ) override;
 	void UnregisterForChanges( uint32_t callbackID ) override;
@@ -27,7 +27,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 private:
 	BlueSharedString m_name;

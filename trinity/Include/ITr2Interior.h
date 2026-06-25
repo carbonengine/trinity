@@ -24,33 +24,35 @@ enum CullResult
 
 BLUE_DECLARE( Tr2ApexScene );
 
-BLUE_INTERFACE( ITr2InteriorCullable ) : public IRoot
+BLUE_INTERFACE( ITr2InteriorCullable ) :
+	public IRoot
 {
 	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const = 0;
 };
 
-BLUE_INTERFACE( ITr2Interior ) : public ITr2InteriorCullable
+BLUE_INTERFACE( ITr2Interior ) :
+	public ITr2InteriorCullable
 {
 	// Per-object data for instanced lighting
-	virtual Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting( 
-		ITriRenderBatchAccumulator* accumulator,
-		Tr2InteriorLightSet* lightSet, 
-		const Matrix& objectToWorldMatrix 
-	) = 0;
+	virtual Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting(
+		ITriRenderBatchAccumulator * accumulator,
+		Tr2InteriorLightSet * lightSet,
+		const Matrix& objectToWorldMatrix ) = 0;
 };
 BLUE_DECLARE_IVECTOR( ITr2Interior );
 
-BLUE_INTERFACE( ITr2InteriorDynamic ) : public ITr2Interior
+BLUE_INTERFACE( ITr2InteriorDynamic ) :
+	public ITr2Interior
 {
-	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const = 0;
+	virtual bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const = 0;
 	virtual bool IsBoundingBoxReady( void ) const = 0;
 
 	// Spherical harmonics update
 	virtual void PrePhysicsUpdate( Be::Time time ) = 0;
-	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene ) = 0;
+	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene * apexScene ) = 0;
 
 	// Scene add/remove
-	virtual bool AddToScene( Tr2ApexScene* apexScene ) = 0;
+	virtual bool AddToScene( Tr2ApexScene * apexScene ) = 0;
 	virtual void RemoveFromScene( void ) = 0;
 
 	// LOD
@@ -61,10 +63,11 @@ BLUE_DECLARE_IVECTOR( ITr2InteriorDynamic );
 
 // -------------------------------------------------------------
 // Description:
-//   ITr2InteriorLight represents light source for interior 
+//   ITr2InteriorLight represents light source for interior
 //   scene.
 // -------------------------------------------------------------
-BLUE_INTERFACE( ITr2InteriorLight ) : public ITr2InteriorCullable
+BLUE_INTERFACE( ITr2InteriorLight ) :
+	public ITr2InteriorCullable
 {
 
 	// Helper structure for determining shadow caster importance
@@ -102,7 +105,7 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public ITr2InteriorCullable
 	// Arguments:
 	//   lightData - Per-object light data
 	// -------------------------------------------------------------
-	virtual void PopulateLightData( Tr2InteriorPerObjectLightData* lightData ) const = 0;
+	virtual void PopulateLightData( Tr2InteriorPerObjectLightData * lightData ) const = 0;
 
 	// -------------------------------------------------------------
 	// Description:

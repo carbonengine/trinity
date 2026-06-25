@@ -10,9 +10,9 @@
 // --------------------------------------------------------------------------------------
 // Description:
 //   Helper class that allows storing per-object data constant buffer with the owner
-//   object for DX11. This in turn allows filling this constant buffer once per frame 
+//   object for DX11. This in turn allows filling this constant buffer once per frame
 //   only. For other platforms this class does not store a constant buffer, but rather
-//   fills the one provided. To fill the buffer the object calls methods 
+//   fills the one provided. To fill the buffer the object calls methods
 //   GetPerObjectDataSize and UpdatePerObjectBuffer of the owner object.
 // See Also:
 //   Tr2PerObjectDataWithPersistentBuffers, Tr2PerObjectData
@@ -22,54 +22,54 @@ class Tr2PersistentPerObjectData
 	: public Tr2DeviceResource
 {
 public:
-	Tr2PersistentPerObjectData()
-		:m_bufferDirty( true )
+	Tr2PersistentPerObjectData() :
+		m_bufferDirty( true )
 	{
 	}
 
 	// ----------------------------------------------------------------------------------
 	// Description:
-	//   Invalidates dirty flag for the object. Next time it is requested to apply its 
+	//   Invalidates dirty flag for the object. Next time it is requested to apply its
 	//   constant buffer, the object fill re-fill it with new data.
 	// ----------------------------------------------------------------------------------
 	void InvalidateBufferData()
 	{
 		m_bufferDirty = true;
 	}
-    
-    void UpdateBuffer( Owner& owner, Tr2RenderContextEnum::ShaderType shaderType )
-    {
-#if TRINITY_PLATFORM != TRINITY_DIRECTX11
-        if( !m_bufferDirty )
-        {
-            return;
-        }
-        uint32_t size = owner.GetPerObjectDataSize( shaderType );
-        if( size > 0 )
-        {
-            USE_MAIN_THREAD_RENDER_CONTEXT();
-            
-            auto& buffer = m_constantBuffer;
-            if( !buffer.IsValid() || size > buffer.GetSize() )
-            {
-                CR_RETURN( buffer.Create( size, renderContext.GetPrimaryRenderContext() ) );
-            }
-            void* data = nullptr;
 
-            if( SUCCEEDED( buffer.Lock( &data, renderContext ) ) && data )
-            {
-                owner.UpdatePerObjectBuffer( shaderType, size, data );
-                buffer.Unlock( renderContext );
-            }
-        }
-        m_bufferDirty = false;
+	void UpdateBuffer( Owner& owner, Tr2RenderContextEnum::ShaderType shaderType )
+	{
+#if TRINITY_PLATFORM != TRINITY_DIRECTX11
+		if( !m_bufferDirty )
+		{
+			return;
+		}
+		uint32_t size = owner.GetPerObjectDataSize( shaderType );
+		if( size > 0 )
+		{
+			USE_MAIN_THREAD_RENDER_CONTEXT();
+
+			auto& buffer = m_constantBuffer;
+			if( !buffer.IsValid() || size > buffer.GetSize() )
+			{
+				CR_RETURN( buffer.Create( size, renderContext.GetPrimaryRenderContext() ) );
+			}
+			void* data = nullptr;
+
+			if( SUCCEEDED( buffer.Lock( &data, renderContext ) ) && data )
+			{
+				owner.UpdatePerObjectBuffer( shaderType, size, data );
+				buffer.Unlock( renderContext );
+			}
+		}
+		m_bufferDirty = false;
 #endif
-    }
+	}
 
 	Tr2ConstantBufferAL& UpdateBuffer(
 		Owner& owner,
 		Tr2RenderContextEnum::ShaderType shaderType,
-		Tr2RenderContext& renderContext)
+		Tr2RenderContext& renderContext )
 	{
 		if( m_bufferDirty )
 		{
@@ -99,7 +99,7 @@ public:
 	//   Applies constant buffer to the render context filling it if needed.
 	// Arguments:
 	//   owner - Owner object
-	//   buffers - Array of transient constant buffers (usually provided by 
+	//   buffers - Array of transient constant buffers (usually provided by
 	//     Tr2EffectStateManager); not used in DX11 as we have our own buffer in this case
 	//   renderContext - Current render context
 	// ----------------------------------------------------------------------------------
@@ -118,8 +118,8 @@ public:
 		if( !m_bufferDirty )
 		{
 			renderContext.SetConstants( m_constantBuffer,
-				shaderType,
-				Tr2Renderer::GetPerObjectStartRegister( shaderType ) );
+										shaderType,
+										Tr2Renderer::GetPerObjectStartRegister( shaderType ) );
 			return;
 		}
 		uint32_t size = owner.GetPerObjectDataSize( shaderType );
@@ -153,11 +153,13 @@ public:
 			m_bufferDirty = true;
 		}
 	}
+
 protected:
 	virtual bool OnPrepareResources()
 	{
 		return true;
 	}
+
 private:
 	Tr2ConstantBufferAL m_constantBuffer;
 	bool m_bufferDirty;
@@ -166,7 +168,7 @@ private:
 // --------------------------------------------------------------------------------------
 // Description:
 //   Per-object data composed of two Tr2PersistentPerObjectData objects: one for vertex
-//   stage and one for pixel stage. 
+//   stage and one for pixel stage.
 // See Also:
 //   Tr2PersistentPerObjectData, Tr2PerObjectData
 // --------------------------------------------------------------------------------------
@@ -177,8 +179,8 @@ public:
 	typedef Tr2PersistentPerObjectData<Owner> PerObjectDataVs;
 	typedef Tr2PersistentPerObjectData<Owner> PerObjectDataPs;
 
-	Tr2PerObjectDataWithPersistentBuffers()
-		:m_owner( nullptr ),
+	Tr2PerObjectDataWithPersistentBuffers() :
+		m_owner( nullptr ),
 		m_perObjectDataVs( nullptr ),
 		m_perObjectDataPs( nullptr )
 	{
@@ -189,28 +191,28 @@ public:
 	//   Initializes the object.
 	// Arguments:
 	//   owner - Owner object, cannot be NULL
-	//   perObjectDataVs - Per-object constant buffer for vertex stage, can be NULL if VS 
+	//   perObjectDataVs - Per-object constant buffer for vertex stage, can be NULL if VS
 	//     is not expecting per-object data
-	//   perObjectDataPs - Per-object constant buffer for vertex stage, can be NULL if PS 
+	//   perObjectDataPs - Per-object constant buffer for vertex stage, can be NULL if PS
 	//     is not expecting per-object data
 	// ----------------------------------------------------------------------------------
-	void Initialize( 
-		Owner* owner, 
-		PerObjectDataVs* perObjectDataVs, 
+	void Initialize(
+		Owner* owner,
+		PerObjectDataVs* perObjectDataVs,
 		PerObjectDataPs* perObjectDataPs )
 	{
 		m_owner = owner;
 		m_perObjectDataVs = perObjectDataVs;
-        m_perObjectDataVs->UpdateBuffer( *owner, Tr2RenderContextEnum::VERTEX_SHADER );
+		m_perObjectDataVs->UpdateBuffer( *owner, Tr2RenderContextEnum::VERTEX_SHADER );
 		m_perObjectDataPs = perObjectDataPs;
-        m_perObjectDataPs->UpdateBuffer( *owner, Tr2RenderContextEnum::PIXEL_SHADER );
+		m_perObjectDataPs->UpdateBuffer( *owner, Tr2RenderContextEnum::PIXEL_SHADER );
 	}
 
 	// ----------------------------------------------------------------------------------
 	// Description:
 	//   Initializes the object.
 	// Arguments:
-	//   buffers - Array of transient constant buffers (usually provided by 
+	//   buffers - Array of transient constant buffers (usually provided by
 	//     Tr2EffectStateManager)
 	//   constantTypeMask - Mask with pipeline stages that are expected by the shader
 	//   renderContext - Current render context
@@ -221,7 +223,7 @@ public:
 		{
 			m_perObjectDataVs->SetPerObjectDataToDevice( *m_owner, Tr2RenderContextEnum::VERTEX_SHADER, buffers, renderContext );
 		}
-		if( SHADER_TYPE_EXISTS( Tr2RenderContextEnum::GEOMETRY_SHADER ) && 
+		if( SHADER_TYPE_EXISTS( Tr2RenderContextEnum::GEOMETRY_SHADER ) &&
 			( constantTypeMask & ( 1 << Tr2RenderContextEnum::GEOMETRY_SHADER ) ) && m_perObjectDataVs )
 		{
 			m_perObjectDataVs->SetPerObjectDataToDevice( *m_owner, Tr2RenderContextEnum::GEOMETRY_SHADER, buffers, renderContext );

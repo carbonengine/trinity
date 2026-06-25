@@ -11,7 +11,7 @@
 #include "TriFrustum.h"
 
 
-EveChildQuad::EveChildQuad( IRoot* lockobj ):
+EveChildQuad::EveChildQuad( IRoot* lockobj ) :
 	m_effectKey( 0 ),
 	m_position( 0.f, 0.f, 0.f ),
 	m_viewRotation( 0.f ),
@@ -96,7 +96,7 @@ void EveChildQuad::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRen
 {
 	if( m_display && m_effect && m_isVisible )
 	{
-			quadRenderer.AddQuads( m_effectKey, &m_quad, 1 );
+		quadRenderer.AddQuads( m_effectKey, &m_quad, 1 );
 	}
 }
 

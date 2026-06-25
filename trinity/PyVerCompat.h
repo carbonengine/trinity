@@ -47,7 +47,7 @@ template <typename T>
 inline T FromPython( PyObject* pyObj )
 {
 	T result{};
-	if ( !BlueExtractArgument( pyObj, result, 0 ) )
+	if( !BlueExtractArgument( pyObj, result, 0 ) )
 	{
 		PyErr_Clear();
 	}

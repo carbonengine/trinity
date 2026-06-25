@@ -4,7 +4,9 @@
 #include "WithValidRenderContextFixture.h"
 #include "WithRenderContextFixture.h"
 
-struct VertexLayout : public WithValidRenderContext {};
+struct VertexLayout : public WithValidRenderContext
+{
+};
 
 void InitializeSampleVertexDefinition( Tr2VertexDefinition& def )
 {

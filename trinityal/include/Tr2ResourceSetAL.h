@@ -16,8 +16,8 @@ struct Tr2ShaderSignatureAL;
 
 namespace TrinityALImpl
 {
-	class Tr2ResourceSetAL;
-	class Tr2RtShaderTableAL;
+class Tr2ResourceSetAL;
+class Tr2RtShaderTableAL;
 }
 
 struct Tr2RegisterMapAL
@@ -63,10 +63,11 @@ public:
 	bool SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
 	bool SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
 	void ClearResources();
-	
+
 	uint32_t ComputeHash() const;
 
 	bool operator==( const Tr2ResourceSetDescriptionAL& other ) const;
+
 private:
 	struct Resource
 	{

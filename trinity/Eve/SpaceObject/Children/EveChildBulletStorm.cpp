@@ -192,7 +192,7 @@ void EveChildBulletStorm::Rebuild()
 		PerInstanceVertex* v = &verts[0];
 		for( unsigned int i = 0; i < (unsigned int)locatorList->size(); ++i )
 		{
-			const Locator& locator = (*locatorList)[i];
+			const Locator& locator = ( *locatorList )[i];
 
 			// per stream start
 			Vector3 startPosOS = locator.position;
@@ -240,10 +240,10 @@ void EveChildBulletStorm::StartEffect()
 
 // --------------------------------------------------------------------------------
 // Description:
-//   This stops bullets appearing, but keeps the bullets that have been generated, 
+//   This stops bullets appearing, but keeps the bullets that have been generated,
 //   so the effects seems to be stopping
 // --------------------------------------------------------------------------------
-void EveChildBulletStorm::StopEffect() 
+void EveChildBulletStorm::StopEffect()
 {
 	m_clipShereMul = -1.0f;
 	m_clipSphere = 0.0f;
@@ -287,7 +287,7 @@ void EveChildBulletStorm::UpdateAsyncronous( const EveUpdateContext& updateConte
 		m_targetBlobs[i] = Vector4( targetPosWS, max( targetSize.w, BULLETSTORM_MIN_TARGETSIZE ) );
 	}
 
-	
+
 	// keep the radius of the soutrceobject here
 	if( m_sourceObject )
 	{
@@ -301,7 +301,7 @@ void EveChildBulletStorm::UpdateAsyncronous( const EveUpdateContext& updateConte
 	// update the start/stop mechanic
 	if( m_changingClipSphere )
 	{
-		m_clipSphere += m_clipShereMul * m_speed * updateContext.GetDeltaT() / (m_sourceRadius + m_range);
+		m_clipSphere += m_clipShereMul * m_speed * updateContext.GetDeltaT() / ( m_sourceRadius + m_range );
 		m_clipSphere = std::max( -1.0f, std::min( 1.0f, m_clipSphere ) );
 		m_changingClipSphere = std::abs( m_clipSphere ) != 1;
 	}
@@ -399,7 +399,7 @@ Tr2PerObjectData* EveChildBulletStorm::GetPerObjectData( ITriRenderBatchAccumula
 	}
 
 	perObjectData->m_worldTransform = XMMatrixTranspose( m_worldTransform );
-	perObjectData->m_effectInfo = Vector4( float(m_targetObjects.size()), m_sourceRadius + m_range, m_clipSphere, m_speed );
+	perObjectData->m_effectInfo = Vector4( float( m_targetObjects.size() ), m_sourceRadius + m_range, m_clipSphere, m_speed );
 
 	for( size_t i = 0; i < m_targetBlobs.size(); ++i )
 	{

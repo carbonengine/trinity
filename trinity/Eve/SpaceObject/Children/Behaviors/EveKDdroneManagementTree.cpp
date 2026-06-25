@@ -3,11 +3,11 @@
 #include "StdAfx.h"
 #include "EveKDdroneManagementTree.h"
 
-EveKDdroneManagementTree::EveKDdroneManagementTree( IRoot* lockobj ):
-	m_debugSquareSize(0), 
-	m_updateTimeCounter(0),
-	m_timeBetweenUpdate(1), //update every '1' seconds
-	m_maxFoundPerAgent(5)
+EveKDdroneManagementTree::EveKDdroneManagementTree( IRoot* lockobj ) :
+	m_debugSquareSize( 0 ),
+	m_updateTimeCounter( 0 ),
+	m_timeBetweenUpdate( 1 ), //update every '1' seconds
+	m_maxFoundPerAgent( 5 )
 {
 }
 
@@ -15,7 +15,7 @@ EveKDdroneManagementTree::~EveKDdroneManagementTree()
 {
 }
 
-void EveKDdroneManagementTree::CreateTree(std::vector<DroneAgent>& agents, size_t NumberOfBehaviors )
+void EveKDdroneManagementTree::CreateTree( std::vector<DroneAgent>& agents, size_t NumberOfBehaviors )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -25,17 +25,17 @@ void EveKDdroneManagementTree::CreateTree(std::vector<DroneAgent>& agents, size_
 	}
 
 	ChangeAgentsIntoAgentRefs( agents );
-	AgentRef tree = *SplitSort( 0, static_cast< int > ( agents.size() ) - 1, Z);
+	AgentRef tree = *SplitSort( 0, static_cast<int>( agents.size() ) - 1, Z );
 	m_tree = tree;
 
 	m_groupSearchReturnInfoBlock.clear();
 
-	for ( int j = 0; j < static_cast< int >(NumberOfBehaviors); j++ )
+	for( int j = 0; j < static_cast<int>( NumberOfBehaviors ); j++ )
 	{
-		std::vector < std::vector <DroneAgent*>> perAgentData;
-		for ( unsigned int i = 0; i < agents.size(); i++ )
+		std::vector<std::vector<DroneAgent*>> perAgentData;
+		for( unsigned int i = 0; i < agents.size(); i++ )
 		{
-			perAgentData.push_back( std::vector <DroneAgent*>() );
+			perAgentData.push_back( std::vector<DroneAgent*>() );
 		}
 		m_groupSearchReturnInfoBlock.push_back( perAgentData );
 	}
@@ -43,7 +43,7 @@ void EveKDdroneManagementTree::CreateTree(std::vector<DroneAgent>& agents, size_
 
 void EveKDdroneManagementTree::UpdateTree( const float dt )
 {
-	if ( m_timeBetweenUpdate != -1 && m_updateTimeCounter >= m_timeBetweenUpdate )
+	if( m_timeBetweenUpdate != -1 && m_updateTimeCounter >= m_timeBetweenUpdate )
 	{
 		m_updateTimeCounter = 0;
 		m_tree = *CompareNodeToChildren( &m_tree );
@@ -57,21 +57,20 @@ void EveKDdroneManagementTree::UpdateTree( const float dt )
 // checking axis for if there needs to be a re-construction
 EveKDdroneManagementTree::AgentRef* EveKDdroneManagementTree::CompareNodeToChildren( AgentRef* node )
 {
-	if ( node == nullptr )
+	if( node == nullptr )
 	{
 		return nullptr;
 	}
 
-	if ( node->left == nullptr  && node->right == nullptr )
+	if( node->left == nullptr && node->right == nullptr )
 	{
 		return node;
 	}
 
-	switch ( node->planeType )
+	switch( node->planeType )
 	{
 	case X:
-		if (IsBiggestOnAxis(node->left, node->agent->position.x, X) && IsSmallestOnAxis(
-			node->right, node->agent->position.x, X))
+		if( IsBiggestOnAxis( node->left, node->agent->position.x, X ) && IsSmallestOnAxis( node->right, node->agent->position.x, X ) )
 		{
 			node->left = CompareNodeToChildren( node->left );
 			node->right = CompareNodeToChildren( node->right );
@@ -83,8 +82,7 @@ EveKDdroneManagementTree::AgentRef* EveKDdroneManagementTree::CompareNodeToChild
 		}
 		break;
 	case Y:
-		if ( IsBiggestOnAxis( node->left, node->agent->position.y, Y ) && IsSmallestOnAxis(
-			node->right, node->agent->position.y, Y ) )
+		if( IsBiggestOnAxis( node->left, node->agent->position.y, Y ) && IsSmallestOnAxis( node->right, node->agent->position.y, Y ) )
 		{
 			node->left = CompareNodeToChildren( node->left );
 			node->right = CompareNodeToChildren( node->right );
@@ -96,8 +94,7 @@ EveKDdroneManagementTree::AgentRef* EveKDdroneManagementTree::CompareNodeToChild
 		}
 		break;
 	case Z:
-		if ( IsBiggestOnAxis( node->left, node->agent->position.z, Z ) && IsSmallestOnAxis(
-			node->right, node->agent->position.z, Z ) )
+		if( IsBiggestOnAxis( node->left, node->agent->position.z, Z ) && IsSmallestOnAxis( node->right, node->agent->position.z, Z ) )
 		{
 			node->left = CompareNodeToChildren( node->left );
 			node->right = CompareNodeToChildren( node->right );
@@ -114,45 +111,42 @@ EveKDdroneManagementTree::AgentRef* EveKDdroneManagementTree::CompareNodeToChild
 
 bool EveKDdroneManagementTree::IsBiggestOnAxis( AgentRef* node, float n, PlaneType pt )
 {
-	if ( node == nullptr )
+	if( node == nullptr )
 	{
 		return true;
 	}
 
-	switch ( node->planeType )
+	switch( node->planeType )
 	{
 	case X:
 		// if this is an X-split axis we only look at the bigger side
-		if( pt == X)
+		if( pt == X )
 		{
 			return n >= node->agent->position.x && IsBiggestOnAxis( node->right, n, X );
 		}
 		else
 		{
-			return n >= node->agent->position.x && IsBiggestOnAxis( node->left, n, X ) 
-				&& IsBiggestOnAxis( node->right, n, X );
+			return n >= node->agent->position.x && IsBiggestOnAxis( node->left, n, X ) && IsBiggestOnAxis( node->right, n, X );
 		}
 		break;
 	case Y:
-		if ( pt == Y )
+		if( pt == Y )
 		{
 			return n >= node->agent->position.y && IsBiggestOnAxis( node->right, n, Y );
 		}
 		else
 		{
-			return n >= node->agent->position.y && IsBiggestOnAxis( node->left, n, Y )
-				&& IsBiggestOnAxis( node->right, n, Y );
+			return n >= node->agent->position.y && IsBiggestOnAxis( node->left, n, Y ) && IsBiggestOnAxis( node->right, n, Y );
 		}
 		break;
 	case Z:
-		if ( pt == Z )
+		if( pt == Z )
 		{
 			return n >= node->agent->position.z && IsBiggestOnAxis( node->right, n, Z );
 		}
 		else
 		{
-			return n >= node->agent->position.z && IsBiggestOnAxis( node->left, n, Z )
-				&& IsBiggestOnAxis( node->right, n, Z );
+			return n >= node->agent->position.z && IsBiggestOnAxis( node->left, n, Z ) && IsBiggestOnAxis( node->right, n, Z );
 		}
 		break;
 	}
@@ -162,45 +156,42 @@ bool EveKDdroneManagementTree::IsBiggestOnAxis( AgentRef* node, float n, PlaneTy
 
 bool EveKDdroneManagementTree::IsSmallestOnAxis( AgentRef* node, const float n, PlaneType pt )
 {
-	if ( node == nullptr )
+	if( node == nullptr )
 	{
 		return true;
 	}
 
-	switch ( node->planeType )
+	switch( node->planeType )
 	{
 	case X:
 		// if this is an X-split axis we only look at the smaller side
-		if ( pt == X )
+		if( pt == X )
 		{
 			return n <= node->agent->position.x && IsSmallestOnAxis( node->left, n, X );
 		}
 		else
 		{
-			return n <= node->agent->position.x && IsSmallestOnAxis( node->left, n, X )
-				&& IsSmallestOnAxis( node->right, n, X );
+			return n <= node->agent->position.x && IsSmallestOnAxis( node->left, n, X ) && IsSmallestOnAxis( node->right, n, X );
 		}
 		break;
 	case Y:
-		if ( pt == Y )
+		if( pt == Y )
 		{
 			return n <= node->agent->position.y && IsSmallestOnAxis( node->left, n, Y );
 		}
 		else
 		{
-			return n <= node->agent->position.y && IsSmallestOnAxis( node->left, n, Y )
-				&& IsSmallestOnAxis( node->right, n, Y );
+			return n <= node->agent->position.y && IsSmallestOnAxis( node->left, n, Y ) && IsSmallestOnAxis( node->right, n, Y );
 		}
 		break;
 	case Z:
-		if ( pt == Z )
+		if( pt == Z )
 		{
 			return n <= node->agent->position.z && IsSmallestOnAxis( node->left, n, Z );
 		}
 		else
 		{
-			return n <= node->agent->position.z && IsSmallestOnAxis( node->left, n, Z )
-				&& IsSmallestOnAxis( node->right, n, Z );
+			return n <= node->agent->position.z && IsSmallestOnAxis( node->left, n, Z ) && IsSmallestOnAxis( node->right, n, Z );
 		}
 		break;
 	}
@@ -214,8 +205,8 @@ EveKDdroneManagementTree::AgentRef* EveKDdroneManagementTree::SplitSort( int b, 
 	{
 		m_agentRefs[b].b = b;
 		m_agentRefs[e].e = e;
-		m_agentRefs[ b ].left = nullptr;
-		m_agentRefs[ b ].right = nullptr;
+		m_agentRefs[b].left = nullptr;
+		m_agentRefs[b].right = nullptr;
 		return &m_agentRefs[b];
 	}
 
@@ -226,14 +217,14 @@ EveKDdroneManagementTree::AgentRef* EveKDdroneManagementTree::SplitSort( int b, 
 
 	SortByAxis( m_agentRefs, b, e + 1, pt );
 
-	int m = b + ( (e - b) / 2 ); // middlePoint
+	int m = b + ( ( e - b ) / 2 ); // middlePoint
 
-	m_agentRefs[ m ].b = b;
-	m_agentRefs[ m ].e = e;
+	m_agentRefs[m].b = b;
+	m_agentRefs[m].e = e;
 
 	pt = FindNextSplitAxis( pt );
-	m_agentRefs[ m ].left = SplitSort( b, m - 1,pt);
-	m_agentRefs[ m ].right = SplitSort( m + 1, e, pt);
+	m_agentRefs[m].left = SplitSort( b, m - 1, pt );
+	m_agentRefs[m].right = SplitSort( m + 1, e, pt );
 
 	return &m_agentRefs[m];
 }
@@ -242,21 +233,21 @@ void EveKDdroneManagementTree::ChangeAgentsIntoAgentRefs( std::vector<DroneAgent
 {
 	m_agentRefs.clear();
 	m_agentRefs.reserve( agents.size() );
-	for ( auto ag = agents.begin(); ag != agents.end(); ++ag )
+	for( auto ag = agents.begin(); ag != agents.end(); ++ag )
 	{
 		AgentRef newRef;
-		newRef.agent = &(*ag);
+		newRef.agent = &( *ag );
 		m_agentRefs.push_back( newRef );
 	}
 }
 
 EveKDdroneManagementTree::PlaneType EveKDdroneManagementTree::FindNextSplitAxis( PlaneType pt )
 {
-	switch ( pt )
+	switch( pt )
 	{
 	case X:
 		return Y;
-	break;
+		break;
 	case Y:
 		return Z;
 		break;
@@ -267,10 +258,9 @@ EveKDdroneManagementTree::PlaneType EveKDdroneManagementTree::FindNextSplitAxis(
 	return X;
 }
 
-std::vector<EveKDdroneManagementTree::AgentRef>& EveKDdroneManagementTree::SortByAxis( std::vector<AgentRef>& agents, int 
-																								b, int e, PlaneType pt ) const
+std::vector<EveKDdroneManagementTree::AgentRef>& EveKDdroneManagementTree::SortByAxis( std::vector<AgentRef>& agents, int b, int e, PlaneType pt ) const
 {
-	for ( auto ag = agents.begin() + b; ag != agents.begin() + e; ++ag )
+	for( auto ag = agents.begin() + b; ag != agents.begin() + e; ++ag )
 	{
 		ag->planeType = pt;
 	}
@@ -285,7 +275,7 @@ std::vector<EveKDdroneManagementTree::AgentRef>& EveKDdroneManagementTree::SortB
 // but this one is a standard tree search
 DroneAgent* EveKDdroneManagementTree::FindClosestAgent( const Vector3 pos )
 {
-	if ( m_tree.agent == nullptr ) 
+	if( m_tree.agent == nullptr )
 	{
 		return nullptr;
 	}
@@ -300,29 +290,29 @@ DroneAgent* EveKDdroneManagementTree::FindClosestAgent( const Vector3 pos )
 
 void EveKDdroneManagementTree::FindClosestAgentRecursive( const Vector3& pos, AgentRef* currentNode, closestDrone& agent ) const
 {
-	if ( currentNode == nullptr )
+	if( currentNode == nullptr )
 	{
 		return;
 	}
 
 	float distToPoint = Length( currentNode->agent->position - pos );
-	
-	if ( agent.rangeBetween > distToPoint )
+
+	if( agent.rangeBetween > distToPoint )
 	{
 		agent.rangeBetween = distToPoint;
 		agent.agent = currentNode->agent;
 	}
 
 	// Dig Through tree disregarding spaces on the other side of the splitting hyperplane
-	switch ( currentNode->planeType )
+	switch( currentNode->planeType )
 	{
 	case X:
-		if ( currentNode->agent->position.x < pos.x )
+		if( currentNode->agent->position.x < pos.x )
 		{
 			FindClosestAgentRecursive( pos, currentNode->right, agent );
 
 			// now when going back up through the recursion we have a best range to compare to
-			if ( currentNode->agent->position.x + agent.rangeBetween > pos.x )
+			if( currentNode->agent->position.x + agent.rangeBetween > pos.x )
 			{
 				FindClosestAgentRecursive( pos, currentNode->left, agent );
 			}
@@ -331,18 +321,18 @@ void EveKDdroneManagementTree::FindClosestAgentRecursive( const Vector3& pos, Ag
 		{
 			FindClosestAgentRecursive( pos, currentNode->left, agent );
 
-			if ( currentNode->agent->position.x - agent.rangeBetween < pos.x )
+			if( currentNode->agent->position.x - agent.rangeBetween < pos.x )
 			{
 				FindClosestAgentRecursive( pos, currentNode->right, agent );
 			}
 		}
 		break;
 	case Y:
-		if ( currentNode->agent->position.y < pos.y )
+		if( currentNode->agent->position.y < pos.y )
 		{
 			FindClosestAgentRecursive( pos, currentNode->right, agent );
 
-			if ( currentNode->agent->position.y + agent.rangeBetween > pos.y )
+			if( currentNode->agent->position.y + agent.rangeBetween > pos.y )
 			{
 				FindClosestAgentRecursive( pos, currentNode->left, agent );
 			}
@@ -351,18 +341,18 @@ void EveKDdroneManagementTree::FindClosestAgentRecursive( const Vector3& pos, Ag
 		{
 			FindClosestAgentRecursive( pos, currentNode->left, agent );
 
-			if ( currentNode->agent->position.y - agent.rangeBetween < pos.y )
+			if( currentNode->agent->position.y - agent.rangeBetween < pos.y )
 			{
 				FindClosestAgentRecursive( pos, currentNode->right, agent );
 			}
 		}
 		break;
 	case Z:
-		if ( currentNode->agent->position.z < pos.z )
+		if( currentNode->agent->position.z < pos.z )
 		{
 			FindClosestAgentRecursive( pos, currentNode->right, agent );
 
-			if ( currentNode->agent->position.z + agent.rangeBetween > pos.z )
+			if( currentNode->agent->position.z + agent.rangeBetween > pos.z )
 			{
 				FindClosestAgentRecursive( pos, currentNode->left, agent );
 			}
@@ -371,7 +361,7 @@ void EveKDdroneManagementTree::FindClosestAgentRecursive( const Vector3& pos, Ag
 		{
 			FindClosestAgentRecursive( pos, currentNode->left, agent );
 
-			if ( currentNode->agent->position.z - agent.rangeBetween < pos.z )
+			if( currentNode->agent->position.z - agent.rangeBetween < pos.z )
 			{
 				FindClosestAgentRecursive( pos, currentNode->right, agent );
 			}
@@ -383,21 +373,22 @@ void EveKDdroneManagementTree::FindClosestAgentRecursive( const Vector3& pos, Ag
 
 // This is a very specialized function optimized for searching  for multiple ranges for multiple agents at the same time
 // Use:		vvv = FindDronesInRange( (list of agents), (list of visionRanges/search-radiuses), (their own collision size / bounding sphere ));
-// After:	vvv is an orginized tri-dementional list where the 1st index is the Behavior's index, 
-//			2nd the agent's index and the 3rd is the list of found agents in range (up to m_maxFoundPerAgent) 
+// After:	vvv is an orginized tri-dementional list where the 1st index is the Behavior's index,
+//			2nd the agent's index and the 3rd is the list of found agents in range (up to m_maxFoundPerAgent)
 const std::vector<std::vector<std::vector<DroneAgent*>>>* EveKDdroneManagementTree::FindDronesInRange( std::vector<DroneAgent>& agents,
-																		std::vector<float>& ranges, const float& BehaviorGroupBoundingSphereRadius)
+																									   std::vector<float>& ranges,
+																									   const float& BehaviorGroupBoundingSphereRadius )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<SearchRange> searchRanges;
 	int behaviorNumber = 0;
-	for ( auto r = ranges.begin(); r != ranges.end(); ++r )
+	for( auto r = ranges.begin(); r != ranges.end(); ++r )
 	{
 		SearchRange br;
 		br.behaviorNbr = behaviorNumber;
 		behaviorNumber++;
-		if ( *r == -1 )
+		if( *r == -1 )
 		{
 			br.radius = -1;
 		}
@@ -410,7 +401,7 @@ const std::vector<std::vector<std::vector<DroneAgent*>>>* EveKDdroneManagementTr
 
 	std::sort( searchRanges.begin(), searchRanges.end(), compareRef() );
 
-	
+
 	if( !m_groupSearchReturnInfoBlock.empty() )
 	{
 		for( int j = 0; j < behaviorNumber; ++j )
@@ -422,12 +413,12 @@ const std::vector<std::vector<std::vector<DroneAgent*>>>* EveKDdroneManagementTr
 		}
 	}
 
-	if ( searchRanges.empty() )
+	if( searchRanges.empty() )
 	{
 		return &m_groupSearchReturnInfoBlock;
 	}
 
-	if ( searchRanges.begin()->radius == -1 )
+	if( searchRanges.begin()->radius == -1 )
 	{
 		return &m_groupSearchReturnInfoBlock;
 	}
@@ -438,11 +429,10 @@ const std::vector<std::vector<std::vector<DroneAgent*>>>* EveKDdroneManagementTr
 	return &m_groupSearchReturnInfoBlock;
 }
 
-void EveKDdroneManagementTree::SearchThroughTree( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents, AgentRef* node,
-											std::vector<DroneAgent>& agents, const std::vector<SearchRange>& ranges, int& activeRange ) const
+void EveKDdroneManagementTree::SearchThroughTree( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents, AgentRef* node, std::vector<DroneAgent>& agents, const std::vector<SearchRange>& ranges, int& activeRange ) const
 {
 	int c = 0;
-	for ( auto agent = agents.begin(); agent != agents.end(); ++agent, ++c )
+	for( auto agent = agents.begin(); agent != agents.end(); ++agent, ++c )
 	{
 		activeRange = 0;
 		SearchThroughTreeHelperFunction( closeAgents, node, *agent, ranges, activeRange, c );
@@ -451,35 +441,39 @@ void EveKDdroneManagementTree::SearchThroughTree( std::vector<std::vector<std::v
 
 // this is a per agent helper function
 void EveKDdroneManagementTree::SearchThroughTreeHelperFunction( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents,
-								AgentRef* node, DroneAgent& agent, const std::vector<SearchRange>& ranges, int& activeRange, int& c ) const
+																AgentRef* node,
+																DroneAgent& agent,
+																const std::vector<SearchRange>& ranges,
+																int& activeRange,
+																int& c ) const
 {
-	if ( node == nullptr )
+	if( node == nullptr )
 	{
 		return;
 	}
 
-	if ( activeRange > ( static_cast< int >( ranges.size() ) - 1 ) )
+	if( activeRange > ( static_cast<int>( ranges.size() ) - 1 ) )
 	{
 		return;
 	}
 
-	if ( ranges[ activeRange ].radius == -1 )
+	if( ranges[activeRange].radius == -1 )
 	{
 		return;
 	}
 
 	float dist = LengthSq( node->agent->position - agent.position );
-	float range = ranges[ activeRange ].radius;
+	float range = ranges[activeRange].radius;
 
-	if ( dist < range * range )
+	if( dist < range * range )
 	{
 		AddAgentToSearchLists( closeAgents, node, dist, ranges, activeRange, c );
 
-		if ( closeAgents[ ranges[ activeRange ].behaviorNbr ][ c ].size() < m_maxFoundPerAgent )
+		if( closeAgents[ranges[activeRange].behaviorNbr][c].size() < m_maxFoundPerAgent )
 		{
 			AddAgentToSearchLists( closeAgents, node, dist, ranges, activeRange, c );
 		}
-		else if ( closeAgents[ ranges[ activeRange ].behaviorNbr ][ c ].size() == m_maxFoundPerAgent )
+		else if( closeAgents[ranges[activeRange].behaviorNbr][c].size() == m_maxFoundPerAgent )
 		{
 			AddAgentToSearchLists( closeAgents, node, dist, ranges, activeRange, c );
 			activeRange++;
@@ -487,34 +481,34 @@ void EveKDdroneManagementTree::SearchThroughTreeHelperFunction( std::vector<std:
 	}
 
 	// switch here to check if pos + range cuts into axis splitter then search both, else just one;
-	switch ( node->planeType )
+	switch( node->planeType )
 	{
 	case X:
-		if ( node->agent->position.x - agent.position.x <= range )
+		if( node->agent->position.x - agent.position.x <= range )
 		{
 			SearchThroughTreeHelperFunction( closeAgents, node->right, agent, ranges, activeRange, c );
 		}
-		if ( node->agent->position.x - agent.position.x >= range )
+		if( node->agent->position.x - agent.position.x >= range )
 		{
 			SearchThroughTreeHelperFunction( closeAgents, node->left, agent, ranges, activeRange, c );
 		}
 		break;
 	case Y:
-		if ( node->agent->position.y - agent.position.y <= range )
+		if( node->agent->position.y - agent.position.y <= range )
 		{
 			SearchThroughTreeHelperFunction( closeAgents, node->right, agent, ranges, activeRange, c );
 		}
-		if ( node->agent->position.y - agent.position.y >= range )
+		if( node->agent->position.y - agent.position.y >= range )
 		{
 			SearchThroughTreeHelperFunction( closeAgents, node->left, agent, ranges, activeRange, c );
 		}
 		break;
 	case Z:
-		if ( node->agent->position.z - agent.position.z <= range )
+		if( node->agent->position.z - agent.position.z <= range )
 		{
 			SearchThroughTreeHelperFunction( closeAgents, node->right, agent, ranges, activeRange, c );
 		}
-		if ( node->agent->position.z - agent.position.z >= range )
+		if( node->agent->position.z - agent.position.z >= range )
 		{
 			SearchThroughTreeHelperFunction( closeAgents, node->left, agent, ranges, activeRange, c );
 		}
@@ -522,14 +516,13 @@ void EveKDdroneManagementTree::SearchThroughTreeHelperFunction( std::vector<std:
 	}
 }
 
-void EveKDdroneManagementTree::AddAgentToSearchLists( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents, AgentRef* node, 
-															float dist, const std::vector<SearchRange>& ranges , int activeRange, int agentNbr )
+void EveKDdroneManagementTree::AddAgentToSearchLists( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents, AgentRef* node, float dist, const std::vector<SearchRange>& ranges, int activeRange, int agentNbr )
 {
-	for ( auto r = ranges.begin() + activeRange; r != ranges.end(); ++r )
+	for( auto r = ranges.begin() + activeRange; r != ranges.end(); ++r )
 	{
 		if( dist < r->radius * r->radius )
 		{
-			closeAgents[ r->behaviorNbr ][agentNbr].push_back( node->agent );
+			closeAgents[r->behaviorNbr][agentNbr].push_back( node->agent );
 		}
 		else
 		{
@@ -548,8 +541,7 @@ void EveKDdroneManagementTree::RenderDebugInfo( ITr2DebugRenderer2& renderer, Ma
 	DrawDebugTree( renderer, &m_tree, debugSquareCorner1, debugSquareCorner2, pwt );
 }
 
-void EveKDdroneManagementTree::DrawDebugTree( ITr2DebugRenderer2& renderer, AgentRef* tree,  Vector3& debugSquareCorner1,
-																				Vector3& debugSquareCorner2, Vector3& pwt )
+void EveKDdroneManagementTree::DrawDebugTree( ITr2DebugRenderer2& renderer, AgentRef* tree, Vector3& debugSquareCorner1, Vector3& debugSquareCorner2, Vector3& pwt )
 {
 	if( tree == nullptr )
 	{
@@ -564,7 +556,7 @@ void EveKDdroneManagementTree::DrawDebugTree( ITr2DebugRenderer2& renderer, Agen
 	Vector3 newCorner1;
 	Vector3 newCorner2;
 
-	switch ( (tree)->planeType )
+	switch( ( tree )->planeType )
 	{
 	case X:
 		newCorner1 = Vector3( ( tree )->agent->position.x + .1f, debugSquareCorner1.y, debugSquareCorner1.z );
@@ -591,15 +583,15 @@ void EveKDdroneManagementTree::DrawDebugTree( ITr2DebugRenderer2& renderer, Agen
 		DrawDebugTree( renderer, tree->right, debugSquareCorner1, newCorner2, pwt );
 		break;
 	}
-	m_debugSquareSize = max(max(max(m_debugSquareSize, 1.5f * abs(tree->agent->position.x) ), 
-									1.5f * abs(tree->agent->position.y) ),1.5f * abs(tree->agent->position.z) );
+	m_debugSquareSize = max( max( max( m_debugSquareSize, 1.5f * abs( tree->agent->position.x ) ),
+								  1.5f * abs( tree->agent->position.y ) ),
+							 1.5f * abs( tree->agent->position.z ) );
 }
 
-void EveKDdroneManagementTree::DrawSquareInnerLines( ITr2DebugRenderer2& renderer, Vector3& agentPos, Vector3& P1,
-																	Vector3& P2, Color C, PlaneType pt, Vector3& pwt )
+void EveKDdroneManagementTree::DrawSquareInnerLines( ITr2DebugRenderer2& renderer, Vector3& agentPos, Vector3& P1, Vector3& P2, Color C, PlaneType pt, Vector3& pwt )
 {
-	
-	switch ( pt )
+
+	switch( pt )
 	{
 	case X:
 		renderer.DrawLine( nullptr, agentPos + pwt, P1 + pwt, C );

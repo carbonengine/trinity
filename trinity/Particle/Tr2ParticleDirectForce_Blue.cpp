@@ -7,7 +7,7 @@ BLUE_DEFINE( Tr2ParticleDirectForce );
 
 const Be::ClassInfo* Tr2ParticleDirectForce::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(Tr2ParticleDirectForce, "" )
+	EXPOSURE_BEGIN( Tr2ParticleDirectForce, "" )
 		MAP_INTERFACE( ITr2ParticleForce )
 		MAP_INTERFACE( Tr2ParticleDirectForce )
 

@@ -19,9 +19,9 @@ class Tr2ShaderProgramAL;
 // -------------------------------------------------------------
 struct Tr2SubresourceData
 {
-	const void*	m_sysMem;			// pointer to pixels for this mip
-	uint32_t	m_sysMemPitch;		// size in bytes of one line of pixels
-	uint32_t	m_sysMemSlicePitch;	// size in bytes of entire mip level. cannot be zero!
+	const void* m_sysMem; // pointer to pixels for this mip
+	uint32_t m_sysMemPitch; // size in bytes of one line of pixels
+	uint32_t m_sysMemSlicePitch; // size in bytes of entire mip level. cannot be zero!
 };
 
 // -------------------------------------------------------------
@@ -30,22 +30,20 @@ struct Tr2SubresourceData
 // -------------------------------------------------------------
 struct Tr2Viewport
 {
-	Tr2Viewport() {}
+	Tr2Viewport()
+	{
+	}
 
-	Tr2Viewport( uint32_t width, uint32_t height )
-	: m_x(0)
-	, m_y(0)
-	, m_width( (float)width )
-	, m_height( (float)height )
-	, m_minZ(0)
-	, m_maxZ(1.0f)
-	{}
-	float	m_x;
-	float	m_y;
-	float	m_width;
-	float	m_height;
-	float	m_minZ;
-	float	m_maxZ;
+	Tr2Viewport( uint32_t width, uint32_t height ) :
+		m_x( 0 ), m_y( 0 ), m_width( (float)width ), m_height( (float)height ), m_minZ( 0 ), m_maxZ( 1.0f )
+	{
+	}
+	float m_x;
+	float m_y;
+	float m_width;
+	float m_height;
+	float m_minZ;
+	float m_maxZ;
 };
 
 struct Tr2TextureCoordBox
@@ -78,8 +76,8 @@ struct Tr2TextureCoordBox
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Descibes region of texture (range of cubemap faces, mip levels, rectangle/box 
-//   coordinates) for Tr2TextureAL::CopySubresourceRegion member function. 
+//   Descibes region of texture (range of cubemap faces, mip levels, rectangle/box
+//   coordinates) for Tr2TextureAL::CopySubresourceRegion member function.
 // --------------------------------------------------------------------------------------
 struct Tr2TextureSubresource
 {
@@ -134,12 +132,12 @@ struct Tr2TextureSubresource
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Descibes texture sampler. Used in creation of Tr2SamplerStateAL objects.  
+//   Descibes texture sampler. Used in creation of Tr2SamplerStateAL objects.
 // --------------------------------------------------------------------------------------
 struct Tr2SamplerDescription
 {
-	Tr2SamplerDescription()
-		: m_minFilter( Tr2RenderContextEnum::TF_POINT ),
+	Tr2SamplerDescription() :
+		m_minFilter( Tr2RenderContextEnum::TF_POINT ),
 		m_magFilter( Tr2RenderContextEnum::TF_POINT ),
 		m_mipFilter( Tr2RenderContextEnum::TF_POINT ),
 		m_isComparisonFilter( false ),
@@ -171,8 +169,8 @@ struct Tr2SamplerDescription
 		Tr2RenderContextEnum::CompareFunc comparisonFunc,
 		const float* borderColor,
 		float minLOD,
-		float maxLOD )
-	:	m_minFilter( minFilter ),
+		float maxLOD ) :
+		m_minFilter( minFilter ),
 		m_magFilter( magFilter ),
 		m_mipFilter( mipFilter ),
 		m_isComparisonFilter( isComparisonFilter ),
@@ -181,7 +179,7 @@ struct Tr2SamplerDescription
 		m_addressW( addressW ),
 		m_mipLODBias( mipLODBias ),
 		m_maxAnisotropy( maxAnisotropy ),
-		m_comparisonFunc( comparisonFunc ),		
+		m_comparisonFunc( comparisonFunc ),
 		m_minLOD( minLOD ),
 		m_maxLOD( maxLOD )
 	{
@@ -196,8 +194,8 @@ struct Tr2SamplerDescription
 		Tr2RenderContextEnum::TextureAddressMode address,
 		uint32_t maxAnisotropy = 1,
 		float minLOD = 0.0f,
-		float maxLOD = std::numeric_limits<float>::max() )
-		: m_minFilter( filter ),
+		float maxLOD = std::numeric_limits<float>::max() ) :
+		m_minFilter( filter ),
 		m_magFilter( filter ),
 		m_mipFilter( filter ),
 		m_isComparisonFilter( false ),
@@ -253,26 +251,26 @@ struct Tr2SamplerDescription
 
 namespace std
 {
-	template<> struct hash<Tr2SamplerDescription>
+template <>
+struct hash<Tr2SamplerDescription>
+{
+	std::size_t operator()( const Tr2SamplerDescription& desc ) const
 	{
-		std::size_t operator()( const Tr2SamplerDescription& desc ) const
-		{
-			return
-				std::hash<int32_t>()( desc.m_minFilter ) ^
-				( std::hash<int32_t>()( desc.m_mipFilter ) << 1 ) ^
-				( std::hash<int32_t>()( desc.m_magFilter ) << 2 ) ^
-				( std::hash<int32_t>()( desc.m_addressU ) << 3 ) ^
-				( std::hash<int32_t>()( desc.m_addressV ) << 4 ) ^
-				( std::hash<int32_t>()( desc.m_addressW ) << 5 );
-		}
-	};
+		return std::hash<int32_t>()( desc.m_minFilter ) ^
+			( std::hash<int32_t>()( desc.m_mipFilter ) << 1 ) ^
+			( std::hash<int32_t>()( desc.m_magFilter ) << 2 ) ^
+			( std::hash<int32_t>()( desc.m_addressU ) << 3 ) ^
+			( std::hash<int32_t>()( desc.m_addressV ) << 4 ) ^
+			( std::hash<int32_t>()( desc.m_addressW ) << 5 );
+	}
+};
 }
 
 
-bool Crop(	Tr2TextureSubresource& sourceSR,
-			const Tr2BitmapDimensions& sourceBD, 
-			Tr2TextureSubresource& destSR,
-			const Tr2BitmapDimensions& destBD );
+bool Crop( Tr2TextureSubresource& sourceSR,
+		   const Tr2BitmapDimensions& sourceBD,
+		   Tr2TextureSubresource& destSR,
+		   const Tr2BitmapDimensions& destBD );
 
 void AdvanceMip( Tr2TextureSubresource& sub, const Tr2BitmapDimensions& bd, uint32_t mip );
 
@@ -282,18 +280,18 @@ struct Tr2MsaaDesc
 	uint32_t samples;
 	uint32_t quality;
 
-	Tr2MsaaDesc( uint32_t samples_ = 1, uint32_t quality_ = 0 )
-		:samples( std::max( samples_, 1u ) ),
+	Tr2MsaaDesc( uint32_t samples_ = 1, uint32_t quality_ = 0 ) :
+		samples( std::max( samples_, 1u ) ),
 		quality( quality_ )
 	{
 	}
 
-	bool operator == ( const Tr2MsaaDesc& other ) const
+	bool operator==( const Tr2MsaaDesc& other ) const
 	{
 		return std::max( samples, 1u ) == std::max( other.samples, 1u ) && quality == other.quality;
 	}
 
-	bool operator != ( const Tr2MsaaDesc& other ) const
+	bool operator!=( const Tr2MsaaDesc& other ) const
 	{
 		return std::max( samples, 1u ) != std::max( other.samples, 1u ) || quality != other.quality;
 	}

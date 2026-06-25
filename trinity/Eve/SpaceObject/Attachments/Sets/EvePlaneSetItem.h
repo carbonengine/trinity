@@ -17,7 +17,7 @@ BLUE_DECLARE_VECTOR( EvePlaneSetItem );
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EvePlaneSetItem ) :
 	public IRoot
-	
+
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -26,7 +26,7 @@ public:
 
 	CcpMath::AxisAlignedBox GetBounds() const;
 	int32_t GetBoneIndex() const;
-	
+
 	// name
 	BlueSharedString m_name;
 	// positional attributes

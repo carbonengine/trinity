@@ -16,7 +16,7 @@ static const char* CURVE_PICK_EFFECT_PATH = "res:/Graphics/Effect/Managed/Space/
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
 // ------------------------------------------------------------------------------------------------------
-EveCurveLineSet::EveCurveLineSet( IRoot* lockobj /*= NULL*/ ):
+EveCurveLineSet::EveCurveLineSet( IRoot* lockobj /*= NULL*/ ) :
 	Tr2CurveLineSet( lockobj ),
 	m_isVisible( false )
 {

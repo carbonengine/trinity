@@ -33,9 +33,9 @@ public:
 
 	bool IsValid();
 	bool HasData() const;
-	void InitRenderPass( Tr2RenderContext &renderContext );
-	void StartRenderFace( unsigned face, Tr2RenderContext &renderContext );
-	void EndRenderPass( Tr2RenderContext &renderContext );
+	void InitRenderPass( Tr2RenderContext & renderContext );
+	void StartRenderFace( unsigned face, Tr2RenderContext& renderContext );
+	void EndRenderPass( Tr2RenderContext & renderContext );
 	Tr2TextureAL GetDepthBuffer( unsigned face );
 
 	TriFrustum GetFrustum( unsigned face, Tr2RenderContext& renderContext );
@@ -44,10 +44,10 @@ public:
 	void SetPosition( Vector3 position );
 
 	void SetBackLightColor( Color color );
-	void SetIntensity( float intensity);
+	void SetIntensity( float intensity );
 	void SetBackLightContrast( float contrast );
 
-	bool OnModified( Be::Var* value );
+	bool OnModified( Be::Var * value );
 
 	bool IsHollyWoodModeOn() const;
 	bool ReadyForDynamicObjectReflections() const;
@@ -62,8 +62,8 @@ public:
 
 private:
 	void RunFilter();
-	void Filter( Tr2RenderContext &renderContext );
-	bool DoPrepareResources( ImageIO::PixelFormat targetFormat, Tr2PrimaryRenderContext& renderContext );
+	void Filter( Tr2RenderContext & renderContext );
+	bool DoPrepareResources( ImageIO::PixelFormat targetFormat, Tr2PrimaryRenderContext & renderContext );
 	void DestroyRenderTargets();
 
 	bool m_initialized;

@@ -11,8 +11,7 @@ BLUE_DECLARE( Tr2ProjectBoundingBoxBracket );
 BLUE_DECLARE( Tr2Sprite2dContainer );
 BLUE_DECLARE_INTERFACE( ITr2BoundingBox );
 
-class Tr2ProjectBoundingBoxBracket :
-	public ITriFunction
+class Tr2ProjectBoundingBoxBracket : public ITriFunction
 {
 public:
 	EXPOSE_TO_BLUE();

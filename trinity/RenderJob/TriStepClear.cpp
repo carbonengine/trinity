@@ -12,10 +12,9 @@ TriStepClear::TriStepClear( IRoot* lockobj ) :
 	m_isDepthCleared( true ),
 	m_isStencilCleared( false )
 {
-
 }
 
-TriStepClear::~TriStepClear(void)
+TriStepClear::~TriStepClear( void )
 {
 }
 
@@ -40,14 +39,13 @@ TriStepResult TriStepClear::Execute( Be::Time realTime, Be::Time simTime, Tr2Ren
 	}
 
 	uint32_t c = Color(
-		max(min(m_color.r, 1.0f), 0.0f),
-		max(min(m_color.g, 1.0f), 0.0f),
-		max(min(m_color.b, 1.0f), 0.0f),
-		max(min(m_color.a, 1.0f), 0.0f)
-	);
+		max( min( m_color.r, 1.0f ), 0.0f ),
+		max( min( m_color.g, 1.0f ), 0.0f ),
+		max( min( m_color.b, 1.0f ), 0.0f ),
+		max( min( m_color.a, 1.0f ), 0.0f ) );
 
 	HRESULT hr = renderContext.Clear( flags, c, m_depth, m_stencil );
-	if(!SUCCEEDED(hr))
+	if( !SUCCEEDED( hr ) )
 	{
 		CCP_LOGERR( "Clear failed" );
 	}

@@ -32,8 +32,8 @@ struct Tr2SpinMutex
 template <typename T>
 struct Tr2BlockedRange
 {
-	Tr2BlockedRange( T begin, T end, T step = 1 )
-		:m_begin( begin ),
+	Tr2BlockedRange( T begin, T end, T step = 1 ) :
+		m_begin( begin ),
 		m_end( end ),
 		m_step( step )
 	{
@@ -67,8 +67,8 @@ template <typename T>
 class Tr2EnumerableThreadSpecific
 {
 public:
-	Tr2EnumerableThreadSpecific()
-		:m_data()
+	Tr2EnumerableThreadSpecific() :
+		m_data()
 	{
 	}
 
@@ -86,6 +86,7 @@ public:
 	{
 		return ( &m_data ) + 1;
 	}
+
 private:
 	T m_data;
 };

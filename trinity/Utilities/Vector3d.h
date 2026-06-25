@@ -8,7 +8,7 @@
 // Description:
 //   This structure represents a 3-vector of doubles.  Unlike Vector3, it does not
 //   inherit from a D3DXMath base class (because none of them use doubles).  It provides
-//   the standard set of constructors, arithmetic, assignment, comparison, and 
+//   the standard set of constructors, arithmetic, assignment, comparison, and
 //   conversion operators.  Vector3d is used in EVE in some situations which require
 //   double precision.
 // See Also:
@@ -21,7 +21,10 @@ public:
 	// Description
 	//   Default constructor, initializes to zero vector.
 	// ----------------------------------------------------------------------------------
-	Vector3d( void ) : x( 0.0 ), y( 0.0 ), z( 0.0 ) {}
+	Vector3d( void ) :
+		x( 0.0 ), y( 0.0 ), z( 0.0 )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -57,7 +60,10 @@ public:
 	//   y - The y-component value to initialize
 	//   z - The z-component value to initialize
 	// ---------------------------------------------------------------------------------
-	Vector3d( double _x, double _y, double _z ) : x( _x ), y( _y ), z( _z ) {}
+	Vector3d( double _x, double _y, double _z ) :
+		x( _x ), y( _y ), z( _z )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -65,7 +71,10 @@ public:
 	// Arguments:
 	//   other - The Vector3d to copy
 	// ----------------------------------------------------------------------------------
-	Vector3d( const Vector3d& other ) : x( other.x ), y( other.y ), z( other.z ) {}
+	Vector3d( const Vector3d& other ) :
+		x( other.x ), y( other.y ), z( other.z )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -73,7 +82,10 @@ public:
 	// Arguments:
 	//   other - The Vector3 to copy
 	// ----------------------------------------------------------------------------------
-	Vector3d( const Vector3& other ) : x( other.x ), y( other.y ), z( other.z ) {}
+	Vector3d( const Vector3& other ) :
+		x( other.x ), y( other.y ), z( other.z )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -106,8 +118,8 @@ public:
 	const Vector3 AsVector3( void ) const
 	{
 		return Vector3( static_cast<float>( x ),
-			static_cast<float>( y ),
-			static_cast<float>( z ) );
+						static_cast<float>( y ),
+						static_cast<float>( z ) );
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -379,7 +391,7 @@ public:
 	// ----------------------------------------------------------------------------------
 	double Length( void ) const
 	{
-		return sqrt( x*x + y*y + z*z );
+		return sqrt( x * x + y * y + z * z );
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -390,7 +402,7 @@ public:
 	// ----------------------------------------------------------------------------------
 	double LengthSq( void ) const
 	{
-		return x*x + y*y + z*z;
+		return x * x + y * y + z * z;
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -438,7 +450,7 @@ public:
 
 	double Dot( const Vector3d& other )
 	{
-		return x*other.x + y*other.y + z*other.z;
+		return x * other.x + y * other.y + z * other.z;
 	};
 
 	// The x-component of the vector

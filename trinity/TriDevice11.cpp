@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 
 #include "TriDevice.h"
 #include "RenderJob/Tr2RenderJobs.h"
@@ -11,13 +11,13 @@
 #include "TriSettingsRegistrar.h"
 bool g_emulateDriverReset = false;
 bool g_fixFullscreenBehaviorForOldWindows = false;
-TRI_REGISTER_SETTING( "emulateDriverReset",		g_emulateDriverReset );
+TRI_REGISTER_SETTING( "emulateDriverReset", g_emulateDriverReset );
 TRI_REGISTER_SETTING( "fixFullscreenBehaviorForOldWindows", g_fixFullscreenBehaviorForOldWindows );
 
 CCP_STATS_DECLARED_ELSEWHERE( presentTime );
 
 
-void TriDevice::HandleRenderTick(  Be::Time realTime, Be::Time simTime )
+void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 {
 #if BLUE_WITH_PYTHON
 	AutoTasklet _at( PyOS->GetTaskletTimer(), "TriDevice::HandleRenderTick" );
@@ -119,7 +119,7 @@ void TriDevice::HandleRenderTick(  Be::Time realTime, Be::Time simTime )
 		return;
 	}
 
-    
+
 	if( mDeviceLost )
 	{
 		return;
@@ -160,9 +160,9 @@ bool TriDevice::DeviceExists()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   A chance for device to respond to application window being activated/deactivated. 
+//   A chance for device to respond to application window being activated/deactivated.
 //   For DX11 platform we minimize fullscreen window when user alt-tabs from application
-//   and restore it back when he returns. This makes DX11 window behavior being 
+//   and restore it back when he returns. This makes DX11 window behavior being
 //   consistent with DX9.
 // Arguments:
 //   activated - true if application was activated; false otherwise
@@ -170,7 +170,7 @@ bool TriDevice::DeviceExists()
 void TriDevice::ApplicationActivated( ApplicationActivation activated )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	
+
 	if( !mPresentParam.windowed && mHwnd )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();

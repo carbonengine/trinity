@@ -75,7 +75,7 @@ PyObject* TriStepCopyRenderTarget::PyInitLowLevel( PyObject* self, PyObject* arg
 			pThis->m_sourceViewport = viewport;
 		}
 	}
-	
+
 
 	Py_RETURN_NONE;
 }
@@ -86,24 +86,23 @@ const Be::ClassInfo* TriStepCopyRenderTarget::ExposeToBlue()
 	EXPOSURE_BEGIN( TriStepCopyRenderTarget, "" )
 		MAP_INTERFACE( TriStepCopyRenderTarget )
 
-		MAP_ATTRIBUTE( "Destination", m_destinationRT, "", Be::READWRITE)
-		MAP_ATTRIBUTE( "destinationTexture", m_destinationTexture, "", Be::READWRITE)
-		MAP_ATTRIBUTE( "Source", m_sourceRT, "", Be::READWRITE)
-		MAP_ATTRIBUTE( "sourceViewport", m_sourceViewport, "", Be::READWRITE)
-		MAP_ATTRIBUTE( "destinationViewport", m_destinationViewport, "", Be::READWRITE)
+		MAP_ATTRIBUTE( "Destination", m_destinationRT, "", Be::READWRITE )
+		MAP_ATTRIBUTE( "destinationTexture", m_destinationTexture, "", Be::READWRITE )
+		MAP_ATTRIBUTE( "Source", m_sourceRT, "", Be::READWRITE )
+		MAP_ATTRIBUTE( "sourceViewport", m_sourceViewport, "", Be::READWRITE )
+		MAP_ATTRIBUTE( "destinationViewport", m_destinationViewport, "", Be::READWRITE )
 
-		MAP_METHOD( 
-			"__init__", 
-			PyInitLowLevel, 
-			":param dest: copy destination\n" 
+		MAP_METHOD(
+			"__init__",
+			PyInitLowLevel,
+			":param dest: copy destination\n"
 			":type dest: Optional[Tr2RenderTarget | TriTextureRes]\n"
-			":param source: copy source\n" 
+			":param source: copy source\n"
 			":type source: Optional[Tr2RenderTarget]\n"
-			":param destViewport: destination rectangle\n" 
+			":param destViewport: destination rectangle\n"
 			":type destViewport: Optional[TriViewport]\n"
-			":param sourceViewport: source rectangle\n" 
-			":type sourceViewport: Optional[TriViewport]\n"
-			)
+			":param sourceViewport: source rectangle\n"
+			":type sourceViewport: Optional[TriViewport]\n" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

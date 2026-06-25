@@ -6,10 +6,9 @@
 
 TriStepRunJob::TriStepRunJob( IRoot* lockobj )
 {
-
 }
 
-TriStepRunJob::~TriStepRunJob(void)
+TriStepRunJob::~TriStepRunJob( void )
 {
 }
 
@@ -26,18 +25,18 @@ TriStepResult TriStepRunJob::Execute( Be::Time realTime, Be::Time simTime, Tr2Re
 
 	switch( status )
 	{
-		case RJ_DONE:
-			return RS_OK;
+	case RJ_DONE:
+		return RS_OK;
 
-		case RJ_IN_PROGRESS:
-			return RS_IN_PROGRESS;
+	case RJ_IN_PROGRESS:
+		return RS_IN_PROGRESS;
 
-		case RJ_FAILED:
-			return RS_FAILED;
+	case RJ_FAILED:
+		return RS_FAILED;
 
-		default:
-			CCP_LOGERR( "TriStepRunJob::Execute: Unexpected return value from running render job (%d)", status );
-			return RS_FAILED;
+	default:
+		CCP_LOGERR( "TriStepRunJob::Execute: Unexpected return value from running render job (%d)", status );
+		return RS_FAILED;
 	}
 }
 

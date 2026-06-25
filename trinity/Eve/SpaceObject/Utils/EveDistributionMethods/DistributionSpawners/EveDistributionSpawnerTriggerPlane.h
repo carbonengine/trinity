@@ -13,9 +13,9 @@ public:
 
 	EveDistributionSpawnerTriggerPlane( IRoot* lockobj = nullptr );
 
-	void Reset( const std::vector<InitialPlacement> & placements ) override;
+	void Reset( const std::vector<InitialPlacement>& placements ) override;
 	void Restart() override;
-	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params, IEveDistributionRulesParent& owner ) override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, IEveDistributionRulesParent& owner ) override;
 
 private:
 	std::vector<std::pair<float, uint32_t>> m_distSortedIndexes;

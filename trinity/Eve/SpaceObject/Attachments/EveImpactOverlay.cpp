@@ -21,7 +21,7 @@ extern bool g_eveSpaceObjectImpactEffectEnabled;
 
 // consts
 static const float IMPACT_HOLE_TO_ARMOR_DAMAGE_RATIO = 12.f;
-static const float IMPACT_HOLE_TO_HULL_DAMAGE_RATIO = 4.f; 
+static const float IMPACT_HOLE_TO_HULL_DAMAGE_RATIO = 4.f;
 static const float IMPACT_ARMOR_SIZE_FACTOR = 0.0129f;
 static const float IMPACT_ARMOR_SIZE_MAX = 10.f;
 static const float IMPACT_SHIELD_SIZE_MAX = 2000.f;
@@ -84,7 +84,7 @@ void EveImpactOverlay::Set( TriPerlinCurvePtr hullDamageFlickerCurve, Tr2GpuUniq
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Sets the name of the impact overlay, this is used for seeding the randomness of 
+//   Sets the name of the impact overlay, this is used for seeding the randomness of
 //	 the impacts between session changes
 // --------------------------------------------------------------------------------
 void EveImpactOverlay::SetSeed( unsigned int seed )
@@ -98,7 +98,7 @@ void EveImpactOverlay::SetSeed( unsigned int seed )
 //   Sets the amount of damage locators, used for the randomness of the impacts
 //   between session change
 // --------------------------------------------------------------------------------
-void EveImpactOverlay::SetDamageLocatorCount( unsigned int count)
+void EveImpactOverlay::SetDamageLocatorCount( unsigned int count )
 {
 	m_damageLocatorCount = count;
 }
@@ -133,9 +133,9 @@ void EveImpactOverlay::UpdateSyncronous( const EveUpdateContext& updateContext, 
 
 	// update block data
 	m_dataTextureBlockID = dataTextureMgr->RequestBlockData( &m_impactTexelHeader.v[0],
-		(uint32_t)m_impactTexelData.size(),
-		m_impactTexelData.empty() ? nullptr : &m_impactTexelData[0].v[0],
-		m_renderPriority );
+															 (uint32_t)m_impactTexelData.size(),
+															 m_impactTexelData.empty() ? nullptr : &m_impactTexelData[0].v[0],
+															 m_renderPriority );
 
 	// spawn armor impact particles?
 	if( updateContext.GetGpuParticleSystem() )
@@ -147,7 +147,7 @@ void EveImpactOverlay::UpdateSyncronous( const EveUpdateContext& updateContext, 
 				for( auto aidit = m_armorImpactData.begin(); aidit != m_armorImpactData.end(); ++aidit )
 				{
 					if( aidit->second.requestSpawnDebris )
-					{						
+					{
 						// where?
 						Vector3 impactPosWS( 0.f, 0.f, 0.f );
 						parent->GetDamageLocatorPosition( &impactPosWS, aidit->second.damageLocatorIndex, true );
@@ -197,7 +197,7 @@ void EveImpactOverlay::UpdateAsyncronous( const EveUpdateContext& updateContext,
 		sidit->second.timeLeft -= updateContext.GetDeltaT();
 		if( sidit->second.timeLeft <= 0.f )
 		{
-			m_shieldImpactData.erase(sidit++);
+			m_shieldImpactData.erase( sidit++ );
 		}
 		else
 		{
@@ -216,7 +216,7 @@ void EveImpactOverlay::UpdateAsyncronous( const EveUpdateContext& updateContext,
 			aidit->second.size -= updateContext.GetDeltaT() / m_armorImpactLifeTime;
 			if( aidit->second.size <= 0.f )
 			{
-				m_armorImpactData.erase(aidit++);
+				m_armorImpactData.erase( aidit++ );
 			}
 			else
 			{
@@ -237,21 +237,21 @@ void EveImpactOverlay::UpdateAsyncronous( const EveUpdateContext& updateContext,
 
 	// the block header is the first column in the data texture, set it!
 	m_impactTexelHeader.v[0] = Vector4( float( m_shieldImpactData.size() ),
-		m_overallShieldImpact,
-		m_shieldImpactColorFade,
-		m_shieldImpactParentSize );
+										m_overallShieldImpact,
+										m_shieldImpactColorFade,
+										m_shieldImpactParentSize );
 	m_impactTexelHeader.v[1] = Vector4( m_shieldHardening->GetFaderValue(),
-		m_shieldBoosting->GetFaderValue(),
-		m_shieldHardening->GetKickInValue(),
-		m_shieldBoosting->GetKickInValue() );
+										m_shieldBoosting->GetFaderValue(),
+										m_shieldHardening->GetKickInValue(),
+										m_shieldBoosting->GetKickInValue() );
 	m_impactTexelHeader.v[2] = Vector4( float( m_armorImpactData.size() ),
-		m_armorImpactParentSize,
-		m_hullRepairing->GetFaderValue(),
-		m_hullRepairing->GetKickInValue() );
+										m_armorImpactParentSize,
+										m_hullRepairing->GetFaderValue(),
+										m_hullRepairing->GetKickInValue() );
 	m_impactTexelHeader.v[3] = Vector4( m_armorRepairing->GetFaderValue(),
-		m_armorHardening->GetFaderValue(),
-		m_armorRepairing->GetKickInValue(),
-		m_armorHardening->GetKickInValue() );
+										m_armorHardening->GetFaderValue(),
+										m_armorRepairing->GetKickInValue(),
+										m_armorHardening->GetKickInValue() );
 
 	// no activity?
 	if( !HasGeneralActivity() )
@@ -302,13 +302,13 @@ void EveImpactOverlay::UpdateAsyncronous( const EveUpdateContext& updateContext,
 			parent->GetDamageLocatorPosition( &tgtPosWS, shieldData->damageLocatorIndex, true );
 
 			Vector3 pos = GetShieldImpactPosition( parentInverseWorldTransform, tgtPosWS, shieldData->direction, shieldEllipsoidCenter, shieldEllipsoidRadii );
-			
+
 			// "encode" it in texels
 			texelData->v[0] = Vector4( pos, shieldData->timeLeft );
 			texelData->v[1] = Vector4( shieldData->size, shieldData->intensity, 0.f, shieldData->lifeTime );
 			// also need this intercept position in WS
 			shieldData->interceptPosition = TransformCoord( pos, parentWorldTransform );
-	
+
 			++i;
 		}
 	}
@@ -604,7 +604,7 @@ void EveImpactOverlay::SetDamageState( float shield, float armor, float hull, bo
 		std::uniform_real_distribution<float> damageSizeDistribution( 0.2f, 0.8f );
 
 		for( size_t i = m_armorImpactData.size(); i < m_armorImpactGoalCount; ++i )
-		{	
+		{
 			CreateArmorImpact( damageLocatorDistribution( generator ), damageSizeDistribution( generator ), m_debugForceSpawnDebris );
 		}
 	}
@@ -635,7 +635,7 @@ int EveImpactOverlay::CreateImpact( int damageLocatorIndex, const Vector3& direc
 	{
 		return -1;
 	}
-	
+
 	// what's the situation?
 	if( m_configuration == ITriTargetable::IMPACT_SHIELD && lod != TR2_LOD_LOW )
 	{
@@ -669,7 +669,7 @@ bool EveImpactOverlay::UpdateImpact( Vector3& out, const Vector3& direction, int
 	{
 		// put new direction in there
 		shieldData->second.direction = direction;
-		// and return the old "intercept" position 
+		// and return the old "intercept" position
 		out = shieldData->second.interceptPosition;
 		return true;
 	}
@@ -717,7 +717,7 @@ int EveImpactOverlay::CreateShieldImpact( int damageLocatorIndex, const Vector3&
 	// if we have one that is close enough, use it instead and hand back that index
 	if( closestImpactAtSameDmgLocAngle > 0.95f )
 	{
-		ShieldImpactData* p = &m_shieldImpactData[ closestImpactAtSameDmgLocIdx ];
+		ShieldImpactData* p = &m_shieldImpactData[closestImpactAtSameDmgLocIdx];
 		p->direction = nrmDir;
 		p->timeLeft = IMPACT_SHIELD_FADEOUT * lifeTime;
 		p->size = std::max( size, p->size );
@@ -730,7 +730,7 @@ int EveImpactOverlay::CreateShieldImpact( int damageLocatorIndex, const Vector3&
 		// if we have no more room, use one of the existing ones, no matter how good they are and what locator they hit
 		if( closestImpactAtAnyDmgLocIdx != -1 )
 		{
-			ShieldImpactData* p = &m_shieldImpactData[ closestImpactAtAnyDmgLocIdx ];
+			ShieldImpactData* p = &m_shieldImpactData[closestImpactAtAnyDmgLocIdx];
 			p->direction = nrmDir;
 			p->timeLeft = IMPACT_SHIELD_FADEOUT * lifeTime;
 			p->size = std::max( size, p->size );
@@ -738,7 +738,7 @@ int EveImpactOverlay::CreateShieldImpact( int damageLocatorIndex, const Vector3&
 		return closestImpactAtAnyDmgLocIdx;
 	}
 
-	
+
 	// need the inverse world matrix
 	Matrix parentWorldTransform, parentInverseWorldTransform;
 	parent->GetLocalToWorldTransform( parentWorldTransform );
@@ -762,7 +762,7 @@ int EveImpactOverlay::CreateShieldImpact( int damageLocatorIndex, const Vector3&
 	sid.lifeTime = sid.timeLeft = IMPACT_SHIELD_FADEOUT * lifeTime;
 	sid.size = size;
 	sid.intensity = intensity;
-	m_shieldImpactData[ m_impactDataNextIdx ] = sid;
+	m_shieldImpactData[m_impactDataNextIdx] = sid;
 	return m_impactDataNextIdx++;
 }
 
@@ -790,7 +790,7 @@ int EveImpactOverlay::CreateArmorImpact( int damageLocatorIndex, float size, boo
 	aid.damageLocatorIndex = damageLocatorIndex;
 	aid.size = size;
 	aid.requestSpawnDebris = spawnEffects && !Tr2Renderer::IsLowQuality();
-	m_armorImpactData[ m_impactDataNextIdx ] = aid;
+	m_armorImpactData[m_impactDataNextIdx] = aid;
 	return m_impactDataNextIdx++;
 }
 
@@ -822,4 +822,3 @@ Tr2Effect* EveImpactOverlay::GetArmorDamageShader( TriBatchType batchType ) cons
 	}
 	return m_armorDamageShader;
 }
-

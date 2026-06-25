@@ -16,8 +16,8 @@
 // There is a "Control Strip" on the right that has some standard stuff like Siri,
 // that we have no control over from the application perspective.
 @interface TouchBar : NSObject
-- (id) initWithWindow: (Tr2MainWindow *) pMainWindow;
-- (NSTouchBar *) makeFunctionKeyTouchBar;
+- (id)initWithWindow:(Tr2MainWindow*)pMainWindow;
+- (NSTouchBar*)makeFunctionKeyTouchBar;
 @end
 
 #endif // __APPLE__

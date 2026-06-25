@@ -15,19 +15,21 @@ BLUE_DECLARE_INTERFACE( ITr2GpuBuffer );
 // See Also:
 //   TriRenderStep
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( TriStepClearUav ) : public TriRenderStep
+BLUE_CLASS( TriStepClearUav ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	TriStepClearUav( IRoot* lockobj = 0 );
 
 	//RenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
+
 private:
 #if BLUE_WITH_PYTHON
 	// Python __init__ constructor
-	static PyObject* py__init__( PyObject* self, PyObject* args );
+	static PyObject* py__init__( PyObject * self, PyObject * args );
 #endif
 
 	// Buffer to clear

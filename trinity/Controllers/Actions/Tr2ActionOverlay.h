@@ -15,12 +15,12 @@ BLUE_CLASS( Tr2ActionOverlay ) :
 public:
 	Tr2ActionOverlay( IRoot* lockobj = nullptr );
 	EXPOSE_TO_BLUE();
-	
-	void Start( ITr2ActionController& controller ) override;
-	void Stop( ITr2ActionController& controller ) override;
+
+	void Start( ITr2ActionController & controller ) override;
+	void Stop( ITr2ActionController & controller ) override;
 
 private:
-	void LoadOverlay( EveSpaceObject2* owner );
+	void LoadOverlay( EveSpaceObject2 * owner );
 
 	std::string m_path;
 	std::string m_overlayName;

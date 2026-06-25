@@ -23,11 +23,11 @@ private:
 	BlueSharedString m_name;
 
 	bool m_initialized;
-    float m_activationStrength;
+	float m_activationStrength;
 	float m_distanceToShip;
 	float m_boundingSphereRadius;
 	float m_distanceToChildParent;
-    float m_killCount;
+	float m_killCount;
 	float m_activeTurretCount;
 	Vector3 m_generatedShapeEllipsoidCenter;
 	Vector3 m_generatedShapeEllipsoidRadius;

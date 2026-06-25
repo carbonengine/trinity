@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
-// This is the refactored TriViewport class - it does not expose any D3D internals and has 
-// been changed so that 
+// This is the refactored TriViewport class - it does not expose any D3D internals and has
+// been changed so that
 //
 //  1. it is compatible with D3D10 and OpenGL
 //  2. it uses Blue 2.0 exposure
@@ -27,11 +27,15 @@ public:
 	float minZ;
 	float maxZ;
 
-	TriViewport(IRoot* lockobj = NULL) : x(0),y(0),width(1),height(1),minZ(0.0f),maxZ(1.0f)
-	{}
-	virtual ~TriViewport(){}
+	TriViewport( IRoot* lockobj = NULL ) :
+		x( 0 ), y( 0 ), width( 1 ), height( 1 ), minZ( 0.0f ), maxZ( 1.0f )
+	{
+	}
+	virtual ~TriViewport()
+	{
+	}
 
-	void py__init__( 
+	void py__init__(
 		int32_t _x,
 		int32_t _y,
 		Be::OptionalWithDefaultValue<int32_t, 1> _width,
@@ -53,8 +57,11 @@ public:
 			maxZ = 1.0f;
 		}
 	}
-	
-	float GetAspectRatio() { return float(width)/height; }
+
+	float GetAspectRatio()
+	{
+		return float( width ) / height;
+	}
 
 	void ConvertToTr2Viewport( Tr2Viewport& viewport ) const
 	{
@@ -69,7 +76,7 @@ public:
 	EXPOSE_TO_BLUE();
 };
 
-TYPEDEF_BLUECLASS(TriViewport);
+TYPEDEF_BLUECLASS( TriViewport );
 
 inline void Vec3TransformByViewport( Vector3& vec, const TriViewport& viewport )
 {
@@ -79,4 +86,3 @@ inline void Vec3TransformByViewport( Vector3& vec, const TriViewport& viewport )
 }
 
 #endif
-

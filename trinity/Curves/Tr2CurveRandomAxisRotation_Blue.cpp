@@ -46,8 +46,7 @@ const Be::ClassInfo* Tr2CurveRandomAxisRotation::ExposeToBlue()
 			"GetValueAt",
 			GetValue,
 			"Returns curve value at specified time\n"
-			":param time: input time"
-		)
+			":param time: input time" )
 
-		EXPOSURE_END()
+	EXPOSURE_END()
 }

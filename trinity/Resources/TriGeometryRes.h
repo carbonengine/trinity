@@ -130,7 +130,10 @@ struct AudioGeometryResData
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;
 
-	AudioGeometryResData() : m_id( s_nextId++ ) {}
+	AudioGeometryResData() :
+		m_id( s_nextId++ )
+	{
+	}
 
 private:
 	static std::atomic<uint64_t> s_nextId;
@@ -176,10 +179,10 @@ struct TriGeometryResLodData
 
 struct TriGeometryResMeshData
 {
-	TriGeometryResMeshData(); 
+	TriGeometryResMeshData();
 
 	std::string m_name;
-	
+
 	unsigned int m_vertexDeclarationHandle;
 	unsigned int m_bytesPerVertex;
 
@@ -215,7 +218,7 @@ struct TriGeometryResSkeletonData
 	TrackableStdVector<TriGeometryResJointData> m_joints;
 };
 
-BLUE_CLASS( TriGeometryRes ):
+BLUE_CLASS( TriGeometryRes ) :
 	public BlueAsyncRes,
 	public ICacheable,
 	public Tr2DeviceResource,
@@ -224,7 +227,7 @@ BLUE_CLASS( TriGeometryRes ):
 public:
 	EXPOSE_TO_BLUE();
 
-	TriGeometryRes(IRoot* lockobj = NULL);	
+	TriGeometryRes( IRoot* lockobj = NULL );
 	virtual ~TriGeometryRes();
 
 	void RecalculateBoundingBox();
@@ -252,35 +255,35 @@ public:
 
 	unsigned int GetAnimationCount() const;
 
-	#if WITH_GRANNY
+#if WITH_GRANNY
 	// query vertex component
 	int GetVertexComponentOffset( const granny_mesh* myMesh, const char* componentName ) const;
-	#endif
+#endif
 
 	// Render multiple consecutive areas, starting at 'areaIx'
 	bool RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );
 	bool RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );
 
 	void RebuildCachedData();
-	
-	bool GetIntersectionPoints( 
-		const Vector3* pos, 
-		const Vector3* dir, 
-		Vector3* hitpointNear, 
-		Vector3* hitpointNearNormal, 
-		Vector3* hitpointFar, 
+
+	bool GetIntersectionPoints(
+		const Vector3* pos,
+		const Vector3* dir,
+		Vector3* hitpointNear,
+		Vector3* hitpointNearNormal,
+		Vector3* hitpointFar,
 		Vector3* hitpointFarNormal,
 		int* boneIndexNear,
 		int* boneIndexFar,
-		unsigned int areaIx=-1 );
+		unsigned int areaIx = -1 );
 
-	bool GetIntersectionPointNormalBone( 
-		const Vector3* pos, 
-		const Vector3* dir, 
-		Vector3* hitpoint, 
+	bool GetIntersectionPointNormalBone(
+		const Vector3* pos,
+		const Vector3* dir,
+		Vector3* hitpoint,
 		Vector3* normal,
 		int* boneIndex,
-		unsigned int areaIx=-1 );
+		unsigned int areaIx = -1 );
 
 	std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>> GetIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir );
 	Be::Result<std::string> GetAreaIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir, int areaIx, std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>>& result );
@@ -291,7 +294,7 @@ public:
 	bool GetBoundingSphere( unsigned int meshIx, Vector4& sphere ) const;
 	Be::Result<std::string> GetBoundingSphereFromScript( unsigned int meshIx, std::pair<Vector3, float>& bounds ) const;
 
-	void PrepareFromGrannyRes( TriGrannyRes* g );
+	void PrepareFromGrannyRes( TriGrannyRes * g );
 
 	BlueStdResult GetMeshVertexElements( size_t meshIndex, std::vector<std::pair<uint32_t, uint32_t>>& elements ) const;
 
@@ -322,12 +325,13 @@ public:
 	// ITriDeviceResource
 private:
 	bool OnPrepareResources();
-public:				
+
+public:
 	void ReleaseResources( TriStorage s );
 
 	void ReleaseResourcesHelper();
 #if TRINITYDEV
-	virtual void GetDescription( std::string& desc );
+	virtual void GetDescription( std::string & desc );
 #endif
 
 #if WITH_GRANNY
@@ -335,12 +339,12 @@ public:
 #endif
 
 #if WITH_GRANNY
-	static bool SaveMeshToGrannyFile( TriGeometryResMeshData& mesh, const char* filename );
+	static bool SaveMeshToGrannyFile( TriGeometryResMeshData & mesh, const char* filename );
 #endif
-	static bool SaveMeshToCMFFile( TriGeometryResMeshData& mesh, const char* filename );
+	static bool SaveMeshToCMFFile( TriGeometryResMeshData & mesh, const char* filename );
 
 	//	Iterator functions for processing mesh data
-	typedef void( *PerTriangleCallback )( void* context, const Vector3& p1, const Vector3& p2, const Vector3& p3 );
+	typedef void ( *PerTriangleCallback )( void* context, const Vector3& p1, const Vector3& p2, const Vector3& p3 );
 	void ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, void* cbContext );
 
 	void RequestReversedIndexBuffers();
@@ -378,21 +382,21 @@ private:
 	// The async management itself is done in TriAsyncLoadedResource.
 	virtual LoadingResult DoLoad();
 	virtual bool DoPrepare();
-	
+
 #if WITH_GRANNY
 	// Read granny file, keep data in m_pGrannyFile
 	bool ReadGrannyFile();
 	void ClearGrannyData();
 
-	bool SetupMeshes( granny_file_info* gi );
-	void SetupSkeletons( granny_file_info* gi );
-	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* grannyMesh, int bytesPerVertex );
-	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* grannyMesh, granny_file_info* gi, int bytesPerVertex );
-	bool IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi );
-	
+	bool SetupMeshes( granny_file_info * gi );
+	void SetupSkeletons( granny_file_info * gi );
+	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData & area, granny_mesh * grannyMesh, int bytesPerVertex );
+	bool IsAreaSkinned( TriGeometryResAreaData & area, granny_mesh * grannyMesh, granny_file_info * gi, int bytesPerVertex );
+	bool IsAreaMorphed( TriGeometryResAreaData & area, granny_mesh * myMesh, granny_file_info * gi );
+
 	// Create D3D mesh from data in m_pGrannyFile
-	bool CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
-	bool CreateLodFromGrannyMesh( granny_mesh* myMesh, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride = NULL );
+	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
+	bool CreateLodFromGrannyMesh( granny_mesh * myMesh, TriGeometryResLodData * pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext, void* pVBOverride = NULL );
 
 	// Extract audio geometry from lowest LOD for Wwise spatial audio
 	void ExtractAudioGeometry( TriGeometryResMeshData * mesh, granny_mesh * grannyMesh );
@@ -403,10 +407,10 @@ private:
 
 	bool SetupMeshes( const cmf::Data& cmfData );
 	void SetupSkeletons( const cmf::Data& cmfData );
-	bool CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
-	bool CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
+	bool CreateMeshesFromCMFFile( Tr2CmfContents & cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
+	bool CreateLodFromCMFMesh( Tr2CmfContents & cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
 };
 
-TYPEDEF_BLUECLASS_WR_SHUTDOWN(TriGeometryRes);
+TYPEDEF_BLUECLASS_WR_SHUTDOWN( TriGeometryRes );
 
 #endif

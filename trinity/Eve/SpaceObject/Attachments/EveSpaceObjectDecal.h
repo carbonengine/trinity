@@ -24,22 +24,24 @@ BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2DebugRenderer );
 BLUE_DECLARE( Tr2InstancedMesh );
 
-struct DecalVSPerObjectData {
-    Matrix m_worldMatrix;
-    Matrix m_invWorldMatrix;
-    Matrix m_decalMatrix;
-    Matrix m_inverseDecalMatrix;
-    Matrix m_parentBoneMatrix;
-    Matrix m_invParentBoneMatrix;
+struct DecalVSPerObjectData
+{
+	Matrix m_worldMatrix;
+	Matrix m_invWorldMatrix;
+	Matrix m_decalMatrix;
+	Matrix m_inverseDecalMatrix;
+	Matrix m_parentBoneMatrix;
+	Matrix m_invParentBoneMatrix;
 };
 
-struct DecalPSPerObjectData {
-    Vector4 m_displayData;
-    Vector4 m_shipData;
-    Vector4 m_clipData;
+struct DecalPSPerObjectData
+{
+	Vector4 m_displayData;
+	Vector4 m_shipData;
+	Vector4 m_clipData;
 	float m_clipRadius2Sq;
 	Vector3 m_unused;
-    Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
+	Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 };
 
 // --------------------------------------------------------------------------------
@@ -55,9 +57,9 @@ public:
 	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// vs per object data
-    DecalVSPerObjectData m_vsData;
+	DecalVSPerObjectData m_vsData;
 	// pixel shader per object data
-    DecalPSPerObjectData m_psData;
+	DecalPSPerObjectData m_psData;
 };
 
 struct DecalMeshCache
@@ -74,7 +76,7 @@ struct DecalMeshCache
 // Description:
 //   ToDo
 // --------------------------------------------------------------------------------
-BLUE_CLASS( EveSpaceObjectDecal ) : 
+BLUE_CLASS( EveSpaceObjectDecal ) :
 	public IInitialize,
 	public Tr2DeviceResource,
 	public INotify,
@@ -87,43 +89,47 @@ public:
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
 
-	EveSpaceObjectDecal(IRoot* lockobj = NULL);
+	EveSpaceObjectDecal( IRoot* lockobj = NULL );
 	~EveSpaceObjectDecal();
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
-public:
 
+public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
-	virtual IRoot* GetID( uint16_t ) { return this->GetRawRoot(); }
-	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
+	virtual IRoot* GetID( uint16_t )
+	{
+		return this->GetRawRoot();
+	}
+	virtual void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual float GetSortValue();
-	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
 
 	// copy init
-	void CopyFrom( EveSpaceObjectDecal *object );
+	void CopyFrom( EveSpaceObjectDecal * object );
 
 	// access
 	void UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables, DecalMeshCache& meshCache, TriGeometryRes* geomRes, float screensize );
-	void GetInstancedRenderables( std::vector<ITr2Renderable*>& renderables, DecalMeshCache& meshCache, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCache & meshCache, TriGeometryRes * geomRes, float screensize );
+	void GetInstancedRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCache & meshCache, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
 
 	// access position etc.
 	const Vector3& GetPosition() const;
@@ -138,7 +144,7 @@ public:
 	void SetMinScreenSize( float minScreenSize );
 
 	// edit helper
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix ) const;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& worldMatrix ) const;
 
 	// set things from the parent, the spaceobject
 	void SetBoneMatrix( const Float4x3* bonesMatrices, int bonesMatricesCount );
@@ -154,7 +160,7 @@ public:
 
 private:
 	// create
-	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache& meshCache );
+	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache & meshCache );
 	// update
 	void UpdateDecalMatrix();
 	void CreateStaticIndexBuffers( TriGeometryResPtr geomRes );
@@ -208,7 +214,7 @@ private:
 	// Bounds for mimicing the frustum culling and fading for instanced hulls that have decals
 	Vector3 m_minBounds, m_maxBounds;
 
-	// the geometry can be frozen 
+	// the geometry can be frozen
 	bool m_isGeometryFrozen;
 };
 

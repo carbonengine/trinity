@@ -4,8 +4,8 @@
 #include "Tr2ControllerReference.h"
 
 
-Tr2ControllerReference::Tr2ControllerReference( IRoot* )
-	:m_owner( nullptr )
+Tr2ControllerReference::Tr2ControllerReference( IRoot* ) :
+	m_owner( nullptr )
 {
 }
 

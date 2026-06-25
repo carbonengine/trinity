@@ -33,23 +33,23 @@ EveDistanceField::EveDistanceField( IRoot* lockobj ) :
 float EveDistanceField::CalculateFieldCoverageAndDistance( Be::Time t, const Vector3& posRef, const Vector3& originShift )
 {
 	Vector3 minBounds( FLT_MAX, FLT_MAX, FLT_MAX );
-	Vector3 maxBounds( -FLT_MAX, -FLT_MAX, -FLT_MAX);
+	Vector3 maxBounds( -FLT_MAX, -FLT_MAX, -FLT_MAX );
 	Vector3 averagePos( 0, 0, 0 );
 	Vector3 posObj;
 
 	float distanceNowSq = m_maxDistance * m_maxDistance;
-	
+
 	if( m_objects.empty() )
 	{
 		m_middle += originShift;
 		return Length( posRef );
 	}
-	
+
 	const float oneOverCount = 1.f / (float)m_objects.size();
 	// Calculate bounds and center
 	for( auto oit = m_objects.begin(); oit != m_objects.end(); ++oit )
 	{
-		(*oit)->GetValueAt( &posObj, t );
+		( *oit )->GetValueAt( &posObj, t );
 		averagePos += posObj * oneOverCount;
 		posObj = posObj - posRef;
 		distanceNowSq = std::min( distanceNowSq, LengthSq( posObj ) );
@@ -61,7 +61,7 @@ float EveDistanceField::CalculateFieldCoverageAndDistance( Be::Time t, const Vec
 		float averageDistance = 0;
 		for( auto oit = m_objects.begin(); oit != m_objects.end(); ++oit )
 		{
-			(*oit)->GetValueAt( &posObj, t );
+			( *oit )->GetValueAt( &posObj, t );
 			posObj = posObj - averagePos;
 			averageDistance += Length( posObj ) * oneOverCount;
 		}
@@ -69,7 +69,7 @@ float EveDistanceField::CalculateFieldCoverageAndDistance( Be::Time t, const Vec
 		// Calculate bounding box for objects close enough to the average position
 		for( auto oit = m_objects.begin(); oit != m_objects.end(); ++oit )
 		{
-			(*oit)->GetValueAt( &posObj, t );
+			( *oit )->GetValueAt( &posObj, t );
 			const Vector3 d = posObj - averagePos;
 			float distance = Length( d );
 			if( m_distanceThreshold == 0.f || distance <= m_distanceThreshold * averageDistance )
@@ -101,7 +101,7 @@ float EveDistanceField::CalculateFieldCoverageAndDistance( Be::Time t, const Vec
 	{
 		m_middle += originShift;
 	}
-	
+
 	return std::sqrt( distanceNowSq );
 }
 
@@ -115,7 +115,7 @@ void EveDistanceField::Update( const EveUpdateContext& updateContext )
 		posRef = m_cameraView->GetTransform().GetTranslation();
 	}
 	Be::Time t = updateContext.GetTime();
-	
+
 	if( m_updateDistanceCurve )
 	{
 		UpdateDistanceCurveSize();
@@ -132,7 +132,7 @@ void EveDistanceField::Update( const EveUpdateContext& updateContext )
 		distanceNow = CalculateFieldCoverageAndDistance( t, posRef, originShift );
 	}
 	else
-	{	
+	{
 		if( m_objects.size() == 1 )
 		{
 			m_objects[0]->GetValueAt( &m_middle, t );
@@ -141,7 +141,7 @@ void EveDistanceField::Update( const EveUpdateContext& updateContext )
 		{
 			m_middle += originShift;
 		}
-		
+
 		Vector3 posObj = m_middle - posRef;
 		distanceNow = std::min( distanceNow, Length( posObj ) );
 	}
@@ -173,7 +173,7 @@ void EveDistanceField::Update( const EveUpdateContext& updateContext )
 		for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
 		{
 			Vector3 position;
-			(*it)->GetValueAt( &position, t );
+			( *it )->GetValueAt( &position, t );
 			m_debugPositions.push_back( position );
 		}
 		m_debug = false;
@@ -205,7 +205,7 @@ void EveDistanceField::CreateCurveSet()
 	m_distanceCurve->AddKey( 50000.0f, 0, Tr2CurveInterpolation::LINEAR, 0, 0, Tr2CurveTangentType::AUTO );
 	m_distanceCurve->SetTimeOffset( 0 );
 
-	m_curveSet->AddCurve( ( ITriFunctionPtr ) m_distanceCurve );
+	m_curveSet->AddCurve( (ITriFunctionPtr)m_distanceCurve );
 }
 
 void EveDistanceField::SetupStaticDistanceField( Vector3 dimensions, Vector3 position, float distanceThreshold, float timeAdjustmentSecondsOut, float timeAdjustmentSecondsIn )
@@ -255,8 +255,7 @@ void EveDistanceField::OnListModified(
 	ssize_t key,
 	ssize_t key2,
 	IRoot* value,
-	const IList* theList
-	)
+	const IList* theList )
 {
 	if( theList != &m_objects )
 	{
@@ -283,8 +282,8 @@ void EveDistanceField::OnListModified(
 // --------------------------------------------------------------------------------------
 bool EveDistanceField::OnModified( Be::Var* value )
 {
-	
-	if( IsMatch( value, m_maxDistance ) || 
+
+	if( IsMatch( value, m_maxDistance ) ||
 		IsMatch( value, m_minDistance ) )
 	{
 		m_updateDistanceCurve = true;
@@ -327,5 +326,3 @@ void EveDistanceField::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		renderer.DrawSphere( this, pos, m_maxDistance, 8, Tr2DebugRenderer::Wireframe, 0x1f1f1f1f );
 	}
 }
-
-

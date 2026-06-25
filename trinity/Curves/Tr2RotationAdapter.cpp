@@ -6,14 +6,13 @@
 
 
 // --------------------------------------------------------------------------------
-Tr2RotationAdapter::Tr2RotationAdapter( IRoot* )
-	:m_value( 0, 0, 0, 1 ),
+Tr2RotationAdapter::Tr2RotationAdapter( IRoot* ) :
+	m_value( 0, 0, 0, 1 ),
 	m_currentValue( 0, 0, 0, 1 ),
 	m_start( 0 ),
 	m_timeScale( 1.f ),
 	m_offset( 0 )
 {
-
 }
 
 // --------------------------------------------------------------------------------
@@ -89,7 +88,6 @@ Quaternion* Tr2RotationAdapter::GetValueAt( Quaternion* in, double time )
 		*in = m_value;
 	}
 	return in;
-
 }
 
 // --------------------------------------------------------------------------------

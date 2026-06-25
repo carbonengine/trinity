@@ -8,30 +8,30 @@ using namespace Tr2RenderContextEnum;
 #include "Tr2Renderer.h"
 #include "TriViewport.h"
 
-void SetupScreenQuad(	Tr2ScreenVertex quad[4], 
-                        const Vector2& tlTexCoord, 
-						const Vector2& brTexCoord,
-                        const Vector2& tlVertexCoord, 
-						const Vector2& brVertexCoord )
+void SetupScreenQuad( Tr2ScreenVertex quad[4],
+					  const Vector2& tlTexCoord,
+					  const Vector2& brTexCoord,
+					  const Vector2& tlVertexCoord,
+					  const Vector2& brVertexCoord )
 {
 	const TriViewport& viewport = Tr2Renderer::GetViewport();
 
-	Vector2 tlScreen( tlVertexCoord[0] * 2.0f - 1.0f, -(tlVertexCoord[1] * 2.0f - 1.0f) );
-	Vector2 brScreen( brVertexCoord[0] * 2.0f - 1.0f, -(brVertexCoord[1] * 2.0f - 1.0f) );
+	Vector2 tlScreen( tlVertexCoord[0] * 2.0f - 1.0f, -( tlVertexCoord[1] * 2.0f - 1.0f ) );
+	Vector2 brScreen( brVertexCoord[0] * 2.0f - 1.0f, -( brVertexCoord[1] * 2.0f - 1.0f ) );
 	const float z = 1.0f;
 	const float w = 1.0f;
 
 	int edge1 = 1;
 	int edge2 = 2;
 
-	USE_MAIN_THREAD_RENDER_CONTEXT();	//TODO! pass it in so we look at actual current cull mode
+	USE_MAIN_THREAD_RENDER_CONTEXT(); //TODO! pass it in so we look at actual current cull mode
 	if( !renderContext.m_esm.IsCullModeInverted() )
 	{
-		// Flip the interior edge direction in the quad which produces a correctly 
+		// Flip the interior edge direction in the quad which produces a correctly
 		// oriented strip of two triangles
 		edge1 = 2;
 		edge2 = 1;
-	}	
+	}
 
 	// Top Left
 	quad[0].p = Vector4( tlScreen.x, tlScreen.y, z, w );
@@ -53,29 +53,29 @@ void SetupScreenQuad(	Tr2ScreenVertex quad[4],
 void SetupScreenQuadInCameraSpace( Tr2ScreenVertex quad[4], int width, int height )
 {
 	const TriViewport& viewport = Tr2Renderer::GetViewport();
-	
+
 	// Top-left and bottom-right in projection space:
 	// See explanation in SetupScreenQuad for pixel offsets
-	Vector3 tl( -1.0f,  1.0f, 1.0f );
-	Vector3 br(  1.0f, -1.0f, 1.0f );
+	Vector3 tl( -1.0f, 1.0f, 1.0f );
+	Vector3 br( 1.0f, -1.0f, 1.0f );
 
 	// Transform to view space:
 	const Matrix& projectionRaw = Tr2Renderer::GetProjectionRawTransform();
 	Matrix proj2view = Inverse( projectionRaw );
 	tl = TransformCoord( tl, proj2view );
 	br = TransformCoord( br, proj2view );
-	
+
 	int edge1 = 1;
 	int edge2 = 2;
 
-	USE_MAIN_THREAD_RENDER_CONTEXT();	//TODO! pass it in for cull mode
+	USE_MAIN_THREAD_RENDER_CONTEXT(); //TODO! pass it in for cull mode
 	if( !renderContext.m_esm.IsCullModeInverted() )
 	{
-		// Flip the interior edge direction in the quad which produces a correctly 
+		// Flip the interior edge direction in the quad which produces a correctly
 		// oriented strip of two triangles
 		edge1 = 2;
 		edge2 = 1;
-	}	
+	}
 
 	// The vertex shader should ensure that the z coordinate is pushed to w
 	Vector2 tlTC( 0.0f, 0.0f );
@@ -131,7 +131,7 @@ void SetConstants( Tr2ConstantBufferAL& buffer, unsigned constantTypeMask, const
 	{
 		if( constantTypeMask & ( 1 << i ) )
 		{
-			renderContext.SetConstants( buffer, static_cast<ShaderType>(i), registerIndex );
+			renderContext.SetConstants( buffer, static_cast<ShaderType>( i ), registerIndex );
 			constantTypeMask &= ~( 1 << i );
 		}
 	}

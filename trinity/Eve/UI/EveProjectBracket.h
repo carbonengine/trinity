@@ -14,8 +14,7 @@ BLUE_DECLARE( Tr2Sprite2dContainer );
 BLUE_DECLARE( EveSprite2dBracket );
 BLUE_DECLARE_INTERFACE( IWorldPosition );
 
-class EveProjectBracket :
-	public ITriFunction
+class EveProjectBracket : public ITriFunction
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -73,7 +72,7 @@ protected:
 	// things around without Transform headaches.
 	float m_offsetX;
 	float m_offsetY;
-	
+
 	// The bracket container
 	Tr2Sprite2dContainerPtr m_parent;
 

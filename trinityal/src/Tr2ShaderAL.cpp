@@ -7,37 +7,37 @@
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2ShaderAL> NullShader()
-	{
-		static std::shared_ptr<TrinityALImpl::Tr2ShaderAL> nullShader = std::make_shared<TrinityALImpl::Tr2ShaderAL>();
-		return nullShader;
-	}
+std::shared_ptr<TrinityALImpl::Tr2ShaderAL> NullShader()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2ShaderAL> nullShader = std::make_shared<TrinityALImpl::Tr2ShaderAL>();
+	return nullShader;
+}
 }
 
 
-Tr2ShaderBytecodeAL::Tr2ShaderBytecodeAL()
-	:bytecode( nullptr ),
+Tr2ShaderBytecodeAL::Tr2ShaderBytecodeAL() :
+	bytecode( nullptr ),
 	size( 0 )
 {
 }
 
-Tr2ShaderBytecodeAL::Tr2ShaderBytecodeAL( const void* bytecode_, size_t size_ )
-	: bytecode( bytecode_ ),
+Tr2ShaderBytecodeAL::Tr2ShaderBytecodeAL( const void* bytecode_, size_t size_ ) :
+	bytecode( bytecode_ ),
 	size( size_ )
 {
 }
 
 Tr2ShaderBytecodeAL::~Tr2ShaderBytecodeAL()
 {
-    bytecode = nullptr;
+	bytecode = nullptr;
 }
 
 Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL()
 {
 }
 
-Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL( Tr2VertexDefinition::UsageCode usage_, uint32_t usageIndex_, uint32_t registerIndex_, Type type_, uint32_t dimension_, uint32_t usedMask_ )
-	:usage( usage_ ),
+Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL( Tr2VertexDefinition::UsageCode usage_, uint32_t usageIndex_, uint32_t registerIndex_, Type type_, uint32_t dimension_, uint32_t usedMask_ ) :
+	usage( usage_ ),
 	usageIndex( usageIndex_ ),
 	registerIndex( registerIndex_ ),
 	usedMask( usedMask_ ),
@@ -52,15 +52,15 @@ bool Tr2ShaderPipelineInputAL::operator==( const Tr2ShaderPipelineInputAL& other
 }
 
 
-Tr2ShaderRegisterAL::Tr2ShaderRegisterAL()
-	:registerType( CONSTANT_BUFFER ),
+Tr2ShaderRegisterAL::Tr2ShaderRegisterAL() :
+	registerType( CONSTANT_BUFFER ),
 	registerIndex( 0 ),
 	dynamic( true )
 {
 }
 
-Tr2ShaderRegisterAL::Tr2ShaderRegisterAL( RegisterType registerType_, uint32_t registerIndex_, uint32_t registerSpace_, uint32_t arrayCount_, bool dynamic_ )
-	: registerType( registerType_ ),
+Tr2ShaderRegisterAL::Tr2ShaderRegisterAL( RegisterType registerType_, uint32_t registerIndex_, uint32_t registerSpace_, uint32_t arrayCount_, bool dynamic_ ) :
+	registerType( registerType_ ),
 	registerIndex( registerIndex_ ),
 	registerSpace( registerSpace_ ),
 	arrayCount( arrayCount_ ),
@@ -129,13 +129,13 @@ bool Tr2ShaderSignatureAL::operator==( const Tr2ShaderSignatureAL& other ) const
 	return registers == other.registers && pipelineInputs == other.pipelineInputs;
 }
 
-Tr2ShaderAL::Tr2ShaderAL()
-	:m_shader( NullShader() )
+Tr2ShaderAL::Tr2ShaderAL() :
+	m_shader( NullShader() )
 {
 }
 
-Tr2ShaderAL::Tr2ShaderAL( std::shared_ptr<TrinityALImpl::Tr2ShaderAL> shader )
-	:m_shader( shader )
+Tr2ShaderAL::Tr2ShaderAL( std::shared_ptr<TrinityALImpl::Tr2ShaderAL> shader ) :
+	m_shader( shader )
 {
 }
 
@@ -144,7 +144,7 @@ ALResult Tr2ShaderAL::Create(
 	const Tr2ShaderBytecodeAL& bytecode,
 	const Tr2ShaderSignatureAL& signature,
 	const char* shaderPath,
-	Tr2PrimaryRenderContextAL &renderContext )
+	Tr2PrimaryRenderContextAL& renderContext )
 {
 	m_shader = std::make_shared<TrinityALImpl::Tr2ShaderAL>();
 	auto result = m_shader->Create( type, bytecode, signature, shaderPath, renderContext );
@@ -200,5 +200,5 @@ ALResult Tr2ShaderAL::SetName( const char* name )
 
 TrinityALImpl::Tr2ShaderAL* Tr2ShaderAL::TrinityALImpl_GetObject() const
 {
-    return m_shader.get();
+	return m_shader.get();
 }

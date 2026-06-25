@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#if !defined(_WIN32) && !defined(TRINITY_AL_MOBILE) && (TRINITY_PLATFORM == TRINITY_STUB)
+#if !defined( _WIN32 ) && !defined( TRINITY_AL_MOBILE ) && ( TRINITY_PLATFORM == TRINITY_STUB )
 
 #include "WithWindowFixture.h"
 #include "RenderWindow.h"
@@ -9,7 +9,7 @@
 
 namespace
 {
-	RenderWindow* s_wnd = nullptr;
+RenderWindow* s_wnd = nullptr;
 }
 
 void WithWindow::SetUpTestCase()
@@ -30,7 +30,7 @@ void WithWindow::BeginLoopProcessing()
 
 bool WithWindow::DoLoopProcessing()
 {
-    return true;
+	return true;
 }
 
 Tr2WindowHandle WithWindow::GetWindowHandle()

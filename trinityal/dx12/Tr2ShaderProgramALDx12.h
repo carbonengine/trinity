@@ -14,108 +14,107 @@ struct Tr2ShaderPipelineInputAL;
 
 namespace TrinityALImpl
 {
-	struct Tr2RootSignatureAL
+struct Tr2RootSignatureAL
+{
+	Tr2RootSignatureAL();
+	void Destroy( Tr2PrimaryRenderContextAL& owner );
+
+	CComPtr<ID3D12RootSignature> m_rootSignature;
+
+	struct CbRegister
 	{
-		Tr2RootSignatureAL();
-		void Destroy( Tr2PrimaryRenderContextAL& owner );
-
-		CComPtr<ID3D12RootSignature> m_rootSignature;
-
-		struct CbRegister
-		{
-			uint32_t stage;
-			uint32_t index;
-			uint32_t parameter;
-			Tr2ShaderRegisterAL::RegisterType registerType;
-			bool dynamic;
-		};
-		std::vector<CbRegister> m_cbRegisters;
-		std::vector<CbRegister> m_srvRegisters;
-		std::vector<CbRegister> m_uavRegisters;
-		std::vector<CbRegister> m_samplerRegisters;
-
-		Tr2RegisterMapAL m_registerMap;
-
-		uint32_t m_srvUavParameterCount;
-		uint32_t m_srvUavParameterOffset;
-		uint32_t m_samplerParameterCount;
-		uint32_t m_samplerParameterOffset;
-
-		bool m_isCompute;
+		uint32_t stage;
+		uint32_t index;
+		uint32_t parameter;
+		Tr2ShaderRegisterAL::RegisterType registerType;
+		bool dynamic;
 	};
+	std::vector<CbRegister> m_cbRegisters;
+	std::vector<CbRegister> m_srvRegisters;
+	std::vector<CbRegister> m_uavRegisters;
+	std::vector<CbRegister> m_samplerRegisters;
+
+	Tr2RegisterMapAL m_registerMap;
+
+	uint32_t m_srvUavParameterCount;
+	uint32_t m_srvUavParameterOffset;
+	uint32_t m_samplerParameterCount;
+	uint32_t m_samplerParameterOffset;
+
+	bool m_isCompute;
+};
 
 
-	class Tr2ShaderProgramAL : public Tr2DeviceResourceAL<Tr2ShaderProgramAL>
-	{
-	public:
-		Tr2ShaderProgramAL();
-		~Tr2ShaderProgramAL();
+class Tr2ShaderProgramAL : public Tr2DeviceResourceAL<Tr2ShaderProgramAL>
+{
+public:
+	Tr2ShaderProgramAL();
+	~Tr2ShaderProgramAL();
 
-		ALResult Create( ::Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
-		void Destroy();
+	ALResult Create( ::Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
+	void Destroy();
 
-		bool IsValid() const;
+	bool IsValid() const;
 
-		Tr2ALMemoryType GetMemoryClass() const;
+	Tr2ALMemoryType GetMemoryClass() const;
 
-		bool IsComputeProgramDx12() const;
-		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	bool IsComputeProgramDx12() const;
+	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 
-		const Tr2RegisterMapAL& GetRegisterMap() const;
-		ALResult SetName( const char* name );
-
-
-		ALResult CreateCommandSignatures( Tr2IndirectBufferLayoutAL& bufferLayout, Tr2PrimaryRenderContextAL& renderContext );
-
-		CComPtr<ID3D12CommandSignature> m_drawIndexedInstanced;
-
-	private:
-		void AddSrvUavParameters(
-			Tr2RenderContextEnum::ShaderType shaderType,
-			const Tr2ShaderSignatureAL& signature,
-			std::vector<D3D12_ROOT_PARAMETER>& parameters,
-			std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges );
-		void AddCbvParameters(
-			Tr2RenderContextEnum::ShaderType shaderType,
-			const Tr2ShaderSignatureAL& signature,
-			std::vector<D3D12_ROOT_PARAMETER>& parameters,
-			bool dynamicBuffers
-			);
-		void AddSamplerParameters(
-			Tr2RenderContextEnum::ShaderType shaderType,
-			const Tr2ShaderSignatureAL& signature,
-			std::vector<D3D12_ROOT_PARAMETER>& parameters,
-			std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges );
-		static D3D12_SHADER_BYTECODE MakeShaderBytecode( const ::Tr2ShaderAL& shader );
+	const Tr2RegisterMapAL& GetRegisterMap() const;
+	ALResult SetName( const char* name );
 
 
-		Tr2RootSignatureAL m_rootSignature;
+	ALResult CreateCommandSignatures( Tr2IndirectBufferLayoutAL& bufferLayout, Tr2PrimaryRenderContextAL& renderContext );
 
-		CComPtr<ID3D12CommandSignature> m_drawInstanced;
+	CComPtr<ID3D12CommandSignature> m_drawIndexedInstanced;
 
-		D3D12_SHADER_BYTECODE m_CS;
-		D3D12_SHADER_BYTECODE m_VS;
-		D3D12_SHADER_BYTECODE m_PS;
-		D3D12_SHADER_BYTECODE m_DS;
-		D3D12_SHADER_BYTECODE m_HS;
-		D3D12_SHADER_BYTECODE m_GS;
+private:
+	void AddSrvUavParameters(
+		Tr2RenderContextEnum::ShaderType shaderType,
+		const Tr2ShaderSignatureAL& signature,
+		std::vector<D3D12_ROOT_PARAMETER>& parameters,
+		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges );
+	void AddCbvParameters(
+		Tr2RenderContextEnum::ShaderType shaderType,
+		const Tr2ShaderSignatureAL& signature,
+		std::vector<D3D12_ROOT_PARAMETER>& parameters,
+		bool dynamicBuffers );
+	void AddSamplerParameters(
+		Tr2RenderContextEnum::ShaderType shaderType,
+		const Tr2ShaderSignatureAL& signature,
+		std::vector<D3D12_ROOT_PARAMETER>& parameters,
+		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges );
+	static D3D12_SHADER_BYTECODE MakeShaderBytecode( const ::Tr2ShaderAL& shader );
 
-		std::vector<::Tr2ShaderAL> m_shaders;
-		std::vector<Tr2ShaderPipelineInputAL> m_iaInputs;
 
-		Tr2PrimaryRenderContextAL* m_owner;
+	Tr2RootSignatureAL m_rootSignature;
 
-		Tr2RegisterMapAL m_registerMap;
+	CComPtr<ID3D12CommandSignature> m_drawInstanced;
 
-		Tr2IndirectBufferLayoutAL m_indirectBufferLayout;
+	D3D12_SHADER_BYTECODE m_CS;
+	D3D12_SHADER_BYTECODE m_VS;
+	D3D12_SHADER_BYTECODE m_PS;
+	D3D12_SHADER_BYTECODE m_DS;
+	D3D12_SHADER_BYTECODE m_HS;
+	D3D12_SHADER_BYTECODE m_GS;
 
-		std::string m_name;
+	std::vector<::Tr2ShaderAL> m_shaders;
+	std::vector<Tr2ShaderPipelineInputAL> m_iaInputs;
 
-		friend class ::Tr2RenderContextAL;
-		friend class Tr2ResourceSetAL;
-		friend class ::DescriptorStateCache;
-		friend class PSODescription;
-	};
+	Tr2PrimaryRenderContextAL* m_owner;
+
+	Tr2RegisterMapAL m_registerMap;
+
+	Tr2IndirectBufferLayoutAL m_indirectBufferLayout;
+
+	std::string m_name;
+
+	friend class ::Tr2RenderContextAL;
+	friend class Tr2ResourceSetAL;
+	friend class ::DescriptorStateCache;
+	friend class PSODescription;
+};
 }
 
 #endif

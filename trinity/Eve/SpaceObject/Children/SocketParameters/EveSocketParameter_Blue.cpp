@@ -8,28 +8,26 @@ BLUE_DEFINE_INTERFACE( IEveSocketParameter );
 BLUE_DEFINE_ABSTRACT( EveSocketParameterBindingBase );
 
 
-const Be::ClassInfo* EveSocketParameterBindingBase::ExposeToBlue()
-{
+const Be::ClassInfo* EveSocketParameterBindingBase::ExposeToBlue(){
 	EXPOSURE_BEGIN( EveSocketParameterBindingBase, "" )
-	EXPOSURE_END()
+		EXPOSURE_END()
 }
 
-#define SOCKET_PARAM_EXPOSE_TO_BLUE( _className, _valueDescription )\
-	BLUE_DEFINE( _className );\
-	const Be::ClassInfo* _className::ExposeToBlue()\
-	{\
-		EXPOSURE_BEGIN( _className, "\n:jessica-icon: fal-paragraph\n:jessica-icon-color: (123, 28, 212)\n:jessica-help-url: https://wiki.ccpgames.com/pages/viewpage.action?spaceKey=TTL&title=Plugs+and+Sockets \n" )\
-			MAP_INTERFACE( IEveSocketParameter )\
-			MAP_ATTRIBUTE( "name", m_name, "Attribute name.", Be::READWRITE | Be::PERSIST )\
-			MAP_ATTRIBUTE( "value", m_value, _valueDescription, Be::READWRITE | Be::PERSIST )\
-			MAP_METHOD_AND_WRAP( "Used", Used, "")\
-			MAP_METHOD_AND_WRAP(\
-				"SetValueToDefault",\
-				SetValueToDefault,\
-				"Reset the value to the default value (whatever the first external parameter bound to is in the original plug."\
-				":jessica-placement:\n"\
-			)\
-			EXPOSURE_END()\
+#define SOCKET_PARAM_EXPOSE_TO_BLUE( _className, _valueDescription )                                                                                                                                                    \
+	BLUE_DEFINE( _className );                                                                                                                                                                                          \
+	const Be::ClassInfo* _className::ExposeToBlue()                                                                                                                                                                     \
+	{                                                                                                                                                                                                                   \
+		EXPOSURE_BEGIN( _className, "\n:jessica-icon: fal-paragraph\n:jessica-icon-color: (123, 28, 212)\n:jessica-help-url: https://wiki.ccpgames.com/pages/viewpage.action?spaceKey=TTL&title=Plugs+and+Sockets \n" ) \
+			MAP_INTERFACE( IEveSocketParameter )                                                                                                                                                                        \
+			MAP_ATTRIBUTE( "name", m_name, "Attribute name.", Be::READWRITE | Be::PERSIST )                                                                                                                             \
+			MAP_ATTRIBUTE( "value", m_value, _valueDescription, Be::READWRITE | Be::PERSIST )                                                                                                                           \
+			MAP_METHOD_AND_WRAP( "Used", Used, "" )                                                                                                                                                                     \
+			MAP_METHOD_AND_WRAP(                                                                                                                                                                                        \
+				"SetValueToDefault",                                                                                                                                                                                    \
+				SetValueToDefault,                                                                                                                                                                                      \
+				"Reset the value to the default value (whatever the first external parameter bound to is in the original plug."                                                                                         \
+				":jessica-placement:\n" )                                                                                                                                                                               \
+		EXPOSURE_END()                                                                                                                                                                                                  \
 	}
 
 SOCKET_PARAM_EXPOSE_TO_BLUE( EveSocketParameterBool, "Attribute value.\n:jessica-widget: checkbox\n" );

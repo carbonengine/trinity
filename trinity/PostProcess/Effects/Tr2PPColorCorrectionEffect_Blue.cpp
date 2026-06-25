@@ -20,4 +20,3 @@ const Be::ClassInfo* Tr2PPColorCorrectionEffect::ExposeToBlue()
 
 	EXPOSURE_CHAINTO( Tr2PPEffect )
 }
-

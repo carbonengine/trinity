@@ -8,8 +8,8 @@
 class YamlOutput
 {
 public:
-	explicit YamlOutput( bool enabled = true )
-		:m_expected( ROOT ),
+	explicit YamlOutput( bool enabled = true ) :
+		m_expected( ROOT ),
 		m_enabled( enabled )
 	{
 	}
@@ -232,6 +232,7 @@ public:
 		}
 		return m_os.str();
 	}
+
 private:
 	static std::string quote( const std::string& str )
 	{
@@ -338,8 +339,8 @@ extern bool g_generateListing;
 class YamlListing : public YamlOutput
 {
 public:
-	explicit YamlListing( bool enabled = true )
-		:YamlOutput( g_generateListing && enabled )
+	explicit YamlListing( bool enabled = true ) :
+		YamlOutput( g_generateListing && enabled )
 	{
 	}
 

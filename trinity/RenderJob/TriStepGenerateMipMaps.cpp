@@ -8,7 +8,7 @@ TriStepGenerateMipMaps::TriStepGenerateMipMaps( IRoot* lockobj )
 {
 }
 
-TriStepGenerateMipMaps::~TriStepGenerateMipMaps(void)
+TriStepGenerateMipMaps::~TriStepGenerateMipMaps( void )
 {
 }
 

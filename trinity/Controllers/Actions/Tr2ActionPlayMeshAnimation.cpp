@@ -6,8 +6,8 @@
 #include "Tr2GrannyAnimation.h"
 
 
-Tr2ActionPlayMeshAnimation::Tr2ActionPlayMeshAnimation( IRoot* lockobj )
-	:m_controller( nullptr ),
+Tr2ActionPlayMeshAnimation::Tr2ActionPlayMeshAnimation( IRoot* lockobj ) :
+	m_controller( nullptr ),
 	m_destinationType( DestinationType::OWNER ),
 	m_playAction( ENQUEUE_PLAY ),
 	m_stopAction( ENQUEUE_STOP ),

@@ -6,45 +6,35 @@
 namespace
 {
 
-	Be::VarChooser ChannelChooser[] =
-	{
-		{
-			"RED",
-			BeCast( 2 ),
-			""
-		},
-		{
-			"GREEN",
-			BeCast( 1 ),
-			""
-		},
-		{
-			"BLUE",
-			BeCast( 0 ),
-			""
-		},
-		{
-			"ALPHA",
-			BeCast( 3 ),
-			""
-		},
-		{ 0 }
-	};
+Be::VarChooser ChannelChooser[] = {
+	{ "RED",
+	  BeCast( 2 ),
+	  "" },
+	{ "GREEN",
+	  BeCast( 1 ),
+	  "" },
+	{ "BLUE",
+	  BeCast( 0 ),
+	  "" },
+	{ "ALPHA",
+	  BeCast( 3 ),
+	  "" },
+	{ 0 }
+};
 }
 
 
 BLUE_DEFINE( Tr2TexturePackChannel );
 
-const Be::ClassInfo* Tr2TexturePackChannel::ExposeToBlue()
-{
+const Be::ClassInfo* Tr2TexturePackChannel::ExposeToBlue(){
 	EXPOSURE_BEGIN( Tr2TexturePackChannel, "" )
 		MAP_INTERFACE( Tr2TexturePackChannel )
 
-		MAP_ATTRIBUTE( "path", m_path, "Res path to the input texture", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "channel", m_channel, "Channel to take from the input texture", Be::READWRITE | Be::PERSIST | Be::ENUM, ChannelChooser )
-		MAP_ATTRIBUTE( "fill", m_fill, "Constant color fill when no input texture is provided", Be::READWRITE | Be::PERSIST )
+			MAP_ATTRIBUTE( "path", m_path, "Res path to the input texture", Be::READWRITE | Be::PERSIST )
+				MAP_ATTRIBUTE_WITH_CHOOSER( "channel", m_channel, "Channel to take from the input texture", Be::READWRITE | Be::PERSIST | Be::ENUM, ChannelChooser )
+					MAP_ATTRIBUTE( "fill", m_fill, "Constant color fill when no input texture is provided", Be::READWRITE | Be::PERSIST )
 
-	EXPOSURE_END()
+						EXPOSURE_END()
 }
 
 BLUE_DEFINE( Tr2TexturePipelineStepPack );

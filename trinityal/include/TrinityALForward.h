@@ -6,18 +6,18 @@
 #define TRINITY_AL_WITH_BLUE_EXPOSURE 1
 #endif
 
-#define TRINITY_DIRECTX11	2
-#define TRINITY_STUB		5
-#define TRINITY_DIRECTX12	6
-#define TRINITY_METAL       10
+#define TRINITY_DIRECTX11 2
+#define TRINITY_STUB 5
+#define TRINITY_DIRECTX12 6
+#define TRINITY_METAL 10
 
 #ifndef TRINITY_PLATFORM
-#	error TRINITY_PLATFORM must be set
+#error TRINITY_PLATFORM must be set
 #endif
 
 
 #ifdef _MSC_VER
-#pragma warning(push, 3)
+#pragma warning( push, 3 )
 #endif
 
 #ifdef _WIN32
@@ -42,17 +42,17 @@
 #include <BitmapDimensions.h>
 
 #ifdef _MSC_VER
-#pragma warning(pop)
+#pragma warning( pop )
 #endif
 
 #if TRINITY_PLATFORM != TRINITY_DIRECTX11 && TRINITY_PLATFORM != TRINITY_DIRECTX12
 #define TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT 0
-#define	Tr2PrimaryRenderContextAL Tr2RenderContextAL
+#define Tr2PrimaryRenderContextAL Tr2RenderContextAL
 #else
 #define TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT 1
 #endif
 
-#if TRINITY_PLATFORM==TRINITY_DIRECTX11 
+#if TRINITY_PLATFORM == TRINITY_DIRECTX11
 
 #define TRINITY_PLATFORM_SYMBOL dx11
 #define TRINITY_PLATFORM_SYMBOL_SUFFIX Dx11
@@ -61,7 +61,7 @@
 #include <D3D11.h>
 #include <DXGI.h>
 
-#elif( TRINITY_PLATFORM==TRINITY_STUB )
+#elif ( TRINITY_PLATFORM == TRINITY_STUB )
 
 #define TRINITY_PLATFORM_SYMBOL stub
 #define TRINITY_PLATFORM_SYMBOL_SUFFIX Stub
@@ -89,4 +89,4 @@
 #endif
 
 
-#define TRINITY_AL_PLATFORM_INCLUDE( className ) CCP_STRINGIZE(../TRINITY_PLATFORM_SYMBOL/CCP_CONCATENATE(className, TRINITY_PLATFORM_SYMBOL_SUFFIX).h)
+#define TRINITY_AL_PLATFORM_INCLUDE( className ) CCP_STRINGIZE(../ TRINITY_PLATFORM_SYMBOL / CCP_CONCATENATE( className, TRINITY_PLATFORM_SYMBOL_SUFFIX ).h )

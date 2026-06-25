@@ -4,9 +4,10 @@
 #ifndef Tr2LodResource_h
 #define Tr2LodResource_h
 
-enum Tr2Lod {
+enum Tr2Lod
+{
 	TR2_LOD_UNSPECIFIED = -1,
-	
+
 	TR2_LOD_LOW = 0,
 	TR2_LOD_MEDIUM,
 	TR2_LOD_HIGH,

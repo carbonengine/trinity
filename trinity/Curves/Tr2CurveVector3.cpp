@@ -5,8 +5,8 @@
 #include "Tr2CurveScalar.h"
 
 
-Tr2CurveVector3::Tr2CurveVector3( IRoot* lockobj )
-	:PARENTLOCK( m_x ),
+Tr2CurveVector3::Tr2CurveVector3( IRoot* lockobj ) :
+	PARENTLOCK( m_x ),
 	PARENTLOCK( m_y ),
 	PARENTLOCK( m_z ),
 	m_currentValue( 0, 0, 0 )

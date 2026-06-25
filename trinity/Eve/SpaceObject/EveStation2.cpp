@@ -11,7 +11,7 @@
 // Description:
 //   Initialize data members
 // --------------------------------------------------------------------------------
-EveStation2::EveStation2( IRoot* lockobj ) : 
+EveStation2::EveStation2( IRoot* lockobj ) :
 	EveSpaceObject2( lockobj )
 {
 }
@@ -37,7 +37,7 @@ void EveStation2::PrepareShaderData( const EveUpdateContext& updateContext )
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Override base ::UpdateSyncronous() function, so we can update the turrets and 
+//   Override base ::UpdateSyncronous() function, so we can update the turrets and
 //   their positions (if they are attached to animated bones!)
 // --------------------------------------------------------------------------------
 void EveStation2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )

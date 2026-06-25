@@ -7,11 +7,11 @@
 #include "Eve/SpaceObject/EveShip2.h"
 
 EveSpaceObjectFxAttributes::EveSpaceObjectFxAttributes( IRoot* lockobj ) :
-    m_activationStrength( 1.f ),
+	m_activationStrength( 1.f ),
 	m_distanceToShip( 0 ),
 	m_boundingSphereRadius( 0 ),
 	m_distanceToChildParent( 0 ),
-    m_killCount( 0 ),
+	m_killCount( 0 ),
 	m_initialized( false ),
 	m_generatedShapeEllipsoidCenter( 0.f, 0.f, 0.f ),
 	m_generatedShapeEllipsoidRadius( 0.f, 0.f, 0.f ),
@@ -26,22 +26,22 @@ EveSpaceObjectFxAttributes::~EveSpaceObjectFxAttributes()
 
 void EveSpaceObjectFxAttributes::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-    if (nullptr == params.spaceObjectParent)
-    {
-        return;
-    }
+	if( nullptr == params.spaceObjectParent )
+	{
+		return;
+	}
 
 	if( !m_initialized )
 	{
 		// things we only want to calculate once
-        if ( EveSpaceObject2Ptr rootParent = BlueCastPtr( params.spaceObjectParent ) )
-        {
-            rootParent->GetShapeEllipsoid(m_generatedShapeEllipsoidCenter, m_generatedShapeEllipsoidRadius );
-        }
+		if( EveSpaceObject2Ptr rootParent = BlueCastPtr( params.spaceObjectParent ) )
+		{
+			rootParent->GetShapeEllipsoid( m_generatedShapeEllipsoidCenter, m_generatedShapeEllipsoidRadius );
+		}
 
 		m_initialized = true;
 	}
-	
+
 	// gather attributes
 	Vector3 objPos;
 	Vector4 sphere;
@@ -53,7 +53,7 @@ void EveSpaceObjectFxAttributes::UpdateAsyncronous( const EveUpdateContext& upda
 
 	m_parentWorldTranslation = objPos;
 	m_parentWorldRotation = RotationQuaternion( parentWorldTransform );
-    m_activationStrength = params.activationStrength;
+	m_activationStrength = params.activationStrength;
 	m_distanceToShip = Length( objPos ) - m_boundingSphereRadius;
 	m_boundingSphereRadius = sphere.w;
 

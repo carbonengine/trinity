@@ -23,7 +23,7 @@ Tr2TextureAtlas* Tr2TextureAtlasMan::FindAtlas( Tr2RenderContextEnum::PixelForma
 
 	for( auto it = m_atlases.begin(); it != m_atlases.end(); ++it )
 	{
-		if( (*it)->GetFormat() == fmt )
+		if( ( *it )->GetFormat() == fmt )
 		{
 			return *it;
 		}
@@ -59,7 +59,7 @@ void Tr2TextureAtlasMan::RemoveAtlas( Tr2RenderContextEnum::PixelFormat fmt )
 	ssize_t ix = 0;
 	for( auto it = m_atlases.begin(); it != m_atlases.end(); ++it, ++ix )
 	{
-		if( (*it)->GetFormat() == fmt )
+		if( ( *it )->GetFormat() == fmt )
 		{
 			m_atlases.Remove( ix );
 			break;

@@ -49,9 +49,9 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 	m_instanceCount( 0 ),
 	m_morphAnimationOffsets( {} ),
 	m_audioInstanceId( EveSpaceObject2::NextAudioInstanceId() ),
-	m_audioGeometrySetId(0),
-	m_audioGeometryRegistered(false),
-	m_allowAudioGeometry(true),
+	m_audioGeometrySetId( 0 ),
+	m_audioGeometryRegistered( false ),
+	m_allowAudioGeometry( true ),
 	EveChildTransform(),
 	EveEntity( lockobj )
 {
@@ -135,7 +135,7 @@ void EveChildMesh::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 		}
 	}
 
-	if ( list == &m_lights )
+	if( list == &m_lights )
 	{
 		auto maskedEvent = event & BELIST_EVENTMASK;
 		if( ( maskedEvent == BELIST_UNLOADSTART ) || ( ( maskedEvent == BELIST_REMOVED ) && m_lights.empty() ) )
@@ -192,7 +192,7 @@ void EveChildMesh::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 
 bool EveChildMesh::OnModified( Be::Var* val )
 {
-	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display) || IsMatch( val, m_mesh) || IsMatch( val, m_castShadow ) )
+	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display ) || IsMatch( val, m_mesh ) || IsMatch( val, m_castShadow ) )
 	{
 		ReRegister();
 	}
@@ -239,7 +239,7 @@ void EveChildMesh::InitializeAnimation()
 void EveChildMesh::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry && m_display  )
+	if( registry && m_display )
 	{
 		if( !m_lights.empty() )
 		{
@@ -329,7 +329,7 @@ bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const IEveS
 		}
 		else
 		{
-			sizeInShadow = shadowFrustum.GetSizeInShadow( bs );	
+			sizeInShadow = shadowFrustum.GetSizeInShadow( bs );
 		}
 	}
 	return sizeInShadow > 5.f;
@@ -390,7 +390,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 		{
 			bounds = m_mesh->GetBounds();
 		}
-		
+
 		bounds.Transform( m_worldTransform );
 		m_currentScreenSize = frustum.GetPixelSizeAccross( m_worldBoundingSphere );
 
@@ -506,18 +506,18 @@ void EveChildMesh::UpdateRtSkeleton()
 	{
 		return;
 	}
-	
+
 	auto meshIndex = m_mesh->GetMeshIndex();
 	auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
 	if( !lod )
 	{
 		return;
 	}
-	
+
 	// check skinning
 	bool hasSkinned = false;
-	
-	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );	
+
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 	for( auto it = begin( *areas ); it != end( *areas ); ++it )
 	{
 		if( lod->m_areas[std::max( 0, ( *it )->GetIndex() )].m_isSkinned )
@@ -559,7 +559,7 @@ void EveChildMesh::UpdateRtSkeleton()
 		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
 			auto meshAreaIndex = std::max( 0, ( *it )->GetIndex() );
-			
+
 			if( lod->m_areas[meshAreaIndex].m_isSkinned || lod->m_areas[meshAreaIndex].m_isMorphed )
 			{
 				( *it )->GetRtMeshArea()->MarkBlasOutdated();
@@ -572,20 +572,20 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	if( m_isVisible )
 	{
-		if( m_instancedMesh ) 
+		if( m_instancedMesh )
 		{
 			if( m_instancesVisible )
 			{
 				renderables.push_back( this );
-				if (!m_decals.empty())
+				if( !m_decals.empty() )
 				{
 					auto geometryRes = m_mesh->GetGeometryResource();
 
-					if (geometryRes)
+					if( geometryRes )
 					{
 						DecalMeshCache meshCache;
 						// run over every decal and update it
-						for (EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it)
+						for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 						{
 							// now prep to get the renderables
 							( *it )->GetInstancedRenderables( renderables, meshCache, m_instancedMesh, m_currentInstanceScreenSize );
@@ -630,7 +630,7 @@ bool EveChildMesh::HasTransparentBatches()
 {
 	if( m_display && m_mesh )
 	{
-		return !(m_mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT )->empty());
+		return !( m_mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT )->empty() );
 	}
 
 	return false;
@@ -657,14 +657,14 @@ void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType
 		{
 			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, min( m_currentInstanceScreenSize, m_currentScreenSize ) );
 		}
-		
+
 		if( m_activationStrength != 0.0 )
 		{
 			for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 			{
 				( *it )->GetBatches( batches, batchType, perObjectData, reason );
 			}
-		}	
+		}
 	}
 }
 
@@ -687,7 +687,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 	auto rtMesh = m_mesh->GetRtMesh();
 
-	if ( !rtMesh || !rtMesh->IsGood() )
+	if( !rtMesh || !rtMesh->IsGood() )
 	{
 		return;
 	}
@@ -717,7 +717,7 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			auto m = XMMatrixMultiply( instanceTransform, m_worldTransform );
 			m_instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
 		}
-		
+
 		auto idm = IdentityMatrix();
 		UpdateRtPerObjectData( m_psData, &idm, renderContext, m_rtPerObjectData );
 
@@ -821,7 +821,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 					m_vsData.bakedMorphTargetVertexDataOffset = m_bakedMorphAllocation.GetOffset();
 				}
 			}
-		}		
+		}
 
 		auto [bones, boneCount] = GetBoneTransforms();
 		m_vsData.boneOffsets[2] = uint32_t( boneCount );
@@ -912,7 +912,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	UpdateTransform( localToWorldTransform );
 	for( auto it = m_transformModifiers.begin(); it != m_transformModifiers.end(); it++ )
 	{
-		m_worldTransform = (*it)->ApplyTransform( m_worldTransform, params.boneCount, params.bones );
+		m_worldTransform = ( *it )->ApplyTransform( m_worldTransform, params.boneCount, params.bones );
 	}
 
 	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
@@ -936,7 +936,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 		// need to move the clipdata inversely of the translation of the childmesh
 		m_vsData.clipData = Vector4( m_vsData.clipData.GetXYZ() - m_translation, m_vsData.clipData.w );
 		m_psData.clipSphereCenter = m_psData.clipSphereCenter - m_translation;
-		
+
 		// update the world transform of the parent
 		m_parentData.transform = m_worldTransform;
 	}
@@ -1150,7 +1150,7 @@ bool EveChildMesh::IsAlwaysOn() const
 
 void EveChildMesh::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
-	if ( nullptr != m_mesh )
+	if( nullptr != m_mesh )
 	{
 		m_mesh->SetShaderOption( name, value );
 	}
@@ -1196,7 +1196,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 	if( m_mesh )
 	{
-		if ( m_animationUpdater && m_animationUpdater->IsInitialized() )
+		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
 			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
 			auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::ALL );
@@ -1314,12 +1314,12 @@ std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTarg
 		result = std::make_pair( m_morphAnimationBuffer.data(), m_morphAnimationOffsets.m_allCount );
 		break;
 	case MorphTargetAnimationFilter::RUNTIME_EVALUATED:
-		if ( m_isMorphsBaked )
+		if( m_isMorphsBaked )
 		{
 			result = std::make_pair( m_morphAnimationBuffer.data() + m_morphAnimationOffsets.m_runtimeEvaluatedOffset, m_morphAnimationOffsets.m_runtimeEvaluatedCount );
 		}
 		else
-		{ 
+		{
 			// as long as the baking code hasn't been executed yet, we will rely on runtime evaluation for everything
 			result = std::make_pair( m_morphAnimationBuffer.data(), m_morphAnimationOffsets.m_allCount );
 		}
@@ -1386,7 +1386,7 @@ void EveChildMesh::UpdateMorphAnimationBuffer()
 
 	m_morphAnimationOffsets.m_runtimeEvaluatedOffset = 0;
 	m_morphAnimationOffsets.m_runtimeEvaluatedCount = uint32_t( std::distance( m_morphAnimationBuffer.begin(), runtimeEvaluatedEnd ) );
-	
+
 	// the baked values follow the runtime evaluated values in the buffer
 	auto bakedEnd = std::partition( runtimeEvaluatedEnd, m_morphAnimationBuffer.end(), [&]( const Tr2MorphTargetAnimationData& data ) {
 		return data.m_weight >= EPSILON && m_mesh->IsBakedMorph( data.m_index );
@@ -1412,7 +1412,7 @@ void EveChildMesh::BakeMorphs()
 		m_mergeMorphsEffect->StartUpdate();
 		m_mergeMorphsEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/System/MorphBaking.fx" );
 		m_mergeMorphsEffect->EndUpdate();
-	}		
+	}
 
 	// Set baked morph weights
 	m_bakeMorphs = true;
@@ -1505,7 +1505,7 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 			Tr2VertexDefinition::Item* positionItem = vertexDefinition.Find( Tr2VertexDefinition::POSITION );
 			Tr2VertexDefinition::Item* tangentItem = vertexDefinition.Find( Tr2VertexDefinition::TANGENT );
 
-			if(positionItem)
+			if( positionItem )
 			{
 				data->vertexDataPositionOffset = positionItem->m_offset;
 			}
@@ -1523,7 +1523,6 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 				data->vertexDataTangentOffset = std::numeric_limits<uint32_t>::max();
 			}
 		}
-
 	}
 
 	m_mergeMorphsConstantBuffer.Unlock( renderContext );
@@ -1557,11 +1556,10 @@ bool EveChildMesh::UpdateMeshMorphs( Tr2RenderContext& renderContext )
 		Tr2Renderer::RunComputeShader(
 			m_mergeMorphsEffect,
 			BlueSharedString( "MorphBaking" ),
-			(vertexCount + 63) / 64,
+			( vertexCount + 63 ) / 64,
 			1,
 			1,
-			renderContext
-		);
+			renderContext );
 
 		auto rtMesh = m_mesh->GetRtMesh();
 
@@ -1620,7 +1618,7 @@ const std::pair<const int32_t*, size_t> EveChildMesh::GetMeshBindingIndices() co
 
 	return std::make_pair( nullptr, 0 );
 }
-	
+
 void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
 {
 	if( m_attachments.empty() || !m_isVisible || !m_display )

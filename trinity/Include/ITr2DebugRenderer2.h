@@ -4,7 +4,7 @@
 // Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
 // The file version in the older blue versions had diverged from this one is incompatible.
 
-// There is already an outdated interface for ITr2DebugRenderer that needs to be 
+// There is already an outdated interface for ITr2DebugRenderer that needs to be
 // there atm for legacy reasons. Thus why this is nr.2 (okt 2019)
 #pragma once
 
@@ -59,40 +59,40 @@ struct Tr2DebugColor
 		return c;
 	}
 
-	Tr2DebugColor( uint32_t color )
-		:m_color( color ),
+	Tr2DebugColor( uint32_t color ) :
+		m_color( color ),
 		m_zFailColor( 0u ),
 		m_colorSelected( GetAutoSelectedColor( color ) ),
 		m_zFailColorSelected( 0u )
 	{
 	}
 
-	Tr2DebugColor( const Color& color )
-		:m_color( color ),
+	Tr2DebugColor( const Color& color ) :
+		m_color( color ),
 		m_zFailColor( 0u ),
 		m_colorSelected( GetAutoSelectedColor( color ) ),
 		m_zFailColorSelected( 0u )
 	{
 	}
 
-	Tr2DebugColor( uint32_t color, uint32_t zFailColor )
-		:m_color( color ),
+	Tr2DebugColor( uint32_t color, uint32_t zFailColor ) :
+		m_color( color ),
 		m_zFailColor( zFailColor ),
 		m_colorSelected( GetAutoSelectedColor( color ) ),
 		m_zFailColorSelected( GetAutoSelectedColor( zFailColor ) )
 	{
 	}
 
-	Tr2DebugColor( const Color& color, const Color& zFailColor )
-		:m_color( color ),
+	Tr2DebugColor( const Color& color, const Color& zFailColor ) :
+		m_color( color ),
 		m_zFailColor( zFailColor ),
 		m_colorSelected( GetAutoSelectedColor( color ) ),
 		m_zFailColorSelected( GetAutoSelectedColor( zFailColor ) )
 	{
 	}
 
-	Tr2DebugColor( const Color& color, const Color& zFailColor, const Color& selectedColor, const Color& zFailSelectedColor )
-		:m_color( color ),
+	Tr2DebugColor( const Color& color, const Color& zFailColor, const Color& selectedColor, const Color& zFailSelectedColor ) :
+		m_color( color ),
 		m_zFailColor( zFailColor ),
 		m_colorSelected( selectedColor ),
 		m_zFailColorSelected( zFailSelectedColor )
@@ -106,15 +106,15 @@ struct Tr2DebugObjectReference
 	uint32_t m_area;
 
 	template <typename T>
-	Tr2DebugObjectReference( T* object )
-		:m_object( object->GetRawRoot() ),
+	Tr2DebugObjectReference( T* object ) :
+		m_object( object->GetRawRoot() ),
 		m_area( 0 )
 	{
 	}
 
 	template <typename T>
-	Tr2DebugObjectReference( T* object, uint32_t area )
-		: m_object( object->GetRawRoot() ),
+	Tr2DebugObjectReference( T* object, uint32_t area ) :
+		m_object( object->GetRawRoot() ),
 		m_area( area )
 	{
 	}
@@ -128,7 +128,8 @@ struct Tr2DebugObjectReference
 	bool operator!=( const Tr2DebugObjectReference& other ) const;
 };
 
-BLUE_INTERFACE( ITr2DebugRenderer2 ) : public IRoot
+BLUE_INTERFACE( ITr2DebugRenderer2 ) :
+	public IRoot
 {
 	enum Effect
 	{
@@ -138,13 +139,13 @@ BLUE_INTERFACE( ITr2DebugRenderer2 ) : public IRoot
 	};
 
 	template <typename T>
-	bool HasOption( T* owner, const char* option ) const
+	bool HasOption( T * owner, const char* option ) const
 	{
 		return this->HasOption( owner->GetRawRoot(), option );
 	}
 
-	virtual bool HasOption( IRoot* owner, const char* option ) const = 0;
-	virtual bool IsSelected( IRoot* owner ) const = 0;
+	virtual bool HasOption( IRoot * owner, const char* option ) const = 0;
+	virtual bool IsSelected( IRoot * owner ) const = 0;
 	virtual bool IsSelected( Tr2DebugObjectReference owner ) const = 0;
 
 	virtual void DrawLine( Tr2DebugObjectReference owner, const Vector3& from, const Vector3& to, Tr2DebugColor color ) = 0;
@@ -166,9 +167,9 @@ BLUE_INTERFACE( ITr2DebugRenderer2 ) : public IRoot
 
 	virtual void DrawCone( Tr2DebugObjectReference owner, const Matrix& transform, float radius, float height, uint32_t segments, Effect effect, Tr2DebugColor color ) = 0;
 	virtual void DrawCone( Tr2DebugObjectReference owner, const Vector3& base, const Vector3& focal, float radius, uint32_t segments, Effect effect, Tr2DebugColor color ) = 0;
-	
+
 	virtual void DrawCone( Tr2DebugObjectReference owner, const Matrix& transform, float height, float angle, uint32_t segments, uint32_t coneSegments, Effect effect, Tr2DebugColor color ) = 0;
-	
+
 	virtual void DrawCapsule( Tr2DebugObjectReference owner, const Matrix& transform, float radius, float height, uint32_t segments, Effect effect, Tr2DebugColor color ) = 0;
 	virtual void DrawCapsule( Tr2DebugObjectReference owner, const Vector3& cap0, const Vector3& cap1, float radius, uint32_t segments, Effect effect, Tr2DebugColor color ) = 0;
 
@@ -189,11 +190,12 @@ BLUE_INTERFACE( ITr2DebugRenderer2 ) : public IRoot
 	virtual void DrawAudioSpeaker( Tr2DebugObjectReference owner, const Matrix& transform, float size, uint32_t segments, Effect effect, Tr2DebugColor color ) = 0;
 };
 
-BLUE_INTERFACE( ITr2DebugRenderable ) : public IRoot
+BLUE_INTERFACE( ITr2DebugRenderable ) :
+	public IRoot
 {
 	virtual void GetDebugOptions( Tr2DebugRendererOptions & options ) = 0;
 
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer ) = 0;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) = 0;
 };
 
 #endif

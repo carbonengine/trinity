@@ -4,14 +4,14 @@
 #include "EveSmartLightBaseAttributeModifier.h"
 #include "include/TriMath.h"
 
-EveSmartLightBaseAttributeModifier::EveSmartLightBaseAttributeModifier( IRoot* lockobj ):
-	m_activationStrength( 1.f),
+EveSmartLightBaseAttributeModifier::EveSmartLightBaseAttributeModifier( IRoot* lockobj ) :
+	m_activationStrength( 1.f ),
 	m_active( true ),
 	m_startsActive( true ),
 	m_isChangingActivation( false ),
 	m_crossFadeDuration( 1.f ),
 	m_crossFadeIntensity( 1.f ),
-	m_activationValuePreMapped( 1.f),
+	m_activationValuePreMapped( 1.f ),
 	m_activationValue( 1.f ),
 	m_finalActivationStrength( 1.f ),
 	m_perInstanceOffset( 0.f ),
@@ -34,7 +34,7 @@ bool EveSmartLightBaseAttributeModifier::Initialize()
 
 bool EveSmartLightBaseAttributeModifier::OnModified( Be::Var* value )
 {
-	if( IsMatch(value, m_active) )
+	if( IsMatch( value, m_active ) )
 	{
 		m_isChangingActivation = true;
 		if( m_crossFadeIntensity > 0.f )
@@ -127,10 +127,10 @@ void EveSmartLightBaseAttributeModifier::UpdateActivationStrength( float parentA
 float EveSmartLightBaseAttributeModifier::GetActivationStrength( const PlacementDataWithIdentifier& placement )
 {
 	float activationMultiplier = 1.f;
-	 
+
 	if( m_activationOverLifetime )
 	{
-		float idOffset = float(placement.initialPlacementID) * m_perInstanceOffset;
+		float idOffset = float( placement.initialPlacementID ) * m_perInstanceOffset;
 		switch( m_lifeTimeFormula )
 		{
 		case PER_INSTANCE_LIFETIME:
@@ -142,10 +142,10 @@ float EveSmartLightBaseAttributeModifier::GetActivationStrength( const Placement
 		case STATIC:
 			activationMultiplier = m_activationOverLifetime->GetValueAt( double( idOffset ) );
 			break;
-		default: 
+		default:
 			break;
 		}
 	}
-	
+
 	return m_finalActivationStrength * activationMultiplier;
 }

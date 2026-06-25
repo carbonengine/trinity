@@ -23,8 +23,8 @@ struct ImposterVertex
 }
 
 
-Tr2ImpostorManager::ImpostorAtlas::ImpostorAtlas()
-	:m_free( "Tr2ImpostorManager::ImpostorAtlas::m_free" )
+Tr2ImpostorManager::ImpostorAtlas::ImpostorAtlas() :
+	m_free( "Tr2ImpostorManager::ImpostorAtlas::m_free" )
 {
 }
 
@@ -86,8 +86,8 @@ void Tr2ImpostorManager::ImpostorAtlas::Drop( Vector2_16 coord )
 }
 
 
-Tr2ImpostorManager::Tr2ImpostorManager()
-	:m_width( 1024 ),
+Tr2ImpostorManager::Tr2ImpostorManager() :
+	m_width( 1024 ),
 	m_height( 1024 ),
 	m_itemWidth( 32 ),
 	m_itemHeight( 32 ),
@@ -101,7 +101,7 @@ Tr2ImpostorManager::Tr2ImpostorManager()
 
 	Tr2Variable altas( "ImposterAtlasMap", m_rt );
 	Tr2Variable itemSizeVar( "ImposterItemSize", Vector4() );
-	
+
 	m_effect.CreateInstance();
 	m_effect->SetEffectPathName( "res:/graphics/effect/managed/space/system/impostor.fx" );
 
@@ -135,7 +135,7 @@ bool Tr2ImpostorManager::Initialize()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements INotify interface. Resets the manager after attribute changes.  
+//   Implements INotify interface. Resets the manager after attribute changes.
 // Return Value:
 //   true always
 // --------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ bool Tr2ImpostorManager::OnModified( Be::Var* )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements Tr2DeviceResource method. Doesn't really do anything.  
+//   Implements Tr2DeviceResource method. Doesn't really do anything.
 // --------------------------------------------------------------------------------------
 void Tr2ImpostorManager::ReleaseResources( TriStorage )
 {
@@ -155,7 +155,7 @@ void Tr2ImpostorManager::ReleaseResources( TriStorage )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements Tr2DeviceResource method. Creates rendering resources.  
+//   Implements Tr2DeviceResource method. Creates rendering resources.
 // Return Value:
 //   true always
 // --------------------------------------------------------------------------------------
@@ -177,11 +177,11 @@ bool Tr2ImpostorManager::OnPrepareResources()
 //   itemWidth - Billboard width
 //   itemHeight - Billboard height
 // --------------------------------------------------------------------------------------
-void Tr2ImpostorManager::Create( 
-		Be::OptionalWithDefaultValue<uint32_t, 1024> width, 
-		Be::OptionalWithDefaultValue<uint32_t, 1024> height, 
-		Be::OptionalWithDefaultValue<uint32_t, 16> itemWidth, 
-		Be::OptionalWithDefaultValue<uint32_t, 16> itemHeight )
+void Tr2ImpostorManager::Create(
+	Be::OptionalWithDefaultValue<uint32_t, 1024> width,
+	Be::OptionalWithDefaultValue<uint32_t, 1024> height,
+	Be::OptionalWithDefaultValue<uint32_t, 16> itemWidth,
+	Be::OptionalWithDefaultValue<uint32_t, 16> itemHeight )
 {
 	m_width = width;
 	m_height = height;
@@ -213,7 +213,7 @@ void Tr2ImpostorManager::SetItemSize( uint32_t width, uint32_t height )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Resets the manager: deletes all billboards.  
+//   Resets the manager: deletes all billboards.
 // --------------------------------------------------------------------------------------
 void Tr2ImpostorManager::Reset()
 {
@@ -340,7 +340,7 @@ void Tr2ImpostorManager::EndUpdate()
 	Tr2Variable altas( "ImposterAtlasMap", m_rt );
 	Vector4 itemSize( float( m_itemWidth ) / float( m_width ), float( m_itemHeight ) / float( m_height ), 0.f, 0.f );
 	Tr2Variable itemSizeVar( "ImposterItemSize", itemSize );
-} 
+}
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -356,7 +356,7 @@ size_t Tr2ImpostorManager::GetRenderQueueLength() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Static comparison of impostor rendering priorities used for sorting. 
+//   Static comparison of impostor rendering priorities used for sorting.
 // Arguments:
 //   item1 - First impostor
 //   item2 - Second impostor
@@ -374,7 +374,7 @@ bool Tr2ImpostorManager::CompareImpostors( const std::pair<ITr2ImpostorSource*, 
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Starts re-rendering of impostor billboards. Should be called before any 
+//   Starts re-rendering of impostor billboards. Should be called before any
 //   BeginImpostorUpdate.
 // Arguments:
 //   renderContext - Current render context
@@ -385,14 +385,14 @@ void Tr2ImpostorManager::BeginUpdateAtlas( Tr2RenderContext& renderContext )
 	{
 		return;
 	}
-	
+
 	if( m_atlasDirty )
 	{
 		renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
 		renderContext.m_esm.PushRenderTarget( *m_rt );
-		
+
 		renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 0 );
-		
+
 		renderContext.m_esm.PopRenderTarget();
 		renderContext.m_esm.PopDepthStencilBuffer();
 		m_atlasDirty = false;
@@ -406,7 +406,7 @@ void Tr2ImpostorManager::BeginUpdateAtlas( Tr2RenderContext& renderContext )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Finishes re-rendering of impostor billboards. Should be called before any 
+//   Finishes re-rendering of impostor billboards. Should be called before any
 //   EndImpostorUpdate. Copies updated impostor images to the atlas.
 // Arguments:
 //   renderContext - Current render context

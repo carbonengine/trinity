@@ -12,7 +12,6 @@ const Be::ClassInfo* EveDistributionPlacementGeneratorParentLocators::ExposeToBl
 		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE( "locatorSetName", m_locatorSetName, "name of the parent locator set", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		
+
 	EXPOSURE_END()
 }
- 

@@ -21,9 +21,9 @@ Matrix EveChildModifierBooster::ApplyTransform( const Matrix& transform, size_t,
 	DistanceBase( transform, alignMat, distCenter, d );
 
 	float radius = 0.5f;
-	float B = sqrtf( distCenter*distCenter - radius*radius );
+	float B = sqrtf( distCenter * distCenter - radius * radius );
 	float scale = B / distCenter;
-	float trans = -radius*radius / (distCenter*scale);
+	float trans = -radius * radius / ( distCenter * scale );
 
 	Matrix scalingTransform = ScalingMatrix( scale, scale, scale );
 	Matrix translationTransform = TranslationMatrix( 0.0f, 0.0f, trans );

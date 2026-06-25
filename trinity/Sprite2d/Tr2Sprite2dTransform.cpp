@@ -30,11 +30,11 @@ void Tr2Sprite2dTransform::GatherSprites( Tr2Sprite2dScene* renderer )
 
 	for( ITr2SpriteObjectVector::reverse_iterator it = m_background.rbegin(); it != m_background.rend(); ++it )
 	{
-		(*it)->GatherSprites( renderer );
+		( *it )->GatherSprites( renderer );
 	}
 	for( ITr2SpriteObjectVector::reverse_iterator it = m_children.rbegin(); it != m_children.rend(); ++it )
 	{
-		(*it)->GatherSprites( renderer );
+		( *it )->GatherSprites( renderer );
 	}
 
 	renderer->SetAccumulatedAlpha( oldOpacity );
@@ -64,13 +64,13 @@ ITr2SpriteObject* Tr2Sprite2dTransform::PickPoint( float x, float y, Tr2Sprite2d
 	{
 		return NULL;
 	}
-	
+
 	ITr2SpriteObject* obj = NULL;
 	renderer->PushTransform( GetTransformationMatrix() );
 
 	for( ITr2SpriteObjectVector::iterator it = m_children.begin(); it != m_children.end(); ++it )
 	{
-		obj = (*it)->PickPoint( x, y, renderer );
+		obj = ( *it )->PickPoint( x, y, renderer );
 		if( obj )
 		{
 			break;
@@ -81,13 +81,13 @@ ITr2SpriteObject* Tr2Sprite2dTransform::PickPoint( float x, float y, Tr2Sprite2d
 	if( m_pickState == TR2_SPS_ON )
 	{
 		this->m_auxMouseover = NULL;
-		if ( !obj )
+		if( !obj )
 		{
 			obj = this;
 		}
 		else
 		{
-			if ( obj->IsAuxMouseover() )
+			if( obj->IsAuxMouseover() )
 			{
 				// The auxiliary mouseover can add content to the mouseover text or context menu
 				this->m_auxMouseover = obj;
@@ -110,7 +110,7 @@ Matrix Tr2Sprite2dTransform::GetTransformationMatrix()
 	return m;
 }
 
-Vector2 Tr2Sprite2dTransform::TransformPoint(float x, float y)
+Vector2 Tr2Sprite2dTransform::TransformPoint( float x, float y )
 {
 	Matrix m;
 	// Rounding the results here helps with ensuring pixel perfect sprites with 90 degree rotations
@@ -118,7 +118,7 @@ Vector2 Tr2Sprite2dTransform::TransformPoint(float x, float y)
 	Vector2 absRotationCenter( floor( m_rotationCenter.x * m_displayWidth + 0.5f ), floor( m_rotationCenter.y * m_displayHeight + 0.5f ) );
 	m = Transformation2DMatrix( &absScalingCenter, m_scalingRotation, &m_scale, &absRotationCenter, m_rotation, NULL );
 
-	Vector2 vec = Vector2(x, y);
+	Vector2 vec = Vector2( x, y );
 	Vector4 ret = Transform( vec, m );
-	return Vector2(ret.x, ret.y);
+	return Vector2( ret.x, ret.y );
 }

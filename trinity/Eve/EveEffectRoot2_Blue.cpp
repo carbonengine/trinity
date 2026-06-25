@@ -7,7 +7,7 @@ BLUE_DEFINE( EveEffectRoot2 );
 
 const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveEffectRoot2, "" )
+	EXPOSURE_BEGIN( EveEffectRoot2, "" )
 		MAP_INTERFACE( IEveSpaceObject2 )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
@@ -16,90 +16,71 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 		MAP_INTERFACE( ITr2CurveSetOwner )
 		MAP_INTERFACE( IEveEffectChildrenOwner )
 		MAP_INTERFACE( ITr2ControllerOwner )
-		MAP_INTERFACE ( IShaderConfigurer )
+		MAP_INTERFACE( IShaderConfigurer )
 		MAP_INTERFACE( ITr2SoundEmitterOwner )
 		MAP_INTERFACE( ITr2LightOwner )
 		MAP_INTERFACE( IWorldPosition )
 		MAP_INTERFACE( EveEntity )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"name",
 			m_name,
 			"",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"display",
 			m_display,
 			"",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY
-		)
-		
-		MAP_ATTRIBUTE( 
-			"mute",
-			m_mute, 
-			"",
-			Be::READWRITE | Be::NOTIFY
-		)
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
-		
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
+			"mute",
+			m_mute,
+			"",
+			Be::READWRITE | Be::NOTIFY )
+
+
+		MAP_ATTRIBUTE(
 			"estimatedSize",
 			m_estimatedSize,
 			"",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"lodLevel",
 			m_lodLevel,
 			"",
-			Be::READ
-		)
+			Be::READ )
 
-		MAP_ATTRIBUTE
-		(
+		MAP_ATTRIBUTE(
 			"dynamicLOD",
 			m_dynamicLODSelection,
 			"",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(    
+		MAP_ATTRIBUTE(
 			"translationCurve",
 			m_ballPosition,
 			"Vector function slot for attaching a destiny ball to set the position of an object",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(    
+		MAP_ATTRIBUTE(
 			"rotationCurve",
 			m_ballRotation,
 			"Quaternion function slot for attaching a destiny ball to set the rotation of an object",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE
-		(    
+		MAP_ATTRIBUTE(
 			"modelTranslationCurve",
 			m_modelTranslation,
 			"Used to add animated translations to ships",
-			Be::READWRITE | Be::PERSIST
-		)
-		MAP_ATTRIBUTE
-		(    
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"modelRotationCurve",
 			m_modelRotation,
 			"Used to add rotations to the basic rotation curve",
-			Be::READWRITE | Be::PERSIST
-		)
+			Be::READWRITE | Be::PERSIST )
 
 #if BLUE_WITH_PYTHON
 		// expose bounding sphere as two variables: center pos and radius
@@ -112,22 +93,18 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "duration", m_effectDuration, "", Be::READWRITE | Be::PERSIST )
-	
-		MAP_ATTRIBUTE
-		(
+
+		MAP_ATTRIBUTE(
 			"effectChildren",
 			m_effectChildren,
 			"",
-			Be::READ | Be::PERSIST
-		)
-		
-		MAP_ATTRIBUTE
-		( 
-			"observers", 
-			m_observers, 
+			Be::READ | Be::PERSIST )
+
+		MAP_ATTRIBUTE(
+			"observers",
+			m_observers,
 			"Observers for pushing data between modules every frame. Currently used to push locator data out to the audio2 module.",
-			Be::READ | Be::PERSIST
-		)
+			Be::READ | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "GetBoundingSphereRadius", GetBoundingSphereRadius, "Returns the bounding sphere radius." )
 
@@ -139,65 +116,59 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "controllers", m_controllers, "List of object controllers", Be::READ | Be::PERSIST )
 
-		MAP_ATTRIBUTE( 
-			"secondaryLightingSphereRadius", 
-			m_secondaryLightingSphereRadiusLocal, 
-			"Radius of secondary light source", 
+		MAP_ATTRIBUTE(
+			"secondaryLightingSphereRadius",
+			m_secondaryLightingSphereRadiusLocal,
+			"Radius of secondary light source",
 			Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( 
-			"secondaryLightingEmissiveColor", 
-			m_secondaryLightingEmissiveColor, 
-			"Color of the secondary light source", 
+		MAP_ATTRIBUTE(
+			"secondaryLightingEmissiveColor",
+			m_secondaryLightingEmissiveColor,
+			"Color of the secondary light source",
 			Be::READWRITE | Be::PERSIST )
-		MAP_METHOD_AND_WRAP( 
-			"Start", 
-			Start, 
+		MAP_METHOD_AND_WRAP(
+			"Start",
+			Start,
 			"Play all top level curveSets\n"
 			":jessica-favorite:\n"
 			":jessica-icon: timeline/play.png" )
-		MAP_METHOD_AND_WRAP( 
-			"Stop", 
-			Stop, 
-			"Stop all top level curveSets.\n" 
+		MAP_METHOD_AND_WRAP(
+			"Stop",
+			Stop,
+			"Stop all top level curveSets.\n"
 			":jessica-favorite:\n"
 			":jessica-icon: timeline/stop.png" )
-			
-		MAP_METHOD_AND_WRAP( "GetBoundingSphereRadius", GetBoundingSphereRadius, "Returns the bounding sphere radius." )	
+
+		MAP_METHOD_AND_WRAP( "GetBoundingSphereRadius", GetBoundingSphereRadius, "Returns the bounding sphere radius." )
 
 		MAP_METHOD_AND_WRAP(
 			"SetControllerVariable",
 			SetControllerVariable,
 			"Set variable for all applicable controllers\n"
 			":param name: variable name\n"
-			":param value: new variable value\n"
-		)
+			":param value: new variable value\n" )
 
 		MAP_METHOD_AND_WRAP(
 			"HandleControllerEvent",
 			HandleControllerEvent,
 			"Pass an event to controllers\n"
-			":param name: event name"
-		)
+			":param name: event name" )
 
 		MAP_METHOD_AND_WRAP(
 			"StartControllers",
 			StartControllers,
-			"Start all controllers"
-		)
-		MAP_METHOD_AND_WRAP
-		(
+			"Start all controllers" )
+		MAP_METHOD_AND_WRAP(
 			"FreezeHighDetailMesh",
 			FreezeHighDetailMesh,
-			""
-		)
+			"" )
 
-        MAP_METHOD_AND_WRAP(
-            "SetProceduralContainerVariable",
-            SetProceduralContainerVariable,
-            "Set variable for all applicable ProceduralContainer\n"
-            ":param name: variable name\n"
-            ":param value: new variable value\n"
-        )
+		MAP_METHOD_AND_WRAP(
+			"SetProceduralContainerVariable",
+			SetProceduralContainerVariable,
+			"Set variable for all applicable ProceduralContainer\n"
+			":param name: variable name\n"
+			":param value: new variable value\n" )
 
-    EXPOSURE_END();
+	EXPOSURE_END();
 }

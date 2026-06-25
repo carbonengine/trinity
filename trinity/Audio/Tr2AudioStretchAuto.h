@@ -17,6 +17,7 @@ public:
 	unsigned int TriggerOutburstEvent();
 	unsigned int TriggerImpactEvent();
 	unsigned int TriggerStretchEvent();
+
 protected:
 	std::wstring m_outburstEvent;
 	std::wstring m_impactEvent;

@@ -6,28 +6,28 @@
 
 namespace PostProcessEnums
 {
-	Be::VarChooser Tr2PostProcessPriorityChooser[] = {
+Be::VarChooser Tr2PostProcessPriorityChooser[] = {
 
-		{ "UI",
-		  BeCast( Priority::UI_PRIORITY ),
-		  "UI (Top) Priority" },
-		{ "High",
-		  BeCast( Priority::HIGH_PRIORITY ),
-		  "High Priority" },
-		{ "Medium",
-		  BeCast( Priority::MEDIUM_PRIORITY ),
-		  "Medium Priority" },
-		{ "Low",
-		  BeCast( Priority::LOW_PRIORITY ),
-		  "Low Priority" },
-		{ "SceneDefault",
-		  BeCast( Priority::SCENE_DEFAULT_PRIORITY ),
-		  "Scene Default (lowest) Priority" },
-		{ 0 }
-	};
-	BLUE_REGISTER_ENUM_EX( "Tr2PostProcessPriority", Priority, Tr2PostProcessPriorityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+	{ "UI",
+	  BeCast( Priority::UI_PRIORITY ),
+	  "UI (Top) Priority" },
+	{ "High",
+	  BeCast( Priority::HIGH_PRIORITY ),
+	  "High Priority" },
+	{ "Medium",
+	  BeCast( Priority::MEDIUM_PRIORITY ),
+	  "Medium Priority" },
+	{ "Low",
+	  BeCast( Priority::LOW_PRIORITY ),
+	  "Low Priority" },
+	{ "SceneDefault",
+	  BeCast( Priority::SCENE_DEFAULT_PRIORITY ),
+	  "Scene Default (lowest) Priority" },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "Tr2PostProcessPriority", Priority, Tr2PostProcessPriorityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 }
-	
+
 
 BLUE_DEFINE( Tr2PostProcessAttributes );
 
@@ -38,11 +38,11 @@ const Be::ClassInfo* Tr2PostProcessAttributes::ExposeToBlue()
 		MAP_ATTRIBUTE_WITH_CHOOSER( "priority", priority, "", Be::READWRITE | Be::PERSIST | Be::ENUM, PostProcessEnums::Tr2PostProcessPriorityChooser )
 		MAP_ATTRIBUTE( "intensity", intensity, "", Be::READ )
 
-#define POSTPROCESSATTRIBUTE_DEFINE( NAME, GROUP, DESC )                                                                                                                   \
+#define POSTPROCESSATTRIBUTE_DEFINE( NAME, GROUP, DESC )                                                                                          \
 	MAP_ATTRIBUTE( #NAME "Enabled", NAME.enabled, "Enables " #NAME " in the postprocess \n:jessica-group: " #GROUP, Be::READWRITE | Be::PERSIST ) \
 	MAP_ATTRIBUTE( #NAME, NAME.value, "The maximum value of " #NAME " in the postprocess " DESC "\n:jessica-group: " #GROUP, Be::READWRITE | Be::PERSIST )
 
-#define POSTPROCESSATTRIBUTE_DEFINE_ENUM( NAME, GROUP, DESC, CHOOSER )                                                                                                     \
+#define POSTPROCESSATTRIBUTE_DEFINE_ENUM( NAME, GROUP, DESC, CHOOSER )                                                                                          \
 	MAP_ATTRIBUTE( #NAME "Enabled", NAME.enabled, "Enables " #NAME " in the postprocess \n:jessica-group: " #GROUP, Be::READWRITE | Be::PERSIST | Be::PERSIST ) \
 	MAP_ATTRIBUTE_WITH_CHOOSER( #NAME, NAME.value, DESC "\n:jessica-group: " #GROUP, Be::READWRITE | Be::PERSIST | Be::ENUM, CHOOSER )
 

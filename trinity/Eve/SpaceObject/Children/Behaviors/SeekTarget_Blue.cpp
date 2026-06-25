@@ -13,9 +13,8 @@ const Be::ClassInfo* SeekTarget::ExposeToBlue()
 		MAP_INTERFACE( SeekTarget )
 		MAP_INTERFACE( IBehavior )
 
-		MAP_ATTRIBUTE_WITH_CHOOSER( "behaviorPriority", m_priority, "control what priority this behavior should have",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, BehaviorPriorityChooser )		
-		
+		MAP_ATTRIBUTE_WITH_CHOOSER( "behaviorPriority", m_priority, "control what priority this behavior should have", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, BehaviorPriorityChooser )
+
 		MAP_ATTRIBUTE( "enabled", m_enabled, "Should this behavior be active", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "locatorSet", m_locatorSet, "Set of Blue structure lists of locators identified by a name", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "locatorSetName", m_locatorSetName, "Name of locatorSet", Be::READWRITE | Be::PERSIST )
@@ -68,10 +67,10 @@ const Be::ClassInfo* SeekTarget::ExposeToBlue()
 			SplitBoundingBox,
 			"Splits bounding box into sub boxes if ship is large enough.\n"
 			":param transforms: target" )
-		
+
 		MAP_METHOD_AND_WRAP(
-			"AddLocatorSet", 
-			AddLocatorSet, 
+			"AddLocatorSet",
+			AddLocatorSet,
 			"Adds a locatorSet to the behavior \n:jessica-placement: TOOLBAR\n:jessica-icon: fa-map-pin\n" )
 
 		MAP_METHOD_AND_WRAP(
@@ -80,5 +79,5 @@ const Be::ClassInfo* SeekTarget::ExposeToBlue()
 			"Set the totalRepairTime \n" )
 
 
-		EXPOSURE_END()
+	EXPOSURE_END()
 }

@@ -20,7 +20,8 @@ class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class Tr2QuadRenderer;
 
-struct EveSpriteLight {
+struct EveSpriteLight
+{
 	EveSpriteLight();
 	EveSpriteLight( const LightData& lightData, float blinkPhase, float blinkRate, float minScale, float maxScale, uint32_t index, const std::wstring& profilePath );
 
@@ -35,7 +36,7 @@ struct EveSpriteLight {
 	Matrix boneMatrix;
 };
 
-BLUE_CLASS( EveSpriteSet ):
+BLUE_CLASS( EveSpriteSet ) :
 	public IEveSpaceObjectAttachment,
 	public IInitialize,
 	public ITr2LightOwner,
@@ -77,7 +78,7 @@ public:
 	void Add( const Vector3& pos, float blinkRate, float blinkPhase, float minScale, float maxScale, float falloff, const Color& color, const Color& warpColor );
 	void Add( const Vector3& pos, float scale, const Color& color, const Color& warpColor );
 	void Add( EveSpriteSetItemPtr newItem );
-	
+
 	// Rebuild resources
 	void Rebuild();
 
@@ -85,10 +86,10 @@ public:
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
 	virtual void UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float parentStrength, float boosterGain ) override;
-	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
-	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const Float4x3* bones, size_t boneCount ) override;
-	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
+	virtual void AddToQuadRenderer( Tr2QuadRenderer & quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const Float4x3* bones, size_t boneCount ) override;
+	virtual void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount ) override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	void AddLightFromSOF( const EveSpriteLight& light );
@@ -99,9 +100,9 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	void GetLights( Tr2LightManager& lightManager ) const override;
+	void GetLights( Tr2LightManager & lightManager ) const override;
 
-	void AddBoosterGlowToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float boosterGain, float warpIntensity );
+	void AddBoosterGlowToQuadRenderer( Tr2QuadRenderer & quadRenderer, const Matrix& world, float boosterGain, float warpIntensity );
 
 	EveSpriteSetItemVector* GetSprites();
 	const char* GetName();

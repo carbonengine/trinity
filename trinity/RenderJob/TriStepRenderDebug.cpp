@@ -13,14 +13,14 @@ const int NUM_POINTS_MAX = 32000;
 
 using namespace Tr2RenderContextEnum;
 
-TriStepRenderDebug::TriStepRenderDebug( IRoot* lockobj ) : 
+TriStepRenderDebug::TriStepRenderDebug( IRoot* lockobj ) :
 	m_data( NULL ),
 	m_numPrimitives( 0 ),
 	m_lineSet( nullptr ),
 	m_projectedText( "TriStepRenderDebug/m_projectedText" ),
 	m_autoClear( true )
 {
-	m_data = (uint8_t*)CCP_MALLOC( "TriStepRenderDebug/m_data", NUM_POINTS_MAX * (3 * sizeof(float) + sizeof(uint32_t)) );
+	m_data = (uint8_t*)CCP_MALLOC( "TriStepRenderDebug/m_data", NUM_POINTS_MAX * ( 3 * sizeof( float ) + sizeof( uint32_t ) ) );
 	m_curData = m_data;
 	BeClasses->CreateInstance( GetTriLineSetClsid(), BlueInterfaceIID<TriLineSet>(), (void**)&m_lineSet );
 
@@ -31,7 +31,7 @@ TriStepRenderDebug::TriStepRenderDebug( IRoot* lockobj ) :
 	m_projectedTextRenderer->PrepareResources();
 }
 
-TriStepRenderDebug::~TriStepRenderDebug(void)
+TriStepRenderDebug::~TriStepRenderDebug( void )
 {
 	if( m_data )
 	{
@@ -70,7 +70,7 @@ TriStepResult TriStepRenderDebug::Execute( Be::Time realTime, Be::Time simTime, 
 		Tr2Rect rect;
 		Vector3 screenPos = Tr2Renderer::ProjectWorldToScreen( e.pos, viewport );
 
-		if( (screenPos.z > 0.0f) && (screenPos.z < 1.0f) )
+		if( ( screenPos.z > 0.0f ) && ( screenPos.z < 1.0f ) )
 		{
 			rect.top = (int32_t)screenPos.y;
 			rect.left = (int32_t)screenPos.x;
@@ -91,7 +91,7 @@ TriStepResult TriStepRenderDebug::Execute( Be::Time realTime, Be::Time simTime, 
 	return RS_OK;
 }
 
-void TriStepRenderDebug::DrawPointCloud(int numPoints, float *points, int stride)
+void TriStepRenderDebug::DrawPointCloud( int numPoints, float* points, int stride )
 {
 	if( m_numPrimitives + numPoints < NUM_POINTS_MAX )
 	{
@@ -108,10 +108,10 @@ void TriStepRenderDebug::DrawPointCloud(int numPoints, float *points, int stride
 
 			++dst;
 
-			src = (float*)((uint8_t*)src + stride);
+			src = (float*)( (uint8_t*)src + stride );
 		}
 
-		m_curData += numPoints * (3 * sizeof(float) + sizeof(uint32_t));
+		m_curData += numPoints * ( 3 * sizeof( float ) + sizeof( uint32_t ) );
 		m_numPrimitives += numPoints;
 	}
 }
@@ -166,7 +166,7 @@ void TriStepRenderDebug::Printf( const Vector3& pos, uint32_t color, const char*
 	va_start( args, msg );
 
 	const int BUFFER_SIZE = 1024;
-	static char buffer[ BUFFER_SIZE ];
+	static char buffer[BUFFER_SIZE];
 
 	vsnprintf_s( buffer, BUFFER_SIZE, _TRUNCATE, msg, args );
 
@@ -198,7 +198,6 @@ void TriStepRenderDebug::DrawCone( const Vector3& start, const Vector3& end, flo
 
 void TriStepRenderDebug::DrawPlane( const Vector4& planeEquation, int segments, uint32_t color /*= 0xffffffff */ )
 {
-
 }
 
 void TriStepRenderDebug::DrawAxes( const Matrix& m, float scale )
@@ -220,7 +219,7 @@ void TriStepRenderDebug::Print2D( int x, int y, uint32_t color, const std::strin
 
 void TriStepRenderDebug::Print2Df( int x, int y, int w, int h, uint32_t format, uint32_t color, const std::string& msg )
 {
-	Tr2Rect rect = {x, y, w, h};
+	Tr2Rect rect = { x, y, w, h };
 	Printf( rect, color, format, msg.c_str() );
 }
 

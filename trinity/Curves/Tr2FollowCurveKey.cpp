@@ -6,7 +6,7 @@
 #include "include/TriMath.h"
 
 
-Tr2ObjectFollowCurveKey::Tr2ObjectFollowCurveKey( IRoot* lockobj ) : 
+Tr2ObjectFollowCurveKey::Tr2ObjectFollowCurveKey( IRoot* lockobj ) :
 	m_time( 0 ),
 	m_leftTangent( 0, 0, 0 ),
 	m_rightTangent( 0, 0, 0 ),
@@ -15,7 +15,7 @@ Tr2ObjectFollowCurveKey::Tr2ObjectFollowCurveKey( IRoot* lockobj ) :
 	m_interpolation( Tr2FollowCurveKeyInterpolation::LINEAR ),
 	m_offset( 0.0, 0.0, 0.0 ),
 	m_rotationSetting( NO_ROTATION ),
-	m_locator(nullptr)
+	m_locator( nullptr )
 {
 }
 
@@ -51,7 +51,7 @@ bool Tr2ObjectFollowCurveKey::Initialize()
 	return true;
 }
 
-bool Tr2ObjectFollowCurveKey::OnModified( Be::Var *value )
+bool Tr2ObjectFollowCurveKey::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_offsetLocatorName ) || IsMatch( value, m_object ) )
 	{
@@ -73,7 +73,7 @@ Locator* Tr2ObjectFollowCurveKey::GetLocator()
 		auto locators = so->GetLocatorsForSet( m_offsetLocatorName );
 		if( locators != nullptr && locators->size() > 0 )
 		{
-			return const_cast< Locator* >( &( *locators )[0] );
+			return const_cast<Locator*>( &( *locators )[0] );
 		}
 	}
 	return nullptr;
@@ -163,12 +163,10 @@ Tr2CameraFollowCurveKey::Tr2CameraFollowCurveKey( IRoot* lockobj ) :
 	m_lastEnabledFrontClip( 10 ),
 	m_lastEnabledInverseViewMatrix( Matrix() )
 {
-
 }
 
 Tr2CameraFollowCurveKey::~Tr2CameraFollowCurveKey()
 {
-
 }
 
 bool Tr2CameraFollowCurveKey::Initialize()
@@ -177,7 +175,7 @@ bool Tr2CameraFollowCurveKey::Initialize()
 	return true;
 }
 
-bool Tr2CameraFollowCurveKey::OnModified( Be::Var *value )
+bool Tr2CameraFollowCurveKey::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_fovMultiplication ) )
 	{
@@ -214,10 +212,10 @@ void Tr2CameraFollowCurveKey::CalculateBoxPosition()
 		m_frontClip = m_lastEnabledFrontClip;
 	}
 
-	
+
 	float tanOuterFov = tan( m_fov );
 	float tanInnerFov = tan( m_fov * m_fovMultiplication );
-		
+
 	float nearClipPlaneSize = m_frontClip / tanOuterFov;
 	float aspectRatio = Tr2Renderer::GetAspectRatio();
 
@@ -249,10 +247,10 @@ void Tr2CameraFollowCurveKey::CalculateBoxPosition()
 	m_boxPosition = TransformCoord( boxOffsetXY + boxCenter, rotMatrix );
 }
 
-Vector3 Tr2CameraFollowCurveKey::GetValue( )
+Vector3 Tr2CameraFollowCurveKey::GetValue()
 {
 	CalculateBoxPosition();
-	
+
 	return m_boxPosition;
 }
 

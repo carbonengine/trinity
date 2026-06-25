@@ -25,10 +25,9 @@
 #include "DxReflection.h"
 #include <WorkQueue.h>
 
-#define DXIL_FOURCC(ch0, ch1, ch2, ch3) (                            \
-  (uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
-  (uint32_t)(uint8_t)(ch2) << 16  | (uint32_t)(uint8_t)(ch3) << 24   \
-  )
+#define DXIL_FOURCC( ch0, ch1, ch2, ch3 ) (                        \
+	(uint32_t)(uint8_t)( ch0 ) | (uint32_t)(uint8_t)( ch1 ) << 8 | \
+	(uint32_t)(uint8_t)( ch2 ) << 16 | (uint32_t)(uint8_t)( ch3 ) << 24 )
 
 enum DxilFourCC
 {
@@ -161,7 +160,7 @@ void PrintValuePath( std::ostream& os, const std::vector<Symbol*>& path, const c
 		}
 		if( *it )
 		{
-			os << (*it)->name;
+			os << ( *it )->name;
 		}
 		else
 		{
@@ -185,8 +184,7 @@ static void PatchSemantics( InputStageType shaderStage, ASTNode* callNode )
 	std::vector<Symbol*> targetPath;
 	switch( shaderStage )
 	{
-	case VERTEX_STAGE:
-	{
+	case VERTEX_STAGE: {
 		const char* semantics[] = { "position", nullptr };
 		if( FindOutputBySemantics( functionHeader, semantics, &targetPath ) )
 		{
@@ -201,8 +199,7 @@ static void PatchSemantics( InputStageType shaderStage, ASTNode* callNode )
 		}
 		break;
 	}
-	case PIXEL_STAGE:
-	{
+	case PIXEL_STAGE: {
 		{
 			const char* semantics[] = { "color", "color0", nullptr };
 			if( FindOutputBySemantics( functionHeader, semantics, &targetPath ) )
@@ -307,14 +304,14 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 		if( vposPath.back() )
 		{
 			if( vposPath.back()->type.symbol ||
-				(vposPath.back()->type.builtInType == OP_FLOAT && vposPath.back()->type.width == 4 && vposPath.back()->type.height == 1) )
+				( vposPath.back()->type.builtInType == OP_FLOAT && vposPath.back()->type.width == 4 && vposPath.back()->type.height == 1 ) )
 			{
 				fixVPOSType = false;
 			}
 		}
 	}
 
-	if( !wrapUniforms && !fixVPOS && !fixVPOSType && (shaderStage != VERTEX_STAGE || outPositionPath.empty()) )
+	if( !wrapUniforms && !fixVPOS && !fixVPOSType && ( shaderStage != VERTEX_STAGE || outPositionPath.empty() ) )
 	{
 		entryPointName = ToString( entryPointSymbol->name );
 		return PATCH_USE;
@@ -512,7 +509,7 @@ bool MatchShaderInputOutput( ID3D11ShaderReflection* output, ID3D11ShaderReflect
 				g_messages.AddMessage( "\\memory(0): error X0000: Could not get shader output parameter description" );
 				return false;
 			}
-			if( vsDesc.Register == psDesc.Register && ((~vsDesc.Mask & psDesc.Mask) == 0) )
+			if( vsDesc.Register == psDesc.Register && ( ( ~vsDesc.Mask & psDesc.Mask ) == 0 ) )
 			{
 				if( _stricmp( vsDesc.SemanticName, psDesc.SemanticName ) || vsDesc.SemanticIndex != psDesc.SemanticIndex )
 				{
@@ -569,52 +566,12 @@ void PrintShaderOutListing( YamlOutput& listing, ID3DBlob* effectData, ID3D11Sha
 	CComPtr<ID3DBlob> disassembly;
 	if( SUCCEEDED( D3DDisassemble( effectData->GetBufferPointer(), effectData->GetBufferSize(), D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS, nullptr, &disassembly ) ) )
 	{
-		listing.literal( "asm" ).literal( reinterpret_cast<const char*>(disassembly->GetBufferPointer()) );
+		listing.literal( "asm" ).literal( reinterpret_cast<const char*>( disassembly->GetBufferPointer() ) );
 	}
 	D3D11_SHADER_DESC desc;
 	if( reflection && SUCCEEDED( reflection->GetDesc( &desc ) ) )
 	{
-		listing.literal( "stats" ).dict()
-			.literal( "Resources" ).dict()
-			.literal( "constantBuffers" ).literal( desc.ConstantBuffers )
-			.literal( "boundResources" ).literal( desc.BoundResources )
-			.literal( "inputParameters" ).literal( desc.InputParameters )
-			.literal( "outputParameters" ).literal( desc.OutputParameters )
-			.literal( "tempRegisterCount" ).literal( desc.TempRegisterCount )
-			.literal( "tempArrayCount" ).literal( desc.TempArrayCount )
-			.end()
-			.literal( "Instructions" ).dict()
-			.literal( "instructionCount" ).literal( desc.InstructionCount )
-			.literal( "defCount" ).literal( desc.DefCount )
-			.literal( "textureNormalInstructions" ).literal( desc.TextureNormalInstructions )
-			.literal( "textureLoadInstructions" ).literal( desc.TextureLoadInstructions )
-			.literal( "textureCompInstructions" ).literal( desc.TextureCompInstructions )
-			.literal( "textureBiasInstructions" ).literal( desc.TextureBiasInstructions )
-			.literal( "textureGradientInstructions" ).literal( desc.TextureGradientInstructions )
-			.literal( "floatInstructionCount" ).literal( desc.FloatInstructionCount )
-			.literal( "intInstructionCount" ).literal( desc.IntInstructionCount )
-			.literal( "uintInstructionCount" ).literal( desc.UintInstructionCount )
-			.literal( "staticFlowControlCount" ).literal( desc.StaticFlowControlCount )
-			.literal( "dynamicFlowControlCount" ).literal( desc.DynamicFlowControlCount )
-			.literal( "macroInstructionCount" ).literal( desc.MacroInstructionCount )
-			.literal( "arrayInstructionCount" ).literal( desc.ArrayInstructionCount )
-			.literal( "cutInstructionCount" ).literal( desc.CutInstructionCount )
-			.literal( "emitInstructionCount" ).literal( desc.EmitInstructionCount )
-			.literal( "cBarrierInstructions" ).literal( desc.cBarrierInstructions )
-			.literal( "cInterlockedInstructions" ).literal( desc.cInterlockedInstructions )
-			.literal( "cTextureStoreInstructions" ).literal( desc.cTextureStoreInstructions )
-			.end()
-			.literal( "Misc" ).dict()
-			.literal( "GSOutputTopology" ).literal( desc.GSOutputTopology )
-			.literal( "inputPrimitive" ).literal( desc.InputPrimitive )
-			.literal( "GSMaxOutputVertexCount" ).literal( desc.GSMaxOutputVertexCount )
-			.literal( "patchConstantParameters" ).literal( desc.PatchConstantParameters )
-			.literal( "cGSInstanceCount" ).literal( desc.cGSInstanceCount )
-			.literal( "HSOutputPrimitive" ).literal( desc.HSOutputPrimitive )
-			.literal( "HSPartitioning" ).literal( desc.HSPartitioning )
-			.literal( "tessellatorDomain" ).literal( desc.TessellatorDomain )
-			.end()
-			.end();
+		listing.literal( "stats" ).dict().literal( "Resources" ).dict().literal( "constantBuffers" ).literal( desc.ConstantBuffers ).literal( "boundResources" ).literal( desc.BoundResources ).literal( "inputParameters" ).literal( desc.InputParameters ).literal( "outputParameters" ).literal( desc.OutputParameters ).literal( "tempRegisterCount" ).literal( desc.TempRegisterCount ).literal( "tempArrayCount" ).literal( desc.TempArrayCount ).end().literal( "Instructions" ).dict().literal( "instructionCount" ).literal( desc.InstructionCount ).literal( "defCount" ).literal( desc.DefCount ).literal( "textureNormalInstructions" ).literal( desc.TextureNormalInstructions ).literal( "textureLoadInstructions" ).literal( desc.TextureLoadInstructions ).literal( "textureCompInstructions" ).literal( desc.TextureCompInstructions ).literal( "textureBiasInstructions" ).literal( desc.TextureBiasInstructions ).literal( "textureGradientInstructions" ).literal( desc.TextureGradientInstructions ).literal( "floatInstructionCount" ).literal( desc.FloatInstructionCount ).literal( "intInstructionCount" ).literal( desc.IntInstructionCount ).literal( "uintInstructionCount" ).literal( desc.UintInstructionCount ).literal( "staticFlowControlCount" ).literal( desc.StaticFlowControlCount ).literal( "dynamicFlowControlCount" ).literal( desc.DynamicFlowControlCount ).literal( "macroInstructionCount" ).literal( desc.MacroInstructionCount ).literal( "arrayInstructionCount" ).literal( desc.ArrayInstructionCount ).literal( "cutInstructionCount" ).literal( desc.CutInstructionCount ).literal( "emitInstructionCount" ).literal( desc.EmitInstructionCount ).literal( "cBarrierInstructions" ).literal( desc.cBarrierInstructions ).literal( "cInterlockedInstructions" ).literal( desc.cInterlockedInstructions ).literal( "cTextureStoreInstructions" ).literal( desc.cTextureStoreInstructions ).end().literal( "Misc" ).dict().literal( "GSOutputTopology" ).literal( desc.GSOutputTopology ).literal( "inputPrimitive" ).literal( desc.InputPrimitive ).literal( "GSMaxOutputVertexCount" ).literal( desc.GSMaxOutputVertexCount ).literal( "patchConstantParameters" ).literal( desc.PatchConstantParameters ).literal( "cGSInstanceCount" ).literal( desc.cGSInstanceCount ).literal( "HSOutputPrimitive" ).literal( desc.HSOutputPrimitive ).literal( "HSPartitioning" ).literal( desc.HSPartitioning ).literal( "tessellatorDomain" ).literal( desc.TessellatorDomain ).end().end();
 	}
 }
 
@@ -628,29 +585,34 @@ void PrintAnnotations( YamlOutput& listing, const std::map<StringReference, Anno
 	for( auto a = annotations.begin(); a != annotations.end(); ++a )
 	{
 		listing.dict()
-			.literal( "name" ).literal( g_stringTable.GetString( a->first ) )
+			.literal( "name" )
+			.literal( g_stringTable.GetString( a->first ) )
 			.literal( "annotationType" );
 		switch( a->second.type )
 		{
 		case ANNOTATION_TYPE_BOOL:
 			listing
 				.literal( "bool" )
-				.literal( "value" ).literal( a->second.intValue != 0 );
+				.literal( "value" )
+				.literal( a->second.intValue != 0 );
 			break;
 		case ANNOTATION_TYPE_INT:
 			listing
 				.literal( "int" )
-				.literal( "value" ).literal( a->second.intValue );
+				.literal( "value" )
+				.literal( a->second.intValue );
 			break;
 		case ANNOTATION_TYPE_FLOAT:
 			listing
 				.literal( "float" )
-				.literal( "value" ).literal( a->second.floatValue );
+				.literal( "value" )
+				.literal( a->second.floatValue );
 			break;
 		default:
 			listing
 				.literal( "string" )
-				.literal( "value" ).literal( g_stringTable.GetString( a->second.stringValue ) );
+				.literal( "value" )
+				.literal( g_stringTable.GetString( a->second.stringValue ) );
 			break;
 		}
 		listing.end();
@@ -728,12 +690,18 @@ void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectDa
 		for( auto it = stage.constants.begin(); it != stage.constants.end(); ++it )
 		{
 			listing.dict()
-				.literal( "name" ).literal( g_stringTable.GetString( it->name ) )
-				.literal( "constantType" ).literal( ToString( it->type ) )
-				.literal( "dimension" ).literal( it->dimension )
-				.literal( "arrayElements" ).literal( it->elements )
-				.literal( "autoregister" ).literal( it->isAutoregister )
-				.literal( "sRGB" ).literal( it->isSRGB );
+				.literal( "name" )
+				.literal( g_stringTable.GetString( it->name ) )
+				.literal( "constantType" )
+				.literal( ToString( it->type ) )
+				.literal( "dimension" )
+				.literal( it->dimension )
+				.literal( "arrayElements" )
+				.literal( it->elements )
+				.literal( "autoregister" )
+				.literal( it->isAutoregister )
+				.literal( "sRGB" )
+				.literal( it->isSRGB );
 			auto annotations = result.annotations.find( it->name );
 			if( annotations != result.annotations.end() )
 			{
@@ -749,24 +717,47 @@ void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectDa
 		for( auto it = stage.samplers.begin(); it != stage.samplers.end(); ++it )
 		{
 			listing.dict()
-				.literal( "register" ).literal( it->first )
-				.literal( "name" ).literal( g_stringTable.GetString( it->second.name ) )
-				.literal( "filter" ).literal( int( it->second.filter ) )
-				.literal( "comparison" ).literal( int( it->second.comparison ) )
-				.literal( "minFilter" ).literal( int( it->second.minFilter ) )
-				.literal( "magFilter" ).literal( int( it->second.magFilter ) )
-				.literal( "mipFilter" ).literal( int( it->second.mipFilter ) )
-				.literal( "addressU" ).literal( int( it->second.addressU ) )
-				.literal( "addressV" ).literal( int( it->second.addressV ) )
-				.literal( "addressW" ).literal( int( it->second.addressW ) )
-				.literal( "mipLODBias" ).literal( it->second.mipLODBias )
-				.literal( "maxAnisotropy" ).literal( int( it->second.maxAnisotropy ) )
-				.literal( "comparisonFunc" ).literal( int( it->second.comparisonFunc ) )
-				.literal( "borderColor" ).list().literal( it->second.borderColor.x ).literal( it->second.borderColor.y ).literal( it->second.borderColor.z ).literal( it->second.borderColor.w ).end()
-				.literal( "minLOD" ).literal( it->second.minLOD )
-				.literal( "maxLOD" ).literal( it->second.maxLOD )
-				.literal( "srgbTexture" ).literal( it->second.srgbTexture != 0 )
-				.literal( "isDynamic" ).literal( it->second.isDynamic != 0 );
+				.literal( "register" )
+				.literal( it->first )
+				.literal( "name" )
+				.literal( g_stringTable.GetString( it->second.name ) )
+				.literal( "filter" )
+				.literal( int( it->second.filter ) )
+				.literal( "comparison" )
+				.literal( int( it->second.comparison ) )
+				.literal( "minFilter" )
+				.literal( int( it->second.minFilter ) )
+				.literal( "magFilter" )
+				.literal( int( it->second.magFilter ) )
+				.literal( "mipFilter" )
+				.literal( int( it->second.mipFilter ) )
+				.literal( "addressU" )
+				.literal( int( it->second.addressU ) )
+				.literal( "addressV" )
+				.literal( int( it->second.addressV ) )
+				.literal( "addressW" )
+				.literal( int( it->second.addressW ) )
+				.literal( "mipLODBias" )
+				.literal( it->second.mipLODBias )
+				.literal( "maxAnisotropy" )
+				.literal( int( it->second.maxAnisotropy ) )
+				.literal( "comparisonFunc" )
+				.literal( int( it->second.comparisonFunc ) )
+				.literal( "borderColor" )
+				.list()
+				.literal( it->second.borderColor.x )
+				.literal( it->second.borderColor.y )
+				.literal( it->second.borderColor.z )
+				.literal( it->second.borderColor.w )
+				.end()
+				.literal( "minLOD" )
+				.literal( it->second.minLOD )
+				.literal( "maxLOD" )
+				.literal( it->second.maxLOD )
+				.literal( "srgbTexture" )
+				.literal( it->second.srgbTexture != 0 )
+				.literal( "isDynamic" )
+				.literal( it->second.isDynamic != 0 );
 			auto annotations = result.annotations.find( it->second.name );
 			if( annotations != result.annotations.end() )
 			{
@@ -782,11 +773,16 @@ void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectDa
 		for( auto it = stage.textures.begin(); it != stage.textures.end(); ++it )
 		{
 			listing.dict()
-				.literal( "register" ).literal( it->first )
-				.literal( "name" ).literal( g_stringTable.GetString( it->second.name ) )
-				.literal( "textureType" ).literal( it->second.type )
-				.literal( "autoregister" ).literal( it->second.isAutoregister )
-				.literal( "sRGB" ).literal( it->second.isSRGB );
+				.literal( "register" )
+				.literal( it->first )
+				.literal( "name" )
+				.literal( g_stringTable.GetString( it->second.name ) )
+				.literal( "textureType" )
+				.literal( it->second.type )
+				.literal( "autoregister" )
+				.literal( it->second.isAutoregister )
+				.literal( "sRGB" )
+				.literal( it->second.isSRGB );
 			auto annotations = result.annotations.find( it->second.name );
 			if( annotations != result.annotations.end() )
 			{
@@ -802,10 +798,14 @@ void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectDa
 		for( auto it = stage.uavs.begin(); it != stage.uavs.end(); ++it )
 		{
 			listing.dict()
-				.literal( "register" ).literal( it->first )
-				.literal( "name" ).literal( g_stringTable.GetString( it->second.name ) )
-				.literal( "resourceType" ).literal( it->second.type )
-				.literal( "autoregister" ).literal( it->second.isAutoregister );
+				.literal( "register" )
+				.literal( it->first )
+				.literal( "name" )
+				.literal( g_stringTable.GetString( it->second.name ) )
+				.literal( "resourceType" )
+				.literal( it->second.type )
+				.literal( "autoregister" )
+				.literal( it->second.isAutoregister );
 			auto annotations = result.annotations.find( it->second.name );
 			if( annotations != result.annotations.end() )
 			{
@@ -821,8 +821,10 @@ void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectDa
 		for( auto it = stage.registerInputs.begin(); it != stage.registerInputs.end(); ++it )
 		{
 			listing.dict()
-				.literal( "registerType" ).literal( it->registerType )
-				.literal( "register" ).literal( it->registerIndex )
+				.literal( "registerType" )
+				.literal( it->registerType )
+				.literal( "register" )
+				.literal( it->registerIndex )
 				.end();
 		}
 		listing.end();
@@ -831,17 +833,21 @@ void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectDa
 
 void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result )
 {
-	PrintStageInfo( listing, static_cast<const StageData&>(stage), result );
+	PrintStageInfo( listing, static_cast<const StageData&>( stage ), result );
 	if( !stage.pipelineInputs.empty() )
 	{
 		listing.literal( "inputs" ).list();
 		for( auto it = stage.pipelineInputs.begin(); it != stage.pipelineInputs.end(); ++it )
 		{
 			listing.dict()
-				.literal( "register" ).literal( it->registerIndex )
-				.literal( "name" ).literal( it->name )
-				.literal( "index" ).literal( it->index )
-				.literal( "usedMask" ).literal( it->usedMask )
+				.literal( "register" )
+				.literal( it->registerIndex )
+				.literal( "name" )
+				.literal( it->name )
+				.literal( "index" )
+				.literal( it->index )
+				.literal( "usedMask" )
+				.literal( it->usedMask )
 				.end();
 		}
 		listing.end(); // inputs
@@ -1035,7 +1041,7 @@ RegisterInputDescription GetRegisterInputDescription( const Type& type, const Re
 }
 
 
-TextureType TypeToTextureType( const Type& type ) 
+TextureType TypeToTextureType( const Type& type )
 {
 	switch( type.builtInType )
 	{
@@ -1204,7 +1210,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 		d.location.lineNumber = 0;
 		d.value = MakeInlineString( it->value.c_str() );
 		state.m_defines[MakeInlineString( it->name.c_str() )] = d;
-
 	}
 
 	if( !state.Parse() )
@@ -1227,10 +1232,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 	YamlListing listing;
 	listing.dict();
-	listing.literal( "permutation" ).dict()
-		.literal( "platform" ).literal( "DX11" )
-		.literal( "id" ).literal( "000" )
-		.literal( "defines" ).dict();
+	listing.literal( "permutation" ).dict().literal( "platform" ).literal( "DX11" ).literal( "id" ).literal( "000" ).literal( "defines" ).dict();
 	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
 		listing.literal( it->name ).literal( it->value );
@@ -1245,8 +1247,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 		technique.name = g_stringTable.AddString( ToString( techniqueNode->GetToken()->stringValue ).c_str() );
 
 		listing.dict()
-			.literal( "name" ).literal( techniqueNode->GetToken()->stringValue )
-			.literal( "passes" ).list();
+			.literal( "name" )
+			.literal( techniqueNode->GetToken()->stringValue )
+			.literal( "passes" )
+			.list();
 
 		for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
 		{
@@ -1351,7 +1355,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 
 				CompilerInputStream os( state, ShadingLanguage::HLSL );
-				os << HLSL{ state.GetTree(), & state.GetSymbolTable() };
+				os << HLSL{ state.GetTree(), &state.GetSymbolTable() };
 
 				std::string entryPoint = ToString( shaderNode->GetChild( 1 )->GetSymbol()->name );
 
@@ -1371,7 +1375,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				{
 					std::lock_guard scope( m_compiledCS );
 					auto found = m_compiled.find( code );
-					if ( found == end( m_compiled ) )
+					if( found == end( m_compiled ) )
 					{
 						// Yep, this thread will have to compile. Make an entry into the cache.
 						syncData = std::make_shared<SyncData>();
@@ -1421,7 +1425,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							&compiledEffectData,
 							&errors );
 					}
-					
+
 					if( FAILED( hr ) )
 					{
 						// We failed compilation, let's print errors.
@@ -1488,8 +1492,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 
 
-				auto handleStrippedData = [&]( ID3DBlob* blob ) 
-				{
+				auto handleStrippedData = [&]( ID3DBlob* blob ) {
 					// No idea what happens when assigning strippedEffectData = effectData, with effectData now being a raw pointer, and not taking any chances...
 					stage.shaderSize = uint32_t( blob->GetBufferSize() );
 					stage.shaderDataStr = g_stringTable.AddString( blob->GetBufferPointer(), blob->GetBufferSize() );
@@ -1499,10 +1502,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				{
 					ZoneScopedN( "D3DStripShader" );
 					if( FAILED( D3DStripShader(
-						effectData->GetBufferPointer(),
-						effectData->GetBufferSize(),
-						D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
-						&strippedEffectData ) ) )
+							effectData->GetBufferPointer(),
+							effectData->GetBufferSize(),
+							D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
+							&strippedEffectData ) ) )
 					{
 						handleStrippedData( effectData );
 					}
@@ -1523,7 +1526,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						return false;
 					}
 				}
-				
+
 				if( !DxReflection::ProcessReflection<DxReflection::ReflectionDx11>( state, reflection.p, compileOptions.useStaticSamplers, stage, result.annotations ) )
 				{
 					return false;
@@ -1557,10 +1560,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				if( listing.enabled() )
 				{
 					listing.dict()
-						.literal( "profile" ).literal( profile )
-						.literal( "original" ).dict()
-						.literal( "entryPoint" ).literal( patchEntryPoint )
-						.literal( "source" ).literal( SanitizeCode( code ) );
+						.literal( "profile" )
+						.literal( profile )
+						.literal( "original" )
+						.dict()
+						.literal( "entryPoint" )
+						.literal( patchEntryPoint )
+						.literal( "source" )
+						.literal( SanitizeCode( code ) );
 					PrintShaderOutListing( listing, effectData, reflection );
 					listing.end();
 				}
@@ -1580,7 +1587,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				HULL_STAGE,
 				DOMAIN_STAGE,
 				GEOMETRY_STAGE,
-				PIXEL_STAGE, };
+				PIXEL_STAGE,
+			};
 			for( int i = 0; i < 6; ++i )
 			{
 				if( reflections[i] )
@@ -1621,8 +1629,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				continue;
 			}
 			listing.dict()
-				.literal( "name" ).literal( libNode->GetToken()->stringValue )
-				.literal( "exports" ).list();
+				.literal( "name" )
+				.literal( libNode->GetToken()->stringValue )
+				.literal( "exports" )
+				.list();
 
 			Library library;
 			library.payloadSize = 0;
@@ -1639,11 +1649,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				if( childNode->GetNodeType() == NT_SHADER_ASSIGNMENT )
 				{
 					ShaderExport shaderExport;
-                    if( auto parsed = ParseRtShaderName( childNode->GetToken()->stringValue ) )
-                    {
-                        shaderExport.type = parsed.value();
-                    }
-                    else
+					if( auto parsed = ParseRtShaderName( childNode->GetToken()->stringValue ) )
+					{
+						shaderExport.type = parsed.value();
+					}
+					else
 					{
 						state.ShowMessage( childNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( childNode->GetToken()->stringValue ).c_str() );
 						return false;
@@ -1656,7 +1666,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					{
 						return false;
 					}
-					for ( auto& gi : globalInputs )
+					for( auto& gi : globalInputs )
 					{
 						if( gi.symbol )
 						{
@@ -1707,7 +1717,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			}
 
 			CompilerInputStream os( state, ShadingLanguage::HLSL );
-			os << HLSL{ state.GetTree(), & state.GetSymbolTable() };
+			os << HLSL{ state.GetTree(), &state.GetSymbolTable() };
 			std::string code = os.str();
 			library.source = code;
 
@@ -1764,7 +1774,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				{
 					arguments[argumentsSize++] = DXC_ARG_DEBUG; //-Zi
 				}
-				if ( g_skipOptimization )
+				if( g_skipOptimization )
 				{
 					arguments[argumentsSize++] = DXC_ARG_SKIP_OPTIMIZATIONS; //-Od
 				}
@@ -1779,12 +1789,12 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 				CComPtr<IDxcResult> pCompileResult;
 				HRESULT hrCompilation = compiler->Compile( &sourceBuffer, arguments, argumentsSize, nullptr, IID_PPV_ARGS( &pCompileResult ) );
-				
+
 				if( FAILED( hrCompilation ) )
 				{
 					// We failed compilation, let's print errors.
 					syncData->libraryResource = nullptr;
-					
+
 					CComPtr<IDxcBlobUtf8> errors;
 					pCompileResult->GetOutput( DXC_OUT_ERRORS, IID_PPV_ARGS( &errors ), nullptr );
 					if( errors && errors->GetStringLength() > 0 )
@@ -1894,7 +1904,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				CComPtr<IDxcBlobEncoding> disassembly;
 				if( SUCCEEDED( compiler->Disassemble( compiled, &disassembly ) ) )
 				{
-					listing.literal( "asm" ).literal( reinterpret_cast<const char*>(disassembly->GetBufferPointer()) );
+					listing.literal( "asm" ).literal( reinterpret_cast<const char*>( disassembly->GetBufferPointer() ) );
 				}
 				listing.end();
 				PrintStageInfo( listing, library.globalInputs, result );

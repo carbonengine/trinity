@@ -10,7 +10,7 @@
 
 using namespace Tr2RenderContextEnum;
 
-TriStepRenderTexture::TriStepRenderTexture( IRoot* lockobj ) : 
+TriStepRenderTexture::TriStepRenderTexture( IRoot* lockobj ) :
 	m_textureSize( 0, 0 ),
 	m_failClearColor( 0 ),
 	m_tlTexCoord( 0.0f, 0.0f ),
@@ -18,7 +18,7 @@ TriStepRenderTexture::TriStepRenderTexture( IRoot* lockobj ) :
 {
 }
 
-TriStepRenderTexture::~TriStepRenderTexture(void)
+TriStepRenderTexture::~TriStepRenderTexture( void )
 {
 }
 
@@ -31,13 +31,13 @@ void TriStepRenderTexture::BlankOut()
 void TriStepRenderTexture::SetTexture( ITr2TextureProvider* tex )
 {
 	BlankOut();
-	m_texture = tex;	
+	m_texture = tex;
 }
 
 void TriStepRenderTexture::SetTexture( Tr2AtlasTexture* tex )
 {
 	BlankOut();
-	m_atlasTexture = tex;	
+	m_atlasTexture = tex;
 }
 
 TriStepResult TriStepRenderTexture::ClearIfFail( bool result, Tr2RenderContext& renderContext )
@@ -53,20 +53,20 @@ TriStepResult TriStepRenderTexture::Execute( Be::Time realTime, Be::Time simTime
 {
 	if( m_texture && m_texture->GetTexture() )
 	{
-		return ClearIfFail( Tr2Renderer::DrawTexture( renderContext, *m_texture->GetTexture(), m_tlTexCoord, m_brTexCoord ), renderContext );		
+		return ClearIfFail( Tr2Renderer::DrawTexture( renderContext, *m_texture->GetTexture(), m_tlTexCoord, m_brTexCoord ), renderContext );
 	}
-	
+
 	if( m_atlasTexture && m_atlasTexture->GetTexture() )
 	{
-		float rectX			= m_tlTexCoord.x * m_atlasTexture->GetWidth();
-		float rectY			= m_tlTexCoord.y * m_atlasTexture->GetHeight();
-		float rectWidth		= ( m_brTexCoord.x - m_tlTexCoord.x ) * m_atlasTexture->GetWidth();
-		float rectHeight	= ( m_brTexCoord.y - m_tlTexCoord.y ) * m_atlasTexture->GetHeight();
+		float rectX = m_tlTexCoord.x * m_atlasTexture->GetWidth();
+		float rectY = m_tlTexCoord.y * m_atlasTexture->GetHeight();
+		float rectWidth = ( m_brTexCoord.x - m_tlTexCoord.x ) * m_atlasTexture->GetWidth();
+		float rectHeight = ( m_brTexCoord.y - m_tlTexCoord.y ) * m_atlasTexture->GetHeight();
 
 		Vector4 tw;
 		m_atlasTexture->CalcSubTextureWindow( tw, rectX, rectY, rectWidth, rectHeight );
-		
-		return ClearIfFail( Tr2Renderer::DrawTexture( renderContext, *m_texture->GetTexture(), Vector2( tw.x, tw.y ), Vector2( tw.x + tw.z, tw.y + tw.w ) ), renderContext );		
+
+		return ClearIfFail( Tr2Renderer::DrawTexture( renderContext, *m_texture->GetTexture(), Vector2( tw.x, tw.y ), Vector2( tw.x + tw.z, tw.y + tw.w ) ), renderContext );
 	}
 
 	return RS_OK;

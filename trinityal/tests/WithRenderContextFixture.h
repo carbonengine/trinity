@@ -6,7 +6,7 @@
 
 #include "WithWindowFixture.h"
 
-struct WithRenderContext: public WithWindow
+struct WithRenderContext : public WithWindow
 {
 public:
 	void SetUp()
@@ -24,7 +24,7 @@ public:
 	static bool MachineHasGfxAdapter()
 	{
 		unsigned count = 0;
-		Tr2VideoAdapterInfo::GetAdapterCount(count);
+		Tr2VideoAdapterInfo::GetAdapterCount( count );
 		return count > 0;
 	}
 

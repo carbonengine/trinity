@@ -11,18 +11,18 @@
 #include "Tr2ShaderProgramAL.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
-	#include "dx12/upscaling/Tr2UpscalingALDx12.h"
-	#define TECHNIQUE_PARENT_CLASS TrinityALImpl::Tr2UpscalingTechniqueDx12
+#include "dx12/upscaling/Tr2UpscalingALDx12.h"
+#define TECHNIQUE_PARENT_CLASS TrinityALImpl::Tr2UpscalingTechniqueDx12
 #elif TRINITY_PLATFORM == TRINITY_DIRECTX11
-	#include "dx11/upscaling/Tr2UpscalingALDx11.h"
-	#define TECHNIQUE_PARENT_CLASS TrinityALImpl::Tr2UpscalingTechniqueDx11
+#include "dx11/upscaling/Tr2UpscalingALDx11.h"
+#define TECHNIQUE_PARENT_CLASS TrinityALImpl::Tr2UpscalingTechniqueDx11
 #else
-	#define TECHNIQUE_PARENT_CLASS Tr2UpscalingTechniqueAL
+#define TECHNIQUE_PARENT_CLASS Tr2UpscalingTechniqueAL
 #endif
 
 class Tr2Fsr1UpscalingTechnique : public TECHNIQUE_PARENT_CLASS
 {
-public:    
+public:
 	Tr2Fsr1UpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2Fsr1UpscalingTechnique();
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
@@ -46,9 +46,8 @@ public:
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
-
 	Tr2SamplerStateAL m_sampler;
-	
+
 	Tr2ShaderProgramAL m_easuProgram;
 
 	Tr2ConstantBufferAL m_constantBuffer;

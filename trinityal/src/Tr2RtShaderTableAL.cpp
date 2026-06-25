@@ -11,16 +11,16 @@
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2RtShaderTableAL> NullRtShaderTable()
-	{
-		static std::shared_ptr<TrinityALImpl::Tr2RtShaderTableAL> nullTable = std::make_shared<TrinityALImpl::Tr2RtShaderTableAL>();
-		return nullTable;
-	}
+std::shared_ptr<TrinityALImpl::Tr2RtShaderTableAL> NullRtShaderTable()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2RtShaderTableAL> nullTable = std::make_shared<TrinityALImpl::Tr2RtShaderTableAL>();
+	return nullTable;
+}
 }
 
 
-Tr2RtShaderTableAL::Tr2RtShaderTableAL()
-	:m_shaderTable( NullRtShaderTable() )
+Tr2RtShaderTableAL::Tr2RtShaderTableAL() :
+	m_shaderTable( NullRtShaderTable() )
 {
 }
 

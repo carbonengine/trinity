@@ -6,9 +6,9 @@
 
 EveChildProceduralContainer::EveChildProceduralContainer( IRoot* lockobj ) :
 	EveChildTransform(),
-    PARENTLOCK( m_transformModifiers ),
-    m_proceduralContainerVariables( "EveChildContainer::m_proceduralContainerVariables" ),
-    m_display( true )
+	PARENTLOCK( m_transformModifiers ),
+	m_proceduralContainerVariables( "EveChildContainer::m_proceduralContainerVariables" ),
+	m_display( true )
 {
 }
 
@@ -18,12 +18,12 @@ EveChildProceduralContainer::~EveChildProceduralContainer()
 
 const char* EveChildProceduralContainer::GetName() const
 {
-    return m_name.c_str();
+	return m_name.c_str();
 }
 
 void EveChildProceduralContainer::SetName( const char* name )
 {
-    m_name = BlueSharedString( name );
+	m_name = BlueSharedString( name );
 }
 
 bool EveChildProceduralContainer::Initialize()
@@ -42,38 +42,38 @@ void EveChildProceduralContainer::UpdateVisibility( const EveUpdateContext& upda
 		return;
 	}
 
-    if ( nullptr != m_selectedObject )
-    {
-	    m_selectedObject->UpdateVisibility( updateContext, parentTransform, parentLod );
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->UpdateVisibility( updateContext, parentTransform, parentLod );
+	}
 }
 
 void EveChildProceduralContainer::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-    if ( m_display && m_selectedObject )
-    {
-        m_selectedObject->GetRenderables( renderables );
-    }
+	if( m_display && m_selectedObject )
+	{
+		m_selectedObject->GetRenderables( renderables );
+	}
 }
 
 bool EveChildProceduralContainer::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
-    bool success = false;
-    Vector4 bSphere( 0.f, 0.f, 0.f, -1.f );
-    if ( m_selectedObject && m_selectedObject->GetBoundingSphere( bSphere ) )
-    {
-        BoundingSphereSetOrUpdate( bSphere, sphere, success );
-        success = true;
-    }
-    return success;
+	bool success = false;
+	Vector4 bSphere( 0.f, 0.f, 0.f, -1.f );
+	if( m_selectedObject && m_selectedObject->GetBoundingSphere( bSphere ) )
+	{
+		BoundingSphereSetOrUpdate( bSphere, sphere, success );
+		success = true;
+	}
+	return success;
 }
 
 void EveChildProceduralContainer::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
-    if ( nullptr != m_selectedObject )
-    {
-	    m_selectedObject->RegisterWithQuadRenderer( quadRenderer );
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->RegisterWithQuadRenderer( quadRenderer );
+	}
 }
 
 void EveChildProceduralContainer::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
@@ -82,10 +82,10 @@ void EveChildProceduralContainer::AddQuadsToQuadRenderer( const TriFrustum& frus
 	{
 		return;
 	}
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->AddQuadsToQuadRenderer(frustum, quadRenderer);
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->AddQuadsToQuadRenderer( frustum, quadRenderer );
+	}
 }
 
 void EveChildProceduralContainer::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
@@ -95,10 +95,10 @@ void EveChildProceduralContainer::UpdateSyncronous( const EveUpdateContext& upda
 	newParams.childParent = this;
 	newParams.localToWorldTransform = m_worldTransform;
 
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->UpdateSyncronous(updateContext, newParams);
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->UpdateSyncronous( updateContext, newParams );
+	}
 
 	if( nullptr != m_selectionMethod && m_selectionMethod->IsSelectedChildModified() )
 	{
@@ -122,58 +122,58 @@ void EveChildProceduralContainer::UpdateAsyncronous( const EveUpdateContext& upd
 	newParams.childParent = this;
 	newParams.localToWorldTransform = m_worldTransform;
 
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->UpdateAsyncronous(updateContext, newParams);
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->UpdateAsyncronous( updateContext, newParams );
+	}
 
-    if ( nullptr != m_selectionMethod )
-    {
-        m_selectionMethod->UpdateAsyncronous(updateContext, newParams);
-    }
+	if( nullptr != m_selectionMethod )
+	{
+		m_selectionMethod->UpdateAsyncronous( updateContext, newParams );
+	}
 }
 
 void EveChildProceduralContainer::ConfigureSelectedObject()
 {
-    EveChildRefPtr child = m_selectionMethod->GetSelectedChild();
-    if( child != nullptr )
-    {
-        for( auto it = begin( m_proceduralContainerVariables ); it != end( m_proceduralContainerVariables ); ++it )
-        {
-            child->SetProceduralContainerVariable( it->first.c_str(), it->second );
-        }
-    }
+	EveChildRefPtr child = m_selectionMethod->GetSelectedChild();
+	if( child != nullptr )
+	{
+		for( auto it = begin( m_proceduralContainerVariables ); it != end( m_proceduralContainerVariables ); ++it )
+		{
+			child->SetProceduralContainerVariable( it->first.c_str(), it->second );
+		}
+	}
 	auto registry = GetComponentRegistry();
 	if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
 	{
 		entity->UnRegister( registry );
 	}
-    m_selectedObject = child;
+	m_selectedObject = child;
 	if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
 	{
 		entity->Register( registry );
 	}
 }
 
-void EveChildProceduralContainer::SetProceduralContainerVariable(const char *name, float value)
+void EveChildProceduralContainer::SetProceduralContainerVariable( const char* name, float value )
 {
-    m_proceduralContainerVariables[name] = value;
-    if( m_selectionMethod )
-    {
-        m_selectionMethod->SetProceduralMethodVariable( name, value );
-    }
+	m_proceduralContainerVariables[name] = value;
+	if( m_selectionMethod )
+	{
+		m_selectionMethod->SetProceduralMethodVariable( name, value );
+	}
 }
 
 const char* EveChildProceduralContainer::GetMethodVariableName()
 {
-    const char* name = "methodUnassigned";
+	const char* name = "methodUnassigned";
 
-    if( m_selectionMethod )
-    {
-        name = m_selectionMethod->GetProceduralMethodVariable();
-    }
+	if( m_selectionMethod )
+	{
+		name = m_selectionMethod->GetProceduralMethodVariable();
+	}
 
-    return name;
+	return name;
 }
 
 //  --- other interface functions ---
@@ -185,60 +185,60 @@ void EveChildProceduralContainer::GetLocalToWorldTransform( Matrix& transform ) 
 
 void EveChildProceduralContainer::ChangeLOD( Tr2Lod lod )
 {
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->ChangeLOD( lod );
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->ChangeLOD( lod );
+	}
 }
 
 void EveChildProceduralContainer::PlayCurveSet( const std::string& name, const std::string& rangeName )
 {
-    if( auto owner = dynamic_cast<ITr2CurveSetOwner*>(  &(*m_selectedObject) ) )
-    {
-        owner->PlayCurveSet( name, rangeName );
-    }
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &( *m_selectedObject ) ) )
+	{
+		owner->PlayCurveSet( name, rangeName );
+	}
 }
 
 void EveChildProceduralContainer::PlayAllCurveSets()
 {
-    if( auto child = dynamic_cast<ITr2CurveSetOwner*>( &(*m_selectedObject) ) )
-    {
-        child->PlayAllCurveSets();
-    }
+	if( auto child = dynamic_cast<ITr2CurveSetOwner*>( &( *m_selectedObject ) ) )
+	{
+		child->PlayAllCurveSets();
+	}
 }
 
 void EveChildProceduralContainer::StopAllCurveSets()
 {
-    if( auto child = dynamic_cast<ITr2CurveSetOwner*>( &(*m_selectedObject) ) )
-    {
-        child->StopAllCurveSets();
-    }
+	if( auto child = dynamic_cast<ITr2CurveSetOwner*>( &( *m_selectedObject ) ) )
+	{
+		child->StopAllCurveSets();
+	}
 }
 
 void EveChildProceduralContainer::StopCurveSet( const std::string& name )
 {
-    if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &(*m_selectedObject) ) )
-    {
-        owner->StopCurveSet( name );
-    }
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &( *m_selectedObject ) ) )
+	{
+		owner->StopCurveSet( name );
+	}
 }
 
 void EveChildProceduralContainer::UpdateCurveSet( const std::string& name, Be::Time time )
 {
-    if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &(*m_selectedObject) ) )
-    {
-        owner->UpdateCurveSet( name, time );
-    }
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &( *m_selectedObject ) ) )
+	{
+		owner->UpdateCurveSet( name, time );
+	}
 }
 
 float EveChildProceduralContainer::GetCurveSetDuration( const std::string& name ) const
 {
 	float maxDuration = 0.f;
 
-    if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &(*m_selectedObject) ) )
-    {
-        maxDuration = max( maxDuration, owner->GetCurveSetDuration( name ) );
-    }
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &( *m_selectedObject ) ) )
+	{
+		maxDuration = max( maxDuration, owner->GetCurveSetDuration( name ) );
+	}
 
 	return maxDuration;
 }
@@ -247,10 +247,10 @@ float EveChildProceduralContainer::GetRangeDuration( const std::string& name, co
 {
 	float maxDuration = 0.f;
 
-    if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &(*m_selectedObject) ) )
-    {
-        maxDuration = max( maxDuration, owner->GetRangeDuration( name, rangeName ) );
-    }
+	if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( &( *m_selectedObject ) ) )
+	{
+		maxDuration = max( maxDuration, owner->GetRangeDuration( name, rangeName ) );
+	}
 
 	return maxDuration;
 }
@@ -262,38 +262,38 @@ void EveChildProceduralContainer::Setup( const Vector3* scale, const Quaternion*
 
 void EveChildProceduralContainer::SetControllerVariable( const char* name, float value )
 {
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->SetControllerVariable( name, value );
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->SetControllerVariable( name, value );
+	}
 }
 
 void EveChildProceduralContainer::HandleControllerEvent( const char* name )
 {
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->HandleControllerEvent(name);
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->HandleControllerEvent( name );
+	}
 }
 
 void EveChildProceduralContainer::StartControllers()
 {
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->StartControllers();
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->StartControllers();
+	}
 }
 
 ITr2AudEmitterPtr EveChildProceduralContainer::FindSoundEmitter( const char* name )
 {
-    if( auto owner = dynamic_cast<ITr2SoundEmitterOwner*>( &(*m_selectedObject) ) )
-    {
-        auto emitter = owner->FindSoundEmitter( name );
-        if( emitter != nullptr )
-        {
-            return emitter;
-        }
-    }
+	if( auto owner = dynamic_cast<ITr2SoundEmitterOwner*>( &( *m_selectedObject ) ) )
+	{
+		auto emitter = owner->FindSoundEmitter( name );
+		if( emitter != nullptr )
+		{
+			return emitter;
+		}
+	}
 	return nullptr;
 }
 
@@ -304,10 +304,10 @@ void EveChildProceduralContainer::AddTransformModifier( IEveChildTransformModifi
 
 void EveChildProceduralContainer::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
-    if ( nullptr != m_selectedObject )
-    {
-        m_selectedObject->SetShaderOption(name, value);
-    }
+	if( nullptr != m_selectedObject )
+	{
+		m_selectedObject->SetShaderOption( name, value );
+	}
 }
 
 bool EveChildProceduralContainer::OnModified( Be::Var* val )
@@ -323,7 +323,7 @@ void EveChildProceduralContainer::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
 
-    if( registry && m_display )
+	if( registry && m_display )
 	{
 		if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
 		{
@@ -334,58 +334,58 @@ void EveChildProceduralContainer::RegisterComponents()
 void EveChildProceduralContainer::UnRegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-    if ( registry )
+	if( registry )
 	{
 		if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
 		{
 			entity->UnRegister( GetComponentRegistry() );
 		}
-    }
+	}
 }
 
 void EveChildProceduralContainer::SetInheritProperties( const Color* colorSet )
 {
-    if ( nullptr != m_selectedObject )
-    {
+	if( nullptr != m_selectedObject )
+	{
 		if( IEveInheritPropertiesOwnerPtr child = BlueCastPtr( m_selectedObject ) )
 		{
 			child->SetInheritProperties( colorSet );
 		}
-    }
+	}
 	//TODO instead set properties on the m_selectionMethod
 }
 
 void EveChildProceduralContainer::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-    if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( &(*m_selectedObject) ) )
-    {
-        renderable->GetDebugOptions( options );
-    }
-    options.insert( "ProceduralVolumes" );
+	if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( &( *m_selectedObject ) ) )
+	{
+		renderable->GetDebugOptions( options );
+	}
+	options.insert( "ProceduralVolumes" );
 }
 
 void EveChildProceduralContainer::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-    if( !m_display )
-    {
-        return;
-    }
+	if( !m_display )
+	{
+		return;
+	}
 
-    if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( &(*m_selectedObject) ) )
-    {
-        renderable->RenderDebugInfo( renderer );
-    }
+	if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( &( *m_selectedObject ) ) )
+	{
+		renderable->RenderDebugInfo( renderer );
+	}
 
-    if( renderer.HasOption( this, "ProceduralVolumes" ) )
-    {
-        if( m_selectionMethod != nullptr )
-        {
-            IEveVolumeVector* debugVolumes = m_selectionMethod->GetDebugVolumes();
+	if( renderer.HasOption( this, "ProceduralVolumes" ) )
+	{
+		if( m_selectionMethod != nullptr )
+		{
+			IEveVolumeVector* debugVolumes = m_selectionMethod->GetDebugVolumes();
 
-            for( auto volume = debugVolumes->begin(); volume != debugVolumes->end(); ++volume )
-            {
-                ( *volume )->RenderDebugInfo( renderer, m_worldTransform );
-            }
-        }
-    }
+			for( auto volume = debugVolumes->begin(); volume != debugVolumes->end(); ++volume )
+			{
+				( *volume )->RenderDebugInfo( renderer, m_worldTransform );
+			}
+		}
+	}
 }

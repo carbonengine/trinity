@@ -14,120 +14,119 @@ CcpStdDevStatisticsEntry g_activeFrametimeStdDev;
 
 namespace
 {
-	const Tr2RenderContextEnum::PixelFormat BACK_BUFFER_FORMAT = Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM;
+const Tr2RenderContextEnum::PixelFormat BACK_BUFFER_FORMAT = Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM;
 
-	ALResult PopulatePresentParams( Tr2PresentParametersAL& presentParams, Tr2WindowMode::Type windowMode, uint32_t adapter, uint32_t width, uint32_t height, Tr2RenderContextEnum::PresentInterval presentInterval )
+ALResult PopulatePresentParams( Tr2PresentParametersAL& presentParams, Tr2WindowMode::Type windowMode, uint32_t adapter, uint32_t width, uint32_t height, Tr2RenderContextEnum::PresentInterval presentInterval )
+{
+	unsigned adapterCount;
+	CR_RETURN_HR( Tr2VideoAdapterInfo::GetAdapterCount( adapterCount ) );
+	if( adapter >= adapterCount )
 	{
-		unsigned adapterCount;
-		CR_RETURN_HR( Tr2VideoAdapterInfo::GetAdapterCount( adapterCount ) );
-		if( adapter >= adapterCount )
+		return E_INVALIDARG;
+	}
+
+	presentParams.backBufferCount = 1;
+	presentParams.presentInterval = presentInterval;
+	presentParams.msaaType = 1;
+	presentParams.msaaQuality = 0;
+	presentParams.software = false;
+	presentParams.windowed = windowMode != Tr2WindowMode::FULL_SCREEN;
+	presentParams.swapEffect = Tr2RenderContextEnum::SWAP_EFFECT_DISCARD;
+
+	if( windowMode == Tr2WindowMode::FULL_SCREEN )
+	{
+		bool found = false;
+		unsigned modeCount;
+		CR_RETURN_HR( Tr2VideoAdapterInfo::GetAdapterModeCount( adapter, BACK_BUFFER_FORMAT, modeCount ) );
+		for( unsigned i = 0; i < modeCount; ++i )
+		{
+			Tr2DisplayModeInfo info;
+			CR_RETURN_HR( Tr2VideoAdapterInfo::GetAdapterMode( adapter, BACK_BUFFER_FORMAT, i, info ) );
+			if( info.width == width && info.height == height )
+			{
+				presentParams.mode = info;
+				found = true;
+				break;
+			}
+		}
+		if( !found )
 		{
 			return E_INVALIDARG;
 		}
-
-		presentParams.backBufferCount = 1;
-		presentParams.presentInterval = presentInterval;
-		presentParams.msaaType = 1;
-		presentParams.msaaQuality = 0;
-		presentParams.software = false;
-		presentParams.windowed = windowMode != Tr2WindowMode::FULL_SCREEN;
-		presentParams.swapEffect = Tr2RenderContextEnum::SWAP_EFFECT_DISCARD;
-
-		if( windowMode == Tr2WindowMode::FULL_SCREEN )
-		{
-			bool found = false;
-			unsigned modeCount;
-			CR_RETURN_HR( Tr2VideoAdapterInfo::GetAdapterModeCount( adapter, BACK_BUFFER_FORMAT, modeCount ) );
-			for( unsigned i = 0; i < modeCount; ++i )
-			{
-				Tr2DisplayModeInfo info;
-				CR_RETURN_HR( Tr2VideoAdapterInfo::GetAdapterMode( adapter, BACK_BUFFER_FORMAT, i, info ) );
-				if( info.width == width && info.height == height )
-				{
-					presentParams.mode = info;
-					found = true;
-					break;
-				}
-			}
-			if( !found )
-			{
-				return E_INVALIDARG;
-			}
-		}
-		else
-		{
-			presentParams.mode = Tr2DisplayModeInfo();
-			presentParams.mode.format = BACK_BUFFER_FORMAT;
-			presentParams.mode.width = width;
-			presentParams.mode.height = height;
-		}
-		return S_OK;
 	}
-
-	std::string ToString( Tr2WindowMode::Type windowMode )
+	else
 	{
-		switch( windowMode )
-		{
-		case Tr2WindowMode::FULL_SCREEN:
-			return "full screen";
-		case Tr2WindowMode::WINDOWED:
-			return "windowed";
-		case Tr2WindowMode::FIXED_WINDOW:
-			return "fixed window";
-		default:
-			return "INVALID WINDOW MODE";
-		}
+		presentParams.mode = Tr2DisplayModeInfo();
+		presentParams.mode.format = BACK_BUFFER_FORMAT;
+		presentParams.mode.width = width;
+		presentParams.mode.height = height;
 	}
+	return S_OK;
+}
 
-	std::string ToString( Tr2WindowShowState::Type windowShowState )
+std::string ToString( Tr2WindowMode::Type windowMode )
+{
+	switch( windowMode )
 	{
-		switch( windowShowState )
-		{
-		case Tr2WindowShowState::NORMAL:
-			return "normal";
-		case Tr2WindowShowState::MAXIMIZED:
-			return "maximized";
-		case Tr2WindowShowState::MINIMIZED:
-			return "minimized";
-		default:
-			return "INVALID WINDOW SHOW STATE";
-		}
+	case Tr2WindowMode::FULL_SCREEN:
+		return "full screen";
+	case Tr2WindowMode::WINDOWED:
+		return "windowed";
+	case Tr2WindowMode::FIXED_WINDOW:
+		return "fixed window";
+	default:
+		return "INVALID WINDOW MODE";
 	}
+}
 
-	std::string ToString( Tr2RenderContextEnum::PresentInterval presentInterval )
+std::string ToString( Tr2WindowShowState::Type windowShowState )
+{
+	switch( windowShowState )
 	{
-		switch( presentInterval )
-		{
-		case Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE:
-			return "immediate";
-		case Tr2RenderContextEnum::PRESENT_INTERVAL_ONE:
-			return "one";
-		default:
-			return "INVALID PRESENT INTERVAL";
-		}
+	case Tr2WindowShowState::NORMAL:
+		return "normal";
+	case Tr2WindowShowState::MAXIMIZED:
+		return "maximized";
+	case Tr2WindowShowState::MINIMIZED:
+		return "minimized";
+	default:
+		return "INVALID WINDOW SHOW STATE";
 	}
+}
 
-
-	class SetupActiveFrameTimeStats
+std::string ToString( Tr2RenderContextEnum::PresentInterval presentInterval )
+{
+	switch( presentInterval )
 	{
-	public:
-
-		SetupActiveFrameTimeStats()
-		{
-			g_activeFrametimeMean.SetName( "Trinity/FrameTime/ActiveMean" );
-			CcpStatistics::RegisterDerived( &g_activeFrametimeMean );
-
-			g_activeFrametimeStdDev.SetName( "Trinity/FrameTime/ActiveStdDev" );
-			CcpStatistics::RegisterDerived( &g_activeFrametimeStdDev );
-		}
-	};
-
-	static SetupActiveFrameTimeStats s_setupActiveFrameTimeStats;
+	case Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE:
+		return "immediate";
+	case Tr2RenderContextEnum::PRESENT_INTERVAL_ONE:
+		return "one";
+	default:
+		return "INVALID PRESENT INTERVAL";
+	}
 }
 
 
-Tr2MainWindowState::State::State()
-	:windowMode( Tr2WindowMode::FULL_SCREEN ),
+class SetupActiveFrameTimeStats
+{
+public:
+	SetupActiveFrameTimeStats()
+	{
+		g_activeFrametimeMean.SetName( "Trinity/FrameTime/ActiveMean" );
+		CcpStatistics::RegisterDerived( &g_activeFrametimeMean );
+
+		g_activeFrametimeStdDev.SetName( "Trinity/FrameTime/ActiveStdDev" );
+		CcpStatistics::RegisterDerived( &g_activeFrametimeStdDev );
+	}
+};
+
+static SetupActiveFrameTimeStats s_setupActiveFrameTimeStats;
+}
+
+
+Tr2MainWindowState::State::State() :
+	windowMode( Tr2WindowMode::FULL_SCREEN ),
 	adapter( 0 ),
 	width( 0 ),
 	height( 0 ),
@@ -196,10 +195,10 @@ std::string Tr2MainWindowState::ToString() const
 
 
 
-Tr2MainWindow::Tr2MainWindow()
-	:m_hwnd(),
+Tr2MainWindow::Tr2MainWindow() :
+	m_hwnd(),
 	m_isResizing( false ),
-    m_inSetState( false )
+	m_inSetState( false )
 {
 	m_minimumSize.width = m_minimumSize.height = 100;
 	BeOS->RegisterForTicks( this, nullptr );
@@ -214,28 +213,28 @@ Tr2MainWindow::~Tr2MainWindow()
 
 ALResult Tr2MainWindow::SetState( bool adjustWindow, const Tr2MainWindowState::State& newState )
 {
-    m_inSetState = true;
-    ON_BLOCK_EXIT( [&]{ m_inSetState = false; } );
-    
+	m_inSetState = true;
+	ON_BLOCK_EXIT( [&] { m_inSetState = false; } );
+
 	Tr2MainWindowState::State state = newState;
 	SanitizeState( state );
 
-    if( state == m_state )
-    {
-        return S_OK;
-    }
+	if( state == m_state )
+	{
+		return S_OK;
+	}
 
-    if( HasWindow() && gTriDev->DeviceExists() && !m_state.RequiresDeviceReset( state ) )
-    {
-        if( adjustWindow )
-        {
-            AdjustWindow( state );
-        }
+	if( HasWindow() && gTriDev->DeviceExists() && !m_state.RequiresDeviceReset( state ) )
+	{
+		if( adjustWindow )
+		{
+			AdjustWindow( state );
+		}
 		gTriDev->SetThrottling( TriDevice::WINDOW_HIDDEN, state.showState == Tr2WindowShowState::MINIMIZED );
-        m_state = state;
-        m_onWindowStateChange.CallVoid( state.WrapCopy() );
-        return S_OK;
-    }
+		m_state = state;
+		m_onWindowStateChange.CallVoid( state.WrapCopy() );
+		return S_OK;
+	}
 
 	if( gTriDev->DeviceExists() )
 	{
@@ -266,7 +265,7 @@ ALResult Tr2MainWindow::SetState( bool adjustWindow, const Tr2MainWindowState::S
 #endif
 
 #else
-		else if( adjustWindow )
+	else if( adjustWindow )
 #endif
 	{
 		AdjustWindow( state );
@@ -290,7 +289,7 @@ ALResult Tr2MainWindow::SetState( bool adjustWindow, const Tr2MainWindowState::S
 		AdjustWindow( state );
 	}
 #else
-    (void)justCreatedWindow;
+	(void)justCreatedWindow;
 #endif
 
 	m_isResizing = false;
@@ -304,7 +303,7 @@ ALResult Tr2MainWindow::SetState( bool adjustWindow, const Tr2MainWindowState::S
 	return S_OK;
 }
 
-ALResult Tr2MainWindow::SetState( const  Tr2MainWindowState::State& state )
+ALResult Tr2MainWindow::SetState( const Tr2MainWindowState::State& state )
 {
 	return SetState( true, state );
 }
@@ -355,8 +354,7 @@ std::vector<std::pair<uint32_t, uint32_t>> Tr2MainWindow::GetWindowSizeOptions( 
 	std::vector<std::pair<uint32_t, uint32_t>> result;
 	SanitizeAdapter( adapter );
 
-	auto Insert = [&result]( const std::pair<uint32_t, uint32_t>& candidate )
-	{
+	auto Insert = [&result]( const std::pair<uint32_t, uint32_t>& candidate ) {
 		if( std::find( begin( result ), end( result ), candidate ) == end( result ) )
 		{
 			result.push_back( candidate );
@@ -539,16 +537,14 @@ Tr2MainWindowStatePtr Tr2MainWindow::GetDefaultState( Tr2WindowMode::Type mode )
 	switch( mode )
 	{
 	case Tr2WindowMode::FULL_SCREEN:
-	case Tr2WindowMode::FIXED_WINDOW:
-	{
+	case Tr2WindowMode::FIXED_WINDOW: {
 		Tr2DisplayModeInfo mi;
 		Tr2VideoAdapterInfo::GetAdapterDisplayMode( result.adapter, mi );
 		result.width = mi.width;
 		result.height = mi.height;
 		break;
 	}
-	case Tr2WindowMode::WINDOWED:
-	{
+	case Tr2WindowMode::WINDOWED: {
 		Tr2DisplayModeInfo mi;
 		Tr2VideoAdapterInfo::GetAdapterDisplayMode( result.adapter, mi );
 
@@ -571,15 +567,15 @@ Tr2MainWindowStatePtr Tr2MainWindow::GetDefaultState( Tr2WindowMode::Type mode )
 
 void Tr2MainWindow::StoreStateSettings( const Tr2MainWindowState* state )
 {
-    if( state )
-    {
-        m_storedStates[state->m_state.windowMode] = state->m_state;
-    }
+	if( state )
+	{
+		m_storedStates[state->m_state.windowMode] = state->m_state;
+	}
 }
 
 #ifdef __APPLE__
 id Tr2MainWindow::GetWindowID() const
 {
-    return (id)m_hwnd;
+	return (id)m_hwnd;
 }
 #endif

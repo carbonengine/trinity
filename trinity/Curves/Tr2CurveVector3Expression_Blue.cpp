@@ -12,7 +12,7 @@ const Be::ClassInfo* Tr2CurveVector3Expression::ExposeToBlue()
 		MAP_INTERFACE( Tr2CurveVector3Expression )
 		MAP_INTERFACE( ITriColorFunction )
 		MAP_INTERFACE( ITriVectorFunction )
-	{
+		{
 			Be::InterfaceEntry entry = { &GetITriFunctionIID(), BLUE_INTERFACEOFFSET( ITriColorFunction ) };
 			s_interfaces.push_back( entry );
 		}
@@ -91,28 +91,24 @@ const Be::ClassInfo* Tr2CurveVector3Expression::ExposeToBlue()
 			"GetValueAt",
 			GetValue,
 			"Returns curve value at specified time\n"
-			":param time: input time"
-		)
+			":param time: input time" )
 
 		MAP_METHOD_AND_WRAP(
 			"ResetRandomConstant",
 			ResetRandomConstant,
 			"Resets curve random constant to a new random value\n"
 			":jessica-favorite:\n"
-			":jessica-icon: timeline/refreshrandom.png"
-		)
+			":jessica-icon: timeline/refreshrandom.png" )
 
 		MAP_METHOD_AND_WRAP(
 			"GetExpressionTermInfo",
 			GetExpressionTermInfo,
-			"Returns information on addional functions and variables available to the expression"
-		)
+			"Returns information on addional functions and variables available to the expression" )
 		MAP_METHOD_AND_WRAP(
 			"EvaluateExpression",
 			EvaluateExpression,
 			"Evaluates an expression against this object\n"
-			":param expression: expression to evaluate"
-		)
+			":param expression: expression to evaluate" )
 
 	EXPOSURE_END()
 }

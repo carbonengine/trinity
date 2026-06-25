@@ -31,27 +31,27 @@ enum class Tr2SpriteTarget
 enum Tr2SpriteObjectEffect
 {
 	TR2_SFX_NO_TEXTURE,
-	TR2_SFX_FILL = TR2_SFX_NO_TEXTURE,			// No texture - only vertex colors
+	TR2_SFX_FILL = TR2_SFX_NO_TEXTURE, // No texture - only vertex colors
 
-	TR2_SFX_FILL_AA,							// Anti-aliased lines
+	TR2_SFX_FILL_AA, // Anti-aliased lines
 
 	TR2_SFX_ONE_TEXTURE = 32,
-	TR2_SFX_COPY = TR2_SFX_ONE_TEXTURE,			// Primary texture modulated with vertex colors
-	TR2_SFX_DOT,								// Primary texture used in dot product against light vector
-	TR2_SFX_NOALPHA,							// Primary texture as a Bink video texture
-	TR2_SFX_DROPSHADOW,							// Primary texture modulated with vertex colors plus a drop shadow
-	TR2_SFX_OUTLINE, 							// Primary texture modulated with vertex colors plus an outline
-	TR2_SFX_COLOROVERLAY,						// Primary texture colorized with overlay effect (http://en.wikipedia.org/wiki/Blend_modes#Overlay)
-	TR2_SFX_SOFTLIGHT,							// Primary texture colorized with a soft light effect (http://en.wikipedia.org/wiki/Blend_modes#Soft_Light)
-	TR2_SFX_BLUR,								// Primary texture is blurred
-	TR2_SFX_BLURBACKGROUNDCOLORED,				// Primary texture is blurred, uvs are calculated from screen coords
-	TR2_SFX_BLURBACKGROUND,						// Primary texture is blurred, uvs are calculated from screen coords
-	TR2_SFX_GLOW,								// Primary texture is blurred, to be used for glow effects
-	TR2_SFX_FONT,								// Primary texture is a glyph rendered by FreeType
+	TR2_SFX_COPY = TR2_SFX_ONE_TEXTURE, // Primary texture modulated with vertex colors
+	TR2_SFX_DOT, // Primary texture used in dot product against light vector
+	TR2_SFX_NOALPHA, // Primary texture as a Bink video texture
+	TR2_SFX_DROPSHADOW, // Primary texture modulated with vertex colors plus a drop shadow
+	TR2_SFX_OUTLINE, // Primary texture modulated with vertex colors plus an outline
+	TR2_SFX_COLOROVERLAY, // Primary texture colorized with overlay effect (http://en.wikipedia.org/wiki/Blend_modes#Overlay)
+	TR2_SFX_SOFTLIGHT, // Primary texture colorized with a soft light effect (http://en.wikipedia.org/wiki/Blend_modes#Soft_Light)
+	TR2_SFX_BLUR, // Primary texture is blurred
+	TR2_SFX_BLURBACKGROUNDCOLORED, // Primary texture is blurred, uvs are calculated from screen coords
+	TR2_SFX_BLURBACKGROUND, // Primary texture is blurred, uvs are calculated from screen coords
+	TR2_SFX_GLOW, // Primary texture is blurred, to be used for glow effects
+	TR2_SFX_FONT, // Primary texture is a glyph rendered by FreeType
 
 	TR2_SFX_TWO_TEXTURES = 64,
-	TR2_SFX_MODULATE = TR2_SFX_TWO_TEXTURES,	// Primary and secondary textures modulated, then again with vertex colors
-	TR2_SFX_MASK,								// Primary texture with secondary texture alpha as mask
+	TR2_SFX_MODULATE = TR2_SFX_TWO_TEXTURES, // Primary and secondary textures modulated, then again with vertex colors
+	TR2_SFX_MASK, // Primary texture with secondary texture alpha as mask
 	TR2_SFX_COPY_DOT,
 
 	TR2_SFX_COUNT,
@@ -61,9 +61,13 @@ enum Tr2SpriteObjectEffect
 
 struct Tr2Sprite2dClipRect
 {
-	Tr2Sprite2dClipRect() {}
+	Tr2Sprite2dClipRect()
+	{
+	}
 	Tr2Sprite2dClipRect( float l, float t, float r, float b ) :
-	left( l ), top( t ), right( r ), bottom( b ) {}
+		left( l ), top( t ), right( r ), bottom( b )
+	{
+	}
 
 	float left;
 	float top;
@@ -101,12 +105,12 @@ enum Tr2Sprite2dRenderEffect
 
 enum Tr2Sprite2dTextureSettings
 {
-	S2D_TS_NONE				= 0x00,
-	S2D_TS_FORCEOPAQUE		= 0x01,
-	S2D_TS_REPEAT_MIRROR	= 0x02,
-	S2D_TS_REPEAT_CLAMP		= 0x04,
-	S2D_TS_TILE_X			= 0x08,
-	S2D_TS_TILE_Y			= 0x10,
+	S2D_TS_NONE = 0x00,
+	S2D_TS_FORCEOPAQUE = 0x01,
+	S2D_TS_REPEAT_MIRROR = 0x02,
+	S2D_TS_REPEAT_CLAMP = 0x04,
+	S2D_TS_TILE_X = 0x08,
+	S2D_TS_TILE_Y = 0x10,
 };
 
 extern Be::VarChooser Tr2Sprite2dRenderEffectChooser[];

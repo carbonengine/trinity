@@ -18,7 +18,7 @@ using namespace Tr2RenderContextEnum;
 EveTrailsSet::EveTrailsSet( IRoot* lockobj ) :
 	m_display( true ),
 	m_trailVertexDeclElementCount( 0 ),
-	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),	
+	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_fadeSpeed( 1.f )
 {
 	PrepareResources();
@@ -72,7 +72,7 @@ void EveTrailsSet::InitializeGeometryResource()
 	if( !m_geometryResPath.empty() )
 	{
 		// get new geometry resource
-		BeResMan->GetResource( m_geometryResPath, "", BlueInterfaceIID<TriGeometryRes>(), (void**)& m_geometryResource );
+		BeResMan->GetResource( m_geometryResPath, "", BlueInterfaceIID<TriGeometryRes>(), (void**)&m_geometryResource );
 	}
 
 	// attach callback, so ::RebuildCachedData() will be called when it finished loading
@@ -281,18 +281,18 @@ void EveTrailsSet::InitializeInstanceBuffer()
 
 	// create and fill with star-shape's position and some random-value
 	std::vector<InstanceVertex> verts( trailCount );
-	for( unsigned int i = 0; i < trailCount ; ++i )
+	for( unsigned int i = 0; i < trailCount; ++i )
 	{
 		verts[i].transform = Vector4( m_trailData[i].transform._41, m_trailData[i].transform._42, m_trailData[i].transform._43, m_trailData[i].size );
 	}
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	
-	CR_RETURN( g_sharedBuffer.Allocate(		
+
+	CR_RETURN( g_sharedBuffer.Allocate(
 		sizeof( InstanceVertex ),
-		trailCount, 
-		&verts[0], 
-		renderContext, 
+		trailCount,
+		&verts[0],
+		renderContext,
 		m_instanceBuffer ) );
 }
 

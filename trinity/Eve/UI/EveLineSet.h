@@ -27,17 +27,16 @@ struct EveLineData
 	Color m_color2;
 };
 
-class EveLineSet : 
-	public IInitialize,
-	public ITr2Renderable,
-	public IEveTransform,
-	public IEveSpaceObject2,
-	public Tr2DeviceResource
+class EveLineSet : public IInitialize,
+				   public ITr2Renderable,
+				   public IEveTransform,
+				   public IEveSpaceObject2,
+				   public Tr2DeviceResource
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	EveLineSet(IRoot* lockobj = NULL);
+	EveLineSet( IRoot* lockobj = NULL );
 	~EveLineSet();
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -51,7 +50,7 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
-	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
+	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform
@@ -59,18 +58,29 @@ public:
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform );
 
 	// No sensible implementation?
-	virtual void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t ) {}
-	virtual void GetModelCenterWorldPosition( Vector3 &position ) const {}
-	virtual bool GetLocalBoundingBox( Vector3 &min, Vector3 &max ) { return false; }
-	virtual void GetLocalToWorldTransform( Matrix &transform ) const { transform = IdentityMatrix(); }
+	virtual void UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
+	{
+	}
+	virtual void GetModelCenterWorldPosition( Vector3& position ) const
+	{
+	}
+	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max )
+	{
+		return false;
+	}
+	virtual void GetLocalToWorldTransform( Matrix& transform ) const
+	{
+		transform = IdentityMatrix();
+	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
-public:
 
+public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
@@ -78,8 +88,12 @@ public:
 	virtual bool HasTransparentBatches();
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	
-	Tr2Lod GetLODLevel() const { return TR2_LOD_HIGH; }
+
+	Tr2Lod GetLODLevel() const
+	{
+		return TR2_LOD_HIGH;
+	}
+
 private:
 	// name
 	std::string m_name;
@@ -107,16 +121,17 @@ private:
 
 	// Python interface
 	unsigned int AddLine( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2 );
-	void RemoveLine( unsigned int id );;
+	void RemoveLine( unsigned int id );
+	;
 
 	void ChangeLine( unsigned int id, const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2 );
 	void ChangeLineColor( unsigned int id, const Vector4& color1, const Vector4& color2 );
-	void ChangeLinePosition(unsigned int id, const Vector3& position1, const Vector3& position2 );;
+	void ChangeLinePosition( unsigned int id, const Vector3& position1, const Vector3& position2 );
+	;
 
 	void ClearLines();
-	
-	bool SubmitChanges();
 
+	bool SubmitChanges();
 };
 
 TYPEDEF_BLUECLASS( EveLineSet );

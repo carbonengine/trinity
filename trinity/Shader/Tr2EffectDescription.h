@@ -74,7 +74,7 @@ struct Tr2EffectResource
 		TEXTURE_2D = Tr2RenderContextEnum::TEX_TYPE_2D,
 		TEXTURE_3D = Tr2RenderContextEnum::TEX_TYPE_3D,
 		TEXTURE_CUBE = Tr2RenderContextEnum::TEX_TYPE_CUBE,
-		TEXTURE_TYPELESS = Tr2RenderContextEnum::TEX_TYPE_TYPELESS,	// valid but unknown dimensions
+		TEXTURE_TYPELESS = Tr2RenderContextEnum::TEX_TYPE_TYPELESS, // valid but unknown dimensions
 
 		BUFFER,
 		STRUCTURED_BUFFER,
@@ -137,7 +137,7 @@ struct Tr2EffectParameterAnnotation
 	};
 
 	// Annotation name (string is managed by the owner of string table: Tr2EffectRes or
-	// Tr2HighLevelShader)	
+	// Tr2HighLevelShader)
 	const char* name;
 	Type type;
 	union
@@ -167,7 +167,10 @@ struct Tr2EffectStageInput
 {
 	Tr2EffectStageInput();
 
-	enum { INVALID = 0xffFFffFFu };
+	enum
+	{
+		INVALID = 0xffFFffFFu
+	};
 
 	// If the stage was loaded from effect file
 	bool m_exists;
@@ -229,8 +232,8 @@ struct Tr2EffectLibrary
 
 struct Tr2EffectTechnique
 {
-	Tr2EffectTechnique()
-		:passes( "Tr2EffectTechnique::passes" ),
+	Tr2EffectTechnique() :
+		passes( "Tr2EffectTechnique::passes" ),
 		shaderTypeMask( 0 )
 	{
 	}
@@ -249,10 +252,10 @@ struct Tr2EffectDescription
 {
 	Tr2EffectDescription();
 
-	bool Read( const void* data, 
+	bool Read( const void* data,
 			   size_t dataSize,
 			   unsigned version,
-			   const char* stringTable, 
+			   const char* stringTable,
 			   size_t stringTableSize,
 			   const char* effectName );
 

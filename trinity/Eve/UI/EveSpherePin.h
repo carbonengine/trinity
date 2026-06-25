@@ -46,20 +46,19 @@ public:
 // SeeAlso:
 //   EvePlanet
 // --------------------------------------------------------------------------------
-class EveSpherePin : 
-	public IInitialize,
-	public ITr2Renderable,
-	public IEveTransform,
-	public IEveSpaceObject2,
-	public Tr2DeviceResource,
-	public IBlueAsyncResNotifyTarget,
-	public ITr2Pickable,
-	public INotify
+class EveSpherePin : public IInitialize,
+					 public ITr2Renderable,
+					 public IEveTransform,
+					 public IEveSpaceObject2,
+					 public Tr2DeviceResource,
+					 public IBlueAsyncResNotifyTarget,
+					 public ITr2Pickable,
+					 public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	EveSpherePin(IRoot* lockobj = NULL);
+	EveSpherePin( IRoot* lockobj = NULL );
 	~EveSpherePin();
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -73,34 +72,51 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
-	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
+	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform
 	virtual void Update( const EveUpdateContext& updateContext );
 	virtual void UpdateViewDependentData( const TriFrustum& frustum, const Matrix& parentTransform );
-	Tr2Lod GetLODLevel() const { return TR2_LOD_HIGH; }
+	Tr2Lod GetLODLevel() const
+	{
+		return TR2_LOD_HIGH;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* val );
 
 	// No sensible implementation?
-	virtual void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t ) {}
-	virtual void GetModelCenterWorldPosition( Vector3 &position ) const {}
-	virtual bool GetLocalBoundingBox( Vector3 &min, Vector3 &max ) { return false; }
-	virtual void GetLocalToWorldTransform( Matrix &transform ) const { transform = IdentityMatrix(); }
+	virtual void UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
+	{
+	}
+	virtual void GetModelCenterWorldPosition( Vector3& position ) const
+	{
+	}
+	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max )
+	{
+		return false;
+	}
+	virtual void GetLocalToWorldTransform( Matrix& transform ) const
+	{
+		transform = IdentityMatrix();
+	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
-public:
 
+public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
-	virtual IRoot* GetID( uint16_t ) { return this->GetRawRoot(); }
+	virtual IRoot* GetID( uint16_t )
+	{
+		return this->GetRawRoot();
+	}
 	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +135,7 @@ public:
 
 	// geom res
 	void InitializeGeometryResource();
-	
+
 private:
 	// name
 	std::string m_name;

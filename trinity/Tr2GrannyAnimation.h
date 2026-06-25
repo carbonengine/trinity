@@ -16,8 +16,8 @@ class Tr2AnimationMeshBinding;
 
 namespace Tr2GrannyAnimationUtils
 {
-	bool GetBoneList( Tr2GrannyAnimation* animationUpdater, const Float4x3*& bones, size_t& boneCount );
-	std::vector<int32_t> CreateMapping( const cmf::Skeleton& skeleton, cmf::Span<cmf::BoneBinding> boneBindings, uint32_t meshBoneCount );
+bool GetBoneList( Tr2GrannyAnimation* animationUpdater, const Float4x3*& bones, size_t& boneCount );
+std::vector<int32_t> CreateMapping( const cmf::Skeleton& skeleton, cmf::Span<cmf::BoneBinding> boneBindings, uint32_t meshBoneCount );
 };
 
 struct GrannyBoneBindingBounds
@@ -34,50 +34,53 @@ BLUE_INTERFACE( ITr2GrannyAnimationOwner ) :
 };
 
 
-BLUE_CLASS( Tr2GrannyAnimation ):
-     public IInitialize,
-	 public ITr2AnimationUpdater,
-	 public IBlueAsyncResNotifyTarget
+BLUE_CLASS( Tr2GrannyAnimation ) :
+	public IInitialize,
+	public ITr2AnimationUpdater,
+	public IBlueAsyncResNotifyTarget
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2GrannyAnimation( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2GrannyAnimation( IRoot* lockobj = NULL );
 	~Tr2GrannyAnimation();
 
 	const std::string& GetResPath() const;
 	void SetResPath( const std::string& val );
-	
+
 	void AddSecondaryResPath( const std::string& val );
 	const std::string GetSecondaryAnimationName( const std::string& resPath, int index ) const;
 
 	bool IsAnimationEnabled() const;
 	void SetAnimationEnabled( bool enabled );
 
-	void	SetSharedGeometryRes( TriGeometryResPtr res );
+	void SetSharedGeometryRes( TriGeometryResPtr res );
 	TriGeometryRes* GetSharedGeometryRes() const;
-	void	SetUseMeshBinding( bool enable ) { m_useMeshBinding = enable; }
+	void SetUseMeshBinding( bool enable )
+	{
+		m_useMeshBinding = enable;
+	}
 
 	const std::string& GetModel() const;
-	void SetModel( const std::string& val);
+	void SetModel( const std::string& val );
 
 	const cmf::Skeleton* GetSkeleton() const;
 	const std::vector<Matrix>& GetWorldTransforms() const;
-	
+
 #if WITH_GRANNY
 	granny_model* GetGrannyModel() const;
 #endif
 
 	bool IsInitialized() const;
 
-	bool	PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone=true );
-	bool	PlayLayerAnimationByName( const char* layer, const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone );
-	void	EndAnimation();
-	void	ClearAnimations();
-	float	GetAnimationChainCompleteTime();
+	bool PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone = true );
+	bool PlayLayerAnimationByName( const char* layer, const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone );
+	void EndAnimation();
+	void ClearAnimations();
+	float GetAnimationChainCompleteTime();
 
 	Tr2GrannyAnimationLayer* GetAnimationLayer( const char* name );
 
-	void AddAnimationLayer( const char* layerName, float layerWeight=1.0f );
+	void AddAnimationLayer( const char* layerName, float layerWeight = 1.0f );
 	void ClearAnimationLayers();
 	void AddAnimationLayerBone( const char* layerName, const char* boneName );
 	void AddAnimationLayerAllBones( const char* layerName );
@@ -85,9 +88,9 @@ public:
 	void AddAnimationLayerWithTrackMask( const char* layerName, const char* trackMask );
 	float GetAnimationChainCompleteTimeForLayer( const char* layerName );
 	float GetLayerWeight( const char* layerName );
-	void SetLayerWeight ( const char* layerName, float layerWeight );
-	void SetLayerControlParam ( const char* layerName, float controlParam );
-	void SetLayerControlParamSkewRate ( const char* layerName, float skewRate );
+	void SetLayerWeight( const char* layerName, float layerWeight );
+	void SetLayerControlParam( const char* layerName, float controlParam );
+	void SetLayerControlParamSkewRate( const char* layerName, float skewRate );
 	void AimBone( const char* boneName, float target_x, float target_y, float target_z, float axis_x, float axis_y, float axis_z );
 	void DisableAimBone();
 
@@ -101,12 +104,12 @@ public:
 
 	void TogglePauseAnimations( bool pause );
 
-	bool GetDynamicBounds( Vector4& boundingSphere, Vector3 &aabbMin, Vector3 &aabbMax );
+	bool GetDynamicBounds( Vector4 & boundingSphere, Vector3 & aabbMin, Vector3 & aabbMax );
 	void RenderDynamicBounds( const Matrix& modelTransform );
 
 #if WITH_GRANNY
-	Vector4 CalculateSkinnedBoundingSphere( granny_file_info* fi=nullptr );
-	bool CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform, Vector3& bbMin, Vector3& bbMax, granny_file_info* fi=nullptr );
+	Vector4 CalculateSkinnedBoundingSphere( granny_file_info* fi = nullptr );
+	bool CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform, Vector3& bbMin, Vector3& bbMax, granny_file_info* fi = nullptr );
 #endif
 
 	void RenderBones( const Matrix& modelTransform, const Tr2AnimationMeshBinding* meshBinding = nullptr );
@@ -115,7 +118,7 @@ public:
 	const Float4x3* GetMeshBoneMatrixList() const;
 
 	std::vector<std::string> GetAnimationNames() const;
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
@@ -123,23 +126,23 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2AnimationUpdater
 	void PrePhysicsAnimation( Be::Time time, const Matrix& modelTransform );
-	void PostPhysicsAnimation( Be::Time time, const Matrix &modelTransform );
+	void PostPhysicsAnimation( Be::Time time, const Matrix& modelTransform );
 	const Matrix* GetAnimationTransforms();
-	const std::string *GetAnimationBoneList( unsigned int& numBones ) const;
+	const std::string* GetAnimationBoneList( unsigned int& numBones ) const;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IAsyncLoadedResNotifyTarget
-	void	ReleaseCachedData( BlueAsyncRes* p );
-	void	RebuildCachedData( BlueAsyncRes* p );
+	void ReleaseCachedData( BlueAsyncRes * p );
+	void RebuildCachedData( BlueAsyncRes * p );
 
-	bool	FindBoneByName( const char* name, unsigned int& ix ) const;
+	bool FindBoneByName( const char* name, unsigned int& ix ) const;
 	const cmf::Animation* FindCMFAnimationByName( const char* name ) const;
 #if WITH_GRANNY
 	granny_animation* FindGrannyAnimationByName( const char* name ) const;
 #endif
 	float FindAnimationDurationByName( const char* name ) const;
 
-	void	Cleanup();
+	void Cleanup();
 
 	void AddNotifyTarget( IBlueAsyncResNotifyTarget * p );
 	void RemoveNotifyTarget( IBlueAsyncResNotifyTarget * p );
@@ -147,9 +150,9 @@ public:
 	const std::unordered_map<std::string, float>& GetMorphAnimations() const;
 
 #if WITH_GRANNY
-	granny_skeleton *m_skeleton;
-	granny_world_pose *m_worldPose;
-	granny_mesh_binding *m_meshBinding;
+	granny_skeleton* m_skeleton;
+	granny_world_pose* m_worldPose;
+	granny_mesh_binding* m_meshBinding;
 #endif
 
 	bool IsUsingCMF() const;
@@ -163,12 +166,12 @@ public:
 	bool GetBoneWorldTransform( const char* boneName, Matrix& transform ) const;
 
 private:
-	std::string			m_name;
-	std::string			m_resPath;
-	std::string			m_model;
-	TriGrannyResPtr		m_grannyRes;
-	std::map<std::string, TriGrannyResPtr>	m_secondaryGrannyRes;
-	TriGeometryResPtr	m_geometryRes;
+	std::string m_name;
+	std::string m_resPath;
+	std::string m_model;
+	TriGrannyResPtr m_grannyRes;
+	std::map<std::string, TriGrannyResPtr> m_secondaryGrannyRes;
+	TriGeometryResPtr m_geometryRes;
 
 	bool m_boneBoundsInitialized;
 	std::vector<GrannyBoneBindingBounds> m_boneBounds;
@@ -184,8 +187,8 @@ private:
 	PGrannyBoneOffset m_boneOffset;
 
 #if WITH_GRANNY
-	granny_local_pose *m_localPose;
-	granny_local_pose *m_compositePose;
+	granny_local_pose* m_localPose;
+	granny_local_pose* m_compositePose;
 #endif
 	cmf::SkeletonPose m_pose;
 	cmf::SkeletonPose m_tmpPose;
@@ -216,7 +219,7 @@ private:
 	Vector3 m_aimBoneOrientation;
 	Vector3 m_aimAxis;
 
-	bool	m_useMeshBinding;
+	bool m_useMeshBinding;
 	bool m_animationEnabled;
 
 	bool m_additiveMode;
@@ -231,8 +234,8 @@ private:
 #endif
 
 	void LoadSecondaryResPath( const std::string& val );
-	void	ApplyBoneOffsets ( unsigned i );
-	
+	void ApplyBoneOffsets( unsigned i );
+
 	IBlueEventListenerPtr m_eventListener;
 	std::vector<IBlueAsyncResNotifyTarget*> m_notifyTargets;
 };

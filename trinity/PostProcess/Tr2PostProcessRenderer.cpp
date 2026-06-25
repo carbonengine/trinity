@@ -277,13 +277,13 @@ GaussianData CalculateGaussianPassParameters( float radius, float centerWeight, 
 	GaussianData data;
 	data.overallWeight = overallWeight;
 	data.count = (uint32_t)taps.size() / 2;
-	
-	std::fill( std::begin( data.weightOffset ), std::end( data.weightOffset ), Vector4(0,0,0,0) );
+
+	std::fill( std::begin( data.weightOffset ), std::end( data.weightOffset ), Vector4( 0, 0, 0, 0 ) );
 
 	uint32_t index = 0;
 
 	// Fill in the data
-	for( uint32_t i = 0; i < taps.size(); i+=2 )
+	for( uint32_t i = 0; i < taps.size(); i += 2 )
 	{
 		// pack 2 weight and offset into a vector4
 		float weight1 = taps[i].first / weightSum;
@@ -291,14 +291,14 @@ GaussianData CalculateGaussianPassParameters( float radius, float centerWeight, 
 		float weight2 = taps[i + 1].first / weightSum;
 		float offset2 = taps[i + 1].second;
 
-		data.weightOffset[index++] = Vector4(weight1, offset1, weight2, offset2);
+		data.weightOffset[index++] = Vector4( weight1, offset1, weight2, offset2 );
 	}
 
 	return data;
 }
 }
 
-namespace Tonemapping 
+namespace Tonemapping
 {
 
 void ApplyColorCorrection( const Tr2PPColorCorrectionEffect* colorCorrection, Tr2Effect* tonemappingEffect )
@@ -510,10 +510,10 @@ void ApplyNoTonemappingMethod( Tr2Effect* tonemappingEffect )
 
 namespace AMDSharpening
 {
-	Vector4 AsVector( uintfloat4 v )
-	{
-		return Vector4( v.f[0], v.f[1], v.f[2], v.f[3] );
-	}
+Vector4 AsVector( uintfloat4 v )
+{
+	return Vector4( v.f[0], v.f[1], v.f[2], v.f[3] );
+}
 }
 
 Tr2PostProcessRenderer::Tr2PostProcessRenderer( IRoot* lockobj ) :
@@ -564,7 +564,7 @@ Tr2PostProcessRenderer::Tr2PostProcessRenderer( IRoot* lockobj ) :
 
 	m_bloomConstantBuffer = Tr2ConstantBufferAL();
 
-	// dynamic exposure shaders 
+	// dynamic exposure shaders
 	m_dynamicExposureToTextureShader.CreateInstance();
 	m_dynamicExposureToTextureShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ExposureToTexture.fx" );
 
@@ -591,7 +591,7 @@ Tr2PostProcessRenderer::Tr2PostProcessRenderer( IRoot* lockobj ) :
 
 	m_fogCompositeEffect.CreateInstance();
 	m_fogCompositeEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/EnvironmentFogComposit.fx" );
-	
+
 	// depth of field shaders
 	m_depthOfFieldBokehBlurShader.CreateInstance();
 	m_depthOfFieldBokehBlurShader->StartUpdate();
@@ -618,7 +618,7 @@ Tr2PostProcessRenderer::Tr2PostProcessRenderer( IRoot* lockobj ) :
 	// signal loss shader
 	m_signalLossEffect.CreateInstance();
 	m_signalLossEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/SignalLoss.fx" );
-	
+
 	// film grain shader
 	m_grainShader.CreateInstance();
 	m_grainShader->StartUpdate();
@@ -640,20 +640,20 @@ PostProcess::Quality Tr2PostProcessRenderer::GetPostProcessingQuality() const
 }
 
 void Tr2PostProcessRenderer::SetPostProcessingQuality( PostProcess::Quality quality )
-{	
+{
 	m_quality = quality;
 }
 
 
-void Tr2PostProcessRenderer::Execute( 
-	const Tr2TextureAL& destination, 
-	Tr2GpuResourcePool::Texture sourceBuffer, 
-	Tr2GpuResourcePool::Texture depthMap, 
-	Tr2GpuResourcePool::Texture velocity, 
-	Tr2GpuResourcePool::Texture opaqueColor, 
+void Tr2PostProcessRenderer::Execute(
+	const Tr2TextureAL& destination,
+	Tr2GpuResourcePool::Texture sourceBuffer,
+	Tr2GpuResourcePool::Texture depthMap,
+	Tr2GpuResourcePool::Texture velocity,
+	Tr2GpuResourcePool::Texture opaqueColor,
 	EveSpaceScene* scene,
-	Tr2UpscalingContextAL* upscalingContext, 
-	Tr2GpuResourcePool& gpuResourcePool, 
+	Tr2UpscalingContextAL* upscalingContext,
+	Tr2GpuResourcePool& gpuResourcePool,
 	Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -674,7 +674,7 @@ void Tr2PostProcessRenderer::Execute(
 
 	renderContext.m_esm.PushRenderTarget();
 	renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
-	
+
 	const auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( upscalingContext ? upscalingContext->GetID() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
 
 	auto upscalingEnabled = upscalingInfo.technique != Tr2UpscalingAL::NONE;
@@ -695,7 +695,7 @@ void Tr2PostProcessRenderer::Execute(
 	// Always copy
 	auto nonMsaaSource = gpuResourcePool.GetTempTexture( "Pre-upscaling Composite", renderSize, sourceBuffer->GetFormat(), RENDER_TARGET );
 	sourceBuffer->Resolve( nonMsaaSource, renderContext );
-	
+
 	Tr2PPDynamicExposureEffect* dynamicExposure = nullptr;
 	Tr2GpuResourcePool::Buffer histogramBuffer;
 
@@ -712,7 +712,7 @@ void Tr2PostProcessRenderer::Execute(
 		}
 		sourceBuffer = {};
 
-		if( auto godrays = postProcess->GetGodRaysIfAvailable (m_quality ) )
+		if( auto godrays = postProcess->GetGodRaysIfAvailable( m_quality ) )
 		{
 			RenderGodRays( nonMsaaSource, depthMap, gpuResourcePool, renderContext, godrays );
 		}
@@ -729,7 +729,7 @@ void Tr2PostProcessRenderer::Execute(
 		if( taa != nullptr && !upscalingInfo.temporal )
 		{
 			RenderTaa( nonMsaaSource, velocity, opaqueColor, gpuResourcePool, renderContext, taa, dynamicExposure );
-			if ( !upscalingContext )
+			if( !upscalingContext )
 			{
 				velocity = {};
 				opaqueColor = {};
@@ -743,7 +743,7 @@ void Tr2PostProcessRenderer::Execute(
 		if( dynamicExposure )
 		{
 			histogramBuffer = RenderDynamicExposure( nonMsaaSource, gpuResourcePool, renderContext, dynamicExposure );
-			if ( !dynamicExposure->m_debug )
+			if( !dynamicExposure->m_debug )
 			{
 				histogramBuffer = {};
 			}
@@ -768,7 +768,7 @@ void Tr2PostProcessRenderer::Execute(
 	else
 	{
 		upscaledSource = nonMsaaSource;
-		if ( !upscalingContext )
+		if( !upscalingContext )
 		{
 			depthMap = {};
 			velocity = {};
@@ -804,12 +804,12 @@ void Tr2PostProcessRenderer::Execute(
 			auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", renderSize, destination.GetFormat(), RENDER_TARGET );
 
 			RenderTonemapping( tonemappedOutput, postProcess, renderContext );
-			
+
 			output = RenderUpscaling( tonemappedOutput, depthMap, velocity, opaqueColor, scene->GetReprojectionMatrix(), gpuResourcePool, renderContext, upscalingContext, dynamicExposure );
 			depthMap = {};
 			velocity = {};
 			opaqueColor = {};
-			
+
 			// need to reset the perframedata so we have the correct viewport size etc
 			scene->ApplyUpscalingToPerFrameData( displaySize.width, displaySize.height, renderContext );
 		}
@@ -853,7 +853,7 @@ void Tr2PostProcessRenderer::SetupExposureConversion( bool enable, float middleV
 	if( enable )
 	{
 		m_dynamicExposureToTextureShader->SetParameter( MEMOIZED_STRING( "ExposureMiddleValue" ), middleValue );
-	} 
+	}
 }
 
 Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderSharpening( bool enable, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
@@ -1008,7 +1008,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourceP
 			name = "Upsample_Horizontal_" + std::to_string( i );
 			upsampleHorizontalTexture[i] = gpuResourcePool.GetTempTexture( name.c_str(), size, dest->GetFormat(), RENDER_TARGET );
 		}
-		
+
 		currentSize *= 0.5f;
 		++depth;
 	}
@@ -1027,18 +1027,17 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourceP
 			TEMP_PARAM( effect, "BlitCurrent", lastRt );
 			TEMP_PARAM( effect, "Exposure", GetExposureBuffer( gpuResourcePool ) );
 
-			auto downsampleInfo = DownsampleData
-			{
+			auto downsampleInfo = DownsampleData{
 				invTexelSize
 			};
 			FillAndSetConstants( m_bloomConstantBuffer, &downsampleInfo, sizeof( downsampleInfo ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
-				
+
 			DrawInto( rt, Tr2LoadAction::DONT_CARE, effect, renderContext );
 
 			lastRt = rt;
 		}
 	}
-	
+
 	{
 		// do a two pass downsampling with gaussian blur on the downsampled texture
 		// then the last upsampled texture will be added on top
@@ -1047,14 +1046,14 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourceP
 
 		float tintScale = ( 1.0f / Bloom::MAX_BLOOM_STEPS ) * bloom->m_bloomBrightness;
 
-		Vector2 directionalWeight = Vector2( std::max( bloom->m_directionalWeight, 0.0f ), std::fabsf(bloom->m_directionalWeight) );
+		Vector2 directionalWeight = Vector2( std::max( bloom->m_directionalWeight, 0.0f ), std::fabsf( bloom->m_directionalWeight ) );
 		for( int i = depth - 1; i >= 0; --i )
 		{
 			lastRt = i == depth - 1 ? black : lastRt;
 
 			auto currentMip = downsampleTexture[i];
 			auto currentUpsampled = upsampleTexture[i];
-			
+
 			if( m_bloomDebugMode != BloomDebugMode::BLOOM_DEBUG_NONE )
 			{
 				currentUpsampled = upsampleHorizontalTexture[i];
@@ -1087,7 +1086,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourceP
 			float radiusInPixels = std::max( (float)currentMip->GetWidth(), (float)currentMip->GetHeight() ) * bloom->m_sizeScale * bloom->m_stepSizes[i] * 0.01f;
 
 			auto invTexelSize = Vector2( 1.0f / (float)currentMip->GetWidth(), 1.0f / (float)currentMip->GetHeight() );
-			
+
 			std::string name = "Vertical Step " + std::to_string( i );
 			GPU_REGION( renderContext, name.c_str() );
 
@@ -1100,7 +1099,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourceP
 			FillAndSetConstants( m_bloomConstantBuffer, &gaussianOutput, sizeof( gaussianOutput ), Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 			// draw into the downsample texture, because they will not be used again
 			DrawInto( currentMip, Tr2LoadAction::DONT_CARE, m_upsamplerVertical, renderContext );
-			
+
 			lastRt = currentMip;
 		}
 	}
@@ -1109,17 +1108,17 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloom( Tr2GpuResourceP
 	{
 		return RenderBloomDebug( downsampleTexture, upsampleTexture, dest, gpuResourcePool, renderContext );
 	}
-	
+
 	return lastRt;
 }
 
-Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloomDebug( 
-	std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& downsample, 
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderBloomDebug(
+	std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& downsample,
 	std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
 	Tr2GpuResourcePool::Texture& blitCurrent,
-	Tr2GpuResourcePool& gpuResourcePool, 
+	Tr2GpuResourcePool& gpuResourcePool,
 	Tr2RenderContext& renderContext )
-{	
+{
 	if( m_bloomDebugShader == nullptr )
 	{
 		m_bloomDebugShader.CreateInstance();
@@ -1175,7 +1174,7 @@ void Tr2PostProcessRenderer::RenderSignalLoss( const Tr2TextureAL& dest, Tr2Rend
 {
 	GPU_REGION( renderContext, "Signal Loss" );
 	m_signalLossEffect->SetParameter( MEMOIZED_STRING( "NoiseStrength" ), signalLoss->m_strength );
-	
+
 	Tr2Renderer::DrawTexture( renderContext, m_signalLossEffect, dest, Vector2( 0, 0 ), Vector2( 1, 1 ) );
 }
 
@@ -1189,9 +1188,9 @@ Tr2GpuResourcePool::Buffer Tr2PostProcessRenderer::RenderDynamicExposure( const 
 
 	uint32_t localHistogramCount = tilesX * tilesY * 16;
 
-	auto localHistograms = gpuResourcePool.GetTempBuffer( 
-		"LocalHistograms", 
-		Tr2BufferDescriptionAL(  Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_UINT, localHistogramCount, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::NONE ) );
+	auto localHistograms = gpuResourcePool.GetTempBuffer(
+		"LocalHistograms",
+		Tr2BufferDescriptionAL( Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_UINT, localHistogramCount, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::NONE ) );
 
 
 	auto histogram = gpuResourcePool.GetTempBuffer(
@@ -1285,19 +1284,19 @@ void Tr2PostProcessRenderer::RenderDynamicExposureDebug( Tr2GpuResourcePool& gpu
 	}
 }
 
-Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderUpscaling( 
-	const Tr2TextureAL& source, 
-	const Tr2TextureAL& depth, 
-	const Tr2TextureAL& velocity, 
-	const Tr2TextureAL& opaqueColor, 
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderUpscaling(
+	const Tr2TextureAL& source,
+	const Tr2TextureAL& depth,
+	const Tr2TextureAL& velocity,
+	const Tr2TextureAL& opaqueColor,
 	const Matrix& reprojection,
-	Tr2GpuResourcePool& gpuResourcePool, 
-	Tr2RenderContext& renderContext, 
-	Tr2UpscalingContextAL* upscalingContext, 
+	Tr2GpuResourcePool& gpuResourcePool,
+	Tr2RenderContext& renderContext,
+	Tr2UpscalingContextAL* upscalingContext,
 	Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	GPU_REGION( renderContext, "Upscaling" );
-	
+
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 	uint32_t w, h;
 	upscalingContext->GetDisplayDimensions( w, h );
@@ -1383,7 +1382,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderUpscaling(
 		auto result = upscalingContext->Dispatch( dispatchParameters );
 		if( result != Tr2UpscalingAL::OK && s_lastUpscalingResult != result )
 		{
-			Tr2UpscalingAL::LogResult(result);
+			Tr2UpscalingAL::LogResult( result );
 		}
 		s_lastUpscalingResult = result;
 	}
@@ -1438,8 +1437,7 @@ void Tr2PostProcessRenderer::RenderTaa( const Tr2TextureAL& dest, const Tr2Textu
 	GPU_REGION( renderContext, "TAA" );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	auto Clear = []( const Tr2TextureAL& tex, Tr2RenderContextAL& renderContext )
-	{
+	auto Clear = []( const Tr2TextureAL& tex, Tr2RenderContextAL& renderContext ) {
 		renderContext.SetRenderTarget( tex, 0 );
 		renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0, 1.0f );
 	};
@@ -1448,12 +1446,12 @@ void Tr2PostProcessRenderer::RenderTaa( const Tr2TextureAL& dest, const Tr2Textu
 		renderContext.ClearUav( tex, 0, zeroes );
 	};
 
-	auto accumulationBuffer0 = gpuResourcePool.GetPersistentTexture( 
-		"TAA Accumulation 0", 
-		dest.GetWidth(), 
-		dest.GetHeight(), 
-		Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_UNORM, 
-		Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, 
+	auto accumulationBuffer0 = gpuResourcePool.GetPersistentTexture(
+		"TAA Accumulation 0",
+		dest.GetWidth(),
+		dest.GetHeight(),
+		Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_UNORM,
+		Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE,
 		Clear );
 	auto accumulationBuffer1 = gpuResourcePool.GetPersistentTexture(
 		"TAA Accumulation 1",
@@ -1488,7 +1486,7 @@ void Tr2PostProcessRenderer::RenderTaa( const Tr2TextureAL& dest, const Tr2Textu
 	}
 
 
-	Tr2EffectPtr effects[] = {m_taaEffect, m_taaCopyEffect};
+	Tr2EffectPtr effects[] = { m_taaEffect, m_taaCopyEffect };
 	for( auto& effect : effects )
 	{
 		if( dynamicExposure )
@@ -1530,10 +1528,10 @@ void Tr2PostProcessRenderer::RenderTaa( const Tr2TextureAL& dest, const Tr2Textu
 	DrawInto( dest, Tr2LoadAction::DONT_CARE, m_taaCopyEffect, renderContext );
 }
 
-void Tr2PostProcessRenderer::RenderTonemapping( 
-					const Tr2TextureAL& dest,
-					Tr2PostProcess2* postprocess, 
-					Tr2RenderContext& renderContext)
+void Tr2PostProcessRenderer::RenderTonemapping(
+	const Tr2TextureAL& dest,
+	Tr2PostProcess2* postprocess,
+	Tr2RenderContext& renderContext )
 {
 	GPU_REGION( renderContext, "Tonemapping" );
 
@@ -1545,7 +1543,7 @@ void Tr2PostProcessRenderer::RenderTonemapping(
 	Tonemapping::ApplyVignette( postprocess ? postprocess->GetVignetteIfAvailable( m_quality ) : nullptr, m_tonemappingEffect );
 	Tonemapping::ApplyDesatureate( postprocess ? postprocess->GetDesaturateIfAvailable( m_quality ) : nullptr, m_tonemappingEffect );
 	Tonemapping::ApplyFade( postprocess ? postprocess->GetFadeIfAvailable( m_quality ) : nullptr, m_tonemappingEffect );
-	
+
 	std::vector<const Tr2PPLutEffect*> luts{};
 	if( postprocess )
 	{
@@ -1603,7 +1601,7 @@ void Tr2PostProcessRenderer::RenderDepthOfField( const Tr2TextureAL& dest, Tr2Gp
 	{
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-		
+
 		BlueSharedString shape = depthOfField->GetBokehShapeString();
 		{
 			Tr2GpuResourcePool::Texture coc;
@@ -1647,7 +1645,7 @@ void Tr2PostProcessRenderer::RenderDepthOfField( const Tr2TextureAL& dest, Tr2Gp
 				float angle = 0;
 				float samplesPerPixel = 2.0 / 5.0;
 
-				if (temporal)
+				if( temporal )
 				{
 					//Vary between 4 different rotations, so that it has the same period as the TAA jitter
 					//This allows it to detect some kinds of flickering and remove it.
@@ -1702,9 +1700,9 @@ void Tr2PostProcessRenderer::RenderDepthOfField( const Tr2TextureAL& dest, Tr2Gp
 Tr2GpuResourcePool::Buffer Tr2PostProcessRenderer::GetExposureBuffer( Tr2GpuResourcePool& gpuResourcePool ) const
 {
 	const float zeroes[8] = {};
-	return gpuResourcePool.GetPersistentBuffer( 
-		"Exposure Buffer", 
-		Tr2BufferDescriptionAL( Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 8, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ), 
+	return gpuResourcePool.GetPersistentBuffer(
+		"Exposure Buffer",
+		Tr2BufferDescriptionAL( Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 8, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ ),
 		zeroes );
 }
 

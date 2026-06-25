@@ -96,7 +96,7 @@ uint8_t Tr2ReflectionProbe::GetEndFace() const
 }
 
 
-void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext &renderContext )
+void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext& renderContext )
 {
 	if( !m_lockPosition )
 	{
@@ -113,15 +113,15 @@ void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext &renderContext )
 
 	// Square projection matrix, with near and far clip planes from the current projection
 	Matrix newProjection = IdentityMatrix();
-	const Matrix &currentProjection = Tr2Renderer::GetProjectionTransform();
+	const Matrix& currentProjection = Tr2Renderer::GetProjectionTransform();
 	newProjection.m[2][2] = currentProjection.m[2][2];
 	newProjection.m[2][3] = -1.0f;
 	newProjection.m[3][2] = currentProjection.m[3][2];
 	newProjection.m[3][3] = 0.0f;
-	
+
 	Tr2Renderer::SetProjectionTransform( newProjection );
 
-	// We need to invert cull-mode because of the left-handed coordinates of the cube rendertarget 
+	// We need to invert cull-mode because of the left-handed coordinates of the cube rendertarget
 	m_prevCullInversion = renderContext.m_esm.IsCullModeInverted();
 	renderContext.m_esm.SetInvertedCullMode( true );
 
@@ -144,38 +144,37 @@ Tr2TextureAL Tr2ReflectionProbe::GetDepthBuffer( unsigned face )
 	return m_stencilMaps[face];
 }
 
-void Tr2ReflectionProbe::StartRenderFace( unsigned face, Tr2RenderContext &renderContext )
+void Tr2ReflectionProbe::StartRenderFace( unsigned face, Tr2RenderContext& renderContext )
 {
 	renderContext.RenderPassHint( { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE, 0 }, { Tr2LoadAction::CLEAR, Tr2StoreAction::DONT_CARE, 0.F } );
 
 	renderContext.m_esm.SetRenderTarget( 0, *m_renderTargets[face] );
 	renderContext.m_esm.SetDepthStencilBuffer( m_stencilMaps[face] );
 
-	static const Vector3 faceDirections[] =
-	{
+	static const Vector3 faceDirections[] = {
 		Vector3( 0, 1, 0 ), Vector3( 1, 0, 0 ), //+X
-		Vector3( 0, 1, 0 ), Vector3(-1, 0, 0 ), //-X
-		Vector3( 0, 0,-1 ), Vector3( 0, 1, 0 ), //+Y
-		Vector3( 0, 0, 1 ), Vector3( 0,-1, 0 ), //-Y
-		Vector3( 0, 1, 0 ), Vector3( 0, 0, 1 ), //+Z
-		Vector3( 0, 1, 0 ), Vector3( 0, 0,-1 ), //-Z
+		Vector3( 0, 1, 0 ),
+		Vector3( -1, 0, 0 ), //-X
+		Vector3( 0, 0, -1 ),
+		Vector3( 0, 1, 0 ), //+Y
+		Vector3( 0, 0, 1 ),
+		Vector3( 0, -1, 0 ), //-Y
+		Vector3( 0, 1, 0 ),
+		Vector3( 0, 0, 1 ), //+Z
+		Vector3( 0, 1, 0 ),
+		Vector3( 0, 0, -1 ), //-Z
 	};
 
 	// We need to invert the X-axis because of the left-handed coordinates of the cube rendertarget
-	static const Matrix xInverter = Matrix
-	(
-	   -1, 0, 0, 0,
-	    0, 1, 0, 0,
-	    0, 0, 1, 0,
-	    0, 0, 0, 1
-	);
+	static const Matrix xInverter = Matrix(
+		-1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 );
 
-	const Vector3 &up = faceDirections[ face * 2 ];
-	const Vector3 &at = faceDirections[ face * 2 + 1 ];
+	const Vector3& up = faceDirections[face * 2];
+	const Vector3& at = faceDirections[face * 2 + 1];
 	Tr2Renderer::SetViewTransform( LookAtMatrix( m_position, m_position + at, up ) * xInverter );
 }
 
-void Tr2ReflectionProbe::EndRenderPass( Tr2RenderContext &renderContext )
+void Tr2ReflectionProbe::EndRenderPass( Tr2RenderContext& renderContext )
 {
 	{
 		GPU_REGION( renderContext, "Reflection RT Copy" );
@@ -197,7 +196,7 @@ void Tr2ReflectionProbe::EndRenderPass( Tr2RenderContext &renderContext )
 	Filter( renderContext );
 	m_hasData = true;
 	m_onePassDone = true;
-	
+
 	if( m_renderFrequency != ALL_SIDES_PER_FRAME )
 	{
 		m_currentFrame = ( m_currentFrame + 1 ) % 6;
@@ -278,7 +277,7 @@ bool Tr2ReflectionProbe::DoPrepareResources( ImageIO::PixelFormat rtFormat, Tr2P
 	{
 		m_filterEffect->SetEffectPathName( "res:/graphics/effect/managed/space/System/Reflection/ReflectionFilterActivision128.fx" );
 		m_preFilterEffect->SetEffectPathName( "res:/graphics/effect/managed/space/System/Reflection/ReflectionFilterActivisionPre.fx" );
-		auto source = dynamic_cast< ITr2TextureProvider* >( m_customSourceTexture.p );
+		auto source = dynamic_cast<ITr2TextureProvider*>( m_customSourceTexture.p );
 		m_preFilterEffect->SetParameter( BlueSharedString( "tex_hi_res" ), source ? source : static_cast<ITr2TextureProvider*>( m_renderTargetCube ) );
 		m_preFilterEffect->SetParameter( BlueSharedString( "tex_lo_res" ), m_preFilterTarget );
 
@@ -345,7 +344,7 @@ void Tr2ReflectionProbe::DestroyRenderTargets()
 	m_currentFrame = 0;
 }
 
-void Tr2ReflectionProbe::Filter( Tr2RenderContext &renderContext )
+void Tr2ReflectionProbe::Filter( Tr2RenderContext& renderContext )
 {
 	if( !IsValid() )
 		return;
@@ -396,6 +395,6 @@ bool Tr2ReflectionProbe::IsHollyWoodModeOn() const
 
 bool Tr2ReflectionProbe::ReadyForDynamicObjectReflections() const
 {
-    // We need to have initialized the cubemap, before we start using it for rendering reflections (otherwise we just get garbage!)
-    return m_onePassDone;
+	// We need to have initialized the cubemap, before we start using it for rendering reflections (otherwise we just get garbage!)
+	return m_onePassDone;
 }

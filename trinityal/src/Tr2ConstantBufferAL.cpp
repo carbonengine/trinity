@@ -7,25 +7,25 @@
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2ConstantBufferAL> NullCB()
-	{
-		static std::shared_ptr<TrinityALImpl::Tr2ConstantBufferAL> nullCB = std::make_shared<TrinityALImpl::Tr2ConstantBufferAL>();
-		return nullCB;
-	}
+std::shared_ptr<TrinityALImpl::Tr2ConstantBufferAL> NullCB()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2ConstantBufferAL> nullCB = std::make_shared<TrinityALImpl::Tr2ConstantBufferAL>();
+	return nullCB;
+}
 }
 
 
-Tr2ConstantBufferAL::Tr2ConstantBufferAL()
-	:m_buffer( NullCB() )
+Tr2ConstantBufferAL::Tr2ConstantBufferAL() :
+	m_buffer( NullCB() )
 {
 }
 
-ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2PrimaryRenderContextAL & renderContext )
+ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2PrimaryRenderContextAL& renderContext )
 {
 	return Create( size, Tr2ConstantUsageAL::REUSABLE, nullptr, renderContext );
 }
 
-ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2ConstantUsageAL::Type usage, const void* initialData, Tr2PrimaryRenderContextAL & renderContext )
+ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2ConstantUsageAL::Type usage, const void* initialData, Tr2PrimaryRenderContextAL& renderContext )
 {
 	if( size == 0 || size > TRINITY_PLATFORM_MAX_CONSTANT_BUFFER_SIZE )
 	{
@@ -46,12 +46,12 @@ ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2ConstantUsageAL::Type us
 	return hr;
 }
 
-ALResult Tr2ConstantBufferAL::Lock( void** data, Tr2RenderContextAL & renderContext )
+ALResult Tr2ConstantBufferAL::Lock( void** data, Tr2RenderContextAL& renderContext )
 {
 	return m_buffer->Lock( data, renderContext );
 }
 
-ALResult Tr2ConstantBufferAL::Unlock( Tr2RenderContextAL & renderContext )
+ALResult Tr2ConstantBufferAL::Unlock( Tr2RenderContextAL& renderContext )
 {
 	return m_buffer->Unlock( renderContext );
 }

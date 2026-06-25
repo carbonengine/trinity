@@ -6,20 +6,22 @@
 #include "Include/ITr2Updateable.h"
 
 
-BLUE_CLASS( Tr2ActionPlayCurveSet ) : public ITr2ControllerAction, public ITr2Updateable
+BLUE_CLASS( Tr2ActionPlayCurveSet ) :
+	public ITr2ControllerAction, public ITr2Updateable
 {
 public:
 	Tr2ActionPlayCurveSet( IRoot* lockobj = nullptr );
 
 	EXPOSE_TO_BLUE();
 
-	void Start( ITr2ActionController& controller ) override;
-	void Stop( ITr2ActionController& controller ) override;
+	void Start( ITr2ActionController & controller ) override;
+	void Stop( ITr2ActionController & controller ) override;
 	void RebaseSimTime( Be::Time diff ) override;
 
 	bool CanTransition() const override;
 
 	virtual void Update( Be::Time realTime, Be::Time simTime );
+
 private:
 	std::string m_curveSetName;
 	std::string m_rangeName;

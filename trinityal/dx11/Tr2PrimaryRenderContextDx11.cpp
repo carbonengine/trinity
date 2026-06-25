@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 
 #include "Tr2PrimaryRenderContextDx11.h"
 #include "ITr2RenderContextEvents.h"
@@ -31,17 +31,18 @@ CCP_STATS_DECLARE( dx11HSInvocations, "Trinity/AL/Pipeline/HSInvocations", false
 CCP_STATS_DECLARE( dx11DSInvocations, "Trinity/AL/Pipeline/DSInvocations", false, CST_COUNTER_HIGH, "Number of times a domain shader was invoked" );
 CCP_STATS_DECLARE( gpuFrameTime, "Trinity/AL/GpuFrameTime", false, CST_TIME, "Time spent on GPU processing a frame" );
 
-namespace Tr2RenderContextImpl {
-	struct NullContext;
-	extern NullContext s_nullContext;
+namespace Tr2RenderContextImpl
+{
+struct NullContext;
+extern NullContext s_nullContext;
 }
 
-Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
-	: m_usingEXDevice( false ), 
+Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL() :
+	m_usingEXDevice( false ),
 	m_recodingFrame( 1 ),
 	m_renderedFrame( 0 ),
-	m_vsyncInterval( 0 ), 
-	m_adapterVendorId( 0 ), 
+	m_vsyncInterval( 0 ),
+	m_adapterVendorId( 0 ),
 	m_deviceStatisticsQueryEmpty( false ),
 	m_upscalingTechnique( nullptr )
 {
@@ -80,13 +81,13 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	m_defaultBackBuffer.m_texture->Destroy();
 
-	m_usingEXDevice		= false;
-	m_deviceStatistics	= nullptr;
+	m_usingEXDevice = false;
+	m_deviceStatistics = nullptr;
 
-	m_d3dDevice11		= nullptr;
-	m_swapChain			= nullptr;
-	m_dxgiFactory		= nullptr;
-	m_dxgiOutput		= nullptr;
+	m_d3dDevice11 = nullptr;
+	m_swapChain = nullptr;
+	m_dxgiFactory = nullptr;
+	m_dxgiOutput = nullptr;
 	//m_context			= nullptr;
 	if( m_aftermathContext )
 	{
@@ -94,7 +95,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 		m_aftermathContext = nullptr;
 	}
 	m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
-	
+
 	m_zeroVertexBuffer = Tr2BufferAL();
 
 	m_adapterVendorId = 0;
@@ -103,54 +104,55 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_renderedFrame = 0;
 }
 
-namespace {
-	DXGI_FORMAT SafeConvertD3DBackBufferFormat( PixelFormat bbFormat )
+namespace
+{
+DXGI_FORMAT SafeConvertD3DBackBufferFormat( PixelFormat bbFormat )
+{
+	DXGI_FORMAT out = static_cast<DXGI_FORMAT>( bbFormat );
+	if( out == DXGI_FORMAT_B8G8R8X8_UNORM )
 	{
-		DXGI_FORMAT out = static_cast<DXGI_FORMAT>( bbFormat );
-		if( out == DXGI_FORMAT_B8G8R8X8_UNORM )
-		{
-			return DXGI_FORMAT_B8G8R8A8_UNORM;
-		}
-		if( out == PIXEL_FORMAT_UNKNOWN )
-		{
-			return DXGI_FORMAT_B8G8R8A8_UNORM;
-		}
-		return out;
+		return DXGI_FORMAT_B8G8R8A8_UNORM;
 	}
+	if( out == PIXEL_FORMAT_UNKNOWN )
+	{
+		return DXGI_FORMAT_B8G8R8A8_UNORM;
+	}
+	return out;
+}
 }
 
-ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter, 
-												Tr2WindowHandle  hFocusWindow, 
-												const Tr2PresentParametersAL& pp )
+ALResult Tr2PrimaryRenderContextAL::CreateDevice( uint32_t adapter,
+												  Tr2WindowHandle hFocusWindow,
+												  const Tr2PresentParametersAL& pp )
 {
 
-	const bool isWindowless = (hFocusWindow == 0) && pp.software;
+	const bool isWindowless = ( hFocusWindow == 0 ) && pp.software;
 
 	DXGI_SWAP_CHAIN_DESC sd;
 	memset( &sd, 0, sizeof( sd ) );
 
-	sd.BufferCount	= 1;
+	sd.BufferCount = 1;
 	sd.OutputWindow = Tr2WindowHandle( pp.outputWindow );
 	if( !sd.OutputWindow )
 	{
 		sd.OutputWindow = hFocusWindow;
 	}
-	sd.Windowed		= true;
-	sd.SwapEffect	= DXGI_SWAP_EFFECT( pp.swapEffect );
-	sd.Flags        = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-	
+	sd.Windowed = true;
+	sd.SwapEffect = DXGI_SWAP_EFFECT( pp.swapEffect );
+	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+
 	sd.SampleDesc.Count = std::max( pp.msaaType, 1u );
 	sd.SampleDesc.Quality = pp.msaaQuality;
-	
-	sd.BufferDesc.Width  = pp.mode.width;
+
+	sd.BufferDesc.Width = pp.mode.width;
 	sd.BufferDesc.Height = pp.mode.height;
 	sd.BufferDesc.Format = SafeConvertD3DBackBufferFormat( pp.mode.format );
 	sd.BufferDesc.RefreshRate.Numerator = sd.BufferDesc.RefreshRate.Denominator = 0;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING( pp.mode.scaling );
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER( pp.mode.scanlineOrdering );
-	
-	sd.BufferUsage       = DXGI_USAGE_RENDER_TARGET_OUTPUT;	
-	
+
+	sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+
 	uint32_t dwFlags = 0;
 
 	if( g_requestDeviceDebugLayer )
@@ -162,9 +164,9 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	D3D_FEATURE_LEVEL levelSupported;
 	CComPtr<IDXGIAdapter1> adapterPtr;
 
-	if( !isWindowless ) 
+	if( !isWindowless )
 	{
-	
+
 		if( FAILED( Tr2VideoAdapterInfo::GetVideoAdapterDX11( adapter, &adapterPtr, &m_dxgiOutput ) ) )
 		{
 			return E_FAIL;
@@ -184,9 +186,9 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		GFSDK_Aftermath_ReleaseContextHandle( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ) );
 		m_aftermathContext = nullptr;
 	}
-	
+
 	m_context.Release();
-	
+
 	D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_UNKNOWN;
 	if( pp.software )
 	{
@@ -198,8 +200,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	CCP_AL_LOG( "DX11: driverType: %i", driverType );
 
 	HRESULT HR = 0;
-	
-	if( isWindowless ) 
+
+	if( isWindowless )
 	{
 		CCP_AL_LOG( "DX11: Creating device without a swap chain" );
 
@@ -214,24 +216,26 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 			&m_d3dDevice11,
 			&levelSupported,
 			&m_context );
-	} else 	{
-		HR = D3D11CreateDeviceAndSwapChain(
-				pp.software ? NULL : adapterPtr,
-				driverType,
-				0,
-				dwFlags,
-				&levelWanted,
-				1,
-				D3D11_SDK_VERSION,
-				&sd,
-				&m_swapChain,
-				&m_d3dDevice11,
-				&levelSupported,
-				&m_context );
 	}
-	
+	else
+	{
+		HR = D3D11CreateDeviceAndSwapChain(
+			pp.software ? NULL : adapterPtr,
+			driverType,
+			0,
+			dwFlags,
+			&levelWanted,
+			1,
+			D3D11_SDK_VERSION,
+			&sd,
+			&m_swapChain,
+			&m_d3dDevice11,
+			&levelSupported,
+			&m_context );
+	}
 
-	if( SUCCEEDED( HR ) )		
+
+	if( SUCCEEDED( HR ) )
 	{
 		if( m_upscalingTechnique )
 		{
@@ -239,10 +243,10 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		}
 		CCP_AL_LOG( "DX11: device created succesfully" );
 	}
-	else		
-	{			
-		m_swapChain   = nullptr;
-		m_d3dDevice11 = nullptr;			
+	else
+	{
+		m_swapChain = nullptr;
+		m_d3dDevice11 = nullptr;
 		m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 
 		if( g_requestDeviceDebugLayer )
@@ -250,7 +254,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 			// Try once again without DEVICE_DEBUG flag for people without DirectX SDK
 			dwFlags &= ~D3D11_CREATE_DEVICE_DEBUG;
 
-			if( isWindowless ) 
+			if( isWindowless )
 			{
 				HR = D3D11CreateDevice(
 					NULL,
@@ -263,20 +267,22 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 					&m_d3dDevice11,
 					&levelSupported,
 					&m_context );
-			} else 	{
+			}
+			else
+			{
 				HR = D3D11CreateDeviceAndSwapChain(
-						pp.software ? NULL : adapterPtr,
-						driverType,
-						0,
-						dwFlags,
-						&levelWanted,
-						1,
-						D3D11_SDK_VERSION,
-						&sd,
-						&m_swapChain,
-						&m_d3dDevice11,
-						&levelSupported,
-						&m_context );
+					pp.software ? NULL : adapterPtr,
+					driverType,
+					0,
+					dwFlags,
+					&levelWanted,
+					1,
+					D3D11_SDK_VERSION,
+					&sd,
+					&m_swapChain,
+					&m_d3dDevice11,
+					&levelSupported,
+					&m_context );
 			}
 
 			if( SUCCEEDED( HR ) )
@@ -298,12 +304,12 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		}
 	}
 
-	if( !m_d3dDevice11 || !m_context || (!isWindowless && !m_swapChain) )
+	if( !m_d3dDevice11 || !m_context || ( !isWindowless && !m_swapChain ) )
 	{
 		CCP_AL_LOGERR( "Failed to D3D11CreateDeviceAndSwapChain" );
-		m_swapChain		= nullptr;
-		m_d3dDevice11	= nullptr;	
-		m_dxgiOutput	= nullptr;
+		m_swapChain = nullptr;
+		m_d3dDevice11 = nullptr;
+		m_dxgiOutput = nullptr;
 		m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 		return E_FAIL;
 	}
@@ -354,21 +360,21 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	}
 
 	// Disable Windows support for alt-enter fullscreen
-	if( adapterPtr ) 
+	if( adapterPtr )
 	{
-		adapterPtr->GetParent(__uuidof(IDXGIFactory), (void **)&m_dxgiFactory);
+		adapterPtr->GetParent( __uuidof( IDXGIFactory ), (void**)&m_dxgiFactory );
 
 		if( m_dxgiFactory )
 		{
 			m_dxgiFactory->MakeWindowAssociation( Tr2WindowHandle( pp.outputWindow ), DXGI_MWA_NO_WINDOW_CHANGES );
 		}
 	}
-	
+
 	if( !isWindowless && !pp.windowed )
 	{
 		CR( m_swapChain->ResizeTarget( &sd.BufferDesc ) );
 
-		CR( m_swapChain->ResizeBuffers(	sd.BufferCount, 
+		CR( m_swapChain->ResizeBuffers( sd.BufferCount,
 										sd.BufferDesc.Width,
 										sd.BufferDesc.Height,
 										sd.BufferDesc.Format,
@@ -386,11 +392,13 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	}
 
 	uint32_t zero = 0;
-	m_context->IASetVertexBuffers(	VERTEX_BUFFER_ZERO_STREAM_RESERVED, 
-									1, &m_zeroVertexBuffer.m_buffer->m_buffer, 
-									&zero, &zero );
+	m_context->IASetVertexBuffers( VERTEX_BUFFER_ZERO_STREAM_RESERVED,
+								   1,
+								   &m_zeroVertexBuffer.m_buffer->m_buffer,
+								   &zero,
+								   &zero );
 
-	if( !isWindowless ) 
+	if( !isWindowless )
 	{
 		CR_RETURN_HR( CreateBackBuffers( pp ) );
 	}
@@ -401,12 +409,11 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		CComQIPtr<ID3D11InfoQueue> queue( m_d3dDevice11 );
 		if( queue )
 		{
-			D3D11_MESSAGE_SEVERITY severity[] = 
-			{
+			D3D11_MESSAGE_SEVERITY severity[] = {
 				D3D11_MESSAGE_SEVERITY_CORRUPTION,
 				D3D11_MESSAGE_SEVERITY_ERROR,
 			};
-			
+
 			D3D11_INFO_QUEUE_FILTER filter;
 			memset( &filter, 0, sizeof( filter ) );
 			filter.AllowList.NumSeverities = 2;
@@ -429,7 +436,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	{
 		m_events->OnContextCreated( *this );
 	}
-	
+
 	return S_OK;
 }
 
@@ -472,11 +479,11 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 
 	m_defaultBackBuffer.m_texture->Destroy();
 
-	CR( m_swapChain->ResizeBuffers(	presentationParameters.backBufferCount, 
-												presentationParameters.mode.width,
-												presentationParameters.mode.height,
-												fmt,
-												DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
+	CR( m_swapChain->ResizeBuffers( presentationParameters.backBufferCount,
+									presentationParameters.mode.width,
+									presentationParameters.mode.height,
+									fmt,
+									DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
 
 	if( !presentationParameters.windowed )
 	{
@@ -505,9 +512,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 	m_defaultBackBuffer.m_texture->Destroy();
 
 	CComPtr<ID3D11Texture2D> pBackBuffer;
-	HRESULT HR = m_swapChain	? m_swapChain->GetBuffer( 0, __uuidof (ID3D11Texture2D), (LPVOID*)&pBackBuffer ) 
-								: E_FAIL;
-	if( FAILED(HR) )
+	HRESULT HR = m_swapChain ? m_swapChain->GetBuffer( 0, __uuidof( ID3D11Texture2D ), (LPVOID*)&pBackBuffer ) : E_FAIL;
+	if( FAILED( HR ) )
 	{
 		CCP_AL_LOGERR( "Failed to GetBuffer, %d", HR );
 		return HR;
@@ -523,16 +529,16 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 	{
 		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_defaultBackBuffer.GetDesc(), m_defaultBackBuffer.GetMsaaDesc() );
 	}
-	
-	D3D11_VIEWPORT viewport;
-    ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
-    viewport.TopLeftX	= 0;
-    viewport.TopLeftY	= 0;
-	viewport.Width		= (float)presentationParameters.mode.width;
-	viewport.Height		= (float)presentationParameters.mode.height;
-	viewport.MinDepth   = 0;
-	viewport.MaxDepth   = 1.0f;
+	D3D11_VIEWPORT viewport;
+	ZeroMemory( &viewport, sizeof( D3D11_VIEWPORT ) );
+
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.Width = (float)presentationParameters.mode.width;
+	viewport.Height = (float)presentationParameters.mode.height;
+	viewport.MinDepth = 0;
+	viewport.MaxDepth = 1.0f;
 
 	m_context->RSSetViewports( 1, &viewport );
 
@@ -576,7 +582,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 			}
 
 			D3D11_QUERY_DATA_PIPELINE_STATISTICS GPUProbeStats;
-			if( m_deviceStatisticsQueryEmpty && 
+			if( m_deviceStatisticsQueryEmpty &&
 				m_context->GetData( m_deviceStatistics, &GPUProbeStats, sizeof( GPUProbeStats ), 0 ) == S_OK )
 			{
 				CCP_STATS_SET( dx11IAVertices, GPUProbeStats.IAVertices );
@@ -626,7 +632,9 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	if( m_swapChain )
 	{
 		m_swapChain->Present( m_vsyncInterval, 0 );
-	} else {
+	}
+	else
+	{
 		m_context->Flush();
 	}
 
@@ -840,7 +848,7 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
 		}
 		if( tech )
-		{	
+		{
 			delete tech;
 			tech = nullptr;
 		}
@@ -864,4 +872,4 @@ uint64_t Tr2PrimaryRenderContextAL::GetRenderedFrameNumber() const
 }
 
 
-#endif	//DX11?
+#endif //DX11?

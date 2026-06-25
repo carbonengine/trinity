@@ -62,8 +62,8 @@ public:
 	void AddAgents( const std::vector<Vector3>& positions );
 	void RemoveAgent();
 	void RemoveSpecificAgent( int index );
-	void UpdateAsyncronous( const EveUpdateContext & updateContext );
-	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params );
+	void UpdateAsyncronous( const EveUpdateContext& updateContext );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAgents( const float dt, EveChildBehaviorSystem& system );
 	float AllTheSame();
 	bool IsGroupVisible() const;

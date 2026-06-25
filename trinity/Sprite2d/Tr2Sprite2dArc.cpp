@@ -17,7 +17,6 @@ Tr2Sprite2dArc::Tr2Sprite2dArc( IRoot* lockobj /*= NULL */ ) :
 	m_renderVertexCount( 0 ),
 	m_renderIndices( "Tr2Sprite2dArc/m_renderIndices" )
 {
-
 }
 
 Tr2Sprite2dArc::~Tr2Sprite2dArc()
@@ -29,7 +28,7 @@ unsigned int Tr2Sprite2dArc::GetVertexCount()
 {
 	unsigned int numVerts = 0;
 
-	float arcLength = (m_endAngle - m_startAngle) * m_radius;
+	float arcLength = ( m_endAngle - m_startAngle ) * m_radius;
 	unsigned int numSteps = (unsigned int)arcLength / 4;
 	if( m_lineWidth > 0 )
 	{
@@ -51,7 +50,7 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_display || (m_spriteEffect == TR2_SFX_NONE) || (m_radius == 0.0f) || (m_startAngle >= m_endAngle) )
+	if( !m_display || ( m_spriteEffect == TR2_SFX_NONE ) || ( m_radius == 0.0f ) || ( m_startAngle >= m_endAngle ) )
 	{
 		if( m_renderVertices )
 		{
@@ -73,7 +72,7 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 					// Don't draw if we're still loading (or failed)
 					return;
 				}
-				m_texturePrimary->Apply( renderer, 0  );
+				m_texturePrimary->Apply( renderer, 0 );
 			}
 			else
 			{
@@ -81,7 +80,7 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 				return;
 			}
 
-			if(	m_spriteEffect >= TR2_SFX_TWO_TEXTURES )
+			if( m_spriteEffect >= TR2_SFX_TWO_TEXTURES )
 			{
 				if( m_textureSecondary )
 				{
@@ -90,7 +89,7 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 						// Don't draw if we're still loading (or failed)
 						return;
 					}
-					m_textureSecondary->Apply( renderer, 1  );
+					m_textureSecondary->Apply( renderer, 1 );
 				}
 				else
 				{
@@ -100,7 +99,7 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 			}
 		}
 
-		// Anti-aliased lines are rendered with a quad that is larger. This is then 
+		// Anti-aliased lines are rendered with a quad that is larger. This is then
 		// compensated for in the pixel shader, using the extra pixels to fill in
 		// alpha values to do the anti-aliasing
 
@@ -111,14 +110,14 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 		SetRegularRenderState( renderer );
 
 		m_renderVertexCapacity = GetVertexCount();
-		m_renderVertices = static_cast<Tr2Sprite2dD3DVertex*>( CCP_MALLOC( 
-			"Tr2Sprite2dArc/m_renderVertices", 
+		m_renderVertices = static_cast<Tr2Sprite2dD3DVertex*>( CCP_MALLOC(
+			"Tr2Sprite2dArc/m_renderVertices",
 			m_renderVertexCapacity * sizeof( Tr2Sprite2dD3DVertex ) ) );
 		m_renderVertexCount = 0;
 
-		float arcLength = (m_endAngle - m_startAngle) * m_radius;
+		float arcLength = ( m_endAngle - m_startAngle ) * m_radius;
 		unsigned int numSteps = (unsigned int)arcLength / 4;
-		float stepSize = (m_endAngle - m_startAngle) / (float)numSteps;
+		float stepSize = ( m_endAngle - m_startAngle ) / (float)numSteps;
 		++numSteps;
 
 		if( m_lineWidth > 0.0f )
@@ -131,7 +130,7 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 			{
 				innerRadius -= 2.0f;
 				outerRadius += 2.0f;
-				pixelWidthInTexels = 1.0f / (m_lineWidth + 4.0f);
+				pixelWidthInTexels = 1.0f / ( m_lineWidth + 4.0f );
 			}
 
 			float a = m_startAngle;
@@ -158,10 +157,10 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 					v0.texCoord[1] = Vector2( 1.0f + pixelWidthInTexels, m_lineWidth );
 					v1.texCoord[1] = Vector2( -pixelWidthInTexels, m_lineWidth );
 				}
-				renderer->PrepareTriangleVerts( 
-					m_renderVertices + m_renderVertexCount, 
-					verts, 
-					sizeof( Tr2Sprite2dVertexBase ), 
+				renderer->PrepareTriangleVerts(
+					m_renderVertices + m_renderVertexCount,
+					verts,
+					sizeof( Tr2Sprite2dVertexBase ),
 					2 );
 
 				if( i < numSteps - 1 )
@@ -192,14 +191,14 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 			if( isAA )
 			{
 				innerRadius += 2.0f;
-				pixelWidthInTexels = 1.0f / (innerRadius + 4.0f);
+				pixelWidthInTexels = 1.0f / ( innerRadius + 4.0f );
 
 				float angleDelta = 0.5f / m_radius;
 				startAngle += angleDelta * 0.5f;
 				endAngle -= angleDelta * 0.5f;
-				arcLength = (endAngle - startAngle) * m_radius;
+				arcLength = ( endAngle - startAngle ) * m_radius;
 				numSteps = (unsigned int)arcLength / 4;
-				stepSize = (endAngle - startAngle) / (float)numSteps;
+				stepSize = ( endAngle - startAngle ) / (float)numSteps;
 				++numSteps;
 			}
 
@@ -210,8 +209,8 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 			{
 				fillVertCount += 8;
 			}
-			Tr2Sprite2dVertexBase* verts = static_cast<Tr2Sprite2dVertexBase*>( CCP_MALLOC( 
-				"Tr2Sprite2dArc/verts", 
+			Tr2Sprite2dVertexBase* verts = static_cast<Tr2Sprite2dVertexBase*>( CCP_MALLOC(
+				"Tr2Sprite2dArc/verts",
 				fillVertCount * sizeof( Tr2Sprite2dVertexBase ) ) );
 
 			unsigned int centerPointIx = m_renderVertexCount;
@@ -237,8 +236,8 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 				{
 					Vector2 from = m_translation;
 					Vector2 to;
-					to.x = cos( m_startAngle ) * (innerRadius - 2.0f) + m_translation.x;
-					to.y = sin( m_startAngle ) * (innerRadius - 2.0f) + m_translation.y;
+					to.x = cos( m_startAngle ) * ( innerRadius - 2.0f ) + m_translation.x;
+					to.y = sin( m_startAngle ) * ( innerRadius - 2.0f ) + m_translation.y;
 
 					Vector2 d = Normalize( from - to );
 
@@ -250,42 +249,42 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 					float halfWidth = 1.5f;
 
 					Vector2 aaOffset = normal * 2.0f;
-					float pixelWidthInTexels = 1.0f / (1.0f + 4.0f);
+					float pixelWidthInTexels = 1.0f / ( 1.0f + 4.0f );
 
 					Tr2Sprite2dVertexBase& v0 = *currentVertex++;
-					v0.position.x = from.x - normal.x*halfWidth - aaOffset.x;
-					v0.position.y = from.y - normal.y*halfWidth - aaOffset.y;
+					v0.position.x = from.x - normal.x * halfWidth - aaOffset.x;
+					v0.position.y = from.y - normal.y * halfWidth - aaOffset.y;
 					v0.position.z = m_depth;
 					v0.color = m_color;
 					v0.texCoord[1] = Vector2( -pixelWidthInTexels, 1.0f );
 
 					Tr2Sprite2dVertexBase& v1 = *currentVertex++;
-					v1.position.x = from.x + normal.x*halfWidth + aaOffset.x;
-					v1.position.y = from.y + normal.y*halfWidth + aaOffset.y;
+					v1.position.x = from.x + normal.x * halfWidth + aaOffset.x;
+					v1.position.y = from.y + normal.y * halfWidth + aaOffset.y;
 					v1.position.z = m_depth;
 					v1.color = m_color;
 					v1.texCoord[1] = Vector2( 1.0f + pixelWidthInTexels, 1.0f );
 
 					Tr2Sprite2dVertexBase& v2 = *currentVertex++;
-					v2.position.x = to.x + normal.x*halfWidth + aaOffset.x;
-					v2.position.y = to.y + normal.y*halfWidth + aaOffset.y;
+					v2.position.x = to.x + normal.x * halfWidth + aaOffset.x;
+					v2.position.y = to.y + normal.y * halfWidth + aaOffset.y;
 					v2.position.z = m_depth;
 					v2.color = m_color;
 					v2.texCoord[1] = Vector2( 1.0f + pixelWidthInTexels, 1.0f );
 
 					Tr2Sprite2dVertexBase& v3 = *currentVertex++;
-					v3.position.x = to.x - normal.x*halfWidth - aaOffset.x;
-					v3.position.y = to.y - normal.y*halfWidth - aaOffset.y;
+					v3.position.x = to.x - normal.x * halfWidth - aaOffset.x;
+					v3.position.y = to.y - normal.y * halfWidth - aaOffset.y;
 					v3.position.z = m_depth;
 					v3.color = m_color;
 					v3.texCoord[1] = Vector2( -pixelWidthInTexels, 1.0f );
 
-					m_renderIndices.push_back(  0 + m_renderVertexCount );
-					m_renderIndices.push_back(  1 + m_renderVertexCount );
-					m_renderIndices.push_back(  3 + m_renderVertexCount );
-					m_renderIndices.push_back(  3 + m_renderVertexCount );
-					m_renderIndices.push_back(  1 + m_renderVertexCount );
-					m_renderIndices.push_back(  2 + m_renderVertexCount );
+					m_renderIndices.push_back( 0 + m_renderVertexCount );
+					m_renderIndices.push_back( 1 + m_renderVertexCount );
+					m_renderIndices.push_back( 3 + m_renderVertexCount );
+					m_renderIndices.push_back( 3 + m_renderVertexCount );
+					m_renderIndices.push_back( 1 + m_renderVertexCount );
+					m_renderIndices.push_back( 2 + m_renderVertexCount );
 
 					m_renderVertexCount += 4;
 					CCP_ASSERT( m_renderVertexCount <= m_renderVertexCapacity );
@@ -293,8 +292,8 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 				{
 					Vector2 from = m_translation;
 					Vector2 to;
-					to.x = cos( m_endAngle ) * (innerRadius - 2.0f) + m_translation.x;
-					to.y = sin( m_endAngle ) * (innerRadius - 2.0f) + m_translation.y;
+					to.x = cos( m_endAngle ) * ( innerRadius - 2.0f ) + m_translation.x;
+					to.y = sin( m_endAngle ) * ( innerRadius - 2.0f ) + m_translation.y;
 
 					Vector2 d = Normalize( from - to );
 
@@ -306,42 +305,42 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 					float halfWidth = 1.5f;
 
 					Vector2 aaOffset = normal * 2.0f;
-					float pixelWidthInTexels = 1.0f / (1.0f + 4.0f);
+					float pixelWidthInTexels = 1.0f / ( 1.0f + 4.0f );
 
 					Tr2Sprite2dVertexBase& v0 = *currentVertex++;
-					v0.position.x = from.x - normal.x*halfWidth - aaOffset.x;
-					v0.position.y = from.y - normal.y*halfWidth - aaOffset.y;
+					v0.position.x = from.x - normal.x * halfWidth - aaOffset.x;
+					v0.position.y = from.y - normal.y * halfWidth - aaOffset.y;
 					v0.position.z = m_depth;
 					v0.color = m_color;
 					v0.texCoord[1] = Vector2( -pixelWidthInTexels, 1.0f );
 
 					Tr2Sprite2dVertexBase& v1 = *currentVertex++;
-					v1.position.x = from.x + normal.x*halfWidth + aaOffset.x;
-					v1.position.y = from.y + normal.y*halfWidth + aaOffset.y;
+					v1.position.x = from.x + normal.x * halfWidth + aaOffset.x;
+					v1.position.y = from.y + normal.y * halfWidth + aaOffset.y;
 					v1.position.z = m_depth;
 					v1.color = m_color;
 					v1.texCoord[1] = Vector2( 1.0f + pixelWidthInTexels, 1.0f );
 
 					Tr2Sprite2dVertexBase& v2 = *currentVertex++;
-					v2.position.x = to.x + normal.x*halfWidth + aaOffset.x;
-					v2.position.y = to.y + normal.y*halfWidth + aaOffset.y;
+					v2.position.x = to.x + normal.x * halfWidth + aaOffset.x;
+					v2.position.y = to.y + normal.y * halfWidth + aaOffset.y;
 					v2.position.z = m_depth;
 					v2.color = m_color;
 					v2.texCoord[1] = Vector2( 1.0f + pixelWidthInTexels, 1.0f );
 
 					Tr2Sprite2dVertexBase& v3 = *currentVertex++;
-					v3.position.x = to.x - normal.x*halfWidth - aaOffset.x;
-					v3.position.y = to.y - normal.y*halfWidth - aaOffset.y;
+					v3.position.x = to.x - normal.x * halfWidth - aaOffset.x;
+					v3.position.y = to.y - normal.y * halfWidth - aaOffset.y;
 					v3.position.z = m_depth;
 					v3.color = m_color;
 					v3.texCoord[1] = Vector2( -pixelWidthInTexels, 1.0f );
 
-					m_renderIndices.push_back(  0 + m_renderVertexCount );
-					m_renderIndices.push_back(  1 + m_renderVertexCount );
-					m_renderIndices.push_back(  3 + m_renderVertexCount );
-					m_renderIndices.push_back(  3 + m_renderVertexCount );
-					m_renderIndices.push_back(  1 + m_renderVertexCount );
-					m_renderIndices.push_back(  2 + m_renderVertexCount );
+					m_renderIndices.push_back( 0 + m_renderVertexCount );
+					m_renderIndices.push_back( 1 + m_renderVertexCount );
+					m_renderIndices.push_back( 3 + m_renderVertexCount );
+					m_renderIndices.push_back( 3 + m_renderVertexCount );
+					m_renderIndices.push_back( 1 + m_renderVertexCount );
+					m_renderIndices.push_back( 2 + m_renderVertexCount );
 
 					m_renderVertexCount += 4;
 					CCP_ASSERT( m_renderVertexCount <= m_renderVertexCapacity );
@@ -366,7 +365,7 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 				if( i > 0 )
 				{
 					m_renderIndices.push_back( -1 + m_renderVertexCount );
-					m_renderIndices.push_back(  0 + m_renderVertexCount );
+					m_renderIndices.push_back( 0 + m_renderVertexCount );
 					m_renderIndices.push_back( centerPointIx );
 				}
 
@@ -376,14 +375,13 @@ void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 				CCP_ASSERT( m_renderVertexCount <= m_renderVertexCapacity );
 			}
 
-			renderer->PrepareTriangleVerts( 
-				m_renderVertices + centerPointIx, 
-				verts, 
-				sizeof( Tr2Sprite2dVertexBase ), 
+			renderer->PrepareTriangleVerts(
+				m_renderVertices + centerPointIx,
+				verts,
+				sizeof( Tr2Sprite2dVertexBase ),
 				fillVertCount );
 
 			CCP_FREE( verts );
-
 		}
 
 		m_isDirty = false;

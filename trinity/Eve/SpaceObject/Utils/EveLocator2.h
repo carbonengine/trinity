@@ -7,19 +7,35 @@
 
 
 
-BLUE_CLASS( EveLocator2 ) : public IRoot
+BLUE_CLASS( EveLocator2 ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
 
 	EveLocator2( IRoot* lockobj = NULL );
 
-	const char* GetName() const { return m_name.c_str(); }
-	void SetName( const char* name ) { m_name = BlueSharedString( name ); }
-	void SetName( const BlueSharedString& name ) { m_name = name; }
+	const char* GetName() const
+	{
+		return m_name.c_str();
+	}
+	void SetName( const char* name )
+	{
+		m_name = BlueSharedString( name );
+	}
+	void SetName( const BlueSharedString& name )
+	{
+		m_name = name;
+	}
 
-	const Matrix& GetTransform() const { return m_transform; }
-	void SetTransform( const Matrix& val) { m_transform = val; }
+	const Matrix& GetTransform() const
+	{
+		return m_transform;
+	}
+	void SetTransform( const Matrix& val )
+	{
+		m_transform = val;
+	}
 
 protected:
 	BlueSharedString m_name;

@@ -27,7 +27,7 @@ Tr2Sprite2dTextObject::~Tr2Sprite2dTextObject()
 
 void Tr2Sprite2dTextObject::GatherSprites( Tr2Sprite2dScene* renderer )
 {
-	if( !m_display || (m_textWidth <= 0.0f) || (m_textHeight <= 0.0f) )
+	if( !m_display || ( m_textWidth <= 0.0f ) || ( m_textHeight <= 0.0f ) )
 	{
 		return;
 	}
@@ -56,7 +56,7 @@ void Tr2Sprite2dTextObject::GatherSprites( Tr2Sprite2dScene* renderer )
 		auto top = m_translation.y + std::min( m_shadowOffset.y, 0.f );
 		auto width = m_textWidth + abs( m_shadowOffset.x );
 		auto height = m_textHeight + abs( m_shadowOffset.x );
-		if( (m_spriteEffect == TR2_SFX_BLUR) || (m_spriteEffect == TR2_SFX_GLOW) )
+		if( ( m_spriteEffect == TR2_SFX_BLUR ) || ( m_spriteEffect == TR2_SFX_GLOW ) )
 		{
 			renderer->PushClipRectangle( m_translation.x - 1 + std::min( m_shadowOffset.x, 0.f ), m_translation.y - 1 + std::min( m_shadowOffset.y, 0.f ), m_textWidth + 2 + abs( m_shadowOffset.x ), m_textHeight + 2 + abs( m_shadowOffset.y ) );
 		}
@@ -76,14 +76,14 @@ ITr2SpriteObject* Tr2Sprite2dTextObject::PickPoint( float x, float y, Tr2Sprite2
 		return nullptr;
 	}
 
-	if( m_pickState == TR2_SPS_ON || m_hasAuxiliaryTooltip)
+	if( m_pickState == TR2_SPS_ON || m_hasAuxiliaryTooltip )
 	{
 		if( renderer->IsInside( Vector2( x, y ), m_translation, m_displayWidth, m_displayHeight, m_pickRadius ) )
 		{
 			return this;
 		}
 	}
-	
+
 	return nullptr;
 }
 
@@ -133,7 +133,7 @@ void Tr2Sprite2dTextObject::SetFontMeasurer( Tr2FontMeasurer* m )
 bool Tr2Sprite2dTextObject::IsAuxMouseover()
 {
 	// Return true if the label is not pickable and is a localization tooltip
-	return (m_pickState != TR2_SPS_ON && m_hasAuxiliaryTooltip);
+	return ( m_pickState != TR2_SPS_ON && m_hasAuxiliaryTooltip );
 }
 
 

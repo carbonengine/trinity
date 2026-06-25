@@ -26,9 +26,9 @@ struct TriangleVertex
 	Color m_color;
 };
 
-BLUE_CLASS( Tr2SolidSet ): 
+BLUE_CLASS( Tr2SolidSet ) :
 	public IInitialize,
-	public Tr2PrimitiveSet,	
+	public Tr2PrimitiveSet,
 	public Tr2DeviceResource
 {
 public:
@@ -40,15 +40,18 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
 
 #if TRINITYDEV
-	virtual void GetDescription( std::string& desc ) { desc = "<Tr2SolidSet>"; }
+	virtual void GetDescription( std::string & desc )
+	{
+		desc = "<Tr2SolidSet>";
+	}
 #endif
-	
+
 	Vector3 GetCenterOfMass( void );
 
 protected:
@@ -56,19 +59,20 @@ protected:
 
 private:
 	virtual bool OnPrepareResources();
-	
+
 	// Hold on to the submitted triangles and the current count
 	std::vector<TriangleData> m_triangles;
 	unsigned int m_maxCurrentTriangleCount;
 	unsigned int m_currentSubmittedTriangleCount;
+
 public:
 	// Python interface
 	void AddTriangle( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2, const Vector3& position3, const Vector4& color3 );
 	void ClearTriangles();
-	void SetCurrentColor( Color& val );
+	void SetCurrentColor( Color & val );
 	bool SubmitChanges();
 };
 
-TYPEDEF_BLUECLASS(Tr2SolidSet);
+TYPEDEF_BLUECLASS( Tr2SolidSet );
 
 #endif

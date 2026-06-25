@@ -6,8 +6,8 @@
 
 
 // --------------------------------------------------------------------------------
-Tr2CurveConstant::Tr2CurveConstant( IRoot* )
-	:m_value( 0, 0, 0, 0 )
+Tr2CurveConstant::Tr2CurveConstant( IRoot* ) :
+	m_value( 0, 0, 0, 0 )
 {
 }
 

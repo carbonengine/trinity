@@ -20,13 +20,7 @@ static PyObject* PyPickPointAndObject( PyObject* self, PyObject* args )
 	PyObject* pyViewport = NULL;
 
 	int x, y;
-	if (!PyArg_ParseTuple(args, "iiOOO",
-		&x,
-		&y,
-		&pyProjection,
-		&pyView,
-		&pyViewport
-		))
+	if( !PyArg_ParseTuple( args, "iiOOO", &x, &y, &pyProjection, &pyView, &pyViewport ) )
 		return NULL;
 
 	TriProjection* projection = NULL;
@@ -56,13 +50,13 @@ static PyObject* PyPickPointAndObject( PyObject* self, PyObject* args )
 
 	if( results.object )
 	{
-		PyObject *result =  PyTuple_New(2);
-		PyTuple_SET_ITEM(result, 0, PyOS->WrapBlueObject(results.object) ); 
-		PyTuple_SET_ITEM(result, 1, Py_BuildValue("(fff)", results.position.x, results.position.y, results.position.z ) );
+		PyObject* result = PyTuple_New( 2 );
+		PyTuple_SET_ITEM( result, 0, PyOS->WrapBlueObject( results.object ) );
+		PyTuple_SET_ITEM( result, 1, Py_BuildValue( "(fff)", results.position.x, results.position.y, results.position.z ) );
 		return result;
 	}
 
-	Py_INCREF(Py_None);
+	Py_INCREF( Py_None );
 	return Py_None;
 }
 #endif
@@ -70,16 +64,16 @@ static PyObject* PyPickPointAndObject( PyObject* self, PyObject* args )
 
 const Be::ClassInfo* Tr2PrimitiveScene::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( Tr2PrimitiveScene, "" )
-        MAP_INTERFACE( Tr2PrimitiveScene )
+	EXPOSURE_BEGIN( Tr2PrimitiveScene, "" )
+		MAP_INTERFACE( Tr2PrimitiveScene )
 		MAP_INTERFACE( ITr2Scene )
 
 		MAP_ATTRIBUTE( "primitives", m_primitives, "A list of primitive sets to render for this scene", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "textLabels", m_textLabels, "A list of text labels to render for this scene", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "manipulator", m_manipulator, "The active manipulator working for the scene", Be::READWRITE )
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
-			"PickObject", 
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
+			"PickObject",
 			PickObjectOnly,
 			1,
 			"Given mouse position and a view setup, returns the object that the mouse is over, as well as the mesh and area indices"
@@ -90,12 +84,11 @@ const Be::ClassInfo* Tr2PrimitiveScene::ExposeToBlue()
 			"\n:param projection: The TriProjection to use to pick into the scene"
 			"\n:param view: The TriView to use to pick into the scene"
 			"\n:param viewport: The TriViewport of the viewport to use to pick into the scene"
-			"\n:param pickFlags: unused\n"
-		)
+			"\n:param pickFlags: unused\n" )
 
-		MAP_METHOD( 
-			"PickPointAndObject", 
-			PyPickPointAndObject, 
+		MAP_METHOD(
+			"PickPointAndObject",
+			PyPickPointAndObject,
 			"Given mouse position and a view setup, returns the object that the mouse is over, as well as the mesh and area indices"
 			"\n returns (<Object>,(x,y,z)) or None if nothing pickable was hit by the ray"
 			"\n"
@@ -109,8 +102,7 @@ const Be::ClassInfo* Tr2PrimitiveScene::ExposeToBlue()
 			"\n:type view: TriView"
 			"\n:param viewport: The TriViewport of the viewport to use to pick into the scene"
 			"\n:type viewport: TriViewport"
-			"\n:rtype: None | (blue.IRoot, (float, float, float))"
-		)
+			"\n:rtype: None | (blue.IRoot, (float, float, float))" )
 
-    EXPOSURE_END()
+	EXPOSURE_END()
 }

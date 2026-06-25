@@ -5,15 +5,15 @@
 #include "HLSLParser.h"
 #include "ParserUtils.h"
 
-ASTNode::ASTNode( ASTNodeType type, const FileLocation& location, ScopeSymbolTable* scope, const ScannerToken* token )
-	:m_nodeType( type ),
+ASTNode::ASTNode( ASTNodeType type, const FileLocation& location, ScopeSymbolTable* scope, const ScannerToken* token ) :
+	m_nodeType( type ),
 	m_symbol( nullptr ),
 	m_location( location ),
-    m_scope( scope )
+	m_scope( scope )
 {
 	m_type.FromTokenType( 0 );
 	if( token )
-	{ 
+	{
 		m_token = *token;
 	}
 	else
@@ -66,11 +66,11 @@ void ASTNode::ReplaceChild( size_t place, ASTNode* child )
 
 void ASTNode::ReplaceChild( ASTNode* old, ASTNode* child )
 {
-    auto found = find( begin( m_children ), end( m_children ), old );
-    if( found != end( m_children ) )
-    {
-        *found = child;
-    }
+	auto found = find( begin( m_children ), end( m_children ), old );
+	if( found != end( m_children ) )
+	{
+		*found = child;
+	}
 }
 
 void ASTNode::RemoveChild( size_t place )
@@ -150,7 +150,7 @@ const ScannerToken* ASTNode::GetToken() const
 	}
 }
 
-void ASTNode::SetToken(const ScannerToken& token)
+void ASTNode::SetToken( const ScannerToken& token )
 {
 	m_token = token;
 }

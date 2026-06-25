@@ -19,10 +19,10 @@ const Be::ClassInfo* Tr2TexturedPointLight::ExposeToBlue()
 		MAP_ATTRIBUTE( "position", m_lightData.position, "Light position", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_lightData.rotation, "Light rotation", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boneIndex", m_lightData.boneIndex, "The bone index that this light is connected to\n:jessica-widget: boneindex", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		
+
 		MAP_ATTRIBUTE( "radius", m_lightData.radius, "Light radius", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "innerRadius", m_lightData.innerRadius, "Inner light radius (to mimick a glowing sphere)", Be::READWRITE | Be::PERSIST )
-		
+
 		MAP_ATTRIBUTE( "color", m_lightData.color, "Light color (in linear space)\n:jessica-tuple-type: linearcolor", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "brightness", m_lightData.brightness, "Light brightness (modulates color) for easier animation", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 

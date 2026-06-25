@@ -8,7 +8,7 @@
 // Description:
 //   Default constructor.
 // --------------------------------------------------------------------------------------
-Tr2DistanceTracker::Tr2DistanceTracker( IRoot* lockobj ):
+Tr2DistanceTracker::Tr2DistanceTracker( IRoot* lockobj ) :
 	m_signedDistance( true ),
 	m_distanceToClosest( true ),
 	m_value( 0 ),
@@ -26,34 +26,34 @@ Tr2DistanceTracker::Tr2DistanceTracker( IRoot* lockobj ):
 // --------------------------------------------------------------------------------------
 void Tr2DistanceTracker::UpdateValue( double time )
 {
-    if( m_source )
-    {
-        m_source->GetValueAt( &m_sourcePosition, time );
-    }
-    if( m_target )
-    {
-        m_target->GetValueAt( &m_targetPosition, time );
-    }
+	if( m_source )
+	{
+		m_source->GetValueAt( &m_sourcePosition, time );
+	}
+	if( m_target )
+	{
+		m_target->GetValueAt( &m_targetPosition, time );
+	}
 
-    Vector3 d = m_targetPosition - m_sourcePosition;
-    float projection = XMVectorGetX( XMVector3Dot( d, m_direction ) );
-    
-    if( m_distanceToClosest )
-    {
-       m_value = projection;
-       if( !m_signedDistance )
-       {
-           m_value = std::abs( m_value );
-       }
-    }
-    else
-    {
-        m_value = XMVectorGetX( XMVector3Length( d ) );
-        if( m_signedDistance && projection < 0)
-        {
-            m_value = -m_value;
-        }
-    }
+	Vector3 d = m_targetPosition - m_sourcePosition;
+	float projection = XMVectorGetX( XMVector3Dot( d, m_direction ) );
+
+	if( m_distanceToClosest )
+	{
+		m_value = projection;
+		if( !m_signedDistance )
+		{
+			m_value = std::abs( m_value );
+		}
+	}
+	else
+	{
+		m_value = XMVectorGetX( XMVector3Length( d ) );
+		if( m_signedDistance && projection < 0 )
+		{
+			m_value = -m_value;
+		}
+	}
 }
 
 bool Tr2DistanceTracker::OnModified( Be::Var* val )

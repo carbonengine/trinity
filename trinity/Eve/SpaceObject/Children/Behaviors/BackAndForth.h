@@ -17,7 +17,8 @@ struct BackAndForthData
 		deliver( false ),
 		arrived( true ),
 		timePassed( 0.f )
-	{}
+	{
+	}
 
 	Vector3 locatorTarget;
 	Vector3 locatorDirection;
@@ -46,14 +47,13 @@ public:
 	virtual size_t GetScratchMemorySize() const;
 	virtual void InitializeScratch( void* scratchMemory );
 
-	virtual std::vector<Vector3> CalculateBehavior(std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
-	                                               BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius);
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation);
+	virtual std::vector<Vector3> CalculateBehavior( std::vector<DroneAgent> & agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, std::vector<DroneAgent> & agents, Matrix & parentWorldLocation );
 	int GetProcessPriority();
 	std::string GetBehaviorName();
 
-	void SetParent( IEveSpaceObject2 *parent );
+	void SetParent( IEveSpaceObject2 * parent );
 
 private:
 	bool m_enabled;

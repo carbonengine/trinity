@@ -39,7 +39,7 @@ struct Tr2PushPopRT
 
 private:
 	Tr2RenderContext* m_renderContext;
-	uint32_t	m_slot;
+	uint32_t m_slot;
 
 	Tr2PushPopRT( Tr2PushPopRT& );
 	Tr2PushPopRT& operator=( Tr2PushPopRT& );

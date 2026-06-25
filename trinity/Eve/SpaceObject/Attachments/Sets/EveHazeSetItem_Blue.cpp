@@ -7,8 +7,8 @@ BLUE_DEFINE( EveHazeSetItem );
 
 const Be::ClassInfo* EveHazeSetItem::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveHazeSetItem, "" )
-        MAP_INTERFACE( EveHazeSetItem )
+	EXPOSURE_BEGIN( EveHazeSetItem, "" )
+		MAP_INTERFACE( EveHazeSetItem )
 
 		MAP_ATTRIBUTE( "name", m_name, "Standard name", Be::READWRITE | Be::PERSIST )
 
@@ -19,5 +19,5 @@ const Be::ClassInfo* EveHazeSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "hazeData", m_hazeData, "Various data for this haze", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, "the bone index this plane is tight to\n:jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 
-		EXPOSURE_END()
+	EXPOSURE_END()
 }

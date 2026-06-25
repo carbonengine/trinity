@@ -23,7 +23,7 @@ EveMeshOverlayEffect::~EveMeshOverlayEffect()
 // Description:
 //   EveMeshOverlayEffect constructor
 // --------------------------------------------------------------------------------------
-EveMeshOverlayEffect::EveMeshOverlayEffect( IRoot* lockobj ):
+EveMeshOverlayEffect::EveMeshOverlayEffect( IRoot* lockobj ) :
 	m_display( true ),
 	m_update( true ),
 	PARENTLOCK( m_opaqueEffects ),
@@ -31,9 +31,9 @@ EveMeshOverlayEffect::EveMeshOverlayEffect( IRoot* lockobj ):
 	PARENTLOCK( m_transparentEffects ),
 	PARENTLOCK( m_additiveEffects ),
 	PARENTLOCK( m_distortionEffects ),
-    PARENTLOCK( m_controllers )
+	PARENTLOCK( m_controllers )
 {
-    m_controllers.SetNotify( this );
+	m_controllers.SetNotify( this );
 }
 
 // --------------------------------------------------------------------------------------
@@ -59,28 +59,32 @@ bool EveMeshOverlayEffect::Initialize()
 // --------------------------------------------------------------------------------------
 void EveMeshOverlayEffect::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
-    if (list == &m_controllers && (event & BELIST_LOADING) == 0) {
-        switch (event & BELIST_EVENTMASK) {
-        case BELIST_INSERTED:
-            if (ITr2ControllerPtr controller = BlueCastPtr(value)) {
-                controller->Link(*GetRawRoot());
-            }
-            break;
-        case BELIST_REMOVED:
-            if (ITr2ControllerPtr controller = BlueCastPtr(value)) {
-                controller->Unlink();
-            }
-            break;
+	if( list == &m_controllers && ( event & BELIST_LOADING ) == 0 )
+	{
+		switch( event & BELIST_EVENTMASK )
+		{
+		case BELIST_INSERTED:
+			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
+			{
+				controller->Link( *GetRawRoot() );
+			}
+			break;
+		case BELIST_REMOVED:
+			if( ITr2ControllerPtr controller = BlueCastPtr( value ) )
+			{
+				controller->Unlink();
+			}
+			break;
 		case BELIST_UNLOADSTART:
 			for( auto& controller : m_controllers )
 			{
 				controller->Unlink();
 			}
 			break;
-        default:
-            break;
-        }
-    }
+		default:
+			break;
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -109,9 +113,9 @@ bool EveMeshOverlayEffect::HasTransparentArea() const
 
 inline void SetIndividualShaderOption( const PTr2EffectVector& effectVector, const BlueSharedString& name, const BlueSharedString& value )
 {
-	for (auto it = effectVector.begin(); it != effectVector.end(); ++it)
+	for( auto it = effectVector.begin(); it != effectVector.end(); ++it )
 	{
-		Tr2Effect *effect = *it;
+		Tr2Effect* effect = *it;
 		effect->SetOption( name, value );
 	}
 }
@@ -128,35 +132,35 @@ void EveMeshOverlayEffect::SetShaderOption( const BlueSharedString& name, const 
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   GetEffect. 
+//   GetEffect.
 // Return Value:
 //   A Tr2EffectVector of effects.
 // --------------------------------------------------------------------------------------
-const PTr2EffectVector& EveMeshOverlayEffect::GetEffects(TriBatchType batchType, bool& success) const
+const PTr2EffectVector& EveMeshOverlayEffect::GetEffects( TriBatchType batchType, bool& success ) const
 {
-	if ( m_display )
+	if( m_display )
 	{
-		if ( batchType == TRIBATCHTYPE_OPAQUE )
+		if( batchType == TRIBATCHTYPE_OPAQUE )
 		{
 			success = true;
 			return m_opaqueEffects;
 		}
-		else if ( batchType == TRIBATCHTYPE_DECAL )
+		else if( batchType == TRIBATCHTYPE_DECAL )
 		{
 			success = true;
 			return m_decalEffects;
 		}
-		else if ( batchType == TRIBATCHTYPE_TRANSPARENT )
+		else if( batchType == TRIBATCHTYPE_TRANSPARENT )
 		{
 			success = true;
 			return m_transparentEffects;
 		}
-		else if ( batchType == TRIBATCHTYPE_ADDITIVE )
+		else if( batchType == TRIBATCHTYPE_ADDITIVE )
 		{
 			success = true;
 			return m_additiveEffects;
 		}
-		else if ( batchType == TRIBATCHTYPE_DISTORTION )
+		else if( batchType == TRIBATCHTYPE_DISTORTION )
 		{
 			success = true;
 			return m_distortionEffects;
@@ -171,27 +175,27 @@ const PTr2EffectVector& EveMeshOverlayEffect::GetEffects(TriBatchType batchType,
 
 void EveMeshOverlayEffect::SetControllerVariable( const char* name, float value )
 {
-    for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
-    {
-        ( *it )->SetVariable( name, value );
-    }
+	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
+	{
+		( *it )->SetVariable( name, value );
+	}
 }
 
 
 void EveMeshOverlayEffect::HandleControllerEvent( const char* name )
 {
-    for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
-    {
-        ( *it )->HandleEvent( name );
-    }
+	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
+	{
+		( *it )->HandleEvent( name );
+	}
 }
 
 void EveMeshOverlayEffect::StartControllers()
 {
-    for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
-    {
-        ( *it )->Start();
-    }
+	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
+	{
+		( *it )->Start();
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -199,69 +203,69 @@ void EveMeshOverlayEffect::StartControllers()
 
 void EveMeshOverlayEffect::PlayCurveSet( const std::string& name, const std::string& rangeName )
 {
-    if( !m_curveSet )
-    {
-        return;
-    }
+	if( !m_curveSet )
+	{
+		return;
+	}
 
-    if( m_curveSet->GetName() == name )
-    {
-        if( rangeName.empty() )
-        {
-            m_curveSet->ResetTimeRange();
-            m_curveSet->Play();
-        }
-        else
-        {
-            m_curveSet->PlayTimeRange( rangeName.c_str() );
-        }
-    }
+	if( m_curveSet->GetName() == name )
+	{
+		if( rangeName.empty() )
+		{
+			m_curveSet->ResetTimeRange();
+			m_curveSet->Play();
+		}
+		else
+		{
+			m_curveSet->PlayTimeRange( rangeName.c_str() );
+		}
+	}
 }
 
 void EveMeshOverlayEffect::StopCurveSet( const std::string& name )
 {
-    if( !m_curveSet )
-    {
-        return;
-    }
+	if( !m_curveSet )
+	{
+		return;
+	}
 
-    if( m_curveSet->GetName() == name )
-    {
-        m_curveSet->Stop();
-    }
+	if( m_curveSet->GetName() == name )
+	{
+		m_curveSet->Stop();
+	}
 }
 
 float EveMeshOverlayEffect::GetCurveSetDuration( const std::string& name ) const
 {
-    float maxDuration = 0.f;
+	float maxDuration = 0.f;
 
-    if( !m_curveSet )
-    {
-        return maxDuration;
-    }
+	if( !m_curveSet )
+	{
+		return maxDuration;
+	}
 
-    if( m_curveSet->GetName() == name )
-    {
-        maxDuration = max( maxDuration, m_curveSet->GetMaxCurveDuration() );
-    }
-    return maxDuration;
+	if( m_curveSet->GetName() == name )
+	{
+		maxDuration = max( maxDuration, m_curveSet->GetMaxCurveDuration() );
+	}
+	return maxDuration;
 }
 
 float EveMeshOverlayEffect::GetRangeDuration( const std::string& name, const std::string& rangeName ) const
 {
-    float maxDuration = 0.f;
+	float maxDuration = 0.f;
 
-    if( !m_curveSet )
-    {
-        return maxDuration;
-    }
+	if( !m_curveSet )
+	{
+		return maxDuration;
+	}
 
-    if( m_curveSet->GetName() == name )
-    {
-        maxDuration = max( maxDuration, m_curveSet->GetRangeDuration( rangeName.c_str() ) );
-    }
+	if( m_curveSet->GetName() == name )
+	{
+		maxDuration = max( maxDuration, m_curveSet->GetRangeDuration( rangeName.c_str() ) );
+	}
 
-    return maxDuration;
+	return maxDuration;
 }
 
 // --------------------------------------------------------------------------------------
@@ -277,8 +281,8 @@ void EveMeshOverlayEffect::Update( Be::Time realTime, Be::Time simTime )
 
 	m_curveSet->Update( realTime, simTime );
 
-    for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
-    {
-        ( *it )->Update( 0.5f );
-    }
+	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
+	{
+		( *it )->Update( 0.5f );
+	}
 }

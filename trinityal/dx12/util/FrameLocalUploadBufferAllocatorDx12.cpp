@@ -62,7 +62,7 @@ ConstantBufferAllocator::Entry ConstantBufferAllocator::Allocate( const void* da
 		std::lock_guard lock( m_spillMutex );
 
 		if( !m_spillPage.buffer || m_spillOffset + size > m_spillPage.size )
-	{
+		{
 			m_spillPage.size *= 2;
 			CreatePage( m_spillPage );
 		}
@@ -71,9 +71,9 @@ ConstantBufferAllocator::Entry ConstantBufferAllocator::Allocate( const void* da
 		m_spillOffset += size;
 	}
 	if( data )
-		{
+	{
 		memcpy( entry.m_cpuAddr, data, dataSize );
-		}
+	}
 	return entry;
 }
 

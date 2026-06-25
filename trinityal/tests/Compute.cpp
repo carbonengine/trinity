@@ -5,7 +5,9 @@
 
 #if TRINITY_PLATFORM_SUPPORTS_COMPUTE
 
-struct Compute: public WithValidRenderContext {};
+struct Compute : public WithValidRenderContext
+{
+};
 
 using namespace Tr2RenderContextEnum;
 
@@ -17,8 +19,8 @@ TEST_F( Compute, CanReadCSResult )
 	};
 
 	auto signature = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
-		.Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
+						 .Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
+						 .Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
 	Tr2ShaderAL cs;
 	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
 
@@ -59,10 +61,10 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 	};
 
 	auto signature = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
-		.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 )
-		.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 1 )
-		.Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
+						 .Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
+						 .Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 )
+						 .Add( Tr2ShaderRegisterAL::SRV_BUFFER, 1 )
+						 .Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
 
 	Tr2ShaderAL cs;
 	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
@@ -117,10 +119,10 @@ TEST_F( Compute, CanAddConstantInCS )
 	};
 
 	auto signature = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
-		.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 )
-		.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 1 )
-		.Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
+						 .Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
+						 .Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 )
+						 .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 1 )
+						 .Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
 
 	Tr2ShaderAL cs;
 	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
@@ -180,10 +182,10 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 	};
 
 	auto signature = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
-		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
-		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
-		.Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
+						 .Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
+						 .Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
+						 .Add( Tr2ShaderRegisterAL::SAMPLER, 0 )
+						 .Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
 
 	Tr2ShaderAL cs;
 	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
@@ -208,8 +210,8 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 
 	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
-	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		Tr2SamplerDescription( 
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
 			Tr2RenderContextEnum::TF_LINEAR,
 			Tr2RenderContextEnum::TA_WRAP,
 			1,
@@ -253,8 +255,8 @@ TEST_F( Compute, CanDispatchCSGroups )
 	};
 
 	auto signature = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
-		.Add( Tr2ShaderThreadGroupSizeAL( 10, 10, 2 ) );
+						 .Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
+						 .Add( Tr2ShaderThreadGroupSizeAL( 10, 10, 2 ) );
 
 	Tr2ShaderAL cs;
 	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );

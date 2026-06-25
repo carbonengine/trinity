@@ -8,7 +8,8 @@ BLUE_DECLARE_IVECTOR( ITr2ControllerAction );
 BLUE_DECLARE_INTERFACE( ITr2ActionController );
 
 
-BLUE_CLASS( Tr2ControllerEventHandler ): public IListNotify
+BLUE_CLASS( Tr2ControllerEventHandler ) :
+	public IListNotify
 {
 public:
 	Tr2ControllerEventHandler( IRoot* lockobj = nullptr );

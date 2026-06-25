@@ -6,7 +6,7 @@ BLUE_DEFINE( Tr2VectorFunctionModifier );
 
 const Be::ClassInfo* Tr2VectorFunctionModifier::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( Tr2VectorFunctionModifier, "Wrapper object for ITriVectorFunction implementer that adds world or view space offset and scaling")
+	EXPOSURE_BEGIN( Tr2VectorFunctionModifier, "Wrapper object for ITriVectorFunction implementer that adds world or view space offset and scaling" )
 		MAP_INTERFACE( ITriVectorFunction )
 		MAP_INTERFACE( Tr2VectorFunctionModifier )
 
@@ -33,9 +33,9 @@ const Be::ClassInfo* Tr2VectorFunctionModifier::ExposeToBlue()
 			m_useViewSpace,
 			"Calcuates offset in view space",
 			Be::READWRITE )
-	
-		MAP_ATTRIBUTE( 
-			"useSystemCoordinates",	
+
+		MAP_ATTRIBUTE(
+			"useSystemCoordinates",
 			m_useSystemCoordinates,
 			"Whether to use the system coordinates for the given position or the default of ship coordinates",
 			Be::READWRITE )

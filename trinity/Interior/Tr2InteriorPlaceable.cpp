@@ -22,7 +22,7 @@
 CCP_STATS_DECLARE( wodInteriorPlaceablesAlive, "Trinity/Tr2InteriorPlaceables", false, CST_COUNTER_LOW, "Count of Tr2InteriorPlaceables alive" );
 
 Tr2InteriorPlaceable::Tr2InteriorPlaceable( IRoot* lockobj ) :
-    m_display( true ),
+	m_display( true ),
 	m_isUniqueInstance( false ),
 	PARENTLOCK( m_transform, IInitialize ),
 	m_placeableResPath(),
@@ -61,7 +61,7 @@ Tr2InteriorPlaceable::~Tr2InteriorPlaceable()
 	CCP_STATS_DEC( wodInteriorPlaceablesAlive );
 }
 
-bool Tr2InteriorPlaceable::AddToScene( Tr2ApexScene *apexScene )
+bool Tr2InteriorPlaceable::AddToScene( Tr2ApexScene* apexScene )
 {
 	if( !IsBoundingBoxReady() )
 	{
@@ -137,14 +137,14 @@ bool Tr2InteriorPlaceable::GetWorldBoundingBox( Vector3& min, Vector3& max ) con
 
 bool Tr2InteriorPlaceable::IsBoundingBoxReady( void ) const
 {
-	return( m_placeableRes && m_placeableRes->IsReady() );
+	return ( m_placeableRes && m_placeableRes->IsReady() );
 }
 
 void Tr2InteriorPlaceable::PrePhysicsUpdate( Be::Time time )
 {
 }
 
-void Tr2InteriorPlaceable::PostPhysicsUpdate( Be::Time time, Tr2ApexScene *apexScene )
+void Tr2InteriorPlaceable::PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene )
 {
 	if( m_placeableRes )
 	{
@@ -172,7 +172,7 @@ void Tr2InteriorPlaceable::PostPhysicsUpdate( Be::Time time, Tr2ApexScene *apexS
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Adds per-cell reflection map to an array of current reflection maps. 
+//   Adds per-cell reflection map to an array of current reflection maps.
 // Arguments:
 //   texture - Per-cell reflection map
 // --------------------------------------------------------------------------------------
@@ -209,7 +209,7 @@ void Tr2InteriorPlaceable::AddReflectionMap( TriTextureRes* texture )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Removes per-cell reflection map from an array of current reflection maps. 
+//   Removes per-cell reflection map from an array of current reflection maps.
 // Arguments:
 //   texture - Per-cell reflection map
 // --------------------------------------------------------------------------------------
@@ -241,20 +241,20 @@ void Tr2InteriorPlaceable::SetLOD( const TriFrustum* frustum )
 // --------------------------------------------------------------------------------------
 bool Tr2InteriorPlaceable::OnModified( Be::Var* value )
 {
-    if( IsMatch( value, m_placeableResPath ) )
-    {
-        LoadPlaceableRes();
-    }
+	if( IsMatch( value, m_placeableResPath ) )
+	{
+		LoadPlaceableRes();
+	}
 	else if( IsMatch( value, m_isUniqueInstance ) )
 	{
 		if( m_placeableRes && m_isUniqueInstance )
 		{
-		    // not worth doing anything if we don't already have something loaded
-		    // if we do, take a copy of what's currently there
+			// not worth doing anything if we don't already have something loaded
+			// if we do, take a copy of what's currently there
 			IRootPtr copyOfOriginal = NULL;
 			BeClasses->CloneTo( m_placeableRes, &copyOfOriginal.p );
 			m_placeableRes.Unlock();
-			BlueQIPtrAssign( ( IRoot** )&m_placeableRes.p, copyOfOriginal, BlueInterfaceIID<WodPlaceableRes>() );
+			BlueQIPtrAssign( (IRoot**)&m_placeableRes.p, copyOfOriginal, BlueInterfaceIID<WodPlaceableRes>() );
 		}
 		else
 		{
@@ -276,19 +276,19 @@ bool Tr2InteriorPlaceable::OnModified( Be::Var* value )
 bool Tr2InteriorPlaceable::Initialize( void )
 {
 	LoadPlaceableRes();
-    return true;
+	return true;
 }
 
 bool Tr2InteriorPlaceable::HasTransparentBatches( void )
 {
 	if( m_placeableRes )
 	{
-		return m_placeableRes->HasTransparency(); 
+		return m_placeableRes->HasTransparency();
 	}
 	return false;
 }
 
-void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches, 
+void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches,
 									   TriBatchType batchType,
 									   const Tr2PerObjectData* data,
 									   Tr2RenderReason reason )
@@ -324,7 +324,7 @@ void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches,
 					continue;
 				}
 				auto lod = geometry->GetMeshLod( mesh->GetMeshIndex(), 0 );
-				if( !lod || !lod->m_allocationsValid)
+				if( !lod || !lod->m_allocationsValid )
 				{
 					continue;
 				}
@@ -362,7 +362,7 @@ void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches,
 							center -= Tr2Renderer::GetViewPosition();
 							float z = std::min( std::max( ( Length( center ) + m_depthOffset ) / maxDepth, 0.f ), 1.f );
 
-							depth = ( unsigned int )( ( float )0xFFFFFFF * ( 1.0f - z ) );
+							depth = (unsigned int)( (float)0xFFFFFFF * ( 1.0f - z ) );
 						}
 
 						Tr2RenderBatch batch = CreateGeometryBatch( lod, area, data );
@@ -377,7 +377,7 @@ void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches,
 
 float Tr2InteriorPlaceable::GetSortValue( void )
 {
-    return CalculateCameraDistance();
+	return CalculateCameraDistance();
 }
 
 Tr2PerObjectData* Tr2InteriorPlaceable::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
@@ -387,12 +387,12 @@ Tr2PerObjectData* Tr2InteriorPlaceable::GetPerObjectData( ITriRenderBatchAccumul
 
 std::string Tr2InteriorPlaceable::GetPlaceableResPath( void ) const
 {
-    return m_placeableResPath;
+	return m_placeableResPath;
 }
 
 void Tr2InteriorPlaceable::SetPlaceableResPath( const std::string& val )
 {
-    m_placeableResPath = val;
+	m_placeableResPath = val;
 	LoadPlaceableRes();
 }
 
@@ -411,9 +411,9 @@ void Tr2InteriorPlaceable::SetPosition( const Vector3& pos )
 
 const Quaternion Tr2InteriorPlaceable::GetRotation( void ) const
 {
-	Vector3		tmpScale;		
-	Quaternion	tmpRotation;	
-	Vector3		tmpTranslation;	
+	Vector3 tmpScale;
+	Quaternion tmpRotation;
+	Vector3 tmpTranslation;
 
 	Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 
@@ -427,9 +427,9 @@ void Tr2InteriorPlaceable::SetRotation( const Quaternion& rotQuat )
 		m_currentRotation = rotQuat;
 		m_rotationSet = true;
 
-		Vector3		tmpScale;		
-		Quaternion	tmpRotation;	
-		Vector3		tmpTranslation;	
+		Vector3 tmpScale;
+		Quaternion tmpRotation;
+		Vector3 tmpTranslation;
 
 		Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 		static_cast<Matrix&>( m_transform ) = TransformationMatrix( tmpScale, rotQuat, tmpTranslation );
@@ -438,10 +438,10 @@ void Tr2InteriorPlaceable::SetRotation( const Quaternion& rotQuat )
 
 const Vector3 Tr2InteriorPlaceable::GetScaling( void ) const
 {
-	Vector3		tmpScale;		
-	Quaternion	tmpRotation;	
-	Vector3		tmpTranslation;	
-	
+	Vector3 tmpScale;
+	Quaternion tmpRotation;
+	Vector3 tmpTranslation;
+
 	Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 
 	return tmpScale;
@@ -454,9 +454,9 @@ void Tr2InteriorPlaceable::SetScaling( const Vector3& scaleVec )
 		m_currentScaling = scaleVec;
 		m_scalingSet = true;
 
-		Vector3		tmpScale;		
-		Quaternion	tmpRotation;	
-		Vector3		tmpTranslation;	
+		Vector3 tmpScale;
+		Quaternion tmpRotation;
+		Vector3 tmpTranslation;
 
 		Decompose( tmpScale, tmpRotation, tmpTranslation, m_transform );
 		static_cast<Matrix&>( m_transform ) = TransformationMatrix( scaleVec, tmpRotation, tmpTranslation );
@@ -493,10 +493,10 @@ void Tr2InteriorPlaceable::RebuildVolume( void )
 {
 	Vector3 minBounds( FLT_MAX, FLT_MAX, FLT_MAX ), maxBounds( -FLT_MAX, -FLT_MAX, -FLT_MAX );
 
-    if( !IsBoundingBoxReady() )
-    {
-        return;
-    }
+	if( !IsBoundingBoxReady() )
+	{
+		return;
+	}
 
 	if( m_isBoundingBoxModified )
 	{
@@ -511,27 +511,27 @@ void Tr2InteriorPlaceable::RebuildVolume( void )
 
 // --------------------------------------------------------------------------------------
 //  Description:
-//    Gets per-object data for the placeable using a per-instance light-set override and 
-//    an arbitrary object-to-world matrix.  Routes the call to helper function 
+//    Gets per-object data for the placeable using a per-instance light-set override and
+//    an arbitrary object-to-world matrix.  Routes the call to helper function
 //    GetPerObjectDataWithLightSet.
 //  See Also:
 //    GetPerObjectData, GetPerObjectDataWithLightSet
 //  Arguments:
 //    accumulator -         The batch accumulator used to allocate memory for per-object data
 //    lightSet -            The set of lights illuminating this object
-//    objectToWorldMatrix - The transformation matrix used to position this object 
+//    objectToWorldMatrix - The transformation matrix used to position this object
 //                          in world coordinates
 //  Return Value:
 //    The allocated per-object data, or NULL if the memory allocation failed.
 // --------------------------------------------------------------------------------------
-Tr2PerObjectData* Tr2InteriorPlaceable::GetPerObjectDataWithPerInstanceLighting( 
+Tr2PerObjectData* Tr2InteriorPlaceable::GetPerObjectDataWithPerInstanceLighting(
 	ITriRenderBatchAccumulator* accumulator,
 	Tr2InteriorLightSet* lightSet,
 	const Matrix& objectToWorldMatrix )
 {
-	return GetPerObjectDataWithLightSet( accumulator, 
-										lightSet,
-										objectToWorldMatrix );
+	return GetPerObjectDataWithLightSet( accumulator,
+										 lightSet,
+										 objectToWorldMatrix );
 }
 
 // ------------------------------------------------------------------------------------------------------

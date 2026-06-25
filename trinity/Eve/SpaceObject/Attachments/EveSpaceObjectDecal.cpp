@@ -24,10 +24,9 @@ TRI_REGISTER_SETTING( "buildDecalBuffers", g_buildDecalBuffers );
 
 using namespace Tr2RenderContextEnum;
 
-static BlueStructureDefinition s_eveSpaceObjectDecalIndexDef[] =
-{ 
-	{ "index",	Be::UINT32_1,	0 }, 
-	{0} 
+static BlueStructureDefinition s_eveSpaceObjectDecalIndexDef[] = {
+	{ "index", Be::UINT32_1, 0 },
+	{ 0 }
 };
 
 // ------------------------------------------------------------------------------------------------------
@@ -86,7 +85,7 @@ bool EveSpaceObjectDecal::Initialize()
 // ------------------------------------------------------------------------------------------------------
 bool EveSpaceObjectDecal::OnModified( Be::Var* value )
 {
-	if( IsMatch( value, m_position ) || IsMatch( value, m_rotation )  || IsMatch( value, m_scaling ) )
+	if( IsMatch( value, m_position ) || IsMatch( value, m_rotation ) || IsMatch( value, m_scaling ) )
 	{
 		// update the decal matrix
 		UpdateDecalMatrix();
@@ -126,7 +125,7 @@ void EveSpaceObjectDecal::UpdateVisibility( const EveUpdateContext& updateContex
 
 	if( m_minScreenSize > 0 )
 	{
-		Matrix worldDecalMatrix = m_parentBoneMatrix * parentData->transform; 
+		Matrix worldDecalMatrix = m_parentBoneMatrix * parentData->transform;
 
 		Vector3 min( -1, -1, -1 );
 		Vector3 max( 1, 1, 1 );
@@ -146,12 +145,12 @@ void EveSpaceObjectDecal::UpdateVisibility( const EveUpdateContext& updateContex
 				m_parentData = *parentData;
 				return;
 			}
-			else if( !frustum.IsBoxVisible( min, max) )
+			else if( !frustum.IsBoxVisible( min, max ) )
 			{
 				m_isVisible = 0;
 				return;
 			}
-						
+
 			Vector3 closest = ClosestPointToBoundingBox( min, max, frustum.m_viewPos );
 			worldDecalMatrix = TranslationMatrix( closest - frustum.m_viewPos ) * worldDecalMatrix;
 		}
@@ -162,14 +161,14 @@ void EveSpaceObjectDecal::UpdateVisibility( const EveUpdateContext& updateContex
 		float sphereRadius( Length( min - max ) / 2 );
 
 		auto pixelSize = frustum.GetPixelSizeAccrossEst( sphereCenter, sphereRadius );
-			
+
 		float modifiedMinScreen = m_minScreenSize * updateContext.GetLodFactor();
 		if( pixelSize < modifiedMinScreen )
 		{
 			m_isVisible = 0;
 			return;
 		}
-		
+
 		m_isVisible = std::min( ( pixelSize - modifiedMinScreen ) / ( modifiedMinScreen * 0.5f ), 1.f );
 	}
 	else
@@ -196,7 +195,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 
 	auto mesh = geomRes->GetMeshData( 0 );
 
-	if( !m_decalGeometry || (mesh && mesh->m_lodMask != m_decalGeometry->m_lodMask) )
+	if( !m_decalGeometry || ( mesh && mesh->m_lodMask != m_decalGeometry->m_lodMask ) )
 	{
 		if( HasStaticIndexBuffers() )
 		{
@@ -248,8 +247,8 @@ bool EveSpaceObjectDecal::HasTransparentBatches()
 // Description:
 //   Todo
 // --------------------------------------------------------------------------------
-void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches, 
-									  TriBatchType batchType, 
+void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
+									  TriBatchType batchType,
 									  const Tr2PerObjectData* perObjectData,
 									  Tr2RenderReason reason )
 {
@@ -353,26 +352,26 @@ Tr2PerObjectData* EveSpaceObjectDecal::GetPerObjectData( ITriRenderBatchAccumula
 		return NULL;
 	}
 
-    // world matrix
-    perObjectData->m_vsData.m_worldMatrix = Transpose( m_parentData.transform );
+	// world matrix
+	perObjectData->m_vsData.m_worldMatrix = Transpose( m_parentData.transform );
 	// inv world matrix
-    perObjectData->m_vsData.m_invWorldMatrix = Inverse( perObjectData->m_vsData.m_worldMatrix );
+	perObjectData->m_vsData.m_invWorldMatrix = Inverse( perObjectData->m_vsData.m_worldMatrix );
 
 	// decal matrix (both nrm and inv)
-    perObjectData->m_vsData.m_decalMatrix = Transpose( m_decalMatrix );
-    perObjectData->m_vsData.m_inverseDecalMatrix = Transpose( m_inverseDecalMatrix );
+	perObjectData->m_vsData.m_decalMatrix = Transpose( m_decalMatrix );
+	perObjectData->m_vsData.m_inverseDecalMatrix = Transpose( m_inverseDecalMatrix );
 
 	// matrix from possible bone animation of parent
-    perObjectData->m_vsData.m_parentBoneMatrix = Transpose( m_parentBoneMatrix );
-    perObjectData->m_vsData.m_invParentBoneMatrix = Inverse( Transpose( m_parentBoneMatrix ) );
+	perObjectData->m_vsData.m_parentBoneMatrix = Transpose( m_parentBoneMatrix );
+	perObjectData->m_vsData.m_invParentBoneMatrix = Inverse( Transpose( m_parentBoneMatrix ) );
 
 	// clip sphere data from parent
-    perObjectData->m_psData.m_shipData = m_parentData.shipData;
-    perObjectData->m_psData.m_clipData = Vector4( m_parentData.clipSphereCenter, m_parentData.clipRadiusSq );
+	perObjectData->m_psData.m_shipData = m_parentData.shipData;
+	perObjectData->m_psData.m_clipData = Vector4( m_parentData.clipSphereCenter, m_parentData.clipRadiusSq );
 	perObjectData->m_psData.m_clipRadius2Sq = m_parentData.clipRadius2Sq;
 
 	// display data
-    perObjectData->m_psData.m_displayData = Vector4( (float)m_parentData.killCount, m_isVisible, 0.f, 0.f );
+	perObjectData->m_psData.m_displayData = Vector4( (float)m_parentData.killCount, m_isVisible, 0.f, 0.f );
 
 	if( m_parentData.shLighting )
 	{
@@ -386,7 +385,7 @@ Tr2PerObjectData* EveSpaceObjectDecal::GetPerObjectData( ITriRenderBatchAccumula
 	return perObjectData;
 }
 
-void EveSpaceObjectDecal::CopyFrom( EveSpaceObjectDecal *object )
+void EveSpaceObjectDecal::CopyFrom( EveSpaceObjectDecal* object )
 {
 	m_display = object->m_display;
 	m_position = object->m_position;
@@ -406,7 +405,7 @@ void EveSpaceObjectDecal::RenderDebugInfo( ITr2DebugRenderer2& renderer, const M
 	Matrix worldDecalMatrix = m_parentBoneMatrix * worldMatrix;
 	if( m_instanceData != nullptr )
 	{
-		if( Tr2RuntimeInstanceDataPtr runtimeInstanceData = BlueCastPtr(m_instanceData) )
+		if( Tr2RuntimeInstanceDataPtr runtimeInstanceData = BlueCastPtr( m_instanceData ) )
 		{
 			// do some magic for instanced meshes that have decals!
 			const char* data = reinterpret_cast<const char*>( runtimeInstanceData->GetData() );
@@ -454,11 +453,10 @@ void EveSpaceObjectDecal::RenderDebugInfo( ITr2DebugRenderer2& renderer, const M
 					renderer.DrawBox( this, instancedDecalMatrix, Vector3( -1, -1, -1 ), Vector3( 1, 1, 1 ), Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff00ffff, 0x2200ffff ) );
 					renderer.DrawBox( this, instancedDecalMatrix, Vector3( -1, -1, -1 ), Vector3( 1, 1, 1 ), Tr2DebugRenderer::Solid, 0 );
 				}
-
 			}
 		}
 	}
-	else 
+	else
 	{
 		worldDecalMatrix = m_decalMatrix * worldDecalMatrix;
 		renderer.DrawBox( this, worldDecalMatrix, Vector3( -1, -1, -1 ), Vector3( 1, 1, 1 ), Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff00ffff, 0x2200ffff ) );
@@ -489,7 +487,7 @@ void EveSpaceObjectDecal::SetBoneMatrix( const Float4x3* bonesMatrices, int bone
 	}
 
 	// keep it
-	TriMatrixCopyFrom3x4( &m_parentBoneMatrix, &bonesMatrices[ m_parentBoneIndex ] );
+	TriMatrixCopyFrom3x4( &m_parentBoneMatrix, &bonesMatrices[m_parentBoneIndex] );
 }
 
 // --------------------------------------------------------------------------------------
@@ -619,7 +617,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 
 	TriGeometryResMeshData* meshData = geomRes->GetMeshData( 0 );
 
-	if (!meshData)
+	if( !meshData )
 	{
 		return;
 	}
@@ -633,7 +631,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, De
 		}
 	}
 
-	std::shared_ptr<MeshDecalData> newDecal = std::make_shared<MeshDecalData>(); 
+	std::shared_ptr<MeshDecalData> newDecal = std::make_shared<MeshDecalData>();
 	newDecal->m_inverseDecalMatrix = m_inverseDecalMatrix;
 	newDecal->m_lodMask = meshData->m_lodMask;
 
@@ -974,8 +972,8 @@ void EveSpaceObjectDecal::SetPriority( uint32_t priority )
 void EveDecalPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 {
 	// add up constant count, see EveDecalPerObjectData
-	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_vsData, sizeof(DecalVSPerObjectData), VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
-	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_psData, sizeof(DecalPSPerObjectData), PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_vsData, sizeof( DecalVSPerObjectData ), VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
+	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_psData, sizeof( DecalPSPerObjectData ), PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 }
 
 void EveDecalPerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const

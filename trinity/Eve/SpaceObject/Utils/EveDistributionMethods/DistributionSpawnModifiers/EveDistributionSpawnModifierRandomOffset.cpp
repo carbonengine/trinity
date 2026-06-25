@@ -5,10 +5,10 @@
 #include "TriMath.h"
 #include "random"
 
-EveDistributionSpawnModifierRandomOffset::EveDistributionSpawnModifierRandomOffset( IRoot* lockobj ):
+EveDistributionSpawnModifierRandomOffset::EveDistributionSpawnModifierRandomOffset( IRoot* lockobj ) :
 	m_consistentRandom( false ),
 	m_uniformOffset( false ),
-	m_minOffset( 0.f, 0.f, 0.f ), 
+	m_minOffset( 0.f, 0.f, 0.f ),
 	m_maxOffset( 0.f, 0.f, 0.f )
 {
 	m_timeSeed = uint32_t( BeOS->GetCurrentFrameTime() );
@@ -49,4 +49,3 @@ void EveDistributionSpawnModifierRandomOffset::ProcessSpawnModifier( PlacementDa
 	TriVectorRotateQuaternion( &randomOffset, &randomOffset, &placement.initialRotation );
 	placement.initialTranslation += randomOffset;
 }
-

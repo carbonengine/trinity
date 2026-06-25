@@ -27,23 +27,23 @@ public:
 	EveVirtualCameraPtr GetCurrentCamera();
 	EveVirtualCameraPtr GetMainCamera();
 
-	// Add camera, unless it's the external camera or already in this systems cameras list. 
+	// Add camera, unless it's the external camera or already in this systems cameras list.
 	// Returns true if successfully added.
 	bool AddCamera( const EveVirtualCameraPtr& camera );
-	
+
 	EveVirtualCameraPtr GetCameraByName( const std::string& cameraName ) const;
-	
+
 	void CutToCamera( EveVirtualCamera * camera );
-	void LerpToCamera( EveVirtualCamera * camera, float lerpTime=1.0f );
+	void LerpToCamera( EveVirtualCamera * camera, float lerpTime = 1.0f );
 
 	bool IsExternallyControlled();
 
 	void Update( Be::Time simTime );
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
 
 private:
 	void SetMainCamera( const EveVirtualCameraPtr& cameraIndex );

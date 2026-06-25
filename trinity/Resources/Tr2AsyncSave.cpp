@@ -6,18 +6,14 @@
 using namespace Tr2RenderContextEnum;
 
 
-Tr2AsyncSave::Tr2AsyncSave()
-	: m_isSaving( false )
-	, m_isSavePrepared( false )
-	, m_saveSucceeded( false )
-	, m_saveCbId( 0 )
-	, m_prepareSaveCbId( 0 )
-{	
+Tr2AsyncSave::Tr2AsyncSave() :
+	m_isSaving( false ), m_isSavePrepared( false ), m_saveSucceeded( false ), m_saveCbId( 0 ), m_prepareSaveCbId( 0 )
+{
 }
 
 Tr2AsyncSave::~Tr2AsyncSave()
 {
-	CleanupAsyncSave( false, true );	
+	CleanupAsyncSave( false, true );
 }
 
 void Tr2AsyncSave::WaitForSave( void ) const
@@ -39,7 +35,7 @@ bool Tr2AsyncSave::StartAsyncSave( const wchar_t* filename )
 	}
 
 	m_saveFilename = filename;
-	
+
 	m_isSaving = TRUE;
 	m_saveSucceeded = FALSE;
 	m_isSavePrepared = FALSE;
@@ -51,14 +47,14 @@ bool Tr2AsyncSave::StartAsyncSave( const wchar_t* filename )
 
 void Tr2AsyncSave::StaticPrepare( void* pContext )
 {
-	Tr2AsyncSave* pThis = static_cast<Tr2AsyncSave*>(pContext);
+	Tr2AsyncSave* pThis = static_cast<Tr2AsyncSave*>( pContext );
 	pThis->PrepareSave();
 }
 
 void Tr2AsyncSave::PrepareSave()
 {
 	// Clear out the prepare task ID, even if this fails, so we can try again in the future.
-	ON_BLOCK_EXIT( [&]{ m_prepareSaveCbId = 0; } );
+	ON_BLOCK_EXIT( [&] { m_prepareSaveCbId = 0; } );
 
 	if( !DoPrepareAsyncSave() )
 	{
@@ -75,13 +71,13 @@ void Tr2AsyncSave::PrepareSave()
 
 void Tr2AsyncSave::StaticSave( void* pContext )
 {
-	Tr2AsyncSave* pThis = static_cast<Tr2AsyncSave*>(pContext);
+	Tr2AsyncSave* pThis = static_cast<Tr2AsyncSave*>( pContext );
 	pThis->DoSave();
 }
 
 void Tr2AsyncSave::DoSave()
 {
-	const bool OK = DoExecuteAsyncSave();	
+	const bool OK = DoExecuteAsyncSave();
 	m_saveCbId = 0;
 	CleanupAsyncSave( !OK );
 }
@@ -104,7 +100,7 @@ void Tr2AsyncSave::CleanupAsyncSave( bool failed, bool fromDestructor )
 		BeResMan->CancelFromQueue( BRMQ_MAIN, prepareSaveCbId );
 		m_prepareSaveCbId = 0;
 	}
-		
+
 	if( saveInProgress )
 	{
 		CCP_LOGERR( "Save canceled for '%S'", m_saveFilename.c_str() );

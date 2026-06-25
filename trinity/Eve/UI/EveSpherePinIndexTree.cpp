@@ -20,7 +20,8 @@ struct EveSpherePinIndexTree::TreeNode
 		thetaMax( 0 ),
 		phiMin( 0 ),
 		phiMax( 0 )
-	{}
+	{
+	}
 
 	float thetaMin, thetaMax, phiMin, phiMax;
 
@@ -32,13 +33,15 @@ struct EveSpherePinIndexTree::TreeNode
 
 struct EveSpherePinIndexTree::Face
 {
-	Face( ) : index1( 0 ), index2( 0 ),  index3( 0 ), flag( false ), radius( 0.f )
-	{}
+	Face() :
+		index1( 0 ), index2( 0 ), index3( 0 ), flag( false ), radius( 0.f )
+	{
+	}
 
 	Vector3 center;
 	float radius;
 	unsigned int index1, index2, index3;
-		
+
 	bool flag;
 };
 
@@ -54,13 +57,13 @@ void CreateChildNodes( EveSpherePinIndexTree::TreeNode* node )
 
 		node->left->thetaMax = node->thetaMax;
 		node->left->thetaMin = node->thetaMin;
-		
+
 		node->left->phiMin = node->phiMin;
 		node->left->phiMax = medium;
 
 		node->right->thetaMax = node->thetaMax;
 		node->right->thetaMin = node->thetaMin;
-		
+
 		node->right->phiMin = medium;
 		node->right->phiMax = node->phiMax;
 	}
@@ -70,13 +73,13 @@ void CreateChildNodes( EveSpherePinIndexTree::TreeNode* node )
 
 		node->left->thetaMax = medium;
 		node->left->thetaMin = node->thetaMin;
-		
+
 		node->left->phiMin = node->phiMin;
 		node->left->phiMax = node->phiMax;
 
 		node->right->thetaMax = node->thetaMax;
 		node->right->thetaMin = medium;
-		
+
 		node->right->phiMin = node->phiMin;
 		node->right->phiMax = node->phiMax;
 	}
@@ -111,7 +114,7 @@ EveSpherePinIndexTree::TreeNode* CreateTree( EveSpherePinIndexTree::TreeNode* no
 
 // ------------------------------------------------------------------------------------------------------
 inline void CarthesianToSpherical( Vector3& carth, Vector2& spherical )
-{	// spherical = Vector2( theta, phi )
+{ // spherical = Vector2( theta, phi )
 	float radius = sqrt( Dot( carth, carth ) );
 	spherical.x = XM_PI / 2.0f - acos( carth.y / radius );
 	spherical.y = atan2( -carth.z, carth.x );
@@ -122,7 +125,7 @@ bool ExtractVertices( const cmf::Data& cmfData, const void* vbData, std::vector<
 {
 	auto mesh = cmfData.meshes[0].lods[0];
 	auto decl = cmfData.meshes[0].decl;
-	
+
 	const cmf::VertexElement* posElem = cmf::FindElement( decl, cmf::Usage::Position );
 	if( !posElem )
 	{
@@ -165,13 +168,16 @@ EveSpherePinIndexTree::Face* ExtractFaceData( const cmf::Data& cmfData, const vo
 
 		faces[i].center.x =
 			( min( min( verts[index1].x, verts[index2].x ), verts[index3].x ) +
-			  max( max( verts[index1].x, verts[index2].x ), verts[index3].x ) ) / 2.0f;
+			  max( max( verts[index1].x, verts[index2].x ), verts[index3].x ) ) /
+			2.0f;
 		faces[i].center.y =
 			( min( min( verts[index1].y, verts[index2].y ), verts[index3].y ) +
-			  max( max( verts[index1].y, verts[index2].y ), verts[index3].y ) ) / 2.0f;
+			  max( max( verts[index1].y, verts[index2].y ), verts[index3].y ) ) /
+			2.0f;
 		faces[i].center.z =
 			( min( min( verts[index1].z, verts[index2].z ), verts[index3].z ) +
-			  max( max( verts[index1].z, verts[index2].z ), verts[index3].z ) ) / 2.0f;
+			  max( max( verts[index1].z, verts[index2].z ), verts[index3].z ) ) /
+			2.0f;
 
 		Vector3 d1( verts[index1] - faces[i].center );
 		Vector3 d2( verts[index2] - faces[i].center );
@@ -214,9 +220,9 @@ bool ExtractVertices( const granny_mesh& mesh, std::vector<Vector2>& sphericalVe
 	}
 
 	int numVerts = mesh.PrimaryVertexData->VertexCount;
-	sphericalVerts.resize(numVerts);
-	verts.resize(numVerts);
-	for ( int i = 0; i < numVerts; i++ )
+	sphericalVerts.resize( numVerts );
+	verts.resize( numVerts );
+	for( int i = 0; i < numVerts; i++ )
 	{
 		Vector3 p1;
 		if( position->Type == GrannyReal16Member )
@@ -255,45 +261,48 @@ EveSpherePinIndexTree::Face* ExtractFaceData( const granny_mesh& mesh, std::vect
 	{
 		return nullptr;
 	}
-	
+
 	EveSpherePinIndexTree::Face* faces = new EveSpherePinIndexTree::Face[numPrim];
 
-	for ( int i = 0; i < numPrim; i++ )
-	{	
+	for( int i = 0; i < numPrim; i++ )
+	{
 		unsigned int index1 = 0;
 		unsigned int index2 = 0;
 		unsigned int index3 = 0;
 
 		if( pShortIndices )
 		{
-			index1 = pShortIndices[i*3];
-			index2 = pShortIndices[(i*3)+1];
-			index3 = pShortIndices[(i*3)+2];
+			index1 = pShortIndices[i * 3];
+			index2 = pShortIndices[( i * 3 ) + 1];
+			index3 = pShortIndices[( i * 3 ) + 2];
 		}
 		else
 		{
-			index1 = pLongIndices[i*3];
-			index2 = pLongIndices[(i*3)+1];
-			index3 = pLongIndices[(i*3)+2];
+			index1 = pLongIndices[i * 3];
+			index2 = pLongIndices[( i * 3 ) + 1];
+			index3 = pLongIndices[( i * 3 ) + 2];
 		}
 
 		faces[i].index1 = index1;
 		faces[i].index2 = index2;
 		faces[i].index3 = index3;
 
-		faces[i].center.x = 
+		faces[i].center.x =
 			( min( min( verts[index1].x, verts[index2].x ), verts[index3].x ) +
-			max( max( verts[index1].x, verts[index2].x ), verts[index3].x ) ) / 2.0f;
-		faces[i].center.y = 
+			  max( max( verts[index1].x, verts[index2].x ), verts[index3].x ) ) /
+			2.0f;
+		faces[i].center.y =
 			( min( min( verts[index1].y, verts[index2].y ), verts[index3].y ) +
-			max( max( verts[index1].y, verts[index2].y ), verts[index3].y ) ) / 2.0f;
-		faces[i].center.z = 
+			  max( max( verts[index1].y, verts[index2].y ), verts[index3].y ) ) /
+			2.0f;
+		faces[i].center.z =
 			( min( min( verts[index1].z, verts[index2].z ), verts[index3].z ) +
-			max( max( verts[index1].z, verts[index2].z ), verts[index3].z ) ) / 2.0f;
-		
-		Vector3 d1(verts[index1] - faces[i].center);
-		Vector3 d2(verts[index2] - faces[i].center);
-		Vector3 d3(verts[index3] - faces[i].center);
+			  max( max( verts[index1].z, verts[index2].z ), verts[index3].z ) ) /
+			2.0f;
+
+		Vector3 d1( verts[index1] - faces[i].center );
+		Vector3 d2( verts[index2] - faces[i].center );
+		Vector3 d3( verts[index3] - faces[i].center );
 		faces[i].radius = Length( d1 );
 		faces[i].radius = max( faces[i].radius, Length( d2 ) );
 		faces[i].radius = max( faces[i].radius, Length( d3 ) );
@@ -306,16 +315,16 @@ EveSpherePinIndexTree::Face* ExtractFaceData( const granny_mesh& mesh, std::vect
 // ------------------------------------------------------------------------------------------------------
 int OverlapTest( EveSpherePinIndexTree::TreeNode* n, EveSpherePinIndexTree::Face* f, std::vector<Vector2>& vertices )
 {
-	float maxTheta = max( vertices[f->index1].x, max( vertices[f->index2].x, vertices[f->index3].x) );
-	float minTheta = min( vertices[f->index1].x, min( vertices[f->index2].x, vertices[f->index3].x) );
-	float maxPhi = max( vertices[f->index1].y, max( vertices[f->index2].y, vertices[f->index3].y) );
-	float minPhi = min( vertices[f->index1].y, min( vertices[f->index2].y, vertices[f->index3].y) );
-	
-	if( (maxPhi - minPhi) > XM_PI )
+	float maxTheta = max( vertices[f->index1].x, max( vertices[f->index2].x, vertices[f->index3].x ) );
+	float minTheta = min( vertices[f->index1].x, min( vertices[f->index2].x, vertices[f->index3].x ) );
+	float maxPhi = max( vertices[f->index1].y, max( vertices[f->index2].y, vertices[f->index3].y ) );
+	float minPhi = min( vertices[f->index1].y, min( vertices[f->index2].y, vertices[f->index3].y ) );
+
+	if( ( maxPhi - minPhi ) > XM_PI )
 	{
 		float temp = minPhi;
 		minPhi = maxPhi;
-		maxPhi = temp + 2*XM_PI;
+		maxPhi = temp + 2 * XM_PI;
 	}
 
 	int phiOverlap = 0;
@@ -323,7 +332,7 @@ int OverlapTest( EveSpherePinIndexTree::TreeNode* n, EveSpherePinIndexTree::Face
 	{
 		phiOverlap = 1;
 	}
-	else if( minPhi < n->phiMax && minPhi >= n->phiMin  )
+	else if( minPhi < n->phiMax && minPhi >= n->phiMin )
 	{
 		phiOverlap = 1;
 	}
@@ -343,13 +352,13 @@ int OverlapTest( EveSpherePinIndexTree::TreeNode* n, EveSpherePinIndexTree::Face
 
 // ------------------------------------------------------------------------------------------------------
 int OverlapTest( EveSpherePinIndexTree::TreeNode* n, float minTheta, float maxTheta, float minPhi, float maxPhi )
-{ 
+{
 	int phiOverlap = 0;
 	if( minPhi < n->phiMin && maxPhi > n->phiMin )
 	{
 		phiOverlap = 1;
 	}
-	else if( minPhi < n->phiMax && minPhi >= n->phiMin  )
+	else if( minPhi < n->phiMax && minPhi >= n->phiMin )
 	{
 		phiOverlap = 1;
 	}
@@ -411,7 +420,7 @@ EveSpherePinIndexTree::EveSpherePinIndexTree( TriGrannyRes* granny ) :
 }
 
 // ------------------------------------------------------------------------------------------------------
-EveSpherePinIndexTree::~EveSpherePinIndexTree(void)
+EveSpherePinIndexTree::~EveSpherePinIndexTree( void )
 {
 	if( m_tree )
 	{
@@ -546,12 +555,12 @@ int EveSpherePinIndexTree::MarkFaces( EveSpherePinIndexTree::TreeNode* node, flo
 
 		return faceCount;
 	}
-	
+
 	for( std::vector<Face*>::const_iterator it = node->faces.begin(); it != node->faces.end(); ++it )
 	{
-		if( !((*it)->flag) )
+		if( !( ( *it )->flag ) )
 		{
-			(*it)->flag = 1;
+			( *it )->flag = 1;
 			faceCount++;
 			m_markedFaces.push_back( *it );
 		}
@@ -568,11 +577,11 @@ int EveSpherePinIndexTree::GetIndices( Vector3& point, float radius, int& primit
 		return 0;
 	}
 
-	Vector3 pole(0,1,0);
+	Vector3 pole( 0, 1, 0 );
 
 	Vector2 p, phiMinSC, phiMaxSC;
 	CarthesianToSpherical( point, p );
-	
+
 	float minTheta = p.x - radius;
 	float maxTheta = p.x + radius;
 	float minPhi;
@@ -608,7 +617,7 @@ int EveSpherePinIndexTree::GetIndices( Vector3& point, float radius, int& primit
 			maxPhi = p.y + radius / cos( minTheta );
 		}
 	}
-	
+
 	if( maxPhi > PHI_MAX )
 	{
 		primitives = MarkFaces( m_tree, minTheta, maxTheta, minPhi, PHI_MAX ) + MarkFaces( m_tree, minTheta, maxTheta, PHI_MIN, maxPhi - 2 * XM_PI );
@@ -624,19 +633,19 @@ int EveSpherePinIndexTree::GetIndices( Vector3& point, float radius, int& primit
 
 	indices.resize( primitives * 3 );
 	int rejected = 0;
-	
+
 	for( int i = 0; i < primitives; i++ )
 	{
-		Face* face = m_markedFaces[i]; 
+		Face* face = m_markedFaces[i];
 		face->flag = 0;
-		Vector3 d(face->center - point );
+		Vector3 d( face->center - point );
 		float len = Length( d );
 
 		if( len <= radius + face->radius )
 		{
-			indices[(i - rejected) * 3] = face->index1;
-			indices[(i - rejected) * 3 + 1] = face->index2;
-			indices[(i - rejected) * 3 + 2] = face->index3;
+			indices[( i - rejected ) * 3] = face->index1;
+			indices[( i - rejected ) * 3 + 1] = face->index2;
+			indices[( i - rejected ) * 3 + 2] = face->index3;
 		}
 		else
 		{

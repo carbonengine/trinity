@@ -142,7 +142,7 @@ void EveTacticalOverlay::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer
 	}
 }
 
-void EveTacticalOverlay::UpdateSyncronous( const EveUpdateContext& updateContext ) 
+void EveTacticalOverlay::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
 	if( m_positionCurve )
 	{
@@ -152,7 +152,7 @@ void EveTacticalOverlay::UpdateSyncronous( const EveUpdateContext& updateContext
 
 	for( auto it = m_trackObjects.begin(); it != m_trackObjects.end(); it++ )
 	{
-		(*it)->UpdatePosition( updateContext );
+		( *it )->UpdatePosition( updateContext );
 	}
 	RegisterVariables();
 }
@@ -220,7 +220,7 @@ void EveTacticalOverlay::UpdateVisibility( const EveUpdateContext& updateContext
 	m_connectorBuffer.clear();
 	m_anchorBuffer.clear();
 	m_velocityBuffer.clear();
-	
+
 	Vector3 up( 0, 1, 0 );
 	float distanceThreshold = ( m_ranges.x + m_ranges.y ) * m_ranges.z;
 	float requestedSegments = 0.f;
@@ -228,8 +228,8 @@ void EveTacticalOverlay::UpdateVisibility( const EveUpdateContext& updateContext
 
 	for( auto it = m_trackObjects.begin(); it != m_trackObjects.end(); it++ )
 	{
-		Vector3 position = (*it)->GetPosition();
-		float radius = (*it)->GetRadius();
+		Vector3 position = ( *it )->GetPosition();
+		float radius = ( *it )->GetRadius();
 		Vector3 direction = position - m_rootPosition;
 		float distance = Length( direction );
 		if( distance > distanceThreshold )
@@ -239,7 +239,7 @@ void EveTacticalOverlay::UpdateVisibility( const EveUpdateContext& updateContext
 
 		direction.y = 0;
 		direction = Normalize( direction );
-		if( !(direction.x || direction.z) )
+		if( !( direction.x || direction.z ) )
 		{
 			direction.x = 0.01;
 		}
@@ -250,7 +250,7 @@ void EveTacticalOverlay::UpdateVisibility( const EveUpdateContext& updateContext
 		{
 			continue;
 		}
-		
+
 		float pixelDiameter = frustum.GetPixelSizeAccross( &bs );
 		float segments = GetSubdivisionCount( pixelDiameter, m_connectorSegmentsLow, m_connectorSegmentsMedium, m_connectorSegmentsHigh, updateContext );
 		if( segments != 0 )
@@ -283,27 +283,27 @@ void EveTacticalOverlay::UpdateVisibility( const EveUpdateContext& updateContext
 			float segmentInfo = segments * 256.f + j;
 			vtx.instanceData = Vector4( position, segmentInfo );
 			vtx.instanceData2 = floor( radius ) + interestReducedIntensity;
-			m_connectorBuffer.push_back(vtx);
+			m_connectorBuffer.push_back( vtx );
 		}
 		// Object properties(radius and movement)
 		for( float i = 0; i < 3; i++ )
 		{
-			if( i == 1.f && !((*it)->IsAggressive()) )
+			if( i == 1.f && !( ( *it )->IsAggressive() ) )
 			{
 				continue;
 			}
-			if( i == 0.f && !((*it)->ShowVelocity()))
+			if( i == 0.f && !( ( *it )->ShowVelocity() ) )
 			{
 				continue;
 			}
 			VelocityConnectorVertex vtx;
 			vtx.instanceData = Vector4( position, i );
 			float blink = i == 1 ? 0.9f : 0.f;
-			vtx.instanceData2 = Vector4( (*it)->GetVelocity(), floor( radius ) + blink );
+			vtx.instanceData2 = Vector4( ( *it )->GetVelocity(), floor( radius ) + blink );
 			m_velocityBuffer.push_back( vtx );
 		}
 	}
-	
+
 	VelocityConnectorVertex vtx;
 	// Add velocity for your ship
 	vtx.instanceData = Vector4( m_rootPosition, 0.f );
@@ -338,4 +338,3 @@ void EveTacticalOverlay::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Q
 	quadRenderer.AddQuads( m_anchorEffectHash, m_anchorBuffer.data(), m_anchorBuffer.size() );
 	quadRenderer.AddQuads( m_velocityEffectHash, m_velocityBuffer.data(), m_velocityBuffer.size() );
 }
-

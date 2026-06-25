@@ -12,7 +12,7 @@
 #include "Audio/Tr2AudioStretchAuto.h"
 #include "Audio/Tr2AudioStretchBase.h"
 
-static const Vector3 Y_AXIS(0.0f, 1.0f, 0.0f);
+static const Vector3 Y_AXIS( 0.0f, 1.0f, 0.0f );
 
 EveStretch::EveStretch( IRoot* lockobj ) :
 	PARENTLOCK( m_curveSets ),
@@ -108,12 +108,12 @@ void EveStretch::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		m_destObject->Update( updateContext );
 	}
 
-	if (auto tmp = dynamic_cast< Tr2AudioStretchBase* > ( m_audio.p ))
+	if( auto tmp = dynamic_cast<Tr2AudioStretchBase*>( m_audio.p ) )
 	{
 		tmp->Update( m_sourcePosition, m_destinationPosition );
 	}
 
-	if (m_stretchAudio != nullptr )
+	if( m_stretchAudio != nullptr )
 	{
 		m_stretchAudio->Update( m_sourcePosition, m_destinationPosition );
 	}
@@ -166,7 +166,7 @@ void EveStretch::UpdateCurves( const EveUpdateContext& updateContext )
 
 		for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 		{
-			(*it)->Update( TimeAsDouble( time ) );
+			( *it )->Update( TimeAsDouble( time ) );
 		}
 	}
 }
@@ -293,7 +293,7 @@ void EveStretch::UpdateVisibility( const EveUpdateContext& updateContext, const 
 	}
 }
 
-void EveStretch::GetRenderables( std::vector<ITr2Renderable*>& renderables)
+void EveStretch::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	GetRenderables( renderables, nullptr );
 }
@@ -337,7 +337,7 @@ void EveStretch::StartMoving()
 		m_moveObject->SetDisplay( true );
 	}
 
-	if ( auto tmp = dynamic_cast< Tr2AudioStretchAuto* > ( m_audio.p ) )
+	if( auto tmp = dynamic_cast<Tr2AudioStretchAuto*>( m_audio.p ) )
 	{
 		tmp->TriggerStretchEvent();
 	}
@@ -348,7 +348,7 @@ void EveStretch::Start()
 {
 	StartMoving();
 
-	if ( !m_curveSets.empty() )
+	if( !m_curveSets.empty() )
 	{
 		m_curveSets.front()->Play();
 	}
@@ -449,7 +449,6 @@ void EveStretch::StartFiring( float delay )
 			{
 				curveSet->PlayFrom( -delay );
 				StartMoving();
-
 			}
 			else if( curveSet->GetName() == "play_loop" )
 			{
@@ -462,14 +461,14 @@ void EveStretch::StartFiring( float delay )
 		}
 	}
 
-	if ( auto tmp = dynamic_cast< Tr2AudioStretchAuto* > ( m_audio.p ) )
+	if( auto tmp = dynamic_cast<Tr2AudioStretchAuto*>( m_audio.p ) )
 	{
 		tmp->TriggerOutburstEvent();
 		tmp->TriggerImpactEvent();
 		tmp->TriggerStretchEvent();
 	}
 
-	if ( m_stretchAudio != nullptr )
+	if( m_stretchAudio != nullptr )
 	{
 		m_stretchAudio->Start();
 	}
@@ -546,7 +545,8 @@ void EveStretch::GetLights( Tr2LightManager& lightManager ) const
 			m = RotationXMatrix( -XM_PI / 2.0f );
 			m = m * m_sourceTransform;
 			scaling = XMVectorGetX( XMVectorAdd( XMVector3LengthEst( m.GetX() ),
-				XMVectorAdd( XMVector3LengthEst( m.GetY() ), XMVector3LengthEst( m.GetZ() ) ) ) ) / 3.f;
+												 XMVectorAdd( XMVector3LengthEst( m.GetY() ), XMVector3LengthEst( m.GetZ() ) ) ) ) /
+				3.f;
 		}
 		else
 		{
@@ -579,12 +579,12 @@ void EveStretch::GetLights( Tr2LightManager& lightManager ) const
 
 void EveStretch::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	if (auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_audio.p ))
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audio.p ) )
 	{
 		tmp->GetDebugOptions( options );
 	}
 
-	if (auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_stretchAudio.p ))
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_stretchAudio.p ) )
 	{
 		tmp->GetDebugOptions( options );
 	}
@@ -592,12 +592,12 @@ void EveStretch::GetDebugOptions( Tr2DebugRendererOptions& options )
 
 void EveStretch::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-	if (auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_audio.p ))
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_audio.p ) )
 	{
 		tmp->RenderDebugInfo( renderer );
 	}
 
-	if (auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_stretchAudio.p ))
+	if( auto tmp = dynamic_cast<ITr2DebugRenderable*>( m_stretchAudio.p ) )
 	{
 		tmp->RenderDebugInfo( renderer );
 	}

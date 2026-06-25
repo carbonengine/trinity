@@ -66,7 +66,7 @@ public:
 	BlueStdResult SetActionStartTime( size_t index, float startTime );
 	BlueStdResult SetActionEndTime( size_t index, float endTime );
 	BlueStdResult SetActionTrackID( size_t index, uint32_t trackID );
-	void AddAction( ITr2ControllerAction* action, float startTime, float endTime, uint32_t trackID = 0 );
+	void AddAction( ITr2ControllerAction * action, float startTime, float endTime, uint32_t trackID = 0 );
 	BlueStdResult RemoveAction( size_t index );
 
 	bool IsActionEnabled( size_t index ) const;

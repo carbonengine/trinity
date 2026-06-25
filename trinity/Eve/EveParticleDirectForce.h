@@ -10,13 +10,12 @@ BLUE_DECLARE( EveParticleDirectForce );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Constant force for particle systems. All the code was moved to Tr2ParticleDirectForce. 
+//   Constant force for particle systems. All the code was moved to Tr2ParticleDirectForce.
 //   This class stays for backward compatibility.
 // See Also:
 //   Tr2ParticleDirectForce
 // --------------------------------------------------------------------------------------
-class EveParticleDirectForce:
-	public Tr2ParticleDirectForce
+class EveParticleDirectForce : public Tr2ParticleDirectForce
 {
 public:
 	EXPOSE_TO_BLUE();

@@ -11,16 +11,13 @@ CCP_STATS_DECLARE( deviceRenderJobs, "Trinity/device/RenderJobs", true, CST_TIME
 CCP_STATS_DECLARE( deviceChainedRenderJobsCount, "Trinity/device/ChainedRenderJobsCount", true, CST_COUNTER_LOW, "Count of scheduled chained render jobs" );
 CCP_STATS_DECLARE( deviceOnceRenderJobsCount, "Trinity/device/OnceRenderJobsCount", true, CST_COUNTER_LOW, "Count of scheduled once render jobs" );
 
-Tr2RenderJobs::Tr2RenderJobs( IRoot* lockobj )
-	: PARENTLOCK( m_scheduledOnce )
-	, PARENTLOCK( m_scheduledRecurring )
-	, PARENTLOCK( m_scheduledChained )
-	, PARENTLOCK( m_updateRecurring )
-{	
+Tr2RenderJobs::Tr2RenderJobs( IRoot* lockobj ) :
+	PARENTLOCK( m_scheduledOnce ), PARENTLOCK( m_scheduledRecurring ), PARENTLOCK( m_scheduledChained ), PARENTLOCK( m_updateRecurring )
+{
 }
 
 Tr2RenderJobs::~Tr2RenderJobs()
-{		
+{
 }
 
 void Tr2RenderJobs::Run( Be::Time realTime, Be::Time simTime )
@@ -29,7 +26,7 @@ void Tr2RenderJobs::Run( Be::Time realTime, Be::Time simTime )
 	CCP_STATS_SET( deviceChainedRenderJobsCount, m_scheduledChained.size() );
 	CCP_STATS_SET( deviceOnceRenderJobsCount, m_scheduledOnce.size() );
 
-	D3DPERF_EVENT(L"RenderJobs");
+	D3DPERF_EVENT( L"RenderJobs" );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -44,14 +41,14 @@ void Tr2RenderJobs::Run( Be::Time realTime, Be::Time simTime )
 	{
 		TriRenderJob* rj = *it;
 		TriRenderJobStatus status = rj->Run( realTime, simTime );
-        CCP_ASSERT( status != RJ_FAILED );
+		CCP_ASSERT( status != RJ_FAILED );
 	}
-    
+
 	// Process jobs scheduled for one-off execution. Every job on this list is run,
 	// jobs that are still in progress are continued next frame.
 	copyOfJobs.clear();
 	copyOfJobs.insert( copyOfJobs.end(), m_scheduledOnce.begin(), m_scheduledOnce.end() );
-		
+
 	CTriRenderJobVector continuedJobs;
 	for( auto it = copyOfJobs.cbegin(); it != copyOfJobs.cend(); ++it )
 	{
@@ -109,6 +106,6 @@ void Tr2RenderJobs::RunUpdate( Be::Time realTime, Be::Time simTime )
 	{
 		TriRenderJob* rj = *it;
 		TriRenderJobStatus status = rj->Run( realTime, simTime );
-        CCP_ASSERT( status != RJ_FAILED );
+		CCP_ASSERT( status != RJ_FAILED );
 	}
 }

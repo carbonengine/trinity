@@ -13,5 +13,4 @@ Tr2PPTaaEffect::Tr2PPTaaEffect( IRoot* lockobj ) :
 
 Tr2PPTaaEffect::~Tr2PPTaaEffect()
 {
-
 }

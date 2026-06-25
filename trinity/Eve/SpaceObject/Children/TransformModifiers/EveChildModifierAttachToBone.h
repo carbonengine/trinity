@@ -15,6 +15,7 @@ public:
 	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const Float4x3* bones ) const;
 
 	void SetBoneIndex( int32_t index );
+
 private:
 	int32_t m_boneIndex;
 };

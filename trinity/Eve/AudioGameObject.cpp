@@ -10,7 +10,8 @@ AudioGameObject::AudioGameObject( IRoot* lockobj ) :
 	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_mute( false ),
 	m_display( true )
-{}
+{
+}
 
 bool AudioGameObject::Initialize()
 {
@@ -20,7 +21,7 @@ bool AudioGameObject::Initialize()
 		return true;
 	}
 
-	if( SUCCEEDED( BeClasses->CreateInstanceFromName( "AudEmitter", BlueInterfaceIID<ITr2AudEmitter>(), reinterpret_cast<void**>(&m_audioEmitter.p) ) ) )
+	if( SUCCEEDED( BeClasses->CreateInstanceFromName( "AudEmitter", BlueInterfaceIID<ITr2AudEmitter>(), reinterpret_cast<void**>( &m_audioEmitter.p ) ) ) )
 	{
 		UpdateWorldTransform( Be::Time( 0.0 ) );
 
@@ -91,27 +92,27 @@ void AudioGameObject::GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpac
 {
 }
 
-void AudioGameObject::UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t )
+void AudioGameObject::UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
 {
 	UpdateWorldTransform( t );
 	Matrix currentTransform = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), m_rotation, m_translation ) * m_worldTransform;
 	position = currentTransform.GetTranslation();
 }
 
-void AudioGameObject::GetModelCenterWorldPosition( Vector3 &position ) const
+void AudioGameObject::GetModelCenterWorldPosition( Vector3& position ) const
 {
 	Matrix currentTransform = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), m_rotation, m_translation ) * m_worldTransform;
 	position = currentTransform.GetTranslation();
 }
 
-bool AudioGameObject::GetLocalBoundingBox( Vector3 &min, Vector3 &max )
+bool AudioGameObject::GetLocalBoundingBox( Vector3& min, Vector3& max )
 {
 	min = Vector3( -1.0f, -1.0f, -1.0f );
 	max = Vector3( 1.0f, 1.0f, 1.0f );
 	return true;
 }
 
-void AudioGameObject::GetLocalToWorldTransform( Matrix &transform ) const
+void AudioGameObject::GetLocalToWorldTransform( Matrix& transform ) const
 {
 	transform = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), m_rotation, m_translation ) * m_worldTransform;
 }

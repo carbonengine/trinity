@@ -12,10 +12,9 @@ BLUE_DECLARE( Tr2Sprite2dTextObject );
 BLUE_DECLARE( Tr2FontMeasurer );
 BLUE_DECLARE_INTERFACE( ITr2Sprite2dTexture );
 
-class Tr2Sprite2dTextObject : 
-	public Tr2SpriteObject,
-	public Tr2DeviceResource,
-	public ITr2FontMeasurerNotifyTarget
+class Tr2Sprite2dTextObject : public Tr2SpriteObject,
+							  public Tr2DeviceResource,
+							  public ITr2FontMeasurerNotifyTarget
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -36,6 +35,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
+
 private:
 	bool OnPrepareResources();
 

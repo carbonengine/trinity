@@ -4,7 +4,7 @@
 #include "EveDistributionModifierTransformOffset.h"
 #include "TriMath.h"
 
-EveDistributionModifierTransformOffset::EveDistributionModifierTransformOffset( IRoot* lockobj ) : 
+EveDistributionModifierTransformOffset::EveDistributionModifierTransformOffset( IRoot* lockobj ) :
 	m_translation( 0.f, 0.f, 0.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_scale( 1.f, 1.f, 1.f )

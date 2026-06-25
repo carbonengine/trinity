@@ -6,15 +6,15 @@
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2VertexLayoutAL> NullLayout()
-	{
-		static std::shared_ptr<TrinityALImpl::Tr2VertexLayoutAL> nullLayout = std::make_shared<TrinityALImpl::Tr2VertexLayoutAL>();
-		return nullLayout;
-	}
+std::shared_ptr<TrinityALImpl::Tr2VertexLayoutAL> NullLayout()
+{
+	static std::shared_ptr<TrinityALImpl::Tr2VertexLayoutAL> nullLayout = std::make_shared<TrinityALImpl::Tr2VertexLayoutAL>();
+	return nullLayout;
+}
 }
 
-Tr2VertexLayoutAL::Tr2VertexLayoutAL()
-	:m_layout( NullLayout() )
+Tr2VertexLayoutAL::Tr2VertexLayoutAL() :
+	m_layout( NullLayout() )
 {
 }
 

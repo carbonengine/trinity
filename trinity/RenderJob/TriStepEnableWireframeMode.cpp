@@ -4,12 +4,12 @@
 #include "TriStepEnableWireframeMode.h"
 #include "ITr2VisualizationModeRenderer.h"
 
-TriStepEnableWireframeMode::TriStepEnableWireframeMode( IRoot* lockobj )
-:	m_enableWireframe( false )
+TriStepEnableWireframeMode::TriStepEnableWireframeMode( IRoot* lockobj ) :
+	m_enableWireframe( false )
 {
 }
 
-TriStepEnableWireframeMode::~TriStepEnableWireframeMode(void)
+TriStepEnableWireframeMode::~TriStepEnableWireframeMode( void )
 {
 }
 

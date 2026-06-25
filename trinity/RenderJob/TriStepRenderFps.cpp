@@ -53,7 +53,7 @@ const char* GetDate()
 }
 #endif
 
-TriStepRenderFps::TriStepRenderFps( IRoot* lockobj ) : 
+TriStepRenderFps::TriStepRenderFps( IRoot* lockobj ) :
 	m_averageFPS( 0 ),
 	m_sumFPSValues( 0 ),
 	m_averageMSPerFrame( 1 ),
@@ -66,27 +66,27 @@ TriStepRenderFps::TriStepRenderFps( IRoot* lockobj ) :
 	m_dpCount( nullptr )
 {
 	auto& entries = CcpStatistics::GetEntryArray();
-	auto found = std::find_if( 
-		entries.begin(), 
-		entries.end(), 
-		[&]( CcpStaticStatisticsEntry *entry ) { return entry->GetName() == "Trinity/AL/sceneDrawcallCount"; } );
+	auto found = std::find_if(
+		entries.begin(),
+		entries.end(),
+		[&]( CcpStaticStatisticsEntry* entry ) { return entry->GetName() == "Trinity/AL/sceneDrawcallCount"; } );
 	if( found != entries.end() )
 	{
 		m_dpCount = *found;
 	}
 }
 
-TriStepRenderFps::~TriStepRenderFps(void)
+TriStepRenderFps::~TriStepRenderFps( void )
 {
 }
 
 
 TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )
 {
-	// these values are static for this implementation, but it should be considered 
+	// these values are static for this implementation, but it should be considered
 	// to change this in a follwing sprint
 	const float fpsCalculationTime = 0.25f;
-	
+
 	// position of the fps, left top corner
 	Tr2Rect screenFPSPos;
 	const TriViewport& vp = renderContext.m_esm.GetViewport();
@@ -94,7 +94,7 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 	screenFPSPos.top = vp.y + m_displayY;
 	screenFPSPos.right = vp.x + vp.width - m_displayX;
 	screenFPSPos.bottom = vp.y + vp.height - m_displayY;
-	
+
 	// this enables access to the fps
 	BeInfo* beOSInfo = BeOS->GetInfo();
 
@@ -103,27 +103,27 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 	// a double where seconds are the first digit before the .
 	double nowTime = TimeAsDouble( beOSInfo->mRealTime );
 
-	// to calculate the average the fps of every frame gets collected 
+	// to calculate the average the fps of every frame gets collected
 	m_FPSValuesCount += 1;
 	m_sumFPSValues += beOSInfo->mFps;
 
 	// This is not the best timing functionality but it is simple and correct enough
 	// for these purposes (the timing is most likely a few nanoseconds off, due to the
 	// fact that this doesn't check for the exact time)
-	if( nowTime >= m_nextFPSCalculationTime )		
+	if( nowTime >= m_nextFPSCalculationTime )
 	{
 		//timer control
 		m_nextFPSCalculationTime = ( nowTime + fpsCalculationTime );
 
 		// calculate the avarege fps and ms
-		m_averageFPS = m_sumFPSValues/m_FPSValuesCount;
-		if( m_averageFPS < 1e-5f ) 
-		{		
+		m_averageFPS = m_sumFPSValues / m_FPSValuesCount;
+		if( m_averageFPS < 1e-5f )
+		{
 			m_averageMSPerFrame = 0.0f;
 		}
-		else 
+		else
 		{
-			m_averageMSPerFrame = 1.0f/m_averageFPS*1000;
+			m_averageMSPerFrame = 1.0f / m_averageFPS * 1000;
 		}
 
 		// clean up for the new average calculation
@@ -131,26 +131,26 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		m_FPSValuesCount = 0;
 	}
 
-	// Set the print color 
+	// Set the print color
 	// over 60fps green
 	// between 60 and 30 fps orange
 	// under 30 fps red
 	// rgb color calculator http://www.drpeterjones.com/colorcalc/
-	if( m_averageFPS > 59.9f ) 
+	if( m_averageFPS > 59.9f )
 	{
 		textColor = 0xff00ff00;
 	}
-	else if( m_averageFPS > 29.5f ) 
+	else if( m_averageFPS > 29.5f )
 	{
 		textColor = 0xffff9900;
 	}
-	else 
+	else
 	{
 		textColor = 0xffff0000;
 	}
 
 // accommodate for release builds, which use `-DCCP_BUILD_FLAVOR=`, e.g. macro without a value
-#if ~(~CCP_BUILD_FLAVOR + 0) == 0 && ~(~CCP_BUILD_FLAVOR + 1) == 1
+#if ~( ~CCP_BUILD_FLAVOR + 0 ) == 0 && ~( ~CCP_BUILD_FLAVOR + 1 ) == 1
 	std::string flavor{ "release" };
 #else
 	std::string flavor{ CCP_STRINGIZE( CCP_BUILD_FLAVOR ) };
@@ -159,7 +159,7 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 
 	int dpCount = m_dpCount ? int( m_dpCount->GetValue() ) : 0;
 	int vertCount = static_cast<int>( CCP_STATS_GET( vertexCount ) );
-	
+
 	uint32_t displayWidth, displayHeight;
 	Tr2UpscalingAL::UpscalingInfo upscalingInfo;
 	{
@@ -176,14 +176,14 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 
 	if( upscalingInfo.technique != Tr2UpscalingAL::Technique::NONE )
 	{
-		std::string formattedUpscalingText = 
-		"   Upscaler: %11s\n"
-		"    Setting: %11s\n"
-		" Render Res: %11s\n";
-		
+		std::string formattedUpscalingText =
+			"   Upscaler: %11s\n"
+			"    Setting: %11s\n"
+			" Render Res: %11s\n";
+
 		std::string techniqueName( Tr2UpscalingAL::GetTechniqueName( upscalingInfo.technique ) );
-        techniqueName = techniqueName.substr( 0, std::min((size_t)11, techniqueName.length()) ).c_str();
-        std::string renderRes = std::to_string( upscalingInfo.renderWidth ) + "x" + std::to_string( upscalingInfo.renderHeight );
+		techniqueName = techniqueName.substr( 0, std::min( (size_t)11, techniqueName.length() ) ).c_str();
+		std::string renderRes = std::to_string( upscalingInfo.renderWidth ) + "x" + std::to_string( upscalingInfo.renderHeight );
 		std::string settingName;
 		std::string generatedFrames;
 		switch( upscalingInfo.setting )
@@ -213,16 +213,16 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		if( upscalingInfo.frameGeneration )
 		{
 			settingName += "/FG";
-			float gen = static_cast<float>( CCP_STATS_GET( smoothedGeneratedFrames ) ) ;
+			float gen = static_cast<float>( CCP_STATS_GET( smoothedGeneratedFrames ) );
 			sprintf_s( fpsCounterBuffer, "%5.1f/%5.1f", m_averageFPS, gen / 100.0f );
 		}
 		sprintf_s(
 			upscalingBuffer,
 			formattedUpscalingText.c_str(),
-            techniqueName.c_str(),
+			techniqueName.c_str(),
 			settingName.c_str(),
-            renderRes.c_str() );
- 	}
+			renderRes.c_str() );
+	}
 	else
 	{
 		sprintf_s( upscalingBuffer, "" );
@@ -249,12 +249,11 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 	{
 		str += "\n      Wine: %11s";
 	}
-	
+
 	const int bufferSize = 512; // Make sure to increase this as necessary
 	char fpsBuffer[bufferSize];
 
-	sprintf_s
-	(
+	sprintf_s(
 		fpsBuffer,
 		str.c_str(),
 		GetDate(),
@@ -269,10 +268,9 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		dpCount,
 		vertCount,
 #if __APPLE__
-        PDM::IsRosetta() ? "Yes" : "No",
+		PDM::IsRosetta() ? "Yes" : "No",
 #endif
-		PDM::GetWineVersion()
-	);
+		PDM::GetWineVersion() );
 
 	uint32_t flags = 0;
 	if( m_alignRight )
@@ -285,6 +283,6 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 	}
 
 	Tr2Renderer::PrintfImmediate( renderContext, TRI_DBG_FONT_LARGE, screenFPSPos, flags, textColor, fpsBuffer );
-	
+
 	return RS_OK;
 }

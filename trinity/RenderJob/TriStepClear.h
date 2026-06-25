@@ -7,20 +7,21 @@
 
 #include "TriRenderStep.h"
 
-BLUE_CLASS( TriStepClear ) : public TriRenderStep
+BLUE_CLASS( TriStepClear ) :
+	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	TriStepClear( IRoot* lockobj = 0 );
-	~TriStepClear(void);
+	~TriStepClear( void );
 
 	//RenderStep
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
 #if BLUE_WITH_PYTHON
 	// Python __init__ constructor
-	static PyObject* py__init__( PyObject* self, PyObject* args );
+	static PyObject* py__init__( PyObject * self, PyObject * args );
 #endif
 
 	Color m_color;

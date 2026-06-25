@@ -16,23 +16,23 @@ struct TriangleVertex
 	Color m_color;
 };
 
-BLUE_CLASS( Tr2GrannyPrimitiveSet ):
+BLUE_CLASS( Tr2GrannyPrimitiveSet ) :
 	public IInitialize,
-	public Tr2PrimitiveSet,	
+	public Tr2PrimitiveSet,
 	public Tr2DeviceResource,
 	public IBlueAsyncResNotifyTarget
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2GrannyPrimitiveSet( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2GrannyPrimitiveSet( IRoot* lockobj = NULL );
 	~Tr2GrannyPrimitiveSet();
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueAsyncResNotifyTarget
-	void ReleaseCachedData( BlueAsyncRes* p );
-	void RebuildCachedData( BlueAsyncRes* p );
+	void ReleaseCachedData( BlueAsyncRes * p );
+	void RebuildCachedData( BlueAsyncRes * p );
 
 	//////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -40,14 +40,17 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
 
 #if TRINITYDEV
-	virtual void GetDescription( std::string& desc ) { desc = "<Tr2GrannyPrimitiveSet>"; }
+	virtual void GetDescription( std::string & desc )
+	{
+		desc = "<Tr2GrannyPrimitiveSet>";
+	}
 #endif
 
 	void SetGrannyResource();
@@ -60,21 +63,21 @@ protected:
 private:
 	virtual bool OnPrepareResources();
 
-	void SetCurrentColor( Color& val );
+	void SetCurrentColor( Color & val );
 
 #if WITH_GRANNY
 	void CreatePrimitiveFromGranny();
 #endif
 	void CreatePrimitiveFromCMF();
-	
-	// We use indices to draw the solids and the lines, 
+
+	// We use indices to draw the solids and the lines,
 	// because we want to use the same vertex buffer
-	Tr2BufferAL m_triangleIndexBuffer;	
+	Tr2BufferAL m_triangleIndexBuffer;
 	Tr2BufferAL m_lineIndexBuffer;
 
 	// How do we want to render this granny res
-	bool	m_renderSolid;
-	
+	bool m_renderSolid;
+
 	// The gr2 data
 	std::string m_grannyResPath;
 	TriGrannyResPtr m_grannyRes;

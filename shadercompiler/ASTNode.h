@@ -114,7 +114,7 @@ public:
 	void AddChild( ASTNode* child );
 	void InsertChild( size_t place, ASTNode* child );
 	void ReplaceChild( size_t place, ASTNode* child );
-    void ReplaceChild( ASTNode* old, ASTNode* child );
+	void ReplaceChild( ASTNode* old, ASTNode* child );
 	void RemoveChild( size_t place );
 	void RemoveChild( ASTNode* child );
 
@@ -147,7 +147,7 @@ public:
 	void FindNodes( ASTNodeType type, std::vector<ASTNode*>& nodes );
 
 	template <typename T>
-	ASTNode* Map( T callback ) 
+	ASTNode* Map( T callback )
 	{
 		ASTNode* newNode = callback( this );
 		for( size_t i = 0; i < newNode->m_children.size(); ++i )
@@ -161,7 +161,7 @@ public:
 	}
 
 private:
-	ASTNodeType  m_nodeType;
+	ASTNodeType m_nodeType;
 	ScannerToken m_token;
 	Symbol* m_symbol;
 	Type m_type;

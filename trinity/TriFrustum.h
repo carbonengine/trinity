@@ -16,7 +16,6 @@ enum class TriFrustumTestResult
 class TriFrustum
 {
 public:
-
 	enum
 	{
 		PLANE_FRONT = 0,
@@ -27,11 +26,11 @@ public:
 		PLANE_BACK,
 		PLANE_COUNT
 	};
-	
-	Plane m_planes[ PLANE_COUNT ];
+
+	Plane m_planes[PLANE_COUNT];
 	Matrix m_projectionMatrix;
 
-	Vector3	m_viewPos;
+	Vector3 m_viewPos;
 	Vector3 m_viewDir;
 
 	float m_halfWidthProjection;
@@ -40,15 +39,15 @@ public:
 	float m_aspectRatio, m_fov;
 
 #ifdef TRINITYDEV
-	mutable int	m_frustumTestCounter;
-	mutable int	m_frustumRejectionCounter;
+	mutable int m_frustumTestCounter;
+	mutable int m_frustumRejectionCounter;
 	float m_frustumCullingRatio;
 #endif
 
 	TriFrustum();
 	// Extract frustum planes from the view and projection matrix in world coordinates
 	void DeriveFrustum( const Matrix* view, const Vector3* campos, const Matrix* projection, const TriViewport& viewport );
-	
+
 	// Returns true if any part of the sphere is inside the frustum
 	bool IsSphereVisible( const Vector4* sphere, bool cullBackPlane = false ) const;
 	bool IsSphereVisible( const Vector3& center, float radius, bool cullBackPlane = false ) const;

@@ -7,13 +7,13 @@
 
 #include <string>
 
-BLUE_CLASS( TriEventKey ):
-     public IRoot
+BLUE_CLASS( TriEventKey ) :
+	public IRoot
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
-    TriEventKey( IRoot* lockobj = NULL );
+	TriEventKey( IRoot* lockobj = NULL );
 	~TriEventKey();
 
 	float m_time;

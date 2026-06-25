@@ -14,8 +14,8 @@ template <typename T, typename Processor>
 class WorkQueue
 {
 public:
-	WorkQueue( size_t workerCount, Processor processor )
-		:m_processor( processor )
+	WorkQueue( size_t workerCount, Processor processor ) :
+		m_processor( processor )
 	{
 		for( size_t i = 0; i < workerCount; ++i )
 		{
@@ -57,8 +57,8 @@ public:
 		}
 		m_workerThreads.clear();
 	}
-private:
 
+private:
 	void PutPtr( T* item )
 	{
 		std::lock_guard scope( m_mutex );
@@ -138,7 +138,7 @@ public:
 		}
 #endif
 		started = false;
-		
+
 		for( size_t i = 0; i < totalWorkerCount; ++i )
 		{
 			m_workerThreads.emplace_back( std::thread( [this] { WorkerThread(); } ) );
@@ -202,7 +202,7 @@ private:
 	{
 #ifdef __APPLE__
 		auto waitResult = semaphore_wait( m_activeWorkersSemaphore );
-		if ( waitResult != KERN_SUCCESS )
+		if( waitResult != KERN_SUCCESS )
 		{
 			g_messages.AddMessage( "WorkQueue2: Waiting on m_activeWorkersSemaphore failed! Error: %d", waitResult );
 		}
@@ -258,7 +258,7 @@ private:
 			T* item = nullptr;
 			{
 				std::unique_lock scope( m_queueMutex );
-				if ( m_queue.empty() )
+				if( m_queue.empty() )
 				{
 					break;
 				}

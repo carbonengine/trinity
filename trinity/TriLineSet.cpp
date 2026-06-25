@@ -5,7 +5,7 @@
 #include "Shader/Tr2Effect.h"
 #include "Tr2Renderer.h"
 
-#if !defined(D3DTARGET) || D3DTARGET == 9
+#if !defined( D3DTARGET ) || D3DTARGET == 9
 
 // ------------------------------------------------------------------------------------------------------
 // Description:
@@ -17,17 +17,17 @@
 // ------------------------------------------------------------------------------------------------------
 inline unsigned SwizzleColor( unsigned color )
 {
-	return 	( ( color & 0xff0000 ) >> 16 ) | ( color & 0xff00ff00 ) | ( ( color & 0xff ) << 16 );
+	return ( ( color & 0xff0000 ) >> 16 ) | ( color & 0xff00ff00 ) | ( ( color & 0xff ) << 16 );
 }
 
-TriLineSet::TriLineSet( IRoot* lockobj ) : 
+TriLineSet::TriLineSet( IRoot* lockobj ) :
 	m_defaultColor( 0xffffffff ),
 	m_zEnable( true ),
 	m_transform( IdentityMatrix() )
 {
 }
 
-void TriLineSet::AddDefaultColor(const Vector3 &from, const Vector3 &to)
+void TriLineSet::AddDefaultColor( const Vector3& from, const Vector3& to )
 {
 	size_t newSize = m_vertices.size() + 2;
 	if( newSize > 100000 )
@@ -46,7 +46,7 @@ void TriLineSet::AddDefaultColor(const Vector3 &from, const Vector3 &to)
 	vTo.m_color = SwizzleColor( m_defaultColor );
 }
 
-void TriLineSet::Add(const Vector3 &from, uint32_t colorFrom, const Vector3 &to, uint32_t colorTo )
+void TriLineSet::Add( const Vector3& from, uint32_t colorFrom, const Vector3& to, uint32_t colorTo )
 {
 	size_t newSize = m_vertices.size() + 2;
 	if( newSize > 100000 )
@@ -55,7 +55,7 @@ void TriLineSet::Add(const Vector3 &from, uint32_t colorFrom, const Vector3 &to,
 	}
 
 	m_vertices.resize( newSize );
-	
+
 	TriDebugResourceHelper::VertexPosColor& vFrom = m_vertices[newSize - 2];
 	vFrom.m_pos = from;
 	vFrom.m_color = SwizzleColor( colorFrom );
@@ -86,7 +86,7 @@ void TriLineSet::AddSphere( const Vector3& center, float radius, int segments, u
 		++segments;
 	}
 
-	float step = (XM_PI * 2.0f) / (float)segments;
+	float step = ( XM_PI * 2.0f ) / (float)segments;
 	float halfStep = step * 0.5f;
 
 	float curRadius = 0.0f;
@@ -135,7 +135,6 @@ void TriLineSet::AddSphere( const Vector3& center, float radius, int segments, u
 			nextTo.y = center.y + nextY;
 
 			Add( from, color, nextTo, color );
-
 		}
 
 		curRadius = nextRadius;
@@ -193,11 +192,11 @@ void TriLineSet::AddCylinder( const Vector3& start, const Vector3& end, float ra
 		++segments;
 	}
 
-	float step = (XM_PI * 2.0f) / (float)segments;
+	float step = ( XM_PI * 2.0f ) / (float)segments;
 	for( int i = 0; i < segments; ++i )
 	{
-		float x = cosf( i*step );
-		float y = sinf( i*step );
+		float x = cosf( i * step );
+		float y = sinf( i * step );
 
 		Vector3 from( x, y, 0.0f );
 		Vector3 to( x, y, 1.0f );
@@ -209,8 +208,8 @@ void TriLineSet::AddCylinder( const Vector3& start, const Vector3& end, float ra
 		Add( from, color, end, color );
 		Add( to, color, start, color );
 
-		float x2 = cosf( i*step + step );
-		float y2 = sinf( i*step + step);
+		float x2 = cosf( i * step + step );
+		float y2 = sinf( i * step + step );
 
 		Vector3 from2( x2, y2, 0.0f );
 		Vector3 to2( x2, y2, 1.0f );
@@ -273,11 +272,11 @@ void TriLineSet::AddCone( const Vector3& start, const Vector3& end, float radius
 		++segments;
 	}
 
-	float step = (XM_PI * 2.0f) / (float)segments;
+	float step = ( XM_PI * 2.0f ) / (float)segments;
 	for( int i = 0; i < segments; ++i )
 	{
-		float x = cosf( i*step );
-		float y = sinf( i*step );
+		float x = cosf( i * step );
+		float y = sinf( i * step );
 
 		Vector3 from( x, y, 0.0f );
 		Vector3 to( 0.0f, 0.0f, 1.0f );
@@ -289,8 +288,8 @@ void TriLineSet::AddCone( const Vector3& start, const Vector3& end, float radius
 		Add( from, color, end, color );
 		Add( to, color, start, color );
 
-		float x2 = cosf( i*step + step );
-		float y2 = sinf( i*step + step);
+		float x2 = cosf( i * step + step );
+		float y2 = sinf( i * step + step );
 
 		Vector3 from2( x2, y2, 0.0f );
 		Vector3 to2( 0.0f, 0.0f, 1.0f );
@@ -305,12 +304,12 @@ void TriLineSet::AddCone( const Vector3& start, const Vector3& end, float radius
 
 void TriLineSet::AddBox( const Vector3& min, const Vector3& max, uint32_t color )
 {
-	Vector3 minA(max.x, min.y, min.z);
-	Vector3 minB(min.x, max.y, min.z); 
-	Vector3	minC(max.x, max.y, min.z); 
-	Vector3	maxA(max.x, min.y, max.z); 
-	Vector3	maxB(min.x, max.y, max.z); 
-	Vector3	maxC(min.x, min.y, max.z);
+	Vector3 minA( max.x, min.y, min.z );
+	Vector3 minB( min.x, max.y, min.z );
+	Vector3 minC( max.x, max.y, min.z );
+	Vector3 maxA( max.x, min.y, max.z );
+	Vector3 maxB( min.x, max.y, max.z );
+	Vector3 maxC( min.x, min.y, max.z );
 
 	Add( min, color, minA, color );
 	Add( min, color, minB, color );
@@ -321,7 +320,7 @@ void TriLineSet::AddBox( const Vector3& min, const Vector3& max, uint32_t color 
 	Add( max, color, maxB, color );
 	Add( maxC, color, maxB, color );
 	Add( maxA, color, maxC, color );
-	
+
 	Add( min, color, maxC, color );
 	Add( max, color, minC, color );
 	Add( minB, color, maxB, color );
@@ -330,12 +329,12 @@ void TriLineSet::AddBox( const Vector3& min, const Vector3& max, uint32_t color 
 
 void TriLineSet::AddOrientedBox( const Matrix& transform, const Vector3& min, const Vector3& max, uint32_t color )
 {
-	Vector3 minA(max.x, min.y, min.z);
-	Vector3 minB(min.x, max.y, min.z); 
-	Vector3	minC(max.x, max.y, min.z); 
-	Vector3	maxA(max.x, min.y, max.z); 
-	Vector3	maxB(min.x, max.y, max.z); 
-	Vector3	maxC(min.x, min.y, max.z);
+	Vector3 minA( max.x, min.y, min.z );
+	Vector3 minB( min.x, max.y, min.z );
+	Vector3 minC( max.x, max.y, min.z );
+	Vector3 maxA( max.x, min.y, max.z );
+	Vector3 maxB( min.x, max.y, max.z );
+	Vector3 maxC( min.x, min.y, max.z );
 
 	AddTransformed( transform, min, color, minA, color );
 	AddTransformed( transform, min, color, minB, color );
@@ -346,7 +345,7 @@ void TriLineSet::AddOrientedBox( const Matrix& transform, const Vector3& min, co
 	AddTransformed( transform, max, color, maxB, color );
 	AddTransformed( transform, maxC, color, maxB, color );
 	AddTransformed( transform, maxA, color, maxC, color );
-	
+
 	AddTransformed( transform, min, color, maxC, color );
 	AddTransformed( transform, max, color, minC, color );
 	AddTransformed( transform, minB, color, maxB, color );
@@ -355,20 +354,20 @@ void TriLineSet::AddOrientedBox( const Matrix& transform, const Vector3& min, co
 
 void TriLineSet::AddOrientedBox( const Matrix& boxMatrix, uint32_t color )
 {
-	Vector3 min ( -1.f, -1.f, -1.f );
-	Vector3 minA(  1.f, -1.f, -1.f );
-	Vector3 minB( -1.f,  1.f, -1.f ); 
-	Vector3	minC(  1.f,  1.f, -1.f ); 
-	Vector3	maxA(  1.f, -1.f,  1.f ); 
-	Vector3	maxB( -1.f,  1.f,  1.f ); 
-	Vector3	maxC( -1.f, -1.f,  1.f );
-	Vector3 max (  1.f,  1.f,  1.f );
+	Vector3 min( -1.f, -1.f, -1.f );
+	Vector3 minA( 1.f, -1.f, -1.f );
+	Vector3 minB( -1.f, 1.f, -1.f );
+	Vector3 minC( 1.f, 1.f, -1.f );
+	Vector3 maxA( 1.f, -1.f, 1.f );
+	Vector3 maxB( -1.f, 1.f, 1.f );
+	Vector3 maxC( -1.f, -1.f, 1.f );
+	Vector3 max( 1.f, 1.f, 1.f );
 
-	min = TransformCoord( min,  boxMatrix );
+	min = TransformCoord( min, boxMatrix );
 	minA = TransformCoord( minA, boxMatrix );
 	minB = TransformCoord( minB, boxMatrix );
 	minC = TransformCoord( minC, boxMatrix );
-	max = TransformCoord( max,  boxMatrix );
+	max = TransformCoord( max, boxMatrix );
 	maxA = TransformCoord( maxA, boxMatrix );
 	maxB = TransformCoord( maxB, boxMatrix );
 	maxC = TransformCoord( maxC, boxMatrix );
@@ -382,7 +381,7 @@ void TriLineSet::AddOrientedBox( const Matrix& boxMatrix, uint32_t color )
 	Add( max, color, maxB, color );
 	Add( maxC, color, maxB, color );
 	Add( maxA, color, maxC, color );
-	
+
 	Add( min, color, maxC, color );
 	Add( max, color, minC, color );
 	Add( minB, color, maxB, color );
@@ -398,7 +397,7 @@ void TriLineSet::SetCurrentColor( uint32_t val )
 {
 	size_t numPoints = m_vertices.size();
 	val = SwizzleColor( val );
-	for ( size_t i = 0; i < numPoints; i++ )
+	for( size_t i = 0; i < numPoints; i++ )
 	{
 		m_vertices[i].m_color = val;
 	}

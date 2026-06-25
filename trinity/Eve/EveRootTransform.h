@@ -13,12 +13,11 @@ BLUE_DECLARE( EveRootTransform );
 BLUE_DECLARE_INTERFACE( ITriVectorFunction );
 BLUE_DECLARE_INTERFACE( ITriQuaternionFunction );
 
-class EveRootTransform:
-	public EveTransform,
-	public ITriTargetable
+class EveRootTransform : public EveTransform,
+						 public ITriTargetable
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 	using EveTransform::Lock;
 	using EveTransform::Unlock;
 
@@ -58,7 +57,10 @@ protected:
 	// last known results from updating m_ballPosition and m_ballRotation
 	Matrix m_lastUpdateMatrix;
 
-	float GetBoundingSphereRadius() { return m_boundingSphereRadius; }
+	float GetBoundingSphereRadius()
+	{
+		return m_boundingSphereRadius;
+	}
 };
 
 TYPEDEF_BLUECLASS( EveRootTransform );

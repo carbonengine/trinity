@@ -4,7 +4,7 @@
 #include "InclusionVolume.h"
 
 
-InclusionVolume::InclusionVolume( IRoot* lockobj ):
+InclusionVolume::InclusionVolume( IRoot* lockobj ) :
 	PARENTLOCK( m_inclusionVolumes ),
 	m_enabled( true ),
 	m_behaviorWeight( 60.0f ),
@@ -23,8 +23,7 @@ int InclusionVolume::GetProcessPriority()
 	return m_priority;
 }
 
-std::vector<Vector3> InclusionVolume::CalculateBehavior(std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
-                                                        BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius)
+std::vector<Vector3> InclusionVolume::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -33,31 +32,30 @@ std::vector<Vector3> InclusionVolume::CalculateBehavior(std::vector<DroneAgent>&
 	{
 		return returnForces;
 	}
-	for ( auto agent = agents.begin(); agent != agents.end(); ++agent)
+	for( auto agent = agents.begin(); agent != agents.end(); ++agent )
 	{
 		Vector3 force( 0, 0, 0 );
 		Vector3 Nforce( 0, 0, 0 );
 		float status;
 		Vector3 boxPos;
 
-		for ( auto volume = m_inclusionVolumes.begin(); volume != m_inclusionVolumes.end(); ++volume )
+		for( auto volume = m_inclusionVolumes.begin(); volume != m_inclusionVolumes.end(); ++volume )
 		{
 			boxPos = ( *volume )->GetBoundingSphere().center;
 			status = ( *volume )->GetIntensity( agent->position );
-			
-			
-			if ( status == 1 )
+
+
+			if( status == 1 )
 			{
 				force = Vector3( 0, 0, 0 );
 				Nforce = Vector3( 0, 0, 0 );
 				break;
 			}
-			else if ( status > 0 )
+			else if( status > 0 )
 			{
 				Nforce = Normalize( boxPos - agent->position );
-				
+
 				force = Nforce * m_behaviorWeight;
-				
 			}
 		}
 
@@ -75,11 +73,11 @@ void InclusionVolume::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "InclusionVolumes" );
 }
 
-void InclusionVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
+void InclusionVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation )
 {
-	if ( renderer.HasOption( this, "InclusionVolumes" ) )
+	if( renderer.HasOption( this, "InclusionVolumes" ) )
 	{
-		for ( auto volume = m_inclusionVolumes.begin(); volume != m_inclusionVolumes.end(); ++volume )
+		for( auto volume = m_inclusionVolumes.begin(); volume != m_inclusionVolumes.end(); ++volume )
 		{
 			( *volume )->RenderDebugInfo( renderer, parentWorldLocation );
 		}

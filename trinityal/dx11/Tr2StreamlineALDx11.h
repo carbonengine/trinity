@@ -30,112 +30,112 @@
 
 namespace StreamlineUtils
 {
-	void Log( sl::LogType type, const char* msg );
-	sl::Resource GenerateTextureResource( Tr2TextureAL* texture );
-	sl::CommandBuffer* GetCommandBuffer( Tr2RenderContextAL& renderContext );
+void Log( sl::LogType type, const char* msg );
+sl::Resource GenerateTextureResource( Tr2TextureAL* texture );
+sl::CommandBuffer* GetCommandBuffer( Tr2RenderContextAL& renderContext );
 
-	enum PluginAvailability
-	{
-		SLPA_YES,
-		SLPA_NO,
-		SLPA_UNKNOWN
-	};
+enum PluginAvailability
+{
+	SLPA_YES,
+	SLPA_NO,
+	SLPA_UNKNOWN
+};
 
-	struct PluginInfo
-	{
-		std::string pluginName;
-		uint32_t streamlineID;
-		PluginAvailability available;
-		bool created;
-	};
+struct PluginInfo
+{
+	std::string pluginName;
+	uint32_t streamlineID;
+	PluginAvailability available;
+	bool created;
+};
 
-	enum StreamlinePlugin
-	{
-		SP_DLSS,
-		SP_DLSSG,
-		SP_REFLEX,
-		SP_NIS,
-		SP_DEBUG,
-		SP_COUNT
-	};
+enum StreamlinePlugin
+{
+	SP_DLSS,
+	SP_DLSSG,
+	SP_REFLEX,
+	SP_NIS,
+	SP_DEBUG,
+	SP_COUNT
+};
 
-	struct CommonConstants
-	{
-		float projection[16];
-		float invprojection[16];
-		float clipToPrevClip[16];
-		float prevClipToClip[16];
-		float jitterOffset[2];
-		float motionScale[2];
-		float cameraPos[3];
-		float cameraUp[3];
-		float cameraRight[3];
-		float cameraForward[3];
-		float cameraNear;
-		float cameraFar;
-		float cameraFOV;
-		float cameraAspectRatio;
-		bool reset;
-	};
+struct CommonConstants
+{
+	float projection[16];
+	float invprojection[16];
+	float clipToPrevClip[16];
+	float prevClipToClip[16];
+	float jitterOffset[2];
+	float motionScale[2];
+	float cameraPos[3];
+	float cameraUp[3];
+	float cameraRight[3];
+	float cameraForward[3];
+	float cameraNear;
+	float cameraFar;
+	float cameraFOV;
+	float cameraAspectRatio;
+	bool reset;
+};
 }
 
 namespace DlssUtils
 {
-	enum DlssMode
-	{
-		dmUltraPerformance,
-		dmPerformance,
-		dmBalanced,
-		dmQuality,
-		dmUltraQuality,
-	};
+enum DlssMode
+{
+	dmUltraPerformance,
+	dmPerformance,
+	dmBalanced,
+	dmQuality,
+	dmUltraQuality,
+};
 
-	struct DlssOptions
-	{
-		DlssMode mode;
-		uint32_t outputWidth;
-		uint32_t outputHeight;
-		uint32_t renderWidth;
-		uint32_t renderHeight;
-		Tr2RenderContextEnum::PixelFormat renderPixelFormat;
-		Tr2RenderContextEnum::PixelFormat outputPixelFormat;
-		Tr2RenderContextEnum::PixelFormat motionVectorPixelFormat;
-		Tr2RenderContextEnum::PixelFormat depthPixelFormat;
-		bool hdr;
-	};
+struct DlssOptions
+{
+	DlssMode mode;
+	uint32_t outputWidth;
+	uint32_t outputHeight;
+	uint32_t renderWidth;
+	uint32_t renderHeight;
+	Tr2RenderContextEnum::PixelFormat renderPixelFormat;
+	Tr2RenderContextEnum::PixelFormat outputPixelFormat;
+	Tr2RenderContextEnum::PixelFormat motionVectorPixelFormat;
+	Tr2RenderContextEnum::PixelFormat depthPixelFormat;
+	bool hdr;
+};
 
-	struct DlssOptimalSetting
-	{
-		float sharpness;
-		uint32_t renderWidth;
-		uint32_t renderHeight;
-	};
+struct DlssOptimalSetting
+{
+	float sharpness;
+	uint32_t renderWidth;
+	uint32_t renderHeight;
+};
 
-	struct DlssResources
-	{
-		Tr2TextureAL* input;
-		Tr2TextureAL* depth;
-		Tr2TextureAL* velocity;
-		Tr2TextureAL* output;
-		Tr2TextureAL* opaqueOnly;
-		Tr2TextureAL* exposure;
-		Tr2TextureAL* reactive;
-	};
+struct DlssResources
+{
+	Tr2TextureAL* input;
+	Tr2TextureAL* depth;
+	Tr2TextureAL* velocity;
+	Tr2TextureAL* output;
+	Tr2TextureAL* opaqueOnly;
+	Tr2TextureAL* exposure;
+	Tr2TextureAL* reactive;
+};
 }
 
 namespace NisUtils
 {
-	struct NisResources
-	{
-		Tr2TextureAL* input;
-		Tr2TextureAL* output;
-	};
+struct NisResources
+{
+	Tr2TextureAL* input;
+	Tr2TextureAL* output;
+};
 
-	struct NisOptions
-	{
-		float sharpness;
-		bool hdr;
-	};
+struct NisOptions
+{
+	float sharpness;
+	bool hdr;
+};
 }
 
 class Tr2DlssPlugin

@@ -14,11 +14,11 @@ BLUE_CLASS( EveVirtualCameraBehaviourFloatBase ) :
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	EveVirtualCameraBehaviourFloatBase( const char* name );
 	virtual ~EveVirtualCameraBehaviourFloatBase();
-	
-	const std::string& GetName() const; 
+
+	const std::string& GetName() const;
 	virtual void SetName( const std::string& name );
 
 	//////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ public:
 	virtual void SetName( const std::string& name ) override;
 
 	virtual float Update( const EveVirtualCamera& camera, float current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection ) override;
-	
+
 private:
 	float m_frequency;
 	int32_t m_octaves;
@@ -138,13 +138,13 @@ BLUE_CLASS( EveVirtualCameraBehaviourVector3Base ) :
 {
 public:
 	EXPOSE_TO_BLUE();
-	
+
 	EveVirtualCameraBehaviourVector3Base( const char* name );
 	virtual ~EveVirtualCameraBehaviourVector3Base();
-	
-	virtual const std::string& GetName() const; 
+
+	virtual const std::string& GetName() const;
 	virtual void SetName( const std::string& name );
-	
+
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	virtual bool OnModified( Be::Var * value ) override;
@@ -174,7 +174,7 @@ public:
 	~EveVirtualCameraBehaviourVector3MoveBetween();
 
 	virtual void SetName( const std::string& name ) override;
-	
+
 	virtual Vector3 Update( const EveVirtualCamera& camera, const Vector3& current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection ) override;
 
 private:
@@ -224,9 +224,9 @@ public:
 	~EveVirtualCameraBehaviourVector3Orbit();
 
 	virtual void SetName( const std::string& name ) override;
-	
+
 	virtual Vector3 Update( const EveVirtualCamera& camera, const Vector3& current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection ) override;
-	
+
 private:
 	float m_start;
 	float m_end;
@@ -253,7 +253,7 @@ public:
 	~EveVirtualCameraBehaviourVector3MoveForward();
 
 	virtual void SetName( const std::string& name ) override;
-	
+
 	virtual Vector3 Update( const EveVirtualCamera& camera, const Vector3& current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection ) override;
 
 protected:
@@ -295,7 +295,7 @@ public:
 	EXPOSE_TO_BLUE();
 
 	EveVirtualCameraBehaviourVector3MoveUp( IRoot* lockobj = NULL );
-	
+
 	virtual Vector3 Update( const EveVirtualCamera& camera, const Vector3& current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection ) override;
 };
 
@@ -315,9 +315,9 @@ public:
 	~EveVirtualCameraBehaviourVector3Shake();
 
 	virtual void SetName( const std::string& name ) override;
-	
+
 	virtual Vector3 Update( const EveVirtualCamera& camera, const Vector3& current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection ) override;
-	
+
 private:
 	float m_frequency;
 	int32_t m_octaves;
@@ -342,7 +342,7 @@ public:
 	~EveVirtualCameraBehaviourVector3Damping();
 
 	virtual Vector3 Update( const EveVirtualCamera& camera, const Vector3& current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection ) override;
-	
+
 private:
 	Vector3 m_lastPosition;
 	float m_dampingRatio;
@@ -365,7 +365,7 @@ public:
 	~EveVirtualCameraBehaviourVector3Inertia();
 
 	virtual Vector3 Update( const EveVirtualCamera& camera, const Vector3& current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection ) override;
-	
+
 private:
 	Vector3 m_lastPosition;
 	Vector3 m_lastVelocity;

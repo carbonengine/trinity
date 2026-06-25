@@ -46,7 +46,7 @@ std::vector<uint8_t> Decode( const std::string_view& str )
 			return {};
 		}
 		q++;
-		if ( q == 4 )
+		if( q == 4 )
 		{
 			q = 0;
 			result.push_back( ( ( quad[0] << 2 ) | ( quad[1] >> 4 ) ) & 0xFF );
@@ -54,7 +54,7 @@ std::vector<uint8_t> Decode( const std::string_view& str )
 			result.push_back( ( ( quad[2] & 0x03 ) << 6 ) | quad[3] );
 		}
 	}
-	if ( q > 0 )
+	if( q > 0 )
 	{
 		for( size_t i = q; i < 4; i++ )
 		{

@@ -7,25 +7,22 @@
 #include "Tr2Renderer.h"
 
 
-#include "Tr2ConstantBufferFormats.h"	// hack
+#include "Tr2ConstantBufferFormats.h" // hack
 
 using namespace Tr2RenderContextEnum;
 
 CCP_STATS_DECLARE( rsRunComputeShaderCount, "Trinity/RenderStep/RunComputeShaderCount", true, CST_COUNTER_LOW, "Calls to TriStepRunComputeShader::Execute per frame" );
 
-TriStepRunComputeShader::TriStepRunComputeShader( IRoot* lockobj )
-	: m_groupDimX( 1 )
-	, m_groupDimY( 1 )
-	, m_groupDimZ( 1 )
-	, m_offsetForArgs( 0 )
+TriStepRunComputeShader::TriStepRunComputeShader( IRoot* lockobj ) :
+	m_groupDimX( 1 ), m_groupDimY( 1 ), m_groupDimZ( 1 ), m_offsetForArgs( 0 )
 {
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
-void TriStepRunComputeShader::py__init__( 
+void TriStepRunComputeShader::py__init__(
 	Tr2Material* effect,
 	Be::OptionalWithDefaultValue<unsigned, 1> groupDimX,
 	Be::OptionalWithDefaultValue<unsigned, 1> groupDimY,

@@ -20,20 +20,20 @@ BLUE_DECLARE( TriTextureRes );
 // SeeAlso:
 //   TriRenderStep, Tr2VariableStore
 // -------------------------------------------------------------
-BLUE_CLASS( TriStepSetVariableStore ): 
+BLUE_CLASS( TriStepSetVariableStore ) :
 	public TriRenderStep
 {
 public:
 	EXPOSE_TO_BLUE();
-	
-	TriStepSetVariableStore( IRoot* lockobj = 0);
-	~TriStepSetVariableStore(void);
+
+	TriStepSetVariableStore( IRoot* lockobj = 0 );
+	~TriStepSetVariableStore( void );
 
 #if BLUE_WITH_PYTHON
-	void py__init__( Be::Optional<std::string> name, PyObject* value );
+	void py__init__( Be::Optional<std::string> name, PyObject * value );
 #endif
 
-	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
+	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext & renderContext );
 
 	void SetName( const std::string& newName )
 	{
@@ -42,7 +42,7 @@ public:
 
 #if BLUE_WITH_PYTHON
 	PyObject* GetValue();
-	void SetValue( PyObject* val );
+	void SetValue( PyObject * val );
 #endif
 
 private:
@@ -51,7 +51,7 @@ private:
 	IRootPtr m_object;
 	ITr2TextureProviderPtr m_texture;
 	ITr2GpuBufferPtr m_gpuBuffer;
-	char m_data[ sizeof(float) * 16 ];
+	char m_data[sizeof( float ) * 16];
 };
 
 TYPEDEF_BLUECLASS( TriStepSetVariableStore );

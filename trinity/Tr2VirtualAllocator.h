@@ -13,7 +13,6 @@ class Tr2VirtualAllocator
 {
 
 public:
-
 	struct VirtualAllocation
 	{
 		void* allocation;
@@ -32,7 +31,7 @@ public:
 	bool Allocate( size_t size, size_t alignment, VirtualAllocation& result );
 	void Free( VirtualAllocation allocation );
 
-	
+
 	size_t GetBlockSize() const;
 	size_t GetMaxSize() const;
 	size_t GetCurrentSize() const;

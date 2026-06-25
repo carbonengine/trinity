@@ -11,19 +11,18 @@
 
 BLUE_DECLARE( TriGrannyRes );
 
-BLUE_CLASS( Tr2GrannyVectorTrack ):
-public Tr2GrannyTrack
+BLUE_CLASS( Tr2GrannyVectorTrack ) :
+	public Tr2GrannyTrack
 {
 public:
 	EXPOSE_TO_BLUE();
 	Tr2GrannyVectorTrack( IRoot* lockobj = NULL );
 	void UpdateValueImpl( double time ) override;
 	void ResetTracks( void ) override;
-	void ApplyTracks( granny_track_group* group, float duration, float timeStep ) override;
+	void ApplyTracks( granny_track_group * group, float duration, float timeStep ) override;
 	bool TracksReady( void ) override;
 
 protected:
-
 	float m_value;
 	granny_curve2* m_valueCurve;
 };

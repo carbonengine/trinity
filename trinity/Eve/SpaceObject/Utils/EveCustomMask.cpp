@@ -91,5 +91,3 @@ void EveCustomMask::ZeroPerObjectData( size_t n, EveSpaceObjectVSData* vsData, E
 	vsData->customMaskMatrix[n] = IdentityMatrix();
 	psData->customMaskTargets[n] = psData->customMaskMaterialIDs[n] = vsData->customMaskData[n] = Vector4( 0.f, 0.f, 0.f, 0.f );
 }
-
-

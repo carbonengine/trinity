@@ -24,8 +24,8 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-    using IInitialize::Lock;
-    using IInitialize::Unlock;
+	using IInitialize::Lock;
+	using IInitialize::Unlock;
 
 	/////////////////////////////////////////////////////////////
 	// IInitialize
@@ -33,15 +33,16 @@ public:
 
 	/////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* value );
+	bool OnModified( Be::Var * value );
 
 	void RegenRandomConstant();
-	void UpdateValues( Tr2ScalarExprKey* previousKey );
+	void UpdateValues( Tr2ScalarExprKey * previousKey );
 
 	// Tangent for non-linear interpolation modes
-	float	m_leftTangent;
+	float m_leftTangent;
 	// Tangent for non-linear interpolation modes
-	float	m_rightTangent;
+	float m_rightTangent;
+
 private:
 	// Parser for time expression
 	CcpParser::Program m_timeParser;
@@ -81,7 +82,7 @@ private:
 	// Value of the previous key (can be used in expressions)
 	float m_prevKeyValue;
 
-	void SetExpression( CcpParser::Program& parser, std::string & expression );
+	void SetExpression( CcpParser::Program & parser, std::string & expression );
 };
 BLUE_DECLARE_VECTOR( Tr2ScalarExprKey );
 
@@ -92,13 +93,13 @@ BLUE_DECLARE_VECTOR( Tr2ScalarExprKey );
 // See Also:
 //   Tr2ScalarExprKey
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2ScalarExprKeyCurve ):
+BLUE_CLASS( Tr2ScalarExprKeyCurve ) :
 	public ITriFunction,
 	public IInitialize,
 	public ITriCurveLength
 {
 public:
-    Tr2ScalarExprKeyCurve( IRoot* lockobj = NULL );
+	Tr2ScalarExprKeyCurve( IRoot* lockobj = NULL );
 
 	EXPOSE_TO_BLUE();
 
@@ -124,7 +125,10 @@ public:
 	unsigned int GetKeyInterpolation( unsigned int idx );
 	void SetKeyInterpolation( unsigned int idx, unsigned int interp );
 
-	unsigned int GetKeyCount() const { return (unsigned int)m_keys.size(); }
+	unsigned int GetKeyCount() const
+	{
+		return (unsigned int)m_keys.size();
+	}
 
 	int AddKey( float time, float value, float leftTangent, float rightTangent, unsigned int interpolation );
 	void RemoveKey( unsigned int idx );
@@ -138,9 +142,10 @@ public:
 	void SetKeyRightTangent( unsigned int idx, float tangent );
 
 	// Starting tangent value
-	float		m_startTangent;
-	// End tangent value`	
-	float		m_endTangent;
+	float m_startTangent;
+	// End tangent value`
+	float m_endTangent;
+
 private:
 	void ReEvaluateKeys();
 	float* Interpolate( float* out, float time, Tr2ScalarExprKey* lastKey, Tr2ScalarExprKey* nextKey );

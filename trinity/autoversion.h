@@ -1,8 +1,8 @@
 // Copyright © 2023 CCP ehf.
 
-#define EVEVER  9
-#define EVEDELIVERY  9
-#define EVEBUILD  9
+#define EVEVER 9
+#define EVEDELIVERY 9
+#define EVEBUILD 9
 #define EVEPROJECTVER 9
 #define EVEVERSIONSTRING "9.9.9.9\0"
 #define EVEBUILDDATE "Sometime, someday, somewhere\0"

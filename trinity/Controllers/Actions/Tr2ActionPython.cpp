@@ -128,13 +128,11 @@ void Tr2ActionPython::Stop( ITr2ActionController& controller )
 
 void Tr2ActionPython::Update( Be::Time realTime, Be::Time simTime )
 {
-	ContinueOnMainThread( [
-		self = Tr2ActionPythonPtr( this ), 
-		controllerPtr = ITr2ActionControllerPtr( m_controller ), 
-		owner = IRootPtr( m_controller->GetOwner() ),
-		realDt = TimeAsFloat( realTime - m_prevRealTime ),
-		simDt = TimeAsFloat( simTime - m_prevSimTime )]() {
-
+	ContinueOnMainThread( [self = Tr2ActionPythonPtr( this ),
+						   controllerPtr = ITr2ActionControllerPtr( m_controller ),
+						   owner = IRootPtr( m_controller->GetOwner() ),
+						   realDt = TimeAsFloat( realTime - m_prevRealTime ),
+						   simDt = TimeAsFloat( simTime - m_prevSimTime )]() {
 		self->m_vtable.onUpdate.CallVoid( owner, controllerPtr, realDt, simDt );
 	} );
 	m_prevRealTime = realTime;
@@ -161,8 +159,7 @@ void Tr2ActionPython::InstantiateObject()
 
 	m_instance = CreateInstance( m_module.c_str(), m_className.c_str() );
 
-	auto ExtractMethod = [&]( const char* methodName, BlueScriptCallback& callback )
-	{
+	auto ExtractMethod = [&]( const char* methodName, BlueScriptCallback& callback ) {
 		BluePy method( PyObject_GetAttrString( m_instance, methodName ) );
 		if( method && PyCallable_Check( method ) )
 		{
@@ -238,7 +235,7 @@ unsigned char* Tr2ActionPython::AllocateReadBuffer( const char* memberName, size
 
 void Tr2ActionPython::SetBufferAndSize( const char* memberName, uint8_t* buffer, size_t bufferSize )
 {
-	if ( !m_instance )
+	if( !m_instance )
 	{
 		InstantiateObject();
 	}

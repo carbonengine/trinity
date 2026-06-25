@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#if defined(__APPLE__) && TRINITY_PLATFORM != TRINITY_STUB
+#if defined( __APPLE__ ) && TRINITY_PLATFORM != TRINITY_STUB
 
 #include "RenderWindow.h"
 #import <Cocoa/Cocoa.h>
@@ -16,12 +16,12 @@ bool s_keyPressed = false;
 
 - (BOOL)canBecomeKeyWindow
 {
-    return YES;
+	return YES;
 }
 
 - (BOOL)canBecomeMainWindow
 {
-    return YES;
+	return YES;
 }
 
 @end
@@ -31,34 +31,34 @@ bool s_keyPressed = false;
 
 @implementation TrinityALTestContentView
 
-- (CALayer *)makeBackingLayer
+- (CALayer*)makeBackingLayer
 {
-    return [CAMetalLayer layer];
+	return [CAMetalLayer layer];
 }
 
 - (BOOL)wantsLayer
 {
-    return YES;
+	return YES;
 }
 
 - (BOOL)canBecomeKeyView
 {
-    return YES;
+	return YES;
 }
 
 - (BOOL)acceptsFirstResponder
 {
-    return YES;
+	return YES;
 }
 
-- (void)keyDown:(NSEvent *)event
+- (void)keyDown:(NSEvent*)event
 {
-    s_keyPressed = true;
+	s_keyPressed = true;
 }
 
-- (void)mouseDown:(NSEvent *)event
+- (void)mouseDown:(NSEvent*)event
 {
-    s_keyPressed = true;
+	s_keyPressed = true;
 }
 
 @end
@@ -66,49 +66,50 @@ bool s_keyPressed = false;
 
 RenderWindow::RenderWindow( uint32_t width, uint32_t height )
 {
-    NSRect frame = NSMakeRect(0, 0, width, height);
-    TrinityALTestWindow* window  = [[TrinityALTestWindow alloc] initWithContentRect:frame
-                                                                          styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
-                                                                            backing:NSBackingStoreBuffered
-                                                                              defer:NO];
+	NSRect frame = NSMakeRect( 0, 0, width, height );
+	TrinityALTestWindow* window =
+		[[TrinityALTestWindow alloc] initWithContentRect:frame
+											   styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable
+												 backing:NSBackingStoreBuffered
+												   defer:NO];
 
-    TrinityALTestContentView* view = [[TrinityALTestContentView alloc] init];
-    [window setContentView:view];
+	TrinityALTestContentView* view = [[TrinityALTestContentView alloc] init];
+	[window setContentView:view];
 
-    // Explicitly set this to force creation of backing layer (makeBackingLayer) for our view.
-    // By default backing layer is created only when the window is shown, which is not
-    // the default behavior for TrinityALTest.
-    view.wantsLayer = YES;
+	// Explicitly set this to force creation of backing layer (makeBackingLayer) for our view.
+	// By default backing layer is created only when the window is shown, which is not
+	// the default behavior for TrinityALTest.
+	view.wantsLayer = YES;
 
-    [window makeKeyAndOrderFront:nil];
-    m_handle = window;
+	[window makeKeyAndOrderFront:nil];
+	m_handle = window;
 }
 
 RenderWindow::~RenderWindow()
 {
-    if( m_handle )
-    {
-        [(TrinityALTestWindow*)m_handle close];
-    }
-    m_handle = nullptr;
+	if( m_handle )
+	{
+		[(TrinityALTestWindow*)m_handle close];
+	}
+	m_handle = nullptr;
 }
 
 uint32_t RenderWindow::GetClientWidth() const
 {
-    auto size = [(TrinityALTestWindow*)m_handle contentView].frame.size;
-    return uint32_t( size.width );
+	auto size = [(TrinityALTestWindow*)m_handle contentView].frame.size;
+	return uint32_t( size.width );
 }
 
 uint32_t RenderWindow::GetClientHeight() const
 {
-    auto size = [(TrinityALTestWindow*)m_handle contentView].frame.size;
-    return uint32_t( size.height );
+	auto size = [(TrinityALTestWindow*)m_handle contentView].frame.size;
+	return uint32_t( size.height );
 }
 
 bool RenderWindow::Resize( uint32_t width, uint32_t height )
 {
-    [(TrinityALTestWindow*)m_handle setContentSize:NSMakeSize( width, height )];
-    return true;
+	[(TrinityALTestWindow*)m_handle setContentSize:NSMakeSize( width, height )];
+	return true;
 }
 
 Tr2WindowHandle RenderWindow::GetHandle() const

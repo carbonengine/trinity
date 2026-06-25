@@ -20,7 +20,7 @@ BLUE_DECLARE_IVECTOR( ITr2GenericEmitter );
 // See Also:
 //   Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2SphereConstraint ): 
+BLUE_CLASS( Tr2SphereConstraint ) :
 	public ITr2GenericParticleConstraint,
 	public IInitialize,
 	public IListNotify
@@ -30,8 +30,8 @@ public:
 
 	EXPOSE_TO_BLUE();
 
-    using IInitialize::Lock;
-    using IInitialize::Unlock;
+	using IInitialize::Lock;
+	using IInitialize::Unlock;
 
 	/////////////////////////////////////////////////////////////
 	// IInitialize
@@ -40,17 +40,16 @@ public:
 	/////////////////////////////////////////////////////////////
 	// INotify
 	virtual void OnListModified(
-		long event,		// BLUELISTEVENT values
+		long event, // BLUELISTEVENT values
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const struct IList* theList
-		);
+		const struct IList* theList );
 
 	/////////////////////////////////////////////////////////////
 	// ITr2ParticleConstraint
 	virtual void ApplyConstraint( const ITr2GenericEmitter::UpdateArguments& arguments, float** particle, unsigned* strides, unsigned count, float dt );
-	virtual void Bind( Tr2ParticleSystem* system );
+	virtual void Bind( Tr2ParticleSystem * system );
 
 	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const override;
 

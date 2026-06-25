@@ -15,7 +15,8 @@ CCP_STATS_DECLARE( triDebugTextRenderersAlive, "Trinity/TriDebugTextRenderer", f
 TriDebugTextRenderer::TriDebugTextRenderer() :
 	m_entries( "TriDebugTextRenderer/m_entries" )
 #ifdef _WIN32
-    , m_bitmapData( nullptr ),
+	,
+	m_bitmapData( nullptr ),
 	m_bitmapWidth( 0 ),
 	m_bitmapHeight( 0 ),
 	m_bitmap( nullptr )
@@ -25,8 +26,8 @@ TriDebugTextRenderer::TriDebugTextRenderer() :
 	const char* font = PDM::IsWine() ? "Menlo" : "Lucida Console";
 	const char* fallbackFont = "Courier New";
 	for( int i = 0; i < 3; ++i )
-    {
-        static int heights[3] = { -9, -12, -16 };
+	{
+		static int heights[3] = { -9, -12, -16 };
 		m_dcFonts[i] = CreateFont( heights[i], 0, 0, 0, 0, FALSE, 0, 0, 0, 0, 0, NONANTIALIASED_QUALITY, 0, font );
 		if( m_dcFonts[i] == NULL )
 		{
@@ -37,7 +38,7 @@ TriDebugTextRenderer::TriDebugTextRenderer() :
 				CCP_LOGERR( "Could not create debug text renderer font: %s or %s, %d", font, fallbackFont, heights[i] );
 			}
 		}
-    }
+	}
 	HDC screenDC = GetDC( NULL );
 	m_dc = CreateCompatibleDC( screenDC );
 	ReleaseDC( NULL, screenDC );
@@ -47,16 +48,16 @@ TriDebugTextRenderer::TriDebugTextRenderer() :
 
 TriDebugTextRenderer::~TriDebugTextRenderer()
 {
-    CCP_STATS_DEC( triDebugTextRenderersAlive );
+	CCP_STATS_DEC( triDebugTextRenderersAlive );
 
 #ifdef _WIN32
-    for( int i = 0; i < 3; ++i )
-    {
-        DeleteObject( m_dcFonts[i] );
-    }
+	for( int i = 0; i < 3; ++i )
+	{
+		DeleteObject( m_dcFonts[i] );
+	}
 
-    DeleteDC( m_dc );
-    DeleteObject( m_bitmap );
+	DeleteDC( m_dc );
+	DeleteObject( m_bitmap );
 #endif
 }
 
@@ -66,7 +67,7 @@ void TriDebugTextRenderer::Vprintf( TriDebugFont font, const Tr2Rect& rect, uint
 	static char buffer[BUFFER_SIZE];
 
 	vsnprintf_s( buffer, BUFFER_SIZE, _TRUNCATE, msg, args );
-	
+
 	TextEntry e;
 	e.m_font = font;
 	e.m_rect = rect;
@@ -88,10 +89,10 @@ void TriDebugTextRenderer::VprintfImmediate( Tr2RenderContext& renderContext, Tr
 
 void TriDebugTextRenderer::Printf( TriDebugFont font, const Tr2Rect& rect, uint32_t format, const Vector4& color, const char* msg, ... )
 {
-    va_list args;
-    va_start( args, msg );
+	va_list args;
+	va_start( args, msg );
 
-    Vprintf( font, rect, format, color, msg, args );
+	Vprintf( font, rect, format, color, msg, args );
 	va_end( args );
 }
 
@@ -107,19 +108,19 @@ void TriDebugTextRenderer::PrintfImmediate( Tr2RenderContext& renderContext, Tri
 
 void TriDebugTextRenderer::Render( Tr2RenderContext& renderContext )
 {
-    for( TrackableStdList<TextEntry>::iterator it = m_entries.begin(); it != m_entries.end(); ++it )
-    {
-        DrawText( renderContext, it->m_font, it->m_text, it->m_rect, it->m_format, it->m_color );
+	for( TrackableStdList<TextEntry>::iterator it = m_entries.begin(); it != m_entries.end(); ++it )
+	{
+		DrawText( renderContext, it->m_font, it->m_text, it->m_rect, it->m_format, it->m_color );
 	}
 }
 
 void TriDebugTextRenderer::Clear()
 {
-    for( TrackableStdList<TextEntry>::iterator it = m_entries.begin(); it != m_entries.end(); ++it )
-    {
-        CCP_FREE( (void*)it->m_text );
-    }
-    m_entries.clear();
+	for( TrackableStdList<TextEntry>::iterator it = m_entries.begin(); it != m_entries.end(); ++it )
+	{
+		CCP_FREE( (void*)it->m_text );
+	}
+	m_entries.clear();
 }
 
 void TriDebugTextRenderer::ReleaseResources( TriStorage s )
@@ -129,12 +130,12 @@ void TriDebugTextRenderer::ReleaseResources( TriStorage s )
 
 bool TriDebugTextRenderer::OnPrepareResources()
 {
-    return true;
+	return true;
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Draws text into current render target.  
+//   Draws text into current render target.
 // Arguments:
 //   font - Font to use
 //   string - NULL-terminated string to render
@@ -142,10 +143,10 @@ bool TriDebugTextRenderer::OnPrepareResources()
 //   format - Bitfield of TRI_DFS_... constants
 //   color - Color to use for rendering (alpha component is ignored)
 // --------------------------------------------------------------------------------------
-void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFont font, const char* string, const Tr2Rect& rect, uint32_t format, const Vector4& vecColor)
+void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFont font, const char* string, const Tr2Rect& rect, uint32_t format, const Vector4& vecColor )
 {
 	uint32_t color = Color( vecColor.x, vecColor.y, vecColor.z, vecColor.w );
-	
+
 	if( !Tr2Renderer::IsResourceCreationAllowed() )
 	{
 		return;
@@ -156,7 +157,7 @@ void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFo
 	{
 		return;
 	}
-    
+
 	// Measure actual text size
 	HGDIOBJ oldFont = SelectObject( m_dc, m_dcFonts[font] );
 	ON_BLOCK_EXIT( [&] { SelectObject( m_dc, oldFont ); } );
@@ -182,15 +183,15 @@ void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFo
 		BITMAPINFO info;
 		memset( &info, 0, sizeof( info ) );
 		info.bmiHeader.biSize = sizeof( info );
-		info.bmiHeader.biWidth = m_bitmapWidth;    
-		info.bmiHeader.biHeight = -int( m_bitmapHeight );  
-		info.bmiHeader.biPlanes = 1;    
-		info.bmiHeader.biBitCount = 32;    
-		info.bmiHeader.biCompression = BI_RGB;    
-		info.bmiHeader.biSizeImage = 0;  
-		info.bmiHeader.biXPelsPerMeter = 0;    
-		info.bmiHeader.biYPelsPerMeter = 0;    
-		info.bmiHeader.biClrUsed = 0;    
+		info.bmiHeader.biWidth = m_bitmapWidth;
+		info.bmiHeader.biHeight = -int( m_bitmapHeight );
+		info.bmiHeader.biPlanes = 1;
+		info.bmiHeader.biBitCount = 32;
+		info.bmiHeader.biCompression = BI_RGB;
+		info.bmiHeader.biSizeImage = 0;
+		info.bmiHeader.biXPelsPerMeter = 0;
+		info.bmiHeader.biYPelsPerMeter = 0;
+		info.bmiHeader.biClrUsed = 0;
 		info.bmiHeader.biClrImportant = 0;
 
 		m_bitmap = CreateDIBSection( screenDC, &info, DIB_RGB_COLORS, (void**)&m_bitmapData, nullptr, 0 );
@@ -211,7 +212,7 @@ void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFo
 
 	// Render into offscreen GDI bitmap
 	HGDIOBJ bkBitmap = SelectObject( m_dc, m_bitmap );
-	FillRect( m_dc, &size, (HBRUSH) GetStockObject( BLACK_BRUSH ) );
+	FillRect( m_dc, &size, (HBRUSH)GetStockObject( BLACK_BRUSH ) );
 	SetTextColor( m_dc, RGB( 255, 255, 255 ) );
 	SetBkMode( m_dc, TRANSPARENT );
 	::DrawText( m_dc, string, -1, &size, format );
@@ -220,13 +221,13 @@ void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFo
 	// Flush GDI commands before accessing bitmap data
 	GdiFlush();
 
-	if( !m_texture.IsValid()					|| 
-		m_texture.GetWidth()  < m_bitmapWidth	|| 
+	if( !m_texture.IsValid() ||
+		m_texture.GetWidth() < m_bitmapWidth ||
 		m_texture.GetHeight() < m_bitmapHeight )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		CR_RETURN( m_texture.Create(		
-			Tr2BitmapDimensions( m_bitmapWidth, m_bitmapHeight, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), 
+		CR_RETURN( m_texture.Create(
+			Tr2BitmapDimensions( m_bitmapWidth, m_bitmapHeight, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ),
 			Tr2GpuUsage::SHADER_RESOURCE,
 			Tr2CpuUsage::WRITE_OFTEN,
 			renderContext ) );
@@ -279,8 +280,8 @@ void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFo
 		size.right = rowWidth;
 	}
 
-	if( !m_texture.IsValid()					|| 
-		m_texture.GetWidth()  < unsigned( size.right )	|| 
+	if( !m_texture.IsValid() ||
+		m_texture.GetWidth() < unsigned( size.right ) ||
 		m_texture.GetHeight() < unsigned( size.bottom ) )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -339,7 +340,7 @@ void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFo
 	}
 	else if( format & TRI_DFS_CENTER )
 	{
-		x = ( rect.right + rect.left - size.right ) / 2; 
+		x = ( rect.right + rect.left - size.right ) / 2;
 	}
 	else
 	{
@@ -351,7 +352,7 @@ void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFo
 	}
 	else if( format & TRI_DFS_VCENTER )
 	{
-		y = ( rect.bottom + rect.top - size.bottom ) / 2; 
+		y = ( rect.bottom + rect.top - size.bottom ) / 2;
 	}
 	else
 	{
@@ -365,4 +366,3 @@ void TriDebugTextRenderer::DrawText( Tr2RenderContext& renderContext, TriDebugFo
 	Tr2Renderer::DrawTexture( renderContext, m_texture, Vector2( 0.f, 0.f ), Vector2( float( size.right ) / m_texture.GetWidth(), float( size.bottom ) / m_texture.GetHeight() ) );
 	renderContext.m_esm.PopViewport();
 }
-

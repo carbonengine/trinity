@@ -11,7 +11,10 @@ struct InlineString
 	const char* start;
 	const char* end;
 
-	operator bool() const { return start != nullptr; }
+	operator bool() const
+	{
+		return start != nullptr;
+	}
 };
 
 inline InlineString MakeInlineString( const char* start, const char* end )
@@ -89,32 +92,26 @@ inline bool operator<( const InlineString& str0, const InlineString& str1 )
 
 inline bool IEquals( const InlineString& a, const InlineString& b )
 {
-    return std::equal(a.start, a.end,
-                      b.start, b.end,
-                      [](char a, char b) {
-                          return tolower(a) == tolower(b);
-                      });
+	return std::equal( a.start, a.end, b.start, b.end, []( char a, char b ) {
+		return tolower( a ) == tolower( b );
+	} );
 }
 
 inline bool IEquals( const InlineString& a, const char* b )
 {
-    return std::equal(a.start, a.end,
-                      b, b + strlen( b ),
-                      [](char a, char b) {
-                          return tolower(a) == tolower(b);
-                      });
+	return std::equal( a.start, a.end, b, b + strlen( b ), []( char a, char b ) {
+		return tolower( a ) == tolower( b );
+	} );
 }
 
 struct ILess
 {
 	inline bool operator()( const InlineString& a, const InlineString& b ) const
 	{
-		
-		return std::lexicographical_compare(a.start, a.end,
-											b.start, b.end,
-											[](char a, char b) {
-												return tolower(a) < tolower(b);
-											});
+
+		return std::lexicographical_compare( a.start, a.end, b.start, b.end, []( char a, char b ) {
+			return tolower( a ) < tolower( b );
+		} );
 	}
 };
 

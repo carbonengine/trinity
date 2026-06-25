@@ -11,34 +11,34 @@ class TriSettings : public IRoot
 public:
 	EXPOSE_TO_BLUE();
 
-    template<typename T> void RegisterSetting( const char* name, T* value )
-    {
+	template <typename T>
+	void RegisterSetting( const char* name, T* value )
+	{
 		Be::VARTYPE type = BlueTypeTraits<T>::VARTYPE_VALUE;
-		RegisterSettingHelper( name, value, type, sizeof(T) );
+		RegisterSettingHelper( name, value, type, sizeof( T ) );
 	}
 
 	struct Setting
 	{
-		Be::VARTYPE	m_type;
-		size_t		m_size;
-		Be::Var*	m_var;
+		Be::VARTYPE m_type;
+		size_t m_size;
+		Be::Var* m_var;
 	};
 
-	typedef std::map<std::string, Setting > SettingMap;
+	typedef std::map<std::string, Setting> SettingMap;
 	SettingMap m_map;
 
 	Setting* FindSetting( const char* name )
 	{
-		SettingMap::iterator it = m_map.find( std::string(name) );
+		SettingMap::iterator it = m_map.find( std::string( name ) );
 		if( it != m_map.end() )
 		{
-			return &(*it).second;
+			return &( *it ).second;
 		}
 		else
 		{
 			return NULL;
 		}
-		
 	}
 
 	std::string GetReprString()
@@ -72,11 +72,10 @@ private:
 		s.m_size = size;
 		s.m_var = (Be::Var*)value;
 
-		m_map[ name ] = s;
-    }
-
+		m_map[name] = s;
+	}
 };
 
-TYPEDEF_BLUECLASS(TriSettings)
+TYPEDEF_BLUECLASS( TriSettings )
 
 #endif // TriSettings_H

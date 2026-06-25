@@ -30,12 +30,11 @@ Tr2InteriorLightSet::~Tr2InteriorLightSet()
 //   lightSource  - The light source to add
 //   viewPosition - The view position, used to determine view importance
 // --------------------------------------------------------------------------------------
-void Tr2InteriorLightSet::AddLight( ITr2InteriorLight* lightSource, 
-								    const Vector3& viewPosition )
+void Tr2InteriorLightSet::AddLight( ITr2InteriorLight* lightSource,
+									const Vector3& viewPosition )
 {
 	// Setup the light instance
-	InternalLightInstance instance =
-	{
+	InternalLightInstance instance = {
 		lightSource,
 		false
 	};
@@ -66,11 +65,11 @@ void Tr2InteriorLightSet::PopulateLightData( Tr2InteriorPerObjectPSData* perObje
 	// set each pointlight data in target array
 	unsigned int i = 0;
 	std::list<InternalLightInstance>::const_iterator it = m_lightInstances.begin();
-	while( (i < MAX_INTERIOR_LIGHTS_PER_OBJECT) && (it != m_lightInstances.end()) )
+	while( ( i < MAX_INTERIOR_LIGHTS_PER_OBJECT ) && ( it != m_lightInstances.end() ) )
 	{
-		if (i < 4)
+		if( i < 4 )
 		{
-			perObjectPSData->spotLights[i] = dynamic_cast<Tr2InteriorLightSource*>(it->lightSource)->m_viewProjection;
+			perObjectPSData->spotLights[i] = dynamic_cast<Tr2InteriorLightSource*>( it->lightSource )->m_viewProjection;
 		}
 
 		// Put standard lightsource data in target
@@ -86,4 +85,3 @@ void Tr2InteriorLightSet::PopulateLightData( Tr2InteriorPerObjectPSData* perObje
 		++it;
 	}
 }
-

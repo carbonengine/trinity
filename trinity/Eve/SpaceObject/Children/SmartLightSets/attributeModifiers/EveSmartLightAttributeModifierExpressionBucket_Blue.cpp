@@ -14,10 +14,10 @@ const Be::ClassInfo* EveSmartLightAttributeModifierExpressionBucket::ExposeToBlu
 		MAP_INTERFACE( IEveSmartLightGroupAttributeModifier )
 		MAP_INTERFACE( EveSmartLightBaseAttributeModifier )
 		MAP_INTERFACE( IInitialize )
-		
+
 		MAP_ATTRIBUTE( "name", m_name, "organize your tree", Be::READWRITE | Be::PERSIST );
 
-	    MAP_ATTRIBUTE( "expression", m_expression, "Curve expression\n:jessica-widget: expression", Be::PERSISTONLY )
+		MAP_ATTRIBUTE( "expression", m_expression, "Curve expression\n:jessica-widget: expression", Be::PERSISTONLY )
 		MAP_PROPERTY( "expression", GetExpression, SetExpression, "Curve expression\n:jessica-widget: expression" )
 
 		MAP_ATTRIBUTE( "currentValue", m_activationStrength, "Value after the last update", Be::READ )

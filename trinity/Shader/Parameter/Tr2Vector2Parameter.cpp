@@ -10,7 +10,7 @@
 // Description:
 //   Constructor.  Initializes member variables to defaults.
 // --------------------------------------------------------------------------------------
-Tr2Vector2Parameter::Tr2Vector2Parameter(IRoot* lockobj) :
+Tr2Vector2Parameter::Tr2Vector2Parameter( IRoot* lockobj ) :
 	m_isUsedByEffect( false ),
 	m_isSrgb( false ),
 	m_value( 1.0f, 1.0f ),
@@ -44,28 +44,27 @@ unsigned Tr2Vector2Parameter::GetHashValue( unsigned startingHash ) const
 //   destHandle - Pointer to the destination buffer
 //   size - Number of bytes to copy (could differ from the size of a vector2)
 // --------------------------------------------------------------------------------------
-void Tr2Vector2Parameter::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-												unsigned char* destHandle, 
-												size_t size,
-												Tr2RenderContext &renderContext ) const
+void Tr2Vector2Parameter::CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+											 unsigned char* destHandle,
+											 size_t size,
+											 Tr2RenderContext& renderContext ) const
 {
-	// We need this to work even when the effect we're copying this to isn't the one 
+	// We need this to work even when the effect we're copying this to isn't the one
 	// that we're bound to
 	if( m_reroutedValue )
 	{
-		memcpy( 
-			destHandle, 
-			m_reroutedValue, 
-			size < sizeof(m_value) ? size : sizeof(m_value) 
-		);
+		memcpy(
+			destHandle,
+			m_reroutedValue,
+			size < sizeof( m_value ) ? size : sizeof( m_value ) );
 	}
 	else if( m_isSrgb )
 	{
-		memcpy( destHandle, &m_linearValue, size < sizeof(m_value) ? size : sizeof( m_value ) );
+		memcpy( destHandle, &m_linearValue, size < sizeof( m_value ) ? size : sizeof( m_value ) );
 	}
 	else
 	{
-		memcpy( destHandle, &m_value, size < sizeof(m_value) ? size : sizeof( m_value ) );
+		memcpy( destHandle, &m_value, size < sizeof( m_value ) ? size : sizeof( m_value ) );
 	}
 }
 
@@ -139,7 +138,7 @@ void Tr2Vector2Parameter::SetDestination( void* dest, size_t size )
 
 		for( BindingVector_t::iterator it = m_bindings.begin(); it != m_bindings.end(); ++it )
 		{
-			(*it)->RerouteDestination( m_reroutedValue );
+			( *it )->RerouteDestination( m_reroutedValue );
 		}
 	}
 	else
@@ -153,7 +152,7 @@ void Tr2Vector2Parameter::SetDestination( void* dest, size_t size )
 
 		for( BindingVector_t::iterator it = m_bindings.begin(); it != m_bindings.end(); ++it )
 		{
-			(*it)->RerouteDestination( &m_value );
+			( *it )->RerouteDestination( &m_value );
 		}
 	}
 }
@@ -188,7 +187,7 @@ void Tr2Vector2Parameter::RegisterBinding( TriValueBinding* vb )
 {
 	CCP_ASSERT( vb );
 
-	// Note that this is a weak reference - adding a reference here would 
+	// Note that this is a weak reference - adding a reference here would
 	// create a circular reference.
 	m_bindings.push_back( vb );
 }
@@ -231,7 +230,7 @@ void Tr2Vector2Parameter::RebuildEffectHandles( Tr2Shader* effectRes )
 		SetDestination( NULL, 0 );
 	}
 
-	if ( m_name.empty() || !effectRes )
+	if( m_name.empty() || !effectRes )
 	{
 		m_isUsedByEffect = false;
 		return;
@@ -239,7 +238,7 @@ void Tr2Vector2Parameter::RebuildEffectHandles( Tr2Shader* effectRes )
 
 	const Tr2EffectConstant* constant = effectRes->GetConstant( m_name.c_str() );
 
-	if ( !constant )
+	if( !constant )
 	{
 		m_isUsedByEffect = false;
 		return;
@@ -248,7 +247,7 @@ void Tr2Vector2Parameter::RebuildEffectHandles( Tr2Shader* effectRes )
 	m_isUsedByEffect = true;
 
 	m_isSrgb = constant->isSRGB;
-	
+
 	if( m_isSrgb )
 	{
 		SetDestination( NULL, 0 );
@@ -349,5 +348,4 @@ bool Tr2Vector2Parameter::Initialize()
 	}
 
 	return true;
-
 }

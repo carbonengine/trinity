@@ -86,7 +86,7 @@ float EveEllipsoidVolume::GetIntensity( Vector3 position )
 		return 1.0f;
 	}
 
-	m_innerIntersection = Vector3(0, 0, 0);
+	m_innerIntersection = Vector3( 0, 0, 0 );
 
 	Vector3 rayDir = Normalize( m_position - position );
 	IntersectEllipsoidRayClosest( m_outerIntersection, m_position, m_shape, position, rayDir );
@@ -128,7 +128,7 @@ void EveEllipsoidVolume::GeneratePointsInVolume( std::vector<Vector3>& points, s
 		Vector3 angle( sqrt( 1.f - z * z ) * cos( a ), sqrt( 1.f - z * z ) * sin( a ), z );
 		angle = Normalize( angle );
 
-		if( (float( rand() ) / RAND_MAX) > sizeDifference )
+		if( ( float( rand() ) / RAND_MAX ) > sizeDifference )
 		{
 			position = angle * ( m_innerShape + ( m_shape - m_innerShape ) * pow( (float)rand() / RAND_MAX, 0.75f * fallOffFactor ) );
 		}

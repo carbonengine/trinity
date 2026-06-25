@@ -4,7 +4,7 @@
 
 enum Tr2ALMemoryType
 {
-	AL_MEMORY_VIDEO = 1 << 0,  // resources created on video card memory
+	AL_MEMORY_VIDEO = 1 << 0, // resources created on video card memory
 	AL_MEMORY_MANAGED = 1 << 1, // resources created in device memory
 };
 
@@ -16,37 +16,37 @@ typedef int Tr2ALMemoryTypes;
 
 namespace TrinityALImpl
 {
-	
-	class Tr2BaseDeviceResourceAL
+
+class Tr2BaseDeviceResourceAL
+{
+public:
+	typedef void ( *ResourceOperation )( Tr2BaseDeviceResourceAL* );
+
+	Tr2BaseDeviceResourceAL();
+	virtual ~Tr2BaseDeviceResourceAL();
+
+	virtual bool IsResourceValid() const = 0;
+	virtual Tr2ALMemoryType GetResourceMemoryClass() const = 0;
+	virtual void Destroy() = 0;
+	virtual void Describe( Tr2DeviceResourceDescriptionAL& description ) const = 0;
+
+	static void EnumerateResources( ResourceOperation* operation );
+};
+
+template <typename T>
+class Tr2DeviceResourceAL : public Tr2BaseDeviceResourceAL
+{
+public:
+	bool IsResourceValid() const override
 	{
-	public:
-		typedef void ( *ResourceOperation )( Tr2BaseDeviceResourceAL* );
+		return static_cast<const T*>( this )->IsValid();
+	}
 
-		Tr2BaseDeviceResourceAL();
-		virtual ~Tr2BaseDeviceResourceAL();
-
-		virtual bool IsResourceValid() const = 0;
-		virtual Tr2ALMemoryType GetResourceMemoryClass() const = 0;
-		virtual void Destroy() = 0;
-		virtual void Describe( Tr2DeviceResourceDescriptionAL& description ) const = 0;
-
-		static void EnumerateResources( ResourceOperation* operation );
-	};
-
-	template <typename T>
-	class Tr2DeviceResourceAL: public Tr2BaseDeviceResourceAL
+	Tr2ALMemoryType GetResourceMemoryClass() const override
 	{
-	public:
-		bool IsResourceValid() const override
-		{
-			return static_cast<const T*>( this )->IsValid();
-		}
-
-		Tr2ALMemoryType GetResourceMemoryClass() const override
-		{
-			return static_cast<const T*>( this )->GetMemoryClass();
-		}
-	};
+		return static_cast<const T*>( this )->GetMemoryClass();
+	}
+};
 
 }
 

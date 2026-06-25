@@ -22,7 +22,8 @@ struct CmfVertexReader
 void ReadCmfVertexAttributes( const CmfVertexReader& reader, const uint8_t* data, uint32_t vertexCount, uint32_t stride, std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<Vector3>* tangents, std::vector<Vector3>* binormals );
 
 
-BLUE_CLASS( Tr2GrannyIntersectionResult ): public IRoot
+BLUE_CLASS( Tr2GrannyIntersectionResult ) :
+	public IRoot
 {
 public:
 	Tr2GrannyIntersectionResult( IRoot* lockobj = nullptr );
@@ -56,25 +57,28 @@ BLUE_DECLARE( TriGrannyRes );
 // TriGrannyRes is used to load Granny files 'raw' - i.e. they are loaded without creating
 // any D3D resources. This is used, for example, when final geometry is constructed from
 // blendshapes.
-BLUE_CLASS( TriGrannyRes ):
+BLUE_CLASS( TriGrannyRes ) :
 	public BlueAsyncRes,
 	public ICacheable
 {
 public:
 	EXPOSE_TO_BLUE();
 
-    TriGrannyRes( IRoot* lockobj = NULL );
-    ~TriGrannyRes();
+	TriGrannyRes( IRoot* lockobj = NULL );
+	~TriGrannyRes();
 
 	//////////////////////////////////////////////////////////////////////////
 	// ICacheable
 	bool IsMemoryUsageKnown();
 	size_t GetMemoryUsage();
 
-    bool Load( const std::string& path );
+	bool Load( const std::string& path );
 
 #if WITH_GRANNY
-    granny_file* GetGrannyFile() const { return m_grannyFile; }
+	granny_file* GetGrannyFile() const
+	{
+		return m_grannyFile;
+	}
 	granny_skeleton* GetGrannySkeleton( int skeletonIx ) const;
 
 	const granny_mesh* GetGrannyMesh( int meshIx ) const;
@@ -128,7 +132,7 @@ public:
 
 	Tr2GrannyIntersectionResultPtr RayIntersection( const Vector3& pos, const Vector3& dir, int32_t meshIndex, int32_t areaIndex );
 
-	Be::Result<std::string> CreateGeometryRes( TriGeometryRes** result );
+	Be::Result<std::string> CreateGeometryRes( TriGeometryRes * *result );
 	Be::Result<std::string> BakeBlendshapeFromScript( unsigned int meshIx, const std::vector<float>& weights, TriGeometryRes* geom );
 
 	bool IsUsingCMF() const;
@@ -146,9 +150,9 @@ protected:
 	Be::Result<std::string> ValidateMeshIndex( unsigned int meshIx );
 
 	// Provide the functions that do the actual work of loading and preparing.
-    // The async management itself is done in TriAsyncLoadedResource.
-    virtual LoadingResult DoLoad();
-    virtual bool DoPrepare();
+	// The async management itself is done in TriAsyncLoadedResource.
+	virtual LoadingResult DoLoad();
+	virtual bool DoPrepare();
 
 	bool BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights, Tr2SuballocatedBuffer::Allocation& pVertexData, Tr2RenderContextAL& renderContext, unsigned int vertexDataSize, const NameToWeightMap* nameToWeight, bool deltaOnly );
 
@@ -157,8 +161,8 @@ protected:
 #if WITH_GRANNY
 	size_t m_dataSize;
 	void* m_data;
-    granny_file* m_grannyFile;
-	granny_memory_arena *m_grannyArena;
+	granny_file* m_grannyFile;
+	granny_memory_arena* m_grannyArena;
 #endif
 	Tr2CmfContents m_cmfContents;
 	bool m_useCMF;

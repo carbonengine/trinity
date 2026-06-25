@@ -4,17 +4,17 @@
 #include "Tr2PPDepthOfFieldEffect.h"
 #include "TriSettingsRegistrar.h"
 
-bool g_postprocessDofEnabled= false;
+bool g_postprocessDofEnabled = false;
 TRI_REGISTER_SETTING( "postprocessDofEnabled", g_postprocessDofEnabled );
 
 Tr2PPDepthOfFieldEffect::Tr2PPDepthOfFieldEffect( IRoot* lockobj ) :
 	m_focalDistance( 0.0f ),
-	m_focalLength(0.0f),
+	m_focalLength( 0.0f ),
 	m_scale( 0.0f ),
 	m_cocScale( 1.0f ),
 	m_foregroundBlurNeeded( true ),
 	m_bokehShape( Tr2Bokeh::Disk ),
-	m_useTAAFriendlyBokeh(true)
+	m_useTAAFriendlyBokeh( true )
 {
 }
 

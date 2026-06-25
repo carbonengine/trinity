@@ -8,7 +8,6 @@ EveSprite2dBracket::EveSprite2dBracket( IRoot* lockobj /*= nullptr */ ) :
 	m_color( 1.0, 1.0f, 1.0f, 1.0f ),
 	m_display( true )
 {
-
 }
 
 Vector2 EveSprite2dBracket::GetTranslation() const
@@ -40,4 +39,3 @@ void EveSprite2dBracket::SetDisplay( bool b )
 {
 	m_display = b;
 }
-

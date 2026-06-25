@@ -12,100 +12,100 @@ CCP_STATS_DECLARED_ELSEWHERE( generatedFrames );
 
 namespace Fsr3Utils
 {
-	void LogFsr3Message( uint32_t type, const wchar_t* message )
-	{
-		std::string m = std::string( "FSR3 Upscaling: " + std::string( CW2A( message ) ) );
+void LogFsr3Message( uint32_t type, const wchar_t* message )
+{
+	std::string m = std::string( "FSR3 Upscaling: " + std::string( CW2A( message ) ) );
 
-		switch( type )
-		{
-		case FFX_API_MESSAGE_TYPE_ERROR:
-			CCP_LOGERR( m.c_str() );
-			break;
-		case FFX_API_MESSAGE_TYPE_WARNING:
-			CCP_LOGWARN( m.c_str() );
-			break;
-		default:
-			CCP_LOG( m.c_str() );
-		}
+	switch( type )
+	{
+	case FFX_API_MESSAGE_TYPE_ERROR:
+		CCP_LOGERR( m.c_str() );
+		break;
+	case FFX_API_MESSAGE_TYPE_WARNING:
+		CCP_LOGWARN( m.c_str() );
+		break;
+	default:
+		CCP_LOG( m.c_str() );
+	}
+}
+
+FfxApiResource ConvertTextureToFfxResource( const Tr2TextureAL* texture, const wchar_t* textureName )
+{
+	ID3D12Resource* res = nullptr;
+	FfxApiResource ffxRes;
+
+	if( texture && texture->IsValid() )
+	{
+		auto texObj = texture->TrinityALImpl_GetObject();
+		res = texObj->GetResourceDx12();
+		res->SetName( textureName );
+		ffxRes = ffxApiGetResourceDX12( res );
+		// Since we set the dx12 resource format as typeless and then we create views into that resource
+		// so we need to get the actual format here...
+		ffxRes.description.format = GetFfxSurfaceFormat( texture->GetFormat() );
+	}
+	else
+	{
+		ffxRes = ffxApiGetResourceDX12( nullptr );
 	}
 
-	FfxApiResource ConvertTextureToFfxResource( const Tr2TextureAL* texture, const wchar_t* textureName )
+	return ffxRes;
+}
+
+FfxApiSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format )
+{
+	switch( format )
 	{
-		ID3D12Resource* res = nullptr;
-		FfxApiResource ffxRes;
-
-		if( texture && texture->IsValid() )
-		{
-			auto texObj = texture->TrinityALImpl_GetObject();
-			res = texObj->GetResourceDx12();
-			res->SetName( textureName );
-			ffxRes = ffxApiGetResourceDX12( res );
-			// Since we set the dx12 resource format as typeless and then we create views into that resource
-			// so we need to get the actual format here...
-			ffxRes.description.format = GetFfxSurfaceFormat( texture->GetFormat() );
-		}
-		else
-		{
-			ffxRes = ffxApiGetResourceDX12(nullptr);
-		}
-
-		return ffxRes;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_TYPELESS ):
+		return FFX_API_SURFACE_FORMAT_R32G32B32A32_TYPELESS;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_FLOAT ):
+		return FFX_API_SURFACE_FORMAT_R32G32B32A32_FLOAT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16B16A16_FLOAT ):
+		return FFX_API_SURFACE_FORMAT_R16G16B16A16_FLOAT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32_FLOAT ):
+		return FFX_API_SURFACE_FORMAT_R32G32_FLOAT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8_UINT ):
+		return FFX_API_SURFACE_FORMAT_R8_UINT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32_UINT ):
+		return FFX_API_SURFACE_FORMAT_R32_UINT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_TYPELESS ):
+		return FFX_API_SURFACE_FORMAT_R8G8B8A8_TYPELESS;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_UNORM ):
+		return FFX_API_SURFACE_FORMAT_R8G8B8A8_UNORM;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB ):
+		return FFX_API_SURFACE_FORMAT_R8G8B8A8_SRGB;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R11G11B10_FLOAT ):
+		return FFX_API_SURFACE_FORMAT_R11G11B10_FLOAT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16_FLOAT ):
+		return FFX_API_SURFACE_FORMAT_R16G16_FLOAT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16_UINT ):
+		return FFX_API_SURFACE_FORMAT_R16G16_UINT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_FLOAT ):
+		return FFX_API_SURFACE_FORMAT_R16_FLOAT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_UINT ):
+		return FFX_API_SURFACE_FORMAT_R16_UINT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_UNORM ):
+		return FFX_API_SURFACE_FORMAT_R16_UNORM;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_SNORM ):
+		return FFX_API_SURFACE_FORMAT_R16_SNORM;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8_UNORM ):
+		return FFX_API_SURFACE_FORMAT_R8_UNORM;
+	case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8_UNORM:
+		return FFX_API_SURFACE_FORMAT_R8G8_UNORM;
+	case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32_FLOAT:
+	case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_D32_FLOAT:
+		return FFX_API_SURFACE_FORMAT_R32_FLOAT;
+	case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_UNKNOWN ):
+		return FFX_API_SURFACE_FORMAT_UNKNOWN;
+	case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_UINT:
+		return FFX_API_SURFACE_FORMAT_R32G32B32A32_UINT;
+	case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_B8G8R8A8_UNORM:
+		return FFX_API_SURFACE_FORMAT_B8G8R8A8_UNORM;
+	default:
+		CCP_LOGERR( "FSR3: GetFfxSurfaceFormat: Unsupported format requested. Please implement." );
+		return FFX_API_SURFACE_FORMAT_UNKNOWN;
 	}
-
-	FfxApiSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format )
-	{
-		switch( format )
-		{
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_TYPELESS ):
-			return FFX_API_SURFACE_FORMAT_R32G32B32A32_TYPELESS;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_FLOAT ):
-			return FFX_API_SURFACE_FORMAT_R32G32B32A32_FLOAT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16B16A16_FLOAT ):
-			return FFX_API_SURFACE_FORMAT_R16G16B16A16_FLOAT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32_FLOAT ):
-			return FFX_API_SURFACE_FORMAT_R32G32_FLOAT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8_UINT ):
-			return FFX_API_SURFACE_FORMAT_R8_UINT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32_UINT ):
-			return FFX_API_SURFACE_FORMAT_R32_UINT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_TYPELESS ):
-			return FFX_API_SURFACE_FORMAT_R8G8B8A8_TYPELESS;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_UNORM ):
-			return FFX_API_SURFACE_FORMAT_R8G8B8A8_UNORM;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB ):
-			return FFX_API_SURFACE_FORMAT_R8G8B8A8_SRGB;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R11G11B10_FLOAT ):
-			return FFX_API_SURFACE_FORMAT_R11G11B10_FLOAT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16_FLOAT ):
-			return FFX_API_SURFACE_FORMAT_R16G16_FLOAT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16G16_UINT ):
-			return FFX_API_SURFACE_FORMAT_R16G16_UINT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_FLOAT ):
-			return FFX_API_SURFACE_FORMAT_R16_FLOAT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_UINT ):
-			return FFX_API_SURFACE_FORMAT_R16_UINT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_UNORM ):
-			return FFX_API_SURFACE_FORMAT_R16_UNORM;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R16_SNORM ):
-			return FFX_API_SURFACE_FORMAT_R16_SNORM;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8_UNORM ):
-			return FFX_API_SURFACE_FORMAT_R8_UNORM;
-		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R8G8_UNORM:
-			return FFX_API_SURFACE_FORMAT_R8G8_UNORM;
-		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32_FLOAT:
-		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_D32_FLOAT:
-			return FFX_API_SURFACE_FORMAT_R32_FLOAT;
-		case( Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_UNKNOWN ):
-			return FFX_API_SURFACE_FORMAT_UNKNOWN;
-		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_R32G32B32A32_UINT:
-			return FFX_API_SURFACE_FORMAT_R32G32B32A32_UINT;
-		case Tr2RenderContextEnum::PixelFormat::PIXEL_FORMAT_B8G8R8A8_UNORM:
-			return FFX_API_SURFACE_FORMAT_B8G8R8A8_UNORM;
-		default:
-			CCP_LOGERR( "FSR3: GetFfxSurfaceFormat: Unsupported format requested. Please implement." );
-			return FFX_API_SURFACE_FORMAT_UNKNOWN;
-		}
-	}
+}
 
 }
 
@@ -205,7 +205,7 @@ void Tr2Fsr3UpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 Tr2UpscalingContextAL* Tr2Fsr3UpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
 {
 	return new Tr2Fsr3UpscalingContext( m_setting, m_frameGeneration, m_swapChainContext, params );
-}	
+}
 
 Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( Tr2UpscalingAL::Setting setting, bool frameGeneration, ffx::Context swapchainContext, Tr2UpscalingAL::UpscalingContextParams params ) :
 	Tr2UpscalingContextAL( setting, frameGeneration, params ),
@@ -294,7 +294,7 @@ void Tr2Fsr3UpscalingContext::SetupForReuse()
 	{
 		if( m_frameGeneration )
 		{
-			// disable frame generation just for a moment (reenabled in dispatch) 
+			// disable frame generation just for a moment (reenabled in dispatch)
 			m_frameGenerationConfig.frameGenerationEnabled = false;
 			m_frameGenerationConfig.swapChain = m_params.renderContext.GetPrimaryRenderContext().m_swapchain;
 			m_frameGenerationConfig.frameGenerationCallback = nullptr;
@@ -368,16 +368,16 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::SetupFrameGen()
 		m_frameGenerationConfig.frameGenerationEnabled = true;
 		m_frameGenerationConfig.frameGenerationCallback = m_frameGenerationCallback;
 		m_frameGenerationConfig.frameGenerationCallbackUserContext = &m_framegenerationFfxContext;
-		
+
 		m_frameGenerationConfig.presentCallback = nullptr;
 		m_frameGenerationConfig.presentCallbackUserContext = nullptr;
-		
+
 		m_frameGenerationConfig.swapChain = m_params.renderContext.GetPrimaryRenderContext().m_swapchain;
 		m_frameGenerationConfig.HUDLessColor = FfxApiResource( {} ); // we don't have a HUDless texture yet
 
 		m_frameGenerationConfig.frameID = 0;
 		m_frameGenerationConfig.allowAsyncWorkloads = false;
-		
+
 		retCode = ffx::Configure( m_framegenerationFfxContext, m_frameGenerationConfig );
 		if( retCode != ffx::ReturnCode::Ok )
 		{
@@ -421,7 +421,7 @@ void Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext::UpdateJitter()
 		m_jitterX = 0.0f;
 		m_jitterY = 0.0f;
 
-		 // Increment jitter index for frame
+		// Increment jitter index for frame
 		++m_jitterIndex;
 
 		ffx::ReturnCode retCode;
@@ -456,8 +456,8 @@ void Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext::UpdateJitter()
 
 uint32_t Tr2Fsr3UpscalingContext::GetDispatchRequirements() const
 {
-	return Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPAQUE_ONLY | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE | 
-			Tr2UpscalingAL::DispatchRequirements::VELOCITY | Tr2UpscalingAL::DispatchRequirements::TRANSPARENCY | Tr2UpscalingAL::DispatchRequirements::REACTIVE;
+	return Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPAQUE_ONLY | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE |
+		Tr2UpscalingAL::DispatchRequirements::VELOCITY | Tr2UpscalingAL::DispatchRequirements::TRANSPARENCY | Tr2UpscalingAL::DispatchRequirements::REACTIVE;
 }
 
 
@@ -546,7 +546,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchFrameGen( Tr2UpscalingAL
 	dispatchFgPrep.depth = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.depth, L"FSR3_InputDepth" );
 	dispatchFgPrep.motionVectors = Fsr3Utils::ConvertTextureToFfxResource( dispatchParameters.velocity, L"FSR3_InputMotionVectors" );
 	dispatchFgPrep.flags = dispatchParameters.frameGenDebugView ? FFX_FRAMEGENERATION_FLAG_DRAW_DEBUG_VIEW : 0;
-	
+
 	dispatchFgPrep.jitterOffset.x = m_jitterX;
 	dispatchFgPrep.jitterOffset.y = m_jitterY;
 	dispatchFgPrep.motionVectorScale.x = (float)m_renderWidth;
@@ -562,14 +562,14 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchFrameGen( Tr2UpscalingAL
 	dispatchFgPrep.viewSpaceToMetersFactor = 1.f;
 	dispatchFgPrep.frameID = dispatchParameters.currentFrameIndex;
 
-	ffxDispatchDescFrameGenerationPrepareCameraInfo cameraInfo {};
+	ffxDispatchDescFrameGenerationPrepareCameraInfo cameraInfo{};
 	std::copy( std::begin( dispatchParameters.cameraForward ), std::end( dispatchParameters.cameraForward ), cameraInfo.cameraForward );
 	std::copy( std::begin( dispatchParameters.cameraRight ), std::end( dispatchParameters.cameraRight ), cameraInfo.cameraRight );
 	std::copy( std::begin( dispatchParameters.cameraUp ), std::end( dispatchParameters.cameraUp ), cameraInfo.cameraUp );
 	std::copy( std::begin( dispatchParameters.cameraPos ), std::end( dispatchParameters.cameraPos ), cameraInfo.cameraPosition );
 
 	dispatchFgPrep.header.pNext = &cameraInfo.header;
-	
+
 	m_frameGenerationConfig.frameID = dispatchParameters.currentFrameIndex;
 	m_frameGenerationConfig.frameGenerationEnabled = true;
 	m_frameGenerationConfig.frameGenerationCallback = m_frameGenerationCallback;
@@ -589,7 +589,7 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::DispatchFrameGen( Tr2UpscalingAL
 			CCP_LOGERR( "FSR3 error while dispatching frame generation preparation during dispatch %d", retCode );
 		}
 	}
-	
+
 	return Tr2UpscalingAL::Result::OK;
 }
 #endif

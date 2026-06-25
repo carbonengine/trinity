@@ -2,7 +2,8 @@
 
 #pragma once
 
-BLUE_CLASS( Tr2PlatformInfo ): public IRoot
+BLUE_CLASS( Tr2PlatformInfo ) :
+	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();

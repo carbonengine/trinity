@@ -7,8 +7,8 @@ BLUE_DEFINE( EveSOFDNA );
 
 const Be::ClassInfo* EveSOFDNA::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveSOFDNA, "" )
-        MAP_INTERFACE( EveSOFDNA )
+	EXPOSURE_BEGIN( EveSOFDNA, "" )
+		MAP_INTERFACE( EveSOFDNA )
 
-    EXPOSURE_END()
+	EXPOSURE_END()
 }

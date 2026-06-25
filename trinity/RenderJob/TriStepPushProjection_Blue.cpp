@@ -8,7 +8,7 @@ BLUE_DEFINE( TriStepPushProjection );
 
 const Be::ClassInfo* TriStepPushProjection::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepPushProjection, "" )
+	EXPOSURE_BEGIN( TriStepPushProjection, "" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepPushProjection )

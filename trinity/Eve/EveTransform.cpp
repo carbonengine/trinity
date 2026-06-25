@@ -26,8 +26,8 @@ EveTransform::EveTransform( IRoot* lockobj ) :
 	m_isVisible( true ),
 	m_hideOnLowQuality( false ),
 	m_visibilityThreshold( 2.0f ),
-	m_lastRelativePosition(0,0,0),
-	m_lastDeltaTime(0.f),
+	m_lastRelativePosition( 0, 0, 0 ),
+	m_lastDeltaTime( 0.f ),
 	m_lastCurveUpdateDelta( g_eveSpaceSceneLowUpdateRate ),
 	m_useLodLevel( true ),
 	m_lodLevel( TR2_LOD_LOW ),
@@ -106,7 +106,7 @@ void EveTransform::UpdateAsyncronous( const EveUpdateContext& updateContext )
 			m_lastCurveUpdateDelta = 0;
 			for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 			{
-				(*it)->Update( TimeAsDouble( time ) );
+				( *it )->Update( TimeAsDouble( time ) );
 			}
 		}
 	}
@@ -119,14 +119,14 @@ void EveTransform::UpdateAsyncronous( const EveUpdateContext& updateContext )
 
 	for( auto it = m_particleSystems.begin(); it != m_particleSystems.end(); ++it )
 	{
-		(*it)->UpdateTransform( m_worldTransform );
+		( *it )->UpdateTransform( m_worldTransform );
 	}
 	if( !m_particleEmitters.empty() )
 	{
 		ITr2GenericEmitter::UpdateArguments args( time, updateContext.GetGpuParticleSystem(), m_worldTransform, updateContext.GetOriginShift() );
 		for( auto it = m_particleEmitters.begin(); it != m_particleEmitters.end(); ++it )
 		{
-			(*it)->Update( args );
+			( *it )->Update( args );
 		}
 	}
 	if( !m_particleSystems.empty() )
@@ -145,13 +145,13 @@ void EveTransform::UpdateViewDependentData( const TriFrustum& frustum, const Mat
 
 	for( auto it = m_particleSystems.begin(); it != m_particleSystems.end(); ++it )
 	{
-		(*it)->UpdateViewDependentData( &frustum, m_worldTransform );
+		( *it )->UpdateViewDependentData( &frustum, m_worldTransform );
 	}
 
 	TriObserverLocalVector::iterator observersEnd = m_observers.end();
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != observersEnd; ++it )
 	{
-		(*it)->Update( m_worldTransform );
+		( *it )->Update( m_worldTransform );
 	}
 }
 
@@ -161,7 +161,7 @@ void EveTransform::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Bounding Sphere" );
 	options.insert( "Names" );
 
-	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	for( auto it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
 		( *it )->GetDebugOptions( options );
 	}
@@ -185,7 +185,7 @@ void EveTransform::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		return;
 	}
 
-	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	for( auto it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
 		( *it )->RenderDebugInfo( renderer );
 	}
@@ -263,7 +263,7 @@ void EveTransform::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr
 
 	for( auto it = m_particleSystems.begin(); it != m_particleSystems.end(); it++ )
 	{
-		(*it)->SortParticles();
+		( *it )->SortParticles();
 	}
 
 	if( m_isVisible && m_mesh )
@@ -294,7 +294,7 @@ void EveTransform::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	}
 
 	UpdateViewDependentData( updateContext.GetFrustum(), parentTransform );
-	
+
 	if( m_mesh )
 	{
 		Vector4 boundingSphere;
@@ -340,7 +340,7 @@ void EveTransform::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	{
 		IEveTransform* p = *it;
 		p->UpdateVisibility( updateContext, m_worldTransform );
-		
+
 		// Use the highest child LOD level.
 		m_lodLevel = EveLODHelper::MergeLOD( m_lodLevel, p->GetLODLevel() );
 	}
@@ -367,13 +367,13 @@ bool EveTransform::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query
 		BoundingSphereFromBox( sphere, minBounds, maxBounds, &m_worldTransform );
 		valid = true;
 	}
-	
+
 	if( query == EVE_BOUNDS_WITH_CHILDREN )
 	{
-		Vector4 boundingSphere(0,0,0,100.f);
+		Vector4 boundingSphere( 0, 0, 0, 100.f );
 		for( auto it = m_children.cbegin(); it != m_children.cend(); it++ )
 		{
-			if( (*it)->GetBoundingSphere( boundingSphere, query ) )
+			if( ( *it )->GetBoundingSphere( boundingSphere, query ) )
 			{
 				BoundingSphereSetOrUpdate( boundingSphere, sphere, valid );
 				valid = true;
@@ -384,7 +384,7 @@ bool EveTransform::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query
 	return valid;
 }
 
-void EveTransform::UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t )
+void EveTransform::UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
 {
 	// As with EveSpaceObject2, we need to make sure that we fully update the position to give to the camera
 	// This has to happen before the Scene2 update, where other objects may be camera aligned
@@ -403,7 +403,7 @@ Quaternion EveTransform::GetWorldRotation()
 	return m_rotation;
 }
 
-void EveTransform::GetModelCenterWorldPosition( Vector3 &position ) const
+void EveTransform::GetModelCenterWorldPosition( Vector3& position ) const
 {
 	position = m_worldTransform.GetTranslation();
 }
@@ -416,7 +416,7 @@ void EveTransform::PlayCurveSets()
 {
 	for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 	{
-		(*it)->Play();
+		( *it )->Play();
 	}
 }
 
@@ -428,7 +428,7 @@ void EveTransform::PlayCurveSet( const std::string& name, const std::string& ran
 {
 	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
 	{
-		if( (*it)->GetName() == name )
+		if( ( *it )->GetName() == name )
 		{
 			if( rangeName.empty() )
 			{
@@ -451,9 +451,9 @@ void EveTransform::StopCurveSet( const std::string& name )
 {
 	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
 	{
-		if( (*it)->GetName() == name )
+		if( ( *it )->GetName() == name )
 		{
-			(*it)->Stop();
+			( *it )->Stop();
 		}
 	}
 }

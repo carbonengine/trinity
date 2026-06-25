@@ -3,7 +3,8 @@
 #pragma once
 
 
-BLUE_CLASS( Tr2ControllerFloatVariable ) : public IInitialize, public INotify
+BLUE_CLASS( Tr2ControllerFloatVariable ) :
+	public IInitialize, public INotify
 {
 public:
 	enum Type

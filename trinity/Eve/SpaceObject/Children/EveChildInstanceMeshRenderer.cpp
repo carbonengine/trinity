@@ -127,7 +127,7 @@ void EveChildInstanceMeshRenderer::UpdateBoundingSphere( const PlacementDataWith
 		if( ( m_mesh->GetGeometryResource() )->IsGood() )
 		{
 			TriGeometryResMeshData* meshData = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() );
-			baseMeshSize = meshData->m_boundingSphere.w;	
+			baseMeshSize = meshData->m_boundingSphere.w;
 		}
 	}
 
@@ -138,9 +138,9 @@ void EveChildInstanceMeshRenderer::UpdateBoundingSphere( const PlacementDataWith
 	for( size_t index = 0; index < m_totalObjectCount; index++ )
 	{
 		Vector3 pointPos = placements[index].initialTranslation + placements[index].additionalTranslation;
-		float dist = LengthSq( pointPos - center ); // calculate squared for efficiency 
-		Vector3 pointScale = placements[index].initialScale * placements[index].additionalScale; 
-		float longestAxis = max( max( pointScale.x, pointScale.y ), pointScale.z ) ;
+		float dist = LengthSq( pointPos - center ); // calculate squared for efficiency
+		Vector3 pointScale = placements[index].initialScale * placements[index].additionalScale;
+		float longestAxis = max( max( pointScale.x, pointScale.y ), pointScale.z );
 		largestScale = max( longestAxis, largestScale );
 		longestDistance = max( dist, longestDistance );
 	}
@@ -234,7 +234,7 @@ void EveChildInstanceMeshRenderer::UpdateGeometryResource( const PlacementDataWi
 	std::vector<PerInstanceData> instances;
 	instances.reserve( m_totalObjectCount );
 
-	std::vector<Matrix> instanceTransforms;  // for raytracing
+	std::vector<Matrix> instanceTransforms; // for raytracing
 	instanceTransforms.reserve( m_totalObjectCount );
 
 	Vector3 position, scaling;
@@ -265,7 +265,7 @@ void EveChildInstanceMeshRenderer::UpdateGeometryResource( const PlacementDataWi
 		{
 			Quaternion objUpToCamera;
 			Vector3 objDir;
-			Vector3 angleToCamera = Normalize( camPos - TransformCoord( position, m_worldTransform ));
+			Vector3 angleToCamera = Normalize( camPos - TransformCoord( position, m_worldTransform ) );
 			Quaternion originRotation = Inverse( RotationQuaternion( m_worldTransform ) );
 			TriVectorRotateQuaternion( &objDir, &up, &originRotation );
 
@@ -356,7 +356,7 @@ void EveChildInstanceMeshRenderer::UpdateInstanceData( std::vector<PerInstanceDa
 	if( Tr2InstancedMeshPtr mesh = BlueCastPtr( m_mesh ) )
 	{
 		auto geometryResource = mesh->GetInstanceGeometryResource();
-		
+
 		if( !geometryResource->IsInstanceDataReady() )
 		{
 			ConfigureInstanceData();
@@ -368,7 +368,7 @@ void EveChildInstanceMeshRenderer::UpdateInstanceData( std::vector<PerInstanceDa
 			auto dest = geoRes->GetData( unsigned( instances.size() ) );
 			memcpy( dest, &instances[0], sizeof( instances[0] ) * instances.size() );
 			geoRes->UpdateData();
-	
+
 			float maxScale = 0;
 			CcpMath::AxisAlignedBox aabb;
 			for( auto& instance : instances )

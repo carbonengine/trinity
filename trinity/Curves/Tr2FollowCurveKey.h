@@ -8,21 +8,22 @@ BLUE_DECLARE( EveSpaceObject2 );
 
 namespace Tr2FollowCurveKeyInterpolation
 {
-	enum Type
-	{
-		// Constant (L0) interpolation
-		CONSTANT = 0,
-		// Linear (L1) interpolation
-		LINEAR = 1,
-		// Hermite/cubic (L2) interpolation
-		HERMITE = 2,
-	};
+enum Type
+{
+	// Constant (L0) interpolation
+	CONSTANT = 0,
+	// Linear (L1) interpolation
+	LINEAR = 1,
+	// Hermite/cubic (L2) interpolation
+	HERMITE = 2,
+};
 }
 
 
- BLUE_INTERFACE( ITr2FollowCurveKey ): public IRoot
+BLUE_INTERFACE( ITr2FollowCurveKey ) :
+	public IRoot
 {
-public: 
+public:
 	virtual Vector3 GetValue() = 0;
 	virtual const float GetTime() = 0;
 	virtual const Tr2FollowCurveKeyInterpolation::Type GetInterpolationType() = 0;
@@ -37,7 +38,8 @@ BLUE_CLASS( Tr2ObjectFollowCurveKey ) :
 	public IInitialize
 {
 public:
-	enum RotationSetting {
+	enum RotationSetting
+	{
 		NO_ROTATION,
 		MODEL_ROTATION,
 		LOCATOR_ROTATION
@@ -53,7 +55,7 @@ public:
 	bool Initialize();
 
 	// INotify
-	bool OnModified( Be::Var *value );
+	bool OnModified( Be::Var * value );
 
 	// ITr2FollowCurveKey
 	Vector3 GetValue();
@@ -64,7 +66,7 @@ public:
 
 private:
 	Locator* GetLocator();
-	
+
 	Matrix GetLocatorRotation();
 	Matrix GetModelRotation();
 
@@ -83,7 +85,6 @@ private:
 	RotationSetting m_rotationSetting;
 
 	Locator* m_locator;
-
 };
 TYPEDEF_BLUECLASS( Tr2ObjectFollowCurveKey );
 
@@ -104,7 +105,7 @@ public:
 	bool Initialize();
 
 	// INotify
-	bool OnModified( Be::Var *value );
+	bool OnModified( Be::Var * value );
 
 	// ITr2FollowCurveKey
 	Vector3 GetValue();
@@ -119,7 +120,7 @@ private:
 	BlueSharedString m_name;
 
 	float m_fovMultiplication;
-	float m_angle; 
+	float m_angle;
 	float m_angleZero;
 	Vector3 m_objectBounds;
 	Vector3 m_offset;
@@ -143,7 +144,5 @@ private:
 	float m_lastEnabledFOV;
 	float m_lastEnabledFrontClip;
 	Matrix m_lastEnabledInverseViewMatrix;
-
-
 };
 TYPEDEF_BLUECLASS( Tr2CameraFollowCurveKey );

@@ -10,7 +10,7 @@
 BLUE_DECLARE( Tr2Vector4Parameter );
 BLUE_CLASS_ALLOW_DELAYED_DELETE( Tr2Vector4Parameter );
 
-BLUE_CLASS( Tr2Vector4Parameter ):
+BLUE_CLASS( Tr2Vector4Parameter ) :
 	public ITriEffectParameter,
 	public ITriReroutable,
 	public IInitialize
@@ -19,7 +19,7 @@ BLUE_CLASS( Tr2Vector4Parameter ):
 public:
 	EXPOSE_TO_BLUE();
 
-	Tr2Vector4Parameter(IRoot* lockobj = NULL);
+	Tr2Vector4Parameter( IRoot* lockobj = NULL );
 
 	using ITriEffectParameter::Lock;
 	using ITriEffectParameter::Unlock;
@@ -37,20 +37,20 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 
-	void CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType, 
-							unsigned char* destHandle, 
+	void CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,
+							unsigned char* destHandle,
 							size_t size,
-							Tr2RenderContext &renderContext ) const;
+							Tr2RenderContext& renderContext ) const;
 	const char* GetParameterName() const;
-	void RebuildEffectHandles( Tr2Shader* effectRes );
+	void RebuildEffectHandles( Tr2Shader * effectRes );
 	unsigned GetHashValue( unsigned startingHash ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriReroutable
 	void SetDestination( void* dest, size_t size );
 	void GetDestination( void*& dest, size_t& size );
-	void RegisterBinding( TriValueBinding* vb );
-	void UnregisterBinding( TriValueBinding* vb );
+	void RegisterBinding( TriValueBinding * vb );
+	void UnregisterBinding( TriValueBinding * vb );
 	bool IsRerouted() const;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -81,4 +81,4 @@ private:
 
 TYPEDEF_BLUECLASS( Tr2Vector4Parameter );
 
-#endif 
+#endif

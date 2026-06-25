@@ -10,7 +10,7 @@ class Tr2RenderContextAL;
 
 namespace TrinityALImpl
 {
-	class Tr2OcclusionQueryAL;
+class Tr2OcclusionQueryAL;
 }
 
 

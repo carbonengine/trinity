@@ -7,8 +7,8 @@
 
 #pragma once
 
-#ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.                   
-#define _WIN32_WINNT 0x0501	// Change this to the appropriate value to target other versions of Windows.
+#ifndef _WIN32_WINNT // Allow use of features specific to Windows XP or later.
+#define _WIN32_WINNT 0x0501 // Change this to the appropriate value to target other versions of Windows.
 #endif
 
 #if _WIN32
@@ -44,8 +44,8 @@
 #define S_OK 0x00000000
 #define E_FAIL 0x80004005
 
-#define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
-#define FAILED(hr) (((HRESULT)(hr)) < 0)
+#define SUCCEEDED( hr ) ( ( (HRESULT)( hr ) ) >= 0 )
+#define FAILED( hr ) ( ( (HRESULT)( hr ) ) < 0 )
 
 #define D3D11_FILTER_REDUCTION_TYPE_MASK ( 0x3 )
 #define D3D11_FILTER_REDUCTION_TYPE_SHIFT ( 7 )
@@ -55,25 +55,21 @@
 #define D3D11_MIP_FILTER_SHIFT ( 0 )
 #define D3D11_ANISOTROPIC_FILTERING_BIT ( 0x40 )
 
-#define D3D11_DECODE_MIN_FILTER( d3d11Filter )                                                              \
-                                 ( ( D3D11_FILTER_TYPE )                                                    \
-                                 ( ( ( d3d11Filter ) >> D3D11_MIN_FILTER_SHIFT ) & D3D11_FILTER_TYPE_MASK ) )
-#define D3D11_DECODE_MAG_FILTER( d3d11Filter )                                                              \
-                                 ( ( D3D11_FILTER_TYPE )                                                    \
-                                 ( ( ( d3d11Filter ) >> D3D11_MAG_FILTER_SHIFT ) & D3D11_FILTER_TYPE_MASK ) )
-#define D3D11_DECODE_MIP_FILTER( d3d11Filter )                                                              \
-                                 ( ( D3D11_FILTER_TYPE )                                                    \
-                                 ( ( ( d3d11Filter ) >> D3D11_MIP_FILTER_SHIFT ) & D3D11_FILTER_TYPE_MASK ) )
-#define D3D11_DECODE_FILTER_REDUCTION( d3d11Filter )                                                        \
-                                 ( ( D3D11_FILTER_REDUCTION_TYPE )                                                      \
-                                 ( ( ( d3d11Filter ) >> D3D11_FILTER_REDUCTION_TYPE_SHIFT ) & D3D11_FILTER_REDUCTION_TYPE_MASK ) )
-#define D3D11_DECODE_IS_COMPARISON_FILTER( d3d11Filter )                                                    \
-                                 ( D3D11_DECODE_FILTER_REDUCTION( d3d11Filter ) == D3D11_FILTER_REDUCTION_TYPE_COMPARISON )
-#define D3D11_DECODE_IS_ANISOTROPIC_FILTER( d3d11Filter )                                               \
-                            ( ( ( d3d11Filter ) & D3D11_ANISOTROPIC_FILTERING_BIT ) &&                  \
-                            ( D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MIN_FILTER( d3d11Filter ) ) &&   \
-                            ( D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MAG_FILTER( d3d11Filter ) ) &&   \
-                            ( D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MIP_FILTER( d3d11Filter ) ) )
+#define D3D11_DECODE_MIN_FILTER( d3d11Filter ) \
+	( (D3D11_FILTER_TYPE)( ( ( d3d11Filter ) >> D3D11_MIN_FILTER_SHIFT ) & D3D11_FILTER_TYPE_MASK ) )
+#define D3D11_DECODE_MAG_FILTER( d3d11Filter ) \
+	( (D3D11_FILTER_TYPE)( ( ( d3d11Filter ) >> D3D11_MAG_FILTER_SHIFT ) & D3D11_FILTER_TYPE_MASK ) )
+#define D3D11_DECODE_MIP_FILTER( d3d11Filter ) \
+	( (D3D11_FILTER_TYPE)( ( ( d3d11Filter ) >> D3D11_MIP_FILTER_SHIFT ) & D3D11_FILTER_TYPE_MASK ) )
+#define D3D11_DECODE_FILTER_REDUCTION( d3d11Filter ) \
+	( (D3D11_FILTER_REDUCTION_TYPE)( ( ( d3d11Filter ) >> D3D11_FILTER_REDUCTION_TYPE_SHIFT ) & D3D11_FILTER_REDUCTION_TYPE_MASK ) )
+#define D3D11_DECODE_IS_COMPARISON_FILTER( d3d11Filter ) \
+	( D3D11_DECODE_FILTER_REDUCTION( d3d11Filter ) == D3D11_FILTER_REDUCTION_TYPE_COMPARISON )
+#define D3D11_DECODE_IS_ANISOTROPIC_FILTER( d3d11Filter )                       \
+	( ( ( d3d11Filter ) & D3D11_ANISOTROPIC_FILTERING_BIT ) &&                  \
+	  ( D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MIN_FILTER( d3d11Filter ) ) && \
+	  ( D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MAG_FILTER( d3d11Filter ) ) && \
+	  ( D3D11_FILTER_TYPE_LINEAR == D3D11_DECODE_MIP_FILTER( d3d11Filter ) ) )
 
 // Definitions taken from https://docs.microsoft.com/en-gb/windows/win32/winprog/windows-data-types
 // Note: On Windows platform DWORD is defined as
@@ -94,15 +90,16 @@ typedef const char* LPCSTR;
 typedef char* LPSTR;
 typedef const void* LPCVOID;
 typedef void* LPVOID;
-typedef void *PVOID;
+typedef void* PVOID;
 // typedef long LONG;
 typedef int32_t LONG;
 typedef LONG HRESULT;
 typedef PVOID HANDLE;
 
-typedef struct _FILETIME {
-  DWORD dwLowDateTime;
-  DWORD dwHighDateTime;
+typedef struct _FILETIME
+{
+	DWORD dwLowDateTime;
+	DWORD dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
 struct ID3DInclude
@@ -111,8 +108,8 @@ struct ID3DInclude
 
 typedef struct D3D_SHADER_MACRO
 {
-  LPCSTR Name;
-  LPCSTR Definition;
+	LPCSTR Name;
+	LPCSTR Definition;
 } D3D_SHADER_MACRO, *LPD3D_SHADER_MACRO;
 
 enum D3D_INCLUDE_TYPE
@@ -122,7 +119,8 @@ enum D3D_INCLUDE_TYPE
 	D3D_INCLUDE_FORCE_DWORD = 0x7fffffff
 };
 
-enum D3D11_FILTER {
+enum D3D11_FILTER
+{
 	D3D11_FILTER_MIN_MAG_MIP_POINT = 0,
 	D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR = 0x1,
 	D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT = 0x4,
@@ -142,7 +140,7 @@ enum D3D11_FILTER {
 	D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR = 0x95,
 	D3D11_FILTER_COMPARISON_ANISOTROPIC = 0xd5,
 
-    D3D11_FILTER_MINIMUM_MIN_MAG_MIP_POINT = 0x100,
+	D3D11_FILTER_MINIMUM_MIN_MAG_MIP_POINT = 0x100,
 	D3D11_FILTER_MINIMUM_MIN_MAG_POINT_MIP_LINEAR = 0x101,
 	D3D11_FILTER_MINIMUM_MIN_POINT_MAG_LINEAR_MIP_POINT = 0x104,
 	D3D11_FILTER_MINIMUM_MIN_POINT_MAG_MIP_LINEAR = 0x105,
@@ -162,7 +160,8 @@ enum D3D11_FILTER {
 	D3D11_FILTER_MAXIMUM_ANISOTROPIC = 0x1d5
 };
 
-enum D3D11_COMPARISON_FUNC {
+enum D3D11_COMPARISON_FUNC
+{
 	D3D11_COMPARISON_NEVER = 1,
 	D3D11_COMPARISON_LESS = 2,
 	D3D11_COMPARISON_EQUAL = 3,
@@ -173,7 +172,8 @@ enum D3D11_COMPARISON_FUNC {
 	D3D11_COMPARISON_ALWAYS = 8
 };
 
-enum D3D11_TEXTURE_ADDRESS_MODE {
+enum D3D11_TEXTURE_ADDRESS_MODE
+{
 	D3D11_TEXTURE_ADDRESS_WRAP = 1,
 	D3D11_TEXTURE_ADDRESS_MIRROR = 2,
 	D3D11_TEXTURE_ADDRESS_CLAMP = 3,
@@ -181,16 +181,18 @@ enum D3D11_TEXTURE_ADDRESS_MODE {
 	D3D11_TEXTURE_ADDRESS_MIRROR_ONCE = 5
 };
 
-enum D3D11_FILTER_TYPE {
-  D3D11_FILTER_TYPE_POINT,
-  D3D11_FILTER_TYPE_LINEAR
+enum D3D11_FILTER_TYPE
+{
+	D3D11_FILTER_TYPE_POINT,
+	D3D11_FILTER_TYPE_LINEAR
 };
 
-enum D3D11_FILTER_REDUCTION_TYPE {
-  D3D11_FILTER_REDUCTION_TYPE_STANDARD,
-  D3D11_FILTER_REDUCTION_TYPE_COMPARISON,
-  D3D11_FILTER_REDUCTION_TYPE_MINIMUM,
-  D3D11_FILTER_REDUCTION_TYPE_MAXIMUM
+enum D3D11_FILTER_REDUCTION_TYPE
+{
+	D3D11_FILTER_REDUCTION_TYPE_STANDARD,
+	D3D11_FILTER_REDUCTION_TYPE_COMPARISON,
+	D3D11_FILTER_REDUCTION_TYPE_MINIMUM,
+	D3D11_FILTER_REDUCTION_TYPE_MAXIMUM
 };
 
 enum D3D11_BLEND
@@ -252,7 +254,7 @@ enum D3D11_FILL_MODE
 #include <thread>
 #include <functional>
 
-#if !NDEBUG 
+#if !NDEBUG
 #undef CCP_TELEMETRY_ENABLED
 #endif
 
@@ -260,7 +262,7 @@ enum D3D11_FILL_MODE
 #include <tracy/Tracy.hpp>
 #else
 #define ZoneScoped
-#define ZoneScopedN(x)
+#define ZoneScopedN( x )
 #endif
 
 #ifndef _WIN32

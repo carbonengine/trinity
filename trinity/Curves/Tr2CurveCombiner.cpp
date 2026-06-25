@@ -3,19 +3,19 @@
 #include "Tr2CurveCombiner.h"
 
 
-Tr2CurveCombiner::Tr2CurveCombiner( IRoot* lockobj )
-	:PARENTLOCK( m_curves ),
+Tr2CurveCombiner::Tr2CurveCombiner( IRoot* lockobj ) :
+	PARENTLOCK( m_curves ),
 	m_currentValue( 0, 0, 0 )
 {
 }
 
 void Tr2CurveCombiner::UpdateValue( double time )
 {
-	Vector3 out(0.f, 0.f, 0.f);
+	Vector3 out( 0.f, 0.f, 0.f );
 	for( auto it = begin( m_curves ); it != end( m_curves ); ++it )
 	{
-		Vector3 temp(0.f, 0.f, 0.f );
-		(*it)->Update( &temp, time );
+		Vector3 temp( 0.f, 0.f, 0.f );
+		( *it )->Update( &temp, time );
 		out += temp;
 	}
 	m_currentValue = out;
@@ -28,7 +28,7 @@ float Tr2CurveCombiner::Length()
 	{
 		if( ITriCurveLengthPtr curve = BlueCastPtr( *it ) )
 		{
-			maxLength = max(curve->Length(), maxLength);
+			maxLength = max( curve->Length(), maxLength );
 		}
 	}
 	return maxLength;
@@ -36,7 +36,7 @@ float Tr2CurveCombiner::Length()
 
 Vector3 Tr2CurveCombiner::GetValue( double time ) const
 {
-	Vector3 out(0.f, 0.f, 0.f);
+	Vector3 out( 0.f, 0.f, 0.f );
 	for( auto it = begin( m_curves ); it != end( m_curves ); ++it )
 	{
 		Vector3 temp( 0.f, 0.f, 0.f );
@@ -49,10 +49,10 @@ Vector3 Tr2CurveCombiner::GetValue( double time ) const
 // --------------------------------------------------------------------------------
 Vector3* Tr2CurveCombiner::Update( Vector3* in, Be::Time time )
 {
-	Vector3 out(0.f, 0.f, 0.f);
+	Vector3 out( 0.f, 0.f, 0.f );
 	for( auto it = begin( m_curves ); it != end( m_curves ); ++it )
 	{
-		Vector3 temp(0.f, 0.f, 0.f);
+		Vector3 temp( 0.f, 0.f, 0.f );
 		( *it )->Update( &temp, time );
 		out += temp;
 	}
@@ -64,10 +64,10 @@ Vector3* Tr2CurveCombiner::Update( Vector3* in, Be::Time time )
 // --------------------------------------------------------------------------------
 Vector3* Tr2CurveCombiner::Update( Vector3* in, double time )
 {
-	Vector3 out(0.f, 0.f, 0.f);
+	Vector3 out( 0.f, 0.f, 0.f );
 	for( auto it = begin( m_curves ); it != end( m_curves ); ++it )
 	{
-		Vector3 temp(0.f, 0.f, 0.f);
+		Vector3 temp( 0.f, 0.f, 0.f );
 		( *it )->Update( &temp, time );
 		out += temp;
 	}

@@ -45,13 +45,13 @@ void Tr2ActionSetAttenuationScaling::StartWithController( ITr2ActionController* 
 	Start( *controller );
 }
 
-// Convert a scaling percentage to float for Wwise. If defined, apply 
+// Convert a scaling percentage to float for Wwise. If defined, apply
 // a value from a controller variable to the final scaling factor.
 float Tr2ActionSetAttenuationScaling::GetScalingFactor() const
 {
 	float controllerVariableValue = 0;
 
-	if ( !m_controllerVariableName.empty() && m_controller != nullptr )
+	if( !m_controllerVariableName.empty() && m_controller != nullptr )
 	{
 		if( auto var = m_controller->GetFloatVariableByName( m_controllerVariableName.c_str() ) )
 		{
@@ -59,7 +59,7 @@ float Tr2ActionSetAttenuationScaling::GetScalingFactor() const
 		}
 	}
 
-	if ( controllerVariableValue != 0 )
+	if( controllerVariableValue != 0 )
 	{
 		return m_scalingFactor * controllerVariableValue;
 	}

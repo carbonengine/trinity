@@ -27,10 +27,9 @@ bool TriVectorIsIdentical( const Vector3* v1, const Vector3* v2, float epsilon )
 }
 
 Vector3* TriVectorRotateQuaternion(
-	Vector3* out, 
+	Vector3* out,
 	const Vector3* v,
-	const Quaternion* q
-	)
+	const Quaternion* q )
 {
 	// q*v*qcomplement, where we treat v as a pure quaternion
 
@@ -49,9 +48,9 @@ Vector3* TriVectorRotateQuaternion(
 	float zz = q->z * q->z;
 
 	Vector3 temp;
-	temp.x = v->x*(ww + xx - yy - zz) + 2.0f*(v->y*(xy - wz) + v->z*(xz + wy));
-	temp.y = v->y*(ww - xx + yy - zz) + 2.0f*(v->x*(xy + wz) + v->z*(yz - wx));
-	temp.z = v->z*(ww - xx - yy + zz) + 2.0f*(v->x*(xz - wy) + v->y*(yz + wx));
+	temp.x = v->x * ( ww + xx - yy - zz ) + 2.0f * ( v->y * ( xy - wz ) + v->z * ( xz + wy ) );
+	temp.y = v->y * ( ww - xx + yy - zz ) + 2.0f * ( v->x * ( xy + wz ) + v->z * ( yz - wx ) );
+	temp.z = v->z * ( ww - xx - yy + zz ) + 2.0f * ( v->x * ( xz - wy ) + v->y * ( yz + wx ) );
 	*out = temp;
 	return out;
 }
@@ -80,132 +79,124 @@ Vector3 TriVectorRotateToPlane( const Vector3& point, const Vector3& p0, const V
 }
 
 Vector3* TriVectorRotateMatrix(
-	Vector3* out, 
+	Vector3* out,
 	const Vector3* v,
-	const Matrix* m
-	)
+	const Matrix* m )
 {
 	// can be optimized quite a lot by skipping the matrix op
 	// that have to do with translation instead of cancelling them out
 	Vector3 temp;
-	temp.x = v->x*m->_11 + v->y*m->_21 + v->z*m->_31;
-	temp.y = v->x*m->_12 +v->y*m->_22 +v->z*m->_32;
-	temp.z = v->x*m->_13 +v->y*m->_23 +v->z*m->_33;
+	temp.x = v->x * m->_11 + v->y * m->_21 + v->z * m->_31;
+	temp.y = v->x * m->_12 + v->y * m->_22 + v->z * m->_32;
+	temp.z = v->x * m->_13 + v->y * m->_23 + v->z * m->_33;
 	*out = temp;
 	return out;
 }
 
-//Rotate a unit vector aligned to one of the axes 
+//Rotate a unit vector aligned to one of the axes
 //(defined by xyz) by the quaternion
 //to understand this code, refer to TriVectorRotateQuaternion
 //10 multis, 11 adds opposed to 22 multis, 21 adds
 //the weird arrays are so we don't have to do switch-statements
 Vector3* TriVectorRotatedBasisQuaternion(
-	Vector3* out, 
+	Vector3* out,
 	const TRITRANSFORMAXIS xyz,
-	const Quaternion* q
-	)
+	const Quaternion* q )
 {
 	float ww = q->w * q->w;
 
 	//[-xx, -yy, -zz]
-	float SQ[] = {- q->x * q->x, - q->y * q->y, - q->z * q->z};
+	float SQ[] = { -q->x * q->x, -q->y * q->y, -q->z * q->z };
 	//extend with q.x, q.y so we don't have to do modulo thingies with xyz
-	float QUAT[] = {q->x, q->y, q->z, q->x, q->y};
+	float QUAT[] = { q->x, q->y, q->z, q->x, q->y };
 
 	//ok this is directly from TriVectorRotateQuaternion, just
 	//substitute 1 into xyz and 0 into the other basis
 	SQ[xyz] = -SQ[xyz];
 	float basis0 = ww + SQ[0] + SQ[1] + SQ[2];
-	float basis1 = 2.0f*(QUAT[xyz]*QUAT[xyz+1] + q->w*QUAT[xyz+2]);
-	float basis2 = 2.0f*(QUAT[xyz]*QUAT[xyz+2] - q->w*QUAT[xyz+1]);
+	float basis1 = 2.0f * ( QUAT[xyz] * QUAT[xyz + 1] + q->w * QUAT[xyz + 2] );
+	float basis2 = 2.0f * ( QUAT[xyz] * QUAT[xyz + 2] - q->w * QUAT[xyz + 1] );
 
 	//finally we have to select the correct axises into the correct components
 	//reversed and extended so we don't have to do modulo thingies with xyz
-	float RET[] = {basis2, basis1, basis0, basis2, basis1};
-	out->x = RET[xyz + 2]; 
+	float RET[] = { basis2, basis1, basis0, basis2, basis1 };
+	out->x = RET[xyz + 2];
 	out->y = RET[xyz + 1];
 	out->z = RET[xyz];
 	return out;
 }
 
-//Rotate a unit vector aligned to one of the axes 
+//Rotate a unit vector aligned to one of the axes
 //(defined by xyz) by the matrix
 Vector3* TriVectorRotatedBasisMatrix(
-	Vector3* out, 
+	Vector3* out,
 	const TRITRANSFORMAXIS xyz,
-	const Matrix* m
-	)
+	const Matrix* m )
 {
-	*out = Vector3(m->m[xyz][0], m->m[xyz][1],m->m[xyz][2]);
+	*out = Vector3( m->m[xyz][0], m->m[xyz][1], m->m[xyz][2] );
 	return out;
 }
 
-Vector3* TriVectorSpherical( 
-	Vector3* v, 
+Vector3* TriVectorSpherical(
+	Vector3* v,
 	float phi,
 	float theta,
-	float rad
-	)
+	float rad )
 {
-	v->x  = rad * sinf( phi );
-	v->z  = v->x * sinf( theta);
-	v->x *= cosf(theta);
-	v->y  = rad * cosf( phi );
+	v->x = rad * sinf( phi );
+	v->z = v->x * sinf( theta );
+	v->x *= cosf( theta );
+	v->y = rad * cosf( phi );
 	return v;
 }
 
-Vector3* TriVectorExponentialDecayInteger( 
-	Vector3* pos, 
+Vector3* TriVectorExponentialDecayInteger(
+	Vector3* pos,
 	const Vector3* x,
 	const Vector3* v,
 	const Vector3* a,
 	const float m,
 	const float k,
-	float t
-	)
-{	
-	*pos = *x + *a*t/k + m*(*v*k-*a)/(k*k)*(1.0f - powf(TRI_E, -k*t/m));
+	float t )
+{
+	*pos = *x + *a * t / k + m * ( *v * k - *a ) / ( k * k ) * ( 1.0f - powf( TRI_E, -k * t / m ) );
 	return pos;
 }
 
-Vector3* TriVectorExponentialDecay( 
-	Vector3* vel, 
+Vector3* TriVectorExponentialDecay(
+	Vector3* vel,
 	const Vector3* v,
 	const Vector3* a,
 	const float m,
 	const float k,
-	const float t
-	)
-{	
-	*vel = *a/k + (*v - *a/k)*(powf(TRI_E, -k*t/m));
+	const float t )
+{
+	*vel = *a / k + ( *v - *a / k ) * ( powf( TRI_E, -k * t / m ) );
 	return vel;
 }
 
-Vector3* TriVectorExponentialDecayInteger( 
-	Vector3* pos, 
+Vector3* TriVectorExponentialDecayInteger(
+	Vector3* pos,
 	const Vector3* x,
 	const Vector3* v,
 	const Vector3* a,
 	const float m,
 	const float k,
 	const float t,
-	const float pow
-	)
-{	
-	*pos = *x + *a*t/k + m*(*v*k-*a)/(k*k)*(1.0f - pow);
+	const float pow )
+{
+	*pos = *x + *a * t / k + m * ( *v * k - *a ) / ( k * k ) * ( 1.0f - pow );
 	return pos;
 }
 
-Vector3* TriVectorExponentialDecay( 
-	Vector3* vel, 
+Vector3* TriVectorExponentialDecay(
+	Vector3* vel,
 	const Vector3* v,
 	const Vector3* a,
 	const float k,
-	const float pow
-	)
-{	
-	*vel = *a/k + (*v - *a/k)*(pow);
+	const float pow )
+{
+	*vel = *a / k + ( *v - *a / k ) * ( pow );
 	return vel;
 }
 
@@ -244,23 +235,22 @@ float TriFloatRandomGauss( float mu, float deviation )
 	}
 	rand1 = -2.f * log( rand1 );
 	float rand2 = TriFloatRandom01() * TRI_2PI;
- 	return mu + deviation * pow( rand1, 0.75f ) * cos( rand2 );
+	return mu + deviation * pow( rand1, 0.75f ) * cos( rand2 );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Color extensions
 /////////////////////////////////////////////////////////////////////////////////////////
 
-Color* TriColorFromVector( 
+Color* TriColorFromVector(
 	Color* c,
-	const Vector3* v, 
-	float height
-	)
+	const Vector3* v,
+	float height )
 {
 	c->r = 0.5f * v->x + 0.5f;
-    c->g = 0.5f * v->y + 0.5f;
-    c->b = 0.5f * v->z + 0.5f;
-    c->a = height;
+	c->g = 0.5f * v->y + 0.5f;
+	c->b = 0.5f * v->z + 0.5f;
+	c->a = height;
 	return c;
 }
 
@@ -270,46 +260,43 @@ Color* TriColorFromVector(
 /////////////////////////////////////////////////////////////////////////////////////////
 
 Quaternion* TriQuaternionDirVector(
-	Quaternion* out, 
-	const Vector3* v
-	)
+	Quaternion* out,
+	const Vector3* v )
 {
 	Vector3 nv = Normalize( *v );
-	*out = Quaternion(nv.x, nv.y, nv.z, 0.0f);
+	*out = Quaternion( nv.x, nv.y, nv.z, 0.0f );
 	return out;
 }
 
 Quaternion* TriQuaternionScale(
-	Quaternion* out, 
+	Quaternion* out,
 	const Quaternion* in,
-	float length
-	)
+	float length )
 {
-	if (length == 1.0f)
+	if( length == 1.0f )
 	{
 		*out = *in;
 		return out;
 	}
-	out->x = in->x*length;
-	out->y = in->y*length;
-	out->z = in->z*length;
-	out->w = in->w*length;
+	out->x = in->x * length;
+	out->y = in->y * length;
+	out->z = in->z * length;
+	out->w = in->w * length;
 	return out;
 }
 
 Quaternion* TriQuaternionSqrt(
-	Quaternion* out, 
-	const Quaternion* q1 
-	)
+	Quaternion* out,
+	const Quaternion* q1 )
 {
 	Quaternion test = *q1;
 	*out = *q1;
 	float magic1 = out->w;
 	float magic = 0.99999f;
 	float magic2 = magic1 + magic;
-	if ( 0.0f > magic2)
+	if( 0.0f > magic2 )
 	{
-		Vector3 axis(out->x, out->y, out->z);
+		Vector3 axis( out->x, out->y, out->z );
 		axis *= 1000000.0f;
 		axis = Normalize( axis );
 		if( LengthSq( axis ) < 0.5 )
@@ -339,145 +326,161 @@ Quaternion* TriQuaternionSqrt(
 }
 
 Quaternion* TriQuaternionRotationArc(
-	Quaternion* out, 
-	const Vector3* v1, 
-	const Vector3* v2 
-	)
+	Quaternion* out,
+	const Vector3* v1,
+	const Vector3* v2 )
 {
-	TriQuaternionDirVector(out,v1);
+	TriQuaternionDirVector( out, v1 );
 	Quaternion q1;
-	TriQuaternionDirVector(&q1,v2);
+	TriQuaternionDirVector( &q1, v2 );
 	q1 = Conjugate( q1 );
 	*out = *out * q1;
-	return TriQuaternionSqrt(out, out);
+	return TriQuaternionSqrt( out, out );
 }
 
 Quaternion* TriQuaternionArcFromForward(
-	Quaternion* out, 
-	const Vector3* v 
-	)
+	Quaternion* out,
+	const Vector3* v )
 {
 	Vector3 temp = Normalize( *v );
-	if (temp.z < 0.99999f)
+	if( temp.z < 0.99999f )
 	{
 		temp.z = 1.0f - temp.z;
-		temp.z = sqrtf(temp.z);
-		float div = 0.707106781187f/temp.z;
-		*out = Quaternion(temp.y*div, -temp.x*div, 0.0f, 0.707106781187f*temp.z);
+		temp.z = sqrtf( temp.z );
+		float div = 0.707106781187f / temp.z;
+		*out = Quaternion( temp.y * div, -temp.x * div, 0.0f, 0.707106781187f * temp.z );
 		return out;
 	}
-	*out = Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+	*out = Quaternion( 1.0f, 0.0f, 0.0f, 0.0f );
 	return out;
-
 }
 
-void TriQuaternionToYawPitchRoll (
-    float* yaw, 
-    float* pitch, 
-    float* roll,
-	const Quaternion* q
-	)
+void TriQuaternionToYawPitchRoll(
+	float* yaw,
+	float* pitch,
+	float* roll,
+	const Quaternion* q )
 {
-	
+
 	static float invSqrtOf2 = 0.70710678118654752440084436210485f;
-	//equivalent to  q * (0,0,-1,0) * q^-1  
-	float y = 2.0f*(q->x*q->w - q->z*q->y);
+	//equivalent to  q * (0,0,-1,0) * q^-1
+	float y = 2.0f * ( q->x * q->w - q->z * q->y );
 	float w;
 	{
-		float temp = 1.0f - y*y;
-		if (temp < 0.0f) temp = 0.0f;
-		w = sqrtf(temp);
+		float temp = 1.0f - y * y;
+		if( temp < 0.0f )
+			temp = 0.0f;
+		w = sqrtf( temp );
 	}
 	//precalculate for speed
-	float gamma = invSqrtOf2/sqrtf(w+1.0f);
+	float gamma = invSqrtOf2 / sqrtf( w + 1.0f );
 
-	// q = qYaw*qPitch*qRoll 
+	// q = qYaw*qPitch*qRoll
 
 	// let qPitch be the quaternion that satisfies
 	// a) y = z = 0
 	// b) qPitch * (0,0,-1,0) * qPitch^-1 = (0,0,y,0)
 
 	//boring pre for asinf
-	if (fabs(y) < 1.0f){}
-	else if (y - 1.0f >  0.0f) y = 1.0f;
-	else if (y + 1.0f < 0.0f) y = -1.0f;
-	float phi = asinf(y); //unambigous
+	if( fabs( y ) < 1.0f )
+	{
+	}
+	else if( y - 1.0f > 0.0f )
+		y = 1.0f;
+	else if( y + 1.0f < 0.0f )
+		y = -1.0f;
+	float phi = asinf( y ); //unambigous
 	Quaternion qPitch;
-	qPitch.x = y*gamma;
+	qPitch.x = y * gamma;
 	qPitch.y = 0.0f;
 	qPitch.z = 0.0f;
-	qPitch.w = (w+1.0f)*gamma;
+	qPitch.w = ( w + 1.0f ) * gamma;
 
 	//remove the pitch
 	// ie get qYaw*qRoll
 	Quaternion yawRoll;
 
-	//hmmm stuff gets messed up in denominator if y == +-1.0f 
+	//hmmm stuff gets messed up in denominator if y == +-1.0f
 	// well if y == +-1.0f we can take a short cut....
-	if (fabs(fabs(y) - 1.0f) < 0.00001f)
+	if( fabs( fabs( y ) - 1.0f ) < 0.00001f )
 	{
 		Quaternion combinedRoll;
 		//use as temp
 		combinedRoll = Conjugate( qPitch );
-		combinedRoll = *q*combinedRoll;
+		combinedRoll = *q * combinedRoll;
 		//boring pre for acos
-		if (fabs(combinedRoll.w) < 1.0f){}
-		else if (combinedRoll.w - 1.0f >  0.0f) combinedRoll.w = 1.0f;
-		else if (combinedRoll.w + 1.0f < 0.0f) combinedRoll.w = -1.0f;
-		float psi = 2.0f*acosf(combinedRoll.w);
-		if (psi > XM_PI) psi -= XM_PI*2.0f;
-		//sign(rollConZ) = -sign(yawRoll.z)  
-		if (combinedRoll.z > 0.0f)
-		psi =  - psi;  
+		if( fabs( combinedRoll.w ) < 1.0f )
+		{
+		}
+		else if( combinedRoll.w - 1.0f > 0.0f )
+			combinedRoll.w = 1.0f;
+		else if( combinedRoll.w + 1.0f < 0.0f )
+			combinedRoll.w = -1.0f;
+		float psi = 2.0f * acosf( combinedRoll.w );
+		if( psi > XM_PI )
+			psi -= XM_PI * 2.0f;
+		//sign(rollConZ) = -sign(yawRoll.z)
+		if( combinedRoll.z > 0.0f )
+			psi = -psi;
 		*yaw = 0.0f;
 		*pitch = phi;
 		*roll = -psi;
 		return;
 	}
 
-	float denominator = 1.0f/(qPitch.x*qPitch.x - qPitch.w*qPitch.w);
-	yawRoll.x = (q->w*qPitch.x - q->x*qPitch.w)*denominator;
-	yawRoll.y = -(q->z*qPitch.x + q->y*qPitch.w)*denominator;
-	yawRoll.z = -(q->z*qPitch.w + q->y*qPitch.x)*denominator;
-	yawRoll.w = (q->x*qPitch.x - q->w*qPitch.w)*denominator;
+	float denominator = 1.0f / ( qPitch.x * qPitch.x - qPitch.w * qPitch.w );
+	yawRoll.x = ( q->w * qPitch.x - q->x * qPitch.w ) * denominator;
+	yawRoll.y = -( q->z * qPitch.x + q->y * qPitch.w ) * denominator;
+	yawRoll.z = -( q->z * qPitch.w + q->y * qPitch.x ) * denominator;
+	yawRoll.w = ( q->x * qPitch.x - q->w * qPitch.w ) * denominator;
 
-/*************************************************************************************************/
+	/*************************************************************************************************/
 	// Nonni this was causing div by Zero erros
 	// I added handler which uses 0.0 in that case, please check
-	float divByZero = sqrtf(yawRoll.w*yawRoll.w + yawRoll.z*yawRoll.z);
-	float rollGamma = divByZero == 0.0 ? 0.0f : 1.0f/divByZero;
-/*************************************************************************************************/
+	float divByZero = sqrtf( yawRoll.w * yawRoll.w + yawRoll.z * yawRoll.z );
+	float rollGamma = divByZero == 0.0 ? 0.0f : 1.0f / divByZero;
+	/*************************************************************************************************/
 	// this is the w part of qRoll
 	// we don't need anything else
-	float rollConW = yawRoll.w*rollGamma; 
+	float rollConW = yawRoll.w * rollGamma;
 
 	//boring pre for acos
-	if (fabs(rollConW) < 1.0f){}
-	else if (rollConW - 1.0f >  0.0f) rollConW = 1.0f;
-	else if (rollConW + 1.0f < 0.0f) rollConW = -1.0f;
-	float psi = 2.0f*acosf(rollConW);
-	if (psi > XM_PI) psi -= XM_PI*2.0f;
-	//sign(rollConZ) = -sign(yawRoll.z)  
-	if (yawRoll.z < 0.0f)
-		psi =  - psi;  
+	if( fabs( rollConW ) < 1.0f )
+	{
+	}
+	else if( rollConW - 1.0f > 0.0f )
+		rollConW = 1.0f;
+	else if( rollConW + 1.0f < 0.0f )
+		rollConW = -1.0f;
+	float psi = 2.0f * acosf( rollConW );
+	if( psi > XM_PI )
+		psi -= XM_PI * 2.0f;
+	//sign(rollConZ) = -sign(yawRoll.z)
+	if( yawRoll.z < 0.0f )
+		psi = -psi;
 
 	//Now we are multiplying qYaw*qRoll with qRoll^-1 from the left
 	//Leaving us with the qYaw
-	//yawRoll.y must be calculated before yawRoll.w because the original 
+	//yawRoll.y must be calculated before yawRoll.w because the original
 	//yawRoll.w is used in the calculation
-	yawRoll.y = (yawRoll.x*yawRoll.z + yawRoll.y*yawRoll.w)*rollGamma;
-	yawRoll.w = (yawRoll.z*yawRoll.z + yawRoll.w*yawRoll.w)*rollGamma;
+	yawRoll.y = ( yawRoll.x * yawRoll.z + yawRoll.y * yawRoll.w ) * rollGamma;
+	yawRoll.w = ( yawRoll.z * yawRoll.z + yawRoll.w * yawRoll.w ) * rollGamma;
 
 	//boring pre for asin
-	if (fabs(yawRoll.y) < 1.0f){}
-	else if (yawRoll.y - 1.0f >  0.0f) yawRoll.y = 1.0f;
-	else if (yawRoll.y + 1.0f < 0.0f) yawRoll.y = -1.0f;
-	float theta = asinf(yawRoll.y);
-	if (yawRoll.w < 0.0f )
-		theta =  XM_PI - theta;  
-	if (theta < 0.0f) theta += XM_PI;
+	if( fabs( yawRoll.y ) < 1.0f )
+	{
+	}
+	else if( yawRoll.y - 1.0f > 0.0f )
+		yawRoll.y = 1.0f;
+	else if( yawRoll.y + 1.0f < 0.0f )
+		yawRoll.y = -1.0f;
+	float theta = asinf( yawRoll.y );
+	if( yawRoll.w < 0.0f )
+		theta = XM_PI - theta;
+	if( theta < 0.0f )
+		theta += XM_PI;
 
-	*yaw = theta*2.0f;
+	*yaw = theta * 2.0f;
 	*pitch = phi;
 	*roll = psi;
 	/*
@@ -520,23 +523,40 @@ void TriQuaternionToYawPitchRoll (
 // Matrix extensions
 /////////////////////////////////////////////////////////////////////////////////////////
 
-Matrix* TriMatrixTranspose(Matrix* out, const Matrix* in, unsigned int sizeInBytes)
+Matrix* TriMatrixTranspose( Matrix* out, const Matrix* in, unsigned int sizeInBytes )
 {
 	float f;
 
 	// transpose 2x2 parts
 	out->_11 = in->_11;
 	out->_22 = in->_22;
-	f = in->_12; out->_12 = in->_21; out->_21 = f;
+	f = in->_12;
+	out->_12 = in->_21;
+	out->_21 = f;
 	// transpose 3x3 parts, but check if allowed to store!
-	f = in->_13; out->_13 = in->_31; if( sizeInBytes > 32 ) out->_31 = f;
-	f = in->_23; out->_23 = in->_32; if( sizeInBytes > 32 ) out->_32 = f;
-	f = in->_14; out->_14 = in->_41; if( sizeInBytes > 48 ) out->_41 = f;
-	f = in->_24; out->_24 = in->_42; if( sizeInBytes > 48 ) out->_42 = f;
+	f = in->_13;
+	out->_13 = in->_31;
+	if( sizeInBytes > 32 )
+		out->_31 = f;
+	f = in->_23;
+	out->_23 = in->_32;
+	if( sizeInBytes > 32 )
+		out->_32 = f;
+	f = in->_14;
+	out->_14 = in->_41;
+	if( sizeInBytes > 48 )
+		out->_41 = f;
+	f = in->_24;
+	out->_24 = in->_42;
+	if( sizeInBytes > 48 )
+		out->_42 = f;
 	if( sizeInBytes > 32 )
 	{
 		out->_33 = in->_33;
-		f = in->_34; out->_34 = in->_43; if( sizeInBytes > 48 ) out->_43 = f;
+		f = in->_34;
+		out->_34 = in->_43;
+		if( sizeInBytes > 48 )
+			out->_43 = f;
 		if( sizeInBytes > 48 )
 		{
 			out->_44 = in->_44;
@@ -547,7 +567,7 @@ Matrix* TriMatrixTranspose(Matrix* out, const Matrix* in, unsigned int sizeInByt
 }
 
 
-Matrix* TriMatrixRotationArc( Matrix* out, const Vector3* v1, const Vector3* v2	)
+Matrix* TriMatrixRotationArc( Matrix* out, const Vector3* v1, const Vector3* v2 )
 {
 	// re-route it through quaternions
 	Quaternion rotQuat;
@@ -558,39 +578,39 @@ Matrix* TriMatrixRotationArc( Matrix* out, const Vector3* v1, const Vector3* v2	
 
 
 Matrix* TriMatrixArcFromForward(
-	Matrix* out, 
-	const Vector3* v 
-	)
+	Matrix* out,
+	const Vector3* v )
 {
 	Vector3 norm = Normalize( *v );
 	*out = IdentityMatrix();
-	if (norm.z < -0.99999f)
+	if( norm.z < -0.99999f )
 	{
 		return out;
 	}
-	if (norm.z > 0.99999f)
+	if( norm.z > 0.99999f )
 	{
 		out->_22 = -1.0f;
 		out->_33 = -1.0f;
 		return out;
 	}
-	const float h = (1.0f + norm.z)/(norm.x*norm.x + norm.y*norm.y);
-	out->_11 = h*norm.y*norm.y - norm.z;
-	out->_12 = -h*norm.x*norm.y;
+	const float h = ( 1.0f + norm.z ) / ( norm.x * norm.x + norm.y * norm.y );
+	out->_11 = h * norm.y * norm.y - norm.z;
+	out->_12 = -h * norm.x * norm.y;
 	out->_13 = norm.x;
 
 	out->_21 = out->_12;
-	out->_22 = h*norm.x*norm.x - norm.z;
+	out->_22 = h * norm.x * norm.x - norm.z;
 	out->_23 = norm.y;
 
 	out->_31 = -norm.x;
 	out->_32 = -norm.y;
-	out->_33 = -norm.z;;
+	out->_33 = -norm.z;
+	;
 	//*out = tempMat;
 	return out;
 }
 
-Matrix* TriMatrixTranslate(Matrix* out, const Matrix* m, const Vector3* v)
+Matrix* TriMatrixTranslate( Matrix* out, const Matrix* m, const Vector3* v )
 {
 	*out = *m;
 	out->_41 += v->x;
@@ -599,16 +619,16 @@ Matrix* TriMatrixTranslate(Matrix* out, const Matrix* m, const Vector3* v)
 	return out;
 }
 
-Matrix* TriMatrixTranslate(Matrix* out, const Vector3* v, const Matrix* m)
+Matrix* TriMatrixTranslate( Matrix* out, const Vector3* v, const Matrix* m )
 {
 	*out = *m;
-	out->_41 += v->x*out->_11 +  v->y*out->_21  + v->z*out->_31;
-	out->_42 += v->x*out->_12 +  v->y*out->_22  + v->z*out->_32;
-	out->_43 += v->x*out->_13 +  v->y*out->_23  + v->z*out->_33;
+	out->_41 += v->x * out->_11 + v->y * out->_21 + v->z * out->_31;
+	out->_42 += v->x * out->_12 + v->y * out->_22 + v->z * out->_32;
+	out->_43 += v->x * out->_13 + v->y * out->_23 + v->z * out->_33;
 	return out;
 }
 
-Matrix* TriMatrixRotate(Matrix* out, const Matrix* m, const Quaternion* q)
+Matrix* TriMatrixRotate( Matrix* out, const Matrix* m, const Quaternion* q )
 {
 	//we might be able to use a niftier way to do this later
 	Matrix tmpResult = RotationMatrix( *q );
@@ -616,7 +636,7 @@ Matrix* TriMatrixRotate(Matrix* out, const Matrix* m, const Quaternion* q)
 	return out;
 }
 
-Matrix* TriMatrixRotate(Matrix* out, const Quaternion* q, const Matrix* m)
+Matrix* TriMatrixRotate( Matrix* out, const Quaternion* q, const Matrix* m )
 {
 	//we might be able to use a niftier way to do this later
 	Matrix tmpResult = RotationMatrix( *q );
@@ -624,7 +644,7 @@ Matrix* TriMatrixRotate(Matrix* out, const Quaternion* q, const Matrix* m)
 	return out;
 }
 
-Matrix* TriMatrixChangeBase(Matrix* out, const Vector3* fwd, const Vector3* up)
+Matrix* TriMatrixChangeBase( Matrix* out, const Vector3* fwd, const Vector3* up )
 {
 	Vector3 cross = Cross( *up, *fwd );
 	out->_11 = cross.x;
@@ -723,7 +743,8 @@ double* Matrix4dInvert( double* result, const double* mat )
 	double src[16]; /* array of transpose source matrix */
 	double det; /* determinant */
 	/* transpose matrix */
-	for (int i = 0; i < 4; i++) {
+	for( int i = 0; i < 4; i++ )
+	{
 		src[i] = mat[i * 4];
 		src[i + 4] = mat[i * 4 + 1];
 		src[i + 8] = mat[i * 4 + 2];
@@ -743,57 +764,57 @@ double* Matrix4dInvert( double* result, const double* mat )
 	tmp[10] = src[8] * src[13];
 	tmp[11] = src[9] * src[12];
 	/* calculate first 8 elements (cofactors) */
-	result[0] = tmp[0]*src[5] + tmp[3]*src[6] + tmp[4]*src[7];
-	result[0] -= tmp[1]*src[5] + tmp[2]*src[6] + tmp[5]*src[7];
-	result[1] = tmp[1]*src[4] + tmp[6]*src[6] + tmp[9]*src[7];
-	result[1] -= tmp[0]*src[4] + tmp[7]*src[6] + tmp[8]*src[7];
-	result[2] = tmp[2]*src[4] + tmp[7]*src[5] + tmp[10]*src[7];
-	result[2] -= tmp[3]*src[4] + tmp[6]*src[5] + tmp[11]*src[7];
-	result[3] = tmp[5]*src[4] + tmp[8]*src[5] + tmp[11]*src[6];
-	result[3] -= tmp[4]*src[4] + tmp[9]*src[5] + tmp[10]*src[6];
-	result[4] = tmp[1]*src[1] + tmp[2]*src[2] + tmp[5]*src[3];
-	result[4] -= tmp[0]*src[1] + tmp[3]*src[2] + tmp[4]*src[3];
-	result[5] = tmp[0]*src[0] + tmp[7]*src[2] + tmp[8]*src[3];
-	result[5] -= tmp[1]*src[0] + tmp[6]*src[2] + tmp[9]*src[3];
-	result[6] = tmp[3]*src[0] + tmp[6]*src[1] + tmp[11]*src[3];
-	result[6] -= tmp[2]*src[0] + tmp[7]*src[1] + tmp[10]*src[3];
-	result[7] = tmp[4]*src[0] + tmp[9]*src[1] + tmp[10]*src[2];
-	result[7] -= tmp[5]*src[0] + tmp[8]*src[1] + tmp[11]*src[2];
+	result[0] = tmp[0] * src[5] + tmp[3] * src[6] + tmp[4] * src[7];
+	result[0] -= tmp[1] * src[5] + tmp[2] * src[6] + tmp[5] * src[7];
+	result[1] = tmp[1] * src[4] + tmp[6] * src[6] + tmp[9] * src[7];
+	result[1] -= tmp[0] * src[4] + tmp[7] * src[6] + tmp[8] * src[7];
+	result[2] = tmp[2] * src[4] + tmp[7] * src[5] + tmp[10] * src[7];
+	result[2] -= tmp[3] * src[4] + tmp[6] * src[5] + tmp[11] * src[7];
+	result[3] = tmp[5] * src[4] + tmp[8] * src[5] + tmp[11] * src[6];
+	result[3] -= tmp[4] * src[4] + tmp[9] * src[5] + tmp[10] * src[6];
+	result[4] = tmp[1] * src[1] + tmp[2] * src[2] + tmp[5] * src[3];
+	result[4] -= tmp[0] * src[1] + tmp[3] * src[2] + tmp[4] * src[3];
+	result[5] = tmp[0] * src[0] + tmp[7] * src[2] + tmp[8] * src[3];
+	result[5] -= tmp[1] * src[0] + tmp[6] * src[2] + tmp[9] * src[3];
+	result[6] = tmp[3] * src[0] + tmp[6] * src[1] + tmp[11] * src[3];
+	result[6] -= tmp[2] * src[0] + tmp[7] * src[1] + tmp[10] * src[3];
+	result[7] = tmp[4] * src[0] + tmp[9] * src[1] + tmp[10] * src[2];
+	result[7] -= tmp[5] * src[0] + tmp[8] * src[1] + tmp[11] * src[2];
 	/* calculate pairs for second 8 elements (cofactors) */
-	tmp[0] = src[2]*src[7];
-	tmp[1] = src[3]*src[6];
-	tmp[2] = src[1]*src[7];
-	tmp[3] = src[3]*src[5];
-	tmp[4] = src[1]*src[6];
-	tmp[5] = src[2]*src[5];
-	tmp[6] = src[0]*src[7];
-	tmp[7] = src[3]*src[4];
-	tmp[8] = src[0]*src[6];
-	tmp[9] = src[2]*src[4];
-	tmp[10] = src[0]*src[5];
-	tmp[11] = src[1]*src[4];
+	tmp[0] = src[2] * src[7];
+	tmp[1] = src[3] * src[6];
+	tmp[2] = src[1] * src[7];
+	tmp[3] = src[3] * src[5];
+	tmp[4] = src[1] * src[6];
+	tmp[5] = src[2] * src[5];
+	tmp[6] = src[0] * src[7];
+	tmp[7] = src[3] * src[4];
+	tmp[8] = src[0] * src[6];
+	tmp[9] = src[2] * src[4];
+	tmp[10] = src[0] * src[5];
+	tmp[11] = src[1] * src[4];
 	/* calculate second 8 elements (cofactors) */
-	result[8] = tmp[0]*src[13] + tmp[3]*src[14] + tmp[4]*src[15];
-	result[8] -= tmp[1]*src[13] + tmp[2]*src[14] + tmp[5]*src[15];
-	result[9] = tmp[1]*src[12] + tmp[6]*src[14] + tmp[9]*src[15];
-	result[9] -= tmp[0]*src[12] + tmp[7]*src[14] + tmp[8]*src[15];
-	result[10] = tmp[2]*src[12] + tmp[7]*src[13] + tmp[10]*src[15];
-	result[10]-= tmp[3]*src[12] + tmp[6]*src[13] + tmp[11]*src[15];
-	result[11] = tmp[5]*src[12] + tmp[8]*src[13] + tmp[11]*src[14];
-	result[11]-= tmp[4]*src[12] + tmp[9]*src[13] + tmp[10]*src[14];
-	result[12] = tmp[2]*src[10] + tmp[5]*src[11] + tmp[1]*src[9];
-	result[12]-= tmp[4]*src[11] + tmp[0]*src[9] + tmp[3]*src[10];
-	result[13] = tmp[8]*src[11] + tmp[0]*src[8] + tmp[7]*src[10];
-	result[13]-= tmp[6]*src[10] + tmp[9]*src[11] + tmp[1]*src[8];
-	result[14] = tmp[6]*src[9] + tmp[11]*src[11] + tmp[3]*src[8];
-	result[14]-= tmp[10]*src[11] + tmp[2]*src[8] + tmp[7]*src[9];
-	result[15] = tmp[10]*src[10] + tmp[4]*src[8] + tmp[9]*src[9];
-	result[15]-= tmp[8]*src[9] + tmp[11]*src[10] + tmp[5]*src[8];
+	result[8] = tmp[0] * src[13] + tmp[3] * src[14] + tmp[4] * src[15];
+	result[8] -= tmp[1] * src[13] + tmp[2] * src[14] + tmp[5] * src[15];
+	result[9] = tmp[1] * src[12] + tmp[6] * src[14] + tmp[9] * src[15];
+	result[9] -= tmp[0] * src[12] + tmp[7] * src[14] + tmp[8] * src[15];
+	result[10] = tmp[2] * src[12] + tmp[7] * src[13] + tmp[10] * src[15];
+	result[10] -= tmp[3] * src[12] + tmp[6] * src[13] + tmp[11] * src[15];
+	result[11] = tmp[5] * src[12] + tmp[8] * src[13] + tmp[11] * src[14];
+	result[11] -= tmp[4] * src[12] + tmp[9] * src[13] + tmp[10] * src[14];
+	result[12] = tmp[2] * src[10] + tmp[5] * src[11] + tmp[1] * src[9];
+	result[12] -= tmp[4] * src[11] + tmp[0] * src[9] + tmp[3] * src[10];
+	result[13] = tmp[8] * src[11] + tmp[0] * src[8] + tmp[7] * src[10];
+	result[13] -= tmp[6] * src[10] + tmp[9] * src[11] + tmp[1] * src[8];
+	result[14] = tmp[6] * src[9] + tmp[11] * src[11] + tmp[3] * src[8];
+	result[14] -= tmp[10] * src[11] + tmp[2] * src[8] + tmp[7] * src[9];
+	result[15] = tmp[10] * src[10] + tmp[4] * src[8] + tmp[9] * src[9];
+	result[15] -= tmp[8] * src[9] + tmp[11] * src[10] + tmp[5] * src[8];
 	/* calculate determinant */
-	det=src[0]*result[0]+src[1]*result[1]+src[2]*result[2]+src[3]*result[3];
+	det = src[0] * result[0] + src[1] * result[1] + src[2] * result[2] + src[3] * result[3];
 	/* calculate matrix inverse */
-	det = 1.0 /det;
-	for (int j = 0; j < 16; j++)
+	det = 1.0 / det;
+	for( int j = 0; j < 16; j++ )
 	{
 		result[j] *= det;
 	}
@@ -807,7 +828,7 @@ double* Matrix4dMultiply( double* result, double* m0, double* m1 )
 	{
 		for( int c = 0; c < 4; c++ )
 		{
-			result[r*4 + c] = m0[r*4] * m1[c] + m0[r*4+1] * m1[c+4] + m0[r*4+2] * m1[c+8] + m0[r*4+3] * m1[c+12];
+			result[r * 4 + c] = m0[r * 4] * m1[c] + m0[r * 4 + 1] * m1[c + 4] + m0[r * 4 + 2] * m1[c + 8] + m0[r * 4 + 3] * m1[c + 12];
 		}
 	}
 	return result;
@@ -825,8 +846,7 @@ Vector4d Matrix4dTransform( Vector4d point, double* mat )
 		point.x * mat[0] + point.y * mat[4] + point.z * mat[8] + point.w * mat[12],
 		point.x * mat[1] + point.y * mat[5] + point.z * mat[9] + point.w * mat[13],
 		point.x * mat[2] + point.y * mat[6] + point.z * mat[10] + point.w * mat[14],
-		point.x * mat[3] + point.y * mat[7] + point.z * mat[11] + point.w * mat[15]
-	);
+		point.x * mat[3] + point.y * mat[7] + point.z * mat[11] + point.w * mat[15] );
 }
 
 
@@ -837,7 +857,7 @@ Matrix Matrix4dToMatrix( double* mat )
 	{
 		for( int c = 0; c < 4; c++ )
 		{
-			m.m[r][c] = (float)mat[r*4 + c];
+			m.m[r][c] = (float)mat[r * 4 + c];
 		}
 	}
 	return m;
@@ -850,7 +870,7 @@ double* Matrix4dFromMatrix( double* result, const Matrix& mat )
 	{
 		for( int c = 0; c < 4; c++ )
 		{
-			 result[r*4 + c] = mat.m[r][c];
+			result[r * 4 + c] = mat.m[r][c];
 		}
 	}
 	return result;
@@ -863,9 +883,9 @@ double* Matrix4dFromMatrix( double* result, const Matrix& mat )
 /////////////////////////////////////////////////////////////////////////////////////////
 bool IsFinite( float value )
 {
-    return value == value && 
-           value != std::numeric_limits<float>::infinity() &&
-           value != -std::numeric_limits<float>::infinity();
+	return value == value &&
+		value != std::numeric_limits<float>::infinity() &&
+		value != -std::numeric_limits<float>::infinity();
 }
 
 bool IsFinite( const Vector3& vec )
@@ -876,8 +896,7 @@ bool IsFinite( const Vector3& vec )
 float TriClamp(
 	float f,
 	float min,
-	float max
-	)
+	float max )
 {
 	return ( f < min ) ? min : ( ( f > max ) ? max : f );
 }
@@ -885,8 +904,7 @@ float TriClamp(
 int32_t ClampInt(
 	int32_t f,
 	int32_t min,
-	int32_t max
-	)
+	int32_t max )
 {
 	return ( f < min ) ? min : ( ( f > max ) ? max : f );
 }
@@ -900,12 +918,11 @@ uint32_t ClampUInt(
 }
 
 float Lerp(
-	float min, 
-	float max, 
-	float s
-	)
+	float min,
+	float max,
+	float s )
 {
-	return min + s * (max - min);
+	return min + s * ( max - min );
 }
 
 float Hermite(
@@ -914,22 +931,21 @@ float Hermite(
 	float v2,
 	float l,
 	float t,
-	float dt
-	)
+	float dt )
 {
 	// minimize number of math operations for max speed:
-    float    _1_T = 1.0f /    dt;
-    float   _1_T2 = _1_T *  _1_T;
-    float      t2 =    t *     t;
-    float    t2_T =   t2 *  _1_T;
-    float   t3_T2 =   t2 *     t * _1_T2;
-    float _2t3_T3 = 2.0f * t3_T2 *  _1_T;
-    float _3t2_T2 = 3.0f *    t2 * _1_T2;
+	float _1_T = 1.0f / dt;
+	float _1_T2 = _1_T * _1_T;
+	float t2 = t * t;
+	float t2_T = t2 * _1_T;
+	float t3_T2 = t2 * t * _1_T2;
+	float _2t3_T3 = 2.0f * t3_T2 * _1_T;
+	float _3t2_T2 = 3.0f * t2 * _1_T2;
 
-    return ( v1 * (   _2t3_T3 - _3t2_T2 + 1.0f     ) +
-             v2 * ( - _2t3_T3 + _3t2_T2            ) +
-              r * (     t3_T2 -    t2_T - t2_T + t ) +
-              l * (     t3_T2 -    t2_T            ) );
+	return ( v1 * ( _2t3_T3 - _3t2_T2 + 1.0f ) +
+			 v2 * ( -_2t3_T3 + _3t2_T2 ) +
+			 r * ( t3_T2 - t2_T - t2_T + t ) +
+			 l * ( t3_T2 - t2_T ) );
 }
 
 float TriLinearize( float min, float max, float v )
@@ -938,16 +954,15 @@ float TriLinearize( float min, float max, float v )
 }
 
 float SinSmooth(
-	float f
-	)
+	float f )
 {
-	float ret = f*XM_PI - XM_PI/2.0f;
-	return sinf(ret)/2.0f + 0.5f;
+	float ret = f * XM_PI - XM_PI / 2.0f;
+	return sinf( ret ) / 2.0f + 0.5f;
 }
 
 float CubicInterpolate( float pm1, float p0, float p1, float p2, float s )
-{ 
-	return p0 + 0.5f * s*(p1 - pm1 + s*(2.f*pm1 - 5.f*p0 + 4.f*p1 - p2 + s*(3.f*(p0 - p1) + p2 - pm1)));
+{
+	return p0 + 0.5f * s * ( p1 - pm1 + s * ( 2.f * pm1 - 5.f * p0 + 4.f * p1 - p2 + s * ( 3.f * ( p0 - p1 ) + p2 - pm1 ) ) );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -956,7 +971,7 @@ float CubicInterpolate( float pm1, float p0, float p1, float p2, float s )
 uint32_t jran = 1234;
 void TriSrand( Be::Time seed )
 {
-	jran = uint32_t(seed) % 714025;
+	jran = uint32_t( seed ) % 714025;
 };
 
 void TriSrand( uint32_t seed )
@@ -969,23 +984,23 @@ float TriRand()
 	jran <<= 12;
 	jran += 150889;
 	jran %= 714025;
-	return float(jran)/714025.0f;
+	return float( jran ) / 714025.0f;
 };
 
-int TriRandInt(int hi)
+int TriRandInt( int hi )
 {
 	jran <<= 12;
 	jran += 150889;
 	jran %= 714025;
-	return (hi*jran)/714025;
+	return ( hi * jran ) / 714025;
 };
 
-int TriRandInt(int lo, int hi)
+int TriRandInt( int lo, int hi )
 {
 	jran <<= 12;
 	jran += 150889;
 	jran %= 714025;
-	return ((hi - lo)*jran)/714025 + lo;
+	return ( ( hi - lo ) * jran ) / 714025 + lo;
 };
 
 int TriRandGetSeed()
@@ -1085,4 +1100,3 @@ bool ConvertProjectionCoordToWorldPickRay( float x, float y, const Matrix* projM
 
 	return true;
 }
-

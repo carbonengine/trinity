@@ -26,24 +26,22 @@ BLUE_REGISTER_RESOURCE_EXTENSION( L"ddslp", CreateTr2LightProfileRes );
 BLUE_REGISTER_RESOURCE_EXTENSION( L"ieslp", CreateTr2LightProfileRes );
 
 
-const Be::ClassInfo* Tr2LightProfileRes::ExposeToBlue()
-{
+const Be::ClassInfo* Tr2LightProfileRes::ExposeToBlue(){
 	EXPOSURE_BEGIN( Tr2LightProfileRes, "" )
 
 		MAP_INTERFACE( Tr2LightProfileRes )
-		MAP_INTERFACE( IBlueResource )
-		MAP_INTERFACE( ICacheable )
-		MAP_ICACHEABLE_METHODS()
+			MAP_INTERFACE( IBlueResource )
+				MAP_INTERFACE( ICacheable )
+					MAP_ICACHEABLE_METHODS()
 
-		MAP_METHOD_AND_WRAP( 
-			"GetThumbnail", 
-			GetThumbnail, 
-			"Generates a thumbnail for the profile. Should only be used for tools.\n"
-			":param width: thumbnail width\n"
-			":param height: thumbnail height"
-		)
+						MAP_METHOD_AND_WRAP(
+							"GetThumbnail",
+							GetThumbnail,
+							"Generates a thumbnail for the profile. Should only be used for tools.\n"
+							":param width: thumbnail width\n"
+							":param height: thumbnail height" )
 
-	EXPOSURE_CHAINTO( BlueAsyncRes )
+							EXPOSURE_CHAINTO( BlueAsyncRes )
 }
 
 

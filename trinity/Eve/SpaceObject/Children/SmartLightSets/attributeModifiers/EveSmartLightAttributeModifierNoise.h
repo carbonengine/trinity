@@ -15,7 +15,7 @@ public:
 
 	EveSmartLightAttributeModifierNoise( IRoot* lockobj = nullptr );
 
-	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params, float activationMultiplier ) override;
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, float activationMultiplier ) override;
 	void ProcessAttributeModifier( Vector3 & attribute, const PlacementDataWithIdentifier& placement, const Vector3& entityPosition, const Vector3& entityDirection, float modifierStrength ) override;
 
 private:

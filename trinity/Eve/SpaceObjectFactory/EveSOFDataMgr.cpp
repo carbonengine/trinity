@@ -14,7 +14,7 @@ uint32_t GetVisibilityGroupHash( const BlueSharedString visibilityGroup )
 
 }
 
-EveSOFDataMgr::HullSpotlightSetItemData::HullSpotlightSetItemData( const EveSOFDataHullSpotlightSetItem& item ):
+EveSOFDataMgr::HullSpotlightSetItemData::HullSpotlightSetItemData( const EveSOFDataHullSpotlightSetItem& item ) :
 	boneIndex( item.m_boneIndex ),
 	boosterGainInfluence( item.m_boosterGainInfluence ),
 	colorType( item.m_colorType ),
@@ -27,13 +27,13 @@ EveSOFDataMgr::HullSpotlightSetItemData::HullSpotlightSetItemData( const EveSOFD
 	saturation( item.m_saturation ),
 	light( nullptr )
 {
-	if (item.m_light) 
-	{	
+	if( item.m_light )
+	{
 		light = std::make_unique<SpotLightAttachment>( *item.m_light );
 	}
 }
 
-EveSOFDataMgr::HullSpotlightSetData::HullSpotlightSetData( const EveSOFDataHullSpotlightSet& spotLightSet ):
+EveSOFDataMgr::HullSpotlightSetData::HullSpotlightSetData( const EveSOFDataHullSpotlightSet& spotLightSet ) :
 	skinned( spotLightSet.m_skinned ),
 	zOffset( spotLightSet.m_zOffset ),
 	visibilityGroup( GetVisibilityGroupHash( spotLightSet.m_visibilityGroup ) ),
@@ -47,7 +47,7 @@ EveSOFDataMgr::HullSpotlightSetData::HullSpotlightSetData( const EveSOFDataHullS
 	}
 }
 
-EveSOFDataMgr::HullPlaneSetItemData::HullPlaneSetItemData( const EveSOFDataHullPlaneSetItem& item ):
+EveSOFDataMgr::HullPlaneSetItemData::HullPlaneSetItemData( const EveSOFDataHullPlaneSetItem& item ) :
 	boneIndex( item.m_boneIndex ),
 	layer1Scroll( item.m_layer1Scroll ),
 	layer1Transform( item.m_layer1Transform ),
@@ -68,7 +68,7 @@ EveSOFDataMgr::HullPlaneSetItemData::HullPlaneSetItemData( const EveSOFDataHullP
 	saturation( item.m_saturation )
 {
 	lights.reserve( item.m_lights.size() );
-	for( auto& l : item.m_lights ) 
+	for( auto& l : item.m_lights )
 	{
 		lights.push_back( PointLightAttachment( *l ) );
 	}
@@ -92,7 +92,8 @@ EveSOFDataMgr::HullPlaneSetData::HullPlaneSetData( const EveSOFDataHullPlaneSet&
 }
 
 
-EveSOFDataMgr::PointLightAttachment::PointLightAttachment( const EveSOFDataPointLightAttachment& light ) {
+EveSOFDataMgr::PointLightAttachment::PointLightAttachment( const EveSOFDataPointLightAttachment& light )
+{
 	this->innerScaleMultiplier = light.m_innerScaleMultiplier;
 	this->intensity = light.m_intensity;
 	this->noiseAmplitude = light.m_noiseAmplitude;
@@ -105,7 +106,8 @@ EveSOFDataMgr::PointLightAttachment::PointLightAttachment( const EveSOFDataPoint
 	this->rotation = light.m_rotation;
 }
 
-LightData EveSOFDataMgr::PointLightAttachment::AsLightData( Color& color, float scale ) const {
+LightData EveSOFDataMgr::PointLightAttachment::AsLightData( Color& color, float scale ) const
+{
 	LightData data;
 	data.color = color;
 	data.position = this->translation;
@@ -120,7 +122,8 @@ LightData EveSOFDataMgr::PointLightAttachment::AsLightData( Color& color, float 
 	return data;
 }
 
-EveSOFDataMgr::SpotLightAttachment::SpotLightAttachment( const EveSOFDataSpotLightAttachment& light ) {
+EveSOFDataMgr::SpotLightAttachment::SpotLightAttachment( const EveSOFDataSpotLightAttachment& light )
+{
 	this->innerAngleMultiplier = light.m_innerAngleMultiplier;
 	this->translation = light.m_translation;
 	this->intensity = light.m_intensity;
@@ -134,7 +137,8 @@ EveSOFDataMgr::SpotLightAttachment::SpotLightAttachment( const EveSOFDataSpotLig
 	this->lightProfilePath = light.m_lightProfilePath;
 }
 
-LightData EveSOFDataMgr::SpotLightAttachment::AsLightData( Color& color, float scale, float innerAngle, float outerAngle ) const {
+LightData EveSOFDataMgr::SpotLightAttachment::AsLightData( Color& color, float scale, float innerAngle, float outerAngle ) const
+{
 	LightData data;
 	data.color = color;
 	data.position = this->translation;
@@ -736,9 +740,9 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hssid.saturation = spriteSetItemData->m_saturation;
 			hssid.colorType = spriteSetItemData->m_colorType;
 			hssid.light = nullptr;
-			if( spriteSetItemData->m_light ) 
+			if( spriteSetItemData->m_light )
 			{
-				hssid.light = std::make_unique<PointLightAttachment>( PointLightAttachment( *spriteSetItemData->m_light ));
+				hssid.light = std::make_unique<PointLightAttachment>( PointLightAttachment( *spriteSetItemData->m_light ) );
 			}
 			hssd.items.push_back( std::move( hssid ) );
 		}
@@ -831,7 +835,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hhsid.lights = std::vector<PointLightAttachment>();
 			hhsid.lights.reserve( hazeSetItemData->m_lights.size() );
 
-			for( auto& light:  hazeSetItemData->m_lights ) 
+			for( auto& light : hazeSetItemData->m_lights )
 			{
 				hhsid.lights.push_back( PointLightAttachment( *light ) );
 			}
@@ -911,12 +915,12 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			data.item.bone = bannerItem->m_boneIndex;
 			data.item.reference = bannerIndex++;
 			data.light = nullptr;
-			if( bannerItem->m_light ) 
+			if( bannerItem->m_light )
 			{
 				data.light = std::make_shared<PointLightAttachment>( *bannerItem->m_light );
 			}
 
-			set.bannerTypes[bannerItem->m_usage].push_back( std::move( data) );
+			set.bannerTypes[bannerItem->m_usage].push_back( std::move( data ) );
 		}
 		hd.bannerSets.push_back( std::move( set ) );
 	}
@@ -952,7 +956,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 				itemData.indexBuffers.push_back( buffer->m_indexBuffer );
 			}
 
-			for ( const auto& mhBuffers : itemPtr->m_multiHullIndexBuffers )
+			for( const auto& mhBuffers : itemPtr->m_multiHullIndexBuffers )
 			{
 				itemData.multiHullIndexBuffers.push_back( MultiHullDecalIndexBuffers( *mhBuffers ) );
 			}
@@ -1535,7 +1539,7 @@ void EveSOFDataMgr::GeneratePatternData( PatternData& pd, EveSOFDataPatternPtr s
 {
 	pd.applicationData.clear();
 	pd.sof6 = srcData->m_sof6;
-	
+
 	// per-layer data
 	PatternLayerData pld1, pld2;
 
@@ -1604,7 +1608,7 @@ EveSOFDataMgr::ExtensionPlacementData EveSOFDataMgr::UnpackPlacementData( IEveSO
 {
 	auto placementData = ExtensionPlacementData();
 
-	if (EveSOFDataHullExtensionPlacementPtr placement = BlueCastPtr( placementOrGroup ))
+	if( EveSOFDataHullExtensionPlacementPtr placement = BlueCastPtr( placementOrGroup ) )
 	{
 		placementData.isAGroup = false;
 		placementData.enabled = placement->m_enabled;
@@ -1653,7 +1657,7 @@ EveSOFDataMgr::ExtensionPlacementData EveSOFDataMgr::UnpackPlacementData( IEveSO
 	if( EveSOFDataHullExtensionPlacementGroupPtr placement = BlueCastPtr( placementOrGroup ) )
 	{
 		placementData.isAGroup = true;
-		
+
 		placementData.name = BlueSharedString( placement->m_name );
 		placementData.enabled = placement->m_enabled;
 
@@ -1715,7 +1719,7 @@ EveSOFDataMgr::ExtensionPlacementDistribution EveSOFDataMgr::generateDistributio
 	placementDistribution.randomRotationStepSizeYPR = distributionObj->m_randomRotationStepSizeYPR;
 	placementDistribution.randomRotationMaxSteps = distributionObj->m_randomRotationMaxSteps;
 	placementDistribution.randomScaleMin = distributionObj->m_randomScaleMin;
-	placementDistribution.randomScaleMax = distributionObj->m_randomScaleMax; 
+	placementDistribution.randomScaleMax = distributionObj->m_randomScaleMax;
 	placementDistribution.uniformScaling = distributionObj->m_uniformScale;
 	placementDistribution.occupyLocators = distributionObj->m_occupyLocators;
 
@@ -2062,7 +2066,7 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 		{
 			continue;
 		}
-		gd.categoryData[std::string( categoryData->m_categoryName.c_str())] = categoryData->m_reflectionMode;
+		gd.categoryData[std::string( categoryData->m_categoryName.c_str() )] = categoryData->m_reflectionMode;
 	}
 
 	// turret area type override

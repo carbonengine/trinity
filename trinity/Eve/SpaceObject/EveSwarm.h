@@ -28,54 +28,58 @@ public:
 
 	explicit EveSwarmRenderable( IRoot* lockobj = nullptr );
 	~EveSwarmRenderable();
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
+	void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 
-    bool HasTransparentBatches() override;
-    float GetSortValue() override; 
+	bool HasTransparentBatches() override;
+	float GetSortValue() override;
 
-	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
-	
+	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// PerObjectData
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveSwarmRenderable
-	void InitializeRenderable( EveSwarm* owner, Tr2MeshBase* mesh );
+	void InitializeRenderable( EveSwarm * owner, Tr2MeshBase * mesh );
 	void SetWorldTransform( const Matrix& transform );
-	const Matrix* GetWorldTransform() const { return &m_worldTransform; }
+	const Matrix* GetWorldTransform() const
+	{
+		return &m_worldTransform;
+	}
 	void SetBoosterIntensity( float intensity );
 	void SetShaderData( const EveSpaceObjectVSData& vsData, const EveSpaceObjectPSData& psData );
-	void InitDecals( const PEveSpaceObjectDecalVector &decals );
-	void PushDecals( std::vector<ITr2Renderable*>& renderables, float screensize );
+	void InitDecals( const PEveSpaceObjectDecalVector& decals );
+	void PushDecals( std::vector<ITr2Renderable*> & renderables, float screensize );
 	void UpdateDecalVisibility( const EveUpdateContext& updateContext, IEveSpaceObject2::ParentData& pd, Tr2GrannyAnimation* animationUpdater );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
 	IRoot* GetID( uint16_t ) override;
-	void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
+	void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
-	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
-	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
+
 private:
 	Tr2MeshBasePtr m_mesh;
 	BlueWeakRef<EveSwarm> m_owner;
 	Matrix m_worldTransform;
 	PEveSpaceObjectDecalVector m_decals;
-	
+
 	Tr2PersistentPerObjectData<EveSwarmRenderable> m_perObjectDataVs;
 	Tr2PersistentPerObjectData<EveSwarmRenderable> m_perObjectDataPs;
 	EveSpaceObjectPSData m_psData;
@@ -93,7 +97,8 @@ struct SwarmVehicle
 		position( 0, 0, 0 ),
 		wanderTarget( 0, 0, 0 ),
 		roll( 0.f )
-	{}
+	{
+	}
 
 	Quaternion rotation;
 	Vector3 acceleration;
@@ -118,7 +123,7 @@ public:
 
 	explicit EveSwarm( IRoot* lockobj = nullptr );
 	~EveSwarm();
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveSwarm
 	void AddSwarmer();
@@ -126,7 +131,7 @@ public:
 	void SetCount( int count );
 	void EnableSwarming( bool enable );
 	void PickFiringOrigin();
-	
+
 	struct BehaviorProperties
 	{
 		BehaviorProperties() :
@@ -157,15 +162,16 @@ public:
 			m_maxDeceleration( 200.f ),
 			m_weightFormation( 1.f ),
 			m_formationDistance( 50.f )
-		{}
+		{
+		}
 
 		float m_mass;
 		float m_speedMultiplier;
 		float m_speedMinimum;
 		float m_agility;
-	
-		float m_maxDistance0;  // Max allowed distance from ball
-		float m_maxDistance1;  // Max allowed distance from ball
+
+		float m_maxDistance0; // Max allowed distance from ball
+		float m_maxDistance1; // Max allowed distance from ball
 		float m_timeMultiplier; // Time multiplier, mostly for debug
 		float m_maxTime; // Never update by more than this, anything too long and things stop making sense
 
@@ -189,8 +195,8 @@ public:
 		// looking random movement characteristics.
 		float m_weightWander;
 		float m_wanderFluctuation; // How fast the point on the sphere changes
-		float m_wanderDistance;  // How far in front of the vehicle is the sphere
-		float m_wanderRadius;  // Radius of the sphere
+		float m_wanderDistance; // How far in front of the vehicle is the sphere
+		float m_wanderRadius; // Radius of the sphere
 
 		// Anchor: Steer vehicles toward the center point/ball
 		float m_weightAnchor;
@@ -206,55 +212,61 @@ public:
 		float m_weightFormation;
 		float m_formationDistance;
 	};
-	void SetBehavior( const BehaviorProperties* behavior ) { m_behavior = *behavior; }
+	void SetBehavior( const BehaviorProperties* behavior )
+	{
+		m_behavior = *behavior;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveShip2 overrides
 	void UpdateSyncronous( const EveUpdateContext& updateContext );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext );
 	void UpdateTurretsAsyncronous( const EveUpdateContext& updateContext );
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform ) override;
-	void PushRenderables( std::vector<ITr2Renderable*>& renderables );
-	void RebuildCachedData( BlueAsyncRes* p );
-	void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
-	void GetModelCenterWorldPosition( Vector3 &position ) const;
-	bool GetLocalBoundingBox( Vector3 &min, Vector3 &max );
-	
-	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	void PushRenderables( std::vector<ITr2Renderable*> & renderables );
+	void RebuildCachedData( BlueAsyncRes * p );
+	void UpdateModelCenterWorldPosition( Vector3 & position, Be::Time t );
+	void GetModelCenterWorldPosition( Vector3 & position ) const;
+	bool GetLocalBoundingBox( Vector3 & min, Vector3 & max );
+
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	virtual bool Initialize();
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
-	
+	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
+
 protected:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Object space damage locator information
-	virtual void GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator ) const;
-	virtual bool GetDamageLocatorPosition( Vector3* out, int index, bool inWorldSpace );
-	
+	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator ) const;
+	virtual bool GetDamageLocatorPosition( Vector3 * out, int index, bool inWorldSpace );
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveShip2 override
 	void UpdateWorldBounds();
 	void EstimatePixelDiameter( const TriFrustum& frustum );
 	Matrix GetObserverTransform() override;
 	const Matrix* GetTurretTransform( unsigned int turretSetIndex ) const;
-	
-	void UpdateBoosters( const EveUpdateContext& updateContext ) override {}
+
+	void UpdateBoosters( const EveUpdateContext& updateContext ) override
+	{
+	}
 	void UpdateWorldTransform( Be::Time time );
 
 private:
@@ -292,9 +304,9 @@ private:
 	Vector3 CalculateForces( int i0, std::vector<SwarmVehicle>& swarmers, const Vector3& followPosition, const Vector3& centerOfMass, const Vector3& alignment, const Vector3& formationDirection, const Vector3& formationSide, float timeSeconds );
 	Vector3 Calculate_Cohesion( Vector3 p0, Vector3 p1 );
 	Vector3 Calculate_Separation( Vector3 p0, Vector3 p1 );
-	Vector3 Calculate_Wander( SwarmVehicle& s, float wanderDistance, float radius, float fluctuation, float t );
-	void UpdateOrientation( SwarmVehicle* s, float t );
-	
+	Vector3 Calculate_Wander( SwarmVehicle & s, float wanderDistance, float radius, float fluctuation, float t );
+	void UpdateOrientation( SwarmVehicle * s, float t );
+
 	bool m_debugShowForces;
 	void EnableSwarmForceDebug( bool enable );
 };

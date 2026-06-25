@@ -7,16 +7,16 @@
 #include "Tr2LineSet.h"
 
 // A primitive specially made for bounding boxes
-BLUE_CLASS( Tr2BoundingLineSet ):
+BLUE_CLASS( Tr2BoundingLineSet ) :
 	public Tr2LineSet
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2BoundingLineSet( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2BoundingLineSet( IRoot* lockobj = NULL );
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 private:
 	void AddBox( const Vector3& min, const Vector3& max, const Vector4& color );

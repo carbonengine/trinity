@@ -78,13 +78,13 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 	int agentCount = 0;
 	for( auto agent = agents.begin(); agent != agents.end(); ++agent, ++data )
 	{
-		
+
 		// find an initial spawn position
 		// might have to move this to behaviorGroup for this to be used in other behaviors but this is just a test
 		if( !data->hasSpawned && m_firstSpawnAtRandomPlaces )
 		{
 			Vector3 spawnPos;
-			spawnPos = FindSpawnPoint( );
+			spawnPos = FindSpawnPoint();
 			group.m_spawnPosition = spawnPos;
 			agent->position = spawnPos;
 			data->hasSpawned = true;
@@ -256,8 +256,8 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 		// Move the drone in the desired direction
 		auto force = desiredVelocity * m_behaviorWeight - agent->velocity;
 		agent->acceleration += desiredVelocity - agent->velocity;
-		
-		Vector3 forceOffset = (force) * group.GetBoundingSphereRadius();
+
+		Vector3 forceOffset = (force)*group.GetBoundingSphereRadius();
 		m_returnForces.push_back( agent->position + forceOffset );
 		m_returnForces.push_back( force );
 	}
@@ -269,7 +269,7 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 		m_repairTimePassed += deltaTime;
 	}
 
-	
+
 	return m_returnForces;
 }
 
@@ -327,7 +327,7 @@ void SeekTarget::SetupShipRepair()
 	m_repair = true;
 }
 
-Vector3 SeekTarget::FindSpawnPoint( )
+Vector3 SeekTarget::FindSpawnPoint()
 {
 	auto seekLocators = GetLocatorsForSet( m_locatorSetName );
 	if( seekLocators != NULL && seekLocators[0].size() > 0 )

@@ -51,34 +51,34 @@ public:
 
 	void DistributeAcrossLocatorset( const BlueSharedString locatorSetName );
 	float GetOwnerMaxSpeed() const;
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
 	const char* GetName() const;
 	void SetName( const char* name );
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, Matrix& parentTransform );
-	void GetLocalToWorldTransform( Matrix& transform ) const;
+	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void ChangeLOD( Tr2Lod lod );
 	void SetOrigin( Origin origin );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	bool IsAlwaysOn() const override;
 	void SetInheritProperties( const Color* colorSet );
-	void GetWorldVelocity( Vector3& velocity ) const;
+	void GetWorldVelocity( Vector3 & velocity ) const;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
-	void AddTransformModifier( IEveChildTransformModifier* modifier ) override;
-	
+	void AddTransformModifier( IEveChildTransformModifier * modifier ) override;
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
 	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild* child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild* child );
+	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ControllerOwner
@@ -100,12 +100,12 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void GetDebugOptions( Tr2DebugRendererOptions & options );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* value ) override;	
+	bool OnModified( Be::Var * value ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify
@@ -120,7 +120,7 @@ public:
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
 
-	void CreateInstance(const Vector3& scale, const Quaternion& rotation, const Vector3& translation, const int32_t boneIndex = -1);
+	void CreateInstance( const Vector3& scale, const Quaternion& rotation, const Vector3& translation, const int32_t boneIndex = -1 );
 	void ClearInstanceList();
 	void PopFront();
 	void DisableEditMode( bool disable );
@@ -130,14 +130,13 @@ public:
 	void UpdateInstance( const uint32_t index, const Vector3& scale, const Quaternion& rotation, const Vector3& translation );
 
 	IEveSpaceObjectChildPtr GetSource();
-	void SetSource( IEveSpaceObjectChild* source );
+	void SetSource( IEveSpaceObjectChild * source );
 
 protected:
-	void CreateInstances( IEveSpaceObject2* parent );
+	void CreateInstances( IEveSpaceObject2 * parent );
 	void RunOnInstances( std::function<void( IEveSpaceObjectChild* )> func ) const;
 
 protected:
-
 	BlueSharedString m_name;
 	Vector3 m_worldVelocity;
 	float m_ownerMaxSpeed;

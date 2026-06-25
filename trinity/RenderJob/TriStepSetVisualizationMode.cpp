@@ -4,18 +4,18 @@
 #include "TriStepSetVisualizationMode.h"
 #include "ITr2VisualizationModeRenderer.h"
 
-TriStepSetVisualizationMode::TriStepSetVisualizationMode( IRoot* lockobj )
-:	m_mode( 0 )
+TriStepSetVisualizationMode::TriStepSetVisualizationMode( IRoot* lockobj ) :
+	m_mode( 0 )
 {
 }
 
-TriStepSetVisualizationMode::~TriStepSetVisualizationMode(void)
+TriStepSetVisualizationMode::~TriStepSetVisualizationMode( void )
 {
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blue-exposed initializer. 
+//   Blue-exposed initializer.
 // --------------------------------------------------------------------------------------
 void TriStepSetVisualizationMode::py__init__( ITr2VisualizationModeRenderer* object, int mode )
 {

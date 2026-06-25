@@ -5,7 +5,7 @@
 
 #include "Tr2Sprite2dScene.h"
 
-Tr2SpriteObjectBase::Tr2SpriteObjectBase() : 
+Tr2SpriteObjectBase::Tr2SpriteObjectBase() :
 	m_isDirty( true ),
 	m_parent( nullptr ),
 	m_auxMouseover( nullptr ),
@@ -15,7 +15,8 @@ Tr2SpriteObjectBase::Tr2SpriteObjectBase() :
 	m_display( true ),
 	m_pickState( TR2_SPS_ON )
 #if BLUE_WITH_PYTHON
-	, m_associatedObject( nullptr )
+	,
+	m_associatedObject( nullptr )
 #endif
 {
 }
@@ -227,7 +228,6 @@ void Tr2SpriteObject::SetColor( Color val )
 
 Tr2TexturedSpriteObject::Tr2TexturedSpriteObject( IRoot* lockobj /*= NULL */ )
 {
-
 }
 
 Tr2TexturedSpriteObject::~Tr2TexturedSpriteObject()
@@ -302,7 +302,7 @@ bool Tr2TexturedSpriteObject::ValidateAndSetTextures( Tr2Sprite2dScene* renderer
 				// Don't draw if we're still loading (or failed)
 				return false;
 			}
-			m_texturePrimary->Apply( renderer, 0  );
+			m_texturePrimary->Apply( renderer, 0 );
 		}
 		else
 		{
@@ -310,7 +310,7 @@ bool Tr2TexturedSpriteObject::ValidateAndSetTextures( Tr2Sprite2dScene* renderer
 			return false;
 		}
 
-		if(	m_spriteEffect >= TR2_SFX_TWO_TEXTURES )
+		if( m_spriteEffect >= TR2_SFX_TWO_TEXTURES )
 		{
 			if( m_textureSecondary )
 			{
@@ -319,7 +319,7 @@ bool Tr2TexturedSpriteObject::ValidateAndSetTextures( Tr2Sprite2dScene* renderer
 					// Don't draw if we're still loading (or failed)
 					return false;
 				}
-				m_textureSecondary->Apply( renderer, 1  );
+				m_textureSecondary->Apply( renderer, 1 );
 			}
 			else
 			{
@@ -339,12 +339,11 @@ void Tr2TexturedSpriteObject::SetValidatedTextures( Tr2Sprite2dScene* renderer )
 	// we would have been flagged dirty so the check is always done there.
 	if( m_spriteEffect >= TR2_SFX_ONE_TEXTURE )
 	{
-		m_texturePrimary->Apply( renderer, 0  );
+		m_texturePrimary->Apply( renderer, 0 );
 
-		if(	m_spriteEffect >= TR2_SFX_TWO_TEXTURES )
+		if( m_spriteEffect >= TR2_SFX_TWO_TEXTURES )
 		{
-			m_textureSecondary->Apply( renderer, 1  );
+			m_textureSecondary->Apply( renderer, 1 );
 		}
 	}
 }
-

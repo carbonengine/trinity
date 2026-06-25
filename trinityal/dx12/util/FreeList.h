@@ -8,10 +8,10 @@
 #include <vector>
 
 /** FreeList class, used by D3D12 Allocators */
-template<class T, typename tInitArgs> class FreeList
+template <class T, typename tInitArgs>
+class FreeList
 {
 public:
-
 	/** List Entry State */
 	enum EMode
 	{
@@ -25,11 +25,11 @@ public:
 	/** Single list entry */
 	struct Entry : T
 	{
-		Entry(uint32_t entryIndex, const tInitArgs& initArgs) :
-			T(entryIndex, initArgs),
-			m_mode(EM_Free),
-			m_prev(nullptr),
-			m_next(nullptr)
+		Entry( uint32_t entryIndex, const tInitArgs& initArgs ) :
+			T( entryIndex, initArgs ),
+			m_mode( EM_Free ),
+			m_prev( nullptr ),
+			m_next( nullptr )
 		{
 		}
 
@@ -39,11 +39,11 @@ public:
 	};
 
 	/**  */
-	FreeList(uint32_t entryCount, const tInitArgs& initArgs) :
-		m_entryCount(0),
-		m_freeCount(0),
-		m_freeHead(nullptr),
-		m_inUseHead(nullptr)
+	FreeList( uint32_t entryCount, const tInitArgs& initArgs ) :
+		m_entryCount( 0 ),
+		m_freeCount( 0 ),
+		m_freeHead( nullptr ),
+		m_inUseHead( nullptr )
 	{
 		AddPage( entryCount, initArgs );
 
@@ -75,7 +75,7 @@ public:
 	{
 		m_allEntries.emplace_back( std::make_unique<std::vector<Entry>>() );
 		// Create free list
-		auto& page = *m_allEntries.back(); 
+		auto& page = *m_allEntries.back();
 		page.reserve( pageSize );
 		for( uint32_t entryIdx = 0; entryIdx < pageSize; ++entryIdx )
 		{
@@ -136,21 +136,21 @@ public:
 	T* Allocate()
 	{
 		// List is full
-		if (m_freeHead == nullptr)
+		if( m_freeHead == nullptr )
 			return nullptr;
 
 		Entry* entry = m_freeHead;
 
 		// Move to the next free element, then unlink this entry
 		m_freeHead = entry->m_next;
-		if (m_freeHead != nullptr)
+		if( m_freeHead != nullptr )
 		{
 			m_freeHead->m_prev = nullptr;
 			entry->m_next = nullptr;
 		}
 
 		// Push into the allocated list
-		if (m_inUseHead != nullptr)
+		if( m_inUseHead != nullptr )
 		{
 			m_inUseHead->m_prev = entry;
 		}
@@ -159,41 +159,41 @@ public:
 		entry->m_mode = EM_InUse;
 		m_inUseHead = entry;
 
-		CCP_ASSERT(m_freeCount > 0);
+		CCP_ASSERT( m_freeCount > 0 );
 		--m_freeCount;
 
 		return entry;
 	}
 
 	/** Free an entry */
-	void Free(T* entryAsT)
+	void Free( T* entryAsT )
 	{
-		Entry* entry = reinterpret_cast<Entry*>(entryAsT);
-		ValidateEntry(entry);
+		Entry* entry = reinterpret_cast<Entry*>( entryAsT );
+		ValidateEntry( entry );
 
-		if (entry == nullptr || entry->m_mode == EM_Free)
+		if( entry == nullptr || entry->m_mode == EM_Free )
 			return;
 
 		// Unlink from in-use neighbors
-		if (entry->m_prev != nullptr)
+		if( entry->m_prev != nullptr )
 		{
 			entry->m_prev->m_next = entry->m_next;
 		}
 
-		if (entry->m_next != nullptr)
+		if( entry->m_next != nullptr )
 		{
 			entry->m_next->m_prev = entry->m_prev;
 		}
 
 		// Also, ensure head reference is updated
-		if (m_inUseHead == entry)
+		if( m_inUseHead == entry )
 		{
 			m_inUseHead = entry->m_next;
 		}
 
 
 		// Insert into free section
-		if (m_freeHead != nullptr)
+		if( m_freeHead != nullptr )
 		{
 			m_freeHead->m_prev = entry;
 		}
@@ -204,11 +204,11 @@ public:
 		m_freeHead = entry;
 
 		m_freeCount++;
-		CCP_ASSERT(m_freeCount <= m_entryCount);
+		CCP_ASSERT( m_freeCount <= m_entryCount );
 	}
 
 	/** Validate that an entry exists within this lists scope */
-	void ValidateEntry(T* entry)
+	void ValidateEntry( T* entry )
 	{
 		// The pointer should lie within our pre-allocated list
 		uintptr_t entryPtr = reinterpret_cast<uintptr_t>( entry );
@@ -226,7 +226,6 @@ public:
 	}
 
 private:
-
 	uint32_t m_entryCount;
 	uint32_t m_freeCount;
 	std::vector<std::unique_ptr<std::vector<Entry>>> m_allEntries;

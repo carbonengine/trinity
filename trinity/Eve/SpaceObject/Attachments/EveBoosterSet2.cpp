@@ -46,7 +46,7 @@ float g_lightNoise[g_lightNoiseSize];
 bool g_lightNoiseInitialized = false;
 
 
-EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) : 
+EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) :
 	m_isVisible( false ),
 	m_parentRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_parentSpeed( 0.f ),
@@ -69,10 +69,10 @@ EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) :
 	// "invalidate" all trail control positions
 	for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 	{
-		m_trailsControlPositions[ i ] = Vector3( 0.f, 0.f, 0.f );
-		m_trailsControlNormals[ i ] = Vector3( 0.f, 0.f, -1.f );
-		m_trailsControlNormalsFactor[ i ] = 1.f;
-		m_trailsSequenceLength[ i ] = 0.f;
+		m_trailsControlPositions[i] = Vector3( 0.f, 0.f, 0.f );
+		m_trailsControlNormals[i] = Vector3( 0.f, 0.f, -1.f );
+		m_trailsControlNormalsFactor[i] = 1.f;
+		m_trailsSequenceLength[i] = 0.f;
 	}
 
 	m_trailsOffsets = (XMVECTOR*)CCP_ALIGNED_MALLOC( "EveBoosterSet2::m_trailsOffsets", sizeof( XMVECTOR ) * EVE_MAX_POSITION_OFFSET_COUNT, 16 );
@@ -128,7 +128,7 @@ float EveBoosterSet2Renderable::CalculateIntensity( const Vector3& acceleration,
 	// dampening (like drum noise)
 	accFactor = accFactor * 0.2f + m_lastAccFactor * 0.8f;
 	m_lastAccFactor = accFactor;
-	float value = m_lastValue * 0.8f + ( speedMultiplier * speedRatio  + accMultiplier * accFactor ) * 0.2f;
+	float value = m_lastValue * 0.8f + ( speedMultiplier * speedRatio + accMultiplier * accFactor ) * 0.2f;
 	value = min( value, 2.0f );
 	m_lastValue = value;
 
@@ -216,7 +216,7 @@ void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, 
 		batch.SetDrawIndexedInstanced(
 			3 * 2 * EVE_BOOSTER_PLANES_COUNT[shape],
 			uint32_t( m_boosterSet->m_singleBoosters.size() ),
-			indexBuffer.GetStartIndex() ,
+			indexBuffer.GetStartIndex(),
 			vb.GetOffset() / vb.GetStride(),
 			m_boosterSet->m_instanceBuffer.GetOffset() / m_boosterSet->m_instanceBuffer.GetStride() );
 		batches->Commit( batch );
@@ -281,8 +281,8 @@ Tr2PerObjectData* EveBoosterSet2Renderable::GetPerObjectData( ITriRenderBatchAcc
 
 	for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 	{
-		perObjectData->m_vsData.trailsControlPositions[ i ] = Vector4( m_trailsControlPositions[ i ], m_trailsSequenceLength[ i ] );
-		perObjectData->m_vsData.trailsControlNormals[ i ] = Vector4( m_trailsControlNormals[ i ], m_trailsControlNormalsFactor[ i ] );
+		perObjectData->m_vsData.trailsControlPositions[i] = Vector4( m_trailsControlPositions[i], m_trailsSequenceLength[i] );
+		perObjectData->m_vsData.trailsControlNormals[i] = Vector4( m_trailsControlNormals[i], m_trailsControlNormalsFactor[i] );
 	}
 
 	return perObjectData;
@@ -322,7 +322,7 @@ void EveBoosterSet2Renderable::UpdateVisibility( const EveUpdateContext& updateC
 	float sqDist = FLT_MAX;
 	for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 	{
-		Vector3 tmp( m_trailsControlPositions[ i ] - frustum.m_viewPos );
+		Vector3 tmp( m_trailsControlPositions[i] - frustum.m_viewPos );
 		float d = LengthSq( tmp );
 		if( d < sqDist )
 		{
@@ -330,7 +330,7 @@ void EveBoosterSet2Renderable::UpdateVisibility( const EveUpdateContext& updateC
 			cntrPosIdx = i;
 		}
 	}
-	Vector4 tmp( m_trailsControlPositions[ cntrPosIdx ], transformedBoundingSphere.w );
+	Vector4 tmp( m_trailsControlPositions[cntrPosIdx], transformedBoundingSphere.w );
 	float trailsLOD = 7.5f * frustum.GetPixelSizeAccross( &tmp );
 	m_trailsVisible = trailsLOD > updateContext.GetLowDetailThreshold();
 
@@ -358,7 +358,7 @@ void EveBoosterSet2Renderable::GetRenderables( std::vector<ITr2Renderable*>& ren
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Does a lot of calculations for trails based on the movement of the parent (aka 
+//   Does a lot of calculations for trails based on the movement of the parent (aka
 //   the ship). Calling the function that calculates all the spline data.
 // Arguments:
 //   deltaT - time since last frame
@@ -427,7 +427,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 		m_trailsOffsetAccu -= movementDir;
 
 		// how many interations fit into elapsed time since last frame?
-		unsigned int iterCount = ( unsigned int )( m_trailsTimeToNext / EVE_POSITION_OFFSET_DELTAT );
+		unsigned int iterCount = (unsigned int)( m_trailsTimeToNext / EVE_POSITION_OFFSET_DELTAT );
 
 		// cumulative offset
 		XMVECTOR offset = ( ( EVE_POSITION_OFFSET_DELTAT / m_trailsTimeToNext ) * iterCount ) * m_trailsOffsetAccu;
@@ -444,7 +444,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 				{
 					for( unsigned int i = 0; i < EVE_MAX_POSITION_OFFSET_COUNT; ++i )
 					{
-						m_trailsOffsets[ i ] = XMVectorAdd( m_trailsOffsets[i], offset );
+						m_trailsOffsets[i] = XMVectorAdd( m_trailsOffsets[i], offset );
 					}
 				}
 
@@ -457,7 +457,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 						m_trailsOffsetLatest = 0;
 					}
 
-					m_trailsOffsets[m_trailsOffsetLatest] = ( ( iterCount - 1 - j ) * ( EVE_POSITION_OFFSET_DELTAT / m_trailsTimeToNext )  ) * m_trailsOffsetAccu;// offsets[j + 1];
+					m_trailsOffsets[m_trailsOffsetLatest] = ( ( iterCount - 1 - j ) * ( EVE_POSITION_OFFSET_DELTAT / m_trailsTimeToNext ) ) * m_trailsOffsetAccu; // offsets[j + 1];
 				}
 			}
 			else
@@ -484,11 +484,11 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 					}
 					if( n < iterCount )
 					{
-						m_trailsOffsets[ i ] = XMVectorMultiply( partialOffset, XMVectorReplicate( float( iterCount - 1 - n ) ) );
+						m_trailsOffsets[i] = XMVectorMultiply( partialOffset, XMVectorReplicate( float( iterCount - 1 - n ) ) );
 					}
 					else
 					{
-						m_trailsOffsets[ i ] = XMVectorAdd( m_trailsOffsets[i], offset );
+						m_trailsOffsets[i] = XMVectorAdd( m_trailsOffsets[i], offset );
 					}
 				}
 				m_trailsOffsetLatest = ( m_trailsOffsetLatest + iterCount - 1 ) % EVE_MAX_POSITION_OFFSET_COUNT;
@@ -502,7 +502,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 		int ringIdx = m_trailsOffsetLatest;
 		for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 		{
-			m_trailsControlPositions[ i ] =  parentPos + Vector3( m_trailsOffsets[ ringIdx ] );
+			m_trailsControlPositions[i] = parentPos + Vector3( m_trailsOffsets[ringIdx] );
 
 			ringIdx -= (unsigned int)( m_trailsTimeDelta / EVE_POSITION_OFFSET_DELTAT );
 			if( ringIdx < 0 )
@@ -517,8 +517,8 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 		for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 		{
 			Vector3 rotatedOffset;
-			TriVectorRotateMatrix( &rotatedOffset, &m_boosterSet->m_trailsStaticOffsets[ i ], &m_parentTransform );
-			m_trailsControlPositions[ i ] =  parentPos + rotatedOffset;
+			TriVectorRotateMatrix( &rotatedOffset, &m_boosterSet->m_trailsStaticOffsets[i], &m_parentTransform );
+			m_trailsControlPositions[i] = parentPos + rotatedOffset;
 		}
 	}
 
@@ -527,7 +527,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 	m_trailsTotalLength = 0.f;
 	for( unsigned int i = 1; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 	{
-		Vector3 sequenceDir = m_trailsControlPositions[ i ] - m_trailsControlPositions[ i - 1 ];
+		Vector3 sequenceDir = m_trailsControlPositions[i] - m_trailsControlPositions[i - 1];
 		m_trailsTotalLength += Length( sequenceDir );
 	}
 
@@ -541,8 +541,8 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 	for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 	{
 		Vector3 r = Vector3( boosterBoundsSphere.w, boosterBoundsSphere.w, boosterBoundsSphere.w );
-		Vector3 boundMin( m_trailsControlPositions[ i ] - r );
-		Vector3 boundMax( m_trailsControlPositions[ i ] + r );
+		Vector3 boundMin( m_trailsControlPositions[i] - r );
+		Vector3 boundMax( m_trailsControlPositions[i] + r );
 		BoundingBoxUpdate( m_trailsBoundsMin, m_trailsBoundsMax, boundMin, boundMax );
 	}
 
@@ -552,34 +552,34 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 	m_trailsControlNormals[0] = TransformNormal( firstTangent, m_parentTransform );
 
 	// last tangent is always from before-last to last point
-	Vector3 lastDir = m_trailsControlPositions[ EVE_MAX_CONTROL_POINT_COUNT - 1 ] - m_trailsControlPositions[ EVE_MAX_CONTROL_POINT_COUNT - 2 ];
-	m_trailsControlNormals[ EVE_MAX_CONTROL_POINT_COUNT - 1 ] = 0.5f * lastDir;
+	Vector3 lastDir = m_trailsControlPositions[EVE_MAX_CONTROL_POINT_COUNT - 1] - m_trailsControlPositions[EVE_MAX_CONTROL_POINT_COUNT - 2];
+	m_trailsControlNormals[EVE_MAX_CONTROL_POINT_COUNT - 1] = 0.5f * lastDir;
 
 	// the rest is calculated according to c-r (or something...)
 	for( unsigned int i = 1; i < EVE_MAX_CONTROL_POINT_COUNT - 1; ++i )
 	{
 		// from -1 to +1
-		Vector3 dir = m_trailsControlPositions[ i + 1 ] - m_trailsControlPositions[ i - 1 ];
+		Vector3 dir = m_trailsControlPositions[i + 1] - m_trailsControlPositions[i - 1];
 		m_trailsControlNormals[i] = Normalize( dir );
 		// adjust length!
-		Vector3 t0( m_trailsControlPositions[ i + 1 ] - m_trailsControlPositions[ i ] );
-		Vector3 t1( m_trailsControlPositions[ i ] - m_trailsControlPositions[ i - 1 ] );
+		Vector3 t0( m_trailsControlPositions[i + 1] - m_trailsControlPositions[i] );
+		Vector3 t1( m_trailsControlPositions[i] - m_trailsControlPositions[i - 1] );
 		float len0 = Length( t0 );
 		float len1 = Length( t1 );
 		// keep the normal add len0 and store a factor to calc a len1-normal
-		m_trailsControlNormals[ i ] *= len0;
-		m_trailsControlNormalsFactor[ i ] = len1 / len0;
+		m_trailsControlNormals[i] *= len0;
+		m_trailsControlNormalsFactor[i] = len1 / len0;
 	}
 
 	for( unsigned int i = 1; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 	{
 		// "sequence length" value is the length of this segment normalized along the whole trail
-		Vector3 segment( m_trailsControlPositions[ i ] - m_trailsControlPositions[ i - 1 ] );
-		m_trailsSequenceLength[ i ] = Length( segment );
+		Vector3 segment( m_trailsControlPositions[i] - m_trailsControlPositions[i - 1] );
+		m_trailsSequenceLength[i] = Length( segment );
 		// normalize if non-zero length
 		if( m_trailsTotalLength > 0.f )
 		{
-			m_trailsSequenceLength[ i ] /= m_trailsTotalLength;
+			m_trailsSequenceLength[i] /= m_trailsTotalLength;
 		}
 	}
 }
@@ -587,70 +587,70 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 
 namespace
 {
-	ALResult GetBoxVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
+ALResult GetBoxVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
+{
+	const uint32_t vertexCount = 4 * 6;
+	EveBoosterSet2::BoosterVertex vertices[vertexCount];
+	auto p = &vertices[0];
+	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
+
+	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
+
+	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
+
+	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
+
+	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
+	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
+	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
+
+	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
+	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
+	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
+
+	return g_sharedBuffer.Allocate( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
+}
+
+ALResult GetStarVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
+{
+	const uint32_t vertexCount = 4 * 4;
+	EveBoosterSet2::BoosterVertex vertices[vertexCount];
+	auto p = &vertices[0];
+	for( unsigned int i = 0; i < vertexCount; i += 4 )
 	{
-		const uint32_t vertexCount = 4 * 6;
-		EveBoosterSet2::BoosterVertex vertices[vertexCount];
-		auto p = &vertices[0];
-		( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-
-		( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-
-		( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-
-		( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-
-		( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-		( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-		( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-
-		( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-		( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-		( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-
-		return g_sharedBuffer.Allocate( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
+		float t = (float)i * XM_PI / 4.f / 4.f;
+		float x = cos( t ) * 0.5f;
+		float y = sin( t ) * 0.5f;
+		p->position = Vector3( -x, -y, 0.f );
+		p->texCoord = Vector2( 1.f, 1.f );
+		++p;
+		p->position = Vector3( -x, -y, -1.f );
+		p->texCoord = Vector2( 1.f, 0.f );
+		++p;
+		p->position = Vector3( x, y, -1.f );
+		p->texCoord = Vector2( 0.f, 0.f );
+		++p;
+		p->position = Vector3( x, y, 0.0f );
+		p->texCoord = Vector2( 0.f, 1.f );
+		++p;
 	}
 
-	ALResult GetStarVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
-	{
-		const uint32_t vertexCount = 4 * 4;
-		EveBoosterSet2::BoosterVertex vertices[vertexCount];
-		auto p = &vertices[0];
-		for( unsigned int i = 0; i < vertexCount; i += 4 )
-		{
-			float t = (float)i * XM_PI / 4.f / 4.f;
-			float x = cos( t ) * 0.5f;
-			float y = sin( t ) * 0.5f;
-			p->position = Vector3( -x, -y, 0.f );
-			p->texCoord = Vector2( 1.f, 1.f );
-			++p;
-			p->position = Vector3( -x, -y, -1.f );
-			p->texCoord = Vector2( 1.f, 0.f );
-			++p;
-			p->position = Vector3( x, y, -1.f );
-			p->texCoord = Vector2( 0.f, 0.f );
-			++p;
-			p->position = Vector3( x, y, 0.0f );
-			p->texCoord = Vector2( 0.f, 1.f );
-			++p;
-		}
-
-		return g_sharedBuffer.Allocate( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
-	}
+	return g_sharedBuffer.Allocate( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
+}
 }
 
 // --------------------------------------------------------------------------------
@@ -691,10 +691,10 @@ EveBoosterSet2::EveBoosterSet2( IRoot* lockobj ) :
 	m_vertexBuffer( BlueSharedString( "BoosterBoxVB" ), GetBoxVB )
 {
 	BoundingSphereInitialize( m_boosterBoundingSphere );
-	
+
 	for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 	{
-		m_trailsStaticOffsets[ i ] = Vector3( 0.f, 0.f, 0.f );
+		m_trailsStaticOffsets[i] = Vector3( 0.f, 0.f, 0.f );
 	}
 
 	if( !g_lightNoiseInitialized )
@@ -762,8 +762,8 @@ bool EveBoosterSet2::OnModified( Be::Var* value )
 		else if( IsMatch( value, m_staticTrailLength ) )
 		{
 			float step = m_staticTrailLength / ( EVE_MAX_CONTROL_POINT_COUNT - 1 );
-			
-			for( unsigned int i = 0; i <EVE_MAX_CONTROL_POINT_COUNT; ++i )
+
+			for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 			{
 				m_trailsStaticOffsets[i] = Vector3( 0.f, 0.f, -step * i );
 			}
@@ -805,7 +805,7 @@ void EveBoosterSet2::Update( float deltaT, Be::Time t, const Matrix& parentMatri
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Does a lot of calculations for trails based on the movement of the parent (aka 
+//   Does a lot of calculations for trails based on the movement of the parent (aka
 //   the ship). Calling the function that calculates all the spline data.
 // Arguments:
 //   deltaT - time since last frame
@@ -817,7 +817,7 @@ void EveBoosterSet2::UpdateTrails( float deltaT, Be::Time t )
 	{
 		for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 		{
-			(*it)->UpdateTrails( deltaT, t );
+			( *it )->UpdateTrails( deltaT, t );
 		}
 		m_trails->Update( t );
 	}
@@ -913,31 +913,28 @@ void EveBoosterSet2::CreateFlares( SingleBoosterData& boosterData )
 	float seed = float( rand() ) / float( RAND_MAX ) * 0.7f;
 
 	Vector3 spritePos = pos - 2.5f * dir;
-	m_glows->Add( spritePos, seed, seed, scale * m_glowScale, scale * m_glowScale, 0.0f,
-		m_glowColor, m_warpGlowColor );
+	m_glows->Add( spritePos, seed, seed, scale * m_glowScale, scale * m_glowScale, 0.0f, m_glowColor, m_warpGlowColor );
 
 	spritePos = pos - 3.0f * dir;
-	m_glows->Add( spritePos, seed, 1.0f + seed, scale * m_symHaloScale, scale * m_symHaloScale, 0.0f,
-		m_haloColor, m_warpHaloColor );
+	m_glows->Add( spritePos, seed, 1.0f + seed, scale * m_symHaloScale, scale * m_symHaloScale, 0.0f, m_haloColor, m_warpHaloColor );
 
 	spritePos = pos - 3.01f * dir;
-	m_glows->Add( spritePos, seed, 1.0f + seed, scale * m_haloScaleX, scale * m_haloScaleY, 0.0f,
-		m_haloColor, m_warpHaloColor );
+	m_glows->Add( spritePos, seed, 1.0f + seed, scale * m_haloScaleX, scale * m_haloScaleY, 0.0f, m_haloColor, m_warpHaloColor );
 }
 
 // --------------------------------------------------------------------------------
 // Description:
 //   Set all internal data of this set
 // --------------------------------------------------------------------------------
-void EveBoosterSet2::SetData( 
-	float glowScale, 
-	const Color* glowColor, 
-	const Color* warpGlowColor, 
-	float symHaloScale, 
-	float haloScaleX, 
-	float haloScaleY, 
-	const Color* haloColor, 
-	const Color* warpHaloColor, 
+void EveBoosterSet2::SetData(
+	float glowScale,
+	const Color* glowColor,
+	const Color* warpGlowColor,
+	float symHaloScale,
+	float haloScaleX,
+	float haloScaleY,
+	const Color* haloColor,
+	const Color* warpHaloColor,
 	bool alwaysOn )
 {
 	m_glowScale = glowScale;
@@ -1032,7 +1029,7 @@ bool EveBoosterSet2::OnPrepareResources()
 
 	// create vertex-declarartion
 	m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_boosterInstancedVertex );
-	if(	m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
 		return false;
 	}
@@ -1079,7 +1076,7 @@ void EveBoosterSet2::RebuildInstanceData( Tr2RenderContext& /*renderContext*/ )
 
 	// create and fill with star-shape's position and some random-value
 	std::vector<InstanceVertex> vertices( boosterCount );
-	for( unsigned int i = 0; i < boosterCount ; ++i )
+	for( unsigned int i = 0; i < boosterCount; ++i )
 	{
 		vertices[i].transform = m_singleBoosters[i].transform;
 		vertices[i].wavePhase = (float)rand() / (float)RAND_MAX;
@@ -1103,7 +1100,7 @@ void EveBoosterSet2::UpdateVisibility( const EveUpdateContext& updateContext )
 	{
 		for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 		{
-			(*it)->UpdateVisibility( updateContext );
+			( *it )->UpdateVisibility( updateContext );
 		}
 		if( m_glows )
 		{
@@ -1143,7 +1140,7 @@ void EveBoosterSet2::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 	{
 		for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 		{
-			(*it)->GetRenderables( renderables );
+			( *it )->GetRenderables( renderables );
 		}
 	}
 }
@@ -1163,7 +1160,7 @@ float EveBoosterSet2::GetBoosterIntensity() const
 	float oneOverCount = 1.f / (float)m_boosterRenderables.size();
 	for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 	{
-		intensity += (*it)->GetIntensity() * oneOverCount;
+		intensity += ( *it )->GetIntensity() * oneOverCount;
 	}
 	return intensity;
 }
@@ -1197,19 +1194,19 @@ void EveBoosterSet2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		for( uint32_t j = 0; j < m_singleBoosters.size(); ++j )
 		{
 			Matrix transform = m_singleBoosters[j].transform * ( *it )->m_parentTransform;
-			renderer.DrawCylinder( 
-				Tr2DebugObjectReference( this, j ), 
-				transform, 
-				Vector3( 0, 0, 0 ), 
-				Vector3( 0, 0, -1 ), 
-				1.0f, 
-				8, 
-				ITr2DebugRenderer2::Lit, 
+			renderer.DrawCylinder(
+				Tr2DebugObjectReference( this, j ),
+				transform,
+				Vector3( 0, 0, 0 ),
+				Vector3( 0, 0, -1 ),
+				1.0f,
+				8,
+				ITr2DebugRenderer2::Lit,
 				Tr2DebugColor( 0x88ffff00, 0x22ffff00 ) );
 		}
 
 		// trails box
-		renderer.DrawBox( this, (*it)->m_trailsBoundsMin, (*it)->m_trailsBoundsMax, ITr2DebugRenderer2::Wireframe, 0xff00ffff );
+		renderer.DrawBox( this, ( *it )->m_trailsBoundsMin, ( *it )->m_trailsBoundsMax, ITr2DebugRenderer2::Wireframe, 0xff00ffff );
 
 		if( m_glows )
 		{
@@ -1229,7 +1226,7 @@ void EveBoosterSet2::GetBoundingSphere( Vector4& boundingSphere ) const
 	for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 	{
 		Vector4 bs;
-		(*it)->GetBoundingSphere( bs );
+		( *it )->GetBoundingSphere( bs );
 		BoundingSphereUpdate( bs, boundingSphere );
 	}
 }
@@ -1264,9 +1261,9 @@ void EveBoosterSet2::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Mat
 
 	for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 	{
-		if( (*it)->m_boostersVisible || !m_flareLodEnabled )
+		if( ( *it )->m_boostersVisible || !m_flareLodEnabled )
 		{
-			m_glows->AddBoosterGlowToQuadRenderer( quadRenderer, (*it)->m_parentTransform, (*it)->m_overallIntensity, m_warpIntensity );
+			m_glows->AddBoosterGlowToQuadRenderer( quadRenderer, ( *it )->m_parentTransform, ( *it )->m_overallIntensity, m_warpIntensity );
 		}
 	}
 }
@@ -1275,7 +1272,7 @@ void EveBoosterSet2::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Mat
 void EveBoosterSet2::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if ( registry )
+	if( registry )
 	{
 		registry->RegisterComponent<ITr2LightOwner>( this );
 	}
@@ -1296,16 +1293,16 @@ void EveBoosterSet2::GetLights( Tr2LightManager& lightManager ) const
 
 	for( auto dit = m_boosterRenderables.begin(); dit != m_boosterRenderables.end(); dit++ )
 	{
-		if( (*dit)->m_overallIntensity <= 0 )
+		if( ( *dit )->m_overallIntensity <= 0 )
 		{
 			continue;
 		}
 
 		float warpIntensity = std::min( std::max( m_warpIntensity, 0.f ), 1.f );
 		float radiusFactor = m_lightRadius * ( 1.f - warpIntensity ) + m_lightWarpRadius * warpIntensity;
-		radiusFactor *= (*dit)->m_overallIntensity;
+		radiusFactor *= ( *dit )->m_overallIntensity;
 		Color color = m_lightColor * ( 1.f - warpIntensity ) + m_lightWarpColor * warpIntensity;
-		XMMATRIX transform = (*dit)->m_parentTransform;
+		XMMATRIX transform = ( *dit )->m_parentTransform;
 		for( auto it = std::begin( m_singleBoosters ); it != std::end( m_singleBoosters ); ++it )
 		{
 			float phase = ( it->lightPhase + Tr2Renderer::GetAnimationTime() ) * m_lightFlickerFrequency;
@@ -1313,11 +1310,10 @@ void EveBoosterSet2::GetLights( Tr2LightManager& lightManager ) const
 			float p1 = g_lightNoise[( int( phase ) + 1 ) % g_lightNoiseSize];
 			float t = phase - std::floor( phase );
 			float flicker = 1 + m_lightFlickerAmplitude * 2.0f * ( p0 * ( 1.0f - t ) + p1 * t ) - m_lightFlickerAmplitude;
-			lightManager.AddPointLight( 
-				Vector3( XMVector3TransformCoord( it->lightPosition, transform ) ), 
+			lightManager.AddPointLight(
+				Vector3( XMVector3TransformCoord( it->lightPosition, transform ) ),
 				it->lightRadius * radiusFactor,
 				color * flicker );
-
 		}
 	}
 }
@@ -1329,7 +1325,7 @@ void EveBoosterSet2::GetLights( Tr2LightManager& lightManager ) const
 void EveBoosterSetPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 {
 	FillAndSetConstants( *buffers[VERTEX_SHADER], m_vsData, VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
-	FillAndSetConstants( *buffers[PIXEL_SHADER ], m_psData, PIXEL_SHADER , Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+	FillAndSetConstants( *buffers[PIXEL_SHADER], m_psData, PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 }
 
 void EveBoosterSetPerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const

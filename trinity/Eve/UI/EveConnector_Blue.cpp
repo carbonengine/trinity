@@ -3,64 +3,46 @@
 #include "StdAfx.h"
 #include "EveConnector.h"
 
-Be::VarChooser EveConnectorTypeChooser[] =
-{
-	{
-		"PointToPoint",
-		BeCast( EveConnector::PointToPoint ),
-		"Connection between two points"
-	},
-	{
-		"StraightAnchor",
-		BeCast( EveConnector::StraightAnchor ),
-		"Anchor line from dest to xz plane containing source"
-	},
-	{
-		"CurvedAnchor",
-		BeCast( EveConnector::CurvedAnchor ),
-		"Sphered line from dest to xz plane containing source using source as the center"
-	},
-	{
-		"XZ_Circle",
-		BeCast( EveConnector::XZ_Circle ),
-		"Circle in xz plane going through the 'CurvedAnchor' point with source as the center"
-	},
-	{
-		"XZ_CircleStraight",
-		BeCast( EveConnector::XZ_CircleStraight ),
-		"Circle in xz plane going through the 'StraightAnchor' point with source as the center"
-	},
-	{
-		"Circle",
-		BeCast( EveConnector::Circle ),
-		"Circle in the plane normal plane"
-	},
-	{
-		"Ellipse",
-		BeCast( EveConnector::Ellipse ),
-		"Ellipse in the plane normal plane, radiusX is destPosition.x, radiusY is destPosition.y and ellipse rotation is destPosition.z"
-	},
-	{
-		"Orbit",
-		BeCast( EveConnector::Orbit ),
-		"Draws an orbit using planeNormal and radius"
-	},
+Be::VarChooser EveConnectorTypeChooser[] = {
+	{ "PointToPoint",
+	  BeCast( EveConnector::PointToPoint ),
+	  "Connection between two points" },
+	{ "StraightAnchor",
+	  BeCast( EveConnector::StraightAnchor ),
+	  "Anchor line from dest to xz plane containing source" },
+	{ "CurvedAnchor",
+	  BeCast( EveConnector::CurvedAnchor ),
+	  "Sphered line from dest to xz plane containing source using source as the center" },
+	{ "XZ_Circle",
+	  BeCast( EveConnector::XZ_Circle ),
+	  "Circle in xz plane going through the 'CurvedAnchor' point with source as the center" },
+	{ "XZ_CircleStraight",
+	  BeCast( EveConnector::XZ_CircleStraight ),
+	  "Circle in xz plane going through the 'StraightAnchor' point with source as the center" },
+	{ "Circle",
+	  BeCast( EveConnector::Circle ),
+	  "Circle in the plane normal plane" },
+	{ "Ellipse",
+	  BeCast( EveConnector::Ellipse ),
+	  "Ellipse in the plane normal plane, radiusX is destPosition.x, radiusY is destPosition.y and ellipse rotation is destPosition.z" },
+	{ "Orbit",
+	  BeCast( EveConnector::Orbit ),
+	  "Draws an orbit using planeNormal and radius" },
 	{ 0 }
 };
 
-BLUE_REGISTER_ENUM_EX( 
+BLUE_REGISTER_ENUM_EX(
 	"EveConnectorStyle",
 	EveConnector::ConnectorType,
 	EveConnectorTypeChooser,
-	ENUM_REG_ENUM_OBJECT_ON_MODULE
-);
+	ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 BLUE_DEFINE( EveConnector );
 
 const Be::ClassInfo* EveConnector::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveConnector, "" )
-        MAP_INTERFACE( EveConnector )
+	EXPOSURE_BEGIN( EveConnector, "" )
+		MAP_INTERFACE( EveConnector )
 
 		MAP_ATTRIBUTE( "color", m_color, "", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "lineWidth", m_width, "", Be::READWRITE | Be::PERSIST );
@@ -81,5 +63,5 @@ const Be::ClassInfo* EveConnector::ExposeToBlue()
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "type", m_type, "", Be::READWRITE | Be::PERSIST | Be::ENUM, EveConnectorTypeChooser );
 
-    EXPOSURE_END()
+	EXPOSURE_END()
 }

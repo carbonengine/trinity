@@ -8,8 +8,8 @@
 #include "Curves/Tr2CurveScalar.h"
 #include "EveChildInstanceContainer.h"
 
-EveChildEffectPropagator::EveChildEffectPropagator( IRoot* lockobj )
-	:EveChildContainer( lockobj ),
+EveChildEffectPropagator::EveChildEffectPropagator( IRoot* lockobj ) :
+	EveChildContainer( lockobj ),
 	m_effectScaling( 1.0f, 1.0f, 1.0f ),
 	m_triggerSphereOffset( 0.0f, 0.0f, 0.0f ),
 	m_type( LOCAL_LOCATORS ),
@@ -67,7 +67,7 @@ bool EveChildEffectPropagator::OnModified( Be::Var* value )
 			m_effect->DisableEditMode( true );
 		}
 	}
-	
+
 	if( IsMatch( value, m_completeness ) )
 	{
 		m_completeness = min( 1.f, max( 0.f, m_completeness ) );
@@ -87,7 +87,7 @@ bool EveChildEffectPropagator::OnModified( Be::Var* value )
 	{
 		if( m_frequency != 0.f )
 		{
-			m_playTime = float( m_currentTriggerIndex ) / m_frequency;	
+			m_playTime = float( m_currentTriggerIndex ) / m_frequency;
 		}
 	}
 
@@ -179,8 +179,8 @@ void EveChildEffectPropagator::UpdateSyncronous( const EveUpdateContext& updateC
 
 		if( m_triggerMethod == INTERVAL_TRIGGERS )
 		{
-			int size = (int) max( floor( m_effectDuration * m_frequency ), 0.f );
-			std::vector<int> arr(size);
+			int size = (int)max( floor( m_effectDuration * m_frequency ), 0.f );
+			std::vector<int> arr( size );
 			for( int x = 0; x < size; ++x )
 			{
 				arr[x] = -1;
@@ -216,7 +216,7 @@ void EveChildEffectPropagator::UpdateSyncronous( const EveUpdateContext& updateC
 		break;
 	case INSTANT_PERMANENT:
 		m_playTime += updateContext.GetDeltaT();
-		if( m_currentTriggerIndex == 0 ) 
+		if( m_currentTriggerIndex == 0 )
 		{
 			for( auto it = m_processedTransforms.begin(); it != m_processedTransforms.end(); ++it )
 			{
@@ -252,7 +252,7 @@ void EveChildEffectPropagator::UpdateTriggerCurve( const EveUpdateContext& updat
 		{
 			return;
 		}
-		
+
 		if( m_replayAfterDelay )
 		{
 			if( m_delayTimer > 0 )
@@ -281,7 +281,7 @@ void EveChildEffectPropagator::UpdateTriggerInterval( const EveUpdateContext& up
 	{
 		return;
 	}
-	
+
 	if( m_stopAfterNumTriggers > 0.0 && m_effectDuration != -1.f && m_playTime > ( m_stopAfterNumTriggers / m_frequency + m_effectDuration ) )
 	{
 		Stop();
@@ -302,7 +302,7 @@ void EveChildEffectPropagator::UpdateTriggerInterval( const EveUpdateContext& up
 		m_effect->CreateInstance( it->scale, it->rotation, it->position );
 		m_currentTriggerIndex++;
 	}
-	
+
 	if( m_effectDuration != -1.f && m_playTime > ( (float)m_numDeleted / m_frequency ) + m_effectDuration )
 	{
 		m_effect->PopFront();
@@ -310,7 +310,7 @@ void EveChildEffectPropagator::UpdateTriggerInterval( const EveUpdateContext& up
 
 		if( m_numDeleted == m_currentTriggerIndex )
 		{
-			m_currentTriggerIndex = 0;  // prevent debug rendering on a running loop after it finishes (see InstanceContainers)
+			m_currentTriggerIndex = 0; // prevent debug rendering on a running loop after it finishes (see InstanceContainers)
 			m_lastTriggered.clear();
 		}
 	}
@@ -319,16 +319,16 @@ void EveChildEffectPropagator::UpdateTriggerInterval( const EveUpdateContext& up
 int EveChildEffectPropagator::GetSmartRandomLocatorIndex()
 {
 	int locatorIndex = -1;
-	int ptSize = (int) m_processedTransforms.size();
-	int ltSize = (int) m_lastTriggered.size();
+	int ptSize = (int)m_processedTransforms.size();
+	int ltSize = (int)m_lastTriggered.size();
 
-	if( ltSize >= ptSize || m_frequency * m_effectDuration > 0.75f * float(ptSize) )  // (*)
+	if( ltSize >= ptSize || m_frequency * m_effectDuration > 0.75f * float( ptSize ) ) // (*)
 	{
 		locatorIndex = TriRandInt( ptSize );
 	}
 	else
 	{
-		// this loop should never repeat more than 2-3 times and most often no 
+		// this loop should never repeat more than 2-3 times and most often no
 		// repeats at all. I also made an early exit condition ->(*).
 		// The assumption is that this is faster than keeping an organized
 		// index array barring excluded indexes. The only bad scenario is when all of these
@@ -429,7 +429,7 @@ void EveChildEffectPropagator::ProcessLocalLocators()
 		float l = LengthSq( t.position );
 		m_triggerSphereScalarMulti = m_triggerSphereScalarMulti > l ? m_triggerSphereScalarMulti : l;
 		t.rotation = it->direction;
-		float rand = m_randScaleMin + TriRand() * (m_randScaleMax - m_randScaleMin);
+		float rand = m_randScaleMin + TriRand() * ( m_randScaleMax - m_randScaleMin );
 		t.scale = m_effectScaling * rand;
 		m_processedTransforms.emplace_back( t );
 	}
@@ -470,12 +470,11 @@ void EveChildEffectPropagator::ProcessRefLocators( IEveSpaceObject2* parent )
 			Transform t;
 			t.position = locator->position;
 			t.rotation = locator->direction;
-			float rand = m_randScaleMin + TriRand() * (m_randScaleMax - m_randScaleMin);
+			float rand = m_randScaleMin + TriRand() * ( m_randScaleMax - m_randScaleMin );
 			t.scale = m_effectScaling * rand;
 			m_processedTransforms.emplace_back( t );
 		}
 	}
-
 }
 
 void EveChildEffectPropagator::ProcessRandomSpreadLocators()
@@ -488,8 +487,8 @@ void EveChildEffectPropagator::ProcessRandomSpreadLocators()
 		}
 
 		float dist = TriRand();
-		dist += (m_rndClosenessPreference - dist) * TriRand();
-		dist = m_rndMinRangeThreshold + (m_rndRange - m_rndMinRangeThreshold) * dist;
+		dist += ( m_rndClosenessPreference - dist ) * TriRand();
+		dist = m_rndMinRangeThreshold + ( m_rndRange - m_rndMinRangeThreshold ) * dist;
 
 		float a = TRI_2PI * TriRand();
 		float z = TriRand() * 2.f - 1.f;
@@ -499,7 +498,7 @@ void EveChildEffectPropagator::ProcessRandomSpreadLocators()
 
 		t.position = angle * dist;
 		TriQuaternionDirVector( &t.rotation, &angle );
-		float rand = m_randScaleMin + TriRand() * (m_randScaleMax - m_randScaleMin);
+		float rand = m_randScaleMin + TriRand() * ( m_randScaleMax - m_randScaleMin );
 		t.scale = m_effectScaling * rand;
 		m_processedTransforms.emplace_back( t );
 	}
@@ -544,7 +543,7 @@ void EveChildEffectPropagator::RecalculateLocatorSizes()
 {
 	for( auto it = m_processedTransforms.begin(); it != m_processedTransforms.end(); ++it )
 	{
-		float rand = m_randScaleMin + TriRand() * (m_randScaleMax - m_randScaleMin);
+		float rand = m_randScaleMin + TriRand() * ( m_randScaleMax - m_randScaleMin );
 		it->scale = m_effectScaling * rand;
 	}
 }
@@ -587,7 +586,10 @@ void EveChildEffectPropagator::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if( m_triggerSphereRadiusCurve != nullptr )
 	{
 		float currentRad = m_triggerSphereRadiusCurve->GetValueAt( m_playTime ) * m_triggerSphereScalarMulti;
-		if( m_type == LOCATOR_SET_BY_REF ) { currentRad *= 2; }
+		if( m_type == LOCATOR_SET_BY_REF )
+		{
+			currentRad *= 2;
+		}
 		renderer.DrawSphere( this, TranslationMatrix( m_triggerSphereOffset * m_triggerSphereScalarMulti ) * m_worldTransform, currentRad, 12, Tr2DebugRenderer::Wireframe, 0xbbffbbff );
 	}
 
@@ -609,8 +611,7 @@ void EveChildEffectPropagator::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 				Length( it->scale ) * m_triggerSphereScalarMulti / 50.f,
 				8,
 				Tr2DebugRenderer::Lit,
-				0x990088ff
-			);
+				0x990088ff );
 		}
 	}
 	else
@@ -624,8 +625,7 @@ void EveChildEffectPropagator::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 				Length( it->scale ) * m_triggerSphereScalarMulti / 50.f,
 				8,
 				Tr2DebugRenderer::Lit,
-				0x990088ff
-			);
+				0x990088ff );
 		}
 	}
 

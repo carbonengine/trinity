@@ -31,8 +31,7 @@ static const char s_ansiChars[][2] = {
 	{ 'x', 'X' }, // kVK_ANSI_X
 	{ 'c', 'C' }, // kVK_ANSI_C
 	{ 'v', 'V' }, // kVK_ANSI_V
-	{ 0, 0 },
-	{ 'b', 'B' }, // kVK_ANSI_B
+	{ 0, 0 },       { 'b', 'B' }, // kVK_ANSI_B
 	{ 'q', 'Q' }, // kVK_ANSI_Q
 	{ 'w', 'W' }, // kVK_ANSI_W
 	{ 'e', 'E' }, // kVK_ANSI_E
@@ -57,8 +56,7 @@ static const char s_ansiChars[][2] = {
 	{ '[', '{' }, // kVK_ANSI_LeftBracket
 	{ 'i', 'I' }, // kVK_ANSI_I
 	{ 'p', 'P' }, // kVK_ANSI_P
-	{ 0, 0 },
-	{ 'l', 'L' }, // kVK_ANSI_L
+	{ 0, 0 },       { 'l', 'L' }, // kVK_ANSI_L
 	{ 'j', 'J' }, // kVK_ANSI_J
 	{ '\'', '\"' }, // kVK_ANSI_Quote
 	{ 'k', 'K' }, // kVK_ANSI_K
@@ -69,11 +67,9 @@ static const char s_ansiChars[][2] = {
 	{ 'n', 'N' }, // kVK_ANSI_N
 	{ 'm', 'M' }, // kVK_ANSI_M
 	{ '.', '>' }, // kVK_ANSI_Period
-	{ 0, 0 },
-	{ 0, 0 },
-	{ '`', '~' }, // kVK_ANSI_Grave
+	{ 0, 0 },       { 0, 0 },     { '`', '~' }, // kVK_ANSI_Grave
 };
-	
+
 class KeyReversedLookup
 {
 public:
@@ -89,15 +85,16 @@ public:
 			}
 		}
 	}
-	
+
 	uint32_t operator[]( char c ) const
 	{
 		return m_keyForChar[int( (uint8_t)c )];
 	}
+
 private:
 	uint32_t m_keyForChar[256];
 };
-	
+
 static KeyReversedLookup s_ansiKeyForChar = KeyReversedLookup( false );
 
 // A list of ANSI key codes - the ones that can be re-assigned in the keyboard layout
@@ -150,7 +147,7 @@ const CGKeyCode s_ansiKeys[] = {
 	kVK_ANSI_Period,
 	kVK_ANSI_Grave,
 
-    10 // OEM 102
+	10 // OEM 102
 };
 
 CGKeyCode s_physicalToVirtual[0xff];
@@ -166,43 +163,44 @@ void ProcessKeyboardLayout()
 		CFRelease( currentKeyboard );
 		return;
 	}
-	
+
 	if( s_activeKeyboard )
 	{
 		CFRelease( s_activeKeyboard );
 		s_activeKeyboard = nullptr;
 	}
 	s_activeKeyboard = currentKeyboard;
-	
+
 	for( int keyCode = 0; keyCode < 0xff; ++keyCode )
 	{
 		s_physicalToVirtual[keyCode] = CGKeyCode( keyCode );
 		s_virtualToPhysical[keyCode] = CGKeyCode( keyCode );
 	}
 	s_keyLabels.clear();
-	
-	if( CFDataRef layoutData = (CFDataRef)TISGetInputSourceProperty( currentKeyboard, kTISPropertyUnicodeKeyLayoutData ) )
+
+	if( CFDataRef layoutData =
+			(CFDataRef)TISGetInputSourceProperty( currentKeyboard, kTISPropertyUnicodeKeyLayoutData ) )
 	{
-		const UCKeyboardLayout *keyboardLayout = (const UCKeyboardLayout *)CFDataGetBytePtr( layoutData );
+		const UCKeyboardLayout* keyboardLayout = (const UCKeyboardLayout*)CFDataGetBytePtr( layoutData );
 		UInt32 keysDown = 0;
 		UniChar chars[4];
 		UniCharCount realLength;
-		
+
 		for( auto keyCode : s_ansiKeys )
 		{
 			// For each of re-assignable keys, we query it's label (what would account for the
 			// keyboard layout. Given this label, we find the key in ANSI layout that corresponds to
 			// that label. This gives us the corresponding "virtual" key for the physical key.
-			UCKeyTranslate(keyboardLayout,
-						   keyCode,
-						   kUCKeyActionDisplay,
-						   0,
-						   LMGetKbdType(),
-						   kUCKeyTranslateNoDeadKeysBit,
-						   &keysDown,
-						   sizeof( chars ) / sizeof( chars[0] ),
-						   &realLength,
-						   chars);
+			UCKeyTranslate( keyboardLayout,
+							keyCode,
+							kUCKeyActionDisplay,
+							0,
+							LMGetKbdType(),
+							kUCKeyTranslateNoDeadKeysBit,
+							&keysDown,
+							sizeof( chars ) / sizeof( chars[0] ),
+							&realLength,
+							chars );
 			if( chars[0] > 31 && chars[0] < 256 )
 			{
 				uint32_t key = s_ansiKeyForChar[char( chars[0] )];
@@ -215,23 +213,23 @@ void ProcessKeyboardLayout()
 				if( !str )
 				{
 					CCP_LOGWARN( "ProcessKeyboardLayout: Failed to create string for character %u", keyCode );
-#if !__has_feature(objc_arc)
+#if !__has_feature( objc_arc )
 					[str release];
 #endif
 					continue;
 				}
-				const char* utf8_str = [ [str localizedUppercaseString] UTF8String ];
+				const char* utf8_str = [[str localizedUppercaseString] UTF8String];
 				if( !str )
 				{
 					CCP_LOGWARN( "ProcessKeyboardLayout: Failed to create utf-8 string for character %u", keyCode );
-#if !__has_feature(objc_arc)
+#if !__has_feature( objc_arc )
 					[str release];
 #endif
 					continue;
 				}
-				s_keyLabels[keyCode] = std::string(utf8_str);
+				s_keyLabels[keyCode] = std::string( utf8_str );
 
-#if !__has_feature(objc_arc)
+#if !__has_feature( objc_arc )
 				[str release];
 #endif
 			}
@@ -255,11 +253,11 @@ CGKeyCode UnapplyKeyboardLayout( CGKeyCode keyCode )
 	ProcessKeyboardLayout();
 	return s_virtualToPhysical[keyCode];
 }
-	
+
 std::string CreateStringForKey( CGKeyCode keyCode )
 {
 	ProcessKeyboardLayout();
-	auto it = s_keyLabels.find(keyCode);
+	auto it = s_keyLabels.find( keyCode );
 	if( it != s_keyLabels.end() )
 	{
 		return it->second;

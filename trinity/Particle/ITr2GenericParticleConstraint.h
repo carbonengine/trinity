@@ -18,7 +18,8 @@ struct ITr2DebugRenderer2;
 // See Also:
 //   Tr2ParticleSystem
 // --------------------------------------------------------------------------------------
-BLUE_INTERFACE( ITr2GenericParticleConstraint ) : public IRoot
+BLUE_INTERFACE( ITr2GenericParticleConstraint ) :
+	public IRoot
 {
 	// ----------------------------------------------------------------------------------
 	// Description:
@@ -26,7 +27,7 @@ BLUE_INTERFACE( ITr2GenericParticleConstraint ) : public IRoot
 	//	 asyncronously.
 	// Arguments:
 	//   arguments - arguments for child emitters
-	//   paticles - Particle data stream: Tr2ParticleElementData::COUNT of float arrays. 
+	//   paticles - Particle data stream: Tr2ParticleElementData::COUNT of float arrays.
 	//		The constraint can modify any data element of a particle.
 	//   strides - Sizes of particle data in each of "particles" arrays (in floats).
 	//   count - Number of particles.
@@ -36,12 +37,12 @@ BLUE_INTERFACE( ITr2GenericParticleConstraint ) : public IRoot
 
 	// ----------------------------------------------------------------------------------
 	// Description:
-	//   A chance for constraint to bind itself to a particle system. Called when 
+	//   A chance for constraint to bind itself to a particle system. Called when
 	//   constaint is added to the particle system or when system is re-binded.
 	// Arguments:
 	//   system - Particle system the constaint is attached to.
 	// ----------------------------------------------------------------------------------
-	virtual void Bind( Tr2ParticleSystem* system ) = 0;
+	virtual void Bind( Tr2ParticleSystem * system ) = 0;
 
 	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& worldTransform, const CcpMath::AxisAlignedBox& aabb ) const
 	{

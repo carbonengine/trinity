@@ -25,7 +25,7 @@ const Be::ClassInfo* EveSmartLightPointLight::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "radius", m_lightGroupData.radius, "Light radius", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "innerRadius", m_lightGroupData.innerRadius, "Inner light radius (to mimick a glowing sphere)", Be::READWRITE | Be::PERSIST )
-		
+
 		MAP_ATTRIBUTE( "brightness", m_lightGroupData.brightness, "Light brightness (modulates color) for easier animation", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "lightProfilePath", m_lightProfilePath, "Path to IES profile\n:jessica-widget: filepath\n:jessica-file-filter: ies", Be::READWRITE | Be::PERSIST | Be::NOTIFY )

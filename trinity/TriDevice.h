@@ -30,12 +30,12 @@ extern Be::VarChooser Tr2UpsclaingAL_UpscalingTechnique_Chooser[];
 extern Be::VarChooser Tr2UpsclaingAL_UpscalingSetting_Chooser[];
 extern const Be::VarChooser TriDeviceTypeChooser[];
 
-BLUE_CLASS( TriDevice ):
+BLUE_CLASS( TriDevice ) :
 	public ITriDevice,
 	public IBlueEvents,
 	public ISimTimeRebaseNotify
 {
-public:	
+public:
 	using ITriDevice::Lock;
 	using ITriDevice::Unlock;
 
@@ -46,9 +46,9 @@ public:
 		THERMAL_STATE = 1 << 2,
 	};
 
-    ITr2ScenePtr m_scene;
+	ITr2ScenePtr m_scene;
 
-	Tr2WindowHandle mHwnd;	
+	Tr2WindowHandle mHwnd;
 
 	int32_t mWidth;
 	int32_t mHeight;
@@ -77,26 +77,23 @@ public:
 	void SetThrottling( ThrottlingReason reason, bool on );
 	bool GetThrottling( ThrottlingReason reason ) const;
 
-	// Window handling	
+	// Window handling
 	bool SetPresentation( int adapter, const Tr2PresentParametersAL* d3dpp );
 
 	//Transform screen (viewport) coordinates into projection coordinates (clip).
-	void ScreenToProjection(	int x,		int y,
-								float* fx,	float* fy );
+	void ScreenToProjection( int x, int y, float* fx, float* fy );
 
-	void ScreenToProjection(	int x,		int y,
-								float* fx,	float* fy,
-								const TriViewport* viewport );
-		
-	void GetPickRayFromViewport( 
-		int x,					// screen coordinates
-		int y, 
-		TriViewport* viewport,	// Viewport
-		const Matrix& view,		// View matrix
-		const Matrix& proj,		// Projection matrix
-		Vector3& rayWorld,		// Out: The ray in world coordinates
-		Vector3& startWorld		// Out: Starting point in world coordinates
-		);
+	void ScreenToProjection( int x, int y, float* fx, float* fy, const TriViewport* viewport );
+
+	void GetPickRayFromViewport(
+		int x, // screen coordinates
+		int y,
+		TriViewport* viewport, // Viewport
+		const Matrix& view, // View matrix
+		const Matrix& proj, // Projection matrix
+		Vector3& rayWorld, // Out: The ray in world coordinates
+		Vector3& startWorld // Out: Starting point in world coordinates
+	);
 
 	bool ChangeDevice(
 		uint32_t adapter,
@@ -116,11 +113,11 @@ public:
 		DEVICE_TYPE_SOFTWARE,
 	};
 
-	bool CreateSimpleDevice( 
-		Tr2WindowHandle hwnd, 
-		unsigned int width, 
-		unsigned int height, 
-		DeviceScreenType type, 
+	bool CreateSimpleDevice(
+		Tr2WindowHandle hwnd,
+		unsigned int width,
+		unsigned int height,
+		DeviceScreenType type,
 		Tr2RenderContextEnum::PresentInterval presentInterval,
 		unsigned int adapter = Tr2VideoAdapterInfo::DEFAULT_ADAPTER );
 
@@ -135,18 +132,21 @@ public:
 
 	void ApplicationActivated( ApplicationActivation activated );
 
-	static void RegisterResource(Tr2DeviceResource *resource);
-	static void UnregisterResource(Tr2DeviceResource *resource);
+	static void RegisterResource( Tr2DeviceResource * resource );
+	static void UnregisterResource( Tr2DeviceResource * resource );
 
 	// Temporary function created during re-factoring. This method contains common code
 	// that is now re-used in a couple of places through this method. Yay! Now, the difference
-	// between this method and 'Shutdown' is subtle and until we determine exactly what is 
+	// between this method and 'Shutdown' is subtle and until we determine exactly what is
 	// needed I'm going to refrain from combining those into one (even though this makes
-	// sense architecturally and should be possible). <halldor 2007-07-03>  
+	// sense architecturally and should be possible). <halldor 2007-07-03>
 	void InvalidateAndUnregisterForTicks();
 
 	// Time in seconds, recentered regularly (once per hour)
-	float GetAnimationTime() { return m_animationTime; }
+	float GetAnimationTime()
+	{
+		return m_animationTime;
+	}
 	float GetAnimationTimeElapsed( float startTime );
 
 
@@ -156,23 +156,22 @@ public:
 	void OnTick(
 		Be::Time realTime,
 		Be::Time simTime,
-		void* cookie
-		);
+		void* cookie );
 
 
-	TriDevice(IRoot* lockobj = NULL);
+	TriDevice( IRoot* lockobj = NULL );
 	~TriDevice();
 
 	Be::Time m_realTime;
 	Be::Time m_simTime;
 
-	void SetRenderJobs( Tr2RenderJobs* renderJobs );
+	void SetRenderJobs( Tr2RenderJobs * renderJobs );
 
 	// Textures and methods for HDR rendering (we use surface level 0 as draw buffer). In order
 	// to use the hardware to perform image processing on these buffers we must be able to texture
-	// from them. This is why we create them as textures (textures can be used as surfaces but not 
+	// from them. This is why we create them as textures (textures can be used as surfaces but not
 	// vice versa in D3D).
-	
+
 
 	void SetGeometryLoadDisabled( bool value );
 	void SetTextureLoadDisabled( bool value );
@@ -183,13 +182,19 @@ public:
 	bool GetEffectLoadDisabled();
 	bool GetAsyncLoadDisabled();
 
-	// Set the number of mip levels that are chopped of the front of the mip 
+	// Set the number of mip levels that are chopped of the front of the mip
 	// chain.  I.e. the number of high detail mip levels that are skipped
 	// while loading the file.  Default is 0.
-	unsigned int GetMipLevelSkipCount() const { return m_mipLevelSkipCount; }
+	unsigned int GetMipLevelSkipCount() const
+	{
+		return m_mipLevelSkipCount;
+	}
 
-	bool IsDeviceLost() const { return mDeviceLost; }
-	
+	bool IsDeviceLost() const
+	{
+		return mDeviceLost;
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ISimTimeRebaseNotify
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -197,7 +202,10 @@ public:
 
 	bool ResetDevice();
 
-	int GetAdapter() { return mAdapter; }
+	int GetAdapter()
+	{
+		return mAdapter;
+	}
 	bool DeviceExists();
 
 	// Add a callback to be processed after update render jobs are processed. This
@@ -212,7 +220,7 @@ public:
 	int GetMinimumModelLOD();
 
 private:
-	bool InitD3DDevice();  //call when a new device has been set
+	bool InitD3DDevice(); //call when a new device has been set
 	void DestroyRenderContext();
 
 	void DoReleaseDevice();
@@ -221,15 +229,15 @@ private:
 
 	void HandleRenderTick( Be::Time realTime, Be::Time simTime );
 
-	void UpdateAvailableUpscalingTechniques( );
+	void UpdateAvailableUpscalingTechniques();
 	void CreateUpscalingTechnique( uint32_t adapter );
 	void SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 
 	uint32_t CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, bool allowFramegen, Be::Optional<uint32_t> existingContext );
 	void DeleteUpscalingContext( uint32_t contextID );
 #if BLUE_WITH_PYTHON
-	PyObject* PyGetUpscalingInfo( PyObject* args );
-#endif 
+	PyObject* PyGetUpscalingInfo( PyObject * args );
+#endif
 
 	Vector2 GetRenderResolution( uint32_t upscalingContextId );
 	PTr2UpscalingTechniqueInfoStructureList m_supportedUpscalingTechniques;
@@ -248,26 +256,26 @@ private:
 	BlueScriptCallback m_onDeviceRemoved;
 
 	DeviceType m_deviceType;
-	
-	int mAdapter;	
+
+	int mAdapter;
 	Tr2PresentParametersAL mPresentParam;
 
 	// We must use a container class that can survive insertions during iteration without invalidating
 	// the iterator.  std::set is such a container and offers fast insertion/removal.
-	typedef std::set<Tr2DeviceResource *> ResourceSet;
+	typedef std::set<Tr2DeviceResource*> ResourceSet;
 	static ResourceSet& GetResourcesRegistered();
-	static ResourceSet	s_resourcesToBeRemoved;
-	static bool			s_iteratingForRelease;
-	
-	//A dict of blue devices, that will get 
+	static ResourceSet s_resourcesToBeRemoved;
+	static bool s_iteratingForRelease;
+
+	//A dict of blue devices, that will get
 #if BLUE_WITH_PYTHON
-	BluePy m_pyResourceSet;  //weakkeydict
+	BluePy m_pyResourceSet; //weakkeydict
 #endif
 
 	//Free memory on adapter, as required before a device can be Reset.
 	void ReleaseDeviceResources( TriStorage s );
 	void PrepareDeviceResources();
-	void RebuildDeviceResourcesInPython(); 
+	void RebuildDeviceResourcesInPython();
 
 	bool mDeviceLost;
 
@@ -275,7 +283,7 @@ private:
 	Tr2UpscalingAL::Technique m_upscalingTechnique;
 	Tr2UpscalingAL::Setting m_upscalingSetting;
 	bool m_upscalingWithFrameGeneration;
-	
+
 	int m_minimumModelLOD;
 
 
@@ -300,7 +308,7 @@ private:
 	// For python code it already looks like Tr2RenderJobs is on the trinity module, but on
 	// the C++ side we keep it in TriDevice for now to make sure its lifetime is still tied
 	// to the lifetime of g_d3dDev, until we figure out what to do with this.
-	Tr2RenderJobsPtr	m_renderJobs;
+	Tr2RenderJobsPtr m_renderJobs;
 
 	IBlueCallbackManPtr m_postUpdateCallbacks;
 
@@ -311,29 +319,29 @@ public:
 	/////////////////////////////////////////
 	// Python thunkers
 #if BLUE_WITH_PYTHON
-	PyObject* PyCreateWindowedDevice ( PyObject* args );
-	PyObject* PyCreateFullScreenDevice ( PyObject* args );
-	PyObject* PyCreateWindowlessDevice ( PyObject* args );
-	
+	PyObject* PyCreateWindowedDevice( PyObject * args );
+	PyObject* PyCreateFullScreenDevice( PyObject * args );
+	PyObject* PyCreateWindowlessDevice( PyObject * args );
+
 	void PyRender();
 
-	PyObject* PyRegisterResource ( PyObject* args );
-	PyObject* PyGetPickRayFromViewport ( PyObject* args );
+	PyObject* PyRegisterResource( PyObject * args );
+	PyObject* PyGetPickRayFromViewport( PyObject * args );
 
 	void RefreshDeviceResources();
 
-	PyObject* PythonCreateDeviceHelper( PyObject* args, DeviceScreenType screenType );
+	PyObject* PythonCreateDeviceHelper( PyObject * args, DeviceScreenType screenType );
 #endif
 
 	//--bpe stupid hack until I can figure out how to export trinity.renderContext similar to trinity.device
 	Tr2RenderContext* GetRenderContext();
 
-	unsigned	GetRenderingPlatformID();
+	unsigned GetRenderingPlatformID();
 };
 
 
 ///////////////////////////////////////////////////////////////////////
-// Global pointer so that all nodes don't have to 
+// Global pointer so that all nodes don't have to
 // be passed a TriDevice pointer
 ///////////////////////////////////////////////////////////////////////
 extern BlueBasicPtr<TriDevice> gTriDev;
@@ -343,7 +351,7 @@ extern BlueBasicPtr<TriDevice> gTriDev;
 //be done with the final implementation, when the Lock() / Unlock() virtual functions
 //have been created.  It's not possible to do so in the virtual class TriDevice
 //So, we do it here.
-#pragma warning (disable:4624) //disable warning about destructor
+#pragma warning( disable : 4624 ) //disable warning about destructor
 class TriDeviceLock : public RootRefLock<TriDevice>
 {
 public:

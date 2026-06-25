@@ -29,36 +29,36 @@ public:
 
 	EveEllipseSet( IRoot* lockobj = nullptr );
 	~EveEllipseSet() override;
-	
+
 	void py__init__();
 
 	void ClearEllipses();
 	bool AddEllipse( const Vector3& center, float semiMajor, float semiMinor, const Vector3& planeNormal, float rotationDegrees );
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
 	const char* GetName() const override;
 	void SetName( const char* name ) override;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-	void GetLocalToWorldTransform( Matrix& transform ) const override;
+	void GetLocalToWorldTransform( Matrix & transform ) const override;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override;
 	void ChangeLOD( Tr2Lod lod ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
 	IRoot* GetID( uint16_t ) override;
-	void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
+	void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
+	void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 	bool HasTransparentBatches() override;
 	float GetSortValue() override;
-	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Tr2DeviceResource
@@ -70,7 +70,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var* val ) override;
+	bool OnModified( Be::Var * val ) override;
 
 	BlueSharedString m_name;
 	bool m_display = true;
@@ -82,7 +82,7 @@ public:
 	Tr2EffectPtr m_effect;
 
 private:
-	void CommitRibbonBatch( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2EffectPtr& effect );
+	void CommitRibbonBatch( ITriRenderBatchAccumulator * accumulator, const Tr2PerObjectData* perObjectData, Tr2EffectPtr& effect );
 
 	bool OnPrepareResources() override;
 

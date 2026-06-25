@@ -13,8 +13,5 @@ const Be::ClassInfo* Tr2PPFadeEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "intensity", m_intensity, "The intensity of the fade", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "color", m_color, "The color of the fade", Be::READWRITE | Be::PERSIST )
 
-		EXPOSURE_CHAINTO( Tr2PPEffect )
-
-
+	EXPOSURE_CHAINTO( Tr2PPEffect )
 }
-

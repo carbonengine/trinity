@@ -12,42 +12,42 @@ BLUE_DECLARE( Tr2MouseCursor );
 
 namespace Tr2WindowMode
 {
-	enum Type
-	{
-		FULL_SCREEN = 0,
-		WINDOWED = 1,
-		FIXED_WINDOW = 2,
-        
-        _COUNT,
-	};
+enum Type
+{
+	FULL_SCREEN = 0,
+	WINDOWED = 1,
+	FIXED_WINDOW = 2,
+
+	_COUNT,
+};
 }
 
 
 namespace Tr2WindowShowState
 {
-	enum Type
-	{
-		NORMAL = 0,
-		MAXIMIZED = 1,
-		MINIMIZED = 2,
-	};
+enum Type
+{
+	NORMAL = 0,
+	MAXIMIZED = 1,
+	MINIMIZED = 2,
+};
 }
 
 #ifdef __APPLE__
 namespace Tr2ImeState_MacOS
 {
-	enum Type
-	{
-		DISABLED = 0,
-		READY    = 1,
-		BLOCKING = 2,
-	};
+enum Type
+{
+	DISABLED = 0,
+	READY = 1,
+	BLOCKING = 2,
+};
 }
 #endif
 
 
 BLUE_CLASS_IMPL( Tr2MainWindowState );
-class Tr2MainWindowState: public IRoot
+class Tr2MainWindowState : public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -130,12 +130,15 @@ public:
 	std::vector<std::pair<uint32_t, uint32_t>> GetWindowSizeOptions( uint32_t adapter, Tr2WindowMode::Type windowMode ) const;
 
 	bool ProcessMessages();
+
 protected:
-    void OnTick( Be::Time realTime, Be::Time simTime, void* cookie ) override;
+	void OnTick( Be::Time realTime, Be::Time simTime, void* cookie ) override;
+
 public:
 	bool IsKeyToggled( uint32_t keyCode ) const;
 	bool IsKeyPressed( uint32_t keyCode ) const;
 	std::string GetKeyName( uint32_t keyCode ) const;
+
 private:
 	ALResult SetState( bool adjustWindow, const Tr2MainWindowState::State& state );
 
@@ -143,8 +146,9 @@ private:
 	void SanitizeFullScreenResolution( Tr2MainWindowState::State& state ) const;
 	void SanitizeWindowedResolution( Tr2MainWindowState::State& state ) const;
 	void SanitizeWindowPosition( Tr2MainWindowState::State& state ) const;
-    
-    void StoreStateSettings( const Tr2MainWindowState* state );
+
+	void StoreStateSettings( const Tr2MainWindowState* state );
+
 private:
 	struct Size
 	{
@@ -168,14 +172,14 @@ private:
 	Size GetWindowSize( const Size& clientSize, Tr2WindowMode::Type mode ) const;
 	Size GetClientSize( const Size& windowSize, Tr2WindowMode::Type mode ) const;
 	bool SupportsFullscreen() const;
-    Size GetLargestWindowSize( uint32_t adapter, Tr2WindowMode::Type mode ) const;
-    
-    uintptr_t GetHwnd() const;
+	Size GetLargestWindowSize( uint32_t adapter, Tr2WindowMode::Type mode ) const;
+
+	uintptr_t GetHwnd() const;
 	Tr2WindowHandle GetOutputWindow() const;
 
 	Tr2MainWindowState::State m_state;
-    
-    Tr2MainWindowState::State m_storedStates[Tr2WindowMode::_COUNT];
+
+	Tr2MainWindowState::State m_storedStates[Tr2WindowMode::_COUNT];
 
 	std::wstring m_title;
 	Tr2MouseCursorPtr m_cursor;
@@ -187,6 +191,7 @@ private:
 	BlueScriptCallback m_onWindowStateChange;
 	BlueScriptCallback m_onBeforeSwapChainChange;
 	BlueScriptCallback m_onSwapChainChange;
+
 private:
 	BlueScriptCallback m_onMouseMove;
 	BlueScriptCallback m_onMouseDown;
@@ -199,6 +204,7 @@ private:
 
 	BlueScriptCallback m_onFocusChange;
 	BlueScriptCallback m_onClose;
+
 private:
 #ifdef _WIN32
 	static LRESULT CALLBACK StaticWndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam );
@@ -212,36 +218,37 @@ private:
 	std::unordered_set<UINT> m_messageFilter;
 	bool m_hasMessageFilter = true;
 #elif defined( __APPLE__ )
-    id GetWindowID() const;
-    
+	id GetWindowID() const;
+
 	//IME
 	BlueScriptCallback m_onInsertTextIME_MacOS;
 	BlueScriptCallback m_onSetMarkedTextIME_MacOS;
 	BlueScriptCallback m_onKeyboardLayoutChange_MacOS;
+
 public:
-    bool OnClose_MacOS();
-    void OnWindowStartedResizing_MacOS();
-    void OnWindowFnishedResizing_MacOS();
-    void OnWindowResized_MacOS();
-    void OnWinowMoved_MacOS();
-    void OnWindowChangedKey_MacOS( bool isKey );
-    void OnWindowDidChangeBackingProperties_MacOS();
-    void OnWindowFullscreenChanged_MacOS( bool fullscreen );
+	bool OnClose_MacOS();
+	void OnWindowStartedResizing_MacOS();
+	void OnWindowFnishedResizing_MacOS();
+	void OnWindowResized_MacOS();
+	void OnWinowMoved_MacOS();
+	void OnWindowChangedKey_MacOS( bool isKey );
+	void OnWindowDidChangeBackingProperties_MacOS();
+	void OnWindowFullscreenChanged_MacOS( bool fullscreen );
 	void OnWindowOcclusionChanged_MacOS();
 
-    void OnMouseButton_MacOS( int32_t button, bool down, float left, float top );
-    void OnMouseMove_MacOS( float left, float top );
-    void OnMouseWheel_MacOS( float delta );
+	void OnMouseButton_MacOS( int32_t button, bool down, float left, float top );
+	void OnMouseMove_MacOS( float left, float top );
+	void OnMouseWheel_MacOS( float delta );
 
-    void OnKey_MacOS( bool isDown, int32_t key, bool repeat = false );
-    void OnChar_MacOS( wchar_t charCode );
-    
-    void OnUpdateCursor_MacOS();
-	
+	void OnKey_MacOS( bool isDown, int32_t key, bool repeat = false );
+	void OnChar_MacOS( wchar_t charCode );
+
+	void OnUpdateCursor_MacOS();
+
 	//IME
 	void OnInsertTextIME_MacOS( const std::wstring& string );
 	void OnSetMarkedTextIME_MacOS( const std::wstring& string, uint64_t selectedLocation, uint64_t selectedLength );
-    void OnKeyboardLayoutChange_MacOS();
+	void OnKeyboardLayoutChange_MacOS();
 
 	Tr2ImeState_MacOS::Type m_imeState_MacOS = Tr2ImeState_MacOS::DISABLED;
 #endif

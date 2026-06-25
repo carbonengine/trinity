@@ -13,10 +13,10 @@ BLUE_DECLARE_VECTOR( Tr2MouseCursor );
 //   Tr2MouseCursor encapsulates mouse cursor image management. There is a considerable
 //   difference in how mouse cursors are handled in DX9 and DX11/GL.
 // --------------------------------------------------------------------------------------
-class Tr2MouseCursor: public IRoot
+class Tr2MouseCursor : public IRoot
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
 	Tr2MouseCursor( IRoot* lockobj = nullptr );
 	~Tr2MouseCursor();
@@ -37,10 +37,10 @@ public:
 		std::unique_ptr<char[]> pixelData;
 	};
 
-    bool Create_MacOS( const std::vector<Representation>& representations, uint32_t width, uint32_t height, int hotspotX, int hotspotY );
-    void Apply_MacOS();
-    
-    id m_cursor;  // NSCursor
+	bool Create_MacOS( const std::vector<Representation>& representations, uint32_t width, uint32_t height, int hotspotX, int hotspotY );
+	void Apply_MacOS();
+
+	id m_cursor; // NSCursor
 #endif
 };
 

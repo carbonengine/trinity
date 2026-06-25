@@ -29,5 +29,4 @@ Tr2PPTonemappingEffect::Tr2PPTonemappingEffect( IRoot* lockobj )
 
 Tr2PPTonemappingEffect::~Tr2PPTonemappingEffect()
 {
-
 }

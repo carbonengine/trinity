@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#if( TRINITY_PLATFORM==TRINITY_STUB )
+#if ( TRINITY_PLATFORM == TRINITY_STUB )
 
 #include "TriDevice.h"
 
@@ -39,7 +39,7 @@ bool TriDevice::DeviceExists()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   A chance for device to respond to application window being activated/deactivated. 
+//   A chance for device to respond to application window being activated/deactivated.
 //   Not implemented for DX9 - we are happy with how windows behaves in DX9.
 // Arguments:
 //   activated - true if application was activated; false otherwise

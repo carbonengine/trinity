@@ -10,8 +10,7 @@
 BLUE_DECLARE( Tr2Sprite2dArc );
 BLUE_DECLARE_INTERFACE( ITr2Sprite2dTexture );
 
-class Tr2Sprite2dArc :
-	public Tr2SpriteObject
+class Tr2Sprite2dArc : public Tr2SpriteObject
 {
 public:
 	EXPOSE_TO_BLUE();

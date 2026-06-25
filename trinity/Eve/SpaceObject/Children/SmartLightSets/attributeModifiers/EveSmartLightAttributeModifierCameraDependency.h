@@ -15,14 +15,14 @@ public:
 
 	EveSmartLightAttributeModifierCameraDependency( IRoot* lockobj = nullptr );
 
-	void UpdateSyncronous( const EveUpdateContext & updateContext, const EveChildUpdateParams& params, float activationMultiplier );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params, float activationMultiplier );
 	void ProcessAttributeModifier( Vector3 & attribute, const PlacementDataWithIdentifier& placement, const Vector3& entityPosition, const Vector3& entityDirection, float modifierStrength ) override;
 
 private:
 	const float GetActivationValue( const Vector3& objectPosition, const Vector3& entityDirection );
 	const float GetDistanceAmplitude( const Vector3& vec2Obj );
 	const float GetLookAtAmplitude( const Vector3& vec2obj );
-	const float GetPlacementAmplitude( const Vector3& vec2Obj, const Vector3& entityDirection );	
+	const float GetPlacementAmplitude( const Vector3& vec2Obj, const Vector3& entityDirection );
 
 	bool m_useCameraDistance;
 	bool m_inverseDistanceFormula;

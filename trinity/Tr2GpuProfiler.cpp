@@ -167,7 +167,6 @@ BlueScriptValue Tr2GpuProfiler::GetRegionReport( size_t& index )
 			auto value = PyFloat_FromDouble( zone.timer.GetTime( renderContext ) );
 			PyDict_SetItemString( stats, "GPU Time", value );
 			Py_DecRef( value );
-		
 		}
 		Tr2PipelineStatsDataAL data;
 		if( SUCCEEDED( zone.query.GetStats( data, renderContext ) ) )

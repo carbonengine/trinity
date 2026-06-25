@@ -23,11 +23,10 @@ const Be::ClassInfo* EveBannerSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "banners", m_banners, "", Be::READ | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "Rebuild", Rebuild, "Rebuild internal buffers" )
-		MAP_METHOD_AND_WRAP( 
-			"GetReference", 
-			GetReference, 
+		MAP_METHOD_AND_WRAP(
+			"GetReference",
+			GetReference,
 			"Returns private reference ID stored for each banner\n"
-			":param index: banner index\n"
-		)
+			":param index: banner index\n" )
 	EXPOSURE_END()
 }

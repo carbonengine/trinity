@@ -29,7 +29,7 @@ void BeginRenderPass( Tr2RenderContext& renderContext, const std::initializer_li
 	}
 	// clear out remaining slots, generously assuming max 4 render targets
 	const uint32_t maxRenderTargets = 4;
-	for ( ; index < maxRenderTargets; ++index )
+	for( ; index < maxRenderTargets; ++index )
 	{
 		renderContext.m_esm.SetRenderTarget( index++, Tr2TextureAL{} );
 	}
@@ -298,12 +298,12 @@ void EveSpaceSceneRenderDriver::PropagateSettings()
 
 bool EveSpaceSceneRenderDriver::Validate( const Span<const Tr2BitmapDimensions>& destDimensions, const Span<const BlueSharedString>& outputs, Be::Time realTime, Be::Time simTime )
 {
-	if ( destDimensions.size == 0 )
+	if( destDimensions.size == 0 )
 	{
 		CCP_ASSERT_M( false, "EveSpaceSceneRenderDriver requires at least one destination texture" );
 		return false;
 	}
-	if ( !m_enableRendering )
+	if( !m_enableRendering )
 	{
 		return true;
 	}
@@ -323,7 +323,7 @@ bool EveSpaceSceneRenderDriver::Validate( const Span<const Tr2BitmapDimensions>&
 	SetupUpscaling( displaySize );
 	const auto renderSize = GetRenderSize( displaySize );
 
-	if ( m_background )
+	if( m_background )
 	{
 		auto bgDimensions = Tr2BitmapDimensions( renderSize.width, renderSize.height, 1, m_internalPixelFormat );
 		if( !m_background->Validate( { &bgDimensions, 1 }, {}, realTime, simTime ) )
@@ -331,7 +331,7 @@ bool EveSpaceSceneRenderDriver::Validate( const Span<const Tr2BitmapDimensions>&
 			return false;
 		}
 	}
-	if ( m_sceneOverlay )
+	if( m_sceneOverlay )
 	{
 		Tr2BitmapDimensions overlayDimensions[] = {
 			Tr2BitmapDimensions( renderSize.width, renderSize.height, 1, m_internalPixelFormat ),
@@ -343,7 +343,7 @@ bool EveSpaceSceneRenderDriver::Validate( const Span<const Tr2BitmapDimensions>&
 		}
 	}
 
-	for ( auto& output : outputs )
+	for( auto& output : outputs )
 	{
 		if( strcmp( output.c_str(), "DepthMap" ) != 0 &&
 			strcmp( output.c_str(), "VelocityMap" ) != 0 &&
@@ -521,7 +521,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
 	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", customStencil );
 	ON_BLOCK_EXIT( [&] { GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", Tr2TextureAL{} ); } );
-	
+
 	Tr2GpuResourcePool::Texture opaqueBackBuffer;
 	EveSpaceScene::ShadowResources shadowResources;
 	if( m_scene->m_display && m_mainPassRenderingEnabled )
@@ -563,7 +563,6 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		}
 		distortionMap = {};
 		GlobalStore().RegisterVariable( "SSAOMap", Tr2TextureAL{} );
-
 	}
 	else
 	{
@@ -637,7 +636,7 @@ void EveSpaceSceneRenderDriver::UpdateGpuParticleSystem( Tr2RenderContext& rende
 	if( m_scene->GetGpuParticleSystem() )
 	{
 		GPU_REGION( renderContext, "Particles" );
-        m_scene->PopulateAndApplyPerFrameData( renderContext );
+		m_scene->PopulateAndApplyPerFrameData( renderContext );
 		m_scene->GetGpuParticleSystem()->Update( m_scene->m_updateTime, m_scene->m_updateContext.GetOriginShift(), renderContext );
 	}
 }
@@ -766,4 +765,3 @@ void EveSpaceSceneRenderDriver::SetScene( EveSpaceScene* scene )
 	}
 	m_scene = scene;
 }
-

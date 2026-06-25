@@ -17,7 +17,7 @@
 // --------------------------------------------------------------------------------------
 static float perlin_wrap( float x, float a, float b, float n )
 {
-	return (float)((PerlinNoise1D( x, a, b, (int)n)+1.0)*0.5);
+	return (float)( ( PerlinNoise1D( x, a, b, (int)n ) + 1.0 ) * 0.5 );
 }
 
 // --------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ static float perlin_wrap( float x, float a, float b, float n )
 // --------------------------------------------------------------------------------------
 static float perlin_wrap_simple( float x )
 {
-	return (float)((PerlinNoise1D( x, 1.1, 2.0, (int)3)+1.0)*0.5);
+	return (float)( ( PerlinNoise1D( x, 1.1, 2.0, (int)3 ) + 1.0 ) * 0.5 );
 }
 
 // --------------------------------------------------------------------------------------
@@ -44,7 +44,7 @@ static float perlin_wrap_simple( float x )
 // --------------------------------------------------------------------------------------
 static float frandom( float a, float b )
 {
-	return ((b-a)*((float)rand()/RAND_MAX))+a;
+	return ( ( b - a ) * ( (float)rand() / RAND_MAX ) ) + a;
 }
 
 namespace
@@ -65,7 +65,7 @@ struct VariableBuffer
 	float m_value;
 	float m_leftTangent;
 	float m_rightTangent;
-    
+
 	float m_inputVar1;
 	float m_inputVar2;
 	float m_inputVar3;
@@ -82,8 +82,8 @@ struct VariableBuffer
 // Description:
 //   Tr2ScalarExprKey destructor.
 // --------------------------------------------------------------------------------------
-Tr2ScalarExprKey::Tr2ScalarExprKey( IRoot* lockobj ) 
-:	m_inputVar1( 0.0f ),
+Tr2ScalarExprKey::Tr2ScalarExprKey( IRoot* lockobj ) :
+	m_inputVar1( 0.0f ),
 	m_inputVar2( 0.0f ),
 	m_inputVar3( 0.0f ),
 	m_inputVar4( 0.0f ),
@@ -118,9 +118,9 @@ bool Tr2ScalarExprKey::Initialize()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements INotify interface.  Allows the key to respond to parameter 
+//   Implements INotify interface.  Allows the key to respond to parameter
 //   changes generated in Python. If one of expression changes it is recompiled.
-//   Any change to attributes also triggers all expressions to be re-evaluated.  
+//   Any change to attributes also triggers all expressions to be re-evaluated.
 // Arguments:
 //   value - The Blue-exposed parameter that changed
 // Return Value:
@@ -144,7 +144,7 @@ bool Tr2ScalarExprKey::OnModified( Be::Var* value )
 	{
 		SetExpression( m_rightTangentParser, m_rightTangentExpression );
 	}
-    
+
 	VariableBuffer buffer;
 	buffer.m_time = m_time;
 	buffer.m_value = m_value;
@@ -180,7 +180,7 @@ bool Tr2ScalarExprKey::OnModified( Be::Var* value )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Re-compiles muParser with a new expression.  
+//   Re-compiles muParser with a new expression.
 // Arguments:
 //   parser - A parser
 //   expression - Expression to compile
@@ -233,7 +233,7 @@ void Tr2ScalarExprKey::SetExpression( CcpParser::Program& parser, std::string& e
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Re-generates random constant (passed to muParser expressions).  
+//   Re-generates random constant (passed to muParser expressions).
 // --------------------------------------------------------------------------------------
 void Tr2ScalarExprKey::RegenRandomConstant()
 {
@@ -258,7 +258,7 @@ void Tr2ScalarExprKey::UpdateValues( Tr2ScalarExprKey* previousKey )
 		m_prevKeyTime = 0.0f;
 		m_prevKeyValue = 0.0f;
 	}
-    
+
 	VariableBuffer buffer;
 	buffer.m_time = m_time;
 	buffer.m_value = m_value;
@@ -295,8 +295,8 @@ void Tr2ScalarExprKey::UpdateValues( Tr2ScalarExprKey* previousKey )
 // Description:
 //   Tr2ScalarExprKeyCurve constructor.
 // --------------------------------------------------------------------------------------
-Tr2ScalarExprKeyCurve::Tr2ScalarExprKeyCurve( IRoot* lockobj ) 
-:	m_currentValue( 0.f ),
+Tr2ScalarExprKeyCurve::Tr2ScalarExprKeyCurve( IRoot* lockobj ) :
+	m_currentValue( 0.f ),
 	m_reversed( false ),
 	m_cycle( false ),
 	m_timeOffset( 0.f ),
@@ -338,7 +338,7 @@ void Tr2ScalarExprKeyCurve::ReEvaluateKeys()
 // --------------------------------------------------------------------------------------
 float Tr2ScalarExprKeyCurve::GetKeyLeftTangent( unsigned int idx )
 {
-	if ( idx < (unsigned int)m_keys.size() )
+	if( idx < (unsigned int)m_keys.size() )
 	{
 		return m_keys[idx]->m_leftTangent;
 	}
@@ -354,7 +354,7 @@ float Tr2ScalarExprKeyCurve::GetKeyLeftTangent( unsigned int idx )
 // --------------------------------------------------------------------------------------
 void Tr2ScalarExprKeyCurve::SetKeyLeftTangent( unsigned int idx, float tangent )
 {
-	if ( idx < (unsigned int)m_keys.size() )
+	if( idx < (unsigned int)m_keys.size() )
 	{
 		m_keys[idx]->m_leftTangent = tangent;
 	}
@@ -368,7 +368,7 @@ void Tr2ScalarExprKeyCurve::SetKeyLeftTangent( unsigned int idx, float tangent )
 // --------------------------------------------------------------------------------------
 float Tr2ScalarExprKeyCurve::GetKeyRightTangent( unsigned int idx )
 {
-	if ( idx < (unsigned int)m_keys.size() )
+	if( idx < (unsigned int)m_keys.size() )
 	{
 		return m_keys[idx]->m_rightTangent;
 	}
@@ -384,7 +384,7 @@ float Tr2ScalarExprKeyCurve::GetKeyRightTangent( unsigned int idx )
 // --------------------------------------------------------------------------------------
 void Tr2ScalarExprKeyCurve::SetKeyRightTangent( unsigned int idx, float tangent )
 {
-	if ( idx < (unsigned int)m_keys.size() )
+	if( idx < (unsigned int)m_keys.size() )
 	{
 		m_keys[idx]->m_rightTangent = tangent;
 	}
@@ -438,7 +438,7 @@ void Tr2ScalarExprKeyCurve::UpdateValue( double time )
 // --------------------------------------------------------------------------------------
 float Tr2ScalarExprKeyCurve::GetValueAt( double time )
 {
-	if ( m_keys.empty() )
+	if( m_keys.empty() )
 	{
 		return 0.0f;
 	}
@@ -451,20 +451,20 @@ float Tr2ScalarExprKeyCurve::GetValueAt( double time )
 
 	time = time / (double)m_timeScale - (double)m_timeOffset;
 
-	if ( length <= 0.0f || time <= 0.0 )
+	if( length <= 0.0f || time <= 0.0 )
 	{
 		return m_keys.front()->m_value;
 	}
 
-	if ( time > length + m_keys.front()->m_time )
+	if( time > length + m_keys.front()->m_time )
 	{
-		if ( m_cycle )
+		if( m_cycle )
 		{
 			time = m_keys.front()->m_value + fmod( time - m_keys.front()->m_value, (double)length );
 		}
 		else
 		{
-			if ( m_reversed )
+			if( m_reversed )
 			{
 				return m_keys.front()->m_value;
 			}
@@ -473,31 +473,31 @@ float Tr2ScalarExprKeyCurve::GetValueAt( double time )
 				return m_keys.back()->m_value;
 			}
 		}
-	}	
+	}
 
-	if ( m_reversed )
+	if( m_reversed )
 	{
 		time = m_keys.front()->m_value + ( (double)length - ( time - m_keys.front()->m_value ) );
 	}
 
 	Tr2ScalarExprKey* startKey = m_keys[0];
 	Tr2ScalarExprKey* endKey = m_keys.back();
-	if ( time <= startKey->m_time ) // We are between the start of the curve and the first key
+	if( time <= startKey->m_time ) // We are between the start of the curve and the first key
 	{
 		Interpolate( &result, float( time ), NULL, startKey );
 	}
-	else if ( time >= endKey->m_time ) // We are between the last key and the end of the curve
+	else if( time >= endKey->m_time ) // We are between the last key and the end of the curve
 	{
 		Interpolate( &result, float( time ), endKey, NULL );
 	}
 	else
-	{	
+	{
 		endKey = startKey;
-		for ( size_t i = 1; i < m_keys.size(); ++i )
+		for( size_t i = 1; i < m_keys.size(); ++i )
 		{
 			startKey = endKey;
 			endKey = m_keys[i];
-			if ( endKey->m_time > time )
+			if( endKey->m_time > time )
 			{
 				break;
 			}
@@ -650,86 +650,83 @@ float* Tr2ScalarExprKeyCurve::Interpolate( float* out, float time, Tr2ScalarExpr
 	float startValue = m_keys.front()->m_value;
 	float endValue = m_keys.back()->m_value;
 	unsigned int interp = m_interpolation;
-	if ( lastKey )
+	if( lastKey )
 	{
 		interp = lastKey->m_interpolation;
-		time -=  lastKey->m_time;
+		time -= lastKey->m_time;
 	}
 
 	// The tr2 curves have by default a start and end point
 	switch( interp )
 	{
-	case LINEAR:
-		{	// We are in between two keys start------x---0----x------end
-			if ( lastKey && nextKey  )
-			{
-				startValue = lastKey->m_value;
-				endValue = nextKey->m_value;
-				deltaTime = nextKey->m_time - lastKey->m_time;
-			}
-			// We are in between the start of the curve and the next key
-			// start--0---x-------x------end
-			else if ( lastKey == NULL && nextKey != NULL )
-			{
-				startValue = endValue = nextKey->m_value;
-				deltaTime = nextKey->m_time;
-			}
-			// We are in between the end of the curve and the last key
-			// start------x-------x--0---end
-			else if ( lastKey != NULL && nextKey == NULL )
-			{
-				startValue = endValue = lastKey->m_value;
-				deltaTime = Length() - lastKey->m_time;
-			}// else there are no keys, just the start and end point . start---0---end
-			*out = startValue + ( endValue - startValue)*(time/deltaTime);
-			break;
-		}
-	case HERMITE:
+	case LINEAR: { // We are in between two keys start------x---0----x------end
+		if( lastKey && nextKey )
 		{
-			float inTangent = 0.0f;
-			float outTangent = 0.0f;
-			// We are in between two keys start------x---0----x------end
-			if ( lastKey && nextKey  )
-			{
-				startValue = lastKey->m_value;
-				inTangent = lastKey->m_rightTangent;
-				endValue = nextKey->m_value;
-				outTangent = nextKey->m_leftTangent;
-				deltaTime = nextKey->m_time - lastKey->m_time;
-			}
-			// We are in between the start of the curve and the next key
-			// start--0---x-------x------end
-			else if ( lastKey == NULL && nextKey != NULL )
-			{
-				startValue = endValue = nextKey->m_value;
-				outTangent = nextKey->m_leftTangent;
-				deltaTime = nextKey->m_time;
-			}
-			// We are in between the end of the curve and the last key
-			// start------x-------x--0---end
-			else if ( lastKey != NULL && nextKey == NULL )
-			{
-				startValue = endValue = lastKey->m_value;
-				inTangent = lastKey->m_rightTangent;
-				deltaTime = Length() - lastKey->m_time;
-			}// else there are no keys, just the start and end point . start---0---end
-
-			float s = time/deltaTime;
-			float s2 = s*s;
-			float s3 = s2*s;
-
-			float c2 = -2.0f*s3 + 3.0f*s2;
-			float c1 =  1.0f - c2;
-			float c4 = s3 - s2;
-			float c3 = s + c4 - s2;
-
-			*out = startValue*c1 + endValue*c2 + inTangent * c3 + outTangent * c4;
-			break;
+			startValue = lastKey->m_value;
+			endValue = nextKey->m_value;
+			deltaTime = nextKey->m_time - lastKey->m_time;
 		}
+		// We are in between the start of the curve and the next key
+		// start--0---x-------x------end
+		else if( lastKey == NULL && nextKey != NULL )
+		{
+			startValue = endValue = nextKey->m_value;
+			deltaTime = nextKey->m_time;
+		}
+		// We are in between the end of the curve and the last key
+		// start------x-------x--0---end
+		else if( lastKey != NULL && nextKey == NULL )
+		{
+			startValue = endValue = lastKey->m_value;
+			deltaTime = Length() - lastKey->m_time;
+		} // else there are no keys, just the start and end point . start---0---end
+		*out = startValue + ( endValue - startValue ) * ( time / deltaTime );
+		break;
+	}
+	case HERMITE: {
+		float inTangent = 0.0f;
+		float outTangent = 0.0f;
+		// We are in between two keys start------x---0----x------end
+		if( lastKey && nextKey )
+		{
+			startValue = lastKey->m_value;
+			inTangent = lastKey->m_rightTangent;
+			endValue = nextKey->m_value;
+			outTangent = nextKey->m_leftTangent;
+			deltaTime = nextKey->m_time - lastKey->m_time;
+		}
+		// We are in between the start of the curve and the next key
+		// start--0---x-------x------end
+		else if( lastKey == NULL && nextKey != NULL )
+		{
+			startValue = endValue = nextKey->m_value;
+			outTangent = nextKey->m_leftTangent;
+			deltaTime = nextKey->m_time;
+		}
+		// We are in between the end of the curve and the last key
+		// start------x-------x--0---end
+		else if( lastKey != NULL && nextKey == NULL )
+		{
+			startValue = endValue = lastKey->m_value;
+			inTangent = lastKey->m_rightTangent;
+			deltaTime = Length() - lastKey->m_time;
+		} // else there are no keys, just the start and end point . start---0---end
+
+		float s = time / deltaTime;
+		float s2 = s * s;
+		float s3 = s2 * s;
+
+		float c2 = -2.0f * s3 + 3.0f * s2;
+		float c1 = 1.0f - c2;
+		float c4 = s3 - s2;
+		float c3 = s + c4 - s2;
+
+		*out = startValue * c1 + endValue * c2 + inTangent * c3 + outTangent * c4;
+		break;
+	}
 	default:
 		break;
 	}
 
 	return out;
 }
-

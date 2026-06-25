@@ -67,7 +67,7 @@ std::vector<Vector3> Inertia::CalculateBehavior( std::vector<DroneAgent>& agents
 			}
 
 			// needs to be data
-			float agentVelocityLength = Length(agent->velocity);
+			float agentVelocityLength = Length( agent->velocity );
 
 			data->inertiaWeight = group.GetMaxVelocity() - agentVelocityLength;
 

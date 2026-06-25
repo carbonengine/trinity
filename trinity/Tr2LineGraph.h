@@ -10,13 +10,12 @@
 BLUE_DECLARE( Tr2LineGraph );
 BLUE_DECLARE_VECTOR( Tr2LineGraph );
 
-class Tr2LineGraph:
-     public ICcpStatisticsAccumulator,
-     public Tr2DeviceResource
+class Tr2LineGraph : public ICcpStatisticsAccumulator,
+					 public Tr2DeviceResource
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2LineGraph( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2LineGraph( IRoot* lockobj = NULL );
 	virtual ~Tr2LineGraph();
 
 	// For saving stats out
@@ -26,7 +25,7 @@ public:
 	void SetSize( unsigned int size );
 
 	const Color& GetColor() const;
-	void SetColor( const Color& val);
+	void SetColor( const Color& val );
 
 	const std::string& GetName() const;
 
@@ -41,9 +40,9 @@ public:
 	// ICcpStatisticsAccumulator
 	void Add( double value );
 
-    /////////////////////////////////////////////////////////////////////////////
-    // ITriDeviceResource
-    void ReleaseResources( TriStorage s );
+	/////////////////////////////////////////////////////////////////////////////
+	// ITriDeviceResource
+	void ReleaseResources( TriStorage s );
 
 private:
 	bool OnPrepareResources();

@@ -11,19 +11,18 @@
 BLUE_DECLARE( Tr2Sprite2dTransform );
 BLUE_DECLARE_IVECTOR( ITr2SpriteObject );
 
-class Tr2Sprite2dTransform:
-     public Tr2Sprite2dContainerBase
+class Tr2Sprite2dTransform : public Tr2Sprite2dContainerBase
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2Sprite2dTransform( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2Sprite2dTransform( IRoot* lockobj = NULL );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2SpriteObject
 	void GatherSprites( Tr2Sprite2dScene* renderer );
 	ITr2SpriteObject* PickPoint( float x, float y, Tr2Sprite2dScene* renderer );
 
-	Vector2 TransformPoint(float x, float y);
+	Vector2 TransformPoint( float x, float y );
 
 private:
 	// Center of rotation as relative coordinates - (0,0) is top-left, (0.5,0.5) is

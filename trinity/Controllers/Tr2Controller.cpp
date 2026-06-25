@@ -18,8 +18,8 @@ CCP_STATS_DECLARE( controllerLinkCount, "Trinity/Controllers/LinkCount", false, 
 
 CcpMutex g_controllerMutex( "", "g_controllerMutex" );
 
-Tr2Controller::Tr2Controller( IRoot* lockobj )
-	:PARENTLOCK( m_stateMachines ),
+Tr2Controller::Tr2Controller( IRoot* lockobj ) :
+	PARENTLOCK( m_stateMachines ),
 	PARENTLOCK( m_variables ),
 	PARENTLOCK( m_eventHandlers ),
 	m_updateables( "Tr2Controller::m_updateables" ),
@@ -94,8 +94,7 @@ void Tr2Controller::OnListModified( long event, ssize_t key, ssize_t key2, IRoot
 		switch( event & BELIST_EVENTMASK )
 		{
 		case BELIST_INSERTED:
-		case BELIST_REMOVED:
-		{
+		case BELIST_REMOVED: {
 			if( auto owner = m_owner )
 			{
 				Unlink();
@@ -201,7 +200,7 @@ bool Tr2Controller::IsLinked() const
 }
 
 void Tr2Controller::Start()
-{	
+{
 	if( m_isActive )
 	{
 		Stop();
@@ -329,7 +328,7 @@ void Tr2Controller::GetExpressionTermInfo( std::vector<Tr2ExpressionTermInfoPtr>
 		out.push_back( Tr2ExpressionTermInfo::Variable( "Variables", ( *it )->GetName().c_str(), "controller variable" ) );
 	}
 }
-	
+
 const PTr2ControllerFloatVariableVector& Tr2Controller::GetVariables() const
 {
 	return m_variables;
@@ -405,7 +404,7 @@ void Tr2Controller::Callback( BlueSharedString callbackName )
 
 void Tr2Controller::RegisterCallback( BlueSharedString callbackName, BlueScriptCallback callback )
 {
-	m_callbacks.push_back(std::pair<BlueSharedString, BlueScriptCallback>( callbackName, callback) );
+	m_callbacks.push_back( std::pair<BlueSharedString, BlueScriptCallback>( callbackName, callback ) );
 }
 
 void Tr2Controller::ClearCallbacks()

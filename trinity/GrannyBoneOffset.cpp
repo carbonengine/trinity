@@ -5,9 +5,8 @@
 
 #include "GrannyBoneOffset.h"
 
-GrannyBoneOffset::GrannyBoneOffset( IRoot* /*lockobj*/ ) 
-: m_transforms( "GrannyBoneOffset/m_transforms" )
-, m_riggedTransforms( "GrannyBoneOffset/m_riggedTransforms" )
+GrannyBoneOffset::GrannyBoneOffset( IRoot* /*lockobj*/ ) :
+	m_transforms( "GrannyBoneOffset/m_transforms" ), m_riggedTransforms( "GrannyBoneOffset/m_riggedTransforms" )
 {
 }
 
@@ -29,7 +28,7 @@ bool GrannyBoneOffset::HaveTransforms() const
 //  check if the number of bones has changed since the last rebind.
 // Arguments:
 //   numBones - number of bones in the current animation rig.
-bool GrannyBoneOffset::NeedRebind ( unsigned numBones ) const
+bool GrannyBoneOffset::NeedRebind( unsigned numBones ) const
 {
 	// yes if we have transforms and the skeleton rig doesn't match up
 	return m_riggedTransforms.size() != numBones && HaveTransforms();
@@ -55,25 +54,25 @@ void GrannyBoneOffset::ClearTransforms()
 //  parentMatrix - collapsed parent transform of the joint, 16 floats
 // Return Value:
 //	true if there was an offset/rotation, and targetMatrix has been filled in properly.
-//  false otherwise and then it's up to the caller to make sure targetMatrix is set up.	
+//  false otherwise and then it's up to the caller to make sure targetMatrix is set up.
 bool GrannyBoneOffset::Apply( float* targetMatrix, unsigned joint, const float* boneMatrix, const float* parentMatrix )
 {
-	if( const float* const t = m_riggedTransforms[ joint ] )
+	if( const float* const t = m_riggedTransforms[joint] )
 	{
 		// apply the rotation in bone space, so eg. the head tilts instead of swerving around the origin in bind pose space
 		// so, pre-multiply, before the animation transform
 		float m[16];
 
-		for( unsigned j = 0; j != 3; ++j )	// 3 rows only
+		for( unsigned j = 0; j != 3; ++j ) // 3 rows only
 		{
 			for( unsigned i = 0; i != 4; ++i )
 			{
 				float f = 0;
 				for( unsigned k = 0; k != 4; ++k )
 				{
-					f += t[j*4+k] * boneMatrix[k*4+i];
+					f += t[j * 4 + k] * boneMatrix[k * 4 + i];
 				}
-				m[j*4+i] = f;
+				m[j * 4 + i] = f;
 			}
 		}
 
@@ -89,14 +88,14 @@ bool GrannyBoneOffset::Apply( float* targetMatrix, unsigned joint, const float* 
 				float f = 0;
 				for( unsigned k = 0; k != 4; ++k )
 				{
-					f += m[j*4+k] * parentMatrix[k*4+i];
+					f += m[j * 4 + k] * parentMatrix[k * 4 + i];
 				}
-				targetMatrix[j*4+i] = f;
+				targetMatrix[j * 4 + i] = f;
 			}
 		}
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -105,7 +104,7 @@ bool GrannyBoneOffset::Apply( float* targetMatrix, unsigned joint, const float* 
 // Arguments:
 //  bones - pointer to exactly numBones strings
 //  numBones - number of bones in this rig
-void GrannyBoneOffset::BindToRig( const std::string * bones, size_t numBones )
+void GrannyBoneOffset::BindToRig( const std::string* bones, size_t numBones )
 {
 	if( !bones || !numBones )
 	{
@@ -130,15 +129,15 @@ void GrannyBoneOffset::BindToRig( const std::string * bones, size_t numBones )
 //  r, i, j, k - Rotation quaternion; applied before the animation's transform.
 // SeeAlso:
 //	SetOffset
-void GrannyBoneOffset::SetRotation( const std::string &bone, float r, float i, float j, float k )
+void GrannyBoneOffset::SetRotation( const std::string& bone, float r, float i, float j, float k )
 {
 	if( bone.empty() )
 	{
 		return;
 	}
 
-	float *m = m_transforms[ bone ].m;
-		
+	float* m = m_transforms[bone].m;
+
 	Matrix mq;
 	Quaternion q;
 	q.x = r;
@@ -148,7 +147,7 @@ void GrannyBoneOffset::SetRotation( const std::string &bone, float r, float i, f
 	mq = RotationMatrix( q );
 
 	memcpy( m, &mq.m[0][0], 64 );
-	
+
 	ClearRigBindings();
 }
 
@@ -159,7 +158,7 @@ void GrannyBoneOffset::SetRotation( const std::string &bone, float r, float i, f
 //  x, y, z - Displacement; applied in the local coordinate frame of the parent bone, after the animation's transform.
 // SeeAlso:
 //	SetRotation
-void GrannyBoneOffset::SetOffset( const std::string & bone, float x, float y, float z )
+void GrannyBoneOffset::SetOffset( const std::string& bone, float x, float y, float z )
 {
 	if( bone.empty() )
 	{
@@ -169,13 +168,13 @@ void GrannyBoneOffset::SetOffset( const std::string & bone, float x, float y, fl
 	TransformsMap::iterator it = m_transforms.find( bone );
 	if( it == m_transforms.end() )
 	{
-		float *m = m_transforms[ bone ].m;
-		memset( m, 0, 16*4 );
+		float* m = m_transforms[bone].m;
+		memset( m, 0, 16 * 4 );
 		m[0] = m[5] = m[10] = m[15] = 1.0f;
 		it = m_transforms.find( bone );
 	}
 
-	float *m = m_transforms[bone].m;
+	float* m = m_transforms[bone].m;
 	m[12] = x;
 	m[13] = y;
 	m[14] = z;

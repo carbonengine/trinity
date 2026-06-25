@@ -67,14 +67,14 @@ uint32_t GetAutoSelectedColor( uint32_t color )
 
 }
 
-Tr2DebugObjectReference::Tr2DebugObjectReference( IRoot* object )
-	:m_object( object ),
+Tr2DebugObjectReference::Tr2DebugObjectReference( IRoot* object ) :
+	m_object( object ),
 	m_area( 0 )
 {
 }
 
-Tr2DebugObjectReference::Tr2DebugObjectReference( IRoot* object, uint32_t area )
-	:m_object( object ),
+Tr2DebugObjectReference::Tr2DebugObjectReference( IRoot* object, uint32_t area ) :
+	m_object( object ),
 	m_area( area )
 {
 }
@@ -113,8 +113,8 @@ Tr2DebugRenderer::Vertex::Vertex()
 {
 }
 
-Tr2DebugRenderer::Vertex::Vertex( const Vector3& position, Tr2DebugColor color, bool selected, size_t objectIndex )
-	:m_position( position ),
+Tr2DebugRenderer::Vertex::Vertex( const Vector3& position, Tr2DebugColor color, bool selected, size_t objectIndex ) :
+	m_position( position ),
 	m_normal( 0, 0, 0 ),
 	m_color( selected ? color.m_colorSelected : color.m_color ),
 	m_zFailColor( selected ? color.m_zFailColorSelected : color.m_zFailColor ),
@@ -123,8 +123,8 @@ Tr2DebugRenderer::Vertex::Vertex( const Vector3& position, Tr2DebugColor color, 
 	m_object = float( objectIndex + 1 );
 }
 
-Tr2DebugRenderer::Vertex::Vertex( const Vector3& position, const Vector3& normal, Tr2DebugColor color, bool selected, size_t objectIndex )
-	:m_position( position ),
+Tr2DebugRenderer::Vertex::Vertex( const Vector3& position, const Vector3& normal, Tr2DebugColor color, bool selected, size_t objectIndex ) :
+	m_position( position ),
 	m_normal( XMVector3Normalize( normal ) ),
 	m_color( selected ? color.m_colorSelected : color.m_color ),
 	m_zFailColor( selected ? color.m_zFailColorSelected : color.m_zFailColor ),
@@ -172,14 +172,14 @@ void Tr2DebugRenderer::DrawLine( Tr2DebugObjectReference owner, const Vector3& f
 	m_lines.push_back( Vertex( to, color, IsSelected( owner ), m_objectLineOffsets.size() - 1 ) );
 }
 
-void Tr2DebugRenderer::DrawTriangle( 
-	Tr2DebugObjectReference owner, 
-	const Vector3& vertex1, 
-	const Vector3& normal1, 
-	const Vector3& vertex2, 
-	const Vector3& normal2, 
-	const Vector3& vertex3, 
-	const Vector3& normal3, 
+void Tr2DebugRenderer::DrawTriangle(
+	Tr2DebugObjectReference owner,
+	const Vector3& vertex1,
+	const Vector3& normal1,
+	const Vector3& vertex2,
+	const Vector3& normal2,
+	const Vector3& vertex3,
+	const Vector3& normal3,
 	Tr2DebugColor color )
 {
 	if( m_objectTriangleOffsets.empty() || m_objectTriangleOffsets.back().first != owner )
@@ -191,12 +191,12 @@ void Tr2DebugRenderer::DrawTriangle(
 	m_triangles.push_back( Vertex( vertex3, normal3, color, IsSelected( owner ), m_objectTriangleOffsets.size() - 1 ) );
 }
 
-void Tr2DebugRenderer::DrawTriangle( 
-	Tr2DebugObjectReference owner, 
-	const Vector3& vertex1, 
-	const Vector3& vertex2, 
-	const Vector3& vertex3, 
-	const Vector3& normal, 
+void Tr2DebugRenderer::DrawTriangle(
+	Tr2DebugObjectReference owner,
+	const Vector3& vertex1,
+	const Vector3& vertex2,
+	const Vector3& vertex3,
+	const Vector3& normal,
 	Tr2DebugColor color )
 {
 	DrawTriangle( owner, vertex1, normal, vertex2, normal, vertex3, normal, color );
@@ -230,7 +230,7 @@ void Tr2DebugRenderer::DrawBox( Tr2DebugObjectReference owner, const Matrix& tra
 		DrawLine( owner, v001, v011, color );
 		DrawLine( owner, v111, v011, color );
 		DrawLine( owner, v111, v101, color );
-	
+
 		DrawLine( owner, v000, v001, color );
 		DrawLine( owner, v100, v101, color );
 		DrawLine( owner, v010, v011, color );
@@ -300,8 +300,7 @@ void Tr2DebugRenderer::DrawSphere( Tr2DebugObjectReference owner, const Matrix& 
 		segments = 4;
 	}
 
-	auto Coords = [&]( float alpha, float betta )->Vector3
-	{
+	auto Coords = [&]( float alpha, float betta ) -> Vector3 {
 		Vector3 v;
 		v.y = sin( alpha - XM_PI / 2 );
 		float ca = cos( alpha - XM_PI / 2 );
@@ -328,51 +327,51 @@ void Tr2DebugRenderer::DrawSphere( Tr2DebugObjectReference owner, const Matrix& 
 			switch( effect )
 			{
 			case Wireframe:
-				DrawLine( 
-					owner, 
-					Vector3( XMVector3TransformCoord( p00 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ), 
+				DrawLine(
+					owner,
+					Vector3( XMVector3TransformCoord( p00 * radius + center, transform ) ),
+					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ),
 					color );
-				DrawLine( 
-					owner, 
-					Vector3( XMVector3TransformCoord( p00 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ), 
+				DrawLine(
+					owner,
+					Vector3( XMVector3TransformCoord( p00 * radius + center, transform ) ),
+					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ),
 					color );
 				break;
 			case Solid:
-				DrawTriangle( 
-					owner, 
-					Vector3( XMVector3TransformCoord( p00 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ), 
-					Vector3( 0, 0, 0 ), 
+				DrawTriangle(
+					owner,
+					Vector3( XMVector3TransformCoord( p00 * radius + center, transform ) ),
+					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ),
+					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ),
+					Vector3( 0, 0, 0 ),
 					color );
-				DrawTriangle( 
-					owner, 
-					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformCoord( p11 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ), 
-					Vector3( 0, 0, 0 ), 
+				DrawTriangle(
+					owner,
+					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ),
+					Vector3( XMVector3TransformCoord( p11 * radius + center, transform ) ),
+					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ),
+					Vector3( 0, 0, 0 ),
 					color );
 				break;
 			default:
-				DrawTriangle( 
-					owner, 
-					Vector3( XMVector3TransformCoord( p00 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformNormal( p00, transform ) ), 
-					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformNormal( p10, transform ) ), 
-					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformNormal( p01, transform ) ), 
+				DrawTriangle(
+					owner,
+					Vector3( XMVector3TransformCoord( p00 * radius + center, transform ) ),
+					Vector3( XMVector3TransformNormal( p00, transform ) ),
+					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ),
+					Vector3( XMVector3TransformNormal( p10, transform ) ),
+					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ),
+					Vector3( XMVector3TransformNormal( p01, transform ) ),
 					color );
-				DrawTriangle( 
-					owner, 
-					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformNormal( p10, transform ) ), 
-					Vector3( XMVector3TransformCoord( p11 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformNormal( p11, transform ) ), 
-					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ), 
-					Vector3( XMVector3TransformNormal( p01, transform ) ), 
+				DrawTriangle(
+					owner,
+					Vector3( XMVector3TransformCoord( p10 * radius + center, transform ) ),
+					Vector3( XMVector3TransformNormal( p10, transform ) ),
+					Vector3( XMVector3TransformCoord( p11 * radius + center, transform ) ),
+					Vector3( XMVector3TransformNormal( p11, transform ) ),
+					Vector3( XMVector3TransformCoord( p01 * radius + center, transform ) ),
+					Vector3( XMVector3TransformNormal( p01, transform ) ),
 					color );
 			}
 		}
@@ -417,7 +416,7 @@ void Tr2DebugRenderer::DrawCone( Tr2DebugObjectReference owner, const Vector3& b
 void Tr2DebugRenderer::DrawCone( Tr2DebugObjectReference owner, const Matrix& transform, float height, float angle, uint32_t segments, uint32_t coneSegments, Effect effect, Tr2DebugColor color )
 {
 	coneSegments = std::max( coneSegments, (uint32_t)3 );
-	
+
 	std::vector<Vector2> vertices;
 	vertices.reserve( coneSegments + 1 );
 
@@ -427,17 +426,17 @@ void Tr2DebugRenderer::DrawCone( Tr2DebugObjectReference owner, const Matrix& tr
 	vertices.push_back( tip );
 	normals.push_back( Vector2( -1, 0 ) );
 
-	for( uint32_t i = 0; i < coneSegments; ++i)
+	for( uint32_t i = 0; i < coneSegments; ++i )
 	{
-		float alpha = (coneSegments - 1 - float( i )) / float( coneSegments - 1 ) * angle;
+		float alpha = ( coneSegments - 1 - float( i ) ) / float( coneSegments - 1 ) * angle;
 		vertices.push_back( Vector2( -cos( alpha ) * height, sin( alpha ) * height ) + tip );
-		normals.push_back( Vector2( -cos( alpha ), sin( alpha ) ) );	
-		if( i != coneSegments-1 )
+		normals.push_back( Vector2( -cos( alpha ), sin( alpha ) ) );
+		if( i != coneSegments - 1 )
 		{
 			normals.push_back( Vector2( -cos( alpha ), sin( alpha ) ) );
 		}
 	}
-	
+
 	DrawExtrusionShape( owner, RotationXMatrix( -XM_PIDIV2 ) * transform, &vertices[0], &normals[0], uint32_t( vertices.size() ), segments, effect, color );
 }
 
@@ -493,34 +492,43 @@ void Tr2DebugRenderer::DrawArrow( Tr2DebugObjectReference owner, const Vector3& 
 	{
 		radius = length * pointerLength * 0.15f;
 
-		const Vector2 vertices[] = { 
-			Vector2( length / 2 - pointerLength * length, 0 ), 
-			Vector2( length / 2 - pointerLength * length, radius * 2 ), 
-			Vector2( length / 2, 0 ) };
+		const Vector2 vertices[] = {
+			Vector2( length / 2 - pointerLength * length, 0 ),
+			Vector2( length / 2 - pointerLength * length, radius * 2 ),
+			Vector2( length / 2, 0 )
+		};
 		Vector2 n = LineNormal( vertices[1], vertices[2] );
-		const Vector2 normals[] = { 
-			Vector2( -1, 0 ), 
-			Vector2( -1, 0 ), n, 
-			n };
+		const Vector2 normals[] = {
+			Vector2( -1, 0 ),
+			Vector2( -1, 0 ),
+			n,
+			n
+		};
 		DrawExtrusionShape( owner, transform, vertices, normals, sizeof( vertices ) / sizeof( vertices[0] ), segments, effect, color );
 		DrawLine( owner, start, start + transform.GetY() * length * ( 1 - pointerLength ), color );
 	}
 	else
 	{
-		const Vector2 vertices[] = { 
-			Vector2( -length / 2, 0 ), 
-			Vector2( -length / 2, radius ), 
-			Vector2( length / 2 - pointerLength * length, radius ), 
-			Vector2( length / 2 - pointerLength * length, radius * 2 ), 
-			Vector2( length / 2, 0 ) };
+		const Vector2 vertices[] = {
+			Vector2( -length / 2, 0 ),
+			Vector2( -length / 2, radius ),
+			Vector2( length / 2 - pointerLength * length, radius ),
+			Vector2( length / 2 - pointerLength * length, radius * 2 ),
+			Vector2( length / 2, 0 )
+		};
 		Vector2 n = LineNormal( vertices[2], vertices[3] );
-		const Vector2 normals[] = { 
-			Vector2( -1, 0 ), 
-			Vector2( -1, 0 ), Vector2( 0, 1 ), 
-			Vector2( 0, 1 ), Vector2( 0, 1 ), 
-			Vector2( 0, 1 ), Vector2( -1, 0 ), 
-			Vector2( -1, 0 ), n,
-			n };
+		const Vector2 normals[] = {
+			Vector2( -1, 0 ),
+			Vector2( -1, 0 ),
+			Vector2( 0, 1 ),
+			Vector2( 0, 1 ),
+			Vector2( 0, 1 ),
+			Vector2( 0, 1 ),
+			Vector2( -1, 0 ),
+			Vector2( -1, 0 ),
+			n,
+			n
+		};
 		DrawExtrusionShape( owner, transform, vertices, normals, sizeof( vertices ) / sizeof( vertices[0] ), segments, effect, color );
 	}
 }
@@ -535,48 +543,60 @@ void Tr2DebugRenderer::DrawDoubleArrow( Tr2DebugObjectReference owner, const Vec
 	{
 		radius = length * pointerLength * 0.15f;
 
-		const Vector2 vertices0[] = { 
-			Vector2( -length / 2, 0 ), 
-			Vector2( -length / 2 + length * pointerLength, radius * 2 ), 
-			Vector2( -length / 2 + length * pointerLength, 0 ) };
+		const Vector2 vertices0[] = {
+			Vector2( -length / 2, 0 ),
+			Vector2( -length / 2 + length * pointerLength, radius * 2 ),
+			Vector2( -length / 2 + length * pointerLength, 0 )
+		};
 		Vector2 n0 = LineNormal( vertices0[0], vertices0[1] );
-		const Vector2 normals0[] = { 
+		const Vector2 normals0[] = {
 			n0,
-			n0, Vector2( 1, 0 ), 
-			Vector2( 1, 0 ) };
+			n0,
+			Vector2( 1, 0 ),
+			Vector2( 1, 0 )
+		};
 		DrawExtrusionShape( owner, transform, vertices0, normals0, sizeof( vertices0 ) / sizeof( vertices0[0] ), segments, effect, color );
 
-		const Vector2 vertices1[] = { 
-			Vector2( length / 2 - length * pointerLength, 0 ), 
-			Vector2( length / 2 - length * pointerLength, radius * 2 ), 
-			Vector2( length / 2, 0 ) };
+		const Vector2 vertices1[] = {
+			Vector2( length / 2 - length * pointerLength, 0 ),
+			Vector2( length / 2 - length * pointerLength, radius * 2 ),
+			Vector2( length / 2, 0 )
+		};
 		Vector2 n1 = LineNormal( vertices1[1], vertices1[2] );
-		const Vector2 normals1[] = { 
+		const Vector2 normals1[] = {
 			Vector2( -1, 0 ),
-			Vector2( -1, 0 ), n1,
-			n1 };
+			Vector2( -1, 0 ),
+			n1,
+			n1
+		};
 		DrawExtrusionShape( owner, transform, vertices1, normals1, sizeof( vertices1 ) / sizeof( vertices1[0] ), segments, effect, color );
 
 		DrawLine( owner, start + transform.GetY() * length * pointerLength, start + transform.GetY() * length * ( 1 - pointerLength ), color );
 	}
 	else
 	{
-		const Vector2 vertices[] = { 
-			Vector2( -length / 2, 0 ), 
-			Vector2( -length / 2 + length * pointerLength, radius * 2 ), 
-			Vector2( -length / 2 + length * pointerLength, radius ), 
-			Vector2( length / 2 - pointerLength * length, radius ), 
-			Vector2( length / 2 - pointerLength * length, radius * 2 ), 
-			Vector2( length / 2, 0 ) };
+		const Vector2 vertices[] = {
+			Vector2( -length / 2, 0 ),
+			Vector2( -length / 2 + length * pointerLength, radius * 2 ),
+			Vector2( -length / 2 + length * pointerLength, radius ),
+			Vector2( length / 2 - pointerLength * length, radius ),
+			Vector2( length / 2 - pointerLength * length, radius * 2 ),
+			Vector2( length / 2, 0 )
+		};
 		Vector2 n0 = LineNormal( vertices[0], vertices[1] );
 		Vector2 n1 = LineNormal( vertices[4], vertices[5] );
-		const Vector2 normals[] = { 
+		const Vector2 normals[] = {
 			n0,
-			n0, Vector2( 1, 0 ), 
-			Vector2( 1, 0 ), Vector2( 0, 1 ), 
-			Vector2( 0, 1 ), Vector2( -1, 0 ), 
-			Vector2( -1, 0 ), n1, 
-			n1 };
+			n0,
+			Vector2( 1, 0 ),
+			Vector2( 1, 0 ),
+			Vector2( 0, 1 ),
+			Vector2( 0, 1 ),
+			Vector2( -1, 0 ),
+			Vector2( -1, 0 ),
+			n1,
+			n1
+		};
 		DrawExtrusionShape( owner, transform, vertices, normals, sizeof( vertices ) / sizeof( vertices[0] ), segments, effect, color );
 	}
 }
@@ -622,7 +642,7 @@ void Tr2DebugRenderer::DrawSphereArrow( Tr2DebugObjectReference owner, const Vec
 	normals.push_back( Vector2( 0, 1 ) );
 	vertices.push_back( Vector2( 2 * radius, arrowRadius ) );
 	normals.push_back( Vector2( 0, 1 ) );
-	
+
 	normals.push_back( Vector2( -1, 0 ) );
 	vertices.push_back( Vector2( 2 * radius, 2 * arrowRadius ) );
 	normals.push_back( Vector2( -1, 0 ) );
@@ -649,8 +669,7 @@ void Tr2DebugRenderer::DrawExtrusionShape( Tr2DebugObjectReference owner, const 
 		segments = 3;
 	}
 
-	auto Coords = [&]( float alpha, const Vector2& e )->Vector3
-	{
+	auto Coords = [&]( float alpha, const Vector2& e ) -> Vector3 {
 		Vector3 v;
 		v.y = e.x;
 		v.x = sin( alpha ) * e.y;
@@ -666,7 +685,7 @@ void Tr2DebugRenderer::DrawExtrusionShape( Tr2DebugObjectReference owner, const 
 		{
 			float alpha0 = float( i ) / float( segments ) * 2 * XM_PI;
 			float alpha1 = float( i + 1 ) / float( segments ) * 2 * XM_PI;
-			
+
 			Vector3 p00( XMVector3TransformCoord( Coords( alpha0, e0 ), transform ) );
 			Vector3 p10( XMVector3TransformCoord( Coords( alpha1, e0 ), transform ) );
 			Vector3 p01( XMVector3TransformCoord( Coords( alpha0, e1 ), transform ) );
@@ -702,7 +721,7 @@ void Tr2DebugRenderer::DrawExtrusionShape( Tr2DebugObjectReference owner, const 
 void Tr2DebugRenderer::DrawText( TriDebugFont font, const Vector3& pos, const Color& color, const char* msg, ... )
 {
 	va_list args;
-    va_start( args, msg );
+	va_start( args, msg );
 
 	Tr2Rect rect;
 	USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -711,7 +730,7 @@ void Tr2DebugRenderer::DrawText( TriDebugFont font, const Vector3& pos, const Co
 
 	Vector3 screenPos = Tr2Renderer::ProjectWorldToScreen( pos, vp );
 
-	if( (screenPos.z > 0.0f) && (screenPos.z < 1.0f) )
+	if( ( screenPos.z > 0.0f ) && ( screenPos.z < 1.0f ) )
 	{
 		rect.top = (int32_t)screenPos.y;
 		rect.left = (int32_t)screenPos.x;
@@ -954,67 +973,64 @@ std::vector<Tr2DebugRendererOption> Tr2DebugRenderer::GetDefaultOptions() const
 
 void Tr2DebugRenderer::DrawAudioSpeaker( Tr2DebugObjectReference owner, const Matrix& transform, float size, uint32_t segments, Effect effect, Tr2DebugColor color )
 {
-    if( segments < 3 )
-    {
-        segments = 3;
-    }
+	if( segments < 3 )
+	{
+		segments = 3;
+	}
 
-    const float coneWidth = size * 0.3f;
-    const float coneHeight = size * 0.5f;
-    const float waveOffset = size * 0.6f;
-    const float waveSpacing = size * 0.2f;
-    const float halfConeHeight = coneHeight * 0.5f;
-    const float coneWidthNarrow = coneWidth * 0.3f;
+	const float coneWidth = size * 0.3f;
+	const float coneHeight = size * 0.5f;
+	const float waveOffset = size * 0.6f;
+	const float waveSpacing = size * 0.2f;
+	const float halfConeHeight = coneHeight * 0.5f;
+	const float coneWidthNarrow = coneWidth * 0.3f;
 
-    const Vector2 coneVertices[] = { 
-        Vector2( -halfConeHeight, coneWidthNarrow ),  // Back narrow end
-        Vector2( -halfConeHeight, coneWidthNarrow ), 
-        Vector2( halfConeHeight, coneWidth ),         // Front wide end
-        Vector2( halfConeHeight, coneWidth ) 
-    };
-    const Vector2 coneNormals[] = { 
-        Vector2( -1, 0 ), Vector2( -1, 0 ), 
-        Vector2( 0, 1 ), Vector2( 0, 1 ) 
-    };
-    
-    DrawExtrusionShape( owner, transform, coneVertices, coneNormals, 
-                        sizeof( coneVertices ) / sizeof( coneVertices[0] ), segments, effect, color );
+	const Vector2 coneVertices[] = {
+		Vector2( -halfConeHeight, coneWidthNarrow ), // Back narrow end
+		Vector2( -halfConeHeight, coneWidthNarrow ),
+		Vector2( halfConeHeight, coneWidth ), // Front wide end
+		Vector2( halfConeHeight, coneWidth )
+	};
+	const Vector2 coneNormals[] = {
+		Vector2( -1, 0 ), Vector2( -1, 0 ), Vector2( 0, 1 ), Vector2( 0, 1 )
+	};
 
-    static const uint32_t MAX_WAVE_SEGMENTS = 32;
-	uint32_t waveSegments = std::min( std::max( segments / 2, 8u ), MAX_WAVE_SEGMENTS);
+	DrawExtrusionShape( owner, transform, coneVertices, coneNormals, sizeof( coneVertices ) / sizeof( coneVertices[0] ), segments, effect, color );
 
-    static const float arcAngle = XM_PI * 0.6f; // 108 degrees total arc
-    static const float halfArcAngle = arcAngle * 0.5f;
-    const float arcStep = arcAngle / float( waveSegments );
-    
-    const Vector3 waveBasePoint( halfConeHeight, 0, 0 );
-    const Vector3 transformedWaveBase = Vector3( XMVector3TransformCoord( waveBasePoint, transform ) );
-    
-    for( int wave = 0; wave < 3; ++wave )
-    {
-        float waveRadius = waveOffset + ( float )wave * waveSpacing;
-        Vector3 arcPoints[MAX_WAVE_SEGMENTS + 1];
-        uint32_t arcCount = waveSegments + 1;
-        
-        for( uint32_t i = 0; i < arcCount; ++i )
-        {
-            float angle = -halfArcAngle + ( float )i * arcStep;
-            float cosAngle = cos( angle );
-            float sinAngle = sin( angle );
-            
-            Vector3 localOffset(
-                0,
-                cosAngle * waveRadius,
-                sinAngle * waveRadius
-            );
-            
-            Vector3 transformedOffset = Vector3( XMVector3TransformNormal( localOffset, transform ) );
-            arcPoints[i] = transformedWaveBase + transformedOffset;
-        }
-        
-        for( uint32_t i = 0; i < waveSegments; ++i )
-        {
-            DrawLine( owner, arcPoints[i], arcPoints[i + 1], color );
-        }
-    }
+	static const uint32_t MAX_WAVE_SEGMENTS = 32;
+	uint32_t waveSegments = std::min( std::max( segments / 2, 8u ), MAX_WAVE_SEGMENTS );
+
+	static const float arcAngle = XM_PI * 0.6f; // 108 degrees total arc
+	static const float halfArcAngle = arcAngle * 0.5f;
+	const float arcStep = arcAngle / float( waveSegments );
+
+	const Vector3 waveBasePoint( halfConeHeight, 0, 0 );
+	const Vector3 transformedWaveBase = Vector3( XMVector3TransformCoord( waveBasePoint, transform ) );
+
+	for( int wave = 0; wave < 3; ++wave )
+	{
+		float waveRadius = waveOffset + (float)wave * waveSpacing;
+		Vector3 arcPoints[MAX_WAVE_SEGMENTS + 1];
+		uint32_t arcCount = waveSegments + 1;
+
+		for( uint32_t i = 0; i < arcCount; ++i )
+		{
+			float angle = -halfArcAngle + (float)i * arcStep;
+			float cosAngle = cos( angle );
+			float sinAngle = sin( angle );
+
+			Vector3 localOffset(
+				0,
+				cosAngle * waveRadius,
+				sinAngle * waveRadius );
+
+			Vector3 transformedOffset = Vector3( XMVector3TransformNormal( localOffset, transform ) );
+			arcPoints[i] = transformedWaveBase + transformedOffset;
+		}
+
+		for( uint32_t i = 0; i < waveSegments; ++i )
+		{
+			DrawLine( owner, arcPoints[i], arcPoints[i + 1], color );
+		}
+	}
 }

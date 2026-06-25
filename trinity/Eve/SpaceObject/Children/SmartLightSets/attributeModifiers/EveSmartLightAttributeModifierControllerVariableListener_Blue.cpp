@@ -17,7 +17,7 @@ const Be::ClassInfo* EveSmartLightAttributeModifierControllerVariableListener::E
 		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE( "attributeModifiers", m_attributeModifiers, "list of attribute modifiers", Be::READ | Be::PERSIST | Be::NOTIFY )
-		
+
 		MAP_ATTRIBUTE( "name", m_name, "organize your tree", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "variableName", m_variableName, "activate and deactivate bucket based on this variable", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "value", m_value, "editable for authoring but triggered automatically from controller states", Be::READWRITE | Be::PERSIST | Be::NOTIFY );
@@ -28,7 +28,8 @@ const Be::ClassInfo* EveSmartLightAttributeModifierControllerVariableListener::E
 		MAP_ATTRIBUTE( "active", m_active, "triggered by controller events\n:jessica-group: AttributeModifierBlending", Be::READ )
 		MAP_ATTRIBUTE( "crossFadeDuration", m_crossFadeDuration, "how many sec does the blending animation take\n:jessica-group: AttributeModifierBlending\n:jessica-numeric-range: (0.0,20.0)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "crossFadeIntensity", m_crossFadeIntensity, "is the animation linear or frontEnd/backend focused. (1=linear, closer to 0 comes in fast, above 1 -> ease in slowly)"
-																   "\n:jessica-group: AttributeModifierBlending\n:jessica-numeric-range: (0.1,10.0)", Be::READWRITE | Be::PERSIST )
+																   "\n:jessica-group: AttributeModifierBlending\n:jessica-numeric-range: (0.1,10.0)",
+					   Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "activationValue", m_activationValue, "[0:1] to visualize/debug the crossfade\n:jessica-group: AttributeModifierBlending", Be::READ )
 		MAP_ATTRIBUTE( "finalAttributeMultiplier", m_finalActivationStrength, "to visualize/debug compound activationStrength\n:jessica-group: AttributeModifierBlending", Be::READ )
 

@@ -27,31 +27,30 @@ class TriView;
 class TriViewport;
 
 // Blue forward declarations
-BLUE_DECLARE(Tr2ApexScene);
-BLUE_DECLARE(Tr2InteriorScene);
-BLUE_DECLARE(TriGeometryRes);
-BLUE_DECLARE(TriTextureRes);
-BLUE_DECLARE(Tr2Effect);
-BLUE_DECLARE(Tr2VisibilityResults);
-BLUE_DECLARE(Tr2TextureAtlas);
-BLUE_DECLARE_VECTOR(Tr2TextureAtlas);
-BLUE_DECLARE(TriCurveSet);
-BLUE_DECLARE_VECTOR(TriCurveSet);
-BLUE_DECLARE(Tr2DebugRenderer);
-BLUE_DECLARE(Tr2RenderTarget);
-BLUE_DECLARE_VECTOR(Tr2RenderTarget);
-BLUE_DECLARE(Tr2DepthStencil);
+BLUE_DECLARE( Tr2ApexScene );
+BLUE_DECLARE( Tr2InteriorScene );
+BLUE_DECLARE( TriGeometryRes );
+BLUE_DECLARE( TriTextureRes );
+BLUE_DECLARE( Tr2Effect );
+BLUE_DECLARE( Tr2VisibilityResults );
+BLUE_DECLARE( Tr2TextureAtlas );
+BLUE_DECLARE_VECTOR( Tr2TextureAtlas );
+BLUE_DECLARE( TriCurveSet );
+BLUE_DECLARE_VECTOR( TriCurveSet );
+BLUE_DECLARE( Tr2DebugRenderer );
+BLUE_DECLARE( Tr2RenderTarget );
+BLUE_DECLARE_VECTOR( Tr2RenderTarget );
+BLUE_DECLARE( Tr2DepthStencil );
 
-class Tr2InteriorScene:
-	public IInitialize,
-	public INotify,
-	public IListNotify,
-	public ITr2Scene,
-	public ITr2MultiPassScene,
-	public ITr2PickableScene,
-	public Tr2DeviceResource,
-	public ITr2VisualizationModeRenderer,
-	public ITr2DebugRenderable
+class Tr2InteriorScene : public IInitialize,
+						 public INotify,
+						 public IListNotify,
+						 public ITr2Scene,
+						 public ITr2MultiPassScene,
+						 public ITr2PickableScene,
+						 public Tr2DeviceResource,
+						 public ITr2VisualizationModeRenderer,
+						 public ITr2DebugRenderable
 {
 public:
 	Tr2InteriorScene( IRoot* lockobj = NULL );
@@ -68,7 +67,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-    virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var* value );
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList );
 
 	//////////////////////////////////////////////////////////////////////////
@@ -95,10 +94,9 @@ public:
 private:
 	bool OnPrepareResources();
 
-	void MaximizeShadowMapUsage(TriProjection& projectionMatrix, const TriView* view, TriFrustum* frustum);
+	void MaximizeShadowMapUsage( TriProjection& projectionMatrix, const TriView* view, TriFrustum* frustum );
 
-public:	
-
+public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2VisualizationModeRenderer
 	virtual void SetVisualizationMode( int visualizationMode );
@@ -126,7 +124,6 @@ public:
 	bool m_debugRenderShadowMaps;
 
 protected:
-
 	void OnQueryBegin( void );
 	void OnInstanceVisible( ITr2InteriorCullable* cullable, const Matrix& );
 
@@ -148,7 +145,7 @@ private:
 
 	void RenderFullForward( Tr2RenderContext& renderContext );
 
-	void RenderShadows(Tr2RenderContext& renderContext);
+	void RenderShadows( Tr2RenderContext& renderContext );
 
 	void SetupShadowMaps();
 
@@ -210,7 +207,7 @@ private:
 	Tr2EffectPtr m_backgroundEffect;
 	bool m_renderBackgroundCubeMap;
 
-	Tr2ApexScenePtr	m_apexScene;
+	Tr2ApexScenePtr m_apexScene;
 
 	void SetBackgroundCubemapResPath();
 
@@ -225,17 +222,23 @@ private:
 	virtual ITriRenderBatchAccumulator* GetOpaquePickingBatchAccumulator();
 	virtual ITriRenderBatchAccumulator* GetPickingBatchAccumulator();
 
-	virtual bool RenderPickingAreasForComponents( PickComponents pass ) const { return true; }
-	virtual Tr2PickBuffer& GetPickBuffer( void ) { return m_pickBuffer; }
+	virtual bool RenderPickingAreasForComponents( PickComponents pass ) const
+	{
+		return true;
+	}
+	virtual Tr2PickBuffer& GetPickBuffer( void )
+	{
+		return m_pickBuffer;
+	}
 	virtual unsigned int GetRequiredPasses( PickComponents requestedComponents, PickComponents* passes );
 	virtual void DecodeBufferPixel( const void* pBuffer, PickComponents pass, BufferResults& results ) const;
 
 	// Construct a sort key from object & batch groups
-    int64_t ConstructKey( unsigned int objectGroup, Tr2InteriorBatchGroup batchGroup );
+	int64_t ConstructKey( unsigned int objectGroup, Tr2InteriorBatchGroup batchGroup );
 
 	// These should be moved over to a smaller per-frame data at some point without the cruft
-	void PopulatePerFramePSData( Tr2PerFramePSData &data, Tr2RenderContext& renderContext );
-	void PopulatePerFrameVSData( Tr2PerFrameVSData &data );
+	void PopulatePerFramePSData( Tr2PerFramePSData& data, Tr2RenderContext& renderContext );
+	void PopulatePerFrameVSData( Tr2PerFrameVSData& data );
 
 	// This is a python only wrapper function for just picking an object
 	IRoot* PickObjectOnly( int x, int y, TriProjection* proj, TriView* view, TriViewport* vp, Be::Optional<Tr2PickTypes> )
@@ -297,10 +300,8 @@ private:
 	// Fog color
 	Color m_fogColor;
 
-	Tr2ConstantBufferAL	m_perFramePSBuffer;
-	Tr2ConstantBufferAL	m_perFrameVSBuffer;
-
-
+	Tr2ConstantBufferAL m_perFramePSBuffer;
+	Tr2ConstantBufferAL m_perFrameVSBuffer;
 };
 
 TYPEDEF_BLUECLASS( Tr2InteriorScene );

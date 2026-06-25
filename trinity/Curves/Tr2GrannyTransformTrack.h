@@ -11,7 +11,7 @@
 
 BLUE_DECLARE( TriGrannyRes );
 
-BLUE_CLASS( Tr2GrannyTransformTrack ):
+BLUE_CLASS( Tr2GrannyTransformTrack ) :
 	public Tr2GrannyTrack
 {
 public:
@@ -19,11 +19,10 @@ public:
 	Tr2GrannyTransformTrack( IRoot* lockobj = NULL );
 	void UpdateValueImpl( double time );
 	void ResetTracks( void );
-	void ApplyTracks( granny_track_group* group, float duration, float timeStep );
+	void ApplyTracks( granny_track_group * group, float duration, float timeStep );
 	bool TracksReady( void );
 
 protected:
-
 	Vector3 m_translation;
 	Quaternion m_rotation;
 	Vector3 m_scale;
@@ -31,7 +30,6 @@ protected:
 	granny_curve2* m_orientationCurve;
 	granny_curve2* m_scaleCurve;
 	bool m_compressCurves;
-
 };
 
 TYPEDEF_BLUECLASS( Tr2GrannyTransformTrack );

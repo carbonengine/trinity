@@ -8,7 +8,7 @@
 // Description:
 //   This structure represents a 4-vector of doubles.  Unlike Vector4, it does not
 //   inherit from a D3DXMath base class (because none of them use doubles).  It provides
-//   the standard set of constructors, arithmetic, assignment, comparison, and 
+//   the standard set of constructors, arithmetic, assignment, comparison, and
 //   conversion operators.  Vector4d is used in EVE in some situations which require
 //   double precision.
 // See Also:
@@ -21,7 +21,10 @@ public:
 	// Description
 	//   Default constructor, initializes to zero vector.
 	// ----------------------------------------------------------------------------------
-	Vector4d( void ) : x( 0.0 ), y( 0.0 ), z( 0.0 ), w( 0.0 ) {}
+	Vector4d( void ) :
+		x( 0.0 ), y( 0.0 ), z( 0.0 ), w( 0.0 )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -60,7 +63,10 @@ public:
 	//   z - The z-component value to initialize
 	//   w - The w-component value to initialize
 	// ---------------------------------------------------------------------------------
-	Vector4d( double _x, double _y, double _z, double _w ) : x( _x ), y( _y ), z( _z ), w( _w ) {}
+	Vector4d( double _x, double _y, double _z, double _w ) :
+		x( _x ), y( _y ), z( _z ), w( _w )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -68,7 +74,10 @@ public:
 	// Arguments:
 	//   other - The Vector4d to copy
 	// ----------------------------------------------------------------------------------
-	Vector4d( const Vector4d& other ) : x( other.x ), y( other.y ), z( other.z ), w( other.w ) {}
+	Vector4d( const Vector4d& other ) :
+		x( other.x ), y( other.y ), z( other.z ), w( other.w )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -76,7 +85,10 @@ public:
 	// Arguments:
 	//   other - The Vector4 to copy
 	// ----------------------------------------------------------------------------------
-	Vector4d( const Vector4& other ) : x( other.x ), y( other.y ), z( other.z ), w( other.w ) {}
+	Vector4d( const Vector4& other ) :
+		x( other.x ), y( other.y ), z( other.z ), w( other.w )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -85,7 +97,10 @@ public:
 	//   other - The Vector3d to copy
 	//   _w - The double w value
 	// ----------------------------------------------------------------------------------
-	Vector4d( const Vector3d& other, double _w ) : x( other.x ), y( other.y ), z( other.z ), w( _w ) {}
+	Vector4d( const Vector3d& other, double _w ) :
+		x( other.x ), y( other.y ), z( other.z ), w( _w )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -94,7 +109,10 @@ public:
 	//   other - The Vector3 to copy
 	//   _w - The float w value
 	// ----------------------------------------------------------------------------------
-	Vector4d( const Vector3& other, float _w ) : x( other.x ), y( other.y ), z( other.z ), w( _w ) {}
+	Vector4d( const Vector3& other, float _w ) :
+		x( other.x ), y( other.y ), z( other.z ), w( _w )
+	{
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description
@@ -127,9 +145,9 @@ public:
 	const Vector4 AsVector4( void ) const
 	{
 		return Vector4( static_cast<float>( x ),
-			static_cast<float>( y ),
-			static_cast<float>( z ),
-			static_cast<float>( w ) );
+						static_cast<float>( y ),
+						static_cast<float>( z ),
+						static_cast<float>( w ) );
 	}
 
 	// ----------------------------------------------------------------------------------

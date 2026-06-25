@@ -17,14 +17,16 @@ BLUE_DECLARE( Tr2GpuParticleSystem );
 class EveUpdateContext
 {
 public:
-	EveUpdateContext() {}
-	EveUpdateContext( Be::Time time ) : 
+	EveUpdateContext()
+	{
+	}
+	EveUpdateContext( Be::Time time ) :
 		m_lastTime( 0 ),
 		m_currentTime( 0 ),
 		m_origin( UNINITIALIZED_ORIGIN, UNINITIALIZED_ORIGIN, UNINITIALIZED_ORIGIN ),
 		m_originShift( 0, 0, 0 ),
 		m_originShiftRemainder( 0, 0, 0 ),
-		m_visibilityThreshold(0.f),
+		m_visibilityThreshold( 0.f ),
 		m_highDetailThreshold( 0.f ),
 		m_mediumDetailThreshold( 0.f ),
 		m_lowDetailThreshold( 0.f ),
@@ -160,7 +162,7 @@ public:
 	{
 		return m_lowDetailThreshold;
 	}
-	
+
 	void SetLodFactor( float lodFactor )
 	{
 		m_lodFactor = lodFactor;
@@ -211,7 +213,7 @@ private:
 	float m_lowDetailThreshold;
 	float m_lodFactor;
 	float m_invLodFactor;
-	TriFrustum m_frustum; 
+	TriFrustum m_frustum;
 };
 
 #endif //EveUpdateContext_h

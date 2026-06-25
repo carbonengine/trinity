@@ -32,7 +32,7 @@ TEST_F( SwapChain, CanCreateSwapChain )
 		ASSERT_HRESULT_SUCCEEDED( sc.Create( window, *renderContext ) );
 		EXPECT_TRUE( sc.IsValid() );
 		EXPECT_TRUE( sc.GetBackBuffer().IsValid() );
-#if( TRINITY_PLATFORM != TRINITY_STUB )
+#if ( TRINITY_PLATFORM != TRINITY_STUB )
 		EXPECT_EQ( window.GetClientWidth(), sc.GetWidth() );
 		EXPECT_EQ( window.GetClientHeight(), sc.GetHeight() );
 		EXPECT_EQ( sc.GetWidth(), sc.GetBackBuffer().GetWidth() );

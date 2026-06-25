@@ -13,9 +13,9 @@
 
 namespace DlssUtils
 {
-	sl::Resource GenerateTextureResource( const Tr2TextureAL* texture );
-	const char* GetPluginName( sl::Feature feature );
-	sl::float4x4 AsFloat4x4( float f[16] );
+sl::Resource GenerateTextureResource( const Tr2TextureAL* texture );
+const char* GetPluginName( sl::Feature feature );
+sl::float4x4 AsFloat4x4( float f[16] );
 }
 
 class Tr2DlssUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx11
@@ -25,7 +25,7 @@ public:
 	~Tr2DlssUpscalingTechnique();
 
 	// Tr2UpscalingTechniqueAL overrides
-	virtual bool IsAvailable( ) const override;
+	virtual bool IsAvailable() const override;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual bool IsTemporal() const override;
 
@@ -49,11 +49,11 @@ private:
 class Tr2DlssUpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2DlssUpscalingContext( 
-		Tr2UpscalingAL::Setting setting, 
-		bool frameGeneration, 
+	Tr2DlssUpscalingContext(
+		Tr2UpscalingAL::Setting setting,
+		bool frameGeneration,
 		Tr2UpscalingAL::UpscalingContextParams params,
-		uint32_t contextNumber, 
+		uint32_t contextNumber,
 		sl::FrameToken* frameToken );
 	~Tr2DlssUpscalingContext();
 

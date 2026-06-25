@@ -25,12 +25,12 @@ DistributionEntityLifeTimeEvent EveDistributionModifierScaleBySpaceObjectParent:
 		if( m_scaleCurve != nullptr )
 		{
 			Vector3 finalScale;
-			m_scaleCurve->GetValueAt( &finalScale, double(bounds.w) );
+			m_scaleCurve->GetValueAt( &finalScale, double( bounds.w ) );
 			placement.additionalScale *= finalScale;
 		}
 		else
 		{
-			float assetRatio = bounds.w / max(m_authoredForBoundingRadius, 1.f);
+			float assetRatio = bounds.w / max( m_authoredForBoundingRadius, 1.f );
 			float finalScale;
 			if( assetRatio > 1.f )
 			{

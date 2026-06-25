@@ -33,7 +33,7 @@ public:
 	const char* GetName() const override;
 	void SetName( const char* name ) override;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
-	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override {};
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override{};
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query ) const override;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;

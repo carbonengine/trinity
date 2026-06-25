@@ -21,10 +21,10 @@ public:
 	bool Initialize() override;
 	bool OnModified( Be::Var * value ) override;
 
-	void Link( ITr2ActionController& controller ) override;
+	void Link( ITr2ActionController & controller ) override;
 	void Unlink() override;
-	void Start( ITr2ActionController& controller ) override;
-	void Stop( ITr2ActionController& controller ) override;
+	void Start( ITr2ActionController & controller ) override;
+	void Stop( ITr2ActionController & controller ) override;
 
 	void Update( Be::Time realTime, Be::Time simTime ) override;
 

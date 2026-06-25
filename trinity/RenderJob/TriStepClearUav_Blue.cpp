@@ -9,7 +9,7 @@ BLUE_DEFINE( TriStepClearUav );
 #if BLUE_WITH_PYTHON
 // --------------------------------------------------------------------------------------
 // Description:
-//   Python initializer function for TriStepClearUav. We can't use MAP_METHOD_AND_WRAP 
+//   Python initializer function for TriStepClearUav. We can't use MAP_METHOD_AND_WRAP
 //   because we need to support optional arguments.
 // Arguments:
 //   self - This pointer
@@ -73,7 +73,7 @@ PyObject* TriStepClearUav::py__init__( PyObject* self, PyObject* args )
 
 const Be::ClassInfo* TriStepClearUav::ExposeToBlue()
 {
-	EXPOSURE_BEGIN(TriStepClearUav, "" )
+	EXPOSURE_BEGIN( TriStepClearUav, "" )
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepClearUav )
@@ -87,7 +87,7 @@ const Be::ClassInfo* TriStepClearUav::ExposeToBlue()
 		MAP_ATTRIBUTE( "bitValue3", m_uintValue[3], "na", Be::READWRITE | Be::PERSIST )
 
 		MAP_METHOD(
-			"__init__", 
+			"__init__",
 			py__init__,
 			"Creates a render step that clears a writable UAV buffer with a value.\n"
 			":param buffer: - Tr2UavBuffer to clear\n"

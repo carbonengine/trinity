@@ -6,14 +6,13 @@
 
 class RenderWindow;
 
-class WithWindow: public ::testing::Test 
+class WithWindow : public ::testing::Test
 {
 public:
 	static void SetUpTestCase();
 	static void TearDownTestCase();
 
-	template <typename T>
-	static void RunLoop( T& t )
+	template <typename T> static void RunLoop( T& t )
 	{
 		extern bool g_interactive;
 		if( g_interactive )
@@ -22,19 +21,20 @@ public:
 			while( true )
 			{
 #if __OBJC__
-                @autoreleasepool {
+				@autoreleasepool
+				{
 #endif
-				if( !DoLoopProcessing() )
-				{
-					return;
-				}
-				t();
-				if( HasFatalFailure() )
-				{
-					return;
-				}
+					if( !DoLoopProcessing() )
+					{
+						return;
+					}
+					t();
+					if( HasFatalFailure() )
+					{
+						return;
+					}
 #if __OBJC__
-                }
+				}
 #endif
 			}
 		}
@@ -46,6 +46,7 @@ public:
 
 	static Tr2WindowHandle GetWindowHandle();
 	static RenderWindow* GetWindow();
+
 private:
 	static void BeginLoopProcessing();
 	static bool DoLoopProcessing();

@@ -7,8 +7,8 @@
 
 
 // --------------------------------------------------------------------------------
-Tr2CurveColor::Tr2CurveColor( IRoot* lockobj )
-	:PARENTLOCK( m_r ),
+Tr2CurveColor::Tr2CurveColor( IRoot* lockobj ) :
+	PARENTLOCK( m_r ),
 	PARENTLOCK( m_g ),
 	PARENTLOCK( m_b ),
 	PARENTLOCK( m_a ),

@@ -9,12 +9,12 @@
 
 Tr2DeviceResource::Tr2DeviceResource()
 {
-	TriDevice::RegisterResource(this);
+	TriDevice::RegisterResource( this );
 }
 
 Tr2DeviceResource::~Tr2DeviceResource()
 {
-	TriDevice::UnregisterResource(this);
+	TriDevice::UnregisterResource( this );
 }
 
 
@@ -31,5 +31,3 @@ bool Tr2DeviceResource::PrepareResources()
 
 	return true;
 }
-
-

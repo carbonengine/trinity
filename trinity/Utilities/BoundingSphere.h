@@ -5,7 +5,10 @@
 #define BoundingSphere_H
 
 // helper functions to deal with bounding spheres
-inline const Vector3& BoundingSphereGetCenter( const Vector4& sphere ) { return ( const Vector3& )sphere; }
+inline const Vector3& BoundingSphereGetCenter( const Vector4& sphere )
+{
+	return (const Vector3&)sphere;
+}
 void BoundingSphereInitialize( Vector4& sphere );
 bool BoundingSphereIsInside( const Vector4& sphere, const Vector3& pos );
 bool BoundingSphereIsSphereInside( const Vector4& parentSphere, const Vector4& testSphere );

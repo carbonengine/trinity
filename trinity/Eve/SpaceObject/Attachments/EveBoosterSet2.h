@@ -82,7 +82,7 @@ public:
 
 BLUE_DECLARE( EveBoosterSet2 );
 
-BLUE_CLASS( EveBoosterSet2Renderable ):
+BLUE_CLASS( EveBoosterSet2Renderable ) :
 	public ITr2Renderable
 {
 public:
@@ -90,25 +90,28 @@ public:
 
 	EveBoosterSet2Renderable( IRoot* lockobj = NULL );
 	~EveBoosterSet2Renderable();
-	
+
 	void Update( float deltaT, Be::Time t, const Matrix& parentMatrix, float parentSpeed, const Vector3& parentAcceleration, const Quaternion& parentRotation );
 	// get the transformed bounding sphere, ready for use
-	void GetBoundingSphere( Vector4& boundingSphere ) const;
+	void GetBoundingSphere( Vector4 & boundingSphere ) const;
 	// rendering
 	void UpdateVisibility( const EveUpdateContext& updateContext );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	void UpdateTrails( float deltaT, Be::Time t );
-	float GetIntensity() const { return m_overallIntensity; }
+	float GetIntensity() const
+	{
+		return m_overallIntensity;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	virtual bool HasTransparentBatches();
-	virtual float GetSortValue(); 
+	virtual float GetSortValue();
 
-	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
+
 	EveBoosterSet2* m_boosterSet;
 
 	// calculated the booster intensity (=gain) from ship's ball
@@ -122,13 +125,13 @@ public:
 	bool m_boosterHighLod;
 	bool m_boostersVisible;
 	bool m_trailsVisible;
-		
+
 	// parent ship data
 	float m_parentSpeed;
 	// parent ship transform
 	Matrix m_parentTransform;
 	Quaternion m_parentRotation;
-	
+
 	// booster gain stuff
 	float m_lastAccFactor;
 	float m_lastValue;
@@ -168,7 +171,7 @@ BLUE_DECLARE_VECTOR( EveBoosterSet2Renderable );
 // SeeAlso:
 //   EveShip2, EveSpriteSet
 // --------------------------------------------------------------------------------
-BLUE_CLASS( EveBoosterSet2 ):
+BLUE_CLASS( EveBoosterSet2 ) :
 	public IInitialize,
 	public INotify,
 	public Tr2DeviceResource,
@@ -197,7 +200,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var* value );
+	virtual bool OnModified( Be::Var * value );
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
@@ -208,6 +211,7 @@ public:
 	void RegisterComponents() override;
 
 	friend class EveBoosterSet2Renderable;
+
 private:
 	bool OnPrepareResources();
 
@@ -232,43 +236,43 @@ public:
 	PEveBoosterSet2RenderableVector m_boosterRenderables;
 
 	// timing
-	void Update( float deltaT, Be::Time t, const Matrix& parentMatrix, float parentSpeed, const Vector3& parentAcceleration, const Quaternion& parentRotation, int boosterInstance=0 );
+	void Update( float deltaT, Be::Time t, const Matrix& parentMatrix, float parentSpeed, const Vector3& parentAcceleration, const Quaternion& parentRotation, int boosterInstance = 0 );
 	void UpdateTrails( float deltaT, Be::Time t );
 	// manage individual exhaust points
 	void Clear();
 	void Add( const Matrix* localMatrix, const Vector4* functionality, bool hasTrail, uint32_t atlasIndex0, uint32_t atlasIndex1, float lightScale = 1 );
 	// set internal visual data
-	void SetData( 
-		float glowScale, 
-		const Color* glowColor, 
-		const Color* warpGlowColor, 
-		float symHaloScale, 
-		float haloScaleX, 
-		float haloScaleY, 
-		const Color* haloColor, 
-		const Color* warpHaloColor, 
+	void SetData(
+		float glowScale,
+		const Color* glowColor,
+		const Color* warpGlowColor,
+		float symHaloScale,
+		float haloScaleX,
+		float haloScaleY,
+		const Color* haloColor,
+		const Color* warpHaloColor,
 		bool alwaysOn );
 	void SetLightData( float offset, float flickerAmplitude, float flickerFrequency, float radius, const Color& color, float warpRadius, const Color& warpColor );
-	void SetEffect( Tr2Effect* effect, Tr2Effect* effectFar );
+	void SetEffect( Tr2Effect * effect, Tr2Effect * effectFar );
 	void SetGlow( EveSpriteSetPtr glow );
 	void SetTrail( EveTrailsSetPtr trail );
 	// rendering
 	void UpdateVisibility( const EveUpdateContext& updateContext );
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	// query booster intensity
 	float GetBoosterIntensity() const;
 	float GetBoosterIntensity( int index ) const;
 	// just debug info
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
 	// get the transformed bounding sphere, ready for use
-	void GetBoundingSphere( Vector4& boundingSphere ) const;
+	void GetBoundingSphere( Vector4 & boundingSphere ) const;
 
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& pool );
-	void AddToQuadRenderer( Tr2QuadRenderer& pool, const Matrix& world );
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & pool );
+	void AddToQuadRenderer( Tr2QuadRenderer & pool, const Matrix& world );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	void GetLights( Tr2LightManager& lightManager ) const override;
+	void GetLights( Tr2LightManager & lightManager ) const override;
 
 private:
 	// indivual data of each booster (position, etc.)
@@ -285,10 +289,10 @@ private:
 	std::vector<SingleBoosterData> m_singleBoosters;
 
 	// re-alloc and init the instance vertex buffers
-	void RebuildInstanceData( Tr2RenderContext& renderContext );
+	void RebuildInstanceData( Tr2RenderContext & renderContext );
 
 	// function to create the flares from boosterdata
-	void CreateFlares( SingleBoosterData& boosterData );
+	void CreateFlares( SingleBoosterData & boosterData );
 
 	// toggle display
 	bool m_display;
@@ -333,7 +337,7 @@ private:
 	Color m_haloColor;
 	Color m_warpGlowColor;
 	Color m_warpHaloColor;
-	
+
 	// trail spline data
 	float m_trailsSmoothing;
 	// toggle trail physics updates

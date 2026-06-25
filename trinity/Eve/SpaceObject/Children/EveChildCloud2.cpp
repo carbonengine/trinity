@@ -895,11 +895,11 @@ void EveChildCloud2::SetupShadowFrustum( ShadowInfo& shadowInfo, Vector3 sunDir 
 	aabb.m_max.z += 2500000.f;
 
 	m_lightViewProj = lightView * OrthoOffCenterMatrix( aabb.m_max.x, aabb.m_min.x, aabb.m_max.y, aabb.m_min.y, -aabb.m_max.z, -aabb.m_min.z );
-	
+
 	// create shadow frustum out from lightView, aabb.min, aabb.max
 	TriFrustumOrtho shadowFrustum;
 	shadowFrustum.DeriveFrustum( lightView, aabb.m_min, aabb.m_max );
-	
+
 	shadowInfo.aabbMax = aabb.m_max;
 	shadowInfo.lightViewProj = m_lightViewProj;
 	shadowInfo.shadowFrustum = shadowFrustum;

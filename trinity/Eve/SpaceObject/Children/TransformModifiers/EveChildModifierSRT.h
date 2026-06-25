@@ -14,7 +14,7 @@ public:
 
 	EveChildModifierSRT( IRoot* lockobj = NULL );
 	~EveChildModifierSRT();
-	
+
 	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const Float4x3* bones ) const;
 
 private:

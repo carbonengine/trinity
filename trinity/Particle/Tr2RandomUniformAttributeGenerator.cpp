@@ -8,8 +8,8 @@
 // Description:
 //   Tr2RandomUniformAttributeGenerator default constructor
 // --------------------------------------------------------------------------------------
-Tr2RandomUniformAttributeGenerator::Tr2RandomUniformAttributeGenerator()
-	:m_name( Tr2ParticleElementDeclarationName::CUSTOM ),
+Tr2RandomUniformAttributeGenerator::Tr2RandomUniformAttributeGenerator() :
+	m_name( Tr2ParticleElementDeclarationName::CUSTOM ),
 	m_minRange( 0.0f, 0.0f, 0.0f, 0.0f ),
 	m_maxRange( 0.0f, 0.0f, 0.0f, 0.0f ),
 	m_valid( false ),
@@ -27,16 +27,16 @@ Tr2RandomUniformAttributeGenerator::~Tr2RandomUniformAttributeGenerator()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements ITr2AttributeGenerator interface. Generates random values for new 
+//   Implements ITr2AttributeGenerator interface. Generates random values for new
 //   particle component (element).
 // Arguments:
 //   position - Position of the "parent" particle (unused).
 //   velocity - Velocity of the "parent" particle (unused).
-//   paticle - (out) New particle data: Tr2ParticleElementData::COUNT of float arrays. 
+//   paticle - (out) New particle data: Tr2ParticleElementData::COUNT of float arrays.
 //		The generator fills element identified by generator's m_name with random values.
 // --------------------------------------------------------------------------------------
-void Tr2RandomUniformAttributeGenerator::Generate( const Vector3* position, 
-												   const Vector3* velocity, 
+void Tr2RandomUniformAttributeGenerator::Generate( const Vector3* position,
+												   const Vector3* velocity,
 												   float** particle )
 {
 	if( !m_valid )
@@ -57,17 +57,17 @@ void Tr2RandomUniformAttributeGenerator::Generate( const Vector3* position,
 // Arguments:
 //   declaration - Particle element data coming from particle system.
 //   boundElements - (in/out) The generator is expected to mark particle elements it will
-//		be filling by adding their declaration names to this set. Emitter uses this set 
+//		be filling by adding their declaration names to this set. Emitter uses this set
 //      to check if all particle elements were bound to some generator. The generator
-//		is responsible for checking if its elements are overwritten by some other 
+//		is responsible for checking if its elements are overwritten by some other
 //		generator using this set.
 // Return Value:
 //   true If the generator successfully binds to the particle system
 //   false Otherwise
 // --------------------------------------------------------------------------------------
-bool Tr2RandomUniformAttributeGenerator::Bind( 
-	const Tr2ParticleElementDataMap& declaration, 
-	std::set<Tr2ParticleElementDeclarationName> &boundElements )
+bool Tr2RandomUniformAttributeGenerator::Bind(
+	const Tr2ParticleElementDataMap& declaration,
+	std::set<Tr2ParticleElementDeclarationName>& boundElements )
 {
 	m_valid = false;
 	auto i = declaration.find( m_name );
@@ -89,7 +89,7 @@ bool Tr2RandomUniformAttributeGenerator::Bind(
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Returns human-readable name for generator's declaration element. Used for Python 
+//   Returns human-readable name for generator's declaration element. Used for Python
 //   exposure.
 // Return Value:
 //   Human-readable name of particle declaration element.
@@ -101,7 +101,7 @@ std::string Tr2RandomUniformAttributeGenerator::GetName() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Returns bounded particle element dimension or 0 if the generator is not bounded. 
+//   Returns bounded particle element dimension or 0 if the generator is not bounded.
 //   Used for Python exposure.
 // Return Value:
 //   Bounded particle element dimension or 0 if the generator is not bounded.

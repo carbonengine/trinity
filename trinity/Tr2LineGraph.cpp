@@ -70,13 +70,14 @@ bool Tr2LineGraph::OnPrepareResources()
 		if( vbSize )
 		{
 			USE_MAIN_THREAD_RENDER_CONTEXT();
-			CR_RETURN_VAL( m_vertexBuffer.Create( 
-				1,
-				vbSize, 
-				Tr2GpuUsage::VERTEX_BUFFER,
-				Tr2CpuUsage::WRITE_OFTEN, 
-				nullptr, 
-				renderContext ), true );
+			CR_RETURN_VAL( m_vertexBuffer.Create(
+							   1,
+							   vbSize,
+							   Tr2GpuUsage::VERTEX_BUFFER,
+							   Tr2CpuUsage::WRITE_OFTEN,
+							   nullptr,
+							   renderContext ),
+						   true );
 		}
 	}
 
@@ -88,7 +89,7 @@ bool Tr2LineGraph::OnPrepareResources()
 		s_lineGraphEffect.CreateInstance();
 		s_lineGraphEffect->SetEffectPathName( LINEGRAPH_EFFECT_PATH );
 	}
-	
+
 	if( !m_vertexBuffer.IsValid() || m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION || !s_lineGraphEffect )
 	{
 		return true;
@@ -126,7 +127,7 @@ void Tr2LineGraph::Add( float value )
 {
 	if( !m_markers.empty() )
 	{
-		for( MarkerList_t::iterator it = m_markers.begin(); it != m_markers.end();  )
+		for( MarkerList_t::iterator it = m_markers.begin(); it != m_markers.end(); )
 		{
 			--it->m_ticksLeft;
 			if( it->m_ticksLeft == 0 )
@@ -194,8 +195,8 @@ void Tr2LineGraph::Render( float scale, Tr2RenderContext& renderContext )
 	LineGraphVertex* pVertsEnd = pVerts + m_primitiveCount * 2;
 
 	unsigned int count = (unsigned int)m_data.size();
-	
-	float step = 2.0f / ((float)count - 1.0f);
+
+	float step = 2.0f / ( (float)count - 1.0f );
 
 	float x = -1.0f;
 
@@ -216,7 +217,7 @@ void Tr2LineGraph::Render( float scale, Tr2RenderContext& renderContext )
 		++pVerts;
 
 		pVerts->pos.x = x + step;
-		pVerts->pos.y = *(p + 1);
+		pVerts->pos.y = *( p + 1 );
 		++pVerts;
 
 		++p;
@@ -253,7 +254,7 @@ void Tr2LineGraph::Render( float scale, Tr2RenderContext& renderContext )
 			++pVerts;
 
 			pVerts->pos.x = x + step;
-			pVerts->pos.y = *(p + 1);
+			pVerts->pos.y = *( p + 1 );
 			++pVerts;
 
 			++p;
@@ -268,16 +269,16 @@ void Tr2LineGraph::Render( float scale, Tr2RenderContext& renderContext )
 	{
 		Tr2Viewport viewport;
 		renderContext.GetViewport( viewport );
-		
-		int yiTop = (int)( 0.1f*(float)viewport.m_height );
-		int yiBottom = (int)( 0.95f*(float)viewport.m_height );
+
+		int yiTop = (int)( 0.1f * (float)viewport.m_height );
+		int yiBottom = (int)( 0.95f * (float)viewport.m_height );
 		int yi = yiTop;
 
 		for( MarkerList_t::iterator it = m_markers.begin(); it != m_markers.end(); ++it )
 		{
-			float x = -1.0f + (float)(it->m_ticksLeft)*step;
+			float x = -1.0f + (float)( it->m_ticksLeft ) * step;
 
-			int xi = (int)( (x + 1.0f)*0.5f*(float)viewport.m_width );
+			int xi = (int)( ( x + 1.0f ) * 0.5f * (float)viewport.m_width );
 			for( std::list<std::string>::iterator valueIt = it->m_values.begin(); valueIt != it->m_values.end(); ++valueIt )
 			{
 				Tr2Renderer::PrintfImmediate( renderContext, xi, yi, m_color, TRI_DFS_LEFT, valueIt->c_str() );

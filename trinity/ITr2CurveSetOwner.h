@@ -6,7 +6,8 @@
 BLUE_DECLARE( TriCurveSet );
 
 
-BLUE_INTERFACE( ITr2CurveSetOwner ): public IRoot
+BLUE_INTERFACE( ITr2CurveSetOwner ) :
+	public IRoot
 {
 	virtual void PlayCurveSet( const std::string& name, const std::string& rangeName ) = 0;
 	virtual void StopCurveSet( const std::string& name ) = 0;

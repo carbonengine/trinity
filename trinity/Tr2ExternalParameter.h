@@ -11,13 +11,13 @@ BLUE_DECLARE( TriValueBinding );
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2ExternalParameter is a special binding that doesn't have a source, but only a
-//   destination. The SetValue method can be used to change destination value from 
-//   script. Tr2ExternalParameter can be used to expose internal values in an object tree 
+//   destination. The SetValue method can be used to change destination value from
+//   script. Tr2ExternalParameter can be used to expose internal values in an object tree
 //   to the script in a nice way.
 // See Also:
 //   EveSpaceScene, EveSpaceObject2
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( Tr2ExternalParameter ): 
+BLUE_CLASS( Tr2ExternalParameter ) :
 	public IInitialize,
 	public INotify
 {
@@ -28,15 +28,15 @@ public:
 	EXPOSE_TO_BLUE();
 
 	virtual bool Initialize();
-	virtual bool OnModified( Be::Var* value );
-	
+	virtual bool OnModified( Be::Var * value );
+
 	const char* GetName() const;
 	void SetName( const std::string& name );
-	void SetDestinationObject( IRoot* destination );
+	void SetDestinationObject( IRoot * destination );
 	void SetDestinationAttribute( const std::string& attributeName );
 
 	BlueStdResult SetValue( BlueScriptValue value );
-	BlueStdResult GetValue( BlueScriptValue& value ) const;
+	BlueStdResult GetValue( BlueScriptValue & value ) const;
 	Be::Var* GetDestination() const;
 	const Be::VarEntry* GetDestinationEntry() const;
 
@@ -44,6 +44,7 @@ public:
 
 	// Creates a binding from this Tr2ExternalParameter. The new binding has the same destination object/attribute.
 	TriValueBindingPtr CreateBinding() const;
+
 private:
 	// parameter name
 	std::string m_name;

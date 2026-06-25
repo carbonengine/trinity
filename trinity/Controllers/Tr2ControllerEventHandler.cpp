@@ -5,8 +5,8 @@
 #include "Actions/ITr2ControllerAction.h"
 
 
-Tr2ControllerEventHandler::Tr2ControllerEventHandler( IRoot* lockobj )
-	:PARENTLOCK( m_actions ),
+Tr2ControllerEventHandler::Tr2ControllerEventHandler( IRoot* lockobj ) :
+	PARENTLOCK( m_actions ),
 	m_controller( nullptr )
 {
 	m_actions.SetNotify( this );

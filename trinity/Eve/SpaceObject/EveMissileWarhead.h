@@ -18,8 +18,7 @@ BLUE_DECLARE( EveSpriteSet );
 // SeeAlso:
 //   EveMissile, EveTransform
 // --------------------------------------------------------------------------------
-class EveMissileWarhead :
-	public EveTransform
+class EveMissileWarhead : public EveTransform
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -62,8 +61,14 @@ public:
 	void Launch( const Matrix& startTransform );
 
 	// locator access
-	void SetTargetLocator( int damageLocator ) { m_targetLocator = damageLocator; }
-	int GetTargetLocator() const { return m_targetLocator; }
+	void SetTargetLocator( int damageLocator )
+	{
+		m_targetLocator = damageLocator;
+	}
+	int GetTargetLocator() const
+	{
+		return m_targetLocator;
+	}
 
 	// enable particle emitting on this warhead
 	void EnableParticleEmitting( bool enable );
@@ -90,10 +95,16 @@ public:
 	// state handling
 	StateChangeEvent UpdateState( float deltaT, float estimatedAliveTime, ITriTargetable* target );
 	StateChangeEvent CheckImpact( float deltaT, float estimatedTotalAliveTime, ITriTargetable* target );
-	State GetState() const { return m_state; }
+	State GetState() const
+	{
+		return m_state;
+	}
 
 	// this warhead's unique ID
-	int GetWarheadID() const { return m_id; }
+	int GetWarheadID() const
+	{
+		return m_id;
+	}
 
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* data );
@@ -126,7 +137,7 @@ private:
 	bool m_startDataValid;
 	bool m_doSpread;
 
-	// 
+	//
 	Vector3 m_movement;
 	Vector3 m_posLastFrame;
 

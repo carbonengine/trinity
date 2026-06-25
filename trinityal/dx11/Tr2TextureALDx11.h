@@ -4,7 +4,7 @@
 #ifndef Tr2TextureALDx11_h_
 #define Tr2TextureALDx11_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 
 
 #include "../include/Tr2TextureAL.h"
@@ -16,100 +16,100 @@
 
 namespace TrinityALImpl
 {
-	class Tr2ResourceSetAL;
+class Tr2ResourceSetAL;
 }
 
 
 
 namespace TrinityALImpl
 {
-	class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
+class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
+{
+public:
+	Tr2TextureAL();
+
+	ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext );
+	void Destroy();
+
+	bool IsValid() const;
+	Tr2ALMemoryType GetMemoryClass() const;
+	const Tr2BitmapDimensions& GetDesc() const;
+	const Tr2MsaaDesc& GetMsaaDesc() const;
+	Tr2GpuUsage::Type GetGpuUsage() const;
+	Tr2CpuUsage::Type GetCpuUsage() const;
+
+	ALResult MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
-	public:
-		Tr2TextureAL();
+		return MapForReading( region, true, data, pitch, renderContext );
+	}
+	ALResult MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
+	void UnmapForReading( Tr2RenderContextAL& renderContext );
+	ALResult MapForWriting( const Tr2TextureSubresource& region, void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
+	void UnmapForWriting( Tr2RenderContextAL& renderContext );
 
-		ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
-		ALResult OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext );
-		void Destroy();
+	ALResult UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext );
+	ALResult CopySubresourceRegion( const Tr2TextureSubresource& destSubresource, Tr2TextureAL& source, const Tr2TextureSubresource& sourceSubresource, Tr2RenderContextAL& renderContext );
+	ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
+	ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
+	uintptr_t GetSharedHandle() const;
 
-		bool IsValid() const;
-		Tr2ALMemoryType GetMemoryClass() const;
-		const Tr2BitmapDimensions& GetDesc() const;
-		const Tr2MsaaDesc& GetMsaaDesc() const;
-		Tr2GpuUsage::Type GetGpuUsage() const;
-		Tr2CpuUsage::Type GetCpuUsage() const;
+	ALResult Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderContextAL& renderContext );
+	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	ALResult SetName( const char* name );
+	const char* GetName() const;
 
-		ALResult MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+	uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+	uint32_t GetUavIndexInHeap( uint32_t mip ) const;
+
+
+	ID3D11Resource* GetResourceDx11() const;
+
+private:
+	struct DepthOption
+	{
+		enum Type
 		{
-			return MapForReading( region, true, data, pitch, renderContext );
-		}
-		ALResult MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
-		void UnmapForReading( Tr2RenderContextAL& renderContext );
-		ALResult MapForWriting( const Tr2TextureSubresource& region, void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
-		void UnmapForWriting( Tr2RenderContextAL& renderContext );
+			READ_WRITE = 0,
+			READ_ONLY = 1,
 
-		ALResult UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext );
-		ALResult CopySubresourceRegion( const Tr2TextureSubresource& destSubresource, Tr2TextureAL& source, const Tr2TextureSubresource& sourceSubresource, Tr2RenderContextAL& renderContext );
-		ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
-		ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
-		uintptr_t GetSharedHandle() const;
-
-		ALResult Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderContextAL& renderContext );
-		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
-		ALResult SetName( const char* name );
-		const char* GetName() const;
-
-		uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
-		uint32_t GetUavIndexInHeap( uint32_t mip ) const;
-
-
-		ID3D11Resource* GetResourceDx11() const;
-
-	private:
-		struct DepthOption
-		{
-			enum Type
-			{
-				READ_WRITE = 0,
-				READ_ONLY = 1,
-
-				COUNT = 2,
-			};
+			COUNT = 2,
 		};
-
-		ALResult CreateViews( 
-			ID3D11Resource* texture, 
-			const Tr2BitmapDimensions& desc, 
-			const Tr2MsaaDesc& msaa, 
-			Tr2GpuUsage::Type gpuUsage, 
-			Tr2CpuUsage::Type cpuUsage, 
-			bool createSrgb,
-			Tr2PrimaryRenderContextAL& renderContext );
-
-		CComPtr<ID3D11Resource> m_texture;
-		CComPtr<ID3D11ShaderResourceView> m_view[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
-		std::vector<CComPtr<ID3D11RenderTargetView>> m_renderTarget;
-		CComPtr<ID3D11DepthStencilView> m_depthStencil[DepthOption::COUNT];
-		std::vector<CComPtr<ID3D11UnorderedAccessView>> m_uav;
-		CComPtr<ID3D11Texture2D> m_stagingTexture;
-		CcpAlignedMallocBuffer m_writeStaging;
-		Tr2TextureCoordBox m_writeBox;
-
-		Tr2BitmapDimensions m_desc;
-		Tr2MsaaDesc m_msaa;
-		Tr2GpuUsage::Type m_gpuUsage;
-		Tr2CpuUsage::Type m_cpuUsage;
-		Tr2MemoryCounterAL m_memory;
-#if TRINITY_AL_GUARD_LOCKS
-		Tr2LockGuard m_lockGuard;
-#endif
-		uint32_t m_lockedSubresource;
-		std::string m_name;
-
-		friend class Tr2PrimaryRenderContextAL;
-		friend class Tr2RenderContextAL;
-		friend class Tr2ResourceSetAL;
 	};
+
+	ALResult CreateViews(
+		ID3D11Resource* texture,
+		const Tr2BitmapDimensions& desc,
+		const Tr2MsaaDesc& msaa,
+		Tr2GpuUsage::Type gpuUsage,
+		Tr2CpuUsage::Type cpuUsage,
+		bool createSrgb,
+		Tr2PrimaryRenderContextAL& renderContext );
+
+	CComPtr<ID3D11Resource> m_texture;
+	CComPtr<ID3D11ShaderResourceView> m_view[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
+	std::vector<CComPtr<ID3D11RenderTargetView>> m_renderTarget;
+	CComPtr<ID3D11DepthStencilView> m_depthStencil[DepthOption::COUNT];
+	std::vector<CComPtr<ID3D11UnorderedAccessView>> m_uav;
+	CComPtr<ID3D11Texture2D> m_stagingTexture;
+	CcpAlignedMallocBuffer m_writeStaging;
+	Tr2TextureCoordBox m_writeBox;
+
+	Tr2BitmapDimensions m_desc;
+	Tr2MsaaDesc m_msaa;
+	Tr2GpuUsage::Type m_gpuUsage;
+	Tr2CpuUsage::Type m_cpuUsage;
+	Tr2MemoryCounterAL m_memory;
+#if TRINITY_AL_GUARD_LOCKS
+	Tr2LockGuard m_lockGuard;
+#endif
+	uint32_t m_lockedSubresource;
+	std::string m_name;
+
+	friend class Tr2PrimaryRenderContextAL;
+	friend class Tr2RenderContextAL;
+	friend class Tr2ResourceSetAL;
+};
 }
 
 #endif

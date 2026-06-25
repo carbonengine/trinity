@@ -20,16 +20,16 @@
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Picks an object and its properties in the given pixel. 
+//   Picks an object and its properties in the given pixel.
 // Arguments:
 //   renderContext - Current render context
 //   x - X viewport coordinate of the pixel to perform picking in
 //   y - Y viewport coordinate of the pixel to perform picking in
-//   proj - Current projection transform 
-//   view - Current view transform 
+//   proj - Current projection transform
+//   view - Current view transform
 //   viewport - Current viewport
 //   results - (in/out) Results of the picking operation. The results.componets field
-//		as an input determines what properties of the object needs to be picked. On the 
+//		as an input determines what properties of the object needs to be picked. On the
 //		output the results.componets is modified to contain only properties that were
 //		successfully picked (for scenes that might not have support for picking some
 //		of the properties).
@@ -73,9 +73,9 @@ void ITr2PickableScene::PickObject( Tr2RenderContext& renderContext, int x, int 
 	const std::vector<ITr2Renderable*>& visibleObjects = GetPickingObjectsToRender( dirWorld );
 
 	// Collect vector of objects to render
-    std::vector<ITr2Renderable*> pickableObjects;
+	std::vector<ITr2Renderable*> pickableObjects;
 	for( std::vector<ITr2Renderable*>::const_iterator it = visibleObjects.begin(); it != visibleObjects.end(); ++it )
-	{		
+	{
 		ITr2PickablePtr pickedObj( BlueCastPtr( *it ) );
 		if( pickedObj )
 		{
@@ -166,12 +166,12 @@ void ITr2PickableScene::PickObject( Tr2RenderContext& renderContext, int x, int 
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Sets view and projection transform to be used for picking. 
+//   Sets view and projection transform to be used for picking.
 // Arguments:
 //   fx - X offset of the frustum in post-projected space
 //   fy - Y offset of the frustum in post-projected space
-//   proj - Current projection transform 
-//   view - Current view transform 
+//   proj - Current projection transform
+//   view - Current view transform
 //   viewport - Current viewport
 // --------------------------------------------------------------------------------------
 void ITr2PickableScene::SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport )
@@ -184,8 +184,8 @@ void ITr2PickableScene::SetupTransformsForPicking( float fx, float fy, TriProjec
 	// translate the projection so that we center around the pick ray origin,
 	// while remembering to scale this value as well:
 	Vector2 translation;
-	translation.x = -fx*scaling.x;
-	translation.y = -fy*scaling.y;
+	translation.x = -fx * scaling.x;
+	translation.y = -fy * scaling.y;
 	Tr2Renderer::AdjustProjection( scaling, translation );
 
 	// We do NOT set the viewport here. It will get set automatically when SetRenderTarget is called.
@@ -193,23 +193,23 @@ void ITr2PickableScene::SetupTransformsForPicking( float fx, float fy, TriProjec
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Collects opaque and picking batches from given objects. 
+//   Collects opaque and picking batches from given objects.
 // Arguments:
 //   pickableObjects - Vector of potentially visible objects for picking
 //   pOpaquePickingBatches - (out) Opaque batch accumulator
 //   pPickingBatches - (out) Picking batch accumulator
 // --------------------------------------------------------------------------------------
 void ITr2PickableScene::GetBatches( std::vector<ITr2Renderable*> const& pickableObjects,
-				 ITriRenderBatchAccumulator*& pOpaquePickingBatches,
-				 ITriRenderBatchAccumulator*& pPickingBatches )
+									ITriRenderBatchAccumulator*& pOpaquePickingBatches,
+									ITriRenderBatchAccumulator*& pPickingBatches )
 {
-    TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
-    CCP_ASSERT( allocator );
+	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
+	CCP_ASSERT( allocator );
 
-    // Get the picking batches from opaque areas to be overridden in the PS
-    pOpaquePickingBatches = GetOpaquePickingBatchAccumulator();
-    // Get the dedicated picking areas
-    pPickingBatches = GetPickingBatchAccumulator();
+	// Get the picking batches from opaque areas to be overridden in the PS
+	pOpaquePickingBatches = GetOpaquePickingBatchAccumulator();
+	// Get the dedicated picking areas
+	pPickingBatches = GetPickingBatchAccumulator();
 
 	CCP_ASSERT( pOpaquePickingBatches && pOpaquePickingBatches->GetBatchCount() == 0 );
 	if( !pOpaquePickingBatches )
@@ -222,45 +222,45 @@ void ITr2PickableScene::GetBatches( std::vector<ITr2Renderable*> const& pickable
 		CCP_ASSERT( pPickingBatches->GetBatchCount() == 0 );
 	}
 
-    for( unsigned int i = 0; i < pickableObjects.size(); ++i )
-    {
-        // We cannot rely on the object data to be up-to-date because this would assume that all
-        // objects in the picked list were rendered on the previous frame and that is tooooo much of an assumption.
-        // <halldor 2008-04-23>
-        Tr2PerObjectData* perObjectData = pickableObjects[i]->GetPerObjectData( pOpaquePickingBatches );
-        if( perObjectData )
-        {
-            perObjectData->SetUserData( i );
+	for( unsigned int i = 0; i < pickableObjects.size(); ++i )
+	{
+		// We cannot rely on the object data to be up-to-date because this would assume that all
+		// objects in the picked list were rendered on the previous frame and that is tooooo much of an assumption.
+		// <halldor 2008-04-23>
+		Tr2PerObjectData* perObjectData = pickableObjects[i]->GetPerObjectData( pOpaquePickingBatches );
+		if( perObjectData )
+		{
+			perObjectData->SetUserData( i );
 
-            size_t curBatchCount = pOpaquePickingBatches->GetBatchCount();
-            pickableObjects[i]->GetBatches( pOpaquePickingBatches, TRIBATCHTYPE_OPAQUE, perObjectData );
-            size_t newBatchCount = pOpaquePickingBatches->GetBatchCount();
+			size_t curBatchCount = pOpaquePickingBatches->GetBatchCount();
+			pickableObjects[i]->GetBatches( pOpaquePickingBatches, TRIBATCHTYPE_OPAQUE, perObjectData );
+			size_t newBatchCount = pOpaquePickingBatches->GetBatchCount();
 
-            // Fall back to opaque prepass batches if there were no opaque batches
-            if( curBatchCount == newBatchCount )
-            {
-                pickableObjects[i]->GetBatches( pOpaquePickingBatches, TRIBATCHTYPE_OPAQUE_PREPASS, perObjectData );
-            }
+			// Fall back to opaque prepass batches if there were no opaque batches
+			if( curBatchCount == newBatchCount )
+			{
+				pickableObjects[i]->GetBatches( pOpaquePickingBatches, TRIBATCHTYPE_OPAQUE_PREPASS, perObjectData );
+			}
 
-            // Dedicated picking areas do not support UV picking (and it doesn't really make sense)
-            if( pPickingBatches )
-            {
-                pickableObjects[i]->GetBatches( pPickingBatches, TRIBATCHTYPE_PICKING, perObjectData );
-            }
-        }
-    }
+			// Dedicated picking areas do not support UV picking (and it doesn't really make sense)
+			if( pPickingBatches )
+			{
+				pickableObjects[i]->GetBatches( pPickingBatches, TRIBATCHTYPE_PICKING, perObjectData );
+			}
+		}
+	}
 
-    pOpaquePickingBatches->Finalize();
+	pOpaquePickingBatches->Finalize();
 
-    if( pPickingBatches )
-    {
-        pPickingBatches->Finalize();
+	if( pPickingBatches )
+	{
+		pPickingBatches->Finalize();
 	}
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Renders picking batches into the picking buffer. 
+//   Renders picking batches into the picking buffer.
 // Arguments:
 //   pOpaquePickingBatches - Opaque batch accumulator
 //   pPickingBatches - Picking batch accumulator
@@ -270,86 +270,75 @@ void ITr2PickableScene::GetBatches( std::vector<ITr2Renderable*> const& pickable
 //   false On error
 // --------------------------------------------------------------------------------------
 bool ITr2PickableScene::RenderPicking( ITriRenderBatchAccumulator* pOpaquePickingBatches,
-					ITriRenderBatchAccumulator* pPickingBatches,
-					PickComponents pass )
+									   ITriRenderBatchAccumulator* pPickingBatches,
+									   PickComponents pass )
 {
-	USE_MAIN_THREAD_RENDER_CONTEXT();	//TODO
+	USE_MAIN_THREAD_RENDER_CONTEXT(); //TODO
 
 	// Use a shader variable for identifying which components are expected.
 	// We can't use situations here because the flags might change during a single
 	// frame.
-	Vector4 componentsParam = Vector4( 
-		( pass & PICK_OBJECT ) ? 1.0f : 0.0f, 
-		( pass & PICK_AREA ) ? 1.0f : 0.0f, 
-		( pass & PICK_POSITION ) ? 1.0f : 0.0f, 
+	Vector4 componentsParam = Vector4(
+		( pass & PICK_OBJECT ) ? 1.0f : 0.0f,
+		( pass & PICK_AREA ) ? 1.0f : 0.0f,
+		( pass & PICK_POSITION ) ? 1.0f : 0.0f,
 		( pass & PICK_UV ) ? 1.0f : 0.0f );
 
 	GlobalStore().RegisterVariable( "PickingComponents", componentsParam );
 
-    float initialDepth = ( HUGE_NUMBER - Tr2Renderer::GetFrontClip() ) / ( Tr2Renderer::GetBackClip() - Tr2Renderer::GetFrontClip() );
-    initialDepth = std::max( 0.0f, std::min( 1.0f, initialDepth ) );
+	float initialDepth = ( HUGE_NUMBER - Tr2Renderer::GetFrontClip() ) / ( Tr2Renderer::GetBackClip() - Tr2Renderer::GetFrontClip() );
+	initialDepth = std::max( 0.0f, std::min( 1.0f, initialDepth ) );
 
-    // Get the pick buffer
-    Tr2PickBuffer& pickBuffer = GetPickBuffer();
+	// Get the pick buffer
+	Tr2PickBuffer& pickBuffer = GetPickBuffer();
 
-    if( !pickBuffer.BeginRendering( initialDepth, renderContext ) )
-    {
-        return false;
-    }
+	if( !pickBuffer.BeginRendering( initialDepth, renderContext ) )
+	{
+		return false;
+	}
 
-    if( pOpaquePickingBatches->GetBatchCount() )
-    {
+	if( pOpaquePickingBatches->GetBatchCount() )
+	{
 		pOpaquePickingBatches->Finalize();
 
-        renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
-        renderContext.RenderBatchesForPicking( pOpaquePickingBatches, BlueSharedString( "Picking" ) );
-    }
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
+		renderContext.RenderBatchesForPicking( pOpaquePickingBatches, BlueSharedString( "Picking" ) );
+	}
 
-    if( pPickingBatches && RenderPickingAreasForComponents( pass ) )
-    {
-        pPickingBatches->Finalize();
+	if( pPickingBatches && RenderPickingAreasForComponents( pass ) )
+	{
+		pPickingBatches->Finalize();
 
-        renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
 		renderContext.RenderBatchesForPicking( pPickingBatches, DEFAULT_TECHNIQUE );
-    }
+	}
 
-    if( !pickBuffer.EndRendering( renderContext ) )
-    {
-        return false;
-    }
+	if( !pickBuffer.EndRendering( renderContext ) )
+	{
+		return false;
+	}
 
-    return true;
+	return true;
 }
 
 namespace
 {
-Be::VarChooser Tr2PickTypeChooser[] =
-{
-	{
-		"PICK_TYPE_PICKING",
-		BeCast( PICK_TYPE_PICKING ),
-		"Authored picking areas"
-	},
-	{
-		"PICK_TYPE_OPAQUE",
-		BeCast( PICK_TYPE_OPAQUE ),
-		"Opaque objects"
-	},
-	{
-		"PICK_TYPE_TRANSPARENT",
-		BeCast( PICK_TYPE_TRANSPARENT ),
-		"Transparent objects"
-	},
-	{
-		"PICK_TYPE_ATTACHMENTS",
-		BeCast( PICK_TYPE_ATTACHMENTS ),
-		"Object attachments (decals, blinkies, etc.)"
-	},
-	{
-		"PICK_TYPE_LOCATORS",
-		BeCast( PICK_TYPE_LOCATORS ),
-		"Object locators"
-	},
+Be::VarChooser Tr2PickTypeChooser[] = {
+	{ "PICK_TYPE_PICKING",
+	  BeCast( PICK_TYPE_PICKING ),
+	  "Authored picking areas" },
+	{ "PICK_TYPE_OPAQUE",
+	  BeCast( PICK_TYPE_OPAQUE ),
+	  "Opaque objects" },
+	{ "PICK_TYPE_TRANSPARENT",
+	  BeCast( PICK_TYPE_TRANSPARENT ),
+	  "Transparent objects" },
+	{ "PICK_TYPE_ATTACHMENTS",
+	  BeCast( PICK_TYPE_ATTACHMENTS ),
+	  "Object attachments (decals, blinkies, etc.)" },
+	{ "PICK_TYPE_LOCATORS",
+	  BeCast( PICK_TYPE_LOCATORS ),
+	  "Object locators" },
 	{ 0 }
 };
 }

@@ -42,12 +42,12 @@ enum AnnotationType
 
 enum TextureType
 {
-	TEX_TYPE_1D		= 1,
+	TEX_TYPE_1D = 1,
 	TEX_TYPE_2D,
 	TEX_TYPE_3D,
 	TEX_TYPE_CUBE,
 
-	TEX_TYPE_TYPELESS,	// valid but unknown dimensions
+	TEX_TYPE_TYPELESS, // valid but unknown dimensions
 
 	// buffers
 	TEX_TYPE_BUFFER,
@@ -130,8 +130,8 @@ class PackAs
 public:
 	PackAs() = default;
 
-	PackAs( T v )
-		:t( v )
+	PackAs( T v ) :
+		t( v )
 	{
 	}
 
@@ -139,7 +139,7 @@ public:
 	{
 		return t;
 	}
-	operator T&( )
+	operator T&()
 	{
 		return t;
 	}
@@ -152,6 +152,7 @@ public:
 	{
 		return static_cast<P>( t );
 	}
+
 private:
 	T t;
 };
@@ -162,8 +163,8 @@ private:
 class PackedStream
 {
 public:
-	explicit PackedStream( void* data, size_t size )
-		:m_size( size )
+	explicit PackedStream( void* data, size_t size ) :
+		m_size( size )
 	{
 		m_data = static_cast<uint8_t*>( data );
 		m_start = m_data;
@@ -221,6 +222,7 @@ public:
 		*reinterpret_cast<P*>( m_data ) = value.Packed();
 		m_data += sizeof( P );
 	}
+
 private:
 	uint8_t* m_data;
 	void* m_start;
@@ -231,8 +233,8 @@ private:
 class SizeCountStream
 {
 public:
-	SizeCountStream()
-		:m_size( 0 )
+	SizeCountStream() :
+		m_size( 0 )
 	{
 	}
 
@@ -270,6 +272,7 @@ public:
 	{
 		m_size += sizeof( P );
 	}
+
 private:
 	size_t m_size;
 };
@@ -292,7 +295,7 @@ struct Constant
 
 	bool operator==( const Constant& other ) const
 	{
-		return name == other.name && offset == other.offset && size == other.size && type == other.type && 
+		return name == other.name && offset == other.offset && size == other.size && type == other.type &&
 			dimension == other.dimension && elements == other.elements && isSRGB == other.isSRGB && isAutoregister == other.isAutoregister;
 	}
 
@@ -388,8 +391,7 @@ struct Sampler
 
 	bool operator==( const Sampler& sampler ) const
 	{
-		return 
-			comparison == sampler.comparison &&
+		return comparison == sampler.comparison &&
 			minFilter == sampler.minFilter &&
 			magFilter == sampler.magFilter &&
 			mipFilter == sampler.mipFilter &&
@@ -410,7 +412,11 @@ struct Sampler
 
 	bool operator<( const Sampler& sampler ) const
 	{
-#define COMPARE( field ) if( field < sampler.field ) return true; if( field > sampler.field ) return false;
+#define COMPARE( field )        \
+	if( field < sampler.field ) \
+		return true;            \
+	if( field > sampler.field ) \
+		return false;
 		COMPARE( comparison );
 		COMPARE( minFilter );
 		COMPARE( magFilter );
@@ -609,7 +615,7 @@ struct ParameterAnnotation
 			return strcmp( g_stringTable.GetString( a ), g_stringTable.GetString( b ) ) < 0;
 		} );
 
-		for (auto key : keys)
+		for( auto key : keys )
 		{
 			stream.Save( key );
 			annotations[key].Save( stream );
@@ -708,7 +714,6 @@ struct StageInput : public StageData
 	uint32_t threadGroupSize[3];
 	std::vector<PipelineInputDescription> pipelineInputs;
 	std::string source; // not persisted: for testing/debugging only
-
 };
 
 typedef std::map<uint32_t, uint32_t> RenderStates;
@@ -807,7 +812,7 @@ struct PDB
 {
 	std::string name;
 #if _WIN32
-	CComPtr<IDxcBlob> pdbBlob;	// this is for dx11/dx12. metal will require another field.
+	CComPtr<IDxcBlob> pdbBlob; // this is for dx11/dx12. metal will require another field.
 #endif
 };
 

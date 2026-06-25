@@ -6,15 +6,15 @@
 
 namespace
 {
-	float RandAngle( std::default_random_engine& engine )
-	{
-		return float( engine() - engine.min() ) / ( engine.max() - engine.min() ) * XM_PI * 2;
-	}
+float RandAngle( std::default_random_engine& engine )
+{
+	return float( engine() - engine.min() ) / ( engine.max() - engine.min() ) * XM_PI * 2;
+}
 }
 
 // --------------------------------------------------------------------------------
-Tr2CurveRandomAxisRotation::Tr2CurveRandomAxisRotation( IRoot* lockobj )
-	:m_seed( 0 ),
+Tr2CurveRandomAxisRotation::Tr2CurveRandomAxisRotation( IRoot* lockobj ) :
+	m_seed( 0 ),
 	m_period( 1.f )
 {
 	SeedChanged();

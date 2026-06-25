@@ -11,13 +11,11 @@ const Be::ClassInfo* TriStepTestBlocking::ExposeToBlue()
 	EXPOSURE_BEGIN( TriStepTestBlocking, "" )
 		MAP_INTERFACE( TriStepTestBlocking )
 
-		MAP_ATTRIBUTE
-		( 
-			"inProgress", 
-			m_inProgress, 
-			"This render step will return in progress while this is set", 
-			Be::READWRITE | Be::PERSIST
-		)
+		MAP_ATTRIBUTE(
+			"inProgress",
+			m_inProgress,
+			"This render step will return in progress while this is set",
+			Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

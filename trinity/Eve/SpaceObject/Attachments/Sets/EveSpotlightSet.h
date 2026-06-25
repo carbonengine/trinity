@@ -20,8 +20,9 @@ BLUE_DECLARE_VECTOR( EveSpotlightSet );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2DebugRenderer );
 
-struct EveSpotlightLight {
-	EveSpotlightLight();	
+struct EveSpotlightLight
+{
+	EveSpotlightLight();
 	EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring& profilePath, bool boosterGainInfluence );
 
 	LightData lightData;
@@ -38,29 +39,29 @@ struct EveSpotlightLight {
 // SeeAlso:
 //   EveSpriteSet, EveSpaceObject2
 // --------------------------------------------------------------------------------
-BLUE_CLASS( EveSpotlightSet ):
+BLUE_CLASS( EveSpotlightSet ) :
 	public IEveSpaceObjectAttachment,
 	public IInitialize,
 	public ITr2LightOwner,
 	public EveEntity
 {
 public:
-    EXPOSE_TO_BLUE();
+	EXPOSE_TO_BLUE();
 
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
 
-    EveSpotlightSet( IRoot* lockobj = NULL );
+	EveSpotlightSet( IRoot* lockobj = NULL );
 	~EveSpotlightSet();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount );
 	virtual void UpdateLights( const Matrix& parentTransform, const Float4x3* bones, size_t boneCount, float parentStrength, float boosterGain );
-	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
-	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const Float4x3* bones, size_t boneCount );
-	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	virtual void RenderDebugInfo(ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount);
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
+	virtual void AddToQuadRenderer( Tr2QuadRenderer & quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const Float4x3* bones, size_t boneCount );
+	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount );
 
 	void AddLightFromSOF( const EveSpotlightLight& light );
 
@@ -70,7 +71,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	void GetLights( Tr2LightManager& lightManager ) const override;
+	void GetLights( Tr2LightManager & lightManager ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -94,10 +95,10 @@ public:
 	const EveSpotlightSetItemVector* GetSpotlightItems() const;
 	void AddSpotlightItem( EveSpotlightSetItemPtr item );
 
-	void SetShaderOption (const BlueSharedString& name, const BlueSharedString& value ) override;
+	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 private:
-	bool m_display;	
+	bool m_display;
 	bool m_skinned;
 	std::string m_name;
 	float m_intensity;
@@ -147,8 +148,8 @@ private:
 	};
 	TrackableStdVector<SpotlightData> m_spotlightData;
 
-	void RegisterQuadRendererCone( Tr2QuadRenderer& quadRenderer );
-	void RegisterQuadRendererGlow( Tr2QuadRenderer& quadRenderer );
+	void RegisterQuadRendererCone( Tr2QuadRenderer & quadRenderer );
+	void RegisterQuadRendererGlow( Tr2QuadRenderer & quadRenderer );
 
 	// bounding box functions
 	AxisAlignedBoundingBox GetAabb( const Float4x3* bones, size_t boneCount ) const;

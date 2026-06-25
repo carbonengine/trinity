@@ -58,13 +58,13 @@ BLUE_CLASS( Tr2Effect ) :
 	public IBlueAsyncResNotifyTarget,
 	public Tr2DeviceResource
 {
-public:    		
+public:
 	using IRoot::Lock;
 	using IRoot::Unlock;
 
 	EXPOSE_TO_BLUE();
 
-	Tr2Effect(IRoot* lockobj = NULL);	
+	Tr2Effect( IRoot* lockobj = NULL );
 	virtual ~Tr2Effect();
 
 	// Utility Functions
@@ -74,14 +74,14 @@ public:
 	// Suppress notification to changed lists
 	void StartUpdate();
 	void EndUpdate();
-	
+
 	// gets
 	Tr2EffectRes* GetEffectRes() const;
 	const char* GetName() const;
 
 	// sets & adds & clears
 	void SetEffectPathName( const char* path );
-	bool AddResource( ITriEffectParameter* param );
+	bool AddResource( ITriEffectParameter * param );
 	bool AddResourceTexture2D( const BlueSharedString& name, const char* resPath );
 	bool AddSamplerOverride( const BlueSharedString& name, Tr2RenderContextEnum::TextureAddressMode addressModeU, Tr2RenderContextEnum::TextureAddressMode addressModeV );
 	bool AddParameterVector4( const BlueSharedString& name, const Vector4* value );
@@ -94,8 +94,8 @@ public:
 	void SetParameter( const BlueSharedString& name, ITr2TextureProvider* texture, uint32_t uavMipLevel = 0 );
 	void SetParameter( const BlueSharedString& name, uint32_t value );
 	void SetParameter( const BlueSharedString& name, float value );
-	void SetParameter( const BlueSharedString& name, const Vector2& value ); 
-	void SetParameter( const BlueSharedString& name, const Vector3& value ); 
+	void SetParameter( const BlueSharedString& name, const Vector2& value );
+	void SetParameter( const BlueSharedString& name, const Vector3& value );
 	void SetParameter( const BlueSharedString& name, const Vector4& value );
 	void SetParameter( const BlueSharedString& name, const Matrix& matrix );
 	void SetParameter( const BlueSharedString& name, const Tr2TextureAL& texture, uint32_t uavMipLevel = 0 );
@@ -113,7 +113,7 @@ public:
 	bool HasSamplerOverride( const char* name ) const;
 	bool HasParameter( const char* name ) const;
 
-	void Render( IRenderCallback* cb, Tr2RenderContext& renderContext );
+	void Render( IRenderCallback * cb, Tr2RenderContext & renderContext );
 
 	unsigned GetHashValue() const;
 
@@ -123,7 +123,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
 	/////////////////////////////////////////////////////////////////////////////////////
-	bool OnModified( Be::Var* val );
+	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -138,26 +138,25 @@ public:
 		ssize_t key,
 		ssize_t key2,
 		IRoot* value,
-		const IList* theList
-		);
+		const IList* theList );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IBlueAsyncResNotifyTarget
 	/////////////////////////////////////////////////////////////////////////////////////
-	void ReleaseCachedData( BlueAsyncRes* p );
-	void RebuildCachedData( BlueAsyncRes* p );
+	void ReleaseCachedData( BlueAsyncRes * p );
+	void RebuildCachedData( BlueAsyncRes * p );
 
 	void RebuildCachedData();
 
-	void SetVariableStore( Tr2VariableStore* variableStore );
+	void SetVariableStore( Tr2VariableStore * variableStore );
 	Tr2VariableStore& GetVariableStore();
 
 protected:
 	void RebuildCachedDataInternal();
 
 	std::string m_name;
-	std::string m_effectFilePath;			// Path to the effect file as set by user
-	std::string m_actualEffectFilePath;		// Path to effect file, adjusted for shader model
+	std::string m_effectFilePath; // Path to the effect file as set by user
+	std::string m_actualEffectFilePath; // Path to effect file, adjusted for shader model
 
 	unsigned int m_parameterHash;
 	bool m_display;
@@ -166,12 +165,14 @@ protected:
 
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
+
 private:
 	void RebuildSamplerOverrides();
+
 public: // TODO: make this private - need to change EveBoosterSet2...
 	// Our list of ITr2EffectParameters
 	typedef PITriEffectParameterVector EffectParameterList;
-	EffectParameterList m_parameters;	
+	EffectParameterList m_parameters;
 
 	// Effect Resources. These need some more care than normal parameters.
 	typedef PITriEffectResourceParameterVector EffectResourceList;
@@ -193,18 +194,18 @@ private:
 	bool m_insideStartUpdate;
 
 protected:
-	void MapPassResources( 
-		const Tr2EffectResourceMap& resources, 
-		Tr2EffectParamVector &pv,
+	void MapPassResources(
+		const Tr2EffectResourceMap& resources,
+		Tr2EffectParamVector& pv,
 		bool& compatibleWithGdr );
 	void MapPassParameters(
 		Tr2RenderContextEnum::ShaderType stage,
-		Tr2MaterialStageInput& stageInput,
-		PassParametersOwner& ppOwner,
+		Tr2MaterialStageInput & stageInput,
+		PassParametersOwner & ppOwner,
 		const Tr2EffectStageInput& stageInputDesc,
 		const Tr2EffectDescription& descriptionDesc,
 		Tr2RenderContext& renderContext );
-	void AddLoddable( ITriEffectParameter* param, const char* name );
+	void AddLoddable( ITriEffectParameter * param, const char* name );
 
 	// Python
 	bool IsParameterUsedByTechnique( const std::string& parameterName );
@@ -212,7 +213,7 @@ protected:
 	// Utility
 	ITriEffectParameter* FindParameterByName( const char* name ) const;
 };
-TYPEDEF_BLUECLASS(Tr2Effect);
+TYPEDEF_BLUECLASS( Tr2Effect );
 BLUE_DECLARE_VECTOR( Tr2Effect );
 
 #endif

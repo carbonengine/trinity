@@ -15,32 +15,32 @@ BLUE_DECLARE( Tr2RenderTarget );
 //   a renderTarget.
 //   This class replaces TriSurface and TriTextureRes.
 // -------------------------------------------------------------
-BLUE_CLASS( Tr2RenderTarget ) : 
+BLUE_CLASS( Tr2RenderTarget ) :
 	public ITr2TextureProvider,
 	public Tr2DeviceResource
 {
 public:
 	EXPOSE_TO_BLUE();
 
-    Tr2RenderTarget( IRoot* = 0 );
+	Tr2RenderTarget( IRoot* = 0 );
 	~Tr2RenderTarget();
 
-	void py__init__( 
-		unsigned width, 
-		unsigned height, 
-		unsigned mipCount, 
+	void py__init__(
+		unsigned width,
+		unsigned height,
+		unsigned mipCount,
 		Tr2RenderContextEnum::PixelFormat format,
-		unsigned msaaType, 
+		unsigned msaaType,
 		unsigned msaaQuality,
 		Tr2RenderContextEnum::ExFlag flags,
 		Tr2RenderContextEnum::TextureType type );
 
-	int32_t Create( 
-		unsigned width, 
-		unsigned height, 
+	int32_t Create(
+		unsigned width,
+		unsigned height,
 		unsigned mipLevelCount,
 		Tr2RenderContextEnum::PixelFormat format,
-		unsigned msaaType = 1, 
+		unsigned msaaType = 1,
 		unsigned msaaQuality = 0,
 		Tr2RenderContextEnum::ExFlag flags = Tr2RenderContextEnum::EX_NONE,
 		Tr2RenderContextEnum::TextureType type = Tr2RenderContextEnum::TEX_TYPE_2D );
@@ -55,8 +55,8 @@ public:
 		Tr2RenderContextEnum::TextureType type = Tr2RenderContextEnum::TEX_TYPE_2D );
 
 	int32_t CreateManual(
-		unsigned width, 
-		unsigned height, 
+		unsigned width,
+		unsigned height,
 		unsigned mipLevelCount,
 		Tr2RenderContextEnum::PixelFormat format,
 		unsigned msaaType,
@@ -87,22 +87,29 @@ public:
 	Tr2RenderContextEnum::TextureType GetType() const;
 
 	long GenerateMipMaps();
-	long Resolve( Tr2RenderTarget* destination );
-	
+	long Resolve( Tr2RenderTarget * destination );
+
 	Tr2TextureAL& GetRenderTarget();
 	const Tr2TextureAL& GetRenderTarget() const;
 
-	operator Tr2TextureAL&() { return GetRenderTarget(); }
-	operator const Tr2TextureAL&() const { return GetRenderTarget(); }
+	operator Tr2TextureAL&()
+	{
+		return GetRenderTarget();
+	}
+	operator const Tr2TextureAL&() const
+	{
+		return GetRenderTarget();
+	}
 
 	uintptr_t GetSharedHandle() const;
 
 	void SetName( const char* name );
 	std::string GetName() const;
-	
+
 protected:
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
+
 private:
 	Tr2TextureAL m_renderTarget;
 	Tr2TextureAL m_attachedRenderTarget;
@@ -119,7 +126,7 @@ private:
 	Tr2CpuUsage::Type m_cpuUsage;
 	Tr2GpuUsage::Type m_gpuUsage;
 	std::string m_name;
-	OnTextureChangeEvent m_onTextureChange; 
+	OnTextureChangeEvent m_onTextureChange;
 
 	bool HasALObject( int type, size_t object );
 };

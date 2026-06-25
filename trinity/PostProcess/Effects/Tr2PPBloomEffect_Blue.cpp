@@ -35,7 +35,4 @@ const Be::ClassInfo* Tr2PPBloomEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "step6Tint", m_stepTints[5], "step6Tint", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_CHAINTO( Tr2PPEffect )
-
-
 }
-
