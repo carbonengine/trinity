@@ -216,4 +216,6 @@ private:
 };
 
 
-#include TRINITY_AL_PLATFORM_INCLUDE( upscaling / Tr2UpscalingAL )
+// clang-format off
+#include TRINITY_AL_PLATFORM_INCLUDE( upscaling/Tr2UpscalingAL )
+// clang-format on
