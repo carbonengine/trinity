@@ -8,6 +8,7 @@
 #include "Include/ITr2Updateable.h"
 #include "../Tr2ExpressionTermInfo.h"
 #include "ContinueOnMainThread.h"
+#include <ScopedBlockTrap.h>
 
 CCP_STATS_DECLARE( controllerUpdateTime, "Trinity/Controllers/UpdateTime", true, CST_TIME, "Cumulative per-frame time for controller update" );
 CCP_STATS_DECLARE( controllerUpdateablesTime, "Trinity/Controllers/UpdateablesTime", true, CST_TIME, "Cumulative per-frame time for controller updates tick" );
@@ -201,6 +202,8 @@ bool Tr2Controller::IsLinked() const
 
 void Tr2Controller::Start()
 {
+	ScopedBlockTrap blockTrap;
+
 	if( m_isActive )
 	{
 		Stop();
