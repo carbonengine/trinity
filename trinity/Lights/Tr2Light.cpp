@@ -52,8 +52,7 @@ Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transfor
 	data.color = ( Vector4( color ) * composedBrightness ).GetXYZ();
 	data.radius = radius * features.parentScale;
 	data.innerRadius = Float_16( innerRadius * features.parentScale );
-	int16_t profile = features.profileIndex;
-	data.flags = flags | ( profile << 4 );
+	data.flags = Tr2LightManager::PackFlags( flags, features.profileIndex );
 	data.position = Vector3( XMVector3TransformCoord( position, transform ) );
 
 	Matrix lightRotation = RotationMatrix( rotation ) * transform;
@@ -68,6 +67,14 @@ Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transfor
 		data.flags |= Tr2LightManager::FLAG_CASTS_SHADOWS;
 	}
 	data.flags |= isVolumetric ? Tr2LightManager::FLAG_IS_VOLUMETRIC : 0;
+	if( falloff == LightFalloffType::INVERSE_SQUARE )
+	{
+		data.flags |= Tr2LightManager::FLAG_FALLOFF_INV_SQUARE;
+	}
+	else
+	{
+		data.flags &= ~Tr2LightManager::FLAG_FALLOFF_INV_SQUARE;
+	}
 
 	return data;
 }

@@ -20,6 +20,13 @@ const Be::VarChooser Tr2LightFlagChooser[] = {
 };
 BLUE_REGISTER_ENUM_EX( "Tr2LightFlags", uint16_t, Tr2LightFlagChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
+const Be::VarChooser LightFalloffTypeChooser[] = {
+	{ "INVERSE", BeCast( LightFalloffType::INVERSE ), "Inverse distance falloff" },
+	{ "INVERSE_SQUARE", BeCast( LightFalloffType::INVERSE_SQUARE ), "Inverse square distance falloff" },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "LightFalloffType", LightFalloffType, LightFalloffTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
 const Be::ClassInfo* Tr2Light::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2Light, "" )

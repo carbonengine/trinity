@@ -217,6 +217,11 @@ void Tr2LightManager::SetVariableStore()
 	m_indexBufferVariable = m_indexBuffer;
 }
 
+uint16_t Tr2LightManager::PackFlags( uint16_t flags, uint16_t profileIndex )
+{
+	return ( flags & ( ( 1 << FLAG_BITS ) - 1 ) ) | ( profileIndex << FLAG_BITS );
+}
+
 void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 {
 	m_lightBufferVariable = m_lightBuffer;

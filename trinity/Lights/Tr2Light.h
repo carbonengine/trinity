@@ -24,6 +24,12 @@ enum class PerLightShadowSetting
 	SHADOW_RAYTRACED = 1 << 3
 };
 
+enum class LightFalloffType: uint8_t
+{
+	INVERSE,
+	INVERSE_SQUARE
+};
+
 struct LightData
 {
 	LightData();
@@ -45,16 +51,18 @@ struct LightData
 	float outerAngle;
 	float innerAngle;
 
+	LightFalloffType falloff;
+
 	// Textured light specifics
 	std::wstring texturePath;
 	int32_t boneIndex;
 
 	uint16_t flags;
 
-	Be::Time startTime;
-
 	uint8_t castsShadows;
 	bool isVolumetric;
+
+	Be::Time startTime;
 };
 
 
@@ -117,3 +125,4 @@ TYPEDEF_BLUECLASS( Tr2Light );
 
 extern const Be::VarChooser PerLightShadowSettingChooser[];
 extern const Be::VarChooser Tr2LightFlagChooser[];
+extern const Be::VarChooser LightFalloffTypeChooser[];
