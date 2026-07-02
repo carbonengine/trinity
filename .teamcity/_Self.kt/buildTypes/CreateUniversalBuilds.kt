@@ -73,10 +73,16 @@ class UniversalBuild() : BuildType({
             scriptContent = """
                 mkdir -p   %universal-output-dir%/%universal-lib-path%
                 mkdir -p   %universal-output-dir%/%universal-bin-path%
+                mkdir -p   %universal-output-dir%/shadercompiler/%universal-bin-path%
                 cp %system.teamcity.build.workingDir%/lib/* %universal-output-dir%/%universal-lib-path%
                 cp %system.teamcity.build.workingDir%/bin/* %universal-output-dir%/%universal-bin-path%
+                cp %system.teamcity.build.workingDir%/shadercompiler/bin/* %universal-output-dir%/shadercompiler/%universal-bin-path%
                 rm -r %universal-output-dir%/%x64-lib-path%
                 rm -r %universal-output-dir%/%arm64-lib-path%
+                rm -r %universal-output-dir%/%x64-bin-path%
+                rm -r %universal-output-dir%/%arm64-bin-path%
+                rm -r %universal-output-dir%/shadercompiler/%x64-bin-path%
+                rm -r %universal-output-dir%/shadercompiler/%arm64-bin-path%
             """.trimIndent()
         }
     }
