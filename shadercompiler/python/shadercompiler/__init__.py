@@ -1,4 +1,4 @@
-# Copyright © 2023 CCP ehf.
+# Copyright (c) 2023 CCP ehf.
 
 class Platform(object):
     DX11 = 2
