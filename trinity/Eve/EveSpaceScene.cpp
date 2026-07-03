@@ -2177,7 +2177,7 @@ bool EveSpaceScene::RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, c
 		{
 			if( distortionMap.IsValid() )
 			{
-				hasBackgroundDistortionBatches = RenderDistortionBatches( m_primaryBatches, distortionMap, depthMap, renderContext );
+				hasBackgroundDistortionBatches = RenderDistortionBatches( m_secondaryBatches, distortionMap, depthMap, renderContext );
 			}
 		}
 		ClearBatches( m_secondaryBatches );
