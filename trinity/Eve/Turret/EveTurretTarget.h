@@ -4,7 +4,7 @@
 #ifndef EveTurretTarget_H
 #define EveTurretTarget_H
 
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
 
 namespace ImpactBehaviour
 {

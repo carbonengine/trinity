@@ -10,7 +10,7 @@
 #include "Tr2AtlasTexture.h"
 #include "Tr2KelvinColor.h"
 #include "Curves/TriCurveSet.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Shader/Tr2Effect.h"
 #include "TriViewport.h"
 

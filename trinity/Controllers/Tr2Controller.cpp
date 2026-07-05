@@ -5,7 +5,7 @@
 #include "Tr2StateMachine.h"
 #include "Tr2ControllerFloatVariable.h"
 #include "Tr2ControllerEventHandler.h"
-#include "Include/ITr2Updateable.h"
+#include "include/ITr2Updateable.h"
 #include "../Tr2ExpressionTermInfo.h"
 #include "ContinueOnMainThread.h"
 

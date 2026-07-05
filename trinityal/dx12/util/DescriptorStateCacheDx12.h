@@ -7,7 +7,7 @@
 #include <memory>
 
 #include "../Tr2ConstantBufferALDx12.h"
-#include "../Tr2ShaderProgramAlDx12.h"
+#include "../Tr2ShaderProgramALDx12.h"
 #include "../../Tr2RenderContextEnum.h"
 #include "../../include/Tr2ResourceSetAL.h"
 
