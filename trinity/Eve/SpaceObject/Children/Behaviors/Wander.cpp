@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "Wander.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "include/TriQuaternion.h"
 
 Wander::Wander( IRoot* lockobj ) :

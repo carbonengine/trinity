@@ -12,7 +12,7 @@
 #include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 #include "Eve/SpaceObject/Children/IEveEffectChildrenOwner.h"
 #include "Tr2ShLightingManager.h"
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
 #include "Tr2DebugRenderer.h"
 #include "ITr2CurveSetOwner.h"
 #include "Shader/IShaderConfigurer.h"

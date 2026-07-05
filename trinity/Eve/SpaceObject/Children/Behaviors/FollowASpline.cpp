@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#include "followASpline.h"
+#include "FollowASpline.h"
 #include "Formation.h"
 
 FollowASpline::FollowASpline( IRoot* lockobj ) :
