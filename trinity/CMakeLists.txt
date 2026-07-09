@@ -17,8 +17,6 @@ if(BUILD_FOR_PYTHON_2)
     add_library(AMD::FidelityFX::CACAO ALIAS AMD::CACAO)
     find_package(IntelTBB REQUIRED)
     add_library(TBB::tbb ALIAS Intel::TBB)
-    add_library(TBB::tbbmalloc INTERFACE IMPORTED)
-    add_library(TBB::tbbmalloc_proxy INTERFACE IMPORTED)
     find_package(VMA REQUIRED)
     add_library(GPUOpen::VulkanMemoryAllocator ALIAS GPUOpen::VMA)
     find_package(CarbonTrinityAudioAPI REQUIRED)
@@ -1861,8 +1859,6 @@ function(set_shared_trinity_properties target package_name)
             AMD::FidelityFX::CACAO
             AMD::FidelityFX::CAS
             TBB::tbb
-            TBB::tbbmalloc
-            TBB::tbbmalloc_proxy
             CcpMath
             platform_pdm_proto_wrapper
             CcpParser
