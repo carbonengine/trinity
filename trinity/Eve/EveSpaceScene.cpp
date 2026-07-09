@@ -1517,6 +1517,8 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 
 	m_instancedMeshManager->GetBatches( m_updateContext.GetFrustum(), m_updateContext.GetInvLodFactor(), { { TRIBATCHTYPE_OPAQUE, *m_primaryBatches[TRIBATCHTYPE_OPAQUE] }, { TRIBATCHTYPE_DECAL, *m_primaryBatches[TRIBATCHTYPE_DECAL] }, { TRIBATCHTYPE_ADDITIVE, *m_primaryBatches[TRIBATCHTYPE_ADDITIVE] }, { TRIBATCHTYPE_DEPTH, *m_primaryBatches[TRIBATCHTYPE_DEPTH] }, { TRIBATCHTYPE_DISTORTION, *m_primaryBatches[TRIBATCHTYPE_DISTORTION] } } );
 
+	m_instancedMeshManager->ReportUsedScreenSizes();
+
 	FinalizeBatches( m_primaryBatches );
 
 	UpdateShLighting( allObjects );
@@ -1905,6 +1907,8 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 												   { TRIBATCHTYPE_ADDITIVE, *m_secondaryBatches[TRIBATCHTYPE_ADDITIVE] },
 												   { TRIBATCHTYPE_DEPTH, *m_secondaryBatches[TRIBATCHTYPE_DEPTH] },
 											   } ) > 0;
+
+				m_instancedMeshManager->ReportUsedScreenSizes();
 
 				if( hasFog || !visibleRenderables.empty() || hasInstancedBatches )
 				{

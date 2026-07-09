@@ -985,9 +985,12 @@ void EveInstancedMeshManager::ReportUsedScreenSizes() const
 {
 	for( auto& [mesh, meshInfo] : m_meshInstances )
 	{
-		if( auto meshData = mesh.geometry->GetMeshLod( mesh.meshIndex, 0 ) )
+		if( meshInfo.maxScreenSize > 0.0f )
 		{
-			meshInfo.material->UsedWithScreenSize( meshInfo.maxScreenSize, meshInfo.radius, meshData->m_uvDensities );
+			if( auto meshData = mesh.geometry->GetMeshLod( mesh.meshIndex, 0 ) )
+			{
+				meshInfo.material->UsedWithScreenSize( meshInfo.maxScreenSize, meshInfo.radius, meshData->m_uvDensities );
+			}
 		}
 	}
 }
