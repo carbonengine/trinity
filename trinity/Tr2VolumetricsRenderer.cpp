@@ -100,7 +100,6 @@ Tr2VolumetricsRenderer::Tr2VolumetricsRenderer( IRoot* ) :
 	}
 
 	{
-		m_testValue = 0.0f;
 		Matrix4dFromMatrix( m_godRayNoiseMatrix, IdentityMatrix() );
 	}
 
@@ -357,10 +356,6 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 		return a->priority > b->priority;
 	} );
 
-	//m_froxelFogSettings = OldPriorityBlend( overrides );
-
-	//std::vector<ITr2FroxelFogSettings::FroxelFogSettings*> test;
-
 #define FROXEL_ACCUMULATE( setting ) m_froxelFogSettings.setting = PriorityBlend::Accumulate( &ITr2FroxelFogSettings::FroxelFogSettings::setting, overrides )
 
 	FROXEL_ACCUMULATE( thickness );
@@ -380,6 +375,8 @@ void Tr2VolumetricsRenderer::UpdateFogSettings( const EveComponentRegistry& regi
 	FROXEL_ACCUMULATE( fogNoiseIntensity );
 	FROXEL_ACCUMULATE( fogNoiseFrequency );
 	FROXEL_ACCUMULATE( fogNoiseMovementSpeed );
+
+	FROXEL_ACCUMULATE( reflectionIntensity );
 
 	if( m_logBlending )
 	{
@@ -485,6 +482,7 @@ void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderCo
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "EnvironmentG" ), environmentG );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "BlendWeight" ), blendWeight );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "Random" ), m_environmentRandom );
+		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "Intensity" ), m_froxelFogSettings.reflectionIntensity.value );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "PrecomputedMieEnvironmentMap" ), m_mieEnvironmentMap );
 		Tr2Renderer::RunComputeShader( m_updateMieEnvironmentMap, environmentMapResolution / 8, environmentMapResolution / 8, 6, renderContext );
 	}
@@ -802,6 +800,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 
 		resources.applyFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity.value > 0 ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );
 		resources.applyFroxels->SetParameter( BlueSharedString( "EveSceneFroxelFogMap" ), fogFroxels );
+		resources.applyFroxels->SetParameter( BlueSharedString( "Intensity" ), 1.0f );
 		Tr2Renderer::DrawScreenQuad( renderContext, resources.applyFroxels );
 		resources.applyFroxels->SetParameter( BlueSharedString( "EveSceneFroxelFogMap" ), Tr2TextureAL{} );
 	}

@@ -49,6 +49,8 @@ public:
 		PriorityBlend::Attribute<float> fogNoiseFrequency = 0.0f;
 		PriorityBlend::Attribute<Vector3> fogNoiseMovementSpeed = Vector3( 0.0f, 0.0f, 0.0f );
 
+		PriorityBlend::Attribute<float> reflectionIntensity = 1.0f;
+
 		PriorityBlend::Attribute<double> logThickness = 0.0;
 	};
 	virtual FroxelFogSettings* GetFroxelFogSettings() = 0;
@@ -207,8 +209,7 @@ private:
 
 	double m_godRayNoiseAnimation;
 	Vector3d m_fogNoiseMovement;
-
-	float m_testValue;
+	
 	double m_godRayNoiseMatrix[16];
 
 	FogViewDependentResources m_fogResources;
