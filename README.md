@@ -1,4 +1,7 @@
 # Carbon trinity
+
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 Rendering engine for the Carbon Game Engine
 
 ## 🛠️ Building
