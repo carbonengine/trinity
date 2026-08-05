@@ -7,14 +7,20 @@
 
 #include "Tr2MeshArea.h"
 #include "ITr2Renderable.h"
+#include "TriRenderBatch.h"
 #include "Controllers/ITr2ControllerOwner.h"
 #include "ITr2CurveSetOwner.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriCurveSet );
+BLUE_DECLARE( Tr2MeshBase );
 BLUE_DECLARE_VECTOR( Tr2Effect );
 BLUE_DECLARE_INTERFACE( ITr2Controller );
 BLUE_DECLARE_IVECTOR( ITr2Controller );
+
+struct TriGeometryResLodData;
+class ITriRenderBatchAccumulator;
+class Tr2PerObjectData;
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -97,5 +103,23 @@ private:
 
 TYPEDEF_BLUECLASS( EveMeshOverlayEffect );
 BLUE_DECLARE_VECTOR( EveMeshOverlayEffect );
+
+void CollectOverlayAreaBlocks( Tr2MeshBase* mesh, std::vector<TriRenderBatchAreaBlock> ( &outAreaBlocks )[EveMeshOverlayEffect::TYPE_COUNT] );
+
+void EmitOverlayBatches(
+	ITriRenderBatchAccumulator* batches,
+	const Tr2PerObjectData* perObjectData,
+	TriBatchType batchType,
+	const PEveMeshOverlayEffectVector& overlayEffects,
+	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
+	const TriGeometryResLodData& lod );
+
+void EmitOverlayBatches(
+	ITriRenderBatchAccumulator* batches,
+	const Tr2PerObjectData* perObjectData,
+	TriBatchType batchType,
+	const std::vector<EveMeshOverlayEffectPtr>& overlayEffects,
+	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
+	const TriGeometryResLodData& lod );
 
 #endif // EveMeshOverlayEffect_H

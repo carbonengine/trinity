@@ -1233,7 +1233,7 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 	}
 
 	TriGeometryRes* geomRes = mesh->GetGeometryResource();
-	if( !geomRes->IsGood() )
+	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
 	}
@@ -1268,39 +1268,7 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 	}
 
 	// second the effects
-	for( auto it = m_overlayEffects.begin(); it != m_overlayEffects.end(); ++it )
-	{
-		EveMeshOverlayEffectPtr overlay = *it;
-		bool success = false;
-		const PTr2EffectVector& effects = overlay->GetEffects( batchType, success );
-		if( success )
-		{
-			EveMeshOverlayEffect::OverlayType overlayType = overlay->GetType( batchType );
-			for( auto eff = effects.begin(); eff != effects.end(); ++eff )
-			{
-				Tr2EffectPtr effect = *eff;
-
-				// add all mesh area blocks
-				for( auto& areaBlock : m_overlayMeshAreaBlocks[overlayType] )
-				{
-					if( auto primCount = GetPrimitiveCount( *lod, areaBlock.m_startIndex, areaBlock.m_count ) )
-					{
-						Tr2RenderBatch batch;
-						batch.SetMaterial( effect );
-						batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
-						batch.SetPerObjectData( perObjectData );
-						batch.SetDrawIndexedInstanced(
-							primCount * 3,
-							1,
-							lod->m_indexAllocation.GetStartIndex() + lod->m_areas[areaBlock.m_startIndex].m_firstIndex,
-							lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
-							0 );
-						batches->Commit( batch );
-					}
-				}
-			}
-		}
-	}
+	EmitOverlayBatches( batches, perObjectData, batchType, m_overlayEffects, m_overlayMeshAreaBlocks, *lod );
 }
 
 const Matrix* EveSpaceObject2::GetLocatorTransform( LocatorType lt, unsigned int lix )
@@ -2098,15 +2066,7 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 	// build list of block areas we need to render for overlay effects
 	if( m_mesh )
 	{
-		m_mesh->CollectAreaBlocks( m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL], TRIBATCHTYPE_OPAQUE );
-		m_mesh->CollectAreaBlocks( m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL], TRIBATCHTYPE_TRANSPARENT );
-		m_mesh->CollectAreaBlocks( m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL], TRIBATCHTYPE_DECAL );
-		m_mesh->CollectAreaBlocks( m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_OPAQUEONLY], TRIBATCHTYPE_OPAQUE );
-		// this list is too long will hold one element for each mesharea at least... Optimize!
-		for( int i = 0; i < EveMeshOverlayEffect::TYPE_COUNT; ++i )
-		{
-			TriRenderBatchAreaBlock::Optimize( m_overlayMeshAreaBlocks[i] );
-		}
+		CollectOverlayAreaBlocks( m_mesh, m_overlayMeshAreaBlocks );
 
 		m_mesh->CollectAreaBlocksWithSharedMaterials( m_shadowMeshOpaqueAreas, TRIBATCHTYPE_OPAQUE );
 		for( auto& collector : m_shadowMeshOpaqueAreas )
