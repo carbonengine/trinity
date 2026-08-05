@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 #include "EveChildInstancedMeshes.h"
 #include "./Tr2RingBuffer.h"
+#include "../EveSpaceObject2.h"
 
 
 EveChildInstancedMeshes::EveChildInstancedMeshes( IRoot* lockobj )
@@ -66,6 +67,10 @@ void EveChildInstancedMeshes::UnregisterFromMeshManager()
 	if( m_perObjectDataHandle )
 	{
 		m_perObjectDataHandle.owner->RemovePerObjectData( m_perObjectDataHandle );
+	}
+	if( m_perObjectDataNoClipHandle )
+	{
+		m_perObjectDataNoClipHandle.owner->RemovePerObjectData( m_perObjectDataNoClipHandle );
 	}
 	m_allRegistered = false;
 }
@@ -183,10 +188,16 @@ void EveChildInstancedMeshes::SetName( const char* name )
 void EveChildInstancedMeshes::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	m_lastCameraFrustum = updateContext.GetFrustum();
+	m_lastInvLodFactor = updateContext.GetInvLodFactor();
 }
 
 void EveChildInstancedMeshes::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
+	// only overlay draws render here; the base hull goes through EveInstancedMeshManager
+	if( m_hasUpdated && ( ( m_parentOverlayEffects != nullptr && AnyMeshInheritsOverlayEffects() ) || HasAnyOwnOverlayEffects() ) )
+	{
+		renderables.push_back( this );
+	}
 }
 
 bool EveChildInstancedMeshes::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
@@ -197,6 +208,16 @@ bool EveChildInstancedMeshes::GetBoundingSphere( Vector4& sphere, BoundingSphere
 void EveChildInstancedMeshes::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	m_worldTransform = params.localToWorldTransform;
+
+	// overlay effect curves must update on the game thread; they may reference attributes that are not thread safe
+	Be::Time time = updateContext.GetTime();
+	for( Mesh& mesh : m_meshes )
+	{
+		for( EveMeshOverlayEffectPtr& overlay : mesh.ownOverlayEffects )
+		{
+			overlay->Update( time, time );
+		}
+	}
 }
 
 void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
@@ -237,6 +258,12 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 	m_perObjectData.customData = vsData.customData;
 	std::copy( std::begin( psData.shLightingCoefficients ), std::end( psData.shLightingCoefficients ), std::begin( m_perObjectData.shLighting ) );
 
+	m_perObjectDataNoClip = m_perObjectData;
+	m_perObjectDataNoClip.clipRadiusSq = 0.f;
+	m_perObjectDataNoClip.clipRadius2Sq = 0.f;
+	m_perObjectDataNoClip.clipSphereFactor = 0.f;
+	m_perObjectDataNoClip.clipSphereFactor2 = 0.f;
+
 	float worldScale = std::sqrtf( std::max( { LengthSq( Vector3( m_worldTransform._11, m_worldTransform._12, m_worldTransform._13 ) ),
 											   LengthSq( Vector3( m_worldTransform._21, m_worldTransform._22, m_worldTransform._23 ) ),
 											   LengthSq( Vector3( m_worldTransform._31, m_worldTransform._32, m_worldTransform._33 ) ) } ) );
@@ -276,6 +303,23 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 				mesh.sphereHandle.owner->SetSphereGroupBounds( mesh.sphereHandle, mesh.worldBoundingSphere, mesh.flags );
 			}
 		}
+	}
+
+	m_parentOverlayEffects = nullptr;
+	if( params.spaceObjectParent )
+	{
+		if( EveSpaceObject2Ptr spaceObject2Parent = BlueCastPtr( params.spaceObjectParent ) )
+		{
+			const PEveMeshOverlayEffectVector& parentOverlays = spaceObject2Parent->GetOverlayEffects();
+			if( !parentOverlays.empty() )
+			{
+				m_parentOverlayEffects = &parentOverlays;
+			}
+		}
+	}
+	if( ( m_parentOverlayEffects != nullptr && AnyMeshInheritsOverlayEffects() ) || HasAnyOwnOverlayEffects() )
+	{
+		UpdateOverlayInstanceData( vsData, psData );
 	}
 
 	m_hasUpdated = true;
@@ -517,6 +561,11 @@ void EveChildInstancedMeshes::AddMeshesToManager( EveInstancedMeshManager& manag
 			continue;
 		}
 
+		if( !mesh.inheritOverlayEffects && !m_perObjectDataNoClipHandle )
+		{
+			manager.AddPerObjectData( m_perObjectDataNoClipHandle, &m_perObjectDataNoClip );
+		}
+
 		if( !mesh.sphereHandle )
 		{
 			manager.AddBoundingSphereGroup( mesh.sphereHandle, mesh.worldBoundingSphere, mesh.flags, mesh.instanceSpheres.data(), static_cast<uint32_t>( mesh.instanceSpheres.size() ) );
@@ -541,7 +590,7 @@ void EveChildInstancedMeshes::AddMeshesToManager( EveInstancedMeshManager& manag
 					area.areaCount,
 					area.effect,
 					area.effectHash,
-					m_perObjectDataHandle,
+					mesh.inheritOverlayEffects ? m_perObjectDataHandle : m_perObjectDataNoClipHandle,
 					mesh.sphereHandle,
 					mesh.instances.data(),
 					uint32_t( mesh.instances.size() ),
@@ -690,6 +739,46 @@ BluePy EveChildInstancedMeshes::SetMeshDisplay( uint32_t meshId, bool display )
 	return BluePy( Py_None, true );
 }
 
+BluePy EveChildInstancedMeshes::GetMeshInheritOverlayEffects( uint32_t meshId ) const
+{
+	if( meshId >= m_meshes.size() )
+	{
+		PyErr_SetString( PyExc_IndexError, "Mesh index out of range" );
+		return {};
+	}
+	if( m_meshes[meshId].inheritOverlayEffects )
+	{
+		return BluePy( Py_True, true );
+	}
+	else
+	{
+		return BluePy( Py_False, true );
+	}
+}
+
+BluePy EveChildInstancedMeshes::SetMeshInheritOverlayEffects( uint32_t meshId, bool inherit )
+{
+	if( meshId >= m_meshes.size() )
+	{
+		PyErr_SetString( PyExc_IndexError, "Mesh index out of range" );
+		return {};
+	}
+	auto& mesh = m_meshes[meshId];
+	if( mesh.inheritOverlayEffects != inherit )
+	{
+		mesh.inheritOverlayEffects = inherit;
+		m_allRegistered = false;
+		for( auto& area : mesh.areas )
+		{
+			if( area.meshGroupHandle )
+			{
+				area.meshGroupHandle.owner->RemoveMeshGroup( area.meshGroupHandle );
+			}
+		}
+	}
+	return BluePy( Py_None, true );
+}
+
 void EveChildInstancedMeshes::ReleaseResources( TriStorage s )
 {
 	if( ( s & TRISTORAGE_MANAGEDMEMORY ) != 0 )
@@ -701,4 +790,342 @@ void EveChildInstancedMeshes::ReleaseResources( TriStorage s )
 bool EveChildInstancedMeshes::OnPrepareResources()
 {
 	return true;
+}
+
+BluePy EveChildInstancedMeshes::AddMeshOverlayEffect( uint32_t meshId, EveMeshOverlayEffect* overlayEffect )
+{
+	if( meshId >= m_meshes.size() )
+	{
+		PyErr_SetString( PyExc_IndexError, "Mesh index out of range" );
+		return {};
+	}
+	if( overlayEffect == nullptr )
+	{
+		PyErr_SetString( PyExc_TypeError, "overlayEffect must not be None" );
+		return {};
+	}
+	m_meshes[meshId].ownOverlayEffects.push_back( overlayEffect );
+	return BluePy( Py_None, true );
+}
+
+BluePy EveChildInstancedMeshes::RemoveMeshOverlayEffect( uint32_t meshId, EveMeshOverlayEffect* overlayEffect )
+{
+	if( meshId >= m_meshes.size() )
+	{
+		PyErr_SetString( PyExc_IndexError, "Mesh index out of range" );
+		return {};
+	}
+	auto& overlays = m_meshes[meshId].ownOverlayEffects;
+	auto it = std::find( overlays.begin(), overlays.end(), EveMeshOverlayEffectPtr( overlayEffect ) );
+	if( it != overlays.end() )
+	{
+		overlays.erase( it );
+	}
+	return BluePy( Py_None, true );
+}
+
+BluePy EveChildInstancedMeshes::ClearMeshOverlayEffects( uint32_t meshId )
+{
+	if( meshId >= m_meshes.size() )
+	{
+		PyErr_SetString( PyExc_IndexError, "Mesh index out of range" );
+		return {};
+	}
+	m_meshes[meshId].ownOverlayEffects.clear();
+	return BluePy( Py_None, true );
+}
+
+BluePy EveChildInstancedMeshes::GetMeshOverlayEffectCount( uint32_t meshId ) const
+{
+	if( meshId >= m_meshes.size() )
+	{
+		PyErr_SetString( PyExc_IndexError, "Mesh index out of range" );
+		return {};
+	}
+	return BluePy( ToPython( uint32_t( m_meshes[meshId].ownOverlayEffects.size() ) ) );
+}
+
+bool EveChildInstancedMeshes::HasAnyOwnOverlayEffects() const
+{
+	for( const Mesh& mesh : m_meshes )
+	{
+		if( !mesh.ownOverlayEffects.empty() )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool EveChildInstancedMeshes::AnyMeshInheritsOverlayEffects() const
+{
+	for( const Mesh& mesh : m_meshes )
+	{
+		if( mesh.inheritOverlayEffects )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool EveChildInstancedMeshes::MeshHasActiveOverlayEffects( const Mesh& mesh ) const
+{
+	return !mesh.ownOverlayEffects.empty() || ( m_parentOverlayEffects != nullptr && mesh.inheritOverlayEffects );
+}
+
+uint32_t EveChildInstancedMeshes::OverlayInstancePod::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const
+{
+	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
+	{
+		return sizeof( psData );
+	}
+	return sizeof( vsData );
+}
+
+void EveChildInstancedMeshes::OverlayInstancePod::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* data )
+{
+	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
+	{
+		memcpy( data, &psData, sizeof( psData ) );
+	}
+	else
+	{
+		memcpy( data, &vsData, sizeof( vsData ) );
+	}
+}
+
+void EveChildInstancedMeshes::UpdateOverlayInstanceData( const EveSpaceObjectVSData& parentVsData, const EveSpaceObjectPSData& parentPsData )
+{
+	// worldTransformLast still holds the previous frame's transposed world transform here
+	Matrix prevWorldTransform = Transpose( m_perObjectData.worldTransformLast );
+
+	for( Mesh& mesh : m_meshes )
+	{
+		if( mesh.instances.empty() || !mesh.display || !MeshHasActiveOverlayEffects( mesh ) )
+		{
+			continue;
+		}
+		if( !mesh.overlayPods )
+		{
+			// sized once; the pods own device resources so they must stay at stable addresses
+			mesh.overlayPods = std::make_unique<std::vector<OverlayInstancePod>>( mesh.instances.size() );
+		}
+
+		for( size_t i = 0; i < mesh.instances.size(); ++i )
+		{
+			const auto& wt = mesh.instances[i].worldTransform;
+			OverlayInstancePod& pod = ( *mesh.overlayPods )[i];
+
+			Matrix local = IdentityMatrix();
+			local._11 = wt[0].x;
+			local._12 = wt[1].x;
+			local._13 = wt[2].x;
+			local._21 = wt[0].y;
+			local._22 = wt[1].y;
+			local._23 = wt[2].y;
+			local._31 = wt[0].z;
+			local._32 = wt[1].z;
+			local._33 = wt[2].z;
+			local._41 = wt[0].w;
+			local._42 = wt[1].w;
+			local._43 = wt[2].w;
+
+			Matrix worldTransform = Transpose( local * m_worldTransform );
+			Matrix worldTransformLast = Transpose( local * prevWorldTransform );
+			Matrix invWorldTransform = Inverse( worldTransform );
+			Matrix invLocal = Inverse( local );
+
+			pod.vsData = parentVsData;
+			pod.vsData.worldTransform = worldTransform;
+			pod.vsData.worldTransformLast = worldTransformLast;
+			pod.vsData.invWorldTransform = invWorldTransform;
+			// need to move the clipdata inversely of the transform of the instance
+			pod.vsData.clipData = Vector4( TransformCoord( pod.vsData.clipData.GetXYZ(), invLocal ), pod.vsData.clipData.w );
+
+			pod.psData = parentPsData;
+			pod.psData.worldTransform = worldTransform;
+			pod.psData.worldTransformLast = worldTransformLast;
+			pod.psData.invWorldTransform = invWorldTransform;
+			pod.psData.clipSphereCenter = TransformCoord( pod.psData.clipSphereCenter, invLocal );
+
+			if( !mesh.inheritOverlayEffects )
+			{
+				// opted out of the parent's overlay: also neutralize the inherited clip sphere
+				pod.vsData.clipData.w = 0.f;
+				pod.psData.clipRadiusSq = 0.f;
+				pod.psData.clipRadius2Sq = 0.f;
+				pod.psData.clipSphereFactor = 0.f;
+				pod.psData.clipSphereFactor2 = 0.f;
+			}
+
+			pod.vsBuffer.InvalidateBufferData();
+			pod.psBuffer.InvalidateBufferData();
+		}
+	}
+}
+
+void EveChildInstancedMeshes::RebuildOverlayAreaBlocks( Mesh& mesh )
+{
+	for( int i = 0; i < EveMeshOverlayEffect::TYPE_COUNT; ++i )
+	{
+		mesh.overlayAreaBlocks[i].clear();
+	}
+
+	for( const MeshArea& area : mesh.areas )
+	{
+		if( area.batchType == TRIBATCHTYPE_OPAQUE || area.batchType == TRIBATCHTYPE_TRANSPARENT || area.batchType == TRIBATCHTYPE_DECAL )
+		{
+			mesh.overlayAreaBlocks[EveMeshOverlayEffect::TYPE_ALL].emplace_back( area.areaIndex, area.areaCount );
+		}
+		if( area.batchType == TRIBATCHTYPE_OPAQUE )
+		{
+			mesh.overlayAreaBlocks[EveMeshOverlayEffect::TYPE_OPAQUEONLY].emplace_back( area.areaIndex, area.areaCount );
+		}
+	}
+
+	for( int i = 0; i < EveMeshOverlayEffect::TYPE_COUNT; ++i )
+	{
+		TriRenderBatchAreaBlock::Optimize( mesh.overlayAreaBlocks[i] );
+	}
+	mesh.overlayAreaBlocksBuilt = true;
+}
+
+bool EveChildInstancedMeshes::HasTransparentBatches()
+{
+	if( m_parentOverlayEffects != nullptr && AnyMeshInheritsOverlayEffects() )
+	{
+		for( const auto& overlayEffect : *m_parentOverlayEffects )
+		{
+			if( overlayEffect->HasTransparentArea() )
+			{
+				return true;
+			}
+		}
+	}
+	for( const Mesh& mesh : m_meshes )
+	{
+		for( const EveMeshOverlayEffectPtr& overlay : mesh.ownOverlayEffects )
+		{
+			if( overlay->HasTransparentArea() )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+float EveChildInstancedMeshes::GetSortValue()
+{
+	Vector3 d = Tr2Renderer::GetViewPosition() - m_worldTransform.GetTranslation();
+	return Length( d );
+}
+
+Tr2PerObjectData* EveChildInstancedMeshes::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
+{
+	if( ( m_parentOverlayEffects == nullptr || !AnyMeshInheritsOverlayEffects() ) && !HasAnyOwnOverlayEffects() )
+	{
+		return nullptr;
+	}
+
+	Tr2PerObjectData* firstPod = nullptr;
+	for( Mesh& mesh : m_meshes )
+	{
+		if( !mesh.overlayPods )
+		{
+			continue;
+		}
+		if( !mesh.display || !MeshHasActiveOverlayEffects( mesh ) )
+		{
+			for( OverlayInstancePod& pod : *mesh.overlayPods )
+			{
+				pod.framePod = nullptr;
+			}
+			continue;
+		}
+		for( OverlayInstancePod& pod : *mesh.overlayPods )
+		{
+			pod.framePod = nullptr;
+			auto* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<OverlayInstancePod>>();
+			if( perObjectData == nullptr )
+			{
+				return firstPod;
+			}
+			perObjectData->Initialize( &pod, &pod.vsBuffer, &pod.psBuffer );
+			pod.framePod = perObjectData;
+			if( firstPod == nullptr )
+			{
+				firstPod = perObjectData;
+			}
+		}
+	}
+	return firstPod;
+}
+
+void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
+{
+	if( !m_hasUpdated )
+	{
+		return;
+	}
+
+	for( Mesh& mesh : m_meshes )
+	{
+		const bool hasOwnOverlays = !mesh.ownOverlayEffects.empty();
+		const bool hasInheritedOverlays = m_parentOverlayEffects != nullptr && mesh.inheritOverlayEffects;
+		if( !hasInheritedOverlays && !hasOwnOverlays )
+		{
+			continue;
+		}
+		if( !mesh.display || !mesh.overlayPods )
+		{
+			continue;
+		}
+		if( reason == TR2RENDERREASON_REFLECTION && !EntityComponents::ShouldReflect( mesh.reflectionMode ) )
+		{
+			continue;
+		}
+		if( !mesh.geometry || !mesh.geometry->IsGood() )
+		{
+			continue;
+		}
+		if( !mesh.overlayAreaBlocksBuilt )
+		{
+			RebuildOverlayAreaBlocks( mesh );
+		}
+
+		for( size_t i = 0; i < mesh.overlayPods->size(); ++i )
+		{
+			OverlayInstancePod& pod = ( *mesh.overlayPods )[i];
+			if( pod.framePod == nullptr )
+			{
+				continue;
+			}
+
+			// per-instance LOD selection matching the base hull in EveInstancedMeshManager
+			const CcpMath::Sphere& sphere = mesh.instanceSpheres[i];
+			if( !m_lastCameraFrustum.IsSphereVisible( sphere.center, sphere.radius ) )
+			{
+				continue;
+			}
+			float screenSize = m_lastCameraFrustum.GetPixelSizeAccrossEst( sphere.center, sphere.radius ) * m_lastInvLodFactor;
+			auto lod = mesh.geometry->GetMeshLod( mesh.meshIndex, screenSize );
+			if( !lod || !lod->m_allocationsValid )
+			{
+				continue;
+			}
+
+			// own effects are emitted before the inherited ones so the parent's overlays
+			// (e.g. cloak) draw on top of this mesh's own overlays
+			if( hasOwnOverlays )
+			{
+				EmitOverlayBatches( batches, pod.framePod, batchType, mesh.ownOverlayEffects, mesh.overlayAreaBlocks, *lod );
+			}
+			if( hasInheritedOverlays )
+			{
+				EmitOverlayBatches( batches, pod.framePod, batchType, *m_parentOverlayEffects, mesh.overlayAreaBlocks, *lod );
+			}
+		}
+	}
 }

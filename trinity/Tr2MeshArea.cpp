@@ -138,12 +138,6 @@ bool Tr2MeshArea::GetReversed() const
 void Tr2MeshArea::SetReversed( bool reversed )
 {
 	m_reversed = reversed;
-	if( m_reversed )
-	{
-		for_each( begin( m_ownerMeshes ), end( m_ownerMeshes ), []( auto mesh ) {
-			mesh->ReverseIndexBuffers();
-		} );
-	}
 }
 
 // -------------------------------------------------------------

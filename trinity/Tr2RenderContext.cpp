@@ -151,7 +151,12 @@ Tr2RenderTargetPtr Tr2RenderContextBase::GetBackBuffer()
 Tr2RenderContext::Tr2RenderContext() :
 	Tr2RenderContextBase( *this ),
 	m_parallelContextMutex( "Tr2RenderContext", "m_parallelContextMutex" ),
+
+#ifdef PYTHON2_SUPPORT
 	m_parallelContextSemaphore( 0, 1024 )
+#else
+	m_parallelContextSemaphore( "Tr2RenderContext_m_parallelContextSemaphore", 0, 1024 )
+#endif
 {
 #if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	m_events = this;

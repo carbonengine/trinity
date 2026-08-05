@@ -56,7 +56,6 @@ public:
 	void SetGeometryRes( TriGeometryRes * res );
 
 	bool IsLoading() const override;
-	void ReverseIndexBuffers() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify

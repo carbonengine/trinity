@@ -448,6 +448,10 @@ public:
 	void AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
 	void RemoveOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
 	EveMeshOverlayEffectPtr GetOverlayEffectByName( const char* name ) const;
+	const PEveMeshOverlayEffectVector& GetOverlayEffects() const
+	{
+		return m_overlayEffects;
+	}
 	void AddLocatorSet( const char* name, const Locator* locators, size_t locatorCount );
 	Vector3 GetDamageLocator( uint32_t index ) const;
 	Vector3 GetDamageLocatorDirectionLocal( uint32_t index ) const;

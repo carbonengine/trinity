@@ -347,8 +347,6 @@ public:
 	typedef void ( *PerTriangleCallback )( void* context, const Vector3& p1, const Vector3& p2, const Vector3& p3 );
 	void ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, void* cbContext );
 
-	void RequestReversedIndexBuffers();
-
 	void Reload();
 
 	// name for logging/debugging
@@ -375,7 +373,6 @@ private:
 
 	int32_t m_forcedLodIndex = -1;
 	bool m_forceLod = false;
-	bool m_reversedIndexBuffersRequested = false;
 
 private:
 	// Provide the functions that do the actual work of loading and preparing.

@@ -178,69 +178,6 @@ uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, ui
 }
 
 
-namespace
-{
-#if WITH_GRANNY
-ALResult ReverseIndexBuffer( TriGeometryResLodData& lod, granny_mesh& grannyMesh, Tr2RenderContext& renderContext )
-{
-	uint32_t bytesPerIndex = 2;
-	auto indexCount = grannyMesh.PrimaryTopology->Index16Count;
-	if( indexCount == 0 )
-	{
-		indexCount = grannyMesh.PrimaryTopology->IndexCount;
-		if( indexCount == 0 )
-		{
-			return S_OK;
-		}
-		if( grannyMesh.PrimaryVertexData->VertexCount > 65535 )
-		{
-			bytesPerIndex = 4;
-		}
-	}
-
-	std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
-	GrannyCopyMeshIndices( &grannyMesh, bytesPerIndex, tempBuffer.data() );
-
-	if( bytesPerIndex == 2 )
-	{
-		std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
-	}
-	else
-	{
-		std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
-	}
-
-	CR_RETURN_HR( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod.m_reversedIndexAllocation ) );
-	lod.m_reversedIndicesValid = true;
-	return S_OK;
-}
-#endif
-
-ALResult ReverseIndexBuffer( TriGeometryResLodData& lod, const void* ibData, const cmf::MeshLod& cmfMeshLod, Tr2RenderContext& renderContext )
-{
-	uint32_t bytesPerIndex = cmfMeshLod.ib.stride;
-	auto indexCount = cmf::GetStreamElementCount( cmfMeshLod.ib );
-
-	std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
-	memcpy( tempBuffer.data(), ibData, indexCount * bytesPerIndex );
-
-	if( bytesPerIndex == 2 )
-	{
-		std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
-	}
-	else
-	{
-		std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
-	}
-
-	CR_RETURN_HR( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod.m_reversedIndexAllocation ) );
-	lod.m_reversedIndicesValid = true;
-	return S_OK;
-}
-
-}
-
-
 TriGeometryRes::TriGeometryRes( IRoot* lockobj ) :
 #if WITH_GRANNY
 	m_pGrannyFile( NULL ),
@@ -1862,76 +1799,6 @@ TriGeometryResMeshData::TriGeometryResMeshData() :
 {
 }
 
-void TriGeometryRes::RequestReversedIndexBuffers()
-{
-	if( !m_isGood )
-	{
-		return;
-	}
-	if( m_reversedIndexBuffersRequested )
-	{
-		return;
-	}
-	m_reversedIndexBuffersRequested = true;
-	if( !m_isPrepared )
-	{
-		return;
-	}
-
-	if( IsUsingCMF() && m_sourceGranny )
-	{
-		if( !m_sourceGranny->GetCMFData() )
-		{
-			return;
-		}
-
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-
-		CCP_ASSERT_M( m_meshes.size() == m_sourceGranny->GetCMFData()->meshes.size(), "Amount of meshes should match!" );
-		for( uint32_t i = 0; i < m_meshes.size(); i++ )
-		{
-			auto& mesh = m_meshes[i];
-			auto& cmfMesh = m_sourceGranny->GetCMFData()->meshes[i];
-
-			// this assertion assumes that gTriDev->GetMinimumModelLOD() has not changed since last call to SetupMeshes. Not sure if this holds true.
-			int minimumLOD = gTriDev->GetMinimumModelLOD() < 0 ? 0 : min( gTriDev->GetMinimumModelLOD(), (int)cmfMesh.lods.size() - 1 );
-			CCP_ASSERT_M( mesh->m_lods.size() == cmfMesh.lods.size() - minimumLOD, "Amount of mesh lods should match!" );
-
-			for( const auto& lod : mesh->m_lods )
-			{
-				auto& cmfLod = cmfMesh.lods[lod->m_originalLodIndex];
-				ReverseIndexBuffer( *lod, m_sourceGranny->GetCMFViewData( cmfLod.ib ), cmfLod, renderContext );
-			}
-		}
-	}
-#if WITH_GRANNY
-	else if( !IsUsingCMF() && m_sourceGranny )
-	{
-		granny_file* f = m_sourceGranny->GetGrannyFile();
-		if( !f )
-		{
-			return;
-		}
-		granny_file_info* gi = GrannyGetFileInfo( f );
-
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-
-		for( auto& mesh : m_meshes )
-		{
-			for( auto& lod : mesh->m_lods )
-			{
-				auto grannyMesh = gi->Meshes[lod->m_grannyMeshIndex];
-				ReverseIndexBuffer( *lod, *grannyMesh, renderContext );
-			}
-		}
-	}
-#endif
-	else
-	{
-		Reload();
-	}
-}
-
 bool TriGeometryRes::RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed )
 {
 	return RenderAreas( std::numeric_limits<float>::max(), meshIx, areaIx, areaCount, renderContext, reversed );
@@ -2087,27 +1954,24 @@ bool TriGeometryRes::CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cm
 			return false;
 		}
 
-		if( m_reversedIndexBuffersRequested )
+		std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
+		memcpy( tempBuffer.data(), pSrcIB, tempBuffer.size() );
+		if( bytesPerIndex == 2 )
 		{
-			std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
-			memcpy( tempBuffer.data(), pSrcIB, tempBuffer.size() );
-			if( bytesPerIndex == 2 )
-			{
-				std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + cmfMeshLod.ib.size ) );
-			}
-			else
-			{
-				std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + cmfMeshLod.ib.size ) );
-			}
-
-			if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod->m_reversedIndexAllocation ) ) )
-			{
-				g_sharedBuffer.Free( lod->m_vertexAllocation );
-				g_sharedBuffer.Free( lod->m_indexAllocation );
-				return false;
-			}
-			lod->m_reversedIndicesValid = true;
+			std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + cmfMeshLod.ib.size ) );
 		}
+		else
+		{
+			std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + cmfMeshLod.ib.size ) );
+		}
+
+		if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod->m_reversedIndexAllocation ) ) )
+		{
+			g_sharedBuffer.Free( lod->m_vertexAllocation );
+			g_sharedBuffer.Free( lod->m_indexAllocation );
+			return false;
+		}
+		lod->m_reversedIndicesValid = true;
 	}
 
 	lod->m_morphVertexDeclaration = -1;
@@ -2170,10 +2034,9 @@ bool TriGeometryRes::CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cm
 	lod->m_allocationsValid = true;
 
 	m_memoryUse += vbSize + ibSize; // Memory use is only approximate as a hint for the resource cache
-	if( m_reversedIndexBuffersRequested )
-	{
-		m_memoryUse += ibSize;
-	}
+
+	// Append reversed index buffer size also
+	m_memoryUse += ibSize;
 
 	return true;
 }
@@ -2242,25 +2105,22 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 			return false;
 		}
 
-		if( m_reversedIndexBuffersRequested )
+		if( bytesPerIndex == 2 )
 		{
-			if( bytesPerIndex == 2 )
-			{
-				std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
-			}
-			else
-			{
-				std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
-			}
-
-			if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod->m_reversedIndexAllocation ) ) )
-			{
-				g_sharedBuffer.Free( lod->m_vertexAllocation );
-				g_sharedBuffer.Free( lod->m_indexAllocation );
-				return false;
-			}
-			lod->m_reversedIndicesValid = true;
+			std::reverse( reinterpret_cast<uint16_t*>( tempBuffer.data() ), reinterpret_cast<uint16_t*>( tempBuffer.data() + tempBuffer.size() ) );
 		}
+		else
+		{
+			std::reverse( reinterpret_cast<uint32_t*>( tempBuffer.data() ), reinterpret_cast<uint32_t*>( tempBuffer.data() + tempBuffer.size() ) );
+		}
+
+		if( FAILED( g_sharedBuffer.Allocate( bytesPerIndex, indexCount, tempBuffer.data(), renderContext, lod->m_reversedIndexAllocation ) ) )
+		{
+			g_sharedBuffer.Free( lod->m_vertexAllocation );
+			g_sharedBuffer.Free( lod->m_indexAllocation );
+			return false;
+		}
+		lod->m_reversedIndicesValid = true;
 	}
 
 	lod->m_morphVertexDeclaration = -1;
@@ -2333,10 +2193,9 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 	lod->m_allocationsValid = true;
 
 	m_memoryUse += vbSize + ibSize; // Memory use is only approximate as a hint for the resource cache
-	if( m_reversedIndexBuffersRequested )
-	{
-		m_memoryUse += ibSize;
-	}
+
+	// Append reversed index buffer size also
+	m_memoryUse += ibSize;
 
 	return true;
 }
