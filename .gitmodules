@@ -3,4 +3,5 @@
 	url = git@github.com:microsoft/vcpkg.git
 [submodule "vendor/github.com/carbonengine/vcpkg-registry"]
 	path = vendor/github.com/carbonengine/vcpkg-registry
-	url = git@github.com:carbonengine/vcpkg-registry.git
+	url = git@github.com:ccpshanghai/vcpkg-registry.git
+	branch = mobile-exp
