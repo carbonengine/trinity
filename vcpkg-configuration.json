@@ -8,7 +8,7 @@
     {
       "kind": "git",
       "repository": "git@github.com:ccpshanghai/vcpkg-registry.git",
-      "baseline": "a17800451f47b87d9f21a34948a54b6dfdfcd577",
+      "baseline": "24e57aa9dde725d8482e26bfa3ad93ede86a3396",
       "packages": ["python3", 
                    "carbon-*", 
                    "tracy",
