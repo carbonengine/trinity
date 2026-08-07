@@ -28,10 +28,6 @@ void BoundingBoxUpdate( Vector3& min, Vector3& max, const Vector4& sphere );
 // the new axis aligned bounding box
 void BoundingBoxTransform( Vector3& min, Vector3& max, const Matrix& tf );
 
-// Projects an axis aligned bounding box into screen space with the given view
-// and projection matrices, along with a viewport.
-void BoundingBoxProject( Vector3& min, Vector3& max, const Matrix& proj, const Matrix& view, const TriViewport& vp );
-
 bool IntersectAxisAlignedBoxAxisAlignedBox( const Vector3& minBoundsA, const Vector3& maxBoundsA, const Vector3& minBoundsB, const Vector3& maxBoundsB );
 bool IntersectOrientedBoxAxisAlignedBox( const Vector3& centerA, const Vector3& extentsA, const Quaternion& orientationA, const Vector3& minBounds, const Vector3& maxBounds );
 bool IntersectOrientedBoxOrientedBox( const Vector3& centerA, const Vector3& extentsA, const Quaternion& orientationA, const Vector3& centerB, const Vector3& extentsB, const Quaternion& orientationB );

@@ -64,16 +64,6 @@ bool EveChildQuad::Initialize()
 	return true;
 }
 
-const char* EveChildQuad::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildQuad::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
 // --------------------------------------------------------------------------------
 // Description:
 //   Setup function to set data from outside, in this case just pass it to
@@ -98,10 +88,6 @@ void EveChildQuad::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRen
 	{
 		quadRenderer.AddQuads( m_effectKey, &m_quad, 1 );
 	}
-}
-
-void EveChildQuad::GetRenderables( std::vector<ITr2Renderable*>& renderables )
-{
 }
 
 bool EveChildQuad::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const

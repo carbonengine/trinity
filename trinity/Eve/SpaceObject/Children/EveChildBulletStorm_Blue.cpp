@@ -9,6 +9,7 @@ const Be::ClassInfo* EveChildBulletStorm::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveChildBulletStorm, "" )
 		MAP_INTERFACE( EveChildBulletStorm )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( INotify )
@@ -35,5 +36,8 @@ const Be::ClassInfo* EveChildBulletStorm::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "StopEffect", StopEffect, "Stop Effect" )
 		MAP_METHOD_AND_WRAP( "CanChangeState", CanChangeState, "Can start or stop the effect without visual errors?" )
 
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

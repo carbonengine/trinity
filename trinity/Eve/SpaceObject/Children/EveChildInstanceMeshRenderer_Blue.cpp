@@ -21,6 +21,7 @@ const Be::ClassInfo* EveChildInstanceMeshRenderer::ExposeToBlue()
 		MAP_INTERFACE( EveChildInstanceMeshRenderer )
 		MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( EveChildMesh )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( IInitialize )
@@ -42,5 +43,8 @@ const Be::ClassInfo* EveChildInstanceMeshRenderer::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP( "RefreshStaticGeometry", RefreshStaticGeometry, "if static geo parameters were changed during authoring: refresh here\n:jessica-placement: TOOLBAR" )
 
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

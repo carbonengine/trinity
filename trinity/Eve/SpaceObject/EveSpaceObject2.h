@@ -21,7 +21,7 @@
 #include "Eve/SpaceObject/Attachments/EveMeshOverlayEffect.h"
 #include "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h"
 #include "Eve/SpaceObject/Attachments/EveImpactOverlay.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 #include "Eve/SpaceObject/Children/IEveEffectChildrenOwner.h"
 #include "Eve/SpaceObject/Children/IEveInheritPropertiesOwner.h"
 #include "Eve/SpaceObject/Attachments/IEveSpaceObjectDecalOwner.h"
@@ -385,9 +385,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
-	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
+	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
+	void AddToEffectChildrenList( EveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ControllerOwner
@@ -448,6 +448,10 @@ public:
 	void AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
 	void RemoveOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
 	EveMeshOverlayEffectPtr GetOverlayEffectByName( const char* name ) const;
+	const PEveMeshOverlayEffectVector& GetOverlayEffects() const
+	{
+		return m_overlayEffects;
+	}
 	void AddLocatorSet( const char* name, const Locator* locators, size_t locatorCount );
 	Vector3 GetDamageLocator( uint32_t index ) const;
 	Vector3 GetDamageLocatorDirectionLocal( uint32_t index ) const;
@@ -704,7 +708,7 @@ protected:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Effect children
-	PIEveSpaceObjectChildVector m_effectChildren;
+	PEveSpaceObjectChildVector m_effectChildren;
 	EveChildInheritPropertiesPtr m_inheritProperties;
 
 	/////////////////////////////////////////////////////////////////////////////////////

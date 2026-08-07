@@ -9,7 +9,7 @@
 #include "EveTransform.h"
 #include "EveLODHelper.h"
 #include "IEveSpaceObject2.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 #include "Eve/SpaceObject/Children/IEveEffectChildrenOwner.h"
 #include "Tr2ShLightingManager.h"
 #include "Include/ITriTargetable.h"
@@ -19,6 +19,7 @@
 #include "ITr2SoundEmitterOwner.h"
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Lights/ITr2LightOwner.h"
+#include "ITr2BoundingBox.h"
 #include "EveEntity.h"
 
 #include <ITriFunction.h>
@@ -49,6 +50,7 @@ BLUE_CLASS( EveEffectRoot2 ) :
 	public ITr2SoundEmitterOwner,
 	public ITr2ControllerOwner,
 	public ITr2LightOwner,
+	public ITr2BoundingBox,
 	public EveEntity
 
 {
@@ -87,6 +89,11 @@ public:
 	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
 	void SetProceduralContainerVariable( const char* name, float value ) override;
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2BoundingBox
+	bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const override;
+	bool IsBoundingBoxReady() const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
@@ -134,9 +141,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
-	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
+	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
+	void AddToEffectChildrenList( EveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -160,7 +167,7 @@ public:
 	void Start();
 	void Stop();
 
-	PIEveSpaceObjectChildVector& GetChildren();
+	PEveSpaceObjectChildVector& GetChildren();
 
 	void SetTransform( const Matrix& transform );
 
@@ -204,7 +211,7 @@ protected:
 	std::string m_name;
 	bool m_display;
 	bool m_mute;
-	PIEveSpaceObjectChildVector m_effectChildren;
+	PEveSpaceObjectChildVector m_effectChildren;
 
 	Vector3 m_scaling;
 	Quaternion m_rotation;
