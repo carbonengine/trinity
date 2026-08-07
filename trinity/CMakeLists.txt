@@ -481,9 +481,15 @@ set(_SOURCES
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierHaloInverted.cpp
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierHaloInverted.h
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierHaloInverted_Blue.cpp
+    Eve/SpaceObject/Children/TransformModifiers/EveChildModifierRotate.cpp
+    Eve/SpaceObject/Children/TransformModifiers/EveChildModifierRotate.h
+    Eve/SpaceObject/Children/TransformModifiers/EveChildModifierRotate_Blue.cpp
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierSRT.cpp
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierSRT.h
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierSRT_Blue.cpp
+    Eve/SpaceObject/Children/TransformModifiers/EveChildModifierShake.cpp
+    Eve/SpaceObject/Children/TransformModifiers/EveChildModifierShake.h
+    Eve/SpaceObject/Children/TransformModifiers/EveChildModifierShake_Blue.cpp
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierStretch.cpp
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierStretch.h
     Eve/SpaceObject/Children/TransformModifiers/EveChildModifierStretch_Blue.cpp
