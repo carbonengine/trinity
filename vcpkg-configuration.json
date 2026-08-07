@@ -9,26 +9,28 @@
       "kind": "git",
       "repository": "git@github.com:ccpshanghai/vcpkg-registry.git",
       "reference": "mobile-exp",
-      "baseline": "24e57aa9dde725d8482e26bfa3ad93ede86a3396",
-      "packages": ["python3", 
-                   "carbon-*", 
-                   "tracy",
-                   "greenlet",
-                   "ccp-debug-info",
-                   "crashpad",
-                   "zlib",
-                   "re2c",
-                   "amd-fidelityfx",
-                   "amd-fidelityfx-cacao",
-                   "amd-fidelityfx-cas",
-                   "amd-fidelityfx-fsr",
-                   "fxc",
-                   "granny",
-                   "intel-xess",
-                   "nvidia-aftermath",
-                   "nvidia-streamline",
-                   "openvdb"
-          ]
+      "baseline": "82ea5ed34556e7ea464dc915a4f024e55f2d4043",
+      "packages": [
+        "python3",
+        "carbon-*",
+        "tracy",
+        "greenlet",
+        "ccp-debug-info",
+        "crashpad",
+        "zlib",
+        "re2c",
+        "amd-fidelityfx",
+        "amd-fidelityfx-cacao",
+        "amd-fidelityfx-cas",
+        "amd-fidelityfx-fsr",
+        "fxc",
+        "granny",
+        "intel-xess",
+        "nvidia-aftermath",
+        "nvidia-streamline",
+        "openvdb",
+        "protobuf"
+      ]
     }
   ]
 }
