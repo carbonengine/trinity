@@ -273,7 +273,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	EveChildContainerPtr layoutContainer;
 	layoutContainer.CreateInstance();
 	layoutContainer->SetName( "layouts" );
-	layoutContainer->SetOrigin( IEveSpaceObjectChild::SOF );
+	layoutContainer->SetOrigin( EveSpaceObjectChild::SOF );
 	layoutContainer->SetIsPlacementRoot( true );
 	layoutContainer->SetAlwaysOn( true );
 	SetupLayout( newObj, layoutContainer, sharedMeshes, dna, centerOffset );
@@ -1719,7 +1719,7 @@ void RecursiveBindParticleEmitters( EveTransform* transform, TriCurveSet* curveS
 	}
 }
 
-void RecursiveBindParticleEmitters( IEveSpaceObjectChild* child, TriCurveSet* curveSet, Tr2CurveScalar* curve )
+void RecursiveBindParticleEmitters( EveSpaceObjectChild* child, TriCurveSet* curveSet, Tr2CurveScalar* curve )
 {
 	if( EveChildContainerPtr container = BlueCastPtr( child ) )
 	{
@@ -1757,7 +1757,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, IEveEffectChild
 	auto postCopy = m_editorMode ? &PostCopyMetadata : nullptr;
 
 	std::map<int, std::vector<EveTransformPtr>> childrenToBindTo;
-	std::map<int, std::vector<IEveSpaceObjectChildPtr>> soChildrenToBindTo;
+	std::map<int, std::vector<EveSpaceObjectChildPtr>> soChildrenToBindTo;
 
 	const std::vector<EveSOFDataMgr::HullChild>& hullChildren = dna->GetHullChildren();
 	for( auto childIt = hullChildren.begin(); childIt != hullChildren.end(); ++childIt )
@@ -1805,12 +1805,12 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, IEveEffectChild
 				obj->AddToChildrenList( transformedChild );
 			}
 		}
-		else if( IEveSpaceObjectChildPtr effectChild = BlueCastPtr( p ) )
+		else if( EveSpaceObjectChildPtr effectChild = BlueCastPtr( p ) )
 		{
 			size_t index = 0;
 			for( auto& offset : offsets )
 			{
-				IEveSpaceObjectChildPtr transformedChild;
+				EveSpaceObjectChildPtr transformedChild;
 				if( ++index < offsets.size() )
 				{
 					CCP_STATS_ZONE( "Child Copy" );
@@ -1829,7 +1829,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, IEveEffectChild
 
 				transformedChild->Setup( &childIt->scaling, &rot, &pos, childIt->lowestLodVisible );
 
-				transformedChild->SetOrigin( IEveSpaceObjectChild::SOF );
+				transformedChild->SetOrigin( EveSpaceObjectChild::SOF );
 				childOwner->AddToEffectChildrenList( transformedChild );
 				if( childIt->id != -1 )
 				{
@@ -1866,7 +1866,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, IEveEffectChild
 			{
 				RecursiveBindParticleEmitters( ( *transformIt ), curveSet, scalarCurve );
 			}
-			std::vector<IEveSpaceObjectChildPtr> childVector = soChildrenToBindTo[animIt->id];
+			std::vector<EveSpaceObjectChildPtr> childVector = soChildrenToBindTo[animIt->id];
 			for( auto childIt = childVector.begin(); childIt != childVector.end(); ++childIt )
 			{
 				RecursiveBindParticleEmitters( ( *childIt ), curveSet, scalarCurve );
@@ -1971,11 +1971,11 @@ void EveSOF::SetupEffectChildren( EveSpaceObject2Ptr newObj, IEveEffectChildrenO
 					newObj->AddToChildrenList( transformedChild );
 				}
 			}
-			else if( IEveSpaceObjectChildPtr effectChild = BlueCastPtr( p ) )
+			else if( EveSpaceObjectChildPtr effectChild = BlueCastPtr( p ) )
 			{
 				for( auto& offset : offsets )
 				{
-					IEveSpaceObjectChildPtr transformedChild;
+					EveSpaceObjectChildPtr transformedChild;
 					if( &offset != &offsets.back() )
 					{
 						BeClasses->CopyTo( effectChild->GetRootObject(), (IRoot**)&transformedChild );
@@ -1993,7 +1993,7 @@ void EveSOF::SetupEffectChildren( EveSpaceObject2Ptr newObj, IEveEffectChildrenO
 
 					transformedChild->Setup( &childSetItem.scaling, &rot, &pos, childSetItem.lowestLodVisible );
 
-					transformedChild->SetOrigin( IEveSpaceObjectChild::SOF );
+					transformedChild->SetOrigin( EveSpaceObjectChild::SOF );
 					childOwner->AddToEffectChildrenList( transformedChild );
 				}
 			}
@@ -3624,7 +3624,7 @@ void EveSOF::CreatePlacement(
 			{
 				sharedMeshes.CreateInstance();
 				sharedMeshes->SetName( "SharedInstancedMeshes" );
-				sharedMeshes->SetOrigin( IEveSpaceObjectChild::SOF );
+				sharedMeshes->SetOrigin( EveSpaceObjectChild::SOF );
 				parent->AddToEffectChildrenList( sharedMeshes );
 			}
 

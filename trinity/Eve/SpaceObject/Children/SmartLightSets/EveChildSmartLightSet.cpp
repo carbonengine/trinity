@@ -13,16 +13,6 @@ EveChildSmartLightSet::EveChildSmartLightSet( IRoot* lockobj ) :
 	m_lightGroups.SetNotify( this );
 }
 
-const char* EveChildSmartLightSet::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildSmartLightSet::SetName( const char* name )
-{
-	m_name = name;
-}
-
 void EveChildSmartLightSet::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
 	if( list == &m_lightGroups && ( event & BELIST_EVENTMASK ) == BELIST_INSERTED )

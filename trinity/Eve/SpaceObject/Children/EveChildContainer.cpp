@@ -59,10 +59,12 @@ EveChildContainer::~EveChildContainer()
 	{
 		controller->Unlink( UnlinkReason::DELETING );
 	}
+	UnregisterChildren( m_objects );
 }
 
 bool EveChildContainer::Initialize()
 {
+	RegisterChildren( m_objects );
 	for( auto& controller : m_controllers )
 	{
 		if( !controller->IsLinked() )
@@ -142,6 +144,8 @@ void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, I
 	}
 	else if( list == &m_objects && ( event & BELIST_LOADING ) == 0 )
 	{
+		HandleChildrenListModified( event, value, m_objects );
+
 		if( IsInRegistry() )
 		{
 			switch( event & BELIST_EVENTMASK )
@@ -314,7 +318,7 @@ void EveChildContainer::SetShaderOption( const BlueSharedString& name, const Blu
 {
 	for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
 	{
-		IEveSpaceObjectChild* child = *it;
+		EveSpaceObjectChild* child = *it;
 		child->SetShaderOption( name, value );
 	}
 
@@ -364,16 +368,6 @@ bool EveChildContainer::IsRendering() const
 bool EveChildContainer::IsUpdating() const
 {
 	return ( m_display || !m_updateOnDisplay ) && ( IsRendering() || m_displayFilter == ONLY_REFLECTIONS );
-}
-
-const char* EveChildContainer::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildContainer::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
 }
 
 void EveChildContainer::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
@@ -442,7 +436,7 @@ bool EveChildContainer::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery 
 	Vector4 bSphere( 0.f, 0.f, 0.f, -1.f );
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		if( ( *it )->GetBoundingSphere( bSphere ) )
+		if( ( *it )->GetBoundingSphere( bSphere, EVE_BOUNDS_NORMAL ) )
 		{
 			BoundingSphereSetOrUpdate( bSphere, sphere, success );
 			success = true;
@@ -966,7 +960,7 @@ void EveChildContainer::StartControllers()
 	}
 }
 
-IEveSpaceObjectChildPtr EveChildContainer::GetEffectChildByName( const char* name ) const
+EveSpaceObjectChildPtr EveChildContainer::GetEffectChildByName( const char* name ) const
 {
 	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
 	{
@@ -979,7 +973,7 @@ IEveSpaceObjectChildPtr EveChildContainer::GetEffectChildByName( const char* nam
 	return nullptr;
 }
 
-void EveChildContainer::AddToEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildContainer::AddToEffectChildrenList( EveSpaceObjectChild* child )
 {
 	auto childRoot = child->GetRootObject();
 	m_objects.Append( childRoot );
@@ -993,7 +987,7 @@ void EveChildContainer::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 	}
 }
 
-void EveChildContainer::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildContainer::RemoveFromEffectChildrenList( EveSpaceObjectChild* child )
 {
 	auto index = m_objects.FindKey( child );
 	if( index >= 0 )
@@ -1108,6 +1102,30 @@ void EveChildContainer::SetProceduralContainerVariable( const char* name, float 
 	{
 		auto child = *it;
 		child->SetProceduralContainerVariable( name, value );
+	}
+}
+
+void EveChildContainer::SetOwner( IEveSpaceObject2* owner )
+{
+	if( GetOwner() != owner )
+	{
+		EveSpaceObjectChild::SetOwner( owner );
+		for( auto& child : m_objects )
+		{
+			child->SetOwner( owner );
+		}
+	}
+}
+
+void EveChildContainer::SetPartTag( PartTag tag )
+{
+	if( GetPartTag() != tag )
+	{
+		EveSpaceObjectChild::SetPartTag( tag );
+		for( auto& child : m_objects )
+		{
+			child->SetPartTag( tag );
+		}
 	}
 }
 

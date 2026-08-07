@@ -98,7 +98,6 @@ private:
 	float m_playTime;
 
 	EveChildInstanceContainerPtr m_effect; // Child containing trigger effect
-	IEveSpaceObjectChildPtr m_effectShared; // Child containing shared parts of the effect (particle systems etc.)
 
 	Vector3 m_effectScaling;
 	float m_randScaleMin;

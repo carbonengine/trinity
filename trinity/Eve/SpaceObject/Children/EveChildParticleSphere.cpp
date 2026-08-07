@@ -68,18 +68,6 @@ EveChildParticleSphere::EveChildParticleSphere( IRoot* lockobj ) :
 {
 }
 
-// --------------------------------------------------------------------------------
-const char* EveChildParticleSphere::GetName() const
-{
-	return m_name.c_str();
-}
-
-// --------------------------------------------------------------------------------
-void EveChildParticleSphere::SetName( const char* name )
-{
-	m_name = name;
-}
-
 // -----------------------------------------------------------------------------
 void EveChildParticleSphere::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {

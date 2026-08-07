@@ -8,7 +8,7 @@
 #include "Behaviors/BehaviorGroup.h"
 #include "Behaviors/SplineTunnelGroup.h"
 #include "Tr2DeviceResource.h"
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "EveChildTransform.h"
 #include "TriRenderBatch.h"
 #include "ITr2Renderable.h"
@@ -22,7 +22,7 @@ BLUE_DECLARE_VECTOR( BehaviorGroup );
 
 
 BLUE_CLASS( EveChildBehaviorSystem ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public Tr2DeviceResource,
 	public ITr2Renderable,
 	public IInitialize,
@@ -70,16 +70,11 @@ public:
 	{
 	}
 
-	const char* GetName() const;
-	void SetName( const char* name );
-
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
-	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
-	void ChangeLOD( Tr2Lod lod );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -112,7 +107,6 @@ private:
 	bool OnPrepareResources();
 	void PassInVertexesToBehaviorGroups();
 	void PassInTunnelFunctionsToBehaviorGroups();
-	char* m_name;
 	bool m_behaviorGroupLoaded;
 	bool m_behaviorGroupLoadedForTunnel;
 

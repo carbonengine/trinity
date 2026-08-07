@@ -283,7 +283,7 @@ private:
 	void InitializeFiringEffect();
 	// setup the attached ambient effect
 	void InitializeAmbientEffect();
-	IEveSpaceObjectChild* GetAmbientEffectOrGeneratedEffect() const;
+	EveSpaceObjectChild* GetAmbientEffectOrGeneratedEffect() const;
 	void SetAmbientEffectControllerVariableOnInstance( int index, const char* name, float value );
 	bool IsAmbientVisible() const;
 
@@ -323,8 +323,8 @@ private:
 	EveTurretFiringFX* GetFiringEffect();
 	void SetFiringEffect( EveTurretFiringFX * firingEffect );
 
-	IEveSpaceObjectChild* GetAmbientEffect();
-	void SetAmbientEffect( IEveSpaceObjectChild * ambientEffect );
+	EveSpaceObjectChild* GetAmbientEffect();
+	void SetAmbientEffect( EveSpaceObjectChild * ambientEffect );
 
 	// name
 	std::string m_name;
@@ -491,7 +491,7 @@ private:
 	bool m_randomizeExplosionRotation;
 
 	// ambient effects
-	IEveSpaceObjectChildPtr m_ambientEffect;
+	EveSpaceObjectChildPtr m_ambientEffect;
 	EveChildInstanceContainerPtr m_generatedDistributedAmbientEffect;
 	Matrix m_ambientOffsetMatrix; // used while editing
 	bool m_ambientEffectEditingMode; // used for editing

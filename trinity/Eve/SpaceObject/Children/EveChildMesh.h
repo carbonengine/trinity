@@ -4,7 +4,7 @@
 #ifndef EveChildMesh_H
 #define EveChildMesh_H
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "EveChildTransform.h"
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h"
@@ -54,7 +54,7 @@ enum class MorphTargetAnimationFilter : uint8_t
 };
 
 BLUE_CLASS( EveChildMesh ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public EveChildTransform,
 	public ITr2Renderable,
 	public IInitialize,
@@ -78,9 +78,7 @@ public:
 	~EveChildMesh();
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	const char* GetName() const;
-	void SetName( const char* name );
+	// EveSpaceObjectChild
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
@@ -110,6 +108,7 @@ public:
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
 	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetBatchesFromOverlayVector( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
 	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
@@ -167,6 +166,14 @@ public:
 	void SetCastShadow( bool castShadow );
 	void SetMinScreenSize( float minScreenSize );
 
+	void AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
+	void RemoveOverlayEffect( EveMeshOverlayEffectPtr overlayEffectToRemove );
+	EveMeshOverlayEffectPtr GetOverlayEffectByName( const char* name ) const;
+	const PEveMeshOverlayEffectVector& GetOverlayEffects() const
+	{
+		return m_overlayEffects;
+	}
+
 	Tr2GrannyAnimation* GetAnimationController() const override;
 	void SetAnimationController( Tr2GrannyAnimation * animation );
 
@@ -201,21 +208,30 @@ protected:
 	bool PrepareMorphBuffers( Tr2RenderContext & renderContext );
 
 	std::pair<const Float4x3*, size_t> GetBoneTransforms() const;
+	std::pair<const Float4x3*, size_t> GetRestPoseBoneTransforms() const;
 	const std::pair<const int32_t*, size_t> GetMeshBindingIndices() const;
 	std::pair<const Tr2MorphTargetAnimationData*, size_t> GetMorphTargets( MorphTargetAnimationFilter filter );
 	void UpdateMorphAnimationBuffer();
-
-	// general data
-	BlueSharedString m_name;
 
 	// the mesh
 	Tr2MeshBasePtr m_mesh;
 	Tr2InstancedMeshPtr m_instancedMesh; // Cached downcast of m_mesh
 	IEveSpaceObject2::ParentData m_parentData;
 
+	const PEveMeshOverlayEffectVector* m_parentOverlayEffects = nullptr;
+	// overlay effects owned by this child mesh, rendered underneath any inherited parent overlays
+	PEveMeshOverlayEffectVector m_overlayEffects;
+	Be::Time m_lastOverlayUpdateTime = 0;
+	Tr2Lod m_overlayUpdateLod = TR2_LOD_UNSPECIFIED;
+	std::vector<TriRenderBatchAreaBlock> m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_COUNT];
+	bool m_overlayAreaBlocksBuilt = false;
+	void RebuildOverlayAreaBlocks();
+
 	PIEveChildTransformModifierVector m_transformModifiers;
 	Tr2GrannyAnimationPtr m_animationUpdater;
 	std::unique_ptr<Tr2AnimationMeshBinding> m_meshBinding;
+	// identity skin matrices for skinned meshes with no animation (rest pose)
+	mutable std::vector<Float4x3> m_restPoseBoneTransforms;
 
 	Tr2Lod m_lowestLodVisible;
 
@@ -238,6 +254,7 @@ protected:
 	CcpMath::Sphere m_worldBoundingSphere; // bounding sphere in world space
 
 	bool m_display;
+	bool m_inheritOverlayEffects;
 	bool m_isVisible;
 	bool m_instancesVisible;
 	bool m_castShadow;

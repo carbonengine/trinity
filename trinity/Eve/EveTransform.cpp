@@ -17,6 +17,26 @@
 
 extern float g_eveSpaceSceneLowUpdateRate;
 
+namespace
+{
+bool HasOverrideBounds( const Vector3& boundsMin, const Vector3& boundsMax )
+{
+	return boundsMax.x != boundsMin.x || boundsMax.y != boundsMin.y || boundsMax.z != boundsMin.z;
+}
+
+bool GetDirectLocalBounds( const Vector3& overrideBoundsMin, const Vector3& overrideBoundsMax, Tr2MeshBase* mesh, Vector3& min, Vector3& max )
+{
+	if( HasOverrideBounds( overrideBoundsMin, overrideBoundsMax ) )
+	{
+		min = overrideBoundsMin;
+		max = overrideBoundsMax;
+		return true;
+	}
+
+	return mesh && mesh->GetBoundingBox( min, max );
+}
+}
+
 EveTransform::EveTransform( IRoot* lockobj ) :
 	Tr2Transform( lockobj ),
 	PARENTLOCK( m_children ),
@@ -349,6 +369,33 @@ void EveTransform::UpdateVisibility( const EveUpdateContext& updateContext, cons
 void EveTransform::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	GetRenderables( renderables, nullptr );
+}
+
+bool EveTransform::GetLocalBoundingBox( Vector3& min, Vector3& max )
+{
+	if( !GetDirectLocalBounds( m_overrideBoundsMin, m_overrideBoundsMax, m_mesh, min, max ) )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool EveTransform::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+{
+	if( !GetDirectLocalBounds( m_overrideBoundsMin, m_overrideBoundsMax, m_mesh, min, max ) )
+	{
+		return false;
+	}
+	BoundingBoxTransform( min, max, m_worldTransform );
+	return true;
+}
+
+bool EveTransform::IsBoundingBoxReady() const
+{
+	Vector3 min;
+	Vector3 max;
+	return GetDirectLocalBounds( m_overrideBoundsMin, m_overrideBoundsMax, m_mesh, min, max );
 }
 
 bool EveTransform::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const

@@ -18,7 +18,7 @@
 #include "EveTurretFiringFX.h"
 #include "include/TriMath.h"
 #include "Tr2QuadRenderer.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
@@ -67,9 +67,9 @@ bool IsUsingCMF( TriGeometryRes* geometryResource )
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Initialize data members, set everything to inlavid/empty and call
-//   ::PrepareResouce(), which will create a vertex decleration and a
-//   special istance buffer for the instance rendering. Also load the
+//   Initialize data members, set everything to invalid/empty and call
+//   ::PrepareResource(), which will create a vertex declaration and a
+//   special instance buffer for the instance rendering. Also load the
 //   shader for shadow generation
 // --------------------------------------------------------------------------------
 EveTurretSet::EveTurretSet( IRoot* lockobj ) :
@@ -461,7 +461,7 @@ bool EveTurretSet::IsAmbientVisible() const
 }
 
 
-IEveSpaceObjectChild* EveTurretSet::GetAmbientEffectOrGeneratedEffect() const
+EveSpaceObjectChild* EveTurretSet::GetAmbientEffectOrGeneratedEffect() const
 {
 	if( m_ambientEffectEditingMode )
 	{
@@ -1419,7 +1419,7 @@ void EveTurretSet::UpdateSingleTurrets()
 //   First thing to do is to keep the world-matrices of all turrets up to date,
 //   cause most likely the ship has moved. Then sample the granny animation
 //   for each single turret of this set, cause they are animated independently.
-//   Just before collapsing the skeleton matrices, sneek in a bone modification
+//   Just before collapsing the skeleton matrices, sneak in a bone modification
 //   for the auto tracking.
 //   Also smoothly do some fading between states and tracking positions.
 // SeeAlso:
@@ -1564,7 +1564,7 @@ void EveTurretSet::UpdateTurretTransforms( const Matrix* turretTransformMatrix )
 // --------------------------------------------------------------------------------
 Matrix EveTurretSet::GetFiringBoneWorldTransform( unsigned int muzzle ) const
 {
-	// there MUST be an avtive turret aka a "firing turret"!
+	// there MUST be an active turret aka a "firing turret"!
 	unsigned int closestTurret = m_activeTurret;
 	// so if we don't have one, calc one temporarily
 	if( closestTurret == INVALID_TURRET_INDEX )
@@ -1735,7 +1735,7 @@ void EveTurretSet::ModifySystemBoneTransform( SystemBones bone, const Vector3* t
 	case SYSBONE_ROTATION:
 	case SYSBONE_ROTATION01:
 	case SYSBONE_ROTATION02: {
-		// rotation of turret 360 degress, alpha is between -pi and pi
+		// rotation of turret 360 degrees, alpha is between -pi and pi
 		float alpha = atan2( target->x, target->z );
 		// never forget do apply influence!
 		alpha *= m_trackingInfluence;
@@ -2918,7 +2918,7 @@ void EveTurretSet::EnterStateIdle()
 		break;
 	case STATE_TARGETING:
 	case STATE_FIRING:
-		// stop shooting, fadout tracking, then into active loop
+		// stop shooting, fadeout tracking, then into active loop
 		m_delayToFadeOutTracking = 0.0001f;
 		m_activeTurret = INVALID_TURRET_INDEX;
 		m_target->StopFireAtLocator();
@@ -3178,7 +3178,7 @@ void EveTurretSet::EnterStateReloading()
 	switch( m_state )
 	{
 	case STATE_DEACTIVE:
-		// ingnore this state change: when the turret is inactive, no reload state can be shown!
+		// ignore this state change: when the turret is inactive, no reload state can be shown!
 		break;
 	case STATE_INVALID:
 	case STATE_IDLE:
@@ -3191,7 +3191,7 @@ void EveTurretSet::EnterStateReloading()
 		break;
 	case STATE_TARGETING:
 	case STATE_FIRING:
-		// stop shooting, fadout tracking, then into active loop
+		// stop shooting, fadeout tracking, then into active loop
 		m_delayToFadeOutTracking = 0.0001f;
 		m_activeTurret = INVALID_TURRET_INDEX;
 		m_target->StopFireAtLocator();
@@ -3654,12 +3654,12 @@ void EveTurretSet::SetFiringEffect( EveTurretFiringFX* firingEffect )
 	InitializeFiringEffect();
 }
 
-IEveSpaceObjectChild* EveTurretSet::GetAmbientEffect()
+EveSpaceObjectChild* EveTurretSet::GetAmbientEffect()
 {
 	return m_ambientEffect;
 }
 
-void EveTurretSet::SetAmbientEffect( IEveSpaceObjectChild* ambientEffect )
+void EveTurretSet::SetAmbientEffect( EveSpaceObjectChild* ambientEffect )
 {
 	auto registry = GetComponentRegistry();
 	if( EveEntityPtr entity = BlueCastPtr( m_ambientEffect ) )

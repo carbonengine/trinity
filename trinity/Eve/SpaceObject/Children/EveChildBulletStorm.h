@@ -4,7 +4,7 @@
 #ifndef EveChildBulletStorm_H
 #define EveChildBulletStorm_H
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "ITr2Renderable.h"
 
 #include "Eve/SpaceObject/EveSpaceObject2.h"
@@ -34,7 +34,7 @@ public:
 //   A spaceobject child for rendering swarm like bullets
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveChildBulletStorm ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public ITr2Renderable,
 	public Tr2DeviceResource,
 	public INotify,
@@ -55,19 +55,11 @@ public:
 	bool OnModified( Be::Var * val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	const char* GetName() const;
-	void SetName( const char* name );
-	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
-	{
-	}
+	// EveSpaceObjectChild
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void GetLocalToWorldTransform( Matrix & transform ) const;
-	void ChangeLOD( Tr2Lod lod ) {};
-	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
@@ -93,7 +85,6 @@ public:
 
 private:
 	// general data
-	std::string m_name;
 	bool m_display;
 	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
 	bool m_hasUpdated = false;
