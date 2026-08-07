@@ -173,6 +173,90 @@
         "VCPKG_TARGET_TRIPLET": "x64-osx-trinitydev",
         "VCPKG_HOST_TRIPLET": "x64-osx-trinitydev"
       }
+    },
+    {
+      "name": "arm64-android",
+      "inherits": "windows",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "Android",
+        "CMAKE_SYSTEM_VERSION": "31",
+        "ANDROID_ABI": "arm64-v8a",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/toolchains/arm64-android-triplet.cmake"
+      },
+      "hidden": true
+    },
+    {
+      "name": "arm64-android-release",
+      "inherits": "arm64-android",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "VCPKG_TARGET_TRIPLET": "arm64-android-release",
+        "VCPKG_HOST_TRIPLET": "x64-windows-release"
+      }
+    },
+    {
+      "name": "arm64-android-debug",
+      "inherits": "arm64-android",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "VCPKG_TARGET_TRIPLET": "arm64-android-debug",
+        "VCPKG_HOST_TRIPLET": "x64-windows-release"
+      }
+    },
+    {
+      "name": "arm64-ios",
+      "inherits": "osx",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "iOS",
+        "CMAKE_OSX_ARCHITECTURES": "arm64",
+        "CMAKE_OSX_DEPLOYMENT_TARGET": "26.0",
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/toolchains/arm64-ios-triplet.cmake"
+      },
+      "hidden": true
+    },
+    {
+      "name": "arm64-ios-release",
+      "inherits": "arm64-ios",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "VCPKG_TARGET_TRIPLET": "arm64-ios-release",
+        "VCPKG_HOST_TRIPLET": "arm64-osx-release"
+      }
+    },
+    {
+      "name": "arm64-ios-debug",
+      "inherits": "arm64-ios",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "VCPKG_TARGET_TRIPLET": "arm64-ios-debug",
+        "VCPKG_HOST_TRIPLET": "arm64-osx-release"
+      }
+    },
+    {
+      "name": "arm64-ios-simulator",
+      "inherits": "arm64-ios",
+      "cacheVariables": {
+        "CMAKE_OSX_SYSROOT": "iphonesimulator"
+      },
+      "hidden": true
+    },
+    {
+      "name": "arm64-ios-simulator-release",
+      "inherits": "arm64-ios-simulator",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "VCPKG_TARGET_TRIPLET": "arm64-ios-simulator-release",
+        "VCPKG_HOST_TRIPLET": "arm64-osx-release"
+      }
+    },
+    {
+      "name": "arm64-ios-simulator-debug",
+      "inherits": "arm64-ios-simulator",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "VCPKG_TARGET_TRIPLET": "arm64-ios-simulator-debug",
+        "VCPKG_HOST_TRIPLET": "arm64-osx-release"
+      }
     }
   ]
 }
