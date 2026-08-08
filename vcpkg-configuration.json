@@ -9,7 +9,7 @@
       "kind": "git",
       "repository": "git@github.com:ccpshanghai/vcpkg-registry.git",
       "reference": "mobile-exp",
-      "baseline": "294693148db6b4a1129823dc1a0b58dc04800384",
+      "baseline": "113b8194b38ebd2a8aafd68e6efda96911df6b0b",
       "packages": [
         "python3",
         "carbon-*",
