@@ -872,7 +872,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderSharpening( bool enabl
 	auto renderHeight = output->GetHeight();
 	AF1 outWidth = static_cast<AF1>( renderWidth );
 	AF1 outHeight = static_cast<AF1>( renderHeight );
-	float casIntensity = 0.5f;
+	float casIntensity = 0.0f;
 
 	AMDSharpening::CASConstants casConst;
 

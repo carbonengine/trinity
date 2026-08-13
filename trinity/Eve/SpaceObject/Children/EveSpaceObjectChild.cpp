@@ -143,7 +143,7 @@ void EveSpaceObjectChild::UnregisterChild( EveSpaceObjectChild* child )
 {
 	if( child )
 	{
-		CCP_ASSERT( child->GetParent() == this );
+		CCP_ASSERT( child->GetParent() == this || child->GetParent() == nullptr );
 		child->SetParent( nullptr );
 		child->SetOwner( nullptr );
 		// No reason to reset the part tag as it is meaningless outside the hierarchy of the parent object
