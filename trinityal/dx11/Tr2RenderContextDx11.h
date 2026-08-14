@@ -277,6 +277,34 @@ private:
 	SharedConstantBuffer m_sharedConstantBuffers[Tr2RenderContextEnum::SHADER_TYPE_COUNT * CB_SLOT_COUNT];
 
 public:
+	// See the DX12 backend for what this is for. There is no DX12 command list
+	// here, and 0 is the documented "not now" value.
+	uint64_t GetNativeCommandList() const
+	{
+		return 0;
+	}
+
+	// See the DX12 backend. No DX12 device or descriptor heap here.
+	uint64_t GetNativeDevice() const
+	{
+		return 0;
+	}
+
+	uint64_t GetNativeSrvHeap() const
+	{
+		return 0;
+	}
+
+	uint64_t GetNativeCommandQueue() const
+	{
+		return 0;
+	}
+
+	uint64_t GetNativeSamplerHeap() const
+	{
+		return 0;
+	}
+
 	uint32_t ComputeVertexCount( uint32_t primitiveCount ) const throw();
 
 	CComPtr<ID3D11Device> m_secondaryDevice11;
