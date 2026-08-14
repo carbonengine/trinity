@@ -1,7 +1,6 @@
 #pragma once
 
 #include "VkResult.h"
-#include "include/Tr2PixelFormat.h"
 
 class Tr2PrimaryRenderContextAL;
 struct Tr2BitmapDimensions;
