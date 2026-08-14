@@ -39,7 +39,7 @@ public:
 		unsigned& msaaQuality );
 	static bool SupportsBackBufferFormat( unsigned adapterIndex,
 		Tr2RenderContextEnum::PixelFormat backBufferFormat );
-	static bool SupportsRenderTargetFormat( unsigned adapterIndex Tr2RenderContextEnum::PixelFormat format );
+	static bool SupportsRenderTargetFormat( unsigned adapterIndex, Tr2RenderContextEnum::PixelFormat format );
 	static ALResult GetAdapterMaxTextureWidth( unsigned adapterIndex, unsigned& maxWidth );
 	static bool AreAdaptersDifferent( unsigned adapter1, unsigned adapter2 );
 
