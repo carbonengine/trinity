@@ -9,6 +9,7 @@
 #define TRINITY_DIRECTX11 2
 #define TRINITY_STUB 5
 #define TRINITY_DIRECTX12 6
+#define TRINITY_VULKAN 7
 #define TRINITY_METAL 10
 
 #ifndef TRINITY_PLATFORM
@@ -45,7 +46,7 @@
 #pragma warning( pop )
 #endif
 
-#if TRINITY_PLATFORM != TRINITY_DIRECTX11 && TRINITY_PLATFORM != TRINITY_DIRECTX12
+#if TRINITY_PLATFORM != TRINITY_DIRECTX11 && TRINITY_PLATFORM != TRINITY_DIRECTX12 && TRINITY_PLATFORM != TRINITY_VULKAN
 #define TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT 0
 #define Tr2PrimaryRenderContextAL Tr2RenderContextAL
 #else
@@ -75,6 +76,18 @@
 
 #include <d3d12.h>
 #include <dxgi1_5.h>
+
+#elif TRINITY_PLATFORM == TRINITY_VULKAN
+
+#define TRINITY_PLATFORM_SYMBOL vulkan
+#define TRINITY_PLATFORM_SYMBOL_SUFFIX Vulkan
+#define TRINITY_PLATFORM_NAME "vulkan"
+
+#pragma warning( push )
+#pragma warning( disable: 4005 )
+#include <vulkan/vulkan.h>
+#include <vulkan/vk_sdk_platform.h>
+#pragma warning( pop )
 
 #elif TRINITY_PLATFORM == TRINITY_METAL
 

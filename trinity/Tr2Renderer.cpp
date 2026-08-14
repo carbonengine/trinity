@@ -1502,7 +1502,7 @@ bool Tr2Renderer::GetGeometryShaderSupport()
 
 	Tr2ShaderAL shader;
 	return SUCCEEDED( shader.Create( GEOMETRY_SHADER, bytecode, Tr2ShaderSignatureAL(), "", renderContext ) );
-#elif TRINITY_PLATFORM == TRINITY_DIRECTX12
+#elif TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_VULKAN
 	return true;
 #else
 	return false;
