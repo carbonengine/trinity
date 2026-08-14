@@ -337,6 +337,60 @@ const Be::ClassInfo* Tr2PrimaryRenderContext::ExposeToBlue()
 			GetBackBufferFormat,
 			"Returns the PixelFormat of the default back buffer" )
 
+		MAP_METHOD_AND_WRAP(
+			"GetNativeCommandList",
+			GetNativeCommandList,
+			"Returns this context's native command list as an integer.\n"
+			"\n"
+			"For hosting an immediate-mode UI (ImGui) inside Trinity's frame from\n"
+			"Python: the renderer ships as a CPython extension module with no C++\n"
+			"exports, so a C++ UI layer cannot link against it and the handle has to\n"
+			"cross through Python.\n"
+			"\n"
+			"This is NOT a liveness check. The DX12 backend allocates its command list\n"
+			"once and reuses it, so the value is non-zero outside the frame too —\n"
+			"measured identical before, during and after a pump. Record into it only\n"
+			"from inside a TriStepPythonCB callback, and gate on being there rather\n"
+			"than on this value.\n"
+			"\n"
+			"0 on every backend other than DX12, which is the one thing zero does mean." )
+
+		MAP_METHOD_AND_WRAP(
+			"GetNativeDevice",
+			GetNativeDevice,
+			"Returns the ID3D12Device as an integer, or 0 off DX12.\n"
+			"\n"
+			"Needed by ImGui's DX12 backend at init, and by the same route as the command\n"
+			"list: there is no C++ path off this engine." )
+
+		MAP_METHOD_AND_WRAP(
+			"GetNativeSrvHeap",
+			GetNativeSrvHeap,
+			"Returns the shader-visible SRV/UAV descriptor heap as an integer, 0 off DX12.\n"
+			"\n"
+			"This is the heap Trinity binds, exposed so a hosted UI can put that binding\n"
+			"back after it has drawn — not a heap to draw out of. The host brings its own\n"
+			"SRV heap for ImGui's font descriptor and binds it before drawing, and\n"
+			"SetDescriptorHeaps replaces the whole binding rather than adding to it, so\n"
+			"Trinity's heaps have to be restored afterwards. See GetNativeSamplerHeap." )
+
+		MAP_METHOD_AND_WRAP(
+			"GetNativeCommandQueue",
+			GetNativeCommandQueue,
+			"Returns the direct ID3D12CommandQueue as an integer, or 0 off DX12.\n"
+			"\n"
+			"ImGui's DX12 backend uploads its font texture through a command queue at\n"
+			"init; without one that upload has nowhere to go." )
+
+		MAP_METHOD_AND_WRAP(
+			"GetNativeSamplerHeap",
+			GetNativeSamplerHeap,
+			"Returns the shader-visible sampler descriptor heap as an integer, 0 off DX12.\n"
+			"\n"
+			"Needed to put the binding back after a hosted UI has drawn:\n"
+			"SetDescriptorHeaps replaces the whole binding rather than adding to it, so\n"
+			"restoring only the SRV heap leaves later draws without samplers." )
+
 	EXPOSURE_END()
 }
 

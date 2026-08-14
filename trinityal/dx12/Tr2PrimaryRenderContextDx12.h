@@ -118,6 +118,39 @@ public:
 
 
 	ID3D12DescriptorHeap* GetGlobalSrvUavHeap() const;
+
+	// The device as an integer, for the same reason and by the same route as
+	// GetNativeCommandList: ImGui's DX12 backend needs it at init, and there is no C++ path
+	// off this engine — the only export is PyInit__trinity_dx12.
+	uint64_t GetNativeDevice() const
+	{
+		return static_cast<uint64_t>( reinterpret_cast<uintptr_t>( m_device.p ) );
+	}
+
+	// The heaps Trinity binds, exposed so a hosted UI can put that binding back after it has
+	// drawn. Not heaps the UI draws out of: the host brings its own SRV heap for ImGui's font
+	// descriptor and binds it before drawing, and SetDescriptorHeaps replaces the whole
+	// binding rather than adding to it, so both of Trinity's heaps are unbound by that call
+	// and both have to be restored — see GetNativeSamplerHeap for the other half.
+	uint64_t GetNativeSrvHeap() const
+	{
+		return static_cast<uint64_t>( reinterpret_cast<uintptr_t>( GetGlobalSrvUavHeap() ) );
+	}
+
+	// The direct command queue. ImGui's DX12 backend wants it to upload its font texture at
+	// init; without one that upload has nowhere to go.
+	uint64_t GetNativeCommandQueue() const
+	{
+		return static_cast<uint64_t>( reinterpret_cast<uintptr_t>( m_commandQueue.p ) );
+	}
+
+	// The other half of the restore described above. Easy to leave out, because ImGui itself
+	// never reads it — its root signature declares a static sampler — so the damage lands on
+	// Trinity's own later draws rather than on the UI.
+	uint64_t GetNativeSamplerHeap() const
+	{
+		return static_cast<uint64_t>( reinterpret_cast<uintptr_t>( GetGlobalSamplerHeap() ) );
+	}
 	std::shared_ptr<ShaderResourceViewDx12> GetSrvHeapView() const;
 	std::shared_ptr<UnorderedAccessViewDx12> GetUavHeapView() const;
 	ID3D12DescriptorHeap* GetGlobalSamplerHeap() const;

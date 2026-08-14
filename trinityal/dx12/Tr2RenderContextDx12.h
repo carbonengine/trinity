@@ -275,6 +275,40 @@ public:
 	// extends the interface to support ray tracing and render passes
 	CComPtr<ID3D12GraphicsCommandList4> m_commandList4;
 
+	// Returns this context's native command list as an integer.
+	//
+	// NOT a liveness check. m_commandList is allocated once and reused across frames, so
+	// this is non-zero outside the frame as well — measured identical before, during and
+	// after a pump. Callers must gate on *where* they are (inside a render step) and never
+	// on this value. Zero means only "not a DX12 backend".
+	//
+	// Exists so an immediate-mode UI (ImGui) can record into Trinity's frame from
+	// Python. Trinity ships as a CPython extension module whose only export is
+	// PyInit__trinity_dx12, so a C++ UI layer cannot link against it at all; the
+	// handle has to travel out through Python and back in.
+	//
+	// uint64_t rather than void*, because Blue marshals only the sized integer
+	// types (BlueExposureTypeSignature.h). Declared here on Tr2RenderContextAL
+	// rather than on a Blue class so that both Tr2RenderContext and
+	// Tr2PrimaryRenderContext inherit it, in every backend configuration, with no
+	// per-configuration shim.
+	//
+	// Only meaningful to *record into* while a frame is open, which in practice means from
+	// inside a TriStepPythonCB callback. Nothing here can enforce that.
+	//
+	// Not virtual: backend selection here is by file, not by dispatch — each
+	// backend header declares its own Tr2RenderContextAL and exactly one compiles.
+	uint64_t GetNativeCommandList() const
+	{
+		return static_cast<uint64_t>( reinterpret_cast<uintptr_t>( m_commandList.p ) );
+	}
+
+	// The other four — device, command queue, SRV heap, sampler heap — live on
+	// Tr2PrimaryRenderContextAL rather than here: that is where m_device, m_commandQueue and
+	// the two GetGlobal*Heap accessors are, and at this point in the header
+	// Tr2PrimaryRenderContextAL is only forward-declared, so an inline body could not
+	// dereference m_ownerDevice.
+
 	Tr2PrimaryRenderContextAL* m_ownerDevice;
 	bool m_dirtyPso;
 
