@@ -18,6 +18,10 @@ else()
     if(WIN32)
         option(BUILD_DX11 "Build dx11." OFF)
         option(BUILD_DX12 "Build dx12." OFF)
+        # No VCPKG_MANIFEST_FEATURES entry: vulkan-headers and
+        # vulkan-memory-allocator are already core, non-feature dependencies in
+        # vcpkg.json, so a Vulkan build widens the dependency closure by nothing.
+        option(BUILD_VULKAN "Build Vulkan." OFF)
     elseif(APPLE)
         option(BUILD_METAL "Build Metal." OFF)
     endif()
