@@ -86,7 +86,6 @@
 #pragma warning( push )
 #pragma warning( disable: 4005 )
 #include <vulkan/vulkan.h>
-#include <vulkan/vk_sdk_platform.h>
 #pragma warning( pop )
 
 #elif TRINITY_PLATFORM == TRINITY_METAL
