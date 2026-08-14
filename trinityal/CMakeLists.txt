@@ -515,6 +515,27 @@ if(WIN32)
         set_shared_trinityal_properties(dx12)
     endif()
 
+    if (BUILD_VULKAN)
+
+        #[[
+            Modelled on TrinityAL_stub, NOT on TrinityAL_dx11/dx12. Those targets
+            link the NVIDIA Streamline/Aftermath, AMD FidelityFX and Intel XeSS
+            packages, and their vcpkg features drag in fxc, which fetches from an
+            internal-only host. Keeping this target clear of all of them is what
+            lets a Vulkan configuration build outside the CCP network -- the only
+            Windows configuration that can. Do not "align" it with dx12 later.
+        ]]
+        find_package(VulkanHeaders CONFIG REQUIRED)
+        find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+
+        ccp_add_library(TrinityAL_vulkan STATIC)
+        target_compile_definitions(TrinityAL_vulkan PUBLIC TRINITY_PLATFORM=TRINITY_VULKAN)
+        target_link_libraries(TrinityAL_vulkan PUBLIC
+                                                    Vulkan::Headers
+                                                    GPUOpen::VulkanMemoryAllocator)
+        set_shared_trinityal_properties(vulkan)
+    endif()
+
 elseif(APPLE)
     
     if(BUILD_METAL)

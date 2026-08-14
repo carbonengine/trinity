@@ -2017,6 +2017,20 @@ if(WIN32)
         set_shared_trinity_properties(${TRINITY_DX12_TARGET_NAME})
     endif()
 
+    if (BUILD_VULKAN)
+
+        set(TRINITY_VULKAN_TARGET_NAME trinity_vulkan)
+
+        ccp_add_library(${TRINITY_VULKAN_TARGET_NAME} SHARED)
+        target_compile_definitions(${TRINITY_VULKAN_TARGET_NAME}
+            PRIVATE
+                TRINITY_PLATFORM=TRINITY_VULKAN
+                TRINITYNAME=_trinity_vulkan
+        )
+        target_link_libraries(${TRINITY_VULKAN_TARGET_NAME} PRIVATE TrinityAL_vulkan)
+        set_shared_trinity_properties(${TRINITY_VULKAN_TARGET_NAME})
+    endif()
+
 elseif(APPLE)
     if(BUILD_METAL)
         enable_language(OBJCXX)
