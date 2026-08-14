@@ -192,10 +192,14 @@ namespace TrinityALImpl
 	{
 		return E_NOTIMPL;
 	}
+	ALResult Tr2BufferAL::MapForReading( const void*& data, uint32_t offset, uint32_t size, Tr2RenderContextAL& renderContext )
+	{
+		return E_NOTIMPL;
+	}
 	void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& renderContext )
 	{
 	}
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
 	{
 		return E_NOTIMPL;
 	}
