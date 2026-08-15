@@ -10,6 +10,7 @@
 #include "Tr2VertexLayoutALVulkan.h"
 #include "Tr2TextureALVulkan.h"
 #include "VkResult.h"
+#include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 
 bool g_gatherPipelineStatistics = false;
 

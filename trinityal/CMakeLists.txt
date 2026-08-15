@@ -529,7 +529,7 @@ if(WIN32)
         find_package(VulkanMemoryAllocator CONFIG REQUIRED)
 
         ccp_add_library(TrinityAL_vulkan STATIC)
-        target_compile_definitions(TrinityAL_vulkan PUBLIC TRINITY_PLATFORM=TRINITY_VULKAN)
+        target_compile_definitions(TrinityAL_vulkan PUBLIC TRINITY_PLATFORM=TRINITY_VULKAN VK_USE_PLATFORM_WIN32_KHR)
         target_link_libraries(TrinityAL_vulkan PUBLIC
                                                     Vulkan::Headers
                                                     GPUOpen::VulkanMemoryAllocator)

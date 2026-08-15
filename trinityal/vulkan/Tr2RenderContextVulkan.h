@@ -29,6 +29,7 @@ class Tr2SamplerStateAL;
 class Tr2BufferAL;
 struct Tr2Viewport;
 class Tr2RtShaderTableAL;
+class Tr2RtTopLevelAccelerationStructureAL;
 
 
 // -------------------------------------------------------------
@@ -326,14 +327,14 @@ public:
 		return std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>>();
 	}
 
-	void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
 	{
 		technique = Tr2UpscalingAL::Technique::NONE;
 		setting = Tr2UpscalingAL::Setting::NATIVE;
 		framegeneration = false;
 	}
 
-	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID )
 	{
 		return Tr2UpscalingAL::UpscalingInfo();
 	}
