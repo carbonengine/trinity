@@ -3,7 +3,6 @@
 #include "VkResult.h"
 
 class Tr2PrimaryRenderContextAL;
-struct Tr2BitmapDimensions;
 struct Tr2MsaaDesc;
 
 namespace TrinityALImpl
