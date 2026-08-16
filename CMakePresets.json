@@ -16,7 +16,7 @@
         "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/triplets"
       },
       "environment": {
-        "PATH_TO_VCPKG_ROOT": "${sourceDir}/vendor/github.com/microsoft/vcpkg"
+        "VCPKG_ROOT": "${sourceDir}/vendor/github.com/microsoft/vcpkg"
       },
       "hidden": true
     },
