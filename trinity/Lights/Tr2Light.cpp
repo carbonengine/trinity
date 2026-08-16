@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "Tr2Light.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Resources/Tr2LightProfileRes.h"
 
 

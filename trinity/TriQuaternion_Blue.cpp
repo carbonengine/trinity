@@ -2,8 +2,8 @@
 
 #include "StdAfx.h"
 #include "include/TriQuaternion.h"
-#include "Include/ITriVector.h"
-#include "Include/ITriMatrix.h"
+#include "include/ITriVector.h"
+#include "include/ITriMatrix.h"
 
 #if BLUE_WITH_PYTHON
 BLUE_DEFINE( TriQuaternion );

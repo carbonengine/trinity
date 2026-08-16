@@ -8,7 +8,7 @@
 
 #include "include/ITr2DebugRenderer.h"
 #include "include/IEveBallpark.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Resources/TriGeometryRes.h"
 #include "TriFrustumOrtho.h"
 

@@ -3,7 +3,7 @@
 #pragma once
 #ifndef EveUpdateContext_h
 #define EveUpdateContext_h
-#include "Include/IEveBallpark.h"
+#include "include/IEveBallpark.h"
 #include "Utilities/Vector3d.h"
 #include "../TbbStub.h"
 #include <TriFrustum.h>
