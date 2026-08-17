@@ -1,0 +1,12 @@
+// Copyright © 2023 CCP ehf.
+
+struct VS_OUTPUT
+{
+	float4 Position : SV_Position;
+};
+
+float4 main(VS_OUTPUT In) : SV_Target
+{
+    float4 color = float4( 1, 0, 0, 1 );
+    return color;
+}
