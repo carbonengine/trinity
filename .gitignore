@@ -41,3 +41,9 @@ CMakeUserPresets.json
 .cmake-build*
 cmake-build*
 .claude/*
+
+### Dear ImGui ###
+# Per-user window layout, saved by ImGui into whatever directory its host was run from.
+# Trinity does not use ImGui itself, but a project that consumes this build tree can be run
+# from this checkout, and the file then shows up as untracked content in the superproject.
+imgui.ini
