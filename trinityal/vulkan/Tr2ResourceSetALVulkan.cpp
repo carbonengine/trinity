@@ -75,9 +75,23 @@ namespace TrinityALImpl
 					0,
 					1,
 				};
+				if( it->type & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
+				{
+					// UAV is no longer a single value (Tr2ShaderAL.h:56-86); it is a
+					// family flagged by UAV_REGISTER_FLAG. This stays a coarse flag
+					// test rather than splitting by subtype: every UAV register has
+					// unconditionally returned E_FAIL here since 2019 (UAV
+					// descriptor-set *writes* were never implemented on Vulkan), so a
+					// flag test reproduces that behavior exactly for every subtype.
+					// Contrast with GetDescriptorType in Tr2ShaderProgramALVulkan.cpp,
+					// which must split because it feeds descriptor-set-layout/pool
+					// creation and is genuinely exercised by UAV_BUFFER today.
+					return E_FAIL;
+				}
+
 				switch( it->type )
 				{
-				case Tr2ShaderRegisterAL::CONSTANTS:
+				case Tr2ShaderRegisterAL::CONSTANT_BUFFER:
 					//d.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 					continue;
 				case Tr2ShaderRegisterAL::SAMPLER:
@@ -92,8 +106,6 @@ namespace TrinityALImpl
 					d.pImageInfo = &imageInfos.back();
 					break;
 				}
-				case Tr2ShaderRegisterAL::UAV:
-					return E_FAIL;
 				default:
 					d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 					if( !description.m_srv[description.m_registerMap.srvs[it->stage][it->registerIndex]].texture.IsValid() )

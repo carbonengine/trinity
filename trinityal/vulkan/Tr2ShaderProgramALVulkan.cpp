@@ -17,13 +17,26 @@ namespace
 	{
 		switch( registerType )
 		{
-		case Tr2ShaderRegisterAL::CONSTANTS:
+		case Tr2ShaderRegisterAL::CONSTANT_BUFFER:
 			return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		case Tr2ShaderRegisterAL::SAMPLER:
 			return VK_DESCRIPTOR_TYPE_SAMPLER;
-		case Tr2ShaderRegisterAL::UAV:
-			return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 		default:
+			// UAV is no longer a single value (Tr2ShaderAL.h:56-86): it is a family
+			// flagged by UAV_REGISTER_FLAG, spanning UAV_BUFFER (64) through
+			// UAV_TEXTURECUBEARRAY (74). Vulkan's VkDescriptorType genuinely
+			// distinguishes storage buffer from storage image, so the two-way split
+			// below -- mirroring dx12's ordinal comparison against *_STRUCTURED_BUFFER,
+			// e.g. Tr2ResourceSetALDx12.cpp:128,186 -- is required for correctness, not
+			// just to compile: the old code collapsed every UAV subtype to
+			// STORAGE_IMAGE, which is wrong for UAV_BUFFER/UAV_STRUCTURED_BUFFER and is
+			// already exercised by tests/Compute.cpp.
+			if( registerType & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
+			{
+				return registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER
+					? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+					: VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+			}
 			return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		}
 	}
@@ -134,7 +147,7 @@ namespace TrinityALImpl
 					nullptr
 				};
 
-				if( it->registerType == Tr2ShaderRegisterAL::CONSTANTS )
+				if( it->registerType == Tr2ShaderRegisterAL::CONSTANT_BUFFER )
 				{
 					constantBindings.push_back( binding );
 				}
