@@ -28,6 +28,11 @@ set(_SOURCES
     Rendering.cpp
     SamplerState.cpp
     Shader.cpp
+    # Vulkan-only in its entirety (guarded by TRINITY_PLATFORM == TRINITY_VULKAN), but
+    # listed here because every backend target compiles this one _SOURCES list. It
+    # asserts the descriptor set/binding ABI by walking the shipped SPIR-V modules; no
+    # GPU and no device involved.
+    ShaderBindingABI.cpp
     StdAfx.h
     StdAfx.cpp
     SwapChain.cpp

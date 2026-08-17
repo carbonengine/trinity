@@ -5,6 +5,7 @@
 #include "Tr2ShaderProgramALVulkan.h"
 #include "Tr2PrimaryRenderContextVulkan.h"
 #include "Tr2ShaderALVulkan.h"
+#include "Tr2ShaderBindingABIVulkan.h"
 #include "UtilitiesVulkan.h"
 
 
@@ -116,44 +117,13 @@ namespace
 			? REGISTER_SLOT_SAMPLER : REGISTER_SLOT_CONSTANT_BUFFER;
 	}
 
-	// The binding-number block a register lives in. This is a shader-compiler ABI,
-	// NOT a private numbering scheme: the four blocks are the four HLSL register
-	// classes b/s/t/u, and Shaders.vulkan/ is compiled with dxc -fvk-{b,s,t,u}-shift
-	// arguments computed from exactly these values (see trinityal/tests/CMakeLists.txt).
-	// The values are 2019's, restored: b=0, s=2, t=1, u=0.
-	//
-	// This is deliberately NOT the same mapping as RegisterTypeIndex above. That one
-	// answers "which descriptor kind", which Vulkan splits six ways; this one answers
-	// "which binding block", which HLSL splits four ways. Tasks 4e and 4f used one
-	// index for both roles and silently moved every SRV/UAV binding number as a side
-	// effect of a descriptor-type fix -- a compute u0 went from 64 to 640. A t0 is a
-	// Buffer<> or a Texture2D<> and never both, so the type split never needed a
-	// block split to avoid collisions.
-	//
-	// b and u sharing block 0 is safe: CONSTANT_BUFFER registers go into
-	// m_constantLayout (descriptor set 0) and every other register into
-	// m_resourceLayout (set 1), so the two never share a set.
-	enum RegisterClass
-	{
-		REGISTER_CLASS_CONSTANT_BUFFER = 0,   // b
-		REGISTER_CLASS_SRV             = 1,   // t
-		REGISTER_CLASS_SAMPLER         = 2,   // s
-		REGISTER_CLASS_UAV             = 0    // u
-	};
-
-	uint32_t RegisterClassOffset( Tr2ShaderRegisterAL::RegisterType registerType )
-	{
-		if( registerType & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
-		{
-			return REGISTER_CLASS_UAV;
-		}
-		if( registerType & Tr2ShaderRegisterAL::SRV_REGISTER_FLAG )
-		{
-			return REGISTER_CLASS_SRV;
-		}
-		return registerType == Tr2ShaderRegisterAL::SAMPLER
-			? REGISTER_CLASS_SAMPLER : REGISTER_CLASS_CONSTANT_BUFFER;
-	}
+	// The binding-number block a register lives in -- RegisterClassOffset, and the
+	// whole binding formula with it -- now lives in Tr2ShaderBindingABIVulkan.h, so
+	// that trinityal/tests/ShaderBindingABI.cpp can derive its expected SPIR-V
+	// decorations by calling the same code this file calls, instead of tabulating
+	// sixteen expected numbers that would keep passing while the formula drifted.
+	// That header carries the full rationale (four HLSL classes vs. six descriptor
+	// kinds; why b and u can share block 0; what Tasks 4e and 4f got wrong).
 }
 
 namespace TrinityALImpl
@@ -247,15 +217,13 @@ namespace TrinityALImpl
 			m_shaderInfo.push_back( info );
 			m_shaders.push_back( shaders[i] );
 
-			uint32_t registerSize = 32;
-
 			auto& inputs = shaders[i].m_shader->m_signature.registers;
 			for( auto it = begin( inputs ); it != end( inputs ); ++it )
 			{
 				uint32_t slot = RegisterTypeIndex( it->registerType );
 
 				VkDescriptorSetLayoutBinding binding = {
-					it->registerIndex + RegisterClassOffset( it->registerType ) * 6 * registerSize + shaders[i].GetType() * registerSize,
+					Tr2VulkanBindingABI::BindingNumber( it->registerType, it->registerIndex, shaders[i].GetType() ),
 					GetDescriptorType( it->registerType ),
 					1,
 					info.stage,
