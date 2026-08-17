@@ -40,6 +40,41 @@ namespace
 			return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		}
 	}
+
+	// RegisterType can no longer be used directly as an array index (see the two
+	// call sites in Create() below): Tr2ShaderAL.h's rewrite turned it from a dense
+	// 0-3 enum into a flag-tagged one (SRV_* = 32-42, UAV_* = 64-74), so a direct
+	// `array[registerType]` silently reads/writes far out of bounds for any SRV or
+	// UAV register. This mirrors dx12's RegisterTypeIndex
+	// (Tr2PrimaryRenderContextDx12.cpp:100) -- a RegisterType -> dense-slot mapping --
+	// sized here to the five descriptor kinds GetDescriptorType above can return:
+	// constant buffer, sampler, SRV (still coarse; splitting it is the identical bug
+	// one line away, but out of this task's scope -- see the report), UAV
+	// buffer-like, UAV image-like.
+	enum RegisterSlot
+	{
+		REGISTER_SLOT_CONSTANT_BUFFER,
+		REGISTER_SLOT_SAMPLER,
+		REGISTER_SLOT_SRV,
+		REGISTER_SLOT_UAV_BUFFER,
+		REGISTER_SLOT_UAV_IMAGE,
+		REGISTER_SLOT_COUNT
+	};
+
+	uint32_t RegisterTypeIndex( Tr2ShaderRegisterAL::RegisterType registerType )
+	{
+		if( registerType & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
+		{
+			return registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER
+				? REGISTER_SLOT_UAV_BUFFER : REGISTER_SLOT_UAV_IMAGE;
+		}
+		if( registerType & Tr2ShaderRegisterAL::SRV_REGISTER_FLAG )
+		{
+			return REGISTER_SLOT_SRV;
+		}
+		return registerType == Tr2ShaderRegisterAL::SAMPLER
+			? REGISTER_SLOT_SAMPLER : REGISTER_SLOT_CONSTANT_BUFFER;
+	}
 }
 
 namespace TrinityALImpl
@@ -95,9 +130,19 @@ namespace TrinityALImpl
 		m_shaderInfo.reserve( count );
 		m_shaders.reserve( count );
 
-		uint32_t poolSizes[4] = { 0 };
+		uint32_t poolSizes[REGISTER_SLOT_COUNT] = { 0 };
+		VkDescriptorType poolTypes[REGISTER_SLOT_COUNT] = { };
 
-		uint32_t registerOffsets[] = { 0, 2, 1, 0 };
+		// One offset block (of 6*registerSize binding numbers) per slot, so registers
+		// of different kinds never collide within the same descriptor-set layout.
+		// REGISTER_SLOT_CONSTANT_BUFFER's value is unused for collision purposes --
+		// its registers land in the separate m_constantLayout, not m_resourceLayout --
+		// so it keeps the legacy CONSTANTS offset (0), same as the 2019 code.
+		// SAMPLER/SRV keep their original offsets (2/1); UAV_IMAGE keeps the original
+		// single UAV slot's offset (0 -- GetDescriptorType used to return
+		// STORAGE_IMAGE for every UAV) and the newly-distinguished UAV_BUFFER gets its
+		// own, previously-unused offset (3).
+		uint32_t registerOffsets[REGISTER_SLOT_COUNT] = { 0, 2, 1, 3, 0 };
 
 		std::vector<VkDescriptorSetLayoutBinding> resourceSetBindings, constantBindings;
 
@@ -139,8 +184,10 @@ namespace TrinityALImpl
 			auto& inputs = shaders[i].m_shader->m_signature.registers;
 			for( auto it = begin( inputs ); it != end( inputs ); ++it )
 			{
+				uint32_t slot = RegisterTypeIndex( it->registerType );
+
 				VkDescriptorSetLayoutBinding binding = {
-					it->registerIndex + registerOffsets[it->registerType] * 6 * registerSize + shaders[i].GetType() * registerSize,
+					it->registerIndex + registerOffsets[slot] * 6 * registerSize + shaders[i].GetType() * registerSize,
 					GetDescriptorType( it->registerType ),
 					1,
 					info.stage,
@@ -153,7 +200,8 @@ namespace TrinityALImpl
 				}
 				else
 				{
-					++poolSizes[it->registerType];
+					poolTypes[slot] = binding.descriptorType;
+					++poolSizes[slot];
 					resourceSetBindings.push_back( binding );
 				}
 
@@ -179,7 +227,14 @@ namespace TrinityALImpl
 				{
 					continue;
 				}
-				VkDescriptorPoolSize poolSize = { GetDescriptorType( Tr2ShaderRegisterAL::RegisterType( i ) ), poolSizes[i] };
+				// poolTypes[i] was recorded from the real registerType at tally time
+				// (above), rather than reconstructed here via GetDescriptorType(
+				// RegisterType(i) ) -- i is a synthetic slot index (see RegisterSlot),
+				// not a real RegisterType value, so casting it back would silently
+				// mis-dispatch (e.g. i == REGISTER_SLOT_UAV_BUFFER has no
+				// UAV_REGISTER_FLAG bit set and would fall through to
+				// VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE instead of STORAGE_BUFFER).
+				VkDescriptorPoolSize poolSize = { poolTypes[i], poolSizes[i] };
 				m_poolSizes.push_back( poolSize );
 			}
 		}
@@ -201,7 +256,14 @@ namespace TrinityALImpl
 				{
 					continue;
 				}
-				VkDescriptorPoolSize poolSize = { GetDescriptorType( Tr2ShaderRegisterAL::RegisterType( i ) ), poolSizes[i] };
+				// poolTypes[i] was recorded from the real registerType at tally time
+				// (above), rather than reconstructed here via GetDescriptorType(
+				// RegisterType(i) ) -- i is a synthetic slot index (see RegisterSlot),
+				// not a real RegisterType value, so casting it back would silently
+				// mis-dispatch (e.g. i == REGISTER_SLOT_UAV_BUFFER has no
+				// UAV_REGISTER_FLAG bit set and would fall through to
+				// VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE instead of STORAGE_BUFFER).
+				VkDescriptorPoolSize poolSize = { poolTypes[i], poolSizes[i] };
 				m_poolSizes.push_back( poolSize );
 			}
 		}
