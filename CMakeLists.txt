@@ -63,6 +63,13 @@ endif()
 
 project(carbon-trinity VERSION 1.0.0)
 
+# Enables CTest at the scope every add_subdirectory() below inherits from, so a
+# ctest run from the build root can see tests registered by any subdirectory
+# (currently trinityal/tests/CMakeLists.txt's TrinityALTest_vulkan). This is
+# additive only -- it defines no targets and does not touch BUILD_TESTING --
+# so it changes nothing about what dx11, dx12, or metal configurations build.
+enable_testing()
+
 if (BUILD_FOR_PYTHON_2)
     if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
         message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")
