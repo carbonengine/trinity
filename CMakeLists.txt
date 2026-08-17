@@ -19,13 +19,22 @@ else()
         option(BUILD_DX11 "Build dx11." OFF)
         option(BUILD_DX12 "Build dx12." OFF)
         # vulkan-headers and vulkan-memory-allocator are core, non-feature
-        # dependencies in vcpkg.json, so the backend itself widens the closure by
-        # nothing. The "vulkan" feature exists only for directx-dxc, which the
-        # TrinityALTest_vulkan shader step needs to emit SPIR-V -- and which is
-        # otherwise gated behind dx11/dx12/shader-compiler, all OFF here.
-        # directx-dxc is a public port, so this preserves the property that the
-        # Vulkan configuration is the one Windows configuration that builds outside
-        # the CCP network.
+        # dependencies in vcpkg.json, so the backend's own compile surface widens the
+        # closure by nothing. The "vulkan" manifest feature carries exactly two ports:
+        #
+        #   directx-dxc   -- the TrinityALTest_vulkan shader step needs it to emit
+        #                    SPIR-V (fxc cannot), and it is otherwise gated behind
+        #                    dx11/dx12/shader-compiler, all OFF here.
+        #   vulkan-loader -- the import library for the vk* entry points. The headers
+        #                    ship no library, which nothing noticed while Phase 1 built
+        #                    the backend as a static archive and linked no executable
+        #                    against it (85 unresolved vk* symbols; see
+        #                    docs/spikes/M4-phase2a-test-harness.md §4a).
+        #
+        # Both are public ports from the vendored default microsoft/vcpkg registry, so
+        # this preserves the property that the Vulkan configuration is the one Windows
+        # configuration that builds outside the CCP network -- which is the argument to
+        # re-check against this list, not against this comment, before adding a third.
         option(BUILD_VULKAN "Build Vulkan." OFF)
     elseif(APPLE)
         option(BUILD_METAL "Build Metal." OFF)

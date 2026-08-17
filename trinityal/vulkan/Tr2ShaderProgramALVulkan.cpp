@@ -286,6 +286,16 @@ namespace TrinityALImpl
 
 			m_constantLayout = layout;
 
+			// KNOWN PRE-EXISTING BUG, NOT FIXED HERE -- Phase 2b owns it. This loop walks
+			// the same `poolSizes` array the resource loop above already walked, and
+			// constants are deliberately excluded from that tally (see the `else` branch
+			// where poolSizes is incremented), so this emits a duplicate copy of every
+			// *resource* pool size and never emits a VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+			// size at all. It has been wrong this way since 2019. The comment below
+			// explains only why the poolTypes[i] *lookup* is correct; it is not a claim
+			// that iterating this array here is intentional. Do not re-derive the bug --
+			// it is on the Phase 2b list with the rest of the constants write path (there
+			// is no write path to m_constantLayout at all today).
 			for( uint32_t i = 0; i < _countof( poolSizes ); ++i )
 			{
 				if( !poolSizes[i] )
