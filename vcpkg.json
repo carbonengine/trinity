@@ -218,8 +218,17 @@
       "version": "1.15#14"
     },
     {
+      "$comment": "vulkan-headers, vulkan-loader and vulkan-memory-allocator are a matched SDK set and must move together: the loader's generated VulkanLoaderConfig.cmake hard-references the Vulkan::Headers target of its own release, so pinning one and leaving the others on a bare version>= lets a baseline move break the configure in whichever direction the unpinned side drifts (observed once already, headers pinned / loader floating -- see docs/spikes/M4-phase2a-test-harness.md §4b).",
+      "name": "vulkan-headers",
+      "version": "1.4.304.1#1"
+    },
+    {
       "name": "vulkan-loader",
       "version": "1.4.304.1"
+    },
+    {
+      "name": "vulkan-memory-allocator",
+      "version": "3.3.0"
     }
   ]
 }
