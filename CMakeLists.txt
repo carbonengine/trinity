@@ -18,9 +18,14 @@ else()
     if(WIN32)
         option(BUILD_DX11 "Build dx11." OFF)
         option(BUILD_DX12 "Build dx12." OFF)
-        # No VCPKG_MANIFEST_FEATURES entry: vulkan-headers and
-        # vulkan-memory-allocator are already core, non-feature dependencies in
-        # vcpkg.json, so a Vulkan build widens the dependency closure by nothing.
+        # vulkan-headers and vulkan-memory-allocator are core, non-feature
+        # dependencies in vcpkg.json, so the backend itself widens the closure by
+        # nothing. The "vulkan" feature exists only for directx-dxc, which the
+        # TrinityALTest_vulkan shader step needs to emit SPIR-V -- and which is
+        # otherwise gated behind dx11/dx12/shader-compiler, all OFF here.
+        # directx-dxc is a public port, so this preserves the property that the
+        # Vulkan configuration is the one Windows configuration that builds outside
+        # the CCP network.
         option(BUILD_VULKAN "Build Vulkan." OFF)
     elseif(APPLE)
         option(BUILD_METAL "Build Metal." OFF)
@@ -36,6 +41,10 @@ else()
 
     if (BUILD_METAL)
         list(APPEND VCPKG_MANIFEST_FEATURES "metal")
+    endif()
+
+    if (BUILD_VULKAN)
+        list(APPEND VCPKG_MANIFEST_FEATURES "vulkan")
     endif()
 
     if (BUILD_SHADER_COMPILER)
