@@ -98,6 +98,11 @@ namespace TrinityALImpl
 	{
 		return E_NOTIMPL;
 	}
+
+	uint32_t Tr2SamplerStateAL::GetIndexInHeap() const
+	{
+		return 0xffffffff;
+	}
 }
 
 

@@ -25,6 +25,7 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+		uint32_t GetIndexInHeap() const;
 
 	private:
 		VkSampler m_sampler;

@@ -45,6 +45,10 @@ namespace TrinityALImpl
 
 		ALResult MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 		{
+			return MapForReading( region, true, data, pitch, renderContext );
+		}
+		ALResult MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+		{
 			return E_NOTIMPL;
 		}
 		void UnmapForReading( Tr2RenderContextAL& renderContext )
@@ -87,6 +91,7 @@ namespace TrinityALImpl
 		VkImageView GetImageView() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+		const char* GetName() const;
 
 		uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
 		uint32_t GetUavIndexInHeap( uint32_t mip ) const;

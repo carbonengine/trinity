@@ -1,6 +1,7 @@
 #pragma once
 
 #include "VkResult.h"
+#include "../Tr2RenderContextEnum.h"
 
 class Tr2PrimaryRenderContextAL;
 struct Tr2MsaaDesc;

@@ -393,6 +393,11 @@ namespace TrinityALImpl
 	{
 		return E_NOTIMPL;
 	}
+
+	const char* Tr2TextureAL::GetName() const
+	{
+		return nullptr;
+	}
 }
 
 #endif
