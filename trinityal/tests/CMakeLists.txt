@@ -115,6 +115,25 @@ set(_SHADERS_METAL
     Shaders.metal/WriteToUav.psh
 )
 
+set(_SHADERS_VULKAN
+    Shaders.vulkan/AddConstantToBuffer.csh
+    Shaders.vulkan/AddVectors.csh
+    Shaders.vulkan/ConstantColor.psh
+    Shaders.vulkan/GroupShared.csh
+    Shaders.vulkan/InstancedRendering.vsh
+    Shaders.vulkan/LoadMsaaTexture.psh
+    Shaders.vulkan/OutputTexCoord.psh
+    Shaders.vulkan/OutputVector.csh
+    Shaders.vulkan/PositionOnly.vsh
+    Shaders.vulkan/PositionOnlyWithPerObjectData.vsh
+    Shaders.vulkan/SampleTexture.csh
+    Shaders.vulkan/SampleTextureFromTexCoord.psh
+    Shaders.vulkan/SampleTextureMipFromTexCoord.psh
+    Shaders.vulkan/SampleVolumeTexture.psh
+    Shaders.vulkan/TexCoordAndPosition.vsh
+    Shaders.vulkan/WriteToUav.psh
+)
+
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
 find_package(GTest CONFIG REQUIRED)
@@ -260,6 +279,96 @@ if(WIN32)
         set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
         #gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
 
+    endif()
+
+    if (BUILD_VULKAN)
+        ccp_add_executable(TrinityALTest_vulkan ${_SOURCES})
+        target_link_libraries(TrinityALTest_vulkan PRIVATE TrinityAL_vulkan)
+        target_compile_definitions(TrinityALTest_vulkan PRIVATE TRINITY_PLATFORM=TRINITY_VULKAN)
+        set_shared_trinityaltest_properties(TrinityALTest_vulkan)
+
+        # Copy DLL dependencies
+        add_custom_command(
+            TARGET TrinityALTest_vulkan POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_RUNTIME_DLLS:TrinityALTest_vulkan> $<TARGET_FILE_DIR:TrinityALTest_vulkan>
+            COMMAND_EXPAND_LISTS
+        )
+
+        target_sources(TrinityALTest_vulkan PRIVATE ${_SHADERS_VULKAN})
+        source_group(Shaders FILES ${_SHADERS_VULKAN})
+
+        # dxc only -- never fxc. fxc cannot emit SPIR-V, and it is fetched from the
+        # internal host vcpkg-prebuilt-sdks.ccpgames.com, which would tie the one
+        # Windows configuration that builds outside the CCP network to that host (R6).
+        #
+        # directx-dxc-config.cmake sets DIRECTX_DXC_TOOL itself, as a CACHE PATH
+        # pointing at tools/directx-dxc/dxc.exe relative to the package root, so
+        # find_package is the whole resolution -- no find_program, and no path into
+        # the binary dir written down here. (Its two imported targets,
+        # Microsoft::DirectXShaderCompiler and Microsoft::DXIL, are the dxcompiler.dll
+        # library, not the driver executable, so $<TARGET_FILE:...> is not what we
+        # want.) The dx12 block above only assigns DIRECTX_DXC_TOOL by hand on the
+        # BUILD_FOR_PYTHON_2 path, where the port is the older `dxc` package that
+        # does not set it.
+        find_package(directx-dxc CONFIG REQUIRED)
+
+        # Reproduces Tr2ShaderProgramALVulkan.cpp's binding formula from the shader
+        # side: binding = registerIndex + classOffset * 6 * 32 + shaderType * 32,
+        # with classOffset b=0, s=2, t=1, u=0 (RegisterClassOffset) and shaderType
+        # from Tr2RenderContextEnum::ShaderType (VERTEX=0, PIXEL=1, COMPUTE=2).
+        # Constant buffers stay in space0 -> descriptor set 0 (m_constantLayout);
+        # t/s/u are declared space1 in the sources -> set 1 (m_resourceLayout).
+        # These two sides are one ABI. Change neither alone.
+        set(_VK_REGISTER_SIZE 32)
+        set(_VK_CLASS_BLOCK 192)   # 6 * _VK_REGISTER_SIZE
+
+        # Matches the instance the backend actually creates: VkApplicationInfo's
+        # apiVersion is VK_MAKE_VERSION(1,0,0) at
+        # trinityal/vulkan/Tr2VideoAdapterInfoALVulkan.cpp:129 (the whole struct is
+        # 1.0), and nothing under trinityal/vulkan requests more. A SPIR-V module
+        # built for a newer environment than the instance requests is a validation
+        # error, so this tracks that line and is not a free choice. Phase 3 raises
+        # both together, with dynamic_rendering and synchronization2.
+        set(_VK_TARGET_ENV vulkan1.0)
+
+        foreach(shaderSource ${_SHADERS_VULKAN})
+            string(REGEX REPLACE "h$" ".h" shaderOutput ${shaderSource})
+            if(${shaderSource} MATCHES ".*psh$")
+                set(SHADER_TARGET "ps_6_0")
+                set(_VK_STAGE 1)
+            elseif(${shaderSource} MATCHES ".*vsh$")
+                set(SHADER_TARGET "vs_6_0")
+                set(_VK_STAGE 0)
+            else()
+                set(SHADER_TARGET "cs_6_0")
+                set(_VK_STAGE 2)
+            endif()
+
+            math(EXPR _VK_STAGE_BASE "${_VK_STAGE} * ${_VK_REGISTER_SIZE}")
+            math(EXPR _VK_B_SHIFT "0 * ${_VK_CLASS_BLOCK} + ${_VK_STAGE_BASE}")
+            math(EXPR _VK_T_SHIFT "1 * ${_VK_CLASS_BLOCK} + ${_VK_STAGE_BASE}")
+            math(EXPR _VK_S_SHIFT "2 * ${_VK_CLASS_BLOCK} + ${_VK_STAGE_BASE}")
+            math(EXPR _VK_U_SHIFT "0 * ${_VK_CLASS_BLOCK} + ${_VK_STAGE_BASE}")
+
+            add_custom_command(
+                OUTPUT ${GENERATED_SOURCES_DIR}/${shaderOutput}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}/Shaders.vulkan
+                COMMAND ${DIRECTX_DXC_TOOL} -nologo -spirv -T ${SHADER_TARGET} -E main
+                        -fspv-target-env=${_VK_TARGET_ENV}
+                        -fvk-b-shift ${_VK_B_SHIFT} 0
+                        -fvk-t-shift ${_VK_T_SHIFT} 1
+                        -fvk-s-shift ${_VK_S_SHIFT} 1
+                        -fvk-u-shift ${_VK_U_SHIFT} 1
+                        -Fo ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${CMAKE_CURRENT_SOURCE_DIR}/${shaderSource}
+                COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/bin2h.cmd ${GENERATED_SOURCES_DIR}/${shaderSource}.bin ${GENERATED_SOURCES_DIR}/${shaderOutput}
+                MAIN_DEPENDENCY ${shaderSource}
+            )
+        endforeach()
+
+        set_target_properties(TrinityALTest_vulkan PROPERTIES FOLDER "Tests")
+
+        enable_testing()
+        add_test(NAME TrinityALTest_vulkan COMMAND TrinityALTest_vulkan)
     endif()
 
 endif()
