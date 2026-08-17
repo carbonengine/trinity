@@ -179,6 +179,10 @@
         {
           "name": "directx-dxc",
           "version>=": "2023-03-01#2"
+        },
+        {
+          "name": "vulkan-loader",
+          "version>=": "1.4.304.1"
         }
       ]
     },
@@ -212,6 +216,10 @@
     {
       "name": "libsquish",
       "version": "1.15#14"
+    },
+    {
+      "name": "vulkan-loader",
+      "version": "1.4.304.1"
     }
   ]
 }

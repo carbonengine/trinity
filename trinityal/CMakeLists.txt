@@ -524,15 +524,21 @@ if(WIN32)
             internal-only host. Keeping this target clear of all of them is what
             lets a Vulkan configuration build outside the CCP network -- the only
             Windows configuration that can. Do not "align" it with dx12 later.
+            vulkan-loader is the one addition here: it is a public port (built
+            from the upstream KhronosGroup/Vulkan-Loader release, matched to the
+            vulkan-headers version pinned above), so it does not reopen that
+            property.
         ]]
         find_package(VulkanHeaders CONFIG REQUIRED)
         find_package(VulkanMemoryAllocator CONFIG REQUIRED)
+        find_package(VulkanLoader CONFIG REQUIRED)
 
         ccp_add_library(TrinityAL_vulkan STATIC)
         target_compile_definitions(TrinityAL_vulkan PUBLIC TRINITY_PLATFORM=TRINITY_VULKAN VK_USE_PLATFORM_WIN32_KHR)
         target_link_libraries(TrinityAL_vulkan PUBLIC
                                                     Vulkan::Headers
-                                                    GPUOpen::VulkanMemoryAllocator)
+                                                    GPUOpen::VulkanMemoryAllocator
+                                                    Vulkan::Loader)
         set_shared_trinityal_properties(vulkan)
     endif()
 
