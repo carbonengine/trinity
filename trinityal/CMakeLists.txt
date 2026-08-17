@@ -538,7 +538,8 @@ if(WIN32)
         target_link_libraries(TrinityAL_vulkan PUBLIC
                                                     Vulkan::Headers
                                                     GPUOpen::VulkanMemoryAllocator
-                                                    Vulkan::Loader)
+                                                    Vulkan::Loader
+                                                    dxgi)
         set_shared_trinityal_properties(vulkan)
     endif()
 
