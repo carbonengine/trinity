@@ -37,6 +37,34 @@ namespace
 					? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
 					: VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			}
+			// SRV has the identical shape (Tr2ShaderAL.h:63-73): a family flagged by
+			// SRV_REGISTER_FLAG, spanning SRV_BUFFER (32) through SRV_TEXTURECUBEARRAY
+			// (42). The 2019 code collapsed every SRV subtype to SAMPLED_IMAGE right
+			// here via this same `default:` branch -- wrong for
+			// SRV_BUFFER/SRV_STRUCTURED_BUFFER for the identical reason as UAV above.
+			// It escaped Task 4e only because `default:` draws no compiler diagnostic;
+			// fixed now (Task 4f) with the same two-way split, the same dx12 ordinal
+			// comparison against *_STRUCTURED_BUFFER (e.g. Tr2ResourceSetALDx12.cpp:128).
+			//
+			// STORAGE_BUFFER, not UNIFORM_TEXEL_BUFFER, for the buffer-like half:
+			// metal binds SRV_BUFFER/SRV_STRUCTURED_BUFFER exactly like
+			// UAV_BUFFER/UAV_STRUCTURED_BUFFER -- a raw GPU buffer address, no
+			// format/texel-view step (Tr2ShaderALMetal.mm:69-75 vs :139-144;
+			// MetalWorkQueue.mm:3113-3125 reads gpuAddress+offset for both families the
+			// same way). dx12's typed-vs-structured buffer SRV/UAV split
+			// (Tr2BufferALDx12.cpp:158-177) is driven by the bound buffer's pixel
+			// format *at creation time*, not by which RegisterType the shader declared,
+			// so it can't be mirrored here anyway -- GetDescriptorType only ever sees
+			// the registerType, never the runtime resource. And Tr2BufferALVulkan has
+			// no VkBufferView machinery today (there is none anywhere under
+			// trinityal/vulkan), so STORAGE_BUFFER needs no new plumbing where
+			// UNIFORM_TEXEL_BUFFER would. Hence: STORAGE_BUFFER, mirroring UAV exactly.
+			if( registerType & Tr2ShaderRegisterAL::SRV_REGISTER_FLAG )
+			{
+				return registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER
+					? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+					: VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			}
 			return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		}
 	}
@@ -47,15 +75,15 @@ namespace
 	// `array[registerType]` silently reads/writes far out of bounds for any SRV or
 	// UAV register. This mirrors dx12's RegisterTypeIndex
 	// (Tr2PrimaryRenderContextDx12.cpp:100) -- a RegisterType -> dense-slot mapping --
-	// sized here to the five descriptor kinds GetDescriptorType above can return:
-	// constant buffer, sampler, SRV (still coarse; splitting it is the identical bug
-	// one line away, but out of this task's scope -- see the report), UAV
-	// buffer-like, UAV image-like.
+	// sized here to the six descriptor kinds GetDescriptorType above can return:
+	// constant buffer, sampler, SRV buffer-like, SRV image-like, UAV buffer-like,
+	// UAV image-like.
 	enum RegisterSlot
 	{
 		REGISTER_SLOT_CONSTANT_BUFFER,
 		REGISTER_SLOT_SAMPLER,
-		REGISTER_SLOT_SRV,
+		REGISTER_SLOT_SRV_BUFFER,
+		REGISTER_SLOT_SRV_IMAGE,
 		REGISTER_SLOT_UAV_BUFFER,
 		REGISTER_SLOT_UAV_IMAGE,
 		REGISTER_SLOT_COUNT
@@ -70,7 +98,8 @@ namespace
 		}
 		if( registerType & Tr2ShaderRegisterAL::SRV_REGISTER_FLAG )
 		{
-			return REGISTER_SLOT_SRV;
+			return registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER
+				? REGISTER_SLOT_SRV_BUFFER : REGISTER_SLOT_SRV_IMAGE;
 		}
 		return registerType == Tr2ShaderRegisterAL::SAMPLER
 			? REGISTER_SLOT_SAMPLER : REGISTER_SLOT_CONSTANT_BUFFER;
@@ -138,11 +167,15 @@ namespace TrinityALImpl
 		// REGISTER_SLOT_CONSTANT_BUFFER's value is unused for collision purposes --
 		// its registers land in the separate m_constantLayout, not m_resourceLayout --
 		// so it keeps the legacy CONSTANTS offset (0), same as the 2019 code.
-		// SAMPLER/SRV keep their original offsets (2/1); UAV_IMAGE keeps the original
-		// single UAV slot's offset (0 -- GetDescriptorType used to return
-		// STORAGE_IMAGE for every UAV) and the newly-distinguished UAV_BUFFER gets its
-		// own, previously-unused offset (3).
-		uint32_t registerOffsets[REGISTER_SLOT_COUNT] = { 0, 2, 1, 3, 0 };
+		// SAMPLER keeps its original offset (2). SRV_IMAGE keeps the offset the
+		// single coarse SRV slot used before Task 4f split the family (1 -- every SRV
+		// subtype shared this offset); the newly-distinguished SRV_BUFFER gets its
+		// own, previously-unused offset (4). UAV_IMAGE keeps the original single UAV
+		// slot's offset (0 -- GetDescriptorType used to return STORAGE_IMAGE for
+		// every UAV) and UAV_BUFFER keeps the previously-unused offset Task 4e gave
+		// it (3). {0,1,2,3} were all already spoken for by the time Task 4f ran, so
+		// SRV_BUFFER is the only slot needing a fresh value.
+		uint32_t registerOffsets[REGISTER_SLOT_COUNT] = { 0, 2, 4, 1, 3, 0 };
 
 		std::vector<VkDescriptorSetLayoutBinding> resourceSetBindings, constantBindings;
 
