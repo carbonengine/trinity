@@ -59,6 +59,16 @@ namespace
 			// no VkBufferView machinery today (there is none anywhere under
 			// trinityal/vulkan), so STORAGE_BUFFER needs no new plumbing where
 			// UNIFORM_TEXEL_BUFFER would. Hence: STORAGE_BUFFER, mirroring UAV exactly.
+			//
+			// KNOWN WRONG, left in place deliberately for Phase 2a. HLSL Buffer<T>
+			// compiles to a uniform texel buffer and RWBuffer<T> to a storage texel
+			// buffer (verified: OpTypeImage ... Buffer, Sampled=1 and Sampled=2), so
+			// SRV_BUFFER/UAV_BUFFER want UNIFORM_TEXEL_BUFFER/STORAGE_TEXEL_BUFFER and
+			// a VkBufferView, while *_STRUCTURED_BUFFER wants STORAGE_BUFFER and a
+			// VkDescriptorBufferInfo. Neither path exists in this backend. Fixing the
+			// type here without the write path would only move the mismatch, which is
+			// how the SRV_BUFFER layout/write mismatch was created in the first place.
+			// Phase 2b owns this; Phase 2a measures it.
 			if( registerType & Tr2ShaderRegisterAL::SRV_REGISTER_FLAG )
 			{
 				return registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER
@@ -78,6 +88,7 @@ namespace
 	// sized here to the six descriptor kinds GetDescriptorType above can return:
 	// constant buffer, sampler, SRV buffer-like, SRV image-like, UAV buffer-like,
 	// UAV image-like.
+	// This mapping is descriptor-kind only; binding-number blocks are RegisterClassOffset's job.
 	enum RegisterSlot
 	{
 		REGISTER_SLOT_CONSTANT_BUFFER,
@@ -103,6 +114,45 @@ namespace
 		}
 		return registerType == Tr2ShaderRegisterAL::SAMPLER
 			? REGISTER_SLOT_SAMPLER : REGISTER_SLOT_CONSTANT_BUFFER;
+	}
+
+	// The binding-number block a register lives in. This is a shader-compiler ABI,
+	// NOT a private numbering scheme: the four blocks are the four HLSL register
+	// classes b/s/t/u, and Shaders.vulkan/ is compiled with dxc -fvk-{b,s,t,u}-shift
+	// arguments computed from exactly these values (see trinityal/tests/CMakeLists.txt).
+	// The values are 2019's, restored: b=0, s=2, t=1, u=0.
+	//
+	// This is deliberately NOT the same mapping as RegisterTypeIndex above. That one
+	// answers "which descriptor kind", which Vulkan splits six ways; this one answers
+	// "which binding block", which HLSL splits four ways. Tasks 4e and 4f used one
+	// index for both roles and silently moved every SRV/UAV binding number as a side
+	// effect of a descriptor-type fix -- a compute u0 went from 64 to 640. A t0 is a
+	// Buffer<> or a Texture2D<> and never both, so the type split never needed a
+	// block split to avoid collisions.
+	//
+	// b and u sharing block 0 is safe: CONSTANT_BUFFER registers go into
+	// m_constantLayout (descriptor set 0) and every other register into
+	// m_resourceLayout (set 1), so the two never share a set.
+	enum RegisterClass
+	{
+		REGISTER_CLASS_CONSTANT_BUFFER = 0,   // b
+		REGISTER_CLASS_SRV             = 1,   // t
+		REGISTER_CLASS_SAMPLER         = 2,   // s
+		REGISTER_CLASS_UAV             = 0    // u
+	};
+
+	uint32_t RegisterClassOffset( Tr2ShaderRegisterAL::RegisterType registerType )
+	{
+		if( registerType & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
+		{
+			return REGISTER_CLASS_UAV;
+		}
+		if( registerType & Tr2ShaderRegisterAL::SRV_REGISTER_FLAG )
+		{
+			return REGISTER_CLASS_SRV;
+		}
+		return registerType == Tr2ShaderRegisterAL::SAMPLER
+			? REGISTER_CLASS_SAMPLER : REGISTER_CLASS_CONSTANT_BUFFER;
 	}
 }
 
@@ -162,21 +212,6 @@ namespace TrinityALImpl
 		uint32_t poolSizes[REGISTER_SLOT_COUNT] = { 0 };
 		VkDescriptorType poolTypes[REGISTER_SLOT_COUNT] = { };
 
-		// One offset block (of 6*registerSize binding numbers) per slot, so registers
-		// of different kinds never collide within the same descriptor-set layout.
-		// REGISTER_SLOT_CONSTANT_BUFFER's value is unused for collision purposes --
-		// its registers land in the separate m_constantLayout, not m_resourceLayout --
-		// so it keeps the legacy CONSTANTS offset (0), same as the 2019 code.
-		// SAMPLER keeps its original offset (2). SRV_IMAGE keeps the offset the
-		// single coarse SRV slot used before Task 4f split the family (1 -- every SRV
-		// subtype shared this offset); the newly-distinguished SRV_BUFFER gets its
-		// own, previously-unused offset (4). UAV_IMAGE keeps the original single UAV
-		// slot's offset (0 -- GetDescriptorType used to return STORAGE_IMAGE for
-		// every UAV) and UAV_BUFFER keeps the previously-unused offset Task 4e gave
-		// it (3). {0,1,2,3} were all already spoken for by the time Task 4f ran, so
-		// SRV_BUFFER is the only slot needing a fresh value.
-		uint32_t registerOffsets[REGISTER_SLOT_COUNT] = { 0, 2, 4, 1, 3, 0 };
-
 		std::vector<VkDescriptorSetLayoutBinding> resourceSetBindings, constantBindings;
 
 		for( size_t i = 0; i < count; ++i )
@@ -220,7 +255,7 @@ namespace TrinityALImpl
 				uint32_t slot = RegisterTypeIndex( it->registerType );
 
 				VkDescriptorSetLayoutBinding binding = {
-					it->registerIndex + registerOffsets[slot] * 6 * registerSize + shaders[i].GetType() * registerSize,
+					it->registerIndex + RegisterClassOffset( it->registerType ) * 6 * registerSize + shaders[i].GetType() * registerSize,
 					GetDescriptorType( it->registerType ),
 					1,
 					info.stage,
