@@ -6,10 +6,22 @@ struct VS_OUTPUT
 	float2 TexCoord : TEXCOORD;
 };
 
-struct PerObjectPSData
+// The DX11 copy of this shader declares this as `struct ... PerObjectPS: register(
+// ps, c0 )`, a DX9-style annotation that dxc -spirv ignores: it folds the global into
+// an implicit `$Globals` cbuffer and assigns that binding 0 *without* applying
+// -fvk-b-shift, so the module read set 0 / binding 0 while the AL's formula declared
+// a binding at 0 + 0*192 + 1*32 = 32 -- a pipeline-layout/shader incompatibility.
+// Spelled as an explicit cbuffer at register(b0) here, matching the other fifteen
+// Shaders.vulkan sources, so the shift applies. Struct name, member name and the
+// resulting constant-buffer layout (one float at offset 0) are unchanged, so this
+// stays behaviourally identical to the DX11 copy.
+cbuffer cb0: register(b0)
 {
-    float lod;
-} PerObjectPS: register( ps, c0 );
+    struct PerObjectPSData
+    {
+        float lod;
+    } PerObjectPS;
+}
 
 Texture2D tex0: register( t0, space1 );
 SamplerState sampl: register( s0, space1 );
