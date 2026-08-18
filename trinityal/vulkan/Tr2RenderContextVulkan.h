@@ -160,10 +160,7 @@ public:
 		return E_NOTIMPL;
 	}
 
-	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw( )
-	{
-		return E_NOTIMPL;
-	}
+	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw( );
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( )
 	{
 		return E_NOTIMPL;
@@ -349,6 +346,7 @@ private:
 
 	ALResult SetPipeline();
 	ALResult CreatePipeline( VkPipeline& pipeline );
+	ALResult BindConstantBuffers( VkPipelineBindPoint bindPoint );
 
 	struct PipelineSource
 	{
@@ -387,6 +385,9 @@ private:
 	VkDescriptorPool m_constantPool;
 	VkDescriptorSet m_constantSet;
 	VkDescriptorSetLayout m_boundConstantLayout;
+
+	VkPipeline m_computePipeline;
+	VkPipelineLayout m_computePipelineLayout;
 public:
 	// If you need this, you're probably doing something wrong :P
 	//Tr2TextureAL&			GetDefaultBackBuffer()
