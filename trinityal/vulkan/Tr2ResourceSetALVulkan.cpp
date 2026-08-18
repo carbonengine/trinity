@@ -5,6 +5,7 @@
 #include "Tr2PrimaryRenderContextVulkan.h"
 #include "Tr2SamplerStateALVulkan.h"
 #include "Tr2TextureALVulkan.h"
+#include "Tr2BufferALVulkan.h"
 #include "Tr2ShaderProgramALVulkan.h"
 #include "UtilitiesVulkan.h"
 
@@ -64,9 +65,22 @@ namespace TrinityALImpl
 			descriptorWrites.reserve( program.m_program->m_registerInput.size() );
 			std::vector<VkDescriptorImageInfo> imageInfos;
 			imageInfos.reserve( program.m_program->m_registerInput.size() );
+			std::vector<VkDescriptorBufferInfo> bufferInfos;
+			bufferInfos.reserve( program.m_program->m_registerInput.size() );
+			std::vector<VkBufferView> texelBufferViews;
+			texelBufferViews.reserve( program.m_program->m_registerInput.size() );
+
+			typedef Tr2ResourceSetDescriptionAL::Resource::Type ResourceType;
 
 			for( auto it = begin( program.m_program->m_registerInput ); it != end( program.m_program->m_registerInput ); ++it )
 			{
+				if( it->type == Tr2ShaderRegisterAL::CONSTANT_BUFFER )
+				{
+					// Constant buffers bind at descriptor set 0 (m_constantLayout),
+					// written by SetConstants; they are not part of this resource set.
+					continue;
+				}
+
 				VkWriteDescriptorSet d = {
 					VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
 					nullptr,
@@ -75,26 +89,8 @@ namespace TrinityALImpl
 					0,
 					1,
 				};
-				if( it->type & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
-				{
-					// UAV is no longer a single value (Tr2ShaderAL.h:56-86); it is a
-					// family flagged by UAV_REGISTER_FLAG. This stays a coarse flag
-					// test rather than splitting by subtype: every UAV register has
-					// unconditionally returned E_FAIL here since 2019 (UAV
-					// descriptor-set *writes* were never implemented on Vulkan), so a
-					// flag test reproduces that behavior exactly for every subtype.
-					// Contrast with GetDescriptorType in Tr2ShaderProgramALVulkan.cpp,
-					// which must split because it feeds descriptor-set-layout/pool
-					// creation and is genuinely exercised by UAV_BUFFER today.
-					return E_FAIL;
-				}
 
-				switch( it->type )
-				{
-				case Tr2ShaderRegisterAL::CONSTANT_BUFFER:
-					//d.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-					continue;
-				case Tr2ShaderRegisterAL::SAMPLER:
+				if( it->type == Tr2ShaderRegisterAL::SAMPLER )
 				{
 					if( !description.m_samplers[description.m_registerMap.samplers[it->stage][it->registerIndex]].sampler.IsValid() )
 					{
@@ -104,21 +100,74 @@ namespace TrinityALImpl
 					imageInfos.push_back( imageInfo );
 					d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
 					d.pImageInfo = &imageInfos.back();
-					break;
 				}
-				default:
-					d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-					if( !description.m_srv[description.m_registerMap.srvs[it->stage][it->registerIndex]].texture.IsValid() )
+				else if( it->type & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
+				{
+					const auto& resource = description.m_uav[description.m_registerMap.uavs[it->stage][it->registerIndex]];
+					if( resource.type == ResourceType::BUFFER )
 					{
-						return E_FAIL;
+						if( it->type == Tr2ShaderRegisterAL::UAV_BUFFER )
+						{
+							texelBufferViews.push_back( resource.buffer.m_buffer->GetBufferViewVulkan() );
+							d.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+							d.pTexelBufferView = &texelBufferViews.back();
+						}
+						else
+						{
+							VkDescriptorBufferInfo bufferInfo = { resource.buffer.m_buffer->GetBufferVulkan(), 0, VK_WHOLE_SIZE };
+							bufferInfos.push_back( bufferInfo );
+							d.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+							d.pBufferInfo = &bufferInfos.back();
+						}
 					}
-					VkDescriptorImageInfo imageInfo = {  };
-					imageInfo.imageView = description.m_srv[description.m_registerMap.srvs[it->stage][it->registerIndex]].texture.m_texture->m_imageViews[0];
-					imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-					imageInfos.push_back( imageInfo );
-					d.pImageInfo = &imageInfos.back();
-					break;
+					else
+					{
+						if( !resource.texture.IsValid() )
+						{
+							return E_FAIL;
+						}
+						VkDescriptorImageInfo imageInfo = {  };
+						imageInfo.imageView = resource.texture.m_texture->m_imageViews[0];
+						imageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+						imageInfos.push_back( imageInfo );
+						d.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+						d.pImageInfo = &imageInfos.back();
+					}
 				}
+				else
+				{
+					const auto& resource = description.m_srv[description.m_registerMap.srvs[it->stage][it->registerIndex]];
+					if( resource.type == ResourceType::BUFFER )
+					{
+						if( it->type == Tr2ShaderRegisterAL::SRV_BUFFER )
+						{
+							texelBufferViews.push_back( resource.buffer.m_buffer->GetBufferViewVulkan() );
+							d.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+							d.pTexelBufferView = &texelBufferViews.back();
+						}
+						else
+						{
+							VkDescriptorBufferInfo bufferInfo = { resource.buffer.m_buffer->GetBufferVulkan(), 0, VK_WHOLE_SIZE };
+							bufferInfos.push_back( bufferInfo );
+							d.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+							d.pBufferInfo = &bufferInfos.back();
+						}
+					}
+					else
+					{
+						if( !resource.texture.IsValid() )
+						{
+							return E_FAIL;
+						}
+						VkDescriptorImageInfo imageInfo = {  };
+						imageInfo.imageView = resource.texture.m_texture->m_imageViews[0];
+						imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+						imageInfos.push_back( imageInfo );
+						d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+						d.pImageInfo = &imageInfos.back();
+					}
+				}
+
 				descriptorWrites.push_back( d );
 			}
 			vkUpdateDescriptorSets( renderContext.m_device, uint32_t( descriptorWrites.size() ), descriptorWrites.data(), 0, nullptr );

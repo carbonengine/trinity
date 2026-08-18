@@ -23,98 +23,39 @@ namespace
 		case Tr2ShaderRegisterAL::SAMPLER:
 			return VK_DESCRIPTOR_TYPE_SAMPLER;
 		default:
-			// UAV is no longer a single value (Tr2ShaderAL.h:56-86): it is a family
-			// flagged by UAV_REGISTER_FLAG, spanning UAV_BUFFER (64) through
-			// UAV_TEXTURECUBEARRAY (74). Vulkan's VkDescriptorType genuinely
-			// distinguishes storage buffer from storage image, so the two-way split
-			// below -- mirroring dx12's ordinal comparison against *_STRUCTURED_BUFFER,
-			// e.g. Tr2ResourceSetALDx12.cpp:128,186 -- is required for correctness, not
-			// just to compile: the old code collapsed every UAV subtype to
-			// STORAGE_IMAGE, which is wrong for UAV_BUFFER/UAV_STRUCTURED_BUFFER and is
-			// already exercised by tests/Compute.cpp.
+			// HLSL Buffer<T> compiles to a uniform texel buffer and RWBuffer<T> to a
+			// storage texel buffer (verified from dxc SPIR-V: OpTypeImage ... Buffer,
+			// Sampled=1 and Sampled=2), so the typed UAV register takes a texel
+			// descriptor + VkBufferView, while UAV_STRUCTURED_BUFFER takes a
+			// STORAGE_BUFFER + VkDescriptorBufferInfo. Textures take STORAGE_IMAGE.
 			if( registerType & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
 			{
-				return registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER
-					? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-					: VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+				if( registerType == Tr2ShaderRegisterAL::UAV_BUFFER )
+				{
+					return VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER;
+				}
+				if( registerType == Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER )
+				{
+					return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+				}
+				return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			}
-			// SRV has the identical shape (Tr2ShaderAL.h:63-73): a family flagged by
-			// SRV_REGISTER_FLAG, spanning SRV_BUFFER (32) through SRV_TEXTURECUBEARRAY
-			// (42). The 2019 code collapsed every SRV subtype to SAMPLED_IMAGE right
-			// here via this same `default:` branch -- wrong for
-			// SRV_BUFFER/SRV_STRUCTURED_BUFFER for the identical reason as UAV above.
-			// It escaped Task 4e only because `default:` draws no compiler diagnostic;
-			// fixed now (Task 4f) with the same two-way split, the same dx12 ordinal
-			// comparison against *_STRUCTURED_BUFFER (e.g. Tr2ResourceSetALDx12.cpp:128).
-			//
-			// STORAGE_BUFFER, not UNIFORM_TEXEL_BUFFER, for the buffer-like half:
-			// metal binds SRV_BUFFER/SRV_STRUCTURED_BUFFER exactly like
-			// UAV_BUFFER/UAV_STRUCTURED_BUFFER -- a raw GPU buffer address, no
-			// format/texel-view step (Tr2ShaderALMetal.mm:69-75 vs :139-144;
-			// MetalWorkQueue.mm:3113-3125 reads gpuAddress+offset for both families the
-			// same way). dx12's typed-vs-structured buffer SRV/UAV split
-			// (Tr2BufferALDx12.cpp:158-177) is driven by the bound buffer's pixel
-			// format *at creation time*, not by which RegisterType the shader declared,
-			// so it can't be mirrored here anyway -- GetDescriptorType only ever sees
-			// the registerType, never the runtime resource. And Tr2BufferALVulkan has
-			// no VkBufferView machinery today (there is none anywhere under
-			// trinityal/vulkan), so STORAGE_BUFFER needs no new plumbing where
-			// UNIFORM_TEXEL_BUFFER would. Hence: STORAGE_BUFFER, mirroring UAV exactly.
-			//
-			// KNOWN WRONG, left in place deliberately for Phase 2a. HLSL Buffer<T>
-			// compiles to a uniform texel buffer and RWBuffer<T> to a storage texel
-			// buffer (verified: OpTypeImage ... Buffer, Sampled=1 and Sampled=2), so
-			// SRV_BUFFER/UAV_BUFFER want UNIFORM_TEXEL_BUFFER/STORAGE_TEXEL_BUFFER and
-			// a VkBufferView, while *_STRUCTURED_BUFFER wants STORAGE_BUFFER and a
-			// VkDescriptorBufferInfo. Neither path exists in this backend. Fixing the
-			// type here without the write path would only move the mismatch, which is
-			// how the SRV_BUFFER layout/write mismatch was created in the first place.
-			// Phase 2b owns this; Phase 2a measures it.
+			// The SRV mirror of the above: typed SRV_BUFFER is a uniform texel buffer,
+			// SRV_STRUCTURED_BUFFER is a storage buffer, textures are sampled images.
 			if( registerType & Tr2ShaderRegisterAL::SRV_REGISTER_FLAG )
 			{
-				return registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER
-					? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-					: VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+				if( registerType == Tr2ShaderRegisterAL::SRV_BUFFER )
+				{
+					return VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER;
+				}
+				if( registerType == Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER )
+				{
+					return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+				}
+				return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 			}
 			return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
 		}
-	}
-
-	// RegisterType can no longer be used directly as an array index (see the two
-	// call sites in Create() below): Tr2ShaderAL.h's rewrite turned it from a dense
-	// 0-3 enum into a flag-tagged one (SRV_* = 32-42, UAV_* = 64-74), so a direct
-	// `array[registerType]` silently reads/writes far out of bounds for any SRV or
-	// UAV register. This mirrors dx12's RegisterTypeIndex
-	// (Tr2PrimaryRenderContextDx12.cpp:100) -- a RegisterType -> dense-slot mapping --
-	// sized here to the six descriptor kinds GetDescriptorType above can return:
-	// constant buffer, sampler, SRV buffer-like, SRV image-like, UAV buffer-like,
-	// UAV image-like.
-	// This mapping is descriptor-kind only; binding-number blocks are RegisterClassOffset's job.
-	enum RegisterSlot
-	{
-		REGISTER_SLOT_CONSTANT_BUFFER,
-		REGISTER_SLOT_SAMPLER,
-		REGISTER_SLOT_SRV_BUFFER,
-		REGISTER_SLOT_SRV_IMAGE,
-		REGISTER_SLOT_UAV_BUFFER,
-		REGISTER_SLOT_UAV_IMAGE,
-		REGISTER_SLOT_COUNT
-	};
-
-	uint32_t RegisterTypeIndex( Tr2ShaderRegisterAL::RegisterType registerType )
-	{
-		if( registerType & Tr2ShaderRegisterAL::UAV_REGISTER_FLAG )
-		{
-			return registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER
-				? REGISTER_SLOT_UAV_BUFFER : REGISTER_SLOT_UAV_IMAGE;
-		}
-		if( registerType & Tr2ShaderRegisterAL::SRV_REGISTER_FLAG )
-		{
-			return registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER
-				? REGISTER_SLOT_SRV_BUFFER : REGISTER_SLOT_SRV_IMAGE;
-		}
-		return registerType == Tr2ShaderRegisterAL::SAMPLER
-			? REGISTER_SLOT_SAMPLER : REGISTER_SLOT_CONSTANT_BUFFER;
 	}
 
 	// The binding-number block a register lives in -- RegisterClassOffset, and the
@@ -179,8 +120,7 @@ namespace TrinityALImpl
 		m_shaderInfo.reserve( count );
 		m_shaders.reserve( count );
 
-		uint32_t poolSizes[REGISTER_SLOT_COUNT] = { 0 };
-		VkDescriptorType poolTypes[REGISTER_SLOT_COUNT] = { };
+		std::map<VkDescriptorType, uint32_t> poolCounts;
 
 		std::vector<VkDescriptorSetLayoutBinding> resourceSetBindings, constantBindings;
 
@@ -220,8 +160,6 @@ namespace TrinityALImpl
 			auto& inputs = shaders[i].m_shader->m_signature.registers;
 			for( auto it = begin( inputs ); it != end( inputs ); ++it )
 			{
-				uint32_t slot = RegisterTypeIndex( it->registerType );
-
 				VkDescriptorSetLayoutBinding binding = {
 					Tr2VulkanBindingABI::BindingNumber( it->registerType, it->registerIndex, shaders[i].GetType() ),
 					GetDescriptorType( it->registerType ),
@@ -236,8 +174,7 @@ namespace TrinityALImpl
 				}
 				else
 				{
-					poolTypes[slot] = binding.descriptorType;
-					++poolSizes[slot];
+					++poolCounts[binding.descriptorType];
 					resourceSetBindings.push_back( binding );
 				}
 
@@ -256,23 +193,6 @@ namespace TrinityALImpl
 			CR_RETURN_HR( Vk2Al( vkCreateDescriptorSetLayout( renderContext.m_device, &layoutInfo, nullptr, &layout ) ) );
 
 			m_resourceLayout = layout;
-
-			for( uint32_t i = 0; i < _countof( poolSizes ); ++i )
-			{
-				if( !poolSizes[i] )
-				{
-					continue;
-				}
-				// poolTypes[i] was recorded from the real registerType at tally time
-				// (above), rather than reconstructed here via GetDescriptorType(
-				// RegisterType(i) ) -- i is a synthetic slot index (see RegisterSlot),
-				// not a real RegisterType value, so casting it back would silently
-				// mis-dispatch (e.g. i == REGISTER_SLOT_UAV_BUFFER has no
-				// UAV_REGISTER_FLAG bit set and would fall through to
-				// VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE instead of STORAGE_BUFFER).
-				VkDescriptorPoolSize poolSize = { poolTypes[i], poolSizes[i] };
-				m_poolSizes.push_back( poolSize );
-			}
 		}
 
 		if( !constantBindings.empty() )
@@ -285,33 +205,18 @@ namespace TrinityALImpl
 			CR_RETURN_HR( Vk2Al( vkCreateDescriptorSetLayout( renderContext.m_device, &layoutInfo, nullptr, &layout ) ) );
 
 			m_constantLayout = layout;
+		}
 
-			// KNOWN PRE-EXISTING BUG, NOT FIXED HERE -- Phase 2b owns it. This loop walks
-			// the same `poolSizes` array the resource loop above already walked, and
-			// constants are deliberately excluded from that tally (see the `else` branch
-			// where poolSizes is incremented), so this emits a duplicate copy of every
-			// *resource* pool size and never emits a VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-			// size at all. It has been wrong this way since 2019. The comment below
-			// explains only why the poolTypes[i] *lookup* is correct; it is not a claim
-			// that iterating this array here is intentional. Do not re-derive the bug --
-			// it is on the Phase 2b list with the rest of the constants write path (there
-			// is no write path to m_constantLayout at all today).
-			for( uint32_t i = 0; i < _countof( poolSizes ); ++i )
-			{
-				if( !poolSizes[i] )
-				{
-					continue;
-				}
-				// poolTypes[i] was recorded from the real registerType at tally time
-				// (above), rather than reconstructed here via GetDescriptorType(
-				// RegisterType(i) ) -- i is a synthetic slot index (see RegisterSlot),
-				// not a real RegisterType value, so casting it back would silently
-				// mis-dispatch (e.g. i == REGISTER_SLOT_UAV_BUFFER has no
-				// UAV_REGISTER_FLAG bit set and would fall through to
-				// VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE instead of STORAGE_BUFFER).
-				VkDescriptorPoolSize poolSize = { poolTypes[i], poolSizes[i] };
-				m_poolSizes.push_back( poolSize );
-			}
+		// The descriptor pool carries one size entry per distinct VkDescriptorType.
+		// poolCounts was tallied from each register's real descriptor type, so typed
+		// and structured buffers land in distinct entries rather than being collapsed
+		// (the pre-Phase-2b code both collapsed SRV/UAV buffer types and then emitted
+		// duplicate entries from the resource array twice). Constants are excluded
+		// here -- their write path (descriptor set 0) is separate and comes later.
+		for( auto it = begin( poolCounts ); it != end( poolCounts ); ++it )
+		{
+			VkDescriptorPoolSize poolSize = { it->first, it->second };
+			m_poolSizes.push_back( poolSize );
 		}
 
 		uint32_t size = 0;
