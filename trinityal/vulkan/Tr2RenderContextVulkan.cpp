@@ -97,6 +97,15 @@ void Tr2RenderContextAL::Destroy() throw( )
 		m_owner->DestroyLaterVulkan( m_framebuffer, vkDestroyFramebuffer );
 		m_framebuffer = VK_NULL_HANDLE;
 	}
+
+	// Release device resources held by this render context while the device is
+	// still live. m_pipelineSource.m_shaderProgram is a member destroyed by the
+	// base-class destructor, which runs after Tr2PrimaryRenderContextAL::Destroy()
+	// has already vkDestroyDevice'd -- and Tr2ShaderAL::Destroy() destroys its
+	// VkShaderModule directly against m_owner->m_device, so leaving the program
+	// for the destructor means destroying the module against a null device.
+	m_pipelineSource.m_shaderProgram = Tr2ShaderProgramAL();
+	m_resourceSet = Tr2ResourceSetAL();
 }
 
 bool Tr2RenderContextAL::IsValid() const throw( )
