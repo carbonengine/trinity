@@ -40,13 +40,18 @@ namespace TrinityALImpl
 		uint32_t GetSrvIndexInHeap() const;
 		uint32_t GetUavIndexInHeap() const;
 
+		VkBuffer GetBufferVulkan() const { return m_buffer; }
+		VkBufferView GetBufferViewVulkan() const { return m_bufferView; }
+
 	private:
 		VkBuffer m_buffer;
 		VkDeviceMemory m_memory;
+		VkBufferView m_bufferView;
 		Tr2PrimaryRenderContextAL* m_owner;
 		Tr2BufferDescriptionAL m_desc;
 
 		friend class Tr2RenderContextAL;
+		friend class Tr2ResourceSetAL;
 	};
 }
 

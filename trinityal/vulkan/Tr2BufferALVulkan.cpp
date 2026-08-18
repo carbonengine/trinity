@@ -18,6 +18,7 @@ namespace TrinityALImpl
 	Tr2BufferAL::Tr2BufferAL()
 		:m_buffer( VK_NULL_HANDLE ),
 		m_memory( VK_NULL_HANDLE ),
+		m_bufferView( VK_NULL_HANDLE ),
 		m_owner( nullptr )
 	{
 
@@ -86,13 +87,14 @@ namespace TrinityALImpl
 		{
 			usage |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
 		}
+		const bool isTypedBuffer = desc.format != Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
 		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
-			return E_NOTIMPL;
+			usage |= isTypedBuffer ? VK_BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT : VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 		}
 		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 		{
-			return E_NOTIMPL;
+			usage |= isTypedBuffer ? VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT : VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 		}
 
 		VkBuffer buffer = VK_NULL_HANDLE;
@@ -147,10 +149,27 @@ namespace TrinityALImpl
 			vkCmdPipelineBarrier( renderContext.m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_VERTEX_INPUT_BIT, 0, 0, nullptr, 1, &barrier, 0, nullptr );
 		}
 
+		VkBufferView bufferView = VK_NULL_HANDLE;
+		if( isTypedBuffer && ( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) || HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) ) )
+		{
+			VkBufferViewCreateInfo viewInfo = {
+				VK_STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO,
+				nullptr,
+				0,
+				buffer,
+				GetVulkanFormat( desc.format ),
+				0,
+				VK_WHOLE_SIZE
+			};
+			CR_RETURN_HR( Vk2Al( vkCreateBufferView( renderContext.m_device, &viewInfo, nullptr, &bufferView ) ) );
+		}
+
 		m_buffer = buffer;
 		buffer = VK_NULL_HANDLE;
 		m_memory = memory;
 		memory = VK_NULL_HANDLE;
+		m_bufferView = bufferView;
+		bufferView = VK_NULL_HANDLE;
 
 		m_owner = &renderContext;
 		m_desc = desc;
@@ -162,6 +181,12 @@ namespace TrinityALImpl
 	{
 		if( m_buffer )
 		{
+			if( m_bufferView )
+			{
+				m_owner->DestroyLaterVulkan( m_bufferView, &vkDestroyBufferView );
+				m_bufferView = VK_NULL_HANDLE;
+			}
+
 			m_owner->DestroyLaterVulkan( m_buffer, &vkDestroyBuffer );
 			m_buffer = VK_NULL_HANDLE;
 
