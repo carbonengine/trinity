@@ -9,6 +9,8 @@
 
 #if TRINITY_PLATFORM == TRINITY_VULKAN
 
+#include <map>
+
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2DrawUPHelper.h"
 #include "../include/Tr2ConstantBufferAL.h"
@@ -179,10 +181,7 @@ public:
 		const Tr2ConstantBufferAL& buffer,
 		Tr2RenderContextEnum::ShaderType constantType,
 		uint32_t registerIndex,
-		uint32_t unusedArgument = 0 ) throw( )
-	{
-		return E_NOTIMPL;
-	}
+		uint32_t unusedArgument = 0 ) throw( );
 
 	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil ) throw( )
 	{
@@ -380,6 +379,14 @@ private:
 	VkFramebuffer m_framebuffer;
 
 	Tr2ResourceSetAL m_resourceSet;
+
+	// Constant-buffer bindings (descriptor set 0), keyed by binding number. Set
+	// by SetConstants, written to a descriptor set and bound at SetPipeline time.
+	std::map<uint32_t, VkBuffer> m_constantBuffers;
+	bool m_constantsDirty;
+	VkDescriptorPool m_constantPool;
+	VkDescriptorSet m_constantSet;
+	VkDescriptorSetLayout m_boundConstantLayout;
 public:
 	// If you need this, you're probably doing something wrong :P
 	//Tr2TextureAL&			GetDefaultBackBuffer()

@@ -9,6 +9,8 @@
 #include "Tr2ResourceSetALVulkan.h"
 #include "Tr2VertexLayoutALVulkan.h"
 #include "Tr2TextureALVulkan.h"
+#include "Tr2ConstantBufferALVulkan.h"
+#include "Tr2ShaderBindingABIVulkan.h"
 #include "VkResult.h"
 #include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 
@@ -46,9 +48,14 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw( )
 	m_renderPass( 0 ),
 	m_framebuffer( VK_NULL_HANDLE ),
 	m_commandBuffer( VK_NULL_HANDLE ),
+	m_constantPool( VK_NULL_HANDLE ),
+	m_constantSet( VK_NULL_HANDLE ),
+	m_boundConstantLayout( VK_NULL_HANDLE ),
+	m_constantsDirty( false ),
 	m_primitiveToVertexCount( 0, 0 )
 {
 	memset( &m_pipelineSource, 0, sizeof( m_pipelineSource ) );
+	memset( &m_renderPassSource, 0, sizeof( m_renderPassSource ) );
 
 	m_pipelineSource.m_depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	m_pipelineSource.m_rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -106,6 +113,16 @@ void Tr2RenderContextAL::Destroy() throw( )
 	// for the destructor means destroying the module against a null device.
 	m_pipelineSource.m_shaderProgram = Tr2ShaderProgramAL();
 	m_resourceSet = Tr2ResourceSetAL();
+
+	if( m_constantPool != VK_NULL_HANDLE )
+	{
+		m_owner->DestroyLaterVulkan( m_constantPool, vkDestroyDescriptorPool );
+		m_constantPool = VK_NULL_HANDLE;
+	}
+	m_constantSet = VK_NULL_HANDLE;
+	m_boundConstantLayout = VK_NULL_HANDLE;
+	m_constantBuffers.clear();
+	m_constantsDirty = false;
 }
 
 bool Tr2RenderContextAL::IsValid() const throw( )
@@ -252,6 +269,19 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader 
 {
 	if( !( m_pipelineSource.m_shaderProgram == shader ) )
 	{
+		// The constant descriptor set/pool belong to the old program's layout, which
+		// is destroyed when the program is released (and the driver may reuse the
+		// handle). Invalidate them so the next SetPipeline reallocates against the
+		// new program's layout rather than comparing stale layout handles.
+		if( m_constantPool )
+		{
+			m_owner->DestroyLaterVulkan( m_constantPool, vkDestroyDescriptorPool );
+			m_constantPool = VK_NULL_HANDLE;
+		}
+		m_constantSet = VK_NULL_HANDLE;
+		m_boundConstantLayout = VK_NULL_HANDLE;
+		m_constantsDirty = true;
+
 		m_pipelineSource.m_shaderProgram = shader;
 		m_dirtyPso = true;
 	}
@@ -261,6 +291,27 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader 
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( )
 {
 	m_resourceSet = resourceSet;
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr2RenderContextEnum::ShaderType constantType, uint32_t registerIndex, uint32_t ) throw( )
+{
+	if( !m_owner )
+	{
+		return E_INVALIDCALL;
+	}
+
+	const uint32_t binding = Tr2VulkanBindingABI::BindingNumber( Tr2ShaderRegisterAL::CONSTANT_BUFFER, registerIndex, constantType );
+
+	if( !buffer.IsValid() )
+	{
+		m_constantBuffers.erase( binding );
+	}
+	else
+	{
+		m_constantBuffers[binding] = buffer.m_buffer->GetBufferVulkan();
+	}
+	m_constantsDirty = true;
 	return S_OK;
 }
 
@@ -526,15 +577,101 @@ ALResult Tr2RenderContextAL::SetPipeline()
 	}
 	vkCmdBindPipeline( m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
 
-	if( m_resourceSet.IsValid() && m_resourceSet.m_resourceSet->m_descriptorSet )
+	auto* program = m_pipelineSource.m_shaderProgram.m_program.get();
+	if( m_resourceSet.IsValid() && m_resourceSet.m_resourceSet->m_descriptorSet && program && program->m_resourceLayout )
 	{
 		vkCmdBindDescriptorSets( 
 			m_commandBuffer, 
 			VK_PIPELINE_BIND_POINT_GRAPHICS, 
-			m_pipelineSource.m_shaderProgram.m_program->m_pipelineLayout, 
+			program->m_pipelineLayout, 
 			1, 
 			1,
 			&m_resourceSet.m_resourceSet->m_descriptorSet, 0, nullptr );
+	}
+
+	// Bind constant buffers at descriptor set 0, if the program declares any and
+	// any were set. The descriptor set is allocated once per layout and re-written
+	// in place when the constants change.
+	{
+		if( program && program->m_constantLayout && !m_constantBuffers.empty() )
+		{
+			if( m_boundConstantLayout != program->m_constantLayout )
+			{
+				m_boundConstantLayout = program->m_constantLayout;
+				if( m_constantPool )
+				{
+					m_owner->DestroyLaterVulkan( m_constantPool, vkDestroyDescriptorPool );
+					m_constantPool = VK_NULL_HANDLE;
+				}
+				m_constantSet = VK_NULL_HANDLE;
+			}
+
+			if( !m_constantSet )
+			{
+				if( !m_constantPool )
+				{
+					VkDescriptorPoolSize poolSize = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 32 };
+					VkDescriptorPoolCreateInfo poolInfo = {
+						VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+						nullptr,
+						0,
+						1,
+						1,
+						&poolSize
+					};
+					CR_RETURN_HR( Vk2Al( vkCreateDescriptorPool( m_owner->m_device, &poolInfo, nullptr, &m_constantPool ) ) );
+				}
+
+				VkDescriptorSetAllocateInfo allocateInfo = {
+					VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+					nullptr,
+					m_constantPool,
+					1,
+					&program->m_constantLayout
+				};
+				CR_RETURN_HR( Vk2Al( vkAllocateDescriptorSets( m_owner->m_device, &allocateInfo, &m_constantSet ) ) );
+				m_constantsDirty = true;
+			}
+
+			if( m_constantsDirty )
+			{
+				std::vector<VkWriteDescriptorSet> writes;
+				std::vector<VkDescriptorBufferInfo> bufferInfos;
+				writes.reserve( m_constantBuffers.size() );
+				bufferInfos.reserve( m_constantBuffers.size() );
+				for( auto it = begin( m_constantBuffers ); it != end( m_constantBuffers ); ++it )
+				{
+					VkDescriptorBufferInfo bufferInfo = { it->second, 0, VK_WHOLE_SIZE };
+					bufferInfos.push_back( bufferInfo );
+					VkWriteDescriptorSet write = {
+						VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+						nullptr,
+						m_constantSet,
+						it->first,
+						0,
+						1,
+						VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+						nullptr,
+						&bufferInfos.back(),
+						nullptr
+					};
+					writes.push_back( write );
+				}
+				vkUpdateDescriptorSets( m_owner->m_device, uint32_t( writes.size() ), writes.data(), 0, nullptr );
+
+				m_constantsDirty = false;
+			}
+
+			vkCmdBindDescriptorSets(
+				m_commandBuffer,
+				VK_PIPELINE_BIND_POINT_GRAPHICS,
+				program->m_pipelineLayout,
+				0,
+				1,
+				&m_constantSet,
+				0,
+				nullptr );
+		}
 	}
 	return S_OK;
 }

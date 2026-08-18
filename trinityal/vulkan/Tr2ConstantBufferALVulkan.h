@@ -38,6 +38,7 @@ namespace TrinityALImpl
 
 		Tr2ConstantUsageAL::Type GetUsage() const;
 		uint32_t GetSize() const;
+		VkBuffer GetBufferVulkan() const { return m_buffer; }
 
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
