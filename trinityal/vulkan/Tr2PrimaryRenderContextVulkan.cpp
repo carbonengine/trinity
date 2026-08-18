@@ -197,7 +197,8 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	m_commandPool( VK_NULL_HANDLE ),
 	m_currentImage( 0 ),
 	m_zeroBuffer( VK_NULL_HANDLE ),
-	m_zeroBufferMemory( VK_NULL_HANDLE )
+	m_zeroBufferMemory( VK_NULL_HANDLE ),
+	m_frameIndex( 0 )
 {
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 }

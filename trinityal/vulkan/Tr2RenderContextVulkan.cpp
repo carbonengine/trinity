@@ -41,8 +41,11 @@ size_t Tr2RenderContextAL::PipelineSource::GetHash() const
 
 Tr2RenderContextAL::Tr2RenderContextAL() throw( )
 	:m_dirtyPso( true ),
+	m_dirtyPass( true ),
 	m_owner( nullptr ),
 	m_renderPass( 0 ),
+	m_framebuffer( VK_NULL_HANDLE ),
+	m_commandBuffer( VK_NULL_HANDLE ),
 	m_primitiveToVertexCount( 0, 0 )
 {
 	memset( &m_pipelineSource, 0, sizeof( m_pipelineSource ) );
