@@ -22,7 +22,6 @@ public:
 	struct PartData
 	{
 		PartTag partId;
-		PartTag partIdEnd; // one past the last tag consumed by this part, including nested layout placements
 		Vector3 position;
 		Quaternion rotation;
 		Vector3 scale;
