@@ -707,7 +707,7 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 						if( s_missingObjectDataLogs.fetch_add( 1 ) < 50 )
 						{
 							auto* effect = dynamic_cast<Tr2Effect*>( batch.m_material );
-							CCP_LOGERR( "GDPR batch %u has no objectData but shader expects per-object data: %s", k, effect ? effect->GetEffectPathName() : "<unknown>" );
+							CCP_LOGERR( "GDPR: effect '%s' declares per-object constants but the batch provides no objectData (effect is not compatible with the instanced path); drawing with zeroed constants", effect ? effect->GetEffectPathName() : "<unknown>" );
 						}
 					}
 					bin.writer.DrawIndexed( batch.m_indexCountPerInstance, batch.m_instanceCount, batch.m_startIndexLocation, batch.m_baseVertexLocation, batch.m_startInstanceLocation );
