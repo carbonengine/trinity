@@ -9,7 +9,6 @@
 #include "Include/ITriEffectParameter.h"
 
 CCP_STATS_DECLARE( effectCBLocks, "Trinity/effectCBLocks", true, CST_COUNTER_LOW, "number of CB locks for effect parameters" );
-CCP_STATS_DECLARE( effectResourceSetCreated, "Trinity/effectResourceSetCreated", true, CST_COUNTER_LOW, "number of resource sets created" );
 
 Tr2SharedConstantBuffers g_sharedConstantBuffers;
 
@@ -97,7 +96,7 @@ Tr2MaterialStageInput::~Tr2MaterialStageInput()
 }
 
 Tr2EffectLibraryParameters::Tr2EffectLibraryParameters() :
-	m_globalResourceSetDirty( true )
+	m_usedTexturesDirty( true )
 {
 }
 
@@ -118,9 +117,8 @@ void Tr2EffectLibraryParameters::AddReroutable( ITriReroutable* reroutable )
 
 
 Tr2EffectPassParameters::Tr2EffectPassParameters() :
-	m_resourceSetDirty( true ),
 	m_compatibleWithGdr( true ),
-	m_resourceSetHash( 0 )
+	m_usedTexturesDirty( true )
 {
 }
 
@@ -197,7 +195,6 @@ void Tr2MaterialStageInput::GetSharedConstantBuffer( const void* contents, uint3
 
 
 Tr2Material::Tr2Material( IRoot* lockobj ) :
-	m_resourceSetHash( 0 ),
 	m_compatibleWithGdr( false )
 {
 }
@@ -214,43 +211,20 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 	}
 	unsigned mask = m_shader->GetShaderTypeMask( techniqueIndex );
 	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
-	bool descChanged = pp.m_resourceSetDirty;
+
+	renderContext.ResetResourceBindings();
+	pp.m_staticBindings.Apply( renderContext );
+
 	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
 	{
 		if( mask & ( 1 << i ) )
 		{
-			descChanged |= ApplyShaderInputs( techniqueIndex, passIndex, Tr2RenderContextEnum::ShaderType( i ), renderContext );
+			auto& input = pp.m_stageInput[i];
+			ApplyConstants( Tr2RenderContextEnum::ShaderType( i ), input, !pp.m_reroutedParameters.empty(), renderContext );
+			SetResources( Tr2RenderContextEnum::ShaderType( i ), input, renderContext );
 			mask &= ~( 1 << i );
 		}
 	}
-
-	if( descChanged || !pp.m_resourceSet.IsValid() )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-
-		CCP_STATS_INC( effectResourceSetCreated );
-
-		auto sp = renderContext.m_esm.GetShaderProgram( m_shader->GetEffect().techniques[techniqueIndex].passes[passIndex].shaderProgram );
-		if( !sp )
-		{
-			return;
-		}
-		pp.m_resourceSet.Create( pp.m_resourceSetDesc, *sp, renderContext );
-		pp.m_resourceSetHash = pp.m_resourceSetDesc.ComputeHash();
-		pp.m_resourceSetDirty = false;
-
-		m_resourceSetHash = 0;
-
-		for( auto& technique : m_parametersForPasses )
-		{
-			for( auto& params : technique.passes )
-			{
-				m_resourceSetHash = CcpHashFNV1( &params->m_resourceSetHash, sizeof( params->m_resourceSetHash ), m_resourceSetHash );
-			}
-		}
-	}
-
-	renderContext.SetResourceSet( pp.m_resourceSet );
 }
 
 void Tr2Material::ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex, unsigned int passIndex, uint32_t overrideProgram, Tr2RenderContext& renderContext ) const
@@ -267,40 +241,19 @@ void Tr2Material::ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex,
 
 	unsigned mask = m_shader->GetShaderTypeMask( techniqueIndex );
 	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
-	auto resourceSetDesc = Tr2ResourceSetDescriptionAL( *sp );
+
+	renderContext.ResetResourceBindings();
+
 	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
 	{
 		if( mask & ( 1 << i ) )
 		{
 			auto& input = pp.m_stageInput[i];
 			ApplyConstants( Tr2RenderContextEnum::ShaderType( i ), input, !pp.m_reroutedParameters.empty(), renderContext );
-			UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType( i ), input, resourceSetDesc );
+			SetResources( Tr2RenderContextEnum::ShaderType( i ), input, renderContext );
 			mask &= ~( 1 << i );
 		}
 	}
-
-	CCP_STATS_INC( effectResourceSetCreated );
-
-	Tr2ResourceSetAL resourceSet;
-	resourceSet.Create( resourceSetDesc, *sp, renderContext.GetPrimaryRenderContext() );
-	renderContext.SetResourceSet( resourceSet );
-
-	pp.m_resourceSetDirty = true;
-}
-
-bool Tr2Material::ApplyShaderInputs( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const
-{
-	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
-	return ApplyShaderInputs( pp, shaderType, renderContext );
-}
-
-bool Tr2Material::ApplyShaderInputs( Tr2EffectPassParameters& pp, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const
-{
-	auto& input = pp.m_stageInput[shaderType];
-
-	ApplyConstants( shaderType, input, !pp.m_reroutedParameters.empty(), renderContext );
-
-	return UpdateResourceSetDesc( shaderType, input, pp.m_resourceSetDesc );
 }
 
 void Tr2Material::ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const
@@ -349,57 +302,21 @@ void Tr2Material::UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, 
 	}
 }
 
-bool Tr2Material::UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2ResourceSetDescriptionAL& desc ) const
+void Tr2Material::SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2RenderContext& renderContext ) const
 {
-	bool descChanged = false;
 	for( auto it = input.m_textures.cbegin(); it != input.m_textures.cend(); ++it )
 	{
-		descChanged |= it->m_sourceValue->CopyToResourceSet( desc, shaderType, it->m_registerIndex, ITr2EffectValue::ResourceFlags( it->m_registerCount ) );
+		it->m_sourceValue->UseSRV( shaderType, it->m_registerIndex, ITr2EffectValue::ResourceFlags( it->m_registerCount ), renderContext );
 	}
 	for( auto it = input.m_uavs.cbegin(); it != input.m_uavs.cend(); ++it )
 	{
-		descChanged |= it->m_sourceValue->ApplyUav( desc, shaderType, it->m_registerIndex );
+		it->m_sourceValue->UseUav( shaderType, it->m_registerIndex, renderContext );
 	}
-	return descChanged;
-}
-
-uint64_t Tr2Material::GetSortValue() const
-{
-	return m_resourceSetHash;
 }
 
 Tr2Shader* Tr2Material::GetShaderStateInterface() const
 {
 	return m_shader;
-}
-
-Tr2EffectPassParameters* Tr2Material::GetPassDescription( uint32_t techniqueIndex, uint32_t passIndex )
-{
-	return m_parametersForPasses[techniqueIndex].passes[passIndex].get();
-}
-
-void Tr2Material::InvalidateResourceSets()
-{
-	for( auto tit = begin( m_parametersForPasses ); tit != end( m_parametersForPasses ); ++tit )
-	{
-		for( auto pit = begin( tit->passes ); pit != end( tit->passes ); ++pit )
-		{
-			auto params = pit->get();
-			params->m_resourceSet = Tr2ResourceSetAL();
-			params->m_resourceSetDesc.ClearResources();
-			params->m_resourceSetHash = 0;
-			params->m_resourceSetDirty = true;
-
-			params->m_usedTexturesDirty = true;
-		}
-		for( auto pit = begin( tit->libraries ); pit != end( tit->libraries ); ++pit )
-		{
-			auto params = pit->get();
-
-			params->m_usedTexturesDirty = true;
-		}
-	}
-	m_resourceSetHash = 0;
 }
 
 void Tr2Material::ResourceChanged()
@@ -408,8 +325,6 @@ void Tr2Material::ResourceChanged()
 	{
 		for( auto& pass : technique.passes )
 		{
-			pass->m_resourceSetHash = 0;
-			pass->m_resourceSetDirty = true;
 			pass->m_usedTexturesDirty = true;
 		}
 		for( auto& pass : technique.libraries )
@@ -417,7 +332,6 @@ void Tr2Material::ResourceChanged()
 			pass->m_usedTexturesDirty = true;
 		}
 	}
-	m_resourceSetHash = 0;
 }
 
 void Tr2Material::MarkConstantBuffersDirty()
@@ -446,7 +360,6 @@ void Tr2Material::MarkConstantBuffersDirty()
 			}
 		}
 	}
-	m_resourceSetHash = 0;
 }
 
 void Tr2Material::UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities )
@@ -565,7 +478,7 @@ void Tr2Material::ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int pa
 	}
 }
 
-void Tr2Material::ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr2RtPipelineStateAL& rtPipelineState, Tr2RenderContext& renderContext ) const
+void Tr2Material::ApplyMaterialDataForRtState( uint32_t techniqueIndex, Tr2RenderContext& renderContext ) const
 {
 	if( !m_shader )
 	{
@@ -573,19 +486,11 @@ void Tr2Material::ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr
 	}
 	auto& pp = *m_parametersForPasses[techniqueIndex].libraries[0];
 
+	renderContext.ResetResourceBindings();
+	pp.m_globalStaticBindings.Apply( renderContext );
+
 	ApplyConstants( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, !pp.m_reroutedParameters.empty(), renderContext );
-
-	bool descChanged = pp.m_globalResourceSetDirty;
-	descChanged |= UpdateResourceSetDesc( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, pp.m_globalResourceSetDesc );
-
-	if( descChanged || !pp.m_globalResourceSet.IsValid() )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		pp.m_globalResourceSet.Create( pp.m_globalResourceSetDesc, rtPipelineState, renderContext );
-		pp.m_globalResourceSetDirty = false;
-	}
-
-	renderContext.SetResourceSet( pp.m_globalResourceSet );
+	SetResources( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, renderContext );
 }
 
 void Tr2Material::ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const

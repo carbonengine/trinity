@@ -22,11 +22,11 @@ const Be::ClassInfo* TriVariable::ExposeToBlue()
 	EXPOSURE_END()
 }
 
-bool TriVariable::CopyToResourceSet(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void TriVariable::UseSRV(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
-	ResourceFlags flags ) const
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
 {
 	switch( m_type )
 	{
@@ -39,12 +39,13 @@ bool TriVariable::CopyToResourceSet(
 		}
 		if( tex )
 		{
-			return resourceDesc.SetSrv( stage, registerIndex, *tex, colorSpace );
+			renderContext.SetSrv( stage, registerIndex, *tex, colorSpace );
 		}
 		else
 		{
-			return resourceDesc.SetSrv( stage, registerIndex, Tr2TextureAL(), colorSpace );
+			renderContext.SetSrv( stage, registerIndex, Tr2TextureAL(), colorSpace );
 		}
+		break;
 	}
 	case TRIVARIABLE_GPUBUFFER: {
 		Tr2BufferAL* buffer = nullptr;
@@ -54,22 +55,23 @@ bool TriVariable::CopyToResourceSet(
 		}
 		if( buffer )
 		{
-			return resourceDesc.SetSrv( stage, registerIndex, *buffer );
+			renderContext.SetSrv( stage, registerIndex, *buffer );
 		}
 		else
 		{
-			return resourceDesc.SetSrv( stage, registerIndex, Tr2BufferAL() );
+			renderContext.SetSrv( stage, registerIndex, Tr2BufferAL() );
 		}
+		break;
 	}
 	default:
-		return false;
+		break;
 	}
 }
 
-bool TriVariable::ApplyUav(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void TriVariable::UseUav(
 	Tr2RenderContextEnum::ShaderType stage,
-	uint32_t registerIndex ) const
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
 {
 	switch( m_type )
 	{
@@ -81,13 +83,13 @@ bool TriVariable::ApplyUav(
 		}
 		if( tex )
 		{
-			return resourceDesc.SetUav( stage, registerIndex, *tex );
+			renderContext.SetUav( stage, registerIndex, *tex );
 		}
 		else
 		{
-			return resourceDesc.SetUav( stage, registerIndex, Tr2BufferAL() );
+			renderContext.SetUav( stage, registerIndex, Tr2BufferAL() );
 		}
-		break;
+		return;
 	}
 	case TRIVARIABLE_GPUBUFFER: {
 		Tr2BufferAL* buffer = nullptr;
@@ -97,18 +99,18 @@ bool TriVariable::ApplyUav(
 		}
 		if( buffer )
 		{
-			return resourceDesc.SetUav( stage, registerIndex, *buffer );
+			renderContext.SetUav( stage, registerIndex, *buffer );
 		}
 		else
 		{
-			return resourceDesc.SetUav( stage, registerIndex, Tr2BufferAL() );
+			renderContext.SetUav( stage, registerIndex, Tr2BufferAL() );
 		}
-		break;
+		return;
 	}
 	default:
 		break;
 	}
-	return resourceDesc.SetUav( stage, registerIndex, Tr2BufferAL() );
+	renderContext.SetUav( stage, registerIndex, Tr2BufferAL() );
 }
 
 void TriVariable::CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,

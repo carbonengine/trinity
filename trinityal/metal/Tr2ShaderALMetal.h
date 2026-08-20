@@ -5,7 +5,6 @@
 #if TRINITY_PLATFORM == TRINITY_METAL
 
 #include "../include/Tr2ShaderAL.h"
-#include "Tr2ResourceSetALMetal.h"
 
 
 namespace TrinityALImpl

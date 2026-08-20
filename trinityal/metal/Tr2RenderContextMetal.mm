@@ -12,7 +12,6 @@
 #include "Tr2ConstantBufferALMetal.h"
 #include "Tr2RenderContextMetal.h"
 #include "Tr2VertexLayoutALMetal.h"
-#include "Tr2ResourceSetALMetal.h"
 #include "Tr2ShaderProgramALMetal.h"
 #include "Tr2TextureALMetal.h"
 #include "Tr2SwapChainALMetal.h"
@@ -93,7 +92,6 @@ Tr2RenderContextAL::~Tr2RenderContextAL()
 	}
 
 	m_vertexLayout = Tr2VertexLayoutAL();
-	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
 
 	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), BoundRT{} );
@@ -523,8 +521,8 @@ ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_
 
 void Tr2RenderContextAL::CheckDrawResources()
 {
-	// Only need to check resources if we don't have a resource set and the shader has changed since the last draw.
-	if( m_needsDrawResourceCheck && !m_resourceSet.IsValid() )
+	// Only need to check resources if the shader has changed since the last draw.
+	if( m_needsDrawResourceCheck )
 	{
 		m_shaderProgram.m_program->SetDummyResources( *m_workQueue );
 		m_needsDrawResourceCheck = false;
@@ -869,7 +867,6 @@ ALResult Tr2RenderContextAL::EndScene()
 	m_workQueue->EndFrame();
 
 	m_vertexLayout = Tr2VertexLayoutAL();
-	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
 	m_needsDrawResourceCheck = true;
 
@@ -1134,46 +1131,51 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL& ) throw()
 {
-#if 0
-	if( m_resourceSet.m_resourceSet == resourceSet.m_resourceSet )
-	{
-        return S_OK;
-    }
-#endif
+	return S_OK;
+}
 
-	TrinityALImpl::MetalContext* metalContext = GetMetalContext();
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType,
+									 uint32_t,
+									 const Tr2TextureAL&,
+									 Tr2RenderContextEnum::ColorSpace ) throw()
+{
+	return S_OK;
+}
 
-	m_resourceSet = resourceSet;
-	auto& rs = *resourceSet.m_resourceSet;
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL& ) throw()
+{
+	return S_OK;
+}
 
-	if( rs.IsValid() )
-	{
-		const ShaderType stages[] = { VERTEX_SHADER, PIXEL_SHADER, COMPUTE_SHADER };
-		for( auto stage : stages )
-		{
-			m_workQueue->SetBuffers( stage,
-									 rs.m_buffers[stage],
-									 rs.m_buffersMask[stage],
-									 GetMetalContext()->GetHeapViewBuffer(),
-									 rs.m_heapViewMask[stage] );
-			m_workQueue->SetTextures( stage, rs.m_textures[stage], rs.m_texturesRange[stage] );
-			m_workQueue->SetSamplers( stage, rs.m_samplers[stage], rs.m_samplersRange[stage] );
-		}
-	}
-	else
-	{
-		const ShaderType stages[] = { VERTEX_SHADER, PIXEL_SHADER, COMPUTE_SHADER };
-		for( auto stage : stages )
-		{
-			m_workQueue->ResetBuffers( stage );
-			m_workQueue->ResetTextures( stage );
-			m_workQueue->ResetSamplers( stage );
-		}
-	}
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2TextureAL&, uint32_t ) throw()
+{
+	return S_OK;
+}
 
-	m_needsDrawResourceCheck = true;
+ALResult Tr2RenderContextAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetSampler( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2SamplerStateAL& ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::ResetResourceBindings() throw()
+{
 	return S_OK;
 }
 
@@ -1399,7 +1401,6 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 	context->m_depthCompareFunction = m_depthCompareFunction;
 
 	context->m_vertexLayout = Tr2VertexLayoutAL();
-	context->m_resourceSet = Tr2ResourceSetAL();
 	context->m_shaderProgram = Tr2ShaderProgramAL();
 	context->m_needsDrawResourceCheck = true;
 

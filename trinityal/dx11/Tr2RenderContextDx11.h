@@ -5,10 +5,13 @@
 #define Tr2RenderContextDx11_h_
 
 
+#include <vector>
+
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2DrawUPHelper.h"
 #include "../include/Tr2ConstantBufferAL.h"
-#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2BufferAL.h"
+#include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2ShaderAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
@@ -20,8 +23,7 @@
 class Tr2ConstantBufferAL;
 struct ITr2RenderContextEvents;
 
-class Tr2SamplerStateAL;
-class Tr2BufferAL;
+class Tr2RtPipelineStateAL;
 class Tr2RtShaderTableAL;
 struct Tr2Viewport;
 
@@ -99,7 +101,16 @@ public:
 	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw();
 	ALResult ClearUav( const Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw();
 
-	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw();
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 ) throw();
+	ALResult SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw();
+
+	ALResult ResetResourceBindings() throw();
 
 	ALResult DrawIndexedPrimitive(
 		uint32_t numVertices,
@@ -256,6 +267,66 @@ private:
 	// Current shaders
 	Tr2ShaderProgramAL m_shaderProgram;
 
+	struct Resource
+	{
+		enum Type
+		{
+			NONE,
+			BUFFER,
+			TEXTURE,
+			HEAP_VIEW,
+		};
+
+		Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::INVALID_SHADER;
+		uint32_t registerIndex = 0;
+		Tr2TextureAL texture;
+		Tr2BufferAL buffer;
+		Type type = NONE;
+		union
+		{
+			Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+			uint32_t mip;
+		};
+	};
+
+	struct Sampler
+	{
+		enum Type
+		{
+			NONE,
+			SAMPLER,
+			HEAP_VIEW,
+		};
+
+		Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::INVALID_SHADER;
+		uint32_t registerIndex = 0;
+		Tr2SamplerStateAL sampler;
+		Type type = NONE;
+	};
+
+	std::vector<Resource> m_pendingSRVs;
+	std::vector<Resource> m_pendingUAVs;
+	std::vector<Sampler> m_pendingSamplers;
+
+	const Resource* m_sortedSRVs[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	const Resource* m_sortedUAVs[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	const Sampler* m_sortedSamplers[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+
+	ID3D11ShaderResourceView* m_boundSrvs[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	ID3D11SamplerState* m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	uint32_t m_assignedUavOffset;
+	uint32_t m_assignedUavCount;
+	bool m_assignedPsUavs;
+
+	bool m_bindingsCommitted;
+	bool m_bindingsSealed;
+	const TrinityALImpl::Tr2ShaderProgramAL* m_committedProgram;
+
+	ALResult UseResourceBindings() throw();
+	void BeginResourceBindingBatch() throw();
+	void DiscardResourceBindings() throw();
+	void UnbindShaderResources( bool unbindUavs ) throw();
+
 	Tr2RenderContextEnum::Topology m_topology;
 	Tr2RenderContextEnum::Topology m_lastSetTopology;
 	// If readonly depth buffer was requested
@@ -328,18 +399,10 @@ private:
 	ALResult SetRtDsToDevice( uint32_t changedSlot ) throw();
 
 private:
-	uint32_t m_resourceHashes[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
-	uint32_t m_samplerHashes[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
-	Tr2ResourceSetAL m_currentResourceSet;
-
 	friend class Tr2PrimaryRenderContextAL;
 	typedef TrackableStdStack<Tr2TextureAL> TextureStack;
 	TrackableStdStack<BoundRT> m_stackRT[MAX_RENDER_TARGET];
 	TextureStack m_stackDS;
-
-	uint32_t m_assignedUavOffset;
-	uint32_t m_assignedUavCount;
-	bool m_assignedPsUavs;
 
 	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;

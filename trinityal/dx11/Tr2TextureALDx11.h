@@ -14,10 +14,6 @@
 #endif
 
 
-namespace TrinityALImpl
-{
-class Tr2ResourceSetAL;
-}
 
 
 
@@ -108,7 +104,6 @@ private:
 
 	friend class Tr2PrimaryRenderContextAL;
 	friend class Tr2RenderContextAL;
-	friend class Tr2ResourceSetAL;
 };
 }
 

@@ -174,24 +174,24 @@ void TriTextureParameter::AddUsedTexture( Tr2BindlessResourcesAL& usedTextures )
 }
 
 // --------------------------------------------------------------------------------------
-bool TriTextureParameter::CopyToResourceSet(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void TriTextureParameter::UseSRV(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
-	ResourceFlags flags ) const
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
 {
 	bool isSrgb = ( flags & RESOURCE_FLAG_SRGB ) != 0;
 	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-	return resourceDesc.SetSrv( stage, registerIndex, m_cachedTexture, colorSpace );
+	renderContext.SetSrv( stage, registerIndex, m_cachedTexture, colorSpace );
 }
 
 // --------------------------------------------------------------------------------------
-bool TriTextureParameter::ApplyUav(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void TriTextureParameter::UseUav(
 	Tr2RenderContextEnum::ShaderType stage,
-	uint32_t registerIndex ) const
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
 {
-	return resourceDesc.SetUav( stage, registerIndex, m_cachedTexture, m_uavMipLevel );
+	renderContext.SetUav( stage, registerIndex, m_cachedTexture, m_uavMipLevel );
 }
 
 // ---------------------------------------------------------------

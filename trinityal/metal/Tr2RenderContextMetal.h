@@ -9,8 +9,8 @@
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2SwapChainAL.h"
 #include "../include/Tr2CapsAL.h"
-#include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2SamplerStateAL.h"
+#include "../include/Tr2BufferAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2VertexLayoutAL.h"
 #include "../include/Tr2ConstantBufferAL.h"
@@ -25,10 +25,6 @@
 
 class Tr2ConstantBufferAL;
 class Tr2ShaderAL;
-class Tr2SamplerStateAL;
-class Tr2TextureAL;
-class Tr2ResourceSetAL;
-class Tr2BufferAL;
 class Tr2RtShaderTableAL;
 class Tr2RtPipelineStateAL;
 struct ITr2RenderContextEvents;
@@ -94,7 +90,22 @@ public:
 	ALResult SetTopology( Tr2RenderContextEnum::Topology topology );
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
 
-	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet );
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage,
+					 uint32_t registerIndex,
+					 const Tr2TextureAL& texture,
+					 Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage,
+					 uint32_t registerIndex,
+					 const Tr2TextureAL& texture,
+					 uint32_t mip = 0 ) throw();
+	ALResult SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw();
+
+	ALResult ResetResourceBindings() throw();
 
 	ALResult DrawIndexedPrimitive( uint32_t numVertices,
 								   uint32_t startIndex,
@@ -301,7 +312,6 @@ protected:
 	Tr2PresentParametersAL m_presentParameters;
 
 	Tr2ShaderProgramAL m_shaderProgram;
-	Tr2ResourceSetAL m_resourceSet;
 	Tr2VertexLayoutAL m_vertexLayout;
 
 	bool m_needsDrawResourceCheck;

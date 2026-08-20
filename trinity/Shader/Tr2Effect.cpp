@@ -620,13 +620,13 @@ void Tr2Effect::RebuildSamplerOverrides()
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2ResourceSetDescriptionAL& resourceSetDesc ) {
+	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2StaticResourceBindingsAL& staticBindings ) {
 		bool modified = false;
 		for( auto& samplerOverride : m_samplerOverrides )
 		{
 			if( auto sampler = FindSamplerByName( stage.samplers, samplerOverride.name.c_str() ) )
 			{
-				modified |= resourceSetDesc.SetSampler( shaderType, sampler->first, samplerOverride.sampler );
+				modified |= staticBindings.SetSampler( shaderType, sampler->first, samplerOverride.sampler );
 			}
 		}
 		return modified;
@@ -648,7 +648,7 @@ void Tr2Effect::RebuildSamplerOverrides()
 					continue;
 				}
 
-				if( UpdateSamplers( ShaderType( i ), stage, pp.m_resourceSetDesc ) )
+				if( UpdateSamplers( ShaderType( i ), stage, pp.m_staticBindings ) )
 				{
 					pp.m_compatibleWithGdr = false;
 					m_compatibleWithGdr = false;
@@ -659,7 +659,7 @@ void Tr2Effect::RebuildSamplerOverrides()
 		{
 			auto& pp = *m_parametersForPasses[technique].libraries[passIx];
 
-			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].globalInput, pp.m_globalResourceSetDesc );
+			UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].globalInput, pp.m_globalStaticBindings );
 		}
 	}
 }
@@ -705,9 +705,7 @@ void Tr2Effect::RebuildCachedDataInternal()
 				{
 					m_parametersForPasses[technique].passes[passIx].reset( CCP_NEW( "Tr2EffectPassParameters" ) Tr2EffectPassParameters() );
 					Tr2EffectPassParameters& pp = *m_parametersForPasses[technique].passes[passIx];
-					pp.m_resourceSetDesc = desc.techniques[technique].passes[passIx].resourceSetDesc;
-					pp.m_resourceSetHash = 0;
-					pp.m_resourceSetDirty = true;
+					pp.m_staticBindings = desc.techniques[technique].passes[passIx].staticBindings;
 					pp.m_compatibleWithGdr = true;
 
 					uint32_t stageCount = 0;
@@ -752,8 +750,7 @@ void Tr2Effect::RebuildCachedDataInternal()
 					m_parametersForPasses[technique].libraries[libIx].reset( CCP_NEW( "Tr2EffectLibraryParameters" ) Tr2EffectLibraryParameters() );
 
 					auto& lib = *m_parametersForPasses[technique].libraries[libIx];
-					lib.m_globalResourceSetDesc = desc.techniques[technique].libraries[libIx].globalResourceSetDesc;
-					lib.m_globalResourceSetDirty = true;
+					lib.m_globalStaticBindings = desc.techniques[technique].libraries[libIx].globalStaticBindings;
 
 
 					bool compatibleWithGdr = true; //we don't care

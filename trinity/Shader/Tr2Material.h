@@ -138,12 +138,9 @@ public:
 
 
 	std::vector<ITriReroutable*> m_reroutedParameters;
-	Tr2ResourceSetDescriptionAL m_resourceSetDesc;
-	Tr2ResourceSetAL m_resourceSet;
+	Tr2StaticResourceBindingsAL m_staticBindings;
 	std::vector<ITr2EffectValuePtr> m_usedResources;
 	Tr2BindlessResourcesAL m_usedTextures;
-	uint32_t m_resourceSetHash;
-	bool m_resourceSetDirty;
 	bool m_compatibleWithGdr;
 	bool m_usedTexturesDirty;
 
@@ -158,12 +155,10 @@ struct Tr2EffectLibraryParameters : public PassParametersOwner
 	Tr2MaterialStageInput m_localInput;
 
 	Tr2MaterialStageInput m_globalInput;
-	Tr2ResourceSetDescriptionAL m_globalResourceSetDesc;
-	Tr2ResourceSetAL m_globalResourceSet;
+	Tr2StaticResourceBindingsAL m_globalStaticBindings;
 	std::vector<ITriReroutable*> m_reroutedParameters;
 	std::vector<ITr2EffectValuePtr> m_usedResources;
 	Tr2BindlessResourcesAL m_usedTextures;
-	bool m_globalResourceSetDirty;
 	bool m_usedTexturesDirty;
 
 	void AddUsedResource( ITr2EffectValuePtr resource ) override;
@@ -211,9 +206,8 @@ public:
 
 	void ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContext& renderContext ) const;
 	void ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex, unsigned int passIndex, uint32_t overrideProgram, Tr2RenderContext& renderContext ) const;
-	void ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr2RtPipelineStateAL& rtPipelineState, Tr2RenderContext& renderContext ) const;
+	void ApplyMaterialDataForRtState( uint32_t techniqueIndex, Tr2RenderContext& renderContext ) const;
 	void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;
-	uint64_t GetSortValue() const;
 	Tr2Shader* GetShaderStateInterface() const;
 
 
@@ -221,9 +215,6 @@ public:
 	{
 	}
 
-	Tr2EffectPassParameters* GetPassDescription( uint32_t techniqueIndex, uint32_t passIndex );
-
-	void InvalidateResourceSets();
 	void ResourceChanged();
 	void MarkConstantBuffersDirty();
 
@@ -236,19 +227,15 @@ public:
 	void ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int passIndex, Tr2IndirectDrawBufferWriter& indirectBuffer, Tr2RenderContext& renderContext );
 
 protected:
-	bool ApplyShaderInputs( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const;
-	bool ApplyShaderInputs( Tr2EffectPassParameters & pp, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext & renderContext ) const;
-
 	void ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
 	void UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
-	bool UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, Tr2ResourceSetDescriptionAL & desc ) const;
+	void SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, Tr2RenderContext & renderContext ) const;
 
 
 	Tr2ShaderPtr m_shader;
 	Tr2EffectTechniqueParametersVector m_parametersForPasses;
 	Tr2EffectTechniqueParametersVector m_parametersForLibraries;
 	std::vector<ITriEffectTextureParameterPtr> m_lodTextureParameters;
-	mutable uint32_t m_resourceSetHash;
 	bool m_compatibleWithGdr;
 };
 

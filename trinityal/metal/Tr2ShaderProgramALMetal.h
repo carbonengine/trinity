@@ -5,9 +5,8 @@
 #if TRINITY_PLATFORM == TRINITY_METAL
 
 #include "../include/Tr2ShaderProgramAL.h"
-#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2RegisterMapAL.h"
 #include "Tr2ShaderALMetal.h"
-#include "Tr2ResourceSetALMetal.h"
 #include "MetalContext.h"
 
 namespace TrinityALImpl
@@ -59,7 +58,6 @@ private:
 	bool m_isValid;
 
 	friend class Tr2RenderContextAL;
-	friend class Tr2ResourceSetAL;
 };
 }
 

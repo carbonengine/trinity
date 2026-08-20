@@ -29,7 +29,6 @@ private:
 	CComPtr<ID3D11SamplerState> m_samplerState;
 	std::string m_name;
 	friend class Tr2RenderContextAL;
-	friend class Tr2ResourceSetAL;
 };
 
 }

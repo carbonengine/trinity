@@ -166,7 +166,7 @@ Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows(
 
 	if( m_shadowShaderTable.IsValid() )
 	{
-		m_shadowEffect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+		m_shadowEffect->ApplyMaterialDataForRtState( techniqueIndex, renderContext );
 
 
 		renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
