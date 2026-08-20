@@ -45,6 +45,11 @@ public:
 	IRootPtr Build( const char* hullName, const char* factionName, const char* raceName );
 	// build a spaceship from a dns string and return a EveShip2 object
 	IRootPtr BuildFromDNA( const char* dnaString );
+	/**
+	 * @brief Builds a hull ("hull:faction:race" DNA) directly onto an existing space object as one part of a
+	 * modular object, stamping partTag on every child, locator and mesh instance it creates.
+	 * @return False if the DNA did not resolve to a buildable hull.
+	 */
 	bool BuildChild( EveSpaceObject2* owner, const char* dnaString, uint32_t partTag, const Matrix& transform );
 
 	// validate a dna string (slow!)

@@ -7,6 +7,10 @@
 
 
 BLUE_CLASS_IMPL( EveChildPartData );
+/**
+ * @brief Persistent state of a modular space object: seed faction/race and per-part transforms and bounds.
+ * Stored as an effect child so the state travels with the object. All editing goes through EveModularObjectModifier.
+ */
 class EveChildPartData : public EveSpaceObjectChild
 {
 public:
@@ -16,6 +20,7 @@ public:
 
 	PartTag GetUnusedPartID() const;
 
+	/// @brief Fallbacks for EveModularObjectModifier::AddHull when it is called with an empty faction or race name.
 	std::string m_faction;
 	std::string m_race;
 
@@ -25,7 +30,7 @@ public:
 		Vector3 position;
 		Quaternion rotation;
 		Vector3 scale;
-		CcpMath::Sphere boundingSphere;
+		CcpMath::Sphere boundingSphere; ///< In the modular object's local space.
 	};
 	std::vector<PartData> m_parts;
 };
@@ -34,6 +39,11 @@ TYPEDEF_BLUECLASS( EveChildPartData );
 
 
 BLUE_CLASS_IMPL( EveModularObjectModifier );
+/**
+ * @brief Transient edit session for a modular space object. Reads and writes the object's EveChildPartData and
+ * holds no persistent state itself. Object-level culling volumes only update on ApplyBounds(), which the
+ * destructor also calls as a fallback.
+ */
 class EveModularObjectModifier : public IRoot
 {
 public:
@@ -44,11 +54,29 @@ public:
 	void Create( SpaceObjectType* object, EveSOF* sof );
 	~EveModularObjectModifier();
 
+	/// @brief Returned by AddHull/AddChild when the part could not be built. Never a valid tag.
 	static constexpr EveSpaceObjectChild::PartTag INVALID_PART_TAG = 0xFFFFFFFF;
 
+	/**
+	 * @brief Builds a SOF hull as a new part at the given transform. Empty factionName/raceName fall back to
+	 * the seed faction/race stored in EveChildPartData (set by CreateModularObject).
+	 * @return The new part's tag, or INVALID_PART_TAG if the hull could not be built.
+	 */
 	EveSpaceObjectChild::PartTag AddHull( const char* hullName, const char* factionName, const char* raceName, const Vector3& position, const Quaternion& rotation, const Vector3& scale );
+
+	/**
+	 * @brief Loads a space object child resource and adds it as a new part at the given transform.
+	 * @return The new part's tag, or INVALID_PART_TAG if the resource could not be loaded.
+	 */
 	EveSpaceObjectChild::PartTag AddChild( const char* resPath, const Vector3& position, const Quaternion& rotation, const Vector3& scale );
+
 	BlueStdResult Remove( EveSpaceObjectChild::PartTag partId );
+
+	/**
+	 * @brief Recomputes the object's bounding sphere and shape ellipsoid from the current parts.
+	 * Cheap; call after a batch of edits to keep culling volumes in sync. The destructor also calls it.
+	 */
+	void ApplyBounds();
 
 	BlueStdResult SetTransform( EveSpaceObjectChild::PartTag partId, const Vector3& position, const Quaternion& rotation, Vector3 scale );
 	BlueStdResult GetPosition( EveSpaceObjectChild::PartTag partId, Vector3& position ) const;
@@ -68,8 +96,14 @@ private:
 
 TYPEDEF_BLUECLASS( EveModularObjectModifier );
 
+/**
+ * @brief Creates an empty modular space object together with an open edit session for it.
+ * factionName/raceName seed the AddHull fallbacks.
+ */
 std::pair<IEveSpaceObject2Ptr, EveModularObjectModifierPtr> CreateModularObject( EveSOF* sof, const char* factionName, const char* raceName );
+
+/// @brief Opens an edit session on an existing modular space object.
 EveModularObjectModifierPtr ModifyModularObject( EveModularObjectModifier::SpaceObjectType* object, EveSOF* sof );
 
-// Wrapper function because blue doesn't support exporting const variables
+/// @brief Wrapper for EveModularObjectModifier::INVALID_PART_TAG because blue doesn't support exporting const variables.
 EveSpaceObjectChild::PartTag GetInvalidPartTag();

@@ -13,7 +13,7 @@ struct Locator
 	Quaternion direction;
 	Vector3 scale;
 	int boneIndex;
-	EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG;
+	EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG; ///< Part of a modular object this locator belongs to; NO_PART_TAG when not part-scoped.
 };
 BLUE_DECLARE_STRUCTURE_LIST( Locator );
 

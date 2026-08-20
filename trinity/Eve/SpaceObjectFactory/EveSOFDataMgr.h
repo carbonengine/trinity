@@ -38,7 +38,7 @@ public:
 		Vector3 scaling;
 		int32_t boneIndex;
 		int32_t uniqueID;
-		EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG;
+		EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG; ///< Part of a modular object this locator belongs to; NO_PART_TAG when not part-scoped.
 
 		operator Locator() const
 		{

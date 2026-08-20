@@ -52,6 +52,11 @@ void EveModularObjectModifier::Create( SpaceObjectType* object, EveSOF* sof )
 
 EveModularObjectModifier::~EveModularObjectModifier()
 {
+	ApplyBounds();
+}
+
+void EveModularObjectModifier::ApplyBounds()
+{
 	if( m_object )
 	{
 		std::vector<const EveChildPartData::PartData*> orderedParts;
