@@ -32,14 +32,13 @@ const Be::ClassInfo* EveModularObjectModifier::ExposeToBlue()
 	EXPOSURE_END()
 }
 
-MAP_FUNCTION_AND_WRAP( "CreateModularObject", CreateModularObject,
-	"Creates an empty modular space object and an edit session for it. Returns (object, modifier).\n"
-	"\n"
-	"    obj, mod = trinity.CreateModularObject(sof, 'faction', 'race')\n"
-	"    tag = mod.AddHull('hullname', '', '', pos, rot, scale)  # '' -> seed faction/race\n"
-	"    mod.SetTransform(tag, pos2, rot2, scale2)\n"
-	"    mod.ApplyBounds()  # apply culling bounds after a batch of edits\n"
-	"    mod = None  # end the session (also applies bounds)" );
+MAP_FUNCTION_AND_WRAP( "CreateModularObject", CreateModularObject, "Creates an empty modular space object and an edit session for it. Returns (object, modifier).\n"
+																   "\n"
+																   "    obj, mod = trinity.CreateModularObject(sof, 'faction', 'race')\n"
+																   "    tag = mod.AddHull('hullname', '', '', pos, rot, scale)  # '' -> seed faction/race\n"
+																   "    mod.SetTransform(tag, pos2, rot2, scale2)\n"
+																   "    mod.ApplyBounds()  # apply culling bounds after a batch of edits\n"
+																   "    mod = None  # end the session (also applies bounds)" );
 MAP_FUNCTION_AND_WRAP( "ModifyModularObject", ModifyModularObject, "Opens an edit session on an existing modular space object" );
 
 MAP_FUNCTION_AND_WRAP( "GetInvalidPartTag", GetInvalidPartTag, "Gets the INVALID_PART_TAG constant" );
