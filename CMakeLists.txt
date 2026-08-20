@@ -113,7 +113,7 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
 
         find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-        file(GLOB_RECURSE TRINITY_DOCS_SOURCE_FILES
+        file(GLOB_RECURSE TRINITY_DOCS_SOURCE_FILES CONFIGURE_DEPENDS
             ${CMAKE_CURRENT_SOURCE_DIR}/trinity/Eve/SpaceObject/*.h
             ${CMAKE_CURRENT_SOURCE_DIR}/trinity/Eve/SpaceObject/*.cpp)
 

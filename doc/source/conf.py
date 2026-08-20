@@ -27,7 +27,7 @@ source_suffix = {
 }
 
 breathe_default_project = "doxygen"
-breathe_implementation_filename_extensions = ['.c', '.cc']
+breathe_implementation_filename_extensions = ['.c', '.cc', '.cpp']
 
 templates_path = ['_templates']
 exclude_patterns = []
