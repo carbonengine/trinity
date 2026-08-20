@@ -479,14 +479,12 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 	SetupAudio( BlueCastPtr( placementContainer ), dna, transform );
 
 
-	//SetupInstancedMeshes( newObj, dna, placementOffsets );
-
+	// Old style instanced meshes are not supported here
 	if( hasChildEffects )
 	{
 		SetupEffects( newObj, (IEveEffectChildrenOwnerPtr)placementContainer, dna, placementOffsets, buildFlags );
 	}
 
-	//SetupCustomMask( newObj, dna );
 	if( !newObj->GetImpactOverlay() )
 	{
 		SetupImpactEffects( newObj, dna );
