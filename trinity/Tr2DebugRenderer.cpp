@@ -11,6 +11,8 @@
 namespace
 {
 
+const uint32_t VERTEX_BUFFER_INITIAL_SIZE = 4 * 1024 * 1024;
+
 Matrix LineTransform( const Vector3& start, const Vector3& end )
 {
 	Matrix transform = IdentityMatrix();
@@ -753,6 +755,10 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, bool synchroni
 	{
 		return;
 	}
+	if( !m_vertexBuffer.IsValid() && !m_vertexBuffer.Create( VERTEX_BUFFER_INITIAL_SIZE ) )
+	{
+		return;
+	}
 
 	Tr2PickBuffer& pickBuffer = readback.m_debugPickBuffer;
 	pickBuffer.SetClearColor( 0 );
@@ -769,53 +775,44 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, bool synchroni
 	m_pickingEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
 	renderContext.m_esm.ApplyVertexDeclaration( handle );
 
-	if( !m_objectLineOffsets.empty() )
-	{
-
-		std::vector<Tr2DebugObjectReference>& lineObjects = readback.m_debugLineObjects;
-		lineObjects.reserve( m_objectLineOffsets.size() );
-
-		renderContext.SetTopology( Tr2RenderContextEnum::TOP_LINES );
-
-		for( size_t i = 0; i < m_objectLineOffsets.size(); ++i )
+	auto draw = [&]( const std::vector<Vertex>& geometry,
+					 Tr2RenderContextEnum::Topology topology,
+					 uint32_t verticesPerPrimitive,
+					 std::vector<Tr2DebugObjectReference>& objects,
+					 const std::vector<std::pair<Tr2DebugObjectReference, size_t>>& objectOffsets ) {
+		if( !objectOffsets.empty() )
 		{
-			auto object = m_objectLineOffsets[i].first;
+			objects.reserve( objectOffsets.size() );
 
-			lineObjects.push_back( object );
-
-			if( !object )
+			uint32_t stride = uint32_t( sizeof( Vertex ) );
+			uint32_t offset = 0;
+			if( SUCCEEDED( m_vertexBuffer.PutData( geometry.data(), uint32_t( geometry.size() * stride ), offset, renderContext ) ) )
 			{
-				continue;
+				renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer.GetBuffer(), offset, stride );
+				renderContext.SetTopology( topology );
+
+				for( size_t i = 0; i < objectOffsets.size(); ++i )
+				{
+					auto object = objectOffsets[i].first;
+
+					objects.push_back( object );
+
+					if( !object )
+					{
+						continue;
+					}
+
+					auto begin = objectOffsets[i].second;
+					auto end = i + 1 < objectOffsets.size() ? objectOffsets[i + 1].second : geometry.size();
+					renderContext.DrawPrimitive( uint32_t( begin ), uint32_t( ( end - begin ) / verticesPerPrimitive ) );
+				}
 			}
-			auto begin = m_objectLineOffsets[i].second;
-			auto end = i + 1 < m_objectLineOffsets.size() ? m_objectLineOffsets[i + 1].second : m_lines.size();
-			renderContext.DrawPrimitiveUP( uint32_t( ( end - begin ) / 2 ), &m_lines[begin], uint32_t( sizeof( Vertex ) ) );
+			m_vertexBuffer.DoneUsingData( renderContext );
 		}
-	}
+	};
 
-	if( !m_objectTriangleOffsets.empty() )
-	{
-
-		std::vector<Tr2DebugObjectReference>& triangleObjects = readback.m_debugTriangleObjects;
-		triangleObjects.reserve( m_objectTriangleOffsets.size() );
-
-		renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
-
-		for( size_t i = 0; i < m_objectTriangleOffsets.size(); ++i )
-		{
-			auto object = m_objectTriangleOffsets[i].first;
-
-			triangleObjects.push_back( object );
-
-			if( !object )
-			{
-				continue;
-			}
-			auto begin = m_objectTriangleOffsets[i].second;
-			auto end = i + 1 < m_objectTriangleOffsets.size() ? m_objectTriangleOffsets[i + 1].second : m_triangles.size();
-			renderContext.DrawPrimitiveUP( uint32_t( ( end - begin ) / 3 ), &m_triangles[begin], uint32_t( sizeof( Vertex ) ) );
-		}
-	}
+	draw( m_lines, Tr2RenderContextEnum::TOP_LINES, 2, readback.m_debugLineObjects, m_objectLineOffsets );
+	draw( m_triangles, Tr2RenderContextEnum::TOP_TRIANGLES, 3, readback.m_debugTriangleObjects, m_objectTriangleOffsets );
 
 	if( !pickBuffer.EndRendering( renderContext ) )
 	{
@@ -847,38 +844,40 @@ void Tr2DebugRenderer::EndRender( Tr2RenderContext& renderContext )
 	{
 		return;
 	}
+	if( !m_vertexBuffer.IsValid() && !m_vertexBuffer.Create( VERTEX_BUFFER_INITIAL_SIZE ) )
+	{
+		return;
+	}
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
 
 	auto handle = GetVertexDeclarationHandle( renderContext );
-	if( !m_lines.empty() )
-	{
-		renderContext.m_esm.ApplyVertexDeclaration( handle );
-		renderContext.SetTopology( Tr2RenderContextEnum::TOP_LINES );
+	uint32_t passCount = shader->GetPassCount( 0 );
 
-		uint32_t passCount = shader->GetPassCount( 0 );
-
-		for( uint32_t passIx = 0; passIx < passCount; ++passIx )
+	auto draw = [&]( const std::vector<Vertex>& geometry, Tr2RenderContextEnum::Topology topology, uint32_t verticesPerPrimitive ) {
+		if( !geometry.empty() )
 		{
-			shader->ApplyAllStateForPass( 0, passIx, renderContext );
-			m_effect->ApplyMaterialDataForPass( 0, passIx, renderContext );
-			renderContext.DrawPrimitiveUP( uint32_t( m_lines.size() / 2 ), &m_lines[0], uint32_t( sizeof( Vertex ) ) );
-		}
-	}
-	if( !m_triangles.empty() )
-	{
-		renderContext.m_esm.ApplyVertexDeclaration( handle );
-		renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
+			uint32_t stride = uint32_t( sizeof( Vertex ) );
+			uint32_t offset = 0;
+			if( SUCCEEDED( m_vertexBuffer.PutData( geometry.data(), uint32_t( geometry.size() * stride ), offset, renderContext ) ) )
+			{
+				renderContext.m_esm.ApplyVertexDeclaration( handle );
+				renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer.GetBuffer(), offset, stride );
+				renderContext.SetTopology( topology );
 
-		uint32_t passCount = shader->GetPassCount( 0 );
-
-		for( uint32_t passIx = 0; passIx < passCount; ++passIx )
-		{
-			shader->ApplyAllStateForPass( 0, passIx, renderContext );
-			m_effect->ApplyMaterialDataForPass( 0, passIx, renderContext );
-			renderContext.DrawPrimitiveUP( uint32_t( m_triangles.size() / 3 ), &m_triangles[0], uint32_t( sizeof( Vertex ) ) );
+				for( uint32_t passIx = 0; passIx < passCount; ++passIx )
+				{
+					shader->ApplyAllStateForPass( 0, passIx, renderContext );
+					m_effect->ApplyMaterialDataForPass( 0, passIx, renderContext );
+					renderContext.DrawPrimitive( 0, uint32_t( geometry.size() / verticesPerPrimitive ) );
+				}
+			}
+			m_vertexBuffer.DoneUsingData( renderContext );
 		}
-	}
+	};
+
+	draw( m_lines, Tr2RenderContextEnum::TOP_LINES, 2 );
+	draw( m_triangles, Tr2RenderContextEnum::TOP_TRIANGLES, 3 );
 }
 
 

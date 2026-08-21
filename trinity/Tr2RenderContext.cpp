@@ -13,6 +13,7 @@
 #include "Tr2RingBuffer.h"
 
 #include "Shader/Tr2Effect.h"
+#include <atomic>
 
 
 bool g_gdrEnabled = true;
@@ -695,6 +696,19 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 					if( batch.m_objectData )
 					{
 						batch.m_objectData->ApplyConstantBuffers( bin.writer, *primaryContext );
+					}
+					else if( bin.writer.HasPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER ) || bin.writer.HasPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER ) )
+					{
+						// Unwritten per-object root CBV addresses in the indirect args hang the GPU
+						static const uint8_t s_zeroPerObjectData[4096] = {};
+						bin.writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, s_zeroPerObjectData, sizeof( s_zeroPerObjectData ) );
+						bin.writer.SetPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER, s_zeroPerObjectData, sizeof( s_zeroPerObjectData ) );
+						static std::atomic<uint32_t> s_missingObjectDataLogs = 0;
+						if( s_missingObjectDataLogs.fetch_add( 1 ) < 50 )
+						{
+							auto* effect = dynamic_cast<Tr2Effect*>( batch.m_material );
+							CCP_LOGERR( "GDPR: effect '%s' declares perObjectData but the c++ batch provides no perObjectData; drawing with zeroed perObjectData", effect ? effect->GetEffectPathName() : "<unknown>" );
+						}
 					}
 					bin.writer.DrawIndexed( batch.m_indexCountPerInstance, batch.m_instanceCount, batch.m_startIndexLocation, batch.m_baseVertexLocation, batch.m_startInstanceLocation );
 					bin.writer.Next();

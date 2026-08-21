@@ -173,6 +173,7 @@ PyObject* InitializeForPython()
 
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
+extern bool g_requestDred;
 extern bool g_gpuTimersEnabled;
 bool g_bindlessRenderingEnabled = true;
 TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
@@ -239,6 +240,12 @@ void InitializeTrinity()
 	if( !debugArg.empty() )
 	{
 		g_requestDeviceDebugLayer = debugArg == L"1";
+	}
+
+	auto dredArg = BeOS->GetStartupArgValue( L"dred" );
+	if( !dredArg.empty() )
+	{
+		g_requestDred = dredArg == L"1";
 	}
 
 	auto markersArg = BeOS->GetStartupArgValue( L"gpuMarkers" );
