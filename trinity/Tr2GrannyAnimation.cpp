@@ -6,6 +6,7 @@
 #include "Resources/TriGeometryRes.h"
 #include "Tr2Renderer.h"
 #include "include/ITr2DebugRenderer.h"
+#include "Include/ITr2PoseModifier.h"
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Tr2VertexDefinitionUtilities.h"
@@ -88,6 +89,7 @@ Tr2GrannyAnimation::Tr2GrannyAnimation( IRoot* lockobj ) :
 	m_additiveMode( false ),
 	m_aimingBone( false ),
 	m_aimBone( "" ),
+	m_poseModifier( nullptr ),
 	m_paused( false ),
 	m_pauseTime( 0.f ),
 	m_totalPauseOffset( 0.f )
@@ -1506,6 +1508,11 @@ void Tr2GrannyAnimation::EndAnimation()
 }
 
 
+void Tr2GrannyAnimation::StopAnimations( float delay )
+{
+	m_baseLayer.StopAnimations( delay );
+}
+
 void Tr2GrannyAnimation::ClearAnimations()
 {
 	m_baseLayer.ClearAnimations();
@@ -1695,6 +1702,13 @@ void Tr2GrannyAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& model
 
 			m_morphAnimations.clear();
 
+			// sampling only writes bones referenced by active animations, so restore the
+			// sampled pose first or the pose modifier compounds onto its own output
+			if( m_poseModifier && m_sampledPose.skeleton == m_pose.skeleton && m_sampledPose.boneTransforms.size() == m_pose.boneTransforms.size() )
+			{
+				m_pose = m_sampledPose;
+			}
+
 			m_baseLayer.SampleAnimation( animationTime, &m_pose, m_eventListener, m_morphAnimations );
 			for( auto& [_, layer] : m_animationLayers )
 			{
@@ -1702,6 +1716,13 @@ void Tr2GrannyAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& model
 			}
 
 			UpdateAimingBone( skeleton );
+
+			if( m_poseModifier )
+			{
+				m_sampledPose = m_pose;
+				m_poseModifier->ModifyPose( skeleton, m_pose );
+			}
+
 
 			if( m_boneOffset.NeedRebind( (uint32_t)skeleton.bones.size() ) && skeleton.bones.size() )
 			{
@@ -2147,6 +2168,16 @@ void Tr2GrannyAnimation::DisableAimBone()
 	m_aimingBone = false;
 }
 
+ITr2PoseModifier* Tr2GrannyAnimation::GetPoseModifier() const
+{
+	return m_poseModifier;
+}
+
+void Tr2GrannyAnimation::SetPoseModifier( ITr2PoseModifier* poseModifier )
+{
+	m_poseModifier = poseModifier;
+}
+
 void Tr2GrannyAnimation::SetAdditiveBlendMode( bool additive )
 {
 	m_additiveMode = additive;
@@ -2448,7 +2479,7 @@ std::pair<const Float4x3*, size_t> Tr2AnimationMeshBinding::GetBoneTransforms() 
 				{
 					GrannyColumnMatrixMultiply4x3Transpose(
 						(granny_real32*)( (granny_matrix_3x4*)m_boneTransforms.get() )[i],
-						(granny_real32*)m_meshSkeleton->Bones[meshToBone[i]].InverseWorld4x4,
+						(granny_real32*)( m_meshSkeleton->Bones[meshToBone[i]].InverseWorld4x4 ),
 						(granny_real32*)GrannyGetWorldPose4x4( m_animation->m_worldPose, animBones[i] ) );
 				}
 			}

@@ -575,6 +575,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildSpherePin_Blue.cpp
     Eve/SpaceObject/Children/EveChildTransform.cpp
     Eve/SpaceObject/Children/EveChildTransform.cpp
+    Eve/SpaceObject/Children/EveChildTurret.cpp
+    Eve/SpaceObject/Children/EveChildTurret.h
+    Eve/SpaceObject/Children/EveChildTurret_Blue.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.h
     Eve/SpaceObject/Children/EveCloudEditableVolume_Blue.cpp
@@ -697,6 +700,8 @@ set(_SOURCES
     Eve/SpaceObjectFactory/EveSOFDNA_Blue.cpp
     Eve/SpaceObjectFactory/EveSOFUtils.cpp
     Eve/SpaceObjectFactory/EveSOFUtils.h
+    Eve/Turret/EveTurretAiming.cpp
+    Eve/Turret/EveTurretAiming.h
     Eve/Turret/EveTurretFiringFX.cpp
     Eve/Turret/EveTurretFiringFX.h
     Eve/Turret/EveTurretFiringFX_Blue.cpp
@@ -851,6 +856,7 @@ set(_SOURCES
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
     Include/ITr2MultiPassScene.h
+    Include/ITr2PoseModifier.h
     Include/ITr2Scene.h
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h

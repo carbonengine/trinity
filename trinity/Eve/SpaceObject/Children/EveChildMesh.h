@@ -83,8 +83,8 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void ChangeLOD( Tr2Lod lod ) override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
@@ -210,7 +210,7 @@ protected:
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
 
-	void InitializeAnimation();
+	virtual void InitializeAnimation();
 	bool ShouldReflect() const;
 
 	bool DisplayDecals() const;
