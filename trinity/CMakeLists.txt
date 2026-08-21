@@ -776,6 +776,9 @@ set(_SOURCES
     Eve/AudioGameObject.cpp
     Eve/AudioGameObject.h
     Eve/AudioGameObject_Blue.cpp
+    Eve/EveTriggerVolume.cpp
+    Eve/EveTriggerVolume.h
+    Eve/EveTriggerVolume_Blue.cpp
     Eve/EveEffectRoot2.cpp
     Eve/EveEffectRoot2.h
     Eve/EveEffectRoot2_Blue.cpp

@@ -85,6 +85,7 @@ void Tr2ActionBindRTPC::StartWithController( ITr2ActionController* controller )
 void Tr2ActionBindRTPC::Stop( ITr2ActionController& controller )
 {
 	controller.UnRegisterUpdateable( *this );
+	m_emitter = nullptr;
 }
 
 void Tr2ActionBindRTPC::StopWithController( ITr2ActionController* controller )
