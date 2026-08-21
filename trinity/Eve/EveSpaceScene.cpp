@@ -1372,18 +1372,6 @@ void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& render
 	renderContext.m_esm.BeginManagedRendering();
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 
-	if( g_eveSpaceSceneDynamicLighting )
-	{
-		if( auto lightManager = Tr2LightManager::GetOrCreateInstance( "res:/graphics/effect/managed/space/system/computelightlists.fx" ) )
-		{
-			lightManager->SetVariableStore();
-		}
-	}
-	else
-	{
-		Tr2LightManager::DeleteInstance();
-	}
-
 	GatherBatches( enableDistortion, renderContext );
 
 	if( m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows )

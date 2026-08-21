@@ -1425,6 +1425,7 @@ set(_SOURCES
     autoversion.h
     ContinueOnMainThread.cpp
     ContinueOnMainThread.h
+    EnumFilter.h
     EveSprite2dBracket.cpp
     EveSprite2dBracket.h
     EveSprite2dBracket_Blue.cpp

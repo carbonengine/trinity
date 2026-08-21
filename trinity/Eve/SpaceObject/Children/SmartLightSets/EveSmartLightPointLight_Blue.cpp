@@ -34,5 +34,7 @@ const Be::ClassInfo* EveSmartLightPointLight::ExposeToBlue()
 		MAP_ATTRIBUTE( "staticOffsetTranslation", m_staticOffsetTranslation, "static per instance offset in local space before placement \n:jessica-group: StaticOffsetFromDistribution", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "staticOffsetRotation", m_staticOffsetRotation, "static per instance rotation in local space before placement \n:jessica-group: StaticOffsetFromDistribution", Be::READWRITE | Be::PERSIST )
 
+		MAP_ATTRIBUTE( "scaleBrightness", m_scaleBrightness, "Scale light brightness by its radius", Be::READWRITE | Be::PERSIST )
+
 	EXPOSURE_CHAINTO( EveSmartLightBaseGroup )
 }
