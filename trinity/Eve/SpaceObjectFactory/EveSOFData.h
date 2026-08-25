@@ -23,12 +23,40 @@ public:
 	{
 	}
 
+	virtual Vector4 GetValue() const
+	{
+		return m_value;
+	}
+
 	// simple shader parameter
 	BlueSharedString m_name;
+
+private:
 	Vector4 m_value;
 };
 TYPEDEF_BLUECLASS( EveSOFDataParameter );
 BLUE_DECLARE_VECTOR( EveSOFDataParameter );
+
+BLUE_CLASS( EveSOFDataParameterColor ) :
+	public EveSOFDataParameter
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataParameterColor( IRoot* lockobj = NULL ) :
+		EveSOFDataParameter( lockobj )
+	{
+	}
+
+	Vector4 GetValue() const override
+	{
+		return m_color;
+	}
+
+private:
+	Color m_color;
+};
+TYPEDEF_BLUECLASS( EveSOFDataParameterColor );
+BLUE_DECLARE_VECTOR( EveSOFDataParameterColor );
 
 BLUE_CLASS( EveSOFDataGenericString ) :
 	public IRoot

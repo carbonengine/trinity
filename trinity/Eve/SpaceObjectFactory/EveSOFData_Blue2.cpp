@@ -17,6 +17,16 @@ const Be::ClassInfo* EveSOFDataParameter::ExposeToBlue(){
 					EXPOSURE_END()
 }
 
+BLUE_DEFINE( EveSOFDataParameterColor );
+const Be::ClassInfo* EveSOFDataParameterColor::ExposeToBlue(){
+	EXPOSURE_BEGIN( EveSOFDataParameterColor, "" )
+		MAP_INTERFACE( EveSOFDataParameterColor )
+			MAP_INTERFACE( EveSOFDataParameter )
+
+				MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+					MAP_ATTRIBUTE( "value", m_color, "\n:jessica-widget: color\n", Be::READWRITE | Be::PERSIST )
+						EXPOSURE_END()
+}
 
 
 BLUE_DEFINE( EveSOFDataFactionHullArea );
