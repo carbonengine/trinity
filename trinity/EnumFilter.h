@@ -16,7 +16,8 @@ class EnumFilter
 public:
 	EnumFilter() = default;
 	EnumFilter( const EnumFilter& other ) = default;
-	EnumFilter( Enum value ) : m_filter( StorageType( StorageType( 1 ) << StorageType( value ) ) )
+	EnumFilter( Enum value ) :
+		m_filter( StorageType( StorageType( 1 ) << StorageType( value ) ) )
 	{
 		CCP_ASSERT_M( uint64_t( value ) < 8 * sizeof( StorageType ), "Enum value out of range for the chosen storage type" );
 	}
