@@ -37,26 +37,28 @@ private:
 TYPEDEF_BLUECLASS( EveSOFDataParameter );
 BLUE_DECLARE_VECTOR( EveSOFDataParameter );
 
-BLUE_CLASS( EveSOFDataParameterColor ) :
-	public EveSOFDataParameter
-{
-public:
-	EXPOSE_TO_BLUE();
-	EveSOFDataParameterColor( IRoot* lockobj = NULL ) :
-		EveSOFDataParameter( lockobj )
-	{
-	}
 
-	Vector4 GetValue() const override
-	{
-		return m_color;
-	}
+#define SOF_PARAM_DECLARE( _className, _valueType )									  \
+	BLUE_CLASS( _className ) :                                                        \
+		public EveSOFDataParameter							                          \
+	{                                                                                 \
+	public:                                                                           \
+		EXPOSE_TO_BLUE();                                                             \
+		_className( IRoot* lockobj = nullptr );                                       \
+		Vector4 GetValue() const override;		                                      \
+                                                                                      \
+	private:                                                                          \
+		_valueType m_value;                                                           \
+	};                                                                                \
+	TYPEDEF_BLUECLASS( _className );
 
-private:
-	Color m_color;
-};
-TYPEDEF_BLUECLASS( EveSOFDataParameterColor );
-BLUE_DECLARE_VECTOR( EveSOFDataParameterColor );
+SOF_PARAM_DECLARE( EveSOFDataParameterBool, bool );
+SOF_PARAM_DECLARE( EveSOFDataParameterInt, int32_t );
+SOF_PARAM_DECLARE( EveSOFDataParameterFloat, float );
+SOF_PARAM_DECLARE( EveSOFDataParameterVector2, Vector2 );
+SOF_PARAM_DECLARE( EveSOFDataParameterVector3, Vector3 );
+SOF_PARAM_DECLARE( EveSOFDataParameterColor, Color );
+
 
 BLUE_CLASS( EveSOFDataGenericString ) :
 	public IRoot

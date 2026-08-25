@@ -82,6 +82,26 @@ EveSOFDataParameter::EveSOFDataParameter( IRoot* lockobj ) :
 }
 
 
+#define SOF_PARAM_DEFINE( _className, _defaultValue, _returnValue )		\
+_className::_className( IRoot* lockobj ) :								\
+	EveSOFDataParameter( lockobj ),										\
+	m_value( _defaultValue )											\
+{																		\
+}																		\
+																		\
+Vector4 _className::GetValue() const								    \
+{																		\
+	return _returnValue;												\
+}
+
+SOF_PARAM_DEFINE( EveSOFDataParameterBool, false, Vector4( m_value, m_value, m_value, m_value ) );
+SOF_PARAM_DEFINE( EveSOFDataParameterInt, 0, Vector4( float( m_value ), float( m_value ), float( m_value ), float( m_value ) ) );
+SOF_PARAM_DEFINE( EveSOFDataParameterFloat, 0.f, Vector4( m_value, m_value, m_value, m_value ) );
+SOF_PARAM_DEFINE( EveSOFDataParameterVector2, {}, Vector4( m_value.x, m_value.y, 0.f, 0.f ) );
+SOF_PARAM_DEFINE( EveSOFDataParameterVector3, {}, Vector4( m_value.x, m_value.y, m_value.z, 0.f ) );
+SOF_PARAM_DEFINE( EveSOFDataParameterColor, {}, m_value );
+
+
 EveSOFDataFactionHullArea::EveSOFDataFactionHullArea( IRoot* lockobj ) :
 	PARENTLOCK( m_parameters )
 {
