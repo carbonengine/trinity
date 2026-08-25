@@ -31,6 +31,30 @@ BLUE_DECLARE_INTERFACE( ITriVectorFunction );
 BLUE_DECLARE_INTERFACE( ITriQuaternionFunction );
 BLUE_DECLARE( Tr2DebugRenderer );
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Per-booster source data. functionality/atlasIndex0/atlasIndex1/hasTrail/lightScale
+//   are persisted to Blue via a BLUE_DECLARE_STRUCTURE_LIST (see s_boosterItemStructureDef
+//   in EveBoosterSet2.cpp) so boosters survive save/load cycles. transform is NOT
+//   persisted: the ship owns locator authority and supplies a fresh transform on every
+//   rebuild via EveBoosterSet2::RebuildBoosters(). The derived point-light fields (position,
+//   radius, phase) are NOT stored here either — they live in EveBoosterSet2's
+//   m_boosterLights vector, parallel to the persisted m_boosters list.
+// --------------------------------------------------------------------------------
+struct EveBoosterItem
+{
+	EveBoosterItem();
+
+	Matrix transform;
+	Vector4 functionality;
+	uint32_t atlasIndex0;
+	uint32_t atlasIndex1;
+	int32_t hasTrail;
+	float lightScale;
+};
+
+BLUE_DECLARE_STRUCTURE_LIST( EveBoosterItem );
+
 // constants
 // maximum number of spline control points per trail
 const unsigned int EVE_MAX_CONTROL_POINT_COUNT = 5;
@@ -240,7 +264,33 @@ public:
 	void UpdateTrails( float deltaT, Be::Time t );
 	// manage individual exhaust points
 	void Clear();
+
+	// The point light contributed by one booster, computed from its EveBoosterItem by Add().
+	// Parallel to m_boosters: same index, same count. Never persisted.
+	struct BoosterLight
+	{
+		Vector3 position;
+		float radius;
+		float phase;
+	};
+
 	void Add( const Matrix* localMatrix, const Vector4* functionality, bool hasTrail, uint32_t atlasIndex0, uint32_t atlasIndex1, float lightScale = 1 );
+
+	// Rebuilds all boosters from the given locator transforms (in order), restoring each
+	// booster's previously-set functionality/atlasIndex0/atlasIndex1/hasTrail/lightScale by
+	// index where available, and falling back to defaults otherwise. The ship owns locator
+	// authority, so it is responsible for gathering locatorTransforms and calling this
+	// whenever locators change and on load (see EveShip2::RebuildBoosterSet/Initialize).
+	void RebuildBoosters( const std::vector<Matrix>& locatorTransforms );
+
+	// Feature-detection marker for cross-repo compatibility tooling (e.g. platformtools'
+	// HasPersistentBoosterItems()). Always true on any build where this is exposed to Blue.
+	// Deliberately exposes only this flag, not the per-booster data itself, which stays
+	// Be::PERSISTONLY (see the "boosters" MAP_ATTRIBUTE in EveBoosterSet2_Blue.cpp).
+	bool HasPersistentBoosterItems() const
+	{
+		return true;
+	}
 	// set internal visual data
 	void SetData(
 		float glowScale,
@@ -275,24 +325,22 @@ public:
 	void GetLights( Tr2LightManager & lightManager ) const override;
 
 private:
-	// indivual data of each booster (position, etc.)
-	struct SingleBoosterData
-	{
-		Matrix transform;
-		Vector4 functionality;
-		Vector3 lightPosition;
-		float lightRadius;
-		float lightPhase;
-		uint32_t atlasIndex0;
-		uint32_t atlasIndex1;
-	};
-	std::vector<SingleBoosterData> m_singleBoosters;
-
+	PEveBoosterItemStructureList m_boosters;
+	std::vector<BoosterLight> m_boosterLights;
 	// re-alloc and init the instance vertex buffers
 	void RebuildInstanceData( Tr2RenderContext & renderContext );
 
+	// derive the point light for one booster from its persisted entry
+	void ComputeBoosterLight( const EveBoosterItem& item, BoosterLight& out ) const;
+
+	// clear boosters/glows/trails/bounding info while preserving effects and visual
+	// settings; used internally by RebuildBoosters() before re-adding from fresh locators
+	void PrepareForRebuild();
+	// rebuild glows after all boosters have been re-added; used internally by RebuildBoosters()
+	void FinalizeRebuild();
+
 	// function to create the flares from boosterdata
-	void CreateFlares( SingleBoosterData & boosterData );
+	void CreateFlares( const EveBoosterItem& item );
 
 	// toggle display
 	bool m_display;
