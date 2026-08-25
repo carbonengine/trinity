@@ -5,7 +5,7 @@
 #include "Resources/TriTextureRes.h"
 #include "Tr2DepthStencil.h"
 #include "Tr2RenderTarget.h"
-#include "Include/ITr2GpuBuffer.h"
+#include "include/ITr2GpuBuffer.h"
 
 BLUE_DEFINE( TriStepSetVariableStore );
 

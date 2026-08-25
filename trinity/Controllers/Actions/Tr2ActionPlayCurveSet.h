@@ -3,7 +3,7 @@
 #pragma once
 
 #include "ITr2ControllerAction.h"
-#include "Include/ITr2Updateable.h"
+#include "include/ITr2Updateable.h"
 
 
 BLUE_CLASS( Tr2ActionPlayCurveSet ) :

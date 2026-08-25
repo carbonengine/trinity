@@ -10,7 +10,7 @@
 
 #include "Tr2DepthStencil.h"
 #include "Tr2RenderTarget.h"
-#include "Include/ITriTextureRes.h"
+#include "include/ITriTextureRes.h"
 
 BLUE_DECLARE( TriTextureRes );
 

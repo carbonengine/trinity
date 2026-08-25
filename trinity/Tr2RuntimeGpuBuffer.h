@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Include/ITr2GpuBuffer.h"
+#include "include/ITr2GpuBuffer.h"
 
 
 BLUE_CLASS( Tr2RuntimeGpuBuffer ) :

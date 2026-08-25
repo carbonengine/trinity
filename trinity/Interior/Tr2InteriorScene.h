@@ -12,9 +12,9 @@
 #include "include/ITr2MultiPassScene.h"
 #include "ITr2VisualizationModeRenderer.h"
 #include "Tr2InteriorLightSet.h"
-#include "Include/ITr2Scene.h"
+#include "include/ITr2Scene.h"
 #include "Tr2InteriorRenderBatch.h"
-#include "Include/ITr2Interior.h"
+#include "include/ITr2Interior.h"
 #include "Tr2DebugRenderer.h"
 
 // Forward declarations

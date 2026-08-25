@@ -17,7 +17,7 @@
 #include "RenderJob/TriRenderJob.h"
 #include "TriSettingsRegistrar.h"
 #include "include/ITr2DebugRenderer.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 
 
 using namespace Tr2RenderContextEnum;

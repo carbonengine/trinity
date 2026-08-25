@@ -23,7 +23,7 @@
 #include "Tr2DepthStencil.h"
 #include "EveTransform.h"
 #include "TbbStub.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "EveDistanceField.h"
 #include "Renderable/EveSceneStaticParticles.h"
 #include "Shader/Utils/Tr2DataTextureManager.h"
