@@ -48,7 +48,7 @@ float Random( float a, float b )
 	{
 		return ( ( b - a ) * 0.41f ) + a;
 	}
-	return ( ( b - a ) * ( (float)rand() / RAND_MAX ) ) + a;
+	return ( ( b - a ) * ( (float)rand() / float( RAND_MAX ) ) ) + a;
 }
 
 // --------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ Tr2CurveEulerRotationExpression::Tr2CurveEulerRotationExpression( IRoot* lockobj
 	PARENTLOCK( m_inputs ),
 	m_currentValue( 0, 0, 0, 1 ),
 	m_timeScale( 1 ),
-	m_randomConstant( float( rand() ) / RAND_MAX )
+	m_randomConstant( float( rand() ) / float( RAND_MAX ) )
 {
 }
 
@@ -297,7 +297,7 @@ Quaternion* Tr2CurveEulerRotationExpression::GetValueDoubleDotAt( Quaternion* in
 // --------------------------------------------------------------------------------
 void Tr2CurveEulerRotationExpression::ResetRandomConstant()
 {
-	m_randomConstant = float( rand() ) / RAND_MAX;
+	m_randomConstant = float( rand() ) / float( RAND_MAX );
 }
 
 // --------------------------------------------------------------------------------
