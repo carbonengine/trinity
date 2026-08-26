@@ -17,6 +17,7 @@ const Be::ClassInfo* EveChildBoosterSet::ExposeToBlue()
 		MAP_INTERFACE( ITr2LightOwner )
 		MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( ITr2Renderable )
+		MAP_INTERFACE( ITr2ControllerOwner )
 
 		MAP_ATTRIBUTE( "name", m_name, "Name of the space object child", Be::READWRITE | Be::PERSIST )
 

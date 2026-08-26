@@ -17,6 +17,7 @@
 #include "Lights/ITr2LightOwner.h"
 #include "EveSpaceObjectChild.h"
 #include "Tr2RingBuffer.h"
+#include "Controllers/ITr2ControllerOwner.h"
 
 // forwards
 class ITriRenderBatchAccumulator;
@@ -80,7 +81,8 @@ class EveChildBoosterSet : public EveSpaceObjectChild,
 						   public Tr2DeviceResource,
 						   public ITr2LightOwner,
 						   public EveEntity,
-						   public ITr2Renderable
+						   public ITr2Renderable,
+						   public ITr2ControllerOwner
 {
 public:
 	EXPOSE_TO_BLUE();
