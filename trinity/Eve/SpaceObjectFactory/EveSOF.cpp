@@ -3079,6 +3079,7 @@ void EveSOF::SetupChildBoosters( EveChildContainerPtr child, const EveSOFDNAPtr 
 	}
 
 	glow->Rebuild();
+	glow->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 
 	// add it to child
 	set->PrepareResources();
