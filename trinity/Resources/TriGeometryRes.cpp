@@ -15,7 +15,7 @@
 #include "Utilities/BoundingBox.h"
 
 #include <cctype>
-
+#include "TbbStub.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -75,39 +75,61 @@ static void CopyGrannyName( std::string& dest, const char* src )
 }
 
 
-static void ConvertDataToVector3( Tr2VertexDefinition::DataType elementType, const void* src, Vector3* dest )
+void Tr2RaycastGeometryRes::SetLodIndices( std::vector<int32_t>&& lodIndices )
 {
+	m_lodIndices = std::move( lodIndices );
+}
 
-	switch( elementType )
+BVH::BoundingVolumeHierarchy& Tr2RaycastGeometryRes::GetBVH()
+{
+	return m_bvh;
+}
+
+BlueAsyncRes::LoadingResult Tr2RaycastGeometryRes::DoLoad()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	if( !m_dataStream )
 	{
-	case Tr2VertexDefinition::FLOAT16_4: {
-		*reinterpret_cast<Vector3*>( dest ) = *static_cast<const Vector3_16*>( src );
-		break;
-	}
-	case Tr2VertexDefinition::FLOAT32_3: {
-		memcpy( dest, src, 3 * sizeof( float ) );
-		break;
-	}
-	case Tr2VertexDefinition::FLOAT32_4: {
-		memcpy( dest, src, 3 * sizeof( float ) );
-		break;
-	}
-	case Tr2VertexDefinition::SHORT_4: {
-		ConvertShort4ToVector3( src, dest );
-		break;
+		return LR_FAILED;
 	}
 
-	case Tr2VertexDefinition::UBYTE_4: {
-		ConvertUByte4ToVector3( src, dest );
-		break;
+	CCP_ASSERT( m_path.size() >= 4 && m_path.compare( m_path.size() - 4, 4, L".cmf" ) == 0 );
+
+	auto cmfContent = Tr2CmfContents( *m_dataStream, CW2A( m_path.c_str() ) );
+	if( !cmfContent )
+	{
+		return LR_FAILED;
 	}
 
-	default: {
-		dest->x = 0.0f;
-		dest->y = 0.0f;
-		dest->z = 0.0f;
+	auto cmfData = cmfContent.GetData();
+	if( !cmfData )
+	{
+		return LR_FAILED;
 	}
+
+	if( m_lodIndices.size() != cmfData->meshes.size() )
+	{
+		return LR_FAILED;
 	}
+
+	for( size_t i = 0; i < cmfData->meshes.size(); i++ )
+	{
+		if( m_lodIndices[i] >= cmfData->meshes[i].lods.size() )
+		{
+			return LR_FAILED;
+		}
+	}
+
+	// BVH creation also decompresses the cmf buffers, which allows safe multithreaded raycast queries.
+	m_bvh = BVH::BoundingVolumeHierarchy( std::move( cmfContent ), m_lodIndices );
+
+	return LR_SUCCESS;
+}
+
+bool Tr2RaycastGeometryRes::DoPrepare()
+{
+	return true;
 }
 
 
@@ -191,6 +213,7 @@ TriGeometryRes::TriGeometryRes( IRoot* lockobj ) :
 
 TriGeometryRes::~TriGeometryRes()
 {
+	DestroyRayCaster();
 	ReleaseResources( TRISTORAGE_ALL );
 #if WITH_GRANNY
 	ClearGrannyData();
@@ -475,6 +498,8 @@ void TriGeometryRes::ReleaseResources( TriStorage s )
 	if( s & TRISTORAGE_MANAGEDMEMORY )
 	{
 		CancelPendingLoad();
+
+		DestroyRayCaster();
 
 		ReleaseResourcesHelper();
 
@@ -1464,29 +1489,16 @@ void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, v
 	}
 }
 
-bool TriGeometryRes::GetIntersectionPointNormalBone( const Vector3* pos, const Vector3* dir, Vector3* hitpoint, Vector3* normal, int* boneIndex, unsigned int areaIx )
-{
-	Vector3 farPoint;
-	Vector3 farPointNormal;
-	int farBoneIndex;
-	return GetIntersectionPoints( pos, dir, hitpoint, normal, &farPoint, &farPointNormal, boneIndex, &farBoneIndex, areaIx );
-}
-
 std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>> TriGeometryRes::GetIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir )
 {
-	Vector3 hitpoint( 0.0f, 0.0f, 0.0f );
-	Vector3 normal( 0.0f, 0.0f, 0.0f );
-	int boneIndex;
-	bool result = GetIntersectionPointNormalBone( &pos, &dir, &hitpoint, &normal, &boneIndex );
-	return std::make_pair( result, std::make_pair( boneIndex, std::make_pair( hitpoint, normal ) ) );
+	RayCastResult hitInfo;
+	bool hit = GetIntersectionPoints( pos, dir, hitInfo );
+	Vector3 normal = Normalize( hitInfo.unnormalizedNormal );
+	return std::make_pair( hit, std::make_pair( hitInfo.boneIndex, std::make_pair( hitInfo.position, normal ) ) );
 }
 
 Be::Result<std::string> TriGeometryRes::GetAreaIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir, int areaIx, std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>>& result )
 {
-	Vector3 hitpoint( 0.0f, 0.0f, 0.0f );
-	Vector3 normal( 0.0f, 0.0f, 0.0f );
-	int boneIndex;
-
 	if( areaIx < -1 )
 	{
 		// -1 is a special case handled to maintain legacy behavior.
@@ -1498,85 +1510,177 @@ Be::Result<std::string> TriGeometryRes::GetAreaIntersectionPointNormalBoneFromSc
 	// this method got changed to accept signed integers and cast them to unsigned.
 	auto unsignedAreaIndex = static_cast<unsigned int>( areaIx );
 
-	bool success = GetIntersectionPointNormalBone( &pos, &dir, &hitpoint, &normal, &boneIndex, unsignedAreaIndex );
-	result = std::make_pair( success, std::make_pair( boneIndex, std::make_pair( hitpoint, normal ) ) );
+	RayCastResult hitInfo;
+	bool hit = GetIntersectionPoints( pos, dir, hitInfo, unsignedAreaIndex );
+	Vector3 normal = Normalize( hitInfo.unnormalizedNormal );
+	result = std::make_pair( hit, std::make_pair( hitInfo.boneIndex, std::make_pair( hitInfo.position, normal ) ) );
 	return Be::Result<std::string>();
 }
 
-static bool GetBoneIndex( Tr2VertexDefinition::DataType elementType, const void* src, int& dest )
+std::pair<bool, std::pair<int, std::pair<Vector3, std::pair<Vector3, std::pair<Color, Color>>>>> TriGeometryRes::GetIntersectionPointNormalBoneColorFromScript( const Vector3& pos, const Vector3& dir )
 {
-	if( elementType != Tr2VertexDefinition::UBYTE_4 )
+	RayCastResult hitInfo;
+	bool hit = GetIntersectionPoints( pos, dir, hitInfo );
+	Vector3 normal = Normalize( hitInfo.unnormalizedNormal );
+	return std::make_pair( hit, std::make_pair( hitInfo.boneIndex, std::make_pair( hitInfo.position, std::make_pair( normal, std::make_pair( hitInfo.firstVertexColor, hitInfo.interpolatedVertexColor ) ) ) ) );
+}
+
+Be::Result<std::string> TriGeometryRes::GetAreaIntersectionPointNormalBoneColorFromScript( const Vector3& pos, const Vector3& dir, int areaIx, std::pair<bool, std::pair<int, std::pair<Vector3, std::pair<Vector3, std::pair<Color, Color>>>>>& result )
+{
+	if( areaIx < -1 )
 	{
-		CCP_LOGERR( "TriGeometryRes: BELNDINDICE using unsupported format." );
+		// -1 is a special case handled to maintain legacy behavior.
+		return Be::Result<std::string>( "Invalid area index" );
+	}
+
+	// In Python 3, passing a signed value to an unsigned C exposed attribute is an error.
+	// In order to maintain backwards compatible behavior with Python 2
+	// this method got changed to accept signed integers and cast them to unsigned.
+	auto unsignedAreaIndex = static_cast<unsigned int>( areaIx );
+
+	RayCastResult hitInfo;
+	bool hit = GetIntersectionPoints( pos, dir, hitInfo, unsignedAreaIndex );
+	Vector3 normal = Normalize( hitInfo.unnormalizedNormal );
+	result = std::make_pair( hit, std::make_pair( hitInfo.boneIndex, std::make_pair( hitInfo.position, std::make_pair( normal, std::make_pair( hitInfo.firstVertexColor, hitInfo.interpolatedVertexColor ) ) ) ) );
+	return Be::Result<std::string>();
+}
+
+void TriGeometryRes::PrepareRayCaster()
+{
+	m_bvh.sessions++;
+
+	if( m_bvh.geometry || !m_useCMF )
+	{
+		return;
+	}
+
+	std::vector<int32_t> lodIndices;
+	lodIndices.resize( m_meshes.size() );
+	for( size_t i = 0; i < m_meshes.size(); i++ )
+	{
+		lodIndices[i] = m_meshes[i] ? m_meshes[i]->m_lods[0]->m_originalLodIndex : 0;
+	}
+
+	m_bvh.geometry.CreateInstance();
+	m_bvh.geometry->SetLodIndices( std::move( lodIndices ) );
+	m_bvh.geometry->Initialize( GetFilePath().c_str(), GetExt() );
+}
+
+void TriGeometryRes::DestroyRayCaster()
+{
+	if( m_bvh.geometry )
+	{
+		m_bvh.geometry->CancelPendingLoad();
+		m_bvh.geometry.Unlock();
+	}
+}
+
+void TriGeometryRes::ResetRayCaster()
+{
+	m_bvh.sessions--;
+
+	CCP_ASSERT( m_bvh.sessions >= 0 );
+
+	if( m_bvh.sessions > 0 )
+	{
+		return;
+	}
+
+	m_bvh.geometry.Unlock();
+}
+
+bool TriGeometryRes::IsRayCasterReady() const
+{
+	return m_bvh.geometry && m_bvh.geometry->IsGood();
+}
+
+bool TriGeometryRes::HasRayCasterPreparationFailed() const
+{
+	if( m_bvh.sessions > 0 && !m_bvh.geometry ) // ReleaseResources destroyed our bvh :(
+	{
+		return true;
+	}
+	return m_bvh.geometry && m_bvh.geometry->IsPrepared() && !m_bvh.geometry->IsGood();
+}
+
+static std::vector<BVH::IntersectedNode>& GetRaycastStack()
+{
+	static Tr2EnumerableThreadSpecific<std::vector<BVH::IntersectedNode>> stacks;
+	return stacks.local();
+}
+
+bool TriGeometryRes::GetIntersectionPoints( const Vector3& pos, const Vector3& dir, RayCastResult& result, uint32_t areaIx, float rayLength )
+{
+	if( !m_useCMF || !m_bvh.geometry || !m_bvh.geometry->IsGood() )
+	{
+		if( BeResMan->IsOnMainThread() )
+		{
+			return GetIntersectionPointsLegacy( pos, dir, result, areaIx, rayLength );
+		}
+		CCP_ASSERT_M( false, "Raycast fallback is not available in a multithreaded environment! You need to wait for IsRayCasterReady before raycasting!" );
 		return false;
 	}
 
-	const uint8_t* vdata = static_cast<const uint8_t*>( src );
-	dest = vdata[0];
+	BVH::RayHit rayHit;
+	bool hit = false;
+	if( areaIx != -1 )
+	{
+		hit = m_bvh.geometry->GetBVH().IntersectAreaAcrossMeshes( GetRaycastStack(), CcpMath::Ray{ pos, dir }, rayLength, areaIx, rayHit );
+	}
+	else
+	{
+		hit = m_bvh.geometry->GetBVH().IntersectAll( GetRaycastStack(), CcpMath::Ray{ pos, dir }, rayLength, rayHit );
+	}
+
+	if( !hit )
+	{
+		return false;
+	}
+
+	result.distance = rayHit.distance;
+	result.position = pos + dir * rayHit.distance;
+
+	auto& bvh = m_bvh.geometry->GetBVH();
+	auto indices = bvh.GetIndices( rayHit.meshIndex );
+	auto positions = bvh.GetPositions( rayHit.meshIndex );
+	auto bones = bvh.GetBones( rayHit.meshIndex );
+	auto colors = bvh.GetColors( rayHit.meshIndex );
+
+	uint32_t index1 = indices[rayHit.primitive * 3 + 0];
+	uint32_t index2 = indices[rayHit.primitive * 3 + 1];
+	uint32_t index3 = indices[rayHit.primitive * 3 + 2];
+
+	Vector3 p1 = positions[index1];
+	Vector3 p2 = positions[index2];
+	Vector3 p3 = positions[index3];
+
+	Vector3 avec = p2 - p1;
+	Vector3 bvec = p3 - p1;
+	result.unnormalizedNormal = Cross( avec, bvec );
+
+	if( bones.has_value() )
+	{
+		result.boneIndex = bones.value()[index1][0];
+	}
+	if( colors.has_value() )
+	{
+		float v1 = 1.0f - ( rayHit.u + rayHit.v );
+		Color color1 = colors.value()[index1];
+		Color color2 = colors.value()[index2];
+		Color color3 = colors.value()[index3];
+		result.firstVertexColor = color1;
+		result.interpolatedVertexColor = color1 * v1 + color2 * rayHit.u + color3 * rayHit.v;
+	}
+
 	return true;
 }
 
-static bool IntersectTri(
-	const Vector3* p0,
-	const Vector3* p1,
-	const Vector3* p2,
-	const Vector3* rayPos,
-	const Vector3* rayDir,
-	float* u,
-	float* v,
-	float* dist )
+// Careful: This function is slow and only works on main thread!
+bool TriGeometryRes::GetIntersectionPointsLegacy( const Vector3& pos, const Vector3& dir, RayCastResult& result, uint32_t areaIx, float rayLength )
 {
-	Matrix m;
-	Vector4 vec;
-
-	m.m[0][0] = p1->x - p0->x;
-	m.m[1][0] = p2->x - p0->x;
-	m.m[2][0] = -rayDir->x;
-	m.m[3][0] = 0.0f;
-	m.m[0][1] = p1->y - p0->y;
-	m.m[1][1] = p2->y - p0->y;
-	m.m[2][1] = -rayDir->y;
-	m.m[3][1] = 0.0f;
-	m.m[0][2] = p1->z - p0->z;
-	m.m[1][2] = p2->z - p0->z;
-	m.m[2][2] = -rayDir->z;
-	m.m[3][2] = 0.0f;
-	m.m[0][3] = 0.0f;
-	m.m[1][3] = 0.0f;
-	m.m[2][3] = 0.0f;
-	m.m[3][3] = 1.0f;
-
-	vec.x = rayPos->x - p0->x;
-	vec.y = rayPos->y - p0->y;
-	vec.z = rayPos->z - p0->z;
-	vec.w = 0.0f;
-
-	if( Inverse( m, m ) )
-	{
-		vec = Transform( vec, m );
-		if( ( vec.x >= 0.0f ) && ( vec.y >= 0.0f ) && ( vec.x + vec.y <= 1.0f ) && ( vec.z >= 0.0f ) )
-		{
-			*u = vec.x;
-			*v = vec.y;
-			*dist = fabs( vec.z );
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3* dir, Vector3* hitpointNear, Vector3* hitpointNearNormal, Vector3* hitpointFar, Vector3* hitpointFarNormal, int* boneIndexNear, int* boneIndexFar, unsigned int areaIx )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	*boneIndexFar = *boneIndexNear = -1;
-	int boneIndex = 0;
-	float minDist = FLT_MAX;
-	float maxDist = FLT_MIN;
-	bool result = false;
+	bool hit = false;
 
 	for( size_t i = 0; i < m_meshes.size(); i++ )
 	{
@@ -1594,7 +1698,7 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3* d
 		int vertSize = m_meshes[i]->m_bytesPerVertex;
 		if( FAILED( lod->m_vertexAllocation.MapForReading( pVertices, renderContext ) ) )
 		{
-			return 0;
+			return false;
 		}
 		ON_BLOCK_EXIT( [&] { lod->m_vertexAllocation.UnmapForReading( renderContext ); } );
 		if( FAILED( lod->m_indexAllocation.MapForReading( pIndices, renderContext ) ) )
@@ -1618,6 +1722,8 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3* d
 		}
 
 		const Tr2VertexDefinition::Item* const blendIndices = decl.Find( decl.BLENDINDICES );
+		const Tr2VertexDefinition::Item* const colors = decl.Find( decl.COLOR );
+
 		int numPrim = lod->m_primitiveCount;
 		auto currentIndex = 0;
 		if( areaIx != -1 )
@@ -1652,53 +1758,47 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3* d
 				index3 = pLongIndices[currentIndex++];
 			}
 
-			ConvertTriangleData( position->m_dataType, vertSize, pVertices, index1, index2, index3, &p1, &p2, &p3 );
+			ConvertTriangleData( position->m_dataType, vertSize, pVertices + position->m_offset, index1, index2, index3, &p1, &p2, &p3 );
 
-			if( IntersectTri( &p1, &p2, &p3, pos, dir, &pu, &pv, &dist ) )
+			if( IntersectTri( p1, p2, p3, pos, dir, pu, pv, dist ) )
 			{
-				float v1 = 1.0f - ( pu + pv );
-				Vector3 avec = p2 - p1;
-				Vector3 bvec = p3 - p1;
-				if( minDist > dist )
+				if( rayLength > dist )
 				{
-					*hitpointNear = p1 * v1 + p2 * pu + p3 * pv;
-					*hitpointNearNormal = Normalize( Cross( avec, bvec ) );
-					minDist = dist;
+					float v1 = 1.0f - ( pu + pv );
+
+					result.position = p1 * v1 + p2 * pu + p3 * pv;
+
+					Vector3 avec = p2 - p1;
+					Vector3 bvec = p3 - p1;
+					result.unnormalizedNormal = Cross( avec, bvec );
+
+					result.distance = rayLength = dist;
+
+					int boneIndex = 0;
 					if( blendIndices && GetBoneIndex( blendIndices->m_dataType, pVertices + index1 * vertSize + blendIndices->m_offset, boneIndex ) )
 					{
-						*boneIndexNear = boneIndex;
+						result.boneIndex = boneIndex;
 					}
-				}
-				if( maxDist < dist )
-				{
-					*hitpointFar = p1 * v1 + p2 * pu + p3 * pv;
-					*hitpointFarNormal = Normalize( Cross( avec, bvec ) );
-					maxDist = dist;
-					if( blendIndices && GetBoneIndex( blendIndices->m_dataType, pVertices + index1 * vertSize + blendIndices->m_offset, boneIndex ) )
+
+					Color color1;
+					Color color2;
+					Color color3;
+					if( colors &&
+						GetColor( colors->m_dataType, pVertices + index1 * vertSize + colors->m_offset, color1 ) &&
+						GetColor( colors->m_dataType, pVertices + index2 * vertSize + colors->m_offset, color2 ) &&
+						GetColor( colors->m_dataType, pVertices + index3 * vertSize + colors->m_offset, color3 ) )
 					{
-						*boneIndexFar = boneIndex;
+						result.firstVertexColor = color1;
+						result.interpolatedVertexColor = color1 * v1 + color2 * pu + color3 * pv;
 					}
+
+					hit = true;
 				}
-				result = true;
 			}
 		}
 	}
 
-	if( minDist == FLT_MAX )
-	{
-		*hitpointNear = *hitpointFar;
-		*hitpointNearNormal = *hitpointFarNormal;
-		*boneIndexNear = *boneIndexFar;
-	}
-
-	if( maxDist == FLT_MIN )
-	{
-		*hitpointFar = *hitpointNear;
-		*hitpointFarNormal = *hitpointNearNormal;
-		*boneIndexFar = *boneIndexNear;
-	}
-
-	return result;
+	return hit;
 }
 
 unsigned int TriGeometryRes::GetSkeletonCount() const
@@ -2234,6 +2334,7 @@ bool TriGeometryRes::CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2Cp
 			}
 		}
 	}
+
 	CCP_STATS_ADD( geometryResBytes, m_memoryUse );
 
 	return true;
@@ -2867,4 +2968,12 @@ bool TriGeometryRes::IsUsingCMF() const
 const cmf::Data* TriGeometryRes::GetCMFData() const
 {
 	return m_cmfContents.GetData();
+}
+
+void TriGeometryRes::VisualizeBVH( Tr2DebugObjectReference owner, const Matrix& transform, ITr2DebugRenderer2& renderer ) const
+{
+	if( m_bvh.geometry && m_bvh.geometry->IsGood() )
+	{
+		m_bvh.geometry->GetBVH().Visualize( owner, transform, renderer );
+	}
 }

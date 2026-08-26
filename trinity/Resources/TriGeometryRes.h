@@ -10,6 +10,7 @@
 
 #include "Tr2CmfContent.h"
 #include "Tr2SuballocatedBuffer.h"
+#include "../Utilities/BVH.h"
 
 constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 32u * 1024u * 1024u;
 constexpr uint32_t SHARED_BUFFER_MAX_SIZE = 2048u * 1024u * 1024u;
@@ -19,6 +20,27 @@ extern Tr2SuballocatedBuffer g_sharedBuffer;
 
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
+
+
+BLUE_CLASS( Tr2RaycastGeometryRes ) :
+	public BlueAsyncRes
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	void SetLodIndices( std::vector<int32_t> && lodIndices );
+	BVH::BoundingVolumeHierarchy& GetBVH();
+
+protected:
+	LoadingResult DoLoad() override;
+	bool DoPrepare() override;
+
+private:
+	std::vector<int32_t> m_lodIndices;
+	BVH::BoundingVolumeHierarchy m_bvh;
+};
+
+TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2RaycastGeometryRes );
 
 
 enum class GrannyDeprecationLevel
@@ -218,6 +240,16 @@ struct TriGeometryResSkeletonData
 	TrackableStdVector<TriGeometryResJointData> m_joints;
 };
 
+struct RayCastResult
+{
+	float distance = std::numeric_limits<float>::infinity();
+	Vector3 position;
+	Vector3 unnormalizedNormal;
+	int boneIndex = -1;
+	Color firstVertexColor;
+	Color interpolatedVertexColor;
+};
+
 BLUE_CLASS( TriGeometryRes ) :
 	public BlueAsyncRes,
 	public ICacheable,
@@ -266,27 +298,21 @@ public:
 
 	void RebuildCachedData();
 
-	bool GetIntersectionPoints(
-		const Vector3* pos,
-		const Vector3* dir,
-		Vector3* hitpointNear,
-		Vector3* hitpointNearNormal,
-		Vector3* hitpointFar,
-		Vector3* hitpointFarNormal,
-		int* boneIndexNear,
-		int* boneIndexFar,
-		unsigned int areaIx = -1 );
+	bool GetIntersectionPoints( const Vector3& pos, const Vector3& dir, RayCastResult& result, uint32_t areaIx = -1, float rayLength = std::numeric_limits<float>::infinity() );
 
-	bool GetIntersectionPointNormalBone(
-		const Vector3* pos,
-		const Vector3* dir,
-		Vector3* hitpoint,
-		Vector3* normal,
-		int* boneIndex,
-		unsigned int areaIx = -1 );
+	bool GetIntersectionPointsLegacy( const Vector3& pos, const Vector3& dir, RayCastResult& result, uint32_t areaIx = -1, float rayLength = std::numeric_limits<float>::infinity() );
+
+	void PrepareRayCaster();
+	void ResetRayCaster();
+	bool IsRayCasterReady() const;
+	bool HasRayCasterPreparationFailed() const;
+	void DestroyRayCaster();
 
 	std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>> GetIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir );
 	Be::Result<std::string> GetAreaIntersectionPointNormalBoneFromScript( const Vector3& pos, const Vector3& dir, int areaIx, std::pair<bool, std::pair<int, std::pair<Vector3, Vector3>>>& result );
+
+	std::pair<bool, std::pair<int, std::pair<Vector3, std::pair<Vector3, std::pair<Color, Color>>>>> GetIntersectionPointNormalBoneColorFromScript( const Vector3& pos, const Vector3& dir );
+	Be::Result<std::string> GetAreaIntersectionPointNormalBoneColorFromScript( const Vector3& pos, const Vector3& dir, int areaIx, std::pair<bool, std::pair<int, std::pair<Vector3, std::pair<Vector3, std::pair<Color, Color>>>>>& result );
 
 	bool GetBoundingBox( unsigned int meshIx, Vector3& min, Vector3& max ) const;
 	Be::Result<std::string> GetBoundingBoxFromScript( unsigned int meshIx, std::pair<Vector3, Vector3>& bounds ) const;
@@ -359,6 +385,8 @@ public:
 	bool IsUsingCMF() const;
 	const cmf::Data* GetCMFData() const;
 
+	void VisualizeBVH( Tr2DebugObjectReference owner, const Matrix& transform, ITr2DebugRenderer2& renderer ) const;
+
 private:
 	unsigned int m_memoryUse;
 	TrackableStdVector<std::unique_ptr<TriGeometryResMeshData>> m_meshes;
@@ -373,6 +401,12 @@ private:
 
 	int32_t m_forcedLodIndex = -1;
 	bool m_forceLod = false;
+
+	struct
+	{
+		Tr2RaycastGeometryResPtr geometry = nullptr;
+		int32_t sessions = 0;
+	} m_bvh;
 
 private:
 	// Provide the functions that do the actual work of loading and preparing.

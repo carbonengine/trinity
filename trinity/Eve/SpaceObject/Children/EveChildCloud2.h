@@ -4,7 +4,7 @@
 
 #include "ITr2Renderable.h"
 #include "Eve/IEveSpaceObject2.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 #include "Tr2DebugRenderer.h"
 #include "Tr2DepthStencil.h"
 #include "TriFrustumOrtho.h"
@@ -27,12 +27,12 @@ BLUE_DECLARE( Tr2TextureAnimation );
 //   plane at the back of the object's bounding sphere using provided effect.
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveChildCloud2 ) :
+	public EveSpaceObjectChild,
 	public ITr2VolumetricRenderable,
 	public Tr2DeviceResource,
 	public IInitialize,
 	public INotify,
 	public IListNotify,
-	public IEveSpaceObjectChild,
 	public ITr2DebugRenderable,
 	public ITr2Renderable,
 	public ITr2LightOwner,
@@ -57,21 +57,11 @@ public:
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const struct IList* theList ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	virtual const char* GetName() const override;
-	virtual void SetName( const char* name ) override;
+	// EveSpaceObjectChild
 	virtual void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	virtual void GetLocalToWorldTransform( Matrix & transform ) const override;
-	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
-	virtual void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
 	virtual bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
-	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override
-	{
-	}
-	virtual void ChangeLOD( Tr2Lod lod ) override
-	{
-	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
@@ -189,7 +179,6 @@ private:
 	Tr2DepthStencilPtr m_shadowMapDS;
 	TriVariable* m_depthShadowMapHandle;
 
-	std::string m_name;
 	bool m_display;
 	bool m_castShadows;
 	bool m_receiveShadows;

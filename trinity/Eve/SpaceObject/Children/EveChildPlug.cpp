@@ -25,10 +25,12 @@ EveChildPlug::~EveChildPlug()
 	{
 		controller->Unlink( UnlinkReason::DELETING );
 	}
+	UnregisterChildren( m_objects );
 }
 
 bool EveChildPlug::Initialize()
 {
+	RegisterChildren( m_objects );
 	for( auto& controller : m_controllers )
 	{
 		if( !controller->IsLinked() )
@@ -73,6 +75,7 @@ void EveChildPlug::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 	}
 	else if( list == &m_objects && ( event & BELIST_LOADING ) == 0 )
 	{
+		HandleChildrenListModified( event, value, m_objects );
 		if( IsInRegistry() )
 		{
 			switch( event & BELIST_EVENTMASK )
@@ -153,16 +156,6 @@ void EveChildPlug::UnRegisterComponents()
 	}
 }
 
-const char* EveChildPlug::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildPlug::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
 void EveChildPlug::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
@@ -195,7 +188,7 @@ bool EveChildPlug::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query
 	Vector4 bSphere( 0.f, 0.f, 0.f, -1.f );
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		if( ( *it )->GetBoundingSphere( bSphere ) )
+		if( ( *it )->GetBoundingSphere( bSphere, EVE_BOUNDS_NORMAL ) )
 		{
 			BoundingSphereSetOrUpdate( bSphere, sphere, success );
 			success = true;
@@ -271,7 +264,7 @@ void EveChildPlug::SetShaderOption( const BlueSharedString& name, const BlueShar
 {
 	for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
 	{
-		IEveSpaceObjectChild* child = *it;
+		EveSpaceObjectChild* child = *it;
 		child->SetShaderOption( name, value );
 	}
 }
@@ -426,7 +419,7 @@ void EveChildPlug::StartControllers()
 	}
 }
 
-IEveSpaceObjectChildPtr EveChildPlug::GetEffectChildByName( const char* name ) const
+EveSpaceObjectChildPtr EveChildPlug::GetEffectChildByName( const char* name ) const
 {
 	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
 	{
@@ -439,7 +432,7 @@ IEveSpaceObjectChildPtr EveChildPlug::GetEffectChildByName( const char* name ) c
 	return nullptr;
 }
 
-void EveChildPlug::AddToEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildPlug::AddToEffectChildrenList( EveSpaceObjectChild* child )
 {
 	if( IsInRegistry() )
 	{
@@ -451,7 +444,7 @@ void EveChildPlug::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 	m_objects.Append( child->GetRootObject() );
 }
 
-void EveChildPlug::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildPlug::RemoveFromEffectChildrenList( EveSpaceObjectChild* child )
 {
 	auto index = m_objects.FindKey( child );
 	if( index >= 0 )
@@ -504,4 +497,28 @@ ITr2AudEmitterPtr EveChildPlug::FindSoundEmitter( const char* name )
 		}
 	}
 	return nullptr;
+}
+
+void EveChildPlug::SetOwner( IEveSpaceObject2* owner )
+{
+	if( GetOwner() != owner )
+	{
+		EveSpaceObjectChild::SetOwner( owner );
+		for( auto& child : m_objects )
+		{
+			child->SetOwner( owner );
+		}
+	}
+}
+
+void EveChildPlug::SetPartTag( PartTag tag )
+{
+	if( GetPartTag() != tag )
+	{
+		EveSpaceObjectChild::SetPartTag( tag );
+		for( auto& child : m_objects )
+		{
+			child->SetPartTag( tag );
+		}
+	}
 }

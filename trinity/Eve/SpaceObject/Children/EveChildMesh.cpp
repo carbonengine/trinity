@@ -12,6 +12,7 @@
 #include "TriFrustumOrtho.h"
 #include "Utilities/BoundingBox.h"
 #include "Resources/TriGeometryRes.h"
+#include "Eve/SpaceObject/Utils/EveLocatorSets.h"
 #include <ITr2AudGeometry.h>
 #include "Tr2GpuStructuredBuffer.h"
 #include <ITr2AudGeometry.h>
@@ -30,7 +31,9 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 	PARENTLOCK( m_decals ),
 	PARENTLOCK( m_attachments ),
 	PARENTLOCK( m_lights ),
+	PARENTLOCK( m_overlayEffects ),
 	m_display( true ),
+	m_inheritOverlayEffects( true ),
 	m_isVisible( false ),
 	m_instancesVisible( false ),
 	m_castShadow( false ),
@@ -71,6 +74,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 
 EveChildMesh::~EveChildMesh()
 {
+	ReleaseBvhVisualization();
 	UnregisterAudioGeometry();
 }
 
@@ -201,17 +205,14 @@ bool EveChildMesh::OnModified( Be::Var* val )
 		m_instancedMesh = BlueCastPtr( m_mesh );
 		InitializeAnimation();
 	}
+	if( !m_ownedLocatorSets.empty() )
+	{
+		if( IsMatch( val, m_scaling ) || IsMatch( val, m_rotation ) || IsMatch( val, m_translation ) || IsMatch( val, m_localTransform ) )
+		{
+			InvalidateOwnerMergedLocators( LocatorInvalidationReason::PartMoved );
+		}
+	}
 	return true;
-}
-
-const char* EveChildMesh::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildMesh::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
 }
 
 void EveChildMesh::InitializeAnimation()
@@ -275,6 +276,7 @@ void EveChildMesh::RegisterComponents()
 void EveChildMesh::UnRegisterComponents()
 {
 	UnregisterAudioGeometry();
+	ReleaseBvhVisualization();
 
 	auto registry = this->GetComponentRegistry();
 	if( registry )
@@ -369,6 +371,7 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 	m_currentScreenSize = -1;
 	m_instancesVisible = false;
 	m_currentInstanceScreenSize = -1.0f;
+	m_overlayUpdateLod = parentLod;
 
 	if( !m_hasUpdated )
 	{
@@ -630,7 +633,29 @@ bool EveChildMesh::HasTransparentBatches()
 {
 	if( m_display && m_mesh )
 	{
-		return !( m_mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT )->empty() );
+		if( !( m_mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT )->empty() ) )
+		{
+			return true;
+		}
+
+		for( const auto& overlayEffect : m_overlayEffects )
+		{
+			if( overlayEffect->HasTransparentArea() )
+			{
+				return true;
+			}
+		}
+
+		if( m_parentOverlayEffects != nullptr )
+		{
+			for( const auto& overlayEffect : *m_parentOverlayEffects )
+			{
+				if( overlayEffect->HasTransparentArea() )
+				{
+					return true;
+				}
+			}
+		}
 	}
 
 	return false;
@@ -666,6 +691,59 @@ void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType
 				( *it )->GetBatches( batches, batchType, perObjectData, reason );
 			}
 		}
+
+		GetBatchesFromOverlayVector( batches, perObjectData, batchType );
+	}
+}
+
+void EveChildMesh::RebuildOverlayAreaBlocks()
+{
+	CollectOverlayAreaBlocks( m_mesh, m_overlayMeshAreaBlocks );
+	m_overlayAreaBlocksBuilt = true;
+}
+
+void EveChildMesh::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType )
+{
+	Tr2Effect* damageShader = m_damageOverlay ? m_damageOverlay->GetArmorDamageShader( batchType ) : nullptr;
+	const bool hasParentOverlays = m_parentOverlayEffects != nullptr && !m_parentOverlayEffects->empty();
+	if( !m_mesh || ( !damageShader && m_overlayEffects.empty() && !hasParentOverlays ) )
+	{
+		return;
+	}
+
+	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
+	if( !geomRes || !geomRes->IsGood() )
+	{
+		return;
+	}
+
+	if( !m_overlayAreaBlocksBuilt )
+	{
+		RebuildOverlayAreaBlocks();
+	}
+
+	const float screenSize = min( m_currentInstanceScreenSize, m_currentScreenSize );
+	auto lod = geomRes->GetMeshLod( m_mesh->GetMeshIndex(), screenSize );
+	if( !lod || !lod->m_allocationsValid )
+	{
+		return;
+	}
+
+	if( damageShader )
+	{
+		EmitDamageOverlayBatches( batches, perObjectData, damageShader, m_overlayMeshAreaBlocks, *lod );
+	}
+
+	// own effects are emitted before the inherited ones so the parent's overlays (e.g. cloak)
+	// draw on top of this child's own overlays (e.g. battle damage)
+	if( !m_overlayEffects.empty() )
+	{
+		EmitOverlayBatches( batches, perObjectData, batchType, m_overlayEffects, m_overlayMeshAreaBlocks, *lod );
+	}
+
+	if( hasParentOverlays )
+	{
+		EmitOverlayBatches( batches, perObjectData, batchType, *m_parentOverlayEffects, m_overlayMeshAreaBlocks, *lod );
 	}
 }
 
@@ -824,11 +902,11 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 				}
 			}
 		}
-
-		auto [bones, boneCount] = GetBoneTransforms();
-		m_vsData.boneOffsets[2] = uint32_t( boneCount );
-		m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( bones ), uint32_t( boneCount ) );
 	}
+
+	auto [bones, boneCount] = GetBoneTransforms();
+	m_vsData.boneOffsets[2] = uint32_t( boneCount );
+	m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( bones ), uint32_t( boneCount ) );
 	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
 	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
 
@@ -930,10 +1008,33 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	}
 
 	// need to update the data we get from the parent to be relevant to us!
+	m_parentOverlayEffects = nullptr;
 	if( nullptr != params.spaceObjectParent )
 	{
 		params.spaceObjectParent->GetPerObjectStructs( m_vsData, m_psData );
 		params.spaceObjectParent->GetParentData( &m_parentData );
+
+		if( m_inheritOverlayEffects )
+		{
+			if( EveSpaceObject2Ptr spaceObject2Parent = BlueCastPtr( params.spaceObjectParent ) )
+			{
+				m_parentOverlayEffects = &spaceObject2Parent->GetOverlayEffects();
+			}
+		}
+		else
+		{
+			// Opted out of the parent's overlay: also neutralize the inherited clip sphere,
+			// otherwise the part is dissolved with the rest of the ship instead of staying visible.
+			m_vsData.clipData.w = 0.f;
+			m_psData.clipRadiusSq = 0.f;
+			m_psData.clipRadius2Sq = 0.f;
+			m_psData.clipSphereFactor = 0.f;
+			m_psData.clipSphereFactor2 = 0.f;
+			m_parentData.clipRadiusSq = 0.f;
+			m_parentData.clipRadius2Sq = 0.f;
+			m_parentData.clipFactor = 0.f;
+			m_parentData.clipFactor2 = 0.f;
+		}
 
 		// need to move the clipdata inversely of the translation of the childmesh
 		m_vsData.clipData = Vector4( m_vsData.clipData.GetXYZ() - m_translation, m_vsData.clipData.w );
@@ -944,6 +1045,21 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	}
 
 	m_activationStrength = params.activationStrength;
+
+	if( m_damageOverlay )
+	{
+		float flicker = m_damageOverlay->GetActivationStrength( updateContext );
+		m_activationStrength *= flicker;
+		if( params.spaceObjectParent )
+		{
+			m_psData.shipData.y *= flicker;
+		}
+		else
+		{
+			m_psData.shipData.y = flicker;
+		}
+		m_psData.impactDataOffset = (float)m_damageOverlay->GetDataTextureOffset();
+	}
 
 	m_vsData.worldTransform = Transpose( m_worldTransform );
 	m_vsData.invWorldTransform = Inverse( m_vsData.worldTransform );
@@ -996,11 +1112,51 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 		m_worldBoundingSphere = {};
 	}
 
+	if( m_damageOverlay )
+	{
+		EveDamageOverlay::OwnerInfo info;
+		if( m_mesh )
+		{
+			CcpMath::AxisAlignedBox localBoundingBox = m_mesh->GetBounds();
+			if( localBoundingBox )
+			{
+				CcpMath::Sphere localBoundingSphere( localBoundingBox );
+				info.boundingSphere = Vector4( localBoundingSphere.center, localBoundingSphere.radius );
+			}
+		}
+		info.estimatedPixelDiameter = max( m_currentScreenSize, 0.f );
+		info.isInFrustum = m_isVisible;
+		info.getDamageLocatorPositionOS = [this]( int index, Vector3& out ) {
+			return GetDamageLocatorPositionLocal( index, out );
+		};
+		m_damageOverlay->UpdateAsyncronous( updateContext, info, 0, false );
+	}
+
 	m_hasUpdated = true;
 }
 
 void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
+	if( m_damageOverlay )
+	{
+		m_damageOverlay->UpdateSyncronous( updateContext );
+	}
+
+	if( !m_overlayEffects.empty() )
+	{
+		Be::Time time = updateContext.GetTime();
+		if( EveLODHelper::ShouldUpdate( m_overlayUpdateLod, float( TimeAsDouble( time - m_lastOverlayUpdateTime ) ) ) )
+		{
+			// overlay effect curves need to be updated on the game thread because they may have references
+			// to attributes that are not thread safe, particularly the parent's clipSphereFactor
+			m_lastOverlayUpdateTime = time;
+			for( const auto& overlayEffect : m_overlayEffects )
+			{
+				overlayEffect->Update( time, time );
+			}
+		}
+	}
+
 	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
 
 	if( !allowAudioGeometry && m_audioGeometryRegistered )
@@ -1062,6 +1218,43 @@ void EveChildMesh::SetMesh( Tr2MeshBase* mesh )
 
 	m_mesh = mesh;
 	m_instancedMesh = BlueCastPtr( m_mesh );
+
+	m_overlayAreaBlocksBuilt = false;
+	for( int i = 0; i < EveMeshOverlayEffect::TYPE_COUNT; ++i )
+	{
+		m_overlayMeshAreaBlocks[i].clear();
+	}
+}
+
+void EveChildMesh::AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect )
+{
+	m_overlayEffects.Append( newOverlayEffect->GetRawRoot() );
+}
+
+void EveChildMesh::RemoveOverlayEffect( EveMeshOverlayEffectPtr overlayEffectToRemove )
+{
+	ssize_t index = m_overlayEffects.FindKey( overlayEffectToRemove->GetRawRoot() );
+	if( index >= 0 )
+	{
+		m_overlayEffects.Remove( index );
+	}
+}
+
+EveMeshOverlayEffectPtr EveChildMesh::GetOverlayEffectByName( const char* name ) const
+{
+	if( name == nullptr )
+	{
+		return nullptr;
+	}
+
+	for( auto overlay : m_overlayEffects )
+	{
+		if( strcmp( overlay->m_name.c_str(), name ) == 0 )
+		{
+			return overlay;
+		}
+	}
+	return nullptr;
 }
 
 void EveChildMesh::RegisterAudioGeometry()
@@ -1157,6 +1350,11 @@ void EveChildMesh::SetShaderOption( const BlueSharedString& name, const BlueShar
 		m_mesh->SetShaderOption( name, value );
 	}
 
+	for( const auto& overlayEffect : m_overlayEffects )
+	{
+		overlayEffect->SetShaderOption( name, value );
+	}
+
 	for( EveSpaceObjectDecalVector::iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 	{
 		( *it )->SetShaderOption( name, value );
@@ -1183,6 +1381,7 @@ void EveChildMesh::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Bones" );
 	options.insert( "Decals" );
 	options.insert( "Lights" );
+	options.insert( "BVH" );
 
 	for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 	{
@@ -1190,12 +1389,29 @@ void EveChildMesh::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
+void EveChildMesh::ReleaseBvhVisualization()
+{
+	if( m_bvhVisualizationGeometry )
+	{
+		m_bvhVisualizationGeometry->ResetRayCaster();
+		m_bvhVisualizationGeometry.Unlock();
+	}
+}
+
 void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
+	bool bvhOptionEnabled = renderer.HasOption( GetRawRoot(), "BVH" );
+
+	if( !bvhOptionEnabled )
+	{
+		ReleaseBvhVisualization();
+	}
+
 	if( !m_display )
 	{
 		return;
 	}
+
 	if( m_mesh )
 	{
 		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
@@ -1208,7 +1424,18 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		{
 			m_mesh->RenderDebugInfo( m_worldTransform, renderer, nullptr );
 		}
+
+		if( bvhOptionEnabled && !m_bvhVisualizationGeometry && m_mesh->GetGeometryResource() && m_mesh->GetGeometryResource()->IsGood() )
+		{
+			m_bvhVisualizationGeometry = m_mesh->GetGeometryResource();
+			m_bvhVisualizationGeometry->PrepareRayCaster();
+		}
+		if( m_bvhVisualizationGeometry && m_bvhVisualizationGeometry->IsRayCasterReady() )
+		{
+			m_bvhVisualizationGeometry->VisualizeBVH( this, m_worldTransform, renderer );
+		}
 	}
+
 	if( m_animationUpdater && renderer.HasOption( GetRawRoot(), "Bones" ) )
 	{
 		m_animationUpdater->RenderBones( m_worldTransform, m_meshBinding.get() );
@@ -1289,7 +1516,7 @@ std::pair<const Float4x3*, size_t> EveChildMesh::GetBoneTransforms() const
 
 	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
 	{
-		return std::make_pair( nullptr, 0 );
+		return GetRestPoseBoneTransforms();
 	}
 
 	auto accumulatedTransforms = m_animationUpdater->GetAnimationTransforms();
@@ -1303,7 +1530,32 @@ std::pair<const Float4x3*, size_t> EveChildMesh::GetBoneTransforms() const
 	{
 		return m_meshBinding->GetBoneTransforms();
 	}
-	return std::make_pair( nullptr, 0 );
+	return GetRestPoseBoneTransforms();
+}
+
+std::pair<const Float4x3*, size_t> EveChildMesh::GetRestPoseBoneTransforms() const
+{
+	if( !m_mesh || !m_mesh->GetGeometryResource() )
+	{
+		return std::make_pair( nullptr, 0 );
+	}
+
+	// Skinned shaders without an animation get rest-pose (identity) skin matrices, sized to the
+	// geometry's bone bindings. Unskinned geometry drawn with a skinned shader (e.g. a SOF hull
+	// flagged isSkinned) has no bindings and no blend indices in the vertex stream, so every
+	// vertex reads bone 0 - a single identity matrix covers it.
+	size_t boneCount = 1;
+	auto cmfData = m_mesh->GetGeometryResource()->GetCMFData();
+	auto meshIndex = m_mesh->GetMeshIndex();
+	if( cmfData && meshIndex < cmfData->meshes.size() )
+	{
+		boneCount = std::max<size_t>( cmfData->meshes[meshIndex].boneBindings.size(), 1 );
+	}
+	if( m_restPoseBoneTransforms.size() != boneCount )
+	{
+		m_restPoseBoneTransforms.assign( boneCount, Float4x3( Matrix() ) );
+	}
+	return std::make_pair( m_restPoseBoneTransforms.data(), boneCount );
 }
 
 std::pair<const Tr2MorphTargetAnimationData*, size_t> EveChildMesh::GetMorphTargets( MorphTargetAnimationFilter filter )
@@ -1635,6 +1887,16 @@ void EveChildMesh::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRen
 	}
 }
 
+void EveChildMesh::SetOwner( IEveSpaceObject2* owner )
+{
+	if( GetOwner() != owner )
+	{
+		InvalidateOwnerMergedLocators( LocatorInvalidationReason::StructureChanged ); // invalidate locators on old owner
+		EveSpaceObjectChild::SetOwner( owner );
+		InvalidateOwnerMergedLocators( LocatorInvalidationReason::StructureChanged ); // invalidate locators on new owner
+	}
+}
+
 void EveChildMesh::GetLights( Tr2LightManager& lightManager ) const
 {
 	if( m_lights.empty() || !m_display )
@@ -1775,4 +2037,104 @@ BluePy EveChildMesh::GetSofSourceLocator( uint32_t areaId ) const
 		return result;
 	}
 	return BluePy( Py_None, true );
+}
+
+void EveChildMesh::CollectOwnedLocatorSets( const Matrix& parentTransform, std::vector<EveChildLocatorSetsSource>& out ) const
+{
+	if( m_ownedLocatorSets.empty() )
+	{
+		return;
+	}
+
+	Matrix localTransform = ComputeLocalTransform();
+
+	for( const auto& entry : m_ownedLocatorSets )
+	{
+		EveChildLocatorSetsSource source;
+		source.childToObject = localTransform * parentTransform;
+		source.owner = this;
+		source.sets = entry;
+		out.push_back( source );
+	}
+}
+
+void EveChildMesh::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+{
+	if( !m_mesh || !m_mesh->GetGeometryResource() )
+	{
+		return;
+	}
+
+	Matrix localTransform = ComputeLocalTransform();
+
+	EveChildGeometry source;
+	source.childToObject = localTransform * parentTransform;
+	source.geometry = m_mesh->GetGeometryResource();
+	source.owner = this;
+	source.mesh = m_mesh;
+	out.push_back( source );
+}
+
+void EveChildMesh::SetOwnedLocatorSets( const std::vector<EveLocatorSetsPtr>& sets )
+{
+	m_ownedLocatorSets = sets;
+	InvalidateOwnerMergedLocators( LocatorInvalidationReason::StructureChanged );
+}
+
+void EveChildMesh::InvalidateOwnerMergedLocators( LocatorInvalidationReason reason )
+{
+	if( GetOwner() )
+	{
+		GetOwner()->InvalidateMergedLocators( reason );
+	}
+}
+
+EveDamageOverlayPtr EveChildMesh::GetDamageOverlay() const
+{
+	return m_damageOverlay;
+}
+
+EveDamageOverlayPtr EveChildMesh::EnsureDamageOverlay()
+{
+	if( !m_damageOverlay )
+	{
+		m_damageOverlay.CreateInstance();
+	}
+	return m_damageOverlay;
+}
+
+bool EveChildMesh::GetDamageLocatorPositionLocal( int index, Vector3& out ) const
+{
+	if( index < 0 )
+	{
+		return false;
+	}
+
+	for( const auto& sets : m_ownedLocatorSets )
+	{
+		if( sets->HasName( DAMAGE_LOCATOR_SET_NAME ) )
+		{
+			const LocatorStructureList* locators = sets->GetLocators();
+			if( index >= int( locators->size() ) )
+			{
+				return false;
+			}
+
+			const Locator& locator = ( *locators )[index];
+			out = locator.position;
+
+			// for reference, see EveSpaceObject2::GetLocatorInObjectSpace
+			if( locator.boneIndex > 0 && m_animationUpdater && m_animationUpdater->IsInitialized() &&
+				locator.boneIndex < m_animationUpdater->GetMeshBoneCount() )
+			{
+				const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
+				Matrix transform = IdentityMatrix();
+				TriMatrixCopyFrom3x4( &transform, &bones[locator.boneIndex] );
+				out = XMVector3TransformCoord( locator.position, transform );
+			}
+
+			return true;
+		}
+	}
+	return false;
 }

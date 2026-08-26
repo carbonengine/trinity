@@ -5,7 +5,7 @@
 #include "IEveSmartLightGroupAttributeModifier.h"
 #include "Lights/Tr2PointLight.h"
 #include <Eve/EveUpdateContext.h>
-#include <Eve/SpaceObject/Children/IEveSpaceObjectChild.h>
+#include <Eve/SpaceObject/Children/EveSpaceObjectChild.h>
 #include "Curves/Tr2CurveScalar.h"
 
 BLUE_DECLARE( Tr2CurveScalar );

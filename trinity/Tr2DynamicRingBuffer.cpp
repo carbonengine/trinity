@@ -30,7 +30,7 @@ Tr2DynamicRingBuffer::~Tr2DynamicRingBuffer()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Puts new data into the buffer. If the data size is larget than the buffer size, the
+//   Puts new data into the buffer. If the data size is larger than the buffer size, the
 //   buffer is resized.
 // Arguments:
 //   data - Pointer to data

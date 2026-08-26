@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "EveChildTransform.h"
 #include "Tr2DebugRenderer.h"
 #include "TriRenderBatch.h"
@@ -17,8 +17,8 @@ class ChildLineSetInstancingBatch;
 
 
 BLUE_CLASS( EveChildLineSet ) :
+	public EveSpaceObjectChild,
 	public IInitialize,
-	public IEveSpaceObjectChild,
 	public Tr2DeviceResource,
 	public ITr2Renderable,
 	public EveChildTransform,
@@ -40,9 +40,7 @@ public:
 	bool OnModified( Be::Var * value ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	const char* GetName() const override;
-	void SetName( const char* name ) override;
+	// EveSpaceObjectChild
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	bool IsAlwaysOn() const override;
@@ -51,9 +49,7 @@ public:
 
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
-	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override {};
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override{};
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Tr2DeviceResource
@@ -105,7 +101,6 @@ private:
 	void GenerateManagedPoints();
 	void UpdateBoundingSphere( bool reCalculateChildren = true );
 
-	BlueSharedString m_name;
 	Vector3 m_worldVelocity;
 	float m_ownerMaxSpeed;
 

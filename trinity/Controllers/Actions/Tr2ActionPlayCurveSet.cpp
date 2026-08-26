@@ -7,7 +7,6 @@
 #include "Curves/TriCurveSet.h"
 
 #include "Eve/SpaceObject/EveSpaceObject2.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 #include "Eve/EveEffectRoot2.h"
 
 

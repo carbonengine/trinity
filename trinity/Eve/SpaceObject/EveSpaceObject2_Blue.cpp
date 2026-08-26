@@ -449,6 +449,12 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"The last damagelocator hit.",
 			Be::READ )
 
+		MAP_ATTRIBUTE(
+			"damageLocatorAutoFilterEnabled",
+			m_damageLocatorAutoFilterEnabled,
+			"For debug purposes: Filter occluded damage locators whenever there are changes to the modular ship parts.",
+			Be::READWRITE | Be::NOTIFY )
+
 		MAP_METHOD_AND_WRAP( "GetDamageLocatorCount", GetDamageLocatorCount, "Get number of damage locators on this ship" )
 		MAP_METHOD_AND_WRAP(
 			"GetLocatorCount",
@@ -470,6 +476,10 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			GetTransformedDamageLocator,
 			"Get the position of indexed damage locator, (0,0,0) is returned for indices out of range.\n"
 			":param idx: locator index" )
+		MAP_METHOD_AND_WRAP(
+			"RunDamageLocatorFilter",
+			RunDamageLocatorFilter,
+			"Filter occluded damage locators. Damage impact may get displayed at different locator after this call." )
 		MAP_METHOD_AND_WRAP(
 			"SetImpactDamageState",
 			SetImpactDamageState,
@@ -497,29 +507,29 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"Get the closest locator in set to target, does not mind about direction of locator.\n"
 			":param position: position of target\n"
 			":param locatorSetName: name of locator set \n" )
-			MAP_METHOD_AND_WRAP(
-				"GetLocatorPositionFromSet",
-				GetLocatorPositionFromSet,
-				"locator position from a set Specified by name\n"
-				":param index: locator index\n"
-				":param inWorldSpace: position of target\n"
-				":param locatorSetName: name of locator set \n" )
-				MAP_METHOD_AND_WRAP(
-					"GetLocatorRotationFromSet",
-					GetLocatorRotationFromSet,
-					"locator rotation in worldspace\n"
-					":param index: locator index\n"
-					":param inWorldSpace: position of target\n"
-					":param locatorSetName: name of locator set \n" )
-					MAP_METHOD_AND_WRAP( "ClearImpactDamage", ClearImpactDamage, "Clear all the impact/damage effects." )
-						MAP_METHOD_AND_WRAP(
-							"CreateImpact",
-							CreateImpact,
-							"debug only\n"
-							":param idx: damage locator index\n"
-							":param direction: incoming damage direction\n"
-							":param lifeTime: effect time\n"
-							":param size: effect size" );
+		MAP_METHOD_AND_WRAP(
+			"GetLocatorPositionFromSet",
+			GetLocatorPositionFromSet,
+			"locator position from a set Specified by name\n"
+			":param index: locator index\n"
+			":param inWorldSpace: position of target\n"
+			":param locatorSetName: name of locator set \n" )
+		MAP_METHOD_AND_WRAP(
+			"GetLocatorRotationFromSet",
+			GetLocatorRotationFromSet,
+			"locator rotation in worldspace\n"
+			":param index: locator index\n"
+			":param inWorldSpace: position of target\n"
+			":param locatorSetName: name of locator set \n" )
+		MAP_METHOD_AND_WRAP( "ClearImpactDamage", ClearImpactDamage, "Clear all the impact/damage effects." )
+		MAP_METHOD_AND_WRAP(
+			"CreateImpact",
+			CreateImpact,
+			"debug only\n"
+			":param idx: damage locator index\n"
+			":param direction: incoming damage direction\n"
+			":param lifeTime: effect time\n"
+			":param size: effect size" );
 		MAP_METHOD_AND_WRAP(
 			"CreateImpactFromPosition",
 			CreateImpactFromPosition,

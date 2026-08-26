@@ -90,26 +90,12 @@ void EveChildLightingOverride::RebuildBoundingSphere()
 	}
 }
 
-const char* EveChildLightingOverride::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildLightingOverride::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
 bool EveChildLightingOverride::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
 	sphere.GetXYZ() = m_boundingSphere.center;
 	sphere.w = m_boundingSphere.radius;
 
 	return true;
-}
-
-void EveChildLightingOverride::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
-{
 }
 
 void EveChildLightingOverride::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
