@@ -48,6 +48,14 @@ const Be::ClassInfo* EveChildInstancedMeshes::ExposeToBlue()
 			":param areaId: Index of the area to query\n"
 			":rtype: (trinity.Tr2Effect, int, int, int)" )
 		MAP_METHOD_AND_WRAP(
+			"GetInstancesTransforms",
+			GetInstancesTransforms,
+			"Returns the object-local transform of each instance of an instanced mesh, decomposed\n"
+			"into translation, rotation and scale. Returns one (translation, rotation, scale)\n"
+			"tuple per instance\n\n"
+			":param meshId: Index of the mesh to query\n"
+			":rtype: (((float, float, float), (float, float, float, float), (float, float, float)), ...)" )
+		MAP_METHOD_AND_WRAP(
 			"GetMeshDisplay",
 			GetMeshDisplay,
 			"Returns True if the mesh is rendered, False otherwise\n\n"

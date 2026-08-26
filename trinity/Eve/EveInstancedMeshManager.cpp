@@ -1046,3 +1046,16 @@ bool EveInstancedMeshManager::InstanceFlags::operator!=( const InstanceFlags& ot
 {
 	return m_flags != other.m_flags;
 }
+
+Matrix EveInstancedMeshManager::StaticPerInstanceData::ToMatrix() const
+{
+	return Transpose( Matrix(
+		worldTransform[0].x, worldTransform[0].y, worldTransform[0].z, worldTransform[0].w, worldTransform[1].x, worldTransform[1].y, worldTransform[1].z, worldTransform[1].w, worldTransform[2].x, worldTransform[2].y, worldTransform[2].z, worldTransform[2].w, 0.f, 0.f, 0.f, 1.f ) );
+}
+
+void EveInstancedMeshManager::StaticPerInstanceData::SetTransform( const Matrix& m )
+{
+	worldTransform[0] = Vector4( m._11, m._21, m._31, m._41 );
+	worldTransform[1] = Vector4( m._12, m._22, m._32, m._42 );
+	worldTransform[2] = Vector4( m._13, m._23, m._33, m._43 );
+}

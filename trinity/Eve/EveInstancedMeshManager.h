@@ -36,6 +36,9 @@ public:
 	{
 		Vector4 worldTransform[3];
 		uint32_t sphereIndex = 0;
+
+		Matrix ToMatrix() const;
+		void SetTransform( const Matrix& m );
 	};
 
 	template <typename T>
