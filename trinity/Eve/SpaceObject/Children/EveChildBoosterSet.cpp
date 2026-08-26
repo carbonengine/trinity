@@ -340,32 +340,6 @@ float EveChildBoosterSet::GetBoosterIntensity() const
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Render debug info of this booster set
-// --------------------------------------------------------------------------------
-void EveChildBoosterSet::RenderDebugInfo( ITr2DebugRenderer2& renderer )
-{
-	for( uint32_t j = 0; j < m_singleBoosters.size(); ++j )
-	{
-		Matrix transform = m_singleBoosters[j].transform * m_parentTransform;
-		renderer.DrawCylinder(
-			Tr2DebugObjectReference( this, j ),
-			transform,
-			Vector3( 0, 0, 0 ),
-			Vector3( 0, 0, -1 ),
-			1.0f,
-			8,
-			ITr2DebugRenderer2::Lit,
-			Tr2DebugColor( 0x88ffff00, 0x22ffff00 ) );
-	}
-
-	if( m_glows )
-	{
-		m_glows->RenderDebugInfo( renderer, m_parentTransform, nullptr, 0 );
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Transform and modify the saved bounding sphere, so it can be used for
 //   culling etc.
 // --------------------------------------------------------------------------------
@@ -560,6 +534,46 @@ Tr2PerObjectData* EveChildBoosterSet::GetPerObjectData( ITriRenderBatchAccumulat
 	perObjectData->m_psData.padding2 = 0.f;
 
 	return perObjectData;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Get debug options of this booster set
+// --------------------------------------------------------------------------------
+void EveChildBoosterSet::GetDebugOptions( Tr2DebugRendererOptions& options )
+{
+	options.insert( "Boosters" );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Render debug info of this booster set
+// --------------------------------------------------------------------------------
+void EveChildBoosterSet::RenderDebugInfo( ITr2DebugRenderer2& renderer )
+{
+	if( !renderer.HasOption( this, "Boosters" ) )
+	{
+		return;
+	}
+
+	for( uint32_t j = 0; j < m_singleBoosters.size(); ++j )
+	{
+		Matrix transform = m_singleBoosters[j].transform * m_parentTransform;
+		renderer.DrawCylinder(
+			Tr2DebugObjectReference( this, j ),
+			transform,
+			Vector3( 0, 0, 0 ),
+			Vector3( 0, 0, -1 ),
+			1.0f,
+			8,
+			ITr2DebugRenderer2::Lit,
+			Tr2DebugColor( 0x88ffff00, 0x22ffff00 ) );
+	}
+
+	if( m_glows )
+	{
+		m_glows->RenderDebugInfo( renderer, m_parentTransform, nullptr, 0 );
+	}
 }
 
 // --------------------------------------------------------------------------------

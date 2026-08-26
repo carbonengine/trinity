@@ -55,7 +55,7 @@ public:
 		float padding2;
 	};
 
-	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const override;
 	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// the data
@@ -82,7 +82,8 @@ class EveChildBoosterSet : public EveSpaceObjectChild,
 						   public ITr2LightOwner,
 						   public EveEntity,
 						   public ITr2Renderable,
-						   public ITr2ControllerOwner
+						   public ITr2ControllerOwner,
+						   public ITr2DebugRenderable
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -120,6 +121,10 @@ public:
 	float GetSortValue() override;
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
 
+	// ITr2DebugRenderable
+	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+
 private:
 	bool OnPrepareResources() override;
 	struct EveBoosterFlareParams GetFlareParams() const;
@@ -148,8 +153,6 @@ public:
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
 	// query booster intensity
 	float GetBoosterIntensity() const;
-	// just debug info
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 	// get the transformed bounding sphere, ready for use
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const override;
 
