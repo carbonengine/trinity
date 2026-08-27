@@ -594,7 +594,7 @@ bool EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, co
 	bool changed = false;
 	for( auto& mesh : m_meshes )
 	{
-		for( int i = 0; i < mesh.instances.size(); i++ )
+		for( size_t i = 0; i < mesh.instances.size(); ++i )
 		{
 			if( mesh.partTags[i] == partTag )
 			{
