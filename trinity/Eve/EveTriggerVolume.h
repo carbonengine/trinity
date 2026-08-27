@@ -51,12 +51,6 @@ public:
 	 */
 	void SetCallback( const BlueScriptCallback& callback );
 
-	/**
-	 * @brief Invokes the stored callback. Called from the post-update callback on the main thread.
-	 * @param entered True if the tracked position entered the volume, false if it exited.
-	 */
-	void InvokeCallback( bool entered );
-
 	// IEveSpaceObject2
 	void UpdateSyncronous( const EveUpdateContext& updateContext ) override;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext ) override;
@@ -86,8 +80,7 @@ private:
 	void RebuildBoundingSphere();
 
 	/**
-	 * @brief Rebuilds the world transform from the position curve when attached,
-	 * otherwise from the translation attribute.
+	 * @brief Rebuilds the world transform from the position and rotation curves.
 	 */
 	void UpdateWorldTransform( Be::Time time );
 
@@ -104,13 +97,10 @@ private:
 	void UpdateTriggerState( const EveUpdateContext& updateContext );
 
 	/**
-	 * @brief Queues the callback for invocation at the post-update point on the main thread.
+	 * @brief Invokes the stored callback.
 	 * @param entered True if the tracked position entered the volume, false if it exited.
 	 */
-	void QueueCallback( bool entered );
-
-	Quaternion m_rotation;
-	Vector3 m_translation;
+	void InvokeCallback( bool entered );
 
 	std::string m_name;
 	PIEveVolumeVector m_volumes;
@@ -122,6 +112,7 @@ private:
 	ITriVectorFunctionPtr m_trackedPosition;
 
 	ITriVectorFunctionPtr m_ballPosition;
+	ITriQuaternionFunctionPtr m_ballRotation;
 
 	Matrix m_worldTransform;
 

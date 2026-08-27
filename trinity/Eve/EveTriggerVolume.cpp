@@ -2,35 +2,11 @@
 
 #include "StdAfx.h"
 #include "EveTriggerVolume.h"
-#include "TriDevice.h"
-
-namespace
-{
-void InvokeTriggerCallback( void* context, bool entered )
-{
-	EveTriggerVolume* triggerVolume = reinterpret_cast<EveTriggerVolume*>( context );
-
-	triggerVolume->InvokeCallback( entered );
-	triggerVolume->GetRawRoot()->Unlock();
-}
-
-void TriggerEnterCallback( void* context )
-{
-	InvokeTriggerCallback( context, true );
-}
-
-void TriggerExitCallback( void* context )
-{
-	InvokeTriggerCallback( context, false );
-}
-}
 
 EveTriggerVolume::EveTriggerVolume( IRoot* lockobj ) :
 	PARENTLOCK( m_volumes ),
 	PARENTLOCK( m_exclusionVolumes ),
 	PARENTLOCK( m_externalParameters ),
-	m_rotation( 0.0f, 0.0f, 0.0f, 1.0f ),
-	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_worldTransform( IdentityMatrix() ),
 	m_enterThreshold( 0.5f ),
 	m_isInside( false ),
@@ -92,27 +68,9 @@ void EveTriggerVolume::InvokeCallback( bool entered )
 	callback.CallVoid( m_name.c_str(), entered ).ReportException();
 }
 
-void EveTriggerVolume::QueueCallback( bool entered )
-{
-	if( !m_callback )
-	{
-		return;
-	}
-	// Keeps the object alive until the queued callback runs.
-	GetRawRoot()->Lock();
-
-	if( entered )
-	{
-		gTriDev->AddPostUpdateCallback( TriggerEnterCallback, reinterpret_cast<void*>( this ) );
-	}
-	else
-	{
-		gTriDev->AddPostUpdateCallback( TriggerExitCallback, reinterpret_cast<void*>( this ) );
-	}
-}
-
 void EveTriggerVolume::UpdateWorldTransform( Be::Time time )
 {
+	Quaternion rotation;
 	Vector3 translation;
 
 	if( m_ballPosition )
@@ -121,10 +79,19 @@ void EveTriggerVolume::UpdateWorldTransform( Be::Time time )
 	}
 	else
 	{
-		translation = m_translation;
+		translation = Vector3( 0.0f, 0.0f, 0.0f );
 	}
 
-	m_worldTransform = RotationMatrix( m_rotation ) * TranslationMatrix( translation );
+	if( m_ballRotation )
+	{
+		m_ballRotation->Update( &rotation, time );
+	}
+	else
+	{
+		rotation = Quaternion( 0.0f, 0.0f, 0.0f, 1.0f );
+	}
+
+	m_worldTransform = RotationMatrix( rotation ) * TranslationMatrix( translation );
 }
 
 // IEveSpaceObject2
@@ -186,7 +153,7 @@ void EveTriggerVolume::UpdateTriggerState( const EveUpdateContext& updateContext
 	if( inside != m_isInside )
 	{
 		m_isInside = inside;
-		QueueCallback( inside );
+		InvokeCallback( inside );
 	}
 }
 

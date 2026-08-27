@@ -20,18 +20,6 @@ const Be::ClassInfo* EveTriggerVolume::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
-			"translation",
-			m_translation,
-			"Local translation of the trigger volume",
-			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
-			"rotation",
-			m_rotation,
-			"Local rotation of the trigger volume",
-			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
 			"volumes",
 			m_volumes,
 			"The volumes defining the trigger region",
@@ -58,7 +46,13 @@ const Be::ClassInfo* EveTriggerVolume::ExposeToBlue()
 		MAP_ATTRIBUTE(
 			"translationCurve",
 			m_ballPosition,
-			"Function for animated position updates, e.g. the object's own destiny ball in the client",
+			"Vector function slot for attaching a destiny ball to set the position of the trigger volume",
+			Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE(
+			"rotationCurve",
+			m_ballRotation,
+			"Quaternion function slot for attaching a destiny ball to set the rotation of the trigger volume",
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
