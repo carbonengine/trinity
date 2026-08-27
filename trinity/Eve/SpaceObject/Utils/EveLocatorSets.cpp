@@ -3,12 +3,15 @@
 #include "StdAfx.h"
 #include "EveLocatorSets.h"
 
+static_assert( sizeof( EveSpaceObjectChild::PartTag ) == sizeof( uint32_t ), "Size mismatch for PartTag: need to update LocatorStructureDef" );
+
 // locator item definition
 static BlueStructureDefinition LocatorStructureDef[] = {
 	{ "position", Be::FLOAT32_3, 0 },
 	{ "direction", Be::FLOAT32_4, 12 },
 	{ "scale", Be::FLOAT32_3, 28 },
 	{ "boneIndex", Be::INT32_1, 40 },
+	{ "partTag", Be::UINT32_1, 44 },
 	{ 0 }
 };
 
@@ -74,6 +77,11 @@ bool EveLocatorSets::HasName( const BlueSharedString& name ) const
 //   Give out pointer to list
 // --------------------------------------------------------------------------------
 const LocatorStructureList* EveLocatorSets::GetLocators() const
+{
+	return &m_locators;
+}
+
+LocatorStructureList* EveLocatorSets::GetLocators()
 {
 	return &m_locators;
 }

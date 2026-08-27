@@ -90,7 +90,10 @@ public:
 		const Matrix* instanceTransforms,
 		size_t count,
 		const BlueSharedString& sofHullName,
-		const BlueSharedString& sofLocatorSetName );
+		const BlueSharedString& sofLocatorSetName,
+		EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG );
+
+	void RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag );
 
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 	uint32_t GetMeshCount() const;
@@ -134,6 +137,7 @@ private:
 
 		std::vector<EveInstancedMeshManager::StaticPerInstanceData> instances;
 		std::vector<CcpMath::Sphere> instanceSpheres;
+		std::vector<uint32_t> partTags;
 
 		EveInstancedMeshManager::BoundingSphereHandle sphereHandle;
 

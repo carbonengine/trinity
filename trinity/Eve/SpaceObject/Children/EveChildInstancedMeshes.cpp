@@ -399,10 +399,77 @@ void EveChildInstancedMeshes::AddMesh(
 	const Matrix* instanceTransforms,
 	size_t count,
 	const BlueSharedString& sofHullName,
-	const BlueSharedString& sofLocatorSetName )
+	const BlueSharedString& sofLocatorSetName,
+	EveSpaceObjectChild::PartTag partTag )
 {
 	if( areaCount == 0 || count == 0 )
 	{
+		return;
+	}
+
+	for( auto& mesh : m_meshes )
+	{
+		if( mesh.geometryPath != geometryPath || mesh.meshIndex != meshIndex )
+		{
+			continue;
+		}
+		if( mesh.flags.GetCastsShadow() != castsShadow || mesh.reflectionMode != reflectionMode )
+		{
+			continue;
+		}
+		if( mesh.areas.size() != areaCount )
+		{
+			continue;
+		}
+		bool areasEqual = true;
+		for( size_t i = 0; i < areaCount; ++i )
+		{
+			if( strcmp( mesh.areas[i].effect->GetEffectPathName(), areas[i].effect->GetEffectPathName() ) != 0 || mesh.areas[i].batchType != areas[i].batchType || mesh.areas[i].areaIndex != areas[i].areaIndex || mesh.areas[i].areaCount != areas[i].areaCount )
+			{
+				areasEqual = false;
+				break;
+			}
+			if( mesh.areas[i].effectHash != areas[i].effect->GetHashValue() )
+			{
+				areasEqual = false;
+				break;
+			}
+		}
+		if( !areasEqual )
+		{
+			continue;
+		}
+		if( !( mesh.sofHullName == sofHullName && mesh.sofLocatorSetName == sofLocatorSetName ) )
+		{
+			continue;
+		}
+		const size_t existingCount = mesh.instances.size();
+		mesh.instances.reserve( existingCount + count );
+		mesh.partTags.reserve( mesh.partTags.size() + count );
+		for( size_t i = 0; i < count; ++i )
+		{
+			EveInstancedMeshManager::StaticPerInstanceData instanceData;
+			auto& mat = instanceTransforms[i];
+			instanceData.worldTransform[0] = Vector4( mat._11, mat._21, mat._31, mat._41 );
+			instanceData.worldTransform[1] = Vector4( mat._12, mat._22, mat._32, mat._42 );
+			instanceData.worldTransform[2] = Vector4( mat._13, mat._23, mat._33, mat._43 );
+			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
+			mesh.instances.push_back( instanceData );
+			mesh.partTags.push_back( partTag );
+		}
+		mesh.instanceSpheres.resize( mesh.instances.size() );
+		if( mesh.sphereHandle )
+		{
+			mesh.sphereHandle.owner->RemoveBoundingSphereGroup( mesh.sphereHandle );
+		}
+		for( auto& area : mesh.areas )
+		{
+			if( area.meshGroupHandle )
+			{
+				area.meshGroupHandle.owner->RemoveMeshGroup( area.meshGroupHandle );
+			}
+		}
+		m_allRegistered = false;
 		return;
 	}
 
@@ -420,6 +487,7 @@ void EveChildInstancedMeshes::AddMesh(
 		a.effectHash = a.effect ? a.effect->GetHashValue() : 0;
 	}
 	mesh.instances.reserve( count );
+	mesh.partTags.reserve( count );
 	for( size_t i = 0; i < count; ++i )
 	{
 		EveInstancedMeshManager::StaticPerInstanceData instanceData;
@@ -429,6 +497,7 @@ void EveChildInstancedMeshes::AddMesh(
 		instanceData.worldTransform[2] = Vector4( mat._13, mat._23, mat._33, mat._43 );
 		instanceData.sphereIndex = static_cast<uint32_t>( i );
 		mesh.instances.push_back( instanceData );
+		mesh.partTags.push_back( partTag );
 	}
 	mesh.instanceSpheres.resize( count );
 	BeResMan->GetResource( mesh.geometryPath, "", mesh.geometry );
@@ -456,6 +525,72 @@ void EveChildInstancedMeshes::AddMesh(
 	mesh.sofHullName = sofHullName;
 	mesh.sofLocatorSetName = sofLocatorSetName;
 	m_allRegistered = false;
+}
+
+void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag )
+{
+	for( size_t i = 0; i < m_meshes.size(); ++i )
+	{
+		auto& mesh = m_meshes[i];
+
+		auto newEnd = std::remove_if( begin( mesh.instances ), end( mesh.instances ), [&]( const EveInstancedMeshManager::StaticPerInstanceData& instance ) {
+			return mesh.partTags[&instance - mesh.instances.data()] == partTag;
+		} );
+		bool removed = newEnd != end( mesh.instances );
+		if( !removed )
+		{
+			continue;
+		}
+		if( newEnd == begin( mesh.instances ) )
+		{
+			if( mesh.sphereHandle )
+			{
+				mesh.sphereHandle.owner->RemoveBoundingSphereGroup( mesh.sphereHandle );
+			}
+			for( auto& area : mesh.areas )
+			{
+				if( area.meshGroupHandle )
+				{
+					area.meshGroupHandle.owner->RemoveMeshGroup( area.meshGroupHandle );
+				}
+			}
+			TriGeometryResPtr geometry = mesh.geometry;
+			std::swap( mesh, m_meshes.back() );
+			auto seenMesh = find_if( begin( m_meshes ), end( m_meshes ) - 1, [&]( const Mesh& m ) { return m.geometry == geometry; } );
+			if( geometry && seenMesh == end( m_meshes ) - 1 )
+			{
+				geometry->RemoveNotifyTarget( this );
+			}
+			m_meshes.pop_back();
+			--i;
+			continue;
+		}
+		mesh.instances.erase( newEnd, end( mesh.instances ) );
+		auto newTagEnd = std::remove_if( begin( mesh.partTags ), end( mesh.partTags ), [&]( uint32_t tag ) {
+			return tag == partTag;
+		} );
+		mesh.partTags.erase( newTagEnd, end( mesh.partTags ) );
+		for( auto& instance : mesh.instances )
+		{
+			instance.sphereIndex = static_cast<uint32_t>( &instance - mesh.instances.data() );
+		}
+		if( removed )
+		{
+			m_allRegistered = false;
+			mesh.instanceSpheres.resize( mesh.instances.size() );
+			if( mesh.sphereHandle )
+			{
+				mesh.sphereHandle.owner->RemoveBoundingSphereGroup( mesh.sphereHandle );
+			}
+			for( auto& area : mesh.areas )
+			{
+				if( area.meshGroupHandle )
+				{
+					area.meshGroupHandle.owner->RemoveMeshGroup( area.meshGroupHandle );
+				}
+			}
+		}
+	}
 }
 
 void EveChildInstancedMeshes::ReleaseCachedData( BlueAsyncRes* p )

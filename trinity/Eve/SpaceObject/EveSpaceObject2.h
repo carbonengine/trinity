@@ -409,6 +409,10 @@ public:
 	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
 	void AddToEffectChildrenList( EveSpaceObjectChild * child );
 	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
+	PEveSpaceObjectChildVector& GetEffectChildren()
+	{
+		return m_effectChildren;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ControllerOwner
@@ -480,6 +484,11 @@ public:
 	void MergeToLocatorSet( const EveLocatorSets& locatorSet );
 	void RunDamageLocatorFilter();
 
+	PEveLocatorSetsVector& GetLocatorSets()
+	{
+		return m_locatorSets;
+	}
+
 	// clear stuff
 	void ClearLocatorSets();
 
@@ -518,6 +527,7 @@ public:
 
 	// access to impacts
 	void SetImpactOverlay( EveImpactOverlayPtr overlay );
+	EveImpactOverlayPtr GetImpactOverlay() const;
 	void SetImpactDamageState( float shield, float armor, float hull, bool doCreateArmorImpacts );
 	void SetImpactAnimation( const std::string& name, bool enable, float duration );
 	void ClearImpactDamage();
@@ -557,6 +567,9 @@ public:
 	void SetInheritProperties( const Color* colorSet ) override;
 
 	void SetMute( bool isMute );
+
+	float GetBoundingSphereRadius() const;
+	Vector3 GetBoundingSphereCenter() const;
 
 protected:
 	// Activation-Strength
@@ -654,9 +667,6 @@ protected:
 
 	bool m_allAreasCastShadow;
 	void CacheAllAreasCastShadow();
-
-	float GetBoundingSphereRadius() const;
-	Vector3 GetBoundingSphereCenter() const;
 
 	Vector4 CalculateSkinnedBoundingSphere();
 	std::pair<Vector3, Vector3> CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform );

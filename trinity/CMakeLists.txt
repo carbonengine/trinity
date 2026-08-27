@@ -501,6 +501,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
     Eve/SpaceObject/Children/EveChildBehaviorSystem.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem_Blue.cpp
+    Eve/SpaceObject/Children/EveChildBoosterSet.cpp
+    Eve/SpaceObject/Children/EveChildBoosterSet.h
+    Eve/SpaceObject/Children/EveChildBoosterSet_Blue.cpp
     Eve/SpaceObject/Children/EveChildBulletStorm.cpp
     Eve/SpaceObject/Children/EveChildBulletStorm.h
     Eve/SpaceObject/Children/EveChildBulletStorm_Blue.cpp
@@ -549,6 +552,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildMesh.cpp
     Eve/SpaceObject/Children/EveChildMesh.h
     Eve/SpaceObject/Children/EveChildMesh_Blue.cpp
+    Eve/SpaceObject/Children/EveChildPartData.cpp
+    Eve/SpaceObject/Children/EveChildPartData.h
+    Eve/SpaceObject/Children/EveChildPartData_Blue.cpp
     Eve/SpaceObject/Children/EveChildParticleSphere.cpp
     Eve/SpaceObject/Children/EveChildParticleSphere.h
     Eve/SpaceObject/Children/EveChildParticleSphere_Blue.cpp
@@ -575,6 +581,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveCloudEditableVolume.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.h
     Eve/SpaceObject/Children/EveCloudEditableVolume_Blue.cpp
+    Eve/SpaceObject/Children/EveModularObjectModifier.cpp
+    Eve/SpaceObject/Children/EveModularObjectModifier.h
+    Eve/SpaceObject/Children/EveModularObjectModifier_Blue.cpp
     Eve/SpaceObject/Children/EveSpaceObjectChild.cpp
     Eve/SpaceObject/Children/EveSpaceObjectChild.h
     Eve/SpaceObject/Children/EveSpaceObjectChild_Blue.cpp
@@ -643,6 +652,8 @@ set(_SOURCES
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes.h
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes_Blue.cpp
     Eve/SpaceObject/Utils/fxAttributes/IEveFxAttribute.h
+    Eve/SpaceObject/Utils/EveBoosterUtilities.cpp
+    Eve/SpaceObject/Utils/EveBoosterUtilities.h
     Eve/SpaceObject/Utils/EveCustomMask.cpp
     Eve/SpaceObject/Utils/EveCustomMask.h
     Eve/SpaceObject/Utils/EveCustomMask_Blue.cpp

@@ -16,6 +16,7 @@
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 extern bool g_requestDred;
+extern bool g_dredBreadcrumbsEnabled;
 bool g_gatherPipelineStatistics = false;
 extern ICrashReporter* TrinityALCrashes;
 
@@ -45,6 +46,9 @@ bool EnableDred()
 		// Turn on auto-breadcrumbs and page fault reporting.
 		pDredSettings->SetAutoBreadcrumbsEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
 		pDredSettings->SetPageFaultEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
+		// Capture SetMarker/BeginEvent strings alongside the breadcrumb ops
+		pDredSettings->SetBreadcrumbContextEnablement( D3D12_DRED_ENABLEMENT_FORCED_ON );
+		g_dredBreadcrumbsEnabled = true;
 		return true;
 	}
 	return false;
@@ -410,6 +414,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	desc.NodeMask = 0;
 
 	CR_RETURN_HR( CreateCommandQueue( device, &desc, commandQueue ) );
+	TrinityALImpl::SetDebugName( commandQueue, "PrimaryDirectQueue" );
 
 	const bool isWindowless = ( focusWindow == 0 ) && presentationParameters.software;
 

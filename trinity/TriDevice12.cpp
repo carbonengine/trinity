@@ -212,13 +212,23 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 
 				CCP_LOGERR( "[DRED] Last tracked GPU operations:" );
 				std::map<UINT, std::wstring> contextStrings;
-				D3D12_AUTO_BREADCRUMB_NODE1 const* pNode = dredAutoBreadcrumbsOutput.pHeadAutoBreadcrumbNode;
-				while( pNode && pNode->pLastBreadcrumbValue )
+				for( D3D12_AUTO_BREADCRUMB_NODE1 const* pNode = dredAutoBreadcrumbsOutput.pHeadAutoBreadcrumbNode; pNode; pNode = pNode->pNext )
 				{
-					UINT lastCompletedOp = *pNode->pLastBreadcrumbValue;
-					if( lastCompletedOp != (int)pNode->BreadcrumbCount && lastCompletedOp != 0 )
+					if( !pNode->pLastBreadcrumbValue )
 					{
-						CCP_LOGERR( "[DRED] Commandlist completed %d of %d commands", lastCompletedOp, pNode->BreadcrumbCount );
+						continue;
+					}
+					UINT lastCompletedOp = *pNode->pLastBreadcrumbValue;
+					// Only lists in flight at removal time; 0 = never started, BreadcrumbCount = fully retired
+					if( lastCompletedOp != pNode->BreadcrumbCount && lastCompletedOp != 0 )
+					{
+						CCP_LOGERR( "[DRED] Commandlist '%s' (%p) on queue '%s' completed %d of %d commands (%d contexts)",
+									pNode->pCommandListDebugNameA ? pNode->pCommandListDebugNameA : "<unnamed>",
+									pNode->pCommandList,
+									pNode->pCommandQueueDebugNameA ? pNode->pCommandQueueDebugNameA : "<unnamed>",
+									lastCompletedOp,
+									pNode->BreadcrumbCount,
+									pNode->BreadcrumbContextsCount );
 
 						UINT firstOp = lastCompletedOp > 100 ? lastCompletedOp - 100 : 0;
 						UINT lastOp = std::min<UINT>( lastCompletedOp + 20, UINT( pNode->BreadcrumbCount ) - 1 );
@@ -227,7 +237,10 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 						for( UINT breadcrumbContext = 0; breadcrumbContext < pNode->BreadcrumbContextsCount; ++breadcrumbContext )
 						{
 							const D3D12_DRED_BREADCRUMB_CONTEXT& context = pNode->pBreadcrumbContexts[breadcrumbContext];
-							contextStrings[context.BreadcrumbIndex] = context.pContextString;
+							if( context.BreadcrumbIndex >= firstOp && context.BreadcrumbIndex <= lastOp )
+							{
+								contextStrings[context.BreadcrumbIndex] = context.pContextString;
+							}
 						}
 
 						for( UINT op = firstOp; op <= lastOp; ++op )
@@ -241,28 +254,36 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 								contextString = it->second;
 							}
 
-							char const* opName = DredBreadcrumbOpName( breadcrumbOp );
-							CCP_LOGERR( "\tOp: %d, %s%ls%s", op, opName, contextString.c_str(), ( op + 1 == lastCompletedOp ) ? " - Last completed" : "" );
+							// Markers with a context string are our own annotations, not GPU work
+							char const* opName = breadcrumbOp == D3D12_AUTO_BREADCRUMB_OP_SETMARKER && !contextString.empty() ? "[Trinity]" : DredBreadcrumbOpName( breadcrumbOp );
+							char const* status = op == lastCompletedOp ? " - IN FLIGHT" : ( op + 1 == lastCompletedOp ) ? " - Last completed" :
+																														  "";
+							CCP_LOGERR( "\tOp: %d, %s %ls%s", op, opName, contextString.c_str(), status );
 						}
 					}
-					pNode = pNode->pNext;
 				}
 			}
 			if( SUCCEEDED( pDred->GetPageFaultAllocationOutput1( &dredPageFaultOutput ) ) )
 			{
+				CCP_LOGERR( "[DRED] Page fault VA: 0x%016llX", dredPageFaultOutput.PageFaultVA );
+				// Engine names are ANSI (WKPDID_D3DDebugObjectName), so DRED fills ObjectNameA; ObjectNameW only holds names set via SetName
+				auto logAllocationNode = []( const char* prefix, const D3D12_DRED_ALLOCATION_NODE1* node ) {
+					if( node->ObjectNameA )
+					{
+						CCP_LOGERR( "%s: %s (type %d)", prefix, node->ObjectNameA, node->AllocationType );
+					}
+					else
+					{
+						CCP_LOGERR( "%s: %ls (type %d)", prefix, node->ObjectNameW ? node->ObjectNameW : L"<unnamed>", node->AllocationType );
+					}
+				};
 				for( auto node = dredPageFaultOutput.pHeadExistingAllocationNode; node != nullptr; node = node->pNext )
 				{
-					if( node->ObjectNameW )
-					{
-						CCP_LOGERR( "Page Fault Allocation on: %ls", node->ObjectNameW );
-					}
+					logAllocationNode( "Page Fault Allocation on", node );
 				}
 				for( auto node = dredPageFaultOutput.pHeadRecentFreedAllocationNode; node != nullptr; node = node->pNext )
 				{
-					if( node->ObjectNameW )
-					{
-						CCP_LOGERR( "Page Fault Free on: %ls", node->ObjectNameW );
-					}
+					logAllocationNode( "Page Fault Free on", node );
 				}
 			}
 		}

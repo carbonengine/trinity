@@ -32,8 +32,8 @@ BLUE_DECLARE( EveChildInstancedMeshes );
 // SeeAlso:
 //   EveBoosterSet2
 // --------------------------------------------------------------------------------
-BLUE_CLASS( EveSOF ) :
-	public IRoot
+BLUE_CLASS_IMPL( EveSOF )
+class EveSOF : public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -45,13 +45,19 @@ public:
 	IRootPtr Build( const char* hullName, const char* factionName, const char* raceName );
 	// build a spaceship from a dns string and return a EveShip2 object
 	IRootPtr BuildFromDNA( const char* dnaString );
+	/**
+	 * @brief Builds a hull ("hull:faction:race" DNA) directly onto an existing space object as one part of a
+	 * modular object, stamping partTag on every child, locator and mesh instance it creates.
+	 * @return False if the DNA did not resolve to a buildable hull.
+	 */
+	bool BuildChild( EveSpaceObject2* owner, const char* dnaString, uint32_t partTag, const Matrix& transform );
 
 	// validate a dna string (slow!)
 	bool ValidateDNA( const char* dnaString );
 
 	// change the material of a turret with SOF data
-	void SetupTurretMaterialFromDNA( EveTurretSet * turretSet, const char* dnaString );
-	void SetupTurretMaterialFromFaction( EveTurretSet * turretSet, const char* factionName );
+	void SetupTurretMaterialFromDNA( EveTurretSet* turretSet, const char* dnaString );
+	void SetupTurretMaterialFromFaction( EveTurretSet* turretSet, const char* factionName );
 
 	bool LoadData( const char* filePath );
 
@@ -104,11 +110,11 @@ private:
 	void SetupDecalSets( IEveSpaceObjectDecalOwnerPtr obj, const EveSOFDNAPtr dna ) const;
 	void SetupModelCurves( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupLocators( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
-	void SetupLocatorSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets );
 	std::vector<EveLocatorSetsPtr> BuildHullLocalLocatorSets( const EveSOFDNAPtr dna ) const;
+	void SetupLocatorSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG );
 	void SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupLights( ITr2LightOwnerPtr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets ) const;
-	void SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr & sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, int& partTag, uint32_t seedOverwrite = 0 );
+	void SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, int& partTag, bool perPlacementTags, uint32_t seedOverwrite = 0 );
 
 
 	Tr2MeshPtr CreateMesh( const EveSOFDNAPtr dna ) const;
@@ -117,30 +123,32 @@ private:
 
 	void CreatePlacement(
 		EveSpaceObject2Ptr parent,
-		EveChildInstancedMeshesPtr & sharedMeshes,
+		EveChildInstancedMeshesPtr& sharedMeshes,
 		EveSOFDNAPtr extensionDna,
 		const EveSOFDNAPtr& parentDna,
 		EveSOFDataMgr::ExtensionPlacementData& placement,
 		const std::vector<EveSOFDataMgr::LocatorDirectionData>& locators,
 		const std::vector<Matrix>& nestedOffsets,
 		EveChildContainerPtr layoutContainer,
-		int& partTag );
+		int& partTag,
+		bool perPlacementTags );
 
 	void SetupCustomMask( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 
 	// all setup functions for ships only
 	void SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const;
+	void SetupChildBoosters( EveChildContainerPtr child, const EveSOFDNAPtr dna ) const;
 
-	Tr2EffectPtr CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* rdata, const BlueSharedString& lodOption ) const;
+	Tr2EffectPtr CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* rdata, const BlueSharedString& lodOption, const std::string& effectPath = "res:/Graphics/Effect/Managed/Space/Booster/BoosterVolumetric.fx", const std::map<BlueSharedString, Vector4>& parameters = {} ) const;
 
-	bool ProcessLayoutDistributionConditions( EveSOFDataMgr::ExtensionPlacementData & placement, const EveSOFDNAPtr dna );
-	void ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacementDistribution & distributionData, const EveSOFDNAPtr dna, std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet, std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet );
-	void ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData & distributionData, EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr & sharedMeshes, const EveSOFDNAPtr dna, std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSet, size_t& layoutIdx, size_t& placementIdx, const std::vector<Matrix>& offsets, EveChildContainerPtr childContainer, int& partTag );
+	bool ProcessLayoutDistributionConditions( EveSOFDataMgr::ExtensionPlacementData& placement, const EveSOFDNAPtr dna );
+	void ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacementDistribution& distributionData, const EveSOFDNAPtr dna, std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet, std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet );
+	void ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData& distributionData, EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSet, size_t& layoutIdx, size_t& placementIdx, const std::vector<Matrix>& offsets, EveChildContainerPtr childContainer, int& partTag, bool perPlacementTags );
 
 	// helper functions
-	size_t FillMeshAreaVector( Tr2MeshAreaVector * meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna, size_t hullIdx, size_t meshIndexOffset ) const;
-	bool GenerateLodResourcePaths( std::string & mediumResPath, std::string & lowResPath, std::string & ultraResPath, const char* resPath, const char* usage ) const;
-	void GenerateDepthFromAreaVector( Tr2MeshBase * mesh, const Tr2MeshAreaVector* meshAreaVector, const EveSOFDNAPtr dna ) const;
+	size_t FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna, size_t hullIdx, size_t meshIndexOffset ) const;
+	bool GenerateLodResourcePaths( std::string& mediumResPath, std::string& lowResPath, std::string& ultraResPath, const char* resPath, const char* usage ) const;
+	void GenerateDepthFromAreaVector( Tr2MeshBase* mesh, const Tr2MeshAreaVector* meshAreaVector, const EveSOFDNAPtr dna ) const;
 	void CreatePointLightData( const Vector3& pos, const float scale, const Color& color, const EveSOFDataMgr::PointLightAttachment* lightData ) const;
 	void CreateTexturedPointLightData( const Vector3& pos, const float scale, const std::string& texturePath, const EveSOFDataMgr::PointLightAttachment* lightData ) const;
 

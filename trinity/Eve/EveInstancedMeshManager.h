@@ -46,15 +46,32 @@ public:
 		DataHandle& operator=( const DataHandle& ) = delete;
 		DataHandle( DataHandle&& other ) noexcept
 		{
-			if( owner )
-			{
-				owner->ReplaceHandle( this, &other );
-			}
 			owner = other.owner;
 			index = other.index;
+			if( owner )
+			{
+				owner->ReplaceHandle( &other, this );
+			}
 			other.owner = nullptr;
 			other.index = InvalidIndex;
 		}
+		DataHandle& operator=( DataHandle&& other ) noexcept
+		{
+			if( this != &other )
+			{
+				CCP_ASSERT( !*this );
+				owner = other.owner;
+				index = other.index;
+				if( owner )
+				{
+					owner->ReplaceHandle( &other, this );
+				}
+				other.owner = nullptr;
+				other.index = InvalidIndex;
+			}
+			return *this;
+		}
+
 
 		operator bool() const
 		{

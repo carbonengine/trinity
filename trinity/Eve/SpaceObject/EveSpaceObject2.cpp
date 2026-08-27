@@ -1135,6 +1135,11 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 {
 	if( !m_mesh )
 	{
+		// meshless objects (modular ships) still render their impact effects
+		if( m_impactOverlay )
+		{
+			m_impactOverlay->GetBatches( batches, batchType, perObjectData, m_meshScreenSize );
+		}
 		return;
 	}
 
@@ -1712,11 +1717,11 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 		}
 	}
 
+	m_meshScreenSize = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) * invLodFactor;
+	m_meshScreenSize = m_allowLodSelection ? m_meshScreenSize : std::numeric_limits<float>::max();
+
 	if( m_mesh )
 	{
-		m_meshScreenSize = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) * invLodFactor;
-		m_meshScreenSize = m_allowLodSelection ? m_meshScreenSize : std::numeric_limits<float>::max();
-
 		m_mesh->UseWithScreenSize( m_meshScreenSize, m_boundingSphereWorldRadius );
 
 		if( updateContext.m_raytracingEnabled )
@@ -1930,6 +1935,7 @@ void EveSpaceObject2::EnsureChildLocatorMerged() const
 			Locator transformedLocator;
 			transformedLocator.boneIndex = -1;
 			Decompose( transformedLocator.scale, transformedLocator.direction, transformedLocator.position, transform );
+			transformedLocator.partTag = locator->partTag;
 			( *mergedLocatorSet )->Append( &transformedLocator, 1 );
 		}
 
@@ -3450,6 +3456,11 @@ void EveSpaceObject2::SetImpactOverlay( EveImpactOverlayPtr overlay )
 	m_impactOverlay = overlay;
 }
 
+EveImpactOverlayPtr EveSpaceObject2::GetImpactOverlay() const
+{
+	return m_impactOverlay;
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Set the impact damage state: how many percent are gone?
@@ -3806,10 +3817,13 @@ void EveSpaceObject2::EstimatePixelDiameter( const TriFrustum& frustum )
 	// estimate the pixel diameter using the local bounding box,
 	// as the bounding sphere may not pepresent the mesh bounding sphere,
 	// but rather the bounding sphere of the object and it's EveChildMesh attachments
-	if( m_mesh )
+	if( !m_mesh )
 	{
-		m_mesh->GetBoundingBox( m_localAabbMin, m_localAabbMax );
+		// meshless objects (modular ships) have no local box; size by the bounding sphere
+		m_estimatedPixelDiameter = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
+		return;
 	}
+	m_mesh->GetBoundingBox( m_localAabbMin, m_localAabbMax );
 	Vector4 sphere;
 	BoundingSphereFromBox( sphere, m_localAabbMin, m_localAabbMax, &m_worldTransform );
 	m_estimatedPixelDiameter = frustum.GetPixelSizeAccross( sphere.GetXYZ(), sphere.w );
