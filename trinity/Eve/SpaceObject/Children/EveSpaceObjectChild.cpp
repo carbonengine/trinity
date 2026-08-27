@@ -131,18 +131,24 @@ void EveSpaceObjectChild::CollectOwnedLocatorSets( const Matrix& parentTransform
 {
 }
 
-void EveSpaceObjectChild::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
+void EveSpaceObjectChild::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
 }
 
-void EveCollectOccluderAreas( Tr2MeshBase* mesh, std::vector<EveChildGeometryArea>& areaPool )
+void EveCollectAreas( TriBatchType type, Tr2MeshBase* mesh, std::vector<EveChildGeometryArea>& areaPool )
 {
 	if( !mesh )
 	{
 		return;
 	}
 
-	Tr2MeshAreaVector* areas = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	Tr2MeshAreaVector* areas = mesh->GetAreas( type );
+
+	if( !areas )
+	{
+		return;
+	}
+
 	for( auto it = begin( *areas ); it != end( *areas ); it++ )
 	{
 		EveChildGeometryArea area;

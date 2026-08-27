@@ -183,8 +183,8 @@ struct DamageFilterOccluder
 {
 	TriGeometryResPtr geometry;
 	Matrix fromObject;
-	uint32_t opaqueAreaStart = 0;
-	uint32_t opaqueAreaCount = 0;
+	uint32_t areaStart = 0;
+	uint32_t areaCount = 0;
 };
 
 // ---------------------------------------------------------------------------------------

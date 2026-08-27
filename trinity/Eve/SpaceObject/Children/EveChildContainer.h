@@ -171,7 +171,7 @@ public:
 	bool Empty() const;
 
 	void CollectOwnedLocatorSets( const Matrix& parentTransform, std::vector<EveChildLocatorSetsSource>& out ) const override;
-	void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const override;
+	void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const override;
 
 	PEveSpaceObjectChildVector m_objects;
 
