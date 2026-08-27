@@ -25,6 +25,7 @@
 #include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
 #include "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h"
 #include "Eve/SpaceObject/Attachments/IEveSpaceObjectDecalOwner.h"
+#include "Eve/SpaceObject/Children/EveChildBoosterSet.h"
 #include "Eve/SpaceObject/Children/EveChildMesh.h"
 #include "Eve/SpaceObject/Children/EveChildContainer.h"
 #include "Eve/SpaceObject/Children/EveChildParticleSystem.h"
@@ -127,6 +128,7 @@ EveSOF::EveSOF( IRoot* lockobj ) :
 	Tr2Variable var2( "DepthMapMsaa", (ITr2TextureProvider*)nullptr );
 	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2RingBuffer::GetInstance<Float4x3>() );
 	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>() );
+	GlobalStore().RegisterVariable( "ChildBoosterSetInstances", &Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>() );
 
 	BlueSharedString gradientMap( "GradientMap" );
 
@@ -335,6 +337,7 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 	const bool hasAnimation = dna->IsHullAnimated();
 	const bool hasEmitters = !dna->GetHullSoundEmitters().empty();
 	const bool hasLayouts = dna->GetLayoutCount() > 0;
+	const bool hasBoosters = dna->GetHullBoosterCount() > 0;
 	bool hasAttachments = false;
 	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
 	{
@@ -354,7 +357,7 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 
 	std::vector<Matrix> placementOffsets = { transform };
 
-	const bool needsPlacementContainer = hasControllers || hasAnimation || hasEmitters || hasChildEffects || hasLayouts || hasAttachments;
+	const bool needsPlacementContainer = hasControllers || hasAnimation || hasEmitters || hasChildEffects || hasLayouts || hasAttachments || hasBoosters;
 	const uint32_t buildFlags = !hasAnimation ? EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT : EveSOFDataHullBuildFilter::NON_INSTANCED_PLACEMENT;
 
 	Quaternion rotation;
@@ -478,6 +481,10 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 	// And last but not least! AUDIO!
 	SetupAudio( BlueCastPtr( placementContainer ), dna, transform );
 
+	if( hasBoosters )
+	{
+		SetupChildBoosters( placementContainer, dna );
+	}
 
 	// Old style instanced meshes are not supported here
 	if( hasChildEffects )
@@ -2798,14 +2805,20 @@ void EveSOF::SetupLights( ITr2LightOwnerPtr spaceObject, const EveSOFDNAPtr dna,
 }
 
 
-Tr2EffectPtr EveSOF::CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* rdata, const BlueSharedString& lodOption ) const
+Tr2EffectPtr EveSOF::CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* rdata, const BlueSharedString& lodOption, const std::string& effectPath, const std::map<BlueSharedString, Vector4>& parameters ) const
 {
 	Tr2EffectPtr effect;
 	effect.CreateInstance();
 	effect->StartUpdate();
 
-	effect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/Booster/BoosterVolumetric.fx" );
+	effect->SetEffectPathName( effectPath.c_str() );
 	effect->SetOption( BlueSharedString( "BOOSTER_LOD" ), lodOption );
+
+	for( const auto& parameter : parameters )
+	{
+		effect->AddParameterVector4( parameter.first, &parameter.second );
+	}
+
 	effect->AddParameterFloat( BlueSharedString( "NoiseSpeed0" ), rdata->shape0.noiseSpeed );
 	effect->AddParameterVector4( BlueSharedString( "NoiseAmplitudeStart0" ), &rdata->shape0.noiseAmplitureStart );
 	effect->AddParameterVector4( BlueSharedString( "NoiseAmplitudeEnd0" ), &rdata->shape0.noiseAmplitureEnd );
@@ -2840,6 +2853,29 @@ Tr2EffectPtr EveSOF::CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* 
 	return effect;
 }
 
+namespace
+{
+
+EveSpriteSetPtr CreateGlow()
+{
+	// create and setup glows
+	EveSpriteSetPtr glow;
+	glow.CreateInstance();
+
+	Tr2EffectPtr glowEffect;
+	glowEffect.CreateInstance();
+	glowEffect->StartUpdate();
+	glowEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/Booster/BoosterGlowAnimated.fx" );
+	glowEffect->AddResourceTexture2D( BlueSharedString( "NoiseMap" ), "res:/Texture/global/noise.dds" );
+	glowEffect->AddResourceTexture2D( BlueSharedString( "DiffuseMap" ), "res:/Texture/Particle/whitesharp.dds" );
+	// finish effect and set it
+	glowEffect->EndUpdate();
+	glow->SetEffect( glowEffect );
+
+	return glow;
+}
+
+}
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -2889,18 +2925,7 @@ void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 		set->SetEffect( effect, effectFar );
 
 		// create and setup glows
-		EveSpriteSetPtr glow;
-		glow.CreateInstance();
-
-		Tr2EffectPtr glowEffect;
-		glowEffect.CreateInstance();
-		glowEffect->StartUpdate();
-		glowEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/Booster/BoosterGlowAnimated.fx" );
-		glowEffect->AddResourceTexture2D( BlueSharedString( "NoiseMap" ), "res:/Texture/global/noise.dds" );
-		glowEffect->AddResourceTexture2D( BlueSharedString( "DiffuseMap" ), "res:/Texture/Particle/whitesharp.dds" );
-		// finish effect and set it
-		glowEffect->EndUpdate();
-		glow->SetEffect( glowEffect );
+		auto glow = CreateGlow();
 		set->SetGlow( glow );
 
 		if( hdata->hasTrails )
@@ -2974,6 +2999,91 @@ void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 	// add it to ship
 	set->PrepareResources();
 	ship->SetBoosters( set );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   add the booster to the new eve child
+// --------------------------------------------------------------------------------
+void EveSOF::SetupChildBoosters( EveChildContainerPtr child, const EveSOFDNAPtr dna ) const
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	// does this hull have boosters at all?
+	if( dna->GetHullBoosterCount() == 0 )
+	{
+		return;
+	}
+
+	// create
+	EveChildBoosterSetPtr set;
+	set.CreateInstance();
+
+	set->SetName( "Boosters" );
+
+	// per-race data
+	const EveSOFDataMgr::RaceBoosterData* rdata = dna->GetRaceBoosterData();
+	// cycle over all hulls in the multi-hull list
+	Vector3 hullOffset( 0.f, 0.f, 0.f );
+	const EveSOFDataMgr::HullBoosterData* hdata0 = dna->GetHullBoosterData( 0 );
+
+	std::string driveName = hdata0->driveName.empty() ? EveChildBoosterSet::DEFAULT_DRIVE_NAME : hdata0->driveName.c_str();
+	set->SetDriveName( driveName );
+
+	// set the booster set's internal data
+	set->SetData(
+		rdata->glowScale,
+		rdata->glowColor,
+		rdata->warpGlowColor,
+		rdata->symHaloScale,
+		rdata->haloScaleX,
+		rdata->haloScaleY,
+		rdata->haloColor,
+		rdata->warpHaloColor );
+	set->SetLightData( rdata->lightOffset, rdata->lightFlickerAmplitude, rdata->lightFlickerFrequency, rdata->lightRadius, rdata->lightColor, rdata->lightWarpRadius, rdata->lightWarpColor );
+
+	std::string effectPath = hdata0->effectPath.empty() ? EveChildBoosterSet::DEFAULT_EFFECT_PATH : hdata0->effectPath.c_str();
+	Tr2EffectPtr effect = CreateBoosterEffect( rdata, BlueSharedString( "BOOSTER_LOD_HIGH" ), effectPath, hdata0->parameters );
+	Tr2EffectPtr effectFar = CreateBoosterEffect( rdata, BlueSharedString( "BOOSTER_LOD_LOW" ), effectPath, hdata0->parameters );
+
+	for( const auto& texture : hdata0->textures )
+	{
+		effect->SetResourceTexture2D( texture.first, texture.second.resFilePath.c_str() );
+		effectFar->SetResourceTexture2D( texture.first, texture.second.resFilePath.c_str() );
+	}
+
+	set->SetEffect( effect, effectFar );
+
+	auto glow = CreateGlow();
+	set->SetGlow( glow );
+
+	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
+	{
+		// per-hull data
+		const EveSOFDataMgr::HullBoosterData* hdata = dna->GetHullBoosterData( hullIdx );
+
+		// add all the indiviual items
+		for( const auto& item : hdata->items )
+		{
+			Matrix matrix;
+			TriMatrixTranslate( &matrix, &item.transform, &hullOffset );
+			set->Add( matrix, item.atlasIndex0, item.atlasIndex1, item.lightScale );
+		}
+
+		// next hull needs offset update from hull's locator
+		const Vector3* nextSubsystemOffset = dna->GetHullNextSubsystemOffset( hullIdx );
+		if( nextSubsystemOffset )
+		{
+			hullOffset += *nextSubsystemOffset;
+		}
+	}
+
+	glow->Rebuild();
+	glow->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
+
+	// add it to child
+	set->PrepareResources();
+	child->AddToEffectChildrenList( set );
 }
 
 // --------------------------------------------------------------------------------
