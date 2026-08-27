@@ -49,7 +49,8 @@ EveChildBoosterSet::EveChildBoosterSet( IRoot* lockobj ) :
 	m_boostersVisible( false ),
 	m_boosterHighLod( false ),
 	m_parentTransform( IdentityMatrix() ),
-	m_driveName( DEFAULT_DRIVE_NAME )
+	m_driveName( DEFAULT_DRIVE_NAME ),
+	m_parentScale( 1.f )
 {
 	Tr2Renderer::ReserveQuadListIndexBuffer( 6 );
 	BoundingSphereInitialize( m_boosterBoundingSphere );
@@ -118,6 +119,14 @@ void EveChildBoosterSet::UpdateAsyncronous( const EveUpdateContext& updateContex
 	}
 
 	m_parentTransform = params.localToWorldTransform;
+
+	// scale with highest scale factor
+	float scaleXSq = LengthSq( m_parentTransform.GetX() );
+	float scaleYSq = LengthSq( m_parentTransform.GetY() );
+	float scaleZSq = LengthSq( m_parentTransform.GetZ() );
+	float scale = std::max( std::max( scaleXSq, scaleYSq ), scaleZSq );
+	m_parentScale = sqrt( scale );
+
 	m_hasUpdated = true;
 }
 
@@ -349,6 +358,7 @@ bool EveChildBoosterSet::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery
 	}
 
 	sphere = PadBoosterBoundingSphere( m_boosterBoundingSphere, m_parentTransform );
+	sphere.w *= m_parentScale;
 	return true;
 }
 
@@ -423,7 +433,12 @@ void EveChildBoosterSet::GetLights( Tr2LightManager& lightManager ) const
 		return;
 	}
 
-	EveBoosterLightParams params{ m_lightWarpRadius, m_lightWarpColor, m_lightRadius, m_lightColor, m_lightFlickerAmplitude, m_lightFlickerFrequency };
+	EveBoosterLightParams params{ m_lightWarpRadius * m_parentScale,
+								  m_lightWarpColor,
+								  m_lightRadius * m_parentScale,
+								  m_lightColor,
+								  m_lightFlickerAmplitude,
+								  m_lightFlickerFrequency };
 	AddBoosterLights( lightManager, m_singleBoosters, m_parentTransform, m_thrust, m_warpIntensity, params );
 }
 

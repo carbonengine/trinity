@@ -227,6 +227,7 @@ private:
 	std::vector<Tr2ChildBoosterInstanceData> m_ringBufferData;
 
 	Matrix m_parentTransform;
+	float m_parentScale;
 	bool m_boosterHighLod;
 	bool m_boostersVisible;
 	bool m_isVisible;
