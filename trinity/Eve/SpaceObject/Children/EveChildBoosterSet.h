@@ -232,6 +232,9 @@ private:
 	bool m_boosterHighLod;
 	bool m_boostersVisible;
 	bool m_isVisible;
+
+	// Has UpdateAsyncronous been called: until it has, the object cannot be rendered
+	bool m_hasUpdated = false;
 };
 
 TYPEDEF_BLUECLASS( EveChildBoosterSet );

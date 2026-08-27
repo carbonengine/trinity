@@ -117,6 +117,7 @@ void EveChildBoosterSet::UpdateAsyncronous( const EveUpdateContext& updateContex
 	}
 
 	m_parentTransform = params.localToWorldTransform;
+	m_hasUpdated = true;
 }
 
 EveBoosterFlareParams EveChildBoosterSet::GetFlareParams() const
@@ -278,6 +279,14 @@ bool EveChildBoosterSet::OnPrepareResources()
 void EveChildBoosterSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	m_glowsVisible = false;
+	m_isVisible = false;
+	m_boostersVisible = false;
+
+	if( !m_hasUpdated )
+	{
+		return;
+	}
+
 	if( m_display )
 	{
 		Vector4 transformedBoundingSphere;
@@ -345,6 +354,11 @@ float EveChildBoosterSet::GetBoosterIntensity() const
 // --------------------------------------------------------------------------------
 bool EveChildBoosterSet::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
+	if( !m_hasUpdated )
+	{
+		return false;
+	}
+
 	sphere = PadBoosterBoundingSphere( m_boosterBoundingSphere, m_parentTransform );
 	return true;
 }
@@ -405,6 +419,11 @@ void EveChildBoosterSet::RegisterComponents()
 // --------------------------------------------------------------------------------
 void EveChildBoosterSet::GetLights( Tr2LightManager& lightManager ) const
 {
+	if( !m_hasUpdated )
+	{
+		return;
+	}
+
 	if( m_lightRadius <= 0.f && m_lightWarpRadius <= 0.f )
 	{
 		return;
@@ -551,6 +570,11 @@ void EveChildBoosterSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 // --------------------------------------------------------------------------------
 void EveChildBoosterSet::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
+	if( !m_hasUpdated )
+	{
+		return;
+	}
+
 	if( !renderer.HasOption( this, "Boosters" ) )
 	{
 		return;
