@@ -2070,7 +2070,6 @@ void EveChildMesh::CollectOwnedGeometry( TriBatchType type, const Matrix& parent
 	EveChildGeometry source;
 	source.childToObject = localTransform * parentTransform;
 	source.geometry = m_mesh->GetGeometryResource();
-	source.owner = this;
 	source.areaStart = uint32_t( areaPool.size() );
 	EveCollectAreas( type, m_mesh, areaPool );
 	source.areaCount = uint32_t( areaPool.size() ) - source.areaStart;

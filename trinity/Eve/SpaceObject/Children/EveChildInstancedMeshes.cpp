@@ -1255,9 +1255,13 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 
 void EveChildInstancedMeshes::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
+	static_assert(
+		sizeof( Float4x3 ) == sizeof( EveInstancedMeshManager::StaticPerInstanceData::worldTransform ),
+		"Float4x3 must match StaticPerInstanceData::worldTransform" );
+
 	for( const Mesh& mesh : m_meshes )
 	{
-		if( !mesh.geometry )
+		if( !mesh.geometry || mesh.instances.empty() )
 		{
 			continue;
 		}
@@ -1289,7 +1293,6 @@ void EveChildInstancedMeshes::CollectOwnedGeometry( TriBatchType type, const Mat
 			EveChildGeometry source;
 			source.childToObject = instanceTransform * parentTransform;
 			source.geometry = mesh.geometry;
-			source.owner = this;
 			source.areaStart = areaStart;
 			source.areaCount = areaCount;
 			out.push_back( source );

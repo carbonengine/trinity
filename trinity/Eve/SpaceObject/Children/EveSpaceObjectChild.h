@@ -33,7 +33,7 @@ struct EveChildGeometryArea
 };
 
 /**
- * @brief Struct bundling geometry and owner information as well as transform, to be processed by the parent object.
+ * @brief Struct bundling geometry and transform, to be processed by the parent object.
  * The geometry's areas live in the pool passed to CollectOwnedGeometry.
  * @see EveSpaceObjectChild::CollectOwnedGeometry
  */
@@ -41,7 +41,6 @@ struct EveChildGeometry
 {
 	class TriGeometryRes* geometry = nullptr;
 	Matrix childToObject = IdentityMatrix();
-	const class EveSpaceObjectChild* owner = nullptr;
 	uint32_t areaStart = 0;
 	uint32_t areaCount = 0;
 };
