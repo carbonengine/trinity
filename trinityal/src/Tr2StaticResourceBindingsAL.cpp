@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 #include "../include/Tr2StaticResourceBindingsAL.h"
 #include "../include/Tr2RenderContextAL.h"
+#include "../include/Tr2RegisterMapAL.h"
 
 
 bool Tr2StaticResourceBindingsAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
@@ -92,6 +93,10 @@ bool Tr2StaticResourceBindingsAL::SharesRegisterSpace( Kind a, Kind b )
 
 bool Tr2StaticResourceBindingsAL::Set( Kind kind, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
 {
+	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
+	{
+		return false;
+	}
 	for( auto& entry : m_entries )
 	{
 		if( entry.stage != uint8_t( stage ) || entry.registerIndex != uint8_t( registerIndex ) || !SharesRegisterSpace( entry.kind, kind ) )
