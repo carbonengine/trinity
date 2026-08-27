@@ -484,6 +484,8 @@ void EveChildInstancedMeshes::AddMesh(
 		a.batchType = areas[i].batchType;
 		a.areaIndex = areas[i].areaIndex;
 		a.areaCount = areas[i].areaCount;
+		a.alphaCutout = areas[i].alphaCutout;
+		a.reversed = areas[i].reversed;
 		a.effectHash = a.effect ? a.effect->GetHashValue() : 0;
 	}
 	mesh.instances.reserve( count );
@@ -1247,6 +1249,48 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 			{
 				EmitOverlayBatches( batches, pod.framePod, batchType, *m_parentOverlayEffects, mesh.overlayAreaBlocks, *lod );
 			}
+		}
+	}
+}
+
+void EveChildInstancedMeshes::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+{
+	for( const Mesh& mesh : m_meshes )
+	{
+		if( !mesh.geometry )
+		{
+			continue;
+		}
+
+		std::vector<EveChildGeometryArea> opaqueAreas;
+		for( const MeshArea& area : mesh.areas )
+		{
+			if( area.batchType != TRIBATCHTYPE_OPAQUE )
+			{
+				continue;
+			}
+			EveChildGeometryArea occluderArea;
+			occluderArea.index = area.areaIndex;
+			occluderArea.count = area.areaCount;
+			occluderArea.alphaCutout = area.alphaCutout;
+			occluderArea.reversed = area.reversed;
+			opaqueAreas.push_back( occluderArea );
+		}
+
+		if( opaqueAreas.empty() )
+		{
+			continue;
+		}
+
+		for( const auto& instance : mesh.instances )
+		{
+			Matrix instanceTransform = *(Float4x3*)&instance.worldTransform;
+			EveChildGeometry source;
+			source.childToObject = instanceTransform * parentTransform;
+			source.geometry = mesh.geometry;
+			source.owner = this;
+			source.opaqueAreas = opaqueAreas;
+			out.push_back( std::move( source ) );
 		}
 	}
 }

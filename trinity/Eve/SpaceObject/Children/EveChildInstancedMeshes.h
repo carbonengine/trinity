@@ -76,6 +76,8 @@ public:
 		TriBatchType batchType = TRIBATCHTYPE_OPAQUE;
 		uint32_t areaIndex = 0;
 		uint32_t areaCount = 1;
+		bool alphaCutout = false;
+		bool reversed = false;
 		uint64_t effectHash = 0;
 		EveInstancedMeshManager::MeshGroupHandle meshGroupHandle;
 	};
@@ -108,6 +110,8 @@ public:
 	BluePy RemoveMeshOverlayEffect( uint32_t meshId, EveMeshOverlayEffect* overlayEffect );
 	BluePy ClearMeshOverlayEffects( uint32_t meshId );
 	BluePy GetMeshOverlayEffectCount( uint32_t meshId ) const;
+
+	void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const override;
 
 private:
 	// per-instance constant buffers for overlay draws

@@ -183,7 +183,7 @@ struct DamageFilterOccluder
 {
 	TriGeometryResPtr geometry;
 	Matrix fromObject;
-	Tr2MeshBasePtr mesh;
+	std::vector<EveChildGeometryArea> opaqueAreas;
 };
 
 // ---------------------------------------------------------------------------------------

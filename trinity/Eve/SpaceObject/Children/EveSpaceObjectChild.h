@@ -18,6 +18,20 @@ struct EveChildLocatorSetsSource
 };
 
 /**
+ * @brief Struct containing information about mesh areas.
+ * @see EveSpaceObjectChild::CollectOwnedGeometry
+ * @see Tr2MeshArea
+ * @see EveChildInstancedMeshes::MeshArea
+ */
+struct EveChildGeometryArea
+{
+	uint32_t index = 0;
+	uint32_t count = 1;
+	bool alphaCutout = false;
+	bool reversed = false;
+};
+
+/**
  * @brief Struct bundling geometry and owner information as well as transform, to be processed by the parent object.
  * @see EveSpaceObjectChild::CollectOwnedGeometry
  */
@@ -25,9 +39,14 @@ struct EveChildGeometry
 {
 	class TriGeometryRes* geometry = nullptr;
 	Matrix childToObject = IdentityMatrix();
-	const class EveChildMesh* owner = nullptr;
-	class Tr2MeshBase* mesh = nullptr;
+	const class EveSpaceObjectChild* owner = nullptr;
+	std::vector<EveChildGeometryArea> opaqueAreas;
 };
+
+/**
+ * @brief Collects opaque areas from a mesh.
+ */
+std::vector<EveChildGeometryArea> EveCollectOccluderAreas( class Tr2MeshBase* mesh );
 
 /**
  * @brief Base class for all space object children. This class provides common functionality and properties for all child objects in the space object hierarchy.
