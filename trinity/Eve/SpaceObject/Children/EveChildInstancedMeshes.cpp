@@ -145,9 +145,8 @@ void EveChildInstancedMeshes::PushRtGeometry( Tr2RaytracingManager& rtManager ) 
 				}
 			}
 
-			XMMATRIX m = *reinterpret_cast<const Matrix*>( instanceTransform.worldTransform );
-			m.r[3] = XMVectorSet( 0, 0, 0, 1 );
-			m = XMMatrixMultiply( XMMatrixTranspose( m ), m_worldTransform );
+			XMMATRIX m = Matrix( instanceTransform.worldTransform );
+			m = XMMatrixMultiply( m, m_worldTransform );
 			mesh.rtMeshes[lodIndex].instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
 		}
 
@@ -275,10 +274,11 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 
 		for( const auto& instance : mesh.instances )
 		{
-			Vector3 position = Vector3( instance.worldTransform[0].w, instance.worldTransform[1].w, instance.worldTransform[2].w );
-			float scale = std::sqrtf( std::max( { LengthSq( instance.worldTransform[0].GetXYZ() ),
-												  LengthSq( instance.worldTransform[1].GetXYZ() ),
-												  LengthSq( instance.worldTransform[2].GetXYZ() ) } ) );
+			Matrix m = instance.worldTransform;
+			Vector3 position = m.GetTranslation();
+			float scale = std::sqrtf( std::max( { LengthSq( Vector3( m._11, m._12, m._13 ) ),
+												  LengthSq( Vector3( m._21, m._22, m._23 ) ),
+												  LengthSq( Vector3( m._31, m._32, m._33 ) ) } ) );
 			position = TransformCoord( position, m_worldTransform );
 			scale *= worldScale;
 			mesh.instanceSpheres[&instance - mesh.instances.data()] = CcpMath::Sphere( position, radius * scale );
@@ -449,7 +449,7 @@ void EveChildInstancedMeshes::AddMesh(
 		for( size_t i = 0; i < count; ++i )
 		{
 			EveInstancedMeshManager::StaticPerInstanceData instanceData;
-			instanceData.SetTransform( instanceTransforms[i] );
+			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
 			mesh.instances.push_back( instanceData );
 			mesh.partTags.push_back( partTag );
@@ -490,7 +490,7 @@ void EveChildInstancedMeshes::AddMesh(
 	for( size_t i = 0; i < count; ++i )
 	{
 		EveInstancedMeshManager::StaticPerInstanceData instanceData;
-		instanceData.SetTransform( instanceTransforms[i] );
+		instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 		instanceData.sphereIndex = static_cast<uint32_t>( i );
 		mesh.instances.push_back( instanceData );
 		mesh.partTags.push_back( partTag );
@@ -591,13 +591,14 @@ void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::Par
 void EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale )
 {
 	Matrix m = TransformationMatrix( scale, rotation, translation );
+	const Float4x3 packedTransform( m );
 	for( auto& mesh : m_meshes )
 	{
 		for( size_t i = 0; i < mesh.instances.size(); ++i )
 		{
 			if( mesh.partTags[i] == partTag )
 			{
-				mesh.instances[i].SetTransform( m );
+				mesh.instances[i].worldTransform = packedTransform;
 			}
 		}
 	}
@@ -792,7 +793,7 @@ BluePy EveChildInstancedMeshes::GetInstancesTransforms( uint32_t meshId ) const
 	{
 		Vector3 scale, translation;
 		Quaternion rotation;
-		Decompose( scale, rotation, translation, instance.ToMatrix() );
+		Decompose( scale, rotation, translation, instance.worldTransform );
 
 		PyObject* transform = PyTuple_New( 3 );
 		PyTuple_SetItem( transform, 0, ToPython( translation ) );
@@ -1074,7 +1075,7 @@ void EveChildInstancedMeshes::UpdateOverlayInstanceData( const EveSpaceObjectVSD
 			const auto& wt = mesh.instances[i].worldTransform;
 			OverlayInstancePod& pod = ( *mesh.overlayPods )[i];
 
-			Matrix local = mesh.instances[i].ToMatrix();
+			Matrix local = mesh.instances[i].worldTransform;
 
 			Matrix worldTransform = Transpose( local * m_worldTransform );
 			Matrix worldTransformLast = Transpose( local * prevWorldTransform );

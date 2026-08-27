@@ -27,18 +27,15 @@ public:
 
 	struct DynamicPerInstanceData
 	{
-		Vector4 worldTransform[3];
-		Vector4 prevWorldTransform[3];
+		Float4x3 worldTransform;
+		Float4x3 prevWorldTransform;
 		uint32_t sphereIndex = 0;
 	};
 
 	struct StaticPerInstanceData
 	{
-		Vector4 worldTransform[3];
+		Float4x3 worldTransform;
 		uint32_t sphereIndex = 0;
-
-		Matrix ToMatrix() const;
-		void SetTransform( const Matrix& m );
 	};
 
 	template <typename T>
@@ -145,14 +142,14 @@ public:
 private:
 	struct StaticPerInstanceBufferElement
 	{
-		Vector4 worldTransform[3];
+		Float4x3 worldTransform;
 		uint32_t perObjectDataIndex = 0;
 	};
 
 	struct DynamicPerInstanceBufferElement
 	{
-		Vector4 worldTransform[3];
-		Vector4 prevWorldTransform[3];
+		Float4x3 worldTransform;
+		Float4x3 prevWorldTransform;
 		uint32_t perObjectDataIndex = 0;
 	};
 
