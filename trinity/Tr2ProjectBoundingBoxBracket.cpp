@@ -29,26 +29,6 @@ struct ProjectedBounds
 	bool coversViewport;
 };
 
-Vector4 TransformPointToClip( const Vector3& point, const Matrix& viewProjection )
-{
-	return Vector4{
-		point.x * viewProjection._11 + point.y * viewProjection._21 + point.z * viewProjection._31 + viewProjection._41,
-		point.x * viewProjection._12 + point.y * viewProjection._22 + point.z * viewProjection._32 + viewProjection._42,
-		point.x * viewProjection._13 + point.y * viewProjection._23 + point.z * viewProjection._33 + viewProjection._43,
-		point.x * viewProjection._14 + point.y * viewProjection._24 + point.z * viewProjection._34 + viewProjection._44
-	};
-}
-
-Vector4 Lerp( const Vector4& a, const Vector4& b, float t )
-{
-	return Vector4{
-		a.x + ( b.x - a.x ) * t,
-		a.y + ( b.y - a.y ) * t,
-		a.z + ( b.z - a.z ) * t,
-		a.w + ( b.w - a.w ) * t
-	};
-}
-
 // Cohen-Sutherland style outcodes: one bit per plane of the D3D clip volume
 // (-w <= x <= w, -w <= y <= w, 0 <= z <= w); a set bit means the point is
 // outside that plane. In 2D (4 bits) the zones look like:
@@ -119,7 +99,7 @@ void AddNearPlaneIntersection( const Vector4& a, const Vector4& b, std::vector<V
 	}
 
 	float t = a.z / denominator;
-	Vector4 point = Lerp( a, b, t );
+	Vector4 point = a + ( b - a ) * t;
 	if( CanPerspectiveDivide( point ) )
 	{
 		points.push_back( point );
@@ -157,7 +137,7 @@ bool ProjectBoundingBoxToViewport( const Vector3& bbMin, const Vector3& bbMax, c
 	uint32_t combinedOutcode = ~0u;
 	for( int i = 0; i < 8; ++i )
 	{
-		clipCorners[i] = TransformPointToClip( corners[i], viewProjection );
+		clipCorners[i] = Transform( corners[i], viewProjection );
 		outcodes[i] = ClipOutcode( clipCorners[i] );
 		combinedOutcode &= outcodes[i];
 	}
@@ -408,7 +388,7 @@ void Tr2ProjectBoundingBoxBracket::ConstrainProjection( const Vector3& center, c
 	{
 		// Bounded brackets are anchored on the projected 3d box center, not the projected
 		// rect center, unless the box center is behind the near plane.
-		Vector4 clipCenter = TransformPointToClip( center, viewProjection );
+		Vector4 clipCenter = Transform( center, viewProjection );
 		Vector3 projectedCenter;
 		if( clipCenter.z >= 0.0f && clipCenter.w > 0.0f && ProjectClipPoint( clipCenter, viewport, projectedCenter ) )
 		{

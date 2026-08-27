@@ -158,7 +158,7 @@ bool EvePlanet::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
 		return false;
 	}
 
-	const float renderScale = m_renderScale > 0.0f ? m_renderScale : 1.0f;
+	const float renderScale = std::max( m_renderScale, 1.0f );
 	const Matrix scaledTransform = CalculatePlanetScaleTransform( m_worldTransform, renderScale );
 	sphere = Vector4( scaledTransform.GetTranslation(), m_radius / renderScale );
 
