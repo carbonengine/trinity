@@ -38,18 +38,18 @@ TYPEDEF_BLUECLASS( EveSOFDataParameter );
 BLUE_DECLARE_VECTOR( EveSOFDataParameter );
 
 
-#define SOF_PARAM_DECLARE( _className, _valueType )									  \
-	BLUE_CLASS( _className ) :                                                        \
-		public EveSOFDataParameter							                          \
-	{                                                                                 \
-	public:                                                                           \
-		EXPOSE_TO_BLUE();                                                             \
-		_className( IRoot* lockobj = nullptr );                                       \
-		Vector4 GetValue() const override;		                                      \
-                                                                                      \
-	private:                                                                          \
-		_valueType m_value;                                                           \
-	};                                                                                \
+#define SOF_PARAM_DECLARE( _className, _valueType ) \
+	BLUE_CLASS( _className ) :                      \
+		public EveSOFDataParameter                  \
+	{                                               \
+	public:                                         \
+		EXPOSE_TO_BLUE();                           \
+		_className( IRoot* lockobj = nullptr );     \
+		Vector4 GetValue() const override;          \
+                                                    \
+	private:                                        \
+		_valueType m_value;                         \
+	};                                              \
 	TYPEDEF_BLUECLASS( _className );
 
 SOF_PARAM_DECLARE( EveSOFDataParameterBool, bool );

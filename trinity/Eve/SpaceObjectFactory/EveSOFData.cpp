@@ -82,17 +82,17 @@ EveSOFDataParameter::EveSOFDataParameter( IRoot* lockobj ) :
 }
 
 
-#define SOF_PARAM_DEFINE( _className, _defaultValue, _returnValue )		\
-_className::_className( IRoot* lockobj ) :								\
-	EveSOFDataParameter( lockobj ),										\
-	m_value( _defaultValue )											\
-{																		\
-}																		\
-																		\
-Vector4 _className::GetValue() const								    \
-{																		\
-	return _returnValue;												\
-}
+#define SOF_PARAM_DEFINE( _className, _defaultValue, _returnValue ) \
+	_className::_className( IRoot* lockobj ) :                      \
+		EveSOFDataParameter( lockobj ),                             \
+		m_value( _defaultValue )                                    \
+	{                                                               \
+	}                                                               \
+                                                                    \
+	Vector4 _className::GetValue() const                            \
+	{                                                               \
+		return _returnValue;                                        \
+	}
 
 SOF_PARAM_DEFINE( EveSOFDataParameterBool, false, Vector4( m_value, m_value, m_value, m_value ) );
 SOF_PARAM_DEFINE( EveSOFDataParameterInt, 0, Vector4( float( m_value ), float( m_value ), float( m_value ), float( m_value ) ) );
