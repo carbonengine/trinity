@@ -96,7 +96,7 @@ public:
 		EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG );
 
 	void RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag );
-	bool SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale );
+	void SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale );
 
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 	uint32_t GetMeshCount() const;

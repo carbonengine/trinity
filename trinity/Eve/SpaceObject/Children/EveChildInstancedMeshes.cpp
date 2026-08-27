@@ -588,10 +588,9 @@ void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::Par
 		}
 	}
 }
-bool EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale )
+void EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale )
 {
 	Matrix m = TransformationMatrix( scale, rotation, translation );
-	bool changed = false;
 	for( auto& mesh : m_meshes )
 	{
 		for( size_t i = 0; i < mesh.instances.size(); ++i )
@@ -599,11 +598,9 @@ bool EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, co
 			if( mesh.partTags[i] == partTag )
 			{
 				mesh.instances[i].SetTransform( m );
-				changed = true;
 			}
 		}
 	}
-	return changed;
 }
 
 void EveChildInstancedMeshes::ReleaseCachedData( BlueAsyncRes* p )
