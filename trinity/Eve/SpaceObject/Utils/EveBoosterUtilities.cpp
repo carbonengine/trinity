@@ -107,11 +107,10 @@ void CreateBoosterFlares( EveSpriteSet& glows,
 						  const Matrix& transform,
 						  const EveBoosterFlareParams& params )
 {
-	auto localMatrix = transform;
 	// grab pos/dir/scale from the local transform matrix
-	Vector3 pos( localMatrix._41, localMatrix._42, localMatrix._43 );
-	Vector3 dir( localMatrix._31, localMatrix._32, localMatrix._33 );
-	float scale = std::max( Length( localMatrix.GetX() ), Length( localMatrix.GetY() ) );
+	Vector3 pos( transform._41, transform._42, transform._43 );
+	Vector3 dir( transform._31, transform._32, transform._33 );
+	float scale = std::max( Length( transform.GetX() ), Length( transform.GetY() ) );
 
 	dir = Normalize( dir );
 	if( scale < 3.f )

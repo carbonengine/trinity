@@ -48,7 +48,8 @@ EveChildBoosterSet::EveChildBoosterSet( IRoot* lockobj ) :
 	m_isVisible( false ),
 	m_boostersVisible( false ),
 	m_boosterHighLod( false ),
-	m_parentTransform( IdentityMatrix() )
+	m_parentTransform( IdentityMatrix() ),
+	m_driveName( DEFAULT_DRIVE_NAME )
 {
 	Tr2Renderer::ReserveQuadListIndexBuffer( 6 );
 	BoundingSphereInitialize( m_boosterBoundingSphere );
@@ -333,18 +334,6 @@ void EveChildBoosterSet::GetRenderables( std::vector<ITr2Renderable*>& renderabl
 	{
 		renderables.push_back( this );
 	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Return the average overall intensity of this booster set. Has been calculated
-//   in ::Update()
-// Return value:
-//   The intensity
-// --------------------------------------------------------------------------------
-float EveChildBoosterSet::GetBoosterIntensity() const
-{
-	return m_thrust;
 }
 
 // --------------------------------------------------------------------------------

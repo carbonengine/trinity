@@ -151,8 +151,6 @@ public:
 	// rendering
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables ) override;
-	// query booster intensity
-	float GetBoosterIntensity() const;
 	// get the transformed bounding sphere, ready for use
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const override;
 
