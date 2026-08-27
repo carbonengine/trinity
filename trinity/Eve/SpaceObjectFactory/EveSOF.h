@@ -137,8 +137,9 @@ private:
 
 	// all setup functions for ships only
 	void SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const;
+	void SetupChildBoosters( EveChildContainerPtr child, const EveSOFDNAPtr dna ) const;
 
-	Tr2EffectPtr CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* rdata, const BlueSharedString& lodOption ) const;
+	Tr2EffectPtr CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* rdata, const BlueSharedString& lodOption, const std::string& effectPath = "res:/Graphics/Effect/Managed/Space/Booster/BoosterVolumetric.fx", const std::map<BlueSharedString, Vector4>& parameters = {} ) const;
 
 	bool ProcessLayoutDistributionConditions( EveSOFDataMgr::ExtensionPlacementData& placement, const EveSOFDNAPtr dna );
 	void ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacementDistribution& distributionData, const EveSOFDNAPtr dna, std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet, std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet );
