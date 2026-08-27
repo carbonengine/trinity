@@ -1963,6 +1963,7 @@ void EveSpaceObject2::ReleaseDamageFilterSessions()
 		}
 
 		m_damageFilterOccluders.clear();
+		m_damageFilterAreas.clear();
 	}
 }
 
@@ -1975,6 +1976,7 @@ bool EveSpaceObject2::CollectOccluders()
 		if( !m_mesh->GetGeometryResource()->IsPrepared() )
 		{
 			m_damageFilterOccluders.clear();
+			m_damageFilterAreas.clear();
 			return false;
 		}
 
@@ -1983,8 +1985,10 @@ bool EveSpaceObject2::CollectOccluders()
 			DamageFilterOccluder occluder;
 			occluder.geometry = m_mesh->GetGeometryResource();
 			occluder.fromObject = IdentityMatrix();
-			occluder.opaqueAreas = EveCollectOccluderAreas( m_mesh );
-			if( !occluder.opaqueAreas.empty() )
+			occluder.opaqueAreaStart = uint32_t( m_damageFilterAreas.size() );
+			EveCollectOccluderAreas( m_mesh, m_damageFilterAreas );
+			occluder.opaqueAreaCount = uint32_t( m_damageFilterAreas.size() ) - occluder.opaqueAreaStart;
+			if( occluder.opaqueAreaCount != 0 )
 			{
 				m_damageFilterOccluders.push_back( std::move( occluder ) );
 			}
@@ -1994,12 +1998,12 @@ bool EveSpaceObject2::CollectOccluders()
 	std::vector<EveChildGeometry> childGeometries;
 	for( auto& child : m_effectChildren )
 	{
-		child->CollectOwnedGeometry( IdentityMatrix(), childGeometries );
+		child->CollectOwnedGeometry( IdentityMatrix(), childGeometries, m_damageFilterAreas );
 	}
 
 	for( auto& childGeometry : childGeometries )
 	{
-		if( childGeometry.opaqueAreas.empty() )
+		if( childGeometry.opaqueAreaCount == 0 )
 		{
 			continue;
 		}
@@ -2007,6 +2011,7 @@ bool EveSpaceObject2::CollectOccluders()
 		if( !childGeometry.geometry->IsPrepared() )
 		{
 			m_damageFilterOccluders.clear();
+			m_damageFilterAreas.clear();
 			return false;
 		}
 
@@ -2018,7 +2023,8 @@ bool EveSpaceObject2::CollectOccluders()
 		DamageFilterOccluder occluder;
 		occluder.geometry = childGeometry.geometry;
 		occluder.fromObject = Inverse( childGeometry.childToObject );
-		occluder.opaqueAreas = std::move( childGeometry.opaqueAreas );
+		occluder.opaqueAreaStart = childGeometry.opaqueAreaStart;
+		occluder.opaqueAreaCount = childGeometry.opaqueAreaCount;
 		m_damageFilterOccluders.push_back( std::move( occluder ) );
 	}
 
@@ -2079,7 +2085,7 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 
 		for( auto& occluder : m_damageFilterOccluders )
 		{
-			if( occluder.opaqueAreas.empty() )
+			if( occluder.opaqueAreaCount == 0 )
 			{
 				continue;
 			}
@@ -2100,8 +2106,9 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 			// That larger distance is in our object space!
 			// So rayLength is always in object space, and can safely be compared with frontFaceMinDistance. :)
 
-			for( const EveChildGeometryArea& area : occluder.opaqueAreas )
+			for( uint32_t poolIndex = occluder.opaqueAreaStart; poolIndex < occluder.opaqueAreaStart + occluder.opaqueAreaCount; poolIndex++ )
 			{
+				const EveChildGeometryArea& area = m_damageFilterAreas[poolIndex];
 				for( uint32_t areaIndex = area.index; areaIndex < area.index + area.count; areaIndex++ )
 				{
 					// We only trace up to the distance of the closest intersection that we have found so far.

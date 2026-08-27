@@ -2058,7 +2058,7 @@ void EveChildMesh::CollectOwnedLocatorSets( const Matrix& parentTransform, std::
 	}
 }
 
-void EveChildMesh::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+void EveChildMesh::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
 	if( !m_mesh || !m_mesh->GetGeometryResource() )
 	{
@@ -2071,8 +2071,10 @@ void EveChildMesh::CollectOwnedGeometry( const Matrix& parentTransform, std::vec
 	source.childToObject = localTransform * parentTransform;
 	source.geometry = m_mesh->GetGeometryResource();
 	source.owner = this;
-	source.opaqueAreas = EveCollectOccluderAreas( m_mesh );
-	out.push_back( std::move( source ) );
+	source.opaqueAreaStart = uint32_t( areaPool.size() );
+	EveCollectOccluderAreas( m_mesh, areaPool );
+	source.opaqueAreaCount = uint32_t( areaPool.size() ) - source.opaqueAreaStart;
+	out.push_back( source );
 }
 
 void EveChildMesh::SetOwnedLocatorSets( const std::vector<EveLocatorSetsPtr>& sets )

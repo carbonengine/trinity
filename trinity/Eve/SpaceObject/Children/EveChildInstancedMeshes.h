@@ -111,7 +111,7 @@ public:
 	BluePy ClearMeshOverlayEffects( uint32_t meshId );
 	BluePy GetMeshOverlayEffectCount( uint32_t meshId ) const;
 
-	void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const override;
+	void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const override;
 
 private:
 	// per-instance constant buffers for overlay draws

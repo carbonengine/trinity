@@ -1253,7 +1253,7 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 	}
 }
 
-void EveChildInstancedMeshes::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+void EveChildInstancedMeshes::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
 	for( const Mesh& mesh : m_meshes )
 	{
@@ -1262,7 +1262,7 @@ void EveChildInstancedMeshes::CollectOwnedGeometry( const Matrix& parentTransfor
 			continue;
 		}
 
-		std::vector<EveChildGeometryArea> opaqueAreas;
+		uint32_t areaStart = uint32_t( areaPool.size() );
 		for( const MeshArea& area : mesh.areas )
 		{
 			if( area.batchType != TRIBATCHTYPE_OPAQUE )
@@ -1274,10 +1274,11 @@ void EveChildInstancedMeshes::CollectOwnedGeometry( const Matrix& parentTransfor
 			occluderArea.count = area.areaCount;
 			occluderArea.alphaCutout = area.alphaCutout;
 			occluderArea.reversed = area.reversed;
-			opaqueAreas.push_back( occluderArea );
+			areaPool.push_back( occluderArea );
 		}
+		uint32_t areaCount = uint32_t( areaPool.size() ) - areaStart;
 
-		if( opaqueAreas.empty() )
+		if( areaCount == 0 )
 		{
 			continue;
 		}
@@ -1289,8 +1290,9 @@ void EveChildInstancedMeshes::CollectOwnedGeometry( const Matrix& parentTransfor
 			source.childToObject = instanceTransform * parentTransform;
 			source.geometry = mesh.geometry;
 			source.owner = this;
-			source.opaqueAreas = opaqueAreas;
-			out.push_back( std::move( source ) );
+			source.opaqueAreaStart = areaStart;
+			source.opaqueAreaCount = areaCount;
+			out.push_back( source );
 		}
 	}
 }

@@ -33,6 +33,7 @@ struct EveChildGeometryArea
 
 /**
  * @brief Struct bundling geometry and owner information as well as transform, to be processed by the parent object.
+ * The geometry's opaque areas live in the pool passed to CollectOwnedGeometry.
  * @see EveSpaceObjectChild::CollectOwnedGeometry
  */
 struct EveChildGeometry
@@ -40,13 +41,14 @@ struct EveChildGeometry
 	class TriGeometryRes* geometry = nullptr;
 	Matrix childToObject = IdentityMatrix();
 	const class EveSpaceObjectChild* owner = nullptr;
-	std::vector<EveChildGeometryArea> opaqueAreas;
+	uint32_t opaqueAreaStart = 0;
+	uint32_t opaqueAreaCount = 0;
 };
 
 /**
- * @brief Collects opaque areas from a mesh.
+ * @brief Appends the opaque areas of a mesh to the given area pool.
  */
-std::vector<EveChildGeometryArea> EveCollectOccluderAreas( class Tr2MeshBase* mesh );
+void EveCollectOccluderAreas( class Tr2MeshBase* mesh, std::vector<EveChildGeometryArea>& areaPool );
 
 /**
  * @brief Base class for all space object children. This class provides common functionality and properties for all child objects in the space object hierarchy.
@@ -283,8 +285,9 @@ public:
 	 * @brief Collects all geometries that are owned by this child, so they can be processed by the parent object.
 	 * @param parentTransform The parent's transform, which is to be applied on the locators.
 	 * @param out The collected geometries, bundled with owner information and transforms.
+	 * @param areaPool Pool receiving the opaque areas of the collected geometries.
 	 */
-	virtual void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const;
+	virtual void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const;
 
 protected:
 	/**
