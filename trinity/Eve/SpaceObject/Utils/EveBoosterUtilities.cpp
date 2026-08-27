@@ -132,7 +132,6 @@ void CreateBoosterFlares( EveSpriteSet& glows,
 
 namespace
 {
-// constants
 const unsigned g_lightNoiseSize = 128;
 }
 

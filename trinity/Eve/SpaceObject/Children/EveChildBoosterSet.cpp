@@ -18,7 +18,7 @@ using namespace Tr2RenderContextEnum;
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Initialize data members, build the tree-shape geometry we will use for
+//   Initialize data members, build the box-shape geometry we will use for
 //   rendering the boosters
 // --------------------------------------------------------------------------------
 EveChildBoosterSet::EveChildBoosterSet( IRoot* lockobj ) :
@@ -260,28 +260,25 @@ void EveChildBoosterSet::ReleaseResources( TriStorage s )
 
 // --------------------------------------------------------------------------------
 // Description:
-//   (Re)-allocate all device stuff: create a vertex declaration for the instanced
-//   rendering and create and fill the vertex buffers
+//   (Re)-allocate all device stuff: create a vertex declaration
 // --------------------------------------------------------------------------------
 bool EveChildBoosterSet::OnPrepareResources()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	static Tr2VertexDefinition s_boosterInstancedVertex;
-	if( s_boosterInstancedVertex.empty() )
+	static Tr2VertexDefinition s_boosterVertex;
+	if( s_boosterVertex.empty() )
 	{
-		Tr2VertexDefinition& vd = s_boosterInstancedVertex;
+		Tr2VertexDefinition& vd = s_boosterVertex;
 		vd.Add( vd.FLOAT32_3, vd.POSITION );
 	}
 
 	// create vertex-declarartion
-	m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_boosterInstancedVertex );
+	m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_boosterVertex );
 	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{
 		return false;
 	}
-
-	m_vertexBuffer = MakeChildBoosterBoxBuffer();
 
 	return true;
 }
@@ -509,7 +506,7 @@ void EveChildBoosterSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBat
 		batch.SetInidices( indexBuffer );
 
 		batch.SetDrawIndexedInstanced(
-			3 * 2 * 6,
+			3 * 2 * 6, // 3 vertices, 2 triangles, 6 faces
 			uint32_t( m_singleBoosters.size() ),
 			indexBuffer.GetStartIndex(),
 			vb.GetOffset() / vb.GetStride(),
