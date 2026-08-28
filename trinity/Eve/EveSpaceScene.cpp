@@ -1545,9 +1545,12 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 	ProcessOutdatedRTAnimations( renderContext );
 
 	auto& shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
-	Tr2ParallelDo( begin( shadowCasters ), end( shadowCasters ), [&]( auto caster ) {
-		caster->PushRtGeometry( *m_rtManager );
-	} );
+	{
+		CCP_STATS_ZONE( "PushRtGeometry" );
+		Tr2ParallelDo( begin( shadowCasters ), end( shadowCasters ), [&]( auto caster ) {
+			caster->PushRtGeometry( *m_rtManager );
+		} );
+	}
 
 	Tr2RtShaderTableDescriptionAL* shaderTableDescs[3];
 	Tr2RaytracingPipelineStateManager* pipelineManagers[3];
@@ -4147,8 +4150,12 @@ void EveSpaceScene::GetLightMatrices( const Tr2LightManager::PerLightData& light
 	view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
 }
 
+bool g_rtOutdatedAnimationsParallel = true;
+TRI_REGISTER_SETTING( "rtOutdatedAnimationsParallel", g_rtOutdatedAnimationsParallel );
+
 void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
 	TriFrustumOrtho sunShadowFrustum;
 	auto sunDir = m_sunData.DirWorld;
 
@@ -4211,7 +4218,11 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 	}
 
 	// Find all casters and mark those that are casting shadows as dirty so RT can rebuild it
-	m_componentRegistry->ProcessComponents<IEveShadowCaster>( [&]( IEveShadowCaster* caster ) -> void {
+	const TriFrustum& cameraFrustum = m_updateContext.GetFrustum();
+	const TriShadowOrthoFrustum sunOrthoFrustum( sunShadowFrustum, SHADOW_MAP_SIZE, sunDir );
+	std::vector<TriShadowFrustum> spotShadowFrustums( begin( spotLightFrustums ), end( spotLightFrustums ) );
+
+	auto processCaster = [&]( IEveShadowCaster* caster ) -> void {
 		if( caster->IsShadowCastingDirty() )
 		{
 			return;
@@ -4219,7 +4230,7 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 
 		{
 			float radius;
-			if( caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowOrthoFrustum( sunShadowFrustum, SHADOW_MAP_SIZE, sunDir ), TR2RENDERREASON_NORMAL, radius ) )
+			if( caster->IsCastingShadow( cameraFrustum, sunOrthoFrustum, TR2RENDERREASON_NORMAL, radius ) )
 			{
 				caster->MarkRtDirty();
 				return;
@@ -4229,17 +4240,17 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 
 		for( auto lightData : pointsLightDatas )
 		{
-			if( caster->IsCastingShadow( m_updateContext.GetFrustum(), lightData->position, lightData->radius, TR2RENDERREASON_NORMAL ) )
+			if( caster->IsCastingShadow( cameraFrustum, lightData->position, lightData->radius, TR2RENDERREASON_NORMAL ) )
 			{
 				caster->MarkRtDirty();
 				return;
 			}
 		}
 
-		for( const auto& shadowFrustum : spotLightFrustums )
+		for( const auto& shadowFrustum : spotShadowFrustums )
 		{
 			float sizeInShadow = 0.0f;
-			caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowFrustum( shadowFrustum ), TR2RENDERREASON_NORMAL, sizeInShadow );
+			caster->IsCastingShadow( cameraFrustum, shadowFrustum, TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
 			{
@@ -4247,7 +4258,17 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 				return;
 			}
 		}
-	} );
+	};
+
+	if( g_rtOutdatedAnimationsParallel )
+	{
+		auto& casters = m_componentRegistry->GetComponents<IEveShadowCaster>();
+		Tr2ParallelDo( begin( casters ), end( casters ), processCaster );
+	}
+	else
+	{
+		m_componentRegistry->ProcessComponents<IEveShadowCaster>( processCaster );
+	}
 }
 
 void RegisterWithVariableStore( const EveSpaceScene::ShadowResources& shadowResources, Tr2GpuResourcePool& gpuResourcePool )
