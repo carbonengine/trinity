@@ -171,6 +171,8 @@ set(_SOURCES
     dx12/util/FrameLocalDescriptorHeapAllocatorDx12.cpp
     dx12/util/FrameLocalDescriptorHeapAllocatorDx12.h
     dx12/util/FrameLocalUploadBufferAllocatorDx12.cpp
+    dx12/util/PersistentConstantBufferPoolDx12.cpp
+    dx12/util/PersistentConstantBufferPoolDx12.h
     dx12/util/FrameLocalUploadBufferAllocatorDx12.h
     dx12/util/FreeList.h
     dx12/util/GlobalDescriptorHeapAllocatorDx12.cpp

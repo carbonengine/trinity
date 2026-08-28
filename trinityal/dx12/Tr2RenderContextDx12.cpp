@@ -809,6 +809,8 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 
 ALResult Tr2RenderContextAL::SetAllState()
 {
+	m_ownerDevice->m_persistentConstants.FlushCopies( *this );
+
 	if( ( m_dynamicVBs & m_psoDescription.m_vertexStreamMask ) != 0 )
 	{
 		D3D12_VERTEX_BUFFER_VIEW vb[4];

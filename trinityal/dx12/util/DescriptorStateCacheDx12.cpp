@@ -12,6 +12,8 @@
 CCP_STATS_DECLARE( dx12CbUploads, "Trinity/AL/cbUploads", true, CST_COUNTER_HIGH, "Constant buffers copied into the frame upload ring this frame." );
 CCP_STATS_DECLARE( dx12CbUploadBytes, "Trinity/AL/cbUploadBytes", true, CST_COUNTER_HIGH, "Bytes of constant buffer data copied into the frame upload ring this frame." );
 CCP_STATS_DECLARE( dx12CbReused, "Trinity/AL/cbReused", true, CST_COUNTER_HIGH, "Constant buffer binds served from the already-uploaded copy this frame." );
+CCP_STATS_DECLARE( dx12CbPersistentReused, "Trinity/AL/cbPersistentReused", true, CST_COUNTER_HIGH, "Persistent constant buffers bound from their resident slot without any copy this frame." );
+CCP_STATS_DECLARE( dx12CbPersistentCopies, "Trinity/AL/cbPersistentCopies", true, CST_COUNTER_HIGH, "Persistent constant buffers whose slot was refreshed by a GPU copy this frame." );
 CCP_STATS_DECLARE( dx12CbUploadCycles, "Trinity/AL/cbUploadCycles", true, CST_COUNTER_HIGH, "TSC cycles spent copying constant buffers into the frame upload ring this frame." );
 CCP_STATS_DECLARE( dx12CbUploadCyclesPerObject, "Trinity/AL/cbUploadCyclesPerObject", true, CST_COUNTER_HIGH, "TSC cycles spent copying 464-byte per-object constant buffers this frame." );
 CCP_STATS_DECLARE( dx12CbUploadsPerObject, "Trinity/AL/cbUploadsPerObject", true, CST_COUNTER_HIGH, "464-byte per-object constant buffers copied into the frame upload ring this frame." );
@@ -142,6 +144,49 @@ D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityAL
 {
 	uint64_t frameNr = m_primaryContext->GetRenderedFrameNumber();
 	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
+
+	if( constantBuffer.m_usage == Tr2ConstantUsageAL::PERSISTENT )
+	{
+		auto& pool = m_primaryContext->m_persistentConstants;
+		uint32_t slot = constantBuffer.m_slot.load( std::memory_order_acquire );
+		if( slot == TrinityALImpl::PersistentConstantBufferPool::INVALID_SLOT && pool.IsValid() )
+		{
+			uint32_t newSlot = pool.AllocateSlot( m_primaryContext->GetRecordingFrameNumber() );
+			if( newSlot != TrinityALImpl::PersistentConstantBufferPool::INVALID_SLOT )
+			{
+				uint32_t expected = TrinityALImpl::PersistentConstantBufferPool::INVALID_SLOT;
+				if( constantBuffer.m_slot.compare_exchange_strong( expected, newSlot ) )
+				{
+					slot = newSlot;
+				}
+				else
+				{
+					pool.ReleaseSlot( newSlot, m_primaryContext->GetRecordingFrameNumber() );
+					slot = expected;
+				}
+			}
+		}
+		// data that changed since the last bind goes through the frame ring below for the whole frame (a slot copy per
+		// change would cost more than it saves); the slot is refreshed once, the first frame the buffer is bound unchanged
+		if( slot != TrinityALImpl::PersistentConstantBufferPool::INVALID_SLOT && constantBuffer.m_token.m_frameNumber != frameNr && !constantBuffer.m_slotDirty.exchange( false ) )
+		{
+			if( constantBuffer.m_slotStale.exchange( false ) )
+			{
+				auto entry = m_allocatorUpload.Allocate( constantBuffer.GetDataPtr(), constantBuffer.GetSize() );
+				if( entry.m_cpuAddr != nullptr )
+				{
+					pool.QueueCopy( slot, entry.m_resource, entry.m_offset, constantBuffer.GetSize() );
+				}
+				CCP_STATS_INC( dx12CbPersistentCopies );
+			}
+			else
+			{
+				CCP_STATS_INC( dx12CbPersistentReused );
+			}
+			return pool.GetSlotAddress( slot );
+		}
+		constantBuffer.m_slotStale = true;
+	}
 
 	// CB isn't resident
 	if( constantBuffer.m_token.m_frameNumber != frameNr )

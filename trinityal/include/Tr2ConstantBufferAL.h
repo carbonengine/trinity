@@ -20,6 +20,7 @@ enum Type
 	IMMUTABLE,
 	ONE_SHOT,
 	REUSABLE,
+	PERSISTENT, // rarely changes: lives in a GPU-resident slot, only re-uploaded when written
 };
 }
 

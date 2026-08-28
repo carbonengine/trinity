@@ -56,6 +56,8 @@ ConstantBufferAllocator::Entry ConstantBufferAllocator::Allocate( const void* da
 	{
 		entry.m_cpuAddr = m_page.cpuAddr + offset;
 		entry.m_gpuAddr = m_page.gpuAddr + offset;
+		entry.m_resource = m_page.buffer;
+		entry.m_offset = offset;
 	}
 	else
 	{
@@ -68,6 +70,8 @@ ConstantBufferAllocator::Entry ConstantBufferAllocator::Allocate( const void* da
 		}
 		entry.m_cpuAddr = m_spillPage.cpuAddr + m_spillOffset;
 		entry.m_gpuAddr = m_spillPage.gpuAddr + m_spillOffset;
+		entry.m_resource = m_spillPage.buffer;
+		entry.m_offset = m_spillOffset;
 		m_spillOffset += size;
 	}
 	if( data )

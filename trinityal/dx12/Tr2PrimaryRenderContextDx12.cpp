@@ -583,6 +583,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	std::vector<uint8_t> cb( nullCbSize );
 	D3D12_SUBRESOURCE_DATA cbd = { cb.data(), nullCbSize, nullCbSize };
 	m_nullCB.Create( TrinityALImpl::Tr2ResourceHelper::STATIC, nullCbSize, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_GENERIC_READ, false, 1, &cbd, *this );
+	m_persistentConstants.Initialize( m_device, 65536 );
 
 	m_immediateBuffer.PutMarker( m_commandList2, "" );
 	m_statsQueryFrameIndex = 0;

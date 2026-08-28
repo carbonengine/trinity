@@ -54,6 +54,10 @@ private:
 
 	Tr2PrimaryRenderContextAL* m_owner;
 	mutable GPUViewToken m_token;
+	Tr2ConstantUsageAL::Type m_usage;
+	mutable std::atomic<uint32_t> m_slot;
+	mutable std::atomic<bool> m_slotDirty; // written since last bind: served from the frame ring this frame
+	mutable std::atomic<bool> m_slotStale; // slot content is behind m_data: refresh once the data has settled
 
 	CcpMallocBuffer m_data;
 	uint32_t m_size;

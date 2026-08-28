@@ -57,7 +57,7 @@ public:
 			auto& buffer = m_constantBuffer;
 			if( !buffer.IsValid() || size > buffer.GetSize() )
 			{
-				CR_RETURN( buffer.Create( size, renderContext.GetPrimaryRenderContext() ) );
+				CR_RETURN( buffer.Create( size, Tr2ConstantUsageAL::PERSISTENT, nullptr, renderContext.GetPrimaryRenderContext() ) );
 			}
 			void* data = nullptr;
 
@@ -84,7 +84,7 @@ public:
 				auto& buffer = m_constantBuffer;
 				if( !buffer.IsValid() || size > buffer.GetSize() )
 				{
-					CR_RETURN_VAL( buffer.Create( size, renderContext.GetPrimaryRenderContext() ), m_constantBuffer );
+					CR_RETURN_VAL( buffer.Create( size, Tr2ConstantUsageAL::PERSISTENT, nullptr, renderContext.GetPrimaryRenderContext() ), m_constantBuffer );
 				}
 				void* data = nullptr;
 
@@ -133,7 +133,7 @@ public:
 			auto& buffer = isPrimary ? m_constantBuffer : *buffers[shaderType];
 			if( !buffer.IsValid() || size > buffer.GetSize() )
 			{
-				CR_RETURN( buffer.Create( size, renderContext.GetPrimaryRenderContext() ) );
+				CR_RETURN( buffer.Create( size, Tr2ConstantUsageAL::PERSISTENT, nullptr, renderContext.GetPrimaryRenderContext() ) );
 			}
 			void* data = nullptr;
 

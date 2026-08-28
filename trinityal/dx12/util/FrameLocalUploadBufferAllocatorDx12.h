@@ -17,6 +17,8 @@ public:
 	{
 		void* m_cpuAddr;
 		D3D12_GPU_VIRTUAL_ADDRESS m_gpuAddr;
+		ID3D12Resource* m_resource;
+		uint64_t m_offset;
 	};
 
 	ConstantBufferAllocator();

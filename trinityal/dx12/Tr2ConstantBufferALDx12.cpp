@@ -6,6 +6,7 @@
 
 #include "Tr2ConstantBufferALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
+#include "util/PersistentConstantBufferPoolDx12.h"
 #include "Utilities.h"
 
 
@@ -19,7 +20,11 @@ namespace TrinityALImpl
 
 Tr2ConstantBufferAL::Tr2ConstantBufferAL() :
 	m_size( 0 ),
-	m_owner( nullptr )
+	m_owner( nullptr ),
+	m_usage( Tr2ConstantUsageAL::REUSABLE ),
+	m_slot( PersistentConstantBufferPool::INVALID_SLOT ),
+	m_slotDirty( true ),
+	m_slotStale( true )
 {
 }
 
@@ -49,6 +54,10 @@ ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2ConstantUsageAL::Type us
 	m_size = size;
 	m_data.resize( "Tr2ConstantBufferAL::m_data", m_size );
 	m_owner = &renderContext;
+	m_usage = usage;
+	m_slot = PersistentConstantBufferPool::INVALID_SLOT;
+	m_slotDirty = true;
+	m_slotStale = true;
 
 	if( initialData )
 	{
@@ -60,6 +69,11 @@ ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2ConstantUsageAL::Type us
 
 void Tr2ConstantBufferAL::Destroy()
 {
+	if( m_owner && m_slot != PersistentConstantBufferPool::INVALID_SLOT )
+	{
+		m_owner->m_persistentConstants.ReleaseSlot( m_slot, m_owner->GetRecordingFrameNumber() );
+		m_slot = PersistentConstantBufferPool::INVALID_SLOT;
+	}
 	m_size = 0;
 	m_data.clear();
 	m_owner = nullptr;
@@ -80,6 +94,7 @@ ALResult Tr2ConstantBufferAL::Unlock( Tr2RenderContextAL& )
 {
 	// JB: Forcibly dirty the render token causing a re-upload
 	m_token.m_frameNumber--;
+	m_slotDirty = true;
 	return S_OK;
 }
 

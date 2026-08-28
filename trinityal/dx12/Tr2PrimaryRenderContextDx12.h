@@ -17,6 +17,7 @@
 #include "./util/DescriptorHeapViewDx12.h"
 #include "./util/GpuMarkerBuffer.h"
 #include "./util/GpuCrashTracker.h"
+#include "./util/PersistentConstantBufferPoolDx12.h"
 #include "upscaling/Tr2UpscalingALDx12.h"
 
 #define USE_BORDERLESS_WINDOW 1
@@ -324,6 +325,7 @@ public:
 	CComPtr<ID3D12CommandSignature> m_dispatchIndirect;
 
 	TrinityALImpl::Tr2ResourceHelper m_nullCB;
+	TrinityALImpl::PersistentConstantBufferPool m_persistentConstants;
 
 	void* m_amdExtDeviceObject;
 };
