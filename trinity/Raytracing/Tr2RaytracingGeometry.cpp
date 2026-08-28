@@ -13,14 +13,37 @@
 
 #include "Tr2MeshArea.h"
 #include "ITr2TextureProvider.h"
+#include "TriSettingsRegistrar.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 #include <../trinityal/dx12/Tr2BufferALDx12.h>
 #endif
 
+bool g_rtShaderTableMaterialCache = true;
+TRI_REGISTER_SETTING( "rtShaderTableMaterialCache", g_rtShaderTableMaterialCache );
+
+CCP_STATS_DECLARE( rtShaderTableEntries, "Trinity/RT/shaderTableEntries", true, CST_COUNTER_HIGH, "Geometry entries processed by PrepareShaderTableDescription this frame." );
+CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
+CCP_STATS_DECLARE( rtShaderTableLibraries, "Trinity/RT/shaderTableLibraries", true, CST_COUNTER_HIGH, "Distinct raytracing libraries seen by the shader table this frame." );
+
 namespace
 {
 std::mutex s_geometryConstantsMutex;
+
+struct RtLibraryState
+{
+	const Tr2EffectLibrary* lib = nullptr;
+	std::vector<BlueSharedStringW> hitGroupNames;
+	uint32_t materialIndex = 0;
+	bool seen = false;
+	bool addsRecords = false;
+};
+
+struct RtShaderState
+{
+	uint32_t techniqueIndex = 0;
+	RtLibraryState* lib = nullptr;
+};
 }
 
 //***********************************************************
@@ -646,76 +669,168 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		shaderTableDescs[i]->Reserve( m_geometryData.size() );
 	}
 
-	std::vector<std::map<uint32_t, std::pair<BlueSharedStringW, uint32_t>>> seenLibraries;
-	seenLibraries.resize( numRaycasters );
+	if( !g_rtShaderTableMaterialCache )
+	{
+		std::vector<std::map<uint32_t, std::pair<BlueSharedStringW, uint32_t>>> seenLibraries;
+		seenLibraries.resize( numRaycasters );
+
+		uint32_t materialIndex = 0;
+		for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
+		{
+			Tr2RtLocalMaterialDescriptionAL material;
+			if( !it->material )
+			{
+				continue;
+			}
+			auto shader = it->material->GetShaderStateInterface();
+			if( !shader )
+			{
+				continue;
+			}
+			uint32_t techniqueIndex;
+			if( !shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
+			{
+				continue;
+			}
+			auto& desc = shader->GetEffectDescription();
+			if( desc.techniques[techniqueIndex].libraries.empty() )
+			{
+				continue;
+			}
+			auto& lib = desc.techniques[techniqueIndex].libraries[0];
+			if( !lib.anyHitName.empty() )
+			{
+				it->isTransparent = true;
+			}
+
+			if( it->perObjectData )
+			{
+				material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
+			}
+			if( it->vertexBufferData )
+			{
+				material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *it->vertexBufferData );
+			}
+			it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
+
+			bool consumedMaterialIndex = false;
+			for( int32_t i = 0; i < numRaycasters; i++ )
+			{
+				auto foundLib = seenLibraries[i].find( lib.libraryHandle );
+				if( foundLib == end( seenLibraries[i] ) )
+				{
+					auto hitGroupName = pipelineManagers[i]->AddHitGroup( lib );
+					seenLibraries[i][lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
+					shaderTableDescs[i]->AddHitGroup( hitGroupName.c_str(), material );
+					it->materialIndex = materialIndex;
+					consumedMaterialIndex = true;
+				}
+				else if( !lib.localInput.signature.registers.empty() )
+				{
+					shaderTableDescs[i]->AddHitGroup( foundLib->second.first.c_str(), material );
+					it->materialIndex = materialIndex;
+					consumedMaterialIndex = true;
+				}
+				else
+				{
+					it->materialIndex = foundLib->second.second;
+				}
+			}
+			if( consumedMaterialIndex )
+			{
+				materialIndex++;
+			}
+		}
+		return;
+	}
+
+	std::unordered_map<const Tr2Shader*, RtShaderState> shaders;
+	std::map<uint32_t, RtLibraryState> libraries;
 
 	uint32_t materialIndex = 0;
-	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
+	for( auto& geometry : m_geometryData )
 	{
-		Tr2RtLocalMaterialDescriptionAL material;
-		if( !it->material )
+		if( !geometry.material )
 		{
 			continue;
 		}
-		auto shader = it->material->GetShaderStateInterface();
+		CCP_STATS_INC( rtShaderTableEntries );
+		auto shader = geometry.material->GetShaderStateInterface();
 		if( !shader )
 		{
 			continue;
 		}
-		uint32_t techniqueIndex;
-		if( !shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
+
+		auto shaderState = shaders.find( shader );
+		if( shaderState == end( shaders ) )
+		{
+			shaderState = shaders.emplace( shader, RtShaderState() ).first;
+			uint32_t techniqueIndex;
+			if( shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
+			{
+				auto& libs = shader->GetEffectDescription().techniques[techniqueIndex].libraries;
+				if( !libs.empty() )
+				{
+					auto& libState = libraries[libs[0].libraryHandle];
+					if( !libState.lib )
+					{
+						libState.lib = &libs[0];
+						libState.hitGroupNames.resize( numRaycasters );
+						libState.addsRecords = !libs[0].localInput.signature.registers.empty();
+					}
+					shaderState->second.techniqueIndex = techniqueIndex;
+					shaderState->second.lib = &libState;
+				}
+			}
+		}
+		auto libState = shaderState->second.lib;
+		if( !libState )
 		{
 			continue;
 		}
-		auto& desc = shader->GetEffectDescription();
-		if( desc.techniques[techniqueIndex].libraries.empty() )
-		{
-			continue;
-		}
-		auto& lib = desc.techniques[techniqueIndex].libraries[0];
+		auto& lib = *libState->lib;
 		if( !lib.anyHitName.empty() )
 		{
-			it->isTransparent = true;
+			geometry.isTransparent = true;
 		}
 
-		if( it->perObjectData )
+		Tr2RtLocalMaterialDescriptionAL material;
+		if( geometry.perObjectData )
 		{
-			material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
+			material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *geometry.perObjectData );
 		}
-		if( it->vertexBufferData )
+		if( geometry.vertexBufferData )
 		{
-			material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *it->vertexBufferData );
+			material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *geometry.vertexBufferData );
 		}
-		it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
+		geometry.material->ApplyMaterialDataForRtMaterial( shaderState->second.techniqueIndex, material, renderContext );
 
-		bool consumedMaterialIndex = false;
-		for( int32_t i = 0; i < numRaycasters; i++ )
+		if( !libState->seen )
 		{
-			auto foundLib = seenLibraries[i].find( lib.libraryHandle );
-			if( foundLib == end( seenLibraries[i] ) )
+			libState->seen = true;
+			libState->materialIndex = materialIndex;
+			for( int32_t i = 0; i < numRaycasters; i++ )
 			{
-				auto hitGroupName = pipelineManagers[i]->AddHitGroup( lib );
-				seenLibraries[i][lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
-				shaderTableDescs[i]->AddHitGroup( hitGroupName.c_str(), material );
-				it->materialIndex = materialIndex;
-				consumedMaterialIndex = true;
+				libState->hitGroupNames[i] = pipelineManagers[i]->AddHitGroup( lib );
+				shaderTableDescs[i]->AddHitGroup( libState->hitGroupNames[i].c_str(), material );
 			}
-			else if( !lib.localInput.signature.registers.empty() )
-			{
-				shaderTableDescs[i]->AddHitGroup( foundLib->second.first.c_str(), material );
-				it->materialIndex = materialIndex;
-				consumedMaterialIndex = true;
-			}
-			else
-			{
-				it->materialIndex = foundLib->second.second;
-			}
+			geometry.materialIndex = materialIndex++;
 		}
-		if( consumedMaterialIndex )
+		else if( libState->addsRecords )
 		{
-			materialIndex++;
+			for( int32_t i = 0; i < numRaycasters; i++ )
+			{
+				shaderTableDescs[i]->AddHitGroup( libState->hitGroupNames[i].c_str(), material );
+			}
+			geometry.materialIndex = materialIndex++;
+		}
+		else
+		{
+			geometry.materialIndex = libState->materialIndex;
 		}
 	}
+	CCP_STATS_ADD( rtShaderTableShaders, shaders.size() );
+	CCP_STATS_ADD( rtShaderTableLibraries, libraries.size() );
 }
 
 namespace
