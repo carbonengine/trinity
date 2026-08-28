@@ -881,6 +881,12 @@ TRI_REGISTER_SETTING( "eveChildMeshPerObjectChangeTracking", g_eveChildMeshPerOb
 CCP_STATS_DECLARE( eveChildMeshPerObjectUploads, "Trinity/EveChildMesh/perObjectUploads", true, CST_COUNTER_HIGH, "Child meshes whose per-object constant buffers were re-filled this frame." );
 CCP_STATS_DECLARE( eveChildMeshPerObjectReused, "Trinity/EveChildMesh/perObjectReused", true, CST_COUNTER_HIGH, "Child meshes whose per-object constant buffers were reused unchanged this frame." );
 
+bool g_eveChildMeshStaticSkip = true;
+TRI_REGISTER_SETTING( "eveChildMeshStaticSkip", g_eveChildMeshStaticSkip );
+
+CCP_STATS_DECLARE( eveChildMeshUpdateSkipped, "Trinity/EveChildMesh/updateSkipped", true, CST_COUNTER_HIGH, "Child meshes whose asynchronous update was skipped because its inputs were unchanged." );
+CCP_STATS_DECLARE( eveChildMeshUpdateFull, "Trinity/EveChildMesh/updateFull", true, CST_COUNTER_HIGH, "Child meshes that ran the full asynchronous update this frame." );
+
 // All rest-pose skeletons are identity, so one shared block in the ring buffer's static area serves every child.
 static uint32_t GetRestPoseBoneOffset( uint32_t boneCount )
 {
@@ -1056,19 +1062,68 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	m_boneOffsets.AdvanceFrame();
 	m_morphTargetOffsets.AdvanceFrame();
 
+	Matrix lastWorldTransform = m_worldTransform;
+	UpdateTransform( params.localToWorldTransform );
+
+	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
+	uint32_t parentDataVersion = params.spaceObjectParent ? params.spaceObjectParent->GetPerObjectDataVersion() : 0;
+	CcpMath::AxisAlignedBox localBounds = m_mesh ? m_mesh->GetBounds() : CcpMath::AxisAlignedBox();
+
+	const std::vector<std::string>* morphTargetNames = m_mesh ? m_mesh->GetMorphTargetNames() : nullptr;
+
+	bool inputsUnchanged = m_hasUpdated
+		&& params.spaceObjectParent == m_lastParent
+		&& ( !params.spaceObjectParent || ( parentDataVersion != 0 && parentDataVersion == m_lastParentDataVersion ) )
+		&& params.activationStrength == m_lastActivationStrength
+		&& allowAudioGeometry == m_lastAllowAudioGeometry
+		&& m_inheritOverlayEffects == m_lastInheritOverlayEffects
+		&& m_translation == m_lastTranslation
+		&& m_worldTransform == lastWorldTransform
+		&& localBounds == m_lastLocalBounds
+		&& m_transformModifiers.empty()
+		&& m_attachments.empty()
+		&& !m_damageOverlay
+		&& !m_audioGeometryRegistered
+		&& !( m_animationUpdater && m_animationUpdater->IsInitialized() )
+		&& !( morphTargetNames && !morphTargetNames->empty() );
+
+	m_staticFrames = inputsUnchanged ? m_staticFrames + 1 : 0;
+	m_lastParent = params.spaceObjectParent;
+	m_lastParentDataVersion = parentDataVersion;
+	m_lastActivationStrength = params.activationStrength;
+	m_lastAllowAudioGeometry = allowAudioGeometry;
+	m_lastInheritOverlayEffects = m_inheritOverlayEffects;
+	m_lastTranslation = m_translation;
+	m_lastLocalBounds = localBounds;
+
+	// Two static frames: the first full update after a change has already caught worldTransformLast up
+	if( g_eveChildMeshStaticSkip && m_staticFrames >= 2 )
+	{
+		float screenSizeX = min( float( m_currentScreenSize / Tr2Renderer::GetViewport().width ), 1.0f );
+		float screenSizeY = min( float( m_currentScreenSize / Tr2Renderer::GetViewport().height ), 1.0f );
+		if( screenSizeX != m_psData.screenSize.x || screenSizeY != m_psData.screenSize.y )
+		{
+			m_psData.screenSize.x = screenSizeX;
+			m_psData.screenSize.y = screenSizeY;
+			m_perObjectDataPs.InvalidateBufferData();
+		}
+		if( !g_eveChildMeshPerObjectChangeTracking )
+		{
+			m_perObjectDataVs.InvalidateBufferData();
+			m_perObjectDataPs.InvalidateBufferData();
+		}
+		CCP_STATS_INC( eveChildMeshUpdateSkipped );
+		return;
+	}
+	CCP_STATS_INC( eveChildMeshUpdateFull );
+
 	const EveSpaceObjectVSData previousVsData = m_vsData;
 	const EveSpaceObjectPSData previousPsData = m_psData;
 
-	Matrix localToWorldTransform = params.localToWorldTransform;
-	Matrix lastWorldTransform = m_worldTransform;
-
-	UpdateTransform( localToWorldTransform );
-	for( auto it = m_transformModifiers.begin(); it != m_transformModifiers.end(); it++ )
+	for( auto& modifier : m_transformModifiers )
 	{
-		m_worldTransform = ( *it )->ApplyTransform( m_worldTransform, params.boneCount, params.bones );
+		m_worldTransform = modifier->ApplyTransform( m_worldTransform, params.boneCount, params.bones );
 	}
-
-	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
 
 	if( !allowAudioGeometry && m_audioGeometryRegistered )
 	{

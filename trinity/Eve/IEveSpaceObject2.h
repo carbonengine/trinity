@@ -95,6 +95,12 @@ BLUE_INTERFACE( IEveSpaceObject2 ) :
 	{
 	}
 
+	// Bumped whenever the data handed to children by GetPerObjectStructs/GetParentData changes; 0 = not tracked
+	virtual uint32_t GetPerObjectDataVersion() const
+	{
+		return 0;
+	}
+
 	virtual void InvalidateMergedLocators( LocatorInvalidationReason reason )
 	{
 	}

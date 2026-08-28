@@ -304,6 +304,7 @@ public:
 	virtual void SetProceduralContainerVariable( const char* name, float value ) override;
 	virtual bool IsPickable() const;
 	virtual void GetParentData( IEveSpaceObject2::ParentData * pd ) const;
+	uint32_t GetPerObjectDataVersion() const override;
 	void InvalidateMergedLocators( LocatorInvalidationReason reason ) override;
 
 	void EnsureChildLocatorMerged() const;
@@ -621,6 +622,11 @@ protected:
 	Vector4 m_spaceObjectShipData;
 	EveSpaceObjectPSData m_psData;
 	EveSpaceObjectVSData m_vsData;
+	// last frame's copies of what children receive, used to stamp m_perObjectDataVersion
+	EveSpaceObjectPSData m_psDataLast;
+	EveSpaceObjectVSData m_vsDataLast;
+	IEveSpaceObject2::ParentData m_parentDataLast;
+	uint32_t m_perObjectDataVersion = 1;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// lod level

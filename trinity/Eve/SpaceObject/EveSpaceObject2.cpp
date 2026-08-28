@@ -693,6 +693,16 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		}
 	}
 
+	IEveSpaceObject2::ParentData parentData;
+	GetParentData( &parentData );
+	if( memcmp( &m_vsData, &m_vsDataLast, sizeof( m_vsData ) ) != 0 || memcmp( &m_psData, &m_psDataLast, sizeof( m_psData ) ) != 0 || memcmp( &parentData, &m_parentDataLast, sizeof( parentData ) ) != 0 )
+	{
+		memcpy( &m_vsDataLast, &m_vsData, sizeof( m_vsData ) );
+		memcpy( &m_psDataLast, &m_psData, sizeof( m_psData ) );
+		memcpy( &m_parentDataLast, &parentData, sizeof( parentData ) );
+		++m_perObjectDataVersion;
+	}
+
 	if( m_lastCurveUpdateTime == time )
 	{
 		for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
@@ -1874,6 +1884,11 @@ void EveSpaceObject2::GetParentData( ParentData* pd ) const
 	pd->clipFactor2 = m_psData.clipSphereFactor2;
 	pd->shLighting = m_psData.shLightingCoefficients;
 	pd->customData = m_psData.customData;
+}
+
+uint32_t EveSpaceObject2::GetPerObjectDataVersion() const
+{
+	return m_perObjectDataVersion;
 }
 
 void EveSpaceObject2::InvalidateMergedLocators( LocatorInvalidationReason reason )

@@ -274,6 +274,16 @@ protected:
 	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
 	bool m_hasUpdated = false;
 
+	// last frame's update inputs; UpdateAsyncronous is skipped once they have stayed unchanged for two frames
+	IEveSpaceObject2* m_lastParent = nullptr;
+	uint32_t m_lastParentDataVersion = 0;
+	float m_lastActivationStrength = 0.f;
+	Vector3 m_lastTranslation = Vector3( 0.f, 0.f, 0.f );
+	CcpMath::AxisAlignedBox m_lastLocalBounds;
+	bool m_lastInheritOverlayEffects = false;
+	bool m_lastAllowAudioGeometry = false;
+	uint32_t m_staticFrames = 0;
+
 	float m_activationStrength;
 
 	Origin m_origin;
