@@ -37,6 +37,11 @@ public:
 		m_bufferDirty = true;
 	}
 
+	bool IsBufferDirty() const
+	{
+		return m_bufferDirty;
+	}
+
 	void UpdateBuffer( Owner& owner, Tr2RenderContextEnum::ShaderType shaderType )
 	{
 #if TRINITY_PLATFORM != TRINITY_DIRECTX11

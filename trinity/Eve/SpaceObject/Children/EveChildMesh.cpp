@@ -17,6 +17,7 @@
 #include "Tr2GpuStructuredBuffer.h"
 #include <ITr2AudGeometry.h>
 #include <IBlueObjectMetadata.h>
+#include "TriSettingsRegistrar.h"
 
 namespace
 {
@@ -874,8 +875,44 @@ Tr2PerObjectData* EveChildMesh::GetShadowPerObjectData( ITriRenderBatchAccumulat
 	return GetPerObjectData( accumulator );
 }
 
+bool g_eveChildMeshPerObjectChangeTracking = true;
+TRI_REGISTER_SETTING( "eveChildMeshPerObjectChangeTracking", g_eveChildMeshPerObjectChangeTracking );
+
+CCP_STATS_DECLARE( eveChildMeshPerObjectUploads, "Trinity/EveChildMesh/perObjectUploads", true, CST_COUNTER_HIGH, "Child meshes whose per-object constant buffers were re-filled this frame." );
+CCP_STATS_DECLARE( eveChildMeshPerObjectReused, "Trinity/EveChildMesh/perObjectReused", true, CST_COUNTER_HIGH, "Child meshes whose per-object constant buffers were reused unchanged this frame." );
+
+// All rest-pose skeletons are identity, so one shared block in the ring buffer's static area serves every child.
+static uint32_t GetRestPoseBoneOffset( uint32_t boneCount )
+{
+	static std::atomic<uint64_t> s_block{ Tr2RingBuffer::INVALID_OFFSET }; // count << 32 | offset
+	static std::mutex s_mutex;
+
+	uint64_t block = s_block.load( std::memory_order_acquire );
+	if( uint32_t( block >> 32 ) >= boneCount )
+	{
+		return uint32_t( block );
+	}
+
+	std::lock_guard lock( s_mutex );
+	block = s_block.load( std::memory_order_acquire );
+	if( uint32_t( block >> 32 ) >= boneCount )
+	{
+		return uint32_t( block );
+	}
+	const uint32_t count = ( boneCount + 15 ) & ~15u;
+	const std::vector<Float4x3> identity( count, Float4x3( Matrix() ) );
+	const uint32_t offset = Tr2RingBuffer::GetInstance<Float4x3>().ReserveStatic( identity.data(), count );
+	if( offset != Tr2RingBuffer::INVALID_OFFSET )
+	{
+		s_block.store( ( uint64_t( count ) << 32 ) | offset, std::memory_order_release );
+	}
+	return offset;
+}
+
 Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
+	const EveSpaceObjectVSData previousVsData = m_vsData;
+
 	m_vsData.activeMorphTargetsCount = 0;
 
 	m_vsData.bakedMorphTargetVertexDataOffset = std::numeric_limits<uint32_t>::max();
@@ -906,14 +943,50 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 
 	auto [bones, boneCount] = GetBoneTransforms();
 	m_vsData.boneOffsets[2] = uint32_t( boneCount );
-	m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( bones ), uint32_t( boneCount ) );
-	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
-	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
+	uint32_t restPoseOffset = Tr2RingBuffer::INVALID_OFFSET;
+	if( g_eveChildMeshPerObjectChangeTracking && boneCount > 0 && bones == m_restPoseBoneTransforms.data() )
+	{
+		restPoseOffset = GetRestPoseBoneOffset( uint32_t( boneCount ) );
+	}
+	if( restPoseOffset != Tr2RingBuffer::INVALID_OFFSET )
+	{
+		const uint32_t previousOffset = m_boneOffsets.GetPreviousFrameOffset();
+		m_vsData.boneOffsets[0] = restPoseOffset;
+		m_vsData.boneOffsets[1] = previousOffset != Tr2RingBufferOffsets::INVALID_OFFSET ? previousOffset : restPoseOffset;
+	}
+	else if( boneCount > 0 || !g_eveChildMeshPerObjectChangeTracking )
+	{
+		m_boneOffsets.UploadTransforms( Tr2RingBuffer::GetInstance<Float4x3>(), reinterpret_cast<const Float4x3*>( bones ), uint32_t( boneCount ) );
+		m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
+		m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
+	}
+	else
+	{
+		m_vsData.boneOffsets[0] = 0;
+		m_vsData.boneOffsets[1] = 0;
+	}
+
+	if( memcmp( &previousVsData, &m_vsData, sizeof( m_vsData ) ) != 0 )
+	{
+		m_perObjectDataVs.InvalidateBufferData();
+	}
+	if( !g_eveChildMeshPerObjectChangeTracking )
+	{
+		m_perObjectDataVs.InvalidateBufferData();
+	}
 
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
 	{
 		return nullptr;
+	}
+	if( m_perObjectDataVs.IsBufferDirty() || m_perObjectDataPs.IsBufferDirty() )
+	{
+		CCP_STATS_INC( eveChildMeshPerObjectUploads );
+	}
+	else
+	{
+		CCP_STATS_INC( eveChildMeshPerObjectReused );
 	}
 	perObjectData->Initialize( this, &m_perObjectDataVs, &m_perObjectDataPs );
 
@@ -983,8 +1056,8 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	m_boneOffsets.AdvanceFrame();
 	m_morphTargetOffsets.AdvanceFrame();
 
-	m_perObjectDataVs.InvalidateBufferData();
-	m_perObjectDataPs.InvalidateBufferData();
+	const EveSpaceObjectVSData previousVsData = m_vsData;
+	const EveSpaceObjectPSData previousPsData = m_psData;
 
 	Matrix localToWorldTransform = params.localToWorldTransform;
 	Matrix lastWorldTransform = m_worldTransform;
@@ -1013,6 +1086,13 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	{
 		params.spaceObjectParent->GetPerObjectStructs( m_vsData, m_psData );
 		params.spaceObjectParent->GetParentData( &m_parentData );
+
+		// bone/morph offsets are this child's own (written in GetPerObjectData); the parent's copy must not leak in
+		memcpy( m_vsData.boneOffsets, previousVsData.boneOffsets, sizeof( m_vsData.boneOffsets ) );
+		m_vsData.morphTargetVertexDataOffset = previousVsData.morphTargetVertexDataOffset;
+		m_vsData.morphTargetAnimationDataOffset = previousVsData.morphTargetAnimationDataOffset;
+		m_vsData.activeMorphTargetsCount = previousVsData.activeMorphTargetsCount;
+		m_vsData.bakedMorphTargetVertexDataOffset = previousVsData.bakedMorphTargetVertexDataOffset;
 
 		if( m_inheritOverlayEffects )
 		{
@@ -1130,6 +1210,20 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 			return GetDamageLocatorPositionLocal( index, out );
 		};
 		m_damageOverlay->UpdateAsyncronous( updateContext, info, 0, false );
+	}
+
+	if( memcmp( &previousVsData, &m_vsData, sizeof( m_vsData ) ) != 0 )
+	{
+		m_perObjectDataVs.InvalidateBufferData();
+	}
+	if( memcmp( &previousPsData, &m_psData, sizeof( m_psData ) ) != 0 )
+	{
+		m_perObjectDataPs.InvalidateBufferData();
+	}
+	if( !g_eveChildMeshPerObjectChangeTracking )
+	{
+		m_perObjectDataVs.InvalidateBufferData();
+		m_perObjectDataPs.InvalidateBufferData();
 	}
 
 	m_hasUpdated = true;

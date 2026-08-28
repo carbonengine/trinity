@@ -34,6 +34,9 @@ public:
 
 	template <typename T>
 	uint32_t UploadTransforms( const T* data, uint32_t matrixCount );
+	// Claims a frame-stable range in front of the ring; fails while the ring still occupies that space.
+	template <typename T>
+	uint32_t ReserveStatic( const T* data, uint32_t count );
 	void PrepareBuffer( Tr2RenderContext & renderContext );
 	void SetFrameNumbers( uint64_t recordingFrame, uint64_t completedFrame );
 
@@ -43,6 +46,8 @@ public:
 	static Tr2RingBuffer& GetInstance();
 
 	void SetName( const std::string& name );
+
+	static const uint32_t INVALID_OFFSET = 0xffffffff;
 
 private:
 	void ReleaseResources( TriStorage s ) override;
@@ -61,6 +66,7 @@ private:
 	uint32_t m_head = 0;
 	uint32_t m_tail = 0;
 	uint32_t m_size = 0;
+	uint32_t m_ringBase = 0;
 
 	struct DirtyRegion
 	{
@@ -68,6 +74,7 @@ private:
 		uint32_t size = 0;
 	};
 	DirtyRegion m_dirtyRegions[2];
+	DirtyRegion m_staticDirty;
 
 	struct LockedRegion
 	{

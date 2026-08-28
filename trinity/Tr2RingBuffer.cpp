@@ -21,17 +21,17 @@ uint32_t Tr2RingBuffer::UploadTransforms( const T* data, uint32_t dataCount )
 	CCP_ASSERT_M( sizeof( T ) == m_stride, "Stride has to match size of datatype!" );
 
 	std::unique_lock lock( m_mutex );
-	if( m_head >= m_tail )
+	bool wrapped = false;
+	if( m_head >= m_tail && m_head + dataCount > m_size )
 	{
-		if( m_head + dataCount > m_size )
-		{
-			m_head = 0;
-		}
+		m_head = m_ringBase;
+		wrapped = true;
 	}
-	if( m_head < m_tail && m_head + dataCount >= m_tail )
+	while( ( m_head < m_tail || wrapped ) && m_head + dataCount >= m_tail )
 	{
 		CCP_LOG( "Resizing Tr2RingBuffer %s to %uKB", m_name.c_str(), uint32_t( m_size * 2 * m_stride ) / 1024 );
 		Resize( m_size * 2 );
+		wrapped = false;
 	}
 
 	memcpy( m_mirror.data() + m_head * m_stride, data, dataCount * m_stride );
@@ -39,6 +39,10 @@ uint32_t Tr2RingBuffer::UploadTransforms( const T* data, uint32_t dataCount )
 	if( m_dirtyRegions[0].offset + m_dirtyRegions[0].size == m_head )
 	{
 		m_dirtyRegions[0].size += dataCount;
+	}
+	else if( m_dirtyRegions[1].size == 0 )
+	{
+		m_dirtyRegions[1] = { m_head, dataCount };
 	}
 	else if( m_dirtyRegions[1].offset + m_dirtyRegions[1].size == m_head )
 	{
@@ -54,8 +58,59 @@ uint32_t Tr2RingBuffer::UploadTransforms( const T* data, uint32_t dataCount )
 	return result;
 }
 
+template <typename T>
+uint32_t Tr2RingBuffer::ReserveStatic( const T* data, uint32_t count )
+{
+	CCP_ASSERT_M( sizeof( T ) == m_stride, "Stride has to match size of datatype!" );
+
+	std::unique_lock lock( m_mutex );
+	const uint32_t offset = m_ringBase;
+	const uint32_t end = offset + count;
+	if( end > m_size )
+	{
+		return INVALID_OFFSET;
+	}
+	// live ring data is [tail, head), or [ringBase, head) + [tail, size) once wrapped
+	const bool empty = m_head == m_tail;
+	const bool wrapped = m_head < m_tail;
+	if( !empty && !( end <= m_tail && ( !wrapped || m_head == m_ringBase ) ) )
+	{
+		return INVALID_OFFSET;
+	}
+
+	memcpy( m_mirror.data() + offset * m_stride, data, count * m_stride );
+	if( m_staticDirty.size == 0 )
+	{
+		m_staticDirty.offset = offset;
+	}
+	m_staticDirty.size += count;
+
+	m_ringBase = end;
+	if( m_head < end )
+	{
+		for( auto& region : m_dirtyRegions )
+		{
+			if( region.size == 0 && region.offset == m_head )
+			{
+				region.offset = end;
+			}
+		}
+		m_head = end;
+	}
+	if( m_tail < end )
+	{
+		m_tail = end;
+	}
+	return offset;
+}
+
 void Tr2RingBuffer::PrepareBuffer( Tr2RenderContext& renderContext )
 {
+	if( m_staticDirty.size )
+	{
+		m_buffer.UpdateBuffer( m_staticDirty.offset * m_stride, m_staticDirty.size * m_stride, m_mirror.data() + m_staticDirty.offset * m_stride, renderContext );
+		m_staticDirty = {};
+	}
 	for( auto& region : m_dirtyRegions )
 	{
 		if( region.size )
@@ -82,7 +137,7 @@ void Tr2RingBuffer::SetFrameNumbers( uint64_t recordingFrame, uint64_t completed
 	{
 		if( it->frame <= completedFrame )
 		{
-			m_tail = it->tail;
+			m_tail = std::max( it->tail, m_ringBase );
 		}
 		else
 		{
@@ -96,6 +151,7 @@ void Tr2RingBuffer::Resize( uint32_t size )
 {
 	m_dirtyRegions[0] = { 0, m_size };
 	m_dirtyRegions[1] = {};
+	m_staticDirty = {};
 	m_lockedRegions.clear();
 
 	m_mirror.resize( size * m_stride );
@@ -188,6 +244,7 @@ template Tr2RingBuffer& Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>(
 template void Tr2RingBufferOffsets::UploadTransforms<Tr2MorphTargetAnimationData>( Tr2RingBuffer& buffer, const Tr2MorphTargetAnimationData* transforms, uint32_t count );
 
 template uint32_t Tr2RingBuffer::UploadTransforms<Float4x3>( const Float4x3* data, uint32_t dataCount );
+template uint32_t Tr2RingBuffer::ReserveStatic<Float4x3>( const Float4x3* data, uint32_t count );
 template Tr2RingBuffer& Tr2RingBuffer::GetInstance<Float4x3>();
 template void Tr2RingBufferOffsets::UploadTransforms<Float4x3>( Tr2RingBuffer& buffer, const Float4x3* transforms, uint32_t count );
 
