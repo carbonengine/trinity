@@ -23,10 +23,13 @@ bool g_rtShaderTableMaterialCache = true;
 TRI_REGISTER_SETTING( "rtShaderTableMaterialCache", g_rtShaderTableMaterialCache );
 bool& g_rtShaderTableReuse = Tr2RtShaderTableAL::s_reuseBuffers;
 TRI_REGISTER_SETTING( "rtShaderTableReuse", g_rtShaderTableReuse );
+bool g_rtTransformMeshesEarlyOut = true;
+TRI_REGISTER_SETTING( "rtTransformMeshesEarlyOut", g_rtTransformMeshesEarlyOut );
 
 CCP_STATS_DECLARE( rtShaderTableEntries, "Trinity/RT/shaderTableEntries", true, CST_COUNTER_HIGH, "Geometry entries processed by PrepareShaderTableDescription this frame." );
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
 CCP_STATS_DECLARE( rtShaderTableLibraries, "Trinity/RT/shaderTableLibraries", true, CST_COUNTER_HIGH, "Distinct raytracing libraries seen by the shader table this frame." );
+CCP_STATS_DECLARE( rtTransformMeshesSkipped, "Trinity/RT/transformMeshesSkipped", true, CST_COUNTER_HIGH, "TransformMeshes returned early because no skinned or morphed geometry was added this frame." );
 
 namespace
 {
@@ -638,6 +641,7 @@ void Tr2RaytracingGeometry::BeginSceneUpdate()
 {
 	m_geometryData.clear();
 	m_usedResources.Clear();
+	m_hasDeformedGeometry.store( false, std::memory_order_relaxed );
 }
 
 
@@ -875,6 +879,21 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	ON_BLOCK_EXIT( [&] { renderContext.PopDisableUAVBarriersDx12(); } );
 #endif
 
+	{
+		CCP_STATS_ZONE( "Prepare BoneTransformBuffer" );
+		Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( renderContext );
+	}
+	{
+		CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer" );
+		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
+	}
+
+	if( g_rtTransformMeshesEarlyOut && !m_hasDeformedGeometry.load( std::memory_order_relaxed ) )
+	{
+		CCP_STATS_INC( rtTransformMeshesSkipped );
+		return;
+	}
+
 	for( auto& geom : m_geometryData )
 	{
 		if( geom.materialIndex == INVALID_MATERIAL )
@@ -889,15 +908,6 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 	std::vector<GeometryData*> outdatedMeshes;
 	outdatedMeshes.reserve( m_geometryData.size() );
-
-	{
-		CCP_STATS_ZONE( "Prepare BoneTransformBuffer" );
-		Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( renderContext );
-	}
-	{
-		CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer" );
-		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
-	}
 
 	uint32_t skinnedVertexCount = 0;
 
@@ -1155,6 +1165,21 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.isTransparent = false;
 	obj.bakedMorphOffset = bakedMorphOffset;
 	m_threadLocalGeometryData.local().push_back( obj );
+	NoteDeformedGeometry( mesh, area );
+}
+
+void Tr2RaytracingGeometry::NoteDeformedGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area )
+{
+	auto lod = mesh.GetCurrentLodData();
+	if( !lod )
+	{
+		return;
+	}
+	auto& lodArea = lod->m_areas[area.GetAreaIndex()];
+	if( lodArea.m_isSkinned || lodArea.m_isMorphed )
+	{
+		m_hasDeformedGeometry.store( true, std::memory_order_relaxed );
+	}
 }
 
 void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount, uint32_t bakedMorphOffset )
@@ -1176,6 +1201,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.isTransparent = false;
 	obj.bakedMorphOffset = bakedMorphOffset;
 	m_threadLocalGeometryData.local().push_back( obj );
+	NoteDeformedGeometry( mesh, area );
 }
 
 bool Tr2RaytracingGeometry::HasGeometry() const
