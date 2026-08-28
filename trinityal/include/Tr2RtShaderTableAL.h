@@ -41,6 +41,7 @@ public:
 	void AddHitGroup( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
 
 	void Reserve( size_t hitGroupCount );
+	void Clear();
 
 private:
 	struct ShaderRecord
@@ -65,6 +66,8 @@ public:
 	bool IsValid() const;
 
 	TrinityALImpl::Tr2RtShaderTableAL* TrinityALImpl_GetObject() const;
+
+	static bool s_reuseBuffers;
 
 private:
 	std::shared_ptr<TrinityALImpl::Tr2RtShaderTableAL> m_shaderTable;

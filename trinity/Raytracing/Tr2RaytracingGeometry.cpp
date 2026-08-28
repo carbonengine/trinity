@@ -21,6 +21,8 @@
 
 bool g_rtShaderTableMaterialCache = true;
 TRI_REGISTER_SETTING( "rtShaderTableMaterialCache", g_rtShaderTableMaterialCache );
+bool& g_rtShaderTableReuse = Tr2RtShaderTableAL::s_reuseBuffers;
+TRI_REGISTER_SETTING( "rtShaderTableReuse", g_rtShaderTableReuse );
 
 CCP_STATS_DECLARE( rtShaderTableEntries, "Trinity/RT/shaderTableEntries", true, CST_COUNTER_HIGH, "Geometry entries processed by PrepareShaderTableDescription this frame." );
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
@@ -665,7 +667,14 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 	CCP_STATS_ZONE( __FUNCTION__ );
 	for( int32_t i = 0; i < numRaycasters; i++ )
 	{
-		*shaderTableDescs[i] = Tr2RtShaderTableDescriptionAL();
+		if( g_rtShaderTableReuse )
+		{
+			shaderTableDescs[i]->Clear();
+		}
+		else
+		{
+			*shaderTableDescs[i] = Tr2RtShaderTableDescriptionAL();
+		}
 		shaderTableDescs[i]->Reserve( m_geometryData.size() );
 	}
 

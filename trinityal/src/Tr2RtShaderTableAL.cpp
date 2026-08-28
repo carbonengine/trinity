@@ -4,6 +4,8 @@
 #include "../include/Tr2RtShaderTableAL.h"
 #include "include/Tr2CapsAL.h"
 
+bool Tr2RtShaderTableAL::s_reuseBuffers = true;
+
 #if TRINITY_PLATFORM_SUPPORTS_RAY_TRACING
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2RtShaderTableAL )
@@ -26,7 +28,10 @@ Tr2RtShaderTableAL::Tr2RtShaderTableAL() :
 
 ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
 {
-	m_shaderTable = std::make_shared<TrinityALImpl::Tr2RtShaderTableAL>();
+	if( !s_reuseBuffers || m_shaderTable == NullRtShaderTable() )
+	{
+		m_shaderTable = std::make_shared<TrinityALImpl::Tr2RtShaderTableAL>();
+	}
 	auto hr = m_shaderTable->Create( desc, pipeline, renderContext );
 	if( FAILED( hr ) )
 	{
@@ -113,4 +118,11 @@ void Tr2RtShaderTableDescriptionAL::AddHitGroup( const wchar_t* name, const Tr2R
 void Tr2RtShaderTableDescriptionAL::Reserve( size_t hitGroupCount )
 {
 	m_hitGroupNames.reserve( hitGroupCount );
+}
+
+void Tr2RtShaderTableDescriptionAL::Clear()
+{
+	m_rayGenNames.clear();
+	m_missNames.clear();
+	m_hitGroupNames.clear();
 }

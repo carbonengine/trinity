@@ -87,25 +87,94 @@ ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, 
 	size_t entrySize = Align( D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + signatureSize, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT );
 	auto size = ( desc.m_rayGenNames.size() + desc.m_missNames.size() + desc.m_hitGroupNames.size() ) * entrySize;
 
-	CComPtr<ID3D12Resource> table;
-	auto heap = HeapDesc( D3D12_HEAP_TYPE_UPLOAD );
-	auto scratchDesc = BufferDesc( Align( size, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT ), D3D12_RESOURCE_FLAG_NONE );
-	CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
-		&heap,
-		D3D12_HEAP_FLAG_NONE,
-		&scratchDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
-		nullptr,
-		IID_PPV_ARGS( &table ) ) );
+	const bool reuseBuffers = ::Tr2RtShaderTableAL::s_reuseBuffers;
+	if( m_owner && ( m_owner != &renderContext || !reuseBuffers ) )
+	{
+		Destroy();
+	}
 
-	uint8_t* tableData;
-	CR_RETURN_HR( table->Map( 0, nullptr, (void**)&tableData ) );
-	ON_BLOCK_EXIT( [&] { table->Unmap( 0, nullptr ); } );
+	CComPtr<ID3D12Resource> table;
+	uint8_t* tableData = nullptr;
+	if( reuseBuffers )
+	{
+		m_owner = &renderContext;
+		if( m_buffers.empty() )
+		{
+			if( m_table )
+			{
+				RELEASE_LATER( m_owner, m_table );
+				m_table = nullptr;
+			}
+			m_buffers.resize( renderContext.GetBackBufferCount() );
+		}
+		auto& buffer = m_buffers[renderContext.GetCurrentBackBufferIndex()];
+		const size_t alignedSize = Align( size, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT );
+		if( buffer.capacity < alignedSize )
+		{
+			if( buffer.resource )
+			{
+				buffer.resource->Unmap( 0, nullptr );
+				RELEASE_LATER( m_owner, buffer.resource );
+				buffer.resource = nullptr;
+				buffer.mapped = nullptr;
+				buffer.capacity = 0;
+			}
+			const size_t capacity = Align( alignedSize + alignedSize / 4, 65536 );
+			auto heap = HeapDesc( D3D12_HEAP_TYPE_UPLOAD );
+			auto bufferDesc = BufferDesc( capacity, D3D12_RESOURCE_FLAG_NONE );
+			CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
+				&heap,
+				D3D12_HEAP_FLAG_NONE,
+				&bufferDesc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS( &buffer.resource ) ) );
+			CR_RETURN_HR( buffer.resource->Map( 0, nullptr, (void**)&buffer.mapped ) );
+			buffer.capacity = capacity;
+		}
+		table = buffer.resource;
+		m_staging.resize( size );
+		tableData = m_staging.data();
+	}
+	else
+	{
+		auto heap = HeapDesc( D3D12_HEAP_TYPE_UPLOAD );
+		auto scratchDesc = BufferDesc( Align( size, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT ), D3D12_RESOURCE_FLAG_NONE );
+		CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
+			&heap,
+			D3D12_HEAP_FLAG_NONE,
+			&scratchDesc,
+			D3D12_RESOURCE_STATE_GENERIC_READ,
+			nullptr,
+			IID_PPV_ARGS( &table ) ) );
+		CR_RETURN_HR( table->Map( 0, nullptr, (void**)&tableData ) );
+	}
+	ON_BLOCK_EXIT( [&] { if( !reuseBuffers ) table->Unmap( 0, nullptr ); } );
+	uint8_t* const tableStart = tableData;
 
 	uint32_t samplerHeapIncrement = renderContext.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
 
+	struct CachedShaderInfo
+	{
+		const wchar_t* name;
+		const TrinityALImpl::Tr2RtPipelineStateAL::ShaderInfo* info;
+	};
+	std::vector<CachedShaderInfo> shaderInfos;
+	auto FindShaderInfo = [&]( const wchar_t* name ) {
+		for( auto& cached : shaderInfos )
+		{
+			if( cached.name == name )
+			{
+				return cached.info;
+			}
+		}
+		auto info = pipeline.TrinityALImpl_GetObject()->GetShaderInfo( name );
+		shaderInfos.push_back( { name, info } );
+		return info;
+	};
+
 	auto FillRecord = [&]( uint8_t* tableData, const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material ) -> ALResult {
-		auto shaderInfo = pipeline.TrinityALImpl_GetObject()->GetShaderInfo( name );
+		auto shaderInfo = reuseBuffers ? FindShaderInfo( name ) : pipeline.TrinityALImpl_GetObject()->GetShaderInfo( name );
 		if( !shaderInfo || !shaderInfo->shaderIdentifier )
 		{
 			return E_INVALIDARG;
@@ -157,21 +226,55 @@ ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, 
 		tableData += entrySize;
 	}
 
+	if( reuseBuffers )
+	{
+		memcpy( m_buffers[renderContext.GetCurrentBackBufferIndex()].mapped, tableStart, size );
+	}
+	else
+	{
+		m_desc = desc;
+	}
+	m_rayGenNames.clear();
+	for( auto& record : desc.m_rayGenNames )
+	{
+		m_rayGenNames.push_back( record.name );
+	}
+	m_missCount = desc.m_missNames.size();
+	m_hitGroupCount = desc.m_hitGroupNames.size();
 	m_table = table;
-	m_desc = desc;
 	m_entrySize = entrySize;
 	m_owner = &renderContext;
 	return S_OK;
+}
+
+void Tr2RtShaderTableAL::ReleaseBuffers()
+{
+	for( auto& buffer : m_buffers )
+	{
+		if( buffer.resource )
+		{
+			buffer.resource->Unmap( 0, nullptr );
+			RELEASE_LATER( m_owner, buffer.resource );
+		}
+	}
+	m_buffers.clear();
 }
 
 void Tr2RtShaderTableAL::Destroy()
 {
 	if( m_owner )
 	{
-		RELEASE_LATER( m_owner, m_table );
+		if( m_buffers.empty() )
+		{
+			RELEASE_LATER( m_owner, m_table );
+		}
+		ReleaseBuffers();
 		m_owner = nullptr;
 		m_table = nullptr;
 		m_desc = Tr2RtShaderTableDescriptionAL();
+		m_rayGenNames.clear();
+		m_missCount = 0;
+		m_hitGroupCount = 0;
 		m_entrySize = 0;
 	}
 }
@@ -193,9 +296,9 @@ void Tr2RtShaderTableAL::Describe( Tr2DeviceResourceDescriptionAL& description )
 
 D3D12_GPU_VIRTUAL_ADDRESS Tr2RtShaderTableAL::GetRayGenShader( const wchar_t* name ) const
 {
-	for( size_t i = 0; i < m_desc.m_rayGenNames.size(); ++i )
+	for( size_t i = 0; i < m_rayGenNames.size(); ++i )
 	{
-		if( m_desc.m_rayGenNames[i].name == name )
+		if( m_rayGenNames[i] == name )
 		{
 			return m_table->GetGPUVirtualAddress() + i * GetEntrySize();
 		}
@@ -205,12 +308,12 @@ D3D12_GPU_VIRTUAL_ADDRESS Tr2RtShaderTableAL::GetRayGenShader( const wchar_t* na
 
 D3D12_GPU_VIRTUAL_ADDRESS Tr2RtShaderTableAL::GetMissShaders() const
 {
-	return m_table->GetGPUVirtualAddress() + m_desc.m_rayGenNames.size() * GetEntrySize();
+	return m_table->GetGPUVirtualAddress() + m_rayGenNames.size() * GetEntrySize();
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS Tr2RtShaderTableAL::GetHitGroupShaders() const
 {
-	return m_table->GetGPUVirtualAddress() + ( m_desc.m_rayGenNames.size() + m_desc.m_missNames.size() ) * GetEntrySize();
+	return m_table->GetGPUVirtualAddress() + ( m_rayGenNames.size() + m_missCount ) * GetEntrySize();
 }
 
 uint64_t Tr2RtShaderTableAL::GetEntrySize() const
@@ -220,12 +323,12 @@ uint64_t Tr2RtShaderTableAL::GetEntrySize() const
 
 uint64_t Tr2RtShaderTableAL::GetMissShaderTableSize() const
 {
-	return GetEntrySize() * m_desc.m_missNames.size();
+	return GetEntrySize() * m_missCount;
 }
 
 uint64_t Tr2RtShaderTableAL::GetHitGroupTableSize() const
 {
-	return GetEntrySize() * m_desc.m_hitGroupNames.size();
+	return GetEntrySize() * m_hitGroupCount;
 }
 }
 
