@@ -25,6 +25,8 @@ bool& g_rtShaderTableReuse = Tr2RtShaderTableAL::s_reuseBuffers;
 TRI_REGISTER_SETTING( "rtShaderTableReuse", g_rtShaderTableReuse );
 bool g_rtTransformMeshesEarlyOut = true;
 TRI_REGISTER_SETTING( "rtTransformMeshesEarlyOut", g_rtTransformMeshesEarlyOut );
+bool g_rtGeometryConstantsCache = true;
+TRI_REGISTER_SETTING( "rtGeometryConstantsCache", g_rtGeometryConstantsCache );
 
 CCP_STATS_DECLARE( rtShaderTableEntries, "Trinity/RT/shaderTableEntries", true, CST_COUNTER_HIGH, "Geometry entries processed by PrepareShaderTableDescription this frame." );
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
@@ -493,6 +495,11 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 	{
 		return nullptr; //No mesh data or area index out of bounds
 	}
+	const uint32_t key[4] = { lod->m_vertexAllocation.GetBuffer().GetSrvIndexInHeap(), lod->m_indexAllocation.GetBuffer().GetSrvIndexInHeap(), lod->m_vertexAllocation.GetOffset(), lod->m_indexAllocation.GetOffset() };
+	if( g_rtGeometryConstantsCache && lod == m_geometryConstantsLod && memcmp( key, m_geometryConstantsKey, sizeof( key ) ) == 0 )
+	{
+		return m_geometryConstants;
+	}
 	std::scoped_lock lock( s_geometryConstantsMutex );
 
 	if( !lod->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
@@ -620,7 +627,10 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 			lod->m_areas[m_areaIndex].m_rtGeometryConstants.Unlock( renderContext );
 		}
 	}
-	return &lod->m_areas[m_areaIndex].m_rtGeometryConstants;
+	m_geometryConstantsLod = lod;
+	memcpy( m_geometryConstantsKey, key, sizeof( key ) );
+	m_geometryConstants = &lod->m_areas[m_areaIndex].m_rtGeometryConstants;
+	return m_geometryConstants;
 }
 
 // ***************** Tr2RaytracingGeometry *****************

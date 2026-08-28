@@ -106,6 +106,9 @@ private:
 
 	Tr2RtBottomLevelAccelerationStructureAL m_blas;
 	bool m_blasOutdated;
+	mutable const TriGeometryResLodData* m_geometryConstantsLod = nullptr;
+	mutable const Tr2ConstantBufferAL* m_geometryConstants = nullptr;
+	mutable uint32_t m_geometryConstantsKey[4] = {};
 };
 
 BLUE_CLASS( Tr2RaytracingGeometry ) :
