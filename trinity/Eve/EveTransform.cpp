@@ -6,6 +6,7 @@
 #include "Utilities/Vector3d.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
+#include "Utilities/Obb.h"
 #include "TriFrustum.h"
 #include "Particle/Tr2ParticleSystem.h"
 #include "Particle/ITr2GenericEmitter.h"
@@ -381,13 +382,14 @@ bool EveTransform::GetLocalBoundingBox( Vector3& min, Vector3& max )
 	return true;
 }
 
-bool EveTransform::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveTransform::GetWorldBoundingObb( Obb& obb ) const
 {
+	Vector3 min, max;
 	if( !GetDirectLocalBounds( m_overrideBoundsMin, m_overrideBoundsMax, m_mesh, min, max ) )
 	{
 		return false;
 	}
-	BoundingBoxTransform( min, max, m_worldTransform );
+	obb.CreateClippedWorldBoundingObb( min, max, m_worldTransform, nullptr );
 	return true;
 }
 

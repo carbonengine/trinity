@@ -5,6 +5,7 @@
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/MatrixUtils.h"
+#include "Utilities/Obb.h"
 
 #include "include/ITr2DebugRenderer.h"
 #include "include/IEveBallpark.h"
@@ -4165,11 +4166,9 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 	}
 }
 
-bool EveSpaceObject2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveSpaceObject2::GetWorldBoundingObb( Obb& obb ) const
 {
-	min = m_localAabbMin;
-	max = m_localAabbMax;
-	BoundingBoxTransform( min, max, m_worldTransform );
+	obb.CreateClippedWorldBoundingObb( m_localAabbMin, m_localAabbMax, m_worldTransform, nullptr );
 	return true;
 }
 

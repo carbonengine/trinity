@@ -5,6 +5,7 @@
 #include "Tr2IntSkinnedObject.h"
 
 #include "Utilities/BoundingSphere.h"
+#include "Utilities/Obb.h"
 #include "TriSettingsRegistrar.h"
 #include "Tr2PerObjectData.h"
 #include "Resources/TriGeometryRes.h"
@@ -147,10 +148,21 @@ bool Tr2IntSkinnedObject::GetWorldBoundingBox( Vector3& min, Vector3& max ) cons
 	return true;
 }
 
+bool Tr2IntSkinnedObject::GetWorldBoundingObb( Obb& obb ) const
+{
+	Vector3 min, max;
+	if( !GetLocalBoundingBox( min, max ) )
+	{
+		return false;
+	}
+	obb.CreateClippedWorldBoundingObb( min, max, GetSkinningTransform(), nullptr );
+	return true;
+}
+
 bool Tr2IntSkinnedObject::IsBoundingBoxReady( void ) const
 {
 	Vector3 min, max;
-	return GetWorldBoundingBox( min, max );
+	return GetLocalBoundingBox( min, max );
 }
 
 void Tr2IntSkinnedObject::AddToApexScene( Tr2ApexScene* apexScene )

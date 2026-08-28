@@ -5,6 +5,7 @@
 
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
+#include "Utilities/Obb.h"
 #include "TriFrustum.h"
 #include "Lights/Tr2PointLight.h"
 #include "Tr2LightManager.h"
@@ -431,15 +432,23 @@ void EveEffectRoot2::GetLocalToWorldTransform( Matrix& transform ) const
 	transform = m_lastUpdateMatrix;
 }
 
-bool EveEffectRoot2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveEffectRoot2::GetWorldBoundingObb( Obb& obb ) const
 {
 	if( m_boundingSphere.w <= 0.0f )
 	{
 		return false;
 	}
 
-	BoundingBoxInitialize( m_boundingSphere, min, max );
-	BoundingBoxTransform( min, max, m_lastUpdateMatrix );
+	// A sphere's bounds must not depend on orientation, so the box is world-axis
+	// aligned; only the scale is taken from the transform.
+	const Vector3 sphereCenter( m_boundingSphere.x, m_boundingSphere.y, m_boundingSphere.z );
+	const float scale = std::max( std::max( Length( m_lastUpdateMatrix.GetX() ), Length( m_lastUpdateMatrix.GetY() ) ), Length( m_lastUpdateMatrix.GetZ() ) );
+	const float radius = m_boundingSphere.w * scale;
+	obb.x = Vector3( 1.0f, 0.0f, 0.0f );
+	obb.y = Vector3( 0.0f, 1.0f, 0.0f );
+	obb.z = Vector3( 0.0f, 0.0f, 1.0f );
+	obb.center = TransformCoord( sphereCenter, m_lastUpdateMatrix );
+	obb.sizes = Vector3( radius, radius, radius );
 	return true;
 }
 

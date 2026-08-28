@@ -8,6 +8,7 @@
 #include "EveUpdateContext.h"
 #include "Curves/TriCurveSet.h"
 #include "Utilities/BoundingBox.h"
+#include "Utilities/Obb.h"
 
 const float EvePlanet::SCALE = 1000000.0f;
 
@@ -150,9 +151,8 @@ Quaternion EvePlanet::GetWorldRotation()
 	return m_rotation;
 }
 
-bool EvePlanet::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EvePlanet::GetWorldBoundingObb( Obb& obb ) const
 {
-	Vector4 sphere;
 	if( m_radius <= 0.0f )
 	{
 		return false;
@@ -160,9 +160,12 @@ bool EvePlanet::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
 
 	const float renderScale = std::max( m_renderScale, 1.0f );
 	const Matrix scaledTransform = CalculatePlanetScaleTransform( m_worldTransform, renderScale );
-	sphere = Vector4( scaledTransform.GetTranslation(), m_radius / renderScale );
-
-	BoundingBoxInitialize( sphere, min, max );
+	const float radius = m_radius / renderScale;
+	obb.x = Vector3( 1.0f, 0.0f, 0.0f );
+	obb.y = Vector3( 0.0f, 1.0f, 0.0f );
+	obb.z = Vector3( 0.0f, 0.0f, 1.0f );
+	obb.center = scaledTransform.GetTranslation();
+	obb.sizes = Vector3( radius, radius, radius );
 	return true;
 }
 
