@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Tr2EffectDescription.h"
+struct Tr2ScreenSizeRequests;
 
 BLUE_DECLARE( Tr2Shader );
 BLUE_DECLARE_INTERFACE( ITriEffectTextureParameter );
@@ -228,6 +229,7 @@ public:
 	void MarkConstantBuffersDirty();
 
 	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities );
+	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests& requests );
 
 	void GetUsedBindlessTextures( uint32_t techniqueIndex, Tr2BindlessResourcesAL& usedTextures );
 

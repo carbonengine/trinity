@@ -3,6 +3,8 @@
 #include "StdAfx.h"
 #include "Tr2MeshBase.h"
 #include "Resources/TriGeometryRes.h"
+#include "Resources/TriTextureRes.h"
+#include "TriSettingsRegistrar.h"
 #include "Utilities/BoundingBox.h"
 #include "Raytracing/Tr2RaytracingGeometry.h"
 
@@ -586,23 +588,50 @@ void Tr2MeshBase::SetMaterialBoundsAdjustment( const Tr2MaterialBoundsAdjustment
 	CacheBounds();
 }
 
+bool g_meshScreenSizeRequestCache = true;
+TRI_REGISTER_SETTING( "meshScreenSizeRequestCache", g_meshScreenSizeRequestCache );
+
+CCP_STATS_DECLARE( meshScreenSizeCacheHits, "Trinity/Mesh/screenSizeRequestCacheHits", true, CST_COUNTER_HIGH, "Meshes that replayed their cached texture LOD requests this frame." );
+CCP_STATS_DECLARE( meshScreenSizeCacheMisses, "Trinity/Mesh/screenSizeRequestCacheMisses", true, CST_COUNTER_HIGH, "Meshes that re-evaluated their texture LOD requests this frame." );
+
 void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 {
-	if( auto geometry = GetGeometryResource() )
+	auto geometry = GetGeometryResource();
+	if( !geometry )
 	{
-		if( auto lod = geometry->GetMeshLod( m_meshIndex, screenSize ) )
+		return;
+	}
+	auto lod = geometry->GetMeshLod( m_meshIndex, screenSize );
+	if( !lod )
+	{
+		return;
+	}
+	auto& cache = m_screenSizeCache;
+	const uint32_t generation = Tr2ScreenSizeRequests::Generation();
+	if( g_meshScreenSizeRequestCache && cache.geometry == geometry && cache.lod == lod && cache.worldRadius == worldRadius && cache.generation == generation && cache.requests.Covers( screenSize ) )
+	{
+		CCP_STATS_INC( meshScreenSizeCacheHits );
+		for( auto& request : cache.requests.requests )
 		{
-			for( auto areaType : m_areaLookupArray )
+			request.texture->RequestResolution( request.lod );
+		}
+		return;
+	}
+	CCP_STATS_INC( meshScreenSizeCacheMisses );
+	cache.geometry = geometry;
+	cache.lod = lod;
+	cache.worldRadius = worldRadius;
+	cache.generation = generation;
+	cache.requests.Reset();
+	for( auto areaType : m_areaLookupArray )
+	{
+		if( areaType )
+		{
+			for( auto& area : *areaType )
 			{
-				if( areaType )
+				if( area && area->GetMaterialInterface() )
 				{
-					for( auto& area : *areaType )
-					{
-						if( area && area->GetMaterialInterface() )
-						{
-							area->GetMaterialInterface()->UsedWithScreenSize( screenSize, worldRadius, lod->m_uvDensities );
-						}
-					}
+					area->GetMaterialInterface()->UsedWithScreenSize( screenSize, worldRadius, lod->m_uvDensities, cache.requests );
 				}
 			}
 		}

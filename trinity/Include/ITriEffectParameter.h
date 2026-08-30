@@ -4,6 +4,7 @@
 #define ITr2EffectParameter_h
 
 #include "ITr2EffectValue.h"
+#include "Tr2ScreenSizeRequests.h"
 
 BLUE_DECLARE( Tr2Shader );
 
@@ -36,6 +37,11 @@ BLUE_INTERFACE( ITriEffectTextureParameter ) :
 {
 	static const size_t UV_SET_MAX_COUNT = 8;
 	virtual void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities ) = 0;
+	virtual void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests& requests )
+	{
+		UsedWithScreenSize( screenSize, worldRadius, uvDensities );
+		requests.Invalidate();
+	}
 	virtual void EnableTextureLoding( const std::array<float, UV_SET_MAX_COUNT>& uvDensityScale ) = 0;
 	virtual void DisableTextureLoding() = 0;
 };

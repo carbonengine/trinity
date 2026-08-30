@@ -53,6 +53,7 @@ public:
 	bool SupportsDirtyNotification() const override;
 
 	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities ) override;
+	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests& requests ) override;
 	void EnableTextureLoding( const std::array<float, UV_SET_MAX_COUNT>& uvDensityScale ) override;
 	void DisableTextureLoding() override;
 
@@ -90,6 +91,8 @@ private:
 	void CacheTexture();
 
 	Tr2ShaderPtr m_cachedEffect;
+
+	void RequestLod( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests* requests );
 
 	BlueSharedString m_name;
 

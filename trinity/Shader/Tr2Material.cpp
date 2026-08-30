@@ -1,6 +1,7 @@
 // Copyright © 2017 CCP ehf.
 
 #include "StdAfx.h"
+#include "Tr2ScreenSizeRequests.h"
 #include "Tr2Material.h"
 #include "ITriReroutable.h"
 #include "Tr2Shader.h"
@@ -454,6 +455,14 @@ void Tr2Material::UsedWithScreenSize( float screenSize, float worldRadius, const
 	for( auto& value : m_lodTextureParameters )
 	{
 		value->UsedWithScreenSize( screenSize, worldRadius, uvDensities );
+	}
+}
+
+void Tr2Material::UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests& requests )
+{
+	for( auto& value : m_lodTextureParameters )
+	{
+		value->UsedWithScreenSize( screenSize, worldRadius, uvDensities, requests );
 	}
 }
 
