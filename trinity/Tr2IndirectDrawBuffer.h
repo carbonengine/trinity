@@ -105,8 +105,10 @@ public:
 	Tr2IndirectDrawBufferWriter( Tr2IndirectDrawBuffer& buffer, const Tr2IndirectDrawBufferLayout& layout, uint32_t commands, Tr2RenderContextAL& renderContext );
 
 	void SetMaterialConstants( Tr2RenderContextEnum::ShaderType stage, const Tr2ConstantBufferAL& buffer );
+	void SetMaterialConstantsAddress( Tr2RenderContextEnum::ShaderType stage, uint64_t address );
 	void SetPerObjectData( Tr2RenderContextEnum::ShaderType stage, const Tr2ConstantBufferAL& buffer );
 	void SetPerObjectData( Tr2RenderContextEnum::ShaderType stage, const void* data, size_t size );
+	void SetPerObjectDataAddress( Tr2RenderContextEnum::ShaderType stage, uint64_t address );
 
 	void DrawIndexed( uint32_t indexCountPerInstance, uint32_t instanceCount, uint32_t startIndexLocation, uint32_t baseVertexLocation, uint32_t startInstanceLocation );
 

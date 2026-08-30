@@ -574,6 +574,54 @@ void Tr2Material::ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int pa
 	}
 }
 
+bool Tr2Material::ApplyPrecomputedConstantBufferAddresses( uint32_t techniqueIndex, unsigned int passIndex, uint64_t frame, Tr2IndirectDrawBufferWriter& indirectBuffer )
+{
+	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
+	if( pp.m_gdprAddressFrame.load( std::memory_order_acquire ) != frame )
+	{
+		// concurrent resolves compute identical values from state that is immutable while recording
+		bool fast = pp.m_reroutedParameters.empty();
+		unsigned mask = m_shader->GetShaderTypeMask( techniqueIndex );
+		for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask && fast; ++i )
+		{
+			if( !( mask & ( 1 << i ) ) )
+			{
+				continue;
+			}
+			mask &= ~( 1 << i );
+			auto& input = pp.m_stageInput[i];
+			uint64_t addr = 0;
+			if( indirectBuffer.HasMaterialConstants( Tr2RenderContextEnum::ShaderType( i ) ) && input.m_constantBuffer.GetSize() )
+			{
+				if( input.m_constantBufferDirty || !input.m_shaderParameters.empty() )
+				{
+					fast = false;
+				}
+				else
+				{
+					addr = input.m_constantBuffer.GetStableAddress();
+					fast = addr != 0;
+				}
+			}
+			pp.m_gdprAddresses[i] = addr;
+		}
+		pp.m_gdprFastPath = fast;
+		pp.m_gdprAddressFrame.store( frame, std::memory_order_release );
+	}
+	if( !pp.m_gdprFastPath )
+	{
+		return false;
+	}
+	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
+	{
+		if( uint64_t addr = pp.m_gdprAddresses[i] )
+		{
+			indirectBuffer.SetMaterialConstantsAddress( Tr2RenderContextEnum::ShaderType( i ), addr );
+		}
+	}
+	return true;
+}
+
 void Tr2Material::ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr2RtPipelineStateAL& rtPipelineState, Tr2RenderContext& renderContext ) const
 {
 	if( !m_shader )

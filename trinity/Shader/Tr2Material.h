@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Tr2EffectDescription.h"
+#include <atomic>
 struct Tr2ScreenSizeRequests;
 
 BLUE_DECLARE( Tr2Shader );
@@ -148,6 +149,11 @@ public:
 	bool m_compatibleWithGdr;
 	bool m_usedTexturesDirty;
 
+	// resolved once per frame by the first recording worker, then read concurrently
+	std::atomic<uint64_t> m_gdprAddressFrame{ 0 };
+	uint64_t m_gdprAddresses[Tr2RenderContextEnum::SHADER_TYPE_COUNT] = {};
+	bool m_gdprFastPath = false;
+
 	void AddUsedResource( ITr2EffectValuePtr resource ) override;
 	void AddReroutable( ITriReroutable* reroutable ) override;
 };
@@ -238,6 +244,7 @@ public:
 	bool CompatibleWithGdr() const;
 	bool CompatibleWithGdr( const BlueSharedString& techniqueName ) const;
 	void ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int passIndex, Tr2IndirectDrawBufferWriter& indirectBuffer, Tr2RenderContext& renderContext );
+	bool ApplyPrecomputedConstantBufferAddresses( uint32_t techniqueIndex, unsigned int passIndex, uint64_t frame, Tr2IndirectDrawBufferWriter& indirectBuffer );
 
 protected:
 	bool ApplyShaderInputs( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const;

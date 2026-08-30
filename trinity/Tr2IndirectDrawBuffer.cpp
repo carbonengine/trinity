@@ -83,6 +83,15 @@ void Tr2IndirectDrawBufferWriter::SetMaterialConstants( Tr2RenderContextEnum::Sh
 #endif
 }
 
+void Tr2IndirectDrawBufferWriter::SetMaterialConstantsAddress( Tr2RenderContextEnum::ShaderType stage, uint64_t address )
+{
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	*reinterpret_cast<uint64_t*>( m_buffer + m_layout.m_materialOffsets[stage] ) = address;
+#elif TRINITY_PLATFORM == TRINITY_METAL
+	m_buffer->material[stage] = address;
+#endif
+}
+
 void Tr2IndirectDrawBufferWriter::SetPerObjectData( Tr2RenderContextEnum::ShaderType stage, const Tr2ConstantBufferAL& buffer )
 {
 	if( !HasPerObjectData( stage ) )
@@ -110,6 +119,15 @@ void Tr2IndirectDrawBufferWriter::SetPerObjectData( Tr2RenderContextEnum::Shader
 #elif TRINITY_PLATFORM == TRINITY_METAL
 	auto addr = m_renderContext.UploadConstants( data, size );
 	m_buffer->perObject[stage] = addr;
+#endif
+}
+
+void Tr2IndirectDrawBufferWriter::SetPerObjectDataAddress( Tr2RenderContextEnum::ShaderType stage, uint64_t address )
+{
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	*reinterpret_cast<uint64_t*>( m_buffer + m_layout.m_perObjectDataOffsets[stage] ) = address;
+#elif TRINITY_PLATFORM == TRINITY_METAL
+	m_buffer->perObject[stage] = address;
 #endif
 }
 

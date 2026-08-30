@@ -27,6 +27,10 @@ CCP_STATS_DECLARE( batchIndirectDraws, "Trinity/batchIndirectDraws", true, CST_C
 int g_gdprBinSize = 256;
 TRI_REGISTER_SETTING( "gdprBinSize", g_gdprBinSize );
 CCP_STATS_DECLARE( batchExecuteIndirectCalls, "Trinity/batchExecuteIndirectCalls", true, CST_COUNTER_HIGH, "ExecuteIndirect() batch calls per frame" );
+bool g_gdprPrecomputedAddresses = true;
+TRI_REGISTER_SETTING( "gdprPrecomputedAddresses", g_gdprPrecomputedAddresses );
+CCP_STATS_DECLARE( batchGdprFastPath, "Trinity/Batches/gdprFastPath", true, CST_COUNTER_HIGH, "Indirect draws recorded from precomputed constant buffer addresses" );
+CCP_STATS_DECLARE( batchGdprSlowPath, "Trinity/Batches/gdprSlowPath", true, CST_COUNTER_HIGH, "Indirect draws recorded through the full constant buffer apply path" );
 
 namespace
 {
@@ -690,15 +694,28 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 		{
 			CCP_STATS_ZONE( "Record All" );
 
+			const bool precomputedAddresses = g_gdprPrecomputedAddresses;
+			const uint64_t recordingFrame = primaryContext->GetPrimaryRenderContext().GetRecordingFrameNumber();
+
 			auto RecordBin = [&]( Bin& bin ) {
 				CCP_STATS_ZONE( "Record" );
+				uint32_t fastPath = 0;
+				uint32_t slowPath = 0;
 				for( uint32_t k = bin.firstIndex; k < bin.endIndex; ++k )
 				{
 					auto& batch = gdprBatches[k];
-					batch.m_material->ApplyConstantBuffers( bin.technique, bin.pass, bin.writer, *primaryContext );
+					bool fast = precomputedAddresses && batch.m_material->ApplyPrecomputedConstantBufferAddresses( bin.technique, bin.pass, recordingFrame, bin.writer );
+					if( !fast )
+					{
+						batch.m_material->ApplyConstantBuffers( bin.technique, bin.pass, bin.writer, *primaryContext );
+					}
 					if( batch.m_objectData )
 					{
-						batch.m_objectData->ApplyConstantBuffers( bin.writer, *primaryContext );
+						if( !precomputedAddresses || !batch.m_objectData->TryApplyStableConstantBufferAddresses( bin.writer ) )
+						{
+							fast = false;
+							batch.m_objectData->ApplyConstantBuffers( bin.writer, *primaryContext );
+						}
 					}
 					else if( bin.writer.HasPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER ) || bin.writer.HasPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER ) )
 					{
@@ -715,7 +732,10 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 					}
 					bin.writer.DrawIndexed( batch.m_indexCountPerInstance, batch.m_instanceCount, batch.m_startIndexLocation, batch.m_baseVertexLocation, batch.m_startInstanceLocation );
 					bin.writer.Next();
+					fast ? ++fastPath : ++slowPath;
 				}
+				CCP_STATS_ADD( batchGdprFastPath, fastPath );
+				CCP_STATS_ADD( batchGdprSlowPath, slowPath );
 			};
 
 			Tr2ParallelDo( begin( writers ), end( writers ), RecordBin );

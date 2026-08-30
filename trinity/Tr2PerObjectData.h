@@ -20,6 +20,11 @@ public:
 
 	virtual void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const;
 
+	virtual bool TryApplyStableConstantBufferAddresses( Tr2IndirectDrawBufferWriter& writer ) const
+	{
+		return false;
+	}
+
 	unsigned int GetUserData() const
 	{
 		return m_userData;

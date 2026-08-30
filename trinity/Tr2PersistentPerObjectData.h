@@ -150,6 +150,11 @@ public:
 		}
 	}
 
+	uint64_t GetStableAddress() const
+	{
+		return m_bufferDirty ? 0 : m_constantBuffer.GetStableAddress();
+	}
+
 	virtual void ReleaseResources( TriStorage s )
 	{
 		if( s & TRISTORAGE_ALL )
@@ -253,6 +258,47 @@ public:
 		{
 			writer.SetPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER, m_perObjectDataPs->UpdateBuffer( *m_owner, Tr2RenderContextEnum::PIXEL_SHADER, renderContext ) );
 		}
+	}
+
+	bool TryApplyStableConstantBufferAddresses( Tr2IndirectDrawBufferWriter& writer ) const override
+	{
+		uint64_t vsAddr = 0;
+		uint64_t gsAddr = 0;
+		uint64_t psAddr = 0;
+		if( writer.HasPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER ) )
+		{
+			if( !m_perObjectDataVs || !( vsAddr = m_perObjectDataVs->GetStableAddress() ) )
+			{
+				return false;
+			}
+		}
+		if( writer.HasPerObjectData( Tr2RenderContextEnum::GEOMETRY_SHADER ) )
+		{
+			if( !m_perObjectDataVs || !( gsAddr = m_perObjectDataVs->GetStableAddress() ) )
+			{
+				return false;
+			}
+		}
+		if( writer.HasPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER ) )
+		{
+			if( !m_perObjectDataPs || !( psAddr = m_perObjectDataPs->GetStableAddress() ) )
+			{
+				return false;
+			}
+		}
+		if( vsAddr )
+		{
+			writer.SetPerObjectDataAddress( Tr2RenderContextEnum::VERTEX_SHADER, vsAddr );
+		}
+		if( gsAddr )
+		{
+			writer.SetPerObjectDataAddress( Tr2RenderContextEnum::GEOMETRY_SHADER, gsAddr );
+		}
+		if( psAddr )
+		{
+			writer.SetPerObjectDataAddress( Tr2RenderContextEnum::PIXEL_SHADER, psAddr );
+		}
+		return true;
 	}
 
 private:
