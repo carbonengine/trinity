@@ -214,6 +214,8 @@ public:
 	void ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex, unsigned int passIndex, uint32_t overrideProgram, Tr2RenderContext& renderContext ) const;
 	void ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr2RtPipelineStateAL& rtPipelineState, Tr2RenderContext& renderContext ) const;
 	void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;
+	// Constant buffer a hit record binds for this material's RT technique; needsUpdate = its contents are not current
+	const Tr2ConstantBufferAL* GetRtLocalConstantBuffer( uint32_t techniqueIndex, bool& needsUpdate ) const;
 	uint64_t GetSortValue() const;
 	Tr2Shader* GetShaderStateInterface() const;
 

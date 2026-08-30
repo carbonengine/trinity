@@ -82,6 +82,32 @@ private:
 	friend class Tr2RaytracingGeometry;
 };
 
+// Retained shader-table record last resolved for a mesh area; valid while the table generation, material and the
+// stable addresses of the constant buffers its hit group binds are unchanged
+struct Tr2RtRetainedRecordRef
+{
+	enum
+	{
+		BINDS_MATERIAL = 1,
+		BINDS_PER_OBJECT = 2,
+		BINDS_GEOMETRY = 4
+	};
+
+	uint32_t generation = 0;
+	uint32_t index = 0;
+	uint32_t techniqueIndex = 0;
+	uint32_t boundMask = 0;
+	const Tr2Shader* shader = nullptr;
+	const Tr2Material* material = nullptr;
+	const Tr2ConstantBufferAL* materialConstants = nullptr;
+	const Tr2ConstantBufferAL* perObjectConstants = nullptr;
+	const Tr2ConstantBufferAL* geometryConstants = nullptr;
+	uint64_t materialAddress = 0;
+	uint64_t perObjectAddress = 0;
+	uint64_t geometryAddress = 0;
+	bool isTransparent = false;
+};
+
 class Tr2RaytracingMeshArea
 {
 public:
@@ -89,6 +115,7 @@ public:
 	const Tr2RtBottomLevelAccelerationStructureAL& BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
 	const TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL* GetBuiltStaticBlas( const Tr2RaytracingMesh& mesh ) const;
 	const Tr2ConstantBufferAL* GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const;
+	bool FindRetainedRecord( const Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* geometryConstants, uint32_t generation, uint32_t& index, bool& isTransparent ) const;
 	uint32_t GetAreaIndex()
 	{
 		return m_areaIndex;
@@ -110,6 +137,9 @@ private:
 	mutable const TriGeometryResLodData* m_geometryConstantsLod = nullptr;
 	mutable const Tr2ConstantBufferAL* m_geometryConstants = nullptr;
 	mutable uint32_t m_geometryConstantsKey[4] = {};
+	Tr2RtRetainedRecordRef m_retainedRecord;
+
+	friend class Tr2RaytracingGeometry;
 };
 
 BLUE_CLASS( Tr2RaytracingGeometry ) :
@@ -164,7 +194,39 @@ private:
 	const BlueSharedString m_outVertexBufferTechniqueName = BlueSharedString( "OutVB" );
 	static const uint32_t INVALID_MATERIAL = 0xffffffff;
 
+	struct RetainedRecordKey
+	{
+		uint32_t libraryHandle;
+		uint64_t address[3];
+
+		bool operator==( const RetainedRecordKey& other ) const
+		{
+			return libraryHandle == other.libraryHandle && address[0] == other.address[0] && address[1] == other.address[1] && address[2] == other.address[2];
+		}
+	};
+	struct RetainedRecordKeyHash
+	{
+		size_t operator()( const RetainedRecordKey& key ) const
+		{
+			uint64_t h = key.libraryHandle * 0x9E3779B97F4A7C15ull;
+			for( auto address : key.address )
+			{
+				h ^= ( address + 0x9E3779B97F4A7C15ull ) * 0xff51afd7ed558ccdull;
+				h ^= h >> 29;
+			}
+			return size_t( h );
+		}
+	};
+	struct TransientRecord
+	{
+		GeometryData* geometry;
+		const std::vector<BlueSharedStringW>* hitGroupNames;
+		Tr2RtLocalMaterialDescriptionAL material;
+	};
+
 	void PrepareShaderTableDescription( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
+	void PrepareRetainedShaderTableDescription( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
+	void ResetRetainedRecords();
 	void TransformMeshes( Tr2RenderContext & renderContext );
 	void BuildAccelerationStructures( Tr2RenderContext & renderContext );
 	void NoteDeformedGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area );
@@ -173,6 +235,13 @@ private:
 
 	std::vector<GeometryData> m_geometryData;
 	Tr2EnumerableThreadSpecific<std::vector<GeometryData>> m_threadLocalGeometryData;
+	std::unordered_map<RetainedRecordKey, uint32_t, RetainedRecordKeyHash> m_retainedRecords;
+	std::vector<uint64_t> m_retainedLastUsed;
+	std::vector<TransientRecord> m_transientRecords;
+	uint32_t m_retainedCount = 0;
+	uint32_t m_recordGeneration = 1;
+	int32_t m_retainedRaycasters = 0;
+	uint64_t m_recordFrame = 0;
 	std::atomic<bool> m_hasDeformedGeometry{ false };
 	std::vector<Tr2RtInstanceAL> m_instances;
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;

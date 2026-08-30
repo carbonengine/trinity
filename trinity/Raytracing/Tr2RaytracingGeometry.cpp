@@ -31,12 +31,18 @@ bool g_rtSkipUnusedMaterialApply = true;
 TRI_REGISTER_SETTING( "rtSkipUnusedMaterialApply", g_rtSkipUnusedMaterialApply );
 bool g_rtPrepareInstancesOnWorkers = true;
 TRI_REGISTER_SETTING( "rtPrepareInstancesOnWorkers", g_rtPrepareInstancesOnWorkers );
+bool g_rtRetainedShaderTable = true;
+TRI_REGISTER_SETTING( "rtRetainedShaderTable", g_rtRetainedShaderTable );
 
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
 CCP_STATS_DECLARE( rtShaderTableLibraries, "Trinity/RT/shaderTableLibraries", true, CST_COUNTER_HIGH, "Distinct raytracing libraries seen by the shader table this frame." );
 CCP_STATS_DECLARE( rtTransformMeshesSkipped, "Trinity/RT/transformMeshesSkipped", true, CST_COUNTER_HIGH, "TransformMeshes returned early because no skinned or morphed geometry was added this frame." );
 CCP_STATS_DECLARE( rtShaderTableMaterialApplies, "Trinity/RT/shaderTableMaterialApplies", true, CST_COUNTER_HIGH, "Shader table entries whose RT material data was built and applied this frame." );
 CCP_STATS_DECLARE( rtMainThreadBlasLookups, "Trinity/RT/mainThreadBlasLookups", true, CST_COUNTER_HIGH, "Geometry entries that went through BuildBlas on the main thread in BuildAccelerationStructures this frame." );
+CCP_STATS_DECLARE( rtRetainedRecordHits, "Trinity/RT/retainedRecordHits", true, CST_COUNTER_HIGH, "Shader table entries served by a retained hit record this frame." );
+CCP_STATS_DECLARE( rtRetainedRecordsAppended, "Trinity/RT/retainedRecordsAppended", true, CST_COUNTER_HIGH, "Hit records appended to the retained shader table this frame." );
+CCP_STATS_DECLARE( rtTransientRecords, "Trinity/RT/transientRecords", true, CST_COUNTER_HIGH, "Hit records rebuilt this frame because a bound constant buffer had no stable address." );
+CCP_STATS_DECLARE( rtShaderTableRebuilds, "Trinity/RT/shaderTableRebuilds", true, CST_COUNTER_LOW, "Retained shader table rebuilt from scratch this frame." );
 
 namespace
 {
@@ -47,8 +53,10 @@ struct RtLibraryState
 	const Tr2EffectLibrary* lib = nullptr;
 	std::vector<BlueSharedStringW> hitGroupNames;
 	uint32_t materialIndex = 0;
+	uint32_t boundMask = 0;
 	bool seen = false;
 	bool addsRecords = false;
+	bool cacheable = true;
 };
 
 struct RtShaderState
@@ -653,6 +661,35 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 	return m_geometryConstants;
 }
 
+bool Tr2RaytracingMeshArea::FindRetainedRecord( const Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* geometryConstants, uint32_t generation, uint32_t& index, bool& isTransparent ) const
+{
+	auto& ref = m_retainedRecord;
+	if( ref.generation != generation || ref.material != material || !material || material->GetShaderStateInterface() != ref.shader )
+	{
+		return false;
+	}
+	if( ref.boundMask & Tr2RtRetainedRecordRef::BINDS_MATERIAL )
+	{
+		bool needsUpdate;
+		auto constants = material->GetRtLocalConstantBuffer( ref.techniqueIndex, needsUpdate );
+		if( needsUpdate || constants != ref.materialConstants || !constants || constants->GetStableAddress() != ref.materialAddress )
+		{
+			return false;
+		}
+	}
+	if( ( ref.boundMask & Tr2RtRetainedRecordRef::BINDS_PER_OBJECT ) && ( perObjectData != ref.perObjectConstants || !perObjectData || perObjectData->GetStableAddress() != ref.perObjectAddress ) )
+	{
+		return false;
+	}
+	if( ( ref.boundMask & Tr2RtRetainedRecordRef::BINDS_GEOMETRY ) && ( geometryConstants != ref.geometryConstants || !geometryConstants || geometryConstants->GetStableAddress() != ref.geometryAddress ) )
+	{
+		return false;
+	}
+	index = ref.index;
+	isTransparent = ref.isTransparent;
+	return true;
+}
+
 // ***************** Tr2RaytracingGeometry *****************
 Tr2RaytracingGeometry::Tr2RaytracingGeometry()
 {
@@ -699,6 +736,12 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 
 	GPU_REGION( renderContext, "PrepareShaderTableDescription" );
 	CCP_STATS_ZONE( __FUNCTION__ );
+	if( g_rtRetainedShaderTable )
+	{
+		PrepareRetainedShaderTableDescription( renderContext, numRaycasters, shaderTableDescs, pipelineManagers );
+		return;
+	}
+	ResetRetainedRecords();
 	for( int32_t i = 0; i < numRaycasters; i++ )
 	{
 		if( g_rtShaderTableReuse )
@@ -877,6 +920,239 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 			geometry.materialIndex = libState->materialIndex;
 		}
 	}
+	CCP_STATS_ADD( rtShaderTableShaders, shaders.size() );
+	CCP_STATS_ADD( rtShaderTableLibraries, libraries.size() );
+}
+
+void Tr2RaytracingGeometry::ResetRetainedRecords()
+{
+	m_retainedRecords.clear();
+	m_retainedLastUsed.clear();
+	m_retainedCount = 0;
+	m_retainedRaycasters = 0;
+	++m_recordGeneration;
+}
+
+// Hit records whose bound constant buffers have stable GPU addresses are kept across frames; each mesh area remembers
+// its record so AddGeometry resolves it on the worker threads and only new or changed entries are processed here.
+void Tr2RaytracingGeometry::PrepareRetainedShaderTableDescription( Tr2RenderContext& renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers )
+{
+	++m_recordFrame;
+	bool rebuild = numRaycasters != m_retainedRaycasters;
+	for( int32_t i = 0; i < numRaycasters; i++ )
+	{
+		rebuild |= shaderTableDescs[i]->GetRetainedHitGroupCount() != m_retainedCount;
+	}
+	if( !rebuild && ( m_recordFrame & 255 ) == 0 && m_retainedCount > 4096 )
+	{
+		uint32_t stale = 0;
+		for( auto lastUsed : m_retainedLastUsed )
+		{
+			stale += lastUsed + 256 < m_recordFrame;
+		}
+		rebuild = stale > m_retainedCount / 2;
+	}
+	if( rebuild )
+	{
+		ResetRetainedRecords();
+		m_retainedRaycasters = numRaycasters;
+		for( int32_t i = 0; i < numRaycasters; i++ )
+		{
+			shaderTableDescs[i]->Clear();
+		}
+		for( auto& geometry : m_geometryData )
+		{
+			geometry.materialIndex = INVALID_MATERIAL;
+		}
+		CCP_STATS_INC( rtShaderTableRebuilds );
+	}
+	else
+	{
+		for( int32_t i = 0; i < numRaycasters; i++ )
+		{
+			shaderTableDescs[i]->ClearTransient();
+		}
+	}
+
+	std::unordered_map<const Tr2Shader*, RtShaderState> shaders;
+	std::map<uint32_t, RtLibraryState> libraries;
+	m_transientRecords.clear();
+	uint32_t retainedHits = 0;
+	uint32_t appended = 0;
+
+	for( auto& geometry : m_geometryData )
+	{
+		if( !geometry.material )
+		{
+			continue;
+		}
+		if( geometry.materialIndex != INVALID_MATERIAL )
+		{
+			m_retainedLastUsed[geometry.materialIndex] = m_recordFrame;
+			++retainedHits;
+			continue;
+		}
+		auto shader = geometry.material->GetShaderStateInterface();
+		if( !shader )
+		{
+			continue;
+		}
+
+		auto shaderState = shaders.find( shader );
+		if( shaderState == end( shaders ) )
+		{
+			shaderState = shaders.emplace( shader, RtShaderState() ).first;
+			uint32_t techniqueIndex;
+			if( shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
+			{
+				auto& libs = shader->GetEffectDescription().techniques[techniqueIndex].libraries;
+				if( !libs.empty() )
+				{
+					auto& libState = libraries[libs[0].libraryHandle];
+					if( !libState.lib )
+					{
+						libState.lib = &libs[0];
+						libState.hitGroupNames.resize( numRaycasters );
+						for( int32_t i = 0; i < numRaycasters; i++ )
+						{
+							libState.hitGroupNames[i] = pipelineManagers[i]->AddHitGroup( libs[0] );
+						}
+						auto& registers = libs[0].localInput.signature.registers;
+						libState.addsRecords = !registers.empty();
+						for( auto& reg : registers )
+						{
+							if( reg.registerType != Tr2ShaderRegisterAL::CONSTANT_BUFFER )
+							{
+								continue;
+							}
+							if( reg.registerIndex == Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS )
+							{
+								libState.boundMask |= Tr2RtRetainedRecordRef::BINDS_MATERIAL;
+							}
+							else if( reg.registerIndex == Tr2Renderer::GetPerObjectPSStartRegister() )
+							{
+								libState.boundMask |= Tr2RtRetainedRecordRef::BINDS_PER_OBJECT;
+							}
+							else if( reg.registerIndex == Tr2Renderer::GetPerObjectRTVertexBufferDataRegister() )
+							{
+								libState.boundMask |= Tr2RtRetainedRecordRef::BINDS_GEOMETRY;
+							}
+							else
+							{
+								libState.cacheable = false;
+							}
+						}
+					}
+					shaderState->second.techniqueIndex = techniqueIndex;
+					shaderState->second.lib = &libState;
+				}
+			}
+		}
+		auto libState = shaderState->second.lib;
+		if( !libState )
+		{
+			continue;
+		}
+		auto& lib = *libState->lib;
+		const uint32_t techniqueIndex = shaderState->second.techniqueIndex;
+		geometry.isTransparent = !lib.anyHitName.empty();
+
+		Tr2RtLocalMaterialDescriptionAL material;
+		RetainedRecordKey key = { lib.libraryHandle, { 0, 0, 0 } };
+		const Tr2ConstantBufferAL* materialConstants = nullptr;
+		bool stable = libState->cacheable;
+		if( libState->addsRecords )
+		{
+			if( geometry.perObjectData )
+			{
+				material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *geometry.perObjectData );
+			}
+			if( geometry.vertexBufferData )
+			{
+				material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *geometry.vertexBufferData );
+			}
+			geometry.material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
+			bool needsUpdate;
+			materialConstants = geometry.material->GetRtLocalConstantBuffer( techniqueIndex, needsUpdate );
+			stable &= !needsUpdate;
+			auto Resolve = [&]( uint32_t bit, const Tr2ConstantBufferAL* constants, uint64_t& address ) {
+				if( libState->boundMask & bit )
+				{
+					address = constants ? constants->GetStableAddress() : 0;
+					stable &= address != 0;
+				}
+			};
+			Resolve( Tr2RtRetainedRecordRef::BINDS_MATERIAL, materialConstants, key.address[0] );
+			Resolve( Tr2RtRetainedRecordRef::BINDS_PER_OBJECT, geometry.perObjectData, key.address[1] );
+			Resolve( Tr2RtRetainedRecordRef::BINDS_GEOMETRY, geometry.vertexBufferData, key.address[2] );
+		}
+		if( !stable )
+		{
+			m_transientRecords.push_back( { &geometry, &libState->hitGroupNames, material } );
+			continue;
+		}
+
+		uint32_t index;
+		auto found = m_retainedRecords.find( key );
+		if( found != end( m_retainedRecords ) )
+		{
+			index = found->second;
+		}
+		else
+		{
+			index = m_retainedCount++;
+			m_retainedRecords.emplace( key, index );
+			m_retainedLastUsed.push_back( m_recordFrame );
+			Tr2RtLocalMaterialDescriptionAL retained;
+			if( libState->boundMask & Tr2RtRetainedRecordRef::BINDS_MATERIAL )
+			{
+				retained.SetConstantsAddress( Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS, key.address[0] );
+			}
+			if( libState->boundMask & Tr2RtRetainedRecordRef::BINDS_PER_OBJECT )
+			{
+				retained.SetConstantsAddress( Tr2Renderer::GetPerObjectPSStartRegister(), key.address[1] );
+			}
+			if( libState->boundMask & Tr2RtRetainedRecordRef::BINDS_GEOMETRY )
+			{
+				retained.SetConstantsAddress( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), key.address[2] );
+			}
+			for( int32_t i = 0; i < numRaycasters; i++ )
+			{
+				shaderTableDescs[i]->AddRetainedHitGroup( libState->hitGroupNames[i].c_str(), retained );
+			}
+			++appended;
+		}
+		m_retainedLastUsed[index] = m_recordFrame;
+		geometry.materialIndex = index;
+
+		auto& ref = geometry.area->m_retainedRecord;
+		ref.generation = m_recordGeneration;
+		ref.index = index;
+		ref.techniqueIndex = techniqueIndex;
+		ref.boundMask = libState->boundMask;
+		ref.shader = shader;
+		ref.material = geometry.material;
+		ref.materialConstants = materialConstants;
+		ref.perObjectConstants = geometry.perObjectData;
+		ref.geometryConstants = geometry.vertexBufferData;
+		ref.materialAddress = key.address[0];
+		ref.perObjectAddress = key.address[1];
+		ref.geometryAddress = key.address[2];
+		ref.isTransparent = geometry.isTransparent;
+	}
+
+	for( size_t k = 0; k < m_transientRecords.size(); ++k )
+	{
+		auto& transient = m_transientRecords[k];
+		transient.geometry->materialIndex = m_retainedCount + uint32_t( k );
+		for( int32_t i = 0; i < numRaycasters; i++ )
+		{
+			shaderTableDescs[i]->AddHitGroup( ( *transient.hitGroupNames )[i].c_str(), transient.material );
+		}
+	}
+	CCP_STATS_ADD( rtRetainedRecordHits, retainedHits );
+	CCP_STATS_ADD( rtRetainedRecordsAppended, appended );
+	CCP_STATS_ADD( rtTransientRecords, m_transientRecords.size() );
 	CCP_STATS_ADD( rtShaderTableShaders, shaders.size() );
 	CCP_STATS_ADD( rtShaderTableLibraries, libraries.size() );
 }
@@ -1205,6 +1481,10 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.worldTransform = worldTransform;
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
+	if( g_rtRetainedShaderTable )
+	{
+		area.FindRetainedRecord( material, perObjectData, vertexBufferData, m_recordGeneration, obj.materialIndex, obj.isTransparent );
+	}
 	obj.bakedMorphOffset = bakedMorphOffset;
 	obj.instance.blas = nullptr;
 	obj.instanceTransformPrepared = g_rtPrepareInstancesOnWorkers;
@@ -1251,6 +1531,10 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.instanceCount = uint32_t( instanceCount );
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
+	if( g_rtRetainedShaderTable )
+	{
+		area.FindRetainedRecord( material, perObjectData, vertexBufferData, m_recordGeneration, obj.materialIndex, obj.isTransparent );
+	}
 	obj.bakedMorphOffset = bakedMorphOffset;
 	obj.instance.blas = g_rtPrepareInstancesOnWorkers ? area.GetBuiltStaticBlas( mesh ) : nullptr;
 	obj.instanceTransformPrepared = false;
@@ -1326,6 +1610,7 @@ Tr2RaytracingGeometry::VtxOffsets Tr2RaytracingGeometry::FindOffsets( unsigned d
 
 void Tr2RaytracingGeometry::ReleaseResources( TriStorage s )
 {
+	ResetRetainedRecords();
 	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
 		m_skinVerticesData = Tr2ConstantBufferAL();

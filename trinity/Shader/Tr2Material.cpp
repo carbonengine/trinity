@@ -611,3 +611,20 @@ void Tr2Material::ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2Rt
 		localMaterial.SetConstants( Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS, cb );
 	}
 }
+
+const Tr2ConstantBufferAL* Tr2Material::GetRtLocalConstantBuffer( uint32_t techniqueIndex, bool& needsUpdate ) const
+{
+	needsUpdate = false;
+	if( !m_shader || techniqueIndex >= m_parametersForPasses.size() || m_parametersForPasses[techniqueIndex].libraries.empty() )
+	{
+		return nullptr;
+	}
+	auto& pp = *m_parametersForPasses[techniqueIndex].libraries[0];
+	auto& input = pp.m_localInput;
+	if( !input.m_constantBuffer.GetSize() )
+	{
+		return nullptr;
+	}
+	needsUpdate = input.m_constantBufferDirty || !pp.m_reroutedParameters.empty() || !input.m_shaderParameters.empty();
+	return &input.m_constantBuffer;
+}

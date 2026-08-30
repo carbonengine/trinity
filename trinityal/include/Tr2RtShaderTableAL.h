@@ -22,9 +22,16 @@ class Tr2RtLocalMaterialDescriptionAL
 public:
 	// Stores a raw pointer to the constant buffer, make sure that it lives as long as the shader table
 	Tr2RtLocalMaterialDescriptionAL& SetConstants( uint32_t registerIndex, const Tr2ConstantBufferAL& buffer );
+	// A GPU address that stays valid for as long as the record is used (persistent constant buffer slot)
+	Tr2RtLocalMaterialDescriptionAL& SetConstantsAddress( uint32_t registerIndex, uint64_t address );
 
 private:
-	const Tr2ConstantBufferAL* m_constants[8] = {};
+	struct Constant
+	{
+		const Tr2ConstantBufferAL* buffer = nullptr;
+		uint64_t address = 0;
+	};
+	Constant m_constants[8];
 
 	friend class TrinityALImpl::Tr2RtShaderTableAL;
 };
@@ -39,9 +46,15 @@ public:
 	void AddMissShader( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
 	void AddHitGroup( const wchar_t* name );
 	void AddHitGroup( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
+	// Retained hit groups keep their record index across frames and precede the per-frame ones; only records
+	// added since the last Create are written to the GPU table
+	void AddRetainedHitGroup( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
+	uint32_t GetRetainedHitGroupCount() const;
 
 	void Reserve( size_t hitGroupCount );
 	void Clear();
+	// Drops everything but the retained hit groups
+	void ClearTransient();
 
 private:
 	struct ShaderRecord
@@ -51,7 +64,9 @@ private:
 	};
 	std::vector<ShaderRecord> m_rayGenNames;
 	std::vector<ShaderRecord> m_missNames;
+	std::vector<ShaderRecord> m_retainedHitGroups;
 	std::vector<ShaderRecord> m_hitGroupNames;
+	uint32_t m_retainedVersion = 0;
 
 	friend class TrinityALImpl::Tr2RtShaderTableAL;
 };

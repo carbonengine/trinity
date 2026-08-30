@@ -75,7 +75,13 @@ TrinityALImpl::Tr2RtShaderTableAL* Tr2RtShaderTableAL::TrinityALImpl_GetObject()
 
 Tr2RtLocalMaterialDescriptionAL& Tr2RtLocalMaterialDescriptionAL::SetConstants( uint32_t registerIndex, const Tr2ConstantBufferAL& buffer )
 {
-	m_constants[registerIndex] = &buffer;
+	m_constants[registerIndex] = { &buffer, 0 };
+	return *this;
+}
+
+Tr2RtLocalMaterialDescriptionAL& Tr2RtLocalMaterialDescriptionAL::SetConstantsAddress( uint32_t registerIndex, uint64_t address )
+{
+	m_constants[registerIndex] = { nullptr, address };
 	return *this;
 }
 
@@ -115,12 +121,30 @@ void Tr2RtShaderTableDescriptionAL::AddHitGroup( const wchar_t* name, const Tr2R
 	m_hitGroupNames.push_back( shaderRecord );
 }
 
+void Tr2RtShaderTableDescriptionAL::AddRetainedHitGroup( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material )
+{
+	ShaderRecord shaderRecord = { name, material };
+	m_retainedHitGroups.push_back( shaderRecord );
+}
+
+uint32_t Tr2RtShaderTableDescriptionAL::GetRetainedHitGroupCount() const
+{
+	return uint32_t( m_retainedHitGroups.size() );
+}
+
 void Tr2RtShaderTableDescriptionAL::Reserve( size_t hitGroupCount )
 {
 	m_hitGroupNames.reserve( hitGroupCount );
 }
 
 void Tr2RtShaderTableDescriptionAL::Clear()
+{
+	ClearTransient();
+	m_retainedHitGroups.clear();
+	++m_retainedVersion;
+}
+
+void Tr2RtShaderTableDescriptionAL::ClearTransient()
 {
 	m_rayGenNames.clear();
 	m_missNames.clear();

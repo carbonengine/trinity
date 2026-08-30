@@ -36,13 +36,17 @@ private:
 		CComPtr<ID3D12Resource> resource;
 		uint8_t* mapped = nullptr;
 		size_t capacity = 0;
+		// retained hit records already written to this buffer, valid for this pipeline / description version / entry size
+		uint32_t retainedWritten = 0;
+		uint32_t retainedVersion = 0xffffffff;
+		ID3D12StateObject* pipeline = nullptr;
+		uint64_t entrySize = 0;
 	};
 	void ReleaseBuffers();
 
 	Tr2RtShaderTableDescriptionAL m_desc;
 	CComPtr<ID3D12Resource> m_table;
 	std::vector<TableBuffer> m_buffers;
-	std::vector<uint8_t> m_staging;
 	std::vector<const wchar_t*> m_rayGenNames;
 	size_t m_missCount = 0;
 	size_t m_hitGroupCount = 0;
