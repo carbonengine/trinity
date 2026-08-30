@@ -7,16 +7,7 @@
 #include "DescriptorStateCacheDx12.h"
 
 #include "../Tr2PrimaryRenderContextDx12.h"
-#include <intrin.h>
 
-CCP_STATS_DECLARE( dx12CbUploads, "Trinity/AL/cbUploads", true, CST_COUNTER_HIGH, "Constant buffers copied into the frame upload ring this frame." );
-CCP_STATS_DECLARE( dx12CbUploadBytes, "Trinity/AL/cbUploadBytes", true, CST_COUNTER_HIGH, "Bytes of constant buffer data copied into the frame upload ring this frame." );
-CCP_STATS_DECLARE( dx12CbReused, "Trinity/AL/cbReused", true, CST_COUNTER_HIGH, "Constant buffer binds served from the already-uploaded copy this frame." );
-CCP_STATS_DECLARE( dx12CbPersistentReused, "Trinity/AL/cbPersistentReused", true, CST_COUNTER_HIGH, "Persistent constant buffers bound from their resident slot without any copy this frame." );
-CCP_STATS_DECLARE( dx12CbPersistentCopies, "Trinity/AL/cbPersistentCopies", true, CST_COUNTER_HIGH, "Persistent constant buffers whose slot was refreshed by a GPU copy this frame." );
-CCP_STATS_DECLARE( dx12CbUploadCycles, "Trinity/AL/cbUploadCycles", true, CST_COUNTER_HIGH, "TSC cycles spent copying constant buffers into the frame upload ring this frame." );
-CCP_STATS_DECLARE( dx12CbUploadCyclesPerObject, "Trinity/AL/cbUploadCyclesPerObject", true, CST_COUNTER_HIGH, "TSC cycles spent copying 464-byte per-object constant buffers this frame." );
-CCP_STATS_DECLARE( dx12CbUploadsPerObject, "Trinity/AL/cbUploadsPerObject", true, CST_COUNTER_HIGH, "464-byte per-object constant buffers copied into the frame upload ring this frame." );
 
 /** */
 DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context ) :
@@ -177,11 +168,9 @@ D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityAL
 				{
 					pool.QueueCopy( slot, entry.m_resource, entry.m_offset, constantBuffer.GetSize() );
 				}
-				CCP_STATS_INC( dx12CbPersistentCopies );
 			}
 			else
 			{
-				CCP_STATS_INC( dx12CbPersistentReused );
 			}
 			return pool.GetSlotAddress( slot );
 		}
@@ -191,7 +180,6 @@ D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityAL
 	// CB isn't resident
 	if( constantBuffer.m_token.m_frameNumber != frameNr )
 	{
-		const uint64_t t0 = __rdtsc();
 		auto entry = m_allocatorUpload.Allocate( constantBuffer.GetDataPtr(), constantBuffer.GetSize() );
 		if( entry.m_cpuAddr != nullptr )
 		{
@@ -200,20 +188,10 @@ D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityAL
 
 		constantBuffer.m_token.m_address = addr;
 		constantBuffer.m_token.m_frameNumber = frameNr;
-		const uint64_t cycles = __rdtsc() - t0;
-		CCP_STATS_INC( dx12CbUploads );
-		CCP_STATS_ADD( dx12CbUploadBytes, constantBuffer.GetSize() );
-		CCP_STATS_ADD( dx12CbUploadCycles, cycles );
-		if( constantBuffer.GetSize() == 464 )
-		{
-			CCP_STATS_ADD( dx12CbUploadCyclesPerObject, cycles );
-			CCP_STATS_INC( dx12CbUploadsPerObject );
-		}
 	}
 	else
 	{
 		addr = constantBuffer.m_token.m_address;
-		CCP_STATS_INC( dx12CbReused );
 	}
 	return addr;
 }
