@@ -27,11 +27,14 @@ bool g_rtTransformMeshesEarlyOut = true;
 TRI_REGISTER_SETTING( "rtTransformMeshesEarlyOut", g_rtTransformMeshesEarlyOut );
 bool g_rtGeometryConstantsCache = true;
 TRI_REGISTER_SETTING( "rtGeometryConstantsCache", g_rtGeometryConstantsCache );
+bool g_rtSkipUnusedMaterialApply = true;
+TRI_REGISTER_SETTING( "rtSkipUnusedMaterialApply", g_rtSkipUnusedMaterialApply );
 
 CCP_STATS_DECLARE( rtShaderTableEntries, "Trinity/RT/shaderTableEntries", true, CST_COUNTER_HIGH, "Geometry entries processed by PrepareShaderTableDescription this frame." );
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
 CCP_STATS_DECLARE( rtShaderTableLibraries, "Trinity/RT/shaderTableLibraries", true, CST_COUNTER_HIGH, "Distinct raytracing libraries seen by the shader table this frame." );
 CCP_STATS_DECLARE( rtTransformMeshesSkipped, "Trinity/RT/transformMeshesSkipped", true, CST_COUNTER_HIGH, "TransformMeshes returned early because no skinned or morphed geometry was added this frame." );
+CCP_STATS_DECLARE( rtShaderTableMaterialApplies, "Trinity/RT/shaderTableMaterialApplies", true, CST_COUNTER_HIGH, "Shader table entries whose RT material data was built and applied this frame." );
 
 namespace
 {
@@ -816,7 +819,13 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		{
 			geometry.isTransparent = true;
 		}
+		if( g_rtSkipUnusedMaterialApply && libState->seen && !libState->addsRecords )
+		{
+			geometry.materialIndex = libState->materialIndex;
+			continue;
+		}
 
+		CCP_STATS_INC( rtShaderTableMaterialApplies );
 		Tr2RtLocalMaterialDescriptionAL material;
 		if( geometry.perObjectData )
 		{
