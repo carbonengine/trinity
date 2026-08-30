@@ -29,12 +29,16 @@ bool g_rtGeometryConstantsCache = true;
 TRI_REGISTER_SETTING( "rtGeometryConstantsCache", g_rtGeometryConstantsCache );
 bool g_rtSkipUnusedMaterialApply = true;
 TRI_REGISTER_SETTING( "rtSkipUnusedMaterialApply", g_rtSkipUnusedMaterialApply );
+bool g_rtPrepareInstancesOnWorkers = true;
+TRI_REGISTER_SETTING( "rtPrepareInstancesOnWorkers", g_rtPrepareInstancesOnWorkers );
 
 CCP_STATS_DECLARE( rtShaderTableEntries, "Trinity/RT/shaderTableEntries", true, CST_COUNTER_HIGH, "Geometry entries processed by PrepareShaderTableDescription this frame." );
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
 CCP_STATS_DECLARE( rtShaderTableLibraries, "Trinity/RT/shaderTableLibraries", true, CST_COUNTER_HIGH, "Distinct raytracing libraries seen by the shader table this frame." );
 CCP_STATS_DECLARE( rtTransformMeshesSkipped, "Trinity/RT/transformMeshesSkipped", true, CST_COUNTER_HIGH, "TransformMeshes returned early because no skinned or morphed geometry was added this frame." );
 CCP_STATS_DECLARE( rtShaderTableMaterialApplies, "Trinity/RT/shaderTableMaterialApplies", true, CST_COUNTER_HIGH, "Shader table entries whose RT material data was built and applied this frame." );
+CCP_STATS_DECLARE( rtInstancesPreparedOnWorkers, "Trinity/RT/instancesPreparedOnWorkers", true, CST_COUNTER_HIGH, "Geometry entries whose static BLAS was resolved on a worker thread in AddGeometry this frame." );
+CCP_STATS_DECLARE( rtMainThreadBlasLookups, "Trinity/RT/mainThreadBlasLookups", true, CST_COUNTER_HIGH, "Geometry entries that went through BuildBlas on the main thread in BuildAccelerationStructures this frame." );
 
 namespace
 {
@@ -489,6 +493,21 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 			renderContext.GetPrimaryRenderContext() );
 	}
 	return lod->m_areas[m_areaIndex].m_staticBlas;
+}
+
+const TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL* Tr2RaytracingMeshArea::GetBuiltStaticBlas( const Tr2RaytracingMesh& mesh ) const
+{
+	auto lod = mesh.GetCurrentLodData();
+	if( !lod || m_areaIndex >= lod->m_areas.size() )
+	{
+		return nullptr;
+	}
+	auto& lodArea = lod->m_areas[m_areaIndex];
+	if( lodArea.m_isSkinned || lodArea.m_isMorphed || !lodArea.m_staticBlas.IsValid() )
+	{
+		return nullptr;
+	}
+	return lodArea.m_staticBlas.TrinityALImpl_GetObject();
 }
 
 const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const
@@ -1111,43 +1130,50 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 	renderContext.FlushBarriersDx12();
 #endif
 
-	static std::vector<Tr2RtInstanceAL> instances;
+	auto& instances = m_instances;
 	instances.clear();
 	Tr2RtBottomLevelAccelerationStructureAL invalidBlas;
 	if( instances.capacity() < m_geometryData.size() )
 	{
 		instances.reserve( m_geometryData.size() );
 	}
-	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
+	for( auto& geometry : m_geometryData )
 	{
-		if( it->materialIndex == INVALID_MATERIAL )
+		if( geometry.materialIndex == INVALID_MATERIAL )
 		{
 			continue;
 		}
 
-		Tr2RtInstanceAL instance;
-		instance.flags = it->isTransparent ? Tr2RtInstanceAL::FORCE_NON_OPAQUE : Tr2RtInstanceAL::NONE;
-		instance.materialIndex = it->materialIndex;
-		instance.blas = it->area->BuildBlas( *it->mesh, renderContext ).TrinityALImpl_GetObject();
+		auto& instance = geometry.instance;
+		instance.flags = geometry.isTransparent ? Tr2RtInstanceAL::FORCE_NON_OPAQUE : Tr2RtInstanceAL::NONE;
+		instance.materialIndex = geometry.materialIndex;
+		if( !instance.blas )
+		{
+			CCP_STATS_INC( rtMainThreadBlasLookups );
+			instance.blas = geometry.area->BuildBlas( *geometry.mesh, renderContext ).TrinityALImpl_GetObject();
+		}
 		if( !instance.blas || instance.blas == invalidBlas.TrinityALImpl_GetObject() )
 		{
 			continue;
 		}
 
-		if( it->worldTransforms )
+		if( geometry.worldTransforms )
 		{
-			for( uint32_t i = 0; i < it->instanceCount; ++i )
+			for( uint32_t i = 0; i < geometry.instanceCount; ++i )
 			{
-				memcpy( instance.transform, it->worldTransforms + i, sizeof( Float4x3 ) );
+				memcpy( instance.transform, geometry.worldTransforms + i, sizeof( Float4x3 ) );
 				instances.push_back( instance );
 			}
 		}
 		else
 		{
-			auto m = Transpose( it->worldTransform );
-			memcpy( instance.transform[0], &m.GetX(), 4 * sizeof( float ) );
-			memcpy( instance.transform[1], &m.GetY(), 4 * sizeof( float ) );
-			memcpy( instance.transform[2], &m.GetZ(), 4 * sizeof( float ) );
+			if( !geometry.instanceTransformPrepared )
+			{
+				auto m = Transpose( geometry.worldTransform );
+				memcpy( instance.transform[0], &m.GetX(), 4 * sizeof( float ) );
+				memcpy( instance.transform[1], &m.GetY(), 4 * sizeof( float ) );
+				memcpy( instance.transform[2], &m.GetZ(), 4 * sizeof( float ) );
+			}
 			instances.push_back( instance );
 		}
 	}
@@ -1183,6 +1209,20 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
 	obj.bakedMorphOffset = bakedMorphOffset;
+	obj.instance.blas = nullptr;
+	obj.instanceTransformPrepared = g_rtPrepareInstancesOnWorkers;
+	if( g_rtPrepareInstancesOnWorkers )
+	{
+		obj.instance.blas = area.GetBuiltStaticBlas( mesh );
+		auto m = Transpose( worldTransform );
+		memcpy( obj.instance.transform[0], &m.GetX(), 4 * sizeof( float ) );
+		memcpy( obj.instance.transform[1], &m.GetY(), 4 * sizeof( float ) );
+		memcpy( obj.instance.transform[2], &m.GetZ(), 4 * sizeof( float ) );
+		if( obj.instance.blas )
+		{
+			CCP_STATS_INC( rtInstancesPreparedOnWorkers );
+		}
+	}
 	m_threadLocalGeometryData.local().push_back( obj );
 	NoteDeformedGeometry( mesh, area );
 }
@@ -1219,6 +1259,12 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
 	obj.bakedMorphOffset = bakedMorphOffset;
+	obj.instance.blas = g_rtPrepareInstancesOnWorkers ? area.GetBuiltStaticBlas( mesh ) : nullptr;
+	obj.instanceTransformPrepared = false;
+	if( obj.instance.blas )
+	{
+		CCP_STATS_INC( rtInstancesPreparedOnWorkers );
+	}
 	m_threadLocalGeometryData.local().push_back( obj );
 	NoteDeformedGeometry( mesh, area );
 }

@@ -87,6 +87,7 @@ class Tr2RaytracingMeshArea
 public:
 	Tr2RaytracingMeshArea( uint32_t index );
 	const Tr2RtBottomLevelAccelerationStructureAL& BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
+	const TrinityALImpl::Tr2RtBottomLevelAccelerationStructureAL* GetBuiltStaticBlas( const Tr2RaytracingMesh& mesh ) const;
 	const Tr2ConstantBufferAL* GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext ) const;
 	uint32_t GetAreaIndex()
 	{
@@ -155,6 +156,8 @@ private:
 		uint32_t materialIndex;
 		bool isTransparent;
 		uint32_t bakedMorphOffset;
+		Tr2RtInstanceAL instance;
+		bool instanceTransformPrepared;
 	};
 
 	const BlueSharedString m_inVertexBufferTechniqueName = BlueSharedString( "InVB" );
@@ -171,6 +174,7 @@ private:
 	std::vector<GeometryData> m_geometryData;
 	Tr2EnumerableThreadSpecific<std::vector<GeometryData>> m_threadLocalGeometryData;
 	std::atomic<bool> m_hasDeformedGeometry{ false };
+	std::vector<Tr2RtInstanceAL> m_instances;
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;
 
 	Tr2EffectPtr m_skinVerticesEffect;
