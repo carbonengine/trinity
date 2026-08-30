@@ -275,6 +275,9 @@ protected:
 	bool m_updateAnimation;
 	bool m_bakeMorphs;
 	bool m_dirtyRtMesh;
+	const Tr2MeshBase* m_rtMeshUpdatedFor = nullptr;
+	const TriGeometryRes* m_rtMeshUpdatedGeometry = nullptr;
+	float m_rtMeshUpdatedScreenSize = -1.0f;
 	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
 	bool m_hasUpdated = false;
 

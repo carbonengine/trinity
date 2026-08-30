@@ -440,7 +440,16 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 		if( updateContext.m_raytracingEnabled )
 		{
-			UpdateRtMesh();
+			const Tr2MeshBase* mesh = m_mesh;
+			auto geometry = mesh ? mesh->GetGeometryResource() : nullptr;
+			if( m_dirtyRtMesh || mesh != m_rtMeshUpdatedFor || geometry != m_rtMeshUpdatedGeometry || m_currentScreenSize != m_rtMeshUpdatedScreenSize )
+			{
+				UpdateRtMesh();
+				m_rtMeshUpdatedFor = mesh;
+				m_rtMeshUpdatedGeometry = geometry;
+				m_rtMeshUpdatedScreenSize = m_currentScreenSize;
+				m_dirtyRtMesh = false;
+			}
 			UpdateRtSkeleton();
 		}
 	}
