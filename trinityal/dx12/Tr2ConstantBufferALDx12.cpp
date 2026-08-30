@@ -54,7 +54,7 @@ ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2ConstantUsageAL::Type us
 	m_size = size;
 	m_data.resize( "Tr2ConstantBufferAL::m_data", m_size );
 	m_owner = &renderContext;
-	m_usage = usage;
+	m_usage = usage == Tr2ConstantUsageAL::PERSISTENT && size > PersistentConstantBufferPool::MAX_SLOT_SIZE ? Tr2ConstantUsageAL::REUSABLE : usage;
 	m_slot = PersistentConstantBufferPool::INVALID_SLOT;
 	m_slotDirty = true;
 	m_slotStale = true;
@@ -111,6 +111,20 @@ uint32_t Tr2ConstantBufferAL::GetSize() const
 Tr2ALMemoryType Tr2ConstantBufferAL::GetMemoryClass() const
 {
 	return AL_MEMORY_MANAGED;
+}
+
+uint64_t Tr2ConstantBufferAL::GetStableAddress() const
+{
+	if( m_usage != Tr2ConstantUsageAL::PERSISTENT || !m_owner )
+	{
+		return 0;
+	}
+	const uint32_t slot = m_slot.load( std::memory_order_acquire );
+	if( slot == PersistentConstantBufferPool::INVALID_SLOT || m_slotDirty.load( std::memory_order_relaxed ) || m_slotStale.load( std::memory_order_relaxed ) )
+	{
+		return 0;
+	}
+	return m_owner->m_persistentConstants.GetSlotAddress( slot );
 }
 
 void Tr2ConstantBufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const

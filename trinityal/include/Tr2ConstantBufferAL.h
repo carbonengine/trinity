@@ -39,6 +39,9 @@ public:
 	bool IsValid() const;
 	uint32_t GetSize() const;
 	Tr2ALMemoryType GetMemoryClass() const;
+	// GPU address of a PERSISTENT buffer's slot while its contents are resident and unchanged, 0 otherwise
+	uint64_t GetStableAddress() const;
+	static bool SupportsPersistent();
 
 	ALResult SetName( const char* name );
 

@@ -142,7 +142,7 @@ D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityAL
 		uint32_t slot = constantBuffer.m_slot.load( std::memory_order_acquire );
 		if( slot == TrinityALImpl::PersistentConstantBufferPool::INVALID_SLOT && pool.IsValid() )
 		{
-			uint32_t newSlot = pool.AllocateSlot( m_primaryContext->GetRecordingFrameNumber() );
+			uint32_t newSlot = pool.AllocateSlot( constantBuffer.GetSize(), m_primaryContext->GetRecordingFrameNumber() );
 			if( newSlot != TrinityALImpl::PersistentConstantBufferPool::INVALID_SLOT )
 			{
 				uint32_t expected = TrinityALImpl::PersistentConstantBufferPool::INVALID_SLOT;

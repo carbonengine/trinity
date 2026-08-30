@@ -33,7 +33,7 @@ std::pair<Tr2SharedConstantBuffers::Key, Tr2ConstantBufferAL> Tr2SharedConstantB
 		if( !value.buffer.IsValid() )
 		{
 			USE_MAIN_THREAD_RENDER_CONTEXT();
-			if( FAILED( value.buffer.Create( size, Tr2ConstantUsageAL::ONE_SHOT, contents, renderContext ) ) )
+			if( FAILED( value.buffer.Create( size, Tr2ConstantBufferAL::SupportsPersistent() ? Tr2ConstantUsageAL::PERSISTENT : Tr2ConstantUsageAL::ONE_SHOT, contents, renderContext ) ) )
 			{
 				return std::make_pair( Key(), Tr2ConstantBufferAL() );
 			}
@@ -50,7 +50,7 @@ std::pair<Tr2SharedConstantBuffers::Key, Tr2ConstantBufferAL> Tr2SharedConstantB
 	Value value;
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		if( FAILED( value.buffer.Create( size, Tr2ConstantUsageAL::ONE_SHOT, contents, renderContext ) ) )
+		if( FAILED( value.buffer.Create( size, Tr2ConstantBufferAL::SupportsPersistent() ? Tr2ConstantUsageAL::PERSISTENT : Tr2ConstantUsageAL::ONE_SHOT, contents, renderContext ) ) )
 		{
 			return std::make_pair( Key(), Tr2ConstantBufferAL() );
 		}
@@ -171,7 +171,7 @@ void Tr2MaterialStageInput::AllocateConstants( uint32_t size )
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		m_constantBuffer.Create(
 			size,
-			Tr2ConstantUsageAL::ONE_SHOT,
+			Tr2ConstantBufferAL::SupportsPersistent() ? Tr2ConstantUsageAL::PERSISTENT : Tr2ConstantUsageAL::ONE_SHOT,
 			nullptr,
 			renderContext );
 		m_constantMirror.resize( "StageInput::m_constantMirror", size );

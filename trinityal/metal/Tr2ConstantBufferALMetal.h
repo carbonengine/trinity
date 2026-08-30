@@ -27,6 +27,10 @@ public:
 	{
 		return AL_MEMORY_MANAGED;
 	}
+	uint64_t GetStableAddress() const
+	{
+		return 0;
+	}
 	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	ALResult SetName( const char* name );
 

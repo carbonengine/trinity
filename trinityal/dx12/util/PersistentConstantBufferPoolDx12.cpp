@@ -7,6 +7,8 @@
 #include "PersistentConstantBufferPoolDx12.h"
 #include "../Tr2RenderContextDx12.h"
 
+CCP_STATS_DECLARE( cbPersistentChunks, "Trinity/AL/cbPersistentChunks", false, CST_COUNTER_LOW, "Chunks allocated by the persistent constant buffer pool." );
+
 namespace
 {
 constexpr uint64_t SLOT_REUSE_FRAME_DELAY = 4;
@@ -15,64 +17,91 @@ constexpr uint64_t SLOT_REUSE_FRAME_DELAY = 4;
 namespace TrinityALImpl
 {
 
-void PersistentConstantBufferPool::Initialize( ID3D12Device* device, uint32_t slotCount )
+void PersistentConstantBufferPool::Initialize( ID3D12Device* device )
 {
 	Destroy();
-
-	D3D12_HEAP_PROPERTIES heap = { D3D12_HEAP_TYPE_DEFAULT, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
-	D3D12_RESOURCE_DESC desc = { D3D12_RESOURCE_DIMENSION_BUFFER, 0, uint64_t( slotCount ) * SLOT_SIZE, 1, 1, 1, DXGI_FORMAT_UNKNOWN, 1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE };
-	HRESULT hr = device->CreateCommittedResource( &heap, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, nullptr, IID_PPV_ARGS( &m_buffer ) );
-	CCP_ASSERT( hr == S_OK );
-	if( hr != S_OK )
-	{
-		return;
-	}
-	const char* name = "Persistent constant buffer pool";
-	m_buffer->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( strlen( name ) ), name );
-	m_gpuAddress = m_buffer->GetGPUVirtualAddress();
-	m_slotCount = slotCount;
-	m_nextUnusedSlot = 0;
+	m_device = device;
 }
 
 void PersistentConstantBufferPool::Destroy()
 {
-	m_buffer = nullptr;
-	m_gpuAddress = 0;
-	m_slotCount = 0;
-	m_nextUnusedSlot = 0;
-	m_freeSlots.clear();
-	m_retiredSlots.clear();
+	for( auto& sizeClass : m_classes )
+	{
+		for( uint32_t i = 0; i < sizeClass.chunkCount; ++i )
+		{
+			sizeClass.chunks[i] = Chunk();
+		}
+		sizeClass.chunkCount = 0;
+		sizeClass.nextUnusedSlot = 0;
+		sizeClass.freeSlots.clear();
+		sizeClass.retiredSlots.clear();
+	}
+	m_device = nullptr;
 	m_pendingCopies.clear();
 	m_hasPendingCopies = false;
 }
 
-uint32_t PersistentConstantBufferPool::AllocateSlot( uint64_t recordingFrame )
+bool PersistentConstantBufferPool::AddChunk( uint32_t classIndex )
 {
-	std::lock_guard lock( m_slotMutex );
-	for( size_t i = 0; i < m_retiredSlots.size(); )
+	auto& sizeClass = m_classes[classIndex];
+	if( sizeClass.chunkCount >= MAX_CHUNKS )
 	{
-		if( m_retiredSlots[i].frame + SLOT_REUSE_FRAME_DELAY <= recordingFrame )
+		return false;
+	}
+	auto& chunk = sizeClass.chunks[sizeClass.chunkCount];
+	D3D12_HEAP_PROPERTIES heap = { D3D12_HEAP_TYPE_DEFAULT, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
+	D3D12_RESOURCE_DESC desc = { D3D12_RESOURCE_DIMENSION_BUFFER, 0, uint64_t( SLOTS_PER_CHUNK ) * sizeClass.slotSize, 1, 1, 1, DXGI_FORMAT_UNKNOWN, 1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE };
+	HRESULT hr = m_device->CreateCommittedResource( &heap, D3D12_HEAP_FLAG_NONE, &desc, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, nullptr, IID_PPV_ARGS( &chunk.buffer ) );
+	CCP_ASSERT( hr == S_OK );
+	if( hr != S_OK )
+	{
+		chunk.buffer = nullptr;
+		return false;
+	}
+	char name[64];
+	sprintf_s( name, "Persistent constant buffer pool %uB #%u", sizeClass.slotSize, sizeClass.chunkCount );
+	chunk.buffer->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( strlen( name ) ), name );
+	chunk.address = chunk.buffer->GetGPUVirtualAddress();
+	++sizeClass.chunkCount;
+	CCP_STATS_INC( cbPersistentChunks );
+	return true;
+}
+
+uint32_t PersistentConstantBufferPool::AllocateSlot( uint32_t size, uint64_t recordingFrame )
+{
+	if( !m_device || size > MAX_SLOT_SIZE )
+	{
+		return INVALID_SLOT;
+	}
+	const uint32_t classIndex = size > m_classes[0].slotSize ? 1 : 0;
+	auto& sizeClass = m_classes[classIndex];
+
+	std::lock_guard lock( m_slotMutex );
+	auto& retired = sizeClass.retiredSlots;
+	for( size_t i = 0; i < retired.size(); )
+	{
+		if( retired[i].frame + SLOT_REUSE_FRAME_DELAY <= recordingFrame )
 		{
-			m_freeSlots.push_back( m_retiredSlots[i].slot );
-			m_retiredSlots[i] = m_retiredSlots.back();
-			m_retiredSlots.pop_back();
+			sizeClass.freeSlots.push_back( retired[i].slot );
+			retired[i] = retired.back();
+			retired.pop_back();
 		}
 		else
 		{
 			++i;
 		}
 	}
-	if( !m_freeSlots.empty() )
+	if( !sizeClass.freeSlots.empty() )
 	{
-		uint32_t slot = m_freeSlots.back();
-		m_freeSlots.pop_back();
+		uint32_t slot = sizeClass.freeSlots.back();
+		sizeClass.freeSlots.pop_back();
 		return slot;
 	}
-	if( m_nextUnusedSlot < m_slotCount )
+	if( sizeClass.nextUnusedSlot >= sizeClass.chunkCount * SLOTS_PER_CHUNK && !AddChunk( classIndex ) )
 	{
-		return m_nextUnusedSlot++;
+		return INVALID_SLOT;
 	}
-	return INVALID_SLOT;
+	return ( classIndex << CLASS_SHIFT ) | sizeClass.nextUnusedSlot++;
 }
 
 void PersistentConstantBufferPool::ReleaseSlot( uint32_t slot, uint64_t recordingFrame )
@@ -82,23 +111,33 @@ void PersistentConstantBufferPool::ReleaseSlot( uint32_t slot, uint64_t recordin
 		return;
 	}
 	std::lock_guard lock( m_slotMutex );
-	m_retiredSlots.push_back( { slot, recordingFrame } );
+	m_classes[slot >> CLASS_SHIFT].retiredSlots.push_back( { slot, recordingFrame } );
+}
+
+ID3D12Resource* PersistentConstantBufferPool::GetSlotResource( uint32_t slot, uint64_t& offset ) const
+{
+	auto& sizeClass = m_classes[slot >> CLASS_SHIFT];
+	const uint32_t local = slot & LOCAL_MASK;
+	offset = uint64_t( local % SLOTS_PER_CHUNK ) * sizeClass.slotSize;
+	return sizeClass.chunks[local / SLOTS_PER_CHUNK].buffer;
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS PersistentConstantBufferPool::GetSlotAddress( uint32_t slot ) const
 {
-	return m_gpuAddress + uint64_t( slot ) * SLOT_SIZE;
+	auto& sizeClass = m_classes[slot >> CLASS_SHIFT];
+	const uint32_t local = slot & LOCAL_MASK;
+	return sizeClass.chunks[local / SLOTS_PER_CHUNK].address + uint64_t( local % SLOTS_PER_CHUNK ) * sizeClass.slotSize;
 }
 
 bool PersistentConstantBufferPool::IsValid() const
 {
-	return m_buffer != nullptr;
+	return m_device != nullptr;
 }
 
 void PersistentConstantBufferPool::QueueCopy( uint32_t slot, ID3D12Resource* source, uint64_t sourceOffset, uint32_t size )
 {
 	std::lock_guard lock( m_copyMutex );
-	m_pendingCopies.push_back( { slot, source, sourceOffset, std::min( size, SLOT_SIZE ) } );
+	m_pendingCopies.push_back( { slot, source, sourceOffset, std::min( size, m_classes[slot >> CLASS_SHIFT].slotSize ) } );
 	m_hasPendingCopies.store( true, std::memory_order_release );
 }
 
@@ -119,23 +158,40 @@ void PersistentConstantBufferPool::FlushCopies( Tr2RenderContextAL& renderContex
 		return;
 	}
 
-	D3D12_RESOURCE_BARRIER barrier = {};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Transition.pResource = m_buffer;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
-	renderContext.ResourceBarrierDx12( barrier );
-	renderContext.FlushBarriersDx12( m_buffer );
+	std::vector<ID3D12Resource*> resources;
+	std::vector<D3D12_RESOURCE_BARRIER> barriers;
+	for( auto& copy : copies )
+	{
+		uint64_t offset;
+		auto resource = GetSlotResource( copy.slot, offset );
+		if( std::find( begin( resources ), end( resources ), resource ) == end( resources ) )
+		{
+			resources.push_back( resource );
+			D3D12_RESOURCE_BARRIER barrier = {};
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			barrier.Transition.pResource = resource;
+			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+			barriers.push_back( barrier );
+		}
+	}
+	renderContext.ResourceBarrierDx12( barriers.size(), barriers.data() );
+	renderContext.FlushBarriersDx12( resources.size(), resources.data() );
 
 	for( auto& copy : copies )
 	{
-		renderContext.m_commandList->CopyBufferRegion( m_buffer, uint64_t( copy.slot ) * SLOT_SIZE, copy.source, copy.sourceOffset, copy.size );
+		uint64_t offset;
+		auto resource = GetSlotResource( copy.slot, offset );
+		renderContext.m_commandList->CopyBufferRegion( resource, offset, copy.source, copy.sourceOffset, copy.size );
 	}
 
-	std::swap( barrier.Transition.StateBefore, barrier.Transition.StateAfter );
-	renderContext.ResourceBarrierDx12( barrier );
-	renderContext.FlushBarriersDx12( m_buffer );
+	for( auto& barrier : barriers )
+	{
+		std::swap( barrier.Transition.StateBefore, barrier.Transition.StateAfter );
+	}
+	renderContext.ResourceBarrierDx12( barriers.size(), barriers.data() );
+	renderContext.FlushBarriersDx12( resources.size(), resources.data() );
 }
 
 }

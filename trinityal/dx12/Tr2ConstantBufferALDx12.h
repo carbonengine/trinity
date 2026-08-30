@@ -40,6 +40,7 @@ public:
 
 	uint32_t GetSize() const;
 	Tr2ALMemoryType GetMemoryClass() const;
+	uint64_t GetStableAddress() const;
 
 	void* GetDataPtr() const
 	{

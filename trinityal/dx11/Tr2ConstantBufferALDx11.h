@@ -28,6 +28,10 @@ public:
 	Tr2ConstantUsageAL::Type GetUsage() const;
 	uint32_t GetSize() const;
 	Tr2ALMemoryType GetMemoryClass() const;
+	uint64_t GetStableAddress() const
+	{
+		return 0;
+	}
 
 	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	ALResult SetName( const char* name );

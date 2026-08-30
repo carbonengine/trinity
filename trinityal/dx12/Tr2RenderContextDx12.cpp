@@ -745,6 +745,7 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 	desc.Height = height;
 	desc.Depth = depth;
 
+	m_ownerDevice->m_persistentConstants.FlushCopies( *this );
 	m_commandList->SetComputeRootSignature( p->GetGlobalRootSignature().m_rootSignature );
 	uint32_t bufferIndex = m_ownerDevice->GetCurrentBackBufferIndex();
 	m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap(), &pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature() );

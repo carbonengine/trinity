@@ -71,6 +71,20 @@ Tr2ALMemoryType Tr2ConstantBufferAL::GetMemoryClass() const
 	return m_buffer->GetMemoryClass();
 }
 
+uint64_t Tr2ConstantBufferAL::GetStableAddress() const
+{
+	return m_buffer->GetStableAddress();
+}
+
+bool Tr2ConstantBufferAL::SupportsPersistent()
+{
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	return true;
+#else
+	return false;
+#endif
+}
+
 bool Tr2ConstantBufferAL::operator==( const Tr2ConstantBufferAL& other ) const
 {
 	return m_buffer == other.m_buffer;

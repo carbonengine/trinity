@@ -524,7 +524,7 @@ const Tr2ConstantBufferAL* Tr2RaytracingMeshArea::GetGeometryConstants( Tr2Raytr
 
 	if( !lod->m_areas[m_areaIndex].m_rtGeometryConstants.IsValid() )
 	{
-		if( SUCCEEDED( lod->m_areas[m_areaIndex].m_rtGeometryConstants.Create( sizeof( TriRtGeometryConstants ), renderContext.GetPrimaryRenderContext() ) ) )
+		if( SUCCEEDED( lod->m_areas[m_areaIndex].m_rtGeometryConstants.Create( sizeof( TriRtGeometryConstants ), Tr2ConstantUsageAL::PERSISTENT, nullptr, renderContext.GetPrimaryRenderContext() ) ) )
 		{
 			TriRtGeometryConstants* data;
 			if( SUCCEEDED( lod->m_areas[m_areaIndex].m_rtGeometryConstants.Lock( (void**)&data, renderContext ) ) )
