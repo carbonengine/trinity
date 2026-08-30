@@ -876,6 +876,18 @@ void GetBatchesFromRenderables( ITr2Renderable** const objectRenderables, const 
 	}
 }
 
+bool g_gatherPerObjectDataParallel = true;
+TRI_REGISTER_SETTING( "gatherPerObjectDataParallel", g_gatherPerObjectDataParallel );
+
+namespace
+{
+enum PerObjectFlags : uint8_t
+{
+	PER_OBJECT_DEFERRED = 1,
+	PER_OBJECT_TRANSPARENT = 2,
+};
+}
+
 void GetBatchesFromRenderables(
 	ITr2Renderable** const objectRenderables,
 	const unsigned renderableCount,
@@ -888,27 +900,57 @@ void GetBatchesFromRenderables(
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	std::vector<Tr2PerObjectData*> perObjectData;
-	perObjectData.reserve( renderableCount );
+	std::vector<Tr2PerObjectData*> perObjectData( renderableCount, nullptr );
+	std::vector<uint8_t> flags( renderableCount, 0 );
+	ITriRenderBatchAccumulator* const opaqueBatches = batches[TRIBATCHTYPE_OPAQUE];
+	const bool wantTransparencies = objectsWithTransparencies != nullptr;
 
 	{
 		CCP_STATS_ZONE( "PerObjectData" );
 
+		if( g_gatherPerObjectDataParallel )
+		{
+			Tr2ParallelFor( Tr2BlockedRange<unsigned>( 0, renderableCount, 64 ), [&]( Tr2BlockedRange<unsigned> range ) {
+				for( unsigned i = range.begin(); i != range.end(); ++i )
+				{
+					ITr2Renderable* r = objectRenderables[i];
+					if( !r->SupportsParallelPerObjectData() )
+					{
+						flags[i] = PER_OBJECT_DEFERRED;
+						continue;
+					}
+					perObjectData[i] = r->GetPerObjectData( opaqueBatches );
+					if( wantTransparencies && r->HasTransparentBatches() )
+					{
+						flags[i] = PER_OBJECT_TRANSPARENT;
+					}
+				}
+			} );
+		}
 		for( unsigned i = 0; i != renderableCount; ++i )
 		{
+			if( g_gatherPerObjectDataParallel && flags[i] != PER_OBJECT_DEFERRED )
+			{
+				continue;
+			}
 			ITr2Renderable* r = objectRenderables[i];
-
-			perObjectData.push_back( r->GetPerObjectData( batches[TRIBATCHTYPE_OPAQUE] ) );
+			perObjectData[i] = r->GetPerObjectData( opaqueBatches );
+			flags[i] = wantTransparencies && r->HasTransparentBatches() ? PER_OBJECT_TRANSPARENT : 0;
 		}
 	}
 	{
 		CCP_STATS_ZONE( "GetBatches" );
 
+		Tr2EnumerableThreadSpecific<EveSpaceScene::PerThreadAccumulator>* threadBatches[TRIBATCHTYPE_COUNT_OF_BATCH_TYPES];
+		for( unsigned type = 0; type != batchTypeCount; ++type )
+		{
+			threadBatches[type] = &perThreadBatches[batchTypes[type]];
+		}
 		Tr2ParallelFor( unsigned( 0 ), renderableCount, [&]( unsigned i ) {
 			ITr2Renderable* r = objectRenderables[i];
 			for( unsigned type = 0; type != batchTypeCount; ++type )
 			{
-				r->GetBatches( &perThreadBatches[batchTypes[type]].local(), batchTypes[type], perObjectData[i], reason );
+				r->GetBatches( &threadBatches[type]->local(), batchTypes[type], perObjectData[i], reason );
 			}
 		} );
 	}
@@ -928,13 +970,11 @@ void GetBatchesFromRenderables(
 	{
 		CCP_STATS_ZONE( "Transparencies" );
 
-		objectsWithTransparencies->reserve( renderableCount );
-
 		for( unsigned i = 0; i != renderableCount; ++i )
 		{
-			ITr2Renderable* r = objectRenderables[i];
-			if( r->HasTransparentBatches() )
+			if( flags[i] == PER_OBJECT_TRANSPARENT )
 			{
+				ITr2Renderable* r = objectRenderables[i];
 				ITr2RenderableEntry entry;
 				entry.m_object = r;
 				entry.m_distance = r->GetSortValue();

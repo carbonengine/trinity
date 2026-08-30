@@ -3,123 +3,168 @@
 #include "StdAfx.h"
 #include "TriPoolAllocator.h"
 
-TriPoolAllocator::TriPoolAllocator() :
-	m_totalBytesAllocated( 0 ),
-	m_totalSystemMemoryAllocated( 0 ),
-	m_pool( NULL ),
-	m_poolEnd( NULL ),
-	m_poolCurrent( NULL ),
-	m_chunkSize( 256 * 1024 )
+namespace
 {
+size_t RoundChunkSize( size_t size )
+{
+	size >>= 8;
+	size += 1;
+	size <<= 8;
+	return size;
+}
+}
+
+TriPoolAllocator::TriPoolAllocator() :
+	m_totalSystemMemoryAllocated( 0 ),
+	m_chunkSize( 256 * 1024 ),
+	m_chunk( nullptr )
+{
+}
+
+TriPoolAllocator::TriPoolAllocator( TriPoolAllocator&& other ) noexcept :
+	m_totalSystemMemoryAllocated( other.m_totalSystemMemoryAllocated ),
+	m_chunkSize( other.m_chunkSize ),
+	m_chunk( other.m_chunk.load() ),
+	m_chunks( std::move( other.m_chunks ) )
+{
+	other.m_chunk = nullptr;
+	other.m_chunks.clear();
+	other.m_totalSystemMemoryAllocated = 0;
+}
+
+TriPoolAllocator& TriPoolAllocator::operator=( TriPoolAllocator&& other ) noexcept
+{
+	if( this != &other )
+	{
+		for( Chunk* chunk : m_chunks )
+		{
+			FreeChunk( chunk );
+		}
+		m_totalSystemMemoryAllocated = other.m_totalSystemMemoryAllocated;
+		m_chunkSize = other.m_chunkSize;
+		m_chunk = other.m_chunk.load();
+		m_chunks = std::move( other.m_chunks );
+		other.m_chunk = nullptr;
+		other.m_chunks.clear();
+		other.m_totalSystemMemoryAllocated = 0;
+	}
+	return *this;
 }
 
 TriPoolAllocator::~TriPoolAllocator()
 {
-	for( ChunkList_t::const_iterator it = m_previousPools.begin(); it != m_previousPools.end(); ++it )
+	for( Chunk* chunk : m_chunks )
 	{
-		CCP_FREE( *it );
+		FreeChunk( chunk );
 	}
-	CCP_FREE( m_pool );
-	m_pool = m_poolCurrent = m_poolEnd = NULL;
+	m_chunks.clear();
+	m_chunk = nullptr;
 }
 
 void* TriPoolAllocator::Allocate( size_t size )
 {
-	// Align size to 16 bytes - pool starts out 16byte aligned - this ensures
+	// Align size to 16 bytes - chunks start out 16byte aligned - this ensures
 	// that all allocations are always 16 byte aligned.
 	size = CCP_ALIGN( size, 16 );
 
-	if( m_poolCurrent + size > m_poolEnd )
+	for( ;; )
 	{
-		GetMoreSystemMemory( size );
-		if( m_poolCurrent + size > m_poolEnd )
+		Chunk* chunk = m_chunk.load( std::memory_order_acquire );
+		if( chunk )
+		{
+			uint8_t* p = chunk->current.fetch_add( size, std::memory_order_relaxed );
+			if( p + size <= chunk->end )
+			{
+				return p;
+			}
+		}
+
+		std::lock_guard lock( m_mutex );
+		if( m_chunk.load( std::memory_order_relaxed ) == chunk && !AddChunk( size ) )
 		{
 			return NULL;
 		}
 	}
-
-	void* ret = m_poolCurrent;
-
-	m_poolCurrent += size;
-	m_totalBytesAllocated += size;
-
-	return ret;
 }
 
 void TriPoolAllocator::Clear()
 {
-	if( !m_previousPools.empty() )
+	size_t totalBytesAllocated = 0;
+	for( Chunk* chunk : m_chunks )
 	{
-		for( ChunkList_t::const_iterator it = m_previousPools.begin(); it != m_previousPools.end(); ++it )
-		{
-			// doing the explicit iterator cast allows you to debug this more easily
-			uint8_t* previousPool = *it;
-			CCP_FREE( previousPool );
-		}
-		m_previousPools.clear();
+		totalBytesAllocated += UsedBytes( *chunk );
 	}
 
-	size_t curChunkSize = m_poolEnd - m_pool;
-	if( m_totalBytesAllocated < curChunkSize / 2 )
+	Chunk* last = m_chunks.empty() ? nullptr : m_chunks.back();
+	for( Chunk* chunk : m_chunks )
+	{
+		if( chunk != last )
+		{
+			FreeChunk( chunk );
+		}
+	}
+	m_chunks.clear();
+	m_chunk = nullptr;
+	m_totalSystemMemoryAllocated = 0;
+
+	if( !last )
+	{
+		return;
+	}
+	if( totalBytesAllocated < last->size / 2 )
 	{
 		// Pool is too large - free it and shrink the chunk size
-		CCP_FREE( m_pool );
-		m_pool = m_poolCurrent = m_poolEnd = NULL;
-		m_chunkSize = curChunkSize / 2;
-		m_chunkSize >>= 8;
-		m_chunkSize += 1;
-		m_chunkSize <<= 8;
-		m_totalSystemMemoryAllocated = 0;
+		m_chunkSize = RoundChunkSize( last->size / 2 );
+		FreeChunk( last );
 	}
-	else if( m_totalBytesAllocated > m_chunkSize )
+	else if( totalBytesAllocated > m_chunkSize )
 	{
 		// Pool is too small - free it and grow the chunk size
-		CCP_FREE( m_pool );
-		m_pool = m_poolCurrent = m_poolEnd = NULL;
-		m_chunkSize = m_totalBytesAllocated;
-		m_chunkSize >>= 8;
-		m_chunkSize += 1;
-		m_chunkSize <<= 8;
-		m_totalSystemMemoryAllocated = 0;
+		m_chunkSize = RoundChunkSize( totalBytesAllocated );
+		FreeChunk( last );
 	}
 	else
 	{
 		// Pool seems to be of the right size.
-		// Align pool to 16 bytes - size of allocations are also aligned to
-		// 16 bytes - this ensures that all allocations are always 16 byte aligned.
-		m_poolCurrent = (uint8_t*)( CCP_ALIGN( (uintptr_t)m_pool, 16 ) );
-		m_totalSystemMemoryAllocated = curChunkSize;
+		last->current = (uint8_t*)( CCP_ALIGN( (uintptr_t)last->memory, 16 ) );
+		m_chunks.push_back( last );
+		m_chunk = last;
+		m_totalSystemMemoryAllocated = last->size;
 	}
-
-	m_totalBytesAllocated = 0;
 }
 
-void TriPoolAllocator::GetMoreSystemMemory( size_t size )
+TriPoolAllocator::Chunk* TriPoolAllocator::AddChunk( size_t size )
 {
-	if( m_pool )
-	{
-		m_previousPools.push_back( m_pool );
-	}
-
 	size_t sizeToRequest = m_chunkSize;
-	while( sizeToRequest < size )
+	while( sizeToRequest < size + 16 )
 	{
 		sizeToRequest += m_chunkSize;
 	}
 
-	// Align pool to 16 bytes - size of allocations are also aligned to
-	// 16 bytes - this ensures that all allocations are always 16 byte aligned.
-	m_pool = (uint8_t*)CCP_MALLOC( "TriPoolAllocator/chunk", sizeToRequest );
-
-	if( m_pool )
+	uint8_t* memory = (uint8_t*)CCP_MALLOC( "TriPoolAllocator/chunk", sizeToRequest );
+	if( !memory )
 	{
-		m_poolEnd = m_pool + sizeToRequest;
-		m_poolCurrent = (uint8_t*)( CCP_ALIGN( (uintptr_t)m_pool, 16 ) );
+		return nullptr;
+	}
+	Chunk* chunk = new Chunk;
+	chunk->memory = memory;
+	chunk->end = memory + sizeToRequest;
+	chunk->size = sizeToRequest;
+	chunk->current = (uint8_t*)( CCP_ALIGN( (uintptr_t)memory, 16 ) );
+	m_chunks.push_back( chunk );
+	m_totalSystemMemoryAllocated += sizeToRequest;
+	m_chunk.store( chunk, std::memory_order_release );
+	return chunk;
+}
 
-		m_totalSystemMemoryAllocated += sizeToRequest;
-	}
-	else
-	{
-		m_poolCurrent = m_poolEnd = NULL;
-	}
+size_t TriPoolAllocator::UsedBytes( const Chunk& chunk )
+{
+	uint8_t* current = chunk.current.load( std::memory_order_relaxed );
+	return size_t( std::min( current, chunk.end ) - chunk.memory );
+}
+
+void TriPoolAllocator::FreeChunk( Chunk* chunk )
+{
+	CCP_FREE( chunk->memory );
+	delete chunk;
 }

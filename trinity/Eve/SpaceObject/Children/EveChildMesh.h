@@ -112,6 +112,10 @@ public:
 	void GetBatchesFromOverlayVector( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
+	bool SupportsParallelPerObjectData() const override
+	{
+		return true;
+	}
 	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
