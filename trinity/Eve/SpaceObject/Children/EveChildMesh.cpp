@@ -874,14 +874,10 @@ Tr2PerObjectData* EveChildMesh::GetShadowPerObjectData( ITriRenderBatchAccumulat
 bool g_eveChildMeshPerObjectChangeTracking = true;
 TRI_REGISTER_SETTING( "eveChildMeshPerObjectChangeTracking", g_eveChildMeshPerObjectChangeTracking );
 
-CCP_STATS_DECLARE( eveChildMeshPerObjectUploads, "Trinity/EveChildMesh/perObjectUploads", true, CST_COUNTER_HIGH, "Child meshes whose per-object constant buffers were re-filled this frame." );
-CCP_STATS_DECLARE( eveChildMeshPerObjectReused, "Trinity/EveChildMesh/perObjectReused", true, CST_COUNTER_HIGH, "Child meshes whose per-object constant buffers were reused unchanged this frame." );
 
 bool g_eveChildMeshStaticSkip = true;
 TRI_REGISTER_SETTING( "eveChildMeshStaticSkip", g_eveChildMeshStaticSkip );
 
-CCP_STATS_DECLARE( eveChildMeshUpdateSkipped, "Trinity/EveChildMesh/updateSkipped", true, CST_COUNTER_HIGH, "Child meshes whose asynchronous update was skipped because its inputs were unchanged." );
-CCP_STATS_DECLARE( eveChildMeshUpdateFull, "Trinity/EveChildMesh/updateFull", true, CST_COUNTER_HIGH, "Child meshes that ran the full asynchronous update this frame." );
 
 // All rest-pose skeletons are identity, so one shared block in the ring buffer's static area serves every child.
 static uint32_t GetRestPoseBoneOffset( uint32_t boneCount )
@@ -981,14 +977,6 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	if( !perObjectData )
 	{
 		return nullptr;
-	}
-	if( m_perObjectDataVs.IsBufferDirty() || m_perObjectDataPs.IsBufferDirty() )
-	{
-		CCP_STATS_INC( eveChildMeshPerObjectUploads );
-	}
-	else
-	{
-		CCP_STATS_INC( eveChildMeshPerObjectReused );
 	}
 	perObjectData->Initialize( this, &m_perObjectDataVs, &m_perObjectDataPs );
 
@@ -1108,10 +1096,8 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 			m_perObjectDataVs.InvalidateBufferData();
 			m_perObjectDataPs.InvalidateBufferData();
 		}
-		CCP_STATS_INC( eveChildMeshUpdateSkipped );
 		return;
 	}
-	CCP_STATS_INC( eveChildMeshUpdateFull );
 
 	const EveSpaceObjectVSData previousVsData = m_vsData;
 	const EveSpaceObjectPSData previousPsData = m_psData;

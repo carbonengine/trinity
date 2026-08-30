@@ -32,12 +32,10 @@ TRI_REGISTER_SETTING( "rtSkipUnusedMaterialApply", g_rtSkipUnusedMaterialApply )
 bool g_rtPrepareInstancesOnWorkers = true;
 TRI_REGISTER_SETTING( "rtPrepareInstancesOnWorkers", g_rtPrepareInstancesOnWorkers );
 
-CCP_STATS_DECLARE( rtShaderTableEntries, "Trinity/RT/shaderTableEntries", true, CST_COUNTER_HIGH, "Geometry entries processed by PrepareShaderTableDescription this frame." );
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
 CCP_STATS_DECLARE( rtShaderTableLibraries, "Trinity/RT/shaderTableLibraries", true, CST_COUNTER_HIGH, "Distinct raytracing libraries seen by the shader table this frame." );
 CCP_STATS_DECLARE( rtTransformMeshesSkipped, "Trinity/RT/transformMeshesSkipped", true, CST_COUNTER_HIGH, "TransformMeshes returned early because no skinned or morphed geometry was added this frame." );
 CCP_STATS_DECLARE( rtShaderTableMaterialApplies, "Trinity/RT/shaderTableMaterialApplies", true, CST_COUNTER_HIGH, "Shader table entries whose RT material data was built and applied this frame." );
-CCP_STATS_DECLARE( rtInstancesPreparedOnWorkers, "Trinity/RT/instancesPreparedOnWorkers", true, CST_COUNTER_HIGH, "Geometry entries whose static BLAS was resolved on a worker thread in AddGeometry this frame." );
 CCP_STATS_DECLARE( rtMainThreadBlasLookups, "Trinity/RT/mainThreadBlasLookups", true, CST_COUNTER_HIGH, "Geometry entries that went through BuildBlas on the main thread in BuildAccelerationStructures this frame." );
 
 namespace
@@ -799,7 +797,6 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		{
 			continue;
 		}
-		CCP_STATS_INC( rtShaderTableEntries );
 		auto shader = geometry.material->GetShaderStateInterface();
 		if( !shader )
 		{
@@ -1218,10 +1215,6 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 		memcpy( obj.instance.transform[0], &m.GetX(), 4 * sizeof( float ) );
 		memcpy( obj.instance.transform[1], &m.GetY(), 4 * sizeof( float ) );
 		memcpy( obj.instance.transform[2], &m.GetZ(), 4 * sizeof( float ) );
-		if( obj.instance.blas )
-		{
-			CCP_STATS_INC( rtInstancesPreparedOnWorkers );
-		}
 	}
 	m_threadLocalGeometryData.local().push_back( obj );
 	NoteDeformedGeometry( mesh, area );
@@ -1261,10 +1254,6 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.bakedMorphOffset = bakedMorphOffset;
 	obj.instance.blas = g_rtPrepareInstancesOnWorkers ? area.GetBuiltStaticBlas( mesh ) : nullptr;
 	obj.instanceTransformPrepared = false;
-	if( obj.instance.blas )
-	{
-		CCP_STATS_INC( rtInstancesPreparedOnWorkers );
-	}
 	m_threadLocalGeometryData.local().push_back( obj );
 	NoteDeformedGeometry( mesh, area );
 }

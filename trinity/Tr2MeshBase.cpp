@@ -591,7 +591,6 @@ void Tr2MeshBase::SetMaterialBoundsAdjustment( const Tr2MaterialBoundsAdjustment
 bool g_meshScreenSizeRequestCache = true;
 TRI_REGISTER_SETTING( "meshScreenSizeRequestCache", g_meshScreenSizeRequestCache );
 
-CCP_STATS_DECLARE( meshScreenSizeCacheHits, "Trinity/Mesh/screenSizeRequestCacheHits", true, CST_COUNTER_HIGH, "Meshes that replayed their cached texture LOD requests this frame." );
 CCP_STATS_DECLARE( meshScreenSizeCacheMisses, "Trinity/Mesh/screenSizeRequestCacheMisses", true, CST_COUNTER_HIGH, "Meshes that re-evaluated their texture LOD requests this frame." );
 
 void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
@@ -610,7 +609,6 @@ void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 	const uint32_t generation = Tr2ScreenSizeRequests::Generation();
 	if( g_meshScreenSizeRequestCache && cache.geometry == geometry && cache.lod == lod && cache.worldRadius == worldRadius && cache.generation == generation && cache.requests.Covers( screenSize ) )
 	{
-		CCP_STATS_INC( meshScreenSizeCacheHits );
 		for( auto& request : cache.requests.requests )
 		{
 			request.texture->RequestResolution( request.lod );
