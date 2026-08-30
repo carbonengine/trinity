@@ -24,6 +24,8 @@ TRI_REGISTER_SETTING( "gdrEnabled", g_gdrEnabled );
 CCP_STATS_DECLARE( batchCount, "Trinity/batchCount", true, CST_COUNTER_HIGH, "Batches rendered per frame" );
 CCP_STATS_DECLARE( batchNormalDraws, "Trinity/batchNormalDraws", true, CST_COUNTER_HIGH, "Normal batch draw calls per frame" );
 CCP_STATS_DECLARE( batchIndirectDraws, "Trinity/batchIndirectDraws", true, CST_COUNTER_HIGH, "Draw calls in ExecuteIndirect() per frame" );
+int g_gdprBinSize = 256;
+TRI_REGISTER_SETTING( "gdprBinSize", g_gdprBinSize );
 CCP_STATS_DECLARE( batchExecuteIndirectCalls, "Trinity/batchExecuteIndirectCalls", true, CST_COUNTER_HIGH, "ExecuteIndirect() batch calls per frame" );
 
 namespace
@@ -675,11 +677,11 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 				for( uint32_t passIx = 0; passIx < passCount; ++passIx )
 				{
 					const auto& passDesc = firstBatch.m_shader->GetEffectDescription().techniques[technique].passes[passIx];
-					const uint32_t MAX_BATCHES = 64;
-					for( auto batch = firstIndex; batch < endIndex; batch += MAX_BATCHES )
+					const uint32_t binSize = uint32_t( std::max( g_gdprBinSize, 1 ) );
+					for( auto batch = firstIndex; batch < endIndex; batch += binSize )
 					{
-						Tr2IndirectDrawBufferWriter writer( s_buffer, passDesc.indirectLayout, std::min( MAX_BATCHES, uint32_t( endIndex - batch ) ), *renderContext );
-						writers.push_back( { writer, batch, std::min( endIndex, batch + MAX_BATCHES ), technique, passIx, batch == firstIndex } );
+						Tr2IndirectDrawBufferWriter writer( s_buffer, passDesc.indirectLayout, std::min( binSize, uint32_t( endIndex - batch ) ), *renderContext );
+						writers.push_back( { writer, batch, std::min( endIndex, batch + binSize ), technique, passIx, batch == firstIndex } );
 					}
 				}
 			}
