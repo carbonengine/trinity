@@ -383,19 +383,6 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 
 	if( m_mesh )
 	{
-		CcpMath::AxisAlignedBox bounds;
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() && m_animationUpdater->GetAnimationTransforms() )
-		{
-			auto [meshBindingIndices, boneCount] = GetMeshBindingIndices();
-			auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::ALL );
-			bounds = m_mesh->GetBounds( m_animationUpdater->GetAnimationTransforms(), meshBindingIndices, boneCount, morphTargets, morphTargetCount );
-		}
-		else
-		{
-			bounds = m_mesh->GetBounds();
-		}
-
-		bounds.Transform( m_worldTransform );
 		m_currentScreenSize = frustum.GetPixelSizeAccross( m_worldBoundingSphere );
 
 		if( m_instancedMesh )
