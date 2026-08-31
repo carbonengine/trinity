@@ -33,6 +33,7 @@ struct Obb
 
 	void CreateWorldBoundingObb( const Vector3& localMin, const Vector3& localMax, const Matrix& localToWorld );
 	void CreateClippedWorldBoundingObb( const Vector3& localMin, const Vector3& localMax, const Matrix& localToWorld, const TriFrustum* frustum );
+	void CreateFromSphere( const CcpMath::Sphere& worldSphere );
 
 	Vector3 GetPoint( unsigned N ) const;
 

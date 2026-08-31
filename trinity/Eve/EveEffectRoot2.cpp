@@ -439,16 +439,9 @@ bool EveEffectRoot2::GetWorldBoundingObb( Obb& obb ) const
 		return false;
 	}
 
-	// A sphere's bounds must not depend on orientation, so the box is world-axis
-	// aligned; only the scale is taken from the transform.
-	const Vector3 sphereCenter( m_boundingSphere.x, m_boundingSphere.y, m_boundingSphere.z );
-	const float scale = std::max( std::max( Length( m_lastUpdateMatrix.GetX() ), Length( m_lastUpdateMatrix.GetY() ) ), Length( m_lastUpdateMatrix.GetZ() ) );
-	const float radius = m_boundingSphere.w * scale;
-	obb.x = Vector3( 1.0f, 0.0f, 0.0f );
-	obb.y = Vector3( 0.0f, 1.0f, 0.0f );
-	obb.z = Vector3( 0.0f, 0.0f, 1.0f );
-	obb.center = TransformCoord( sphereCenter, m_lastUpdateMatrix );
-	obb.sizes = Vector3( radius, radius, radius );
+	CcpMath::Sphere worldSphere( m_boundingSphere );
+	worldSphere.Transform( m_lastUpdateMatrix );
+	obb.CreateFromSphere( worldSphere );
 	return true;
 }
 

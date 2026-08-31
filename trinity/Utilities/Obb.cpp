@@ -206,6 +206,16 @@ void Obb::CreateClippedWorldBoundingObb( const Vector3& localMin, const Vector3&
 	}
 }
 
+// A sphere's bounds do not depend on orientation, so the box is world-axis aligned.
+void Obb::CreateFromSphere( const CcpMath::Sphere& worldSphere )
+{
+	x = Vector3( 1.0f, 0.0f, 0.0f );
+	y = Vector3( 0.0f, 1.0f, 0.0f );
+	z = Vector3( 0.0f, 0.0f, 1.0f );
+	center = worldSphere.center;
+	sizes = Vector3( worldSphere.radius, worldSphere.radius, worldSphere.radius );
+}
+
 // -------------------------------------------------------------
 // Description:
 //   Return a corner point of the OBB.

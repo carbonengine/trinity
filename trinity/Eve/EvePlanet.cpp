@@ -161,11 +161,8 @@ bool EvePlanet::GetWorldBoundingObb( Obb& obb ) const
 	const float renderScale = std::max( m_renderScale, 1.0f );
 	const Matrix scaledTransform = CalculatePlanetScaleTransform( m_worldTransform, renderScale );
 	const float radius = m_radius / renderScale;
-	obb.x = Vector3( 1.0f, 0.0f, 0.0f );
-	obb.y = Vector3( 0.0f, 1.0f, 0.0f );
-	obb.z = Vector3( 0.0f, 0.0f, 1.0f );
-	obb.center = scaledTransform.GetTranslation();
-	obb.sizes = Vector3( radius, radius, radius );
+	CcpMath::Sphere worldSphere( scaledTransform.GetTranslation(), radius );
+	obb.CreateFromSphere( worldSphere );
 	return true;
 }
 
