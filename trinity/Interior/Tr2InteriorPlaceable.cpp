@@ -143,7 +143,7 @@ bool Tr2InteriorPlaceable::GetWorldBoundingObb( Obb& obb ) const
 	{
 		return false;
 	}
-	obb.CreateClippedWorldBoundingObb( min, max, m_transform, nullptr );
+	obb.CreateWorldBoundingObb( min, max, m_transform );
 	return true;
 }
 

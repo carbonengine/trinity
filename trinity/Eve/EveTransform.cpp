@@ -389,7 +389,7 @@ bool EveTransform::GetWorldBoundingObb( Obb& obb ) const
 	{
 		return false;
 	}
-	obb.CreateClippedWorldBoundingObb( min, max, m_worldTransform, nullptr );
+	obb.CreateWorldBoundingObb( min, max, m_worldTransform );
 	return true;
 }
 

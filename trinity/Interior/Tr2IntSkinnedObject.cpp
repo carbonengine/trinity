@@ -155,7 +155,7 @@ bool Tr2IntSkinnedObject::GetWorldBoundingObb( Obb& obb ) const
 	{
 		return false;
 	}
-	obb.CreateClippedWorldBoundingObb( min, max, GetSkinningTransform(), nullptr );
+	obb.CreateWorldBoundingObb( min, max, GetSkinningTransform() );
 	return true;
 }
 

@@ -7,6 +7,34 @@
 
 // -------------------------------------------------------------
 // Description:
+//   Computes an Oriented Bounding Box in world space.
+//   The calculation starts out with the AABB from GetLocalBoundingBox, so the explicit bounds
+//   are supported.
+// Arguments:
+//   localMin     - minimum of AABB in local coordinates
+//   localMax     - maximum of AABB in local coordinates
+//   localToWorld - [in]  transform that takes this skinned object from local to world coordinates
+// Summary:
+//   Compute a world-space OBB.
+// -------------------------------------------------------------
+void Obb::CreateWorldBoundingObb( const Vector3& localMin, const Vector3& localMax, const Matrix& localToWorld )
+{
+	// take AABB center
+	center = 0.5 * ( localMax + localMin );
+
+	// and move to world space.
+	Vector4 centerWorld = Transform( center, localToWorld );
+	center = Vector3( centerWorld.x, centerWorld.y, centerWorld.z );
+
+
+	sizes = 0.5 * ( localMax - localMax );
+	x = Vector3( localToWorld._11, localToWorld._12, localToWorld._13 );
+	y = Vector3( localToWorld._21, localToWorld._22, localToWorld._23 );
+	z = Vector3( localToWorld._31, localToWorld._32, localToWorld._33 );
+}
+
+// -------------------------------------------------------------
+// Description:
 //   Computes an Oriented Bounding Box in world space, which has been shrunk
 //   to fit the current viewing frustum as tightly as possible without visibly clipping
 //   into it.  The frustum is derived from Tr2Renderer GetViewTransform, GetProjectionTransform, and so on.
@@ -20,20 +48,9 @@
 // Summary:
 //   Compute a world-space OBB, tightened for the current frustum.
 // -------------------------------------------------------------
-void Obb::CreateClippedWorldBoundingObb( const Vector3& min, const Vector3& max, const Matrix& localToWorld, const TriFrustum* frustum )
+void Obb::CreateClippedWorldBoundingObb( const Vector3& localMin, const Vector3& localMax, const Matrix& localToWorld, const TriFrustum* frustum )
 {
-	// take AABB center..
-	center = 0.5 * ( max + min );
-
-	// .. and move to world space.
-	Vector4 centerWorld = Transform( center, localToWorld );
-	center = Vector3( centerWorld.x, centerWorld.y, centerWorld.z );
-
-
-	sizes = 0.5 * ( max - min );
-	x = Vector3( localToWorld._11, localToWorld._12, localToWorld._13 );
-	y = Vector3( localToWorld._21, localToWorld._22, localToWorld._23 );
-	z = Vector3( localToWorld._31, localToWorld._32, localToWorld._33 );
+	CreateWorldBoundingObb( localMin, localMax, localToWorld );
 
 	if( !frustum )
 	{

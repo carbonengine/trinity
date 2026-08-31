@@ -4168,7 +4168,7 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 
 bool EveSpaceObject2::GetWorldBoundingObb( Obb& obb ) const
 {
-	obb.CreateClippedWorldBoundingObb( m_localAabbMin, m_localAabbMax, m_worldTransform, nullptr );
+	obb.CreateWorldBoundingObb( m_localAabbMin, m_localAabbMax, m_worldTransform );
 	return true;
 }
 
