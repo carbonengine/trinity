@@ -21,9 +21,18 @@ const float CLIP_EPSILON = 1e-5f;
 // Obb::GetPoint corner index bits: 0x1 = -X, 0x2 = -Y, 0x4 = -Z;
 // each edge joins the two corners differing in exactly one axis sign.
 const int OBB_EDGES[12][2] = {
-	{ 0, 1 }, { 2, 3 }, { 4, 5 }, { 6, 7 },
-	{ 0, 2 }, { 1, 3 }, { 4, 6 }, { 5, 7 },
-	{ 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 },
+	{ 0, 1 },
+	{ 2, 3 },
+	{ 4, 5 },
+	{ 6, 7 },
+	{ 0, 2 },
+	{ 1, 3 },
+	{ 4, 6 },
+	{ 5, 7 },
+	{ 0, 4 },
+	{ 1, 5 },
+	{ 2, 6 },
+	{ 3, 7 },
 };
 
 // 8 corners plus at most one near-plane cut per edge
