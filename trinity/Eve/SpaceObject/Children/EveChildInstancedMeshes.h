@@ -96,11 +96,13 @@ public:
 		EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG );
 
 	void RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag );
+	void SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale );
 
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 	uint32_t GetMeshCount() const;
 	BluePy GetMeshInfo( uint32_t meshId ) const;
 	BluePy GetAreaInfo( uint32_t meshId, uint32_t areaId ) const;
+	BluePy GetInstancesTransforms( uint32_t meshId ) const;
 	BluePy GetMeshDisplay( uint32_t meshId ) const;
 	BluePy SetMeshDisplay( uint32_t meshId, bool display );
 	BluePy GetMeshInheritOverlayEffects( uint32_t meshId ) const;
