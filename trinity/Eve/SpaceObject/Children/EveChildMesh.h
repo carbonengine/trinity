@@ -89,6 +89,7 @@ public:
 	void ChangeLOD( Tr2Lod lod ) override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	bool IsAlwaysOn() const;
+	bool IsUpdateSkippable() const override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	void SetScale( const Vector3& scale );
 	void AddTransformModifier( IEveChildTransformModifier * modifier ) override;

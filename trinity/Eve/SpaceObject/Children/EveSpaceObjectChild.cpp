@@ -56,6 +56,23 @@ bool EveSpaceObjectChild::IsAlwaysOn() const
 	return false;
 };
 
+static std::atomic<uint32_t> s_childUpdateEpoch{ 1 };
+
+uint32_t EveChildUpdateEpoch()
+{
+	return s_childUpdateEpoch.load( std::memory_order_relaxed );
+}
+
+void BumpChildUpdateEpoch()
+{
+	s_childUpdateEpoch.fetch_add( 1, std::memory_order_relaxed );
+}
+
+bool EveSpaceObjectChild::IsUpdateSkippable() const
+{
+	return false;
+}
+
 void EveSpaceObjectChild::Setup( const Vector3*, const Quaternion*, const Vector3*, Tr2Lod )
 {
 }

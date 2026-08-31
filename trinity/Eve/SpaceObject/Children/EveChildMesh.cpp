@@ -197,6 +197,7 @@ void EveChildMesh::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 
 bool EveChildMesh::OnModified( Be::Var* val )
 {
+	BumpChildUpdateEpoch();
 	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display ) || IsMatch( val, m_mesh ) || IsMatch( val, m_castShadow ) )
 	{
 		ReRegister();
@@ -413,6 +414,16 @@ void EveChildMesh::UpdateVisibility( const EveUpdateContext& updateContext, cons
 			m_isVisible = parentLod >= m_lowestLodVisible && m_currentScreenSize >= m_minScreenSize;
 			m_instancesVisible = m_isVisible && m_currentInstanceScreenSize >= s_instanceScreenSizeThreshold;
 		}
+	}
+
+	// keep the shader-facing screen size current even when UpdateAsyncronous is skipped for static children
+	const float screenSizeX = min( float( m_currentScreenSize / Tr2Renderer::GetViewport().width ), 1.0f );
+	const float screenSizeY = min( float( m_currentScreenSize / Tr2Renderer::GetViewport().height ), 1.0f );
+	if( screenSizeX != m_psData.screenSize.x || screenSizeY != m_psData.screenSize.y )
+	{
+		m_psData.screenSize.x = screenSizeX;
+		m_psData.screenSize.y = screenSizeY;
+		m_perObjectDataPs.InvalidateBufferData();
 	}
 
 	if( !m_attachments.empty() )
@@ -671,6 +682,22 @@ bool EveChildMesh::IsVisible( const EveUpdateContext& updateContext ) const
 	return false;
 }
 
+extern bool g_eveChildMeshStaticSkip;
+extern bool g_eveChildMeshPerObjectChangeTracking;
+
+bool EveChildMesh::IsUpdateSkippable() const
+{
+	// four static frames: two to enter the per-child skip, two more so the ring buffer offsets have
+	// advanced to INVALID and GetPerObjectData is served entirely from static data
+	if( !g_eveChildMeshStaticSkip || !g_eveChildMeshPerObjectChangeTracking || m_staticFrames < 4 )
+	{
+		return false;
+	}
+	// unloaded geometry still changes bounds when it arrives; keep such children walking
+	auto geometry = m_mesh ? m_mesh->GetGeometryResource() : nullptr;
+	return !m_mesh || ( geometry && geometry->IsGood() );
+}
+
 void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( m_display )
@@ -856,6 +883,7 @@ bool EveChildMesh::IsShadowCastingDirty() const
 
 void EveChildMesh::SetInstanceTransforms( std::vector<Matrix> instances )
 {
+	BumpChildUpdateEpoch();
 	m_instanceTransforms = instances;
 }
 
@@ -1083,14 +1111,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	// Two static frames: the first full update after a change has already caught worldTransformLast up
 	if( g_eveChildMeshStaticSkip && m_staticFrames >= 2 )
 	{
-		float screenSizeX = min( float( m_currentScreenSize / Tr2Renderer::GetViewport().width ), 1.0f );
-		float screenSizeY = min( float( m_currentScreenSize / Tr2Renderer::GetViewport().height ), 1.0f );
-		if( screenSizeX != m_psData.screenSize.x || screenSizeY != m_psData.screenSize.y )
-		{
-			m_psData.screenSize.x = screenSizeX;
-			m_psData.screenSize.y = screenSizeY;
-			m_perObjectDataPs.InvalidateBufferData();
-		}
+		// psData.screenSize is kept current by UpdateVisibility
 		if( !g_eveChildMeshPerObjectChangeTracking )
 		{
 			m_perObjectDataVs.InvalidateBufferData();
@@ -1342,6 +1363,7 @@ void EveChildMesh::ChangeLOD( Tr2Lod )
 
 void EveChildMesh::SetMesh( Tr2MeshBase* mesh )
 {
+	BumpChildUpdateEpoch();
 	if( mesh != m_mesh )
 	{
 		UnregisterAudioGeometry();
@@ -1359,11 +1381,13 @@ void EveChildMesh::SetMesh( Tr2MeshBase* mesh )
 
 void EveChildMesh::AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect )
 {
+	BumpChildUpdateEpoch();
 	m_overlayEffects.Append( newOverlayEffect->GetRawRoot() );
 }
 
 void EveChildMesh::RemoveOverlayEffect( EveMeshOverlayEffectPtr overlayEffectToRemove )
 {
+	BumpChildUpdateEpoch();
 	ssize_t index = m_overlayEffects.FindKey( overlayEffectToRemove->GetRawRoot() );
 	if( index >= 0 )
 	{
@@ -1462,6 +1486,7 @@ void EveChildMesh::SetOrigin( Origin origin )
 // --------------------------------------------------------------------------------
 void EveChildMesh::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
 {
+	BumpChildUpdateEpoch();
 	// call base class's setup
 	EveChildTransform::Setup( scale, rotation, translation, lowestLodVisible );
 
@@ -1500,6 +1525,7 @@ void EveChildMesh::SetShaderOption( const BlueSharedString& name, const BlueShar
 
 void EveChildMesh::SetScale( const Vector3& scale )
 {
+	BumpChildUpdateEpoch();
 	m_scaling = scale;
 }
 
@@ -1602,6 +1628,7 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 void EveChildMesh::AddTransformModifier( IEveChildTransformModifier* modifier )
 {
+	BumpChildUpdateEpoch();
 	m_transformModifiers.Append( modifier );
 }
 
@@ -1612,23 +1639,27 @@ Tr2GrannyAnimation* EveChildMesh::GetAnimationController() const
 
 void EveChildMesh::SetAnimationController( Tr2GrannyAnimation* animation )
 {
+	BumpChildUpdateEpoch();
 	m_animationUpdater = animation;
 	InitializeAnimation();
 }
 
 void EveChildMesh::AddDecal( EveSpaceObjectDecalPtr newDecal )
 {
+	BumpChildUpdateEpoch();
 	newDecal->SetPriority( (uint32_t)m_decals.size() );
 	m_decals.Insert( -1, newDecal->GetRawRoot() );
 }
 
 void EveChildMesh::AddAttachment( IEveSpaceObjectAttachment* attachment )
 {
+	BumpChildUpdateEpoch();
 	m_attachments.Append( attachment );
 }
 
 void EveChildMesh::ClearAttachments()
 {
+	BumpChildUpdateEpoch();
 	m_attachments.Clear();
 }
 
@@ -1785,6 +1816,7 @@ void EveChildMesh::UpdateMorphAnimationBuffer()
 
 void EveChildMesh::BakeMorphs()
 {
+	BumpChildUpdateEpoch();
 	EveComponentRegistry* registry = GetComponentRegistry();
 	if( registry )
 	{
@@ -1805,6 +1837,7 @@ void EveChildMesh::BakeMorphs()
 
 void EveChildMesh::UnbakeMorphs()
 {
+	BumpChildUpdateEpoch();
 	m_isMorphsBaked = false;
 
 	if( !m_mesh )
@@ -2085,6 +2118,7 @@ std::vector<std::string> EveChildMesh::GetMorphTargetNames() const
 
 void EveChildMesh::SetMorphTargetWeight( const char* name, float weight )
 {
+	BumpChildUpdateEpoch();
 	if( !m_mesh )
 	{
 		return;
@@ -2115,6 +2149,7 @@ float EveChildMesh::GetMorphTargetWeight( const char* name )
 
 void EveChildMesh::SetBakedMorphTarget( const char* name, bool isBaked )
 {
+	BumpChildUpdateEpoch();
 	if( !m_mesh )
 	{
 		return;
@@ -2227,6 +2262,7 @@ EveDamageOverlayPtr EveChildMesh::GetDamageOverlay() const
 
 EveDamageOverlayPtr EveChildMesh::EnsureDamageOverlay()
 {
+	BumpChildUpdateEpoch();
 	if( !m_damageOverlay )
 	{
 		m_damageOverlay.CreateInstance();

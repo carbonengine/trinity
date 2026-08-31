@@ -69,6 +69,7 @@ public:
 	// EveSpaceObjectChild
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	bool IsAlwaysOn() const override;
+	bool IsUpdateSkippable() const override;
 	void AddTransformModifier( IEveChildTransformModifier * modifier ) override;
 	void SetProceduralContainerVariable( const char* name, float value ) override;
 	void SetOwner( IEveSpaceObject2 * owner ) override;
@@ -199,6 +200,14 @@ protected:
 	bool m_mute;
 	// Has UpdateSynchronous/UpdateAsynchronous been called: until it was, the object can not be rendered
 	bool m_hasUpdated = false;
+
+	// last frame's update inputs; the async child walk is skipped once they have stayed unchanged for two frames
+	IEveSpaceObject2* m_lastParent = nullptr;
+	uint32_t m_lastParentDataVersion = 0;
+	float m_lastActivationStrength = 0.f;
+	uint32_t m_lastChildUpdateEpoch = 0;
+	uint32_t m_staticFrames = 0;
+	bool m_childrenSkippable = false;
 	DisplayQualityModifier m_displayFilter;
 	bool m_isAlwaysOn;
 	bool m_isPlacementRoot;

@@ -15,6 +15,7 @@
 #include "Controllers/Tr2ControllerFloatVariable.h"
 #include "Eve/SpaceObject/Utils/fxAttributes/IEveFxAttribute.h"
 #include "ITr2SoundEmitterOwner.h"
+#include "TriSettingsRegistrar.h"
 
 
 EveChildContainer::EveChildContainer( IRoot* lockobj ) :
@@ -112,6 +113,12 @@ void EveChildContainer::MuteChildren()
 
 void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
+	if( list == &m_objects )
+	{
+		// a new or removed child invalidates the static child walk skip
+		m_staticFrames = 0;
+		m_childrenSkippable = false;
+	}
 	if( list == &m_controllers && ( event & BELIST_LOADING ) == 0 )
 	{
 		switch( event & BELIST_EVENTMASK )
@@ -532,12 +539,53 @@ void EveChildContainer::UpdateAsyncronous( const EveUpdateContext& updateContext
 	}
 }
 
+bool g_eveChildContainerStaticSkip = true;
+TRI_REGISTER_SETTING( "eveChildContainerStaticSkip", g_eveChildContainerStaticSkip );
+
+CCP_STATS_DECLARE( eveChildContainerSkips, "Trinity/EveChildContainer/subtreeSkips", true, CST_COUNTER_HIGH, "Container child walks skipped because the whole subtree is static" );
+
+bool EveChildContainer::IsUpdateSkippable() const
+{
+	return g_eveChildContainerStaticSkip && m_staticFrames >= 2;
+}
+
 void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix lastWorldTransform = m_worldTransform;
 	Matrix localToWorldTransform = params.localToWorldTransform;
 
 	UpdateTransform( localToWorldTransform );
+
+	const uint32_t parentDataVersion = params.spaceObjectParent ? params.spaceObjectParent->GetPerObjectDataVersion() : 0;
+	const uint32_t childUpdateEpoch = EveChildUpdateEpoch();
+	const bool inputsUnchanged = m_hasUpdated
+		&& m_worldTransform == lastWorldTransform
+		&& params.spaceObjectParent == m_lastParent
+		&& ( !params.spaceObjectParent || ( parentDataVersion != 0 && parentDataVersion == m_lastParentDataVersion ) )
+		&& params.activationStrength == m_lastActivationStrength
+		&& params.boneCount == 0
+		&& childUpdateEpoch == m_lastChildUpdateEpoch
+		&& m_childrenSkippable
+		&& m_controllers.empty()
+		&& m_curveSets.empty()
+		&& m_fxAttributes.empty()
+		&& m_lights.empty()
+		&& m_attachments.empty()
+		&& m_transformModifiers.empty()
+		&& !( m_animationOwner && m_animationOwner->GetAnimationController() )
+		&& !HasRenderables();
+
+	m_staticFrames = inputsUnchanged ? m_staticFrames + 1 : 0;
+	m_lastParent = params.spaceObjectParent;
+	m_lastParentDataVersion = parentDataVersion;
+	m_lastActivationStrength = params.activationStrength;
+
+	// Two static frames: the first full walk after a change has already caught worldTransformLast up in the children
+	if( g_eveChildContainerStaticSkip && m_staticFrames >= 2 )
+	{
+		CCP_STATS_INC( eveChildContainerSkips );
+		return;
+	}
 
 	auto boneCount = params.boneCount;
 	auto bones = params.bones;
@@ -603,10 +651,14 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 		}
 	}
 
+	bool childrenSkippable = true;
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
 		( *it )->UpdateAsyncronous( updateContext, newParams );
+		childrenSkippable &= ( *it )->IsUpdateSkippable();
 	}
+	m_childrenSkippable = childrenSkippable;
+	m_lastChildUpdateEpoch = childUpdateEpoch;
 
 	if( !m_curveSets.empty() )
 	{

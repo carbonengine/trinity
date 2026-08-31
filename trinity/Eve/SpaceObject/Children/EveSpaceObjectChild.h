@@ -29,6 +29,10 @@ struct EveChildGeometry
 	class Tr2MeshBase* mesh = nullptr;
 };
 
+// Global stamp bumped whenever a child mutates state a skipped container walk cannot observe
+uint32_t EveChildUpdateEpoch();
+void BumpChildUpdateEpoch();
+
 /**
  * @brief Base class for all space object children. This class provides common functionality and properties for all child objects in the space object hierarchy.
  */
@@ -134,6 +138,13 @@ public:
 	 * @return True if the child should always be updated/rendered, false otherwise.
 	 */
 	virtual bool IsAlwaysOn() const;
+
+	/**
+	 * @brief True when the last UpdateAsyncronous concluded this child (and everything it owns) is static, so a
+	 * container may skip the child's update entirely. Any state change a skipped walk cannot observe must bump
+	 * the child update epoch (BumpChildUpdateEpoch).
+	 */
+	virtual bool IsUpdateSkippable() const;
 
 	/**
 	 * @brief Sets up the child transform and LOD. This methods is called by the SOF when creating a child object.
