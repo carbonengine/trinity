@@ -501,6 +501,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
     Eve/SpaceObject/Children/EveChildBehaviorSystem.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem_Blue.cpp
+    Eve/SpaceObject/Children/EveChildBoosterSet.cpp
+    Eve/SpaceObject/Children/EveChildBoosterSet.h
+    Eve/SpaceObject/Children/EveChildBoosterSet_Blue.cpp
     Eve/SpaceObject/Children/EveChildBulletStorm.cpp
     Eve/SpaceObject/Children/EveChildBulletStorm.h
     Eve/SpaceObject/Children/EveChildBulletStorm_Blue.cpp
@@ -652,6 +655,8 @@ set(_SOURCES
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes.h
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes_Blue.cpp
     Eve/SpaceObject/Utils/fxAttributes/IEveFxAttribute.h
+    Eve/SpaceObject/Utils/EveBoosterUtilities.cpp
+    Eve/SpaceObject/Utils/EveBoosterUtilities.h
     Eve/SpaceObject/Utils/EveCustomMask.cpp
     Eve/SpaceObject/Utils/EveCustomMask.h
     Eve/SpaceObject/Utils/EveCustomMask_Blue.cpp

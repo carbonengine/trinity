@@ -198,7 +198,7 @@ public:
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 
 	void CollectOwnedLocatorSets( const Matrix& parentTransform, std::vector<EveChildLocatorSetsSource>& out ) const override;
-	void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const override;
+	void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const override;
 	void SetOwnedLocatorSets( const std::vector<EveLocatorSetsPtr>& sets );
 	void InvalidateOwnerMergedLocators( LocatorInvalidationReason reason );
 

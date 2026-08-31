@@ -76,6 +76,8 @@ public:
 		TriBatchType batchType = TRIBATCHTYPE_OPAQUE;
 		uint32_t areaIndex = 0;
 		uint32_t areaCount = 1;
+		bool alphaCutout = false;
+		bool reversed = false;
 		uint64_t effectHash = 0;
 		EveInstancedMeshManager::MeshGroupHandle meshGroupHandle;
 	};
@@ -94,11 +96,13 @@ public:
 		EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG );
 
 	void RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag );
+	void SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale );
 
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 	uint32_t GetMeshCount() const;
 	BluePy GetMeshInfo( uint32_t meshId ) const;
 	BluePy GetAreaInfo( uint32_t meshId, uint32_t areaId ) const;
+	BluePy GetInstancesTransforms( uint32_t meshId ) const;
 	BluePy GetMeshDisplay( uint32_t meshId ) const;
 	BluePy SetMeshDisplay( uint32_t meshId, bool display );
 	BluePy GetMeshInheritOverlayEffects( uint32_t meshId ) const;
@@ -108,6 +112,8 @@ public:
 	BluePy RemoveMeshOverlayEffect( uint32_t meshId, EveMeshOverlayEffect* overlayEffect );
 	BluePy ClearMeshOverlayEffects( uint32_t meshId );
 	BluePy GetMeshOverlayEffectCount( uint32_t meshId ) const;
+
+	void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const override;
 
 private:
 	// per-instance constant buffers for overlay draws
