@@ -11,6 +11,7 @@ if(BUILD_FOR_PYTHON_2)
     set(BUILD_METAL ON)
     set(BUILD_SHADER_COMPILER ON)
     set(INSTALL_TO_MONOLITH ON)
+    set(BUILD_TESTING OFF)
 
 else()
     # Feature options
@@ -51,6 +52,10 @@ endif()
 project(carbon-trinity VERSION 1.0.0)
 
 if(PROJECT_IS_TOP_LEVEL)
+    option(BUILD_TESTING "Build tests. Enabled by default." ON)
+endif()
+
+if(BUILD_TESTING)
     enable_testing()
 endif()
 

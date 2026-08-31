@@ -306,10 +306,7 @@ else() # VCPKG install mode
 
 endif()
  
-option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
-message(STATUS " BUILD_TESTING VALUE IS ${BUILD_TESTING}")
 if(BUILD_TESTING)
-
     find_package(GTest REQUIRED)
 
     add_executable(ShaderCompilerTest)
