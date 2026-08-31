@@ -183,7 +183,8 @@ struct DamageFilterOccluder
 {
 	TriGeometryResPtr geometry;
 	Matrix fromObject;
-	Tr2MeshBasePtr mesh;
+	uint32_t areaStart = 0;
+	uint32_t areaCount = 0;
 };
 
 // ---------------------------------------------------------------------------------------
@@ -821,6 +822,7 @@ private:
 	bool m_damageLocatorAutoFilterEnabled; // For debugging purposes: Shall we run damage locator filtering whenever parts are moved?
 	bool m_damageLocatorFilterRequested; // Did someone request filtering damage locator?
 	std::vector<DamageFilterOccluder> m_damageFilterOccluders; // Occluders used during damage locator filtering (geometry to raycast against).
+	std::vector<EveChildGeometryArea> m_damageFilterAreas; // Areas referenced by m_damageFilterOccluders.
 	enum class DamageFilterState // State machine for damage locator filtering, since we have to wait on stuff before we can start raycasting.
 	{
 		Idle, // No need to run filtering this frame.

@@ -11,6 +11,5 @@ const Be::ClassInfo* EveChildPartData::ExposeToBlue()
 	EXPOSURE_BEGIN( EveChildPartData, "Persistent state of a modular space object (per-part transforms and bounds). Edit through EveModularObjectModifier" )
 		MAP_INTERFACE( EveSpaceObjectChild );
 		MAP_INTERFACE( IEveSpaceObjectChild )
-		MAP_ATTRIBUTE( "name", m_name, "Name of the space object child", Be::READWRITE | Be::PERSIST )
-	EXPOSURE_END()
+	EXPOSURE_CHAINTO( EveSpaceObjectChild )
 }

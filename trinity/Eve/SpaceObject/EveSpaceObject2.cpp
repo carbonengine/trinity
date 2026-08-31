@@ -1963,6 +1963,7 @@ void EveSpaceObject2::ReleaseDamageFilterSessions()
 		}
 
 		m_damageFilterOccluders.clear();
+		m_damageFilterAreas.clear();
 	}
 }
 
@@ -1975,6 +1976,7 @@ bool EveSpaceObject2::CollectOccluders()
 		if( !m_mesh->GetGeometryResource()->IsPrepared() )
 		{
 			m_damageFilterOccluders.clear();
+			m_damageFilterAreas.clear();
 			return false;
 		}
 
@@ -1983,22 +1985,33 @@ bool EveSpaceObject2::CollectOccluders()
 			DamageFilterOccluder occluder;
 			occluder.geometry = m_mesh->GetGeometryResource();
 			occluder.fromObject = IdentityMatrix();
-			occluder.mesh = m_mesh;
-			m_damageFilterOccluders.push_back( occluder );
+			occluder.areaStart = uint32_t( m_damageFilterAreas.size() );
+			EveCollectAreas( TRIBATCHTYPE_OPAQUE, m_mesh, m_damageFilterAreas );
+			occluder.areaCount = uint32_t( m_damageFilterAreas.size() ) - occluder.areaStart;
+			if( occluder.areaCount != 0 )
+			{
+				m_damageFilterOccluders.push_back( std::move( occluder ) );
+			}
 		}
 	}
 
 	std::vector<EveChildGeometry> childGeometries;
 	for( auto& child : m_effectChildren )
 	{
-		child->CollectOwnedGeometry( IdentityMatrix(), childGeometries );
+		child->CollectOwnedGeometry( TRIBATCHTYPE_OPAQUE, IdentityMatrix(), childGeometries, m_damageFilterAreas );
 	}
 
 	for( auto& childGeometry : childGeometries )
 	{
+		if( childGeometry.areaCount == 0 )
+		{
+			continue;
+		}
+
 		if( !childGeometry.geometry->IsPrepared() )
 		{
 			m_damageFilterOccluders.clear();
+			m_damageFilterAreas.clear();
 			return false;
 		}
 
@@ -2010,8 +2023,9 @@ bool EveSpaceObject2::CollectOccluders()
 		DamageFilterOccluder occluder;
 		occluder.geometry = childGeometry.geometry;
 		occluder.fromObject = Inverse( childGeometry.childToObject );
-		occluder.mesh = childGeometry.mesh;
-		m_damageFilterOccluders.push_back( occluder );
+		occluder.areaStart = childGeometry.areaStart;
+		occluder.areaCount = childGeometry.areaCount;
+		m_damageFilterOccluders.push_back( std::move( occluder ) );
 	}
 
 	for( auto& occluder : m_damageFilterOccluders )
@@ -2071,40 +2085,49 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 
 		for( auto& occluder : m_damageFilterOccluders )
 		{
-			auto areas = occluder.mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-			if( !areas->empty() )
+			if( occluder.areaCount == 0 )
 			{
-				Vector3 rayOrigin = Transform( origin, occluder.fromObject ).GetXYZ();
-				Vector3 rayDirection = TransformNormal( direction, occluder.fromObject );
+				continue;
+			}
 
-				// Note that we deliberately don't normalize the rayDirection.
-				//
-				// We transform the 'direction' from object space to child space to compute 'rayDirection'.
-				// A child, that has been scaled to a large size, will get a small rayDirection.
-				// After all, we go from object space to child space, so we transform rayDirection with the inverse child scale!
-				//
-				// The intersection function will then find an intersection at a proportionally larger distance.
-				// Consider the line equation: intersectionPoint = distance * rayDirection + rayOrigin
-				// If rayDirection is small, then distance has to be larger to compensate.
-				//
-				// That larger distance is in our object space!
-				// So rayLength is always in object space, and can safely be compared with frontFaceMinDistance. :)
+			Vector3 rayOrigin = Transform( origin, occluder.fromObject ).GetXYZ();
+			Vector3 rayDirection = TransformNormal( direction, occluder.fromObject );
 
-				for( auto it = begin( *areas ); it != end( *areas ); ++it )
+			// Note that we deliberately don't normalize the rayDirection.
+			//
+			// We transform the 'direction' from object space to child space to compute 'rayDirection'.
+			// A child, that has been scaled to a large size, will get a small rayDirection.
+			// After all, we go from object space to child space, so we transform rayDirection with the inverse child scale!
+			//
+			// The intersection function will then find an intersection at a proportionally larger distance.
+			// Consider the line equation: intersectionPoint = distance * rayDirection + rayOrigin
+			// If rayDirection is small, then distance has to be larger to compensate.
+			//
+			// That larger distance is in our object space!
+			// So rayLength is always in object space, and can safely be compared with frontFaceMinDistance. :)
+
+			for( uint32_t poolIndex = occluder.areaStart; poolIndex < occluder.areaStart + occluder.areaCount; poolIndex++ )
+			{
+				const EveChildGeometryArea& area = m_damageFilterAreas[poolIndex];
+				for( uint32_t areaIndex = area.index; areaIndex < area.index + area.count; areaIndex++ )
 				{
 					// We only trace up to the distance of the closest intersection that we have found so far.
 					RayCastResult hitInfo;
-					if( occluder.geometry->GetIntersectionPoints( rayOrigin, rayDirection, hitInfo, ( *it )->GetIndex(), rayLength ) )
+					if( occluder.geometry->GetIntersectionPoints( rayOrigin, rayDirection, hitInfo, areaIndex, rayLength ) )
 					{
 						rayLength = hitInfo.distance;
 						// TRIBATCHTYPE_OPAQUE also contains alpha cutouts, which can be one-sided. Ignore them to prevent false positives.
-						backfacing = !( *it )->IsAlphaCutout() && ( ( Dot( hitInfo.unnormalizedNormal, rayDirection ) > 0 ) != ( *it )->IsReversed() );
+						backfacing = !area.alphaCutout && ( ( Dot( hitInfo.unnormalizedNormal, rayDirection ) > 0 ) != area.reversed );
 						if( rayLength < frontFaceMinDistance )
 						{
 							occluded = true;
 							break;
 						}
 					}
+				}
+				if( occluded )
+				{
+					break;
 				}
 			}
 			if( occluded )

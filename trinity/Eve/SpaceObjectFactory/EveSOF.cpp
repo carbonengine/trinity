@@ -431,7 +431,13 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 			{
 				auto effect = area->GetMaterialInterface();
 				effect->SetOption( BlueSharedString( "SPACE_OBJECT_INSTANCED_ATTACHMENT" ), BlueSharedString( "SOIA_SHARED" ) );
-				areas.push_back( EveChildInstancedMeshes::MeshArea{ effect, type == TRIBATCHTYPE_DECAL ? TRIBATCHTYPE_OPAQUE : type, uint32_t( area->GetIndex() ), uint32_t( area->GetCount() ) } );
+				areas.push_back( EveChildInstancedMeshes::MeshArea{
+					effect,
+					type == TRIBATCHTYPE_DECAL ? TRIBATCHTYPE_OPAQUE : type,
+					uint32_t( area->GetIndex() ),
+					uint32_t( area->GetCount() ),
+					area->IsAlphaCutout(),
+					area->IsReversed() } );
 			}
 		}
 		sharedMeshes->AddMesh(
@@ -4013,7 +4019,13 @@ void EveSOF::CreatePlacement(
 				{
 					auto effect = area->GetMaterialInterface();
 					effect->SetOption( BlueSharedString( "SPACE_OBJECT_INSTANCED_ATTACHMENT" ), BlueSharedString( "SOIA_SHARED" ) );
-					areas.push_back( EveChildInstancedMeshes::MeshArea{ effect, type == TRIBATCHTYPE_DECAL ? TRIBATCHTYPE_OPAQUE : type, uint32_t( area->GetIndex() ), uint32_t( area->GetCount() ) } );
+					areas.push_back( EveChildInstancedMeshes::MeshArea{
+						effect,
+						type == TRIBATCHTYPE_DECAL ? TRIBATCHTYPE_OPAQUE : type,
+						uint32_t( area->GetIndex() ),
+						uint32_t( area->GetCount() ),
+						area->IsAlphaCutout(),
+						area->IsReversed() } );
 				}
 			}
 			sharedMeshes->AddMesh(

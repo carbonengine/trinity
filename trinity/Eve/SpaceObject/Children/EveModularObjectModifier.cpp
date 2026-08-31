@@ -222,6 +222,10 @@ BlueStdResult EveModularObjectModifier::SetTransform( EveSpaceObjectChild::PartT
 		{
 			child->Setup( &scale, &rotation, &position, Tr2Lod::TR2_LOD_LOW );
 		}
+		if( EveChildInstancedMeshesPtr instancedMeshes = BlueCastPtr( child ) )
+		{
+			instancedMeshes->SetInstanceTransformByPartTag( partId, position, rotation, scale );
+		}
 	}
 	m_object->InvalidateMergedLocators( LocatorInvalidationReason::PartMoved );
 	return BlueStdResultType::BLUE_STD_RESULT_OK;
