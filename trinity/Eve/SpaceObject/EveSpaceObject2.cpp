@@ -1015,29 +1015,18 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			for( size_t i = 0; i < locators.size(); ++i )
 			{
 				auto& locator = locators[i];
-				auto position = locator.position;
-				auto rotation = locator.direction;
 
-				size_t boneCount;
-				const Float4x3* bones;
+				Vector3 position;
+				Vector3 direction;
+				GetLocatorInObjectSpace( position, direction, locator, isDamageLocatorSet ? int( i ) : -1 );
 
 				Color locatorColor = c;
 
-				if( locator.boneIndex >= 0 && Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount ) )
+				size_t boneCount;
+				const Float4x3* bones;
+				if( Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount ) && locator.boneIndex >= int( boneCount ) )
 				{
-					if( locator.boneIndex < int( boneCount ) )
-					{
-						const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
-						Matrix boneTF = IdentityMatrix();
-						TriMatrixCopyFrom3x4( &boneTF, &bones[locator.boneIndex] );
-						position = XMVector3TransformCoord( position, boneTF );
-
-						rotation = XMQuaternionMultiply( rotation, XMQuaternionRotationMatrix( boneTF ) );
-					}
-					else
-					{
-						locatorColor = 0x99ff4444;
-					}
+					locatorColor = 0x99ff4444;
 				}
 
 				if( isDamageLocatorSet && i < m_damageLocatorEnabled.size() && !m_damageLocatorEnabled[i] )
@@ -1049,7 +1038,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 				renderer.DrawSphereArrow(
 					Tr2DebugObjectReference( &locators, uint32_t( i ) ),
 					Vector3( XMVector3TransformCoord( position, m_worldTransform ) ),
-					Vector3( XMVector3TransformNormal( Vector3( 0, 1, 0 ), Matrix( XMMatrixRotationQuaternion( rotation ) ) * m_worldTransform ) ),
+					Vector3( XMVector3TransformNormal( direction, m_worldTransform ) ),
 					min( m_boundingSphereRadius * m_modelScale / 50.f, 100.0f ),
 					8,
 					Tr2DebugRenderer::Lit,
