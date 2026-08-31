@@ -50,6 +50,10 @@ endif()
 
 project(carbon-trinity VERSION 1.0.0)
 
+if(PROJECT_IS_TOP_LEVEL)
+    enable_testing()
+endif()
+
 if (BUILD_FOR_PYTHON_2)
     if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
         message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")

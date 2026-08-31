@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 extern std::string g_metalToolsPath;
+bool g_metalCompilerAvailable = true;
 
 class ThrowListener : public testing::EmptyTestEventListener
 {
@@ -46,6 +47,35 @@ int main( int argc, char** argv )
 			}
 		}
 	}
+
+#ifdef _WIN32
+	std::ostringstream cmd;
+	if( !g_metalToolsPath.empty() )
+	{
+		cmd << "\"" << g_metalToolsPath << "\\macos\\bin\\metal.exe\" --version";
+	}
+	else
+	{
+		char programFiles[MAX_PATH] = { 0 };
+		size_t programFilesSize;
+		getenv_s( &programFilesSize, programFiles, "PROGRAMFILES" );
+
+		cmd << "\"" << std::string((const char*)programFiles) << "\\Metal Developer Tools\\metal\\macos\\bin\\metal2.exe\" --version";
+	}
+	FILE* process = _popen( cmd.str().c_str(), "r" );
+	char readBuffer[128];
+	while( fgets( readBuffer, sizeof( readBuffer ), process ) )
+	{
+	}
+	if( !process )
+	{
+		g_metalCompilerAvailable = false;
+	}
+	else
+	{
+		g_metalCompilerAvailable = _pclose( process ) == 0;
+	}
+#endif
 
 	testing::InitGoogleTest( &argc, argv );
 	testing::UnitTest::GetInstance()->listeners().Append( new ThrowListener );

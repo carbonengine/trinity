@@ -172,7 +172,7 @@ if(WIN32)
 
         #GTest
         set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
-        #gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
+        gtest_discover_tests(TrinityALTest_dx11)
 
         # Copy DLL dependencies
         add_custom_command(
@@ -258,7 +258,7 @@ if(WIN32)
 
         #GTest
         set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
-        #gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
+        gtest_discover_tests(TrinityALTest_dx12)
 
     endif()
 

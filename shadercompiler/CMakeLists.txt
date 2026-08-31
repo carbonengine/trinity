@@ -320,4 +320,6 @@ if(BUILD_TESTING)
     configure_shader_compiler(ShaderCompilerTest)
     set_target_properties(ShaderCompilerTest PROPERTIES FOLDER "Tests")
     add_dependencies(ShaderCompilerTest ShaderCompiler)
+
+    gtest_discover_tests(ShaderCompilerTest)
 endif()
