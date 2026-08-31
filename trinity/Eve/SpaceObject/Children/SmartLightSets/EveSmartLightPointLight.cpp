@@ -71,6 +71,10 @@ void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 	{
 		return;
 	}
+	if( !m_lightGroupData.lightingQuality.HasBit( lightManager.GetLightingQuality() ) )
+	{
+		return;
+	}
 
 	const PlacementDataWithIdentifierStructureList& placements = *m_distribution->GetPlacementData();
 	size_t size = m_distribution->GetNumberOfPlacements();

@@ -22,6 +22,7 @@ const Be::ClassInfo* EveSmartLightPointLight::ExposeToBlue()
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "flags", m_lightGroupData.flags, "Various light options", Be::READWRITE | Be::PERSIST, Tr2LightFlagChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "lightingQuality", m_lightGroupData.lightingQuality.m_filter, "Filter for lighting quality settings. Controls whether light is active with a certain lighting quality setting.", Be::READWRITE | Be::PERSIST, LightingQualityFilterChooser );
 
 		MAP_ATTRIBUTE( "radius", m_lightGroupData.radius, "Light radius", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "innerRadius", m_lightGroupData.innerRadius, "Inner light radius (to mimick a glowing sphere)", Be::READWRITE | Be::PERSIST )
