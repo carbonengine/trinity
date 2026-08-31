@@ -204,9 +204,12 @@ public:
 
 	EveDamageOverlayPtr GetDamageOverlay() const;
 	EveDamageOverlayPtr EnsureDamageOverlay();
-	bool GetDamageLocatorPositionLocal( int index, Vector3& out ) const;
+	bool GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const;
+	bool GetDamageLocatorAnimatedLocal( int index, Vector3& position, Vector3& direction ) const;
 
 protected:
+	const LocatorStructureList* GetOwnedDamageLocators() const;
+
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
 
