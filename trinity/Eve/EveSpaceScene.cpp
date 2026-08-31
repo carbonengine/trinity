@@ -61,6 +61,13 @@ CCP_STATS_DECLARE( shadowsRendered, "Trinity/EveSpaceScene/shadowsRendered", tru
 CCP_STATS_DECLARE( raytracedShadowsTime, "Trinity/EveSpaceScene/raytracedShadowsTime", true, CST_TIME, "Time it took to set up raytraced shadows" );
 CCP_STATS_DECLARE( shLightingUpdateTime, "Trinity/EveSpaceScene/shLightingUpdateTime", true, CST_TIME, "Time took to update SH lighting for EveSpaceScene" );
 CCP_STATS_DECLARE( gatherDynamicLights, "Trinity/EveSpaceScene/gatherDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
+CCP_STATS_DECLARE( csmPerObjectDataShared, "Trinity/EveSpaceScene/csmPerObjectDataShared", true, CST_COUNTER_HIGH, "Cascade shadow per-object data reused from an earlier cascade this frame" );
+CCP_STATS_DECLARE( csmPerObjectDataAllocated, "Trinity/EveSpaceScene/csmPerObjectDataAllocated", true, CST_COUNTER_HIGH, "Cascade shadow per-object data allocated this frame" );
+
+bool g_csmSharedPerObjectData = true;
+TRI_REGISTER_SETTING( "csmSharedPerObjectData", g_csmSharedPerObjectData );
+
+static uint32_t s_csmPerObjectDataStamp = 0;
 
 
 bool g_eveIsSpaceObjectResourceUnloadingEnabled = true;
@@ -711,15 +718,32 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 		{
 			CCP_STATS_ZONE( "Per object data" );
 
+			// One allocation per caster per invocation; later cascades reuse it. The per-cascade
+			// allocator clears are deferred to the end of this function to keep the data alive.
+			const uint32_t stamp = ++s_csmPerObjectDataStamp;
+			int64_t shared = 0;
+			int64_t allocated = 0;
+
 			// This is not thread safe, hence no threading...
 			for( unsigned int frustumIndex = 0; frustumIndex < SHADOW_FRUSTUM_COUNT; ++frustumIndex )
 			{
 				auto batches = m_shadowBatches[frustumIndex].get();
 				for( auto& info : shadowCasterInfo[frustumIndex] )
 				{
+					if( g_csmSharedPerObjectData && info.caster->m_sharedShadowDataStamp == stamp )
+					{
+						info.perObjectData = info.caster->m_sharedShadowPerObjectData;
+						++shared;
+						continue;
+					}
 					info.perObjectData = info.caster->GetShadowPerObjectData( batches );
+					info.caster->m_sharedShadowPerObjectData = info.perObjectData;
+					info.caster->m_sharedShadowDataStamp = stamp;
+					++allocated;
 				}
 			}
+			CCP_STATS_ADD( csmPerObjectDataShared, shared );
+			CCP_STATS_ADD( csmPerObjectDataAllocated, allocated );
 		}
 
 		{
@@ -753,7 +777,6 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 				if( m_shadowBatches[i]->GetBatchCount() == 0 )
 				{
 					m_shadowBatches[i]->Clear();
-					m_shadowAllocators[i].Clear();
 					continue;
 				}
 
@@ -782,9 +805,14 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 				}
 
 				m_shadowBatches[i]->Clear();
-				m_shadowAllocators[i].Clear();
 			}
 			shadowMap.EndShadowRendering( renderContext );
+
+			// deferred so per-object data allocated in one cascade stays valid for the later ones
+			for( auto& allocator : m_shadowAllocators )
+			{
+				allocator.Clear();
+			}
 		}
 
 		PopulatePerFramePSData( m_perFramePS, &shadowMap, renderContext );

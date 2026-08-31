@@ -159,6 +159,10 @@ BLUE_INTERFACE( IEveShadowCaster ) :
 	{
 		return false;
 	}
+
+	// per-object data shared across cascades within one SetupCascadedShadows invocation (see the stamp there)
+	Tr2PerObjectData* m_sharedShadowPerObjectData = nullptr;
+	uint32_t m_sharedShadowDataStamp = 0;
 };
 
 REGISTER_COMPONENT_TYPE( "ShadowCaster", IEveShadowCaster );
