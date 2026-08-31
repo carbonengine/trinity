@@ -18,7 +18,7 @@ constexpr float TRACKING_FADE_TIME = 1.f;
 EveChildTurret::EveChildTurret( IRoot* lockobj ) :
 	EveChildMesh( lockobj )
 {
-	for( unsigned int i = 0; i < SYSBONE_MAX; ++i )
+	for( unsigned int i = 0; i < EveTurretAiming::SYSBONE_MAX; ++i )
 	{
 		m_systemBoneID[i] = INVALID_BONE_INDEX;
 	}
@@ -319,7 +319,7 @@ void EveChildTurret::BuildCachedGeometryData( TriGeometryRes& geometryRes )
 	{
 		if( TriGeometryResSkeletonData* skeletonData = geometryRes.GetSkeletonData( 0 ) )
 		{
-			for( int i = 0; i < SYSBONE_MAX; ++i )
+			for( int i = 0; i < EveTurretAiming::SYSBONE_MAX; ++i )
 			{
 				// in case we don't find system bone, ::FindJoint() returns 0xffffffff
 				m_systemBoneID[i] = skeletonData->FindJoint( EveTurretAiming::GetSystemBoneName( i ) );
@@ -723,14 +723,14 @@ void EveChildTurret::ModifyPose( const cmf::Skeleton& skeleton, cmf::SkeletonPos
 
 	Vector3 targetPosOS = TransformCoord( *m_target->GetTrackingPosition(), Inverse( m_worldTransform ) );
 
-	for( unsigned int bone = 0; bone < SYSBONE_MAX; ++bone )
+	for( unsigned int bone = 0; bone < EveTurretAiming::SYSBONE_MAX; ++bone )
 	{
 		// covers Invalid since INVALID_BONE_INDEX is max
 		if( m_systemBoneID[bone] < pose.boneTransforms.size() )
 		{
 			cmf::Transform& boneTransform = pose.boneTransforms[m_systemBoneID[bone]];
 			m_aiming.ModifySystemBoneTransform(
-				static_cast<SystemBones>( bone ),
+				static_cast<EveTurretAiming::SystemBones>( bone ),
 				&targetPosOS,
 				nullptr,
 				m_trackingInfluence,

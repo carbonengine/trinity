@@ -4,32 +4,32 @@
 #ifndef EveTurretAiming_H
 #define EveTurretAiming_H
 
-// system-controlled bones
-enum SystemBones
-{
-	SYSBONE_INVALID = 0,
-	SYSBONE_ROTATION,
-	SYSBONE_ROTATION01,
-	SYSBONE_ROTATION02,
-	SYSBONE_COUNTER_ROTATION,
-	SYSBONE_PITCH,
-	SYSBONE_PITCH1,
-	SYSBONE_PITCH2,
-	SYSBONE_SCALED_HEIGHT,
-	SYSBONE_SCALED_PITCH01,
-	SYSBONE_SCALED_PITCH02,
-	SYSBONE_SCALED_PITCH03,
-	SYSBONE_SCALED_PITCH04,
-	SYSBONE_SCALED_PITCH05,
-	SYSBONE_SCALED_PITCH06,
-	SYSBONE_MAX,
-};
-
 // Sysbone aiming math and tuning values shared by EveTurretSet and EveChildTurret.
 // Hosts embed this by value and expose the members through their own Blue schema.
 class EveTurretAiming
 {
 public:
+	// system-controlled bones
+	enum SystemBones
+	{
+		SYSBONE_INVALID = 0,
+		SYSBONE_ROTATION,
+		SYSBONE_ROTATION01,
+		SYSBONE_ROTATION02,
+		SYSBONE_COUNTER_ROTATION,
+		SYSBONE_PITCH,
+		SYSBONE_PITCH1,
+		SYSBONE_PITCH2,
+		SYSBONE_SCALED_HEIGHT,
+		SYSBONE_SCALED_PITCH01,
+		SYSBONE_SCALED_PITCH02,
+		SYSBONE_SCALED_PITCH03,
+		SYSBONE_SCALED_PITCH04,
+		SYSBONE_SCALED_PITCH05,
+		SYSBONE_SCALED_PITCH06,
+		SYSBONE_MAX,
+	};
+
 	// name of a system bone as authored in the model skeleton
 	static const char* GetSystemBoneName( unsigned int bone );
 

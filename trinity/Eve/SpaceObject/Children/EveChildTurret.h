@@ -115,7 +115,7 @@ protected:
 	uint32_t m_currentCyclingFiresPos = 0;
 
 	// system bones
-	unsigned int m_systemBoneID[SYSBONE_MAX];
+	unsigned int m_systemBoneID[EveTurretAiming::SYSBONE_MAX];
 	// sysbone aiming math + tuning (shared with EveTurretSet)
 	EveTurretAiming m_aiming;
 

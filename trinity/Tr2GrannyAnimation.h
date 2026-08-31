@@ -97,6 +97,8 @@ public:
 	void DisableAimBone();
 
 	ITr2PoseModifier* GetPoseModifier() const;
+	// Non-owning: the modifier must outlive the registration or be cleared
+	// with SetPoseModifier( nullptr ) before it is destroyed.
 	void SetPoseModifier( ITr2PoseModifier * poseModifier );
 
 	void SetAdditiveBlendMode( bool additive );

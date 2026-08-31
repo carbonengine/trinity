@@ -420,7 +420,7 @@ private:
 	uint32_t m_currentCyclingFiresPos;
 
 	// system bones
-	unsigned int m_systemBoneID[SYSBONE_MAX];
+	unsigned int m_systemBoneID[EveTurretAiming::SYSBONE_MAX];
 	// sysbone aiming math + tuning (shared with EveChildTurret)
 	EveTurretAiming m_aiming;
 
