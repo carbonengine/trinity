@@ -60,7 +60,7 @@ int main( int argc, char** argv )
 		size_t programFilesSize;
 		getenv_s( &programFilesSize, programFiles, "PROGRAMFILES" );
 
-		cmd << "\"" << std::string((const char*)programFiles) << "\\Metal Developer Tools\\metal\\macos\\bin\\metal2.exe\" --version";
+		cmd << "\"" << std::string( programFiles ) << "\\Metal Developer Tools\\metal\\macos\\bin\\metal2.exe\" --version";
 	}
 	FILE* process = _popen( cmd.str().c_str(), "r" );
 	char readBuffer[128];
