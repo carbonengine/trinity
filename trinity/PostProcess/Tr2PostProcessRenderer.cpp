@@ -684,10 +684,10 @@ void Tr2PostProcessRenderer::Execute(
 	{
 		displaySize = { upscalingInfo.displayWidth, upscalingInfo.displayHeight };
 	}
-	Tr2GpuResourcePool::Texture output = gpuResourcePool.GetTempTexture( 
-		"Final Result", 
-		displaySize, 
-		sharpeningRequired ? GetUavCompatibleFormat( destination.GetFormat() ) : destination.GetFormat(), 
+	Tr2GpuResourcePool::Texture output = gpuResourcePool.GetTempTexture(
+		"Final Result",
+		displaySize,
+		sharpeningRequired ? GetUavCompatibleFormat( destination.GetFormat() ) : destination.GetFormat(),
 		sharpeningRequired ? RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS : RENDER_TARGET );
 
 	// Always copy
@@ -811,18 +811,18 @@ void Tr2PostProcessRenderer::Execute(
 			scene->ApplyUpscalingToPerFrameData( displaySize.width, displaySize.height, renderContext );
 			if( sharpeningRequired )
 			{
-				RenderSharpening( postProcess->m_sharpeningStrength, upscaled, output, gpuResourcePool, renderContext );
+				RenderSharpening( postProcess->m_sharpeningStrength, upscaled, output, renderContext );
 			}
 			else
 			{
 				output = upscaled;
 			}
 		}
-		else if ( sharpeningRequired )
+		else if( sharpeningRequired )
 		{
 			auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", displaySize, upscaledSource->GetFormat(), RENDER_TARGET );
 			RenderTonemapping( tonemappedOutput, postProcess, renderContext );
-			RenderSharpening( postProcess->m_sharpeningStrength, tonemappedOutput, output, gpuResourcePool, renderContext );
+			RenderSharpening( postProcess->m_sharpeningStrength, tonemappedOutput, output, renderContext );
 		}
 		else
 		{
@@ -838,11 +838,11 @@ void Tr2PostProcessRenderer::Execute(
 			Tr2Renderer::DrawTexture( renderContext, output );
 		}
 	}
-	else if ( sharpeningRequired )
+	else if( sharpeningRequired )
 	{
 		auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", displaySize, upscaledSource->GetFormat(), RENDER_TARGET );
 		RenderTonemapping( tonemappedOutput, postProcess, renderContext );
-		RenderSharpening( postProcess->m_sharpeningStrength, tonemappedOutput, output, gpuResourcePool, renderContext );
+		RenderSharpening( postProcess->m_sharpeningStrength, tonemappedOutput, output, renderContext );
 		Tr2Renderer::DrawTexture( renderContext, output );
 	}
 	else
@@ -873,7 +873,7 @@ void Tr2PostProcessRenderer::SetupExposureConversion( bool enable, float middleV
 	}
 }
 
-void Tr2PostProcessRenderer::RenderSharpening( float strength, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool::Texture& output, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
+void Tr2PostProcessRenderer::RenderSharpening( float strength, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool::Texture& output, Tr2RenderContext& renderContext )
 {
 	GPU_REGION( renderContext, "CAS Sharpening" );
 

@@ -147,7 +147,7 @@ private:
 	void SetupExposureConversion( bool enable, float middleValue );
 
 	// optional sharpening
-	void RenderSharpening( float strength, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool::Texture& output, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	void RenderSharpening( float strength, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool::Texture& output, Tr2RenderContext& renderContext );
 
 	// bloom
 	Tr2GpuResourcePool::Texture RenderBloom( Tr2GpuResourcePool::Texture & dest, Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext, Tr2PPBloomEffect * bloom, Tr2PPDynamicExposureEffect * dynamicExposure );

@@ -368,7 +368,7 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 		{
 			m_combinedPostProcess.CreateInstance();
 		}
-		m_combinedPostProcess->m_sharpeningStrength = m_sceneDefaultPostProcess->m_sharpeningStrength;
+		m_combinedPostProcess->m_sharpeningStrength = m_sceneDefaultPostProcess ? m_sceneDefaultPostProcess->m_sharpeningStrength : 0.5f;
 
 		std::sort(
 			begin( postProcessAttributes ),
