@@ -37,7 +37,7 @@ public:
 		Be::OptionalWithDefaultValue<unsigned, 0> msaaQuality,
 		Be::OptionalWithDefaultValue<Tr2RenderContextEnum::ExFlag, Tr2RenderContextEnum::EX_NONE> flags );
 
-	long Create(
+	int32_t Create(
 		unsigned width,
 		unsigned height,
 		Tr2RenderContextEnum::DepthStencilFormat format,
