@@ -131,9 +131,9 @@ function(set_shared_trinityaltest_properties target)
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
 
     if(BUILD_FOR_PYTHON_2)
-        target_link_libraries(${target} PRIVATE GTest::GTest GTest::Main)
+        target_link_libraries(${target} PRIVATE GTest::GTest)
     else()
-        target_link_libraries(${target} PRIVATE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
+        target_link_libraries(${target} PRIVATE GTest::gtest)
     endif()
     
     if(APPLE)
@@ -150,16 +150,7 @@ function(set_shared_trinityaltest_properties target)
 
     target_include_directories(${target} PRIVATE ${GENERATED_SOURCES_DIR})
 
-    # override the output directory to ensure that all TrinityALTest outputs end up in the same folder.
-    # this is OK because we're differentiating them by OUTPUT_NAME
-    set(output_directory "${CMAKE_BINARY_DIR}/carbon/autobuild/TrinityALTest/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/$<$<CONFIG:DEBUG>:>")
-    message(STATUS "Overriding ${target} output directory to ${output_directory}")
-    set_target_properties(${target}
-        PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY ${output_directory}
-            PDB_OUTPUT_DIRECTORY ${output_directory}
-            FOLDER Trinity/Tests
-    )
+    set_target_properties(${target} PROPERTIES FOLDER Tests)
 
 endfunction()
 
@@ -169,10 +160,6 @@ if(WIN32)
         target_link_libraries(TrinityALTest_dx11 PRIVATE TrinityAL_dx11)
         target_compile_definitions(TrinityALTest_dx11 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX11)
         set_shared_trinityaltest_properties(TrinityALTest_dx11)
-
-        #GTest
-        set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
-        gtest_discover_tests(TrinityALTest_dx11)
 
         # Copy DLL dependencies
         add_custom_command(
@@ -207,6 +194,8 @@ if(WIN32)
                 MAIN_DEPENDENCY ${shaderSource}
             )
         endforeach()
+
+        gtest_discover_tests(TrinityALTest_dx11 TEST_PREFIX TrinityAL_dx11.)
     endif()
 
     if (BUILD_DX12)
@@ -258,7 +247,7 @@ if(WIN32)
 
         #GTest
         set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
-        gtest_discover_tests(TrinityALTest_dx12)
+        gtest_discover_tests(TrinityALTest_dx12 TEST_PREFIX TrinityALTest_dx12.)
 
     endif()
 

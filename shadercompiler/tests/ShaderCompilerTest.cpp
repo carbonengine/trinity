@@ -63,17 +63,17 @@ int main( int argc, char** argv )
 		cmd << "\"" << std::string( programFiles ) << "\\Metal Developer Tools\\metal\\macos\\bin\\metal2.exe\" --version";
 	}
 	FILE* process = _popen( cmd.str().c_str(), "r" );
-	char readBuffer[128];
-	while( fgets( readBuffer, sizeof( readBuffer ), process ) )
+	if( process )
 	{
-	}
-	if( !process )
-	{
-		g_metalCompilerAvailable = false;
+		char readBuffer[128];
+		while( fgets( readBuffer, sizeof( readBuffer ), process ) )
+		{
+		}
+		g_metalCompilerAvailable = _pclose( process ) == 0;
 	}
 	else
 	{
-		g_metalCompilerAvailable = _pclose( process ) == 0;
+		g_metalCompilerAvailable = false;
 	}
 #endif
 
