@@ -95,7 +95,7 @@ EveSpaceObjectChild::PartTag EveModularObjectModifier::AddHull( const char* hull
 	auto id = AllocatePartId();
 	auto size = m_object->GetEffectChildren().size();
 	auto dna = std::string( hullName ) + ":" + ( factionName[0] ? factionName : m_data->m_faction.c_str() ) + ":" + ( raceName[0] ? raceName : m_data->m_race.c_str() );
-	if( !m_sof->BuildChild( m_object, dna.c_str(), id, TransformationMatrix( scale, rotation, position ) ) )
+	if( !m_sof->BuildChild( m_object, dna.c_str(), id, TransformationMatrix( scale, rotation, position ), m_armorDamageEffectCache ) )
 	{
 		return INVALID_PART_TAG;
 	}

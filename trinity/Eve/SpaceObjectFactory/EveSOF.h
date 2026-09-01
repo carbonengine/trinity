@@ -41,6 +41,8 @@ public:
 	EveSOF( IRoot* lockobj = NULL );
 	~EveSOF();
 
+	using ArmorDamageEffectCache = std::map<std::pair<BlueSharedString, bool>, Tr2EffectPtr>;
+
 	// build a spaceship and return a EveShip2 object
 	IRootPtr Build( const char* hullName, const char* factionName, const char* raceName );
 	// build a spaceship from a dns string and return a EveShip2 object
@@ -50,7 +52,7 @@ public:
 	 * modular object, stamping partTag on every child, locator and mesh instance it creates.
 	 * @return False if the DNA did not resolve to a buildable hull.
 	 */
-	bool BuildChild( EveSpaceObject2* owner, const char* dnaString, uint32_t partTag, const Matrix& transform );
+	bool BuildChild( EveSpaceObject2* owner, const char* dnaString, uint32_t partTag, const Matrix& transform, ArmorDamageEffectCache& armorDamageEffectCache );
 
 	// validate a dna string (slow!)
 	bool ValidateDNA( const char* dnaString );
@@ -89,8 +91,6 @@ private:
 	};
 
 	EveSOFDNAPtr CreateDna( const char* dnaString );
-
-	using ArmorDamageEffectCache = std::map<std::pair<const EveSOFDataMgr::RaceDamageData*, bool>, Tr2EffectPtr>;
 
 	// all setup functions for the to-be-created space object
 	void SetupConsts( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;

@@ -309,7 +309,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	return newObj->GetRawRoot();
 }
 
-bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_t partTag, const Matrix& transform )
+bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_t partTag, const Matrix& transform, ArmorDamageEffectCache& armorDamageEffectCache )
 {
 	std::string s = "BuildChild ";
 	s += std::string( dnaString );
@@ -499,7 +499,6 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 		SetupEffects( newObj, (IEveEffectChildrenOwnerPtr)placementContainer, dna, placementOffsets, buildFlags );
 	}
 
-	ArmorDamageEffectCache armorDamageEffectCache;
 	if( !newObj->GetImpactOverlay() )
 	{
 		SetupImpactEffects( newObj, dna, armorDamageEffectCache );
@@ -2610,7 +2609,7 @@ static Tr2EffectPtr CreateArmorDamageEffect( const EveSOFDNAPtr& dna )
 // --------------------------------------------------------------------------------
 Tr2EffectPtr EveSOF::GetOrCreateArmorDamageEffect( ArmorDamageEffectCache& cache, const EveSOFDNAPtr& dna ) const
 {
-	auto key = std::make_pair( dna->GetRaceDamageData(), dna->IsHullAnimated() );
+	auto key = std::make_pair( dna->GetRaceName(), dna->IsHullAnimated() );
 	auto found = cache.find( key );
 	if( found != cache.end() )
 	{
