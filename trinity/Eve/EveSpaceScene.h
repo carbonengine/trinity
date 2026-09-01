@@ -426,6 +426,7 @@ protected:
 	// Utility batches.
 	std::vector<TriPoolAllocator> m_shadowAllocators;
 	std::vector<std::unique_ptr<ITriRenderBatchAccumulator>> m_shadowBatches;
+	Tr2EnumerableThreadSpecific<PerThreadAccumulator> m_shadowGatherPerThread;
 
 	Tr2EffectPtr m_backgroundEffect;
 

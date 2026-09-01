@@ -67,6 +67,9 @@ CCP_STATS_DECLARE( csmPerObjectDataAllocated, "Trinity/EveSpaceScene/csmPerObjec
 bool g_csmSharedPerObjectData = true;
 TRI_REGISTER_SETTING( "csmSharedPerObjectData", g_csmSharedPerObjectData );
 
+bool g_csmParallelGather = true;
+TRI_REGISTER_SETTING( "csmParallelGather", g_csmParallelGather );
+
 static uint32_t s_csmPerObjectDataStamp = 0;
 
 
@@ -748,12 +751,36 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 
 		{
 			CCP_STATS_ZONE( "get batches" );
-			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
-				for( const auto& info : shadowCasterInfo[frustumIndex] )
+			if( g_csmParallelGather )
+			{
+				// parallel within each cascade: the far cascades hold most of the scene, so
+				// one-task-per-cascade leaves the wall time equal to the biggest cascade
+				for( unsigned int frustumIndex = 0; frustumIndex < SHADOW_FRUSTUM_COUNT; ++frustumIndex )
 				{
-					info.caster->GetShadowBatches( m_shadowBatches[frustumIndex].get(), info.perObjectData, info.radius );
+					auto& infos = shadowCasterInfo[frustumIndex];
+					if( infos.empty() )
+					{
+						continue;
+					}
+					Tr2ParallelFor( size_t( 0 ), infos.size(), [&]( size_t i ) {
+						const auto& info = infos[i];
+						info.caster->GetShadowBatches( &m_shadowGatherPerThread.local(), info.perObjectData, info.radius );
+					} );
+					for( auto& src : m_shadowGatherPerThread )
+					{
+						m_shadowBatches[frustumIndex]->TransferFrom( &src );
+					}
 				}
-			} );
+			}
+			else
+			{
+				Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
+					for( const auto& info : shadowCasterInfo[frustumIndex] )
+					{
+						info.caster->GetShadowBatches( m_shadowBatches[frustumIndex].get(), info.perObjectData, info.radius );
+					}
+				} );
+			}
 		}
 
 		for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
