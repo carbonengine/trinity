@@ -60,6 +60,13 @@ BLUE_INTERFACE( ITr2Renderable ) :
 	{
 		return false;
 	}
+
+	// non-null when this renderable is also an IEveShadowCaster, so the main-pass gather can
+	// stamp its per-object data for reuse by the cascade shadow setup
+	virtual struct IEveShadowCaster* AsShadowCaster()
+	{
+		return nullptr;
+	}
 };
 REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
 

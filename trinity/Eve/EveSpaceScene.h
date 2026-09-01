@@ -427,6 +427,9 @@ protected:
 	std::vector<TriPoolAllocator> m_shadowAllocators;
 	std::vector<std::unique_ptr<ITriRenderBatchAccumulator>> m_shadowBatches;
 	Tr2EnumerableThreadSpecific<PerThreadAccumulator> m_shadowGatherPerThread;
+	// main-pass per-object data window: stamped during the primary gather, invalid once m_primaryBatches clear
+	uint32_t m_primaryPodStamp = 0;
+	bool m_primaryPodsValid = false;
 
 	Tr2EffectPtr m_backgroundEffect;
 

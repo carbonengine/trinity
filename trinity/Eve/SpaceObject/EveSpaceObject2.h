@@ -336,6 +336,10 @@ public:
 	{
 		return true;
 	}
+	IEveShadowCaster* AsShadowCaster() override
+	{
+		return this;
+	}
 	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////

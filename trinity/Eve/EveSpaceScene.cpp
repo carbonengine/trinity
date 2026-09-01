@@ -63,6 +63,7 @@ CCP_STATS_DECLARE( shLightingUpdateTime, "Trinity/EveSpaceScene/shLightingUpdate
 CCP_STATS_DECLARE( gatherDynamicLights, "Trinity/EveSpaceScene/gatherDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
 CCP_STATS_DECLARE( csmPerObjectDataShared, "Trinity/EveSpaceScene/csmPerObjectDataShared", true, CST_COUNTER_HIGH, "Cascade shadow per-object data reused from an earlier cascade this frame" );
 CCP_STATS_DECLARE( csmPerObjectDataAllocated, "Trinity/EveSpaceScene/csmPerObjectDataAllocated", true, CST_COUNTER_HIGH, "Cascade shadow per-object data allocated this frame" );
+CCP_STATS_DECLARE( csmPerObjectDataFromMainPass, "Trinity/EveSpaceScene/csmPerObjectDataFromMainPass", true, CST_COUNTER_HIGH, "Cascade shadow per-object data reused from the main pass gather" );
 
 bool g_csmSharedPerObjectData = true;
 TRI_REGISTER_SETTING( "csmSharedPerObjectData", g_csmSharedPerObjectData );
@@ -70,7 +71,12 @@ TRI_REGISTER_SETTING( "csmSharedPerObjectData", g_csmSharedPerObjectData );
 bool g_csmParallelGather = true;
 TRI_REGISTER_SETTING( "csmParallelGather", g_csmParallelGather );
 
+bool g_csmMainPassPerObjectData = true;
+TRI_REGISTER_SETTING( "csmMainPassPerObjectData", g_csmMainPassPerObjectData );
+
 static uint32_t s_csmPerObjectDataStamp = 0;
+// non-zero only while the primary gather runs; casters stamped then can serve the shadow setup
+static uint32_t s_gatherShadowStamp = 0;
 
 
 bool g_eveIsSpaceObjectResourceUnloadingEnabled = true;
@@ -724,8 +730,10 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 			// One allocation per caster per invocation; later cascades reuse it. The per-cascade
 			// allocator clears are deferred to the end of this function to keep the data alive.
 			const uint32_t stamp = ++s_csmPerObjectDataStamp;
+			const uint32_t mainPassStamp = ( g_csmMainPassPerObjectData && m_primaryPodsValid ) ? m_primaryPodStamp : 0;
 			int64_t shared = 0;
 			int64_t allocated = 0;
+			int64_t fromMainPass = 0;
 
 			// This is not thread safe, hence no threading...
 			for( unsigned int frustumIndex = 0; frustumIndex < SHADOW_FRUSTUM_COUNT; ++frustumIndex )
@@ -733,10 +741,18 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 				auto batches = m_shadowBatches[frustumIndex].get();
 				for( auto& info : shadowCasterInfo[frustumIndex] )
 				{
-					if( g_csmSharedPerObjectData && info.caster->m_sharedShadowDataStamp == stamp )
+					const uint32_t casterStamp = info.caster->m_sharedShadowDataStamp;
+					if( g_csmSharedPerObjectData && casterStamp == stamp )
 					{
 						info.perObjectData = info.caster->m_sharedShadowPerObjectData;
 						++shared;
+						continue;
+					}
+					if( casterStamp != 0 && casterStamp == mainPassStamp )
+					{
+						// the main pass already computed identical data this frame and it outlives the shadow passes
+						info.perObjectData = info.caster->m_sharedShadowPerObjectData;
+						++fromMainPass;
 						continue;
 					}
 					info.perObjectData = info.caster->GetShadowPerObjectData( batches );
@@ -747,6 +763,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 			}
 			CCP_STATS_ADD( csmPerObjectDataShared, shared );
 			CCP_STATS_ADD( csmPerObjectDataAllocated, allocated );
+			CCP_STATS_ADD( csmPerObjectDataFromMainPass, fromMainPass );
 		}
 
 		{
@@ -959,6 +976,7 @@ void GetBatchesFromRenderables(
 	std::vector<uint8_t> flags( renderableCount, 0 );
 	ITriRenderBatchAccumulator* const opaqueBatches = batches[TRIBATCHTYPE_OPAQUE];
 	const bool wantTransparencies = objectsWithTransparencies != nullptr;
+	const uint32_t shadowStamp = s_gatherShadowStamp;
 
 	{
 		CCP_STATS_ZONE( "PerObjectData" );
@@ -975,6 +993,14 @@ void GetBatchesFromRenderables(
 						continue;
 					}
 					perObjectData[i] = r->GetPerObjectData( opaqueBatches );
+					if( shadowStamp )
+					{
+						if( IEveShadowCaster* caster = r->AsShadowCaster() )
+						{
+							caster->m_sharedShadowPerObjectData = perObjectData[i];
+							caster->m_sharedShadowDataStamp = shadowStamp;
+						}
+					}
 					if( wantTransparencies && r->HasTransparentBatches() )
 					{
 						flags[i] = PER_OBJECT_TRANSPARENT;
@@ -990,6 +1016,14 @@ void GetBatchesFromRenderables(
 			}
 			ITr2Renderable* r = objectRenderables[i];
 			perObjectData[i] = r->GetPerObjectData( opaqueBatches );
+			if( shadowStamp )
+			{
+				if( IEveShadowCaster* caster = r->AsShadowCaster() )
+				{
+					caster->m_sharedShadowPerObjectData = perObjectData[i];
+					caster->m_sharedShadowDataStamp = shadowStamp;
+				}
+			}
 			flags[i] = wantTransparencies && r->HasTransparentBatches() ? PER_OBJECT_TRANSPARENT : 0;
 		}
 	}
@@ -1608,7 +1642,14 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_OPAQUE, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
 	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_ADDITIVE, m_primaryBatches[TRIBATCHTYPE_ADDITIVE] );
 
+	if( g_csmMainPassPerObjectData )
+	{
+		m_primaryPodStamp = ++s_csmPerObjectDataStamp;
+		s_gatherShadowStamp = m_primaryPodStamp;
+	}
 	GetAllBatchesFromRenderables( renderables, transparentObjects, includeDistortions, m_primaryBatches );
+	s_gatherShadowStamp = 0;
+	m_primaryPodsValid = true;
 	PrepareTransparentBatch( transparentObjects, m_primaryBatches );
 
 	m_instancedMeshManager->CollectMeshes( *m_componentRegistry );
@@ -3057,6 +3098,11 @@ void EveSpaceScene::Render( Tr2RenderContext& )
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::ClearBatches( BatchMap& batches )
 {
+	if( &batches == &m_primaryBatches )
+	{
+		// the main-pass per-object data lives in these accumulators; the shadow setup may no longer reuse it
+		m_primaryPodsValid = false;
+	}
 	for( auto it = batches.begin(); it != batches.end(); ++it )
 	{
 		it->second->Clear();

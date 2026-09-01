@@ -133,6 +133,10 @@ public:
 	void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 	float GetSortValue() override;
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+	IEveShadowCaster* AsShadowCaster() override
+	{
+		return this;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IBlueAsyncResNotifyTarget

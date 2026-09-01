@@ -37,6 +37,10 @@ public:
 	float GetSortValue() override;
 
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+	IEveShadowCaster* AsShadowCaster() override
+	{
+		return this;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// PerObjectData
