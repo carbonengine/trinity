@@ -8,6 +8,7 @@
 #include "include/ITriTargetable.h"
 #include "Tr2ShLightingManager.h"
 #include "Tr2GrannyAnimation.h"
+#include "EveTurretAiming.h"
 #include "EveTurretTarget.h"
 #include "Tr2DebugRenderer.h"
 
@@ -254,27 +255,6 @@ public:
 	};
 
 private:
-	// system-controlled bones
-	enum SystemBones
-	{
-		SYSBONE_INVALID = 0,
-		SYSBONE_ROTATION,
-		SYSBONE_ROTATION01,
-		SYSBONE_ROTATION02,
-		SYSBONE_COUNTER_ROTATION,
-		SYSBONE_PITCH,
-		SYSBONE_PITCH1,
-		SYSBONE_PITCH2,
-		SYSBONE_SCALED_HEIGHT,
-		SYSBONE_SCALED_PITCH01,
-		SYSBONE_SCALED_PITCH02,
-		SYSBONE_SCALED_PITCH03,
-		SYSBONE_SCALED_PITCH04,
-		SYSBONE_SCALED_PITCH05,
-		SYSBONE_SCALED_PITCH06,
-		SYSBONE_MAX,
-	};
-
 	// geom res load
 	void InitializeGeometryResource();
 	// instance vertex buffer
@@ -295,17 +275,6 @@ private:
 	bool UpdateLOD( const EveUpdateContext& updateContext );
 
 	void UpdateSingleTurrets();
-
-	// set transform for tracking
-	void ModifySystemBoneTransform( SystemBones bone, const Vector3* target, const Matrix* localTransform, Vector3& position, Quaternion& rotation ) const;
-
-	// Calculates the pitch for a bone based on the parameters
-	void CalcTransformForPitchBone( const Vector3* target, float minPitch, float maxPitch, unsigned int boneIndex, const Matrix* localTransform, Quaternion& rotation ) const;
-
-	// Returns the correct pitch factor for a specific bone index
-	float GetBonePitchFactor( unsigned int boneIndex ) const;
-	// Returns the correct pitch offset for a specific bone index
-	float GetBonePitchOffset( unsigned int boneIndex ) const;
 
 	// animation
 	float PlayAnimation( unsigned int turretIndex, const std::string& animName, const std::string& animNameIdle, float delay = 0.f );
@@ -451,19 +420,9 @@ private:
 	uint32_t m_currentCyclingFiresPos;
 
 	// system bones
-	unsigned int m_systemBoneID[SYSBONE_MAX];
-	// specific system bone values
-	float m_sysBoneHeight;
-	float m_sysBonePitchOffset;
-	float m_sysBonePitchFactor;
-	float m_sysBonePitchMin;
-	float m_sysBonePitchMax;
-	float m_sysBonePitch01Offset;
-	float m_sysBonePitch01Factor;
-	float m_sysBonePitch02Offset;
-	float m_sysBonePitch02Factor;
-	float m_sysBonePitch03Offset;
-	float m_sysBonePitch03Factor;
+	unsigned int m_systemBoneID[EveTurretAiming::SYSBONE_MAX];
+	// sysbone aiming math + tuning (shared with EveChildTurret)
+	EveTurretAiming m_aiming;
 
 	Matrix GetTurretBoneTransform( uint32_t closestTurret, uint32_t boneID ) const;
 
