@@ -2104,6 +2104,16 @@ EveDamageOverlayPtr EveChildMesh::EnsureDamageOverlay()
 	return m_damageOverlay;
 }
 
+void EveChildMesh::SetArmorDamageShaderEffect( Tr2Effect* effect )
+{
+	m_armorDamageShader = effect;
+}
+
+Tr2Effect* EveChildMesh::GetArmorDamageShaderEffect() const
+{
+	return m_armorDamageShader;
+}
+
 const LocatorStructureList* EveChildMesh::GetOwnedDamageLocators() const
 {
 	for( const auto& sets : m_ownedLocatorSets )

@@ -90,6 +90,8 @@ private:
 
 	EveSOFDNAPtr CreateDna( const char* dnaString );
 
+	using ArmorDamageEffectCache = std::map<std::pair<const EveSOFDataMgr::RaceDamageData*, bool>, Tr2EffectPtr>;
+
 	// all setup functions for the to-be-created space object
 	void SetupConsts( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupMesh( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
@@ -112,9 +114,9 @@ private:
 	void SetupLocators( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	std::vector<EveLocatorSetsPtr> BuildHullLocalLocatorSets( const EveSOFDNAPtr dna ) const;
 	void SetupLocatorSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG );
-	void SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
+	void SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, ArmorDamageEffectCache& armorDamageEffectCache ) const;
 	void SetupLights( ITr2LightOwnerPtr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets ) const;
-	void SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, int& partTag, bool perPlacementTags, uint32_t seedOverwrite = 0 );
+	void SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr& sharedMeshes, ArmorDamageEffectCache& armorDamageEffectCache, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, int& partTag, bool perPlacementTags, uint32_t seedOverwrite = 0 );
 
 
 	Tr2MeshPtr CreateMesh( const EveSOFDNAPtr dna ) const;
@@ -124,6 +126,7 @@ private:
 	void CreatePlacement(
 		EveSpaceObject2Ptr parent,
 		EveChildInstancedMeshesPtr& sharedMeshes,
+		ArmorDamageEffectCache& armorDamageEffectCache,
 		EveSOFDNAPtr extensionDna,
 		const EveSOFDNAPtr& parentDna,
 		EveSOFDataMgr::ExtensionPlacementData& placement,
@@ -141,9 +144,11 @@ private:
 
 	Tr2EffectPtr CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* rdata, const BlueSharedString& lodOption, const std::string& effectPath = "res:/Graphics/Effect/Managed/Space/Booster/BoosterVolumetric.fx", const std::map<BlueSharedString, Vector4>& parameters = {} ) const;
 
+	Tr2EffectPtr GetOrCreateArmorDamageEffect( ArmorDamageEffectCache& cache, const EveSOFDNAPtr& dna ) const;
+
 	bool ProcessLayoutDistributionConditions( EveSOFDataMgr::ExtensionPlacementData& placement, const EveSOFDNAPtr dna );
 	void ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacementDistribution& distributionData, const EveSOFDNAPtr dna, std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet, std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet );
-	void ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData& distributionData, EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSet, size_t& layoutIdx, size_t& placementIdx, const std::vector<Matrix>& offsets, EveChildContainerPtr childContainer, int& partTag, bool perPlacementTags );
+	void ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData& distributionData, EveSpaceObject2Ptr obj, EveChildInstancedMeshesPtr& sharedMeshes, ArmorDamageEffectCache& armorDamageEffectCache, const EveSOFDNAPtr dna, std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSet, size_t& layoutIdx, size_t& placementIdx, const std::vector<Matrix>& offsets, EveChildContainerPtr childContainer, int& partTag, bool perPlacementTags );
 
 	// helper functions
 	size_t FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna, size_t hullIdx, size_t meshIndexOffset ) const;

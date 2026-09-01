@@ -198,6 +198,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	SetupConsts( newObj, dna );
 
 	int partTag = 1; // we start at 1 because NO_PART_TAG is 0
+	ArmorDamageEffectCache armorDamageEffectCache;
 
 	auto centerOffset = std::vector<Matrix>( 1, IdentityMatrix() );
 	if( dna->GetBuildClass() == EveSOFDataHull::BUILDCLASS_EXTENSION )
@@ -226,7 +227,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 		extensionContainer->SetIsPlacementRoot( true );
 
 		EveChildInstancedMeshesPtr sharedMeshes;
-		CreatePlacement( newObj, sharedMeshes, dna, dna, fakePlacement, std::vector<EveSOFDataMgr::LocatorDirectionData>( 1, center ), centerOffset, extensionContainer, partTag, true );
+		CreatePlacement( newObj, sharedMeshes, armorDamageEffectCache, dna, dna, fakePlacement, std::vector<EveSOFDataMgr::LocatorDirectionData>( 1, center ), centerOffset, extensionContainer, partTag, true );
 
 		newObj->AddToEffectChildrenList( extensionContainer );
 		// create an empty mesh...
@@ -256,7 +257,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	// Attachments
 	SetupAttachments( BlueCastPtr( newObj->GetRawRoot() ), dna, centerOffset, EveSOFDataHullBuildFilter::STANDALONE );
 
-	SetupImpactEffects( newObj, dna );
+	SetupImpactEffects( newObj, dna, armorDamageEffectCache );
 
 	// Effects
 	SetupEffects( newObj, BlueCastPtr( newObj->GetRawRoot() ), dna, centerOffset, EveSOFDataHullBuildFilter::STANDALONE );
@@ -280,7 +281,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	layoutContainer->SetOrigin( EveSpaceObjectChild::SOF );
 	layoutContainer->SetIsPlacementRoot( true );
 	layoutContainer->SetAlwaysOn( true );
-	SetupLayout( newObj, layoutContainer, sharedMeshes, dna, centerOffset, partTag, true );
+	SetupLayout( newObj, layoutContainer, sharedMeshes, armorDamageEffectCache, dna, centerOffset, partTag, true );
 
 	if( layoutContainer->m_objects.size() != 0 )
 	{
@@ -498,14 +499,15 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 		SetupEffects( newObj, (IEveEffectChildrenOwnerPtr)placementContainer, dna, placementOffsets, buildFlags );
 	}
 
+	ArmorDamageEffectCache armorDamageEffectCache;
 	if( !newObj->GetImpactOverlay() )
 	{
-		SetupImpactEffects( newObj, dna );
+		SetupImpactEffects( newObj, dna, armorDamageEffectCache );
 	}
 	SetupLocatorSets( newObj, dna, placementOffsets, partTag );
 	// setup nested layout
 	int layoutPartTag = static_cast<int>( partTag );
-	SetupLayout( newObj, placementContainer, sharedMeshes, dna, placementOffsets, layoutPartTag, false );
+	SetupLayout( newObj, placementContainer, sharedMeshes, armorDamageEffectCache, dna, placementOffsets, layoutPartTag, false );
 	return true;
 }
 
@@ -2574,9 +2576,60 @@ void EveSOF::SetupCustomMask( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) c
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Build the armor damage shader effect
+// --------------------------------------------------------------------------------
+static Tr2EffectPtr CreateArmorDamageEffect( const EveSOFDNAPtr& dna )
+{
+	const EveSOFDataMgr::GenericDamageData* genericDamageData = dna->GetGenericDamageData();
+	const EveSOFDataMgr::RaceDamageData* raceDamageData = dna->GetRaceDamageData();
+
+	Tr2EffectPtr armorDamageShader;
+	if( !genericDamageData || !raceDamageData )
+	{
+		return armorDamageShader;
+	}
+
+	armorDamageShader.CreateInstance();
+	armorDamageShader->StartUpdate();
+	armorDamageShader->SetEffectPathName( dna->GetCompleteShaderPath( genericDamageData->armorShader.c_str() ).c_str() );
+	for( const auto& param : raceDamageData->armorDamageParameters )
+	{
+		armorDamageShader->AddParameterVector4( param.first, &param.second );
+	}
+	for( const auto& texture : raceDamageData->armorDamageTextures )
+	{
+		armorDamageShader->AddResourceTexture2D( texture.first, texture.second.resFilePath.c_str() );
+	}
+	armorDamageShader->EndUpdate();
+	return armorDamageShader;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Armor damage effect for a hull or layout part.
+// --------------------------------------------------------------------------------
+Tr2EffectPtr EveSOF::GetOrCreateArmorDamageEffect( ArmorDamageEffectCache& cache, const EveSOFDNAPtr& dna ) const
+{
+	auto key = std::make_pair( dna->GetRaceDamageData(), dna->IsHullAnimated() );
+	auto found = cache.find( key );
+	if( found != cache.end() )
+	{
+		return found->second;
+	}
+
+	Tr2EffectPtr armorDamageShader = CreateArmorDamageEffect( dna );
+	if( armorDamageShader )
+	{
+		cache[key] = armorDamageShader;
+	}
+	return armorDamageShader;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Add all kinds of effects to the ship
 // --------------------------------------------------------------------------------
-void EveSOF::SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
+void EveSOF::SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, ArmorDamageEffectCache& armorDamageEffectCache ) const
 {
 	EveSOFDataHull::ImpactEffectType impactType = dna->GetImpactEffectType();
 	// todo - how do we create impact effects for instanced objects?
@@ -2640,19 +2693,7 @@ void EveSOF::SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna 
 			}
 
 			// armor damage impact via shader
-			Tr2EffectPtr armorDamageShader;
-			armorDamageShader.CreateInstance();
-			armorDamageShader->StartUpdate();
-			armorDamageShader->SetEffectPathName( dna->GetCompleteShaderPath( genericDamageData->armorShader.c_str() ).c_str() );
-			for( auto it = raceDamageData->armorDamageParameters.begin(); it != raceDamageData->armorDamageParameters.end(); ++it )
-			{
-				armorDamageShader->AddParameterVector4( it->first, &it->second );
-			}
-			for( auto it = raceDamageData->armorDamageTextures.begin(); it != raceDamageData->armorDamageTextures.end(); ++it )
-			{
-				armorDamageShader->AddResourceTexture2D( it->first, it->second.resFilePath.c_str() );
-			}
-			armorDamageShader->EndUpdate();
+			Tr2EffectPtr armorDamageShader = GetOrCreateArmorDamageEffect( armorDamageEffectCache, dna );
 
 			// armor damage impact via particlesystem
 			Tr2GpuParticleSystem::Emitter psEmitter;
@@ -3393,7 +3434,7 @@ std::vector<EveLocatorSetsPtr> EveSOF::BuildHullLocalLocatorSets( const EveSOFDN
 	return result;
 }
 
-void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr& sharedMeshes, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, int& partTag, bool perPlacementTags, uint32_t seedOverwrite )
+void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr& sharedMeshes, ArmorDamageEffectCache& armorDamageEffectCache, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, int& partTag, bool perPlacementTags, uint32_t seedOverwrite )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -3447,7 +3488,7 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutCon
 		// Go over all the placements (each layout can have multiple mesh attachments)
 		for( auto placement : layout->placements )
 		{
-			ProcessPlacementDistributionOrGroup( placement, obj, sharedMeshes, dna, locatorSets, layoutIdx, placementIdx, offsets, layoutContainer, partTag, perPlacementTags );
+			ProcessPlacementDistributionOrGroup( placement, obj, sharedMeshes, armorDamageEffectCache, dna, locatorSets, layoutIdx, placementIdx, offsets, layoutContainer, partTag, perPlacementTags );
 		}
 
 		if( layout->scrambleSeed )
@@ -3460,6 +3501,7 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutCon
 void EveSOF::ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData& placement,
 												  EveSpaceObject2Ptr obj,
 												  EveChildInstancedMeshesPtr& sharedMeshes,
+												  ArmorDamageEffectCache& armorDamageEffectCache,
 												  const EveSOFDNAPtr dna,
 												  std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSets,
 												  size_t& layoutIdx,
@@ -3486,7 +3528,7 @@ void EveSOF::ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacem
 		// Go over all the placements (each layout can have multiple mesh attachments)
 		for( auto& placement : placement.placements )
 		{
-			ProcessPlacementDistributionOrGroup( placement, obj, sharedMeshes, dna, managedLocatorSets, layoutIdx, placementIdx, offsets, layoutContainer, partTag, perPlacementTags );
+			ProcessPlacementDistributionOrGroup( placement, obj, sharedMeshes, armorDamageEffectCache, dna, managedLocatorSets, layoutIdx, placementIdx, offsets, layoutContainer, partTag, perPlacementTags );
 		}
 		return;
 	}
@@ -3590,12 +3632,12 @@ void EveSOF::ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacem
 			for( auto& locator : locators )
 			{
 				singleLocator[0] = locator;
-				CreatePlacement( obj, sharedMeshes, placementDna, dna, placement, singleLocator, offsets, layoutContainer, partTag, perPlacementTags );
+				CreatePlacement( obj, sharedMeshes, armorDamageEffectCache, placementDna, dna, placement, singleLocator, offsets, layoutContainer, partTag, perPlacementTags );
 			}
 		}
 		else
 		{
-			CreatePlacement( obj, sharedMeshes, placementDna, dna, placement, locators, offsets, layoutContainer, partTag, perPlacementTags );
+			CreatePlacement( obj, sharedMeshes, armorDamageEffectCache, placementDna, dna, placement, locators, offsets, layoutContainer, partTag, perPlacementTags );
 		}
 	}
 
@@ -3815,6 +3857,7 @@ void EveSOF::ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacem
 void EveSOF::CreatePlacement(
 	EveSpaceObject2Ptr parent,
 	EveChildInstancedMeshesPtr& sharedMeshes,
+	ArmorDamageEffectCache& armorDamageEffectCache,
 	EveSOFDNAPtr extensionDna,
 	const EveSOFDNAPtr& parentDna,
 	EveSOFDataMgr::ExtensionPlacementData& placement,
@@ -3859,6 +3902,19 @@ void EveSOF::CreatePlacement(
 	if( !placement.isInstanced )
 	{
 		childLocatorSets = BuildHullLocalLocatorSets( extensionDna );
+	}
+
+	Tr2EffectPtr partArmorDamageShader;
+	if( !placement.isInstanced )
+	{
+		for( const auto& sets : childLocatorSets )
+		{
+			if( sets->HasName( DAMAGE_LOCATOR_SET_NAME ) )
+			{
+				partArmorDamageShader = GetOrCreateArmorDamageEffect( armorDamageEffectCache, extensionDna );
+				break;
+			}
+		}
 	}
 
 	for( auto& offset : nestedOffsets )
@@ -3923,6 +3979,7 @@ void EveSOF::CreatePlacement(
 				child->SetName( "Hull" );
 				child->SetupWithStaticTransform( &randomScale, &rotation, &translation, Tr2Lod::TR2_LOD_LOW );
 				child->SetOwnedLocatorSets( childLocatorSets );
+				child->SetArmorDamageShaderEffect( partArmorDamageShader );
 				child->SetPartTag( perPlacementTags ? partTag++ : partTag );
 
 				if( m_editorMode )
@@ -4126,7 +4183,7 @@ void EveSOF::CreatePlacement(
 		SetupLocatorSets( parent, extensionDna, placementOffsets );
 	}
 	// setup nested layout
-	SetupLayout( parent, layoutContainer, sharedMeshes, extensionDna, placementOffsets, partTag, perPlacementTags );
+	SetupLayout( parent, layoutContainer, sharedMeshes, armorDamageEffectCache, extensionDna, placementOffsets, partTag, perPlacementTags );
 
 	CCP_LOGNOTICE( "Creating %s extensions on %zu places", placement.isInstanced ? " instanced" : "", locators.size() );
 }
