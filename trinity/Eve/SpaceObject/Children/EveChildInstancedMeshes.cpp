@@ -145,9 +145,8 @@ void EveChildInstancedMeshes::PushRtGeometry( Tr2RaytracingManager& rtManager ) 
 				}
 			}
 
-			XMMATRIX m = *reinterpret_cast<const Matrix*>( instanceTransform.worldTransform );
-			m.r[3] = XMVectorSet( 0, 0, 0, 1 );
-			m = XMMatrixMultiply( XMMatrixTranspose( m ), m_worldTransform );
+			XMMATRIX m = Matrix( instanceTransform.worldTransform );
+			m = XMMatrixMultiply( m, m_worldTransform );
 			mesh.rtMeshes[lodIndex].instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
 		}
 
@@ -275,10 +274,11 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 
 		for( const auto& instance : mesh.instances )
 		{
-			Vector3 position = Vector3( instance.worldTransform[0].w, instance.worldTransform[1].w, instance.worldTransform[2].w );
-			float scale = std::sqrtf( std::max( { LengthSq( instance.worldTransform[0].GetXYZ() ),
-												  LengthSq( instance.worldTransform[1].GetXYZ() ),
-												  LengthSq( instance.worldTransform[2].GetXYZ() ) } ) );
+			Matrix m = instance.worldTransform;
+			Vector3 position = m.GetTranslation();
+			float scale = std::sqrtf( std::max( { LengthSq( Vector3( m._11, m._12, m._13 ) ),
+												  LengthSq( Vector3( m._21, m._22, m._23 ) ),
+												  LengthSq( Vector3( m._31, m._32, m._33 ) ) } ) );
 			position = TransformCoord( position, m_worldTransform );
 			scale *= worldScale;
 			mesh.instanceSpheres[&instance - mesh.instances.data()] = CcpMath::Sphere( position, radius * scale );
@@ -449,10 +449,7 @@ void EveChildInstancedMeshes::AddMesh(
 		for( size_t i = 0; i < count; ++i )
 		{
 			EveInstancedMeshManager::StaticPerInstanceData instanceData;
-			auto& mat = instanceTransforms[i];
-			instanceData.worldTransform[0] = Vector4( mat._11, mat._21, mat._31, mat._41 );
-			instanceData.worldTransform[1] = Vector4( mat._12, mat._22, mat._32, mat._42 );
-			instanceData.worldTransform[2] = Vector4( mat._13, mat._23, mat._33, mat._43 );
+			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
 			mesh.instances.push_back( instanceData );
 			mesh.partTags.push_back( partTag );
@@ -484,6 +481,8 @@ void EveChildInstancedMeshes::AddMesh(
 		a.batchType = areas[i].batchType;
 		a.areaIndex = areas[i].areaIndex;
 		a.areaCount = areas[i].areaCount;
+		a.alphaCutout = areas[i].alphaCutout;
+		a.reversed = areas[i].reversed;
 		a.effectHash = a.effect ? a.effect->GetHashValue() : 0;
 	}
 	mesh.instances.reserve( count );
@@ -491,10 +490,7 @@ void EveChildInstancedMeshes::AddMesh(
 	for( size_t i = 0; i < count; ++i )
 	{
 		EveInstancedMeshManager::StaticPerInstanceData instanceData;
-		auto& mat = instanceTransforms[i];
-		instanceData.worldTransform[0] = Vector4( mat._11, mat._21, mat._31, mat._41 );
-		instanceData.worldTransform[1] = Vector4( mat._12, mat._22, mat._32, mat._42 );
-		instanceData.worldTransform[2] = Vector4( mat._13, mat._23, mat._33, mat._43 );
+		instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 		instanceData.sphereIndex = static_cast<uint32_t>( i );
 		mesh.instances.push_back( instanceData );
 		mesh.partTags.push_back( partTag );
@@ -588,6 +584,21 @@ void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::Par
 				{
 					area.meshGroupHandle.owner->RemoveMeshGroup( area.meshGroupHandle );
 				}
+			}
+		}
+	}
+}
+void EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale )
+{
+	Matrix m = TransformationMatrix( scale, rotation, translation );
+	const Float4x3 packedTransform( m );
+	for( auto& mesh : m_meshes )
+	{
+		for( size_t i = 0; i < mesh.instances.size(); ++i )
+		{
+			if( mesh.partTags[i] == partTag )
+			{
+				mesh.instances[i].worldTransform = packedTransform;
 			}
 		}
 	}
@@ -766,6 +777,32 @@ BluePy EveChildInstancedMeshes::GetSofSourceLocator( uint32_t areaId ) const
 uint32_t EveChildInstancedMeshes::GetMeshCount() const
 {
 	return static_cast<uint32_t>( m_meshes.size() );
+}
+BluePy EveChildInstancedMeshes::GetInstancesTransforms( uint32_t meshId ) const
+{
+	if( meshId >= m_meshes.size() )
+	{
+		PyErr_SetString( PyExc_IndexError, "Mesh index out of range" );
+		return {};
+	}
+
+	auto& mesh = m_meshes[meshId];
+	BluePy result( PyTuple_New( mesh.instances.size() ) );
+	int i = 0;
+	for( auto& instance : mesh.instances )
+	{
+		Vector3 scale, translation;
+		Quaternion rotation;
+		Decompose( scale, rotation, translation, instance.worldTransform );
+
+		PyObject* transform = PyTuple_New( 3 );
+		PyTuple_SetItem( transform, 0, ToPython( translation ) );
+		PyTuple_SetItem( transform, 1, ToPython( rotation ) );
+		PyTuple_SetItem( transform, 2, ToPython( scale ) );
+		PyTuple_SetItem( result, i++, transform );
+	}
+
+	return result;
 }
 
 BluePy EveChildInstancedMeshes::GetMeshInfo( uint32_t meshId ) const
@@ -1038,19 +1075,7 @@ void EveChildInstancedMeshes::UpdateOverlayInstanceData( const EveSpaceObjectVSD
 			const auto& wt = mesh.instances[i].worldTransform;
 			OverlayInstancePod& pod = ( *mesh.overlayPods )[i];
 
-			Matrix local = IdentityMatrix();
-			local._11 = wt[0].x;
-			local._12 = wt[1].x;
-			local._13 = wt[2].x;
-			local._21 = wt[0].y;
-			local._22 = wt[1].y;
-			local._23 = wt[2].y;
-			local._31 = wt[0].z;
-			local._32 = wt[1].z;
-			local._33 = wt[2].z;
-			local._41 = wt[0].w;
-			local._42 = wt[1].w;
-			local._43 = wt[2].w;
+			Matrix local = mesh.instances[i].worldTransform;
 
 			Matrix worldTransform = Transpose( local * m_worldTransform );
 			Matrix worldTransformLast = Transpose( local * prevWorldTransform );
@@ -1247,6 +1272,53 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 			{
 				EmitOverlayBatches( batches, pod.framePod, batchType, *m_parentOverlayEffects, mesh.overlayAreaBlocks, *lod );
 			}
+		}
+	}
+}
+
+void EveChildInstancedMeshes::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
+{
+	static_assert(
+		sizeof( Float4x3 ) == sizeof( EveInstancedMeshManager::StaticPerInstanceData::worldTransform ),
+		"Float4x3 must match StaticPerInstanceData::worldTransform" );
+
+	for( const Mesh& mesh : m_meshes )
+	{
+		if( !mesh.geometry || mesh.instances.empty() )
+		{
+			continue;
+		}
+
+		uint32_t areaStart = uint32_t( areaPool.size() );
+		for( const MeshArea& area : mesh.areas )
+		{
+			if( area.batchType != type )
+			{
+				continue;
+			}
+			EveChildGeometryArea childGeometryArea;
+			childGeometryArea.index = area.areaIndex;
+			childGeometryArea.count = area.areaCount;
+			childGeometryArea.alphaCutout = area.alphaCutout;
+			childGeometryArea.reversed = area.reversed;
+			areaPool.push_back( childGeometryArea );
+		}
+		uint32_t areaCount = uint32_t( areaPool.size() ) - areaStart;
+
+		if( areaCount == 0 )
+		{
+			continue;
+		}
+
+		for( const auto& instance : mesh.instances )
+		{
+			Matrix instanceTransform = *(Float4x3*)&instance.worldTransform;
+			EveChildGeometry source;
+			source.childToObject = instanceTransform * parentTransform;
+			source.geometry = mesh.geometry;
+			source.areaStart = areaStart;
+			source.areaCount = areaCount;
+			out.push_back( source );
 		}
 	}
 }

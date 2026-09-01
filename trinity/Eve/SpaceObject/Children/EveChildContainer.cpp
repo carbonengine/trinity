@@ -1293,12 +1293,12 @@ void EveChildContainer::CollectOwnedLocatorSets( const Matrix& parentTransform, 
 	}
 }
 
-void EveChildContainer::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+void EveChildContainer::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
 	Matrix transform = ComputeLocalTransform();
 	transform = transform * parentTransform;
 	for( const auto& object : m_objects )
 	{
-		object->CollectOwnedGeometry( transform, out );
+		object->CollectOwnedGeometry( type, transform, out, areaPool );
 	}
 }

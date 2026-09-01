@@ -83,8 +83,8 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void ChangeLOD( Tr2Lod lod ) override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
@@ -207,19 +207,22 @@ public:
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 
 	void CollectOwnedLocatorSets( const Matrix& parentTransform, std::vector<EveChildLocatorSetsSource>& out ) const override;
-	void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const override;
+	void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const override;
 	void SetOwnedLocatorSets( const std::vector<EveLocatorSetsPtr>& sets );
 	void InvalidateOwnerMergedLocators( LocatorInvalidationReason reason );
 
 	EveDamageOverlayPtr GetDamageOverlay() const;
 	EveDamageOverlayPtr EnsureDamageOverlay();
-	bool GetDamageLocatorPositionLocal( int index, Vector3& out ) const;
+	bool GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const;
+	bool GetDamageLocatorAnimatedLocal( int index, Vector3& position, Vector3& direction ) const;
 
 protected:
+	const LocatorStructureList* GetOwnedDamageLocators() const;
+
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
 
-	void InitializeAnimation();
+	virtual void InitializeAnimation();
 	bool ShouldReflect() const;
 
 	bool DisplayDecals() const;

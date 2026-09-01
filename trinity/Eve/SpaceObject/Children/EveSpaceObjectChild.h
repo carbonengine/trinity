@@ -3,6 +3,7 @@
 #pragma once
 
 #include "IEveSpaceObjectChild.h"
+#include "ITr2Renderable.h"
 
 BLUE_CLASS_IMPL( EveSpaceObjectChild );
 
@@ -18,20 +19,40 @@ struct EveChildLocatorSetsSource
 };
 
 /**
- * @brief Struct bundling geometry and owner information as well as transform, to be processed by the parent object.
+ * @brief Struct containing information about mesh areas.
+ * @see EveSpaceObjectChild::CollectOwnedGeometry
+ * @see Tr2MeshArea
+ * @see EveChildInstancedMeshes::MeshArea
+ */
+struct EveChildGeometryArea
+{
+	uint32_t index = 0;
+	uint32_t count = 1;
+	bool alphaCutout = false;
+	bool reversed = false;
+};
+
+/**
+ * @brief Struct bundling geometry and transform, to be processed by the parent object.
+ * The geometry's areas live in the pool passed to CollectOwnedGeometry.
  * @see EveSpaceObjectChild::CollectOwnedGeometry
  */
 struct EveChildGeometry
 {
 	class TriGeometryRes* geometry = nullptr;
 	Matrix childToObject = IdentityMatrix();
-	const class EveChildMesh* owner = nullptr;
-	class Tr2MeshBase* mesh = nullptr;
+	uint32_t areaStart = 0;
+	uint32_t areaCount = 0;
 };
 
 // Global stamp bumped whenever a child mutates state a skipped container walk cannot observe
 uint32_t EveChildUpdateEpoch();
 void BumpChildUpdateEpoch();
+
+/**
+ * @brief Appends the areas of a mesh to the given area pool.
+ */
+void EveCollectAreas( TriBatchType type, class Tr2MeshBase* mesh, std::vector<EveChildGeometryArea>& areaPool );
 
 /**
  * @brief Base class for all space object children. This class provides common functionality and properties for all child objects in the space object hierarchy.
@@ -273,10 +294,12 @@ public:
 
 	/**
 	 * @brief Collects all geometries that are owned by this child, so they can be processed by the parent object.
+	 * @param type The type of geometry that will be collected.
 	 * @param parentTransform The parent's transform, which is to be applied on the locators.
 	 * @param out The collected geometries, bundled with owner information and transforms.
+	 * @param areaPool Pool receiving the areas of the collected geometries.
 	 */
-	virtual void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const;
+	virtual void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const;
 
 protected:
 	/**
