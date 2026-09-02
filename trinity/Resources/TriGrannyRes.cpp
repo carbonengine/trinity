@@ -1821,49 +1821,6 @@ Tr2CmfContents& TriGrannyRes::GetCMFContents()
 	return m_cmfContents;
 }
 
-
-bool RayTriangleIntersection( float& dist, float& u, float& v, const Vector3& pos, const Vector3& dir, const Vector3& p0, const Vector3& p1, const Vector3& p2 )
-{
-	Matrix m;
-	Vector4 vec;
-
-	m.m[0][0] = p1.x - p0.x;
-	m.m[1][0] = p2.x - p0.x;
-	m.m[2][0] = -dir.x;
-	m.m[3][0] = 0.0f;
-	m.m[0][1] = p1.y - p0.y;
-	m.m[1][1] = p2.y - p0.y;
-	m.m[2][1] = -dir.y;
-	m.m[3][1] = 0.0f;
-	m.m[0][2] = p1.z - p0.z;
-	m.m[1][2] = p2.z - p0.z;
-	m.m[2][2] = -dir.z;
-	m.m[3][2] = 0.0f;
-	m.m[0][3] = 0.0f;
-	m.m[1][3] = 0.0f;
-	m.m[2][3] = 0.0f;
-	m.m[3][3] = 1.0f;
-
-	vec.x = pos.x - p0.x;
-	vec.y = pos.y - p0.y;
-	vec.z = pos.z - p0.z;
-	vec.w = 0.0f;
-
-	if( Inverse( m, m ) )
-	{
-		vec = Transform( vec, m );
-		if( ( vec.x >= 0.0f ) && ( vec.y >= 0.0f ) && ( vec.x + vec.y <= 1.0f ) && ( vec.z >= 0.0f ) )
-		{
-			u = vec.x;
-			v = vec.y;
-			dist = fabs( vec.z );
-			return true;
-		}
-	}
-
-	return false;
-}
-
 #if WITH_GRANNY
 namespace
 {
@@ -1914,7 +1871,7 @@ bool RayTriangleIntersection( float& dist, float& u, float& v, const Vector3& po
 	Vector3 p1 = ExtractVector3( vertices[1], position );
 	Vector3 p2 = ExtractVector3( vertices[2], position );
 
-	return RayTriangleIntersection( dist, u, v, pos, dir, p0, p1, p2 );
+	return IntersectTri( p0, p1, p2, pos, dir, u, v, dist );
 }
 
 void FillResult( Tr2GrannyIntersectionResult::Result& result, const uint8_t** triangle, const granny_data_type_definition* vertexFormat, float u, float v )
@@ -2247,7 +2204,7 @@ Tr2GrannyIntersectionResultPtr TriGrannyRes::RayIntersection( const Vector3& pos
 					Vector3 p2 = positionStream[triangleIndices[2]];
 
 					float u, v, dist;
-					if( RayTriangleIntersection( dist, u, v, pos, dir, p0, p1, p2 ) )
+					if( IntersectTri( p0, p1, p2, pos, dir, u, v, dist ) )
 					{
 						if( dist < closestDist )
 						{
