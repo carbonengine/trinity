@@ -2161,7 +2161,7 @@ if(BUILD_TESTING)
         set(TEST_TARGET TrinityPythonTest_${platform})
 
         # Set up a fake google test target that will run the python tests.
-        add_executable(${TEST_TARGET} ${CMAKE_CURRENT_SOURCE_DIR}/tests/Python/GTestAdapter/GTestAdapter.cpp)
+        add_executable(${TEST_TARGET} ${CMAKE_CURRENT_SOURCE_DIR}/tests/Python/GTestAdapter/GTestAdapter.cpp ${CMAKE_CURRENT_BINARY_DIR}/TouchedPyFiles.h)
         target_sources(${TEST_TARGET} PRIVATE ${PYTHON_TEST_SOURCES})
         source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/tests/Python" FILES ${PYTHON_TEST_SOURCES})
         target_compile_definitions(${TEST_TARGET} PRIVATE "EXECUTABLE_PATH=\"${exefile_tool}\"")
