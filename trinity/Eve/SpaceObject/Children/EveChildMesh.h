@@ -205,7 +205,7 @@ public:
 
 	EveDamageOverlayPtr GetDamageOverlay() const;
 	EveDamageOverlayPtr EnsureDamageOverlay();
-	void SetArmorDamageShaderEffect( Tr2Effect* effect );
+	void SetArmorDamageShaderEffect( Tr2Effect * effect );
 	Tr2Effect* GetArmorDamageShaderEffect() const;
 	bool GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const;
 	bool GetDamageLocatorAnimatedLocal( int index, Vector3& position, Vector3& direction ) const;
