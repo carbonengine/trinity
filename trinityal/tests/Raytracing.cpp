@@ -93,7 +93,7 @@ TEST_F( Raytracing, BLASIsInvalidBeforeCreation )
 
 TEST_F( Raytracing, BLASIsValidAfterCreation )
 {
-	if ( !renderContext->GetCaps().SupportsRaytracing() )
+	if( !renderContext->GetCaps().SupportsRaytracing() )
 	{
 		GTEST_SKIP() << "Raytracing not supported on this device";
 	}

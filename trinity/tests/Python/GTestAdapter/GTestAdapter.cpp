@@ -21,31 +21,31 @@ TEST( DummyTestSuite, DummyTest )
 #endif
 
 int main( int argc, char* argv[] )
-{    
+{
 	std::string command = std::string( EXECUTABLE_PATH ) + ".exe" + " /inherit /buildflavor=" BUILDFLAVOR " /py " + TEST_PATH;
-	for ( int i = 1; i < argc; ++i )
+	for( int i = 1; i < argc; ++i )
 	{
 		command += " ";
 		command += argv[i];
 	}
 #ifdef _WIN32
 	_putenv_s( "PYTHONPATH", PYTHON_LIB_PATH );
-	_putenv_s( "TRINITYPLATFORM", TRINITYPLATFORM ); 
+	_putenv_s( "TRINITYPLATFORM", TRINITYPLATFORM );
 #else
 	setenv( "PYTHONPATH", PYTHON_LIB_PATH, 1 );
 	setenv( "TRINITYPLATFORM", TRINITYPLATFORM, 1 );
 #endif
 	FILE* pipe = popen( command.c_str(), "r" );
-	if ( !pipe )
+	if( !pipe )
 	{
-		return -1; 
+		return -1;
 	}
 
 	std::array<char, 128> buffer;
-	while ( fgets( buffer.data(), int( buffer.size() ), pipe ) != nullptr )
+	while( fgets( buffer.data(), int( buffer.size() ), pipe ) != nullptr )
 	{
 		// output to stdout
 		printf( "%s", buffer.data() );
 	}
-	return  pclose( pipe );
+	return pclose( pipe );
 }

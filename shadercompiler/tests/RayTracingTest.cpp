@@ -1022,6 +1022,7 @@ SamplerState TestMapSampler1
     MipFilter = Point;
     AddressU  = Clamp;
     AddressV  = Clamp;
+	IsDynamic = true;
 };
 
 struct HitInfo
@@ -1063,12 +1064,7 @@ technique t0
 
 	auto data = Compile<typename TestFixture::Compiler>( src );
 	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.textures.size(), 2 );
-	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 3 );
-	// on metal static samplers are not exposed
-	if( !std::is_same<typename TestFixture::Compiler, EffectCompilerMetal>::value )
-	{
-		ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.staticSamplers.empty() );
-	}
+	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 4 );
 }
 
 
