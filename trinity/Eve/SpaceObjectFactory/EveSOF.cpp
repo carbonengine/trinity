@@ -3898,21 +3898,13 @@ void EveSOF::CreatePlacement(
 	bool needsPlacementContainer = hasControllers || hasAnimation;
 
 	std::vector<EveLocatorSetsPtr> childLocatorSets;
-	if( !placement.isInstanced )
-	{
-		childLocatorSets = BuildHullLocalLocatorSets( extensionDna );
-	}
-
 	Tr2EffectPtr partArmorDamageShader;
 	if( !placement.isInstanced )
 	{
-		for( const auto& sets : childLocatorSets )
+		childLocatorSets = BuildHullLocalLocatorSets( extensionDna );
+		if( extensionDna->GetLocatorCount( DAMAGE_LOCATOR_SET_NAME.c_str() ) > 0 )
 		{
-			if( sets->HasName( DAMAGE_LOCATOR_SET_NAME ) )
-			{
-				partArmorDamageShader = GetOrCreateArmorDamageEffect( armorDamageEffectCache, extensionDna );
-				break;
-			}
+			partArmorDamageShader = GetOrCreateArmorDamageEffect( armorDamageEffectCache, extensionDna );
 		}
 	}
 
