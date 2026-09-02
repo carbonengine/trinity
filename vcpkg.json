@@ -76,6 +76,11 @@
     {
       "name": "carbon-mesh",
       "version>=": "1.0.1"
+    },
+    {
+      "name": "carbon-exefile",
+      "version>=": "4.1.1",
+      "host": true
     }
   ],
   "features": {

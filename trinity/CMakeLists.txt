@@ -2112,3 +2112,92 @@ if (NOT INSTALL_TO_MONOLITH)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/carbon-trinityConfig.cmake
             DESTINATION share/carbon-trinity)
 endif()
+
+
+if(BUILD_TESTING)
+    find_package(GTest CONFIG REQUIRED)
+    find_package(Python3 COMPONENTS Interpreter REQUIRED)
+
+    # Find exefile tool, which is used to run the tests
+    if (DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "Release")
+        string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYP_LOWER)
+        set(EXEFILE_TOOL_NAME exefile_${CMAKE_BUILD_TYP_LOWER})
+        set(SCHEDULER_NAME _scheduler_${CMAKE_BUILD_TYP_LOWER})
+    else()
+        set(EXEFILE_TOOL_NAME exefile)
+        set(SCHEDULER_NAME _scheduler)
+    endif()
+    find_program(exefile_tool ${EXEFILE_TOOL_NAME} NO_CACHE)
+
+    # Get a list of Python test sources. These are only used to trigger a rebuild of the test target when they change
+    # and have nothing to do with test discovery or execution.
+    file(GLOB_RECURSE PYTHON_TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/tests/Python/*.py")
+    # The TouchedPyFiles.h file is included in the test main cpp file and is used to trigger a rebuild of the test target
+    # when any of the Python test sources change, which in turn triggers test discovery.
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/TouchedPyFiles.h
+        COMMAND ${CMAKE_COMMAND} -E touch ${CMAKE_CURRENT_BINARY_DIR}/TouchedPyFiles.h
+        DEPENDS ${PYTHON_TEST_SOURCES}
+    )
+
+    function(set_up_trinity_tests trinity_target platform)
+        if (WIN32)
+            add_custom_command(TARGET ${trinity_target} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:${trinity_target}>
+            )
+            add_custom_command(TARGET ${trinity_target} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/${SCHEDULER_NAME}.pyd $<TARGET_FILE_DIR:${trinity_target}>/_scheduler.pyd
+            )
+            set(exefile_tool $<TARGET_FILE_DIR:${trinity_target}>/${EXEFILE_TOOL_NAME})
+            if (WIN32)
+                add_custom_command(
+                        TARGET ${trinity_target} POST_BUILD
+                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${trinity_target}> $<TARGET_FILE_DIR:${trinity_target}>
+                        COMMAND_EXPAND_LISTS
+                )
+            endif ()
+        endif()
+
+        set(TEST_TARGET TrinityPythonTest_${platform})
+
+        # Set up a fake google test target that will run the python tests.
+        add_executable(${TEST_TARGET} ${CMAKE_CURRENT_SOURCE_DIR}/tests/Python/GTestAdapter/GTestAdapter.cpp)
+        target_sources(${TEST_TARGET} PRIVATE ${PYTHON_TEST_SOURCES})
+        source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/tests/Python" FILES ${PYTHON_TEST_SOURCES})
+        target_compile_definitions(${TEST_TARGET} PRIVATE "EXECUTABLE_PATH=\"${exefile_tool}\"")
+        target_compile_definitions(${TEST_TARGET} PRIVATE "TEST_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/tests/Python/GTestAdapter/gtest_reporter.py\"")
+        target_compile_definitions(${TEST_TARGET} PRIVATE "BUILDFLAVOR=\"$<LOWER_CASE:$<CONFIG>>\"")
+        target_compile_definitions(${TEST_TARGET} PRIVATE "TRINITYPLATFORM=\"${platform}\"")
+        target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})        
+        target_link_libraries(${TEST_TARGET} PRIVATE GTest::gtest)
+        add_dependencies(${TEST_TARGET} ${trinity_target})
+        if(WIN32)
+            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"$<TARGET_FILE_DIR:${trinity_target}>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${Python3_STDLIB}\"")
+        elseif (APPLE)
+            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/tests/python:$<TARGET_FILE_DIR:${trinity_target}>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/python3.12/lib-dynload:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB}\"")
+        else()
+            message(FATAL_ERROR "Unsupported platform")
+        endif ()
+        set_target_properties(${TEST_TARGET} PROPERTIES FOLDER "Tests")
+        gtest_discover_tests(${TEST_TARGET} TEST_PREFIX ${TEST_TARGET}.)
+
+    endfunction()
+
+
+
+    if(WIN32)
+        if (BUILD_DX11)
+            set_up_trinity_tests(trinity_dx11 dx11)
+        endif()
+
+        if (BUILD_DX12)
+            set_up_trinity_tests(trinity_dx12 dx12)
+        endif()
+        set_up_trinity_tests(trinity_stub stub)
+
+    elseif(APPLE)
+        if(BUILD_METAL)
+            set_up_trinity_tests(trinity_metal metal)
+        endif()
+    endif()
+endif()
