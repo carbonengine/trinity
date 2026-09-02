@@ -324,7 +324,7 @@ protected:
 	void ReleaseBvhVisualization();
 	TriGeometryResPtr m_bvhVisualizationGeometry;
 
-	std::vector<EveLocatorSetsPtr> m_ownedLocatorSets;
+	PEveLocatorSetsVector m_ownedLocatorSets;
 
 	// armor/hull damage owned by this part, renders whether or not it is attached to a ship
 	EveDamageOverlayPtr m_damageOverlay;

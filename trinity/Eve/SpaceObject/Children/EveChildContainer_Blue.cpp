@@ -107,7 +107,7 @@ const Be::ClassInfo* EveChildContainer::ExposeToBlue()
 			StartControllers,
 			"Start all controllers" )
 
-		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_PROPERTY_PERSISTED( "partTag", GetPartTag, SetPartTag, "Part tag for multi-part space objects" )
 		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
 		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()

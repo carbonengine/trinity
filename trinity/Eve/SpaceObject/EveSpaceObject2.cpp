@@ -3534,8 +3534,8 @@ EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSour
 			BeClasses->CopyTo( flickerCurve->GetRootObject(), (IRoot**)&flickerCopy );
 			overlay->SetHullDamageFlickerCurve( flickerCopy );
 		}
-		overlay->SetSeed( m_impactOverlay->GetSeed() + range.owner->GetPartTag() );
 	}
+	overlay->SetSeed( m_impactOverlay->GetSeed() + range.owner->GetPartTag() );
 	overlay->SetDamageLocatorCount( uint32_t( range.count ) );
 	int rangeStart = min( int32_t( m_damageLocatorEnabled.size() ), range.start );
 	int rangeEnd = min( int32_t( m_damageLocatorEnabled.size() ), range.start + range.count );

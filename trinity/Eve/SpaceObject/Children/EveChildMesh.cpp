@@ -32,6 +32,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ) :
 	PARENTLOCK( m_attachments ),
 	PARENTLOCK( m_lights ),
 	PARENTLOCK( m_overlayEffects ),
+	PARENTLOCK( m_ownedLocatorSets ),
 	m_display( true ),
 	m_inheritOverlayEffects( true ),
 	m_isVisible( false ),
@@ -2078,7 +2079,11 @@ void EveChildMesh::CollectOwnedGeometry( TriBatchType type, const Matrix& parent
 
 void EveChildMesh::SetOwnedLocatorSets( const std::vector<EveLocatorSetsPtr>& sets )
 {
-	m_ownedLocatorSets = sets;
+	m_ownedLocatorSets.Clear();
+	for( const auto& entry : sets )
+	{
+		m_ownedLocatorSets.Append( entry );
+	}
 	InvalidateOwnerMergedLocators( LocatorInvalidationReason::StructureChanged );
 }
 

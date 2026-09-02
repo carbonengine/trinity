@@ -286,7 +286,6 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	if( layoutContainer->m_objects.size() != 0 )
 	{
 		newObj->AddToEffectChildrenList( layoutContainer );
-		newObj->RunDamageLocatorFilter();
 	}
 
 	// EveShip2-specific setups
