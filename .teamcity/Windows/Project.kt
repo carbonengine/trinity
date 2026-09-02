@@ -114,7 +114,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
             name = "Run Tests"
             workingDir = "%env.CMAKE_BUILD_FOLDER%"
             path = "ctest"
-            arguments = "-C %env.CMAKE_CONFIG_TYPE% -V --output-on-failure --output-junit %env.CTEST_JUNIT_OUTPUT_FILE%"
+            arguments = "-C %env.CMAKE_CONFIG_TYPE% -V --output-on-failure --timeout 30 --output-junit %env.CTEST_JUNIT_OUTPUT_FILE%"
         }
         exec {
             name = "Package artifact"
