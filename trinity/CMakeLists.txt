@@ -2143,16 +2143,16 @@ if(BUILD_TESTING)
     function(set_up_trinity_tests trinity_target platform)
         if (WIN32)
             add_custom_command(TARGET ${trinity_target} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:${trinity_target}>
+                    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${trinity_target}>/${platform}
             )
             add_custom_command(TARGET ${trinity_target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy ${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/${SCHEDULER_NAME}.pyd $<TARGET_FILE_DIR:${trinity_target}>/_scheduler.pyd
+                    COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:${trinity_target}>/${platform}
             )
-            set(exefile_tool $<TARGET_FILE_DIR:${trinity_target}>/${EXEFILE_TOOL_NAME})
+            set(exefile_tool $<TARGET_FILE_DIR:${trinity_target}>/${platform}/${EXEFILE_TOOL_NAME})
             if (WIN32)
                 add_custom_command(
                         TARGET ${trinity_target} POST_BUILD
-                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${trinity_target}> $<TARGET_FILE_DIR:${trinity_target}>
+                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${trinity_target}> $<TARGET_FILE_DIR:${trinity_target}>/${platform}
                         COMMAND_EXPAND_LISTS
                 )
             endif ()
