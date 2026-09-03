@@ -5,7 +5,12 @@ def _import_trinity():
     import os
 
     triPlatform = os.getenv("TRINITYPLATFORM", "stub")
-    mod = blue.LoadExtension("_trinity_%s" % triPlatform)
+    flavor = os.getenv("TRINITYFLAVOR", "release")
+    if flavor == "release":
+        name = "_trinity_%s" % triPlatform
+    else:
+        name = "_trinity_%s_%s" % (triPlatform, flavor)
+    mod = __import__(name)
     for memberName in dir(mod):
         globals()[memberName] = getattr(mod, memberName)
     globals()['platform'] = triPlatform

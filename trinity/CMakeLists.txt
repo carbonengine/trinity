@@ -2141,22 +2141,6 @@ if(BUILD_TESTING)
     )
 
     function(set_up_trinity_tests trinity_target platform)
-        if (WIN32)
-            add_custom_command(TARGET ${trinity_target} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${trinity_target}>/${platform}
-            )
-            add_custom_command(TARGET ${trinity_target} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:${trinity_target}>/${platform}
-            )
-            set(exefile_tool $<TARGET_FILE_DIR:${trinity_target}>/${platform}/${EXEFILE_TOOL_NAME})
-            if (WIN32)
-                add_custom_command(
-                        TARGET ${trinity_target} POST_BUILD
-                        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${trinity_target}> $<TARGET_FILE_DIR:${trinity_target}>/${platform}
-                        COMMAND_EXPAND_LISTS
-                )
-            endif ()
-        endif()
 
         set(TEST_TARGET TrinityPythonTest_${platform})
 
@@ -2164,16 +2148,38 @@ if(BUILD_TESTING)
         add_executable(${TEST_TARGET} ${CMAKE_CURRENT_SOURCE_DIR}/tests/Python/GTestAdapter/GTestAdapter.cpp ${CMAKE_CURRENT_BINARY_DIR}/TouchedPyFiles.h)
         target_sources(${TEST_TARGET} PRIVATE ${PYTHON_TEST_SOURCES})
         source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/tests/Python" FILES ${PYTHON_TEST_SOURCES})
+
+        if (WIN32)
+            add_custom_command(TARGET ${TEST_TARGET} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${TEST_TARGET}>
+            )
+            add_custom_command(TARGET ${TEST_TARGET} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy ${exefile_tool} $<TARGET_FILE_DIR:${TEST_TARGET}>
+            )
+            set(exefile_tool $<TARGET_FILE_DIR:${TEST_TARGET}>/${EXEFILE_TOOL_NAME}.exe)
+            add_custom_command(
+                    TARGET ${TEST_TARGET} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${TEST_TARGET}> $<TARGET_FILE_DIR:${TEST_TARGET}>
+                    COMMAND_EXPAND_LISTS
+            )
+            add_custom_command(
+                    TARGET ${TEST_TARGET} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:${trinity_target}> $<TARGET_FILE_DIR:${TEST_TARGET}>
+                    COMMAND_EXPAND_LISTS
+            )
+        endif()
+
         target_compile_definitions(${TEST_TARGET} PRIVATE "EXECUTABLE_PATH=\"${exefile_tool}\"")
         target_compile_definitions(${TEST_TARGET} PRIVATE "TEST_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/tests/Python/GTestAdapter/gtest_reporter.py\"")
-        target_compile_definitions(${TEST_TARGET} PRIVATE "BUILDFLAVOR=\"$<LOWER_CASE:$<CONFIG>>\"")
+        target_compile_definitions(${TEST_TARGET} PRIVATE "BUILDFLAVOR=\"$<LOWER_CASE:${CMAKE_BUILD_TYPE}>\"")
+        target_compile_definitions(${TEST_TARGET} PRIVATE "TRINITYFLAVOR=\"$<LOWER_CASE:$<CONFIG>>\"")
         target_compile_definitions(${TEST_TARGET} PRIVATE "TRINITYPLATFORM=\"${platform}\"")
         target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})        
         target_link_libraries(${TEST_TARGET} PRIVATE GTest::gtest ${trinity_target})
         if(WIN32)
-            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"$<TARGET_FILE_DIR:${trinity_target}>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${Python3_STDLIB}\"")
+            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"$<TARGET_FILE_DIR:${TEST_TARGET}>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${Python3_STDLIB}\"")
         elseif (APPLE)
-            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/tests/python:$<TARGET_FILE_DIR:${trinity_target}>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/python3.12/lib-dynload:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB}\"")
+            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/tests/python:$<TARGET_FILE_DIR:${TEST_TARGET}>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/python3.12/lib-dynload:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB}\"")
         else()
             message(FATAL_ERROR "Unsupported platform")
         endif ()

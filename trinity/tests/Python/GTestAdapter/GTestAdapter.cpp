@@ -22,7 +22,7 @@ TEST( DummyTestSuite, DummyTest )
 
 int main( int argc, char* argv[] )
 {
-	std::string command = std::string( EXECUTABLE_PATH ) + ".exe" + " /inherit /buildflavor=" BUILDFLAVOR " /py " + TEST_PATH;
+	std::string command = std::string( EXECUTABLE_PATH ) + " /inherit /buildflavor=" BUILDFLAVOR " /py " + TEST_PATH;
 	for( int i = 1; i < argc; ++i )
 	{
 		command += " ";
@@ -31,9 +31,11 @@ int main( int argc, char* argv[] )
 #ifdef _WIN32
 	_putenv_s( "PYTHONPATH", PYTHON_LIB_PATH );
 	_putenv_s( "TRINITYPLATFORM", TRINITYPLATFORM );
+	_putenv_s( "TRINITYFLAVOR", TRINITYFLAVOR );
 #else
 	setenv( "PYTHONPATH", PYTHON_LIB_PATH, 1 );
 	setenv( "TRINITYPLATFORM", TRINITYPLATFORM, 1 );
+	setenv( "TRINITYFLAVOR", TRINITYFLAVOR, 1 );
 #endif
 	FILE* pipe = popen( command.c_str(), "r" );
 	if( !pipe )
