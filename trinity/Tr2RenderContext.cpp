@@ -359,6 +359,7 @@ void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* bat
 	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
 	Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( *primaryContext );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( *primaryContext );
+	Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().PrepareBuffer( *primaryContext );
 
 	D3DPERF_EVENT( L"Tr2RenderContext::RenderBatchesInOrder" );
 
@@ -779,6 +780,7 @@ void Tr2RenderContextBase::RenderBatchesSortedByEffect( ITriRenderBatchAccumulat
 	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
 	Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( *primaryContext );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( *primaryContext );
+	Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().PrepareBuffer( *primaryContext );
 
 	UseTextures( batches, techniqueName, *primaryContext );
 
@@ -792,6 +794,7 @@ void Tr2RenderContextBase::RenderBatches( ITriRenderBatchAccumulator* batches, c
 	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
 	Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( *primaryContext );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( *primaryContext );
+	Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().PrepareBuffer( *primaryContext );
 
 	if( batches->IsChainedByEffect() )
 	{
@@ -816,6 +819,7 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
 	Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( *primaryContext );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( *primaryContext );
+	Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().PrepareBuffer( *primaryContext );
 
 	D3DPERF_EVENT( L"Tr2RenderContextBase::RenderBatchesWithOverride" );
 
@@ -887,6 +891,7 @@ void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* 
 	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
 	Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( *primaryContext );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( *primaryContext );
+	Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().PrepareBuffer( *primaryContext );
 
 
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );

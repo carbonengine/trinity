@@ -258,6 +258,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	Tr2RingBuffer::GetInstance<Float4x3>().SetName( "BoneTransformsBuffer" );
 	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>() );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().SetName( "MorphTargetAnimationsBuffer" );
+	GlobalStore().RegisterVariable( "ChildBoosterSetInstances", &Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>() );
+	Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().SetName( "ChildBoosterSetInstanceBuffer" );
 
 	// Picking batches
 	m_pickingBatches = CCP_NEW( "EveSpaceScene/m_pickingBatches" ) TriRenderBatchAccumulator<>( allocator );
@@ -440,6 +442,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		auto frame = renderContext.GetRecordingFrameNumber();
 		Tr2RingBuffer::GetInstance<Float4x3>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
 		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
+		Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
 
 		if( frame == m_lastUpdateFrame )
 		{

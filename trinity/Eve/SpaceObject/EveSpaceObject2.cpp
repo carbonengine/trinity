@@ -205,7 +205,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_mergedLocatorSetsDirty( true ),
 	m_damageLocatorAutoFilterEnabled( false ),
 	m_damageLocatorFilterRequested( false ),
-	m_damageFilterState( DamageFilterState::Pending )
+	m_damageFilterState( DamageFilterState::Idle )
 {
 	m_positionDelta.CreateInstance();
 
@@ -1015,29 +1015,18 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			for( size_t i = 0; i < locators.size(); ++i )
 			{
 				auto& locator = locators[i];
-				auto position = locator.position;
-				auto rotation = locator.direction;
 
-				size_t boneCount;
-				const Float4x3* bones;
+				Vector3 position;
+				Vector3 direction;
+				GetLocatorInObjectSpace( position, direction, locator, isDamageLocatorSet ? int( i ) : -1 );
 
 				Color locatorColor = c;
 
-				if( locator.boneIndex >= 0 && Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount ) )
+				size_t boneCount;
+				const Float4x3* bones;
+				if( Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount ) && locator.boneIndex >= int( boneCount ) )
 				{
-					if( locator.boneIndex < int( boneCount ) )
-					{
-						const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
-						Matrix boneTF = IdentityMatrix();
-						TriMatrixCopyFrom3x4( &boneTF, &bones[locator.boneIndex] );
-						position = XMVector3TransformCoord( position, boneTF );
-
-						rotation = XMQuaternionMultiply( rotation, XMQuaternionRotationMatrix( boneTF ) );
-					}
-					else
-					{
-						locatorColor = 0x99ff4444;
-					}
+					locatorColor = 0x99ff4444;
 				}
 
 				if( isDamageLocatorSet && i < m_damageLocatorEnabled.size() && !m_damageLocatorEnabled[i] )
@@ -1049,7 +1038,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 				renderer.DrawSphereArrow(
 					Tr2DebugObjectReference( &locators, uint32_t( i ) ),
 					Vector3( XMVector3TransformCoord( position, m_worldTransform ) ),
-					Vector3( XMVector3TransformNormal( Vector3( 0, 1, 0 ), Matrix( XMMatrixRotationQuaternion( rotation ) ) * m_worldTransform ) ),
+					Vector3( XMVector3TransformNormal( direction, m_worldTransform ) ),
 					min( m_boundingSphereRadius * m_modelScale / 50.f, 100.0f ),
 					8,
 					Tr2DebugRenderer::Lit,
@@ -1946,6 +1935,7 @@ void EveSpaceObject2::EnsureChildLocatorMerged() const
 			range.partTag = childLocatorSet.owner->GetPartTag();
 			range.start = int32_t( ( *mergedLocatorSet )->GetLocators()->size() - childLocatorSet.sets->GetLocators()->size() );
 			range.count = int32_t( childLocatorSet.sets->GetLocators()->size() );
+			range.childToObject = childLocatorSet.childToObject;
 			m_mergedDamageLocatorSources.push_back( range );
 		}
 	}
@@ -1963,6 +1953,7 @@ void EveSpaceObject2::ReleaseDamageFilterSessions()
 		}
 
 		m_damageFilterOccluders.clear();
+		m_damageFilterAreas.clear();
 	}
 }
 
@@ -1975,6 +1966,7 @@ bool EveSpaceObject2::CollectOccluders()
 		if( !m_mesh->GetGeometryResource()->IsPrepared() )
 		{
 			m_damageFilterOccluders.clear();
+			m_damageFilterAreas.clear();
 			return false;
 		}
 
@@ -1983,22 +1975,33 @@ bool EveSpaceObject2::CollectOccluders()
 			DamageFilterOccluder occluder;
 			occluder.geometry = m_mesh->GetGeometryResource();
 			occluder.fromObject = IdentityMatrix();
-			occluder.mesh = m_mesh;
-			m_damageFilterOccluders.push_back( occluder );
+			occluder.areaStart = uint32_t( m_damageFilterAreas.size() );
+			EveCollectAreas( TRIBATCHTYPE_OPAQUE, m_mesh, m_damageFilterAreas );
+			occluder.areaCount = uint32_t( m_damageFilterAreas.size() ) - occluder.areaStart;
+			if( occluder.areaCount != 0 )
+			{
+				m_damageFilterOccluders.push_back( std::move( occluder ) );
+			}
 		}
 	}
 
 	std::vector<EveChildGeometry> childGeometries;
 	for( auto& child : m_effectChildren )
 	{
-		child->CollectOwnedGeometry( IdentityMatrix(), childGeometries );
+		child->CollectOwnedGeometry( TRIBATCHTYPE_OPAQUE, IdentityMatrix(), childGeometries, m_damageFilterAreas );
 	}
 
 	for( auto& childGeometry : childGeometries )
 	{
+		if( childGeometry.areaCount == 0 )
+		{
+			continue;
+		}
+
 		if( !childGeometry.geometry->IsPrepared() )
 		{
 			m_damageFilterOccluders.clear();
+			m_damageFilterAreas.clear();
 			return false;
 		}
 
@@ -2010,8 +2013,9 @@ bool EveSpaceObject2::CollectOccluders()
 		DamageFilterOccluder occluder;
 		occluder.geometry = childGeometry.geometry;
 		occluder.fromObject = Inverse( childGeometry.childToObject );
-		occluder.mesh = childGeometry.mesh;
-		m_damageFilterOccluders.push_back( occluder );
+		occluder.areaStart = childGeometry.areaStart;
+		occluder.areaCount = childGeometry.areaCount;
+		m_damageFilterOccluders.push_back( std::move( occluder ) );
 	}
 
 	for( auto& occluder : m_damageFilterOccluders )
@@ -2071,40 +2075,49 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 
 		for( auto& occluder : m_damageFilterOccluders )
 		{
-			auto areas = occluder.mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-			if( !areas->empty() )
+			if( occluder.areaCount == 0 )
 			{
-				Vector3 rayOrigin = Transform( origin, occluder.fromObject ).GetXYZ();
-				Vector3 rayDirection = TransformNormal( direction, occluder.fromObject );
+				continue;
+			}
 
-				// Note that we deliberately don't normalize the rayDirection.
-				//
-				// We transform the 'direction' from object space to child space to compute 'rayDirection'.
-				// A child, that has been scaled to a large size, will get a small rayDirection.
-				// After all, we go from object space to child space, so we transform rayDirection with the inverse child scale!
-				//
-				// The intersection function will then find an intersection at a proportionally larger distance.
-				// Consider the line equation: intersectionPoint = distance * rayDirection + rayOrigin
-				// If rayDirection is small, then distance has to be larger to compensate.
-				//
-				// That larger distance is in our object space!
-				// So rayLength is always in object space, and can safely be compared with frontFaceMinDistance. :)
+			Vector3 rayOrigin = Transform( origin, occluder.fromObject ).GetXYZ();
+			Vector3 rayDirection = TransformNormal( direction, occluder.fromObject );
 
-				for( auto it = begin( *areas ); it != end( *areas ); ++it )
+			// Note that we deliberately don't normalize the rayDirection.
+			//
+			// We transform the 'direction' from object space to child space to compute 'rayDirection'.
+			// A child, that has been scaled to a large size, will get a small rayDirection.
+			// After all, we go from object space to child space, so we transform rayDirection with the inverse child scale!
+			//
+			// The intersection function will then find an intersection at a proportionally larger distance.
+			// Consider the line equation: intersectionPoint = distance * rayDirection + rayOrigin
+			// If rayDirection is small, then distance has to be larger to compensate.
+			//
+			// That larger distance is in our object space!
+			// So rayLength is always in object space, and can safely be compared with frontFaceMinDistance. :)
+
+			for( uint32_t poolIndex = occluder.areaStart; poolIndex < occluder.areaStart + occluder.areaCount; poolIndex++ )
+			{
+				const EveChildGeometryArea& area = m_damageFilterAreas[poolIndex];
+				for( uint32_t areaIndex = area.index; areaIndex < area.index + area.count; areaIndex++ )
 				{
 					// We only trace up to the distance of the closest intersection that we have found so far.
 					RayCastResult hitInfo;
-					if( occluder.geometry->GetIntersectionPoints( rayOrigin, rayDirection, hitInfo, ( *it )->GetIndex(), rayLength ) )
+					if( occluder.geometry->GetIntersectionPoints( rayOrigin, rayDirection, hitInfo, areaIndex, rayLength ) )
 					{
 						rayLength = hitInfo.distance;
 						// TRIBATCHTYPE_OPAQUE also contains alpha cutouts, which can be one-sided. Ignore them to prevent false positives.
-						backfacing = !( *it )->IsAlphaCutout() && ( ( Dot( hitInfo.unnormalizedNormal, rayDirection ) > 0 ) != ( *it )->IsReversed() );
+						backfacing = !area.alphaCutout && ( ( Dot( hitInfo.unnormalizedNormal, rayDirection ) > 0 ) != area.reversed );
 						if( rayLength < frontFaceMinDistance )
 						{
 							occluded = true;
 							break;
 						}
 					}
+				}
+				if( occluded )
+				{
+					break;
 				}
 			}
 			if( occluded )
@@ -2598,7 +2611,7 @@ int EveSpaceObject2::GetClosestLocatorIndex( const Vector3* position, BlueShared
 		}
 
 		auto& locator = ( *locators )[i];
-		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator );
+		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator, isDamageLocatorSet ? int( i ) : -1 );
 		if( IsLocatorFacingPosition( locatorDirection, posInObjectSpace ) )
 		{
 			auto distanceFromLocator = LengthSq( locatorPosition - posInObjectSpace );
@@ -2641,7 +2654,7 @@ int EveSpaceObject2::GetCloseLocatorIndex( const Vector3& position, BlueSharedSt
 		}
 
 		auto& locator = ( *locators )[i];
-		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator );
+		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator, isDamageLocatorSet ? int( i ) : -1 );
 
 		auto distanceFromLocator = LengthSq( locatorPosition - posInObjectSpace );
 		if( distanceFromLocator < closestLength )
@@ -2711,7 +2724,7 @@ int EveSpaceObject2::GetGoodLocatorIndex( const Vector3& position, BlueSharedStr
 		}
 
 		auto& locator = ( *locators )[i];
-		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator );
+		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator, isDamageLocatorSet ? int( i ) : -1 );
 		if( IsLocatorFacingPosition( locatorDirection, posInObjectSpace ) )
 		{
 			Vector3 v( XMVectorSubtract( locatorPosition, posInObjectSpace ) );
@@ -2736,7 +2749,7 @@ int EveSpaceObject2::GetGoodLocatorIndex( const Vector3& position, BlueSharedStr
 		}
 
 		auto& locator = ( *locators )[i];
-		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator );
+		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator, isDamageLocatorSet ? int( i ) : -1 );
 		if( IsLocatorFacingPosition( locatorDirection, posInObjectSpace ) )
 		{
 			Vector3 v( XMVectorSubtract( locatorPosition, posInObjectSpace ) );
@@ -2767,6 +2780,19 @@ float EveSpaceObject2::GetRadius() const
 bool EveSpaceObject2::GetDamageLocatorPosition( Vector3* out, int index, bool inWorldSpace )
 {
 	return GetLocatorPosition( out, index, inWorldSpace, DAMAGE_LOCATOR_SET_NAME );
+}
+
+bool EveSpaceObject2::GetDamageLocatorBindPosition( int index, Vector3& out ) const
+{
+	auto damageLocators = GetLocatorsForSet( DAMAGE_LOCATOR_SET_NAME );
+	if( !damageLocators || index < 0 || index >= int( damageLocators->size() ) )
+	{
+		out = Vector3( 0.f, 0.f, 0.f );
+		return false;
+	}
+
+	out = ( *damageLocators )[index].position;
+	return true;
 }
 
 Vector3 EveSpaceObject2::GetLocatorPositionFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName )
@@ -2800,7 +2826,7 @@ bool EveSpaceObject2::GetLocatorPosition( Vector3* out, int index, bool inWorldS
 	const Locator& locator = ( *locators )[index];
 
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, locator );
+	GetLocatorInObjectSpace( position, direction, locator, locatorSetName == DAMAGE_LOCATOR_SET_NAME ? index : -1 );
 
 	if( inWorldSpace )
 	{
@@ -2943,7 +2969,7 @@ bool EveSpaceObject2::GetLocatorDirection( Vector3* out, int index, bool inWorld
 	const Locator& locator = ( *locators )[index];
 
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, locator );
+	GetLocatorInObjectSpace( position, direction, locator, locatorSetName == DAMAGE_LOCATOR_SET_NAME ? index : -1 );
 
 	if( inWorldSpace )
 	{
@@ -3500,7 +3526,7 @@ EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSour
 	if( !overlay )
 	{
 		overlay = const_cast<EveChildMesh*>( range.owner )->EnsureDamageOverlay();
-		overlay->SetArmorDamageShaderEffect( m_impactOverlay->GetArmorDamageShaderEffect() );
+		overlay->SetArmorDamageShaderEffect( range.owner->GetArmorDamageShaderEffect() );
 		// each part gets its own flicker curve instance, the async child updates must not share one
 		if( TriPerlinCurve* flickerCurve = m_impactOverlay->GetHullDamageFlickerCurve() )
 		{
@@ -3683,7 +3709,7 @@ Vector3 EveSpaceObject2::GetDamageLocator( uint32_t index ) const
 	const Locator& damageLocator = ( *damageLocators )[index];
 
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, damageLocator );
+	GetLocatorInObjectSpace( position, direction, damageLocator, int( index ) );
 
 	return position;
 }
@@ -3697,13 +3723,13 @@ Vector3 EveSpaceObject2::GetDamageLocatorDirectionLocal( uint32_t index ) const
 	}
 	const Locator& damageLocator = ( *damageLocators )[index];
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, damageLocator );
+	GetLocatorInObjectSpace( position, direction, damageLocator, int( index ) );
 	return direction;
 }
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Returns the damage locator positionin worldspace
+//   Returns the damage locator position in worldspace
 // --------------------------------------------------------------------------------
 Vector3 EveSpaceObject2::GetTransformedDamageLocator( uint32_t index )
 {
@@ -3717,35 +3743,32 @@ Vector3 EveSpaceObject2::GetTransformedDamageLocator( uint32_t index )
 	const Locator& damageLocator = ( *damageLocators )[index];
 
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, damageLocator );
+	GetLocatorInObjectSpace( position, direction, damageLocator, int( index ) );
 
 	return XMVector3TransformCoord( position, m_worldTransform );
 }
 
-void EveSpaceObject2::GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator ) const
+void EveSpaceObject2::GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator, int mergedDamageIndex ) const
 {
-	Vector3 damagelocatorDirection = (Vector3)XMVector3Rotate( Vector3( 0.f, 1.f, 0.f ), locator.direction );
-	// We're assuming for now that the bone 0 isn't animated for performance reasons.
-	if( locator.boneIndex <= 0 )
+	if( mergedDamageIndex >= 0 )
 	{
-		// damage locator is not attached to a bone, return the position
-		position = locator.position;
-		direction = damagelocatorDirection;
-		return;
-	}
-
-	// If the damage locator is animated we extract the bone matrix and apply it to the damage locator position
-	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-	{
-		if( locator.boneIndex < m_animationUpdater->GetMeshBoneCount() )
+		EnsureChildLocatorMerged();
+		for( const auto& range : m_mergedDamageLocatorSources )
 		{
-			const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
-			Matrix boneTF = IdentityMatrix();
-			TriMatrixCopyFrom3x4( &boneTF, &bones[locator.boneIndex] );
-			position = XMVector3TransformCoord( locator.position, boneTF );
-			direction = XMVector3TransformNormal( damagelocatorDirection, boneTF );
+			if( range.owner && mergedDamageIndex >= range.start && mergedDamageIndex < range.start + range.count )
+			{
+				if( range.owner->GetDamageLocatorAnimatedLocal( mergedDamageIndex - range.start, position, direction ) )
+				{
+					position = XMVector3TransformCoord( position, range.childToObject );
+					direction = Normalize( (Vector3)XMVector3TransformNormal( direction, range.childToObject ) );
+					return;
+				}
+				break;
+			}
 		}
 	}
+
+	EveGetLocatorPose( m_animationUpdater, locator, position, direction );
 }
 
 Be::Result<std::string> EveSpaceObject2::GetLocalBoundingBoxFromScript( std::pair<Vector3, Vector3>& result )

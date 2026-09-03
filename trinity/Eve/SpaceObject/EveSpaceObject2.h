@@ -177,13 +177,15 @@ struct LocatorSourceRange
 	int32_t count;
 	const class EveChildMesh* owner;
 	uint32_t partTag;
+	Matrix childToObject = IdentityMatrix();
 };
 
 struct DamageFilterOccluder
 {
 	TriGeometryResPtr geometry;
 	Matrix fromObject;
-	Tr2MeshBasePtr mesh;
+	uint32_t areaStart = 0;
+	uint32_t areaCount = 0;
 };
 
 // ---------------------------------------------------------------------------------------
@@ -353,6 +355,7 @@ public:
 	unsigned int GetDamageLocatorCount() const;
 	int GetClosestDamageLocatorIndex( const Vector3* position );
 	virtual bool GetDamageLocatorPosition( Vector3 * out, int index, bool inWorldSpace );
+	bool GetDamageLocatorBindPosition( int index, Vector3& out ) const;
 	virtual bool GetDamageLocatorDirection( Vector3 * out, int index, bool inWorldSpace );
 	void GetMissPosition( const Vector3* hit, const Vector3* source, Vector3* out );
 	int GetGoodDamageLocatorIndex( const Vector3& position );
@@ -761,7 +764,9 @@ protected:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Object space damage locator information
-	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator ) const;
+	// Pass the locator's index in the merged damage locator set as mergedDamageIndex so that
+	// locators owned by a child part get the child's bone pose applied; -1 for other sets.
+	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator, int mergedDamageIndex = -1 ) const;
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -821,6 +826,7 @@ private:
 	bool m_damageLocatorAutoFilterEnabled; // For debugging purposes: Shall we run damage locator filtering whenever parts are moved?
 	bool m_damageLocatorFilterRequested; // Did someone request filtering damage locator?
 	std::vector<DamageFilterOccluder> m_damageFilterOccluders; // Occluders used during damage locator filtering (geometry to raycast against).
+	std::vector<EveChildGeometryArea> m_damageFilterAreas; // Areas referenced by m_damageFilterOccluders.
 	enum class DamageFilterState // State machine for damage locator filtering, since we have to wait on stuff before we can start raycasting.
 	{
 		Idle, // No need to run filtering this frame.

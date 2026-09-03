@@ -501,6 +501,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
     Eve/SpaceObject/Children/EveChildBehaviorSystem.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem_Blue.cpp
+    Eve/SpaceObject/Children/EveChildBoosterSet.cpp
+    Eve/SpaceObject/Children/EveChildBoosterSet.h
+    Eve/SpaceObject/Children/EveChildBoosterSet_Blue.cpp
     Eve/SpaceObject/Children/EveChildBulletStorm.cpp
     Eve/SpaceObject/Children/EveChildBulletStorm.h
     Eve/SpaceObject/Children/EveChildBulletStorm_Blue.cpp
@@ -575,6 +578,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildSpherePin_Blue.cpp
     Eve/SpaceObject/Children/EveChildTransform.cpp
     Eve/SpaceObject/Children/EveChildTransform.cpp
+    Eve/SpaceObject/Children/EveChildTurret.cpp
+    Eve/SpaceObject/Children/EveChildTurret.h
+    Eve/SpaceObject/Children/EveChildTurret_Blue.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.h
     Eve/SpaceObject/Children/EveCloudEditableVolume_Blue.cpp
@@ -649,6 +655,8 @@ set(_SOURCES
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes.h
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes_Blue.cpp
     Eve/SpaceObject/Utils/fxAttributes/IEveFxAttribute.h
+    Eve/SpaceObject/Utils/EveBoosterUtilities.cpp
+    Eve/SpaceObject/Utils/EveBoosterUtilities.h
     Eve/SpaceObject/Utils/EveCustomMask.cpp
     Eve/SpaceObject/Utils/EveCustomMask.h
     Eve/SpaceObject/Utils/EveCustomMask_Blue.cpp
@@ -697,6 +705,8 @@ set(_SOURCES
     Eve/SpaceObjectFactory/EveSOFDNA_Blue.cpp
     Eve/SpaceObjectFactory/EveSOFUtils.cpp
     Eve/SpaceObjectFactory/EveSOFUtils.h
+    Eve/Turret/EveTurretAiming.cpp
+    Eve/Turret/EveTurretAiming.h
     Eve/Turret/EveTurretFiringFX.cpp
     Eve/Turret/EveTurretFiringFX.h
     Eve/Turret/EveTurretFiringFX_Blue.cpp
@@ -776,6 +786,9 @@ set(_SOURCES
     Eve/AudioGameObject.cpp
     Eve/AudioGameObject.h
     Eve/AudioGameObject_Blue.cpp
+    Eve/EveTriggerVolume.cpp
+    Eve/EveTriggerVolume.h
+    Eve/EveTriggerVolume_Blue.cpp
     Eve/EveEffectRoot2.cpp
     Eve/EveEffectRoot2.h
     Eve/EveEffectRoot2_Blue.cpp
@@ -851,6 +864,7 @@ set(_SOURCES
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
     Include/ITr2MultiPassScene.h
+    Include/ITr2PoseModifier.h
     Include/ITr2Scene.h
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h

@@ -13,6 +13,7 @@ BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2GrannyAnimation );
 
 class Tr2AnimationMeshBinding;
+class ITr2PoseModifier;
 
 namespace Tr2GrannyAnimationUtils
 {
@@ -75,6 +76,7 @@ public:
 	bool PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone = true );
 	bool PlayLayerAnimationByName( const char* layer, const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone );
 	void EndAnimation();
+	void StopAnimations( float delay );
 	void ClearAnimations();
 	float GetAnimationChainCompleteTime();
 
@@ -93,6 +95,11 @@ public:
 	void SetLayerControlParamSkewRate( const char* layerName, float skewRate );
 	void AimBone( const char* boneName, float target_x, float target_y, float target_z, float axis_x, float axis_y, float axis_z );
 	void DisableAimBone();
+
+	ITr2PoseModifier* GetPoseModifier() const;
+	// Non-owning: the modifier must outlive the registration or be cleared
+	// with SetPoseModifier( nullptr ) before it is destroyed.
+	void SetPoseModifier( ITr2PoseModifier * poseModifier );
 
 	void SetAdditiveBlendMode( bool additive );
 	bool GetAdditiveBlendMode();
@@ -192,6 +199,7 @@ private:
 #endif
 	cmf::SkeletonPose m_pose;
 	cmf::SkeletonPose m_tmpPose;
+	cmf::SkeletonPose m_sampledPose;
 	std::vector<int32_t> m_skeletonBoneIndices;
 	std::vector<Matrix> m_worldTransforms;
 
@@ -218,6 +226,8 @@ private:
 	std::string m_aimBone;
 	Vector3 m_aimBoneOrientation;
 	Vector3 m_aimAxis;
+
+	ITr2PoseModifier* m_poseModifier;
 
 	bool m_useMeshBinding;
 	bool m_animationEnabled;
