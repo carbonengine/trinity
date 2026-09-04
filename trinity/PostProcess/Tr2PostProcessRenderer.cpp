@@ -678,19 +678,17 @@ void Tr2PostProcessRenderer::Execute(
 	const auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( upscalingContext ? upscalingContext->GetID() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
 
 	auto upscalingEnabled = upscalingInfo.technique != Tr2UpscalingAL::NONE;
-	bool sharpeningRequired = !upscalingInfo.hasSharpening;
+	bool sharpeningRequired = postProcess ? !upscalingInfo.hasSharpening && postProcess->m_sharpeningStrength > 0.f : false;
 
-	Tr2GpuResourcePool::Texture output;
 	if( upscalingEnabled )
 	{
 		displaySize = { upscalingInfo.displayWidth, upscalingInfo.displayHeight };
-
-		output = gpuResourcePool.GetTempTexture( "Final Result", displaySize, destination.GetFormat(), RENDER_TARGET );
 	}
-	else
-	{
-		output = gpuResourcePool.GetTempTexture( "Final Result", displaySize, destination.GetFormat(), RENDER_TARGET );
-	}
+	Tr2GpuResourcePool::Texture output = gpuResourcePool.GetTempTexture(
+		"Final Result",
+		displaySize,
+		sharpeningRequired ? GetUavCompatibleFormat( destination.GetFormat() ) : destination.GetFormat(),
+		sharpeningRequired ? RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS : RENDER_TARGET );
 
 	// Always copy
 	auto nonMsaaSource = gpuResourcePool.GetTempTexture( "Pre-upscaling Composite", renderSize, sourceBuffer->GetFormat(), RENDER_TARGET );
@@ -787,12 +785,11 @@ void Tr2PostProcessRenderer::Execute(
 		}
 	}
 
-	upscaledSource = RenderSharpening( sharpeningRequired, upscaledSource, gpuResourcePool, renderContext );
-
 	TEMP_PARAM( m_tonemappingEffect, "BlitCurrent", bloomTexture );
 	TEMP_PARAM( m_tonemappingEffect, "BlitOriginal", upscaledSource );
 	TEMP_PARAM( m_tonemappingEffect, "Exposure", GetExposureBuffer( gpuResourcePool ) );
 	TEMP_PARAM( m_tonemappingEffect, "Histogram", histogramBuffer );
+	m_tonemappingEffect->SetParameter( MEMOIZED_STRING( "DitherStrength" ), sharpeningRequired ? 0.f : 1.f );
 
 	Tr2PPFilmGrainEffect* filmGrain = postProcess != nullptr ? postProcess->GetFilmGrainIfAvailable( m_quality ) : nullptr;
 
@@ -801,23 +798,36 @@ void Tr2PostProcessRenderer::Execute(
 		GPU_REGION( renderContext, "Tonemapping" );
 		if( upscalingContext && !upscalingInfo.temporal )
 		{
-			auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", renderSize, destination.GetFormat(), RENDER_TARGET );
+			auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", renderSize, sharpeningRequired ? upscaledSource->GetFormat() : destination.GetFormat(), RENDER_TARGET );
 
 			RenderTonemapping( tonemappedOutput, postProcess, renderContext );
 
-			output = RenderUpscaling( tonemappedOutput, depthMap, velocity, opaqueColor, scene->GetReprojectionMatrix(), gpuResourcePool, renderContext, upscalingContext, dynamicExposure );
+			auto upscaled = RenderUpscaling( tonemappedOutput, depthMap, velocity, opaqueColor, scene->GetReprojectionMatrix(), gpuResourcePool, renderContext, upscalingContext, dynamicExposure );
 			depthMap = {};
 			velocity = {};
 			opaqueColor = {};
 
 			// need to reset the perframedata so we have the correct viewport size etc
 			scene->ApplyUpscalingToPerFrameData( displaySize.width, displaySize.height, renderContext );
+			if( sharpeningRequired )
+			{
+				RenderSharpening( postProcess->m_sharpeningStrength, upscaled, output, renderContext );
+			}
+			else
+			{
+				output = upscaled;
+			}
+		}
+		else if( sharpeningRequired )
+		{
+			auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", displaySize, upscaledSource->GetFormat(), RENDER_TARGET );
+			RenderTonemapping( tonemappedOutput, postProcess, renderContext );
+			RenderSharpening( postProcess->m_sharpeningStrength, tonemappedOutput, output, renderContext );
 		}
 		else
 		{
 			RenderTonemapping( output, postProcess, renderContext );
 		}
-
 		renderContext.m_esm.SetRenderTarget( 0, destination );
 		if( filmGrain != nullptr )
 		{
@@ -827,6 +837,13 @@ void Tr2PostProcessRenderer::Execute(
 		{
 			Tr2Renderer::DrawTexture( renderContext, output );
 		}
+	}
+	else if( sharpeningRequired )
+	{
+		auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", displaySize, upscaledSource->GetFormat(), RENDER_TARGET );
+		RenderTonemapping( tonemappedOutput, postProcess, renderContext );
+		RenderSharpening( postProcess->m_sharpeningStrength, tonemappedOutput, output, renderContext );
+		Tr2Renderer::DrawTexture( renderContext, output );
 	}
 	else
 	{
@@ -856,27 +873,20 @@ void Tr2PostProcessRenderer::SetupExposureConversion( bool enable, float middleV
 	}
 }
 
-Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderSharpening( bool enable, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
+void Tr2PostProcessRenderer::RenderSharpening( float strength, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool::Texture& output, Tr2RenderContext& renderContext )
 {
-	if( !enable )
-	{
-		return input;
-	}
 	GPU_REGION( renderContext, "CAS Sharpening" );
 
 	static const uint32_t CAS_THREAD_GROUP_WORK_REGION_DIM = 16;
-	auto format = GetUavCompatibleFormat( input->GetFormat() );
-	auto output = gpuResourcePool.GetTempTexture( "Sharpening Output", input->GetWidth(), input->GetHeight(), format, RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS );
 
 	auto renderWidth = output->GetWidth();
 	auto renderHeight = output->GetHeight();
 	AF1 outWidth = static_cast<AF1>( renderWidth );
 	AF1 outHeight = static_cast<AF1>( renderHeight );
-	float casIntensity = 0.0f;
 
 	AMDSharpening::CASConstants casConst;
 
-	CasSetup( casConst.const0.u, casConst.const1.u, casIntensity, outWidth, outHeight, outWidth, outHeight );
+	CasSetup( casConst.const0.u, casConst.const1.u, std::clamp( strength, 0.0f, 1.0f ), outWidth, outHeight, outWidth, outHeight );
 
 	m_fidelityFxCasShader->SetParameter( MEMOIZED_STRING( "const0" ), AMDSharpening::AsVector( casConst.const0 ) );
 	m_fidelityFxCasShader->SetParameter( MEMOIZED_STRING( "const1" ), AMDSharpening::AsVector( casConst.const1 ) );
@@ -886,7 +896,6 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderSharpening( bool enabl
 	auto dispatchX = ( renderWidth + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
 	auto dispatchY = ( renderHeight + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
 	Tr2Renderer::RunComputeShader( m_fidelityFxCasShader, dispatchX, dispatchY, 1, renderContext );
-	return output;
 }
 
 // Helper function to blur certain channel of a source render target to a destination render target with a blur type (Big/Small)
