@@ -5,11 +5,14 @@
 #include "Resources/Tr2LightProfileRes.h"
 #include "TriMath.h"
 
+extern bool g_scaleLightBrightnessByRadiusDefault;
+
 EveSmartLightPointLight::EveSmartLightPointLight( IRoot* lockobj ) :
 	m_staticOffsetTranslation( 0.f, 0.f, 0.f ),
 	m_staticOffsetRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_activationStrength( 1.f ),
-	m_display( true )
+	m_display( true ),
+	m_scaleBrightness( g_scaleLightBrightnessByRadiusDefault )
 {
 	m_lightGroupData = LightData();
 	m_lightType = Tr2Light::POINT_LIGHT;
@@ -68,6 +71,10 @@ void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 	{
 		return;
 	}
+	if( !m_lightGroupData.lightingQuality.HasBit( lightManager.GetLightingQuality() ) )
+	{
+		return;
+	}
 
 	const PlacementDataWithIdentifierStructureList& placements = *m_distribution->GetPlacementData();
 	size_t size = m_distribution->GetNumberOfPlacements();
@@ -92,7 +99,7 @@ void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 		pointLightData.radius = m_lightGroupData.radius * scaling * perLightScaling;
 		pointLightData.innerRadius = Float_16( m_lightGroupData.innerRadius * scaling * perLightScaling );
 
-		pointLightData.flags = m_lightGroupData.flags | ( profileIndex << 4 );
+		pointLightData.flags = Tr2LightManager::PackFlags( m_lightGroupData.flags, profileIndex );
 
 		Quaternion rotation = placements[index].initialRotation * placements[index].additionalRotation;
 		if( m_staticOffsetTranslation != Vector3( 0.f, 0.f, 0.f ) )
@@ -126,7 +133,7 @@ void EveSmartLightPointLight::GetLights( Tr2LightManager& lightManager ) const
 			pointLightData.innerAngle = Float_16( cos( TRI_2PI * m_lightGroupData.innerAngle / 360.0f ) );
 		}
 
-		lightManager.AddLight( pointLightData );
+		lightManager.AddLight( pointLightData, m_scaleBrightness );
 	}
 }
 
