@@ -19,6 +19,63 @@ CCP_STATS_DECLARED_ELSEWHERE( frameTime );
 
 namespace
 {
+// Occlusion detection for the WINDOW_HIDDEN throttle. DXGI_STATUS_OCCLUDED is not reported for flip-model
+// swapchains (mandatory on DX12) under DWM composition, so we detect "covered by another window" from Win32
+// window geometry: sample 5 points (centre + 4 inset corners); at each, find the topmost OPAQUE window
+// (skipping see-through overlays like the Alt+Tab switcher). Hidden iff every point is covered, or minimized.
+const UINT_PTR OCCLUSION_TIMER_ID = 0xE7E0;
+
+bool PointTopIsWindow( HWND target, int px, int py )
+{
+	struct Ctx
+	{
+		int px, py;
+		HWND result;
+	} ctx = { px, py, nullptr };
+	::EnumWindows(
+		[]( HWND hwnd, LPARAM lp ) -> BOOL {
+			Ctx* c = reinterpret_cast<Ctx*>( lp );
+			if( !::IsWindowVisible( hwnd ) || ::IsIconic( hwnd ) )
+				return TRUE;
+			if( ::GetWindowLongW( hwnd, GWL_EXSTYLE ) & ( WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW ) )
+				return TRUE;
+			RECT r;
+			if( !::GetWindowRect( hwnd, &r ) )
+				return TRUE;
+			if( c->px >= r.left && c->px < r.right && c->py >= r.top && c->py < r.bottom )
+			{
+				c->result = hwnd;
+				return FALSE;
+			}
+			return TRUE;
+		},
+		reinterpret_cast<LPARAM>( &ctx ) );
+	return ctx.result == target;
+}
+
+bool IsWindowOccluded( HWND hwnd )
+{
+	if( !hwnd )
+		return false;
+	if( ::IsIconic( hwnd ) )
+		return true;
+	RECT r;
+	if( !::GetWindowRect( hwnd, &r ) )
+		return false;
+	const int w = r.right - r.left;
+	const int h = r.bottom - r.top;
+	if( w <= 0 || h <= 0 )
+		return true;
+	const double fx[5] = { 0.5, 0.12, 0.88, 0.12, 0.88 };
+	const double fy[5] = { 0.5, 0.12, 0.12, 0.88, 0.88 };
+	for( int i = 0; i < 5; ++i )
+	{
+		if( PointTopIsWindow( hwnd, r.left + int( fx[i] * w ), r.top + int( fy[i] * h ) ) )
+			return false;
+	}
+	return true;
+}
+
 struct MonitorRects
 {
 	std::vector<RECT> rcMonitors;
@@ -123,12 +180,18 @@ void Tr2MainWindow::CreateOSWindow( Tr2MainWindowState::State& state )
 		}
 	}
 	SetPropW( m_hwnd, L"Tr2MainWindow", reinterpret_cast<HANDLE>( this ) );
+
+	// Drive the WINDOW_HIDDEN throttle from actual window occlusion (see IsWindowOccluded above). Polled
+	// rather than event-driven because "covered by another window" produces no window message. Runs from
+	// creation so a client launched straight into the background is throttled immediately.
+	::SetTimer( m_hwnd, OCCLUSION_TIMER_ID, 250, nullptr );
 }
 
 void Tr2MainWindow::DestroyOSWindow()
 {
 	if( m_hwnd )
 	{
+		::KillTimer( m_hwnd, OCCLUSION_TIMER_ID );
 		::DestroyWindow( m_hwnd );
 		m_hwnd = nullptr;
 	}
@@ -600,6 +663,15 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		{
 			// Prevent the user from selecting the menu in fullscreen mode
 			return HTCLIENT;
+		}
+		break;
+	case WM_TIMER:
+		if( wParam == OCCLUSION_TIMER_ID && gTriDev )
+		{
+			// A focused window is on top and cannot be occluded, so skip the window scan when we have
+			// focus (near-zero cost on the active client); otherwise check whether we are covered/minimized.
+			const bool occluded = HasFocus() ? false : IsWindowOccluded( m_hwnd );
+			gTriDev->SetThrottling( TriDevice::WINDOW_HIDDEN, occluded );
 		}
 		break;
 	case WM_ACTIVATE:
