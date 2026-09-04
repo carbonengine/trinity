@@ -2119,7 +2119,7 @@ if(BUILD_TESTING)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
     # Find exefile tool, which is used to run the tests
-    if (DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "Release" AND NOT CMAKE_BUILD_TYPE MATCHES "")
+    if (DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "Release")
         string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYP_LOWER)
         set(EXEFILE_TOOL_NAME exefile_${CMAKE_BUILD_TYP_LOWER})
         set(SCHEDULER_NAME _scheduler_${CMAKE_BUILD_TYP_LOWER})
@@ -2127,7 +2127,7 @@ if(BUILD_TESTING)
         set(EXEFILE_TOOL_NAME exefile)
         set(SCHEDULER_NAME _scheduler)
     endif()
-    find_program(exefile_tool ${EXEFILE_TOOL_NAME} NO_CACHE REQUIRED)
+    find_program(exefile_tool ${EXEFILE_TOOL_NAME} NO_CACHE)
 
     # Get a list of Python test sources. These are only used to trigger a rebuild of the test target when they change
     # and have nothing to do with test discovery or execution.
