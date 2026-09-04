@@ -306,18 +306,17 @@ else() # VCPKG install mode
 
 endif()
  
-option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
-message(STATUS " BUILD_TESTING VALUE IS ${BUILD_TESTING}")
 if(BUILD_TESTING)
-
     find_package(GTest REQUIRED)
 
     add_executable(ShaderCompilerTest)
     target_compile_definitions(ShaderCompilerTest PRIVATE SHADER_COMPILER_TEST=1)
-    target_link_libraries(ShaderCompilerTest PRIVATE GTest::GTest GTest::Main)
+    target_link_libraries(ShaderCompilerTest PRIVATE GTest::GTest)
     target_sources(ShaderCompilerTest PRIVATE ${_TEST_SOURCES})
     source_group(Tests FILES ${_TEST_SOURCES})
     configure_shader_compiler(ShaderCompilerTest)
     set_target_properties(ShaderCompilerTest PROPERTIES FOLDER "Tests")
     add_dependencies(ShaderCompilerTest ShaderCompiler)
+
+    gtest_discover_tests(ShaderCompilerTest TEST_PREFIX ShaderCompiler.)
 endif()

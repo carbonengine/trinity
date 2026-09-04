@@ -27,6 +27,11 @@ TYPED_TEST_SUITE( RayTracing, RayTracingCompilers );
 
 TYPED_TEST( RayTracing, NumericInputsAreLocal )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -58,6 +63,11 @@ technique t0
 
 TYPED_TEST( RayTracing, CanAccessLocalInputFromFunctions )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -92,6 +102,11 @@ technique t0
 
 TYPED_TEST( RayTracing, SrvsAreGlobal )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -124,6 +139,11 @@ technique t0
 
 TYPED_TEST( RayTracing, MissingSrvsInGlobalInputGeneratesError )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -153,6 +173,11 @@ technique t0
 
 TYPED_TEST( RayTracing, AssignsRegistersBasedOnGlobalInput )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -189,6 +214,11 @@ technique t0
 
 TYPED_TEST( RayTracing, AllowsTextureArraysInGlobalInput )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -227,6 +257,11 @@ technique t0
 
 TYPED_TEST( RayTracing, AllowsBuffersInGlobalInput )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -263,6 +298,11 @@ technique t0
 
 TYPED_TEST( RayTracing, AllowsBufferArraysInGlobalInput )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -301,6 +341,11 @@ technique t0
 
 TYPED_TEST( RayTracing, PerFrameDataIsGlobal )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -339,6 +384,11 @@ technique t0
 
 TYPED_TEST( RayTracing, IncludesScalarAnnotations )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -375,6 +425,11 @@ technique t0
 
 TYPED_TEST( RayTracing, IncludesSrvAnnotations )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -412,6 +467,11 @@ technique t0
 
 TYPED_TEST( RayTracing, AllowSamplersInGlobalInput )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -456,6 +516,11 @@ technique t0
 
 TYPED_TEST( RayTracing, AllowBindlessSamplersInLocalInput )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -502,6 +567,11 @@ technique t0
 
 TYPED_TEST( RayTracing, AllowMergedSamplersInGlobalInput )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -555,6 +625,11 @@ technique t0
 
 TYPED_TEST( RayTracing, RealLifeTest )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 RaytracingAccelerationStructure Scene <bool SasUiVisible = true; >;
@@ -712,6 +787,11 @@ technique t1
 
 TYPED_TEST( RayTracing, NumericConstantsAreInlined )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -743,6 +823,11 @@ technique t0
 
 TYPED_TEST( RayTracing, CanProvideLocalCBuffers )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -781,6 +866,11 @@ technique t0
 
 TYPED_TEST( RayTracing, CanProvideGlobalCBuffers )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -824,6 +914,11 @@ technique t0
 
 TYPED_TEST( RayTracing, NotUsedGlobalInputsAreAccepted )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -864,6 +959,11 @@ technique t0
 
 TYPED_TEST( RayTracing, NotUsedGlobalInputsAreExported )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -909,6 +1009,11 @@ technique t0
 
 TYPED_TEST( RayTracing, NotUsedSamplerGlobalInputsAreExported )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 SamplerState TestMapSampler1
 {
@@ -917,6 +1022,7 @@ SamplerState TestMapSampler1
     MipFilter = Point;
     AddressU  = Clamp;
     AddressV  = Clamp;
+	IsDynamic = true;
 };
 
 struct HitInfo
@@ -958,18 +1064,18 @@ technique t0
 
 	auto data = Compile<typename TestFixture::Compiler>( src );
 	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.textures.size(), 2 );
-	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 3 );
-	// on metal static samplers are not exposed
-	if( !std::is_same<typename TestFixture::Compiler, EffectCompilerMetal>::value )
-	{
-		ASSERT_FALSE( data.techniques[0].libraries[0].globalInputs.staticSamplers.empty() );
-	}
+	ASSERT_EQ( data.techniques[0].libraries[0].globalInputs.registerInputs.size(), 4 );
 }
 
 
 
 TYPED_TEST( RayTracing, CanCallTraceRayInFunction )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 RaytracingAccelerationStructure Scene <bool SasUiVisible = true; >;
@@ -1034,6 +1140,11 @@ technique t0
 
 TYPED_TEST( RayTracing, CanCallTraceRayInFunctionChain )
 {
+	if( !g_metalCompilerAvailable && std::is_same_v<typename TestFixture::Compiler, EffectCompilerMetal> )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 RaytracingAccelerationStructure Scene <bool SasUiVisible = true; >;

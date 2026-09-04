@@ -8,6 +8,7 @@
 #include "CompileMessageQueue.h"
 
 extern CompileMessageQueue g_messages;
+extern bool g_metalCompilerAvailable;
 
 
 
