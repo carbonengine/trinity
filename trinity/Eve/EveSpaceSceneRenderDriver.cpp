@@ -17,6 +17,8 @@
 
 CCP_STATS_DECLARE( updateDynamicLightLists, "Trinity/EveSpaceScene/updateDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
 
+extern bool g_eveSpaceSceneDynamicLighting;
+
 namespace
 {
 
@@ -486,6 +488,20 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 
 	{
 		TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
+
+		if( g_eveSpaceSceneDynamicLighting )
+		{
+			if( auto lightManager = Tr2LightManager::GetOrCreateInstance( "res:/graphics/effect/managed/space/system/computelightlists.fx" ) )
+			{
+				lightManager->SetVariableStore();
+				lightManager->SetLightingQuality( m_settings.lightingQuality );
+			}
+		}
+		else
+		{
+			Tr2LightManager::DeleteInstance();
+		}
+
 		m_scene->BeginRender( m_settings.enableDistortion, renderContext );
 	}
 	{

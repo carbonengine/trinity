@@ -22,6 +22,7 @@ const Be::ClassInfo* EveSmartLightPointLight::ExposeToBlue()
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "flags", m_lightGroupData.flags, "Various light options", Be::READWRITE | Be::PERSIST, Tr2LightFlagChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "lightingQuality", m_lightGroupData.lightingQuality.m_filter, "Filter for lighting quality settings. Controls whether light is active with a certain lighting quality setting.", Be::READWRITE | Be::PERSIST, LightingQualityFilterChooser );
 
 		MAP_ATTRIBUTE( "radius", m_lightGroupData.radius, "Light radius", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "innerRadius", m_lightGroupData.innerRadius, "Inner light radius (to mimick a glowing sphere)", Be::READWRITE | Be::PERSIST )
@@ -33,6 +34,8 @@ const Be::ClassInfo* EveSmartLightPointLight::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "staticOffsetTranslation", m_staticOffsetTranslation, "static per instance offset in local space before placement \n:jessica-group: StaticOffsetFromDistribution", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "staticOffsetRotation", m_staticOffsetRotation, "static per instance rotation in local space before placement \n:jessica-group: StaticOffsetFromDistribution", Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE( "scaleBrightness", m_scaleBrightness, "Scale light brightness by its radius", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_CHAINTO( EveSmartLightBaseGroup )
 }

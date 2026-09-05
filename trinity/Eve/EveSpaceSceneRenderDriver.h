@@ -58,6 +58,7 @@ public:
 		AmbientOcclusionQuality aoQuality = AmbientOcclusionQuality::High;
 		PostProcess::Quality postProcessingQuality = PostProcess::Quality::HIGH;
 		Tr2VolumerticQuality volumetricQuality = Tr2VolumerticQuality::High;
+		LightingQuality lightingQuality = LightingQuality::HIGH;
 
 		Color clearColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
 

@@ -217,6 +217,11 @@ void Tr2LightManager::SetVariableStore()
 	m_indexBufferVariable = m_indexBuffer;
 }
 
+uint16_t Tr2LightManager::PackFlags( uint16_t flags, uint16_t profileIndex )
+{
+	return ( flags & ( ( 1 << FLAG_BITS ) - 1 ) ) | ( profileIndex << FLAG_BITS );
+}
+
 void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 {
 	m_lightBufferVariable = m_lightBuffer;
@@ -294,7 +299,17 @@ void Tr2LightManager::SetShadowQuality( ShadowQuality shadowQuality, uint64_t fr
 	m_ShadowMap.m_atlasSettings.actualTextureSize = CalculateShadowMapAtlasSettings( m_ShadowMap.m_qualityUsedByAtlas ).size;
 }
 
-void Tr2LightManager::AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius, uint16_t flags )
+void Tr2LightManager::SetLightingQuality( LightingQuality lightingQuality )
+{
+	m_lightingQuality = lightingQuality;
+}
+
+LightingQuality Tr2LightManager::GetLightingQuality() const
+{
+	return m_lightingQuality;
+}
+
+void Tr2LightManager::AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius, uint16_t flags, bool scaleBrightness )
 {
 	if( !AreLightFlagsValid( flags ) )
 	{
@@ -319,9 +334,20 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 	{
 		float dimming = std::min( ( size - m_adjustedCutoff ) / FADE_SIZE, 1.f );
 		data.color = reinterpret_cast<const Vector3&>( color );
-		data.color.x *= radius * dimming;
-		data.color.y *= radius * dimming;
-		data.color.z *= radius * dimming;
+		if( scaleBrightness )
+		{
+			if( flags & FLAG_FALLOFF_INV_SQUARE )
+			{
+				dimming *= radius * radius;
+			}
+			else
+			{
+				dimming *= radius;
+			}
+		}
+		data.color.x *= dimming;
+		data.color.y *= dimming;
+		data.color.z *= dimming;
 		data.innerRadius = innerRadius;
 		data.flags = flags;
 		data.direction = Vector3_16( Vector3( 1.f, 0.f, 0.f ) );
@@ -331,7 +357,7 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 	}
 }
 
-void Tr2LightManager::AddLight( PerLightData& data )
+void Tr2LightManager::AddLight( PerLightData& data, bool scaleBrightness )
 {
 	if( !AreLightFlagsValid( data.flags ) )
 	{
@@ -352,10 +378,20 @@ void Tr2LightManager::AddLight( PerLightData& data )
 	if( size > m_adjustedCutoff )
 	{
 		float dimming = std::min( ( size - m_adjustedCutoff ) / FADE_SIZE, 1.f );
-		data.color.x *= data.radius * dimming;
-		data.color.y *= data.radius * dimming;
-		data.color.z *= data.radius * dimming;
-
+		if( scaleBrightness )
+		{
+			if( data.flags & FLAG_FALLOFF_INV_SQUARE )
+			{
+				dimming *= data.radius * data.radius;
+			}
+			else
+			{
+				dimming *= data.radius;
+			}
+		}
+		data.color.x *= dimming;
+		data.color.y *= dimming;
+		data.color.z *= dimming;
 		bool usingShadowMap = m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_LOW || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_HIGH;
 		if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED ||
 			( usingShadowMap && m_ShadowMap.m_qualityUsedByAtlas == ShadowQuality::SHADOW_DISABLED ) ||
