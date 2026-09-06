@@ -997,7 +997,7 @@ bool Tr2Sprite2dScene::PrepareTriangleVerts( Tr2Sprite2dD3DVertex* destVerts, Tr
 	return true;
 }
 
-void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount, unsigned short* indices, unsigned short indexCount )
+void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount, unsigned short* indices, unsigned int indexCount )
 {
 	if( m_transformCurrent >= TR2_SS_MAX_TRANSFORM_COUNT - 1 )
 	{
@@ -1018,7 +1018,30 @@ void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, u
 	CopyIndicesWithOffset( indices, indexCount, vertexOffset );
 }
 
-void Tr2Sprite2dScene::RenderTriangleVerts( Tr2BufferAL& verticesSrc, unsigned int vertexCount, Tr2BufferAL& indices, unsigned short indexCount )
+// 32-bit index overload for large text batches: glyph index counts AND values can exceed 65535
+// (e.g. huge contract / acceleration-gate popups). The GPU index buffer is already 32-bit.
+void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount, unsigned int* indices, unsigned int indexCount )
+{
+	if( m_transformCurrent >= TR2_SS_MAX_TRANSFORM_COUNT - 1 )
+	{
+		// Buffers are full, kick off what we've got
+		IssueDrawCall();
+	}
+
+	// Offset applied to indices
+	int vertexOffset;
+
+	bool canRender = EnsureBufferSpace( vertexCount, indexCount, vertexOffset );
+	if( !canRender )
+	{
+		return;
+	}
+
+	ProcessVertices( verticesSrc, vertexCount );
+	CopyIndicesWithOffset( indices, indexCount, vertexOffset );
+}
+
+void Tr2Sprite2dScene::RenderTriangleVerts( Tr2BufferAL& verticesSrc, unsigned int vertexCount, Tr2BufferAL& indices, unsigned int indexCount )
 {
 	CCP_ASSERT( !m_captureDisplayList );
 
@@ -2478,7 +2501,7 @@ void Tr2Sprite2dScene::GrowCaptureVertexBuffer( unsigned int vertexCount )
 
 // Grow the index buffer used for capturing display lists. 'indexCount' is the number
 // indices that need to be added.
-void Tr2Sprite2dScene::GrowCaptureIndexBuffer( unsigned short indexCount )
+void Tr2Sprite2dScene::GrowCaptureIndexBuffer( unsigned int indexCount )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -2495,7 +2518,7 @@ void Tr2Sprite2dScene::GrowCaptureIndexBuffer( unsigned short indexCount )
 }
 
 // Copy indices to current index data, adding the given vertex offset
-void Tr2Sprite2dScene::CopyIndicesWithOffset( unsigned short* indices, unsigned short indexCount, int vertexOffset )
+void Tr2Sprite2dScene::CopyIndicesWithOffset( unsigned short* indices, unsigned int indexCount, int vertexOffset )
 {
 	unsigned short* curIndex = indices;
 	for( unsigned int i = 0; i < indexCount; ++i )
@@ -2508,7 +2531,21 @@ void Tr2Sprite2dScene::CopyIndicesWithOffset( unsigned short* indices, unsigned 
 	m_indexCount += indexCount;
 }
 
-bool Tr2Sprite2dScene::EnsureBufferSpace( unsigned int vertexCount, unsigned short indexCount, int& vertexOffset )
+// 32-bit index overload (see the 32-bit RenderTriangleVerts above). m_currentIndexData is uint32.
+void Tr2Sprite2dScene::CopyIndicesWithOffset( unsigned int* indices, unsigned int indexCount, int vertexOffset )
+{
+	unsigned int* curIndex = indices;
+	for( unsigned int i = 0; i < indexCount; ++i )
+	{
+		*m_currentIndexData = *curIndex + vertexOffset;
+		++m_currentIndexData;
+		++curIndex;
+	}
+
+	m_indexCount += indexCount;
+}
+
+bool Tr2Sprite2dScene::EnsureBufferSpace( unsigned int vertexCount, unsigned int indexCount, int& vertexOffset )
 {
 	if( m_captureDisplayList )
 	{
