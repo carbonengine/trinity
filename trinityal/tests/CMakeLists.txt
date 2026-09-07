@@ -247,7 +247,7 @@ if(WIN32)
 
         #GTest
         set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
-        gtest_discover_tests(TrinityALTest_dx12 TEST_PREFIX TrinityALTest_dx12.)
+        gtest_discover_tests(TrinityALTest_dx12 DISCOVERY_MODE PRE_TEST TEST_PREFIX TrinityALTest_dx12.)
 
     endif()
 

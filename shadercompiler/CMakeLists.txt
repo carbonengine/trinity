@@ -318,5 +318,5 @@ if(BUILD_TESTING)
     set_target_properties(ShaderCompilerTest PROPERTIES FOLDER "Tests")
     add_dependencies(ShaderCompilerTest ShaderCompiler)
 
-    gtest_discover_tests(ShaderCompilerTest TEST_PREFIX ShaderCompiler.)
+    gtest_discover_tests(ShaderCompilerTest DISCOVERY_MODE PRE_TEST TEST_PREFIX ShaderCompiler.)
 endif()
