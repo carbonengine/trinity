@@ -1507,7 +1507,6 @@ void Tr2GrannyAnimation::EndAnimation()
 	m_baseLayer.EndAnimation();
 }
 
-
 void Tr2GrannyAnimation::StopAnimations( float delay )
 {
 	m_baseLayer.StopAnimations( delay );

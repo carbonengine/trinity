@@ -18,7 +18,7 @@ constexpr float TRACKING_FADE_TIME = 1.f;
 EveChildTurret::EveChildTurret( IRoot* lockobj ) :
 	EveChildMesh( lockobj )
 {
-	for( unsigned int i = 0; i < SYSBONE_MAX; ++i )
+	for( unsigned int i = 0; i < EveTurretAiming::SYSBONE_MAX; ++i )
 	{
 		m_systemBoneID[i] = INVALID_BONE_INDEX;
 	}
@@ -148,13 +148,11 @@ void EveChildTurret::UpdateSyncronous( const EveUpdateContext& updateContext, co
 				{
 					Vector3 source = m_worldTransform.GetTranslation();
 					Vector3 position = source;
-					if( int closestLocator = m_target->FindClosestLocator( &source, &position ) )
+					int closestLocator = m_target->FindClosestLocator( &source, &position );
+					if( closestLocator >= 0 && closestLocator != m_target->GetLocator() )
 					{
-						if( closestLocator != m_target->GetLocator() )
-						{
-							// Set up the firing states correctly
-							SetupFiringState();
-						}
+						// Set up the firing states correctly
+						SetupFiringState();
 					}
 					// recheck every 2 seconds
 					m_recheckTimeLeft = 2.f;
@@ -321,7 +319,7 @@ void EveChildTurret::BuildCachedGeometryData( TriGeometryRes& geometryRes )
 	{
 		if( TriGeometryResSkeletonData* skeletonData = geometryRes.GetSkeletonData( 0 ) )
 		{
-			for( int i = 0; i < SYSBONE_MAX; ++i )
+			for( int i = 0; i < EveTurretAiming::SYSBONE_MAX; ++i )
 			{
 				// in case we don't find system bone, ::FindJoint() returns 0xffffffff
 				m_systemBoneID[i] = skeletonData->FindJoint( EveTurretAiming::GetSystemBoneName( i ) );
@@ -686,12 +684,12 @@ void EveChildTurret::InitializeFiringEffect()
 			// firing bones should always be on the format Pos_FireXX where XX can range form 01 to 99
 			for( unsigned int i = 0; i < boneCount; ++i )
 			{
-				char boneName[32];
-				int boneNameIndex = i + 1;
-				snprintf( boneName, sizeof boneName, "%s%02u", m_firingEffect->GetFiringBoneName(), boneNameIndex );
+				char boneNameBuffer[32];
+				unsigned int boneNameIndex = i + 1;
+				sprintf_s( boneNameBuffer, "%s%.2d", m_firingEffect->GetFiringBoneName(), boneNameIndex );
 
 				// in case we don't find positional bone, ::FindJoint() returns 0xffffffff
-				m_firingEffect->SetMuzzleBoneID( i, skeletonData->FindJoint( boneName ) );
+				m_firingEffect->SetMuzzleBoneID( i, skeletonData->FindJoint( boneNameBuffer ) );
 			}
 		}
 	}
@@ -725,14 +723,14 @@ void EveChildTurret::ModifyPose( const cmf::Skeleton& skeleton, cmf::SkeletonPos
 
 	Vector3 targetPosOS = TransformCoord( *m_target->GetTrackingPosition(), Inverse( m_worldTransform ) );
 
-	for( unsigned int bone = 0; bone < SYSBONE_MAX; ++bone )
+	for( unsigned int bone = 0; bone < EveTurretAiming::SYSBONE_MAX; ++bone )
 	{
 		// covers Invalid since INVALID_BONE_INDEX is max
 		if( m_systemBoneID[bone] < pose.boneTransforms.size() )
 		{
 			cmf::Transform& boneTransform = pose.boneTransforms[m_systemBoneID[bone]];
 			m_aiming.ModifySystemBoneTransform(
-				static_cast<SystemBones>( bone ),
+				static_cast<EveTurretAiming::SystemBones>( bone ),
 				&targetPosOS,
 				nullptr,
 				m_trackingInfluence,

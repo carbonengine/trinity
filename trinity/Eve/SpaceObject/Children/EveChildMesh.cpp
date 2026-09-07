@@ -1127,7 +1127,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 		info.estimatedPixelDiameter = max( m_currentScreenSize, 0.f );
 		info.isInFrustum = m_isVisible;
 		info.getDamageLocatorPositionOS = [this]( int index, Vector3& out ) {
-			return GetDamageLocatorPositionLocal( index, out );
+			return GetDamageLocatorBindPositionLocal( index, out );
 		};
 		m_damageOverlay->UpdateAsyncronous( updateContext, info, 0, false );
 	}
@@ -2058,7 +2058,7 @@ void EveChildMesh::CollectOwnedLocatorSets( const Matrix& parentTransform, std::
 	}
 }
 
-void EveChildMesh::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+void EveChildMesh::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
 	if( !m_mesh || !m_mesh->GetGeometryResource() )
 	{
@@ -2070,8 +2070,9 @@ void EveChildMesh::CollectOwnedGeometry( const Matrix& parentTransform, std::vec
 	EveChildGeometry source;
 	source.childToObject = localTransform * parentTransform;
 	source.geometry = m_mesh->GetGeometryResource();
-	source.owner = this;
-	source.mesh = m_mesh;
+	source.areaStart = uint32_t( areaPool.size() );
+	EveCollectAreas( type, m_mesh, areaPool );
+	source.areaCount = uint32_t( areaPool.size() ) - source.areaStart;
 	out.push_back( source );
 }
 
@@ -2103,38 +2104,48 @@ EveDamageOverlayPtr EveChildMesh::EnsureDamageOverlay()
 	return m_damageOverlay;
 }
 
-bool EveChildMesh::GetDamageLocatorPositionLocal( int index, Vector3& out ) const
+void EveChildMesh::SetArmorDamageShaderEffect( Tr2Effect* effect )
 {
-	if( index < 0 )
-	{
-		return false;
-	}
+	m_armorDamageShader = effect;
+}
 
+Tr2Effect* EveChildMesh::GetArmorDamageShaderEffect() const
+{
+	return m_armorDamageShader;
+}
+
+const LocatorStructureList* EveChildMesh::GetOwnedDamageLocators() const
+{
 	for( const auto& sets : m_ownedLocatorSets )
 	{
 		if( sets->HasName( DAMAGE_LOCATOR_SET_NAME ) )
 		{
-			const LocatorStructureList* locators = sets->GetLocators();
-			if( index >= int( locators->size() ) )
-			{
-				return false;
-			}
-
-			const Locator& locator = ( *locators )[index];
-			out = locator.position;
-
-			// for reference, see EveSpaceObject2::GetLocatorInObjectSpace
-			if( locator.boneIndex > 0 && m_animationUpdater && m_animationUpdater->IsInitialized() &&
-				locator.boneIndex < m_animationUpdater->GetMeshBoneCount() )
-			{
-				const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
-				Matrix transform = IdentityMatrix();
-				TriMatrixCopyFrom3x4( &transform, &bones[locator.boneIndex] );
-				out = XMVector3TransformCoord( locator.position, transform );
-			}
-
-			return true;
+			return sets->GetLocators();
 		}
 	}
-	return false;
+	return nullptr;
+}
+
+bool EveChildMesh::GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const
+{
+	const LocatorStructureList* locators = GetOwnedDamageLocators();
+	if( !locators || index < 0 || index >= int( locators->size() ) )
+	{
+		return false;
+	}
+
+	out = ( *locators )[index].position;
+	return true;
+}
+
+bool EveChildMesh::GetDamageLocatorAnimatedLocal( int index, Vector3& position, Vector3& direction ) const
+{
+	const LocatorStructureList* locators = GetOwnedDamageLocators();
+	if( !locators || index < 0 || index >= int( locators->size() ) )
+	{
+		return false;
+	}
+
+	EveGetLocatorPose( m_animationUpdater, ( *locators )[index], position, direction );
+	return true;
 }

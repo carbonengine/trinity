@@ -237,7 +237,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String) 
         perfmon {
         }
         freeDiskSpace {
-            requiredSpace = "10gb"
+            requiredSpace = "30gb"
             failBuild = true
         }
         sshAgent {

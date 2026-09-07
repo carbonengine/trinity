@@ -112,7 +112,7 @@ EveTurretSet::EveTurretSet( IRoot* lockobj ) :
 	//m_rtMeshArea.reset( new Tr2RaytracingMeshArea( 0 ) );
 	//m_rtMesh.reset( new Tr2RaytracingMesh() );
 
-	for( unsigned int i = 0; i < SYSBONE_MAX; ++i )
+	for( unsigned int i = 0; i < EveTurretAiming::SYSBONE_MAX; ++i )
 	{
 		m_systemBoneID[i] = INVALID_BONE_INDEX;
 	}
@@ -462,7 +462,7 @@ void EveTurretSet::Cleanup()
 	m_turretVertexDeclElementCount = 0;
 
 	// system bone ids are no longer valid
-	for( unsigned int i = 0; i < SYSBONE_MAX; ++i )
+	for( unsigned int i = 0; i < EveTurretAiming::SYSBONE_MAX; ++i )
 	{
 		m_systemBoneID[i] = INVALID_BONE_INDEX;
 	}
@@ -1040,7 +1040,7 @@ void EveTurretSet::RebuildCachedData( BlueAsyncRes* p )
 			TriGeometryResSkeletonData* skeletonData = m_geometryResource->GetSkeletonData( 0 );
 			if( skeletonData )
 			{
-				for( int i = 0; i < SYSBONE_MAX; ++i )
+				for( int i = 0; i < EveTurretAiming::SYSBONE_MAX; ++i )
 				{
 					// in case we don't find system bone, ::FindJoint() returns 0xffffffff
 					m_systemBoneID[i] = skeletonData->FindJoint( EveTurretAiming::GetSystemBoneName( i ) );
@@ -1302,21 +1302,21 @@ void EveTurretSet::UpdateSingleTurrets()
 						Vector3 targetPosOS = TransformCoord( *m_target->GetTrackingPosition(), Inverse( turret.worldMatrix ) );
 
 						// "do" all the system bones, we have found
-						for( unsigned int bone = 0; bone < SYSBONE_MAX; ++bone )
+						for( unsigned int bone = 0; bone < EveTurretAiming::SYSBONE_MAX; ++bone )
 						{
 							if( m_systemBoneID[bone] != INVALID_BONE_INDEX && m_systemBoneID[bone] < turret.pose.boneTransforms.size() )
 							{
 								const Matrix* localTransformPtr = nullptr;
 								// Currently only do this for the main pitch bones. May want to extend this for others
 								// if we find a case that uses them.
-								if( bone >= SYSBONE_PITCH && bone <= SYSBONE_PITCH2 && m_updatePitchPose )
+								if( bone >= EveTurretAiming::SYSBONE_PITCH && bone <= EveTurretAiming::SYSBONE_PITCH2 && m_updatePitchPose )
 								{
 									cmf::ComputeWorldTransforms( turret.worldTransforms, turret.pose );
 									localTransformPtr = &turret.worldTransforms[m_systemBoneID[bone]];
 								}
 								// modify this bone's transform data
 								cmf::Transform& boneTransform = turret.pose.boneTransforms[m_systemBoneID[bone]];
-								m_aiming.ModifySystemBoneTransform( (SystemBones)bone, &targetPosOS, localTransformPtr, m_trackingInfluence, boneTransform.position, boneTransform.rotation );
+								m_aiming.ModifySystemBoneTransform( (EveTurretAiming::SystemBones)bone, &targetPosOS, localTransformPtr, m_trackingInfluence, boneTransform.position, boneTransform.rotation );
 							}
 						}
 					}
@@ -1345,7 +1345,7 @@ void EveTurretSet::UpdateSingleTurrets()
 						Vector3 targetPosOS = TransformCoord( *m_target->GetTrackingPosition(), Inverse( turret.worldMatrix ) );
 
 						// "do" all the system bones, we have found
-						for( unsigned int bone = 0; bone < SYSBONE_MAX; ++bone )
+						for( unsigned int bone = 0; bone < EveTurretAiming::SYSBONE_MAX; ++bone )
 						{
 							if( m_systemBoneID[bone] != INVALID_BONE_INDEX )
 							{
@@ -1353,7 +1353,7 @@ void EveTurretSet::UpdateSingleTurrets()
 								Matrix localTransform;
 								// Currently only do this for the main pitch bones. May want to extend this for others
 								// if we find a case that uses them.
-								if( bone >= SYSBONE_PITCH && bone <= SYSBONE_PITCH2 && m_updatePitchPose )
+								if( bone >= EveTurretAiming::SYSBONE_PITCH && bone <= EveTurretAiming::SYSBONE_PITCH2 && m_updatePitchPose )
 								{
 									Matrix id = IdentityMatrix();
 									GrannyBuildWorldPose( turret.grnSkeleton, 0, turret.grnSkeleton->BoneCount, turret.grnLocalPose, &id.m[0][0], turret.grnWorldPose );
@@ -1368,7 +1368,7 @@ void EveTurretSet::UpdateSingleTurrets()
 								{
 									Vector3 position = Vector3( boneTransform->Position[0], boneTransform->Position[1], boneTransform->Position[2] );
 									Quaternion rotation = *reinterpret_cast<Quaternion*>( boneTransform->Orientation );
-									m_aiming.ModifySystemBoneTransform( (SystemBones)bone, &targetPosOS, localTransformPtr, m_trackingInfluence, position, rotation );
+									m_aiming.ModifySystemBoneTransform( static_cast<EveTurretAiming::SystemBones>( bone ), &targetPosOS, localTransformPtr, m_trackingInfluence, position, rotation );
 									GrannySetTransform( boneTransform, &position.x, (float*)&rotation, (float*)boneTransform->ScaleShear );
 								}
 							}

@@ -190,3 +190,7 @@ template void Tr2RingBufferOffsets::UploadTransforms<Tr2MorphTargetAnimationData
 template uint32_t Tr2RingBuffer::UploadTransforms<Float4x3>( const Float4x3* data, uint32_t dataCount );
 template Tr2RingBuffer& Tr2RingBuffer::GetInstance<Float4x3>();
 template void Tr2RingBufferOffsets::UploadTransforms<Float4x3>( Tr2RingBuffer& buffer, const Float4x3* transforms, uint32_t count );
+
+template uint32_t Tr2RingBuffer::UploadTransforms<Tr2ChildBoosterInstanceData>( const Tr2ChildBoosterInstanceData* data, uint32_t dataCount );
+template Tr2RingBuffer& Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>();
+template void Tr2RingBufferOffsets::UploadTransforms<Tr2ChildBoosterInstanceData>( Tr2RingBuffer& buffer, const Tr2ChildBoosterInstanceData* instances, uint32_t count );

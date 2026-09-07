@@ -186,7 +186,7 @@ void EveImpactOverlay::UpdateAsyncronous( const EveUpdateContext& updateContext,
 	info.estimatedPixelDiameter = parent->GetEstimatedPixelDiameter();
 	info.isInFrustum = parent->IsInFrustum();
 	info.getDamageLocatorPositionOS = [parent]( int index, Vector3& out ) {
-		return parent->GetDamageLocatorPosition( &out, index, false );
+		return parent->GetDamageLocatorBindPosition( index, out );
 	};
 	m_damageOverlay->UpdateAsyncronous( updateContext, info, m_shieldImpactData.size(), HasShieldActivity() );
 

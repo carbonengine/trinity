@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include "EveSpaceObjectChild.h"
+#include "Tr2MeshBase.h"
 
 
 EveSpaceObjectChild::EveSpaceObjectChild( IRoot* )
@@ -130,8 +131,33 @@ void EveSpaceObjectChild::CollectOwnedLocatorSets( const Matrix& parentTransform
 {
 }
 
-void EveSpaceObjectChild::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+void EveSpaceObjectChild::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
+}
+
+void EveCollectAreas( TriBatchType type, Tr2MeshBase* mesh, std::vector<EveChildGeometryArea>& areaPool )
+{
+	if( !mesh )
+	{
+		return;
+	}
+
+	Tr2MeshAreaVector* areas = mesh->GetAreas( type );
+
+	if( !areas )
+	{
+		return;
+	}
+
+	for( auto it = begin( *areas ); it != end( *areas ); it++ )
+	{
+		EveChildGeometryArea area;
+		area.index = uint32_t( ( *it )->GetIndex() );
+		area.count = uint32_t( ( *it )->GetCount() );
+		area.alphaCutout = ( *it )->IsAlphaCutout();
+		area.reversed = ( *it )->IsReversed();
+		areaPool.push_back( area );
+	}
 }
 
 void EveSpaceObjectChild::RegisterChild( EveSpaceObjectChild* child )
