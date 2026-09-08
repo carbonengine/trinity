@@ -8,6 +8,11 @@
 
 TEST( MetalConversion, TextureIndexingWorks )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 Texture2D<float3> tex;
 
@@ -38,6 +43,10 @@ technique t0
 
 TEST( MetalConversion, AppliesPackedModifiersToCBuffers )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
 	const char* src = R"SRC(
 cbuffer cb0: register( b3 )
 {
@@ -72,6 +81,10 @@ technique t0
 
 TEST( MetalConversion, AddsRowsToMatrixInitializers )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
 	const char* src = R"SRC(
 float4 vs(): SV_Position
 {
@@ -105,6 +118,12 @@ technique t0
 
 TEST( MetalConversion, AppliesPackedModifiersToRtLocalBuffers )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
+
 	const char* src = R"SRC(
 struct HitInfo
 {
@@ -140,6 +159,11 @@ technique t0
 
 TEST( MetalConversion, AllowBindlessResources )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 Buffer<float4> HeapView_BufferFloat4[]
@@ -186,6 +210,10 @@ technique t0
 
 TEST( MetalConversion, AllowLocalBufferVars )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
 	const char* src = R"SRC(
 
 Buffer<float4> HeapView_BufferFloat4[]
@@ -229,6 +257,11 @@ technique t0
 
 TEST( MetalConversion, AllowManySrvsUavs )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 RWTexture2D<float4> Tex0;
@@ -338,6 +371,11 @@ technique t0
 
 TEST( MetalShaderPatching, CanHaveVertexID )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 struct VSIn
@@ -381,6 +419,11 @@ technique t0
 
 TEST( MetalShaderPatching, CanHaveVertexIDWithIAInputs )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 struct VSIn
@@ -425,6 +468,11 @@ technique t0
 
 TEST( MetalShaderPatching, CanHaveNestedStructs )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 struct VSIn
@@ -472,6 +520,11 @@ technique t0
 
 TEST( MetalShaderPatching, CanHaveNestedStructsWithSystemSemanticsWithIAInputs1 )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 struct VSIn
@@ -522,6 +575,11 @@ technique t0
 
 TEST( MetalShaderPatching, CanHaveNestedStructsWithSystemSemanticsWithIAInputs2 )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 struct VSIn
@@ -572,6 +630,11 @@ technique t0
 
 TEST( MetalShaderPatching, CanHaveInstanceID )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 struct VSIn
@@ -615,6 +678,11 @@ technique t0
 
 TEST( MetalShaderPatching, CanHaveInstanceIDWithIAInputs )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 struct VSIn
@@ -659,6 +727,11 @@ technique t0
 
 TEST( MetalShaderPatching, CanHaveSystemSemanticMixedParameterAndIAInputs )
 {
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+
 	const char* src = R"SRC(
 
 struct VSIn
