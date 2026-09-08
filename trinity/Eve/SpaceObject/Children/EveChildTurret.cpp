@@ -822,6 +822,10 @@ void EveChildTurret::SetTargetObject( IRoot* target )
 {
 	if( !target )
 	{
+		if( m_state == STATE_TARGETING || m_state == STATE_FIRING )
+		{
+			EnterStateIdle();
+		}
 		m_target->SetTargetable( nullptr );
 		return;
 	}
