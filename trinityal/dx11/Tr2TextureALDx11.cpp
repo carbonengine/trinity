@@ -328,6 +328,59 @@ Tr2RenderContextEnum::PixelFormat FromTypeless( Tr2RenderContextEnum::PixelForma
 
 namespace TrinityALImpl
 {
+
+void Tr2ReadbackAL::Initialize( CComPtr<ID3D11Texture2D> stagingTexture, uint64_t frameNumber )
+{
+	m_stagingTexture = stagingTexture;
+	m_frameNumber = frameNumber;
+}
+
+Tr2ReadbackAL::~Tr2ReadbackAL()
+{
+	Destroy();
+}
+
+bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext ) const
+{
+	return renderContext.GetRenderedFrameNumber() >= m_frameNumber;
+}
+
+ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const
+{
+	//DX11 Map() will always wait if the resource is in use, so no need to wait until the GPU is done manually
+	D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
+	HRESULT hr = renderContext.m_context->Map( m_stagingTexture, 0, D3D11_MAP_READ, 0, &ms );
+	pointer = ms.pData;
+	rowPitch = ms.RowPitch;
+	if( !ms.pData )
+	{
+		return E_FAIL;
+	}
+	return hr;
+}
+
+void Tr2ReadbackAL::Destroy()
+{
+	m_stagingTexture = nullptr;
+}
+
+void Tr2ReadbackAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+{
+}
+
+Tr2ALMemoryType Tr2ReadbackAL::GetMemoryClass() const
+{
+	return AL_MEMORY_MANAGED;
+}
+
+bool Tr2ReadbackAL::IsValid() const
+{
+	return m_stagingTexture != nullptr;
+}
+
+
+
+
 Tr2TextureAL::Tr2TextureAL() :
 	m_gpuUsage( Tr2GpuUsage::NONE ),
 	m_cpuUsage( Tr2CpuUsage::NONE ),
@@ -799,11 +852,74 @@ Tr2CpuUsage::Type Tr2TextureAL::GetCpuUsage() const
 	return m_cpuUsage;
 }
 
-ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSubresource& region, Tr2PrimaryRenderContextAL& renderContext )
 {
+	if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
+	{
+		return nullptr;
+	}
 
-	//Note: synchronize is ignored on DX11, as the current code needs significant refactoring to support asynchronous mapping.
+	if( !IsValid() || !renderContext.IsValid() )
+	{
+		return nullptr;
+	}
+	if( m_desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+	{
+		return nullptr;
+	}
 
+	if( !region.IsValidForBitmap( m_desc ) )
+	{
+		return nullptr;
+	}
+	if( !region.IsSingleSubresource() )
+	{
+		return nullptr;
+	}
+
+	D3D11_TEXTURE2D_DESC desc;
+	memset( &desc, 0, sizeof( desc ) );
+	desc.Width = m_desc.GetWidth();
+	desc.Height = m_desc.GetHeight();
+	desc.MipLevels = 1;
+	desc.ArraySize = 1;
+	desc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeTypeless( m_desc.GetFormat() ) );
+
+	desc.Usage = D3D11_USAGE_STAGING;
+	desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+
+	desc.SampleDesc.Count = 1;
+
+	if( !renderContext.m_secondaryDevice11 )
+	{
+		return nullptr;
+	}
+
+	CComPtr<ID3D11Texture2D> stagingTexture;
+	CR_RETURN_VAL( renderContext.m_secondaryDevice11->CreateTexture2D( &desc, nullptr, &stagingTexture ), nullptr );
+	if( !stagingTexture )
+	{
+		return nullptr;
+	}
+
+	if( region.HasBox() )
+	{
+		D3D11_BOX box = { region.m_box.left, region.m_box.top, region.m_box.front, region.m_box.right, region.m_box.bottom, region.m_box.back };
+		renderContext.m_context->CopySubresourceRegion( stagingTexture, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), &box );
+	}
+	else
+	{
+		renderContext.m_context->CopySubresourceRegion( stagingTexture, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), nullptr );
+	}
+
+	
+	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
+	readback->Initialize( stagingTexture, renderContext.GetRecordingFrameNumber() );
+	return readback;
+}
+
+ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+{
 	data = nullptr;
 	if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
 	{

@@ -113,8 +113,9 @@ Tr2RenderContextBase::Tr2RenderContextBase( Tr2RenderContext& renderContext ) :
 	m_backBuffer.CreateInstance();
 	m_backBuffer->SetName( "backbuffer" );
 #endif
-	m_objectIdVariable = GlobalStore().RegisterVariable( "objectId", 0.0f );
-	m_areaIdVariable = GlobalStore().RegisterVariable( "areaId", 0.0f );
+	m_pickingObjectLowBitsVariable = GlobalStore().RegisterVariable( "pickingObjectLowBits", 0 );
+	m_pickingObjectHighBitsVariable = GlobalStore().RegisterVariable( "pickingObjectHighBits", 0 );
+	m_areaIdVariable = GlobalStore().RegisterVariable( "areaId", 0 );
 }
 
 using namespace Tr2RenderContextEnum;
@@ -320,11 +321,6 @@ Tr2PrimaryRenderContext& Tr2RenderContext_GetMainThreadRenderContext()
 	}
 
 	return *s_mainThreadRenderContext;
-}
-
-TriVariable* Tr2RenderContextBase::GetObjectIdVariable( void )
-{
-	return m_objectIdVariable;
 }
 
 namespace
@@ -898,16 +894,24 @@ void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* 
 				curPerObjectData = batch.m_objectData;
 			}
 
-			uint32_t id = batch.m_objectData->GetUserData();
-			if( m_objectIdVariable )
+			uint64_t pickingPointer = batch.m_objectData->GetPickingPointer();
+
+			uint32_t lowBits = (uint32_t)( ( pickingPointer >> 0 ) & 0xFFFFFFFFL );
+			uint32_t highBits = (uint32_t)( ( pickingPointer >> 32 ) & 0xFFFFFFFFL );
+
+			if( m_pickingObjectLowBitsVariable )
 			{
-				m_objectIdVariable->SetValue( (float)id );
+				m_pickingObjectLowBitsVariable->SetValue( (int)lowBits );
+			}
+			if( m_pickingObjectHighBitsVariable )
+			{
+				m_pickingObjectHighBitsVariable->SetValue( (int)highBits );
 			}
 
 			uint32_t areaID = batch.m_pickingData;
 			if( m_areaIdVariable )
 			{
-				m_areaIdVariable->SetValue( (float)areaID );
+				m_areaIdVariable->SetValue( (int) areaID );
 			}
 		}
 

@@ -16,26 +16,12 @@ class EvePendingPickingReadback : public Tr2DeviceResource
 public:
 	EvePendingPickingReadback( uint32_t pickedX, uint32_t pickedY );
 
-	void MapDebug( bool synchronize, Tr2RenderContext& renderContext );
-	void MapMain( bool synchronize, Tr2RenderContext& renderContext );
-	void Unmap( Tr2RenderContext& renderContext );
-
 	uint32_t m_pickedX;
 	uint32_t m_pickedY;
-	uint64_t m_frameIndex;
 
+	std::vector<IRootPtr> m_blueObjects;
 
-
-	std::vector<Tr2DebugObjectReference> m_debugLineObjects;
-	std::vector<Tr2DebugObjectReference> m_debugTriangleObjects;
-	Tr2PickBuffer m_debugPickBuffer;
-	const void* m_debugPickData;
-
-	std::vector<std::pair<ITr2PickablePtr, ITr2Renderable*>> m_collisionSet;
-
-	std::vector<std::pair<IRootPtr, uint32_t>> m_instancedTraceback;
-	Tr2PickBuffer m_mainPickBuffer;
-	const void* m_mainPickData;
+	Tr2ReadbackAL m_readback;
 
 
 	/////////////////////////////////////////////////////////////

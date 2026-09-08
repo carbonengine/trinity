@@ -473,7 +473,7 @@ ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region,
 															   readOrigin,
 															   readSize,
 															   readMipLevel,
-															   synchronize );
+															   true );
 
 	pitch = mipPitch;
 	data = m_mtlReadBackBuffer.contents;

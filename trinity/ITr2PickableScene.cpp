@@ -117,7 +117,7 @@ void ITr2PickableScene::PickObject( Tr2RenderContext& renderContext, int x, int 
 
 				const void* data;
 				uint32_t pitch;
-				if( pickBuffer.MapForReading( true, data, pitch, renderContext ) )
+				if( pickBuffer.MapForReading( data, pitch, renderContext ) )
 				{
 					DecodeBufferPixel( data, passes[i], buffer );
 					pickBuffer.UnmapForReading( renderContext );
@@ -230,7 +230,7 @@ void ITr2PickableScene::GetBatches( std::vector<ITr2Renderable*> const& pickable
 		Tr2PerObjectData* perObjectData = pickableObjects[i]->GetPerObjectData( pOpaquePickingBatches );
 		if( perObjectData )
 		{
-			perObjectData->SetUserData( i );
+			//perObjectData->SetUserData( i );
 
 			size_t curBatchCount = pOpaquePickingBatches->GetBatchCount();
 			pickableObjects[i]->GetBatches( pOpaquePickingBatches, TRIBATCHTYPE_OPAQUE, perObjectData );

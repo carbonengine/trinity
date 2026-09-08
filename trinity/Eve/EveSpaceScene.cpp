@@ -428,6 +428,11 @@ Tr2PostProcess2Ptr EveSpaceScene::GetPostProcess()
 
 bool EveSpaceScene::OnPrepareResources()
 {
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	CR( m_pickBuffer.Create( Tr2BitmapDimensions( 1, 1, 1, PIXEL_FORMAT_R32G32B32A32_UINT ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ_OFTEN, renderContext ) );
+	CR( m_pickDepthBuffer.Create( Tr2BitmapDimensions( 1, 1, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, renderContext ) );
+
 	return true;
 }
 
@@ -3490,24 +3495,6 @@ void EveSpaceScene::OnListModified(
 	}
 }
 
-namespace
-{
-void DecodeMainPickPixel( const void* pBuffer, uint32_t& objId, uint32_t& areaId )
-{
-	// helpers: get each channel
-	uint32_t b = (uint32_t)( *( (unsigned char*)pBuffer + 0 ) );
-	uint32_t g = (uint32_t)( *( (unsigned char*)pBuffer + 1 ) );
-	uint32_t r = (uint32_t)( *( (unsigned char*)pBuffer + 2 ) );
-	uint32_t a = (uint32_t)( *( (unsigned char*)pBuffer + 3 ) );
-
-	// put it "together"
-	objId = ( ( r & 0xff ) << 8 ) | ( g & 0xff );
-	objId--;
-	areaId = ( ( b & 0xff ) << 8 ) | ( a & 0xff );
-	areaId--;
-}
-}
-
 
 
 IRoot* EveSpaceScene::PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
@@ -3568,7 +3555,7 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 	ConvertProjectionCoordToWorldPickRay( fx, fy, &projTransform, &viewTransform, &startWorld, &dirWorld );
 
-	EvePendingPickingReadback& readback = *listener->m_readbacks.emplace_back( std::make_unique<EvePendingPickingReadback>( x, y ) );
+	EvePendingPickingReadback& pickingReadback = *listener->m_readbacks.emplace_back( std::make_unique<EvePendingPickingReadback>( x, y ) );
 
 
 
@@ -3583,27 +3570,13 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 	// Render for picking, limit our view to the pick ray
 	SetupTransformsForPicking( fx, fy, proj, view, viewport, renderContext );
 
+	std::vector<IRootPtr>& blueObjects = pickingReadback.m_blueObjects;
 
-	if( m_debugRenderer )
-	{
-		m_debugRenderer->Pick( readback, immediate, renderContext );
-	}
 
 	std::vector<ITr2Renderable*> visibleObjects;
 	GetPickingObjectsToRender( visibleObjects );
 
 
-	std::vector<std::pair<ITr2PickablePtr, ITr2Renderable*>>& collisionSet = readback.m_collisionSet;
-	collisionSet.reserve( visibleObjects.size() );
-
-	for( std::vector<ITr2Renderable*>::const_iterator it = visibleObjects.begin(); it != visibleObjects.end(); ++it )
-	{
-		ITr2PickablePtr pickedObj( BlueCastPtr( *it ) );
-		if( pickedObj )
-		{
-			collisionSet.push_back( std::make_pair( pickedObj, *it ) );
-		}
-	}
 
 	// Get batches from shared instanced meshes
 	{
@@ -3621,141 +3594,158 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 		if( !batches.empty() )
 		{
-			m_instancedMeshManager->GetPickingBatches( readback, m_updateContext.GetFrustum(), CreatePickingFrustum(), m_updateContext.GetInvLodFactor(), uint32_t( collisionSet.size() ), batches );
+			m_instancedMeshManager->GetPickingBatches( pickingReadback, m_updateContext.GetFrustum(), CreatePickingFrustum(), m_updateContext.GetInvLodFactor(), batches );
 		}
 	}
 
-	Tr2PickBuffer& pickBuffer = readback.m_mainPickBuffer;
 
-	if( !collisionSet.empty() || m_pickingBatches->GetBatchCount() > 0 )
+	//if( !visibleObjects.empty() || m_pickingBatches->GetBatchCount() > 0 )
+	if (m_pickBuffer.IsValid() && m_pickDepthBuffer.IsValid())
 	{
-		renderContext.m_esm.SetInvertedDepthTest( true );
-		ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
-
-		renderContext.m_esm.BeginManagedRendering();
-		ON_BLOCK_EXIT( [&] { renderContext.m_esm.EndManagedRendering(); } );
-
-		CR_RETURN( Tr2Renderer::BeginRenderContext() );
-		ON_BLOCK_EXIT( [&] { Tr2Renderer::EndRenderContext(); } );
-
-		pickBuffer.PrepareResources();
-
-		if( pickBuffer.BeginRendering( 0.0f, renderContext ) )
 		{
-			for( unsigned int i = 0; i < collisionSet.size(); i++ )
+			renderContext.m_esm.SetInvertedDepthTest( true );
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
+
+			renderContext.m_esm.BeginManagedRendering();
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.EndManagedRendering(); } );
+
+			CR_RETURN( Tr2Renderer::BeginRenderContext() );
+			ON_BLOCK_EXIT( [&] { Tr2Renderer::EndRenderContext(); } );
+
+			renderContext.m_esm.PushRenderTarget( m_pickBuffer );
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.PopRenderTarget(); } );
+
+			renderContext.m_esm.PushDepthStencilBuffer( m_pickDepthBuffer );
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.PopDepthStencilBuffer(); } );
+
+			renderContext.Clear( CLEARFLAGS_TARGET | CLEARFLAGS_ZBUFFER, 0, 0.0f );
+
+			renderContext.m_esm.SetFullScreenViewport();
 			{
 
-				ITr2Renderable* renderable = collisionSet[i].second;
-				ITr2Pickable* pickable = collisionSet[i].first;
 
-				Tr2PerObjectData* perObjectData = renderable->GetPerObjectData( m_pickingBatches );
-				if( perObjectData )
+				for( std::vector<ITr2Renderable*>::const_iterator it = visibleObjects.begin(); it != visibleObjects.end(); ++it )
 				{
-					perObjectData->SetUserData( i );
+
+					ITr2PickablePtr pickedObj( BlueCastPtr( *it ) );
+					if( !pickedObj )
+					{
+						continue;
+					}
+
+					ITr2Pickable* pickable = pickedObj;
+					ITr2Renderable* renderable = *it;
+
+					Tr2PerObjectData* perObjectData = renderable->GetPerObjectData( m_pickingBatches );
+					if( perObjectData )
+					{
+						perObjectData->SetPickingPointer( (uint64_t)pickable->GetRootObject() );
+					}
+
+					// We always pick against the opaque geometry that's rendered
+					if( pickTypes != PICK_TYPE_PICKING )
+					{
+						pickable->GetPickingBatches( m_pickingBatches, pickTypes & ~PICK_TYPE_PICKING, perObjectData );
+					}
+					// Additionally, we can pick against geometry that's only rendered for picking,
+					// allowing us to put placeholders in for things that are partly transparent, but still should be pickable
+					if( ( pickTypes & PICK_TYPE_PICKING ) != 0 )
+					{
+						pickable->GetPickingBatches( m_pickingBatches, PICK_TYPE_PICKING, perObjectData );
+					}
+
+					blueObjects.push_back( pickable->GetRootObject() );
 				}
 
-				// We always pick against the opaque geometry that's rendered
-				if( pickTypes != PICK_TYPE_PICKING )
+
+				Tr2Renderer::SetWorldTransform( IdentityMatrix() );
+
+				m_pickingBatches->Finalize();
+
+				renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
+				renderContext.RenderBatchesForPicking( m_pickingBatches, BlueSharedString( "Picking" ) );
+
+
+				//clear depth for debug rendering
+				renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0.0f );
+
+				if( m_debugRenderer )
 				{
-					pickable->GetPickingBatches( m_pickingBatches, pickTypes & ~PICK_TYPE_PICKING, perObjectData );
+					m_debugRenderer->Pick( pickingReadback, immediate, renderContext );
 				}
-				// Additionally, we can pick against geometry that's only rendered for picking,
-				// allowing us to put placeholders in for things that are partly transparent, but still should be pickable
-				if( ( pickTypes & PICK_TYPE_PICKING ) != 0 )
-				{
-					pickable->GetPickingBatches( m_pickingBatches, PICK_TYPE_PICKING, perObjectData );
-				}
+
+
+				m_pickingBatches->Clear();
 			}
-
-			Tr2Renderer::SetWorldTransform( IdentityMatrix() );
-
-			m_pickingBatches->Finalize();
-
-			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
-			renderContext.RenderBatchesForPicking( m_pickingBatches, BlueSharedString( "Picking" ) );
-
-			pickBuffer.EndRendering( renderContext );
-
-			m_pickingBatches->Clear();
-
-			readback.MapMain( immediate, renderContext );
 		}
-	}
 
-	readback.m_frameIndex = immediate ? 0u : renderContext.GetRecordingFrameNumber();
+		pickingReadback.m_readback = m_pickBuffer.CreateReadback( Tr2TextureSubresource( 0 ), renderContext );
+	}
 
 	while( !listener->m_readbacks.empty() )
 	{
-		EvePendingPickingReadback& readback = *listener->m_readbacks[0];
-		if( readback.m_frameIndex >= renderContext.GetRenderedFrameNumber() )
+		EvePendingPickingReadback& pickingReadback = *listener->m_readbacks[0];
+
+		if (!pickingReadback.m_readback.IsValid())
+		{
+			//this readback is dead (most likely GPU device lost)
+			listener->m_readbacks.erase( listener->m_readbacks.begin() );
+			continue;
+		}
+
+		bool ready = immediate || pickingReadback.m_readback.IsReady( renderContext );
+		if( !ready )
 		{
 			break;
 		}
 
-		IRootPtr object = nullptr;
+		IRoot* object = nullptr;
 		uint32_t area = 0;
 
-		if( readback.m_debugPickData )
+		const void* pointer;
+		uint32_t pitch;
+		if( m_pickBuffer.MapForReading( Tr2TextureSubresource( 0 ), pointer, pitch, renderContext ) == S_OK )
+		//if( pickingReadback.m_readback.Map(pointer, pitch, renderContext ) == S_OK ) 
 		{
-			const float* pixels = static_cast<const float*>( readback.m_debugPickData );
-			uint32_t index = uint32_t( pixels[0] + 0.5f ) - 1;
-			bool isLine = pixels[1] != 0;
 
-			if( isLine )
-			{
-				if( index < readback.m_debugLineObjects.size() )
-				{
-					Tr2DebugObjectReference debugObject = readback.m_debugLineObjects[index];
-					object = debugObject.m_object;
-					area = debugObject.m_area;
-				}
-			}
-			else
-			{
-				if( index < readback.m_debugTriangleObjects.size() )
-				{
-					Tr2DebugObjectReference debugObject = readback.m_debugTriangleObjects[index];
-					object = debugObject.m_object;
-					area = debugObject.m_area;
-				}
-			}
-		}
-		if( object == nullptr && readback.m_mainPickData )
-		{
-			uint32_t objectID;
-			uint32_t areaID;
-			DecodeMainPickPixel( readback.m_mainPickData, objectID, areaID );
+			const uint32_t* data = static_cast<const uint32_t*>( pointer );
 
-			if( objectID < readback.m_collisionSet.size() )
+			uint64_t pickingObjectLowBits = data[0];
+			uint64_t pickingObjectHighBits = data[1];
+			uint32_t extraData1 = data[2];
+			uint32_t extraData2 = data[3];
+
+			object = (IRoot*)( pickingObjectLowBits | ( pickingObjectHighBits << 32 ) );
+
+			bool found = false;
+
+			std::vector<IRootPtr>& blueObjects = pickingReadback.m_blueObjects;
+
+			for( size_t i = 0; i < blueObjects.size(); i++ )
 			{
-				object = readback.m_collisionSet[objectID].first->GetID( areaID );
-				area = areaID;
-			}
-			else
-			{
-				if( immediate )
+				IRoot* ptr = blueObjects[i];
+
+				if( ptr == object )
 				{
-					auto picked = m_instancedMeshManager->GetPickedObject( objectID, areaID );
-					object = picked.first;
-					area = picked.second;
-				}
-				else
-				{
-					uint32_t instanceIndex = objectID - (uint32_t)readback.m_collisionSet.size();
-					if( instanceIndex < readback.m_instancedTraceback.size() )
-					{
-						std::pair<IRootPtr, uint32_t> traceback = readback.m_instancedTraceback[instanceIndex];
-						object = traceback.first;
-						uint32_t instanceID = 0; //Not supported for async queries yet, as it is very hard to reconstruct.
-						uint32_t ownerIndex = traceback.second;
-						area = instanceID | ( ownerIndex << 16 );
-					}
+					found = true;
+					break;
 				}
 			}
+
+			CCP_LOGERR( "READBACK RESULT: %08x, %08x, %08x, %08x", data[0], data[1], data[2], data[3] );
+
+			CCP_LOGERR( "Picking result: pointer: %p (found: %s), extra1: %d, extra2: %d", object, found ? "yes" : "NO!!!", extraData1, extraData2 );
+
+
+			if( !found )
+			{
+				object = nullptr;
+			}
+
+			area = extraData1;
 		}
 
-		readback.Unmap( renderContext );
-		listener->UpdateResult( readback.m_pickedX, readback.m_pickedY, object, area );
+		listener->UpdateResult( pickingReadback.m_pickedX, pickingReadback.m_pickedY, object, area );
 		listener->m_readbacks.erase( listener->m_readbacks.begin() );
 	}
 }

@@ -376,6 +376,8 @@ void EveChildInstancedMeshes::AddMesh(
 		return;
 	}
 
+	uint32_t pickingMeshIndex = (uint32_t) m_meshes.size();
+
 	Mesh& mesh = m_meshes.emplace_back();
 	mesh.geometryPath = geometryPath;
 	mesh.reflectionMode = reflectionMode;
@@ -398,6 +400,8 @@ void EveChildInstancedMeshes::AddMesh(
 		instanceData.worldTransform[1] = Vector4( mat._12, mat._22, mat._32, mat._42 );
 		instanceData.worldTransform[2] = Vector4( mat._13, mat._23, mat._33, mat._43 );
 		instanceData.sphereIndex = static_cast<uint32_t>( i );
+		instanceData.pickingMeshIndex = pickingMeshIndex;
+		instanceData.pickingInstanceIndex = static_cast<uint32_t>( i );
 		mesh.instances.push_back( instanceData );
 	}
 	mesh.instanceSpheres.resize( count );
@@ -453,6 +457,8 @@ void EveChildInstancedMeshes::RebuildCachedData( BlueAsyncRes* p )
 					elements.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 12, 1, 1 );
 					elements.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 13, 1, 1 );
 					elements.Add( Tr2VertexDefinition::UINT32_1, Tr2VertexDefinition::TEXCOORD, 14, 1, 1 );
+
+					elements.Add( Tr2VertexDefinition::UINT32_2, Tr2VertexDefinition::TEXCOORD, 15, 1, 1 );
 					mesh.combinedVertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( elements );
 				}
 			}

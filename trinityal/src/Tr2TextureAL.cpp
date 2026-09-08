@@ -8,8 +8,11 @@
 bool g_preloadTextureToDeviceOnPrepare = true;
 
 
+
 namespace
 {
+
+
 
 std::shared_ptr<TrinityALImpl::Tr2TextureAL>& NullTexture()
 {
@@ -18,6 +21,32 @@ std::shared_ptr<TrinityALImpl::Tr2TextureAL>& NullTexture()
 }
 
 }
+
+
+Tr2ReadbackAL::Tr2ReadbackAL()
+{
+}
+
+bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext )
+{
+	return m_readback->IsReady( renderContext );
+}
+
+bool Tr2ReadbackAL::IsValid( )
+{
+	return m_readback && m_readback->IsValid();
+}
+
+ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext )
+{
+	return m_readback->Map( pointer, rowPitch, renderContext );
+}
+
+Tr2ReadbackAL::Tr2ReadbackAL( std::shared_ptr<TrinityALImpl::Tr2ReadbackAL> readback )
+{
+	m_readback = readback;
+}
+
 
 
 Tr2TextureAL::Tr2TextureAL() :
@@ -152,14 +181,14 @@ bool Tr2TextureAL::operator==( const Tr2TextureAL& other ) const
 	return m_texture == other.m_texture;
 }
 
+Tr2ReadbackAL Tr2TextureAL::CreateReadback( const Tr2TextureSubresource& region, Tr2PrimaryRenderContextAL& renderContext )
+{
+	return Tr2ReadbackAL( m_texture->CreateReadback( region, renderContext ) );
+}
+
 ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 {
 	return m_texture->MapForReading( region, data, pitch, renderContext );
-}
-
-ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
-{
-	return m_texture->MapForReading( region, synchronize, data, pitch, renderContext );
 }
 
 void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& renderContext )

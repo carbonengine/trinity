@@ -543,6 +543,9 @@ protected:
 
 	// Picking
 
+	Tr2TextureAL m_pickBuffer;
+	Tr2TextureAL m_pickDepthBuffer;
+
 	ITriRenderBatchAccumulator* m_pickingBatches;
 
 	void SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2RenderContext& renderContext );

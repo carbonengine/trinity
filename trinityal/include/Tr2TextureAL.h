@@ -8,6 +8,7 @@
 
 namespace TrinityALImpl
 {
+class Tr2ReadbackAL;
 class Tr2TextureAL;
 class Tr2ResourceSetAL;
 class Tr2SwapChainAL;
@@ -20,6 +21,28 @@ struct Tr2SubresourceData;
 struct Tr2MsaaDesc;
 struct Tr2TextureSubresource;
 
+class Tr2ReadbackAL
+{
+
+public:
+
+	Tr2ReadbackAL();
+
+	bool IsReady( Tr2PrimaryRenderContextAL& renderContext );
+
+	bool IsValid();
+
+	ALResult Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext );
+
+private:
+
+	Tr2ReadbackAL( std::shared_ptr<TrinityALImpl::Tr2ReadbackAL> readback );
+
+	std::shared_ptr<TrinityALImpl::Tr2ReadbackAL> m_readback;
+
+
+	friend class Tr2TextureAL;
+};
 
 class Tr2TextureAL
 {
@@ -53,8 +76,9 @@ public:
 
 	bool operator==( const Tr2TextureAL& other ) const;
 
+	Tr2ReadbackAL CreateReadback( const Tr2TextureSubresource& region, Tr2PrimaryRenderContextAL& renderContext );
+
 	ALResult MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
-	ALResult MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
 	void UnmapForReading( Tr2RenderContextAL& renderContext );
 	ALResult MapForWriting( const Tr2TextureSubresource& region, void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
 	void UnmapForWriting( Tr2RenderContextAL& renderContext );

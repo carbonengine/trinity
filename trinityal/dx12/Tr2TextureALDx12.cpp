@@ -615,6 +615,75 @@ void FlushBarriersMaybe( const Tr2TextureAL& tex, Tr2RenderContextAL& renderCont
 }
 
 
+
+
+
+void Tr2ReadbackAL::Initialize( CComPtr<ID3D12Resource> readScratch, uint32_t rowPitch, uint64_t frameNumber )
+{
+	m_readScratch = readScratch;
+	m_rowPitch = rowPitch;
+	m_frameNumber = frameNumber;
+}
+
+Tr2ReadbackAL::~Tr2ReadbackAL()
+{
+	Destroy();
+}
+
+bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext ) const
+{
+	return renderContext.GetRenderedFrameNumber() >= m_frameNumber;
+}
+
+ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const
+{
+	//Map first, so that in case we need to wait for the GPU, we can map it while we wait
+	CR_RETURN_HR( m_readScratch->Map( 0, nullptr, (void**)&pointer ) );
+
+	if( !pointer )
+	{
+		return E_FAIL;
+	}
+
+	if( !IsReady( renderContext ) )
+	{
+		CR_RETURN_HR( renderContext.FlushAndSyncDx12( renderContext ) );
+	}
+
+	rowPitch = m_rowPitch;
+
+	return S_OK;
+}
+
+void Tr2ReadbackAL::Destroy()
+{
+	m_readScratch = nullptr;
+}
+
+void Tr2ReadbackAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+{
+}
+
+Tr2ALMemoryType Tr2ReadbackAL::GetMemoryClass() const
+{
+	return AL_MEMORY_MANAGED;
+}
+
+bool Tr2ReadbackAL::IsValid() const
+{
+	return m_readScratch != nullptr;
+}
+
+
+
+
+
+
+
+
+
+
+
 Tr2TextureAL::Tr2TextureAL() :
 	m_owner( nullptr ),
 	m_currentTextureIndex( 0 ),
@@ -1482,7 +1551,61 @@ void Tr2TextureAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
 	m_mappedScratch = m_writeScratches.end();
 }
 
-ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+
+std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSubresource& region, Tr2PrimaryRenderContextAL& renderContext )
+{
+
+	if( !IsValid() )
+	{
+		return nullptr;
+	}
+	if( !renderContext.IsValid() )
+	{
+		return nullptr;
+	}
+	if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
+	{
+		return nullptr;
+	}
+
+	
+
+	auto texture = GetResourceDx12();
+
+	CComPtr<ID3D12Resource> scratch;
+	auto totalSize = GetRequiredIntermediateSize( texture, 0, 1 );
+	auto scratchHeap = HeapDesc( D3D12_HEAP_TYPE_READBACK );
+	auto scratchDesc = BufferDesc( totalSize );
+	CR_RETURN_VAL( m_owner->m_device->CreateCommittedResource(
+		&scratchHeap,
+		D3D12_HEAP_FLAG_NONE,
+		&scratchDesc,
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		nullptr,
+		IID_PPV_ARGS( &scratch ) ), nullptr );
+
+	renderContext.ResourceBarrierDx12( Transition( texture, m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE ) );
+	renderContext.FlushBarriersDx12( texture );
+
+	auto subresource = region.m_startFace * m_desc.GetTrueMipCount() + region.m_startMipLevel;
+	D3D12_RESOURCE_DESC desc = texture->GetDesc();
+	D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
+	m_owner->m_device->GetCopyableFootprints( &desc, subresource, 1, 0, &layout, nullptr, nullptr, nullptr );
+	layout.Offset = 0;
+	D3D12_TEXTURE_COPY_LOCATION Src = { texture, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, subresource };
+	D3D12_TEXTURE_COPY_LOCATION Dst = { scratch, D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, layout };
+
+	renderContext.m_commandList->CopyTextureRegion( &Dst, 0, 0, 0, &Src, nullptr );
+
+	renderContext.ResourceBarrierDx12( Transition( texture, D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
+	FlushBarriersMaybe( *this, renderContext );
+
+	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
+	readback->Initialize( scratch, layout.Footprint.RowPitch, renderContext.GetRecordingFrameNumber() );
+	return readback;
+}
+
+ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 {
 	if( !IsValid() )
 	{
@@ -1530,15 +1653,12 @@ ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool 
 	renderContext.ResourceBarrierDx12( Transition( texture, D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
 	FlushBarriersMaybe( *this, renderContext );
 
-	if( synchronize )
+	auto hr = renderContext.FlushAndSyncDx12();
+	if( FAILED( hr ) )
 	{
-		auto hr = renderContext.FlushAndSyncDx12();
-		if( FAILED( hr ) )
-		{
-			RELEASE_LATER( m_owner, scratch );
-			scratch = nullptr;
-			return hr;
-		}
+		RELEASE_LATER( m_owner, scratch );
+		scratch = nullptr;
+		return hr;
 	}
 
 	CR_RETURN_HR( scratch->Map( 0, nullptr, (void**)&data ) );

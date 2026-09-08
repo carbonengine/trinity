@@ -9,6 +9,51 @@
 
 namespace TrinityALImpl
 {
+
+void Tr2ReadbackAL::Initialize( size_t size, uint32_t rowPitch )
+{
+	m_data.resize( "Dummy redback buffer", size );
+	m_rowPitch = rowPitch;
+}
+
+Tr2ReadbackAL::~Tr2ReadbackAL()
+{
+	Destroy();
+}
+
+bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext ) const
+{
+	return true;
+}
+
+ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const
+{
+	pointer = m_data.get();
+	rowPitch = m_rowPitch;
+
+	return S_OK;
+}
+
+void Tr2ReadbackAL::Destroy()
+{
+	m_data.clear();
+}
+
+void Tr2ReadbackAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+{
+}
+
+Tr2ALMemoryType Tr2ReadbackAL::GetMemoryClass() const
+{
+	return AL_MEMORY_MANAGED;
+}
+
+bool Tr2ReadbackAL::IsValid() const
+{
+	return !m_data.empty();
+}
+
+
 Tr2TextureAL::Tr2TextureAL() :
 	m_gpuUsage( Tr2GpuUsage::NONE ),
 	m_cpuUsage( Tr2CpuUsage::NONE )
@@ -137,7 +182,37 @@ Tr2CpuUsage::Type Tr2TextureAL::GetCpuUsage() const
 	return m_cpuUsage;
 }
 
-ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
+
+std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSubresource& region, Tr2PrimaryRenderContextAL& renderContext )
+{
+	if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
+	{
+		return nullptr;
+	}
+
+	if( !IsValid() || !renderContext.IsValid() )
+	{
+		return nullptr;
+	}
+	if( !region.IsValidForBitmap( m_desc ) )
+	{
+		return nullptr;
+	}
+	if( !region.IsSingleSubresource() )
+	{
+		return nullptr;
+	}
+
+	auto mipPitch = m_desc.GetMipPitch( region.m_startMipLevel );
+	auto size = mipPitch * m_desc.GetMipHeight( region.m_startMipLevel );
+
+	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
+	readback->Initialize( size, mipPitch ); //mipPitch here is probably wrong.
+	return readback;
+}
+
+
+ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 {
 	data = nullptr;
 	if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )

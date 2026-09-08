@@ -754,39 +754,37 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, bool synchroni
 		return;
 	}
 
-	Tr2PickBuffer& pickBuffer = readback.m_debugPickBuffer;
-	pickBuffer.SetClearColor( 0 );
-	pickBuffer.PrepareResources();
-
-	if( !pickBuffer.BeginRendering( 0.f, renderContext ) )
-	{
-		return;
-	}
-
 	auto handle = GetVertexDeclarationHandle( renderContext );
 
 	shader->ApplyAllStateForPass( 0, 0, renderContext );
-	m_pickingEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
+
 	renderContext.m_esm.ApplyVertexDeclaration( handle );
+
+	std::vector<IRootPtr>& blueObjects = readback.m_blueObjects;
 
 	if( !m_objectLineOffsets.empty() )
 	{
-
-		std::vector<Tr2DebugObjectReference>& lineObjects = readback.m_debugLineObjects;
-		lineObjects.reserve( m_objectLineOffsets.size() );
-
 		renderContext.SetTopology( Tr2RenderContextEnum::TOP_LINES );
 
 		for( size_t i = 0; i < m_objectLineOffsets.size(); ++i )
 		{
 			auto object = m_objectLineOffsets[i].first;
 
-			lineObjects.push_back( object );
-
 			if( !object )
 			{
 				continue;
 			}
+
+			IRoot* root = object.m_object;
+			blueObjects.push_back( root );
+
+			uint64_t pointer = (uint64_t) root->GetRootObject();
+
+			m_pickingEffect->SetParameter( BlueSharedString( "PickingPointerLowBits" ), (uint32_t)( ( pointer >> 0 ) & 0xFFFFFFFFUL ) );
+			m_pickingEffect->SetParameter( BlueSharedString( "PickingPointerHighBits" ), (uint32_t)( ( pointer >> 32 ) & 0xFFFFFFFFUL ) );
+			m_pickingEffect->SetParameter( BlueSharedString( "PickingArea" ), object.m_area );
+			m_pickingEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
+
 			auto begin = m_objectLineOffsets[i].second;
 			auto end = i + 1 < m_objectLineOffsets.size() ? m_objectLineOffsets[i + 1].second : m_lines.size();
 			renderContext.DrawPrimitiveUP( uint32_t( ( end - begin ) / 2 ), &m_lines[begin], uint32_t( sizeof( Vertex ) ) );
@@ -795,34 +793,32 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, bool synchroni
 
 	if( !m_objectTriangleOffsets.empty() )
 	{
-
-		std::vector<Tr2DebugObjectReference>& triangleObjects = readback.m_debugTriangleObjects;
-		triangleObjects.reserve( m_objectTriangleOffsets.size() );
-
 		renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
 
 		for( size_t i = 0; i < m_objectTriangleOffsets.size(); ++i )
 		{
 			auto object = m_objectTriangleOffsets[i].first;
 
-			triangleObjects.push_back( object );
-
 			if( !object )
 			{
 				continue;
 			}
+
+			IRoot* root = object.m_object;
+			blueObjects.push_back( root );
+
+			uint64_t pointer = (uint64_t)root->GetRootObject();
+
+			m_pickingEffect->SetParameter( BlueSharedString( "PickingPointerLowBits" ), (uint32_t)( ( pointer >> 0 ) & 0xFFFFFFFFUL ) );
+			m_pickingEffect->SetParameter( BlueSharedString( "PickingPointerHighBits" ), (uint32_t)( ( pointer >> 32 ) & 0xFFFFFFFFUL ) );
+			m_pickingEffect->SetParameter( BlueSharedString( "PickingArea" ), object.m_area );
+			m_pickingEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
+
 			auto begin = m_objectTriangleOffsets[i].second;
 			auto end = i + 1 < m_objectTriangleOffsets.size() ? m_objectTriangleOffsets[i + 1].second : m_triangles.size();
 			renderContext.DrawPrimitiveUP( uint32_t( ( end - begin ) / 3 ), &m_triangles[begin], uint32_t( sizeof( Vertex ) ) );
 		}
 	}
-
-	if( !pickBuffer.EndRendering( renderContext ) )
-	{
-		return;
-	}
-
-	readback.MapDebug( synchronize, renderContext );
 }
 
 void Tr2DebugRenderer::BeginRender()
