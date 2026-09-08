@@ -660,6 +660,22 @@ Matrix EveChildTurret::GetFiringBoneWorldTransform( unsigned int muzzle ) const
 	return GetTurretBoneTransform( boneID );
 }
 
+void EveChildTurret::SetControllerVariable( const char* name, float value )
+{
+	if( m_firingEffect )
+	{
+		m_firingEffect->SetControllerVariable( name, value );
+	}
+}
+
+void EveChildTurret::StartControllers()
+{
+	if( m_firingEffect )
+	{
+		m_firingEffect->StartControllers();
+	}
+}
+
 void EveChildTurret::InitializeFiringEffect()
 {
 	m_firingEffectMuzzlePosSet = false;

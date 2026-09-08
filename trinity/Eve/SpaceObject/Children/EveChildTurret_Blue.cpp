@@ -93,5 +93,17 @@ const Be::ClassInfo* EveChildTurret::ExposeToBlue()
 			"\n:param idx: index of the firing bone in the current model."
 			"\n:returns: The world transform matrix." )
 
+		MAP_METHOD_AND_WRAP(
+			"SetControllerVariable",
+			SetControllerVariable,
+			"Set a controller variable, forwarded to the firing effect's controllers\n"
+			":param name: variable name\n"
+			":param value: new variable value\n" )
+
+		MAP_METHOD_AND_WRAP(
+			"StartControllers",
+			StartControllers,
+			"Start the firing effect's controllers" )
+
 	EXPOSURE_CHAINTO( EveChildMesh )
 }
