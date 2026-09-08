@@ -8,6 +8,7 @@ const Be::ClassInfo* EveChildBehaviorSystem::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveChildBehaviorSystem, "" )
 		MAP_INTERFACE( EveChildBehaviorSystem )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( INotify )
@@ -30,5 +31,8 @@ const Be::ClassInfo* EveChildBehaviorSystem::ExposeToBlue()
 			GetVertexElementAddedThroughCode,
 			"for validation and objects requiring vertex elements added to the shader through code\n:jessica-hidden: True" )
 
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

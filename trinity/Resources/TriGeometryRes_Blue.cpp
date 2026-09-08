@@ -21,6 +21,19 @@ BLUE_REGISTER_RESOURCE_EXTENSION( L"gr2", CreateStaticGeometryResource );
 BLUE_REGISTER_RESOURCE_EXTENSION( L"cmf", CreateStaticGeometryResource );
 
 
+BLUE_DEFINE( Tr2RaycastGeometryRes );
+
+const Be::ClassInfo* Tr2RaycastGeometryRes::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( Tr2RaycastGeometryRes, "Session-scoped CPU raycast data (BVH) for a geometry resource." )
+
+		MAP_INTERFACE( Tr2RaycastGeometryRes )
+		MAP_INTERFACE( IBlueResource )
+
+	EXPOSURE_CHAINTO( BlueAsyncRes )
+}
+
+
 const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( TriGeometryRes, "" )
@@ -101,16 +114,48 @@ const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
 			"Forces a reload from disk" )
 
 		MAP_METHOD_AND_WRAP(
+			"PrepareRayCaster",
+			PrepareRayCaster,
+			"To speed up raycasts, you can call this to load the asset asynchronously, and then poll IsRayCasterReady and HasRayCasterPreparationFailed, before attempting to call GetIntersection. Must be matched with exactly one call to ResetRayCaster!" )
+		MAP_METHOD_AND_WRAP(
+			"ResetRayCaster",
+			ResetRayCaster,
+			"Call this after being done with GetIntersection! It will unload the asset. Must be matched with exactly one call to PrepareRayCaster!" )
+		MAP_METHOD_AND_WRAP(
+			"IsRayCasterReady",
+			IsRayCasterReady,
+			"Call this after PrepareRayCaster to see if the asset has been loaded and is ready yet for raycasting." )
+		MAP_METHOD_AND_WRAP(
+			"HasRayCasterPreparationFailed",
+			HasRayCasterPreparationFailed,
+			"Call this after PrepareRayCaster to see if the loading asset has failed." )
+
+		MAP_METHOD_AND_WRAP(
 			"GetIntersectionPointNormalBone",
 			GetIntersectionPointNormalBoneFromScript,
-			"( pos, dir ) ->( near, far )\nGet the near intersection points and the normal between a ray and the geometry.\n"
+			"( pos, dir ) ->( near )\nGet the near intersection (position, normal, bone index) between a ray and the geometry.\n"
 			":param pos: ray origin\n"
 			":param direction: ray direction\n" )
 
 		MAP_METHOD_AND_WRAP(
 			"GetAreaIntersectionPointNormalBone",
 			GetAreaIntersectionPointNormalBoneFromScript,
-			"( pos, dir ) ->( near, far )\nGet the near intersection points and the normal between a ray and the geometry.\n"
+			"( pos, dir, areaIx ) ->( near )\nGet the near intersection (position, normal, bone index) between a ray and the geometry.\n"
+			":param pos: ray origin\n"
+			":param direction: ray direction\n"
+			":param areaIx: the mesh area index\n" )
+
+		MAP_METHOD_AND_WRAP(
+			"GetIntersectionPointNormalBoneColor",
+			GetIntersectionPointNormalBoneColorFromScript,
+			"( pos, dir ) ->( near )\nGet the near intersection (position, normal, bone index, color) between a ray and the geometry.\n"
+			":param pos: ray origin\n"
+			":param direction: ray direction\n" )
+
+		MAP_METHOD_AND_WRAP(
+			"GetAreaIntersectionPointNormalBoneColor",
+			GetAreaIntersectionPointNormalBoneColorFromScript,
+			"( pos, dir, areaIx ) ->( near )\nGet the near intersection (position, normal, bone index, color) between a ray and the geometry.\n"
 			":param pos: ray origin\n"
 			":param direction: ray direction\n"
 			":param areaIx: the mesh area index\n" )

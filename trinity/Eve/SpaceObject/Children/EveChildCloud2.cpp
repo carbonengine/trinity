@@ -205,24 +205,6 @@ bool EveChildCloud2::OnModified( Be::Var* value )
 	return true;
 }
 
-const char* EveChildCloud2::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildCloud2::SetName( const char* name )
-{
-	m_name = name;
-}
-
-void EveChildCloud2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
-{
-}
-
-void EveChildCloud2::GetRenderables( std::vector<ITr2Renderable*>& )
-{
-}
-
 bool EveChildCloud2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery ) const
 {
 	sphere = Vector4( m_boundingSphere.center, m_boundingSphere.radius );

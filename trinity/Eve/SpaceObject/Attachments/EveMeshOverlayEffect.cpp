@@ -5,6 +5,8 @@
 #include "Shader/Tr2Effect.h"
 #include "Curves/TriCurveSet.h"
 #include "Controllers/ITr2Controller.h"
+#include "Tr2MeshBase.h"
+#include "Resources/TriGeometryRes.h"
 
 
 // --------------------------------------------------------------------------------------
@@ -285,4 +287,120 @@ void EveMeshOverlayEffect::Update( Be::Time realTime, Be::Time simTime )
 	{
 		( *it )->Update( 0.5f );
 	}
+}
+
+void CollectOverlayAreaBlocks( Tr2MeshBase* mesh, std::vector<TriRenderBatchAreaBlock> ( &outAreaBlocks )[EveMeshOverlayEffect::TYPE_COUNT] )
+{
+	for( int i = 0; i < EveMeshOverlayEffect::TYPE_COUNT; ++i )
+	{
+		outAreaBlocks[i].clear();
+	}
+
+	if( !mesh )
+	{
+		return;
+	}
+
+	mesh->CollectAreaBlocks( outAreaBlocks[EveMeshOverlayEffect::TYPE_ALL], TRIBATCHTYPE_OPAQUE );
+	mesh->CollectAreaBlocks( outAreaBlocks[EveMeshOverlayEffect::TYPE_ALL], TRIBATCHTYPE_TRANSPARENT );
+	mesh->CollectAreaBlocks( outAreaBlocks[EveMeshOverlayEffect::TYPE_ALL], TRIBATCHTYPE_DECAL );
+	mesh->CollectAreaBlocks( outAreaBlocks[EveMeshOverlayEffect::TYPE_OPAQUEONLY], TRIBATCHTYPE_OPAQUE );
+
+	// this list is too long, will hold one element for each mesharea at least... Optimize!
+	for( int i = 0; i < EveMeshOverlayEffect::TYPE_COUNT; ++i )
+	{
+		TriRenderBatchAreaBlock::Optimize( outAreaBlocks[i] );
+	}
+}
+
+template <typename OverlayEffectContainer>
+static void EmitOverlayBatchesImpl(
+	ITriRenderBatchAccumulator* batches,
+	const Tr2PerObjectData* perObjectData,
+	TriBatchType batchType,
+	const OverlayEffectContainer& overlayEffects,
+	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
+	const TriGeometryResLodData& lod )
+{
+	for( const auto& overlay : overlayEffects )
+	{
+		bool success = false;
+		const PTr2EffectVector& effects = overlay->GetEffects( batchType, success );
+		if( !success )
+		{
+			continue;
+		}
+
+		EveMeshOverlayEffect::OverlayType overlayType = overlay->GetType( batchType );
+		for( const auto& effect : effects )
+		{
+			// add all mesh area blocks
+			for( auto& areaBlock : areaBlocks[overlayType] )
+			{
+				if( auto primCount = GetPrimitiveCount( lod, areaBlock.m_startIndex, areaBlock.m_count ) )
+				{
+					Tr2RenderBatch batch;
+					batch.SetMaterial( effect );
+					batch.SetGeometry( lod.m_mesh->m_vertexDeclarationHandle, lod.m_vertexAllocation, lod.m_indexAllocation );
+					batch.SetPerObjectData( perObjectData );
+					batch.SetDrawIndexedInstanced(
+						primCount * 3,
+						1,
+						lod.m_indexAllocation.GetStartIndex() + lod.m_areas[areaBlock.m_startIndex].m_firstIndex,
+						lod.m_vertexAllocation.GetOffset() / lod.m_vertexAllocation.GetStride(),
+						0 );
+					batches->Commit( batch );
+				}
+			}
+		}
+	}
+}
+
+void EmitOverlayBatches(
+	ITriRenderBatchAccumulator* batches,
+	const Tr2PerObjectData* perObjectData,
+	TriBatchType batchType,
+	const PEveMeshOverlayEffectVector& overlayEffects,
+	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
+	const TriGeometryResLodData& lod )
+{
+	EmitOverlayBatchesImpl( batches, perObjectData, batchType, overlayEffects, areaBlocks, lod );
+}
+
+void EmitDamageOverlayBatches(
+	ITriRenderBatchAccumulator* batches,
+	const Tr2PerObjectData* perObjectData,
+	Tr2Effect* effect,
+	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
+	const TriGeometryResLodData& lod )
+{
+	for( auto& areaBlock : areaBlocks[EveMeshOverlayEffect::TYPE_ALL] )
+	{
+		if( auto primCount = GetPrimitiveCount( lod, areaBlock.m_startIndex, areaBlock.m_count ) )
+		{
+			Tr2RenderBatch batch;
+			batch.SetMaterial( effect );
+			batch.SetPriority( 0xFFFFFFFF );
+			batch.SetGeometry( lod.m_mesh->m_vertexDeclarationHandle, lod.m_vertexAllocation, lod.m_indexAllocation );
+			batch.SetPerObjectData( perObjectData );
+			batch.SetDrawIndexedInstanced(
+				primCount * 3,
+				1,
+				lod.m_indexAllocation.GetStartIndex() + lod.m_areas[areaBlock.m_startIndex].m_firstIndex,
+				lod.m_vertexAllocation.GetOffset() / lod.m_vertexAllocation.GetStride(),
+				0 );
+			batches->Commit( batch );
+		}
+	}
+}
+
+void EmitOverlayBatches(
+	ITriRenderBatchAccumulator* batches,
+	const Tr2PerObjectData* perObjectData,
+	TriBatchType batchType,
+	const std::vector<EveMeshOverlayEffectPtr>& overlayEffects,
+	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
+	const TriGeometryResLodData& lod )
+{
+	EmitOverlayBatchesImpl( batches, perObjectData, batchType, overlayEffects, areaBlocks, lod );
 }

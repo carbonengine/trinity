@@ -10,6 +10,7 @@ const Be::ClassInfo* EveChildAudio::ExposeToBlue()
 	EXPOSURE_BEGIN( EveChildAudio, "Audio emitter space object child" )
 		MAP_INTERFACE( EveChildAudio )
 		MAP_INTERFACE( IEveSpaceObjectChild )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
 
@@ -20,5 +21,8 @@ const Be::ClassInfo* EveChildAudio::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "SetEmitterName", SetEmitterName, "Sets emitter name" )
 		MAP_METHOD_AND_WRAP( "__init__", py__init__, "Initialize the audio emitter after contruction/deserialization" )
 
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

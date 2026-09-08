@@ -5,7 +5,7 @@
 #define EveChildRef_H
 
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "IEveEffectChildrenOwner.h"
 #include "EveChildTransform.h"
 #include "Tr2DebugRenderer.h"
@@ -16,7 +16,7 @@
 
 
 BLUE_CLASS( EveChildRef ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public EveChildTransform,
 	public ITr2CurveSetOwner,
 	public IInitialize,
@@ -53,15 +53,10 @@ public:
 	void UnRegisterComponents() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	const char* GetName() const;
-	void SetName( const char* name );
-
-	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
-	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
+	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
+	void AddToEffectChildrenList( EveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
 	void SetProceduralContainerVariable( const char* name, float value ) override;
 
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
@@ -78,6 +73,9 @@ public:
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
+
+	void SetOwner( IEveSpaceObject2 * owner ) override;
+	void SetPartTag( PartTag tag ) override;
 
 	void PlayCurveSet( const std::string& name, const std::string& rangeName );
 	void StopCurveSet( const std::string& name );
@@ -104,8 +102,7 @@ public:
 protected:
 	bool LoadChild();
 
-	IEveSpaceObjectChildPtr m_child;
-	BlueSharedString m_name;
+	EveSpaceObjectChildPtr m_child;
 	std::string m_resPath;
 
 	bool m_loadChildAutomatically;

@@ -40,16 +40,10 @@ struct Vector3d;
 bool TriVectorIsIdentical( const Vector3* v1, const Vector3* v2, float epsilon = 1e-5f );
 
 //Rotate a vector by the quaternion
-Vector3* TriVectorRotateQuaternion(
-	Vector3* out,
-	const Vector3* v,
-	const Quaternion* q );
+Vector3* TriVectorRotateQuaternion( Vector3* out, const Vector3* v, const Quaternion* q );
 
 //Rotate a vector by the rotation part of a matrix (ignores translation)
-Vector3* TriVectorRotateMatrix(
-	Vector3* out,
-	const Vector3* v,
-	const Matrix* m );
+Vector3* TriVectorRotateMatrix( Vector3* out, const Vector3* v, const Matrix* m );
 
 //The next two functions are the most common application
 //of the previous two functions and can be optimized greatly
@@ -57,59 +51,41 @@ Vector3* TriVectorRotateMatrix(
 
 //Rotate a unit vector aligned to one of the axes
 //(defined by xyz) by the quaternion
-Vector3* TriVectorRotatedBasisQuaternion(
-	Vector3* out,
-	const TRITRANSFORMAXIS xyz,
-	const Quaternion* q );
+Vector3* TriVectorRotatedBasisQuaternion( Vector3* out, const TRITRANSFORMAXIS xyz, const Quaternion* q );
 
 //Rotate a unit vector aligned to one of the axes
 //(defined by xyz) by the matrix
-Vector3* TriVectorRotatedBasisMatrix(
-	Vector3* out,
-	const TRITRANSFORMAXIS xyz,
-	const Matrix* m );
+Vector3* TriVectorRotatedBasisMatrix( Vector3* out, const TRITRANSFORMAXIS xyz, const Matrix* m );
 
 
 //
-Vector3* TriVectorSpherical(
-	Vector3* v,
-	float phi,
-	float theta,
-	float rad );
+Vector3* TriVectorSpherical( Vector3* v, float phi, float theta, float rad );
 
-Vector3* TriVectorExponentialDecayInteger(
-	Vector3* pos,
-	const Vector3* pos0,
-	const Vector3* vel0,
-	const Vector3* acc0,
-	const float mass,
-	const float drag,
-	float time );
+Vector3* TriVectorExponentialDecayInteger( Vector3* pos,
+										   const Vector3* pos0,
+										   const Vector3* vel0,
+										   const Vector3* acc0,
+										   const float mass,
+										   const float drag,
+										   float time );
 
-Vector3* TriVectorExponentialDecay(
-	Vector3* vel,
-	const Vector3* vel0,
-	const Vector3* acc0,
-	const float mass,
-	const float drag,
-	float time );
+Vector3* TriVectorExponentialDecay( Vector3* vel,
+									const Vector3* vel0,
+									const Vector3* acc0,
+									const float mass,
+									const float drag,
+									float time );
 
-Vector3* TriVectorExponentialDecayInteger(
-	Vector3* pos,
-	const Vector3* x,
-	const Vector3* v,
-	const Vector3* a,
-	const float m,
-	const float k,
-	const float t,
-	const float pow );
+Vector3* TriVectorExponentialDecayInteger( Vector3* pos,
+										   const Vector3* x,
+										   const Vector3* v,
+										   const Vector3* a,
+										   const float m,
+										   const float k,
+										   const float t,
+										   const float pow );
 
-Vector3* TriVectorExponentialDecay(
-	Vector3* vel,
-	const Vector3* v,
-	const Vector3* a,
-	const float k,
-	const float pow );
+Vector3* TriVectorExponentialDecay( Vector3* vel, const Vector3* v, const Vector3* a, const float k, const float pow );
 
 // Projects a point onto a plane
 Vector3 TriVectorProjectOnPlane( const Vector3& point, const Vector3& p0, const Vector3& n );
@@ -140,10 +116,7 @@ float TriFloatRandomGauss( float mu, float deviation );
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Turns a normalized vector into a color. Used to change directions into color.
-Color* TriColorFromVector(
-	Color* c,
-	const Vector3* v,
-	float height = 0.0f );
+Color* TriColorFromVector( Color* c, const Vector3* v, float height = 0.0f );
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -159,46 +132,27 @@ Color* TriColorFromVector(
 // Ergo, the sqrt is half as much rotation around the *same* axis as the quaternion.
 // This is very useful, since a quaternion rotates by theta when w = cos(theta/2)
 // See TriQuaternionRotationArc for an example of use.
-Quaternion* TriQuaternionSqrt(
-	Quaternion* out,
-	const Quaternion* q );
+Quaternion* TriQuaternionSqrt( Quaternion* out, const Quaternion* q );
 
 // Builds a quaternion that is the rotation between two vectors about the origin
-Quaternion* TriQuaternionRotationArc(
-	Quaternion* out,
-	const Vector3* v1,
-	const Vector3* v2 );
+Quaternion* TriQuaternionRotationArc( Quaternion* out, const Vector3* v1, const Vector3* v2 );
 
-Quaternion* TriQuaternionArcFromForward(
-	Quaternion* out,
-	const Vector3* v );
+Quaternion* TriQuaternionArcFromForward( Quaternion* out, const Vector3* v );
 
 // does something nice, Eggert, please specify....
-Quaternion* TriQuaternionAxisHeading(
-	Quaternion* out,
-	const Quaternion* q,
-	const Vector3* v );
+Quaternion* TriQuaternionAxisHeading( Quaternion* out, const Quaternion* q, const Vector3* v );
 
 //Takes in a vector, and returns a pure unit quaternion with the same rotation axis as the vectors heading
-Quaternion* TriQuaternionDirVector(
-	Quaternion* out,
-	const Vector3* v );
+Quaternion* TriQuaternionDirVector( Quaternion* out, const Vector3* v );
 
 //out = in*length
-Quaternion* TriQuaternionScale(
-	Quaternion* out,
-	const Quaternion* in,
-	float length );
+Quaternion* TriQuaternionScale( Quaternion* out, const Quaternion* in, float length );
 
 
 //Pre: q is a unit quaternion
 //Post: yaw in [0;2*pi[ , pitch in [-pi/2;pi/2]; roll in  [-pi; pi]
 // if you yaw and then pitch and then roll you get the same result as using the quaternion
-void TriQuaternionToYawPitchRoll(
-	float* yaw,
-	float* pitch,
-	float* roll,
-	const Quaternion* q );
+void TriQuaternionToYawPitchRoll( float* yaw, float* pitch, float* roll, const Quaternion* q );
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Matrix extensions
@@ -233,14 +187,9 @@ Matrix* TriMatrixRemoveScaling( Matrix* out, const Matrix* in );
 Matrix* TriMatrixRemoveTranslation( Matrix* out, const Matrix* in );
 Matrix* TriMatrixOverwriteTranslation( Matrix* out, const Matrix* in, const Vector3* t );
 
-Matrix* TriMatrixRotationArc(
-	Matrix* out,
-	const Vector3* v1,
-	const Vector3* v2 );
+Matrix* TriMatrixRotationArc( Matrix* out, const Vector3* v1, const Vector3* v2 );
 
-Matrix* TriMatrixArcFromForward(
-	Matrix* out,
-	const Vector3* v );
+Matrix* TriMatrixArcFromForward( Matrix* out, const Vector3* v );
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -271,8 +220,7 @@ float TriLinearize( float min, float max, float v );
 
 //pre: f in [0.0 ; 1.0]
 //post: returnvalue in [0.0 ; 1.0]
-float SinSmooth(
-	float f );
+float SinSmooth( float f );
 
 
 float CubicInterpolate( float f0, float f1, float f2, float f3, float s );
@@ -334,7 +282,8 @@ public:
 	 * @param frequencyScale The factor by which to scale the frequency of each octave. Typically greater than 1 (e.g., 2) to ensure that higher octaves have higher frequency.
 	 * @return The fractal sum of Perlin noise octaves at the given coordinate.
 	 */
-	[[nodiscard]] double FractalSum( double x, size_t octaves, double amplitudeScale = 0.5, double frequencyScale = 2 ) const;
+	[[nodiscard]] double
+		FractalSum( double x, size_t octaves, double amplitudeScale = 0.5, double frequencyScale = 2 ) const;
 
 private:
 	static constexpr int32_t TABLE_SIZE = 256;
@@ -350,7 +299,12 @@ double PerlinNoise1D( double x, double invAmplitude, double frequency, int octav
 //
 // Coordinate system conversion methods
 //
-bool ConvertProjectionCoordToWorldPickRay( float x, float y, const Matrix* projMat, const Matrix* viewMat, Vector3* rayStart, Vector3* rayDir );
+bool ConvertProjectionCoordToWorldPickRay( float x,
+										   float y,
+										   const Matrix* projMat,
+										   const Matrix* viewMat,
+										   Vector3* rayStart,
+										   Vector3* rayDir );
 
 
 #endif

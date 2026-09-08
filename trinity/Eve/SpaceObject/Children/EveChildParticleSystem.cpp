@@ -77,16 +77,6 @@ bool EveChildParticleSystem::OnModified( Be::Var* value )
 	return true;
 }
 
-const char* EveChildParticleSystem::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildParticleSystem::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
 // --------------------------------------------------------------------------------
 // Description:
 //   Setup function to set data from outside, in this case just pass it to
@@ -196,13 +186,6 @@ Tr2PerObjectData* EveChildParticleSystem::GetPerObjectData( ITriRenderBatchAccum
 
 void EveChildParticleSystem::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
-	if( m_mesh )
-	{
-		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
-		{
-			m_mesh->ReverseIndexBuffers();
-		}
-	}
 }
 
 void EveChildParticleSystem::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )

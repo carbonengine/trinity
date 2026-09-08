@@ -174,7 +174,7 @@ void EveChildExplosion::SetGlobalExplosionOffset( const Vector3& offset )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements IEveSpaceObjectChild interface. If the effect is playing this function
+//   Implements EveSpaceObjectChild interface. If the effect is playing this function
 //   spawns explosions.
 // --------------------------------------------------------------------------------------
 void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
@@ -224,7 +224,7 @@ void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext,
 			{
 				if( m_globalExplosionInstances.empty() )
 				{
-					IEveSpaceObjectChildPtr instance;
+					EveSpaceObjectChildPtr instance;
 					if( BeClasses->CopyTo( m_globalExplosion, (IRoot**)&instance.p ) )
 					{
 						Quaternion rotation = Quaternion( 0.0, 0.0, 0.0, 1.0 );
@@ -261,7 +261,7 @@ void EveChildExplosion::UpdateSyncronous( const EveUpdateContext& updateContext,
 					for( auto it = m_globalExplosions.begin(); it != m_globalExplosions.end(); ++it )
 					{
 						auto globalExplosion = ( *it );
-						IEveSpaceObjectChildPtr instance;
+						EveSpaceObjectChildPtr instance;
 						if( BeClasses->CopyTo( globalExplosion, (IRoot**)&instance.p ) )
 						{
 							m_globalExplosionContainer->m_objects.Append( instance );
@@ -460,7 +460,7 @@ void EveChildExplosion::SpawnLocalExplosion( const Matrix& transform )
 	{
 		return;
 	}
-	IEveSpaceObjectChildPtr instance;
+	EveSpaceObjectChildPtr instance;
 
 	Transform t;
 	Vector3 scale;

@@ -11,6 +11,7 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 	EXPOSURE_BEGIN( EveChildFogVolume, "" )
 		MAP_INTERFACE( ITr2FroxelFogSettings )
 		MAP_INTERFACE( EveEntity )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( IInitialize )
 
@@ -54,6 +55,8 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 		MAP_ATTRIBUTE( "boundingSphereCenter", m_boundingSphere.center, "", Be::READ )
 		MAP_ATTRIBUTE( "boundingSphereRadius", m_boundingSphere.radius, "", Be::READ )
 		MAP_ATTRIBUTE( "volumes", m_volumes, "", Be::READ | Be::PERSIST )
-
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

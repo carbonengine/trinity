@@ -3,7 +3,7 @@
 #ifndef EVE_CHILD_AUDIO_H
 #define EVE_CHILD_AUDIO_H
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "EveChildTransform.h"
 
 #ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
@@ -27,7 +27,7 @@ BLUE_DECLARE( EveChildAudio );
  * @brief Audio emitter that can be added as a child to EveChildContainer.
  */
 BLUE_CLASS( EveChildAudio ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public EveChildTransform,
 	public IInitialize,
 	public INotify,
@@ -73,24 +73,15 @@ public:
          */
 	void SetEmitterName( const std::string& name );
 
-	// Implementing the IEveSpaceObjectChild interface
-	const char* GetName() const;
-	void SetName( const char* name );
-	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
-	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	// Implementing the EveSpaceObjectChild interface
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void GetLocalToWorldTransform( Matrix & transform ) const;
-	void ChangeLOD( Tr2Lod lod );
-	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 
 	// ITr2DebugRenderable
 	virtual void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
 	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
 
 private:
-	std::string m_name; ///< The name identifier for this audio child.
 	Matrix m_worldTransform; ///< Cached world transformation matrix.
 	bool m_mute; ///< Whether audio playback is muted.
 	ITr2AudEmitterPtr m_audioEmitter; ///< The audio emitter instance.

@@ -265,68 +265,6 @@ void BoundingBoxTransform( Vector3& min, Vector3& max, const Matrix& tf )
 	}
 }
 
-void BoundingBoxProject( Vector3& min, Vector3& max, const Matrix& view, const Matrix& proj, const TriViewport& vp )
-{
-	Vector3 corners[8];
-
-	corners[0] = min;
-
-	corners[1].x = min.x;
-	corners[1].y = min.y;
-	corners[1].z = max.z;
-
-	corners[2].x = max.x;
-	corners[2].y = min.y;
-	corners[2].z = min.z;
-
-	corners[3].x = max.x;
-	corners[3].y = min.y;
-	corners[3].z = max.z;
-
-	corners[4] = max;
-
-	corners[5].x = max.x;
-	corners[5].y = max.y;
-	corners[5].z = min.z;
-
-	corners[6].x = min.x;
-	corners[6].y = max.y;
-	corners[6].z = max.z;
-
-	corners[7].x = min.x;
-	corners[7].y = max.y;
-	corners[7].z = min.z;
-
-	Matrix viewProj = view * proj;
-	for( int i = 0; i < 8; ++i )
-	{
-		corners[i] = TransformCoord( corners[i], viewProj );
-		Vec3TransformByViewport( corners[i], vp );
-	}
-
-	min = corners[0];
-	max = corners[0];
-	float* pMin = (float*)&min;
-	float* pMax = (float*)&max;
-
-	for( int i = 1; i < 8; ++i )
-	{
-		float* pCorner = (float*)&corners[i];
-
-		for( int component = 0; component < 3; ++component )
-		{
-			if( pCorner[component] < pMin[component] )
-			{
-				pMin[component] = pCorner[component];
-			}
-			if( pCorner[component] > pMax[component] )
-			{
-				pMax[component] = pCorner[component];
-			}
-		}
-	}
-}
-
 bool IntersectAxisAlignedBoxAxisAlignedBox( const Vector3& minBoundsA, const Vector3& maxBoundsA, const Vector3& minBoundsB, const Vector3& maxBoundsB )
 {
 	XMVECTOR MinA = XMVectorSet( minBoundsA.x, minBoundsA.y, minBoundsA.z, 0.0f );

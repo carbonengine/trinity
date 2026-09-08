@@ -33,7 +33,8 @@ public:
 	virtual void GetBatches( ITriRenderBatchAccumulator * batches,
 							 const Tr2MeshAreaVector* areas,
 							 const Tr2PerObjectData* data,
-							 float screenSize = std::numeric_limits<float>::max() ) const;
+							 float screenSize = std::numeric_limits<float>::max(),
+							 bool reverseWinding = false ) const;
 
 	Tr2MeshAreaVector* GetAreas( TriBatchType areaType );
 	const Tr2MeshAreaVector* GetAreas( TriBatchType areaType ) const;
@@ -99,9 +100,6 @@ public:
 
 	void UseWithScreenSize( float screenSize, float worldRadius ) const;
 
-	virtual void ReverseIndexBuffers();
-	bool HasReversedAreas() const;
-
 protected:
 	unsigned int FindJoint( const std::string* boneList, const int numBones, const char* name ) const;
 	void CacheBounds();
@@ -146,7 +144,7 @@ TYPEDEF_BLUECLASS( Tr2MeshBase );
 BLUE_DECLARE_VECTOR( Tr2MeshBase );
 
 
-Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* area, const Tr2PerObjectData* data );
+Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* area, const Tr2PerObjectData* data, bool reverseWinding = false );
 
 
 #endif // Tr2MeshBase_h

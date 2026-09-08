@@ -197,7 +197,7 @@ int32_t Tr2DataTextureManager::RequestBlockData( const Vector4* headerData, uint
 	m_blockData[m_blockDataNextIdx] = bd;
 
 	// and insert it into the priority map, keeps it sorted!
-	m_blockPriority[priority] = m_blockDataNextIdx;
+	m_blockPriority.insert( std::make_pair( priority, m_blockDataNextIdx ) );
 
 	return m_blockDataNextIdx++;
 }

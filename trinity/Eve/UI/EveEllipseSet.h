@@ -11,12 +11,12 @@
 #include "Shader/Tr2EffectStateManager.h"
 #include "Tr2BufferAL.h"
 #include "EveEllipseDefinition.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 
 BLUE_DECLARE( EveEllipseSet );
 
 BLUE_CLASS( EveEllipseSet ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public EveChildTransform,
 	public ITr2Renderable,
 	public IListNotify,
@@ -36,9 +36,7 @@ public:
 	bool AddEllipse( const Vector3& center, float semiMajor, float semiMinor, const Vector3& planeNormal, float rotationDegrees );
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	const char* GetName() const override;
-	void SetName( const char* name ) override;
+	// EveSpaceObjectChild
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
@@ -46,7 +44,6 @@ public:
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void GetLocalToWorldTransform( Matrix & transform ) const override;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override;
-	void ChangeLOD( Tr2Lod lod ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
@@ -72,7 +69,6 @@ public:
 	// INotify
 	bool OnModified( Be::Var * val ) override;
 
-	BlueSharedString m_name;
 	bool m_display = true;
 	bool m_enablePicking = true;
 	float m_depthOffset = 0.f;

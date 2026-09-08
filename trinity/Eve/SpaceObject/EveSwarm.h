@@ -254,7 +254,7 @@ public:
 protected:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Object space damage locator information
-	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator ) const;
+	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator, int mergedDamageIndex = -1 ) const;
 	virtual bool GetDamageLocatorPosition( Vector3 * out, int index, bool inWorldSpace );
 
 	/////////////////////////////////////////////////////////////////////////////////////

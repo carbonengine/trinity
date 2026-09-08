@@ -44,9 +44,10 @@ function(create_carbon_docs_sphinx_target)
     )
 
     # Evaluate config file for Doxygen to input project values
+    set(DOCUMENTATION_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/doxygen_generated)
     set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
     set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-    set(DOXYGEN_INDEX_FILE ${CMAKE_CURRENT_BINARY_DIR}/xml/index.xml)
+    set(DOXYGEN_INDEX_FILE ${DOCUMENTATION_OUT_DIR}/xml/index.xml)
     configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
 
     # Regenerate with source changes
@@ -60,13 +61,14 @@ function(create_carbon_docs_sphinx_target)
     add_custom_target(${arg_DOXYGEN_TARGET_NAME} ALL DEPENDS ${DOXYGEN_INDEX_FILE})
 
     if (WIN32)
-        set(SPHINX_COMMAND Scripts/sphinx-build -E -b html -D breathe_projects.doxygen=${CMAKE_CURRENT_BINARY_DIR}/docs/xml -c ${arg_SPHINX_SOURCE} ${arg_SPHINX_SOURCE} ${arg_SPHINX_BUILD})
+        set(SPHINX_COMMAND Scripts/sphinx-build -E -b html -D breathe_projects.doxygen=${DOCUMENTATION_OUT_DIR}/xml -c ${arg_SPHINX_SOURCE} ${arg_SPHINX_SOURCE} ${arg_SPHINX_BUILD})
     elseif(APPLE)
-        set(SPHINX_COMMAND bin/sphinx-build -E -b html -D breathe_projects.doxygen=${CMAKE_CURRENT_BINARY_DIR}/docs/xml -c ${arg_SPHINX_SOURCE} ${arg_SPHINX_SOURCE} ${arg_SPHINX_BUILD})
+        set(SPHINX_COMMAND bin/sphinx-build -E -b html -D breathe_projects.doxygen=${DOCUMENTATION_OUT_DIR}/xml -c ${arg_SPHINX_SOURCE} ${arg_SPHINX_SOURCE} ${arg_SPHINX_BUILD})
     endif()
 
     message(STATUS "Working directory is ${CMAKE_CURRENT_BINARY_DIR}")
     message(STATUS "Command: ${SPHINX_COMMAND}")
+    message(STATUS "Python Path is: ${arg_PYTHONPATH_ENV}")
 
     add_custom_target(${arg_SPHINX_TARGET_NAME} ALL
             COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${arg_PYTHONPATH_ENV} ${SPHINX_COMMAND}

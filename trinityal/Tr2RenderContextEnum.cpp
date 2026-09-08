@@ -6,6 +6,7 @@
 #include "ALLog.h"
 
 bool g_requestDebugMarkers = false;
+bool g_dredBreadcrumbsEnabled = false;
 bool g_skipNvidiaStreamline = false;
 bool g_brokenMacOSNvidiaDrivers = false;
 

@@ -127,16 +127,6 @@ bool EveEllipseSet::AddEllipse( const Vector3& center, float semiMajor, float se
 	return true;
 }
 
-const char* EveEllipseSet::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveEllipseSet::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
 EveEllipseSet::~EveEllipseSet()
 {
 	// Specs may outlive via Python references
@@ -398,10 +388,6 @@ void EveEllipseSet::Setup( const Vector3* scale, const Quaternion* rotation, con
 
 	// and remember lodding!
 	m_lowestLodVisible = lowestLodVisible;
-}
-
-void EveEllipseSet::ChangeLOD( Tr2Lod lod )
-{
 }
 
 IRoot* EveEllipseSet::GetID( uint16_t )

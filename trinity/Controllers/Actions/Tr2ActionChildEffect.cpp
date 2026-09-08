@@ -4,7 +4,7 @@
 #include "Tr2ActionChildEffect.h"
 #include "Controllers/Tr2Controller.h"
 #include "Eve/SpaceObject/Children/IEveEffectChildrenOwner.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 #include "Eve/EveMultiEffect.h"
 #include "Eve/EveMultiEffectParameter.h"
 #include "Eve/Renderable/Stretch/EveStretch3.h"
@@ -115,7 +115,7 @@ void Tr2ActionChildEffect::Start( ITr2ActionController& controller )
 	}
 	if( m_addOnStart && !m_child && !m_path.empty() )
 	{
-		m_child = BeResMan->LoadObject<IEveSpaceObjectChild>( m_path.c_str() );
+		m_child = BeResMan->LoadObject<EveSpaceObjectChild>( m_path.c_str() );
 		if( m_child )
 		{
 			if( !m_childName.empty() )

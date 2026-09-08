@@ -258,3 +258,165 @@ granny_data_type_definition MeshBoundsInfoType[] = {
 //
 //////////////////////////////////////////////////////////////////////////
 #endif
+
+
+void ConvertDataToVector3( Tr2VertexDefinition::DataType elementType, const void* src, Vector3* dest )
+{
+
+	switch( elementType )
+	{
+	case Tr2VertexDefinition::FLOAT16_4: {
+		*dest = *static_cast<const Vector3_16*>( src );
+		break;
+	}
+	case Tr2VertexDefinition::FLOAT32_3: {
+		memcpy( dest, src, 3 * sizeof( float ) );
+		break;
+	}
+	case Tr2VertexDefinition::FLOAT32_4: {
+		memcpy( dest, src, 3 * sizeof( float ) );
+		break;
+	}
+	case Tr2VertexDefinition::SHORT_4: {
+		ConvertShort4ToVector3( src, dest );
+		break;
+	}
+
+	case Tr2VertexDefinition::UBYTE_4: {
+		ConvertUByte4ToVector3( src, dest );
+		break;
+	}
+
+	default: {
+		dest->x = 0.0f;
+		dest->y = 0.0f;
+		dest->z = 0.0f;
+	}
+	}
+}
+
+bool IntersectTri(
+	const Vector3& vertex0,
+	const Vector3& vertex1,
+	const Vector3& vertex2,
+	const Vector3& rayPos,
+	const Vector3& rayDir,
+	float& u,
+	float& v,
+	float& dist )
+{
+	// Möller–Trumbore intersection algorithm
+	Vector3 e1 = vertex1 - vertex0;
+	Vector3 e2 = vertex2 - vertex0;
+	Vector3 a = Cross( rayDir, e2 );
+
+	float det = Dot( e1, a );
+	if( std::abs( det ) < std::numeric_limits<float>::min() )
+	{
+		return false;
+	}
+	float invDet = 1.f / det;
+
+	Vector3 t0 = rayPos - vertex0;
+	float uu = Dot( t0, a ) * invDet;
+	if( uu < 0.f || uu > 1.f )
+	{
+		return false;
+	}
+
+	Vector3 b = Cross( t0, e1 );
+	float vv = Dot( rayDir, b ) * invDet;
+	if( vv < 0.f || uu + vv > 1.f )
+	{
+		return false;
+	}
+
+	float t = Dot( e2, b ) * invDet;
+	if( t < 0.f )
+	{
+		return false;
+	}
+
+	u = uu;
+	v = vv;
+	dist = t;
+	return true;
+}
+
+bool IntersectTriXM(
+	const XMVECTOR& vertex0,
+	const XMVECTOR& edge1,
+	const XMVECTOR& edge2,
+	const XMVECTOR& rayPos,
+	const XMVECTOR& rayDir,
+	float& u,
+	float& v,
+	float& dist )
+{
+	// Möller–Trumbore intersection algorithm, SIMD
+	XMVECTOR a = XMVector3Cross( rayDir, edge2 );
+
+	float det = XMVectorGetX( XMVector3Dot( edge1, a ) );
+	if( std::abs( det ) < std::numeric_limits<float>::min() )
+	{
+		return false;
+	}
+	float invDet = 1.f / det;
+
+	XMVECTOR t0 = XMVectorSubtract( rayPos, vertex0 );
+	float uu = XMVectorGetX( XMVector3Dot( t0, a ) ) * invDet;
+	if( uu < 0.f || uu > 1.f )
+	{
+		return false;
+	}
+
+	XMVECTOR b = XMVector3Cross( t0, edge1 );
+	float vv = XMVectorGetX( XMVector3Dot( rayDir, b ) ) * invDet;
+	if( vv < 0.f || uu + vv > 1.f )
+	{
+		return false;
+	}
+
+	float t = XMVectorGetX( XMVector3Dot( edge2, b ) ) * invDet;
+	if( t < 0.f )
+	{
+		return false;
+	}
+
+	u = uu;
+	v = vv;
+	dist = t;
+	return true;
+}
+
+bool GetBoneIndex( Tr2VertexDefinition::DataType elementType, const void* src, int& dest )
+{
+	if( elementType != Tr2VertexDefinition::UBYTE_4 )
+	{
+		CCP_LOGERR( "BLENDINDICES using unsupported format." );
+		return false;
+	}
+
+	const uint8_t* vdata = static_cast<const uint8_t*>( src );
+	dest = vdata[0];
+	return true;
+}
+
+bool GetColor( Tr2VertexDefinition::DataType elementType, const void* src, Color& dest )
+{
+	if( elementType == Tr2VertexDefinition::UBYTE_4_NORM )
+	{
+		const uint8_t* v = static_cast<const uint8_t*>( src );
+		dest = Color( v[0] / 255.0f, v[1] / 255.0f, v[2] / 255.0f, v[3] / 255.0f );
+		return true;
+	}
+
+	if( elementType == Tr2VertexDefinition::FLOAT16_4 )
+	{
+		dest = Color( *static_cast<const Vector4_16*>( src ) );
+		return true;
+	}
+
+	CCP_LOGERR( "COLOR using unsupported format." );
+	return false;
+}

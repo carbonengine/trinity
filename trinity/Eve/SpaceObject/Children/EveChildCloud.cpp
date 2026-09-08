@@ -208,16 +208,6 @@ bool EveChildCloud::OnModified( Be::Var* value )
 	return true;
 }
 
-const char* EveChildCloud::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildCloud::SetName( const char* name )
-{
-	m_name = name;
-}
-
 void EveChildCloud::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	auto& frustum = updateContext.GetFrustum();

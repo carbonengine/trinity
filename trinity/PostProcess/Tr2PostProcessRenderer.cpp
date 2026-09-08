@@ -434,7 +434,7 @@ void ApplyAcesTonemappingMethod( const Tr2PPTonemappingEffect* tonemapping, Tr2E
 {
 	tonemappingEffect->SetOption( MEMOIZED_STRING( "TONE_MAPPING_METHOD" ), MEMOIZED_STRING( "TONE_MAPPING_ACES" ) );
 
-	static BlueSharedString blueOption = tonemapping->m_aces.m_useSweeteners ? MEMOIZED_STRING( "SWEETENER_ENABLED" ) : MEMOIZED_STRING( "SWEETENER_DISABLED" );
+	BlueSharedString blueOption = tonemapping->m_aces.m_useSweeteners ? MEMOIZED_STRING( "SWEETENER_ENABLED" ) : MEMOIZED_STRING( "SWEETENER_DISABLED" );
 	tonemappingEffect->SetOption( MEMOIZED_STRING( "SWEETENER_TOGGLE" ), blueOption );
 	tonemappingEffect->SetParameter( MEMOIZED_STRING( "AcesSlope" ), tonemapping->m_aces.m_slope );
 	tonemappingEffect->SetParameter( MEMOIZED_STRING( "AcesToe" ), tonemapping->m_aces.m_toe );
@@ -872,7 +872,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderSharpening( bool enabl
 	auto renderHeight = output->GetHeight();
 	AF1 outWidth = static_cast<AF1>( renderWidth );
 	AF1 outHeight = static_cast<AF1>( renderHeight );
-	float casIntensity = 0.5f;
+	float casIntensity = 0.0f;
 
 	AMDSharpening::CASConstants casConst;
 

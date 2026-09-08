@@ -260,17 +260,17 @@ struct Tr2TextureAL::MipMapGenerator
 			else
 			{
 				auto restore = TrinityALImpl::Transition( m_staging, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
-				commandList->ResourceBarrier( 1, &restore );
+				TrinityALImpl::ResourceBarrier( commandList, 1, &restore );
 			}
 
 			staging = m_staging;
 
 			// Copy the resource to staging
 			auto from = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
-			commandList->ResourceBarrier( 1, &from );
+			TrinityALImpl::ResourceBarrier( commandList, 1, &from );
 			commandList->CopyResource( staging, resource );
 			auto to = TrinityALImpl::Transition( staging, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-			commandList->ResourceBarrier( 1, &to );
+			TrinityALImpl::ResourceBarrier( commandList, 1, &to );
 		}
 		else
 		{
@@ -279,7 +279,7 @@ struct Tr2TextureAL::MipMapGenerator
 			if( ( resourceState & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) == 0 )
 			{
 				auto barrier = TrinityALImpl::Transition( staging, resourceState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-				commandList->ResourceBarrier( 1, &barrier );
+				TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 			}
 			else
 			{
@@ -390,7 +390,7 @@ struct Tr2TextureAL::MipMapGenerator
 				srv2uavDescs[i].Transition.Subresource = mip + ( i * desc.MipLevels );
 				uav2srvDescs[i].Transition.Subresource = mip + ( i * desc.MipLevels );
 			}
-			commandList->ResourceBarrier( desc.DepthOrArraySize, srv2uavDescs.data() );
+			TrinityALImpl::ResourceBarrier( commandList, desc.DepthOrArraySize, srv2uavDescs.data() );
 
 			// Bind the mip subresources
 			commandList->SetComputeRootDescriptorTable( TrinityALImpl::GenerateMipsResources::TargetTexture, uavH );
@@ -412,10 +412,10 @@ struct Tr2TextureAL::MipMapGenerator
 				( mipHeight + TrinityALImpl::GenerateMipsResources::ThreadGroupSize - 1 ) / TrinityALImpl::GenerateMipsResources::ThreadGroupSize,
 				desc.DepthOrArraySize );
 
-			commandList->ResourceBarrier( 1, &barrierUAV );
+			TrinityALImpl::ResourceBarrier( commandList, 1, &barrierUAV );
 
 			// Transition the mip to an SRV
-			commandList->ResourceBarrier( desc.DepthOrArraySize, uav2srvDescs.data() );
+			TrinityALImpl::ResourceBarrier( commandList, desc.DepthOrArraySize, uav2srvDescs.data() );
 
 			// Offset the descriptor heap handles
 			uavH.ptr += descriptorSize;
@@ -430,18 +430,18 @@ struct Tr2TextureAL::MipMapGenerator
 				TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST )
 			};
 
-			commandList->ResourceBarrier( 2, barriers );
+			TrinityALImpl::ResourceBarrier( commandList, 2, barriers );
 			// Copy the entire resource back
 			commandList->CopyResource( resource, staging );
 
 			// Transition the target resource back to pixel shader resource
 			auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
-			commandList->ResourceBarrier( 1, &barrier );
+			TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		}
 		else if( ( resourceState & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) == 0 )
 		{
 			auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, resourceState );
-			commandList->ResourceBarrier( 1, &barrier );
+			TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		}
 
 		m_device.DirtyDescriptorCache();
@@ -477,27 +477,27 @@ struct Tr2TextureAL::MipMapGenerator
 		else
 		{
 			auto restore = TrinityALImpl::Transition( m_resourceCopy, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
-			commandList->ResourceBarrier( 1, &restore );
+			TrinityALImpl::ResourceBarrier( commandList, 1, &restore );
 		}
 
 		// Copy the resource data
 		auto barrier = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		commandList->CopyResource( m_resourceCopy, resource );
 		barrier = TrinityALImpl::Transition( m_resourceCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 
 		// Generate the mips
 		GenerateMips_UnorderedAccessPath( m_resourceCopy, DXGI_FORMAT_R8G8B8A8_UNORM, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
 
 		// Direct copy back
 		barrier = TrinityALImpl::Transition( m_resourceCopy, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		commandList->CopyResource( resource, m_resourceCopy );
 		barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		return S_OK;
 	}
 
@@ -550,33 +550,33 @@ struct Tr2TextureAL::MipMapGenerator
 		else
 		{
 			auto restore = TrinityALImpl::Transition( m_bgrAliasCopy, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
-			commandList->ResourceBarrier( 1, &restore );
+			TrinityALImpl::ResourceBarrier( commandList, 1, &restore );
 		}
 
 		// Copy the resource data
 		auto barrier = TrinityALImpl::AliasBarrier( nullptr, m_bgrAliasCopy );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		barrier = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		commandList->CopyResource( m_bgrAliasCopy, resource );
 
 		// Generate the mips
 		barrier = TrinityALImpl::AliasBarrier( m_bgrAliasCopy, m_bgrResourceCopy );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		barrier = TrinityALImpl::Transition( m_bgrResourceCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		FORWARD_HR( GenerateMips_UnorderedAccessPath( m_bgrResourceCopy, DXGI_FORMAT_R8G8B8A8_UNORM, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) );
 
 		// Direct copy back
 		barrier = TrinityALImpl::AliasBarrier( m_bgrResourceCopy, m_bgrAliasCopy );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		barrier = TrinityALImpl::Transition( m_bgrAliasCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		commandList->CopyResource( resource, m_bgrAliasCopy );
 		barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
-		commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( commandList, 1, &barrier );
 		return S_OK;
 	}
 

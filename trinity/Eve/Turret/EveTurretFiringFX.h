@@ -15,8 +15,8 @@
 BLUE_DECLARE_INTERFACE( IEveFiringEffectElement );
 BLUE_DECLARE_IVECTOR( IEveFiringEffectElement );
 BLUE_DECLARE_INTERFACE( IEveEffectChildrenOwner );
-BLUE_DECLARE_INTERFACE( IEveSpaceObjectChild );
-BLUE_DECLARE_IVECTOR( IEveSpaceObjectChild );
+BLUE_DECLARE( EveSpaceObjectChild );
+BLUE_DECLARE_VECTOR( EveSpaceObjectChild );
 BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE( TriObserverLocal );
 BLUE_DECLARE( Tr2QuadRenderer );

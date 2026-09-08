@@ -86,10 +86,6 @@ void Tr2MeshBase::OnListModified(
 		if( Tr2MeshAreaPtr area = BlueCastPtr( value ) )
 		{
 			area->AddOwnerMesh( this );
-			if( area->IsReversed() )
-			{
-				ReverseIndexBuffers();
-			}
 		}
 		break;
 	case BELIST_REMOVED:
@@ -106,10 +102,6 @@ void Tr2MeshBase::OnListModified(
 				entity->AddOwnerMesh( this );
 			}
 		}
-		if( HasReversedAreas() )
-		{
-			ReverseIndexBuffers();
-		}
 		break;
 	case BELIST_UNLOADSTART:
 		for( ssize_t i = 0; i < list->GetSize(); ++i )
@@ -122,29 +114,6 @@ void Tr2MeshBase::OnListModified(
 		break;
 	default:
 		break;
-	}
-}
-
-bool Tr2MeshBase::HasReversedAreas() const
-{
-	for( auto& list : m_areaLookupArray )
-	{
-		for( auto& area : *list )
-		{
-			if( area->IsReversed() )
-			{
-				return true;
-			}
-		}
-	}
-	return false;
-}
-
-void Tr2MeshBase::ReverseIndexBuffers()
-{
-	if( auto geometry = GetGeometryResource() )
-	{
-		geometry->RequestReversedIndexBuffers();
 	}
 }
 
@@ -369,7 +338,7 @@ bool Tr2MeshBase::GetDisplay() const
 	return m_display;
 }
 
-Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* area, const Tr2PerObjectData* data )
+Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* area, const Tr2PerObjectData* data, bool reverseWinding )
 {
 	Tr2RenderBatch batch;
 
@@ -392,8 +361,9 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* are
 	}
 
 	auto& meshArea = lod->m_areas[std::max( 0, area->GetIndex() )];
+	const bool reversed = area->GetReversed() != reverseWinding;
 
-	if( area->GetReversed() && !lod->m_reversedIndicesValid )
+	if( reversed && !lod->m_reversedIndicesValid )
 	{
 		return batch;
 	}
@@ -403,9 +373,9 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* are
 
 	batch.SetPerObjectData( data );
 
-	auto& indices = area->GetReversed() ? lod->m_reversedIndexAllocation : lod->m_indexAllocation;
+	auto& indices = reversed ? lod->m_reversedIndexAllocation : lod->m_indexAllocation;
 	uint32_t startIndex;
-	if( area->GetReversed() )
+	if( reversed )
 	{
 		startIndex = indices.GetStartIndex() + lod->m_primitiveCount * 3 - meshArea.m_firstIndex - primCount * 3;
 	}
@@ -428,7 +398,8 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* are
 void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches,
 							  const Tr2MeshAreaVector* areas,
 							  const Tr2PerObjectData* data,
-							  float screenSize ) const
+							  float screenSize,
+							  bool reverseWinding ) const
 {
 	if( !GetDisplay() )
 	{
@@ -449,7 +420,7 @@ void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches,
 
 	for( auto& area : *areas )
 	{
-		if( auto batch = CreateGeometryBatch( lod, area, data ) )
+		if( auto batch = CreateGeometryBatch( lod, area, data, reverseWinding ) )
 		{
 			batch.SetPickingData( m_meshIndex, area->GetIndex() );
 			batches->Commit( batch );

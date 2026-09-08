@@ -17,8 +17,6 @@ if(BUILD_FOR_PYTHON_2)
     add_library(AMD::FidelityFX::CACAO ALIAS AMD::CACAO)
     find_package(IntelTBB REQUIRED)
     add_library(TBB::tbb ALIAS Intel::TBB)
-    add_library(TBB::tbbmalloc INTERFACE IMPORTED)
-    add_library(TBB::tbbmalloc_proxy INTERFACE IMPORTED)
     find_package(VMA REQUIRED)
     add_library(GPUOpen::VulkanMemoryAllocator ALIAS GPUOpen::VMA)
     find_package(CarbonTrinityAudioAPI REQUIRED)
@@ -308,6 +306,9 @@ set(_SOURCES
     Eve/SpaceObject/Attachments/EveBoosterSet2.cpp
     Eve/SpaceObject/Attachments/EveBoosterSet2.h
     Eve/SpaceObject/Attachments/EveBoosterSet2_Blue.cpp
+    Eve/SpaceObject/Attachments/EveDamageOverlay.cpp
+    Eve/SpaceObject/Attachments/EveDamageOverlay.h
+    Eve/SpaceObject/Attachments/EveDamageOverlay_Blue.cpp
     Eve/SpaceObject/Attachments/EveImpactOverlay.cpp
     Eve/SpaceObject/Attachments/EveImpactOverlay.h
     Eve/SpaceObject/Attachments/EveImpactOverlay_Blue.cpp
@@ -500,6 +501,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildBehaviorSystem.cpp
     Eve/SpaceObject/Children/EveChildBehaviorSystem.h
     Eve/SpaceObject/Children/EveChildBehaviorSystem_Blue.cpp
+    Eve/SpaceObject/Children/EveChildBoosterSet.cpp
+    Eve/SpaceObject/Children/EveChildBoosterSet.h
+    Eve/SpaceObject/Children/EveChildBoosterSet_Blue.cpp
     Eve/SpaceObject/Children/EveChildBulletStorm.cpp
     Eve/SpaceObject/Children/EveChildBulletStorm.h
     Eve/SpaceObject/Children/EveChildBulletStorm_Blue.cpp
@@ -548,6 +552,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildMesh.cpp
     Eve/SpaceObject/Children/EveChildMesh.h
     Eve/SpaceObject/Children/EveChildMesh_Blue.cpp
+    Eve/SpaceObject/Children/EveChildPartData.cpp
+    Eve/SpaceObject/Children/EveChildPartData.h
+    Eve/SpaceObject/Children/EveChildPartData_Blue.cpp
     Eve/SpaceObject/Children/EveChildParticleSphere.cpp
     Eve/SpaceObject/Children/EveChildParticleSphere.h
     Eve/SpaceObject/Children/EveChildParticleSphere_Blue.cpp
@@ -571,9 +578,18 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildSpherePin_Blue.cpp
     Eve/SpaceObject/Children/EveChildTransform.cpp
     Eve/SpaceObject/Children/EveChildTransform.cpp
+    Eve/SpaceObject/Children/EveChildTurret.cpp
+    Eve/SpaceObject/Children/EveChildTurret.h
+    Eve/SpaceObject/Children/EveChildTurret_Blue.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.h
     Eve/SpaceObject/Children/EveCloudEditableVolume_Blue.cpp
+    Eve/SpaceObject/Children/EveModularObjectModifier.cpp
+    Eve/SpaceObject/Children/EveModularObjectModifier.h
+    Eve/SpaceObject/Children/EveModularObjectModifier_Blue.cpp
+    Eve/SpaceObject/Children/EveSpaceObjectChild.cpp
+    Eve/SpaceObject/Children/EveSpaceObjectChild.h
+    Eve/SpaceObject/Children/EveSpaceObjectChild_Blue.cpp
     Eve/SpaceObject/Children/IEveEffectChildrenOwner.h
     Eve/SpaceObject/Children/IEveSpaceObjectChild.h
     Eve/SpaceObject/Utils/EveDistributionMethods/DistributionAttributeModifiers/EveDistributionModifierProcessLifetime.cpp
@@ -639,6 +655,8 @@ set(_SOURCES
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes.h
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes_Blue.cpp
     Eve/SpaceObject/Utils/fxAttributes/IEveFxAttribute.h
+    Eve/SpaceObject/Utils/EveBoosterUtilities.cpp
+    Eve/SpaceObject/Utils/EveBoosterUtilities.h
     Eve/SpaceObject/Utils/EveCustomMask.cpp
     Eve/SpaceObject/Utils/EveCustomMask.h
     Eve/SpaceObject/Utils/EveCustomMask_Blue.cpp
@@ -687,6 +705,8 @@ set(_SOURCES
     Eve/SpaceObjectFactory/EveSOFDNA_Blue.cpp
     Eve/SpaceObjectFactory/EveSOFUtils.cpp
     Eve/SpaceObjectFactory/EveSOFUtils.h
+    Eve/Turret/EveTurretAiming.cpp
+    Eve/Turret/EveTurretAiming.h
     Eve/Turret/EveTurretFiringFX.cpp
     Eve/Turret/EveTurretFiringFX.h
     Eve/Turret/EveTurretFiringFX_Blue.cpp
@@ -766,6 +786,9 @@ set(_SOURCES
     Eve/AudioGameObject.cpp
     Eve/AudioGameObject.h
     Eve/AudioGameObject_Blue.cpp
+    Eve/EveTriggerVolume.cpp
+    Eve/EveTriggerVolume.h
+    Eve/EveTriggerVolume_Blue.cpp
     Eve/EveEffectRoot2.cpp
     Eve/EveEffectRoot2.h
     Eve/EveEffectRoot2_Blue.cpp
@@ -841,6 +864,7 @@ set(_SOURCES
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
     Include/ITr2MultiPassScene.h
+    Include/ITr2PoseModifier.h
     Include/ITr2Scene.h
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h
@@ -1387,6 +1411,8 @@ set(_SOURCES
     Utilities/BoundingBox.h
     Utilities/BoundingSphere.cpp
     Utilities/BoundingSphere.h
+    Utilities/BVH.cpp
+    Utilities/BVH.h
     Utilities/GeometryUtils.cpp
     Utilities/GeometryUtils.h
     Utilities/GrannyCurveHelpers.h
@@ -1848,7 +1874,7 @@ else()
 endif()
 
 # utility function that sets properties shared between all trinity targets
-function(set_shared_trinity_properties target package_name)
+function(set_shared_trinity_properties target)
 
     target_link_libraries(${target}
         PUBLIC
@@ -1861,8 +1887,6 @@ function(set_shared_trinity_properties target package_name)
             AMD::FidelityFX::CACAO
             AMD::FidelityFX::CAS
             TBB::tbb
-            TBB::tbbmalloc
-            TBB::tbbmalloc_proxy
             CcpMath
             platform_pdm_proto_wrapper
             CcpParser
@@ -1902,6 +1926,7 @@ function(set_shared_trinity_properties target package_name)
         target_compile_definitions(${target}
         PRIVATE
             BLUE_USE_LOCAL_ITr2DebugRenderer2=1
+            PYTHON2_SUPPORT=1
     )
     endif()
 
@@ -1938,11 +1963,11 @@ function(set_shared_trinity_properties target package_name)
 
         configure_ccp_vendor_config_file(
             TARGET ${target}
-            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${package_name}Config.cmake"
+            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake"
             DEPENDENCIES ""
         )
 
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}Config.cmake DESTINATION .)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake DESTINATION .)
     else () # VCPKG install mode
 
         # Install rule to ensure that our runtime and linker files are in the vcpkg structure
@@ -1984,7 +2009,7 @@ if(WIN32)
     )
 
     target_link_libraries(${TRINITY_STUB_TARGET_NAME} PRIVATE TrinityAL_stub)
-    set_shared_trinity_properties(${TRINITY_STUB_TARGET_NAME} carbon-trinity-stub)
+    set_shared_trinity_properties(${TRINITY_STUB_TARGET_NAME})
 endif()
 
 if(WIN32)
@@ -2000,7 +2025,7 @@ if(WIN32)
         )
         #find_package(nvidia-aftermath CONFIG REQUIRED)#Required for dx11
         target_link_libraries(${TRINITY_DX11_TARGET_NAME} PRIVATE TrinityAL_dx11)
-        set_shared_trinity_properties(${TRINITY_DX11_TARGET_NAME} carbon-trinity-dx11)
+        set_shared_trinity_properties(${TRINITY_DX11_TARGET_NAME})
     endif()
 
     if (BUILD_DX12)
@@ -2014,7 +2039,7 @@ if(WIN32)
                 TRINITYNAME=_trinity_dx12
         )
         target_link_libraries(${TRINITY_DX12_TARGET_NAME} PRIVATE TrinityAL_dx12 )
-        set_shared_trinity_properties(${TRINITY_DX12_TARGET_NAME} carbon-trinity-dx12)
+        set_shared_trinity_properties(${TRINITY_DX12_TARGET_NAME})
     endif()
 
 elseif(APPLE)
@@ -2029,7 +2054,7 @@ elseif(APPLE)
                 TRINITY_PLATFORM=TRINITY_METAL
                 TRINITYNAME=_trinity_metal
         )
-        set_shared_trinity_properties(${TRINITY_METAL_TARGET_NAME} carbon-trinity-metal)
+        set_shared_trinity_properties(${TRINITY_METAL_TARGET_NAME})
         target_link_libraries(${TRINITY_METAL_TARGET_NAME}
             PRIVATE
                 TrinityAL_metal

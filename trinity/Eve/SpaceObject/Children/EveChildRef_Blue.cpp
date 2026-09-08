@@ -10,6 +10,7 @@ const Be::ClassInfo* EveChildRef::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveChildRef, "\n:jessica-icon: alicorn\n:jessica-icon-color: (123, 28, 212)\n:jessica-help-url: https://wiki.ccpgames.com/pages/viewpage.action?spaceKey=TTL&title=Plugs+and+Sockets \n" )
 		MAP_INTERFACE( EveChildRef )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2CurveSetOwner )
 		MAP_INTERFACE( IInitialize )
@@ -62,5 +63,8 @@ const Be::ClassInfo* EveChildRef::ExposeToBlue()
 			Reload,
 			1,
 			"Reload the effect child.\n" )
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

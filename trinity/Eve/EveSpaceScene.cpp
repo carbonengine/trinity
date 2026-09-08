@@ -258,6 +258,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	Tr2RingBuffer::GetInstance<Float4x3>().SetName( "BoneTransformsBuffer" );
 	GlobalStore().RegisterVariable( "MorphTargetAnimations", &Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>() );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().SetName( "MorphTargetAnimationsBuffer" );
+	GlobalStore().RegisterVariable( "ChildBoosterSetInstances", &Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>() );
+	Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().SetName( "ChildBoosterSetInstanceBuffer" );
 
 	// Picking batches
 	m_pickingBatches = CCP_NEW( "EveSpaceScene/m_pickingBatches" ) TriRenderBatchAccumulator<>( allocator );
@@ -445,6 +447,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		auto frame = renderContext.GetRecordingFrameNumber();
 		Tr2RingBuffer::GetInstance<Float4x3>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
 		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
+		Tr2RingBuffer::GetInstance<Tr2ChildBoosterInstanceData>().SetFrameNumbers( frame, renderContext.GetRenderedFrameNumber() );
 
 		if( frame == m_lastUpdateFrame )
 		{
@@ -1522,6 +1525,8 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 
 	m_instancedMeshManager->GetBatches( m_updateContext.GetFrustum(), m_updateContext.GetInvLodFactor(), { { TRIBATCHTYPE_OPAQUE, *m_primaryBatches[TRIBATCHTYPE_OPAQUE] }, { TRIBATCHTYPE_DECAL, *m_primaryBatches[TRIBATCHTYPE_DECAL] }, { TRIBATCHTYPE_ADDITIVE, *m_primaryBatches[TRIBATCHTYPE_ADDITIVE] }, { TRIBATCHTYPE_DEPTH, *m_primaryBatches[TRIBATCHTYPE_DEPTH] }, { TRIBATCHTYPE_DISTORTION, *m_primaryBatches[TRIBATCHTYPE_DISTORTION] } } );
 
+	m_instancedMeshManager->ReportUsedScreenSizes();
+
 	FinalizeBatches( m_primaryBatches );
 
 	UpdateShLighting( allObjects );
@@ -1910,6 +1915,8 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 												   { TRIBATCHTYPE_ADDITIVE, *m_secondaryBatches[TRIBATCHTYPE_ADDITIVE] },
 												   { TRIBATCHTYPE_DEPTH, *m_secondaryBatches[TRIBATCHTYPE_DEPTH] },
 											   } ) > 0;
+
+				m_instancedMeshManager->ReportUsedScreenSizes();
 
 				if( hasFog || !visibleRenderables.empty() || hasInstancedBatches )
 				{

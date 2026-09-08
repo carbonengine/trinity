@@ -54,16 +54,8 @@ EveChildInstanceContainer::EveChildInstanceContainer( IRoot* lockobj ) :
 
 EveChildInstanceContainer::~EveChildInstanceContainer()
 {
-}
-
-const char* EveChildInstanceContainer::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildInstanceContainer::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
+	UnregisterChildren( m_instances );
+	UnregisterChild( m_source );
 }
 
 bool EveChildInstanceContainer::OnModified( Be::Var* value )
@@ -121,25 +113,27 @@ void EveChildInstanceContainer::UnRegisterComponents()
 	}
 }
 
-void EveChildInstanceContainer::SetSourceEffect( IEveSpaceObjectChildPtr sourceEffect )
+void EveChildInstanceContainer::SetSourceEffect( EveSpaceObjectChildPtr sourceEffect )
 {
 	SetSource( sourceEffect );
 	m_reset = true;
 }
 
-IEveSpaceObjectChildPtr EveChildInstanceContainer::GetSource()
+EveSpaceObjectChildPtr EveChildInstanceContainer::GetSource()
 {
 	return m_source;
 }
 
-void EveChildInstanceContainer::SetSource( IEveSpaceObjectChild* source )
+void EveChildInstanceContainer::SetSource( EveSpaceObjectChild* source )
 {
 	auto registry = GetComponentRegistry();
 	if( EveEntityPtr entity = BlueCastPtr( m_source ) )
 	{
 		entity->UnRegister( registry );
 	}
+	UnregisterChild( m_source );
 	m_source = source;
+	RegisterChild( m_source );
 	if( m_instances.empty() && !m_disableEditMode )
 	{
 		if( EveEntityPtr entity = BlueCastPtr( m_source ) )
@@ -247,7 +241,7 @@ void EveChildInstanceContainer::CreateInstance( const Vector3& scale, const Quat
 	EveChildContainerPtr translationParent;
 	translationParent.CreateInstance();
 
-	IEveSpaceObjectChildPtr instance;
+	EveSpaceObjectChildPtr instance;
 
 	if( !BeClasses->CopyTo( m_source, (IRoot**)&instance ) )
 	{
@@ -280,14 +274,20 @@ void EveChildInstanceContainer::CreateInstance( const Vector3& scale, const Quat
 		boneParent->AddToEffectChildrenList( translationParent );
 		boneParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 		boneParent->Register( GetComponentRegistry() );
+		boneParent->SetOwner( GetOwner() );
+		boneParent->SetParent( this );
+		boneParent->SetPartTag( GetPartTag() );
 
-		m_instances.Append( (IEveSpaceObjectChildPtr)boneParent );
+		m_instances.Append( boneParent->GetRawRoot() );
 	}
 	else
 	{
 		translationParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 		translationParent->Register( GetComponentRegistry() );
-		m_instances.Append( (IEveSpaceObjectChildPtr)translationParent );
+		translationParent->SetOwner( GetOwner() );
+		translationParent->SetParent( this );
+		translationParent->SetPartTag( GetPartTag() );
+		m_instances.Append( translationParent->GetRawRoot() );
 	}
 
 	return;
@@ -300,7 +300,7 @@ void EveChildInstanceContainer::CreateInstance( const Vector3& scale, const Quat
 // --------------------------------------------------------------------------------------
 void EveChildInstanceContainer::UpdateInstance( const uint32_t index, const Vector3& scale, const Quaternion& rotation, const Vector3& translation )
 {
-	auto instance = (IEveSpaceObjectChild*)m_instances.GetAt( index );
+	auto instance = static_cast<EveSpaceObjectChild*>( m_instances.GetAt( index ) );
 	if( instance == nullptr )
 	{
 		return;
@@ -313,9 +313,9 @@ void EveChildInstanceContainer::UpdateInstance( const uint32_t index, const Vect
 //   A helper method to run a function on the source (if the instances are not valid) or
 //   on the instances
 // Arguments:
-//   func - The function to run, takes a single parameter which is an IEveSpaceObjectChild*
+//   func - The function to run, takes a single parameter which is an EveSpaceObjectChild*
 // --------------------------------------------------------------------------------------
-void EveChildInstanceContainer::RunOnInstances( std::function<void( IEveSpaceObjectChild* )> func ) const
+void EveChildInstanceContainer::RunOnInstances( std::function<void( EveSpaceObjectChild* )> func ) const
 {
 	if( m_instances.empty() && m_source && !m_disableEditMode )
 	{
@@ -339,6 +339,7 @@ void EveChildInstanceContainer::DisableEditMode( bool disable )
 void EveChildInstanceContainer::ClearInstanceList()
 {
 	UnRegisterComponents();
+	UnregisterChildren( m_instances );
 	m_instances.Clear();
 }
 
@@ -353,7 +354,7 @@ void EveChildInstanceContainer::PopFront()
 				front->UnRegister( GetComponentRegistry() );
 			}
 		}
-
+		UnregisterChild( m_instances[0] );
 		m_instances.Remove( 0 );
 	}
 }
@@ -370,7 +371,7 @@ void EveChildInstanceContainer::GetRenderables( std::vector<ITr2Renderable*>& re
 		return;
 	}
 
-	RunOnInstances( [&renderables]( IEveSpaceObjectChild* c ) { c->GetRenderables( renderables ); } );
+	RunOnInstances( [&renderables]( EveSpaceObjectChild* c ) { c->GetRenderables( renderables ); } );
 }
 
 
@@ -381,7 +382,7 @@ void EveChildInstanceContainer::UpdateVisibility( const EveUpdateContext& update
 		return;
 	}
 
-	RunOnInstances( [&updateContext, &parentTransform, parentLod]( IEveSpaceObjectChild* c ) { c->UpdateVisibility( updateContext, parentTransform, parentLod ); } );
+	RunOnInstances( [&updateContext, &parentTransform, parentLod]( EveSpaceObjectChild* c ) { c->UpdateVisibility( updateContext, parentTransform, parentLod ); } );
 }
 
 void EveChildInstanceContainer::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
@@ -405,7 +406,7 @@ void EveChildInstanceContainer::UpdateSyncronous( const EveUpdateContext& update
 	newParams.childParent = this;
 	newParams.localToWorldTransform = m_worldTransform;
 
-	RunOnInstances( [&updateContext, &newParams]( IEveSpaceObjectChild* c ) { c->UpdateSyncronous( updateContext, newParams ); } );
+	RunOnInstances( [&updateContext, &newParams]( EveSpaceObjectChild* c ) { c->UpdateSyncronous( updateContext, newParams ); } );
 }
 
 void EveChildInstanceContainer::AddTransformModifier( IEveChildTransformModifier* modifier )
@@ -430,7 +431,7 @@ void EveChildInstanceContainer::UpdateAsyncronous( const EveUpdateContext& updat
 	newParams.childParent = this;
 	newParams.localToWorldTransform = m_worldTransform;
 
-	RunOnInstances( [&updateContext, &newParams]( IEveSpaceObjectChild* c ) { c->UpdateAsyncronous( updateContext, newParams ); } );
+	RunOnInstances( [&updateContext, &newParams]( EveSpaceObjectChild* c ) { c->UpdateAsyncronous( updateContext, newParams ); } );
 
 
 	if( params.spaceObjectParent && !params.childParent )
@@ -458,7 +459,7 @@ bool EveChildInstanceContainer::GetBoundingSphere( Vector4& sphere, BoundingSphe
 		return true;
 	}
 
-	RunOnInstances( [&sphere, &query]( IEveSpaceObjectChild* c ) { c->GetBoundingSphere( sphere, query ); } );
+	RunOnInstances( [&sphere, &query]( EveSpaceObjectChild* c ) { c->GetBoundingSphere( sphere, query ); } );
 	return true;
 }
 
@@ -473,12 +474,12 @@ void EveChildInstanceContainer::RegisterWithQuadRenderer( Tr2QuadRenderer& quadR
 
 void EveChildInstanceContainer::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
 {
-	RunOnInstances( [&frustum, &quadRenderer]( IEveSpaceObjectChild* c ) { c->AddQuadsToQuadRenderer( frustum, quadRenderer ); } );
+	RunOnInstances( [&frustum, &quadRenderer]( EveSpaceObjectChild* c ) { c->AddQuadsToQuadRenderer( frustum, quadRenderer ); } );
 }
 
 void EveChildInstanceContainer::ChangeLOD( Tr2Lod lod )
 {
-	RunOnInstances( [&lod]( IEveSpaceObjectChild* c ) { c->ChangeLOD( lod ); } );
+	RunOnInstances( [&lod]( EveSpaceObjectChild* c ) { c->ChangeLOD( lod ); } );
 }
 
 void EveChildInstanceContainer::SetOrigin( Origin origin )
@@ -488,7 +489,7 @@ void EveChildInstanceContainer::SetOrigin( Origin origin )
 
 void EveChildInstanceContainer::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
-	RunOnInstances( [&name, &value]( IEveSpaceObjectChild* c ) { c->SetShaderOption( name, value ); } );
+	RunOnInstances( [&name, &value]( EveSpaceObjectChild* c ) { c->SetShaderOption( name, value ); } );
 }
 
 bool EveChildInstanceContainer::IsAlwaysOn() const
@@ -509,18 +510,18 @@ void EveChildInstanceContainer::GetWorldVelocity( Vector3& velocity ) const
 	velocity = m_worldVelocity;
 }
 
-IEveSpaceObjectChildPtr EveChildInstanceContainer::GetEffectChildByName( const char* name ) const
+EveSpaceObjectChildPtr EveChildInstanceContainer::GetEffectChildByName( const char* name ) const
 {
 	// don't really know what to do here...
 	return nullptr;
 }
 
-void EveChildInstanceContainer::AddToEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildInstanceContainer::AddToEffectChildrenList( EveSpaceObjectChild* child )
 {
 	// do nothing for now
 }
 
-void EveChildInstanceContainer::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildInstanceContainer::RemoveFromEffectChildrenList( EveSpaceObjectChild* child )
 {
 	// do nothing for now
 }
@@ -540,17 +541,17 @@ void EveChildInstanceContainer::SetControllerVariable( const char* name, float v
 	{
 		found->second = value;
 	}
-	RunOnInstances( [&name, &value]( IEveSpaceObjectChild* c ) { c->SetControllerVariable( name, value ); } );
+	RunOnInstances( [&name, &value]( EveSpaceObjectChild* c ) { c->SetControllerVariable( name, value ); } );
 }
 
 void EveChildInstanceContainer::HandleControllerEvent( const char* name )
 {
-	RunOnInstances( [name]( IEveSpaceObjectChild* c ) { c->HandleControllerEvent( name ); } );
+	RunOnInstances( [name]( EveSpaceObjectChild* c ) { c->HandleControllerEvent( name ); } );
 }
 
 void EveChildInstanceContainer::StartControllers()
 {
-	RunOnInstances( []( IEveSpaceObjectChild* c ) { c->StartControllers(); } );
+	RunOnInstances( []( EveSpaceObjectChild* c ) { c->StartControllers(); } );
 }
 
 void EveChildInstanceContainer::SetControllerVariableForInstance( const uint32_t index, const char* name, float value )
@@ -577,7 +578,7 @@ void EveChildInstanceContainer::HandleControllerEventForInstance( const uint32_t
 
 void EveChildInstanceContainer::PlayCurveSet( const std::string& name, const std::string& rangeName )
 {
-	RunOnInstances( [&name, &rangeName]( IEveSpaceObjectChild* c ) {
+	RunOnInstances( [&name, &rangeName]( EveSpaceObjectChild* c ) {
 		ITr2CurveSetOwnerPtr cso = BlueCastPtr( c->GetRootObject() );
 		if( cso != nullptr )
 		{
@@ -588,7 +589,7 @@ void EveChildInstanceContainer::PlayCurveSet( const std::string& name, const std
 
 void EveChildInstanceContainer::StopCurveSet( const std::string& name )
 {
-	RunOnInstances( [&name]( IEveSpaceObjectChild* c ) {
+	RunOnInstances( [&name]( EveSpaceObjectChild* c ) {
 		ITr2CurveSetOwnerPtr cso = BlueCastPtr( c->GetRootObject() );
 
 		if( cso != nullptr )
@@ -600,7 +601,7 @@ void EveChildInstanceContainer::StopCurveSet( const std::string& name )
 
 void EveChildInstanceContainer::UpdateCurveSet( const std::string& name, Be::Time time )
 {
-	RunOnInstances( [&name, time]( IEveSpaceObjectChild* c ) {
+	RunOnInstances( [&name, time]( EveSpaceObjectChild* c ) {
 		ITr2CurveSetOwnerPtr cso = BlueCastPtr( c->GetRootObject() );
 		if( cso != nullptr )
 		{
@@ -635,7 +636,7 @@ float EveChildInstanceContainer::GetRangeDuration( const std::string& name, cons
 
 void EveChildInstanceContainer::PlayAllCurveSets()
 {
-	RunOnInstances( []( IEveSpaceObjectChild* c ) {
+	RunOnInstances( []( EveSpaceObjectChild* c ) {
 		EveChildContainerPtr cc = BlueCastPtr( c->GetRootObject() );
 		if( cc != nullptr )
 		{
@@ -646,7 +647,7 @@ void EveChildInstanceContainer::PlayAllCurveSets()
 
 void EveChildInstanceContainer::StopAllCurveSets()
 {
-	RunOnInstances( []( IEveSpaceObjectChild* c ) {
+	RunOnInstances( []( EveSpaceObjectChild* c ) {
 		EveChildContainerPtr cc = BlueCastPtr( c->GetRootObject() );
 		if( cc != nullptr )
 		{
@@ -657,7 +658,7 @@ void EveChildInstanceContainer::StopAllCurveSets()
 
 void EveChildInstanceContainer::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	RunOnInstances( [&options]( IEveSpaceObjectChild* c ) {
+	RunOnInstances( [&options]( EveSpaceObjectChild* c ) {
 		if( auto dr = dynamic_cast<ITr2DebugRenderable*>( c ) )
 		{
 			dr->GetDebugOptions( options );
@@ -667,10 +668,42 @@ void EveChildInstanceContainer::GetDebugOptions( Tr2DebugRendererOptions& option
 
 void EveChildInstanceContainer::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
-	RunOnInstances( [&renderer]( IEveSpaceObjectChild* c ) {
+	RunOnInstances( [&renderer]( EveSpaceObjectChild* c ) {
 		if( auto dr = dynamic_cast<ITr2DebugRenderable*>( c ) )
 		{
 			dr->RenderDebugInfo( renderer );
 		}
 	} );
+}
+
+void EveChildInstanceContainer::SetOwner( IEveSpaceObject2* owner )
+{
+	if( GetOwner() != owner )
+	{
+		EveSpaceObjectChild::SetOwner( owner );
+		for( auto& child : m_instances )
+		{
+			child->SetOwner( owner );
+		}
+		if( m_source )
+		{
+			m_source->SetOwner( owner );
+		}
+	}
+}
+
+void EveChildInstanceContainer::SetPartTag( PartTag tag )
+{
+	if( GetPartTag() != tag )
+	{
+		EveSpaceObjectChild::SetPartTag( tag );
+		for( auto& child : m_instances )
+		{
+			child->SetPartTag( tag );
+		}
+		if( m_source )
+		{
+			m_source->SetPartTag( tag );
+		}
+	}
 }

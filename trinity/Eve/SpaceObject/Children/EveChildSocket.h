@@ -4,7 +4,7 @@
 #ifndef EveChildSocket_H
 #define EveChildSocket_H
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "IEveEffectChildrenOwner.h"
 #include "EveChildTransform.h"
 #include "Tr2DebugRenderer.h"
@@ -19,7 +19,7 @@ BLUE_DECLARE_IVECTOR( IEveSocketParameter );
 
 
 BLUE_CLASS( EveChildSocket ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public EveChildTransform,
 	public ITr2CurveSetOwner,
 	public IInitialize,
@@ -53,15 +53,10 @@ public:
 	virtual bool OnModified( Be::Var * value );
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	const char* GetName() const;
-	void SetName( const char* name );
-
-	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
-	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
+	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
+	void AddToEffectChildrenList( EveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -81,6 +76,9 @@ public:
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
+
+	void SetOwner( IEveSpaceObject2 * owner ) override;
+	void SetPartTag( PartTag tag ) override;
 
 	void PlayAllCurveSets();
 	void StopAllCurveSets();
@@ -109,7 +107,6 @@ protected:
 
 	EveChildPlugPtr m_plug;
 
-	BlueSharedString m_name;
 	std::string m_plugResPath;
 
 	bool m_display;

@@ -10,6 +10,7 @@ const Be::ClassInfo* EveChildSocket::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveChildSocket, "\n:jessica-icon:blender-phone\n:jessica-icon-color: (123, 28, 212)\n:jessica-help-url: https://wiki.ccpgames.com/pages/viewpage.action?spaceKey=TTL&title=Plugs+and+Sockets \n" )
 		MAP_INTERFACE( EveChildSocket )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2CurveSetOwner )
 		MAP_INTERFACE( IInitialize )
@@ -69,5 +70,8 @@ const Be::ClassInfo* EveChildSocket::ExposeToBlue()
 			":jessica-placement:\n"
 			":jessica-icon: far-sync\n" )
 
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

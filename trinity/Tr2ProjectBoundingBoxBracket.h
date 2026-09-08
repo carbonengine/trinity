@@ -23,8 +23,13 @@ public:
 	void UpdateValue( double time );
 
 	void SetEmptyProjection();
+	void UpdateBracket();
 
 protected:
+	void SetFullViewportProjection( const TriViewport& viewport );
+	void ConstrainProjection( const Vector3& center, const Matrix& viewProjection, const TriViewport& viewport );
+	void PublishProjection( const TriViewport& viewport );
+
 	std::wstring m_name;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -54,6 +59,11 @@ protected:
 	float m_projectedHeight;
 	float m_cameraDistance;
 	float m_screenMargin;
+
+	bool m_isProjectionValid;
+	bool m_containsCamera;
+	bool m_extendsOffscreen;
+	bool m_coversViewport;
 };
 
 TYPEDEF_BLUECLASS( Tr2ProjectBoundingBoxBracket );

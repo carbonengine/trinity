@@ -4,6 +4,9 @@
 #include "Tr2IndirectDrawBuffer.h"
 #include "Tr2Renderer.h"
 #include "../trinityal/metal/Tr2ShaderProgramALMetal.h"
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+#include "../trinityal/dx12/Utilities.h"
+#endif
 
 
 CCP_STATS_DECLARE( sceneExecuteIndirectCount, "Trinity/AL/sceneExecuteIndirectCount", true, CST_COUNTER_LOW, "Number of ExecuteIndirect calls." );
@@ -328,7 +331,7 @@ void Tr2IndirectDrawBuffer::CopyArguments()
 			transition
 		};
 
-		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( renderContext.m_commandList, 1, &barrier );
 	}
 
 	for( int i = 0; i <= copyIndex; i++ )
@@ -352,7 +355,7 @@ void Tr2IndirectDrawBuffer::CopyArguments()
 			transition
 		};
 
-		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+		TrinityALImpl::ResourceBarrier( renderContext.m_commandList, 1, &barrier );
 	}
 #endif
 }
