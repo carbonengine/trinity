@@ -676,6 +676,44 @@ void EveChildTurret::StartControllers()
 	}
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Add a hit/miss to the target's shot queue. godma pushes one entry per damage
+//   message; StartFireAtLocator pops one per shot.
+// --------------------------------------------------------------------------------
+void EveChildTurret::SetShotMissed( const bool missed )
+{
+	m_target->SetShotMissed( missed );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Return the time of the last queued shot.
+// --------------------------------------------------------------------------------
+double EveChildTurret::GetLastShotTime() const
+{
+	return m_target->GetLastShotTime();
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Maximum firing time offset between turrets. Same constant as EveTurretSet so
+//   godma can compare the two.
+// --------------------------------------------------------------------------------
+float EveChildTurret::GetShotTimeVariance() const
+{
+	return EVE_TURRET_RANDOM_DELAY_MAX;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Return the size of the target's hit/miss queue.
+// --------------------------------------------------------------------------------
+size_t EveChildTurret::MissQueueSize() const
+{
+	return m_target->MissQueueSize();
+}
+
 void EveChildTurret::InitializeFiringEffect()
 {
 	m_firingEffectMuzzlePosSet = false;
