@@ -822,6 +822,7 @@ void EveChildTurret::SetTargetObject( IRoot* target )
 {
 	if( !target )
 	{
+		m_target->SetTargetable( nullptr );
 		return;
 	}
 	ITriTargetablePtr oldTargetPtr = m_target->GetTargetable();
