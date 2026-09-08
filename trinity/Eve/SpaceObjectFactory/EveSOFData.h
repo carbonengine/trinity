@@ -1493,8 +1493,12 @@ BLUE_CLASS( EveSOFDataHullController ) :
 public:
 	EXPOSE_TO_BLUE();
 
+	EveSOFDataHullController( IRoot* lockobj = NULL );
+	~EveSOFDataHullController() {}
+
 	std::string GetName() const;
 
+	BlueSharedString m_visibilityGroup;
 	std::string m_path;
 	uint32_t m_buildFilter = EveSOFDataHullBuildFilter::DEFAULT_FILTER;
 };

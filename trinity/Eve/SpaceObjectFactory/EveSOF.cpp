@@ -2232,6 +2232,11 @@ void EveSOF::SetupControllers( ITr2ControllerOwnerPtr owner, const EveSOFDNAPtr 
 			continue;
 		}
 
+		if( !dna->IsInVisibilityData( cit->visibilityGroup ) )
+		{
+			continue;
+		}
+
 		if( auto controller = BeResMan->LoadObject<ITr2Controller>( cit->path.c_str() ) )
 		{
 			owner->AddController( controller );
