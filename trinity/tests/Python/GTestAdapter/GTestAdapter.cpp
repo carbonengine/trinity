@@ -32,10 +32,12 @@ int main( int argc, char* argv[] )
 	_putenv_s( "PYTHONPATH", PYTHON_LIB_PATH );
 	_putenv_s( "TRINITYPLATFORM", TRINITYPLATFORM );
 	_putenv_s( "TRINITYFLAVOR", TRINITYFLAVOR );
+	_putenv_s( "PYTHONDONTWRITEBYTECODE", "1" );
 #else
 	setenv( "PYTHONPATH", PYTHON_LIB_PATH, 1 );
 	setenv( "TRINITYPLATFORM", TRINITYPLATFORM, 1 );
 	setenv( "TRINITYFLAVOR", TRINITYFLAVOR, 1 );
+	setenv( "PYTHONDONTWRITEBYTECODE", "1", 1 );
 #endif
 	FILE* pipe = popen( command.c_str(), "r" );
 	if( !pipe )

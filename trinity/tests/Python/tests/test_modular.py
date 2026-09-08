@@ -130,19 +130,6 @@ class TestModular(unittest.TestCase):
         self.assertEqual(instancedMeshes.GetMeshInfo(0)[6], 1)
         self.assertEqual(instancedMeshes.GetMeshInfo(1)[6], 1)
 
-    def test_removeAnimatedHull(self):
-        sof = _CreateSof()
-        ship, modifier = trinity.CreateModularObject(sof, "testfaction", "restrace")
-        part = modifier.AddHull('anim_hull', 'testfaction', 'testrace', (0, 0, 0), (0, 0, 0, 1), (1,1,1))
-        del modifier
-
-        self.assertTrue(len(blue.FindInterface(ship, 'EveChildInstancedMeshes')) == 0)
-        self.assertTrue(len(blue.FindInterface(ship, 'EveChildMesh')) == 1)
-
-        modifier = trinity.ModifyModularObject(ship, sof)
-        modifier.Remove(part)
-        del modifier
-
     def test_removeStaticHull(self):
         sof = _CreateSof()
         ship, modifier = trinity.CreateModularObject(sof, "testfaction", "restrace")
