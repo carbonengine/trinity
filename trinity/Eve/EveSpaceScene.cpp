@@ -3678,7 +3678,7 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 				if( m_debugRenderer )
 				{
-					m_debugRenderer->Pick( pickingReadback, immediate, renderContext );
+					m_debugRenderer->Pick( pickingReadback, renderContext );
 				}
 
 
