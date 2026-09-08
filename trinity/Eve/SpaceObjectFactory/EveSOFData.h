@@ -1494,7 +1494,9 @@ public:
 	EXPOSE_TO_BLUE();
 
 	EveSOFDataHullController( IRoot* lockobj = NULL );
-	~EveSOFDataHullController() {}
+	~EveSOFDataHullController()
+	{
+	}
 
 	std::string GetName() const;
 
