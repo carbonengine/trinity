@@ -37,8 +37,6 @@ public:
 	const std::vector<Tr2ShaderPipelineInputAL>& GetInputs() const;
 	size_t GetInputsHash() const;
 
-	void SetDummyResources( TrinityALImpl::MetalWorkQueue& workQueue );
-
 private:
 	id<MTLFunction>
 		CompileShader( const ::Tr2ShaderAL& shader, NSString* entryFunction, Tr2PrimaryRenderContextAL& renderContext );
