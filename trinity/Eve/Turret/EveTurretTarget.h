@@ -59,6 +59,10 @@ public:
 	double GetLastShotTime() const;
 	bool PopShotMissed();
 	size_t MissQueueSize() const;
+	float GetShotTimeVariance() const
+	{
+		return EVE_TURRET_RANDOM_DELAY_MAX;
+	}
 
 	// target object queries
 	float GetRadius() const;

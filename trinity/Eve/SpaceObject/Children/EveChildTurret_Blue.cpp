@@ -105,26 +105,5 @@ const Be::ClassInfo* EveChildTurret::ExposeToBlue()
 			StartControllers,
 			"Start the firing effect's controllers" )
 
-		MAP_METHOD_AND_WRAP(
-			"SetShotMissed",
-			SetShotMissed,
-			"Queue whether the next turret shot misses.\n"
-			":param missed: is the next shot a miss" )
-
-		MAP_METHOD_AND_WRAP(
-			"GetLastShotTime",
-			GetLastShotTime,
-			"Get the time we last queued a shot in arbitrary units. Only use for comparison between turrets." )
-
-		MAP_METHOD_AND_WRAP(
-			"GetShotTimeVariance",
-			GetShotTimeVariance,
-			"Get maximum firing time variance between turrets." )
-
-		MAP_METHOD_AND_WRAP(
-			"MissQueueSize",
-			MissQueueSize,
-			"Get the size of the active miss/hit queue." )
-
 	EXPOSURE_CHAINTO( EveChildMesh )
 }

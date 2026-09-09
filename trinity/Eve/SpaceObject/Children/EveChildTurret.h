@@ -60,12 +60,6 @@ public:
 	void SetControllerVariable( const char* name, float value );
 	void StartControllers();
 
-	// hit/miss queue: forwarded to the turret target, which pops it on every shot
-	void SetShotMissed( bool missed );
-	double GetLastShotTime() const;
-	float GetShotTimeVariance() const;
-	size_t MissQueueSize() const;
-
 	// turret set states
 	enum State
 	{
