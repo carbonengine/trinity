@@ -175,7 +175,7 @@ struct LocatorSourceRange
 {
 	int32_t start;
 	int32_t count;
-	const class EveChildMesh* owner;
+	const class EveSpaceObjectChild* owner;
 	uint32_t partTag;
 	Matrix childToObject = IdentityMatrix();
 };
@@ -311,6 +311,7 @@ public:
 	void EnsureChildLocatorMerged() const;
 	void UpdateDamageLocatorFilter();
 	EveDamageOverlayPtr EnsureChildDamageOverlay( const LocatorSourceRange& range );
+	void CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>>& out );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
@@ -797,6 +798,7 @@ protected:
 private:
 #if BLUE_WITH_PYTHON
 	static PyObject* PyTransformLocators( PyObject * self, PyObject * args );
+	static PyObject* PyGetTransformedLocatorsFromSet( PyObject * self, PyObject * args );
 #endif
 
 	void ReleaseDamageFilterSessions();

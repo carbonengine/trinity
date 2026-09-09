@@ -119,6 +119,8 @@ private:
 
 	Vector3 GetShieldImpactPosition( const Matrix& parentInverseWorldTransform, const Vector3& damageLocatorPosWS, const Vector3& impactDirection, const Vector3& shieldEllipsoidCenter, const Vector3& shieldEllipsoidRadii );
 
+	void SpawnImpactDebris( const EveUpdateContext& updateContext, EveSpaceObject2* parent );
+
 	// general data
 	BlueSharedString m_name;
 	bool m_display;

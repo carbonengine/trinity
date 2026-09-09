@@ -95,6 +95,8 @@ bool EveImpactOverlay::Initialize()
 // --------------------------------------------------------------------------------
 void EveImpactOverlay::UpdateSyncronous( const EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
+	SpawnImpactDebris( updateContext, parent );
+
 	// do we have something to do at all?
 	if( !HasGeneralActivity() )
 	{
@@ -105,54 +107,75 @@ void EveImpactOverlay::UpdateSyncronous( const EveUpdateContext& updateContext, 
 	// this comes from the scene via EveUpdateContext
 	Tr2DataTextureManagerPtr dataTextureMgr = updateContext.GetDataTextureManager();
 	m_damageOverlay->UpdateBlockData( dataTextureMgr, true );
+}
 
-	// spawn armor impact particles?
-	if( updateContext.GetGpuParticleSystem() )
+// --------------------------------------------------------------------------------
+// Description:
+//   Spawns particles for armor impacts
+// --------------------------------------------------------------------------------
+void EveImpactOverlay::SpawnImpactDebris( const EveUpdateContext& updateContext, EveSpaceObject2* parent )
+{
+	if( !g_eveSpaceObjectImpactEffectEnabled )
 	{
-		if( m_armorImpactEmitter )
+		return;
+	}
+
+	if( !updateContext.GetGpuParticleSystem() || !m_armorImpactEmitter )
+	{
+		return;
+	}
+
+	auto spawnFromOverlay = [&]( EveDamageOverlay& overlay, int32_t mergedIndexOffset ) {
+		float armorImpactParentSize = overlay.GetArmorImpactParentSize();
+		if( armorImpactParentSize <= 0.f )
 		{
-			float armorImpactParentSize = m_damageOverlay->GetArmorImpactParentSize();
-			if( armorImpactParentSize > 0.f )
+			return;
+		}
+		for( auto& impact : overlay.ArmorImpacts() )
+		{
+			if( !impact.second.requestSpawnDebris )
 			{
-				auto& armorImpactData = m_damageOverlay->ArmorImpacts();
-				for( auto aidit = armorImpactData.begin(); aidit != armorImpactData.end(); ++aidit )
-				{
-					if( aidit->second.requestSpawnDebris )
-					{
-						// where?
-						Vector3 impactPosWS( 0.f, 0.f, 0.f );
-						parent->GetDamageLocatorPosition( &impactPosWS, aidit->second.damageLocatorIndex, true );
-						m_armorImpactEmitter->SetPosition( &impactPosWS );
-						// facing?
-						Vector3 impactDirWS( 0.f, 1.f, 0.f );
-						parent->GetDamageLocatorDirection( &impactDirWS, aidit->second.damageLocatorIndex, true );
-						m_armorImpactEmitter->SetDirection( &impactDirWS );
-						// velocity?
-						Vector3 parentVelocityWS;
-						parent->GetWorldVelocity( parentVelocityWS );
+				continue;
+			}
+			// where?
+			Vector3 impactPosWS( 0.f, 0.f, 0.f );
+			parent->GetDamageLocatorPosition( &impactPosWS, mergedIndexOffset + impact.second.damageLocatorIndex, true );
+			m_armorImpactEmitter->SetPosition( &impactPosWS );
+			// facing?
+			Vector3 impactDirWS( 0.f, 1.f, 0.f );
+			parent->GetDamageLocatorDirection( &impactDirWS, mergedIndexOffset + impact.second.damageLocatorIndex, true );
+			m_armorImpactEmitter->SetDirection( &impactDirWS );
+			// velocity?
+			Vector3 parentVelocityWS;
+			parent->GetWorldVelocity( parentVelocityWS );
+			// scaling?
+			float scale = impact.second.size * armorImpactParentSize / ( IMPACT_ARMOR_SIZE_MAX / IMPACT_ARMOR_SIZE_FACTOR );
+			// loding for emit rate?
+			float rateModifier = TriClamp( overlay.GetRenderPriority() / IMPACT_ARMOR_PARTICLE_LOD_FACTOR, 0.f, 1.f );
+			// put together particle update info
+			ITr2GenericEmitter::UpdateArguments args( updateContext.GetTime(), updateContext.GetGpuParticleSystem(), IdentityMatrix(), updateContext.GetOriginShift() );
+			// do the spawn here once!
+			m_armorImpactEmitter->SpawnOnce( args, parentVelocityWS, scale, rateModifier );
+			impact.second.requestSpawnDebris = false;
 
-						// scaling?
-						float scale = aidit->second.size * armorImpactParentSize / ( IMPACT_ARMOR_SIZE_MAX / IMPACT_ARMOR_SIZE_FACTOR );
-						// loding for emit rate?
-						float rateModifier = TriClamp( m_damageOverlay->GetRenderPriority() / IMPACT_ARMOR_PARTICLE_LOD_FACTOR, 0.f, 1.f );
-						// put together particle update info
-						ITr2GenericEmitter::UpdateArguments args( updateContext.GetTime(), updateContext.GetGpuParticleSystem(), IdentityMatrix(), updateContext.GetOriginShift() );
-						// do the spawn here once!
-						m_armorImpactEmitter->SpawnOnce( args, parentVelocityWS, scale, rateModifier );
-						aidit->second.requestSpawnDebris = false;
+			if( m_hullImpactEmitter && m_damageOverlay->GetImpactConfiguration() == ITriTargetable::IMPACT_HULL )
+			{
+				m_hullImpactEmitter->SetPosition( &impactPosWS );
+				m_hullImpactEmitter->SetDirection( &impactDirWS );
 
-						if( m_hullImpactEmitter && m_damageOverlay->GetImpactConfiguration() == ITriTargetable::IMPACT_HULL )
-						{
-							m_hullImpactEmitter->SetPosition( &impactPosWS );
-							m_hullImpactEmitter->SetDirection( &impactDirWS );
-
-							// do the spawn here once!
-							m_hullImpactEmitter->SpawnOnce( args, parentVelocityWS, scale, rateModifier );
-						}
-					}
-				}
+				// do the spawn here once!
+				m_hullImpactEmitter->SpawnOnce( args, parentVelocityWS, scale, rateModifier );
 			}
 		}
+	};
+
+	spawnFromOverlay( *m_damageOverlay, 0 );
+
+	std::vector<std::pair<EveDamageOverlay*, int32_t>> partOverlays;
+	parent->CollectPartDamageOverlays( partOverlays );
+	for( auto& partOverlay : partOverlays )
+	{
+		spawnFromOverlay( *partOverlay.first, partOverlay.second );
 	}
 }
 

@@ -7,6 +7,9 @@
 
 BLUE_CLASS_IMPL( EveSpaceObjectChild );
 
+BLUE_DECLARE( EveDamageOverlay );
+BLUE_DECLARE( Tr2Effect );
+
 /**
  * @brief Struct bundling locator sets and owner information as well as transform, to be processed by the parent object.
  * @see EveSpaceObjectChild::CollectOwnedLocatorSets
@@ -15,7 +18,8 @@ struct EveChildLocatorSetsSource
 {
 	class EveLocatorSets* sets = nullptr;
 	Matrix childToObject = IdentityMatrix();
-	const class EveChildMesh* owner = nullptr;
+	const class EveSpaceObjectChild* owner = nullptr;
+	uint32_t partTag = 0;
 };
 
 /**
@@ -289,6 +293,37 @@ public:
 	 * @param areaPool Pool receiving the areas of the collected geometries.
 	 */
 	virtual void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const;
+
+	/**
+	 * @brief Returns the damage overlay of the given part.
+	 * @param partTag Part tag identifying the part on this child.
+	 * @return The part's damage overlay, or nullptr if the part has none yet.
+	 */
+	virtual EveDamageOverlayPtr GetPartDamageOverlay( PartTag partTag ) const;
+
+	/**
+	 * @brief Returns damage overlay of the given part, creating it if non-existent.
+	 * @param partTag Part tag identifying the part on this child.
+	 * @return The part's damage overlay.
+	 */
+	virtual EveDamageOverlayPtr EnsurePartDamageOverlay( PartTag partTag );
+
+	/**
+	 * @brief Returns the armor damage shader effect of the given part's damage overlay.
+	 * @param partTag Part tag identifying the part on this child.
+	 * @return The part's armor damage shader effect, or nullptr if the child has none.
+	 */
+	virtual Tr2Effect* GetPartArmorDamageShaderEffect( PartTag partTag ) const;
+
+	/**
+	 * @brief Retrieves the current (animated) pose of one of the given part's damage locators.
+	 * @param partTag Part tag identifying the part on this child.
+	 * @param index Index of the locator within the part's damage locator set.
+	 * @param position Receives the locator position in child-local space.
+	 * @param direction Receives the locator direction in child-local space.
+	 * @return True if the pose was written, false otherwise.
+	 */
+	virtual bool GetPartDamageLocatorAnimatedLocal( PartTag partTag, int index, Vector3& position, Vector3& direction ) const;
 
 protected:
 	/**
