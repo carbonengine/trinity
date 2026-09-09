@@ -5,6 +5,7 @@
 #if TRINITY_PLATFORM == TRINITY_METAL
 
 #include "../include/Tr2ShaderAL.h"
+#include "MetalWorkQueue.h"
 
 
 namespace TrinityALImpl

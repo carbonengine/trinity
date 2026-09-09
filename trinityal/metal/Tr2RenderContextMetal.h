@@ -12,6 +12,7 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2BufferAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
+#include "../include/Tr2RegisterMapAL.h"
 #include "../include/Tr2VertexLayoutAL.h"
 #include "../include/Tr2ConstantBufferAL.h"
 #include "../include/Tr2RenderPassAL.h"
@@ -314,8 +315,61 @@ protected:
 	Tr2ShaderProgramAL m_shaderProgram;
 	Tr2VertexLayoutAL m_vertexLayout;
 
-	bool m_needsDrawResourceCheck;
+private:
+	struct Resource
+	{
+		enum Type
+		{
+			NONE,
+			BUFFER,
+			TEXTURE,
+			HEAP_VIEW,
+		};
 
+		Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::INVALID_SHADER;
+		uint32_t registerIndex = 0;
+		Tr2TextureAL texture;
+		Tr2BufferAL buffer;
+		Type type = NONE;
+		union
+		{
+			Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+			uint32_t mip;
+		};
+	};
+
+	struct Sampler
+	{
+		enum Type
+		{
+			NONE,
+			SAMPLER,
+			HEAP_VIEW,
+		};
+
+		Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::INVALID_SHADER;
+		uint32_t registerIndex = 0;
+		Tr2SamplerStateAL sampler;
+		Type type = NONE;
+	};
+
+	std::vector<Resource> m_pendingSRVs;
+	std::vector<Resource> m_pendingUAVs;
+	std::vector<Sampler> m_pendingSamplers;
+
+	const Resource* m_sortedSRVs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	const Resource* m_sortedUAVs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	const Sampler* m_sortedSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+
+	bool m_bindingsCommitted;
+	bool m_bindingsSealed;
+	const TrinityALImpl::Tr2ShaderProgramAL* m_committedProgram;
+
+	ALResult UseResourceBindings() throw();
+	void BeginResourceBindingBatch() throw();
+	void DiscardResourceBindings() throw();
+
+protected:
 	struct MetalPrimitiveInfo
 	{
 		MTLPrimitiveType metalPrimitiveType;
