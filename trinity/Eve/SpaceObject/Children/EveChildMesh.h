@@ -162,6 +162,7 @@ public:
 	void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
 
 	// access
+	Tr2MeshBase* GetMesh() const;
 	void SetMesh( Tr2MeshBase * mesh );
 	void SetOrigin( Origin origin );
 	void SetReflectionMode( EntityComponents::ReflectionMode reflectionMode );

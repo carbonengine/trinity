@@ -965,6 +965,10 @@ void EveChildMesh::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2Pi
 		}
 	}
 }
+Tr2MeshBase* EveChildMesh::GetMesh() const
+{
+	return m_mesh;
+}
 
 void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* data )
 {

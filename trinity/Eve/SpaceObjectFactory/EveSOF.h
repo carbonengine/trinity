@@ -19,6 +19,7 @@ BLUE_DECLARE( EveSOFDNA );
 BLUE_DECLARE( Tr2InstancedMesh );
 BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE( EveChildContainer );
+BLUE_DECLARE( EveChildTurret );
 BLUE_DECLARE_INTERFACE( IEveEffectChildrenOwner );
 BLUE_DECLARE_INTERFACE( ITr2LightOwner );
 BLUE_DECLARE_INTERFACE( IEveSpaceObjectAttachment );
@@ -60,6 +61,7 @@ public:
 	// change the material of a turret with SOF data
 	void SetupTurretMaterialFromDNA( EveTurretSet* turretSet, const char* dnaString );
 	void SetupTurretMaterialFromFaction( EveTurretSet* turretSet, const char* factionName );
+	void SetupChildTurretMaterialFromFaction( EveChildTurret* childTurret, const char* factionName );
 
 	bool LoadData( const char* filePath );
 
@@ -117,6 +119,7 @@ private:
 	void SetupImpactEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, ArmorDamageEffectCache& armorDamageEffectCache ) const;
 	void SetupLights( ITr2LightOwnerPtr obj, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets ) const;
 	void SetupLayout( EveSpaceObject2Ptr obj, EveChildContainerPtr layoutContainer, EveChildInstancedMeshesPtr& sharedMeshes, ArmorDamageEffectCache& armorDamageEffectCache, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, int& partTag, bool perPlacementTags, uint32_t seedOverwrite = 0 );
+	void ApplyFactionToTurretShader( Tr2Effect* shader, const EveSOFDataMgr::GenericData* genericData, const EveSOFDataMgr::FactionData* factionData ) const;
 
 
 	Tr2MeshPtr CreateMesh( const EveSOFDNAPtr dna ) const;

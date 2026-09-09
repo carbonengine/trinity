@@ -42,8 +42,6 @@ BLUE_DECLARE( TriObserverLocal );
 // constants
 // maximum number of single turrets per turret set
 const unsigned int EVE_MAX_TURRETS_PER_SET = 24;
-// maximum time offset for turret firing
-const float EVE_TURRET_RANDOM_DELAY_MAX = 0.6f;
 
 struct EveTurretSetVSData
 {
