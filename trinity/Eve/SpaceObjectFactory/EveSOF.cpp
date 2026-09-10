@@ -391,6 +391,11 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 		{
 			child->SetupWithStaticTransform( &scale, &rotation, &translation, Tr2Lod::TR2_LOD_LOW );
 		}
+		child->SetOwnedLocatorSets( BuildHullLocalLocatorSets( dna ) );
+		if( dna->GetLocatorCount( DAMAGE_LOCATOR_SET_NAME.c_str() ) > 0 )
+		{
+			child->SetArmorDamageShaderEffect( GetOrCreateArmorDamageEffect( armorDamageEffectCache, dna ) );
+		}
 		child->SetPartTag( partTag );
 
 		if( m_editorMode )
@@ -440,6 +445,14 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 					area->IsReversed() } );
 			}
 		}
+
+		std::vector<EveLocatorSetsPtr> partLocatorSets = BuildHullLocalLocatorSets( dna );
+		Tr2EffectPtr partArmorDamageShader;
+		if( dna->GetLocatorCount( DAMAGE_LOCATOR_SET_NAME.c_str() ) > 0 )
+		{
+			partArmorDamageShader = GetOrCreateArmorDamageEffect( armorDamageEffectCache, dna );
+		}
+
 		sharedMeshes->AddMesh(
 			dna->GetHullGeometryResPath().c_str(),
 			dna->CastShadow(),
@@ -451,7 +464,9 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 			1,
 			m_editorMode ? BlueSharedString( dna->GetHullNames()[0].c_str() ) : BlueSharedString(),
 			BlueSharedString(),
-			partTag );
+			partTag,
+			partLocatorSets,
+			partArmorDamageShader );
 
 		SetupAttachments( BlueCastPtr( placementContainer ), dna, placementOffsets, buildFlags );
 	}
@@ -502,7 +517,7 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 	{
 		SetupImpactEffects( newObj, dna, armorDamageEffectCache );
 	}
-	SetupLocatorSets( newObj, dna, placementOffsets, partTag );
+
 	// setup nested layout
 	int layoutPartTag = static_cast<int>( partTag );
 	SetupLayout( newObj, placementContainer, sharedMeshes, armorDamageEffectCache, dna, placementOffsets, layoutPartTag, false );
