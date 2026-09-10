@@ -581,12 +581,12 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		Tr2ParallelTaskGroup taskGroup = {};
 		m_updateContext.SetTaskGroup( &taskGroup );
 
-		for( auto& object : m_objects )
-		{
-			taskGroup.run( [object, this] {
-				object->UpdateAsyncronous( m_updateContext );
-			} );
-		}
+		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 32 ), [&]( Tr2BlockedRange<size_t> range ) {
+			for( size_t i = range.begin(); i != range.end(); ++i )
+			{
+				m_objects[i]->UpdateAsyncronous( m_updateContext );
+			}
+		} );
 		for( auto& object : m_uiObjects )
 		{
 			taskGroup.run( [object, this] {
@@ -1574,8 +1574,11 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 
 	{
 		CCP_STATS_ZONE( "UpdateVisibility" );
-		Tr2ParallelDo( m_objects.begin(), m_objects.end(), [&]( IEveSpaceObject2* obj ) {
-			obj->UpdateVisibility( m_updateContext, identity );
+		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 32 ), [&]( Tr2BlockedRange<size_t> range ) {
+			for( size_t i = range.begin(); i != range.end(); ++i )
+			{
+				m_objects[i]->UpdateVisibility( m_updateContext, identity );
+			}
 		} );
 
 		m_cameraAttachmentParent->SetTransform( Tr2Renderer::GetInverseViewTransform() );
@@ -1683,8 +1686,11 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 	auto& shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 	{
 		CCP_STATS_ZONE( "PushRtGeometry" );
-		Tr2ParallelDo( begin( shadowCasters ), end( shadowCasters ), [&]( auto caster ) {
-			caster->PushRtGeometry( *m_rtManager );
+		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, shadowCasters.size(), 32 ), [&]( Tr2BlockedRange<size_t> range ) {
+			for( size_t i = range.begin(); i != range.end(); ++i )
+			{
+				shadowCasters[i]->PushRtGeometry( *m_rtManager );
+			}
 		} );
 	}
 
