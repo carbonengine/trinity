@@ -28,6 +28,7 @@ BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2MeshBase );
 BLUE_DECLARE( EveSpaceObject2 );
 BLUE_DECLARE( Tr2GpuBufferWrapper );
+BLUE_DECLARE( Tr2Effect );
 
 extern Tr2SuballocatedBuffer g_bakedMorphTargetBuffer;
 
@@ -213,6 +214,8 @@ public:
 
 	EveDamageOverlayPtr GetDamageOverlay() const;
 	EveDamageOverlayPtr EnsureDamageOverlay();
+	void SetArmorDamageShaderEffect( Tr2Effect * effect );
+	Tr2Effect* GetArmorDamageShaderEffect() const;
 	bool GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const;
 	bool GetDamageLocatorAnimatedLocal( int index, Vector3& position, Vector3& direction ) const;
 
@@ -347,6 +350,7 @@ protected:
 
 	// armor/hull damage owned by this part, renders whether or not it is attached to a ship
 	EveDamageOverlayPtr m_damageOverlay;
+	Tr2EffectPtr m_armorDamageShader;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );
