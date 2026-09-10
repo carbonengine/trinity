@@ -4,7 +4,11 @@
 #include "../include/Tr2RtShaderTableAL.h"
 #include "include/Tr2CapsAL.h"
 
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
 bool Tr2RtShaderTableAL::s_reuseBuffers = true;
+#else
+bool Tr2RtShaderTableAL::s_reuseBuffers = false;
+#endif
 
 #if TRINITY_PLATFORM_SUPPORTS_RAY_TRACING
 

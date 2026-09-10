@@ -31,7 +31,7 @@ bool g_rtSkipUnusedMaterialApply = true;
 TRI_REGISTER_SETTING( "rtSkipUnusedMaterialApply", g_rtSkipUnusedMaterialApply );
 bool g_rtPrepareInstancesOnWorkers = true;
 TRI_REGISTER_SETTING( "rtPrepareInstancesOnWorkers", g_rtPrepareInstancesOnWorkers );
-bool g_rtRetainedShaderTable = true;
+bool g_rtRetainedShaderTable = Tr2ConstantBufferAL::SupportsPersistent();
 TRI_REGISTER_SETTING( "rtRetainedShaderTable", g_rtRetainedShaderTable );
 
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
