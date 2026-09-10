@@ -732,6 +732,8 @@ protected:
 	// It would be really, really nice not to have to hold on to the ball twice
 	// but we can't do it without writing another interface, or linking to destiny
 	ITriVectorFunctionPtr m_ballPosition;
+	ITriVectorFunction* m_referencePointSource = nullptr;
+	IEveReferencePointPtr m_referencePoint;
 	ITriQuaternionFunctionPtr m_ballRotation;
 	ITriQuaternionFunctionPtr m_modelRotation;
 	ITriVectorFunctionPtr m_modelTranslation;

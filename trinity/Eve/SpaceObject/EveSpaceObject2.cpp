@@ -535,10 +535,14 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 	// Particle Systems
 	// Get the reference position
 	Vector3d referencePosition( 0.0, 0.0, 0.0 );
-	IEveReferencePointPtr refObject( BlueCastPtr( m_ballPosition ) );
-	if( refObject )
+	if( m_referencePointSource != m_ballPosition.p )
 	{
-		refObject->GetReferencePoint( &referencePosition, time );
+		m_referencePointSource = m_ballPosition.p;
+		m_referencePoint = BlueCastPtr( m_ballPosition );
+	}
+	if( m_referencePoint )
+	{
+		m_referencePoint->GetReferencePoint( &referencePosition, time );
 	}
 
 	if( m_previousPosition.x != UNINITIALIZED_POSITION )
@@ -2153,12 +2157,12 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 
 void EveSpaceObject2::UpdateDamageLocatorFilter()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
-
 	if( m_damageFilterState == DamageFilterState::Idle )
 	{
 		return;
 	}
+
+	CCP_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_damageLocatorAutoFilterEnabled && !m_damageLocatorFilterRequested )
 	{
