@@ -686,7 +686,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 	// Get shadow batches in parallel
 	std::vector<size_t> indices;
 
-	std::vector<std::vector<EveSpaceScene::ShadowInfo>> shadowCasterInfo;
+	auto& shadowCasterInfo = m_shadowCasterInfo;
 	shadowCasterInfo.resize( SHADOW_FRUSTUM_COUNT );
 
 	for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
@@ -696,32 +696,24 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 
 	{
 		CCP_STATS_ZONE( "GetBatches" );
-		unsigned int shadowMapSize = shadowMap.GetShadowMapSize();
-		auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
-		for( auto& vector : shadowCasterInfo )
-		{
-			vector.reserve( shadowCasters.size() );
-		}
+		const auto& shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 
 		{
 			CCP_STATS_ZONE( "Find shadow casters" );
 			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
-				auto cameraFrustum = cameraFrustums[frustumIndex];
-				auto casters = shadowCasterInfo[frustumIndex];
-				auto shadowFrustum = shadowFrustums[frustumIndex];
-
-				auto frustumShadowCasterInfo = std::vector<EveSpaceScene::ShadowInfo>();
-				frustumShadowCasterInfo.reserve( shadowCasterCount );
+				const auto& cameraFrustum = cameraFrustums[frustumIndex];
+				const auto& shadowFrustum = shadowFrustums[frustumIndex];
+				auto& frustumShadowCasterInfo = shadowCasterInfo[frustumIndex];
+				frustumShadowCasterInfo.clear();
 
 				for( auto& caster : shadowCasters )
 				{
 					float radius;
 					if( caster->IsCastingShadow( cameraFrustum, shadowFrustum, renderReason, radius ) )
 					{
-						frustumShadowCasterInfo.push_back( EveSpaceScene::ShadowInfo( radius, caster, nullptr ) );
+						frustumShadowCasterInfo.emplace_back( radius, caster, nullptr );
 					}
 				}
-				shadowCasterInfo[frustumIndex] = frustumShadowCasterInfo;
 			} );
 		}
 		{
