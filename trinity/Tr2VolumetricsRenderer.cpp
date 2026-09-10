@@ -17,6 +17,22 @@
 #include "include/TriMath.h"
 #include "Utilities/Vector4d.h"
 
+namespace
+{
+const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
+const BlueSharedString RtSceneParameterName = BlueSharedString( "RtShadowScene" );
+const BlueSharedString Noise3DTextureParameterName = BlueSharedString( "Noise3DTexture" );
+const BlueSharedString FroxelOutputParameterName = BlueSharedString( "RtFroxelOutputTexture" );
+const BlueSharedString ShadowsOptionName = BlueSharedString( "SHADOWS" );
+const BlueSharedString ShadowsEnabledOption = BlueSharedString( "SHADOWS_ENABLED" );
+const BlueSharedString ShadowsDisabledOption = BlueSharedString( "SHADOWS_DISABLED" );
+const BlueSharedString GodRayNoiseOptionName = BlueSharedString( "GOD_RAY_NOISE" );
+const BlueSharedString GodRayNoiseEnabledOption = BlueSharedString( "GOD_RAY_NOISE_ENABLED" );
+const BlueSharedString GodRayNoiseDisabledOption = BlueSharedString( "GOD_RAY_NOISE_DISABLED" );
+const BlueSharedString FogNoiseOptionName = BlueSharedString( "FOG_NOISE" );
+const BlueSharedString FogNoiseEnabledOption = BlueSharedString( "FOG_NOISE_ENABLED" );
+const BlueSharedString FogNoiseDisabledOption = BlueSharedString( "FOG_NOISE_DISABLED" );
+}
 
 Tr2VolumetricsRenderer::FogViewDependentResources::FogViewDependentResources( bool temporalFroxels ) :
 	useTemporalFroxels( temporalFroxels )
@@ -695,7 +711,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 			if( shadowType == SHADOWS_RAYTRACED )
 			{
 				uint32_t techniqueIndex;
-				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
+				if( !resources.rtCalculateFroxels->GetShaderStateInterface()->GetTechniqueIndex( RtShadowTechniqueName, techniqueIndex ) )
 				{
 					CCP_LOGERR( "Failed to get technique index for raytraced froxel fog shadows!" );
 					return {};
@@ -703,7 +719,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 
 				BlueSharedStringW rayGenName;
 				BlueSharedStringW missName;
-				m_pipelineManager.AddLibrary( rayGenName, missName, resources.rtCalculateFroxels, BlueSharedString( "RtShadow" ) );
+				m_pipelineManager.AddLibrary( rayGenName, missName, resources.rtCalculateFroxels, RtShadowTechniqueName );
 
 				Tr2RtPipelineStateAL pipelineState = m_pipelineManager.GetPipelineState( renderContext );
 
@@ -716,20 +732,20 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 				Tr2RtLocalMaterialDescriptionAL material;
 				material.SetConstants( Tr2Renderer::GetPerObjectVSStartRegister(), m_fogConstantBuffer );
 
-				CCP_STATS_ZONE( "Create shader table" );
-				m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
-				m_shaderTableDesc.AddMissShader( missName.c_str(), material );
+				{
+					CCP_STATS_ZONE( "Create shader table" );
+					m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
+					m_shaderTableDesc.AddMissShader( missName.c_str(), material );
+					m_rtShadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+				}
 
-				Tr2RtShaderTableAL shadowShaderTable;
-				shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+				resources.rtCalculateFroxels->SetOption( GodRayNoiseOptionName, m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? GodRayNoiseEnabledOption : GodRayNoiseDisabledOption );
+				resources.rtCalculateFroxels->SetOption( FogNoiseOptionName, m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? FogNoiseEnabledOption : FogNoiseDisabledOption );
 
-				resources.rtCalculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
-				resources.rtCalculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
+				resources.rtCalculateFroxels->SetParameter( Noise3DTextureParameterName, m_froxel3DNoise );
+				resources.rtCalculateFroxels->SetParameter( FroxelOutputParameterName, fogFroxels );
 
-				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), fogFroxels );
-
-				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
+				resources.rtCalculateFroxels->SetParameter( RtSceneParameterName, raytracingGeometry );
 				resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 				renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
 
@@ -738,17 +754,17 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 					renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, raytracingGeometry->GetBindlessResources() );
 				}
 
-				renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
+				renderContext.DispatchRays( pipelineState, m_rtShadowShaderTable, rayGenName.c_str(), width, height, depth );
 			}
 			else
 			{
 				//Otherwise, just use a plain compute shader.
-				resources.calculateFroxels->SetOption( BlueSharedString( "SHADOWS" ), BlueSharedString( shadowType == SHADOWS_CASCADED ? "SHADOWS_ENABLED" : "SHADOWS_DISABLED" ) );
-				resources.calculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
-				resources.calculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
+				resources.calculateFroxels->SetOption( ShadowsOptionName, shadowType == SHADOWS_CASCADED ? ShadowsEnabledOption : ShadowsDisabledOption );
+				resources.calculateFroxels->SetOption( GodRayNoiseOptionName, m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? GodRayNoiseEnabledOption : GodRayNoiseDisabledOption );
+				resources.calculateFroxels->SetOption( FogNoiseOptionName, m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? FogNoiseEnabledOption : FogNoiseDisabledOption );
 
-				resources.calculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-				resources.calculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), fogFroxels );
+				resources.calculateFroxels->SetParameter( Noise3DTextureParameterName, m_froxel3DNoise );
+				resources.calculateFroxels->SetParameter( FroxelOutputParameterName, fogFroxels );
 
 				Tr2Renderer::RunComputeShader( resources.calculateFroxels, wgX, wgY, wgZ, renderContext );
 			}
