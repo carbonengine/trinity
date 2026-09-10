@@ -690,7 +690,7 @@ public:
 	bool m_usingRaytracedShadows;
 
 	void RenderVolumetricShadowMap( Tr2RenderContext & renderContext );
-	void RenderIntoCloudShadowMap( Tr2RenderContext & renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, std::vector<IEveShadowCaster*> shadowCasters );
+	void RenderIntoCloudShadowMap( Tr2RenderContext & renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, const std::vector<IEveShadowCaster*>& shadowCasters );
 
 	// Frame index when Update was last called
 	uint64_t m_lastUpdateFrame = std::numeric_limits<uint64_t>::max();

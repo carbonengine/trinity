@@ -2496,7 +2496,7 @@ void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
+	const auto& shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 
 	m_componentRegistry->ProcessComponents<ITr2VolumetricRenderable>( [this, &renderContext, &shadowCasters]( ITr2VolumetricRenderable* volumetric ) -> void {
 		ITr2VolumetricRenderable::ShadowInfo shadowInfo;
@@ -2510,7 +2510,7 @@ void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 	} );
 }
 
-void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, std::vector<IEveShadowCaster*> shadowCasters )
+void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, const std::vector<IEveShadowCaster*>& shadowCasters )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -2528,16 +2528,29 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 	{
 		CCP_STATS_ZONE( "get shadowbatches for volumetrics" );
 		auto shadowFrustum = TriShadowOrthoFrustum( cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld );
-		float sizeInShadow = 0.0f;
+		m_shadowCasterInfo.resize( SHADOW_FRUSTUM_COUNT );
+		auto& infos = m_shadowCasterInfo[0];
+		infos.clear();
+		const uint32_t mainPassStamp = ( g_csmMainPassPerObjectData && m_primaryPodsValid ) ? m_primaryPodStamp : 0;
 		for( auto& caster : shadowCasters )
 		{
+			float sizeInShadow = 0.0f;
 			caster->IsCastingShadow( frustum, shadowFrustum, TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
 			{
-				auto perObjData = caster->GetShadowPerObjectData( m_shadowBatches[0].get() );
-				caster->GetShadowBatches( m_shadowBatches[0].get(), perObjData, sizeInShadow );
+				const uint32_t casterStamp = caster->m_sharedShadowDataStamp;
+				Tr2PerObjectData* perObjData = ( casterStamp != 0 && casterStamp == mainPassStamp ) ? caster->m_sharedShadowPerObjectData : caster->GetShadowPerObjectData( m_shadowBatches[0].get() );
+				infos.emplace_back( sizeInShadow, caster, perObjData );
 			}
+		}
+		Tr2ParallelFor( size_t( 0 ), infos.size(), [&]( size_t i ) {
+			const auto& info = infos[i];
+			info.caster->GetShadowBatches( &m_shadowGatherPerThread.local(), info.perObjectData, info.radius );
+		} );
+		for( auto& src : m_shadowGatherPerThread )
+		{
+			m_shadowBatches[0]->TransferFrom( &src );
 		}
 		m_instancedMeshManager->GetShadowBatches( m_updateContext.GetFrustum(), shadowFrustum, m_updateContext.GetInvLodFactor(), { { TRIBATCHTYPE_OPAQUE, *m_shadowBatches[0] } } );
 	}
