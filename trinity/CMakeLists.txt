@@ -1899,7 +1899,11 @@ function(set_shared_trinity_properties target)
     endif()
 
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
-    get_target_property(DESTINY_INCLUDE_DIRS destiny INTERFACE_INCLUDE_DIRECTORIES)
+    set(destiny_target_name destiny)
+    if (BUILD_FOR_PYTHON_2)
+        set(destiny_target_name Destiny)
+    endif ()
+    get_target_property(DESTINY_INCLUDE_DIRS ${destiny_target_name} INTERFACE_INCLUDE_DIRECTORIES)
     target_include_directories(${target}
         PUBLIC
             $<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>
