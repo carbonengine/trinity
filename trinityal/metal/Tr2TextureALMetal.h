@@ -11,6 +11,31 @@
 
 namespace TrinityALImpl
 {
+class Tr2ReadbackAL : public Tr2DeviceResourceAL<Tr2ReadbackAL>
+{
+public:
+	void Initialize( CComPtr<ID3D12Resource> readScratch, uint32_t rowPitch, uint64_t frameNumber );
+
+	~Tr2ReadbackAL();
+
+	bool IsReady( Tr2PrimaryRenderContextAL& renderContext ) const;
+
+	ALResult Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const;
+
+	void Destroy();
+
+	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+
+	Tr2ALMemoryType GetMemoryClass() const;
+
+	bool IsValid() const;
+
+private:
+	id<MTLBuffer> m_mtlReadBackBuffer;
+	uint32_t m_rowPitch;
+	uint64_t m_frameNumber;
+};
+
 class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
 {
 public:
@@ -28,7 +53,7 @@ public:
 	Tr2GpuUsage::Type GetGpuUsage() const;
 	Tr2CpuUsage::Type GetCpuUsage() const;
 
-	ALResult BeginAsyncReadback( Tr2TextureAsyncReadback& readback );
+	std::shared_ptr<Tr2ReadbackAL> CreateReadback( const Tr2TextureSubresource& region, Tr2PrimaryRenderContextAL& renderContext );
 
 	ALResult MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
 	void UnmapForReading( Tr2RenderContextAL& renderContext );

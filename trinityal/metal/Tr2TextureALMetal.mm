@@ -12,6 +12,64 @@
 
 namespace TrinityALImpl
 {
+
+
+
+void Tr2ReadbackAL::Initialize( id<MTLBuffer> mtlReadBackBuffer, uint32_t rowPitch, uint64_t frameNumber )
+{
+	m_mtlReadBackBuffer = mtlReadBackBuffer;
+	m_rowPitch = rowPitch;
+	m_frameNumber = frameNumber;
+}
+
+Tr2ReadbackAL::~Tr2ReadbackAL()
+{
+	Destroy();
+}
+
+bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext ) const
+{
+	return renderContext.GetRenderedFrameNumber() >= m_frameNumber;
+}
+
+ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const
+{
+	if( IsReady( renderContext ) )
+	{
+		renderContext.ReadBackBufferToCPU( m_mtlReadBackBuffer, true );
+	}
+
+	pointer = m_mtlReadBackBuffer.contents;
+	rowPitch = m_rowPitch;
+
+	return S_OK;
+}
+
+void Tr2ReadbackAL::Destroy()
+{
+	if( m_mtlReadBackBuffer )
+	{
+		m_metalContext->DestroyMetalBuffer( m_mtlReadBackBuffer );
+		m_mtlReadBackBuffer = nil;
+	}
+}
+
+void Tr2ReadbackAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+{
+}
+
+Tr2ALMemoryType Tr2ReadbackAL::GetMemoryClass() const
+{
+	return AL_MEMORY_MANAGED;
+}
+
+bool Tr2ReadbackAL::IsValid() const
+{
+	return mtlReadBackBuffer != nil;
+}
+
+
+
 Tr2TextureAL::Tr2TextureAL() :
 	m_gpuUsage( Tr2GpuUsage::NONE ),
 	m_cpuUsage( Tr2CpuUsage::NONE ),
@@ -395,8 +453,74 @@ Tr2CpuUsage::Type Tr2TextureAL::GetCpuUsage() const
 	return m_cpuUsage;
 }
 
+
+std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSubresource& region, Tr2PrimaryRenderContextAL& renderContext )
+{
+	MetalContext* metalContext = renderContext.GetMetalContext();
+
+	if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
+	{
+		return nil;
+	}
+
+	if( !IsValid() || !renderContext.IsValid() )
+	{
+		return nil;
+	}
+	if( !region.IsValidForBitmap( m_desc ) )
+	{
+		return nil;
+	}
+	if( !region.IsSingleSubresource() )
+	{
+		return nil;
+	}
+
+	CCP_ASSERT( region.m_startFace == 0 && region.m_endFace == 1 );
+
+	MTLOrigin readOrigin;
+	MTLSize readSize;
+	uint32_t readMipLevel = region.m_startMipLevel;
+
+	if( readMipLevel >= m_mtlTexture.mipmapLevelCount )
+	{
+		CCP_AL_LOGWARN( "Mip level %d does not exist for this texture. Defaulting to 0.", (int)readMipLevel );
+		readMipLevel = 0;
+	}
+
+	if( region.HasBox() )
+	{
+		readOrigin = MTLOriginMake( region.m_box.left, region.m_box.bottom, region.m_box.front );
+		readSize = MTLSizeMake( region.GetWidth(), region.GetHeight(), region.GetDepth() );
+	}
+	else
+	{
+		readOrigin = MTLOriginMake( 0, 0, 0 );
+		readSize = MTLSizeMake( m_desc.GetMipWidth( readMipLevel ),
+								m_desc.GetMipHeight( readMipLevel ),
+								m_desc.GetMipDepth( readMipLevel ) );
+	}
+
+	auto mipPitch = m_desc.GetMipPitch( readMipLevel );
+	auto bufferSize = m_desc.GetMipSize( readMipLevel );
+
+	id<MTLBuffer> mtlReadbackBuffer = mtlReadBackBuffer = metalContext->CreateMetalBuffer(renderContext.GetMetalWorkQueue(), bufferSize, MTLResourceStorageModeManaged, nil );
+
+	renderContext.GetMetalWorkQueue()->CopyTextureToMTLBuffer( m_mtlTexture,
+															   mtlReadBackBuffer,
+															   mipPitch,
+															   bufferSize / std::max( 1u, m_desc.GetDepth() ),
+															   readOrigin,
+															   readSize,
+															   readMipLevel,
+															   false );
+
+	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
+	readback->Initialize( mtlReadbackBuffer, mipPitch, renderContext.GetRecordingFrameNumber() );
+	return readback;
+}
+
 ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region,
-									  bool synchronize,
 									  const void*& data,
 									  uint32_t& pitch,
 									  Tr2RenderContextAL& renderContext )
