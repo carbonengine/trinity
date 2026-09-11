@@ -883,9 +883,8 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
 		auto meshIndex = m_mesh->GetMeshIndex();
-		if( auto mesh = m_mesh->GetGeometryResource()->GetMeshData( meshIndex ) )
+        if( auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize ) )
 		{
-			auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
 			if( lod->m_morphTargetAllocation.IsValid() )
 			{
 				auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::RUNTIME_EVALUATED );

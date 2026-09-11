@@ -1,4 +1,4 @@
-﻿// Copyright © 2026 CCP ehf.
+// Copyright © 2026 CCP ehf.
 
 #include "StdAfx.h"
 #include "BVH.h"
@@ -75,7 +75,7 @@ void CreateNodes(
 			} );
 		}
 
-		node.firstChildIndex = nodes.size();
+		node.firstChildIndex = (uint32_t) nodes.size();
 		node.numObj = 2;
 		node.leaf = false;
 		Node leftChild;
