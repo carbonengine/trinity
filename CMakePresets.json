@@ -44,7 +44,7 @@
       "name": "x64-windows",
       "inherits": "windows",
       "cacheVariables": {
-        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/toolchains/x64-windows-carbon.cmake"
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/toolchains/x64-windows-145-carbon.cmake"
       },
       "hidden": true
     },
@@ -71,8 +71,8 @@
       "inherits": "x64-windows",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Internal",
-        "VCPKG_TARGET_TRIPLET": "x64-windows-internal",
-        "VCPKG_HOST_TRIPLET": "x64-windows-internal"
+        "VCPKG_TARGET_TRIPLET": "x64-windows-145-internal",
+        "VCPKG_HOST_TRIPLET": "x64-windows-145-internal"
       }
     },
     {
@@ -80,8 +80,8 @@
       "inherits": "x64-windows",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "VCPKG_TARGET_TRIPLET": "x64-windows-release",
-        "VCPKG_HOST_TRIPLET": "x64-windows-release"
+        "VCPKG_TARGET_TRIPLET": "x64-windows-145-release",
+        "VCPKG_HOST_TRIPLET": "x64-windows-145-release"
       }
     },
     {
@@ -89,8 +89,8 @@
       "inherits": "x64-windows",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "VCPKG_TARGET_TRIPLET": "x64-windows-debug",
-        "VCPKG_HOST_TRIPLET": "x64-windows-debug"
+        "VCPKG_TARGET_TRIPLET": "x64-windows-145-debug",
+        "VCPKG_HOST_TRIPLET": "x64-windows-145-debug"
       }
     },
     {
@@ -98,8 +98,8 @@
       "inherits": "x64-windows",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "TrinityDev",
-        "VCPKG_TARGET_TRIPLET": "x64-windows-trinitydev",
-        "VCPKG_HOST_TRIPLET": "x64-windows-trinitydev"
+        "VCPKG_TARGET_TRIPLET": "x64-windows-145-trinitydev",
+        "VCPKG_HOST_TRIPLET": "x64-windows-145-trinitydev"
       }
     },
     {

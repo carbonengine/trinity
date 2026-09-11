@@ -86,8 +86,8 @@ public:
 	Tr2RenderContextEnum::PixelFormat GetFormat() const;
 	Tr2RenderContextEnum::TextureType GetType() const;
 
-	long GenerateMipMaps();
-	long Resolve( Tr2RenderTarget * destination );
+	int32_t GenerateMipMaps();
+	int32_t Resolve( Tr2RenderTarget * destination );
 
 	Tr2TextureAL& GetRenderTarget();
 	const Tr2TextureAL& GetRenderTarget() const;
