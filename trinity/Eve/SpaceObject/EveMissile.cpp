@@ -7,7 +7,7 @@
 #include "EveMissile.h"
 #include "EveMissileWarhead.h"
 #include "Eve/EveUpdateContext.h"
-#include "include/IEveReferencePoint.h"
+#include <IEveReferencePoint.h>
 
 // keep track of missiles
 CCP_STATS_DECLARE( eveMissileObjects, "Trinity/Missiles/missileObjects", true, CST_COUNTER_LOW, "Number of missiles (MIRVs) in this frame." );
