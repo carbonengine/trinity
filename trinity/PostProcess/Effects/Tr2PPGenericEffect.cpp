@@ -20,33 +20,28 @@ struct EffectInstance
 	float intensity;
 };
 
-template <typename Param, typename Value>
-struct BlendableParameter
-{
-	BluePtr<Param> parameter;
-	Value value;
-};
-
 struct EffectBucket
 {
 	EffectBucket() = default;
-	explicit EffectBucket( const Tr2PPGenericEffect& effect )
+	EffectBucket( Tr2PPGenericEffect* effect, PostProcessEnums::Priority priority, float intensity )
 	{
-		for( auto& param : effect.blendableFloatParameters )
+		instance.effect = effect;
+		effects.push_back( EffectInstance{ effect, priority, intensity } );
+		for( auto& param : effect->blendableFloatParameters )
 		{
-			floatValues.push_back( param.defaultValue );
+			instance.floatValues.push_back( param.defaultValue );
 		}
-		for( auto& param : effect.blendableVector2Parameters )
+		for( auto& param : effect->blendableVector2Parameters )
 		{
-			vector2Values.push_back( param.defaultValue );
+			instance.vector2Values.push_back( param.defaultValue );
 		}
-		for( auto& param : effect.blendableVector3Parameters )
+		for( auto& param : effect->blendableVector3Parameters )
 		{
-			vector3Values.push_back( param.defaultValue );
+			instance.vector3Values.push_back( param.defaultValue );
 		}
-		for( auto& param : effect.blendableVector4Parameters )
+		for( auto& param : effect->blendableVector4Parameters )
 		{
-			vector4Values.push_back( param.defaultValue );
+			instance.vector4Values.push_back( param.defaultValue );
 		}
 	}
 
@@ -59,19 +54,19 @@ struct EffectBucket
 				values[&param - params.data()] += value;
 			}
 		};
-		AccumulateValues( effect.blendableFloatParameters, floatValues );
-		AccumulateValues( effect.blendableVector2Parameters, vector2Values );
-		AccumulateValues( effect.blendableVector3Parameters, vector3Values );
-		AccumulateValues( effect.blendableVector4Parameters, vector4Values );
+		AccumulateValues( effect.blendableFloatParameters, instance.floatValues );
+		AccumulateValues( effect.blendableVector2Parameters, instance.vector2Values );
+		AccumulateValues( effect.blendableVector3Parameters, instance.vector3Values );
+		AccumulateValues( effect.blendableVector4Parameters, instance.vector4Values );
 	}
 
+	Tr2AccumulatedGenericEffects::GenericEffectInstance instance;
 	std::vector<EffectInstance> effects;
-	std::vector<float> floatValues;
-	std::vector<Vector2> vector2Values;
-	std::vector<Vector3> vector3Values;
-	std::vector<Vector4> vector4Values;
 };
 
+/** 
+ Partition effects into buckets of compatible effects that can be blended together. Each bucket contains a list of effects that can be merged, 
+ along with the accumulated parameters for the bucket. */
 std::vector<EffectBucket> PopulateBuckets( Tr2PostProcess2& postprocess, std::vector<Tr2PostProcessAttributes*>& sources )
 {
 	std::vector<EffectBucket> buckets;
@@ -83,8 +78,7 @@ std::vector<EffectBucket> PopulateBuckets( Tr2PostProcess2& postprocess, std::ve
 			deprecated->UpdateEffectParameters();
 			if( deprecated->IsValid() )
 			{
-				auto& bucket = buckets.emplace_back( *deprecated );
-				bucket.effects.push_back( EffectInstance{ deprecated, PostProcessEnums::SCENE_DEFAULT_PRIORITY, 1.0f } );
+				buckets.emplace_back( deprecated, PostProcessEnums::SCENE_DEFAULT_PRIORITY, 1.0f );
 			}
 		}
 	}
@@ -112,15 +106,18 @@ std::vector<EffectBucket> PopulateBuckets( Tr2PostProcess2& postprocess, std::ve
 			} );
 			if( found == buckets.end() )
 			{
-				buckets.emplace_back( *effect );
-				found = std::prev( buckets.end() );
+				buckets.emplace_back( effect, src->priority, src->intensity );
 			}
-			found->effects.push_back( EffectInstance{ effect, src->priority, src->intensity } );
+			else
+			{
+				found->effects.push_back( EffectInstance{ effect, src->priority, src->intensity } );
+			}
 		}
 	}
 	return buckets;
 }
 
+/// Checks if the constant is a float# type parameter with IsBlendable annotation. Only such parameters can be blended together.
 bool IsBlendableParameter( const Tr2EffectConstant& constant, const Tr2Shader& shader )
 {
 	if( constant.type != Tr2EffectConstant::FLOAT || constant.elements > 1 || constant.dimension < 1 || constant.dimension > 4 )
@@ -190,6 +187,10 @@ void Tr2PPGenericEffect::UpdateEffectParameters()
 			}
 		}
 	}
+	std::sort( blendableFloatParameters.begin(), blendableFloatParameters.end(), []( const auto& a, const auto& b ) { return a.parameter->m_name < b.parameter->m_name; } );
+	std::sort( blendableVector2Parameters.begin(), blendableVector2Parameters.end(), []( const auto& a, const auto& b ) { return a.parameter->m_name < b.parameter->m_name; } );
+	std::sort( blendableVector3Parameters.begin(), blendableVector3Parameters.end(), []( const auto& a, const auto& b ) { return a.parameter->m_name < b.parameter->m_name; } );
+	std::sort( blendableVector4Parameters.begin(), blendableVector4Parameters.end(), []( const auto& a, const auto& b ) { return a.parameter->m_name < b.parameter->m_name; } );
 }
 
 bool Tr2PPGenericEffect::IsValid() const
@@ -347,13 +348,7 @@ void AccumulateGenericEffects( Tr2PostProcess2& postprocess, std::vector<Tr2Post
 
 	for( auto& bucket : buckets )
 	{
-		Tr2AccumulatedGenericEffects::GenericEffectInstance instance;
-		instance.effect = bucket.effects.front().effect;
-		instance.floatValues = std::move( bucket.floatValues );
-		instance.vector2Values = std::move( bucket.vector2Values );
-		instance.vector3Values = std::move( bucket.vector3Values );
-		instance.vector4Values = std::move( bucket.vector4Values );
-		postprocess.m_genericEffects.effects[instance.effect->m_executionSlot].push_back( instance );
+		postprocess.m_genericEffects.effects[bucket.instance.effect->m_executionSlot].push_back( bucket.instance );
 	}
 	for( auto& each : postprocess.m_genericEffects.effects )
 	{
