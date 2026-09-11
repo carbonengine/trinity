@@ -184,10 +184,6 @@
   },
   "overrides": [
     {
-      "name": "protobuf",
-      "version": "3.6.0.1"
-    },
-    {
       "name": "openssl",
       "version": "1.1.1k#8"
     },
