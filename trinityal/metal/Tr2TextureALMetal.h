@@ -14,7 +14,7 @@ namespace TrinityALImpl
 class Tr2ReadbackAL : public Tr2DeviceResourceAL<Tr2ReadbackAL>
 {
 public:
-	void Initialize( CComPtr<ID3D12Resource> readScratch, uint32_t rowPitch, uint64_t frameNumber );
+    void Initialize( MetalContext* metalContext, id<MTLBuffer> mtlReadBackBuffer, uint32_t rowPitch, uint64_t frameNumber );
 
 	~Tr2ReadbackAL();
 
@@ -31,6 +31,7 @@ public:
 	bool IsValid() const;
 
 private:
+    MetalContext* m_metalContext;
 	id<MTLBuffer> m_mtlReadBackBuffer;
 	uint32_t m_rowPitch;
 	uint64_t m_frameNumber;

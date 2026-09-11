@@ -15,8 +15,9 @@ namespace TrinityALImpl
 
 
 
-void Tr2ReadbackAL::Initialize( id<MTLBuffer> mtlReadBackBuffer, uint32_t rowPitch, uint64_t frameNumber )
+void Tr2ReadbackAL::Initialize( MetalContext* metalContext, id<MTLBuffer> mtlReadBackBuffer, uint32_t rowPitch, uint64_t frameNumber )
 {
+    m_metalContext = metalContext;
 	m_mtlReadBackBuffer = mtlReadBackBuffer;
 	m_rowPitch = rowPitch;
 	m_frameNumber = frameNumber;
@@ -36,7 +37,7 @@ ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2Primar
 {
 	if( IsReady( renderContext ) )
 	{
-		renderContext.ReadBackBufferToCPU( m_mtlReadBackBuffer, true );
+        renderContext.GetMetalWorkQueue()->ReadBackBufferToCPU( m_mtlReadBackBuffer, true );
 	}
 
 	pointer = m_mtlReadBackBuffer.contents;
@@ -65,7 +66,7 @@ Tr2ALMemoryType Tr2ReadbackAL::GetMemoryClass() const
 
 bool Tr2ReadbackAL::IsValid() const
 {
-	return mtlReadBackBuffer != nil;
+	return m_mtlReadBackBuffer != nil;
 }
 
 
@@ -504,10 +505,10 @@ std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSub
 	auto mipPitch = m_desc.GetMipPitch( readMipLevel );
 	auto bufferSize = m_desc.GetMipSize( readMipLevel );
 
-	id<MTLBuffer> mtlReadbackBuffer = mtlReadBackBuffer = metalContext->CreateMetalBuffer(renderContext.GetMetalWorkQueue(), bufferSize, MTLResourceStorageModeManaged, nil );
+	id<MTLBuffer> mtlReadbackBuffer = metalContext->CreateMetalBuffer(renderContext.GetMetalWorkQueue(), bufferSize, MTLResourceStorageModeManaged, nil );
 
 	renderContext.GetMetalWorkQueue()->CopyTextureToMTLBuffer( m_mtlTexture,
-															   mtlReadBackBuffer,
+                                                               mtlReadbackBuffer,
 															   mipPitch,
 															   bufferSize / std::max( 1u, m_desc.GetDepth() ),
 															   readOrigin,
@@ -516,7 +517,7 @@ std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSub
 															   false );
 
 	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
-	readback->Initialize( mtlReadbackBuffer, mipPitch, renderContext.GetRecordingFrameNumber() );
+	readback->Initialize( metalContext, mtlReadbackBuffer, mipPitch, renderContext.GetRecordingFrameNumber() );
 	return readback;
 }
 
