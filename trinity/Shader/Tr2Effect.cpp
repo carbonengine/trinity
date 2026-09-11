@@ -1549,6 +1549,39 @@ unsigned Tr2Effect::GetHashValue() const
 	return hash;
 }
 
+uint32_t Tr2Effect::GetNonBlendableHashValue() const
+{
+	unsigned hash = 0;
+	if( m_effectResource )
+	{
+		hash = CcpHashFNV1( m_effectResource->GetPath(), wcslen( m_effectResource->GetPath() ) * sizeof( wchar_t ) );
+	}
+	for( auto& option : m_options )
+	{
+		hash = CcpHashFNV1( &option, sizeof( option ), hash );
+	}
+	for( auto it = m_constParameters.begin(); it != m_constParameters.end(); ++it )
+	{
+		auto name = it->name.c_str();
+		// looks scary, but it's a constant string, so the pointer is unique
+		hash = CcpHashFNV1( &name, sizeof( name ), hash );
+		hash = CcpHashFNV1( &it->value, sizeof( it->value ), hash );
+	}
+	for( auto it = m_parameters.begin(); it != m_parameters.end(); ++it )
+	{
+		if ( GetBool( m_shader, ( *it )->GetParameterName(), "IsBlendable", false ) )
+		{
+			continue;
+		}
+		hash = ( *it )->GetHashValue( hash );
+	}
+	for( auto it = m_resources.begin(); it != m_resources.end(); ++it )
+	{
+		hash = ( *it )->GetHashValue( hash );
+	}
+	return hash;
+}
+
 ITriEffectParameter* Tr2Effect::FindParameterByName( const char* name ) const
 {
 	CCP_STATS_ZONE( __FUNCTION__ );

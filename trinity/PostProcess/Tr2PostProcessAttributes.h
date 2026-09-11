@@ -10,6 +10,9 @@
 BLUE_DECLARE( Tr2PostProcessAttributes );
 BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
 
+BLUE_DECLARE( Tr2PPGenericEffect );
+BLUE_DECLARE_VECTOR( Tr2PPGenericEffect );
+
 BLUE_CLASS( Tr2PostProcessAttributes ) :
 	public IRoot
 {
@@ -102,6 +105,8 @@ public:
 	PriorityBlend::Attribute<float> colorGamma = 1.f;
 	PriorityBlend::Attribute<Vector3> colorGain = Vector3( 1, 1, 1 );
 	PriorityBlend::Attribute<Vector3> colorOffset = Vector3( 0, 0, 0 );
+
+	PTr2PPGenericEffectVector genericEffects;
 };
 
 TYPEDEF_BLUECLASS( Tr2PostProcessAttributes );

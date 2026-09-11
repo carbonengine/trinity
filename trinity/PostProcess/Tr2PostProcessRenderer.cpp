@@ -701,11 +701,6 @@ void Tr2PostProcessRenderer::Execute(
 
 	if( postProcess != nullptr )
 	{
-		if( auto genericEffect = postProcess->GetGenericEffectIfAvailable( m_quality ) )
-		{
-			RenderGenericEffect( nonMsaaSource, sourceBuffer, renderContext, genericEffect );
-		}
-
 		if( auto fog = postProcess->GetFogIfAvailable( m_quality ) )
 		{
 			RenderFog( nonMsaaSource, sourceBuffer, gpuResourcePool, renderContext, fog );
@@ -716,6 +711,8 @@ void Tr2PostProcessRenderer::Execute(
 		{
 			RenderGodRays( nonMsaaSource, depthMap, gpuResourcePool, renderContext, godrays );
 		}
+
+		nonMsaaSource = RenderGenericEffects( postProcess->m_genericEffects.effects[Tr2PPGenericEffect::BEFORE_UPSCALING], nonMsaaSource, gpuResourcePool, renderContext );
 
 		if( auto dof = postProcess->GetDepthOfFieldIfAvailable( m_quality ) )
 		{
@@ -806,16 +803,26 @@ void Tr2PostProcessRenderer::Execute(
 			RenderTonemapping( tonemappedOutput, postProcess, renderContext );
 
 			output = RenderUpscaling( tonemappedOutput, depthMap, velocity, opaqueColor, scene->GetReprojectionMatrix(), gpuResourcePool, renderContext, upscalingContext, dynamicExposure );
-			depthMap = {};
-			velocity = {};
-			opaqueColor = {};
-
+			if( !postProcess || postProcess->m_genericEffects.effects[Tr2PPGenericEffect::AFTER_TONEMAP].empty() )
+			{
+				depthMap = {};
+				velocity = {};
+				opaqueColor = {};
+			}
 			// need to reset the perframedata so we have the correct viewport size etc
 			scene->ApplyUpscalingToPerFrameData( displaySize.width, displaySize.height, renderContext );
 		}
 		else
 		{
 			RenderTonemapping( output, postProcess, renderContext );
+		}
+
+		{
+			auto newOutput = RenderGenericEffects( postProcess->m_genericEffects.effects[Tr2PPGenericEffect::AFTER_TONEMAP], output, gpuResourcePool, renderContext );
+			if( !( newOutput.Get() == output.Get() ) )
+			{
+				DrawInto( output, Tr2LoadAction::DONT_CARE, newOutput, renderContext );
+			}
 		}
 
 		renderContext.m_esm.SetRenderTarget( 0, destination );
@@ -831,6 +838,14 @@ void Tr2PostProcessRenderer::Execute(
 	else
 	{
 		RenderTonemapping( output, postProcess, renderContext );
+		{
+			auto newOutput = RenderGenericEffects( postProcess->m_genericEffects.effects[Tr2PPGenericEffect::AFTER_TONEMAP], output, gpuResourcePool, renderContext );
+			if( !( newOutput.Get() == output.Get() ) )
+			{
+				DrawInto( output, Tr2LoadAction::DONT_CARE, newOutput, renderContext );
+			}
+		}
+
 		Tr2Renderer::DrawTexture( renderContext, output );
 	}
 
@@ -1582,19 +1597,6 @@ void Tr2PostProcessRenderer::RenderTonemapping(
 	DrawInto( dest, Tr2LoadAction::DONT_CARE, m_tonemappingEffect, renderContext );
 }
 
-void Tr2PostProcessRenderer::RenderGenericEffect( const Tr2TextureAL& dest, const Tr2TextureAL& src, Tr2RenderContext& renderContext, Tr2PPGenericEffectPtr genericEffect )
-{
-	Tr2EffectPtr effect = genericEffect->GetEffect();
-	if( effect != nullptr )
-	{
-		GPU_REGION( renderContext, "GenericEffect" );
-		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-
-		TEMP_PARAM( effect, "Blit", src );
-		DrawInto( dest, Tr2LoadAction::DONT_CARE, effect, renderContext );
-	}
-}
-
 void Tr2PostProcessRenderer::RenderDepthOfField( const Tr2TextureAL& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* depthOfField, bool temporal, float upscalingAmount )
 {
 	GPU_REGION( renderContext, "DepthOfField" );
@@ -1711,4 +1713,34 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::GetBlackTexture( Tr2GpuResou
 	const uint32_t blackColor[4 * 4] = {};
 	Tr2SubresourceData initData = { blackColor, 4 * sizeof( uint32_t ), 4 * 4 * sizeof( uint32_t ) };
 	return gpuResourcePool.GetPersistentTexture( "Black", 4, 4, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2GpuUsage::SHADER_RESOURCE, &initData );
+}
+
+Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderGenericEffects( std::vector<Tr2AccumulatedGenericEffects::GenericEffectInstance>& effects, const Tr2GpuResourcePool::Texture& src, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext ) const
+{
+	auto effectSrc = src;
+	for( auto& genericEffect : effects )
+	{
+		if ( genericEffect.effect->m_quality > m_quality )
+		{
+			continue;
+		}
+
+		GPU_REGION( renderContext, "GenericEffect" );
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
+
+		genericEffect.SetParameters();
+		if( genericEffect.effect->RequiresSourceTexture() )
+		{
+			auto dest = gpuResourcePool.GetTempTexture( "", src->GetWidth(), src->GetHeight(), src->GetFormat(), RENDER_TARGET );
+			TEMP_PARAM( genericEffect.effect->m_effect, "Blit", effectSrc );
+			DrawInto( dest, Tr2LoadAction::DONT_CARE, genericEffect.effect->m_effect, renderContext );
+			effectSrc = dest;
+		}
+		else
+		{
+			DrawInto( effectSrc, Tr2LoadAction::LOAD, genericEffect.effect->m_effect, renderContext );
+		}
+		genericEffect.RestoreParameters();
+	}
+	return effectSrc;
 }
