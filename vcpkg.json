@@ -47,11 +47,11 @@
     },
     {
       "name": "carbon-pdmprotowrapper",
-      "version>=": "2.0.4"
+      "version>=": "3.0.0#1"
     },
     {
       "name": "carbon-blue",
-      "version>=": "6.0.0"
+      "version>=": "6.2.0"
     },
     {
       "name": "carbon-math",
