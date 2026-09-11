@@ -6,7 +6,7 @@
 
 
 #include "include/ITr2Scene.h"
-#include "include/IEveBallpark.h"
+#include "IEveBallpark.h"
 #include "TriFrustum.h"
 #include "SpaceObject/EveSpaceObject2.h"
 #include "TriRenderBatch.h"

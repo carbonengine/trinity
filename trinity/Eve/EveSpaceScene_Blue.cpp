@@ -3,7 +3,7 @@
 #include "StdAfx.h"
 #include "EveSpaceScene.h"
 
-#include "include/IEveBallpark.h"
+#include "IEveBallpark.h"
 
 #include "TriProjection.h"
 #include "TriPythonContext.h"

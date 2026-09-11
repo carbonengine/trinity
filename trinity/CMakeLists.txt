@@ -21,6 +21,7 @@ if(BUILD_FOR_PYTHON_2)
     add_library(GPUOpen::VulkanMemoryAllocator ALIAS GPUOpen::VMA)
     find_package(CarbonTrinityAudioAPI REQUIRED)
     add_library(CcpTrinityAudioAPI ALIAS CarbonTrinityAudioAPI)
+    find_package(Destiny)
 else()
     find_package(unofficial-libsquish CONFIG REQUIRED)
     find_package(amd-fidelityfx-cas CONFIG REQUIRED)
@@ -29,11 +30,10 @@ else()
     find_package(VulkanHeaders CONFIG) # Required for VulkanMemoryAllocator
     find_package(VulkanMemoryAllocator CONFIG REQUIRED)
     find_package(carbon-trinityaudioapi CONFIG REQUIRED)
+    find_package(carbon-destiny CONFIG REQUIRED)
 endif()
 
 set(PUBLIC_HEADER_FILES
-    Include/IEveBallpark.h
-    Include/IEveReferencePoint.h
     Include/ITr2AnimationUpdater.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
@@ -855,8 +855,6 @@ set(_SOURCES
     Font/Tr2SBit.cpp
     Font/Tr2SBit.h
     Font/Tr2SBit_Blue.cpp
-    Include/IEveBallpark.h
-    Include/IEveReferencePoint.h
     Include/ITr2AnimationUpdater.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
@@ -1901,13 +1899,14 @@ function(set_shared_trinity_properties target)
     endif()
 
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
-
+    get_target_property(DESTINY_INCLUDE_DIRS destiny INTERFACE_INCLUDE_DIRECTORIES)
     target_include_directories(${target}
         PUBLIC
             $<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
             $<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>
+            $<BUILD_INTERFACE:${DESTINY_INCLUDE_DIRS}>
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/..

@@ -7,7 +7,7 @@
 #include "Utilities/MatrixUtils.h"
 
 #include "include/ITr2DebugRenderer.h"
-#include "include/IEveBallpark.h"
+#include "IEveBallpark.h"
 #include "Include/TriMath.h"
 #include "Resources/TriGeometryRes.h"
 #include "TriFrustumOrtho.h"
