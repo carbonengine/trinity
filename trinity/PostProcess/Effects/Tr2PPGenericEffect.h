@@ -58,8 +58,12 @@ public:
 	std::vector<BlendableParameter<Tr2Vector3Parameter, Vector3>> blendableVector3Parameters;
 	std::vector<BlendableParameter<Tr2Vector4Parameter, Vector4>> blendableVector4Parameters;
 
+	static constexpr const char* IsBlendableAnnotationName = "IsBlendable";
+	static constexpr const char* SourceTextureName = "Blit";
 
 private:
+	void AddBlendableParameter( const Tr2EffectConstant& constant, const uint8_t* defaultValues );
+
 	unsigned m_lastHashValue = 0;
 	unsigned m_nonBlendableHash = 0;
 	Tr2ShaderPtr m_lastShader;
