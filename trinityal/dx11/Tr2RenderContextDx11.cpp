@@ -2233,7 +2233,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 	for( const auto& resource : m_pendingSRVs )
 	{
 		uint32_t index = registerMap.srvs[resource.stage][resource.registerIndex];
-		if( index < registerMap.srvCount && index < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
+		if( index < registerMap.srvCount )
 		{
 			m_sortedSRVs[index] = &resource;
 		}
@@ -2241,7 +2241,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 	for( const auto& resource : m_pendingUAVs )
 	{
 		uint32_t index = registerMap.uavs[resource.stage][resource.registerIndex];
-		if( index < registerMap.uavCount && index < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
+		if( index < registerMap.uavCount )
 		{
 			m_sortedUAVs[index] = &resource;
 		}
@@ -2249,7 +2249,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 	for( const auto& sampler : m_pendingSamplers )
 	{
 		uint32_t index = registerMap.samplers[sampler.stage][sampler.registerIndex];
-		if( index < registerMap.samplerCount && index < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
+		if( index < registerMap.samplerCount )
 		{
 			m_sortedSamplers[index] = &sampler;
 		}
@@ -2269,7 +2269,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 			uint32_t srvIndex = registerMap.srvs[stageIndex][registerIndex];
 			if( srvIndex < registerMap.srvCount )
 			{
-				const Resource* resource = srvIndex < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE ? m_sortedSRVs[srvIndex] : nullptr;
+				const Resource* resource = m_sortedSRVs[srvIndex];
 				switch( resource ? resource->type : Resource::NONE )
 				{
 				case Resource::TEXTURE:
@@ -2292,7 +2292,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 			uint32_t samplerIndex = registerMap.samplers[stageIndex][registerIndex];
 			if( samplerIndex < registerMap.samplerCount )
 			{
-				const Sampler* sampler = samplerIndex < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE ? m_sortedSamplers[samplerIndex] : nullptr;
+				const Sampler* sampler = m_sortedSamplers[samplerIndex];
 				if( sampler && sampler->type == Sampler::SAMPLER && sampler->sampler.m_sampler )
 				{
 					desiredSamplers[stageIndex][registerIndex] = sampler->sampler.m_sampler->m_samplerState;
@@ -2303,7 +2303,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 			if( uavIndex < registerMap.uavCount &&
 				( stageIndex == PIXEL_SHADER || stageIndex == COMPUTE_SHADER ) )
 			{
-				const Resource* resource = uavIndex < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE ? m_sortedUAVs[uavIndex] : nullptr;
+				const Resource* resource = m_sortedUAVs[uavIndex];
 				switch( resource ? resource->type : Resource::NONE )
 				{
 				case Resource::TEXTURE:

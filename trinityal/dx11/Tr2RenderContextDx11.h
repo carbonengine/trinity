@@ -308,9 +308,9 @@ private:
 	std::vector<Resource> m_pendingUAVs;
 	std::vector<Sampler> m_pendingSamplers;
 
-	const Resource* m_sortedSRVs[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	const Resource* m_sortedUAVs[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	const Sampler* m_sortedSamplers[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	const Resource* m_sortedSRVs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	const Resource* m_sortedUAVs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	const Sampler* m_sortedSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
 
 	ID3D11ShaderResourceView* m_boundSrvs[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
 	ID3D11SamplerState* m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];

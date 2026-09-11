@@ -1028,7 +1028,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 	for( const auto& resource : m_pendingSRVs )
 	{
 		uint32_t index = registerMap.srvs[resource.stage][resource.registerIndex];
-		if( index < registerMap.srvCount && index < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
+		if( index < registerMap.srvCount )
 		{
 			m_sortedSRVs[index] = &resource;
 		}
@@ -1036,7 +1036,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 	for( const auto& resource : m_pendingUAVs )
 	{
 		uint32_t index = registerMap.uavs[resource.stage][resource.registerIndex];
-		if( index < registerMap.uavCount && index < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
+		if( index < registerMap.uavCount )
 		{
 			m_sortedUAVs[index] = &resource;
 		}
@@ -1044,7 +1044,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 	for( const auto& sampler : m_pendingSamplers )
 	{
 		uint32_t index = registerMap.samplers[sampler.stage][sampler.registerIndex];
-		if( index < registerMap.samplerCount && index < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
+		if( index < registerMap.samplerCount )
 		{
 			m_sortedSamplers[index] = &sampler;
 		}
@@ -1057,8 +1057,9 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 	}
 	m_usedResources.clear();
 
-	D3D12_RESOURCE_BARRIER inTransitions[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	ID3D12Resource* transitioned[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	constexpr uint32_t maxTransitions = 2 * Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE;
+	D3D12_RESOURCE_BARRIER inTransitions[maxTransitions];
+	ID3D12Resource* transitioned[maxTransitions];
 	uint32_t inCount = 0;
 	uint32_t transitionedCount = 0;
 
@@ -1067,7 +1068,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 		if( ( defaultState & expectedState ) == 0 && defaultState != D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE )
 		{
 			auto found = std::find( transitioned, transitioned + transitionedCount, res );
-			if( found == transitioned + transitionedCount && transitionedCount < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
+			if( found == transitioned + transitionedCount && transitionedCount < maxTransitions )
 			{
 				inTransitions[inCount++] = TrinityALImpl::Transition( res, defaultState, expectedState );
 				m_outTransitions.push_back( TrinityALImpl::Transition( res, expectedState, defaultState ) );
@@ -1082,7 +1083,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 	for( const auto& reg : rootSignature.m_srvRegisters )
 	{
 		uint32_t mapIndex = registerMap.srvs[reg.stage][reg.index];
-		const Resource* resource = mapIndex < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE ? m_sortedSRVs[mapIndex] : nullptr;
+		const Resource* resource = mapIndex < registerMap.srvCount ? m_sortedSRVs[mapIndex] : nullptr;
 		auto stateFlag = reg.stage == Tr2RenderContextEnum::PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 
 		std::shared_ptr<ShaderResourceViewDx12> srv;
@@ -1133,7 +1134,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 	for( const auto& reg : rootSignature.m_uavRegisters )
 	{
 		uint32_t mapIndex = registerMap.uavs[reg.stage][reg.index];
-		const Resource* resource = mapIndex < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE ? m_sortedUAVs[mapIndex] : nullptr;
+		const Resource* resource = mapIndex < registerMap.uavCount ? m_sortedUAVs[mapIndex] : nullptr;
 
 		std::shared_ptr<UnorderedAccessViewDx12> uav;
 		switch( resource ? resource->type : Resource::NONE )
@@ -1193,7 +1194,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 	for( const auto& reg : rootSignature.m_samplerRegisters )
 	{
 		uint32_t mapIndex = registerMap.samplers[reg.stage][reg.index];
-		const Sampler* sampler = mapIndex < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE ? m_sortedSamplers[mapIndex] : nullptr;
+		const Sampler* sampler = mapIndex < registerMap.samplerCount ? m_sortedSamplers[mapIndex] : nullptr;
 
 		switch( sampler ? sampler->type : Sampler::NONE )
 		{
