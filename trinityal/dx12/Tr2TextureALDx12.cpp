@@ -1193,7 +1193,8 @@ ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext )
 		return E_INVALIDCALL;
 	}
 
-	renderContext.SetResourceSet( ::Tr2ResourceSetAL() );
+	renderContext.ResetResourceBindings();
+	renderContext.FlushBarriersDx12();
 	renderContext.FlushBarriersDx12( m_textures[0] );
 
 	renderContext.m_dirtyPso = true;

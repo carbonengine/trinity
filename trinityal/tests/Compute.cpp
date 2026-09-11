@@ -31,17 +31,12 @@ TEST_F( Compute, CanReadCSResult )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->ResetResourceBindings() );
 
 	const float* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
@@ -84,21 +79,14 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
-	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, arg2 );
-	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, arg2 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->ResetResourceBindings() );
 
 	const float* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
@@ -146,23 +134,15 @@ TEST_F( Compute, CanAddConstantInCS )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
-	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
-
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( arg2, COMPUTE_SHADER, 1 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->ResetResourceBindings() );
 
 	const float* readData = nullptr;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( readData, *renderContext ) );
@@ -222,21 +202,14 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, input );
-	desc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, sampl );
-	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, input ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, sampl ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->ResetResourceBindings() );
 
 	const float* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
@@ -267,19 +240,12 @@ TEST_F( Compute, CanDispatchCSGroups )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32_UINT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 2, 2, 2 ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->ResetResourceBindings() );
 
 	const uint32_t* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );

@@ -912,7 +912,7 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 	const uint32_t clearValue[] = { 0, 0, 0, 0 };
 	renderContext.ClearUav( destTex, 0, clearValue );
 
-	m_Raytracing.m_effect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+	m_Raytracing.m_effect->ApplyMaterialDataForRtState( techniqueIndex, renderContext );
 	renderContext.UseAccelerationStructure( geometry->GetTLAS() );
 
 	{

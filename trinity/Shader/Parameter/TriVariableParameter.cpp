@@ -56,30 +56,31 @@ bool TriVariableParameter::Initialize()
 }
 
 // ---------------------------------------------------------------
-bool TriVariableParameter::CopyToResourceSet(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void TriVariableParameter::UseSRV(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
-	ResourceFlags flags ) const
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
 {
 	if( !m_variable )
 	{
-		return false;
+		return;
 	}
-	return m_variable->CopyToResourceSet( resourceDesc, stage, registerIndex, flags );
+	m_variable->UseSRV( stage, registerIndex, flags, renderContext );
 }
 
 // ---------------------------------------------------------------
-bool TriVariableParameter::ApplyUav(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void TriVariableParameter::UseUav(
 	Tr2RenderContextEnum::ShaderType stage,
-	uint32_t registerIndex ) const
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
 {
 	if( m_variable )
 	{
-		return m_variable->ApplyUav( resourceDesc, stage, registerIndex );
+		m_variable->UseUav( stage, registerIndex, renderContext );
+		return;
 	}
-	return resourceDesc.SetUav( stage, registerIndex, Tr2TextureAL() );
+	renderContext.SetUav( stage, registerIndex, Tr2TextureAL() );
 }
 
 void TriVariableParameter::CopyValueToEffect( Tr2RenderContextEnum::ShaderType inputType,

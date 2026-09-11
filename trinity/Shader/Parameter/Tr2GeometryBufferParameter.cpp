@@ -101,40 +101,42 @@ void Tr2GeometryBufferParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 }
 
 // --------------------------------------------------------------------------------------
-bool Tr2GeometryBufferParameter::CopyToResourceSet(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void Tr2GeometryBufferParameter::UseSRV(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
-	ResourceFlags flags ) const
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
 {
 	if( !m_gpuBuffer )
 	{
-		return false;
+		return;
 	}
 	auto buffer = m_gpuBuffer->GetGpuBuffer( m_meshIndex );
 	if( !buffer )
 	{
-		return false;
+		return;
 	}
-	return resourceDesc.SetSrv( stage, registerIndex, *buffer );
+	renderContext.SetSrv( stage, registerIndex, *buffer );
 }
 
 // --------------------------------------------------------------------------------------
-bool Tr2GeometryBufferParameter::ApplyUav(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void Tr2GeometryBufferParameter::UseUav(
 	Tr2RenderContextEnum::ShaderType stage,
-	uint32_t registerIndex ) const
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
 {
 	if( !m_gpuBuffer )
 	{
-		return resourceDesc.SetUav( stage, registerIndex, Tr2BufferAL() );
+		renderContext.SetUav( stage, registerIndex, Tr2BufferAL() );
+		return;
 	}
 	auto buffer = m_gpuBuffer->GetGpuBuffer( m_meshIndex );
 	if( !buffer )
 	{
-		return resourceDesc.SetUav( stage, registerIndex, Tr2BufferAL() );
+		renderContext.SetUav( stage, registerIndex, Tr2BufferAL() );
+		return;
 	}
-	return resourceDesc.SetUav( stage, registerIndex, *buffer );
+	renderContext.SetUav( stage, registerIndex, *buffer );
 }
 
 // --------------------------------------------------------------------------------------
