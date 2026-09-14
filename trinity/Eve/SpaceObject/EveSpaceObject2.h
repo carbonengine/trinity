@@ -311,7 +311,7 @@ public:
 	void EnsureChildLocatorMerged() const;
 	void UpdateDamageLocatorFilter();
 	EveDamageOverlayPtr EnsureChildDamageOverlay( const LocatorSourceRange& range );
-	void CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>>& out );
+	void CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>> & out );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
