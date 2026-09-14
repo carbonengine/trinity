@@ -39,6 +39,32 @@ ITriRenderBatchAccumulator* FindBatchAccumulator( const T& batches, TriBatchType
 	}
 	return nullptr;
 }
+
+constexpr uint32_t SLOTS_PER_LOD = 2;
+
+uint32_t LodSlot( uint32_t lod, bool mirrored )
+{
+	return lod * SLOTS_PER_LOD + ( mirrored ? 1u : 0u );
+}
+
+struct LodSlotDraw
+{
+	TriGeometryResLodData* lodData = nullptr;
+	uint32_t primCount = 0;
+	TriGeometryAreaIndexRange indexRange;
+	bool valid = false;
+};
+
+LodSlotDraw GetLodSlotDraw( TriGeometryRes& geometry, uint32_t meshIndex, uint32_t areaIndex, uint32_t areaCount, bool areaReversed, uint32_t slot )
+{
+	LodSlotDraw draw;
+	draw.lodData = geometry.GetMeshLod( meshIndex, int( slot / SLOTS_PER_LOD ) );
+	draw.primCount = GetPrimitiveCount( *draw.lodData, areaIndex, areaCount );
+	bool reversed = areaReversed != ( ( slot % SLOTS_PER_LOD ) != 0 );
+	draw.indexRange = GetAreaIndexRange( *draw.lodData, areaIndex, draw.primCount, reversed );
+	draw.valid = draw.primCount != 0 && draw.indexRange.valid;
+	return draw;
+}
 }
 
 
@@ -62,7 +88,7 @@ void EveInstancedMeshManager::CollectMeshes( EveComponentRegistry& registry )
 		{
 			m_perObjectDataBuffer.CreateInstance();
 		}
-		auto count = static_cast<uint32_t>( m_perObjectData.size() );
+		auto count = uint32_t( m_perObjectData.size() );
 		if( m_perObjectDataBuffer->GetCount() < count )
 		{
 			auto newCount = std::max( count, m_perObjectDataBuffer->GetCount() * 2u );
@@ -230,6 +256,7 @@ void EveInstancedMeshManager::AddMeshGroup(
 					meshIndex,
 					areaIndex,
 					areaCount,
+					false,
 					true };
 	auto& instances = m_meshInstances[key];
 	instances.material = material;
@@ -243,7 +270,7 @@ void EveInstancedMeshManager::AddMeshGroup(
 	{
 		auto meshData = geometry->GetMeshData( meshIndex );
 		auto lodCount = meshData->m_lods.size();
-		instances.lodIndices.resize( lodCount );
+		instances.lodIndices.resize( SLOTS_PER_LOD * lodCount );
 		instances.screenSizeThresholds.resize( lodCount );
 		for( uint32_t lod = 0; lod < lodCount; ++lod )
 		{
@@ -273,6 +300,7 @@ void EveInstancedMeshManager::AddMeshGroup(
 	uint32_t meshIndex,
 	uint32_t areaIndex,
 	uint32_t areaCount,
+	bool areaReversed,
 	Tr2Effect* material,
 	uint64_t materialHash,
 	const PerObjectDataHandle& perObjectDataHandle,
@@ -292,7 +320,8 @@ void EveInstancedMeshManager::AddMeshGroup(
 					batchType,
 					meshIndex,
 					areaIndex,
-					areaCount };
+					areaCount,
+					areaReversed };
 	auto& instances = m_meshInstances[key];
 	instances.material = material;
 	if( instances.radius == 0 )
@@ -305,7 +334,7 @@ void EveInstancedMeshManager::AddMeshGroup(
 	{
 		auto meshData = geometry->GetMeshData( meshIndex );
 		auto lodCount = meshData->m_lods.size();
-		instances.lodIndices.resize( lodCount );
+		instances.lodIndices.resize( SLOTS_PER_LOD * lodCount );
 		instances.screenSizeThresholds.resize( lodCount );
 		for( uint32_t lod = 0; lod < lodCount; ++lod )
 		{
@@ -653,7 +682,8 @@ std::pair<uint32_t, float> EveInstancedMeshManager::BinVisibleInstances( const M
 			maxScreenSize = std::max( maxScreenSize, screenSize );
 			if( screenSize > SCREEN_SIZE_THRESHOLD )
 			{
-				meshInfo.lodIndices[GetMeshLod( meshInfo, screenSize )].push_back( { mesh.isDynamic ? (const void*)&group.dynamicInstances[i] : (const void*)&group.staticInstances[i], group.perObjectDataIndex } );
+				bool mirrored = mesh.isDynamic ? group.dynamicInstances[i].mirrored : group.staticInstances[i].mirrored;
+				meshInfo.lodIndices[LodSlot( GetMeshLod( meshInfo, screenSize ), mirrored )].push_back( { mesh.isDynamic ? (const void*)&group.dynamicInstances[i] : (const void*)&group.staticInstances[i], group.perObjectDataIndex } );
 				++totalCount;
 			}
 		}
@@ -807,6 +837,7 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 
 			for( uint32_t lod = 0; lod < static_cast<uint32_t>( meshInfo.lodIndices.size() ); ++lod )
 			{
+				traceback.push_back( { nullptr, 0 } );
 				if( meshInfo.lodIndices[lod].empty() )
 				{
 					continue;
@@ -814,24 +845,23 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 				InstanceBuffer::Allocation allocation = AllocateInstanceData( uint32_t( meshInfo.lodIndices[lod].size() ), mesh.isDynamic );
 				UploadLodData( mesh, meshInfo, lod, allocation );
 
-				auto lodData = mesh.geometry->GetMeshLod( mesh.meshIndex, int( lod ) );
-				auto primCount = GetPrimitiveCount( *lodData, mesh.areaIndex, mesh.areaCount );
-				if( !primCount )
+				auto draw = GetLodSlotDraw( *mesh.geometry, mesh.meshIndex, mesh.areaIndex, mesh.areaCount, mesh.areaReversed, lod );
+				if( !draw.valid )
 				{
 					continue;
 				}
-
+				
 				uint32_t stride = uint32_t( mesh.isDynamic ? sizeof( DynamicPerInstanceBufferElement ) : sizeof( StaticPerInstanceBufferElement ) );
 
 				Tr2RenderBatch batch;
 				batch.SetMaterial( meshInfo.material );
-				batch.SetGeometry( mesh.combinedVertexDeclaration, lodData->m_vertexAllocation, lodData->m_indexAllocation );
+				batch.SetGeometry( mesh.combinedVertexDeclaration, draw.lodData->m_vertexAllocation, *draw.indexRange.indices );
 				batch.SetStreamSource( 1, *allocation.buffer, stride );
 				batch.SetDrawIndexedInstanced(
-					primCount * 3,
+					draw.primCount * 3,
 					static_cast<uint32_t>( meshInfo.lodIndices[lod].size() ),
-					lodData->m_indexAllocation.GetStartIndex() + lodData->m_areas[mesh.areaIndex].m_firstIndex,
-					lodData->m_vertexAllocation.GetOffset() / lodData->m_vertexAllocation.GetStride(),
+					draw.indexRange.startIndex,
+					draw.lodData->m_vertexAllocation.GetOffset() / draw.lodData->m_vertexAllocation.GetStride(),
 					allocation.offset / stride );
 
 				auto perObjectData = accumulator->Allocate<PickingPerObjectData>();
@@ -840,7 +870,7 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 
 				accumulator->Commit( batch );
 
-				traceback.push_back( { group.owner, group.ownerIndex } );
+				traceback.back() = { group.owner, group.ownerIndex };
 			}
 			objectIdOffset += static_cast<uint32_t>( meshInfo.lodIndices.size() );
 		}
@@ -903,30 +933,30 @@ size_t EveInstancedMeshManager::GetBatches( const std::initializer_list<std::pai
 			{
 				continue;
 			}
+			uint32_t lodInstanceCount = uint32_t( meshInfo.lodIndices[lod].size() );
 
-			auto lodData = mesh.geometry->GetMeshLod( mesh.meshIndex, int( lod ) );
-
-			auto primCount = GetPrimitiveCount( *lodData, mesh.areaIndex, mesh.areaCount );
-			if( !primCount )
+			auto draw = GetLodSlotDraw( *mesh.geometry, mesh.meshIndex, mesh.areaIndex, mesh.areaCount, mesh.areaReversed, lod );
+			if( !draw.valid )
 			{
+				instanceOffset += lodInstanceCount;
 				continue;
 			}
 
 			Tr2RenderBatch batch;
 			batch.SetMaterial( meshInfo.material );
-			batch.SetGeometry( mesh.combinedVertexDeclaration, lodData->m_vertexAllocation, lodData->m_indexAllocation );
+			batch.SetGeometry( mesh.combinedVertexDeclaration, draw.lodData->m_vertexAllocation, *draw.indexRange.indices );
 			batch.SetStreamSource( 1, *allocation.buffer, stride );
 			batch.SetDrawIndexedInstanced(
-				primCount * 3,
-				static_cast<uint32_t>( meshInfo.lodIndices[lod].size() ),
-				lodData->m_indexAllocation.GetStartIndex() + lodData->m_areas[mesh.areaIndex].m_firstIndex,
-				lodData->m_vertexAllocation.GetOffset() / lodData->m_vertexAllocation.GetStride(),
+				draw.primCount * 3,
+				lodInstanceCount,
+				draw.indexRange.startIndex,
+				draw.lodData->m_vertexAllocation.GetOffset() / draw.lodData->m_vertexAllocation.GetStride(),
 				instanceOffset );
 
 			accumulator->Commit( batch );
-			instanceOffset += static_cast<uint32_t>( meshInfo.lodIndices[lod].size() );
+			instanceOffset += lodInstanceCount;
 
-			totalInstances += meshInfo.lodIndices[lod].size();
+			totalInstances += lodInstanceCount;
 			++totalBatches;
 		}
 	}
@@ -970,7 +1000,7 @@ EveInstancedMeshManager::InstanceBuffer::Allocation EveInstancedMeshManager::All
 
 uint32_t EveInstancedMeshManager::GetMeshLod( const MeshData& meshInfo, float screenSize )
 {
-	auto lodCount = static_cast<uint32_t>( meshInfo.lodIndices.size() );
+	auto lodCount = static_cast<uint32_t>( meshInfo.screenSizeThresholds.size() );
 	for( uint32_t lod = 0; lod + 1 < lodCount; ++lod )
 	{
 		if( screenSize > meshInfo.screenSizeThresholds[lod + 1] )

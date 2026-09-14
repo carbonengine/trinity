@@ -308,7 +308,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	return newObj->GetRawRoot();
 }
 
-bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_t partTag, const Matrix& transform, ArmorDamageEffectCache& armorDamageEffectCache )
+bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_t partTag, const Vector3& scale, const Quaternion& rotation, const Vector3& translation, ArmorDamageEffectCache& armorDamageEffectCache )
 {
 	std::string s = "BuildChild ";
 	s += std::string( dnaString );
@@ -355,15 +355,11 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 		}
 	}
 
+	Matrix transform = TransformationMatrix( scale, rotation, translation );
 	std::vector<Matrix> placementOffsets = { transform };
 
 	const bool needsPlacementContainer = hasControllers || hasAnimation || hasEmitters || hasChildEffects || hasLayouts || hasAttachments || hasBoosters;
 	const uint32_t buildFlags = !hasAnimation ? EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT : EveSOFDataHullBuildFilter::NON_INSTANCED_PLACEMENT;
-
-	Quaternion rotation;
-	Vector3 translation;
-	Vector3 scale;
-	Decompose( scale, rotation, translation, transform );
 
 	EveChildContainerPtr placementContainer;
 	if( needsPlacementContainer )
@@ -1130,8 +1126,9 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 							Quaternion rotation;
 							Vector3 pos;
 							Vector3 scale;
-							Decompose( scale, rotation, pos, spotlightSetItem->m_transform );
+							DecomposeMirrorAware( scale, rotation, pos, spotlightSetItem->m_transform );
 
+							bool mirrored = scale.x < 0.f;
 							scale.x = abs( scale.x );
 							scale.y = abs( scale.y );
 							scale.z = abs( scale.z );
@@ -1148,6 +1145,10 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 							auto data = ssiit.light->AsLightData( saturatedColor, scale.z, innerAngle, outerAngle );
 
 							data.boneIndex = ssiit.boneIndex;
+							if( mirrored )
+							{
+								data.position.x = -data.position.x;
+							}
 							data.position = ( TranslationMatrix( data.position ) * RotationMatrix( rotation ) * TranslationMatrix( pos ) ).GetTranslation();
 							data.rotation = rotation;
 							data.brightness *= ssiit.coneIntensity;
@@ -1268,7 +1269,7 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 					// set up the position data
 					Vector3 tmp;
 					Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), psiit.rotation, psiit.position + hullOffset ) * offset;
-					Decompose( tmp, planeSetItem->m_rotation, planeSetItem->m_position, m );
+					DecomposeMirrorAware( tmp, planeSetItem->m_rotation, planeSetItem->m_position, m );
 
 					// fill it up
 					planeSetItem->m_scaling = psiit.scaling;
@@ -1389,7 +1390,7 @@ void EveSOF::SetupSpriteLineSets( IEveSpaceObjectAttachmentOwnerPtr obj, const E
 						// set up the position data
 						Vector3 tmp;
 						Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), itemData->rotation, itemData->position + hullOffset ) * offset;
-						Decompose( tmp, spriteLineSetItem->m_rotation, spriteLineSetItem->m_position, m );
+						DecomposeMirrorAware( tmp, spriteLineSetItem->m_rotation, spriteLineSetItem->m_position, m, 1 );
 
 						// set it up the per-hull data
 						spriteLineSetItem->m_blinkPhaseShift = itemData->blinkPhaseShift;
@@ -1525,7 +1526,7 @@ void EveSOF::SetupHazeSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOFD
 						// set up the position data
 						Vector3 tmp;
 						Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), itemData->rotation, itemData->position + hullOffset ) * offset;
-						Decompose( tmp, hazeSetItem->m_rotation, hazeSetItem->m_position, m );
+						DecomposeMirrorAware( tmp, hazeSetItem->m_rotation, hazeSetItem->m_position, m );
 
 						// set it up the per-hull data
 						hazeSetItem->m_scaling = itemData->scaling;
@@ -1614,7 +1615,7 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const
 					// set up the position data
 					Vector3 tmp;
 					Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), modifiedData.rotation, modifiedData.position + hullOffset ) * offset;
-					Decompose( tmp, modifiedData.rotation, modifiedData.position, m );
+					DecomposeMirrorAware( tmp, modifiedData.rotation, modifiedData.position, m );
 
 					bannerSet->AddBanner( modifiedData );
 
@@ -1774,7 +1775,7 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 						// set up the position data
 						Vector3 tmp;
 						Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), modifiedItem.rotation, modifiedItem.position + hullOffset ) * offset;
-						Decompose( tmp, modifiedItem.rotation, modifiedItem.position, m );
+						DecomposeMirrorAware( tmp, modifiedItem.rotation, modifiedItem.position, m );
 
 						bannerSet->AddBanner( modifiedItem );
 
@@ -2019,7 +2020,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, IEveEffectChild
 				Vector3 tmp, pos;
 				Quaternion rot;
 				Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), childIt->rotation, childIt->translation ) * offset;
-				Decompose( tmp, rot, pos, m );
+				DecomposeMirrorAware( tmp, rot, pos, m );
 				transformedChild->SetRotation( rot );
 				transformedChild->SetScaling( childIt->scaling );
 				transformedChild->SetTranslation( pos );
@@ -2051,7 +2052,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, IEveEffectChild
 				Vector3 tmp, pos;
 				Quaternion rot;
 				Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), childIt->rotation, childIt->translation ) * offset;
-				Decompose( tmp, rot, pos, m );
+				DecomposeMirrorAware( tmp, rot, pos, m );
 
 				transformedChild->Setup( &childIt->scaling, &rot, &pos, childIt->lowestLodVisible );
 
@@ -2190,7 +2191,7 @@ void EveSOF::SetupEffectChildren( EveSpaceObject2Ptr newObj, IEveEffectChildrenO
 					Vector3 tmp, pos;
 					Quaternion rot;
 					Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), childSetItem.rotation, childSetItem.translation ) * offset;
-					Decompose( tmp, rot, pos, m );
+					DecomposeMirrorAware( tmp, rot, pos, m );
 					transformedChild->SetRotation( rot );
 					transformedChild->SetScaling( childSetItem.scaling );
 					transformedChild->SetTranslation( pos );
@@ -2215,7 +2216,7 @@ void EveSOF::SetupEffectChildren( EveSpaceObject2Ptr newObj, IEveEffectChildrenO
 					Vector3 tmp, pos;
 					Quaternion rot;
 					Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), childSetItem.rotation, childSetItem.translation ) * offset;
-					Decompose( tmp, rot, pos, m );
+					DecomposeMirrorAware( tmp, rot, pos, m );
 
 					transformedChild->Setup( &childSetItem.scaling, &rot, &pos, childSetItem.lowestLodVisible );
 
@@ -2269,7 +2270,7 @@ void EveSOF::SetupAudio( ITr2SoundEmitterOwnerPtr newObj, const EveSOFDNAPtr dna
 
 	Quaternion parentRotation;
 	Vector3 tmp, tmp2;
-	Decompose( tmp, parentRotation, tmp2, parentOffset );
+	DecomposeMirrorAware( tmp, parentRotation, tmp2, parentOffset );
 
 	for( auto cit = begin( hullEmitters ); cit != end( hullEmitters ); ++cit )
 	{
@@ -2834,7 +2835,7 @@ void EveSOF::SetupLights( ITr2LightOwnerPtr spaceObject, const EveSOFDNAPtr dna,
 					// set up the position data
 					Vector3 tmp;
 					Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), lightSetItem.rotation, lightSetItem.position + hullOffset ) * offset;
-					Decompose( tmp, data.rotation, data.position, m );
+					DecomposeMirrorAware( tmp, data.rotation, data.position, m );
 
 					data.radius = lightSetItem.radius;
 					data.innerRadius = lightSetItem.innerRadius;
@@ -3377,7 +3378,7 @@ void EveSOF::SetupLocatorSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, c
 						std::transform( ( *locators ).begin(), ( *locators ).end(), std::back_inserter( distributedLocators ), [offset, hullOffset, partTag]( EveSOFDataMgr::LocatorDirectionData d ) -> EveSOFDataMgr::LocatorDirectionData {
 							Matrix m = TransformationMatrix( Vector3( 1.0, 1.0, 1.0 ), d.rotation, d.position + hullOffset ) * offset;
 							Vector3 tmp;
-							Decompose( tmp, d.rotation, d.position, m );
+							DecomposeMirrorAware( tmp, d.rotation, d.position, m );
 							d.partTag = partTag;
 							return d;
 						} );
@@ -3971,7 +3972,7 @@ void EveSOF::CreatePlacement(
 				// create the child normally
 				Quaternion rotation;
 				Vector3 translation, scale;
-				Decompose( scale, rotation, translation, transform );
+				DecomposeMirrorAware( scale, rotation, translation, transform );
 
 				// create the non instanced extension mesh
 				EveChildMeshPtr child;

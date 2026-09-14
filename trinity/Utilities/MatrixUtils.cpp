@@ -25,6 +25,26 @@ Float4x3::operator Matrix() const
 		elements[0], elements[4], elements[8], 0.0f, elements[1], elements[5], elements[9], 0.0f, elements[2], elements[6], elements[10], 0.0f, elements[3], elements[7], elements[11], 1.0f );
 }
 
+bool IsMirrored( const Matrix& m )
+{
+	return Determinant( m ) < 0.f;
+}
+
+void DecomposeMirrorAware( Vector3& scale, Quaternion& rotation, Vector3& translation, const Matrix& m, int mirrorAxis )
+{
+	if( !IsMirrored( m ) )
+	{
+		Decompose( scale, rotation, translation, m );
+		return;
+	}
+	Matrix mirrored = m;
+	mirrored.m[mirrorAxis][0] = -mirrored.m[mirrorAxis][0];
+	mirrored.m[mirrorAxis][1] = -mirrored.m[mirrorAxis][1];
+	mirrored.m[mirrorAxis][2] = -mirrored.m[mirrorAxis][2];
+	Decompose( scale, rotation, translation, mirrored );
+	scale[mirrorAxis] = -scale[mirrorAxis];
+}
+
 void DeconstructProjectionMatrix( const Matrix& proj, float& asp, float& fov, float& frontClip, float& backClip )
 {
 	// Use the fact that:

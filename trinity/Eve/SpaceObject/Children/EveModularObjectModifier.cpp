@@ -7,7 +7,6 @@
 #include "../Attachments/EveImpactOverlay.h"
 #include "EveChildInstancedMeshes.h"
 #include "EveChildContainer.h"
-#include <cmf/transforms.h>
 
 
 void EveModularObjectModifier::Create( SpaceObjectType* object, EveSOF* sof )
@@ -95,7 +94,7 @@ EveSpaceObjectChild::PartTag EveModularObjectModifier::AddHull( const char* hull
 	auto id = AllocatePartId();
 	auto size = m_object->GetEffectChildren().size();
 	auto dna = std::string( hullName ) + ":" + ( factionName[0] ? factionName : m_data->m_faction.c_str() ) + ":" + ( raceName[0] ? raceName : m_data->m_race.c_str() );
-	if( !m_sof->BuildChild( m_object, dna.c_str(), id, TransformationMatrix( scale, rotation, position ), m_armorDamageEffectCache ) )
+	if( !m_sof->BuildChild( m_object, dna.c_str(), id, scale, rotation, position, m_armorDamageEffectCache ) )
 	{
 		return INVALID_PART_TAG;
 	}
@@ -180,12 +179,13 @@ BlueStdResult EveModularObjectModifier::SetTransform( EveSpaceObjectChild::PartT
 		return BlueStdResultType::BLUE_STD_RESULT_KEY_ERROR;
 	}
 
-	cmf::Transform oldTransform{ found->position, found->rotation, found->scale };
-	cmf::Transform newTransform{ position, rotation, scale };
-	auto invOldTransform = cmf::Inverse( oldTransform );
+	Matrix oldTransform = TransformationMatrix( found->scale, found->rotation, found->position );
+	Matrix newTransform = TransformationMatrix( scale, rotation, position );
 
-	found->boundingSphere.center = cmf::TransformPoint( cmf::TransformPoint( found->boundingSphere.center, invOldTransform ), newTransform );
-	found->boundingSphere.radius *= std::max( { scale.x, scale.y, scale.z } ) / std::max( { found->scale.x, found->scale.y, found->scale.z } );
+	found->boundingSphere.center = TransformCoord( found->boundingSphere.center, Inverse( oldTransform ) * newTransform );
+	Vector3 absScale = Abs( scale );
+	Vector3 absFoundScale = Abs( found->scale );
+	found->boundingSphere.radius *= std::max( { absScale.x, absScale.y, absScale.z } ) / std::max( { absFoundScale.x, absFoundScale.y, absFoundScale.z } );
 
 	found->position = position;
 	found->rotation = rotation;

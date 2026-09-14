@@ -52,7 +52,7 @@ public:
 	 * modular object, stamping partTag on every child, locator and mesh instance it creates.
 	 * @return False if the DNA did not resolve to a buildable hull.
 	 */
-	bool BuildChild( EveSpaceObject2* owner, const char* dnaString, uint32_t partTag, const Matrix& transform, ArmorDamageEffectCache& armorDamageEffectCache );
+	bool BuildChild( EveSpaceObject2* owner, const char* dnaString, uint32_t partTag, const Vector3& scale, const Quaternion& rotation, const Vector3& translation, ArmorDamageEffectCache& armorDamageEffectCache );
 
 	// validate a dna string (slow!)
 	bool ValidateDNA( const char* dnaString );

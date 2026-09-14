@@ -100,6 +100,7 @@ TriLineSet* s_debugLineSet = NULL;
 // shared vertex/index buffers
 Tr2BufferAL s_quadVertexBuffer;
 Tr2SuballocatedBuffer::Allocation s_quadListIndexBuffer;
+Tr2SuballocatedBuffer::Allocation s_reversedQuadListIndexBuffer;
 uint32_t s_quadListSize = 0;
 
 Tr2TextureAL s_fallbackTextures[2][3];
@@ -291,21 +292,23 @@ void AdjustTextureCoordsToViewport( Tr2RenderContext& renderContext, Vector2& to
 
 
 template <typename T>
-bool CreateIndexBuffer( T count, Tr2SuballocatedBuffer::Allocation& buffer )
+bool CreateIndexBuffer( T count, Tr2SuballocatedBuffer::Allocation& buffer, bool reversedWinding = false )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	// Re-create the index buffer with the correct type
+
+	const T forwardPattern[6] = { 0, 2, 1, 0, 3, 2 };
+	const T reversedPattern[6] = { 0, 1, 2, 0, 2, 3 };
+	const T* pattern = reversedWinding ? reversedPattern : forwardPattern;
 
 	std::vector<T> indices( count * 6 );
 	T* pInds = indices.data();
 	for( T i = 0; i < count; ++i )
 	{
-		pInds[0] = 0 + 4 * i;
-		pInds[1] = 2 + 4 * i;
-		pInds[2] = 1 + 4 * i;
-		pInds[3] = 0 + 4 * i;
-		pInds[4] = 3 + 4 * i;
-		pInds[5] = 2 + 4 * i;
+		for( int k = 0; k < 6; ++k )
+		{
+			pInds[k] = pattern[k] + 4 * i;
+		}
 		pInds += 6;
 	}
 	if( buffer.IsValid() )
@@ -1237,7 +1240,7 @@ void Tr2Renderer::ReserveQuadListIndexBuffer( uint32_t numOfQuads )
 
 	std::scoped_lock lock( s_mutex );
 
-	if( numOfQuads <= s_quadListSize && s_quadListIndexBuffer.IsValid() )
+	if( numOfQuads <= s_quadListSize && s_quadListIndexBuffer.IsValid() && s_reversedQuadListIndexBuffer.IsValid() )
 	{
 		return;
 	}
@@ -1251,14 +1254,16 @@ void Tr2Renderer::ReserveQuadListIndexBuffer( uint32_t numOfQuads )
 	// we just need the 16 bit buffer
 	if( numOfQuads <= static_cast<uint32_t>( std::numeric_limits<uint16_t>::max() / 6 ) )
 	{
-		if( CreateIndexBuffer<uint16_t>( static_cast<uint16_t>( numOfQuads ), s_quadListIndexBuffer ) )
+		if( CreateIndexBuffer<uint16_t>( static_cast<uint16_t>( numOfQuads ), s_quadListIndexBuffer ) &&
+			CreateIndexBuffer<uint16_t>( static_cast<uint16_t>( numOfQuads ), s_reversedQuadListIndexBuffer, true ) )
 		{
 			s_quadListSize = numOfQuads;
 		}
 	}
 	else
 	{
-		if( CreateIndexBuffer<uint32_t>( numOfQuads, s_quadListIndexBuffer ) )
+		if( CreateIndexBuffer<uint32_t>( numOfQuads, s_quadListIndexBuffer ) &&
+			CreateIndexBuffer<uint32_t>( numOfQuads, s_reversedQuadListIndexBuffer, true ) )
 		{
 			s_quadListSize = numOfQuads;
 		}
@@ -1268,6 +1273,11 @@ void Tr2Renderer::ReserveQuadListIndexBuffer( uint32_t numOfQuads )
 Tr2SuballocatedBuffer::Allocation& Tr2Renderer::GetQuadListIndexBuffer()
 {
 	return s_quadListIndexBuffer;
+}
+
+Tr2SuballocatedBuffer::Allocation& Tr2Renderer::GetReversedQuadListIndexBuffer()
+{
+	return s_reversedQuadListIndexBuffer;
 }
 
 void Tr2Renderer::PrepareDeviceResources()
@@ -1312,6 +1322,7 @@ void Tr2Renderer::ReleaseDeviceResources( TriStorage s )
 	if( ( s & TRISTORAGE_MANAGEDMEMORY ) )
 	{
 		g_sharedBuffer.Free( s_quadListIndexBuffer );
+		g_sharedBuffer.Free( s_reversedQuadListIndexBuffer );
 	}
 }
 

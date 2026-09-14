@@ -223,6 +223,14 @@ struct TriGeometryResMeshData
 
 uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, uint32_t count );
 
+struct TriGeometryAreaIndexRange
+{
+	const Tr2SuballocatedBuffer::Allocation* indices = nullptr;
+	uint32_t startIndex = 0;
+	bool valid = false;
+};
+TriGeometryAreaIndexRange GetAreaIndexRange( const TriGeometryResLodData& lod, uint32_t areaIndex, uint32_t primCount, bool reversed );
+
 struct TriGeometryResJointData
 {
 	std::string m_name;
